@@ -95,6 +95,12 @@ StackFrame::initExecuteFrame(UnrootedScript script, StackFrame *prevLink, Abstra
     prevInline_ = regs ? regs->inlined() : NULL;
     blockChain_ = NULL;
 
+#ifdef JS_ION
+    /* Set prevBaselineFrame_ if this is an eval-in-frame. */
+    prevBaselineFrame_ = prev.isBaselineFrame() ? prev.asBaselineFrame() : NULL;
+    JS_ASSERT_IF(prevBaselineFrame_, isDebuggerFrame());
+#endif
+
 #ifdef DEBUG
     ncode_ = (void *)0xbad;
     Debug_SetValueRangeToCrashOnTouch(&rval_, 1);
@@ -1081,7 +1087,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     if (evalInFrame) {
         /* First, find the right segment. */
         AllFramesIter frameIter(cx->runtime);
-        while (frameIter.isIon() || frameIter.abstractFramePtr() != evalInFrame)
+        while (frameIter.isIonOptimizedJS() || frameIter.abstractFramePtr() != evalInFrame)
             ++frameIter;
         JS_ASSERT(frameIter.abstractFramePtr() == evalInFrame);
 
@@ -1090,10 +1096,10 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
         StackIter iter(cx->runtime, seg);
         /* Debug-mode currently disables Ion compilation. */
         JS_ASSERT_IF(evalInFrame.isStackFrame(), !evalInFrame.asStackFrame()->runningInIon());
-        JS_ASSERT_IF(evalInFrame.compartment() == iter.compartment(), !iter.isIon());
-        while (!iter.isScript() || iter.isIon() || iter.abstractFramePtr() != evalInFrame) {
+        JS_ASSERT_IF(evalInFrame.compartment() == iter.compartment(), !iter.isIonOptimizedJS());
+        while (!iter.isScript() || iter.isIonOptimizedJS() || iter.abstractFramePtr() != evalInFrame) {
             ++iter;
-            JS_ASSERT_IF(evalInFrame.compartment() == iter.compartment(), !iter.isIon());
+            JS_ASSERT_IF(evalInFrame.compartment() == iter.compartment(), !iter.isIonOptimizedJS());
         }
         JS_ASSERT(iter.abstractFramePtr() == evalInFrame);
         evalInFrameCalls = iter.data_.calls_;
@@ -1398,6 +1404,23 @@ StackIter::settleOnNewState()
         if (containsFrame && (!containsCall || (Value *)data_.fp_ >= data_.calls_->array())) {
 #ifdef JS_ION
             if (data_.fp_->beginsIonActivation()) {
+                /*
+                 * Eval-in-frame can link to an arbitrary frame on the stack.
+                 * Skip any IonActivation's until we reach the one for the
+                 * current StackFrame. Treat activations with NULL entryfp
+                 * (pushed by FastInvoke) as belonging to the previous
+                 * activation.
+                 */
+                while (true) {
+                    ion::IonActivation *act = data_.ionActivations_.activation();
+                    while (!act->entryfp())
+                        act = act->prev();
+                    if (act->entryfp() == data_.fp_)
+                        break;
+
+                    ++data_.ionActivations_;
+                }
+
                 data_.ionFrames_ = ion::IonFrameIterator(data_.ionActivations_);
 
                 if (data_.ionFrames_.isNative()) {
@@ -1596,6 +1619,20 @@ StackIter::popIonFrame()
         }
     }
 }
+
+void
+StackIter::popBaselineDebuggerFrame()
+{
+    ion::BaselineFrame *prevBaseline = data_.fp_->prevBaselineFrame();
+
+    popFrame();
+    settleOnNewState();
+
+    /* Pop Ion frames until we reach the target frame. */
+    JS_ASSERT(data_.state_ == ION);
+    while (!data_.ionFrames_.isBaselineJS() || data_.ionFrames_.baselineFrame() != prevBaseline)
+        popIonFrame();
+}
 #endif
 
 StackIter &
@@ -1605,6 +1642,13 @@ StackIter::operator++()
       case DONE:
         JS_NOT_REACHED("Unexpected state");
       case SCRIPTED:
+#ifdef JS_ION
+        if (data_.fp_->isDebuggerFrame() && data_.fp_->prevBaselineFrame()) {
+            /* Eval-in-frame with a baseline JIT frame. */
+            popBaselineDebuggerFrame();
+            break;
+        }
+#endif
         popFrame();
         settleOnNewState();
         break;
