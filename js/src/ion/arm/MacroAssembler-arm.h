@@ -277,6 +277,8 @@ class MacroAssemblerARM : public Assembler
     // except, possibly in the crazy bailout-table case.
     void ma_bl(Label *dest, Condition c = Always);
 
+    void ma_blx(Register dest, Condition c = Always);
+
     //VFP/ALU
     void ma_vadd(FloatRegister src1, FloatRegister src2, FloatRegister dst);
     void ma_vsub(FloatRegister src1, FloatRegister src2, FloatRegister dst);
@@ -499,6 +501,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     CodeOffsetLabel toggledJump(Label *label);
+
+    // Emit a BLX or NOP instruction. ToggleCall can be used to patch
+    // this instruction.
+    CodeOffsetLabel toggledCall(IonCode *target, bool enabled);
 
     CodeOffsetLabel pushWithPatch(ImmWord imm) {
         CodeOffsetLabel label = currentOffset();
