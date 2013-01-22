@@ -389,6 +389,13 @@ class MochitestServer:
     
     env = self._automation.environment(xrePath = self._xrePath)
     env["XPCOM_DEBUG_BREAK"] = "warn"
+
+    # When running with an ASan build, our xpcshell server will also be ASan-enabled,
+    # thus consuming too much resources when running together with the browser on
+    # the test slaves. Try to limit the amount of resources by disabling certain
+    # features.
+    env["ASAN_OPTIONS"] = "quarantine_size=1:redzone=32"
+
     if self._automation.IS_WIN32:
       env["PATH"] = env["PATH"] + ";" + self._xrePath
 
