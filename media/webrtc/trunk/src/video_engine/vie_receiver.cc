@@ -27,7 +27,8 @@ ViEReceiver::ViEReceiver(const int32_t channel_id,
       external_decryption_(NULL),
       decryption_buffer_(NULL),
       rtp_dump_(NULL),
-      receiving_(false) {
+      receiving_(false),
+      receiving_rtcp_(false) {
 }
 
 ViEReceiver::~ViEReceiver() {
@@ -104,7 +105,7 @@ int ViEReceiver::ReceivedRTPPacket(const void* rtp_packet,
 
 int ViEReceiver::ReceivedRTCPPacket(const void* rtcp_packet,
                                     int rtcp_packet_length) {
-  if (!receiving_) {
+  if (!receiving_rtcp_) {
     return -1;
   }
   return InsertRTCPPacket((const WebRtc_Word8*) rtcp_packet,
@@ -218,6 +219,14 @@ void ViEReceiver::StartReceive() {
 
 void ViEReceiver::StopReceive() {
   receiving_ = false;
+}
+
+void ViEReceiver::StartRTCPReceive() {
+  receiving_rtcp_ = true;
+}
+
+void ViEReceiver::StopRTCPReceive() {
+  receiving_rtcp_ = false;
 }
 
 int ViEReceiver::StartRTPDump(const char file_nameUTF8[1024]) {

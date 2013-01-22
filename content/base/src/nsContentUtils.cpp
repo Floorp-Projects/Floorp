@@ -6795,3 +6795,45 @@ nsContentUtils::InternalIsSupported(nsISupports* aObject,
   // Otherwise, we claim to support everything
   return true;
 }
+
+AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+  : mCx(nullptr)
+{
+  Init(false MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT);
+}
+
+AutoJSContext::AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : mCx(nullptr)
+{
+  Init(aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT);
+}
+
+void
+AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+{
+  MOZ_ASSERT(!mCx, "mCx should not be initialized!");
+
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  if (!aSafe) {
+    mCx = nsContentUtils::GetCurrentJSContext();
+  }
+
+  if (!mCx) {
+    mCx = nsContentUtils::GetSafeJSContext();
+    bool result = mPusher.Push(mCx);
+    if (!result || !mCx) {
+      MOZ_CRASH();
+    }
+  }
+}
+
+AutoJSContext::operator JSContext*()
+{
+  return mCx;
+}
+
+SafeAutoJSContext::SafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+  : AutoJSContext(true MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
+{
+}

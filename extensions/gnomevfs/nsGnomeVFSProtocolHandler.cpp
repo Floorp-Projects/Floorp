@@ -8,8 +8,9 @@ extern "C" {
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-standard-callbacks.h>
 #include <libgnomevfs/gnome-vfs-mime-utils.h>
-#include <algorithm>
 }
+
+#include <algorithm>
 
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"

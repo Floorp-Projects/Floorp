@@ -150,7 +150,6 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
     blockChain_= NULL;
     JS_ASSERT(!hasBlockChain());
     JS_ASSERT(!hasHookData());
-    JS_ASSERT(annotation() == NULL);
 
     initVarsToUndefined();
 }
@@ -704,6 +703,215 @@ AbstractFramePtr::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
         return asStackFrame()->unaliasedFormal(i, checkAliasing);
     JS_NOT_REACHED("Invalid frame");
     return asStackFrame()->unaliasedFormal(i);
+}
+
+inline JSGenerator *
+AbstractFramePtr::maybeSuspendedGenerator(JSRuntime *rt) const
+{
+    if (isStackFrame())
+        return asStackFrame()->maybeSuspendedGenerator(rt);
+    return NULL;
+}
+
+inline StaticBlockObject *
+AbstractFramePtr::maybeBlockChain() const
+{
+    if (isStackFrame())
+        return asStackFrame()->maybeBlockChain();
+    return NULL;
+}
+inline bool
+AbstractFramePtr::hasCallObj() const
+{
+    if (isStackFrame())
+        return asStackFrame()->hasCallObj();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline bool
+AbstractFramePtr::isGeneratorFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isGeneratorFrame();
+    return false;
+}
+inline bool
+AbstractFramePtr::isYielding() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isYielding();
+    return false;
+}
+inline bool
+AbstractFramePtr::isFunctionFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isFunctionFrame();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline bool
+AbstractFramePtr::isGlobalFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isGlobalFrame();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline bool
+AbstractFramePtr::isEvalFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isEvalFrame();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline bool
+AbstractFramePtr::isFramePushedByExecute() const
+{
+    return isGlobalFrame() || isEvalFrame();
+}
+inline bool
+AbstractFramePtr::isDebuggerFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isDebuggerFrame();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline UnrootedScript
+AbstractFramePtr::script() const
+{
+    if (isStackFrame())
+        return asStackFrame()->script();
+    JS_NOT_REACHED("Invalid frame");
+    return NULL;
+}
+inline JSFunction *
+AbstractFramePtr::fun() const
+{
+    if (isStackFrame())
+        return asStackFrame()->fun();
+    JS_NOT_REACHED("Invalid frame");
+    return NULL;
+}
+inline JSFunction &
+AbstractFramePtr::callee() const
+{
+    if (isStackFrame())
+        return asStackFrame()->callee();
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->callee();
+}
+inline bool
+AbstractFramePtr::isNonEvalFunctionFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isNonEvalFunctionFrame();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline bool
+AbstractFramePtr::isNonStrictDirectEvalFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isNonStrictDirectEvalFrame();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline bool
+AbstractFramePtr::isStrictEvalFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->isStrictEvalFrame();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+
+inline Value *
+AbstractFramePtr::formals() const
+{
+    if (isStackFrame())
+        return asStackFrame()->formals();
+    JS_NOT_REACHED("Invalid frame");
+    return NULL;
+}
+inline Value *
+AbstractFramePtr::actuals() const
+{
+    if (isStackFrame())
+        return asStackFrame()->actuals();
+    JS_NOT_REACHED("Invalid frame");
+    return NULL;
+}
+inline bool
+AbstractFramePtr::hasArgsObj() const
+{
+    if (isStackFrame())
+        return asStackFrame()->hasArgsObj();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline ArgumentsObject &
+AbstractFramePtr::argsObj() const
+{
+    if (isStackFrame())
+        return asStackFrame()->argsObj();
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->argsObj();
+}
+inline void
+AbstractFramePtr::initArgsObj(ArgumentsObject &argsobj) const
+{
+    if (isStackFrame()) {
+        asStackFrame()->initArgsObj(argsobj);
+        return;
+    }
+    JS_NOT_REACHED("Invalid frame");
+}
+inline bool
+AbstractFramePtr::copyRawFrameSlots(AutoValueVector *vec) const
+{
+    if (isStackFrame())
+        return asStackFrame()->copyRawFrameSlots(vec);
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+
+inline bool
+AbstractFramePtr::prevUpToDate() const
+{
+    if (isStackFrame())
+        return asStackFrame()->prevUpToDate();
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+}
+inline void
+AbstractFramePtr::setPrevUpToDate() const
+{
+    if (isStackFrame()) {
+        asStackFrame()->setPrevUpToDate();
+        return;
+    }
+    JS_NOT_REACHED("Invalid frame");
+}
+inline AbstractFramePtr
+AbstractFramePtr::evalPrev() const
+{
+    JS_ASSERT(isEvalFrame());
+    if (isStackFrame())
+        return AbstractFramePtr(asStackFrame()->prev());
+    JS_NOT_REACHED("Invalid frame");
+    return NullFramePtr();
+}
+
+inline Value &
+AbstractFramePtr::thisValue() const
+{
+    if (isStackFrame())
+        return asStackFrame()->thisValue();
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->thisValue();
 }
 
 } /* namespace js */

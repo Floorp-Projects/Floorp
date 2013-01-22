@@ -764,9 +764,7 @@ this.DOMApplicationRegistry = {
 
     switch (aMessage.name) {
       case "Webapps:Install":
-        // always ask for UI to install
         this.doInstall(msg, mm);
-        //Services.obs.notifyObservers(mm, "webapps-ask-install", JSON.stringify(msg));
         break;
       case "Webapps:GetSelf":
         this.getSelf(msg, mm);
@@ -1511,6 +1509,8 @@ this.DOMApplicationRegistry = {
   // Downloads the manifest and run checks, then eventually triggers the
   // installation UI.
   doInstall: function doInstall(aData, aMm) {
+    let app = aData.app;
+
     let sendError = function sendError(aError) {
       aData.error = aError;
       aMm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
@@ -1518,14 +1518,19 @@ this.DOMApplicationRegistry = {
                      ": " + aError);
     }.bind(this);
 
+    // Disallow reinstalls from the same origin for now.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=821288
+    if (this._appId(app.origin) !== null) {
+      sendError("REINSTALL_FORBIDDEN");
+      return;
+    }
+
     // Hosted apps can't be trusted or certified, so just check that the
     // manifest doesn't ask for those.
     function checkAppStatus(aManifest) {
       let manifestStatus = aManifest.type || "web";
       return manifestStatus === "web";
     }
-
-    let app = aData.app;
 
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
@@ -1582,6 +1587,8 @@ this.DOMApplicationRegistry = {
   },
 
   doInstallPackage: function doInstallPackage(aData, aMm) {
+    let app = aData.app;
+
     let sendError = function sendError(aError) {
       aData.error = aError;
       aMm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
@@ -1589,7 +1596,13 @@ this.DOMApplicationRegistry = {
                      app.installOrigin + ": " + aError);
     }.bind(this);
 
-    let app = aData.app;
+    // Disallow reinstalls from the same manifest URL for now.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=821288
+    if (this.getAppLocalIdByManifestURL(app.manifestURL) !==
+        Ci.nsIScriptSecurityManager.NO_APP_ID) {
+      sendError("REINSTALL_FORBIDDEN");
+      return;
+    }
 
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);

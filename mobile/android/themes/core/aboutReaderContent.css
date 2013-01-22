@@ -3,7 +3,7 @@ html {
 }
 
 body {
-  font-family: "OpenSansRegular","Droid Sans",sans-serif;
+  font-family: "Open Sans","Droid Sans",sans-serif;
   margin: 0;
   padding-top: 20px;
   padding-bottom: 20px;
@@ -29,8 +29,8 @@ body {
 }
 
 .header > h1 {
-  font-family: "OpenSansLight","Droid Sans",sans-serif;
-  font-weight: normal;
+  font-family: "Open Sans","Droid Sans",sans-serif;
+  font-weight: 300;
   line-height: 1.1em;
   width: 100%;
   margin: 0px;

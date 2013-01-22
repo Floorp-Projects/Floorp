@@ -156,6 +156,15 @@ var tests = {
     let removeSocialMenuitems = document.getElementsByClassName("social-remove-menuitem");
     is(removeSocialMenuitems.length, 2, "Remove Social menuitems exist");
     next();
-  }
+  },
+  testToggleNotifications: function(next) {
+    let enabled = Services.prefs.getBoolPref("social.toast-notifications.enabled");
+    let cmd = document.getElementById("Social:ToggleNotifications");
+    is(cmd.getAttribute("checked"), enabled ? "true" : "false");
+    enabled = !enabled;
+    Services.prefs.setBoolPref("social.toast-notifications.enabled", enabled);
+    is(cmd.getAttribute("checked"), enabled ? "true" : "false");
+    Services.prefs.clearUserPref("social.toast-notifications.enabled");
+    next();
+  },
 }
-

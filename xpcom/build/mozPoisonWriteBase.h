@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <vector>
 #include "nspr.h"
+#include "mozilla/NullPtr.h"
 #include "mozilla/Util.h"
 #include "mozilla/Scoped.h"
 
