@@ -528,8 +528,8 @@ const DownloadsPanel = {
         this.panel.openPopup(aAnchor, "bottomcenter topright", 0, 0, false,
                              null);
       } else {
-        this.panel.openPopup(document.getElementById("TabsToolbar"),
-                             "after_end", 0, 0, false, null);
+        Components.utils.reportError(
+          "Downloads button cannot be found");
       }
     }.bind(this));
   }
