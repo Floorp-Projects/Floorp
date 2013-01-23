@@ -383,23 +383,6 @@ function check_no_bookmarks() {
   root.containerOpen = false;
 }
 
-
-
-/**
- * Sets title synchronously for a page in moz_places.
- *
- * @param aURI
- *        An nsIURI to set the title for.
- * @param aTitle
- *        The title to set the page to.
- * @throws if the page is not found in the database.
- *
- * @note This is just a test compatibility mock.
- */
-function setPageTitle(aURI, aTitle) {
-  PlacesUtils.history.setPageTitle(aURI, aTitle);
-}
-
 /**
  * Allows waiting for an observer notification once.
  *
