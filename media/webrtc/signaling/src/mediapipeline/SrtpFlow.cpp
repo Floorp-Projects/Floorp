@@ -75,8 +75,8 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   policy.ssrc.type = inbound ? ssrc_any_inbound : ssrc_any_outbound;
   policy.ssrc.value = 0;
   policy.ekt = NULL;
-  policy.window_size = 0;      // Use the default value.
-  policy.allow_repeat_tx = 0;  // TODO(ekr@rtfm.com): revisit?
+  policy.window_size = 1024;   // Use the Chrome value.  Needs to be revisited.  Default is 128
+  policy.allow_repeat_tx = 1;  // Use Chrome value; needed for NACK mode to work
   policy.next = NULL;
 
   // Now make the session
