@@ -1277,7 +1277,7 @@ namespace XrayUtils {
 bool
 IsTransparent(JSContext *cx, JSObject *wrapper)
 {
-    return WrapperFactory::HasWaiveXrayFlag(wrapper);
+    return false;
 }
 
 JSObject *
