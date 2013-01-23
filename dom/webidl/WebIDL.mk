@@ -191,6 +191,7 @@ endif
 ifdef MOZ_WEBRTC
 webidl_files += \
   MediaStreamList.webidl \
+  RTCIceServer.webidl \
   $(NULL)
 endif
 
