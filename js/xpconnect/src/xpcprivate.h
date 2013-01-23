@@ -4342,6 +4342,9 @@ private:
 CompartmentPrivate*
 EnsureCompartmentPrivate(JSObject *obj);
 
+CompartmentPrivate*
+EnsureCompartmentPrivate(JSCompartment *c);
+
 inline CompartmentPrivate*
 GetCompartmentPrivate(JSCompartment *compartment)
 {
