@@ -401,7 +401,7 @@ int nr_ice_candidate_pair_do_triggered_check(nr_ice_peer_ctx *pctx, nr_ice_cand_
   {
     int r,_status;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): triggered check on %s",pctx,pair->as_string);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): triggered check on %s",pctx->label,pair->as_string);
 
     switch(pair->state){
       case NR_ICE_PAIR_STATE_FROZEN:

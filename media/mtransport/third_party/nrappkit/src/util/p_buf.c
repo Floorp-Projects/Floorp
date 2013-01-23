@@ -176,7 +176,7 @@ int nr_p_buf_write_to_chain(ctx,chain,data,len)
       data+=towrite;
       buf->length+=towrite;
 
-      r_log(LOG_COMMON,LOG_DEBUG,"Wrote %d bytes to buffer %d",towrite,buf);
+      r_log(LOG_COMMON,LOG_DEBUG,"Wrote %d bytes to buffer %p",towrite,buf);
       buf=0;
     }
 

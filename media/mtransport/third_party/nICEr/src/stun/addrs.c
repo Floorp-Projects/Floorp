@@ -190,7 +190,7 @@ stun_grab_addrs(char *name, int addrcount, struct ifa_msghdr *ifam, nr_transport
         addrcount--;
 
         if (*count >= maxaddrs) {
-            r_log(NR_LOG_STUN, LOG_WARNING, "Address list truncated at %d out of entries", maxaddrs, maxaddrs+addrcount);
+            r_log(NR_LOG_STUN, LOG_WARNING, "Address list truncated at %d out of %d entries", maxaddrs, maxaddrs+addrcount);
             break;
         }
 

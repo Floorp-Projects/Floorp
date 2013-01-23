@@ -178,7 +178,7 @@ nr_reg_register_callback(NR_registry name, char action, void (*cb)(void *cb_arg,
 
     _status=0;
   abort:
-    r_log(NR_LOG_REGISTRY, LOG_DEBUG, "register callback %X on '%s' for '%s' %s", cb, name, nr_reg_action_name(action), (_status ? "FAILED" : "succeeded"));
+    r_log(NR_LOG_REGISTRY, LOG_DEBUG, "register callback %p on '%s' for '%s' %s", cb, name, nr_reg_action_name(action), (_status ? "FAILED" : "succeeded"));
 
     if (_status) {
       if (create_info && info) RFREE(info);
@@ -231,7 +231,7 @@ nr_reg_unregister_callback(char *name, char action, void (*cb)(void *cb_arg, cha
 
     _status=0;
   abort:
-    r_log(NR_LOG_REGISTRY, LOG_DEBUG, "unregister callback %X on '%s' for '%s' %s", cb, name, nr_reg_action_name(action), (_status ? "FAILED" : "succeeded"));
+    r_log(NR_LOG_REGISTRY, LOG_DEBUG, "unregister callback %p on '%s' for '%s' %s", cb, name, nr_reg_action_name(action), (_status ? "FAILED" : "succeeded"));
 
     return(_status);
 }
@@ -323,7 +323,7 @@ nr_reg_raise_event_recurse(char *name, char *tmp, int action)
 
         if (info->action == action) {
           r_log(NR_LOG_REGISTRY, LOG_DEBUG,
-                "Invoking callback %X for '%s'",
+                "Invoking callback %p for '%s'",
                 info->cb,
                 nr_reg_action_name(info->action));
 
@@ -331,7 +331,7 @@ nr_reg_raise_event_recurse(char *name, char *tmp, int action)
         }
         else {
           r_log(NR_LOG_REGISTRY, LOG_DEBUG,
-                "Skipping callback %X for '%s'",
+                "Skipping callback %p for '%s'",
                 info->cb,
                 nr_reg_action_name(info->action));
         }
