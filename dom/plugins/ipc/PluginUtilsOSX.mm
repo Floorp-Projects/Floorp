@@ -134,9 +134,36 @@ CGBitmapContextSetDataFunc CGBitmapContextSetDataPtr = NULL;
 @end
 
 void* mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance,
-                                                   bool aAvoidCGCrashes)
+                                                   bool aAvoidCGCrashes, double aContentsScaleFactor)
 {
-  CGBridgeLayer *bridgeLayer = [[CGBridgeLayer alloc] init ];
+  CGBridgeLayer *bridgeLayer = [[CGBridgeLayer alloc] init];
+
+  // We need to make bridgeLayer behave properly when its superlayer changes
+  // size (in nsCARenderer::SetBounds()).
+  bridgeLayer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+  bridgeLayer.needsDisplayOnBoundsChange = YES;
+  NSNull *nullValue = [NSNull null];
+  NSDictionary *actions = [NSDictionary dictionaryWithObjectsAndKeys:
+                             nullValue, @"bounds",
+                             nullValue, @"contents",
+                             nullValue, @"contentsRect",
+                             nullValue, @"position",
+                             nil];
+  [bridgeLayer setStyle:[NSDictionary dictionaryWithObject:actions forKey:@"actions"]];
+
+  // For reasons that aren't clear (perhaps one or more OS bugs), we can only
+  // use full HiDPI resolution here if the tree is built with the 10.7 SDK or
+  // up.  If we build with the 10.6 SDK, changing the contentsScale property
+  // of bridgeLayer (even to the same value) causes it to stop working (go
+  // blank).  This doesn't happen with objects that are members of the CALayer
+  // class (as opposed to one of its subclasses).
+#if defined(MAC_OS_X_VERSION_10_7) && \
+    MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+  if ([bridgeLayer respondsToSelector:@selector(setContentsScale:)]) {
+    bridgeLayer.contentsScale = aContentsScaleFactor;
+  }
+#endif
+
   [bridgeLayer setDrawFunc:aFunc
             pluginInstance:aPluginInstance
             avoidCGCrashes:aAvoidCGCrashes];
