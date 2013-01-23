@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+.test {
+  position:fixed;
+  display:none;
+  width:100px; height:100px;
+  background:yellow;
+}
+.doTest .test {
+  display:block;
+}
+</style>
+</head>
+<body>
+<div style="transform:translate(10px,0); overflow:scroll; width:200px; height:200px;">
+  <div class="test"></div>
+</div>
+<script>
+function doTest() {
+  document.documentElement.setAttribute("class", "doTest");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
