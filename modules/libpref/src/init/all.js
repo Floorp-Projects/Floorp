@@ -211,7 +211,6 @@ pref("gfx.color_management.enablev4", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
-pref("gfx.downloadable_fonts.sanitize", true);
 
 pref("gfx.filter.nearest.force-enabled", false);
 
