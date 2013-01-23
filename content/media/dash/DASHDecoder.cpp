@@ -780,6 +780,57 @@ DASHDecoder::LoadAborted()
 }
 
 void
+DASHDecoder::Suspend()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Suspend MPD download if not yet complete.
+  if (!mMPDManager && mResource) {
+    LOG1("Suspending MPD download.");
+    mResource->Suspend(true);
+    return;
+  }
+
+  // Otherwise, forward |Suspend| to active rep decoders.
+  if (AudioRepDecoder()) {
+    LOG("Suspending download for audio decoder [%p].", AudioRepDecoder());
+    AudioRepDecoder()->Suspend();
+  }
+  if (VideoRepDecoder()) {
+    LOG("Suspending download for video decoder [%p].", VideoRepDecoder());
+    VideoRepDecoder()->Suspend();
+  }
+}
+
+void
+DASHDecoder::Resume(bool aForceBuffering)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Resume MPD download if not yet complete.
+  if (!mMPDManager) {
+    if (mResource) {
+      LOG1("Resuming MPD download.");
+      mResource->Resume();
+    }
+    if (aForceBuffering) {
+      ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+      if (mDecoderStateMachine) {
+        mDecoderStateMachine->StartBuffering();
+      }
+    }
+  }
+
+  // Otherwise, forward |Resume| to active rep decoders.
+  if (AudioRepDecoder()) {
+    LOG("Resuming download for audio decoder [%p].", AudioRepDecoder());
+    AudioRepDecoder()->Resume(aForceBuffering);
+  }
+  if (VideoRepDecoder()) {
+    LOG("Resuming download for video decoder [%p].", VideoRepDecoder());
+    VideoRepDecoder()->Resume(aForceBuffering);
+  }
+}
+
+void
 DASHDecoder::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
