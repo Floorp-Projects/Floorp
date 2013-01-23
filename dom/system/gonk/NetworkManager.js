@@ -211,6 +211,10 @@ NetworkManager.prototype = {
             // to set default route only on preferred network
             this.removeDefaultRoute(network.name);
             this.setAndConfigureActive();
+            // Update data connection when Wifi connected/disconnected
+            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+              this.mRIL.updateRILNetworkInterface();
+            }
             // Turn on wifi tethering when the callback is set.
             if (this.waitForConnectionReadyCallback) {
               this.waitForConnectionReadyCallback.call(this);
@@ -225,6 +229,10 @@ NetworkManager.prototype = {
               this.removeHostRoute(network);
             }
             this.setAndConfigureActive();
+            // Update data connection when Wifi connected/disconnected
+            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+              this.mRIL.updateRILNetworkInterface();
+            }
             break;
         }
         break;
@@ -826,6 +834,12 @@ NetworkManager.prototype = {
     }
   }
 };
+
+XPCOMUtils.defineLazyGetter(NetworkManager.prototype, "mRIL", function () {
+    return Cc["@mozilla.org/telephony/system-worker-manager;1"]
+              .getService(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIRadioInterfaceLayer);
+});
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
 
