@@ -43,18 +43,10 @@ FileService::Init()
   mFileStorageInfos.Init();
 
   nsresult rv;
-
   mStreamTransportTarget =
     do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIStreamTransportService> sts =
-    do_QueryInterface(mStreamTransportTarget);
-
-  rv = sts->RaiseThreadLimit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult
