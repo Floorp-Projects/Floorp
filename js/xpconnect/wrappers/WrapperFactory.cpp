@@ -318,8 +318,15 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
                "wrapped object passed to rewrap");
     MOZ_ASSERT(JS_GetClass(obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
 
+    // Compute the information we need to select the right wrapper.
     JSCompartment *origin = js::GetObjectCompartment(obj);
     JSCompartment *target = js::GetContextCompartment(cx);
+    bool originIsChrome = AccessCheck::isChrome(origin);
+    bool targetIsChrome = AccessCheck::isChrome(target);
+    bool originSubsumesTarget = AccessCheck::subsumes(origin, target);
+    bool targetSubsumesOrigin = AccessCheck::subsumes(target, origin);
+    bool sameOrigin = targetSubsumesOrigin && originSubsumesTarget;
+    XrayType xrayType = GetXrayType(obj);
 
     // By default we use the wrapped proto of the underlying object as the
     // prototype for our wrapper, but we may select something different below.
@@ -327,8 +334,8 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
 
     Wrapper *wrapper;
     CompartmentPrivate *targetdata = EnsureCompartmentPrivate(target);
-    if (AccessCheck::isChrome(target)) {
-        if (AccessCheck::isChrome(origin)) {
+    if (targetIsChrome) {
+        if (originIsChrome) {
             wrapper = &CrossCompartmentWrapper::singleton;
         } else {
             if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
@@ -337,10 +344,9 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
                 wrapper = &WaiveXrayWrapper::singleton;
             } else {
                 // Native objects must be wrapped into an X-ray wrapper.
-                XrayType type = GetXrayType(obj);
-                if (type == XrayForDOMObject) {
+                if (xrayType == XrayForDOMObject) {
                     wrapper = &PermissiveXrayDOM::singleton;
-                } else if (type == XrayForWrappedNative) {
+                } else if (xrayType == XrayForWrappedNative) {
                     wrapper = &PermissiveXrayXPCWN::singleton;
                 } else {
                     wrapper = &CrossCompartmentWrapper::singleton;
@@ -349,7 +355,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
         }
     } else if (xpc::IsUniversalXPConnectEnabled(target)) {
         wrapper = &CrossCompartmentWrapper::singleton;
-    } else if (AccessCheck::isChrome(origin)) {
+    } else if (originIsChrome) {
         JSFunction *fun = JS_GetObjectFunction(obj);
         if (fun) {
             if (JS_IsBuiltinEvalFunction(fun) || JS_IsBuiltinFunctionConstructor(fun)) {
@@ -358,10 +364,9 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
             }
         }
 
-        XrayType type = GetXrayType(obj);
-        if (type == XrayForWrappedNative) {
+        if (xrayType == XrayForWrappedNative) {
             wrapper = &FilteringWrapper<SecurityXrayXPCWN, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (type == XrayForDOMObject) {
+        } else if (xrayType == XrayForDOMObject) {
             wrapper = &FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (IsComponentsObject(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
@@ -401,7 +406,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
                 proxyProto = homeProto;
             }
         }
-    } else if (AccessCheck::subsumes(target, origin)) {
+    } else if (targetSubsumesOrigin) {
         // For the same-origin case we use a transparent wrapper, unless one
         // of the following is true:
         // * The object is flagged as needing a SOW.
@@ -411,17 +416,15 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
         //
         // The first two cases always require a security wrapper for non-chrome
         // access, regardless of the origin of the object.
-        XrayType type;
         if (AccessCheck::needsSystemOnlyWrapper(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         OnlyIfSubjectIsSystem>::singleton;
         } else if (IsComponentsObject(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ComponentsObjectPolicy>::singleton;
-        } else if (!targetdata->wantXrays ||
-                   (type = GetXrayType(obj)) == NotXray) {
+        } else if (!targetdata->wantXrays || xrayType == NotXray) {
             wrapper = &CrossCompartmentWrapper::singleton;
-        } else if (type == XrayForDOMObject) {
+        } else if (xrayType == XrayForDOMObject) {
             wrapper = &PermissiveXrayDOM::singleton;
         } else {
             wrapper = &PermissiveXrayXPCWN::singleton;
@@ -432,10 +435,9 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
 
         // Cross origin we want to disallow scripting and limit access to
         // a predefined set of properties.
-        XrayType type = GetXrayType(obj);
-        if (type == NotXray) {
+        if (xrayType == NotXray) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
-        } else if (type == XrayForDOMObject) {
+        } else if (xrayType == XrayForDOMObject) {
             wrapper = &FilteringWrapper<SecurityXrayDOM,
                                         CrossOriginAccessiblePropertiesOnly>::singleton;
         } else {
