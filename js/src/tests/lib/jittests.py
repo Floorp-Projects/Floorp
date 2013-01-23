@@ -138,7 +138,7 @@ def find_tests(dir, substring = None):
                 ans.append(test)
     return ans
 
-def get_test_cmd(path, jitflags, lib_dir, shell_args):
+def get_test_cmd(js, path, jitflags, lib_dir, shell_args):
     libdir_var = lib_dir
     if not libdir_var.endswith('/'):
         libdir_var += '/'
@@ -149,7 +149,7 @@ def get_test_cmd(path, jitflags, lib_dir, shell_args):
             % (sys.platform, libdir_var, scriptdir_var))
     # We may have specified '-a' or '-d' twice: once via --jitflags, once
     # via the "|jit-test|" line.  Remove dups because they are toggles.
-    return ([ JS ] + list(set(jitflags)) + shell_args +
+    return ([js] + list(set(jitflags)) + shell_args +
             [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'), '-f', path ])
 
 def tmppath(token):
@@ -238,7 +238,7 @@ def run_cmd_avoid_stdio(cmdline, env, timeout):
     return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
 def run_test(test, lib_dir, shell_args, options):
-    cmd = get_test_cmd(test.path, test.jitflags, lib_dir, shell_args)
+    cmd = get_test_cmd(options.js_shell, test.path, test.jitflags, lib_dir, shell_args)
 
     if (test.valgrind and
         any([os.path.exists(os.path.join(d, 'valgrind'))
@@ -307,15 +307,9 @@ def print_tinderbox(label, test, message=None):
         result += ": " + message
     print(result)
 
-def wrap_parallel_run_test(test, lib_dir, shell_args, resultQueue, options, js):
-    # This is necessary because on Windows global variables are not automatically
-    # available in the children, while on Linux and OSX this is the case (because of fork).
-    global JS
-    JS = js
-
+def wrap_parallel_run_test(test, lib_dir, shell_args, resultQueue, options):
     # Ignore SIGINT in the child
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-
     result = run_test(test, lib_dir, shell_args, options) + (test,)
     resultQueue.put(result)
     return result
@@ -338,7 +332,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
     result_process_return_queue = queue_manager.Queue()
     result_process = Process(target=process_test_results_parallel,
                              args=(async_test_result_queue, result_process_return_queue,
-                                   notify_queue, len(tests), options, JS, lib_dir, shell_args))
+                                   notify_queue, len(tests), options, lib_dir, shell_args))
     result_process.start()
 
     # Ensure that a SIGTERM is handled the same way as SIGINT
@@ -368,7 +362,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
         while notify_queue.get():
             if (testcnt < len(tests)):
                 # Start one new worker
-                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], lib_dir, shell_args, async_test_result_queue, options, JS))
+                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], lib_dir, shell_args, async_test_result_queue, options))
                 worker_processes.append(worker_process)
                 worker_process.start()
                 testcnt += 1
@@ -417,9 +411,9 @@ def get_parallel_results(async_test_result_queue, notify_queue):
 
         yield async_test_result
 
-def process_test_results_parallel(async_test_result_queue, return_queue, notify_queue, num_tests, options, js, lib_dir, shell_args):
+def process_test_results_parallel(async_test_result_queue, return_queue, notify_queue, num_tests, options, lib_dir, shell_args):
     gen = get_parallel_results(async_test_result_queue, notify_queue)
-    ok = process_test_results(gen, num_tests, options, js, lib_dir, shell_args)
+    ok = process_test_results(gen, num_tests, options, lib_dir, shell_args)
     return_queue.put(ok)
 
 def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
@@ -446,7 +440,7 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
 
         def show_test(test):
             if options.show_failed:
-                print('    ' + subprocess.list2cmdline(get_test_cmd(test.path, test.jitflags, lib_dir, shell_args)))
+                print('    ' + subprocess.list2cmdline(get_test_cmd(options.js_shell, test.path, test.jitflags, lib_dir, shell_args)))
             else:
                 print('    ' + ' '.join(test.jitflags + [test.path]))
 
@@ -465,7 +459,7 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)' % doing))
         return True
 
-def process_test_results(results, num_tests, options, js, lib_dir, shell_args):
+def process_test_results(results, num_tests, options, lib_dir, shell_args):
     pb = NullProgressBar()
     if not options.hide_progress and not options.show_cmd and ProgressBar.conservative_isatty():
         fmt = [
@@ -524,7 +518,7 @@ def get_serial_results(tests, lib_dir, shell_args, options):
 
 def run_tests(tests, test_dir, lib_dir, shell_args, options):
     gen = get_serial_results(tests, lib_dir, shell_args, options)
-    ok = process_test_results(gen, len(tests), options, JS, lib_dir, shell_args)
+    ok = process_test_results(gen, len(tests), options, lib_dir, shell_args)
     return ok
 
 def parse_jitflags(options):
@@ -551,9 +545,7 @@ def platform_might_be_android():
 def stdio_might_be_broken():
     return platform_might_be_android()
 
-JS = None
 def main(argv):
-    global JS
 
     script_path = os.path.abspath(sys.modules['__main__'].__file__)
     script_dir = os.path.dirname(script_path)
@@ -621,7 +613,7 @@ def main(argv):
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
     # We need to make sure we are using backslashes on Windows.
-    JS, test_args = os.path.abspath(args[0]), args[1:]
+    options.js_shell, test_args = os.path.abspath(args[0]), args[1:]
 
     if stdio_might_be_broken():
         # Prefer erring on the side of caution and not using stdio if
@@ -726,7 +718,7 @@ def main(argv):
             sys.exit(1)
 
         tc = job_list[0]
-        cmd = [ 'gdb', '--args' ] + get_test_cmd(tc.path, tc.jitflags, lib_dir, shell_args)
+        cmd = ['gdb', '--args'] + get_test_cmd(options.js_shell, tc.path, tc.jitflags, lib_dir, shell_args)
         call(cmd)
         sys.exit()
 
@@ -739,8 +731,8 @@ def main(argv):
         if not ok:
             sys.exit(2)
     except OSError:
-        if not os.path.exists(JS):
-            print("JS shell argument: file does not exist: '%s'" % JS, file=sys.stderr)
+        if not os.path.exists(options.js_shell):
+            print >> sys.stderr, "JS shell argument: file does not exist: '%s'"%options.js_shell
             sys.exit(1)
         else:
             raise
