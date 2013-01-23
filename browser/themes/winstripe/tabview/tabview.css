@@ -10,7 +10,7 @@ body {
 
 #bg:not(:-moz-system-metric(windows-compositor)) {
   background: url("chrome://browser/skin/tabview/grain.png") repeat scroll center top,
-              -moz-linear-gradient(center top , #CCD9EA, #C7D5E7) repeat scroll 0 0 transparent;
+              linear-gradient(#CCD9EA, #C7D5E7) repeat scroll 0 0;
 }
 
 /* Tabs
