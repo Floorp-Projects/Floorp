@@ -25,9 +25,9 @@ enum AllowOfflineRendererEnum { ALLOW_OFFLINE_RENDERER, DISALLOW_OFFLINE_RENDERE
 
 class nsCARenderer : public mozilla::RefCounted<nsCARenderer> {
 public:
-  nsCARenderer() : mCARenderer(nullptr), mFBOTexture(0), mOpenGLContext(nullptr),
-                   mCGImage(nullptr), mCGData(nullptr), mIOSurface(nullptr), mFBO(0),
-                   mIOTexture(0),
+  nsCARenderer() : mCARenderer(nullptr), mWrapperCALayer(nullptr), mFBOTexture(0),
+                   mOpenGLContext(nullptr), mCGImage(nullptr), mCGData(nullptr),
+                   mIOSurface(nullptr), mFBO(0), mIOTexture(0),
                    mUnsupportedWidth(UINT32_MAX), mUnsupportedHeight(UINT32_MAX),
                    mAllowOfflineRenderer(DISALLOW_OFFLINE_RENDERER),
                    mContentsScaleFactor(1.0) {}
@@ -62,7 +62,7 @@ public:
 
   // Remove & Add the layer without destroying
   // the renderer for fast back buffer swapping.
-  void DettachCALayer();
+  void DetachCALayer();
   void AttachCALayer(void *aCALayer);
 #ifdef DEBUG
   static void SaveToDisk(MacIOSurface *surf);
@@ -77,6 +77,7 @@ private:
   void Destroy();
 
   void *mCARenderer;
+  void *mWrapperCALayer;
   GLuint                    mFBOTexture;
   _CGLContextObject        *mOpenGLContext;
   CGImageRef                mCGImage;
