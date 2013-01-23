@@ -283,15 +283,6 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     return DoubleWrap(cx, obj, flags);
 }
 
-static XPCWrappedNative *
-GetWrappedNative(JSContext *cx, JSObject *obj)
-{
-    obj = JS_ObjectToInnerObject(cx, obj);
-    return IS_WN_WRAPPER(obj)
-           ? static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj))
-           : nullptr;
-}
-
 #ifdef DEBUG
 static void
 DEBUG_CheckUnwrapSafety(JSObject *obj, js::Wrapper *handler,
@@ -367,11 +358,10 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
             }
         }
 
-        XPCWrappedNative *wn;
-        if ((wn = GetWrappedNative(cx, obj)) &&
-            wn->HasProto() && wn->GetProto()->ClassIsDOMObject()) {
+        XrayType type = GetXrayType(obj);
+        if (type == XrayForWrappedNative) {
             wrapper = &FilteringWrapper<SecurityXrayXPCWN, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (mozilla::dom::UseDOMXray(obj)) {
+        } else if (type == XrayForDOMObject) {
             wrapper = &FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (IsComponentsObject(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
