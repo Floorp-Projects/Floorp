@@ -117,6 +117,21 @@ public:
   // |mVideoSubsegmentIdx|.
   void SetSubsegmentIndex(DASHRepDecoder* aRepDecoder,
                           int32_t aSubsegmentIdx);
+
+  // Suspend any media downloads that are in progress. Called by the
+  // media element when it is sent to the bfcache, or when we need
+  // to throttle the download. Call on the main thread only. This can
+  // be called multiple times, there's an internal "suspend count".
+  void Suspend() MOZ_OVERRIDE;
+
+  // Resume any media downloads that have been suspended. Called by the
+  // media element when it is restored from the bfcache, or when we need
+  // to stop throttling the download. Call on the main thread only.
+  // The download will only actually resume once as many Resume calls
+  // have been made as Suspend calls. When aForceBuffering is true,
+  // we force the decoder to go into buffering state before resuming
+  // playback.
+  void Resume(bool aForceBuffering) MOZ_OVERRIDE;
 private:
   // Increments the byte range index for audio|video downloads. Will only
   // increment for current active decoders. Could be called from any thread.
