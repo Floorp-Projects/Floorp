@@ -5237,8 +5237,12 @@ dnl the master list above.
 if test -n "$MOZ_WEBRTC"; then
     case "$target" in
     *-android*|*-linuxandroid*)
-        dnl Make sure doesn't get matched by *-linux*
-        MOZ_WEBRTC=
+        if test -n "$MOZ_B2G"; then
+            MOZ_WEBRTC=1
+        else
+            dnl Make sure doesn't get matched by *-linux*
+            MOZ_WEBRTC=
+        fi
         ;;
     *-linux*|*-mingw*|*-darwin*)
         dnl Leave enabled
@@ -5266,18 +5270,20 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
 
-    dnl OpenSLES is only available in Android 2.3 and later; we'll change this
-    dnl hard dependency to a dynamic load with graceful runtime failure before
-    dnl we make --enable-webrtc on by default in Android (bug 815905)
-    dnl
-    if test "$OS_TARGET" = "Android"; then
-       LDFLAGS="$LDFLAGS -lOpenSLES"
+    if test "$MOZ_WIDGET_TOOLKIT" != "gonk"; then
+       dnl OpenSLES is only available in Android 2.3 and later; we'll change this
+       dnl hard dependency to a dynamic load with graceful runtime failure before
+       dnl we make --enable-webrtc on by default in Android (bug 815905)
+       dnl
+       if test "$OS_TARGET" = "Android"; then
+          LDFLAGS="$LDFLAGS -lOpenSLES"
+       fi
+       case "$target" in
+          *-android*|*-linuxandroid*)
+          LDFLAGS="$LDFLAGS -lOpenSLES"
+          ;;
+       esac
     fi
-    case "$target" in
-    *-android*|*-linuxandroid*)
-       LDFLAGS="$LDFLAGS -lOpenSLES"
-       ;;
-    esac
 
 dnl enable once Signaling lands
     MOZ_WEBRTC_SIGNALING=1
@@ -9009,20 +9015,34 @@ if test "${OS_TARGET}" = "WINNT"; then
    EXTRA_GYP_DEFINES="-D MSVS_VERSION=${_MSVS_VERSION} -D MSVS_OS_BITS=${OS_BITS}"
 
 elif test "${OS_TARGET}" = "Android"; then
-   EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
+   if test "${MOZ_WIDGET_TOOLKIT}" != "gonk"; then
+      EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
+   fi
    if test -n "$ARM_ARCH" && test "$ARM_ARCH" -lt 7; then
-      EXTRA_GYP_DEFINES+=" -D armv7=0 "
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
    else
-      EXTRA_GYP_DEFINES+=" -D armv7=1 "
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=1 "
    fi
 fi
 
 if test -n "$MOZ_WEBRTC"; then
    AC_MSG_RESULT("generating WebRTC Makefiles...")
 
+   if test "${MOZ_WIDGET_TOOLKIT}" = "gonk"; then
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D moz_widget_toolkit_gonk=1"
+   else
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D moz_widget_toolkit_gonk=0"
+   fi
+
 dnl Any --include files must also appear in -D FORCED_INCLUDE_FILE= entries
 dnl so that regeneration via dependencies works correctly
    WEBRTC_CONFIG="-D build_with_mozilla=1 --include ${srcdir}/media/webrtc/webrtc_config.gypi -D FORCED_INCLUDE_FILE=${srcdir}/media/webrtc/webrtc_config.gypi"
+
+   if test -n HAVE_CLOCK_MONOTONIC; then
+      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D moz_have_clock_monotonic=1"
+   else
+      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D moz_have_clock_monotonic=0"
+   fi
 
    GYP_WEBRTC_OPTIONS="--format=mozmake ${WEBRTC_CONFIG} -D target_arch=${WEBRTC_TARGET_ARCH} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
 
