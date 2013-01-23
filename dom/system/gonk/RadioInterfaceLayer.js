@@ -1143,10 +1143,16 @@ RadioInterfaceLayer.prototype = {
             "or doesn't have data connection.");
       return;
     }
+    let wifi_active = false;
+    if (gNetworkManager.active &&
+        gNetworkManager.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+      wifi_active = true;
+    }
 
     if (this.dataNetworkInterface.connected &&
         (!this.dataCallSettings["enabled"] ||
-         (dataInfo.roaming && !this.dataCallSettings["roaming_enabled"]))) {
+         (dataInfo.roaming && !this.dataCallSettings["roaming_enabled"]) ||
+         (wifi_active && this.shareDefaultAPNCounter == 0))) {
       debug("Data call settings: disconnect data call.");
       this.dataNetworkInterface.disconnect();
       return;
@@ -1157,6 +1163,10 @@ RadioInterfaceLayer.prototype = {
     }
     if (dataInfo.roaming && !this.dataCallSettings["roaming_enabled"]) {
       debug("We're roaming, but data roaming is disabled.");
+      return;
+    }
+    if (wifi_active && this.shareDefaultAPNCounter == 0) {
+      debug("Don't connect data call when Wifi is connected.");
       return;
     }
     if (this._changingRadioPower) {
@@ -2514,9 +2524,16 @@ RadioInterfaceLayer.prototype = {
     }
   },
 
+  /**
+   * Number of activated secondary APN data call that shares with default APN.
+   */
+  shareDefaultAPNCounter: 0,
+
   setupDataCallByType: function setupDataCallByType(apntype) {
     if (apntype != "default" && this.usingDefaultAPN(apntype)) {
-      debug("Secondary APN type " + apntype + " goes through default APN, nothing to do.");
+      debug("Setup secondary APN type " + apntype + " which goes through default APN.");
+      this.shareDefaultAPNCounter++;
+      this.updateRILNetworkInterface();
       return;
     }
     switch (apntype) {
@@ -2537,7 +2554,11 @@ RadioInterfaceLayer.prototype = {
 
   deactivateDataCallByType: function deactivateDataCallByType(apntype) {
     if (apntype != "default" && this.usingDefaultAPN(apntype)) {
-      debug("Secondary APN type " + apntype + " goes through default APN, nothing to do.");
+      debug("Deactivate secondary APN type " + apntype + " which goes through default APN.");
+      if (this.shareDefaultAPNCounter > 0) {
+        this.shareDefaultAPNCounter--;
+        this.updateRILNetworkInterface();
+      }
       return;
     }
     switch (apntype) {
