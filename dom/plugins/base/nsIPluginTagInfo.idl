@@ -25,7 +25,7 @@ interface nsIDOMElement;
  * Some day this might get superseded by a DOM API.
  */
 
-[uuid(ED83A4D9-77D2-40EA-B140-F160EDB3FE1C)]
+[uuid(759a955e-c590-419a-b5f3-e54bb67e24b8)]
 interface nsIPluginTagInfo : nsISupports
 {
   /**
@@ -57,11 +57,6 @@ interface nsIPluginTagInfo : nsISupports
    * plugin.  Currently supported tags are EMBED, OBJECT and APPLET.
    */
   readonly attribute nsPluginTagType tagType;
-
-  /**
-   * Get the complete text of the HTML tag that was used to instantiate this plugin.
-   */
-  void getTagText(out constCharPtr aTagText);
 
   /**
    * Get a ptr to the paired list of parameter names and values,
