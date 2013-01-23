@@ -7,7 +7,12 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-function run_test_on_service() {
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+const Cu = Components.utils;
+
+function run_test() {
   var am = Cc["@mozilla.org/network/http-auth-manager;1"].
            getService(Ci.nsIHttpAuthManager);
 
@@ -97,7 +102,3 @@ function run_test_on_service() {
   }
 }
 
-// Support running tests on both the service itself and its wrapper
-function run_test() {
-  run_test_on_all_services();
-}
