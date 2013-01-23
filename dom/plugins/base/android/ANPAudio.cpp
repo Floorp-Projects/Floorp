@@ -14,6 +14,7 @@
 #include "ANPBase.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Mutex.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPluginsAudio" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_audio_##name
@@ -97,6 +98,8 @@ struct ANPAudioTrack {
   unsigned int isStopped;
   unsigned int keepGoing;
 
+  mozilla::Mutex* lock;
+
   void* user;
   ANPAudioCallbackProc proc;
   ANPSampleFormat format;
@@ -142,13 +145,20 @@ AudioRunnable::Run()
   buffer.format = mTrack->format;
   buffer.bufferData = (void*) byte;
 
-  while (mTrack->keepGoing)
+  while (true)
   {
     // reset the buffer size
     buffer.size = mTrack->bufferSize;
+    
+    {
+      mozilla::MutexAutoLock lock(*mTrack->lock);
 
-    // Get data from the plugin
-    mTrack->proc(kMoreData_ANPAudioEvent, mTrack->user, &buffer);
+      if (!mTrack->keepGoing)
+        break;
+
+      // Get data from the plugin
+      mTrack->proc(kMoreData_ANPAudioEvent, mTrack->user, &buffer);
+    }
 
     if (buffer.size == 0) {
       LOG("%p - kMoreData_ANPAudioEvent", mTrack);
@@ -177,6 +187,8 @@ AudioRunnable::Run()
 
   jenv->DeleteGlobalRef(mTrack->output_unit);
   jenv->DeleteGlobalRef(mTrack->at_class);
+
+  delete mTrack->lock;
 
   free(mTrack);
 
@@ -210,6 +222,7 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
   s->user = user;
   s->proc = proc;
   s->format = format;
+  s->lock = new mozilla::Mutex("ANPAudioTrack");
 
   int jformat;
   switch (format) {
@@ -275,6 +288,7 @@ anp_audio_deleteTrack(ANPAudioTrack* s)
     return;
   }
 
+  mozilla::MutexAutoLock lock(*s->lock);
   s->keepGoing = false;
 
   // deallocation happens in the AudioThread.  There is a
