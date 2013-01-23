@@ -222,7 +222,7 @@ class TestSimpleManifestSink(unittest.TestCase):
             'bin/foo/qux',
             'bin/foo/chrome.manifest',
             'bin/bar',
-            'bin/**/chrome.manifest'
+            'bin/chrome.manifest'
         ])
 
 
