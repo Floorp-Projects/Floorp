@@ -7,65 +7,16 @@
 
 #ifdef DEBUG
 
+// We can't forward declare an enum before C++11 which means we have to include
+// nsPresContext.h just because nsLayoutPhase is passed to the ctor.
 #include "nsPresContext.h"
-#include "nsContentUtils.h"
 
 struct nsAutoLayoutPhase {
-  nsAutoLayoutPhase(nsPresContext* aPresContext, nsLayoutPhase aPhase)
-    : mPresContext(aPresContext), mPhase(aPhase), mCount(0)
-  {
-    Enter();
-  }
+  nsAutoLayoutPhase(nsPresContext* aPresContext, nsLayoutPhase aPhase);
+  ~nsAutoLayoutPhase();
 
-  ~nsAutoLayoutPhase()
-  {
-    Exit();
-    NS_ASSERTION(mCount == 0, "imbalanced");
-  }
-
-  void Enter()
-  {
-    switch (mPhase) {
-      case eLayoutPhase_Paint:
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
-                     "recurring into paint");
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
-                     "painting in the middle of reflow");
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
-                     "painting in the middle of frame construction");
-        break;
-      case eLayoutPhase_Reflow:
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
-                     "reflowing in the middle of a paint");
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
-                     "recurring into reflow");
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
-                     "reflowing in the middle of frame construction");
-        break;
-      case eLayoutPhase_FrameC:
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
-                     "constructing frames in the middle of a paint");
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
-                     "constructing frames in the middle of reflow");
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
-                     "recurring into frame construction");
-        NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
-                     "constructing frames and scripts are not blocked");
-        break;
-      default:
-        break;
-    }
-    ++(mPresContext->mLayoutPhaseCount[mPhase]);
-    ++mCount;
-  }
-
-  void Exit()
-  {
-    NS_ASSERTION(mCount > 0 && mPresContext->mLayoutPhaseCount[mPhase] > 0,
-                 "imbalanced");
-    --(mPresContext->mLayoutPhaseCount[mPhase]);
-    --mCount;
-  }
+  void Enter();
+  void Exit();
 
 private:
   nsPresContext* mPresContext;
@@ -84,7 +35,7 @@ private:
     autoLayoutPhase.Enter(); \
   PR_END_MACRO
 
-#else
+#else // DEBUG
 
 #define AUTO_LAYOUT_PHASE_ENTRY_POINT(pc_, phase_) \
   PR_BEGIN_MACRO PR_END_MACRO
@@ -93,6 +44,6 @@ private:
 #define LAYOUT_PHASE_TEMP_REENTER() \
   PR_BEGIN_MACRO PR_END_MACRO
 
-#endif
+#endif // DEBUG
 
 #endif // nsAutoLayoutPhase_h
