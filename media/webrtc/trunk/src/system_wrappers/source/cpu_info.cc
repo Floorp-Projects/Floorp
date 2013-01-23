@@ -40,7 +40,7 @@ WebRtc_UWord32 CpuInfo::DetectNumberOfCores()
         WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1,
                      "Available number of cores:%d", _numberOfCores);
 
-#elif defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
+#elif defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID) && !defined(WEBRTC_GONK)
         _numberOfCores = get_nprocs();
         WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1,
                      "Available number of cores:%d", _numberOfCores);
