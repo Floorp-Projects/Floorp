@@ -496,6 +496,15 @@ function getPlayableAudio(candidates) {
   return null;
 }
 
+// Returns the type of element that should be created for the given mimetype.
+function getMajorMimeType(mimetype) {
+  if (/^video/.test(mimetype) || /^application\/dash\+xml/.test(mimetype)) {
+    return "video";
+  } else {
+    return "audio";
+  }
+}
+
 // Number of tests to run in parallel. Warning: Each media element requires
 // at least 3 threads (4 on Linux), and on Linux each thread uses 10MB of
 // virtual address space. Beware!
