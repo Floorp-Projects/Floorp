@@ -13,7 +13,6 @@
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/ErrorResult.h"
-#include "nsContentUtils.h"
 #include "nsIDOMHTMLMenuElement.h"
 #include "mozilla/dom/ValidityState.h"
 
