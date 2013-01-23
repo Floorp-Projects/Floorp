@@ -433,11 +433,15 @@ input.name::-moz-placeholder {
   color: transparent;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);
   background-repeat: no-repeat;
-  -moz-padding-start: 20px;
 }
 
 .title-container:hover input.name::-moz-placeholder {
   color: GrayText;
+  background-image: none;
+}
+
+input.name:focus::-moz-placeholder {
+  background-image: none;
 }
 
 .title-shield {
