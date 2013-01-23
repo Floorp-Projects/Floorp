@@ -38,6 +38,7 @@ MOCHITEST_FILES = \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
 		can_play_type_webm.js \
+   can_play_type_dash.js \
 		can_play_type_mpeg.js \
 		cancellable_request.sjs \
 		dynamic_redirect.sjs \
@@ -335,6 +336,20 @@ else
 MOCHITEST_FILES += \
 		test_can_play_type_no_webm.html \
 		$(NULL)
+endif
+
+ifdef MOZ_DASH
+MOCHITEST_FILES += \
+    test_can_play_type_dash.html \
+    dash/dash-manifest.mpd \
+    dash/dash-webm-video-320x180.webm \
+    dash/dash-webm-video-428x240.webm \
+    dash/dash-webm-audio-128k.webm \
+    $(NULL)
+else
+MOCHITEST_FILES += \
+    test_can_play_type_no_dash.html \
+    $(NULL)
 endif
 
 ifdef MOZ_WAVE
