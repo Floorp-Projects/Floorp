@@ -51,7 +51,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
   }
 
   gfxRect maskArea = nsSVGUtils::GetRelativeRect(units,
-    &mask->mLengthAttributes[SVGMaskElement::X], bbox, aParent);
+    &mask->mLengthAttributes[SVGMaskElement::ATTR_X], bbox, aParent);
 
   gfxContext *gfx = aContext->ThebesContext();
 

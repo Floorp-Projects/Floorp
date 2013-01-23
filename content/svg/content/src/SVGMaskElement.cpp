@@ -8,6 +8,8 @@
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGMaskElement.h"
+#include "mozilla/dom/SVGMaskElementBinding.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
 
 DOMCI_NODE_DATA(SVGMaskElement, mozilla::dom::SVGMaskElement)
 
@@ -15,6 +17,12 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Mask)
 
 namespace mozilla {
 namespace dom {
+
+JSObject*
+SVGMaskElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return SVGMaskElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 //--------------------- Masks ------------------------
 
@@ -57,6 +65,7 @@ NS_INTERFACE_MAP_END_INHERITING(SVGMaskElementBase)
 SVGMaskElement::SVGMaskElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGMaskElementBase(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
@@ -70,37 +79,79 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMaskElement)
 /* readonly attribute nsIDOMSVGAnimatedEnumeration maskUnits; */
 NS_IMETHODIMP SVGMaskElement::GetMaskUnits(nsIDOMSVGAnimatedEnumeration * *aMaskUnits)
 {
-  return mEnumAttributes[MASKUNITS].ToDOMAnimatedEnum(aMaskUnits, this);
+  *aMaskUnits = MaskUnits().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGMaskElement::MaskUnits()
+{
+  return mEnumAttributes[MASKUNITS].ToDOMAnimatedEnum(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration maskContentUnits; */
 NS_IMETHODIMP SVGMaskElement::GetMaskContentUnits(nsIDOMSVGAnimatedEnumeration * *aMaskUnits)
 {
-  return mEnumAttributes[MASKCONTENTUNITS].ToDOMAnimatedEnum(aMaskUnits, this);
+  *aMaskUnits = MaskContentUnits().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGMaskElement::MaskContentUnits()
+{
+  return mEnumAttributes[MASKCONTENTUNITS].ToDOMAnimatedEnum(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP SVGMaskElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
+  *aX = X().get();
+  return NS_OK;
+}
+
+already_AddRefed<SVGAnimatedLength>
+SVGMaskElement::X()
+{
+  return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP SVGMaskElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
+  *aY = Y().get();
+  return NS_OK;
+}
+
+already_AddRefed<SVGAnimatedLength>
+SVGMaskElement::Y()
+{
+  return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP SVGMaskElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
+  *aWidth = Width().get();
+  return NS_OK;
+}
+
+already_AddRefed<SVGAnimatedLength>
+SVGMaskElement::Width()
+{
+  return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP SVGMaskElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
+  *aHeight = Height().get();
+  return NS_OK;
+}
+
+already_AddRefed<SVGAnimatedLength>
+SVGMaskElement::Height()
+{
+  return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------
@@ -109,10 +160,10 @@ NS_IMETHODIMP SVGMaskElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 /* virtual */ bool
 SVGMaskElement::HasValidDimensions() const
 {
-  return (!mLengthAttributes[WIDTH].IsExplicitlySet() ||
-           mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
-         (!mLengthAttributes[HEIGHT].IsExplicitlySet() || 
-           mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() > 0);
+  return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
+           mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
+         (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||
+           mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
 nsSVGElement::LengthAttributesInfo
