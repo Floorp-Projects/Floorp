@@ -3184,7 +3184,7 @@ js::DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
  *   - Otherwise no property was resolved. Set *propp = NULL and *recursedp = false
  *     and return true.
  */
-static JSBool
+static JS_ALWAYS_INLINE JSBool
 CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
               MutableHandleObject objp, MutableHandleShape propp, bool *recursedp)
 {
@@ -3242,7 +3242,7 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     }
 
     if (JSID_IS_INT(id) && objp->containsDenseElement(JSID_TO_INT(id))) {
-        MarkDenseElementFound(propp);
+        MarkDenseElementFound<ALLOW_GC>(propp);
         return true;
     }
 
@@ -3255,20 +3255,27 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
+template <AllowGC allowGC>
 static JS_ALWAYS_INLINE bool
-LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                              MutableHandleObject objp, MutableHandleShape propp)
+LookupPropertyWithFlagsInline(JSContext *cx,
+                              typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+                              typename MaybeRooted<jsid, allowGC>::HandleType id,
+                              unsigned flags,
+                              typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+                              typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
-    AssertCanGC();
+    if (allowGC)
+        AssertCanGC();
 
     /* Search scopes starting with obj and following the prototype link. */
-    RootedObject current(cx, obj);
+    typename MaybeRooted<JSObject*, allowGC>::RootType current(cx, obj);
+
     while (true) {
         /* Search for a native dense element or property. */
         {
             if (JSID_IS_INT(id) && current->containsDenseElement(JSID_TO_INT(id))) {
                 objp.set(current);
-                MarkDenseElementFound(propp);
+                MarkDenseElementFound<allowGC>(propp);
                 return true;
             }
 
@@ -3282,9 +3289,20 @@ LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsi
 
         /* Try obj's class resolve hook if id was not found in obj's scope. */
         if (current->getClass()->resolve != JS_ResolveStub) {
-            bool recursed;
-            if (!CallResolveOp(cx, current, id, flags, objp, propp, &recursed))
+            if (!allowGC)
                 return false;
+            bool recursed;
+            if (!CallResolveOp(cx,
+                               MaybeRooted<JSObject*, allowGC>::toHandle(current),
+                               MaybeRooted<jsid, allowGC>::toHandle(id),
+                               flags,
+                               MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                               MaybeRooted<Shape*, allowGC>::toMutableHandle(propp),
+                               &recursed))
+            {
+                return false;
+            }
+
             if (recursed)
                 break;
             if (propp) {
@@ -3296,15 +3314,18 @@ LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsi
             }
         }
 
-        RootedObject proto(cx);
-        if (!JSObject::getProto(cx, current, &proto))
-            return false;
+        typename MaybeRooted<JSObject*, allowGC>::RootType proto(cx, current->getProto());
+
         if (!proto)
             break;
         if (!proto->isNative()) {
-            if (!JSObject::lookupGeneric(cx, proto, id, objp, propp))
+            if (!allowGC)
                 return false;
-            return true;
+            return JSObject::lookupGeneric(cx,
+                                           MaybeRooted<JSObject*, allowGC>::toHandle(proto),
+                                           MaybeRooted<jsid, allowGC>::toHandle(id),
+                                           MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                                           MaybeRooted<Shape*, allowGC>::toMutableHandle(propp));
         }
 
         current = proto;
@@ -3319,7 +3340,7 @@ JS_FRIEND_API(JSBool)
 baseops::LookupProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
                         MutableHandleShape propp)
 {
-    return LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp);
+    return LookupPropertyWithFlagsInline<ALLOW_GC>(cx, obj, id, cx->resolveFlags, objp, propp);
 }
 
 JS_FRIEND_API(JSBool)
@@ -3330,14 +3351,14 @@ baseops::LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
     if (!IndexToId(cx, index, &id))
         return false;
 
-    return LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp);
+    return LookupPropertyWithFlagsInline<ALLOW_GC>(cx, obj, id, cx->resolveFlags, objp, propp);
 }
 
 bool
 js::LookupPropertyWithFlags(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                             MutableHandleObject objp, MutableHandleShape propp)
 {
-    return LookupPropertyWithFlagsInline(cx, obj, id, flags, objp, propp);
+    return LookupPropertyWithFlagsInline<ALLOW_GC>(cx, obj, id, flags, objp, propp);
 }
 
 bool
@@ -3358,6 +3379,32 @@ js::LookupName(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
     objp.set(NULL);
     pobjp.set(NULL);
     propp.set(NULL);
+    return true;
+}
+
+bool
+js::LookupNameNoGC(JSContext *cx, PropertyName *name, JSObject *scopeChain,
+                   JSObject **objp, JSObject **pobjp, Shape **propp)
+{
+    AutoAssertNoGC nogc;
+
+    JS_ASSERT(!*objp && !*pobjp && !*propp);
+
+    for (JSObject *scope = scopeChain; scope; scope = scope->enclosingScope()) {
+        if (scope->getOps()->lookupGeneric)
+            return false;
+        if (!LookupPropertyWithFlagsInline<DONT_ALLOW_GC>(cx, scope, NameToId(name),
+                                                          cx->resolveFlags, pobjp, propp))
+        {
+            JS_ASSERT(!cx->isExceptionPending());
+            return false;
+        }
+        if (*propp) {
+            *objp = scope;
+            return true;
+        }
+    }
+
     return true;
 }
 
@@ -3481,7 +3528,7 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
     /* This call site is hot -- use the always-inlined variant of LookupPropertyWithFlags(). */
     RootedObject obj2(cx);
     RootedShape shape(cx);
-    if (!LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, &obj2, &shape))
+    if (!LookupPropertyWithFlagsInline<ALLOW_GC>(cx, obj, id, cx->resolveFlags, &obj2, &shape))
         return false;
 
     if (!shape) {
@@ -4116,8 +4163,10 @@ baseops::DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 }
 
 bool
-js::HasDataProperty(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
+js::HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
+    AutoAssertNoGC nogc;
+
     if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
         *vp = obj->getDenseElement(JSID_TO_INT(id));
         return true;
