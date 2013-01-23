@@ -1,4 +1,0 @@
-retry:500
-:space isn't a valid NCName char, am I right?
-event: message event
-data: 1
