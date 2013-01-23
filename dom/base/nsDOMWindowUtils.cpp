@@ -2137,11 +2137,13 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::StartFrameTimeRecording()
+nsDOMWindowUtils::StartFrameTimeRecording(uint32_t *startIndex)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
+
+  NS_ENSURE_ARG_POINTER(startIndex);
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -2151,13 +2153,16 @@ nsDOMWindowUtils::StartFrameTimeRecording()
   if (!mgr)
     return NS_ERROR_FAILURE;
 
-  mgr->StartFrameTimeRecording();
+  *startIndex = mgr->StartFrameTimeRecording();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::StopFrameTimeRecording(float** paintTimes, uint32_t *frameCount, float **frameIntervals)
+nsDOMWindowUtils::StopFrameTimeRecording(uint32_t   startIndex,
+                                         float    **paintTimes,
+                                         uint32_t  *frameCount,
+                                         float    **frameIntervals)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -2177,31 +2182,21 @@ nsDOMWindowUtils::StopFrameTimeRecording(float** paintTimes, uint32_t *frameCoun
 
   nsTArray<float> tmpFrameIntervals;
   nsTArray<float> tmpPaintTimes;
-  mgr->StopFrameTimeRecording(tmpFrameIntervals, tmpPaintTimes);
-
-  *frameIntervals = nullptr;
-  *paintTimes = nullptr;
+  mgr->StopFrameTimeRecording(startIndex, tmpFrameIntervals, tmpPaintTimes);
   *frameCount = tmpFrameIntervals.Length();
 
-  if (*frameCount != 0) {
-    *frameIntervals = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
-    if (!*frameIntervals)
-      return NS_ERROR_OUT_OF_MEMORY;
+  *frameIntervals = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
+  *paintTimes =     (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
 
-    *paintTimes = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
-    if (!*paintTimes)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    /* copy over the frame intervals and paint times into the arrays we just allocated */
-    for (uint32_t i = 0; i < *frameCount; i++) {
-      (*frameIntervals)[i] = tmpFrameIntervals[i];
+  /* copy over the frame intervals and paint times into the arrays we just allocated */
+  for (uint32_t i = 0; i < *frameCount; i++) {
+    (*frameIntervals)[i] = tmpFrameIntervals[i];
 #ifndef MOZ_WIDGET_GONK
-      (*paintTimes)[i] = tmpPaintTimes[i];
+    (*paintTimes)[i] = tmpPaintTimes[i];
 #else
-      // Waiting for bug 830475 to work on B2G.
-      (*paintTimes)[i] = 0;
+    // Waiting for bug 830475 to work on B2G.
+    (*paintTimes)[i] = 0;
 #endif
-    }
   }
 
   return NS_OK;

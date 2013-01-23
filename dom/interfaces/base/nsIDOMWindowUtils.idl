@@ -41,7 +41,7 @@ interface nsIDOMClientRect;
 interface nsIURI;
 interface nsIDOMEventTarget;
 
-[scriptable, uuid(7cd26372-d2e2-463a-bce3-3f02d4b23fa8)]
+[scriptable, uuid(458f5b08-4966-4a91-8617-258afb87070e)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1053,10 +1053,33 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   readonly attribute AString layerManagerType;
 
-  void startFrameTimeRecording();
-  void stopFrameTimeRecording([optional, array, size_is(frameCount)] out float paintTimes,
+  /**
+   * Record (and return) frame-intervals and paint-times for frames which were presented
+   *   between calling StartFrameTimeRecording and StopFrameTimeRecording.
+   *
+   * - Uses a cyclic buffer and serves concurrent consumers, so if Stop is called too late
+   *     (elements were overwritten since Start), result is considered invalid and hence empty.
+   * - Buffer is capable of holding 10 seconds @ 60fps (or more if frames were less frequent).
+   *     Can be changed (up to 1 hour) via pref: toolkit.framesRecording.bufferSize.
+   * - Note: the first frame-interval may be longer than expected because last frame
+   *     might have been presented some time before calling StartFrameTimeRecording.
+   */
+
+  /**
+   * Returns a handle which represents current recording start position.
+   */
+   void startFrameTimeRecording([retval] out unsigned long startIndex);
+
+  /**
+   * Returns number of recorded frames since startIndex was issued,
+   *   and allocates+populates 2 arraye with the recorded data.
+   * - Allocation is infallible. Should be released even if size is 0.
+   */
+   void stopFrameTimeRecording(in unsigned long startIndex,
+                              [optional, array, size_is(frameCount)] out float paintTimes,
                               [optional] out unsigned long frameCount,
                               [retval, array, size_is(frameCount)] out float frameIntervals);
+
   /**
    * Signals that we're begining to tab switch. This is used by painting code to
    * determine total tab switch time.
