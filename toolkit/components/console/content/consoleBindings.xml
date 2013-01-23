@@ -24,8 +24,8 @@
         250
       </field>
 
-      <field name="hrefMaxLength" readonly="true">
-        <!-- Limit displayed script error source URL to avoid performance issues. (Bug 796179) -->
+      <field name="fieldMaxLength" readonly="true">
+        <!-- Limit displayed string lengths to avoid performance issues. (Bug 796179 and 831020) -->
         200
       </field>
 
@@ -190,6 +190,42 @@
         ]]></body>
       </method>
 
+      <method name="_truncateIfNecessary">
+        <parameter name="aString"/>
+        <parameter name="aMiddleCharacter"/>
+        <body><![CDATA[
+          if (!aString || aString.length <= this.fieldMaxLength)
+            return {string: aString, column: aMiddleCharacter};
+          let halfLimit = this.fieldMaxLength / 2;
+          if (!aMiddleCharacter || aMiddleCharacter < 0 || aMiddleCharacter > aString.length)
+            aMiddleCharacter = halfLimit;
+
+          let startPosition = 0;
+          let endPosition = aString.length;
+          if (aMiddleCharacter - halfLimit >= 0)
+            startPosition = aMiddleCharacter - halfLimit;
+          if (aMiddleCharacter + halfLimit <= aString.length)
+            endPosition = aMiddleCharacter + halfLimit;
+          if (endPosition - startPosition < this.fieldMaxLength)
+            endPosition += this.fieldMaxLength - (endPosition - startPosition);
+          let truncatedString = aString.substring(startPosition, endPosition);
+          let Ci = Components.interfaces;
+          let ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
+                                                        Ci.nsIPrefLocalizedString).data;
+          if (startPosition > 0) {
+            truncatedString = ellipsis + truncatedString;
+            aMiddleCharacter += ellipsis.length;
+          }
+          if (endPosition < aString.length)
+            truncatedString = truncatedString + ellipsis;
+
+          return {
+            string: truncatedString,
+            column: aMiddleCharacter - startPosition
+          };
+        ]]></body>
+      </method>
+
       <method name="appendError">
         <parameter name="aObject"/>
         <body><![CDATA[
@@ -206,21 +242,20 @@
           row.setAttribute("category", aObject.category);
           row.setAttribute("time", this.properFormatTime(aObject.timeStamp));
           if (aObject.lineNumber || aObject.sourceName) {
-            if (aObject.sourceName.length <= this.hrefMaxLength) {
-              row.setAttribute("href", aObject.sourceName);
-            } else {
-              row.setAttribute("href", aObject.sourceName.substring(0, this.hrefMaxLength) + '…');
-            }
+            row.setAttribute("href", this._truncateIfNecessary(aObject.sourceName).string);
             row.mSourceName = aObject.sourceName;
             row.setAttribute("line", aObject.lineNumber);
           } else {
             row.setAttribute("hideSource", "true");
           }
           if (aObject.sourceLine) {
-            row.setAttribute("code", aObject.sourceLine.replace(/\s/g, " "));
+            let sourceLine = aObject.sourceLine.replace(/\s/g, " ");
+            let truncatedLineObj = this._truncateIfNecessary(sourceLine, aObject.columnNumber);
+            row.setAttribute("code", truncatedLineObj.string);
+            row.mSourceLine = sourceLine;
             if (aObject.columnNumber) {
               row.setAttribute("col", aObject.columnNumber);
-              row.setAttribute("errorDots", this.repeatChar(" ", aObject.columnNumber));
+              row.setAttribute("errorDots", this.repeatChar(" ", truncatedLineObj.column));
               row.setAttribute("errorCaret", " ");
             } else {
               row.setAttribute("hideCaret", "true");
@@ -321,11 +356,14 @@
       <method name="filterElement">
         <parameter name="aRow" />
         <body><![CDATA[
-          let anyMatch = ["msg", "line", "code"].some(function (key) {
-            return (aRow.hasAttribute(key) &&
-                    this.stringMatchesFilters(aRow.getAttribute(key), this.mFilter));
-          }, this) || (aRow.mSourceName &&
-                       this.stringMatchesFilters(aRow.mSourceName, this.mFilter));
+          let anyMatch = (aRow.hasAttribute("msg") &&
+                          this.stringMatchesFilters(aRow.getAttribute("msg"), this.mFilter)) ||
+                         (aRow.hasAttribute("code") &&
+                          this.stringMatchesFilters(aRow.getAttribute("code"), this.mFilter)) ||
+                         (aRow.mSourceName &&
+                          this.stringMatchesFilters(aRow.mSourceName, this.mFilter)) ||
+                         (aRow.mSourceLine &&
+                          this.stringMatchesFilters(aRow.mSourceLine, this.mFilter));
 
           if (anyMatch) {
             aRow.classList.remove("filtered-by-string")
@@ -457,6 +495,7 @@
 
     <implementation>
       <field name="mSourceName">null</field>
+      <field name="mSourceLine">null</field>
 
       <method name="toString">
         <body><![CDATA[
@@ -473,9 +512,9 @@
                                         [this.mSourceName]) + "\n";
             if (this.hasAttribute("col")) {
               msg += strBundle.getFormattedString("errLineCol",
-                         [this.getAttribute("line"), this.getAttribute("col")]);
+                         [this.mSourceLine, this.getAttribute("col")]);
             } else
-              msg += strBundle.getFormattedString("errLine", [this.getAttribute("line")]);
+              msg += strBundle.getFormattedString("errLine", [this.mSourceLine]);
           }
 
           if (this.hasAttribute("code"))
