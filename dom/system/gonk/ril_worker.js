@@ -2519,13 +2519,13 @@ let RIL = {
           destinationId: STK_DEVICE_ID_SIM
         };
         command.transactionId = 0;
-        command.address = command.eventData.number;
+        command.address = command.event.number;
         break;
       case STK_EVENT_TYPE_CALL_DISCONNECTED:
-        command.cause = command.eventData.error;
+        command.cause = command.event.error;
       case STK_EVENT_TYPE_CALL_CONNECTED:  // Fall through
         command.deviceId = {
-          sourceId: (command.eventData.isIssuedByRemote ?
+          sourceId: (command.event.isIssuedByRemote ?
                      STK_DEVICE_ID_NETWORK : STK_DEVICE_ID_ME),
           destinationId: STK_DEVICE_ID_SIM
         };
