@@ -1,0 +1,13 @@
+manifestdestiny.pth:testing/mozbase/manifestdestiny
+mozb2g.pth:testing/mozbase/mozb2g
+mozcrash.pth:testing/mozbase/mozcrash
+mozdevice.pth:testing/mozbase/mozdevice
+mozfile.pth:testing/mozbase/mozfile
+mozhttpd.pth:testing/mozbase/mozhttpd
+mozinfo.pth:testing/mozbase/mozinfo
+mozinstall.pth:testing/mozbase/mozinstall
+mozlog.pth:testing/mozbase/mozlog
+mozprocess.pth:testing/mozbase/mozprocess
+mozprofile.pth:testing/mozbase/mozprofile
+mozrunner.pth:testing/mozbase/mozrunner
+moztest.pth:testing/mozbase/moztest
