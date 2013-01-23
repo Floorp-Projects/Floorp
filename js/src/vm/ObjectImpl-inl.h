@@ -314,12 +314,6 @@ js::ObjectImpl::numDynamicSlots() const
     return dynamicSlotsCount(numFixedSlots(), slotSpan());
 }
 
-inline js::Class *
-js::ObjectImpl::getClass() const
-{
-    return lastProperty()->getObjectClass();
-}
-
 inline JSClass *
 js::ObjectImpl::getJSClass() const
 {

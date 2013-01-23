@@ -1738,7 +1738,7 @@ TryReuseArrayType(JSObject *obj, JSObject *nobj)
      * and has the same prototype.
      */
     JS_ASSERT(nobj->isArray());
-    JS_ASSERT(nobj->getProto()->hasNewType(nobj->type()));
+    JS_ASSERT(nobj->getProto()->hasNewType(&ArrayClass, nobj->type()));
 
     if (obj->isArray() && !obj->hasSingletonType() && obj->getProto() == nobj->getProto())
         nobj->setType(obj->type());
@@ -2445,7 +2445,7 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     if (!proto)
         return NULL;
 
-    RootedTypeObject type(cx, proto->getNewType(cx));
+    RootedTypeObject type(cx, proto->getNewType(cx, &ArrayClass));
     if (!type)
         return NULL;
 
@@ -2467,7 +2467,7 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
      * arrays in JSON and script literals and allows setDenseArrayElement to
      * be used without updating the indexed type set for such default arrays.
      */
-    if (!JSObject::setNewTypeUnknown(cx, arrayProto))
+    if (!JSObject::setNewTypeUnknown(cx, &ArrayClass, arrayProto))
         return NULL;
 
     if (!LinkConstructorAndPrototype(cx, ctor, arrayProto))
@@ -2536,7 +2536,7 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg)
     if (!proto && !FindProto(cx, &ArrayClass, &proto))
         return NULL;
 
-    RootedTypeObject type(cx, proto->getNewType(cx));
+    RootedTypeObject type(cx, proto->getNewType(cx, &ArrayClass));
     if (!type)
         return NULL;
 

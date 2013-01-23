@@ -343,10 +343,11 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
     js::types::TypeObjectSet     lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectSet &table);
 
-    js::types::TypeObject *getNewType(JSContext *cx, js::TaggedProto proto,
-                                      js::UnrootedFunction fun = NULL, bool isDOM = false);
+    js::types::TypeObject *getNewType(JSContext *cx, js::Class *clasp, js::TaggedProto proto,
+                                      JSFunction *fun = NULL);
 
-    js::types::TypeObject *getLazyType(JSContext *cx, js::Handle<js::TaggedProto> proto);
+    js::types::TypeObject *getLazyType(JSContext *cx, js::Class *clasp,
+                                       js::Handle<js::TaggedProto> proto);
 
     /*
      * Hash table of all manually call site-cloned functions from within
