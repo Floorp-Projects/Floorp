@@ -24,10 +24,14 @@ is(a1.childNodes.length, 0, "should have no children");
 function newSource(filter) {
   var test = null;
   var candidates = gSmallTests.filter(function(x){return filter.test(x.type);});
-  var e = document.createElement("source");
-  e.type = candidates[0].type;
-  e.src = candidates[0].name;
-  return e;
+  if (candidates.length > 0) {
+    var e = document.createElement("source");
+    e.type = candidates[0].type;
+    e.src = candidates[0].name;
+    return e;
+  } else {
+    return null
+  }
 }
 
 var audioLoaded = false;
@@ -53,6 +57,9 @@ v1.addEventListener('loadeddata', loaded, false);
 a1.addEventListener('loadeddata', loaded, false);
 
 var videoSource = newSource(/^video/);
+if (videoSource == null) {
+  videoSource = newSource(/^application\/dash\+xml/);
+}
 if (videoSource) {
   v1.appendChild(videoSource);
   v1.load();
@@ -72,7 +79,12 @@ if (audioSource) {
 if (!audioLoaded && !videoLoaded) {
   SimpleTest.waitForExplicitFinish();
 } else {
-  todo(false, "No types supported");
+  if (audioLoaded) {
+    todo(false, "No audio types supported");
+  }
+  if (videoLoaded) {
+    todo(false, "No video types supported");
+  }
 }
 
 </script>
