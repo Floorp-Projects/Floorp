@@ -17,8 +17,6 @@ function test()
   // Disable the default gestures support during the test
   gGestureSupport.init(false);
 
-  // Enable privileges so we can use nsIDOMWindowUtils interface
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   test_utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
     getInterface(Components.interfaces.nsIDOMWindowUtils);
 
