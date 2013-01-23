@@ -631,6 +631,12 @@ DASHDecoder::LoadRepresentations()
       mVideoRepDecoders[i]->SetStateMachine(mDecoderStateMachine);
     }
   }
+
+  // Ensure decoder is set to play if its already been requested.
+  if (mPlayState == PLAY_STATE_PLAYING) {
+    mNextState = PLAY_STATE_PLAYING;
+  }
+
   // Now that subreaders are init'd, it's ok to init state machine.
   return InitializeStateMachine(nullptr);
 }
