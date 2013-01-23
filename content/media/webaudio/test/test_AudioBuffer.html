@@ -12,7 +12,7 @@
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-  var ac = new mozAudioContext();
+  var ac = new AudioContext();
   var buffer = ac.createBuffer(2, 2048, 44100);
   SpecialPowers.gc(); // Make sure that our channels are accessible after GC
   ok(buffer, "Buffer was allocated successfully");
