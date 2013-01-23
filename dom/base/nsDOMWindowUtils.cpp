@@ -2195,10 +2195,10 @@ nsDOMWindowUtils::StopFrameTimeRecording(float** paintTimes, uint32_t *frameCoun
     /* copy over the frame intervals and paint times into the arrays we just allocated */
     for (uint32_t i = 0; i < *frameCount; i++) {
       (*frameIntervals)[i] = tmpFrameIntervals[i];
-#ifndef ANDROID
+#ifndef MOZ_WIDGET_GONK
       (*paintTimes)[i] = tmpPaintTimes[i];
 #else
-      // Waiting for bug 785597 to work on android.
+      // Waiting for bug 830475 to work on B2G.
       (*paintTimes)[i] = 0;
 #endif
     }
