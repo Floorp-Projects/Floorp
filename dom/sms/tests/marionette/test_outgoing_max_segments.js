@@ -29,7 +29,9 @@ function sendSms() {
   log("Sending multipart SMS (" + msgText.length + " chars total).");
 
   sms.onsent = function(event) {
+    sms.onsent = null;
     log("Received 'onsent' smsmanager event.");
+
     gotSmsOnSent = true;
     sentSms = event.message;
     ok(sentSms, "outgoing sms");
@@ -118,7 +120,6 @@ function deleteSms(smsMsgObj) {
 }
 
 function cleanUp() {
-  sms.onsent = null;
   SpecialPowers.removePermission("sms", document);
   SpecialPowers.clearUserPref("dom.sms.enabled");
   finish();
