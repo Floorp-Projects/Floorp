@@ -175,7 +175,7 @@ MarFile *mar_open(const char *path) {
 }
 
 #ifdef XP_WIN
-MarFile *mar_wopen(const PRUnichar *path) {
+MarFile *mar_wopen(const wchar_t *path) {
   FILE *fp;
 
   fp = _wfopen(path, L"rb");
