@@ -117,8 +117,13 @@
 #include "cpr_linux_timers.h"
 #include "plat_api.h"
 #include <errno.h>
+#if defined(WEBRTC_GONK)
+#include <linux/msg.h>
+#include <linux/ipc.h>
+#else
 #include <sys/msg.h>
 #include <sys/ipc.h>
+#endif
 #include "plat_debug.h"
 
 /**

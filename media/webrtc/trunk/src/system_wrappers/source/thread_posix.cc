@@ -129,7 +129,7 @@ uint32_t ThreadWrapper::GetThreadId() {
 int ThreadPosix::Construct()
 {
     int result = 0;
-#if !defined(WEBRTC_ANDROID)
+#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_GONK)
     // Enable immediate cancellation if requested, see Shutdown()
     result = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     if (result != 0)
@@ -284,7 +284,7 @@ void ThreadPosix::SetNotAlive()
 
 bool ThreadPosix::Shutdown()
 {
-#if !defined(WEBRTC_ANDROID)
+#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_GONK)
     if (_thread && (0 != pthread_cancel(_thread)))
     {
         return false;
