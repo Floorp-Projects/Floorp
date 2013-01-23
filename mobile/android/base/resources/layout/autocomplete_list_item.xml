@@ -7,7 +7,7 @@
           android:layout_width="fill_parent"
           android:layout_height="32dip"
           android:textAppearance="?android:attr/textAppearanceMediumInverse"
-          android:textColor="?android:attr/textColorPrimaryInverse"
+          android:textColor="@color/autocomplete_listitem_text"
           android:layout_gravity="center_vertical"
           android:paddingLeft="10dp"
           android:paddingRight="10dp"
