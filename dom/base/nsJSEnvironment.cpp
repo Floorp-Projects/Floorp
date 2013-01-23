@@ -186,7 +186,7 @@ static PRTime sFirstCollectionTime;
 
 static bool sIsInitialized;
 static bool sDidShutdown;
-
+static bool sShuttingDown;
 static int32_t sContextCount;
 
 static PRTime sMaxScriptRunTime;
@@ -194,7 +194,7 @@ static PRTime sMaxChromeScriptRunTime;
 
 static nsIScriptSecurityManager *sSecurityManager;
 
-// nsMemoryPressureObserver observes the memory-pressure notifications
+// nsJSEnvironmentObserver observes the memory-pressure notifications
 // and forces a garbage collection and cycle collection when it happens, if
 // the appropriate pref is set.
 
@@ -211,26 +211,40 @@ GetCollectionTimeDelta()
   return 0;
 }
 
-class nsMemoryPressureObserver MOZ_FINAL : public nsIObserver
+static void
+KillTimers()
+{
+  nsJSContext::KillGCTimer();
+  nsJSContext::KillShrinkGCBuffersTimer();
+  nsJSContext::KillCCTimer();
+  nsJSContext::KillFullGCTimer();
+  nsJSContext::KillInterSliceGCTimer();
+}
+
+class nsJSEnvironmentObserver MOZ_FINAL : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(nsMemoryPressureObserver, nsIObserver)
+NS_IMPL_ISUPPORTS1(nsJSEnvironmentObserver, nsIObserver)
 
 NS_IMETHODIMP
-nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                                  const PRUnichar* aData)
+nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                                 const PRUnichar* aData)
 {
-  if (sGCOnMemoryPressure) {
+  if (sGCOnMemoryPressure && !nsCRT::strcmp(aTopic, "memory-pressure")) {
     nsJSContext::GarbageCollectNow(js::gcreason::MEM_PRESSURE,
                                    nsJSContext::NonIncrementalGC,
                                    nsJSContext::NonCompartmentGC,
                                    nsJSContext::ShrinkingGC);
     nsJSContext::CycleCollectNow();
+  } else if (!nsCRT::strcmp(aTopic, "quit-application")) {
+    sShuttingDown = true;
+    KillTimers();
   }
+
   return NS_OK;
 }
 
@@ -3068,7 +3082,7 @@ nsJSContext::LoadEnd()
 void
 nsJSContext::PokeGC(js::gcreason::Reason aReason, int aDelay)
 {
-  if (sGCTimer) {
+  if (sGCTimer || sShuttingDown) {
     // There's already a timer for GC'ing, just return
     return;
   }
@@ -3097,7 +3111,7 @@ nsJSContext::PokeGC(js::gcreason::Reason aReason, int aDelay)
 void
 nsJSContext::PokeShrinkGCBuffers()
 {
-  if (sShrinkGCBuffersTimer) {
+  if (sShrinkGCBuffersTimer || sShuttingDown) {
     return;
   }
 
@@ -3117,7 +3131,7 @@ nsJSContext::PokeShrinkGCBuffers()
 void
 nsJSContext::MaybePokeCC()
 {
-  if (sCCTimer || sDidShutdown) {
+  if (sCCTimer || sShuttingDown) {
     return;
   }
 
@@ -3260,11 +3274,13 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
   // The GC has more work to do, so schedule another GC slice.
   if (aProgress == js::GC_SLICE_END) {
     nsJSContext::KillInterSliceGCTimer();
-    CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
-    sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
-                                             NULL,
-                                             NS_INTERSLICE_GC_DELAY,
-                                             nsITimer::TYPE_ONE_SHOT);
+    if (!sShuttingDown) {
+      CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
+      sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
+                                               NULL,
+                                               NS_INTERSLICE_GC_DELAY,
+                                               nsITimer::TYPE_ONE_SHOT);
+    }
   }
 
   if (aProgress == js::GC_CYCLE_END) {
@@ -3278,7 +3294,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 
     if (aDesc.isCompartment) {
       ++sCompartmentGCCount;
-      if (!sFullGCTimer) {
+      if (!sFullGCTimer && !sShuttingDown) {
         CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
         js::gcreason::Reason reason = js::gcreason::FULL_GC_TIMER;
         sFullGCTimer->InitWithFuncCallback(FullGCTimerFired,
@@ -3404,6 +3420,7 @@ nsJSRuntime::Startup()
   sRuntime = nullptr;
   sIsInitialized = false;
   sDidShutdown = false;
+  sShuttingDown = false;
   sContextCount = 0;
   sSecurityManager = nullptr;
 }
@@ -3720,9 +3737,9 @@ nsJSRuntime::Init()
                                "javascript.options.gc_on_memory_pressure",
                                true);
 
-  nsIObserver* memPressureObserver = new nsMemoryPressureObserver();
-  NS_ENSURE_TRUE(memPressureObserver, NS_ERROR_OUT_OF_MEMORY);
-  obs->AddObserver(memPressureObserver, "memory-pressure", false);
+  nsIObserver* observer = new nsJSEnvironmentObserver();
+  obs->AddObserver(observer, "memory-pressure", false);
+  obs->AddObserver(observer, "quit-application", false);
 
   sIsInitialized = true;
 
@@ -3751,11 +3768,7 @@ nsJSRuntime::GetNameSpaceManager()
 void
 nsJSRuntime::Shutdown()
 {
-  nsJSContext::KillGCTimer();
-  nsJSContext::KillShrinkGCBuffersTimer();
-  nsJSContext::KillCCTimer();
-  nsJSContext::KillFullGCTimer();
-  nsJSContext::KillInterSliceGCTimer();
+  KillTimers();
 
   NS_IF_RELEASE(gNameSpaceManager);
 
@@ -3767,6 +3780,7 @@ nsJSRuntime::Shutdown()
     NS_IF_RELEASE(sSecurityManager);
   }
 
+  sShuttingDown = true;
   sDidShutdown = true;
 }
 

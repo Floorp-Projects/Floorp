@@ -4,7 +4,7 @@ var timer = null;
 var strings_to_send = ["data\r\n\nda", "ta", ":", "de", "layed1\n\n",
                        "",
                        "",
-                       "data:delayed2", "", ""];
+                       "data:delayed2\n\n", "", ""];
 var resp = null;
 
 function sendNextString()
