@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -47,7 +47,7 @@ GlobalPCList.prototype = {
   _xpcom_factory: {
     createInstance: function(outer, iid) {
       if (outer) {
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Cr.NS_ERROR_NO_AGGREGATION;
       }
       return _globalPCList.QueryInterface(iid);
     }
@@ -254,15 +254,21 @@ PeerConnection.prototype = {
   ]),
 
   // Constructor is an explicit function, because of nsIDOMGlobalObjectConstructor.
-  constructor: function(win) {
+  constructor: function(win, rtcConfig) {
     if (!Services.prefs.getBoolPref("media.peerconnection.enabled")) {
       throw new Error("PeerConnection not enabled (did you set the pref?)");
     }
     if (this._win) {
-      throw new Error("Constructor already called");
+      throw new Error("RTCPeerConnection constructor already called");
     }
+    if (!rtcConfig) {
+      // TODO(jib@mozilla.com): Hardcoded server pending Mozilla one. Bug 807494
+      rtcConfig = [{ url: "stun:23.21.150.121" }];
+    }
+    this._mustValidateRTCConfiguration(rtcConfig,
+        "RTCPeerConnection constructor passed invalid RTCConfiguration");
     if (_globalPCList._networkdown) {
-      throw new Error("Can't create RTPPeerConnections when the network is down");
+      throw new Error("Can't create RTCPeerConnections when the network is down");
     }
 
     this._pc = Cc["@mozilla.org/peerconnection;1"].
@@ -272,7 +278,7 @@ PeerConnection.prototype = {
     // Nothing starts until ICE gathering completes.
     this._queueOrRun({
       func: this._pc.initialize,
-      args: [this._observer, win, Services.tm.currentThread],
+      args: [this._observer, win, rtcConfig, Services.tm.currentThread],
       wait: true
     });
 
@@ -318,6 +324,49 @@ PeerConnection.prototype = {
       }
     } else {
       this._pending = false;
+    }
+  },
+
+  /**
+   * An RTCConfiguration looks like this:
+   *
+   *   [ { url:"stun:23.21.150.121" },
+   *     { url:"turn:user@turn.example.org", credential:"myPassword"} ]
+   *
+   * We check for basic structure and well-formed stun/turn urls, but not
+   * validity of servers themselves, before passing along to C++.
+   * ErrorMsg is passed in to detail which array-entry failed, if any.
+   */
+  _mustValidateRTCConfiguration: function(rtcConfig, errorMsg) {
+    function isObject(obj) {
+      return obj && (typeof obj === "object");
+    }
+    function isArray(obj) {
+      return isObject(obj) &&
+        (Object.prototype.toString.call(obj) === "[object Array]");
+    }
+    function nicerNewURI(uriStr, errorMsg) {
+      let ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+      try {
+        return ios.newURI(uriStr, null, null);
+      } catch (e if (e.result == Cr.NS_ERROR_MALFORMED_URI)) {
+        throw new Error(errorMsg + " - malformed URI: " + uriStr);
+      }
+    }
+    function mustValidateServer(server) {
+      let url = nicerNewURI(server.url, errorMsg);
+      if (!(url.scheme in { stun:1, stuns:1, turn:1 })) {
+        throw new Error (errorMsg + " - improper scheme: " + url.scheme);
+      }
+      if (server.credential && isObject(server.credential)) {
+        throw new Error (errorMsg + " - invalid credential");
+      }
+    }
+    if (!isArray(rtcConfig)) {
+      throw new Error (errorMsg);
+    }
+    for (let i=0; i < rtcConfig.length; i++) {
+      mustValidateServer (rtcConfig[i], errorMsg);
     }
   },
 
@@ -481,11 +530,11 @@ PeerConnection.prototype = {
 
   addIceCandidate: function(cand) {
     if (!cand) {
-      throw "NULL candidate passed to addIceCandidate!";
+      throw new Error ("NULL candidate passed to addIceCandidate!");
     }
 
     if (!cand.candidate || !cand.sdpMLineIndex) {
-      throw "Invalid candidate passed to addIceCandidate!";
+      throw new Error ("Invalid candidate passed to addIceCandidate!");
     }
 
     this._queueOrRun({
