@@ -64,7 +64,6 @@ const char* XPCJSRuntime::mStrings[] = {
     "__proto__",            // IDX_PROTO
     "__iterator__",         // IDX_ITERATOR
     "__exposedProps__",     // IDX_EXPOSEDPROPS
-    "__scriptOnly__",       // IDX_SCRIPTONLY
     "baseURIObject",        // IDX_BASEURIOBJECT
     "nodePrincipal",        // IDX_NODEPRINCIPAL
     "documentURIObject",    // IDX_DOCUMENTURIOBJECT
