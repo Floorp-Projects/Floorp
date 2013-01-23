@@ -1565,11 +1565,13 @@ endif
 
 # If we're using binary nsinstall and it's not built yet, fallback to python nsinstall.
 ifneq (,$(filter $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX),$(install_cmd)))
-nsinstall_is_usable = $(if $(wildcard $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)),$(eval nsinstall_is_usable := yes)yes)
+ifeq (,$(wildcard $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)))
+nsinstall_is_usable = $(if $(wildcard $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)),yes)
 
 define install_cmd_override
 $(1): install_cmd = $$(if $$(nsinstall_is_usable),$$(INSTALL),$$(NSINSTALL_PY)) $$(1)
 endef
+endif
 endif
 
 define install_file_template
