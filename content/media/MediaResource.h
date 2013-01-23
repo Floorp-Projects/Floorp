@@ -47,6 +47,12 @@ class MediaChannelStatistics {
 public:
   MediaChannelStatistics() { Reset(); }
 
+  MediaChannelStatistics(MediaChannelStatistics * aCopyFrom)
+  {
+    MOZ_ASSERT(aCopyFrom);
+    *this = *aCopyFrom;
+  }
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaChannelStatistics)
 
   void Reset() {

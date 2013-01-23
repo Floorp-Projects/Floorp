@@ -251,6 +251,9 @@ private:
   DASHRepDecoder* AudioRepDecoder() {
     ReentrantMonitorConditionallyEnter mon(!OnDecodeThread(),
                                            GetReentrantMonitor());
+    if (0 == mAudioRepDecoders.Length()) {
+      return nullptr;
+    }
     NS_ENSURE_TRUE((uint32_t)mAudioRepDecoderIdx < mAudioRepDecoders.Length(),
                    nullptr);
     if (mAudioRepDecoderIdx < 0) {
@@ -266,6 +269,9 @@ private:
   DASHRepDecoder* VideoRepDecoder() {
     ReentrantMonitorConditionallyEnter mon(!OnDecodeThread(),
                                            GetReentrantMonitor());
+    if (0 == mVideoRepDecoders.Length()) {
+      return nullptr;
+    }
     NS_ENSURE_TRUE((uint32_t)mVideoRepDecoderIdx < mVideoRepDecoders.Length(),
                    nullptr);
     if (mVideoRepDecoderIdx < 0) {
