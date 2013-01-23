@@ -3320,7 +3320,7 @@ JS_SetPrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
 
-    return SetProto(cx, obj, proto, JS_FALSE);
+    return SetClassAndProto(cx, obj, obj->getClass(), proto, JS_FALSE);
 }
 
 JS_PUBLIC_API(JSObject *)

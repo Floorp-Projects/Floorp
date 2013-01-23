@@ -376,8 +376,7 @@ JSObject::setArrayLength(JSContext *cx, js::HandleObject obj, uint32_t length)
          * requirements of OBJECT_FLAG_NON_DENSE_ARRAY.
          */
         js::types::MarkTypeObjectFlags(cx, obj,
-                                       js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
-                                       js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
+                                       js::types::OBJECT_FLAG_LENGTH_OVERFLOW);
         jsid lengthId = js::NameToId(cx->names().length);
         js::types::AddTypePropertyId(cx, obj, lengthId,
                                      js::types::Type::DoubleType());
@@ -460,7 +459,7 @@ JSObject::initDenseElementWithType(JSContext *cx, js::HandleObject obj, unsigned
 /* static */ inline void
 JSObject::setDenseElementHole(JSContext *cx, js::HandleObject obj, unsigned idx)
 {
-    js::types::MarkTypeObjectFlags(cx, obj, js::types::OBJECT_FLAG_NON_PACKED_ARRAY);
+    js::types::MarkTypeObjectFlags(cx, obj, js::types::OBJECT_FLAG_NON_PACKED);
     obj->setDenseElement(idx, js::MagicValue(JS_ELEMENTS_HOLE));
 }
 
@@ -468,8 +467,8 @@ JSObject::setDenseElementHole(JSContext *cx, js::HandleObject obj, unsigned idx)
 JSObject::removeDenseElementForSparseIndex(JSContext *cx, js::HandleObject obj, unsigned idx)
 {
     js::types::MarkTypeObjectFlags(cx, obj,
-                                   js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
-                                   js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
+                                   js::types::OBJECT_FLAG_NON_PACKED |
+                                   js::types::OBJECT_FLAG_SPARSE_INDEXES);
     if (obj->containsDenseElement(idx))
         obj->setDenseElement(idx, js::MagicValue(JS_ELEMENTS_HOLE));
 }
@@ -544,7 +543,7 @@ inline void
 JSObject::markDenseElementsNotPacked(JSContext *cx)
 {
     JS_ASSERT(isNative());
-    MarkTypeObjectFlags(cx, this, js::types::OBJECT_FLAG_NON_PACKED_ARRAY);
+    MarkTypeObjectFlags(cx, this, js::types::OBJECT_FLAG_NON_PACKED);
 }
 
 inline void
@@ -763,10 +762,10 @@ JSObject::setSingletonType(JSContext *cx, js::HandleObject obj)
 
     JS_ASSERT(!obj->hasLazyType());
     JS_ASSERT_IF(obj->getTaggedProto().isObject(),
-                 obj->type() == obj->getTaggedProto().toObject()->getNewType(cx, NULL));
+                 obj->type() == obj->getTaggedProto().toObject()->getNewType(cx, obj->getClass()));
 
     js::Rooted<js::TaggedProto> objProto(cx, obj->getTaggedProto());
-    js::types::TypeObject *type = cx->compartment->getLazyType(cx, objProto);
+    js::types::TypeObject *type = cx->compartment->getLazyType(cx, obj->getClass(), objProto);
     if (!type)
         return false;
 
@@ -789,7 +788,7 @@ JSObject::clearType(JSContext *cx, js::HandleObject obj)
     JS_ASSERT(!obj->hasSingletonType());
     JS_ASSERT(cx->compartment == obj->compartment());
 
-    js::types::TypeObject *type = cx->compartment->getNewType(cx, NULL);
+    js::types::TypeObject *type = cx->compartment->getNewType(cx, obj->getClass(), NULL);
     if (!type)
         return false;
 
@@ -964,9 +963,10 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
      * make sure their presence is consistent with the shape.
      */
     JS_ASSERT(shape && type);
-    JS_ASSERT(shape->getObjectClass() != &js::ArrayClass);
+    JS_ASSERT(type->clasp == shape->getObjectClass());
+    JS_ASSERT(type->clasp != &js::ArrayClass);
     JS_ASSERT(!!dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == !!slots);
-    JS_ASSERT(js::gc::GetGCKindSlots(kind, shape->getObjectClass()) == shape->numFixedSlots());
+    JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
     JS_ASSERT(cx->compartment == type->compartment());
 
     JSObject *obj = js_NewGCObject(cx, kind);
@@ -978,7 +978,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     obj->slots = slots;
     obj->elements = js::emptyObjectElements;
 
-    const js::Class *clasp = shape->getObjectClass();
+    const js::Class *clasp = type->clasp;
     if (clasp->hasPrivate())
         obj->privateRef(shape->numFixedSlots()) = NULL;
 
@@ -995,7 +995,8 @@ JSObject::createArray(JSContext *cx, js::gc::AllocKind kind,
                       uint32_t length)
 {
     JS_ASSERT(shape && type);
-    JS_ASSERT(shape->getObjectClass() == &js::ArrayClass);
+    JS_ASSERT(type->clasp == shape->getObjectClass());
+    JS_ASSERT(type->clasp == &js::ArrayClass);
     JS_ASSERT(cx->compartment == type->compartment());
 
     /*

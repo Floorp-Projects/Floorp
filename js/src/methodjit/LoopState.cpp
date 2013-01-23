@@ -788,7 +788,7 @@ LoopState::invariantLength(const CrossSSAValue &obj)
         return NULL;
 
     /* Hoist 'length' access on typed arrays. */
-    if (!objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_TYPED_ARRAY)) {
+    if (objTypes->getTypedArrayType() != TypedArray::TYPE_MAX) {
         uint32_t which = frame.allocTemporary();
         if (which == UINT32_MAX)
             return NULL;
@@ -806,7 +806,10 @@ LoopState::invariantLength(const CrossSSAValue &obj)
         return fe;
     }
 
-    if (objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY))
+    if (objTypes->getKnownClass() != &ArrayClass)
+        return NULL;
+    if (objTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
+                                 types::OBJECT_FLAG_LENGTH_OVERFLOW))
         return NULL;
 
     /*
@@ -1432,7 +1435,10 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
         return false;
     }
 
-    if (objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY))
+    if (objTypes->getKnownClass() != &ArrayClass)
+        return false;
+    if (objTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
+                                 types::OBJECT_FLAG_LENGTH_OVERFLOW))
         return false;
 
     RootedScript rOuterScript(cx, outerScript);

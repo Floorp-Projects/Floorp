@@ -487,6 +487,47 @@ struct AutoEnterCompilation
  * a type function on JSScript to perform inference operations.
  */
 
+inline Class *
+GetClassForProtoKey(JSProtoKey key)
+{
+    switch (key) {
+      case JSProto_Object:
+        return &ObjectClass;
+      case JSProto_Array:
+        return &ArrayClass;
+
+      case JSProto_Number:
+        return &NumberClass;
+      case JSProto_Boolean:
+        return &BooleanClass;
+      case JSProto_String:
+        return &StringClass;
+      case JSProto_RegExp:
+        return &RegExpClass;
+
+      case JSProto_Int8Array:
+      case JSProto_Uint8Array:
+      case JSProto_Int16Array:
+      case JSProto_Uint16Array:
+      case JSProto_Int32Array:
+      case JSProto_Uint32Array:
+      case JSProto_Float32Array:
+      case JSProto_Float64Array:
+      case JSProto_Uint8ClampedArray:
+        return &TypedArray::classes[key - JSProto_Int8Array];
+
+      case JSProto_ArrayBuffer:
+        return &ArrayBufferClass;
+
+      case JSProto_DataView:
+        return &DataViewClass;
+
+      default:
+        JS_NOT_REACHED("Bad proto key");
+        return NULL;
+    }
+}
+
 /*
  * Get the default 'new' object for a given standard class, per the currently
  * active global.
@@ -497,7 +538,7 @@ GetTypeNewObject(JSContext *cx, JSProtoKey key)
     js::RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, key, &proto))
         return NULL;
-    return proto->getNewType(cx);
+    return proto->getNewType(cx, GetClassForProtoKey(key));
 }
 
 /* Get a type object for the immediate allocation site within a native. */
@@ -807,7 +848,7 @@ TypeScript::StandardType(JSContext *cx, HandleScript script, JSProtoKey key)
     js::RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, key, &proto, NULL))
         return NULL;
-    return proto->getNewType(cx);
+    return proto->getNewType(cx, GetClassForProtoKey(key));
 }
 
 struct AllocationSiteKey {
@@ -1503,13 +1544,14 @@ TypeCallsite::TypeCallsite(JSContext *cx, UnrootedScript script, jsbytecode *pc,
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-inline TypeObject::TypeObject(TaggedProto proto, bool function, bool unknown)
+inline TypeObject::TypeObject(Class *clasp, TaggedProto proto, bool function, bool unknown)
 {
     PodZero(this);
 
     /* Inner objects may not appear on prototype chains. */
     JS_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
 
+    this->clasp = clasp;
     this->proto = proto.raw();
 
     if (function)
@@ -1617,43 +1659,6 @@ TypeObject::getProperty(unsigned i)
         return (Property *) propertySet;
     }
     return propertySet[i];
-}
-
-inline void
-TypeObject::setFlagsFromKey(JSContext *cx, JSProtoKey key)
-{
-    TypeObjectFlags flags = 0;
-
-    switch (key) {
-      case JSProto_Array:
-        flags = OBJECT_FLAG_NON_TYPED_ARRAY
-              | OBJECT_FLAG_NON_DOM;
-        break;
-
-      case JSProto_Int8Array:
-      case JSProto_Uint8Array:
-      case JSProto_Int16Array:
-      case JSProto_Uint16Array:
-      case JSProto_Int32Array:
-      case JSProto_Uint32Array:
-      case JSProto_Float32Array:
-      case JSProto_Float64Array:
-      case JSProto_Uint8ClampedArray:
-        flags = OBJECT_FLAG_NON_DENSE_ARRAY
-              | OBJECT_FLAG_NON_PACKED_ARRAY
-              | OBJECT_FLAG_NON_DOM;
-        break;
-
-      default:
-        flags = OBJECT_FLAG_NON_DENSE_ARRAY
-              | OBJECT_FLAG_NON_PACKED_ARRAY
-              | OBJECT_FLAG_NON_TYPED_ARRAY
-              | OBJECT_FLAG_NON_DOM;
-        break;
-    }
-
-    if (!hasAllFlags(flags))
-        setFlags(cx, flags);
 }
 
 inline void

@@ -1074,6 +1074,10 @@ class ObjectImpl : public gc::Cell
         return type_->proto;
     }
 
+    Class *getClass() const {
+        return type_->clasp;
+    }
+
     inline bool isExtensible() const;
 
     inline HeapSlotArray getDenseElements();
@@ -1221,7 +1225,6 @@ class ObjectImpl : public gc::Cell
     inline bool nativeContainsNoAllocation(PropertyName *name);
     inline bool nativeContainsNoAllocation(Shape &shape);
 
-    inline Class *getClass() const;
     inline JSClass *getJSClass() const;
     inline bool hasClass(const Class *c) const;
     inline const ObjectOps *getOps() const;
