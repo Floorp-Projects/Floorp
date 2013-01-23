@@ -11,6 +11,10 @@ let sms = window.navigator.mozSms;
 let maxCharsPerSms = 160;
 let maxSegments = 10; // 10 message segments concatenated into 1 multipart SMS
 
+const REMOTE = "5551234567";
+const REMOTE_FMT = "+15551234567"; // the normalized remote number
+const EMU_FMT = "+15555215554"; // the emulator's number
+
 function verifyInitialState() {
   log("Verifying initial state.");
   ok(sms, "mozSms");
@@ -18,7 +22,6 @@ function verifyInitialState() {
 }
 
 function simulateIncomingSms() {
-  let fromNumber = "5551234567";
   let msgText = "";
 
   // Build the message text
@@ -27,7 +30,9 @@ function simulateIncomingSms() {
       " chars total).");
 
   sms.onreceived = function onreceived(event) {
+    sms.onreceived = null;
     log("Received 'onreceived' smsmanager event.");
+
     let incomingSms = event.message;
     ok(incomingSms, "incoming sms");
     ok(incomingSms.id, "sms id");
@@ -36,13 +41,13 @@ function simulateIncomingSms() {
     is(incomingSms.body, msgText, "msg body");
     is(incomingSms.delivery, "received", "delivery");
     is(incomingSms.read, false, "read");
-    is(incomingSms.receiver, null, "receiver");
-    is(incomingSms.sender, fromNumber, "sender");
+    is(incomingSms.receiver, EMU_FMT, "receiver");
+    is(incomingSms.sender, REMOTE_FMT, "sender");
     ok(incomingSms.timestamp instanceof Date, "timestamp is instanceof date");
 
     verifySmsExists(incomingSms);
   };
-  runEmulatorCmd("sms send " + fromNumber + " " + msgText, function(result) {
+  runEmulatorCmd("sms send " + REMOTE + " " + msgText, function(result) {
     is(result[0], "OK", "emulator output");
   });
 }
@@ -99,7 +104,6 @@ function deleteSms(smsMsgObj){
 }
 
 function cleanUp() {
-  sms.onreceived = null;
   SpecialPowers.removePermission("sms", document);
   SpecialPowers.clearUserPref("dom.sms.enabled");
   finish();
