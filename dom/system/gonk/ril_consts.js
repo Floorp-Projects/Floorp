@@ -478,7 +478,7 @@ this.ADN_MAX_NUMBER_DIGITS = 20;
 // READ_RECORD mode,  TS 102.221
 this.READ_RECORD_ABSOLUTE_MODE = 4;
 
-// GET_RESPONSE mandatory response size for EF, see TS 51.011 clause 9, 
+// GET_RESPONSE mandatory response size for EF, see TS 51.011 clause 9,
 // 'Response data in case of an EF.'
 this.GET_RESPONSE_EF_SIZE_BYTES = 15;
 
