@@ -1209,21 +1209,13 @@ class ObjectImpl : public gc::Cell
     /* Compute dynamicSlotsCount() for this object. */
     inline uint32_t numDynamicSlots() const;
 
-    UnrootedShape nativeLookup(JSContext *cx, HandleId id);
+    UnrootedShape nativeLookup(JSContext *cx, jsid id);
     inline UnrootedShape nativeLookup(JSContext *cx, PropertyId pid);
     inline UnrootedShape nativeLookup(JSContext *cx, PropertyName *name);
 
-    UnrootedShape nativeLookupNoAllocation(jsid id);
-    inline UnrootedShape nativeLookupNoAllocation(PropertyId pid);
-    inline UnrootedShape nativeLookupNoAllocation(PropertyName *name);
-
-    inline bool nativeContains(JSContext *cx, Handle<jsid> id);
-    inline bool nativeContains(JSContext *cx, Handle<PropertyName*> name);
-    inline bool nativeContains(JSContext *cx, Handle<Shape*> shape);
-
-    inline bool nativeContainsNoAllocation(jsid id);
-    inline bool nativeContainsNoAllocation(PropertyName *name);
-    inline bool nativeContainsNoAllocation(Shape &shape);
+    inline bool nativeContains(JSContext *cx, jsid id);
+    inline bool nativeContains(JSContext *cx, PropertyName* name);
+    inline bool nativeContains(JSContext *cx, Shape* shape);
 
     inline JSClass *getJSClass() const;
     inline bool hasClass(const Class *c) const;

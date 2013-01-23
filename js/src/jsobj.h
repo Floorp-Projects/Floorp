@@ -1272,6 +1272,10 @@ extern bool
 LookupName(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
            MutableHandleObject objp, MutableHandleObject pobjp, MutableHandleShape propp);
 
+extern bool
+LookupNameNoGC(JSContext *cx, PropertyName *name, JSObject *scopeChain,
+               JSObject **objp, JSObject **pobjp, Shape **propp);
+
 /*
  * Like LookupName except returns the global object if 'name' is not found in
  * any preceding non-global scope.
@@ -1341,13 +1345,12 @@ GetMethod(JSContext *cx, HandleObject obj, PropertyName *name, unsigned getHow, 
  * store the property value in *vp.
  */
 extern bool
-HasDataProperty(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 
 inline bool
-HasDataProperty(JSContext *cx, HandleObject obj, PropertyName *name, Value *vp)
+HasDataProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp)
 {
-    RootedId id(cx, NameToId(name));
-    return HasDataProperty(cx, obj, id, vp);
+    return HasDataProperty(cx, obj, NameToId(name), vp);
 }
 
 extern JSBool

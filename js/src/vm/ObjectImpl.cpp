@@ -264,19 +264,12 @@ js::ObjectImpl::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
 MOZ_NEVER_INLINE
 #endif
 UnrootedShape
-js::ObjectImpl::nativeLookup(JSContext *cx, HandleId id)
+js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 {
-    AssertCanGC();
+    AutoAssertNoGC nogc;
     MOZ_ASSERT(isNative());
     Shape **spp;
     return Shape::search(cx, lastProperty(), id, &spp);
-}
-
-UnrootedShape
-js::ObjectImpl::nativeLookupNoAllocation(jsid id)
-{
-    MOZ_ASSERT(isNative());
-    return Shape::searchNoAllocation(lastProperty(), id);
 }
 
 void
