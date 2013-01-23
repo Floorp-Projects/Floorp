@@ -442,10 +442,10 @@ nsStreamTransportService::Init()
     NS_ENSURE_STATE(mPool);
 
     // Configure the pool
-    mPool->SetThreadLimit(4);
-    mPool->SetIdleThreadLimit(1);
-    mPool->SetIdleThreadTimeout(PR_SecondsToInterval(60));
     mPool->SetName(NS_LITERAL_CSTRING("StreamTrans"));
+    mPool->SetThreadLimit(25);
+    mPool->SetIdleThreadLimit(1);
+    mPool->SetIdleThreadTimeout(PR_SecondsToInterval(30));
 
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
