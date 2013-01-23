@@ -1482,62 +1482,6 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget, JSObject* aScope, JSObj
 
 
 nsresult
-nsJSContext::CompileEventHandler(nsIAtom *aName,
-                                 uint32_t aArgCount,
-                                 const char** aArgNames,
-                                 const nsAString& aBody,
-                                 const char *aURL, uint32_t aLineNo,
-                                 uint32_t aVersion,
-                                 bool aIsXBL,
-                                 nsScriptObjectHolder<JSObject>& aHandler)
-{
-  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  NS_PRECONDITION(AtomIsEventHandlerName(aName), "Bad event name");
-  NS_PRECONDITION(!::JS_IsExceptionPending(mContext),
-                  "Why are we being called with a pending exception?");
-
-  if (!sSecurityManager) {
-    NS_ERROR("Huh, we need a script security manager to compile "
-             "an event handler!");
-
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Don't compile if aVersion is unknown.  Since the caller is responsible for
-  // parsing the version strings, we just check it isn't JSVERSION_UNKNOWN.
-  if ((JSVersion)aVersion == JSVERSION_UNKNOWN) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-#ifdef DEBUG
-  JSContext* top = nsContentUtils::GetCurrentJSContext();
-  NS_ASSERTION(mContext == top, "Context not properly pushed!");
-#endif
-
-  // Event handlers are always shared, and must be bound before use.
-  // Therefore we don't bother compiling with principals.
-  XPCAutoRequest ar(mContext);
-
-  JS::CompileOptions options(mContext);
-  options.setVersion(JSVersion(aVersion))
-         .setFileAndLine(aURL, aLineNo)
-         .setUserBit(aIsXBL);
-  js::RootedObject empty(mContext, NULL);
-  JSFunction* fun = JS::CompileFunction(mContext, empty, options, nsAtomCString(aName).get(),
-                                        aArgCount, aArgNames,
-                                        PromiseFlatString(aBody).get(), aBody.Length());
-
-  if (!fun) {
-    ReportPendingException();
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  JSObject *handler = ::JS_GetFunctionObject(fun);
-  return aHandler.set(handler);
-}
-
-nsresult
 nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
                               JSObject* aHandler, nsIArray* aargv,
                               nsIVariant** arv)
