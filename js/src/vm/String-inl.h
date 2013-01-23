@@ -27,8 +27,8 @@ NewShortString(JSContext *cx, Latin1Chars chars)
     size_t len = chars.length();
     JS_ASSERT(JSShortString::lengthFits(len));
     UnrootedInlineString str = JSInlineString::lengthFits(len)
-                               ? JSInlineString::new_(cx)
-                               : JSShortString::new_(cx);
+                               ? JSInlineString::new_<ALLOW_GC>(cx)
+                               : JSShortString::new_<ALLOW_GC>(cx);
     if (!str)
         return NULL;
 
@@ -51,8 +51,8 @@ NewShortString(JSContext *cx, StableTwoByteChars chars)
      */
     JS_ASSERT(JSShortString::lengthFits(len));
     JSInlineString *str = JSInlineString::lengthFits(len)
-                          ? JSInlineString::new_(cx)
-                          : JSShortString::new_(cx);
+                          ? JSInlineString::new_<ALLOW_GC>(cx)
+                          : JSShortString::new_<ALLOW_GC>(cx);
     if (!str)
         return NULL;
 
@@ -74,8 +74,8 @@ NewShortString(JSContext *cx, TwoByteChars chars)
      */
     JS_ASSERT(JSShortString::lengthFits(len));
     JSInlineString *str = JSInlineString::lengthFits(len)
-                          ? JSInlineString::tryNew_(cx)
-                          : JSShortString::tryNew_(cx);
+                          ? JSInlineString::new_<DONT_ALLOW_GC>(cx)
+                          : JSShortString::new_<DONT_ALLOW_GC>(cx);
     if (!str) {
         jschar tmp[JSShortString::MAX_SHORT_LENGTH];
         PodCopy(tmp, chars.start().get(), len);
@@ -186,7 +186,7 @@ JSRope::newStringMaybeAllowGC(JSContext *cx,
 {
     if (!validateLength(cx, length))
         return NULL;
-    JSRope *str = (JSRope *) (allowGC ? js_NewGCString(cx) : js_TryNewGCString(cx));
+    JSRope *str = (JSRope *) js_NewGCString<allowGC>(cx);
     if (!str)
         return NULL;
     str->init(left, right, length);
@@ -243,7 +243,7 @@ JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *ch
     if (JSShortString::lengthFits(length))
         return js::NewShortString(cx, js::TwoByteChars(chars, length));
 
-    JSDependentString *str = (JSDependentString *)js_NewGCString(cx);
+    JSDependentString *str = (JSDependentString *)js_NewGCString<js::ALLOW_GC>(cx);
     if (!str)
         return NULL;
     str->init(base, chars, length);
@@ -293,23 +293,18 @@ JSStableString::new_(JSContext *cx, const jschar *chars, size_t length)
 
     if (!validateLength(cx, length))
         return NULL;
-    JSStableString *str = (JSStableString *)js_NewGCString(cx);
+    JSStableString *str = (JSStableString *)js_NewGCString<js::ALLOW_GC>(cx);
     if (!str)
         return NULL;
     str->init(chars, length);
     return str;
 }
 
+template <js::AllowGC allowGC>
 JS_ALWAYS_INLINE JSInlineString *
 JSInlineString::new_(JSContext *cx)
 {
-    return (JSInlineString *)js_NewGCString(cx);
-}
-
-JS_ALWAYS_INLINE JSInlineString *
-JSInlineString::tryNew_(JSContext *cx)
-{
-    return (JSInlineString *)js_TryNewGCString(cx);
+    return (JSInlineString *)js_NewGCString<allowGC>(cx);
 }
 
 JS_ALWAYS_INLINE jschar *
@@ -328,16 +323,11 @@ JSInlineString::resetLength(size_t length)
     JS_ASSERT(lengthFits(length) || (isShort() && JSShortString::lengthFits(length)));
 }
 
+template <js::AllowGC allowGC>
 JS_ALWAYS_INLINE JSShortString *
 JSShortString::new_(JSContext *cx)
 {
-    return js_NewGCShortString(cx);
-}
-
-JS_ALWAYS_INLINE JSShortString *
-JSShortString::tryNew_(JSContext *cx)
-{
-    return js_TryNewGCShortString(cx);
+    return js_NewGCShortString<allowGC>(cx);
 }
 
 JS_ALWAYS_INLINE void

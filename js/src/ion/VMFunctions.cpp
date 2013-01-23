@@ -116,7 +116,7 @@ InvokeFunction(JSContext *cx, HandleFunction fun0, uint32_t argc, Value *argv, V
 JSObject *
 NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize)
 {
-    return gc::NewGCThing<JSObject>(cx, allocKind, thingSize);
+    return gc::NewGCThing<JSObject, ALLOW_GC>(cx, allocKind, thingSize);
 }
 
 bool

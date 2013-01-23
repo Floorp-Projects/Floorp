@@ -969,7 +969,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
     JS_ASSERT(cx->compartment == type->compartment());
 
-    JSObject *obj = js_NewGCObject(cx, kind);
+    JSObject *obj = js_NewGCObject<js::ALLOW_GC>(cx, kind);
     if (!obj)
         return NULL;
 
@@ -1014,7 +1014,7 @@ JSObject::createArray(JSContext *cx, js::gc::AllocKind kind,
 
     uint32_t capacity = js::gc::GetGCKindSlots(kind) - js::ObjectElements::VALUES_PER_HEADER;
 
-    JSObject *obj = js_NewGCObject(cx, kind);
+    JSObject *obj = js_NewGCObject<js::ALLOW_GC>(cx, kind);
     if (!obj) {
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -1695,7 +1695,7 @@ DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
     JS_ASSERT(proto);
 
     RootedId id(cx, NameToId(ClassName(key, cx)));
-    JS_ASSERT(!global->nativeLookupNoAllocation(id));
+    JS_ASSERT(!global->nativeLookup(cx, id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */
     global->setSlot(key, ObjectValue(*ctor));

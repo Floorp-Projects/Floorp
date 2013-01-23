@@ -411,6 +411,7 @@ struct ArenaLists {
         return freeLists[thingKind].allocate(thingSize);
     }
 
+    template <AllowGC allowGC>
     static void *refillFreeList(JSContext *cx, AllocKind thingKind);
 
     void checkEmptyFreeLists() {
