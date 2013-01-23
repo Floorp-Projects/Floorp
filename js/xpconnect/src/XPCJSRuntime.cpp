@@ -31,6 +31,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
+#include "AccessCheck.h"
 
 #include "sampler.h"
 #include "nsJSPrincipals.h"
@@ -255,6 +256,10 @@ EnableUniversalXPConnect(JSContext *cx)
 {
     JSCompartment *compartment = js::GetContextCompartment(cx);
     if (!compartment)
+        return true;
+    // Never set universalXPConnectEnabled on a chrome compartment - it confuses
+    // the security wrapping code.
+    if (AccessCheck::isChrome(compartment))
         return true;
     CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
     if (!priv)
