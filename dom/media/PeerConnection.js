@@ -148,7 +148,7 @@ IceCandidate.prototype = {
     this._win = win;
     if (candidateInitDict !== undefined) {
       this.candidate = candidateInitDict.candidate || null;
-      this.sdpMid = candidateInitDict.sdbMid || null;
+      this.sdpMid = candidateInitDict.sdpMid || null;
       this.sdpMLineIndex = candidateInitDict.sdpMLineIndex === null ?
             null : candidateInitDict.sdpMLineIndex + 1;
     } else {
