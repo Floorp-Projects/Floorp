@@ -6565,10 +6565,6 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
       // otherwise kill this listitem
       res = mHTMLEditor->DeleteNode(aListItem);
       NS_ENSURE_SUCCESS(res, res);
-      
-      res = ClearCachedStyles();
-      NS_ENSURE_SUCCESS(res, res);
-      mHTMLEditor->mTypeInState->ClearAllProps();
 
       // time to insert a paragraph
       NS_NAMED_LITERAL_STRING(pType, "p");
