@@ -291,7 +291,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(8526675d-2be7-4289-9d97-71e30c712010)]
+[scriptable, uuid(a585a7f4-6a64-4d6b-a3fb-bcd90624dcd4)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -334,6 +334,8 @@ interface nsIRadioInterfaceLayer : nsISupports
 
   void registerDataCallCallback(in nsIRILDataCallback callback);
   void unregisterDataCallCallback(in nsIRILDataCallback callback);
+
+  void updateRILNetworkInterface();
 
   /**
    * SMS-related functionality.
