@@ -176,14 +176,11 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   // AudioDataValue is 'float', but it's not worth it for this deprecated API.
   nsAutoArrayPtr<AudioDataValue> audioData(new AudioDataValue[writeLen * mChannels]);
   ConvertAudioSamples(frames, audioData.get(), writeLen * mChannels);
-  if (!mAudioStream->IsStarted()) {
-    mAudioStream->Start();
-  }
   nsresult rv = mAudioStream->Write(audioData.get(), writeLen);
-
   if (NS_FAILED(rv)) {
     return rv;
   }
+  mAudioStream->Start();
 
   // Return the actual amount written.
   *aRetVal = writeLen * mChannels;
