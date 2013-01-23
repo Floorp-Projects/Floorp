@@ -232,6 +232,41 @@ EnsureCompartmentPrivate(JSObject *obj)
     return priv;
 }
 
+bool
+IsUniversalXPConnectEnabled(JSCompartment *compartment)
+{
+    CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
+    if (!priv)
+        return false;
+    return priv->universalXPConnectEnabled;
+}
+
+bool
+IsUniversalXPConnectEnabled(JSContext *cx)
+{
+    JSCompartment *compartment = js::GetContextCompartment(cx);
+    if (!compartment)
+        return false;
+    return IsUniversalXPConnectEnabled(compartment);
+}
+
+bool
+EnableUniversalXPConnect(JSContext *cx)
+{
+    JSCompartment *compartment = js::GetContextCompartment(cx);
+    if (!compartment)
+        return true;
+    CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
+    if (!priv)
+        return true;
+    priv->universalXPConnectEnabled = true;
+
+    // Recompute all the cross-compartment wrappers leaving the newly-privileged
+    // compartment.
+    return js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
+                                 js::AllCompartments());
+}
+
 }
 
 static void
