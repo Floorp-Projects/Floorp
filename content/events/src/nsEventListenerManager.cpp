@@ -838,8 +838,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     JSAutoCompartment ac(cx, context->GetNativeGlobal());
     JS::CompileOptions options(cx);
     options.setFileAndLine(url.get(), lineNo)
-           .setVersion(SCRIPTVERSION_DEFAULT)
-           .setUserBit(true); // Flag us as XBL
+           .setVersion(SCRIPTVERSION_DEFAULT);
 
     js::RootedObject rootedNull(cx, nullptr); // See bug 781070.
     JSObject *handlerFun = nullptr;
