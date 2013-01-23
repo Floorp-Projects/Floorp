@@ -190,9 +190,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   public Object syncMonitor = new Object();
   private SyncResult syncResult;
 
-  public Account localAccount;
+  protected Account localAccount;
   protected boolean thisSyncIsForced = false;
-  public SharedPreferences accountSharedPreferences;
+  protected SharedPreferences accountSharedPreferences;
 
   /**
    * Return the number of milliseconds until we're allowed to sync again,

@@ -221,21 +221,21 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   protected void prepareStages() {
     HashMap<Stage, GlobalSyncStage> stages = new HashMap<Stage, GlobalSyncStage>();
 
-    stages.put(Stage.checkPreconditions,      new CheckPreconditionsStage(this));
-    stages.put(Stage.ensureClusterURL,        new EnsureClusterURLStage(this));
-    stages.put(Stage.fetchInfoCollections,    new FetchInfoCollectionsStage(this));
-    stages.put(Stage.fetchMetaGlobal,         new FetchMetaGlobalStage(this));
-    stages.put(Stage.ensureKeysStage,         new EnsureCrypto5KeysStage(this));
-    stages.put(Stage.syncClientsEngine,       new SyncClientsEngineStage(this));
+    stages.put(Stage.checkPreconditions,      new CheckPreconditionsStage());
+    stages.put(Stage.ensureClusterURL,        new EnsureClusterURLStage());
+    stages.put(Stage.fetchInfoCollections,    new FetchInfoCollectionsStage());
+    stages.put(Stage.fetchMetaGlobal,         new FetchMetaGlobalStage());
+    stages.put(Stage.ensureKeysStage,         new EnsureCrypto5KeysStage());
+    stages.put(Stage.syncClientsEngine,       new SyncClientsEngineStage());
 
-    stages.put(Stage.syncTabs,                new FennecTabsServerSyncStage(this));
-    stages.put(Stage.syncPasswords,           new PasswordsServerSyncStage(this));
-    stages.put(Stage.syncBookmarks,           new AndroidBrowserBookmarksServerSyncStage(this));
-    stages.put(Stage.syncHistory,             new AndroidBrowserHistoryServerSyncStage(this));
-    stages.put(Stage.syncFormHistory,         new FormHistoryServerSyncStage(this));
+    stages.put(Stage.syncTabs,                new FennecTabsServerSyncStage());
+    stages.put(Stage.syncPasswords,           new PasswordsServerSyncStage());
+    stages.put(Stage.syncBookmarks,           new AndroidBrowserBookmarksServerSyncStage());
+    stages.put(Stage.syncHistory,             new AndroidBrowserHistoryServerSyncStage());
+    stages.put(Stage.syncFormHistory,         new FormHistoryServerSyncStage());
 
-    stages.put(Stage.uploadMetaGlobal,        new UploadMetaGlobalStage(this));
-    stages.put(Stage.completed,               new CompletedStage(this));
+    stages.put(Stage.uploadMetaGlobal,        new UploadMetaGlobalStage());
+    stages.put(Stage.completed,               new CompletedStage());
 
     this.stages = Collections.unmodifiableMap(stages);
   }
@@ -313,7 +313,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     this.currentState = next;
     Logger.info(LOG_TAG, "Running next stage " + next + " (" + nextStage + ")...");
     try {
-      nextStage.execute();
+      nextStage.execute(this);
     } catch (Exception ex) {
       Logger.warn(LOG_TAG, "Caught exception " + ex + " running stage " + next);
       this.abort(ex, "Uncaught exception in stage.");
@@ -901,11 +901,11 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     this.wipeStagesByEnum(Stage.getNamedStages());
   }
 
-  public static void wipeStages(Collection<GlobalSyncStage> stages) {
+  public void wipeStages(Collection<GlobalSyncStage> stages) {
     for (GlobalSyncStage stage : stages) {
       try {
         Logger.info(LOG_TAG, "Wiping " + stage);
-        stage.wipeLocal();
+        stage.wipeLocal(this);
       } catch (Exception e) {
         Logger.error(LOG_TAG, "Ignoring wipe failure for stage " + stage, e);
       }
@@ -913,11 +913,11 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   }
 
   public void wipeStagesByEnum(Collection<Stage> stages) {
-    GlobalSession.wipeStages(this.getSyncStagesByEnum(stages));
+    wipeStages(this.getSyncStagesByEnum(stages));
   }
 
   public void wipeStagesByName(Collection<String> names) {
-    GlobalSession.wipeStages(this.getSyncStagesByName(names));
+    wipeStages(this.getSyncStagesByName(names));
   }
 
   public void resetAllStages() {
@@ -926,11 +926,11 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     this.resetStagesByEnum(Stage.getNamedStages());
   }
 
-  public static void resetStages(Collection<GlobalSyncStage> stages) {
+  public void resetStages(Collection<GlobalSyncStage> stages) {
     for (GlobalSyncStage stage : stages) {
       try {
         Logger.info(LOG_TAG, "Resetting " + stage);
-        stage.resetLocal();
+        stage.resetLocal(this);
       } catch (Exception e) {
         Logger.error(LOG_TAG, "Ignoring reset failure for stage " + stage, e);
       }
@@ -938,20 +938,11 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   }
 
   public void resetStagesByEnum(Collection<Stage> stages) {
-    GlobalSession.resetStages(this.getSyncStagesByEnum(stages));
+    resetStages(this.getSyncStagesByEnum(stages));
   }
 
   public void resetStagesByName(Collection<String> names) {
-    Collection<GlobalSyncStage> stages = new ArrayList<GlobalSyncStage>();
-    for (String name : names) {
-      try {
-        GlobalSyncStage stage = this.getSyncStageByName(name);
-        stages.add(stage);
-      } catch (NoSuchStageException e) {
-        Logger.warn(LOG_TAG, "Cannot reset stage " + name + ": no such stage.");
-      }
-    }
-    GlobalSession.resetStages(stages);
+    resetStages(this.getSyncStagesByName(names));
   }
 
   /**

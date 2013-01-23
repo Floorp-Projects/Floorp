@@ -5,7 +5,6 @@
 package org.mozilla.gecko.sync.stage;
 
 import org.mozilla.gecko.sync.CryptoRecord;
-import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
@@ -16,10 +15,6 @@ import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
 
 public class FennecTabsServerSyncStage extends ServerSyncStage {
   private static final String COLLECTION = "tabs";
-
-  public FennecTabsServerSyncStage(GlobalSession session) {
-    super(session);
-  }
 
   public class FennecTabsRecordFactory extends RecordFactory {
     @Override
