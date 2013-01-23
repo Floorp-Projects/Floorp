@@ -1207,6 +1207,11 @@ this.PDU_FCS_USAT_BUSY                = 0XD4;
 this.PDU_FCS_USIM_DATA_DOWNLOAD_ERROR = 0xD5;
 this.PDU_FCS_RESERVED                 = 0xE0;
 this.PDU_FCS_UNSPECIFIED              = 0xFF;
+// Special internal value that means we should not acknowledge an
+// incoming text right away, but need to wait for other components
+// (e.g. storage) to complete. This can be any value, so long it
+// doesn't conflict with the PDU_FCS_* constants above.
+this.MOZ_FCS_WAIT_FOR_EXPLICIT_ACK    = 0x0F;
 
 // ST - Status
 // Bit 7..0 = 000xxxxx, short message transaction completed
