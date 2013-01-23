@@ -325,14 +325,6 @@ DASHDecoder::OnReadMPDBufferCompleted()
   }
   mMPDReaderThread = nullptr;
 
-  // Close the MPD resource.
-  rv = mResource ? mResource->Close() : NS_ERROR_NULL_POINTER;
-  if (NS_FAILED(rv)) {
-    LOG("Media Resource did not close correctly! rv [%x]", rv);
-    NetworkError();
-    return;
-  }
-
   // Start parsing the MPD data and loading the media.
   rv = ParseMPDBuffer();
   if (NS_FAILED(rv)) {
