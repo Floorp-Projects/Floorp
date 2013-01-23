@@ -1238,6 +1238,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MozLoadFrom(nsIDOMHTMLMediaElement* aOther)
     ChangeDelayLoadStatus(false);
     return rv;
   }
+  mMimeType = other->mMimeType;
 
   SetPlaybackRate(mDefaultPlaybackRate);
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));

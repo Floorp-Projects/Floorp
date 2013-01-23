@@ -44,8 +44,12 @@ public:
   DASHDecoder();
   ~DASHDecoder();
 
-  // Clone not supported; just return nullptr.
-  MediaDecoder* Clone() { return nullptr; }
+  MediaDecoder* Clone() MOZ_OVERRIDE {
+    if (!IsDASHEnabled()) {
+      return nullptr;
+    }
+    return new DASHDecoder();
+  }
 
   // Creates a single state machine for all stream decoders.
   // Called from Load on the main thread only.
