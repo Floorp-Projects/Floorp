@@ -334,7 +334,41 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
 
     Wrapper *wrapper;
     CompartmentPrivate *targetdata = EnsureCompartmentPrivate(target);
-    if (targetIsChrome) {
+
+    //
+    // First, handle the special cases.
+    //
+
+    // If UniversalXPConnect is enabled, this is just some dumb mochitest. Use
+    // a vanilla CCW.
+    if (xpc::IsUniversalXPConnectEnabled(target)) {
+        wrapper = &CrossCompartmentWrapper::singleton;
+
+    // If this is a chrome object being exposed to content without Xrays, use
+    // a COW.
+    } else if (originIsChrome && !targetIsChrome && xrayType == NotXray) {
+        wrapper = &ChromeObjectWrapper::singleton;
+
+    // If content is accessing a Components object or NAC, we need a special filter,
+    // even if the object is same origin.
+    } else if (IsComponentsObject(obj) && !AccessCheck::isChrome(target)) {
+        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
+                                    ComponentsObjectPolicy>::singleton;
+    } else if (AccessCheck::needsSystemOnlyWrapper(obj) && !AccessCheck::isChrome(target)) {
+        // This should never happen unless an addon does something really dumb.
+        if (!AccessCheck::subsumes(target, origin)) {
+            JS_ReportError(cx, "Don't expose cross-origin NAC");
+            return nullptr;
+        }
+        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
+                                    OnlyIfSubjectIsSystem>::singleton;
+    }
+
+    //
+    // Now, handle the regular cases.
+    //
+
+    else if (targetIsChrome) {
         if (originIsChrome) {
             wrapper = &CrossCompartmentWrapper::singleton;
         } else {
@@ -353,19 +387,14 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
                 }
             }
         }
-    } else if (xpc::IsUniversalXPConnectEnabled(target)) {
-        wrapper = &CrossCompartmentWrapper::singleton;
     } else if (originIsChrome) {
 
         if (xrayType == XrayForWrappedNative) {
             wrapper = &FilteringWrapper<SecurityXrayXPCWN, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (xrayType == XrayForDOMObject) {
             wrapper = &FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (IsComponentsObject(obj)) {
-            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                        ComponentsObjectPolicy>::singleton;
         } else {
-            wrapper = &ChromeObjectWrapper::singleton;
+            MOZ_NOT_REACHED();
         }
     } else if (targetSubsumesOrigin) {
         // For the same-origin case we use a transparent wrapper, unless one
@@ -377,13 +406,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
         //
         // The first two cases always require a security wrapper for non-chrome
         // access, regardless of the origin of the object.
-        if (AccessCheck::needsSystemOnlyWrapper(obj)) {
-            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                        OnlyIfSubjectIsSystem>::singleton;
-        } else if (IsComponentsObject(obj)) {
-            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                        ComponentsObjectPolicy>::singleton;
-        } else if (!targetdata->wantXrays || xrayType == NotXray) {
+        if (!targetdata->wantXrays || xrayType == NotXray) {
             wrapper = &CrossCompartmentWrapper::singleton;
         } else if (xrayType == XrayForDOMObject) {
             wrapper = &PermissiveXrayDOM::singleton;
@@ -391,9 +414,6 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
             wrapper = &PermissiveXrayXPCWN::singleton;
         }
     } else {
-        NS_ASSERTION(!AccessCheck::needsSystemOnlyWrapper(obj),
-                     "bad object exposed across origins");
-
         // Cross origin we want to disallow scripting and limit access to
         // a predefined set of properties.
         if (xrayType == NotXray) {
