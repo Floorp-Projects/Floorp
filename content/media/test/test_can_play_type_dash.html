@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=792935
+-->
+<head>
+  <title>Test for Bug 792935: DASH: Add DASH-WebM cases to mochitests</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=792935">Mozilla Bug 792935: DASH: Add DASH-WebM cases to mochitests</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<video id="v"></video>
+
+<pre id="test">
+<script src="can_play_type_dash.js"></script>
+<script>
+var enabledByPref = SpecialPowers.getBoolPref("media.dash.enabled");
+check_dash(document.getElementById('v'), enabledByPref);
+mediaTestCleanup();
+</script>
+</pre>
+</body>
+</html>
