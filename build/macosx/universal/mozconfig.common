@@ -9,6 +9,8 @@ mk_add_options MOZ_POSTFLIGHT_ALL+=build/macosx/universal/flight.mk
 DARWIN_VERSION=`uname -r`
 ac_add_app_options i386 --target=i386-apple-darwin$DARWIN_VERSION
 ac_add_app_options x86_64 --target=x86_64-apple-darwin$DARWIN_VERSION
+ac_add_app_options i386 --with-unify-dist=../x86_64/dist
+ac_add_app_options x86_64 --with-unify-dist=../i386/dist
 
 ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.6.sdk
 
