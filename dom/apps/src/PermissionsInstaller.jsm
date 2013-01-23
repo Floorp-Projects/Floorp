@@ -90,10 +90,8 @@ this.PermissionsInstaller = {
                 continue;
               }
               // Remove the deprecated permission
-              PermissionSettingsModule.removePermission(permName,
-                                                        aApp.manifestURL,
-                                                        aApp.origin,
-                                                        false);
+              // TODO: use PermSettings.remove, see bug 793204
+              this._setPermission(permName, "unknown", aApp);
             }
           }
         }
