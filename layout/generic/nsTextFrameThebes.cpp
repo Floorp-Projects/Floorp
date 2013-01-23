@@ -4270,6 +4270,10 @@ nsTextFrame::GetCursor(const nsPoint& aPoint,
   FillCursorInformationFromStyle(GetStyleUserInterface(), aCursor);  
   if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
     aCursor.mCursor = NS_STYLE_CURSOR_TEXT;
+    // If this is editable, we should ignore tabindex value.
+    if (mContent->IsEditable()) {
+      return NS_OK;
+    }
 
     // If tabindex >= 0, use default cursor to indicate it's not selectable
     nsIFrame *ancestorFrame = this;
