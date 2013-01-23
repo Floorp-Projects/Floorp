@@ -304,7 +304,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 
   mObjectFrame = nullptr;
   mContent = nullptr;
-  mTagText = nullptr;
   mWidgetCreationComplete = false;
 #ifdef XP_MACOSX
   memset(&mCGPluginPortCopy, 0, sizeof(NP_CGContext));
@@ -373,11 +372,6 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   if (mCachedAttrParamValues) {
     NS_Free(mCachedAttrParamValues);
     mCachedAttrParamValues = nullptr;
-  }
-
-  if (mTagText) {
-    NS_Free(mTagText);
-    mTagText = nullptr;
   }
 
   PLUG_DeletePluginNativeWindow(mPluginWindow);
@@ -834,49 +828,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
   else if (atom == nsGkAtoms::object)
     *result = nsPluginTagType_Object;
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-  if (nullptr == mTagText) {
-    nsresult rv;
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent, &rv));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIDocument> document;
-    rv = GetDocument(getter_AddRefs(document));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
-    NS_ASSERTION(domDoc, "Need a document");
-
-    nsCOMPtr<nsIDocumentEncoder> docEncoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html", &rv));
-    if (NS_FAILED(rv))
-      return rv;
-    rv = docEncoder->Init(domDoc, NS_LITERAL_STRING("text/html"), nsIDocumentEncoder::OutputEncodeBasicEntities);
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsRefPtr<nsRange> range = new nsRange();
-    rv = range->SelectNode(node);
-    if (NS_FAILED(rv))
-      return rv;
-
-    docEncoder->SetRange(range);
-    nsString elementHTML;
-    rv = docEncoder->EncodeToString(elementHTML);
-    if (NS_FAILED(rv))
-      return rv;
-
-    mTagText = ToNewUTF8String(elementHTML);
-    if (!mTagText)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *result = mTagText;
   return NS_OK;
 }
 
