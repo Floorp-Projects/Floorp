@@ -1350,10 +1350,17 @@ let RIL = {
       }
     }
 
+    // Return a new object to avoid global variable, PNN, be modified by accident.
+    let ret = null;
+
     if (pnnEntry) {
-      return [pnnEntry.fullName, pnnEntry.shortName];
+      ret = {
+        fullName: pnnEntry.fullName || "",
+        shortName: pnnEntry.shortName || "",
+      };
     }
-    return null;
+
+    return ret;
   },
 
   /**
@@ -3070,8 +3077,8 @@ let RIL = {
 
       let networkName = this.updateNetworkName();
       if (networkName) {
-        this.operator.longName = networkName[0];
-        this.operator.shortName = networkName[1];
+        this.operator.longName = networkName.fullName;
+        this.operator.shortName = networkName.shortName;
       } else {
         this.operator.longName = longName;
         this.operator.shortName = shortName;
@@ -9467,10 +9474,7 @@ let ICCRecordHelper = {
    */
   readPNN: function readPNN() {
     function callback(options) {
-      let pnnElement = {
-        fullName: "",
-        shortName: ""
-      };
+      let pnnElement;
       let strLen = Buf.readUint32();
       let octetLen = strLen / 2;
       let readLen = 0;
@@ -9484,6 +9488,9 @@ let ICCRecordHelper = {
           Buf.seekIncoming((octetLen - readLen) * PDU_HEX_OCTET_SIZE);
           break;
         }
+
+        // Needs this check to avoid initializing twice.
+        pnnElement = pnnElement || {};
 
         let tlvLen = GsmPDUHelper.readHexOctet();
 
@@ -9503,14 +9510,19 @@ let ICCRecordHelper = {
       }
       Buf.readStringDelimiter(strLen);
 
-      if (DEBUG) {
-        debug("PNN: [" + (pnn.length + 1) + "]: " + JSON.stringify(pnnElement));
+      if (pnnElement) {
+        pnn.push(pnnElement);
       }
-      pnn.push(pnnElement);
 
-      if (options.p1 < options.totalRecords) {
+      // Will ignore remaining records when got the contents of a record are all 0xff.
+      if (pnnElement && options.p1 < options.totalRecords) {
         ICCIOHelper.loadNextRecord(options);
       } else {
+        if (DEBUG) {
+          for (let i = 0; i < pnn.length; i++) {
+            debug("PNN: [" + i + "]: " + JSON.stringify(pnn[i]));
+          }
+        }
         RIL.iccInfoPrivate.PNN = pnn;
       }
     }
