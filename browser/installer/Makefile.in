@@ -152,7 +152,7 @@ ifdef MOZ_PKG_MANIFEST_P
 	rm -f $(DIST)/pack-list.txt $(DIST)/bin-list.txt
 endif
 
-installer:: removed-files
+installer::
 ifdef INSTALLER_DIR
 	$(MAKE) -C $(INSTALLER_DIR)
 endif
