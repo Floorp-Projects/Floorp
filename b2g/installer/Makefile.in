@@ -28,12 +28,7 @@ DEFINES += \
 	-DPREF_DIR=$(PREF_DIR) \
 	$(NULL)
 
-ifeq ($(MOZ_CHROME_FILE_FORMAT),jar)
-JAREXT=.jar
-else
-JAREXT=
-endif
-DEFINES += -DJAREXT=$(JAREXT)
+DEFINES += -DJAREXT=
 
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
