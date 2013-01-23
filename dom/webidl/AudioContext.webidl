@@ -11,7 +11,7 @@
  */
 
 [Constructor, PrefControlled]
-interface mozAudioContext {
+interface AudioContext {
 
     readonly attribute AudioDestinationNode destination;
     readonly attribute float sampleRate;
@@ -40,6 +40,4 @@ interface mozAudioContext {
     DynamicsCompressorNode createDynamicsCompressor();
 
 };
-
-typedef mozAudioContext AudioContext;
 

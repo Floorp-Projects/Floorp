@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 
   // non-nsISupports cycle-collected classes should fail as weak map keys.
-  let context = new mozAudioContext();
+  let context = new AudioContext();
   let contextFail = false;
   try {
     live_map.set(context, 2);
