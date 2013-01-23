@@ -595,9 +595,6 @@ stage-package: $(MOZ_PKG_MANIFEST)
 		$(addprefix --unify ,$(UNIFY_DIST)) \
 		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DIST)/$(MOZ_PKG_DIR)
-ifdef MOZ_POST_STAGING_CMD
-	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(MOZ_POST_STAGING_CMD)
-endif # MOZ_POST_STAGING_CMD
 ifndef LIBXUL_SDK
 ifdef MOZ_PACKAGE_JSSHELL
 # Package JavaScript Shell
