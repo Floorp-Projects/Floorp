@@ -1366,3 +1366,83 @@ add_test(function test_parse_pbr_tlvs() {
 
   run_next_test();
 });
+
+/**
+ * Verify Event Download Command : Location Status
+ */
+add_test(function test_stk_event_download_location_status() {
+  let worker = newUint8WithOutgoingIndexWorker();
+  let buf = worker.Buf;
+  let pduHelper = worker.GsmPDUHelper;
+
+  buf.sendParcel = function () {
+    // Type
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND)
+
+    // Token : we don't care
+    this.readUint32();
+
+    // Data Size, 42 = 2 * (2 + TLV_DEVICE_ID_SIZE(4) +
+    //                      TLV_EVENT_LIST_SIZE(3) +
+    //                      TLV_LOCATION_STATUS_SIZE(3) +
+    //                      TLV_LOCATION_INFO_GSM_SIZE(9))
+    do_check_eq(this.readUint32(), 42);
+
+    // BER tag
+    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+
+    // BER length, 19 = TLV_DEVICE_ID_SIZE(4) +
+    //                  TLV_EVENT_LIST_SIZE(3) +
+    //                  TLV_LOCATION_STATUS_SIZE(3) +
+    //                  TLV_LOCATION_INFO_GSM_SIZE(9)
+    do_check_eq(pduHelper.readHexOctet(), 19);
+
+    // Device Identifies, Type-Length-Value(Source ID-Destination ID)
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 2);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+
+    // Event List, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 1);
+    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_LOCATION_STATUS);
+
+    // Location Status, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LOCATION_STATUS |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 1);
+    do_check_eq(pduHelper.readHexOctet(), STK_SERVICE_STATE_NORMAL);
+
+    // Location Info, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LOCATION_INFO |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 7);
+
+    do_check_eq(pduHelper.readHexOctet(), 0x21); // MCC + MNC
+    do_check_eq(pduHelper.readHexOctet(), 0x63);
+    do_check_eq(pduHelper.readHexOctet(), 0x54);
+    do_check_eq(pduHelper.readHexOctet(), 0); // LAC
+    do_check_eq(pduHelper.readHexOctet(), 0);
+    do_check_eq(pduHelper.readHexOctet(), 0); // Cell ID
+    do_check_eq(pduHelper.readHexOctet(), 0);
+
+    run_next_test();
+  };
+
+  let event = {
+    eventType: STK_EVENT_TYPE_LOCATION_STATUS,
+    locationStatus: STK_SERVICE_STATE_NORMAL,
+    locationInfo: {
+      mcc: 123,
+      mnc: 456,
+      gsmLocationAreaCode: 0,
+      gsmCellId: 0
+    }
+  };
+  worker.RIL.sendStkEventDownload({
+    event: event
+  });
+});
