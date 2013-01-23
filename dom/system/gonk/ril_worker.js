@@ -2349,7 +2349,7 @@ let RIL = {
     GsmPDUHelper.writeHexOctet(response.resultCode);
 
     // Item Identifier
-    if (response.itemIdentifier) {
+    if (response.itemIdentifier != null) {
       GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_ITEM_ID |
                                  COMPREHENSIONTLV_FLAG_CR);
       GsmPDUHelper.writeHexOctet(1);
@@ -2417,7 +2417,7 @@ let RIL = {
       }
 
       // IMEI
-      if (localInfo.imei) {
+      if (localInfo.imei != null) {
         let imei = localInfo.imei;
         if(imei.length == 15) {
           imei = imei + "0";
@@ -2431,7 +2431,7 @@ let RIL = {
       }
 
       // Date and Time Zone
-      if (localInfo.date) {
+      if (localInfo.date != null) {
         ComprehensionTlvHelper.writeDateTimeZoneTlv(localInfo.date);
       }
 
@@ -2579,7 +2579,7 @@ let RIL = {
     GsmPDUHelper.writeHexOctet(options.deviceId.destinationId);
 
     // Item Identifier
-    if (options.itemIdentifier) {
+    if (options.itemIdentifier != null) {
       GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_ITEM_ID |
                                  COMPREHENSIONTLV_FLAG_CR);
       GsmPDUHelper.writeHexOctet(1);
@@ -2595,7 +2595,7 @@ let RIL = {
     }
 
     // Event List
-    if (options.eventList) {
+    if (options.eventList != null) {
       GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_EVENT_LIST |
                                  COMPREHENSIONTLV_FLAG_CR);
       GsmPDUHelper.writeHexOctet(1);
@@ -2603,7 +2603,7 @@ let RIL = {
     }
 
     // Location Status
-    if (options.locationStatus) {
+    if (options.locationStatus != null) {
       let len = options.locationStatus.length;
       GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_LOCATION_STATUS |
                                  COMPREHENSIONTLV_FLAG_CR);
@@ -2617,7 +2617,7 @@ let RIL = {
     }
 
     // Transaction Id
-    if (options.transactionId) {
+    if (options.transactionId != null) {
       GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TRANSACTION_ID |
                                  COMPREHENSIONTLV_FLAG_CR);
       GsmPDUHelper.writeHexOctet(1);
@@ -2635,12 +2635,12 @@ let RIL = {
     }
 
     // Cause of disconnection.
-    if (options.cause) {
+    if (options.cause != null) {
       ComprehensionTlvHelper.writeCauseTlv(options.cause);
     }
 
     // Timer Identifier
-    if (options.timerId) {
+    if (options.timerId != null) {
         GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER |
                                    COMPREHENSIONTLV_FLAG_CR);
         GsmPDUHelper.writeHexOctet(1);
@@ -2648,7 +2648,7 @@ let RIL = {
     }
 
     // Timer Value
-    if (options.timerValue) {
+    if (options.timerValue != null) {
         ComprehensionTlvHelper.writeTimerValueTlv(options.timerValue, true);
     }
 
