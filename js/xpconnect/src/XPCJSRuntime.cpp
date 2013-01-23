@@ -223,7 +223,12 @@ CompartmentPrivate::~CompartmentPrivate()
 CompartmentPrivate*
 EnsureCompartmentPrivate(JSObject *obj)
 {
-    JSCompartment *c = js::GetObjectCompartment(obj);
+    return EnsureCompartmentPrivate(js::GetObjectCompartment(obj));
+}
+
+CompartmentPrivate*
+EnsureCompartmentPrivate(JSCompartment *c)
+{
     CompartmentPrivate *priv = GetCompartmentPrivate(c);
     if (priv)
         return priv;

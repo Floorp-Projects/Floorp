@@ -335,7 +335,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
     JSObject *proxyProto = wrappedProto;
 
     Wrapper *wrapper;
-    CompartmentPrivate *targetdata = GetCompartmentPrivate(target);
+    CompartmentPrivate *targetdata = EnsureCompartmentPrivate(target);
     if (AccessCheck::isChrome(target)) {
         if (AccessCheck::isChrome(origin)) {
             wrapper = &CrossCompartmentWrapper::singleton;
@@ -368,8 +368,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
         }
 
         XPCWrappedNative *wn;
-        if (targetdata &&
-            (wn = GetWrappedNative(cx, obj)) &&
+        if ((wn = GetWrappedNative(cx, obj)) &&
             wn->HasProto() && wn->GetProto()->ClassIsDOMObject()) {
             wrapper = &FilteringWrapper<SecurityXrayXPCWN, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (mozilla::dom::UseDOMXray(obj)) {
@@ -429,7 +428,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
         } else if (IsComponentsObject(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ComponentsObjectPolicy>::singleton;
-        } else if (!targetdata || !targetdata->wantXrays ||
+        } else if (!targetdata->wantXrays ||
                    (type = GetXrayType(obj)) == NotXray) {
             wrapper = &CrossCompartmentWrapper::singleton;
         } else if (type == XrayForDOMObject) {
