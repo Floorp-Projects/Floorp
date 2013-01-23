@@ -151,7 +151,7 @@ description > html|a {
   border: 1px solid rgba(60,73,97,0.5);
   border-radius: @toolbarbuttonCornerRadius@;
   box-shadow: inset 0 1px rgba(255,255,255,0.25), 0 1px rgba(255,255,255,0.25);
-  background: -moz-linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0));
+  background: linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0));
   background-clip: padding-box;
 }
 
@@ -167,5 +167,5 @@ description > html|a {
 .header-button[open="true"] {
   border-color: rgba(45,54,71,0.7);
   box-shadow: inset 0 0 4px rgb(45,54,71), 0 1px rgba(255,255,255,0.25);
-  background-image: -moz-linear-gradient(rgba(45,54,71,0.6), rgba(45,54,71,0));
+  background-image: linear-gradient(rgba(45,54,71,0.6), rgba(45,54,71,0));
 }

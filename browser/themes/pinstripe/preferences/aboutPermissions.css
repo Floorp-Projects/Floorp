@@ -20,7 +20,7 @@
   -moz-appearance: none;
   border: 1px solid rgba(60,73,97,0.5);
   box-shadow: inset 0 1px 1px rgba(0,0,0,0.15), 0 1px rgba(255,255,255,0.25);
-  background: -moz-linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.3));
+  background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.3));
   margin: 5px 0 0 0;
 }
 
