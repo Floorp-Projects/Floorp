@@ -13,9 +13,9 @@
   var iframe = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
   document.body.appendChild(iframe);
   var frameWin = iframe.contentWindow;
-  frameWin.mozAudioContext();
+  frameWin.AudioContext();
   document.body.removeChild(iframe);
-  frameWin.mozAudioContext();
+  frameWin.AudioContext();
 
   ok(true, "This test should not leak");
   SpecialPowers.clearUserPref("media.webaudio.enabled");
