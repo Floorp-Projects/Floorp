@@ -575,7 +575,7 @@ endif
 endif
 endif
 ifndef MOZ_PACKAGER_FORMAT
-$(error MOZ_PACKAGER_FORMAT is not set)
+MOZ_PACKAGER_FORMAT = $(error MOZ_PACKAGER_FORMAT is not set)
 endif
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
