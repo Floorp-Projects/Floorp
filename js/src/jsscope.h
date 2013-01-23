@@ -342,7 +342,6 @@ class BaseShape : public js::gc::Cell
     inline void assertConsistency();
 
     /* For JIT usage */
-    static inline size_t offsetOfClass() { return offsetof(BaseShape, clasp); }
     static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 

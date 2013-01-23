@@ -1268,7 +1268,7 @@ NewObjectCache::invalidateEntriesForShape(JSContext *cx, HandleShape shape, Hand
         kind = GetBackgroundAllocKind(kind);
 
     Rooted<GlobalObject *> global(cx, &shape->getObjectParent()->global());
-    Rooted<types::TypeObject *> type(cx, proto->getNewType(cx));
+    Rooted<types::TypeObject *> type(cx, proto->getNewType(cx, clasp));
 
     EntryIndex entry;
     if (lookupGlobal(clasp, global, kind, &entry))

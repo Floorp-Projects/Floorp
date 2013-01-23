@@ -391,7 +391,7 @@ static inline PropertyIteratorObject *
 NewPropertyIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedTypeObject type(cx, cx->compartment->getNewType(cx, NULL));
+        RootedTypeObject type(cx, cx->compartment->getNewType(cx, &PropertyIteratorObject::class_, NULL));
         if (!type)
             return NULL;
 

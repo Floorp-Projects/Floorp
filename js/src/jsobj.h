@@ -464,11 +464,10 @@ class JSObject : public js::ObjectImpl
 
     inline void setType(js::types::TypeObject *newType);
 
-    js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL,
-                                      bool isDOM = false);
+    js::types::TypeObject *getNewType(JSContext *cx, js::Class *clasp, JSFunction *fun = NULL);
 
 #ifdef DEBUG
-    bool hasNewType(js::types::TypeObject *newType);
+    bool hasNewType(js::Class *clasp, js::types::TypeObject *newType);
 #endif
 
     /*
@@ -482,10 +481,10 @@ class JSObject : public js::ObjectImpl
      * Mark an object as requiring its default 'new' type to have unknown
      * properties.
      */
-    static bool setNewTypeUnknown(JSContext *cx, JS::HandleObject obj);
+    static bool setNewTypeUnknown(JSContext *cx, js::Class *clasp, JS::HandleObject obj);
 
     /* Set a new prototype for an object with a singleton type. */
-    bool splicePrototype(JSContext *cx, js::Handle<js::TaggedProto> proto);
+    bool splicePrototype(JSContext *cx, js::Class *clasp, js::Handle<js::TaggedProto> proto);
 
     /*
      * For bootstrapping, whether to splice a prototype for Function.prototype
@@ -1431,7 +1430,8 @@ js_GetClassPrototype(JSContext *cx, JSProtoKey protoKey, js::MutableHandleObject
 namespace js {
 
 extern bool
-SetProto(JSContext *cx, HandleObject obj, Handle<TaggedProto> proto, bool checkForCycles);
+SetClassAndProto(JSContext *cx, HandleObject obj,
+                 Class *clasp, Handle<TaggedProto> proto, bool checkForCycles);
 
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);

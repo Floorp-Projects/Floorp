@@ -3101,7 +3101,7 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
      */
     if (proto.isObject()) {
         RootedObject protoObj(cx, proto.toObject());
-        if (!JSObject::setNewTypeUnknown(cx, protoObj))
+        if (!JSObject::setNewTypeUnknown(cx, clasp, protoObj))
             return NULL;
     }
 

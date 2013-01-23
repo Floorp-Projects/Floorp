@@ -286,7 +286,7 @@ js::ObjectImpl::markChildren(JSTracer *trc)
 
     MarkShape(trc, &shape_, "shape");
 
-    Class *clasp = shape_->getObjectClass();
+    Class *clasp = type_->clasp;
     JSObject *obj = asObjectPtr();
     if (clasp->trace)
         clasp->trace(trc, obj);

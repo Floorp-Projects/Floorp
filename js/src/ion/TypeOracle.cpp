@@ -273,14 +273,14 @@ TypeInferenceOracle::inObjectIsDenseArray(HandleScript script, jsbytecode *pc)
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
-    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
+    return obj->getKnownClass() == &ArrayClass;
 }
 
 bool
 TypeInferenceOracle::inArrayIsPacked(UnrootedScript script, jsbytecode *pc)
 {
-    StackTypeSet *types = DropUnrooted(script)->analysis()->poppedTypes(pc, 0);
-    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+    StackTypeSet *types = script->analysis()->poppedTypes(pc, 0);
+    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
 }
 
 bool
@@ -294,7 +294,11 @@ TypeInferenceOracle::elementReadIsDenseArray(RawScript script, jsbytecode *pc)
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
-    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
+    if (obj->getKnownClass() != &ArrayClass)
+        return false;
+
+    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
+                                types::OBJECT_FLAG_LENGTH_OVERFLOW);
 }
 
 bool
@@ -306,9 +310,6 @@ TypeInferenceOracle::elementReadIsTypedArray(HandleScript script, jsbytecode *pc
 
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
-        return false;
-
-    if (obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY))
         return false;
 
     *arrayType = obj->getTypedArrayType();
@@ -360,8 +361,8 @@ TypeInferenceOracle::elementReadIsString(UnrootedScript script, jsbytecode *pc)
 bool
 TypeInferenceOracle::elementReadIsPacked(UnrootedScript script, jsbytecode *pc)
 {
-    StackTypeSet *types = DropUnrooted(script)->analysis()->poppedTypes(pc, 1);
-    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+    StackTypeSet *types = script->analysis()->poppedTypes(pc, 1);
+    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
 }
 
 void
@@ -395,7 +396,11 @@ TypeInferenceOracle::elementWriteIsDenseArray(HandleScript script, jsbytecode *p
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
-    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
+    if (obj->getKnownClass() != &ArrayClass)
+        return false;
+
+    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
+                                types::OBJECT_FLAG_LENGTH_OVERFLOW);
 }
 
 bool
@@ -409,10 +414,6 @@ TypeInferenceOracle::elementWriteIsTypedArray(RawScript script, jsbytecode *pc, 
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
-    AssertCanGC();
-    if (obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY))
-        return false;
-
     *arrayType = obj->getTypedArrayType();
     if (*arrayType == TypedArray::TYPE_MAX)
         return false;
@@ -423,8 +424,8 @@ TypeInferenceOracle::elementWriteIsTypedArray(RawScript script, jsbytecode *pc, 
 bool
 TypeInferenceOracle::elementWriteIsPacked(UnrootedScript script, jsbytecode *pc)
 {
-    StackTypeSet *types = DropUnrooted(script)->analysis()->poppedTypes(pc, 2);
-    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+    StackTypeSet *types = script->analysis()->poppedTypes(pc, 2);
+    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
 }
 
 bool
