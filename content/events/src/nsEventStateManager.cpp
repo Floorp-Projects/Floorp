@@ -3902,6 +3902,18 @@ public:
   nsCOMPtr<nsIContent> mTarget;
 };
 
+/*static*/ bool
+nsEventStateManager::IsHandlingUserInput()
+{
+  if (sUserInputEventDepth <= 0) {
+    return false;
+  }
+
+  TimeDuration timeout = nsContentUtils::HandlingUserInputTimeout();
+  return timeout <= TimeDuration(0) ||
+         (TimeStamp::Now() - sHandlingInputStart) <= timeout;
+}
+
 nsIFrame*
 nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, uint32_t aMessage,
                                         nsIContent* aTargetContent,
