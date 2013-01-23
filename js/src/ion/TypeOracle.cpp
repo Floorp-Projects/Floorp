@@ -273,10 +273,6 @@ TypeInferenceOracle::inObjectIsDenseArray(HandleScript script, jsbytecode *pc)
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
-    JSValueType objType = obj->getKnownTypeTag();
-    if (objType != JSVAL_TYPE_OBJECT)
-        return false;
-
     return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
 }
 
@@ -294,10 +290,6 @@ TypeInferenceOracle::elementReadIsDenseArray(RawScript script, jsbytecode *pc)
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
     StackTypeSet *id = script->analysis()->poppedTypes(pc, 0);
 
-    JSValueType objType = obj->getKnownTypeTag();
-    if (objType != JSVAL_TYPE_OBJECT)
-        return false;
-
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
@@ -311,10 +303,6 @@ TypeInferenceOracle::elementReadIsTypedArray(HandleScript script, jsbytecode *pc
     // Check whether the object is a typed array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
     StackTypeSet *id = DropUnrooted(script)->analysis()->poppedTypes(pc, 0);
-
-    JSValueType objType = obj->getKnownTypeTag();
-    if (objType != JSVAL_TYPE_OBJECT)
-        return false;
 
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
@@ -403,10 +391,6 @@ TypeInferenceOracle::elementWriteIsDenseArray(HandleScript script, jsbytecode *p
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
     StackTypeSet *id = script->analysis()->poppedTypes(pc, 1);
 
-    JSValueType objType = obj->getKnownTypeTag();
-    if (objType != JSVAL_TYPE_OBJECT)
-        return false;
-
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
@@ -420,10 +404,6 @@ TypeInferenceOracle::elementWriteIsTypedArray(RawScript script, jsbytecode *pc, 
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
     StackTypeSet *id = script->analysis()->poppedTypes(pc, 1);
-
-    JSValueType objType = obj->getKnownTypeTag();
-    if (objType != JSVAL_TYPE_OBJECT)
-        return false;
 
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
