@@ -445,8 +445,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
         // a predefined set of properties.
         XrayType type = GetXrayType(obj);
         if (type == NotXray) {
-            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                        CrossOriginAccessiblePropertiesOnly>::singleton;
+            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
         } else if (type == XrayForDOMObject) {
             wrapper = &FilteringWrapper<SecurityXrayDOM,
                                         CrossOriginAccessiblePropertiesOnly>::singleton;
