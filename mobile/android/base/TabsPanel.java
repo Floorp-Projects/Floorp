@@ -180,6 +180,9 @@ public class TabsPanel extends LinearLayout
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        if (!mVisible)
+            return;
+
         Panel panel = TabsPanel.Panel.NORMAL_TABS;
         if (position == 1)
             panel = TabsPanel.Panel.PRIVATE_TABS;
