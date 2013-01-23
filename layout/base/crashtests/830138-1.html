@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<math><menclose id="m" style="transform:translate(10px,0)">
+  <ll style="display:block">
+    <ll id=test2 style="display:none; position: fixed"></ll>
+  </ll>
+</menclose></math>
+<script>
+function doTest() {
+  document.getElementById("test2").setAttribute("style", "position:fixed")
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
