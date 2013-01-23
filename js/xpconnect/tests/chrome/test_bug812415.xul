@@ -17,17 +17,72 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812415
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-  /** Test for Bug 812415 **/
+  /** Test for Bug 812415 and Bug 823348 **/
 
   const Cu = Components.utils;
   SimpleTest.waitForExplicitFinish();
-  function go() {
-    var iwin = document.getElementById('ifr').contentWindow;
-    var sb = new Components.utils.Sandbox(iwin);
+
+  function testWaiving(iwin, sb) {
     sb.win = iwin;
     is(Cu.evalInSandbox('win', sb), iwin, "Basic identity works");
     is(Cu.evalInSandbox('win.wrappedJSObject', sb), iwin.wrappedJSObject, "Waivers work via .wrappedJSObject");
     is(Cu.evalInSandbox('XPCNativeWrapper.unwrap(win)', sb), iwin.wrappedJSObject, "Waivers work via XPCNativeWrapper.unwrap");
+    is(Cu.evalInSandbox('win.wrappedJSObject.document', sb), iwin.document.wrappedJSObject, "Waivers are deep");
+  }
+
+  function checkThrows(expression, sb, msg) {
+    var result = Cu.evalInSandbox('(function() { try { ' + expression + '; return "allowed"; } catch (e) { return e.toString(); }})();', sb);
+    ok(!!/denied/.exec(result), msg);
+  }
+
+  function testAsymmetric(regular, expanded) {
+
+    // Set up objects.
+    expanded.regFun = Cu.evalInSandbox('function reg() { return 42; }; reg', regular);
+    expanded.regObj = Cu.evalInSandbox('new Object({foo: 2})', regular);
+    regular.expFun = Cu.evalInSandbox('function exp() { return 41; }; exp', expanded);
+    regular.expObj = Cu.evalInSandbox('new Object({bar: 3})', expanded);
+
+    // Check objects.
+    is(Cu.evalInSandbox('regObj.foo', expanded), 2, "Expanded can see regular object prop");
+    checkThrows('expObj.bar', regular, "Regular shouldn't read properties");
+    Cu.evalInSandbox('regObj.foo = 20', expanded);
+    is(expanded.regObj.foo, 20, "Expanded can set properties");
+    checkThrows('expFun.bar = 0', regular, "Regular shouldn't write properties");
+
+    // Functions are callable regardless of security relationships.
+    is(Cu.evalInSandbox('regFun()', expanded), 42, "Expanded can call regular function");
+    is(Cu.evalInSandbox('expFun()', regular), 41, "Regular can call expanded function");
+
+    // Otherwise, the relationship is asymmetric.
+    is(Cu.evalInSandbox('regFun.name', expanded), 'reg', "Expanded can see regular function's name");
+    checkThrows('expFun.name', regular, "Regular can't see expanded function's name");
+    Cu.evalInSandbox('regFun.expando = 30', expanded);
+    is(expanded.regFun.expando, 30, "Expanded can set expandos");
+    checkThrows('expFun.expando = 29', regular, "Regular can't set expandos");
+
+    // Check __proto__ stuff.
+    is(Cu.evalInSandbox('regFun.__proto__', expanded), regular.Function.prototype, "expanded can get __proto__");
+    checkThrows('expFun.__proto__', regular, "regular can't use __proto__");
+    checkThrows('expFun.__proto__ = {}', regular, "regular can't mutate __proto__");
+  }
+
+  function go() {
+    var iwin = document.getElementById('ifr').contentWindow;
+
+    // Make our sandboxes. We pass wantXrays=false for the nsEP to ensure that
+    // the Xrays we get are the result of being an nsEP, not from the wantXrays
+    // flag.
+    var regular = new Components.utils.Sandbox(iwin);
+    var expanded = new Components.utils.Sandbox([iwin], {wantXrays: false});
+
+    // Because of the crazy secret life of wantXrays, passing wantXrays=false
+    // has the side effect of waiving Xrays on the returned sandbox. Undo that.
+    expanded = XPCNativeWrapper(expanded);
+
+    testWaiving(iwin, regular);
+    testWaiving(iwin, expanded);
+    testAsymmetric(regular, expanded);
     SimpleTest.finish();
   }
 
