@@ -31,7 +31,7 @@ var testCertApp = {
 
 SpecialPowers.addPermission("permissions", true, document);
 var comp = SpecialPowers.wrap(Components);
-SpecialPowers.pushPrefEnv({ "set": [["dom.mozPermissionSettings.enabled", true]] }, 
+SpecialPowers.pushPrefEnv({ "set": [["dom.mozPermissionSettings.enabled", true]] },
                           function() {
                             SpecialPowers.removePermission("permissions", document);
                           });
@@ -66,7 +66,7 @@ function permissionTest() {
 
     // Erasing a permission, even an explicit one, is not allowed
     try {
-      mozPermissions.set(testPerm, "unknown", privAppManifest, originPriv, false);
+      mozPermissions.remove(testPerm, privAppManifest, originPriv, false);
       ok(false, "Erase explicit permission");
     } catch (e) {
       ok(true, "Erase explicit permission");
