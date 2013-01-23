@@ -3169,7 +3169,7 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
         return;
 
     ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj.get());
-    RootedShape baseShape(cx, obj->lastProperty());
+    Shape *baseShape = obj->lastProperty();
 
     if (p) {
         /* The lookup ensures the shape matches, now check that the types match. */
@@ -3177,22 +3177,26 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
         for (unsigned i = 0; i < obj->slotSpan(); i++) {
             Type ntype = GetValueTypeForTable(cx, obj->getSlot(i));
             if (ntype != types[i]) {
-                if (NumberTypes(ntype, types[i])) {
-                    if (types[i].isPrimitive(JSVAL_TYPE_INT32)) {
-                        types[i] = Type::DoubleType();
-                        RootedShape shape(cx, baseShape);
-                        while (!shape->isEmptyShape()) {
-                            if (shape->slot() == i) {
-                                Type type = Type::DoubleType();
-                                if (!p->value.object->unknownProperties())
-                                    p->value.object->addPropertyType(cx, IdToTypeId(shape->propid()), type);
-                                break;
-                            }
-                            shape = shape->previous();
-                        }
-                    }
+                if (ntype.isPrimitive(JSVAL_TYPE_INT32) &&
+                    types[i].isPrimitive(JSVAL_TYPE_DOUBLE))
+                {
+                    /* The property types already reflect 'int32'. */
                 } else {
-                    return;
+                    if (ntype.isPrimitive(JSVAL_TYPE_DOUBLE) &&
+                        types[i].isPrimitive(JSVAL_TYPE_INT32))
+                    {
+                        /* Include 'double' in the property types to avoid the walk below later. */
+                        types[i] = Type::DoubleType();
+                    }
+                    Shape *shape = baseShape;
+                    while (!shape->isEmptyShape()) {
+                        if (shape->slot() == i) {
+                            if (!p->value.object->unknownProperties())
+                                p->value.object->addPropertyType(cx, IdToTypeId(shape->propid()), ntype);
+                            break;
+                        }
+                        shape = shape->previous();
+                    }
                 }
             }
         }
