@@ -51,21 +51,6 @@ const PARCEL_SIZE_SIZE = UINT32_SIZE;
 
 const PDU_HEX_OCTET_SIZE = 4;
 
-const TLV_COMMAND_DETAILS_SIZE = 5;
-const TLV_DEVICE_ID_SIZE = 4;
-const TLV_RESULT_SIZE = 3;
-const TLV_ITEM_ID_SIZE = 3;
-const TLV_HELP_REQUESTED_SIZE = 2;
-const TLV_EVENT_LIST_SIZE = 3;
-const TLV_LOCATION_STATUS_SIZE = 3;
-const TLV_LOCATION_INFO_GSM_SIZE = 9;
-const TLV_LOCATION_INFO_UMTS_SIZE = 11;
-const TLV_IMEI_SIZE = 10;
-const TLV_DATE_TIME_ZONE_SIZE = 9;
-const TLV_LANGUAGE_SIZE = 4;
-const TLV_TIMER_IDENTIFIER = 3;
-const TLV_TIMER_VALUE = 5;
-
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
 // MMI match groups
@@ -2323,50 +2308,13 @@ let RIL = {
     }
 
     let token = Buf.newParcel(REQUEST_STK_SEND_TERMINAL_RESPONSE);
-    let textLen = 0;
     let command = response.command;
-    if (response.resultCode != STK_RESULT_HELP_INFO_REQUIRED) {
-      if (response.isYesNo) {
-        textLen = 1;
-      } else if (response.input) {
-        if (command.options.isUCS2) {
-          textLen = response.input.length * 2;
-        } else if (command.options.isPacked) {
-          let bits = response.input.length * 7;
-          textLen = bits * 7 / 8 + (bits % 8 ? 1 : 0);
-        } else {
-          textLen = response.input.length;
-        }
-      }
-    }
 
-    let berLen = TLV_COMMAND_DETAILS_SIZE +
-                 TLV_DEVICE_ID_SIZE +
-                 TLV_RESULT_SIZE +
-                 (response.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
-                 (textLen ? textLen + 3 : 0);
-
-    if (response.localInfo) {
-      let localInfo = response.localInfo;
-      berLen += ((localInfo.locationInfo ?
-                 (localInfo.locationInfo.gsmCellId > 0xffff ?
-                   TLV_LOCATION_INFO_UMTS_SIZE :
-                   TLV_LOCATION_INFO_GSM_SIZE) :
-                  0) +
-                 (localInfo.imei ? TLV_IMEI_SIZE : 0) +
-                 (localInfo.date ? TLV_DATE_TIME_ZONE_SIZE : 0) +
-                 (localInfo.language ? TLV_LANGUAGE_SIZE : 0));
-    }
-
-    if (response.timer) {
-      let timer = response.timer;
-      berLen += TLV_TIMER_IDENTIFIER +
-                (timer.timerValue ? TLV_TIMER_VALUE : 0);
-    }
-
-    // 1 octets = 2 chars.
-    let size = berLen * 2;
-    Buf.writeUint32(size);
+    // 1st mark for Parcel size
+    Buf.startCalOutgoingSize(function(size) {
+      // Parcel size is in string length, which costs 2 uint8 per char.
+      Buf.writeUint32(size / 2);
+    });
 
     // Command Details
     GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
@@ -2425,7 +2373,13 @@ let RIL = {
       if (text) {
         GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_TEXT_STRING |
                                    COMPREHENSIONTLV_FLAG_CR);
-        GsmPDUHelper.writeHexOctet(textLen + 1); // +1 for coding
+
+        // 2nd mark for text length
+        Buf.startCalOutgoingSize(function(size) {
+          // Text length is in number of hexOctets, which costs 4 uint8 per hexOctet.
+          GsmPDUHelper.writeHexOctet(size / 4);
+        });
+
         let coding = command.options.isUCS2 ?
                        STK_TEXT_CODING_UCS2 :
                        (command.options.isPacked ?
@@ -2442,11 +2396,14 @@ let RIL = {
             GsmPDUHelper.writeStringAsSeptets(text, 0, 0, 0);
             break;
           case STK_TEXT_CODING_GSM_8BIT:
-            for (let i = 0; i < textLen; i++) {
+            for (let i = 0; i < text.length; i++) {
               GsmPDUHelper.writeHexOctet(text.charCodeAt(i));
             }
             break;
         }
+
+        // Calculate and write text length to 2nd mark
+        Buf.stopCalOutgoingSize();
       }
     }
 
@@ -2498,6 +2455,9 @@ let RIL = {
         ComprehensionTlvHelper.writeTimerValueTlv(timer.timerValue, false);
       }
     }
+
+    // Calculate and write Parcel size to 1st mark
+    Buf.stopCalOutgoingSize();
 
     Buf.writeUint32(0);
     Buf.sendParcel();
@@ -2597,33 +2557,19 @@ let RIL = {
     }
     let token = Buf.newParcel(REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
-    let berLen = TLV_DEVICE_ID_SIZE + /* Size of Device Identifier TLV */
-                 (options.itemIdentifier ? TLV_ITEM_ID_SIZE : 0) +
-                 (options.helpRequested ? TLV_HELP_REQUESTED_SIZE : 0) +
-                 (options.eventList ? TLV_EVENT_LIST_SIZE : 0) +
-                 (options.locationStatus ? TLV_LOCATION_STATUS_SIZE : 0) +
-                 (options.locationInfo ?
-                    (options.locationInfo.gsmCellId > 0xffff ?
-                      TLV_LOCATION_INFO_UMTS_SIZE :
-                      TLV_LOCATION_INFO_GSM_SIZE) :
-                    0) +
-                 (options.transactionId ? 3 : 0) +
-                 (options.address ?
-                  1 + // Length of tag.
-                  ComprehensionTlvHelper.getSizeOfLengthOctets(
-                    Math.ceil(options.address.length/2) + 1) + // Length of length field.
-                  Math.ceil(options.address.length/2) + 1 // address BCD + TON.
-                  : 0) +
-                 (options.cause ? 4 : 0) +
-                 (options.timerId ? TLV_TIMER_IDENTIFIER : 0) +
-                 (options.timerValue ? TLV_TIMER_VALUE : 0);
-    let size = (2 + berLen) * 2;
-
-    Buf.writeUint32(size);
+    // 1st mark for Parcel size
+    Buf.startCalOutgoingSize(function(size) {
+      // Parcel size is in string length, which costs 2 uint8 per char.
+      Buf.writeUint32(size / 2);
+    });
 
     // Write a BER-TLV
     GsmPDUHelper.writeHexOctet(options.tag);
-    GsmPDUHelper.writeHexOctet(berLen);
+    // 2nd mark for BER length
+    Buf.startCalOutgoingSize(function(size) {
+      // BER length is in number of hexOctets, which costs 4 uint8 per hexOctet.
+      GsmPDUHelper.writeHexOctet(size / 4);
+    });
 
     // Device Identifies
     GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DEVICE_ID |
@@ -2705,6 +2651,12 @@ let RIL = {
     if (options.timerValue) {
         ComprehensionTlvHelper.writeTimerValueTlv(options.timerValue, true);
     }
+
+    // Calculate and write BER length to 2nd mark
+    Buf.stopCalOutgoingSize();
+
+    // Calculate and write Parcel size to 1st mark
+    Buf.stopCalOutgoingSize();
 
     Buf.writeUint32(0);
     Buf.sendParcel();
