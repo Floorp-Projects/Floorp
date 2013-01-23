@@ -237,7 +237,7 @@ def run_cmd_avoid_stdio(cmdline, env, timeout):
     _, __, code = run_timeout_cmd(cmdline, { 'env': env }, timeout)
     return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
-def run_test(test, lib_dir, shell_args):
+def run_test(test, lib_dir, shell_args, options):
     cmd = get_test_cmd(test.path, test.jitflags, lib_dir, shell_args)
 
     if (test.valgrind and
@@ -254,10 +254,10 @@ def run_test(test, lib_dir, shell_args):
             valgrind_prefix += ['--dsymutil=yes']
         cmd = valgrind_prefix + cmd
 
-    if OPTIONS.show_cmd:
+    if options.show_cmd:
         print(subprocess.list2cmdline(cmd))
 
-    if OPTIONS.avoid_stdio:
+    if options.avoid_stdio:
         run = run_cmd_avoid_stdio
     else:
         run = run_cmd
@@ -266,9 +266,9 @@ def run_test(test, lib_dir, shell_args):
     if test.tz_pacific:
         env['TZ'] = 'PST8PDT'
 
-    out, err, code, timed_out = run(cmd, env, OPTIONS.timeout)
+    out, err, code, timed_out = run(cmd, env, options.timeout)
 
-    if OPTIONS.show_output:
+    if options.show_output:
         sys.stdout.write(out)
         sys.stdout.write(err)
         sys.stdout.write('Exit code: %s\n' % code)
@@ -310,19 +310,17 @@ def print_tinderbox(label, test, message=None):
 def wrap_parallel_run_test(test, lib_dir, shell_args, resultQueue, options, js):
     # This is necessary because on Windows global variables are not automatically
     # available in the children, while on Linux and OSX this is the case (because of fork).
-    global OPTIONS
     global JS
-    OPTIONS = options
     JS = js
 
     # Ignore SIGINT in the child
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    result = run_test(test, lib_dir, shell_args) + (test,)
+    result = run_test(test, lib_dir, shell_args, options) + (test,)
     resultQueue.put(result)
     return result
 
-def run_tests_parallel(tests, test_dir, lib_dir, shell_args):
+def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
     # This queue will contain the results of the various tests run.
     # We could make this queue a global variable instead of using
     # a manager to share, but this will not work on Windows.
@@ -340,7 +338,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args):
     result_process_return_queue = queue_manager.Queue()
     result_process = Process(target=process_test_results_parallel,
                              args=(async_test_result_queue, result_process_return_queue,
-                                   notify_queue, len(tests), OPTIONS, JS, lib_dir, shell_args))
+                                   notify_queue, len(tests), options, JS, lib_dir, shell_args))
     result_process.start()
 
     # Ensure that a SIGTERM is handled the same way as SIGINT
@@ -362,7 +360,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args):
     try:
         testcnt = 0
         # Initially start as many jobs as allowed to run parallel
-        for i in range(min(OPTIONS.max_jobs,len(tests))):
+        for i in range(min(options.max_jobs,len(tests))):
             notify_queue.put(True)
 
         # For every item in the notify queue, start one new worker.
@@ -370,7 +368,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args):
         while notify_queue.get():
             if (testcnt < len(tests)):
                 # Start one new worker
-                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], lib_dir, shell_args, async_test_result_queue, OPTIONS, JS))
+                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], lib_dir, shell_args, async_test_result_queue, options, JS))
                 worker_processes.append(worker_process)
                 worker_process.start()
                 testcnt += 1
@@ -519,19 +517,19 @@ def process_test_results(results, num_tests, options, js, lib_dir, shell_args):
     return print_test_summary(failures, complete, doing, options, lib_dir, shell_args)
 
 
-def get_serial_results(tests, lib_dir, shell_args):
+def get_serial_results(tests, lib_dir, shell_args, options):
     for test in tests:
-        result = run_test(test, lib_dir, shell_args)
+        result = run_test(test, lib_dir, shell_args, options)
         yield result + (test,)
 
-def run_tests(tests, test_dir, lib_dir, shell_args):
-    gen = get_serial_results(tests, lib_dir, shell_args)
-    ok = process_test_results(gen, len(tests), OPTIONS, JS, lib_dir, shell_args)
+def run_tests(tests, test_dir, lib_dir, shell_args, options):
+    gen = get_serial_results(tests, lib_dir, shell_args, options)
+    ok = process_test_results(gen, len(tests), options, JS, lib_dir, shell_args)
     return ok
 
-def parse_jitflags():
+def parse_jitflags(options):
     jitflags = [ [ '-' + flag for flag in flags ]
-                 for flags in OPTIONS.jitflags.split(',') ]
+                 for flags in options.jitflags.split(',') ]
     for flags in jitflags:
         for flag in flags:
             if flag not in ('-m', '-a', '-p', '-d', '-n'):
@@ -554,9 +552,8 @@ def stdio_might_be_broken():
     return platform_might_be_android()
 
 JS = None
-OPTIONS = None
 def main(argv):
-    global JS, OPTIONS
+    global JS
 
     script_path = os.path.abspath(sys.modules['__main__'].__file__)
     script_dir = os.path.dirname(script_path)
@@ -620,7 +617,7 @@ def main(argv):
     op.add_option('-j', '--worker-count', dest='max_jobs', type=int, default=max_jobs_default,
                   help='Number of tests to run in parallel (default %default)')
 
-    (OPTIONS, args) = op.parse_args(argv)
+    options, args = op.parse_args(argv)
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
     # We need to make sure we are using backslashes on Windows.
@@ -634,11 +631,11 @@ def main(argv):
         #
         # XXX technically we could check for broken stdio, but it
         # really seems like overkill.
-        OPTIONS.avoid_stdio = True
+        options.avoid_stdio = True
 
-    if OPTIONS.retest:
-        OPTIONS.read_tests = OPTIONS.retest
-        OPTIONS.write_failures = OPTIONS.retest
+    if options.retest:
+        options.read_tests = options.retest
+        options.write_failures = options.retest
 
     test_list = []
     read_all = True
@@ -648,28 +645,28 @@ def main(argv):
         for arg in test_args:
             test_list += find_tests(test_dir, arg)
 
-    if OPTIONS.read_tests:
+    if options.read_tests:
         read_all = False
         try:
-            f = open(OPTIONS.read_tests)
+            f = open(options.read_tests)
             for line in f:
                 test_list.append(os.path.join(test_dir, line.strip('\n')))
             f.close()
         except IOError:
-            if OPTIONS.retest:
+            if options.retest:
                 read_all = True
             else:
                 sys.stderr.write("Exception thrown trying to read test file '%s'\n"%
-                                 OPTIONS.read_tests)
+                                 options.read_tests)
                 traceback.print_exc()
                 sys.stderr.write('---\n')
 
     if read_all:
         test_list = find_tests(test_dir)
 
-    if OPTIONS.exclude:
+    if options.exclude:
         exclude_list = []
-        for exclude in OPTIONS.exclude:
+        for exclude in options.exclude:
             exclude_list += find_tests(test_dir, exclude)
         test_list = [ test for test in test_list if test not in set(exclude_list) ]
 
@@ -677,14 +674,14 @@ def main(argv):
         print("No tests found matching command line arguments.", file=sys.stderr)
         sys.exit(0)
 
-    test_list = [ Test.from_file(_, OPTIONS) for _ in test_list ]
+    test_list = [ Test.from_file(_, options) for _ in test_list ]
 
-    if not OPTIONS.run_slow:
+    if not options.run_slow:
         test_list = [ _ for _ in test_list if not _.slow ]
 
     # The full test list is ready. Now create copies for each JIT configuration.
     job_list = []
-    if OPTIONS.tbpl:
+    if options.tbpl:
         # Running all bits would take forever. Instead, we test a few interesting combinations.
         flags = [
                       ['--no-jm'],
@@ -704,7 +701,7 @@ def main(argv):
                 new_test = test.copy()
                 new_test.jitflags.extend(variant)
                 job_list.append(new_test)
-    elif OPTIONS.ion:
+    elif options.ion:
         flags = [['--no-jm'], ['--ion-eager']]
         for test in test_list:
             for variant in flags:
@@ -712,16 +709,16 @@ def main(argv):
                 new_test.jitflags.extend(variant)
                 job_list.append(new_test)
     else:
-        jitflags_list = parse_jitflags()
+        jitflags_list = parse_jitflags(options)
         for test in test_list:
             for jitflags in jitflags_list:
                 new_test = test.copy()
                 new_test.jitflags.extend(jitflags)
                 job_list.append(new_test)
 
-    shell_args = shlex.split(OPTIONS.shell_args)
+    shell_args = shlex.split(options.shell_args)
 
-    if OPTIONS.debug:
+    if options.debug:
         if len(job_list) > 1:
             print('Multiple tests match command line arguments, debugger can only run one')
             for tc in job_list:
@@ -735,10 +732,10 @@ def main(argv):
 
     try:
         ok = None
-        if OPTIONS.max_jobs > 1 and HAVE_MULTIPROCESSING:
-            ok = run_tests_parallel(job_list, test_dir, lib_dir, shell_args)
+        if options.max_jobs > 1 and HAVE_MULTIPROCESSING:
+            ok = run_tests_parallel(job_list, test_dir, lib_dir, shell_args, options)
         else:
-            ok = run_tests(job_list, test_dir, lib_dir, shell_args)
+            ok = run_tests(job_list, test_dir, lib_dir, shell_args, options)
         if not ok:
             sys.exit(2)
     except OSError:
