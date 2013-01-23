@@ -6,6 +6,10 @@ MARIONETTE_TIMEOUT = 10000;
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.addPermission("sms", true, document);
 
+const REMOTE = "5555552368";
+const SENDER = "+15555552368"; // the normalized remote number
+const RECEIVER = "+15555215554"; // the emulator's number
+
 let sms = window.navigator.mozSms;
 
 function verifyInitialState() {
@@ -15,7 +19,6 @@ function verifyInitialState() {
 }
 
 function simulateIncomingSms() {
-  let fromNumber = "5551234567";
   let msgText = "";
 
   log("Simulating incoming SMS.");
@@ -34,13 +37,13 @@ function simulateIncomingSms() {
     is(incomingSms.body, msgText, "msg body");
     is(incomingSms.delivery, "received", "delivery");
     is(incomingSms.read, false, "read");
-    is(incomingSms.receiver, null, "receiver");
-    is(incomingSms.sender, fromNumber, "sender");
+    is(incomingSms.receiver, RECEIVER, "receiver");
+    is(incomingSms.sender, SENDER, "sender");
     ok(incomingSms.timestamp instanceof Date, "timestamp is istanceof date");
 
     verifySmsExists(incomingSms);
   };
-  runEmulatorCmd("sms send " + fromNumber + " " + msgText, function(result) {
+  runEmulatorCmd("sms send " + REMOTE + " " + msgText, function(result) {
     is(result[0], "OK", "emulator output");
   });
 }
@@ -56,6 +59,10 @@ function verifySmsExists(incomingSms) {
     let foundSms = event.target.result;
     is(foundSms.id, incomingSms.id, "found SMS id matches");
     is(foundSms.body, incomingSms.body, "found SMS msg text matches");
+    is(foundSms.delivery, "received", "delivery");
+    is(foundSms.read, false, "read");
+    is(foundSms.receiver, RECEIVER, "receiver");
+    is(foundSms.sender, SENDER, "sender");
     log("Got SMS (id: " + foundSms.id + ") as expected.");
     deleteSms(incomingSms);
   };

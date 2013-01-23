@@ -7,6 +7,8 @@ SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding", false);
 SpecialPowers.addPermission("sms", true, document);
 
+const SENDER = "+15555215554"; // the emulator's number
+
 let sms = window.navigator.mozSms;
 const SHORT_BODY = "Hello SMS world!";
 const LONG_BODY = "Let me not to the marriage of true minds\n"
@@ -32,7 +34,7 @@ function checkMessage(message, delivery, body) {
   ok(message.id, "message.id");
   is(message.delivery, delivery, "message.delivery");
   is(message.deliveryStatus, "pending", "message.deliveryStatus");
-  is(message.sender, null, "message.sender");
+  is(message.sender, SENDER, "message.sender");
   ok(message.receiver, "message.receiver");
   is(message.body, body, "message.body");
   is(message.messageClass, "normal", "message.messageClass");
