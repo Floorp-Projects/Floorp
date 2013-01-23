@@ -161,6 +161,8 @@ nsJSUtils::CompileFunction(JSContext* aCx,
   MOZ_ASSERT(js::GetEnterCompartmentDepth(aCx) > 0);
   MOZ_ASSERT_IF(aTarget, js::IsObjectInContextCompartment(aTarget, aCx));
   MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
+  mozilla::DebugOnly<nsIScriptContext*> ctx = GetScriptContextFromJSContext(aCx);
+  MOZ_ASSERT_IF(ctx, ctx->IsContextInitialized());
 
   // Since aTarget and aCx are same-compartment, there should be no distinction
   // between the object principal and the cx principal.
@@ -177,7 +179,10 @@ nsJSUtils::CompileFunction(JSContext* aCx,
                                         aArgCount, aArgArray,
                                         PromiseFlatString(aBody).get(),
                                         aBody.Length());
-  NS_ENSURE_TRUE(fun, NS_ERROR_FAILURE);
+  if (!fun) {
+    ReportPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
 
   *aFunctionObject = JS_GetFunctionObject(fun);
   return NS_OK;
