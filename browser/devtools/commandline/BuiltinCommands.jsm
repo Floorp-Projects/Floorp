@@ -1260,6 +1260,41 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   });
 
   /**
+  * 'dbg list' command
+  */
+  gcli.addCommand({
+    name: "dbg list",
+    description: gcli.lookup("dbgListSourcesDesc"),
+    params: [],
+    returnType: "html",
+    exec: function(args, context) {
+      let dbg = getPanel(context, "jsdebugger");
+      let doc = context.environment.chromeDocument;
+      if (!dbg) {
+        return gcli.lookup("debuggerClosed");
+      }
+      let sources = dbg._view.Sources.values;
+      let div = createXHTMLElement(doc, "div");
+      let ol = createXHTMLElement(doc, "ol");
+      sources.forEach(function(src) {
+        let li = createXHTMLElement(doc, "li");
+        li.textContent = src;
+        ol.appendChild(li);
+      });
+      div.appendChild(ol);
+
+      return div;
+    }
+  });
+
+  /**
+  * A helper to create xhtml namespaced elements
+  */
+  function createXHTMLElement(document, tagname) {
+    return document.createElementNS("http://www.w3.org/1999/xhtml", tagname);
+  }
+
+  /**
   * A helper to go from a command context to a debugger panel
   */
   function getPanel(context, id) {
