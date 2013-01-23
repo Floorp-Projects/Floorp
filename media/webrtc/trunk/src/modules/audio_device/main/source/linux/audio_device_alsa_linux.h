@@ -15,10 +15,15 @@
 #include "critical_section_wrapper.h"
 #include "audio_mixer_manager_alsa_linux.h"
 
-#include <sys/soundcard.h>
 #include <sys/ioctl.h>
 
+#if defined (WEBRTC_GONK)
+#include <linux/soundcard.h>
+#include <tinyalsa/asoundlib.h>
+#else
+#include <sys/soundcard.h>
 #include <alsa/asoundlib.h>
+#endif
 
 namespace webrtc
 {
