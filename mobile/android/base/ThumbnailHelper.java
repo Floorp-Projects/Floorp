@@ -112,10 +112,12 @@ final class ThumbnailHelper {
             }
             try {
                 mBuffer = DirectBufferAllocator.allocate(capacity);
+            } catch (IllegalArgumentException iae) {
+                Log.w(LOGTAG, iae.toString());
             } catch (OutOfMemoryError oom) {
                 Log.w(LOGTAG, "Unable to allocate thumbnail buffer of capacity " + capacity);
-                // At this point mBuffer will be pointing to null, so we are in a sane state.
             }
+            // If we hit an error above, mBuffer will be pointing to null, so we are in a sane state.
         }
     }
 
