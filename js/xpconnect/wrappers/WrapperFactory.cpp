@@ -356,13 +356,6 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
     } else if (xpc::IsUniversalXPConnectEnabled(target)) {
         wrapper = &CrossCompartmentWrapper::singleton;
     } else if (originIsChrome) {
-        JSFunction *fun = JS_GetObjectFunction(obj);
-        if (fun) {
-            if (JS_IsBuiltinEvalFunction(fun) || JS_IsBuiltinFunctionConstructor(fun)) {
-                JS_ReportError(cx, "Not allowed to access chrome eval or Function from content");
-                return nullptr;
-            }
-        }
 
         if (xrayType == XrayForWrappedNative) {
             wrapper = &FilteringWrapper<SecurityXrayXPCWN, CrossOriginAccessiblePropertiesOnly>::singleton;
@@ -373,38 +366,6 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
                                         ComponentsObjectPolicy>::singleton;
         } else {
             wrapper = &ChromeObjectWrapper::singleton;
-
-            // If the prototype of the chrome object being wrapped is a prototype
-            // for a standard class, use the one from the content compartment so
-            // that we can safely take advantage of things like .forEach().
-            //
-            // If the prototype chain of chrome object |obj| looks like this:
-            //
-            // obj => foo => bar => chromeWin.StandardClass.prototype
-            //
-            // The prototype chain of COW(obj) looks lke this:
-            //
-            // COW(obj) => COW(foo) => COW(bar) => contentWin.StandardClass.prototype
-            JSProtoKey key = JSProto_Null;
-            {
-                JSAutoCompartment ac(cx, obj);
-                JSObject *unwrappedProto;
-                if (!js::GetObjectProto(cx, obj, &unwrappedProto))
-                    return NULL;
-                if (unwrappedProto && IsCrossCompartmentWrapper(unwrappedProto))
-                    unwrappedProto = Wrapper::wrappedObject(unwrappedProto);
-                if (unwrappedProto) {
-                    JSAutoCompartment ac2(cx, unwrappedProto);
-                    key = JS_IdentifyClassPrototype(cx, unwrappedProto);
-                }
-            }
-            if (key != JSProto_Null) {
-                JSObject *homeProto;
-                if (!JS_GetClassPrototype(cx, key, &homeProto))
-                    return NULL;
-                MOZ_ASSERT(homeProto);
-                proxyProto = homeProto;
-            }
         }
     } else if (targetSubsumesOrigin) {
         // For the same-origin case we use a transparent wrapper, unless one
@@ -443,6 +404,50 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
         } else {
             wrapper = &FilteringWrapper<SecurityXrayXPCWN,
                                         CrossOriginAccessiblePropertiesOnly>::singleton;
+        }
+    }
+
+    // If the prototype of a chrome object being wrapped in content is a prototype
+    // for a standard class, use the one from the content compartment so
+    // that we can safely take advantage of things like .forEach().
+    //
+    // If the prototype chain of chrome object |obj| looks like this:
+    //
+    // obj => foo => bar => chromeWin.StandardClass.prototype
+    //
+    // The prototype chain of COW(obj) looks lke this:
+    //
+    // COW(obj) => COW(foo) => COW(bar) => contentWin.StandardClass.prototype
+    if (wrapper == &ChromeObjectWrapper::singleton) {
+        JSProtoKey key = JSProto_Null;
+        {
+            JSAutoCompartment ac(cx, obj);
+            JSObject *unwrappedProto;
+            if (!js::GetObjectProto(cx, obj, &unwrappedProto))
+                return NULL;
+            if (unwrappedProto && IsCrossCompartmentWrapper(unwrappedProto))
+                unwrappedProto = Wrapper::wrappedObject(unwrappedProto);
+            if (unwrappedProto) {
+                JSAutoCompartment ac2(cx, unwrappedProto);
+                key = JS_IdentifyClassPrototype(cx, unwrappedProto);
+            }
+        }
+        if (key != JSProto_Null) {
+            JSObject *homeProto;
+            if (!JS_GetClassPrototype(cx, key, &homeProto))
+                return NULL;
+            MOZ_ASSERT(homeProto);
+            proxyProto = homeProto;
+        }
+
+        // This shouldn't happen, but do a quick check to make some dumb addon
+        // doesn't expose chrome eval or Function().
+        JSFunction *fun = JS_GetObjectFunction(obj);
+        if (fun) {
+            if (JS_IsBuiltinEvalFunction(fun) || JS_IsBuiltinFunctionConstructor(fun)) {
+                JS_ReportError(cx, "Not allowed to access chrome eval or Function from content");
+                return nullptr;
+            }
         }
     }
 
