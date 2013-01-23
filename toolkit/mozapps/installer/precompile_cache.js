@@ -79,18 +79,6 @@ function resolveResource(spec) {
   return Services.io.newURI(rph.resolveURI(uri), null, null);
 }
 
-function populate_startupcache(startupcacheName) {
-  var scFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
-  scFile.append(startupcacheName);
-  let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  env.set('MOZ_STARTUP_CACHE', scFile.path);
-
-  var greURI = resolveResource("resource://gre/");
-  var appURI = resolveResource("resource://app/");
-
-  load_modules_under("resource://gre/", greURI);
-  if (!appURI.equals(greURI))
-    load_modules_under("resource://app/", appURI);
+function precompile_startupcache(uri) {
+  load_modules_under(uri, resolveResource(uri));
 }
-
-

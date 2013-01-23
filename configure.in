@@ -907,6 +907,23 @@ dnl when we can run target binaries.
 AC_SUBST(UNIVERSAL_BINARY)
 AC_SUBST(MOZ_CAN_RUN_PROGRAMS)
 
+MOZ_ARG_WITH_STRING(unify-dist,
+[  --with-unify-dist=dir   Location of the dist directory to unify with at packaging time (Mac OS X universal build only)],
+    UNIFY_DIST=$withval)
+if test -n "$UNIVERSAL_BINARY"; then
+    if test -z "$UNIFY_DIST"; then
+        AC_MSG_ERROR([You need to provide the --with-unify-dist=dir argument when performing a universal build])
+    fi
+    case "$UNIFY_DIST" in
+    /*)
+        ;;
+    *)
+        UNIFY_DIST="${MOZ_BUILD_ROOT}/${UNIFY_DIST}"
+        ;;
+    esac
+fi
+AC_SUBST(UNIFY_DIST)
+
 dnl ========================================================
 dnl Check for MacOS deployment target version
 dnl ========================================================
@@ -2367,6 +2384,8 @@ ia64*-hpux*)
     RCFLAGS='-n'
     MOZ_USER_DIR="Mozilla"
     ZIP="$ZIP -X"
+    STRIP=lxlite
+    STRIP_FLAGS="/yua /ydd /yxd /ynl /anp /b- /cs+ /d /i- /ml1 /mr2 /mf2 /r+ /u+ /x- /zs:0 /zx /zd"
 
     if test "$MOZTOOLS"; then
         MOZ_TOOLS_DIR=`echo $MOZTOOLS | sed -e 's|\\\\|/|g'`
@@ -7711,18 +7730,20 @@ dnl done during packaging with omnijar.
 if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     MOZ_OMNIJAR=1
     AC_DEFINE(MOZ_OMNIJAR)
-    if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
-        MOZ_CHROME_FILE_FORMAT=flat
-    else
-        MOZ_CHROME_FILE_FORMAT=symlink
-    fi
 elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
     AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
+fi
+MOZ_PACKAGER_FORMAT="$MOZ_CHROME_FILE_FORMAT"
+if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
+    MOZ_CHROME_FILE_FORMAT=flat
+else
+    MOZ_CHROME_FILE_FORMAT=symlink
 fi
 
 OMNIJAR_NAME=omni.ja
 AC_SUBST(OMNIJAR_NAME)
 AC_SUBST(MOZ_OMNIJAR)
+AC_SUBST(MOZ_PACKAGER_FORMAT)
 
 dnl ========================================================
 dnl = Define default location for MOZILLA_FIVE_HOME
