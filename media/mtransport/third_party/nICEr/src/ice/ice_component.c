@@ -233,7 +233,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     /* count the candidates that will be initialized */
     cand=TAILQ_FIRST(&component->candidates);
     if(!cand){
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create any valid candidates");
+      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create any valid candidates",ctx->label);
       ABORT(R_NOT_FOUND);
     }
 
@@ -397,7 +397,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
       ABORT(r);
     }
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): This STUN request appears to map to local addr",comp->stream->pctx->label,local_addr.as_string);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): This STUN request appears to map to local addr %s",comp->stream->pctx->label,local_addr.as_string);
 
     pair=TAILQ_FIRST(&comp->stream->check_list);
     while(pair){

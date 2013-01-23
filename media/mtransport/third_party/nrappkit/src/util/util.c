@@ -385,12 +385,12 @@ int nr_reg_uint4_fetch_and_check(NR_registry key, UINT4 min, UINT4 max, int log_
     }
 
     if((min>0) && (my_val<min)){
-      r_log(log_fac,LOG_ERR,"Invalid value for key '%s'=%lu, (min = %lu)",key,my_val,min);
+      r_log(log_fac,LOG_ERR,"Invalid value for key '%s'=%lu, (min = %lu)",key,(unsigned long)my_val,(unsigned long)min);
       ABORT(R_BAD_DATA);
     }
 
     if(my_val>max){
-      r_log(log_fac,LOG_ERR,"Invalid value for key '%s'=%lu, (max = %lu)",key,my_val,max);
+      r_log(log_fac,LOG_ERR,"Invalid value for key '%s'=%lu, (max = %lu)",key,(unsigned long)my_val,(unsigned long)max);
       ABORT(R_BAD_DATA);
     }
 
