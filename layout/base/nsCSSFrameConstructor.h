@@ -1463,11 +1463,8 @@ private:
    * corresponding logic in these functions.
    */
 public:
-  enum ContainingBlockType {
-    ABS_POS,
-    FIXED_POS
-  };
-  nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame, ContainingBlockType aType);
+  nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
+  nsIFrame* GetFixedContainingBlock(nsIFrame* aFrame);
   nsIFrame* GetFloatContainingBlock(nsIFrame* aFrame);
 
 private:
