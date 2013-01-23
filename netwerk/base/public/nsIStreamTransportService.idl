@@ -15,7 +15,7 @@ interface nsIOutputStream;
  * into a fully asynchronous stream that can be read/written without 
  * blocking the main thread.
  */
-[scriptable, uuid(51CAC889-ABC6-4948-97A3-4F135A6E7630)]
+[scriptable, uuid(8268D474-EFBF-494f-A152-E8A8616F4E52)]
 interface nsIStreamTransportService : nsISupports
 {
     /**
@@ -65,33 +65,4 @@ interface nsIStreamTransportService : nsISupports
                                        in long long aStartOffset,
                                        in long long aWriteLimit,
                                        in boolean aCloseWhenDone);
-
-    /**
-     * Raise the maximum number of active threads by one.
-     *
-     * Calling this method won't create any additional thread synchronously.
-     * It will be only created when it's needed (lazily).
-     *
-     * Used by mozilla::dom::file::FileService to increase the maximum number
-     * of active threads in the thread pool for asynchronous file IO.
-     */
-    void raiseThreadLimit();
-
-    /**
-     * Lower the maximum number of active threads by one.
-     * lowerThreadLimit() should be always paired with raiseThreadLimit().
-     *
-     * Calling this method won't destroy any already running thread
-     * synchronously. It will be only destroyed when it's done with
-     * currently running event.
-     *
-     * This will never lower the maximum number of active threads beyond
-     * the internal limit.
-     *
-     * @throws NS_ERROR_UNEXPECTED
-     *         When trying to lower the maximum number of active threads
-     *         beyond the internal limit (for example in the case of badly
-     *         nested calls)
-     */
-    void lowerThreadLimit();
 };
