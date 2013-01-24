@@ -437,6 +437,8 @@ parent:
     // get nsIVolumeService to broadcast volume information
     async BroadcastVolume(nsString volumeName);
 
+    async RecordingDeviceEvents(nsString recordingStatus);
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);
 };
