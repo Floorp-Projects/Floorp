@@ -11,6 +11,7 @@
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 #include "nsPrintfCString.h"
+#include "mozilla/Preferences.h"
 
 #if defined(DEBUG) || defined(ENABLE_TESTS)
 # define NECKO_ERRORS_ARE_FATAL_DEFAULT true
@@ -94,6 +95,22 @@ IsNeckoChild()
   }
   return amChild;
 }
+
+// This should always return true unless xpcshell tests are being used
+inline bool
+UsingNeckoIPCSecurity()
+{
+  static bool securityDisabled = true;
+  static bool registeredBool = false;
+
+  if (!registeredBool) {
+    Preferences::AddBoolVarCache(&securityDisabled,
+                                 "network.disable.ipc.security");
+    registeredBool = true;
+  }
+  return !securityDisabled;
+}
+
 
 
 } // namespace net
