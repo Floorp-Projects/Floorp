@@ -40,6 +40,15 @@
 }
 
 /**
+ * Watch expressions view
+ */
+
+#expressions {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/**
  * Variables view
  */
 
