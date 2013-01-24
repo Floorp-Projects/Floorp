@@ -28,7 +28,7 @@ cp $1/include/FIFOSamplePipe.h src
 cp $1/include/SoundTouch.h src
 cp $1/include/STTypes.h src
 
-# Remote the Windows line ending characters from the files.
+# Remove the Windows line ending characters from the files.
 for i in src/*
 do
   cat $i | tr -d '\015' > $i.lf
