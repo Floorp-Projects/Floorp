@@ -440,6 +440,8 @@
  */
 
 #variables .element-value-input {
+  overflow: hidden;
+  max-width: 30em;
   -moz-margin-start: 5px !important;
 }
 
@@ -484,6 +486,7 @@
 }
 
 .token-string {
+  max-width: 30em;
   color: #1c00cf;
 }
 
