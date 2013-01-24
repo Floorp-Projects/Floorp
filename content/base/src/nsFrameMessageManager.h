@@ -88,6 +88,9 @@ protected:
 				      ClonedMessageData& aClonedData);
 };
 
+StructuredCloneData UnpackClonedMessageDataForParent(const ClonedMessageData& aData);
+StructuredCloneData UnpackClonedMessageDataForChild(const ClonedMessageData& aData);
+
 } // namespace ipc
 } // namespace dom
 } // namespace mozilla
