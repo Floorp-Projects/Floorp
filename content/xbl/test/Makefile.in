@@ -41,7 +41,6 @@ MOCHITEST_FILES =	\
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
-		test_bug296375.xul \
 		test_bug378518.xul \
 		test_bug398135.xul \
 		test_bug398492.xul \

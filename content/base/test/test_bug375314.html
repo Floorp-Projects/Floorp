@@ -90,7 +90,7 @@ function runNextTest() {
     if (tests[curTest] == "XBL")
     {
       //XXX Removing binding to work-around a memory leak (bugs 478528, 499735).
-      document.removeBinding(div, testURL);
+      div.style.MozBinding = "";
     }
   }
 
@@ -168,9 +168,9 @@ function request_xbl() {
   var content = $("content");
 
   div = document.createElement("div");
-  content.appendChild(div);
-
-  document.addBinding(div, testURL);
+  div.style.MozBinding = "url(" + testURL + ")";
+  $('test').appendChild(div);
+  div.offsetLeft; // Flush styles.
 }
 
 function request_xmlhttprequest() {
