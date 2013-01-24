@@ -1644,10 +1644,10 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
   NS_PRECONDITION(aOverflowCont->GetPrevInFlow(),
                   "overflow containers must have a prev-in-flow");
   nsresult rv = NS_OK;
-  bool convertedToOverflowContainer = false;
+  bool reparented = false;
   nsPresContext* presContext = aOverflowCont->PresContext();
-  if (!mSentry || aOverflowCont != mSentry->GetNextInFlow()) {
-    // Not in our list, so we need to add it
+  const bool addToList = !mSentry || aOverflowCont != mSentry->GetNextInFlow();
+  if (addToList) {
     if (aOverflowCont->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
       // aOverflowCont is in some other overflow container list,
       // steal it first
@@ -1660,7 +1660,6 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
     }
     else {
       aOverflowCont->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-      convertedToOverflowContainer = true;
     }
     if (!mOverflowContList) {
       mOverflowContList = new nsFrameList();
@@ -1673,6 +1672,7 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
       nsContainerFrame::ReparentFrameView(presContext, aOverflowCont,
                                           aOverflowCont->GetParent(),
                                           mParent);
+      reparented = true;
     }
     mOverflowContList->InsertFrame(mParent, mPrevOverflowCont, aOverflowCont);
     aReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
@@ -1690,16 +1690,20 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
                 (aOverflowCont->GetStateBits() & NS_FRAME_OUT_OF_FLOW)),
               "OverflowContTracker in unexpected state");
 
-  if (convertedToOverflowContainer) {
+  if (addToList) {
     // Convert all non-overflow-container continuations of aOverflowCont
     // into overflow containers and move them to our overflow
     // tracker. This preserves the invariant that the next-continuations
     // of an overflow container are also overflow containers.
     nsIFrame* f = aOverflowCont->GetNextContinuation();
-    if (f && !(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
-      nsContainerFrame* parent = static_cast<nsContainerFrame*>(f->GetParent());
-      rv = parent->StealFrame(presContext, f);
-      NS_ENSURE_SUCCESS(rv, rv);
+    if (f && (!(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) ||
+              (!reparented && f->GetParent() == mParent) ||
+              (reparented && f->GetParent() != mParent))) {
+      if (!(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+        nsContainerFrame* parent = static_cast<nsContainerFrame*>(f->GetParent());
+        rv = parent->StealFrame(presContext, f);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
       Insert(f, aReflowStatus);
     }
   }
