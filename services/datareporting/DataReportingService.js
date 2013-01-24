@@ -32,7 +32,7 @@ const DEFAULT_LOAD_DELAY_MSEC = 10 * 1000;
  * EXAMPLE USAGE
  * =============
  *
- * let reporter = Cc["@mozilla.org/healthreport/service;1"]
+ * let reporter = Cc["@mozilla.org/datareporting/service;1"]
  *                  .getService(Ci.nsISupports)
  *                  .wrappedJSObject
  *                  .healthReporter;
