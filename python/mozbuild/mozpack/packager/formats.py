@@ -200,12 +200,14 @@ class OmniJarFormatter(FlatFormatter):
     '''
     Formatter for the omnijar package format.
     '''
-    def __init__(self, copier, omnijar_name, compress=True, optimize=True):
+    def __init__(self, copier, omnijar_name, compress=True, optimize=True,
+                 non_resources=[]):
         FlatFormatter.__init__(self, copier)
         self.omnijars = {}
         self._omnijar_name = omnijar_name
         self._compress = compress
         self._optimize = optimize
+        self._non_resources = non_resources
 
     def _get_omnijar(self, path, create=True):
         '''
@@ -257,6 +259,9 @@ class OmniJarFormatter(FlatFormatter):
         '''
         base = self._get_base(path)
         path = mozpack.path.split(mozpack.path.relpath(path, base))
+        if any(mozpack.path.match(path, p.replace('*', '**'))
+               for p in self._non_resources):
+            return False
         if path[0] == 'chrome':
             return len(path) == 1 or path[1] != 'icons'
         if path[0] == 'components':

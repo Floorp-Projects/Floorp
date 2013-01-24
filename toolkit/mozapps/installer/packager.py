@@ -240,10 +240,11 @@ def main():
                         help='Base directory of another build to unify with')
     parser.add_argument('manifest', default=None, nargs='?',
                         help='Manifest file name')
-    parser.add_argument('source', metavar="source",
-                        help='Source directory')
-    parser.add_argument('destination',
-                        help='Destination directory')
+    parser.add_argument('source', help='Source directory')
+    parser.add_argument('destination', help='Destination directory')
+    parser.add_argument('--non-resource', nargs='+', metavar='PATTERN',
+                        default=[],
+                        help='Extra files not to be considered as resources')
     args = parser.parse_args()
 
     defines = dict(buildconfig.defines)
@@ -262,7 +263,8 @@ def main():
     elif args.format == 'omni':
         formatter = OmniJarFormatter(copier,
                                      buildconfig.substs['OMNIJAR_NAME'],
-                                     optimize=args.optimizejars)
+                                     optimize=args.optimizejars,
+                                     non_resources=args.non_resource)
     else:
         errors.fatal('Unknown format: %s', format)
 
