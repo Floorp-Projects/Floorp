@@ -634,17 +634,6 @@ JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
     return Valueify(fp)->maybeScriptFunction();
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fpArg)
-{
-    StackFrame *fp = Valueify(fpArg);
-    if (!fp->isFunctionFrame())
-        return NULL;
-
-    JS_ASSERT(fp->callee().isFunction());
-    return &fp->callee();
-}
-
 JS_PUBLIC_API(JSFunction *)
 JS_GetScriptFunction(JSContext *cx, JSScript *script)
 {
@@ -661,12 +650,6 @@ JS_PUBLIC_API(JSBool)
 JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 {
     return Valueify(fp)->isConstructing();
-}
-
-JS_PUBLIC_API(JSObject *)
-JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
-{
-    return Valueify(fp)->maybeCalleev().toObjectOrNull();
 }
 
 JS_PUBLIC_API(const char *)
@@ -687,24 +670,6 @@ JS_PUBLIC_API(JSBool)
 JS_IsGlobalFrame(JSContext *cx, JSStackFrame *fp)
 {
     return Valueify(fp)->isGlobalFrame();
-}
-
-JS_PUBLIC_API(jsval)
-JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
-{
-    return Valueify(fp)->returnValue();
-}
-
-JS_PUBLIC_API(void)
-JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fpArg, jsval rval)
-{
-    AutoAssertNoGC nogc;
-    StackFrame *fp = Valueify(fpArg);
-#ifdef JS_METHODJIT
-    JS_ASSERT(fp->script()->debugMode);
-#endif
-    assertSameCompartment(cx, fp, rval);
-    fp->setReturnValue(rval);
 }
 
 /************************************************************************/
