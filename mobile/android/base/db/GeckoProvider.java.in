@@ -305,6 +305,10 @@ public abstract class GeckoProvider extends ContentProvider {
         } finally {
             db.endTransaction();
         }
+
+        if (rowsAdded > 0)
+            mContext.getContentResolver().notifyChange(uri, null);
+
         return rowsAdded;
     }
 
