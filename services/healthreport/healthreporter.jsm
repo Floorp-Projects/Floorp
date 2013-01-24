@@ -38,7 +38,8 @@ const DEFAULT_DATABASE_NAME = "healthreport.sqlite";
  * lower-level components (such as collection and submission) together.
  *
  * An instance of this type is created as an XPCOM service. See
- * HealthReportService.js and HealthReportComponents.manifest.
+ * DataReportingService.js and
+ * DataReporting.manifest/HealthReportComponents.manifest.
  *
  * It is theoretically possible to have multiple instances of this running
  * in the application. For example, this type may one day handle submission
@@ -483,7 +484,7 @@ HealthReporter.prototype = Object.freeze({
    * Register a `Metrics.Provider` with this instance.
    *
    * This needs to be called or no data will be collected. See also
-   * registerProvidersFromCategoryManager`.
+   * `registerProvidersFromCategoryManager`.
    *
    * @param provider
    *        (Metrics.Provider) The provider to register for collection.
