@@ -18,11 +18,6 @@ let SocialUI = {
     Services.obs.addObserver(this, "social:recommend-info-changed", false);
     Services.obs.addObserver(this, "social:frameworker-error", false);
     Services.obs.addObserver(this, "social:provider-set", false);
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    // this observer is necessary so things are also correctly updated
-    // when per-window PB isn't active
-    Services.obs.addObserver(this, "private-browsing", false);
-#endif
 
     Services.prefs.addObserver("social.sidebar.open", this, false);
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
@@ -46,9 +41,6 @@ let SocialUI = {
     Services.obs.removeObserver(this, "social:recommend-info-changed");
     Services.obs.removeObserver(this, "social:frameworker-error");
     Services.obs.removeObserver(this, "social:provider-set");
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    Services.obs.removeObserver(this, "private-browsing");
-#endif
 
     Services.prefs.removeObserver("social.sidebar.open", this);
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
@@ -128,7 +120,7 @@ let SocialUI = {
           }
           break;
         case "social:frameworker-error":
-          if (this.enabled && Social.provider.origin == data) {
+          if (Social.provider && Social.provider.origin == data) {
             SocialSidebar.setSidebarErrorMessage("frameworker-error");
           }
           break;
@@ -140,14 +132,6 @@ let SocialUI = {
             SocialToolbar.updateButton();
           }
           break;
-
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-        case "private-browsing":
-          this._updateEnabledState();
-          this._updateActiveUI();
-          SocialToolbar.init();
-          break;
-#endif
       }
     } catch (e) {
       Components.utils.reportError(e + "\n" + e.stack);
@@ -172,7 +156,7 @@ let SocialUI = {
 
   _updateActiveUI: function SocialUI_updateActiveUI() {
     let broadcaster = document.getElementById("socialActiveBroadcaster");
-    broadcaster.hidden = !this.enabled;
+    broadcaster.hidden = !Social.active;
 
     if (!Social.provider)
       return;
@@ -217,11 +201,6 @@ let SocialUI = {
     let providerOrigin = targetDoc.nodePrincipal.origin;
     let whitelist = Services.prefs.getCharPref("social.activation.whitelist");
     if (whitelist.split(",").indexOf(providerOrigin) == -1)
-      return;
-
-    // If we are in PB mode, we silently do nothing (bug 829404 exists to
-    // do something sensible here...)
-    if (PrivateBrowsingUtils.isWindowPrivate(window))
       return;
 
     // If the last event was received < 1s ago, ignore this one
@@ -306,30 +285,7 @@ let SocialUI = {
     if (confirmationIndex == 0) {
       Social.deactivateFromOrigin(Social.provider.origin);
     }
-  },
-
-  get _chromeless() {
-    // Is this a popup window that doesn't want chrome shown?
-    let docElem = document.documentElement;
-    let chromeless = docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
-    // This property is "fixed" for a window, so avoid doing the check above
-    // multiple times...
-    delete this._chromeless;
-    this._chromeless = chromeless;
-    return chromeless;
-  },
-
-  get enabled() {
-    // Returns whether social is enabled *for this window*.
-    if (this._chromeless
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-        || PrivateBrowsingUtils.isWindowPrivate(window)
-#endif
-       )
-      return false;
-    return !!(Social.active && Social.provider && Social.provider.enabled);
-  },
-
+  }
 }
 
 let SocialChatBar = {
@@ -339,7 +295,11 @@ let SocialChatBar = {
   // Whether the chatbar is available for this window.  Note that in full-screen
   // mode chats are available, but not shown.
   get isAvailable() {
-    return SocialUI.enabled && Social.haveLoggedInUser();
+    if (!Social.haveLoggedInUser())
+      return false;
+    let docElem = document.documentElement;
+    let chromeless = docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
+    return Social.uiVisible && !chromeless;
   },
   // Does this chatbar have any chats (whether minimized, collapsed or normal)
   get hasChats() {
@@ -434,7 +394,7 @@ let SocialFlyout = {
 
   _createFrame: function() {
     let panel = this.panel;
-    if (!SocialUI.enabled || panel.firstChild)
+    if (!Social.provider || panel.firstChild)
       return;
     // create and initialize the panel for this window
     let iframe = document.createElement("iframe");
@@ -511,7 +471,7 @@ let SocialFlyout = {
     // Hide any other social panels that may be open.
     document.getElementById("social-notification-panel").hidePopup();
 
-    if (!SocialUI.enabled)
+    if (!Social.provider)
       return;
     let panel = this.panel;
     if (!panel.firstChild)
@@ -577,7 +537,7 @@ let SocialShareButton = {
   // changes, via updateProvider)
   updateProfileInfo: function SSB_updateProfileInfo() {
     let profileRow = document.getElementById("unsharePopupHeader");
-    let profile = SocialUI.enabled ? Social.provider.profile : null;
+    let profile = Social.provider.profile;
     if (profile && profile.displayName) {
       profileRow.hidden = false;
       let portrait = document.getElementById("socialUserPortrait");
@@ -609,7 +569,7 @@ let SocialShareButton = {
   updateButtonHiddenState: function SSB_updateButtonHiddenState() {
     let shareButton = this.shareButton;
     if (shareButton)
-      shareButton.hidden = !SocialUI.enabled || Social.provider.recommendInfo == null ||
+      shareButton.hidden = !Social.uiVisible || Social.provider.recommendInfo == null ||
                            !Social.haveLoggedInUser() ||
                            !this.canSharePage(gBrowser.currentURI);
 
@@ -675,7 +635,7 @@ let SocialShareButton = {
     let shareButton = this.shareButton;
     let currentPageShared = shareButton && !shareButton.hidden && Social.isPageShared(gBrowser.currentURI);
 
-    let recommendInfo = SocialUI.enabled ? Social.provider.recommendInfo : null;
+    let recommendInfo = Social.provider ? Social.provider.recommendInfo : null;
     // Provide a11y-friendly notification of share.
     let status = document.getElementById("share-button-status");
     if (status) {
@@ -717,10 +677,10 @@ var SocialMenu = {
 
     let separator = document.getElementById("socialAmbientMenuSeparator");
     separator.hidden = true;
-    let provider = SocialUI.enabled ? Social.provider : null;
-    if (!provider)
+    if (!Social.uiVisible)
       return;
 
+    let provider = Social.provider;
     let iconNames = Object.keys(provider.ambientNotificationIcons);
     for (let name of iconNames) {
       let icon = provider.ambientNotificationIcons[name];
@@ -758,7 +718,7 @@ var SocialToolbar = {
 
   // Called when the Social.provider changes
   updateProvider: function () {
-    if (!SocialUI.enabled)
+    if (!Social.provider)
       return;
     this.button.style.listStyleImage = "url(" + Social.provider.iconURL + ")";
     this.button.setAttribute("label", Social.provider.name);
@@ -776,7 +736,7 @@ var SocialToolbar = {
   // socialActiveBroadcaster is responsible for that.
   updateButtonHiddenState: function SocialToolbar_updateButtonHiddenState() {
     let tbi = document.getElementById("social-toolbar-item");
-    let socialEnabled = SocialUI.enabled;
+    let socialEnabled = Social.uiVisible;
     for (let className of ["social-statusarea-separator", "social-statusarea-user"]) {
       for (let element of document.getElementsByClassName(className))
         element.hidden = !socialEnabled;
@@ -832,7 +792,7 @@ var SocialToolbar = {
     const CACHE_PREF_NAME = "social.cached.ambientNotificationIcons";
     // provider.profile == undefined means no response yet from the provider
     // to tell us whether the user is logged in or not.
-    if (!SocialUI.enabled ||
+    if (!provider.enabled ||
         (!Social.haveLoggedInUser() && provider.profile !== undefined)) {
       // Either no enabled provider, or there is a provider and it has
       // responded with a profile and the user isn't loggedin.  The icons
@@ -1044,8 +1004,8 @@ var SocialToolbar = {
     while (providerMenuSep.previousSibling.nodeName == "menuitem") {
       menu.removeChild(providerMenuSep.previousSibling);
     }
-    // only show a selection if enabled and there is more than one
-    if (!SocialUI.enabled || Social.providers.length < 2) {
+    // only show a selection if there is more than one
+    if (!Social.enabled || providers.length < 2) {
       providerMenuSep.hidden = true;
       return;
     }
@@ -1086,7 +1046,15 @@ var SocialSidebar = {
 
   // Whether the sidebar can be shown for this window.
   get canShow() {
-    return SocialUI.enabled && Social.provider.sidebarURL;
+    return Social.uiVisible && Social.provider.sidebarURL && !this.chromeless;
+  },
+
+  // Whether this is a "chromeless window" (e.g. popup window). We don't show
+  // the sidebar in these windows.
+  get chromeless() {
+    let docElem = document.documentElement;
+    return docElem.getAttribute('disablechrome') ||
+           docElem.getAttribute('chromehidden').contains("toolbar");
   },
 
   // Whether the user has toggled the sidebar on (for windows where it can appear)
