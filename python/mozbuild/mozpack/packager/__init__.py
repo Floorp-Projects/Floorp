@@ -246,7 +246,7 @@ class SimpleManifestSink(object):
             paths = [mozpack.path.dirname(m) for m in self._manifests]
             path = mozpack.path.dirname(mozpack.path.commonprefix(paths))
             for p, f in self._finder.find(mozpack.path.join(path,
-                                          '**', 'chrome.manifest')):
+                                          'chrome.manifest')):
                 if not p in self._manifests:
                     self.packager.add(SimpleManifestSink.normalize_path(p), f)
         self.packager.close()
