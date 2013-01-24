@@ -323,3 +323,12 @@ add_task(function test_detect_multiple_transactions() {
   yield c.close();
 });
 
+add_task(function test_shrink_memory() {
+  let c = yield getDummyDatabase("shrink_memory");
+
+  // It's just a simple sanity test. We have no way of measuring whether this
+  // actually does anything.
+
+  yield c.shrinkMemory();
+  yield c.close();
+});
