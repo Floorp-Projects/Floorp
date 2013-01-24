@@ -221,9 +221,6 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp, jsval *thisv);
 extern JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
 
-extern JS_PUBLIC_API(JSObject *)
-JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp);
-
 JS_PUBLIC_API(JSFunction *)
 JS_GetScriptFunction(JSContext *cx, JSScript *script);
 
@@ -240,20 +237,6 @@ JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsGlobalFrame(JSContext *cx, JSStackFrame *fp);
-
-extern JS_PUBLIC_API(jsval)
-JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp);
-
-extern JS_PUBLIC_API(void)
-JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval);
-
-/**
- * Return fp's callee function object (fp->callee) if it has one. Note that
- * this API cannot fail. A null return means "no callee": fp is a global or
- * eval-from-global frame, not a call frame.
- */
-extern JS_PUBLIC_API(JSObject *)
-JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp);
 
 /************************************************************************/
 

@@ -41,9 +41,6 @@ JS_FindCompilationScope(JSContext *cx, JSRawObject obj);
 extern JS_FRIEND_API(JSFunction *)
 JS_GetObjectFunction(JSRawObject obj);
 
-extern JS_FRIEND_API(JSObject *)
-JS_GetGlobalForFrame(JSStackFrame *fp);
-
 extern JS_FRIEND_API(JSBool)
 JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
 
