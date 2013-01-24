@@ -4,11 +4,11 @@
 
 const PREF_RESTORE_ON_DEMAND = "browser.sessionstore.restore_on_demand";
 
-let stateBackup = ss.getBrowserState();
-
 function test() {
-  waitForExplicitFinish();
+  TestRunner.run();
+}
 
+function runTests() {
   Services.prefs.setBoolPref(PREF_RESTORE_ON_DEMAND, false);
   registerCleanupFunction(function () {
     Services.prefs.clearUserPref(PREF_RESTORE_ON_DEMAND);
@@ -89,10 +89,7 @@ function test() {
     // Remove the progress listener from this window, it will be removed from
     // theWin when that window is closed (in setBrowserState).
     gProgressListener.unsetCallback();
-    executeSoon(function () {
-      closeAllButPrimaryWindow();
-      waitForBrowserState(JSON.parse(stateBackup), finish);
-    });
+    executeSoon(next);
   });
 
   // We also want to catch the extra windows (there should be 2), so we need to observe domwindowopened
@@ -107,5 +104,5 @@ function test() {
     }
   });
 
-  ss.setBrowserState(JSON.stringify(state1));
+  yield ss.setBrowserState(JSON.stringify(state1));
 }
