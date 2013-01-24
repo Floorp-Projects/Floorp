@@ -439,7 +439,7 @@ let Downloads = {
       } catch (ex) {
         this.logError("openDownload() " + ex, aDownload);
       }
-    });
+    }.bind(this));
   },
 
   removeDownload: function dl_removeDownload(aItem) {
@@ -458,7 +458,7 @@ let Downloads = {
       } catch (ex) {
         this.logError("removeDownload() " + ex, aDownload);
       }
-    });
+    }.bind(this));
     aItem.parentNode.removeChild(aItem);
   },
 
