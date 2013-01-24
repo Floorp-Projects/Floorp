@@ -35,6 +35,9 @@ Cu.import("resource:///modules/source-editor.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this,
+  "Reflect", "resource://gre/modules/reflect.jsm");
+
 /**
  * Object defining the debugger controller components.
  */
@@ -1002,17 +1005,37 @@ StackFrames.prototype = {
   syncWatchExpressions: function SF_syncWatchExpressions() {
     let list = DebuggerView.WatchExpressions.getExpressions();
 
-    if (list.length) {
+    // Sanity check all watch expressions before syncing them. To avoid
+    // having the whole watch expressions array throw because of a single
+    // faulty expression, simply convert it to a string describing the error.
+    // There's no other information necessary to be offered in such cases.
+    let sanitizedExpressions = list.map(function(str) {
+      // Reflect.parse throws when encounters a syntax error.
+      try {
+        Reflect.parse(str);
+        return str; // Watch expression can be executed safely.
+      } catch (e) {
+        return "\"" + e.name + ": " + e.message + "\""; // Syntax error.
+      }
+    });
+
+    if (sanitizedExpressions.length) {
       this.syncedWatchExpressions =
-        this.currentWatchExpressions = "[" + list.map(function(str)
-          // Avoid yielding an empty pseudo-array when evaluating `arguments`,
-          // since they're overridden by the expression's closure scope.
-          "(function(arguments) {" +
-            // Make sure all the quotes are escaped in the expression's syntax.
-            "try { return eval(\"" + str.replace(/"/g, "\\$&") + "\"); }" +
-            "catch(e) { return e.name + ': ' + e.message; }" +
-          "})(arguments)"
-        ).join(",") + "]";
+        this.currentWatchExpressions =
+          "[" +
+            sanitizedExpressions.map(function(str)
+              "eval(\"" +
+                "try {" +
+                  // Make sure all quotes are escaped in the expression's syntax,
+                  // and add a newline after the statement to avoid comments
+                  // breaking the code integrity inside the eval block.
+                  str.replace(/"/g, "\\$&") + "\" + " + "'\\n'" + " + \"" +
+                "} catch (e) {" +
+                  "e.name + ': ' + e.message;" + // FIXME: bug 812765, 812764
+                "}" +
+              "\")"
+            ).join(",") +
+          "]";
     } else {
       this.syncedWatchExpressions =
         this.currentWatchExpressions = null;

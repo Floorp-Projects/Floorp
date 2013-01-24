@@ -23,10 +23,7 @@ function test()
     gWatch = gDebugger.DebuggerView.WatchExpressions;
 
     gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });
-
-    executeSoon(function() {
-      performTest();
-    });
+    performTest();
   });
 
   function performTest()
@@ -129,9 +126,9 @@ function test()
     is(gWatch.getItemForElement(element).attachment.initialExpression, "",
       "The initial expression at index " + index + " should be correct (2)");
 
-    is(gWatch.getItemAtIndex(index).attachment.expression, string,
+    is(gWatch.getItemAtIndex(index).attachment.currentExpression, string,
       "The expression at index " + index + " should be correct (1)");
-    is(gWatch.getItemForElement(element).attachment.expression, string,
+    is(gWatch.getItemForElement(element).attachment.currentExpression, string,
       "The expression at index " + index + " should be correct (2)");
 
     is(gWatch.getExpression(index), string,
@@ -195,9 +192,9 @@ function test()
       is(gWatch.getItemForElement(element).attachment.initialExpression, string,
         "The initial expression at index " + index + " should be correct (2)");
 
-      is(gWatch.getItemAtIndex(index).attachment.expression, string,
+      is(gWatch.getItemAtIndex(index).attachment.currentExpression, string,
         "The expression at index " + index + " should be correct (1)");
-      is(gWatch.getItemForElement(element).attachment.expression, string,
+      is(gWatch.getItemForElement(element).attachment.currentExpression, string,
         "The expression at index " + index + " should be correct (2)");
 
       is(gWatch.getExpression(index), string,
@@ -230,9 +227,9 @@ function test()
     is(gWatch.getItemForElement(element).attachment.initialExpression, string,
       "The initial expression at index " + index + " should be correct (2)");
 
-    is(gWatch.getItemAtIndex(index).attachment.expression, string,
+    is(gWatch.getItemAtIndex(index).attachment.currentExpression, string,
       "The expression at index " + index + " should be correct (1)");
-    is(gWatch.getItemForElement(element).attachment.expression, string,
+    is(gWatch.getItemForElement(element).attachment.currentExpression, string,
       "The expression at index " + index + " should be correct (2)");
 
     is(gWatch.getExpression(index), string,

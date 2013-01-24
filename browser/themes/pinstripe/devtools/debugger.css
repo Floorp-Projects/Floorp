@@ -261,6 +261,7 @@
 #expressions {
   background-color: white;
   min-height: 10px;
+  max-height: 125px;
 }
 
 .dbg-expression {
