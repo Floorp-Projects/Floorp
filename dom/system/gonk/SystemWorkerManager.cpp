@@ -366,13 +366,7 @@ SystemWorkerManager::Init()
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = InitRIL(cx);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to initialize RIL/Telephony!");
-    return rv;
-  }
-
-  rv = InitWifi(cx);
+  nsresult rv = InitWifi(cx);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to initialize WiFi Networking!");
     return rv;
@@ -413,8 +407,6 @@ SystemWorkerManager::Shutdown()
 #endif
 
   StopRil();
-
-  mRIL = nullptr;
 
 #ifdef MOZ_WIDGET_GONK
   StopNetd();
@@ -468,11 +460,6 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aIID.Equals(NS_GET_IID(nsIRadioInterfaceLayer))) {
-    NS_IF_ADDREF(*reinterpret_cast<nsIRadioInterfaceLayer**>(aResult) = mRIL);
-    return NS_OK;
-  }
-
   if (aIID.Equals(NS_GET_IID(nsIWifi))) {
     return CallQueryInterface(mWifiWorker,
                               reinterpret_cast<nsIWifi**>(aResult));
@@ -490,42 +477,28 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
 }
 
 nsresult
-SystemWorkerManager::InitRIL(JSContext *cx)
+SystemWorkerManager::RegisterRilWorker(const JS::Value& aWorker,
+                                       JSContext *aCx)
 {
-  // We're keeping as much of this implementation as possible in JS, so the real
-  // worker lives in RadioInterfaceLayer.js. All we do here is hold it alive and
-  // hook it up to the RIL thread.
-  nsCOMPtr<nsIRadioInterfaceLayer> ril = do_CreateInstance("@mozilla.org/ril;1");
-  NS_ENSURE_TRUE(ril, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aWorker), NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIWorkerHolder> worker = do_QueryInterface(ril);
-  if (worker) {
-    jsval workerval;
-    nsresult rv = worker->GetWorker(&workerval);
-    NS_ENSURE_SUCCESS(rv, rv);
+  JSAutoRequest ar(aCx);
+  JSAutoCompartment ac(aCx, JSVAL_TO_OBJECT(aWorker));
 
-    NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(workerval), NS_ERROR_UNEXPECTED);
-
-    JSAutoRequest ar(cx);
-    JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(workerval));
-
-    WorkerCrossThreadDispatcher *wctd =
-      GetWorkerCrossThreadDispatcher(cx, workerval);
-    if (!wctd) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
-    if (!wctd->PostTask(connection)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    // Now that we're set up, connect ourselves to the RIL thread.
-    mozilla::RefPtr<RILReceiver> receiver = new RILReceiver(wctd);
-    StartRil(receiver);
+  WorkerCrossThreadDispatcher *wctd =
+    GetWorkerCrossThreadDispatcher(aCx, aWorker);
+  if (!wctd) {
+    return NS_ERROR_FAILURE;
   }
 
-  mRIL = ril;
+  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
+  if (!wctd->PostTask(connection)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Now that we're set up, connect ourselves to the RIL thread.
+  mozilla::RefPtr<RILReceiver> receiver = new RILReceiver(wctd);
+  StartRil(receiver);
   return NS_OK;
 }
 
@@ -575,7 +548,10 @@ SystemWorkerManager::InitWifi(JSContext *cx)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(SystemWorkerManager, nsIObserver, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS3(SystemWorkerManager,
+                   nsIObserver,
+                   nsIInterfaceRequestor,
+                   nsISystemWorkerManager)
 
 NS_IMETHODIMP
 SystemWorkerManager::Observe(nsISupports *aSubject, const char *aTopic,
