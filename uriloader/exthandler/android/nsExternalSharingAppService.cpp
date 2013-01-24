@@ -57,7 +57,7 @@ nsExternalSharingAppService::GetSharingApps(const nsAString & aMIMEType,
   *aHandlers =
     static_cast<nsISharingHandlerApp**>(NS_Alloc(sizeof(nsISharingHandlerApp*)
                                                  * *aLen));
-  for (int i = 0; i < *aLen; i++) {
+  for (uint32_t i = 0; i < *aLen; i++) {
     rv = array->QueryElementAt(i, nsISharingHandlerApp::GetIID(),
                                (void**)(*aHandlers + i));
     NS_ENSURE_SUCCESS(rv, rv);
