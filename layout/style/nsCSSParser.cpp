@@ -3491,6 +3491,20 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   bool isTreePseudo = false;
   nsCSSPseudoElements::Type pseudoElementType =
     nsCSSPseudoElements::GetPseudoType(pseudo);
+  nsCSSPseudoClasses::Type pseudoClassType =
+    nsCSSPseudoClasses::GetPseudoType(pseudo);
+
+  // We currently allow :-moz-placeholder and ::-moz-placeholder. We have to
+  // be a bit stricter regarding the pseudo-element parsing rules.
+  if (pseudoElementType == nsCSSPseudoElements::ePseudo_mozPlaceholder &&
+      pseudoClassType == nsCSSPseudoClasses::ePseudoClass_mozPlaceholder) {
+    if (parsingPseudoElement) {
+      pseudoClassType = nsCSSPseudoClasses::ePseudoClass_NotPseudoClass;
+    } else {
+      pseudoElementType = nsCSSPseudoElements::ePseudo_NotPseudoElement;
+    }
+  }
+
 #ifdef MOZ_XUL
   isTreePseudo = (pseudoElementType == nsCSSPseudoElements::ePseudo_XULTree);
   // If a tree pseudo-element is using the function syntax, it will
@@ -3509,8 +3523,6 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   bool isAnonBox = isTreePseudo ||
     (pseudoElementType == nsCSSPseudoElements::ePseudo_AnonBox &&
      mUnsafeRulesEnabled);
-  nsCSSPseudoClasses::Type pseudoClassType =
-    nsCSSPseudoClasses::GetPseudoType(pseudo);
   bool isPseudoClass =
     (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass);
 
