@@ -25,6 +25,10 @@ class nsIInputStream;
 
 namespace mozilla {
 namespace dom {
+
+class ContentParent;
+class ContentChild;
+
 namespace ipc {
 
 enum ActorFlavorEnum
@@ -43,6 +47,7 @@ struct BlobTraits<Parent>
   typedef mozilla::dom::PBlobParent ProtocolType;
   typedef mozilla::dom::PBlobStreamParent StreamType;
   typedef mozilla::dom::PContentParent ContentManagerType;
+  typedef mozilla::dom::ContentParent ConcreteContentManagerType;
   typedef ProtocolType BlobManagerType;
 
   // BaseType on the parent side is a bit more complicated than for the child
@@ -83,6 +88,7 @@ struct BlobTraits<Child>
   typedef mozilla::dom::PBlobChild ProtocolType;
   typedef mozilla::dom::PBlobStreamChild StreamType;
   typedef mozilla::dom::PContentChild ContentManagerType;
+  typedef mozilla::dom::ContentChild ConcreteContentManagerType;
   typedef ProtocolType BlobManagerType;
 
   class BaseType : public ProtocolType
