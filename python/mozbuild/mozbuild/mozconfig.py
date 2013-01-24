@@ -264,7 +264,13 @@ class MozconfigLoader(ProcessExecutionMixin):
         in_variable = None
 
         for line in output.splitlines():
-            if not len(line):
+
+            # XXX This is an ugly hack. Data may be lost from things
+            # like environment variable values.
+            # See https://bugzilla.mozilla.org/show_bug.cgi?id=831381
+            line = line.decode('utf-8', 'ignore')
+
+            if not line:
                 continue
 
             if line.startswith('------BEGIN_'):
