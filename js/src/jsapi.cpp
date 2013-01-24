@@ -5677,7 +5677,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
             return false;
     }
 
-    options = options.setFileAndLine(filename, 1);
+    options.setFileAndLine(filename, 1);
     return Evaluate(cx, obj, options, buffer.begin(), buffer.length(), rval);
 }
 
