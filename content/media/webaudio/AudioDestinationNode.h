@@ -14,21 +14,24 @@ namespace dom {
 
 class AudioContext;
 
-class AudioDestinationNode : public AudioNode
+/**
+ * Need to have an nsWrapperCache on AudioDestinationNodes since
+ * AudioContext.destination returns them.
+ */
+class AudioDestinationNode : public AudioNode,
+                             public nsWrapperCache
 {
 public:
   explicit AudioDestinationNode(AudioContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(AudioDestinationNode,
+                                                         AudioNode)
 
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
                                bool* aTriedToWrap);
 
-  virtual uint32_t MaxNumberOfInputs() const MOZ_FINAL MOZ_OVERRIDE
-  {
-    return 1;
-  }
-  virtual uint32_t MaxNumberOfOutputs() const MOZ_FINAL MOZ_OVERRIDE
+  virtual uint32_t NumberOfOutputs() const MOZ_FINAL MOZ_OVERRIDE
   {
     return 0;
   }
