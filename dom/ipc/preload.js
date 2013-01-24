@@ -69,4 +69,11 @@
   Cc["@mozilla.org/thread-manager;1"].getService(Ci["nsIThreadManager"]);
   Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci["nsIAppStartup"]);
   Cc["@mozilla.org/uriloader;1"].getService(Ci["nsIURILoader"]);
+
+  docShell.isActive = false;
+  docShell.QueryInterface(Ci.nsIWebNavigation)
+          .loadURI("about:blank",
+                   Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+                   null, null, null);
+
 })();
