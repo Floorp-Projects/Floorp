@@ -40,16 +40,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gRIL",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
+
 XPCOMUtils.defineLazyGetter(this, "MMS", function () {
   let MMS = {};
   Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
   return MMS;
-});
-
-XPCOMUtils.defineLazyGetter(this, "gRIL", function () {
-  return Cc["@mozilla.org/telephony/system-worker-manager;1"].
-           getService(Ci.nsIInterfaceRequestor).
-           getInterface(Ci.nsIRadioInterfaceLayer);
 });
 
 /**
