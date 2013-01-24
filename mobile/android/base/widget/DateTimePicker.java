@@ -58,6 +58,7 @@ public class DateTimePicker extends FrameLayout {
     private boolean mHourEnabled = true;
     private boolean mMinuteEnabled = true;
     private boolean mCalendarEnabled = false;
+    private boolean mIs12HourMode;
     // Size of the screen in inches;
     private int mScreenWidth;
     private int mScreenHeight;
@@ -72,6 +73,7 @@ public class DateTimePicker extends FrameLayout {
     private final NumberPicker mYearSpinner;
     private final NumberPicker mHourSpinner;
     private final NumberPicker mMinuteSpinner;
+    private final NumberPicker mAMPMSpinner;
     private final CalendarView mCalendar;
     private final EditText mDaySpinnerInput;
     private final EditText mMonthSpinnerInput;
@@ -79,8 +81,10 @@ public class DateTimePicker extends FrameLayout {
     private final EditText mYearSpinnerInput;
     private final EditText mHourSpinnerInput;
     private final EditText mMinuteSpinnerInput;
+    private final EditText mAMPMSpinnerInput;
     private Locale mCurrentLocale;
     private String[] mShortMonths;
+    private String[] mShortAMPMs;
     private int mNumberOfMonths;
     private Calendar mTempDate;
     private Calendar mMinDate;
@@ -111,19 +115,25 @@ public class DateTimePicker extends FrameLayout {
                     int maxWeekOfYear = mTempDate.getActualMaximum(Calendar.WEEK_OF_YEAR);
                     setTempDate(Calendar.WEEK_OF_YEAR, old, newVal, 0, maxWeekOfYear);
                 } else if (picker == mYearSpinner && mYearEnabled) {
-                    int month=mTempDate.get(Calendar.MONTH);
+                    int month = mTempDate.get(Calendar.MONTH);
                     mTempDate.set(Calendar.YEAR,newVal);
                     // Changing the year shouldn't change the month. (in case of non-leap year a Feb 29)
                     // change the day instead;
                     if (month != mTempDate.get(Calendar.MONTH)){
                         mTempDate.set(Calendar.MONTH, month);
                         mTempDate.set(Calendar.DAY_OF_MONTH,
-                                mTempDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+                        mTempDate.getActualMaximum(Calendar.DAY_OF_MONTH));
                     }
                 } else if (picker == mHourSpinner && mHourEnabled) {
-                    setTempDate(Calendar.HOUR_OF_DAY, oldVal, newVal, 0, 23);
+                    if (mIs12HourMode) {
+                        setTempDate(Calendar.HOUR, oldVal, newVal, 1, 12);
+                    } else {
+                        setTempDate(Calendar.HOUR_OF_DAY, oldVal, newVal, 0, 23);
+                    }
                 } else if (picker == mMinuteSpinner && mMinuteEnabled) {
                     setTempDate(Calendar.MINUTE, oldVal, newVal, 0, 59);
+                } else if (picker == mAMPMSpinner && mHourEnabled) {
+                    mTempDate.set(Calendar.AM_PM,newVal);
                 } else {
                     throw new IllegalArgumentException();
                 }
@@ -136,24 +146,30 @@ public class DateTimePicker extends FrameLayout {
                     if (mTempDate.get(Calendar.MONTH) == newVal+1){
                         mTempDate.set(Calendar.MONTH, newVal);
                         mTempDate.set(Calendar.DAY_OF_MONTH,
-                                mTempDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+                        mTempDate.getActualMaximum(Calendar.DAY_OF_MONTH));
                     }
                 } else if (picker == mWeekSpinner){
                     mTempDate.set(Calendar.WEEK_OF_YEAR, newVal);
                 } else if (picker == mYearSpinner && mYearEnabled){
-                    int month=mTempDate.get(Calendar.MONTH);
+                    int month = mTempDate.get(Calendar.MONTH);
                     mTempDate.set(Calendar.YEAR, newVal);
-                    if (month != mTempDate.get(Calendar.MONTH)){
+                    if (month != mTempDate.get(Calendar.MONTH)) {
                         mTempDate.set(Calendar.MONTH, month);
                         mTempDate.set(Calendar.DAY_OF_MONTH,
-                                mTempDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+                        mTempDate.getActualMaximum(Calendar.DAY_OF_MONTH));
                     }
                 } else if (picker == mHourSpinner && mHourEnabled){
-                    mTempDate.set(Calendar.HOUR_OF_DAY, newVal);
+                    if (mIs12HourMode) {
+                        mTempDate.set(Calendar.HOUR, newVal);
+                    } else {
+                        mTempDate.set(Calendar.HOUR_OF_DAY, newVal);
+                    }
                 } else if (picker == mMinuteSpinner && mMinuteEnabled){
                     mTempDate.set(Calendar.MINUTE, newVal);
+                } else if (picker == mAMPMSpinner && mHourEnabled) {
+                    mTempDate.set(Calendar.AM_PM, newVal);
                 } else {
-                  throw new IllegalArgumentException();
+                    throw new IllegalArgumentException();
                 }
             }
             setDate(mTempDate);
@@ -161,7 +177,7 @@ public class DateTimePicker extends FrameLayout {
                 mDaySpinner.setMaxValue(mCurrentDate.getActualMaximum(Calendar.DAY_OF_MONTH));
             }
             if(mWeekEnabled) {
-               mWeekSpinner.setMaxValue(mCurrentDate.getActualMaximum(Calendar.WEEK_OF_YEAR));
+                mWeekSpinner.setMaxValue(mCurrentDate.getActualMaximum(Calendar.WEEK_OF_YEAR));
             }
             updateCalendar();
             updateSpinners();
@@ -196,6 +212,7 @@ public class DateTimePicker extends FrameLayout {
 
     private void displayPickers() {
         setWeekShown(false);
+        set12HourShown(mIs12HourMode);
         if (mState == pickersState.DATETIME) {
             return;
         }
@@ -310,7 +327,18 @@ public class DateTimePicker extends FrameLayout {
                                     DEFAULT_END_YEAR);
         mYearSpinnerInput = (EditText) mYearSpinner.getChildAt(1);
 
-        mHourSpinner = setupSpinner(R.id.hour, 0, 23);
+        mAMPMSpinner = setupSpinner(R.id.ampm, 0, 1);
+        mAMPMSpinner.setFormatter(TWO_DIGIT_FORMATTER);
+
+        if (mIs12HourMode) {
+            mHourSpinner = setupSpinner(R.id.hour, 1, 12);
+            mAMPMSpinnerInput = (EditText) mAMPMSpinner.getChildAt(1);
+            mAMPMSpinner.setDisplayedValues(mShortAMPMs); 
+        } else {
+            mHourSpinner = setupSpinner(R.id.hour, 0, 23);
+            mAMPMSpinnerInput = null;
+        }
+
         mHourSpinner.setFormatter(TWO_DIGIT_FORMATTER);
         mHourSpinnerInput = (EditText) mHourSpinner.getChildAt(1);
 
@@ -442,7 +470,13 @@ public class DateTimePicker extends FrameLayout {
         }
 
         if (mHourEnabled) {
-            mHourSpinner.setValue(mCurrentDate.get(Calendar.HOUR_OF_DAY));
+            if (mIs12HourMode) {
+                mHourSpinner.setValue(mCurrentDate.get(Calendar.HOUR));
+                mAMPMSpinner.setValue(mCurrentDate.get(Calendar.AM_PM));
+                mAMPMSpinner.setDisplayedValues(mShortAMPMs);
+            } else {
+                mHourSpinner.setValue(mCurrentDate.get(Calendar.HOUR_OF_DAY));
+            }
         }
         if (mMinuteEnabled) {
             mMinuteSpinner.setValue(mCurrentDate.get(Calendar.MINUTE));
@@ -527,12 +561,21 @@ public class DateTimePicker extends FrameLayout {
         }
     }
 
+    private void set12HourShown(boolean shown) {
+        if (shown) {
+            mAMPMSpinner.setVisibility(VISIBLE);
+        } else {
+            mAMPMSpinner.setVisibility(GONE);
+        }
+    }
+
     private void setHourShown(boolean shown) {
         if (shown) {
             mHourSpinner.setVisibility(VISIBLE);
             mHourEnabled= true;
         } else {
             mHourSpinner.setVisibility(GONE);
+            mAMPMSpinner.setVisibility(GONE);
             mTimeSpinners.setVisibility(GONE);
             mHourEnabled = false;
         }
@@ -556,13 +599,18 @@ public class DateTimePicker extends FrameLayout {
         }
 
         mCurrentLocale = locale;
-
+        mIs12HourMode = !DateFormat.is24HourFormat(getContext());
         mTempDate = getCalendarForLocale(mTempDate, locale);
         mMinDate = getCalendarForLocale(mMinDate, locale);
         mMaxDate = getCalendarForLocale(mMaxDate, locale);
         mCurrentDate = getCalendarForLocale(mCurrentDate, locale);
 
         mNumberOfMonths = mTempDate.getActualMaximum(Calendar.MONTH) + 1;
+
+        mShortAMPMs = new String[2];
+        mShortAMPMs[0] = DateUtils.getAMPMString(Calendar.AM);
+        mShortAMPMs[1] = DateUtils.getAMPMString(Calendar.PM);
+
         mShortMonths = new String[mNumberOfMonths];
         for (int i = 0; i < mNumberOfMonths; i++) {
             mShortMonths[i] = DateUtils.getMonthString(Calendar.JANUARY + i,
