@@ -114,9 +114,6 @@ MobileICCCardLockResult.prototype = {
 };
 
 function MobileICCInfo() {
-  try {
-    this.lastKnownMcc = Services.prefs.getIntPref("ril.lastKnownMcc");
-  } catch (e) {}
 };
 MobileICCInfo.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozMobileICCInfo]),
@@ -132,7 +129,6 @@ MobileICCInfo.prototype = {
 
   iccid: null,
   mcc: 0,
-  lastKnownMcc: 0,
   mnc: 0,
   spn: null,
   msisdn: null
@@ -162,6 +158,7 @@ MobileConnectionInfo.prototype = {
   emergencyCallsOnly: false,
   roaming: false,
   network: null,
+  lastKnownMcc: 0,
   cell: null,
   type: null,
   signalStrength: null,
@@ -350,15 +347,6 @@ RILContentHelper.prototype = {
     }
   },
 
-  updateICCInfo: function updateICCInfo(srcInfo, destInfo) {
-    for (let key in srcInfo) {
-      destInfo[key] = srcInfo[key];
-      if (key === 'mcc') {
-        destInfo['lastKnownMcc'] = srcInfo[key];
-      }
-    }
-  },
-
   updateConnectionInfo: function updateConnectionInfo(srcInfo, destInfo) {
     for (let key in srcInfo) {
       if ((key != "network") && (key != "cell")) {
@@ -413,7 +401,7 @@ RILContentHelper.prototype = {
       return;
     }
     this.rilContext.cardState = rilContext.cardState;
-    this.updateICCInfo(rilContext.iccInfo, this.rilContext.iccInfo);
+    this.updateInfo(rilContext.iccInfo, this.rilContext.iccInfo);
     this.updateConnectionInfo(rilContext.voice, this.rilContext.voiceConnectionInfo);
     this.updateConnectionInfo(rilContext.data, this.rilContext.dataConnectionInfo);
 
@@ -916,12 +904,7 @@ RILContentHelper.prototype = {
         }
         break;
       case "RIL:IccInfoChanged":
-        this.updateICCInfo(msg.json, this.rilContext.iccInfo);
-        if (this.rilContext.iccInfo.mcc) {
-          try {
-            Services.prefs.setIntPref("ril.lastKnownMcc", this.rilContext.iccInfo.mcc);
-          } catch (e) {}
-        }
+        this.updateInfo(msg.json, this.rilContext.iccInfo);
         Services.obs.notifyObservers(null, kIccInfoChangedTopic, null);
         break;
       case "RIL:VoiceInfoChanged":
