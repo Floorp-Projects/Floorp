@@ -344,6 +344,8 @@ private:
 
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName);
 
+    virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus);
+
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     GeckoChildProcessHost* mSubprocess;
