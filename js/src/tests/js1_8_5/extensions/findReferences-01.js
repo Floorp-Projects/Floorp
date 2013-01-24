@@ -7,13 +7,15 @@ if (typeof findReferences == "function") {
     var o = new C;
     o.x = {};               // via ordinary property
     o[42] = {};             // via numeric property
+    o[123456789] = {};      // via ridiculous numeric property
     o.myself = o;           // self-references should be reported
     o.alsoMyself = o;       // multiple self-references should all be reported
 
     assertEq(referencesVia(o, 'type; type_proto', C.prototype), true);
     assertEq(referencesVia(o, 'shape; base; parent', this), true);
     assertEq(referencesVia(o, 'x', o.x), true);
-    assertEq(referencesVia(o, '42', o[42]), true);
+    assertEq(referencesVia(o, 'objectElements[42]', o[42]), true);
+    assertEq(referencesVia(o, '123456789', o[123456789]), true);
     assertEq(referencesVia(o, 'myself', o), true);
     assertEq(referencesVia(o, 'alsoMyself', o), true);
 
@@ -44,7 +46,7 @@ if (typeof findReferences == "function") {
     // Dense arrays should work, too.
     a = [];
     a[1] = o;
-    assertEq(referencesVia(a, 'element[1]', o), true);
+    assertEq(referencesVia(a, 'objectElements[1]', o), true);
 
     reportCompare(true, true);
 } else {
