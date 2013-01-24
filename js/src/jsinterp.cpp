@@ -303,13 +303,11 @@ js::RunScript(JSContext *cx, HandleScript script, StackFrame *fp)
     struct CheckStackBalance {
         JSContext *cx;
         StackFrame *fp;
-        RootedObject enumerators;
         CheckStackBalance(JSContext *cx)
-          : cx(cx), fp(cx->fp()), enumerators(cx, cx->enumerators)
+          : cx(cx), fp(cx->fp())
         {}
         ~CheckStackBalance() {
             JS_ASSERT(fp == cx->fp());
-            JS_ASSERT_IF(!fp->isGeneratorFrame(), enumerators == cx->enumerators);
         }
     } check(cx);
 #endif
