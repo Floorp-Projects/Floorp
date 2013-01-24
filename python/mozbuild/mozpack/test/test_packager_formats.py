@@ -234,5 +234,49 @@ class TestOmniJarFormatter(TestWithTmpDir):
         ])
 
 
+    def test_omnijar_is_resource(self):
+        registry = FileRegistry()
+        f = OmniJarFormatter(registry, 'omni.foo', non_resources=[
+            'defaults/messenger/mailViews.dat',
+            'defaults/foo/*',
+            '*/dummy',
+        ])
+        f.add_base('app')
+        for base in ['', 'app/']:
+            self.assertTrue(f.is_resource(base + 'chrome'))
+            self.assertTrue(
+                f.is_resource(base + 'chrome/foo/bar/baz.properties'))
+            self.assertFalse(f.is_resource(base + 'chrome/icons/foo.png'))
+            self.assertTrue(f.is_resource(base + 'components/foo.js'))
+            self.assertFalse(f.is_resource(base + 'components/foo.so'))
+            self.assertTrue(f.is_resource(base + 'res/foo.css'))
+            self.assertFalse( f.is_resource(base + 'res/cursors/foo.png'))
+            self.assertFalse(f.is_resource(base + 'res/MainMenu.nib/'))
+            self.assertTrue(f.is_resource(base + 'defaults/pref/foo.js'))
+            self.assertFalse(
+                f.is_resource(base + 'defaults/pref/channel-prefs.js'))
+            self.assertTrue(f.is_resource(base + 'defaults/preferences/foo.js'))
+            self.assertFalse(
+                f.is_resource(base + 'defaults/preferences/channel-prefs.js'))
+            self.assertTrue(f.is_resource(base + 'modules/foo.jsm'))
+            self.assertTrue(f.is_resource(base + 'greprefs.js'))
+            self.assertTrue(f.is_resource(base + 'hyphenation/foo'))
+            self.assertTrue(f.is_resource(base + 'update.locale'))
+            self.assertTrue(
+                f.is_resource(base + 'jsloader/resource/gre/modules/foo.jsm'))
+            self.assertFalse(f.is_resource(base + 'foo'))
+            self.assertFalse(f.is_resource('foo/bar/greprefs.js'))
+            self.assertTrue(f.is_resource(base + 'defaults/messenger/foo.dat'))
+            self.assertFalse(
+                f.is_resource(base + 'defaults/messenger/mailViews.dat'))
+            self.assertTrue(f.is_resource(base + 'defaults/pref/foo.js'))
+            self.assertFalse(f.is_resource(base + 'defaults/foo/bar.dat'))
+            self.assertFalse(f.is_resource(base + 'defaults/foo/bar/baz.dat'))
+            self.assertTrue(f.is_resource(base + 'chrome/foo/bar/baz/dummy_'))
+            self.assertFalse(f.is_resource(base + 'chrome/foo/bar/baz/dummy'))
+            self.assertTrue(f.is_resource(base + 'chrome/foo/bar/dummy_'))
+            self.assertFalse(f.is_resource(base + 'chrome/foo/bar/dummy'))
+
+
 if __name__ == '__main__':
     mozunit.main()
