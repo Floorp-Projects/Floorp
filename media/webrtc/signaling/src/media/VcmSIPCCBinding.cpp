@@ -907,7 +907,6 @@ static short vcmCreateRemoteStream_m(
   cc_mcapid_t mcap_id,
   const char *peerconnection,
   int *pc_stream_id) {
-  uint32_t hints = 0;
   nsresult res;
 
   *pc_stream_id = -1;
@@ -916,15 +915,8 @@ static short vcmCreateRemoteStream_m(
   sipcc::PeerConnectionWrapper pc(peerconnection);
   ENSURE_PC(pc, VCM_ERROR);
 
-  if (CC_IS_AUDIO(mcap_id)) {
-    hints |= nsDOMMediaStream::HINT_CONTENTS_AUDIO;
-  }
-  if (CC_IS_VIDEO(mcap_id)) {
-    hints |= nsDOMMediaStream::HINT_CONTENTS_VIDEO;
-  }
-
   nsRefPtr<sipcc::RemoteSourceStreamInfo> info;
-  res = pc.impl()->CreateRemoteSourceStreamInfo(hints, &info);
+  res = pc.impl()->CreateRemoteSourceStreamInfo(&info);
   if (NS_FAILED(res)) {
     return VCM_ERROR;
   }
@@ -934,22 +926,8 @@ static short vcmCreateRemoteStream_m(
     return VCM_ERROR;
   }
 
-  if (CC_IS_AUDIO(mcap_id)) {
-    mozilla::AudioSegment *segment = new mozilla::AudioSegment();
-    segment->Init(1); // 1 Channel
-    // TODO(ekr@rtfm.com): Clean up Track IDs
-    info->GetMediaStream()->GetStream()->AsSourceStream()->AddTrack(1, 16000, 0, segment);
-
-    // We aren't going to add any more tracks
-    info->GetMediaStream()->GetStream()->AsSourceStream()->
-        AdvanceKnownTracksTime(mozilla::STREAM_TIME_MAX);
-  }
-  if (CC_IS_VIDEO(mcap_id)) {
-    // AddTrack takes ownership of segment
-  }
-
-  CSFLogDebug( logTag, "%s: created remote stream with index %d hints=%d",
-    __FUNCTION__, *pc_stream_id, hints);
+  CSFLogDebug( logTag, "%s: created remote stream with index %d",
+    __FUNCTION__, *pc_stream_id);
 
   return 0;
 }
@@ -1356,6 +1334,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
         pc.impl()->GetMainThread().get(),
         pc.impl()->GetSTSThread(),
         stream->GetMediaStream()->GetStream(),
+        pc_track_id,
         conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
@@ -1399,6 +1378,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
             pc.impl()->GetMainThread().get(),
             pc.impl()->GetSTSThread(),
             stream->GetMediaStream()->GetStream(),
+            pc_track_id,
             conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
@@ -1985,6 +1965,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
             pc.impl()->GetMainThread().get(),
             pc.impl()->GetSTSThread(),
             stream->GetMediaStream()->GetStream(),
+            pc_track_id,
             conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
@@ -2025,6 +2006,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
             pc.impl()->GetMainThread().get(),
             pc.impl()->GetSTSThread(),
             stream->GetMediaStream()->GetStream(),
+            pc_track_id,
             conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
