@@ -226,6 +226,7 @@ function RadioInterfaceLayer() {
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
+                     lastKnownMcc: 0,
                      cell: null,
                      type: null,
                      signalStrength: null,
@@ -234,11 +235,16 @@ function RadioInterfaceLayer() {
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
+                     lastKnownMcc: 0,
                      cell: null,
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
   };
+
+  try {
+    this.rilContext.voice.lastKnownMcc = Services.prefs.getIntPref("ril.lastKnownMcc");
+  } catch (e) {}
 
   this.voicemailInfo = {
     number: null,
@@ -1008,6 +1014,18 @@ RadioInterfaceLayer.prototype = {
     let data = this.rilContext.data;
 
     if (this.networkChanged(message, voice.network)) {
+      // Update lastKnownMcc.
+      if (message.mcc) {
+        voice.lastKnownMcc = message.mcc;
+        // Update pref if mcc is changed.
+        // !voice.network is in case voice.network is still null.
+        if (!voice.network || voice.network.mcc != message.mcc) {
+          try {
+            Services.prefs.setIntPref("ril.lastKnownMcc", message.mcc);
+          } catch (e) {}
+        }
+      }
+
       voice.network = message;
       if (!message.batch) {
         this._sendTargetMessage("mobileconnection", "RIL:VoiceInfoChanged", voice);
