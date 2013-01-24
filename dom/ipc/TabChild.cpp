@@ -2018,22 +2018,8 @@ TabChild::DoSendSyncMessage(const nsAString& aMessage,
 {
   ContentChild* cc = static_cast<ContentChild*>(Manager());
   ClonedMessageData data;
-  SerializedStructuredCloneBuffer& buffer = data.data();
-  buffer.data = aData.mData;
-  buffer.dataLength = aData.mDataLength;
-
-  const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
-  if (!blobs.IsEmpty()) {
-    InfallibleTArray<PBlobChild*>& blobChildList = data.blobsChild();
-    uint32_t length = blobs.Length();
-    blobChildList.SetCapacity(length);
-    for (uint32_t i = 0; i < length; ++i) {
-      BlobChild* blobChild = cc->GetOrCreateActorForBlob(blobs[i]);
-      if (!blobChild) {
-        return false;
-      }
-      blobChildList.AppendElement(blobChild);
-    }
+  if (!BuildClonedMessageDataForChild(cc, aData, data)) {
+    return false;
   }
   return SendSyncMessage(nsString(aMessage), data, aJSONRetVal);
 }
@@ -2044,24 +2030,9 @@ TabChild::DoSendAsyncMessage(const nsAString& aMessage,
 {
   ContentChild* cc = static_cast<ContentChild*>(Manager());
   ClonedMessageData data;
-  SerializedStructuredCloneBuffer& buffer = data.data();
-  buffer.data = aData.mData;
-  buffer.dataLength = aData.mDataLength;
-
-  const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
-  if (!blobs.IsEmpty()) {
-    InfallibleTArray<PBlobChild*>& blobChildList = data.blobsChild();
-    uint32_t length = blobs.Length();
-    blobChildList.SetCapacity(length);
-    for (uint32_t i = 0; i < length; ++i) {
-      BlobChild* blobChild = cc->GetOrCreateActorForBlob(blobs[i]);
-      if (!blobChild) {
-        return false;
-      }
-      blobChildList.AppendElement(blobChild);
-    }
+  if (!BuildClonedMessageDataForChild(cc, aData, data)) {
+    return false;
   }
-
   return SendAsyncMessage(nsString(aMessage), data);
 }
 
