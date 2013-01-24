@@ -276,8 +276,8 @@
   font: 9pt monospace;
 }
 
-.dbg-expression-delete {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+.dbg-expression-delete:not(:hover) {
+  opacity: 0.5;
 }
 
 /**
@@ -290,7 +290,6 @@
 }
 
 .dbg-variable-delete:not(:hover) {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
   opacity: 0.5;
 }
 
