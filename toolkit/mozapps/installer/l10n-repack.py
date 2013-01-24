@@ -35,7 +35,7 @@ from createprecomplete import generate_precomplete
 # Set of files or directories not listed in a chrome.manifest but that are
 # localized.
 NON_CHROME = set([
-    'crashreporter*.ini',
+    '**/crashreporter*.ini',
     'searchplugins',
     'dictionaries',
     'hyphenation',
