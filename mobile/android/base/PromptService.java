@@ -20,6 +20,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.text.Html;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
@@ -203,6 +204,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                     }
                 } catch(Exception ex) { }
                 mView = (View)spinner;
+            } else if (mType.equals("label")) {
+                // not really an input, but a way to add labels and such to the dialog
+                TextView view = new TextView(GeckoApp.mAppContext);
+                view.setText(Html.fromHtml(mLabel));
+                mView = view;
             }
             return mView;
         }
@@ -226,6 +232,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 GregorianCalendar calendar =
                     new GregorianCalendar(0,0,0,tp.getCurrentHour(),tp.getCurrentMinute());
                 return formatDateString("kk:mm",calendar);
+            } else if (mType.equals("label")) {
+                return "";
             } else if (android.os.Build.VERSION.SDK_INT < 11 && mType.equals("date")) {
                 // We can't use the custom DateTimePicker with a sdk older than 11.
                 // Fallback on the native DatePicker.
