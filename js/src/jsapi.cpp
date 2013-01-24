@@ -1483,14 +1483,6 @@ JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSScript *target)
     cx_->enterCompartment(target->compartment());
 }
 
-JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSStackFrame *target)
-  : cx_(cx),
-    oldCompartment_(cx->compartment)
-{
-    AssertHeapIsIdleOrIterating(cx_);
-    cx_->enterCompartment(Valueify(target)->global().compartment());
-}
-
 JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSString *target)
   : cx_(cx),
     oldCompartment_(cx->compartment)
