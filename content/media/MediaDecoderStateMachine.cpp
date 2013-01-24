@@ -2102,6 +2102,13 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         StopPlayback();
       }
 
+      if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
+          !IsPlaying()) {
+        // We are playing, but the state machine does not know it yet. Tell it
+        // that it is, so that the clock can be properly queried.
+        StartPlayback();
+      }
+
       if (IsPausedAndDecoderWaiting()) {
         // The decode buffers are full, and playback is paused. Shutdown the
         // decode thread.
@@ -2378,7 +2385,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
     if (frame && !currentFrame) {
       int64_t now = IsPlaying() ? clock_time : mPlayDuration;
 
-      remainingTime = frame->mTime - mStartTime - now;
+      remainingTime = frame->mTime - now;
     }
   }
 
@@ -2425,7 +2432,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
       return;
     }
     mDecoder->GetFrameStatistics().NotifyPresentedFrame();
-    remainingTime = currentFrame->mEndTime - mStartTime - clock_time;
+    remainingTime = currentFrame->mEndTime - clock_time;
     currentFrame = nullptr;
   }
 
