@@ -31,6 +31,7 @@ from mozpack.chrome.manifest import (
 from mozpack.errors import errors
 from mozpack.packager.unpack import UnpackFinder
 from createprecomplete import generate_precomplete
+from argparse import ArgumentParser
 
 # Set of files or directories not listed in a chrome.manifest but that are
 # localized.
@@ -47,7 +48,7 @@ NON_CHROME = set([
 ])
 
 
-def repack(source, l10n):
+def repack(source, l10n, non_resources=[]):
     finder = UnpackFinder(source)
     l10n_finder = UnpackFinder(l10n)
     copier = FileCopier()
@@ -57,7 +58,8 @@ def repack(source, l10n):
         formatter = JarFormatter(copier, optimize=finder.optimizedjars)
     elif finder.kind == 'omni':
         formatter = OmniJarFormatter(copier, finder.omnijar,
-                                     optimize=finder.optimizedjars)
+                                     optimize=finder.optimizedjars,
+                                     non_resources=non_resources)
 
     # Read all manifest entries from the packaged directory.
     manifests = dict((p, m) for p, m in finder.find('**/*.manifest')
@@ -174,12 +176,17 @@ def repack(source, l10n):
 
 
 def main():
-    if len(sys.argv) != 3:
-        print >>sys.stderr, "Usage: %s directory l10n-directory" % \
-                            os.path.basename(sys.argv[0])
-        sys.exit(1)
+    parser = ArgumentParser()
+    parser.add_argument('build',
+                        help='Directory containing the build to repack')
+    parser.add_argument('l10n',
+                        help='Directory containing the staged langpack')
+    parser.add_argument('--non-resource', nargs='+', metavar='PATTERN',
+                        default=[],
+                        help='Extra files not to be considered as resources')
+    args = parser.parse_args()
 
-    repack(sys.argv[1], sys.argv[2])
+    repack(args.build, args.l10n, args.non_resource)
 
 if __name__ == "__main__":
     main()
