@@ -404,8 +404,7 @@ Element::WrapObject(JSContext *aCx, JSObject *aScope,
   }
 
   nsRefPtr<nsXBLBinding> binding;
-  xblService->LoadBindings(this, uri, principal, false, getter_AddRefs(binding),
-                           &dummy);
+  xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding), &dummy);
   
   if (binding) {
     if (nsContentUtils::IsSafeToRunScript()) {

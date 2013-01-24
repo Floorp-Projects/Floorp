@@ -835,34 +835,6 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent,
 }
 
 nsresult
-nsBindingManager::AddLayeredBinding(nsIContent* aContent, nsIURI* aURL,
-                                    nsIPrincipal* aOriginPrincipal)
-{
-  // First we need to load our binding.
-  nsXBLService* xblService = nsXBLService::GetInstance();
-  if (!xblService)
-    return NS_ERROR_FAILURE;
-
-  // Load the bindings.
-  nsRefPtr<nsXBLBinding> binding;
-  bool dummy;
-  xblService->LoadBindings(aContent, aURL, aOriginPrincipal, true,
-                           getter_AddRefs(binding), &dummy);
-  if (binding) {
-    AddToAttachedQueue(binding);
-    ProcessAttachedQueue();
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
-{
-  return ClearBinding(aContent);
-}
-
-nsresult
 nsBindingManager::ClearBinding(nsIContent* aContent)
 {
   // Hold a ref to the binding so it won't die when we remove it from our table
