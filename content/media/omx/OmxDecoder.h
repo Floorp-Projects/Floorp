@@ -9,6 +9,7 @@
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 #include "GrallocImages.h"
+#include "MP3FrameParser.h"
 #include "MPAPI.h"
 #include "MediaResource.h"
 #include "AbstractMediaDecoder.h"
@@ -76,6 +77,7 @@ private:
 class OmxDecoder : public OMXCodecProxy::EventListener {
   typedef MPAPI::AudioFrame AudioFrame;
   typedef MPAPI::VideoFrame VideoFrame;
+  typedef mozilla::MP3FrameParser MP3FrameParser;
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::AbstractMediaDecoder AbstractMediaDecoder;
 
@@ -109,6 +111,7 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   int64_t mDurationUs;
   VideoFrame mVideoFrame;
   AudioFrame mAudioFrame;
+  MP3FrameParser mMP3FrameParser;
 
   // Lifetime of these should be handled by OMXCodec, as long as we release
   //   them after use: see ReleaseVideoBuffer(), ReleaseAudioBuffer()
@@ -176,6 +179,8 @@ public:
   void ReleaseMediaResources();
   bool SetVideoFormat();
   bool SetAudioFormat();
+
+  void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
   void GetDuration(int64_t *durationUs) {
     *durationUs = mDurationUs;
