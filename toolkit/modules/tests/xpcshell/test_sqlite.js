@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 do_get_profile();
 
@@ -13,19 +13,38 @@ Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 
-function getConnection(dbName) {
-  let path = dbName + ".sqlite";
+function sleep(ms) {
+  let deferred = Promise.defer();
 
-  return Sqlite.openConnection({path: path});
+  let timer = Cc["@mozilla.org/timer;1"]
+                .createInstance(Ci.nsITimer);
+
+  timer.initWithCallback({
+    notify: function () {
+      deferred.resolve();
+    },
+  }, ms, timer.TYPE_ONE_SHOT);
+
+  return deferred.promise;
 }
 
-function getDummyDatabase(name) {
+function getConnection(dbName, extraOptions={}) {
+  let path = dbName + ".sqlite";
+  let options = {path: path};
+  for (let [k, v] in Iterator(extraOptions)) {
+    options[k] = v;
+  }
+
+  return Sqlite.openConnection(options);
+}
+
+function getDummyDatabase(name, extraOptions={}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
   };
 
-  let c = yield getConnection(name);
+  let c = yield getConnection(name, extraOptions);
 
   for (let [k, v] in Iterator(TABLES)) {
     yield c.execute("CREATE TABLE " + k + "(" + v + ")");
@@ -161,11 +180,17 @@ add_task(function test_execute_invalid_statement() {
 
   let deferred = Promise.defer();
 
+  do_check_eq(c._anonymousStatements.size, 0);
+
   c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
     deferred.resolve();
   });
 
   yield deferred.promise;
+
+  // Ensure we don't leak the statement instance.
+  do_check_eq(c._anonymousStatements.size, 0);
+
   yield c.close();
 });
 
@@ -332,3 +357,117 @@ add_task(function test_shrink_memory() {
   yield c.shrinkMemory();
   yield c.close();
 });
+
+add_task(function test_no_shrink_on_init() {
+  let c = yield getConnection("no_shrink_on_init",
+                              {shrinkMemoryOnConnectionIdleMS: 200});
+
+  let oldShrink = c.shrinkMemory;
+  let count = 0;
+  Object.defineProperty(c, "shrinkMemory", {
+    value: function () {
+      count++;
+    },
+  });
+
+  // We should not shrink until a statement has been executed.
+  yield sleep(220);
+  do_check_eq(count, 0);
+
+  yield c.execute("SELECT 1");
+  yield sleep(220);
+  do_check_eq(count, 1);
+
+  yield c.close();
+});
+
+add_task(function test_idle_shrink_fires() {
+  let c = yield getDummyDatabase("idle_shrink_fires",
+                                 {shrinkMemoryOnConnectionIdleMS: 200});
+  c._clearIdleShrinkTimer();
+
+  let oldShrink = c.shrinkMemory;
+  let shrinkPromises = [];
+
+  let count = 0;
+  Object.defineProperty(c, "shrinkMemory", {
+    value: function () {
+      count++;
+      let promise = oldShrink.call(c);
+      shrinkPromises.push(promise);
+      return promise;
+    },
+  });
+
+  // We reset the idle shrink timer after monkeypatching because otherwise the
+  // installed timer callback will reference the non-monkeypatched function.
+  c._startIdleShrinkTimer();
+
+  yield sleep(220);
+  do_check_eq(count, 1);
+  do_check_eq(shrinkPromises.length, 1);
+  yield shrinkPromises[0];
+  shrinkPromises.shift();
+
+  // We shouldn't shrink again unless a statement was executed.
+  yield sleep(300);
+  do_check_eq(count, 1);
+
+  yield c.execute("SELECT 1");
+  yield sleep(300);
+
+  do_check_eq(count, 2);
+  do_check_eq(shrinkPromises.length, 1);
+  yield shrinkPromises[0];
+
+  yield c.close();
+});
+
+add_task(function test_idle_shrink_reset_on_operation() {
+  const INTERVAL = 500;
+  let c = yield getDummyDatabase("idle_shrink_reset_on_operation",
+                                 {shrinkMemoryOnConnectionIdleMS: INTERVAL});
+
+  c._clearIdleShrinkTimer();
+
+  let oldShrink = c.shrinkMemory;
+  let shrinkPromises = [];
+  let count = 0;
+
+  Object.defineProperty(c, "shrinkMemory", {
+    value: function () {
+      count++;
+      let promise = oldShrink.call(c);
+      shrinkPromises.push(promise);
+      return promise;
+    },
+  });
+
+  let now = new Date();
+  c._startIdleShrinkTimer();
+
+  let initialIdle = new Date(now.getTime() + INTERVAL);
+
+  // Perform database operations until initial scheduled time has been passed.
+  let i = 0;
+  while (new Date() < initialIdle) {
+    yield c.execute("INSERT INTO dirs (path) VALUES (?)", ["" + i]);
+    i++;
+  }
+
+  do_check_true(i > 0);
+
+  // We should not have performed an idle while doing operations.
+  do_check_eq(count, 0);
+
+  // Wait for idle timer.
+  yield sleep(INTERVAL);
+
+  // Ensure we fired.
+  do_check_eq(count, 1);
+  do_check_eq(shrinkPromises.length, 1);
+  yield shrinkPromises[0];
+
+  yield c.close();
+});
+
