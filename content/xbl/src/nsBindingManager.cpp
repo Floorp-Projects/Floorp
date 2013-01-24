@@ -859,6 +859,12 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, nsIURI* aURL,
 nsresult
 nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 {
+  return ClearBinding(aContent);
+}
+
+nsresult
+nsBindingManager::ClearBinding(nsIContent* aContent)
+{
   // Hold a ref to the binding so it won't die when we remove it from our table
   nsRefPtr<nsXBLBinding> binding = GetBinding(aContent);
   
@@ -868,11 +874,6 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 
   // For now we can only handle removing a binding if it's the only one
   NS_ENSURE_FALSE(binding->GetBaseBinding(), NS_ERROR_FAILURE);
-
-  // Make sure that the binding has the URI that is requested to be removed
-  if (!binding->PrototypeBinding()->CompareBindingURI(aURL)) {
-    return NS_OK;
-  }
 
   // Make sure it isn't a style binding
   if (binding->IsStyleBinding()) {

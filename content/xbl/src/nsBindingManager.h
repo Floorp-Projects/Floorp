@@ -159,6 +159,7 @@ public:
 
   nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL,
                              nsIPrincipal* aOriginPrincipal);
+  nsresult ClearBinding(nsIContent* aContent);
   nsresult RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
   nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
                                nsIPrincipal* aOriginPrincipal);
