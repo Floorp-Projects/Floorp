@@ -632,7 +632,7 @@ nsresult MediaDecoder::Seek(double aTime)
         if (distanceLeft == distanceRight) {
           distanceLeft = Abs(leftBound - mCurrentTime);
           distanceRight = Abs(rightBound - mCurrentTime);
-        } 
+        }
         aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
       } else {
         // Seek target is after the end last range in seekable data.
