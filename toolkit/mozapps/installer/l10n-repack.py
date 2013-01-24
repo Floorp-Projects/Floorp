@@ -32,6 +32,7 @@ from mozpack.errors import errors
 from mozpack.packager.unpack import UnpackFinder
 from createprecomplete import generate_precomplete
 from argparse import ArgumentParser
+import buildconfig
 
 # Set of files or directories not listed in a chrome.manifest but that are
 # localized.
@@ -186,6 +187,8 @@ def main():
                         help='Extra files not to be considered as resources')
     args = parser.parse_args()
 
+    buildconfig.substs['USE_ELF_HACK'] = False
+    buildconfig.substs['PKG_SKIP_STRIP'] = True
     repack(args.build, args.l10n, args.non_resource)
 
 if __name__ == "__main__":
