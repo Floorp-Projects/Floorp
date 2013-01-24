@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -49,7 +49,7 @@ class Image
     Image();
     ~Image();
 
-    bool redefine(GLenum format, GLsizei width, GLsizei height, GLenum type, bool forceRelease);
+    bool redefine(GLint internalformat, GLsizei width, GLsizei height, bool forceRelease);
     void markDirty() {mDirty = true;}
     void markClean() {mDirty = false;}
 
@@ -58,15 +58,14 @@ class Image
 
     GLsizei getWidth() const {return mWidth;}
     GLsizei getHeight() const {return mHeight;}
-    GLenum getFormat() const {return mFormat;}
-    GLenum getType() const {return mType;}
+    GLenum getInternalFormat() const {return mInternalFormat;}
     bool isDirty() const {return mSurface && mDirty;}
     IDirect3DSurface9 *getSurface();
 
     void setManagedSurface(IDirect3DSurface9 *surface);
     void updateSurface(IDirect3DSurface9 *dest, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
 
-    void loadData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum type,
+    void loadData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                   GLint unpackAlignment, const void *input);
 
     void loadAlphaData(GLsizei width, GLsizei height,
@@ -126,8 +125,7 @@ class Image
 
     GLsizei mWidth;
     GLsizei mHeight;
-    GLenum mFormat;
-    GLenum mType;
+    GLint mInternalFormat;
 
     bool mDirty;
 
@@ -192,6 +190,7 @@ class Texture : public RefCountObject
     GLenum getWrapT() const;
     float getMaxAnisotropy() const;
     GLenum getUsage() const;
+    bool isMipmapFiltered() const;
 
     virtual bool isSamplerComplete() const = 0;
 
@@ -227,7 +226,7 @@ class Texture : public RefCountObject
     virtual void convertToRenderTarget() = 0;
     virtual IDirect3DSurface9 *getRenderTarget(GLenum target) = 0;
 
-    int levelCount() const;
+    int levelCount();
 
     static Blit *getBlitter();
     static bool copyToRenderTarget(IDirect3DSurface9 *dest, IDirect3DSurface9 *source, bool fromManaged);
@@ -258,7 +257,7 @@ class TextureStorage2D : public TextureStorage
 
     virtual ~TextureStorage2D();
 
-    IDirect3DSurface9 *getSurfaceLevel(int level);
+    IDirect3DSurface9 *getSurfaceLevel(int level, bool dirty);
     IDirect3DBaseTexture9 *getBaseTexture() const;
 
     virtual unsigned int getRenderTargetSerial(GLenum target) const;
@@ -321,7 +320,7 @@ class Texture2D : public Texture
 
     bool isMipmapComplete() const;
 
-    void redefineImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLenum type);
+    void redefineImage(GLint level, GLint internalformat, GLsizei width, GLsizei height);
     void commitRect(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
 
     Image mImageArray[IMPLEMENTATION_MAX_TEXTURE_LEVELS];
@@ -345,7 +344,7 @@ class TextureStorageCubeMap : public TextureStorage
 
     virtual ~TextureStorageCubeMap();
 
-    IDirect3DSurface9 *getCubeMapSurface(GLenum faceTarget, int level);
+    IDirect3DSurface9 *getCubeMapSurface(GLenum faceTarget, int level, bool dirty);
     IDirect3DBaseTexture9 *getBaseTexture() const;
 
     virtual unsigned int getRenderTargetSerial(GLenum target) const;
@@ -416,7 +415,7 @@ class TextureCubeMap : public Texture
 
     void setImage(int faceIndex, GLint level, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels);
     void commitRect(int faceIndex, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
-    void redefineImage(int faceIndex, GLint level, GLenum format, GLsizei width, GLsizei height, GLenum type);
+    void redefineImage(int faceIndex, GLint level, GLint internalformat, GLsizei width, GLsizei height);
 
     Image mImageArray[6][IMPLEMENTATION_MAX_TEXTURE_LEVELS];
 
