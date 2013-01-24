@@ -3387,10 +3387,21 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     masm.or32(Imm32(JSITER_ACTIVE), Address(niTemp, offsetof(NativeIterator, flags)));
 
     // Chain onto the active iterator stack.
-    masm.loadJSContext(temp1);
-    masm.loadPtr(Address(temp1, offsetof(JSContext, enumerators)), temp2);
-    masm.storePtr(temp2, Address(niTemp, offsetof(NativeIterator, next)));
-    masm.storePtr(output, Address(temp1, offsetof(JSContext, enumerators)));
+    masm.movePtr(ImmWord(GetIonContext()->compartment), temp1);
+    masm.loadPtr(Address(temp1, offsetof(JSCompartment, enumerators)), temp1);
+
+    // ni->next = list
+    masm.storePtr(temp1, Address(niTemp, NativeIterator::offsetOfNext()));
+
+    // ni->prev = list->prev
+    masm.loadPtr(Address(temp1, NativeIterator::offsetOfPrev()), temp2);
+    masm.storePtr(temp2, Address(niTemp, NativeIterator::offsetOfPrev()));
+
+    // list->prev->next = ni
+    masm.storePtr(niTemp, Address(temp2, NativeIterator::offsetOfNext()));
+
+    // list->prev = ni
+    masm.storePtr(niTemp, Address(temp1, NativeIterator::offsetOfPrev()));
 
     masm.bind(ool->rejoin());
     return true;
@@ -3477,6 +3488,7 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd *lir)
     const Register obj = ToRegister(lir->object());
     const Register temp1 = ToRegister(lir->temp1());
     const Register temp2 = ToRegister(lir->temp2());
+    const Register temp3 = ToRegister(lir->temp3());
 
     OutOfLineCode *ool = oolCallVM(CloseIteratorInfo, lir, (ArgList(), obj), StoreNothing());
     if (!ool)
@@ -3494,10 +3506,17 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd *lir)
     masm.loadPtr(Address(temp1, offsetof(NativeIterator, props_array)), temp2);
     masm.storePtr(temp2, Address(temp1, offsetof(NativeIterator, props_cursor)));
 
-    // Advance enumerators list.
-    masm.loadJSContext(temp2);
-    masm.loadPtr(Address(temp1, offsetof(NativeIterator, next)), temp1);
-    masm.storePtr(temp1, Address(temp2, offsetof(JSContext, enumerators)));
+    // Unlink from the iterator list.
+    const Register next = temp2;
+    const Register prev = temp3;
+    masm.loadPtr(Address(temp1, NativeIterator::offsetOfNext()), next);
+    masm.loadPtr(Address(temp1, NativeIterator::offsetOfPrev()), prev);
+    masm.storePtr(prev, Address(next, NativeIterator::offsetOfPrev()));
+    masm.storePtr(next, Address(prev, NativeIterator::offsetOfNext()));
+#ifdef DEBUG
+    masm.storePtr(ImmWord(uintptr_t(0)), Address(temp1, NativeIterator::offsetOfNext()));
+    masm.storePtr(ImmWord(uintptr_t(0)), Address(temp1, NativeIterator::offsetOfPrev()));
+#endif
 
     masm.bind(ool->rejoin());
     return true;
