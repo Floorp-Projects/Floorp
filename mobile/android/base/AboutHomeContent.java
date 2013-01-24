@@ -213,6 +213,8 @@ public class AboutHomeContent extends ScrollView
                 if (holder.isPinned()) {
                     menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                 } else {
+                    if (TextUtils.isEmpty(holder.getUrl()))
+                        menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                 }
             }
