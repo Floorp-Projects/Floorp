@@ -106,6 +106,9 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
   if (aTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(aTabChild);
   }
+  if (MissingRequiredTabChild(tabChild, "remoteopenfile")) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   // Windows/OSX desktop builds skip remoting, and just open file in child

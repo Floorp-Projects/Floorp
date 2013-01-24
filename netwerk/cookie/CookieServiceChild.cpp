@@ -124,6 +124,9 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
     if (iTabChild) {
       tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
     }
+    if (MissingRequiredTabChild(tabChild, "cookie")) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
   }
 
   // Synchronously call the parent.
@@ -165,6 +168,9 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     NS_QueryNotificationCallbacks(aChannel, iTabChild);
     if (iTabChild) {
       tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+    }
+    if (MissingRequiredTabChild(tabChild, "cookie")) {
+      return NS_ERROR_ILLEGAL_VALUE;
     }
   }
 
