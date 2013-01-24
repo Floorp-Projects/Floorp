@@ -148,3 +148,36 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
   }
   runNextTest();
 }
+
+// A fairly large hammer which checks all aspects of the SocialUI for
+// internal consistency.
+function checkSocialUI(win) {
+  let win = win || window;
+  let doc = win.document;
+  let provider = Social.provider;
+  let enabled = win.SocialUI.enabled;
+  function isbool(a, b, msg) {
+    is(!!a, !!b, msg);
+  }
+  isbool(win.SocialSidebar.canShow, enabled, "social sidebar active?");
+  if (enabled)
+    isbool(win.SocialSidebar.opened, enabled, "social sidebar open?");
+  isbool(win.SocialChatBar.isAvailable, enabled && Social.haveLoggedInUser(), "chatbar available?");
+  isbool(!win.SocialChatBar.chatbar.hidden, enabled && Social.haveLoggedInUser(), "chatbar visible?");
+  isbool(!win.SocialShareButton.shareButton.hidden, enabled && provider.recommendInfo, "share button visible?");
+  isbool(!doc.getElementById("social-toolbar-item").hidden, enabled, "toolbar items visible?");
+  if (enabled)
+    todo_is(win.SocialToolbar.button.style.listStyleImage, 'url("' + provider.iconURL + '")', "Bug 821262 - toolbar button has provider icon");
+
+  // and for good measure, check all the social commands.
+  // Social:Remove - never disabled directly but parent nodes are
+  isbool(!doc.getElementById("Social:Toggle").hidden, enabled, "Social:Toggle visible?");
+  // Until bug 821262 is fixed, ToggleNotifications might not be updated correctly...
+  // isbool(!doc.getElementById("Social:ToggleNotifications").hidden, enabled, "Bug 821262 - Social:ToggleNotifications visible?");
+  isbool(!doc.getElementById("Social:FocusChat").hidden, enabled && Social.haveLoggedInUser(), "Social:FocusChat visible?");
+  isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
+  is(doc.getElementById("Social:SharePage").getAttribute("disabled"), enabled && provider.recommendInfo ? "false" : "true", "Social:SharePage visible?");
+
+  // broadcasters.
+  isbool(!doc.getElementById("socialActiveBroadcaster").hidden, enabled, "socialActiveBroadcaster hidden?");
+}
