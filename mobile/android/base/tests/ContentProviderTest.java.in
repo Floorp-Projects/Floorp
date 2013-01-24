@@ -15,6 +15,7 @@ import android.content.res.Resources;
 import android.content.pm.ApplicationInfo;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.ContentObserver;
 import android.os.Build;
 import android.net.Uri;
 import android.test.AndroidTestCase;
@@ -29,6 +30,7 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 /*
  * ContentProviderTest provides the infrastructure to run content provider
@@ -51,7 +53,7 @@ import java.util.HashMap;
  */
 abstract class ContentProviderTest extends BaseTest {
     protected ContentProvider mProvider;
-    protected MockContentResolver mResolver;
+    protected ChangeRecordingMockContentResolver mResolver;
     protected ClassLoader mClassLoader;
     protected ArrayList<Runnable> mTests;
     protected Class mProviderClass;
@@ -155,6 +157,22 @@ abstract class ContentProviderTest extends BaseTest {
         }
     }
 
+    /*
+     * A MockContentResolver that records each URI that is supplied to
+     * notifyChange.  Warning: the list of changed URIs is not
+     * synchronized.
+     */
+    protected class ChangeRecordingMockContentResolver extends MockContentResolver {
+        public final LinkedList<Uri> notifyChangeList = new LinkedList<Uri>();
+
+        @Override
+        public void notifyChange(Uri uri, ContentObserver observer, boolean syncToNetwork) {
+            notifyChangeList.addLast(uri);
+
+            super.notifyChange(uri, observer, syncToNetwork);
+        }
+    }
+
     private void setUpProviderClassAndAuthority(String providerClassName,
             String authorityField) throws Exception {
         mProviderContract = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract");
@@ -163,7 +181,7 @@ abstract class ContentProviderTest extends BaseTest {
     }
 
     private void setUpContentProvider() throws Exception {
-        mResolver = new MockContentResolver();
+        mResolver = new ChangeRecordingMockContentResolver();
 
         final String filenamePrefix = this.getClass().getSimpleName() + ".";
         RenamingDelegatingContext targetContextWrapper =
