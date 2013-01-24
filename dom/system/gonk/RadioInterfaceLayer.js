@@ -2847,7 +2847,9 @@ RILNetworkInterface.prototype = {
     this.httpProxyPort = this.dataCallSettings["httpProxyPort"];
 
     debug("Going to set up data connection with APN " + this.dataCallSettings["apn"]);
-    this.mRIL.setupDataCall(RIL.DATACALL_RADIOTECHNOLOGY_GSM,
+    let radioTechType = this.mRIL.rilContext.data.type;
+    let radioTechnology = RIL.GECKO_RADIO_TECH.indexOf(radioTechType);
+    this.mRIL.setupDataCall(radioTechnology,
                             this.dataCallSettings["apn"],
                             this.dataCallSettings["user"],
                             this.dataCallSettings["passwd"],
