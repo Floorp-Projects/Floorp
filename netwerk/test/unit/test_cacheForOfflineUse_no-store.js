@@ -15,8 +15,6 @@ const basePath = "/" + testFileName + "/";
 const baseURI = "http://localhost:4444" + basePath;
 const normalEntry = "normal";
 const noStoreEntry = "no-store";
-const noStorePreRedirect = "no-store-pre-redirect";
-const noStorePostRedirect = "no-store-post-redirect";
 
 var cacheUpdateObserver = null;
 
@@ -114,35 +112,6 @@ add_test(function test_noStore() {
                  null);
 });
 
-
-// An HTTP channel for updating the offline cache should fail when it gets a
-// response with Cache-Control: no-store, even if it's a failed redirect
-function noStoreHandlerFailedRedirect(metadata, response)
-{
-  // this redirect will be vetoed, so we can check how we handle caching failed
-  // redirect body
-  do_print("noStoreHandler-failedredirect");
-  response.setStatusLine(metadata.httpVersion, 302, "Found");
-  response.setHeader("Location", noStorePostRedirect, false);
-  response.setHeader("Content-Type", "text/plain");
-  response.setHeader("Cache-Control", "no-store");
-  response.bodyOutputStream.write(responseBody, responseBody.length);
-}
-function checkNoStoreFailedRedirect(request, buffer)
-{
-  do_check_eq(buffer, "");
-  asyncCheckCacheEntryExistance(noStorePreRedirect, false);
-  run_next_test();
-}
-add_test(function test_noStore_redirect() {
-  var chan = make_channel_for_offline_use(baseURI + noStorePreRedirect);
-  chan.notificationCallbacks = new ChannelEventSink(ES_ABORT_REDIRECT);
-  // The no-store should cause the channel to fail to load.
-  chan.asyncOpen(new ChannelListener(checkNoStoreFailedRedirect, 
-                 chan, CL_EXPECT_FAILURE),
-                 null);
-});
-
 function run_test()
 {
   do_get_profile();
@@ -150,8 +119,6 @@ function run_test()
   httpServer = new HttpServer();
   httpServer.registerPathHandler(basePath + normalEntry, normalHandler);
   httpServer.registerPathHandler(basePath + noStoreEntry, noStoreHandler);
-  httpServer.registerPathHandler(basePath + noStorePreRedirect,
-                                 noStoreHandlerFailedRedirect);
   httpServer.start(4444);
   run_next_test();
 }
