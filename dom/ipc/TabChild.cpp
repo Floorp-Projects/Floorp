@@ -1378,6 +1378,7 @@ TabChild::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
   event.refPoint = aRefPoint;
   event.time = aTime;
   event.button = nsMouseEvent::eLeftButton;
+  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   if (aMsg != NS_MOUSE_MOVE) {
     event.clickCount = 1;
   }
