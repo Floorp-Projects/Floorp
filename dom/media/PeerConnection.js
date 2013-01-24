@@ -262,8 +262,8 @@ PeerConnection.prototype = {
       throw new Error("RTCPeerConnection constructor already called");
     }
     if (!rtcConfig) {
-      // TODO(jib@mozilla.com): Hardcoded server pending Mozilla one. Bug 807494
-      rtcConfig = [{ url: "stun:23.21.150.121" }];
+      // TODO(jib@mozilla.com): Hardcoded Mozilla server. Final? Bug 807494
+      rtcConfig = { "iceServers": [{ url: "stun:23.21.150.121" }] };
     }
     this._mustValidateRTCConfiguration(rtcConfig,
         "RTCPeerConnection constructor passed invalid RTCConfiguration");
@@ -330,8 +330,8 @@ PeerConnection.prototype = {
   /**
    * An RTCConfiguration looks like this:
    *
-   *   [ { url:"stun:23.21.150.121" },
-   *     { url:"turn:user@turn.example.org", credential:"myPassword"} ]
+   * { "iceServers": [ { url:"stun:23.21.150.121" },
+   *                   { url:"turn:user@turn.example.org", credential:"mypass"} ] }
    *
    * We check for basic structure and well-formed stun/turn urls, but not
    * validity of servers themselves, before passing along to C++.
@@ -355,18 +355,21 @@ PeerConnection.prototype = {
     }
     function mustValidateServer(server) {
       let url = nicerNewURI(server.url, errorMsg);
-      if (!(url.scheme in { stun:1, stuns:1, turn:1 })) {
+      if (!(url.scheme in { stun:1, stuns:1, turn:1, turns:1 })) {
         throw new Error (errorMsg + " - improper scheme: " + url.scheme);
       }
       if (server.credential && isObject(server.credential)) {
         throw new Error (errorMsg + " - invalid credential");
       }
     }
-    if (!isArray(rtcConfig)) {
+    if (!isObject(rtcConfig)) {
       throw new Error (errorMsg);
     }
-    for (let i=0; i < rtcConfig.length; i++) {
-      mustValidateServer (rtcConfig[i], errorMsg);
+    if (!isArray(rtcConfig.iceServers)) {
+      throw new Error (errorMsg + " - iceServers [] property not present");
+    }
+    for (let i=0; i < rtcConfig.iceServers.length; i++) {
+      mustValidateServer (rtcConfig.iceServers[i], errorMsg);
     }
   },
 
