@@ -61,34 +61,6 @@ let gProfD = do_get_profile();
 clearDB();
 
 /**
- * Adds a task generator function written for Task.jsm to the list of tests that
- * are to be run asynchronously.
- *
- * The next asynchronous test runs automatically when the task terminates.  The
- * task should not call run_next_test() to continue.  Any exception in the task
- * function causes the current test to fail immediately, and the next test to be
- * executed.
- *
- * Test files should call run_next_test() inside run_test() to execute all the
- * asynchronous tests, as usual.  Test files may include both function added
- * with add_test() as well as function added with add_task().
- *
- * Example:
- *
- * add_task(function test_promise_resolves_to_true() {
- *   let result = yield promiseThatResolvesToTrue;
- *   do_check_true(result);
- * });
- */
-function add_task(aTaskFn) {
-  function wrapperFn() {
-    Task.spawn(aTaskFn)
-        .then(run_next_test, do_report_unexpected_exception);
-  }
-  eval("add_test(function " + aTaskFn.name + "() wrapperFn());");
-}
-
-/**
  * Shortcut to create a nsIURI.
  *
  * @param aSpec
