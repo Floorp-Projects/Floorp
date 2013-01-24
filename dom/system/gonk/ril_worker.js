@@ -7402,13 +7402,6 @@ let StkCommandParamsFactory = {
     }
     input.text = ctlv.value.textString;
 
-    // duration
-    ctlv = StkProactiveCmdHelper.searchForTag(
-        COMPREHENSIONTLV_TAG_DURATION, ctlvs);
-    if (ctlv) {
-      input.duration = ctlv.value;
-    }
-
     input.minLength = 1;
     input.maxLength = 1;
 
