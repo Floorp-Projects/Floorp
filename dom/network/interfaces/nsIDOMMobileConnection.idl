@@ -316,7 +316,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   [implicit_jscontext] attribute jsval oncfstatechange;
 };
 
-[scriptable, uuid(5ea0e4a9-4684-40da-9930-8ebb61d187f3)]
+[scriptable, uuid(21a20166-a9b4-4386-b151-49e6cfb9401b)]
 interface nsIDOMMozMobileConnectionInfo : nsISupports
 {
   /**
@@ -350,6 +350,11 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
    * Network operator
    */
   readonly attribute nsIDOMMozMobileNetworkInfo network;
+
+  /**
+   * Mobile Country Code (MCC) of last known network operator.
+   */
+  readonly attribute unsigned short lastKnownMcc;
 
   /**
    * Type of connection.
@@ -422,7 +427,7 @@ interface nsIDOMMozMobileCellInfo: nsISupports
   readonly attribute unsigned long gsmCellId;
 };
 
-[scriptable, uuid(1fb27dc0-427e-11e2-a25f-0800200c9a66)]
+[scriptable, uuid(b794bfcd-4ba4-46f2-8bf3-b4ed1b8d2b40)]
 interface nsIDOMMozMobileICCInfo : nsISupports
 {
    /**
@@ -434,11 +439,6 @@ interface nsIDOMMozMobileICCInfo : nsISupports
    * Mobile Country Code (MCC) of the subscriber's home network.
    */
   readonly attribute unsigned short mcc;
-
-  /**
-   * Mobile Country Code (MCC) of previous subscriber's home network.
-   */
-  readonly attribute unsigned short lastKnownMcc;
 
   /**
    * Mobile Network Code (MNC) of the subscriber's home network.
