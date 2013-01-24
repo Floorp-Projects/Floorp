@@ -147,7 +147,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     // Load the bindings.
     nsRefPtr<nsXBLBinding> unused;
     bool ignored;
-    rv = xblService->LoadBindings(rootCont, bindingUri, sysPrincipal, false,
+    rv = xblService->LoadBindings(rootCont, bindingUri, sysPrincipal,
                                   getter_AddRefs(unused), &ignored);
     NS_ENSURE_SUCCESS(rv, rv);
 

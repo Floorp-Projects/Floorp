@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(1a38762b-4da5-4f61-80fb-9317e198cb92)]
+[scriptable, uuid(af628000-e3fa-40d2-9118-fbaa9f3ec6b9)]
 interface nsIDOMDocumentXBL : nsISupports
 {
   /**
@@ -15,11 +15,6 @@ interface nsIDOMDocumentXBL : nsISupports
   nsIDOMElement         getAnonymousElementByAttribute(in nsIDOMElement elt,
                                                        in DOMString attrName,
                                                        in DOMString attrValue);
-
-  void                  addBinding(in nsIDOMElement elt,
-                                   in DOMString bindingURL);
-  void                  removeBinding(in nsIDOMElement elt,
-                                      in DOMString bindingURL);
 
   nsIDOMElement         getBindingParent(in nsIDOMNode node);
   void                  loadBindingDocument(in DOMString documentURL);
