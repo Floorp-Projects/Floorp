@@ -21,4 +21,5 @@ which.pth:python/which
 mock.pth:python/mock-1.0.0
 mozilla.pth:build
 mozilla.pth:config
+mozilla.pth:xpcom/typelib/xpt/tools
 copy:build/buildconfig.py

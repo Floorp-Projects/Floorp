@@ -884,11 +884,11 @@ xpicleanup@BIN_SUFFIX@
   components/addonManager.js
   components/amContentHandler.js
   components/amWebInstallListener.js
+  components/binary.manifest
   components/browser.xpt
   components/BrowserElementParent.js
   components/BrowserElementParent.manifest
   components/BrowserElementPromptService.jsm
-  components/components.manifest
   components/contentAreaDropListener.js
   components/contentSecurityPolicy.js
   components/crypto-SDR.js
