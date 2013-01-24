@@ -463,8 +463,8 @@ JSContext::findVersion() const
     if (hasVersionOverride)
         return versionOverride;
 
-    if (stack.hasfp())
-        return fp()->script()->getVersion();
+    if (JSScript *script = stack.currentScript())
+        return script->getVersion();
 
     return defaultVersion;
 }
