@@ -1230,6 +1230,18 @@ ContentParent::RecvBroadcastVolume(const nsString& aVolumeName)
 #endif
 }
 
+bool
+ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus)
+{
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "recording-device-events", aRecordingStatus.get());
+    } else {
+        NS_WARNING("Could not get the Observer service for ContentParent::RecvRecordingDeviceEvents.");
+    }
+    return true;
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
                               nsIObserver,
                               nsIThreadObserver,
