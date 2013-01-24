@@ -2323,23 +2323,9 @@ ContentParent::DoSendAsyncMessage(const nsAString& aMessage,
                                   const mozilla::dom::StructuredCloneData& aData)
 {
   ClonedMessageData data;
-  SerializedStructuredCloneBuffer& buffer = data.data();
-  buffer.data = aData.mData;
-  buffer.dataLength = aData.mDataLength;
-  const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
-  if (!blobs.IsEmpty()) {
-    InfallibleTArray<PBlobParent*>& blobParents = data.blobsParent();
-    uint32_t length = blobs.Length();
-    blobParents.SetCapacity(length);
-    for (uint32_t i = 0; i < length; ++i) {
-      BlobParent* blobParent = GetOrCreateActorForBlob(blobs[i]);
-      if (!blobParent) {
-        return false;
-      }
-      blobParents.AppendElement(blobParent);
-    }
+  if (!BuildClonedMessageDataForParent(this, aData, data)) {
+    return false;
   }
-
   return SendAsyncMessage(nsString(aMessage), data);
 }
 
