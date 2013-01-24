@@ -88,7 +88,11 @@ GonkCameraHardware::postData(int32_t aMsgType, const sp<IMemory>& aDataPtr, came
       break;
 
     case CAMERA_MSG_COMPRESSED_IMAGE:
-      ReceiveImage(mTarget, (uint8_t*)aDataPtr->pointer(), aDataPtr->size());
+      if (aDataPtr != nullptr) {
+        ReceiveImage(mTarget, (uint8_t*)aDataPtr->pointer(), aDataPtr->size());
+      } else {
+        ReceiveImageError(mTarget);
+      }
       break;
 
     default:
