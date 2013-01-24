@@ -12,7 +12,7 @@
 
 static DWORD currentTLS = TLS_OUT_OF_INDEXES;
 
-BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
+extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
     switch (reason)
     {

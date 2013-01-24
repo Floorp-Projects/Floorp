@@ -34,14 +34,16 @@ int VariableColumnCount(GLenum type);
 
 int AllocateFirstFreeBits(unsigned int *bits, unsigned int allocationSize, unsigned int bitsSize);
 
-int ComputePixelSize(GLenum format, GLenum type);
-GLsizei ComputePitch(GLsizei width, GLenum format, GLenum type, GLint alignment);
+int ComputePixelSize(GLint internalformat);
+GLsizei ComputePitch(GLsizei width, GLint internalformat, GLint alignment);
 GLsizei ComputeCompressedPitch(GLsizei width, GLenum format);
 GLsizei ComputeCompressedSize(GLsizei width, GLsizei height, GLenum format);
 bool IsCompressed(GLenum format);
 bool IsDepthTexture(GLenum format);
+bool IsStencilTexture(GLenum format);
 bool IsCubemapTextureTarget(GLenum target);
 bool IsInternalTextureTarget(GLenum target);
+GLint ConvertSizedInternalFormat(GLenum format, GLenum type);
 GLenum ExtractFormat(GLenum internalformat);
 GLenum ExtractType(GLenum internalformat);
 
@@ -49,6 +51,8 @@ bool IsColorRenderable(GLenum internalformat);
 bool IsDepthRenderable(GLenum internalformat);
 bool IsStencilRenderable(GLenum internalformat);
 
+bool IsFloat32Format(GLint internalformat);
+bool IsFloat16Format(GLint internalformat);
 }
 
 namespace es2dx
@@ -74,23 +78,27 @@ D3DMULTISAMPLE_TYPE GetMultisampleTypeFromSamples(GLsizei samples);
 
 namespace dx2es
 {
+
 GLuint GetAlphaSize(D3DFORMAT colorFormat);
 GLuint GetRedSize(D3DFORMAT colorFormat);
 GLuint GetGreenSize(D3DFORMAT colorFormat);
 GLuint GetBlueSize(D3DFORMAT colorFormat);
 GLuint GetDepthSize(D3DFORMAT depthFormat);
 GLuint GetStencilSize(D3DFORMAT stencilFormat);
-bool IsFloat32Format(D3DFORMAT surfaceFormat);
-bool IsFloat16Format(D3DFORMAT surfaceFormat);
-bool IsDepthTextureFormat(D3DFORMAT surfaceFormat);
-bool IsStencilTextureFormat(D3DFORMAT surfaceFormat);
-bool IsCompressedD3DFormat(D3DFORMAT format);
 
 GLsizei GetSamplesFromMultisampleType(D3DMULTISAMPLE_TYPE type);
 
+bool IsFormatChannelEquivalent(D3DFORMAT d3dformat, GLenum format);
+bool ConvertReadBufferFormat(D3DFORMAT d3dformat, GLenum *format, GLenum *type);
 GLenum ConvertBackBufferFormat(D3DFORMAT format);
 GLenum ConvertDepthStencilFormat(D3DFORMAT format);
 
+}
+
+namespace dx
+{
+bool IsCompressedFormat(D3DFORMAT format);
+size_t ComputeRowSize(D3DFORMAT format, unsigned int width);
 }
 
 std::string getTempPath();
@@ -108,6 +116,6 @@ inline bool isDeviceLostError(HRESULT errorCode)
       default:
         return false;
     }
-};
+}
 
 #endif  // LIBGLESV2_UTILITIES_H
