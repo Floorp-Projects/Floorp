@@ -459,7 +459,7 @@ nsXBLService::IsChromeOrResourceURI(nsIURI* aURI)
 // onto the element.
 nsresult
 nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
-                           nsIPrincipal* aOriginPrincipal, bool aAugmentFlag,
+                           nsIPrincipal* aOriginPrincipal,
                            nsXBLBinding** aBinding, bool* aResolveStyle) 
 {
   NS_PRECONDITION(aOriginPrincipal, "Must have an origin principal");
@@ -482,7 +482,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   nsBindingManager *bindingManager = document->BindingManager();
   
   nsXBLBinding *binding = bindingManager->GetBinding(aContent);
-  if (binding && !aAugmentFlag) {
+  if (binding) {
     nsXBLBinding *styleBinding = binding->GetFirstStyleBinding();
     if (styleBinding) {
       if (binding->MarkedForDeath()) {
@@ -520,31 +520,14 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  if (aAugmentFlag) {
-    nsXBLBinding *baseBinding;
-    nsXBLBinding *nextBinding = newBinding;
-    do {
-      baseBinding = nextBinding;
-      nextBinding = baseBinding->GetBaseBinding();
-      baseBinding->SetIsStyleBinding(false);
-    } while (nextBinding);
-
-    // XXX Handle adjusting the prototype chain! We need to somehow indicate to
-    // InstallImplementation that the whole chain should just be whacked and rebuilt.
-    // We are becoming the new binding.
-    baseBinding->SetBaseBinding(binding);
-    bindingManager->SetBinding(aContent, newBinding);
+  // We loaded a style binding.  It goes on the end.
+  if (binding) {
+    // Get the last binding that is in the append layer.
+    binding->RootBinding()->SetBaseBinding(newBinding);
   }
   else {
-    // We loaded a style binding.  It goes on the end.
-    if (binding) {
-      // Get the last binding that is in the append layer.
-      binding->RootBinding()->SetBaseBinding(newBinding);
-    }
-    else {
-      // Install the binding on the content node.
-      bindingManager->SetBinding(aContent, newBinding);
-    }
+    // Install the binding on the content node.
+    bindingManager->SetBinding(aContent, newBinding);
   }
 
   {
