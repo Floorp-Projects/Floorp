@@ -54,7 +54,14 @@ endif
 FORCE_STATIC_LIB = 1
 DIST_INSTALL = 1
 
-VPATH		= \
+###############################################
+# BEGIN include sources for low-level code shared with mfbt
+#
+MFBT_ROOT = $(srcdir)/../../mfbt
+VPATH += $(MFBT_ROOT)
+include $(MFBT_ROOT)/exported_headers.mk
+
+VPATH		+= \
 		$(srcdir) \
 		$(srcdir)/builtin \
 		$(srcdir)/devtools \
@@ -227,13 +234,6 @@ EXPORTS_js = \
 		Utility.h \
 		Vector.h \
 		$(NULL)
-
-###############################################
-# BEGIN include sources for low-level code shared with mfbt
-#
-MFBT_ROOT = $(srcdir)/../../mfbt
-VPATH += $(MFBT_ROOT)
-include $(MFBT_ROOT)/exported_headers.mk
 
 ###############################################
 # BEGIN enable non-releasable features
