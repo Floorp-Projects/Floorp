@@ -130,15 +130,6 @@ function testTimerManagementGetCurrentValue(cmd) {
   runNextTest();
 }
 
-function testGetInKeyVariableTimeout(cmd) {
-  log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_GET_INKEY);
-  is(cmd.duration.timeUnit, 0x01);
-  is(cmd.duration.timeInterval, 0x0A);
-
-  runNextTest();
-}
-
 function testSetupCall(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
   is(cmd.typeOfCommand, icc.STK_CMD_SET_UP_CALL);
@@ -178,8 +169,6 @@ let tests = [
    func: testTimerManagementGetCurrentValue},
   {command: "d029810301100482028182050a446973636f6e6e6563748609811032042143651c2c05074d657373616765",
    func: testSetupCall},
-  {command: "D0198103012200820281828D0A04456E74657220222B228402010A",
-   func: testGetInKeyVariableTimeout},
 ];
 
 let pendingEmulatorCmdCount = 0;
