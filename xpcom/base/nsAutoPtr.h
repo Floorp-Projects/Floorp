@@ -34,8 +34,12 @@ class nsAutoPtr
       void
       assign( T* newPtr )
         {
-          NS_ABORT_IF_FALSE(mRawPtr != newPtr || !newPtr, "This makes no sense!");
           T* oldPtr = mRawPtr;
+
+          if (newPtr != nullptr && newPtr == oldPtr) {
+            NS_RUNTIMEABORT("Logic flaw in the caller");
+          }
+
           mRawPtr = newPtr;
           delete oldPtr;
         }
