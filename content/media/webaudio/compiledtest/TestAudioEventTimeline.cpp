@@ -97,10 +97,8 @@ typedef AudioEventTimeline<FloatArrayMock, ErrorResultMock> Timeline;
 void TestSpecExample()
 {
   // First, run the basic tests
-  Timeline timeline(10.0f, .1f, 20.0f);
-  is(timeline.DefaultValue(), 10.0f, "Correct default value returned");
-  is(timeline.MinValue(), .1f, "Correct min value returned");
-  is(timeline.MaxValue(), 20.0f, "Correct max value returned");
+  Timeline timeline(10.0f);
+  is(timeline.Value(), 10.0f, "Correct default value returned");
 
   ErrorResultMock rv;
 
@@ -152,7 +150,7 @@ void TestInvalidEvents()
   MOZ_STATIC_ASSERT(numeric_limits<float>::has_quiet_NaN, "Platform must have a quiet NaN");
   const float NaN = numeric_limits<float>::quiet_NaN();
   const float Infinity = numeric_limits<float>::infinity();
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -191,7 +189,7 @@ void TestInvalidEvents()
 
 void TestEventReplacement()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -210,7 +208,7 @@ void TestEventReplacement()
 
 void TestEventRemoval()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -229,7 +227,7 @@ void TestEventRemoval()
 
 void TestBeforeFirstEvent()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -239,7 +237,7 @@ void TestBeforeFirstEvent()
 
 void TestAfterLastValueEvent()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -249,7 +247,7 @@ void TestAfterLastValueEvent()
 
 void TestAfterLastTargetValueEvent()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -259,7 +257,7 @@ void TestAfterLastTargetValueEvent()
 
 void TestAfterLastTargetValueEventWithValueSet()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -270,7 +268,7 @@ void TestAfterLastTargetValueEventWithValueSet()
 
 void TestValue()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -286,7 +284,7 @@ void TestValue()
 
 void TestLinearRampAtZero()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -296,7 +294,7 @@ void TestLinearRampAtZero()
 
 void TestExponentialRampAtZero()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -306,7 +304,7 @@ void TestExponentialRampAtZero()
 
 void TestLinearRampAtSameTime()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -317,7 +315,7 @@ void TestLinearRampAtSameTime()
 
 void TestExponentialRampAtSameTime()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
@@ -328,7 +326,7 @@ void TestExponentialRampAtSameTime()
 
 void TestSetTargetZeroTimeConstant()
 {
-  Timeline timeline(10.0f, .1f, 20.0f);
+  Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 

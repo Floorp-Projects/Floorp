@@ -22,9 +22,15 @@ AudioParam::AudioParam(AudioContext* aContext,
                        float aDefaultValue,
                        float aMinValue,
                        float aMaxValue)
-  : AudioParamTimeline(aDefaultValue, aMinValue, aMaxValue)
+  : AudioParamTimeline(aDefaultValue)
   , mContext(aContext)
+  , mDefaultValue(aDefaultValue)
+  , mMinValue(aMinValue)
+  , mMaxValue(aMaxValue)
 {
+  MOZ_ASSERT(aDefaultValue >= aMinValue);
+  MOZ_ASSERT(aDefaultValue <= aMaxValue);
+  MOZ_ASSERT(aMinValue < aMaxValue);
   SetIsDOMBinding();
 }
 

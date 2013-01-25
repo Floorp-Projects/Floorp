@@ -108,8 +108,26 @@ public:
                                             aStartTime, aDuration, aRv);
   }
 
+  float MinValue() const
+  {
+    return mMinValue;
+  }
+
+  float MaxValue() const
+  {
+    return mMaxValue;
+  }
+
+  float DefaultValue() const
+  {
+    return mDefaultValue;
+  }
+
 private:
   nsRefPtr<AudioContext> mContext;
+  const float mDefaultValue;
+  const float mMinValue;
+  const float mMaxValue;
 };
 
 }
