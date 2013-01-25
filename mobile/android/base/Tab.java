@@ -12,7 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.ContentResolver;
-import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -54,8 +53,6 @@ public class Tab {
     private ZoomConstraints mZoomConstraints;
     private ArrayList<View> mPluginViews;
     private HashMap<Object, Layer> mPluginLayers;
-    private ContentResolver mContentResolver;
-    private ContentObserver mContentObserver;
     private int mBackgroundColor = Color.WHITE;
     private int mState;
     private Bitmap mThumbnailBitmap;
@@ -92,17 +89,13 @@ public class Tab {
         mPluginViews = new ArrayList<View>();
         mPluginLayers = new HashMap<Object, Layer>();
         mState = GeckoApp.shouldShowProgress(url) ? STATE_SUCCESS : STATE_LOADING;
-        mContentResolver = Tabs.getInstance().getContentResolver();
-        mContentObserver = new ContentObserver(null) {
-            public void onChange(boolean selfChange) {
-                updateBookmark();
-            }
-        };
-        BrowserDB.registerBookmarkObserver(mContentResolver, mContentObserver);
+    }
+
+    private ContentResolver getContentResolver() {
+        return Tabs.getInstance().getContentResolver();
     }
 
     public void onDestroy() {
-        BrowserDB.unregisterContentObserver(mContentResolver, mContentObserver);
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.CLOSED);
     }
 
@@ -346,7 +339,7 @@ public class Tab {
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.MENU_UPDATED);
     }
 
-    private void updateBookmark() {
+    void updateBookmark() {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 final String url = getURL();
@@ -354,8 +347,8 @@ public class Tab {
                     return;
 
                 if (url.equals(getURL())) {
-                    mBookmark = BrowserDB.isBookmark(mContentResolver, url);
-                    mReadingListItem = BrowserDB.isReadingListItem(mContentResolver, url);
+                    mBookmark = BrowserDB.isBookmark(getContentResolver(), url);
+                    mReadingListItem = BrowserDB.isReadingListItem(getContentResolver(), url);
                 }
 
                 Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.MENU_UPDATED);
@@ -370,7 +363,7 @@ public class Tab {
                 if (url == null)
                     return;
 
-                BrowserDB.addBookmark(mContentResolver, mTitle, url);
+                BrowserDB.addBookmark(getContentResolver(), mTitle, url);
             }
         });
     }
@@ -382,7 +375,7 @@ public class Tab {
                 if (url == null)
                     return;
 
-                BrowserDB.removeBookmarksWithURL(mContentResolver, url);
+                BrowserDB.removeBookmarksWithURL(getContentResolver(), url);
             }
         });
     }
@@ -516,7 +509,7 @@ public class Tab {
             if (url == null)
                 return;
 
-            BrowserDB.updateThumbnailForUrl(mContentResolver, url, mThumbnail);
+            BrowserDB.updateThumbnailForUrl(getContentResolver(), url, mThumbnail);
         } catch (Exception e) {
             // ignore
         }
