@@ -36,7 +36,8 @@ ICStubSpace::StubSpaceFor(JSScript *script)
 BaselineScript::BaselineScript()
   : method_(NULL),
     fallbackStubSpace_(),
-    optimizedStubSpace_()
+    optimizedStubSpace_(),
+    active_(false)
 { }
 
 static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12; //XXX
@@ -298,6 +299,12 @@ BaselineScript::Trace(JSTracer *trc, BaselineScript *script)
     script->trace(trc);
 }
 
+void
+BaselineScript::Destroy(FreeOp *fop, BaselineScript *script)
+{
+    fop->free_(script);
+}
+
 ICEntry &
 BaselineScript::icEntry(size_t index)
 {
@@ -415,4 +422,21 @@ BaselineScript::toggleDebugTraps(UnrootedScript script, jsbytecode *pc)
         CodeLocationLabel label(method(), entry.nativeOffset);
         Assembler::ToggleCall(label, enabled);
     }
+}
+
+void
+ion::FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script)
+{
+    if (!script->hasBaselineScript())
+        return;
+
+    if (script->baseline->active()) {
+        // Script is live on the stack, don't destroy it. Reset |active| flag so
+        // that we don't need a separate script iteration to unmark them.
+        script->baseline->resetActive();
+        return;
+    }
+
+    BaselineScript::Destroy(fop, script->baseline);
+    script->baseline = NULL;
 }
