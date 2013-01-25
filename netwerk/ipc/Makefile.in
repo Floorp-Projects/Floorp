@@ -35,6 +35,7 @@ EXPORTS_mozilla/net = \
   $(NULL)
 
 CPPSRCS =               \
+  NeckoCommon.cpp       \
   NeckoChild.cpp        \
   NeckoParent.cpp       \
   ChannelEventQueue.cpp \
