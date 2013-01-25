@@ -682,13 +682,13 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
 
     /* Step 5. */
     if (space.isObject()) {
-        JSObject &spaceObj = space.toObject();
-        if (ObjectClassIs(spaceObj, ESClass_Number, cx)) {
+        RootedObject spaceObj(cx, &space.toObject());
+        if (ObjectClassIs(*spaceObj, ESClass_Number, cx)) {
             double d;
             if (!ToNumber(cx, space, &d))
                 return false;
             space = NumberValue(d);
-        } else if (ObjectClassIs(spaceObj, ESClass_String, cx)) {
+        } else if (ObjectClassIs(*spaceObj, ESClass_String, cx)) {
             JSString *str = ToStringSlow(cx, space);
             if (!str)
                 return false;

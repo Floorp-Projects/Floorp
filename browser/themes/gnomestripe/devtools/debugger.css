@@ -276,8 +276,8 @@
   font: 9pt monospace;
 }
 
-.dbg-expression-delete {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+.dbg-expression-delete:not(:hover) {
+  opacity: 0.5;
 }
 
 /**
@@ -289,9 +289,14 @@
   min-height: 10px;
 }
 
-.dbg-variables-delete:not(:hover) {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+.dbg-variable-delete:not(:hover) {
   opacity: 0.5;
+}
+
+.dbg-variable-throbber {
+  background: url("chrome://global/skin/icons/loading_16.png");
+  width: 16px;
+  height: 16px;
 }
 
 /**
@@ -434,6 +439,8 @@
  */
 
 #variables .element-value-input {
+  overflow: hidden;
+  max-width: 30em;
   -moz-margin-start: 5px !important;
 }
 
@@ -478,6 +485,7 @@
 }
 
 .token-string {
+  max-width: 30em;
   color: #1c00cf;
 }
 

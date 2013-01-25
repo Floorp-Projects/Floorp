@@ -16,6 +16,18 @@
   <script type="application/javascript"
           src="chrome://global/content/viewSourceUtils.js"/>
 
+  <commandset>
+    <command id="nodeSearchCommand"
+      oncommand="inspector.searchBox.focus()"/>
+  </commandset>
+
+  <keyset>
+    <key id="nodeSearchKey"
+      key="&inspectorSearchHTML.key;"
+      modifiers="accel"
+      command="nodeSearchCommand"/>
+  </keyset>
+
   <popupset id="inspectorPopupSet">
     <!-- Used by the Markup Panel, the Highlighter and the Breadcrumbs -->
     <menupopup id="inspector-node-popup">
@@ -54,10 +66,15 @@
           tooltiptext="&inspector.selectButton.tooltip;"
           class="devtools-toolbarbutton"
           hidden="true"
-          oncommand="inspector.highlighter.unlock()"/>
+          oncommand="inspector.highlighter.unlockAndFocus()"/>
         <arrowscrollbox id="inspector-breadcrumbs"
           flex="1" orient="horizontal"
           clicktoscroll="true"/>
+        <textbox id="inspector-searchbox"
+          type="search"
+          timeout="50"
+          class="devtools-searchinput"
+          placeholder="&inspectorSearchHTML.label;"/>
       </toolbar>
       <vbox flex="1" id="markup-box">
       </vbox>

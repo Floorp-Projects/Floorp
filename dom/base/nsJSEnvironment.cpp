@@ -186,7 +186,7 @@ static PRTime sFirstCollectionTime;
 
 static bool sIsInitialized;
 static bool sDidShutdown;
-
+static bool sShuttingDown;
 static int32_t sContextCount;
 
 static PRTime sMaxScriptRunTime;
@@ -194,7 +194,7 @@ static PRTime sMaxChromeScriptRunTime;
 
 static nsIScriptSecurityManager *sSecurityManager;
 
-// nsMemoryPressureObserver observes the memory-pressure notifications
+// nsJSEnvironmentObserver observes the memory-pressure notifications
 // and forces a garbage collection and cycle collection when it happens, if
 // the appropriate pref is set.
 
@@ -211,26 +211,40 @@ GetCollectionTimeDelta()
   return 0;
 }
 
-class nsMemoryPressureObserver MOZ_FINAL : public nsIObserver
+static void
+KillTimers()
+{
+  nsJSContext::KillGCTimer();
+  nsJSContext::KillShrinkGCBuffersTimer();
+  nsJSContext::KillCCTimer();
+  nsJSContext::KillFullGCTimer();
+  nsJSContext::KillInterSliceGCTimer();
+}
+
+class nsJSEnvironmentObserver MOZ_FINAL : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 };
 
-NS_IMPL_ISUPPORTS1(nsMemoryPressureObserver, nsIObserver)
+NS_IMPL_ISUPPORTS1(nsJSEnvironmentObserver, nsIObserver)
 
 NS_IMETHODIMP
-nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                                  const PRUnichar* aData)
+nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                                 const PRUnichar* aData)
 {
-  if (sGCOnMemoryPressure) {
+  if (sGCOnMemoryPressure && !nsCRT::strcmp(aTopic, "memory-pressure")) {
     nsJSContext::GarbageCollectNow(js::gcreason::MEM_PRESSURE,
                                    nsJSContext::NonIncrementalGC,
                                    nsJSContext::NonCompartmentGC,
                                    nsJSContext::ShrinkingGC);
     nsJSContext::CycleCollectNow();
+  } else if (!nsCRT::strcmp(aTopic, "quit-application")) {
+    sShuttingDown = true;
+    KillTimers();
   }
+
   return NS_OK;
 }
 
@@ -1392,6 +1406,7 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject,
 
   nsJSContext::TerminationFuncHolder holder(this);
   XPCAutoRequest ar(mContext);
+  JSAutoCompartment ac(mContext, aScopeObject);
   ++mExecuteDepth;
 
   // The result of evaluation, used only if there were no errors. This need
@@ -1465,62 +1480,6 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget, JSObject* aScope, JSObj
   return NS_OK;
 }
 
-
-nsresult
-nsJSContext::CompileEventHandler(nsIAtom *aName,
-                                 uint32_t aArgCount,
-                                 const char** aArgNames,
-                                 const nsAString& aBody,
-                                 const char *aURL, uint32_t aLineNo,
-                                 uint32_t aVersion,
-                                 bool aIsXBL,
-                                 nsScriptObjectHolder<JSObject>& aHandler)
-{
-  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  NS_PRECONDITION(AtomIsEventHandlerName(aName), "Bad event name");
-  NS_PRECONDITION(!::JS_IsExceptionPending(mContext),
-                  "Why are we being called with a pending exception?");
-
-  if (!sSecurityManager) {
-    NS_ERROR("Huh, we need a script security manager to compile "
-             "an event handler!");
-
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Don't compile if aVersion is unknown.  Since the caller is responsible for
-  // parsing the version strings, we just check it isn't JSVERSION_UNKNOWN.
-  if ((JSVersion)aVersion == JSVERSION_UNKNOWN) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-#ifdef DEBUG
-  JSContext* top = nsContentUtils::GetCurrentJSContext();
-  NS_ASSERTION(mContext == top, "Context not properly pushed!");
-#endif
-
-  // Event handlers are always shared, and must be bound before use.
-  // Therefore we don't bother compiling with principals.
-  XPCAutoRequest ar(mContext);
-
-  JS::CompileOptions options(mContext);
-  options.setVersion(JSVersion(aVersion))
-         .setFileAndLine(aURL, aLineNo)
-         .setUserBit(aIsXBL);
-  js::RootedObject empty(mContext, NULL);
-  JSFunction* fun = JS::CompileFunction(mContext, empty, options, nsAtomCString(aName).get(),
-                                        aArgCount, aArgNames,
-                                        PromiseFlatString(aBody).get(), aBody.Length());
-
-  if (!fun) {
-    ReportPendingException();
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  JSObject *handler = ::JS_GetFunctionObject(fun);
-  return aHandler.set(handler);
-}
 
 nsresult
 nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
@@ -3067,7 +3026,7 @@ nsJSContext::LoadEnd()
 void
 nsJSContext::PokeGC(js::gcreason::Reason aReason, int aDelay)
 {
-  if (sGCTimer) {
+  if (sGCTimer || sShuttingDown) {
     // There's already a timer for GC'ing, just return
     return;
   }
@@ -3096,7 +3055,7 @@ nsJSContext::PokeGC(js::gcreason::Reason aReason, int aDelay)
 void
 nsJSContext::PokeShrinkGCBuffers()
 {
-  if (sShrinkGCBuffersTimer) {
+  if (sShrinkGCBuffersTimer || sShuttingDown) {
     return;
   }
 
@@ -3116,7 +3075,7 @@ nsJSContext::PokeShrinkGCBuffers()
 void
 nsJSContext::MaybePokeCC()
 {
-  if (sCCTimer || sDidShutdown) {
+  if (sCCTimer || sShuttingDown) {
     return;
   }
 
@@ -3259,11 +3218,13 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
   // The GC has more work to do, so schedule another GC slice.
   if (aProgress == js::GC_SLICE_END) {
     nsJSContext::KillInterSliceGCTimer();
-    CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
-    sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
-                                             NULL,
-                                             NS_INTERSLICE_GC_DELAY,
-                                             nsITimer::TYPE_ONE_SHOT);
+    if (!sShuttingDown) {
+      CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
+      sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
+                                               NULL,
+                                               NS_INTERSLICE_GC_DELAY,
+                                               nsITimer::TYPE_ONE_SHOT);
+    }
   }
 
   if (aProgress == js::GC_CYCLE_END) {
@@ -3277,7 +3238,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 
     if (aDesc.isCompartment) {
       ++sCompartmentGCCount;
-      if (!sFullGCTimer) {
+      if (!sFullGCTimer && !sShuttingDown) {
         CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
         js::gcreason::Reason reason = js::gcreason::FULL_GC_TIMER;
         sFullGCTimer->InitWithFuncCallback(FullGCTimerFired,
@@ -3403,6 +3364,7 @@ nsJSRuntime::Startup()
   sRuntime = nullptr;
   sIsInitialized = false;
   sDidShutdown = false;
+  sShuttingDown = false;
   sContextCount = 0;
   sSecurityManager = nullptr;
 }
@@ -3719,9 +3681,9 @@ nsJSRuntime::Init()
                                "javascript.options.gc_on_memory_pressure",
                                true);
 
-  nsIObserver* memPressureObserver = new nsMemoryPressureObserver();
-  NS_ENSURE_TRUE(memPressureObserver, NS_ERROR_OUT_OF_MEMORY);
-  obs->AddObserver(memPressureObserver, "memory-pressure", false);
+  nsIObserver* observer = new nsJSEnvironmentObserver();
+  obs->AddObserver(observer, "memory-pressure", false);
+  obs->AddObserver(observer, "quit-application", false);
 
   sIsInitialized = true;
 
@@ -3750,11 +3712,7 @@ nsJSRuntime::GetNameSpaceManager()
 void
 nsJSRuntime::Shutdown()
 {
-  nsJSContext::KillGCTimer();
-  nsJSContext::KillShrinkGCBuffersTimer();
-  nsJSContext::KillCCTimer();
-  nsJSContext::KillFullGCTimer();
-  nsJSContext::KillInterSliceGCTimer();
+  KillTimers();
 
   NS_IF_RELEASE(gNameSpaceManager);
 
@@ -3766,6 +3724,7 @@ nsJSRuntime::Shutdown()
     NS_IF_RELEASE(sSecurityManager);
   }
 
+  sShuttingDown = true;
   sDidShutdown = true;
 }
 

@@ -11,9 +11,12 @@
     <script type="text/javascript"
             src="stretchy-and-large-operators.js"></script>
     <script type="text/javascript">
+
+      var mathml = "http://www.w3.org/1998/Math/MathML";
+
       function createMo(aOperator, aForm)
       {
-        var mo = document.createElement("mo");
+        var mo = document.createElementNS(mathml, "mo");
         mo.appendChild(document.createTextNode(aOperator));
         mo.setAttribute("form", aForm);
         return mo;
@@ -29,13 +32,13 @@
         var div = document.createElement("div");
         div.appendChild(document.createTextNode(opname));
 
-        var math = document.createElement("math");
+        var math = document.createElementNS(mathml, "math");
 
         switch (type)
         {
           case "l": // largeop
             math.appendChild(createMo(operator, form));
-            var mstyle = document.createElement("mstyle");
+            var mstyle = document.createElementNS(mathml, "mstyle");
             mstyle.setAttribute("displaystyle", "true");
             mstyle.appendChild(createMo(operator, form));
             math.appendChild(mstyle);
@@ -52,9 +55,9 @@
           case "h": // horizontal
             for (var i = 1; i < 10; i+=2) {
               var mo = createMo(operator, form);
-              var mspace = document.createElement("mspace");
+              var mspace = document.createElementNS(mathml, "mspace");
               mspace.setAttribute("width", (.5 * i) + "em");
-              var mover = document.createElement("mover");
+              var mover = document.createElementNS(mathml, "mover");
               mover.setAttribute("accent", "false");
               mover.appendChild(mspace);
               mover.appendChild(mo);

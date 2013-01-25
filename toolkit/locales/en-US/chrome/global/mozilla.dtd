@@ -2,17 +2,13 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY mozilla.title
-'The Book of Mozilla, 11:9'>
+<!ENTITY mozilla.title.15.1
+'The Book of Mozilla, 15:1'>
 
-<!ENTITY mozilla.quote
-'Mammon slept. And the <em>beast reborn</em> spread over the earth and its numbers
-grew legion. And they proclaimed the times and <em>sacrificed</em> crops unto the
-fire, with the <em>cunning of foxes</em>. And they built a new world in their own
-image as promised by the <em><a href="http://www.mozilla.org/about/mozilla-manifesto.html">
-sacred words</a></em>, and <em><a href="http://wiki.mozilla.org/About:mozilla">spoke
-</a></em> of the beast with their children. Mammon awoke, and lo! it was
-<em>naught</em> but a follower.'>
+<!ENTITY mozilla.quote.15.1
+'The <em>twins</em> of Mammon quarrelled. Their warring plunged the world into a <em>new darkness</em>, and the beast 
+abhorred the darkness. So it began to move <em>swiftly</em>, and grew more powerful, and went forth and multiplied. 
+And the beasts brought <em>fire</em> and light to the darkness.'>
 
-<!ENTITY mozilla.from
-'from <strong>The Book of Mozilla,</strong> 11:9<br/><small>(10th Edition)</small>'>
+<!ENTITY mozilla.from.15.1
+'from <strong>The Book of Mozilla,</strong> 15:1'>

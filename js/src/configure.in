@@ -342,6 +342,13 @@ fi
 
 MOZ_TOOL_VARIABLES
 
+if test -n "$GNU_CC" -a -z "$CLANG_CC" ; then
+    if test "$GCC_MAJOR_VERSION" -eq 4 -a "$GCC_MINOR_VERSION" -lt 4 ||
+       test "$GCC_MAJOR_VERSION" -lt 4; then
+        AC_MSG_ERROR([Only GCC 4.4 or newer supported])
+    fi
+fi
+
 dnl Special win32 checks
 dnl ========================================================
 
@@ -684,42 +691,6 @@ dnl ========================================================
 dnl = Mac OS X toolchain support
 dnl ========================================================
 
-case "$target_os" in
-darwin*)
-    dnl Current known valid versions for GCC_VERSION are 2.95.2 3.1 3.3 4.0.
-    dnl 4.0 identifies itself as 4.0.x, so strip the decidecimal for
-    dnl the environment and includedir purposes (when using an SDK, below),
-    dnl but remember the full version number for the libdir (SDK).
-    changequote(,)
-    GCC_VERSION_FULL=`echo $CXX_VERSION | $PERL -pe 's/^.*gcc version ([^ ]*).*/$1/'`
-    GCC_VERSION=`echo $GCC_VERSION_FULL | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/$1/;'`
-    changequote([,])
-    if test "$GCC_VERSION_FULL" = "4.0.0" ; then
-        dnl Bug 280479, but this keeps popping up in bug 292530 too because
-        dnl 4.0.0/4061 is the default compiler in Tiger.
-        changequote(,)
-        GCC_BUILD=`echo $CXX_VERSION | $PERL -pe 's/^.*build ([^ )]*).*/$1/'`
-        changequote([,])
-        if test "$GCC_BUILD" = "4061" ; then
-            AC_MSG_ERROR([You are attempting to use Apple gcc 4.0 build 4061.
-This compiler was supplied with Xcode 2.0, and contains bugs that prevent it
-from building Mozilla. Upgrade to Xcode 2.1 or later.])
-        fi
-    fi
-
-    dnl xcodebuild needs GCC_VERSION defined in the environment, since it
-    dnl doesn't respect the CC/CXX setting.  With GCC_VERSION set, it will use
-    dnl /usr/bin/g(cc|++)-$GCC_VERSION.
-    MOZ_PATH_PROGS(PBBUILD_BIN, pbbuild xcodebuild pbxbuild)
-
-    dnl sdp was formerly in /Developer/Tools.  As of Mac OS X 10.4 (Darwin 8),
-    dnl it has moved into /usr/bin.
-    MOZ_PATH_PROG(SDP, sdp, :, [$PATH:/usr/bin:/Developer/Tools])
-    ;;
-esac
-
-AC_SUBST(GCC_VERSION)
-
 dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
 dnl that a universal binary is being produced and MOZ_CAN_RUN_PROGRAMS
 dnl when we can run target binaries.
@@ -777,26 +748,12 @@ specify a valid SDK.  SDKs are installed when the optional cross-development
 tools are selected during the Xcode/Developer Tools installation.])
   fi
 
-  GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
-  if test "$GCC_VERSION_MAJOR" -lt "4" ; then
-    AC_MSG_ERROR([You need to upgrade the compiler version to 4.x])
-  else
-    CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
-    CXXFLAGS="$CXXFLAGS -isysroot ${MACOS_SDK_DIR}"
+  CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
+  CXXFLAGS="$CXXFLAGS -isysroot ${MACOS_SDK_DIR}"
 
-    dnl CPP/CXXCPP needs to be set for MOZ_CHECK_HEADER.
-    CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
-    CXXCPP="$CXXCPP -isysroot ${MACOS_SDK_DIR}"
-
-    if test "$GCC_VERSION_FULL" = "4.0.0" ; then
-      dnl If gcc >= 4.0, we're guaranteed to be on Tiger, which has an ld
-      dnl that supports -syslibroot.  Don't set NEXT_ROOT because it will
-      dnl be ignored and cause warnings when -syslibroot is specified.
-      dnl gcc 4.0.1 will pass -syslibroot to ld automatically based on
-      dnl the -isysroot it receives, so this is only needed with 4.0.0.
-      LDFLAGS="$LDFLAGS -Wl,-syslibroot,${MACOS_SDK_DIR}"
-    fi
-  fi
+  dnl CPP/CXXCPP needs to be set for MOZ_CHECK_HEADER.
+  CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
+  CXXCPP="$CXXCPP -isysroot ${MACOS_SDK_DIR}"
 
   AC_LANG_SAVE
   AC_MSG_CHECKING([for valid compiler/Mac OS X SDK combination])
@@ -1188,7 +1145,12 @@ if test "$GNU_CC"; then
             DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
         fi
     fi
-    WARNINGS_AS_ERRORS='-Werror -Wno-error=uninitialized'
+    WARNINGS_AS_ERRORS='-Werror'
+    # Don't treat -Wuninitialized as error b/c it has lots of false positives.
+    WARNINGS_AS_ERRORS="$WARNINGS_AS_ERRORS -Wno-error=uninitialized"
+    # Don't treat -Wdeprecated-declarations as error b/c we don't want our
+    # builds held hostage when a platform-specific API is suddenly deprecated.
+    WARNINGS_AS_ERRORS="$WARNINGS_AS_ERRORS -Wno-error=deprecated-declarations"
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
@@ -1632,10 +1594,9 @@ ia64*-hpux*)
         MOZ_OPTIMIZE_FLAGS="-O2"
         MOZ_DEBUG_FLAGS="-g"
     elif test "$GNU_CC" -o "$GNU_CXX"; then
-        GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
         case $GCC_VERSION in
-        4.1.*|4.2.*|4.5.*)
-            # -Os is broken on gcc 4.1.x 4.2.x, 4.5.x we need to tweak it to get good results.
+        4.5.*)
+            # -Os is broken on gcc 4.5.x we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
@@ -1676,6 +1637,8 @@ ia64*-hpux*)
         MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         RC='$(WINDRES)'
+        # Use static libgcc and libstdc++
+        LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++"
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
@@ -1686,7 +1649,6 @@ ia64*-hpux*)
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom -lmozalloc'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
-        GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
 
         # We use mix of both POSIX and Win32 printf format across the tree, so format
         # warnings are useless on mingw.
@@ -4045,27 +4007,16 @@ else
 fi
 
 dnl ========================================================
-dnl = Disable -fstrict-aliasing on Linux/Android with GCC 4.4 and earlier.
-dnl = See bug 821502.
+dnl = Disable -fstrict-aliasing with GCC 4.4 and earlier.
+dnl = See bugs 821502 and 832623.
 dnl ========================================================
-case "$target" in
-*-android*|*-linuxandroid*|*-*linux*)
-    if test "$GNU_CC"; then
-        changequote(,)
-        GCC_VERSION_FULL=`echo "$CXX_VERSION" | $PERL -pe 's/^.*gcc version ([^ ]*).*/$1/'`
-        GCC_VERSION=`echo "$GCC_VERSION_FULL" | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/$1/;'`
-        changequote([,])
-
-        GCC_MAJOR_VERSION=`echo ${GCC_VERSION} | $AWK -F\. '{ print $1 }'`
-        GCC_MINOR_VERSION=`echo ${GCC_VERSION} | $AWK -F\. '{ print $2 }'`
-
-        dnl GCC 3.x isn't supported, so we don't need to check for that.
-        if test "$GCC_MAJOR_VERSION" -eq "4" -a "$GCC_MINOR_VERSION" -lt "5" ; then
-            CFLAGS="$CFLAGS -fno-strict-aliasing"
-            CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
-        fi
+if test -n "$GNU_CC" -a -z "$CLANG_CC"; then
+    dnl GCC 3.x isn't supported, so we don't need to check for that.
+    if test "$GCC_MAJOR_VERSION" -eq "4" -a "$GCC_MINOR_VERSION" -lt "5" ; then
+        CFLAGS="$CFLAGS -fno-strict-aliasing"
+        CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     fi
-esac
+fi
 
 dnl ========================================================
 dnl = Link js shell to system readline

@@ -211,7 +211,6 @@ pref("gfx.color_management.enablev4", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
-pref("gfx.downloadable_fonts.sanitize", true);
 
 pref("gfx.filter.nearest.force-enabled", false);
 
@@ -4060,7 +4059,7 @@ pref("wap.UAProf.tagname", "x-wap-profile");
 // might be executing a pan gesture, how long do we wait before
 // tentatively deciding the gesture is actually a tap and activating
 // the target element?
-pref("ui.touch_activation.delay_ms", 50);
+pref("ui.touch_activation.delay_ms", 100);
 
 // nsMemoryInfoDumper can watch a fifo in the temp directory and take various
 // actions when the fifo is written to.  Disable this in general.

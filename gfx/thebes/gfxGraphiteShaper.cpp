@@ -343,6 +343,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
         if (c.nGlyphs == 1 &&
             gfxShapedText::CompressedGlyph::IsSimpleGlyphID(gids[c.baseGlyph]) &&
             gfxShapedText::CompressedGlyph::IsSimpleAdvance(appAdvance) &&
+            charGlyphs[offs].IsClusterStart() &&
             yLocs[c.baseGlyph] == 0)
         {
             charGlyphs[offs].SetSimpleGlyph(appAdvance, gids[c.baseGlyph]);

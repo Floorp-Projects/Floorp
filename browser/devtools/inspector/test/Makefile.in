@@ -36,6 +36,8 @@ _BROWSER_FILES = \
 		browser_inspector_changes.js \
 		browser_inspector_bug_674871.js \
 		browser_inspector_bug_817558_delete_node.js \
+		browser_inspector_bug_650804_search.js \
+		browser_inspector_bug_650804_search.html \
 		head.js \
 		helpers.js \
 		$(NULL)

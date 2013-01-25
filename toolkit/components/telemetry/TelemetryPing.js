@@ -547,8 +547,8 @@ TelemetryPing.prototype = {
   getCurrentSessionPayloadAndSlug: function getCurrentSessionPayloadAndSlug(reason) {
     let isTestPing = (reason == "test-ping");
     let payloadObj = this.getCurrentSessionPayload(reason);
-    let slug = (isTestPing ? reason : this._uuid);
-    return { slug: slug, payload: JSON.stringify(payloadObj) };
+    let slug = this._uuid;
+    return { slug: slug, reason: reason, payload: JSON.stringify(payloadObj) };
   },
 
   getPayloads: function getPayloads(reason) {
@@ -559,7 +559,7 @@ TelemetryPing.prototype = {
         let data = this._pendingPings.pop();
         // Send persisted pings to the test URL too.
         if (reason == "test-ping") {
-          data.slug = reason;
+          data.reason = reason;
         }
         yield data;
       }
@@ -645,7 +645,9 @@ TelemetryPing.prototype = {
   },
 
   doPing: function doPing(server, ping, onSuccess, onError) {
-    let submitPath = "/submit/telemetry/" + ping.slug;
+    let submitPath = "/submit/telemetry/" + (ping.reason == "test-ping"
+                                             ? "test-ping"
+                                             : ping.slug);
     let url = server + submitPath;
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
@@ -756,6 +758,7 @@ TelemetryPing.prototype = {
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     function timerCallback() {
       this._initialized = true;
+      this.loadSavedPings(false);
       this.attachObservers();
       this.gatherMemory();
 
@@ -765,7 +768,6 @@ TelemetryPing.prototype = {
     }
     this._timer.initWithCallback(timerCallback.bind(this), TELEMETRY_DELAY,
                                  Ci.nsITimer.TYPE_ONE_SHOT);
-    this.loadSavedPings(false);
   },
 
   verifyPingChecksum: function verifyPingChecksum(ping) {

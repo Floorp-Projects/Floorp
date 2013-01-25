@@ -7,7 +7,6 @@
 #ifndef AudioNode_h_
 #define AudioNode_h_
 
-#include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "EnableWebAudioCheck.h"
@@ -24,15 +23,14 @@ class ErrorResult;
 namespace dom {
 
 class AudioNode : public nsISupports,
-                  public nsWrapperCache,
                   public EnableWebAudioCheck
 {
 public:
   explicit AudioNode(AudioContext* aContext);
-  virtual ~AudioNode() {}
+  virtual ~AudioNode();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AudioNode)
+  NS_DECL_CYCLE_COLLECTION_CLASS(AudioNode)
 
   AudioContext* GetParentObject() const
   {
@@ -49,71 +47,33 @@ public:
 
   void Disconnect(uint32_t aOutput, ErrorResult& aRv);
 
-  uint32_t NumberOfInputs() const
-  {
-    return mInputs.Length();
-  }
-  uint32_t NumberOfOutputs() const
-  {
-    return mOutputs.Length();
-  }
-
   // The following two virtual methods must be implemented by each node type
-  // to provide the maximum number of input and outputs they accept.
-  virtual uint32_t MaxNumberOfInputs() const = 0;
-  virtual uint32_t MaxNumberOfOutputs() const = 0;
+  // to provide their number of input and output ports. These numbers are
+  // constant for the lifetime of the node. Both default to 1.
+  virtual uint32_t NumberOfInputs() const { return 1; }
+  virtual uint32_t NumberOfOutputs() const { return 1; }
 
-  struct Output {
-    enum { InvalidIndex = 0xffffffff };
-    Output()
-      : mInput(InvalidIndex)
-    {
-    }
-    Output(AudioNode* aDestination, uint32_t aInput)
-      : mDestination(aDestination),
-        mInput(aInput)
-    {
-    }
-
-    // Check whether the slot is valid
-    typedef void**** ConvertibleToBool;
-    operator ConvertibleToBool() const {
-      return ConvertibleToBool(mDestination && mInput != InvalidIndex);
-    }
-
-    nsRefPtr<AudioNode> mDestination;
-    // This is an index into mDestination->mInputs which specifies the Input
-    // object corresponding to this Output node.
-    const uint32_t mInput;
-  };
-  struct Input {
-    enum { InvalidIndex = 0xffffffff };
-    Input()
-      : mOutput(InvalidIndex)
-    {
-    }
-    Input(AudioNode* aSource, uint32_t aOutput)
-      : mSource(aSource),
-        mOutput(aOutput)
-    {
-    }
-
-    // Check whether the slot is valid
-    typedef void**** ConvertibleToBool;
-    operator ConvertibleToBool() const {
-      return ConvertibleToBool(mSource && mOutput != InvalidIndex);
-    }
-
-    nsRefPtr<AudioNode> mSource;
-    // This is an index into mSource->mOutputs which specifies the Output
-    // object corresponding to this Input node.
-    const uint32_t mOutput;
+  struct InputNode {
+    // Strong reference.
+    // May be null if the source node has gone away.
+    nsRefPtr<AudioNode> mInputNode;
+    // The index of the input port this node feeds into.
+    uint32_t mInputPort;
+    // The index of the output port this node comes out of.
+    uint32_t mOutputPort;
   };
 
 private:
   nsRefPtr<AudioContext> mContext;
-  nsTArray<Input> mInputs;
-  nsTArray<Output> mOutputs;
+
+  // For every InputNode, there is a corresponding entry in mOutputNodes of the
+  // InputNode's mInputNode.
+  nsTArray<InputNode> mInputNodes;
+  // For every mOutputNode entry, there is a corresponding entry in mInputNodes
+  // of the mOutputNode entry. We won't necessarily be able to identify the
+  // exact matching entry, since mOutputNodes doesn't include the port
+  // identifiers and the same node could be connected on multiple ports.
+  nsTArray<nsRefPtr<AudioNode> > mOutputNodes;
 };
 
 }

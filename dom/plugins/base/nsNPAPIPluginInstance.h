@@ -207,6 +207,8 @@ public:
 
   void SetInverted(bool aInverted);
   bool Inverted() { return mInverted; }
+
+  static nsNPAPIPluginInstance* GetFromNPP(NPP npp);
 #endif
 
   nsresult NewStreamListener(const char* aURL, void* notifyData,

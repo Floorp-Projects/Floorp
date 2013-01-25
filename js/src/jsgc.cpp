@@ -1178,8 +1178,6 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
     ArenaList *al = &arenaLists[thingKind];
     AutoLockGC maybeLock;
 
-    JS_ASSERT(!comp->scheduledForDestruction);
-
 #ifdef JS_THREADSAFE
     volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
     if (*bfs != BFS_DONE) {
@@ -1451,6 +1449,7 @@ RunLastDitchGC(JSContext *cx, gcreason::Reason reason)
     GC(rt, GC_NORMAL, reason);
 }
 
+template <AllowGC allowGC>
 /* static */ void *
 ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
 {
@@ -1460,7 +1459,9 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
     JSRuntime *rt = comp->rt;
     JS_ASSERT(!rt->isHeapBusy());
 
-    bool runGC = rt->gcIncrementalState != NO_INCREMENTAL && comp->gcBytes > comp->gcTriggerBytes;
+    bool runGC = rt->gcIncrementalState != NO_INCREMENTAL &&
+                 comp->gcBytes > comp->gcTriggerBytes &&
+                 allowGC;
     for (;;) {
         if (JS_UNLIKELY(runGC)) {
             PrepareCompartmentForGC(comp);
@@ -1494,6 +1495,9 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
             rt->gcHelperThread.waitBackgroundSweepEnd();
         }
 
+        if (!allowGC)
+            return NULL;
+
         /*
          * We failed to allocate. Run the GC if we haven't done it already.
          * Otherwise report OOM.
@@ -1503,9 +1507,16 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
         runGC = true;
     }
 
+    JS_ASSERT(allowGC);
     js_ReportOutOfMemory(cx);
     return NULL;
 }
+
+template void *
+ArenaLists::refillFreeList<DONT_ALLOW_GC>(JSContext *cx, AllocKind thingKind);
+
+template void *
+ArenaLists::refillFreeList<ALLOW_GC>(JSContext *cx, AllocKind thingKind);
 
 JSGCTraceKind
 js_GetGCThingTraceKind(void *thing)
@@ -4771,6 +4782,6 @@ js_NewGCXML(JSContext *cx)
     if (!cx->runningWithTrustedPrincipals())
         ++sE4XObjectsCreated;
 
-    return NewGCThing<JSXML>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
+    return NewGCThing<JSXML, ALLOW_GC>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
 }
 #endif

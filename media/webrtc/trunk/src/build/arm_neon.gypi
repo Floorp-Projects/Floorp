@@ -21,7 +21,7 @@
 
 {
   'conditions': [
-    ['OS=="android"', {
+    ['OS=="android" or moz_widget_toolkit_gonk==1', {
       'cflags!': [
         '-mfpu=vfpv3-d16',
       ],

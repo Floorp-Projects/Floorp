@@ -125,12 +125,12 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     if (!proto)
         return NULL;
 
-    RootedTypeObject type(cx, proto->getNewType(cx));
-    if (!type)
-        return NULL;
-
     bool strict = callee->strict();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
+
+    RootedTypeObject type(cx, proto->getNewType(cx, clasp));
+    if (!type)
+        return NULL;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(proto),
                                                       proto->getParent(), FINALIZE_KIND,

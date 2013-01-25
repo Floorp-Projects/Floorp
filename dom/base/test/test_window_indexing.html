@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 <html>
 <!--
@@ -26,13 +27,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   ok("1" in window, "We have two subframes");
   ok(!("2" in window), "But we don't have three subframes");
   window[2] = "myString";
-  ok("2" in window, "Should be able to set expando");
+  ok(!("2" in window), "Should not be able to set indexed expando");
   Object.getPrototypeOf(window)[3] = "Hey there";
   ok("3" in window, "Should be walking up the proto chain");
 
   is(window[0].name, "x", "First frame is x");
   is(window[1].name, "y", "Second frame is y");
-  is(window[2], "myString", "We should still have our expando");
+  is(window[2], undefined, "We should still not have our expando");
   is(window[3], "Hey there", "We should still have our prop on the proto chain");
 
   var x = $("x");
@@ -57,31 +58,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   is(window[1], undefined, "We should not have a value here either");
 
   // More set() hook test
-  window[1] = "PASS";
-  is(window[1], "PASS", "Should be able to set expando on window[1] now");
+  window[1] = "FAIL3";
+  ok(!("1" in window), "We shouldn't allow indexed expandos");
+  is(window[1], undefined, "We should not have a value for an indexed expando");
   var desc = Object.getOwnPropertyDescriptor(window, "1");
-  ok(desc.configurable, "Expando should be configurable");
-  ok(desc.enumerable, "Expando should be configurable");
-  ok(desc.writable, "Expando should be writable");
-  is(desc.value, "PASS", "Expando should have correct value");
+  is(desc, undefined, "We really really shouldn't have indexed expandos");
 
-  // Sneaky shadowing (get() hook)
   x.parentNode.appendChild(y);
-  is(window[1], y.contentWindow, "Second frame should now shadow expando");
+  is(window[1], y.contentWindow, "Second frame should now be visible");
   desc = Object.getOwnPropertyDescriptor(window, "1");
   ok(desc.configurable, "Subframe should be configurable");
   ok(desc.enumerable, "Subframe should be configurable");
   ok(!desc.writable, "Subframe should not be writable");
   is(desc.value, y.contentWindow, "Subframe should have correct value");
 
-  // And unshadowing
   y.parentNode.removeChild(y);
-  is(window[1], "PASS", "And now we should be able to see the expando again");
+  is(window[1], undefined, "And now we should be back to no [1] property");
 
   // And more defineProperty()
-  Object.defineProperty(window, "1", { value: "PASS2", configurable: true,
+  Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
 				       writable: true })
-  is(window[1], "PASS2", "Defining past end of list should work");
+  ok(!("1" in window), "Defining indexed properties really just shouldn't work");
+  is(window[1], undefined, "Defining past end of list should not work");
 
   // Enumeration tests
   x.parentNode.appendChild(y);
@@ -89,7 +87,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   var names = Object.getOwnPropertyNames(window);
   is(names[0], "0", "Must start with 0");
   is(names[1], "1", "Must continue with 1");
-  isnot(names.indexOf("2"), -1, "And then 2, defined earlier, should be in there");
+  is(names.indexOf("2"), -1, "And 2, an attempted expando, should not be in there");
   is(names.indexOf("3"), -1, "But no 3; that's on the proto");
 
   names = [];
@@ -98,19 +96,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   }
   is(names[0], "0", "Enumeration must start with 0");
   is(names[1], "1", "Enumeration must continue with 1");
-  isnot(names.indexOf("2"), -1, "Enumeration: and then 2, defined earlier");
+  is(names.indexOf("2"), -1, "Enumeration: but no expando 2");
   isnot(names.indexOf("3"), -1, "Enumeration: and then 3, defined on the proto");
   is(names.indexOf("4"), -1, "But no 4 around");
 
   // Delete tests
-  delete window[1];
+  is(delete window[1], false, "Deleting supported index should return false");
   is(window[1], y.contentWindow, "Shouldn't be able to delete a supported index");
   y.parentNode.removeChild(y);
-  is(window[1], "PASS2",
-     "And shouldn't have deleted the thing we were shadowing either");
-  delete window[1];
   is(window[1], undefined,
-     "But should be able to delete unshadowed things");
+     "And now we should have no property here");
+  is(delete window[1], true, "Deleting unsupported index should return true");
+  is(window[1], undefined,
+     "And we shouldn't have things magically appear due to delete");
   </script>
 </body>
 </html>

@@ -41,9 +41,6 @@ JS_FindCompilationScope(JSContext *cx, JSRawObject obj);
 extern JS_FRIEND_API(JSFunction *)
 JS_GetObjectFunction(JSRawObject obj);
 
-extern JS_FRIEND_API(JSObject *)
-JS_GetGlobalForFrame(JSStackFrame *fp);
-
 extern JS_FRIEND_API(JSBool)
 JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
 
@@ -314,6 +311,7 @@ SizeOfDataIfCDataObject(JSMallocSizeOfFun mallocSizeOf, JSObject *obj);
 namespace shadow {
 
 struct TypeObject {
+    Class       *clasp;
     JSObject    *proto;
 };
 
@@ -383,7 +381,7 @@ extern JS_FRIEND_DATA(js::Class) ObjectClass;
 inline js::Class *
 GetObjectClass(RawObject obj)
 {
-    return reinterpret_cast<const shadow::Object*>(obj)->shape->base->clasp;
+    return reinterpret_cast<const shadow::Object*>(obj)->type->clasp;
 }
 
 inline JSClass *

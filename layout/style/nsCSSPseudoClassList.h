@@ -203,6 +203,9 @@ CSS_STATE_PSEUDO_CLASS(mozMeterSubOptimum, ":-moz-meter-sub-optimum", "",
 CSS_STATE_PSEUDO_CLASS(mozMeterSubSubOptimum, ":-moz-meter-sub-sub-optimum", "",
                        NS_EVENT_STATE_SUB_SUB_OPTIMUM)
 
+// Those values should be parsed but do nothing.
+CSS_STATE_PSEUDO_CLASS(mozPlaceholder, ":-moz-placeholder", "", NS_EVENT_STATE_IGNORE)
+
 #ifdef DEFINED_CSS_STATE_PSEUDO_CLASS
 #undef DEFINED_CSS_STATE_PSEUDO_CLASS
 #undef CSS_STATE_PSEUDO_CLASS

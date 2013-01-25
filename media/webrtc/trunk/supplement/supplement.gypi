@@ -8,5 +8,10 @@
     'include_internal_video_capture': 1,
     'include_internal_video_render': 0,
     'include_pulse_audio': 0,
-  }
+    'conditions': [
+      ['moz_widget_toolkit_gonk==1', {
+        'include_internal_audio_device': 0,
+      }],
+    ],
+  },
 }

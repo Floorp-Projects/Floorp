@@ -442,10 +442,10 @@ nsStreamTransportService::Init()
     NS_ENSURE_STATE(mPool);
 
     // Configure the pool
-    mPool->SetThreadLimit(4);
-    mPool->SetIdleThreadLimit(1);
-    mPool->SetIdleThreadTimeout(PR_SecondsToInterval(60));
     mPool->SetName(NS_LITERAL_CSTRING("StreamTrans"));
+    mPool->SetThreadLimit(25);
+    mPool->SetIdleThreadLimit(1);
+    mPool->SetIdleThreadTimeout(PR_SecondsToInterval(30));
 
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
@@ -501,35 +501,6 @@ nsStreamTransportService::CreateOutputTransport(nsIOutputStream *stream,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*result = trans);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStreamTransportService::RaiseThreadLimit()
-{
-    NS_ENSURE_TRUE(mPool, NS_ERROR_NOT_INITIALIZED);
-
-    uint32_t threadLimit;
-    nsresult rv = mPool->GetThreadLimit(&threadLimit);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return mPool->SetThreadLimit(threadLimit + 1);
-}
-
-NS_IMETHODIMP
-nsStreamTransportService::LowerThreadLimit()
-{
-    NS_ENSURE_TRUE(mPool, NS_ERROR_NOT_INITIALIZED);
-
-    uint32_t threadLimit;
-    nsresult rv = mPool->GetThreadLimit(&threadLimit);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (threadLimit == 4) {
-      NS_WARNING("Badly nested raise/lower thread limit!");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    return mPool->SetThreadLimit(threadLimit - 1);
 }
 
 NS_IMETHODIMP

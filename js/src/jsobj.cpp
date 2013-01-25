@@ -1062,6 +1062,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
 
         for (size_t i = 0; i < shapes.length(); i++) {
             StackShape child(shapes[i]);
+            StackShape::AutoRooter rooter(cx, &child);
             child.attrs |= getSealedOrFrozenAttributes(child.attrs, it);
 
             if (!JSID_IS_EMPTY(child.propid))
@@ -1212,8 +1213,7 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp,
         }
     }
 
-    bool isDOM = (clasp->flags & JSCLASS_IS_DOMJSCLASS);
-    types::TypeObject *type = cx->compartment->getNewType(cx, proto, NULL, isDOM);
+    types::TypeObject *type = cx->compartment->getNewType(cx, clasp, proto, NULL);
     if (!type)
         return NULL;
 
@@ -1275,7 +1275,7 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
     if (!FindProto(cx, clasp, &proto))
         return NULL;
 
-    types::TypeObject *type = proto->getNewType(cx);
+    types::TypeObject *type = proto->getNewType(cx, clasp);
     if (!type)
         return NULL;
 
@@ -1292,7 +1292,7 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
 JSObject *
 js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind kind)
 {
-    JS_ASSERT(type->proto->hasNewType(type));
+    JS_ASSERT(type->proto->hasNewType(&ObjectClass, type));
     JS_ASSERT(parent);
 
     JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
@@ -1421,7 +1421,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject *
     JSObject *res;
 
     if (proto) {
-        RootedTypeObject type(cx, proto->getNewType(cx, callee->toFunction()));
+        RootedTypeObject type(cx, proto->getNewType(cx, &ObjectClass, callee->toFunction()));
         if (!type)
             return NULL;
         res = CreateThisForFunctionWithType(cx, type, callee->getParent());
@@ -1592,9 +1592,10 @@ JSObject::deleteByValue(JSContext *cx, HandleObject obj,
 }
 
 JS_FRIEND_API(bool)
-JS_CopyPropertiesFrom(JSContext *cx, JSObject *targetArg, JSObject *obj)
+JS_CopyPropertiesFrom(JSContext *cx, JSObject *targetArg, JSObject *objArg)
 {
     RootedObject target(cx, targetArg);
+    RootedObject obj(cx, objArg);
 
     // If we're not native, then we cannot copy properties.
     JS_ASSERT(target->isNative() == obj->isNative());
@@ -1632,7 +1633,7 @@ JS_CopyPropertiesFrom(JSContext *cx, JSObject *targetArg, JSObject *obj)
 }
 
 static bool
-CopySlots(JSContext *cx, JSObject *from, JSObject *to)
+CopySlots(JSContext *cx, HandleObject from, HandleObject to)
 {
     JS_ASSERT(!from->isNative() && !to->isNative());
     JS_ASSERT(from->getClass() == to->getClass());
@@ -1664,8 +1665,8 @@ js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, 
                              JSMSG_CANT_CLONE_OBJECT);
         return NULL;
     }
-    JSObject *clone = NewObjectWithGivenProto(cx, obj->getClass(),
-                                              proto, parent, obj->getAllocKind());
+    RootedObject clone(cx, NewObjectWithGivenProto(cx, obj->getClass(),
+                                                   proto, parent, obj->getAllocKind()));
     if (!clone)
         return NULL;
     if (obj->isNative()) {
@@ -1689,7 +1690,8 @@ js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, 
 JSObject *
 js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
 {
-    Rooted<TypeObject*> typeObj(cx, cx->global()->getOrCreateObjectPrototype(cx)->getNewType(cx));
+    Rooted<TypeObject*> typeObj(cx);
+    typeObj = cx->global()->getOrCreateObjectPrototype(cx)->getNewType(cx, &ObjectClass);
     RootedShape shape(cx, srcObj->lastProperty());
     return NewReshapedObject(cx, typeObj, parent, srcObj->getAllocKind(), shape);
 }
@@ -1721,9 +1723,11 @@ struct JSObject::TradeGutsReserved {
 };
 
 bool
-JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
+JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
                               TradeGutsReserved &reserved)
 {
+    RootedObject a(cx, aArg);
+    RootedObject b(cx, bArg);
     AssertCanGC();
     JS_ASSERT(a->compartment() == b->compartment());
     AutoCompartment ac(cx, a);
@@ -1734,15 +1738,30 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
      * swaps can be performed infallibly.
      */
 
+#ifdef JSGC_INCREMENTAL
     /*
-     * Swap prototypes on the two objects, so that TradeGuts can preserve
-     * the types of the two objects.
+     * We need a write barrier here. If |a| was marked and |b| was not, then
+     * after the swap, |b|'s guts would never be marked. The write barrier
+     * solves this.
      */
-    RootedObject na(cx, a);
-    RootedObject nb(cx, b);
+    JSCompartment *comp = a->compartment();
+    if (comp->needsBarrier()) {
+        MarkChildren(comp->barrierTracer(), a);
+        MarkChildren(comp->barrierTracer(), b);
+    }
+#endif
+
+    /*
+     * Swap prototypes and classes on the two objects, so that TradeGuts can
+     * preserve the types of the two objects.
+     */
+    Class *aClass = a->getClass();
+    Class *bClass = b->getClass();
     Rooted<TaggedProto> aProto(cx, a->getTaggedProto());
     Rooted<TaggedProto> bProto(cx, b->getTaggedProto());
-    if (!SetProto(cx, na, bProto, false) || !SetProto(cx, nb, aProto, false))
+    if (!SetClassAndProto(cx, a, bClass, bProto, false))
+        return false;
+    if (!SetClassAndProto(cx, b, aClass, aProto, false))
         return false;
 
     if (a->sizeOfThis() == b->sizeOfThis())
@@ -1758,8 +1777,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
         if (!a->generateOwnShape(cx))
             return false;
     } else {
-        reserved.newbshape = EmptyShape::getInitialShape(cx, a->getClass(),
-                                                         a->getTaggedProto(), a->getParent(),
+        reserved.newbshape = EmptyShape::getInitialShape(cx, aClass, aProto, a->getParent(),
                                                          b->getAllocKind());
         if (!reserved.newbshape)
             return false;
@@ -1768,8 +1786,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
         if (!b->generateOwnShape(cx))
             return false;
     } else {
-        reserved.newashape = EmptyShape::getInitialShape(cx, b->getClass(),
-                                                         b->getTaggedProto(), b->getParent(),
+        reserved.newashape = EmptyShape::getInitialShape(cx, bClass, bProto, b->getParent(),
                                                          a->getAllocKind());
         if (!reserved.newashape)
             return false;
@@ -1782,9 +1799,6 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
     if (!reserved.bvals.reserve(b->slotSpan()))
         return false;
 
-    JS_ASSERT(a->elements == emptyObjectElements);
-    JS_ASSERT(b->elements == emptyObjectElements);
-
     /*
      * The newafixed/newbfixed hold the number of fixed slots in the objects
      * after the swap. Adjust these counts according to whether the objects
@@ -1794,11 +1808,11 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
     reserved.newafixed = a->numFixedSlots();
     reserved.newbfixed = b->numFixedSlots();
 
-    if (a->hasPrivate()) {
+    if (aClass->hasPrivate()) {
         reserved.newafixed++;
         reserved.newbfixed--;
     }
-    if (b->hasPrivate()) {
+    if (bClass->hasPrivate()) {
         reserved.newbfixed++;
         reserved.newafixed--;
     }
@@ -1838,6 +1852,14 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     JS_ASSERT(a->compartment() == b->compartment());
     JS_ASSERT(a->isFunction() == b->isFunction());
 
+    /*
+     * Swap the object's types, to restore their initial type information.
+     * The prototypes and classes of the objects were swapped in ReserveForTradeGuts.
+     */
+    TypeObject *tmp = a->type_;
+    a->type_ = b->type_;
+    b->type_ = tmp;
+
     /* Don't try to swap a JSFunction for a plain function JSObject. */
     JS_ASSERT_IF(a->isFunction(), a->sizeOfThis() == b->sizeOfThis());
 
@@ -1856,19 +1878,6 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
      * these use a different slot representation from other objects.
      */
     JS_ASSERT(!a->isArrayBuffer() && !b->isArrayBuffer());
-
-#ifdef JSGC_INCREMENTAL
-    /*
-     * We need a write barrier here. If |a| was marked and |b| was not, then
-     * after the swap, |b|'s guts would never be marked. The write barrier
-     * solves this.
-     */
-    JSCompartment *comp = a->compartment();
-    if (comp->needsBarrier()) {
-        MarkChildren(comp->barrierTracer(), a);
-        MarkChildren(comp->barrierTracer(), b);
-    }
-#endif
 
     /* Trade the guts of the objects. */
     const size_t size = a->sizeOfThis();
@@ -1962,14 +1971,6 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         a->lastProperty()->listp = &a->shape_;
     if (b->inDictionaryMode())
         b->lastProperty()->listp = &b->shape_;
-
-    /*
-     * Swap the object's types, to restore their initial type information.
-     * The prototypes of the objects were swapped in ReserveForTradeGuts.
-     */
-    TypeObject *tmp = a->type_;
-    a->type_ = b->type_;
-    b->type_ = tmp;
 }
 
 /* Use this method with extreme caution. It trades the guts of two objects. */
@@ -1987,11 +1988,15 @@ JSObject::swap(JSContext *cx, JSObject *other_)
               IsBackgroundFinalized(other->getAllocKind()));
     JS_ASSERT(compartment() == other->compartment());
 
-    TradeGutsReserved reserved(cx);
-    if (!ReserveForTradeGuts(cx, this, other, reserved))
-        return false;
     unsigned r = NotifyGCPreSwap(this, other);
+
+    TradeGutsReserved reserved(cx);
+    if (!ReserveForTradeGuts(cx, this, other, reserved)) {
+        NotifyGCPostSwap(other, this, r);
+        return false;
+    }
     TradeGuts(cx, this, other, reserved);
+
     NotifyGCPostSwap(this, other, r);
     return true;
 }
@@ -2153,7 +2158,7 @@ js::DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey ke
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-        if (ctor->getClass() == clasp && !ctor->splicePrototype(cx, tagged))
+        if (ctor->getClass() == clasp && !ctor->splicePrototype(cx, clasp, tagged))
             goto bad;
     }
 
@@ -2627,7 +2632,8 @@ static JSClassInitializerOp lazy_prototype_init[JSProto_LIMIT] = {
 };
 
 bool
-js::SetProto(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, bool checkForCycles)
+js::SetClassAndProto(JSContext *cx, HandleObject obj,
+                     Class *clasp, Handle<js::TaggedProto> proto, bool checkForCycles)
 {
     JS_ASSERT_IF(!checkForCycles, obj.get() != proto.raw());
 
@@ -2689,7 +2695,7 @@ js::SetProto(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, boo
          * Just splice the prototype, but mark the properties as unknown for
          * consistent behavior.
          */
-        if (!obj->splicePrototype(cx, proto))
+        if (!obj->splicePrototype(cx, clasp, proto))
             return false;
         MarkTypeObjectUnknownProperties(cx, obj->type());
         return true;
@@ -2697,11 +2703,11 @@ js::SetProto(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, boo
 
     if (proto.isObject()) {
         RootedObject protoObj(cx, proto.toObject());
-        if (!JSObject::setNewTypeUnknown(cx, protoObj))
+        if (!JSObject::setNewTypeUnknown(cx, clasp, protoObj))
             return false;
     }
 
-    TypeObject *type = cx->compartment->getNewType(cx, proto);
+    TypeObject *type = cx->compartment->getNewType(cx, clasp, proto);
     if (!type)
         return false;
 
@@ -3180,7 +3186,7 @@ js::DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
  *   - Otherwise no property was resolved. Set *propp = NULL and *recursedp = false
  *     and return true.
  */
-static JSBool
+static JS_ALWAYS_INLINE JSBool
 CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
               MutableHandleObject objp, MutableHandleShape propp, bool *recursedp)
 {
@@ -3238,7 +3244,7 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     }
 
     if (JSID_IS_INT(id) && objp->containsDenseElement(JSID_TO_INT(id))) {
-        MarkDenseElementFound(propp);
+        MarkDenseElementFound<ALLOW_GC>(propp);
         return true;
     }
 
@@ -3251,20 +3257,27 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
+template <AllowGC allowGC>
 static JS_ALWAYS_INLINE bool
-LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                              MutableHandleObject objp, MutableHandleShape propp)
+LookupPropertyWithFlagsInline(JSContext *cx,
+                              typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+                              typename MaybeRooted<jsid, allowGC>::HandleType id,
+                              unsigned flags,
+                              typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+                              typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
-    AssertCanGC();
+    if (allowGC)
+        AssertCanGC();
 
     /* Search scopes starting with obj and following the prototype link. */
-    RootedObject current(cx, obj);
+    typename MaybeRooted<JSObject*, allowGC>::RootType current(cx, obj);
+
     while (true) {
         /* Search for a native dense element or property. */
         {
             if (JSID_IS_INT(id) && current->containsDenseElement(JSID_TO_INT(id))) {
                 objp.set(current);
-                MarkDenseElementFound(propp);
+                MarkDenseElementFound<allowGC>(propp);
                 return true;
             }
 
@@ -3278,9 +3291,20 @@ LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsi
 
         /* Try obj's class resolve hook if id was not found in obj's scope. */
         if (current->getClass()->resolve != JS_ResolveStub) {
-            bool recursed;
-            if (!CallResolveOp(cx, current, id, flags, objp, propp, &recursed))
+            if (!allowGC)
                 return false;
+            bool recursed;
+            if (!CallResolveOp(cx,
+                               MaybeRooted<JSObject*, allowGC>::toHandle(current),
+                               MaybeRooted<jsid, allowGC>::toHandle(id),
+                               flags,
+                               MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                               MaybeRooted<Shape*, allowGC>::toMutableHandle(propp),
+                               &recursed))
+            {
+                return false;
+            }
+
             if (recursed)
                 break;
             if (propp) {
@@ -3292,15 +3316,18 @@ LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsi
             }
         }
 
-        RootedObject proto(cx);
-        if (!JSObject::getProto(cx, current, &proto))
-            return false;
+        typename MaybeRooted<JSObject*, allowGC>::RootType proto(cx, current->getProto());
+
         if (!proto)
             break;
         if (!proto->isNative()) {
-            if (!JSObject::lookupGeneric(cx, proto, id, objp, propp))
+            if (!allowGC)
                 return false;
-            return true;
+            return JSObject::lookupGeneric(cx,
+                                           MaybeRooted<JSObject*, allowGC>::toHandle(proto),
+                                           MaybeRooted<jsid, allowGC>::toHandle(id),
+                                           MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                                           MaybeRooted<Shape*, allowGC>::toMutableHandle(propp));
         }
 
         current = proto;
@@ -3315,7 +3342,7 @@ JS_FRIEND_API(JSBool)
 baseops::LookupProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
                         MutableHandleShape propp)
 {
-    return LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp);
+    return LookupPropertyWithFlagsInline<ALLOW_GC>(cx, obj, id, cx->resolveFlags, objp, propp);
 }
 
 JS_FRIEND_API(JSBool)
@@ -3326,14 +3353,14 @@ baseops::LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
     if (!IndexToId(cx, index, &id))
         return false;
 
-    return LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp);
+    return LookupPropertyWithFlagsInline<ALLOW_GC>(cx, obj, id, cx->resolveFlags, objp, propp);
 }
 
 bool
 js::LookupPropertyWithFlags(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                             MutableHandleObject objp, MutableHandleShape propp)
 {
-    return LookupPropertyWithFlagsInline(cx, obj, id, flags, objp, propp);
+    return LookupPropertyWithFlagsInline<ALLOW_GC>(cx, obj, id, flags, objp, propp);
 }
 
 bool
@@ -3354,6 +3381,32 @@ js::LookupName(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
     objp.set(NULL);
     pobjp.set(NULL);
     propp.set(NULL);
+    return true;
+}
+
+bool
+js::LookupNameNoGC(JSContext *cx, PropertyName *name, JSObject *scopeChain,
+                   JSObject **objp, JSObject **pobjp, Shape **propp)
+{
+    AutoAssertNoGC nogc;
+
+    JS_ASSERT(!*objp && !*pobjp && !*propp);
+
+    for (JSObject *scope = scopeChain; scope; scope = scope->enclosingScope()) {
+        if (scope->getOps()->lookupGeneric)
+            return false;
+        if (!LookupPropertyWithFlagsInline<DONT_ALLOW_GC>(cx, scope, NameToId(name),
+                                                          cx->resolveFlags, pobjp, propp))
+        {
+            JS_ASSERT(!cx->isExceptionPending());
+            return false;
+        }
+        if (*propp) {
+            *objp = scope;
+            return true;
+        }
+    }
+
     return true;
 }
 
@@ -3477,7 +3530,7 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
     /* This call site is hot -- use the always-inlined variant of LookupPropertyWithFlags(). */
     RootedObject obj2(cx);
     RootedShape shape(cx);
-    if (!LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, &obj2, &shape))
+    if (!LookupPropertyWithFlagsInline<ALLOW_GC>(cx, obj, id, cx->resolveFlags, &obj2, &shape))
         return false;
 
     if (!shape) {
@@ -4112,8 +4165,10 @@ baseops::DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 }
 
 bool
-js::HasDataProperty(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
+js::HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
+    AutoAssertNoGC nogc;
+
     if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
         *vp = obj->getDenseElement(JSID_TO_INT(id));
         return true;

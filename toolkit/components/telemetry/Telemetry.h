@@ -148,9 +148,10 @@ void RecordSlowSQLStatement(const nsACString &statement,
                             uint32_t delay);
 
 /**
- * Threshold for a statement to be considered slow, in milliseconds
+ * Thresholds for a statement to be considered slow, in milliseconds
  */
-const uint32_t kSlowStatementThreshold = 100;
+const uint32_t kSlowSQLThresholdForMainThread = 50;
+const uint32_t kSlowSQLThresholdForHelperThreads = 100;
 
 class ProcessedStack;
 

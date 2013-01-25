@@ -646,6 +646,9 @@ public class TabsProvider extends ContentProvider {
             db.endTransaction();
         }
 
+        if (successes > 0)
+            mContext.getContentResolver().notifyChange(uri, null);
+
         return successes;
     }
 }

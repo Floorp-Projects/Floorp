@@ -96,7 +96,6 @@ endif # MOZ_NATIVE_NSPR
 MAKE_JSSHELL  = $(ZIP) -9j $(PKG_JSSHELL) $(JSSHELL_BINS)
 endif # LIBXUL_SDK
 
-PREPARE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 _ABS_DIST = $(call core_abspath,$(DIST))
 JARLOG_DIR = $(call core_abspath,$(DEPTH)/jarlog/)
 JARLOG_DIR_AB_CD = $(JARLOG_DIR)/$(AB_CD)
@@ -447,128 +446,10 @@ endif
 MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 
-ifdef MOZ_OMNIJAR
-
-# Set MOZ_CAN_RUN_PROGRAMS for trivial cases.
-ifndef MOZ_CAN_RUN_PROGRAMS
-ifdef UNIVERSAL_BINARY
-MOZ_CAN_RUN_PROGRAMS=1
-endif
-ifndef CROSS_COMPILE
-MOZ_CAN_RUN_PROGRAMS=1
-endif
-endif # MOZ_CAN_RUN_PROGRAMS
-
-ifdef GENERATE_CACHE
-ifdef MOZ_CAN_RUN_PROGRAMS
-ifdef RUN_TEST_PROGRAM
-_ABS_RUN_TEST_PROGRAM = $(call core_abspath,$(RUN_TEST_PROGRAM))
-endif
-
-ifdef LIBXUL_SDK
-PRECOMPILE_RESOURCE=app
-PRECOMPILE_GRE=$(LIBXUL_DIST)/bin
-else
-PRECOMPILE_RESOURCE=gre
-PRECOMPILE_GRE=$$PWD
-endif
-
-# Silence the unzip step so we don't print any binary data from the comment field.
-GENERATE_CACHE = \
-  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('startupCache.zip');" && \
-  rm -rf jsloader jssubloader && \
-  $(UNZIP) -q startupCache.zip && \
-  rm startupCache.zip && \
-  $(ZIP) -r9m $(OMNIJAR_NAME) jsloader/resource/$(PRECOMPILE_RESOURCE) jssubloader/*/resource/$(PRECOMPILE_RESOURCE) && \
-  rm -rf jsloader jssubloader
-else
-GENERATE_CACHE = true
-endif
-endif
-
-GENERATE_CACHE ?= true
-
-OMNIJAR_FILES	= \
-  chrome \
-  chrome.manifest \
-  components/*.js \
-  components/*.xpt \
-  components/*.manifest \
-  modules \
-  res \
-  defaults \
-  greprefs.js \
-  jsloader \
-  jssubloader \
-  hyphenation \
-  update.locale \
-  $(NULL)
-
-# defaults/pref/channel-prefs.js is handled separate from other prefs due to
-# bug 756325
-NON_OMNIJAR_FILES += \
-  chrome/icons/\* \
-  $(PREF_DIR)/channel-prefs.js \
-  defaults/pref/channel-prefs.js \
-  res/cursors/\* \
-  res/MainMenu.nib/\* \
-  \*/.mkdir.done \
-  $(NULL)
-
-PACK_OMNIJAR	= \
-  rm -f $(OMNIJAR_NAME) components/binary.manifest && \
-  grep -h '^binary-component' components/*.manifest > binary.manifest ; \
-  for m in components/*.manifest; do \
-    sed -e 's/^binary-component/\#binary-component/' $$m > tmp.manifest && \
-    mv tmp.manifest $$m; \
-  done; \
-  $(ZIP) -r9m $(OMNIJAR_NAME) $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
-  $(GENERATE_CACHE) && \
-  $(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) ./ ./ && \
-  mv binary.manifest components && \
-  printf "manifest components/binary.manifest\n" > chrome.manifest
-UNPACK_OMNIJAR	= \
-  $(OPTIMIZE_JARS_CMD) --deoptimize $(JARLOG_DIR_AB_CD) ./ ./ && \
-  $(UNZIP) -o $(OMNIJAR_NAME) && \
-  rm -f components/binary.manifest && \
-  for m in components/*.manifest; do \
-    sed -e 's/^\#binary-component/binary-component/' $$m > tmp.manifest && \
-    mv tmp.manifest $$m; \
-  done
-
-ifdef MOZ_WEBAPP_RUNTIME
-# It's simpler to pack the webapp runtime, because it doesn't have any
-# binary components.  We also don't pre-generate the startup cache, which seems
-# unnecessary, given the small size of the runtime, although it might become
-# more valuable over time.
-PACK_OMNIJAR_WEBAPP_RUNTIME	= \
-  rm -f $(OMNIJAR_NAME); \
-  $(ZIP) -r9m $(OMNIJAR_NAME) $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
-  $(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) ./ ./
-UNPACK_OMNIJAR_WEBAPP_RUNTIME	= \
-  $(OPTIMIZE_JARS_CMD) --deoptimize $(JARLOG_DIR_AB_CD) ./ ./ && \
-  $(UNZIP) -o $(OMNIJAR_NAME)
-
-PREPARE_PACKAGE	= (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)) && \
-	              (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/webapprt && $(PACK_OMNIJAR_WEBAPP_RUNTIME)) && \
-	              (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(CREATE_PRECOMPLETE_CMD))
-UNMAKE_PACKAGE	= $(INNER_UNMAKE_PACKAGE) && \
-	              (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(UNPACK_OMNIJAR)) && \
-	              (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/webapprt && $(UNPACK_OMNIJAR_WEBAPP_RUNTIME))
-else # ndef MOZ_WEBAPP_RUNTIME
-PREPARE_PACKAGE	= (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)) && \
-	              (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(CREATE_PRECOMPLETE_CMD))
-UNMAKE_PACKAGE	= $(INNER_UNMAKE_PACKAGE) && (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(UNPACK_OMNIJAR))
-endif # def MOZ_WEBAPP_RUNTIME
-else # ndef MOZ_OMNIJAR
-PREPARE_PACKAGE	= (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(CREATE_PRECOMPLETE_CMD))
-UNMAKE_PACKAGE	= $(INNER_UNMAKE_PACKAGE)
-endif # def MOZ_OMNIJAR
-
 ifdef MOZ_INTERNAL_SIGNING_FORMAT
 MOZ_SIGN_PREPARED_PACKAGE_CMD=$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_INTERNAL_SIGNING_FORMAT),-f $(f)) $(foreach i,$(SIGN_INCLUDES),-i $(i)) $(foreach x,$(SIGN_EXCLUDES),-x $(x))
 ifeq (WINNT,$(OS_ARCH))
-MOZ_SIGN_PREPARED_PACKAGE_CMD += --nsscmd "$(SIGN_CMD)"
+MOZ_SIGN_PREPARED_PACKAGE_CMD += --nsscmd "$(_ABS_DIST)/bin/shlibsign$(BIN_SUFFIX) -v -i"
 endif
 endif
 
@@ -601,49 +482,6 @@ ifdef MOZ_SIGN_CMD
 MAKE_SDK           += && $(MOZ_SIGN_CMD) -f gpg $(SDK)
 UPLOAD_EXTRA_FILES += $(SDK).asc
 endif
-
-# dummy macro if we don't have PSM built
-SIGN_NSS		=
-ifdef MOZ_CAN_RUN_PROGRAMS
-ifdef MOZ_PSM
-SIGN_NSS		= echo signing nss libraries;
-
-NSS_DLL_SUFFIX	= $(DLL_SUFFIX)
-ifdef UNIVERSAL_BINARY
-NATIVE_ARCH	= $(shell uname -p | sed -e s/powerpc/ppc/)
-NATIVE_DIST	= $(DIST:$(DEPTH)/%=$(DEPTH)/../$(NATIVE_ARCH)/%)
-SIGN_CMD	= $(NATIVE_DIST)/bin/run-mozilla.sh $(NATIVE_DIST)/bin/shlibsign -v -i
-else
-ifeq ($(OS_ARCH),OS2)
-# uppercase extension to get the correct output file from shlibsign
-NSS_DLL_SUFFIX	= .DLL
-SIGN_CMD	= $(MOZILLA_DIR)/toolkit/mozapps/installer/os2/sign.cmd $(DIST)
-else
-SIGN_CMD	= $(strip $(RUN_TEST_PROGRAM) $(_ABS_DIST)/bin/shlibsign$(BIN_SUFFIX) -v -i)
-endif
-endif
-
-SOFTOKN		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)softokn3$(NSS_DLL_SUFFIX)
-NSSDBM		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)nssdbm3$(NSS_DLL_SUFFIX)
-FREEBL		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl3$(NSS_DLL_SUFFIX)
-FREEBL_32FPU	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_32fpu_3$(DLL_SUFFIX)
-FREEBL_32INT	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_32int_3$(DLL_SUFFIX)
-FREEBL_32INT64	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_32int64_3$(DLL_SUFFIX)
-FREEBL_64FPU	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_64fpu_3$(DLL_SUFFIX)
-FREEBL_64INT	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_64int_3$(DLL_SUFFIX)
-
-SIGN_NSS	+= \
-  if test -f $(SOFTOKN); then $(SIGN_CMD) $(SOFTOKN); fi && \
-  if test -f $(NSSDBM); then $(SIGN_CMD) $(NSSDBM); fi && \
-  if test -f $(FREEBL); then $(SIGN_CMD) $(FREEBL); fi && \
-  if test -f $(FREEBL_32FPU); then $(SIGN_CMD) $(FREEBL_32FPU); fi && \
-  if test -f $(FREEBL_32INT); then $(SIGN_CMD) $(FREEBL_32INT); fi && \
-  if test -f $(FREEBL_32INT64); then $(SIGN_CMD) $(FREEBL_32INT64); fi && \
-  if test -f $(FREEBL_64FPU); then $(SIGN_CMD) $(FREEBL_64FPU); fi && \
-  if test -f $(FREEBL_64INT); then $(SIGN_CMD) $(FREEBL_64INT); fi;
-
-endif # MOZ_PSM
-endif # MOZ_CAN_RUN_PROGRAMS
 
 NO_PKG_FILES += \
 	core \
@@ -688,28 +526,7 @@ endif
 
 DEFINES += -DDLL_PREFIX=$(DLL_PREFIX) -DDLL_SUFFIX=$(DLL_SUFFIX) -DBIN_SUFFIX=$(BIN_SUFFIX)
 
-ifdef MOZ_PKG_REMOVALS
-MOZ_PKG_REMOVALS_GEN = removed-files
-
-$(MOZ_PKG_REMOVALS_GEN): $(MOZ_PKG_REMOVALS) $(GLOBAL_DEPS)
-	cat $(MOZ_PKG_REMOVALS) | \
-	sed -e 's/^[ \t]*//' | \
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) > $(MOZ_PKG_REMOVALS_GEN)
-
-GARBAGE += $(MOZ_PKG_REMOVALS_GEN)
-endif
-
 GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
-
-ifeq ($(OS_ARCH),OS2)
-STRIP		= $(MOZILLA_DIR)/toolkit/mozapps/installer/os2/strip.cmd
-endif
-
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
-PKGCP_OS = dos
-else
-PKGCP_OS = unix
-endif
 
 # The following target stages files into two directories: one directory for
 # core files, and one for optional extensions based on the information in
@@ -718,18 +535,6 @@ endif
 # MOZ_LOCALIZED_PKG_LIST
 
 PKG_ARG = , "$(pkg)"
-
-# Define packager macro to work around make 3.81 backslash issue (bug #339933)
-
-# Controls whether missing file warnings should be fatal
-ifndef MOZ_PKG_FATAL_WARNINGS
-MOZ_PKG_FATAL_WARNINGS = 0
-endif
-
-define PACKAGER_COPY
-$(PERL) -I$(MOZILLA_DIR)/toolkit/mozapps/installer -e 'use Packager; \
-       Packager::Copy($1,$2,$3,$4,$5,$(MOZ_PKG_FATAL_WARNINGS),$6,$7);'
-endef
 
 installer-stage: prepare-package
 ifndef MOZ_PKG_MANIFEST
@@ -749,115 +554,48 @@ ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 ELF_HACK_FLAGS = --fill
 endif
 
-stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
-	@rm -rf $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
-ifndef MOZ_FAST_PACKAGE
-	@rm -rf $(DIST)/$(MOZ_PKG_DIR)
-endif
-# NOTE: this must be a tar now that dist links into the tree so that we
-# do not strip the binaries actually in the tree.
-	@echo "Creating package directory..."
-	if ! test -d $(DIST)/$(MOZ_PKG_DIR) ; then \
-		mkdir $(DIST)/$(MOZ_PKG_DIR); \
-	fi
-ifndef UNIVERSAL_BINARY
-# If UNIVERSAL_BINARY, the package will be made from an already-prepared
-# STAGEPATH
-ifdef MOZ_PKG_MANIFEST
-ifndef MOZ_FAST_PACKAGE
-	$(RM) -rf $(DIST)/xpt $(DIST)/manifests
-endif
-	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
-	  "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
-	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
-	$(PERL) $(MOZILLA_DIR)/toolkit/mozapps/installer/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/components -v -x "$(XPIDL_LINK)"
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py \
-	  $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/components/components.manifest \
-	  $(patsubst %,$(DIST)/manifests/%/components,$(MOZ_NONLOCALIZED_PKG_LIST))
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py \
-	  $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/chrome/nonlocalized.manifest \
-	  $(patsubst %,$(DIST)/manifests/%/chrome,$(MOZ_NONLOCALIZED_PKG_LIST))
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py \
-	  $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/chrome/localized.manifest \
-	  $(patsubst %,$(DIST)/manifests/%/chrome,$(MOZ_LOCALIZED_PKG_LIST))
-ifdef MOZ_WEBAPP_RUNTIME
-	mv $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/webapprt/chrome/$(AB_CD).manifest $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/webapprt/chrome/localized.manifest
-	sed 's/$(AB_CD)/localized/' $(DIST)/bin/webapprt/chrome.manifest > $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/webapprt/chrome.manifest
-endif
-	printf "manifest components/interfaces.manifest\nmanifest components/components.manifest\nmanifest chrome/nonlocalized.manifest\nmanifest chrome/localized.manifest\n" > $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/chrome.manifest
-else # !MOZ_PKG_MANIFEST
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-ifndef STAGE_SDK
-	@cd $(DIST) && rsync -auv --copy-unsafe-links $(_APPNAME) $(MOZ_PKG_DIR)
-	@echo "Linking XPT files..."
-	@rm -rf $(DIST)/xpt
-	@$(NSINSTALL) -D $(DIST)/xpt
-	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components && printf "interfaces $(MOZ_PKG_APPNAME).xpt\n" >$(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/interfaces.manifest) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/.  Continuing...
-else
-	@cd $(DIST)/bin && $(TAR) $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
-endif
-else
-	@cd $(DIST)/bin && $(TAR) $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
-	@echo "Linking XPT files..."
-	@rm -rf $(DIST)/xpt
-	@$(NSINSTALL) -D $(DIST)/xpt
-	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components && printf "interfaces $(MOZ_PKG_APPNAME).xpt\n" >$(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/interfaces.manifest) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/.  Continuing...
-endif # DMG
+# MOZ_PKG_MANIFEST is the canonical way to define the package manifest (which
+# the packager will preprocess), but for a smooth transition, we derive it
+# from the now deprecated MOZ_PKG_MANIFEST_P when MOZ_PKG_MANIFEST is not
+# defined.
+ifndef MOZ_PKG_MANIFEST
+ifdef MOZ_PKG_MANIFEST_P
+MOZ_PKG_MANIFEST := $(MOZ_PKG_MANIFEST_P)
+endif # MOZ_PKG_MANIFEST_P
 endif # MOZ_PKG_MANIFEST
-endif # UNIVERSAL_BINARY
-	$(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) $(DIST)/bin/chrome $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/chrome
-ifndef PKG_SKIP_STRIP
-  ifeq ($(OS_ARCH),OS2)
-		@echo "Stripping package directory..."
-		@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR) && $(STRIP)
-  else
-		@echo "Stripping package directory..."
-		@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . ! -type d \
-				! -name "*.js" \
-				! -name "*.xpt" \
-				! -name "*.gif" \
-				! -name "*.jpg" \
-				! -name "*.png" \
-				! -name "*.xpm" \
-				! -name "*.txt" \
-				! -name "*.rdf" \
-				! -name "*.sh" \
-				! -name "*.properties" \
-				! -name "*.dtd" \
-				! -name "*.html" \
-				! -name "*.xul" \
-				! -name "*.css" \
-				! -name "*.xml" \
-				! -name "*.jar" \
-				! -name "*.dat" \
-				! -name "*.tbl" \
-				! -name "*.src" \
-				! -name "*.reg" \
-				$(PLATFORM_EXCLUDE_LIST) \
-				-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
-  endif
-endif # PKG_SKIP_STRIP
-ifdef USE_ELF_HACK
-	@echo ===
-	@echo === If you get failures below, please file a bug describing the error
-	@echo === and your environment \(compiler and linker versions\), and use
-	@echo === --disable-elf-hack until this is fixed.
-	@echo ===
-	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . -name "*$(DLL_SUFFIX)" | xargs ../../build/unix/elfhack/elfhack $(ELF_HACK_FLAGS)
+
+# For smooth transition of comm-central
+ifndef MOZ_PACKAGER_FORMAT
+ifeq ($(MOZ_CHROME_FILE_FORMAT),flat)
+ifdef MOZ_OMNIJAR
+MOZ_PACKAGER_FORMAT := omni
+else
+MOZ_PACKAGER_FORMAT := flat
+endif
+endif
+endif
+ifndef MOZ_PACKAGER_FORMAT
+MOZ_PACKAGER_FORMAT = $(error MOZ_PACKAGER_FORMAT is not set)
 endif
 
-# We always sign nss because we don't do it from security/manager anymore
-	@$(SIGN_NSS)
-	@echo "Removing unpackaged files..."
-ifdef NO_PKG_FILES
-	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH); rm -rf $(NO_PKG_FILES)
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+OPTIMIZEJARS = 1
 endif
-ifdef MOZ_PKG_REMOVALS
-	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
-endif # MOZ_PKG_REMOVALS
-ifdef MOZ_POST_STAGING_CMD
-	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(MOZ_POST_STAGING_CMD)
-endif # MOZ_POST_STAGING_CMD
+
+export NO_PKG_FILES USE_ELF_HACK ELF_HACK_FLAGS _BINPATH
+stage-package: $(MOZ_PKG_MANIFEST)
+	@rm -rf $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.py $(DEFINES) \
+		--format $(MOZ_PACKAGER_FORMAT) \
+		$(addprefix --removals ,$(MOZ_PKG_REMOVALS)) \
+		$(if $(filter-out 0,$(MOZ_PKG_FATAL_WARNINGS)),,--ignore-errors) \
+		$(if $(MOZ_PACKAGER_MINIFY),--minify) \
+		$(if $(JARLOG_DIR),--jarlogs $(JARLOG_DIR_AB_CD)) \
+		$(if $(OPTIMIZEJARS),--optimizejars) \
+		$(addprefix --unify ,$(UNIFY_DIST)) \
+		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR) \
+		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DIST)/$(MOZ_PKG_DIR)
 ifndef LIBXUL_SDK
 ifdef MOZ_PACKAGE_JSSHELL
 # Package JavaScript Shell
@@ -868,19 +606,12 @@ endif # MOZ_PACKAGE_JSSHELL
 endif # LIBXUL_SDK
 
 prepare-package: stage-package
-	cd $(DIST) && $(PREPARE_PACKAGE)
 
 make-package-internal: prepare-package make-sourcestamp-file
 	@echo "Compressing..."
 	cd $(DIST) && $(MAKE_PACKAGE)
 
-ifdef MOZ_FAST_PACKAGE
-MAKE_PACKAGE_DEPS = $(wildcard $(subst * , ,$(addprefix $(DIST)/bin/,$(shell $(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/packager-deps.py $(MOZ_PKG_MANIFEST)))))
-else
-MAKE_PACKAGE_DEPS = FORCE
-endif
-
-make-package: $(MAKE_PACKAGE_DEPS)
+make-package: FORCE
 	$(MAKE) make-package-internal
 	$(TOUCH) $@
 

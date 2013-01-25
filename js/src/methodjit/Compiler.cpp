@@ -3577,11 +3577,12 @@ mjit::Compiler::updateElemCounts(jsbytecode *pc, FrameEntry *obj, FrameEntry *id
 
     if (obj->mightBeType(JSVAL_TYPE_OBJECT)) {
         types::StackTypeSet *types = frame.extra(obj).types;
-        if (types && !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY) &&
-            types->getTypedArrayType() != TypedArray::TYPE_MAX) {
+        if (types && types->getTypedArrayType() != TypedArray::TYPE_MAX) {
             count = PCCounts::ELEM_OBJECT_TYPED;
-        } else if (types && !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY)) {
-            if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY))
+        } else if (types && types->getKnownClass() == &ArrayClass &&
+                   !types->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
+                                          types::OBJECT_FLAG_LENGTH_OVERFLOW)) {
+            if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED))
                 count = PCCounts::ELEM_OBJECT_PACKED;
             else
                 count = PCCounts::ELEM_OBJECT_DENSE;
@@ -5081,11 +5082,12 @@ mjit::Compiler::jsop_getprop(HandlePropertyName name, JSValueType knownType,
         types::StackTypeSet *types = analysis->poppedTypes(PC, 0);
 
         /*
-         * Check if we are accessing the 'length' property of a known dense array.
-         * Note that if the types are known to indicate dense arrays, their lengths
-         * must fit in an int32_t.
+         * Check if we are accessing the 'length' property of an array whose
+         * length is known to fit in an int32_t.
          */
-        if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY)) {
+        if (types->getKnownClass() == &ArrayClass &&
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_LENGTH_OVERFLOW))
+        {
             frame.forgetMismatchedObject(top);
             bool isObject = top->isTypeKnown();
             if (!isObject) {
@@ -5114,7 +5116,7 @@ mjit::Compiler::jsop_getprop(HandlePropertyName name, JSValueType knownType,
          * Check if we're accessing the 'length' property of a typed array.
          * The typed array length always fits in an int32_t.
          */
-        if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
+        if (types->getTypedArrayType() != TypedArray::TYPE_MAX) {
             if (top->isConstant()) {
                 JSObject *obj = &top->getValue().toObject();
                 uint32_t length = TypedArray::length(obj);
@@ -6276,10 +6278,21 @@ mjit::Compiler::iter(unsigned flags)
     masm.store32(T1, flagsAddr);
 
     /* Chain onto the active iterator stack. */
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), T1);
-    masm.loadPtr(Address(T1, offsetof(JSContext, enumerators)), T2);
-    masm.storePtr(T2, Address(nireg, offsetof(NativeIterator, next)));
-    masm.storePtr(ioreg, Address(T1, offsetof(JSContext, enumerators)));
+    masm.move(ImmPtr(cx->compartment), T1);
+    masm.loadPtr(Address(T1, offsetof(JSCompartment, enumerators)), T1);
+
+    /* ni->next = list */
+    masm.storePtr(T1, Address(nireg, NativeIterator::offsetOfNext()));
+
+    /* ni->prev = list->prev */
+    masm.loadPtr(Address(T1, NativeIterator::offsetOfPrev()), T2);
+    masm.storePtr(T2, Address(nireg, NativeIterator::offsetOfPrev()));
+
+    /* list->prev->next = ni */
+    masm.storePtr(nireg, Address(T2, NativeIterator::offsetOfNext()));
+
+    /* list->prev = ni */
+    masm.storePtr(nireg, Address(T1, NativeIterator::offsetOfPrev()));
 
     frame.freeReg(nireg);
     frame.freeReg(T1);
@@ -6430,13 +6443,22 @@ mjit::Compiler::iterEnd()
     masm.loadPtr(Address(T1, offsetof(NativeIterator, props_array)), T2);
     masm.storePtr(T2, Address(T1, offsetof(NativeIterator, props_cursor)));
 
-    /* Advance enumerators list. */
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), T2);
-    masm.loadPtr(Address(T1, offsetof(NativeIterator, next)), T1);
-    masm.storePtr(T1, Address(T2, offsetof(JSContext, enumerators)));
+    /* Unlink from the iterator list. */
+    RegisterID prev = T2;
+    RegisterID next = frame.allocReg();
+
+    masm.loadPtr(Address(T1, NativeIterator::offsetOfNext()), next);
+    masm.loadPtr(Address(T1, NativeIterator::offsetOfPrev()), prev);
+    masm.storePtr(prev, Address(next, NativeIterator::offsetOfPrev()));
+    masm.storePtr(next, Address(prev, NativeIterator::offsetOfNext()));
+#ifdef DEBUG
+    masm.storePtr(ImmPtr(NULL), Address(T1, NativeIterator::offsetOfNext()));
+    masm.storePtr(ImmPtr(NULL), Address(T1, NativeIterator::offsetOfPrev()));
+#endif
 
     frame.freeReg(T1);
     frame.freeReg(T2);
+    frame.freeReg(next);
 
     stubcc.leave();
     OOL_STUBCALL(stubs::EndIter, REJOIN_FALLTHROUGH);
@@ -6793,14 +6815,15 @@ mjit::Compiler::jsop_instanceof()
     RegisterID tmp = frame.allocReg();
     RegisterID obj = frame.tempRegForData(rhs);
 
-    masm.loadBaseShape(obj, tmp);
+    masm.loadPtr(Address(obj, JSObject::offsetOfType()), tmp);
     Jump notFunction = masm.branchPtr(Assembler::NotEqual,
-                                      Address(tmp, BaseShape::offsetOfClass()),
+                                      Address(tmp, offsetof(types::TypeObject, clasp)),
                                       ImmPtr(&FunctionClass));
 
     stubcc.linkExit(notFunction, Uses(2));
 
     /* Test for bound functions. */
+    masm.loadBaseShape(obj, tmp);
     Jump isBound = masm.branchTest32(Assembler::NonZero,
                                      Address(tmp, BaseShape::offsetOfFlags()),
                                      Imm32(BaseShape::BOUND_FUNCTION));
@@ -7409,7 +7432,7 @@ mjit::Compiler::constructThis()
          * prototype. Only do this if the type is actually known as a possible
          * 'this' type of the script.
          */
-        types::TypeObject *type = proto->getNewType(cx, fun);
+        types::TypeObject *type = proto->getNewType(cx, &ObjectClass, fun);
         if (!type)
             return false;
         if (!types::TypeScript::ThisTypes(script_)->hasType(types::Type::ObjectType(type)))
@@ -7596,11 +7619,12 @@ mjit::Compiler::jsop_in()
         types::StackTypeSet *types = analysis->poppedTypes(PC, 0);
 
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
-            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
+            types->getKnownClass() == &ArrayClass &&
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES) &&
             !types::ArrayPrototypeHasIndexedProperty(cx, outerScript))
         {
             frame.forgetMismatchedObject(obj);
-            bool isPacked = !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+            bool isPacked = !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
 
             if (!obj->isTypeKnown()) {
                 Jump guard = frame.testObject(Assembler::NotEqual, obj);

@@ -239,7 +239,7 @@ static int nr_transport_addr_to_praddr(nr_transport_addr *addr,
     return(_status);
   }
 
-static int nr_praddr_to_transport_addr(PRNetAddr *praddr,
+int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
   nr_transport_addr *addr, int keep)
   {
     int _status;

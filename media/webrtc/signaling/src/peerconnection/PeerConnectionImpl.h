@@ -46,13 +46,15 @@ namespace sipcc {
 
 class PeerConnectionWrapper;
 
-struct ConstraintInfo {
+struct ConstraintInfo
+{
   std::string  value;
   bool         mandatory;
 };
 typedef std::map<std::string, ConstraintInfo> constraints_map;
 
-class MediaConstraints {
+class MediaConstraints
+{
 public:
   void setBooleanConstraint(const std::string& constraint, bool enabled, bool mandatory);
 
@@ -60,6 +62,24 @@ public:
 
 private:
   constraints_map  mConstraints;
+};
+
+class RTCConfiguration
+{
+public:
+  bool addServer(const std::string& addr, uint16_t port)
+  {
+    NrIceStunServer* server(NrIceStunServer::Create(addr, port));
+    if (!server) {
+      return false;
+    }
+    addServer(*server);
+    return true;
+  }
+  void addServer(const NrIceStunServer& server) { mServers.push_back (server); }
+  const std::vector<NrIceStunServer>& getServers() const { return mServers; }
+private:
+  std::vector<NrIceStunServer> mServers;
 };
 
 class PeerConnectionWrapper;
@@ -79,7 +99,8 @@ class PeerConnectionImpl MOZ_FINAL : public IPeerConnection,
 #ifdef MOZILLA_INTERNAL_API
                                      public mozilla::DataChannelConnection::DataConnectionListener,
 #endif
-                                     public sigslot::has_slots<> {
+                                     public sigslot::has_slots<>
+{
 public:
   PeerConnectionImpl();
   ~PeerConnectionImpl();
@@ -117,6 +138,8 @@ public:
   NS_DECL_IPEERCONNECTION
 
   static PeerConnectionImpl* CreatePeerConnection();
+  static nsresult ConvertRTCConfiguration(const JS::Value& aSrc,
+    RTCConfiguration *aDst, JSContext* aCx);
   static nsresult ConvertConstraints(
     const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx);
   static nsresult MakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aStream);
@@ -184,6 +207,14 @@ public:
     return mWindow;
   }
 
+  // Initialize PeerConnection from an RTCConfiguration object.
+  nsresult Initialize(IPeerConnectionObserver* aObserver,
+                      nsIDOMWindow* aWindow,
+                      const RTCConfiguration& aConfiguration,
+                      nsIThread* aThread) {
+    return Initialize(aObserver, aWindow, &aConfiguration, nullptr, aThread, nullptr);
+  }
+
   // Validate constraints and construct a MediaConstraints object
   // from a JS::Value.
   NS_IMETHODIMP CreateOffer(MediaConstraints& aConstraints);
@@ -192,7 +223,12 @@ public:
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
-
+  nsresult Initialize(IPeerConnectionObserver* aObserver,
+                      nsIDOMWindow* aWindow,
+                      const RTCConfiguration* aConfiguration,
+                      const JS::Value* aRTCConfiguration,
+                      nsIThread* aThread,
+                      JSContext* aCx);
   NS_IMETHODIMP CreateOfferInt(MediaConstraints& constraints);
   NS_IMETHODIMP CreateAnswerInt(MediaConstraints& constraints);
 
@@ -272,7 +308,8 @@ public:
 };
 
 // This is what is returned when you acquire on a handle
-class PeerConnectionWrapper {
+class PeerConnectionWrapper
+{
  public:
   PeerConnectionWrapper(const std::string& handle);
 

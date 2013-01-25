@@ -165,15 +165,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="GeckoAppWidgetProvider"
-                  android:label="@MOZ_APP_DISPLAYNAME@">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                       android:resource="@xml/gecko_appwidget_info" />
-        </receiver>
-
         <activity android:name="Restarter"
                   android:process="@ANDROID_PACKAGE_NAME@Restarter"
                   android:theme="@style/Gecko">

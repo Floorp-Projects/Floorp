@@ -2709,14 +2709,14 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
                builder.unaryExpression(op, expr, &pn->pn_pos, dst);
       }
 
+#if JS_HAS_GENERATOR_EXPRS
+      case PNK_GENEXP:
+        return generatorExpression(pn->generatorExpr(), dst);
+#endif
+
       case PNK_NEW:
       case PNK_CALL:
       {
-#if JS_HAS_GENERATOR_EXPRS
-        if (pn->isGeneratorExpr())
-            return generatorExpression(pn->generatorExpr(), dst);
-#endif
-
         ParseNode *next = pn->pn_head;
         JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 

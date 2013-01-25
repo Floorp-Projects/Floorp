@@ -655,6 +655,9 @@ var gPluginHandler = {
     }];
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
     let dismissed = notification ? notification.dismissed : true;
+    // Always show the doorhanger if the anchor is not available.
+    if (!isElementVisible(gURLBar))
+      dismissed = false;
     let options = { dismissed: dismissed, centerActions: centerActions };
     let icon = haveVulnerablePlugin ? "blocked-plugins-notification-icon" : "plugins-notification-icon"
     PopupNotifications.show(aBrowser, "click-to-play-plugins",

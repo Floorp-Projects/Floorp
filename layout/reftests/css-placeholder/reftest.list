@@ -4,3 +4,4 @@ include textarea/reftest.list
 == css-restrictions.html css-restrictions-ref.html
 == css-simple-styling.html css-simple-styling-ref.html
 != css-background.html css-background-ref.html
+== ignore-pseudo-class.html ignore-pseudo-class-ref.html
