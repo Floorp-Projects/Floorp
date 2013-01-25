@@ -20,15 +20,10 @@ namespace dom {
  * This class will be instantiated with different template arguments for testing and
  * production code.
  *
- * FloatArrayWrapper is a type which satisfies the following:
- *  - Is copy-constructible.
- *  - Implements a Data() method returning a float*, representing an array.
- *  - Implements a Length() method returning a uint32_t, representing the array length.
- *  - Implements an inited() method returning true for valid objects.
  * ErrorResult is a type which satisfies the following:
  *  - Implements a Throw() method taking an nsresult argument, representing an error code.
  */
-template <class FloatArrayWrapper, class ErrorResult>
+template <class ErrorResult>
 class AudioEventTimeline
 {
 private:
@@ -42,16 +37,15 @@ private:
     };
 
     Event(Type aType, double aTime, float aValue, double aTimeConstant = 0.0,
-          float aDuration = 0.0, FloatArrayWrapper aCurve = FloatArrayWrapper())
+          float aDuration = 0.0, float* aCurve = nullptr, uint32_t aCurveLength = 0)
       : mType(aType)
       , mValue(aValue)
       , mTime(aTime)
       , mTimeConstant(aTimeConstant)
       , mDuration(aDuration)
+      , mCurve(aCurve)
+      , mCurveLength(aCurveLength)
     {
-      if (aCurve.inited()) {
-        mCurve = aCurve;
-      }
     }
 
     bool IsValid() const
@@ -67,7 +61,8 @@ private:
     double mTime;
     double mTimeConstant;
     double mDuration;
-    FloatArrayWrapper mCurve;
+    float* mCurve;
+    uint32_t mCurveLength;
 
   private:
     static bool IsValid(float value)
@@ -122,10 +117,11 @@ public:
     InsertEvent(Event(Event::SetTarget, aStartTime, aTarget, aTimeConstant), aRv);
   }
 
-  void SetValueCurveAtTime(const FloatArrayWrapper& aValues, double aStartTime, double aDuration, ErrorResult& aRv)
+  void SetValueCurveAtTime(const float* aValues, uint32_t aValuesLength, double aStartTime, double aDuration, ErrorResult& aRv)
   {
     // TODO: implement
-    // InsertEvent(Event(Event::SetValueCurve, aStartTime, 0.0f, 0.0f, aDuration, aValues), aRv);
+    // Note that we will need to copy the buffer here.
+    // InsertEvent(Event(Event::SetValueCurve, aStartTime, 0.0f, 0.0f, aDuration, aValues, aValuesLength), aRv);
   }
 
   void CancelScheduledValues(double aStartTime)
