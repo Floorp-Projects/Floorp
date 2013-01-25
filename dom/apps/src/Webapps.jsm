@@ -1635,7 +1635,8 @@ this.DOMApplicationRegistry = {
     // Disallow reinstalls from the same manifest URL for now.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=821288
     if (this.getAppLocalIdByManifestURL(app.manifestURL) !==
-        Ci.nsIScriptSecurityManager.NO_APP_ID) {
+        Ci.nsIScriptSecurityManager.NO_APP_ID ||
+        this._appId(app.origin) !== null) {
       sendError("REINSTALL_FORBIDDEN");
       return;
     }
