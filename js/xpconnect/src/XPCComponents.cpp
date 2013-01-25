@@ -3762,16 +3762,12 @@ ContextHolder::ContextHolder(JSContext *aOuterCx,
         DebugOnly<nsresult> rv = XPCWrapper::GetSecurityManager()->
                                    IsSystemPrincipal(mPrincipal, &isChrome);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
-        bool allowXML = Preferences::GetBool(isChrome ?
-                                             "javascript.options.xml.chrome" :
-                                             "javascript.options.xml.content");
 
         JSAutoRequest ar(mJSContext);
         JS_SetOptions(mJSContext,
                       JS_GetOptions(mJSContext) |
                       JSOPTION_DONT_REPORT_UNCAUGHT |
-                      JSOPTION_PRIVATE_IS_NSISUPPORTS |
-                      (allowXML ? JSOPTION_ALLOW_XML : 0));
+                      JSOPTION_PRIVATE_IS_NSISUPPORTS);
         JS_SetGlobalObject(mJSContext, aSandbox);
         JS_SetContextPrivate(mJSContext, this);
         JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback);
@@ -4494,7 +4490,6 @@ SetBoolOption(JSContext* cx, uint32_t aOption, bool aValue)
 GENERATE_JSOPTION_GETTER_SETTER(Strict, JSOPTION_STRICT)
 GENERATE_JSOPTION_GETTER_SETTER(Werror, JSOPTION_WERROR)
 GENERATE_JSOPTION_GETTER_SETTER(Atline, JSOPTION_ATLINE)
-GENERATE_JSOPTION_GETTER_SETTER(Xml, JSOPTION_MOAR_XML)
 GENERATE_JSOPTION_GETTER_SETTER(Methodjit, JSOPTION_METHODJIT)
 GENERATE_JSOPTION_GETTER_SETTER(Methodjit_always, JSOPTION_METHODJIT_ALWAYS)
 GENERATE_JSOPTION_GETTER_SETTER(Strict_mode, JSOPTION_STRICT_MODE)

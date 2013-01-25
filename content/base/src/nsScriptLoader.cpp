@@ -398,20 +398,6 @@ ParseTypeAttribute(const nsAString& aType, JSVersion* aVersion)
     return false;
   }
 
-  nsAutoString value;
-  rv = parser.GetParameter("e4x", value);
-  if (NS_SUCCEEDED(rv)) {
-    if (value.Length() == 1 && value[0] == '1') {
-      // This happens in about 2 web pages. Enable E4X no matter what JS
-      // version number was selected.  We do this by turning on the "moar
-      // XML" version bit.  This is OK even if version has
-      // JSVERSION_UNKNOWN (-1).
-      *aVersion = js::VersionSetMoarXML(*aVersion, true);
-    }
-  } else if (rv != NS_ERROR_INVALID_ARG) {
-    return false;
-  }
-
   return true;
 }
 

@@ -385,9 +385,6 @@ interface nsIXPCComponents_Utils : nsISupports
     attribute boolean atline;
 
     [implicit_jscontext]
-    attribute boolean xml;
-
-    [implicit_jscontext]
     attribute boolean methodjit;
 
     [implicit_jscontext]
