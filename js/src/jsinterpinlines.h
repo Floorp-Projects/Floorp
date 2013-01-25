@@ -220,21 +220,6 @@ AssertValidPropertyCacheHit(JSContext *cx, JSObject *start, JSObject *found,
 #endif
 
 inline bool
-GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    /*
-     * Various XML properties behave differently when accessed in a
-     * call vs. normal context, and getGeneric will not work right.
-     */
-#if JS_HAS_XML_SUPPORT
-    if (op == JSOP_CALLPROP && obj->isXML())
-        return js_GetXMLMethod(cx, obj, id, vp);
-#endif
-
-    return JSObject::getGeneric(cx, obj, obj, id, vp);
-}
-
-inline bool
 GetLengthProperty(const Value &lval, MutableHandleValue vp)
 {
     /* Optimize length accesses on strings, arrays, and arguments. */
@@ -304,7 +289,7 @@ GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHan
     RootedObject nobj(cx, obj);
 
     if (obj->getOps()->getProperty) {
-        if (!GetPropertyGenericMaybeCallXML(cx, op, nobj, id, vp))
+        if (!JSObject::getGeneric(cx, nobj, nobj, id, vp))
             return false;
     } else {
         if (!GetPropertyHelper(cx, nobj, id, JSGET_CACHE_RESULT, vp))
@@ -577,15 +562,6 @@ AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
     }
 
-#if JS_HAS_XML_SUPPORT
-    if (IsXML(lhs) && IsXML(rhs)) {
-        if (!js_ConcatenateXML(cx, &lhs.toObject(), &rhs.toObject(), res))
-            return false;
-        types::TypeScript::MonitorUnknown(cx, script, pc);
-        return true;
-    }
-#endif
-
     /*
      * If either operand is an object, any non-integer result must be
      * reported to inference.
@@ -767,20 +743,6 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
                           HandleValue rref, MutableHandleValue res)
 {
     do {
-
-#if JS_HAS_XML_SUPPORT
-        if (op == JSOP_CALLELEM && JS_UNLIKELY(objArg->isXML())) {
-            RootedObject obj(cx, objArg);
-            RootedId id(cx);
-            if (!FetchElementId(cx, obj, rref, &id, res))
-                return false;
-            if (!js_GetXMLMethod(cx, obj, id, res))
-                return false;
-            objArg = obj;
-            break;
-        }
-#endif
-
         // Don't call GetPcScript (needed for analysis) from inside Ion since it's expensive.
         bool analyze = !cx->fp()->beginsIonActivation();
 

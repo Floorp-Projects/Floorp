@@ -1906,17 +1906,8 @@ nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
 {
   JSContext* cx = mContext->GetNativeContext();
 
-  bool isChrome = IsChromeWindow();
-  if (isChrome) {
-    // Always enable E4X for XUL and other chrome content -- there is no
-    // need to preserve the <!-- script hiding hack from JS-in-HTML daze
-    // (introduced in 1995 for graceful script degradation in Netscape 1,
-    // Mosaic, and other pre-JS browsers).
-    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_MOAR_XML);
-  }
-
   JSObject* outer = NewOuterWindowProxy(cx, aNewInner->FastGetGlobalJSObject(),
-                                        isChrome);
+                                        IsChromeWindow());
   if (!outer) {
     return NS_ERROR_FAILURE;
   }

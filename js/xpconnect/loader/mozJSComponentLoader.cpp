@@ -471,11 +471,6 @@ mozJSComponentLoader::ReallyInit()
     if (!mContext)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (Preferences::GetBool("javascript.options.xml.chrome")) {
-        uint32_t options = JS_GetOptions(mContext);
-        JS_SetOptions(mContext, options | JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML);
-    }
-
     // Always use the latest js version
     JS_SetVersion(mContext, JSVERSION_LATEST);
 
