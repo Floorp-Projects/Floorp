@@ -53,24 +53,6 @@ void is(const float& a, const float& b, const char* msg)
   ok(fabsf(a - b) < kEpsilon, ss.str().c_str());
 }
 
-class FloatArrayMock
-{
-public:
-  // This implementation is not used for now, so let's just return dummy values.
-  float* Data() const
-  {
-    return nullptr;
-  }
-  uint32_t Length() const
-  {
-    return 0;
-  }
-  bool inited() const
-  {
-    return true;
-  }
-};
-
 class ErrorResultMock
 {
 public:
@@ -92,7 +74,7 @@ private:
   nsresult mRv;
 };
 
-typedef AudioEventTimeline<FloatArrayMock, ErrorResultMock> Timeline;
+typedef AudioEventTimeline<ErrorResultMock> Timeline;
 
 void TestSpecExample()
 {
