@@ -60,6 +60,13 @@ public:
     }
   }
 
+  // This method should be overridden to return true in nodes
+  // which support being hooked up to the Media Stream graph.
+  virtual bool SupportsMediaStreams() const
+  {
+    return false;
+  }
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(AudioNode)
 
