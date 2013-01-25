@@ -43,6 +43,11 @@ AppsService.prototype = {
     return DOMApplicationRegistry.getAppLocalIdByManifestURL(aManifestURL);
   },
 
+  getAppLocalIdByStoreId: function getAppLocalIdByStoreId(aStoreId) {
+    debug("getAppLocalIdByStoreId( " + aStoreId + " )");
+    return DOMApplicationRegistry.getAppLocalIdByStoreId(aStoreId);
+  },
+
   getAppByLocalId: function getAppByLocalId(aLocalId) {
     debug("getAppByLocalId( " + aLocalId + " )");
     return DOMApplicationRegistry.getAppByLocalId(aLocalId);

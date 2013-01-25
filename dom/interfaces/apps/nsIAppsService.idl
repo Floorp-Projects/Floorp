@@ -16,7 +16,7 @@ interface mozIApplication;
  * This service allows accessing some DOMApplicationRegistry methods from
  * non-javascript code.
  */
-[scriptable, uuid(4ac27836-4d79-4d35-b105-d6fb7f4f8e41)]
+[scriptable, uuid(1113c6e3-28a2-4315-be10-8b3230eecc0f)]
 interface nsIAppsService : nsISupports
 {
   mozIDOMApplication getAppByManifestURL(in DOMString manifestURL);
@@ -62,4 +62,9 @@ interface nsIAppsService : nsISupports
   DOMString getWebAppsBasePath();
 
   jsval getAppInfo(in DOMString appId);
+
+  /**
+   * Returns the localId if the app was installed from a store
+   */
+  DOMString getAppLocalIdByStoreId(in DOMString storeID);
 };
