@@ -112,8 +112,12 @@ def repack(source, l10n, non_resources=[]):
                  for e in entries if isinstance(e, ManifestEntryWithRelPath))
 
     for path in NON_CHROME:
-        for p, f in l10n_finder.find(path):
+        left = set(p for p, f in finder.find(path))
+        right = set(p for p, f in l10n_finder.find(path))
+        for p in right:
             paths[p] = p
+        for p in left - right:
+            paths[p] = None
 
     # Create a new package, with non localized bits coming from the original
     # package, and localized bits coming from the langpack.
@@ -123,19 +127,23 @@ def repack(source, l10n, non_resources=[]):
             # Remove localized manifest entries.
             for e in [e for e in f if e.localized]:
                 f.remove(e)
-        base = mozpack.path.basedir(p, paths.keys())
-        if base:
-            # If the path is one that needs a locale replacement, use the
-            # corresponding file from the langpack.
-            subpath = mozpack.path.relpath(p, base)
-            path = mozpack.path.normpath(mozpack.path.join(paths[base],
-                                                           subpath))
+        # If the path is one that needs a locale replacement, use the
+        # corresponding file from the langpack.
+        path = None
+        if p in paths:
+            path = paths[p]
+            if not path:
+                continue
+        else:
+            base = mozpack.path.basedir(p, paths.keys())
+            if base:
+                subpath = mozpack.path.relpath(p, base)
+                path = mozpack.path.normpath(mozpack.path.join(paths[base],
+                                                               subpath))
+        if path:
             files = [f for p, f in l10n_finder.find(path)]
-            if len(files) == 0 and base in NON_CHROME:
-                path = path.replace(locale, l10n_locale)
-                files = [f for p, f in l10n_finder.find(path)]
-            if len(files) == 0:
-                if not base in NON_CHROME:
+            if not len(files):
+                if base not in NON_CHROME:
                     errors.error("Missing file: %s" % os.path.join(l10n, path))
             else:
                 packager.add(path, files[0])
