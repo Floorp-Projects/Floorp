@@ -232,6 +232,8 @@ abstract public class BrowserApp extends GeckoApp
         super.onDestroy();
         if (mAboutHomeContent != null)
             mAboutHomeContent.onDestroy();
+        if (mBrowserToolbar != null)
+            mBrowserToolbar.onDestroy();
 
         unregisterEventListener("CharEncoding:Data");
         unregisterEventListener("CharEncoding:State");
