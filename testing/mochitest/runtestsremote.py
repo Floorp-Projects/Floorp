@@ -150,16 +150,6 @@ class RemoteOptions(MochitestOptions):
             else:
                 options.xrePath = options.utilityPath
 
-        if not os.path.isdir(options.utilityPath):
-            self.error("--utility-path '%s' is not a directory" % options.utilityPath)
-        xpcshell = os.path.join(options.utilityPath, 'xpcshell')
-        if not os.access(xpcshell, os.F_OK):
-            self.error('xpcshell not found at %s' % xpcshell)
-        if automation.elf_arm(xpcshell):
-            self.error('xpcshell at %s is an ARM binary; please use '
-                       'the --utility-path argument to specify the path '
-                       'to a desktop version.' % xpcshell)
-
         if (options.pidFile != ""):
             f = open(options.pidFile, 'w')
             f.write("%s" % os.getpid())
@@ -283,6 +273,12 @@ class MochiRemote(Mochitest):
         if options.utilityPath == None:
             print "ERROR: unable to find utility path for %s, please specify with --utility-path" % (os.name)
             sys.exit(1)
+
+        xpcshell_path = os.path.join(options.utilityPath, xpcshell)
+        if localAutomation.elf_arm(xpcshell_path):
+            self.error('xpcshell at %s is an ARM binary; please use '
+                       'the --utility-path argument to specify the path '
+                       'to a desktop version.' % xpcshell)
 
         options.profilePath = tempfile.mkdtemp()
         self.server = MochitestServer(localAutomation, options)
