@@ -72,8 +72,12 @@ class IonRuntime
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
 
     IonCode *debugTrapHandler(JSContext *cx) {
-        if (!debugTrapHandler_)
+        if (!debugTrapHandler_) {
+            // IonRuntime code stubs are shared across compartments and have to
+            // be allocated in the atoms compartment.
+            AutoEnterAtomsCompartment ac(cx);
             debugTrapHandler_ = generateDebugTrapHandler(cx);
+        }
         return debugTrapHandler_;
     }
 
