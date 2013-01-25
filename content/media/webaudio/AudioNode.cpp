@@ -165,12 +165,14 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
   input->mInputNode = this;
   input->mInputPort = aInput;
   input->mOutputPort = aOutput;
-  // Connect streams in the MediaStreamGraph
-  MOZ_ASSERT(aDestination.mStream->AsProcessedStream());
-  ProcessedMediaStream* ps =
-    static_cast<ProcessedMediaStream*>(aDestination.mStream.get());
-  input->mStreamPort =
-    ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_OUTPUT);
+  if (SupportsMediaStreams() && aDestination.mStream) {
+    // Connect streams in the MediaStreamGraph
+    MOZ_ASSERT(aDestination.mStream->AsProcessedStream());
+    ProcessedMediaStream* ps =
+      static_cast<ProcessedMediaStream*>(aDestination.mStream.get());
+    input->mStreamPort =
+      ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_OUTPUT);
+  }
 }
 
 void
