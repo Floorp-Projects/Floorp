@@ -2,6 +2,10 @@ load 25888-1.html
 load 25888-2.html
 load 37757-1.html
 load 225868-1.html
+load 255982-1.html
+load 255982-2.html
+load 255982-3.html
+load 255982-4.html
 load 264937-1.html
 asserts(9) load 265867-1.html # Bug 575011
 load 265867-2.html
