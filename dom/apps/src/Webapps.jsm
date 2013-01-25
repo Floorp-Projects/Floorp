@@ -897,9 +897,13 @@ this.DOMApplicationRegistry = {
 
     if (download.cacheUpdate) {
       // Cancel hosted app download.
+      app.isCanceling = true;
       try {
         download.cacheUpdate.cancel();
-      } catch (e) { debug (e); }
+      } catch (e) {
+        delete app.isCanceling;
+        debug (e);
+      }
     } else if (download.channel) {
       // Cancel packaged app download.
       app.isCanceling = true;
@@ -2244,14 +2248,21 @@ this.DOMApplicationRegistry = {
   },
 
   uninstall: function(aData, aMm) {
+    debug("uninstall " + aData.origin);
     for (let id in this.webapps) {
       let app = this.webapps[id];
       if (app.origin != aData.origin) {
         continue;
       }
 
+      dump("-- webapps.js uninstall " + app.manifestURL + "\n");
+
       if (!app.removable)
         return;
+
+      // Check if we are downloading something for this app, and cancel the
+      // download if needed.
+      this.cancelDownload(app.manifestURL);
 
       // Clean up the deprecated manifest cache if needed.
       if (id in this._manifestCache) {
@@ -2714,9 +2725,16 @@ AppcacheObserver.prototype = {
 
     let setError = function appObs_setError(aError) {
       debug("Offlinecache setError to " + aError);
-      DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
-                                              { manifest: app.manifestURL,
-                                                error: aError });
+      // If we are canceling the download, we already send a DOWNLOAD_CANCELED
+      // error.
+      if (!app.isCanceling) {
+        DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
+                                                { manifest: app.manifestURL,
+                                                  error: aError });
+      } else {
+        delete app.isCanceling;
+      }
+
       app.downloading = false;
       app.downloadAvailable = false;
       mustSave = true;
@@ -2725,11 +2743,13 @@ AppcacheObserver.prototype = {
     switch (aState) {
       case Ci.nsIOfflineCacheUpdateObserver.STATE_ERROR:
         aUpdate.removeObserver(this);
+        AppDownloadManager.remove(app.manifestURL);
         setError("APP_CACHE_DOWNLOAD_ERROR");
         break;
       case Ci.nsIOfflineCacheUpdateObserver.STATE_NOUPDATE:
       case Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED:
         aUpdate.removeObserver(this);
+        AppDownloadManager.remove(app.manifestURL);
         setStatus("installed", aUpdate.byteProgress);
         break;
       case Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING:
