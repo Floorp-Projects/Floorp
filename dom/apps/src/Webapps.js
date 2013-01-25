@@ -649,6 +649,7 @@ WebappsApplicationMgmt.prototype = {
   },
 
   uninstall: function(aApp) {
+    dump("-- webapps.js uninstall " + aApp.manifestURL + "\n");
     let request = this.createRequest();
     cpmm.sendAsyncMessage("Webapps:Uninstall", { origin: aApp.origin,
                                                  oid: this._id,
