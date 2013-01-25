@@ -240,9 +240,7 @@ CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
     SECStatus rv = SECSuccess;
     PRStatus ret;
 
-    CERT_LockCertTrust(cert);
     ret = STAN_ChangeCertTrust(cert, trust);
-    CERT_UnlockCertTrust(cert);
     if (ret != PR_SUCCESS) {
 	rv = SECFailure;
 	CERT_MapStanError();

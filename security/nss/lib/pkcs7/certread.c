@@ -145,9 +145,6 @@ static const char NS_CERT_TRAILER[] = "-----END CERTIFICATE-----";
 #define NS_CERT_HEADER_LEN  ((sizeof NS_CERT_HEADER) - 1)
 #define NS_CERT_TRAILER_LEN ((sizeof NS_CERT_TRAILER) - 1)
 
-static const char CERTIFICATE_TYPE_STRING[] = "certificate";
-#define CERTIFICATE_TYPE_LEN (sizeof(CERTIFICATE_TYPE_STRING)-1)
-
 /*
  * read an old style ascii or binary certificate chain
  */
@@ -163,6 +160,22 @@ CERT_DecodeCertPackage(char *certbuf,
     SECStatus      rv;
     
     if ( certbuf == NULL ) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return(SECFailure);
+    }
+    /*
+     * Make sure certlen is long enough to handle the longest possible
+     * reference in the code below:
+     * 0x30 0x84 l1 l2 l3 l4  +
+     *                       tag 9 o1 o2 o3 o4 o5 o6 o7 o8 o9
+     *   6 + 11 = 17. 17 bytes is clearly too small to code any kind of
+     *  certificate (a 128 bit ECC certificate contains at least an 8 byte
+     * key and a 16 byte signature, plus coding overhead). Typically a cert
+     * is much larger. So it's safe to require certlen to be at least 17
+     * bytes.
+     */
+    if (certlen < 17) {
+	PORT_SetError(SEC_ERROR_INPUT_LEN);
 	return(SECFailure);
     }
     
@@ -194,9 +207,12 @@ CERT_DecodeCertPackage(char *certbuf,
 	      case 1:
 		seqLen = cp[1];
 		break;
-	      default:
+	      case 0:
 		/* indefinite length */
 		seqLen = 0;
+		break;
+	      default:
+		goto notder;
 	    }
 	    cp += ( seqLenLen + 1 );
 
@@ -217,26 +233,20 @@ CERT_DecodeCertPackage(char *certbuf,
 	    }
 	}
 	
-	/* check the type string */
-	/* netscape wrapped DER cert */
-	if ( ( cp[0] == SEC_ASN1_OCTET_STRING ) &&
-	    ( cp[1] == CERTIFICATE_TYPE_LEN ) &&
-	    ( PORT_Strcmp((char *)&cp[2], CERTIFICATE_TYPE_STRING) ) ) {
-	    
-	    cp += ( CERTIFICATE_TYPE_LEN + 2 );
-
-	    /* it had better be a certificate by now!! */
-	    certitem.data = cp;
-	    certitem.len = certlen - ( cp - (unsigned char *)certbuf );
-	    
-	    rv = (* f)(arg, &pcertitem, 1);
-	    
-	    return(rv);
-	} else if ( cp[0] == SEC_ASN1_OBJECT_ID ) {
+	/* check the type oid */
+	if ( cp[0] == SEC_ASN1_OBJECT_ID ) {
 	    SECOidData *oiddata;
 	    SECItem oiditem;
 	    /* XXX - assume DER encoding of OID len!! */
 	    oiditem.len = cp[1];
+	    /* if we add an oid below that is longer than 9 bytes, then we
+	     * need to change the certlen check at the top of the function
+	     * to prevent a buffer overflow
+	     */
+	    if ( oiditem.len > 9 ) {
+		PORT_SetError(SEC_ERROR_UNRECOGNIZED_OID);
+		return(SECFailure);
+	    }
 	    oiditem.data = (unsigned char *)&cp[2];
 	    oiddata = SECOID_FindOID(&oiditem);
 	    if ( oiddata == NULL ) {

@@ -636,9 +636,11 @@ PKIX_ProcessingParams_GetTrustAnchors(
  * FUNCTION: PKIX_ProcessingParams_SetTrustAnchors
  * DESCRIPTION:
  *
- * Sets user defined set of trust anchors. A certificate will be considered
- * invalid if it does not chain to a trusted anchor from this list.
- * 
+ * Sets user defined set of trust anchors. The handling of the trust anchors
+ * may be furthered alter via PKIX_ProcessingParams_SetUseOnlyTrustAnchors.
+ * By default, a certificate will be considered invalid if it does not chain
+ * to a trusted anchor from this list.
+ *
  * PARAMETERS:
  *  "params"
  *      Address of ProcessingParams whose List of TrustAnchors are to
@@ -659,6 +661,71 @@ PKIX_Error *
 PKIX_ProcessingParams_SetTrustAnchors(
         PKIX_ProcessingParams *params,
         PKIX_List *pAnchors,  /* list of TrustAnchor */
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_GetUseOnlyTrustAnchors
+ * DESCRIPTION:
+ *
+ * Retrieves a pointer to the Boolean. The boolean value represents
+ * the switch value that is used to identify whether trust anchors, if
+ * specified, should be the exclusive source of trust information.
+ * If the function succeeds, the pointer to the Boolean is guaranteed to be
+ * non-NULL.
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams. Must be non-NULL.
+ *  "pUseOnlyTrustAnchors"
+ *      Address where object pointer will be stored. Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Conditionally Thread Safe
+ *      (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_GetUseOnlyTrustAnchors(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean *pUseOnlyTrustAnchors,
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_SetUseOnlyTrustAnchors
+ * DESCRIPTION:
+ *
+ * Configures whether trust anchors are used as the exclusive source of trust.
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams. Must be non-NULL.
+ *  "useOnlyTrustAnchors"
+ *      If true, indicates that trust anchors should be used exclusively when
+ *      they have been specified via PKIX_ProcessingParams_SetTrustAnchors. A
+ *      certificate will be considered invalid if it does not chain to a
+ *      trusted anchor from that list.
+ *      If false, indicates that the trust anchors are additive to whatever
+ *      existing trust stores are configured. A certificate is considered
+ *      valid if it chains to EITHER a trusted anchor from that list OR a
+ *      certificate marked trusted in a trust store.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Conditionally Thread Safe
+ *      (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_SetUseOnlyTrustAnchors(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean useOnlyTrustAnchors,
         void *plContext);
 
 /*
