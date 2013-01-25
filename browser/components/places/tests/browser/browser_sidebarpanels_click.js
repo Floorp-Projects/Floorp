@@ -27,12 +27,13 @@ function test() {
 
   tests.push({
     _itemID: null,
-    init: function() {
+    init: function(aCallback) {
       // Add a bookmark to the Unfiled Bookmarks folder.
       this._itemID = PlacesUtils.bookmarks.insertBookmark(
         PlacesUtils.unfiledBookmarksFolderId, PlacesUtils._uri(TEST_URL),
         PlacesUtils.bookmarks.DEFAULT_INDEX, "test"
       );
+      aCallback();
     },
     prepare: function() {
     },
@@ -49,13 +50,14 @@ function test() {
   });
 
   tests.push({
-    init: function() {
+    init: function(aCallback) {
       // Add a history entry.
       let uri = PlacesUtils._uri(TEST_URL);
-      PlacesUtils.history.addVisit(uri, Date.now() * 1000, null,
-                                   PlacesUtils.history.TRANSITION_TYPED,
-                                   false, 0);
-      ok(PlacesUtils.ghistory2.isVisited(uri), "Item is visited");
+      addVisits(
+        { uri: uri, visitDate: Date.now() * 1000,
+          transition: PlacesUtils.history.TRANSITION_TYPED },
+        window,
+        aCallback);
     },
     prepare: function() {
       sidebar.contentDocument.getElementById("byvisited").doCommand();
@@ -74,7 +76,9 @@ function test() {
   });
 
   function testPlacesPanel(preFunc, postFunc) {
-    currentTest.init();
+    currentTest.init(function() {
+      toggleSidebar(currentTest.sidebarName);
+    });
 
     sidebar.addEventListener("load", function() {
       sidebar.removeEventListener("load", arguments.callee, true);
@@ -113,7 +117,6 @@ function test() {
         // for the purpose of this test.
       });
     }, true);
-    toggleSidebar(currentTest.sidebarName);
   }
 
   function synthesizeClickOnSelectedTreeCell(aTree) {

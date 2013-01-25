@@ -18,6 +18,7 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="head.js" />
 
   <body xmlns="http://www.w3.org/1999/xhtml" />
 
@@ -77,91 +78,92 @@
       midnight.setSeconds(0);
       midnight.setMilliseconds(0);
 
-      // Add a visit 1ms before midnight.
-      hs.addVisit(uri("http://before.midnight.com/"),
-                  (midnight.getTime() - 1) * 1000,
-                  null, hs.TRANSITION_TYPED, false, 0);
+      function addVisitsCallback() {
+        // add a bookmark to the midnight visit
+        var itemId = bs.insertBookmark(bs.toolbarFolder,
+                                       uri("http://at.midnight.com/"),
+                                       bs.DEFAULT_INDEX,
+                                       "A bookmark at midnight");
 
-      // Add a visit at midnight.
-      hs.addVisit(uri("http://at.midnight.com/"),
-                  (midnight.getTime()) * 1000,
-                  null, hs.TRANSITION_TYPED, false, 0);
+        // Make a history query.
+        var query = hs.getNewQuery();
+        var opts = hs.getNewQueryOptions();
+        var queryURI = hs.queriesToQueryString([query], 1, opts);
 
-      // Add a visit 1ms after midnight.
-      hs.addVisit(uri("http://after.midnight.com/"),
-                  (midnight.getTime() + 1) * 1000,
-                  null, hs.TRANSITION_TYPED, false, 0);
+        // Setup the places tree contents.
+        var tree = document.getElementById("tree");
+        tree.place = queryURI;
 
-      // add a bookmark to the midnight visit
-      var itemId = bs.insertBookmark(bs.toolbarFolder,
-                                     uri("http://at.midnight.com/"),
-                                     bs.DEFAULT_INDEX,
-                                     "A bookmark at midnight");
-
-      // Make a history query.
-      var query = hs.getNewQuery();
-      var opts = hs.getNewQueryOptions();
-      var queryURI = hs.queriesToQueryString([query], 1, opts);
-
-      // Setup the places tree contents.
-      var tree = document.getElementById("tree");
-      tree.place = queryURI;
-
-      // loop through the rows and check formatting
-      var treeView = tree.view;
-      var rc = treeView.rowCount;
-      ok(rc >= 3, "Rows found");
-      var columns = tree.columns;
-      ok(columns.count > 0, "Columns found");
-      for (var r = 0; r < rc; r++) {
-        var node = treeView.nodeForTreeIndex(r);
-        ok(node, "Places node found");
-        for (var ci = 0; ci < columns.count; ci++) {
-          var c = columns.getColumnAt(ci);
-          var text = treeView.getCellText(r, c);
-          switch (c.element.getAttribute("anonid")) {
-            case "title":
-              // The title can differ, we did not set any title so we would
-              // expect null, but in such a case the view will generate a title
-              // through PlacesUIUtils.getBestTitle.
-              if (node.title)
-                is(text, node.title, "Title is correct");
-              break;
-            case "url":
-              is(text, node.uri, "Uri is correct");
-              break;
-            case "date":
-              var timeObj = new Date(node.time / 1000);
-              // Default is short date format.
-              var dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
-              // For today's visits we don't show date portion.
-              if (node.uri == "http://at.midnight.com/" ||
-                  node.uri == "http://after.midnight.com/")
-                dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
-              else if (node.uri == "http://before.midnight.com/")
-                dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
-              else {
-                // Avoid to test spurious uris, due to how the test works
-                // a redirecting uri could be put in the tree while we test.
+        // loop through the rows and check formatting
+        var treeView = tree.view;
+        var rc = treeView.rowCount;
+        ok(rc >= 3, "Rows found");
+        var columns = tree.columns;
+        ok(columns.count > 0, "Columns found");
+        for (var r = 0; r < rc; r++) {
+          var node = treeView.nodeForTreeIndex(r);
+          ok(node, "Places node found");
+          for (var ci = 0; ci < columns.count; ci++) {
+            var c = columns.getColumnAt(ci);
+            var text = treeView.getCellText(r, c);
+            switch (c.element.getAttribute("anonid")) {
+              case "title":
+                // The title can differ, we did not set any title so we would
+                // expect null, but in such a case the view will generate a title
+                // through PlacesUIUtils.getBestTitle.
+                if (node.title)
+                  is(text, node.title, "Title is correct");
                 break;
-              }
-              var timeStr = ds.FormatDateTime("", dateFormat,
-                    Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
-                    timeObj.getFullYear(), timeObj.getMonth() + 1,
-                    timeObj.getDate(), timeObj.getHours(),
-                    timeObj.getMinutes(), timeObj.getSeconds())
+              case "url":
+                is(text, node.uri, "Uri is correct");
+                break;
+              case "date":
+                var timeObj = new Date(node.time / 1000);
+                // Default is short date format.
+                var dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
+                // For today's visits we don't show date portion.
+                if (node.uri == "http://at.midnight.com/" ||
+                    node.uri == "http://after.midnight.com/")
+                  dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
+                else if (node.uri == "http://before.midnight.com/")
+                  dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
+                else {
+                  // Avoid to test spurious uris, due to how the test works
+                  // a redirecting uri could be put in the tree while we test.
+                  break;
+                }
+                var timeStr = ds.FormatDateTime("", dateFormat,
+                      Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
+                      timeObj.getFullYear(), timeObj.getMonth() + 1,
+                      timeObj.getDate(), timeObj.getHours(),
+                      timeObj.getMinutes(), timeObj.getSeconds())
 
-              is(text, timeStr, "Date format is correct");
-              break;
-            case "visitCount":
-              is(text, 1, "Visit count is correct");
-              break;         
+                is(text, timeStr, "Date format is correct");
+                break;
+              case "visitCount":
+                is(text, 1, "Visit count is correct");
+                break;
+            }
           }
         }
+        // Cleanup.
+        bs.removeItem(itemId);
+        waitForClearHistory(SimpleTest.finish);
       }
-      // Cleanup.
-      bs.removeItem(itemId);
-      waitForClearHistory(SimpleTest.finish);
+
+      // Add a visit 1ms before midnight, a visit at midnight, and
+      // a visit 1ms after midnight.
+      addVisits(
+        [{uri: uri("http://before.midnight.com/"),
+           visitDate: (midnight.getTime() - 1) * 1000,
+           transition: hs.TRANSITION_TYPED},
+         {uri: uri("http://at.midnight.com/"),
+           visitDate: (midnight.getTime()) * 1000,
+           transition: hs.TRANSITION_TYPED},
+         {uri: uri("http://after.midnight.com/"),
+           visitDate: (midnight.getTime() + 1) * 1000,
+           transition: hs.TRANSITION_TYPED}],
+        addVisitsCallback);
     }
 
     /**
