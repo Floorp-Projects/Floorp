@@ -14,6 +14,8 @@
 #include "ion/Bailouts.h"
 #include "ion/VMFunctions.h"
 
+#include "jscntxtinlines.h"
+
 using namespace js;
 using namespace js::ion;
 

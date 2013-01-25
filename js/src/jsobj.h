@@ -580,6 +580,7 @@ class JSObject : public js::ObjectImpl
 
     inline bool ensureElements(JSContext *cx, unsigned cap);
     bool growElements(JSContext *cx, unsigned cap);
+    bool growElements(js::Allocator *alloc, unsigned cap);
     void shrinkElements(JSContext *cx, unsigned cap);
     inline void setDynamicElements(js::ObjectElements *header);
 
@@ -612,6 +613,10 @@ class JSObject : public js::ObjectImpl
      */
     enum EnsureDenseResult { ED_OK, ED_FAILED, ED_SPARSE };
     inline EnsureDenseResult ensureDenseElements(JSContext *cx, unsigned index, unsigned extra);
+    inline EnsureDenseResult parExtendDenseElements(js::Allocator *alloc, js::Value *v,
+                                                    uint32_t extra);
+    template<typename CONTEXT>
+    inline EnsureDenseResult extendDenseElements(CONTEXT *cx, unsigned requiredCapacity, unsigned extra);
 
     /* Convert a single dense element to a sparse property. */
     static bool sparsifyDenseElement(JSContext *cx, js::HandleObject obj, unsigned index);
