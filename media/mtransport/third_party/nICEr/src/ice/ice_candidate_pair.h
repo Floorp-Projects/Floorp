@@ -52,7 +52,7 @@ struct nr_ice_cand_pair_ {
 #define NR_ICE_PAIR_STATE_SUCCEEDED        5
 #define NR_ICE_PAIR_STATE_CANCELLED        6
 
-  UCHAR peer_nominated;               /* The peer sent USE-CANDIDATE 
+  UCHAR peer_nominated;               /* The peer sent USE-CANDIDATE
                                          on this check */
   UCHAR nominated;                    /* Is this nominated or not */
 
@@ -60,7 +60,7 @@ struct nr_ice_cand_pair_ {
   nr_ice_candidate *local;            /* The local candidate */
   nr_ice_candidate *remote;           /* The remote candidate */
   char *foundation;                   /* The combined foundations */
-       
+
   char *r2l_user;                     /* Stashed username */
   Data r2l_pwd;                       /* Stashed password */
 

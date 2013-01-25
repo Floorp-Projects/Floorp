@@ -1,37 +1,37 @@
 /**
    util.c
 
-   
+
    Copyright (C) 2001-2003, Network Resonance, Inc.
    Copyright (C) 2006, Network Resonance, Inc.
    All Rights Reserved
-   
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
-   
+
    1. Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
    2. Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
    3. Neither the name of Network Resonance, Inc. nor the name of any
-      contributors to this software may be used to endorse or promote 
+      contributors to this software may be used to endorse or promote
       products derived from this software without specific prior written
       permission.
-   
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
-   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    POSSIBILITY OF SUCH DAMAGE.
-   
+
 
    ekr@rtfm.com  Wed Dec 26 17:19:36 2001
  */
@@ -66,14 +66,14 @@ int nr_get_filename(base,name,namep)
     int len=strlen(base)+strlen(name)+2;
     char *ret=0;
     int _status;
-    
+
     if(!(ret=(char *)RMALLOC(len)))
       ABORT(R_NO_MEMORY);
     if(base[strlen(base)-1]!='/'){
       sprintf(ret,"%s/%s",base,name);
     }
     else{
-      sprintf(ret,"%s%s",base,name);      
+      sprintf(ret,"%s%s",base,name);
     }
     *namep=ret;
     _status=0;
@@ -92,7 +92,7 @@ int read_RSA_private_key(base,name,keyp)
     FILE *fp=0;
     RSA *rsa=0;
     int r,_status;
-    
+
     /* Load the keyfile */
     if(r=get_filename(base,name,&keyfile))
       ABORT(r);
@@ -110,15 +110,15 @@ int read_RSA_private_key(base,name,keyp)
   abort:
     return(_status);
   }
-#endif    
-    
+#endif
+
 
 void nr_errprintf_log(const char *format,...)
   {
     va_list ap;
 
     va_start(ap,format);
-    
+
     r_vlog(nr_util_default_log_facility,LOG_ERR,format,ap);
 
     va_end(ap);
@@ -129,12 +129,12 @@ void nr_errprintf_log2(void *ignore, const char *format,...)
     va_list ap;
 
     va_start(ap,format);
-    
+
     r_vlog(nr_util_default_log_facility,LOG_ERR,format,ap);
 
     va_end(ap);
   }
-  
+
 
 int nr_fwrite_all(FILE *fp,UCHAR *buf,int len)
   {
@@ -160,7 +160,7 @@ int nr_read_data(fd,buf,len)
   int len;
   {
     int r,_status;
-    
+
     while(len){
       r=NR_SOCKET_READ(fd,buf,len);
       if(r<=0)
@@ -170,28 +170,28 @@ int nr_read_data(fd,buf,len)
       len-=r;
     }
 
-    
+
     _status=0;
   abort:
     return(_status);
   }
-    
+
 #ifdef WIN32
   // TODO
 #else
 int nr_drop_privileges(char *username)
   {
     int _status;
-    
+
     /* Drop privileges */
     if ((getuid() == 0) || geteuid()==0) {
       struct passwd *passwd;
-      
+
       if ((passwd = getpwnam(CAPTURE_USER)) == 0){
         r_log(LOG_GENERIC,LOG_EMERG,"Couldn't get user %s",CAPTURE_USER);
         ABORT(R_INTERNAL);
       }
-      
+
       if(setuid(passwd->pw_uid)!=0){
         r_log(LOG_GENERIC,LOG_EMERG,"Couldn't drop privileges");
         ABORT(R_INTERNAL);
@@ -221,19 +221,19 @@ int nr_bin2hex(UCHAR *in,int len,UCHAR *out)
 int nr_hex_ascii_dump(Data *data)
   {
     UCHAR *ptr=data->data;
-    int len=data->len;    
-    
+    int len=data->len;
+
     while(len){
       int i;
       int bytes=MIN(len,16);
-      
+
       for(i=0;i<bytes;i++)
         printf("%.2x ",ptr[i]&255);
       /* Fill */
       for(i=0;i<(16-bytes);i++)
         printf("   ");
       printf("   ");
-      
+
       for(i=0;i<bytes;i++){
         if(isprint(ptr[i]))
           printf("%c",ptr[i]);
@@ -241,7 +241,7 @@ int nr_hex_ascii_dump(Data *data)
           printf(".");
       }
       printf("\n");
-      
+
       len-=bytes;
       ptr+=bytes;
     }
@@ -258,14 +258,14 @@ int nr_sha1_file(char *filename,UCHAR *out)
     int out_len;
 
     EVP_MD_CTX_init(&md_ctx);
-    
+
     if(!(fp=fopen(filename,"r"))){
       r_log(LOG_COMMON,LOG_ERR,"Couldn't open file %s",filename);
       ABORT(R_NOT_FOUND);
     }
 
     EVP_DigestInit_ex(&md_ctx,EVP_sha1(),0);
-    
+
     while(1){
       r=fread(buf,1,sizeof(buf),fp);
 
@@ -276,7 +276,7 @@ int nr_sha1_file(char *filename,UCHAR *out)
 
       if(!r)
         break;
-      
+
       EVP_DigestUpdate(&md_ctx,buf,r);
     }
 
@@ -288,7 +288,7 @@ int nr_sha1_file(char *filename,UCHAR *out)
   abort:
     EVP_MD_CTX_cleanup(&md_ctx);
     if(fp) fclose(fp);
-    
+
     return(_status);
   }
 
@@ -309,7 +309,7 @@ int nr_rm_tree(char *path)
     int failed=0;
     int _status;
     char *argv[2];
-    
+
     argv[0]=path;
     argv[1]=0;
 
@@ -317,7 +317,7 @@ int nr_rm_tree(char *path)
       r_log_e(LOG_COMMON,LOG_ERR,"Couldn't open directory %s",path);
       ABORT(R_FAILED);
     }
-      
+
     while(p=fts_read(fts)){
       switch(p->fts_info){
         case FTS_D:
@@ -339,7 +339,7 @@ int nr_rm_tree(char *path)
 
     if(failed)
       ABORT(R_FAILED);
-    
+
     _status=0;
   abort:
     if(fts) fts_close(fts);
@@ -563,5 +563,5 @@ int snprintf(char *buffer, size_t n, const char *format, ...)
   return ret;
 }
 
-#endif 
+#endif
 
