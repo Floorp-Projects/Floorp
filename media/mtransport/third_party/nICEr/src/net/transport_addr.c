@@ -87,7 +87,7 @@ int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int saddr_len, int pro
       }
       addr->ip_version=NR_IPV4;
       addr->protocol=protocol;
-      
+
       memcpy(&addr->u.addr4,saddr,sizeof(struct sockaddr_in));
       addr->addr=(struct sockaddr *)&addr->u.addr4;
       addr->addr_len=saddr_len;
@@ -112,7 +112,7 @@ int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from)
   {
     memcpy(to,from,sizeof(nr_transport_addr));
     to->addr=(struct sockaddr *)((char *)to + ((char *)from->addr - (char *)from));
-    
+
     return(0);
   }
 
@@ -161,7 +161,7 @@ int nr_transport_addr_get_addrstring(nr_transport_addr *addr, char *str, int max
   {
     char buf[100]; // Long enough
     int _status;
-    
+
     switch(addr->ip_version){
       case NR_IPV4:
         if(!(addr2ascii(AF_INET, &addr->u.addr4.sin_addr,sizeof(struct in_addr),buf)))
@@ -176,7 +176,7 @@ int nr_transport_addr_get_addrstring(nr_transport_addr *addr, char *str, int max
         ABORT(R_INTERNAL);
     }
 
-            
+
     _status=0;
   abort:
     return(_status);

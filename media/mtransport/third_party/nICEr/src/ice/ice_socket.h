@@ -45,7 +45,7 @@ typedef struct nr_ice_stun_ctx_ {
 #define NR_ICE_STUN_CLIENT  1
 #define NR_ICE_STUN_SERVER  2
 #define NR_ICE_TURN_CLIENT  3
-  
+
   union {
     nr_stun_client_ctx *client;
     nr_stun_server_ctx *server;
@@ -60,7 +60,7 @@ typedef struct nr_ice_stun_ctx_ {
 typedef struct nr_ice_socket_ {
   nr_socket *sock;
   nr_ice_ctx *ctx;
-  
+
   nr_ice_candidate_head candidates;
   nr_ice_component *component;
 

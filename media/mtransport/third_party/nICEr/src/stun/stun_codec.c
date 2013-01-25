@@ -1000,7 +1000,7 @@ nr_stun_attr_codec_unknown_attributes_decode(nr_stun_attr_info *attr_info, int a
     }
 
     unknown_attributes->num_attributes = attrlen / 2;
- 
+
     if (unknown_attributes->num_attributes > NR_STUN_MAX_UNKNOWN_ATTRIBUTES) {
         r_log(NR_LOG_STUN, LOG_WARNING, "Too many UNKNOWN-ATTRIBUTES: %d", unknown_attributes->num_attributes);
         ABORT(R_REJECTED);
@@ -1437,10 +1437,10 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
 #ifdef USE_STUN_PEDANTIC
                 r_log(NR_LOG_STUN, LOG_DEBUG, "Before pedantic attr_info checks");
                 if (attr_info->illegal) {
-    		    if ((r=attr_info->illegal(attr_info, attr->length, &attr->u))) {
+                    if ((r=attr_info->illegal(attr_info, attr->length, &attr->u))) {
                         r_log(NR_LOG_STUN, LOG_DEBUG, "Failed pedantic attr_info checks");
                         ABORT(r);
-		    }
+                    }
                 }
                 r_log(NR_LOG_STUN, LOG_DEBUG, "After pedantic attr_info checks");
 #endif /* USE_STUN_PEDANTIC */

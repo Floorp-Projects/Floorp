@@ -52,7 +52,7 @@ struct nr_ice_component_ {
   nr_ice_socket_head sockets;
   nr_ice_candidate_head candidates;
   int candidate_ct;
-  
+
   int valid_pairs;
   struct nr_ice_cand_pair_ *nominated; /* Highest priority nomninated pair */
   struct nr_ice_cand_pair_ *active;

@@ -46,7 +46,7 @@ typedef struct nr_turn_client_ctx_ {
 #define NR_TURN_CLIENT_STATE_CANCELLED       8
 
   int phase;
-#define NR_TURN_CLIENT_PHASE_INITIALIZED          -1 
+#define NR_TURN_CLIENT_PHASE_INITIALIZED          -1
 #define NR_TURN_CLIENT_PHASE_ALLOCATE_REQUEST1    0
 #define NR_TURN_CLIENT_PHASE_ALLOCATE_REQUEST2    1
 #define NR_TURN_CLIENT_PHASE_SET_ACTIVE_DEST      2
