@@ -204,10 +204,6 @@ function OpenedConnection(connection, basename, number, options) {
   // canceling prior to finalizing the mozIStorageStatements.
   this._pendingStatements = new Map();
 
-  // A map from statement index to mozIStorageStatement, for all outstanding
-  // query executions.
-  this._inProgressStatements = new Map();
-
   // Increments for each executed statement for the life of the connection.
   this._statementCounter = 0;
 
@@ -325,64 +321,6 @@ OpenedConnection.prototype = Object.freeze({
     return deferred.promise;
   },
 
-  /**
-   * Record that an executing statement has completed by removing it from the
-   * pending statements map and decrementing the corresponding in-progress
-   * counter.
-   */
-  _recordStatementCompleted: function (statement, index) {
-    this._log.debug("Stmt #" + index + " finished.");
-    this._pendingStatements.delete(index);
-
-    let now = this._inProgressStatements.get(statement) - 1;
-    if (now == 0) {
-      this._inProgressStatements.delete(statement);
-    } else {
-      this._inProgressStatements.set(statement, now);
-    }
-  },
-
-  /**
-   * Record that an executing statement is beginning by adding it to the
-   * pending statements map and incrementing the corresponding in-progress
-   * counter.
-   */
-  _recordStatementBeginning: function (statement, pending, index) {
-    this._log.info("Recording statement beginning: " + statement);
-    this._pendingStatements.set(index, pending);
-    if (!this._inProgressStatements.has(statement)) {
-      this._inProgressStatements.set(statement, 1);
-      this._log.info("Only one: " + statement);
-      return;
-    }
-    let now = this._inProgressStatements.get(statement) + 1;
-    this._inProgressStatements.set(statement, now);
-    this._log.info("More: " + statement + ", " + now);
-  },
-
-  /**
-   * Get a count of in-progress statements. This is useful for debugging and
-   * testing, and also for discarding cached statements.
-   *
-   * @param statement (optional) the statement after which to inquire.
-   * @return (integer) a count of executing queries, whether for `statement` or
-   *                   for the connection as a whole.
-   */
-  inProgress: function (statement) {
-    if (statement) {
-      if (this._inProgressStatements.has(statement)) {
-        return this._inProgressStatements.get(statement);
-      }
-      return 0;
-    }
-
-    let out = 0;
-    for (let v of this._inProgressStatements.values()) {
-      out += v;
-    }
-    return out;
-  },
-
   _finalize: function (deferred) {
     this._log.debug("Finalizing connection.");
     // Cancel any pending statements.
@@ -392,7 +330,6 @@ OpenedConnection.prototype = Object.freeze({
     this._pendingStatements.clear();
 
     // We no longer need to track these.
-    this._inProgressStatements.clear();
     this._statementCounter = 0;
 
     // Next we finalize all active statements.
@@ -732,21 +669,22 @@ OpenedConnection.prototype = Object.freeze({
   },
 
   /**
-   * Discard all inactive cached statements.
+   * Discard all cached statements.
+   *
+   * Note that this relies on us being non-interruptible between
+   * the insertion or retrieval of a statement in the cache and its
+   * execution: we finalize all statements, which is only safe if
+   * they will not be executed again.
    *
    * @return (integer) the number of statements discarded.
    */
   discardCachedStatements: function () {
     let count = 0;
     for (let [k, statement] of this._cachedStatements) {
-      if (this.inProgress(statement)) {
-        continue;
-      }
-
       ++count;
-      this._cachedStatements.delete(k);
       statement.finalize();
     }
+    this._cachedStatements.clear();
     this._log.debug("Discarded " + count + " cached statements.");
     return count;
   },
@@ -824,7 +762,8 @@ OpenedConnection.prototype = Object.freeze({
       },
 
       handleCompletion: function (reason) {
-        self._recordStatementCompleted(statement, index);
+        self._log.debug("Stmt #" + index + " finished.");
+        self._pendingStatements.delete(index);
 
         switch (reason) {
           case Ci.mozIStorageStatementCallback.REASON_FINISHED:
@@ -859,7 +798,7 @@ OpenedConnection.prototype = Object.freeze({
       },
     });
 
-    this._recordStatementBeginning(statement, pending, index);
+    this._pendingStatements.set(index, pending);
     return deferred.promise;
   },
 
