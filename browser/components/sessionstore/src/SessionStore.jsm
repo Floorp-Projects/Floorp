@@ -110,6 +110,10 @@ function debug(aMsg) {
 }
 
 this.SessionStore = {
+  get promiseInitialized() {
+    return SessionStoreInternal.promiseInitialized.promise;
+  },
+
   get canRestoreLastSession() {
     return SessionStoreInternal.canRestoreLastSession;
   },
@@ -311,6 +315,13 @@ let SessionStoreInternal = {
   // previous session is not always restored when
   // "sessionstore.resume_from_crash" is true.
   _resume_session_once_on_shutdown: null,
+
+  /**
+   * A promise fulfilled once initialization is complete.
+   */
+  get promiseInitialized() {
+    return this._promiseInitialization;
+  },
 
   /* ........ Public Getters .............. */
   get canRestoreLastSession() {

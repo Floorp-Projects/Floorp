@@ -18,11 +18,16 @@ function test() {
 function testCommands(dbg, cmd) {
   // Wait for the initial resume...
   dbg._controller.activeThread.addOneTimeListener("resumed", function () {
-    info("Starting tests.");
+    info("Starting tests");
 
     let contentDoc = content.window.document;
     let output = contentDoc.querySelector("input[type=text]");
     let btnDoit = contentDoc.querySelector("input[type=button]");
+
+    DeveloperToolbarTest.exec({
+      typed: "dbg list",
+      outputMatch: /browser_dbg_cmd.html/
+    });
 
     cmd("dbg interrupt", function() {
       ok(true, "debugger is paused");
