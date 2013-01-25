@@ -9006,7 +9006,8 @@ void ColorToString(nscolor aColor, nsAutoString &aString)
 
 nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 {
-  return FrameConstructor()->GetAbsoluteContainingBlock(aFrame);
+  return FrameConstructor()->GetAbsoluteContainingBlock(aFrame,
+      nsCSSFrameConstructor::ABS_POS);
 }
 
 #ifdef ACCESSIBILITY
