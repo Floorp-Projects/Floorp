@@ -769,7 +769,6 @@ DescribeGCThing(bool isMarked, void *p, JSGCTraceKind traceKind,
                 "String",
                 "Script",
                 "IonCode",
-                "Xml",
                 "Shape",
                 "BaseShape",
                 "TypeObject",
@@ -2516,13 +2515,8 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
 
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
-    size_t i = JS_GetE4XObjectsCreated(cx);
+    size_t i = JS_SetProtoCalled(cx);
     jsval v = DOUBLE_TO_JSVAL(i);
-    if (!JS_DefineProperty(cx, obj, "e4x", v, NULL, NULL, attrs))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    i = JS_SetProtoCalled(cx);
-    v = DOUBLE_TO_JSVAL(i);
     if (!JS_DefineProperty(cx, obj, "setProto", v, NULL, NULL, attrs))
         return NS_ERROR_OUT_OF_MEMORY;
 

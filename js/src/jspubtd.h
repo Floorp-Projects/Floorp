@@ -91,7 +91,6 @@ typedef enum JSType {
     JSTYPE_NUMBER,              /* number */
     JSTYPE_BOOLEAN,             /* boolean */
     JSTYPE_NULL,                /* null */
-    JSTYPE_XML,                 /* xml object */
     JSTYPE_LIMIT
 } JSType;
 
@@ -154,9 +153,6 @@ typedef enum {
      * implements JSTraceCallback.
      */
     JSTRACE_IONCODE,
-#if JS_HAS_XML_SUPPORT
-    JSTRACE_XML,
-#endif
     JSTRACE_SHAPE,
     JSTRACE_BASE_SHAPE,
     JSTRACE_TYPE_OBJECT,
@@ -227,7 +223,6 @@ enum ThingRootKind
     THING_ROOT_TYPE_OBJECT,
     THING_ROOT_STRING,
     THING_ROOT_SCRIPT,
-    THING_ROOT_XML,
     THING_ROOT_ID,
     THING_ROOT_PROPERTY_ID,
     THING_ROOT_VALUE,

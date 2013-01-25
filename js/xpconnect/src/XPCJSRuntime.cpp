@@ -1646,13 +1646,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "heap that holds references to executable code pools "
                      "used by IonMonkey.");
 
-#if JS_HAS_XML_SUPPORT
-    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/xml"),
-                     cStats.gcHeapXML,
-                     "Memory on the garbage-collected JavaScript "
-                     "heap that holds E4X XML objects.");
-#endif
-
     CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/slots"),
                   cStats.objectsExtra.slots,
                   "Memory allocated for the non-fixed object "

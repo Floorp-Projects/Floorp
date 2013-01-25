@@ -18,7 +18,6 @@ class jsid(object):
     TYPE_INT                    = 0x1
     TYPE_VOID                   = 0x2
     TYPE_OBJECT                 = 0x4
-    TYPE_DEFAULT_XML_NAMESPACE  = 0x6
     TYPE_MASK                   = 0x7
 
     def __init__(self, value, cache):
@@ -49,8 +48,6 @@ class jsid(object):
         elif tag == jsid.TYPE_OBJECT:
             body = ((bits & ~jsid.TYPE_MASK)
                     .cast(self.cache.JSObject_ptr_t))
-        elif tag == jsid.TYPE_DEFAULT_XML_NAMESPACE:
-            return "JS_DEFAULT_XML_NAMESPACE_ID"
         else:
             body = "<unrecognized>"
         return '$jsid(%s)' % (body,)

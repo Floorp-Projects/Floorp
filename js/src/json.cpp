@@ -24,7 +24,6 @@
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsxml.h"
 
 #include "frontend/TokenStream.h"
 #include "vm/StringBuffer.h"
@@ -360,7 +359,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
 static inline bool
 IsFilteredValue(const Value &v)
 {
-    return v.isUndefined() || js_IsCallable(v) || VALUE_IS_XML(v);
+    return v.isUndefined() || js_IsCallable(v);
 }
 
 /* ES5 15.12.3 JO. */

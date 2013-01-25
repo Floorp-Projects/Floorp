@@ -467,9 +467,6 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            js_InitRegExpClass(cx, global) &&
            js_InitStringClass(cx, global) &&
            js_InitTypedArrayClasses(cx, global) &&
-#if JS_HAS_XML_SUPPORT
-           (!VersionHasAllowXML(cx->findVersion()) || js_InitXMLClasses(cx, global)) &&
-#endif
            js_InitIteratorClasses(cx, global) &&
            js_InitDateClass(cx, global) &&
            js_InitWeakMapClass(cx, global) &&
