@@ -731,6 +731,26 @@ OpenedConnection.prototype = Object.freeze({
     return this.execute("PRAGMA shrink_memory").then(onShrunk, onShrunk);
   },
 
+  /**
+   * Discard all inactive cached statements.
+   *
+   * @return (integer) the number of statements discarded.
+   */
+  discardCachedStatements: function () {
+    let count = 0;
+    for (let [k, statement] of this._cachedStatements) {
+      if (this.inProgress(statement)) {
+        continue;
+      }
+
+      ++count;
+      this._cachedStatements.delete(k);
+      statement.finalize();
+    }
+    this._log.debug("Discarded " + count + " cached statements.");
+    return count;
+  },
+
   _executeStatement: function (sql, statement, params, onRow) {
     if (statement.state != statement.MOZ_STORAGE_STATEMENT_READY) {
       throw new Error("Statement is not ready for execution.");
