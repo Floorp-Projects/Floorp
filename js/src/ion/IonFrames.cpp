@@ -329,9 +329,43 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
     JS_ASSERT(frame.isBaselineJS());
     AssertCanGC();
 
+    JS_ASSERT(cx->isExceptionPending());
+
     RootedScript script(cx);
     jsbytecode *pc;
     frame.baselineScriptAndPc(script.address(), &pc);
+
+    if (cx->compartment->debugMode()) {
+        BaselineFrame *baselineFrame = frame.baselineFrame();
+        JSTrapStatus status = DebugExceptionUnwind(cx, baselineFrame, pc);
+        switch (status) {
+          case JSTRAP_ERROR:
+            // Uncatchable exception, return.
+            return;
+
+          case JSTRAP_CONTINUE:
+          case JSTRAP_THROW:
+            break;
+
+          case JSTRAP_RETURN:
+            JS_ASSERT(baselineFrame->hasReturnValue());
+            if (ion::DebugEpilogue(cx, baselineFrame, true)) {
+                rfe->kind = ResumeFromException::RESUME_FORCED_RETURN;
+                rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
+                rfe->stackPointer = reinterpret_cast<uint8_t *>(baselineFrame);
+                return;
+            }
+
+            // Uncatchable exception, return.
+            JS_ASSERT(!cx->isExceptionPending());
+            return;
+
+          default:
+            JS_NOT_REACHED("Invalid trap status");
+        }
+    }
+
+    JS_ASSERT(cx->isExceptionPending());
 
     if (!script->hasTrynotes())
         return;
@@ -410,12 +444,11 @@ ion::HandleException(ResumeFromException *rfe)
             IonScript *ionScript;
             if (iter.checkInvalidation(&ionScript))
                 ionScript->decref(cx->runtime->defaultFreeOp());
-        }
 
-        if (iter.isBaselineJS()) {
+        } else if (iter.isBaselineJS()) {
             if (cx->isExceptionPending()) {
                 HandleException(cx, iter, rfe);
-                if (rfe->kind == ResumeFromException::RESUME_CATCH)
+                if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
                     return;
             }
 
