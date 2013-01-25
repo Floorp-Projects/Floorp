@@ -31,8 +31,11 @@ class BaselineFrame
         // The frame has a valid return value. See also StackFrame::HAS_RVAL.
         HAS_RVAL         = 1 << 0,
 
+        // Frame has blockChain_ set.
+        HAS_BLOCKCHAIN   = 1 << 1,
+
         // See StackFrame::PREV_UP_TO_DATE.
-        PREV_UP_TO_DATE  = 1 << 1
+        PREV_UP_TO_DATE  = 1 << 2,
     };
 
   protected: // Silence Clang warning about unused private fields.
@@ -44,7 +47,13 @@ class BaselineFrame
     uint32_t hiReturnValue_;
     size_t frameSize_;
     JSObject *scopeChain_;
+    StaticBlockObject *blockChain_;
     uint32_t flags_;
+
+#if JS_BITS_PER_WORD == 32
+    // Keep frame 8-byte aligned.
+    uint32_t padding_;
+#endif
 
   public:
     // Distance between the frame pointer and the frame header (return address).
@@ -57,6 +66,10 @@ class BaselineFrame
     UnrootedObject scopeChain() const {
         return scopeChain_;
     }
+
+    inline void pushOnScopeChain(ScopeObject &scope);
+    inline void popOffScopeChain();
+
     CalleeToken calleeToken() const {
         uint8_t *pointer = (uint8_t *)this + Size() + offsetOfCalleeToken();
         return *(CalleeToken *)pointer;
@@ -100,6 +113,13 @@ class BaselineFrame
         return formals()[i];
     }
 
+    Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing) const {
+#ifdef DEBUG
+        CheckLocalUnaliased(checkAliasing, script(), maybeBlockChain(), i);
+#endif
+        return *valueSlot(i);
+    }
+
     unsigned numActualArgs() const {
         return *(unsigned *)(reinterpret_cast<const uint8_t *>(this) +
                              BaselineFrame::Size() +
@@ -124,16 +144,37 @@ class BaselineFrame
 
     bool copyRawFrameSlots(AutoValueVector *vec) const;
 
-    inline bool hasReturnValue() const {
+    bool hasReturnValue() const {
         return flags_ & HAS_RVAL;
     }
-    inline Value *returnValue() {
+    Value *returnValue() {
         return reinterpret_cast<Value *>(&loReturnValue_);
     }
-    inline void setReturnValue(const Value &v) {
+    void setReturnValue(const Value &v) {
         flags_ |= HAS_RVAL;
         *returnValue() = v;
     }
+
+    bool hasBlockChain() const {
+        return (flags_ & HAS_BLOCKCHAIN) && blockChain_;
+    }
+
+    StaticBlockObject &blockChain() const {
+        JS_ASSERT(hasBlockChain());
+        return *blockChain_;
+    }
+
+    StaticBlockObject *maybeBlockChain() const {
+        return hasBlockChain() ? blockChain_ : NULL;
+    }
+
+    void setBlockChain(StaticBlockObject &block) {
+        flags_ |= HAS_BLOCKCHAIN;
+        blockChain_ = &block;
+    }
+
+    inline bool pushBlock(JSContext *cx, Handle<StaticBlockObject *> block);
+    inline void popBlock(JSContext *cx);
 
     bool prevUpToDate() const {
         return flags_ & PREV_UP_TO_DATE;
@@ -171,13 +212,13 @@ class BaselineFrame
     static size_t offsetOfCalleeToken() {
         return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfCalleeToken();
     }
-    static inline size_t offsetOfThis() {
+    static size_t offsetOfThis() {
         return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfThis();
     }
-    static inline size_t offsetOfArg(size_t index) {
+    static size_t offsetOfArg(size_t index) {
         return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfActualArg(index);
     }
-    static inline size_t offsetOfNumActualArgs() {
+    static size_t offsetOfNumActualArgs() {
         return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfNumActualArgs();
     }
     static size_t Size() {
@@ -187,22 +228,25 @@ class BaselineFrame
     // The reverseOffsetOf methods below compute the offset relative to the
     // frame's base pointer. Since the stack grows down, these offsets are
     // negative.
-    static inline size_t reverseOffsetOfFrameSize() {
+    static size_t reverseOffsetOfFrameSize() {
         return -BaselineFrame::Size() + offsetof(BaselineFrame, frameSize_);
     }
-    static inline size_t reverseOffsetOfScratchValue() {
+    static size_t reverseOffsetOfScratchValue() {
         return -BaselineFrame::Size() + offsetof(BaselineFrame, loScratchValue_);
     }
-    static inline size_t reverseOffsetOfScopeChain() {
+    static size_t reverseOffsetOfScopeChain() {
         return -BaselineFrame::Size() + offsetof(BaselineFrame, scopeChain_);
     }
-    static inline size_t reverseOffsetOfFlags() {
+    static size_t reverseOffsetOfBlockChain() {
+        return -BaselineFrame::Size() + offsetof(BaselineFrame, blockChain_);
+    }
+    static size_t reverseOffsetOfFlags() {
         return -BaselineFrame::Size() + offsetof(BaselineFrame, flags_);
     }
-    static inline size_t reverseOffsetOfReturnValue() {
+    static size_t reverseOffsetOfReturnValue() {
         return -BaselineFrame::Size() + offsetof(BaselineFrame, loReturnValue_);
     }
-    static inline size_t reverseOffsetOfLocal(size_t index) {
+    static size_t reverseOffsetOfLocal(size_t index) {
         return -BaselineFrame::Size() - (index + 1) * sizeof(Value);
     }
 };

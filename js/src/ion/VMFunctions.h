@@ -194,6 +194,7 @@ template <> struct TypeToDataType<HandleObject> { static const DataType result =
 template <> struct TypeToDataType<HandleString> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandlePropertyName> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleFunction> { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<Handle<StaticBlockObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleScript> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleValue> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
@@ -217,6 +218,9 @@ template <> struct TypeToArgProperties<HandlePropertyName> {
 };
 template <> struct TypeToArgProperties<HandleFunction> {
     static const uint32_t result = TypeToArgProperties<JSFunction *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<Handle<StaticBlockObject *> > {
+    static const uint32_t result = TypeToArgProperties<StaticBlockObject *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleScript> {
     static const uint32_t result = TypeToArgProperties<RawScript>::result | VMFunction::ByRef;
@@ -472,6 +476,9 @@ bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok);
 bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn);
 
 bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool *mustReturn);
+
+bool EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block);
+bool LeaveBlock(JSContext *cx, BaselineFrame *frame);
 
 } // namespace ion
 } // namespace js

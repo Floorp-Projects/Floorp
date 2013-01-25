@@ -8,6 +8,7 @@
 #include "Ion.h"
 #include "IonCompartment.h"
 #include "jsinterp.h"
+#include "ion/BaselineFrame-inl.h"
 #include "ion/BaselineIC.h"
 #include "ion/IonFrames.h"
 #include "ion/IonFrames-inl.h" // for GetTopIonJSScript
@@ -632,6 +633,19 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool 
       default:
         JS_NOT_REACHED("Invalid trap status");
     }
+}
+
+bool
+EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block)
+{
+    return frame->pushBlock(cx, block);
+}
+
+bool
+LeaveBlock(JSContext *cx, BaselineFrame *frame)
+{
+    frame->popBlock(cx);
+    return true;
 }
 
 } // namespace ion
