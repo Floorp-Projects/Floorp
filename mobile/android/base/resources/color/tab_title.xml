@@ -5,7 +5,10 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
-    <item android:drawable="@drawable/tabs_tray_selected_bg_repeat"/>
+    <item android:state_checked="true"
+          android:color="#FFFFFFFF"/>
+
+    <item android:state_checked="false"
+          android:color="#FFCBCBCB"/>
 
 </selector>
