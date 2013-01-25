@@ -199,16 +199,16 @@ struct ForkJoinSlice
 
     // Check the current state of parallel execution.
     static inline ForkJoinSlice *Current();
-    static inline bool InParallelSection();
 
-    static bool Initialize();
+    // Initializes the thread-local state.
+    static bool InitializeTLS();
 
   private:
     friend class AutoRendezvous;
     friend class AutoSetForkJoinSlice;
 
 #ifdef JS_THREADSAFE
-    // Initialized by Initialize()
+    // Initialized by InitializeTLS()
     static unsigned ThreadPrivateIndex;
     static bool TLSInitialized;
 #endif
@@ -235,6 +235,12 @@ struct ForkJoinOp
     virtual bool parallel(ForkJoinSlice &slice) = 0;
 };
 
+static inline bool
+InParallelSection()
+{
+    return ForkJoinSlice::Current() != NULL;
+}
+
 } // namespace js
 
 /* static */ inline js::ForkJoinSlice *
@@ -245,12 +251,6 @@ js::ForkJoinSlice::Current()
 #else
     return NULL;
 #endif
-}
-
-/* static */ inline bool
-js::ForkJoinSlice::InParallelSection()
-{
-    return Current() != NULL;
 }
 
 #endif // ForkJoin_h__

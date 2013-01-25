@@ -203,7 +203,7 @@ ion::ParCompareStrings(JSString *str1, JSString *str2)
 void
 ion::ParallelAbort(JSScript *script)
 {
-    JS_ASSERT(ForkJoinSlice::InParallelSection());
+    JS_ASSERT(InParallelSection());
 
     ForkJoinSlice *slice = ForkJoinSlice::Current();
 
@@ -216,7 +216,7 @@ ion::ParallelAbort(JSScript *script)
 void
 ion::ParCallToUncompiledScript(JSFunction *func)
 {
-    JS_ASSERT(ForkJoinSlice::InParallelSection());
+    JS_ASSERT(InParallelSection());
 
 #ifdef DEBUG
     RawScript script = func->nonLazyScript();

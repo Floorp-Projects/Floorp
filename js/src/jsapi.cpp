@@ -1119,7 +1119,7 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
         return NULL;
 #endif
 
-    if (!ForkJoinSlice::Initialize())
+    if (!ForkJoinSlice::InitializeTLS())
         return NULL;
 
     if (!rt->init(maxbytes)) {
