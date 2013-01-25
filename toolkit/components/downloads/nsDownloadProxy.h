@@ -52,9 +52,6 @@ public:
       branch->GetBoolPref(PREF_BDM_SHOWWHENSTARTING, &showDM);
 
     if (showDM) {
-      uint32_t id;
-      mInner->GetId(&id);
-
       nsCOMPtr<nsIDownloadManagerUI> dmui =
         do_GetService("@mozilla.org/download-manager-ui;1", &rv);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -70,7 +67,7 @@ public:
       if (visible && !focusWhenStarting)
         return NS_OK;
 
-      return dmui->Show(nullptr, id, nsIDownloadManagerUI::REASON_NEW_DOWNLOAD, aIsPrivate);
+      return dmui->Show(nullptr, mInner, nsIDownloadManagerUI::REASON_NEW_DOWNLOAD, aIsPrivate);
     }
     return rv;
   }

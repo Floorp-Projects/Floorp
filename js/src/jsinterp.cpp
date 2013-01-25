@@ -514,7 +514,7 @@ js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsign
 
 bool
 js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Value &thisv,
-                  ExecuteType type, StackFrame *evalInFrame, Value *result)
+                  ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
     JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain.isScope());
@@ -574,7 +574,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
     Value thisv = ObjectValue(*thisObj);
 
     return ExecuteKernel(cx, script, *scopeChain, thisv, EXECUTE_GLOBAL,
-                         NULL /* evalInFrame */, rval);
+                         NullFramePtr() /* evalInFrame */, rval);
 }
 
 bool
@@ -3576,28 +3576,23 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(interpMode != JSINTERP_REJOIN);
 
     if (cx->isExceptionPending()) {
-        /* Call debugger throw hook if set. */
-        if (cx->runtime->debugHooks.throwHook || !cx->compartment->getDebuggees().empty()) {
-            Value rval;
-            JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
-            if (st == JSTRAP_CONTINUE) {
-                if (JSThrowHook handler = cx->runtime->debugHooks.throwHook)
-                    st = handler(cx, script, regs.pc, &rval, cx->runtime->debugHooks.throwHookData);
-            }
-
-            switch (st) {
+        /* Call debugger throw hooks. */
+        if (cx->compartment->debugMode()) {
+            JSTrapStatus status = DebugExceptionUnwind(cx, regs.fp(), regs.pc);
+            switch (status) {
               case JSTRAP_ERROR:
-                cx->clearPendingException();
                 goto error;
+
+              case JSTRAP_CONTINUE:
+              case JSTRAP_THROW:
+                break;
+
               case JSTRAP_RETURN:
-                cx->clearPendingException();
-                regs.fp()->setReturnValue(rval);
                 interpReturnOK = true;
                 goto forced_return;
-              case JSTRAP_THROW:
-                cx->setPendingException(rval);
-              case JSTRAP_CONTINUE:
-              default:;
+
+              default:
+                JS_NOT_REACHED("Invalid trap status");
             }
         }
 

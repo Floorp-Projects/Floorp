@@ -10,6 +10,6 @@ setup(
     name='mozbuild',
     description='Mozilla build system functionality.',
     license='MPL 2.0',
-    packages=['mach', 'mozbuild'],
+    packages=['mach', 'mozbuild', 'mozpack'],
     version=VERSION
 )

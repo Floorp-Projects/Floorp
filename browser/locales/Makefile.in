@@ -248,5 +248,5 @@ l10n-check::
 	$(NSINSTALL) -D x-test/toolkit
 	echo "#define MOZ_LANG_TITLE Just testing" > x-test/toolkit/defines.inc
 	$(MAKE) installers-x-test L10NBASEDIR="$(PWD)" LOCALE_MERGEDIR="$(PWD)/mergedir"
-	cd $(DIST)/l10n-stage && $(UNMAKE_PACKAGE)
+	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/unpack.py $(DIST)/l10n-stage/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 	cd $(DIST)/l10n-stage && test $$(cat $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/update.locale) = x-test

@@ -1,3 +1,5 @@
+. "$topsrcdir/build/mozconfig.common"
+
 # Use Clang as specified in manifest
 export CC="$topsrcdir/clang/bin/clang -fgnu89-inline"
 export CXX="$topsrcdir/clang/bin/clang++"

@@ -6,17 +6,17 @@ MARIONETTE_TIMEOUT = 10000;
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.addPermission("sms", true, document);
 
+const REMOTE = "5559997777";
+const REMOTE_FMT = "+15559997777"; // the normalized remote number
+const EMU_FMT = "+15555215554"; // the emulator's number
+
 let sms = window.navigator.mozSms;
-let myNumber = "15555215554";
-let myNumberFormats = ["15555215554", "+15555215554"];
 let inText = "Incoming SMS message. Mozilla Firefox OS!";
-let remoteNumber = "5559997777";
-let remoteNumberFormats = ["5559997777", "+15559997777"];
 let outText = "Outgoing SMS message. Mozilla Firefox OS!";
 let gotSmsOnsent = false;
 let gotReqOnsuccess = false;
-let inSmsid = 0;
-let outSmsid = 0;
+let inSmsId = 0;
+let outSmsId = 0;
 let inSmsTimeStamp;
 let outSmsTimeStamp;
 
@@ -24,10 +24,6 @@ function verifyInitialState() {
   log("Verifying initial state.");
   ok(sms, "mozSms");
   simulateIncomingSms();  
-}
-
-function isIn(aVal, aArray, aMsg) {
-  ok(aArray.indexOf(aVal) >= 0, aMsg);
 }
 
 function simulateIncomingSms() {
@@ -44,15 +40,15 @@ function simulateIncomingSms() {
     is(incomingSms.delivery, "received", "delivery");
     is(incomingSms.deliveryStatus, "success", "deliveryStatus");
     is(incomingSms.read, false, "read");
-    is(incomingSms.receiver, null, "receiver");
-    isIn(incomingSms.sender, remoteNumberFormats, "sender");
+    is(incomingSms.receiver, EMU_FMT, "receiver");
+    is(incomingSms.sender, REMOTE_FMT, "sender");
     is(incomingSms.messageClass, "normal", "messageClass");
     ok(incomingSms.timestamp instanceof Date, "timestamp is instanceof date");
     inSmsTimeStamp = incomingSms.timestamp;
     sendSms();
   };
   // Simulate incoming sms sent from remoteNumber to our emulator
-  runEmulatorCmd("sms send " + remoteNumber + " " + inText, function(result) {
+  runEmulatorCmd("sms send " + REMOTE + " " + inText, function(result) {
     is(result[0], "OK", "emulator output");
   });
 }
@@ -71,8 +67,8 @@ function sendSms() {
     is(sentSms.delivery, "sent", "delivery");
     is(sentSms.deliveryStatus, "pending", "deliveryStatus");
     is(sentSms.read, true, "read");
-    isIn(sentSms.receiver, remoteNumberFormats, "receiver");
-    is(sentSms.sender, null, "sender");
+    is(sentSms.receiver, REMOTE_FMT, "receiver");
+    is(sentSms.sender, EMU_FMT, "sender");
     is(sentSms.messageClass, "normal", "messageClass");
     ok(sentSms.timestamp instanceof Date, "timestamp is instanceof date");  
     outSmsTimeStamp = sentSms.timestamp;
@@ -80,7 +76,7 @@ function sendSms() {
     if (gotSmsOnsent && gotReqOnsuccess) { getReceivedSms(); }
   };
 
-  let requestRet = sms.send(remoteNumber, outText);
+  let requestRet = sms.send(REMOTE, outText);
   ok(requestRet, "smsrequest obj returned");
 
   requestRet.onsuccess = function(event) {
@@ -120,8 +116,8 @@ function getReceivedSms() {
     is(foundSms.delivery, "received", "delivery");
     is(foundSms.deliveryStatus, "success", "deliveryStatus");
     is(foundSms.read, false, "read");
-    isIn(foundSms.receiver, myNumberFormats, "receiver");
-    isIn(foundSms.sender, remoteNumberFormats, "sender");
+    is(foundSms.receiver, EMU_FMT, "receiver");
+    is(foundSms.sender, REMOTE_FMT, "sender");
     is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), inSmsTimeStamp.getTime(), "timestamp matches");
@@ -153,8 +149,8 @@ function getSentSms() {
     is(foundSms.delivery, "sent", "delivery");
     is(foundSms.deliveryStatus, "pending", "deliveryStatus");
     is(foundSms.read, true, "read");
-    isIn(foundSms.receiver, remoteNumberFormats, "receiver");
-    isIn(foundSms.sender, myNumberFormats, "sender");
+    is(foundSms.receiver, REMOTE_FMT, "receiver");
+    is(foundSms.sender, EMU_FMT, "sender");
     is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), outSmsTimeStamp.getTime(), "timestamp matches");

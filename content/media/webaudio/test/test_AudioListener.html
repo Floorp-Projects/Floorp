@@ -12,7 +12,7 @@
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-  var context = new mozAudioContext();
+  var context = new AudioContext();
   ok("listener" in context, "AudioContext.listener should exist");
   ok(Math.abs(context.listener.dopplerFactor - 1.0) < 1e-4, "Correct default doppler factor");
   ok(Math.abs(context.listener.speedOfSound - 343.3) < 1e-4, "Correct default speed of sound value");

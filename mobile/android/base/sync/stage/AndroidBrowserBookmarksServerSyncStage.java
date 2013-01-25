@@ -6,7 +6,6 @@ package org.mozilla.gecko.sync.stage;
 
 import java.net.URISyntaxException;
 
-import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.JSONRecordFetcher;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.MetaGlobalException;
@@ -24,10 +23,6 @@ public class AndroidBrowserBookmarksServerSyncStage extends ServerSyncStage {
   // and all this hard-coding can go away.
   private static final String BOOKMARKS_SORT          = "index";
   private static final long   BOOKMARKS_REQUEST_LIMIT = 5000;         // Sanity limit.
-
-  public AndroidBrowserBookmarksServerSyncStage(GlobalSession session) {
-    super(session);
-  }
 
   @Override
   protected String getCollection() {

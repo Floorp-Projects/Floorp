@@ -2,12 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsISupports.idl"
 #include "nsISmsDatabaseService.idl"
 
-[scriptable, uuid(71d7dd4e-5489-4e58-a489-171200378c3c)]
+interface nsIDOMMozSmsMessage;
+
+[scriptable, function, uuid(04a08668-c020-469e-a1ad-8626c951ab2b)]
+interface nsIRilSmsDatabaseCallback : nsISupports
+{
+  void notify(in nsresult aRv, in nsIDOMMozSmsMessage aSms);
+};
+
+[scriptable, uuid(8e2acd73-0332-4d16-82cc-ff5bac59d245)]
 interface nsIRilSmsDatabaseService : nsISmsDatabaseService
 {
-  long saveReceivedMessage(in DOMString aSender, in DOMString aBody, in DOMString aMessageClass, in unsigned long long aDate);
-  long saveSendingMessage(in DOMString aReceiver, in DOMString aBody, in unsigned long long aDate);
-  void setMessageDelivery(in long aMessageId, in DOMString aDelivery, in DOMString aDeliveryStatus);
+  long saveReceivedMessage(in DOMString aSender,
+                           in DOMString aBody,
+                           in DOMString aMessageClass,
+                           in unsigned long long aDate,
+                [optional] in nsIRilSmsDatabaseCallback aCallback);
+  long saveSendingMessage(in DOMString aReceiver,
+                          in DOMString aBody,
+                          in DOMString aDeliveryStatus,
+                          in unsigned long long aDate,
+               [optional] in nsIRilSmsDatabaseCallback aCallback);
+  void setMessageDelivery(in long aMessageId,
+                          in DOMString aDelivery,
+                          in DOMString aDeliveryStatus,
+               [optional] in nsIRilSmsDatabaseCallback aCallback);
 };

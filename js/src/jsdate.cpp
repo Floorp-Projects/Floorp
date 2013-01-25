@@ -768,7 +768,7 @@ DaysInMonth(int year, int month)
  */
 
 static JSBool
-date_parseISOString(Handle<JSLinearString*> str, double *result, DateTimeInfo *dtInfo)
+date_parseISOString(RawLinearString str, double *result, DateTimeInfo *dtInfo)
 {
     double msec;
 
@@ -907,7 +907,7 @@ date_parseISOString(Handle<JSLinearString*> str, double *result, DateTimeInfo *d
 }
 
 static JSBool
-date_parseString(Handle<JSLinearString*> str, double *result, DateTimeInfo *dtInfo)
+date_parseString(RawLinearString str, double *result, DateTimeInfo *dtInfo)
 {
     double msec;
 
@@ -1187,11 +1187,11 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedString str(cx, ToString(cx, args[0]));
+    UnrootedString str = ToString(cx, args[0]);
     if (!str)
         return false;
 
-    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    UnrootedLinearString linearStr = str->ensureLinear(cx);
     if (!linearStr)
         return false;
 
@@ -1415,7 +1415,7 @@ date_getYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     FillLocalTimeSlots(&cx->runtime->dateTimeInfo, thisObj);
 
     Value yearVal = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
@@ -1442,7 +1442,7 @@ date_getFullYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     FillLocalTimeSlots(&cx->runtime->dateTimeInfo, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR));
@@ -1481,7 +1481,7 @@ date_getMonth_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     FillLocalTimeSlots(&cx->runtime->dateTimeInfo, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH));
@@ -1517,7 +1517,7 @@ date_getDate_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     FillLocalTimeSlots(&cx->runtime->dateTimeInfo, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DATE));
@@ -1556,7 +1556,7 @@ date_getDay_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     FillLocalTimeSlots(&cx->runtime->dateTimeInfo, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DAY));
@@ -1595,7 +1595,7 @@ date_getHours_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     FillLocalTimeSlots(&cx->runtime->dateTimeInfo, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS));
@@ -1634,7 +1634,7 @@ date_getMinutes_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     FillLocalTimeSlots(&cx->runtime->dateTimeInfo, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES));
@@ -1675,7 +1675,7 @@ date_getUTCSeconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     FillLocalTimeSlots(&cx->runtime->dateTimeInfo, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS));
@@ -1716,7 +1716,7 @@ date_getTimezoneOffset_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
     double utctime = thisObj->getDateUTCTime().toNumber();
     double localtime = GetCachedLocalTime(&cx->runtime->dateTimeInfo, thisObj);
 
@@ -2548,8 +2548,8 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Step 2. */
-    Value tv = ObjectValue(*obj);
-    if (!ToPrimitive(cx, JSTYPE_NUMBER, &tv))
+    RootedValue tv(cx, ObjectValue(*obj));
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, tv.address()))
         return false;
 
     /* Step 3. */
@@ -2961,7 +2961,7 @@ date_valueOf_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    RootedObject thisObj(cx, &args.thisv().toObject());
+    UnrootedObject thisObj = &args.thisv().toObject();
 
     args.rval().set(thisObj->getDateUTCTime());
     return true;
@@ -3057,11 +3057,11 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
 
         if (args[0].isString()) {
             /* Step 2. */
-            UnrootedString str = args[0].toString();
+            RawString str = args[0].toString();
             if (!str)
                 return false;
 
-            Rooted<JSLinearString*> linearStr(cx, DropUnrooted(str)->ensureLinear(cx));
+            RawLinearString linearStr = str->ensureLinear(cx);
             if (!linearStr)
                 return false;
 

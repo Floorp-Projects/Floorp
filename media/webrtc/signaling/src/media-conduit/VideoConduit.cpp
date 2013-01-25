@@ -223,6 +223,7 @@ MediaConduitErrorCode WebrtcVideoConduit::Init()
     return kMediaConduitKeyFrameRequestError;
   }
   // Enable lossless transport
+  // XXX Note: We may want to disable this or limit it
   if (mPtrRTP->SetNACKStatus(mChannel, true) != 0)
   {
     CSFLogError(logTag,  "%s NACKStatus Failed %d ", __FUNCTION__,
@@ -602,7 +603,9 @@ int WebrtcVideoConduit::SendRTCPPacket(int channel, const void* data, int len)
 {
   CSFLogError(logTag,  "%s : channel %d , len %d ", __FUNCTION__, channel,len);
 
-  if(mTransport && (mTransport->SendRtcpPacket(data, len) == NS_OK))
+  // can't enable this assertion, because we do.  Suppress it
+  // NS_ASSERTION(mEngineReceiving,"We shouldn't send RTCP on the receiver side");
+  if(mEngineReceiving && mTransport && (mTransport->SendRtcpPacket(data, len) == NS_OK))
    {
       CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
       return len;
@@ -659,7 +662,7 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
   cinst.plType  = codecInfo->mType;
   cinst.width   = codecInfo->mWidth;
   cinst.height  = codecInfo->mHeight;
-  cinst.minBitrate = 50;
+  cinst.minBitrate = 200;
   cinst.startBitrate = 300;
   cinst.maxBitrate = 2000;
 }

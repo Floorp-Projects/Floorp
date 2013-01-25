@@ -10,7 +10,7 @@ body {
 
 #bg {
   background-color: window;
-  background-image: -moz-linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,.2));
+  background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.2));
 }
 
 /* Tabs
@@ -197,7 +197,7 @@ html[dir=rtl] .stack-trayed .tab-title {
   cursor: pointer;
   border: 1px solid rgba(230,230,230,1);
   background-color: window;
-  background-image: -moz-linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.1));
+  background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.1));
   border-radius: 0.4em;
   box-shadow:
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px,

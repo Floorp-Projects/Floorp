@@ -43,6 +43,7 @@ CPPSRCS		= \
 		PuppetWidget.cpp \
 		nsFilePickerProxy.cpp \
 		WidgetUtils.cpp \
+		InputData.cpp \
 		$(NULL)
 
 ifdef MOZ_X11

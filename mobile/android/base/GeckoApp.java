@@ -931,23 +931,23 @@ abstract public class GeckoApp
                 final String type = message.getString("shortcutType");
                 GeckoAppShell.removeShortcut(title, url, origin, type);
             } else if (event.equals("WebApps:Open")) {
-                String url = message.getString("uri");
+                String manifestURL = message.getString("manifestURL");
                 String origin = message.getString("origin");
-                Intent intent = GeckoAppShell.getWebAppIntent(url, origin, "", null);
+                Intent intent = GeckoAppShell.getWebAppIntent(manifestURL, origin, "", null);
                 if (intent == null)
                     return;
                 startActivity(intent);
             } else if (event.equals("WebApps:Install")) {
                 String name = message.getString("name");
-                String launchPath = message.getString("launchPath");
+                String manifestURL = message.getString("manifestURL");
                 String iconURL = message.getString("iconURL");
-                String uniqueURI = message.getString("uniqueURI");
+                String origin = message.getString("origin");
 
                 // installWebapp will return a File object pointing to the profile directory of the webapp
-                mCurrentResponse = GeckoAppShell.installWebApp(name, launchPath, uniqueURI, iconURL).toString();
+                mCurrentResponse = GeckoAppShell.installWebApp(name, manifestURL, origin, iconURL).toString();
             } else if (event.equals("WebApps:Uninstall")) {
-                String uniqueURI = message.getString("uniqueURI");
-                GeckoAppShell.uninstallWebApp(uniqueURI);
+                String origin = message.getString("origin");
+                GeckoAppShell.uninstallWebApp(origin);
             } else if (event.equals("DesktopMode:Changed")) {
                 int tabId = message.getInt("tabId");
                 boolean desktopMode = message.getBoolean("desktopMode");
@@ -1284,6 +1284,9 @@ abstract public class GeckoApp
             @Override
             protected Boolean doInBackground(Void... params) {
                 WallpaperManager mgr = WallpaperManager.getInstance(mAppContext);
+                if (mgr == null) {
+                    return false;
+                }
 
                 // Determine the ideal width and height of the wallpaper
                 // for the device
@@ -1297,7 +1300,7 @@ abstract public class GeckoApp
                 // the ideal width and height from the device's display 
                 // resolution (excluding the decorated area)
 
-                if(idealWidth <= 0 || idealHeight <= 0) {
+                if (idealWidth <= 0 || idealHeight <= 0) {
                     int orientation;
                     Display defaultDisplay = getWindowManager().getDefaultDisplay();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {

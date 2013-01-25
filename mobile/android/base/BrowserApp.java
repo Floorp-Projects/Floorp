@@ -1040,10 +1040,6 @@ abstract public class BrowserApp extends GeckoApp
                 mAboutHomeContent.unpinSite();
                 return true;
 
-            case R.id.abouthome_topsites_unpinall:
-                mAboutHomeContent.unpinAllSites();
-                return true;
-
             case R.id.abouthome_topsites_pin:
                 mAboutHomeContent.pinSite();
                 return true;

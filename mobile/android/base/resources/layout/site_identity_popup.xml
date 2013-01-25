@@ -23,7 +23,7 @@
           <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColor="@color/doorhanger_text"
                     android:text="@string/identity_connected_to"/>
 
           <TextView android:id="@+id/host"
@@ -35,7 +35,7 @@
           <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColor="@color/doorhanger_text"
                     android:text="@string/identity_run_by"/>
 
           <TextView android:id="@+id/owner"
@@ -53,7 +53,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:textColor="?android:attr/textColorPrimary"/>
+                    android:textColor="@color/doorhanger_text"/>
 
       </LinearLayout>
 
@@ -70,7 +70,7 @@
                 android:padding="12dip"
                 android:gravity="right"
                 android:textAppearance="?android:attr/textAppearanceSmall"
-                android:textColor="?android:attr/textColorPrimary"/>
+                android:textColor="@color/doorhanger_text"/>
 
     </RelativeLayout>
 
