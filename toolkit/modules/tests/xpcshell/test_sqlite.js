@@ -528,3 +528,50 @@ add_task(function test_in_progress_counts() {
   yield c.close();
 });
 
+add_task(function test_discard_while_active() {
+  let c = yield getDummyDatabase("discard_while_active");
+
+  yield c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
+  yield c.executeCached("INSERT INTO dirs (path) VALUES ('bar')");
+
+  let discarded = -1;
+  let first = true;
+  let sql = "SELECT * FROM dirs";
+  yield c.executeCached(sql, null, function onRow(row) {
+    if (!first) {
+      return;
+    }
+    first = false;
+    discarded = c.discardCachedStatements();
+  });
+
+  // We didn't discard the SELECT, only the two INSERTs.
+  do_check_eq(2, discarded);
+
+  // But we got the remainder when it became inactive.
+  do_check_eq(1, c.discardCachedStatements());
+
+  // And again is safe.
+  do_check_eq(0, c.discardCachedStatements());
+
+  yield c.close();
+});
+
+add_task(function test_discard_cached() {
+  let c = yield getDummyDatabase("discard_cached");
+
+  yield c.executeCached("SELECT * from dirs");
+  do_check_eq(1, c._cachedStatements.size);
+
+  yield c.executeCached("SELECT * from files");
+  do_check_eq(2, c._cachedStatements.size);
+
+  yield c.executeCached("SELECT * from dirs");
+  do_check_eq(2, c._cachedStatements.size);
+
+  c.discardCachedStatements();
+  do_check_eq(0, c._cachedStatements.size);
+
+  yield c.close();
+});
+
