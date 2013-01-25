@@ -100,19 +100,22 @@ IsNeckoChild()
   return amChild;
 }
 
+namespace NeckoCommonInternal {
+  extern bool gSecurityDisabled;
+  extern bool gRegisteredBool;
+}
+
 // This should always return true unless xpcshell tests are being used
 inline bool
 UsingNeckoIPCSecurity()
 {
-  static bool securityDisabled = true;
-  static bool registeredBool = false;
 
-  if (!registeredBool) {
-    Preferences::AddBoolVarCache(&securityDisabled,
+  if (!NeckoCommonInternal::gRegisteredBool) {
+    Preferences::AddBoolVarCache(&NeckoCommonInternal::gSecurityDisabled,
                                  "network.disable.ipc.security");
-    registeredBool = true;
+    NeckoCommonInternal::gRegisteredBool = true;
   }
-  return !securityDisabled;
+  return !NeckoCommonInternal::gSecurityDisabled;
 }
 
 inline bool
