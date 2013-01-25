@@ -124,7 +124,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
     if (!detector.init())
         return false;
     if (detector.foundCycle()) {
-        JSString *str = js_NewStringCopyZ(cx, "{}");
+        JSString *str = js_NewStringCopyZ<CanGC>(cx, "{}");
         if (!str)
             return false;
         args.rval().setString(str);
@@ -763,7 +763,7 @@ obj_keys(JSContext *cx, unsigned argc, Value *vp)
         if (JSID_IS_STRING(id)) {
             vals.infallibleAppend(StringValue(JSID_TO_STRING(id)));
         } else if (JSID_IS_INT(id)) {
-            JSString *str = Int32ToString(cx, JSID_TO_INT(id));
+            JSString *str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
             if (!str)
                 return false;
             vals.infallibleAppend(StringValue(str));
@@ -799,7 +799,7 @@ obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
     for (size_t i = 0, len = keys.length(); i < len; i++) {
          jsid id = keys[i];
          if (JSID_IS_INT(id)) {
-             JSString *str = Int32ToString(cx, JSID_TO_INT(id));
+             JSString *str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
              if (!str)
                  return false;
              vals[i].setString(str);

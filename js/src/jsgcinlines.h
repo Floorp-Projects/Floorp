@@ -575,20 +575,20 @@ js_NewGCShortString(JSContext *cx)
 inline JSExternalString *
 js_NewGCExternalString(JSContext *cx)
 {
-    return js::gc::NewGCThing<JSExternalString, js::ALLOW_GC>(cx, js::gc::FINALIZE_EXTERNAL_STRING,
-                                                          sizeof(JSExternalString));
+    return js::gc::NewGCThing<JSExternalString, js::CanGC>(cx, js::gc::FINALIZE_EXTERNAL_STRING,
+                                                           sizeof(JSExternalString));
 }
 
 inline JSScript *
 js_NewGCScript(JSContext *cx)
 {
-    return js::gc::NewGCThing<JSScript, js::ALLOW_GC>(cx, js::gc::FINALIZE_SCRIPT, sizeof(JSScript));
+    return js::gc::NewGCThing<JSScript, js::CanGC>(cx, js::gc::FINALIZE_SCRIPT, sizeof(JSScript));
 }
 
 inline js::UnrootedShape
 js_NewGCShape(JSContext *cx)
 {
-    return js::gc::NewGCThing<js::Shape, js::ALLOW_GC>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
+    return js::gc::NewGCThing<js::Shape, js::CanGC>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
 }
 
 template <js::AllowGC allowGC>

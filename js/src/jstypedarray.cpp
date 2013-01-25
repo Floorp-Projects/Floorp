@@ -1286,7 +1286,7 @@ class TypedArrayTemplate
         if (ValueIsSpecial(obj, &idval, &sid, cx))
             return obj_getSpecial(cx, obj, receiver, sid, vp);
 
-        JSAtom *atom = ToAtom(cx, idval);
+        JSAtom *atom = ToAtom<CanGC>(cx, idval);
         if (!atom)
             return false;
 

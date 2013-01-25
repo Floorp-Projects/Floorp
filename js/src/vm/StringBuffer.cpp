@@ -51,7 +51,7 @@ StringBuffer::finishString()
 
     JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
     if (JSShortString::lengthFits(length))
-        return NewShortString(cx, TwoByteChars(cb.begin(), length));
+        return NewShortString<CanGC>(cx, TwoByteChars(cb.begin(), length));
 
     if (!cb.append('\0'))
         return UnrootedFlatString();
@@ -60,7 +60,7 @@ StringBuffer::finishString()
     if (!buf)
         return UnrootedFlatString();
 
-    JSFlatString *str = js_NewString(cx, buf, length);
+    JSFlatString *str = js_NewString<CanGC>(cx, buf, length);
     if (!str)
         js_free(buf);
     return str;
@@ -76,7 +76,7 @@ StringBuffer::finishAtom()
     if (length == 0)
         return UnrootedAtom(cx->names().empty);
 
-    UnrootedAtom atom = AtomizeChars(cx, cb.begin(), length);
+    UnrootedAtom atom = AtomizeChars<CanGC>(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }
