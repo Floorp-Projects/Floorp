@@ -4225,7 +4225,7 @@ var BrowserEventHandler = {
     let rect = ElementTouchHelper.getBoundingContentRect(aElement);
 
     let viewport = BrowserApp.selectedTab.getViewport();
-    let bRect = new Rect(aCanZoomIn ? Math.max(viewport.cssPageLeft, rect.x - margin) : viewport.cssLeft,
+    let bRect = new Rect(aCanZoomIn ? Math.max(viewport.cssPageLeft, rect.x - margin) : viewport.cssPageLeft,
                          rect.y,
                          aCanZoomIn ? rect.w + 2 * margin : viewport.cssWidth,
                          rect.h);
