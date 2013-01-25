@@ -699,8 +699,9 @@ var Scratchpad = {
         // Check to see if the first line is a mode-line comment.
         let line = content.split("\n")[0];
         let modeline = self._scanModeLine(line);
+        let chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
 
-        if (modeline["-sp-context"] === "browser") {
+        if (chrome && modeline["-sp-context"] === "browser") {
           self.setBrowserContext();
         }
 
