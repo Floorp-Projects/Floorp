@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+// To spin the event loop in test.
+Cu.import("resource://services-common/async.js");
 
 function sleep(ms) {
   let deferred = Promise.defer();
@@ -45,9 +47,11 @@ function getDummyDatabase(name, extraOptions={}) {
   };
 
   let c = yield getConnection(name, extraOptions);
+  c._initialStatementCount = 0;
 
   for (let [k, v] in Iterator(TABLES)) {
     yield c.execute("CREATE TABLE " + k + "(" + v + ")");
+    c._initialStatementCount++;
   }
 
   throw new Task.Result(c);
@@ -467,6 +471,59 @@ add_task(function test_idle_shrink_reset_on_operation() {
   do_check_eq(count, 1);
   do_check_eq(shrinkPromises.length, 1);
   yield shrinkPromises[0];
+
+  yield c.close();
+});
+
+add_task(function test_in_progress_counts() {
+  let c = yield getDummyDatabase("in_progress_counts");
+  do_check_eq(c._statementCounter, c._initialStatementCount);
+  do_check_eq(c.inProgress(), 0);
+  yield c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
+  do_check_eq(c._statementCounter, c._initialStatementCount + 1);
+  do_check_eq(c.inProgress(), 0);
+
+  let expectOne;
+  let expectTwo;
+
+  // Please forgive me.
+  let inner = Async.makeSpinningCallback();
+  let outer = Async.makeSpinningCallback();
+
+  // We want to make sure that two queries executing simultaneously
+  // result in `inProgress()` reaching 2, then dropping back to 0.
+  //
+  // To do so, we kick off a second statement within the row handler
+  // of the first, then wait for both to finish.
+
+  yield c.executeCached("SELECT * from dirs", null, function onRow() {
+    // In the onRow handler, we're still an outstanding query.
+    // Expect a single in-progress entry.
+    expectOne = c.inProgress();
+
+    // Start another query, checking that after its statement has been created
+    // there are two statements in progress.
+    let p = c.executeCached("SELECT 10, path from dirs");
+    expectTwo = c.inProgress();
+
+    // Now wait for it to be done before we return from the row handler …
+    p.then(function onInner() {
+      inner();
+    });
+  }).then(function onOuter() {
+    // … and wait for the inner to be done before we finish …
+    inner.wait();
+    outer();
+  });
+
+  // … and wait for both queries to have finished before we go on and 
+  // test postconditions.
+  outer.wait();
+
+  do_check_eq(expectOne, 1);
+  do_check_eq(expectTwo, 2);
+  do_check_eq(c._statementCounter, c._initialStatementCount + 3);
+  do_check_eq(c.inProgress(), 0);
 
   yield c.close();
 });
