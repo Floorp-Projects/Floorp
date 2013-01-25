@@ -412,11 +412,10 @@ BaselineScript::toggleDebugTraps(UnrootedScript script, jsbytecode *pc)
             continue;
 
         scanner.advanceTo(entry.pcOffset);
-        if (!scanner.isLineHeader())
-            continue;
 
         jsbytecode *trapPc = script->code + entry.pcOffset;
-        bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(trapPc);
+        bool enabled = (script->stepModeEnabled() && scanner.isLineHeader()) ||
+            script->hasBreakpointsAt(trapPc);
 
         // Patch the trap.
         CodeLocationLabel label(method(), entry.nativeOffset);
