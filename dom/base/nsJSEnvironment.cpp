@@ -1296,10 +1296,10 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   }
 
   if (!ok) {
+    *aRetValue = JS::UndefinedValue();
     // Tell XPConnect about any pending exceptions. This is needed
     // to avoid dropping JS exceptions in case we got here through
     // nested calls through XPConnect.
-
     ReportPendingException();
   }
 
