@@ -77,17 +77,9 @@ private:
   };
 
 public:
-  AudioEventTimeline(float aDefaultValue,
-                     float aMinValue,
-                     float aMaxValue)
+  explicit AudioEventTimeline(float aDefaultValue)
     : mValue(aDefaultValue)
-    , mDefaultValue(aDefaultValue)
-    , mMinValue(aMinValue)
-    , mMaxValue(aMaxValue)
   {
-    MOZ_ASSERT(aDefaultValue >= aMinValue);
-    MOZ_ASSERT(aDefaultValue <= aMaxValue);
-    MOZ_ASSERT(aMinValue < aMaxValue);
   }
 
   float Value() const
@@ -108,21 +100,6 @@ public:
   {
     // TODO: implement
     return 0;
-  }
-
-  float MinValue() const
-  {
-    return mMinValue;
-  }
-
-  float MaxValue() const
-  {
-    return mMaxValue;
-  }
-
-  float DefaultValue() const
-  {
-    return mDefaultValue;
   }
 
   void SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
@@ -377,9 +354,6 @@ private:
   // being a bottleneck.
   nsTArray<Event> mEvents;
   float mValue;
-  const float mDefaultValue;
-  const float mMinValue;
-  const float mMaxValue;
 };
 
 }
