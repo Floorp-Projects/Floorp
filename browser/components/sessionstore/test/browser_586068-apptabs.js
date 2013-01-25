@@ -4,11 +4,11 @@
 
 const PREF_RESTORE_ON_DEMAND = "browser.sessionstore.restore_on_demand";
 
-let stateBackup = ss.getBrowserState();
-
 function test() {
-  waitForExplicitFinish();
+  TestRunner.run();
+}
 
+function runTests() {
   Services.prefs.setBoolPref(PREF_RESTORE_ON_DEMAND, true);
   registerCleanupFunction(function () {
     Services.prefs.clearUserPref(PREF_RESTORE_ON_DEMAND);
@@ -46,10 +46,8 @@ function test() {
       return;
 
     gProgressListener.unsetCallback();
-    executeSoon(function () {
-      waitForBrowserState(JSON.parse(stateBackup), finish);
-    });
+    executeSoon(next);
   });
 
-  ss.setBrowserState(JSON.stringify(state));
+  yield ss.setBrowserState(JSON.stringify(state));
 }
