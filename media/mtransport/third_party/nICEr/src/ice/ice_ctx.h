@@ -61,7 +61,7 @@ typedef struct nr_ice_turn_server_ {
 
 typedef struct nr_ice_foundation_ {
   int index;
-  
+
   nr_transport_addr addr;
   int type;
   nr_ice_stun_server *stun_server;
@@ -103,7 +103,7 @@ struct nr_ice_ctx_ {
 #define NR_ICE_STATE_INITIALIZING     2
 #define NR_ICE_STATE_INITIALIZED      3
   char *label;
-  
+
   char *ufrag;
   char *pwd;
 
@@ -115,11 +115,11 @@ struct nr_ice_ctx_ {
   int turn_server_ct;
 
   nr_ice_foundation_head foundations;
-  
+
   nr_ice_media_stream_head streams;           /* Media streams */
   int stream_ct;
   nr_ice_socket_head sockets;                 /* The sockets we're using */
-  int uninitialized_candidates;  
+  int uninitialized_candidates;
 
   UINT4 gather_rto;
   UINT4 stun_delay;

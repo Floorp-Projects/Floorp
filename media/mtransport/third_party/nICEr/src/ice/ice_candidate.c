@@ -116,7 +116,7 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,char *label,nr_ice_component *comp,n
 
     /* Add the candidate to the isock list*/
     TAILQ_INSERT_TAIL(&isock->candidates,cand,entry_sock);
-    
+
     *candp=cand;
 
     _status=0;
@@ -132,7 +132,7 @@ int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_c
     nr_ice_candidate *cand=0;
     nr_ice_candidate_type ctype=PEER_REFLEXIVE;
     int r,_status;
- 
+
     if(!(cand=RCALLOC(sizeof(nr_ice_candidate))))
       ABORT(R_NO_MEMORY);
     if(!(cand->label=r_strdup(label)))
@@ -145,7 +145,7 @@ int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_c
     cand->component=comp;
     cand->stream=comp->stream;
 
-    
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): creating candidate %s with type %d",
       ctx->label,label,ctype);
 
@@ -194,7 +194,7 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
     RFREE(cand->foundation);
     RFREE(cand->label);
     RFREE(cand);
-    
+
     return(0);
   }
 
@@ -283,7 +283,7 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
     if(type_preference > 126)
       r_log(LOG_ICE,LOG_ERR,"Illegal type preference %d",type_preference);
 
-      
+
     if(r=NR_reg_get2_uchar(NR_ICE_REG_PREF_INTERFACE_PRFX,cand->base.ifname,
       &interface_preference)) {
       if (r==R_NOT_FOUND) {
@@ -310,7 +310,7 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
       (stun_priority << 8) |
       (256 - cand->component_id);
 
-    /* S 4.1.2 */    
+    /* S 4.1.2 */
     assert(cand->priority>=1&&cand->priority<=2147483647);
 
     _status=0;
@@ -384,7 +384,7 @@ static void nr_ice_srvrflx_start_stun_timer_cb(NR_SOCKET s, int how, void *cb_ar
 
     if(r=nr_ice_ctx_remember_id(cand->ctx, cand->u.srvrflx.stun->request))
       ABORT(r);
- 
+
     if(r=nr_ice_socket_register_stun_client(cand->isock,cand->u.srvrflx.stun,&cand->u.srvrflx.stun_handle))
       ABORT(r);
 
@@ -393,14 +393,14 @@ static void nr_ice_srvrflx_start_stun_timer_cb(NR_SOCKET s, int how, void *cb_ar
     if(_status){
       cand->state=NR_ICE_CAND_STATE_FAILED;
     }
-    
+
     return;
   }
 
 static int nr_ice_srvrflx_start_stun(nr_ice_candidate *cand, NR_async_cb ready_cb, void *cb_arg)
   {
     int r,_status;
- 
+
     cand->done_cb=ready_cb;
     cand->cb_arg=cb_arg;
 
@@ -412,7 +412,7 @@ static int nr_ice_srvrflx_start_stun(nr_ice_candidate *cand, NR_async_cb ready_c
       ABORT(r);
 
     NR_ASYNC_TIMER_SET(cand->stream->ctx->stun_delay,nr_ice_srvrflx_start_stun_timer_cb,cand,&cand->delay_timer);
-    cand->stream->ctx->stun_delay += cand->stream->ctx->Ta; 
+    cand->stream->ctx->stun_delay += cand->stream->ctx->Ta;
 
     _status=0;
   abort:
@@ -502,7 +502,7 @@ static void nr_ice_srvrflx_stun_finished_cb(NR_SOCKET sock, int how, void *cb_ar
         /* Execute the ready callback */
         cand->done_cb(0,0,cand->cb_arg);
         break;
-        
+
       /* This failed, so go to the next STUN server if there is one */
       case NR_STUN_CLIENT_STATE_FAILED:
         ABORT(R_NOT_FOUND);
@@ -559,7 +559,7 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
         /* Execute the ready callback */
         cand->done_cb(0,0,cand->cb_arg);
 
-        
+
         /* We also need to activate the associated STUN candidate */
         if(cand->u.relayed.srvflx_candidate){
           nr_ice_candidate *cand2=cand->u.relayed.srvflx_candidate;
@@ -568,9 +568,9 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
           cand2->state=NR_ICE_CAND_STATE_INITIALIZED;
           cand2->done_cb(0,0,cand2->cb_arg);
         }
-        
+
         break;
-        
+
     case NR_TURN_CLIENT_STATE_FAILED:
     case NR_TURN_CLIENT_STATE_TIMED_OUT:
     case NR_TURN_CLIENT_STATE_CANCELLED:
@@ -597,7 +597,7 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
 
       if(cand->u.relayed.srvflx_candidate){
         nr_ice_candidate *cand2=cand->u.relayed.srvflx_candidate;
-        
+
         cand2->state=NR_ICE_CAND_STATE_FAILED;
         cand2->done_cb(0,0,cand2->cb_arg);
       }
@@ -637,7 +637,7 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
           ABORT(r);
         if(r=nr_transport_addr_get_port(&cand->base,&port))
           ABORT(r);
-        
+
         snprintf(attr,maxlen," raddr %s rport %d",addr,port);
         break;
       case RELAYED:

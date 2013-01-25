@@ -8,37 +8,37 @@
  *
  *    Datastore for tracking configuration and related info.
  *
- *    
+ *
  *    Copyright (C) 2005, Network Resonance, Inc.
  *    Copyright (C) 2006, Network Resonance, Inc.
  *    All Rights Reserved
- *    
+ *
  *    Redistribution and use in source and binary forms, with or without
  *    modification, are permitted provided that the following conditions
  *    are met:
- *    
+ *
  *    1. Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
  *    2. Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
  *    3. Neither the name of Network Resonance, Inc. nor the name of any
- *       contributors to this software may be used to endorse or promote 
+ *       contributors to this software may be used to endorse or promote
  *       products derived from this software without specific prior written
  *       permission.
- *    
+ *
  *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
  *    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- *    ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
- *    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- *    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ *    ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ *    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  *    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *    POSSIBILITY OF SUCH DAMAGE.
- *    
+ *
  *
  */
 
@@ -267,7 +267,7 @@ nr_reg_local_find_children(void *ptr, r_assoc_iterator *iter, char *prefix, char
   }
 
   _status = 0;
- abort: 
+ abort:
   return _status;
 }
 
@@ -351,14 +351,14 @@ nr_reg_fetch_node(char *name, unsigned char type, nr_registry_node **node, int *
   abort:
     if (_status) {
         if (*node)
-            r_log(NR_LOG_REGISTRY, LOG_DEBUG, "Couldn't fetch node '%s' ('%s'), found '%s' instead", 
+            r_log(NR_LOG_REGISTRY, LOG_DEBUG, "Couldn't fetch node '%s' ('%s'), found '%s' instead",
               name, nr_reg_type_name(type), nr_reg_type_name((*node)->type));
-        else 
-            r_log(NR_LOG_REGISTRY, LOG_DEBUG, "Couldn't fetch node '%s' ('%s')", 
+        else
+            r_log(NR_LOG_REGISTRY, LOG_DEBUG, "Couldn't fetch node '%s' ('%s')",
               name, nr_reg_type_name(type));
     }
     else {
-        r_log(NR_LOG_REGISTRY, LOG_DEBUG, "Fetched node '%s' ('%s')", 
+        r_log(NR_LOG_REGISTRY, LOG_DEBUG, "Fetched node '%s' ('%s')",
               name, nr_reg_type_name(type));
     }
     return(_status);
@@ -507,7 +507,7 @@ nr_reg_alloc_node_data(char *name, nr_registry_node *node, int *freeit)
       }
       break;
     case NR_REG_TYPE_STRING:
-      s = (char*)((nr_array_registry_node*)node)->array.data; 
+      s = (char*)((nr_array_registry_node*)node)->array.data;
       break;
     default:
       assert(0); /* bad value */
@@ -800,7 +800,7 @@ nr_reg_is_valid(NR_registry name)
       if (isspace(name[i]) || ! (isprint(name[i]) || name[i] == '/'))
         ABORT(R_BAD_ARGS);
     }
- 
+
     _status=0;
   abort:
     if (_status) {

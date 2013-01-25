@@ -1,37 +1,37 @@
 /**
    r_log.c
 
-   
+
    Copyright (C) 2001, RTFM, Inc.
    Copyright (C) 2006, Network Resonance, Inc.
    All Rights Reserved
-   
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
-   
+
    1. Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
    2. Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
    3. Neither the name of Network Resonance, Inc. nor the name of any
-      contributors to this software may be used to endorse or promote 
+      contributors to this software may be used to endorse or promote
       products derived from this software without specific prior written
       permission.
-   
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
-   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    POSSIBILITY OF SUCH DAMAGE.
-   
+
 
    ekr@rtfm.com  Mon Dec  3 15:24:38 2001
  */
@@ -172,7 +172,7 @@ int r_log_register(char *facility_name,int *log_facility)
     int r,_status;
     char *buf=0;
     NR_registry dest_prefix, dest_facility_prefix;
- 
+
     for(i=0;i<log_type_ct;i++){
       if(!strcmp(facility_name,log_types[i].facility_name)){
         *log_facility=i;
@@ -190,7 +190,7 @@ int r_log_register(char *facility_name,int *log_facility)
     log_types[i].facility_name=r_strdup(facility_name);
     *log_facility=log_type_ct;
     log_type_ct++;
-    
+
     for(j=0; j<LOG_NUM_DESTINATIONS; j++){
       log_types[i].level[j]=LOG_LEVEL_UNDEFINED;
 
@@ -230,7 +230,7 @@ int r_log_register(char *facility_name,int *log_facility)
       RFREE(buf);
     return(_status);
   }
-     
+
 int r_log_facility(int facility,char **typename)
   {
     if(facility >= 0 && facility < log_type_ct){
@@ -276,7 +276,7 @@ static void r_log_facility_change_cb(void *cb_arg, char action, NR_registry name
     int *lt_level=(int *)cb_arg;
     int level;
     int r,_status;
-    
+
     if(r=r_log_get_reg_level(name,&level))
       ABORT(r);
 
@@ -300,10 +300,10 @@ int r_log(int facility,int level,const char *format,...)
     va_list ap;
 
     va_start(ap,format);
-    
+
     r_vlog(facility,level,format,ap);
     va_end(ap);
-    
+
     return(0);
   }
 
@@ -370,7 +370,7 @@ int stderr_vlog(int facility,int level,const char *format,va_list ap)
 
     ctime_r(&tt,cbuf);
     cbuf[strlen(cbuf)-1]=0;
-    
+
     fprintf(stderr,"%s: ",cbuf);
 #endif
 
@@ -470,7 +470,7 @@ static int r_logging_dest(int dest_index, int facility, int level)
 
     if(r_log_initted<R_LOG_INITTED2)
       return(level<=r_log_level);
-          
+
     if(facility < 0 || facility > log_type_ct)
       thresh=r_log_level;
     else{
@@ -512,8 +512,8 @@ static int r_log_get_default_level(void)
   {
     char *log;
     int _status;
-    
-    log=getenv("R_LOG_LEVEL");    
+
+    log=getenv("R_LOG_LEVEL");
 
     if(log){
       r_log_level=atoi(log);
@@ -626,10 +626,10 @@ int _r_log_init(int use_reg)
     else{
       if(r_log_initted<R_LOG_INITTED2){
         int facility;
-        
+
         r_log_get_default_level();
         r_log_get_destinations(1);
-        
+
         r_log_register("generic",&facility);
         r_log_register("logging",&NR_LOG_LOGGING);
 
