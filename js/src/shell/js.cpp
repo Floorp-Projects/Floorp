@@ -1539,7 +1539,7 @@ TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rval,
     JS_ASSERT(!iter.done());
 
     /* Debug-mode currently disables Ion compilation. */
-    JSStackFrame *caller = Jsvalify(iter.interpFrame());
+    JSAbstractFramePtr frame(Jsvalify(iter.abstractFramePtr()));
     RootedScript script(cx, iter.script());
 
     size_t length;
@@ -1547,10 +1547,11 @@ TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rval,
     if (!chars)
         return JSTRAP_ERROR;
 
-    if (!JS_EvaluateUCInStackFrame(cx, caller, chars, length,
-                                   script->filename,
-                                   script->lineno,
-                                   rval)) {
+    if (!frame.evaluateUCInStackFrame(cx, chars, length,
+                                      script->filename,
+                                      script->lineno,
+                                      rval))
+    {
         return JSTRAP_ERROR;
     }
     if (!JSVAL_IS_VOID(*rval))
@@ -2635,13 +2636,13 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (!chars)
         return false;
 
-    StackFrame *fp = fi.interpFrame();
-    RootedScript fpscript(cx, fp->script());
-    bool ok = !!JS_EvaluateUCInStackFrame(cx, Jsvalify(fp), chars, length,
-                                          fpscript->filename,
-                                          JS_PCToLineNumber(cx, fpscript,
-                                                            fi.pc()),
-                                          vp);
+    JSAbstractFramePtr frame(Jsvalify(fi.abstractFramePtr()));
+    RootedScript fpscript(cx, frame.script());
+    bool ok = !!frame.evaluateUCInStackFrame(cx, chars, length,
+                                             fpscript->filename,
+                                             JS_PCToLineNumber(cx, fpscript,
+                                                               fi.pc()),
+                                             vp);
 
     if (saved)
         JS_RestoreFrameChain(cx);
