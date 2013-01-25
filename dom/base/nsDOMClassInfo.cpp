@@ -472,6 +472,7 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "StkCommandEvent.h"
 #include "nsIDOMMozCellBroadcast.h"
 #include "nsIDOMMozCellBroadcastEvent.h"
+#include "CFStateChangeEvent.h"
 #endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_FM
@@ -1377,6 +1378,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozCellBroadcast, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(CFStateChangeEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
@@ -3666,6 +3670,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(MozCellBroadcastEvent, nsIDOMMozCellBroadcastEvent)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCellBroadcastEvent)
      DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CFStateChangeEvent, nsIDOMCFStateChangeEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCFStateChangeEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
 #endif // MOZ_B2G_RIL
 
