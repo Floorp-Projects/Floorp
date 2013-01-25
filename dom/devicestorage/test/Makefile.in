@@ -27,7 +27,9 @@ MOCHITEST_FILES	= \
 		test_dotdot.html \
 		test_enumerateOptions.html \
 		test_lastModificationFilter.html \
-		test_stat.html \
+		test_freeSpace.html \
+		test_usedSpace.html \
+		test_available.html \
 		test_watch.html \
 		test_watchOther.html \
 		test_823965.html \

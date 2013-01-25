@@ -37,10 +37,18 @@ struct EnumerationResponse
   DeviceStorageFileValue[] paths;
 };
 
-struct StatStorageResponse
+struct FreeSpaceStorageResponse
 {
   int64_t freeBytes;
-  int64_t totalBytes;
+};
+
+struct UsedSpaceStorageResponse
+{
+  int64_t usedBytes;
+};
+
+struct AvailableStorageResponse
+{
   nsString mountState;
 };
 
@@ -50,7 +58,9 @@ union DeviceStorageResponseValue
   SuccessResponse;
   BlobResponse;
   EnumerationResponse;
-  StatStorageResponse;
+  FreeSpaceStorageResponse;
+  UsedSpaceStorageResponse;
+  AvailableStorageResponse;
 };
 
 sync protocol PDeviceStorageRequest {
