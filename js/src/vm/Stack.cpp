@@ -2276,3 +2276,27 @@ AllFramesIter::abstractFramePtr() const
     JS_NOT_REACHED("Unexpected state");
     return NullFramePtr();
 }
+
+#ifdef DEBUG
+void
+js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, UnrootedScript script,
+                        StaticBlockObject *maybeBlock, unsigned i)
+{
+    if (!checkAliasing)
+        return;
+
+    AutoAssertNoGC nogc;
+    JS_ASSERT(i < script->nslots);
+    if (i < script->nfixed) {
+        JS_ASSERT(!script->varIsAliased(i));
+    } else {
+        unsigned depth = i - script->nfixed;
+        for (StaticBlockObject *b = maybeBlock; b; b = b->enclosingBlock()) {
+            if (b->containsVarAtDepth(depth)) {
+                JS_ASSERT(!b->isAliased(depth - b->stackDepth()));
+                break;
+            }
+        }
+    }
+}
+#endif

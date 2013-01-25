@@ -213,6 +213,12 @@ enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
 
 /*****************************************************************************/
 
+#ifdef DEBUG
+extern void
+CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, UnrootedScript script,
+                    StaticBlockObject *maybeBlock, unsigned i);
+#endif
+
 class ion::BaselineFrame;
 
 /* Pointer to either a StackFrame or a baseline JIT frame. */

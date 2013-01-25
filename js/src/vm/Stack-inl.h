@@ -14,13 +14,14 @@
 #include "methodjit/MethodJIT.h"
 #include "vm/Stack.h"
 #ifdef JS_ION
+#include "ion/BaselineFrame.h"
+#include "ion/BaselineFrame-inl.h"
 #include "ion/IonFrameIterator-inl.h"
 #endif
 #include "jsscriptinlines.h"
 
 #include "ArgumentsObject-inl.h"
 #include "ScopeObject-inl.h"
-
 
 namespace js {
 
@@ -218,21 +219,7 @@ inline Value &
 StackFrame::unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
 #ifdef DEBUG
-    AutoAssertNoGC nogc;
-    if (checkAliasing) {
-        JS_ASSERT(i < script()->nslots);
-        if (i < script()->nfixed) {
-            JS_ASSERT(!script()->varIsAliased(i));
-        } else {
-            unsigned depth = i - script()->nfixed;
-            for (StaticBlockObject *b = maybeBlockChain(); b; b = b->enclosingBlock()) {
-                if (b->containsVarAtDepth(depth)) {
-                    JS_ASSERT(!b->isAliased(depth - b->stackDepth()));
-                    break;
-                }
-            }
-        }
-    }
+    CheckLocalUnaliased(checkAliasing, script(), maybeBlockChain(), i);
 #endif
     return slots()[i];
 }
@@ -691,8 +678,7 @@ AbstractFramePtr::unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     if (isStackFrame())
         return asStackFrame()->unaliasedLocal(i, checkAliasing);
-    JS_NOT_REACHED("Invalid frame");
-    return asStackFrame()->unaliasedLocal(i);
+    return asBaselineFrame()->unaliasedLocal(i, checkAliasing);
 }
 
 inline Value &
@@ -716,7 +702,7 @@ AbstractFramePtr::maybeBlockChain() const
 {
     if (isStackFrame())
         return asStackFrame()->maybeBlockChain();
-    return NULL;
+    return asBaselineFrame()->maybeBlockChain();
 }
 inline bool
 AbstractFramePtr::hasCallObj() const

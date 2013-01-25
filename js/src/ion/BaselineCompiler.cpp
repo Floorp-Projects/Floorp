@@ -1399,6 +1399,9 @@ BaselineCompiler::emit_JSOP_TRY()
     return true;
 }
 
+typedef bool (*EnterBlockFn)(JSContext *, BaselineFrame *, Handle<StaticBlockObject *>);
+static const VMFunction EnterBlockInfo = FunctionInfo<EnterBlockFn>(ion::EnterBlock);
+
 bool
 BaselineCompiler::emit_JSOP_ENTERBLOCK()
 {
@@ -1407,23 +1410,40 @@ BaselineCompiler::emit_JSOP_ENTERBLOCK()
     if (!addPCMappingEntry())
         return false;
 
-    // TODO: clone block if needed, push on block chain.
     StaticBlockObject &blockObj = script->getObject(pc)->asStaticBlock();
-
     for (size_t i = 0; i < blockObj.slotCount(); i++)
         frame.push(UndefinedValue());
 
     // Pushed values will be accessed using GETLOCAL and SETLOCAL, so ensure
     // they are synced.
     frame.syncStack(0);
-    return true;
+
+    // Call a stub to push the block on the block chain.
+    prepareVMCall();
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+    pushArg(ImmGCPtr(&blockObj));
+    pushArg(R0.scratchReg());
+
+    return callVM(EnterBlockInfo);
 }
+
+typedef bool (*LeaveBlockFn)(JSContext *, BaselineFrame *);
+static const VMFunction LeaveBlockInfo = FunctionInfo<LeaveBlockFn>(ion::LeaveBlock);
 
 bool
 BaselineCompiler::emit_JSOP_LEAVEBLOCK()
 {
-    // TODO: pop block from block chain.
+    // Call a stub to pop the block from the block chain.
+    prepareVMCall();
 
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(LeaveBlockInfo))
+        return false;
+
+    // Pop slots pushed by ENTERBLOCK.
     size_t n = StackUses(script, pc);
     frame.popn(n);
     return true;
