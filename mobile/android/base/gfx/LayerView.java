@@ -123,6 +123,9 @@ public class LayerView extends FrameLayout {
         if (mRenderer != null) {
             mRenderer.destroy();
         }
+        if (mTouchEventHandler != null) {
+            mTouchEventHandler.destroy();
+        }
     }
 
     @Override
