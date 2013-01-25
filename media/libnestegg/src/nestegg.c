@@ -1727,7 +1727,8 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
   int r;
   struct cue_point * cue_point;
   struct cue_track_positions * pos;
-  uint64_t seek_pos, tc_scale, t;
+  uint64_t seek_pos, tc_scale, track_number;
+  unsigned int t;
   struct ebml_list_node * node = ctx->segment.cues.cue_point.head;
 
   /* If there are no cues loaded, check for cues element in the seek head
@@ -1756,7 +1757,13 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
   while (node) {
     assert(node->id == ID_CUE_TRACK_POSITIONS);
     pos = node->data;
-    if (ne_get_uint(pos->track, &t) == 0 && t - 1 == track) {
+    if (ne_get_uint(pos->track, &track_number) != 0)
+      return -1;
+
+    if (ne_map_track_number_to_index(ctx, track_number, &t) != 0)
+      return -1;
+
+    if (t == track) {
       if (ne_get_uint(pos->cluster_position, &seek_pos) != 0)
         return -1;
       break;
