@@ -42,7 +42,6 @@
 #include "json.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
-#include "jsxml.h"
 
 #include "builtin/MapObject.h"
 #include "builtin/Module.h"
@@ -2174,8 +2173,7 @@ js::DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey ke
         /*
          * Optionally construct the prototype object, before the class has
          * been fully initialized.  Allow the ctor to replace proto with a
-         * different object, as is done for operator new -- and as at least
-         * XML support requires.
+         * different object, as is done for operator new.
          */
         ctor = fun;
         if (!LinkConstructorAndPrototype(cx, ctor, proto))
@@ -2790,13 +2788,6 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
                      Class *clasp, Handle<js::TaggedProto> proto, bool checkForCycles)
 {
     JS_ASSERT_IF(!checkForCycles, obj.get() != proto.raw());
-
-#if JS_HAS_XML_SUPPORT
-    if (proto.isObject() && proto.toObject()->isXML()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
-        return false;
-    }
-#endif
 
     /*
      * Regenerate shapes for all of the scopes along the old prototype chain,
@@ -3910,16 +3901,9 @@ js::GetMethod(JSContext *cx, HandleObject obj, HandleId id, unsigned getHow, Mut
     JSAutoResolveFlags rf(cx, 0);
 
     GenericIdOp op = obj->getOps()->getGeneric;
-    if (!op) {
-#if JS_HAS_XML_SUPPORT
-        JS_ASSERT(!obj->isXML());
-#endif
+    if (!op)
         return GetPropertyHelper(cx, obj, id, getHow, vp);
-    }
-#if JS_HAS_XML_SUPPORT
-    if (obj->isXML())
-        return js_GetXMLMethod(cx, obj, id, vp);
-#endif
+
     return op(cx, obj, obj, id, vp);
 }
 
@@ -4409,9 +4393,6 @@ JSBool
 js::DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
     JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
-#if JS_HAS_XML_SUPPORT
-    JS_ASSERT(!obj->isXML());
-#endif
 
     Rooted<jsid> id(cx);
 
