@@ -307,6 +307,9 @@ HealthReporter.prototype = Object.freeze({
     this._log.info("HealthReporter started.");
     this._initialized = true;
     Services.obs.addObserver(this, "idle-daily", false);
+
+    // Clean up caches and reduce memory usage.
+    this._storage.compact();
     this._initializedDeferred.resolve(this);
   },
 
@@ -695,6 +698,7 @@ HealthReporter.prototype = Object.freeze({
       o.errors = errors;
     }
 
+    this._storage.compact();
     throw new Task.Result(JSON.stringify(o));
   },
 
