@@ -256,15 +256,17 @@ add_task(function test_serialize_json_default() {
   let serializer = m.serializer(m.SERIALIZE_JSON);
   let formatted = serializer.singular(data.singular);
 
-  do_check_eq(Object.keys(formatted).length, 2);
+  do_check_eq(Object.keys(formatted).length, 3);  // Our keys + _v.
   do_check_true("last-numeric" in formatted);
   do_check_true("last-text" in formatted);
   do_check_eq(formatted["last-numeric"], 6);
   do_check_eq(formatted["last-text"], "hello");
+  do_check_eq(formatted["_v"], 1);
 
   formatted = serializer.daily(data.days.getDay(now));
-  do_check_eq(Object.keys(formatted).length, 5);
+  do_check_eq(Object.keys(formatted).length, 6);  // Our keys + _v.
   do_check_eq(formatted["daily-counter"], 2);
+  do_check_eq(formatted["_v"], 1);
 
   do_check_true(Array.isArray(formatted["daily-discrete-numeric"]));
   do_check_eq(formatted["daily-discrete-numeric"].length, 2);

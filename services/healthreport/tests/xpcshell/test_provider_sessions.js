@@ -170,6 +170,7 @@ add_task(function test_serialization() {
   let serializer = current.serializer(current.SERIALIZE_JSON);
   let fields = serializer.singular(data.singular);
 
+  do_check_eq(fields._v, 2);
   do_check_eq(fields.activeTicks, 0);
   do_check_eq(fields.startDay, Metrics.dateToDays(recorder.startDate));
   do_check_eq(fields.main, 500);
