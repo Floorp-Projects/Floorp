@@ -33,7 +33,7 @@ GARBAGE += \
   FenCP.apk  \
   $(NULL)
 
-GARBAGE_DIRS += res classes network-libs
+GARBAGE_DIRS += network-libs
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
@@ -45,7 +45,6 @@ include $(topsrcdir)/config/android-common.mk
 tools:: FenCP.apk
 
 classes.dex: $(JAVAFILES)
-	$(NSINSTALL) -D classes
 	$(JAVAC) $(JAVAC_FLAGS) -d classes  $(addprefix $(srcdir)/,$(JAVAFILES))
 	$(DX) --dex --output=$@ classes
 
@@ -63,8 +62,3 @@ endif
 
 FenCP.apk: FenCP-unaligned.apk
 	$(ZIPALIGN) -f -v 4 FenCP-unaligned.apk $@
-
-export::
-	$(NSINSTALL) -D res
-	@(cd $(srcdir)/res && tar $(TAR_CREATE_FLAGS) - *) | (cd $(DEPTH)/build/mobile/sutagent/android/fencp/res && tar -xf -)
-
