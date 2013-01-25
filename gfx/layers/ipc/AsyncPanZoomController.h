@@ -79,6 +79,12 @@ public:
   //
 
   /**
+   * Shut down the controller/UI thread state and prepare to be
+   * deleted (which may happen from any thread).
+   */
+  void Destroy();
+
+  /**
    * General handler for incoming input events. Manipulates the frame metrics
    * basde on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class.
