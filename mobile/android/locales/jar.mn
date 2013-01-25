@@ -22,6 +22,7 @@
   locale/@AB_CD@/browser/localepicker.properties  (%chrome/localepicker.properties)
   locale/@AB_CD@/browser/checkbox.dtd             (%chrome/checkbox.dtd)
   locale/@AB_CD@/browser/notification.dtd         (%chrome/notification.dtd)
+  locale/@AB_CD@/browser/pippki.properties        (%chrome/pippki.properties)
   locale/@AB_CD@/browser/sync.dtd                 (%chrome/sync.dtd)
   locale/@AB_CD@/browser/sync.properties          (%chrome/sync.properties)
   locale/@AB_CD@/browser/prompt.dtd               (%chrome/prompt.dtd)

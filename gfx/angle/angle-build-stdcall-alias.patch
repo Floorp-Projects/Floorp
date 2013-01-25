@@ -1,0 +1,19 @@
+From: Jeff Gilbert <jgilbert@mozilla.com>
+
+diff --git a/gfx/angle/src/libGLESv2/libGLESv2.def b/gfx/angle/src/libGLESv2/libGLESv2.def
+--- a/gfx/angle/src/libGLESv2/libGLESv2.def
++++ b/gfx/angle/src/libGLESv2/libGLESv2.def
+@@ -175,8 +175,13 @@ EXPORTS
+ 
+     ; EGL dependencies
+     glCreateContext                 @144 NONAME
+     glDestroyContext                @145 NONAME
+     glMakeCurrent                   @146 NONAME
+     glGetCurrentContext             @147 NONAME
+     glGetProcAddress                @148 NONAME
+     glBindTexImage                  @158 NONAME
++
++    ; GCC has problems with linking to undecorated stdcall functions,
++    ; so we explicitly add aliases for APIs used by EGL.
++    glGetProcAddress@4=glGetProcAddress
++    glBindTexImage@4=glBindTexImage

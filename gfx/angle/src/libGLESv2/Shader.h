@@ -14,7 +14,6 @@
 
 #define GL_APICALL
 #include <GLES2/gl2.h>
-#include <d3dx9.h>
 #include <string>
 #include <list>
 #include <vector>
