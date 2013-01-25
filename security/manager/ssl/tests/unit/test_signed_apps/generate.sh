@@ -50,7 +50,7 @@ sign_app_with_new_cert()
   certutil -d $db -L -n ca1 -r -o $db/ca1.der
   certutil -d $db -L -n ee1 -r -o $db/ee1.der
 
-  python sign_b2g_app.py -d $db -f $passwordfile -k ee1 -i $unsigned_zip -o $out_signed_zip
+  python sign_b2g_app.py -d $db -f $passwordfile -k ee1 -i $unsigned_zip -o $out_signed_zip -S test_app_identifier -V 1
 }
 
 rm -Rf $tmpdir
