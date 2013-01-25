@@ -627,10 +627,12 @@ HealthReporter.prototype = Object.freeze({
       };
 
       for (let [measurementKey, measurement] of provider.measurements) {
-        let name = providerName + "." + measurement.name + "." + measurement.version;
+        let name = providerName + "." + measurement.name;
 
         let serializer;
         try {
+          // The measurement is responsible for returning a serializer which
+          // is aware of the measurement version.
           serializer = measurement.serializer(measurement.SERIALIZE_JSON);
         } catch (ex) {
           this._log.warn("Error obtaining serializer for measurement: " + name +

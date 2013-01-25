@@ -111,9 +111,10 @@ add_task(function test_collect() {
   let serializer = active.serializer(active.SERIALIZE_JSON);
   let serialized = serializer.singular(data.singular);
   do_check_eq(typeof(serialized), "object");
-  do_check_eq(Object.keys(serialized).length, 2);
+  do_check_eq(Object.keys(serialized).length, 3);   // Our two keys, plus _v.
   do_check_true("addon0" in serialized);
   do_check_true("addon1" in serialized);
+  do_check_eq(serialized._v, 1);
 
   let counts = provider.getMeasurement("counts", 1);
   data = yield counts.getValues();
