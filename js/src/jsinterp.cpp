@@ -316,7 +316,8 @@ js::RunScript(JSContext *cx, HandleScript script, StackFrame *fp)
 
 #ifdef JS_ION
     if (ion::IsEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, fp, false);
+        ion::MethodStatus status = ion::CanEnter(cx, script, AbstractFramePtr(fp),
+                                                 fp->isConstructing(), false);
         if (status == ion::Method_Error)
             return false;
         if (status == ion::Method_Compiled) {
@@ -1420,7 +1421,8 @@ BEGIN_CASE(JSOP_LOOPENTRY)
     // entry points.
     if (ion::IsEnabled(cx)) {
         ion::MethodStatus status =
-            ion::CanEnterAtBranch(cx, script, regs.fp(), regs.pc);
+            ion::CanEnterAtBranch(cx, script, AbstractFramePtr(regs.fp()), regs.pc,
+                                  regs.fp()->isConstructing());
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
@@ -2403,7 +2405,8 @@ BEGIN_CASE(JSOP_FUNCALL)
 
 #ifdef JS_ION
     if (!newType && ion::IsEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp(), newType);
+        ion::MethodStatus status = ion::CanEnter(cx, script, AbstractFramePtr(regs.fp()),
+                                                 regs.fp()->isConstructing(), newType);
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
