@@ -272,7 +272,6 @@ private:
   nsObjectFrame              *mObjectFrame;
   nsIContent                 *mContent; // WEAK, content owns us
   nsCString                   mDocumentBase;
-  char                       *mTagText;
   bool                        mWidgetCreationComplete;
   nsCOMPtr<nsIWidget>         mWidget;
   nsRefPtr<nsPluginHost>      mPluginHost;

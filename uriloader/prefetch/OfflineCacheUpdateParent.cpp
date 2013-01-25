@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/unused.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
 #include "nsNetUtil.h"
@@ -139,7 +140,7 @@ OfflineCacheUpdateParent::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, uin
 
     uint64_t byteProgress;
     aUpdate->GetByteProgress(&byteProgress);
-    SendNotifyStateEvent(state, byteProgress);
+    unused << SendNotifyStateEvent(state, byteProgress);
 
     if (state == nsIOfflineCacheUpdateObserver::STATE_FINISHED) {
         // Tell the child the particulars after the update has finished.
@@ -150,7 +151,7 @@ OfflineCacheUpdateParent::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, uin
         bool succeeded;
         aUpdate->GetSucceeded(&succeeded);
 
-        SendFinish(succeeded, isUpgrade);
+        unused << SendFinish(succeeded, isUpgrade);
     }
 
     return NS_OK;
@@ -169,7 +170,7 @@ OfflineCacheUpdateParent::ApplicationCacheAvailable(nsIApplicationCache *aApplic
     nsCString cacheGroupId;
     aApplicationCache->GetGroupID(cacheGroupId);
 
-    SendAssociateDocuments(cacheGroupId, cacheClientId);
+    unused << SendAssociateDocuments(cacheGroupId, cacheClientId);
     return NS_OK;
 }
 

@@ -323,7 +323,7 @@ IonCode::New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutableP
 {
     AssertCanGC();
 
-    IonCode *codeObj = gc::NewGCThing<IonCode>(cx, gc::FINALIZE_IONCODE, sizeof(IonCode));
+    IonCode *codeObj = gc::NewGCThing<IonCode, ALLOW_GC>(cx, gc::FINALIZE_IONCODE, sizeof(IonCode));
     if (!codeObj) {
         pool->release();
         return NULL;

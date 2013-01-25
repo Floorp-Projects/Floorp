@@ -1070,6 +1070,9 @@ bool
 nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
                                           double& aResultValue) const
 {
+  MOZ_ASSERT(DoesValueAsNumberApply(),
+             "ConvertStringToNumber only applies if .valueAsNumber applies");
+
   switch (mType) {
     case NS_FORM_INPUT_NUMBER:
       {
@@ -1100,7 +1103,7 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
         jsval rval;
         jsval fullYear[3];
         fullYear[0].setInt32(year);
-        fullYear[1].setInt32(month-1);
+        fullYear[1].setInt32(month - 1);
         fullYear[2].setInt32(day);
         if (!JS::Call(ctx, date, "setUTCFullYear", 3, fullYear, &rval)) {
           JS_ClearPendingException(ctx);
@@ -1120,6 +1123,14 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
         aResultValue = timestamp.toNumber();
         return true;
       }
+    case NS_FORM_INPUT_TIME:
+      uint32_t milliseconds;
+      if (!ParseTime(aValue, &milliseconds)) {
+        return false;
+      }
+
+      aResultValue = static_cast<double>(milliseconds);
+      return true;
     default:
       return false;
   }
@@ -1228,8 +1239,8 @@ bool
 nsHTMLInputElement::ConvertNumberToString(double aValue,
                                           nsAString& aResultString) const
 {
-  MOZ_ASSERT(mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_NUMBER,
-             "ConvertNumberToString is only implemented for type='{number,date}'");
+  MOZ_ASSERT(DoesValueAsNumberApply(),
+             "ConvertNumberToString is only implemented for types implementing .valueAsNumber");
   MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(aValue) && !MOZ_DOUBLE_IS_INFINITE(aValue),
              "aValue must be a valid non-Infinite number.");
 
@@ -1273,6 +1284,36 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
 
 	return true;
       }
+    case NS_FORM_INPUT_TIME:
+      {
+        // Per spec, we need to truncate |aValue| and we should only represent
+        // times inside a day [00:00, 24:00[, which means that we should do a
+        // modulo on |aValue| using the number of milliseconds in a day (86400000).
+        uint32_t value = NS_floorModulo(floor(aValue), 86400000);
+
+        uint16_t milliseconds = value % 1000;
+        value /= 1000;
+
+        uint8_t seconds = value % 60;
+        value /= 60;
+
+        uint8_t minutes = value % 60;
+        value /= 60;
+
+        uint8_t hours = value;
+
+        if (milliseconds != 0) {
+          aResultString.AppendPrintf("%02d:%02d:%02d.%03d",
+                                     hours, minutes, seconds, milliseconds);
+        } else if (seconds != 0) {
+          aResultString.AppendPrintf("%02d:%02d:%02d",
+                                     hours, minutes, seconds);
+        } else {
+          aResultString.AppendPrintf("%02d:%02d", hours, minutes);
+        }
+      
+        return true;
+      }
     default:
       MOZ_NOT_REACHED();
       return false;
@@ -1282,45 +1323,73 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
 NS_IMETHODIMP
 nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, jsval* aDate)
 {
-  if (mType != NS_FORM_INPUT_DATE) {
+  if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
     aDate->setNull();
     return NS_OK;
   }
 
-  uint32_t year, month, day;
-  nsAutoString value;
-  GetValueInternal(value);
-  if (!GetValueAsDate(value, &year, &month, &day)) {
-    aDate->setNull();
-    return NS_OK;
+  switch (mType) {
+    case NS_FORM_INPUT_DATE:
+    {
+      uint32_t year, month, day;
+      nsAutoString value;
+      GetValueInternal(value);
+      if (!GetValueAsDate(value, &year, &month, &day)) {
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      JSObject* date = JS_NewDateObjectMsec(aCtx, 0);
+      if (!date) {
+        JS_ClearPendingException(aCtx);
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      jsval rval;
+      jsval fullYear[3];
+      fullYear[0].setInt32(year);
+      fullYear[1].setInt32(month - 1);
+      fullYear[2].setInt32(day);
+      if(!JS::Call(aCtx, date, "setUTCFullYear", 3, fullYear, &rval)) {
+        JS_ClearPendingException(aCtx);
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      aDate->setObjectOrNull(date);
+      return NS_OK;
+    }
+    case NS_FORM_INPUT_TIME:
+    {
+      uint32_t millisecond;
+      nsAutoString value;
+      GetValueInternal(value);
+      if (!ParseTime(value, &millisecond)) {
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      JSObject* date = JS_NewDateObjectMsec(aCtx, millisecond);
+      if (!date) {
+        JS_ClearPendingException(aCtx);
+        aDate->setNull();
+        return NS_OK;
+      }
+
+      aDate->setObjectOrNull(date);
+      return NS_OK;
+    }
   }
 
-  JSObject* date = JS_NewDateObjectMsec(aCtx, 0);
-  if (!date) {
-    JS_ClearPendingException(aCtx);
-    aDate->setNull();
-    return NS_OK;
-  }
-
-  jsval rval;
-  jsval fullYear[3];
-  fullYear[0].setInt32(year);
-  fullYear[1].setInt32(month-1);
-  fullYear[2].setInt32(day);
-  if(!JS::Call(aCtx, date, "setUTCFullYear", 3, fullYear, &rval)) {
-    JS_ClearPendingException(aCtx);
-    aDate->setNull();
-    return NS_OK;
-  }
-
-  aDate->setObjectOrNull(date);
-  return NS_OK;
+  MOZ_NOT_REACHED();
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueAsDate(JSContext* aCtx, const jsval& aDate)
 {
-  if (mType != NS_FORM_INPUT_DATE) {
+  if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
@@ -3107,6 +3176,12 @@ nsHTMLInputElement::DigitSubStringToNumber(const nsAString& aStr,
 bool
 nsHTMLInputElement::IsValidTime(const nsAString& aValue) const
 {
+  return ParseTime(aValue, nullptr);
+}
+
+/* static */ bool
+nsHTMLInputElement::ParseTime(const nsAString& aValue, uint32_t* aResult)
+{
   /* The string must have the following parts:
    * - HOURS: two digits, value being in [0, 23];
    * - Colon (:);
@@ -3140,6 +3215,9 @@ nsHTMLInputElement::IsValidTime(const nsAString& aValue) const
   }
 
   if (aValue.Length() == 5) {
+    if (aResult) {
+      *aResult = ((hours * 60) + minutes) * 60000;
+    }
     return true;
   }
 
@@ -3154,6 +3232,9 @@ nsHTMLInputElement::IsValidTime(const nsAString& aValue) const
   }
 
   if (aValue.Length() == 8) {
+    if (aResult) {
+      *aResult = (((hours * 60) + minutes) * 60 + seconds) * 1000;
+    }
     return true;
   }
 
@@ -3164,7 +3245,18 @@ nsHTMLInputElement::IsValidTime(const nsAString& aValue) const
   }
 
   uint32_t fractionsSeconds;
-  return DigitSubStringToNumber(aValue, 9, aValue.Length() - 9, &fractionsSeconds);
+  if (!DigitSubStringToNumber(aValue, 9, aValue.Length() - 9, &fractionsSeconds)) {
+    return false;
+  }
+
+  if (aResult) {
+    *aResult = (((hours * 60) + minutes) * 60 + seconds) * 1000 +
+               // NOTE: there is 10.0 instead of 10 and static_cast<int> because
+               // some old [and stupid] compilers can't just do the right thing.
+               fractionsSeconds * pow(10.0, static_cast<int>(3 - (aValue.Length() - 9)));
+  }
+
+  return true;
 }
  
 bool

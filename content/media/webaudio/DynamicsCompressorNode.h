@@ -23,17 +23,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DynamicsCompressorNode, AudioNode)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
-                               bool* aTriedToWrap);
-
-  virtual uint32_t MaxNumberOfInputs() const MOZ_FINAL MOZ_OVERRIDE
-  {
-    return 1;
-  }
-  virtual uint32_t MaxNumberOfOutputs() const MOZ_FINAL MOZ_OVERRIDE
-  {
-    return 1;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope);
 
   AudioParam* Threshold() const
   {

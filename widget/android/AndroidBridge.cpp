@@ -179,7 +179,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jUnlockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "unlockScreenOrientation", "()V");
 
     jThumbnailHelperClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/ThumbnailHelper"));
-    jNotifyThumbnail = jEnv->GetStaticMethodID(jThumbnailHelperClass, "notifyThumbnail", "(Ljava/nio/ByteBuffer;I)V");
+    jNotifyThumbnail = jEnv->GetStaticMethodID(jThumbnailHelperClass, "notifyThumbnail", "(Ljava/nio/ByteBuffer;IZ)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -2458,13 +2458,29 @@ jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
 
+void
+AndroidBridge::SendThumbnail(jobject buffer, int32_t tabId, bool success) {
+    // Regardless of whether we successfully captured a thumbnail, we need to
+    // send a response to process the remaining entries in the queue. If we
+    // don't get an env here, we'll stall the thumbnail loop, but there isn't
+    // much we can do about it.
+    JNIEnv* env = GetJNIEnv();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env, 0);
+    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jThumbnailHelperClass,
+                              AndroidBridge::Bridge()->jNotifyThumbnail,
+                              buffer, tabId, success);
+}
+
 nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, jobject buffer)
 {
     nsresult rv;
     float scale = 1.0;
 
     if (!buffer)
-        return NS_OK;
+        return NS_ERROR_FAILURE;
 
     // take a screenshot, as wide as possible, proportional to the destination size
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
@@ -2502,9 +2518,9 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
 
     JNIEnv* env = GetJNIEnv();
     if (!env)
-        return NS_OK;
+        return NS_ERROR_FAILURE;
 
-    AutoLocalJNIFrame jniFrame(env);
+    AutoLocalJNIFrame jniFrame(env, 0);
 
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
     if (!win)
@@ -2542,9 +2558,6 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     context->Scale(scale * bufW / srcW, scale * bufH / srcH);
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
     NS_ENSURE_SUCCESS(rv, rv);
-    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jThumbnailHelperClass,
-                              AndroidBridge::Bridge()->jNotifyThumbnail,
-                              buffer, tabId);
     return NS_OK;
 }
 

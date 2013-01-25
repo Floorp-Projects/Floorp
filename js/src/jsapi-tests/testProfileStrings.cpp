@@ -196,12 +196,16 @@ BEGIN_TEST(testProfileStrings_isCalledWhenError)
     EXEC("function check2() { throw 'a'; }");
 
     reset(cx);
+    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
     {
         js::RootedValue rval(cx);
         /* Make sure the stack resets and we have an entry for each stack */
-        JS_CallFunctionName(cx, global, "check2", 0, NULL, rval.address());
+        JSBool ok = JS_CallFunctionName(cx, global, "check2", 0, NULL, rval.address());
+        CHECK(!ok);
         CHECK(psize == 0);
         CHECK(cx->runtime->spsProfiler.stringsCount() == 1);
+
+        JS_ClearPendingException(cx);
     }
     return true;
 }

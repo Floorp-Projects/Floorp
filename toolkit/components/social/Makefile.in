@@ -15,6 +15,9 @@ EXTRA_JS_MODULES = \
   MessagePortWorker.js \
   SocialService.jsm \
   WorkerAPI.jsm \
+  $(NULL)
+
+EXTRA_PP_JS_MODULES = \
   MozSocialAPI.jsm \
   $(NULL)
 

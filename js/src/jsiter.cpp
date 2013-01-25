@@ -55,6 +55,8 @@ using namespace js::gc;
 
 using mozilla::ArrayLength;
 
+typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
+
 static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
 void
@@ -391,7 +393,7 @@ static inline PropertyIteratorObject *
 NewPropertyIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedTypeObject type(cx, cx->compartment->getNewType(cx, NULL));
+        RootedTypeObject type(cx, cx->compartment->getNewType(cx, &PropertyIteratorObject::class_, NULL));
         if (!type)
             return NULL;
 
@@ -1074,7 +1076,7 @@ template<typename StringPredicate>
 static bool
 SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate predicate)
 {
-    PropertyIteratorObject *iterobj = cx->enumerators;
+    RootedPropertyIteratorObject iterobj(cx, cx->enumerators);
     while (iterobj) {
       again:
         NativeIterator *ni = iterobj->getNativeIterator();
@@ -1561,7 +1563,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
         gen->regs = cx->regs();
 
         cx->enterGenerator(gen);   /* OOM check above. */
-        PropertyIteratorObject *enumerators = cx->enumerators;
+        RootedPropertyIteratorObject enumerators(cx, cx->enumerators);
         cx->enumerators = gen->enumerators;
 
         RootedScript script(cx, fp->script());

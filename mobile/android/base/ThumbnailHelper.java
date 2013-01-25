@@ -142,10 +142,29 @@ final class ThumbnailHelper {
     }
 
     /* This method is invoked by JNI once the thumbnail data is ready. */
-    public static void notifyThumbnail(ByteBuffer data, int tabId) {
+    public static void notifyThumbnail(ByteBuffer data, int tabId, boolean success) {
         Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab != null) {
-            ThumbnailHelper.getInstance().handleThumbnailData(tab, data);
+        ThumbnailHelper helper = ThumbnailHelper.getInstance();
+        if (success && tab != null) {
+            helper.handleThumbnailData(tab, data);
+        }
+        helper.processNextThumbnail(tab);
+    }
+
+    private void processNextThumbnail(Tab tab) {
+        Tab nextTab = null;
+        synchronized (mPendingThumbnails) {
+            if (tab != null && tab != mPendingThumbnails.peek()) {
+                Log.e(LOGTAG, "handleThumbnailData called with unexpected tab's data!");
+                // This should never happen, but recover gracefully by processing the
+                // unexpected tab that we found in the queue
+            } else {
+                mPendingThumbnails.remove();
+            }
+            nextTab = mPendingThumbnails.peek();
+        }
+        if (nextTab != null) {
+            requestThumbnailFor(nextTab);
         }
     }
 
@@ -157,20 +176,6 @@ final class ThumbnailHelper {
 
         if (shouldUpdateThumbnail(tab)) {
             processThumbnailData(tab, data);
-        }
-        Tab nextTab = null;
-        synchronized (mPendingThumbnails) {
-            if (tab != mPendingThumbnails.peek()) {
-                Log.e(LOGTAG, "handleThumbnailData called with unexpected tab's data!");
-                // This should never happen, but recover gracefully by processing the
-                // unexpected tab that we found in the queue
-            } else {
-                mPendingThumbnails.remove();
-            }
-            nextTab = mPendingThumbnails.peek();
-        }
-        if (nextTab != null) {
-            requestThumbnailFor(nextTab);
         }
     }
 

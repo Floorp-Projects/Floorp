@@ -316,11 +316,6 @@ public:
     bool DownloadableFontsEnabled();
 
     /**
-     * Whether to sanitize downloaded fonts using the OTS library
-     */
-    bool SanitizeDownloadedFonts();
-
-    /**
      * True when hinting should be enabled.  This setting shouldn't
      * change per gecko process, while the process is live.  If so the
      * results are not defined.
@@ -570,7 +565,6 @@ protected:
     }
 
     int8_t  mAllowDownloadableFonts;
-    int8_t  mDownloadableFontsSanitize;
 #ifdef MOZ_GRAPHITE
     int8_t  mGraphiteShapingEnabled;
 #endif

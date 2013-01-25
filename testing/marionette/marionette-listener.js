@@ -16,7 +16,8 @@ loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
 loader.loadSubScript("chrome://marionette/content/marionette-perf.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");  
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let utils = {};
 utils.window = content;
 // Load Event/ChromeUtils for use with JS scripts:
@@ -284,7 +285,7 @@ function errUnload() {
 /**
  * Returns a content sandbox that can be used by the execute_foo functions.
  */
-function createExecuteContentSandbox(aWindow, timeout, specialPowers) {
+function createExecuteContentSandbox(aWindow, timeout) {
   let sandbox = new Cu.Sandbox(aWindow);
   sandbox.global = sandbox;
   sandbox.window = aWindow;
@@ -306,9 +307,9 @@ function createExecuteContentSandbox(aWindow, timeout, specialPowers) {
     }
   });
 
-  if (specialPowers) {
-    sandbox.SpecialPowers = new SpecialPowers(aWindow);
-  }
+  XPCOMUtils.defineLazyGetter(sandbox, 'SpecialPowers', function() {
+    return new SpecialPowers(aWindow);
+  });
 
   sandbox.asyncComplete = function sandbox_asyncComplete(value, status) {
     curWindow.removeEventListener("unload", errUnload, false);
@@ -366,8 +367,7 @@ function executeScript(msg, directInject) {
 
   if (msg.json.newSandbox || !sandbox) {
     sandbox = createExecuteContentSandbox(curWindow,
-                                          msg.json.timeout,
-                                          msg.json.specialPowers);
+                                          msg.json.timeout);
     if (!sandbox) {
       sendError("Could not create sandbox!", asyncTestCommandId);
       return;
@@ -470,8 +470,7 @@ function executeWithCallback(msg, useFinish) {
 
   if (msg.json.newSandbox || !sandbox) {
     sandbox = createExecuteContentSandbox(curWindow,
-                                          msg.json.timeout,
-                                          msg.json.specialPowers);
+                                          msg.json.timeout);
     if (!sandbox) {
       sendError("Could not create sandbox!");
       return;

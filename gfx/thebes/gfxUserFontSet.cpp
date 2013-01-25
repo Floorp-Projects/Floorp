@@ -18,8 +18,6 @@
 #include "nsIPrincipal.h"
 #include "mozilla/Telemetry.h"
 
-#include "woff.h"
-
 #include "opentype-sanitiser.h"
 #include "ots-memory-stream.h"
 
@@ -200,58 +198,6 @@ gfxUserFontSet::FindFontEntry(gfxFontFamily *aFamily,
         (proxyEntry->mLoadingState < gfxProxyFontEntry::LOADING_SLOWLY);
 
     // if either loading or an error occurred, return null
-    return nullptr;
-}
-
-// Given a buffer of downloaded font data, do any necessary preparation
-// to make it into usable OpenType.
-// May return the original pointer unchanged, or a newly-allocated
-// block (in which case the passed-in block is NS_Free'd).
-// aLength is updated if necessary to the new length of the data.
-// Returns NULL and NS_Free's the incoming data in case of errors.
-static const uint8_t*
-PrepareOpenTypeData(const uint8_t* aData, uint32_t* aLength)
-{
-    switch(gfxFontUtils::DetermineFontDataType(aData, *aLength)) {
-    
-    case GFX_USERFONT_OPENTYPE:
-        // nothing to do
-        return aData;
-        
-    case GFX_USERFONT_WOFF: {
-        uint32_t status = eWOFF_ok;
-        uint32_t bufferSize = woffGetDecodedSize(aData, *aLength, &status);
-        if (WOFF_FAILURE(status)) {
-            break;
-        }
-        uint8_t* decodedData = static_cast<uint8_t*>(NS_Alloc(bufferSize));
-        if (!decodedData) {
-            break;
-        }
-        woffDecodeToBuffer(aData, *aLength,
-                           decodedData, bufferSize,
-                           aLength, &status);
-        // replace original data with the decoded version
-        NS_Free((void*)aData);
-        aData = decodedData;
-        if (WOFF_FAILURE(status)) {
-            // something went wrong, discard the data and return NULL
-            break;
-        }
-        // success, return the decoded data
-        return aData;
-    }
-
-    // xxx - add support for other wrappers here
-
-    default:
-        NS_WARNING("unknown font format");
-        break;
-    }
-
-    // discard downloaded data that couldn't be used
-    NS_Free((void*)aData);
-
     return nullptr;
 }
 
@@ -666,18 +612,6 @@ gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,
     gfxUserFontType fontType =
         gfxFontUtils::DetermineFontDataType(aFontData, aLength);
 
-    // Save a copy of the metadata block (if present) for nsIDOMFontFace
-    // to use if required. Ownership of the metadata block will be passed
-    // to the gfxUserFontData record below.
-    // NOTE: after the non-OTS codepath using PrepareOpenTypeData is
-    // removed, we should defer this until after we've created the new
-    // fontEntry.
-    nsTArray<uint8_t> metadata;
-    uint32_t metaOrigLen = 0;
-    if (fontType == GFX_USERFONT_WOFF) {
-        CopyWOFFMetadata(aFontData, aLength, &metadata, &metaOrigLen);
-    }
-
     // Unwrap/decompress/sanitize or otherwise munge the downloaded data
     // to make a usable sfnt structure.
 
@@ -686,67 +620,42 @@ gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,
     // it can be reported via the nsIDOMFontFace API.
     nsAutoString originalFullName;
 
-    if (gfxPlatform::GetPlatform()->SanitizeDownloadedFonts()) {
-       // Call the OTS sanitizer; this will also decode WOFF to sfnt
-        // if necessary. The original data in aFontData is left unchanged.
-        uint32_t saneLen;
-        const uint8_t* saneData =
-            SanitizeOpenTypeData(aFamily, aProxy, aFontData, aLength, saneLen,
-                                 fontType == GFX_USERFONT_WOFF);
-        if (!saneData) {
-            LogMessage(aFamily, aProxy, "rejected by sanitizer");
-        }
-        if (saneData) {
-            // The sanitizer ensures that we have a valid sfnt and a usable
-            // name table, so this should never fail unless we're out of
-            // memory, and GetFullNameFromSFNT is not directly exposed to
-            // arbitrary/malicious data from the web.
-            gfxFontUtils::GetFullNameFromSFNT(saneData, saneLen,
-                                              originalFullName);
-            // Here ownership of saneData is passed to the platform,
-            // which will delete it when no longer required
-            fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
-                                                              saneData,
-                                                              saneLen);
-            if (!fe) {
-                LogMessage(aFamily, aProxy, "not usable by platform");
-            }
-        }
-    } else {
-        // FIXME: this code can be removed once we remove the pref to
-        // disable the sanitizer; the PrepareOpenTypeData and
-        // ValidateSFNTHeaders functions will then be obsolete.
-        aFontData = PrepareOpenTypeData(aFontData, &aLength);
-
-        if (aFontData) {
-            if (gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength)) {
-                // ValidateSFNTHeaders has checked that we have a valid
-                // sfnt structure and a usable 'name' table
-                gfxFontUtils::GetFullNameFromSFNT(aFontData, aLength,
-                                                  originalFullName);
-                // Here ownership of aFontData is passed to the platform,
-                // which will delete it when no longer required
-                fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
-                                                                  aFontData,
-                                                                  aLength);
-                if (!fe) {
-                    LogMessage(aFamily, aProxy, "not usable by platform");
-                }
-                aFontData = nullptr; // we must NOT free this!
-            } else {
-                // the data was unusable, so just discard it
-                // (error will be reported below, if logging is enabled)
-                LogMessage(aFamily, aProxy, "SFNT header or tables invalid");
-            }
-        }
+    // Call the OTS sanitizer; this will also decode WOFF to sfnt
+    // if necessary. The original data in aFontData is left unchanged.
+    uint32_t saneLen;
+    const uint8_t* saneData =
+        SanitizeOpenTypeData(aFamily, aProxy, aFontData, aLength, saneLen,
+                             fontType == GFX_USERFONT_WOFF);
+    if (!saneData) {
+        LogMessage(aFamily, aProxy, "rejected by sanitizer");
     }
-
-    if (aFontData) {
-        NS_Free((void*)aFontData);
-        aFontData = nullptr;
+    if (saneData) {
+        // The sanitizer ensures that we have a valid sfnt and a usable
+        // name table, so this should never fail unless we're out of
+        // memory, and GetFullNameFromSFNT is not directly exposed to
+        // arbitrary/malicious data from the web.
+        gfxFontUtils::GetFullNameFromSFNT(saneData, saneLen,
+                                          originalFullName);
+        // Here ownership of saneData is passed to the platform,
+        // which will delete it when no longer required
+        fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
+                                                          saneData,
+                                                          saneLen);
+        if (!fe) {
+            LogMessage(aFamily, aProxy, "not usable by platform");
+        }
     }
 
     if (fe) {
+        // Save a copy of the metadata block (if present) for nsIDOMFontFace
+        // to use if required. Ownership of the metadata block will be passed
+        // to the gfxUserFontData record below.
+        nsTArray<uint8_t> metadata;
+        uint32_t metaOrigLen = 0;
+        if (fontType == GFX_USERFONT_WOFF) {
+            CopyWOFFMetadata(aFontData, aLength, &metadata, &metaOrigLen);
+        }
+
         // copy OpenType feature/language settings from the proxy to the
         // newly-created font entry
         fe->mFeatureSettings.AppendElements(aProxy->mFeatureSettings);
@@ -777,6 +686,10 @@ gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,
         }
 #endif
     }
+
+    // The downloaded data can now be discarded; the font entry is using the
+    // sanitized copy
+    NS_Free((void*)aFontData);
 
     return fe;
 }
