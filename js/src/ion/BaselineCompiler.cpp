@@ -368,8 +368,6 @@ BaselineCompiler::emitBody()
 {
     JS_ASSERT(pc == script->code);
 
-    SrcNoteLineScanner scanner(script->notes(), script->lineno);
-
     while (true) {
         SPEW_OPCODE();
         JSOp op = JSOp(*pc);
@@ -386,12 +384,9 @@ BaselineCompiler::emitBody()
 
         masm.bind(labelOf(pc));
 
-        if (debugMode_) {
-            // Emit traps for breakpoints and step mode.
-            scanner.advanceTo(pc - script->code);
-            if (scanner.isLineHeader() && !emitDebugTrap())
-                return Method_Error;
-        }
+        // Emit traps for breakpoints and step mode.
+        if (debugMode_ && !emitDebugTrap())
+            return Method_Error;
 
         switch (op) {
           default:
