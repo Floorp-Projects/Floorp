@@ -383,23 +383,6 @@ function check_no_bookmarks() {
   root.containerOpen = false;
 }
 
-
-
-/**
- * Sets title synchronously for a page in moz_places.
- *
- * @param aURI
- *        An nsIURI to set the title for.
- * @param aTitle
- *        The title to set the page to.
- * @throws if the page is not found in the database.
- *
- * @note This is just a test compatibility mock.
- */
-function setPageTitle(aURI, aTitle) {
-  PlacesUtils.history.setPageTitle(aURI, aTitle);
-}
-
 /**
  * Allows waiting for an observer notification once.
  *
@@ -820,6 +803,26 @@ function do_compare_arrays(a1, a2, sorted)
            a2.filter(function (e) a1.indexOf(e) == -1).length == 0;
   }
 }
+
+/**
+ * Generic nsINavBookmarkObserver that doesn't implement anything, but provides
+ * dummy methods to prevent errors about an object not having a certain method.
+ */
+function NavBookmarkObserver() {}
+
+NavBookmarkObserver.prototype = {
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
+  onItemAdded: function () {},
+  onBeforeItemRemoved: function () {},
+  onItemRemoved: function () {},
+  onItemChanged: function () {},
+  onItemVisited: function () {},
+  onItemMoved: function () {},
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsINavBookmarkObserver,
+  ])
+};
 
 /**
  * Generic nsINavHistoryObserver that doesn't implement anything, but provides

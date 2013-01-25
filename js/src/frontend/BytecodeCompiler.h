@@ -14,7 +14,7 @@ namespace js {
 namespace frontend {
 
 UnrootedScript
-CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *callerFrame,
+CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr callerFrame,
               const CompileOptions &options, StableCharPtr chars, size_t length,
               JSString *source_ = NULL, unsigned staticLevel = 0);
 

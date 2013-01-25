@@ -48,10 +48,6 @@ endif
 
 WRAP_LDFLAGS=
 
-# need this to suppress errors due to /usr/include/linux/byteorder/swab.h
-# on mozilla buildbots
-OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
-
 include $(topsrcdir)/config/rules.mk
 
 test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX) elfhack $(filter inject/%,$(CSRCS:.c=.$(OBJ_SUFFIX)))

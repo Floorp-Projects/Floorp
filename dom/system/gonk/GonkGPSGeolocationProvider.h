@@ -99,7 +99,6 @@ private:
   nsCOMPtr<nsIGeolocationUpdate> mLocationCallback;
   nsCOMPtr<nsIThread> mInitThread;
   nsCOMPtr<nsIRadioInterfaceLayer> mRIL;
-  nsAutoString mCid;
 };
 
 #endif /* GonkGPSGeolocationProvider_h */

@@ -51,6 +51,7 @@ MOCHITEST_FILES = \
 		test_input_number_value.html \
 		test_input_sanitization.html \
 		test_valueasdate_attribute.html \
+		test_input_file_b2g_disabled.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

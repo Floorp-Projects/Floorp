@@ -935,7 +935,7 @@ void ExtractFontsFromJar(nsIFile* aLocalDir)
         "res/fonts/*.ttf$",
     };
 
-    for (int i = 0; i < ArrayLength(sJarSearchPaths); i++) {
+    for (size_t i = 0; i < ArrayLength(sJarSearchPaths); i++) {
         reader->FindInit(sJarSearchPaths[i], &find);
         while (true) {
             const char* tmpPath;

@@ -2905,8 +2905,10 @@ RasterImage::CanScale(gfxPattern::GraphicsFilter aFilter,
 {
 // The high-quality scaler requires Skia.
 #ifdef MOZ_ENABLE_SKIA
+  // We don't use the scaler for animated or multipart images to avoid doing a
+  // bunch of work on an image that just gets thrown away.
   if (gHQDownscaling && aFilter == gfxPattern::FILTER_GOOD &&
-      !mAnim && mDecoded && IsDownscale(aScale)) {
+      !mAnim && mDecoded && !mMultipart && IsDownscale(aScale)) {
     gfxFloat factor = gHQDownscalingMinFactor / 1000.0;
     return (aScale.width < factor || aScale.height < factor);
   }

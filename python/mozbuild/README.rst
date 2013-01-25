@@ -13,6 +13,7 @@ Modules Overview
 * mozbuild.frontend -- Functionality for reading build frontend files
   (what defines the build system) and converting them to data structures
   which are fed into build backends to produce backend configurations.
+* mozpack -- Functionality related to packaging builds.
 
 Overview
 ========

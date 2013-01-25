@@ -16,6 +16,9 @@
 #include "mozilla/IHistory.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
+#include "mozIStorageAsyncStatement.h"
+#include "mozIStorageStatementCallback.h"
+#include "mozIStoragePendingStatement.h"
 #include "nsPIPlacesDatabase.h"
 #include "nsIObserver.h"
 #include "prinrval.h"
@@ -141,6 +144,62 @@ NS_IMPL_ISUPPORTS1(
   WaitForTopicSpinner,
   nsIObserver
 )
+
+/**
+ * Spins current thread until an async statement is executed.
+ */
+class AsyncStatementSpinner MOZ_FINAL : public mozIStorageStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+
+  AsyncStatementSpinner();
+  void SpinUntilCompleted();
+  uint16_t completionReason;
+
+protected:
+  volatile bool mCompleted;
+};
+
+NS_IMPL_ISUPPORTS1(AsyncStatementSpinner,
+                   mozIStorageStatementCallback)
+
+AsyncStatementSpinner::AsyncStatementSpinner()
+: completionReason(0)
+, mCompleted(false)
+{
+}
+
+NS_IMETHODIMP
+AsyncStatementSpinner::HandleResult(mozIStorageResultSet *aResultSet)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncStatementSpinner::HandleError(mozIStorageError *aError)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncStatementSpinner::HandleCompletion(uint16_t aReason)
+{
+  completionReason = aReason;
+  mCompleted = true;
+  return NS_OK;
+}
+
+void AsyncStatementSpinner::SpinUntilCompleted()
+{
+  nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
+  nsresult rv = NS_OK;
+  bool processed = true;
+  while (!mCompleted && NS_SUCCEEDED(rv)) {
+    rv = thread->ProcessNextEvent(true, &processed);
+  }
+}
 
 /**
  * Adds a URI to the database.

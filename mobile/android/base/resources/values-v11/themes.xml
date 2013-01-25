@@ -5,7 +5,7 @@
 
 <resources>
 
-    <style name="Gecko" parent="@android:style/Theme.Holo">
+    <style name="Gecko" parent="@android:style/Theme.Holo.Light">
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>

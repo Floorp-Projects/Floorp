@@ -1641,7 +1641,13 @@ class nsIWidget : public nsISupports {
     virtual bool WidgetPaintsBackground() { return false; }
 
     virtual bool NeedsPaint() {
-      return true;
+       if (!IsVisible()) {
+           return false;
+       }
+       nsIntRect bounds;
+       nsresult rv = GetBounds(bounds);
+       NS_ENSURE_SUCCESS(rv, false);
+       return !bounds.IsEmpty();
     }
 
     /**

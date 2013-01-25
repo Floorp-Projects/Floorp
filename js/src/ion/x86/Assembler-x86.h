@@ -369,6 +369,15 @@ class Assembler : public AssemblerX86Shared
         addPendingJump(src, target.asPointer(), Relocation::HARDCODED);
     }
 
+    // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
+    // this instruction.
+    CodeOffsetLabel toggledCall(IonCode *target, bool enabled) {
+        CodeOffsetLabel offset(size());
+        JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
+        addPendingJump(src, target->raw(), Relocation::IONCODE);
+        return offset;
+    }
+
     // Re-routes pending jumps to an external target, flushing the label in the
     // process.
     void retarget(Label *label, void *target, Relocation::Kind reloc) {

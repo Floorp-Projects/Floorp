@@ -99,6 +99,7 @@ DEFINES += \
 endif
 
 ifneq ($(OS_TARGET),WINNT)
+ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
 CPP_UNIT_TESTS = \
   ice_unittest.cpp \
   nrappkit_unittest.cpp \
@@ -110,6 +111,7 @@ ifdef MOZ_SCTP
 CPP_UNIT_TESTS += sctp_unittest.cpp
 endif
 
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

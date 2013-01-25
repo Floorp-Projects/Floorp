@@ -1698,6 +1698,7 @@ class Assembler
     static void ToggleToJmp(CodeLocationLabel inst_);
     static void ToggleToCmp(CodeLocationLabel inst_);
 
+    static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.
@@ -1787,6 +1788,20 @@ class InstLDR : public InstDTR
 
 };
 JS_STATIC_ASSERT(sizeof(InstDTR) == sizeof(InstLDR));
+
+class InstNOP : public Instruction
+{
+    static const uint32_t NopInst = 0x0320f000;
+
+  public:
+    InstNOP()
+      : Instruction(NopInst, Assembler::Always)
+    { }
+
+    static bool isTHIS(const Instruction &i);
+    static InstNOP *asTHIS(Instruction &i);
+};
+
 // Branching to a register, or calling a register
 class InstBranchReg : public Instruction
 {
@@ -1798,7 +1813,7 @@ class InstBranchReg : public Instruction
     };
     static const uint32_t IsBRegMask = 0x0ffffff0;
     InstBranchReg(BranchTag tag, Register rm, Assembler::Condition c)
-      : Instruction(tag | RM(rm), c)
+      : Instruction(tag | rm.code(), c)
     { }
   public:
     static bool isTHIS (const Instruction &i);
@@ -1841,6 +1856,10 @@ class InstBXReg : public InstBranchReg
 class InstBLXReg : public InstBranchReg
 {
   public:
+    InstBLXReg(Register reg, Assembler::Condition c)
+      : InstBranchReg(IsBLX, reg, c)
+    { }
+
     static bool isTHIS (const Instruction &i);
     static InstBLXReg *asTHIS (const Instruction &i);
 };

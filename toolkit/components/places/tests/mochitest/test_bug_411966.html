@@ -22,14 +22,15 @@
       /** Test for Bug 411966 **/
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-      ghist.addURI(typedURI, false, true, null);
-      bhist.markPageAsTyped(typedURI);
+      addVisits(typedURI, function() {
+        bhist.markPageAsTyped(typedURI);
 
-      var clickedLinkChannel = ios.newChannelFromURI(clickedLinkURI);
-      clickedLinkChannel.QueryInterface(Ci.nsIHttpChannel).referrer = typedURI;
-      var listener = new StreamListener(clickedLinkChannel, checkDB);
-      clickedLinkChannel.notificationCallbacks = listener;
-      clickedLinkChannel.asyncOpen(listener, null);
+        var clickedLinkChannel = ios.newChannelFromURI(clickedLinkURI);
+        clickedLinkChannel.QueryInterface(Ci.nsIHttpChannel).referrer = typedURI;
+        var listener = new StreamListener(clickedLinkChannel, checkDB);
+        clickedLinkChannel.notificationCallbacks = listener;
+        clickedLinkChannel.asyncOpen(listener, null);
+      });
 
       SimpleTest.waitForExplicitFinish();
 
