@@ -139,8 +139,7 @@ class ExecutableFile(File):
     '''
     def copy(self, dest):
         assert isinstance(dest, basestring)
-        if not File.copy(self, dest):
-            return False
+        File.copy(self, dest)
         try:
             if may_strip(dest):
                 strip(dest)

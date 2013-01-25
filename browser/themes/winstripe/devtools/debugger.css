@@ -288,6 +288,10 @@
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
+.dbg-expression-delete:not(:hover) {
+  opacity: 0.5;
+}
+
 /**
  * Variables view
  */
@@ -448,6 +452,8 @@
  */
 
 #variables .element-value-input {
+  overflow: hidden;
+  max-width: 30em;
   -moz-margin-start: 5px !important;
 }
 
@@ -492,6 +498,7 @@
 }
 
 .token-string {
+  max-width: 30em;
   color: #1c00cf;
 }
 

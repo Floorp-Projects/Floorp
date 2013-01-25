@@ -593,7 +593,8 @@ stage-package: $(MOZ_PKG_MANIFEST)
 		$(if $(JARLOG_DIR),--jarlogs $(JARLOG_DIR_AB_CD)) \
 		$(if $(OPTIMIZEJARS),--optimizejars) \
 		$(addprefix --unify ,$(UNIFY_DIST)) \
-		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)
+		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR) \
+		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DIST)/$(MOZ_PKG_DIR)
 ifndef LIBXUL_SDK
 ifdef MOZ_PACKAGE_JSSHELL
