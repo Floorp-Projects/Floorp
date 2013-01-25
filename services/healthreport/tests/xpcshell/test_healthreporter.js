@@ -204,8 +204,10 @@ add_task(function test_json_payload_dummy_provider() {
   print(payload);
   let o = JSON.parse(payload);
 
+  let name = "DummyProvider.DummyMeasurement";
   do_check_eq(Object.keys(o.data.last).length, 1);
-  do_check_true("DummyProvider.DummyMeasurement.1" in o.data.last);
+  do_check_true(name in o.data.last);
+  do_check_eq(o.data.last[name]._v, 1);
 
   reporter._shutdown();
 });

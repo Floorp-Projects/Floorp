@@ -246,7 +246,7 @@ Measurement.prototype = Object.freeze({
   },
 
   _serializeJSONSingular: function (data) {
-    let result = {};
+    let result = {"_v": this.version};
 
     for (let [field, data] of data) {
       // There could be legacy fields in storage we no longer care about.
@@ -278,7 +278,7 @@ Measurement.prototype = Object.freeze({
   },
 
   _serializeJSONDay: function (data) {
-    let result = {};
+    let result = {"_v": this.version};
 
     for (let [field, data] of data) {
       if (!this._fieldsByName.has(field)) {
