@@ -115,12 +115,14 @@ public class TabsTray extends ListView
         int id;
         TextView title;
         ImageView thumbnail;
+        ImageButton close;
         LinearLayout info;
 
         public TabRow(View view) {
             info = (LinearLayout) view;
             title = (TextView) view.findViewById(R.id.title);
             thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
+            close = (ImageButton) view.findViewById(R.id.close);
         }
     }
 
@@ -194,7 +196,7 @@ public class TabsTray extends ListView
             if (selected == -1)
                 return;
 
-            TabsTray.this.setItemChecked(selected, true);
+            TabsTray.this.setSelection(selected);
         }
 
         public void clear() {
@@ -225,7 +227,6 @@ public class TabsTray extends ListView
             if (tab.isPrivate() == mIsPrivate && mTabs != null) {
                 mTabs.remove(tab);
                 notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
-                updateSelectedPosition();
             }
         }
 
@@ -244,11 +245,13 @@ public class TabsTray extends ListView
                 row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
 
             if (Tabs.getInstance().isSelectedTab(tab))
-                row.thumbnail.setAlpha(255);
+                row.info.setBackgroundResource(R.drawable.tabs_tray_active_selector);
             else
-                row.thumbnail.setAlpha(179);
+                row.info.setBackgroundResource(R.drawable.tabs_tray_default_selector);
 
             row.title.setText(tab.getDisplayTitle());
+
+            row.close.setTag(row);
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -256,10 +259,14 @@ public class TabsTray extends ListView
 
             if (convertView == null) {
                 convertView = mInflater.inflate(R.layout.tabs_row, null);
+
                 row = new TabRow(convertView);
+                row.close.setOnClickListener(mOnCloseClickListener);
+
                 convertView.setTag(row);
             } else {
                 row = (TabRow) convertView.getTag();
+                row.close.setVisibility(View.VISIBLE);
             }
 
             Tab tab = mTabs.get(position);
@@ -329,6 +336,15 @@ public class TabsTray extends ListView
         PropertyAnimator animator = new PropertyAnimator(ANIMATION_DURATION);
         animator.attach(view, Property.ALPHA, 1);
         animator.attach(view, Property.TRANSLATION_X, 0);
+
+        animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            public void onPropertyAnimationStart() { }
+            public void onPropertyAnimationEnd() {
+                TabRow tab = (TabRow) view.getTag();
+                tab.close.setVisibility(View.VISIBLE);
+            }
+        });
+
         animator.start();
     }
 
@@ -477,6 +493,9 @@ public class TabsTray extends ListView
 
                         mSwiping = true;
                         TabsTray.this.requestDisallowInterceptTouchEvent(true);
+
+                        TabRow tab = (TabRow) mSwipeView.getTag();
+                        tab.close.setVisibility(View.INVISIBLE);
 
                         // Stops listview from highlighting the touched item
                         // in the list when swiping.
