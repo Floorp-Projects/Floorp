@@ -143,10 +143,10 @@ class Allocator
 
     inline void *parallelNewGCThing(gc::AllocKind thingKind, size_t thingSize);
 
-    inline void* malloc_(size_t bytes);
-    inline void* calloc_(size_t bytes);
-    inline void* realloc_(void* p, size_t bytes);
-    inline void* realloc_(void* p, size_t oldBytes, size_t newBytes);
+    inline void *malloc_(size_t bytes);
+    inline void *calloc_(size_t bytes);
+    inline void *realloc_(void *p, size_t bytes);
+    inline void *realloc_(void *p, size_t oldBytes, size_t newBytes);
     template <class T> inline T *pod_malloc();
     template <class T> inline T *pod_calloc();
     template <class T> inline T *pod_malloc(size_t numElems);

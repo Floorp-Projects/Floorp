@@ -22,44 +22,6 @@
 
 #include "jsgcinlines.h"
 
-void*
-JSRuntime::malloc_(size_t bytes, JSCompartment *comp, JSContext *cx) {
-    JS_ASSERT_IF(cx != NULL, cx->compartment == comp);
-    updateMallocCounter(comp, bytes);
-    void *p = js_malloc(bytes);
-    return JS_LIKELY(!!p) ? p : onOutOfMemory(NULL, bytes, cx);
-}
-
-void*
-JSRuntime::calloc_(size_t bytes, JSCompartment *comp, JSContext *cx) {
-    JS_ASSERT_IF(cx != NULL, cx->compartment == comp);
-    updateMallocCounter(comp, bytes);
-    void *p = js_calloc(bytes);
-    return JS_LIKELY(!!p) ? p : onOutOfMemory(reinterpret_cast<void *>(1), bytes, cx);
-}
-
-void*
-JSRuntime::realloc_(void* p, size_t oldBytes, size_t newBytes, JSCompartment *comp, JSContext *cx) {
-    JS_ASSERT_IF(cx != NULL, cx->compartment == comp);
-    JS_ASSERT(oldBytes < newBytes);
-    updateMallocCounter(comp, newBytes - oldBytes);
-    void *p2 = js_realloc(p, newBytes);
-    return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, newBytes, cx);
-}
-
-void*
-JSRuntime::realloc_(void* p, size_t bytes, JSCompartment *comp, JSContext *cx) {
-    JS_ASSERT_IF(cx != NULL, cx->compartment == comp);
-    /*
-     * For compatibility we do not account for realloc that increases
-     * previously allocated memory.
-     */
-    if (!p)
-        updateMallocCounter(comp, bytes);
-    void *p2 = js_realloc(p, bytes);
-    return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, bytes, cx);
-}
-
 namespace js {
 
 inline void
