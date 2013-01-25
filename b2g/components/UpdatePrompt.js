@@ -55,7 +55,11 @@ UpdateCheckListener.prototype = {
   _updatePrompt: null,
 
   onCheckComplete: function UCL_onCheckComplete(request, updates, updateCount) {
-    if (Services.um.activeUpdate) {
+    if (Services.um.activeUpdate && Services.aus.isDownloading) {
+      // We're actively downloading an update, that's the update the user should
+      // see, even if a newer update is available.
+      this._updatePrompt.setUpdateStatus("active-update");
+      this._updatePrompt.showUpdateAvailable(Services.um.activeUpdate);
       return;
     }
 
@@ -177,6 +181,14 @@ UpdatePrompt.prototype = {
   showUpdateError: function UP_showUpdateError(aUpdate) {
     log("Update error, state: " + aUpdate.state + ", errorCode: " +
         aUpdate.errorCode);
+    if (aUpdate.state == "applied" && aUpdate.errorCode == 0) {
+      // The user chose to apply the update later and then tried to download
+      // it again. If there isn't a new update to download, then the updater
+      // code will detect that there is an update waiting to be installed and
+      // fail. So reprompt the user to apply the update.
+      this.showApplyPrompt(aUpdate);
+      return;
+    }
 
     this.sendUpdateEvent("update-error", aUpdate);
     this.setUpdateStatus(aUpdate.statusText);
