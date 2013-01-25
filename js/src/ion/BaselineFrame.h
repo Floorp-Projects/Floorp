@@ -51,26 +51,29 @@ class BaselineFrame
     // This is the old frame pointer saved in the prologue.
     static const uint32_t FramePointerOffset = sizeof(void *);
 
-    inline size_t frameSize() const {
+    size_t frameSize() const {
         return frameSize_;
     }
-    inline UnrootedObject scopeChain() const {
+    UnrootedObject scopeChain() const {
         return scopeChain_;
     }
     CalleeToken calleeToken() const {
         uint8_t *pointer = (uint8_t *)this + Size() + offsetOfCalleeToken();
         return *(CalleeToken *)pointer;
     }
-    inline UnrootedScript script() const {
+    UnrootedScript script() const {
         return ScriptFromCalleeToken(calleeToken());
     }
-    inline UnrootedFunction fun() const {
+    UnrootedFunction fun() const {
         return CalleeTokenToFunction(calleeToken());
     }
-    inline UnrootedFunction callee() const {
+    UnrootedFunction callee() const {
         return CalleeTokenToFunction(calleeToken());
     }
-    inline size_t numValueSlots() const {
+    Value calleev() const {
+        return ObjectValue(*callee());
+    }
+    size_t numValueSlots() const {
         size_t size = frameSize();
 
         JS_ASSERT(size >= BaselineFrame::FramePointerOffset + BaselineFrame::Size());
@@ -79,18 +82,37 @@ class BaselineFrame
         JS_ASSERT((size % sizeof(Value)) == 0);
         return size / sizeof(Value);
     }
-    inline Value *valueSlot(size_t slot) const {
+    Value *valueSlot(size_t slot) const {
         JS_ASSERT(slot < numValueSlots());
         return (Value *)this - (slot + 1);
     }
 
+    Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing) const {
+        JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
+        JS_ASSERT(i < script()->nfixed);
+        return *valueSlot(i);
+    }
+
+    unsigned numActualArgs() const {
+        return *(unsigned *)(reinterpret_cast<const uint8_t *>(this) +
+                             BaselineFrame::Size() +
+                             offsetOfNumActualArgs());
+    }
     unsigned numFormalArgs() const {
         return script()->function()->nargs;
+    }
+    Value &thisValue() const {
+        return *(Value *)(reinterpret_cast<const uint8_t *>(this) +
+                         BaselineFrame::Size() +
+                         offsetOfThis());
     }
     Value *formals() const {
         return (Value *)(reinterpret_cast<const uint8_t *>(this) +
                          BaselineFrame::Size() +
                          offsetOfArg(0));
+    }
+    Value *actuals() const {
+        return formals();
     }
 
     bool copyRawFrameSlots(AutoValueVector *vec) const;
@@ -125,7 +147,16 @@ class BaselineFrame
     bool isEvalFrame() const {
         return false;
     }
+    bool isNonStrictDirectEvalFrame() const {
+        return false;
+    }
+    bool isStrictEvalFrame() const {
+        return false;
+    }
     bool isNonEvalFunctionFrame() const {
+        return !!script()->function();
+    }
+    bool isFunctionFrame() const {
         return !!script()->function();
     }
 
@@ -138,6 +169,9 @@ class BaselineFrame
     }
     static inline size_t offsetOfArg(size_t index) {
         return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfActualArg(index);
+    }
+    static inline size_t offsetOfNumActualArgs() {
+        return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfNumActualArgs();
     }
     static size_t Size() {
         return sizeof(BaselineFrame);
