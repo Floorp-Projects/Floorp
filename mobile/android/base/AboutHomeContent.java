@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
@@ -25,6 +26,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -95,6 +97,8 @@ public class AboutHomeContent extends ScrollView
     private AccountManager mAccountManager;
     private OnAccountsUpdateListener mAccountListener = null;
 
+    private ContentObserver mTabsContentObserver = null;
+
     protected TopSitesCursorAdapter mTopSitesAdapter;
     protected TopSitesGridView mTopSitesGrid;
 
@@ -145,6 +149,18 @@ public class AboutHomeContent extends ScrollView
                 updateLayoutForSync();
             }
         }, GeckoAppShell.getHandler(), false);
+        
+        // Reload the mobile homepage on inbound tab syncs
+        // Because the tabs URI is coarse grained, this updates the
+        // remote tabs component on *every* tab change
+        // The observer will run on the background thread (see constructor argument)
+        mTabsContentObserver = new ContentObserver(GeckoAppShell.getHandler()) {
+            public void onChange(boolean selfChange) {
+                update(EnumSet.of(AboutHomeContent.UpdateFlags.REMOTE_TABS));
+            }
+        };
+        mActivity.getContentResolver().registerContentObserver(BrowserContract.Tabs.CONTENT_URI,
+                false, mTabsContentObserver);
 
         mRemoteTabClickListener = new View.OnClickListener() {
             @Override
@@ -248,6 +264,11 @@ public class AboutHomeContent extends ScrollView
             Cursor cursor = mTopSitesAdapter.getCursor();
             if (cursor != null && !cursor.isClosed())
                 cursor.close();
+        }
+
+        if (mTabsContentObserver != null) {
+            mActivity.getContentResolver().unregisterContentObserver(mTabsContentObserver);
+            mTabsContentObserver = null;
         }
     }
 
