@@ -1980,10 +1980,18 @@ this.DOMApplicationRegistry = {
       // try a new download.
       app.downloadAvailable = false;
 
-      // If there were not enough storage to download the packaged app we
+      // If there were not enough storage to download the package we
       // won't have a record of the download details, so we just set the
-      // installState to 'pending'.
-      app.installState = download ? download.previousState : "pending";
+      // installState to 'pending' at first download and to 'installed' when
+      // updating.
+      app.installState = download ? download.previousState
+                                  : aIsUpdate ? "installed"
+                                  : "pending";
+
+      if (app.staged) {
+        delete app.staged;
+      }
+
       self.broadcastMessage("Webapps:PackageEvent",
                             { type: "error",
                               manifestURL:  aApp.manifestURL,
