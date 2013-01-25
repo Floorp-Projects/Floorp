@@ -4,10 +4,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
+  <color name="autocomplete_listitem_text">#000000</color>
   <color name="splash_background">#000000</color>
   <color name="splash_msgfont">#ffffff</color>
   <color name="splash_urlfont">#000000</color>
   <color name="splash_content">#ffffff</color>
+  <color name="doorhanger_text">#ffffff</color>
   <color name="doorhanger_link">#ACC4D5</color>
   <color name="validation_message_text">#ffffff</color>
   <color name="identity_verified">#77BAFF</color>
@@ -20,5 +22,6 @@
   <color name="tab_indicator_unselected">@android:color/transparent</color>
   <color name="tab_indicator_unselected_focused">#34FF9500</color>
   <color name="abouthome_topsite_pin">#55000000</color>
+  <color name="dialogtitle_textcolor">#ffffff</color>
 </resources>
 

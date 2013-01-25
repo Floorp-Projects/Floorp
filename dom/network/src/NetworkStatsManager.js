@@ -122,9 +122,6 @@ NetworkStatsManager.prototype = {
       throw Components.results.NS_ERROR_INVALID_ARG;
     }
 
-    aOptions.start = aOptions.start.getTime();
-    aOptions.end = aOptions.end.getTime();
-
     let request = this.createRequest();
     cpmm.sendAsyncMessage("NetworkStats:Get",
                           {data: aOptions, id: this.getRequestId(request)});

@@ -31,6 +31,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
+#include "AccessCheck.h"
 
 #include "sampler.h"
 #include "nsJSPrincipals.h"
@@ -63,7 +64,6 @@ const char* XPCJSRuntime::mStrings[] = {
     "__proto__",            // IDX_PROTO
     "__iterator__",         // IDX_ITERATOR
     "__exposedProps__",     // IDX_EXPOSEDPROPS
-    "__scriptOnly__",       // IDX_SCRIPTONLY
     "baseURIObject",        // IDX_BASEURIOBJECT
     "nodePrincipal",        // IDX_NODEPRINCIPAL
     "documentURIObject",    // IDX_DOCUMENTURIOBJECT
@@ -223,13 +223,57 @@ CompartmentPrivate::~CompartmentPrivate()
 CompartmentPrivate*
 EnsureCompartmentPrivate(JSObject *obj)
 {
-    JSCompartment *c = js::GetObjectCompartment(obj);
+    return EnsureCompartmentPrivate(js::GetObjectCompartment(obj));
+}
+
+CompartmentPrivate*
+EnsureCompartmentPrivate(JSCompartment *c)
+{
     CompartmentPrivate *priv = GetCompartmentPrivate(c);
     if (priv)
         return priv;
     priv = new CompartmentPrivate();
     JS_SetCompartmentPrivate(c, priv);
     return priv;
+}
+
+bool
+IsUniversalXPConnectEnabled(JSCompartment *compartment)
+{
+    CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
+    if (!priv)
+        return false;
+    return priv->universalXPConnectEnabled;
+}
+
+bool
+IsUniversalXPConnectEnabled(JSContext *cx)
+{
+    JSCompartment *compartment = js::GetContextCompartment(cx);
+    if (!compartment)
+        return false;
+    return IsUniversalXPConnectEnabled(compartment);
+}
+
+bool
+EnableUniversalXPConnect(JSContext *cx)
+{
+    JSCompartment *compartment = js::GetContextCompartment(cx);
+    if (!compartment)
+        return true;
+    // Never set universalXPConnectEnabled on a chrome compartment - it confuses
+    // the security wrapping code.
+    if (AccessCheck::isChrome(compartment))
+        return true;
+    CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
+    if (!priv)
+        return true;
+    priv->universalXPConnectEnabled = true;
+
+    // Recompute all the cross-compartment wrappers leaving the newly-privileged
+    // compartment.
+    return js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
+                                 js::AllCompartments());
 }
 
 }

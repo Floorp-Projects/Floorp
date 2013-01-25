@@ -784,7 +784,6 @@ public:
         IDX_PROTO                   ,
         IDX_ITERATOR                ,
         IDX_EXPOSEDPROPS            ,
-        IDX_SCRIPTONLY              ,
         IDX_BASEURIOBJECT           ,
         IDX_NODEPRINCIPAL           ,
         IDX_DOCUMENTURIOBJECT       ,
@@ -4343,6 +4342,9 @@ private:
 CompartmentPrivate*
 EnsureCompartmentPrivate(JSObject *obj);
 
+CompartmentPrivate*
+EnsureCompartmentPrivate(JSCompartment *c);
+
 inline CompartmentPrivate*
 GetCompartmentPrivate(JSCompartment *compartment)
 {
@@ -4361,37 +4363,9 @@ GetCompartmentPrivate(JSObject *object)
     return GetCompartmentPrivate(compartment);
 }
 
-inline bool IsUniversalXPConnectEnabled(JSCompartment *compartment)
-{
-    CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
-    if (!priv)
-        return false;
-    return priv->universalXPConnectEnabled;
-}
-
-inline bool IsUniversalXPConnectEnabled(JSContext *cx)
-{
-    JSCompartment *compartment = js::GetContextCompartment(cx);
-    if (!compartment)
-        return false;
-    return IsUniversalXPConnectEnabled(compartment);
-}
-
-inline bool EnableUniversalXPConnect(JSContext *cx)
-{
-    JSCompartment *compartment = js::GetContextCompartment(cx);
-    if (!compartment)
-        return true;
-    CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
-    if (!priv)
-        return true;
-    priv->universalXPConnectEnabled = true;
-
-    // Recompute all the cross-compartment wrappers leaving the newly-privileged
-    // compartment.
-    return js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
-                                 js::AllCompartments());
-}
+bool IsUniversalXPConnectEnabled(JSCompartment *compartment);
+bool IsUniversalXPConnectEnabled(JSContext *cx);
+bool EnableUniversalXPConnect(JSContext *cx);
 
 // This returns null if and only if it is called on an object in a non-XPConnect
 // compartment.

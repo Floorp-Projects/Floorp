@@ -19,8 +19,6 @@ try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
   var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
-  var ghist = Cc["@mozilla.org/browser/global-history;2"].
-              getService(Ci.nsIGlobalHistory2);
   var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
   var prefs = Cc["@mozilla.org/preferences-service;1"].
@@ -92,7 +90,12 @@ function task_initializeBucket(bucket) {
         }
         else {
           matchTitle = searchTerm + "UnvisitedTyped";
-          ghist.setPageTitle(calculatedURI, matchTitle);
+          yield promiseAddVisits({
+            uri: calculatedURI,
+            title: matchTitle,
+            transition: visitType,
+            visitDate: now
+          });
           bhist.markPageAsTyped(calculatedURI);
         }
       }
@@ -133,7 +136,12 @@ function task_initializeBucket(bucket) {
 
     if (calculatedURI && frecency) {
       results.push([calculatedURI, frecency, matchTitle]);
-      setPageTitle(calculatedURI, matchTitle);
+      yield promiseAddVisits({
+        uri: calculatedURI,
+        title: matchTitle,
+        transition: visitType,
+        visitDate: dateInPeriod
+      });
     }
   }
 }

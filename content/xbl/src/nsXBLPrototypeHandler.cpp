@@ -44,6 +44,7 @@
 #include "nsXBLEventHandler.h"
 #include "nsXBLSerialize.h"
 #include "nsEventDispatcher.h"
+#include "nsJSUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 
@@ -349,14 +350,23 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
   const char **argNames;
   nsContentUtils::GetEventArgNames(kNameSpaceID_XBL, aName, &argCount,
                                    &argNames);
-  nsresult rv = aBoundContext->CompileEventHandler(aName, argCount, argNames,
-                                                   handlerText,
-                                                   bindingURI.get(), 
-                                                   mLineNumber,
-                                                   JSVERSION_LATEST,
-                                                   /* aIsXBL = */ true,
-                                                   aHandler);
+
+  JSContext* cx = aBoundContext->GetNativeContext();
+  JSAutoRequest ar(cx);
+  JSAutoCompartment ac(cx, aGlobal->GetGlobalJSObject());
+  JS::CompileOptions options(cx);
+  options.setFileAndLine(bindingURI.get(), mLineNumber)
+         .setVersion(JSVERSION_LATEST)
+         .setUserBit(true); // Flag us as XBL
+
+  js::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+  JSObject* handlerFun = nullptr;
+  nsresult rv = nsJSUtils::CompileFunction(cx, rootedNull, options,
+                                           nsAtomCString(aName), argCount,
+                                           argNames, handlerText, &handlerFun);
   NS_ENSURE_SUCCESS(rv, rv);
+  aHandler.set(handlerFun);
+  NS_ENSURE_TRUE(aHandler, NS_ERROR_FAILURE);
 
   if (pWindow) {
     pWindow->CacheXBLPrototypeHandler(this, aHandler);

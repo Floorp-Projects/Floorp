@@ -130,17 +130,11 @@ nsresult NrIceMediaStream::ParseTrickleCandidate(const std::string& candidate) {
   MOZ_MTLOG(PR_LOG_DEBUG, "NrIceCtx(" << ctx_->name() << ")/STREAM(" <<
             name() << ") : parsing trickle candidate " << candidate);
 
-  // Strip off Chrome's inappropriate leading a=.
-  // TODO(ekr@rtfm.com): remove once Chrome conforms to the specification
-  // or revisit if the specification changes.
-  char *candidate_ptr = const_cast<char *>(candidate.c_str());
-  std::string candidate_tmp;  // Define out of if clause so it stays live.
-  if (!candidate.compare(0, 2, static_cast<const char *>("a="))) {
-    candidate_tmp = candidate.substr(2, std::string::npos);
-    candidate_ptr = const_cast<char *>(candidate_tmp.c_str());
-  }
   r = nr_ice_peer_ctx_parse_trickle_candidate(ctx_->peer(),
-                                              stream_, candidate_ptr);
+                                              stream_,
+                                              const_cast<char *>(
+                                                candidate.c_str())
+                                              );
   if (r) {
     if (r == R_ALREADY) {
       MOZ_MTLOG(PR_LOG_ERROR, "Trickle candidates are redundant for stream '"

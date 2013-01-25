@@ -114,6 +114,26 @@ test_set_places_enabled()
   run_next_test();
 }
 
+
+void
+test_wait_checkpoint()
+{
+  // This "fake" test is here to wait for the initial WAL checkpoint we force
+  // after creating the database schema, since that may happen at any time,
+  // and cause concurrent readers to access an older checkpoint.
+  nsCOMPtr<mozIStorageConnection> db = do_get_db();
+  nsCOMPtr<mozIStorageAsyncStatement> stmt;
+  db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT 1"),
+                           getter_AddRefs(stmt));
+  nsRefPtr<AsyncStatementSpinner> spinner = new AsyncStatementSpinner();
+  nsCOMPtr<mozIStoragePendingStatement> pending;
+  (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pending));
+  spinner->SpinUntilCompleted();
+
+  // Run the next test.
+  run_next_test();
+}
+
 // These variables are shared between part 1 and part 2 of the test.  Part 2
 // sets the nsCOMPtr's to nullptr, freeing the reference.
 namespace test_unvisited_does_not_notify {
@@ -591,6 +611,7 @@ test_two_null_links_same_uri()
  */
 Test gTests[] = {
   TEST(test_set_places_enabled), // Must come first!
+  TEST(test_wait_checkpoint), // Must come second!
   TEST(test_unvisited_does_not_notify_part1), // Order Important!
   TEST(test_visited_notifies),
   TEST(test_unvisited_does_not_notify_part2), // Order Important!

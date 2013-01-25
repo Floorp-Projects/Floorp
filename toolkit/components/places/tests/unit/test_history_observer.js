@@ -150,7 +150,10 @@ add_task(function test_onTitleChanged() {
 
   let [testuri] = yield task_add_visit();
   let title = "test-title";
-  PlacesUtils.history.setPageTitle(testuri, title);
+  yield promiseAddVisits({
+    uri: testuri,
+    title: title
+  });
   yield promiseNotify;
 });
 

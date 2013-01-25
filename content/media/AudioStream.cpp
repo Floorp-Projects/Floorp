@@ -59,8 +59,7 @@ class NativeAudioStream : public AudioStream
   uint32_t Available();
   void SetVolume(double aVolume);
   void Drain();
-  nsresult Start();
-  bool IsStarted();
+  void Start();
   void Pause();
   void Resume();
   int64_t GetPosition();
@@ -465,17 +464,10 @@ void NativeAudioStream::Drain()
   }
 }
 
-nsresult NativeAudioStream::Start()
+void NativeAudioStream::Start()
 {
   // Since sydneyaudio is a push API, the playback is started when enough frames
   // have been written. Hence, Start() is a noop.
-  return NS_OK;
-}
-
-bool NativeAudioStream::IsStarted()
-{
-  // See the comment for the |Start()| method.
-  return true;
 }
 
 void NativeAudioStream::Pause()
@@ -620,8 +612,7 @@ class BufferedAudioStream : public AudioStream
   uint32_t Available();
   void SetVolume(double aVolume);
   void Drain();
-  nsresult Start();
-  bool IsStarted();
+  void Start();
   void Pause();
   void Resume();
   int64_t GetPosition();
@@ -656,6 +647,8 @@ private:
   // Shared implementation of underflow adjusted position calculation.
   // Caller must own the monitor.
   int64_t GetPositionInFramesUnlocked();
+
+  void StartUnlocked();
 
   // The monitor is held to protect all access to member variables.  Write()
   // waits while mBuffer is full; DataCallback() notifies as it consumes
@@ -821,9 +814,11 @@ BufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
     if (bytesToCopy > 0) {
       // If we are not playing, but our buffer is full, start playing to make
       // room for soon-to-be-decoded data.
-      if (!IsStarted()) {
-        MonitorAutoUnlock mon(mMonitor);
-        Start();
+      if (mState != STARTED) {
+        StartUnlocked();
+        if (mState != STARTED) {
+          return NS_ERROR_FAILURE;
+        }
       }
       mon.Wait();
     }
@@ -861,6 +856,7 @@ BufferedAudioStream::Drain()
 {
   MonitorAutoLock mon(mMonitor);
   if (mState != STARTED) {
+    NS_ASSERTION(mBuffer.Available() == 0, "Draining with unplayed audio");
     return;
   }
   mState = DRAINING;
@@ -869,24 +865,30 @@ BufferedAudioStream::Drain()
   }
 }
 
-nsresult
+void
 BufferedAudioStream::Start()
 {
-  if (!mCubebStream) {
-    return NS_ERROR_FAILURE;
-  }
-  if (mState != STARTED) {
-    int r = cubeb_stream_start(mCubebStream);
-    mState = r == CUBEB_OK ? STARTED : ERRORED;
-    return mState == STARTED ? NS_OK : NS_ERROR_FAILURE;
-  }
-  return NS_OK;
+  MonitorAutoLock mon(mMonitor);
+  StartUnlocked();
 }
 
-bool
-BufferedAudioStream::IsStarted()
+void
+BufferedAudioStream::StartUnlocked()
 {
-  return mState == STARTED ? true : false;
+  mMonitor.AssertCurrentThreadOwns();
+  if (!mCubebStream || mState != INITIALIZED) {
+    return;
+  }
+  if (mState != STARTED) {
+    int r;
+    {
+      MonitorAutoUnlock mon(mMonitor);
+      r = cubeb_stream_start(mCubebStream);
+    }
+    if (mState != ERRORED) {
+      mState = r == CUBEB_OK ? STARTED : ERRORED;
+    }
+  }
 }
 
 void

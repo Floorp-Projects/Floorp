@@ -31,6 +31,35 @@ function newUint8Worker() {
 
   return worker;
 }
+
+function newUint8WithOutgoingIndexWorker() {
+  let worker = newWorker();
+  let index = 4;          // index for read
+  let buf = [0, 0, 0, 0]; // Preserved parcel size
+
+  worker.Buf.writeUint8 = function (value) {
+    if (worker.Buf.outgoingIndex >= buf.length) {
+      buf.push(value);
+    } else {
+      buf[worker.Buf.outgoingIndex] = value;
+    }
+
+    worker.Buf.outgoingIndex++;
+  };
+
+  worker.Buf.readUint8 = function () {
+    return buf[index++];
+  };
+
+  worker.Buf.seekIncoming = function (offset) {
+    index += offset;
+  };
+
+  worker.debug = do_print;
+
+  return worker;
+}
+
 /**
  * Verify GsmPDUHelper#readICCUCS2String()
  */
@@ -1336,4 +1365,151 @@ add_test(function test_parse_pbr_tlvs() {
   do_check_eq(pbr.ext1.fileId, 0x4F4A);
 
   run_next_test();
+});
+
+/**
+ * Verify Event Download Command : Location Status
+ */
+add_test(function test_stk_event_download_location_status() {
+  let worker = newUint8WithOutgoingIndexWorker();
+  let buf = worker.Buf;
+  let pduHelper = worker.GsmPDUHelper;
+
+  buf.sendParcel = function () {
+    // Type
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND)
+
+    // Token : we don't care
+    this.readUint32();
+
+    // Data Size, 42 = 2 * (2 + TLV_DEVICE_ID_SIZE(4) +
+    //                      TLV_EVENT_LIST_SIZE(3) +
+    //                      TLV_LOCATION_STATUS_SIZE(3) +
+    //                      TLV_LOCATION_INFO_GSM_SIZE(9))
+    do_check_eq(this.readUint32(), 42);
+
+    // BER tag
+    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+
+    // BER length, 19 = TLV_DEVICE_ID_SIZE(4) +
+    //                  TLV_EVENT_LIST_SIZE(3) +
+    //                  TLV_LOCATION_STATUS_SIZE(3) +
+    //                  TLV_LOCATION_INFO_GSM_SIZE(9)
+    do_check_eq(pduHelper.readHexOctet(), 19);
+
+    // Device Identifies, Type-Length-Value(Source ID-Destination ID)
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 2);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+
+    // Event List, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 1);
+    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_LOCATION_STATUS);
+
+    // Location Status, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LOCATION_STATUS |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 1);
+    do_check_eq(pduHelper.readHexOctet(), STK_SERVICE_STATE_NORMAL);
+
+    // Location Info, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LOCATION_INFO |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 7);
+
+    do_check_eq(pduHelper.readHexOctet(), 0x21); // MCC + MNC
+    do_check_eq(pduHelper.readHexOctet(), 0x63);
+    do_check_eq(pduHelper.readHexOctet(), 0x54);
+    do_check_eq(pduHelper.readHexOctet(), 0); // LAC
+    do_check_eq(pduHelper.readHexOctet(), 0);
+    do_check_eq(pduHelper.readHexOctet(), 0); // Cell ID
+    do_check_eq(pduHelper.readHexOctet(), 0);
+
+    run_next_test();
+  };
+
+  let event = {
+    eventType: STK_EVENT_TYPE_LOCATION_STATUS,
+    locationStatus: STK_SERVICE_STATE_NORMAL,
+    locationInfo: {
+      mcc: 123,
+      mnc: 456,
+      gsmLocationAreaCode: 0,
+      gsmCellId: 0
+    }
+  };
+  worker.RIL.sendStkEventDownload({
+    event: event
+  });
+});
+
+/**
+ * Verify STK terminal response
+ */
+add_test(function test_stk_event_download_location_status() {
+  let worker = newUint8WithOutgoingIndexWorker();
+  let buf = worker.Buf;
+  let pduHelper = worker.GsmPDUHelper;
+
+  buf.sendParcel = function () {
+    // Type
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_TERMINAL_RESPONSE)
+
+    // Token : we don't care
+    this.readUint32();
+
+    // Data Size, 44 = 2 * (TLV_COMMAND_DETAILS_SIZE(5) +
+    //                      TLV_DEVICE_ID_SIZE(4) +
+    //                      TLV_RESULT_SIZE(3) +
+    //                      TEXT LENGTH(10))
+    do_check_eq(this.readUint32(), 44);
+
+    // Command Details, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 3);
+    do_check_eq(pduHelper.readHexOctet(), 0x01);
+    do_check_eq(pduHelper.readHexOctet(), STK_CMD_PROVIDE_LOCAL_INFO);
+    do_check_eq(pduHelper.readHexOctet(), STK_LOCAL_INFO_NNA);
+
+    // Device Identifies, Type-Length-Value(Source ID-Destination ID)
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+    do_check_eq(pduHelper.readHexOctet(), 2);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+
+    // Result
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 1);
+    do_check_eq(pduHelper.readHexOctet(), STK_RESULT_OK);
+
+    // Text
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 8);
+    do_check_eq(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_7BIT_PACKED);
+    do_check_eq(pduHelper.readSeptetsToString(7, 0, PDU_NL_IDENTIFIER_DEFAULT,
+                PDU_NL_IDENTIFIER_DEFAULT), "Mozilla");
+
+    run_next_test();
+  };
+
+  let response = {
+    command: {
+      commandNumber: 0x01,
+      typeOfCommand: STK_CMD_PROVIDE_LOCAL_INFO,
+      commandQualifier: STK_LOCAL_INFO_NNA,
+      options: {
+        isPacked: true
+      }
+    },
+    input: "Mozilla",
+    resultCode: STK_RESULT_OK
+  };
+  worker.RIL.sendStkTerminalResponse(response);
 });

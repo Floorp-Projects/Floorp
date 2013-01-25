@@ -60,11 +60,7 @@ ifdef _MSC_VER
 DEFINES += -D_MSC_VER=$(_MSC_VER)
 endif
 
-ifeq ($(MOZ_CHROME_FILE_FORMAT),jar)
-DEFINES += -DJAREXT=.jar
-else
 DEFINES += -DJAREXT=
-endif
 
 ifdef MOZ_ANGLE_RENDERER
 DEFINES += -DMOZ_ANGLE_RENDERER=$(MOZ_ANGLE_RENDERER)
@@ -152,7 +148,7 @@ ifdef MOZ_PKG_MANIFEST_P
 	rm -f $(DIST)/pack-list.txt $(DIST)/bin-list.txt
 endif
 
-installer:: removed-files
+installer::
 ifdef INSTALLER_DIR
 	$(MAKE) -C $(INSTALLER_DIR)
 endif

@@ -45,8 +45,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xd5358302, 0xcd6b, 0x4830, \
-    { 0x8c, 0x81, 0xfb, 0xc4, 0x31, 0x71, 0x1c, 0x11 } }
+{ 0xa2210341, 0x3123, 0x4477, \
+    { 0xb5, 0xa9, 0x91, 0x95, 0xbd, 0x77, 0xb1, 0xe6 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -120,43 +120,6 @@ public:
    */
   virtual nsresult ExecuteScript(JSScript* aScriptObject,
                                  JSObject* aScopeObject) = 0;
-
-  /**
-   * Compile the event handler named by atom aName, with function body aBody
-   * into a function object returned if ok via aHandler.  Does NOT bind the
-   * function to anything - BindCompiledEventHandler() should be used for that
-   * purpose.  Note that this event handler is always considered 'shared' and
-   * hence is compiled without principals.  Never call the returned object
-   * directly - it must be bound (and thereby cloned, and therefore have the 
-   * correct principals) before use!
-   *
-   * If the compilation sets a pending exception on the native context, it is
-   * this method's responsibility to report said exception immediately, without
-   * relying on callers to do so.
-   *
-   *
-   * @param aName an nsIAtom pointer naming the function; it must be lowercase
-   *        and ASCII, and should not be longer than 63 chars.  This bound on
-   *        length is enforced only by assertions, so caveat caller!
-   * @param aEventName the name that the event object should be bound to
-   * @param aBody the event handler function's body
-   * @param aURL the URL or filename for error messages
-   * @param aLineNo the starting line number of the script for error messages
-   * @param aVersion the script language version to use when executing
-   * @param aHandler the out parameter in which a void pointer to the compiled
-   *        function object is stored on success
-   *
-   * @return NS_OK if the function body was valid and got compiled
-   */
-  virtual nsresult CompileEventHandler(nsIAtom* aName,
-                                       uint32_t aArgCount,
-                                       const char** aArgNames,
-                                       const nsAString& aBody,
-                                       const char* aURL,
-                                       uint32_t aLineNo,
-                                       uint32_t aVersion,
-                                       bool aIsXBL,
-                                       nsScriptObjectHolder<JSObject>& aHandler) = 0;
 
   /**
    * Call the function object with given args and return its boolean result,

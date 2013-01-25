@@ -1,6 +1,10 @@
 
 Changes made to pristine png source by mozilla.org developers.
 
+2012/07/04  -- Disabled TEXT support in mozpngconf.h.
+
+2012/10/02  -- Synced with libpng-1.5.13 (bug #775662).
+
 2012/07/16  -- Add an "APNG-aware app" flag (bug #759067).
 
 2012/07/04  -- Synced with libpng-1.5.11 (bug #771394).

@@ -29,10 +29,6 @@ FORCE_STATIC_LIB = 1
 
 EXPORTS_NAMESPACES = mozilla/net
 
-ifdef GNU_CC
-OS_CFLAGS := $(filter-out -pedantic,$(OS_CFLAGS))
-endif
-
 CSRCS := \
   ekt.c \
   srtp.c \
