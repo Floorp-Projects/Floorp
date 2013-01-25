@@ -284,7 +284,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx)
     // Call the target function.
     // Note that this assumes the function is JITted.
     masm.movl(Operand(eax, offsetof(JSFunction, u.i.script_)), eax);
-    masm.loadBaselineOrIonCode(eax);
+    masm.loadBaselineOrIonCode(eax, NULL);
     masm.movl(Operand(eax, IonCode::offsetOfCode()), eax);
     masm.call(eax);
 

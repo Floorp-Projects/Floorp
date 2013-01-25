@@ -33,6 +33,7 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #ifdef JS_ION
+#include "ion/BaselineJIT.h"
 #include "ion/IonCompartment.h"
 #include "ion/Ion.h"
 #endif
@@ -606,7 +607,19 @@ JSCompartment::discardJitCode(FreeOp *fop, bool discardConstraints)
         PurgeJITCaches(this);
     } else {
 # ifdef JS_ION
-        /* Only mark OSI points if code is being discarded. */
+
+#  ifdef DEBUG
+        /* Assert no baseline scripts are marked as active. */
+        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            JS_ASSERT_IF(script->hasBaselineScript(), !script->baseline->active());
+        }
+#  endif
+
+        /*
+         * Invalidate Ion scripts and mark baseline scripts on the stack as
+         * active.
+         */
         ion::InvalidateAll(fop, this);
 # endif
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
@@ -614,6 +627,12 @@ JSCompartment::discardJitCode(FreeOp *fop, bool discardConstraints)
             mjit::ReleaseScriptCode(fop, script);
 # ifdef JS_ION
             ion::FinishInvalidation(fop, script);
+
+            /*
+             * Discard script if it's not marked as active. Note that this
+             * also resets the active flag.
+             */
+            ion::FinishDiscardBaselineScript(fop, script);
 # endif
 
             /*

@@ -65,6 +65,10 @@ struct BaselineScript
     // Allocated space for optimized stubs.
     ICStubSpace optimizedStubSpace_;
 
+    // Bit set when discarding JIT code, to indicate this script is
+    // on the stack and should not be discarded.
+    bool active_;
+
   private:
     void trace(JSTracer *trc);
 
@@ -84,6 +88,16 @@ struct BaselineScript
 
     static inline size_t offsetOfMethod() {
         return offsetof(BaselineScript, method_);
+    }
+
+    bool active() const {
+        return active_;
+    }
+    void setActive() {
+        active_ = true;
+    }
+    void resetActive() {
+        active_ = false;
     }
 
     ICEntry *icEntryList() {
@@ -144,6 +158,9 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp, bool new
 
 IonExecStatus
 EnterBaselineMethod(JSContext *cx, StackFrame *fp);
+
+void
+FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script);
 
 } // namespace ion
 } // namespace js

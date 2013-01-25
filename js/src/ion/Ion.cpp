@@ -1787,6 +1787,9 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
         }
 #endif
 
+        if (invalidateAll && it.isBaselineJS())
+            it.script()->baseline->setActive();
+
         if (!it.isOptimizedJS())
             continue;
 
@@ -2142,6 +2145,9 @@ ion::DestroyIonScripts(FreeOp *fop, UnrootedScript script) {
 
     if (script->hasParallelIonScript())
         ion::IonScript::Destroy(fop, script->parallelIon);
+
+    if (script->hasBaselineScript())
+        ion::BaselineScript::Destroy(fop, script->baseline);
 }
 
 void
