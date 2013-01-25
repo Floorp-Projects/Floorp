@@ -49,11 +49,10 @@ class Debugger;
  *   for the corresponding JSProtoKey offset from 2 * JSProto_LIMIT.
  * [3 * JSProto_LIMIT, RESERVED_SLOTS)
  *   Various one-off values: ES5 13.2.3's [[ThrowTypeError]], RegExp statics,
- *   the Namespace object for E4X's function::, the original eval for this
- *   global object (implementing |var eval = otherWindow.eval; eval(...)| as an
- *   indirect eval), a bit indicating whether this object has been cleared
- *   (see JS_ClearScope), and a cache for whether eval is allowed (per the
- *   global's Content Security Policy).
+ *   the original eval for this global object (implementing |var eval =
+ *   otherWindow.eval; eval(...)| as an indirect eval), a bit indicating
+ *   whether this object has been cleared (see JS_ClearScope), and a cache for
+ *   whether eval is allowed (per the global's Content Security Policy).
  *
  * The first two ranges are necessary to implement js::FindClassObject,
  * FindClassPrototype, and spec language speaking in terms of "the original
@@ -427,8 +426,6 @@ class GlobalObject : public JSObject
         JS_ASSERT(getSlot(EVAL).isObject());
         return getSlot(EVAL);
     }
-
-    bool getFunctionNamespace(JSContext *cx, Value *vp);
 
     // Implemented in jsiter.cpp.
     static bool initIteratorClasses(JSContext *cx, Handle<GlobalObject*> global);

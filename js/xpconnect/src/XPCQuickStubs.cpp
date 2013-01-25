@@ -828,14 +828,6 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     // else...
     // Slow path.
 
-    // XXX E4X breaks the world. Don't try wrapping E4X objects!
-    // This hack can be removed (or changed accordingly) when the
-    // DOM <-> E4X bindings are complete, see bug 270553
-    if (JS_TypeOfValue(cx, OBJECT_TO_JSVAL(src)) == JSTYPE_XML) {
-        *ppArgRef = nullptr;
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-
     // Try to unwrap a slim wrapper.
     nsISupports *iface;
     if (XPCConvert::GetISupportsFromJSObject(src, &iface)) {

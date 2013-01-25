@@ -310,10 +310,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isJaegerInlineable = isIonInlineable = false;
             break;
 
-          case JSOP_QNAMEPART:
-          case JSOP_QNAMECONST:
-            isJaegerCompileable = false;
-            /* FALL THROUGH */
           case JSOP_NAME:
           case JSOP_CALLNAME:
           case JSOP_BINDNAME:
@@ -874,7 +870,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
                     jsbytecode *entrypc = script_->code + entry;
 
-                    if (JSOp(*entrypc) == JSOP_GOTO || JSOp(*entrypc) == JSOP_FILTER)
+                    if (JSOp(*entrypc) == JSOP_GOTO)
                         loop->entry = entry + GET_JUMP_OFFSET(entrypc);
                     else
                         loop->entry = targetOffset;

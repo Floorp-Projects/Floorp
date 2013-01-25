@@ -11,7 +11,6 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jslock.h"
-#include "jsxml.h"
 
 #include "gc/Root.h"
 #include "js/TemplateLib.h"
@@ -603,10 +602,5 @@ js_NewGCBaseShape(JSContext *cx)
 {
     return js::gc::NewGCThing<js::BaseShape, allowGC>(cx, js::gc::FINALIZE_BASE_SHAPE, sizeof(js::BaseShape));
 }
-
-#if JS_HAS_XML_SUPPORT
-extern JSXML *
-js_NewGCXML(JSContext *cx);
-#endif
 
 #endif /* jsgcinlines_h___ */
