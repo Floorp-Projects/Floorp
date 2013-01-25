@@ -12,7 +12,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = test_mtransport
 
 DEFINES += \
-  -DHAVE_STRDUP -DNR_SOCKET_IS_VOID_PTR -DSCTP_DEBUG -DINET -DINET6
+  -DHAVE_STRDUP -DNR_SOCKET_IS_VOID_PTR -DSCTP_DEBUG -DINET
+
+ifneq ($(OS_TARGET),Android)
+DEFINES += -DINET6
+endif
+
 LIBS = $(EXTRA_DSO_LIBS) \
   $(XPCOM_LIBS) \
   $(NSPR_LIBS) \

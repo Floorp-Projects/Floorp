@@ -319,7 +319,7 @@ ConcatStringsMaybeAllowGC(JSContext *cx,
         return NULL;
 
     if (JSShortString::lengthFits(wholeLength)) {
-        JSShortString *str = allowGC ? js_NewGCShortString(cx) : js_TryNewGCShortString(cx);
+        JSShortString *str = js_NewGCShortString<allowGC>(cx);
         if (!str)
             return NULL;
         const jschar *leftChars = left->getChars(cx);

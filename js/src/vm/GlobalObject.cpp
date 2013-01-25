@@ -161,7 +161,7 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
     if (!CheckAccess(cx, obj, nid, JSAccessMode(JSACC_PROTO | JSACC_WRITE), &v, &dummy))
         return false;
 
-    if (!SetProto(cx, obj, newProto, true))
+    if (!SetClassAndProto(cx, obj, obj->getClass(), newProto, true))
         return false;
 
     args.rval().setUndefined();
@@ -200,7 +200,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * to have unknown properties, to simplify handling of e.g. heterogenous
      * objects in JSON and script literals.
      */
-    if (!setNewTypeUnknown(cx, objectProto))
+    if (!setNewTypeUnknown(cx, &ObjectClass, objectProto))
         return NULL;
 
     /* Create |Function.prototype| next so we can create other functions. */
@@ -263,7 +263,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
          * inference to have unknown properties, to simplify handling of e.g.
          * CloneFunctionObject.
          */
-        if (!setNewTypeUnknown(cx, functionProto))
+        if (!setNewTypeUnknown(cx, &FunctionClass, functionProto))
             return NULL;
     }
 
@@ -404,7 +404,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * only set the [[Prototype]] if it hasn't already been set.
      */
     Rooted<TaggedProto> tagged(cx, TaggedProto(objectProto));
-    if (self->shouldSplicePrototype(cx) && !self->splicePrototype(cx, tagged))
+    if (self->shouldSplicePrototype(cx) && !self->splicePrototype(cx, self->getClass(), tagged))
         return NULL;
 
     /*

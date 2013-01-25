@@ -6,6 +6,9 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.GfxInfoThread;
+import org.mozilla.gecko.util.GeckoEventListener;
+
+import org.json.JSONObject;
 
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -15,16 +18,27 @@ import android.util.Log;
 
 import java.util.Locale;
 
-public class GeckoThread extends Thread {
+public class GeckoThread extends Thread implements GeckoEventListener {
     private static final String LOGTAG = "GeckoThread";
 
-    Intent mIntent;
-    String mUri;
+    public enum LaunchState {
+        Launching,
+        WaitForDebugger,
+        Launched,
+        GeckoRunning,
+        GeckoExiting
+    };
+
+    private static LaunchState sLaunchState = LaunchState.Launching;
+
+    private final Intent mIntent;
+    private final String mUri;
 
     GeckoThread(Intent intent, String uri) {
         mIntent = intent;
         mUri = uri;
         setName("Gecko");
+        GeckoAppShell.getEventDispatcher().registerEventListener("Gecko:Ready", this);
     }
 
     public void run() {
@@ -78,5 +92,38 @@ public class GeckoThread extends Thread {
                                args,
                                mUri,
                                type);
+    }
+
+    public void handleMessage(String event, JSONObject message) {
+        if ("Gecko:Ready".equals(event)) {
+            GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
+            setLaunchState(LaunchState.GeckoRunning);
+            GeckoAppShell.sendPendingEventsToGecko();
+        }
+    }
+
+    public static boolean checkLaunchState(LaunchState checkState) {
+        synchronized (sLaunchState) {
+            return sLaunchState == checkState;
+        }
+    }
+
+    static void setLaunchState(LaunchState setState) {
+        synchronized (sLaunchState) {
+            sLaunchState = setState;
+        }
+    }
+
+    /**
+     * Set the launch state to <code>setState</code> and return true if the current launch
+     * state is <code>checkState</code>; otherwise do nothing and return false.
+     */
+    static boolean checkAndSetLaunchState(LaunchState checkState, LaunchState setState) {
+        synchronized (sLaunchState) {
+            if (sLaunchState != checkState)
+                return false;
+            sLaunchState = setState;
+            return true;
+        }
     }
 }

@@ -835,11 +835,9 @@ NetworkManager.prototype = {
   }
 };
 
-XPCOMUtils.defineLazyGetter(NetworkManager.prototype, "mRIL", function () {
-    return Cc["@mozilla.org/telephony/system-worker-manager;1"]
-              .getService(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIRadioInterfaceLayer);
-});
+XPCOMUtils.defineLazyServiceGetter(NetworkManager.prototype, "mRIL",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
 

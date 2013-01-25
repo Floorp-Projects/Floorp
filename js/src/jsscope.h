@@ -342,7 +342,6 @@ class BaseShape : public js::gc::Cell
     inline void assertConsistency();
 
     /* For JIT usage */
-    static inline size_t offsetOfClass() { return offsetof(BaseShape, clasp); }
     static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
@@ -499,8 +498,6 @@ class Shape : public js::gc::Cell
     static inline UnrootedShape search(JSContext *cx, Shape *start, jsid id,
                                        Shape ***pspp, bool adding = false);
 
-    static inline UnrootedShape searchNoAllocation(UnrootedShape start, jsid id);
-
     inline void removeFromDictionary(JSObject *obj);
     inline void insertIntoDictionary(HeapPtrShape *dictp);
 
@@ -513,7 +510,7 @@ class Shape : public js::gc::Cell
     static UnrootedShape replaceLastProperty(JSContext *cx, const StackBaseShape &base,
                                              TaggedProto proto, HandleShape shape);
 
-    static bool hashify(JSContext *cx, HandleShape shape);
+    static bool hashify(JSContext *cx, Shape *shape);
     void handoffTableTo(UnrootedShape newShape);
 
     inline void setParent(UnrootedShape p);
@@ -521,11 +518,10 @@ class Shape : public js::gc::Cell
     bool ensureOwnBaseShape(JSContext *cx) {
         if (base()->isOwned())
             return true;
-        RootedShape self(cx, this);
-        return makeOwnBaseShape(cx, self);
+        return makeOwnBaseShape(cx);
     }
 
-    static bool makeOwnBaseShape(JSContext *cx, HandleShape shape);
+    bool makeOwnBaseShape(JSContext *cx);
 
   public:
     bool hasTable() const { return base()->hasTable(); }
@@ -1056,14 +1052,7 @@ namespace js {
 inline UnrootedShape
 Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 {
-    AssertCanGC();
-#ifdef DEBUG
-    {
-        SkipRoot skip0(cx, &start);
-        SkipRoot skip1(cx, &id);
-        MaybeCheckStackRoots(cx);
-    }
-#endif
+    AutoAssertNoGC nogc;
 
     if (start->inDictionary()) {
         *pspp = start->table().search(id, adding);
@@ -1079,14 +1068,10 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 
     if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
         if (start->isBigEnoughForAShapeTable()) {
-            RootedShape startRoot(cx, start);
-            RootedId idRoot(cx, id);
-            if (Shape::hashify(cx, startRoot)) {
-                Shape **spp = startRoot->table().search(idRoot, adding);
+            if (Shape::hashify(cx, start)) {
+                Shape **spp = start->table().search(id, adding);
                 return SHAPE_FETCH(spp);
             }
-            start = startRoot;
-            id = idRoot;
         }
         /*
          * No table built -- there weren't enough entries, or OOM occurred.
@@ -1095,22 +1080,6 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
         JS_ASSERT(!start->hasTable());
     } else {
         start->incrementNumLinearSearches();
-    }
-
-    for (UnrootedShape shape = start; shape; shape = shape->parent) {
-        if (shape->propidRef() == id)
-            return shape;
-    }
-
-    return UnrootedShape(NULL);
-}
-
-/* static */ inline UnrootedShape
-Shape::searchNoAllocation(UnrootedShape start, jsid id)
-{
-    if (start->hasTable()) {
-        Shape **spp = start->table().search(id, false);
-        return SHAPE_FETCH(spp);
     }
 
     for (UnrootedShape shape = start; shape; shape = shape->parent) {

@@ -130,6 +130,7 @@ webidl_files = \
   SVGLinearGradientElement.webidl \
   SVGLineElement.webidl \
   SVGLocatableElement.webidl \
+  SVGMaskElement.webidl \
   SVGMatrix.webidl \
   SVGMetadataElement.webidl \
   SVGMPathElement.webidl \
@@ -190,6 +191,7 @@ endif
 ifdef MOZ_WEBRTC
 webidl_files += \
   MediaStreamList.webidl \
+  RTCIceServer.webidl \
   $(NULL)
 endif
 

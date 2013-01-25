@@ -272,13 +272,19 @@ BEGIN_TEST(testVersion_AllowXML)
 {
     JSBool ok;
 
+    // The first JS_Evaluate* call should fail with a SyntaxError.
+    // Since it's expected, don't report it to stderr.
+    uint32_t baseOptions = JS_GetOptions(cx);
+    JS_SetOptions(cx, baseOptions | JSOPTION_DONT_REPORT_UNCAUGHT);
+
     static const char code[] = "var m = <x/>;";
     ok = JS_EvaluateScriptForPrincipalsVersion(cx, global, NULL, code, strlen(code),
                                                __FILE__, __LINE__, NULL, JSVERSION_ECMA_5);
     CHECK_EQUAL(ok, JS_FALSE);
     JS_ClearPendingException(cx);
 
-    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ALLOW_XML);
+    // Permit XML, and turn error reporting back on (just in case this fails).
+    JS_SetOptions(cx, baseOptions | JSOPTION_ALLOW_XML);
     ok = JS_EvaluateScriptForPrincipalsVersion(cx, global, NULL, code, strlen(code),
                                                __FILE__, __LINE__, NULL, JSVERSION_ECMA_5);
     CHECK_EQUAL(ok, JS_TRUE);

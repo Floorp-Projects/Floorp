@@ -130,17 +130,14 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         loadPtr(Address(dest, Shape::offsetOfBase()), dest);
     }
-    void loadBaseShapeClass(Register baseShapeReg, Register dest) {
-        loadPtr(Address(baseShapeReg, BaseShape::offsetOfClass()), dest);
-    }
     void loadObjClass(Register objReg, Register dest) {
-        loadBaseShape(objReg, dest);
-        loadBaseShapeClass(dest, dest);
+        loadPtr(Address(objReg, JSObject::offsetOfType()), dest);
+        loadPtr(Address(dest, offsetof(types::TypeObject, clasp)), dest);
     }
     void branchTestObjClass(Condition cond, Register obj, Register scratch, js::Class *clasp,
                             Label *label) {
-        loadBaseShape(obj, scratch);
-        branchPtr(cond, Address(scratch, BaseShape::offsetOfClass()), ImmWord(clasp), label);
+        loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
+        branchPtr(cond, Address(scratch, offsetof(types::TypeObject, clasp)), ImmWord(clasp), label);
     }
     void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);

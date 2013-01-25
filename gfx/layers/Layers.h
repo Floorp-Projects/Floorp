@@ -489,9 +489,32 @@ public:
    */
   void LogSelf(const char* aPrefix="");
 
-  void StartFrameTimeRecording();
+  /**
+   * Record (and return) frame-intervals and paint-times for frames which were presented
+   *   between calling StartFrameTimeRecording and StopFrameTimeRecording.
+   *
+   * - Uses a cyclic buffer and serves concurrent consumers, so if Stop is called too late
+   *     (elements were overwritten since Start), result is considered invalid and hence empty.
+   * - Buffer is capable of holding 10 seconds @ 60fps (or more if frames were less frequent).
+   *     Can be changed (up to 1 hour) via pref: toolkit.framesRecording.bufferSize.
+   * - Note: the first frame-interval may be longer than expected because last frame
+   *     might have been presented some time before calling StartFrameTimeRecording.
+   */
+
+  /**
+   * Returns a handle which represents current recording start position.
+   */
+  uint32_t StartFrameTimeRecording();
+
+  /**
+   *  Clears, then populates 2 arraye with the recorded frames timing data.
+   *  The arrays will be empty if data was overwritten since aStartIndex was obtained.
+   */
+  void StopFrameTimeRecording(uint32_t         aStartIndex,
+                              nsTArray<float>& aFrameIntervals,
+                              nsTArray<float>& aPaintTimes);
+
   void SetPaintStartTime(TimeStamp& aTime);
-  void StopFrameTimeRecording(nsTArray<float>& aFrameTimes, nsTArray<float>& aProcessingTimes);
 
   void PostPresent();
 
@@ -526,10 +549,25 @@ protected:
   uint64_t mId;
   bool mInTransaction;
 private:
-  TimeStamp mLastFrameTime;
-  TimeStamp mPaintStartTime;
-  nsTArray<float> mFrameIntervals;
-  nsTArray<float> mPaintTimes;
+  struct FramesTimingRecording
+  {
+    // Stores state and data for frame intervals and paint times recording.
+    // see LayerManager::StartFrameTimeRecording() at Layers.cpp for more details.
+    FramesTimingRecording()
+      : mIsPaused(true)
+      , mNextIndex(0)
+    {}
+    bool mIsPaused;
+    uint32_t mNextIndex;
+    TimeStamp mLastFrameTime;
+    TimeStamp mPaintStartTime;
+    nsTArray<float> mIntervals;
+    nsTArray<float> mPaints;
+    uint32_t mLatestStartIndex;
+    uint32_t mCurrentRunStartIndex;
+  };
+  FramesTimingRecording mRecording;
+
   TimeStamp mTabSwitchStart;
 };
 
