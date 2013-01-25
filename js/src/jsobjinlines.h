@@ -22,7 +22,6 @@
 #include "jsproxy.h"
 #include "jsstr.h"
 #include "jstypedarray.h"
-#include "jsxml.h"
 #include "jswrapper.h"
 
 #include "builtin/MapObject.h"
@@ -749,97 +748,6 @@ JSObject::setDateUTCTime(const js::Value &time)
     setFixedSlot(JSSLOT_DATE_UTC_TIME, time);
 }
 
-#if JS_HAS_XML_SUPPORT
-
-inline JSLinearString *
-JSObject::getNamePrefix() const
-{
-    JS_ASSERT(isNamespace() || isQName());
-    const js::Value &v = getSlot(JSSLOT_NAME_PREFIX);
-    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
-}
-
-inline jsval
-JSObject::getNamePrefixVal() const
-{
-    JS_ASSERT(isNamespace() || isQName());
-    return getSlot(JSSLOT_NAME_PREFIX);
-}
-
-inline void
-JSObject::setNamePrefix(JSLinearString *prefix)
-{
-    JS_ASSERT(isNamespace() || isQName());
-    setSlot(JSSLOT_NAME_PREFIX, prefix ? js::StringValue(prefix) : js::UndefinedValue());
-}
-
-inline void
-JSObject::clearNamePrefix()
-{
-    JS_ASSERT(isNamespace() || isQName());
-    setSlot(JSSLOT_NAME_PREFIX, js::UndefinedValue());
-}
-
-inline JSLinearString *
-JSObject::getNameURI() const
-{
-    JS_ASSERT(isNamespace() || isQName());
-    const js::Value &v = getSlot(JSSLOT_NAME_URI);
-    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
-}
-
-inline jsval
-JSObject::getNameURIVal() const
-{
-    JS_ASSERT(isNamespace() || isQName());
-    return getSlot(JSSLOT_NAME_URI);
-}
-
-inline void
-JSObject::setNameURI(JSLinearString *uri)
-{
-    JS_ASSERT(isNamespace() || isQName());
-    setSlot(JSSLOT_NAME_URI, uri ? js::StringValue(uri) : js::UndefinedValue());
-}
-
-inline jsval
-JSObject::getNamespaceDeclared() const
-{
-    JS_ASSERT(isNamespace());
-    return getSlot(JSSLOT_NAMESPACE_DECLARED);
-}
-
-inline void
-JSObject::setNamespaceDeclared(jsval decl)
-{
-    JS_ASSERT(isNamespace());
-    setSlot(JSSLOT_NAMESPACE_DECLARED, decl);
-}
-
-inline JSAtom *
-JSObject::getQNameLocalName() const
-{
-    JS_ASSERT(isQName());
-    const js::Value &v = getSlot(JSSLOT_QNAME_LOCAL_NAME);
-    return !v.isUndefined() ? &v.toString()->asAtom() : NULL;
-}
-
-inline jsval
-JSObject::getQNameLocalNameVal() const
-{
-    JS_ASSERT(isQName());
-    return getSlot(JSSLOT_QNAME_LOCAL_NAME);
-}
-
-inline void
-JSObject::setQNameLocalName(JSAtom *name)
-{
-    JS_ASSERT(isQName());
-    setSlot(JSSLOT_QNAME_LOCAL_NAME, name ? js::StringValue(name) : js::UndefinedValue());
-}
-
-#endif
-
 /* static */ inline bool
 JSObject::setSingletonType(JSContext *cx, js::HandleObject obj)
 {
@@ -1031,27 +939,6 @@ JSObject::isDebugScope() const
     extern bool js_IsDebugScopeSlow(js::RawObject obj);
     return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(const_cast<JSObject*>(this));
 }
-
-#if JS_HAS_XML_SUPPORT
-inline bool JSObject::isNamespace() const { return hasClass(&js::NamespaceClass); }
-inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }
-
-inline bool
-JSObject::isXMLId() const
-{
-    return hasClass(&js::QNameClass)
-        || hasClass(&js::AttributeNameClass)
-        || hasClass(&js::AnyNameClass);
-}
-
-inline bool
-JSObject::isQName() const
-{
-    return hasClass(&js::QNameClass)
-        || hasClass(&js::AttributeNameClass)
-        || hasClass(&js::AnyNameClass);
-}
-#endif /* JS_HAS_XML_SUPPORT */
 
 /* static */ inline JSObject *
 JSObject::create(JSContext *cx, js::gc::AllocKind kind,
@@ -1482,25 +1369,6 @@ GetOuterObject(JSContext *cx, HandleObject obj)
         return op(cx, obj);
     return obj;
 }
-
-#if JS_HAS_XML_SUPPORT
-/*
- * Methods to test whether an object or a value is of type "xml" (per typeof).
- */
-
-#define VALUE_IS_XML(v)     ((v).isObject() && (v).toObject().isXML())
-
-static inline bool
-IsXML(const js::Value &v)
-{
-    return v.isObject() && v.toObject().isXML();
-}
-
-#else
-
-#define VALUE_IS_XML(v)     false
-
-#endif /* JS_HAS_XML_SUPPORT */
 
 static inline bool
 IsStopIteration(const js::Value &v)
@@ -1944,23 +1812,6 @@ static JS_ALWAYS_INLINE bool
 ValueIsSpecial(JSObject *obj, MutableHandleValue propval, MutableHandle<SpecialId> sidp,
                JSContext *cx)
 {
-#if JS_HAS_XML_SUPPORT
-    if (!propval.isObject())
-        return false;
-
-    if (obj->isXML()) {
-        sidp.set(SpecialId(propval.toObject()));
-        return true;
-    }
-
-    JSObject &propobj = propval.toObject();
-    JSAtom *name;
-    if (propobj.isQName() && GetLocalNameFromFunctionQName(&propobj, &name, cx)) {
-        propval.setString(name);
-        return false;
-    }
-#endif
-
     return false;
 }
 

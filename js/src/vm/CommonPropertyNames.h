@@ -13,23 +13,6 @@
 #include "jsprototypes.h"
 #include "jsversion.h"
 
-#if JS_HAS_XML_SUPPORT
-#define FOR_EACH_XML_ONLY_NAME(macro) \
-    macro(etago, etago, "</") \
-    macro(functionNamespaceURI, functionNamespaceURI, "@mozilla.org/js/function") \
-    macro(namespace, namespace_, "namespace") \
-    macro(ptagc, ptagc, "/>") \
-    macro(qualifier, qualifier, "::") \
-    macro(space, space, " ") \
-    macro(stago, stago, "<") \
-    macro(star, star, "*") \
-    macro(starQualifier, starQualifier, "*::") \
-    macro(tagc, tagc, ">") \
-    macro(XMLList, XMLList, "XMLList")
-#else
-#define FOR_EACH_XML_ONLY_NAME(macro) /* nothing */
-#endif /* JS_HAS_XML_SUPPORT */
-
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
     macro(anonymous, anonymous, "anonymous") \
     macro(apply, apply, "apply") \
@@ -90,7 +73,6 @@
     macro(isFinite, isFinite, "isFinite") \
     macro(isNaN, isNaN, "isNaN") \
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \
-    macro(isXMLName, isXMLName, "isXMLName") \
     macro(iterate, iterate, "iterate") \
     macro(Infinity, Infinity, "Infinity") \
     macro(iterator, iterator, "iterator") \
@@ -154,8 +136,6 @@
     macro(string, string, "string") \
     macro(number, number, "number") \
     macro(boolean, boolean, "boolean") \
-    macro(null, null, "null") \
-    macro(xml, xml, "xml") \
-    FOR_EACH_XML_ONLY_NAME(macro)
+    macro(null, null, "null")
 
 #endif /* CommonPropertyNames_h__ */
