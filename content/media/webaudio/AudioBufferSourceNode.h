@@ -28,6 +28,10 @@ public:
     }
     AudioSourceNode::DestroyMediaStream();
   }
+  virtual bool SupportsMediaStreams() const MOZ_OVERRIDE
+  {
+    return true;
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode, AudioSourceNode)
