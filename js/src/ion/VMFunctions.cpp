@@ -541,8 +541,12 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
     // return value. If it returns |false|, the debugger threw an exception.
     // In both cases we have to pop debug scopes.
     ok = ScriptDebugEpilogue(cx, frame, ok);
-    JS_ASSERT_IF(ok, frame->hasReturnValue());
-    DebugScopes::onPopCall(frame, cx);
+
+    if (frame->isNonEvalFunctionFrame()) {
+        JS_ASSERT_IF(ok, frame->hasReturnValue());
+        DebugScopes::onPopCall(frame, cx);
+    }
+
     return ok;
 }
 
