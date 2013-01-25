@@ -6,6 +6,7 @@
 
 # jit_test.py -- Python harness for JavaScript trace tests.
 
+from __future__ import print_function
 import os, sys, tempfile, traceback, time, shlex
 import subprocess
 from subprocess import Popen, PIPE, call
@@ -90,9 +91,9 @@ class Test:
                         try:
                             test.expect_status = int(value, 0);
                         except ValueError:
-                            print("warning: couldn't parse exit status %s"%value)
+                            print("warning: couldn't parse exit status %s" % value)
                     else:
-                        print('warning: unrecognized |jit-test| attribute %s'%part)
+                        print('warning: unrecognized |jit-test| attribute %s' % part)
                 else:
                     if name == 'slow':
                         test.slow = True
@@ -113,7 +114,7 @@ class Test:
                     elif name == 'dump-bytecode':
                         test.jitflags.append('-D')
                     else:
-                        print('warning: unrecognized |jit-test| attribute %s'%part)
+                        print('warning: unrecognized |jit-test| attribute %s' % part)
 
         if options.valgrind_all:
             test.valgrind = True
@@ -304,7 +305,7 @@ def print_tinderbox(label, test, message=None):
 
     if message:
         result += ": " + message
-    print result
+    print(result)
 
 def wrap_parallel_run_test(test, lib_dir, shell_args, resultQueue, options, js):
     # This is necessary because on Windows global variables are not automatically
@@ -449,7 +450,7 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
             if options.show_failed:
                 print('    ' + subprocess.list2cmdline(get_test_cmd(test.path, test.jitflags, lib_dir, shell_args)))
             else:
-                print('    ' + ' '.join(test.jitflags + [ test.path ]))
+                print('    ' + ' '.join(test.jitflags + [test.path]))
 
         print('FAILURES:')
         for test, _, __, ___, timed_out in failures:
@@ -463,7 +464,7 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
 
         return False
     else:
-        print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)'%doing))
+        print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)' % doing))
         return True
 
 def process_test_results(results, num_tests, options, js, lib_dir, shell_args):
@@ -534,7 +535,7 @@ def parse_jitflags():
     for flags in jitflags:
         for flag in flags:
             if flag not in ('-m', '-a', '-p', '-d', '-n'):
-                print('Invalid jit flag: "%s"'%flag)
+                print('Invalid jit flag: "%s"' % flag)
                 sys.exit(1)
     return jitflags
 
@@ -673,7 +674,7 @@ def main(argv):
         test_list = [ test for test in test_list if test not in set(exclude_list) ]
 
     if not test_list:
-        print >> sys.stderr, "No tests found matching command line arguments."
+        print("No tests found matching command line arguments.", file=sys.stderr)
         sys.exit(0)
 
     test_list = [ Test.from_file(_, OPTIONS) for _ in test_list ]
@@ -724,7 +725,7 @@ def main(argv):
         if len(job_list) > 1:
             print('Multiple tests match command line arguments, debugger can only run one')
             for tc in job_list:
-                print('    %s'%tc.path)
+                print('    %s' % tc.path)
             sys.exit(1)
 
         tc = job_list[0]
@@ -742,10 +743,10 @@ def main(argv):
             sys.exit(2)
     except OSError:
         if not os.path.exists(JS):
-            print >> sys.stderr, "JS shell argument: file does not exist: '%s'"%JS
+            print("JS shell argument: file does not exist: '%s'" % JS, file=sys.stderr)
             sys.exit(1)
         else:
             raise
 
 if __name__ == '__main__':
-    print 'Use ../jit-test/jit_test.py to run these tests.'
+    print('Use ../jit-test/jit_test.py to run these tests.')
