@@ -700,8 +700,7 @@ AbstractFramePtr::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     if (isStackFrame())
         return asStackFrame()->unaliasedFormal(i, checkAliasing);
-    JS_NOT_REACHED("Invalid frame");
-    return asStackFrame()->unaliasedFormal(i);
+    return asBaselineFrame()->unaliasedFormal(i, checkAliasing);
 }
 
 inline JSGenerator *

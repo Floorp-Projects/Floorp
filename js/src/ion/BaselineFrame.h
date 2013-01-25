@@ -93,6 +93,13 @@ class BaselineFrame
         return *valueSlot(i);
     }
 
+    Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing) const {
+        JS_ASSERT(i < numFormalArgs());
+        JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
+        JS_ASSERT_IF(checkAliasing, !script()->formalIsAliased(i));
+        return formals()[i];
+    }
+
     unsigned numActualArgs() const {
         return *(unsigned *)(reinterpret_cast<const uint8_t *>(this) +
                              BaselineFrame::Size() +
