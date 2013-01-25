@@ -320,8 +320,8 @@ Warn(JSContext* aCx, const nsCString& aMsg) {
 /**
  * In JS, an RTCConfiguration looks like this:
  *
- *    [ { url:"stun:23.21.150.121" },
- *      { url:"turn:user@turn.example.org", credential:"myPassword"} ]
+ * { "iceServers": [ { url:"stun:23.21.150.121" },
+ *                   { url:"turn:user@turn.example.org", credential:"mypass"} ] }
  *
  * This function converts an already-validated jsval that looks like the above
  * into an RTCConfiguration object.
@@ -335,8 +335,13 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
   if (!aSrc.isObject()) {
     return NS_ERROR_FAILURE;
   }
-  JSObject& servers = aSrc.toObject();
-  JSAutoCompartment ac(aCx, &servers);
+  JSObject& config = aSrc.toObject();
+  JSAutoCompartment ac(aCx, &config);
+  JS::Value jsServers;
+  if (!(JS_GetProperty(aCx, &config, "iceServers", &jsServers) && jsServers.isObject())) {
+    return NS_ERROR_FAILURE;
+  }
+  JSObject& servers = jsServers.toObject();
   uint32_t len;
   if (!(IsArrayLike(aCx, &servers) && JS_GetArrayLength(aCx, &servers, &len))) {
     return NS_ERROR_FAILURE;
