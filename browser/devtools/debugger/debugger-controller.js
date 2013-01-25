@@ -661,13 +661,12 @@ StackFrames.prototype = {
     // to contain all the values.
     if (this.syncedWatchExpressions && watchExpressionsEvaluation) {
       let label = L10N.getStr("watchExpressionsScopeLabel");
-      let arrow = L10N.getStr("watchExpressionsSeparatorLabel");
       let scope = DebuggerView.Variables.addScope(label);
-      scope.separator = arrow;
-      scope.showDescriptorTooltip = false;
-      scope.allowNameInput = true;
-      scope.allowDeletion = true;
-      scope.contextMenu = "debuggerWatchExpressionsContextMenu";
+
+      // Customize the scope for holding watch expressions evaluations.
+      scope.descriptorTooltip = false;
+      scope.contextMenuId = "debuggerWatchExpressionsContextMenu";
+      scope.separatorStr = L10N.getStr("watchExpressionsSeparatorLabel");
       scope.switch = DebuggerView.WatchExpressions.switchExpression;
       scope.delete = DebuggerView.WatchExpressions.deleteExpression;
 
@@ -769,6 +768,12 @@ StackFrames.prototype = {
         let expVal = ownProperties[i].value;
         let expRef = aScope.addVar(name, ownProperties[i]);
         this._addVarExpander(expRef, expVal);
+
+        // Revert some of the custom watch expressions scope presentation flags.
+        expRef.switch = null;
+        expRef.delete = null;
+        expRef.descriptorTooltip = true;
+        expRef.separatorStr = L10N.getStr("variablesSeparatorLabel");
       }
 
       // Signal that watch expressions have been fetched.
