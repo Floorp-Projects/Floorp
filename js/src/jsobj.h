@@ -101,19 +101,23 @@ namespace baseops {
  * property of *objp stored in *propp. If successful but id was not found,
  * return true with both *objp and *propp null.
  */
-extern JS_FRIEND_API(JSBool)
-LookupProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
-               MutableHandleShape propp);
+template <AllowGC allowGC>
+extern JSBool
+LookupProperty(JSContext *cx,
+               typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+               typename MaybeRooted<jsid, allowGC>::HandleType id,
+               typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+               typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
 
 inline bool
 LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
                MutableHandleObject objp, MutableHandleShape propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
-    return LookupProperty(cx, obj, id, objp, propp);
+    return LookupProperty<CanGC>(cx, obj, id, objp, propp);
 }
 
-extern JS_FRIEND_API(JSBool)
+extern JSBool
 LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
               MutableHandleObject objp, MutableHandleShape propp);
 
@@ -135,6 +139,9 @@ DefineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue value
 
 extern JSBool
 GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id, MutableHandleValue vp);
+
+extern JSBool
+GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
 
 extern JSBool
 GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, MutableHandleValue vp);
@@ -860,12 +867,18 @@ class JSObject : public js::ObjectImpl
     static inline JSBool getGeneric(JSContext *cx, js::HandleObject obj,
                                     js::HandleObject receiver,
                                     js::HandleId id, js::MutableHandleValue vp);
+    static inline JSBool getGenericNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                                        jsid id, js::Value *vp);
     static inline JSBool getProperty(JSContext *cx, js::HandleObject obj,
                                      js::HandleObject receiver,
                                      js::PropertyName *name, js::MutableHandleValue vp);
+    static inline JSBool getPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                                         js::PropertyName *name, js::Value *vp);
     static inline JSBool getElement(JSContext *cx, js::HandleObject obj,
                                     js::HandleObject receiver,
                                     uint32_t index, js::MutableHandleValue vp);
+    static inline JSBool getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                                        uint32_t index, js::Value *vp);
     /* If element is not present (e.g. array hole) *present is set to
        false and the contents of *vp are unusable garbage. */
     static inline JSBool getElementIfPresent(JSContext *cx, js::HandleObject obj,

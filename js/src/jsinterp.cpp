@@ -938,27 +938,24 @@ inline InterpreterFrames::~InterpreterFrames()
 
 #if defined(DEBUG) && !defined(JS_THREADSAFE) && !defined(JSGC_ROOT_ANALYSIS)
 void
-js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
+js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start,
                                 JSObject *found, PropertyCacheEntry *entry)
 {
     jsbytecode *pc;
     JSScript *script = cx->stack.currentScript(&pc);
 
     uint64_t sample = cx->runtime->gcNumber;
-    PropertyCacheEntry savedEntry = *entry;
 
-    RootedPropertyName name(cx, GetNameFromBytecode(cx, script, pc, JSOp(*pc)));
-    RootedObject start(cx, start_);
-    RootedObject pobj(cx);
-    RootedShape prop(cx);
-    bool ok = baseops::LookupProperty(cx, start, name, &pobj, &prop);
-    JS_ASSERT(ok);
+    PropertyName *name = GetNameFromBytecode(cx, script, pc, JSOp(*pc));
+    JSObject *pobj;
+    Shape *prop;
+    if (baseops::LookupProperty<NoGC>(cx, start, NameToId(name), &pobj, &prop)) {
+        JS_ASSERT(prop);
+        JS_ASSERT(pobj == found);
+        JS_ASSERT(entry->prop == prop);
+    }
 
-    if (cx->runtime->gcNumber != sample)
-        cx->propertyCache().restore(&savedEntry);
-    JS_ASSERT(prop);
-    JS_ASSERT(pobj == found);
-    JS_ASSERT(entry->prop == prop);
+    JS_ASSERT(cx->runtime->gcNumber == sample);
 }
 #endif /* DEBUG && !JS_THREADSAFE */
 
@@ -1910,9 +1907,9 @@ END_CASE(JSOP_CASE)
 BEGIN_CASE(JSOP_LT)
 {
     bool cond;
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
-    if (!LessThanOperation(cx, lref, rref, &cond))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!LessThanOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp[-2].setBoolean(cond);
@@ -1923,9 +1920,9 @@ END_CASE(JSOP_LT)
 BEGIN_CASE(JSOP_LE)
 {
     bool cond;
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
-    if (!LessThanOrEqualOperation(cx, lref, rref, &cond))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!LessThanOrEqualOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp[-2].setBoolean(cond);
@@ -1936,9 +1933,9 @@ END_CASE(JSOP_LE)
 BEGIN_CASE(JSOP_GT)
 {
     bool cond;
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
-    if (!GreaterThanOperation(cx, lref, rref, &cond))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!GreaterThanOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp[-2].setBoolean(cond);
@@ -1949,9 +1946,9 @@ END_CASE(JSOP_GT)
 BEGIN_CASE(JSOP_GE)
 {
     bool cond;
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
-    if (!GreaterThanOrEqualOperation(cx, lref, rref, &cond))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!GreaterThanOrEqualOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp[-2].setBoolean(cond);
@@ -3906,13 +3903,13 @@ template bool js::DeleteProperty<true> (JSContext *cx, HandleValue val, HandlePr
 template bool js::DeleteProperty<false>(JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
 
 bool
-js::GetElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue vp)
+js::GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue vp)
 {
     return GetElementOperation(cx, JSOP_GETELEM, lref, rref, vp);
 }
 
 bool
-js::GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref,
+js::GetElementMonitored(JSContext *cx, MutableHandleValue lref, HandleValue rref,
                         MutableHandleValue vp)
 {
     if (!GetElement(cx, lref, rref, vp))
@@ -3923,7 +3920,7 @@ js::GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref,
 }
 
 bool
-js::CallElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res)
+js::CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res)
 {
     return GetElementOperation(cx, JSOP_CALLELEM, lref, rref, res);
 }

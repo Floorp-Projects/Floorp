@@ -1832,7 +1832,7 @@ ParallelArrayObject::getGeneric(JSContext *cx, HandleObject obj, HandleObject re
     if (ValueIsSpecial(obj, &idval, &sid, cx))
         return getSpecial(cx, obj, receiver, sid, vp);
 
-    JSAtom *atom = ToAtom(cx, idval);
+    JSAtom *atom = ToAtom<CanGC>(cx, idval);
     if (!atom)
         return false;
 

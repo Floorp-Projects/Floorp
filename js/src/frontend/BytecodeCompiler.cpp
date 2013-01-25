@@ -138,7 +138,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr
              * Save eval program source in script->atoms[0] for the
              * eval cache (see EvalCacheLookup in jsobj.cpp).
              */
-            JSAtom *atom = AtomizeString(cx, source);
+            JSAtom *atom = AtomizeString<CanGC>(cx, source);
             jsatomid _;
             if (!atom || !bce.makeAtomIndex(atom, &_))
                 return UnrootedScript(NULL);

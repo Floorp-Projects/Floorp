@@ -2249,6 +2249,28 @@ class AutoObjectObjectHashMap : public AutoHashMapRooter<RawObject, RawObject>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+class AutoAssertNoGCOrException : public AutoAssertNoGC
+{
+#ifdef DEBUG
+    JSContext *cx;
+    bool hadException;
+#endif
+
+  public:
+    AutoAssertNoGCOrException(JSContext *cx)
+#ifdef DEBUG
+      : cx(cx),
+        hadException(cx->isExceptionPending())
+#endif
+    {
+    }
+
+    ~AutoAssertNoGCOrException()
+    {
+        JS_ASSERT_IF(!hadException, !cx->isExceptionPending());
+    }
+};
+
 /*
  * Allocation policy that uses JSRuntime::malloc_ and friends, so that
  * memory pressure is properly accounted for. This is suitable for

@@ -2279,7 +2279,7 @@ TypeCompartment::newTypeObject(JSContext *cx, Class *clasp, Handle<TaggedProto> 
 {
     JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
 
-    TypeObject *object = gc::NewGCThing<TypeObject, ALLOW_GC>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
+    TypeObject *object = gc::NewGCThing<TypeObject, CanGC>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
         return NULL;
     new(object) TypeObject(clasp, proto, clasp == &FunctionClass, unknown);

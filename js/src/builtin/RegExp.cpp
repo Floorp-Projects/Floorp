@@ -70,7 +70,7 @@ js::CreateRegExpMatchResult(JSContext *cx, JSString *input_, StableCharPtr chars
         return false;
 
     if (!input) {
-        input = js_NewStringCopyN(cx, chars.get(), length);
+        input = js_NewStringCopyN<CanGC>(cx, chars.get(), length);
         if (!input)
             return false;
     }
@@ -285,7 +285,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         if (!str)
             return false;
 
-        source = AtomizeString(cx, str);
+        source = AtomizeString<CanGC>(cx, str);
         if (!source)
             return false;
     }

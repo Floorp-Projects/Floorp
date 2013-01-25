@@ -335,7 +335,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
                 return false;
             vp.set(NumberValue(d));
         } else if (ObjectClassIs(obj, ESClass_String, cx)) {
-            JSString *str = ToStringSlow(cx, vp);
+            JSString *str = ToStringSlow<CanGC>(cx, vp);
             if (!str)
                 return false;
             vp.set(StringValue(str));
@@ -689,7 +689,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                 return false;
             space = NumberValue(d);
         } else if (ObjectClassIs(*spaceObj, ESClass_String, cx)) {
-            JSString *str = ToStringSlow(cx, space);
+            JSString *str = ToStringSlow<CanGC>(cx, space);
             if (!str)
                 return false;
             space = StringValue(str);

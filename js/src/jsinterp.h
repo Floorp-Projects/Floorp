@@ -356,13 +356,13 @@ JSObject *
 Lambda(JSContext *cx, HandleFunction fun, HandleObject parent);
 
 bool
-GetElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
-GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+GetElementMonitored(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
-CallElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
 SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,

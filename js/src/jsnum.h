@@ -47,11 +47,13 @@ class JSString;
  * ECMA-262-5 section 9.8.1; but note that it handles integers specially for
  * performance.  See also js::NumberToCString().
  */
+template <js::AllowGC allowGC>
 extern JSString *
 js_NumberToString(JSContext *cx, double d);
 
 namespace js {
 
+template <AllowGC allowGC>
 extern JSFlatString *
 Int32ToString(JSContext *cx, int32_t i);
 
