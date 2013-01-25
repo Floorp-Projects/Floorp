@@ -41,8 +41,8 @@ function startTest(test, token) {
   // TODO: Bug 568402, there's a bug in the WAV backend where we sometimes
   // don't send canplaythrough events after seeking. Once that is fixed,
   // we should remove this guard below so that we run this test for audio.
-  var isVideo = /^video/.test(test.type) ? true : false;
-  if (!isVideo)
+  var type = getMajorMimeType(test.type);
+  if (type != "video")
     return;
 
   var v = document.createElement('video');

@@ -46,6 +46,7 @@ EXPORTS_mozilla/dom := \
   BiquadFilterNode.h \
   DelayNode.h \
   DynamicsCompressorNode.h \
+  EnableWebAudioCheck.h \
   GainNode.h \
   PannerNode.h \
   $(NULL)

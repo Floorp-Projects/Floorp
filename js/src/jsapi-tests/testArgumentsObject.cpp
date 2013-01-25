@@ -86,18 +86,18 @@ BEGIN_TEST(testArgumentsObject)
 template<size_t ArgCount> bool
 ExhaustiveTest(const char funcode[])
 {
-    jsval v;
-    EVAL(funcode, &v);
+    RootedValue v(cx);
+    EVAL(funcode, v.address());
 
-    EVAL(CALL_CODES[ArgCount], &v);
-    ArgumentsObject &argsobj = JSVAL_TO_OBJECT(v)->asArguments();
+    EVAL(CALL_CODES[ArgCount], v.address());
+    Rooted<ArgumentsObject*> argsobj(cx, &JSVAL_TO_OBJECT(v)->asArguments());
 
     Value elems[MAX_ELEMS];
 
     for (size_t i = 0; i <= ArgCount; i++) {
         for (size_t j = 0; j <= ArgCount - i; j++) {
             ClearElements(elems);
-            CHECK(argsobj.maybeGetElements(i, j, elems));
+            CHECK(argsobj->maybeGetElements(i, j, elems));
             for (size_t k = 0; k < j; k++)
                 CHECK_SAME(elems[k], INT_TO_JSVAL(i + k));
             for (size_t k = j; k < MAX_ELEMS - 1; k++)

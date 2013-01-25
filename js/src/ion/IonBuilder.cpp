@@ -3648,7 +3648,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, MDefinition *call
 
     // Generate an inline path to create a new |this| object with
     // the given singleton prototype.
-    types::TypeObject *type = proto->getNewType(cx, target);
+    types::TypeObject *type = proto->getNewType(cx, &ObjectClass, target);
     if (!type)
         return NULL;
     if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(type)))
@@ -4007,9 +4007,7 @@ TestAreKnownDOMTypes(JSContext *cx, types::TypeSet *inTypes)
         if (curType->unknownProperties())
             return false;
 
-        // Unlike TypeSet::HasObjectFlags, TypeObject::hasAnyFlags doesn't add a
-        // freeze.
-        if (curType->hasAnyFlags(types::OBJECT_FLAG_NON_DOM))
+        if (!(curType->clasp->flags & JSCLASS_IS_DOMJSCLASS))
             return false;
     }
 
@@ -4018,29 +4016,6 @@ TestAreKnownDOMTypes(JSContext *cx, types::TypeSet *inTypes)
         return true;
 
     return false;
-}
-
-static void
-FreezeDOMTypes(JSContext *cx, types::StackTypeSet *inTypes)
-{
-    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
-        types::TypeObject *curType = inTypes->getTypeObject(i);
-
-        if (!curType) {
-            JSObject *curObj = inTypes->getSingleObject(i);
-
-            // Skip holes in TypeSets.
-            if (!curObj)
-                continue;
-
-            curType = curObj->getType(cx);
-        }
-
-        // Add freeze by asking the question.
-        DebugOnly<bool> wasntDOM =
-            types::HeapTypeSet::HasObjectFlags(cx, curType, types::OBJECT_FLAG_NON_DOM);
-        JS_ASSERT(!wasntDOM);
-    }
 }
 
 void
@@ -4146,7 +4121,6 @@ IonBuilder::makeCallHelper(HandleFunction target, types::StackTypeSet *calleeTyp
             TestAreKnownDOMTypes(cx, thisTypes) &&
             TestShouldDOMCall(cx, thisTypes, target, JSJitInfo::Method))
         {
-            FreezeDOMTypes(cx, thisTypes);
             call->setDOMFunction();
         }
     }
@@ -5663,7 +5637,9 @@ IonBuilder::jsop_length_fastPath()
       }
 
       case JSVAL_TYPE_OBJECT: {
-        if (!sig.inTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY)) {
+        if (sig.inTypes->getKnownClass() == &ArrayClass &&
+            !sig.inTypes->hasObjectFlags(cx, types::OBJECT_FLAG_LENGTH_OVERFLOW))
+        {
             MDefinition *obj = current->pop();
             MElements *elements = MElements::New(obj);
             current->add(elements);
@@ -5675,7 +5651,7 @@ IonBuilder::jsop_length_fastPath()
             return true;
         }
 
-        if (!sig.inTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
+        if (sig.inTypes->getTypedArrayType() != TypedArray::TYPE_MAX) {
             MDefinition *obj = current->pop();
             MInstruction *length = GetTypedArrayLength(obj);
             current->add(length);
@@ -5811,8 +5787,6 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
     *funcp = NULL;
     *isDOM = false;
 
-    bool thinkDOM = true;
-
     // No sense looking if we don't know what's going on.
     if (!types || types->unknownObject())
         return true;
@@ -5840,9 +5814,6 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
             if (propSet->ownProperty(false))
                 return true;
 
-            // Check the DOM status of the instance type
-            thinkDOM = thinkDOM && !typeObj->hasAnyFlags(types::OBJECT_FLAG_NON_DOM);
-
             // Otherwise try using the prototype.
             curObj = typeObj->proto;
         } else {
@@ -5851,10 +5822,6 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
             // shapeguard, though.
             if (!isGetter && curObj->watched())
                 return true;
-
-            // Check the DOM-ness of the singleton.
-            types::TypeObject *objType = curObj->getType(cx);
-            thinkDOM = thinkDOM && !objType->hasAnyFlags(types::OBJECT_FLAG_NON_DOM);
         }
 
         // Turns out that we need to check for a property lookup op, else we
@@ -5965,14 +5932,6 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
             curType = obj->getType(cx);
         }
 
-        // Freeze the types as being DOM objects if they are
-        if (thinkDOM) {
-            // Asking the question adds the freeze
-            DebugOnly<bool> wasntDOM =
-                types::HeapTypeSet::HasObjectFlags(cx, curType, types::OBJECT_FLAG_NON_DOM);
-            JS_ASSERT(!wasntDOM);
-        }
-
         // If we found a Singleton object's own-property, there's nothing to
         // freeze.
         if (obj != foundProto) {
@@ -5998,7 +5957,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
     }
 
     *funcp = found->toFunction();
-    *isDOM = thinkDOM;
+    *isDOM = types->isDOMClass();
 
     return true;
 }

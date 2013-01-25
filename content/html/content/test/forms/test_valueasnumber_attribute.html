@@ -21,9 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=636737
  * This test is checking .valueAsNumber.
  */
 
-// Global variable used by all functions.
-var element = document.createElement("input");
-
 function checkAvailability()
 {
   var testData =
@@ -44,6 +41,7 @@ function checkAvailability()
     ["button", false],
     ["number", true],
     ["date", true],
+    ["time", true],
     // The next types have not been implemented but will fallback to "text"
     // which has the same value.
     ["color", false],
@@ -54,11 +52,11 @@ function checkAvailability()
     ["datetime", true],
     ["month", true],
     ["week", true],
-    ["time", true],
     ["datetime-local", true],
     ["range", true],
   ];
 
+  var element = document.createElement('input');
 
   for (data of testData) {
     var exceptionCatched = false;
@@ -123,6 +121,7 @@ function checkNumberGet()
     ["42,13", null], // comma can't be used as a decimal separator
   ];
 
+  var element = document.createElement('input');
   element.type = "number";
   for (data of testData) {
     element.value = data[0];
@@ -162,6 +161,7 @@ function checkNumberSet()
     [NaN, ""],
   ];
 
+  var element = document.createElement('input');
   element.type = "number";
   for (data of testData) {
     var caught = false;
@@ -213,6 +213,7 @@ function checkDateGet()
     "1900-02-29",
   ];
 
+  var element = document.createElement('input');
   element.type = "date";
   for (data of validData) {
     element.value = data[0];
@@ -268,6 +269,7 @@ function checkDateSet()
     [ -Infinity, "2011-02-28", true ],
   ];
 
+  var element = document.createElement('input');
   element.type = "date";
   for (data of testData) {
     var caught = false;
@@ -289,6 +291,111 @@ function checkDateSet()
 
 }
 
+function checkTimeGet()
+{
+  var tests = [
+    // Some invalid values to begin.
+    { value: "", result: NaN },
+    { value: "foobar", result: NaN },
+    { value: "00:", result: NaN },
+    { value: "24:00", result: NaN },
+    { value: "00:99", result: NaN },
+    { value: "00:00:", result: NaN },
+    { value: "00:00:99", result: NaN },
+    { value: "00:00:00:", result: NaN },
+    { value: "00:00:00.", result: NaN },
+    { value: "00:00:00.0000", result: NaN },
+    // Some simple valid values.
+    { value: "00:00", result: 0 },
+    { value: "00:01", result: 60000 },
+    { value: "01:00", result: 3600000 },
+    { value: "01:01", result: 3660000 },
+    { value: "13:37", result: 49020000 },
+    // Valid values including seconds.
+    { value: "00:00:01", result: 1000 },
+    { value: "13:37:42", result: 49062000 },
+    // Valid values including seconds fractions.
+    { value: "00:00:00.001", result: 1 },
+    { value: "00:00:00.123", result: 123 },
+    { value: "00:00:00.100", result: 100 },
+    { value: "00:00:00.000", result: 0 },
+    { value: "20:17:31.142", result: 73051142 },
+    // Highest possible value.
+    { value: "23:59:59.999", result: 86399999 },
+    // Some values with one or two digits for the fraction of seconds.
+    { value: "00:00:00.1", result: 100 },
+    { value: "00:00:00.14", result: 140 },
+    { value: "13:37:42.7", result: 49062700 },
+    { value: "23:31:12.23", result: 84672230 },
+  ];
+
+  var element = document.createElement('input');
+  element.type = 'time';
+
+  for (test of tests) {
+    element.value = test.value;
+    if (isNaN(test.result)) {
+      ok(isNaN(element.valueAsNumber),
+         "invalid value should have .valueAsNumber return NaN");
+    } else {
+      is(element.valueAsNumber, test.result,
+         ".valueAsNumber should return " + test.result);
+    }
+  }
+}
+
+function checkTimeSet()
+{
+  var tests = [
+    // Some NaN values (should set to empty string).
+    { value: NaN, result: "" },
+    { value: "foobar", result: "" },
+    { value: function() {}, result: "" },
+    // Inifinity (should throw).
+    { value: Infinity, throw: true },
+    { value: -Infinity, throw: true },
+    // "" converts to 0... JS is fun :)
+    { value: "", result: "00:00" },
+    // Simple tests.
+    { value: 0, result: "00:00" },
+    { value: 1, result: "00:00:00.001" },
+    { value: 100, result: "00:00:00.100" },
+    { value: 1000, result: "00:00:01" },
+    { value: 60000, result: "00:01" },
+    { value: 3600000, result: "01:00" },
+    { value: 83622234, result: "23:13:42.234" },
+    // Some edge cases.
+    { value: 86400000, result: "00:00" },
+    { value: 86400001, result: "00:00:00.001" },
+    { value: 170022234, result: "23:13:42.234" },
+    { value: 432000000, result: "00:00" },
+    { value: -1, result: "23:59:59.999" },
+    { value: -86400000, result: "00:00" },
+    { value: -86400001, result: "23:59:59.999" },
+    { value: -56789, result: "23:59:03.211" },
+    { value: 0.9, result: "00:00" },
+  ];
+
+  var element = document.createElement('input');
+  element.type = 'time';
+
+  for (test of tests) {
+    try {
+      var caught = false;
+      element.valueAsNumber = test.value;
+      is(element.value, test.result, "value should return " + test.result);
+    } catch(e) {
+      caught = true;
+    }
+
+    if (!test.throw) {
+      test.throw = false;
+    }
+
+    is(caught, test.throw, "the test throwing status should be " + test.throw);
+  }
+}
+
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 checkAvailability();
@@ -300,6 +407,10 @@ checkNumberSet();
 // <input type='date'> test
 checkDateGet();
 checkDateSet();
+
+// <input type='time'> test
+checkTimeGet();
+checkTimeSet();
 
 SimpleTest.finish();
 });

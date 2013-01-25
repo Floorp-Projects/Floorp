@@ -12,7 +12,7 @@ struct LooseEqualityFixture : public JSAPITest
 {
     virtual ~LooseEqualityFixture() {}
 
-    bool leq(jsval x, jsval y) {
+    bool leq(JS::HandleValue x, JS::HandleValue y) {
         JSBool equal;
         CHECK(JS_LooselyEqual(cx, x, y, &equal) && equal);
         CHECK(JS_LooselyEqual(cx, y, x, &equal) && equal);

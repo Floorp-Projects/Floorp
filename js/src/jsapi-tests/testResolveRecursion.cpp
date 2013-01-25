@@ -42,8 +42,8 @@ BEGIN_TEST(testResolveRecursion)
     resolveExitCount = 0;
 
     /* Start the essence of the test via invoking the first resolve hook. */
-    jsval v;
-    EVAL("obj1.x", &v);
+    js::RootedValue v(cx);
+    EVAL("obj1.x", v.address());
     CHECK_SAME(v, JSVAL_FALSE);
     CHECK_EQUAL(resolveEntryCount, 4);
     CHECK_EQUAL(resolveExitCount, 4);
@@ -79,12 +79,12 @@ doResolve(JSHandleObject obj, JSHandleId id, unsigned flags, JSMutableHandleObje
 
     JSFlatString *str = JS_FlattenString(cx, JSID_TO_STRING(id));
     CHECK(str);
-    jsval v;
+    js::RootedValue v(cx);
     if (JS_FlatStringEqualsAscii(str, "x")) {
         if (obj == obj1) {
             /* First resolve hook invocation. */
             CHECK_EQUAL(resolveEntryCount, 1);
-            EVAL("obj2.y = true", &v);
+            EVAL("obj2.y = true", v.address());
             CHECK_SAME(v, JSVAL_TRUE);
             CHECK(JS_DefinePropertyById(cx, obj, id, JSVAL_FALSE, NULL, NULL, 0));
             objp.set(obj);
@@ -99,24 +99,24 @@ doResolve(JSHandleObject obj, JSHandleId id, unsigned flags, JSMutableHandleObje
         if (obj == obj2) {
             CHECK_EQUAL(resolveEntryCount, 2);
             CHECK(JS_DefinePropertyById(cx, obj, id, JSVAL_NULL, NULL, NULL, 0));
-            EVAL("obj1.x", &v);
+            EVAL("obj1.x", v.address());
             CHECK(JSVAL_IS_VOID(v));
-            EVAL("obj1.y", &v);
+            EVAL("obj1.y", v.address());
             CHECK_SAME(v, JSVAL_ZERO);
             objp.set(obj);
             return true;
         }
         if (obj == obj1) {
             CHECK_EQUAL(resolveEntryCount, 3);
-            EVAL("obj1.x", &v);
+            EVAL("obj1.x", v.address());
             CHECK(JSVAL_IS_VOID(v));
-            EVAL("obj1.y", &v);
+            EVAL("obj1.y", v.address());
             CHECK(JSVAL_IS_VOID(v));
-            EVAL("obj2.y", &v);
+            EVAL("obj2.y", v.address());
             CHECK(JSVAL_IS_NULL(v));
-            EVAL("obj2.x", &v);
+            EVAL("obj2.x", v.address());
             CHECK(JSVAL_IS_VOID(v));
-            EVAL("obj1.y = 0", &v);
+            EVAL("obj1.y = 0", v.address());
             CHECK_SAME(v, JSVAL_ZERO);
             objp.set(obj);
             return true;

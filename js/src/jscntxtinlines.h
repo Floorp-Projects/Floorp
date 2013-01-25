@@ -106,7 +106,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
     JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
     Entry *entry = &entries[entry_];
 
-    JSObject *obj = js_TryNewGCObject(cx, entry->kind);
+    JSObject *obj = js_NewGCObject<DONT_ALLOW_GC>(cx, entry->kind);
     if (obj) {
         copyCachedToObject(obj, reinterpret_cast<JSObject *>(&entry->templateObject));
         Probes::createObject(cx, obj);

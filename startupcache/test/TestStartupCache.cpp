@@ -361,7 +361,7 @@ TestEarlyShutdown() {
   char* outbuf = NULL;
   
   sc->ResetStartupWriteTimer();
-  rv = sc->PutBuffer(buf, id, strlen(buf) + 1);
+  rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIObserver> obs;
@@ -373,13 +373,23 @@ TestEarlyShutdown() {
   rv = sc->GetBuffer(id, &outbuf, &len);
   delete[] outbuf;
 
+  if (NS_SUCCEEDED(rv)) {
+    passed("GetBuffer succeeded after early shutdown");
+  } else {
+    fail("GetBuffer failed after early shutdown");
+    return rv;
+  }
+
+  const char* other_id = "other_id";
+  rv = sc->PutBuffer(other_id, buf, strlen(buf) + 1);
+
   if (rv == NS_ERROR_NOT_AVAILABLE) {
-    passed("buffer not available after early shutdown");
+    passed("PutBuffer not available after early shutdown");
   } else if (NS_SUCCEEDED(rv)) {
-    fail("GetBuffer succeeded unexpectedly after early shutdown");
+    fail("PutBuffer succeeded unexpectedly after early shutdown");
     return NS_ERROR_UNEXPECTED;
   } else {
-    fail("GetBuffer gave an unexpected failure, expected NOT_AVAILABLE");
+    fail("PutBuffer gave an unexpected failure, expected NOT_AVAILABLE");
     return rv;
   }
  

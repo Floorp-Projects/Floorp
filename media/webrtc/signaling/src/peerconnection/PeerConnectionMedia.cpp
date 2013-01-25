@@ -68,7 +68,7 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
 }
 
 
-nsresult PeerConnectionMedia::Init()
+nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_servers)
 {
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
@@ -77,7 +77,10 @@ nsresult PeerConnectionMedia::Init()
     CSFLogErrorS(logTag, __FUNCTION__ << ": Failed to create Ice Context");
     return NS_ERROR_FAILURE;
   }
-
+  nsresult rv = mIceCtx->SetStunServers(stun_servers);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   mIceCtx->SignalGatheringCompleted.connect(this,
                                             &PeerConnectionMedia::IceGatheringCompleted);
   mIceCtx->SignalCompleted.connect(this,

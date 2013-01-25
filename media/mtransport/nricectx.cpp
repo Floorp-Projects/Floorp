@@ -81,6 +81,7 @@ extern "C" {
 #include "logging.h"
 #include "nricectx.h"
 #include "nricemediastream.h"
+#include "nr_socket_prsock.h"
 
 namespace mozilla {
 
@@ -231,8 +232,8 @@ int NrIceCtx::msg_recvd(void *obj, nr_ice_peer_ctx *pctx,
 
 
 RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
-                                           bool offerer,
-                                           bool set_interface_priorities) {
+                                  bool offerer,
+                                  bool set_interface_priorities) {
   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer);
 
   // Initialize the crypto callbacks
@@ -275,8 +276,6 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
       NR_reg_set_uchar((char *)"ice.pref.interface.wlan0", 232);
     }
 
-    NR_reg_set_string((char *)"ice.stun.server.0.addr", (char *)"23.21.150.121");
-    NR_reg_set_uint2((char *)"ice.stun.server.0.port",3478);
     NR_reg_set_uint4((char *)"stun.client.maximum_transmits",4);
   }
 
@@ -354,6 +353,33 @@ nsresult NrIceCtx::SetControlling(Controlling controlling) {
 
   MOZ_MTLOG(PR_LOG_DEBUG, "ICE ctx " << name_ << " setting controlling to" <<
             controlling);
+  return NS_OK;
+}
+
+nsresult NrIceCtx::SetStunServers(const std::vector<NrIceStunServer>&
+                                  stun_servers) {
+  if (stun_servers.empty())
+    return NS_OK;
+
+  ScopedDeleteArray<nr_ice_stun_server> servers(
+      new nr_ice_stun_server[stun_servers.size()]);
+
+  int r;
+  for (size_t i=0; i < stun_servers.size(); ++i) {
+    r = nr_praddr_to_transport_addr(&stun_servers[i].addr(),
+                                    &servers[i].addr, 0);
+    if (r) {
+      MOZ_MTLOG(PR_LOG_ERROR, "Couldn't set STUN server for '" << name_ << "'");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  r = nr_ice_ctx_set_stun_servers(ctx_, servers, stun_servers.size());
+  if (r) {
+    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't set STUN server for '" << name_ << "'");
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 

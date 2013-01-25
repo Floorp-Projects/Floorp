@@ -112,6 +112,50 @@ int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out)
     return(_status);
   }
 
+int nr_ice_ctx_set_stun_servers(nr_ice_ctx *ctx,nr_ice_stun_server *servers,int ct)
+  {
+    int _status;
+
+    if(ctx->stun_servers){
+      RFREE(ctx->stun_servers);
+      ctx->stun_server_ct=0;
+    }
+
+    if (ct) {
+      if(!(ctx->stun_servers=RCALLOC(sizeof(nr_ice_stun_server)*ct)))
+        ABORT(R_NO_MEMORY);
+
+      memcpy(ctx->stun_servers,servers,sizeof(nr_ice_stun_server)*ct);
+      ctx->stun_server_ct = ct;
+    }
+
+    _status=0;
+ abort:
+    return(_status);
+  }
+
+int nr_ice_ctx_set_turn_servers(nr_ice_ctx *ctx,nr_ice_turn_server *servers,int ct)
+  {
+    int _status;
+
+    if(ctx->turn_servers){
+      RFREE(ctx->turn_servers);
+      ctx->turn_server_ct=0;
+    }
+
+    if(ct) {
+      if(!(ctx->turn_servers=RCALLOC(sizeof(nr_ice_turn_server)*ct)))
+        ABORT(R_NO_MEMORY);
+
+      memcpy(ctx->turn_servers,servers,sizeof(nr_ice_turn_server)*ct);
+      ctx->turn_server_ct = ct;
+    }
+
+    _status=0;
+ abort:
+    return(_status);
+  }
+
 #ifdef USE_TURN
 int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out)
   {
@@ -214,7 +258,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
       ABORT(r);
     if(!(ctx->pwd=r_strdup(buf)))
       ABORT(r);
-    
+
     /* Get the STUN servers */
     if(r=NR_reg_get_child_count(NR_ICE_REG_STUN_SRV_PRFX,
       (unsigned int *)&ctx->stun_server_ct)||ctx->stun_server_ct==0) {
@@ -228,10 +272,12 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
       ctx->stun_server_ct=255;
     }
 
-    if(r=nr_ice_fetch_stun_servers(ctx->stun_server_ct,&ctx->stun_servers)){
-      r_log(LOG_ICE,LOG_ERR,"Couldn't load STUN servers from registry");
-      ctx->turn_server_ct=0;
-      ABORT(r);
+    if(ctx->stun_server_ct>0){
+      if(r=nr_ice_fetch_stun_servers(ctx->stun_server_ct,&ctx->stun_servers)){
+        r_log(LOG_ICE,LOG_ERR,"Couldn't load STUN servers from registry");
+        ctx->stun_server_ct=0;
+        ABORT(r);
+      }
     }
 
 #ifdef USE_TURN
@@ -252,10 +298,12 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
     }
 
 #ifdef USE_TURN
-    if(r=nr_ice_fetch_turn_servers(ctx->turn_server_ct,&ctx->turn_servers)){
-      ctx->turn_server_ct=0;
-      r_log(LOG_ICE,LOG_ERR,"Couldn't load TURN servers from registry");
-      ABORT(r);
+    if(ctx->turn_server_ct>0){
+      if(r=nr_ice_fetch_turn_servers(ctx->turn_server_ct,&ctx->turn_servers)){
+        ctx->turn_server_ct=0;
+        r_log(LOG_ICE,LOG_ERR,"Couldn't load TURN servers from registry");
+        ABORT(r);
+      }
     }
 #endif /* USE_TURN */
 

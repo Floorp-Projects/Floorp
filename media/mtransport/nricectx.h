@@ -54,6 +54,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "sigslot.h"
 
+#include "prnetdb.h"
+
 #include "mozilla/RefPtr.h"
 #include "mozilla/Scoped.h"
 #include "nsAutoPtr.h"
@@ -74,6 +76,50 @@ typedef struct nr_ice_cand_pair_ nr_ice_cand_pair;
 
 class NrIceMediaStream;
 
+
+struct NrIceStunServer {
+ public:
+  NrIceStunServer(const PRNetAddr& addr) {
+    memcpy(&addr_, &addr, sizeof(addr));
+  }
+
+  // Convenience function to allow you to pass an IP addr as a string
+  static NrIceStunServer* Create(const std::string& addr, uint16_t port) {
+    ScopedDeletePtr<NrIceStunServer> server(
+        new NrIceStunServer());
+
+    nsresult rv = server->Init(addr, port);
+    if (NS_FAILED(rv))
+      return nullptr;
+
+    return server.forget();
+  }
+  
+
+  const PRNetAddr& addr() const { return addr_; }
+
+ private:
+  NrIceStunServer() : addr_() {}
+
+  nsresult Init(const std::string& addr, uint16_t port) {
+    PRStatus status = PR_StringToNetAddr(addr.c_str(), &addr_);
+    if (status != PR_SUCCESS)
+      return NS_ERROR_INVALID_ARG;
+
+    addr_.inet.port = PR_htons(port);
+
+    return NS_OK;
+  }
+
+  PRNetAddr addr_;
+};
+
+struct NrIceTurnServer {
+  PRNetAddr addr;
+  std::string username;
+  std::string password;
+};
+
 class NrIceCtx {
  public:
   enum State { ICE_CTX_INIT,
@@ -89,8 +135,8 @@ class NrIceCtx {
   };
 
   static RefPtr<NrIceCtx> Create(const std::string& name,
-                                          bool offerer,
-                                          bool set_interface_priorities = true);
+                                 bool offerer,
+                                 bool set_interface_priorities = true);
   virtual ~NrIceCtx();
 
   nr_ice_ctx *ctx() { return ctx_; }
@@ -118,6 +164,10 @@ class NrIceCtx {
   // Set whether we are controlling or not.
   nsresult SetControlling(Controlling controlling);
 
+  // Set the STUN servers. Must be called before StartGathering
+  // (if at all).
+  nsresult SetStunServers(const std::vector<NrIceStunServer>& stun_servers);
+
   // Start ICE gathering
   nsresult StartGathering();
 
@@ -139,15 +189,16 @@ class NrIceCtx {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtx)
 
  private:
-  NrIceCtx(const std::string& name, bool offerer)
-      : state_(ICE_CTX_INIT),
-      name_(name),
-      offerer_(offerer),
-      streams_(),
-      ctx_(nullptr),
-      peer_(nullptr),
-      ice_handler_vtbl_(nullptr),
-      ice_handler_(nullptr) {}
+  NrIceCtx(const std::string& name,
+           bool offerer)
+  : state_(ICE_CTX_INIT),
+    name_(name),
+    offerer_(offerer),
+    streams_(),
+    ctx_(nullptr),
+    peer_(nullptr),
+    ice_handler_vtbl_(nullptr),
+    ice_handler_(nullptr) {}
 
   DISALLOW_COPY_ASSIGN(NrIceCtx);
 

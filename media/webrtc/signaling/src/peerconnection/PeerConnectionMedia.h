@@ -236,7 +236,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     PR_DestroyLock(mLocalSourceStreamsLock);
   }
 
-  nsresult Init();
+  nsresult Init(const std::vector<mozilla::NrIceStunServer>& stun_servers);
 
   // WARNING: This destroys the object!
   void SelfDestruct();

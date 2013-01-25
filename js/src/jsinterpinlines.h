@@ -340,9 +340,9 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
             ((obj2 = obj->getProto()) && obj2->lastProperty() == entry->pshape)) {
 #ifdef DEBUG
             if (entry->isOwnPropertyHit()) {
-                JS_ASSERT(obj->nativeLookupNoAllocation(shape->propid()) == shape);
+                JS_ASSERT(obj->nativeLookup(cx, shape->propid()) == shape);
             } else {
-                JS_ASSERT(obj2->nativeLookupNoAllocation(shape->propid()) == shape);
+                JS_ASSERT(obj2->nativeLookup(cx, shape->propid()) == shape);
                 JS_ASSERT(entry->isPrototypePropertyHit());
                 JS_ASSERT(entry->kshape != entry->pshape);
                 JS_ASSERT(!shape->hasSlot());
@@ -410,6 +410,16 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
 }
 
 inline bool
+FetchNameNoGC(JSContext *cx, JSObject *pobj, Shape *shape, MutableHandleValue vp)
+{
+    if (!shape || !pobj->isNative() || !shape->isDataDescriptor() || !shape->hasDefaultGetter())
+        return false;
+
+    vp.set(pobj->nativeGetSlot(shape->slot()));
+    return true;
+}
+
+inline bool
 GetIntrinsicOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHandleValue vp)
 {
     JSOp op = JSOp(*pc);
@@ -427,8 +437,8 @@ SetIntrinsicOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleVal
 inline bool
 NameOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
 {
-    RootedObject obj(cx, cx->stack.currentScriptedScopeChain());
-    RootedPropertyName name(cx, cx->stack.currentScript()->getName(pc));
+    JSObject *obj = cx->stack.currentScriptedScopeChain();
+    PropertyName *name = cx->stack.currentScript()->getName(pc);
 
     /*
      * Skip along the scope chain to the enclosing global object. This is
@@ -442,16 +452,26 @@ NameOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
     if (IsGlobalOp(JSOp(*pc)))
         obj = &obj->global();
 
-    RootedShape shape(cx);
-    RootedObject scope(cx), pobj(cx);
-    if (!LookupName(cx, name, obj, &scope, &pobj, &shape))
+    Shape *shape = NULL;
+    JSObject *scope = NULL, *pobj = NULL;
+    if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
+        if (FetchNameNoGC(cx, pobj, shape, vp))
+            return true;
+        JS_ASSERT(!cx->isExceptionPending());
+    }
+
+    RootedObject objRoot(cx, obj), scopeRoot(cx), pobjRoot(cx);
+    RootedPropertyName nameRoot(cx, name);
+    RootedShape shapeRoot(cx);
+
+    if (!LookupName(cx, nameRoot, objRoot, &scopeRoot, &pobjRoot, &shapeRoot))
         return false;
 
     /* Kludge to allow (typeof foo == "undefined") tests. */
     JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
     if (op2 == JSOP_TYPEOF)
-        return FetchName<true>(cx, scope, pobj, name, shape, vp);
-    return FetchName<false>(cx, scope, pobj, name, shape, vp);
+        return FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+    return FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
 }
 
 inline bool

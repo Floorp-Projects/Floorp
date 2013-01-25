@@ -3101,7 +3101,7 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
      */
     if (proto.isObject()) {
         RootedObject protoObj(cx, proto.toObject());
-        if (!JSObject::setNewTypeUnknown(cx, protoObj))
+        if (!JSObject::setNewTypeUnknown(cx, clasp, protoObj))
             return NULL;
     }
 
@@ -3236,17 +3236,17 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
                              "createFunction", "1", "");
         return false;
     }
-    JSObject *handler = NonNullObject(cx, vp[2]);
+    RootedObject handler(cx, NonNullObject(cx, vp[2]));
     if (!handler)
         return false;
-    JSObject *proto, *parent;
+    RootedObject proto(cx), parent(cx);
     parent = vp[0].toObject().getParent();
     proto = parent->global().getOrCreateFunctionPrototype(cx);
     if (!proto)
         return false;
     parent = proto->getParent();
 
-    JSObject *call = ValueToCallable(cx, &vp[3]);
+    RootedObject call(cx, ValueToCallable(cx, &vp[3]));
     if (!call)
         return false;
     JSObject *construct = NULL;

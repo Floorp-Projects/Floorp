@@ -113,6 +113,7 @@ HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 skip-if(B2G) HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html
 fails HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 == wordbreak-8.html wordbreak-8-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 HTTP(..) == wordwrap-02.html wordwrap-02-ref.html
 skip-if(B2G) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html

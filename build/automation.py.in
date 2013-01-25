@@ -1283,3 +1283,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     else:
       self.log.info("INFO | automation.py | Cannot install extension, invalid extensionSource at: %s", extensionSource)
+
+  def elf_arm(self, filename):
+    data = open(filename, 'rb').read(20)
+    return data[:4] == "\x7fELF" and ord(data[18]) == 40 # EM_ARM

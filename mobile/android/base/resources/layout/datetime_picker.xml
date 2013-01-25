@@ -131,6 +131,17 @@
                 android:focusableInTouchMode="true"
                 />
 
+            <!-- AMPM -->
+            <android.widget.NumberPicker
+                android:id="@+id/ampm"
+                android:layout_width="60dip"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="1dip"
+                android:layout_marginRight="1dip"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                />
+
         </LinearLayout>
 
     </LinearLayout>
