@@ -13,7 +13,7 @@ BEGIN_TEST(testAtomizedIsNotInterned)
 {
     /* Try to pick a string that won't be interned by other tests in this runtime. */
     static const char someChars[] = "blah blah blah? blah blah blah";
-    JSAtom *atom = js::Atomize(cx, someChars, ArrayLength(someChars));
+    js::Rooted<JSAtom*> atom(cx, js::Atomize(cx, someChars, ArrayLength(someChars)));
     CHECK(!JS_StringHasBeenInterned(cx, atom));
     CHECK(JS_InternJSString(cx, atom));
     CHECK(JS_StringHasBeenInterned(cx, atom));

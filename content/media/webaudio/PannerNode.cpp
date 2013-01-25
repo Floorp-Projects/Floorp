@@ -27,10 +27,9 @@ PannerNode::PannerNode(AudioContext* aContext)
 }
 
 JSObject*
-PannerNode::WrapObject(JSContext* aCx, JSObject* aScope,
-                       bool* aTriedToWrap)
+PannerNode::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return PannerNodeBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return PannerNodeBinding::Wrap(aCx, aScope, this);
 }
 
 }

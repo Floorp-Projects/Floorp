@@ -239,7 +239,7 @@ class JSString : public js::gc::Cell
      * representable by a JSString. An allocation overflow is reported if false
      * is returned.
      */
-    static inline bool validateLength(JSContext *cx, size_t length);
+    static inline bool validateLength(JSContext *maybecx, size_t length);
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
@@ -656,8 +656,8 @@ class JSInlineString : public JSFlatString
     static const size_t MAX_INLINE_LENGTH = NUM_INLINE_CHARS - 1;
 
   public:
+    template <js::AllowGC allowGC>
     static inline JSInlineString *new_(JSContext *cx);
-    static inline JSInlineString *tryNew_(JSContext *cx);
 
     inline jschar *init(size_t length);
 
@@ -688,8 +688,8 @@ class JSShortString : public JSInlineString
     jschar inlineStorageExtension[INLINE_EXTENSION_CHARS];
 
   public:
+    template <js::AllowGC allowGC>
     static inline JSShortString *new_(JSContext *cx);
-    static inline JSShortString *tryNew_(JSContext *cx);
 
     static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
                                            INLINE_EXTENSION_CHARS

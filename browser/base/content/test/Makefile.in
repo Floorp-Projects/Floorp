@@ -254,6 +254,7 @@ _BROWSER_FILES = \
                  plugin_add_dynamically.html \
                  plugin_clickToPlayAllow.html \
                  plugin_clickToPlayDeny.html \
+                 plugin_bug744745.html \
                  plugin_bug749455.html \
                  plugin_bug797677.html \
                  plugin_bug818009.html \
@@ -283,6 +284,7 @@ _BROWSER_FILES = \
                  browser_tabDrop.js \
                  browser_lastAccessedTab.js \
                  browser_bug734076.js \
+                 browser_bug744745.js \
                  browser_bug812562.js \
                  browser_bug818009.js \
                  browser_bug818118.js \

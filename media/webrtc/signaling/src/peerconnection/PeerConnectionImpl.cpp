@@ -26,17 +26,24 @@
 #include "nsISimpleEnumerator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsISocketTransportService.h"
-
+#include "nsIConsoleService.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 
 #include "runnable_utils.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
-
 #include "nsPIDOMWindow.h"
 #include "nsDOMDataChannel.h"
 #ifdef MOZILLA_INTERNAL_API
+#include "nsContentUtils.h"
+#include "nsDOMJSUtils.h"
+#include "nsIScriptError.h"
+#include "nsPrintfCString.h"
+#include "nsURLHelper.h"
+#include "nsNetUtil.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/RTCIceServerBinding.h"
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "jsapi.h"
@@ -45,6 +52,8 @@
 #ifndef USE_FAKE_MEDIA_STREAMS
 #include "MediaSegment.h"
 #endif
+
+#define ICE_PARSING "In RTCConfiguration passed to RTCPeerConnection constructor"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -291,29 +300,150 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(uint32_t aHint, nsRefPtr<Remote
   return NS_OK;
 }
 
+#ifdef MOZILLA_INTERNAL_API
+static void
+Warn(JSContext* aCx, const nsCString& aMsg) {
+  CSFLogErrorS(logTag, "Warning: " << aMsg.get());
+  nsIScriptContext* sc = GetScriptContextFromJSContext(aCx);
+  if (sc) {
+    nsCOMPtr<nsIDocument> doc;
+    doc = nsContentUtils::GetDocumentFromScriptContext(sc);
+    if (doc) {
+      // Passing in line-# 1 hides peerconnection.js (shows document instead)
+      nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16 (aMsg),
+          nsIScriptError::warningFlag, logTag, doc, nullptr, EmptyString(), 1);
+    }
+  }
+}
+#endif
+
+/**
+ * In JS, an RTCConfiguration looks like this:
+ *
+ * { "iceServers": [ { url:"stun:23.21.150.121" },
+ *                   { url:"turn:user@turn.example.org", credential:"mypass"} ] }
+ *
+ * This function converts an already-validated jsval that looks like the above
+ * into an RTCConfiguration object.
+ */
+nsresult
+PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
+                                            RTCConfiguration *aDst,
+                                            JSContext* aCx)
+{
+#ifdef MOZILLA_INTERNAL_API
+  if (!aSrc.isObject()) {
+    return NS_ERROR_FAILURE;
+  }
+  JSObject& config = aSrc.toObject();
+  JSAutoCompartment ac(aCx, &config);
+  JS::Value jsServers;
+  if (!(JS_GetProperty(aCx, &config, "iceServers", &jsServers) && jsServers.isObject())) {
+    return NS_ERROR_FAILURE;
+  }
+  JSObject& servers = jsServers.toObject();
+  uint32_t len;
+  if (!(IsArrayLike(aCx, &servers) && JS_GetArrayLength(aCx, &servers, &len))) {
+    return NS_ERROR_FAILURE;
+  }
+  for (uint32_t i = 0; i < len; i++) {
+    nsresult rv;
+    RTCIceServer server;
+    {
+      JS::Value v;
+      if (!(JS_GetElement(aCx, &servers, i, &v) && server.Init(aCx, nullptr, v))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+    if (!server.mUrl.WasPassed()) {
+      return NS_ERROR_FAILURE;
+    }
+    nsRefPtr<nsIURI> url;
+    rv = NS_NewURI(getter_AddRefs(url), server.mUrl.Value());
+    NS_ENSURE_SUCCESS(rv, rv);
+    bool isStun = false, isStuns = false, isTurn = false, isTurns = false;
+    url->SchemeIs("stun", &isStun);
+    url->SchemeIs("stuns", &isStuns);
+    url->SchemeIs("turn", &isTurn);
+    url->SchemeIs("turns", &isTurns);
+    if (!(isStun || isStuns || isTurn || isTurns)) {
+      return NS_ERROR_FAILURE;
+    }
+    nsAutoCString spec;
+    rv = url->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!server.mCredential.IsEmpty()) {
+      // TODO(jib@mozilla.com): Support username, credentials & TURN servers
+      Warn(aCx, nsPrintfCString(ICE_PARSING
+          ": Credentials not yet implemented. Omitting \"%s\"", spec.get()));
+      continue;
+    }
+    if (isTurn || isTurns) {
+      Warn(aCx, nsPrintfCString(ICE_PARSING
+          ": TURN servers not yet supported. Treating as STUN: \"%s\"", spec.get()));
+    }
+    // TODO(jib@mozilla.com): Revisit once nsURI supports host and port on STUN
+    int32_t port;
+    nsAutoCString host;
+    {
+      uint32_t hostPos;
+      int32_t hostLen;
+      nsAutoCString path;
+      rv = url->GetPath(path);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = net_GetAuthURLParser()->ParseAuthority(path.get(), path.Length(),
+                                                  nullptr,  nullptr,
+                                                  nullptr,  nullptr,
+                                                  &hostPos,  &hostLen, &port);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!hostLen) {
+        return NS_ERROR_FAILURE;
+      }
+      path.Mid(host, hostPos, hostLen);
+    }
+    if (port == -1)
+      port = (isStuns || isTurns)? 5349 : 3478;
+    if (!aDst->addServer(host.get(), port)) {
+      Warn(aCx, nsPrintfCString(ICE_PARSING
+          ": FQDN not yet implemented (only IP-#s). Omitting \"%s\"", spec.get()));
+    }
+  }
+#endif
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                nsIDOMWindow* aWindow,
-                               nsIThread* aThread) {
+                               const JS::Value &aRTCConfiguration,
+                               nsIThread* aThread,
+                               JSContext* aCx)
+{
+  return Initialize(aObserver, aWindow, nullptr, &aRTCConfiguration, aThread, aCx);
+}
+
+nsresult
+PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
+                               nsIDOMWindow* aWindow,
+                               const RTCConfiguration* aConfiguration,
+                               const JS::Value* aRTCConfiguration,
+                               nsIThread* aThread,
+                               JSContext* aCx)
+{
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
   MOZ_ASSERT(aObserver);
   MOZ_ASSERT(aThread);
+  mThread = aThread;
 
   mPCObserver = do_GetWeakReference(aObserver);
 
   nsresult res;
-
 #ifdef MOZILLA_INTERNAL_API
   // This code interferes with the C++ unit test startup code.
   nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &res);
   NS_ENSURE_SUCCESS(res, res);
-#endif
-
-  mThread = aThread;
-
-#ifdef MOZILLA_INTERNAL_API
   // Currently no standalone unit tests for DataChannel,
   // which is the user of mWindow
   MOZ_ASSERT(aWindow);
@@ -338,7 +468,14 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mMedia->SignalIceCompleted.connect(this, &PeerConnectionImpl::IceCompleted);
 
   // Initialize the media object.
-  res = mMedia->Init();
+  if (aRTCConfiguration) {
+    RTCConfiguration ic;
+    res = ConvertRTCConfiguration(*aRTCConfiguration, &ic, aCx);
+    NS_ENSURE_SUCCESS(res, res);
+    res = mMedia->Init(ic.getServers());
+  } else {
+    res = mMedia->Init(aConfiguration->getServers());
+  }
   if (NS_FAILED(res)) {
     CSFLogErrorS(logTag, __FUNCTION__ << ": Couldn't initialize media object");
     return res;
@@ -615,7 +752,7 @@ nsresult
 PeerConnectionImpl::ConvertConstraints(
   const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx)
 {
-  jsval mandatory, optional;
+  JS::Value mandatory, optional;
   JSObject& constraints = aConstraints.toObject();
 
   // Mandatory constraints.  Note that we only care if the constraint array exists
@@ -632,7 +769,7 @@ PeerConnectionImpl::ConvertConstraints(
 
     // Iterate over each property.
     for (size_t i = 0; i < mandatoryOpts.length(); i++) {
-      jsval option, optionName;
+      JS::Value option, optionName;
       if (!JS_GetPropertyById(aCx, opts, mandatoryOpts[i], &option) ||
           !JS_IdToValue(aCx, mandatoryOpts[i], &optionName) ||
           // We only support boolean constraints for now.
@@ -663,8 +800,8 @@ PeerConnectionImpl::ConvertConstraints(
         !JS_GetArrayLength(aCx, opts, &length)) {
       return NS_ERROR_FAILURE;
     }
-    for (size_t i = 0; i < length; i++) {
-      jsval val;
+    for (uint32_t i = 0; i < length; i++) {
+      JS::Value val;
       if (!JS_GetElement(aCx, opts, i, &val) ||
           !val.isObject()) {
         return NS_ERROR_FAILURE;

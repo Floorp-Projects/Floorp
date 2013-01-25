@@ -875,6 +875,13 @@
     'directx_sdk_default_path': '<(DEPTH)/third_party/directxsdk/files',
 
     'conditions': [
+      ['moz_widget_toolkit_gonk==1', {
+        'variables': {
+          'disable_sse2': 1,
+        },
+      }],
+    ],
+    'conditions': [
       ['OS=="win" and "<!(python <(DEPTH)/build/dir_exists.py <(windows_sdk_default_path))"=="True"', {
         'windows_sdk_path%': '<(windows_sdk_default_path)',
       }, {

@@ -618,6 +618,25 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
     SendCommand("+CIEV: ", CINDType::SIGNAL);
   }
 
+  /**
+   * Possible return values for mode are:
+   * - null (unknown): set mNetworkSelectionMode to 0 (auto)
+   * - automatic: set mNetworkSelectionMode to 0 (auto)
+   * - manual: set mNetworkSelectionMode to 1 (manual)
+   */
+  nsString mode;
+  connection->GetNetworkSelectionMode(mode);
+  if (mode.EqualsLiteral("manual")) {
+    mNetworkSelectionMode = 1;
+  } else {
+    mNetworkSelectionMode = 0;
+  }
+
+  nsIDOMMozMobileNetworkInfo* network;
+  voiceInfo->GetNetwork(&network);
+  NS_ENSURE_TRUE(network, NS_ERROR_FAILURE);
+  network->GetLongName(mOperatorName);
+
   return NS_OK;
 }
 
@@ -631,13 +650,7 @@ BluetoothHfpManager::HandleIccInfoChanged()
   nsIDOMMozMobileICCInfo* iccInfo;
   connection->GetIccInfo(&iccInfo);
   NS_ENSURE_TRUE(iccInfo, NS_ERROR_FAILURE);
-
-  nsString msisdn;
-  iccInfo->GetMsisdn(msisdn);
-
-  if (!msisdn.Equals(mMsisdn)) {
-    mMsisdn = msisdn;
-  }
+  iccInfo->GetMsisdn(mMsisdn);
 
   return NS_OK;
 }
@@ -707,8 +720,35 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     // AT+CMEE = 1: use numeric <err>
     // AT+CMEE = 2: use verbose <err>
     mCMEE = !atCommandValues[0].EqualsLiteral("0");
+  } else if (msg.Find("AT+COPS=") != -1) {
+    ParseAtCommand(msg, 8, atCommandValues);
+
+    if (atCommandValues.Length() != 2) {
+      NS_WARNING("Could't get the value of command [AT+COPS=]");
+      goto respond_with_ok;
+    }
+
+    // Handsfree only support AT+COPS=3,0
+    if (!atCommandValues[0].EqualsLiteral("3") ||
+        !atCommandValues[1].EqualsLiteral("0")) {
+      if (mCMEE) {
+        SendCommand("+CME ERROR: ", BluetoothCmeError::OPERATION_NOT_SUPPORTED);
+      } else {
+        SendLine("ERROR");
+      }
+      return;
+    }
+  } else if (msg.Find("AT+COPS?") != -1) {
+    nsAutoCString message("+COPS: ");
+    message.AppendInt(mNetworkSelectionMode);
+    message += ",0,\"";
+    message += NS_ConvertUTF16toUTF8(mOperatorName);
+    message += "\"";
+    SendLine(message.get());
+    return;
   } else if (msg.Find("AT+VTS=") != -1) {
     ParseAtCommand(msg, 7, atCommandValues);
+
     if (atCommandValues.Length() != 1) {
       NS_WARNING("Couldn't get the value of command [AT+VTS=]");
       goto respond_with_ok;

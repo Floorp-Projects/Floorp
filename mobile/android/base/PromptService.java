@@ -20,6 +20,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.text.Html;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
@@ -38,6 +39,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -64,6 +66,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     private final int mTopBottomTextWithIconPadding;
     private final int mIconTextPadding;
     private final int mIconSize;
+    private final int mInputPaddingSize;
 
     PromptService() {
         sInflater = LayoutInflater.from(GeckoApp.mAppContext);
@@ -74,6 +77,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         mTopBottomTextWithIconPadding = (int) (res.getDimension(R.dimen.prompt_service_top_bottom_text_with_icon_padding));
         mIconTextPadding = (int) (res.getDimension(R.dimen.prompt_service_icon_text_padding));
         mIconSize = (int) (res.getDimension(R.dimen.prompt_service_icon_size));
+        mInputPaddingSize = (int) (res.getDimension(R.dimen.prompt_service_inputs_padding));
 
         GeckoAppShell.getEventDispatcher().registerEventListener("Prompt:Show", this);
     }
@@ -200,6 +204,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                     }
                 } catch(Exception ex) { }
                 mView = (View)spinner;
+            } else if (mType.equals("label")) {
+                // not really an input, but a way to add labels and such to the dialog
+                TextView view = new TextView(GeckoApp.mAppContext);
+                view.setText(Html.fromHtml(mLabel));
+                mView = view;
             }
             return mView;
         }
@@ -223,6 +232,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 GregorianCalendar calendar =
                     new GregorianCalendar(0,0,0,tp.getCurrentHour(),tp.getCurrentMinute());
                 return formatDateString("kk:mm",calendar);
+            } else if (mType.equals("label")) {
+                return "";
             } else if (android.os.Build.VERSION.SDK_INT < 11 && mType.equals("date")) {
                 // We can't use the custom DateTimePicker with a sdk older than 11.
                 // Fallback on the native DatePicker.
@@ -271,6 +282,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             promptServiceResult = waitForReturn();
         } catch (InterruptedException e) { }
         return promptServiceResult;
+    }
+
+    private View applyInputStyle(View view) {
+        view.setPadding(mInputPaddingSize, 0, mInputPaddingSize, 0);
+        return view;
     }
 
     public void show(String aTitle, String aText, PromptListItem[] aMenuList, boolean aMultipleSelection) {
@@ -324,7 +340,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             }
         } else if (length == 1) {
             try {
-                builder.setView(mInputs[0].getView());
+                builder.setView(applyInputStyle(mInputs[0].getView()));
             } catch(UnsupportedOperationException ex) {
                 // We cannot display these input widgets with this sdk version,
                 // do not display any dialog and finish the prompt now.
@@ -345,7 +361,9 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 finishDialog("{\"button\": -1}");
                 return;
             }
-            builder.setView((View)linearLayout);
+            ScrollView view = new ScrollView(GeckoApp.mAppContext);
+            view.addView(linearLayout);
+            builder.setView(applyInputStyle(view));
         }
 
         length = mButtons == null ? 0 : mButtons.length;

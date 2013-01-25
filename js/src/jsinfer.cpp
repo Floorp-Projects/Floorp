@@ -1050,8 +1050,8 @@ GetSingletonPropertyType(JSContext *cx, RawObject rawObjArg, HandleId id)
         if (!obj->isNative())
             return Type::UnknownType();
 
-        Value v;
-        if (HasDataProperty(cx, obj, id, &v)) {
+        RootedValue v(cx);
+        if (HasDataProperty(cx, obj, id, v.address())) {
             if (v.isUndefined())
                 return Type::UnknownType();
             return GetValueType(cx, v);
@@ -1989,46 +1989,63 @@ HeapTypeSet::knownSubset(JSContext *cx, TypeSet *other)
     return true;
 }
 
-int
-StackTypeSet::getTypedArrayType()
+Class *
+StackTypeSet::getKnownClass()
 {
-    AutoAssertNoGC nogc;
+    if (unknownObject())
+        return NULL;
 
-    int arrayType = TypedArray::TYPE_MAX;
+    Class *clasp = NULL;
     unsigned count = getObjectCount();
 
     for (unsigned i = 0; i < count; i++) {
-        TaggedProto proto;
-        if (RawObject object = getSingleObject(i)) {
-            proto = object->getTaggedProto();
-        } else if (TypeObject *object = getTypeObject(i)) {
-            JS_ASSERT(!object->hasAnyFlags(OBJECT_FLAG_NON_TYPED_ARRAY));
-            proto = TaggedProto(object->proto);
-        }
-        if (!proto.isObject())
+        Class *nclasp;
+        if (RawObject object = getSingleObject(i))
+            nclasp = object->getClass();
+        else if (TypeObject *object = getTypeObject(i))
+            nclasp = object->clasp;
+        else
             continue;
 
-        int objArrayType = proto.toObject()->getClass() - TypedArray::protoClasses;
-        JS_ASSERT(objArrayType >= 0 && objArrayType < TypedArray::TYPE_MAX);
-
-        /*
-         * Set arrayType to the type of the first array. Return if there is an array
-         * of another type.
-         */
-        if (arrayType == TypedArray::TYPE_MAX)
-            arrayType = objArrayType;
-        else if (arrayType != objArrayType)
-            return TypedArray::TYPE_MAX;
+        if (clasp && clasp != nclasp)
+            return NULL;
+        clasp = nclasp;
     }
 
-    /*
-     * Assume the caller checked that OBJECT_FLAG_NON_TYPED_ARRAY is not set.
-     * This means the set contains at least one object because sets with no
-     * objects have all object flags.
-     */
-    JS_ASSERT(arrayType != TypedArray::TYPE_MAX);
+    return clasp;
+}
 
-    return arrayType;
+int
+StackTypeSet::getTypedArrayType()
+{
+    Class *clasp = getKnownClass();
+
+    if (clasp && IsTypedArrayClass(clasp))
+        return clasp - &TypedArray::classes[0];
+    return TypedArray::TYPE_MAX;
+}
+
+bool
+StackTypeSet::isDOMClass()
+{
+    if (unknownObject())
+        return false;
+
+    unsigned count = getObjectCount();
+    for (unsigned i = 0; i < count; i++) {
+        Class *clasp;
+        if (RawObject object = getSingleObject(i))
+            clasp = object->getClass();
+        else if (TypeObject *object = getTypeObject(i))
+            clasp = object->clasp;
+        else
+            continue;
+
+        if (!(clasp->flags & JSCLASS_IS_DOMJSCLASS))
+            return false;
+    }
+
+    return true;
 }
 
 JSObject *
@@ -2258,27 +2275,17 @@ TypeCompartment::init(JSContext *cx)
 }
 
 TypeObject *
-TypeCompartment::newTypeObject(JSContext *cx, JSProtoKey key, Handle<TaggedProto> proto,
-                               bool unknown, bool isDOM)
+TypeCompartment::newTypeObject(JSContext *cx, Class *clasp, Handle<TaggedProto> proto, bool unknown)
 {
     JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
 
-    TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
+    TypeObject *object = gc::NewGCThing<TypeObject, ALLOW_GC>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
         return NULL;
-    new(object) TypeObject(proto, key == JSProto_Function, unknown);
+    new(object) TypeObject(clasp, proto, clasp == &FunctionClass, unknown);
 
-    if (!cx->typeInferenceEnabled()) {
+    if (!cx->typeInferenceEnabled())
         object->flags |= OBJECT_FLAG_UNKNOWN_MASK;
-    } else {
-        if (isDOM) {
-            object->setFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY
-                               | OBJECT_FLAG_NON_TYPED_ARRAY
-                               | OBJECT_FLAG_NON_PACKED_ARRAY);
-        } else {
-            object->setFlagsFromKey(cx, key);
-        }
-    }
 
     return object;
 }
@@ -2397,9 +2404,8 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
         if (!js_GetClassPrototype(cx, key.kind, &proto, NULL))
             return NULL;
 
-        RootedScript keyScript(cx, key.script);
         Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-        res = newTypeObject(cx, key.kind, tagged);
+        res = newTypeObject(cx, GetClassForProtoKey(key.kind), tagged);
         if (!res) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return NULL;
@@ -3072,7 +3078,7 @@ TypeCompartment::fixArrayType(JSContext *cx, HandleObject obj)
         Rooted<Type> origType(cx, type);
         /* Make a new type to use for future arrays with the same elements. */
         RootedObject objProto(cx, obj->getProto());
-        Rooted<TypeObject*> objType(cx, newTypeObject(cx, JSProto_Array, objProto));
+        Rooted<TypeObject*> objType(cx, newTypeObject(cx, &ArrayClass, objProto));
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -3169,7 +3175,7 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
         return;
 
     ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj.get());
-    RootedShape baseShape(cx, obj->lastProperty());
+    Shape *baseShape = obj->lastProperty();
 
     if (p) {
         /* The lookup ensures the shape matches, now check that the types match. */
@@ -3177,22 +3183,26 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
         for (unsigned i = 0; i < obj->slotSpan(); i++) {
             Type ntype = GetValueTypeForTable(cx, obj->getSlot(i));
             if (ntype != types[i]) {
-                if (NumberTypes(ntype, types[i])) {
-                    if (types[i].isPrimitive(JSVAL_TYPE_INT32)) {
-                        types[i] = Type::DoubleType();
-                        RootedShape shape(cx, baseShape);
-                        while (!shape->isEmptyShape()) {
-                            if (shape->slot() == i) {
-                                Type type = Type::DoubleType();
-                                if (!p->value.object->unknownProperties())
-                                    p->value.object->addPropertyType(cx, IdToTypeId(shape->propid()), type);
-                                break;
-                            }
-                            shape = shape->previous();
-                        }
-                    }
+                if (ntype.isPrimitive(JSVAL_TYPE_INT32) &&
+                    types[i].isPrimitive(JSVAL_TYPE_DOUBLE))
+                {
+                    /* The property types already reflect 'int32'. */
                 } else {
-                    return;
+                    if (ntype.isPrimitive(JSVAL_TYPE_DOUBLE) &&
+                        types[i].isPrimitive(JSVAL_TYPE_INT32))
+                    {
+                        /* Include 'double' in the property types to avoid the walk below later. */
+                        types[i] = Type::DoubleType();
+                    }
+                    Shape *shape = baseShape;
+                    while (!shape->isEmptyShape()) {
+                        if (shape->slot() == i) {
+                            if (!p->value.object->unknownProperties())
+                                p->value.object->addPropertyType(cx, IdToTypeId(shape->propid()), ntype);
+                            break;
+                        }
+                        shape = shape->previous();
+                    }
                 }
             }
         }
@@ -3201,7 +3211,7 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
     } else {
         /* Make a new type to use for the object and similar future ones. */
         Rooted<TaggedProto> objProto(cx, obj->getTaggedProto());
-        TypeObject *objType = newTypeObject(cx, JSProto_Object, objProto);
+        TypeObject *objType = newTypeObject(cx, &ObjectClass, objProto);
         if (!objType || !objType->addDefiniteProperties(cx, obj)) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -3692,12 +3702,12 @@ TypeObject::print()
     if (unknownProperties()) {
         printf(" unknown");
     } else {
-        if (!hasAnyFlags(OBJECT_FLAG_NON_PACKED_ARRAY))
-            printf(" packed");
-        if (!hasAnyFlags(OBJECT_FLAG_NON_DENSE_ARRAY))
+        if (!hasAnyFlags(OBJECT_FLAG_SPARSE_INDEXES))
             printf(" dense");
-        if (!hasAnyFlags(OBJECT_FLAG_NON_TYPED_ARRAY))
-            printf(" typed");
+        if (!hasAnyFlags(OBJECT_FLAG_NON_PACKED))
+            printf(" packed");
+        if (!hasAnyFlags(OBJECT_FLAG_LENGTH_OVERFLOW))
+            printf(" noLengthOverflow");
         if (hasAnyFlags(OBJECT_FLAG_UNINLINEABLE))
             printf(" uninlineable");
         if (hasAnyFlags(OBJECT_FLAG_SPECIAL_EQUALITY))
@@ -4337,7 +4347,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
                     types->addType(cx, Type::UnknownType());
                 } else if (state.hasHole) {
                     if (!initializer->unknownProperties())
-                        initializer->setFlags(cx, OBJECT_FLAG_NON_PACKED_ARRAY);
+                        initializer->setFlags(cx, OBJECT_FLAG_NON_PACKED);
                 } else if (op == JSOP_SPREAD) {
                     // Iterator could put arbitrary things into the array.
                     types->addType(cx, Type::UnknownType());
@@ -4484,19 +4494,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
         break;
 
       case JSOP_GENERATOR:
-          if (script_->function()) {
-            if (script_->compileAndGo) {
-                RawObject proto = script_->global().getOrCreateGeneratorPrototype(cx);
-                if (!proto)
-                    return false;
-                TypeObject *object = proto->getNewType(cx);
-                if (!object)
-                    return false;
-                TypeScript::ReturnTypes(script_)->addType(cx, Type::ObjectType(object));
-            } else {
-                TypeScript::ReturnTypes(script_)->addType(cx, Type::UnknownType());
-            }
-        }
+        TypeScript::ReturnTypes(script_)->addType(cx, Type::UnknownType());
         break;
 
       case JSOP_YIELD:
@@ -5759,7 +5757,7 @@ JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool s
          */
     } else {
         RootedObject funProto(cx, fun->getProto());
-        TypeObject *type = cx->compartment->types.newTypeObject(cx, JSProto_Function, funProto);
+        TypeObject *type = cx->compartment->types.newTypeObject(cx, &FunctionClass, funProto);
         if (!type)
             return false;
 
@@ -5833,7 +5831,7 @@ JSObject::shouldSplicePrototype(JSContext *cx)
 }
 
 bool
-JSObject::splicePrototype(JSContext *cx, Handle<TaggedProto> proto)
+JSObject::splicePrototype(JSContext *cx, Class *clasp, Handle<TaggedProto> proto)
 {
     JS_ASSERT(cx->compartment == compartment());
 
@@ -5861,13 +5859,14 @@ JSObject::splicePrototype(JSContext *cx, Handle<TaggedProto> proto)
     }
 
     if (!cx->typeInferenceEnabled()) {
-        TypeObject *type = cx->compartment->getNewType(cx, proto);
+        TypeObject *type = cx->compartment->getNewType(cx, clasp, proto);
         if (!type)
             return false;
         self->type_ = type;
         return true;
     }
 
+    type->clasp = clasp;
     type->proto = proto.raw();
 
     AutoEnterAnalysis enter(cx);
@@ -5903,9 +5902,8 @@ JSObject::makeLazyType(JSContext *cx)
         if (!JSFunction::getOrCreateScript(cx, fun))
             return NULL;
     }
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
     Rooted<TaggedProto> proto(cx, getTaggedProto());
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, key, proto);
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, getClass(), proto);
     AutoAssertNoGC nogc;
     if (!type) {
         if (cx->typeInferenceEnabled())
@@ -5953,14 +5951,14 @@ JSObject::makeLazyType(JSContext *cx)
      * looking at the class prototype key.
      */
 
-    if (IsTypedArrayProtoClass(self->getClass()))
-        type->flags |= OBJECT_FLAG_NON_TYPED_ARRAY;
-
     /* Don't track whether singletons are packed. */
-    type->flags |= OBJECT_FLAG_NON_PACKED_ARRAY;
+    type->flags |= OBJECT_FLAG_NON_PACKED;
 
-    if (self->isArray() && (self->isIndexed() || self->getArrayLength() > INT32_MAX))
-        type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY;
+    if (self->isIndexed())
+        type->flags |= OBJECT_FLAG_SPARSE_INDEXES;
+
+    if (self->isArray() && self->getArrayLength() > INT32_MAX)
+        type->flags |= OBJECT_FLAG_LENGTH_OVERFLOW;
 
     self->type_ = type;
 
@@ -5968,33 +5966,34 @@ JSObject::makeLazyType(JSContext *cx)
 }
 
 /* static */ inline HashNumber
-TypeObjectEntry::hash(TaggedProto proto)
+TypeObjectEntry::hash(const Lookup &lookup)
 {
-    return PointerHasher<JSObject *, 3>::hash(proto.raw());
+    return PointerHasher<JSObject *, 3>::hash(lookup.proto.raw()) ^
+           PointerHasher<Class *, 3>::hash(lookup.clasp);
 }
 
 /* static */ inline bool
-TypeObjectEntry::match(TypeObject *key, TaggedProto lookup)
+TypeObjectEntry::match(TypeObject *key, const Lookup &lookup)
 {
-    return key->proto == lookup.raw();
+    return key->proto == lookup.proto.raw() && key->clasp == lookup.clasp;
 }
 
 #ifdef DEBUG
 bool
-JSObject::hasNewType(TypeObject *type)
+JSObject::hasNewType(Class *clasp, TypeObject *type)
 {
     TypeObjectSet &table = compartment()->newTypeObjects;
 
     if (!table.initialized())
         return false;
 
-    TypeObjectSet::Ptr p = table.lookup(this);
+    TypeObjectSet::Ptr p = table.lookup(TypeObjectSet::Lookup(clasp, this));
     return p && *p == type;
 }
 #endif /* DEBUG */
 
 /* static */ bool
-JSObject::setNewTypeUnknown(JSContext *cx, HandleObject obj)
+JSObject::setNewTypeUnknown(JSContext *cx, Class *clasp, HandleObject obj)
 {
     if (!obj->setFlag(cx, js::BaseShape::NEW_TYPE_UNKNOWN))
         return false;
@@ -6006,7 +6005,7 @@ JSObject::setNewTypeUnknown(JSContext *cx, HandleObject obj)
      */
     TypeObjectSet &table = cx->compartment->newTypeObjects;
     if (table.initialized()) {
-        if (TypeObjectSet::Ptr p = table.lookup(obj.get()))
+        if (TypeObjectSet::Ptr p = table.lookup(TypeObjectSet::Lookup(clasp, obj.get())))
             MarkTypeObjectUnknownProperties(cx, *p);
     }
 
@@ -6014,7 +6013,7 @@ JSObject::setNewTypeUnknown(JSContext *cx, HandleObject obj)
 }
 
 TypeObject *
-JSCompartment::getNewType(JSContext *cx, TaggedProto proto_, UnrootedFunction fun_, bool isDOM)
+JSCompartment::getNewType(JSContext *cx, Class *clasp, TaggedProto proto_, JSFunction *fun_)
 {
     JS_ASSERT_IF(fun_, proto_.isObject());
     JS_ASSERT_IF(proto_.isObject(), cx->compartment == proto_.toObject()->compartment());
@@ -6022,7 +6021,7 @@ JSCompartment::getNewType(JSContext *cx, TaggedProto proto_, UnrootedFunction fu
     if (!newTypeObjects.initialized() && !newTypeObjects.init())
         return NULL;
 
-    TypeObjectSet::AddPtr p = newTypeObjects.lookupForAdd(proto_);
+    TypeObjectSet::AddPtr p = newTypeObjects.lookupForAdd(TypeObjectSet::Lookup(clasp, proto_));
     if (p) {
         TypeObject *type = *p;
 
@@ -6040,15 +6039,14 @@ JSCompartment::getNewType(JSContext *cx, TaggedProto proto_, UnrootedFunction fu
         if (type->newScript && type->newScript->fun != fun_)
             type->clearNewScript(cx);
 
-        if (!isDOM && !type->hasAnyFlags(OBJECT_FLAG_NON_DOM))
-            type->setFlags(cx, OBJECT_FLAG_NON_DOM);
-
         return type;
     }
 
     Rooted<TaggedProto> proto(cx, proto_);
-    RootedFunction fun(cx, DropUnrooted(fun_));
+    RootedFunction fun(cx, fun_);
+
     AssertCanGC();
+
     if (proto.isObject() && !proto.toObject()->setDelegate(cx))
         return NULL;
 
@@ -6057,11 +6055,11 @@ JSCompartment::getNewType(JSContext *cx, TaggedProto proto_, UnrootedFunction fu
         ? proto.toObject()->lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN)
         : true;
 
-    RootedTypeObject type(cx, types.newTypeObject(cx, JSProto_Object, proto, markUnknown, isDOM));
+    RootedTypeObject type(cx, types.newTypeObject(cx, clasp, proto, markUnknown));
     if (!type)
         return NULL;
 
-    if (!newTypeObjects.relookupOrAdd(p, proto, type.get()))
+    if (!newTypeObjects.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type.get()))
         return NULL;
 
     if (!cx->typeInferenceEnabled())
@@ -6117,13 +6115,13 @@ JSCompartment::getNewType(JSContext *cx, TaggedProto proto_, UnrootedFunction fu
 }
 
 TypeObject *
-JSObject::getNewType(JSContext *cx, RawFunction fun, bool isDOM)
+JSObject::getNewType(JSContext *cx, Class *clasp, JSFunction *fun)
 {
-    return cx->compartment->getNewType(cx, this, fun, isDOM);
+    return cx->compartment->getNewType(cx, clasp, this, fun);
 }
 
 TypeObject *
-JSCompartment::getLazyType(JSContext *cx, Handle<TaggedProto> proto)
+JSCompartment::getLazyType(JSContext *cx, Class *clasp, Handle<TaggedProto> proto)
 {
     JS_ASSERT(cx->compartment == this);
     JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
@@ -6135,7 +6133,7 @@ JSCompartment::getLazyType(JSContext *cx, Handle<TaggedProto> proto)
     if (!table.initialized() && !table.init())
         return NULL;
 
-    TypeObjectSet::AddPtr p = table.lookupForAdd(proto);
+    TypeObjectSet::AddPtr p = table.lookupForAdd(TypeObjectSet::Lookup(clasp, proto));
     if (p) {
         TypeObject *type = *p;
         JS_ASSERT(type->lazy());
@@ -6143,11 +6141,11 @@ JSCompartment::getLazyType(JSContext *cx, Handle<TaggedProto> proto)
         return type;
     }
 
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, JSProto_Object, proto, false);
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, clasp, proto, false);
     if (!type)
         return NULL;
 
-    if (!table.relookupOrAdd(p, proto, type))
+    if (!table.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type))
         return NULL;
 
     type->singleton = (JSObject *) TypeObject::LAZY_SINGLETON;
@@ -6480,7 +6478,7 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectSet &table)
             if (IsTypeObjectAboutToBeFinalized(&type))
                 e.removeFront();
             else if (type != e.front())
-                e.rekeyFront(TaggedProto(type->proto), type);
+                e.rekeyFront(TypeObjectSet::Lookup(type->clasp, type->proto.get()), type);
         }
     }
 }

@@ -109,5 +109,8 @@ private:
   nsCOMPtr<nsISocketTransportService> stservice_;
 };
 
+int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
+                                nr_transport_addr *addr, int keep);
+
 }  // close namespace
 #endif

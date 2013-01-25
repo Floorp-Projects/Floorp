@@ -29,6 +29,8 @@ namespace ion {
     class IonCompartment;
 }
 
+struct NativeIterator;
+
 /*
  * A single-entry cache for some base-10 double-to-string conversions. This
  * helps date-format-xparb.js.  It also avoids skewing the results for
@@ -343,10 +345,11 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
     js::types::TypeObjectSet     lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectSet &table);
 
-    js::types::TypeObject *getNewType(JSContext *cx, js::TaggedProto proto,
-                                      js::UnrootedFunction fun = NULL, bool isDOM = false);
+    js::types::TypeObject *getNewType(JSContext *cx, js::Class *clasp, js::TaggedProto proto,
+                                      JSFunction *fun = NULL);
 
-    js::types::TypeObject *getLazyType(JSContext *cx, js::Handle<js::TaggedProto> proto);
+    js::types::TypeObject *getLazyType(JSContext *cx, js::Class *clasp,
+                                       js::Handle<js::TaggedProto> proto);
 
     /*
      * Hash table of all manually call site-cloned functions from within
@@ -528,6 +531,12 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
 
     /* Bookkeeping information for debug scope objects. */
     js::DebugScopes *debugScopes;
+
+    /*
+     * List of potentially active iterators that may need deleted property
+     * suppression.
+     */
+    js::NativeIterator *enumerators;
 
 #ifdef JS_ION
   private:
@@ -774,3 +783,4 @@ class AutoWrapperRooter : private AutoGCRooter {
 } /* namespace js */
 
 #endif /* jscompartment_h___ */
+

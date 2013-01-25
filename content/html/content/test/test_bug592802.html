@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592802
 SimpleTest.waitForExplicitFinish();
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window);
 
 var testData = [
 /* visibility | display | multiple */

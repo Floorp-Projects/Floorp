@@ -1,0 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Information about networks that is exposed to network manager API consumers.
+ */
+[scriptable, builtinclass, uuid(02166330-2ff6-4ea5-895a-693c0c2b4c1f)]
+interface nsISystemWorkerManager : nsISupports
+{
+  [implicit_jscontext]
+  void registerRilWorker(in jsval aWorker);
+};

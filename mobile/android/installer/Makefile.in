@@ -34,12 +34,7 @@ DEFINES += \
 	-DPREF_DIR=$(PREF_DIR) \
 	$(NULL)
 
-ifeq ($(MOZ_CHROME_FILE_FORMAT),jar)
-JAREXT=.jar
-else
-JAREXT=
-endif
-DEFINES += -DJAREXT=$(JAREXT)
+DEFINES += -DJAREXT=
 
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
@@ -48,7 +43,7 @@ ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 endif
 
-MOZ_POST_STAGING_CMD = find chrome -type f -name *.properties -exec $(PERL) -n -i -e 'print unless /^\#/' {} \;
+MOZ_PACKAGER_MINIFY=1
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 

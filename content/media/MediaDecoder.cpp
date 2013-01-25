@@ -23,6 +23,7 @@
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
 #include <algorithm>
+#include <mozilla/FloatingPoint.h>
 
 #ifdef MOZ_WMF
 #include "WMFDecoder.h"
@@ -640,15 +641,16 @@ void MediaDecoder::QueueMetadata(int64_t aPublishTime,
                                  int aChannels,
                                  int aRate,
                                  bool aHasAudio,
+                                 bool aHasVideo,
                                  MetadataTags* aTags)
 {
   NS_ASSERTION(mDecoderStateMachine->OnDecodeThread(),
                "Should be on decode thread.");
   GetReentrantMonitor().AssertCurrentThreadIn();
-  mDecoderStateMachine->QueueMetadata(aPublishTime, aChannels, aRate, aHasAudio, aTags);
+  mDecoderStateMachine->QueueMetadata(aPublishTime, aChannels, aRate, aHasAudio, aHasVideo, aTags);
 }
 
-void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
+void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mShuttingDown) {
@@ -670,7 +672,7 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, Meta
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aTags);
+    mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
   }
 
   if (!mResourceLoaded) {
@@ -969,8 +971,8 @@ void MediaDecoder::NotifyPrincipalChanged()
 
 void MediaDecoder::NotifyBytesConsumed(int64_t aBytes)
 {
-  NS_ENSURE_TRUE_VOID(mDecoderStateMachine);
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  NS_ENSURE_TRUE_VOID(mDecoderStateMachine);
   MOZ_ASSERT(OnStateMachineThread() || mDecoderStateMachine->OnDecodeThread());
   if (!mIgnoreProgressData) {
     mDecoderPosition += aBytes;
@@ -1188,7 +1190,14 @@ void MediaDecoder::DurationChanged()
 void MediaDecoder::SetDuration(double aDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mDuration = static_cast<int64_t>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
+  if (MOZ_DOUBLE_IS_INFINITE(aDuration)) {
+    SetInfinite(true);
+  } else if (MOZ_DOUBLE_IS_NaN(aDuration)) {
+    mDuration = -1;
+    SetInfinite(true);
+  } else {
+    mDuration = static_cast<int64_t>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
+  }
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (mDecoderStateMachine) {
@@ -1372,8 +1381,7 @@ void MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
 }
 
 bool MediaDecoder::OnDecodeThread() const {
-  NS_ENSURE_TRUE(mDecoderStateMachine, false);
-  return mDecoderStateMachine->OnDecodeThread();
+  return mDecoderStateMachine ? mDecoderStateMachine->OnDecodeThread() : false;
 }
 
 ReentrantMonitor& MediaDecoder::GetReentrantMonitor() {

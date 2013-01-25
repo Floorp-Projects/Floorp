@@ -85,7 +85,6 @@ MOCHITEST_FILES = \
 		test_bug790475.html \
 		test_bug796839.html \
 		test_bug832025.html \
-		test_bug832025_2.html \
 		test_spellcheck_pref.html \
 		$(NULL)
 

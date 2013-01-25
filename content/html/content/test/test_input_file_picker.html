@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565274
 SimpleTest.waitForExplicitFinish();
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window);
 
 // The following lists are from toolkit/content/filepicker.properties which is used by filePicker
 var imageExtensionList = "*.jpe; *.jpg; *.jpeg; *.gif; *.png; *.bmp; *.ico; *.svg; *.svgz; *.tif; *.tiff; *.ai; *.drw; *.pct; *.psp; *.xcf; *.psd; *.raw"

@@ -13,10 +13,6 @@ import org.mozilla.gecko.sync.delegates.MetaGlobalDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
 public class FetchMetaGlobalStage extends AbstractNonRepositorySyncStage {
-  public FetchMetaGlobalStage(GlobalSession session) {
-    super(session);
-  }
-
   private static final String LOG_TAG = "FetchMetaGlobalStage";
   private static final String META_COLLECTION = "meta";
 

@@ -70,9 +70,9 @@ button {
               0 0 0 1px hsla(0,0%,100%,.3) inset,
               0 1px 0 hsla(0,0%,100%,.1);
 
-  -moz-transition-property: background-color, border-color, box-shadow;
-  -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: ease;
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
 
 }
 
@@ -83,16 +83,16 @@ button:hover {
               0 0 0 1px hsla(0,0%,100%,.3) inset,
               0 1px 0 hsla(0,0%,100%,.1),
               0 0 3px hsla(210,15%,25%,.1);
-  -moz-transition-property: background-color, border-color, box-shadow;
-  -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: ease;
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
 }
 
 button:hover:active {
   background-color: hsla(210,15%,25%,.2);
   box-shadow: 0 1px 1px hsla(210,15%,25%,.2) inset,
               0 0 2px hsla(210,15%,25%,.4) inset;
-  -moz-transition-property: background-color, border-color, box-shadow;
-  -moz-transition-duration: 10ms;
-  -moz-transition-timing-function: linear;
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 10ms;
+  transition-timing-function: linear;
 }

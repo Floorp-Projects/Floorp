@@ -86,8 +86,7 @@ else
 endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
-	  $(UNMAKE_PACKAGE)
-	$(MAKE) clobber-zip AB_CD=en-US
+	  $(INNER_UNMAKE_PACKAGE)
 
 
 unpack: $(STAGEDIST)
@@ -107,24 +106,14 @@ endif
 endif
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
 repackage-zip:  libs-$(AB_CD)
-# Adjust jar logs with the new locale (can't use sed -i because of bug 373784)
-	mkdir -p $(JARLOG_DIR_AB_CD)
-	-cp -r $(JARLOG_DIR)/en-US/*.jar.log $(JARLOG_DIR_AB_CD)
-	-$(PERL) -pi.old -e "s/en-US/$(AB_CD)/g" $(JARLOG_DIR_AB_CD)/*.jar.log
 # call a hook for apps to put their uninstall helper.exe into the package
 	$(UNINSTALLER_PACKAGE_HOOK)
 # call a hook for apps to build the stub installer
 ifdef MOZ_STUB_INSTALLER
 	$(STUB_HOOK)
 endif
-# copy xpi-stage over, but not install.rdf and chrome.manifest,
-# those are just for language packs
-	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  tar --exclude=install.rdf --exclude=chrome.manifest $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
-	mv $(STAGEDIST)/chrome/$(AB_CD).manifest $(STAGEDIST)/chrome/localized.manifest
-ifdef MOZ_WEBAPP_RUNTIME
-	mv $(STAGEDIST)/webapprt/chrome/$(AB_CD).manifest $(STAGEDIST)/webapprt/chrome/localized.manifest
-endif
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/l10n-repack.py $(STAGEDIST) $(DIST)/xpi-stage/locale-$(AB_CD) \
+		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
 ifneq (en,$(AB))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/$(AB).lproj
@@ -132,7 +121,7 @@ endif
 endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
 	cd $(DIST)/l10n-stage; \
-	  $(PREPARE_PACKAGE) && $(MAKE_PACKAGE)
+	  $(MAKE_PACKAGE)
 ifdef MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
@@ -145,13 +134,6 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/en.lproj
 endif
 endif
-ifdef MOZ_OMNIJAR
-	@(cd $(STAGEDIST) && $(UNPACK_OMNIJAR))
-ifdef MOZ_WEBAPP_RUNTIME
-	@(cd $(STAGEDIST)/webapprt && $(UNPACK_OMNIJAR_WEBAPP_RUNTIME))
-endif
-endif
-	$(MAKE) clobber-zip AB_CD=$(AB_CD)
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(ZIP_OUT)"
 	if test -f "$(DIST)/l10n-stage/$(PACKAGE).asc"; then mv -f "$(DIST)/l10n-stage/$(PACKAGE).asc" "$(ZIP_OUT).asc"; fi

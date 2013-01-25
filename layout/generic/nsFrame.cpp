@@ -2571,7 +2571,7 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   //
   // For instance, if the frame hierarchy is:
   //    AUTO     -> _MOZ_ALL -> NONE -> TEXT,     the returned value is _MOZ_ALL
-  //    TEXT     -> NONE     -> AUTO -> _MOZ_ALL, the returned value is NONE
+  //    TEXT     -> NONE     -> AUTO -> _MOZ_ALL, the returned value is TEXT
   //    _MOZ_ALL -> TEXT     -> AUTO -> AUTO,     the returned value is _MOZ_ALL
   //    AUTO     -> CELL     -> TEXT -> AUTO,     the returned value is TEXT
   //
@@ -2582,7 +2582,6 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
     const nsStyleUIReset* userinterface = frame->GetStyleUIReset();
     switch (userinterface->mUserSelect) {
       case NS_STYLE_USER_SELECT_ALL:
-      case NS_STYLE_USER_SELECT_NONE:
       case NS_STYLE_USER_SELECT_MOZ_ALL:
         // override the previous values
         selectStyle = userinterface->mUserSelect;
@@ -2603,9 +2602,6 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
   else
   if (selectStyle == NS_STYLE_USER_SELECT_MOZ_ALL)
     selectStyle = NS_STYLE_USER_SELECT_ALL;
-  else
-  if (selectStyle == NS_STYLE_USER_SELECT_MOZ_NONE)
-    selectStyle = NS_STYLE_USER_SELECT_NONE;
 
   // return stuff
   if (aSelectStyle)
@@ -3015,9 +3011,9 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
 {
   MOZ_ASSERT(aEvent->eventStructType == NS_MOUSE_EVENT, "HandleDrag can only handle mouse event");
 
-  bool    selectable;
-  uint8_t selectStyle;
-  IsSelectable(&selectable, &selectStyle);
+  bool selectable;
+  IsSelectable(&selectable, nullptr);
+
   // XXX Do we really need to exclude non-selectable content here?
   // GetContentOffsetsFromPoint can handle it just fine, although some
   // other stuff might not like it.
@@ -3592,15 +3588,13 @@ static nsIFrame* AdjustFrameForSelectionStyles(nsIFrame* aFrame) {
   {
     // These are the conditions that make all children not able to handle
     // a cursor.
-    if (frame->GetStyleUIReset()->mUserSelect == NS_STYLE_USER_SELECT_NONE || 
-        frame->GetStyleUIReset()->mUserSelect == NS_STYLE_USER_SELECT_ALL || 
+    if (frame->GetStyleUIReset()->mUserSelect == NS_STYLE_USER_SELECT_ALL ||
         frame->IsGeneratedContentFrame()) {
       adjustedFrame = frame;
     }
   }
   return adjustedFrame;
 }
-  
 
 nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint,
                                                               uint32_t aFlags)
@@ -3611,8 +3605,8 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint,
   }
   else {
     // This section of code deals with special selection styles.  Note that
-    // -moz-none and -moz-all exist, even though they don't need to be explicitly
-    // handled.
+    // -moz-all exists, even though it doesn't need to be explicitly handled.
+    //
     // The offset is forced not to end up in generated content; content offsets
     // cannot represent content outside of the document's content tree.
 
@@ -3682,7 +3676,10 @@ nsFrame::GetCursor(const nsPoint& aPoint,
 {
   FillCursorInformationFromStyle(GetStyleUserInterface(), aCursor);
   if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
-    aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
+    // If this is editable, I-beam cursor is better for most elements.
+    aCursor.mCursor =
+      (mContent && mContent->IsEditable()) ? NS_STYLE_CURSOR_TEXT :
+                                             NS_STYLE_CURSOR_DEFAULT;
   }
 
 

@@ -29,9 +29,13 @@ _BROWSER_FILES = \
                  social_worker.js \
                  $(NULL)
 
-ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 _BROWSER_FILES += \
-                browser_social.js \
+                browser_social_perwindowPB.js \
+                $(NULL)
+else
+_BROWSER_FILES += \
+                browser_social_globalPB.js \
                 $(NULL)
 endif
 

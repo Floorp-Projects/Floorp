@@ -61,12 +61,21 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   gfxIntSize newFrameSize = mImageContainer->GetCurrentSize();
   if (oldFrameSize != newFrameSize) {
     mImageSizeChanged = true;
+    mNeedInvalidation = true;
   }
 
   mPaintTarget = aTargetTime;
 }
 
-void VideoFrameContainer::ClearCurrentFrame()
+void VideoFrameContainer::Reset()
+{
+  ClearCurrentFrame(true);
+  Invalidate();
+  mPaintDelay = TimeDuration();
+  mImageContainer->ResetPaintCount();
+}
+
+void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
 {
   MutexAutoLock lock(mMutex);
 
@@ -75,6 +84,7 @@ void VideoFrameContainer::ClearCurrentFrame()
   nsRefPtr<Image> kungFuDeathGrip;
   kungFuDeathGrip = mImageContainer->LockCurrentImage();
   mImageContainer->UnlockCurrentImage();
+  mImageSizeChanged = aResetSize;
 
   mImageContainer->SetCurrentImage(nullptr);
 
@@ -104,7 +114,8 @@ void VideoFrameContainer::Invalidate()
 
   if (mImageContainer &&
       mImageContainer->IsAsync() &&
-      mImageContainer->HasCurrentImage()) {
+      mImageContainer->HasCurrentImage() &&
+      !mIntrinsicSizeChanged) {
     mNeedInvalidation = false;
   }
 

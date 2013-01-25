@@ -13,7 +13,7 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 
-  var context = new mozAudioContext();
+  var context = new AudioContext();
   var buffer = context.createBuffer(1, 2048, 44100);
   for (var i = 0; i < 2048; ++i) {
     buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / 44100);
@@ -22,13 +22,13 @@ addLoadEvent(function() {
   var destination = context.destination;
   is(destination.context, context, "Destination node has proper context");
   is(destination.context, context, "Destination node has proper context");
-  is(destination.numberOfInputs, 0, "Destination node has 0 inputs");
+  is(destination.numberOfInputs, 1, "Destination node has 1 inputs");
   is(destination.numberOfOutputs, 0, "Destination node has 0 outputs");
 
   var source = context.createBufferSource();
   is(source.context, context, "Source node has proper context");
   is(source.numberOfInputs, 0, "Source node has 0 inputs");
-  is(source.numberOfOutputs, 0, "Source node has 0 outputs");
+  is(source.numberOfOutputs, 1, "Source node has 1 outputs");
   ok(!source.buffer, "Source node should not have a buffer when it's created");
 
   source.buffer = buffer;

@@ -726,6 +726,8 @@ interface nsIDocShell : nsISupports
   
   void setFullscreenAllowed(in boolean allowed);
 
+  [noscript, infallible] attribute boolean affectPrivateSessionLifetime;
+
   /**
    * Indicates whether the UI may enable the character encoding menu. The UI
    * must disable the menu when this property is false.

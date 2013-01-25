@@ -125,9 +125,11 @@ DASHRepDecoder::NotifyDownloadEnded(nsresult aStatus)
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   if (!mMainDecoder) {
-    LOG("Error! Main Decoder is reported as null: mMainDecoder [%p]",
-        mMainDecoder.get());
-    DecodeError();
+    if (!mShuttingDown) {
+      LOG("Error! Main Decoder is null before shutdown: mMainDecoder [%p] ",
+          mMainDecoder.get());
+      DecodeError();
+    }
     return;
   }
 
@@ -153,7 +155,8 @@ DASHRepDecoder::NotifyDownloadEnded(nsresult aStatus)
       mMainDecoder->NotifyDownloadEnded(this, aStatus, mSubsegmentIdx);
     }
   } else if (aStatus == NS_BINDING_ABORTED) {
-    LOG("MPD download has been cancelled by the user: aStatus [%x].", aStatus);
+    LOG("Media download has been cancelled by the user: aStatus [%x].",
+        aStatus);
     if (mMainDecoder) {
       mMainDecoder->LoadAborted();
     }
@@ -413,7 +416,8 @@ DASHRepDecoder::SetInfinite(bool aInfinite)
 void
 DASHRepDecoder::SetMediaSeekable(bool aMediaSeekable)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  NS_ASSERTION(NS_IsMainThread() || OnDecodeThread(),
+               "Should be on main thread or decode thread.");
   if (mMainDecoder) { mMainDecoder->SetMediaSeekable(aMediaSeekable); }
 }
 

@@ -82,8 +82,8 @@ BEGIN_TEST(testChromeBuffer)
         CHECK(fun = JS_CompileFunction(cx, global, "untrusted", 1, &paramName,
                                        bytes, strlen(bytes), "", 0));
 
-        jsval rval;
-        CHECK(JS_CallFunction(cx, NULL, fun, 1, v.address(), &rval));
+        js::RootedValue rval(cx);
+        CHECK(JS_CallFunction(cx, NULL, fun, 1, v.address(), rval.address()));
         CHECK(JSVAL_TO_INT(rval) == 100);
     }
 
@@ -119,8 +119,8 @@ BEGIN_TEST(testChromeBuffer)
         CHECK(fun = JS_CompileFunction(cx, global, "untrusted", 1, &paramName,
                                        bytes, strlen(bytes), "", 0));
 
-        jsval rval;
-        CHECK(JS_CallFunction(cx, NULL, fun, 1, v.address(), &rval));
+        js::RootedValue rval(cx);
+        CHECK(JS_CallFunction(cx, NULL, fun, 1, v.address(), rval.address()));
         JSBool match;
         CHECK(JS_StringEqualsAscii(cx, JSVAL_TO_STRING(rval), "From trusted: InternalError: too much recursion", &match));
         CHECK(match);
@@ -141,7 +141,7 @@ BEGIN_TEST(testChromeBuffer)
             trusted_fun = JS_GetFunctionObject(fun);
         }
 
-        JSFunction *fun = JS_NewFunction(cx, CallTrusted, 0, 0, global, "callTrusted");
+        js::RootedFunction fun(cx, JS_NewFunction(cx, CallTrusted, 0, 0, global, "callTrusted"));
         js::RootedObject callTrusted(cx, JS_GetFunctionObject(fun));
 
         const char *paramName = "f";
@@ -154,8 +154,8 @@ BEGIN_TEST(testChromeBuffer)
                                        bytes, strlen(bytes), "", 0));
 
         js::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
-        jsval rval;
-        CHECK(JS_CallFunction(cx, NULL, fun, 1, arg.address(), &rval));
+        js::RootedValue rval(cx);
+        CHECK(JS_CallFunction(cx, NULL, fun, 1, arg.address(), rval.address()));
         CHECK(JSVAL_TO_INT(rval) == 42);
     }
 

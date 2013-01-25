@@ -16,7 +16,7 @@
 
 * {
   -moz-user-focus: ignore;
-  -moz-user-select: -moz-none;
+  -moz-user-select: none;
   display: -moz-box;
   -moz-box-sizing: border-box;
 }

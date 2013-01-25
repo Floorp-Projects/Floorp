@@ -5,6 +5,10 @@
 const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 
+let tmp = {};
+Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
+let SessionStore = tmp.SessionStore;
+
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 // Some tests here assume that all restored tabs are loaded without waiting for
@@ -284,4 +288,55 @@ function whenNewWindowLoaded(aIsPrivate, aCallback) {
     win.removeEventListener("load", onLoad, false);
     aCallback(win);
   }, false);
+}
+
+/**
+ * The test runner that controls the execution flow of our tests.
+ */
+let TestRunner = {
+  _iter: null,
+
+  /**
+   * Holds the browser state from before we started so
+   * that we can restore it after all tests ran.
+   */
+  backupState: {},
+
+  /**
+   * Starts the test runner.
+   */
+  run: function () {
+    waitForExplicitFinish();
+
+    SessionStore.promiseInitialized.then(function () {
+      executeSoon(function () {
+        this.backupState = JSON.parse(ss.getBrowserState());
+        this._iter = runTests();
+        this.next();
+      }.bind(this));
+    }.bind(this));
+  },
+
+  /**
+   * Runs the next available test or finishes if there's no test left.
+   */
+  next: function () {
+    try {
+      TestRunner._iter.next();
+    } catch (e if e instanceof StopIteration) {
+      TestRunner.finish();
+    }
+  },
+
+  /**
+   * Finishes all tests and cleans up.
+   */
+  finish: function () {
+    closeAllButPrimaryWindow();
+    waitForBrowserState(this.backupState, finish);
+  }
+};
+
+function next() {
+  TestRunner.next();
 }

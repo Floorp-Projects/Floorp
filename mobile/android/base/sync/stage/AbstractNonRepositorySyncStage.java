@@ -4,25 +4,18 @@
 
 package org.mozilla.gecko.sync.stage;
 
-import org.mozilla.gecko.sync.GlobalSession;
 
 /**
  * This is simply a stage that is not responsible for synchronizing repositories.
  */
-public abstract class AbstractNonRepositorySyncStage implements GlobalSyncStage {
-  protected final GlobalSession session;
-
-  public AbstractNonRepositorySyncStage(GlobalSession session) {
-    this.session = session;
-  }
-
+public abstract class AbstractNonRepositorySyncStage extends AbstractSessionManagingSyncStage {
   @Override
-  public void resetLocal() {
+  protected void resetLocal() {
     // Do nothing.
   }
 
   @Override
-  public void wipeLocal() {
+  protected void wipeLocal() {
     // Do nothing.
   }
 

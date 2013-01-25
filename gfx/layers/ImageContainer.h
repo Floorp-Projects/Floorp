@@ -444,6 +444,15 @@ public:
   }
 
   /**
+   * Resets the paint count to zero.
+   * Can be called from any thread.
+   */
+  void ResetPaintCount() {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    mPaintCount = 0;
+  }
+
+  /**
    * Increments mPaintCount if this is the first time aPainted has been
    * painted, and sets mPaintTime if the painted image is the current image.
    * current image.  Can be called from any thread.
@@ -722,7 +731,7 @@ protected:
   already_AddRefed<gfxASurface> GetAsSurface();
 
   void SetOffscreenFormat(gfxASurface::gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
-  gfxASurface::gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
+  gfxASurface::gfxImageFormat GetOffscreenFormat();
 
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mBufferSize;

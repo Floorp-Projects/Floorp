@@ -10,7 +10,7 @@
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
               android:textAppearance="?android:attr/textAppearanceMedium"
-              android:textColor="?android:attr/textColorPrimary"
+              android:textColor="@color/doorhanger_text"
               android:textColorLink="@color/doorhanger_link"
               android:padding="10dp"/>
 

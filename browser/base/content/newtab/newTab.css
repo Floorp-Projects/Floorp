@@ -18,6 +18,19 @@ input[type=button] {
   overflow: auto;
 }
 
+/* UNDO */
+#newtab-undo-container {
+  transition: opacity 100ms ease-out;
+  display: -moz-box;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+#newtab-undo-container[undo-disabled] {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* TOGGLE */
 #newtab-toggle {
   position: absolute;
@@ -41,7 +54,10 @@ input[type=button] {
 #newtab-margin-top {
   min-height: 50px;
   max-height: 80px;
+  display: -moz-box;
   -moz-box-flex: 1;
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
 
 #newtab-margin-bottom {

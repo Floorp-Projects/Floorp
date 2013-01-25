@@ -10,11 +10,11 @@ body {
 }
 
 #bg {
-  background: -moz-linear-gradient(#C4C4C4,#9E9E9E);
+  background: linear-gradient(#C4C4C4, #9E9E9E);
 }
 
 #bg:-moz-window-inactive {
-  background: -moz-linear-gradient(rgb(237,237,237),rgb(216,216,216));
+  background: linear-gradient(#EDEDED, #D8D8D8);
 }
 
 /* Tabs
@@ -425,11 +425,15 @@ input.name::-moz-placeholder {
   color: transparent;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);
   background-repeat: no-repeat;
-  -moz-padding-start: 20px;
 }
 
 .title-container:hover input.name::-moz-placeholder {
   color: #CCC;
+  background-image: none;
+}
+
+input.name:focus::-moz-placeholder {
+  background-image: none;
 }
 
 .title-shield {
@@ -541,7 +545,7 @@ html[dir=rtl] .iq-resizable-se {
 }
 
 #searchshade:-moz-window-inactive {
-  background: -moz-linear-gradient(rgba(237,237,237,.42),rgba(216,216,216,.42));
+  background: linear-gradient(rgba(237,237,237,0.42), rgba(216,216,216,0.42));
 }
 
 #search{

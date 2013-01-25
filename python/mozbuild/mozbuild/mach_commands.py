@@ -32,7 +32,10 @@ class Build(MachCommandBase):
         warnings_database = WarningsDatabase()
 
         if os.path.exists(warnings_path):
-            warnings_database.load_from_file(warnings_path)
+            try:
+                warnings_database.load_from_file(warnings_path)
+            except ValueError:
+                os.remove(warnings_path)
 
         warnings_collector = WarningsCollector(database=warnings_database,
             objdir=self.topobjdir)
