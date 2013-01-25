@@ -185,7 +185,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr
                 return UnrootedScript(NULL);
         }
 
-        if (!FoldConstants(cx, pn, &parser))
+        if (!FoldConstants(cx, &pn, &parser))
             return UnrootedScript(NULL);
         if (!NameFunctions(cx, pn))
             return UnrootedScript(NULL);

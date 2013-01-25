@@ -357,7 +357,7 @@ nsDOMCameraControl::TakePicture(const JS::Value& aOptions, nsICameraTakePictureC
   rv = pos.Init(cx, &options.position);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mCameraControl->TakePicture(size, options.rotation, options.fileFormat, pos, onSuccess, onError);
+  return mCameraControl->TakePicture(size, options.rotation, options.fileFormat, pos, options.dateTime, onSuccess, onError);
 }
 
 /* [implicit_jscontext] void GetPreviewStreamVideoMode (in jsval aOptions, in nsICameraPreviewStreamCallback onSuccess, [optional] in nsICameraErrorCallback onError); */

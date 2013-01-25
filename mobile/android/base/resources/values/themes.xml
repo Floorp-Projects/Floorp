@@ -5,7 +5,7 @@
 
 <resources>
 
-    <style name="Gecko" parent="@android:style/Theme">
+    <style name="Gecko" parent="@android:style/Theme.Light">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>

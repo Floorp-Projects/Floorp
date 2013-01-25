@@ -1512,8 +1512,27 @@ NS_INTERFACE_MAP_END
 
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocument)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsDocument,
-                                              nsNodeUtils::LastRelease(this))
+NS_IMETHODIMP_(nsrefcnt)
+nsDocument::Release()
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(nsDocument);
+  nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsDocument)::Upcast(this);
+  nsrefcnt count = mRefCnt.decr(base);
+  NS_LOG_RELEASE(this, count, "nsDocument");
+  if (count == 0) {
+    if (mStackRefCnt && !mNeedsReleaseAfterStackRefCntRelease) {
+      mNeedsReleaseAfterStackRefCntRelease = true;
+      NS_ADDREF_THIS();
+      return mRefCnt.get();
+    }
+    NS_ASSERT_OWNINGTHREAD(nsDocument);
+    mRefCnt.stabilizeForDeletion();
+    nsNodeUtils::LastRelease(this);
+    return 0;
+  }
+  return count;
+}
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
   if (Element::CanSkip(tmp, aRemovingAllowed)) {
@@ -5156,77 +5175,6 @@ nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
 }
 
 NS_IMETHODIMP
-nsDocument::AddBinding(nsIDOMElement* aContent, const nsAString& aURI)
-{
-  nsCOMPtr<Element> element = do_QueryInterface(aContent);
-  NS_ENSURE_ARG_POINTER(element);
-  ErrorResult rv;
-  nsIDocument::AddBinding(*element, aURI, rv);
-  return rv.ErrorCode();
-}
-
-void
-nsIDocument::AddBinding(Element& aContent, const nsAString& aURI, ErrorResult& rv)
-{
-  rv = nsContentUtils::CheckSameOrigin(this, &aContent);
-  if (rv.Failed()) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aURI);
-  if (rv.Failed()) {
-    return;
-  }
-
-  // Figure out the right principal to use
-  nsCOMPtr<nsIPrincipal> subject;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (secMan) {
-    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
-    if (rv.Failed()) {
-      return;
-    }
-  }
-
-  if (!subject) {
-    // Fall back to our principal.  Or should we fall back to the null
-    // principal?  The latter would just mean no binding loads....
-    subject = NodePrincipal();
-  }
-
-  rv = BindingManager()->AddLayeredBinding(&aContent, uri, subject);
-}
-
-NS_IMETHODIMP
-nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsAString& aURI)
-{
-  nsCOMPtr<Element> element = do_QueryInterface(aContent);
-  NS_ENSURE_ARG_POINTER(element);
-  ErrorResult rv;
-  nsIDocument::RemoveBinding(*element, aURI, rv);
-  return rv.ErrorCode();
-}
-
-void
-nsIDocument::RemoveBinding(Element& aContent, const nsAString& aURI,
-                           ErrorResult& rv)
-{
-  rv = nsContentUtils::CheckSameOrigin(this, &aContent);
-  if (rv.Failed()) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aURI);
-  if (rv.Failed()) {
-    return;
-  }
-
-  rv = BindingManager()->RemoveLayeredBinding(&aContent, uri);
-}
-
-NS_IMETHODIMP
 nsDocument::LoadBindingDocument(const nsAString& aURI)
 {
   ErrorResult rv;
@@ -6707,6 +6655,8 @@ nsIDocument::CreateEvent(const nsAString& aEventType, ErrorResult& rv) const
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
+  nsDocumentOnStack dos(this);
+
   // We need to flush the sink for non-HTML documents (because the XML
   // parser still does insertion with deferred notifications).  We
   // also need to flush the sink if this is a layout-related flush, to

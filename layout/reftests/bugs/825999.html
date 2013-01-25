@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Testcase for bug 825999</title>
+        <meta charset="utf-8">
+        <style>
+        html,body {
+            color:black; background-color:white; font-family: monospace; font-size:16px; padding:4px; margin:0;
+        }
+
+            button,p,select,span,table,object {
+                width: 14px;
+                text-indent: 20px;
+                overflow: hidden;
+                padding-left:6px;
+                padding-right:17px;
+                outline: 1px solid blue;
+            }
+            span {
+                display:inline-block;
+                overflow: hidden;
+                outline:none;
+            }
+            x {
+                display:block;
+                overflow:auto;
+                height:3em;
+                padding:1px;
+                vertical-align:top;
+                background:lime;
+                width:36px;
+            }
+            .bb * {
+                -moz-box-sizing: border-box;
+            }
+            .cb * {
+                -moz-box-sizing: content-box;
+            }
+            td {
+              max-width:14px;
+            }
+            .bc {
+              border-collapse:collapse;
+            }
+            .it {
+              display:inline-table;
+            }
+            object { height:3em; }
+        </style>
+    </head>
+    <body>
+      <div class="bb">
+        <p>testing</p>
+        <x><span>testing</span></x>
+        <button>testing</button>
+        <select size=1><option>testing</select>
+        <select size=3><option>testing<option>testing<option>testing</select>
+        <object type="text/html" data="data:text/html,testing"></object>
+        <table><tr><td>testing</td></tr></table>
+        <table class="bc"><tr><td>testing</td></tr></table>
+        <table class="it"><tr><td>testing</td></tr></table>
+        <table class="bc it"><tr><td>testing</td></tr></table>
+        <table style="overflow:visible"><tbody style="overflow:hidden"><tr><td>testing</td></tr></table>
+        <table style="overflow:visible"><tbody><tr style="overflow:hidden"><td>testing</td></tr></table>
+        <table style="overflow:visible"><tbody><tr><td style="overflow:hidden">testing</td></tr></table>
+      </div>
+      <div class="cb">
+        <p>testing</p>
+        <x><span>testing</span></x>
+        <button>testing</button>
+        <select size=1><option>testing</select>
+        <select size=3><option>testing<option>testing<option>testing</select>
+        <object type="text/html" data="data:text/html,testing"></object>
+        <table><tr><td>testing</td></tr></table>
+        <table class="bc"><tr><td>testing</td></tr></table>
+        <table class="it"><tr><td>testing</td></tr></table>
+        <table class="bc it"><tr><td>testing</td></tr></table>
+        <table style="overflow:visible"><tbody style="overflow:hidden"><tr><td>testing</td></tr></table>
+        <table style="overflow:visible"><tbody><tr style="overflow:hidden"><td>testing</td></tr></table>
+        <table style="overflow:visible"><tbody><tr><td style="overflow:hidden">testing</td></tr></table>
+      </div>
+    </body>
+</html>

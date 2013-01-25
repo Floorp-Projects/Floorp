@@ -14,10 +14,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
@@ -132,7 +132,7 @@ public abstract class GeckoProvider extends ContentProvider {
 
             // if Gecko is not running, we should bail out. Otherwise we try to
             // let Gecko build the database for us
-            if (!GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
+            if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
                 Log.e(mLogTag, "Can not set up database. Gecko is not running");
                 return null;
             }
@@ -305,6 +305,10 @@ public abstract class GeckoProvider extends ContentProvider {
         } finally {
             db.endTransaction();
         }
+
+        if (rowsAdded > 0)
+            mContext.getContentResolver().notifyChange(uri, null);
+
         return rowsAdded;
     }
 

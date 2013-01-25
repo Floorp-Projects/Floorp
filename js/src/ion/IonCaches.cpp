@@ -416,7 +416,7 @@ struct GetNativePropertyStub
             JS_ASSERT_IF(expando, expando->isNative() && expando->getProto() == NULL);
 
             masm.loadValue(expandoAddr, tempVal);
-            if (expando && expando->nativeLookupNoAllocation(propName)) {
+            if (expando && expando->nativeLookup(cx, propName)) {
                 // Reference object has an expando that doesn't define the name.
                 // Check incoming object's expando and make sure it's an object.
 
@@ -904,10 +904,13 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
 
-    if (IsCacheableGetPropReadSlot(checkObj, holder, shape) ||
-        IsCacheableNoProperty(checkObj, holder, shape, pc, cache.output()))
+    if (IsCacheableGetPropReadSlot(obj, holder, shape) ||
+        IsCacheableNoProperty(obj, holder, shape, pc, cache.output()))
     {
-        readSlot = true;
+        // With Proxies, we cannot garantee any property access as the proxy can
+        // mask any property from the prototype chain.
+        if (!obj->isProxy())
+            readSlot = true;
     } else if (IsCacheableGetPropCallNative(checkObj, holder, shape) ||
                IsCacheableGetPropCallPropertyOp(checkObj, holder, shape))
     {

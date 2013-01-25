@@ -971,7 +971,7 @@ abstract public class BrowserApp extends GeckoApp
         if (aMenu == null)
             return false;
 
-        if (!checkLaunchState(LaunchState.GeckoRunning))
+        if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning))
             aMenu.findItem(R.id.settings).setEnabled(false);
 
         Tab tab = Tabs.getInstance().getSelectedTab();
@@ -1038,10 +1038,6 @@ abstract public class BrowserApp extends GeckoApp
 
             case R.id.abouthome_topsites_unpin:
                 mAboutHomeContent.unpinSite();
-                return true;
-
-            case R.id.abouthome_topsites_unpinall:
-                mAboutHomeContent.unpinAllSites();
                 return true;
 
             case R.id.abouthome_topsites_pin:

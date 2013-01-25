@@ -29,15 +29,15 @@ BEGIN_TEST(testGetPropertyDefault_bug594060)
         js::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
         CHECK(obj);
 
-        jsval v0 = JSVAL_TRUE;
-        CHECK(JS_SetProperty(cx, obj, "here", &v0));
+        js::RootedValue v0(cx, JSVAL_TRUE);
+        CHECK(JS_SetProperty(cx, obj, "here", v0.address()));
 
-        jsval v1;
-        CHECK(JS_GetPropertyDefault(cx, obj, "here", JSVAL_FALSE, &v1));
+        js::RootedValue v1(cx);
+        CHECK(JS_GetPropertyDefault(cx, obj, "here", JSVAL_FALSE, v1.address()));
         CHECK(JSVAL_IS_TRUE(v1));
 
-        jsval v2;
-        CHECK(JS_GetPropertyDefault(cx, obj, "nothere", JSVAL_FALSE, &v2));
+        js::RootedValue v2(cx);
+        CHECK(JS_GetPropertyDefault(cx, obj, "nothere", JSVAL_FALSE, v2.address()));
         CHECK(JSVAL_IS_FALSE(v2));
     }
 
@@ -53,15 +53,15 @@ BEGIN_TEST(testGetPropertyDefault_bug594060)
         jsid nothereid;
         CHECK(stringToId(cx, "nothere", &nothereid));
 
-        jsval v0 = JSVAL_TRUE;
-        CHECK(JS_SetPropertyById(cx, obj, hereid, &v0));
+        js::RootedValue v0(cx, JSVAL_TRUE);
+        CHECK(JS_SetPropertyById(cx, obj, hereid, v0.address()));
 
-        jsval v1;
-        CHECK(JS_GetPropertyByIdDefault(cx, obj, hereid, JSVAL_FALSE, &v1));
+        js::RootedValue v1(cx);
+        CHECK(JS_GetPropertyByIdDefault(cx, obj, hereid, JSVAL_FALSE, v1.address()));
         CHECK(JSVAL_IS_TRUE(v1));
 
-        jsval v2;
-        CHECK(JS_GetPropertyByIdDefault(cx, obj, nothereid, JSVAL_FALSE, &v2));
+        js::RootedValue v2(cx);
+        CHECK(JS_GetPropertyByIdDefault(cx, obj, nothereid, JSVAL_FALSE, v2.address()));
         CHECK(JSVAL_IS_FALSE(v2));
     }
 

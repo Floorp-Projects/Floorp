@@ -4,55 +4,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Get the history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-}
-catch(ex) {
-  do_throw("Could not get the history service\n");
-}
+const NHQO = Ci.nsINavHistoryQueryOptions;
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-}
-catch(ex) {
-  do_throw("Could not get the nav-bookmarks-service\n");
-}
-
-// Get annotation service
-try {
-  var annosvc= Cc["@mozilla.org/browser/annotation-service;1"].getService(Ci.nsIAnnotationService);
-} catch(ex) {
-  do_throw("Could not get annotation service\n");
+/**
+ * Waits for onItemVisited notifications to be received.
+ */
+function promiseOnItemVisited() {
+  let defer = Promise.defer();
+  let bookmarksObserver = {
+    __proto__: NavBookmarkObserver.prototype,
+    onItemVisited: function BO_onItemVisited() {
+      PlacesUtils.bookmarks.removeObserver(this);
+      // Enqueue to be sure that all onItemVisited notifications ran.
+      do_execute_soon(defer.resolve);
+    }
+  };
+  PlacesUtils.bookmarks.addObserver(bookmarksObserver, false);
+  return defer.promise;
 }
 
 function run_test() {
-  do_test_pending();
+  run_next_test();
+}
 
-  var testRoot = bmsvc.createFolder(bmsvc.placesRoot,
-                                    "Result-sort functionality tests root",
-                                    bmsvc.DEFAULT_INDEX);
-  var uri1 = uri("http://foo.tld/a");
-  var uri2 = uri("http://foo.tld/b");
-  var id1 = bmsvc.insertBookmark(testRoot, uri1, bmsvc.DEFAULT_INDEX, "b");
-  var id2 = bmsvc.insertBookmark(testRoot, uri2, bmsvc.DEFAULT_INDEX, "a");
+add_task(function test() {
+  let testFolder = PlacesUtils.bookmarks.createFolder(
+    PlacesUtils.bookmarks.placesRoot,
+    "Result-sort functionality tests root",
+    PlacesUtils.bookmarks.DEFAULT_INDEX);
+
+  let uri1 = NetUtil.newURI("http://foo.tld/a");
+  let uri2 = NetUtil.newURI("http://foo.tld/b");
+
+  let id1 = PlacesUtils.bookmarks.insertBookmark(
+    testFolder, uri1, PlacesUtils.bookmarks.DEFAULT_INDEX, "b");
+  let id2 = PlacesUtils.bookmarks.insertBookmark(
+    testFolder, uri2, PlacesUtils.bookmarks.DEFAULT_INDEX, "a");
   // url of id1, title of id2
-  var id3 = bmsvc.insertBookmark(testRoot, uri1, bmsvc.DEFAULT_INDEX, "a");
+  let id3 = PlacesUtils.bookmarks.insertBookmark(
+    testFolder, uri1, PlacesUtils.bookmarks.DEFAULT_INDEX, "a");
 
   // query with natural order
-  var options = histsvc.getNewQueryOptions();
-  var query = histsvc.getNewQuery();
-  query.setFolders([testRoot], 1);
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
-  root.containerOpen = true;
+  let result = PlacesUtils.getFolderContents(testFolder);
+  let root = result.root;
 
   do_check_eq(root.childCount, 3);
-
-  const NHQO = Ci.nsINavHistoryQueryOptions;
 
   function checkOrder(a, b, c) {
     do_check_eq(root.getChild(0).itemId, a);
@@ -61,39 +57,46 @@ function run_test() {
   }
 
   // natural order
+  do_print("Natural order");
   checkOrder(id1, id2, id3);
 
   // title: id3 should precede id2 since we fall-back to URI-based sorting
+  do_print("Sort by title asc");
   result.sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
   checkOrder(id3, id2, id1);
 
   // In reverse
+  do_print("Sort by title desc");
   result.sortingMode = NHQO.SORT_BY_TITLE_DESCENDING;
   checkOrder(id1, id2, id3);
 
   // uri sort: id1 should precede id3 since we fall-back to natural order
+  do_print("Sort by uri asc");
   result.sortingMode = NHQO.SORT_BY_URI_ASCENDING;
   checkOrder(id1, id3, id2);
 
   // test live update
-  bmsvc.changeBookmarkURI(id1, uri2);
+  do_print("Change bookmark uri liveupdate");
+  PlacesUtils.bookmarks.changeBookmarkURI(id1, uri2);
   checkOrder(id3, id1, id2);
-  bmsvc.changeBookmarkURI(id1, uri1);
+  PlacesUtils.bookmarks.changeBookmarkURI(id1, uri1);
   checkOrder(id1, id3, id2);
 
   // keyword sort
+  do_print("Sort by keyword asc");
   result.sortingMode = NHQO.SORT_BY_KEYWORD_ASCENDING;
   checkOrder(id3, id2, id1);  // no keywords set - falling back to title sort
-  bmsvc.setKeywordForBookmark(id1, "a");
-  bmsvc.setKeywordForBookmark(id2, "z");
+  PlacesUtils.bookmarks.setKeywordForBookmark(id1, "a");
+  PlacesUtils.bookmarks.setKeywordForBookmark(id2, "z");
   checkOrder(id3, id1, id2);
 
   // XXXtodo: test history sortings (visit count, visit date)
   // XXXtodo: test different item types once folderId and bookmarkId are merged.
   // XXXtodo: test sortingAnnotation functionality with non-bookmark nodes
 
-  annosvc.setItemAnnotation(id1, "testAnno", "a", 0, 0);
-  annosvc.setItemAnnotation(id3, "testAnno", "b", 0, 0);
+  do_print("Sort by annotation desc");
+  PlacesUtils.annotations.setItemAnnotation(id1, "testAnno", "a", 0, 0);
+  PlacesUtils.annotations.setItemAnnotation(id3, "testAnno", "b", 0, 0);
   result.sortingAnnotation = "testAnno";
   result.sortingMode = NHQO.SORT_BY_ANNOTATION_DESCENDING;
 
@@ -104,22 +107,32 @@ function run_test() {
   // XXXtodo:  test lastModified sort
 
   // test live update
-  annosvc.setItemAnnotation(id1, "testAnno", "c", 0, 0);
+  do_print("Annotation liveupdate");
+  PlacesUtils.annotations.setItemAnnotation(id1, "testAnno", "c", 0, 0);
   checkOrder(id1, id3, id2);
 
   // Add a visit, then check frecency ordering.
-  addVisits({
-    uri: uri("http://foo.tld/b"),
-    transition: TRANSITION_TYPED
-  }, function () {
-    promiseAsyncUpdates().then(function () {
-      result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
-      checkOrder(id2, id3, id1);
-      result.sortingMode = NHQO.SORT_BY_FRECENCY_ASCENDING;
-      checkOrder(id1, id3, id2);
+  yield promiseAddVisits({ uri: uri2,
+                           transition: TRANSITION_TYPED});
+  // When the bookmarks service gets onVisit, it asynchronously fetches all
+  // items for that visit, and then notifies onItemVisited.  Thus we must
+  // explicitly wait for that.
+  yield promiseOnItemVisited();
 
-      root.containerOpen = false;
-      do_test_finished();
-    });
-  });
-}
+  do_print("Sort by frecency desc");
+  result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
+  for (let i = 0; i < root.childCount; ++i) {
+    print(root.getChild(i).uri + " " + root.getChild(i).title);
+  }
+  // For id1 and id3, since they have same frecency and no visits, fallback
+  // to sort by the newest bookmark.
+  checkOrder(id2, id3, id1);
+  do_print("Sort by frecency asc");
+  result.sortingMode = NHQO.SORT_BY_FRECENCY_ASCENDING;
+  for (let i = 0; i < root.childCount; ++i) {
+    print(root.getChild(i).uri + " " + root.getChild(i).title);
+  }
+  checkOrder(id1, id3, id2);
+
+  root.containerOpen = false;
+});

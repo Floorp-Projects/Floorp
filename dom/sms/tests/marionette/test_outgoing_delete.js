@@ -6,8 +6,11 @@ MARIONETTE_TIMEOUT = 10000;
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.addPermission("sms", true, document);
 
+const SENDER = "+15555215554"; // the emulator's number
+const DEST = "5551117777";
+const RECEIVER = "+15551117777"; // normalized destination number
+
 let sms = window.navigator.mozSms;
-let destNumber = "5551117777";
 let msgText = "Mozilla Firefox OS!";
 let gotSmsOnsent = false;
 let gotReqOnsuccess = false;
@@ -34,15 +37,15 @@ function sendSms() {
     is(sentSms.delivery, "sent", "delivery");
     is(sentSms.deliveryStatus, "pending", "deliveryStatus");
     is(sentSms.read, true, "read");
-    is(sentSms.receiver, destNumber, "receiver");
-    is(sentSms.sender, null, "sender");
+    is(sentSms.receiver, RECEIVER, "receiver");
+    is(sentSms.sender, SENDER, "sender");
     is(sentSms.messageClass, "normal", "messageClass");
     ok(sentSms.timestamp instanceof Date, "timestamp is istanceof date");
 
     if (gotSmsOnsent && gotReqOnsuccess) { verifySmsExists(smsId); }
   };
 
-  let requestRet = sms.send(destNumber, msgText);
+  let requestRet = sms.send(DEST, msgText);
   ok(requestRet, "smsrequest obj returned");
 
   requestRet.onsuccess = function(event) {
@@ -77,6 +80,11 @@ function verifySmsExists(smsId) {
     let foundSms = event.target.result;
     is(foundSms.id, smsId, "found SMS id matches");
     is(foundSms.body, msgText, "found SMS msg text matches");
+    is(foundSms.delivery, "sent", "delivery");
+    is(foundSms.read, true, "read");
+    is(foundSms.receiver, RECEIVER, "receiver");
+    is(foundSms.sender, SENDER, "sender");
+    is(foundSms.messageClass, "normal", "messageClass");
     log("Got SMS (id: " + foundSms.id + ") as expected.");
     deleteSms(smsId);
   };

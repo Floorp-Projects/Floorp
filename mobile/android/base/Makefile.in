@@ -454,6 +454,7 @@ RES_VALUES_LAND = \
   $(NULL)
 
 RES_VALUES_V11 = \
+  res/values-v11/colors.xml \
   res/values-v11/dimens.xml \
   res/values-v11/styles.xml \
   res/values-v11/themes.xml \

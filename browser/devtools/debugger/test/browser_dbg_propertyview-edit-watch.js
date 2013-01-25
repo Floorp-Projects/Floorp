@@ -70,7 +70,7 @@ function testFrameEval() {
 
       is(scope.get("this")._isShown, true,
         "Should have the right visibility state for 'this'.");
-      is(scope.get("this").target.querySelectorAll(".dbg-variables-delete").length, 1,
+      is(scope.get("this").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'this'.");
       is(scope.get("this").name, "this",
         "Should have the right name for 'this'.");
@@ -81,7 +81,7 @@ function testFrameEval() {
 
       is(scope.get("ermahgerd")._isShown, true,
         "Should have the right visibility state for 'ermahgerd'.");
-      is(scope.get("ermahgerd").target.querySelectorAll(".dbg-variables-delete").length, 1,
+      is(scope.get("ermahgerd").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'ermahgerd'.");
       is(scope.get("ermahgerd").name, "ermahgerd",
         "Should have the right name for 'ermahgerd'.");
@@ -92,7 +92,7 @@ function testFrameEval() {
 
       is(scope.get("aArg")._isShown, true,
         "Should have the right visibility state for 'aArg'.");
-      is(scope.get("aArg").target.querySelectorAll(".dbg-variables-delete").length, 1,
+      is(scope.get("aArg").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'aArg'.");
       is(scope.get("aArg").name, "aArg",
         "Should have the right name for 'aArg'.");
@@ -101,7 +101,7 @@ function testFrameEval() {
 
       is(scope.get("document.title")._isShown, true,
         "Should have the right visibility state for 'document.title'.");
-      is(scope.get("document.title").target.querySelectorAll(".dbg-variables-delete").length, 1,
+      is(scope.get("document.title").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'document.title'.");
       is(scope.get("document.title").name, "document.title",
         "Should have the right name for 'document.title'.");
@@ -112,7 +112,7 @@ function testFrameEval() {
 
       is(scope.get("document.title = 42")._isShown, true,
         "Should have the right visibility state for 'document.title = 42'.");
-      is(scope.get("document.title = 42").target.querySelectorAll(".dbg-variables-delete").length, 1,
+      is(scope.get("document.title = 42").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'document.title = 42'.");
       is(scope.get("document.title = 42").name, "document.title = 42",
         "Should have the right name for 'document.title = 42'.");
@@ -325,7 +325,7 @@ function testExprDeletion(aVar, aTest, aCallback, aArgResult,
   }
 
   EventUtils.sendMouseEvent({ type: "click" },
-    aVar.querySelector(".dbg-variables-delete"),
+    aVar.querySelector(".dbg-variable-delete"),
     gDebugger);
 }
 

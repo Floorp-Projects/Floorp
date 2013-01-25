@@ -55,13 +55,13 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         try {
             Actions.EventExpecter geckoReadyExpector = mActions.expectGeckoEvent("Gecko:Ready");
             ClassLoader classLoader = getActivity().getClassLoader();
-            Class appsCls = classLoader.loadClass("org.mozilla.gecko.GeckoApp");
-            Class launchStateCls = classLoader.loadClass("org.mozilla.gecko.GeckoApp$LaunchState");
+            Class appsCls = classLoader.loadClass("org.mozilla.gecko.GeckoThread");
+            Class launchStateCls = classLoader.loadClass("org.mozilla.gecko.GeckoThread$LaunchState");
             Method checkLaunchState =  appsCls.getMethod("checkLaunchState", launchStateCls);
             Object states[] =  launchStateCls.getEnumConstants();
             Boolean ret = (Boolean)checkLaunchState.invoke(null, states[3]);
             if (!ret.booleanValue()) {
-	        geckoReadyExpector.blockForEvent();
+                geckoReadyExpector.blockForEvent();
             }
         } catch (Exception e) {
             mAsserter.dumpLog("Exception in blockForGeckoReady", e);

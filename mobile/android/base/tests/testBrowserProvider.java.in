@@ -359,6 +359,8 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestCombinedViewWithDeletedBookmark());
         mTests.add(new TestCombinedViewWithDeletedReadingListItem());
         mTests.add(new TestExpireHistory());
+
+        mTests.add(new TestBrowserProviderNotifications());
     }
 
     public void testBrowserProvider() throws Exception {
@@ -1770,9 +1772,94 @@ public class testBrowserProvider extends ContentProviderTest {
             c = mProvider.query(mHistoryUri, null, "", null, null);
             mAsserter.is(c.getCount(), 500, "500 history entries found");
 
-            // expiring with a aggressive priority should delete all but 10 thumbnails
+            // expiring with an aggressive priority should delete all but 10 thumbnails
             c = mProvider.query(mThumbnailsUri, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
+        }
+    }
+
+    /*
+     * Verify that insert, update, delete, and bulkInsert operations
+     * notify the ambient content resolver.  Each operation calls the
+     * content resolver notifyChange method synchronously, so it is
+     * okay to test sequentially.
+     */
+    class TestBrowserProviderNotifications extends Test {
+        public static final String LOGTAG = "TestBPNotifications";
+
+        protected void ensureOnlyChangeNotifiedStartsWith(Uri expectedUri, String operation) {
+            if (expectedUri == null) {
+                throw new IllegalArgumentException("expectedUri must not be null");
+            }
+
+            if (mResolver.notifyChangeList.size() != 1) {
+                // Log to help post-mortem debugging
+                Log.w(LOGTAG, "after operation, notifyChangeList = " + mResolver.notifyChangeList);
+            }
+
+            mAsserter.is(Long.valueOf(mResolver.notifyChangeList.size()),
+                         Long.valueOf(1),
+                         "Content observer was notified exactly once by " + operation);
+
+            Uri uri = mResolver.notifyChangeList.poll();
+
+            mAsserter.isnot(uri,
+                            null,
+                            "Notification from " + operation + " was valid");
+
+            mAsserter.ok(uri.toString().startsWith(expectedUri.toString()),
+                         "Content observer was notified exactly once by " + operation,
+                         uri.toString() + " starts with expected prefix " + expectedUri);
+        }
+
+        public void test() throws Exception {
+            // Insert
+            final ContentValues h = createOneHistoryEntry();
+
+            mResolver.notifyChangeList.clear();
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+
+            mAsserter.isnot(Long.valueOf(id),
+                            Long.valueOf(-1),
+                            "Inserted item has valid id");
+
+            ensureOnlyChangeNotifiedStartsWith(mHistoryUri, "insert");
+
+            // Update
+            mResolver.notifyChangeList.clear();
+            h.put(mHistoryTitleCol, "http://newexample.com");
+
+            long numUpdated = mProvider.update(mHistoryUri, h,
+                                               mHistoryIdCol + " = ?",
+                                               new String[] { String.valueOf(id) });
+
+            mAsserter.is(Long.valueOf(numUpdated),
+                         Long.valueOf(1),
+                         "Correct number of items are updated");
+
+            ensureOnlyChangeNotifiedStartsWith(mHistoryUri, "update");
+
+            // Delete
+            mResolver.notifyChangeList.clear();
+            long numDeleted = mProvider.delete(mHistoryUri, null, null);
+
+            mAsserter.is(Long.valueOf(numDeleted),
+                         Long.valueOf(1),
+                         "Correct number of items are deleted");
+
+            ensureOnlyChangeNotifiedStartsWith(mHistoryUri, "delete");
+
+            // Bulk insert
+            final ContentValues[] hs = new ContentValues[] { createOneHistoryEntry() };
+
+            mResolver.notifyChangeList.clear();
+            long numBulkInserted = mProvider.bulkInsert(mHistoryUri, hs);
+
+            mAsserter.is(Long.valueOf(numBulkInserted),
+                         Long.valueOf(1),
+                         "Correct number of items are bulkInserted");
+
+            ensureOnlyChangeNotifiedStartsWith(mHistoryUri, "bulkInsert");
         }
     }
 }

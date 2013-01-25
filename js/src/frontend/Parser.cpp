@@ -499,7 +499,7 @@ Parser::parse(JSObject *chain)
             reportError(NULL, JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else if (foldConstants) {
-            if (!FoldConstants(context, pn, this))
+            if (!FoldConstants(context, &pn, this))
                 pn = NULL;
         }
     }
@@ -735,7 +735,7 @@ Parser::standaloneFunctionBody(HandleFunction fun, const AutoNameVector &formals
         return NULL;
     }
 
-    if (!FoldConstants(context, pn, this))
+    if (!FoldConstants(context, &pn, this))
         return NULL;
 
     InternalHandle<Bindings*> bindings(script, &script->bindings);
@@ -3702,13 +3702,6 @@ Parser::expressionStatement()
         if (!pn)
             return NULL;
 
-        /* Normalize empty statement to empty block for the decompiler. */
-        if (pn->isKind(PNK_SEMI) && !pn->pn_kid) {
-            pn->setKind(PNK_STATEMENTLIST);
-            pn->setArity(PN_LIST);
-            pn->makeEmpty();
-        }
-
         /* Pop the label, set pn_expr, and return early. */
         PopStatementPC(context, pc);
         pn2->setKind(PNK_COLON);
@@ -4669,7 +4662,7 @@ Parser::unaryExpr()
          * returns true. Here we fold constants before checking for a call
          * expression, in order to rule out delete of a generator expression.
          */
-        if (foldConstants && !FoldConstants(context, pn2, this))
+        if (foldConstants && !FoldConstants(context, &pn2, this))
             return NULL;
         switch (pn2->getKind()) {
           case PNK_CALL:
@@ -5377,7 +5370,7 @@ Parser::generatorExpr(ParseNode *kid)
      * Our result is a call expression that invokes the anonymous generator
      * function object.
      */
-    ParseNode *result = ListNode::create(PNK_CALL, this);
+    ParseNode *result = ListNode::create(PNK_GENEXP, this);
     if (!result)
         return NULL;
     result->setOp(JSOP_CALL);
@@ -5618,7 +5611,7 @@ Parser::memberExpr(bool allowCallSyntax)
              * Do folding so we don't have roundtrip changes for cases like:
              * function (obj) { return obj["a" + "b"] }
              */
-            if (foldConstants && !FoldConstants(context, propExpr, this))
+            if (foldConstants && !FoldConstants(context, &propExpr, this))
                 return NULL;
 
             /*
@@ -6532,7 +6525,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                     }
                     pn2 = assignExpr();
                     if (pn2) {
-                        if (foldConstants && !FoldConstants(context, pn2, this))
+                        if (foldConstants && !FoldConstants(context, &pn2, this))
                             return NULL;
                         if (!pn2->isConstant() || spreadNode)
                             pn->pn_xflags |= PNX_NONCONST;
@@ -6761,7 +6754,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                 if (!pnval)
                     return NULL;
 
-                if (foldConstants && !FoldConstants(context, pnval, this))
+                if (foldConstants && !FoldConstants(context, &pnval, this))
                     return NULL;
 
                 /*

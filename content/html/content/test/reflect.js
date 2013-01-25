@@ -243,15 +243,17 @@ function reflectUnsignedInt(aParameters)
  * Checks that a given attribute is correctly reflected as limited to known
  * values enumerated attribute.
  *
- * @param aParameters    Object    object containing the parameters, which are:
- *  - element            Element   node to test on
- *  - attribute          String    name of the attribute
+ * @param aParameters     Object   object containing the parameters, which are:
+ *  - element             Element  node to test on
+ *  - attribute           String   name of the attribute
  *     OR
- *    attribute          Object    object containing two attributes, 'content' and 'idl'
- *  - validValues        Array     valid values we support
- *  - invalidValues      Array     invalid values
- *  - defaultValue       String    [optional] default value when no valid value is set
- *  - unsupportedValues  Array     [optional] valid values we do not support
+ *    attribute           Object   object containing two attributes, 'content' and 'idl'
+ *  - validValues         Array    valid values we support
+ *  - invalidValues       Array    invalid values
+ *  - defaultValue        String   [optional] default value when no valid value is set
+ *     OR
+ *    defaultValue        Object   [optional] object containing two attributes, 'invalid' and 'missing'
+ *  - unsupportedValues   Array    [optional] valid values we do not support
  */
 function reflectLimitedEnumerated(aParameters)
 {
@@ -264,6 +266,12 @@ function reflectLimitedEnumerated(aParameters)
   var invalidValues = aParameters.invalidValues;
   var defaultValue = aParameters.defaultValue !== undefined
                        ? aParameters.defaultValue : "";
+  var defaultValueInvalid = aParameters.defaultValue === undefined
+                               ? "" : typeof aParameters.defaultValue === "string"
+                                   ? aParameters.defaultValue : aParameters.defaultValue.invalid
+  var defaultValueMissing = aParameters.defaultValue === undefined
+                                ? "" : typeof aParameters.defaultValue === "string"
+                                    ? aParameters.defaultValue : aParameters.defaultValue.missing
   var unsupportedValues = aParameters.unsupportedValues !== undefined
                             ? aParameters.unsupportedValues : [];
 
@@ -272,7 +280,7 @@ function reflectLimitedEnumerated(aParameters)
 
   // Explicitly check the default value.
   element.removeAttribute(contentAttr);
-  is(element[idlAttr], defaultValue,
+  is(element[idlAttr], defaultValueMissing,
      "When no attribute is set, the value should be the default value.");
 
   // Check valid values.
@@ -309,14 +317,14 @@ function reflectLimitedEnumerated(aParameters)
   // Check invalid values.
   invalidValues.forEach(function (v) {
     element.setAttribute(contentAttr, v);
-    is(element[idlAttr], defaultValue,
+    is(element[idlAttr], defaultValueInvalid,
        "When the content attribute is set to an invalid value, the default value should be returned.");
     is(element.getAttribute(contentAttr), v,
        "Content attribute should not have been changed.");
     element.removeAttribute(contentAttr);
 
     element[idlAttr] = v;
-    is(element[idlAttr], defaultValue,
+    is(element[idlAttr], defaultValueInvalid,
        "When the value is set to an invalid value, the default value should be returned.");
     is(element.getAttribute(contentAttr), v,
        "Content attribute should not have been changed.");

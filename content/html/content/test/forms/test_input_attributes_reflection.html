@@ -76,7 +76,7 @@ reflectLimitedEnumerated({
   validValues: [ "application/x-www-form-urlencoded", "multipart/form-data",
                  "text/plain" ],
   invalidValues: [ "", "foo", "tulip", "multipart/foo" ],
-  defaultValue: "application/x-www-form-urlencoded"
+  defaultValue: { invalid: "application/x-www-form-urlencoded", missing: "" }
 });
 
 // .formMethod
@@ -85,7 +85,7 @@ reflectLimitedEnumerated({
   attribute: "formMethod",
   validValues: [ "get", "post" ],
   invalidValues: [ "", "foo", "tulip" ],
-  defaultValue: "get"
+  defaultValue: { invalid: "get", missing: "" }
 });
 
 // .formNoValidate

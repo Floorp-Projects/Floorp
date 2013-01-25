@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 
   SimpleTest.waitForExplicitFinish();
   var MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init();
+  MockFilePicker.init(window);
 
   function fileInputBlurTest() {
     var btn = document.getElementById('fileInput');

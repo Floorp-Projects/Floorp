@@ -14,7 +14,4 @@
     <item android:id="@+id/abouthome_topsites_unpin"
           android:title="@string/abouthome_topsites_unpin"/>
 
-    <item android:id="@+id/abouthome_topsites_unpinall"
-          android:title="@string/abouthome_topsites_unpinall"/>
-
 </menu>

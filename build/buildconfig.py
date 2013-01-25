@@ -16,12 +16,15 @@ while not os.path.exists(os.path.join(path, 'config.status')):
 path = os.path.join(path, 'config.status')
 config = imp.load_module('_buildconfig', open(path), path, ('', 'r', imp.PY_SOURCE))
 
-for var in os.environ:
-    if var in config.substs:
-        config.substs[var] = os.environ[var]
-
+# Copy values from the config.status namespace into this module namespace.
+# This effectively imports topsrcdir, topobjdir, defines, substs, files,
+# headers and non_global_defines
 for var in config.__all__:
     value = getattr(config, var)
     if isinstance(value, list) and value and isinstance(value[0], tuple):
         value = dict(value)
     setattr(sys.modules[__name__], var, value)
+
+for var in os.environ:
+    if var != 'SHELL' and var in substs:
+        substs[var] = os.environ[var]

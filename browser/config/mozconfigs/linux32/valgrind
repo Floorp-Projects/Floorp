@@ -5,3 +5,7 @@ ac_add_options --disable-jemalloc
 ac_add_options --disable-elf-hack
 ac_add_options --enable-optimize="-g -O -freorder-blocks"
 ac_add_options --disable-install-strip
+
+# Include the override mozconfig again (even though the above includes it)
+# since it's supposed to override everything.
+. "$topsrcdir/build/mozconfig.common.override"

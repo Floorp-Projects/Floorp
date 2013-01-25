@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500885
 <script type="text/javascript">
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
 function test() {

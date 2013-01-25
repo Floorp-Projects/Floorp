@@ -281,7 +281,6 @@ nsDOMMultipartFile::InitFile(JSContext* aCx,
 
   NS_ENSURE_TRUE(aArgc > 0, NS_ERROR_UNEXPECTED);
 
-  bool nativeEOL = false;
   if (aArgc > 1) {
     FilePropertyBag d;
     if (!d.Init(aCx, nullptr, aArgv[1])) {
@@ -289,7 +288,6 @@ nsDOMMultipartFile::InitFile(JSContext* aCx,
     }
     mName = d.mName;
     mContentType = d.mType;
-    nativeEOL = d.mEndings == EndingTypesValues::Native;
   }
 
   // We expect to get a path to represent as a File object,

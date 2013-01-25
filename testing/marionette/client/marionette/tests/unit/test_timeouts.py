@@ -18,7 +18,7 @@ class TestTimeouts(MarionetteTestCase):
         self.assertRaises(MarionetteException, self.marionette.navigate, test_html)
 
     def test_pagetimeout_pass(self):
-        self.marionette.timeouts("page load", 300)
+        self.marionette.timeouts("page load", 60000)
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
 

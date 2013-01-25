@@ -81,12 +81,6 @@ JS_GetObjectFunction(RawObject obj)
     return NULL;
 }
 
-JS_FRIEND_API(JSObject *)
-JS_GetGlobalForFrame(JSStackFrame *fp)
-{
-    return &Valueify(fp)->global();
-}
-
 JS_FRIEND_API(JSBool)
 JS_SplicePrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
 {
@@ -108,7 +102,7 @@ JS_SplicePrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
     }
 
     Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-    return obj->splicePrototype(cx, tagged);
+    return obj->splicePrototype(cx, obj->getClass(), tagged);
 }
 
 JS_FRIEND_API(JSObject *)

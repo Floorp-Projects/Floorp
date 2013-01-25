@@ -2357,7 +2357,9 @@ nsINode::WrapObject(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
   }
 
   JSObject* obj = WrapNode(aCx, aScope, aTriedToWrap);
-  if (obj && ChromeOnlyAccess()) {
+  if (obj && ChromeOnlyAccess() &&
+      !nsContentUtils::IsSystemPrincipal(NodePrincipal()))
+  {
     // Create a new wrapper and cache it.
     JSAutoCompartment ac(aCx, obj);
     JSObject* wrapper = xpc::WrapperFactory::WrapSOWObject(aCx, obj);

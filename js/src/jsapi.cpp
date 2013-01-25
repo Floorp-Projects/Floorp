@@ -1483,14 +1483,6 @@ JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSScript *target)
     cx_->enterCompartment(target->compartment());
 }
 
-JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSStackFrame *target)
-  : cx_(cx),
-    oldCompartment_(cx->compartment)
-{
-    AssertHeapIsIdleOrIterating(cx_);
-    cx_->enterCompartment(Valueify(target)->global().compartment());
-}
-
 JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSString *target)
   : cx_(cx),
     oldCompartment_(cx->compartment)
@@ -3320,7 +3312,7 @@ JS_SetPrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
 
-    return SetProto(cx, obj, proto, JS_FALSE);
+    return SetClassAndProto(cx, obj, obj->getClass(), proto, JS_FALSE);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -5677,7 +5669,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
             return false;
     }
 
-    options = options.setFileAndLine(filename, 1);
+    options.setFileAndLine(filename, 1);
     return Evaluate(cx, obj, options, buffer.begin(), buffer.length(), rval);
 }
 

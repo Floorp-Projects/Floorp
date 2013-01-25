@@ -10,7 +10,7 @@
 <script class="testbody" type="text/javascript">
 
 SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-mozAudioContext().createBuffer(0, 0, 0);
+AudioContext().createBuffer(0, 0, 0);
 ok(true, "The test should not crash during CC");
 SpecialPowers.clearUserPref("media.webaudio.enabled");
 

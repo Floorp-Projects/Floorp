@@ -19,7 +19,6 @@ TOOLKIT_NSIS_FILES = \
 	locales.nsi \
 	overrides.nsh \
 	setup.ico \
-	version.nsh \
 	$(NULL)
 
 CUSTOM_NSIS_PLUGINS = \

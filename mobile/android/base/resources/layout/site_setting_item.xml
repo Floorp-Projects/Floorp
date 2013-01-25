@@ -8,7 +8,7 @@
     android:gravity="center_vertical"
     android:paddingLeft="16dip"
     android:paddingRight="12dip"
-    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:minHeight="?android:attr/listPreferredItemHeight"
     android:focusable="false">
 
     <LinearLayout
@@ -24,7 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="?android:attr/textColorAlertDialogListItem"
+            style="GeckoList.ListItem"
             android:gravity="center_vertical|left"
             android:singleLine="true"
             android:ellipsize="marquee"/>
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="?android:attr/textColorAlertDialogListItem"
+            style="GeckoList.ListItem"
             android:gravity="center_vertical|left"
             android:singleLine="true"
             android:ellipsize="marquee"/>

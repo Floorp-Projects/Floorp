@@ -43,63 +43,31 @@ Debug_SetSlotRangeToCrashOnTouch(HeapSlot *begin, HeapSlot *end)
 inline js::UnrootedShape
 js::ObjectImpl::nativeLookup(JSContext *cx, PropertyId pid)
 {
-    RootedId id(cx, pid.asId());
-    return nativeLookup(cx, id);
+    return nativeLookup(cx, pid.asId());
 }
 
 inline js::UnrootedShape
 js::ObjectImpl::nativeLookup(JSContext *cx, PropertyName *name)
 {
-    return nativeLookup(cx, PropertyId(name));
-}
-
-inline js::UnrootedShape
-js::ObjectImpl::nativeLookupNoAllocation(PropertyId pid)
-{
-    return nativeLookupNoAllocation(pid.asId());
-}
-
-inline js::UnrootedShape
-js::ObjectImpl::nativeLookupNoAllocation(PropertyName *name)
-{
-    return nativeLookupNoAllocation(PropertyId(name));
+    return nativeLookup(cx, NameToId(name));
 }
 
 inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, JS::Handle<jsid> id)
+js::ObjectImpl::nativeContains(JSContext *cx, jsid id)
 {
     return nativeLookup(cx, id) != NULL;
 }
 
 inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, JS::Handle<PropertyName*> name)
+js::ObjectImpl::nativeContains(JSContext *cx, PropertyName *name)
 {
     return nativeLookup(cx, name) != NULL;
 }
 
 inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, JS::Handle<Shape*> shape)
+js::ObjectImpl::nativeContains(JSContext *cx, Shape *shape)
 {
-    RootedId id(cx, shape->propid());
-    return nativeLookup(cx, id) == shape;
-}
-
-inline bool
-js::ObjectImpl::nativeContainsNoAllocation(jsid id)
-{
-    return nativeLookupNoAllocation(id) != NULL;
-}
-
-inline bool
-js::ObjectImpl::nativeContainsNoAllocation(PropertyName *name)
-{
-    return nativeLookupNoAllocation(name) != NULL;
-}
-
-inline bool
-js::ObjectImpl::nativeContainsNoAllocation(Shape &shape)
-{
-    return nativeLookupNoAllocation(shape.propid()) == &shape;
+    return nativeLookup(cx, shape->propid()) == shape;
 }
 
 inline bool
@@ -312,12 +280,6 @@ inline uint32_t
 js::ObjectImpl::numDynamicSlots() const
 {
     return dynamicSlotsCount(numFixedSlots(), slotSpan());
-}
-
-inline js::Class *
-js::ObjectImpl::getClass() const
-{
-    return lastProperty()->getObjectClass();
 }
 
 inline JSClass *

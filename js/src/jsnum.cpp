@@ -532,7 +532,7 @@ js::Int32ToString(JSContext *cx, int32_t si)
     if (JSFlatString *str = c->dtoaCache.lookup(10, si))
         return str;
 
-    JSShortString *str = js_NewGCShortString(cx);
+    JSShortString *str = js_NewGCShortString<ALLOW_GC>(cx);
     if (!str)
         return NULL;
 
@@ -1287,7 +1287,7 @@ js::IndexToString(JSContext *cx, uint32_t index)
     if (JSFlatString *str = c->dtoaCache.lookup(10, index))
         return str;
 
-    JSShortString *str = js_NewGCShortString(cx);
+    JSShortString *str = js_NewGCShortString<ALLOW_GC>(cx);
     if (!str)
         return NULL;
 

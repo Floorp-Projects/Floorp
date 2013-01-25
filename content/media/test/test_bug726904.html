@@ -24,6 +24,9 @@ var v1 = document.createElement("video"),
     resource = getPlayableVideo(gSmallTests);
 
 function bodyLoaded(){
+  // Note: For DASH, width and height would vary once the video started playing, so
+  // the values would not correlate with those in manifest.js. Since this test has
+  // no playing, this should not affect the result.
   is(v1.videoWidth, resource.width, "Intrinsic width should match video width");
   is(v1.videoHeight, resource.height, "Intrinsic height should match video height");
   is(v2.clientWidth, 400, "clientWidth should be 400");

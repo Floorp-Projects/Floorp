@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <time.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -797,6 +798,33 @@ nsGonkCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
     SetParameter(CameraParameters::KEY_GPS_TIMESTAMP, nsPrintfCString("%lf", aTakePicture->mPosition.timestamp).get());
   }
 
+  // Add the non-GPS timestamp.  The EXIF date/time field is formatted as
+  // "YYYY:MM:DD HH:MM:SS", without room for a time-zone; as such, the time
+  // is meant to be stored as a local time.  Since we are given seconds from
+  // Epoch GMT, we use localtime_r() to handle the conversion.
+  time_t time = aTakePicture->mDateTime;
+  if (time != aTakePicture->mDateTime) {
+    DOM_CAMERA_LOGE("picture date/time '%llu' is too far in the future\n", aTakePicture->mDateTime);
+  } else {
+    struct tm t;
+    if (localtime_r(&time, &t)) {
+      char dateTime[20];
+      if (strftime(dateTime, sizeof(dateTime), "%Y:%m:%d %T", &t)) {
+        DOM_CAMERA_LOGI("setting picture date/time to %s\n", dateTime);
+        // Not every platform defines a CameraParameters::KEY_EXIF_DATETIME;
+        // for those who don't, we use the raw string key, and if the platform
+        // doesn't support it, it will be ignored.
+        //
+        // See bug 832494.
+        SetParameter("exif-datetime", dateTime);
+      } else {
+        DOM_CAMERA_LOGE("picture date/time couldn't be converted to string\n");
+      }
+    } else {
+      DOM_CAMERA_LOGE("picture date/time couldn't be converted to local time: (%d) %s\n", errno, strerror(errno));
+    }
+  }
+
   mDeferConfigUpdate = false;
   PushParameters();
 
@@ -876,9 +904,8 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
 class RecordingComplete : public nsRunnable
 {
 public:
-  RecordingComplete(DeviceStorageFile* aFile, nsACString& aType)
+  RecordingComplete(DeviceStorageFile* aFile)
     : mFile(aFile)
-    , mType(aType)
   { }
 
   ~RecordingComplete() { }
@@ -887,16 +914,13 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsString data;
-    CopyASCIItoUTF16(mType, data);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(mFile, "file-watcher-notify", data.get());
+    obs->NotifyObservers(mFile, "file-watcher-notify", NS_LITERAL_STRING("modified").get());
     return NS_OK;
   }
 
 private:
   nsRefPtr<DeviceStorageFile> mFile;
-  nsCString mType;
 };
 
 nsresult
@@ -909,8 +933,7 @@ nsGonkCameraControl::StopRecordingImpl(StopRecordingTask* aStopRecording)
   mRecorder = nullptr;
 
   // notify DeviceStorage that the new video file is closed and ready
-  nsCString type(mRecorderProfile->GetFileMimeType());
-  nsCOMPtr<nsIRunnable> recordingComplete = new RecordingComplete(mVideoFile, type);
+  nsCOMPtr<nsIRunnable> recordingComplete = new RecordingComplete(mVideoFile);
   return NS_DispatchToMainThread(recordingComplete, NS_DISPATCH_NORMAL);
 }
 
