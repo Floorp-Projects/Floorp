@@ -18,17 +18,19 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID, oldFactory;
 var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
-var newFactory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return new MockFilePickerInstance().QueryInterface(aIID);
-  },
-  lockFactory: function(aLock) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
-};
+var newFactory = function (window) {
+  return {
+    createInstance: function(aOuter, aIID) {
+      if (aOuter)
+	throw Components.results.NS_ERROR_NO_AGGREGATION;
+      return new MockFilePickerInstance(window).QueryInterface(aIID);
+    },
+    lockFactory: function(aLock) {
+      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+  };
+}
 
 this.MockFilePicker = {
   returnOK: Ci.nsIFilePicker.returnOK,
@@ -46,13 +48,14 @@ this.MockFilePicker = {
   filterAudio: Ci.nsIFilePicker.filterAudio,
   filterVideo: Ci.nsIFilePicker.filterVideo,
 
-  init: function() {
+  init: function(window) {
     this.reset();
+    this.factory = newFactory(window);
     if (!registrar.isCIDRegistered(newClassID)) {
       oldClassID = registrar.contractIDToCID(CONTRACT_ID);
       oldFactory = Cm.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
       registrar.unregisterFactory(oldClassID, oldFactory);
-      registrar.registerFactory(newClassID, "", CONTRACT_ID, newFactory);
+      registrar.registerFactory(newClassID, "", CONTRACT_ID, this.factory);
     }
   },
   
@@ -70,9 +73,11 @@ this.MockFilePicker = {
   },
   
   cleanup: function() {
+    var previousFactory = this.factory;
     this.reset();
+    this.factory = null;
     if (oldFactory) {
-      registrar.unregisterFactory(newClassID, newFactory);
+      registrar.unregisterFactory(newClassID, previousFactory);
       registrar.registerFactory(oldClassID, "", CONTRACT_ID, oldFactory);
     }
   },
@@ -84,7 +89,9 @@ this.MockFilePicker = {
   }
 };
 
-function MockFilePickerInstance() { };
+function MockFilePickerInstance(window) {
+  this.window = window;
+};
 MockFilePickerInstance.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
   init: function(aParent, aTitle, aMode) {
@@ -137,9 +144,7 @@ MockFilePickerInstance.prototype = {
   },
   open: function(aFilePickerShownCallback) {
     MockFilePicker.showing = true;
-    var tm = Components.classes["@mozilla.org/thread-manager;1"]
-                       .getService(Components.interfaces.nsIThreadManager);
-    tm.mainThread.dispatch(function() {
+    this.window.setTimeout(function() {
       let result = Components.interfaces.nsIFilePicker.returnCancel;
       try {
         result = this.show();
@@ -148,7 +153,7 @@ MockFilePickerInstance.prototype = {
       if (aFilePickerShownCallback) {
         aFilePickerShownCallback.done(result);
       }
-    }.bind(this), Components.interfaces.nsIThread.DISPATCH_NORMAL);
+    }.bind(this), 0);
   }
 };
 

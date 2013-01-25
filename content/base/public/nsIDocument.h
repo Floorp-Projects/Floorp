@@ -1946,10 +1946,6 @@ public:
   Element* GetAnonymousElementByAttribute(Element& aElement,
                                           const nsAString& aAttrName,
                                           const nsAString& aAttrValue);
-  void AddBinding(Element& aElement, const nsAString& aURI,
-                  mozilla::ErrorResult& rv);
-  void RemoveBinding(Element& aElement, const nsAString& aURI,
-                     mozilla::ErrorResult& rv);
   Element* GetBindingParent(nsINode& aNode);
   void LoadBindingDocument(const nsAString& aURI, mozilla::ErrorResult& rv);
   already_AddRefed<nsIDOMXPathExpression>

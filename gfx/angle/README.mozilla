@@ -1,45 +1,81 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/
 
-Current revision: r1267
+Current revision: r1561
+
 
 == Applied local patches ==
-
 In this order:
-
-  angle-renaming-debug.patch
-    rename debug.h to compilerdebug.h to avoid conflict in our makefiles
-
-  angle-renaming-preprocessor-diagonostics.patch
-    rename one of the two Diagnostics.cpp to avoid conflict in our makefiles
-
-  angle-renaming-preprocessor-directivehandler.patch
-    rename one of the two DirectiveHandler.cpp to avoid conflict in our makefiles
-
-  angle-enforce-readpixels-spec.patch
-    see bug 724476
-
-  angle-impl-read-bgra.patch
-    see bug 724476
-
-  gfx/angle/angle-long-identifier-hash-spooky.patch
-    see bug 676071
-
-  angle-abort-on-oom-in-preprocessor.patch
-    see bug 680840. Probably not useful anymore now that we're on the new
-    preprocessor, but it doesn't hurt to keep it around a bit longer.
-
-  angle-faceforward-emu.patch
-    See bug 771406. Adds emulation for faceforward(float,float,float),
-    which is needed to prevent crashing on Mac+Intel.
-
-  angle-r1278.patch
-    Imports ANGLE r1278, which fixes ANGLE bug 350, a crasher.
+  angle-build-stdcall-alias.patch:
+    Fix an issue GCC has with linking to undecorated stdcalls.
+    
+  angle-build-dedupe-debug-cpp-h.patch:
+    Rename: "src/compiler/debug.{cpp,h}"
+    To:     "src/compiler/compiler_debug.{cpp,h}"
+    Repair includes accordingly.
+    
+  angle-build-dedupe-preproc-files.patch:
+    Rename: "src/compiler/preprocessor/Diagnostics.cpp"
+    To:     "src/compiler/preprocessor/PreprocessorDiagnostics.cpp"
+    Rename: "src/compiler/preprocessor/DirectiveHandler.cpp"
+    To:     "src/compiler/preprocessor/PreprocessorDirectiveHandler.cpp"
+  
+  angle-long-ident-spooky-hash.patch:
+    Use Spooky Hash for long identifier hashing. See bug 676071.
+  
+  angle-faceforward-emu.patch:
+    Adds emulation for faceforward(float,float,float), which is needed to
+    prevent crashing on Mac+Intel. See bug 771406.
 
 In addition to these patches, the Makefile.in files are ours, they're not present in
 upsteam ANGLE. Therefore, changes made to the Makefile.in files should not be stored
 in the local .patch files.
 
-== How to update this ANGLE copy ==
+
+== How to do a clean-slate upgrade ==
+1.  Backup our moz-specific files:
+      README.mozilla
+      Makefile.in
+      *.patch
+      src/libEGL/Makefile.in
+      src/libGLESv2/Makefile.in
+
+2.  $ rm -rf gfx/angle
+
+3.  Copy the folder containing the angle rev you want onto gfx/angle.
+    $ svn export -r <rev> <src> <moz-central>/gfx/angle 
+
+4.  Fold our moz-specific files into this new angle folder. (Makefiles, README)
+4a. Remove the unused directories. (test/, samples/, etc)
+
+5.  Clear out the "Applied Local Patches" section above, since we're going to
+    repopulate it.
+
+6.  Re-apply the angle-build-*.patch files and record them above.
+
+7.  Update the Makefile.in files with the current deps from the .gyp(i) files.
+
+8.  Build. Fix things until it builds.
+
+9.  Reapply the rest of the .patch files and record them above.
+
+10. Try runs and reviews!
+
+
+== Applying Diffs ==
+In general:
+$ patch -p1 -R < gfx/angle/angle-some-bug-fix.patch
+
+SVN diffs however can be iffy. They don't seem to be completely compatible
+with `patch`. Be aware that you'll likely get rejects whenever a file is
+removed.
+
+
+
+== How to do an incremental update ==
+Same general idea here, but instead of nuking the ANGLE dir, we're going to
+have to get a diff between revs from SVN, and deal with applying that. We
+also naturally have to peel off our local patches before we can apply a diff
+from upstream.
 
 1. Unapply patches
 
@@ -130,10 +166,10 @@ new patches that you need to add to get this update to work.
 You do not need a review for the ANGLE diff itself and for trivial updates of
 existing patches.
 
-== Visual Studio Solution Files ==
 
+== Visual Studio Solution Files ==
 Ignore these. We don't use them anymore. We use custom Makefiles.
 
-== Generated parser code==
 
+== Generated parser code==
 Don't bother about that anymore. The parser is now generated and included in the ANGLE svn repo.

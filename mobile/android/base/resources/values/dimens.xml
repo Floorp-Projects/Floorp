@@ -40,6 +40,7 @@
     <dimen name="prompt_service_group_padding_size">32dp</dimen>
     <dimen name="prompt_service_icon_size">72dp</dimen>
     <dimen name="prompt_service_icon_text_padding">10dp</dimen>
+    <dimen name="prompt_service_inputs_padding">16dp</dimen>
     <dimen name="prompt_service_left_right_text_with_icon_padding">10dp</dimen>
     <dimen name="prompt_service_top_bottom_text_with_icon_padding">8dp</dimen>
     <dimen name="remote_tab_child_row_height">64dp</dimen>
