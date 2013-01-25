@@ -93,6 +93,8 @@ load 337476-1.xul
 load 338703-1.html
 load 339651-1.html
 load 340093-1.xul
+load 341382-1.html
+load 341382-2.html
 asserts-if(browserIsRemote,1) load 341858-1.html # bug 622188
 load 342145-1.xhtml
 load 343293-1.xhtml
