@@ -194,7 +194,7 @@ str_escape(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(ni == newlength);
     newchars[newlength] = 0;
 
-    JSString *retstr = js_NewString(cx, newchars, newlength);
+    JSString *retstr = js_NewString<CanGC>(cx, newchars, newlength);
     if (!retstr) {
         js_free(newchars);
         return false;
@@ -456,7 +456,7 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
         return NULL;
     }
 
-    JSString *str = ToStringSlow(cx, call.thisv());
+    JSString *str = ToStringSlow<CanGC>(cx, call.thisv());
     if (!str)
         return NULL;
 
@@ -626,7 +626,7 @@ js_toLowerCase(JSContext *cx, JSString *str)
     for (size_t i = 0; i < n; i++)
         news[i] = unicode::ToLowerCase(s[i]);
     news[n] = 0;
-    str = js_NewString(cx, news, n);
+    str = js_NewString<CanGC>(cx, news, n);
     if (!str) {
         js_free(news);
         return NULL;
@@ -693,7 +693,7 @@ js_toUpperCase(JSContext *cx, JSString *str)
     for (size_t i = 0; i < n; i++)
         news[i] = unicode::ToUpperCase(s[i]);
     news[n] = 0;
-    str = js_NewString(cx, news, n);
+    str = js_NewString<CanGC>(cx, news, n);
     if (!str) {
         js_free(news);
         return NULL;
@@ -1600,7 +1600,7 @@ class StringRegExpGuard
             if (!arg)
                 return false;
 
-            fm.patstr = AtomizeString(cx, arg);
+            fm.patstr = AtomizeString<CanGC>(cx, arg);
             if (!fm.patstr)
                 return false;
         }
@@ -2010,7 +2010,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (str->isAtom()) {
             atom = &str->asAtom();
         } else {
-            atom = AtomizeString(cx, str);
+            atom = AtomizeString<CanGC>(cx, str);
             if (!atom)
                 return false;
         }
@@ -2804,7 +2804,7 @@ SplitHelper(JSContext *cx, Handle<JSStableString*> str, uint32_t limit, const Ma
                 if (!matches[i + 1].isUndefined()) {
                     JSSubString parsub;
                     res->getParen(i + 1, &parsub);
-                    sub = js_NewStringCopyN(cx, parsub.chars, parsub.length);
+                    sub = js_NewStringCopyN<CanGC>(cx, parsub.chars, parsub.length);
                     if (!sub || !splits.append(StringValue(sub)))
                         return NULL;
                 } else {
@@ -3408,7 +3408,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
         chars[i] = (jschar)code;
     }
     chars[args.length()] = 0;
-    JSString *str = js_NewString(cx, chars, args.length());
+    JSString *str = js_NewString<CanGC>(cx, chars, args.length());
     if (!str) {
         js_free(chars);
         return JS_FALSE;
@@ -3472,14 +3472,21 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     return proto;
 }
 
+template <AllowGC allowGC>
 JSStableString *
 js_NewString(JSContext *cx, jschar *chars, size_t length)
 {
-    JSStableString *s = JSStableString::new_(cx, chars, length);
+    JSStableString *s = JSStableString::new_<allowGC>(cx, chars, length);
     if (s)
         Probes::createString(cx, s, length);
     return s;
 }
+
+template JSStableString *
+js_NewString<CanGC>(JSContext *cx, jschar *chars, size_t length);
+
+template JSStableString *
+js_NewString<NoGC>(JSContext *cx, jschar *chars, size_t length);
 
 JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t length)
@@ -3504,61 +3511,89 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
     return s;
 }
 
+template <AllowGC allowGC>
 JSFlatString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
 {
     if (JSShortString::lengthFits(n))
-        return NewShortString(cx, TwoByteChars(s, n));
+        return NewShortString<allowGC>(cx, TwoByteChars(s, n));
 
     jschar *news = cx->pod_malloc<jschar>(n + 1);
     if (!news)
         return NULL;
     js_strncpy(news, s, n);
     news[n] = 0;
-    JSFlatString *str = js_NewString(cx, news, n);
+    JSFlatString *str = js_NewString<allowGC>(cx, news, n);
     if (!str)
         js_free(news);
     return str;
 }
 
+template JSFlatString *
+js_NewStringCopyN<CanGC>(JSContext *cx, const jschar *s, size_t n);
+
+template JSFlatString *
+js_NewStringCopyN<NoGC>(JSContext *cx, const jschar *s, size_t n);
+
+template <AllowGC allowGC>
 JSFlatString *
 js_NewStringCopyN(JSContext *cx, const char *s, size_t n)
 {
     if (JSShortString::lengthFits(n))
-        return NewShortString(cx, Latin1Chars(s, n));
+        return NewShortString<allowGC>(cx, Latin1Chars(s, n));
 
     jschar *chars = InflateString(cx, s, &n);
     if (!chars)
         return NULL;
-    JSFlatString *str = js_NewString(cx, chars, n);
+    JSFlatString *str = js_NewString<allowGC>(cx, chars, n);
     if (!str)
         js_free(chars);
     return str;
 }
 
+template JSFlatString *
+js_NewStringCopyN<CanGC>(JSContext *cx, const char *s, size_t n);
+
+template JSFlatString *
+js_NewStringCopyN<NoGC>(JSContext *cx, const char *s, size_t n);
+
+template <AllowGC allowGC>
 JSFlatString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s)
 {
     size_t n = js_strlen(s);
     if (JSShortString::lengthFits(n))
-        return NewShortString(cx, TwoByteChars(s, n));
+        return NewShortString<allowGC>(cx, TwoByteChars(s, n));
 
     size_t m = (n + 1) * sizeof(jschar);
     jschar *news = (jschar *) cx->malloc_(m);
     if (!news)
         return NULL;
     js_memcpy(news, s, m);
-    JSFlatString *str = js_NewString(cx, news, n);
+    JSFlatString *str = js_NewString<allowGC>(cx, news, n);
     if (!str)
         js_free(news);
     return str;
 }
 
+template JSFlatString *
+js_NewStringCopyZ<CanGC>(JSContext *cx, const jschar *s);
+
+template JSFlatString *
+js_NewStringCopyZ<NoGC>(JSContext *cx, const jschar *s);
+
+template <AllowGC allowGC>
 JSFlatString *
 js_NewStringCopyZ(JSContext *cx, const char *s)
 {
-    return js_NewStringCopyN(cx, s, strlen(s));
+    return js_NewStringCopyN<allowGC>(cx, s, strlen(s));
 }
+
+template JSFlatString *
+js_NewStringCopyZ<CanGC>(JSContext *cx, const char *s);
+
+template JSFlatString *
+js_NewStringCopyZ<NoGC>(JSContext *cx, const char *s);
 
 const char *
 js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool asSource)
@@ -3574,6 +3609,7 @@ js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool
     return bytes->encode(cx, str);
 }
 
+template <AllowGC allowGC>
 JSString *
 js::ToStringSlow(JSContext *cx, const Value &arg)
 {
@@ -3581,16 +3617,20 @@ js::ToStringSlow(JSContext *cx, const Value &arg)
     JS_ASSERT(!arg.isString());
 
     Value v = arg;
-    if (!ToPrimitive(cx, JSTYPE_STRING, &v))
-        return NULL;
+    if (!v.isPrimitive()) {
+        if (!allowGC)
+            return NULL;
+        if (!ToPrimitive(cx, JSTYPE_STRING, &v))
+            return NULL;
+    }
 
     JSString *str;
     if (v.isString()) {
         str = v.toString();
     } else if (v.isInt32()) {
-        str = Int32ToString(cx, v.toInt32());
+        str = Int32ToString<allowGC>(cx, v.toInt32());
     } else if (v.isDouble()) {
-        str = js_NumberToString(cx, v.toDouble());
+        str = js_NumberToString<allowGC>(cx, v.toDouble());
     } else if (v.isBoolean()) {
         str = js_BooleanToString(cx, v.toBoolean());
     } else if (v.isNull()) {
@@ -3600,6 +3640,12 @@ js::ToStringSlow(JSContext *cx, const Value &arg)
     }
     return str;
 }
+
+template JSString *
+js::ToStringSlow<CanGC>(JSContext *cx, const Value &arg);
+
+template JSString *
+js::ToStringSlow<NoGC>(JSContext *cx, const Value &arg);
 
 JSString *
 js::ValueToSource(JSContext *cx, const Value &v)
@@ -3617,7 +3663,7 @@ js::ValueToSource(JSContext *cx, const Value &v)
             /* NB: _ucNstr rather than _ucstr to indicate non-terminated. */
             static const jschar js_negzero_ucNstr[] = {'-', '0'};
 
-            return js_NewStringCopyN(cx, js_negzero_ucNstr, 2);
+            return js_NewStringCopyN<CanGC>(cx, js_negzero_ucNstr, 2);
         }
         return ToString(cx, v);
     }

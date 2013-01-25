@@ -515,9 +515,9 @@ MarkDenseElementFound(typename MaybeRooted<Shape*, allowGC>::MutableHandleType p
 }
 
 static inline bool
-IsImplicitDenseElement(HandleShape prop)
+IsImplicitDenseElement(Shape *prop)
 {
-    return prop.get() == reinterpret_cast<Shape*>(1);
+    return prop == reinterpret_cast<Shape*>(1);
 }
 
 static inline uint8_t

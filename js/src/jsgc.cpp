@@ -1513,10 +1513,10 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
 }
 
 template void *
-ArenaLists::refillFreeList<DONT_ALLOW_GC>(JSContext *cx, AllocKind thingKind);
+ArenaLists::refillFreeList<NoGC>(JSContext *cx, AllocKind thingKind);
 
 template void *
-ArenaLists::refillFreeList<ALLOW_GC>(JSContext *cx, AllocKind thingKind);
+ArenaLists::refillFreeList<CanGC>(JSContext *cx, AllocKind thingKind);
 
 JSGCTraceKind
 js_GetGCThingTraceKind(void *thing)
@@ -4782,6 +4782,6 @@ js_NewGCXML(JSContext *cx)
     if (!cx->runningWithTrustedPrincipals())
         ++sE4XObjectsCreated;
 
-    return NewGCThing<JSXML, ALLOW_GC>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
+    return NewGCThing<JSXML, CanGC>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
 }
 #endif

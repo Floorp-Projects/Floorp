@@ -1214,7 +1214,7 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
                 return NULL;
             }
             decompressed[length_] = 0;
-            cached = js_NewString(cx, decompressed, length_);
+            cached = js_NewString<CanGC>(cx, decompressed, length_);
             if (!cached) {
                 js_free(decompressed);
                 return NULL;
@@ -1229,7 +1229,7 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 #else
     chars = data.source;
 #endif
-    return js_NewStringCopyN(cx, chars + start, stop - start);
+    return js_NewStringCopyN<CanGC>(cx, chars + start, stop - start);
 }
 
 bool

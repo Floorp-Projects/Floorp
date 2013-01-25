@@ -2758,7 +2758,7 @@ DebuggerScript_getUrl(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get url)", args, obj, script);
 
     if (script->filename) {
-        JSString *str = js_NewStringCopyZ(cx, script->filename);
+        JSString *str = js_NewStringCopyZ<CanGC>(cx, script->filename);
         if (!str)
             return false;
         args.rval().setString(str);
@@ -4201,7 +4201,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
     for (size_t i = 0, len = keys.length(); i < len; i++) {
          jsid id = keys[i];
          if (JSID_IS_INT(id)) {
-             JSString *str = Int32ToString(cx, JSID_TO_INT(id));
+             JSString *str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
              if (!str)
                  return false;
              vals[i].setString(str);

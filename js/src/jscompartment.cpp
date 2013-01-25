@@ -368,7 +368,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
         Rooted<JSStableString *> str(cx, vp->toString()->ensureStable(cx));
         if (!str)
             return false;
-        RootedString wrapped(cx, js_NewStringCopyN(cx, str->chars().get(), str->length()));
+        RootedString wrapped(cx, js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length()));
         if (!wrapped)
             return false;
         vp->setString(wrapped);

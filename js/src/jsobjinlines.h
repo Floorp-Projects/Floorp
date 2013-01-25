@@ -178,11 +178,28 @@ JSObject::getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject recei
 }
 
 /* static */ inline JSBool
+JSObject::getGenericNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                         jsid id, js::Value *vp)
+{
+    js::GenericIdOp op = obj->getOps()->getGeneric;
+    if (op)
+        return false;
+    return js::baseops::GetPropertyNoGC(cx, obj, receiver, id, vp);
+}
+
+/* static */ inline JSBool
 JSObject::getProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                       js::PropertyName *name, js::MutableHandleValue vp)
 {
     js::RootedId id(cx, js::NameToId(name));
     return getGeneric(cx, obj, receiver, id, vp);
+}
+
+/* static */ inline JSBool
+JSObject::getPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                          js::PropertyName *name, js::Value *vp)
+{
+    return getGenericNoGC(cx, obj, receiver, js::NameToId(name), vp);
 }
 
 /* static */ inline bool
@@ -969,7 +986,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
     JS_ASSERT(cx->compartment == type->compartment());
 
-    JSObject *obj = js_NewGCObject<js::ALLOW_GC>(cx, kind);
+    JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind);
     if (!obj)
         return NULL;
 
@@ -1014,7 +1031,7 @@ JSObject::createArray(JSContext *cx, js::gc::AllocKind kind,
 
     uint32_t capacity = js::gc::GetGCKindSlots(kind) - js::ObjectElements::VALUES_PER_HEADER;
 
-    JSObject *obj = js_NewGCObject<js::ALLOW_GC>(cx, kind);
+    JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind);
     if (!obj) {
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -1140,7 +1157,7 @@ JSObject::lookupGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
     js::LookupGenericOp op = obj->getOps()->lookupGeneric;
     if (op)
         return op(cx, obj, id, objp, propp);
-    return js::baseops::LookupProperty(cx, obj, id, objp, propp);
+    return js::baseops::LookupProperty<js::CanGC>(cx, obj, id, objp, propp);
 }
 
 /* static */ inline JSBool
@@ -1223,6 +1240,20 @@ JSObject::getElement(JSContext *cx, js::HandleObject obj, js::HandleObject recei
     if (!js::IndexToId(cx, index, &id))
         return false;
     return getGeneric(cx, obj, receiver, id, vp);
+}
+
+/* static */ inline JSBool
+JSObject::getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                         uint32_t index, js::Value *vp)
+{
+    js::ElementIdOp op = obj->getOps()->getElement;
+    if (op)
+        return false;
+
+    jsid id;
+    if (!js::IndexToIdNoGC(cx, index, &id))
+        return false;
+    return getGenericNoGC(cx, obj, receiver, id, vp);
 }
 
 /* static */ inline JSBool
@@ -1737,6 +1768,12 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
     if (!v.isObject())
         return false;
     return ObjectClassIs(v.toObject(), classValue, cx);
+}
+
+static JS_ALWAYS_INLINE bool
+ValueMightBeSpecial(const Value &propval)
+{
+    return propval.isObject();
 }
 
 static JS_ALWAYS_INLINE bool
