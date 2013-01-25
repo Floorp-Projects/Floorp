@@ -91,7 +91,7 @@ ifdef FREEBL_PRELINK_COMMAND
 	DEFINES +=-DFREEBL_PRELINK_COMMAND=\"$(FREEBL_PRELINK_COMMAND)\"
 endif
 # NSS_X86 means the target is a 32-bits x86 CPU architecture
-# NSS_X64 means the target is a 64-bits x64 CPU architecture
+# NSS_X64 means the target is a 64-bits 64 CPU architecture
 # NSS_X86_OR_X64 means the target is either x86 or x64
 ifeq (,$(filter-out i386 x386 x86 x86_64,$(CPU_ARCH)))
         DEFINES += -DNSS_X86_OR_X64
@@ -187,7 +187,9 @@ ifeq ($(CPU_ARCH),x86_64)
 #   DEFINES += -DMPI_AMD64_ADD
     # comment the next two lines to turn off intel HW accelleration
     DEFINES += -DUSE_HW_AES
-    ASFILES += intel-aes.s
+    ASFILES += intel-aes.s intel-gcm.s
+    EXTRA_SRCS +=  intel-gcm-wrap.c
+    INTEL_GCM=1
     MPI_SRCS += mpi_amd64.c mp_comba.c
 endif
 ifeq ($(CPU_ARCH),x86)
@@ -442,7 +444,9 @@ else
 	DEFINES += -DNSS_USE_COMBA -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
 	# comment the next two lines to turn off intel HW accelleration
 	DEFINES += -DUSE_HW_AES
-	ASFILES += intel-aes.s
+	ASFILES += intel-aes.s intel-gcm.s
+        EXTRA_SRCS +=  intel-gcm-wrap.c
+        INTEL_GCM=1
 	MPI_SRCS += mpi_amd64.c
     else
 	# Solaris x86
@@ -641,5 +645,18 @@ ifdef NEED_ABSOLUTE_PATH
 else
 	$(CC) -o $@ -c $(CFLAGS) -fno-strict-aliasing $<
 endif
+endif
+endif
+
+ifdef INTEL_GCM
+#
+# GCM binary needs -msse4
+#
+$(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): intel-gcm-wrap.c
+	@$(MAKE_OBJDIR)
+ifdef NEED_ABSOLUTE_PATH
+	$(CC) -o $@ -c -mssse3 $(CFLAGS) $(call core_abspath,$<)
+else
+	$(CC) -o $@ -c -mssse3 $(CFLAGS) $<
 endif
 endif

@@ -4,7 +4,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.57 2012/09/28 23:40:14 rrelyea%redhat.com Exp $
+ * $Id: certt.h,v 1.58 2013/01/07 03:56:12 ryan.sleevi%gmail.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -955,6 +955,8 @@ typedef enum {
 				 * the following cases:
 				 *      * when the parameter is not set.
 				 *      * when the list of trust anchors is empty.
+				 * Note that this handling can be further altered by altering the
+				 * cert_pi_useOnlyTrustAnchors flag
 				 * Specified in value.pointer.chain */
    cert_pi_useAIACertFetch = 12, /* Enables cert fetching using AIA extension.
 				 * In NSS 3.12.1 or later. Default is off.
@@ -963,6 +965,16 @@ typedef enum {
                                 /* The callback container for doing extra
                                  * validation on the currently calculated chain.
                                  * Value is in value.pointer.chainVerifyCallback */
+   cert_pi_useOnlyTrustAnchors = 14,/* If true, disables trusting any
+				 * certificates other than the ones passed in via cert_pi_trustAnchors.
+				 * If false, then the certificates specified via cert_pi_trustAnchors
+				 * will be combined with the pre-existing trusted roots, but only for
+				 * the certificate validation being performed.
+				 * If no value has been supplied via cert_pi_trustAnchors, this has no
+				 * effect.
+				 * The default value is true, meaning if this is not supplied, only
+				 * trust anchors supplied via cert_pi_trustAnchors are trusted.
+				 * Specified in value.scalar.b */
    cert_pi_max                  /* SPECIAL: signifies maximum allowed value,
 				 *  can increase in future releases */
 } CERTValParamInType;

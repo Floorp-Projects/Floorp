@@ -8,7 +8,9 @@ include $(CORE_DEPTH)/coreconf/UNIX.mk
 #
 # The default implementation strategy for Linux is now pthreads
 #
-USE_PTHREADS = 1
+ifneq ($(OS_TARGET),Android)
+	USE_PTHREADS = 1
+endif
 
 ifeq ($(USE_PTHREADS),1)
 	IMPL_STRATEGY = _PTH
@@ -20,6 +22,26 @@ RANLIB			= ranlib
 
 DEFAULT_COMPILER = gcc
 
+ifeq ($(OS_TARGET),Android)
+ifndef ANDROID_NDK
+	$(error Must set ANDROID_NDK to the path to the android NDK first)
+endif
+	ANDROID_PREFIX=$(OS_TEST)-linux-androideabi
+	ANDROID_TARGET=$(ANDROID_PREFIX)-4.4.3
+	# should autodetect which linux we are on, currently android only
+	# supports linux-x86 prebuilts
+	ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/$(ANDROID_TARGET)/prebuilt/linux-x86
+	ANDROID_SYSROOT=$(ANDROID_NDK)/platforms/android-$(OS_TARGET_RELEASE)/arch-$(OS_TEST)
+	ANDROID_CC=$(ANDROID_TOOLCHAIN)/bin/$(ANDROID_PREFIX)-gcc
+# internal tools need to be built with the native compiler
+ifndef INTERNAL_TOOLS
+	CC = $(ANDROID_CC) --sysroot=$(ANDROID_SYSROOT)
+	DEFAULT_COMPILER=$(ANDROID_PREFIX)-gcc
+	ARCHFLAG = --sysroot=$(ANDROID_SYSROOT)
+	DEFINES += -DNO_SYSINFO -DNO_FORK_CHECK -DANDROID
+	CROSS_COMPILE = 1
+endif
+endif
 ifeq ($(OS_TEST),ppc64)
 	CPU_ARCH	= ppc
 ifeq ($(USE_64),1)
@@ -67,7 +89,9 @@ endif
 endif
 
 
+ifneq ($(OS_TARGET),Android)
 LIBC_TAG		= _glibc
+endif
 
 ifeq ($(OS_RELEASE),2.0)
 	OS_REL_CFLAGS	+= -DLINUX2_0
@@ -103,7 +127,7 @@ endif
 # Place -ansi and *_SOURCE before $(DSO_CFLAGS) so DSO_CFLAGS can override
 # -ansi on platforms like Android where the system headers are C99 and do
 # not build with -ansi.
-STANDARDS_CFLAGS	= -ansi -D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE
+STANDARDS_CFLAGS	= -D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE
 OS_CFLAGS		= $(STANDARDS_CFLAGS) $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -Werror-implicit-function-declaration -Wno-switch -pipe -DLINUX -Dlinux -DHAVE_STRERROR
 OS_LIBS			= $(OS_PTHREAD) -ldl -lc
 
@@ -141,10 +165,12 @@ CPU_TAG = _$(CPU_ARCH)
 # dependencies by default.  Set FREEBL_NO_DEPEND to 0 in the environment to
 # override this.
 #
+ifneq ($(OS_TARGET),Android)
 ifeq (2.6,$(firstword $(sort 2.6 $(OS_RELEASE))))
 ifndef FREEBL_NO_DEPEND
 FREEBL_NO_DEPEND = 1
 FREEBL_LOWHASH = 1
+endif
 endif
 endif
 
