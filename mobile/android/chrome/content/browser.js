@@ -499,6 +499,30 @@ var BrowserApp = {
           }
         });
       });
+
+    NativeWindow.contextmenus.add(
+      function(aTarget) {
+        if (aTarget instanceof HTMLVideoElement) {
+          // If a video element is zero width or height, its essentially
+          // an HTMLAudioElement.
+          if (aTarget.videoWidth == 0 || aTarget.videoHeight == 0 )
+            return Strings.browser.GetStringFromName("contextmenu.saveAudio");
+          return Strings.browser.GetStringFromName("contextmenu.saveVideo");
+        } else if (aTarget instanceof HTMLAudioElement) {
+          return Strings.browser.GetStringFromName("contextmenu.saveAudio");
+        }
+        return Strings.browser.GetStringFromName("contextmenu.saveVideo");
+      }, NativeWindow.contextmenus.mediaSaveableContext,
+      function(aTarget) {
+        let url = aTarget.currentSrc || aTarget.src;
+        let filePickerTitleKey = (aTarget instanceof HTMLVideoElement &&
+                                  (aTarget.videoWidth != 0 && aTarget.videoHeight != 0))
+                                  ? "SaveVideoTitle" : "SaveAudioTitle";
+        // Skipped trying to pull MIME type out of cache for now
+        ContentAreaUtils.internalSave(url, null, null, null, null, false,
+                                      filePickerTitleKey, null, aTarget.ownerDocument.documentURIObject,
+                                      aTarget.ownerDocument, true, null);
+      });
   },
 
   onAppUpdated: function() {
@@ -1543,6 +1567,13 @@ var NativeWindow = {
           return (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE));
         }
         return false;
+      }
+    },
+
+    mediaSaveableContext: {
+      matches: function mediaSaveableContextMatches(aElement) {
+        return (aElement instanceof HTMLVideoElement ||
+               aElement instanceof HTMLAudioElement);
       }
     },
 
