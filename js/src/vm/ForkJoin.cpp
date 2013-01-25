@@ -10,8 +10,9 @@
 
 #include "vm/ForkJoin.h"
 #include "vm/Monitor.h"
+#include "gc/Marking.h"
 
-#include "vm/ForkJoin-inl.h"
+#include "jsinferinlines.h"
 
 #ifdef JS_THREADSAFE
 #  include "prthread.h"
@@ -29,7 +30,7 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     JSContext *const cx_;          // Current context
     ThreadPool *const threadPool_; // The thread pool.
     ForkJoinOp &op_;               // User-defined operations to be perf. in par.
-    const size_t numThreads_;      // Total number of threads.
+    const uint32_t numSlices_;     // Total number of threads.
     PRCondVar *rendezvousEnd_;     // Cond. var used to signal end of rendezvous.
 
     /////////////////////////////////////////////////////////////////////////
@@ -37,16 +38,19 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     //
     // Each worker thread gets an arena to use when allocating.
 
-    Vector<gc::ArenaLists *, 16> arenaListss_;
+    Vector<Allocator *, 16> allocators_;
 
     /////////////////////////////////////////////////////////////////////////
     // Locked Fields
     //
     // Only to be accessed while holding the lock.
 
-    size_t uncompleted_;     // Number of uncompleted worker threads.
-    size_t blocked_;         // Number of threads that have joined the rendezvous.
-    size_t rendezvousIndex_; // Number of rendezvous attempts
+    uint32_t uncompleted_;         // Number of uncompleted worker threads
+    uint32_t blocked_;             // Number of threads that have joined rendezvous
+    uint32_t rendezvousIndex_;     // Number of rendezvous attempts
+    bool gcRequested_;             // True if a worker requested a GC
+    gcreason::Reason gcReason_;    // Reason given to request GC
+    JSCompartment *gcCompartment_; // Compartment for GC, or NULL for full
 
     /////////////////////////////////////////////////////////////////////////
     // Asynchronous Flags
@@ -68,11 +72,11 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     volatile bool rendezvous_;
 
     // Invoked only from the main thread:
-    void executeFromMainThread(uintptr_t stackLimit);
+    void executeFromMainThread();
 
     // Executes slice #threadId of the work, either from a worker or
     // the main thread.
-    void executePortion(PerThreadData *perThread, size_t threadId, uintptr_t stackLimit);
+    void executePortion(PerThreadData *perThread, uint32_t threadId);
 
     // Rendezvous protocol:
     //
@@ -97,8 +101,8 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     ForkJoinShared(JSContext *cx,
                    ThreadPool *threadPool,
                    ForkJoinOp &op,
-                   size_t numThreads,
-                   size_t uncompleted);
+                   uint32_t numSlices,
+                   uint32_t uncompleted);
     ~ForkJoinShared();
 
     bool init();
@@ -106,18 +110,26 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     ParallelResult execute();
 
     // Invoked from parallel worker threads:
-    virtual void executeFromWorker(size_t threadId, uintptr_t stackLimit);
+    virtual void executeFromWorker(uint32_t threadId, uintptr_t stackLimit);
 
-    // Moves all the per-thread arenas into the main compartment.  This can
-    // only safely be invoked on the main thread, either during a rendezvous
-    // or after the workers have completed.
-    void transferArenasToCompartment();
+    // Moves all the per-thread arenas into the main compartment and
+    // processes any pending requests for a GC.  This can only safely
+    // be invoked on the main thread, either during a rendezvous or
+    // after the workers have completed.
+    void transferArenasToCompartmentAndProcessGCRequests();
 
     // Invoked during processing by worker threads to "check in".
     bool check(ForkJoinSlice &threadCx);
 
     // See comment on |ForkJoinSlice::setFatal()| in forkjoin.h
     bool setFatal();
+
+    // Requests a GC, either full or specific to a compartment.
+    void requestGC(gcreason::Reason reason);
+    void requestCompartmentGC(JSCompartment *compartment, gcreason::Reason reason);
+
+    // Requests that computation abort.
+    void setAbortFlag();
 
     JSRuntime *runtime() { return cx_->runtime; }
 };
@@ -160,19 +172,22 @@ class js::AutoSetForkJoinSlice
 ForkJoinShared::ForkJoinShared(JSContext *cx,
                                ThreadPool *threadPool,
                                ForkJoinOp &op,
-                               size_t numThreads,
-                               size_t uncompleted)
-    : cx_(cx),
-      threadPool_(threadPool),
-      op_(op),
-      numThreads_(numThreads),
-      arenaListss_(cx),
-      uncompleted_(uncompleted),
-      blocked_(0),
-      rendezvousIndex_(0),
-      abort_(false),
-      fatal_(false),
-      rendezvous_(false)
+                               uint32_t numSlices,
+                               uint32_t uncompleted)
+  : cx_(cx),
+    threadPool_(threadPool),
+    op_(op),
+    numSlices_(numSlices),
+    allocators_(cx),
+    uncompleted_(uncompleted),
+    blocked_(0),
+    rendezvousIndex_(0),
+    gcRequested_(false),
+    gcReason_(gcreason::NUM_REASONS),
+    gcCompartment_(NULL),
+    abort_(false),
+    fatal_(false),
+    rendezvous_(false)
 { }
 
 bool
@@ -182,10 +197,10 @@ ForkJoinShared::init()
     // parallel code.
     //
     // Note: you might think (as I did, initially) that we could use
-    // compartment ArenaLists for the main thread.  This is not true,
+    // compartment |Allocator| for the main thread.  This is not true,
     // because when executing parallel code we sometimes check what
     // arena list an object is in to decide if it is writable.  If we
-    // used the compartment ArenaLists for the main thread, then the
+    // used the compartment |Allocator| for the main thread, then the
     // main thread would be permitted to write to any object it wants.
 
     if (!Monitor::init())
@@ -195,13 +210,13 @@ ForkJoinShared::init()
     if (!rendezvousEnd_)
         return false;
 
-    for (unsigned i = 0; i < numThreads_; i++) {
-        gc::ArenaLists *arenaLists = cx_->new_<gc::ArenaLists>();
-        if (!arenaLists)
+    for (unsigned i = 0; i < numSlices_; i++) {
+        Allocator *allocator = cx_->runtime->new_<Allocator>(cx_->compartment);
+        if (!allocator)
             return false;
 
-        if (!arenaListss_.append(arenaLists)) {
-            delete arenaLists;
+        if (!allocators_.append(allocator)) {
+            js_delete(allocator);
             return false;
         }
     }
@@ -213,30 +228,34 @@ ForkJoinShared::~ForkJoinShared()
 {
     PR_DestroyCondVar(rendezvousEnd_);
 
-    while (arenaListss_.length() > 0)
-        delete arenaListss_.popCopy();
+    while (allocators_.length() > 0)
+        js_delete(allocators_.popCopy());
 }
 
 ParallelResult
 ForkJoinShared::execute()
 {
-    AutoLockMonitor lock(*this);
-
-    // Give the task set a chance to prepare for parallel workload.
-    if (!op_.pre(numThreads_))
+    // Sometimes a GC request occurs *just before* we enter into the
+    // parallel section.  Rather than enter into the parallel section
+    // and then abort, we just check here and abort early.
+    if (cx_->runtime->interrupt)
         return TP_RETRY_SEQUENTIALLY;
+
+    AutoLockMonitor lock(*this);
 
     // Notify workers to start and execute one portion on this thread.
     {
         AutoUnlockMonitor unlock(*this);
         if (!threadPool_->submitAll(cx_, this))
             return TP_FATAL;
-        executeFromMainThread(cx_->runtime->ionStackLimit);
+        executeFromMainThread();
     }
 
     // Wait for workers to complete.
     while (uncompleted_ > 0)
         lock.wait();
+
+    transferArenasToCompartmentAndProcessGCRequests();
 
     // Check if any of the workers failed.
     if (abort_) {
@@ -246,37 +265,36 @@ ForkJoinShared::execute()
             return TP_RETRY_SEQUENTIALLY;
     }
 
-    transferArenasToCompartment();
-
-    // Give task set a chance to cleanup after parallel execution.
-    if (!op_.post(numThreads_))
-        return TP_RETRY_SEQUENTIALLY;
-
     // Everything went swimmingly. Give yourself a pat on the back.
     return TP_SUCCESS;
 }
 
 void
-ForkJoinShared::transferArenasToCompartment()
+ForkJoinShared::transferArenasToCompartmentAndProcessGCRequests()
 {
-#if 0
-    // XXX: This code will become relevant once other bugs are merged down.
-
-    JSRuntime *rt = cx_->runtime;
     JSCompartment *comp = cx_->compartment;
-    for (unsigned i = 0; i < numThreads_; i++)
-        comp->arenas.adoptArenas(rt, arenaListss_[i]);
-#endif
+    for (unsigned i = 0; i < numSlices_; i++)
+        comp->adoptWorkerAllocator(allocators_[i]);
+
+    if (gcRequested_) {
+        if (!gcCompartment_)
+            TriggerGC(cx_->runtime, gcReason_);
+        else
+            TriggerCompartmentGC(gcCompartment_, gcReason_);
+        gcRequested_ = false;
+        gcCompartment_ = NULL;
+    }
 }
 
 void
-ForkJoinShared::executeFromWorker(size_t workerId, uintptr_t stackLimit)
+ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
 {
-    JS_ASSERT(workerId < numThreads_ - 1);
+    JS_ASSERT(workerId < numSlices_ - 1);
 
     PerThreadData thisThread(cx_->runtime);
     TlsPerThreadData.set(&thisThread);
-    executePortion(&thisThread, workerId, stackLimit);
+    thisThread.ionStackLimit = stackLimit;
+    executePortion(&thisThread, workerId);
     TlsPerThreadData.set(NULL);
 
     AutoLockMonitor lock(*this);
@@ -290,23 +308,21 @@ ForkJoinShared::executeFromWorker(size_t workerId, uintptr_t stackLimit)
 }
 
 void
-ForkJoinShared::executeFromMainThread(uintptr_t stackLimit)
+ForkJoinShared::executeFromMainThread()
 {
-    executePortion(&cx_->runtime->mainThread, numThreads_ - 1, stackLimit);
+    executePortion(&cx_->runtime->mainThread, numSlices_ - 1);
 }
 
 void
 ForkJoinShared::executePortion(PerThreadData *perThread,
-                               size_t threadId,
-                               uintptr_t stackLimit)
+                               uint32_t threadId)
 {
-    gc::ArenaLists *arenaLists = arenaListss_[threadId];
-    ForkJoinSlice slice(perThread, threadId, numThreads_,
-                        stackLimit, arenaLists, this);
+    Allocator *allocator = allocators_[threadId];
+    ForkJoinSlice slice(perThread, threadId, numSlices_, allocator, this);
     AutoSetForkJoinSlice autoContext(&slice);
 
     if (!op_.parallel(slice))
-        abort_ = true;
+        setAbortFlag();
 }
 
 bool
@@ -314,7 +330,7 @@ ForkJoinShared::setFatal()
 {
     // Might as well set the abort flag to true, as it will make propagation
     // faster.
-    abort_ = true;
+    setAbortFlag();
     fatal_ = true;
     return false;
 }
@@ -326,12 +342,21 @@ ForkJoinShared::check(ForkJoinSlice &slice)
         return false;
 
     if (slice.isMainThread()) {
+        JS_ASSERT(!cx_->runtime->gcIsNeeded);
+
         if (cx_->runtime->interrupt) {
+            // The GC Needed flag should not be set during parallel
+            // execution.  Instead, one of the requestGC() or
+            // requestCompartmentGC() methods should be invoked.
+            JS_ASSERT(!cx_->runtime->gcIsNeeded);
+
             // If interrupt is requested, bring worker threads to a halt,
             // service the interrupt, then let them start back up again.
-            AutoRendezvous autoRendezvous(slice);
-            if (!js_HandleExecutionInterrupt(cx_))
-                return setFatal();
+            // AutoRendezvous autoRendezvous(slice);
+            // if (!js_HandleExecutionInterrupt(cx_))
+            //     return setFatal();
+            setAbortFlag();
+            return false;
         }
     } else if (rendezvous_) {
         joinRendezvous(slice);
@@ -392,7 +417,7 @@ ForkJoinShared::joinRendezvous(ForkJoinSlice &slice)
     JS_ASSERT(rendezvous_);
 
     AutoLockMonitor lock(*this);
-    const size_t index = rendezvousIndex_;
+    const uint32_t index = rendezvousIndex_;
     blocked_ += 1;
 
     // If we're the last to arrive, let the main thread know about it.
@@ -421,6 +446,42 @@ ForkJoinShared::endRendezvous(ForkJoinSlice &slice)
     PR_NotifyAllCondVar(rendezvousEnd_);
 }
 
+void
+ForkJoinShared::setAbortFlag()
+{
+    abort_ = true;
+}
+
+void
+ForkJoinShared::requestGC(gcreason::Reason reason)
+{
+    AutoLockMonitor lock(*this);
+
+    gcCompartment_ = NULL;
+    gcReason_ = reason;
+    gcRequested_ = true;
+}
+
+void
+ForkJoinShared::requestCompartmentGC(JSCompartment *compartment,
+                                     gcreason::Reason reason)
+{
+    AutoLockMonitor lock(*this);
+
+    if (gcRequested_ && gcCompartment_ != compartment) {
+        // If a full GC has been requested, or a GC for another compartment,
+        // issue a request for a full GC.
+        gcCompartment_ = NULL;
+        gcReason_ = reason;
+        gcRequested_ = true;
+    } else {
+        // Otherwise, just GC this compartment.
+        gcCompartment_ = compartment;
+        gcReason_ = reason;
+        gcRequested_ = true;
+    }
+}
+
 #endif // JS_THREADSAFE
 
 /////////////////////////////////////////////////////////////////////////////
@@ -428,14 +489,13 @@ ForkJoinShared::endRendezvous(ForkJoinSlice &slice)
 //
 
 ForkJoinSlice::ForkJoinSlice(PerThreadData *perThreadData,
-                             size_t sliceId, size_t numSlices,
-                             uintptr_t stackLimit, gc::ArenaLists *arenaLists,
-                             ForkJoinShared *shared)
+                             uint32_t sliceId, uint32_t numSlices,
+                             Allocator *allocator, ForkJoinShared *shared)
     : perThreadData(perThreadData),
       sliceId(sliceId),
       numSlices(numSlices),
-      ionStackLimit(stackLimit),
-      arenaLists(arenaLists),
+      allocator(allocator),
+      abortedScript(NULL),
       shared(shared)
 { }
 
@@ -490,20 +550,100 @@ ForkJoinSlice::Initialize()
 #endif
 }
 
+void
+ForkJoinSlice::requestGC(gcreason::Reason reason)
+{
+#ifdef JS_THREADSAFE
+    shared->requestGC(reason);
+    triggerAbort();
+#endif
+}
+
+void
+ForkJoinSlice::requestCompartmentGC(JSCompartment *compartment,
+                                    gcreason::Reason reason)
+{
+#ifdef JS_THREADSAFE
+    shared->requestCompartmentGC(compartment, reason);
+    triggerAbort();
+#endif
+}
+
+#ifdef JS_THREADSAFE
+void
+ForkJoinSlice::triggerAbort()
+{
+    shared->setAbortFlag();
+
+    // set iontracklimit to -1 so that on next entry to a function,
+    // the thread will trigger the overrecursedcheck.  If the thread
+    // is in a loop, then it will be calling ForkJoinSlice::check(),
+    // in which case it will notice the shared abort_ flag.
+    //
+    // In principle, we probably ought to set the ionStackLimit's for
+    // the other threads too, but right now the various slice objects
+    // are not on a central list so that's not possible.
+    perThreadData->ionStackLimit = -1;
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
+
+namespace js {
+class AutoEnterParallelSection
+{
+  private:
+    JSContext *cx_;
+    uint8_t *prevIonTop_;
+
+  public:
+    AutoEnterParallelSection(JSContext *cx)
+      : cx_(cx),
+        prevIonTop_(cx->mainThread().ionTop)
+    {
+        // Note: we do not allow GC during parallel sections.
+        // Moreover, we do not wish to worry about making
+        // write barriers thread-safe.  Therefore, we guarantee
+        // that there is no incremental GC in progress.
+
+        if (IsIncrementalGCInProgress(cx->runtime)) {
+            PrepareForIncrementalGC(cx->runtime);
+            FinishIncrementalGC(cx->runtime, gcreason::API);
+        }
+
+        cx->runtime->gcHelperThread.waitBackgroundSweepEnd();
+    }
+
+    ~AutoEnterParallelSection() {
+        cx_->runtime->mainThread.ionTop = prevIonTop_;
+    }
+};
+} /* namespace js */
+
+uint32_t
+js::ForkJoinSlices(JSContext *cx)
+{
+#ifndef JS_THREADSAFE
+    return 1;
+#else
+    // Parallel workers plus this main thread.
+    return cx->runtime->threadPool.numWorkers() + 1;
+#endif
+}
 
 ParallelResult
 js::ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op)
 {
 #ifdef JS_THREADSAFE
     // Recursive use of the ThreadPool is not supported.
-    JS_ASSERT(!InParallelSection());
+    JS_ASSERT(!ForkJoinSlice::InParallelSection());
+
+    AutoEnterParallelSection enter(cx);
 
     ThreadPool *threadPool = &cx->runtime->threadPool;
-    // Parallel workers plus this main thread.
-    size_t numThreads = threadPool->numWorkers() + 1;
+    uint32_t numSlices = ForkJoinSlices(cx);
 
-    ForkJoinShared shared(cx, threadPool, op, numThreads, numThreads - 1);
+    ForkJoinShared shared(cx, threadPool, op, numSlices, numSlices - 1);
     if (!shared.init())
         return TP_RETRY_SEQUENTIALLY;
 

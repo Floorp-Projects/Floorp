@@ -569,7 +569,7 @@ IsObjectInContextCompartment(RawObject obj, const JSContext *cx);
 inline uintptr_t
 GetNativeStackLimit(const JSRuntime *rt)
 {
-    return RuntimeFriendFields::get(rt)->nativeStackLimit;
+    return PerThreadDataFriendFields::getMainThread(rt)->nativeStackLimit;
 }
 
 /*

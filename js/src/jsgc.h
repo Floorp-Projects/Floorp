@@ -414,6 +414,18 @@ struct ArenaLists {
     template <AllowGC allowGC>
     static void *refillFreeList(JSContext *cx, AllocKind thingKind);
 
+    /*
+     * Moves all arenas from |fromArenaLists| into |this|.  In
+     * parallel blocks, we temporarily create one ArenaLists per
+     * parallel thread.  When the parallel block ends, we move
+     * whatever allocations may have been performed back into the
+     * compartment's main arena list using this function.
+     */
+    void adoptArenas(JSRuntime *runtime, ArenaLists *fromArenaLists);
+
+    /* True if the ArenaHeader in question is found in this ArenaLists */
+    bool containsArena(JSRuntime *runtime, ArenaHeader *arenaHeader);
+
     void checkEmptyFreeLists() {
 #ifdef DEBUG
         for (size_t i = 0; i < mozilla::ArrayLength(freeLists); ++i)
@@ -433,6 +445,14 @@ struct ArenaLists {
 
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget);
     static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread);
+
+    /*
+     * Invoked from IonMonkey-compiled parallel worker threads to
+     * perform an allocation.  In this case, |this| will be
+     * thread-local, but the compartment |comp| is shared between all
+     * threads.
+     */
+    void *parallelAllocate(JSCompartment *comp, AllocKind thingKind, size_t thingSize);
 
   private:
     inline void finalizeNow(FreeOp *fop, AllocKind thingKind);
