@@ -584,7 +584,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
 }
 
 void
-MacroAssembler::loadBaselineOrIonCode(Register script)
+MacroAssembler::loadBaselineOrIonCode(Register script, Label *failure)
 {
     Label noIonScript, done;
     Address scriptIon(script, offsetof(JSScript, ion));
@@ -598,9 +598,11 @@ MacroAssembler::loadBaselineOrIonCode(Register script)
     }
     bind(&noIonScript);
     {
-        // If the script does not have a valid IonScript, it must have a
-        // BaselineScript.
+        // The script does not have an IonScript. If |failure| is NULL,
+        // assume the script has a baseline script.
         loadPtr(Address(script, offsetof(JSScript, baseline)), script);
+        if (failure)
+            branchPtr(Assembler::BelowOrEqual, script, ImmWord(BASELINE_DISABLED_SCRIPT), failure);
         loadPtr(Address(script, BaselineScript::offsetOfMethod()), script);
     }
 

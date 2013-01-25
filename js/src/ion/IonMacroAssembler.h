@@ -675,7 +675,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         add32(Imm32(-1), Address(temp, 0));
     }
 
-    void loadBaselineOrIonCode(Register script);
+    void loadBaselineOrIonCode(Register script, Label *failure);
 
     void loadBaselineFramePtr(Register framePtr, Register dest);
 
