@@ -339,7 +339,7 @@ private:
     static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
     static JSBool constructWithProto(JSContext *cx, unsigned argc, Value *vp);
     static JSBool construct(JSContext *cx, JSObject *bufobj, const CallArgs &args,
-                            JSObject *proto);
+                            HandleObject proto);
 
     static inline DataViewObject *
     create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
