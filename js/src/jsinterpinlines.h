@@ -1124,7 +1124,7 @@ class FastInvokeGuard
       , useIon_(ion::IsEnabled(cx))
 #endif
     {
-        JS_ASSERT(!ForkJoinSlice::InParallelSection());
+        JS_ASSERT(!InParallelSection());
         initFunction(fval);
     }
 
