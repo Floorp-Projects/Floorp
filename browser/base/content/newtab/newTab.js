@@ -51,6 +51,7 @@ const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 #include dropTargetShim.js
 #include dropPreview.js
 #include updater.js
+#include undo.js
 
 // Everything is loaded. Initialize the New Tab Page.
 gPage.init();

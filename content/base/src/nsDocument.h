@@ -93,6 +93,7 @@ class nsHTMLCSSStyleSheet;
 class nsDOMNavigationTiming;
 class nsWindowSizes;
 class nsHtml5TreeOpExecutor;
+class nsDocumentOnStack;
 
 namespace mozilla {
 namespace dom {
@@ -1020,6 +1021,20 @@ public:
 
 protected:
   friend class nsNodeUtils;
+  friend class nsDocumentOnStack;
+
+  void IncreaseStackRefCnt()
+  {
+    ++mStackRefCnt;
+  }
+
+  void DecreaseStackRefCnt()
+  {
+    if (--mStackRefCnt == 0 && mNeedsReleaseAfterStackRefCntRelease) {
+      mNeedsReleaseAfterStackRefCntRelease = false;
+      NS_RELEASE_THIS();
+    }
+  }
 
   // Returns true if a request for DOM full-screen is currently enabled in
   // this document. This returns true if there are no windowed plugins in this
@@ -1379,10 +1394,28 @@ private:
   bool mAutoSize, mAllowZoom, mValidScaleFloat, mValidMaxScale, mScaleStrEmpty, mWidthStrEmpty;
   uint32_t mViewportWidth, mViewportHeight;
 
+  nsrefcnt mStackRefCnt;
+  bool mNeedsReleaseAfterStackRefCntRelease;
+
 #ifdef DEBUG
 protected:
   bool mWillReparent;
 #endif
+};
+
+class nsDocumentOnStack
+{
+public:
+  nsDocumentOnStack(nsDocument* aDoc) : mDoc(aDoc)
+  {
+    mDoc->IncreaseStackRefCnt();
+  }
+  ~nsDocumentOnStack()
+  {
+    mDoc->DecreaseStackRefCnt();
+  }
+private:
+  nsDocument* mDoc;
 };
 
 #define NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                             \

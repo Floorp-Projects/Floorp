@@ -8,17 +8,13 @@ Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
 let NetUtil = tempScope.NetUtil;
 let FileUtils = tempScope.FileUtils;
 
-// Reference to the Scratchpad object.
-let gScratchpad;
 
-// Reference to the temporary nsIFile we will work with.
-let gFile;
+let gScratchpad; // Reference to the Scratchpad object.
+let gFile; // Reference to the temporary nsIFile we will work with.
+let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
 // The temporary file content.
 let gFileContent = "function main() { return 0; }";
-
-const SCRATCHPAD_CONTEXT_CONTENT = 1;
-const SCRATCHPAD_CONTEXT_BROWSER = 2;
 
 function test() {
   waitForExplicitFinish();
@@ -72,11 +68,25 @@ function runTests() {
 
 function fileImported(status, content) {
   ok(Components.isSuccessCode(status), "File was imported successfully");
-  is(gScratchpad.executionContext, SCRATCHPAD_CONTEXT_BROWSER);
 
-  gFile.remove(false);
-  gFile = null;
-  gScratchpad = null;
-  finish();
+  // Since devtools.chrome.enabled is off, Scratchpad should still be in
+  // the content context.
+  is(gScratchpad.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT);
+
+  // Set the pref and try again.
+  Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
+
+  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true, function(status, content) {
+    ok(Components.isSuccessCode(status), "File was imported successfully");
+    is(gScratchpad.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER);
+
+    gFile.remove(false);
+    gFile = null;
+    gScratchpad = null;
+    finish();
+  });
 }
 
+registerCleanupFunction(function () {
+  Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
+});

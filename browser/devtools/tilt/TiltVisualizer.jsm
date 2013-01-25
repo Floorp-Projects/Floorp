@@ -194,7 +194,9 @@ TiltVisualizer.prototype = {
     this._browserTab = null;
 
     if (this.inspector) {
-      this.inspector.selection.off("new-node", this.onNewNodeFromInspector);
+      if (this.inspector.selection) {
+        this.inspector.selection.off("new-node", this.onNewNodeFromInspector);
+      }
       this.inspector = null;
     }
 

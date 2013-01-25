@@ -20,7 +20,20 @@
   <div id="newtab-scrollbox">
 
     <div id="newtab-vertical-margin">
-      <div id="newtab-margin-top"/>
+      <div id="newtab-margin-top">
+        <div id="newtab-undo-container" undo-disabled="true">
+          <xul:label id="newtab-undo-label"
+                     value="&newtab.undo.removedLabel;" />
+          <xul:button id="newtab-undo-button" tabindex="-1"
+                      label="&newtab.undo.undoButton;"
+                      class="newtab-undo-button" />
+          <xul:button id="newtab-undo-restore-button" tabindex="-1"
+                      label="&newtab.undo.restoreButton;"
+                      class="newtab-undo-button" />
+          <xul:toolbarbutton id="newtab-undo-close-button" tabindex="-1"
+                             title="&newtab.undo.closeTooltip;" />
+        </div>
+      </div>
 
       <div id="newtab-horizontal-margin">
         <div class="newtab-side-margin"/>

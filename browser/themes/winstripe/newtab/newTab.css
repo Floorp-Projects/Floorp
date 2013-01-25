@@ -4,6 +4,7 @@
 
 :root {
   -moz-appearance: none;
+  font-size: 75%;
   background-color: transparent;
 }
 
@@ -13,6 +14,70 @@
   background-image: url(chrome://browser/skin/newtab/noise.png),
                     linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,.2));
   background-attachment: fixed;
+}
+
+/* UNDO */
+#newtab-undo-container {
+  padding: 4px 3px;
+  border: 1px solid;
+  border-color: rgba(8,22,37,.12) rgba(8,22,37,.14) rgba(8,22,37,.16);
+  background-color: rgba(255,255,255,.4);
+  color: #525e69;
+}
+
+#newtab-undo-label {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.newtab-undo-button {
+  -moz-appearance: none;
+  color: -moz-nativehyperlinktext;
+  color: rgb(0,102,204);
+  cursor: pointer;
+  padding: 0;
+  margin: 0 4px;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.newtab-undo-button:hover {
+  text-decoration: underline;
+}
+
+.newtab-undo-button:-moz-focusring {
+  outline: 1px dotted;
+}
+
+.newtab-undo-button > .button-box {
+  padding: 0;
+}
+
+#newtab-undo-close-button {
+  -moz-appearance: none;
+  padding: 0;
+  border: none;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-user-focus: normal;
+}
+
+#newtab-undo-close-button:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+#newtab-undo-close-button:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
+#newtab-undo-close-button > .toolbarbutton-text {
+  display: none;
+}
+
+#newtab-undo-close-button:-moz-focusring {
+  outline: 1px dotted;
 }
 
 /* TOGGLE */
@@ -89,7 +154,6 @@
   padding: 0 8px;
   background-color: rgba(248,249,251,.95);
   color: #1f364c;
-  font-size: 12px;
   line-height: 24px;
 }
 
