@@ -183,6 +183,7 @@ FENNEC_JAVA_FILES = \
   ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
   widget/DateTimePicker.java \
+  widget/TabRow.java \
   widget/ThumbnailView.java \
   GeckoNetworkManager.java \
   GeckoScreenOrientationListener.java \
@@ -1032,6 +1033,7 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
 RES_COLOR = \
   res/color/menu_item_title.xml \
   res/color/select_item_multichoice.xml \
+  res/color/tab_title.xml \
   res/color/tabs_counter_color.xml \
   $(NULL)
 
@@ -1092,12 +1094,11 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/spinner.xml                            \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
+  mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
   mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
-  mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \
-  mobile/android/base/resources/drawable/tabs_tray_default_selector.xml         \
   mobile/android/base/resources/drawable/shadow.png                             \
   mobile/android/base/resources/drawable/marketplace.png                        \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
