@@ -92,6 +92,7 @@ load 372376-1.xhtml
 load 373859-1.html
 load 373868-1.xhtml
 load 375462-1.html
+load 376419.html
 load 379217-1.xhtml
 asserts(1-2) load 379217-2.xhtml # Bug 439204
 load 379917-1.xhtml
