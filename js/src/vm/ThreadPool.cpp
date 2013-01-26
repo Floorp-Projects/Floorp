@@ -118,8 +118,9 @@ ThreadPoolWorker::run()
 {
     // This is hokey in the extreme.  To compute the stack limit,
     // subtract the size of the stack from the address of a local
-    // variable and give a 2k buffer.  Is there a better way?
-    uintptr_t stackLimitOffset = WORKER_THREAD_STACK_SIZE - 2*1024;
+    // variable and give a 10k buffer.  Is there a better way?
+    // (Note: 2k proved to be fine on Mac, but too little on Linux)
+    uintptr_t stackLimitOffset = WORKER_THREAD_STACK_SIZE - 10*1024;
     uintptr_t stackLimit = (((uintptr_t)&stackLimitOffset) +
                              stackLimitOffset * JS_STACK_GROWTH_DIRECTION);
 

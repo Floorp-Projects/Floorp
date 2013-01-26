@@ -603,6 +603,10 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
   SerializeURI(mOriginalURI, originalURI);
 
   mozilla::dom::TabChild* tabChild = GetTabChild(this);
+  if (MissingRequiredTabChild(tabChild, "wyciwyg")) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   SendAsyncOpen(originalURI, mLoadFlags, IPC::SerializedLoadContext(this), tabChild);
 
   mSentAppData = true;

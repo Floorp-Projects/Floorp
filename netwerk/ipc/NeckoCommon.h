@@ -11,6 +11,11 @@
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 #include "nsPrintfCString.h"
+#include "mozilla/Preferences.h"
+
+namespace mozilla { namespace dom {
+class TabChild;
+}}
 
 #if defined(DEBUG) || defined(ENABLE_TESTS)
 # define NECKO_ERRORS_ARE_FATAL_DEFAULT true
@@ -93,6 +98,41 @@ IsNeckoChild()
     didCheck = true;
   }
   return amChild;
+}
+
+// This should always return true unless xpcshell tests are being used
+inline bool
+UsingNeckoIPCSecurity()
+{
+  static bool securityDisabled = true;
+  static bool registeredBool = false;
+
+  if (!registeredBool) {
+    Preferences::AddBoolVarCache(&securityDisabled,
+                                 "network.disable.ipc.security");
+    registeredBool = true;
+  }
+  return !securityDisabled;
+}
+
+inline bool
+MissingRequiredTabChild(mozilla::dom::TabChild* tabChild,
+                        const char* context)
+{
+  if (UsingNeckoIPCSecurity()) {
+    // Bug 833935: during navigation away from page some loads may lack
+    // TabParent: we don't want to kill browser for that.  Doesn't happen in
+    // test harness, so fail in debug mode so we can catch new code that fails
+    // to pass security info.
+    MOZ_ASSERT(tabChild);
+
+    if (!tabChild) {
+      printf_stderr("WARNING: child tried to open %s IPDL channel w/o "
+                    "security info\n", context);
+      return true;
+    }
+  }
+  return false;
 }
 
 

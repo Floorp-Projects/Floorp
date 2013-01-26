@@ -253,8 +253,9 @@ bool SetIonContext(IonContext *ctx);
 bool CanIonCompileScript(JSContext *cx, UnrootedScript script);
 
 MethodStatus CanEnterAtBranch(JSContext *cx, HandleScript script,
-                              StackFrame *fp, jsbytecode *pc);
-MethodStatus CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType);
+                              AbstractFramePtr fp, jsbytecode *pc, bool isConstructing);
+MethodStatus CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp,
+                      bool isConstructing, bool newType);
 MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs);
 
 enum IonExecStatus

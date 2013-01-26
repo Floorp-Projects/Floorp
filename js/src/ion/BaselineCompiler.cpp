@@ -272,7 +272,7 @@ bool
 BaselineCompiler::emitStackCheck()
 {
     Label skipIC;
-    uintptr_t *limitAddr = &cx->runtime->ionStackLimit;
+    uintptr_t *limitAddr = &cx->runtime->mainThread.ionStackLimit;
     masm.loadPtr(AbsoluteAddress(limitAddr), R0.scratchReg());
     masm.branchPtr(Assembler::AboveOrEqual, BaselineStackReg, R0.scratchReg(), &skipIC);
 

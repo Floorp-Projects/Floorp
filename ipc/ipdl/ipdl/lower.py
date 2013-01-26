@@ -4326,7 +4326,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ifread.addifstmt(StmtReturn.FALSE)
 
         ifnvalid = StmtIf(ExprNot(ExprCall(ExprSelect(tmpvar, '.', 'IsValid'))))
-        ifnvalid.addifstmt(StmtReturn.FALSE)
+        ifnvalid.addifstmt(
+            _protocolErrorBreakpoint('[' +
+                                     _actorName(self.protocol.name, self.side) +
+                                     '] Received an invalid file descriptor!'))
 
         read.addstmts([
             StmtDecl(Decl(_fdPickleType(), picklevar.name)),

@@ -608,7 +608,7 @@ TrackPropertyTypes(JSContext *cx, UnrootedObject obj, RawId id)
 
 /* Add a possible type for a property of obj. */
 inline void
-AddTypePropertyId(JSContext *cx, HandleObject obj, RawId id, Type type)
+AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, Type type)
 {
     AssertCanGC();
     if (cx->typeInferenceEnabled())
@@ -618,7 +618,7 @@ AddTypePropertyId(JSContext *cx, HandleObject obj, RawId id, Type type)
 }
 
 inline void
-AddTypePropertyId(JSContext *cx, HandleObject obj, RawId id, const Value &value)
+AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, const Value &value)
 {
     AssertCanGC();
     if (cx->typeInferenceEnabled())

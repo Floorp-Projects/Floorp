@@ -1056,8 +1056,8 @@ TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
         if (contentIndex < 0) {
             data = cx->names().empty;
         } else {
-            data = AtomizeChars(cx, tokenbuf.begin() + contentIndex,
-                                tokenbuf.length() - contentIndex);
+            data = AtomizeChars<CanGC>(cx, tokenbuf.begin() + contentIndex,
+                                       tokenbuf.length() - contentIndex);
             if (!data)
                 goto error;
         }
@@ -1284,7 +1284,7 @@ TokenStream::newToken(ptrdiff_t adjust)
 JS_ALWAYS_INLINE JSAtom *
 TokenStream::atomize(JSContext *cx, CharBuffer &cb)
 {
-    return AtomizeChars(cx, cb.begin(), cb.length());
+    return AtomizeChars<CanGC>(cx, cb.begin(), cb.length());
 }
 
 #ifdef DEBUG
@@ -1580,7 +1580,7 @@ TokenStream::getTokenInternal()
          */
         JSAtom *atom;
         if (!hadUnicodeEscape)
-            atom = AtomizeChars(cx, identStart, userbuf.addressOfNextRawChar() - identStart);
+            atom = AtomizeChars<CanGC>(cx, identStart, userbuf.addressOfNextRawChar() - identStart);
         else
             atom = atomize(cx, tokenbuf);
         if (!atom)
