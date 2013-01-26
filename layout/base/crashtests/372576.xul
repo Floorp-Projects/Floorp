@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window id="yourwindow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script type="text/javascript">
+<![CDATA[
+// put some js code here
+]]>
+</script>
+<toolbox>
+		<toolbar>
+			<toolbarbutton type="menu" class="toolbarbutton-1 firefly_files" label="Crash" tooltiptext="Crash">
+				<menupopup onpopupshown="this.enableKeyboardNavigator(false);">
+					<menuitem>
+						<textbox type="autocomplete" oninput="doFilter(this.value,false)" onchange="doFilter(this.value,false)" />
+					</menuitem>
+				</menupopup>
+			</toolbarbutton>
+		</toolbar>
+	</toolbox>
+</window>
