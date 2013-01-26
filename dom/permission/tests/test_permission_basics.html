@@ -31,7 +31,7 @@ var testCertApp = {
 
 SpecialPowers.addPermission("permissions", true, document);
 var comp = SpecialPowers.wrap(Components);
-SpecialPowers.pushPrefEnv({ "set": [["dom.mozPermissionSettings.enabled", true]] }, 
+SpecialPowers.pushPrefEnv({ "set": [["dom.mozPermissionSettings.enabled", true]] },
                           function() {
                             SpecialPowers.removePermission("permissions", document);
                           });
@@ -42,16 +42,21 @@ var mozPermissions = window.navigator.mozPermissionSettings;
 function permissionTest() {
   // Any permission explicit for privileged and implicit for certified serves
   var testPerm = "contacts-read";
+  // Any permission explicit for privileged and certified apps
+  var explicitPerm = "geolocation";
 
-  // Simulate than the app request the permissions
+  // Simulate that the app requested the permissions
   SpecialPowers.addPermission(testPerm, true, testPrivApp);
   SpecialPowers.addPermission(testPerm, true, testCertApp);
+  SpecialPowers.addPermission(explicitPerm, true, testPrivApp);
+  SpecialPowers.addPermission(explicitPerm, true, testCertApp);
 
-  if (gPermissionssEnabled) {
+  if (gPermissionsEnabled) {
     var certAppManifest = testCertApp.manifestURL;
     var privAppManifest = testPrivApp.manifestURL;
     var originPriv = "https://aprivileged.com";
     var originCert = "https://acertified.com";
+    var originOther = "http://test";
 
     // Trying to make any change to implicit permissions should fail
     try {
@@ -64,13 +69,29 @@ function permissionTest() {
     var result=mozPermissions.get(testPerm, certAppManifest, originCert, false);
     is(result, "allow", "same result");
 
-    // Erasing a permission, even an explicit one, is not allowed
+    // Removing a permission from the same origin, even an explicit one, should fail
     try {
-      mozPermissions.set(testPerm, "unknown", privAppManifest, originPriv, false);
-      ok(false, "Erase explicit permission");
+      mozPermissions.set(testPerm, "unknown", privAppManifest, originPriv);
+      ok(false, "Setting a permission to unknown");
     } catch (e) {
-      ok(true, "Erase explicit permission");
+      ok(true, "Setting a permission to unknown");
     }
+
+    // Removing an explicit permission from a different origin should work
+    var testRemove = function(aPerm, aManifest, aOrigin, aTestMsg) {
+      try {
+        mozPermissions.remove(aPerm, aManifest, aOrigin);
+        var status = mozPermissions.get(aPerm, aManifest, aOrigin, false);
+        is(status, "unknown", aTestMsg);
+      } catch (e) {
+        ok(false, aTestMsg);
+      }
+    }
+
+    testRemove(explicitPerm, privAppManifest, originOther,
+               "Remove explicit permission of privileged app");
+    testRemove(explicitPerm, certAppManifest, originOther,
+               "Remove explicit permission of certified app");
 
     mozPermissions.set(testPerm, "allow", privAppManifest, originPriv, false);
     result = mozPermissions.get(testPerm, privAppManifest, originPriv, false);
@@ -90,7 +111,7 @@ function permissionTest() {
   SpecialPowers.removePermission(testPerm, testCertApp);
 }
 
-var gPermissionssEnabled = SpecialPowers.getBoolPref("dom.mozPermissionSettings.enabled");
+var gPermissionsEnabled = SpecialPowers.getBoolPref("dom.mozPermissionSettings.enabled");
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(permissionTest);
 
