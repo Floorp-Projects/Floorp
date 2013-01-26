@@ -1742,7 +1742,7 @@ class YarrGenerator : private MacroAssembler {
                 removeCallFrame();
 #endif
 #if WTF_CPU_X86_64
-                move(TrustedImm32(WTF::notFound), returnRegister);
+                move(TrustedImm32(int(WTF::notFound)), returnRegister);
 #else
                 move(TrustedImmPtr((void*)WTF::notFound), returnRegister);
                 move(TrustedImm32(0), returnRegister2);
@@ -1988,7 +1988,7 @@ class YarrGenerator : private MacroAssembler {
                 removeCallFrame();
 #endif
 #if WTF_CPU_X86_64
-                move(TrustedImm32(WTF::notFound), returnRegister);
+                move(TrustedImm32(int(WTF::notFound)), returnRegister);
 #else
                 move(TrustedImmPtr((void*)WTF::notFound), returnRegister);
                 move(TrustedImm32(0), returnRegister2);
@@ -2640,7 +2640,7 @@ public:
 
         Jump hasInput = checkInput();
 #if WTF_CPU_X86_64
-        move(TrustedImm32(WTF::notFound), returnRegister);
+        move(TrustedImm32(int(WTF::notFound)), returnRegister);
 #else
         move(TrustedImmPtr((void*)WTF::notFound), returnRegister);
         move(TrustedImm32(0), returnRegister2);
