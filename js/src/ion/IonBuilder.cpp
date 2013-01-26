@@ -4324,7 +4324,7 @@ IonBuilder::jsop_initelem_array()
     current->add(elements);
 
     // Store the value.
-    MStoreElement *store = MStoreElement::New(elements, id, value);
+    MStoreElement *store = MStoreElement::New(elements, id, value, /* needsHoleCheck = */ false);
     current->add(store);
 
     // Update the length.
@@ -5214,7 +5214,7 @@ IonBuilder::jsop_getelem()
 {
     RootedScript script(cx, this->script());
 
-    if (oracle->elementReadIsDenseArray(script, pc))
+    if (oracle->elementReadIsDenseNative(script, pc))
         return jsop_getelem_dense();
 
     int arrayType = TypedArray::TYPE_MAX;
@@ -5266,14 +5266,17 @@ IonBuilder::jsop_getelem()
 bool
 IonBuilder::jsop_getelem_dense()
 {
-    if (oracle->arrayPrototypeHasIndexedProperty())
-        return abort("GETELEM Array proto has indexed properties");
-
     RootedScript scriptRoot(cx, script());
     types::StackTypeSet *barrier = oracle->propertyReadBarrier(scriptRoot, pc);
     types::StackTypeSet *types = oracle->propertyRead(script(), pc);
     bool needsHoleCheck = !oracle->elementReadIsPacked(script(), pc);
-    bool maybeUndefined = types->hasType(types::Type::UndefinedType());
+
+    // Reads which are on holes in the object do not have to bail out if
+    // undefined values have been observed at this access site and the access
+    // cannot hit another indexed property on the object or its prototypes.
+    bool readOutOfBounds =
+        types->hasType(types::Type::UndefinedType()) &&
+        !oracle->elementReadHasExtraIndexedProperty(script(), pc);
 
     MDefinition *id = current->pop();
     MDefinition *obj = current->pop();
@@ -5310,7 +5313,7 @@ IonBuilder::jsop_getelem_dense()
 
     MInstruction *load;
 
-    if (!maybeUndefined) {
+    if (!readOutOfBounds) {
         // This load should not return undefined, so likely we're reading
         // in-bounds elements, and the array is packed or its holes are not
         // read. This is the best case: we can separate the bounds check for
@@ -5483,7 +5486,7 @@ IonBuilder::jsop_setelem()
     RootedScript script(cx, this->script());
 
     if (oracle->propertyWriteCanSpecialize(script, pc)) {
-        if (oracle->elementWriteIsDenseArray(script, pc))
+        if (oracle->elementWriteIsDenseNative(script, pc))
             return jsop_setelem_dense();
 
         int arrayType = TypedArray::TYPE_MAX;
@@ -5511,11 +5514,12 @@ IonBuilder::jsop_setelem()
 bool
 IonBuilder::jsop_setelem_dense()
 {
-    if (oracle->arrayPrototypeHasIndexedProperty())
-        return abort("SETELEM Array proto has indexed properties");
-
     MIRType elementType = oracle->elementWrite(script(), pc);
     bool packed = oracle->elementWriteIsPacked(script(), pc);
+
+    // Writes which are on holes in the object do not have to bail out if they
+    // cannot hit another indexed property on the object or its prototypes.
+    bool writeOutOfBounds = !oracle->elementWriteHasExtraIndexedProperty(script(), pc);
 
     MDefinition *value = current->pop();
     MDefinition *id = current->pop();
@@ -5534,7 +5538,7 @@ IonBuilder::jsop_setelem_dense()
     // indexes in the past. Otherwise, use MStoreElement so that we can hoist
     // the initialized length and bounds check.
     MStoreElementCommon *store;
-    if (oracle->setElementHasWrittenHoles(script(), pc)) {
+    if (oracle->setElementHasWrittenHoles(script(), pc) && writeOutOfBounds) {
         MStoreElementHole *ins = MStoreElementHole::New(obj, elements, id, value);
         store = ins;
 
@@ -5549,7 +5553,9 @@ IonBuilder::jsop_setelem_dense()
 
         id = addBoundsCheck(id, initLength);
 
-        MStoreElement *ins = MStoreElement::New(elements, id, value);
+        bool needsHoleCheck = !packed && !writeOutOfBounds;
+
+        MStoreElement *ins = MStoreElement::New(elements, id, value, needsHoleCheck);
         store = ins;
 
         current->add(ins);
@@ -6794,7 +6800,7 @@ bool
 IonBuilder::jsop_in()
 {
     RootedScript scriptRoot(cx, script());
-    if (oracle->inObjectIsDenseArray(scriptRoot, pc))
+    if (oracle->inObjectIsDenseNativeWithoutExtraIndexedProperties(scriptRoot, pc))
         return jsop_in_dense();
 
     MDefinition *obj = current->pop();
@@ -6810,9 +6816,6 @@ IonBuilder::jsop_in()
 bool
 IonBuilder::jsop_in_dense()
 {
-    if (oracle->arrayPrototypeHasIndexedProperty())
-        return abort("JSOP_IN Array proto has indexed properties");
-
     bool needsHoleCheck = !oracle->inArrayIsPacked(script(), pc);
 
     MDefinition *obj = current->pop();

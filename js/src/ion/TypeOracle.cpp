@@ -263,9 +263,9 @@ TypeInferenceOracle::propertyReadAccessGetter(UnrootedScript script, jsbytecode 
 }
 
 bool
-TypeInferenceOracle::inObjectIsDenseArray(HandleScript script, jsbytecode *pc)
+TypeInferenceOracle::inObjectIsDenseNativeWithoutExtraIndexedProperties(HandleScript script, jsbytecode *pc)
 {
-    // Check whether the object is a dense array and index is int32 or double.
+    // Check whether the object is a native and index is int32 or double.
     StackTypeSet *id = script->analysis()->poppedTypes(pc, 1);
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 0);
 
@@ -273,7 +273,11 @@ TypeInferenceOracle::inObjectIsDenseArray(HandleScript script, jsbytecode *pc)
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
-    return obj->getKnownClass() == &ArrayClass;
+    Class *clasp = obj->getKnownClass();
+    if (!clasp || !clasp->isNative())
+        return false;
+
+    return !types::TypeCanHaveExtraIndexedProperties(cx, obj);
 }
 
 bool
@@ -284,7 +288,7 @@ TypeInferenceOracle::inArrayIsPacked(UnrootedScript script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::elementReadIsDenseArray(RawScript script, jsbytecode *pc)
+TypeInferenceOracle::elementReadIsDenseNative(RawScript script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
@@ -294,11 +298,8 @@ TypeInferenceOracle::elementReadIsDenseArray(RawScript script, jsbytecode *pc)
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
-    if (obj->getKnownClass() != &ArrayClass)
-        return false;
-
-    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
-                                types::OBJECT_FLAG_LENGTH_OVERFLOW);
+    Class *clasp = obj->getKnownClass();
+    return clasp && clasp->isNative();
 }
 
 bool
@@ -359,6 +360,13 @@ TypeInferenceOracle::elementReadIsString(UnrootedScript script, jsbytecode *pc)
 }
 
 bool
+TypeInferenceOracle::elementReadHasExtraIndexedProperty(UnrootedScript script, jsbytecode *pc)
+{
+    StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
+    return types::TypeCanHaveExtraIndexedProperties(cx, obj);
+}
+
+bool
 TypeInferenceOracle::elementReadIsPacked(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *types = script->analysis()->poppedTypes(pc, 1);
@@ -386,7 +394,7 @@ TypeInferenceOracle::elementReadGeneric(UnrootedScript script, jsbytecode *pc, b
 }
 
 bool
-TypeInferenceOracle::elementWriteIsDenseArray(HandleScript script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteIsDenseNative(HandleScript script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
@@ -396,11 +404,8 @@ TypeInferenceOracle::elementWriteIsDenseArray(HandleScript script, jsbytecode *p
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
-    if (obj->getKnownClass() != &ArrayClass)
-        return false;
-
-    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
-                                types::OBJECT_FLAG_LENGTH_OVERFLOW);
+    Class *clasp = obj->getKnownClass();
+    return clasp && clasp->isNative();
 }
 
 bool
@@ -419,6 +424,17 @@ TypeInferenceOracle::elementWriteIsTypedArray(RawScript script, jsbytecode *pc, 
         return false;
 
     return true;
+}
+
+bool
+TypeInferenceOracle::elementWriteHasExtraIndexedProperty(UnrootedScript script, jsbytecode *pc)
+{
+    StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
+
+    if (obj->hasObjectFlags(cx, types::OBJECT_FLAG_LENGTH_OVERFLOW))
+        return true;
+
+    return types::TypeCanHaveExtraIndexedProperties(cx, obj);
 }
 
 bool
@@ -446,6 +462,9 @@ TypeInferenceOracle::elementWrite(UnrootedScript script, jsbytecode *pc)
             return MIRType_None;
 
         if (TypeObject *object = objTypes->getTypeObject(i)) {
+            if (object->unknownProperties())
+                return MIRType_None;
+
             types::HeapTypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
             if (!elementTypes)
                 return MIRType_None;
@@ -462,13 +481,6 @@ TypeInferenceOracle::elementWrite(UnrootedScript script, jsbytecode *pc)
     }
 
     return elementType;
-}
-
-bool
-TypeInferenceOracle::arrayPrototypeHasIndexedProperty()
-{
-    RootedScript scriptRoot(cx, script());
-    return ArrayPrototypeHasIndexedProperty(cx, scriptRoot);
 }
 
 bool
