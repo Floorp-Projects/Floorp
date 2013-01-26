@@ -29,8 +29,6 @@ public class SiteIdentityPopup extends PopupWindow {
     public static final String VERIFIED = "verified";
     public static final String IDENTIFIED = "identified";
 
-    private static SiteIdentityPopup sInstance;
-
     private Resources mResources;
     private boolean mInflated;
 
@@ -50,15 +48,12 @@ public class SiteIdentityPopup extends PopupWindow {
         mInflated = false;
     }
 
-    public static synchronized SiteIdentityPopup getInstance() {
-        if (sInstance == null) {
-            sInstance = new SiteIdentityPopup();
-        }
-        return sInstance;
+    private static class InstanceHolder {
+        private static final SiteIdentityPopup INSTANCE = new SiteIdentityPopup();
     }
 
-    public static synchronized void clearInstance() {
-        sInstance = null;
+    public static SiteIdentityPopup getInstance() {
+       return SiteIdentityPopup.InstanceHolder.INSTANCE;
     }
 
     private void init() {

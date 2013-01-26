@@ -20,7 +20,6 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.CharacterStyle;
 import android.util.Log;
-import android.view.View;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -78,10 +77,9 @@ final class GeckoEditable
     private final SpannableStringBuilder mText;
     private final SpannableStringBuilder mChangedText;
     private final Editable mProxy;
+    private final GeckoEditableListener mListener;
     private final ActionQueue mActionQueue;
 
-    private View mCurrentView;
-    private GeckoEditableListener mListener;
     private int mSavedSelectionStart;
     private volatile int mGeckoUpdateSeqno;
     private int mUIUpdateSeqno;
@@ -258,8 +256,8 @@ final class GeckoEditable
                 Editable.class.getClassLoader(),
                 PROXY_INTERFACES, this);
 
-        mCurrentView = GeckoApp.mAppContext.getLayerView();
-        mListener = GeckoInputConnection.create(mCurrentView, this);
+        LayerView v = GeckoApp.mAppContext.getLayerView();
+        mListener = GeckoInputConnection.create(v, this);
     }
 
     private static void geckoPostToUI(Runnable runnable) {
@@ -547,8 +545,10 @@ final class GeckoEditable
     @Override
     public void notifyIMEEnabled(final int state, final String typeHint,
                           final String modeHint, final String actionHint) {
-        // Because we want to be able to bind GeckoEditable to the newest LayerView instance,
-        // this can be called from the Java UI thread in addition to the Gecko thread.
+        if (DEBUG) {
+            // GeckoEditableListener methods should all be called from the Gecko thread
+            GeckoApp.assertOnGeckoThread();
+        }
         geckoPostToUI(new Runnable() {
             public void run() {
                 // Make sure there are no other things going on
@@ -558,13 +558,10 @@ final class GeckoEditable
                 // InputConnectionHandler.onCreateInputConnection
                 LayerView v = GeckoApp.mAppContext.getLayerView();
                 if (v != null) {
-                    if (v != mCurrentView) {
-                        mCurrentView = v;
-                        mListener = GeckoInputConnection.create(v, GeckoEditable.this);
-                        v.setInputConnectionHandler((InputConnectionHandler)mListener);
-                    }
-                    mListener.notifyIMEEnabled(state, typeHint, modeHint, actionHint);
+                    v.setInputConnectionHandler((InputConnectionHandler)mListener);
                 }
+                mListener.notifyIMEEnabled(state, typeHint,
+                                           modeHint, actionHint);
             }
         });
     }
