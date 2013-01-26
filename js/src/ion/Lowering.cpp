@@ -1655,6 +1655,8 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
       case MIRType_Value:
       {
         LInstruction *lir = new LStoreElementV(elements, index);
+        if (ins->fallible() && !assignSnapshot(lir))
+            return false;
         if (!useBox(lir, LStoreElementV::Value, ins->value()))
             return false;
         return add(lir, ins);
@@ -1663,7 +1665,10 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
       default:
       {
         const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-        return add(new LStoreElementT(elements, index, value), ins);
+        LInstruction *lir = new LStoreElementT(elements, index, value);
+        if (ins->fallible() && !assignSnapshot(lir))
+            return false;
+        return add(lir, ins);
       }
     }
 }

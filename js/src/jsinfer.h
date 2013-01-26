@@ -592,6 +592,9 @@ class StackTypeSet : public TypeSet
     /* Get the class shared by all objects in this set, or NULL. */
     Class *getKnownClass();
 
+    /* Get the prototype shared by all objects in this set, or NULL. */
+    JSObject *getCommonPrototype();
+
     /* Get the typed array type of all objects in this set, or TypedArray::TYPE_MAX. */
     int getTypedArrayType();
 
@@ -1100,6 +1103,10 @@ UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, JSProt
  */
 bool
 ArrayPrototypeHasIndexedProperty(JSContext *cx, HandleScript script);
+
+/* Whether obj or any of its prototypes have an indexed property. */
+bool
+TypeCanHaveExtraIndexedProperties(JSContext *cx, StackTypeSet *types);
 
 /*
  * Type information about a callsite. this is separated from the bytecode
