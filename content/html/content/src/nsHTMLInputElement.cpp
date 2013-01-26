@@ -1501,9 +1501,12 @@ nsHTMLInputElement::GetStepBase() const
 
   // If @min is not a double, we should use @value.
   nsAutoString valueStr;
-  if (GetAttr(kNameSpaceID_None, nsGkAtoms::value, valueStr) &&
-      ConvertStringToNumber(valueStr, stepBase)) {
-    return stepBase;
+  if (GetAttr(kNameSpaceID_None, nsGkAtoms::value, valueStr)) {
+    nsresult ec;
+    stepBase = valueStr.ToDouble(&ec);
+    if (NS_SUCCEEDED(ec)) {
+      return stepBase;
+    }
   }
 
   return kDefaultStepBase;
