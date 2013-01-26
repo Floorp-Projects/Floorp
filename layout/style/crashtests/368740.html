@@ -1,0 +1,25 @@
+<html>
+<head>
+<title>Testcase bug - Crash [@ nsIFrame::IsThemed] when trying to get the computed style of a button in iframe</title>
+
+<style>
+iframe {
+width: 800px;
+height: 400px;
+}
+</style>
+</head>
+<body>
+This page should not crash Mozilla<br>
+<iframe id="content" src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3C/head%3E%3Cbody%3E%0A%3Cbutton%3E%3C/button%3E%0A%3C/body%3E%3C/html%3E"></iframe>
+
+<script>
+function getComputedStyles(){
+var x=document.getElementById('content').contentDocument.getElementsByTagName('button')[0];
+var style = document.defaultView.getComputedStyle(x, null).getPropertyValue('border-left-width');
+}
+setTimeout(getComputedStyles,300);
+</script>
+
+</body>
+</html>
