@@ -1,0 +1,23 @@
+<html><head>
+<title>Testcase bug - Crash [@ nsBoxFrame::BuildDisplayListForChildren] with tree stuff in iframe toggling display</title>
+</head>
+<body>
+<iframe src="data:application/vnd.mozilla.xul+xml;charset=utf-8,%3Cwindow%20xmlns%3D%22http%3A//www.mozilla.org/keymaster/gatekeeper/there.is.only.xul%22%3E%0A%20%20%3Ctree%20style%3D%22display%3A%20block%3B%20position%3A%20absolute%3B%22%3E%0A%20%20%20%20%3Ctree%20style%3D%22display%3A%20table%3B%22%3E%0A%20%20%20%20%20%20%3Ctreeseparator%20style%3D%22display%3A%20block%3B%20position%3A%20absolute%3B%22%3E%0A%20%20%20%20%20%20%20%20%3Ctreechildren%20style%3D%22display%3A%20block%3B%22/%3E%0A%20%20%20%20%20%20%3C/treeseparator%3E%0A%20%20%20%20%20%20%3Ctreechildren%20style%3D%22display%3A%20none%3B%22/%3E%0A%20%20%20%20%3C/tree%3E%0A%20%20%3C/tree%3E%0A%3C/window%3E" id="content"></iframe>
+
+<script>
+function toggleIframe(){
+var x=document.getElementById('content');
+x.style.display = x.style.display == 'none' ? x.style.display = 'block' : x.style.display = 'none';
+setTimeout(toggleIframe,200);
+}
+setTimeout(toggleIframe,500);
+
+function removestyles(i){
+window.frames[0].document.getElementsByTagName('*')[1].removeAttribute('style');
+}
+
+setTimeout(removestyles,500,1);
+/*template*/
+</script>
+</body>
+</html>
