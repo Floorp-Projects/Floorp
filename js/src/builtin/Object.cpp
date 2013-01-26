@@ -72,7 +72,7 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 1. */
     RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.length() ? args[0] : UndefinedValue(), &id))
         return false;
 
     /* Step 2. */
@@ -183,7 +183,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
         }
 
         /* Convert id to a linear string. */
-        RawString s = ToString(cx, IdToValue(id));
+        RawString s = ToString<CanGC>(cx, IdToValue(id));
         if (!s)
             return false;
         Rooted<JSLinearString*> idstr(cx, s->ensureLinear(cx));
@@ -382,7 +382,7 @@ DefineAccessor(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RootedId id(cx);
-    if (!ValueToId(cx, args[0], &id))
+    if (!ValueToId<CanGC>(cx, args[0], &id))
         return false;
 
     RootedObject descObj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
@@ -434,7 +434,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.length() ? args[0] : UndefinedValue(), &id))
         return JS_FALSE;
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
@@ -470,7 +470,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.length() ? args[0] : UndefinedValue(), &id))
         return JS_FALSE;
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
@@ -575,7 +575,7 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedId propid(cx);
-    if (!ValueToId(cx, args[0], &propid))
+    if (!ValueToId<CanGC>(cx, args[0], &propid))
         return false;
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
@@ -603,7 +603,7 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setUndefined();
     RootedId id(cx);
     if (argc != 0) {
-        if (!ValueToId(cx, args[0], &id))
+        if (!ValueToId<CanGC>(cx, args[0], &id))
             return false;
     } else {
         id = JSID_VOID;
@@ -619,9 +619,24 @@ obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    Value idValue = args.length() ? args[0] : UndefinedValue();
+
+    /* Step 1, 2. */
+    jsid id;
+    if (args.thisv().isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
+        JSObject *obj = &args.thisv().toObject(), *obj2;
+        Shape *prop;
+        if (!obj->isProxy() &&
+            HasOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id, &obj2, &prop))
+        {
+            args.rval().setBoolean(!!prop);
+            return true;
+        }
+    }
+
     /* Step 1. */
-    RootedId id(cx);
-    if (!ValueToId(cx, args.length() ? args[0] : UndefinedValue(), &id))
+    RootedId idRoot(cx);
+    if (!ValueToId<CanGC>(cx, idValue, &idRoot))
         return false;
 
     /* Step 2. */
@@ -634,14 +649,14 @@ obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
     RootedShape prop(cx);
     if (obj->isProxy()) {
         bool has;
-        if (!Proxy::hasOwn(cx, obj, id, &has))
+        if (!Proxy::hasOwn(cx, obj, idRoot, &has))
             return false;
         args.rval().setBoolean(has);
         return true;
     }
 
     /* Step 3. */
-    if (!js_HasOwnProperty(cx, obj->getOps()->lookupGeneric, obj, id, &obj2, &prop))
+    if (!HasOwnProperty<CanGC>(cx, obj->getOps()->lookupGeneric, obj, idRoot, &obj2, &prop))
         return false;
     /* Step 4,5. */
     args.rval().setBoolean(!!prop);
@@ -739,7 +754,7 @@ obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyDescriptor", &obj))
         return JS_FALSE;
     RootedId id(cx);
-    if (!ValueToId(cx, args.length() > 1 ? args[1] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.length() > 1 ? args[1] : UndefinedValue(), &id))
         return JS_FALSE;
     return GetOwnPropertyDescriptor(cx, obj, id, args.rval());
 }
@@ -827,7 +842,7 @@ obj_defineProperty(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedId id(cx);
-    if (!ValueToId(cx, argc >= 2 ? vp[3] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, argc >= 2 ? vp[3] : UndefinedValue(), &id))
         return JS_FALSE;
 
     const Value descval = argc >= 3 ? vp[4] : UndefinedValue();

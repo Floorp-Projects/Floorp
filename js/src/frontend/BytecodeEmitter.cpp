@@ -3745,7 +3745,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
                 RootedId id(cx);
                 if (idvalue.isInt32() && INT_FITS_IN_JSID(idvalue.toInt32()))
                     id = INT_TO_JSID(idvalue.toInt32());
-                else if (!InternNonIntElementId(cx, obj, idvalue, &id))
+                else if (!InternNonIntElementId<CanGC>(cx, obj, idvalue, &id))
                     return false;
                 if (!JSObject::defineGeneric(cx, obj, id, value, NULL, NULL, JSPROP_ENUMERATE))
                     return false;

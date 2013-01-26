@@ -1756,7 +1756,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, unsigned tableLength,
                         return JS_FALSE;
                     str = NULL;
                 } else {
-                    str = ToString(cx, key);
+                    str = ToString<CanGC>(cx, key);
                     if (!str)
                         return JS_FALSE;
                 }

@@ -423,7 +423,7 @@ class SetPropCompiler : public PICStubCompiler
             jsbytecode *pc;
             RootedScript script(cx, cx->stack.currentScript(&pc));
 
-            if (!JSScript::ensureRanInference(cx, script) || monitor.recompiled())
+            if (!script->ensureRanInference(cx) || monitor.recompiled())
                 return false;
 
             JS_ASSERT(*pc == JSOP_SETPROP || *pc == JSOP_SETNAME);
@@ -2650,7 +2650,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (idval.isInt32() && INT_FITS_IN_JSID(idval.toInt32())) {
         id = INT_TO_JSID(idval.toInt32());
     } else {
-        if (!InternNonIntElementId(cx, obj, idval, &id))
+        if (!InternNonIntElementId<CanGC>(cx, obj, idval, &id))
             THROW();
     }
 

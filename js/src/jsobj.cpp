@@ -137,16 +137,28 @@ js::InformalValueTypeName(const Value &v)
     return "value";
 }
 
+template <AllowGC allowGC>
 JSBool
-js_HasOwnProperty(JSContext *cx, LookupGenericOp lookup, HandleObject obj, HandleId id,
-                  MutableHandleObject objp, MutableHandleShape propp)
+js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
+                   typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+                   typename MaybeRooted<jsid, allowGC>::HandleType id,
+                   typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+                   typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
     JSAutoResolveFlags rf(cx, 0);
     if (lookup) {
-        if (!lookup(cx, obj, id, objp, propp))
+        if (!allowGC)
             return false;
+        if (!lookup(cx,
+                    MaybeRooted<JSObject*, allowGC>::toHandle(obj),
+                    MaybeRooted<jsid, allowGC>::toHandle(id),
+                    MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                    MaybeRooted<Shape*, allowGC>::toMutableHandle(propp)))
+        {
+            return false;
+        }
     } else {
-        if (!baseops::LookupProperty<CanGC>(cx, obj, id, objp, propp))
+        if (!baseops::LookupProperty<allowGC>(cx, obj, id, objp, propp))
             return false;
     }
     if (!propp)
@@ -157,7 +169,9 @@ js_HasOwnProperty(JSContext *cx, LookupGenericOp lookup, HandleObject obj, Handl
 
     JSObject *outer = NULL;
     if (JSObjectOp op = objp->getClass()->ext.outerObject) {
-        Rooted<JSObject*> inner(cx, objp);
+        if (!allowGC)
+            return false;
+        RootedObject inner(cx, objp);
         outer = op(cx, inner);
         if (!outer)
             return false;
@@ -167,6 +181,16 @@ js_HasOwnProperty(JSContext *cx, LookupGenericOp lookup, HandleObject obj, Handl
         propp.set(NULL);
     return true;
 }
+
+template JSBool
+js::HasOwnProperty<CanGC>(JSContext *cx, LookupGenericOp lookup,
+                          HandleObject obj, HandleId id,
+                          MutableHandleObject objp, MutableHandleShape propp);
+
+template JSBool
+js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
+                         JSObject *obj, jsid id,
+                         FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
 
 bool
 js::NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc,
@@ -263,7 +287,7 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 
     RootedObject pobj(cx);
     RootedShape shape(cx);
-    if (!js_HasOwnProperty(cx, obj->getOps()->lookupGeneric, obj, id, &pobj, &shape))
+    if (!HasOwnProperty<CanGC>(cx, obj->getOps()->lookupGeneric, obj, id, &pobj, &shape))
         return false;
     if (!shape) {
         desc->obj = NULL;
@@ -582,7 +606,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
     RootedShape shape(cx);
     RootedObject obj2(cx);
     JS_ASSERT(!obj->getOps()->lookupGeneric);
-    if (!js_HasOwnProperty(cx, NULL, obj, id, &obj2, &shape))
+    if (!HasOwnProperty<CanGC>(cx, NULL, obj, id, &obj2, &shape))
         return JS_FALSE;
 
     JS_ASSERT(!obj->getOps()->defineProperty);
@@ -3045,6 +3069,14 @@ static inline bool
 CallAddPropertyHookDense(JSContext *cx, Class *clasp, HandleObject obj, uint32_t index,
                          HandleValue nominal)
 {
+    /* Inline addProperty for array objects. */
+    if (obj->isArray()) {
+        uint32_t length = obj->getArrayLength();
+        if (index >= length)
+            JSObject::setArrayLength(cx, obj, index + 1);
+        return true;
+    }
+
     if (clasp->addProperty != JS_PropertyStub) {
         /* Make a local copy of value so addProperty can mutate its inout parameter. */
         RootedValue value(cx, nominal);

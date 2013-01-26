@@ -10,13 +10,6 @@
 
 #include "StringObject.h"
 
-inline js::StringObject &
-JSObject::asString()
-{
-    JS_ASSERT(isString());
-    return *static_cast<js::StringObject *>(this);
-}
-
 namespace js {
 
 inline bool
