@@ -19,9 +19,10 @@
 #include "ion/IonInstrumentation.h"
 #include "ion/TypeOracle.h"
 
-#include "jsscope.h"
 #include "jstypedarray.h"
 #include "jscompartment.h"
+
+#include "vm/Shape.h"
 
 namespace js {
 namespace ion {

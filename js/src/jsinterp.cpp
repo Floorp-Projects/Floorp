@@ -36,13 +36,13 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jspropertycache.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
 #include "builtin/Eval.h"
 #include "gc/Marking.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
@@ -58,11 +58,11 @@
 #include "jsopcodeinlines.h"
 #include "jsprobes.h"
 #include "jspropertycacheinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 
 #include "builtin/Iterator-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 

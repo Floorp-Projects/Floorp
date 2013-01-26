@@ -20,7 +20,6 @@
 #include "jsprobes.h"
 #include "jspropertytree.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 #include "jsstr.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
@@ -35,6 +34,7 @@
 #include "js/TemplateLib.h"
 #include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/Shape.h"
 #include "vm/NumberObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringObject.h"
@@ -44,12 +44,12 @@
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 
 #include "vm/ObjectImpl-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/String-inl.h"
 

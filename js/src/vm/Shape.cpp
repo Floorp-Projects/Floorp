@@ -22,16 +22,17 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
-#include "jsscope.h"
 #include "jsstr.h"
 
 #include "js/HashTable.h"
 #include "js/MemoryMetrics.h"
+#include "vm/Shape.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
+
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::gc;

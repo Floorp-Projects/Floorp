@@ -27,7 +27,6 @@
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsautooplen.h"        // generated headers last
 
@@ -37,14 +36,15 @@
 #include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
 #include "vm/RegExpObject.h"
+#include "vm/Shape.h"
 
 #include "jsatominlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
 #include "frontend/SharedContext-inl.h"
+#include "vm/Shape-inl.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK_LENGTH  1024    /* initial bytecode chunk length */

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsscopeinlines_h___
-#define jsscopeinlines_h___
+#ifndef Shape_inl_h__
+#define Shape_inl_h__
 
 #include "mozilla/DebugOnly.h"
 
@@ -15,11 +15,11 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jsscope.h"
 
 #include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ScopeObject.h"
+#include "vm/Shape-inl.h"
 #include "vm/StringObject.h"
 
 #include "jscntxtinlines.h"
@@ -528,4 +528,4 @@ GetShapeAttributes(HandleShape shape)
 
 } /* namespace js */
 
-#endif /* jsscopeinlines_h___ */
+#endif /* Shape_inl_h__ */

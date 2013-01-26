@@ -19,7 +19,6 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jscntxt.h"
-#include "jsscope.h"
 #include "jsstr.h"
 #include "jsiter.h"
 #include "jsworkers.h"
@@ -33,6 +32,7 @@
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
+#include "vm/Shape.h"
 #ifdef JS_METHODJIT
 # include "assembler/assembler/MacroAssembler.h"
 #endif
