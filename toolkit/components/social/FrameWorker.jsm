@@ -220,7 +220,7 @@ FrameWorker.prototype = {
       }
       catch (e) {
         Cu.reportError("FrameWorker: Error setting up event listener for chrome side of the worker: " + e + "\n" + e.stack);
-        notifyWorkerError();
+        notifyWorkerError(worker);
         return;
       }
 
