@@ -52,6 +52,13 @@ function do_run_test() {
   do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 4);
   do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
+  // cleanse them
+  do_close_profile(test_generator, "shutdown-cleanse");
+  yield;
+  do_load_profile();
+  do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 0);
+  do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
+
   // test with third party cookies for session only.
   Services.prefs.setBoolPref("network.cookie.thirdparty.sessionOnly", true);
   do_set_cookies(uri1, channel2, false, [1, 2, 3, 4]);
