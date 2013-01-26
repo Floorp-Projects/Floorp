@@ -9,7 +9,6 @@
 #include "mozilla/FloatingPoint.h"
 
 #include "jscntxt.h"
-#include "jsscope.h"
 #include "jsobj.h"
 #include "jslibmath.h"
 #include "jsiter.h"
@@ -22,6 +21,7 @@
 #include "gc/Marking.h"
 #include "vm/Debugger.h"
 #include "vm/NumericConversions.h"
+#include "vm/Shape.h"
 #include "vm/String.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -34,12 +34,12 @@
 #include "jsinterpinlines.h"
 #include "jsnuminlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jstypedarray.h"
 
 #include "StubCalls-inl.h"
 #include "vm/RegExpObject-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 
 #ifdef JS_ION

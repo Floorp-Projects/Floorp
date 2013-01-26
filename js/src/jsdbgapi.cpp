@@ -26,7 +26,6 @@
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jswatchpoint.h"
@@ -36,14 +35,15 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsinterpinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/Shape-inl.h"
 #include "vm/Stack-inl.h"
 
 #include "jsautooplen.h"

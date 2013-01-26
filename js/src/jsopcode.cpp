@@ -33,7 +33,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
@@ -42,6 +41,7 @@
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jscntxtinlines.h"

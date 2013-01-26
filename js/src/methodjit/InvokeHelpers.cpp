@@ -9,7 +9,6 @@
 
 #include "jsanalyze.h"
 #include "jscntxt.h"
-#include "jsscope.h"
 #include "jsobj.h"
 #include "jslibmath.h"
 #include "jsiter.h"
@@ -26,15 +25,17 @@
 #include "methodjit/BaseCompiler.h"
 #include "methodjit/ICRepatcher.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 
 #include "jsinterpinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
 
 #include "StubCalls-inl.h"
+
+#include "vm/Shape-inl.h"
 
 #include "jsautooplen.h"
 

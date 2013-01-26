@@ -13,12 +13,12 @@
 #include "jsfun.h"
 #include "jsopcode.h"
 #include "jsscript.h"
-#include "jsscope.h"
 
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
+#include "vm/Shape.h"
 
-#include "jsscopeinlines.h"
+#include "vm/Shape-inl.h"
 
 namespace js {
 

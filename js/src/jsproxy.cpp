@@ -13,9 +13,9 @@
 #include "jsprvtd.h"
 #include "jsnum.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 
 #include "gc/Marking.h"
+#include "vm/Shape.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"

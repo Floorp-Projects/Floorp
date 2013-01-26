@@ -25,7 +25,6 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 
 #include "gc/Marking.h"
@@ -36,6 +35,7 @@
 #include "ion/IonCode.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 #include "vm/Xdr.h"
 
 #include "jsinferinlines.h"

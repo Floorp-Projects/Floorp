@@ -28,7 +28,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 #include "jsscript.h"
 
 #if JS_HAS_XML_SUPPORT
@@ -36,11 +35,11 @@
 #endif
 
 #include "builtin/ParallelArray.h"
-
 #include "ds/Sort.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
+#include "vm/Shape.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"

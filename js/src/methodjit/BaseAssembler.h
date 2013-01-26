@@ -19,8 +19,9 @@
 #include "methodjit/MachineRegs.h"
 #include "CodeGenIncludes.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 #include "jstypedarrayinlines.h"
+
+#include "vm/Shape-inl.h"
 
 using mozilla::DebugOnly;
 

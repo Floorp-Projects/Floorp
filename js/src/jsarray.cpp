@@ -30,7 +30,6 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
-#include "jsscope.h"
 #include "jswrapper.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/StubCalls.h"
@@ -40,6 +39,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 #include "vm/NumericConversions.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/ThreadPool.h"
 
@@ -49,11 +49,11 @@
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 #include "jsstrinlines.h"
 
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ObjectImpl-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

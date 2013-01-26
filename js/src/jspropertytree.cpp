@@ -10,11 +10,13 @@
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jspropertytree.h"
-#include "jsscope.h"
+
+#include "vm/Shape.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
+
+#include "vm/Shape-inl.h"
 
 using namespace js;
 

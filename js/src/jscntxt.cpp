@@ -43,7 +43,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jspubtd.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsworkers.h"
@@ -61,6 +60,7 @@
 #include "js/MemoryMetrics.h"
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
+#include "vm/Shape.h"
 #include "yarr/BumpPointerAllocator.h"
 
 #include "jsatominlines.h"
