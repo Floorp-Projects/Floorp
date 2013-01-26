@@ -2038,6 +2038,37 @@ StackTypeSet::isDOMClass()
 }
 
 JSObject *
+StackTypeSet::getCommonPrototype()
+{
+    if (unknownObject())
+        return NULL;
+
+    JSObject *proto = NULL;
+    unsigned count = getObjectCount();
+
+    for (unsigned i = 0; i < count; i++) {
+        TaggedProto nproto;
+        if (RawObject object = getSingleObject(i))
+            nproto = object->getProto();
+        else if (TypeObject *object = getTypeObject(i))
+            nproto = object->proto.get();
+        else
+            continue;
+
+        if (proto) {
+            if (nproto != proto)
+                return NULL;
+        } else {
+            if (!nproto.isObject())
+                return NULL;
+            proto = nproto.toObject();
+        }
+    }
+
+    return proto;
+}
+
+JSObject *
 StackTypeSet::getSingleton()
 {
     if (baseFlags() != 0 || baseObjectCount() != 1)
@@ -2483,27 +2514,60 @@ types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc,
     return !script->analysis()->getCode(pc).inLoop;
 }
 
+static inline bool
+ClassCanHaveExtraProperties(Class *clasp)
+{
+    JS_ASSERT(clasp->resolve);
+    return clasp->resolve != JS_ResolveStub || clasp->ops.lookupGeneric || clasp->ops.getGeneric;
+}
+
+static inline bool
+PrototypeHasIndexedProperty(JSContext *cx, JSObject *obj)
+{
+    do {
+        TypeObject *type = obj->getType(cx);
+        if (ClassCanHaveExtraProperties(type->clasp))
+            return true;
+        if (type->unknownProperties())
+            return true;
+        HeapTypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
+        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
+            return true;
+        obj = obj->getProto();
+    } while (obj);
+
+    return false;
+}
+
 bool
 types::ArrayPrototypeHasIndexedProperty(JSContext *cx, HandleScript script)
 {
     if (!cx->typeInferenceEnabled() || !script->compileAndGo)
         return true;
 
-    RootedObject proto(cx, script->global().getOrCreateArrayPrototype(cx));
+    JSObject *proto = script->global().getOrCreateArrayPrototype(cx);
     if (!proto)
         return true;
 
-    do {
-        TypeObject *type = proto->getType(cx);
-        if (type->unknownProperties())
-            return true;
-        HeapTypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
-        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
-            return true;
-        proto = proto->getProto();
-    } while (proto);
+    return PrototypeHasIndexedProperty(cx, proto);
+}
 
-    return false;
+bool
+types::TypeCanHaveExtraIndexedProperties(JSContext *cx, StackTypeSet *types)
+{
+    Class *clasp = types->getKnownClass();
+
+    if (!clasp || ClassCanHaveExtraProperties(clasp))
+        return true;
+
+    if (types->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES))
+        return true;
+
+    JSObject *proto = types->getCommonPrototype();
+    if (!proto)
+        return true;
+
+    return PrototypeHasIndexedProperty(cx, proto);
 }
 
 bool

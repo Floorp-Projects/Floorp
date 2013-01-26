@@ -253,6 +253,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     // be tested in the first place.)
     void testObjectTruthy(Register objreg, Label *ifTruthy, Label *ifFalsy, Register scratch,
                           OutOfLineTestObject *ool);
+
+    // Bailout if an element about to be written to is a hole.
+    bool emitStoreHoleCheck(Register elements, const LAllocation *index, LSnapshot *snapshot);
 };
 
 } // namespace ion
