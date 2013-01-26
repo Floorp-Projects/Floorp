@@ -1,0 +1,42 @@
+<html><head>
+<title>Testcase bug 350370 - Crash [@ nsStyleContext::FindChildWithRules] with ::first-line, appending rows and table-cells, etc</title>
+<style>
+#b td::first-line { font-size:110%;}
+nobr::first-line { font-size:110%;}
+
+#b td::after { content:"anonymous text"; }
+nobr::after{ content:"anonymous text"; }
+
+#b::before { content:"before text";}
+#b td::before { content:"before text";}
+</style>
+</head>
+<body>
+<table style="display: table-row;"></table><nobr style="display: list-item; -moz-column-count: 2;">
+<table id="b" style="display: inline;"></table>
+</nobr>
+<br>
+This page should not crash Mozilla
+<script>
+function doe(){
+   var td = document.createElement('td');;
+   td.setAttribute('height', '50%');
+   var tr = document.createElement('tr');;
+   tr.setAttribute('height', '50%');
+   tr.appendChild(td);
+   document.getElementsByTagName('table')[1].appendChild(tr);
+   document.body.offsetHeight;
+
+   var td = document.createElement('td');;
+   td.setAttribute('height', '50%');
+   document.getElementsByTagName('tr')[0].appendChild(td); 
+   document.body.offsetHeight;
+
+   var td = document.createElement('td');;
+   td.setAttribute('height', '50%');
+   document.getElementsByTagName('tr')[0].appendChild(td); 
+} 
+setTimeout(doe, 60);
+</script>
+</body>
+</html>
