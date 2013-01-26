@@ -463,8 +463,8 @@ JSContext::findVersion() const
     if (hasVersionOverride)
         return versionOverride;
 
-    if (stack.hasfp())
-        return fp()->script()->getVersion();
+    if (JSScript *script = stack.currentScript(NULL, js::ContextStack::ALLOW_CROSS_COMPARTMENT))
+        return script->getVersion();
 
     return defaultVersion;
 }
