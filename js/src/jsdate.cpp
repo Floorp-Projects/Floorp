@@ -397,8 +397,8 @@ DaylightSavingTA(double t, DateTimeInfo *dtInfo)
         t = MakeDate(day, TimeWithinDay(t));
     }
 
-    int64_t timeMilliseconds = static_cast<int64_t>(t);
-    int64_t offsetMilliseconds = dtInfo->getDSTOffsetMilliseconds(timeMilliseconds);
+    int64_t utcMilliseconds = static_cast<int64_t>(t);
+    int64_t offsetMilliseconds = dtInfo->getDSTOffsetMilliseconds(utcMilliseconds);
     return static_cast<double>(offsetMilliseconds);
 }
 

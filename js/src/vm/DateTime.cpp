@@ -161,10 +161,10 @@ js::DateTimeInfo::DateTimeInfo()
 }
 
 int64_t
-js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t localTimeSeconds)
+js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
 {
-    MOZ_ASSERT(localTimeSeconds >= 0);
-    MOZ_ASSERT(localTimeSeconds <= MaxUnixTimeT);
+    MOZ_ASSERT(utcSeconds >= 0);
+    MOZ_ASSERT(utcSeconds <= MaxUnixTimeT);
 
 #if defined(XP_WIN)
     // Windows does not follow POSIX. Updates to the TZ environment variable
@@ -174,12 +174,10 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t localTimeSeconds)
 #endif
 
     struct tm tm;
-    if (!ComputeLocalTime(static_cast<time_t>(localTimeSeconds), &tm))
+    if (!ComputeLocalTime(static_cast<time_t>(utcSeconds), &tm))
         return 0;
 
-    int32_t utcToLocalOffsetSeconds = UTCToLocalStandardOffsetSeconds();
-
-    int32_t dayoff = int32_t((localTimeSeconds + utcToLocalOffsetSeconds) % SecondsPerDay);
+    int32_t dayoff = int32_t((utcSeconds + UTCToLocalStandardOffsetSeconds()) % SecondsPerDay);
     int32_t tmoff = tm.tm_sec + (tm.tm_min * SecondsPerMinute) + (tm.tm_hour * SecondsPerHour);
 
     int32_t diff = tmoff - dayoff;
@@ -191,17 +189,17 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t localTimeSeconds)
 }
 
 int64_t
-js::DateTimeInfo::getDSTOffsetMilliseconds(int64_t localTimeMilliseconds)
+js::DateTimeInfo::getDSTOffsetMilliseconds(int64_t utcMilliseconds)
 {
     sanityCheck();
 
-    int64_t localTimeSeconds = localTimeMilliseconds / msPerSecond;
+    int64_t utcSeconds = utcMilliseconds / msPerSecond;
 
-    if (localTimeSeconds > MaxUnixTimeT) {
-        localTimeSeconds = MaxUnixTimeT;
-    } else if (localTimeSeconds < 0) {
+    if (utcSeconds > MaxUnixTimeT) {
+        utcSeconds = MaxUnixTimeT;
+    } else if (utcSeconds < 0) {
         /* Go ahead a day to make localtime work (does not work with 0). */
-        localTimeSeconds = SecondsPerDay;
+        utcSeconds = SecondsPerDay;
     }
 
     /*
@@ -210,64 +208,60 @@ js::DateTimeInfo::getDSTOffsetMilliseconds(int64_t localTimeMilliseconds)
      *     values, must result in a cache miss.
      */
 
-    if (rangeStartSeconds <= localTimeSeconds &&
-        localTimeSeconds <= rangeEndSeconds) {
+    if (rangeStartSeconds <= utcSeconds && utcSeconds <= rangeEndSeconds)
         return offsetMilliseconds;
-    }
 
-    if (oldRangeStartSeconds <= localTimeSeconds &&
-        localTimeSeconds <= oldRangeEndSeconds) {
+    if (oldRangeStartSeconds <= utcSeconds && utcSeconds <= oldRangeEndSeconds)
         return oldOffsetMilliseconds;
-    }
 
     oldOffsetMilliseconds = offsetMilliseconds;
     oldRangeStartSeconds = rangeStartSeconds;
     oldRangeEndSeconds = rangeEndSeconds;
 
-    if (rangeStartSeconds <= localTimeSeconds) {
+    if (rangeStartSeconds <= utcSeconds) {
         int64_t newEndSeconds = Min(rangeEndSeconds + RangeExpansionAmount, MaxUnixTimeT);
-        if (newEndSeconds >= localTimeSeconds) {
+        if (newEndSeconds >= utcSeconds) {
             int64_t endOffsetMilliseconds = computeDSTOffsetMilliseconds(newEndSeconds);
             if (endOffsetMilliseconds == offsetMilliseconds) {
                 rangeEndSeconds = newEndSeconds;
                 return offsetMilliseconds;
             }
 
-            offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
+            offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
             if (offsetMilliseconds == endOffsetMilliseconds) {
-                rangeStartSeconds = localTimeSeconds;
+                rangeStartSeconds = utcSeconds;
                 rangeEndSeconds = newEndSeconds;
             } else {
-                rangeEndSeconds = localTimeSeconds;
+                rangeEndSeconds = utcSeconds;
             }
             return offsetMilliseconds;
         }
 
-        offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
-        rangeStartSeconds = rangeEndSeconds = localTimeSeconds;
+        offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
+        rangeStartSeconds = rangeEndSeconds = utcSeconds;
         return offsetMilliseconds;
     }
 
     int64_t newStartSeconds = Max<int64_t>(rangeStartSeconds - RangeExpansionAmount, 0);
-    if (newStartSeconds <= localTimeSeconds) {
+    if (newStartSeconds <= utcSeconds) {
         int64_t startOffsetMilliseconds = computeDSTOffsetMilliseconds(newStartSeconds);
         if (startOffsetMilliseconds == offsetMilliseconds) {
             rangeStartSeconds = newStartSeconds;
             return offsetMilliseconds;
         }
 
-        offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
+        offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
         if (offsetMilliseconds == startOffsetMilliseconds) {
             rangeStartSeconds = newStartSeconds;
-            rangeEndSeconds = localTimeSeconds;
+            rangeEndSeconds = utcSeconds;
         } else {
-            rangeStartSeconds = localTimeSeconds;
+            rangeStartSeconds = utcSeconds;
         }
         return offsetMilliseconds;
     }
 
-    rangeStartSeconds = rangeEndSeconds = localTimeSeconds;
-    offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
+    rangeStartSeconds = rangeEndSeconds = utcSeconds;
+    offsetMilliseconds = computeDSTOffsetMilliseconds(utcSeconds);
     return offsetMilliseconds;
 }
 
