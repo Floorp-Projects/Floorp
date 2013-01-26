@@ -27,8 +27,6 @@ CPPSRCS = nsBrowserApp.cpp
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += BootAnimation.cpp
 LIBS += \
-  -lGLESv2 \
-  -lEGL \
   -lui \
   -lhardware_legacy \
   -lhardware \

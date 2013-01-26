@@ -219,7 +219,9 @@ CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, UnrootedScript script,
                     StaticBlockObject *maybeBlock, unsigned i);
 #endif
 
-class ion::BaselineFrame;
+namespace ion {
+    class BaselineFrame;
+}
 
 /* Pointer to either a StackFrame or a baseline JIT frame. */
 class AbstractFramePtr
@@ -242,6 +244,11 @@ class AbstractFramePtr
       : ptr_(uintptr_t(fp))
     {
         JS_ASSERT((uintptr_t(fp) & 1) == 0);
+    }
+
+    explicit AbstractFramePtr(JSAbstractFramePtr frame)
+        : ptr_(uintptr_t(frame.raw()))
+    {
     }
 
     bool isStackFrame() const {
@@ -288,6 +295,7 @@ class AbstractFramePtr
 
     inline UnrootedScript script() const;
     inline JSFunction *fun() const;
+    inline JSFunction *maybeFun() const;
     inline JSFunction *callee() const;
     inline Value calleev() const;
     inline Value &thisValue() const;
@@ -791,7 +799,7 @@ class StackFrame
      * All function frames have an associated interpreted JSFunction. The
      * function returned by fun() and maybeFun() is not necessarily the
      * original canonical function which the frame's script was compiled
-     * against. To get this function, use maybeScriptFunction().
+     * against.
      */
 
     JSFunction* fun() const {
@@ -801,15 +809,6 @@ class StackFrame
 
     JSFunction* maybeFun() const {
         return isFunctionFrame() ? fun() : NULL;
-    }
-
-    JSFunction* maybeScriptFunction() const {
-        if (!isFunctionFrame())
-            return NULL;
-        const StackFrame *fp = this;
-        while (fp->isEvalFrame())
-            fp = fp->prev();
-        return fp->script()->function();
     }
 
     /*
@@ -1252,8 +1251,8 @@ InitialFrameFlagsAreLowered(InitialFrameFlags initial)
     return !!(initial & INITIAL_LOWERED);
 }
 
-inline StackFrame *          Valueify(JSStackFrame *fp) { return (StackFrame *)fp; }
-static inline JSStackFrame * Jsvalify(StackFrame *fp)   { return (JSStackFrame *)fp; }
+inline AbstractFramePtr Valueify(JSAbstractFramePtr frame) { return AbstractFramePtr(frame); }
+static inline JSAbstractFramePtr Jsvalify(AbstractFramePtr frame)   { return JSAbstractFramePtr(frame.raw()); }
 
 /*****************************************************************************/
 
@@ -1909,6 +1908,7 @@ class StackIter
     };
 
     friend class ContextStack;
+    friend class ::JSBrokenFrameIterator;
   private:
     Data data_;
 #ifdef JS_ION
@@ -1971,7 +1971,13 @@ class StackIter
         return data_.state_ == ION;
     }
 
-    bool isIonOptimizedJS() const { return isIon() && data_.ionFrames_.isOptimizedJS(); }
+    bool isIonOptimizedJS() const {
+#ifdef JS_ION
+        return isIon() && data_.ionFrames_.isOptimizedJS();
+#else
+        return false;
+#endif
+}
 
     bool isNativeCall() const {
         JS_ASSERT(!done());
@@ -2086,7 +2092,13 @@ class AllFramesIter
     AllFramesIter& operator++();
 
     bool isIon() const { return state_ == ION; }
-    bool isIonOptimizedJS() const { return isIon() && ionFrames_.isOptimizedJS(); }
+    bool isIonOptimizedJS() const {
+#ifdef JS_ION
+        return isIon() && ionFrames_.isOptimizedJS();
+#else
+        return false;
+#endif
+    }
     StackFrame *interpFrame() const { JS_ASSERT(state_ == SCRIPTED); return fp_; }
     StackSegment *seg() const { return seg_; }
 

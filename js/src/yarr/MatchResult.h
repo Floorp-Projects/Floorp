@@ -55,7 +55,7 @@ struct MatchResult {
 
     static MatchResult failed()
     {
-        return MatchResult(WTF::notFound, 0);
+        return MatchResult(int(WTF::notFound), 0);
     }
 
     operator bool()

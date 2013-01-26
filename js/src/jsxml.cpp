@@ -383,7 +383,7 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
         }
         js_strncpy(chars + 1, strChars, length);
         chars[++length] = 0;
-        str = js_NewString(cx, chars, length);
+        str = js_NewString<CanGC>(cx, chars, length);
         if (!str) {
             js_free(chars);
             return NULL;
@@ -739,7 +739,7 @@ QNameHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
     } else if (argc < 0) {
         name = cx->names().undefined;
     } else {
-        name = ToAtom(cx, nameval);
+        name = ToAtom<CanGC>(cx, nameval);
         if (!name)
             return false;
     }
@@ -1234,7 +1234,7 @@ ParseNodeToQName(Parser *parser, ParseNode *pn,
             return NULL;
         }
 
-        localName = AtomizeChars(parser->context, colon + 1, length - (offset + 1));
+        localName = AtomizeChars<CanGC>(parser->context, colon + 1, length - (offset + 1));
         if (!localName)
             return NULL;
     } else {
@@ -1311,7 +1311,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn,
     JSXMLClass xml_class;
     int stackDummy;
 
-    if (!JS_CHECK_STACK_SIZE(cx->runtime->nativeStackLimit, &stackDummy)) {
+    if (!JS_CHECK_STACK_SIZE(cx->mainThread().nativeStackLimit, &stackDummy)) {
         parser->reportError(pn, JSMSG_OVER_RECURSED);
         return NULL;
     }
@@ -1473,7 +1473,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn,
                     /* 10.3.2.1. Step 6(h)(i)(1)(a). */
                     prefix = cx->runtime->emptyString;
                 } else {
-                    prefix = js_NewStringCopyN(cx, chars + 6, length - 6);
+                    prefix = js_NewStringCopyN<CanGC>(cx, chars + 6, length - 6);
                     if (!prefix)
                         goto fail;
                 }
@@ -2270,7 +2270,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
      * This is necessary for various log10 uses below to be valid.
      */
     if (decls->length == 0)
-        return js_NewStringCopyZ(cx, "a");
+        return js_NewStringCopyZ<CanGC>(cx, "a");
 
     /*
      * Try peeling off the last filename suffix or pathname component till
@@ -2352,7 +2352,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
         offset = cp - start;
         prefix = js_NewDependentString(cx, uri, offset, length);
     } else {
-        prefix = js_NewString(cx, bp, newlength);
+        prefix = js_NewString<CanGC>(cx, bp, newlength);
         if (!prefix)
             js_free(bp);
     }
@@ -2777,7 +2777,7 @@ ToAttributeName(JSContext *cx, jsval v)
 
     JSAtom *name;
     if (JSVAL_IS_STRING(v)) {
-        name = ToAtom(cx, v);
+        name = ToAtom<CanGC>(cx, v);
         if (!name)
             return NULL;
         uri = prefix = cx->runtime->emptyString;
@@ -2803,7 +2803,7 @@ ToAttributeName(JSContext *cx, jsval v)
             if (clasp == &AnyNameClass) {
                 name = cx->names().star;
             } else {
-                name = ToAtom(cx, v);
+                name = ToAtom<CanGC>(cx, v);
                 if (!name)
                     return NULL;
             }
@@ -2874,12 +2874,12 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
             name = cx->names().star;
             goto construct;
         }
-        name = ToStringSlow(cx, v);
+        name = ToStringSlow<CanGC>(cx, v);
         if (!name)
             return NULL;
     }
 
-    atomizedName = AtomizeString(cx, name);
+    atomizedName = AtomizeString<CanGC>(cx, name);
     if (!atomizedName)
         return NULL;
 
@@ -4588,7 +4588,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj_, jsid funid_, JSBool *found)
     Rooted<JSObject*> obj(cx, obj_);
     RootedObject pobj(cx);
     RootedShape prop(cx);
-    if (!baseops::LookupProperty(cx, obj, funid, &pobj, &prop))
+    if (!baseops::LookupProperty<CanGC>(cx, obj, funid, &pobj, &prop))
         return false;
     if (!prop) {
         xml = (JSXML *) obj->getPrivate();
@@ -4601,7 +4601,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj_, jsid funid_, JSBool *found)
             if (!proto)
                 return false;
 
-            if (!baseops::LookupProperty(cx, proto, funid, &pobj, &prop))
+            if (!baseops::LookupProperty<CanGC>(cx, proto, funid, &pobj, &prop))
                 return false;
         }
     }
@@ -4708,7 +4708,7 @@ xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         if (!qn)
             return JS_FALSE;
         if (!JSID_IS_VOID(funid))
-            return baseops::LookupProperty(cx, obj, funid, objp, propp);
+            return baseops::LookupProperty<CanGC>(cx, obj, funid, objp, propp);
         found = HasNamedProperty(xml, qn);
     }
     if (!found) {
@@ -5217,7 +5217,7 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
                   vxml->xml_class == JSXML_CLASS_ATTRIBUTE) &&
                  HasSimpleContent(xml)))
             {
-                ok = (str = ToStringSlow(cx, ObjectValue(*obj))) &&
+                ok = (str = ToStringSlow<CanGC>(cx, ObjectValue(*obj))) &&
                      (vstr = ToString(cx, v));
                 if (ok) {
                     bool equal;
@@ -5537,7 +5537,7 @@ ValueToIdForXML(JSContext *cx, jsval v, jsid *idp)
             *idp = id;
         }
     } else if (JSVAL_IS_STRING(v)) {
-        JSAtom *atom = AtomizeString(cx, JSVAL_TO_STRING(v));
+        JSAtom *atom = AtomizeString<CanGC>(cx, JSVAL_TO_STRING(v));
         if (!atom)
             return JS_FALSE;
         *idp = AtomToId(atom);
@@ -5894,7 +5894,7 @@ xml_hasOwnProperty(JSContext *cx, unsigned argc, jsval *vp)
 
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    if (!js_HasOwnProperty(cx, baseops::LookupProperty, obj, id, &obj2, &prop))
+    if (!js_HasOwnProperty(cx, baseops::LookupProperty<CanGC>, obj, id, &obj2, &prop))
         return false;
     args.rval().setBoolean(!!prop);
     return true;
@@ -6648,7 +6648,7 @@ xml_setLocalName(JSContext *cx, unsigned argc, jsval *vp)
         if (!JSVAL_IS_PRIMITIVE(name) && JSVAL_TO_OBJECT(name)->isQName()) {
             namestr = JSVAL_TO_OBJECT(name)->getQNameLocalName();
         } else {
-            namestr = ToAtom(cx, name);
+            namestr = ToAtom<CanGC>(cx, name);
             if (!namestr)
                 return false;
         }
@@ -7613,7 +7613,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
         *newchars++ = '"';
     }
     *newchars = 0;
-    return js_NewString(cx, newchars - newlen, newlen);
+    return js_NewString<CanGC>(cx, newchars - newlen, newlen);
 }
 
 JSFlatString *
@@ -7996,7 +7996,7 @@ js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
         return NULL;
     xml = (JSXML *) obj->getPrivate();
     if (name) {
-        JSAtom *atomName = AtomizeString(cx, name);
+        JSAtom *atomName = AtomizeString<CanGC>(cx, name);
         if (!atomName)
             return NULL;
         qn = NewXMLQName(cx, cx->runtime->emptyString, NULL, atomName);

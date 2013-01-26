@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -237,15 +238,20 @@ public class FennecNativeDriver implements Driver {
     }
 
     private View getSurfaceView() {
+        ArrayList<View> views = mSolo.getCurrentViews();
         try {
             Class c = Class.forName("org.mozilla.gecko.gfx.LayerView");
-            for (View v : mSolo.getCurrentViews()) {
+            for (View v : views) {
                 if (c.isInstance(v)) {
                     return v;
                 }
             }
         } catch (ClassNotFoundException e) {
             log(LogLevel.ERROR, e);
+        }
+        log(LogLevel.WARN, "getSurfaceView could not find LayerView");
+        for (View v : views) {
+            log(LogLevel.WARN, v.toString());
         }
         return null;
     }

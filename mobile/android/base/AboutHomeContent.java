@@ -184,7 +184,7 @@ public class AboutHomeContent extends ScrollView
         mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-                String spec = holder.url;
+                String spec = holder.getUrl();
 
                 // If we don't have a url, this must be an empty row. Show the edit dialog box
                 if (TextUtils.isEmpty(spec)) {
@@ -206,17 +206,16 @@ public class AboutHomeContent extends ScrollView
                 inflater.inflate(R.menu.abouthome_topsites_contextmenu, menu);
 
                 // If nothing is pinned at all, hide both clear items
-                TopSitesCursorWrapper cursor = (TopSitesCursorWrapper)mTopSitesAdapter.getCursor();
-                if (!cursor.hasPinnedSites()) {
-                    menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
+                // We can assume that the adapter count and view count are the same in this case because our grid view
+                // force all items to be visible all the time
+                View view = mTopSitesGrid.getChildAt(info.position);
+                TopSitesViewHolder holder = (TopSitesViewHolder) view.getTag();
+                if (holder.isPinned()) {
+                    menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                 } else {
-                    PinnedSite site = cursor.getPinnedSite(info.position);
-                    if (site == null) {
-                        // If there's nothing pinned here, hide the clear item
-                        menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
-                    } else {
+                    if (TextUtils.isEmpty(holder.getUrl()))
                         menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
-                    }
+                    menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                 }
             }
         });
@@ -401,7 +400,7 @@ public class AboutHomeContent extends ScrollView
                 continue;
 
             TopSitesViewHolder holder = (TopSitesViewHolder)view.getTag();
-            final String url = holder.url;
+            final String url = holder.getUrl();
             if (TextUtils.isEmpty(url)) {
                 holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
                 holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -867,12 +866,46 @@ public class AboutHomeContent extends ScrollView
         public TextView titleView = null;
         public ImageView thumbnailView = null;
         public ImageView pinnedView = null;
-        public String url = null;
+        private String mTitle = null;
+        private String mUrl = null;
+        private boolean mIsPinned = false;
 
         public TopSitesViewHolder(View v) {
             titleView = (TextView) v.findViewById(R.id.title);
             thumbnailView = (ImageView) v.findViewById(R.id.thumbnail);
             pinnedView = (ImageView) v.findViewById(R.id.pinned);
+        }
+
+        public void setTitle(String title) {
+            if (mTitle != null && mTitle.equals(title))
+                return;
+            mTitle = title;
+            updateTitleView();
+        }
+
+        public String getTitle() {
+            return (!TextUtils.isEmpty(mTitle) ? mTitle : mUrl);
+        }
+
+        public void setUrl(String url) {
+            if (mUrl != null && mUrl.equals(url))
+                return;
+            mUrl = url;
+            updateTitleView();
+        }
+
+        public String getUrl() {
+            return mUrl;
+        }
+
+        public void updateTitleView() {
+            String title = getTitle();
+            if (!TextUtils.isEmpty(title)) {
+                titleView.setText(title);
+                titleView.setVisibility(View.VISIBLE);
+            } else {
+                titleView.setVisibility(View.INVISIBLE);
+            }
         }
 
         private Drawable getPinDrawable() {
@@ -894,7 +927,12 @@ public class AboutHomeContent extends ScrollView
         }
 
         public void setPinned(boolean aPinned) {
+            mIsPinned = aPinned;
             pinnedView.setBackgroundDrawable(aPinned ? getPinDrawable() : null);
+        }
+
+        public boolean isPinned() {
+            return mIsPinned;
         }
     }
 
@@ -927,9 +965,8 @@ public class AboutHomeContent extends ScrollView
                 viewHolder = (TopSitesViewHolder) convertView.getTag();
             }
 
-            viewHolder.titleView.setVisibility(TextUtils.isEmpty(title) ? View.INVISIBLE : View.VISIBLE);
-            viewHolder.titleView.setText(title);
-            viewHolder.url = url;
+            viewHolder.setTitle(title);
+            viewHolder.setUrl(url);
             viewHolder.setPinned(pinned);
 
             // Force the view to fit inside this slot in the grid
@@ -957,18 +994,29 @@ public class AboutHomeContent extends ScrollView
         }
     }
 
+    private void clearThumbnailsWithUrl(final String url) {
+        for (int i = 0; i < mTopSitesAdapter.getCount(); i++) {
+            final View view = mTopSitesGrid.getChildAt(i);
+            final TopSitesViewHolder holder = (TopSitesViewHolder) view.getTag();
+
+            if (holder.getUrl().equals(url)) {
+                clearThumbnail(holder);
+            }
+        }
+    }
+
     private void clearThumbnail(TopSitesViewHolder holder) {
-        holder.titleView.setText("");
-        holder.url = "";
-        holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
+        holder.setTitle("");
+        holder.setUrl("");
+        holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
         holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        holder.setPinned(false);
     }
 
     public void unpinSite() {
         final int position = mTopSitesGrid.getSelectedPosition();
         View v = mTopSitesGrid.getChildAt(position);
         TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-        holder.setPinned(false);
 
         // Quickly update the view so that there isn't as much lag between the request and response
         clearThumbnail(holder);
@@ -979,11 +1027,6 @@ public class AboutHomeContent extends ScrollView
                 BrowserDB.unpinSite(resolver, position);
                 return null;
             }
-
-            @Override
-            public void onPostExecute(Void v) {
-                update(EnumSet.of(UpdateFlags.TOP_SITES));
-            }
         }).execute();
     }
 
@@ -991,9 +1034,7 @@ public class AboutHomeContent extends ScrollView
         final int position = mTopSitesGrid.getSelectedPosition();
         View v = mTopSitesGrid.getChildAt(position);
 
-        TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-        final String url = holder.url;
-        final String title = holder.titleView.getText().toString();
+        final TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
         holder.setPinned(true);
 
         // update the database on a background thread
@@ -1001,13 +1042,8 @@ public class AboutHomeContent extends ScrollView
             @Override
             public Void doInBackground(Void... params) {
                 final ContentResolver resolver = mActivity.getContentResolver();
-                BrowserDB.pinSite(resolver, url, (title == null || TextUtils.isEmpty(title) ? url : title), position);
+                BrowserDB.pinSite(resolver, holder.getUrl(), holder.getTitle(), position);
                 return null;
-            }
-
-            @Override
-            public void onPostExecute(Void v) {
-                update(EnumSet.of(UpdateFlags.TOP_SITES));
             }
         }).execute();
     }
@@ -1017,7 +1053,7 @@ public class AboutHomeContent extends ScrollView
         View v = mTopSitesGrid.getChildAt(position);
 
         TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-        editSite(holder.url, position);
+        editSite(holder.getUrl(), position);
     }
 
     // Edit the site at position. Provide a url to start editing with
@@ -1034,21 +1070,43 @@ public class AboutHomeContent extends ScrollView
                 if (resultCode == Activity.RESULT_CANCELED || data == null)
                     return;
 
+                final View v = mTopSitesGrid.getChildAt(position);
+                final TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+
                 final String title = data.getStringExtra(AwesomeBar.TITLE_KEY);
                 final String url = data.getStringExtra(AwesomeBar.URL_KEY);
+                clearThumbnailsWithUrl(url);
+
+                holder.setUrl(url);
+                holder.setTitle(title);
+                holder.setPinned(true);
 
                 // update the database on a background thread
-                (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+                (new GeckoAsyncTask<Void, Void, Bitmap>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
                     @Override
-                    public Void doInBackground(Void... params) {
+                    public Bitmap doInBackground(Void... params) {
                         final ContentResolver resolver = mActivity.getContentResolver();
-                        BrowserDB.pinSite(resolver, url, (title == null ? url : title), position);
+                        BrowserDB.pinSite(resolver, holder.getUrl(), holder.getTitle(), position);
+
+                        List<String> urls = new ArrayList<String>();
+                        urls.add(holder.getUrl());
+
+                        Cursor c = BrowserDB.getThumbnailsForUrls(resolver, urls);
+                        if (c == null || !c.moveToFirst()) {
+                            return null;
+                        }
+
+                        final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Thumbnails.DATA));
+                        if (b != null) {
+                            return BitmapFactory.decodeByteArray(b, 0, b.length);
+                        }
+
                         return null;
                     }
-        
+
                     @Override
-                    public void onPostExecute(Void v) {
-                        update(EnumSet.of(UpdateFlags.TOP_SITES));
+                    public void onPostExecute(Bitmap b) {
+                        displayThumbnail(v, b);
                     }
                 }).execute();
             }

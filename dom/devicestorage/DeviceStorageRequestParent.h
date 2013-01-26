@@ -133,15 +133,25 @@ private:
       nsRefPtr<DeviceStorageFile> mFile;
   };
 
-  class StatFileEvent : public CancelableRunnable
+  class FreeSpaceFileEvent : public CancelableRunnable
   {
     public:
-      StatFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~StatFileEvent();
+      FreeSpaceFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
+      virtual ~FreeSpaceFileEvent();
       virtual nsresult CancelableRun();
      private:
        nsRefPtr<DeviceStorageFile> mFile;
-   };
+  };
+
+  class UsedSpaceFileEvent : public CancelableRunnable
+  {
+    public:
+      UsedSpaceFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
+      virtual ~UsedSpaceFileEvent();
+      virtual nsresult CancelableRun();
+     private:
+       nsRefPtr<DeviceStorageFile> mFile;
+  };
 
   class ReadFileEvent : public CancelableRunnable
   {
@@ -176,17 +186,35 @@ private:
       nsString mPath;
   };
 
-  class PostStatResultEvent : public CancelableRunnable
+ class PostFreeSpaceResultEvent : public CancelableRunnable
  {
     public:
-      PostStatResultEvent(DeviceStorageRequestParent* aParent,
-                          int64_t aFreeBytes,
-                          int64_t aTotalBytes);
-      virtual ~PostStatResultEvent();
+      PostFreeSpaceResultEvent(DeviceStorageRequestParent* aParent,
+                               int64_t aFreeSpace);
+      virtual ~PostFreeSpaceResultEvent();
       virtual nsresult CancelableRun();
     private:
-      int64_t mFreeBytes, mTotalBytes;
-   };
+      int64_t mFreeSpace;
+ };
+
+ class PostUsedSpaceResultEvent : public CancelableRunnable
+ {
+    public:
+      PostUsedSpaceResultEvent(DeviceStorageRequestParent* aParent,
+                               int64_t aUsedSpace);
+      virtual ~PostUsedSpaceResultEvent();
+      virtual nsresult CancelableRun();
+    private:
+      int64_t mUsedSpace;
+ };
+
+ class PostAvailableResultEvent : public CancelableRunnable
+ {
+    public:
+      PostAvailableResultEvent(DeviceStorageRequestParent* aParent);
+      virtual ~PostAvailableResultEvent();
+      virtual nsresult CancelableRun();
+ };
 
 protected:
   bool AddRunnable(CancelableRunnable* aRunnable) {

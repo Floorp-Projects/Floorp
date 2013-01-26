@@ -28,12 +28,12 @@ namespace js {
 
 class ThreadPoolWorker;
 
-typedef void (*TaskFun)(void *userdata, size_t workerId, uintptr_t stackLimit);
+typedef void (*TaskFun)(void *userdata, uint32_t workerId, uintptr_t stackLimit);
 
 class TaskExecutor
 {
   public:
-    virtual void executeFromWorker(size_t workerId, uintptr_t stackLimit) = 0;
+    virtual void executeFromWorker(uint32_t workerId, uintptr_t stackLimit) = 0;
 };
 
 // ThreadPool used for parallel JavaScript execution as well as
@@ -77,7 +77,7 @@ class ThreadPool
     size_t numWorkers_;
 
     // Next worker for |submitOne()|. Atomically modified.
-    size_t nextId_;
+    uint32_t nextId_;
 
     bool lazyStartWorkers(JSContext *cx);
     void terminateWorkers();

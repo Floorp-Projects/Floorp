@@ -1736,7 +1736,7 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
     RootedValue lval(cx, ObjectValue(*obj));
 
     if (cache.isDisabled()) {
-        if (!GetElementOperation(cx, JSOp(*pc), lval, idval, res))
+        if (!GetElementOperation(cx, JSOp(*pc), &lval, idval, res))
             return false;
         types::TypeScript::Monitor(cx, script, pc, res);
         return true;
@@ -1771,7 +1771,7 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Han
         }
     }
 
-    if (!GetElementOperation(cx, JSOp(*pc), lval, idval, res))
+    if (!GetElementOperation(cx, JSOp(*pc), &lval, idval, res))
         return false;
 
     // If no new attach was done, and we've reached maximum number of stubs, then

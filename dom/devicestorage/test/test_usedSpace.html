@@ -17,26 +17,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 devicestorage_setup();
 
-function statSuccess(e) {
-  ok(e.target.result.freeBytes  > 0, "free bytes should exist and be greater than zero");
-  ok(e.target.result.totalBytes > 0, "total bytes should exist and be greater than zero");
+function usedSpaceSuccess(e) {
+  ok(e.target.result > 0, "total bytes should exist and be greater than zero");
   devicestorage_cleanup();
 }
 
-function statError(e) {
-  ok(false, "statError was called");
+function usedSpaceError(e) {
+  ok(false, "usedSpaceError was called");
   devicestorage_cleanup();
 }
 
 var storage = navigator.getDeviceStorage("pictures");
-ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
@@ -44,11 +42,11 @@ function addError(e) {
 }
 
 function addSuccess(e) {
-  request = storage.stat();
+  request = storage.usedSpace();
   ok(request, "Should have a non-null request");
 
-  request.onsuccess = statSuccess;
-  request.onerror = statError;
+  request.onsuccess = usedSpaceSuccess;
+  request.onerror = usedSpaceError;
 }
 
 request = storage.addNamed(createRandomBlob('image/png'), "a/b.png");

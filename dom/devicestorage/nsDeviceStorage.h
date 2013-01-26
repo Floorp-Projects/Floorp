@@ -15,7 +15,6 @@ class nsPIDOMWindow;
 #include "nsIClassInfo.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsIDOMDeviceStorageCursor.h"
-#include "nsIDOMDeviceStorageStat.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsInterfaceHashtable.h"
@@ -45,7 +44,9 @@ enum DeviceStorageRequestType {
     DEVICE_STORAGE_REQUEST_CREATE,
     DEVICE_STORAGE_REQUEST_DELETE,
     DEVICE_STORAGE_REQUEST_WATCH,
-    DEVICE_STORAGE_REQUEST_STAT
+    DEVICE_STORAGE_REQUEST_FREE_SPACE,
+    DEVICE_STORAGE_REQUEST_USED_SPACE,
+    DEVICE_STORAGE_REQUEST_AVAILABLE
 };
 
 class DeviceStorageTypeChecker MOZ_FINAL
@@ -120,21 +121,6 @@ private:
 
   nsRefPtr<DeviceStorageFile> mFile;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-};
-
-class nsDOMDeviceStorageStat MOZ_FINAL
-  : public nsIDOMDeviceStorageStat
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDEVICESTORAGESTAT
-
-  nsDOMDeviceStorageStat(uint64_t aFreeBytes, uint64_t aTotalBytes, nsAString& aState);
-
-private:
-  ~nsDOMDeviceStorageStat();
-  uint64_t mFreeBytes, mTotalBytes;
-  nsString mState;
 };
 
 //helpers

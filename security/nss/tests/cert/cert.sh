@@ -1079,12 +1079,12 @@ cert_extensions_test()
 
     echo
     echo certutil -d ${CERT_EXTENSIONS_DIR} -S -n ${CERTNAME} \
-        -t "u,u,u" -o /tmp/cert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
+        -t "u,u,u" -o ${CERT_EXTENSIONS_DIR}/tempcert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
         -z "${R_NOISE_FILE}" -${OPT} \< ${TARG_FILE}
     echo "certutil options:"
     cat ${TARG_FILE}
     ${BINDIR}/certutil -d ${CERT_EXTENSIONS_DIR} -S -n ${CERTNAME} \
-        -t "u,u,u" -o /tmp/cert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
+        -t "u,u,u" -o ${CERT_EXTENSIONS_DIR}/tempcert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
         -z "${R_NOISE_FILE}" -${OPT} < ${TARG_FILE}
     RET=$?
     if [ "${RET}" -ne 0 ]; then
@@ -1485,7 +1485,9 @@ cert_all_CA
 cert_extended_ssl 
 cert_ssl 
 cert_smime_client        
-cert_fips
+if [ -z "$NSS_TEST_DISABLE_FIPS" ]; then
+    cert_fips
+fi
 cert_eccurves
 cert_extensions
 cert_test_password

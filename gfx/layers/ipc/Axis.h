@@ -183,7 +183,7 @@ protected:
   // they are flinging multiple times in a row very quickly, probably trying to
   // reach one of the extremes of the page.
   int32_t mAcceleration;
-  nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
+  AsyncPanZoomController* mAsyncPanZoomController;
 };
 
 class AxisX : public Axis {

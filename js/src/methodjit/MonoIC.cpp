@@ -622,7 +622,7 @@ class CallCompiler : public BaseCompiler
         masm.store32(t0, Address(JSFrameReg, StackFrame::offsetOfFlags()));
 
         /* Store the entry fp and calling pc into the IonActivation. */
-        masm.loadPtr(&cx->runtime->ionActivation, t0);
+        masm.loadPtr(&cx->mainThread().ionActivation, t0);
         masm.storePtr(JSFrameReg, Address(t0, ion::IonActivation::offsetOfEntryFp()));
         masm.storePtr(t1, Address(t0, ion::IonActivation::offsetOfPrevPc()));
 
@@ -795,7 +795,7 @@ class CallCompiler : public BaseCompiler
 
         /* Unset IonActivation::entryfp. */
         t0 = regs.takeAnyReg().reg();
-        masm.loadPtr(&cx->runtime->ionActivation, t0);
+        masm.loadPtr(&cx->mainThread().ionActivation, t0);
         masm.storePtr(ImmPtr(NULL), Address(t0, ion::IonActivation::offsetOfEntryFp()));
         masm.storePtr(ImmPtr(NULL), Address(t0, ion::IonActivation::offsetOfPrevPc()));
 

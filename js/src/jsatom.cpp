@@ -270,7 +270,7 @@ AtomizeAndTakeOwnership(JSContext *cx, StableCharPtr tbchars, size_t length,
 
     AutoEnterAtomsCompartment ac(cx);
 
-    UnrootedFlatString flat = js_NewString(cx, const_cast<jschar*>(tbchars.get()), length);
+    UnrootedFlatString flat = js_NewString<CanGC>(cx, const_cast<jschar*>(tbchars.get()), length);
     if (!flat) {
         js_free((void*)tbchars.get());
         return UnrootedAtom();
@@ -287,6 +287,7 @@ AtomizeAndTakeOwnership(JSContext *cx, StableCharPtr tbchars, size_t length,
 }
 
 /* |tbchars| must not point into an inline or short string. */
+template <AllowGC allowGC>
 JS_ALWAYS_INLINE
 static UnrootedAtom
 AtomizeAndCopyStableChars(JSContext *cx, const jschar *tbchars, size_t length, InternBehavior ib)
@@ -311,7 +312,7 @@ AtomizeAndCopyStableChars(JSContext *cx, const jschar *tbchars, size_t length, I
 
     AutoEnterAtomsCompartment ac(cx);
 
-    UnrootedFlatString flat = js_NewStringCopyN(cx, tbchars, length);
+    UnrootedFlatString flat = js_NewStringCopyN<allowGC>(cx, tbchars, length);
     if (!flat)
         return UnrootedAtom();
 
@@ -325,6 +326,7 @@ AtomizeAndCopyStableChars(JSContext *cx, const jschar *tbchars, size_t length, I
     return atom;
 }
 
+template <AllowGC allowGC>
 UnrootedAtom
 js::AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib /* = js::DoNotInternAtom */)
 {
@@ -344,13 +346,29 @@ js::AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib /* = js::D
         return &atom;
     }
 
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return NULL;
+
+    if (JSAtom *atom = AtomizeAndCopyStableChars<NoGC>(cx, chars, str->length(), ib))
+        return atom;
+
+    if (!allowGC)
+        return NULL;
+
     JSStableString *stable = str->ensureStable(cx);
     if (!stable)
         return NULL;
 
     JS_ASSERT(stable->length() <= JSString::MAX_LENGTH);
-    return AtomizeAndCopyStableChars(cx, stable->chars().get(), stable->length(), ib);
+    return AtomizeAndCopyStableChars<CanGC>(cx, stable->chars().get(), stable->length(), ib);
 }
+
+template UnrootedAtom
+js::AtomizeString<CanGC>(JSContext *cx, JSString *str, js::InternBehavior ib);
+
+template UnrootedAtom
+js::AtomizeString<NoGC>(JSContext *cx, JSString *str, js::InternBehavior ib);
 
 UnrootedAtom
 js::Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib)
@@ -374,7 +392,7 @@ js::Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib)
         jschar inflated[ATOMIZE_BUF_MAX];
         size_t inflatedLength = ATOMIZE_BUF_MAX - 1;
         InflateStringToBuffer(cx, bytes, length, inflated, &inflatedLength);
-        atom = AtomizeAndCopyStableChars(cx, inflated, inflatedLength, ib);
+        atom = AtomizeAndCopyStableChars<CanGC>(cx, inflated, inflatedLength, ib);
     } else {
         jschar *tbcharsZ = InflateString(cx, bytes, &length);
         if (!tbcharsZ)
@@ -385,20 +403,28 @@ js::Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib)
     return atom;
 }
 
+template <AllowGC allowGC>
 UnrootedAtom
 js::AtomizeChars(JSContext *cx, const jschar *chars, size_t length, InternBehavior ib)
 {
-    AssertCanGC();
     CHECK_REQUEST(cx);
 
     if (!JSString::validateLength(cx, length))
         return NULL;
 
-    return AtomizeAndCopyStableChars(cx, chars, length, ib);
+    return AtomizeAndCopyStableChars<allowGC>(cx, chars, length, ib);
 }
 
+template UnrootedAtom
+js::AtomizeChars<CanGC>(JSContext *cx, const jschar *chars, size_t length, InternBehavior ib);
+
+template UnrootedAtom
+js::AtomizeChars<NoGC>(JSContext *cx, const jschar *chars, size_t length, InternBehavior ib);
+
+template <AllowGC allowGC>
 bool
-js::IndexToIdSlow(JSContext *cx, uint32_t index, MutableHandleId idp)
+js::IndexToIdSlow(JSContext *cx, uint32_t index,
+                  typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
 {
     JS_ASSERT(index > JSID_INT_MAX);
 
@@ -406,13 +432,19 @@ js::IndexToIdSlow(JSContext *cx, uint32_t index, MutableHandleId idp)
     RangedPtr<jschar> end(ArrayEnd(buf), buf, ArrayEnd(buf));
     RangedPtr<jschar> start = BackfillIndexInCharBuffer(index, end);
 
-    JSAtom *atom = AtomizeChars(cx, start.get(), end - start);
+    JSAtom *atom = AtomizeChars<allowGC>(cx, start.get(), end - start);
     if (!atom)
         return false;
 
     idp.set(JSID_FROM_BITS((size_t)atom));
     return true;
 }
+
+template bool
+js::IndexToIdSlow<CanGC>(JSContext *cx, uint32_t index, MutableHandleId idp);
+
+template bool
+js::IndexToIdSlow<NoGC>(JSContext *cx, uint32_t index, FakeMutableHandle<jsid> idp);
 
 bool
 js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
@@ -441,7 +473,7 @@ js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
     }
 #endif
 
-    JSAtom *atom = ToAtom(cx, idval);
+    JSAtom *atom = ToAtom<CanGC>(cx, idval);
     if (!atom)
         return false;
 
@@ -477,7 +509,7 @@ js::XDRAtom(XDRState<mode> *xdr, MutableHandleAtom atomp)
 #if IS_LITTLE_ENDIAN
     /* Directly access the little endian chars in the XDR buffer. */
     const jschar *chars = reinterpret_cast<const jschar *>(xdr->buf.read(nchars * sizeof(jschar)));
-    atom = AtomizeChars(cx, chars, nchars);
+    atom = AtomizeChars<CanGC>(cx, chars, nchars);
 #else
     /*
      * We must copy chars to a temporary buffer to convert between little and

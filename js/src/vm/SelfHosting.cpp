@@ -309,7 +309,7 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
         Rooted<JSStableString*> str(cx, srcObj->asString().unbox()->ensureStable(cx));
         if (!str)
             return NULL;
-        str = js_NewStringCopyN(cx, str->chars().get(), str->length())->ensureStable(cx);
+        str = js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length())->ensureStable(cx);
         if (!str)
             return NULL;
         clone = StringObject::create(cx, str);
@@ -343,7 +343,7 @@ CloneValue(JSContext *cx, MutableHandleValue vp, CloneMemory &clonedObjects)
         Rooted<JSStableString*> str(cx, vp.toString()->ensureStable(cx));
         if (!str)
             return false;
-        RootedString clone(cx, js_NewStringCopyN(cx, str->chars().get(), str->length()));
+        RootedString clone(cx, js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length()));
         if (!clone)
             return false;
         vp.setString(clone);

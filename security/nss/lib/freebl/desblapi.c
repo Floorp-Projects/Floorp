@@ -243,7 +243,7 @@ DES_Encrypt(DESContext *cx, BYTE *out, unsigned int *outLen,
             unsigned int maxOutLen, const BYTE *in, unsigned int inLen)
 {
 
-    if (inLen < 0 || (inLen % 8) != 0 || maxOutLen < inLen || !cx || 
+    if ((inLen % 8) != 0 || maxOutLen < inLen || !cx || 
         cx->direction != DES_ENCRYPT) {
     	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
@@ -260,7 +260,7 @@ DES_Decrypt(DESContext *cx, BYTE *out, unsigned int *outLen,
             unsigned int maxOutLen, const BYTE *in, unsigned int inLen)
 {
 
-    if (inLen < 0 || (inLen % 8) != 0 || maxOutLen < inLen || !cx || 
+    if ((inLen % 8) != 0 || maxOutLen < inLen || !cx || 
         cx->direction != DES_DECRYPT) {
     	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;

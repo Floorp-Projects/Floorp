@@ -593,27 +593,16 @@ IDBTransaction::Abort(nsresult aErrorCode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
                                                   IDBWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDatabase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError);
-
-  for (uint32_t i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedObjectStores[i]");
-    cb.NoteXPCOMChild(static_cast<nsIIDBObjectStore*>(
-                      tmp->mCreatedObjectStores[i].get()));
-  }
-  for (uint32_t i = 0; i < tmp->mDeletedObjectStores.Length(); i++) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mDeletedObjectStores[i]");
-    cb.NoteXPCOMChild(static_cast<nsIIDBObjectStore*>(
-                      tmp->mDeletedObjectStores[i].get()));
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCreatedObjectStores)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeletedObjectStores)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction, IDBWrapperCache)
   // Don't unlink mDatabase!
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mError);
-
-  tmp->mCreatedObjectStores.Clear();
-  tmp->mDeletedObjectStores.Clear();
-
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCreatedObjectStores)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDeletedObjectStores)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBTransaction)

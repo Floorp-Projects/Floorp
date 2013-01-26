@@ -226,13 +226,16 @@ extern UnrootedAtom
 Atomize(JSContext *cx, const char *bytes, size_t length,
         js::InternBehavior ib = js::DoNotInternAtom);
 
+template <AllowGC allowGC>
 extern UnrootedAtom
 AtomizeChars(JSContext *cx, const jschar *chars, size_t length,
              js::InternBehavior ib = js::DoNotInternAtom);
 
+template <AllowGC allowGC>
 extern UnrootedAtom
 AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
+template <AllowGC allowGC>
 inline JSAtom *
 ToAtom(JSContext *cx, const js::Value &v);
 
