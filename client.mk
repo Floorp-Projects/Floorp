@@ -286,6 +286,7 @@ CONFIG_STATUS_DEPS := \
   $(TOPSRCDIR)/browser/config/version.txt \
   $(TOPSRCDIR)/build/virtualenv/packages.txt \
   $(TOPSRCDIR)/build/virtualenv/populate_virtualenv.py \
+  $(TOPSRCDIR)/testing/mozbase/packages.txt \
   $(NULL)
 
 CONFIGURE_ENV_ARGS += \
