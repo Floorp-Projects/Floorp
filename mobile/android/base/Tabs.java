@@ -16,7 +16,6 @@ import android.accounts.AccountManager;
 import android.accounts.OnAccountsUpdateListener;
 import android.content.ContentResolver;
 import android.content.Intent;
-import android.database.ContentObserver;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
@@ -56,7 +55,6 @@ public class Tabs implements GeckoEventListener {
     private static AtomicInteger sTabId = new AtomicInteger(0);
 
     private GeckoApp mActivity;
-    private ContentObserver mContentObserver;
 
     private Tabs() {
         registerEventListener("SessionHistory:New");
@@ -84,9 +82,6 @@ public class Tabs implements GeckoEventListener {
                 persistAllTabs();
             }
         }, GeckoAppShell.getHandler(), false);
-        if (mContentObserver != null) {
-            BrowserDB.registerBookmarkObserver(getContentResolver(), mContentObserver);
-        }
     }
 
     public void detachFromActivity(GeckoApp activity) {
@@ -94,31 +89,13 @@ public class Tabs implements GeckoEventListener {
             mAccountManager.removeOnAccountsUpdatedListener(mAccountListener);
             mAccountListener = null;
         }
-        if (mContentObserver != null) {
-            BrowserDB.unregisterContentObserver(getContentResolver(), mContentObserver);
-        }
     }
 
     public int getCount() {
         return mTabs.size();
     }
 
-    private void lazyRegisterBookmarkObserver() {
-        if (mContentObserver == null) {
-            mContentObserver = new ContentObserver(null) {
-                public void onChange(boolean selfChange) {
-                    for (Tab tab : mTabs.values()) {
-                        tab.updateBookmark();
-                    }
-                }
-            };
-            BrowserDB.registerBookmarkObserver(getContentResolver(), mContentObserver);
-        }
-    }
-
     private Tab addTab(int id, String url, boolean external, int parentId, String title, boolean isPrivate) {
-        lazyRegisterBookmarkObserver();
-
         final Tab tab = isPrivate ? new PrivateTab(id, url, external, parentId, title) :
                                     new Tab(id, url, external, parentId, title);
         mTabs.put(id, tab);

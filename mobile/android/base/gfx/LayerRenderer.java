@@ -183,7 +183,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         if (mFrameRateLayer != null) {
             mFrameRateLayer.destroy();
         }
-        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     void onSurfaceCreated(EGLConfig config) {

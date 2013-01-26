@@ -533,6 +533,8 @@ public class GeckoAppShell
     }
 
     public static void runGecko(String apkPath, String args, String url, String type) {
+        WebAppAllocator.getInstance();
+
         Looper.prepare();
         sGeckoHandler = new Handler();
 
