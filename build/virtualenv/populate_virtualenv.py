@@ -22,26 +22,23 @@ MINIMUM_PYTHON_MINOR = 7
 class VirtualenvManager(object):
     """Contains logic for managing virtualenvs for building the tree."""
 
-    def __init__(self, topsrcdir, virtualenv_path, log_handle):
+    def __init__(self, topsrcdir, virtualenv_path, log_handle, manifest_path):
         """Create a new manager.
 
         Each manager is associated with a source directory, a path where you
         want the virtualenv to be created, and a handle to write output to.
         """
+        assert os.path.isabs(manifest_path), "manifest_path must be an absolute path: %s" % (manifest_path)
         self.topsrcdir = topsrcdir
         self.virtualenv_root = virtualenv_path
         self.log_handle = log_handle
+        self.manifest_path = manifest_path
 
     @property
     def virtualenv_script_path(self):
         """Path to virtualenv's own populator script."""
         return os.path.join(self.topsrcdir, 'python', 'virtualenv',
             'virtualenv.py')
-
-    @property
-    def manifest_path(self):
-        return os.path.join(self.topsrcdir, 'build', 'virtualenv',
-            'packages.txt')
 
     @property
     def python_path(self):
@@ -58,6 +55,37 @@ class VirtualenvManager(object):
 
         return os.path.join(self.virtualenv_root, 'bin', 'activate_this.py')
 
+    def up_to_date(self):
+        """Returns whether the virtualenv is present and up to date."""
+
+        deps = [self.manifest_path, __file__]
+
+        # check if virtualenv exists
+        if not os.path.exists(self.virtualenv_root) or \
+            not os.path.exists(self.activate_path):
+
+            return False
+
+        # check modification times
+        activate_mtime = os.path.getmtime(self.activate_path)
+        dep_mtime = max(os.path.getmtime(p) for p in deps)
+        if dep_mtime > activate_mtime:
+            return False
+
+        # recursively check sub packages.txt files
+        submanifests = [i[1] for i in self.packages()
+                        if i[0] == 'packages.txt']
+        for submanifest in submanifests:
+            submanifest = os.path.join(self.topsrcdir, submanifest)
+            submanager = VirtualenvManager(self.topsrcdir,
+                                           self.virtualenv_root,
+                                           self.log_handle,
+                                           submanifest)
+            if not submanager.up_to_date():
+                return False
+
+        return True
+
     def ensure(self):
         """Ensure the virtualenv is present and up to date.
 
@@ -67,20 +95,9 @@ class VirtualenvManager(object):
         This should be the main API used from this class as it is the
         highest-level.
         """
-        deps = [self.manifest_path, __file__]
-
-        if not os.path.exists(self.virtualenv_root) or \
-            not os.path.exists(self.activate_path):
-
-            return self.build()
-
-        activate_mtime = os.path.getmtime(self.activate_path)
-        dep_mtime = max(os.path.getmtime(p) for p in deps)
-
-        if dep_mtime > activate_mtime:
-            return self.build()
-
-        return self.virtualenv_root
+        if self.up_to_date():
+            return self.virtualenv_root
+        return self.build()
 
     def create(self):
         """Create a new, empty virtualenv.
@@ -90,10 +107,7 @@ class VirtualenvManager(object):
         write output to.
         """
         env = dict(os.environ)
-        try:
-            del env['PYTHONDONTWRITEBYTECODE']
-        except KeyError:
-            pass
+        env.pop('PYTHONDONTWRITEBYTECODE', None)
 
         args = [sys.executable, self.virtualenv_script_path,
             '--system-site-packages', self.virtualenv_root]
@@ -101,10 +115,16 @@ class VirtualenvManager(object):
         result = subprocess.call(args, stdout=self.log_handle,
             stderr=subprocess.STDOUT, env=env)
 
-        if result != 0:
+        if result:
             raise Exception('Error creating virtualenv.')
 
         return self.virtualenv_root
+
+    def packages(self):
+        with file(self.manifest_path, 'rU') as fh:
+            packages = [line.rstrip().split(':')
+                        for line in fh]
+        return packages
 
     def populate(self):
         """Populate the virtualenv.
@@ -136,11 +156,8 @@ class VirtualenvManager(object):
         environment is not configured properly, packages could be installed
         into the wrong place. This is how virtualenv's work.
         """
-        packages = []
-        fh = open(self.manifest_path, 'rU')
-        for line in fh:
-            packages.append(line.rstrip().split(':'))
-        fh.close()
+
+        packages = self.packages()
 
         def handle_package(package):
             python_lib = distutils.sysconfig.get_python_lib()
@@ -159,6 +176,19 @@ class VirtualenvManager(object):
                 dst = os.path.join(python_lib, os.path.basename(package[1]))
 
                 shutil.copy(src, dst)
+
+                return True
+
+            if package[0] == 'packages.txt':
+                assert len(package) == 2
+
+                src = os.path.join(self.topsrcdir, package[1])
+                assert os.path.isfile(src), "'%s' does not exist" % src
+                submanager = VirtualenvManager(self.topsrcdir,
+                                               self.virtualenv_root,
+                                               self.log_handle,
+                                               src)
+                submanager.populate()
 
                 return True
 
@@ -221,17 +251,12 @@ class VirtualenvManager(object):
             for package in packages:
                 handle_package(package)
         finally:
-            try:
-                del os.environ['MACOSX_DEPLOYMENT_TARGET']
-            except KeyError:
-                pass
+            os.environ.pop('MACOSX_DEPLOYMENT_TARGET', None)
 
             if old_target is not None:
                 os.environ['MACOSX_DEPLOYMENT_TARGET'] = old_target
 
-            for k in old_env_variables:
-                os.environ[k] = old_env_variables[k]
-
+            os.environ.update(old_env_variables)
 
     def call_setup(self, directory, arguments):
         """Calls setup.py in a directory."""
@@ -320,7 +345,10 @@ if __name__ == '__main__':
         topsrcdir = sys.argv[2]
         virtualenv_path = sys.argv[3]
 
-    manager = VirtualenvManager(topsrcdir, virtualenv_path, sys.stdout)
+    # path to default packages.txt
+    manifest_path = os.path.join(topsrcdir, 'build', 'virtualenv', 'packages.txt')
+
+    manager = VirtualenvManager(topsrcdir, virtualenv_path, sys.stdout, manifest_path)
 
     if populate:
         manager.populate()
