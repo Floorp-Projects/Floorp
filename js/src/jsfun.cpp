@@ -31,7 +31,6 @@
 #include "jsopcode.h"
 #include "jspropertytree.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
@@ -41,6 +40,7 @@
 #include "gc/Marking.h"
 #include "vm/Debugger.h"
 #include "vm/ScopeObject.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
 

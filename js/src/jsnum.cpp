@@ -39,12 +39,12 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
-#include "jsscope.h"
 #include "jsstr.h"
 #include "jslibmath.h"
 
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"

@@ -8,12 +8,12 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jslibmath.h"
-#include "jsscope.h"
 
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
 #include "vm/NumericConversions.h"
+#include "vm/Shape.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"

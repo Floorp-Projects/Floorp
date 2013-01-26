@@ -14,13 +14,13 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jsscope.h"
 #include "jsscript.h"
 
-#include "jsobjinlines.h"
-
-#include "ion/IonCode.h"
 #include "ion/Ion.h"
+#include "ion/IonCode.h"
+#include "vm/Shape.h"
+
+#include "jsobjinlines.h"
 
 using namespace js;
 

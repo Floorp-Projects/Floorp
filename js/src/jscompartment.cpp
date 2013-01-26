@@ -14,13 +14,19 @@
 #include "jsiter.h"
 #include "jsmath.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
+#if ENABLE_YARR_JIT
+#include "assembler/jit/ExecutableAllocator.h"
+#endif
 #include "assembler/wtf/Platform.h"
 #include "gc/Marking.h"
 #include "gc/Root.h"
+#ifdef JS_ION
+#include "ion/IonCompartment.h"
+#include "ion/Ion.h"
+#endif
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
@@ -32,15 +38,8 @@
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
-#ifdef JS_ION
-#include "ion/IonCompartment.h"
-#include "ion/Ion.h"
-#endif
 
-#if ENABLE_YARR_JIT
-#include "assembler/jit/ExecutableAllocator.h"
-#endif
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::gc;

@@ -10,7 +10,8 @@
 
 #include "jslock.h"
 #include "jspropertycache.h"
-#include "jsscope.h"
+
+#include "vm/Shape.h"
 
 /*
  * This method is designed to inline the fast path in js_Interpret, so it makes

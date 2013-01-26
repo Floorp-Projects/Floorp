@@ -11,12 +11,11 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jslock.h"
-#include "jsscope.h"
 #include "jsxml.h"
 
 #include "gc/Root.h"
-
 #include "js/TemplateLib.h"
+#include "vm/Shape.h"
 
 using JS::AssertCanGC;
 

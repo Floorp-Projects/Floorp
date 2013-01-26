@@ -16,12 +16,12 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jsscope.h"
 
 #include "gc/StoreBuffer.h"
 #include "gc/FindSCCs.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
+#include "vm/Shape.h"
 
 namespace js {
 

@@ -37,7 +37,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprobes.h"
-#include "jsscope.h"
 #include "jsstr.h"
 #include "jsversion.h"
 
@@ -46,6 +45,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"

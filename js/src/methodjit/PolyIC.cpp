@@ -11,19 +11,21 @@
 #include "BaseCompiler.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "TypedArrayIC.h"
-#include "jsscope.h"
 #include "jsnum.h"
 #include "jstypedarray.h"
-#include "jsatominlines.h"
-#include "jsobjinlines.h"
-#include "jsscopeinlines.h"
-#include "jsinterpinlines.h"
 #include "jsautooplen.h"
 
 #include "js/CharacterEncoding.h"
+#include "vm/Shape.h"
 
 #include "vm/ScopeObject-inl.h"
 #include "vm/StringObject-inl.h"
+
+#include "jsatominlines.h"
+#include "jsobjinlines.h"
+#include "jsinterpinlines.h"
+
+#include "vm/Shape-inl.h"
 
 #if defined JS_POLYIC
 

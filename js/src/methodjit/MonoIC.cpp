@@ -8,12 +8,14 @@
 #include "jscntxt.h"
 #include "jsnum.h"
 #include "jsobj.h"
-#include "jsscope.h"
 
+#include "assembler/assembler/CodeLocation.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/MacroAssembler.h"
-#include "assembler/assembler/CodeLocation.h"
-
+#include "builtin/RegExp.h"
+#ifdef JS_ION
+# include "ion/IonMacroAssembler.h"
+#endif
 #include "methodjit/CodeGenIncludes.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/ICRepatcher.h"
@@ -21,18 +23,14 @@
 #include "methodjit/MonoIC.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/StubCalls.h"
-
-#include "builtin/RegExp.h"
+#include "vm/Shape.h"
 
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "methodjit/StubCalls-inl.h"
-#ifdef JS_ION
-# include "ion/IonMacroAssembler.h"
-#endif
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::mjit;

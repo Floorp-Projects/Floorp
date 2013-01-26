@@ -65,7 +65,6 @@
 #include "jsobj.h"
 #include "jsprobes.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jswatchpoint.h"
 #include "jsweakmap.h"
@@ -81,8 +80,9 @@
 #include "gc/Memory.h"
 #include "methodjit/MethodJIT.h"
 #include "vm/Debugger.h"
-#include "vm/String.h"
 #include "vm/ForkJoin.h"
+#include "vm/Shape.h"
+#include "vm/String.h"
 #include "ion/IonCode.h"
 #ifdef JS_ION
 # include "ion/IonMacroAssembler.h"
