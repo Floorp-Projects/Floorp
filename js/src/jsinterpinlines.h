@@ -289,6 +289,8 @@ GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHan
         return NativeGet(cx, obj, pobj, entry->prop, JSGET_CACHE_RESULT, vp);
     }
 
+    bool wasObject = lval.isObject();
+
     RootedId id(cx, NameToId(name));
     RootedObject nobj(cx, obj);
 
@@ -303,7 +305,7 @@ GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHan
 #if JS_HAS_NO_SUCH_METHOD
     if (op == JSOP_CALLPROP &&
         JS_UNLIKELY(vp.isPrimitive()) &&
-        lval.isObject())
+        wasObject)
     {
         if (!OnUnknownMethod(cx, nobj, IdToValue(id), vp))
             return false;
@@ -591,7 +593,7 @@ AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
         if (lIsString) {
             lstr = lhs.toString();
         } else {
-            lstr = ToString(cx, lhs);
+            lstr = ToString<CanGC>(cx, lhs);
             if (!lstr)
                 return false;
         }
@@ -600,15 +602,15 @@ AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
         } else {
             // Save/restore lstr in case of GC activity under ToString.
             lhs.setString(lstr);
-            rstr = ToString(cx, rhs);
+            rstr = ToString<CanGC>(cx, rhs);
             if (!rstr)
                 return false;
             lstr = lhs.toString();
         }
-        JSString *str = ConcatStringsNoGC(cx, lstr, rstr);
+        JSString *str = ConcatStrings<NoGC>(cx, lstr, rstr);
         if (!str) {
             RootedString nlstr(cx, lstr), nrstr(cx, rstr);
-            str = js_ConcatStrings(cx, nlstr, nrstr);
+            str = ConcatStrings<CanGC>(cx, nlstr, nrstr);
             if (!str)
                 return false;
         }
@@ -726,7 +728,7 @@ FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, MutableHandleId
         idp.set(INT_TO_JSID(i_));
         return true;
     }
-    return !!InternNonIntElementId(cx, obj, idval, idp, vp);
+    return !!InternNonIntElementId<CanGC>(cx, obj, idval, idp, vp);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -743,7 +745,7 @@ ToIdOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue ob
         return false;
 
     RootedId dummy(cx);
-    if (!InternNonIntElementId(cx, obj, idval, &dummy, res))
+    if (!InternNonIntElementId<CanGC>(cx, obj, idval, &dummy, res))
         return false;
 
     if (!res.isInt32())

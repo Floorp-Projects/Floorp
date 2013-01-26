@@ -83,12 +83,12 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 1; i < 4 && i < args.length(); i++) {
         RootedValue val(cx, args[i]);
         if (val.isInt32()) {
-            JSString *str = ToString(cx, val);
+            JSString *str = ToString<CanGC>(cx, val);
             if (!str)
                 return false;
             errorArgs[i - 1] = JS_EncodeString(cx, str);
         } else if (val.isString()) {
-            errorArgs[i - 1] = JS_EncodeString(cx, ToString(cx, val));
+            errorArgs[i - 1] = JS_EncodeString(cx, ToString<CanGC>(cx, val));
         } else {
             errorArgs[i - 1] = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr());
         }
@@ -114,7 +114,7 @@ intrinsic_AssertionFailed(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() > 0) {
         // try to dump the informative string
-        JSString *str = ToString(cx, args[0]);
+        JSString *str = ToString<CanGC>(cx, args[0]);
         if (str) {
             const jschar *chars = str->getChars(cx);
             if (chars) {

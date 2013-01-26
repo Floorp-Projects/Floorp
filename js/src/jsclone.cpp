@@ -770,8 +770,8 @@ JSStructuredCloneWriter::write(const Value &v)
                  */
                 RootedObject obj2(context());
                 RootedShape prop(context());
-                if (!js_HasOwnProperty(context(), obj->getOps()->lookupGeneric, obj, id,
-                                       &obj2, &prop)) {
+                if (!HasOwnProperty<CanGC>(context(), obj->getOps()->lookupGeneric, obj, id,
+                                           &obj2, &prop)) {
                     return false;
                 }
 

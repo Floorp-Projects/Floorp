@@ -297,10 +297,10 @@ JSRope::flatten(JSContext *maybecx)
 }
 
 template <AllowGC allowGC>
-static inline JSString *
-ConcatStringsMaybeAllowGC(JSContext *cx,
-                          typename MaybeRooted<JSString*, allowGC>::HandleType left,
-                          typename MaybeRooted<JSString*, allowGC>::HandleType right)
+JSString *
+js::ConcatStrings(JSContext *cx,
+                  typename MaybeRooted<JSString*, allowGC>::HandleType left,
+                  typename MaybeRooted<JSString*, allowGC>::HandleType right)
 {
     JS_ASSERT_IF(!left->isAtom(), left->compartment() == cx->compartment);
     JS_ASSERT_IF(!right->isAtom(), right->compartment() == cx->compartment);
@@ -339,18 +339,11 @@ ConcatStringsMaybeAllowGC(JSContext *cx,
     return JSRope::new_<allowGC>(cx, left, right, wholeLength);
 }
 
-JSString *
-js_ConcatStrings(JSContext *cx, HandleString left, HandleString right)
-{
-    return ConcatStringsMaybeAllowGC<CanGC>(cx, left, right);
-}
+template JSString *
+js::ConcatStrings<CanGC>(JSContext *cx, HandleString left, HandleString right);
 
-JSString *
-js::ConcatStringsNoGC(JSContext *cx, JSString *left, JSString *right)
-{
-    AutoAssertNoGCOrException nogc(cx);
-    return ConcatStringsMaybeAllowGC<NoGC>(cx, left, right);
-}
+template JSString *
+js::ConcatStrings<NoGC>(JSContext *cx, JSString *left, JSString *right);
 
 JSFlatString *
 JSDependentString::undepend(JSContext *cx)

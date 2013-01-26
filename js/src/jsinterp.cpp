@@ -286,11 +286,11 @@ js::ValueToCallable(JSContext *cx, const Value *vp, MaybeConstruct construct)
 }
 
 bool
-js::RunScript(JSContext *cx, HandleScript script, StackFrame *fp)
+js::RunScript(JSContext *cx, StackFrame *fp)
 {
-    JS_ASSERT(script);
     JS_ASSERT(fp == cx->fp());
-    JS_ASSERT(fp->script() == script);
+    JSScript *script = fp->script();
+
     JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
     JS_ASSERT_IF(fp->isEvalFrame(), script->isActiveEval);
 #ifdef JS_METHODJIT_SPEW
@@ -384,13 +384,12 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     }
 
     /* Invoke native functions. */
-    RootedFunction fun(cx, callee.toFunction());
+    JSFunction *fun = callee.toFunction();
     JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
 
-    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-    if (!script)
+    if (!fun->getOrCreateScript(cx))
         return false;
 
     if (!TypeMonitorCall(cx, args, construct))
@@ -402,7 +401,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
         return false;
 
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
-    JSBool ok = RunScript(cx, script, ifg.fp());
+    JSBool ok = RunScript(cx, ifg.fp());
 
     /* Propagate the return value out. */
     args.rval().set(ifg.fp()->returnValue());
@@ -528,12 +527,12 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, cons
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!JSScript::ensureRanAnalysis(cx, script))
+    if (!script->ensureRanAnalysis(cx))
         return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
     Probes::startExecution(script);
-    bool ok = RunScript(cx, script, efg.fp());
+    bool ok = RunScript(cx, efg.fp());
     Probes::stopExecution(script);
 
     /* Propgate the return value out. */
@@ -1626,7 +1625,7 @@ END_CASE(JSOP_AND)
 #define FETCH_ELEMENT_ID(obj, n, id)                                          \
     JS_BEGIN_MACRO                                                            \
         const Value &idval_ = regs.sp[n];                                     \
-        if (!ValueToId(cx, obj, idval_, &id))                                 \
+        if (!ValueToId<CanGC>(cx, obj, idval_, &id))                          \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -2225,17 +2224,12 @@ BEGIN_CASE(JSOP_GETXPROP)
 BEGIN_CASE(JSOP_LENGTH)
 BEGIN_CASE(JSOP_CALLPROP)
 {
-    RootedValue &lval = rootValue0;
-    lval = regs.sp[-1];
-
-    RootedValue rval(cx);
-    if (!GetPropertyOperation(cx, script, regs.pc, &lval, &rval))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!GetPropertyOperation(cx, script, regs.pc, lval, lval))
         goto error;
 
-    TypeScript::Monitor(cx, script, regs.pc, rval);
-
-    regs.sp[-1] = rval;
-    assertSameCompartmentDebugOnly(cx, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, regs.pc, lval);
+    assertSameCompartmentDebugOnly(cx, lval);
 }
 END_CASE(JSOP_GETPROP)
 
@@ -2363,7 +2357,7 @@ BEGIN_CASE(JSOP_FUNCALL)
      * TI and JITs.
      */
     if (isFunction) {
-        if (fun->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, fun))
+        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
             goto error;
         if (cx->typeInferenceEnabled() && fun->isCloneAtCallsite()) {
             fun = CloneFunctionAtCallsite(cx, fun, script, regs.pc);
@@ -2394,7 +2388,8 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RootedScript funScript(cx, fun->nonLazyScript());
+    RootedScript &funScript = rootScript0;
+    funScript = fun->nonLazyScript();
     if (!cx->stack.pushInlineFrame(cx, regs, args, fun, funScript, initial))
         goto error;
 
@@ -3001,7 +2996,8 @@ END_CASE(JSOP_INITELEM_INC)
 BEGIN_CASE(JSOP_SPREAD)
 {
     int32_t count = regs.sp[-2].toInt32();
-    RootedObject arr(cx, &regs.sp[-3].toObject());
+    RootedObject &arr = rootObject0;
+    arr = &regs.sp[-3].toObject();
     const Value iterable = regs.sp[-1];
     ForOfIterator iter(cx, iterable);
     RootedValue &iterVal = rootValue0;
@@ -3253,7 +3249,8 @@ BEGIN_CASE(JSOP_SETXMLNAME)
 {
     JS_ASSERT(!script->strict);
 
-    Rooted<JSObject*> obj(cx, &regs.sp[-3].toObject());
+    RootedObject &obj = rootObject0;
+    obj = &regs.sp[-3].toObject();
     RootedValue &rval = rootValue0;
     rval = regs.sp[-1];
     RootedId &id = rootId0;
@@ -3386,7 +3383,7 @@ BEGIN_CASE(JSOP_XMLTAGEXPR)
     JS_ASSERT(!script->strict);
 
     Value rval = regs.sp[-1];
-    JSString *str = ToString(cx, rval);
+    JSString *str = ToString<CanGC>(cx, rval);
     if (!str)
         goto error;
     regs.sp[-1].setString(str);
@@ -3402,7 +3399,7 @@ BEGIN_CASE(JSOP_XMLELTEXPR)
     if (IsXML(rval)) {
         str = js_ValueToXMLString(cx, rval);
     } else {
-        str = ToString(cx, rval);
+        str = ToString<CanGC>(cx, rval);
         if (str)
             str = js_EscapeElementValue(cx, str);
     }
