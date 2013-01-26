@@ -33,6 +33,17 @@ void InitProcessPriorityManager();
  */
 bool CurrentProcessIsForeground();
 
+/**
+ * If this process is in the background, temporarily boost its priority to the
+ * foreground.  This priority boost will expire after a few seconds
+ * (dom.ipc.processPriorityManager.temporaryPriorityMS).
+ *
+ * You might want to call this function when a process starts loading some
+ * things, but doesn't yet have a foreground window.  The hope would be that by
+ * once the timer here expires, the process will have a foreground window.
+ */
+void TemporarilySetProcessPriorityToForeground();
+
 } // namespace ipc
 } // namespace dom
 } // namespace mozilla
