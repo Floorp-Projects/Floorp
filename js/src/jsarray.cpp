@@ -167,7 +167,7 @@ DoubleIndexToId(JSContext *cx, double index, MutableHandleId id)
     if (index == uint32_t(index))
         return IndexToId(cx, uint32_t(index), id);
 
-    return ValueToId(cx, DoubleValue(index), id);
+    return ValueToId<CanGC>(cx, DoubleValue(index), id);
 }
 
 /*
@@ -720,7 +720,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
     // Steps 4 and 5
     RootedString sepstr(cx, NULL);
     if (!locale && args.hasDefined(0)) {
-        sepstr = ToString(cx, args[0]);
+        sepstr = ToString<CanGC>(cx, args[0]);
         if (!sepstr)
             return false;
     }
@@ -953,7 +953,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     double index = MAX_ARRAY_INDEX + 1;
     do {
         value = *vector++;
-        if (!ValueToId(cx, DoubleValue(index), &id) ||
+        if (!ValueToId<CanGC>(cx, DoubleValue(index), &id) ||
             !JSObject::setGeneric(cx, obj, obj, id, &value, true)) {
             return false;
         }

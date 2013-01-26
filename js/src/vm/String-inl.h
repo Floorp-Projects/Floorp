@@ -218,20 +218,18 @@ JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length
 JS_ALWAYS_INLINE JSLinearString *
 JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *chars, size_t length)
 {
-    js::Rooted<JSLinearString*> base(cx, baseArg);
-
     /* Try to avoid long chains of dependent strings. */
-    while (base->isDependent())
-        base = base->asDependent().base();
+    while (baseArg->isDependent())
+        baseArg = baseArg->asDependent().base();
 
-    JS_ASSERT(base->isFlat());
+    JS_ASSERT(baseArg->isFlat());
 
     /*
      * The chars we are pointing into must be owned by something in the chain
      * of dependent or undepended strings kept alive by our base pointer.
      */
 #ifdef DEBUG
-    for (JSLinearString *b = base; ; b = b->base()) {
+    for (JSLinearString *b = baseArg; ; b = b->base()) {
         if (chars >= b->chars() && chars < b->chars() + b->length() &&
             length <= b->length() - (chars - b->chars()))
         {
@@ -248,7 +246,15 @@ JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *ch
     if (JSShortString::lengthFits(length))
         return js::NewShortString<js::CanGC>(cx, js::TwoByteChars(chars, length));
 
-    JSDependentString *str = (JSDependentString *)js_NewGCString<js::CanGC>(cx);
+    JSDependentString *str = (JSDependentString *)js_NewGCString<js::NoGC>(cx);
+    if (str) {
+        str->init(baseArg, chars, length);
+        return str;
+    }
+
+    js::Rooted<JSLinearString*> base(cx, baseArg);
+
+    str = (JSDependentString *)js_NewGCString<js::CanGC>(cx);
     if (!str)
         return NULL;
     str->init(base, chars, length);

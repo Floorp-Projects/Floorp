@@ -467,7 +467,7 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp)
     if (!wrap(cx, value.address()))
         return false;
     RootedId id(cx);
-    if (!ValueToId(cx, value.get(), &id))
+    if (!ValueToId<CanGC>(cx, value.get(), &id))
         return false;
 
     *idp = id;

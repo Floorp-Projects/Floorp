@@ -314,7 +314,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH_PROP);
         return false;
     } else {
-        if (!ValueToId(cx, IdToValue(id), &propid))
+        if (!ValueToId<CanGC>(cx, IdToValue(id), &propid))
             return false;
     }
 
@@ -516,7 +516,7 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
     if (fun->isInterpretedLazy()) {
         RootedFunction rootedFun(cx, fun);
         AutoCompartment funCompartment(cx, rootedFun);
-        script = JSFunction::getOrCreateScript(cx, rootedFun);
+        script = rootedFun->getOrCreateScript(cx);
         if (!script)
             MOZ_CRASH();
     } else {
@@ -1101,7 +1101,7 @@ class AutoPropertyDescArray
 static const char *
 FormatValue(JSContext *cx, const Value &v, JSAutoByteString &bytes)
 {
-    JSString *str = ToString(cx, v);
+    JSString *str = ToString<CanGC>(cx, v);
     if (!str)
         return NULL;
     const char *buf = bytes.encode(cx, str);
@@ -1249,7 +1249,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
     if (showLocals) {
         if (!thisVal.isUndefined()) {
             JSAutoByteString thisValBytes;
-            RootedString thisValStr(cx, ToString(cx, thisVal));
+            RootedString thisValStr(cx, ToString<CanGC>(cx, thisVal));
             if (thisValStr) {
                 if (const char *str = thisValBytes.encode(cx, thisValStr)) {
                     buf = JS_sprintf_append(buf, "    this = %s\n", str);

@@ -264,7 +264,7 @@ num_parseFloat(JSContext *cx, unsigned argc, Value *vp)
         vp->setDouble(js_NaN);
         return JS_TRUE;
     }
-    str = ToString(cx, vp[2]);
+    str = ToString<CanGC>(cx, vp[2]);
     if (!str)
         return JS_FALSE;
     bp = str->getChars(cx);
@@ -381,7 +381,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 1. */
-    RootedString inputString(cx, ToString(cx, args[0]));
+    RootedString inputString(cx, ToString<CanGC>(cx, args[0]));
     if (!inputString)
         return false;
     args[0].setString(inputString);

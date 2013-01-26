@@ -1105,10 +1105,9 @@ static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
 template <typename CompileContext>
 static AbortReason
-IonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing,
+IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
            CompileContext &compileContext)
 {
-    AssertCanGC();
 #if JS_TRACE_LOGGING
     AutoTraceLog logger(TraceLogging::defaultLogger(),
                         TraceLogging::ION_COMPILE_START,
@@ -1349,7 +1348,7 @@ CheckScriptSize(JSContext *cx, UnrootedScript script)
 }
 
 static MethodStatus
-Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing)
+Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
@@ -1402,7 +1401,7 @@ Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrP
 // Decide if a transition from interpreter execution to Ion code should occur.
 // May compile or recompile the target JSScript.
 MethodStatus
-ion::CanEnterAtBranch(JSContext *cx, HandleScript script, AbstractFramePtr fp,
+ion::CanEnterAtBranch(JSContext *cx, JSScript *script, AbstractFramePtr fp,
                       jsbytecode *pc, bool isConstructing)
 {
     JS_ASSERT(ion::IsEnabled(cx));
@@ -1431,7 +1430,7 @@ ion::CanEnterAtBranch(JSContext *cx, HandleScript script, AbstractFramePtr fp,
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    RootedFunction fun(cx, fp.isFunctionFrame() ? fp.fun() : NULL);
+    JSFunction *fun = fp.isFunctionFrame() ? fp.fun() : NULL;
     MethodStatus status = Compile(cx, script, fun, pc, isConstructing);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
@@ -1446,7 +1445,7 @@ ion::CanEnterAtBranch(JSContext *cx, HandleScript script, AbstractFramePtr fp,
 }
 
 MethodStatus
-ion::CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp,
+ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp,
               bool isConstructing, bool newType)
 {
     JS_ASSERT(ion::IsEnabled(cx));
@@ -1467,11 +1466,13 @@ ion::CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp,
     // Creating |this| is done before building Ion because it may change the
     // type information and invalidate compilation results.
     if (isConstructing && fp.thisValue().isPrimitive()) {
+        RootedScript scriptRoot(cx, script);
         RootedObject callee(cx, &fp.callee());
         RootedObject obj(cx, js_CreateThisForFunction(cx, callee, newType));
         if (!obj)
             return Method_Skipped;
         fp.thisValue().setObject(*obj);
+        script = scriptRoot;
     }
 
     // Mark as forbidden if frame can't be handled.
@@ -1481,7 +1482,7 @@ ion::CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp,
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    RootedFunction fun(cx, fp.isFunctionFrame() ? fp.fun() : NULL);
+    JSFunction *fun = fp.isFunctionFrame() ? fp.fun() : NULL;
     MethodStatus status = Compile(cx, script, fun, NULL, isConstructing);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
@@ -1674,13 +1675,12 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args)
 {
     JS_CHECK_RECURSION(cx, return IonExec_Error);
 
-    RootedScript script(cx, fun->nonLazyScript());
-    IonScript *ion = script->ionScript();
+    IonScript *ion = fun->nonLazyScript()->ionScript();
     IonCode *code = ion->method();
     void *jitcode = code->raw();
 
     JS_ASSERT(ion::IsEnabled(cx));
-    JS_ASSERT(!script->ion->bailoutExpected());
+    JS_ASSERT(!ion->bailoutExpected());
 
     bool clearCallingIntoIon = false;
     StackFrame *fp = cx->fp();

@@ -18,11 +18,11 @@ using namespace js::types;
 using namespace js::analyze;
 
 bool
-TypeInferenceOracle::init(JSContext *cx, HandleScript script)
+TypeInferenceOracle::init(JSContext *cx, JSScript *script)
 {
     this->cx = cx;
     this->script_.init(script);
-    return JSScript::ensureRanInference(cx, script);
+    return script->ensureRanInference(cx);
 }
 
 MIRType

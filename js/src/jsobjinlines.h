@@ -990,6 +990,20 @@ inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()
 inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
 inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 
+inline js::NumberObject &
+JSObject::asNumber()
+{
+    JS_ASSERT(isNumber());
+    return *static_cast<js::NumberObject *>(this);
+}
+
+inline js::StringObject &
+JSObject::asString()
+{
+    JS_ASSERT(isString());
+    return *static_cast<js::StringObject *>(this);
+}
+
 inline bool
 JSObject::isDebugScope() const
 {
@@ -1473,15 +1487,96 @@ IsStopIteration(const js::Value &v)
     return v.isObject() && v.toObject().isStopIteration();
 }
 
+static JS_ALWAYS_INLINE bool
+IsFunctionObject(const js::Value &v)
+{
+    return v.isObject() && v.toObject().isFunction();
+}
+
+static JS_ALWAYS_INLINE bool
+IsFunctionObject(const js::Value &v, JSFunction **fun)
+{
+    if (v.isObject() && v.toObject().isFunction()) {
+        *fun = v.toObject().toFunction();
+        return true;
+    }
+    return false;
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v)
+{
+    JSFunction *fun;
+    return IsFunctionObject(v, &fun) && fun->isNative();
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v, JSFunction **fun)
+{
+    return IsFunctionObject(v, fun) && (*fun)->isNative();
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v, JSNative native)
+{
+    JSFunction *fun;
+    return IsFunctionObject(v, &fun) && fun->maybeNative() == native;
+}
+
+/*
+ * When we have an object of a builtin class, we don't quite know what its
+ * valueOf/toString methods are, since these methods may have been overwritten
+ * or shadowed. However, we can still do better than the general case by
+ * hard-coding the necessary properties for us to find the native we expect.
+ *
+ * TODO: a per-thread shape-based cache would be faster and simpler.
+ */
+static JS_ALWAYS_INLINE bool
+ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid, JSNative native)
+{
+    JS_ASSERT(!obj->isProxy());
+    JS_ASSERT(obj->getClass() == clasp);
+
+    Value v;
+    if (!HasDataProperty(cx, obj, methodid, &v)) {
+        JSObject *proto = obj->getProto();
+        if (!proto || proto->getClass() != clasp || !HasDataProperty(cx, proto, methodid, &v))
+            return false;
+    }
+
+    return js::IsNativeFunction(v, native);
+}
+
 /* ES5 9.1 ToPrimitive(input). */
 static JS_ALWAYS_INLINE bool
 ToPrimitive(JSContext *cx, Value *vp)
 {
     if (vp->isPrimitive())
         return true;
-    RootedObject obj(cx, &vp->toObject());
+
+    JSObject *obj = &vp->toObject();
+
+    /* Optimize new String(...).valueOf(). */
+    if (obj->isString()) {
+        jsid id = NameToId(cx->names().valueOf);
+        if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
+            vp->setString(obj->asString().unbox());
+            return true;
+        }
+    }
+
+    /* Optimize new Number(...).valueOf(). */
+    if (obj->isNumber()) {
+        jsid id = NameToId(cx->names().valueOf);
+        if (ClassMethodIsNative(cx, obj, &NumberClass, id, js_num_valueOf)) {
+            vp->setNumber(obj->asNumber().unbox());
+            return true;
+        }
+    }
+
+    RootedObject objRoot(cx, obj);
     RootedValue value(cx, *vp);
-    if (!JSObject::defaultValue(cx, obj, JSTYPE_VOID, &value))
+    if (!JSObject::defaultValue(cx, objRoot, JSTYPE_VOID, &value))
         return false;
     *vp = value;
     return true;
