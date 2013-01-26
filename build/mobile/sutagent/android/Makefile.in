@@ -42,11 +42,15 @@ GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
   sutAgentAndroid.apk  \
+  sutAgentAndroid.ap_ \
+  sutAgentAndroid-unsigned-unaligned.apk \
+  sutAgentAndroid-unaligned.apk \
   $(NULL)
 
-GARBAGE_DIRS += res classes network-libs
+GARBAGE_DIRS += network-libs
 
 EXTRA_JARS = $(srcdir)/network-libs/commons-net-2.0.jar:$(srcdir)/network-libs/jmdns.jar
+
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar:$(EXTRA_JARS)
 
 include $(topsrcdir)/config/rules.mk
@@ -57,26 +61,20 @@ include $(topsrcdir)/config/android-common.mk
 tools:: sutAgentAndroid.apk
 
 classes.dex: $(JAVAFILES)
-	$(NSINSTALL) -D classes
 	$(JAVAC) $(JAVAC_FLAGS) -d classes  $(addprefix $(srcdir)/,$(JAVAFILES))
 	$(DX) --dex --output=$@ classes $(subst :, ,$(EXTRA_JARS))
 
 sutAgentAndroid.ap_: $(srcdir)/AndroidManifest.xml
-	$(AAPT) package -f -M $(srcdir)/AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -F $@
+	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar -S res -F $@
 
 sutAgentAndroid-unsigned-unaligned.apk: sutAgentAndroid.ap_ classes.dex
 	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z sutAgentAndroid.ap_ -f classes.dex
 
 sutAgentAndroid-unaligned.apk: sutAgentAndroid-unsigned-unaligned.apk
-	cp  sutAgentAndroid-unsigned-unaligned.apk $@
+	cp $< $@
 ifdef JARSIGNER
 	$(JARSIGNER) $@
 endif
 
 sutAgentAndroid.apk: sutAgentAndroid-unaligned.apk
 	$(ZIPALIGN) -f -v 4 sutAgentAndroid-unaligned.apk $@
-
-export::
-	$(NSINSTALL) -D res
-	@(cd $(srcdir)/res && tar $(TAR_CREATE_FLAGS) - *) | (cd $(DEPTH)/build/mobile/sutagent/android/res && tar -xf -)
-

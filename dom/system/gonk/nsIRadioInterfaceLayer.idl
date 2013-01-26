@@ -240,7 +240,7 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
   readonly attribute DOMString voicemailDisplayName;
 };
 
-[scriptable, uuid(886251a4-18d9-4a54-a6a1-57d5c1d61ceb)]
+[scriptable, uuid(7cb249b8-7ec9-4e31-a043-293121574dd0)]
 interface nsIICCRecords : nsISupports
 {
   /**
@@ -282,6 +282,21 @@ interface nsIICCRecords : nsISupports
    * Fixed Dialling Numbers
    */
   readonly attribute jsval fdn;
+
+  /**
+   * Service Provider Name (SPN) of the subscriber's home network.
+   */
+  readonly attribute DOMString spn;
+
+  /**
+   * Network name must be a part of displayed carrier name.
+   */
+  readonly attribute boolean isDisplayNetworkNameRequired;
+
+  /**
+   * Service provider name must be a part of displayed carrier name.
+   */
+  readonly attribute boolean isDisplaySpnRequired;
 };
 
 [scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]

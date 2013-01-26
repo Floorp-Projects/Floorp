@@ -98,8 +98,6 @@ protected:
 
   bool ChannelsActiveWithHigherPriorityThan(AudioChannelInternalType aType);
 
-  bool HasMoreThanOneContentChannelHidden();
-
   const char* ChannelName(AudioChannelType aType);
 
   AudioChannelInternalType GetInternalType(AudioChannelType aType,
@@ -129,6 +127,9 @@ protected:
   nsTArray<uint64_t> mChannelCounters[AUDIO_CHANNEL_INT_LAST];
 
   AudioChannelType mCurrentHigherChannel;
+
+  nsTArray<uint64_t> mActiveContentChildIDs;
+  bool mActiveContentChildIDsFrozen;
 
   // This is needed for IPC comunication between
   // AudioChannelServiceChild and this class.

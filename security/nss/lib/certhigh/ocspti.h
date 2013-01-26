@@ -5,7 +5,7 @@
 /*
  * Private header defining OCSP types.
  *
- * $Id: ocspti.h,v 1.9 2012/12/12 16:03:44 wtc%google.com Exp $
+ * $Id: ocspti.h,v 1.11 2013/01/23 23:05:51 kaie%kuix.de Exp $
  */
 
 #ifndef _OCSPTI_H_
@@ -189,14 +189,18 @@ struct CERTOCSPCertIDStr {
  * }
  */
 typedef enum {
-    ocspResponse_other = -1,		/* unknown/unrecognized value */
+    ocspResponse_min = 0,
     ocspResponse_successful = 0,
     ocspResponse_malformedRequest = 1,
     ocspResponse_internalError = 2,
     ocspResponse_tryLater = 3,
     ocspResponse_unused = 4,
     ocspResponse_sigRequired = 5,
-    ocspResponse_unauthorized = 6
+    ocspResponse_unauthorized = 6,
+    ocspResponse_max = 6 /* Please update max when adding values.
+                          * Remember to also update arrays, e.g.
+                          * "responseStatusNames" in ocspclnt.c
+                          * and potentially other places. */
 } ocspResponseStatus;
 
 /*

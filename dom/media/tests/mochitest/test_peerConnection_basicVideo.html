@@ -29,8 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=796888
   var pcRemote;
 
   var test_data = {
-    pcLocal: { audio: [], video: []},
-    pcRemote: { audio: [], video: []}
+    pcLocal: [],
+    pcRemote: []
   };
 
   runTest(function () {
@@ -42,21 +42,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=796888
     pcRemote = new mozRTCPeerConnection();
 
     pcLocal.onaddstream = function (aObj) {
-      test_data.pcLocal[aObj.type].push(aObj.stream);
+      test_data.pcLocal.push(aObj.stream);
 
-      if (aObj.type === "video") {
-        videoPCRemote.mozSrcObject = aObj.stream;
-        videoPCRemote.play();
-      }
+      videoPCRemote.mozSrcObject = aObj.stream;
+      videoPCRemote.play();
     };
 
     pcRemote.onaddstream = function (aObj) {
-      test_data.pcRemote[aObj.type].push(aObj.stream);
+      test_data.pcRemote.push(aObj.stream);
 
-      if (aObj.type === "video") {
-        videoPCLocal.mozSrcObject = aObj.stream;
-        videoPCLocal.play();
-      }
+      videoPCLocal.mozSrcObject = aObj.stream;
+      videoPCLocal.play();
     };
 
     navigator.mozGetUserMedia({video: true, fake: true}, function onSuccess(aLocalInputStream) {
@@ -74,18 +70,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=796888
           is(pcRemote.localStreams.length, 1,
              "A single local stream has been attached to the remote peer");
 
-          is(test_data.pcLocal.video.length, 1,
-             "A remote video stream has been attached to the local peer");
-          is(test_data.pcLocal.audio.length, 0,
-             "A temporary remote audio stream has been attached to the local peer");
-          is(test_data.pcRemote.video.length, 1,
-             "A remote video stream has been attached to the remote peer");
-          is(test_data.pcRemote.audio.length, 0,
-             "A temporary remote audio stream has been attached to the remote peer");
+          // TODO: check that the streams are of the expected types.
+	  // Bug 834837.
 
-          ok(PeerConnection.findStream(pcLocal.remoteStreams, test_data.pcLocal.video[0]) !== -1,
+          ok(PeerConnection.findStream(pcLocal.remoteStreams, test_data.pcLocal[0]) !== -1,
              "Remote video stream for local peer is accessible");
-          ok(PeerConnection.findStream(pcRemote.remoteStreams, test_data.pcRemote.video[0]) !== -1,
+          ok(PeerConnection.findStream(pcRemote.remoteStreams, test_data.pcRemote[0]) !== -1,
              "Remote video stream for remote peer is accessible");
 
           info("For now simply disconnect. We will add checks for media in a follow-up bug");

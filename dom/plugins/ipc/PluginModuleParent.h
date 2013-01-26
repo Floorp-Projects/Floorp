@@ -296,7 +296,7 @@ private:
     void ProcessFirstMinidump();
     void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
 #endif
-    void CleanupFromTimeout();
+    void CleanupFromTimeout(const bool aByHangUI);
     void SetChildTimeout(const int32_t aChildTimeout);
     static int TimeoutChanged(const char* aPref, void* aModule);
     void NotifyPluginCrashed();

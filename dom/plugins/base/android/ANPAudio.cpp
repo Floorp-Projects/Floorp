@@ -98,11 +98,13 @@ struct ANPAudioTrack {
   unsigned int isStopped;
   unsigned int keepGoing;
 
-  mozilla::Mutex* lock;
+  mozilla::Mutex lock;
 
   void* user;
   ANPAudioCallbackProc proc;
   ANPSampleFormat format;
+
+  ANPAudioTrack() : lock("ANPAudioTrack") { }
 };
 
 class AudioRunnable : public nsRunnable
@@ -151,7 +153,7 @@ AudioRunnable::Run()
     buffer.size = mTrack->bufferSize;
     
     {
-      mozilla::MutexAutoLock lock(*mTrack->lock);
+      mozilla::MutexAutoLock lock(mTrack->lock);
 
       if (!mTrack->keepGoing)
         break;
@@ -188,10 +190,8 @@ AudioRunnable::Run()
   jenv->DeleteGlobalRef(mTrack->output_unit);
   jenv->DeleteGlobalRef(mTrack->at_class);
 
-  delete mTrack->lock;
-
-  free(mTrack);
-
+  delete mTrack;
+  
   jenv->ReleaseByteArrayElements(bytearray, byte, 0);
 
   return NS_OK;
@@ -204,7 +204,7 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
                    ANPAudioCallbackProc proc,
                    void* user)
 {
-  ANPAudioTrack *s = (ANPAudioTrack*) malloc(sizeof(ANPAudioTrack));
+  ANPAudioTrack *s = new ANPAudioTrack();
   if (s == NULL) {
     return NULL;
   }
@@ -222,7 +222,6 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
   s->user = user;
   s->proc = proc;
   s->format = format;
-  s->lock = new mozilla::Mutex("ANPAudioTrack");
 
   int jformat;
   switch (format) {
@@ -288,7 +287,7 @@ anp_audio_deleteTrack(ANPAudioTrack* s)
     return;
   }
 
-  mozilla::MutexAutoLock lock(*s->lock);
+  mozilla::MutexAutoLock lock(s->lock);
   s->keepGoing = false;
 
   // deallocation happens in the AudioThread.  There is a

@@ -186,9 +186,13 @@ chains_init()
     if [ -n "${NSS_AIA_PATH}" ]; then
         HTTPPID=${NSS_AIA_PATH}/http_pid.$$
         mkdir -p "${NSS_AIA_PATH}"
-        pushd "${NSS_AIA_PATH}"
+        SAVEPWD=`pwd`
+        cd "${NSS_AIA_PATH}"
+        # Start_httpserv sets environment variables, which are required for
+        # correct cleanup. (Running it in a subshell doesn't work, the
+        # value of $SHELL_HTTPPID wouldn't arrive in this scope.)
         start_httpserv
-        popd
+        cd "${SAVEPWD}"
     fi
 
     html_head "Certificate Chains Tests"
@@ -790,6 +794,7 @@ revoke_cert()
 # FETCH - fetch flag (used with AIA extension)
 # POLICY - list of policies
 # TRUST - trust anchor
+# TRUST_AND_DB - Examine both trust anchors and the cert db for trust
 # VERIFY - list of certificates to use as vfychain parameters
 # EXP_RESULT - expected result
 # REV_OPTS - revocation options
@@ -806,6 +811,7 @@ verify_cert()
     TRUST_OPT=
     VFY_CERTS=
     VFY_LIST=
+    TRUST_AND_DB_OPT=
 
     if [ -n "${DB}" ]; then
         DB_OPT="-d ${DB}"
@@ -817,6 +823,10 @@ verify_cert()
             echo "${SCRIPTNAME} Skipping test using AIA fetching, NSS_AIA_HTTP not defined"
             return
         fi
+    fi
+
+    if [ -n "${TRUST_AND_DB}" ]; then
+        TRUST_AND_DB_OPT="-T"
     fi
 
     for ITEM in ${POLICY}; do
@@ -851,8 +861,8 @@ verify_cert()
         fi
     done
 
-    VFY_OPTS_TNAME="${REV_OPTS} ${DB_OPT} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${TRUST_OPT}"
-    VFY_OPTS_ALL="${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
+    VFY_OPTS_TNAME="${TRUST_AND_DB_OPT} ${REV_OPTS} ${DB_OPT} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${TRUST_OPT}"
+    VFY_OPTS_ALL="${DB_OPT} -pp -vv ${TRUST_AND_DB_OPT} ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
 
     TESTNAME="Verifying certificate(s) ${VFY_LIST} with flags ${VFY_OPTS_TNAME}"
     echo "${SCRIPTNAME}: ${TESTNAME}"
@@ -1045,6 +1055,7 @@ parse_config()
         "verify")
             VERIFY="${VALUE}"
             TRUST=
+            TRUST_AND_DB=
             POLICY=
             FETCH=
             EXP_RESULT=
@@ -1063,6 +1074,9 @@ parse_config()
             ;;
         "trust")
             TRUST="${TRUST} ${VALUE}"
+            ;;
+        "trust_and_db")
+            TRUST_AND_DB=1
             ;;
         "fetch")
             FETCH=1

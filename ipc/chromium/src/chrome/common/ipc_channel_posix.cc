@@ -642,7 +642,11 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       struct cmsghdr *cmsg;
       const unsigned num_fds = msg->file_descriptor_set()->size();
 
-      DCHECK_LE(num_fds, FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE);
+      if (num_fds > FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
+        LOG(FATAL) << "Too many file descriptors!";
+        // This should not be reached.
+        return false;
+      }
 
       msgh.msg_control = buf;
       msgh.msg_controllen = CMSG_SPACE(sizeof(int) * num_fds);

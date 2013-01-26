@@ -802,6 +802,7 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
       // Stop our content controller from requesting repaints of our
       // content.
       mContentController->ClearRenderFrame();
+      mPanZoomController->Destroy();
     }
   }
 

@@ -13,9 +13,9 @@
 
 #include "methodjit/MethodJIT.h"
 #include "vm/Stack.h"
-#ifdef JS_ION
 #include "ion/BaselineFrame.h"
 #include "ion/BaselineFrame-inl.h"
+#ifdef JS_ION
 #include "ion/IonFrameIterator-inl.h"
 #endif
 #include "jsscriptinlines.h"
@@ -605,7 +605,11 @@ AbstractFramePtr::maybeHookData() const
 {
     if (isStackFrame())
         return asStackFrame()->maybeHookData();
+#ifdef JS_ION
     return asBaselineFrame()->maybeHookData();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline void
@@ -621,10 +625,15 @@ AbstractFramePtr::setHookData(void *data) const
 inline void
 AbstractFramePtr::setReturnValue(const Value &rval) const
 {
-    if (isStackFrame())
+    if (isStackFrame()) {
         asStackFrame()->setReturnValue(rval);
-    else
-        asBaselineFrame()->setReturnValue(rval);
+        return;
+    }
+#ifdef JS_ION
+    asBaselineFrame()->setReturnValue(rval);
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline UnrootedObject
@@ -632,7 +641,11 @@ AbstractFramePtr::scopeChain() const
 {
     if (isStackFrame())
         return asStackFrame()->scopeChain();
+#ifdef JS_ION
     return asBaselineFrame()->scopeChain();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline CallObject &
@@ -655,14 +668,22 @@ AbstractFramePtr::numActualArgs() const
 {
     if (isStackFrame())
         return asStackFrame()->numActualArgs();
+#ifdef JS_ION
     return asBaselineFrame()->numActualArgs();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline unsigned
 AbstractFramePtr::numFormalArgs() const
 {
     if (isStackFrame())
         return asStackFrame()->numFormalArgs();
+#ifdef JS_ION
     return asBaselineFrame()->numFormalArgs();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline Value &
@@ -670,7 +691,11 @@ AbstractFramePtr::unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     if (isStackFrame())
         return asStackFrame()->unaliasedVar(i, checkAliasing);
+#ifdef JS_ION
     return asBaselineFrame()->unaliasedVar(i, checkAliasing);
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline Value &
@@ -678,7 +703,11 @@ AbstractFramePtr::unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     if (isStackFrame())
         return asStackFrame()->unaliasedLocal(i, checkAliasing);
+#ifdef JS_ION
     return asBaselineFrame()->unaliasedLocal(i, checkAliasing);
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline Value &
@@ -686,7 +715,11 @@ AbstractFramePtr::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     if (isStackFrame())
         return asStackFrame()->unaliasedFormal(i, checkAliasing);
+#ifdef JS_ION
     return asBaselineFrame()->unaliasedFormal(i, checkAliasing);
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline JSGenerator *
@@ -702,7 +735,11 @@ AbstractFramePtr::maybeBlockChain() const
 {
     if (isStackFrame())
         return asStackFrame()->maybeBlockChain();
+#ifdef JS_ION
     return asBaselineFrame()->maybeBlockChain();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::hasCallObj() const
@@ -731,21 +768,33 @@ AbstractFramePtr::isFunctionFrame() const
 {
     if (isStackFrame())
         return asStackFrame()->isFunctionFrame();
+#ifdef JS_ION
     return asBaselineFrame()->isFunctionFrame();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::isGlobalFrame() const
 {
     if (isStackFrame())
         return asStackFrame()->isGlobalFrame();
+#ifdef JS_ION
     return asBaselineFrame()->isGlobalFrame();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::isEvalFrame() const
 {
     if (isStackFrame())
         return asStackFrame()->isEvalFrame();
+#ifdef JS_ION
     return asBaselineFrame()->isEvalFrame();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::isFramePushedByExecute() const
@@ -765,49 +814,85 @@ AbstractFramePtr::script() const
 {
     if (isStackFrame())
         return asStackFrame()->script();
+#ifdef JS_ION
     return asBaselineFrame()->script();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline JSFunction *
 AbstractFramePtr::fun() const
 {
     if (isStackFrame())
         return asStackFrame()->fun();
+#ifdef JS_ION
     return asBaselineFrame()->fun();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
+}
+inline JSFunction *
+AbstractFramePtr::maybeFun() const
+{
+    if (isStackFrame())
+        return asStackFrame()->maybeFun();
+    JS_NOT_REACHED("Invalid frame");
+    return NULL;
 }
 inline JSFunction *
 AbstractFramePtr::callee() const
 {
     if (isStackFrame())
         return &asStackFrame()->callee();
+#ifdef JS_ION
     return asBaselineFrame()->callee();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline Value
 AbstractFramePtr::calleev() const
 {
     if (isStackFrame())
         return asStackFrame()->calleev();
+#ifdef JS_ION
     return asBaselineFrame()->calleev();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::isNonEvalFunctionFrame() const
 {
     if (isStackFrame())
         return asStackFrame()->isNonEvalFunctionFrame();
+#ifdef JS_ION
     return asBaselineFrame()->isNonEvalFunctionFrame();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::isNonStrictDirectEvalFrame() const
 {
     if (isStackFrame())
         return asStackFrame()->isNonStrictDirectEvalFrame();
+#ifdef JS_ION
     return asBaselineFrame()->isNonStrictDirectEvalFrame();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::isStrictEvalFrame() const
 {
     if (isStackFrame())
         return asStackFrame()->isStrictEvalFrame();
+#ifdef JS_ION
     return asBaselineFrame()->isStrictEvalFrame();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline Value *
@@ -815,14 +900,22 @@ AbstractFramePtr::formals() const
 {
     if (isStackFrame())
         return asStackFrame()->formals();
+#ifdef JS_ION
     return asBaselineFrame()->formals();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline Value *
 AbstractFramePtr::actuals() const
 {
     if (isStackFrame())
         return asStackFrame()->actuals();
+#ifdef JS_ION
     return asBaselineFrame()->actuals();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::hasArgsObj() const
@@ -854,7 +947,11 @@ AbstractFramePtr::copyRawFrameSlots(AutoValueVector *vec) const
 {
     if (isStackFrame())
         return asStackFrame()->copyRawFrameSlots(vec);
+#ifdef JS_ION
     return asBaselineFrame()->copyRawFrameSlots(vec);
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline bool
@@ -862,15 +959,24 @@ AbstractFramePtr::prevUpToDate() const
 {
     if (isStackFrame())
         return asStackFrame()->prevUpToDate();
+#ifdef JS_ION
     return asBaselineFrame()->prevUpToDate();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline void
 AbstractFramePtr::setPrevUpToDate() const
 {
-    if (isStackFrame())
+    if (isStackFrame()) {
         asStackFrame()->setPrevUpToDate();
-    else
-        asBaselineFrame()->setPrevUpToDate();
+        return;
+    }
+#ifdef JS_ION
+    asBaselineFrame()->setPrevUpToDate();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline AbstractFramePtr
 AbstractFramePtr::evalPrev() const
@@ -887,7 +993,11 @@ AbstractFramePtr::thisValue() const
 {
     if (isStackFrame())
         return asStackFrame()->thisValue();
+#ifdef JS_ION
     return asBaselineFrame()->thisValue();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 } /* namespace js */

@@ -60,6 +60,7 @@ this.AppsUtils = {
       packageEtag: aApp.packageEtag,
       manifestHash: aApp.manifestHash,
       packageHash: aApp.packageHash,
+      staged: aApp.staged,
       installerAppId: aApp.installerAppId || Ci.nsIScriptSecurityManager.NO_APP_ID,
       installerIsBrowser: !!aApp.installerIsBrowser
     };

@@ -147,7 +147,7 @@ class TestAgentSend : public TestAgent {
         test_pc,
         NULL,
         test_utils->sts_target(),
-        audio_->GetStream(), audio_conduit_, audio_flow_, NULL);
+        audio_->GetStream(), 1, audio_conduit_, audio_flow_, NULL);
 
     audio_pipeline_->Init();
 
@@ -185,7 +185,7 @@ class TestAgentReceive : public TestAgent {
         test_pc,
         NULL,
         test_utils->sts_target(),
-        audio_->GetStream(),
+        audio_->GetStream(), 1,
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
         audio_flow_, NULL);
 

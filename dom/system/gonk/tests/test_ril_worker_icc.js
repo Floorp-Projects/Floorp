@@ -32,7 +32,7 @@ function newUint8Worker() {
   return worker;
 }
 
-function newUint8WithOutgoingIndexWorker() {
+function newUint8SupportOutgoingIndexWorker() {
   let worker = newWorker();
   let index = 4;          // index for read
   let buf = [0, 0, 0, 0]; // Preserved parcel size
@@ -1371,7 +1371,7 @@ add_test(function test_parse_pbr_tlvs() {
  * Verify Event Download Command : Location Status
  */
 add_test(function test_stk_event_download_location_status() {
-  let worker = newUint8WithOutgoingIndexWorker();
+  let worker = newUint8SupportOutgoingIndexWorker();
   let buf = worker.Buf;
   let pduHelper = worker.GsmPDUHelper;
 
@@ -1450,8 +1450,8 @@ add_test(function test_stk_event_download_location_status() {
 /**
  * Verify STK terminal response
  */
-add_test(function test_stk_event_download_location_status() {
-  let worker = newUint8WithOutgoingIndexWorker();
+add_test(function test_stk_terminal_response() {
+  let worker = newUint8SupportOutgoingIndexWorker();
   let buf = worker.Buf;
   let pduHelper = worker.GsmPDUHelper;
 
@@ -1512,4 +1512,52 @@ add_test(function test_stk_event_download_location_status() {
     resultCode: STK_RESULT_OK
   };
   worker.RIL.sendStkTerminalResponse(response);
+});
+
+/**
+ * Verify Event Download Command : Idle Screen Available
+ */
+add_test(function test_stk_event_download_idle_screen_available() {
+  let worker = newUint8SupportOutgoingIndexWorker();
+  let buf = worker.Buf;
+  let pduHelper = worker.GsmPDUHelper;
+
+  buf.sendParcel = function () {
+    // Type
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND)
+
+    // Token : we don't care
+    this.readUint32();
+
+    // Data Size, 18 = 2 * (2 + TLV_DEVICE_ID_SIZE(4) + TLV_EVENT_LIST_SIZE(3))
+    do_check_eq(this.readUint32(), 18);
+
+    // BER tag
+    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+
+    // BER length, 7 = TLV_DEVICE_ID_SIZE(4) + TLV_EVENT_LIST_SIZE(3)
+    do_check_eq(pduHelper.readHexOctet(), 7);
+
+    // Device Identities, Type-Length-Value(Source ID-Destination ID)
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 2);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_DISPLAY);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+
+    // Event List, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 1);
+    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE);
+
+    run_next_test();
+  };
+
+  let event = {
+    eventType: STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE
+  };
+  worker.RIL.sendStkEventDownload({
+    event: event
+  });
 });

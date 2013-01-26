@@ -1805,13 +1805,8 @@ UpdateService.prototype = {
     // Applying the update can take several minutes. Instead we wait until
     // the UI is initialized so it is possible to give feedback to and get
     // consent to update from the user.
-    //
-    // We clear um.activeUpdate (so _selectAndInstallUpdate doesn't return
-    // early), and leave the files so that an interrupted download can resume
-    // where it left off.
     if (isInterruptedUpdate(status)) {
       LOG("UpdateService:_postUpdateProcessing - interrupted update detected - wait for user consent");
-      um.activeUpdate = null;
       return;
     }
 #endif
@@ -2259,8 +2254,14 @@ UpdateService.prototype = {
     // is downloading or performed some user action to prevent notification.
     var um = Cc["@mozilla.org/updates/update-manager;1"].
              getService(Ci.nsIUpdateManager);
-    if (um.activeUpdate)
+    if (um.activeUpdate) {
+#ifdef MOZ_WIDGET_GONK
+      // For gonk, the user isn't necessarily aware of the update, so we need
+      // to show the prompt to make sure.
+      this._showPrompt(um.activeUpdate);
+#endif
       return;
+    }
 
     var update = this.selectUpdate(updates, updates.length);
     if (!update)
@@ -2580,6 +2581,21 @@ UpdateService.prototype = {
       }
       this._downloader.cancel();
     }
+#ifdef MOZ_WIDGET_GONK
+    var um = Cc["@mozilla.org/updates/update-manager;1"].
+             getService(Ci.nsIUpdateManager);
+    var activeUpdate = um.activeUpdate;
+    if (activeUpdate &&
+        (activeUpdate.appVersion != update.appVersion ||
+         activeUpdate.buildID != update.buildID)) {
+      // We have an activeUpdate (which presumably was interrupted), and are
+      // about start downloading a new one. Make sure we remove all traces
+      // of the active one (otherwise we'll start appending the new update.mar
+      // the the one that's been partially downloaded).
+      LOG("UpdateService:downloadUpdate - removing stale active update.");
+      cleanupActiveUpdate();
+    }
+#endif
     // Set the previous application version prior to downloading the update.
     update.previousAppVersion = Services.appinfo.version;
     this._downloader = new Downloader(background, this);
@@ -3418,10 +3434,17 @@ Downloader.prototype = {
       case STATE_DOWNLOADING:
         LOG("Downloader:_selectPatch - resuming download");
         return selectedPatch;
+#ifdef MOZ_WIDGET_GONK
+      case STATE_PENDING:
+      case STATE_APPLYING:
+        LOG("Downloader:_selectPatch - resuming interrupted apply");
+        return selectedPatch;
+#else
       case STATE_PENDING_SVC:
       case STATE_PENDING:
         LOG("Downloader:_selectPatch - already downloaded and staged");
         return null;
+#endif
       default:
         // Something went wrong when we tried to apply the previous patch.
         // Try the complete patch next time.
@@ -3540,15 +3563,21 @@ Downloader.prototype = {
       }
       if (patchFile.exists()) {
         LOG("Downloader:downloadUpdate - resuming with patchFile " + patchFile.path);
+        if (patchFile.fileSize == this._patch.size) {
+          LOG("Downloader:downloadUpdate - patchFile appears to be fully downloaded");
+          // Bump the status along so that we don't try to redownload again.
+          status = STATE_PENDING;
+        }
       } else {
-        LOG("Downloader:downloadUpdate - patchFile " + patchFile.path + " doesn't exist - performing full download");
+        LOG("Downloader:downloadUpdate - patchFile " + patchFile.path +
+            " doesn't exist - performing full download");
         // The patchfile doesn't exist, we might as well treat this like
         // a new download.
         patchFile = null;
       }
       if (patchFile && (status != STATE_DOWNLOADING)) {
-        // It looks like the patch was downloaded, but got interrupted while
-        // it was being applied. So we'll fake the downloading portion.
+        // It looks like the patch was downloaded, but got interrupted while it
+        // was being verified or applied. So we'll fake the downloading portion.
 
         writeStatusFile(updateDir, STATE_PENDING);
 

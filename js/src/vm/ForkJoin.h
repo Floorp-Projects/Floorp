@@ -26,27 +26,18 @@
 //     MyForkJoinOp op;
 //     ExecuteForkJoinOp(cx, op);
 //
-// |ExecuteForkJoinOp()| will fire up the workers in the runtime's thread
-// pool, have them execute the callbacks defined in the |ForkJoinOp| class,
-// and then return once all the workers have completed.
-//
-// There are three callbacks defined in |ForkJoinOp|.  The first, |pre()|, is
-// invoked before the parallel section begins.  It informs you how many slices
-// your problem will be divided into (effectively, how many worker threads
-// there will be).  This is often useful for allocating an array for the
-// workers to store their result or something like that.
-//
-// Next, you will receive |N| calls to the |parallel()| callback, where |N| is
-// the number of slices that were specified in |pre()|.  Each callback will be
-// supplied with a |ForkJoinSlice| instance providing some context.
+// |ExecuteForkJoinOp()| will fire up the workers in the runtime's
+// thread pool, have them execute the callback |parallel()| defined in
+// the |ForkJoinOp| class, and then return once all the workers have
+// completed.  You will receive |N| calls to the |parallel()|
+// callback, where |N| is the value returned by |ForkJoinSlice()|.
+// Each callback will be supplied with a |ForkJoinSlice| instance
+// providing some context.
 //
 // Typically there will be one call to |parallel()| from each worker thread,
 // but that is not something you should rely upon---if we implement
 // work-stealing, for example, then it could be that a single worker thread
 // winds up handling multiple slices.
-//
-// Finally, after the operation is complete the |post()| callback is invoked,
-// giving you a chance to collect the various results.
 //
 // Operation callback:
 //
@@ -69,6 +60,35 @@
 // parallel code encountered an unexpected path that cannot safely be executed
 // in parallel (writes to shared state, say).
 //
+// Garbage collection and allocation:
+//
+// Code which executes on these parallel threads must be very careful
+// with respect to garbage collection and allocation.  Currently, we
+// do not permit GC to occur when executing in parallel.  Furthermore,
+// the typical allocation paths are UNSAFE in parallel code because
+// they access shared state (the compartment's arena lists and so
+// forth) without any synchronization.
+//
+// To deal with this, the forkjoin code creates a distinct |Allocator|
+// object for each slice.  You can access the appropriate object via
+// the |ForkJoinSlice| object that is provided to the callbacks.  Once
+// the execution is complete, all the objects found in these distinct
+// |Allocator| is merged back into the main compartment lists and
+// things proceed normally.
+//
+// In Ion-generated code, we will do allocation through the
+// |Allocator| found in |ForkJoinSlice| (which is obtained via TLS).
+// Also, no write barriers are emitted.  Conceptually, we should never
+// need a write barrier because we only permit writes to objects that
+// are newly allocated, and such objects are always black (to use
+// incremental GC terminology).  However, to be safe, we also block
+// upon entering a parallel section to ensure that any concurrent
+// marking or incremental GC has completed.
+//
+// In the future, it should be possible to lift the restriction that
+// we must block until inc. GC has completed and also to permit GC
+// during parallel exeution. But we're not there yet.
+//
 // Current Limitations:
 //
 // - The API does not support recursive or nested use.  That is, the
@@ -88,6 +108,11 @@ enum ParallelResult { TP_SUCCESS, TP_RETRY_SEQUENTIALLY, TP_FATAL };
 
 struct ForkJoinOp;
 
+// Returns the number of slices that a fork-join op will have when
+// executed.
+uint32_t
+ForkJoinSlices(JSContext *cx);
+
 // Executes the given |TaskSet| in parallel using the runtime's |ThreadPool|,
 // returning upon completion.  In general, if there are |N| workers in the
 // threadpool, the problem will be divided into |N+1| slices, as the main
@@ -98,7 +123,19 @@ class PerThreadData;
 class ForkJoinShared;
 class AutoRendezvous;
 class AutoSetForkJoinSlice;
-namespace gc { struct ArenaLists; }
+
+#ifdef DEBUG
+struct IonTraceData
+{
+    uint32_t bblock;
+    uint32_t lir;
+    uint32_t execModeInt;
+    const char *lirOpName;
+    const char *mirOpName;
+    JSScript *script;
+    jsbytecode *pc;
+};
+#endif
 
 struct ForkJoinSlice
 {
@@ -107,22 +144,26 @@ struct ForkJoinSlice
     PerThreadData *perThreadData;
 
     // Which slice should you process? Ranges from 0 to |numSlices|.
-    const size_t sliceId;
+    const uint32_t sliceId;
 
     // How many slices are there in total?
-    const size_t numSlices;
+    const uint32_t numSlices;
 
-    // Top of the stack.  This should move into |perThreadData|.
-    uintptr_t ionStackLimit;
-
-    // Arenas to use when allocating on this thread.  See
+    // Allocator to use when allocating on this thread.  See
     // |ion::ParFunctions::ParNewGCThing()|.  This should move into
     // |perThreadData|.
-    gc::ArenaLists *const arenaLists;
+    Allocator *const allocator;
 
-    ForkJoinSlice(PerThreadData *perThreadData, size_t sliceId, size_t numSlices,
-                  uintptr_t stackLimit, gc::ArenaLists *arenaLists,
-                  ForkJoinShared *shared);
+    // If we took a parallel bailout, the script that bailed out is stored here.
+    JSScript *abortedScript;
+
+    // Records the last instruction to execute on this thread.
+#ifdef DEBUG
+    IonTraceData traceData;
+#endif
+
+    ForkJoinSlice(PerThreadData *perThreadData, uint32_t sliceId, uint32_t numSlices,
+                  Allocator *arenaLists, ForkJoinShared *shared);
 
     // True if this is the main thread, false if it is one of the parallel workers.
     bool isMainThread();
@@ -136,6 +177,17 @@ struct ForkJoinSlice
     // For convenience, *always* returns false.
     bool setFatal();
 
+    // When the code would normally trigger a GC, we don't trigger it
+    // immediately but instead record that request here.  This will
+    // cause |ExecuteForkJoinOp()| to invoke |TriggerGC()| or
+    // |TriggerCompartmentGC()| as appropriate once the parallel
+    // section is complete. This is done because those routines do
+    // various preparations that are not thread-safe, and because the
+    // full set of arenas is not available until the end of the
+    // parallel section.
+    void requestGC(gcreason::Reason reason);
+    void requestCompartmentGC(JSCompartment *compartment, gcreason::Reason reason);
+
     // During the parallel phase, this method should be invoked periodically,
     // for example on every backedge, similar to the interrupt check.  If it
     // returns false, then the parallel phase has been aborted and so you
@@ -146,7 +198,10 @@ struct ForkJoinSlice
     // Be wary, the runtime is shared between all threads!
     JSRuntime *runtime();
 
-    static inline ForkJoinSlice *current();
+    // Check the current state of parallel execution.
+    static inline ForkJoinSlice *Current();
+    static inline bool InParallelSection();
+
     static bool Initialize();
 
   private:
@@ -158,6 +213,13 @@ struct ForkJoinSlice
     static unsigned ThreadPrivateIndex;
 #endif
 
+#ifdef JS_THREADSAFE
+    // Sets the abort flag and adjusts ionStackLimit so as to cause
+    // the overrun check to fail.  This should lead to the operation
+    // as a whole aborting.
+    void triggerAbort();
+#endif
+
     ForkJoinShared *const shared;
 };
 
@@ -166,26 +228,29 @@ struct ForkJoinSlice
 struct ForkJoinOp
 {
   public:
-    // Invoked before parallel phase begins; informs the task set how many
-    // slices there will be and gives it a chance to initialize per-slice data
-    // structures.
-    //
-    // Returns true on success, false to halt parallel execution.
-    virtual bool pre(size_t numSlices) = 0;
-
     // Invoked from each parallel thread to process one slice.  The
     // |ForkJoinSlice| which is supplied will also be available using TLS.
     //
     // Returns true on success, false to halt parallel execution.
     virtual bool parallel(ForkJoinSlice &slice) = 0;
-
-    // Invoked after parallel phase ends if execution was successful
-    // (not aborted)
-    //
-    // Returns true on success, false to halt parallel execution.
-    virtual bool post(size_t numSlices) = 0;
 };
 
 } // namespace js
+
+/* static */ inline js::ForkJoinSlice *
+js::ForkJoinSlice::Current()
+{
+#ifdef JS_THREADSAFE
+    return (ForkJoinSlice*) PR_GetThreadPrivate(ThreadPrivateIndex);
+#else
+    return NULL;
+#endif
+}
+
+/* static */ inline bool
+js::ForkJoinSlice::InParallelSection()
+{
+    return Current() != NULL;
+}
 
 #endif // ForkJoin_h__

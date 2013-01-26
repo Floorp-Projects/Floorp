@@ -1,0 +1,48 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=834595
+-->
+<head>
+  <title>Test for the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=834595">Mozilla Bug 834595</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+function availableSuccess(e) {
+  isnot(e.target.result, null, "result should not be null");
+  devicestorage_cleanup();
+}
+
+function availableError(e) {
+  ok(false, "availableError was called");
+  devicestorage_cleanup();
+}
+
+var storage = navigator.getDeviceStorage("pictures");
+
+request = storage.available();
+ok(request, "Should have a non-null request");
+
+request.onsuccess = availableSuccess;
+request.onerror = availableError;
+
+</script>
+</pre>
+</body>
+</html>

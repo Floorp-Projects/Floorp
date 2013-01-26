@@ -705,32 +705,36 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
 
     FallbackICSpew(cx, stub, "Compare(%s)", js_CodeName[op]);
 
+    // Don't pass lhs/rhs directly, we need the original values when
+    // generating stubs.
+    RootedValue lhsCopy(cx, lhs);
+    RootedValue rhsCopy(cx, rhs);
+
     // Perform the compare operation.
     JSBool out;
-
     switch(op) {
       case JSOP_LT:
-        if (!LessThan(cx, lhs, rhs, &out))
+        if (!LessThan(cx, &lhsCopy, &rhsCopy, &out))
             return false;
         break;
       case JSOP_LE:
-        if (!LessThanOrEqual(cx, lhs, rhs, &out))
+        if (!LessThanOrEqual(cx, &lhsCopy, &rhsCopy, &out))
             return false;
         break;
       case JSOP_GT:
-        if (!GreaterThan(cx, lhs, rhs, &out))
+        if (!GreaterThan(cx, &lhsCopy, &rhsCopy, &out))
             return false;
         break;
       case JSOP_GE:
-        if (!GreaterThanOrEqual(cx, lhs, rhs, &out))
+        if (!GreaterThanOrEqual(cx, &lhsCopy, &rhsCopy, &out))
             return false;
         break;
       case JSOP_EQ:
-        if (!LooselyEqual<true>(cx, lhs, rhs, &out))
+        if (!LooselyEqual<true>(cx, &lhsCopy, &rhsCopy, &out))
             return false;
         break;
       case JSOP_NE:
-        if (!LooselyEqual<false>(cx, lhs, rhs, &out))
+        if (!LooselyEqual<false>(cx, &lhsCopy, &rhsCopy, &out))
             return false;
         break;
       default:
@@ -1210,7 +1214,9 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
     RootedScript script(cx, GetTopIonJSScript(cx));
     FallbackICSpew(cx, stub, "GetElem");
 
-    if (!GetElementMonitored(cx, lhs, rhs, res))
+    // Don't pass lhs directly, we need it when generating stubs.
+    RootedValue lhsCopy(cx, lhs);
+    if (!GetElementMonitored(cx, &lhsCopy, rhs, res))
         return false;
 
     if (stub->numOptimizedStubs() >= ICGetElem_Fallback::MAX_OPTIMIZED_STUBS) {

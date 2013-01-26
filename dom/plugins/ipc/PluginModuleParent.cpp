@@ -262,7 +262,7 @@ PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
 }
 
 void
-PluginModuleParent::CleanupFromTimeout()
+PluginModuleParent::CleanupFromTimeout(const bool aFromHangUI)
 {
     if (mShutdown) {
       return;
@@ -273,11 +273,22 @@ PluginModuleParent::CleanupFromTimeout()
         MessageLoop::current()->PostDelayedTask(
             FROM_HERE,
             mTaskFactory.NewRunnableMethod(
-                &PluginModuleParent::CleanupFromTimeout), 10);
+                &PluginModuleParent::CleanupFromTimeout, aFromHangUI), 10);
         return;
     }
 
-    Close();
+    /* If the plugin container was terminated by the Plugin Hang UI, 
+       then either the I/O thread detects a channel error, or the 
+       main thread must set the error (whomever gets there first).
+       OTOH, if we terminate and return false from 
+       ShouldContinueFromReplyTimeout, then the channel state has 
+       already been set to ChannelTimeout and we should call the 
+       regular Close function. */
+    if (aFromHangUI) {
+        GetIPCChannel()->CloseWithError();
+    } else {
+        Close();
+    }
 }
 
 #ifdef XP_WIN
@@ -465,17 +476,19 @@ PluginModuleParent::TerminateChildProcess(MessageLoop* aMsgLoop)
 
     // this must run before the error notification from the channel,
     // or not at all
-    if (aMsgLoop == MessageLoop::current()) {
-        aMsgLoop->PostTask(
-            FROM_HERE,
-            mTaskFactory.NewRunnableMethod(
-                &PluginModuleParent::CleanupFromTimeout));
-    } else {
+    bool isFromHangUI = aMsgLoop != MessageLoop::current();
+    if (isFromHangUI) {
         // If we're posting from a different thread we can't create
         // the task via mTaskFactory
         aMsgLoop->PostTask(FROM_HERE,
                            NewRunnableMethod(this,
-                               &PluginModuleParent::CleanupFromTimeout));
+                               &PluginModuleParent::CleanupFromTimeout,
+                               isFromHangUI));
+    } else {
+        aMsgLoop->PostTask(
+            FROM_HERE,
+            mTaskFactory.NewRunnableMethod(
+                &PluginModuleParent::CleanupFromTimeout, isFromHangUI));
     }
 
     if (!KillProcess(OtherProcess(), 1, false))
@@ -970,7 +983,9 @@ PluginModuleParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
     NS_ABORT_IF_FALSE(0 > mPluginXSocketFdDup.get(),
                       "Already backed up X resources??");
     mPluginXSocketFdDup.forget();
-    mPluginXSocketFdDup.reset(aXSocketFd.PlatformHandle());
+    if (aXSocketFd.IsValid()) {
+      mPluginXSocketFdDup.reset(aXSocketFd.PlatformHandle());
+    }
 #endif
     return true;
 }

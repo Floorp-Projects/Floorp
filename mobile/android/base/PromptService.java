@@ -123,7 +123,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             } else if (mType.equals("date")) {
                 try {
                     DateTimePicker input = new DateTimePicker(GeckoApp.mAppContext, "yyyy-MM-dd", mValue,
-                                                              DateTimePicker.pickersState.DATE);
+                                                              DateTimePicker.PickersState.DATE);
                     input.toggleCalendar(true);
                     mView = (View)input;
                 } catch (UnsupportedOperationException ex) {
@@ -145,7 +145,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 }
             } else if (mType.equals("week")) {
                 DateTimePicker input = new DateTimePicker(GeckoApp.mAppContext, "yyyy-'W'ww", mValue,
-                                                          DateTimePicker.pickersState.WEEK);
+                                                          DateTimePicker.PickersState.WEEK);
                 mView = (View)input;
             } else if (mType.equals("time")) {
                 TimePicker input = new TimePicker(GeckoApp.mAppContext);
@@ -162,12 +162,12 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 mView = (View)input;
             } else if (mType.equals("datetime-local") || mType.equals("datetime")) {
                 DateTimePicker input = new DateTimePicker(GeckoApp.mAppContext, "yyyy-MM-dd kk:mm", mValue,
-                                                          DateTimePicker.pickersState.DATETIME);
+                                                          DateTimePicker.PickersState.DATETIME);
                 input.toggleCalendar(true);
                 mView = (View)input;
             } else if (mType.equals("month")) {
                 DateTimePicker input = new DateTimePicker(GeckoApp.mAppContext, "yyyy-MM", mValue,
-                                                          DateTimePicker.pickersState.MONTH);
+                                                          DateTimePicker.PickersState.MONTH);
                 mView = (View)input;
             } else if (mType.equals("textbox") || mType.equals("password")) {
                 EditText input = new EditText(GeckoApp.mAppContext);

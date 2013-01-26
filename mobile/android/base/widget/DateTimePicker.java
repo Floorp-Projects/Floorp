@@ -90,9 +90,9 @@ public class DateTimePicker extends FrameLayout {
     private Calendar mMinDate;
     private Calendar mMaxDate;
     private Calendar mCurrentDate;
-    private pickersState mState;
+    private PickersState mState;
 
-    public static enum pickersState { DATE, MONTH, WEEK, TIME, DATETIME };
+    public static enum PickersState { DATE, MONTH, WEEK, TIME, DATETIME };
 
     public class OnValueChangeListener implements NumberPicker.OnValueChangeListener {
         public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
@@ -109,7 +109,7 @@ public class DateTimePicker extends FrameLayout {
                     setTempDate(Calendar.DAY_OF_MONTH, old, newVal, 1, maxDayOfMonth);
                 } else if (picker == mMonthSpinner && mMonthEnabled) {
                     int old = mTempDate.get(Calendar.MONTH);
-                    setTempDate(Calendar.MONTH, old, newVal, 0, 11);
+                    setTempDate(Calendar.MONTH, old, newVal, Calendar.JANUARY, Calendar.DECEMBER);
                 } else if (picker == mWeekSpinner) {
                     int old = mTempDate.get(Calendar.WEEK_OF_YEAR);
                     int maxWeekOfYear = mTempDate.getActualMaximum(Calendar.WEEK_OF_YEAR);
@@ -213,32 +213,32 @@ public class DateTimePicker extends FrameLayout {
     private void displayPickers() {
         setWeekShown(false);
         set12HourShown(mIs12HourMode);
-        if (mState == pickersState.DATETIME) {
+        if (mState == PickersState.DATETIME) {
             return;
         }
         setHourShown(false);
         setMinuteShown(false);
-        if (mState == pickersState.WEEK) {
+        if (mState == PickersState.WEEK) {
             setDayShown(false);
             setMonthShown(false);
             setWeekShown(true);
-        } else if (mState == pickersState.MONTH) {
+        } else if (mState == PickersState.MONTH) {
             setDayShown(false);
         }
     }
 
     public DateTimePicker(Context context) {
-        this(context, "", "", pickersState.DATE);
+        this(context, "", "", PickersState.DATE);
     }
 
-    public DateTimePicker(Context context, String dateFormat, String dateTimeValue, pickersState state) {
+    public DateTimePicker(Context context, String dateFormat, String dateTimeValue, PickersState state) {
         super(context);
         if (Build.VERSION.SDK_INT < 11) {
             throw new UnsupportedOperationException("Custom DateTimePicker is only available for SDK > 10");
         }
         setCurrentLocale(Locale.getDefault());
-        mMinDate.set(DEFAULT_START_YEAR,1,1);
-        mMaxDate.set(DEFAULT_END_YEAR,12,31);
+        mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
+        mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
         mState = state;
         LayoutInflater inflater = LayoutInflater.from(context);
         inflater.inflate(R.layout.datetime_picker, this, true);
@@ -261,7 +261,7 @@ public class DateTimePicker extends FrameLayout {
 
         // If we're displaying a date, the screen is wide enought (and if we're using a sdk where the calendar view exists)
         // then display a calendar.
-        if ((mState == pickersState.DATE || mState == pickersState.DATETIME) &&
+        if ((mState == PickersState.DATE || mState == PickersState.DATETIME) &&
             Build.VERSION.SDK_INT > 10 && mScreenWidth >= SCREEN_SIZE_THRESHOLD) {
             if (DEBUG) Log.d(LOGTAG,"SDK > 10 and screen wide enough, displaying calendar");
             mCalendar = new CalendarView(context);
@@ -288,7 +288,7 @@ public class DateTimePicker extends FrameLayout {
           // If the screen is more wide than high, we are displaying daye and time spinners,
           // and if there is no calendar displayed,
           // we should display the fields in one row.
-            if (mScreenWidth > mScreenHeight && mState == pickersState.DATETIME) {
+            if (mScreenWidth > mScreenHeight && mState == PickersState.DATETIME) {
                 mSpinners.setOrientation(LinearLayout.HORIZONTAL);
             }
             mCalendar = null;
@@ -453,8 +453,8 @@ public class DateTimePicker extends FrameLayout {
                 mMonthSpinner.setMinValue(mCurrentDate.getActualMinimum(Calendar.MONTH));
                 mMonthSpinner.setMaxValue(mCurrentDate.get(Calendar.MONTH));
             } else {
-                mMonthSpinner.setMinValue(0);
-                mMonthSpinner.setMaxValue(11);
+                mMonthSpinner.setMinValue(Calendar.JANUARY);
+                mMonthSpinner.setMaxValue(Calendar.DECEMBER);
             }
 
             String[] displayedValues = Arrays.copyOfRange(mShortMonths,
@@ -494,7 +494,7 @@ public class DateTimePicker extends FrameLayout {
     }
 
     public void toggleCalendar(boolean shown) {
-        if ((mState != pickersState.DATE && mState != pickersState.DATETIME) ||
+        if ((mState != PickersState.DATE && mState != PickersState.DATETIME) ||
             Build.VERSION.SDK_INT < 11 || mScreenWidth < SCREEN_SIZE_THRESHOLD) {
             if (DEBUG) Log.d(LOGTAG,"Cannot display calendar on this device, in this state" +
                 ": screen width :"+mScreenWidth);
