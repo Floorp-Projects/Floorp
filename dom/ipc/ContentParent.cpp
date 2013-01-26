@@ -32,6 +32,7 @@
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "SmsParent.h"
+#include "mozilla/Hal.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -119,7 +120,7 @@ using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
 using namespace mozilla::dom::indexedDB;
-using namespace mozilla::hal_sandbox;
+using namespace mozilla::hal;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::net;
@@ -870,14 +871,23 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content,
                                             aOSPrivileges);
 
-    bool useOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
-    if (useOffMainThreadCompositing) {
-        // We need the subprocess's ProcessHandle to create the
-        // PCompositor channel below.  Block just until we have that.
-        mSubprocess->LaunchAndWaitForProcessHandle();
-    } else {
-        mSubprocess->AsyncLaunch();
+    mSubprocess->LaunchAndWaitForProcessHandle();
+
+    // Set the subprocess's priority (bg if we're a preallocated process, fg
+    // otherwise).  We do this first because we're likely /lowering/ its CPU and
+    // memory priority, which it has inherited from this process.
+    if (Preferences::GetBool("dom.ipc.processPriorityManager.enabled")) {
+        ProcessPriority priority;
+        if (aAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL) {
+            priority = PROCESS_PRIORITY_BACKGROUND;
+        } else {
+            priority = PROCESS_PRIORITY_FOREGROUND;
+        }
+
+        SetProcessPriority(base::GetProcId(mSubprocess->GetChildProcessHandle()),
+                           priority);
     }
+
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
 
     // NB: internally, this will send an IPC message to the child
@@ -888,6 +898,7 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
     // PBrowsers are created, because they rely on the Compositor
     // already being around.  (Creation is async, so can't happen
     // on demand.)
+    bool useOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
     if (useOffMainThreadCompositing) {
         DebugOnly<bool> opened = PCompositor::Open(this);
         MOZ_ASSERT(opened);
@@ -1359,12 +1370,10 @@ ContentParent::AllocPImageBridge(mozilla::ipc::Transport* aTransport,
 }
 
 bool
-ContentParent::RecvGetProcessAttributes(uint64_t* aId, bool* aStartBackground,
+ContentParent::RecvGetProcessAttributes(uint64_t* aId,
                                         bool* aIsForApp, bool* aIsForBrowser)
 {
     *aId = mChildID = gContentChildID++;
-    *aStartBackground =
-        (mAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL);
     *aIsForApp = IsForApp();
     *aIsForBrowser = mIsForBrowser;
 
@@ -1650,14 +1659,14 @@ ContentParent::DeallocPCrashReporter(PCrashReporterParent* crashreporter)
   return true;
 }
 
-PHalParent*
+hal_sandbox::PHalParent*
 ContentParent::AllocPHal()
 {
-    return CreateHalParent();
+    return hal_sandbox::CreateHalParent();
 }
 
 bool
-ContentParent::DeallocPHal(PHalParent* aHal)
+ContentParent::DeallocPHal(hal_sandbox::PHalParent* aHal)
 {
     delete aHal;
     return true;

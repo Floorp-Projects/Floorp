@@ -343,8 +343,7 @@ parent:
      * !isForBrowser|, we're probably loading <xul:browser remote>.
      */
     sync GetProcessAttributes()
-        returns (uint64_t id, bool startBackground,
-                 bool isForApp, bool isForBrowser);
+        returns (uint64_t id, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
         returns (bool isOffline);
 
