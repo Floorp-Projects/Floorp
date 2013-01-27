@@ -286,6 +286,10 @@ enum {
     TYPE_FLAG_LAZYARGS  = 0x40,
     TYPE_FLAG_ANYOBJECT = 0x80,
 
+    /* Mask containing all primitives */
+    TYPE_FLAG_PRIMITIVE = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL | TYPE_FLAG_BOOLEAN |
+                          TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE | TYPE_FLAG_STRING,
+
     /* Mask/shift for the number of objects in objectSet */
     TYPE_FLAG_OBJECT_COUNT_MASK   = 0xff00,
     TYPE_FLAG_OBJECT_COUNT_SHIFT  = 8,
@@ -507,6 +511,13 @@ class TypeSet
     bool purged() { return !!(flags & TYPE_FLAG_PURGED); }
     void setPurged() { flags |= TYPE_FLAG_PURGED | TYPE_FLAG_CONSTRAINTS_PURGED; }
 
+    /*
+     * Get whether this type set is known to be a subset of other.
+     * This variant doesn't freeze constraints. That variant is called knownSubset
+     */
+    bool isSubset(TypeSet *other);
+    bool isSubsetIgnorePrimitives(TypeSet *other);
+
     inline StackTypeSet *toStackTypeSet();
     inline HeapTypeSet *toHeapTypeSet();
 
@@ -620,9 +631,7 @@ class StackTypeSet : public TypeSet
     bool knownNonStringPrimitive();
 
     bool knownPrimitiveOrObject() {
-        TypeFlags flags = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL | TYPE_FLAG_DOUBLE |
-                          TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN | TYPE_FLAG_STRING |
-                          TYPE_FLAG_ANYOBJECT;
+        TypeFlags flags = TYPE_FLAG_PRIMITIVE | TYPE_FLAG_ANYOBJECT;
         if (baseFlags() & (~flags & TYPE_FLAG_BASE_MASK))
             return false;
 
