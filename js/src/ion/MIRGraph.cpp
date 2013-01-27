@@ -155,6 +155,12 @@ MBasicBlock::init()
     return slots_.init(info_.nslots());
 }
 
+bool
+MBasicBlock::increaseSlots(size_t num)
+{
+    return slots_.increase(num);
+}
+
 void
 MBasicBlock::copySlots(MBasicBlock *from)
 {
@@ -341,7 +347,7 @@ MBasicBlock::rewriteAtDepth(int32_t depth, MDefinition *ins)
 void
 MBasicBlock::push(MDefinition *ins)
 {
-    JS_ASSERT(stackPosition_ < info_.nslots());
+    JS_ASSERT(stackPosition_ < nslots());
     slots_[stackPosition_++] = ins;
 }
 
