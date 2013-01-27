@@ -6072,6 +6072,8 @@ ExpressionDecompiler::~ExpressionDecompiler()
 bool
 ExpressionDecompiler::init()
 {
+    assertSameCompartment(cx, script);
+
     if (!sprinter.init())
         return false;
 
@@ -6242,6 +6244,7 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Valu
         return true;
 
     RootedScript script(cx, frameIter.script());
+    AutoCompartment ac(cx, &script->global());
     jsbytecode *valuepc = frameIter.pc();
     RootedFunction fun(cx, frameIter.isFunctionFrame()
                            ? frameIter.callee()
@@ -6334,6 +6337,7 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
         return true;
 
     RootedScript script(cx, frameIter.script());
+    AutoCompartment ac(cx, &script->global());
     jsbytecode *current = frameIter.pc();
     RootedFunction fun(cx, frameIter.isFunctionFrame()
                        ? frameIter.callee()
