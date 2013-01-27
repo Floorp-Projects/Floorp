@@ -149,7 +149,7 @@ HeapValue::set(Zone *zone, const Value &v)
     if (value.isMarkable()) {
         js::gc::Cell *cell = (js::gc::Cell *)value.toGCThing();
         JS_ASSERT(cell->zone() == zone ||
-                  cell->zone() == zone->rt->atomsCompartment);
+                  cell->zone() == zone->rt->atomsCompartment->zone());
     }
 #endif
 

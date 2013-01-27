@@ -374,7 +374,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
         if (!putWrapper(orig, *vp))
             return false;
 
-        if (str->compartment()->isGCMarking()) {
+        if (str->zone()->isGCMarking()) {
             /*
              * All string wrappers are dropped when collection starts, but we
              * just created a new one.  Mark the wrapped string to stop it being
@@ -522,7 +522,7 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
 void
 JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 {
-    JS_ASSERT(!isCollecting());
+    JS_ASSERT(!zone()->isCollecting());
 
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         Value v = e.front().value;
@@ -815,9 +815,8 @@ JSCompartment::setGCMaxMallocBytes(size_t value)
 void
 JSCompartment::onTooMuchMalloc()
 {
-    TriggerZoneGC(this, gcreason::TOO_MUCH_MALLOC);
+    TriggerZoneGC(zone(), gcreason::TOO_MUCH_MALLOC);
 }
-
 
 bool
 JSCompartment::hasScriptsOnStack()
@@ -908,7 +907,7 @@ JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
     // to run any scripts in this compartment until the dmgc is destroyed.
     // That is the caller's responsibility.
     if (!rt->isHeapBusy())
-        dmgc.scheduleGC(this);
+        dmgc.scheduleGC(zone());
 #endif
 }
 

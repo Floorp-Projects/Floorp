@@ -104,7 +104,7 @@ bool startExecution(UnrootedScript script);
 bool stopExecution(UnrootedScript script);
 
 /* Heap has been resized */
-bool resizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize);
+bool resizeHeap(JS::Zone *zone, size_t oldSize, size_t newSize);
 
 /*
  * Object has been created. |obj| must exist (its class and size are read)
@@ -371,12 +371,12 @@ Probes::exitScript(JSContext *cx, UnrootedScript script, UnrootedFunction maybeF
 }
 
 inline bool
-Probes::resizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize)
+Probes::resizeHeap(JS::Zone *zone, size_t oldSize, size_t newSize)
 {
     bool ok = true;
 
 #ifdef MOZ_ETW
-    if (ProfilingActive && !ETWResizeHeap(compartment, oldSize, newSize))
+    if (ProfilingActive && !ETWResizeHeap(zone, oldSize, newSize))
         ok = false;
 #endif
 
