@@ -3334,8 +3334,8 @@ IonBuilder::makePolyInlineDispatch(JSContext *cx, CallInfo &callInfo,
 
     // Make the actual call.
     CallInfo realCallInfo(cx, callInfo.constructing());
-    if (realCallInfo.init(callInfo))
-        return false;
+    if (!realCallInfo.init(callInfo))
+        return NULL;
     realCallInfo.popFormals(current);
     realCallInfo.wrapArgs(current);
 
