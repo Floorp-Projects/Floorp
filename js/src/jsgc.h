@@ -539,7 +539,7 @@ TriggerGC(JSRuntime *rt, js::gcreason::Reason reason);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerCompartmentGC(JSCompartment *comp, js::gcreason::Reason reason);
+TriggerZoneGC(Zone *zone, js::gcreason::Reason reason);
 
 extern void
 MaybeGC(JSContext *cx);
@@ -1057,13 +1057,13 @@ struct GCMarker : public JSTracer {
 
   private:
 #ifdef DEBUG
-    void checkCompartment(void *p);
+    void checkZone(void *p);
 #else
-    void checkCompartment(void *p) {}
+    void checkZone(void *p) {}
 #endif
 
     void pushTaggedPtr(StackTag tag, void *ptr) {
-        checkCompartment(ptr);
+        checkZone(ptr);
         uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
         JS_ASSERT(!(addr & StackTagMask));
         if (!stack.push(addr | uintptr_t(tag)))
@@ -1071,7 +1071,7 @@ struct GCMarker : public JSTracer {
     }
 
     void pushValueArray(JSObject *obj, void *start, void *end) {
-        checkCompartment(obj);
+        checkZone(obj);
 
         JS_ASSERT(start <= end);
         uintptr_t tagged = reinterpret_cast<uintptr_t>(obj) | GCMarker::ValueArrayTag;
