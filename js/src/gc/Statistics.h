@@ -17,6 +17,8 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
+#include "js/GCAPI.h"
+
 struct JSCompartment;
 
 namespace js {

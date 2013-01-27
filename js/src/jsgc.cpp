@@ -4513,8 +4513,8 @@ js::PrepareForDebugGC(JSRuntime *rt)
         PrepareForFullGC(rt);
 }
 
-void
-js::ShrinkGCBuffers(JSRuntime *rt)
+JS_FRIEND_API(void)
+JS::ShrinkGCBuffers(JSRuntime *rt)
 {
     AutoLockGC lock(rt);
     JS_ASSERT(!rt->isHeapBusy());

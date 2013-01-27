@@ -545,9 +545,6 @@ extern void
 MaybeGC(JSContext *cx);
 
 extern void
-ShrinkGCBuffers(JSRuntime *rt);
-
-extern void
 ReleaseAllJITCode(FreeOp *op);
 
 /*

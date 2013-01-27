@@ -8,6 +8,8 @@
 #include "jslock.h"
 #include "jsd_xpc.h"
 
+#include "js/GCAPI.h"
+
 #include "nsIXPConnect.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
@@ -77,7 +79,7 @@
 #define JSD_STARTUP_ENTRY "JSDebugger Startup Observer"
 
 static void
-jsds_GCSliceCallbackProc (JSRuntime *rt, js::GCProgress progress, const js::GCDescription &desc);
+jsds_GCSliceCallbackProc (JSRuntime *rt, JS::GCProgress progress, const JS::GCDescription &desc);
 
 /*******************************************************************************
  * global vars
@@ -98,7 +100,7 @@ uint32_t gFrameCount  = 0;
 #endif
 
 static jsdService          *gJsds               = 0;
-static js::GCSliceCallback gPrevGCSliceCallback = jsds_GCSliceCallbackProc;
+static JS::GCSliceCallback gPrevGCSliceCallback = jsds_GCSliceCallbackProc;
 static bool                gGCRunning           = false;
 
 static struct DeadScript {
@@ -478,9 +480,9 @@ jsds_NotifyPendingDeadScripts (JSRuntime *rt)
 }
 
 static void
-jsds_GCSliceCallbackProc (JSRuntime *rt, js::GCProgress progress, const js::GCDescription &desc)
+jsds_GCSliceCallbackProc (JSRuntime *rt, JS::GCProgress progress, const JS::GCDescription &desc)
 {
-    if (progress == js::GC_CYCLE_END || progress == js::GC_SLICE_END) {
+    if (progress == JS::GC_CYCLE_END || progress == JS::GC_SLICE_END) {
         NS_ASSERTION(gGCRunning, "GC slice callback was missed");
 
         while (gDeadScripts)
@@ -2556,7 +2558,7 @@ jsdService::ActivateDebugger (JSRuntime *rt)
 
     if (gPrevGCSliceCallback == jsds_GCSliceCallbackProc)
         /* condition indicates that the callback proc has not been set yet */
-        gPrevGCSliceCallback = js::SetGCSliceCallback (rt, jsds_GCSliceCallbackProc);
+        gPrevGCSliceCallback = JS::SetGCSliceCallback (rt, jsds_GCSliceCallbackProc);
 
     mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
     if (!mCx)
