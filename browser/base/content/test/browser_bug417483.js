@@ -19,7 +19,7 @@ function onPageShow() {
     
     document.popupNode = frame.document.body;
     var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-    var contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+    var contextMenu = new nsContextMenu(contentAreaContextMenu);
 
     ok(document.getElementById("frame-sep").hidden, "'frame-sep' should be hidden if the selection contains only spaces");
     finish();
