@@ -451,7 +451,7 @@ class GCCompartmentGroupIter {
   public:
     GCCompartmentGroupIter(JSRuntime *rt) {
         JS_ASSERT(rt->isHeapBusy());
-        current = rt->gcCurrentCompartmentGroup;
+        current = rt->gcCurrentZoneGroup;
     }
 
     bool done() const { return !current; }

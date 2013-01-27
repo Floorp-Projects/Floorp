@@ -2184,7 +2184,7 @@ SweepBackgroundThings(JSRuntime* rt, bool onBackgroundThread)
      */
     FreeOp fop(rt, false);
     for (int phase = 0 ; phase < BackgroundPhaseCount ; ++phase) {
-        for (Zone *zone = rt->gcSweepingCompartments; zone; zone = zone->gcNextGraphNode) {
+        for (Zone *zone = rt->gcSweepingZones; zone; zone = zone->gcNextGraphNode) {
             for (int index = 0 ; index < BackgroundPhaseLength[phase] ; ++index) {
                 AllocKind kind = BackgroundPhases[phase][index];
                 ArenaHeader *arenas = zone->allocator.arenas.arenaListsToSweep[kind];
@@ -2194,14 +2194,14 @@ SweepBackgroundThings(JSRuntime* rt, bool onBackgroundThread)
         }
     }
 
-    rt->gcSweepingCompartments = NULL;
+    rt->gcSweepingZones = NULL;
 }
 
 #ifdef JS_THREADSAFE
 static void
 AssertBackgroundSweepingFinished(JSRuntime *rt)
 {
-    JS_ASSERT(!rt->gcSweepingCompartments);
+    JS_ASSERT(!rt->gcSweepingZones);
     for (ZonesIter zone(rt); !zone.done(); zone.next()) {
         for (unsigned i = 0; i < FINALIZE_LIMIT; ++i) {
             JS_ASSERT(!zone->allocator.arenas.arenaListsToSweep[i]);
@@ -3228,21 +3228,22 @@ FindCompartmentGroups(JSRuntime *rt)
         JS_ASSERT(c->isGCMarking());
         finder.addNode(c);
     }
-    rt->gcCompartmentGroups = finder.getResultsList();
-    rt->gcCurrentCompartmentGroup = rt->gcCompartmentGroups;
-    rt->gcCompartmentGroupIndex = 0;
+    rt->gcZoneGroups = finder.getResultsList();
+    rt->gcCurrentZoneGroup = rt->gcZoneGroups;
+    rt->gcZoneGroupIndex = 0;
 }
 
-static void ResetGrayList(JSCompartment* comp);
+static void
+ResetGrayList(JSCompartment* comp);
 
 static void
 GetNextCompartmentGroup(JSRuntime *rt)
 {
-    rt->gcCurrentCompartmentGroup = rt->gcCurrentCompartmentGroup->nextGroup();
-    ++rt->gcCompartmentGroupIndex;
+    rt->gcCurrentZoneGroup = rt->gcCurrentZoneGroup->nextGroup();
+    ++rt->gcZoneGroupIndex;
 
     if (!rt->gcIsIncremental)
-        ComponentFinder<JSCompartment>::mergeCompartmentGroups(rt->gcCurrentCompartmentGroup);
+        ComponentFinder<JSCompartment>::mergeCompartmentGroups(rt->gcCurrentZoneGroup);
 
     if (rt->gcAbortSweepAfterCurrentGroup) {
         JS_ASSERT(!rt->gcIsIncremental);
@@ -3257,7 +3258,7 @@ GetNextCompartmentGroup(JSRuntime *rt)
         }
 
         rt->gcAbortSweepAfterCurrentGroup = false;
-        rt->gcCurrentCompartmentGroup = NULL;
+        rt->gcCurrentZoneGroup = NULL;
     }
 }
 
@@ -3589,7 +3590,7 @@ BeginSweepingCompartmentGroup(JSRuntime *rt)
 
         bool releaseTypes = ReleaseObservedTypes(rt);
         for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
+            gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
             c->sweep(&fop, releaseTypes);
         }
     }
@@ -3603,30 +3604,30 @@ BeginSweepingCompartmentGroup(JSRuntime *rt)
      * Objects are finalized immediately but this may change in the future.
      */
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
+        gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
         zone->allocator.arenas.queueObjectsForSweep(&fop);
     }
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
+        gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
         zone->allocator.arenas.queueStringsForSweep(&fop);
     }
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-    	gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
+        gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
         zone->allocator.arenas.queueScriptsForSweep(&fop);
     }
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
+        gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
         zone->allocator.arenas.queueShapesForSweep(&fop);
     }
 #ifdef JS_ION
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
+        gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
         zone->allocator.arenas.queueIonCodeForSweep(&fop);
     }
 #endif
 
     rt->gcSweepPhase = 0;
-    rt->gcSweepCompartment = rt->gcCurrentCompartmentGroup;
+    rt->gcSweepZone = rt->gcCurrentZoneGroup;
     rt->gcSweepKindIndex = 0;
 
     {
@@ -3721,27 +3722,25 @@ SweepPhase(JSRuntime *rt, SliceBudget &sliceBudget)
         for (; rt->gcSweepPhase < FinalizePhaseCount ; ++rt->gcSweepPhase) {
             gcstats::AutoPhase ap(rt->gcStats, FinalizePhaseStatsPhase[rt->gcSweepPhase]);
 
-            for (; rt->gcSweepCompartment;
-                 rt->gcSweepCompartment = rt->gcSweepCompartment->nextNodeInGroup())
-            {
-                JSCompartment *c = rt->gcSweepCompartment;
+            for (; rt->gcSweepZone; rt->gcSweepZone = rt->gcSweepZone->nextNodeInGroup()) {
+                Zone *zone = rt->gcSweepZone;
 
                 while (rt->gcSweepKindIndex < FinalizePhaseLength[rt->gcSweepPhase]) {
                     AllocKind kind = FinalizePhases[rt->gcSweepPhase][rt->gcSweepKindIndex];
 
-                    if (!c->allocator.arenas.foregroundFinalize(&fop, kind, sliceBudget))
+                    if (!zone->allocator.arenas.foregroundFinalize(&fop, kind, sliceBudget))
                         return false;  /* Yield to the mutator. */
 
                     ++rt->gcSweepKindIndex;
                 }
                 rt->gcSweepKindIndex = 0;
             }
-            rt->gcSweepCompartment = rt->gcCurrentCompartmentGroup;
+            rt->gcSweepZone = rt->gcCurrentZoneGroup;
         }
 
         EndSweepingCompartmentGroup(rt);
         GetNextCompartmentGroup(rt);
-        if (!rt->gcCurrentCompartmentGroup)
+        if (!rt->gcCurrentZoneGroup)
             return true;  /* We're finished. */
         EndMarkingCompartmentGroup(rt);
         BeginSweepingCompartmentGroup(rt);
@@ -3835,11 +3834,11 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
             rt->gcGrayBitsValid = true;
     }
 
-    /* Set up list of compartments for sweeping of background things. */
-    JS_ASSERT(!rt->gcSweepingCompartments);
+    /* Set up list of zones for sweeping of background things. */
+    JS_ASSERT(!rt->gcSweepingZones);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        zone->gcNextGraphNode = rt->gcSweepingCompartments;
-        rt->gcSweepingCompartments = zone;
+        zone->gcNextGraphNode = rt->gcSweepingZones;
+        rt->gcSweepingZones = zone;
     }
 
     /* If not sweeping on background thread then we must do it here. */
