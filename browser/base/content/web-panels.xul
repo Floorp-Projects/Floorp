@@ -50,7 +50,7 @@
     <menupopup id="contentAreaContextMenu" pagemenu="start"
                onpopupshowing="if (event.target != this)
                                  return true;
-                               gContextMenu = new nsContextMenu(this, getPanelBrowser(), event.shiftKey);
+                               gContextMenu = new nsContextMenu(this, event.shiftKey);
                                if (gContextMenu.shouldDisplay)
                                  document.popupNode = this.triggerNode;
                                return gContextMenu.shouldDisplay;"

@@ -14,7 +14,7 @@ function setSelection(el1, el2, index1, index2) {
 function initContextMenu(aNode) {
   document.popupNode = aNode;
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  let contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+  let contextMenu = new nsContextMenu(contentAreaContextMenu);
   return contextMenu;
 }
 
