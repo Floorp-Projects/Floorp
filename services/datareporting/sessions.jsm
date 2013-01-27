@@ -4,11 +4,15 @@
 
 "use strict";
 
+#ifndef MERGED_COMPARTMENT
+
 this.EXPORTED_SYMBOLS = [
   "SessionRecorder",
 ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+#endif
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/log4moz.js");
