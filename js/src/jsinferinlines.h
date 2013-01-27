@@ -334,7 +334,6 @@ IsInlinableCall(jsbytecode *pc)
 #endif
            op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH ||
            op == JSOP_SETPROP || op == JSOP_SETGNAME || op == JSOP_SETNAME;
-
 }
 
 /*
