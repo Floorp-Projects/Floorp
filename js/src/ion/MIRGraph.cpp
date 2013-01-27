@@ -158,7 +158,7 @@ MBasicBlock::init()
 bool
 MBasicBlock::increaseSlots(size_t num)
 {
-    return slots_.increase(num);
+    return slots_.growBy(num);
 }
 
 void

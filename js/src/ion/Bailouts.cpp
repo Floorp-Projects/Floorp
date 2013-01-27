@@ -180,9 +180,9 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
     IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p (line %d)",
             pcOff, (void *)script(), PCToLineNumber(script(), regs.pc));
 
-    // For fun.apply({}, arguments) the reconstructStackDepth will have stackdepth 4,
+    // For fun.apply({}, arguments) the reconstructStackDepth will be atleast 4,
     // but it could be that we inlined the funapply. In that case exprStackSlots,
-    // will have the real arguments in the slots and not be 4.
+    // will have the real arguments in the slots and not always be equal.
     JS_ASSERT_IF(JSOp(*regs.pc) != JSOP_FUNAPPLY,
                  exprStackSlots == js_ReconstructStackDepth(cx, script(), regs.pc));
 }
