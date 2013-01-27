@@ -344,6 +344,22 @@ MConstant::printOpcode(FILE *fp)
         fprintf(fp, "%f", value().toDouble());
         break;
       case MIRType_Object:
+        if (value().toObject().isFunction()) {
+            JSFunction *fun = value().toObject().toFunction();
+            if (fun->displayAtom()) {
+                fputs("function ", fp);
+                FileEscapedString(fp, fun->displayAtom(), 0);
+            } else {
+                fputs("unnamed function", fp);
+            }
+            if (fun->hasScript()) {
+                UnrootedScript script = fun->nonLazyScript();
+                fprintf(fp, " (%s:%u)",
+                        script->filename ? script->filename : "", script->lineno);
+            }
+            fprintf(fp, " at %p", (void *) fun);
+            break;
+        }
         fprintf(fp, "object %p (%s)", (void *)&value().toObject(),
                 value().toObject().getClass()->name);
         break;

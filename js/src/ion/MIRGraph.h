@@ -138,6 +138,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Returns the top of the stack, then decrements the virtual stack pointer.
     MDefinition *pop();
+    void popn(uint32_t n);
 
     // Adds an instruction to this block's instruction list. |ins| may be NULL
     // to simplify OOM checking.
