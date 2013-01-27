@@ -1,0 +1,5 @@
+conformance/textures/texture-mips.html
+conformance/textures/texture-size-cube-maps.html
+conformance/extensions/oes-texture-float.html
+conformance/glsl/functions/glsl-function-sin.html
+
