@@ -20,7 +20,7 @@ using mozilla::ArrayLength;
 template<size_t N> JSFlatString *
 NewString(JSContext *cx, const jschar (&chars)[N])
 {
-    return js_NewStringCopyN(cx, chars, N);
+    return js_NewStringCopyN<js::CanGC>(cx, chars, N);
 }
 
 static const struct TestPair {

@@ -47,7 +47,7 @@ class nsXBLService : public nsIObserver,
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.  aOriginPrincipal must not be null here.
   nsresult LoadBindings(nsIContent* aContent, nsIURI* aURL,
-                        nsIPrincipal* aOriginPrincipal, bool aAugmentFlag,
+                        nsIPrincipal* aOriginPrincipal,
                         nsXBLBinding** aBinding, bool* aResolveStyle);
 
   // Indicates whether or not a binding is fully loaded.

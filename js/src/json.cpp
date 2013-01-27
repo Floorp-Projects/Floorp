@@ -61,7 +61,7 @@ js_json_parse(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    JSString *str = (argc >= 1) ? ToString(cx, args[0]) : cx->names().undefined;
+    JSString *str = (argc >= 1) ? ToString<CanGC>(cx, args[0]) : cx->names().undefined;
     if (!str)
         return false;
 
@@ -335,7 +335,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
                 return false;
             vp.set(NumberValue(d));
         } else if (ObjectClassIs(obj, ESClass_String, cx)) {
-            JSString *str = ToStringSlow(cx, vp);
+            JSString *str = ToStringSlow<CanGC>(cx, vp);
             if (!str)
                 return false;
             vp.set(StringValue(str));
@@ -652,7 +652,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                     if (v.isNumber() && ValueFitsInInt32(v, &n) && INT_FITS_IN_JSID(n)) {
                         id = INT_TO_JSID(n);
                     } else {
-                        if (!ValueToId(cx, v, &id))
+                        if (!ValueToId<CanGC>(cx, v, &id))
                             return false;
                     }
                 } else if (v.isString() ||
@@ -661,7 +661,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                              ObjectClassIs(v.toObject(), ESClass_Number, cx))))
                 {
                     /* Step 4b(iv)(3), 4b(iv)(5). */
-                    if (!ValueToId(cx, v, &id))
+                    if (!ValueToId<CanGC>(cx, v, &id))
                         return false;
                 } else {
                     continue;
@@ -689,7 +689,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                 return false;
             space = NumberValue(d);
         } else if (ObjectClassIs(*spaceObj, ESClass_String, cx)) {
-            JSString *str = ToStringSlow(cx, space);
+            JSString *str = ToStringSlow<CanGC>(cx, space);
             if (!str)
                 return false;
             space = StringValue(str);

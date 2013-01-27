@@ -95,7 +95,7 @@ interface nsIContentPolicy : nsISupports
 
   /**
    * Indicates an XBL binding request, triggered either by -moz-binding CSS
-   * property or Document.addBinding method.
+   * property.
    */
   const nsContentPolicyType TYPE_XBL = 9;
 

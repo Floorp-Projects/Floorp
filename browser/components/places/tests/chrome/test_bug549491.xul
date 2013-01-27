@@ -19,6 +19,7 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="head.js" />
 
   <body xmlns="http://www.w3.org/1999/xhtml" />
 
@@ -51,27 +52,28 @@
     }
 
     function continue_test() {
-      PlacesUtils.history
-                 .addVisit(Services.io.newURI("http://example.tld/", null, null),
-                           Date.now() * 1000, null, PlacesUtils.history.TRANSITION_TYPED, false, 0);
+      addVisits(
+        {uri: Services.io.newURI("http://example.tld/", null, null),
+          transition: PlacesUtils.history.TRANSITION_TYPED},
+        function() {
+          // Make a history query.
+          let query = PlacesUtils.history.getNewQuery();
+          let opts = PlacesUtils.history.getNewQueryOptions();
+          let queryURI = PlacesUtils.history.queriesToQueryString([query], 1, opts);
 
-      // Make a history query.
-      let query = PlacesUtils.history.getNewQuery();
-      let opts = PlacesUtils.history.getNewQueryOptions();
-      let queryURI = PlacesUtils.history.queriesToQueryString([query], 1, opts);
+          // Setup the places tree contents.
+          let tree = document.getElementById("tree");
+          tree.place = queryURI;
 
-      // Setup the places tree contents.
-      let tree = document.getElementById("tree");
-      tree.place = queryURI;
+          let rootNode = tree.result.root;
+          let obs = tree.view.QueryInterface(Ci.nsINavHistoryResultObserver);
+          obs.nodeHistoryDetailsChanged(rootNode, rootNode.time, rootNode.accessCount);
+          obs.nodeTitleChanged(rootNode, rootNode.title);
+          ok(true, "No exceptions thrown");
 
-      let rootNode = tree.result.root;
-      let obs = tree.view.QueryInterface(Ci.nsINavHistoryResultObserver);
-      obs.nodeHistoryDetailsChanged(rootNode, rootNode.time, rootNode.accessCount);
-      obs.nodeTitleChanged(rootNode, rootNode.title);
-      ok(true, "No exceptions thrown");
-
-      // Cleanup.
-      waitForClearHistory(SimpleTest.finish);
+          // Cleanup.
+          waitForClearHistory(SimpleTest.finish);
+        });
     }
 
     /**

@@ -289,7 +289,7 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         };
 
         int max = 0;
-        for (int i = 0; i < sizeof(renderBufferFormats) / sizeof(D3DFORMAT); ++i)
+        for (unsigned int i = 0; i < sizeof(renderBufferFormats) / sizeof(D3DFORMAT); ++i)
         {
             bool *multisampleArray = new bool[D3DMULTISAMPLE_16_SAMPLES + 1];
             mDisplay->getMultiSampleSupport(renderBufferFormats[i], multisampleArray);
@@ -370,10 +370,6 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         depthStencil->Release();
     }
 
-    // Reset pixel shader to null to work around a bug that only happens with Intel GPUs.
-    // http://crbug.com/110343
-    mDevice->SetPixelShader(NULL);
-    
     markAllStateDirty();
 }
 
@@ -1576,8 +1572,19 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
             }
         }
         break;
-      case GL_IMPLEMENTATION_COLOR_READ_TYPE:   *params = gl::IMPLEMENTATION_COLOR_READ_TYPE;   break;
-      case GL_IMPLEMENTATION_COLOR_READ_FORMAT: *params = gl::IMPLEMENTATION_COLOR_READ_FORMAT; break;
+      case GL_IMPLEMENTATION_COLOR_READ_TYPE:
+      case GL_IMPLEMENTATION_COLOR_READ_FORMAT:
+        {
+            GLenum format, type;
+            if (getCurrentReadFormatType(&format, &type))
+            {
+                if (pname == GL_IMPLEMENTATION_COLOR_READ_FORMAT)
+                    *params = format;
+                else
+                    *params = type;
+            }
+        }
+        break;
       case GL_MAX_VIEWPORT_DIMS:
         {
             int maxDimension = std::max(getMaximumRenderbufferDimension(), getMaximumTextureDimension());
@@ -1672,7 +1679,7 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
         break;
       case GL_TEXTURE_BINDING_2D:
         {
-            if (mState.activeSampler < 0 || mState.activeSampler > getMaximumCombinedTextureImageUnits() - 1)
+            if (mState.activeSampler > getMaximumCombinedTextureImageUnits() - 1)
             {
                 error(GL_INVALID_OPERATION);
                 return false;
@@ -1683,7 +1690,7 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
         break;
       case GL_TEXTURE_BINDING_CUBE_MAP:
         {
-            if (mState.activeSampler < 0 || mState.activeSampler > getMaximumCombinedTextureImageUnits() - 1)
+            if (mState.activeSampler > getMaximumCombinedTextureImageUnits() - 1)
             {
                 error(GL_INVALID_OPERATION);
                 return false;
@@ -2496,7 +2503,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
         return error(GL_INVALID_OPERATION);
     }
 
-    GLsizei outputPitch = ComputePitch(width, format, type, mState.packAlignment);
+    GLsizei outputPitch = ComputePitch(width, ConvertSizedInternalFormat(format, type), mState.packAlignment);
     // sized query sanity check
     if (bufSize)
     {
@@ -2611,19 +2618,51 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
         inputPitch = lock.Pitch;
     }
 
+    unsigned int fastPixelSize = 0;
+
+    if (desc.Format == D3DFMT_A8R8G8B8 &&
+        format == GL_BGRA_EXT &&
+        type == GL_UNSIGNED_BYTE)
+    {
+        fastPixelSize = 4;
+    }
+    else if ((desc.Format == D3DFMT_A4R4G4B4 &&
+             format == GL_BGRA_EXT &&
+             type == GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT) ||
+             (desc.Format == D3DFMT_A1R5G5B5 &&
+             format == GL_BGRA_EXT &&
+             type == GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT))
+    {
+        fastPixelSize = 2;
+    }
+    else if (desc.Format == D3DFMT_A16B16G16R16F &&
+             format == GL_RGBA &&
+             type == GL_HALF_FLOAT_OES)
+    {
+        fastPixelSize = 8;
+    }
+    else if (desc.Format == D3DFMT_A32B32G32R32F &&
+             format == GL_RGBA &&
+             type == GL_FLOAT)
+    {
+        fastPixelSize = 16;
+    }
+
     for (int j = 0; j < rect.bottom - rect.top; j++)
     {
-        if (desc.Format == D3DFMT_A8R8G8B8 &&
-            format == GL_BGRA_EXT &&
-            type == GL_UNSIGNED_BYTE)
+        if (fastPixelSize != 0)
         {
-            // Fast path for EXT_read_format_bgra, given
-            // an RGBA source buffer.  Note that buffers with no
-            // alpha go through the slow path below.
-            // Note that this is also the combo exposed by IMPLEMENTATION_COLOR_READ_TYPE/FORMAT
+            // Fast path for formats which require no translation:
+            // D3DFMT_A8R8G8B8 to BGRA/UNSIGNED_BYTE
+            // D3DFMT_A4R4G4B4 to BGRA/UNSIGNED_SHORT_4_4_4_4_REV_EXT
+            // D3DFMT_A1R5G5B5 to BGRA/UNSIGNED_SHORT_1_5_5_5_REV_EXT
+            // D3DFMT_A16B16G16R16F to RGBA/HALF_FLOAT_OES
+            // D3DFMT_A32B32G32R32F to RGBA/FLOAT
+            // 
+            // Note that buffers with no alpha go through the slow path below.
             memcpy(dest + j * outputPitch,
                    source + j * inputPitch,
-                   (rect.right - rect.left) * 4);
+                   (rect.right - rect.left) * fastPixelSize);
             continue;
         }
 
@@ -2698,14 +2737,10 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
               case D3DFMT_A16B16G16R16F:
                 {
                     // float formats in D3D are stored rgba, rather than the other way round
-                    float abgr[4];
-
-                    D3DXFloat16To32Array(abgr, (D3DXFLOAT16*)(source + 8 * i + j * inputPitch), 4);
-
-                    a = abgr[3];
-                    b = abgr[2];
-                    g = abgr[1];
-                    r = abgr[0];
+                    r = float16ToFloat32(*((unsigned short*)(source + 8 * i + j * inputPitch) + 0));
+                    g = float16ToFloat32(*((unsigned short*)(source + 8 * i + j * inputPitch) + 1));
+                    b = float16ToFloat32(*((unsigned short*)(source + 8 * i + j * inputPitch) + 2));
+                    a = float16ToFloat32(*((unsigned short*)(source + 8 * i + j * inputPitch) + 3));
                 }
                 break;
               default:
@@ -2776,6 +2811,11 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                         ((unsigned short)(31 * b + 0.5f) << 0) |
                         ((unsigned short)(63 * g + 0.5f) << 5) |
                         ((unsigned short)(31 * r + 0.5f) << 11);
+                    break;
+                  case GL_UNSIGNED_BYTE:
+                    dest[3 * i + j * outputPitch + 0] = (unsigned char)(255 * r + 0.5f);
+                    dest[3 * i + j * outputPitch + 1] = (unsigned char)(255 * g + 0.5f);
+                    dest[3 * i + j * outputPitch + 2] = (unsigned char)(255 * b + 0.5f);
                     break;
                   default: UNREACHABLE();
                 }
@@ -3056,7 +3096,7 @@ void Context::drawArrays(GLenum mode, GLint first, GLsizei count, GLsizei instan
         return error(GL_INVALID_OPERATION);
     }
 
-    if (!cullSkipsDraw(mode))
+    if (!skipDraw(mode))
     {
         mDisplay->startScene();
         
@@ -3141,12 +3181,12 @@ void Context::drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid
     applyShaders();
     applyTextures();
 
-    if (!getCurrentProgramBinary()->validateSamplers(false))
+    if (!getCurrentProgramBinary()->validateSamplers(NULL))
     {
         return error(GL_INVALID_OPERATION);
     }
 
-    if (!cullSkipsDraw(mode))
+    if (!skipDraw(mode))
     {
         mDisplay->startScene();
 
@@ -3586,6 +3626,29 @@ float Context::getTextureMaxAnisotropy() const
     return mMaxTextureAnisotropy;
 }
 
+bool Context::getCurrentReadFormatType(GLenum *format, GLenum *type)
+{
+    Framebuffer *framebuffer = getReadFramebuffer();
+    if (!framebuffer || framebuffer->completeness() != GL_FRAMEBUFFER_COMPLETE)
+    {
+        return error(GL_INVALID_OPERATION, false);
+    }
+
+    Renderbuffer *renderbuffer = framebuffer->getColorbuffer();
+    if (!renderbuffer)
+    {
+        return error(GL_INVALID_OPERATION, false);
+    }
+
+    if(!dx2es::ConvertReadBufferFormat(renderbuffer->getD3DFormat(), format, type))
+    {
+        ASSERT(false);
+        return false;
+    }
+
+    return true;
+}
+
 void Context::detachBuffer(GLuint buffer)
 {
     // [OpenGL ES 2.0.24] section 2.9 page 22:
@@ -3738,9 +3801,31 @@ Texture *Context::getIncompleteTexture(TextureType type)
     return t;
 }
 
-bool Context::cullSkipsDraw(GLenum drawMode)
+bool Context::skipDraw(GLenum drawMode)
 {
-    return mState.cullFace && mState.cullMode == GL_FRONT_AND_BACK && isTriangleMode(drawMode);
+    if (drawMode == GL_POINTS)
+    {
+        // ProgramBinary assumes non-point rendering if gl_PointSize isn't written,
+        // which affects varying interpolation. Since the value of gl_PointSize is
+        // undefined when not written, just skip drawing to avoid unexpected results.
+        if (!getCurrentProgramBinary()->usesPointSize())
+        {
+            // This is stictly speaking not an error, but developers should be 
+            // notified of risking undefined behavior.
+            ERR("Point rendering without writing to gl_PointSize.");
+
+            return true;
+        }
+    }
+    else if (isTriangleMode(drawMode))
+    {
+        if (mState.cullFace && mState.cullMode == GL_FRONT_AND_BACK)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool Context::isTriangleMode(GLenum drawMode)

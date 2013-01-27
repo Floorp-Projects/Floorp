@@ -1,0 +1,20 @@
+<html>
+<head>
+<title>Testcase bug 363950 - crash [@ nsComputedDOMStyle::GetMarginWidthCoordFor]</title>
+</head>
+<body>
+This page should not crash Mozilla
+<script>
+var properties = ['margin-left','margin-right','margin-top','padding-bottom','padding-left','padding-right','padding-top'];
+
+function removestyles(i, j){
+if (j>=properties.length)
+   j = 0;
+document.defaultView.getComputedStyle(document.getElementsByTagName('head')[0], null).getPropertyValue(properties[j]);
+j++;
+setTimeout(removestyles,50,j);
+}
+setTimeout(removestyles,500,0,0);
+</script>
+</body>
+</html>

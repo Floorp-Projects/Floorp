@@ -58,6 +58,7 @@ CPPSRCS = \
 ifdef MOZ_B2G_RIL
 CPPSRCS += \
   MobileConnection.cpp \
+  CFStateChangeEvent.cpp \
   $(NULL)
 endif
 

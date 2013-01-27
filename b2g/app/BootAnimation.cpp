@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-#include <GLES2/gl2.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include <algorithm>
 #include <endian.h>
 #include <fcntl.h>
@@ -24,13 +20,15 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <vector>
-#include "mozilla/Util.h"
+#include "mozilla/FileUtils.h"
 #include "mozilla/NullPtr.h"
+#include "mozilla/Util.h"
 #include "png.h"
 
 #include "android/log.h"
 #include "ui/FramebufferNativeWindow.h"
 #include "hardware_legacy/power.h"
+#include "hardware/gralloc.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 #define LOGW(args...) __android_log_print(ANDROID_LOG_WARN, "Gonk", ## args)
@@ -231,9 +229,10 @@ public:
 struct AnimationFrame {
     char path[256];
     char *buf;
-    uint16_t width;
-    uint16_t height;
     const local_file_header *file;
+    uint32_t width;
+    uint32_t height;
+    uint16_t bytepp;
 
     AnimationFrame() : buf(nullptr) {}
     AnimationFrame(const AnimationFrame &frame) : buf(nullptr) {
@@ -251,7 +250,7 @@ struct AnimationFrame {
         return strcmp(path, other.path) < 0;
     }
 
-    void ReadPngFrame();
+    void ReadPngFrame(int outputFormat);
 };
 
 struct AnimationPart {
@@ -280,8 +279,20 @@ RawReader(png_structp png_ptr, png_bytep data, png_size_t length)
     state->offset += length;
 }
 
+static void
+TransformTo565(png_structp png_ptr, png_row_infop row_info, png_bytep data)
+{
+    uint16_t *outbuf = (uint16_t *)data;
+    uint8_t *inbuf = (uint8_t *)data;
+    for (int i = 0; i < row_info->rowbytes; i += 3) {
+        *outbuf++ = ((inbuf[i]     & 0xF8) << 8) |
+                    ((inbuf[i + 1] & 0xFC) << 3) |
+                    ((inbuf[i + 2]       ) >> 3);
+    }
+}
+
 void
-AnimationFrame::ReadPngFrame()
+AnimationFrame::ReadPngFrame(int outputFormat)
 {
     png_structp pngread = png_create_read_struct(PNG_LIBPNG_VER_STRING,
                                                  nullptr, nullptr, nullptr);
@@ -301,50 +312,43 @@ AnimationFrame::ReadPngFrame()
 
     width = png_get_image_width(pngread, pnginfo);
     height = png_get_image_height(pngread, pnginfo);
-    buf = (char *)malloc(width * height * 3);
+    switch (outputFormat) {
+    case HAL_PIXEL_FORMAT_BGRA_8888:
+        png_set_bgr(pngread);
+        // FALL THROUGH
+    case HAL_PIXEL_FORMAT_RGBA_8888:
+    case HAL_PIXEL_FORMAT_RGBX_8888:
+        bytepp = 4;
+        png_set_filler(pngread, 0xFF, PNG_FILLER_AFTER);
+        break;
+    case HAL_PIXEL_FORMAT_RGB_888:
+        bytepp = 3;
+        png_set_strip_alpha(pngread);
+        break;
+    default:
+        LOGW("Unknown pixel format %d. Assuming RGB 565.", outputFormat);
+        // FALL THROUGH
+    case HAL_PIXEL_FORMAT_RGB_565:
+        bytepp = 2;
+        png_set_strip_alpha(pngread);
+        png_set_read_user_transform_fn(pngread, TransformTo565);
+        break;
+    }
+
+    // An extra row is added to give libpng enough space when
+    // decoding 3/4 bytepp inputs for 2 bytepp output surfaces
+    buf = (char *)malloc(width * (height + 1) * bytepp);
 
     vector<char *> rows(height + 1);
-    uint32_t stride = width * 3;
+    uint32_t stride = width * bytepp;
     for (int i = 0; i < height; i++) {
         rows[i] = buf + (stride * i);
     }
     rows[height] = nullptr;
+    png_set_strip_16(pngread);
     png_set_palette_to_rgb(pngread);
     png_read_image(pngread, (png_bytepp)&rows.front());
     png_destroy_read_struct(&pngread, &pnginfo, nullptr);
-}
-
-static const EGLint kEGLConfigAttribs[] = {
-    EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-};
-
-static bool
-CreateConfig(EGLConfig* aConfig, EGLDisplay display, int format)
-{
-    EGLConfig configs[64];
-    EGLint ncfg = ArrayLength(configs);
-
-    if (!eglChooseConfig(display, kEGLConfigAttribs,
-                         configs, ncfg, &ncfg) ||
-        ncfg < 1) {
-        return false;
-    }
-
-    for (int j = 0; j < ncfg; ++j) {
-        EGLConfig config = configs[j];
-        EGLint id;
-
-        if (eglGetConfigAttrib(display, config,
-                               EGL_NATIVE_VISUAL_ID, &id) &&
-            id > 0 && id == format)
-        {
-            *aConfig = config;
-            return true;
-        }
-    }
-    return false;
 }
 
 static void *
@@ -355,21 +359,6 @@ AnimationThread(void *)
         LOGW("Could not open boot animation");
         return nullptr;
     }
-
-    EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    eglInitialize(display, nullptr, nullptr);
-
-    int format;
-    ANativeWindow const * const window = gNativeWindow.get();
-    window->query(window, NATIVE_WINDOW_FORMAT, &format);
-
-    EGLConfig config;
-    if (!CreateConfig(&config, display, format)) {
-        LOGW("Could not find config for pixel format");
-        return nullptr;
-    }
-
-    EGLSurface surface = eglCreateWindowSurface(display, config, gNativeWindow.get(), nullptr);
 
     const cdir_entry *entry = nullptr;
     const local_file_header *file = nullptr;
@@ -385,6 +374,18 @@ AnimationThread(void *)
         LOGW("Could not find desc.txt in boot animation");
         return nullptr;
     }
+
+    int format;
+    ANativeWindow *window = gNativeWindow.get();
+    window->query(window, NATIVE_WINDOW_FORMAT, &format);
+
+    hw_module_t const *module;
+    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module)) {
+        LOGW("Could not get gralloc module");
+        return nullptr;
+    }
+    gralloc_module_t const *grmodule =
+        reinterpret_cast<gralloc_module_t const*>(module);
 
     string descCopy;
     descCopy.append(file->GetData(), entry->GetDataSize());
@@ -452,104 +453,6 @@ AnimationThread(void *)
         sort(part.frames.begin(), part.frames.end());
     }
 
-    static EGLint gContextAttribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE, 0
-    };
-    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, gContextAttribs);
-
-    eglMakeCurrent(display, surface, surface, context);
-    glEnable(GL_TEXTURE_2D);
-
-    const char *vsString =
-        "attribute vec2 aPosition; "
-        "attribute vec2 aTexCoord; "
-        "varying vec2 vTexCoord; "
-        "void main() { "
-        "  gl_Position = vec4(aPosition, 0.0, 1.0); "
-        "  vTexCoord = aTexCoord; "
-        "}";
-
-    const char *fsString =
-        "precision mediump float; "
-        "varying vec2 vTexCoord; "
-        "uniform sampler2D sTexture; "
-        "void main() { "
-        "  gl_FragColor = vec4(texture2D(sTexture, vTexCoord).rgb, 1.0); "
-        "}";
-
-    GLint status;
-    GLuint vsh = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vsh, 1, &vsString, nullptr);
-    glCompileShader(vsh);
-    glGetShaderiv(vsh, GL_COMPILE_STATUS, &status);
-    if (!status) {
-        LOGE("Failed to compile vertex shader");
-        return nullptr;
-    }
-
-    GLuint fsh = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fsh, 1, &fsString, nullptr);
-    glCompileShader(fsh);
-    glGetShaderiv(fsh, GL_COMPILE_STATUS, &status);
-    if (!status) {
-        LOGE("Failed to compile fragment shader");
-        return nullptr;
-    }
-
-    GLuint programId = glCreateProgram();
-    glAttachShader(programId, vsh);
-    glAttachShader(programId, fsh);
-
-    glLinkProgram(programId);
-    glGetProgramiv(programId, GL_LINK_STATUS, &status);
-    if (!status) {
-        LOG("Failed to link program");
-        return nullptr;
-    }
-
-    GLint positionLoc = glGetAttribLocation(programId, "aPosition");
-    GLint texCoordLoc = glGetAttribLocation(programId, "aTexCoord");
-    GLint textureLoc = glGetUniformLocation(programId, "sTexture");
-
-    glUseProgram(programId);
-
-    GLfloat texCoords[] = { 0.0f, 1.0f,
-                            0.0f, 0.0f,
-                            1.0f, 1.0f,
-                            1.0f, 0.0f };
-
-    GLfloat vCoords[] = { -1.0f, -1.0f,
-                          -1.0f,  1.0f,
-                           1.0f, -1.0f,
-                           1.0f,  1.0f };
-
-    GLuint rectBuf, texBuf;
-    glGenBuffers(1, &rectBuf);
-    glGenBuffers(1, &texBuf);
-
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glEnableVertexAttribArray(positionLoc);
-    glBindBuffer(GL_ARRAY_BUFFER, rectBuf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vCoords), vCoords, GL_STATIC_DRAW);
-    glVertexAttribPointer(positionLoc, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glEnableVertexAttribArray(texCoordLoc);
-    glBindBuffer(GL_ARRAY_BUFFER, texBuf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
-    glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glUniform1i(textureLoc, 0);
-
     uint32_t frameDelayUs = 1000000 / fps;
 
     for (uint32_t i = 0; i < parts.size(); i++) {
@@ -562,13 +465,33 @@ AnimationThread(void *)
                 gettimeofday(&tv1, nullptr);
                 AnimationFrame &frame = part.frames[k];
                 if (!frame.buf) {
-                    frame.ReadPngFrame();
+                    frame.ReadPngFrame(format);
                 }
 
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                             frame.width, frame.height, 0,
-                             GL_RGB, GL_UNSIGNED_BYTE, frame.buf);
-                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                ANativeWindowBuffer *buf;
+                if (window->dequeueBuffer(window, &buf)) {
+                    LOGW("Failed to get an ANativeWindowBuffer");
+                    break;
+                }
+                if (window->lockBuffer(window, buf)) {
+                    LOGW("Failed to lock ANativeWindowBuffer");
+                    window->queueBuffer(window, buf);
+                    break;
+                }
+
+                void *vaddr;
+                if (grmodule->lock(grmodule, buf->handle,
+                                   GRALLOC_USAGE_SW_READ_NEVER |
+                                   GRALLOC_USAGE_SW_WRITE_OFTEN |
+                                   GRALLOC_USAGE_HW_FB,
+                                   0, 0, width, height, &vaddr)) {
+                    LOGW("Failed to lock buffer_handle_t");
+                    window->queueBuffer(window, buf);
+                    break;
+                }
+                memcpy(vaddr, frame.buf,
+                       frame.width * frame.height * frame.bytepp);
+                grmodule->unlock(grmodule, buf->handle);
 
                 gettimeofday(&tv2, nullptr);
 
@@ -580,7 +503,7 @@ AnimationThread(void *)
                     LOGW("Frame delay is %d us but decoding took %d us", frameDelayUs, tv2.tv_usec);
                 }
 
-                eglSwapBuffers(display, surface);
+                window->queueBuffer(window, buf);
 
                 if (part.count && j >= part.count) {
                     free(frame.buf);
@@ -590,19 +513,7 @@ AnimationThread(void *)
             usleep(frameDelayUs * part.pause);
         }
     }
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glUseProgram(0);
-    glDeleteTextures(1, &tex);
-    glDeleteBuffers(1, &texBuf);
-    glDeleteBuffers(1, &rectBuf);
-    glDeleteProgram(programId);
-    glDeleteShader(fsh);
-    glDeleteShader(vsh);
 
-    eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-    eglDestroyContext(display, context);
-    eglDestroySurface(display, surface);
     return nullptr;
 }
 
@@ -627,6 +538,21 @@ NativeWindow()
     // FramebufferNativeWindow.  Do not separate these two C++
     // statements.
     set_screen_state(1);
+
+    // For some devices, it takes a while for the framebuffer to become
+    // usable. So we wait until the framebuffer has woken up before we
+    // try to open it.
+    {
+        char buf;
+        int len = 0;
+        ScopedClose fd(open("/sys/power/wait_for_fb_wake", O_RDONLY, 0));
+        do {
+            len = read(fd.get(), &buf, 1);
+        } while (len < 0 && errno == EINTR);
+        if (len < 0) {
+            LOGE("BootAnimation: wait_for_fb_sleep failed errno: %d", errno);
+        }
+    }
 
     // We (apparently) don't have a way to tell if allocating the
     // fbs succeeded or failed.

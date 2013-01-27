@@ -169,17 +169,19 @@ function test() {
   ok(PlacesUtils, "PlacesUtils in context");
 
   // Add visits, a bookmark and a tag.
-  PlacesUtils.history.addVisit(PlacesUtils._uri(TEST_URL),
-                               Date.now() * 1000, null,
-                               PlacesUtils.history.TRANSITION_TYPED, false, 0);
-  PlacesUtils.history.addVisit(PlacesUtils._uri(TEST_DOWNLOAD_URL),
-                               Date.now() * 1000, null,
-                               PlacesUtils.history.TRANSITION_DOWNLOAD, false, 0);
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       PlacesUtils._uri(TEST_URL),
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "dummy");
-  PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
+  addVisits(
+    [{ uri: PlacesUtils._uri(TEST_URL), visitDate: Date.now() * 1000,
+       transition: PlacesUtils.history.TRANSITION_TYPED },
+     { uri: PlacesUtils._uri(TEST_DOWNLOAD_URL), visitDate: Date.now() * 1000,
+       transition: PlacesUtils.history.TRANSITION_DOWNLOAD }],
+    window,
+    function() {
+      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                           PlacesUtils._uri(TEST_URL),
+                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                           "dummy");
+      PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
 
-  gLibrary = openLibrary(onLibraryAvailable);
+      gLibrary = openLibrary(onLibraryAvailable);
+    });
 }

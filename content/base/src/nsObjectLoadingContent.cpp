@@ -787,11 +787,9 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
     // already passed content policy in LoadObject.
     if ((mURI && !mChannelLoaded) || (mChannelLoaded && !aIsLoading)) {
       NS_ASSERTION(!mChannel, "should not have an existing channel here");
-      if (MakePluginListener()) {
-        // We intentionally ignore errors here, leaving it up to the plugin to
-        // deal with not having an initial stream.
-        OpenChannel();
-      }
+      // We intentionally ignore errors here, leaving it up to the plugin to
+      // deal with not having an initial stream.
+      OpenChannel();
     }
   }
 
@@ -831,12 +829,17 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
   // If we already switched to type plugin, this channel can just be passed to
   // the final listener.
   if (mType == eType_Plugin) {
-    if (!mInstanceOwner || !mFinalListener) {
+    if (!mInstanceOwner) {
       // We drop mChannel when stopping plugins, so something is wrong
       NS_NOTREACHED("Opened a channel in plugin mode, but don't have a plugin");
       return NS_BINDING_ABORTED;
     }
-    return mFinalListener->OnStartRequest(aRequest, nullptr);
+    if (MakePluginListener()) {
+      return mFinalListener->OnStartRequest(aRequest, nullptr);
+    } else {
+      NS_NOTREACHED("Failed to create PluginStreamListener, aborting channel");
+      return NS_BINDING_ABORTED;
+    }
   }
 
   // Otherwise we should be state loading, and call LoadObject with the channel
@@ -2006,7 +2009,8 @@ nsObjectLoadingContent::CloseChannel()
     mFinalListener = nullptr;
     channelGrip->Cancel(NS_BINDING_ABORTED);
     if (listenerGrip) {
-      // mFinalListener is only set by LoadObject after OnStartRequest
+      // mFinalListener is only set by LoadObject after OnStartRequest, or
+      // by OnStartRequest in the case of late-opened plugin streams
       listenerGrip->OnStopRequest(channelGrip, nullptr, NS_BINDING_ABORTED);
     }
   }

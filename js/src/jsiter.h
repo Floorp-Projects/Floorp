@@ -30,7 +30,8 @@ namespace js {
 
 struct NativeIterator
 {
-    HeapPtrObject obj;
+    HeapPtrObject obj;                  // Object being iterated.
+    JSObject *iterObj_;                 // Internal iterator object.
     HeapPtr<JSFlatString> *props_array;
     HeapPtr<JSFlatString> *props_cursor;
     HeapPtr<JSFlatString> *props_end;
@@ -38,9 +39,16 @@ struct NativeIterator
     uint32_t shapes_length;
     uint32_t shapes_key;
     uint32_t flags;
-    PropertyIteratorObject *next;  /* Forms cx->enumerators list, garbage otherwise. */
 
-    bool isKeyIter() const { return (flags & JSITER_FOREACH) == 0; }
+  private:
+    /* While in compartment->enumerators, these form a doubly linked list. */
+    NativeIterator *next_;
+    NativeIterator *prev_;
+
+  public:
+    bool isKeyIter() const {
+        return (flags & JSITER_FOREACH) == 0;
+    }
 
     inline HeapPtr<JSFlatString> *begin() const {
         return props_array;
@@ -54,20 +62,57 @@ struct NativeIterator
         return end() - begin();
     }
 
+    JSObject *iterObj() const {
+        return iterObj_;
+    }
     HeapPtr<JSFlatString> *current() const {
         JS_ASSERT(props_cursor < props_end);
         return props_cursor;
     }
 
+    NativeIterator *next() {
+        return next_;
+    }
+
+    static inline size_t offsetOfNext() {
+        return offsetof(NativeIterator, next_);
+    }
+    static inline size_t offsetOfPrev() {
+        return offsetof(NativeIterator, prev_);
+    }
+
     void incCursor() {
         props_cursor = props_cursor + 1;
     }
+    void link(NativeIterator *other) {
+        /* A NativeIterator cannot appear in the enumerator list twice. */
+        JS_ASSERT(!next_ && !prev_);
+        JS_ASSERT(flags & JSITER_ENUMERATE);
 
+        this->next_ = other;
+        this->prev_ = other->prev_;
+        other->prev_->next_ = this;
+        other->prev_ = this;
+    }
+    void unlink() {
+        JS_ASSERT(flags & JSITER_ENUMERATE);
+
+        next_->prev_ = prev_;
+        prev_->next_ = next_;
+        next_ = NULL;
+        prev_ = NULL;
+    }
+
+    static NativeIterator *allocateSentinel(JSContext *cx);
     static NativeIterator *allocateIterator(JSContext *cx, uint32_t slength,
                                             const js::AutoIdVector &props);
-    void init(RawObject obj, unsigned flags, uint32_t slength, uint32_t key);
+    void init(RawObject obj, RawObject iterObj, unsigned flags, uint32_t slength, uint32_t key);
 
     void mark(JSTracer *trc);
+
+    static void destroy(NativeIterator *iter) {
+        js_free(iter);
+    }
 };
 
 class PropertyIteratorObject : public JSObject
@@ -297,7 +342,6 @@ struct JSGenerator
     js::HeapPtrObject   obj;
     JSGeneratorState    state;
     js::FrameRegs       regs;
-    js::PropertyIteratorObject *enumerators;
     JSGenerator         *prevGenerator;
     js::StackFrame      *fp;
     js::HeapValue       stackSnapshot[1];

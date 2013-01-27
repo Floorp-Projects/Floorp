@@ -7,9 +7,12 @@
 #include "nsDOMClassInfo.h"
 #include "jsapi.h"
 #include "nsThread.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/Services.h"
+#include "mozilla/unused.h"
 #include "nsIObserverService.h"
 #include "nsIDOMDeviceStorage.h"
+#include "nsXULAppAPI.h"
 #include "DOMCameraManager.h"
 #include "DOMCameraCapabilities.h"
 #include "DOMCameraControl.h"
@@ -259,6 +262,11 @@ nsDOMCameraControl::StartRecording(const JS::Value& aOptions, nsIDOMDeviceStorag
   obs->NotifyObservers(nullptr,
                        "recording-device-events",
                        NS_LITERAL_STRING("starting").get());
+  // Forward recording events to parent process.
+  // The events are gathered in chrome process and used for recording indicator
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    unused << ContentChild::GetSingleton()->SendRecordingDeviceEvents(NS_LITERAL_STRING("starting"));
+  }
 
   #ifdef MOZ_B2G
   if (!mAudioChannelAgent) {
@@ -291,6 +299,11 @@ nsDOMCameraControl::StopRecording()
   obs->NotifyObservers(nullptr,
                        "recording-device-events",
                        NS_LITERAL_STRING("shutdown").get());
+  // Forward recording events to parent process.
+  // The events are gathered in chrome process and used for recording indicator
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    unused << ContentChild::GetSingleton()->SendRecordingDeviceEvents(NS_LITERAL_STRING("shutdown"));
+  }
 
   #ifdef MOZ_B2G
   if (mAudioChannelAgent) {

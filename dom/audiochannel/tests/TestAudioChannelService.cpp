@@ -145,6 +145,12 @@ TestContentChannels()
   rv = agent2.Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = agent1.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = agent2.mAgent->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   bool playing;
   rv = agent1.StartPlaying(&playing);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -166,7 +172,7 @@ TestContentChannels()
 
   rv = agent2.StartPlaying(&playing);
   NS_ENSURE_SUCCESS(rv, rv);
-  TEST_ENSURE_BASE(!playing, "Test3: A content channel unvisible agent2 should not be playing");
+  TEST_ENSURE_BASE(playing, "Test3: A content channel unvisible agent2 should be playing");
 
   rv = agent1.mAgent->SetVisibilityState(true);
   NS_ENSURE_SUCCESS(rv, rv);

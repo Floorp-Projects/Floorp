@@ -26,12 +26,12 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jswrapper.h"
 
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
@@ -560,7 +560,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     /* Set the 'message' property. */
     RootedString message(cx);
     if (args.hasDefined(0)) {
-        message = ToString(cx, args[0]);
+        message = ToString<CanGC>(cx, args[0]);
         if (!message)
             return false;
         args[0].setString(message);
@@ -575,7 +575,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     RootedScript script(cx, iter.script());
     RootedString filename(cx);
     if (args.length() > 1) {
-        filename = ToString(cx, args[1]);
+        filename = ToString<CanGC>(cx, args[1]);
         if (!filename)
             return false;
         args[1].setString(filename);
@@ -633,7 +633,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
     if (nameVal.isUndefined()) {
         name = cx->names().Error;
     } else {
-        name = ToString(cx, nameVal);
+        name = ToString<CanGC>(cx, nameVal);
         if (!name)
             return false;
     }
@@ -648,7 +648,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
     if (msgVal.isUndefined()) {
         message = cx->runtime->emptyString;
     } else {
-        message = ToString(cx, msgVal);
+        message = ToString<CanGC>(cx, msgVal);
         if (!message)
             return false;
     }
@@ -700,7 +700,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
     RootedValue nameVal(cx);
     RootedString name(cx);
     if (!JSObject::getProperty(cx, obj, obj, cx->names().name, &nameVal) ||
-        !(name = ToString(cx, nameVal)))
+        !(name = ToString<CanGC>(cx, nameVal)))
     {
         return false;
     }
@@ -745,7 +745,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
         if (filename->empty() && !sb.append(", \"\""))
                 return false;
 
-        RawString linenumber = ToString(cx, linenoVal);
+        RawString linenumber = ToString<CanGC>(cx, linenoVal);
         if (!linenumber)
             return false;
         if (!sb.append(", ") || !sb.append(linenumber))
@@ -1043,7 +1043,7 @@ js_ReportUncaughtException(JSContext *cx)
     reportp = js_ErrorFromException(exn);
 
     /* XXX L10N angels cry once again. see also everywhere else */
-    RootedString str(cx, ToString(cx, exn));
+    RootedString str(cx, ToString<CanGC>(cx, exn));
     if (str)
         roots[1] = StringValue(str);
 
@@ -1071,10 +1071,10 @@ js_ReportUncaughtException(JSContext *cx)
             RootedString colon(cx, JS_NewStringCopyZ(cx, ": "));
             if (!colon)
                 return false;
-            RootedString nameColon(cx, js_ConcatStrings(cx, name, colon));
+            RootedString nameColon(cx, ConcatStrings<CanGC>(cx, name, colon));
             if (!nameColon)
                 return false;
-            str = js_ConcatStrings(cx, nameColon, msg);
+            str = ConcatStrings<CanGC>(cx, nameColon, msg);
             if (!str)
                 return false;
         } else if (name) {
@@ -1084,7 +1084,7 @@ js_ReportUncaughtException(JSContext *cx)
         }
 
         if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
-            RawString tmp = ToString(cx, roots[4]);
+            RawString tmp = ToString<CanGC>(cx, roots[4]);
             if (tmp)
                 filename.encode(cx, tmp);
         }

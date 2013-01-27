@@ -80,7 +80,7 @@ _destroyJSDObject(JSDContext* jsdc, JSDObject* jsdobj)
 
 void
 jsd_Constructing(JSDContext* jsdc, JSContext *cx, JSObject *obj,
-                 JSStackFrame *fp)
+                 JSAbstractFramePtr frame)
 {
     JSDObject* jsdobj;
     JSScript* script;
@@ -93,7 +93,7 @@ jsd_Constructing(JSDContext* jsdc, JSContext *cx, JSObject *obj,
     jsdobj = jsd_GetJSDObjectForJSObject(jsdc, obj);
     if( jsdobj && !jsdobj->ctorURL )
     {
-        script = JS_GetFrameScript(cx, fp);
+        script = frame.script();
         if( script )
         {
             ctorURL = JS_GetScriptFilename(cx, script);
@@ -101,7 +101,7 @@ jsd_Constructing(JSDContext* jsdc, JSContext *cx, JSObject *obj,
                 jsdobj->ctorURL = jsd_AddAtom(jsdc, ctorURL);
 
             JSD_LOCK_SCRIPTS(jsdc);
-            jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, fp);
+            jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, frame);
             JSD_UNLOCK_SCRIPTS(jsdc);
             if( jsdscript && (ctorNameStr = jsd_GetScriptFunctionId(jsdc, jsdscript)) ) {
                 if( (ctorName = JS_EncodeString(cx, ctorNameStr)) ) {

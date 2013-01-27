@@ -542,17 +542,15 @@ CollectDistNames( CERTCertificate *cert, SECItem *k, void *data)
 {
     CERTDistNames *names;
     PRBool saveit = PR_FALSE;
-    CERTCertTrust *trust;
+    CERTCertTrust trust;
     dnameNode *node;
     int len;
     
     names = (CERTDistNames *)data;
     
-    if ( cert->trust ) {
-	trust = cert->trust;
-	
+    if ( CERT_GetCertTrust(cert, &trust) == SECSuccess ) {
 	/* only collect names of CAs trusted for issuing SSL clients */
-	if (  trust->sslFlags &  CERTDB_TRUSTED_CLIENT_CA )  {
+	if (  trust.sslFlags &  CERTDB_TRUSTED_CLIENT_CA )  {
 	    saveit = PR_TRUE;
 	}
     }

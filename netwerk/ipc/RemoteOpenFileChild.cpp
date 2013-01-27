@@ -106,6 +106,9 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
   if (aTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(aTabChild);
   }
+  if (MissingRequiredTabChild(tabChild, "remoteopenfile")) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   // Windows/OSX desktop builds skip remoting, and just open file in child
@@ -143,6 +146,11 @@ RemoteOpenFileChild::RecvFileOpened(const FileDescriptor& aFD)
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   NS_NOTREACHED("osX and Windows shouldn't be doing IPDL here");
 #else
+  if (!aFD.IsValid()) {
+    return RecvFileDidNotOpen();
+  }
+
+  MOZ_ASSERT(!mNSPRFileDesc);
   mNSPRFileDesc = PR_AllocFileDesc(aFD.PlatformHandle(), PR_GetFileMethods());
 
   MOZ_ASSERT(mListener);
@@ -163,8 +171,10 @@ RemoteOpenFileChild::RecvFileDidNotOpen()
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   NS_NOTREACHED("osX and Windows shouldn't be doing IPDL here");
 #else
-  MOZ_ASSERT(mListener);
+  MOZ_ASSERT(!mNSPRFileDesc);
   printf_stderr("RemoteOpenFileChild: file was not opened!\n");
+
+  MOZ_ASSERT(mListener);
   mListener->OnRemoteFileOpenComplete(NS_ERROR_FILE_NOT_FOUND);
   mListener = nullptr;     // release ref to listener
 

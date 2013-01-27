@@ -239,14 +239,13 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow)
     var button = aEvent.button || 0;
     var clickCount = aEvent.clickCount || 1;
     var modifiers = _parseModifiers(aEvent);
+    var pressure = ("pressure" in aEvent) ? aEvent.pressure : 0;
+    var inputSource = ("inputSource" in aEvent) ? aEvent.inputSource : 0;
+    var types = (("type" in aEvent) && aEvent.type) ? [aEvent.type] : ["mousedown", "mouseup"];
 
-    if (("type" in aEvent) && aEvent.type) {
-      utils.sendMouseEvent(aEvent.type, left, top, button, clickCount, modifiers);
-    }
-    else {
-      utils.sendMouseEvent("mousedown", left, top, button, clickCount, modifiers);
-      utils.sendMouseEvent("mouseup", left, top, button, clickCount, modifiers);
-    }
+    types.forEach(function(type) {
+      utils.sendMouseEvent(type, left, top, button, clickCount, modifiers, false, pressure, inputSource);
+    });
   }
 }
 function synthesizeTouchAtPoint(left, top, aEvent, aWindow)

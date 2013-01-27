@@ -1150,7 +1150,7 @@ void _PR_InitIO(void)
         osfd = socket(AF_INET6, SOCK_STREAM, 0);
         if (osfd != -1) {
             int on;
-            int optlen = sizeof(on);
+            socklen_t optlen = sizeof(on);
             if (getsockopt(osfd, IPPROTO_IPV6, IPV6_V6ONLY,
                     &on, &optlen) == 0) {
                 _pr_ipv6_v6only_on_by_default = on;

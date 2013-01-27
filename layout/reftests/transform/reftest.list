@@ -115,7 +115,7 @@ skip-if(B2G) fails-if(Android) fuzzy-if(cocoaWidget,1,2) == stresstest-1.html st
 # Bugs
 == 601894-1.html 601894-ref.html
 == 601894-2.html 601894-ref.html
-fails asserts(1) == 830299-1.html 830299-1-ref.html
+== 830299-1.html 830299-1-ref.html
 # Bug 722777
 == table-1a.html table-1-ref.html
 == table-1b.html table-1-ref.html

@@ -108,7 +108,7 @@ interface nsIPrincipal : nsISerializable
      * principals are not allowed to load anything. This is changed slightly
      * by the optional flag allowIfInheritsPrincipal (which defaults to false)
      * which allows the load of a data: URI (which inherits the principal of
-     * its loader) or a URI with the same principal as its loader (eg. a 
+     * its loader) or a URI with the same principal as its loader (eg. a
      * Blob URI).
      * In these cases, with allowIfInheritsPrincipal set to true, the URI can
      * be loaded by a null principal.
@@ -159,7 +159,7 @@ interface nsIPrincipal : nsISerializable
      * non-hierarchical schemes correctly.
      */
     readonly attribute ACString baseDomain;
-    
+
     const short APP_STATUS_NOT_INSTALLED = 0;
     const short APP_STATUS_INSTALLED     = 1;
     const short APP_STATUS_PRIVILEGED    = 2;
@@ -229,14 +229,14 @@ interface nsIPrincipal : nsISerializable
 };
 
 /**
- * If nsSystemPrincipal is too risky to use, but we want a principal to access 
- * more than one origin, nsExpandedPrincipals letting us define an array of 
+ * If nsSystemPrincipal is too risky to use, but we want a principal to access
+ * more than one origin, nsExpandedPrincipals letting us define an array of
  * principals it subsumes. So script with an nsExpandedPrincipals will gain
- * same origin access when at least one of its principals it contains gained 
+ * same origin access when at least one of its principals it contains gained
  * sameorigin acccess. An nsExpandedPrincipal will be subsumed by the system
  * principal, and by another nsExpandedPrincipal that has all its principals.
  * It is added for jetpack content-scripts to let them interact with the
- * content and a well defined set of other domains, without the risk of 
+ * content and a well defined set of other domains, without the risk of
  * leaking out a system principal to the content. See: Bug 734891
  */
 [uuid(f3e177Df-6a5e-489f-80a7-2dd1481471d8)]
@@ -244,7 +244,7 @@ interface nsIExpandedPrincipal : nsISupports
 {
   /**
    * An array of principals that the expanded principal subsumes.
-   * Note: this list is not reference counted, it is shared, so 
+   * Note: this list is not reference counted, it is shared, so
    * should not be changed and should only be used ephemerally.
    */
   [noscript] readonly attribute PrincipalArray whiteList;

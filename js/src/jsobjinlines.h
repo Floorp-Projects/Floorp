@@ -20,7 +20,6 @@
 #include "jsprobes.h"
 #include "jspropertytree.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 #include "jsstr.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
@@ -35,6 +34,7 @@
 #include "js/TemplateLib.h"
 #include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/Shape.h"
 #include "vm/NumberObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringObject.h"
@@ -44,12 +44,12 @@
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 
 #include "vm/ObjectImpl-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/String-inl.h"
 
@@ -178,11 +178,28 @@ JSObject::getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject recei
 }
 
 /* static */ inline JSBool
+JSObject::getGenericNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                         jsid id, js::Value *vp)
+{
+    js::GenericIdOp op = obj->getOps()->getGeneric;
+    if (op)
+        return false;
+    return js::baseops::GetPropertyNoGC(cx, obj, receiver, id, vp);
+}
+
+/* static */ inline JSBool
 JSObject::getProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                       js::PropertyName *name, js::MutableHandleValue vp)
 {
     js::RootedId id(cx, js::NameToId(name));
     return getGeneric(cx, obj, receiver, id, vp);
+}
+
+/* static */ inline JSBool
+JSObject::getPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                          js::PropertyName *name, js::Value *vp)
+{
+    return getGenericNoGC(cx, obj, receiver, js::NameToId(name), vp);
 }
 
 /* static */ inline bool
@@ -570,6 +587,80 @@ JSObject::ensureDenseInitializedLength(JSContext *cx, uint32_t index, uint32_t e
     }
 }
 
+template<typename CONTEXT>
+JSObject::EnsureDenseResult
+JSObject::extendDenseElements(CONTEXT *cx, unsigned requiredCapacity, unsigned extra)
+{
+    /*
+     * Don't grow elements for non-extensible objects or watched objects. Dense
+     * elements can be added/written with no extensible or watchpoint checks as
+     * long as there is capacity for them.
+     */
+    if (!isExtensible() || watched()) {
+        JS_ASSERT(getDenseCapacity() == 0);
+        return ED_SPARSE;
+    }
+
+    /*
+     * Don't grow elements for objects which already have sparse indexes.
+     * This avoids needing to count non-hole elements in willBeSparseElements
+     * every time a new index is added.
+     */
+    if (isIndexed())
+        return ED_SPARSE;
+
+    /*
+     * We use the extra argument also as a hint about number of non-hole
+     * elements to be inserted.
+     */
+    if (requiredCapacity > MIN_SPARSE_INDEX &&
+        willBeSparseElements(requiredCapacity, extra)) {
+        return ED_SPARSE;
+    }
+
+    if (!growElements(cx, requiredCapacity))
+        return ED_FAILED;
+
+    return ED_OK;
+}
+
+inline JSObject::EnsureDenseResult
+JSObject::parExtendDenseElements(js::Allocator *alloc, js::Value *v, uint32_t extra)
+{
+    JS_ASSERT(isNative());
+
+    js::ObjectElements *header = getElementsHeader();
+    unsigned initializedLength = header->initializedLength;
+    unsigned requiredCapacity = initializedLength + extra;
+    if (requiredCapacity < initializedLength)
+        return ED_SPARSE; /* Overflow. */
+
+    if (requiredCapacity > header->capacity) {
+        EnsureDenseResult edr = extendDenseElements(alloc, requiredCapacity, extra);
+        if (edr != ED_OK)
+            return edr;
+    }
+
+    // Watch out lest the header has been reallocated by
+    // extendDenseElements():
+    header = getElementsHeader();
+
+    js::HeapSlot *sp = elements + initializedLength;
+    if (v) {
+        for (uint32_t i = 0; i < extra; i++)
+            sp[i].init(compartment(), this, js::HeapSlot::Element,
+                       initializedLength+i, v[i]);
+    } else {
+        for (uint32_t i = 0; i < extra; i++)
+            sp[i].init(compartment(), this, js::HeapSlot::Element,
+                       initializedLength+i, js::MagicValue(JS_ELEMENTS_HOLE));
+    }
+    header->initializedLength = requiredCapacity;
+    if (header->length < requiredCapacity)
+        header->length = requiredCapacity;
+    return ED_OK;
+}
+
 inline JSObject::EnsureDenseResult
 JSObject::ensureDenseElements(JSContext *cx, unsigned index, unsigned extra)
 {
@@ -601,35 +692,9 @@ JSObject::ensureDenseElements(JSContext *cx, unsigned index, unsigned extra)
         }
     }
 
-    /*
-     * Don't grow elements for non-extensible objects or watched objects. Dense
-     * elements can be added/written with no extensible or watchpoint checks as
-     * long as there is capacity for them.
-     */
-    if (!isExtensible() || watched()) {
-        JS_ASSERT(currentCapacity == 0);
-        return ED_SPARSE;
-    }
-
-    /*
-     * Don't grow elements for objects which already have sparse indexes.
-     * This avoids needing to count non-hole elements in willBeSparseElements
-     * every time a new index is added.
-     */
-    if (isIndexed())
-        return ED_SPARSE;
-
-    /*
-     * We use the extra argument also as a hint about number of non-hole
-     * elements to be inserted.
-     */
-    if (requiredCapacity > MIN_SPARSE_INDEX &&
-        willBeSparseElements(requiredCapacity, extra)) {
-        return ED_SPARSE;
-    }
-
-    if (!growElements(cx, requiredCapacity))
-        return ED_FAILED;
+    EnsureDenseResult edr = extendDenseElements(cx, requiredCapacity, extra);
+    if (edr != ED_OK)
+        return edr;
 
     ensureDenseInitializedLength(cx, index, extra);
     return ED_OK;
@@ -925,6 +990,20 @@ inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()
 inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
 inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 
+inline js::NumberObject &
+JSObject::asNumber()
+{
+    JS_ASSERT(isNumber());
+    return *static_cast<js::NumberObject *>(this);
+}
+
+inline js::StringObject &
+JSObject::asString()
+{
+    JS_ASSERT(isString());
+    return *static_cast<js::StringObject *>(this);
+}
+
 inline bool
 JSObject::isDebugScope() const
 {
@@ -969,7 +1048,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
     JS_ASSERT(cx->compartment == type->compartment());
 
-    JSObject *obj = js_NewGCObject<js::ALLOW_GC>(cx, kind);
+    JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind);
     if (!obj)
         return NULL;
 
@@ -1014,7 +1093,7 @@ JSObject::createArray(JSContext *cx, js::gc::AllocKind kind,
 
     uint32_t capacity = js::gc::GetGCKindSlots(kind) - js::ObjectElements::VALUES_PER_HEADER;
 
-    JSObject *obj = js_NewGCObject<js::ALLOW_GC>(cx, kind);
+    JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind);
     if (!obj) {
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -1140,7 +1219,7 @@ JSObject::lookupGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
     js::LookupGenericOp op = obj->getOps()->lookupGeneric;
     if (op)
         return op(cx, obj, id, objp, propp);
-    return js::baseops::LookupProperty(cx, obj, id, objp, propp);
+    return js::baseops::LookupProperty<js::CanGC>(cx, obj, id, objp, propp);
 }
 
 /* static */ inline JSBool
@@ -1223,6 +1302,20 @@ JSObject::getElement(JSContext *cx, js::HandleObject obj, js::HandleObject recei
     if (!js::IndexToId(cx, index, &id))
         return false;
     return getGeneric(cx, obj, receiver, id, vp);
+}
+
+/* static */ inline JSBool
+JSObject::getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                         uint32_t index, js::Value *vp)
+{
+    js::ElementIdOp op = obj->getOps()->getElement;
+    if (op)
+        return false;
+
+    jsid id;
+    if (!js::IndexToIdNoGC(cx, index, &id))
+        return false;
+    return getGenericNoGC(cx, obj, receiver, id, vp);
 }
 
 /* static */ inline JSBool
@@ -1394,15 +1487,96 @@ IsStopIteration(const js::Value &v)
     return v.isObject() && v.toObject().isStopIteration();
 }
 
+static JS_ALWAYS_INLINE bool
+IsFunctionObject(const js::Value &v)
+{
+    return v.isObject() && v.toObject().isFunction();
+}
+
+static JS_ALWAYS_INLINE bool
+IsFunctionObject(const js::Value &v, JSFunction **fun)
+{
+    if (v.isObject() && v.toObject().isFunction()) {
+        *fun = v.toObject().toFunction();
+        return true;
+    }
+    return false;
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v)
+{
+    JSFunction *fun;
+    return IsFunctionObject(v, &fun) && fun->isNative();
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v, JSFunction **fun)
+{
+    return IsFunctionObject(v, fun) && (*fun)->isNative();
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v, JSNative native)
+{
+    JSFunction *fun;
+    return IsFunctionObject(v, &fun) && fun->maybeNative() == native;
+}
+
+/*
+ * When we have an object of a builtin class, we don't quite know what its
+ * valueOf/toString methods are, since these methods may have been overwritten
+ * or shadowed. However, we can still do better than the general case by
+ * hard-coding the necessary properties for us to find the native we expect.
+ *
+ * TODO: a per-thread shape-based cache would be faster and simpler.
+ */
+static JS_ALWAYS_INLINE bool
+ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid, JSNative native)
+{
+    JS_ASSERT(!obj->isProxy());
+    JS_ASSERT(obj->getClass() == clasp);
+
+    Value v;
+    if (!HasDataProperty(cx, obj, methodid, &v)) {
+        JSObject *proto = obj->getProto();
+        if (!proto || proto->getClass() != clasp || !HasDataProperty(cx, proto, methodid, &v))
+            return false;
+    }
+
+    return js::IsNativeFunction(v, native);
+}
+
 /* ES5 9.1 ToPrimitive(input). */
 static JS_ALWAYS_INLINE bool
 ToPrimitive(JSContext *cx, Value *vp)
 {
     if (vp->isPrimitive())
         return true;
-    RootedObject obj(cx, &vp->toObject());
+
+    JSObject *obj = &vp->toObject();
+
+    /* Optimize new String(...).valueOf(). */
+    if (obj->isString()) {
+        jsid id = NameToId(cx->names().valueOf);
+        if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
+            vp->setString(obj->asString().unbox());
+            return true;
+        }
+    }
+
+    /* Optimize new Number(...).valueOf(). */
+    if (obj->isNumber()) {
+        jsid id = NameToId(cx->names().valueOf);
+        if (ClassMethodIsNative(cx, obj, &NumberClass, id, js_num_valueOf)) {
+            vp->setNumber(obj->asNumber().unbox());
+            return true;
+        }
+    }
+
+    RootedObject objRoot(cx, obj);
     RootedValue value(cx, *vp);
-    if (!JSObject::defaultValue(cx, obj, JSTYPE_VOID, &value))
+    if (!JSObject::defaultValue(cx, objRoot, JSTYPE_VOID, &value))
         return false;
     *vp = value;
     return true;
@@ -1737,6 +1911,12 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
     if (!v.isObject())
         return false;
     return ObjectClassIs(v.toObject(), classValue, cx);
+}
+
+static JS_ALWAYS_INLINE bool
+ValueMightBeSpecial(const Value &propval)
+{
+    return propval.isObject();
 }
 
 static JS_ALWAYS_INLINE bool

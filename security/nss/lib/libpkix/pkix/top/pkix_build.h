@@ -68,6 +68,7 @@ struct BuildConstantsStruct {
         PKIX_RevocationChecker *revChecker;
         PKIX_PL_AIAMgr *aiaMgr;
         PKIX_Boolean useAIAForCertFetching;
+        PKIX_Boolean trustOnlyUserAnchors;
 };
 
 struct PKIX_ForwardBuilderStateStruct{

@@ -157,9 +157,7 @@ public:
   nsIContent* GetNestedSingleInsertionPoint(nsIContent* aParent,
                                             bool* aMultipleInsertionPoints);
 
-  nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL,
-                             nsIPrincipal* aOriginPrincipal);
-  nsresult RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
+  nsresult ClearBinding(nsIContent* aContent);
   nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
                                nsIPrincipal* aOriginPrincipal);
 

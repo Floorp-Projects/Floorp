@@ -68,12 +68,26 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
       break;
     }
 
-    case DeviceStorageResponseValue::TStatStorageResponse:
+    case DeviceStorageResponseValue::TFreeSpaceStorageResponse:
     {
-      StatStorageResponse r = aValue;
+      FreeSpaceStorageResponse r = aValue;
+      jsval result = JS_NumberValue(double(r.freeBytes()));
+      mRequest->FireSuccess(result);
+      break;
+    }
 
-      nsRefPtr<nsIDOMDeviceStorageStat> domstat = new nsDOMDeviceStorageStat(r.freeBytes(), r.totalBytes(), r.mountState());
-      jsval result = InterfaceToJsval(mRequest->GetOwner(), domstat, &NS_GET_IID(nsIDOMDeviceStorageStat));
+    case DeviceStorageResponseValue::TUsedSpaceStorageResponse:
+    {
+      UsedSpaceStorageResponse r = aValue;
+      jsval result = JS_NumberValue(double(r.usedBytes()));
+      mRequest->FireSuccess(result);
+      break;
+    }
+
+    case DeviceStorageResponseValue::TAvailableStorageResponse:
+    {
+      AvailableStorageResponse r = aValue;
+      jsval result = StringToJsval(mRequest->GetOwner(), r.mountState());
       mRequest->FireSuccess(result);
       break;
     }

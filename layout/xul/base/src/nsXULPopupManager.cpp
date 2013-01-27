@@ -226,6 +226,14 @@ bool nsXULPopupManager::ShouldRollupOnMouseWheelEvent()
   if (!content)
     return false;
 
+  if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rolluponmousewheel,
+                           nsGkAtoms::_true, eCaseMatters))
+    return true;
+
+  if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rolluponmousewheel,
+                           nsGkAtoms::_false, eCaseMatters))
+    return false;
+
   nsAutoString value;
   content->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
   return StringBeginsWith(value, NS_LITERAL_STRING("autocomplete"));

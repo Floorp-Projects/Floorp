@@ -81,7 +81,7 @@ GetBailedJSScript(JSContext *cx)
 
     // Just after the frame conversion, we can safely interpret the ionTop as JS
     // frame because it targets the bailed JS frame converted to an exit frame.
-    IonJSFrameLayout *frame = reinterpret_cast<IonJSFrameLayout*>(cx->runtime->ionTop);
+    IonJSFrameLayout *frame = reinterpret_cast<IonJSFrameLayout*>(cx->mainThread().ionTop);
     switch (GetCalleeTokenTag(frame->calleeToken())) {
       case CalleeToken_Function: {
         JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
@@ -360,7 +360,7 @@ ion::Bailout(BailoutStack *sp)
     AutoAssertNoGC nogc;
     JSContext *cx = GetIonContext()->cx;
     // We don't have an exit frame.
-    cx->runtime->ionTop = NULL;
+    cx->mainThread().ionTop = NULL;
     IonActivationIterator ionActivations(cx);
     IonBailoutIterator iter(ionActivations, sp);
     IonActivation *activation = ionActivations.activation();
@@ -386,7 +386,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
     JSContext *cx = GetIonContext()->cx;
 
     // We don't have an exit frame.
-    cx->runtime->ionTop = NULL;
+    cx->mainThread().ionTop = NULL;
     IonActivationIterator ionActivations(cx);
     IonBailoutIterator iter(ionActivations, sp);
     IonActivation *activation = ionActivations.activation();
@@ -458,7 +458,7 @@ uint32_t
 ion::ReflowTypeInfo(uint32_t bailoutResult)
 {
     JSContext *cx = GetIonContext()->cx;
-    IonActivation *activation = cx->runtime->ionActivation;
+    IonActivation *activation = cx->mainThread().ionActivation;
 
     IonSpew(IonSpew_Bailouts, "reflowing type info");
 
@@ -584,7 +584,7 @@ uint32_t
 ion::ThunkToInterpreter(Value *vp)
 {
     JSContext *cx = GetIonContext()->cx;
-    IonActivation *activation = cx->runtime->ionActivation;
+    IonActivation *activation = cx->mainThread().ionActivation;
     BailoutClosure *br = activation->takeBailout();
     InterpMode resumeMode = JSINTERP_BAILOUT;
 

@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print"><head>
+<title>Testcase bug 347367 - crash when print preview is opened on a certain file styled with meda=print [@ BasicTableLayoutStrategy::CalcPctAdjTableWidth]</title>
+<style>
+div.page
+{
+ float:left;
+ clear:both;
+}
+
+
+table.display td
+{
+ width:50%;
+
+}
+
+
+</style>
+ </head><body>
+  <div id="display_container">
+
+
+   <div class="page"><table class="display" border="0" rules="cols">
+    <tbody><tr><th colspan="2"><h2>Customer Information</h2></th></tr>
+    <tr><td>Company Name</td><td>TenSen.net</td></tr>
+    <tr><td>Address</td><td>208</td></tr>
+    <tr><td>City</td><td>Carthage</td></tr>
+    <tr><td>State</td><td>TX</td></tr>
+    <tr><td>Zipcode</td><td>75633</td></tr>
+    <tr><td>Contact Name</td><td>Dakota</td></tr>
+    <tr><td>Phone Number</td><td>9032353248</td></tr>
+    <tr><td>Email Address</td><td>dakota@tensen.net</td></tr>
+    <tr><td>Customer Information Additional Notes</td><td>This is a rather long "additional notes" field, just a test to see what will happen on the display page.</td></tr>
+   </tbody></table></div>
+
+   <div class="page"><table class="display" border="0" rules="cols">
+    <tbody><tr><th colspan="2"><h2>Customer Information</h2></th></tr>
+    <tr><td>Company Name</td><td>TenSen.net</td></tr>
+    <tr><td>Address</td><td>208</td></tr>
+    <tr><td>City</td><td>Carthage</td></tr>
+    <tr><td>State</td><td>TX</td></tr>
+    <tr><td>Zipcode</td><td>75633</td></tr>
+    <tr><td>Contact Name</td><td>Dakota</td></tr>
+    <tr><td>Phone Number</td><td>9032353248</td></tr>
+    <tr><td>Email Address</td><td>dakota@tensen.net</td></tr>
+    <tr><td>Customer Information Additional Notes</td><td>This is a rather long "additional notes" field, just a test to see what will happen on the display page.</td></tr>
+   </tbody></table></div>
+
+   <div class="page"><table class="display" border="0" rules="cols">
+    <tbody><tr><th colspan="2"><h2>Customer Information</h2></th></tr>
+    <tr><td>Company Name</td><td>TenSen.net</td></tr>
+    <tr><td>Address</td><td>208</td></tr>
+    <tr><td>City</td><td>Carthage</td></tr>
+    <tr><td>State</td><td>TX</td></tr>
+    <tr><td>Zipcode</td><td>75633</td></tr>
+    <tr><td>Contact Name</td><td>Dakota</td></tr>
+    <tr><td>Phone Number</td><td>9032353248</td></tr>
+    <tr><td>Email Address</td><td>dakota@tensen.net</td></tr>
+    <tr><td>Customer Information Additional Notes</td><td>This is a rather long "additional notes" field, just a test to see what will happen on the display page.</td></tr>
+   </tbody></table></div>
+
+   <div class="page"><table class="display" border="0" rules="cols">
+    <tbody><tr><th colspan="2"><h2>Customer Information</h2></th></tr>
+    <tr><td>Company Name</td><td>TenSen.net</td></tr>
+    <tr><td>Address</td><td>208</td></tr>
+    <tr><td>City</td><td>Carthage</td></tr>
+    <tr><td>State</td><td>TX</td></tr>
+    <tr><td>Zipcode</td><td>75633</td></tr>
+    <tr><td>Contact Name</td><td>Dakota</td></tr>
+    <tr><td>Phone Number</td><td>9032353248</td></tr>
+    <tr><td>Email Address</td><td>dakota@tensen.net</td></tr>
+    <tr><td>Customer Information Additional Notes</td><td>This is a rather long "additional notes" field, just a test to see what will happen on the display page.</td></tr>
+   </tbody></table></div>
+
+   
+  </div>
+ </body></html>

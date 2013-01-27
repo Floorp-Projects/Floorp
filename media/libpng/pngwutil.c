@@ -1,8 +1,8 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.5.10 [March 8, 2012]
- * Copyright (c) 1998-2012 Glenn Randers-Pehrson
+ * Last changed in libpng 1.5.14 [January 24, 2013]
+ * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -460,24 +460,21 @@ png_text_compress(png_structp png_ptr,
                old_ptr = comp->output_ptr;
 
                comp->output_ptr = (png_bytepp)png_malloc(png_ptr,
-                   (png_alloc_size_t)
-                   (comp->max_output_ptr * png_sizeof(png_charpp)));
+                   (comp->max_output_ptr * png_sizeof(png_bytep)));
 
                png_memcpy(comp->output_ptr, old_ptr, old_max
-                   * png_sizeof(png_charp));
+                   * png_sizeof(png_bytep));
 
                png_free(png_ptr, old_ptr);
             }
             else
                comp->output_ptr = (png_bytepp)png_malloc(png_ptr,
-                   (png_alloc_size_t)
-                   (comp->max_output_ptr * png_sizeof(png_charp)));
+                   (comp->max_output_ptr * png_sizeof(png_bytep)));
          }
 
          /* Save the data */
          comp->output_ptr[comp->num_output_ptr] =
-             (png_bytep)png_malloc(png_ptr,
-             (png_alloc_size_t)png_ptr->zbuf_size);
+             (png_bytep)png_malloc(png_ptr, png_ptr->zbuf_size);
 
          png_memcpy(comp->output_ptr[comp->num_output_ptr], png_ptr->zbuf,
              png_ptr->zbuf_size);
@@ -1049,7 +1046,7 @@ png_write_IDAT(png_structp png_ptr, png_bytep data, png_size_t length)
    {
       png_byte buf[4];
 
-      png_write_chunk_header(png_ptr, png_fdAT, 4 + length);
+      png_write_chunk_header(png_ptr, png_fdAT, (png_uint_32)(4 + length));
 
       png_save_uint_32(buf, png_ptr->next_seq_num);
       png_write_chunk_data(png_ptr, buf, 4);
