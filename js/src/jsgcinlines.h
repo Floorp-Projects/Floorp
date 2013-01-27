@@ -281,7 +281,7 @@ class CellIterImpl
     }
 
     void init(ArenaHeader *singleAheader) {
-        initSpan(singleAheader->compartment, singleAheader->getAllocKind());
+        initSpan(singleAheader->zone, singleAheader->getAllocKind());
         aiter.init(singleAheader);
         next();
         aiter.init();
@@ -341,7 +341,7 @@ class CellIterUnderGC : public CellIterImpl
     }
 
     CellIterUnderGC(ArenaHeader *aheader) {
-        JS_ASSERT(aheader->compartment->rt->isHeapBusy());
+        JS_ASSERT(aheader->zone->rt->isHeapBusy());
         init(aheader);
     }
 };

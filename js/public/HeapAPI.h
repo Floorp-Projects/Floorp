@@ -56,18 +56,22 @@ static const uint32_t GRAY = 1;
 } /* namespace js */
 
 namespace JS {
+typedef JSCompartment Zone;
+} /* namespace JS */
+
+namespace JS {
 namespace shadow {
 
 struct ArenaHeader
 {
-    JSCompartment *compartment;
+    js::Zone *zone;
 };
 
-struct Compartment
+struct Zone
 {
     bool needsBarrier_;
 
-    Compartment() : needsBarrier_(false) {}
+    Zone() : needsBarrier_(false) {}
 };
 
 } /* namespace shadow */
@@ -114,7 +118,7 @@ static JS_ALWAYS_INLINE JSCompartment *
 GetGCThingCompartment(void *thing)
 {
     JS_ASSERT(thing);
-    return js::gc::GetGCThingArena(thing)->compartment;
+    return js::gc::GetGCThingArena(thing)->zone;
 }
 
 static JS_ALWAYS_INLINE JSCompartment *
@@ -134,8 +138,8 @@ GCThingIsMarkedGray(void *thing)
 static JS_ALWAYS_INLINE bool
 IsIncrementalBarrierNeededOnGCThing(void *thing, JSGCTraceKind kind)
 {
-    JSCompartment *comp = GetGCThingCompartment(thing);
-    return reinterpret_cast<shadow::Compartment *>(comp)->needsBarrier_;
+    js::Zone *zone = GetGCThingCompartment(thing);
+    return reinterpret_cast<shadow::Zone *>(zone)->needsBarrier_;
 }
 
 } /* namespace JS */
