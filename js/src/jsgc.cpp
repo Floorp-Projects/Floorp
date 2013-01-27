@@ -676,7 +676,7 @@ static inline Chunk **
 GetAvailableChunkList(Zone *zone)
 {
     JSRuntime *rt = zone->rt;
-    return zone->isSystemCompartment
+    return zone->isSystem
            ? &rt->gcSystemAvailableChunkListHead
            : &rt->gcUserAvailableChunkListHead;
 }
