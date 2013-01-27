@@ -146,7 +146,7 @@ class TypeOracle
     virtual bool canInlineCall(HandleScript caller, jsbytecode *pc) {
         return false;
     }
-    virtual bool canEnterInlinedFunction(JSFunction *callee) {
+    virtual bool canEnterInlinedFunction(HandleScript  caller, jsbytecode *pc, JSFunction *callee) {
         return false;
     }
 
@@ -251,7 +251,7 @@ class TypeInferenceOracle : public TypeOracle
     MIRType elementWrite(UnrootedScript script, jsbytecode *pc);
     bool canInlineCalls();
     bool canInlineCall(HandleScript caller, jsbytecode *pc);
-    bool canEnterInlinedFunction(JSFunction *callee);
+    bool canEnterInlinedFunction(HandleScript caller, jsbytecode *pc, JSFunction *callee);
     types::StackTypeSet *aliasedVarBarrier(UnrootedScript script, jsbytecode *pc, types::StackTypeSet **barrier);
 
     LazyArgumentsType isArgumentObject(types::StackTypeSet *obj);

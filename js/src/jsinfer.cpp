@@ -323,6 +323,49 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
 // TypeSet
 /////////////////////////////////////////////////////////////////////
 
+bool
+TypeSet::isSubset(TypeSet *other)
+{
+    if ((baseFlags() & other->baseFlags()) != baseFlags())
+        return false;
+
+    if (unknownObject()) {
+        JS_ASSERT(other->unknownObject());
+    } else {
+        for (unsigned i = 0; i < getObjectCount(); i++) {
+            TypeObjectKey *obj = getObject(i);
+            if (!obj)
+                continue;
+            if (!other->hasType(Type::ObjectType(obj)))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+TypeSet::isSubsetIgnorePrimitives(TypeSet *other)
+{
+    TypeFlags otherFlags = other->baseFlags() | TYPE_FLAG_PRIMITIVE;
+    if ((baseFlags() & otherFlags) != baseFlags())
+        return false;
+
+    if (unknownObject()) {
+        JS_ASSERT(other->unknownObject());
+    } else {
+        for (unsigned i = 0; i < getObjectCount(); i++) {
+            TypeObjectKey *obj = getObject(i);
+            if (!obj)
+                continue;
+            if (!other->hasType(Type::ObjectType(obj)))
+                return false;
+        }
+    }
+
+    return true;
+}
+
 inline void
 TypeSet::addTypesToConstraint(JSContext *cx, TypeConstraint *constraint)
 {
@@ -1958,20 +2001,8 @@ HeapTypeSet::knownSubset(JSContext *cx, TypeSet *other)
 {
     JS_ASSERT(!other->constraintsPurged());
 
-    if ((baseFlags() & other->baseFlags()) != baseFlags())
+    if (!isSubset(other))
         return false;
-
-    if (unknownObject()) {
-        JS_ASSERT(other->unknownObject());
-    } else {
-        for (unsigned i = 0; i < getObjectCount(); i++) {
-            TypeObjectKey *obj = getObject(i);
-            if (!obj)
-                continue;
-            if (!other->hasType(Type::ObjectType(obj)))
-                return false;
-        }
-    }
 
     addFreeze(cx);
 
