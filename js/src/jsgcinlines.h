@@ -505,17 +505,20 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
     if (allowGC)
         MaybeCheckStackRoots(cx, /* relax = */ false);
 
-    JSCompartment *comp = cx->compartment;
-    T *t = static_cast<T *>(comp->allocator.arenas.allocateFromFreeList(kind, thingSize));
+    JS::Zone *zone = cx->zone();
+    T *t = static_cast<T *>(zone->allocator.arenas.allocateFromFreeList(kind, thingSize));
     if (!t)
         t = static_cast<T *>(js::gc::ArenaLists::refillFreeList<allowGC>(cx, kind));
 
-    JS_ASSERT_IF(t && comp->wasGCStarted() && (comp->isGCMarking() || comp->isGCSweeping()),
+    JS_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
                  t->arenaHeader()->allocatedDuringIncremental);
 
 #if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
-    if (cx->runtime->gcVerifyPostData && IsNurseryAllocable(kind) && !IsAtomsCompartment(comp))
-        comp->gcNursery.insertPointer(t);
+    if (cx->runtime->gcVerifyPostData && IsNurseryAllocable(kind)
+        && !IsAtomsCompartment(cx->compartment))
+    {
+        zone->gcNursery.insertPointer(t);
+    }
 #endif
 
     return t;

@@ -607,4 +607,10 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
         wrapPendingException();
 }
 
+inline JS::Zone *
+JSContext::zone()
+{
+    return compartment->zone();
+}
+
 #endif /* jscntxtinlines_h___ */

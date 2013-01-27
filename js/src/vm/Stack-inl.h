@@ -76,7 +76,7 @@ inline mjit::JITScript *
 StackFrame::jit()
 {
     AutoAssertNoGC nogc;
-    return script()->getJIT(isConstructing(), script()->compartment()->compileBarriers());
+    return script()->getJIT(isConstructing(), script()->zone()->compileBarriers());
 }
 #endif
 
