@@ -619,6 +619,7 @@ nsGIOInputStream::Close()
 
     NS_ASSERTION(thread && NS_SUCCEEDED(rv), "leaking channel reference");
     mChannel = nullptr;
+    (void) rv;
   }
 
   mSpec.Truncate(); // free memory
