@@ -27,12 +27,6 @@ class StringObject : public JSObject
      */
     static inline StringObject *create(JSContext *cx, HandleString str);
 
-    /*
-     * Identical to create(), but uses |proto| as [[Prototype]].  This method
-     * must not be used to create |String.prototype|.
-     */
-    static inline StringObject *createWithProto(JSContext *cx, HandleString str, JSObject &proto);
-
     JSString *unbox() const {
         return getFixedSlot(PRIMITIVE_VALUE_SLOT).toString();
     }

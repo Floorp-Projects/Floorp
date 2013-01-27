@@ -52,18 +52,6 @@ StringObject::create(JSContext *cx, HandleString str)
     return strobj;
 }
 
-inline StringObject *
-StringObject::createWithProto(JSContext *cx, HandleString str, JSObject &proto)
-{
-    JSObject *obj = NewObjectWithClassProto(cx, &StringClass, &proto, NULL);
-    if (!obj)
-        return NULL;
-    Rooted<StringObject*> strobj(cx, &obj->asString());
-    if (!strobj->init(cx, str))
-        return NULL;
-    return strobj;
-}
-
 } // namespace js
 
 #endif /* StringObject_inl_h__ */
