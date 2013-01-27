@@ -265,7 +265,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
 
     /*
      * We can be called from the background finalization thread when the free
-     * list in the compartment can mutate at any moment. We cannot do any
+     * list in the zone can mutate at any moment. We cannot do any
      * checks in this case.
      */
     if (IsBackgroundFinalized(getAllocKind()) && !zone->rt->isHeapBusy())
@@ -2676,12 +2676,12 @@ BeginMarkPhase(JSRuntime *rt)
     }
 
     for (ZonesIter zone(rt); !zone.done(); zone.next()) {
-        /* Assert that compartment state is as we expect */
+        /* Assert that zone state is as we expect */
         JS_ASSERT(!zone->isCollecting());
         for (unsigned i = 0; i < FINALIZE_LIMIT; ++i)
             JS_ASSERT(!zone->allocator.arenas.arenaListsToSweep[i]);
 
-        /* Set up which compartments will be collected. */
+        /* Set up which zones will be collected. */
         if (zone->isGCScheduled()) {
             if (zone != rt->atomsCompartment->zone()) {
                 any = true;
@@ -2692,14 +2692,14 @@ BeginMarkPhase(JSRuntime *rt)
         }
     }
 
-    /* Check that at least one compartment is scheduled for collection. */
+    /* Check that at least one zone is scheduled for collection. */
     if (!any)
         return false;
 
     /*
      * Atoms are not in the cross-compartment map. So if there are any
-     * compartments that are not being collected, we are not allowed to collect
-     * atoms. Otherwise, the non-collected compartments could contain pointers
+     * zones that are not being collected, we are not allowed to collect
+     * atoms. Otherwise, the non-collected zones could contain pointers
      * to atoms that we would miss.
      */
     Zone *atomsZone = rt->atomsCompartment->zone();
@@ -2940,7 +2940,7 @@ void
 js::gc::MarkingValidator::nonIncrementalMark()
 {
     /*
-     * Perform a non-incremental mark for all collecting compartments and record
+     * Perform a non-incremental mark for all collecting zones and record
      * the results for later comparison.
      *
      * Currently this does not validate gray marking.
@@ -3016,7 +3016,7 @@ js::gc::MarkingValidator::nonIncrementalMark()
         gcstats::AutoPhase ap(runtime->gcStats, gcstats::PHASE_SWEEP);
         MarkAllWeakReferences(runtime, gcstats::PHASE_SWEEP_MARK_WEAK);
 
-        /* Update compartment state for gray marking. */
+        /* Update zone state for gray marking. */
         for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
             JS_ASSERT(zone->isGCMarkingBlack());
             zone->setGCState(Zone::MarkGray);
@@ -3024,7 +3024,7 @@ js::gc::MarkingValidator::nonIncrementalMark()
 
         MarkAllGrayReferences(runtime);
 
-        /* Restore compartment state. */
+        /* Restore zone state. */
         for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
             JS_ASSERT(zone->isGCMarkingGray());
             zone->setGCState(Zone::Mark);
@@ -3155,7 +3155,7 @@ DropStringWrappers(JSRuntime *rt)
 }
 
 /*
- * Group compartments that must be swept at the same time.
+ * Group zones that must be swept at the same time.
  *
  * If compartment A has an edge to an unmarked object in compartment B, then we
  * must not sweep A in a later slice than we sweep B. That's because a write
@@ -3605,7 +3605,7 @@ BeginSweepingZoneGroup(JSRuntime *rt)
     }
 
     /*
-     * Queue all GC things in all compartments for sweeping, either in the
+     * Queue all GC things in all zones for sweeping, either in the
      * foreground or on the background thread.
      *
      * Note that order is important here for the background case.
@@ -3649,7 +3649,7 @@ BeginSweepingZoneGroup(JSRuntime *rt)
 static void
 EndSweepingZoneGroup(JSRuntime *rt)
 {
-    /* Update the GC state for compartments we have swept and unlink the list. */
+    /* Update the GC state for zones we have swept and unlink the list. */
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         JS_ASSERT(zone->isGCSweeping());
         zone->setGCState(Zone::Finished);
@@ -3769,7 +3769,7 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
 
     /*
      * Recalculate whether GC was full or not as this may have changed due to
-     * newly created compartments.  Can only change from full to not full.
+     * newly created zones.  Can only change from full to not full.
      */
     if (rt->gcIsFull) {
         for (ZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -3782,7 +3782,7 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
 
     /*
      * If we found any black->gray edges during marking, we completely clear the
-     * mark bits of all uncollected compartments, or if a reset has occured, compartments that
+     * mark bits of all uncollected zones, or if a reset has occured, zones that
      * will no longer be collected. This is safe, although it may
      * prevent the cycle collector from collecting some dead objects.
      */
@@ -4286,7 +4286,7 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
     }
 
     if (reset)
-        ResetIncrementalGC(rt, "compartment change");
+        ResetIncrementalGC(rt, "zone change");
 }
 
 /*
@@ -4469,7 +4469,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
                 callback(rt, JSGC_END);
         }
 
-        /* Need to re-schedule all compartments for GC. */
+        /* Need to re-schedule all zones for GC. */
         if (rt->gcPoke && rt->gcShouldCleanUpEverything)
             PrepareForFullGC(rt);
 
@@ -4533,7 +4533,7 @@ js::GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
     Collect(rt, true, budget, GC_NORMAL, gcreason::DEBUG_GC);
 }
 
-/* Schedule a full GC unless a compartment will already be collected. */
+/* Schedule a full GC unless a zone will already be collected. */
 void
 js::PrepareForDebugGC(JSRuntime *rt)
 {
