@@ -127,9 +127,9 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *protoArg, JS
 }
 
 JS_FRIEND_API(void)
-JS::PrepareCompartmentForGC(JSCompartment *comp)
+JS::PrepareZoneForGC(Zone *zone)
 {
-    comp->scheduleGC();
+    zone->scheduleGC();
 }
 
 JS_FRIEND_API(void)
@@ -147,7 +147,7 @@ JS::PrepareForIncrementalGC(JSRuntime *rt)
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->wasGCStarted())
-            PrepareCompartmentForGC(c);
+            PrepareZoneForGC(c);
     }
 }
 
@@ -163,9 +163,9 @@ JS::IsGCScheduled(JSRuntime *rt)
 }
 
 JS_FRIEND_API(void)
-JS::SkipCompartmentForGC(JSCompartment *comp)
+JS::SkipZoneForGC(Zone *zone)
 {
-    comp->unscheduleGC();
+    zone->unscheduleGC();
 }
 
 JS_FRIEND_API(void)

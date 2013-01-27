@@ -673,18 +673,18 @@ Chunk::init()
 }
 
 static inline Chunk **
-GetAvailableChunkList(JSCompartment *comp)
+GetAvailableChunkList(Zone *zone)
 {
-    JSRuntime *rt = comp->rt;
-    return comp->isSystemCompartment
+    JSRuntime *rt = zone->rt;
+    return zone->isSystemCompartment
            ? &rt->gcSystemAvailableChunkListHead
            : &rt->gcUserAvailableChunkListHead;
 }
 
 inline void
-Chunk::addToAvailableList(JSCompartment *comp)
+Chunk::addToAvailableList(Zone *zone)
 {
-    insertToAvailableList(GetAvailableChunkList(comp));
+    insertToAvailableList(GetAvailableChunkList(zone));
 }
 
 inline void
@@ -771,11 +771,11 @@ Chunk::fetchNextFreeArena(JSRuntime *rt)
 }
 
 ArenaHeader *
-Chunk::allocateArena(JSCompartment *comp, AllocKind thingKind)
+Chunk::allocateArena(Zone *zone, AllocKind thingKind)
 {
     JS_ASSERT(hasAvailableArenas());
 
-    JSRuntime *rt = comp->rt;
+    JSRuntime *rt = zone->rt;
     JS_ASSERT(rt->gcBytes <= rt->gcMaxBytes);
     if (rt->gcMaxBytes - rt->gcBytes < ArenaSize)
         return NULL;
@@ -783,15 +783,15 @@ Chunk::allocateArena(JSCompartment *comp, AllocKind thingKind)
     ArenaHeader *aheader = JS_LIKELY(info.numArenasFreeCommitted > 0)
                            ? fetchNextFreeArena(rt)
                            : fetchNextDecommittedArena();
-    aheader->init(comp, thingKind);
+    aheader->init(zone, thingKind);
     if (JS_UNLIKELY(!hasAvailableArenas()))
         removeFromAvailableList();
 
-    Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes + ArenaSize);
+    Probes::resizeHeap(zone, rt->gcBytes, rt->gcBytes + ArenaSize);
     rt->gcBytes += ArenaSize;
-    comp->gcBytes += ArenaSize;
-    if (comp->gcBytes >= comp->gcTriggerBytes)
-        TriggerCompartmentGC(comp, gcreason::ALLOC_TRIGGER);
+    zone->gcBytes += ArenaSize;
+    if (zone->gcBytes >= zone->gcTriggerBytes)
+        TriggerZoneGC(zone, gcreason::ALLOC_TRIGGER);
 
     return aheader;
 }
@@ -812,19 +812,19 @@ Chunk::releaseArena(ArenaHeader *aheader)
 {
     JS_ASSERT(aheader->allocated());
     JS_ASSERT(!aheader->hasDelayedMarking);
-    JSCompartment *comp = aheader->zone;
-    JSRuntime *rt = comp->rt;
+    Zone *zone = aheader->zone;
+    JSRuntime *rt = zone->rt;
     AutoLockGC maybeLock;
     if (rt->gcHelperThread.sweeping())
         maybeLock.lock(rt);
 
-    Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes - ArenaSize);
+    Probes::resizeHeap(zone, rt->gcBytes, rt->gcBytes - ArenaSize);
     JS_ASSERT(rt->gcBytes >= ArenaSize);
-    JS_ASSERT(comp->gcBytes >= ArenaSize);
+    JS_ASSERT(zone->gcBytes >= ArenaSize);
     if (rt->gcHelperThread.sweeping())
-        comp->reduceGCTriggerBytes(comp->gcHeapGrowthFactor * ArenaSize);
+        zone->reduceGCTriggerBytes(zone->gcHeapGrowthFactor * ArenaSize);
     rt->gcBytes -= ArenaSize;
-    comp->gcBytes -= ArenaSize;
+    zone->gcBytes -= ArenaSize;
 
     aheader->setAsNotAllocated();
     addArenaToFreeList(rt, aheader);
@@ -832,7 +832,7 @@ Chunk::releaseArena(ArenaHeader *aheader)
     if (info.numArenasFree == 1) {
         JS_ASSERT(!info.prevp);
         JS_ASSERT(!info.next);
-        addToAvailableList(comp);
+        addToAvailableList(zone);
     } else if (!unused()) {
         JS_ASSERT(info.prevp);
     } else {
@@ -844,10 +844,10 @@ Chunk::releaseArena(ArenaHeader *aheader)
 
 /* The caller must hold the GC lock. */
 static Chunk *
-PickChunk(JSCompartment *comp)
+PickChunk(Zone *zone)
 {
-    JSRuntime *rt = comp->rt;
-    Chunk **listHeadp = GetAvailableChunkList(comp);
+    JSRuntime *rt = zone->rt;
+    Chunk **listHeadp = GetAvailableChunkList(zone);
     Chunk *chunk = *listHeadp;
     if (chunk)
         return chunk;
@@ -871,7 +871,7 @@ PickChunk(JSCompartment *comp)
 
     chunk->info.prevp = NULL;
     chunk->info.next = NULL;
-    chunk->addToAvailableList(comp);
+    chunk->addToAvailableList(zone);
 
     return chunk;
 }
@@ -1092,10 +1092,10 @@ typedef RootedValueMap::Entry RootEntry;
 typedef RootedValueMap::Enum RootEnum;
 
 static size_t
-ComputeTriggerBytes(JSCompartment *comp, size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
+ComputeTriggerBytes(Zone *zone, size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
 {
-    size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, comp->rt->gcAllocationThreshold);
-    float trigger = float(base) * comp->gcHeapGrowthFactor;
+    size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, zone->rt->gcAllocationThreshold);
+    float trigger = float(base) * zone->gcHeapGrowthFactor;
     return size_t(Min(float(maxBytes), trigger));
 }
 
@@ -1192,7 +1192,7 @@ ArenaLists::parallelAllocate(JSCompartment *comp, AllocKind thingKind, size_t th
 }
 
 inline void *
-ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
+ArenaLists::allocateFromArena(Zone *zone, AllocKind thingKind)
 {
     /*
      * Parallel JS Note:
@@ -1217,10 +1217,10 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
          * background finalization runs and can modify head or cursor at any
          * moment. So we always allocate a new arena in that case.
          */
-        maybeLock.lock(comp->rt);
+        maybeLock.lock(zone->rt);
         if (*bfs == BFS_RUN) {
             JS_ASSERT(!*al->cursor);
-            chunk = PickChunk(comp);
+            chunk = PickChunk(zone);
             if (!chunk) {
                 /*
                  * Let the caller to wait for the background allocation to
@@ -1254,12 +1254,12 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
              */
             freeLists[thingKind] = aheader->getFirstFreeSpan();
             aheader->setAsFullyUsed();
-            if (JS_UNLIKELY(comp->wasGCStarted())) {
-                if (comp->needsBarrier()) {
+            if (JS_UNLIKELY(zone->wasGCStarted())) {
+                if (zone->needsBarrier()) {
                     aheader->allocatedDuringIncremental = true;
-                    comp->rt->gcMarker.delayMarkingArena(aheader);
-                } else if (comp->isGCSweeping()) {
-                    PushArenaAllocatedDuringSweep(comp->rt, aheader);
+                    zone->rt->gcMarker.delayMarkingArena(aheader);
+                } else if (zone->isGCSweeping()) {
+                    PushArenaAllocatedDuringSweep(zone->rt, aheader);
                 }
             }
             return freeLists[thingKind].infallibleAllocate(Arena::thingSize(thingKind));
@@ -1267,8 +1267,8 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
 
         /* Make sure we hold the GC lock before we call PickChunk. */
         if (!maybeLock.locked())
-            maybeLock.lock(comp->rt);
-        chunk = PickChunk(comp);
+            maybeLock.lock(zone->rt);
+        chunk = PickChunk(zone);
         if (!chunk)
             return NULL;
     }
@@ -1283,16 +1283,16 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
      * for allocations improving cache locality.
      */
     JS_ASSERT(!*al->cursor);
-    ArenaHeader *aheader = chunk->allocateArena(comp, thingKind);
+    ArenaHeader *aheader = chunk->allocateArena(zone, thingKind);
     if (!aheader)
         return NULL;
 
-    if (JS_UNLIKELY(comp->wasGCStarted())) {
-        if (comp->needsBarrier()) {
+    if (JS_UNLIKELY(zone->wasGCStarted())) {
+        if (zone->needsBarrier()) {
             aheader->allocatedDuringIncremental = true;
-            comp->rt->gcMarker.delayMarkingArena(aheader);
-        } else if (comp->isGCSweeping()) {
-            PushArenaAllocatedDuringSweep(comp->rt, aheader);
+            zone->rt->gcMarker.delayMarkingArena(aheader);
+        } else if (zone->isGCSweeping()) {
+            PushArenaAllocatedDuringSweep(zone->rt, aheader);
         }
     }
     aheader->next = al->head;
@@ -1369,7 +1369,7 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgr
 {
     JS_ASSERT(listHead);
     AllocKind thingKind = listHead->getAllocKind();
-    JSCompartment *comp = listHead->zone;
+    Zone *zone = listHead->zone;
 
     ArenaList finalized;
     SliceBudget budget;
@@ -1381,7 +1381,7 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgr
      * the head list as we emptied the list before the background finalization
      * and the allocation adds new arenas before the cursor.
      */
-    ArenaLists *lists = &comp->allocator.arenas;
+    ArenaLists *lists = &zone->allocator.arenas;
     ArenaList *al = &lists->arenaLists[thingKind];
 
     AutoLockGC lock(fop->runtime());
@@ -1470,8 +1470,8 @@ ArenaLists::queueIonCodeForSweep(FreeOp *fop)
     finalizeNow(fop, FINALIZE_IONCODE);
 }
 
-static void*
-RunLastDitchGC(JSContext *cx, JSCompartment *comp, AllocKind thingKind)
+static void *
+RunLastDitchGC(JSContext *cx, JS::Zone *zone, AllocKind thingKind)
 {
     /*
      * In parallel sections, we do not attempt to refill the free list
@@ -1479,7 +1479,7 @@ RunLastDitchGC(JSContext *cx, JSCompartment *comp, AllocKind thingKind)
      */
     JS_ASSERT(!ForkJoinSlice::InParallelSection());
 
-    PrepareCompartmentForGC(comp);
+    PrepareZoneForGC(zone);
 
     JSRuntime *rt = cx->runtime;
 
@@ -1493,7 +1493,7 @@ RunLastDitchGC(JSContext *cx, JSCompartment *comp, AllocKind thingKind)
      * return that list head.
      */
     size_t thingSize = Arena::thingSize(thingKind);
-    if (void *thing = comp->allocator.arenas.allocateFromFreeList(thingKind, thingSize))
+    if (void *thing = zone->allocator.arenas.allocateFromFreeList(thingKind, thingSize))
         return thing;
 
     return NULL;
@@ -1505,16 +1505,16 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
 {
     JS_ASSERT(cx->compartment->allocator.arenas.freeLists[thingKind].isEmpty());
 
-    JSCompartment *comp = cx->compartment;
-    JSRuntime *rt = comp->rt;
+    Zone *zone = cx->compartment;
+    JSRuntime *rt = zone->rt;
     JS_ASSERT(!rt->isHeapBusy());
 
     bool runGC = rt->gcIncrementalState != NO_INCREMENTAL &&
-                 comp->gcBytes > comp->gcTriggerBytes &&
+                 zone->gcBytes > zone->gcTriggerBytes &&
                  allowGC;
     for (;;) {
         if (JS_UNLIKELY(runGC)) {
-            if (void *thing = RunLastDitchGC(cx, comp, thingKind))
+            if (void *thing = RunLastDitchGC(cx, zone, thingKind))
                 return thing;
         }
 
@@ -1527,7 +1527,7 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
          * always try to allocate twice.
          */
         for (bool secondAttempt = false; ; secondAttempt = true) {
-            void *thing = comp->allocator.arenas.allocateFromArena(comp, thingKind);
+            void *thing = zone->allocator.arenas.allocateFromArena(zone, thingKind);
             if (JS_LIKELY(!!thing))
                 return thing;
             if (secondAttempt)
@@ -1824,10 +1824,10 @@ GCMarker::markDelayedChildren(SliceBudget &budget)
 
 #ifdef DEBUG
 void
-GCMarker::checkCompartment(void *p)
+GCMarker::checkZone(void *p)
 {
     JS_ASSERT(started);
-    JS_ASSERT(static_cast<Cell *>(p)->compartment()->isCollecting());
+    JS_ASSERT(static_cast<Cell *>(p)->zone()->isCollecting());
 }
 #endif
 
@@ -1968,15 +1968,15 @@ js::TriggerGC(JSRuntime *rt, gcreason::Reason reason)
 }
 
 void
-js::TriggerCompartmentGC(JSCompartment *comp, gcreason::Reason reason)
+js::TriggerZoneGC(Zone *zone, gcreason::Reason reason)
 {
     /* Wait till end of parallel section to trigger GC. */
     if (ForkJoinSlice *slice = ForkJoinSlice::Current()) {
-        slice->requestCompartmentGC(comp, reason);
+        slice->requestZoneGC(zone, reason);
         return;
     }
 
-    JSRuntime *rt = comp->rt;
+    JSRuntime *rt = zone->rt;
     rt->assertValidThread();
 
     if (rt->isHeapBusy())
@@ -1987,13 +1987,13 @@ js::TriggerCompartmentGC(JSCompartment *comp, gcreason::Reason reason)
         return;
     }
 
-    if (comp == rt->atomsCompartment) {
-        /* We can't do a compartmental GC of the default compartment. */
+    if (zone == rt->atomsCompartment) {
+        /* We can't do a zone GC of the atoms compartment. */
         TriggerGC(rt, reason);
         return;
     }
 
-    PrepareCompartmentForGC(comp);
+    PrepareZoneForGC(zone);
     TriggerOperationCallback(rt, reason);
 }
 
@@ -2015,13 +2015,13 @@ js::MaybeGC(JSContext *cx)
     }
 
     double factor = rt->gcHighFrequencyGC ? 0.75 : 0.9;
-    JSCompartment *comp = cx->compartment;
-    if (comp->gcBytes > 1024 * 1024 &&
-        comp->gcBytes >= factor * comp->gcTriggerBytes &&
+    Zone *zone = cx->compartment;
+    if (zone->gcBytes > 1024 * 1024 &&
+        zone->gcBytes >= factor * zone->gcTriggerBytes &&
         rt->gcIncrementalState == NO_INCREMENTAL &&
         !rt->gcHelperThread.sweeping())
     {
-        PrepareCompartmentForGC(comp);
+        PrepareZoneForGC(zone);
         GCSlice(rt, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
@@ -2184,10 +2184,10 @@ SweepBackgroundThings(JSRuntime* rt, bool onBackgroundThread)
      */
     FreeOp fop(rt, false);
     for (int phase = 0 ; phase < BackgroundPhaseCount ; ++phase) {
-        for (JSCompartment *comp = rt->gcSweepingCompartments; comp; comp = comp->gcNextGraphNode) {
+        for (Zone *zone = rt->gcSweepingCompartments; zone; zone = zone->gcNextGraphNode) {
             for (int index = 0 ; index < BackgroundPhaseLength[phase] ; ++index) {
                 AllocKind kind = BackgroundPhases[phase][index];
-                ArenaHeader *arenas = comp->allocator.arenas.arenaListsToSweep[kind];
+                ArenaHeader *arenas = zone->allocator.arenas.arenaListsToSweep[kind];
                 if (arenas)
                     ArenaLists::backgroundFinalize(&fop, arenas, onBackgroundThread);
             }
@@ -2574,19 +2574,20 @@ PurgeRuntime(JSRuntime *rt)
 }
 
 static bool
-ShouldPreserveJITCode(JSCompartment *c, int64_t currentTime)
+ShouldPreserveJITCode(JSCompartment *comp, int64_t currentTime)
 {
-    if (c->rt->gcShouldCleanUpEverything || !c->types.inferenceEnabled)
+    if (comp->rt->gcShouldCleanUpEverything || !comp->types.inferenceEnabled)
         return false;
 
-    if (c->rt->alwaysPreserveCode)
+    if (comp->rt->alwaysPreserveCode)
         return true;
-    if (c->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime &&
-        c->lastCodeRelease + (PRMJ_USEC_PER_SEC * 300) >= currentTime) {
+    if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime &&
+        comp->lastCodeRelease + (PRMJ_USEC_PER_SEC * 300) >= currentTime)
+    {
         return true;
     }
 
-    c->lastCodeRelease = currentTime;
+    comp->lastCodeRelease = currentTime;
     return false;
 }
 
