@@ -92,8 +92,8 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 #endif
 {
     /* Ensure that there are no vtables to mess us up here. */
-    JS_ASSERT(reinterpret_cast<JS::shadow::Compartment *>(this) ==
-              static_cast<JS::shadow::Compartment *>(this));
+    JS_ASSERT(reinterpret_cast<JS::shadow::Zone *>(this) ==
+              static_cast<JS::shadow::Zone *>(this));
 
     setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
 }
