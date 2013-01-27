@@ -46,9 +46,9 @@ class FixedList
         length_ -= num;
     }
 
-    bool increase(size_t num) {
+    bool growBy(size_t num) {
         T *list = (T *)GetIonContext()->temp->allocate((length_ + num) * sizeof(T));
-        if (list != NULL) {
+        if (!list) {
             for (size_t i = 0; i < length_; i++)
                 list[i] = list_[i];
 

@@ -2975,7 +2975,7 @@ IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasic
         MGoto *replacement = MGoto::New(bottom);
         exitBlock->end(replacement);
         if (!bottom->addPredecessorWithoutPhis(exitBlock))
-            return false;
+            return NULL;
 
         if (exits.length() == 1)
             return rval;
