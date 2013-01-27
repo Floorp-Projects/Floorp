@@ -29,19 +29,24 @@
 static nsStringBuffer* sCachedBuffer = nullptr;
 static JSString* sCachedString = nullptr;
 
+// Called from GC finalize callback to make sure we don't hand out a pointer to
+// a JSString that's about to be finalized by incremental sweeping.
+// static
+void
+XPCStringConvert::ClearCache()
+{
+    sCachedBuffer = nullptr;
+    sCachedString = nullptr;
+}
+
 static void
 FinalizeDOMString(const JSStringFinalizer *fin, jschar *chars)
 {
     nsStringBuffer* buf = nsStringBuffer::FromData(chars);
-    if (buf == sCachedBuffer) {
-        sCachedBuffer = nullptr;
-        // No need to clear sCachedString
-    }
     buf->Release();
 }
 
 static const JSStringFinalizer sDOMStringFinalizer = { FinalizeDOMString };
-
 
 // convert a readable to a JSString, copying string data
 // static

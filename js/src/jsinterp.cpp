@@ -36,13 +36,13 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jspropertycache.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
 #include "builtin/Eval.h"
 #include "gc/Marking.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
@@ -58,11 +58,11 @@
 #include "jsopcodeinlines.h"
 #include "jsprobes.h"
 #include "jspropertycacheinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 
 #include "builtin/Iterator-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -286,11 +286,11 @@ js::ValueToCallable(JSContext *cx, const Value *vp, MaybeConstruct construct)
 }
 
 bool
-js::RunScript(JSContext *cx, HandleScript script, StackFrame *fp)
+js::RunScript(JSContext *cx, StackFrame *fp)
 {
-    JS_ASSERT(script);
     JS_ASSERT(fp == cx->fp());
-    JS_ASSERT(fp->script() == script);
+    JSScript *script = fp->script();
+
     JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
     JS_ASSERT_IF(fp->isEvalFrame(), script->isActiveEval);
 #ifdef JS_METHODJIT_SPEW
@@ -303,13 +303,11 @@ js::RunScript(JSContext *cx, HandleScript script, StackFrame *fp)
     struct CheckStackBalance {
         JSContext *cx;
         StackFrame *fp;
-        RootedObject enumerators;
         CheckStackBalance(JSContext *cx)
-          : cx(cx), fp(cx->fp()), enumerators(cx, cx->enumerators)
+          : cx(cx), fp(cx->fp())
         {}
         ~CheckStackBalance() {
             JS_ASSERT(fp == cx->fp());
-            JS_ASSERT_IF(!fp->isGeneratorFrame(), enumerators == cx->enumerators);
         }
     } check(cx);
 #endif
@@ -318,7 +316,8 @@ js::RunScript(JSContext *cx, HandleScript script, StackFrame *fp)
 
 #ifdef JS_ION
     if (ion::IsEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, fp, false);
+        ion::MethodStatus status = ion::CanEnter(cx, script, AbstractFramePtr(fp),
+                                                 fp->isConstructing(), false);
         if (status == ion::Method_Error)
             return false;
         if (status == ion::Method_Compiled) {
@@ -385,13 +384,12 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     }
 
     /* Invoke native functions. */
-    RootedFunction fun(cx, callee.toFunction());
+    JSFunction *fun = callee.toFunction();
     JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
 
-    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-    if (!script)
+    if (!fun->getOrCreateScript(cx))
         return false;
 
     if (!TypeMonitorCall(cx, args, construct))
@@ -403,7 +401,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
         return false;
 
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
-    JSBool ok = RunScript(cx, script, ifg.fp());
+    JSBool ok = RunScript(cx, ifg.fp());
 
     /* Propagate the return value out. */
     args.rval().set(ifg.fp()->returnValue());
@@ -529,12 +527,12 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, cons
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!JSScript::ensureRanAnalysis(cx, script))
+    if (!script->ensureRanAnalysis(cx))
         return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
     Probes::startExecution(script);
-    bool ok = RunScript(cx, script, efg.fp());
+    bool ok = RunScript(cx, efg.fp());
     Probes::stopExecution(script);
 
     /* Propgate the return value out. */
@@ -940,27 +938,24 @@ inline InterpreterFrames::~InterpreterFrames()
 
 #if defined(DEBUG) && !defined(JS_THREADSAFE) && !defined(JSGC_ROOT_ANALYSIS)
 void
-js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
+js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start,
                                 JSObject *found, PropertyCacheEntry *entry)
 {
     jsbytecode *pc;
     JSScript *script = cx->stack.currentScript(&pc);
 
     uint64_t sample = cx->runtime->gcNumber;
-    PropertyCacheEntry savedEntry = *entry;
 
-    RootedPropertyName name(cx, GetNameFromBytecode(cx, script, pc, JSOp(*pc)));
-    RootedObject start(cx, start_);
-    RootedObject pobj(cx);
-    RootedShape prop(cx);
-    bool ok = baseops::LookupProperty(cx, start, name, &pobj, &prop);
-    JS_ASSERT(ok);
+    PropertyName *name = GetNameFromBytecode(cx, script, pc, JSOp(*pc));
+    JSObject *pobj;
+    Shape *prop;
+    if (baseops::LookupProperty<NoGC>(cx, start, NameToId(name), &pobj, &prop)) {
+        JS_ASSERT(prop);
+        JS_ASSERT(pobj == found);
+        JS_ASSERT(entry->prop == prop);
+    }
 
-    if (cx->runtime->gcNumber != sample)
-        cx->propertyCache().restore(&savedEntry);
-    JS_ASSERT(prop);
-    JS_ASSERT(pobj == found);
-    JS_ASSERT(entry->prop == prop);
+    JS_ASSERT(cx->runtime->gcNumber == sample);
 }
 #endif /* DEBUG && !JS_THREADSAFE */
 
@@ -1425,7 +1420,8 @@ BEGIN_CASE(JSOP_LOOPENTRY)
     // entry points.
     if (ion::IsEnabled(cx)) {
         ion::MethodStatus status =
-            ion::CanEnterAtBranch(cx, script, regs.fp(), regs.pc);
+            ion::CanEnterAtBranch(cx, script, AbstractFramePtr(regs.fp()), regs.pc,
+                                  regs.fp()->isConstructing());
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
@@ -1629,7 +1625,7 @@ END_CASE(JSOP_AND)
 #define FETCH_ELEMENT_ID(obj, n, id)                                          \
     JS_BEGIN_MACRO                                                            \
         const Value &idval_ = regs.sp[n];                                     \
-        if (!ValueToId(cx, obj, idval_, &id))                                 \
+        if (!ValueToId<CanGC>(cx, obj, idval_, &id))                          \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -1912,9 +1908,9 @@ END_CASE(JSOP_CASE)
 BEGIN_CASE(JSOP_LT)
 {
     bool cond;
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
-    if (!LessThanOperation(cx, lref, rref, &cond))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!LessThanOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp[-2].setBoolean(cond);
@@ -1925,9 +1921,9 @@ END_CASE(JSOP_LT)
 BEGIN_CASE(JSOP_LE)
 {
     bool cond;
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
-    if (!LessThanOrEqualOperation(cx, lref, rref, &cond))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!LessThanOrEqualOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp[-2].setBoolean(cond);
@@ -1938,9 +1934,9 @@ END_CASE(JSOP_LE)
 BEGIN_CASE(JSOP_GT)
 {
     bool cond;
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
-    if (!GreaterThanOperation(cx, lref, rref, &cond))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!GreaterThanOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp[-2].setBoolean(cond);
@@ -1951,9 +1947,9 @@ END_CASE(JSOP_GT)
 BEGIN_CASE(JSOP_GE)
 {
     bool cond;
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
-    if (!GreaterThanOrEqualOperation(cx, lref, rref, &cond))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!GreaterThanOrEqualOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp[-2].setBoolean(cond);
@@ -2228,17 +2224,12 @@ BEGIN_CASE(JSOP_GETXPROP)
 BEGIN_CASE(JSOP_LENGTH)
 BEGIN_CASE(JSOP_CALLPROP)
 {
-    RootedValue &lval = rootValue0;
-    lval = regs.sp[-1];
-
-    RootedValue rval(cx);
-    if (!GetPropertyOperation(cx, script, regs.pc, &lval, &rval))
+    MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!GetPropertyOperation(cx, script, regs.pc, lval, lval))
         goto error;
 
-    TypeScript::Monitor(cx, script, regs.pc, rval);
-
-    regs.sp[-1] = rval;
-    assertSameCompartmentDebugOnly(cx, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, regs.pc, lval);
+    assertSameCompartmentDebugOnly(cx, lval);
 }
 END_CASE(JSOP_GETPROP)
 
@@ -2366,7 +2357,7 @@ BEGIN_CASE(JSOP_FUNCALL)
      * TI and JITs.
      */
     if (isFunction) {
-        if (fun->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, fun))
+        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
             goto error;
         if (cx->typeInferenceEnabled() && fun->isCloneAtCallsite()) {
             fun = CloneFunctionAtCallsite(cx, fun, script, regs.pc);
@@ -2397,7 +2388,8 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RootedScript funScript(cx, fun->nonLazyScript());
+    RootedScript &funScript = rootScript0;
+    funScript = fun->nonLazyScript();
     if (!cx->stack.pushInlineFrame(cx, regs, args, fun, funScript, initial))
         goto error;
 
@@ -2408,7 +2400,8 @@ BEGIN_CASE(JSOP_FUNCALL)
 
 #ifdef JS_ION
     if (!newType && ion::IsEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp(), newType);
+        ion::MethodStatus status = ion::CanEnter(cx, script, AbstractFramePtr(regs.fp()),
+                                                 regs.fp()->isConstructing(), newType);
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
@@ -3003,7 +2996,8 @@ END_CASE(JSOP_INITELEM_INC)
 BEGIN_CASE(JSOP_SPREAD)
 {
     int32_t count = regs.sp[-2].toInt32();
-    RootedObject arr(cx, &regs.sp[-3].toObject());
+    RootedObject &arr = rootObject0;
+    arr = &regs.sp[-3].toObject();
     const Value iterable = regs.sp[-1];
     ForOfIterator iter(cx, iterable);
     RootedValue &iterVal = rootValue0;
@@ -3255,7 +3249,8 @@ BEGIN_CASE(JSOP_SETXMLNAME)
 {
     JS_ASSERT(!script->strict);
 
-    Rooted<JSObject*> obj(cx, &regs.sp[-3].toObject());
+    RootedObject &obj = rootObject0;
+    obj = &regs.sp[-3].toObject();
     RootedValue &rval = rootValue0;
     rval = regs.sp[-1];
     RootedId &id = rootId0;
@@ -3388,7 +3383,7 @@ BEGIN_CASE(JSOP_XMLTAGEXPR)
     JS_ASSERT(!script->strict);
 
     Value rval = regs.sp[-1];
-    JSString *str = ToString(cx, rval);
+    JSString *str = ToString<CanGC>(cx, rval);
     if (!str)
         goto error;
     regs.sp[-1].setString(str);
@@ -3404,7 +3399,7 @@ BEGIN_CASE(JSOP_XMLELTEXPR)
     if (IsXML(rval)) {
         str = js_ValueToXMLString(cx, rval);
     } else {
-        str = ToString(cx, rval);
+        str = ToString<CanGC>(cx, rval);
         if (str)
             str = js_EscapeElementValue(cx, str);
     }
@@ -3908,13 +3903,13 @@ template bool js::DeleteProperty<true> (JSContext *cx, HandleValue val, HandlePr
 template bool js::DeleteProperty<false>(JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
 
 bool
-js::GetElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue vp)
+js::GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue vp)
 {
     return GetElementOperation(cx, JSOP_GETELEM, lref, rref, vp);
 }
 
 bool
-js::GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref,
+js::GetElementMonitored(JSContext *cx, MutableHandleValue lref, HandleValue rref,
                         MutableHandleValue vp)
 {
     if (!GetElement(cx, lref, rref, vp))
@@ -3925,7 +3920,7 @@ js::GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref,
 }
 
 bool
-js::CallElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res)
+js::CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res)
 {
     return GetElementOperation(cx, JSOP_CALLELEM, lref, rref, res);
 }

@@ -32,7 +32,6 @@ size_t sE4XObjectsCreated = 0;
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsxml.h"
@@ -41,6 +40,7 @@ size_t sE4XObjectsCreated = 0;
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
@@ -360,12 +360,12 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
         str = cx->runtime->emptyString;
     } else {
         RootedString qualstr(cx, cx->names().qualifier);
-        str = js_ConcatStrings(cx, uri, qualstr);
+        str = ConcatStrings<CanGC>(cx, uri, qualstr);
         if (!str)
             return NULL;
     }
     Rooted<JSString*> localName(cx, obj->getQNameLocalName());
-    str = js_ConcatStrings(cx, str, localName);
+    str = ConcatStrings<CanGC>(cx, str, localName);
     if (!str)
         return NULL;
 
@@ -383,7 +383,7 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
         }
         js_strncpy(chars + 1, strChars, length);
         chars[++length] = 0;
-        str = js_NewString(cx, chars, length);
+        str = js_NewString<CanGC>(cx, chars, length);
         if (!str) {
             js_free(chars);
             return NULL;
@@ -556,7 +556,7 @@ js_IsXMLName(JSContext *cx, jsval v)
         name = JSVAL_TO_OBJECT(v)->getQNameLocalName();
     } else {
         older = JS_SetErrorReporter(cx, NULL);
-        JSString *str = ToString(cx, v);
+        JSString *str = ToString<CanGC>(cx, v);
         if (str)
             name = str->ensureLinear(cx);
         JS_SetErrorReporter(cx, older);
@@ -625,7 +625,7 @@ NamespaceHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
             obj->setNameURI(uri);
             obj->setNamePrefix(uriobj->getNamePrefix());
         } else {
-            JSString *str = ToString(cx, urival);
+            JSString *str = ToString<CanGC>(cx, urival);
             if (!str)
                 return JS_FALSE;
             uri = str->ensureLinear(cx);
@@ -637,7 +637,7 @@ NamespaceHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
         }
     } else if (argc == 2) {
         if (!isQName || !(uri = uriobj->getNameURI())) {
-            JSString *str = ToString(cx, urival);
+            JSString *str = ToString<CanGC>(cx, urival);
             if (!str)
                 return JS_FALSE;
             uri = str->ensureLinear(cx);
@@ -649,7 +649,7 @@ NamespaceHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
         prefixval = argv[0];
         if (uri->empty()) {
             if (!JSVAL_IS_VOID(prefixval)) {
-                JSString *str = ToString(cx, prefixval);
+                JSString *str = ToString<CanGC>(cx, prefixval);
                 if (!str)
                     return JS_FALSE;
                 if (!str->empty()) {
@@ -664,7 +664,7 @@ NamespaceHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
         } else if (JSVAL_IS_VOID(prefixval) || !js_IsXMLName(cx, prefixval)) {
             obj->clearNamePrefix();
         } else {
-            JSString *str = ToString(cx, prefixval);
+            JSString *str = ToString<CanGC>(cx, prefixval);
             if (!str)
                 return JS_FALSE;
             prefix = str->ensureLinear(cx);
@@ -739,7 +739,7 @@ QNameHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
     } else if (argc < 0) {
         name = cx->names().undefined;
     } else {
-        name = ToAtom(cx, nameval);
+        name = ToAtom<CanGC>(cx, nameval);
         if (!name)
             return false;
     }
@@ -785,7 +785,7 @@ QNameHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
             prefix = obj2->getNamePrefix();
         } else {
             JS_ASSERT(argc > 1);
-            JSString *str = ToString(cx, nsval);
+            JSString *str = ToString<CanGC>(cx, nsval);
             if (!str)
                 return JS_FALSE;
             uri = str->ensureLinear(cx);
@@ -1234,7 +1234,7 @@ ParseNodeToQName(Parser *parser, ParseNode *pn,
             return NULL;
         }
 
-        localName = AtomizeChars(parser->context, colon + 1, length - (offset + 1));
+        localName = AtomizeChars<CanGC>(parser->context, colon + 1, length - (offset + 1));
         if (!localName)
             return NULL;
     } else {
@@ -1311,7 +1311,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn,
     JSXMLClass xml_class;
     int stackDummy;
 
-    if (!JS_CHECK_STACK_SIZE(cx->runtime->nativeStackLimit, &stackDummy)) {
+    if (!JS_CHECK_STACK_SIZE(cx->mainThread().nativeStackLimit, &stackDummy)) {
         parser->reportError(pn, JSMSG_OVER_RECURSED);
         return NULL;
     }
@@ -1473,7 +1473,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn,
                     /* 10.3.2.1. Step 6(h)(i)(1)(a). */
                     prefix = cx->runtime->emptyString;
                 } else {
-                    prefix = js_NewStringCopyN(cx, chars + 6, length - 6);
+                    prefix = js_NewStringCopyN<CanGC>(cx, chars + 6, length - 6);
                     if (!prefix)
                         goto fail;
                 }
@@ -1862,7 +1862,7 @@ ToXML(JSContext *cx, jsval v)
         }
     }
 
-    str = ToString(cx, v);
+    str = ToString<CanGC>(cx, v);
     if (!str)
         return NULL;
     if (str->empty()) {
@@ -1940,7 +1940,7 @@ ToXMLList(JSContext *cx, jsval v)
         }
     }
 
-    str = ToString(cx, v);
+    str = ToString<CanGC>(cx, v);
     if (!str)
         return NULL;
     if (str->empty()) {
@@ -2270,7 +2270,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
      * This is necessary for various log10 uses below to be valid.
      */
     if (decls->length == 0)
-        return js_NewStringCopyZ(cx, "a");
+        return js_NewStringCopyZ<CanGC>(cx, "a");
 
     /*
      * Try peeling off the last filename suffix or pathname component till
@@ -2352,7 +2352,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
         offset = cp - start;
         prefix = js_NewDependentString(cx, uri, offset, length);
     } else {
-        prefix = js_NewString(cx, bp, newlength);
+        prefix = js_NewString<CanGC>(cx, bp, newlength);
         if (!prefix)
             js_free(bp);
     }
@@ -2739,7 +2739,7 @@ ToXMLString(JSContext *cx, jsval v, uint32_t toSourceFlag)
     }
 
     if (JSVAL_IS_BOOLEAN(v) || JSVAL_IS_NUMBER(v))
-        return ToString(cx, v);
+        return ToString<CanGC>(cx, v);
 
     if (JSVAL_IS_STRING(v)) {
         StringBuffer sb(cx);
@@ -2750,7 +2750,7 @@ ToXMLString(JSContext *cx, jsval v, uint32_t toSourceFlag)
     if (!obj->isXML()) {
         if (!ToPrimitive(cx, JSTYPE_STRING, &v))
             return NULL;
-        JSString *str = ToString(cx, v);
+        JSString *str = ToString<CanGC>(cx, v);
         if (!str)
             return NULL;
         StringBuffer sb(cx);
@@ -2777,7 +2777,7 @@ ToAttributeName(JSContext *cx, jsval v)
 
     JSAtom *name;
     if (JSVAL_IS_STRING(v)) {
-        name = ToAtom(cx, v);
+        name = ToAtom<CanGC>(cx, v);
         if (!name)
             return NULL;
         uri = prefix = cx->runtime->emptyString;
@@ -2803,7 +2803,7 @@ ToAttributeName(JSContext *cx, jsval v)
             if (clasp == &AnyNameClass) {
                 name = cx->names().star;
             } else {
-                name = ToAtom(cx, v);
+                name = ToAtom<CanGC>(cx, v);
                 if (!name)
                     return NULL;
             }
@@ -2874,12 +2874,12 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
             name = cx->names().star;
             goto construct;
         }
-        name = ToStringSlow(cx, v);
+        name = ToStringSlow<CanGC>(cx, v);
         if (!name)
             return NULL;
     }
 
-    atomizedName = AtomizeString(cx, name);
+    atomizedName = AtomizeString<CanGC>(cx, name);
     if (!atomizedName)
         return NULL;
 
@@ -3467,7 +3467,7 @@ Insert(JSContext *cx, JSXML *xml, uint32_t i, jsval v)
         }
     }
     if (!vxml) {
-        str = ToString(cx, v);
+        str = ToString<CanGC>(cx, v);
         if (!str)
             return JS_FALSE;
 
@@ -3546,7 +3546,7 @@ Replace(JSContext *cx, JSXML *xml, uint32_t i, jsval v)
         break;
 
       default:
-        str = ToString(cx, v);
+        str = ToString<CanGC>(cx, v);
         if (!str)
             return JS_FALSE;
 
@@ -3813,7 +3813,7 @@ KidToString(JSContext *cx, JSXML *xml, uint32_t index)
     kidobj = js_GetXMLObject(cx, kid);
     if (!kidobj)
         return NULL;
-    return ToString(cx, ObjectValue(*kidobj));
+    return ToString<CanGC>(cx, ObjectValue(*kidobj));
 }
 
 /* Forward declared -- its implementation uses other statics that call it. */
@@ -4252,13 +4252,13 @@ PutProperty(JSContext *cx, HandleObject obj_, HandleId id_, JSBool strict, Mutab
 
                     RootedString space(cx, cx->names().space);
                     for (i = 1; i < n; i++) {
-                        left = js_ConcatStrings(cx, left, space);
+                        left = ConcatStrings<CanGC>(cx, left, space);
                         if (!left)
                             goto bad;
                         RootedString right(cx, KidToString(cx, vxml, i));
                         if (!right)
                             goto bad;
-                        left = js_ConcatStrings(cx, left, right);
+                        left = ConcatStrings<CanGC>(cx, left, right);
                         if (!left)
                             goto bad;
                     }
@@ -4588,7 +4588,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj_, jsid funid_, JSBool *found)
     Rooted<JSObject*> obj(cx, obj_);
     RootedObject pobj(cx);
     RootedShape prop(cx);
-    if (!baseops::LookupProperty(cx, obj, funid, &pobj, &prop))
+    if (!baseops::LookupProperty<CanGC>(cx, obj, funid, &pobj, &prop))
         return false;
     if (!prop) {
         xml = (JSXML *) obj->getPrivate();
@@ -4601,7 +4601,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj_, jsid funid_, JSBool *found)
             if (!proto)
                 return false;
 
-            if (!baseops::LookupProperty(cx, proto, funid, &pobj, &prop))
+            if (!baseops::LookupProperty<CanGC>(cx, proto, funid, &pobj, &prop))
                 return false;
         }
     }
@@ -4708,7 +4708,7 @@ xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         if (!qn)
             return JS_FALSE;
         if (!JSID_IS_VOID(funid))
-            return baseops::LookupProperty(cx, obj, funid, objp, propp);
+            return baseops::LookupProperty<CanGC>(cx, obj, funid, objp, propp);
         found = HasNamedProperty(xml, qn);
     }
     if (!found) {
@@ -5217,8 +5217,8 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
                   vxml->xml_class == JSXML_CLASS_ATTRIBUTE) &&
                  HasSimpleContent(xml)))
             {
-                ok = (str = ToStringSlow(cx, ObjectValue(*obj))) &&
-                     (vstr = ToString(cx, v));
+                ok = (str = ToStringSlow<CanGC>(cx, ObjectValue(*obj))) &&
+                     (vstr = ToString<CanGC>(cx, v));
                 if (ok) {
                     bool equal;
                     ok = EqualStrings(cx, str, vstr, &equal);
@@ -5230,15 +5230,15 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
         }
     } else {
         if (HasSimpleContent(xml)) {
-            ok = (str = ToString(cx, ObjectValue(*obj))) &&
-                 (vstr = ToString(cx, v));
+            ok = (str = ToString<CanGC>(cx, ObjectValue(*obj))) &&
+                 (vstr = ToString<CanGC>(cx, v));
             if (ok) {
                 bool equal;
                 ok = EqualStrings(cx, str, vstr, &equal);
                 *bp = equal;
             }
         } else if (JSVAL_IS_STRING(v) || JSVAL_IS_NUMBER(v)) {
-            str = ToString(cx, ObjectValue(*obj));
+            str = ToString<CanGC>(cx, ObjectValue(*obj));
             if (!str) {
                 ok = JS_FALSE;
             } else if (JSVAL_IS_STRING(v)) {
@@ -5532,12 +5532,12 @@ ValueToIdForXML(JSContext *cx, jsval v, jsid *idp)
             *idp = INT_TO_JSID(i);
         } else {
             RootedId id(cx);
-            if (!ValueToId(cx, v, &id))
+            if (!ValueToId<CanGC>(cx, v, &id))
                 return JS_FALSE;
             *idp = id;
         }
     } else if (JSVAL_IS_STRING(v)) {
-        JSAtom *atom = AtomizeString(cx, JSVAL_TO_STRING(v));
+        JSAtom *atom = AtomizeString<CanGC>(cx, JSVAL_TO_STRING(v));
         if (!atom)
             return JS_FALSE;
         *idp = AtomToId(atom);
@@ -5889,12 +5889,12 @@ xml_hasOwnProperty(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     RootedId id(cx);
-    if (!ValueToId(cx, name, &id))
+    if (!ValueToId<CanGC>(cx, name, &id))
         return false;
 
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    if (!js_HasOwnProperty(cx, baseops::LookupProperty, obj, id, &obj2, &prop))
+    if (!HasOwnProperty<CanGC>(cx, baseops::LookupProperty<CanGC>, obj, id, &obj2, &prop))
         return false;
     args.rval().setBoolean(!!prop);
     return true;
@@ -6142,7 +6142,7 @@ xml_namespace(JSContext *cx, unsigned argc, jsval *vp)
     if (argc == 0) {
         prefix = NULL;
     } else {
-        JSString *str = ToString(cx, vp[2]);
+        JSString *str = ToString<CanGC>(cx, vp[2]);
         if (!str)
             return false;
         prefix = str->ensureLinear(cx);
@@ -6279,7 +6279,7 @@ xml_normalize_helper(JSContext *cx, JSObject *obj, JSXML *xml)
             {
                 Rooted<JSString*> lstr(cx, kid->xml_value);
                 Rooted<JSString*> rstr(cx, kid2->xml_value);
-                str = js_ConcatStrings(cx, lstr, rstr);
+                str = ConcatStrings<CanGC>(cx, lstr, rstr);
                 if (!str)
                     return JS_FALSE;
                 NormalizingDelete(cx, xml, i + 1);
@@ -6648,7 +6648,7 @@ xml_setLocalName(JSContext *cx, unsigned argc, jsval *vp)
         if (!JSVAL_IS_PRIMITIVE(name) && JSVAL_TO_OBJECT(name)->isQName()) {
             namestr = JSVAL_TO_OBJECT(name)->getQNameLocalName();
         } else {
-            namestr = ToAtom(cx, name);
+            namestr = ToAtom<CanGC>(cx, name);
             if (!namestr)
                 return false;
         }
@@ -6913,7 +6913,7 @@ xml_toString_helper(JSContext *cx, JSXML *xml)
                 str = NULL;
                 break;
             }
-            str = js_ConcatStrings(cx, str, kidstr);
+            str = ConcatStrings<CanGC>(cx, str, kidstr);
             if (!str)
                 break;
         }
@@ -7613,7 +7613,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
         *newchars++ = '"';
     }
     *newchars = 0;
-    return js_NewString(cx, newchars - newlen, newlen);
+    return js_NewString<CanGC>(cx, newchars - newlen, newlen);
 }
 
 JSFlatString *
@@ -7996,7 +7996,7 @@ js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
         return NULL;
     xml = (JSXML *) obj->getPrivate();
     if (name) {
-        JSAtom *atomName = AtomizeString(cx, name);
+        JSAtom *atomName = AtomizeString<CanGC>(cx, name);
         if (!atomName)
             return NULL;
         qn = NewXMLQName(cx, cx->runtime->emptyString, NULL, atomName);

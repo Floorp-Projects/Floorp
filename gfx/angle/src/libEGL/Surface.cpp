@@ -309,6 +309,7 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
         result = mSwapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &mBackBuffer);
         ASSERT(SUCCEEDED(result));
+        InvalidateRect(mWindow, NULL, FALSE);
     }
 
     if (mConfig->mDepthStencilFormat != D3DFMT_UNKNOWN)

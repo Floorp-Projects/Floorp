@@ -13,9 +13,9 @@
 #include "jsprvtd.h"
 #include "jsnum.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 
 #include "gc/Marking.h"
+#include "vm/Shape.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -635,7 +635,7 @@ Trap(JSContext *cx, HandleObject handler, HandleValue fval, unsigned argc, Value
 static bool
 Trap1(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, Value *rval)
 {
-    JSString *str = ToString(cx, IdToValue(id));
+    JSString *str = ToString<CanGC>(cx, IdToValue(id));
     if (!str)
         return false;
     rval->setString(str);
@@ -646,7 +646,7 @@ static bool
 Trap2(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, Value v_, Value *rval)
 {
     RootedValue v(cx, v_);
-    JSString *str = ToString(cx, IdToValue(id));
+    JSString *str = ToString<CanGC>(cx, IdToValue(id));
     if (!str)
         return false;
     rval->setString(str);
@@ -709,7 +709,7 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
         if (!JSObject::getElement(cx, obj, obj, n, &v))
             return false;
         RootedId id(cx);
-        if (!ValueToId(cx, v, &id))
+        if (!ValueToId<CanGC>(cx, v, &id))
             return false;
         if (!props.append(id))
             return false;
@@ -897,7 +897,7 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, JSObject *proxy_, JSObject *rec
     RootedId id(cx, id_);
     RootedObject proxy(cx, proxy_), receiver(cx, receiver_);
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
-    JSString *str = ToString(cx, IdToValue(id));
+    JSString *str = ToString<CanGC>(cx, IdToValue(id));
     if (!str)
         return false;
     RootedValue value(cx, StringValue(str));
@@ -918,7 +918,7 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, JSObject *proxy_, JSObject *rec
     RootedId id(cx, id_);
     RootedObject proxy(cx, proxy_), receiver(cx, receiver_);
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
-    JSString *str = ToString(cx, IdToValue(id));
+    JSString *str = ToString<CanGC>(cx, IdToValue(id));
     if (!str)
         return false;
     RootedValue value(cx, StringValue(str));
@@ -1265,7 +1265,7 @@ HasOwn(JSContext *cx, HandleObject obj, HandleId id, bool *bp)
 static bool
 IdToValue(JSContext *cx, HandleId id, MutableHandleValue value)
 {
-    JSString *name = ToString(cx, IdToValue(id));
+    JSString *name = ToString<CanGC>(cx, IdToValue(id));
     if (!name)
         return false;
     value.set(StringValue(name));
@@ -1491,7 +1491,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
         // step ii
         RootedId id(cx);
-        if (!ValueToId(cx, v, &id))
+        if (!ValueToId<CanGC>(cx, v, &id))
             return false;
 
         // step iii

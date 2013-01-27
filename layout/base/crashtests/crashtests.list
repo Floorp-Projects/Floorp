@@ -93,6 +93,8 @@ load 337476-1.xul
 load 338703-1.html
 load 339651-1.html
 load 340093-1.xul
+load 341382-1.html
+load 341382-2.html
 asserts-if(browserIsRemote,1) load 341858-1.html # bug 622188
 load 342145-1.xhtml
 load 343293-1.xhtml
@@ -120,6 +122,9 @@ load 356325-1.xul
 load 358729-1.xhtml
 load 360339-1.xul
 load 360339-2.xul
+load 363729-1.html
+load 363729-2.html
+load 363729-3.html
 load 364427-1.html
 load 365909-1.xhtml
 load 365909-2.xhtml
@@ -362,7 +367,7 @@ load 727601.html
 # content process when it gets into an unexpected state, it's just
 # that the reftest harness can't handle restarting crashed content
 # processes so we time out.)
-skip-if(Android||browserIsRemote) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271
+skip-if(Android||B2G||browserIsRemote) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271, for b2g bug 833371
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
 asserts-if(winWidget,0-2) load 736924-1.html # bug 738803
 load 749816-1.html

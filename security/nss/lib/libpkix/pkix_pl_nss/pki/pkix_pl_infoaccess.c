@@ -823,7 +823,7 @@ pkix_pl_InfoAccess_ParseLocation(
                 nameComponent->attrType = (unsigned char *)avaPtr;
                 while ((*avaPtr != '=') && (*avaPtr != '\0')) {
                         avaPtr++;
-                        if (avaPtr == '\0') {
+                        if (*avaPtr == '\0') {
                                 PKIX_ERROR(PKIX_NAMECOMPONENTWITHNOEQ);
                         }
                 }

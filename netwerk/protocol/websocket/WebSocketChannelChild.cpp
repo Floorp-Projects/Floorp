@@ -331,6 +331,9 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
+  if (MissingRequiredTabChild(tabChild, "websocket")) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   URIParams uri;
   SerializeURI(aURI, uri);

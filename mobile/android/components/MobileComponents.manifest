@@ -90,3 +90,6 @@ contract @mozilla.org/login-manager/prompter;1 {97d12931-abe2-11df-94e2-0800200c
 component {4e6ea350-b09a-11df-94e2-0800200c9a66} BlocklistPrompt.js
 contract @mozilla.org/addons/blocklist-prompt;1 {4e6ea350-b09a-11df-94e2-0800200c9a66}
 
+# NSSDialogService.js
+component {cbc08081-49b6-4561-9c18-a7707a50bda1} NSSDialogService.js
+contract @mozilla.org/nsCertificateDialogs;1 {cbc08081-49b6-4561-9c18-a7707a50bda1}

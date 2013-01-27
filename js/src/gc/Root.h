@@ -861,6 +861,10 @@ class FakeMutableHandle : public js::MutableHandleBase<T>
         ptr = t;
     }
 
+    FakeMutableHandle(FakeRooted<T> *root) {
+        ptr = root->address();
+    }
+
     void set(T v) {
         JS_ASSERT(!js::RootMethods<T>::poisoned(v));
         *ptr = v;
@@ -887,19 +891,19 @@ class FakeMutableHandle : public js::MutableHandleBase<T>
  * operate on either rooted or unrooted data.
  *
  * The toHandle() and toMutableHandle() functions are for calling functions
- * which require handle types and are only called in the ALLOW_GC case. These
+ * which require handle types and are only called in the CanGC case. These
  * allow the calling code to type check.
  */
 enum AllowGC {
-    DONT_ALLOW_GC = 0,
-    ALLOW_GC = 1
+    NoGC = 0,
+    CanGC = 1
 };
 template <typename T, AllowGC allowGC>
 class MaybeRooted
 {
 };
 
-template <typename T> class MaybeRooted<T, ALLOW_GC>
+template <typename T> class MaybeRooted<T, CanGC>
 {
   public:
     typedef Handle<T> HandleType;
@@ -915,7 +919,7 @@ template <typename T> class MaybeRooted<T, ALLOW_GC>
     }
 };
 
-template <typename T> class MaybeRooted<T, DONT_ALLOW_GC>
+template <typename T> class MaybeRooted<T, NoGC>
 {
   public:
     typedef T HandleType;

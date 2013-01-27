@@ -34,7 +34,7 @@ jsd_InterruptHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rva
         return JSTRAP_CONTINUE;
     
     JSD_LOCK_SCRIPTS(jsdc);
-    jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, NULL);
+    jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, JSNullFramePtr());
     JSD_UNLOCK_SCRIPTS(jsdc);
     if( ! jsdscript )
         return JSTRAP_CONTINUE;
@@ -72,7 +72,7 @@ jsd_DebuggerHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
         return JSTRAP_CONTINUE;
 
     JSD_LOCK_SCRIPTS(jsdc);
-    jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, NULL);
+    jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, JSNullFramePtr());
     JSD_UNLOCK_SCRIPTS(jsdc);
     if( ! jsdscript )
         return JSTRAP_CONTINUE;
@@ -106,7 +106,7 @@ jsd_ThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
         return JSTRAP_CONTINUE;
 
     JSD_LOCK_SCRIPTS(jsdc);
-    jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, NULL);
+    jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, JSNullFramePtr());
     JSD_UNLOCK_SCRIPTS(jsdc);
     if( ! jsdscript )
         return JSTRAP_CONTINUE;

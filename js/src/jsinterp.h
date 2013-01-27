@@ -210,7 +210,7 @@ extern JS_NEVER_INLINE InterpretStatus
 Interpret(JSContext *cx, StackFrame *stopFp, InterpMode mode = JSINTERP_NORMAL);
 
 extern bool
-RunScript(JSContext *cx, HandleScript script, StackFrame *fp);
+RunScript(JSContext *cx, StackFrame *fp);
 
 extern bool
 StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *equal);
@@ -356,13 +356,13 @@ JSObject *
 Lambda(JSContext *cx, HandleFunction fun, HandleObject parent);
 
 bool
-GetElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
-GetElementMonitored(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+GetElementMonitored(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
-CallElement(JSContext *cx, HandleValue lref, HandleValue rref, MutableHandleValue res);
+CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res);
 
 bool
 SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,

@@ -16,7 +16,7 @@ dictionary DeviceStorageEnumerationParameters
   jsval since;
 };
 
-[scriptable, uuid(7f69936f-2948-4733-ba41-c7e1d657a88b), builtinclass]
+[scriptable, uuid(c611b701-ddfc-456d-893a-3b3fcb30d9fd), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
@@ -38,7 +38,11 @@ interface nsIDOMDeviceStorage : nsIDOMEventTarget
     [optional_argc, implicit_jscontext]
     nsIDOMDeviceStorageCursor enumerateEditable([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
 
-    nsIDOMDOMRequest stat();
+    nsIDOMDOMRequest freeSpace();
+
+    nsIDOMDOMRequest usedSpace();
+
+    nsIDOMDOMRequest available();
 
     [noscript] readonly attribute nsIFile rootDirectory;
 };

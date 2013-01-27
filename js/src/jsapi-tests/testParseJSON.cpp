@@ -40,7 +40,7 @@ class AutoInflatedString {
 template<size_t N> JSFlatString *
 NewString(JSContext *cx, const jschar (&chars)[N])
 {
-    return js_NewStringCopyN(cx, chars, N);
+    return js_NewStringCopyN<CanGC>(cx, chars, N);
 }
 
 BEGIN_TEST(testParseJSON_success)
@@ -60,7 +60,7 @@ BEGIN_TEST(testParseJSON_success)
     js::Rooted<JSFlatString*> str(cx);
 
     const jschar emptystr[] = { '\0' };
-    str = js_NewStringCopyN(cx, emptystr, 0);
+    str = js_NewStringCopyN<CanGC>(cx, emptystr, 0);
     CHECK(str);
     CHECK(TryParse(cx, "\"\"", STRING_TO_JSVAL(str)));
 

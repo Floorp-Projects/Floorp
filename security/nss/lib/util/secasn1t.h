@@ -6,7 +6,7 @@
  * Types for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1t.h,v 1.11 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id: secasn1t.h,v 1.12 2013/01/08 16:19:09 kaie%kuix.de Exp $
  */
 
 #ifndef _SECASN1T_H_
@@ -183,7 +183,7 @@ typedef struct sec_ASN1Template_struct {
 typedef const SEC_ASN1Template * SEC_ASN1TemplateChooser(void *arg, PRBool enc);
 typedef SEC_ASN1TemplateChooser * SEC_ASN1TemplateChooserPtr;
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(ANDROID)
 #define SEC_ASN1_GET(x)        NSS_Get_##x(NULL, PR_FALSE)
 #define SEC_ASN1_SUB(x)        &p_NSS_Get_##x
 #define SEC_ASN1_XTRN          SEC_ASN1_DYNAMIC

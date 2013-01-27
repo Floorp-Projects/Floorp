@@ -19,6 +19,7 @@
 #
 # Contributor(s):
 #   Slavomir Katuscak <slavomir.katuscak@sun.com>, Sun Microsystems
+#   Ryan Sleevi <ryan.sleevi@gmail.com>, Google
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,3 +52,4 @@ dsa.cfg
 revoc.cfg
 ocsp.cfg
 crldp.cfg
+trustanchors.cfg
