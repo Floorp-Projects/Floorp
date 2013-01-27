@@ -40,13 +40,13 @@ class MutatingRopeSegmentRange;
  */
 class RopeBuilder;
 
+template <AllowGC allowGC>
 extern JSString *
-ConcatStringsNoGC(JSContext *cx, JSString *s1, JSString *s2);
+ConcatStrings(JSContext *cx,
+              typename MaybeRooted<JSString*, allowGC>::HandleType left,
+              typename MaybeRooted<JSString*, allowGC>::HandleType right);
 
 }  /* namespace js */
-
-extern JSString *
-js_ConcatStrings(JSContext *cx, js::HandleString s1, js::HandleString s2);
 
 extern JSString * JS_FASTCALL
 js_toLowerCase(JSContext *cx, JSString *str);
@@ -85,6 +85,7 @@ extern const char js_decodeURIComponent_str[];
 extern const char js_encodeURIComponent_str[];
 
 /* GC-allocate a string descriptor for the given malloc-allocated chars. */
+template <js::AllowGC allowGC>
 extern JSStableString *
 js_NewString(JSContext *cx, jschar *chars, size_t length);
 
@@ -92,16 +93,20 @@ extern JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start, size_t length);
 
 /* Copy a counted string and GC-allocate a descriptor for it. */
+template <js::AllowGC allowGC>
 extern JSFlatString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n);
 
+template <js::AllowGC allowGC>
 extern JSFlatString *
 js_NewStringCopyN(JSContext *cx, const char *s, size_t n);
 
 /* Copy a C string and GC-allocate a descriptor for it. */
+template <js::AllowGC allowGC>
 extern JSFlatString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s);
 
+template <js::AllowGC allowGC>
 extern JSFlatString *
 js_NewStringCopyZ(JSContext *cx, const char *s);
 
@@ -118,6 +123,7 @@ namespace js {
  * Convert a non-string value to a string, returning null after reporting an
  * error, otherwise returning a new string reference.
  */
+template <AllowGC allowGC>
 extern JSString *
 ToStringSlow(JSContext *cx, const Value &v);
 
@@ -126,12 +132,12 @@ ToStringSlow(JSContext *cx, const Value &v);
  * fast-path for the case where the value is already a string; if the value is
  * known not to be a string, use ToStringSlow instead.
  */
+template <AllowGC allowGC>
 static JS_ALWAYS_INLINE JSString *
 ToString(JSContext *cx, const js::Value &v)
 {
-    AssertCanGC();
 #ifdef DEBUG
-    {
+    if (allowGC) {
         SkipRoot skip(cx, &v);
         MaybeCheckStackRoots(cx);
     }
@@ -139,7 +145,7 @@ ToString(JSContext *cx, const js::Value &v)
 
     if (v.isString())
         return v.toString();
-    return ToStringSlow(cx, v);
+    return ToStringSlow<allowGC>(cx, v);
 }
 
 /*

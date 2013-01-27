@@ -13,7 +13,7 @@ interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozIccManager;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(cc4947eb-aa39-4c25-878d-618dc4d4d2bc)]
+[scriptable, builtinclass, uuid(4175a903-61e6-4fa7-af0d-1e41632ee2dd)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -308,6 +308,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * 'setCardLock' fails.
    */
   [implicit_jscontext] attribute jsval onicccardlockerror;
+
+  /**
+   * The 'oncfstatechange' event is notified whenever the call forwarding
+   * state changes.
+   */
+  [implicit_jscontext] attribute jsval oncfstatechange;
 };
 
 [scriptable, uuid(5ea0e4a9-4684-40da-9930-8ebb61d187f3)]

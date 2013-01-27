@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
+<title>Testcase bug 331292 - Loading page causes freeze, no Talkback, both WindowsXP & Linux</title>
+<style>
+.floatA{
+	width:110px;
+	float: left;
+	border:1px solid red;
+}
+.floatB{
+	width:430px;
+	float: left;
+	border:1px solid green;
+}
+.floatC{
+	width:430px;
+	float: left;
+	border:1px solid blue;
+}
+.floatclear{
+clear: both;
+}
+</style>
+</head>
+<body>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+ 
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+ 
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatB"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatC"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear">
+<div class="floatA"></div>
+<div class="floatclear"></div>
+</div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>
+</body></html>

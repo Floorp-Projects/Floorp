@@ -274,6 +274,8 @@
            side="right"
            type="arrow"
            hidden="true"
+           rolluponmousewheel="true"
+           consumeoutsideclicks="false"
            noautofocus="true"
            position="topcenter topright"/>
 

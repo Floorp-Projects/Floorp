@@ -31,34 +31,36 @@
 typedef uint64_t EncodedMatchResult;
 
 struct MatchResult {
-    MatchResult(size_t start, size_t end)
+    MatchResult(int start, int end)
         : start(start)
         , end(end)
     {
     }
 
+#if !WTF_CPU_X86_64 || WTF_PLATFORM_WIN
     explicit MatchResult(EncodedMatchResult encoded)
     {
         union u {
             uint64_t encoded;
             struct s {
-                size_t start;
-                size_t end;
+                int start;
+                int end;
             } split;
         } value;
         value.encoded = encoded;
         start = value.split.start;
         end = value.split.end;
     }
+#endif
 
     static MatchResult failed()
     {
-        return MatchResult(WTF::notFound, 0);
+        return MatchResult(int(WTF::notFound), 0);
     }
 
     operator bool()
     {
-        return start != WTF::notFound;
+        return start != int(WTF::notFound);
     }
 
     bool empty()
@@ -66,8 +68,9 @@ struct MatchResult {
         return start == end;
     }
 
-    size_t start;
-    size_t end;
+    // strings are limited to a length of 2^28. So this is safe
+    int start;
+    int end;
 };
 
 #endif

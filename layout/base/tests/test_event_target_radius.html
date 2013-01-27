@@ -44,6 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 <script type="application/javascript">
 var prefBase = "ui.mouse.radius.";
 SpecialPowers.setBoolPref(prefBase + "enabled", true);
+SpecialPowers.setBoolPref(prefBase + "inputSource.touchOnly", false);
 SpecialPowers.setIntPref(prefBase + "leftmm", 12);
 SpecialPowers.setIntPref(prefBase + "topmm", 8);
 SpecialPowers.setIntPref(prefBase + "rightmm", 4);
@@ -57,6 +58,7 @@ ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test res
 
 function endTest() {
   SpecialPowers.clearUserPref(prefBase + "enabled");
+  SpecialPowers.clearUserPref(prefBase + "inputSource.touchOnly");
   SpecialPowers.clearUserPref(prefBase + "leftmmm");
   SpecialPowers.clearUserPref(prefBase + "topmm");
   SpecialPowers.clearUserPref(prefBase + "rightmm");
@@ -68,9 +70,9 @@ function endTest() {
 var eventTarget;
 window.onmousedown = function(event) { eventTarget = event.target; };
 
-function testMouseClick(idPosition, dx, dy, idTarget, msg) {
+function testMouseClick(idPosition, dx, dy, idTarget, msg, options) {
   eventTarget = null;
-  synthesizeMouse(document.getElementById(idPosition), dx, dy, {});
+  synthesizeMouse(document.getElementById(idPosition), dx, dy, options || {});
   try {
     is(eventTarget.id, idTarget,
        "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]");
@@ -96,6 +98,18 @@ function runTest() {
   testMouseClick("t", -3*mm, 10, "t", "basic functionality");
   testMouseClick("t", 10, -5*mm, "body", "basic functionality");
   testMouseClick("t", 10, -3*mm, "t", "basic functionality");
+
+  // When inputSource.touchOnly is true, mouse input is not retargeted.
+  SpecialPowers.setBoolPref(prefBase + "inputSource.touchOnly", true);
+  testMouseClick("t", 100 + 11*mm, 10, "body", "disabled for mouse input");
+  testMouseClick("t", 100 + 11*mm, 10, "t", "enabled for touch input", {
+    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+  });
+  testMouseClick("t", 100 + 13*mm, 10, "body", "basic functionality for touch", {
+    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+  });
+  SpecialPowers.setBoolPref(prefBase + "inputSource.touchOnly", false);
+
   setShowing("t", false);
 
   // Now test the criteria we use to determine which elements are hittable

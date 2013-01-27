@@ -790,7 +790,9 @@ typedef struct cc_media_track_t_ {
 } cc_media_track_t;
 
 typedef struct cc_media_remote_track_table_t_ {
+    boolean           created;
     uint32_t          num_tracks;
+    uint32_t          num_tracks_notified;
     uint32_t          media_stream_id;
     cc_media_track_t  track[CC_MAX_TRACKS];
 } cc_media_remote_track_table_t;

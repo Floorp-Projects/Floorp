@@ -75,10 +75,21 @@ struct FontListEntry {
     uint8_t   index;
 };
 
-struct DeviceStorageStatParams
+struct DeviceStorageFreeSpaceParams
 {
   nsString type;
   nsString fullpath;
+};
+
+struct DeviceStorageUsedSpaceParams
+{
+  nsString type;
+  nsString fullpath;
+};
+
+struct DeviceStorageAvailableParams
+{
+  nsString type;
 };
 
 struct DeviceStorageAddParams
@@ -115,7 +126,9 @@ union DeviceStorageParams
   DeviceStorageGetParams;
   DeviceStorageDeleteParams;
   DeviceStorageEnumerationParams;
-  DeviceStorageStatParams;
+  DeviceStorageFreeSpaceParams;
+  DeviceStorageUsedSpaceParams;
+  DeviceStorageAvailableParams;
 };
 
 // An IPCTabContext which corresponds to a PBrowser opened by a child when it
@@ -436,6 +449,8 @@ parent:
                                nsCString aReason);
     // get nsIVolumeService to broadcast volume information
     async BroadcastVolume(nsString volumeName);
+
+    async RecordingDeviceEvents(nsString recordingStatus);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);

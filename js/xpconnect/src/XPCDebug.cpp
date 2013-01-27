@@ -71,10 +71,6 @@ xpcDumpEvalErrorReporter(JSContext *cx, const char *message,
 JSBool
 xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
 {
-    JSStackFrame* fp;
-    JSStackFrame* iter = nullptr;
-    uint32_t num = 0;
-
     if (!cx || !text) {
         DebugDump("%s", "invalid params passed to xpc_DumpEvalInJSStackFrame!\n");
         return false;
@@ -82,13 +78,21 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
 
     DebugDump("js[%d]> %s\n", frameno, text);
 
-    while (nullptr != (fp = JS_BrokenFrameIterator(cx, &iter))) {
-        if (num == frameno)
+    uint32_t num = 0;
+
+    JSAbstractFramePtr frame = JSNullFramePtr();
+
+    JSBrokenFrameIterator iter(cx);
+    while (!iter.done()) {
+        if (num == frameno) {
+            frame = iter.abstractFramePtr();
             break;
+        }
+        ++iter;
         num++;
     }
 
-    if (!fp) {
+    if (!frame) {
         DebugDump("%s", "invalid frame number!\n");
         return false;
     }
@@ -101,7 +105,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
     jsval rval;
     JSString* str;
     JSAutoByteString bytes;
-    if (JS_EvaluateInStackFrame(cx, fp, text, strlen(text), "eval", 1, &rval) &&
+    if (frame.evaluateInStackFrame(cx, text, strlen(text), "eval", 1, &rval) &&
         nullptr != (str = JS_ValueToString(cx, rval)) &&
         bytes.encode(cx, str)) {
         DebugDump("%s\n", bytes.ptr());

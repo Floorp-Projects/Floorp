@@ -15,22 +15,17 @@
 #include "mozilla/net/WebSocketChannelChild.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
-#include "mozilla/Preferences.h"
 
 using mozilla::dom::TCPSocketChild;
 
 namespace mozilla {
 namespace net {
 
-static bool gDisableIPCSecurity = false;
-static const char kPrefDisableIPCSecurity[] = "network.disable.ipc.security";
-
 PNeckoChild *gNeckoChild = nullptr;
 
 // C++ file contents
 NeckoChild::NeckoChild()
 {
-  Preferences::AddBoolVarCache(&gDisableIPCSecurity, kPrefDisableIPCSecurity);
 }
 
 NeckoChild::~NeckoChild()

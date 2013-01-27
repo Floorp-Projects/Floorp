@@ -1,3 +1,3 @@
-component {18390770-02ab-11e2-a21f-0800200c9a66} PermissionSettings.js
-contract @mozilla.org/permissionSettings;1 {18390770-02ab-11e2-a21f-0800200c9a66}
+component {cd2cf7a1-f4c1-487b-8c1b-1a71c7097431} PermissionSettings.js
+contract @mozilla.org/permissionSettings;1 {cd2cf7a1-f4c1-487b-8c1b-1a71c7097431}
 category JavaScript-navigator-property mozPermissionSettings @mozilla.org/permissionSettings;1

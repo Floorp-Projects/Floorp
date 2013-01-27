@@ -8,17 +8,17 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsprf.h"
-#include "jsscope.h"
 #include "jsstr.h"
 #include "jsxml.h"
 
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
+#include "vm/Shape.h"
 
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 
 #include "ion/IonCode.h"
+#include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;

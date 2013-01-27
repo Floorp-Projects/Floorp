@@ -7,7 +7,7 @@
 },
 {
 "size": 4139008,
-"digest": "b1eac90cebe52708d512bbc293c507da9d93bc8c6a78cbbbd78cc9b7beb2cd335bef9bf8e4bf5a9dc38521f7080d29a743626f9e4af6c42ec211db22dc9d0fda",
+"digest": "6f65553e882316582b944e46c659915a1b907c4a326104cb31d81356330dddacba757e3eafbd282063da0e670c3c5d6b9a0905ab88da84b47848d810c37571cb",
 "algorithm": "sha512",
 "filename": "boot.img"
 }

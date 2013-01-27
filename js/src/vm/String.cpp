@@ -297,10 +297,10 @@ JSRope::flatten(JSContext *maybecx)
 }
 
 template <AllowGC allowGC>
-static inline JSString *
-ConcatStringsMaybeAllowGC(JSContext *cx,
-                          typename MaybeRooted<JSString*, allowGC>::HandleType left,
-                          typename MaybeRooted<JSString*, allowGC>::HandleType right)
+JSString *
+js::ConcatStrings(JSContext *cx,
+                  typename MaybeRooted<JSString*, allowGC>::HandleType left,
+                  typename MaybeRooted<JSString*, allowGC>::HandleType right)
 {
     JS_ASSERT_IF(!left->isAtom(), left->compartment() == cx->compartment);
     JS_ASSERT_IF(!right->isAtom(), right->compartment() == cx->compartment);
@@ -336,24 +336,14 @@ ConcatStringsMaybeAllowGC(JSContext *cx,
         return str;
     }
 
-    return JSRope::newStringMaybeAllowGC<allowGC>(cx, left, right, wholeLength);
+    return JSRope::new_<allowGC>(cx, left, right, wholeLength);
 }
 
-JSString *
-js_ConcatStrings(JSContext *cx, HandleString left, HandleString right)
-{
-    return ConcatStringsMaybeAllowGC<ALLOW_GC>(cx, left, right);
-}
+template JSString *
+js::ConcatStrings<CanGC>(JSContext *cx, HandleString left, HandleString right);
 
-JSString *
-js::ConcatStringsNoGC(JSContext *cx, JSString *left, JSString *right)
-{
-    AutoAssertNoGC nogc;
-    JSString *res = ConcatStringsMaybeAllowGC<DONT_ALLOW_GC>(cx, left, right);
-
-    JS_ASSERT(!cx->isExceptionPending());
-    return res;
-}
+template JSString *
+js::ConcatStrings<NoGC>(JSContext *cx, JSString *left, JSString *right);
 
 JSFlatString *
 JSDependentString::undepend(JSContext *cx)
@@ -491,7 +481,7 @@ StaticStrings::init(JSContext *cx)
 
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
         jschar buffer[] = { jschar(i), '\0' };
-        JSFlatString *s = js_NewStringCopyN(cx, buffer, 1);
+        JSFlatString *s = js_NewStringCopyN<CanGC>(cx, buffer, 1);
         if (!s)
             return false;
         unitStaticTable[i] = s->morphAtomizedStringIntoAtom();
@@ -499,7 +489,7 @@ StaticStrings::init(JSContext *cx)
 
     for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++) {
         jschar buffer[] = { FROM_SMALL_CHAR(i >> 6), FROM_SMALL_CHAR(i & 0x3F), '\0' };
-        JSFlatString *s = js_NewStringCopyN(cx, buffer, 2);
+        JSFlatString *s = js_NewStringCopyN<CanGC>(cx, buffer, 2);
         if (!s)
             return false;
         length2StaticTable[i] = s->morphAtomizedStringIntoAtom();
@@ -517,7 +507,7 @@ StaticStrings::init(JSContext *cx)
                                 jschar('0' + ((i / 10) % 10)),
                                 jschar('0' + (i % 10)),
                                 '\0' };
-            JSFlatString *s = js_NewStringCopyN(cx, buffer, 3);
+            JSFlatString *s = js_NewStringCopyN<CanGC>(cx, buffer, 3);
             if (!s)
                 return false;
             intStaticTable[i] = s->morphAtomizedStringIntoAtom();

@@ -30,6 +30,7 @@ XPIDLSRCS += \
   nsINavigatorMobileConnection.idl \
   nsIDOMNetworkStatsManager.idl \
   nsIDOMNetworkStats.idl \
+  nsIDOMCFStateChangeEvent.idl \
   $(NULL)
 endif
 

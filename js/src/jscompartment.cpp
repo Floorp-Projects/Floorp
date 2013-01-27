@@ -14,32 +14,32 @@
 #include "jsiter.h"
 #include "jsmath.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
+#if ENABLE_YARR_JIT
+#include "assembler/jit/ExecutableAllocator.h"
+#endif
 #include "assembler/wtf/Platform.h"
 #include "gc/Marking.h"
 #include "gc/Root.h"
+#ifdef JS_ION
+#include "ion/IonCompartment.h"
+#include "ion/Ion.h"
+#endif
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
+#include "vm/ForkJoin.h"
 #include "yarr/BumpPointerAllocator.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
-#ifdef JS_ION
-#include "ion/IonCompartment.h"
-#include "ion/Ion.h"
-#endif
 
-#if ENABLE_YARR_JIT
-#include "assembler/jit/ExecutableAllocator.h"
-#endif
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -51,6 +51,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     principals(NULL),
     global_(NULL),
     enterCompartmentDepth(0),
+    allocator(this),
 #ifdef JSGC_GENERATIONAL
     gcNursery(),
     gcStoreBuffer(&gcNursery),
@@ -74,8 +75,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     lastAnimationTime(0),
     regExps(rt),
     propertyTree(thisForCtor()),
-    gcMallocAndFreeBytes(0),
-    gcTriggerMallocAndFreeBytes(0),
     gcIncomingGrayPointers(NULL),
     gcLiveArrayBuffers(NULL),
     gcWeakMapList(NULL),
@@ -86,7 +85,8 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     watchpointMap(NULL),
     scriptCountsMap(NULL),
     debugScriptMap(NULL),
-    debugScopes(NULL)
+    debugScopes(NULL),
+    enumerators(NULL)
 #ifdef JS_ION
     , ionCompartment_(NULL)
 #endif
@@ -108,6 +108,7 @@ JSCompartment::~JSCompartment()
     js_delete(scriptCountsMap);
     js_delete(debugScriptMap);
     js_delete(debugScopes);
+    js_free(enumerators);
 }
 
 bool
@@ -150,6 +151,10 @@ JSCompartment::init(JSContext *cx)
         gcStoreBuffer.disable();
     }
 #endif
+
+    enumerators = NativeIterator::allocateSentinel(cx);
+    if (!enumerators)
+        return false;
 
     return debuggees.init();
 }
@@ -362,7 +367,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
         Rooted<JSStableString *> str(cx, vp->toString()->ensureStable(cx));
         if (!str)
             return false;
-        RootedString wrapped(cx, js_NewStringCopyN(cx, str->chars().get(), str->length()));
+        RootedString wrapped(cx, js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length()));
         if (!wrapped)
             return false;
         vp->setString(wrapped);
@@ -461,7 +466,7 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp)
     if (!wrap(cx, value.address()))
         return false;
     RootedId id(cx);
-    if (!ValueToId(cx, value.get(), &id))
+    if (!ValueToId<CanGC>(cx, value.get(), &id))
         return false;
 
     *idp = id;
@@ -575,7 +580,7 @@ JSCompartment::markTypes(JSTracer *trc)
     }
 
     for (size_t thingKind = FINALIZE_OBJECT0; thingKind < FINALIZE_OBJECT_LIMIT; thingKind++) {
-        ArenaHeader *aheader = arenas.getFirstArena(static_cast<AllocKind>(thingKind));
+        ArenaHeader *aheader = allocator.arenas.getFirstArena(static_cast<AllocKind>(thingKind));
         if (aheader)
             rt->gcMarker.pushArenaList(aheader);
     }
@@ -744,6 +749,15 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             rt->freeLifoAlloc.transferFrom(&analysisLifoAlloc);
             rt->freeLifoAlloc.transferFrom(&oldAlloc);
         }
+    }
+
+    NativeIterator *ni = enumerators->next();
+    while (ni != enumerators) {
+        JSObject *iterObj = ni->iterObj();
+        NativeIterator *next = ni->next();
+        if (gc::IsObjectAboutToBeFinalized(&iterObj))
+            ni->unlink();
+        ni = next;
     }
 
     active = false;
@@ -1018,4 +1032,10 @@ JSCompartment::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compa
     *crossCompartmentWrappersArg = crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
     *regexpCompartment = regExps.sizeOfExcludingThis(mallocSizeOf);
     *debuggeesSet = debuggees.sizeOfExcludingThis(mallocSizeOf);
+}
+
+void
+JSCompartment::adoptWorkerAllocator(Allocator *workerAllocator)
+{
+    allocator.arenas.adoptArenas(rt, &workerAllocator->arenas);
 }
