@@ -4009,8 +4009,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
     rt->gcStats.reset(reason);
 
 #ifdef DEBUG
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        JS_ASSERT(c->isCollecting());
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
         JS_ASSERT(!c->needsBarrier());
         JS_ASSERT(!c->gcLiveArrayBuffers);
         for (unsigned i = 0 ; i < FINALIZE_LIMIT ; ++i)
