@@ -3170,15 +3170,8 @@ DropStringWrappers(JSRuntime *rt)
  */
 
 void
-JSCompartment::findOutgoingEdges(ComponentFinder<JSCompartment> &finder)
+JSCompartment::findOutgoingEdgesFromCompartment(ComponentFinder<JS::Zone> &finder)
 {
-    /*
-     * Any compartment may have a pointer to an atom in the atoms
-     * compartment, and these aren't in the cross compartment map.
-     */
-    if (rt->atomsCompartment->isGCMarking())
-        finder.addEdgeTo(rt->atomsCompartment);
-
     for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey::Kind kind = e.front().key.kind;
         JS_ASSERT(kind != CrossCompartmentKey::StringWrapper);
@@ -3190,7 +3183,7 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JSCompartment> &finder)
              * after wrapped compartment.
              */
             if (!other->isMarked(BLACK) || other->isMarked(GRAY)) {
-                JSCompartment *w = other->compartment();
+                JS::Zone *w = other->zone();
                 if (w->isGCMarking())
                     finder.addEdgeTo(w);
             }
@@ -3203,7 +3196,7 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JSCompartment> &finder)
              * with call to Debugger::findCompartmentEdges below) that debugger
              * and debuggee objects are always swept in the same group.
              */
-            JSCompartment *w = other->compartment();
+            JS::Zone *w = other->zone();
             if (w->isGCMarking())
                 finder.addEdgeTo(w);
         }
@@ -3217,16 +3210,29 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JSCompartment> &finder)
     Debugger::findCompartmentEdges(this, finder);
 }
 
-static void
-FindCompartmentGroups(JSRuntime *rt)
+void
+JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
 {
-    ComponentFinder<JSCompartment> finder(rt->mainThread.nativeStackLimit);
+    /*
+     * Any compartment may have a pointer to an atom in the atoms
+     * compartment, and these aren't in the cross compartment map.
+     */
+    if (rt->atomsCompartment->isGCMarking())
+        finder.addEdgeTo(rt->atomsCompartment);
+
+    findOutgoingEdgesFromCompartment(finder);
+}
+
+static void
+FindZoneGroups(JSRuntime *rt)
+{
+    ComponentFinder<Zone> finder(rt->mainThread.nativeStackLimit);
     if (!rt->gcIsIncremental)
         finder.useOneComponent();
 
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        JS_ASSERT(c->isGCMarking());
-        finder.addNode(c);
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        JS_ASSERT(zone->isGCMarking());
+        finder.addNode(zone);
     }
     rt->gcZoneGroups = finder.getResultsList();
     rt->gcCurrentZoneGroup = rt->gcZoneGroups;
@@ -3237,24 +3243,27 @@ static void
 ResetGrayList(JSCompartment* comp);
 
 static void
-GetNextCompartmentGroup(JSRuntime *rt)
+GetNextZoneGroup(JSRuntime *rt)
 {
     rt->gcCurrentZoneGroup = rt->gcCurrentZoneGroup->nextGroup();
     ++rt->gcZoneGroupIndex;
 
     if (!rt->gcIsIncremental)
-        ComponentFinder<JSCompartment>::mergeCompartmentGroups(rt->gcCurrentZoneGroup);
+        ComponentFinder<Zone>::mergeGroups(rt->gcCurrentZoneGroup);
 
     if (rt->gcAbortSweepAfterCurrentGroup) {
         JS_ASSERT(!rt->gcIsIncremental);
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            JS_ASSERT(!c->gcNextGraphComponent);
-            JS_ASSERT(c->isGCMarking());
-            c->setNeedsBarrier(false, JSCompartment::UpdateIon);
-            c->setGCState(JSCompartment::NoGC);
-            ArrayBufferObject::resetArrayBufferList(c);
-            ResetGrayList(c);
-            c->gcGrayRoots.clearAndFree();
+        for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+            JS_ASSERT(!zone->gcNextGraphComponent);
+            JS_ASSERT(zone->isGCMarking());
+            zone->setNeedsBarrier(false, JSCompartment::UpdateIon);
+            zone->setGCState(JSCompartment::NoGC);
+        }
+
+        for (GCCompartmentGroupIter comp(rt); !comp.done(); comp.next()) {
+            ArrayBufferObject::resetArrayBufferList(comp);
+            ResetGrayList(comp);
+            comp->gcGrayRoots.clearAndFree();
         }
 
         rt->gcAbortSweepAfterCurrentGroup = false;
@@ -3500,7 +3509,7 @@ js::NotifyGCPostSwap(RawObject a, RawObject b, unsigned removedFlags)
 }
 
 static void
-EndMarkingCompartmentGroup(JSRuntime *rt)
+EndMarkingZoneGroup(JSRuntime *rt)
 {
     /*
      * Mark any incoming black pointers from previously swept compartments
@@ -3540,10 +3549,10 @@ EndMarkingCompartmentGroup(JSRuntime *rt)
 }
 
 static void
-BeginSweepingCompartmentGroup(JSRuntime *rt)
+BeginSweepingZoneGroup(JSRuntime *rt)
 {
     /*
-     * Begin sweeping the group of compartments in gcCurrentCompartmentGroup,
+     * Begin sweeping the group of zones in gcCurrentZoneGroup,
      * performing actions that must be done before yielding to caller.
      */
 
@@ -3638,7 +3647,7 @@ BeginSweepingCompartmentGroup(JSRuntime *rt)
 }
 
 static void
-EndSweepingCompartmentGroup(JSRuntime *rt)
+EndSweepingZoneGroup(JSRuntime *rt)
 {
     /* Update the GC state for compartments we have swept and unlink the list. */
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
@@ -3685,9 +3694,9 @@ BeginSweepPhase(JSRuntime *rt)
 #endif
 
     DropStringWrappers(rt);
-    FindCompartmentGroups(rt);
-    EndMarkingCompartmentGroup(rt);
-    BeginSweepingCompartmentGroup(rt);
+    FindZoneGroups(rt);
+    EndMarkingZoneGroup(rt);
+    BeginSweepingZoneGroup(rt);
 }
 
 bool
@@ -3738,12 +3747,12 @@ SweepPhase(JSRuntime *rt, SliceBudget &sliceBudget)
             rt->gcSweepZone = rt->gcCurrentZoneGroup;
         }
 
-        EndSweepingCompartmentGroup(rt);
-        GetNextCompartmentGroup(rt);
+        EndSweepingZoneGroup(rt);
+        GetNextZoneGroup(rt);
         if (!rt->gcCurrentZoneGroup)
             return true;  /* We're finished. */
-        EndMarkingCompartmentGroup(rt);
-        BeginSweepingCompartmentGroup(rt);
+        EndMarkingZoneGroup(rt);
+        BeginSweepingZoneGroup(rt);
     }
 }
 
@@ -3998,7 +4007,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         for (CompartmentsIter c(rt); !c.done(); c.next())
             c->scheduledForDestruction = false;
 
-        /* Finish sweeping the current compartment group, then abort. */
+        /* Finish sweeping the current zone group, then abort. */
         rt->gcAbortSweepAfterCurrentGroup = true;
         IncrementalCollectSlice(rt, SliceBudget::Unlimited, gcreason::RESET, GC_NORMAL);
 
