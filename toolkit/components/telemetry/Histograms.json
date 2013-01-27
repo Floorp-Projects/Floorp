@@ -84,7 +84,7 @@
   },
   "GC_REASON_2": {
     "kind": "enumerated",
-    "n_values": "js::gcreason::NUM_TELEMETRY_REASONS",
+    "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
     "description": "Reason (enum value) for initiating a GC"
   },
   "GC_IS_COMPARTMENTAL": {
