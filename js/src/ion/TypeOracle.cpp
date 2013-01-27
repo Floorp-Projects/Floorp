@@ -542,27 +542,43 @@ TypeInferenceOracle::canInlineCall(HandleScript caller, jsbytecode *pc)
     JS_ASSERT(types::IsInlinableCall(pc));
 
     Bytecode *code = caller->analysis()->maybeCode(pc);
-    if (code->monitoredTypes || code->monitoredTypesReturn || caller->analysis()->typeBarriers(cx, pc))
+    if (code->monitoredTypes)
         return false;
+
+    // Gets removed in Bug 796114
+    if (caller->analysis()->typeBarriers(cx, pc))
+        return false;
+
     return true;
 }
 
 bool
-TypeInferenceOracle::canEnterInlinedFunction(JSFunction *target)
+TypeInferenceOracle::canEnterInlinedFunction(HandleScript caller, jsbytecode *pc, JSFunction *target)
 {
     AssertCanGC();
-    RootedScript script(cx, target->nonLazyScript());
-    if (!script->hasAnalysis() || !script->analysis()->ranInference())
+    RootedScript targetScript(cx, target->nonLazyScript());
+    if (!targetScript->hasAnalysis() || !targetScript->analysis()->ranInference())
         return false;
 
-    if (!script->analysis()->ionInlineable())
+    if (!targetScript->analysis()->ionInlineable())
         return false;
 
-    if (script->analysis()->usesScopeChain())
+    if (targetScript->analysis()->usesScopeChain())
         return false;
 
     if (target->getType(cx)->unknownProperties())
         return false;
+
+    JSOp op = JSOp(*pc);
+    TypeSet *returnTypes = TypeScript::ReturnTypes(targetScript);
+    TypeSet *callReturn = getCallReturn(caller, pc);
+    if (op == JSOP_NEW) {
+        if (!returnTypes->isSubsetIgnorePrimitives(callReturn))
+            return false;
+    } else {
+        if (!returnTypes->isSubset(callReturn))
+            return false;
+    }
 
     // TI calls ObjectStateChange to trigger invalidation of the caller.
     HeapTypeSet::WatchObjectStateChange(cx, target->getType(cx));

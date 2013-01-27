@@ -212,7 +212,8 @@ IonBuilder::canInlineTarget(JSFunction *target)
         builder = builder->callerBuilder_;
     }
 
-    bool canInline = oracle->canEnterInlinedFunction(target);
+    RootedScript callerScript(cx, script());
+    bool canInline = oracle->canEnterInlinedFunction(callerScript, pc, target);
 
     if (!canInline) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to oracle veto %d", script()->lineno);
