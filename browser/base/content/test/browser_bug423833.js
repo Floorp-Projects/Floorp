@@ -32,7 +32,7 @@ function test1Setup() {
   document.popupNode = badFrame.document.firstChild;
 
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  var contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+  var contextMenu = new nsContextMenu(contentAreaContextMenu);
 
   // We'd like to use another load listener here, but error pages don't fire load events
   contextMenu.showOnlyThisFrame();
@@ -69,7 +69,7 @@ function test2Setup() {
   document.popupNode = badFrame.document.firstChild;
 
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  var contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+  var contextMenu = new nsContextMenu(contentAreaContextMenu);
 
   gBrowser.tabContainer.addEventListener("TabOpen", function (event) {
     test2tab = event.target;
@@ -105,7 +105,7 @@ function test3Setup() {
   document.popupNode = badFrame.document.firstChild;
 
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  var contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+  var contextMenu = new nsContextMenu(contentAreaContextMenu);
 
   Services.ww.registerNotification(function (aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened")

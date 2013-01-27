@@ -102,6 +102,6 @@ function test() {
 function initContextMenu(aNode) {
   document.popupNode = aNode;
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  let contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+  let contextMenu = new nsContextMenu(contentAreaContextMenu);
   return contextMenu;
 }
