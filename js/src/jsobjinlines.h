@@ -494,18 +494,18 @@ inline void
 JSObject::copyDenseElements(unsigned dstStart, const js::Value *src, unsigned count)
 {
     JS_ASSERT(dstStart + count <= getDenseCapacity());
-    JSCompartment *comp = compartment();
+    JS::Zone *zone = this->zone();
     for (unsigned i = 0; i < count; ++i)
-        elements[dstStart + i].set(comp, this, js::HeapSlot::Element, dstStart + i, src[i]);
+        elements[dstStart + i].set(zone, this, js::HeapSlot::Element, dstStart + i, src[i]);
 }
 
 inline void
 JSObject::initDenseElements(unsigned dstStart, const js::Value *src, unsigned count)
 {
     JS_ASSERT(dstStart + count <= getDenseCapacity());
-    JSCompartment *comp = compartment();
+    JS::Zone *zone = this->zone();
     for (unsigned i = 0; i < count; ++i)
-        elements[dstStart + i].init(comp, this, js::HeapSlot::Element, dstStart + i, src[i]);
+        elements[dstStart + i].init(zone, this, js::HeapSlot::Element, dstStart + i, src[i]);
 }
 
 inline void
@@ -526,29 +526,29 @@ JSObject::moveDenseElements(unsigned dstStart, unsigned srcStart, unsigned count
      * write barrier is invoked here on B, despite the fact that it exists in
      * the array before and after the move.
     */
-    JSCompartment *comp = compartment();
-    if (comp->needsBarrier()) {
+    JS::Zone *zone = this->zone();
+    if (zone->needsBarrier()) {
         if (dstStart < srcStart) {
             js::HeapSlot *dst = elements + dstStart;
             js::HeapSlot *src = elements + srcStart;
             for (unsigned i = 0; i < count; i++, dst++, src++)
-                dst->set(comp, this, js::HeapSlot::Element, dst - elements, *src);
+                dst->set(zone, this, js::HeapSlot::Element, dst - elements, *src);
         } else {
             js::HeapSlot *dst = elements + dstStart + count - 1;
             js::HeapSlot *src = elements + srcStart + count - 1;
             for (unsigned i = 0; i < count; i++, dst--, src--)
-                dst->set(comp, this, js::HeapSlot::Element, dst - elements, *src);
+                dst->set(zone, this, js::HeapSlot::Element, dst - elements, *src);
         }
     } else {
         memmove(elements + dstStart, elements + srcStart, count * sizeof(js::HeapSlot));
-        DenseRangeWriteBarrierPost(comp, this, dstStart, count);
+        DenseRangeWriteBarrierPost(zone, this, dstStart, count);
     }
 }
 
 inline void
 JSObject::moveDenseElementsUnbarriered(unsigned dstStart, unsigned srcStart, unsigned count)
 {
-    JS_ASSERT(!compartment()->needsBarrier());
+    JS_ASSERT(!zone()->needsBarrier());
 
     JS_ASSERT(dstStart + count <= getDenseCapacity());
     JS_ASSERT(srcStart + count <= getDenseCapacity());
@@ -577,12 +577,12 @@ JSObject::ensureDenseInitializedLength(JSContext *cx, uint32_t index, uint32_t e
         markDenseElementsNotPacked(cx);
 
     if (initlen < index + extra) {
-        JSCompartment *comp = compartment();
+        JS::Zone *zone = this->zone();
         size_t offset = initlen;
         for (js::HeapSlot *sp = elements + initlen;
              sp != elements + (index + extra);
              sp++, offset++)
-            sp->init(comp, this, js::HeapSlot::Element, offset, js::MagicValue(JS_ELEMENTS_HOLE));
+            sp->init(zone, this, js::HeapSlot::Element, offset, js::MagicValue(JS_ELEMENTS_HOLE));
         initlen = index + extra;
     }
 }
@@ -648,12 +648,12 @@ JSObject::parExtendDenseElements(js::Allocator *alloc, js::Value *v, uint32_t ex
     js::HeapSlot *sp = elements + initializedLength;
     if (v) {
         for (uint32_t i = 0; i < extra; i++)
-            sp[i].init(compartment(), this, js::HeapSlot::Element,
-                       initializedLength+i, v[i]);
+            sp[i].init(zone(), this, js::HeapSlot::Element, initializedLength+i, v[i]);
     } else {
-        for (uint32_t i = 0; i < extra; i++)
-            sp[i].init(compartment(), this, js::HeapSlot::Element,
-                       initializedLength+i, js::MagicValue(JS_ELEMENTS_HOLE));
+        for (uint32_t i = 0; i < extra; i++) {
+            sp[i].init(zone(), this, js::HeapSlot::Element,
+                       initializedLength + i, js::MagicValue(JS_ELEMENTS_HOLE));
+        }
     }
     header->initializedLength = requiredCapacity;
     if (header->length < requiredCapacity)
