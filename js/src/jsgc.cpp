@@ -268,13 +268,13 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      * list in the compartment can mutate at any moment. We cannot do any
      * checks in this case.
      */
-    if (IsBackgroundFinalized(getAllocKind()) && !compartment->rt->isHeapBusy())
+    if (IsBackgroundFinalized(getAllocKind()) && !zone->rt->isHeapBusy())
         return;
 
     FreeSpan firstSpan = FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
     if (firstSpan.isEmpty())
         return;
-    const FreeSpan *list = compartment->allocator.arenas.getFreeList(getAllocKind());
+    const FreeSpan *list = zone->allocator.arenas.getFreeList(getAllocKind());
     if (list->isEmpty() || firstSpan.arenaAddress() != list->arenaAddress())
         return;
 
@@ -812,7 +812,7 @@ Chunk::releaseArena(ArenaHeader *aheader)
 {
     JS_ASSERT(aheader->allocated());
     JS_ASSERT(!aheader->hasDelayedMarking);
-    JSCompartment *comp = aheader->compartment;
+    JSCompartment *comp = aheader->zone;
     JSRuntime *rt = comp->rt;
     AutoLockGC maybeLock;
     if (rt->gcHelperThread.sweeping())
@@ -1369,7 +1369,7 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgr
 {
     JS_ASSERT(listHead);
     AllocKind thingKind = listHead->getAllocKind();
-    JSCompartment *comp = listHead->compartment;
+    JSCompartment *comp = listHead->zone;
 
     ArenaList finalized;
     SliceBudget budget;
@@ -3072,7 +3072,7 @@ js::gc::MarkingValidator::validate()
             Arena *arena = &chunk->arenas[i];
             if (!arena->aheader.allocated())
                 continue;
-            if (!arena->aheader.compartment->isGCSweeping())
+            if (!arena->aheader.zone->isGCSweeping())
                 continue;
             if (arena->aheader.allocatedDuringIncremental)
                 continue;
