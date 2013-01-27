@@ -4,6 +4,8 @@
 
 "use strict";
 
+#ifndef MERGED_COMPARTMENT
+
 this.EXPORTED_SYMBOLS = [
   "DailyValues",
   "MetricsStorageBackend",
@@ -13,14 +15,16 @@ this.EXPORTED_SYMBOLS = [
 
 const {utils: Cu} = Components;
 
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+#endif
+
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/utils.js");
 
-
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 // These do not account for leap seconds. Meh.
 function dateToDays(date) {

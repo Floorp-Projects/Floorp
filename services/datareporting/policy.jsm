@@ -15,12 +15,16 @@
 
 "use strict";
 
+#ifndef MERGED_COMPARTMENT
+
 this.EXPORTED_SYMBOLS = [
   "DataSubmissionRequest", // For test use only.
   "DataReportingPolicy",
 ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+#endif
 
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource://services-common/log4moz.js");

@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/services-common/utils.js");
-Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
+Cu.import("resource://gre/modules/HealthReport.jsm");
 
 
 let APP_INFO = {
