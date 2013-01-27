@@ -161,12 +161,12 @@ js::ObjectImpl::initializeSlotRange(uint32_t start, uint32_t length)
     HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
     getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
 
-    JSCompartment *comp = compartment();
+    Zone *zone = this->zone();
     uint32_t offset = start;
     for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
-        sp->init(comp, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
+        sp->init(zone, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
     for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
-        sp->init(comp, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
+        sp->init(zone, this->asObjectPtr(), HeapSlot::Slot, offset++, UndefinedValue());
 }
 
 inline bool
@@ -198,6 +198,13 @@ ValueCompartment(const js::Value &value)
     return static_cast<js::gc::Cell *>(value.toGCThing())->compartment();
 }
 
+static JS_ALWAYS_INLINE JS::Zone *
+ValueZone(const js::Value &value)
+{
+    JS_ASSERT(value.isMarkable());
+    return static_cast<js::gc::Cell *>(value.toGCThing())->zone();
+}
+
 #ifdef DEBUG
 inline bool
 IsValueInCompartment(js::Value v, JSCompartment *comp)
@@ -223,7 +230,7 @@ js::ObjectImpl::setCrossCompartmentSlot(uint32_t slot, const js::Value &value)
     MOZ_ASSERT(slotInRange(slot));
     if (value.isMarkable())
         getSlotRef(slot).setCrossCompartment(this->asObjectPtr(), HeapSlot::Slot, slot, value,
-                                             ValueCompartment(value));
+                                             ValueZone(value));
     else
         setSlot(slot, value);
 }
@@ -243,7 +250,7 @@ js::ObjectImpl::initCrossCompartmentSlot(uint32_t slot, const js::Value &value)
     MOZ_ASSERT(getSlot(slot).isUndefined());
     MOZ_ASSERT(slotInRange(slot));
     if (value.isMarkable())
-        getSlotRef(slot).init(ValueCompartment(value), this->asObjectPtr(), HeapSlot::Slot, slot, value);
+        getSlotRef(slot).init(ValueZone(value), this->asObjectPtr(), HeapSlot::Slot, slot, value);
     else
         initSlot(slot, value);
 }
@@ -336,11 +343,11 @@ js::ObjectImpl::sizeOfThis() const
 js::ObjectImpl::readBarrier(ObjectImpl *obj)
 {
 #ifdef JSGC_INCREMENTAL
-    JSCompartment *comp = obj->compartment();
-    if (comp->needsBarrier()) {
-        MOZ_ASSERT(!comp->rt->isHeapBusy());
+    Zone *zone = obj->zone();
+    if (zone->needsBarrier()) {
+        MOZ_ASSERT(!zone->rt->isHeapBusy());
         JSObject *tmp = obj->asObjectPtr();
-        MarkObjectUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
+        MarkObjectUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
         MOZ_ASSERT(tmp == obj->asObjectPtr());
     }
 #endif
@@ -350,10 +357,10 @@ inline void
 js::ObjectImpl::privateWriteBarrierPre(void **old)
 {
 #ifdef JSGC_INCREMENTAL
-    JSCompartment *comp = compartment();
-    if (comp->needsBarrier()) {
+    Zone *zone = this->zone();
+    if (zone->needsBarrier()) {
         if (*old && getClass()->trace)
-            getClass()->trace(comp->barrierTracer(), this->asObjectPtr());
+            getClass()->trace(zone->barrierTracer(), this->asObjectPtr());
     }
 #endif
 }
@@ -362,7 +369,7 @@ inline void
 js::ObjectImpl::privateWriteBarrierPost(void **pprivate)
 {
 #ifdef JSGC_GENERATIONAL
-    compartment()->gcStoreBuffer.putCell(reinterpret_cast<js::gc::Cell **>(pprivate));
+    zone()->gcStoreBuffer.putCell(reinterpret_cast<js::gc::Cell **>(pprivate));
 #endif
 }
 
@@ -377,11 +384,11 @@ js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
     if (uintptr_t(obj) < 32)
         return;
 
-    JSCompartment *comp = obj->compartment();
-    if (comp->needsBarrier()) {
-        MOZ_ASSERT(!comp->rt->isHeapBusy());
+    Zone *zone = obj->zone();
+    if (zone->needsBarrier()) {
+        MOZ_ASSERT(!zone->rt->isHeapBusy());
         JSObject *tmp = obj->asObjectPtr();
-        MarkObjectUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        MarkObjectUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         MOZ_ASSERT(tmp == obj->asObjectPtr());
     }
 #endif
@@ -393,7 +400,7 @@ js::ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *addr)
 #ifdef JSGC_GENERATIONAL
     if (uintptr_t(obj) < 32)
         return;
-    obj->compartment()->gcStoreBuffer.putCell((Cell **)addr);
+    obj->zone()->gcStoreBuffer.putCell((Cell **)addr);
 #endif
 }
 

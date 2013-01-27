@@ -7231,10 +7231,10 @@ JSXML::writeBarrierPre(JSXML *xml)
     if (!xml)
         return;
 
-    JSCompartment *comp = xml->compartment();
-    if (comp->needsBarrier()) {
+    JS::Zone *zone = xml->zone();
+    if (zone->needsBarrier()) {
         JSXML *tmp = xml;
-        MarkXMLUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        MarkXMLUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == xml);
     }
 #endif
