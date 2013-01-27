@@ -64,7 +64,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerBytes(0),
     gcHeapGrowthFactor(3.0),
     hold(false),
-    isSystemCompartment(false),
+    isSystem(false),
     lastCodeRelease(0),
     analysisLifoAlloc(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     typeLifoAlloc(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
