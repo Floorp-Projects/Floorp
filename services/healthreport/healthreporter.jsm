@@ -38,7 +38,8 @@ const DEFAULT_DATABASE_NAME = "healthreport.sqlite";
  * lower-level components (such as collection and submission) together.
  *
  * An instance of this type is created as an XPCOM service. See
- * HealthReportService.js and HealthReportComponents.manifest.
+ * DataReportingService.js and
+ * DataReporting.manifest/HealthReportComponents.manifest.
  *
  * It is theoretically possible to have multiple instances of this running
  * in the application. For example, this type may one day handle submission
@@ -306,6 +307,9 @@ HealthReporter.prototype = Object.freeze({
     this._log.info("HealthReporter started.");
     this._initialized = true;
     Services.obs.addObserver(this, "idle-daily", false);
+
+    // Clean up caches and reduce memory usage.
+    this._storage.compact();
     this._initializedDeferred.resolve(this);
   },
 
@@ -483,7 +487,7 @@ HealthReporter.prototype = Object.freeze({
    * Register a `Metrics.Provider` with this instance.
    *
    * This needs to be called or no data will be collected. See also
-   * registerProvidersFromCategoryManager`.
+   * `registerProvidersFromCategoryManager`.
    *
    * @param provider
    *        (Metrics.Provider) The provider to register for collection.
@@ -626,10 +630,12 @@ HealthReporter.prototype = Object.freeze({
       };
 
       for (let [measurementKey, measurement] of provider.measurements) {
-        let name = providerName + "." + measurement.name + "." + measurement.version;
+        let name = providerName + "." + measurement.name;
 
         let serializer;
         try {
+          // The measurement is responsible for returning a serializer which
+          // is aware of the measurement version.
           serializer = measurement.serializer(measurement.SERIALIZE_JSON);
         } catch (ex) {
           this._log.warn("Error obtaining serializer for measurement: " + name +
@@ -692,6 +698,7 @@ HealthReporter.prototype = Object.freeze({
       o.errors = errors;
     }
 
+    this._storage.compact();
     throw new Task.Result(JSON.stringify(o));
   },
 
