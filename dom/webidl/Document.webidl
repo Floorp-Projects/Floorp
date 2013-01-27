@@ -390,10 +390,6 @@ partial interface Document {
   NodeList? getAnonymousNodes(Element elt);
   Element? getAnonymousElementByAttribute(Element elt, DOMString attrName,
                                           DOMString attrValue);
-  [Throws]
-  void addBinding(Element elt, DOMString bindingURL);
-  [Throws]
-  void removeBinding(Element elt, DOMString bindingURL);
   Element? getBindingParent(Node node);
   [Throws]
   void loadBindingDocument(DOMString documentURL);

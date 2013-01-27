@@ -52,12 +52,11 @@ function runRangeTest() {
   newSubTree.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "div"));
 
   d = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
-  document.loadBindingDocument(window.location);
-  document.addBinding(d, window.location + "#rangebinding");
+  d.style.MozBinding = "url('" + window.location + "#rangebinding" + "')";
+  document.body.appendChild(d);
 }
 
 function finish() {
-  document.removeBinding(d, window.location + "#rangebinding");
   SimpleTest.finish();
 }
 

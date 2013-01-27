@@ -1711,6 +1711,13 @@ cert_pkixSetParam(PKIX_ProcessingParams *procParams,
         }
         break;
 
+        case cert_pi_useOnlyTrustAnchors:
+            error =
+                PKIX_ProcessingParams_SetUseOnlyTrustAnchors(procParams,
+                                      (PRBool)(param->value.scalar.b != 0),
+                                                             plContext);
+            break;
+
         default:
             PORT_SetError(errCode);
             r = SECFailure;

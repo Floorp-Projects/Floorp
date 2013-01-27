@@ -165,6 +165,9 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
+  if (MissingRequiredTabChild(tabChild, "ftp")) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   // FIXME: like bug 558623, merge constructor+SendAsyncOpen into 1 IPC msg
   gNeckoChild->SendPFTPChannelConstructor(this, tabChild, IPC::SerializedLoadContext(this));

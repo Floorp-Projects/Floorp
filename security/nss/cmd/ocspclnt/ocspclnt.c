@@ -5,7 +5,7 @@
 /*
  * Test program for client-side OCSP.
  *
- * $Id: ocspclnt.c,v 1.13 2012/03/20 14:47:10 gerv%gerv.net Exp $
+ * $Id: ocspclnt.c,v 1.14 2013/01/23 23:05:50 kaie%kuix.de Exp $
  */
 
 #include "secutil.h"
@@ -828,8 +828,7 @@ static char *responseStatusNames[] = {
     "tryLater (Try again later)",
     "unused ((4) is not used)",
     "sigRequired (Must sign the request)",
-    "unauthorized (Request unauthorized)",
-    "other (Status value out of defined range)"
+    "unauthorized (Request unauthorized)"
 };
 
 /*
@@ -853,9 +852,15 @@ print_response (FILE *out_file, SECItem *data, CERTCertDBHandle *handle)
     if (response == NULL)
 	return SECFailure;
 
-    PORT_Assert (response->statusValue <= ocspResponse_other);
-    fprintf (out_file, "Response Status: %s\n",
-	     responseStatusNames[response->statusValue]);
+    if (response->statusValue >= ocspResponse_min &&
+	response->statusValue <= ocspResponse_max) {
+	fprintf (out_file, "Response Status: %s\n",
+		 responseStatusNames[response->statusValue]);
+    } else {
+	fprintf (out_file,
+		 "Response Status: other (Status value %d out of defined range)\n",
+		 (int)response->statusValue);
+    }
 
     if (response->statusValue == ocspResponse_successful) {
 	ocspResponseBytes *responseBytes = response->responseBytes;

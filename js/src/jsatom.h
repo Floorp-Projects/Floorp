@@ -226,25 +226,32 @@ extern UnrootedAtom
 Atomize(JSContext *cx, const char *bytes, size_t length,
         js::InternBehavior ib = js::DoNotInternAtom);
 
+template <AllowGC allowGC>
 extern UnrootedAtom
 AtomizeChars(JSContext *cx, const jschar *chars, size_t length,
              js::InternBehavior ib = js::DoNotInternAtom);
 
+template <AllowGC allowGC>
 extern UnrootedAtom
 AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
+template <AllowGC allowGC>
 inline JSAtom *
 ToAtom(JSContext *cx, const js::Value &v);
 
+template <AllowGC allowGC>
 bool
 InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
-                      MutableHandleId idp, MutableHandleValue vp);
+                      typename MaybeRooted<jsid, allowGC>::MutableHandleType idp,
+                      typename MaybeRooted<Value, allowGC>::MutableHandleType vp);
 
+template <AllowGC allowGC>
 inline bool
-InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval, MutableHandleId idp)
+InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
+                      typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
 {
-    RootedValue dummy(cx);
-    return InternNonIntElementId(cx, obj, idval, idp, &dummy);
+    typename MaybeRooted<Value, allowGC>::RootType dummy(cx);
+    return InternNonIntElementId<allowGC>(cx, obj, idval, idp, &dummy);
 }
 
 template<XDRMode mode>

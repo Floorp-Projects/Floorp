@@ -52,12 +52,47 @@ LocalUTCDifferenceSeconds()
     _tzset();
 #endif
 
-    time_t t = time(NULL);
-    struct tm local, utc;
-
-    if (!ComputeLocalTime(t, &local) || !ComputeUTCTime(t, &utc))
+    // Get the current time.
+    time_t currentMaybeWithDST = time(NULL);
+    if (currentMaybeWithDST == time_t(-1))
         return 0;
 
+    // Break down the current time into its (locally-valued, maybe with DST)
+    // components.
+    struct tm local;
+    if (!ComputeLocalTime(currentMaybeWithDST, &local))
+        return 0;
+
+    // Compute a |time_t| corresponding to |local| interpreted without DST.
+    time_t currentNoDST;
+    if (local.tm_isdst == 0) {
+        // If |local| wasn't DST, we can use the same time.
+        currentNoDST = currentMaybeWithDST;
+    } else {
+        // If |local| respected DST, we need a time broken down into components
+        // ignoring DST.  Turn off DST in the broken-down time.
+        local.tm_isdst = 0;
+
+        // Compute a |time_t t| corresponding to the broken-down time with DST
+        // off.  This has boundary-condition issues (for about the duration of
+        // a DST offset) near the time a location moves to a different time
+        // zone.  But 1) errors will be transient; 2) locations rarely change
+        // time zone; and 3) in the absence of an API that provides the time
+        // zone offset directly, this may be the best we can do.
+        currentNoDST = mktime(&local);
+        if (currentNoDST == time_t(-1))
+            return 0;
+    }
+
+    // Break down the time corresponding to the no-DST |local| into UTC-based
+    // components.
+    struct tm utc;
+    if (!ComputeUTCTime(currentNoDST, &utc))
+        return 0;
+
+    // Finally, compare the seconds-based components of the local non-DST
+    // representation and the UTC representation to determine the actual
+    // difference.
     int utc_secs = utc.tm_hour * SecondsPerHour + utc.tm_min * SecondsPerMinute;
     int local_secs = local.tm_hour * SecondsPerHour + local.tm_min * SecondsPerMinute;
 

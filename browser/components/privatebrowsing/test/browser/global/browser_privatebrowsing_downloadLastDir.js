@@ -19,7 +19,7 @@ function test() {
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 
-  MockFilePicker.init();
+  MockFilePicker.init(window);
    MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
 
   Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);

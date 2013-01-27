@@ -11,6 +11,7 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_CHROME_FILES = \
+	head.js \
 	test_treeview_date.xul \
 	test_bug485100-change-case-loses-tag.xul \
 	test_bug427633_no_newfolder_if_noip.xul \

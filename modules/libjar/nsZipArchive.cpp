@@ -558,8 +558,11 @@ MOZ_WIN_MEM_TRY_BEGIN
 
     // Sanity check variable sizes and refuse to deal with
     // anything too big: it's likely a corrupt archive.
-    if (namelen > kMaxNameLength || buf >= endp)
+    if (namelen < 1 ||
+        namelen > kMaxNameLength ||
+        buf >= endp) {
       return NS_ERROR_FILE_CORRUPTED;
+    }
 
     nsZipItem* item = CreateZipItem();
     if (!item)
@@ -610,7 +613,7 @@ MOZ_WIN_MEM_TRY_BEGIN
   // Do this when all ziptable has scanned to prevent double entries.
   for (int i = 0; i < ZIP_TABSIZE; ++i)
   {
-    for (nsZipItem* item = mFiles[i]; item != 0; item = item->next)
+    for (nsZipItem* item = mFiles[i]; item != nullptr; item = item->next)
     {
       if (item->isSynthetic)
         continue;
@@ -622,10 +625,16 @@ MOZ_WIN_MEM_TRY_BEGIN
       //-- start just before the last char so as to not add the item
       //-- twice if it's a directory
       uint16_t namelen = item->nameLength;
+      MOZ_ASSERT(namelen > 0, "Attempt to build synthetic for zero-length entry name!");
       const char *name = item->Name();
       for (uint16_t dirlen = namelen - 1; dirlen > 0; dirlen--)
       {
         if (name[dirlen-1] != '/')
+          continue;
+
+        // The character before this is '/', so if this is also '/' then we
+        // have an empty path component. Skip it.
+        if (name[dirlen] == '/')
           continue;
 
         // Is the directory already in the file table?

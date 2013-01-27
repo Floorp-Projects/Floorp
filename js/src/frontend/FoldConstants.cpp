@@ -87,10 +87,10 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
 
           case PNK_STRING:
             if (pn->isKind(PNK_NUMBER)) {
-                JSString *str = js_NumberToString(cx, pn->pn_dval);
+                JSString *str = js_NumberToString<CanGC>(cx, pn->pn_dval);
                 if (!str)
                     return false;
-                pn->pn_atom = AtomizeString(cx, str);
+                pn->pn_atom = AtomizeString<CanGC>(cx, str);
                 if (!pn->pn_atom)
                     return false;
                 pn->setKind(PNK_STRING);
@@ -226,7 +226,7 @@ FoldXMLConstants(JSContext *cx, ParseNode **pnp, Parser *parser)
      * the newborn string root. However, when |pn2->getKind()| is PNK_XMLCDATA,
      * PNK_XMLCOMMENT, or PNK_XMLPI it is knocked out of the newborn root.
      * Therefore, we have to add additonal protection from GC nesting under
-     * js_ConcatStrings.
+     * ConcatString.
      */
     ParseNode *pn2;
     uint32_t i, j;
@@ -288,7 +288,7 @@ FoldXMLConstants(JSContext *cx, ParseNode **pnp, Parser *parser)
                 pn1->setKind(PNK_XMLTEXT);
                 pn1->setOp(JSOP_STRING);
                 pn1->setArity(PN_NULLARY);
-                pn1->pn_atom = AtomizeString(cx, accum);
+                pn1->pn_atom = AtomizeString<CanGC>(cx, accum);
                 if (!pn1->pn_atom)
                     return false;
                 JS_ASSERT(listp != &pn1->pn_next);
@@ -304,7 +304,7 @@ FoldXMLConstants(JSContext *cx, ParseNode **pnp, Parser *parser)
             {
                 str = ((kind == PNK_XMLSTAGO || kind == PNK_XMLPTAGC) && i != 0)
                       ? js_AddAttributePart(cx, i & 1, accum, str)
-                      : js_ConcatStrings(cx, accum, str);
+                      : ConcatStrings<CanGC>(cx, accum, str);
             }
             if (!str)
                 return false;
@@ -327,7 +327,7 @@ FoldXMLConstants(JSContext *cx, ParseNode **pnp, Parser *parser)
                 str = cx->names().tagc;
         }
         if (str) {
-            accum = js_ConcatStrings(cx, accum, str);
+            accum = ConcatStrings<CanGC>(cx, accum, str);
             if (!accum)
                 return false;
         }
@@ -340,7 +340,7 @@ FoldXMLConstants(JSContext *cx, ParseNode **pnp, Parser *parser)
         pn1->setKind(PNK_XMLTEXT);
         pn1->setOp(JSOP_STRING);
         pn1->setArity(PN_NULLARY);
-        pn1->pn_atom = AtomizeString(cx, accum);
+        pn1->pn_atom = AtomizeString<CanGC>(cx, accum);
         if (!pn1->pn_atom)
             return false;
         JS_ASSERT(listp != &pn1->pn_next);
@@ -710,7 +710,7 @@ frontend::FoldConstants(JSContext *cx, ParseNode **pnp, Parser *parser, bool inG
             if (!chars)
                 return false;
             chars[length] = 0;
-            JSString *str = js_NewString(cx, chars, length);
+            JSString *str = js_NewString<CanGC>(cx, chars, length);
             if (!str) {
                 js_free(chars);
                 return false;
@@ -726,7 +726,7 @@ frontend::FoldConstants(JSContext *cx, ParseNode **pnp, Parser *parser, bool inG
             JS_ASSERT(*chars == 0);
 
             /* Atomize the result string and mutate pn to refer to it. */
-            pn->pn_atom = AtomizeString(cx, str);
+            pn->pn_atom = AtomizeString<CanGC>(cx, str);
             if (!pn->pn_atom)
                 return false;
             pn->setKind(PNK_STRING);
@@ -744,10 +744,10 @@ frontend::FoldConstants(JSContext *cx, ParseNode **pnp, Parser *parser, bool inG
                 return true;
             RootedString left(cx, pn1->pn_atom);
             RootedString right(cx, pn2->pn_atom);
-            RootedString str(cx, js_ConcatStrings(cx, left, right));
+            RootedString str(cx, ConcatStrings<CanGC>(cx, left, right));
             if (!str)
                 return false;
-            pn->pn_atom = AtomizeString(cx, str);
+            pn->pn_atom = AtomizeString<CanGC>(cx, str);
             if (!pn->pn_atom)
                 return false;
             pn->setKind(PNK_STRING);

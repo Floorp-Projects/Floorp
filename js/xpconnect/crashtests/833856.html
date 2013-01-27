@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+function go() {
+  window.location = "javascript: foopy();";
+  setTimeout(function(){document.documentElement.removeAttribute("class");}, 0);
+}
+
+</script>
+</head>
+<body onload="go()">
+</body>
+</html>

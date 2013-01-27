@@ -44,28 +44,27 @@ function test() {
   registerCleanupFunction(cleanUp);
 
   // add test history visit
-  PlacesUtils.history.addVisit(TEST_URI_1, Date.now() * 1000, null,
-    Ci.nsINavHistoryService.TRANSITION_LINK, false, 0);
-
-  // set permissions ourselves to avoid problems with different defaults
-  // from test harness configuration
-  for (let type in TEST_PERMS) {
-    if (type == "password") {
-      Services.logins.setLoginSavingEnabled(TEST_URI_2.prePath, true);
-    } else {
-      // set permissions on a site without history visits to test enumerateServices
-      Services.perms.addFromPrincipal(TEST_PRINCIPAL_2, type, TEST_PERMS[type]);
+  addVisits(TEST_URI_1, function() {
+    // set permissions ourselves to avoid problems with different defaults
+    // from test harness configuration
+    for (let type in TEST_PERMS) {
+      if (type == "password") {
+        Services.logins.setLoginSavingEnabled(TEST_URI_2.prePath, true);
+      } else {
+        // set permissions on a site without history visits to test enumerateServices
+        Services.perms.addFromPrincipal(TEST_PRINCIPAL_2, type, TEST_PERMS[type]);
+      }
     }
-  }
+
+    // open about:permissions
+    gBrowser.selectedTab = gBrowser.addTab("about:permissions");
+  });
 
   function observer() {
     Services.obs.removeObserver(observer, "browser-permissions-initialized", false);
     runNextTest();
   }
   Services.obs.addObserver(observer, "browser-permissions-initialized", false);
-
-  // open about:permissions
-  gBrowser.selectedTab = gBrowser.addTab("about:permissions");
 }
 
 function cleanUp() {

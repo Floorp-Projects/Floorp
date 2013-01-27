@@ -517,13 +517,12 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
     if (channels > 8)
       return NS_ERROR_FAILURE;
 
-#ifdef MOZ_SAMPLE_TYPE_FLOAT32
     uint32_t out_channels;
     out_channels = 2;
-
     // dBuffer stores the downmixed sample data.
     nsAutoArrayPtr<AudioDataValue> dBuffer(new AudioDataValue[frames * out_channels]);
-    // Downmix matrix for channels up to 8, normalized to 2.0.
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+    // Downmix matrix. Per-row normalization 1 for rows 3,4 and 2 for rows 5-8.
     static const float dmatrix[6][8][2]= {
         /*3*/{ {0.5858f,0}, {0.4142f,0.4142f}, {0,0.5858f}},
         /*4*/{ {0.4226f,0}, {0,0.4226f}, {0.366f,0.2114f}, {0.2114f,0.366f}},
@@ -542,11 +541,32 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
       dBuffer[i*out_channels]=sampL;
       dBuffer[i*out_channels+1]=sampR;
     }
+#else
+    // Downmix matrix. Per-row normalization 1 for rows 3,4 and 2 for rows 5-8.
+    // Coefficients in Q14.
+    static const int16_t dmatrix[6][8][2]= {
+        /*3*/{{9598, 0},{6786,6786},{0,   9598}},
+        /*4*/{{6925, 0},{0,   6925},{5997,3462},{3462,5997}},
+        /*5*/{{10663,0},{7540,7540},{0,  10663},{9234,5331},{5331,9234}},
+        /*6*/{{8668, 0},{6129,6129},{0,   8668},{7507,4335},{4335,7507},{6129,6129}},
+        /*7*/{{7459, 0},{5275,5275},{0,   7459},{6460,3731},{3731,6460},{4568,4568},{5275,5275}},
+        /*8*/{{6368, 0},{4502,4502},{0,   6368},{5514,3184},{3184,5514},{5514,3184},{3184,5514},{4502,4502}}
+    };
+    for (int32_t i = 0; i < frames; i++) {
+      int32_t sampL = 0;
+      int32_t sampR = 0;
+      for (uint32_t j = 0; j < channels; j++) {
+        sampL+=buffer[i*channels+j]*dmatrix[channels-3][j][0];
+        sampR+=buffer[i*channels+j]*dmatrix[channels-3][j][1];
+      }
+      sampL = (sampL + 8192)>>14;
+      dBuffer[i*out_channels]   = static_cast<AudioDataValue>(MOZ_CLIP_TO_15(sampL));
+      sampR = (sampR + 8192)>>14;
+      dBuffer[i*out_channels+1] = static_cast<AudioDataValue>(MOZ_CLIP_TO_15(sampR));
+    }
+#endif
     channels = out_channels;
     buffer = dBuffer;
-#else
-  return NS_ERROR_FAILURE;
-#endif
   }
 
   LOG(PR_LOG_DEBUG, ("Opus decoder pushing %d frames", frames));
@@ -712,6 +732,7 @@ bool OggReader::ReadOggChain()
                                channels,
                                rate,
                                HasAudio(),
+                               HasVideo(),
                                tags);
     }
     return true;

@@ -436,9 +436,6 @@ function start() {
     indexOfEmptyFilename = testsExpectedToFail.indexOf("");
   }
 
-  if (kIsWindows && !kIsWindowsVistaOrHigher)
-    testsExpectedToFail.push('conformance/textures/texture-mips.html');
-
   var testsToIgnore = [];
 
   var testsToSkip = [];
