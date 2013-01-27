@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "secoid.h"
-#include "secoidt.h"
 #include "pkcs11t.h"
 #include "secitem.h"
 #include "secerr.h"

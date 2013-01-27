@@ -346,13 +346,11 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (NS_FAILED(rv)) {
-        rv = NS_ERROR_MALFORMED_URI;
-    }
-    else if (v.isUndefined()) {
-        rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
-    }
-    else {
+    if (NS_FAILED(rv) || !(v.isString() || v.isUndefined())) {
+        return NS_ERROR_MALFORMED_URI;
+    } else if (v.isUndefined()) {
+        return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    } else {
         nsDependentJSString result;
         if (!result.init(cx, v)) {
             return NS_ERROR_OUT_OF_MEMORY;

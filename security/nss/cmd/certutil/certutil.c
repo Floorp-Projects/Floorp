@@ -477,8 +477,7 @@ listCerts(CERTCertDBHandle *handle, char *name, char *email, PK11SlotInfo *slot,
 		}
 		rv = SECSuccess;
 	    } else {
-		rv = SEC_PrintCertificateAndTrust(the_cert, "Certificate",
-                                                  the_cert->trust);
+		rv = SEC_PrintCertificateAndTrust(the_cert, "Certificate", NULL);
 		if (rv != SECSuccess) {
 		    SECU_PrintError(progName, "problem printing certificate");
 		}
@@ -516,8 +515,7 @@ listCerts(CERTCertDBHandle *handle, char *name, char *email, PK11SlotInfo *slot,
 		    rv = SECFailure;
 		}
 	    } else {
-		rv = SEC_PrintCertificateAndTrust(the_cert, "Certificate",
-                                                  the_cert->trust);
+		rv = SEC_PrintCertificateAndTrust(the_cert, "Certificate", NULL);
 		if (rv != SECSuccess) {
 		    SECU_PrintError(progName, "problem printing certificate");
 		}

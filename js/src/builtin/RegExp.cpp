@@ -70,7 +70,7 @@ js::CreateRegExpMatchResult(JSContext *cx, JSString *input_, StableCharPtr chars
         return false;
 
     if (!input) {
-        input = js_NewStringCopyN(cx, chars.get(), length);
+        input = js_NewStringCopyN<CanGC>(cx, chars.get(), length);
         if (!input)
             return false;
     }
@@ -281,18 +281,18 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         source = cx->runtime->emptyString;
     } else {
         /* Coerce to string and compile. */
-        JSString *str = ToString(cx, sourceValue);
+        JSString *str = ToString<CanGC>(cx, sourceValue);
         if (!str)
             return false;
 
-        source = AtomizeString(cx, str);
+        source = AtomizeString<CanGC>(cx, str);
         if (!source)
             return false;
     }
 
     RegExpFlag flags = RegExpFlag(0);
     if (args.hasDefined(1)) {
-        JSString *flagStr = ToString(cx, args[1]);
+        JSString *flagStr = ToString<CanGC>(cx, args[1]);
         if (!flagStr)
             return false;
         args[1].setString(flagStr);
@@ -604,7 +604,7 @@ ExecuteRegExp(JSContext *cx, CallArgs args, MatchConduit &matches)
     RootedObject regexp(cx, &args.thisv().toObject());
 
     /* Step 2. */
-    RootedString string(cx, ToString(cx, (args.length() > 0) ? args[0] : UndefinedValue()));
+    RootedString string(cx, ToString<CanGC>(cx, (args.length() > 0) ? args[0] : UndefinedValue()));
     if (!string)
         return RegExpRunStatus_Error;
 
@@ -624,7 +624,7 @@ regexp_exec_impl(JSContext *cx, CallArgs args)
      * and CreateRegExpMatchResult().
      */
     RootedObject regexp(cx, &args.thisv().toObject());
-    RootedString string(cx, ToString(cx, (args.length() > 0) ? args[0] : UndefinedValue()));
+    RootedString string(cx, ToString<CanGC>(cx, (args.length() > 0) ? args[0] : UndefinedValue()));
     if (!string)
         return false;
 

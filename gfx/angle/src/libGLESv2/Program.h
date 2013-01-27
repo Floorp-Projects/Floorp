@@ -10,7 +10,6 @@
 #ifndef LIBGLESV2_PROGRAM_H_
 #define LIBGLESV2_PROGRAM_H_
 
-#include <d3dx9.h>
 #include <string>
 #include <set>
 

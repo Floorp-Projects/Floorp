@@ -84,9 +84,6 @@ mkstempflags(char *path, int extraFlags)
 static int 
 _gettemp(char *path, register int *doopen, int extraFlags)
 {    
-#if !defined(_WINDOWS) || defined(_WIN32)
-	extern int errno;                    
-#endif
 	register char *start, *trv;
 	struct stat sbuf;
 	unsigned int pid;

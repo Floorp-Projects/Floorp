@@ -155,8 +155,8 @@ class PropertyCache
 
   public:
     JS_ALWAYS_INLINE void test(JSContext *cx, jsbytecode *pc,
-                               JSObject *&obj, JSObject *&pobj,
-                               PropertyCacheEntry *&entry, PropertyName *&name);
+                               JSObject **obj, JSObject **pobj,
+                               PropertyCacheEntry **entry, PropertyName **name);
 
     /*
      * Test for cached information about a property set on *objp at pc.

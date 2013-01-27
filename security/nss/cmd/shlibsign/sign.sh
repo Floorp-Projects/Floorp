@@ -3,6 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# arguments:
+# 1: full path to DIST/OBJDIR (parent dir of "lib")
+# 2: full path to shlibsign executable (DIST/OBJDIR/bin)
+# 3: OS_TARGET
+# 4: full path to DIST/OBJDIR/lib
+# 5: full path to library that is to be signed
+
 case "${3}" in
 WIN*)
     if echo "${PATH}" | grep -c \; >/dev/null; then

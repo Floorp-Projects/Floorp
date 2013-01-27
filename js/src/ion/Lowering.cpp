@@ -2073,7 +2073,7 @@ LIRGenerator::visitIteratorMore(MIteratorMore *ins)
 bool
 LIRGenerator::visitIteratorEnd(MIteratorEnd *ins)
 {
-    LIteratorEnd *lir = new LIteratorEnd(useRegister(ins->iterator()), temp(), temp());
+    LIteratorEnd *lir = new LIteratorEnd(useRegister(ins->iterator()), temp(), temp(), temp());
     return add(lir, ins) && assignSafepoint(lir, ins);
 }
 

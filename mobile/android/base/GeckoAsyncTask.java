@@ -53,6 +53,8 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
         return this;
     }
 
+    /* Empty stub method. Implementors can optionally override this if they need it */
+    protected void onPostExecute(Result result) { }
+
     protected abstract Result doInBackground(Params... params);
-    protected abstract void onPostExecute(Result result);
 }

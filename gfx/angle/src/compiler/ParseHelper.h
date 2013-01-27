@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 #include "compiler/Diagnostics.h"
 #include "compiler/DirectiveHandler.h"
 #include "compiler/localintermediate.h"
-#include "compiler/preprocessor/new/Preprocessor.h"
+#include "compiler/preprocessor/Preprocessor.h"
 #include "compiler/ShHandle.h"
 #include "compiler/SymbolTable.h"
 
@@ -97,7 +97,7 @@ struct TParseContext {
     bool samplerErrorCheck(int line, const TPublicType& pType, const char* reason);
     bool structQualifierErrorCheck(int line, const TPublicType& pType);
     bool parameterSamplerErrorCheck(int line, TQualifier qualifier, const TType& type);
-    bool nonInitConstErrorCheck(int line, TString& identifier, TPublicType& type);
+    bool nonInitConstErrorCheck(int line, TString& identifier, TPublicType& type, bool array);
     bool nonInitErrorCheck(int line, TString& identifier, TPublicType& type, TVariable*& variable);
     bool paramErrorCheck(int line, TQualifier qualifier, TQualifier paramQualifier, TType* type);
     bool extensionErrorCheck(int line, const TString&);

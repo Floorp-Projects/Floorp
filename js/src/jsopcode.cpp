@@ -33,7 +33,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
@@ -42,6 +41,7 @@
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jscntxtinlines.h"
@@ -1756,7 +1756,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, unsigned tableLength,
                         return JS_FALSE;
                     str = NULL;
                 } else {
-                    str = ToString(cx, key);
+                    str = ToString<CanGC>(cx, key);
                     if (!str)
                         return JS_FALSE;
                 }

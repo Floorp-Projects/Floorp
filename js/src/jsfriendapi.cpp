@@ -23,9 +23,11 @@ using namespace js;
 using namespace JS;
 
 // Required by PerThreadDataFriendFields::getMainThread()
-JS_STATIC_ASSERT(offsetof(JSRuntime, mainThread) == sizeof(RuntimeFriendFields));
+JS_STATIC_ASSERT(offsetof(JSRuntime, mainThread) ==
+                 PerThreadDataFriendFields::RuntimeMainThreadOffset);
 
 PerThreadDataFriendFields::PerThreadDataFriendFields()
+  : nativeStackLimit(0)
 {
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     skipGCRooters = NULL;
@@ -79,12 +81,6 @@ JS_GetObjectFunction(RawObject obj)
     if (obj->isFunction())
         return obj->toFunction();
     return NULL;
-}
-
-JS_FRIEND_API(JSObject *)
-JS_GetGlobalForFrame(JSStackFrame *fp)
-{
-    return &Valueify(fp)->global();
 }
 
 JS_FRIEND_API(JSBool)

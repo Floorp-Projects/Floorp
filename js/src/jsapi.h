@@ -3317,7 +3317,6 @@ class JS_PUBLIC_API(JSAutoCompartment)
   public:
     JSAutoCompartment(JSContext *cx, JSRawObject target);
     JSAutoCompartment(JSContext *cx, JSScript *target);
-    JSAutoCompartment(JSContext *cx, JSStackFrame *target);
     JSAutoCompartment(JSContext *cx, JSString *target);
     ~JSAutoCompartment();
 };
@@ -3538,12 +3537,6 @@ JS_THIS(JSContext *cx, jsval *vp)
  * created.
  */
 #define JS_THIS_VALUE(cx,vp)    ((vp)[1])
-
-extern JS_PUBLIC_API(void)
-JS_MallocInCompartment(JSCompartment *comp, size_t nbytes);
-
-extern JS_PUBLIC_API(void)
-JS_FreeInCompartment(JSCompartment *comp, size_t nbytes);
 
 extern JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes);

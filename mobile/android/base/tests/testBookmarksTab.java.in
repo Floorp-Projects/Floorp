@@ -17,9 +17,15 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.io.File;
 
-/* Tests opening the bookmarks tab, that items look correct, clicking on an item
-   and long tapping on an item
-*/
+/**
+ * Tests the Bookamrks Tab
+ * - opening the bookmarks tab
+ * - items look correct
+ * - clicking on an item
+ * - long tapping on an item
+ * - editing the name, url and keyword of a bookmark from the context menu
+ * - removing a bookmark
+ */
 
 public class testBookmarksTab extends BaseTest {
     private View mFirstChild;
@@ -93,6 +99,7 @@ public class testBookmarksTab extends BaseTest {
         mSolo.waitForText(url);
 
         // wait for the bookmarks list to be populated
+        View child;
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
@@ -135,19 +142,100 @@ public class testBookmarksTab extends BaseTest {
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
 
             // test long tap on a folder, this should fail but will still open the folder
-            View child = list.getChildAt(0);
+            child = list.getChildAt(0);
             mSolo.clickLongOnView(child);
             mAsserter.is(mSolo.waitForText("Open in New Tab"), false, "Folders have no context menu");
-
-            // pressing back should exit the folder
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-
         } else {
             mAsserter.ok(false, "waiting for bookmark item", "bookmark item available");
         }
 
+        list = getBookmarksList();
+
+        // Test edit bookmark name
+        editBookmark(1,0," Bookmark Name ");
+        mAsserter.is(checkBookmarkEdit(1," Bookmark Name "), true, "Bookmark Name was changed");
+
+        // Test edit bookmark link
+        editBookmark(1,1," Bookmark Link ");
+        mAsserter.is(checkBookmarkEdit(1,"Bookmark Link"), true, "Bookmark Link was changed");
+
+        // Test edit bookmark keyword
+        editBookmark(1,2," Bookmark Keyword ");
+        mAsserter.is(checkBookmarkEdit(1,"Bookmark Keyword"), true, "Bookmark Keyword was changed");
+
+        // Remove Bookmark from Context Menu
+        mSolo.waitForText("Bookmarks");
+        child = list.getChildAt(1);
+        mSolo.clickLongOnView(child);
+        mSolo.waitForText("Open in New Tab");
+        mSolo.clickOnText("Remove");
+
+        // Wait for the toaster notification
+        mSolo.waitForText("Bookmark Removed");
+
+        // Verify Bookmark is removed
+        child = list.getChildAt(1);
+        mSolo.clickLongOnView(child);
+        mSolo.waitForText("Open in New Tab");
+        mAsserter.is(mSolo.searchText("Bookmark Name"), false, "Removed bookmark has been deleted");
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit the Context Menu
+
         // back again to exit the awesomebar
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+    }
+
+    private void editBookmark(int bookmarkIndex, int fieldIndex, String addedText) {
+
+        // Open the Edit Bookmark context menu
+        View child;
+        mSolo.clickOnText("Bookmarks");
+        child = list.getChildAt(bookmarkIndex);
+        mSolo.waitForText("Desktop Bookmarks");
+        mSolo.clickLongOnView(child);
+        mSolo.waitForText("Open in New Tab");
+        mSolo.clickOnText("Edit");
+        mSolo.waitForText("Edit Bookmark");
+
+        // Clear the Field
+        mSolo.clearEditText(fieldIndex);
+
+        // Enter the new text
+        mSolo.clickOnEditText(fieldIndex);
+        mActions.sendKeys(addedText);
+        mSolo.clickOnText("OK");
+        mSolo.waitForText("Bookmark Updated");
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+    }
+
+    private boolean checkBookmarkEdit(int bookmarkIndex, String addedText) {
+        Device mDevice = new Device();
+        // Open the Edit Bookmark context menu
+        View child;
+        mSolo.clickOnText("Bookmarks");
+        child = list.getChildAt(bookmarkIndex);
+        mSolo.waitForText("Desktop Bookmarks");
+        mSolo.clickLongOnView(child);
+        mSolo.waitForText("Open in New Tab");
+        mSolo.clickOnText("Edit");
+        mSolo.waitForText("Edit Bookmark");
+
+        // If the OS is not Gingerbread the vkb will be opened so we need to close it in order to press the "Cancel" button
+        if (!(mDevice.version.equals("2.x"))) {
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+        }
+
+        // Check if the new text was added
+        if (mSolo.searchText(addedText)) {
+           mSolo.clickOnText("Cancel");
+           mSolo.waitForText("Desktop Bookmarks");
+           mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+           return true;
+        } else {
+           mSolo.clickOnText("Cancel");
+           mSolo.waitForText("Desktop Bookmarks");
+           mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+           return false;
+        }
     }
 
     private void compareRow(View child, int numTextViews, int numImageViews) {

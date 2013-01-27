@@ -19,8 +19,9 @@
 #include "methodjit/MachineRegs.h"
 #include "CodeGenIncludes.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 #include "jstypedarrayinlines.h"
+
+#include "vm/Shape-inl.h"
 
 using mozilla::DebugOnly;
 
@@ -1364,7 +1365,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
          * span is not empty is handled.
          */
         gc::FreeSpan *list = const_cast<gc::FreeSpan *>
-                             (cx->compartment->arenas.getFreeList(allocKind));
+                             (cx->compartment->allocator.arenas.getFreeList(allocKind));
         loadPtr(&list->first, result);
 
         Jump jump = branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(&list->last), result);

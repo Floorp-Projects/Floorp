@@ -39,12 +39,12 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
-#include "jsscope.h"
 #include "jsstr.h"
 #include "jslibmath.h"
 
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
@@ -264,7 +264,7 @@ num_parseFloat(JSContext *cx, unsigned argc, Value *vp)
         vp->setDouble(js_NaN);
         return JS_TRUE;
     }
-    str = ToString(cx, vp[2]);
+    str = ToString<CanGC>(cx, vp[2]);
     if (!str)
         return JS_FALSE;
     bp = str->getChars(cx);
@@ -381,7 +381,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 1. */
-    RootedString inputString(cx, ToString(cx, args[0]));
+    RootedString inputString(cx, ToString<CanGC>(cx, args[0]));
     if (!inputString)
         return false;
     args[0].setString(inputString);
@@ -515,6 +515,7 @@ ToCStringBuf::~ToCStringBuf()
         js_free(dbuf);
 }
 
+template <AllowGC allowGC>
 JSFlatString *
 js::Int32ToString(JSContext *cx, int32_t si)
 {
@@ -532,7 +533,7 @@ js::Int32ToString(JSContext *cx, int32_t si)
     if (JSFlatString *str = c->dtoaCache.lookup(10, si))
         return str;
 
-    JSShortString *str = js_NewGCShortString<ALLOW_GC>(cx);
+    JSShortString *str = js_NewGCShortString<allowGC>(cx);
     if (!str)
         return NULL;
 
@@ -550,6 +551,12 @@ js::Int32ToString(JSContext *cx, int32_t si)
     c->dtoaCache.cache(10, si, str);
     return str;
 }
+
+template JSFlatString *
+js::Int32ToString<CanGC>(JSContext *cx, int32_t si);
+
+template JSFlatString *
+js::Int32ToString<NoGC>(JSContext *cx, int32_t si);
 
 /* Returns a non-NULL pointer to inside cbuf.  */
 static char *
@@ -587,6 +594,7 @@ IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
     return cp.get();
 }
 
+template <AllowGC allowGC>
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, double d, int base);
 
@@ -610,7 +618,7 @@ num_toString_impl(JSContext *cx, CallArgs args)
 
         base = int32_t(d2);
     }
-    JSString *str = js_NumberToStringWithBase(cx, d, base);
+    JSString *str = js_NumberToStringWithBase<CanGC>(cx, d, base);
     if (!str) {
         JS_ReportOutOfMemory(cx);
         return false;
@@ -633,7 +641,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
 
     double d = Extract(args.thisv());
 
-    Rooted<JSString*> str(cx, js_NumberToStringWithBase(cx, d, 10));
+    Rooted<JSString*> str(cx, js_NumberToStringWithBase<CanGC>(cx, d, 10));
     if (!str) {
         JS_ReportOutOfMemory(cx);
         return false;
@@ -743,7 +751,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
         return ok;
     }
 
-    str = js_NewStringCopyN(cx, buf, buflen);
+    str = js_NewStringCopyN<CanGC>(cx, buf, buflen);
     js_free(buf);
     if (!str)
         return false;
@@ -803,7 +811,7 @@ DToStrResult(JSContext *cx, double d, JSDToStrMode mode, int precision, CallArgs
         JS_ReportOutOfMemory(cx);
         return false;
     }
-    JSString *str = js_NewStringCopyZ(cx, numStr);
+    JSString *str = js_NewStringCopyZ<CanGC>(cx, numStr);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -871,7 +879,7 @@ num_toPrecision_impl(JSContext *cx, CallArgs args)
     double d = Extract(args.thisv());
 
     if (!args.hasDefined(0)) {
-        JSString *str = js_NumberToStringWithBase(cx, d, 10);
+        JSString *str = js_NumberToStringWithBase<CanGC>(cx, d, 10);
         if (!str) {
             JS_ReportOutOfMemory(cx);
             return false;
@@ -1210,6 +1218,7 @@ js::NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base/* = 10
            : FracNumberToCString(cx, cbuf, d, base);
 }
 
+template <AllowGC allowGC>
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, double d, int base)
 {
@@ -1258,21 +1267,28 @@ js_NumberToStringWithBase(JSContext *cx, double d, int base)
                      cbuf.dbuf && cbuf.dbuf == numStr);
     }
 
-    JSFlatString *s = js_NewStringCopyZ(cx, numStr);
+    JSFlatString *s = js_NewStringCopyZ<allowGC>(cx, numStr);
     c->dtoaCache.cache(base, d, s);
     return s;
 }
 
+template <AllowGC allowGC>
 JSString *
 js_NumberToString(JSContext *cx, double d)
 {
-    return js_NumberToStringWithBase(cx, d, 10);
+    return js_NumberToStringWithBase<allowGC>(cx, d, 10);
 }
+
+template JSString *
+js_NumberToString<CanGC>(JSContext *cx, double d);
+
+template JSString *
+js_NumberToString<NoGC>(JSContext *cx, double d);
 
 JSFlatString *
 js::NumberToString(JSContext *cx, double d)
 {
-    if (JSString *str = js_NumberToStringWithBase(cx, d, 10))
+    if (JSString *str = js_NumberToStringWithBase<CanGC>(cx, d, 10))
         return &str->asFlat();
     return NULL;
 }
@@ -1287,7 +1303,7 @@ js::IndexToString(JSContext *cx, uint32_t index)
     if (JSFlatString *str = c->dtoaCache.lookup(10, index))
         return str;
 
-    JSShortString *str = js_NewGCShortString<ALLOW_GC>(cx);
+    JSShortString *str = js_NewGCShortString<CanGC>(cx);
     if (!str)
         return NULL;
 

@@ -2143,7 +2143,7 @@ printflags(char *trusts, unsigned int flags)
 SECStatus
 SECU_PrintCertNickname(CERTCertListNode *node, void *data)
 {
-    CERTCertTrust *trust;
+    CERTCertTrust trust;
     CERTCertificate* cert;
     FILE *out;
     char trusts[30];
@@ -2165,13 +2165,12 @@ SECU_PrintCertNickname(CERTCertListNode *node, void *data)
         name = "(NULL)";
     }
 
-    trust = cert->trust;
-    if (trust) {
-        printflags(trusts, trust->sslFlags);
+    if (CERT_GetCertTrust(cert, &trust) == SECSuccess) {
+        printflags(trusts, trust.sslFlags);
         PORT_Strcat(trusts, ",");
-        printflags(trusts, trust->emailFlags);
+        printflags(trusts, trust.emailFlags);
         PORT_Strcat(trusts, ",");
-        printflags(trusts, trust->objectSigningFlags);
+        printflags(trusts, trust.objectSigningFlags);
     } else {
         PORT_Memcpy(trusts,",,",3);
     }
@@ -3068,6 +3067,7 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
 {
     SECStatus rv;
     SECItem data;
+    CERTCertTrust certTrust;
     
     data.data = cert->derCert.data;
     data.len = cert->derCert.len;
@@ -3080,8 +3080,8 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
     if (trust) {
 	SECU_PrintTrustFlags(stdout, trust,
 	                     "Certificate Trust Flags", 1);
-    } else if (cert->trust) {
-	SECU_PrintTrustFlags(stdout, cert->trust,
+    } else if (CERT_GetCertTrust(cert, &certTrust) == SECSuccess) {
+	SECU_PrintTrustFlags(stdout, &certTrust,
 	                     "Certificate Trust Flags", 1);
     }
 
@@ -3463,6 +3463,7 @@ SECU_FindCrlIssuer(CERTCertDBHandle *dbhandle, SECItem* subject,
 {
     CERTCertificate *issuerCert = NULL;
     CERTCertList *certList = NULL;
+    CERTCertTrust trust;
 
     if (!subject) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -3481,7 +3482,7 @@ SECU_FindCrlIssuer(CERTCertDBHandle *dbhandle, SECItem* subject,
             /* check cert CERTCertTrust data is allocated, check cert
                usage extension, check that cert has pkey in db. Select
                the first (newest) user cert */
-            if (cert->trust &&
+            if (CERT_GetCertTrust(cert, &trust) == SECSuccess &&
                 CERT_CheckCertUsage(cert, KU_CRL_SIGN) == SECSuccess &&
                 CERT_IsUserCert(cert)) {
                 

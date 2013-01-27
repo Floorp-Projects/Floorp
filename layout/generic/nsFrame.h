@@ -604,6 +604,9 @@ public:
           type == nsGkAtoms::svgForeignObjectFrame) {
         return true;
       }
+      if (aFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock)) {
+        return true;
+      }
     }
 
     if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {

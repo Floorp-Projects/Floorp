@@ -770,8 +770,8 @@ JSStructuredCloneWriter::write(const Value &v)
                  */
                 RootedObject obj2(context());
                 RootedShape prop(context());
-                if (!js_HasOwnProperty(context(), obj->getOps()->lookupGeneric, obj, id,
-                                       &obj2, &prop)) {
+                if (!HasOwnProperty<CanGC>(context(), obj->getOps()->lookupGeneric, obj, id,
+                                           &obj2, &prop)) {
                     return false;
                 }
 
@@ -840,7 +840,7 @@ JSStructuredCloneReader::readString(uint32_t nchars)
     Chars chars(context());
     if (!chars.allocate(nchars) || !in.readChars(chars.get(), nchars))
         return NULL;
-    JSString *str = js_NewString(context(), chars.get(), nchars);
+    JSString *str = js_NewString<CanGC>(context(), chars.get(), nchars);
     if (str)
         chars.forget();
     return str;
@@ -1111,7 +1111,7 @@ JSStructuredCloneReader::readId(jsid *idp)
         JSString *str = readString(data);
         if (!str)
             return false;
-        JSAtom *atom = AtomizeString(context(), str);
+        JSAtom *atom = AtomizeString<CanGC>(context(), str);
         if (!atom)
             return false;
         *idp = NON_INTEGER_ATOM_TO_JSID(atom);

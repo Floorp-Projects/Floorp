@@ -1,6 +1,6 @@
 Libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.5.13 - September 27, 2012
+ libpng version 1.5.14 - January 24, 2013
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2012 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ Libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.5.13 - September 27, 2012
+ libpng versions 0.97, January 1998, through 1.5.14 - January 24, 2013
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2012 Glenn Randers-Pehrson
 
@@ -649,9 +649,6 @@ of sPLT, tEXt, iTXt, zTXt, and unknown chunks that will be stored, with
 where 0x7fffffffL means unlimited.  You can retrieve this limit with
 
    chunk_cache_max = png_get_chunk_cache_max(png_ptr);
-
-This limit also applies to the number of buffers that can be allocated
-by png_decompress_chunk() while decompressing iTXt, zTXt, and iCCP chunks.
 
 You can also set a limit on the amount of memory that a compressed chunk
 other than IDAT can occupy, with
@@ -4612,13 +4609,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIV. Y2K Compliance in libpng
 
-September 27, 2012
+January 24, 2013
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.5.13 are Y2K compliant.  It is my belief that earlier
+upward through 1.5.14 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer that

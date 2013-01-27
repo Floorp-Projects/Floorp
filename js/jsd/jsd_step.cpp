@@ -31,19 +31,19 @@ _indentSpaces(int i)
 }
 
 static void
-_interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
-                  JSBool before)
+_interpreterTrace(JSDContext* jsdc, JSContext *cx, JSAbstractFramePtr frame,
+                  bool isConstructing, JSBool before)
 {
     JSDScript* jsdscript = NULL;
     JSScript * script;
     static indent = 0;
     JSString* funName = NULL;
 
-    script = JS_GetFrameScript(cx, fp);
+    script = frame.script();
     if(script)
     {
         JSD_LOCK_SCRIPTS(jsdc);
-        jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, fp);
+        jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, frame);
         JSD_UNLOCK_SCRIPTS(jsdc);
         if(jsdscript)
             funName = JSD_GetScriptFunctionId(jsdc, jsdscript);
@@ -63,9 +63,9 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
     {
         jsval thisVal;
 
-        printf("%s this: ", JS_IsConstructorFrame(cx, fp) ? "constructing":"");
+        printf("%s this: ", isConstructing ? "constructing":"");
 
-        if (JS_GetFrameThis(cx, fp, &thisVal))
+        if (JS_GetFrameThis(cx, frame, &thisVal))
             printf("0x%0llx", (uintptr_t) thisVal);
         else
             puts("<unavailable>");
@@ -76,8 +76,8 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
 #endif
 
 JSBool
-_callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
-          unsigned type, JSD_CallHookProc hook, void *hookData)
+_callHook(JSDContext *jsdc, JSContext *cx, JSAbstractFramePtr frame, bool isConstructing,
+          JSBool before, unsigned type, JSD_CallHookProc hook, void *hookData)
 {
     JSDScript*        jsdscript;
     JSScript*         jsscript;
@@ -93,19 +93,19 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
          */
         return hookresult;
     }
-    
-    if (before && JS_IsConstructorFrame(cx, fp)) {
+
+    if (before && isConstructing) {
         jsval newObj;
-        if (!JS_GetFrameThis(cx, fp, &newObj))
+        if (!frame.getThisValue(cx, &newObj))
             return JS_FALSE;
-        jsd_Constructing(jsdc, cx, JSVAL_TO_OBJECT(newObj), fp);
+        jsd_Constructing(jsdc, cx, JSVAL_TO_OBJECT(newObj), frame);
     }
 
-    jsscript = JS_GetFrameScript(cx, fp);
+    jsscript = frame.script();
     if (jsscript)
     {
         JSD_LOCK_SCRIPTS(jsdc);
-        jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, jsscript, fp);
+        jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, jsscript, frame);
         JSD_UNLOCK_SCRIPTS(jsdc);
     
         if (jsdscript)
@@ -223,7 +223,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
     }
 
 #ifdef JSD_TRACE
-    _interpreterTrace(jsdc, cx, fp, before);
+    _interpreterTrace(jsdc, cx, frame, isConstructing, before);
     return JS_TRUE;
 #else
     return hookresult;
@@ -232,8 +232,8 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
 }
 
 void *
-jsd_FunctionCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
-                     JSBool *ok, void *closure)
+jsd_FunctionCallHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing,
+                     JSBool before, JSBool *ok, void *closure)
 {
     JSDContext*       jsdc;
     JSD_CallHookProc  hook;
@@ -247,7 +247,7 @@ jsd_FunctionCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
     hookData = jsdc->functionHookData;
     JSD_UNLOCK();
     
-    if (_callHook (jsdc, cx, fp, before,
+    if (_callHook (jsdc, cx, frame, isConstructing, before,
                    (before) ? JSD_HOOK_FUNCTION_CALL : JSD_HOOK_FUNCTION_RETURN,
                    hook, hookData))
     {
@@ -258,8 +258,8 @@ jsd_FunctionCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
 }
 
 void *
-jsd_TopLevelCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
-                     JSBool *ok, void *closure)
+jsd_TopLevelCallHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing,
+                     JSBool before, JSBool *ok, void *closure)
 {
     JSDContext*       jsdc;
     JSD_CallHookProc  hook;
@@ -273,7 +273,7 @@ jsd_TopLevelCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
     hookData = jsdc->toplevelHookData;
     JSD_UNLOCK();
     
-    if (_callHook (jsdc, cx, fp, before,
+    if (_callHook (jsdc, cx, frame, isConstructing, before,
                    (before) ? JSD_HOOK_TOPLEVEL_START : JSD_HOOK_TOPLEVEL_END,
                    hook, hookData))
     {

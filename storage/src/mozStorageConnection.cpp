@@ -1054,6 +1054,7 @@ Connection::Clone(bool aReadOnly,
   }
 
   // Copy any functions that have been added to this connection.
+  SQLiteMutexAutoLock lockedScope(sharedDBMutex);
   (void)mFunctions.EnumerateRead(copyFunctionEnumerator, clone);
 
   NS_ADDREF(*_connection = clone);

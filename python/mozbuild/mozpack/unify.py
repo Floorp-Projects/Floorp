@@ -10,6 +10,7 @@ from mozpack.files import (
 )
 from mozpack.executables import (
     MACHO_SIGNATURES,
+    may_strip,
     strip,
 )
 from mozpack.errors import errors
@@ -58,7 +59,8 @@ class UnifiedExecutableFile(BaseFile):
                 os.close(fd)
                 tmpfiles.append(f)
                 shutil.copy2(p, f)
-                strip(f)
+                if may_strip(f):
+                    strip(f)
             subprocess.call(['lipo', '-create'] + tmpfiles + ['-output', dest])
         finally:
             for f in tmpfiles:

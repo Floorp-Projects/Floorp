@@ -795,6 +795,14 @@ AbstractFramePtr::fun() const
     JS_NOT_REACHED("Invalid frame");
     return NULL;
 }
+inline JSFunction *
+AbstractFramePtr::maybeFun() const
+{
+    if (isStackFrame())
+        return asStackFrame()->maybeFun();
+    JS_NOT_REACHED("Invalid frame");
+    return NULL;
+}
 inline JSFunction &
 AbstractFramePtr::callee() const
 {

@@ -26,7 +26,7 @@ function testSimpleCall() {
       let testScope = gDebugger.DebuggerView.Variables.addScope("test");
       let testVar = testScope.addVar("something");
 
-      testVar._setGrip(1.618);
+      testVar.setGrip(1.618);
 
       is(testVar.target.querySelector(".value").getAttribute("value"), "1.618",
         "The grip information for the variable wasn't set correctly.");
@@ -35,7 +35,7 @@ function testSimpleCall() {
         "Adding a value property shouldn't add any new tree nodes.");
 
 
-      testVar._setGrip({ "type": "object", "class": "Window" });
+      testVar.setGrip({ "type": "object", "class": "Window" });
 
       is(testVar.target.querySelector(".details").childNodes.length, 0,
         "Adding type and class properties shouldn't add any new tree nodes.");

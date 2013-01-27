@@ -1861,6 +1861,7 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
                                  mInfo.mAudioChannels,
                                  mInfo.mAudioRate,
                                  HasAudio(),
+                                 HasVideo(),
                                  tags);
   NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 
@@ -2099,6 +2100,13 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         // perceptible delay between the pause command, and playback actually
         // pausing.
         StopPlayback();
+      }
+
+      if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
+          !IsPlaying()) {
+        // We are playing, but the state machine does not know it yet. Tell it
+        // that it is, so that the clock can be properly queried.
+        StartPlayback();
       }
 
       if (IsPausedAndDecoderWaiting()) {
@@ -2377,7 +2385,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
     if (frame && !currentFrame) {
       int64_t now = IsPlaying() ? clock_time : mPlayDuration;
 
-      remainingTime = frame->mTime - mStartTime - now;
+      remainingTime = frame->mTime - now;
     }
   }
 
@@ -2424,7 +2432,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
       return;
     }
     mDecoder->GetFrameStatistics().NotifyPresentedFrame();
-    remainingTime = currentFrame->mEndTime - mStartTime - clock_time;
+    remainingTime = currentFrame->mEndTime - clock_time;
     currentFrame = nullptr;
   }
 
@@ -2779,7 +2787,12 @@ bool MediaDecoderStateMachine::IsShutdown()
   return GetState() == DECODER_STATE_SHUTDOWN;
 }
 
-void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime, int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
+void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
+                                             int aChannels,
+                                             int aRate,
+                                             bool aHasAudio,
+                                             bool aHasVideo,
+                                             MetadataTags* aTags)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
