@@ -217,8 +217,8 @@ class ArenaIter
         init();
     }
 
-    ArenaIter(JSCompartment *comp, AllocKind kind) {
-        init(comp, kind);
+    ArenaIter(JS::Zone *zone, AllocKind kind) {
+        init(zone, kind);
     }
 
     void init() {
@@ -231,9 +231,9 @@ class ArenaIter
         remainingHeader = NULL;
     }
 
-    void init(JSCompartment *comp, AllocKind kind) {
-        aheader = comp->allocator.arenas.getFirstArena(kind);
-        remainingHeader = comp->allocator.arenas.getFirstArenaToSweep(kind);
+    void init(JS::Zone *zone, AllocKind kind) {
+        aheader = zone->allocator.arenas.getFirstArena(kind);
+        remainingHeader = zone->allocator.arenas.getFirstArenaToSweep(kind);
         if (!aheader) {
             aheader = remainingHeader;
             remainingHeader = NULL;
@@ -271,8 +271,8 @@ class CellIterImpl
     CellIterImpl() {
     }
 
-    void initSpan(JSCompartment *comp, AllocKind kind) {
-        JS_ASSERT(comp->allocator.arenas.isSynchronizedFreeList(kind));
+    void initSpan(JS::Zone *zone, AllocKind kind) {
+        JS_ASSERT(zone->allocator.arenas.isSynchronizedFreeList(kind));
         firstThingOffset = Arena::firstThingOffset(kind);
         thingSize = Arena::thingSize(kind);
         firstSpan.initAsEmpty();
@@ -288,8 +288,8 @@ class CellIterImpl
     }
 
     void init(JSCompartment *comp, AllocKind kind) {
-        initSpan(comp, kind);
-        aiter.init(comp, kind);
+        initSpan(comp->zone(), kind);
+        aiter.init(comp->zone(), kind);
         next();
     }
 
@@ -355,7 +355,7 @@ class CellIter : public CellIterImpl
 #endif
   public:
     CellIter(JSCompartment *comp, AllocKind kind)
-      : lists(&comp->allocator.arenas),
+      : lists(&comp->zone()->allocator.arenas),
         kind(kind)
     {
         /*

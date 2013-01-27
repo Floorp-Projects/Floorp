@@ -2575,7 +2575,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
     return;
   }
 
-  // Use compartment GC when we're not asked to do a shrinking GC nor
+  // Use zone GC when we're not asked to do a shrinking GC nor
   // global GC and compartment GC has been called less than
   // NS_MAX_COMPARTMENT_GC_COUNT times after the previous global GC.
   if (!sDisableExplicitCompartmentGC &&
@@ -2585,7 +2585,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
     for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
       if (!cx->mActive && cx->mContext) {
         if (JSObject* global = cx->GetNativeGlobal()) {
-          JS::SkipZoneForGC(js::GetObjectCompartment(global));
+          JS::SkipZoneForGC(js::GetObjectZone(global));
         }
       }
       cx->mActive = false;
