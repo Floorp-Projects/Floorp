@@ -2202,10 +2202,10 @@ static void
 AssertBackgroundSweepingFinished(JSRuntime *rt)
 {
     JS_ASSERT(!rt->gcSweepingCompartments);
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        for (unsigned i = 0 ; i < FINALIZE_LIMIT ; ++i) {
-            JS_ASSERT(!c->allocator.arenas.arenaListsToSweep[i]);
-            JS_ASSERT(c->allocator.arenas.doneBackgroundFinalize(AllocKind(i)));
+    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+        for (unsigned i = 0; i < FINALIZE_LIMIT; ++i) {
+            JS_ASSERT(!zone->allocator.arenas.arenaListsToSweep[i]);
+            JS_ASSERT(zone->allocator.arenas.doneBackgroundFinalize(AllocKind(i)));
         }
     }
 }
@@ -2557,8 +2557,8 @@ SweepCompartments(FreeOp *fop, bool lastGC)
 static void
 PurgeRuntime(JSRuntime *rt)
 {
-    for (GCCompartmentsIter c(rt); !c.done(); c.next())
-        c->purge();
+    for (GCZonesIter zone(rt); !zone.done(); zone.next())
+        zone->purge();
 
     rt->freeLifoAlloc.transferUnusedFrom(&rt->tempLifoAlloc);
 
@@ -2669,26 +2669,27 @@ BeginMarkPhase(JSRuntime *rt)
     rt->gcIsFull = true;
     bool any = false;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        /* Assert that compartment state is as we expect */
-        JS_ASSERT(!c->isCollecting());
-        for (unsigned i = 0; i < FINALIZE_LIMIT; ++i)
-            JS_ASSERT(!c->allocator.arenas.arenaListsToSweep[i]);
         JS_ASSERT(!c->gcLiveArrayBuffers);
+        c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
+        c->scheduledForDestruction = false;
+        c->maybeAlive = false;
+    }
+
+    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+        /* Assert that compartment state is as we expect */
+        JS_ASSERT(!zone->isCollecting());
+        for (unsigned i = 0; i < FINALIZE_LIMIT; ++i)
+            JS_ASSERT(!zone->allocator.arenas.arenaListsToSweep[i]);
 
         /* Set up which compartments will be collected. */
-        if (c->isGCScheduled()) {
-            if (c != rt->atomsCompartment) {
+        if (zone->isGCScheduled()) {
+            if (zone != rt->atomsCompartment) {
                 any = true;
-                c->setGCState(JSCompartment::Mark);
+                zone->setGCState(JSCompartment::Mark);
             }
         } else {
             rt->gcIsFull = false;
         }
-
-        c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
-
-        c->scheduledForDestruction = false;
-        c->maybeAlive = false;
     }
 
     /* Check that at least one compartment is scheduled for collection. */
@@ -2715,8 +2716,8 @@ BeginMarkPhase(JSRuntime *rt)
      * allocations after the incremental GC started.
      */
     if (rt->gcIsIncremental) {
-        for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            c->allocator.arenas.purge();
+        for (GCZonesIter zone(rt); !zone.done(); zone.next())
+            zone->allocator.arenas.purge();
     }
 
     rt->gcMarker.start();
@@ -2755,10 +2756,12 @@ BeginMarkPhase(JSRuntime *rt)
     gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_MARK);
     gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_MARK_ROOTS);
 
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        /* Unmark everything in the compartments being collected. */
-        c->allocator.arenas.unmarkAll();
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        /* Unmark everything in the zones being collected. */
+        zone->allocator.arenas.unmarkAll();
+    }
 
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         /* Reset weak map list for the compartments being collected. */
         WeakMapBase::resetCompartmentWeakMapList(c);
     }
@@ -3014,17 +3017,17 @@ js::gc::MarkingValidator::nonIncrementalMark()
         MarkAllWeakReferences(runtime, gcstats::PHASE_SWEEP_MARK_WEAK);
 
         /* Update compartment state for gray marking. */
-        for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
-            JS_ASSERT(c->isGCMarkingBlack());
-            c->setGCState(JSCompartment::MarkGray);
+        for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
+            JS_ASSERT(zone->isGCMarkingBlack());
+            zone->setGCState(JSCompartment::MarkGray);
         }
 
         MarkAllGrayReferences(runtime);
 
         /* Restore compartment state. */
-        for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
-            JS_ASSERT(c->isGCMarkingGray());
-            c->setGCState(JSCompartment::Mark);
+        for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
+            JS_ASSERT(zone->isGCMarkingGray());
+            zone->setGCState(JSCompartment::Mark);
         }
     }
 
@@ -3513,9 +3516,9 @@ EndMarkingCompartmentGroup(JSRuntime *rt)
      * these will be marked through, as they are not marked with
      * MarkCrossCompartmentXXX.
      */
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-        JS_ASSERT(c->isGCMarkingBlack());
-        c->setGCState(JSCompartment::MarkGray);
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+        JS_ASSERT(zone->isGCMarkingBlack());
+        zone->setGCState(JSCompartment::MarkGray);
     }
 
     /* Mark incoming gray pointers from previously swept compartments. */
@@ -3527,9 +3530,9 @@ EndMarkingCompartmentGroup(JSRuntime *rt)
     MarkGrayReferencesInCurrentGroup(rt);
 
     /* Restore marking state. */
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-        JS_ASSERT(c->isGCMarkingGray());
-        c->setGCState(JSCompartment::Mark);
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+        JS_ASSERT(zone->isGCMarkingGray());
+        zone->setGCState(JSCompartment::Mark);
     }
 
     JS_ASSERT(rt->gcMarker.isDrained());
@@ -3544,15 +3547,15 @@ BeginSweepingCompartmentGroup(JSRuntime *rt)
      */
 
     bool sweepingAtoms = false;
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         /* Set the GC state to sweeping. */
-        JS_ASSERT(c->isGCMarking());
-        c->setGCState(JSCompartment::Sweep);
+        JS_ASSERT(zone->isGCMarking());
+        zone->setGCState(JSCompartment::Sweep);
 
         /* Purge the ArenaLists before sweeping. */
-        c->allocator.arenas.purge();
+        zone->allocator.arenas.purge();
 
-        if (c == rt->atomsCompartment)
+        if (zone == rt->atomsCompartment)
             sweepingAtoms = true;
     }
 
@@ -3599,26 +3602,26 @@ BeginSweepingCompartmentGroup(JSRuntime *rt)
      *
      * Objects are finalized immediately but this may change in the future.
      */
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
-        c->allocator.arenas.queueObjectsForSweep(&fop);
+        zone->allocator.arenas.queueObjectsForSweep(&fop);
     }
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
-        c->allocator.arenas.queueStringsForSweep(&fop);
+        zone->allocator.arenas.queueStringsForSweep(&fop);
     }
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
     	gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
-        c->allocator.arenas.queueScriptsForSweep(&fop);
+        zone->allocator.arenas.queueScriptsForSweep(&fop);
     }
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
-        c->allocator.arenas.queueShapesForSweep(&fop);
+        zone->allocator.arenas.queueShapesForSweep(&fop);
     }
 #ifdef JS_ION
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(rt->gcStats, rt->gcCompartmentGroupIndex);
-        c->allocator.arenas.queueIonCodeForSweep(&fop);
+        zone->allocator.arenas.queueIonCodeForSweep(&fop);
     }
 #endif
 
@@ -3637,9 +3640,9 @@ static void
 EndSweepingCompartmentGroup(JSRuntime *rt)
 {
     /* Update the GC state for compartments we have swept and unlink the list. */
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-        JS_ASSERT(c->isGCSweeping());
-        c->setGCState(JSCompartment::Finished);
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+        JS_ASSERT(zone->isGCSweeping());
+        zone->setGCState(JSCompartment::Finished);
     }
 
     /* Reset the list of arenas marked as being allocated during sweep phase. */
@@ -3834,9 +3837,9 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
 
     /* Set up list of compartments for sweeping of background things. */
     JS_ASSERT(!rt->gcSweepingCompartments);
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        c->gcNextGraphNode = rt->gcSweepingCompartments;
-        rt->gcSweepingCompartments = c;
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        zone->gcNextGraphNode = rt->gcSweepingCompartments;
+        rt->gcSweepingCompartments = zone;
     }
 
     /* If not sweeping on background thread then we must do it here. */
@@ -3973,11 +3976,14 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         rt->gcMarker.stop();
 
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-            JS_ASSERT(c->isGCMarking());
-            c->setNeedsBarrier(false, JSCompartment::UpdateIon);
-            c->setGCState(JSCompartment::NoGC);
             ArrayBufferObject::resetArrayBufferList(c);
             ResetGrayList(c);
+        }
+
+        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+            JS_ASSERT(zone->isGCMarking());
+            zone->setNeedsBarrier(false, JSCompartment::UpdateIon);
+            zone->setGCState(JSCompartment::NoGC);
         }
 
         rt->gcIncrementalState = NO_INCREMENTAL;
@@ -4010,11 +4016,13 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
     rt->gcStats.reset(reason);
 
 #ifdef DEBUG
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        JS_ASSERT(!c->needsBarrier());
+    for (CompartmentsIter c(rt); !c.done(); c.next())
         JS_ASSERT(!c->gcLiveArrayBuffers);
-        for (unsigned i = 0 ; i < FINALIZE_LIMIT ; ++i)
-            JS_ASSERT(!c->allocator.arenas.arenaListsToSweep[i]);
+
+    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+        JS_ASSERT(!zone->needsBarrier());
+        for (unsigned i = 0; i < FINALIZE_LIMIT; ++i)
+            JS_ASSERT(!zone->allocator.arenas.arenaListsToSweep[i]);
     }
 #endif
 }
@@ -4039,31 +4047,31 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
      */
     rt->stackSpace.markActiveCompartments();
 
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         /*
          * Clear needsBarrier early so we don't do any write barriers during
          * GC. We don't need to update the Ion barriers (which is expensive)
          * because Ion code doesn't run during GC. If need be, we'll update the
          * Ion barriers in ~AutoGCSlice.
          */
-        if (c->isGCMarking()) {
-            JS_ASSERT(c->needsBarrier());
-            c->setNeedsBarrier(false, JSCompartment::DontUpdateIon);
+        if (zone->isGCMarking()) {
+            JS_ASSERT(zone->needsBarrier());
+            zone->setNeedsBarrier(false, JSCompartment::DontUpdateIon);
         } else {
-            JS_ASSERT(!c->needsBarrier());
+            JS_ASSERT(!zone->needsBarrier());
         }
     }
 }
 
 AutoGCSlice::~AutoGCSlice()
 {
-    /* We can't use GCCompartmentsIter if this is the end of the last slice. */
-    for (CompartmentsIter c(runtime); !c.done(); c.next()) {
-        if (c->isGCMarking()) {
-            c->setNeedsBarrier(true, JSCompartment::UpdateIon);
-            c->allocator.arenas.prepareForIncrementalGC(runtime);
+    /* We can't use GCZonesIter if this is the end of the last slice. */
+    for (ZonesIter zone(runtime); !zone.done(); zone.next()) {
+        if (zone->isGCMarking()) {
+            zone->setNeedsBarrier(true, JSCompartment::UpdateIon);
+            zone->allocator.arenas.prepareForIncrementalGC(runtime);
         } else {
-            c->setNeedsBarrier(false, JSCompartment::UpdateIon);
+            zone->setNeedsBarrier(false, JSCompartment::UpdateIon);
         }
     }
 }
