@@ -121,10 +121,23 @@ GetGCThingCompartment(void *thing)
     return js::gc::GetGCThingArena(thing)->zone;
 }
 
+static JS_ALWAYS_INLINE Zone *
+GetGCThingZone(void *thing)
+{
+    JS_ASSERT(thing);
+    return js::gc::GetGCThingArena(thing)->zone;
+}
+
 static JS_ALWAYS_INLINE JSCompartment *
 GetObjectCompartment(JSObject *obj)
 {
     return GetGCThingCompartment(obj);
+}
+
+static JS_ALWAYS_INLINE Zone *
+GetObjectZone(JSObject *obj)
+{
+    return GetGCThingZone(obj);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -138,7 +151,7 @@ GCThingIsMarkedGray(void *thing)
 static JS_ALWAYS_INLINE bool
 IsIncrementalBarrierNeededOnGCThing(void *thing, JSGCTraceKind kind)
 {
-    js::Zone *zone = GetGCThingCompartment(thing);
+    js::Zone *zone = GetGCThingZone(thing);
     return reinterpret_cast<shadow::Zone *>(zone)->needsBarrier_;
 }
 

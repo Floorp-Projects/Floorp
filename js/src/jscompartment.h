@@ -210,6 +210,14 @@ struct JSCompartment : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS
     bool                         ionUsingBarriers_;
   public:
 
+    JS::Zone *zone() {
+        return this;
+    }
+
+    const JS::Zone *zone() const {
+        return this;
+    }
+
     bool needsBarrier() const {
         return needsBarrier_;
     }
