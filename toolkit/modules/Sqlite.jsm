@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = [
   "Sqlite",
 ];
 
-const {interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource://gre/modules/osfile.jsm");
@@ -43,6 +43,13 @@ let connectionCounters = {};
  *       to obtain a lock, possibly making database access slower. Defaults to
  *       true.
  *
+ *   shrinkMemoryOnConnectionIdleMS -- (integer) If defined, the connection
+ *       will attempt to minimize its memory usage after this many
+ *       milliseconds of connection idle. The connection is idle when no
+ *       statements are executing. There is no default value which means no
+ *       automatic memory minimization will occur. Please note that this is
+ *       *not* a timer on the idle service and this could fire while the
+ *       application is active.
  *
  * FUTURE options to control:
  *
@@ -69,6 +76,18 @@ function openConnection(options) {
   let sharedMemoryCache = "sharedMemoryCache" in options ?
                             options.sharedMemoryCache : true;
 
+  let openedOptions = {};
+
+  if ("shrinkMemoryOnConnectionIdleMS" in options) {
+    if (!Number.isInteger(options.shrinkMemoryOnConnectionIdleMS)) {
+      throw new Error("shrinkMemoryOnConnectionIdleMS must be an integer. " +
+                      "Got: " + options.shrinkMemoryOnConnectionIdleMS);
+    }
+
+    openedOptions.shrinkMemoryOnConnectionIdleMS =
+      options.shrinkMemoryOnConnectionIdleMS;
+  }
+
   let file = FileUtils.File(path);
   let openDatabaseFn = sharedMemoryCache ?
                          Services.storage.openDatabase :
@@ -92,7 +111,8 @@ function openConnection(options) {
       return Promise.reject(new Error("Connection is not ready."));
     }
 
-    return Promise.resolve(new OpenedConnection(connection, basename, number));
+    return Promise.resolve(new OpenedConnection(connection, basename, number,
+                                                openedOptions));
   } catch (ex) {
     log.warn("Could not open database: " + CommonUtils.exceptionStr(ex));
     return Promise.reject(ex);
@@ -143,8 +163,11 @@ function openConnection(options) {
  *        (string) The basename of this database name. Used for logging.
  * @param number
  *        (Number) The connection number to this database.
+ * @param options
+ *        (object) Options to control behavior of connection. See
+ *        `openConnection`.
  */
-function OpenedConnection(connection, basename, number) {
+function OpenedConnection(connection, basename, number, options) {
   let log = Log4Moz.repository.getLogger("Sqlite.Connection." + basename);
 
   // getLogger() returns a shared object. We can't modify the functions on this
@@ -176,10 +199,23 @@ function OpenedConnection(connection, basename, number) {
   this._cachedStatements = new Map();
   this._anonymousStatements = new Map();
   this._anonymousCounter = 0;
-  this._inProgressStatements = new Map();
-  this._inProgressCounter = 0;
+
+  // A map from statement index to mozIStoragePendingStatement, to allow for
+  // canceling prior to finalizing the mozIStorageStatements.
+  this._pendingStatements = new Map();
+
+  // Increments for each executed statement for the life of the connection.
+  this._statementCounter = 0;
 
   this._inProgressTransaction = null;
+
+  this._idleShrinkMS = options.shrinkMemoryOnConnectionIdleMS;
+  if (this._idleShrinkMS) {
+    this._idleShrinkTimer = Cc["@mozilla.org/timer;1"]
+                              .createInstance(Ci.nsITimer);
+    // We wait for the first statement execute to start the timer because
+    // shrinking now would not do anything.
+  }
 }
 
 OpenedConnection.prototype = Object.freeze({
@@ -259,7 +295,7 @@ OpenedConnection.prototype = Object.freeze({
     }
 
     this._log.debug("Request to close connection.");
-
+    this._clearIdleShrinkTimer();
     let deferred = Promise.defer();
 
     // We need to take extra care with transactions during shutdown.
@@ -287,11 +323,14 @@ OpenedConnection.prototype = Object.freeze({
 
   _finalize: function (deferred) {
     this._log.debug("Finalizing connection.");
-    // Cancel any in-progress statements.
-    for (let [k, statement] of this._inProgressStatements) {
+    // Cancel any pending statements.
+    for (let [k, statement] of this._pendingStatements) {
       statement.cancel();
     }
-    this._inProgressStatements.clear();
+    this._pendingStatements.clear();
+
+    // We no longer need to track these.
+    this._statementCounter = 0;
 
     // Next we finalize all active statements.
     for (let [k, statement] of this._anonymousStatements) {
@@ -389,7 +428,27 @@ OpenedConnection.prototype = Object.freeze({
       this._cachedStatements.set(sql, statement);
     }
 
-    return this._executeStatement(sql, statement, params, onRow);
+    this._clearIdleShrinkTimer();
+
+    let deferred = Promise.defer();
+
+    try {
+      this._executeStatement(sql, statement, params, onRow).then(
+        function onResult(result) {
+          this._startIdleShrinkTimer();
+          deferred.resolve(result);
+        }.bind(this),
+        function onError(error) {
+          this._startIdleShrinkTimer();
+          deferred.reject(error);
+        }.bind(this)
+      );
+    } catch (ex) {
+      this._startIdleShrinkTimer();
+      throw ex;
+    }
+
+    return deferred.promise;
   },
 
   /**
@@ -418,22 +477,32 @@ OpenedConnection.prototype = Object.freeze({
     let index = this._anonymousCounter++;
 
     this._anonymousStatements.set(index, statement);
+    this._clearIdleShrinkTimer();
+
+    let onFinished = function () {
+      this._anonymousStatements.delete(index);
+      statement.finalize();
+      this._startIdleShrinkTimer();
+    }.bind(this);
 
     let deferred = Promise.defer();
 
-    this._executeStatement(sql, statement, params, onRow).then(
-      function onResult(rows) {
-        this._anonymousStatements.delete(index);
-        statement.finalize();
-        deferred.resolve(rows);
-      }.bind(this),
+    try {
+      this._executeStatement(sql, statement, params, onRow).then(
+        function onResult(rows) {
+          onFinished();
+          deferred.resolve(rows);
+        }.bind(this),
 
-      function onError(error) {
-        this._anonymousStatements.delete(index);
-        statement.finalize();
-        deferred.reject(error);
-      }.bind(this)
-    );
+        function onError(error) {
+          onFinished();
+          deferred.reject(error);
+        }.bind(this)
+      );
+    } catch (ex) {
+      onFinished();
+      throw ex;
+    }
 
     return deferred.promise;
   },
@@ -586,6 +655,40 @@ OpenedConnection.prototype = Object.freeze({
     );
   },
 
+  /**
+   * Free up as much memory from the underlying database connection as possible.
+   *
+   * @return Promise<>
+   */
+  shrinkMemory: function () {
+    this._log.info("Shrinking memory usage.");
+
+    let onShrunk = this._clearIdleShrinkTimer.bind(this);
+
+    return this.execute("PRAGMA shrink_memory").then(onShrunk, onShrunk);
+  },
+
+  /**
+   * Discard all cached statements.
+   *
+   * Note that this relies on us being non-interruptible between
+   * the insertion or retrieval of a statement in the cache and its
+   * execution: we finalize all statements, which is only safe if
+   * they will not be executed again.
+   *
+   * @return (integer) the number of statements discarded.
+   */
+  discardCachedStatements: function () {
+    let count = 0;
+    for (let [k, statement] of this._cachedStatements) {
+      ++count;
+      statement.finalize();
+    }
+    this._cachedStatements.clear();
+    this._log.debug("Discarded " + count + " cached statements.");
+    return count;
+  },
+
   _executeStatement: function (sql, statement, params, onRow) {
     if (statement.state != statement.MOZ_STORAGE_STATEMENT_READY) {
       throw new Error("Statement is not ready for execution.");
@@ -608,7 +711,7 @@ OpenedConnection.prototype = Object.freeze({
                       "object. Got: " + params);
     }
 
-    let index = this._inProgressCounter++;
+    let index = this._statementCounter++;
 
     let deferred = Promise.defer();
     let userCancelled = false;
@@ -659,8 +762,8 @@ OpenedConnection.prototype = Object.freeze({
       },
 
       handleCompletion: function (reason) {
-        self._log.debug("Stmt #" + index + " finished");
-        self._inProgressStatements.delete(index);
+        self._log.debug("Stmt #" + index + " finished.");
+        self._pendingStatements.delete(index);
 
         switch (reason) {
           case Ci.mozIStorageStatementCallback.REASON_FINISHED:
@@ -695,8 +798,7 @@ OpenedConnection.prototype = Object.freeze({
       },
     });
 
-    this._inProgressStatements.set(index, pending);
-
+    this._pendingStatements.set(index, pending);
     return deferred.promise;
   },
 
@@ -704,6 +806,24 @@ OpenedConnection.prototype = Object.freeze({
     if (!this._open) {
       throw new Error("Connection is not open.");
     }
+  },
+
+  _clearIdleShrinkTimer: function () {
+    if (!this._idleShrinkTimer) {
+      return;
+    }
+
+    this._idleShrinkTimer.cancel();
+  },
+
+  _startIdleShrinkTimer: function () {
+    if (!this._idleShrinkTimer) {
+      return;
+    }
+
+    this._idleShrinkTimer.initWithCallback(this.shrinkMemory.bind(this),
+                                           this._idleShrinkMS,
+                                           this._idleShrinkTimer.TYPE_ONE_SHOT);
   },
 });
 

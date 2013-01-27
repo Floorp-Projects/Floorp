@@ -34,6 +34,7 @@ add_task(function test_collect_smoketest() {
   let serializer = m.serializer(m.SERIALIZE_JSON);
   let d = serializer.singular(data.singular);
 
+  do_check_eq(d._v, 1);
   do_check_eq(d.vendor, "Mozilla");
   do_check_eq(d.name, "xpcshell");
   do_check_eq(d.id, "xpcshell@tests.mozilla.org");
