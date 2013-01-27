@@ -21,13 +21,15 @@ testing_modules := \
 
 # We install Metrics.jsm into the "main" JSM repository and the rest in
 # services. External consumers should only go through Metrics.jsm.
-EXTRA_JS_MODULES := Metrics.jsm
+MAIN_JS_MODULE := Metrics.jsm
+MAIN_JS_MODULE_PATH = $(FINAL_TARGET)/modules
+PP_TARGETS += MAIN_JS_MODULE
 
 TEST_DIRS += tests
 
-MODULES_FILES := $(modules)
-MODULES_DEST = $(FINAL_TARGET)/modules/services/metrics
-INSTALL_TARGETS += MODULES
+JS_MODULES := $(modules)
+JS_MODULES_PATH = $(FINAL_TARGET)/modules/services/metrics
+PP_TARGETS += JS_MODULES
 
 TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
 TESTING_JS_MODULE_DIR := services/metrics

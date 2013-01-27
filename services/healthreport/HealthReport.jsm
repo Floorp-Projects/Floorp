@@ -4,35 +4,34 @@
 
 "use strict";
 
-#ifndef MERGED_COMPARTMENT
+this.EXPORTED_SYMBOLS = [
+  "HealthReporter",
+  "AddonsProvider",
+  "AppInfoProvider",
+  "CrashesProvider",
+  "Metrics",
+  "ProfileMetadataProvider",
+  "SessionsProvider",
+  "SysInfoProvider",
+];
 
-this.EXPORTED_SYMBOLS = ["Metrics"];
-
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-
-#endif
 
 // We concatenate the JSMs together to eliminate compartment overhead.
 // This is a giant hack until compartment overhead is no longer an
 // issue.
 #define MERGED_COMPARTMENT
 
-#include collector.jsm
+#include ../common/bagheeraclient.js
 ;
-#include dataprovider.jsm
+#include ../metrics/Metrics.jsm
 ;
-#include storage.jsm
+#include healthreporter.jsm
 ;
-
-this.Metrics = {
-  Collector: Collector,
-  DailyValues: DailyValues,
-  Measurement: Measurement,
-  Provider: Provider,
-  Storage: MetricsStorageBackend,
-  dateToDays: dateToDays,
-  daysToDate: daysToDate,
-};
+#include profile.jsm
+;
+#include providers.jsm
+;
 

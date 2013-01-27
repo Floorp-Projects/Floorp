@@ -6,8 +6,6 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
-Cu.import("resource://gre/modules/services/datareporting/sessions.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/preferences.js");
@@ -223,7 +221,7 @@ DataReportingService.prototype = Object.freeze({
     // Lazy import so application startup isn't adversely affected.
 
     Cu.import("resource://gre/modules/Task.jsm", ns);
-    Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm", ns);
+    Cu.import("resource://gre/modules/HealthReport.jsm", ns);
     Cu.import("resource://services-common/log4moz.js", ns);
 
     // How many times will we rewrite this code before rolling it up into a
@@ -256,4 +254,11 @@ DataReportingService.prototype = Object.freeze({
 });
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DataReportingService]);
+
+#define MERGED_COMPARTMENT
+
+#include policy.jsm
+;
+#include sessions.jsm
+;
 
