@@ -744,6 +744,15 @@ nsSMILAnimationController::AddAnimationToCompositorTable(
   }
 }
 
+static inline bool
+IsTransformAttribute(int32_t aNamespaceID, nsIAtom *aAttributeName)
+{
+  return aNamespaceID == kNameSpaceID_None &&
+         (aAttributeName == nsGkAtoms::transform ||
+          aAttributeName == nsGkAtoms::patternTransform ||
+          aAttributeName == nsGkAtoms::gradientTransform);
+}
+
 // Helper function that, given a nsISMILAnimationElement, looks up its target
 // element & target attribute and populates a nsSMILTargetIdentifier
 // for this target.
@@ -765,6 +774,12 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   if (!aAnimElem->GetTargetAttributeName(&attributeNamespaceID,
                                          getter_AddRefs(attributeName)))
     // Animation has no target attr -- skip it.
+    return false;
+
+  // animateTransform can only animate transforms, conversely transforms
+  // can only be animated by animateTransform
+  if (IsTransformAttribute(attributeNamespaceID, attributeName) !=
+      aAnimElem->AsElement().IsSVG(nsGkAtoms::animateTransform))
     return false;
 
   // Look up target (animated) attribute-type
