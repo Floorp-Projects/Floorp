@@ -157,11 +157,11 @@ JSScript::writeBarrierPre(js::UnrootedScript script)
     if (!script)
         return;
 
-    JSCompartment *comp = script->compartment();
-    if (comp->needsBarrier()) {
-        JS_ASSERT(!comp->rt->isHeapBusy());
+    JS::Zone *zone = script->zone();
+    if (zone->needsBarrier()) {
+        JS_ASSERT(!zone->rt->isHeapBusy());
         js::UnrootedScript tmp = script;
-        MarkScriptUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        MarkScriptUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == script);
     }
 #endif
