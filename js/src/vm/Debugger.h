@@ -46,17 +46,17 @@ template <class Key, class Value>
 class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 {
   private:
-    typedef HashMap<JSCompartment *,
+    typedef HashMap<JS::Zone *,
                     uintptr_t,
-                    DefaultHasher<JSCompartment *>,
+                    DefaultHasher<JS::Zone *>,
                     RuntimeAllocPolicy> CountMap;
 
-    CountMap compartmentCounts;
+    CountMap zoneCounts;
 
   public:
     typedef WeakMap<Key, Value, DefaultHasher<Key> > Base;
     explicit DebuggerWeakMap(JSContext *cx)
-        : Base(cx), compartmentCounts(cx) { }
+        : Base(cx), zoneCounts(cx) { }
 
   public:
     /* Expose those parts of HashMap public interface that are used by Debugger methods. */
@@ -68,7 +68,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     typedef typename Base::Lookup Lookup;
 
     bool init(uint32_t len = 16) {
-        return Base::init(len) && compartmentCounts.init();
+        return Base::init(len) && zoneCounts.init();
     }
 
     AddPtr lookupForAdd(const Lookup &l) const {
@@ -78,11 +78,11 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         JS_ASSERT(v->compartment() == Base::compartment);
-        if (!incCompartmentCount(k->compartment()))
+        if (!incZoneCount(k->zone()))
             return false;
         bool ok = Base::relookupOrAdd(p, k, v);
         if (!ok)
-            decCompartmentCount(k->compartment());
+            decZoneCount(k->zone());
         return ok;
     }
 
@@ -92,7 +92,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 
     void remove(const Lookup &l) {
         Base::remove(l);
-        decCompartmentCount(l->compartment());
+        decZoneCount(l->zone());
     }
 
   public:
@@ -110,8 +110,8 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
         }
     }
 
-    bool hasKeyInCompartment(JSCompartment *c) {
-        CountMap::Ptr p = compartmentCounts.lookup(c);
+    bool hasKeyInZone(JS::Zone *zone) {
+        CountMap::Ptr p = zoneCounts.lookup(zone);
         JS_ASSERT_IF(p, p->value > 0);
         return p;
     }
@@ -124,27 +124,27 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
             Value v(e.front().value);
             if (gc::IsAboutToBeFinalized(&k)) {
                 e.removeFront();
-                decCompartmentCount(k->compartment());
+                decZoneCount(k->zone());
             }
         }
         Base::assertEntriesNotAboutToBeFinalized();
     }
 
-    bool incCompartmentCount(JSCompartment *c) {
-        CountMap::Ptr p = compartmentCounts.lookupWithDefault(c, 0);
+    bool incZoneCount(JS::Zone *zone) {
+        CountMap::Ptr p = zoneCounts.lookupWithDefault(zone, 0);
         if (!p)
             return false;
         ++p->value;
         return true;
     }
 
-    void decCompartmentCount(JSCompartment *c) {
-        CountMap::Ptr p = compartmentCounts.lookup(c);
+    void decZoneCount(JS::Zone *zone) {
+        CountMap::Ptr p = zoneCounts.lookup(zone);
         JS_ASSERT(p);
         JS_ASSERT(p->value > 0);
         --p->value;
         if (p->value == 0)
-            compartmentCounts.remove(c);
+            zoneCounts.remove(zone);
     }
 };
 
@@ -385,7 +385,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                              GlobalObjectSet::Enum *compartmentEnum);
     static unsigned gcGrayLinkSlot();
     static bool isDebugWrapper(RawObject o);
-    static void findCompartmentEdges(JSCompartment *v, gc::ComponentFinder<JSCompartment> &finder);
+    static void findCompartmentEdges(JS::Zone *v, gc::ComponentFinder<JS::Zone> &finder);
 
     static inline JSTrapStatus onEnterFrame(JSContext *cx, Value *vp);
     static inline bool onLeaveFrame(JSContext *cx, bool ok);

@@ -475,7 +475,8 @@ struct JSCompartment : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS
     void sweepCrossCompartmentWrappers();
     void purge();
 
-    void findOutgoingEdges(js::gc::ComponentFinder<JSCompartment> &finder);
+    void findOutgoingEdgesFromCompartment(js::gc::ComponentFinder<JS::Zone> &finder);
+    void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
     void setGCLastBytes(size_t lastBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
