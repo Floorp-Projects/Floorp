@@ -396,6 +396,11 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_DWMCompositor:
         aResult = nsUXThemeData::CheckForCompositor();
         break;
+    case eIntID_WindowsGlass:
+        // Aero Glass is only available prior to Windows 8 when DWM is used.
+        aResult = (nsUXThemeData::CheckForCompositor() &&
+                   WinUtils::GetWindowsVersion() < WinUtils::WIN8_VERSION);
+        break;
     case eIntID_AlertNotificationOrigin:
         aResult = 0;
         {
