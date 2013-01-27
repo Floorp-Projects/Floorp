@@ -335,7 +335,7 @@ struct JSCompartment : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS
     double                       gcHeapGrowthFactor;
 
     bool                         hold;
-    bool                         isSystemCompartment;
+    bool                         isSystem;
 
     int64_t                      lastCodeRelease;
 
