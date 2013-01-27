@@ -15,6 +15,7 @@
                            oncommand="document.getBindingParent(this).close();"/>
       </xul:hbox>
       <xul:iframe anonid="iframe" class="chat-frame" flex="1"
+                  context="contentAreaContextMenu"
                   xbl:inherits="src,origin,collapsed=minimized" type="content"/>
     </content>
 
