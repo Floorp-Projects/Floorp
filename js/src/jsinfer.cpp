@@ -6229,7 +6229,7 @@ void
 TypeSet::sweep(JSCompartment *compartment)
 {
     JS_ASSERT(!purged());
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
 
     /*
      * Purge references to type objects that are no longer live. Type sets hold
@@ -6309,7 +6309,7 @@ TypeObject::sweep(FreeOp *fop)
     }
 
     JSCompartment *compartment = this->compartment();
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
 
     if (!isMarked()) {
         if (newScript)
@@ -6393,7 +6393,7 @@ struct SweepTypeObjectOp
 void
 SweepTypeObjects(FreeOp *fop, JSCompartment *compartment)
 {
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
     SweepTypeObjectOp op(fop);
     gc::ForEachArenaAndCell(compartment, gc::FINALIZE_TYPE_OBJECT, gc::EmptyArenaOp, op);
 }
@@ -6402,7 +6402,7 @@ void
 TypeCompartment::sweep(FreeOp *fop)
 {
     JSCompartment *compartment = this->compartment();
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
 
     SweepTypeObjects(fop, compartment);
 
@@ -6539,7 +6539,7 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectSet &table)
 {
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
 
-    JS_ASSERT(isGCSweeping());
+    JS_ASSERT(zone()->isGCSweeping());
     if (table.initialized()) {
         for (TypeObjectSet::Enum e(table); !e.empty(); e.popFront()) {
             TypeObject *type = e.front();
@@ -6570,7 +6570,7 @@ TypeCompartment::~TypeCompartment()
 TypeScript::Sweep(FreeOp *fop, RawScript script)
 {
     JSCompartment *compartment = script->compartment();
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
     JS_ASSERT(compartment->types.inferenceEnabled);
 
     unsigned num = NumTypeSets(script);

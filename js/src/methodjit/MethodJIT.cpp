@@ -1104,7 +1104,7 @@ JaegerStatus
 mjit::JaegerShot(JSContext *cx, bool partial)
 {
     StackFrame *fp = cx->fp();
-    JITScript *jit = fp->script()->getJIT(fp->isConstructing(), cx->compartment->compileBarriers());
+    JITScript *jit = fp->script()->getJIT(fp->isConstructing(), cx->zone()->compileBarriers());
 
     JS_ASSERT(cx->regs().pc == fp->script()->code);
 
@@ -1334,8 +1334,8 @@ JITScript::destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses)
          * Write barrier: Before we destroy the chunk, trace through the objects
          * it holds.
          */
-        if (script->compartment()->needsBarrier())
-            desc.chunk->trace(script->compartment()->barrierTracer());
+        if (script->zone()->needsBarrier())
+            desc.chunk->trace(script->zone()->barrierTracer());
 
         Probes::discardMJITCode(fop, this, desc.chunk, desc.chunk->code.m_code.executableAddress());
         fop->delete_(desc.chunk);
@@ -1386,7 +1386,7 @@ JITScript::trace(JSTracer *trc)
 static ic::PICInfo *
 GetPIC(JSContext *cx, JSScript *script, jsbytecode *pc, bool constructing)
 {
-    JITScript *jit = script->getJIT(constructing, cx->compartment->needsBarrier());
+    JITScript *jit = script->getJIT(constructing, cx->zone()->needsBarrier());
     if (!jit)
         return NULL;
 

@@ -420,7 +420,7 @@ struct AutoEnterCompilation
         co.script = script;
         co.setKind(kind);
         co.constructing = constructing;
-        co.barriers = cx->compartment->compileBarriers();
+        co.barriers = cx->zone()->compileBarriers();
         co.chunkIndex = chunkIndex;
 
         // This flag is used to prevent adding the current compiled script in

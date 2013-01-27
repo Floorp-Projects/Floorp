@@ -1382,7 +1382,8 @@ struct JSContext : js::ContextFriendFields,
     JSContext *thisDuringConstruction() { return this; }
     ~JSContext();
 
-    js::PerThreadData& mainThread() { return runtime->mainThread; }
+    inline JS::Zone *zone();
+    js::PerThreadData &mainThread() { return runtime->mainThread; }
 
   private:
     /* See JSContext::findVersion. */

@@ -135,8 +135,8 @@ JS::PrepareZoneForGC(Zone *zone)
 JS_FRIEND_API(void)
 JS::PrepareForFullGC(JSRuntime *rt)
 {
-    for (CompartmentsIter c(rt); !c.done(); c.next())
-        c->scheduleGC();
+    for (ZonesIter zone(rt); !zone.done(); zone.next())
+        zone->scheduleGC();
 }
 
 JS_FRIEND_API(void)
@@ -145,17 +145,17 @@ JS::PrepareForIncrementalGC(JSRuntime *rt)
     if (!IsIncrementalGCInProgress(rt))
         return;
 
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->wasGCStarted())
-            PrepareZoneForGC(c);
+    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (zone->wasGCStarted())
+            PrepareZoneForGC(zone);
     }
 }
 
 JS_FRIEND_API(bool)
 JS::IsGCScheduled(JSRuntime *rt)
 {
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->isGCScheduled())
+    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (zone->isGCScheduled())
             return true;
     }
 
@@ -218,7 +218,7 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
         // with the old one, but JSPrincipals doesn't give us a way to do that.
         // But we can at least assert that we're not switching between system
         // and non-system.
-        JS_ASSERT(compartment->isSystemCompartment == isSystem);
+        JS_ASSERT(compartment->zone()->isSystemCompartment == isSystem);
     }
 
     // Set up the new principals.
@@ -228,7 +228,7 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
     }
 
     // Update the system flag.
-    compartment->isSystemCompartment = isSystem;
+    compartment->zone()->isSystemCompartment = isSystem;
 }
 
 JS_FRIEND_API(JSBool)
@@ -318,7 +318,7 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
 JS_FRIEND_API(bool)
 js::IsSystemCompartment(const JSCompartment *c)
 {
-    return c->isSystemCompartment;
+    return c->zone()->isSystemCompartment;
 }
 
 JS_FRIEND_API(bool)

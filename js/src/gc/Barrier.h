@@ -264,7 +264,7 @@ class RelocatablePtr : public EncapsulatedPtr<T>
 
     ~RelocatablePtr() {
         if (this->value)
-            relocate(this->value->compartment());
+            relocate(this->value->zone());
     }
 
     RelocatablePtr<T> &operator=(T *v) {
