@@ -16,7 +16,7 @@ function test() {
       document.popupNode = element;
 
       let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-      let contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+      let contextMenu = new nsContextMenu(contentAreaContextMenu);
 
       is(contextMenu.shouldDisplay, expected, "context menu behavior for <input type=" + type + "> is wrong");
     };
@@ -26,7 +26,7 @@ function test() {
       document.popupNode = element;
 
       let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-      let contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+      let contextMenu = new nsContextMenu(contentAreaContextMenu);
 
       is(contextMenu.shouldDisplay, expected, "context menu behavior for <" + tag + "> is wrong");
     };
