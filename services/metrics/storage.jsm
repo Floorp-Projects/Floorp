@@ -1205,6 +1205,21 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
   },
 
   /**
+   * Reduce memory usage as much as possible.
+   *
+   * This returns a promise that will be resolved on completion.
+   *
+   * @return Promise<>
+   */
+  compact: function () {
+    let self = this;
+    return this.enqueueOperation(function doCompact() {
+      self._connection.discardCachedStatements();
+      return self._connection.shrinkMemory();
+    });
+  },
+
+  /**
    * Ensure a field ID matches a specified type.
    *
    * This is called internally as part of adding values to ensure that

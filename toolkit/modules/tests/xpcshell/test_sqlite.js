@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 do_get_profile();
 
@@ -12,23 +12,46 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+// To spin the event loop in test.
+Cu.import("resource://services-common/async.js");
 
-function getConnection(dbName) {
-  let path = dbName + ".sqlite";
+function sleep(ms) {
+  let deferred = Promise.defer();
 
-  return Sqlite.openConnection({path: path});
+  let timer = Cc["@mozilla.org/timer;1"]
+                .createInstance(Ci.nsITimer);
+
+  timer.initWithCallback({
+    notify: function () {
+      deferred.resolve();
+    },
+  }, ms, timer.TYPE_ONE_SHOT);
+
+  return deferred.promise;
 }
 
-function getDummyDatabase(name) {
+function getConnection(dbName, extraOptions={}) {
+  let path = dbName + ".sqlite";
+  let options = {path: path};
+  for (let [k, v] in Iterator(extraOptions)) {
+    options[k] = v;
+  }
+
+  return Sqlite.openConnection(options);
+}
+
+function getDummyDatabase(name, extraOptions={}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
   };
 
-  let c = yield getConnection(name);
+  let c = yield getConnection(name, extraOptions);
+  c._initialStatementCount = 0;
 
   for (let [k, v] in Iterator(TABLES)) {
     yield c.execute("CREATE TABLE " + k + "(" + v + ")");
+    c._initialStatementCount++;
   }
 
   throw new Task.Result(c);
@@ -161,11 +184,17 @@ add_task(function test_execute_invalid_statement() {
 
   let deferred = Promise.defer();
 
+  do_check_eq(c._anonymousStatements.size, 0);
+
   c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
     deferred.resolve();
   });
 
   yield deferred.promise;
+
+  // Ensure we don't leak the statement instance.
+  do_check_eq(c._anonymousStatements.size, 0);
+
   yield c.close();
 });
 
@@ -319,6 +348,226 @@ add_task(function test_detect_multiple_transactions() {
 
   let rows = yield c.execute("SELECT * FROM dirs");
   do_check_eq(rows.length, 1);
+
+  yield c.close();
+});
+
+add_task(function test_shrink_memory() {
+  let c = yield getDummyDatabase("shrink_memory");
+
+  // It's just a simple sanity test. We have no way of measuring whether this
+  // actually does anything.
+
+  yield c.shrinkMemory();
+  yield c.close();
+});
+
+add_task(function test_no_shrink_on_init() {
+  let c = yield getConnection("no_shrink_on_init",
+                              {shrinkMemoryOnConnectionIdleMS: 200});
+
+  let oldShrink = c.shrinkMemory;
+  let count = 0;
+  Object.defineProperty(c, "shrinkMemory", {
+    value: function () {
+      count++;
+    },
+  });
+
+  // We should not shrink until a statement has been executed.
+  yield sleep(220);
+  do_check_eq(count, 0);
+
+  yield c.execute("SELECT 1");
+  yield sleep(220);
+  do_check_eq(count, 1);
+
+  yield c.close();
+});
+
+add_task(function test_idle_shrink_fires() {
+  let c = yield getDummyDatabase("idle_shrink_fires",
+                                 {shrinkMemoryOnConnectionIdleMS: 200});
+  c._clearIdleShrinkTimer();
+
+  let oldShrink = c.shrinkMemory;
+  let shrinkPromises = [];
+
+  let count = 0;
+  Object.defineProperty(c, "shrinkMemory", {
+    value: function () {
+      count++;
+      let promise = oldShrink.call(c);
+      shrinkPromises.push(promise);
+      return promise;
+    },
+  });
+
+  // We reset the idle shrink timer after monkeypatching because otherwise the
+  // installed timer callback will reference the non-monkeypatched function.
+  c._startIdleShrinkTimer();
+
+  yield sleep(220);
+  do_check_eq(count, 1);
+  do_check_eq(shrinkPromises.length, 1);
+  yield shrinkPromises[0];
+  shrinkPromises.shift();
+
+  // We shouldn't shrink again unless a statement was executed.
+  yield sleep(300);
+  do_check_eq(count, 1);
+
+  yield c.execute("SELECT 1");
+  yield sleep(300);
+
+  do_check_eq(count, 2);
+  do_check_eq(shrinkPromises.length, 1);
+  yield shrinkPromises[0];
+
+  yield c.close();
+});
+
+add_task(function test_idle_shrink_reset_on_operation() {
+  const INTERVAL = 500;
+  let c = yield getDummyDatabase("idle_shrink_reset_on_operation",
+                                 {shrinkMemoryOnConnectionIdleMS: INTERVAL});
+
+  c._clearIdleShrinkTimer();
+
+  let oldShrink = c.shrinkMemory;
+  let shrinkPromises = [];
+  let count = 0;
+
+  Object.defineProperty(c, "shrinkMemory", {
+    value: function () {
+      count++;
+      let promise = oldShrink.call(c);
+      shrinkPromises.push(promise);
+      return promise;
+    },
+  });
+
+  let now = new Date();
+  c._startIdleShrinkTimer();
+
+  let initialIdle = new Date(now.getTime() + INTERVAL);
+
+  // Perform database operations until initial scheduled time has been passed.
+  let i = 0;
+  while (new Date() < initialIdle) {
+    yield c.execute("INSERT INTO dirs (path) VALUES (?)", ["" + i]);
+    i++;
+  }
+
+  do_check_true(i > 0);
+
+  // We should not have performed an idle while doing operations.
+  do_check_eq(count, 0);
+
+  // Wait for idle timer.
+  yield sleep(INTERVAL);
+
+  // Ensure we fired.
+  do_check_eq(count, 1);
+  do_check_eq(shrinkPromises.length, 1);
+  yield shrinkPromises[0];
+
+  yield c.close();
+});
+
+add_task(function test_in_progress_counts() {
+  let c = yield getDummyDatabase("in_progress_counts");
+  do_check_eq(c._statementCounter, c._initialStatementCount);
+  do_check_eq(c._pendingStatements.size, 0);
+  yield c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
+  do_check_eq(c._statementCounter, c._initialStatementCount + 1);
+  do_check_eq(c._pendingStatements.size, 0);
+
+  let expectOne;
+  let expectTwo;
+
+  // Please forgive me.
+  let inner = Async.makeSpinningCallback();
+  let outer = Async.makeSpinningCallback();
+
+  // We want to make sure that two queries executing simultaneously
+  // result in `_pendingStatements.size` reaching 2, then dropping back to 0.
+  //
+  // To do so, we kick off a second statement within the row handler
+  // of the first, then wait for both to finish.
+
+  yield c.executeCached("SELECT * from dirs", null, function onRow() {
+    // In the onRow handler, we're still an outstanding query.
+    // Expect a single in-progress entry.
+    expectOne = c._pendingStatements.size;
+
+    // Start another query, checking that after its statement has been created
+    // there are two statements in progress.
+    let p = c.executeCached("SELECT 10, path from dirs");
+    expectTwo = c._pendingStatements.size;
+
+    // Now wait for it to be done before we return from the row handler …
+    p.then(function onInner() {
+      inner();
+    });
+  }).then(function onOuter() {
+    // … and wait for the inner to be done before we finish …
+    inner.wait();
+    outer();
+  });
+
+  // … and wait for both queries to have finished before we go on and 
+  // test postconditions.
+  outer.wait();
+
+  do_check_eq(expectOne, 1);
+  do_check_eq(expectTwo, 2);
+  do_check_eq(c._statementCounter, c._initialStatementCount + 3);
+  do_check_eq(c._pendingStatements.size, 0);
+
+  yield c.close();
+});
+
+add_task(function test_discard_while_active() {
+  let c = yield getDummyDatabase("discard_while_active");
+
+  yield c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
+  yield c.executeCached("INSERT INTO dirs (path) VALUES ('bar')");
+
+  let discarded = -1;
+  let first = true;
+  let sql = "SELECT * FROM dirs";
+  yield c.executeCached(sql, null, function onRow(row) {
+    if (!first) {
+      return;
+    }
+    first = false;
+    discarded = c.discardCachedStatements();
+  });
+
+  // We discarded everything, because the SELECT had already started to run.
+  do_check_eq(3, discarded);
+
+  // And again is safe.
+  do_check_eq(0, c.discardCachedStatements());
+
+  yield c.close();
+});
+
+add_task(function test_discard_cached() {
+  let c = yield getDummyDatabase("discard_cached");
+
+  yield c.executeCached("SELECT * from dirs");
+  do_check_eq(1, c._cachedStatements.size);
+
+  yield c.executeCached("SELECT * from files");
+  do_check_eq(2, c._cachedStatements.size);
+
+  yield c.executeCached("SELECT * from dirs");
+  do_check_eq(2, c._cachedStatements.size);
+
+  c.discardCachedStatements();
+  do_check_eq(0, c._cachedStatements.size);
 
   yield c.close();
 });
