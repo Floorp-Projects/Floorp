@@ -441,6 +441,8 @@ class GCCompartmentsIter {
     JSCompartment *operator->() const { return get(); }
 };
 
+typedef GCCompartmentsIter GCZonesIter;
+
 /* Iterates over all compartments in the current compartment group. */
 class GCCompartmentGroupIter {
   private:
@@ -467,6 +469,8 @@ class GCCompartmentGroupIter {
     operator JSCompartment *() const { return get(); }
     JSCompartment *operator->() const { return get(); }
 };
+
+typedef GCCompartmentGroupIter GCZoneGroupIter;
 
 /*
  * Allocates a new GC thing. After a successful allocation the caller must

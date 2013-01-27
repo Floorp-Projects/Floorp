@@ -734,6 +734,8 @@ class CompartmentsIter {
     JSCompartment *operator->() const { return get(); }
 };
 
+typedef CompartmentsIter ZonesIter;
+
 /*
  * AutoWrapperVector and AutoWrapperRooter can be used to store wrappers that
  * are obtained from the cross-compartment map. However, these classes should
