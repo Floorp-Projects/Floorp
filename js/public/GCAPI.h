@@ -67,7 +67,7 @@ enum Reason {
 } /* namespace gcreason */
 
 extern JS_FRIEND_API(void)
-PrepareCompartmentForGC(JSCompartment *comp);
+PrepareZoneForGC(Zone *zone);
 
 extern JS_FRIEND_API(void)
 PrepareForFullGC(JSRuntime *rt);
@@ -79,12 +79,12 @@ extern JS_FRIEND_API(bool)
 IsGCScheduled(JSRuntime *rt);
 
 extern JS_FRIEND_API(void)
-SkipCompartmentForGC(JSCompartment *comp);
+SkipZoneForGC(Zone *zone);
 
 /*
  * When triggering a GC using one of the functions below, it is first necessary
  * to select the compartments to be collected. To do this, you can call
- * PrepareCompartmentForGC on each compartment, or you can call PrepareForFullGC
+ * PrepareZoneForGC on each compartment, or you can call PrepareForFullGC
  * to select all compartments. Failing to select any compartment is an error.
  */
 

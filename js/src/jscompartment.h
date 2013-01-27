@@ -602,9 +602,9 @@ class js::AutoDebugModeGC
             GC(rt, GC_NORMAL, gcreason::DEBUG_MODE_GC);
     }
 
-    void scheduleGC(JSCompartment *compartment) {
+    void scheduleGC(Zone *zone) {
         JS_ASSERT(!rt->isHeapBusy());
-        PrepareCompartmentForGC(compartment);
+        PrepareZoneForGC(zone);
         needGC = true;
     }
 };
