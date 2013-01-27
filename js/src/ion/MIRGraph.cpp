@@ -152,9 +152,7 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
 bool
 MBasicBlock::init()
 {
-    if (!slots_.init(info_.nslots()))
-        return false;
-    return true;
+    return slots_.init(info_.nslots());
 }
 
 void
@@ -376,6 +374,13 @@ MBasicBlock::pop()
 {
     JS_ASSERT(stackPosition_ > info_.firstStackSlot());
     return slots_[--stackPosition_];
+}
+
+void
+MBasicBlock::popn(uint32_t n)
+{
+    JS_ASSERT(stackPosition_ - n >= info_.firstStackSlot());
+    stackPosition_ -= n;
 }
 
 MDefinition *
