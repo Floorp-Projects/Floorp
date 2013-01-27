@@ -2856,6 +2856,11 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     // Create resumepoint if not provided. This resume point collects outer variables only.
     // It is used to recover the stack state before the current bytecode.
 
+    // Make sure there is enough place in the slots
+    uint32_t depth = current->stackDepth() + callInfo.argc() + 2;
+    if (depth > current->nslots())
+        current->increaseSlots(depth - current->nslots());
+
     // Push formals to capture in the resumepoint
     callInfo.pushFormals(current);
 
@@ -3984,8 +3989,22 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
     // Pop apply function.
     current->pop();
 
+    // Set type information
+    types::StackTypeSet *barrier;
+    types::StackTypeSet *types = oracle->returnTypeSet(script(), pc, &barrier);
+    callInfo.setTypeInfo(types, barrier);
+
+    // Try inlining call
+    if (target != NULL) {
+        AutoObjectVector targets(cx);
+        targets.append(target);
+
+        if (makeInliningDecision(targets, argc))
+            return inlineScriptedCall(target, callInfo);
+    }
+
     callInfo.wrapArgs(current);
-    return makeCall(target, callInfo, funTypes, false);
+    return makeCallBarrier(target, callInfo, funTypes, false);
 }
 
 bool

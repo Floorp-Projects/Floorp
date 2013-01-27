@@ -932,7 +932,10 @@ InlineFrameIterator::findNextFrame()
         JS_ASSERT(js_CodeSpec[*pc_].format & JOF_INVOKE);
 
         // Recover the number of actual arguments from the script.
-        numActualArgs_ = GET_ARGC(pc_);
+        if (JSOp(*pc_) != JSOP_FUNAPPLY)
+            numActualArgs_ = GET_ARGC(pc_);
+
+        JS_ASSERT(numActualArgs_ != 0xbad);
 
         // Skip over non-argument slots, as well as |this|.
         unsigned skipCount = (si_.slots() - 1) - numActualArgs_ - 1;

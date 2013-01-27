@@ -541,8 +541,12 @@ TypeInferenceOracle::canInlineCall(HandleScript caller, jsbytecode *pc)
 {
     JS_ASSERT(types::IsInlinableCall(pc));
 
+    JSOp op = JSOp(*pc);
     Bytecode *code = caller->analysis()->maybeCode(pc);
-    if (code->monitoredTypes)
+
+    // For foo.apply(this, arguments), the caller is foo and not the js_fun_apply function.
+    // Ignore code->monitoredTypes, as we know the caller is foo
+    if (op != JSOP_FUNAPPLY && code->monitoredTypes)
         return false;
 
     // Gets removed in Bug 796114
