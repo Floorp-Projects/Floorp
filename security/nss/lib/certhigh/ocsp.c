@@ -6,7 +6,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.76 2012/12/12 19:29:40 wtc%google.com Exp $
+ * $Id: ocsp.c,v 1.77 2013/01/23 23:05:50 kaie%kuix.de Exp $
  */
 
 #include "prerror.h"
@@ -5691,7 +5691,6 @@ CERT_GetOCSPResponseStatus(CERTOCSPResponse *response)
       case ocspResponse_unauthorized:
 	PORT_SetError(SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST);
 	break;
-      case ocspResponse_other:
       case ocspResponse_unused:
       default:
 	PORT_SetError(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS);

@@ -758,7 +758,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // ThreadData::ionTop.
     void linkExitFrame() {
         JSCompartment *compartment = GetIonContext()->compartment;
-        movl(StackPointer, Operand(&compartment->rt->ionTop));
+        movl(StackPointer, Operand(&compartment->rt->mainThread.ionTop));
     }
 
     void callWithExitFrame(IonCode *target, Register dynStack) {

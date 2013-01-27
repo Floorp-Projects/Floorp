@@ -1,15 +1,4 @@
 simplejson.pth:python/simplejson-2.1.1
-manifestdestiny.pth:testing/mozbase/manifestdestiny
-mozcrash.pth:testing/mozbase/mozcrash
-mozdevice.pth:testing/mozbase/mozdevice
-mozfile.pth:testing/mozbase/mozfile
-mozhttpd.pth:testing/mozbase/mozhttpd
-mozinfo.pth:testing/mozbase/mozinfo
-mozinstall.pth:testing/mozbase/mozinstall
-mozlog.pth:testing/mozbase/mozlog
-mozprocess.pth:testing/mozbase/mozprocess
-mozprofile.pth:testing/mozbase/mozprofile
-mozrunner.pth:testing/mozbase/mozrunner
 marionette.pth:testing/marionette/client
 blessings.pth:python/blessings
 mach.pth:python/mach
@@ -23,3 +12,4 @@ mozilla.pth:build
 mozilla.pth:config
 mozilla.pth:xpcom/typelib/xpt/tools
 copy:build/buildconfig.py
+packages.txt:testing/mozbase/packages.txt

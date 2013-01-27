@@ -249,6 +249,17 @@ ifeq (MINGW32_NT,$(findstring MINGW32_NT,$(OS_ARCH)))
     endif
 endif
 
+ifeq ($(OS_TARGET),Android)
+#
+# this should be  configurable from the user
+#
+   OS_TEST := arm
+   OS_ARCH = Android
+   ifndef OS_TARGET_RELEASE
+	OS_TARGET_RELEASE := 8
+   endif
+endif
+
 ifndef OS_TARGET
     OS_TARGET = $(OS_ARCH)
 endif

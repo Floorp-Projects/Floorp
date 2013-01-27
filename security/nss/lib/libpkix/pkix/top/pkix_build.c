@@ -263,6 +263,8 @@ pkix_ForwardBuilderState_Create(
                         parentState->buildConstants.revChecker;
                 state->buildConstants.aiaMgr =
                         parentState->buildConstants.aiaMgr;
+                state->buildConstants.trustOnlyUserAnchors =
+                        parentState->buildConstants.trustOnlyUserAnchors;
         }
 
         *pState = state;
@@ -847,10 +849,8 @@ pkix_Build_VerifyCertificate(
         PKIX_INCREF(state->candidateCert);
         candidateCert = state->candidateCert;
 
-        /* If user defined trust anchor list is not empty, do not
-         * trust any certs except to the ones that are in the list */
         if (state->buildConstants.numAnchors) {
-            trustOnlyUserAnchors = PKIX_TRUE;
+            trustOnlyUserAnchors = state->buildConstants.trustOnlyUserAnchors;
         }
 
         PKIX_CHECK(
@@ -3477,7 +3477,9 @@ pkix_Build_InitiateBuildChain(
             buildConstants.hintCerts = hintCerts;
             buildConstants.revChecker = revChecker;
             buildConstants.aiaMgr = aiaMgr;
-                
+            buildConstants.trustOnlyUserAnchors =
+                    procParams->useOnlyTrustAnchors;
+
             PKIX_CHECK(pkix_Build_GetResourceLimits(&buildConstants, plContext),
                     PKIX_BUILDGETRESOURCELIMITSFAILED);
     
@@ -3524,6 +3526,8 @@ pkix_Build_InitiateBuildChain(
             state->buildConstants.revChecker = buildConstants.revChecker;
             state->buildConstants.aiaMgr = buildConstants.aiaMgr;
             aiaMgr = NULL;
+            state->buildConstants.trustOnlyUserAnchors =
+                    buildConstants.trustOnlyUserAnchors;
 
             if (buildConstants.maxTime != 0) {
                     PKIX_CHECK(PKIX_PL_Date_Create_CurrentOffBySeconds

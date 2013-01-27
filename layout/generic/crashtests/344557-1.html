@@ -1,0 +1,32 @@
+<html class="reftest-wait"><head>
+<title>Testcase bug 344557 - [columns] Crash [@ nsLineBox::DeleteLineList] with moz-column-count and generated content</title>
+<script>
+function removestyles(i){
+document.getElementsByTagName('div')[0].removeAttribute('style');
+document.documentElement.removeAttribute("class");
+}
+window.resizeTo(1440, 600);
+setTimeout(removestyles,200);
+</script>
+
+<style>
+ div::first-line, ul::first-line { text-transform: uppercase;  font-size:110%;}
+sub::after, div::after { content:"anonymous text"; border:3px solid black;text-transform: uppercase;}
+sub::before, div::before { content:"before text"; font-size: 10px;}
+</style>
+</head>
+<body>
+
+<ul>
+  <sub>t</sub>
+  <div style="-moz-column-count: 3;">
+    <sub>t-column-councode&gt;text</sub>
+    <div style="-moz-column-count: 3;"><sub>text styletttmoztcolumntcountt 2;ttext</sub>
+      <div>
+        <sub>text</sub>
+      </div>
+    </div>
+  </div>
+</ul>
+
+</body></html>

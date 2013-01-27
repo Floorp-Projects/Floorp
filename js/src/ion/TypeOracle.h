@@ -208,7 +208,7 @@ class TypeInferenceOracle : public TypeOracle
   public:
     TypeInferenceOracle() : cx(NULL), script_(NULL) {}
 
-    bool init(JSContext *cx, HandleScript script);
+    bool init(JSContext *cx, JSScript *script);
 
     UnrootedScript script() { return script_.get(); }
 

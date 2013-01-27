@@ -1,0 +1,48 @@
+<html><head>
+<title>Testcase3 bug 309322 - Evil testcase using multiple display:table-caption causes crash</title>
+<style>
+*[toggle_style],*[toggle_style1],*[toggle_style2],*[toggle_style3],*[toggle_style4]{
+display:table-caption;
+}
+</style>
+<script>
+function doe(i){
+var x=document.body.getElementsByTagName('*');
+var xl=x.length;i=i+1;
+x[i-1].removeAttribute('toggle_style');
+x[i].setAttribute('toggle_style','toggle_style');
+if ((i+1)<xl) {x[i+1].setAttribute('toggle_style1','toggle_style');
+x[i].removeAttribute('toggle_style1');
+}
+if ((i+2)<xl) {x[i+2].setAttribute('toggle_style2','toggle_style');
+x[i+1].removeAttribute('toggle_style2');
+}
+if ((i+3)<xl) {x[i+3].setAttribute('toggle_style3','toggle_style');
+x[i+2].removeAttribute('toggle_style3');
+}
+if ((i+4)<xl) {x[i+4].setAttribute('toggle_style4','toggle_style');
+x[i+3].removeAttribute('toggle_style4');
+}
+if ((i+4)==xl) {
+x[i+3].removeAttribute('toggle_style4');
+}
+if ((i+3)==xl) {
+x[i+2].removeAttribute('toggle_style3');
+}
+if ((i+2)==xl) {
+x[i+1].removeAttribute('toggle_style2');
+}
+if ((i+1)==xl) {
+x[i].removeAttribute('toggle_style1');
+}
+setTimeout(doe,20,i);
+}
+
+
+</script></head><body onload="doe(3)">
+<button onclick="doe(3)">Clicking on this button should not create extra "Galloway" text</button>
+<table><tbody><tr><td> 
+<span><br></span>
+<a href="#">Galloway</a>
+</td></tr></tbody></table>
+</body></html>

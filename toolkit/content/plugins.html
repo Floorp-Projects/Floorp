@@ -11,7 +11,8 @@
 
   Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
-  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+  var Ci = Components.interfaces;
+  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
   var pluginsbundle = strBundleService.createBundle("chrome://global/locale/plugins.properties");
   var regionbundle = strBundleService.createBundle("chrome://global-region/locale/region.properties");
 
@@ -112,9 +113,18 @@
 
     fragment.appendChild(document.createElement("hr"));
 
+    var stateNames = {};
+    ["STATE_SOFTBLOCKED",
+     "STATE_BLOCKED",
+     "STATE_OUTDATED",
+     "STATE_VULNERABLE_UPDATE_AVAILABLE",
+     "STATE_VULNERABLE_NO_UPDATE"].forEach(function(label) {
+      stateNames[Ci.nsIBlocklistService[label]] = label;  
+    });
+    
     for (var i = 0; i < aPlugins.length; i++) {
       var plugin = aPlugins[i];
-      if (plugin && plugin.isActive) {
+      if (plugin) {
         // "Shockwave Flash"
         var plugname = document.createElement("h2");
         plugname.setAttribute("class", "plugname");
@@ -141,6 +151,19 @@
         versionDd.appendChild(version);
         versionDd.appendChild(document.createTextNode(plugin.version));
         dl.appendChild(versionDd);
+
+        // "State: "
+        var stateDd = document.createElement("dd");
+        var state = document.createElement("span");
+        state.setAttribute("label", "state");
+        state.appendChild(document.createTextNode(pluginsbundle.GetStringFromName("state_label") + " "));
+        stateDd.appendChild(state);
+        status = plugin.isActive ? "Enabled" : "Disabled";
+        if (plugin.blocklistState in stateNames) {
+          status += " (" + stateNames[plugin.blocklistState] + ")";
+        }
+        stateDd.appendChild(document.createTextNode(status));
+        dl.appendChild(stateDd);
 
         // Plugin Description
         var descDd = document.createElement("dd");

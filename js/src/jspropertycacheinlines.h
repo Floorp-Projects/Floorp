@@ -10,7 +10,8 @@
 
 #include "jslock.h"
 #include "jspropertycache.h"
-#include "jsscope.h"
+
+#include "vm/Shape.h"
 
 /*
  * This method is designed to inline the fast path in js_Interpret, so it makes
@@ -28,35 +29,35 @@
  * caches (on all threads) by re-generating JSObject::shape().
  */
 JS_ALWAYS_INLINE void
-js::PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
-                        JSObject *&pobj, PropertyCacheEntry *&entry, PropertyName *&name)
+js::PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject **obj,
+                        JSObject **pobj, PropertyCacheEntry **entry, PropertyName **name)
 {
     AutoAssertNoGC nogc;
 
     JS_ASSERT(this == &cx->propertyCache());
 
-    UnrootedShape kshape = obj->lastProperty();
-    entry = &table[hash(pc, kshape)];
-    PCMETER(pctestentry = entry);
+    UnrootedShape kshape = (*obj)->lastProperty();
+    *entry = &table[hash(pc, kshape)];
+    PCMETER(pctestentry = *entry);
     PCMETER(tests++);
-    JS_ASSERT(&obj != &pobj);
-    if (entry->kpc == pc && entry->kshape == kshape) {
+    JS_ASSERT(obj != pobj);
+    if ((*entry)->kpc == pc && (*entry)->kshape == kshape) {
         JSObject *tmp;
-        pobj = obj;
-        if (entry->isPrototypePropertyHit() &&
-            (tmp = pobj->getProto()) != NULL) {
-            pobj = tmp;
+        *pobj = *obj;
+        if ((*entry)->isPrototypePropertyHit() &&
+            (tmp = (*pobj)->getProto()) != NULL) {
+            *pobj = tmp;
         }
 
-        if (pobj->lastProperty() == entry->pshape) {
+        if ((*pobj)->lastProperty() == (*entry)->pshape) {
             PCMETER(pchits++);
-            PCMETER(entry->isOwnPropertyHit() || protopchits++);
-            name = NULL;
+            PCMETER((*entry)->isOwnPropertyHit() || protopchits++);
+            *name = NULL;
             return;
         }
     }
-    name = fullTest(cx, pc, &obj, &pobj, entry);
-    if (name)
+    *name = fullTest(cx, pc, obj, pobj, *entry);
+    if (!*name)
         PCMETER(misses++);
 }
 

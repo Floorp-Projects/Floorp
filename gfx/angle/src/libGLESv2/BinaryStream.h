@@ -80,6 +80,17 @@ class BinaryInputStream
         mOffset += length;
     }
 
+    void skip(size_t length)
+    {
+        if (mOffset + length > mLength)
+        {
+            mError = true;
+            return;
+        }
+
+        mOffset += length;
+    }
+
     size_t offset() const
     {
         return mOffset;

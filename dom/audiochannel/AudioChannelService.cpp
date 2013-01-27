@@ -67,6 +67,7 @@ NS_IMPL_ISUPPORTS0(AudioChannelService)
 
 AudioChannelService::AudioChannelService()
 : mCurrentHigherChannel(AUDIO_CHANNEL_LAST)
+, mActiveContentChildIDsFrozen(false)
 {
   // Creation of the hash table.
   mAgents.Init();
@@ -169,6 +170,27 @@ AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
     mChannelCounters[oldType].RemoveElement(aChildID);
   }
 
+  // If the audio content channel is visible, let's remember this ChildID.
+  if (newType == AUDIO_CHANNEL_INT_CONTENT &&
+      oldType == AUDIO_CHANNEL_INT_CONTENT_HIDDEN &&
+      !mActiveContentChildIDs.Contains(aChildID)) {
+
+    if (mActiveContentChildIDsFrozen) {
+      mActiveContentChildIDsFrozen = false;
+      mActiveContentChildIDs.Clear();
+    }
+
+    mActiveContentChildIDs.AppendElement(aChildID);
+  }
+
+  // If nothing is visible, the list has to been frozen.
+  else if (newType == AUDIO_CHANNEL_INT_CONTENT_HIDDEN &&
+           oldType == AUDIO_CHANNEL_INT_CONTENT &&
+           !mActiveContentChildIDsFrozen &&
+           mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].IsEmpty()) {
+    mActiveContentChildIDsFrozen = true;
+  }
+
   // Let play any visible audio channel.
   if (!aElementHidden) {
     return false;
@@ -179,8 +201,7 @@ AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
   // We are not visible, maybe we have to mute.
   if (newType == AUDIO_CHANNEL_INT_NORMAL_HIDDEN ||
       (newType == AUDIO_CHANNEL_INT_CONTENT_HIDDEN &&
-       (!mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].IsEmpty() ||
-        HasMoreThanOneContentChannelHidden()))) {
+       !mActiveContentChildIDs.Contains(aChildID))) {
     muted = true;
   }
 
@@ -197,25 +218,6 @@ AudioChannelService::ContentChannelIsActive()
 {
   return !mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].IsEmpty() ||
          !mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN].IsEmpty();
-}
-
-bool
-AudioChannelService::HasMoreThanOneContentChannelHidden()
-{
-  uint32_t childId = CONTENT_PARENT_UNKNOWN_CHILD_ID;
-  bool empty = true;
-  for (uint32_t i = 0;
-       i < mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN].Length();
-       ++i) {
-    if (empty) {
-      childId = mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN][i];
-      empty = false;
-    } else if (childId != mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN][i]) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 void
@@ -279,8 +281,7 @@ AudioChannelService::SendAudioChannelChangedNotification()
   }
 
   // Content channels play in background if just one is active.
-  else if ((!mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN].IsEmpty() &&
-            !HasMoreThanOneContentChannelHidden())) {
+  else if (!mActiveContentChildIDs.IsEmpty()) {
     higher = AUDIO_CHANNEL_CONTENT;
   }
 
@@ -390,6 +391,10 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PR
       int32_t index;
       while ((index = mChannelCounters[type].IndexOf(childID)) != -1) {
         mChannelCounters[type].RemoveElementAt(index);
+      }
+
+      if ((index = mActiveContentChildIDs.IndexOf(childID)) != -1) {
+        mActiveContentChildIDs.RemoveElementAt(index);
       }
     }
 

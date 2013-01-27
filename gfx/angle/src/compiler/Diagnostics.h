@@ -7,7 +7,7 @@
 #ifndef COMPILER_DIAGNOSTICS_H_
 #define COMPILER_DIAGNOSTICS_H_
 
-#include "compiler/preprocessor/new/Diagnostics.h"
+#include "compiler/preprocessor/Diagnostics.h"
 
 class TInfoSink;
 

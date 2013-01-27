@@ -37,7 +37,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
@@ -46,6 +45,7 @@
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
+#include "vm/Shape.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -5636,7 +5636,7 @@ Parser::memberExpr(bool allowCallSyntax)
                 } else if (propExpr->isKind(PNK_NUMBER)) {
                     double number = propExpr->pn_dval;
                     if (number != ToUint32(number)) {
-                        JSAtom *atom = ToAtom(context, DoubleValue(number));
+                        JSAtom *atom = ToAtom<CanGC>(context, DoubleValue(number));
                         if (!atom)
                             return NULL;
                         name = atom->asPropertyName();
@@ -6651,7 +6651,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                 if (!pn3)
                     return NULL;
                 pn3->pn_dval = tokenStream.currentToken().number();
-                atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                atom = ToAtom<CanGC>(context, DoubleValue(pn3->pn_dval));
                 if (!atom)
                     return NULL;
                 break;
@@ -6685,7 +6685,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                             if (!pn3)
                                 return NULL;
                             pn3->pn_dval = index;
-                            atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                            atom = ToAtom<CanGC>(context, DoubleValue(pn3->pn_dval));
                             if (!atom)
                                 return NULL;
                         } else {
@@ -6698,7 +6698,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                         if (!pn3)
                             return NULL;
                         pn3->pn_dval = tokenStream.currentToken().number();
-                        atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                        atom = ToAtom<CanGC>(context, DoubleValue(pn3->pn_dval));
                         if (!atom)
                             return NULL;
                     } else {

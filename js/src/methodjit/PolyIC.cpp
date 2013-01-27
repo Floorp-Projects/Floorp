@@ -11,19 +11,21 @@
 #include "BaseCompiler.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "TypedArrayIC.h"
-#include "jsscope.h"
 #include "jsnum.h"
 #include "jstypedarray.h"
-#include "jsatominlines.h"
-#include "jsobjinlines.h"
-#include "jsscopeinlines.h"
-#include "jsinterpinlines.h"
 #include "jsautooplen.h"
 
 #include "js/CharacterEncoding.h"
+#include "vm/Shape.h"
 
 #include "vm/ScopeObject-inl.h"
 #include "vm/StringObject-inl.h"
+
+#include "jsatominlines.h"
+#include "jsobjinlines.h"
+#include "jsinterpinlines.h"
+
+#include "vm/Shape-inl.h"
 
 #if defined JS_POLYIC
 
@@ -423,7 +425,7 @@ class SetPropCompiler : public PICStubCompiler
             jsbytecode *pc;
             RootedScript script(cx, cx->stack.currentScript(&pc));
 
-            if (!JSScript::ensureRanInference(cx, script) || monitor.recompiled())
+            if (!script->ensureRanInference(cx) || monitor.recompiled())
                 return false;
 
             JS_ASSERT(*pc == JSOP_SETPROP || *pc == JSOP_SETNAME);
@@ -2650,7 +2652,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (idval.isInt32() && INT_FITS_IN_JSID(idval.toInt32())) {
         id = INT_TO_JSID(idval.toInt32());
     } else {
-        if (!InternNonIntElementId(cx, obj, idval, &id))
+        if (!InternNonIntElementId<CanGC>(cx, obj, idval, &id))
             THROW();
     }
 
