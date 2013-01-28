@@ -212,8 +212,8 @@ private:
   // nsDeviceContext::AppUnitsPerDevPixel, but since we do a lot of
   // multiplying by 1/GetTextRunUnitsFactor, it's good for it to be a
   // power of 2 to avoid accuracy loss.
-  static uint32_t GetTextRunUnitsFactor() { return 64; }
-  
+  static int32_t GetTextRunUnitsFactor() { return 64; }
+
   /**
    * @aParam aDrawScale font drawing must be scaled into user units
    * by this factor
