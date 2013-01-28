@@ -69,10 +69,7 @@ let tests = {
     addVisits(
       {uri: testURI1, transition: PlacesUtils.history.TRANSITION_TYPED},
       window,
-      function() {
-        ok(PlacesUtils.ghistory2.isVisited(testURI1), MOZURISPEC + " is a visited url.");
-        aCallback();
-      });
+      aCallback);
   },
 
   makeTag: function() {
