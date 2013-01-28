@@ -1014,6 +1014,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
         bool painted = false;
         nsIntRegion region = invalidRect;
 
+        mWidgetListener->WillPaintWindow(this, true);
+
         switch (GetLayerManager(nullptr)->GetBackendType()) {
             case mozilla::layers::LAYERS_BASIC: {
 
@@ -1024,7 +1026,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                     AutoLayerManagerSetup
                       setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
 
-                    painted = mWidgetListener->PaintWindow(this, region, 0);
+                    painted = mWidgetListener->PaintWindow(this, region,
+                        nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
                 }
 
                 // XXX uhh.. we can't just ignore this because we no longer have
@@ -1044,13 +1047,16 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nullptr))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
-                painted = mWidgetListener->PaintWindow(this, region, 0);
+                painted = mWidgetListener->PaintWindow(this, region,
+                    nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
                 break;
             }
 
             default:
                 NS_ERROR("Invalid layer manager");
         }
+
+        mWidgetListener->DidPaintWindow();
 
         // We had no covering child, so make sure we draw all the children,
         // starting from index 0.
