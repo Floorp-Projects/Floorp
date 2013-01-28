@@ -1515,6 +1515,64 @@ add_test(function test_stk_terminal_response() {
 });
 
 /**
+ * Verify Event Download Command : Language Selection
+ */
+add_test(function test_stk_event_download_language_selection() {
+  let worker = newUint8SupportOutgoingIndexWorker();
+  let buf = worker.Buf;
+  let pduHelper = worker.GsmPDUHelper;
+
+  buf.sendParcel = function () {
+    // Type
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND)
+
+    // Token : we don't care
+    this.readUint32();
+
+    // Data Size, 26 = 2 * (2 + TLV_DEVICE_ID_SIZE(4) +
+    //                      TLV_EVENT_LIST_SIZE(3) +
+    //                      TLV_LANGUAGE(4))
+    do_check_eq(this.readUint32(), 26);
+
+    // BER tag
+    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+
+    // BER length, 19 = TLV_DEVICE_ID_SIZE(4) +
+    //                  TLV_EVENT_LIST_SIZE(3) +
+    //                  TLV_LANGUAGE(4)
+    do_check_eq(pduHelper.readHexOctet(), 11);
+
+    // Device Identifies, Type-Length-Value(Source ID-Destination ID)
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 2);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+
+    // Event List, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 1);
+    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_LANGUAGE_SELECTION);
+
+    // Language, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LANGUAGE);
+    do_check_eq(pduHelper.readHexOctet(), 2);
+    do_check_eq(pduHelper.read8BitUnpackedToString(2), "zh");
+
+    run_next_test();
+  };
+
+  let event = {
+    eventType: STK_EVENT_TYPE_LANGUAGE_SELECTION,
+    language: "zh"
+  };
+  worker.RIL.sendStkEventDownload({
+    event: event
+  });
+});
+
+/**
  * Verify Event Download Command : Idle Screen Available
  */
 add_test(function test_stk_event_download_idle_screen_available() {
