@@ -17,7 +17,6 @@ SIGN_INCLUDES := \
 
 SIGN_EXCLUDES := \
   'D3DCompiler*.dll' \
-  'd3dx9*.dll' \
   'msvc*.dll' \
   $(NULL)
 endif # Windows
