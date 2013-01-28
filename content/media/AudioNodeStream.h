@@ -9,6 +9,7 @@
 #include "MediaStreamGraph.h"
 #include "AudioChannelFormat.h"
 #include "AudioNodeEngine.h"
+#include "mozilla/dom/AudioParam.h"
 
 #ifdef PR_LOGGING
 #define LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
@@ -52,6 +53,7 @@ public:
                               double aStreamTime);
   void SetDoubleParameter(uint32_t aIndex, double aValue);
   void SetInt32Parameter(uint32_t aIndex, int32_t aValue);
+  void SetTimelineParameter(uint32_t aIndex, const dom::AudioParamTimeline& aValue);
   void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer);
 
   virtual AudioNodeStream* AsAudioNodeStream() { return this; }

@@ -16,13 +16,12 @@
 #include "AudioContext.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/Util.h"
+#include "mozilla/ErrorResult.h"
 
 struct JSContext;
 class nsIDOMWindow;
 
 namespace mozilla {
-
-class ErrorResult;
 
 namespace dom {
 
