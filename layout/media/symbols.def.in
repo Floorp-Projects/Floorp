@@ -210,6 +210,7 @@ MOZ_PNG_get_tRNS
 MOZ_PNG_get_valid
 MOZ_PNG_longjmp
 MOZ_PNG_process_data
+MOZ_PNG_process_data_pause
 MOZ_PNG_progressive_combine_row
 MOZ_PNG_read_update_info
 MOZ_PNG_set_cHRM
