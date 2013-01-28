@@ -83,7 +83,7 @@ RangeAnalysis::RangeAnalysis(MIRGraph &graph)
 static bool
 IsDominatedUse(MBasicBlock *block, MUse *use)
 {
-    MNode *n = use->node();
+    MNode *n = use->consumer();
     bool isPhi = n->isDefinition() && n->toDefinition()->isPhi();
 
     if (isPhi)
@@ -110,8 +110,8 @@ RangeAnalysis::replaceDominatedUsesWith(MDefinition *orig, MDefinition *dom,
                                             MBasicBlock *block)
 {
     for (MUseIterator i(orig->usesBegin()); i != orig->usesEnd(); ) {
-        if (i->node() != dom && IsDominatedUse(block, *i))
-            i = i->node()->replaceOperand(i, dom);
+        if (i->consumer() != dom && IsDominatedUse(block, *i))
+            i = i->consumer()->replaceOperand(i, dom);
         else
             i++;
     }
