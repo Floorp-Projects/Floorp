@@ -107,8 +107,10 @@ public:
       // We still need to take into account clipBounds if it contains additional
       // clipping information.
       RefPtr<ID2D1RectangleGeometry> rectGeom;
-      factory()->CreateRectangleGeometry(D2D1::Rect(clipBounds.x, clipBounds.y,
-                                                    clipBounds.XMost(), clipBounds.YMost()),
+      factory()->CreateRectangleGeometry(D2D1::Rect(Float(clipBounds.x),
+                                                    Float(clipBounds.y),
+                                                    Float(clipBounds.XMost()),
+                                                    Float(clipBounds.YMost())),
                                          byRef(rectGeom));
 
       mClippedArea = mDT->Intersect(mClippedArea, rectGeom);
