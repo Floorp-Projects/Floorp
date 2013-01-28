@@ -24,6 +24,10 @@ extern bool gBluetoothDebugFlag;
       __android_log_print(ANDROID_LOG_INFO, "GeckoBluetooth", args); \
     }                                                                \
   } while(0)
+
+#define BT_WARNING(args...)                                          \
+  __android_log_print(ANDROID_LOG_WARN, "GeckoBluetooth", args)
+
 #else
 #define BT_LOG(args...)                                              \
   do {                                                               \
@@ -31,6 +35,8 @@ extern bool gBluetoothDebugFlag;
       printf(args);                                                  \
     }                                                                \
   } while(0)
+
+#define BT_WARNING(args...) printf(args);
 #endif
 
 #define BEGIN_BLUETOOTH_NAMESPACE \
