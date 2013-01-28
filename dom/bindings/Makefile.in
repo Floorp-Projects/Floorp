@@ -46,6 +46,7 @@ CPPSRCS = \
   $(linked_binding_cpp_files) \
   $(filter %.cpp, $(globalgen_targets)) \
   BindingUtils.cpp \
+  CallbackInterface.cpp \
   CallbackObject.cpp \
   DOMJSProxyHandler.cpp \
   $(NULL)
