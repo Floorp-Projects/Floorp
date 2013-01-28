@@ -1780,7 +1780,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         return;
 
     const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
-    const uint32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    const int32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
     bool isRTL = aTextRun->IsRightToLeft();
     double direction = aTextRun->GetDirection();
@@ -2250,7 +2250,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
         }
     }
 
-    const uint32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    const int32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // Current position in appunits
     const gfxFont::Metrics& fontMetrics = GetMetrics();
 
@@ -2777,7 +2777,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
 }
 
 gfxGlyphExtents *
-gfxFont::GetOrCreateGlyphExtents(uint32_t aAppUnitsPerDevUnit) {
+gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
     uint32_t i, count = mGlyphExtentsArray.Length();
     for (i = 0; i < count; ++i) {
         if (mGlyphExtentsArray[i]->GetAppUnitsPerDevUnit() == aAppUnitsPerDevUnit)
@@ -2807,7 +2807,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTi
     cairo_glyph_extents(aContext->GetCairo(), &glyph, 1, &extents);
 
     const Metrics& fontMetrics = GetMetrics();
-    uint32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
+    int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
     if (!aNeedTight && extents.x_bearing >= 0 &&
         extents.y_bearing >= -fontMetrics.maxAscent &&
         extents.height + extents.y_bearing <= fontMetrics.maxDescent) {
@@ -4704,7 +4704,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
     , mUserData(aParams->mUserData)
     , mFontGroup(aFontGroup)
 {
-    NS_ASSERTION(mAppUnitsPerDevUnit != 0, "Invalid app unit scale");
+    NS_ASSERTION(mAppUnitsPerDevUnit > 0, "Invalid app unit scale");
     MOZ_COUNT_CTOR(gfxTextRun);
     NS_ADDREF(mFontGroup);
 
