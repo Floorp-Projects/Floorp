@@ -20,3 +20,5 @@ if CONFIG['OS_ARCH'] != 'ANDROID':
     TEST_DIRS += ['jsapi-tests']
 
 TEST_DIRS += ['tests', 'gdb']
+
+CONFIGURE_SUBST_FILES += ['devtools/rootAnalysis/Makefile']
