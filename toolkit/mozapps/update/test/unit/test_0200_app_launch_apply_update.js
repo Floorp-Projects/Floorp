@@ -30,6 +30,11 @@ let gProcess;
 let gTimeoutRuns = 0;
 
 function run_test() {
+  if (APP_BIN_NAME == "xulrunner") {
+    logTestInfo("Unable to run this test on xulrunner");
+    return;
+  }
+
   do_test_pending();
   do_register_cleanup(end_test);
 
