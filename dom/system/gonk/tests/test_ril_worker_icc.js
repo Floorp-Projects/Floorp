@@ -456,7 +456,7 @@ add_test(function test_is_icc_service_available() {
   let ICCUtilsHelper = worker.ICCUtilsHelper;
 
   function test_table(sst, geckoService, simEnabled, usimEnabled) {
-    worker.RIL.iccInfo.sst = sst;
+    worker.RIL.iccInfoPrivate.sst = sst;
     worker.RIL.appType = CARD_APPTYPE_SIM;
     do_check_eq(ICCUtilsHelper.isICCServiceAvailable(geckoService), simEnabled);
     worker.RIL.appType = CARD_APPTYPE_USIM;
