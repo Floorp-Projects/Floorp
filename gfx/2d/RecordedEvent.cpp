@@ -211,7 +211,9 @@ RecordedEvent::ReadStrokeOptions(std::istream &aStream, StrokeOptions &aStrokeOp
   ReadElement(aStream, aStrokeOptions.mMiterLimit);
   ReadElement(aStream, joinStyle);
   ReadElement(aStream, capStyle);
-  aStrokeOptions.mDashLength = dashLength;
+  // On 32 bit we truncate the value of dashLength.
+  // See also bug 811850 for history.
+  aStrokeOptions.mDashLength = size_t(dashLength);
   aStrokeOptions.mLineJoin = joinStyle;
   aStrokeOptions.mLineCap = capStyle;
 
