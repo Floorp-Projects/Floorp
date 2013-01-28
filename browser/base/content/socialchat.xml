@@ -395,7 +395,7 @@
           // already fired and new callbacks can be made immediately.
           aChatBox._callbacks = [aCallback];
           var tmp = {};
-          Components.utils.import("resource://gre/modules/Social.jsm", tmp);
+          Components.utils.import("resource:///modules/Social.jsm", tmp);
           tmp.Social.setErrorListener(aChatBox.iframe, function(iframe) {
             iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
           });
