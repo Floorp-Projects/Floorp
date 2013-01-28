@@ -7666,12 +7666,12 @@ class CGCallbackFunction(CGClass):
         return [ClassConstructor(
             [Argument("JSContext*", "cx"),
              Argument("JSObject*", "aOwner"),
-             Argument("JSObject*", "aCallable"),
+             Argument("JSObject*", "aCallback"),
              Argument("bool*", "aInited")],
             bodyInHeader=True,
             visibility="public",
             baseConstructors=[
-                "CallbackFunction(cx, aOwner, aCallable, aInited)"
+                "CallbackFunction(cx, aOwner, aCallback, aInited)"
                 ],
             body=""),
             ClassConstructor(
@@ -7700,7 +7700,7 @@ class CGCallbackFunction(CGClass):
         argsWithoutThis = list(args)
         args.insert(0, Argument("const T&",  "thisObj"))
 
-        setupCall = ("CallSetup s(mCallable);\n"
+        setupCall = ("CallSetup s(mCallback);\n"
                      "if (!s.GetContext()) {\n"
                      "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
                      "  return${errorReturn};\n"
@@ -7708,7 +7708,7 @@ class CGCallbackFunction(CGClass):
 
         bodyWithThis = string.Template(
             setupCall+
-            "JSObject* thisObjJS = WrapCallThisObject(s.GetContext(), mCallable, thisObj);\n"
+            "JSObject* thisObjJS = WrapCallThisObject(s.GetContext(), mCallback, thisObj);\n"
             "if (!thisObjJS) {\n"
             "  aRv.Throw(NS_ERROR_FAILURE);\n"
             "  return${errorReturn};\n"
@@ -7802,7 +7802,7 @@ class CallCallback(CGNativeMember):
             "JS::Value rval = JSVAL_VOID;\n"
             "${argvDecl}" # Newlines and semicolons are in the value
             "${convertArgs}"
-            "if (!JS_CallFunctionValue(cx, aThisObj, JS::ObjectValue(*mCallable),\n"
+            "if (!JS_CallFunctionValue(cx, aThisObj, JS::ObjectValue(*mCallback),\n"
             "                          ${argc}, ${argv}, &rval)) {\n"
             "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
             "  return${errorReturn};\n"
@@ -7816,7 +7816,7 @@ class CallCallback(CGNativeMember):
             "holderName" : "rvalHolder",
             "declName" : "rvalDecl",
             # We actually want to pass in a null scope object here, because
-            # wrapping things into our current compartment (that of mCallable)
+            # wrapping things into our current compartment (that of mCallback)
             # is what we want.
             "obj": "nullptr"
             }
@@ -7881,7 +7881,7 @@ class CallCallback(CGNativeMember):
                 'jsvalPtr' : "&argv[%s]" % jsvalIndex,
                 # XXXbz we don't have anything better to use for 'obj',
                 # really...
-                'obj' : 'mCallable',
+                'obj' : 'mCallback',
                 'isCreator': False,
                 'exceptionCode' : self.exceptionCode
                 })
