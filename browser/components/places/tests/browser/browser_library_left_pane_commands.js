@@ -20,8 +20,6 @@ gTests.push({
   run: function() {
     function addVisitsCallback() {
       var bhist = PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
-      // Add a visit.
-      ok(bhist.isVisited(PlacesUtils._uri(TEST_URI)), "Visit has been added");
 
       // Select and open the left pane "History" query.
       var PO = gLibrary.PlacesOrganizer;
