@@ -160,7 +160,7 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     data->deletedBits = reinterpret_cast<size_t *>(dstEnd);
     ClearAllBitArrayElements(data->deletedBits, numDeletedWords);
 
-    RawObject obj = JSObject::create(cx, FINALIZE_KIND, shape, type, NULL);
+    RawObject obj = JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, type, NULL);
     if (!obj) {
         js_free(data);
         return NULL;

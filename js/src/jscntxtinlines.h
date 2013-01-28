@@ -100,12 +100,12 @@ NewObjectCache::fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *
 }
 
 inline JSObject *
-NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
+NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::InitialHeap heap)
 {
     JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
     Entry *entry = &entries[entry_];
 
-    JSObject *obj = js_NewGCObject<NoGC>(cx, entry->kind);
+    JSObject *obj = js_NewGCObject<NoGC>(cx, entry->kind, heap);
     if (obj) {
         copyCachedToObject(obj, reinterpret_cast<JSObject *>(&entry->templateObject));
         Probes::createObject(cx, obj);

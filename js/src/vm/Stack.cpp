@@ -321,7 +321,7 @@ StackFrame::prologue(JSContext *cx, bool newType)
 
     if (isConstructing()) {
         RootedObject callee(cx, &this->callee());
-        JSObject *obj = js_CreateThisForFunction(cx, callee, newType);
+        JSObject *obj = CreateThisForFunction(cx, callee, newType);
         if (!obj)
             return false;
         functionThis() = ObjectValue(*obj);

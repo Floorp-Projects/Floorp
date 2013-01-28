@@ -2389,7 +2389,8 @@ TypeCompartment::newTypeObject(JSContext *cx, Class *clasp, Handle<TaggedProto> 
 {
     JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
 
-    TypeObject *object = gc::NewGCThing<TypeObject, CanGC>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
+    TypeObject *object = gc::NewGCThing<TypeObject, CanGC>(cx, gc::FINALIZE_TYPE_OBJECT,
+                                                           sizeof(TypeObject), gc::TenuredHeap);
     if (!object)
         return NULL;
     new(object) TypeObject(clasp, proto, clasp == &FunctionClass, unknown);
@@ -2584,7 +2585,7 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
     return false;
 }
 
-bool
+NewObjectKind
 types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey key)
 {
     /*
@@ -2594,17 +2595,26 @@ types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc,
      */
 
     if (!cx->typeInferenceEnabled() || (script->function() && !script->treatAsRunOnce))
-        return false;
+        return GenericObject;
 
     if (key != JSProto_Object && !(key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray))
-        return false;
+        return GenericObject;
 
     AutoEnterAnalysis enter(cx);
 
     if (!script->ensureRanAnalysis(cx))
-        return false;
+        return GenericObject;
 
-    return !script->analysis()->getCode(pc).inLoop;
+    if (script->analysis()->getCode(pc).inLoop)
+        return GenericObject;
+
+    return SingletonObject;
+}
+
+NewObjectKind
+types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, Class *clasp)
+{
+    return UseNewTypeForInitializer(cx, script, pc, JSCLASS_CACHED_PROTO_KEY(clasp));
 }
 
 static inline bool
@@ -5823,7 +5833,7 @@ JSScript::makeAnalysis(JSContext *cx)
 }
 
 /* static */ bool
-JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool singleton)
+JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool singleton /* = false */)
 {
     JS_ASSERT(fun->nonLazyScript());
     JS_ASSERT(fun->nonLazyScript()->function() == fun);
@@ -6190,12 +6200,12 @@ JSObject::getNewType(JSContext *cx, Class *clasp, JSFunction *fun)
 }
 
 TypeObject *
-JSCompartment::getLazyType(JSContext *cx, Class *clasp, Handle<TaggedProto> proto)
+JSCompartment::getLazyType(JSContext *cx, Class *clasp, TaggedProto proto)
 {
     JS_ASSERT(cx->compartment == this);
     JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
 
-    MaybeCheckStackRoots(cx);
+    AutoEnterAnalysis enter(cx);
 
     TypeObjectSet &table = cx->compartment->lazyTypeObjects;
 
@@ -6210,7 +6220,8 @@ JSCompartment::getLazyType(JSContext *cx, Class *clasp, Handle<TaggedProto> prot
         return type;
     }
 
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, clasp, proto, false);
+    Rooted<TaggedProto> protoRoot(cx, proto);
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, clasp, protoRoot, false);
     if (!type)
         return NULL;
 
