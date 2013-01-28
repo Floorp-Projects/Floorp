@@ -638,7 +638,7 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
 
 bool nsViewManager::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
                                 uint32_t aFlags)
- {
+{
   if (!aWidget || !mContext)
     return false;
 
@@ -649,7 +649,7 @@ bool nsViewManager::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
   // destroyed it during CallWillPaintOnObservers (bug 378273).
   nsView* view = nsView::GetViewFor(aWidget);
   if (view && !aRegion.IsEmpty()) {
-    Refresh(view, aRegion, (aFlags & nsIWidgetListener::WILL_SEND_DID_PAINT));
+    Refresh(view, aRegion, true);
   }
 
   return true;

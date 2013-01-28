@@ -530,16 +530,14 @@ PuppetWidget::Paint()
 #endif
 
     if (mozilla::layers::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
-      mAttachedWidgetListener->PaintWindow(this, region,
-        nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+      mAttachedWidgetListener->PaintWindow(this, region, 0);
     } else {
       nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
       ctx->Rectangle(gfxRect(0,0,0,0));
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
                                               BUFFER_NONE);
-      mAttachedWidgetListener->PaintWindow(this, region,
-        nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+      mAttachedWidgetListener->PaintWindow(this, region, 0);
       mTabChild->NotifyPainted();
     }
   }
