@@ -167,7 +167,8 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE(rollupListener, event);
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-  NS_ENSURE_TRUE(rollupWidget, event);
+  if (!rollupWidget)
+    return event;
 
   // Don't bother with rightMouseDown events here -- because of the delay,
   // we'll end up closing browser context menus that we just opened.  Since
