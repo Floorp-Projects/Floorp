@@ -8,7 +8,7 @@
 #define MAX_LZW_BITS          12
 #define MAX_BITS            4097 /* 2^MAX_LZW_BITS+1 */
 #define MAX_COLORS           256
-#define MAX_HOLD_SIZE        256
+#define MIN_HOLD_SIZE        256
 
 enum { GIF_TRAILER                     = 0x3B }; //';'
 enum { GIF_IMAGE_SEPARATOR             = 0x2C }; //','
@@ -28,6 +28,7 @@ typedef enum {
     gif_global_colormap,
     gif_image_start,
     gif_image_header,
+    gif_image_header_continue,
     gif_image_colormap,
     gif_image_body,
     gif_lzw_start,
@@ -95,7 +96,7 @@ typedef struct gif_struct {
     bool is_transparent;         /* TRUE, if tpixel is valid */
 
     uint16_t  prefix[MAX_BITS];          /* LZW decoding tables */
-    uint8_t   hold[MAX_HOLD_SIZE];       /* Accumulation buffer */
+    uint8_t*  hold;                      /* Accumulation buffer */
     uint32_t  global_colormap[MAX_COLORS];   /* Default colormap if local not supplied */
     uint8_t   suffix[MAX_BITS];          /* LZW decoding tables */
     uint8_t   stack[MAX_BITS];           /* Base of LZW decoder stack */

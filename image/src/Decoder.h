@@ -184,6 +184,15 @@ protected:
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
 
+  // This is called by decoders when they need a new frame. These decoders
+  // must then save the data they have been sent but not yet processed and
+  // return from WriteInternal. When the new frame is created, WriteInternal
+  // will be called again with nullptr and 0 as arguments.
+  void NeedNewFrame(uint32_t frameNum, uint32_t x_offset, uint32_t y_offset,
+                    uint32_t width, uint32_t height,
+                    gfxASurface::gfxImageFormat format,
+                    uint8_t palette_depth = 0);
+
   /*
    * Member variables.
    *
@@ -208,6 +217,32 @@ private:
 
   nsresult mFailCode;
 
+  struct NewFrameData
+  {
+    NewFrameData()
+    {}
+
+    NewFrameData(uint32_t num, uint32_t offsetx, uint32_t offsety,
+                 uint32_t width, uint32_t height,
+                 gfxASurface::gfxImageFormat format, uint8_t paletteDepth)
+      : mFrameNum(num)
+      , mOffsetX(offsetx)
+      , mOffsetY(offsety)
+      , mWidth(width)
+      , mHeight(height)
+      , mFormat(format)
+      , mPaletteDepth(paletteDepth)
+    {}
+    uint32_t mFrameNum;
+    uint32_t mOffsetX;
+    uint32_t mOffsetY;
+    uint32_t mWidth;
+    uint32_t mHeight;
+    gfxASurface::gfxImageFormat mFormat;
+    uint8_t mPaletteDepth;
+  };
+  NewFrameData mNewFrameData;
+  bool mNeedsNewFrame;
   bool mInitialized;
   bool mSizeDecode;
   bool mInFrame;
