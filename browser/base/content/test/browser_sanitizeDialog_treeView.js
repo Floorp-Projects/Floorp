@@ -77,11 +77,11 @@ var gAllTests = [
         wh.checkPrefCheckbox("history", false);
 
         wh.cancelDialog();
-        ensureHistoryClearedState(uris, false);
+        yield promiseHistoryClearedState(uris, false);
 
         // OK, done, cleanup after ourselves.
         blankSlate();
-        ensureHistoryClearedState(uris, true);
+        yield promiseHistoryClearedState(uris, true);
       });
     });
   },
@@ -133,16 +133,16 @@ var gAllTests = [
         // hour are cleared.
         wh.checkPrefCheckbox("history", true);
         wh.acceptDialog();
-        ensureHistoryClearedState(uris, true);
+        yield promiseHistoryClearedState(uris, true);
         ensureDownloadsClearedState(downloadIDs, true);
 
         // Make sure visits and downloads > 1 hour still exist.
-        ensureHistoryClearedState(olderURIs, false);
+        yield promiseHistoryClearedState(olderURIs, false);
         ensureDownloadsClearedState(olderDownloadIDs, false);
 
         // OK, done, cleanup after ourselves.
         blankSlate();
-        ensureHistoryClearedState(olderURIs, true);
+        yield promiseHistoryClearedState(olderURIs, true);
         ensureDownloadsClearedState(olderDownloadIDs, true);
       });
     });
@@ -187,13 +187,13 @@ var gAllTests = [
         wh.acceptDialog();
 
         // Of the three only form entries should be cleared.
-        ensureHistoryClearedState(uris, false);
+        yield promiseHistoryClearedState(uris, false);
         ensureDownloadsClearedState(downloadIDs, false);
         ensureFormEntriesClearedState(formEntries, true);
 
         // OK, done, cleanup after ourselves.
         blankSlate();
-        ensureHistoryClearedState(uris, true);
+        yield promiseHistoryClearedState(uris, true);
         ensureDownloadsClearedState(downloadIDs, true);
       });
     });
@@ -222,7 +222,7 @@ var gAllTests = [
         wh.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
         wh.checkPrefCheckbox("history", true);
         wh.acceptDialog();
-        ensureHistoryClearedState(uris, true);
+        yield promiseHistoryClearedState(uris, true);
       });
     });
   }
@@ -572,22 +572,6 @@ function ensureFormEntriesClearedState(aFormEntries, aShouldBeCleared) {
 }
 
 /**
- * Ensures that the specified URIs are either cleared or not.
- *
- * @param aURIs
- *        Array of page URIs
- * @param aShouldBeCleared
- *        True if each visit to the URI should be cleared, false otherwise
- */
-function ensureHistoryClearedState(aURIs, aShouldBeCleared) {
-  let niceStr = aShouldBeCleared ? "no longer" : "still";
-  aURIs.forEach(function (aURI) {
-    is(PlacesUtils.bhistory.isVisited(aURI), !aShouldBeCleared,
-       "history visit " + aURI.spec + " should " + niceStr + " exist");
-  });
-}
-
-/**
  * Opens the sanitize dialog and runs a callback once it's finished loading.
  * 
  * @param aOnloadCallback
@@ -606,8 +590,11 @@ function openWindow(aOnloadCallback) {
         // Some exceptions that reach here don't reach the test harness, but
         // ok()/is() do...
         try {
-          aOnloadCallback(win);
-          waitForAsyncUpdates(doNextTest);
+          Task.spawn(function() {
+            aOnloadCallback(win);
+          }).then(function() {
+            waitForAsyncUpdates(doNextTest);
+          });
         }
         catch (exc) {
           win.close();
