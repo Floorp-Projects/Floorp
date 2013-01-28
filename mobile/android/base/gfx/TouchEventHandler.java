@@ -141,6 +141,10 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
         Tabs.registerOnTabsChangedListener(this);
     }
 
+    void destroy() {
+        Tabs.unregisterOnTabsChangedListener(this);
+    }
+
     /* This function MUST be called on the UI thread */
     public boolean handleEvent(MotionEvent event) {
         // if we don't have gecko listeners, just dispatch the event

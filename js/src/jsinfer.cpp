@@ -323,6 +323,49 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
 // TypeSet
 /////////////////////////////////////////////////////////////////////
 
+bool
+TypeSet::isSubset(TypeSet *other)
+{
+    if ((baseFlags() & other->baseFlags()) != baseFlags())
+        return false;
+
+    if (unknownObject()) {
+        JS_ASSERT(other->unknownObject());
+    } else {
+        for (unsigned i = 0; i < getObjectCount(); i++) {
+            TypeObjectKey *obj = getObject(i);
+            if (!obj)
+                continue;
+            if (!other->hasType(Type::ObjectType(obj)))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+TypeSet::isSubsetIgnorePrimitives(TypeSet *other)
+{
+    TypeFlags otherFlags = other->baseFlags() | TYPE_FLAG_PRIMITIVE;
+    if ((baseFlags() & otherFlags) != baseFlags())
+        return false;
+
+    if (unknownObject()) {
+        JS_ASSERT(other->unknownObject());
+    } else {
+        for (unsigned i = 0; i < getObjectCount(); i++) {
+            TypeObjectKey *obj = getObject(i);
+            if (!obj)
+                continue;
+            if (!other->hasType(Type::ObjectType(obj)))
+                return false;
+        }
+    }
+
+    return true;
+}
+
 inline void
 TypeSet::addTypesToConstraint(JSContext *cx, TypeConstraint *constraint)
 {
@@ -1958,20 +2001,8 @@ HeapTypeSet::knownSubset(JSContext *cx, TypeSet *other)
 {
     JS_ASSERT(!other->constraintsPurged());
 
-    if ((baseFlags() & other->baseFlags()) != baseFlags())
+    if (!isSubset(other))
         return false;
-
-    if (unknownObject()) {
-        JS_ASSERT(other->unknownObject());
-    } else {
-        for (unsigned i = 0; i < getObjectCount(); i++) {
-            TypeObjectKey *obj = getObject(i);
-            if (!obj)
-                continue;
-            if (!other->hasType(Type::ObjectType(obj)))
-                return false;
-        }
-    }
 
     addFreeze(cx);
 
@@ -2035,6 +2066,37 @@ StackTypeSet::isDOMClass()
     }
 
     return true;
+}
+
+JSObject *
+StackTypeSet::getCommonPrototype()
+{
+    if (unknownObject())
+        return NULL;
+
+    JSObject *proto = NULL;
+    unsigned count = getObjectCount();
+
+    for (unsigned i = 0; i < count; i++) {
+        TaggedProto nproto;
+        if (RawObject object = getSingleObject(i))
+            nproto = object->getProto();
+        else if (TypeObject *object = getTypeObject(i))
+            nproto = object->proto.get();
+        else
+            continue;
+
+        if (proto) {
+            if (nproto != proto)
+                return NULL;
+        } else {
+            if (!nproto.isObject())
+                return NULL;
+            proto = nproto.toObject();
+        }
+    }
+
+    return proto;
 }
 
 JSObject *
@@ -2483,27 +2545,60 @@ types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc,
     return !script->analysis()->getCode(pc).inLoop;
 }
 
+static inline bool
+ClassCanHaveExtraProperties(Class *clasp)
+{
+    JS_ASSERT(clasp->resolve);
+    return clasp->resolve != JS_ResolveStub || clasp->ops.lookupGeneric || clasp->ops.getGeneric;
+}
+
+static inline bool
+PrototypeHasIndexedProperty(JSContext *cx, JSObject *obj)
+{
+    do {
+        TypeObject *type = obj->getType(cx);
+        if (ClassCanHaveExtraProperties(type->clasp))
+            return true;
+        if (type->unknownProperties())
+            return true;
+        HeapTypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
+        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
+            return true;
+        obj = obj->getProto();
+    } while (obj);
+
+    return false;
+}
+
 bool
 types::ArrayPrototypeHasIndexedProperty(JSContext *cx, HandleScript script)
 {
     if (!cx->typeInferenceEnabled() || !script->compileAndGo)
         return true;
 
-    RootedObject proto(cx, script->global().getOrCreateArrayPrototype(cx));
+    JSObject *proto = script->global().getOrCreateArrayPrototype(cx);
     if (!proto)
         return true;
 
-    do {
-        TypeObject *type = proto->getType(cx);
-        if (type->unknownProperties())
-            return true;
-        HeapTypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
-        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
-            return true;
-        proto = proto->getProto();
-    } while (proto);
+    return PrototypeHasIndexedProperty(cx, proto);
+}
 
-    return false;
+bool
+types::TypeCanHaveExtraIndexedProperties(JSContext *cx, StackTypeSet *types)
+{
+    Class *clasp = types->getKnownClass();
+
+    if (!clasp || ClassCanHaveExtraProperties(clasp))
+        return true;
+
+    if (types->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES))
+        return true;
+
+    JSObject *proto = types->getCommonPrototype();
+    if (!proto)
+        return true;
+
+    return PrototypeHasIndexedProperty(cx, proto);
 }
 
 bool
@@ -6134,7 +6229,7 @@ void
 TypeSet::sweep(JSCompartment *compartment)
 {
     JS_ASSERT(!purged());
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
 
     /*
      * Purge references to type objects that are no longer live. Type sets hold
@@ -6214,7 +6309,7 @@ TypeObject::sweep(FreeOp *fop)
     }
 
     JSCompartment *compartment = this->compartment();
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
 
     if (!isMarked()) {
         if (newScript)
@@ -6298,7 +6393,7 @@ struct SweepTypeObjectOp
 void
 SweepTypeObjects(FreeOp *fop, JSCompartment *compartment)
 {
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
     SweepTypeObjectOp op(fop);
     gc::ForEachArenaAndCell(compartment, gc::FINALIZE_TYPE_OBJECT, gc::EmptyArenaOp, op);
 }
@@ -6307,7 +6402,7 @@ void
 TypeCompartment::sweep(FreeOp *fop)
 {
     JSCompartment *compartment = this->compartment();
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
 
     SweepTypeObjects(fop, compartment);
 
@@ -6444,7 +6539,7 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectSet &table)
 {
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
 
-    JS_ASSERT(isGCSweeping());
+    JS_ASSERT(zone()->isGCSweeping());
     if (table.initialized()) {
         for (TypeObjectSet::Enum e(table); !e.empty(); e.popFront()) {
             TypeObject *type = e.front();
@@ -6475,7 +6570,7 @@ TypeCompartment::~TypeCompartment()
 TypeScript::Sweep(FreeOp *fop, RawScript script)
 {
     JSCompartment *compartment = script->compartment();
-    JS_ASSERT(compartment->isGCSweeping());
+    JS_ASSERT(compartment->zone()->isGCSweeping());
     JS_ASSERT(compartment->types.inferenceEnabled);
 
     unsigned num = NumTypeSets(script);

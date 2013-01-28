@@ -46,6 +46,20 @@ class FixedList
         length_ -= num;
     }
 
+    bool growBy(size_t num) {
+        T *list = (T *)GetIonContext()->temp->allocate((length_ + num) * sizeof(T));
+        if (!list) {
+            for (size_t i = 0; i < length_; i++)
+                list[i] = list_[i];
+
+            length_ += num;
+            list_ = list;
+            return true;
+        }
+
+        return false;
+    }
+
     T &operator[](size_t index) {
         JS_ASSERT(index < length_);
         return list_[index];

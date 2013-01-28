@@ -159,7 +159,7 @@ NormalArgumentsObject::callee() const
 inline void
 NormalArgumentsObject::clearCallee()
 {
-    data()->callee.set(compartment(), MagicValue(JS_OVERWRITTEN_CALLEE));
+    data()->callee.set(zone(), MagicValue(JS_OVERWRITTEN_CALLEE));
 }
 
 } /* namespace js */

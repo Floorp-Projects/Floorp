@@ -1,0 +1,39 @@
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="boom()" class="reftest-wait">
+
+
+<script>
+function boom()
+{
+ try {
+  var tree = document.getElementById("tree");
+  var col = tree.treeBoxObject.columns.getFirstColumn();
+  var treecols = document.getElementById("treecols");
+  treecols.parentNode.removeChild(treecols);
+  var x = col.x;
+ } finally {
+  document.documentElement.removeAttribute("class");
+ }
+}
+</script>
+
+
+<tree rows="6" id="tree">
+
+  <treecols id="treecols">
+      <treecol id="firstname" label="First Name"/>
+  </treecols>
+
+  <treechildren id="treechildren">
+    <treeitem>
+      <treerow>
+        <treecell label="Bob"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
+
+</tree>
+
+</window>

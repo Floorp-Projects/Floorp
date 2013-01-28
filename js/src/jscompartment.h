@@ -26,7 +26,7 @@
 namespace js {
 
 namespace ion {
-    class IonCompartment;
+class IonCompartment;
 }
 
 struct NativeIterator;
@@ -39,8 +39,8 @@ struct NativeIterator;
  * is erroneously included in the measurement; see bug 562553.
  */
 class DtoaCache {
-    double        d;
-    int         base;
+    double       d;
+    int          base;
     JSFlatString *s;      // if s==NULL, d and base are not valid
 
   public:
@@ -154,9 +154,9 @@ class Allocator
     JS_DECLARE_NEW_METHODS(new_, malloc_, JS_ALWAYS_INLINE)
 };
 
-}
+} /* namespace js */
 
-struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNodeBase<JSCompartment>
+struct JSCompartment : private JS::shadow::Zone, public js::gc::GraphNodeBase<JSCompartment>
 {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
@@ -209,6 +209,14 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
   private:
     bool                         ionUsingBarriers_;
   public:
+
+    JS::Zone *zone() {
+        return this;
+    }
+
+    const JS::Zone *zone() const {
+        return this;
+    }
 
     bool needsBarrier() const {
         return needsBarrier_;
@@ -327,7 +335,7 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
     double                       gcHeapGrowthFactor;
 
     bool                         hold;
-    bool                         isSystemCompartment;
+    bool                         isSystem;
 
     int64_t                      lastCodeRelease;
 
@@ -475,7 +483,8 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
     void sweepCrossCompartmentWrappers();
     void purge();
 
-    void findOutgoingEdges(js::gc::ComponentFinder<JSCompartment> &finder);
+    void findOutgoingEdgesFromCompartment(js::gc::ComponentFinder<JS::Zone> &finder);
+    void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
     void setGCLastBytes(size_t lastBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
@@ -578,6 +587,10 @@ struct JSCompartment : private JS::shadow::Compartment, public js::gc::GraphNode
 #endif
 };
 
+namespace JS {
+typedef JSCompartment Zone;
+} /* namespace JS */
+
 // For use when changing the debug mode flag on one or more compartments.
 // Do not run scripts in any compartment that is scheduled for GC using this
 // object. See comment in updateForDebugMode.
@@ -598,9 +611,9 @@ class js::AutoDebugModeGC
             GC(rt, GC_NORMAL, gcreason::DEBUG_MODE_GC);
     }
 
-    void scheduleGC(JSCompartment *compartment) {
+    void scheduleGC(Zone *zone) {
         JS_ASSERT(!rt->isHeapBusy());
-        PrepareCompartmentForGC(compartment);
+        PrepareZoneForGC(zone);
         needGC = true;
     }
 };
@@ -729,6 +742,8 @@ class CompartmentsIter {
     operator JSCompartment *() const { return get(); }
     JSCompartment *operator->() const { return get(); }
 };
+
+typedef CompartmentsIter ZonesIter;
 
 /*
  * AutoWrapperVector and AutoWrapperRooter can be used to store wrappers that
