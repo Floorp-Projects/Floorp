@@ -6,11 +6,12 @@
 
 #include "TelephonyCall.h"
 
-#include "nsDOMClassInfo.h"
+#include "nsIDOMCallEvent.h"
 
-#include "CallEvent.h"
-#include "Telephony.h"
 #include "DOMError.h"
+#include "GeneratedEvents.h"
+#include "nsDOMClassInfo.h"
+#include "Telephony.h"
 
 USING_TELEPHONY_NAMESPACE
 
@@ -98,25 +99,38 @@ TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
   }
 
   if (aFireEvents) {
-    nsRefPtr<CallEvent> event = CallEvent::Create(this);
-    NS_ASSERTION(event, "This should never fail!");
-
-    if (NS_FAILED(event->Dispatch(ToIDOMEventTarget(),
-                                  NS_LITERAL_STRING("statechange")))) {
-      NS_WARNING("Failed to dispatch statechange event!");
+    nsresult rv = DispatchCallEvent(NS_LITERAL_STRING("statechange"), this);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to dispatch specific event!");
     }
 
     // This can change if the statechange handler called back here... Need to
     // figure out something smarter.
     if (mCallState == aCallState) {
-      event = CallEvent::Create(this);
-      NS_ASSERTION(event, "This should never fail!");
-
-      if (NS_FAILED(event->Dispatch(ToIDOMEventTarget(), stateString))) {
+      rv = DispatchCallEvent(stateString, this);
+      if (NS_FAILED(rv)) {
         NS_WARNING("Failed to dispatch specific event!");
       }
     }
   }
+}
+
+nsresult
+TelephonyCall::DispatchCallEvent(const nsAString& aType,
+                                 nsIDOMTelephonyCall* aCall)
+{
+  MOZ_ASSERT(aCall);
+
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMCallEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_ASSERTION(event, "This should never fail!");
+
+  nsCOMPtr<nsIDOMCallEvent> callEvent = do_QueryInterface(event);
+  MOZ_ASSERT(callEvent);
+  nsresult rv = callEvent->InitCallEvent(aType, false, false, aCall);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchTrustedEvent(callEvent);
 }
 
 void
@@ -130,12 +144,8 @@ TelephonyCall::NotifyError(const nsAString& aError)
   // Do the state transitions
   ChangeStateInternal(nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED, true);
 
-  // Notify the error event
-  nsRefPtr<CallEvent> event = CallEvent::Create(this);
-  NS_ASSERTION(event, "This should never fail!");
-
-  if (NS_FAILED(event->Dispatch(ToIDOMEventTarget(),
-                                NS_LITERAL_STRING("error")))) {
+  nsresult rv = DispatchCallEvent(NS_LITERAL_STRING("error"), this);
+  if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch error event!");
   }
 }
@@ -215,10 +225,10 @@ TelephonyCall::Hold()
     NS_WARNING("Hold non-connected call ignored!");
     return NS_OK;
   }
-  
+
   nsresult rv = mTelephony->RIL()->HoldCall(mCallIndex);
   NS_ENSURE_SUCCESS(rv,rv);
-  
+
   ChangeStateInternal(nsIRadioInterfaceLayer::CALL_STATE_HOLDING, true);
   return NS_OK;
 }
@@ -230,10 +240,10 @@ TelephonyCall::Resume()
     NS_WARNING("Resume non-held call ignored!");
     return NS_OK;
   }
-  
+
   nsresult rv = mTelephony->RIL()->ResumeCall(mCallIndex);
   NS_ENSURE_SUCCESS(rv,rv);
-  
+
   ChangeStateInternal(nsIRadioInterfaceLayer::CALL_STATE_RESUMING, true);
   return NS_OK;
 }
