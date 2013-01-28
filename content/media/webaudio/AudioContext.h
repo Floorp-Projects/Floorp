@@ -31,7 +31,6 @@ class BiquadFilterNode;
 class DelayNode;
 class DynamicsCompressorNode;
 class GainNode;
-class GlobalObject;
 class PannerNode;
 
 class AudioContext MOZ_FINAL : public nsWrapperCache,
@@ -56,7 +55,7 @@ public:
                                bool* aTriedToWrap);
 
   static already_AddRefed<AudioContext>
-  Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+  Constructor(nsISupports* aGlobal, ErrorResult& aRv);
 
   AudioDestinationNode* Destination() const
   {
