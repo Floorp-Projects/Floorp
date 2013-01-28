@@ -289,10 +289,10 @@ struct PropDesc {
     bool checkGetter(JSContext *cx);
     bool checkSetter(JSContext *cx);
 
-    bool unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, JSObject *obj,
+    bool unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, HandleObject obj,
                                    PropDesc *unwrapped) const;
 
-    bool wrapInto(JSContext *cx, JSObject *obj, const jsid &id, jsid *wrappedId,
+    bool wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappedId,
                   PropDesc *wrappedDesc) const;
 
     class AutoRooter : private AutoGCRooter
