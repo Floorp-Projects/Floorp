@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetworkPanel",
                                   "resource:///modules/NetworkPanel.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
-                                  "resource:///modules/AutocompletePopup.jsm");
+                                  "resource:///modules/devtools/AutocompletePopup.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
@@ -2736,9 +2736,15 @@ JSTerm.prototype = {
   init: function JST_init()
   {
     let chromeDocument = this.hud.owner.chromeDocument;
-    this.autocompletePopup = new AutocompletePopup(chromeDocument);
-    this.autocompletePopup.onSelect = this.onAutocompleteSelect.bind(this);
-    this.autocompletePopup.onClick = this.acceptProposedCompletion.bind(this);
+    let autocompleteOptions = {
+      onSelect: this.onAutocompleteSelect.bind(this),
+      onClick: this.acceptProposedCompletion.bind(this),
+      panelId: "webConsole_autocompletePopup",
+      listBoxId: "webConsole_autocompletePopupListBox",
+      position: "before_start"
+    };
+    this.autocompletePopup = new AutocompletePopup(chromeDocument,
+                                                   autocompleteOptions);
 
     let doc = this.hud.document;
     this.completeNode = doc.querySelector(".jsterm-complete-node");
