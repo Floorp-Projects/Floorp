@@ -343,7 +343,8 @@ RILContentHelper.prototype = {
                                     interfaces: [Ci.nsIMobileConnectionProvider,
                                                  Ci.nsIRILContentHelper]}),
 
-  updateVoicemailInfo: function updateVoicemailInfo(srcInfo, destInfo) {
+  // An utility function to copy objects.
+  updateInfo: function updateInfo(srcInfo, destInfo) {
     for (let key in srcInfo) {
       destInfo[key] = srcInfo[key];
     }
@@ -389,11 +390,8 @@ RILContentHelper.prototype = {
       network = destInfo.network = new MobileNetworkInfo();
     }
 
-    network.longName = srcNetwork.longName;
-    network.shortName = srcNetwork.shortName;
-    network.mnc = srcNetwork.mnc;
-    network.mcc = srcNetwork.mcc;
-  },
+    this.updateInfo(srcNetwork, network);
+ },
 
   // nsIRILContentHelper
 
@@ -687,7 +685,7 @@ RILContentHelper.prototype = {
 
     let voicemailInfo = cpmm.sendSyncMessage("RIL:GetVoicemailInfo")[0];
     if (voicemailInfo) {
-      this.updateVoicemailInfo(voicemailInfo, this.voicemailInfo);
+      this.updateInfo(voicemailInfo, this.voicemailInfo);
     }
 
     return this.voicemailInfo;
@@ -967,7 +965,7 @@ RILContentHelper.prototype = {
         this.handleVoicemailNotification(msg.json);
         break;
       case "RIL:VoicemailInfoChanged":
-        this.updateVoicemailInfo(msg.json, this.voicemailInfo);
+        this.updateInfo(msg.json, this.voicemailInfo);
         break;
       case "RIL:CardLockResult":
         if (msg.json.success) {
@@ -1076,11 +1074,7 @@ RILContentHelper.prototype = {
     for (let i = 0; i < networks.length; i++) {
       let network = networks[i];
       let info = new MobileNetworkInfo();
-
-      for (let key in network) {
-        info[key] = network[key];
-      }
-
+      this.updateInfo(network, info);
       networks[i] = info;
     }
 
@@ -1135,11 +1129,7 @@ RILContentHelper.prototype = {
     for (let i = 0; i < rules.length; i++) {
       let rule = rules[i];
       let info = new MobileCFInfo();
-
-      for (let key in rule) {
-        info[key] = rule[key];
-      }
-
+      this.updateInfo(rule, info);
       rules[i] = info;
     }
   },
