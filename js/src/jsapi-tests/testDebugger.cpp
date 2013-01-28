@@ -132,13 +132,13 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
 BEGIN_TEST(testDebugger_throwHook)
 {
     uint32_t newopts =
-        JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS | JSOPTION_ALLOW_XML;
+        JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
     uint32_t oldopts = JS_SetOptions(cx, newopts);
 
     CHECK(JS_SetThrowHook(rt, ThrowHook, NULL));
     EXEC("function foo() { throw 3 };\n"
          "for (var i = 0; i < 10; ++i) { \n"
-         "  var x = <tag></tag>;\n"
+         "  var x = {}\n"
          "  try {\n"
          "    foo(); \n"
          "  } catch(e) {}\n"
