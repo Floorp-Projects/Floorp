@@ -408,23 +408,21 @@ GonkGPSGeolocationProvider::RequestSetID(uint32_t flags)
   mRIL->GetRilContext(getter_AddRefs(rilCtx));
 
   if (rilCtx) {
-    nsAutoString id;
-    if (flags & AGPS_RIL_REQUEST_SETID_IMSI) {
-      type = AGPS_SETID_TYPE_IMSI;
-      rilCtx->GetImsi(id);
-    }
-
-    if (flags & AGPS_RIL_REQUEST_SETID_MSISDN) {
-      nsCOMPtr<nsIDOMMozMobileICCInfo> icc;
-      rilCtx->GetIccInfo(getter_AddRefs(icc));
-      if (icc) {
+    nsCOMPtr<nsIICCRecords> icc;
+    rilCtx->GetIcc(getter_AddRefs(icc));
+    if (icc) {
+      nsAutoString id;
+      if (flags & AGPS_RIL_REQUEST_SETID_IMSI) {
+        type = AGPS_SETID_TYPE_IMSI;
+        icc->GetImsi(id);
+      }
+      if (flags & AGPS_RIL_REQUEST_SETID_MSISDN) {
         type = AGPS_SETID_TYPE_MSISDN;
         icc->GetMsisdn(id);
       }
+      NS_ConvertUTF16toUTF8 idBytes(id);
+      mAGpsRilInterface->set_set_id(type, idBytes.get());
     }
-
-    NS_ConvertUTF16toUTF8 idBytes(id);
-    mAGpsRilInterface->set_set_id(type, idBytes.get());
   }
 }
 
@@ -446,8 +444,8 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
   location.type = AGPS_REF_LOCATION_TYPE_UMTS_CELLID;
 
   if (rilCtx) {
-    nsCOMPtr<nsIDOMMozMobileICCInfo> icc;
-    rilCtx->GetIccInfo(getter_AddRefs(icc));
+    nsCOMPtr<nsIICCRecords> icc;
+    rilCtx->GetIcc(getter_AddRefs(icc));
     if (icc) {
       icc->GetMcc(&location.u.cellID.mcc);
       icc->GetMnc(&location.u.cellID.mnc);
