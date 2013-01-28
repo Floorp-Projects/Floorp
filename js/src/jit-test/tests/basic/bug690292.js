@@ -3,7 +3,7 @@ done = false;
 try {
     function x() {}
     print(this.watch("d", Object.create))
-    var d = <x></x>
+    var d = {}
 } catch (e) {}
 try {
   eval("d = ''")

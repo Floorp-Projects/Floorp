@@ -19,14 +19,14 @@ f();
 f();
 f();
 f();
-try { f("<x/>.(x=[]);function x(){}(x())"); } catch (e) {}
+try { f("function x(){}(x())"); } catch (e) {}
 
 function f2() {
     a = {
         x
     } = x, (x._)
     function
-    x()( * :: * )
+    x()({})
 }
 try { f2(); } catch (e) {}
 

@@ -1,1 +1,0 @@
-uneval(Function("[] = (*::*++);print(x);"));

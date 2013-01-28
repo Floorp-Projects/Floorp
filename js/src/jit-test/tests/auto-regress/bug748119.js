@@ -77,7 +77,6 @@ function toPrinted(value) value=value.replace(/\\\\n/g, 'NL').replace(/[^\\x20-\
 ");
 lfcode.push("\
 var summary = 'Regression test for bug 385393';\
-var current = isXMLName({});\
 var expect = 'No Crash';\
   reportCompare(expect, actual, summary);\
 ");

@@ -13,7 +13,7 @@ try {
 } catch (e) {}
 try {
     (function() {
-        n.(O)
+        true
     }())
 } catch (e) {}
 try {

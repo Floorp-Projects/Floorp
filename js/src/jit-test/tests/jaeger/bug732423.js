@@ -1,10 +1,10 @@
-function testXML(x, y) {
+function testStuff(x, y) {
     for (var i = 0; i < 60; i++) {
         x[y]();
         x[y];
     }
 }
-testXML(<x/>, "elements");
+testStuff({"elements":function(){}}, "elements");
 
 var o = {
     res: 0,

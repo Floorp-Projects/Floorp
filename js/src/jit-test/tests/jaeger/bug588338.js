@@ -1,4 +1,4 @@
-// |jit-test| error: <x/> is not a function
+// |jit-test| error: [1, 2, 3] is not a function
 function f() { (e)
 } (x = Proxy.createFunction((function(x) {
   return {
@@ -10,5 +10,5 @@ function f() { (e)
 for (z = 0; z < 100; x.unwatch(), z++)
 for (e in [0]) {
   gczeal(2)
-} ( <x/>)("")
+} ( [1,2,3])("")
 

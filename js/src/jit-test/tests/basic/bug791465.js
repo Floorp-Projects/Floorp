@@ -1,11 +1,5 @@
 load(libdir + "asserts.js");
 
-function xmlAllowed() {
-  return (typeof options == "function") &&
-         (options() + "").contains("allow_xml");
-}
-
-
 var valid_strict_funs = [
   // directive ends on next line
   function () {
@@ -56,7 +50,7 @@ var invalid_strict_funs = [
     "use strict"
     ();
   },
-  ...(xmlAllowed() ? [Function("'use strict'\n..not")] : []),
+  ...([]),
   ...[Function("'use strict'\n " + op + " 'not'") for (op of binary_ops)],
 ];
 
