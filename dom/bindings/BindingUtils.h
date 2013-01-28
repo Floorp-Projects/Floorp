@@ -1169,6 +1169,41 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T& value,
   return WrapNewBindingObjectHelper<T>::Wrap(cx, scope, value, vp);
 }
 
+template <class T>
+inline JSObject*
+GetCallbackFromCallbackObject(T* aObj)
+{
+  return aObj->Callback();
+}
+
+// Helper for getting the callback JSObject* of a smart ptr around a
+// CallbackObject or a reference to a CallbackObject or something like
+// that.
+template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+struct GetCallbackFromCallbackObjectHelper
+{
+  static inline JSObject* Get(const T& aObj)
+  {
+    return GetCallbackFromCallbackObject(aObj.get());
+  }
+};
+
+template <class T>
+struct GetCallbackFromCallbackObjectHelper<T, false>
+{
+  static inline JSObject* Get(T& aObj)
+  {
+    return GetCallbackFromCallbackObject(&aObj);
+  }
+};
+
+template<class T>
+inline JSObject*
+GetCallbackFromCallbackObject(T& aObj)
+{
+  return GetCallbackFromCallbackObjectHelper<T>::Get(aObj);
+}
+
 static inline bool
 InternJSString(JSContext* cx, jsid& id, const char* chars)
 {
