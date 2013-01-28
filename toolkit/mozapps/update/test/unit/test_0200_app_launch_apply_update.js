@@ -23,7 +23,7 @@ const MAX_TIMEOUT_RUNS = 300;
 
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
-const APP_TIMER_TIMEOUT = 20000;
+const APP_TIMER_TIMEOUT = 120000;
 
 let gAppTimer;
 let gProcess;
