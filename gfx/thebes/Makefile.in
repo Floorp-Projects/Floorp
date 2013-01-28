@@ -14,6 +14,10 @@ LIBRARY_NAME	= thebes
 LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
 
+ifndef _MSC_VER
+FAIL_ON_WARNINGS = 1
+endif # !_MSC_VER
+
 EXPORTS	= \
 	gfx2DGlue.h \
 	gfx3DMatrix.h \
