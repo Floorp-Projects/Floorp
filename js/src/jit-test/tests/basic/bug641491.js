@@ -3,7 +3,7 @@ function f1() {
 function f2() {
 }
 function f3(o) {
-    f2 = XML.prototype;
+    f2 = Date.prototype;
 }
 var key = Object.getOwnPropertyNames(f1)[30];
 if(key) {

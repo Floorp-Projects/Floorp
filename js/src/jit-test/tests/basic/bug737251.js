@@ -1,5 +1,5 @@
 a = {}
-a.getOwnPropertyDescriptor = XML;
+a.getOwnPropertyDescriptor = Array;
 b = Proxy.create(a)
 for (x in this)
 try {
