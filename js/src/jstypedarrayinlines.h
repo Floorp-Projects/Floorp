@@ -212,6 +212,16 @@ InitTypedArrayDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t byteO
 #endif
 }
 
+static NewObjectKind
+DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)
+{
+    jsbytecode *pc;
+    JSScript *script = cx->stack.currentScript(&pc);
+    if (!proto && byteLength >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH)
+        return types::UseNewTypeForInitializer(cx, script, pc, &DataViewClass);
+    return GenericObject;
+}
+
 inline DataViewObject *
 DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
                        Handle<ArrayBufferObject*> arrayBuffer, JSObject *protoArg)
@@ -220,7 +230,10 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     JS_ASSERT(byteLength <= INT32_MAX);
 
     RootedObject proto(cx, protoArg);
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &DataViewClass));
+    RootedObject obj(cx);
+
+    NewObjectKind newKind = DataViewNewObjectKind(cx, byteLength, proto);
+    obj = NewBuiltinClassInstance(cx, &DataViewClass, newKind);
     if (!obj)
         return NULL;
 
@@ -231,13 +244,12 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
         obj->setType(type);
     } else if (cx->typeInferenceEnabled()) {
         if (byteLength >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH) {
-            if (!JSObject::setSingletonType(cx, obj))
-                return NULL;
+            JS_ASSERT(obj->hasSingletonType());
         } else {
             jsbytecode *pc;
             RootedScript script(cx, cx->stack.currentScript(&pc));
             if (script) {
-                if (!types::SetInitializerObjectType(cx, script, pc, obj))
+                if (!types::SetInitializerObjectType(cx, script, pc, obj, newKind))
                     return NULL;
             }
         }
