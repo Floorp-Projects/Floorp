@@ -38,7 +38,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-#include "processor/scoped_ptr.h"
+#include "common/scoped_ptr.h"
 #include "third_party/lss/linux_syscall_support.h"
 
 #if defined(__ARM_EABI__)

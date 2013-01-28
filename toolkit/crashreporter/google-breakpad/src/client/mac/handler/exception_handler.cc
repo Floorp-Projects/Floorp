@@ -27,18 +27,31 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <map>
 #include <mach/exc.h>
 #include <mach/mig.h>
 #include <pthread.h>
 #include <signal.h>
 #include <TargetConditionals.h>
 
+#include <map>
+
 #include "client/mac/handler/exception_handler.h"
 #include "client/mac/handler/minidump_generator.h"
 #include "common/mac/macho_utilities.h"
 #include "common/mac/scoped_task_suspend-inl.h"
 #include "google_breakpad/common/minidump_exception_mac.h"
+
+#ifndef __EXCEPTIONS
+// This file uses C++ try/catch (but shouldn't). Duplicate the macros from
+// <c++/4.2.1/exception_defines.h> allowing this file to work properly with
+// exceptions disabled even when other C++ libraries are used. #undef the try
+// and catch macros first in case libstdc++ is in use and has already provided
+// its own definitions.
+#undef try
+#define try       if (true)
+#undef catch
+#define catch(X)  if (false)
+#endif  // __EXCEPTIONS
 
 #ifndef USE_PROTECTED_ALLOCATIONS
 #if TARGET_OS_IPHONE

@@ -31,6 +31,7 @@
 #define CLIENT_LINUX_MINIDUMP_WRITER_MINIDUMP_WRITER_H_
 
 #include <stdint.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <list>
@@ -98,6 +99,18 @@ bool WriteMinidump(const char* minidump_path, pid_t crashing_process,
                    const MappingList& mappings,
                    const AppMemoryList& appdata);
 bool WriteMinidump(int minidump_fd, pid_t crashing_process,
+                   const void* blob, size_t blob_size,
+                   const MappingList& mappings,
+                   const AppMemoryList& appdata);
+
+// These overloads also allow passing a file size limit for the minidump.
+bool WriteMinidump(const char* minidump_path, off_t minidump_size_limit,
+                   pid_t crashing_process,
+                   const void* blob, size_t blob_size,
+                   const MappingList& mappings,
+                   const AppMemoryList& appdata);
+bool WriteMinidump(int minidump_fd, off_t minidump_size_limit,
+                   pid_t crashing_process,
                    const void* blob, size_t blob_size,
                    const MappingList& mappings,
                    const AppMemoryList& appdata);

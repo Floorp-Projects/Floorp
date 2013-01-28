@@ -31,8 +31,8 @@
 #include <objbase.h>
 #include <dbghelp.h>
 
-#include "../crash_generation/minidump_generator.h"
-#include "dump_analysis.h"  // NOLINT
+#include "client/windows/crash_generation/minidump_generator.h"
+#include "client/windows/unittests/dump_analysis.h"  // NOLINT
 
 #include "gtest/gtest.h"
 

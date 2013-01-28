@@ -166,7 +166,7 @@ TEST(LineReaderTest, MaxLength) {
   char l[LineReader::kMaxLineLen - 1];
   memset(l, 'a', sizeof(l));
   const int r = HANDLE_EINTR(write(fd, l, sizeof(l)));
-  ASSERT_EQ(sizeof(l), r);
+  ASSERT_EQ(static_cast<ssize_t>(sizeof(l)), r);
   lseek(fd, 0, SEEK_SET);
   LineReader reader(fd);
 
@@ -185,7 +185,7 @@ TEST(LineReaderTest, TooLong) {
   char l[LineReader::kMaxLineLen];
   memset(l, 'a', sizeof(l));
   const int r = HANDLE_EINTR(write(fd, l, sizeof(l)));
-  ASSERT_EQ(sizeof(l), r);
+  ASSERT_EQ(static_cast<ssize_t>(sizeof(l)), r);
   lseek(fd, 0, SEEK_SET);
   LineReader reader(fd);
 

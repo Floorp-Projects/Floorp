@@ -34,7 +34,7 @@
   'targets': [
     {
       'target_name': 'exception_handler',
-      'type': '<(library)',
+      'type': 'static_library',
       'sources': [
         "exception_handler.cc",
         "exception_handler.h",

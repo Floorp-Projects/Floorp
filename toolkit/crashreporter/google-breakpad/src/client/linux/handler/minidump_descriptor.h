@@ -31,6 +31,8 @@
 #define CLIENT_LINUX_HANDLER_MINIDUMP_DESCRIPTOR_H_
 
 #include <assert.h>
+#include <sys/types.h>
+
 #include <string>
 
 #include "common/using_std_string.h"
@@ -48,11 +50,15 @@ class MinidumpDescriptor {
   explicit MinidumpDescriptor(const string& directory)
       : fd_(-1),
         directory_(directory),
-        c_path_(NULL) {
+        c_path_(NULL),
+        size_limit_(-1) {
     assert(!directory.empty());
   }
 
-  explicit MinidumpDescriptor(int fd) : fd_(fd), c_path_(NULL) {
+  explicit MinidumpDescriptor(int fd)
+      : fd_(fd),
+        c_path_(NULL),
+        size_limit_(-1) {
     assert(fd != -1);
   }
 
@@ -71,6 +77,9 @@ class MinidumpDescriptor {
   // Should be called from a normal context: this methods uses the heap.
   void UpdatePath();
 
+  off_t size_limit() const { return size_limit_; }
+  void set_size_limit(off_t limit) { size_limit_ = limit; }
+
  private:
   // The file descriptor where the minidump is generated.
   int fd_;
@@ -82,6 +91,8 @@ class MinidumpDescriptor {
   // The C string of |path_|. Precomputed so it can be access from a compromised
   // context.
   const char* c_path_;
+
+  off_t size_limit_;
 };
 
 }  // namespace google_breakpad

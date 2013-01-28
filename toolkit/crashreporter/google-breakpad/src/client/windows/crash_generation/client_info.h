@@ -33,8 +33,8 @@
 #include <Windows.h>
 #include <DbgHelp.h>
 #include "client/windows/common/ipc_protocol.h"
+#include "common/scoped_ptr.h"
 #include "google_breakpad/common/minidump_format.h"
-#include "processor/scoped_ptr.h"
 
 namespace google_breakpad {
 

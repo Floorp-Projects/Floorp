@@ -46,8 +46,8 @@
 //  Use this to conditionally transfer ownership of a heap-allocated object
 //  to the caller, usually on method success.
 
-#ifndef PROCESSOR_SCOPED_PTR_H__
-#define PROCESSOR_SCOPED_PTR_H__
+#ifndef COMMON_SCOPED_PTR_H_
+#define COMMON_SCOPED_PTR_H_
 
 #include <cstddef>            // for std::ptrdiff_t
 #include <assert.h>           // for assert
@@ -332,4 +332,4 @@ bool operator!=(T* p, const scoped_ptr_malloc<T,FP>& b) {
 
 }  // namespace google_breakpad
 
-#endif  // PROCESSOR_SCOPED_PTR_H__
+#endif  // COMMON_SCOPED_PTR_H_

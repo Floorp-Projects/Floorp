@@ -37,9 +37,9 @@
 #include <map>
 #include <string>
 
+#include "common/scoped_ptr.h"
 #include "processor/basic_code_module.h"
 #include "processor/logging.h"
-#include "processor/scoped_ptr.h"
 
 #define ASSERT_TRUE(condition) \
   if (!(condition)) { \

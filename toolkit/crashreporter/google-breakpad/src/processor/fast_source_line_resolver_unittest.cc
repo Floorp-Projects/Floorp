@@ -213,20 +213,20 @@ TEST_F(TestFastSourceLineResolver, TestLoadAndResolve) {
   fast_resolver.FillSourceLineInfo(&frame);
   ASSERT_FALSE(frame.module);
   ASSERT_TRUE(frame.function_name.empty());
-  ASSERT_EQ(frame.function_base, 0);
+  ASSERT_EQ(frame.function_base, 0U);
   ASSERT_TRUE(frame.source_file_name.empty());
   ASSERT_EQ(frame.source_line, 0);
-  ASSERT_EQ(frame.source_line_base, 0);
+  ASSERT_EQ(frame.source_line_base, 0U);
 
   frame.module = &module1;
   fast_resolver.FillSourceLineInfo(&frame);
   ASSERT_EQ(frame.function_name, "Function1_1");
   ASSERT_TRUE(frame.module);
   ASSERT_EQ(frame.module->code_file(), "module1");
-  ASSERT_EQ(frame.function_base, 0x1000);
+  ASSERT_EQ(frame.function_base, 0x1000U);
   ASSERT_EQ(frame.source_file_name, "file1_1.cc");
   ASSERT_EQ(frame.source_line, 44);
-  ASSERT_EQ(frame.source_line_base, 0x1000);
+  ASSERT_EQ(frame.source_line_base, 0x1000U);
   windows_frame_info.reset(fast_resolver.FindWindowsFrameInfo(&frame));
   ASSERT_TRUE(windows_frame_info.get());
   ASSERT_FALSE(windows_frame_info->allocates_base_pointer);
@@ -374,16 +374,16 @@ TEST_F(TestFastSourceLineResolver, TestLoadAndResolve) {
   frame.module = &module2;
   fast_resolver.FillSourceLineInfo(&frame);
   ASSERT_EQ(frame.function_name, "Function2_2");
-  ASSERT_EQ(frame.function_base, 0x2170);
+  ASSERT_EQ(frame.function_base, 0x2170U);
   ASSERT_TRUE(frame.module);
   ASSERT_EQ(frame.module->code_file(), "module2");
   ASSERT_EQ(frame.source_file_name, "file2_2.cc");
   ASSERT_EQ(frame.source_line, 21);
-  ASSERT_EQ(frame.source_line_base, 0x2180);
+  ASSERT_EQ(frame.source_line_base, 0x2180U);
   windows_frame_info.reset(fast_resolver.FindWindowsFrameInfo(&frame));
   ASSERT_TRUE(windows_frame_info.get());
   ASSERT_EQ(windows_frame_info->type_, WindowsFrameInfo::STACK_INFO_FRAME_DATA);
-  ASSERT_EQ(windows_frame_info->prolog_size, 1);
+  ASSERT_EQ(windows_frame_info->prolog_size, 1U);
 
   frame.instruction = 0x216f;
   fast_resolver.FillSourceLineInfo(&frame);
