@@ -951,10 +951,10 @@ nsView::RequestWindowClose(nsIWidget* aWidget)
 }
 
 void
-nsView::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
+nsView::WillPaintWindow(nsIWidget* aWidget)
 {
   nsRefPtr<nsViewManager> vm = mViewManager;
-  vm->WillPaintWindow(aWidget, aWillSendDidPaint);
+  vm->WillPaintWindow(aWidget);
 }
 
 bool

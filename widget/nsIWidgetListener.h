@@ -117,7 +117,7 @@ public:
    * at a time when it's OK to change the geometry of this widget or of
    * other widgets. Must be called before every call to PaintWindow.
    */
-  virtual void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint) { }
+  virtual void WillPaintWindow(nsIWidget* aWidget) { }
 
   /**
    * Paint the specified region of the window. Returns true if the

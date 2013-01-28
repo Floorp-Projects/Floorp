@@ -521,7 +521,7 @@ PuppetWidget::Paint()
   mDirtyRegion.SetEmpty();
   mPaintTask.Revoke();
 
-  mAttachedWidgetListener->WillPaintWindow(this, true);
+  mAttachedWidgetListener->WillPaintWindow(this);
 
   if (mAttachedWidgetListener) {
 #ifdef DEBUG
