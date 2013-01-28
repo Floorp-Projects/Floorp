@@ -1,4 +1,4 @@
-// |reftest| pref(javascript.options.xml.content,true) skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell)
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.
@@ -105,25 +105,6 @@ function localSrc(src) "(function(){ " + src + " })"
 function localPatt(patt) program([exprStmt(funExpr(null, [], blockStmt([patt])))])
 function blockSrc(src) "(function(){ { " + src + " } })"
 function blockPatt(patt) program([exprStmt(funExpr(null, [], blockStmt([blockStmt([patt])])))])
-
-var xmlAnyName = Pattern({ type: "XMLAnyName" });
-
-function xmlQualId(left, right, computed) Pattern({ type: "XMLQualifiedIdentifier", left: left, right: right, computed: computed })
-function xmlFuncQualId(right, computed) Pattern({ type: "XMLFunctionQualifiedIdentifier", right: right, computed: computed })
-function xmlAttrSel(id, computed) Pattern({ type: "XMLAttributeSelector", attribute: id, computed: !!computed })
-function xmlFilter(left, right) Pattern({ type: "XMLFilterExpression", left: left, right: right })
-function xmlPointTag(contents) Pattern({ type: "XMLPointTag", contents: contents })
-function xmlStartTag(contents) Pattern({ type: "XMLStartTag", contents: contents })
-function xmlEndTag(contents) Pattern({ type: "XMLEndTag", contents: contents })
-function xmlEscape(expr) Pattern({ type: "XMLEscape", expression: expr })
-function xmlElt(contents) Pattern({ type: "XMLElement", contents: contents })
-function xmlAttr(value) Pattern({ type: "XMLAttribute", value: value })
-function xmlText(text) Pattern({ type: "XMLText", text: text })
-function xmlPI(target, contents) Pattern({ type: "XMLProcessingInstruction", target: target, contents: contents })
-function xmlDefNS(ns) Pattern({ type: "XMLDefaultDeclaration", namespace: ns })
-function xmlName(name) Pattern({ type: "XMLName", contents: name })
-function xmlComment(contents) Pattern({ type: "XMLComment", contents: contents })
-function xmlCdata(cdata) Pattern({ type: "XMLCdata", contents: cdata })
 
 function assertBlockStmt(src, patt) {
     blockPatt(patt).assert(Reflect.parse(blockSrc(src)));
@@ -895,123 +876,6 @@ try {
 } catch (e) { }
 
 
-// E4X
-
-assertExpr("x..tagName", binExpr("..", ident("x"), lit("tagName")));
-assertExpr("x.*", memExpr(ident("x"), xmlAnyName));
-assertExpr("x[*]", memExpr(ident("x"), xmlAnyName));
-assertExpr("x::y", xmlQualId(ident("x"), ident("y"), false));
-assertExpr("x::[foo]", xmlQualId(ident("x"), ident("foo"), true));
-assertExpr("x::[foo()]", xmlQualId(ident("x"), callExpr(ident("foo"), []), true));
-assertExpr("*::*", xmlQualId(xmlAnyName, ident("*"), false));
-assertExpr("*::[foo]", xmlQualId(xmlAnyName, ident("foo"), true));
-assertExpr("*::[foo()]", xmlQualId(xmlAnyName, callExpr(ident("foo"), []), true));
-assertExpr("x.y::z", memExpr(ident("x"), xmlQualId(ident("y"), ident("z"), false)));
-assertExpr("x[y::z]", memExpr(ident("x"), xmlQualId(ident("y"), ident("z"), false)));
-assertExpr("x[y::[z]]", memExpr(ident("x"), xmlQualId(ident("y"), ident("z"), true)));
-assertExpr("function::x", xmlFuncQualId(ident("x"), false));
-assertExpr("function::[foo]", xmlFuncQualId(ident("foo"), true));
-assertExpr("@foo", xmlAttrSel(ident("foo"), false));
-assertExpr("@[foo]", xmlAttrSel(ident("foo"), true));
-assertExpr("x.@foo", memExpr(ident("x"), xmlAttrSel(ident("foo"), false)));
-assertExpr("x.@[foo]", memExpr(ident("x"), xmlAttrSel(ident("foo"), true)));
-assertExpr("x[@foo]", memExpr(ident("x"), xmlAttrSel(ident("foo"), false)));
-assertExpr("x[@[foo]]", memExpr(ident("x"), xmlAttrSel(ident("foo"), true)));
-assertExpr("x.(p)", xmlFilter(ident("x"), ident("p")));
-assertExpr("<{foo}/>", xmlPointTag([xmlEscape(ident("foo"))]));
-assertExpr("<{foo}></{foo}>", xmlElt([xmlStartTag([xmlEscape(ident("foo"))]),
-                                      xmlEndTag([xmlEscape(ident("foo"))])]));
-assertExpr("<{foo} {attr}='attr'/>", xmlPointTag([xmlEscape(ident("foo")),
-                                                  xmlEscape(ident("attr")),
-                                                  xmlAttr("attr")]));
-assertExpr("<{foo}>text</{foo}>", xmlElt([xmlStartTag([xmlEscape(ident("foo"))]),
-                                          xmlText("text"),
-                                          xmlEndTag([xmlEscape(ident("foo"))])]));
-assertExpr("<?xml?>", xmlPI("xml", ""));
-assertExpr("<?xml version='1.0'?>", xmlPI("xml", "version='1.0'"));
-assertDecl("default xml namespace = 'js';", xmlDefNS(lit("js")));
-assertDecl("default xml namespace = foo;", xmlDefNS(ident("foo")));
-
-// The parser turns these into TOK_UNARY nodes with pn_op == JSOP_SETXMLNAME.
-
-assertExpr("x::y = foo", aExpr("=", xmlQualId(ident("x"), ident("y"), false), ident("foo")));
-assertExpr("function::x = foo", aExpr("=", xmlFuncQualId(ident("x"), false), ident("foo")));
-assertExpr("@x = foo", aExpr("=", xmlAttrSel(ident("x")), ident("foo")));
-assertExpr("x::* = foo", aExpr("=", xmlQualId(ident("x"), ident("*"), false), ident("foo")));
-assertExpr("*::* = foo", aExpr("=", xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
-assertExpr("x.* = foo", aExpr("=", memExpr(ident("x"), xmlAnyName), ident("foo")));
-assertExpr("x[*] = foo", aExpr("=", memExpr(ident("x"), xmlAnyName), ident("foo")));
-
-assertExpr("x::y += foo", aExpr("+=", xmlQualId(ident("x"), ident("y"), false), ident("foo")));
-assertExpr("function::x += foo", aExpr("+=", xmlFuncQualId(ident("x"), false), ident("foo")));
-assertExpr("@x += foo", aExpr("+=", xmlAttrSel(ident("x")), ident("foo")));
-assertExpr("x::* += foo", aExpr("+=", xmlQualId(ident("x"), ident("*"), false), ident("foo")));
-assertExpr("*::* += foo", aExpr("+=", xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
-assertExpr("x.* += foo", aExpr("+=", memExpr(ident("x"), xmlAnyName), ident("foo")));
-assertExpr("x[*] += foo", aExpr("+=", memExpr(ident("x"), xmlAnyName), ident("foo")));
-
-assertExpr("x::y++", updExpr("++", xmlQualId(ident("x"), ident("y"), false), false));
-assertExpr("function::x++", updExpr("++", xmlFuncQualId(ident("x"), false), false));
-assertExpr("@x++", updExpr("++", xmlAttrSel(ident("x")), false));
-assertExpr("x::*++", updExpr("++", xmlQualId(ident("x"), ident("*"), false), false));
-assertExpr("*::*++", updExpr("++", xmlQualId(xmlAnyName, ident("*"), false), false));
-assertExpr("x.*++", updExpr("++", memExpr(ident("x"), xmlAnyName), false));
-assertExpr("x[*]++", updExpr("++", memExpr(ident("x"), xmlAnyName), false));
-
-assertExpr("++x::y", updExpr("++", xmlQualId(ident("x"), ident("y"), false), true));
-assertExpr("++function::x", updExpr("++", xmlFuncQualId(ident("x"), false), true));
-assertExpr("++@x", updExpr("++", xmlAttrSel(ident("x")), true));
-assertExpr("++x::*", updExpr("++", xmlQualId(ident("x"), ident("*"), false), true));
-assertExpr("++*::*", updExpr("++", xmlQualId(xmlAnyName, ident("*"), false), true));
-assertExpr("++x.*", updExpr("++", memExpr(ident("x"), xmlAnyName), true));
-assertExpr("++x[*]", updExpr("++", memExpr(ident("x"), xmlAnyName), true));
-
-
-// The parser turns these into TOK_UNARY nodes with pn_op == JSOP_BINDXMLNAME.
-
-function singletonObjPatt(name, val) objPatt([{ key: ident(name), value: val }])
-
-assertExpr("({a:x::y}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(ident("x"), ident("y"), false)), ident("foo")));
-assertExpr("({a:function::x}) = foo", aExpr("=", singletonObjPatt("a", xmlFuncQualId(ident("x"), false)), ident("foo")));
-assertExpr("({a:@x}) = foo", aExpr("=", singletonObjPatt("a", xmlAttrSel(ident("x"))), ident("foo")));
-assertExpr("({a:x::*}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(ident("x"), ident("*"), false)), ident("foo")));
-assertExpr("({a:*::*}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(xmlAnyName, ident("*"), false)), ident("foo")));
-assertExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), xmlAnyName)), ident("foo")));
-assertExpr("({a:x[*]}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), xmlAnyName)), ident("foo")));
-
-function emptyForInPatt(val, rhs) forInStmt(val, rhs, emptyStmt)
-
-assertStmt("for (x::y in foo);", emptyForInPatt(xmlQualId(ident("x"), ident("y"), false), ident("foo")));
-assertStmt("for (function::x in foo);", emptyForInPatt(xmlFuncQualId(ident("x"), false), ident("foo")));
-assertStmt("for (@x in foo);", emptyForInPatt(xmlAttrSel(ident("x")), ident("foo")));
-assertStmt("for (x::* in foo);", emptyForInPatt(xmlQualId(ident("x"), ident("*"), false), ident("foo")));
-assertStmt("for (*::* in foo);", emptyForInPatt(xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
-assertStmt("for (x.* in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
-assertStmt("for (x[*] in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
-
-
-// I'm not quite sure why, but putting XML in the callee of a call expression is
-// the only way I've found to be able to preserve TOK_XMLNAME, TOK_XMLSPACE,
-// TOK_XMLCDATA, and TOK_XMLCOMMENT parse nodes.
-
-assertExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]),
-                                            xmlText(" "),
-                                            xmlEndTag([xmlName("x")])]),
-                                    []));
-assertExpr("(<x>    </x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]),
-                                               xmlText("    "),
-                                               xmlEndTag([xmlName("x")])]),
-                                       []));
-assertExpr("(<x><![CDATA[hello, world]]></x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]),
-                                                                   xmlCdata("hello, world"),
-                                                                   xmlEndTag([xmlName("x")])]),
-                                                           []));
-assertExpr("(<x><!-- hello, world --></x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]),
-                                                                xmlComment(" hello, world "),
-                                                                xmlEndTag([xmlName("x")])]),
-                                                        []));
-
-
 // Source location information
 
 
@@ -1099,19 +963,6 @@ assertGlobalExpr("[x for (y in z) for (x in y)]", compExpr(ident("x"), [3, 3], n
 assertGlobalExpr("({ x: y } = z)", aExpr("=", 1, ident("z")), { objectPattern: function() 1 });
 assertGlobalExpr("({ x: y } = z)", aExpr("=", objPatt([2]), ident("z")), { propertyPattern: function() 2 });
 assertGlobalExpr("[ x ] = y", aExpr("=", 3, ident("y")), { arrayPattern: function() 3 });
-
-assertGlobalExpr("({a:x::y}) = foo", aExpr("=", singletonObjPatt("a", 1), ident("foo")), { xmlQualifiedIdentifier: function() 1 });
-assertGlobalExpr("({a:function::x}) = foo", aExpr("=", singletonObjPatt("a", 2), ident("foo")), { xmlFunctionQualifiedIdentifier: function() 2 });
-assertGlobalExpr("({a:@x}) = foo", aExpr("=", singletonObjPatt("a", 3), ident("foo")), { xmlAttributeSelector: function() 3 });
-assertGlobalExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), 4)), ident("foo")), { xmlAnyName: function() 4 });
-
-assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([5, xmlText(" "), xmlEndTag([xmlName("x")])]), []), { xmlStartTag: function() 5 });
-assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([6]), xmlText(" "), xmlEndTag([6])]), []), { xmlName: function() 6 });
-assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]), 7, xmlEndTag([xmlName("x")])]), []), { xmlText: function() 7 });
-assertGlobalExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]), xmlText(" "), 8]), []), { xmlEndTag: function() 8 });
-assertGlobalExpr("(<x><![CDATA[hello, world]]></x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]), 9, xmlEndTag([xmlName("x")])]), []), { xmlCdata: function() 9 });
-assertGlobalExpr("(<x><!-- hello, world --></x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]), 10, xmlEndTag([xmlName("x")])]), []), { xmlComment: function() 10 });
-
 
 // Ensure that exceptions thrown by builder methods propagate.
 var thrown = false;
@@ -1331,25 +1182,6 @@ return {
     arrayPattern: reject,
     objectPattern: reject,
     propertyPattern: reject,
-
-    xmlAnyName: reject,
-    xmlAttributeSelector: reject,
-    xmlEscape: reject,
-    xmlFilterExpression: reject,
-    xmlDefaultDeclaration: reject,
-    xmlQualifiedIdentifier: reject,
-    xmlFunctionQualifiedIdentifier: reject,
-    xmlElement: reject,
-    xmlText: reject,
-    xmlList: reject,
-    xmlStartTag: reject,
-    xmlEndTag: reject,
-    xmlPointTag: reject,
-    xmlName: reject,
-    xmlAttribute: reject,
-    xmlCdata: reject,
-    xmlComment: reject,
-    xmlProcessingInstruction: reject
 };
 })();
 

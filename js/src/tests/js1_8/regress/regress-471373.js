@@ -1,4 +1,3 @@
-// |reftest| pref(javascript.options.xml.content,true)
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,7 +28,7 @@ function test()
   jit(true);
 
   function g() {
-    var x = <x/>;
+    var x = {};
     for (var b = 0; b < 2; ++b) {
       yield x;
       for (var c = 0; c < 10;++c) {

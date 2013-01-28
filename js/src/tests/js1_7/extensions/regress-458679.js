@@ -44,7 +44,6 @@ try
     s = q + q; 
   }
   print(x.length);
-  <e4x>{x}</e4x>;
 }
 catch(ex)
 {
