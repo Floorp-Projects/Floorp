@@ -35,15 +35,6 @@
 #include "BluetoothUnixSocketConnector.h"
 #include "nsThreadUtils.h"
 
-#undef LOG
-#if defined(MOZ_WIDGET_GONK)
-#include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GonkDBus", args);
-#else
-#define BTDEBUG true
-#define LOG(args...) if (BTDEBUG) printf(args);
-#endif
-
 USING_BLUETOOTH_NAMESPACE
 
 static const int RFCOMM_SO_SNDBUF = 70 * 1024; // 70 KB send buffer
