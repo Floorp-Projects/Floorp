@@ -337,7 +337,7 @@ static void
 WeakObjectSlotBarrierPost(JSObject *obj, size_t slot, const char *desc)
 {
 #ifdef JSGC_GENERATIONAL
-    obj->compartment()->gcStoreBuffer.putGeneric(WeakObjectSlotRef(obj, slot, desc));
+    obj->runtime()->gcStoreBuffer.putGeneric(WeakObjectSlotRef(obj, slot, desc));
 #endif
 }
 

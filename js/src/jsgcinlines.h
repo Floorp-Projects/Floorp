@@ -518,7 +518,7 @@ NewGCThing(JSContext *cx, AllocKind kind, size_t thingSize, InitialHeap heap)
         !IsAtomsCompartment(cx->compartment) &&
         heap != TenuredHeap)
     {
-        zone->gcNursery.insertPointer(t);
+        cx->runtime->gcNursery.insertPointer(t);
     }
 #endif
 
