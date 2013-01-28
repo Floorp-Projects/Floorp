@@ -686,7 +686,7 @@ stubs::CreateThis(VMFrame &f, JSObject *proto)
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
     RootedObject callee(cx, &fp->callee());
-    JSObject *obj = js_CreateThisForFunctionWithProto(cx, callee, proto);
+    JSObject *obj = CreateThisForFunctionWithProto(cx, callee, proto);
     if (!obj)
         THROW();
     fp->thisValue() = ObjectValue(*obj);
@@ -897,7 +897,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
       case REJOIN_THIS_PROTOTYPE: {
         RootedObject callee(cx, &fp->callee());
         JSObject *proto = f.regs.sp[0].isObject() ? &f.regs.sp[0].toObject() : NULL;
-        JSObject *obj = js_CreateThisForFunctionWithProto(cx, callee, proto);
+        JSObject *obj = CreateThisForFunctionWithProto(cx, callee, proto);
         if (!obj)
             return js_InternalThrow(f);
         fp->thisValue() = ObjectValue(*obj);
@@ -958,7 +958,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
       case REJOIN_FUNCTION_PROLOGUE:
         if (fp->isConstructing()) {
             RootedObject callee(cx, &fp->callee());
-            JSObject *obj = js_CreateThisForFunction(cx, callee, types::UseNewTypeAtEntry(cx, fp));
+            JSObject *obj = CreateThisForFunction(cx, callee, types::UseNewTypeAtEntry(cx, fp));
             if (!obj)
                 return js_InternalThrow(f);
             fp->functionThis() = ObjectValue(*obj);
