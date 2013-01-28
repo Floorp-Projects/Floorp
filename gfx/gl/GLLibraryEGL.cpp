@@ -101,12 +101,6 @@ GLLibraryEGL::EnsureInitialized()
         // libraries. This matters especially for WebRT apps which are in a different directory.
         // See bug 760323 and bug 749459
 
-#ifndef MOZ_D3DX9_DLL
-#error MOZ_D3DX9_DLL should have been defined by the Makefile
-#endif
-        LoadLibraryForEGLOnWindows(NS_LITERAL_STRING(NS_STRINGIFY(MOZ_D3DX9_DLL)));
-        // intentionally leak the D3DX9_DLL library
-
 #ifndef MOZ_D3DCOMPILER_DLL
 #error MOZ_D3DCOMPILER_DLL should have been defined by the Makefile
 #endif
