@@ -4,17 +4,23 @@
 
 "use strict";
 
+#ifndef MERGED_COMPARTMENT
+
 this.EXPORTED_SYMBOLS = ["HealthReporter"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://services-common/async.js");
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://services-common/bagheeraclient.js");
+#endif
+
+Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
-Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -26,7 +32,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const OLDEST_ALLOWED_YEAR = 2012;
 
 const DAYS_IN_PAYLOAD = 180;
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const DEFAULT_DATABASE_NAME = "healthreport.sqlite";
 
