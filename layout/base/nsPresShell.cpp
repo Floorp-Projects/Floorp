@@ -5274,10 +5274,6 @@ public:
   ~nsAutoNotifyDidPaint()
   {
     mShell->GetPresContext()->NotifyDidPaintForSubtree(mFlags);
-    if (!(mFlags & nsIPresShell::PAINT_WILL_SEND_DID_PAINT) &&
-        nsContentUtils::XPConnect()) {
-      nsContentUtils::XPConnect()->NotifyDidPaint();
-    }
   }
 
 private:
@@ -7128,7 +7124,7 @@ PresShell::ShouldIgnoreInvalidation()
 }
 
 void
-PresShell::WillPaint(bool aWillSendDidPaint)
+PresShell::WillPaint()
 {
   nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
   if (!rootPresContext) {
@@ -7156,7 +7152,7 @@ PresShell::WillPaint(bool aWillSendDidPaint)
 }
 
 void
-PresShell::WillPaintWindow(bool aWillSendDidPaint)
+PresShell::WillPaintWindow()
 {
   nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
   if (rootPresContext != mPresContext) {

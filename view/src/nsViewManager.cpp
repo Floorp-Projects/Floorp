@@ -331,8 +331,7 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion)
       printf("--COMPOSITE-- %p\n", mPresShell);
 #endif
       mPresShell->Paint(aView, damageRegion,
-                        nsIPresShell::PAINT_COMPOSITE |
-                        nsIPresShell::PAINT_WILL_SEND_DID_PAINT);
+                        nsIPresShell::PAINT_COMPOSITE);
 #ifdef DEBUG_INVALIDATIONS
       printf("--ENDCOMPOSITE--\n");
 #endif
@@ -397,8 +396,7 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
       aView->GetWidget()->WillPaint();
       SetPainting(true);
       mPresShell->Paint(aView, nsRegion(),
-                        nsIPresShell::PAINT_LAYERS |
-                        nsIPresShell::PAINT_WILL_SEND_DID_PAINT);
+                        nsIPresShell::PAINT_LAYERS);
 #ifdef DEBUG_INVALIDATIONS
       printf("---- PAINT END ----\n");
 #endif
@@ -631,7 +629,7 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget)
 
   nsCOMPtr<nsIPresShell> shell = mPresShell;
   if (shell) {
-    shell->WillPaintWindow(true);
+    shell->WillPaintWindow();
   }
 }
 
@@ -1148,7 +1146,7 @@ nsViewManager::CallWillPaintOnObservers()
       if (vm->mRootView && vm->mRootView->IsEffectivelyVisible()) {
         nsCOMPtr<nsIPresShell> shell = vm->GetPresShell();
         if (shell) {
-          shell->WillPaint(true);
+          shell->WillPaint();
         }
       }
     }

@@ -120,10 +120,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// a43e26cd-9573-44c7-8fe5-859549eff814
+// 0841d094-debf-4255-bc7c-c6ff638b2c83
 #define NS_IPRESSHELL_IID \
-  {0xb0f585b5, 0x199b, 0x4cd7, \
-    {0x9c, 0xee, 0xea, 0xfd, 0x40, 0xc4, 0x88, 0x6f}}
+{ 0x0841d094, 0xdebf, 0x4255, \
+  { 0xbc, 0x7c, 0xc6, 0xff, 0x63, 0x8b, 0x2c, 0x83 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1236,7 +1236,6 @@ public:
     PAINT_LAYERS = 0x01,
     /* Composite layers to the window. */
     PAINT_COMPOSITE = 0x02,
-    PAINT_WILL_SEND_DID_PAINT = 0x80
   };
   virtual void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
                      uint32_t aFlags) = 0;
@@ -1252,13 +1251,13 @@ public:
    * painted widget). This is issued at a time when it's safe to modify
    * widget geometry.
    */
-  virtual void WillPaint(bool aWillSendDidPaint) = 0;
+  virtual void WillPaint() = 0;
   /**
    * Notify that we're going to call Paint with PAINT_COMPOSITE.
    * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
    */
-  virtual void WillPaintWindow(bool aWillSendDidPaint) = 0;
+  virtual void WillPaintWindow() = 0;
   /**
    * Notify that we called Paint with PAINT_COMPOSITE.
    * Fires on the presshell for the painted widget.
