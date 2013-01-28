@@ -49,8 +49,6 @@ private:
   uint32_t mWidth;
   uint32_t mHeight;
 
-  uint32_t *mImageData;
-
   uint8_t* mRow;                    // Holds one raw line of the image
   uint32_t mRowBytes;               // How many bytes of the row were already received
   uint32_t mCurLine;                // The current line being decoded (0 to mHeight - 1)

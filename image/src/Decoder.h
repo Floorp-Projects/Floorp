@@ -192,6 +192,11 @@ protected:
   RefPtr<imgDecoderObserver> mObserver;
   ImageMetadata mImageMetadata;
 
+  uint8_t* mImageData;       // Pointer to image data in either Cairo or 8bit format
+  uint32_t mImageDataLength;
+  uint32_t* mColormap;       // Current colormap to be used in Cairo format
+  uint32_t mColormapSize;
+
   uint32_t mDecodeFlags;
   bool mDecodeDone;
   bool mDataError;

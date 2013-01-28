@@ -65,8 +65,6 @@ protected:
   void OutputScanlines(bool* suspend);
 
 public:
-  uint8_t *mImageData;
-
   struct jpeg_decompress_struct mInfo;
   struct jpeg_source_mgr mSourceMgr;
   decoder_error_mgr mErr;

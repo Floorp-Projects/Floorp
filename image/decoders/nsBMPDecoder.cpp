@@ -40,7 +40,6 @@ nsBMPDecoder::nsBMPDecoder(RasterImage &aImage)
 {
   mColors = nullptr;
   mRow = nullptr;
-  mImageData = nullptr;
   mCurPos = mPos = mNumColors = mRowBytes = 0;
   mOldLine = mCurLine = 1; // Otherwise decoder will never start
   mState = eRLEStateInitial;
@@ -89,7 +88,7 @@ nsBMPDecoder::GetHeight() const
 uint32_t* 
 nsBMPDecoder::GetImageData() 
 {
-  return mImageData;
+  return reinterpret_cast<uint32_t*>(mImageData);
 }
 
 // Obtains the size of the compressed image resource
@@ -429,7 +428,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                 if (rowSize == mRowBytes) {
                     // Collected a whole row into mRow, process it
                     uint8_t* p = mRow;
-                    uint32_t* d = mImageData + PIXEL_OFFSET(mCurLine, 0);
+                    uint32_t* d = reinterpret_cast<uint32_t*>(mImageData) + PIXEL_OFFSET(mCurLine, 0);
                     uint32_t lpos = mBIH.width;
                     switch (mBIH.bpp) {
                       case 1:
@@ -487,7 +486,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                               // 4 has been right all along.  And we know it
                               // has been set to 0 the whole time, so that 
                               // means that everything is transparent so far.
-                              uint32_t* start = mImageData + GetWidth() * (mCurLine - 1);
+                              uint32_t* start = reinterpret_cast<uint32_t*>(mImageData) + GetWidth() * (mCurLine - 1);
                               uint32_t heightDifference = GetHeight() - mCurLine + 1;
                               uint32_t pixelCount = GetWidth() * heightDifference;
 
@@ -547,7 +546,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                             mState = eRLEStateInitial;
                             uint32_t pixelsNeeded = std::min<uint32_t>(mBIH.width - mCurPos, mStateData);
                             if (pixelsNeeded) {
-                                uint32_t* d = mImageData + PIXEL_OFFSET(mCurLine, mCurPos);
+                                uint32_t* d = reinterpret_cast<uint32_t*>(mImageData) + PIXEL_OFFSET(mCurLine, mCurPos);
                                 mCurPos += pixelsNeeded;
                                 if (mBIH.compression == BI_RLE8) {
                                     do {
@@ -635,7 +634,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                             // represents the number of pixels 
                             // that follow, each of which contains 
                             // the color index of a single pixel.
-                            uint32_t* d = mImageData + PIXEL_OFFSET(mCurLine, mCurPos);
+                            uint32_t* d = reinterpret_cast<uint32_t*>(mImageData) + PIXEL_OFFSET(mCurLine, mCurPos);
                             uint32_t* oldPos = d;
                             if (mBIH.compression == BI_RLE8) {
                                 while (aCount > 0 && mStateData > 0) {

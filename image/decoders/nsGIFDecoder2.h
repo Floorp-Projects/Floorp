@@ -49,9 +49,6 @@ private:
   int32_t mCurrentRow;
   int32_t mLastFlushedRow;
 
-  uint8_t *mImageData;       // Pointer to image data in either Cairo or 8bit format
-  uint32_t *mColormap;       // Current colormap to be used in Cairo format
-  uint32_t mColormapSize;
   uint32_t mOldColor;        // The old value of the transparent pixel
 
   // The frame number of the currently-decoding frame when we're in the middle
