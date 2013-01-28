@@ -21,7 +21,7 @@ NS_IMPL_RELEASE_INHERITED(DelayNode, AudioNode)
 
 DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
   : AudioNode(aContext)
-  , mDelay(new AudioParam(aContext, 0.0f, 0.0f, float(aMaxDelay)))
+  , mDelay(new AudioParam(this, Callback, 0.0f, 0.0f, float(aMaxDelay)))
 {
 }
 
