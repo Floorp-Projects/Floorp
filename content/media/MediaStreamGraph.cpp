@@ -814,7 +814,8 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
                              aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
                              startTicks, endTicks));
       }
-      output.WriteTo(audioOutput.mStream);
+      // XXX need unique id for stream & track
+      output.WriteTo((((uint64_t)i) << 32) | track->GetID(), audioOutput.mStream);
       t = end;
     }
   }
