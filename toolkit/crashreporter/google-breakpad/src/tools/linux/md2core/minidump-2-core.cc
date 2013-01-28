@@ -47,8 +47,8 @@
 #include <vector>
 
 #include "common/linux/memory_mapped_file.h"
+#include "common/scoped_ptr.h"
 #include "google_breakpad/common/minidump_format.h"
-#include "processor/scoped_ptr.h"
 #include "third_party/lss/linux_syscall_support.h"
 #include "tools/linux/md2core/minidump_memory_range.h"
 
@@ -675,7 +675,7 @@ ParseDSODebugInfo(CrashedProcess* crashinfo, const MinidumpMemoryRange& range,
                                    range.length() - sizeof(MDRawDebug));
   }
   if (debug->map != kInvalidMDRVA) {
-    for (int i = 0; i < debug->dso_count; ++i) {
+    for (unsigned int i = 0; i < debug->dso_count; ++i) {
       const MDRawLinkMap* link_map =
           full_file.GetArrayElement<MDRawLinkMap>(debug->map, i);
       if (link_map) {

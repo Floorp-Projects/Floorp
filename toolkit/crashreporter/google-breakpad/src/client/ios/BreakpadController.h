@@ -55,6 +55,10 @@
   // Whether or not crash reports should be uploaded.
   BOOL enableUploads_;
 
+  // Whether the controller has been started on the main thread. This is only
+  // used to assert the initialization order is correct.
+  BOOL started_;
+
   // The interval to wait between two uploads. Value is 0 if no upload must be
   // done.
   int uploadIntervalInSeconds_;

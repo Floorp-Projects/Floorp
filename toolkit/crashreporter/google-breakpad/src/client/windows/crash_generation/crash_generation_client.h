@@ -35,7 +35,7 @@
 #include <string>
 #include <utility>
 #include "client/windows/common/ipc_protocol.h"
-#include "processor/scoped_ptr.h"
+#include "common/scoped_ptr.h"
 
 namespace google_breakpad {
 

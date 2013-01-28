@@ -31,7 +31,7 @@
 
 #include "google_breakpad/common/minidump_exception_mac.h"
 #include "client/minidump_file_writer-inl.h"
-#include "processor/scoped_ptr.h"
+#include "common/scoped_ptr.h"
 
 namespace {
 

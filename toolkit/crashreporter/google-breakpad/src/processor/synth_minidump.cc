@@ -126,7 +126,10 @@ void Memory::CiteMemoryIn(test_assembler::Section *section) const {
 Context::Context(const Dump &dump, const MDRawContextX86 &context)
   : Section(dump) {
   // The caller should have properly set the CPU type flag.
-  assert(context.context_flags & MD_CONTEXT_X86);
+  // The high 24 bits identify the CPU.  Note that context records with no CPU
+  // type information can be valid (e.g. produced by ::RtlCaptureContext).
+  assert(((context.context_flags & MD_CONTEXT_CPU_MASK) == 0) ||
+         (context.context_flags & MD_CONTEXT_X86));
   // It doesn't make sense to store x86 registers in big-endian form.
   assert(dump.endianness() == kLittleEndian);
   D32(context.context_flags);

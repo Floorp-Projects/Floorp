@@ -90,17 +90,17 @@ TEST(LinuxLibcSupportTest, strtoui) {
 }
 
 TEST(LinuxLibcSupportTest, uint_len) {
-  ASSERT_EQ(my_uint_len(0), 1);
-  ASSERT_EQ(my_uint_len(2), 1);
-  ASSERT_EQ(my_uint_len(5), 1);
-  ASSERT_EQ(my_uint_len(9), 1);
-  ASSERT_EQ(my_uint_len(10), 2);
-  ASSERT_EQ(my_uint_len(99), 2);
-  ASSERT_EQ(my_uint_len(100), 3);
-  ASSERT_EQ(my_uint_len(101), 3);
-  ASSERT_EQ(my_uint_len(1000), 4);
+  ASSERT_EQ(my_uint_len(0), 1U);
+  ASSERT_EQ(my_uint_len(2), 1U);
+  ASSERT_EQ(my_uint_len(5), 1U);
+  ASSERT_EQ(my_uint_len(9), 1U);
+  ASSERT_EQ(my_uint_len(10), 2U);
+  ASSERT_EQ(my_uint_len(99), 2U);
+  ASSERT_EQ(my_uint_len(100), 3U);
+  ASSERT_EQ(my_uint_len(101), 3U);
+  ASSERT_EQ(my_uint_len(1000), 4U);
   // 0xFFFFFFFFFFFFFFFF
-  ASSERT_EQ(my_uint_len(18446744073709551615LLU), 20);
+  ASSERT_EQ(my_uint_len(18446744073709551615LLU), 20U);
 }
 
 TEST(LinuxLibcSupportTest, uitos) {
@@ -159,23 +159,23 @@ TEST(LinuxLibcSupportTest, read_hex_ptr) {
   const char* last;
 
   last = my_read_hex_ptr(&result, "");
-  ASSERT_EQ(result, 0);
+  ASSERT_EQ(result, 0U);
   ASSERT_EQ(*last, 0);
 
   last = my_read_hex_ptr(&result, "0");
-  ASSERT_EQ(result, 0);
+  ASSERT_EQ(result, 0U);
   ASSERT_EQ(*last, 0);
 
   last = my_read_hex_ptr(&result, "0123");
-  ASSERT_EQ(result, 0x123);
+  ASSERT_EQ(result, 0x123U);
   ASSERT_EQ(*last, 0);
 
   last = my_read_hex_ptr(&result, "0123a");
-  ASSERT_EQ(result, 0x123a);
+  ASSERT_EQ(result, 0x123aU);
   ASSERT_EQ(*last, 0);
 
   last = my_read_hex_ptr(&result, "0123a-");
-  ASSERT_EQ(result, 0x123a);
+  ASSERT_EQ(result, 0x123aU);
   ASSERT_EQ(*last, '-');
 }
 
@@ -184,18 +184,18 @@ TEST(LinuxLibcSupportTest, read_decimal_ptr) {
   const char* last;
 
   last = my_read_decimal_ptr(&result, "0");
-  ASSERT_EQ(result, 0);
+  ASSERT_EQ(result, 0U);
   ASSERT_EQ(*last, 0);
 
   last = my_read_decimal_ptr(&result, "0123");
-  ASSERT_EQ(result, 123);
+  ASSERT_EQ(result, 123U);
   ASSERT_EQ(*last, 0);
 
   last = my_read_decimal_ptr(&result, "1234");
-  ASSERT_EQ(result, 1234);
+  ASSERT_EQ(result, 1234U);
   ASSERT_EQ(*last, 0);
 
   last = my_read_decimal_ptr(&result, "01234-");
-  ASSERT_EQ(result, 1234);
+  ASSERT_EQ(result, 1234U);
   ASSERT_EQ(*last, '-');
 }

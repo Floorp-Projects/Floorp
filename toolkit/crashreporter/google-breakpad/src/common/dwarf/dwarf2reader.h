@@ -342,8 +342,7 @@ class Dwarf2Handler {
 
   // Start to process a DIE at OFFSET from the beginning of the .debug_info
   // section. Return false if you would like to skip this DIE.
-  virtual bool StartDIE(uint64 offset, enum DwarfTag tag,
-                        const AttributeList& attrs) { return false; }
+  virtual bool StartDIE(uint64 offset, enum DwarfTag tag) { return false; }
 
   // Called when we have an attribute with unsigned data to give to our
   // handler. The attribute is for the DIE at OFFSET from the beginning of the
