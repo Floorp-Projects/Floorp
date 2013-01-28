@@ -1,4 +1,3 @@
-// |reftest| pref(javascript.options.xml.content,true)
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 // Contributors: Jesse Ruderman <jruderman@gmail.com>,
@@ -15,11 +14,7 @@ try {
 } catch (exc) {}
 
 try {
-    evalcx('var p;', <x/>);
-} catch (exc) {}
-
-try {
-    evalcx('var p;', <x><p/></x>);
+    evalcx('var p;');
 } catch (exc) {}
 
 reportCompare(0, 0, "ok");

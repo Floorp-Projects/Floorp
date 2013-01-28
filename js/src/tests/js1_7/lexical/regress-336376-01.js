@@ -1,4 +1,3 @@
-// |reftest| pref(javascript.options.xml.content,true)
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,10 +34,6 @@ const ALL_TESTS =
     "CONTEXT_OBJECT_PROPERTY_DOT_REFERENCE_IS_FUNCTION",
     "CONTEXT_OBJECT_PROPERTY_DOT_GET",
     "CONTEXT_OBJECT_PROPERTY_DOT_SET",
-    "CONTEXT_XML_DESCENDANTS",
-    "CONTEXT_XML_NAMESPACE_QUALIFIED_ELEMENT",
-    "CONTEXT_XML_NAMESPACE_QUALIFIED_ATTR",
-    "CONTEXT_XML_ATTRIBUTE_SELECTOR",
     ];
 
 function r(keyword, tests)
@@ -298,87 +293,6 @@ Tester.prototype =
 	throw e;
       }
     },
-    CONTEXT_XML_DESCENDANTS:
-    function(keyword)
-    {
-      try
-      {
-	eval("var x = <foo><biz><" + keyword + " id='1'/></biz><" + keyword + " f='g'/></foo>;\n" +
-	     "if (x.." + keyword + ".length() != 2 ||\n" +
-	     "    x.." + keyword + " !=              \n" +
-	     "      <><" + keyword + " id='1'/><" + keyword + " f='g'/></>)\n" +
-	     "throw \"'x.." + keyword + ".length()' failed!\";");
-      }
-      catch (e)
-      {
-	throw e;
-      }
-    },
-    CONTEXT_XML_NAMESPACE_QUALIFIED_ELEMENT:
-    function(keyword)
-    {
-      try
-      {
-	var bar = new Namespace("http://localhost/");
-	eval("var x = <foo xmlns:bar='http://localhost/'>\n\
-                              <bar>\n\
-                                <baz/>\n\
-                              </bar>\n\
-                              <bar:" + keyword + " id='17'/>\n\
-                              <quiz>\n\
-                                <bar:" + keyword + ">\n\
-                                  <bunk/>\n\
-                                </bar:" + keyword + ">\n\
-                              </quiz>\n\
-                            </foo>;\n\
-                    if (x.quiz.bar::" + keyword + " != \n\
-                          <bar:" + keyword + "  xmlns:bar='http://localhost/'>\n\
-                            <bunk/>\n\
-                          </bar:" + keyword + "> ||\n\
-                        x..bar::" + keyword + " != \n\
-                            <><bar:" + keyword + "\n\
-                                xmlns:bar='http://localhost/' id='17'/>\n\
-                              <bar:" + keyword + " xmlns:bar='http://localhost/'>\n\
-                                <bunk/>\n\
-                              </bar:" + keyword + "></>)\n\
-                      throw 'reserved names in XML namespace-qualified stuff are broken!';");
-      }
-      catch (e)
-      {
-	throw e;
-      }
-    },
-    CONTEXT_XML_NAMESPACE_QUALIFIED_ATTR:
-    function(keyword)
-    {
-      try
-      {
-	var bar = new Namespace("http://localhost/");
-	eval("var x = <foo xmlns:bar='http://localhost/'>\
-                              <fin bar:" + keyword + "='5'/>\
-                            </foo>;\n\
-                    if (x.fin.@bar::" + keyword + " != 5)\n\
-                      throw 'namespaced attributes which are keywords are broken!';");
-      }
-      catch (e)
-      {
-	throw e;
-      }
-    },
-    CONTEXT_XML_ATTRIBUTE_SELECTOR:
-    function(keyword)
-    {
-      try
-      {
-	eval("var x = <foo " + keyword + "='idref'/>;\n\
-                    if (x.@" + keyword + " != 'idref')\n\
-                      throw 'keywords on the right of the @ E4X selector are broken!';");
-      }
-      catch (e)
-      {
-	throw e;
-      }
-    }
   }
 };
 
