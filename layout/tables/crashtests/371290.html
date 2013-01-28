@@ -1,4 +1,4 @@
-<html>
+<html class="reftest-wait">
 <head>
 <title>BC crash</title>
 <script>
@@ -11,6 +11,7 @@ function doit() {
   D.parentNode.removeChild(D);  
   var A = document.getElementById('A'); 
   A.parentNode.removeChild(A);  
+  document.documentElement.removeAttribute("class");
 }
 </script>
 </head>

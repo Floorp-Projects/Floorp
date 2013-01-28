@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
       
 <head>
 <script>
@@ -6,6 +6,7 @@
 function boom()
 {
   document.getElementById("tr").style.cssFloat = "right";
+  document.documentElement.removeAttribute("class");
 }
 
 </script>
