@@ -55,6 +55,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
 import android.os.StatFs;
+import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Base64;
@@ -631,6 +632,8 @@ public class GeckoAppShell
 
     // Block the current thread until the Gecko event loop is caught up
     synchronized public static void geckoEventSync() {
+        long time = SystemClock.uptimeMillis();
+
         sGeckoPendingAcks = new CountDownLatch(1);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createSyncEvent());
         while (sGeckoPendingAcks.getCount() != 0) {
@@ -639,6 +642,13 @@ public class GeckoAppShell
             } catch(InterruptedException e) {}
         }
         sGeckoPendingAcks = null;
+
+        time = SystemClock.uptimeMillis() - time;
+        if (time > 500) {
+            Log.w(LOGTAG, "Gecko event sync took too long! (" + time + " ms)", new Exception());
+        } else {
+            Log.d(LOGTAG, "Gecko event sync took " + time + " ms");
+        }
     }
 
     // Signal the Java thread that it's time to wake up
