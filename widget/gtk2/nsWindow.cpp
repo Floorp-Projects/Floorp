@@ -2008,7 +2008,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     // Dispatch WillPaintWindow notification to allow scripts etc. to run
     // before we paint
     {
-        listener->WillPaintWindow(this, true);
+        listener->WillPaintWindow(this);
 
         // If the window has been destroyed during the will paint notification,
         // there is nothing left to do.

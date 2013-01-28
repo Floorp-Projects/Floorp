@@ -1014,7 +1014,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
         bool painted = false;
         nsIntRegion region = invalidRect;
 
-        mWidgetListener->WillPaintWindow(this, true);
+        mWidgetListener->WillPaintWindow(this);
 
         switch (GetLayerManager(nullptr)->GetBackendType()) {
             case mozilla::layers::LAYERS_BASIC: {
