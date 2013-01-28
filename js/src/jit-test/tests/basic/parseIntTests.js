@@ -19,5 +19,5 @@ function doParseIntTests() {
 }
 doParseIntTests();
 
-assertEq(parseInt("08"), 0);
-assertEq(parseInt("09"), 0);
+assertEq(parseInt("08"), 8);
+assertEq(parseInt("09"), 9);
