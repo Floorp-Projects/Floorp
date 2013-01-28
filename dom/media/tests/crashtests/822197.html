@@ -1,0 +1,23 @@
+﻿﻿<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=822197
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Bug 822197 - Many PeerConnections with CreateOffer</title>
+  <script type="application/javascript">
+    var pcArray = [];
+
+    function start() {
+      for(var i = 0; i < 70; i++) {
+        var pc = new mozRTCPeerConnection();
+        pc.createOffer(function() {}, function() {});
+        pcArray.push(pc);
+      }
+    }
+  </script>
+</head>
+
+<body onload="start();"></body>
+</html>
