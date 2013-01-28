@@ -37,6 +37,10 @@ public:
   {
   }
 
+protected:
+  bool GetCallableProperty(JSContext* cx, const char* aPropName,
+                           JS::Value* aCallable);
+
 };
 
 } // namespace dom
