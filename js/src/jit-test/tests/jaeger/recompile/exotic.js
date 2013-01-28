@@ -52,7 +52,7 @@ xfoo(function(a) { oglobal = a; return 10; }, [1]);
 xfoo(function(a) { oglobal = a; return 10; }, [1]);
 xfoo(function(a) { oglobal = a; return 10; }, [1]);
 assertEq(oglobal, 1);
-xfoo(function(a) { <x></x>; oglobal = a; return 3; }, [true]);
+xfoo(function(a) { [1,2,3]; oglobal = a; return 3; }, [true]);
 assertEq(oglobal, true);
 
 // Recompilation out of SplatApplyArgs.

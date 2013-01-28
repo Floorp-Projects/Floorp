@@ -1,4 +1,4 @@
-try { let(x = XMLList(7), y = let(a = x)("")) {} } catch (e) {}
+try { let(x = Date(7), y = let(a = x)("")) {} } catch (e) {}
 
 try {
 with({
