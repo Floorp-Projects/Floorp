@@ -533,7 +533,7 @@ private:
      * Ensures the decode state accumulated by the decoding process gets
      * applied to the image.
      */
-    static void DidSomeDecoding(RasterImage* image, DecodeRequest* request);
+    static void NotifyFinishedSomeDecoding(RasterImage* image, DecodeRequest* request);
 
     NS_IMETHOD Run();
 
@@ -546,9 +546,8 @@ private:
     nsRefPtr<DecodeRequest> mRequest;
   };
 
-  static void FinishedSomeDecoding(RasterImage* image,
-                                   eShutdownIntent intent = eShutdownIntent_Done,
-                                   DecodeRequest* request = nullptr);
+  void FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
+                            DecodeRequest* request = nullptr);
 
   void DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                                     gfxContext *aContext,
