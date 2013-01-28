@@ -19,7 +19,6 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-class GlobalObject;
 template<class> class Optional;
 } // namespace dom
 } // namespace mozilla
@@ -50,7 +49,7 @@ public:
     return mOwner;
   }
   static already_AddRefed<nsFormData>
-  Constructor(const mozilla::dom::GlobalObject& aGlobal,
+  Constructor(nsISupports* aGlobal,
               const mozilla::dom::Optional<nsHTMLFormElement*>& aFormElement,
               mozilla::ErrorResult& aRv);
   void Append(const nsAString& aName, const nsAString& aValue);

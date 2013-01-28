@@ -148,14 +148,13 @@ public:
 
   // The WebIDL constructors.
   static already_AddRefed<nsXMLHttpRequest>
-  Constructor(const mozilla::dom::GlobalObject& aGlobal,
-              JSContext* aCx,
+  Constructor(JSContext* aCx,
+              nsISupports* aGlobal,
               const mozilla::dom::MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv)
   {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
-    nsCOMPtr<nsIScriptObjectPrincipal> principal =
-      do_QueryInterface(aGlobal.Get());
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
+    nsCOMPtr<nsIScriptObjectPrincipal> principal = do_QueryInterface(aGlobal);
     if (!window || ! principal) {
       aRv.Throw(NS_ERROR_FAILURE);
       return NULL;
@@ -168,8 +167,8 @@ public:
   }
 
   static already_AddRefed<nsXMLHttpRequest>
-  Constructor(const mozilla::dom::GlobalObject& aGlobal,
-              JSContext* aCx,
+  Constructor(JSContext* aCx,
+              nsISupports* aGlobal,
               const nsAString& ignored,
               ErrorResult& aRv)
   {
@@ -180,7 +179,7 @@ public:
       return nullptr;
     }
 
-    return Constructor(aGlobal, aCx, params, aRv);
+    return Constructor(aCx, aGlobal, params, aRv);
   }
 
   void Construct(nsIPrincipal* aPrincipal,

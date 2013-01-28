@@ -32,12 +32,11 @@ public:
 
   // WebIDL API
   static already_AddRefed<nsDOMParser>
-  Constructor(const mozilla::dom::GlobalObject& aOwner,
-              mozilla::ErrorResult& rv);
+  Constructor(nsISupports* aOwner, mozilla::ErrorResult& rv);
 
   static already_AddRefed<nsDOMParser>
-  Constructor(const mozilla::dom::GlobalObject& aOwner,
-              nsIPrincipal* aPrincipal, nsIURI* aDocumentURI, nsIURI* aBaseURI,
+  Constructor(nsISupports* aOwner, nsIPrincipal* aPrincipal,
+              nsIURI* aDocumentURI, nsIURI* aBaseURI,
               mozilla::ErrorResult& rv);
 
   already_AddRefed<nsIDocument>

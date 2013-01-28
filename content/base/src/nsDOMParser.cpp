@@ -353,7 +353,7 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
 }
 
 /*static */already_AddRefed<nsDOMParser>
-nsDOMParser::Constructor(const GlobalObject& aOwner, nsIPrincipal* aPrincipal,
+nsDOMParser::Constructor(nsISupports* aOwner, nsIPrincipal* aPrincipal,
                          nsIURI* aDocumentURI, nsIURI* aBaseURI,
                          ErrorResult& rv)
 {
@@ -361,9 +361,8 @@ nsDOMParser::Constructor(const GlobalObject& aOwner, nsIPrincipal* aPrincipal,
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
-  nsRefPtr<nsDOMParser> domParser = new nsDOMParser(aOwner.Get());
-  rv = domParser->InitInternal(aOwner.Get(), aPrincipal, aDocumentURI,
-                               aBaseURI);
+  nsRefPtr<nsDOMParser> domParser = new nsDOMParser(aOwner);
+  rv = domParser->InitInternal(aOwner, aPrincipal, aDocumentURI, aBaseURI);
   if (rv.Failed()) {
     return nullptr;
   }
@@ -371,7 +370,7 @@ nsDOMParser::Constructor(const GlobalObject& aOwner, nsIPrincipal* aPrincipal,
 }
 
 /*static */already_AddRefed<nsDOMParser>
-nsDOMParser::Constructor(const GlobalObject& aOwner, ErrorResult& rv)
+nsDOMParser::Constructor(nsISupports* aOwner, mozilla::ErrorResult& rv)
 {
   nsCOMPtr<nsIPrincipal> prin;
   nsCOMPtr<nsIURI> documentURI;
@@ -394,8 +393,8 @@ nsDOMParser::Constructor(const GlobalObject& aOwner, ErrorResult& rv)
     return nullptr;
   }
 
-  nsRefPtr<nsDOMParser> domParser = new nsDOMParser(aOwner.Get());
-  rv = domParser->InitInternal(aOwner.Get(), prin, documentURI, baseURI);
+  nsRefPtr<nsDOMParser> domParser = new nsDOMParser(aOwner);
+  rv = domParser->InitInternal(aOwner, prin, documentURI, baseURI);
   if (rv.Failed()) {
     return nullptr;
   }

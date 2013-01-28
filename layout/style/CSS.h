@@ -15,19 +15,17 @@
 namespace mozilla {
 namespace dom {
 
-class GlobalObject;
-
 class CSS {
 private:
   CSS() MOZ_DELETE;
 
 public:
-  static bool Supports(const GlobalObject& aGlobal,
+  static bool Supports(nsISupports* aGlobal,
                        const nsAString& aProperty,
                        const nsAString& aValue,
                        ErrorResult& aRv);
 
-  static bool Supports(const GlobalObject& aGlobal,
+  static bool Supports(nsISupports* aGlobal,
                        const nsAString& aDeclaration,
                        ErrorResult& aRv);
 

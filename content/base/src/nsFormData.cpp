@@ -106,11 +106,11 @@ nsFormData::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
 }
 
 /* static */ already_AddRefed<nsFormData>
-nsFormData::Constructor(const GlobalObject& aGlobal,
+nsFormData::Constructor(nsISupports* aGlobal,
                         const Optional<nsHTMLFormElement*>& aFormElement,
                         ErrorResult& aRv)
 {
-  nsRefPtr<nsFormData> formData = new nsFormData(aGlobal.Get());
+  nsRefPtr<nsFormData> formData = new nsFormData(aGlobal);
   if (aFormElement.WasPassed()) {
     MOZ_ASSERT(aFormElement.Value());
     aRv = aFormElement.Value()->WalkFormElements(formData);

@@ -284,13 +284,12 @@ EventSource::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
 }
 
 /* static */ already_AddRefed<EventSource>
-EventSource::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
+EventSource::Constructor(nsISupports* aOwner, const nsAString& aURL,
                          const EventSourceInit& aEventSourceInitDict,
                          ErrorResult& aRv)
 {
   nsRefPtr<EventSource> eventSource = new EventSource();
-  aRv = eventSource->Init(aGlobal.Get(), aURL,
-                          aEventSourceInitDict.mWithCredentials);
+  aRv = eventSource->Init(aOwner, aURL, aEventSourceInitDict.mWithCredentials);
   return eventSource.forget();
 }
 

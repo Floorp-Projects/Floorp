@@ -8,7 +8,6 @@
 
 USING_WORKERS_NAMESPACE
 using mozilla::ErrorResult;
-using mozilla::dom::WorkerGlobalObject;
 
 void
 TextEncoder::_trace(JSTracer* aTrc)
@@ -24,17 +23,17 @@ TextEncoder::_finalize(JSFreeOp* aFop)
 
 // static
 TextEncoder*
-TextEncoder::Constructor(const WorkerGlobalObject& aGlobal,
+TextEncoder::Constructor(JSContext* aCx, JSObject* aObj,
                          const nsAString& aEncoding,
                          ErrorResult& aRv)
 {
-  nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aGlobal.GetContext());
+  nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aCx);
   txtEncoder->Init(aEncoding, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  if (!Wrap(aGlobal.GetContext(), aGlobal.Get(), txtEncoder)) {
+  if (!Wrap(aCx, aObj, txtEncoder)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
