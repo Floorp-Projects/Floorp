@@ -7064,6 +7064,20 @@ JS_IndexToId(JSContext *cx, uint32_t index, jsid *idp)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, jsid *idp)
+{
+    RootedAtom atom(cx, AtomizeChars<CanGC>(cx, chars.start().get(), chars.length()));
+    if (!atom)
+        return false;
+#ifdef DEBUG
+    uint32_t dummy;
+    MOZ_ASSERT(!atom->isIndex(&dummy), "API misuse: |chars| must not encode an index");
+#endif
+    *idp = AtomToId(atom);
+    return true;
+}
+
+JS_PUBLIC_API(JSBool)
 JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier)
 {
     assertSameCompartment(cx, str);
