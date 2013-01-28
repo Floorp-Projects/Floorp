@@ -119,8 +119,12 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
-    SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTest);
+    if (!MAC) {
+      SimpleTest.waitForExplicitFinish();
+      openBrowserWindow(doTest);
+    } else {
+      todo(false, "Re-enable on Mac after fixing bug 835338");
+    }
   ]]>
   </script>
 
