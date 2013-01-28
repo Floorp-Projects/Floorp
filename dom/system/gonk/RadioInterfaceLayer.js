@@ -787,22 +787,18 @@ RadioInterfaceLayer.prototype = {
       this.updateVoiceConnection(voiceMessage);
     }
 
-    let dataInfoChanged = false;
     if (dataMessage) {
       dataMessage.batch = true;
       this.updateDataConnection(dataMessage);
     }
 
+    if (operatorMessage) {
+      operatorMessage.batch = true;
+      this.handleOperatorChange(operatorMessage);
+    }
+
     let voice = this.rilContext.voice;
     let data = this.rilContext.data;
-    if (operatorMessage) {
-      if (this.networkChanged(operatorMessage, voice.network)) {
-        voice.network = operatorMessage;
-      }
-      if (this.networkChanged(operatorMessage, data.network)) {
-        data.network = operatorMessage;
-      }
-    }
 
     this.checkRoamingBetweenOperators(voice);
     this.checkRoamingBetweenOperators(data);
@@ -1013,12 +1009,16 @@ RadioInterfaceLayer.prototype = {
 
     if (this.networkChanged(message, voice.network)) {
       voice.network = message;
-      this._sendTargetMessage("mobileconnection", "RIL:VoiceInfoChanged", voice);
+      if (!message.batch) {
+        this._sendTargetMessage("mobileconnection", "RIL:VoiceInfoChanged", voice);
+      }
     }
 
     if (this.networkChanged(message, data.network)) {
       data.network = message;
-      this._sendTargetMessage("mobileconnection", "RIL:DataInfoChanged", data);
+      if (!message.batch) {
+        this._sendTargetMessage("mobileconnection", "RIL:DataInfoChanged", data);
+      }
     }
   },
 
