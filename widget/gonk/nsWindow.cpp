@@ -235,8 +235,7 @@ nsWindow::DoDraw(void)
 
         listener = gWindowToRedraw->GetWidgetListener();
         if (listener) {
-            listener->PaintWindow(gWindowToRedraw, region,
-                nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+            listener->PaintWindow(gWindowToRedraw, region, 0);
         }
     } else if (mozilla::layers::LAYERS_BASIC == lm->GetBackendType()) {
         MOZ_ASSERT(sFramebufferOpen || sUsingOMTC);
@@ -259,8 +258,7 @@ nsWindow::DoDraw(void)
 
             listener = gWindowToRedraw->GetWidgetListener();
             if (listener) {
-                listener->PaintWindow(gWindowToRedraw, region,
-                    nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+                listener->PaintWindow(gWindowToRedraw, region, 0);
             }
         }
 

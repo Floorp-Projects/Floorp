@@ -1507,8 +1507,7 @@ bool nsChildView::PaintWindow(nsIntRegion aRegion, bool aIsAlternate)
   bool returnValue = false;
   bool oldDispatchPaint = mIsDispatchPaint;
   mIsDispatchPaint = true;
-  uint32_t flags =
-    nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT;
+  uint32_t flags = 0;
   if (aIsAlternate) {
     flags |= nsIWidgetListener::PAINT_IS_ALTERNATE; 
   }
