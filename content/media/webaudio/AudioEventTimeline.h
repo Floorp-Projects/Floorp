@@ -39,13 +39,16 @@ private:
     Event(Type aType, double aTime, float aValue, double aTimeConstant = 0.0,
           float aDuration = 0.0, float* aCurve = nullptr, uint32_t aCurveLength = 0)
       : mType(aType)
-      , mValue(aValue)
-      , mTime(aTime)
       , mTimeConstant(aTimeConstant)
       , mDuration(aDuration)
-      , mCurve(aCurve)
-      , mCurveLength(aCurveLength)
     {
+      if (aType == Event::SetValueCurve) {
+        mCurve = aCurve;
+        mCurveLength = aCurveLength;
+      } else {
+        mValue = aValue;
+        mTime = aTime;
+      }
     }
 
     bool IsValid() const
@@ -57,12 +60,16 @@ private:
     }
 
     Type mType;
-    float mValue;
-    double mTime;
+    union {
+      float mValue;
+      uint32_t mCurveLength;
+    };
+    union {
+      double mTime;
+      float* mCurve;
+    };
     double mTimeConstant;
     double mDuration;
-    float* mCurve;
-    uint32_t mCurveLength;
 
   private:
     static bool IsValid(float value)
