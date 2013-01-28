@@ -54,7 +54,7 @@ class MemoryMappedFileTest : public testing::Test {
   void ExpectNoMappedData(const MemoryMappedFile& mapped_file) {
     EXPECT_TRUE(mapped_file.content().IsEmpty());
     EXPECT_TRUE(mapped_file.data() == NULL);
-    EXPECT_EQ(0, mapped_file.size());
+    EXPECT_EQ(0U, mapped_file.size());
   }
 };
 

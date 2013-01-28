@@ -33,37 +33,38 @@
 //
 // Author: Mark Mentovai, Ted Mielczarek, Jim Blandy
 
+#include <vector>
+
+#include "common/scoped_ptr.h"
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/source_line_resolver_interface.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
 #include "processor/cfi_frame_info.h"
 #include "processor/logging.h"
-#include "processor/scoped_ptr.h"
 #include "processor/stackwalker_arm.h"
 
 namespace google_breakpad {
 
 
-StackwalkerARM::StackwalkerARM(const SystemInfo *system_info,
-                               const MDRawContextARM *context,
+StackwalkerARM::StackwalkerARM(const SystemInfo* system_info,
+                               const MDRawContextARM* context,
                                int fp_register,
-                               MemoryRegion *memory,
-                               const CodeModules *modules,
-                               SymbolSupplier *supplier,
-                               SourceLineResolverInterface *resolver)
-    : Stackwalker(system_info, memory, modules, supplier, resolver),
+                               MemoryRegion* memory,
+                               const CodeModules* modules,
+                               StackFrameSymbolizer* resolver_helper)
+    : Stackwalker(system_info, memory, modules, resolver_helper),
       context_(context), fp_register_(fp_register),
       context_frame_validity_(StackFrameARM::CONTEXT_VALID_ALL) { }
 
 
 StackFrame* StackwalkerARM::GetContextFrame() {
-  if (!context_ || !memory_) {
-    BPLOG(ERROR) << "Can't get context frame without context or memory";
+  if (!context_) {
+    BPLOG(ERROR) << "Can't get context frame without context";
     return NULL;
   }
 
-  StackFrameARM *frame = new StackFrameARM();
+  StackFrameARM* frame = new StackFrameARM();
 
   // The instruction pointer is stored directly in a register (r15), so pull it
   // straight out of the CPU context structure.
@@ -75,12 +76,12 @@ StackFrame* StackwalkerARM::GetContextFrame() {
   return frame;
 }
 
-StackFrameARM *StackwalkerARM::GetCallerByCFIFrameInfo(
-    const vector<StackFrame *> &frames,
-    CFIFrameInfo *cfi_frame_info) {
-  StackFrameARM *last_frame = static_cast<StackFrameARM *>(frames.back());
+StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
+    const vector<StackFrame*> &frames,
+    CFIFrameInfo* cfi_frame_info) {
+  StackFrameARM* last_frame = static_cast<StackFrameARM*>(frames.back());
 
-  static const char *register_names[] = {
+  static const char* register_names[] = {
     "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
     "r8",  "r9",  "r10", "r11", "r12", "sp",  "lr",  "pc",
     "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
@@ -121,7 +122,7 @@ StackFrameARM *StackwalkerARM::GetCallerByCFIFrameInfo(
     }
   }
   // If the CFI doesn't recover the PC explicitly, then use .ra.
-  if (! (frame->context_validity & StackFrameARM::CONTEXT_VALID_PC)) {
+  if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_PC)) {
     CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
       caller_registers.find(".ra");
     if (entry != caller_registers.end()) {
@@ -140,7 +141,7 @@ StackFrameARM *StackwalkerARM::GetCallerByCFIFrameInfo(
     }
   }
   // If the CFI doesn't recover the SP explicitly, then use .cfa.
-  if (! (frame->context_validity & StackFrameARM::CONTEXT_VALID_SP)) {
+  if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_SP)) {
     CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
       caller_registers.find(".cfa");
     if (entry != caller_registers.end()) {
@@ -159,13 +160,20 @@ StackFrameARM *StackwalkerARM::GetCallerByCFIFrameInfo(
   return frame.release();
 }
 
-StackFrameARM *StackwalkerARM::GetCallerByStackScan(
-    const vector<StackFrame *> &frames) {
-  StackFrameARM *last_frame = static_cast<StackFrameARM *>(frames.back());
+StackFrameARM* StackwalkerARM::GetCallerByStackScan(
+    const vector<StackFrame*> &frames) {
+  StackFrameARM* last_frame = static_cast<StackFrameARM*>(frames.back());
   u_int32_t last_sp = last_frame->context.iregs[MD_CONTEXT_ARM_REG_SP];
   u_int32_t caller_sp, caller_pc;
 
-  if (!ScanForReturnAddress(last_sp, &caller_sp, &caller_pc)) {
+  // When searching for the caller of the context frame,
+  // allow the scanner to look farther down the stack.
+  const int kRASearchWords = frames.size() == 1 ?
+    Stackwalker::kRASearchWords * 4 :
+    Stackwalker::kRASearchWords;
+
+  if (!ScanForReturnAddress(last_sp, &caller_sp, &caller_pc,
+                            kRASearchWords)) {
     // No plausible return address was found.
     return NULL;
   }
@@ -177,7 +185,7 @@ StackFrameARM *StackwalkerARM::GetCallerByStackScan(
 
   // Create a new stack frame (ownership will be transferred to the caller)
   // and fill it in.
-  StackFrameARM *frame = new StackFrameARM();
+  StackFrameARM* frame = new StackFrameARM();
 
   frame->trust = StackFrame::FRAME_TRUST_SCAN;
   frame->context = last_frame->context;
@@ -189,9 +197,9 @@ StackFrameARM *StackwalkerARM::GetCallerByStackScan(
   return frame;
 }
 
-StackFrameARM *StackwalkerARM::GetCallerByFramePointer(
-    const vector<StackFrame *> &frames) {
-  StackFrameARM *last_frame = static_cast<StackFrameARM *>(frames.back());
+StackFrameARM* StackwalkerARM::GetCallerByFramePointer(
+    const vector<StackFrame*> &frames) {
+  StackFrameARM* last_frame = static_cast<StackFrameARM*>(frames.back());
 
   if (!(last_frame->context_validity &
         StackFrameARM::RegisterValidFlag(fp_register_))) {
@@ -219,7 +227,7 @@ StackFrameARM *StackwalkerARM::GetCallerByFramePointer(
 
   // Create a new stack frame (ownership will be transferred to the caller)
   // and fill it in.
-  StackFrameARM *frame = new StackFrameARM();
+  StackFrameARM* frame = new StackFrameARM();
 
   frame->trust = StackFrame::FRAME_TRUST_FP;
   frame->context = last_frame->context;
@@ -235,19 +243,19 @@ StackFrameARM *StackwalkerARM::GetCallerByFramePointer(
   return frame;
 }
 
-StackFrame* StackwalkerARM::GetCallerFrame(const CallStack *stack) {
+StackFrame* StackwalkerARM::GetCallerFrame(const CallStack* stack) {
   if (!memory_ || !stack) {
     BPLOG(ERROR) << "Can't get caller frame without memory or stack";
     return NULL;
   }
 
-  const vector<StackFrame *> &frames = *stack->frames();
-  StackFrameARM *last_frame = static_cast<StackFrameARM *>(frames.back());
+  const vector<StackFrame*> &frames = *stack->frames();
+  StackFrameARM* last_frame = static_cast<StackFrameARM*>(frames.back());
   scoped_ptr<StackFrameARM> frame;
 
   // See if there is DWARF call frame information covering this address.
   scoped_ptr<CFIFrameInfo> cfi_frame_info(
-      resolver_ ? resolver_->FindCFIFrameInfo(last_frame) : NULL);
+      frame_symbolizer_->FindCFIFrameInfo(last_frame));
   if (cfi_frame_info.get())
     frame.reset(GetCallerByCFIFrameInfo(frames, cfi_frame_info.get()));
 

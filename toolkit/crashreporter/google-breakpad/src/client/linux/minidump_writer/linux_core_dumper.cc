@@ -102,9 +102,8 @@ bool LinuxCoreDumper::GetThreadInfoByIndex(size_t index, ThreadInfo* info) {
 #else
 #error "This code hasn't been ported to your platform yet."
 #endif
-
-  return GetStackInfo(&info->stack, &info->stack_len,
-                      reinterpret_cast<uintptr_t>(stack_pointer));
+  info->stack_pointer = reinterpret_cast<uintptr_t>(stack_pointer);
+  return true;
 }
 
 bool LinuxCoreDumper::IsPostMortem() const {

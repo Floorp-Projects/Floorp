@@ -39,6 +39,7 @@
 #include <string>
 #include <vector>
 
+#include "common/scoped_ptr.h"
 #include "common/using_std_string.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
@@ -50,7 +51,6 @@
 #include "google_breakpad/processor/stack_frame_cpu.h"
 #include "processor/logging.h"
 #include "processor/pathname_stripper.h"
-#include "processor/scoped_ptr.h"
 #include "processor/simple_symbol_supplier.h"
 
 namespace {
@@ -88,7 +88,7 @@ static int PrintRegister(const char *name, u_int32_t value, int start_col) {
   char buffer[64];
   snprintf(buffer, sizeof(buffer), " %5s = 0x%08x", name, value);
 
-  if (start_col + strlen(buffer) > kMaxWidth) {
+  if (start_col + static_cast<ssize_t>(strlen(buffer)) > kMaxWidth) {
     start_col = 0;
     printf("\n ");
   }
@@ -102,7 +102,7 @@ static int PrintRegister64(const char *name, u_int64_t value, int start_col) {
   char buffer[64];
   snprintf(buffer, sizeof(buffer), " %5s = 0x%016" PRIx64 , name, value);
 
-  if (start_col + strlen(buffer) > kMaxWidth) {
+  if (start_col + static_cast<ssize_t>(strlen(buffer)) > kMaxWidth) {
     start_col = 0;
     printf("\n ");
   }
@@ -137,9 +137,14 @@ static string StripSeparator(const string &original) {
 // frame printed is also output, if available.
 static void PrintStack(const CallStack *stack, const string &cpu) {
   int frame_count = stack->frames()->size();
+  if (frame_count == 0) {
+    printf(" <no frames>\n");
+  }
   for (int frame_index = 0; frame_index < frame_count; ++frame_index) {
     const StackFrame *frame = stack->frames()->at(frame_index);
     printf("%2d  ", frame_index);
+
+    u_int64_t instruction_address = frame->ReturnAddress();
 
     if (frame->module) {
       printf("%s", PathnameStripper::File(frame->module->code_file()).c_str());
@@ -150,16 +155,16 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
           printf(" [%s : %d + 0x%" PRIx64 "]",
                  source_file.c_str(),
                  frame->source_line,
-                 frame->instruction - frame->source_line_base);
+                 instruction_address - frame->source_line_base);
         } else {
-          printf(" + 0x%" PRIx64, frame->instruction - frame->function_base);
+          printf(" + 0x%" PRIx64, instruction_address - frame->function_base);
         }
       } else {
         printf(" + 0x%" PRIx64,
-               frame->instruction - frame->module->base_address());
+               instruction_address - frame->module->base_address());
       }
     } else {
-      printf("0x%" PRIx64, frame->instruction);
+      printf("0x%" PRIx64, instruction_address);
     }
     printf("\n ");
 
@@ -272,6 +277,8 @@ static void PrintStackMachineReadable(int thread_num, const CallStack *stack) {
     printf("%d%c%d%c", thread_num, kOutputSeparator, frame_index,
            kOutputSeparator);
 
+    u_int64_t instruction_address = frame->ReturnAddress();
+
     if (frame->module) {
       assert(!frame->module->code_file().empty());
       printf("%s", StripSeparator(PathnameStripper::File(
@@ -286,13 +293,13 @@ static void PrintStackMachineReadable(int thread_num, const CallStack *stack) {
                  kOutputSeparator,
                  frame->source_line,
                  kOutputSeparator,
-                 frame->instruction - frame->source_line_base);
+                 instruction_address - frame->source_line_base);
         } else {
           printf("%c%c%c0x%" PRIx64,
                  kOutputSeparator,  // empty source file
                  kOutputSeparator,  // empty source line
                  kOutputSeparator,
-                 frame->instruction - frame->function_base);
+                 instruction_address - frame->function_base);
         }
       } else {
         printf("%c%c%c%c0x%" PRIx64,
@@ -300,7 +307,7 @@ static void PrintStackMachineReadable(int thread_num, const CallStack *stack) {
                kOutputSeparator,  // empty source file
                kOutputSeparator,  // empty source line
                kOutputSeparator,
-               frame->instruction - frame->module->base_address());
+               instruction_address - frame->module->base_address());
       }
     } else {
       // the printf before this prints a trailing separator for module name
@@ -309,7 +316,7 @@ static void PrintStackMachineReadable(int thread_num, const CallStack *stack) {
              kOutputSeparator,  // empty source file
              kOutputSeparator,  // empty source line
              kOutputSeparator,
-             frame->instruction);
+             instruction_address);
     }
     printf("\n");
   }

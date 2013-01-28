@@ -120,8 +120,10 @@ class DwarfLineToModule: public dwarf2reader::LineInfoHandler {
   // end of the address space, we clip it. It's up to our client to
   // sort out which lines belong to which functions; we don't add them
   // to any particular function in MODULE ourselves.
-  DwarfLineToModule(Module *module, vector<Module::Line> *lines)
+  DwarfLineToModule(Module *module, const string& compilation_dir,
+                    vector<Module::Line> *lines)
       : module_(module),
+        compilation_dir_(compilation_dir),
         lines_(lines),
         highest_file_number_(-1),
         omitted_line_end_(0),
@@ -145,6 +147,10 @@ class DwarfLineToModule: public dwarf2reader::LineInfoHandler {
   // The module we're contributing debugging info to. Owned by our
   // client.
   Module *module_;
+
+  // The compilation directory for the current compilation unit whose
+  // lines are being accumulated.
+  string compilation_dir_;
 
   // The vector of lines we're accumulating. Owned by our client.
   //

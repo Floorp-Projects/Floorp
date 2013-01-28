@@ -53,7 +53,7 @@ TEST(ElfCoreDumpTest, DefaultConstructor) {
   ElfCoreDump core;
   EXPECT_FALSE(core.IsValid());
   EXPECT_EQ(NULL, core.GetHeader());
-  EXPECT_EQ(0, core.GetProgramHeaderCount());
+  EXPECT_EQ(0U, core.GetProgramHeaderCount());
   EXPECT_EQ(NULL, core.GetProgramHeader(0));
   EXPECT_EQ(NULL, core.GetFirstProgramHeaderOfType(PT_LOAD));
   EXPECT_FALSE(core.GetFirstNote().IsValid());
@@ -74,7 +74,7 @@ TEST(ElfCoreDumpTest, TestElfHeader) {
   core.SetContent(mapped_core_file.content());
   EXPECT_FALSE(core.IsValid());
   EXPECT_EQ(NULL, core.GetHeader());
-  EXPECT_EQ(0, core.GetProgramHeaderCount());
+  EXPECT_EQ(0U, core.GetProgramHeaderCount());
   EXPECT_EQ(NULL, core.GetProgramHeader(0));
   EXPECT_EQ(NULL, core.GetFirstProgramHeaderOfType(PT_LOAD));
   EXPECT_FALSE(core.GetFirstNote().IsValid());
@@ -238,7 +238,7 @@ TEST(ElfCoreDumpTest, ValidCoreFile) {
   }
 
   EXPECT_TRUE(expected_thread_ids == actual_thread_ids);
-  EXPECT_EQ(1, num_nt_prpsinfo);
+  EXPECT_EQ(1U, num_nt_prpsinfo);
   EXPECT_EQ(kNumOfThreads, num_nt_prstatus);
 #if defined(__i386__) || defined(__x86_64__)
   EXPECT_EQ(kNumOfThreads, num_nt_fpregset);

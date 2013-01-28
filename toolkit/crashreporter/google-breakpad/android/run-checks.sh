@@ -369,28 +369,33 @@ else
   ACTION="Running"
   TESTS_ENVIRONMENT=
 fi
-if [ "$ALL_TESTS" ]; then
-  dump "$ACTION full Android unit tests."
-else
-  dump "$ACTION Android client library unit tests."
-fi
 
 (
   PATH="$NDK_STANDALONE/bin:$PATH"
   run cd "$TMPDIR"/build-target &&
-  if [ -z "$ALL_TESTS" ]; then
-    # Reconfigure to avoid building the unit tests for the tools
-    # and processor, unless --all-tests is used.
+  # Reconfigure to only run the client unit test suite.
+  # This one should _never_ fail.
+  dump "$ACTION Android client library unit tests."
+  run2 "$PROGDIR"/../configure --prefix="$TMPTARGET" \
+                               --host="$GNU_CONFIG" \
+                               --disable-tools \
+                               --disable-processor &&
+  run make -j$NUM_JOBS check $TESTS_ENVIRONMENT || exit $?
+
+  if [ "$ALL_TESTS" ]; then
+    dump "$ACTION Tools and processor unit tests."
+    # Reconfigure to run the processor and tools tests.
+    # Most of these fail for now, so do not worry about it.
     run2 "$PROGDIR"/../configure --prefix="$TMPTARGET" \
-                                  --host="$GNU_CONFIG" \
-                                  --disable-tools \
-                                  --disable-processor
-  fi &&
-  run make -j$NUM_JOBS check $TESTS_ENVIRONMENT
+                                 --host="$GNU_CONFIG" &&
+    run make -j$NUM_JOBS check $TESTS_ENVIRONMENT
+    if [ $? != 0 ]; then
+      dump "Tools and processor unit tests failed as expected. \
+Use --verbose for results."
+    fi                           
+  fi
 )
-if [ -z "$NO_DEVICE" ] && verbosity_is_lower_than 2; then
-  dump "  Unit tests failed as expected. Use --verbose to see results."
-fi
+fail_panic "Client library unit test suite failed!"
 
 # Copy sources to temporary directory
 PROJECT_DIR=$TMPDIR/project

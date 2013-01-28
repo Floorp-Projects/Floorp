@@ -16,6 +16,6 @@ Module|kernel32.dll|5.1.2600.2945|kernel32.pdb|BCE8785C57B44245A669896B6A19B9542
 Module|ntdll.dll|5.1.2600.2180|ntdll.pdb|36515FB5D04345E491F672FA2E2878C02|0x7c900000|0x7c9affff|0
 
 0|0|test_app.exe|`anonymous namespace'::CrashFunction|c:\test_app.cc|58|0x3
-0|1|test_app.exe|main|c:\test_app.cc|65|0x4
-0|2|test_app.exe|__tmainCRTStartup|f:\sp\vctools\crt_bld\self_x86\crt\src\crt0.c|327|0x11
-0|3|kernel32.dll|BaseProcessStart|||0x22
+0|1|test_app.exe|main|c:\test_app.cc|65|0x5
+0|2|test_app.exe|__tmainCRTStartup|f:\sp\vctools\crt_bld\self_x86\crt\src\crt0.c|327|0x12
+0|3|kernel32.dll|BaseProcessStart|||0x23
