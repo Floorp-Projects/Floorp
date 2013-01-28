@@ -39,6 +39,9 @@ public class Favicons {
 
     public static final long NOT_LOADING = 0;
 
+    private static int sFaviconSmallSize = -1;
+    private static int sFaviconLargeSize = -1;
+
     private Context mContext;
 
     private Map<Long,LoadFaviconTask> mLoadTasks;
@@ -170,8 +173,29 @@ public class Favicons {
        return Favicons.FaviconsInstanceHolder.INSTANCE;
     }
 
+    public boolean isLargeFavicon(Bitmap image) {
+        return image.getWidth() > sFaviconSmallSize || image.getHeight() > sFaviconSmallSize;
+    }
+
+    public Bitmap scaleImage(Bitmap image) {
+        // If the icon is larger than 16px, scale it to sFaviconLargeSize.
+        // Otherwise, scale it to sFaviconSmallSize.
+        if (isLargeFavicon(image)) {
+            image = Bitmap.createScaledBitmap(image, sFaviconLargeSize, sFaviconLargeSize, false);
+        } else {
+            image = Bitmap.createScaledBitmap(image, sFaviconSmallSize, sFaviconSmallSize, false);
+        }
+        return image;
+    }
+
     public void attachToContext(Context context) {
         mContext = context;
+        if (sFaviconSmallSize < 0) {
+            sFaviconSmallSize = Math.round(mContext.getResources().getDimension(R.dimen.awesomebar_row_favicon_size_small));
+        }
+        if (sFaviconLargeSize < 0) {
+            sFaviconLargeSize = Math.round(mContext.getResources().getDimension(R.dimen.awesomebar_row_favicon_size_large));
+        }
     }
 
     private class LoadFaviconTask extends AsyncTask<Void, Void, Bitmap> {
@@ -286,7 +310,7 @@ public class Favicons {
             if (storedFaviconUrl != null && storedFaviconUrl.equals(mFaviconUrl)) {
                 image = loadFaviconFromDb();
                 if (image != null)
-                    return image;
+                    return scaleImage(image);
             }
 
             if (isCancelled())
@@ -296,6 +320,7 @@ public class Favicons {
 
             if (image != null && image.getWidth() > 0 && image.getHeight() > 0) {
                 saveFaviconToDb(image);
+                image = scaleImage(image);
             } else {
                 image = null;
             }
