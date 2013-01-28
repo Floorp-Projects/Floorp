@@ -188,6 +188,14 @@ ifeq ($(CPU_ARCH),x86_64)
     # comment the next two lines to turn off intel HW accelleration
     DEFINES += -DUSE_HW_AES
     ASFILES += intel-aes.s intel-gcm.s
+    # The integrated assembler in Clang 3.0 does not support % in the
+    # expression of a .set directive. intel-gcm.s uses .set to give
+    # symbolic names to registers, for example,
+    #     .set  Htbl, %rdi
+    # So we can't use Clang's integrated assembler with intel-gcm.s.
+    ifneq (,$(findstring clang,$(AS)))
+        ASFLAGS += -no-integrated-as
+    endif
     EXTRA_SRCS +=  intel-gcm-wrap.c
     INTEL_GCM=1
     MPI_SRCS += mpi_amd64.c mp_comba.c

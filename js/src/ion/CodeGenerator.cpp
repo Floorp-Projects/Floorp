@@ -2935,13 +2935,30 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
 };
 
 bool
+CodeGenerator::emitStoreHoleCheck(Register elements, const LAllocation *index, LSnapshot *snapshot)
+{
+    Assembler::Condition cond;
+    if (index->isConstant())
+        cond = masm.testMagic(Assembler::Equal, Address(elements, ToInt32(index) * sizeof(js::Value)));
+    else
+        cond = masm.testMagic(Assembler::Equal, BaseIndex(elements, ToRegister(index), TimesEight));
+    return bailoutIf(cond, snapshot);
+}
+
+bool
 CodeGenerator::visitStoreElementT(LStoreElementT *store)
 {
+    Register elements = ToRegister(store->elements());
+    const LAllocation *index = store->index();
+
     if (store->mir()->needsBarrier())
-       emitPreBarrier(ToRegister(store->elements()), store->index(), store->mir()->elementType());
+       emitPreBarrier(elements, index, store->mir()->elementType());
+
+    if (store->mir()->needsHoleCheck() && !emitStoreHoleCheck(elements, index, store->snapshot()))
+        return false;
 
     storeElementTyped(store->value(), store->mir()->value()->type(), store->mir()->elementType(),
-                      ToRegister(store->elements()), store->index());
+                      elements, index);
     return true;
 }
 
@@ -2950,9 +2967,13 @@ CodeGenerator::visitStoreElementV(LStoreElementV *lir)
 {
     const ValueOperand value = ToValue(lir, LStoreElementV::Value);
     Register elements = ToRegister(lir->elements());
+    const LAllocation *index = lir->index();
 
     if (lir->mir()->needsBarrier())
-        emitPreBarrier(elements, lir->index(), MIRType_Value);
+        emitPreBarrier(elements, index, MIRType_Value);
+
+    if (lir->mir()->needsHoleCheck() && !emitStoreHoleCheck(elements, index, lir->snapshot()))
+        return false;
 
     if (lir->index()->isConstant())
         masm.storeValue(value, Address(elements, ToInt32(lir->index()) * sizeof(js::Value)));
@@ -3660,7 +3681,7 @@ CodeGenerator::link()
     // The correct state for prebarriers is unknown until the end of compilation,
     // since a GC can occur during code generation. All barriers are emitted
     // off-by-default, and are toggled on here if necessary.
-    if (cx->compartment->needsBarrier())
+    if (cx->zone()->needsBarrier())
         ionScript->toggleBarriers(true);
 
     return true;

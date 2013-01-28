@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+      
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("tr").style.cssFloat = "right";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 300);">
+
+<table border="1">
+  <tr id="tr">
+    <td>Foo</td>
+  </tr>
+</table>
+
+</body>
+</html>

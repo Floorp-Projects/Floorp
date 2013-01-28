@@ -432,16 +432,6 @@ fi
 AC_SUBST(CRTDLLVERSION)
 AC_SUBST(CRTEXPDLLVERSION)
 
-if test -n "$MOZ_METRO"; then
-  case "$target" in
-  *-mingw*)
-    ;;
-  *)
-    AC_MSG_ERROR([Metro builds only valid on the windows platform.]);
-    ;;
-  esac
-fi
-
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
                           Windows SDK version to target. Lowest version

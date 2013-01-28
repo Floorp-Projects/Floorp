@@ -1793,8 +1793,6 @@ pref("dom.ipc.plugins.flash.subprocess.crashreporter.enabled", true);
 
 pref("dom.ipc.processCount", 1);
 
-pref("svg.smil.enabled", true);
-
 // Enable the use of display-lists for SVG hit-testing and painting.
 pref("svg.display-lists.hit-testing.enabled", true);
 pref("svg.display-lists.painting.enabled", true);

@@ -267,3 +267,9 @@ NSSSMIME_GetVersion;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.14.2 {    # NSS 3.14.2 release
+;+    global:
+SEC_PKCS7VerifyDetachedSignatureAtTime;
+;+    local:
+;+       *;
+;+};

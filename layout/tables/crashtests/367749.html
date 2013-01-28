@@ -1,0 +1,14 @@
+<html><head>
+<title>Testcase bug 362275 - Hang with testcase on print preview, using -moz-column-count and table related stuff</title>
+</head>
+<body>
+This page should not hang Mozilla on print preview
+<div style="-moz-column-count: 2;">
+  <span style="display: table-cell;">	
+    <span>
+      <textarea style="display: table-cell;"></textarea>
+    </span>
+  </span>
+  <span style="display: table-header-group;"></span>
+</div>
+</body></html>

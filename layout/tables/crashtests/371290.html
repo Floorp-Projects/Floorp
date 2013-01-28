@@ -1,0 +1,33 @@
+<html class="reftest-wait">
+<head>
+<title>BC crash</title>
+<script>
+function doit() {
+  var C = document.getElementById('C'); 
+  var newNode = document.createElement('td'); 
+  newNode.setAttribute('id', 'D'); 
+  C.insertBefore(newNode, document.getElementById('B')); 
+  var D = document.getElementById('D'); 
+  D.parentNode.removeChild(D);  
+  var A = document.getElementById('A'); 
+  A.parentNode.removeChild(A);  
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+
+<body onload="doit()">
+<table style="border-collapse: collapse">
+  <tbody>
+   <tr id="C">
+     <th id="B"></th>
+   </tr>
+   <tr>
+    <td id="A" colspan="2"></th>
+   </tr>
+   <tbody><tr><th></th></tr></tbody>
+
+</table>
+</body>
+</html>

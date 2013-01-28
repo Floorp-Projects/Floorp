@@ -334,7 +334,7 @@ JS::SystemCompartmentCount(const JSRuntime *rt)
 {
     size_t n = 0;
     for (size_t i = 0; i < rt->compartments.length(); i++) {
-        if (rt->compartments[i]->isSystemCompartment)
+        if (rt->compartments[i]->zone()->isSystem)
             ++n;
     }
     return n;
@@ -345,7 +345,7 @@ JS::UserCompartmentCount(const JSRuntime *rt)
 {
     size_t n = 0;
     for (size_t i = 0; i < rt->compartments.length(); i++) {
-        if (!rt->compartments[i]->isSystemCompartment)
+        if (!rt->compartments[i]->zone()->isSystem)
             ++n;
     }
     return n;

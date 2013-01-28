@@ -152,9 +152,13 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
 bool
 MBasicBlock::init()
 {
-    if (!slots_.init(info_.nslots()))
-        return false;
-    return true;
+    return slots_.init(info_.nslots());
+}
+
+bool
+MBasicBlock::increaseSlots(size_t num)
+{
+    return slots_.growBy(num);
 }
 
 void
@@ -343,7 +347,7 @@ MBasicBlock::rewriteAtDepth(int32_t depth, MDefinition *ins)
 void
 MBasicBlock::push(MDefinition *ins)
 {
-    JS_ASSERT(stackPosition_ < info_.nslots());
+    JS_ASSERT(stackPosition_ < nslots());
     slots_[stackPosition_++] = ins;
 }
 
@@ -376,6 +380,13 @@ MBasicBlock::pop()
 {
     JS_ASSERT(stackPosition_ > info_.firstStackSlot());
     return slots_[--stackPosition_];
+}
+
+void
+MBasicBlock::popn(uint32_t n)
+{
+    JS_ASSERT(stackPosition_ - n >= info_.firstStackSlot());
+    stackPosition_ -= n;
 }
 
 MDefinition *

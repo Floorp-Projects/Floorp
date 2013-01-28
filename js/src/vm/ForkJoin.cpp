@@ -50,7 +50,7 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     uint32_t rendezvousIndex_;     // Number of rendezvous attempts
     bool gcRequested_;             // True if a worker requested a GC
     gcreason::Reason gcReason_;    // Reason given to request GC
-    JSCompartment *gcCompartment_; // Compartment for GC, or NULL for full
+    Zone *gcZone_;                 // Zone for GC, or NULL for full
 
     /////////////////////////////////////////////////////////////////////////
     // Asynchronous Flags
@@ -126,7 +126,7 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
 
     // Requests a GC, either full or specific to a compartment.
     void requestGC(gcreason::Reason reason);
-    void requestCompartmentGC(JSCompartment *compartment, gcreason::Reason reason);
+    void requestZoneGC(JS::Zone *zone, gcreason::Reason reason);
 
     // Requests that computation abort.
     void setAbortFlag();
@@ -184,7 +184,7 @@ ForkJoinShared::ForkJoinShared(JSContext *cx,
     rendezvousIndex_(0),
     gcRequested_(false),
     gcReason_(gcreason::NUM_REASONS),
-    gcCompartment_(NULL),
+    gcZone_(NULL),
     abort_(false),
     fatal_(false),
     rendezvous_(false)
@@ -277,12 +277,12 @@ ForkJoinShared::transferArenasToCompartmentAndProcessGCRequests()
         comp->adoptWorkerAllocator(allocators_[i]);
 
     if (gcRequested_) {
-        if (!gcCompartment_)
+        if (!gcZone_)
             TriggerGC(cx_->runtime, gcReason_);
         else
-            TriggerCompartmentGC(gcCompartment_, gcReason_);
+            TriggerZoneGC(gcZone_, gcReason_);
         gcRequested_ = false;
-        gcCompartment_ = NULL;
+        gcZone_ = NULL;
     }
 }
 
@@ -347,7 +347,7 @@ ForkJoinShared::check(ForkJoinSlice &slice)
         if (cx_->runtime->interrupt) {
             // The GC Needed flag should not be set during parallel
             // execution.  Instead, one of the requestGC() or
-            // requestCompartmentGC() methods should be invoked.
+            // requestZoneGC() methods should be invoked.
             JS_ASSERT(!cx_->runtime->gcIsNeeded);
 
             // If interrupt is requested, bring worker threads to a halt,
@@ -457,26 +457,25 @@ ForkJoinShared::requestGC(gcreason::Reason reason)
 {
     AutoLockMonitor lock(*this);
 
-    gcCompartment_ = NULL;
+    gcZone_ = NULL;
     gcReason_ = reason;
     gcRequested_ = true;
 }
 
 void
-ForkJoinShared::requestCompartmentGC(JSCompartment *compartment,
-                                     gcreason::Reason reason)
+ForkJoinShared::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
 {
     AutoLockMonitor lock(*this);
 
-    if (gcRequested_ && gcCompartment_ != compartment) {
-        // If a full GC has been requested, or a GC for another compartment,
+    if (gcRequested_ && gcZone_ != zone) {
+        // If a full GC has been requested, or a GC for another zone,
         // issue a request for a full GC.
-        gcCompartment_ = NULL;
+        gcZone_ = NULL;
         gcReason_ = reason;
         gcRequested_ = true;
     } else {
-        // Otherwise, just GC this compartment.
-        gcCompartment_ = compartment;
+        // Otherwise, just GC this zone.
+        gcZone_ = zone;
         gcReason_ = reason;
         gcRequested_ = true;
     }
@@ -560,11 +559,10 @@ ForkJoinSlice::requestGC(gcreason::Reason reason)
 }
 
 void
-ForkJoinSlice::requestCompartmentGC(JSCompartment *compartment,
-                                    gcreason::Reason reason)
+ForkJoinSlice::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
 {
 #ifdef JS_THREADSAFE
-    shared->requestCompartmentGC(compartment, reason);
+    shared->requestZoneGC(zone, reason);
     triggerAbort();
 #endif
 }

@@ -334,7 +334,6 @@ IsInlinableCall(jsbytecode *pc)
 #endif
            op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH ||
            op == JSOP_SETPROP || op == JSOP_SETGNAME || op == JSOP_SETNAME;
-
 }
 
 /*
@@ -421,7 +420,7 @@ struct AutoEnterCompilation
         co.script = script;
         co.setKind(kind);
         co.constructing = constructing;
-        co.barriers = cx->compartment->compileBarriers();
+        co.barriers = cx->zone()->compileBarriers();
         co.chunkIndex = chunkIndex;
 
         // This flag is used to prevent adding the current compiled script in
@@ -1665,10 +1664,10 @@ TypeObject::writeBarrierPre(TypeObject *type)
     if (!type)
         return;
 
-    JSCompartment *comp = type->compartment();
-    if (comp->needsBarrier()) {
+    JS::Zone *zone = type->zone();
+    if (zone->needsBarrier()) {
         TypeObject *tmp = type;
-        MarkTypeObjectUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        MarkTypeObjectUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == type);
     }
 #endif
@@ -1683,10 +1682,10 @@ inline void
 TypeObject::readBarrier(TypeObject *type)
 {
 #ifdef JSGC_INCREMENTAL
-    JSCompartment *comp = type->compartment();
-    if (comp->needsBarrier()) {
+    JS::Zone *zone = type->zone();
+    if (zone->needsBarrier()) {
         TypeObject *tmp = type;
-        MarkTypeObjectUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
+        MarkTypeObjectUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
         JS_ASSERT(tmp == type);
     }
 #endif
@@ -1699,10 +1698,10 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
     if (!newScript)
         return;
 
-    JSCompartment *comp = newScript->fun->compartment();
-    if (comp->needsBarrier()) {
-        MarkObject(comp->barrierTracer(), &newScript->fun, "write barrier");
-        MarkShape(comp->barrierTracer(), &newScript->shape, "write barrier");
+    JS::Zone *zone = newScript->fun->zone();
+    if (zone->needsBarrier()) {
+        MarkObject(zone->barrierTracer(), &newScript->fun, "write barrier");
+        MarkShape(zone->barrierTracer(), &newScript->shape, "write barrier");
     }
 #endif
 }

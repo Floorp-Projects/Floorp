@@ -2280,6 +2280,7 @@ abstract public class GeckoApp
             mPromptService.destroy();
         if (mTextSelection != null)
             mTextSelection.destroy();
+        SiteIdentityPopup.clearInstance();
 
         Tabs.getInstance().detachFromActivity(this);
 

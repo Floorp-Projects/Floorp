@@ -1,2 +1,6 @@
 This directory contains patches that were added locally
 on top of the NSS release.
+
+bug-834091.patch: Add SEC_PKCS7VerifyDetachedSignatureAtTime, which is needed
+                  for B2G 1.0. This patch is probably going to be modified
+                  before it can land in upstream NSS.

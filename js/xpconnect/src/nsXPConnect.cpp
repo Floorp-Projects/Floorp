@@ -513,7 +513,7 @@ private:
         if (delegateMightNeedMarking && kkind == JSTRACE_OBJECT) {
             JSObject *kdelegate = js::GetWeakmapKeyDelegate((JSObject *)k);
             if (kdelegate && !xpc_IsGrayGCThing(kdelegate)) {
-                js::UnmarkGrayGCThingRecursively(k, JSTRACE_OBJECT);
+                JS::UnmarkGrayGCThingRecursively(k, JSTRACE_OBJECT);
                 tracer->mAnyMarked = true;
             }
         }
@@ -523,7 +523,7 @@ private:
             (!m || !xpc_IsGrayGCThing(m)) &&
             vkind != JSTRACE_SHAPE)
         {
-            js::UnmarkGrayGCThingRecursively(v, vkind);
+            JS::UnmarkGrayGCThingRecursively(v, vkind);
             tracer->mAnyMarked = true;
         }
 

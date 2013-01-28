@@ -18,6 +18,7 @@ namespace js {
 namespace ion {
 
 class CodeGenerator;
+class CallInfo;
 
 class IonBuilder : public MIRGenerator
 {
@@ -171,7 +172,7 @@ class IonBuilder : public MIRGenerator
 
     bool build();
     bool buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
-                     MDefinition *thisDefn, MDefinitionVector &args);
+                     CallInfo &callInfo);
 
   private:
     bool traverseBytecode();
@@ -416,35 +417,24 @@ class IonBuilder : public MIRGenerator
 
     InliningStatus inlineNativeCall(JSNative native, uint32_t argc, bool constructing);
 
-    bool jsop_call_inline(HandleFunction callee, uint32_t argc, bool constructing,
-                          MConstant *constFun, MBasicBlock *bottom,
+    // Call functions
+    bool jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBlock *bottom,
                           Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
-    bool inlineScriptedCall(AutoObjectVector &targets, AutoObjectVector &originals,
-                            uint32_t argc, bool constructing,
-                            types::StackTypeSet *types, types::StackTypeSet *barrier);
+    bool inlineScriptedCalls(AutoObjectVector &targets, AutoObjectVector &originals,
+                             CallInfo &callInfo);
+    bool inlineScriptedCall(HandleFunction target, CallInfo &callInfo);
     bool makeInliningDecision(AutoObjectVector &targets, uint32_t argc);
 
     bool anyFunctionIsCloneAtCallsite(types::StackTypeSet *funTypes);
     MDefinition *makeCallsiteClone(HandleFunction target, MDefinition *fun);
-    void popFormals(uint32_t argc, MDefinition **fun, MPassArg **thisArg,
-                    Vector<MPassArg *> *args);
-    MCall *makeCallHelper(HandleFunction target,  types::StackTypeSet *calleeTypes,
-                          bool constructing, bool cloneAtCallsite,
-                          MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args);
-    MCall *makeCallHelper(HandleFunction target,  types::StackTypeSet *calleeTypes,
-                          uint32_t argc, bool constructing, bool cloneAtCallsite);
-    bool makeCallBarrier(HandleFunction target,  types::StackTypeSet *calleeTypes,
-                         uint32_t argc, bool constructing, bool cloneAtCallsite,
-                         types::StackTypeSet *types, types::StackTypeSet *barrier);
-    bool makeCallBarrier(HandleFunction target, types::StackTypeSet *calleeTypes,
-                         bool constructing, bool cloneAtCallsite,
-                         MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args,
-                         types::StackTypeSet *types, types::StackTypeSet *barrier);
-    bool makeCall(HandleFunction target, types::StackTypeSet *calleeTypes,
-                  uint32_t argc, bool constructing, bool cloneAtCallsite);
-    bool makeCall(HandleFunction target, types::StackTypeSet *calleeTypes,
-                  bool constructing, bool cloneAtCallsite,
-                  MDefinition *fun, MPassArg *thisArg, Vector<MPassArg *> &args);
+    MCall *makeCallHelper(HandleFunction target, CallInfo &callInfo,
+                          types::StackTypeSet *calleeTypes, bool cloneAtCallsite);
+    bool makeCallBarrier(HandleFunction target,  CallInfo &callInfo,
+                         types::StackTypeSet *calleeTypes, bool cloneAtCallsite);
+    bool makeCall(HandleFunction target, CallInfo &callInfo, 
+                  types::StackTypeSet *calleeTypes, bool cloneAtCallsite);
+
+    MDefinition *patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasicBlock *bottom);
 
     inline bool TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types,
                                    HandleId id, JSFunction **funcp,
@@ -457,10 +447,8 @@ class IonBuilder : public MIRGenerator
     MGetPropertyCache *checkInlineableGetPropertyCache(uint32_t argc);
 
     MPolyInlineDispatch *
-    makePolyInlineDispatch(JSContext *cx, int argc,
-                           MGetPropertyCache *getPropCache,
-                           types::StackTypeSet *types, types::StackTypeSet *barrier,
-                           MBasicBlock *bottom,
+    makePolyInlineDispatch(JSContext *cx, CallInfo &callInfo,
+                           MGetPropertyCache *getPropCache, MBasicBlock *bottom,
                            Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
 
     const types::StackTypeSet *cloneTypeSet(const types::StackTypeSet *types);
@@ -521,6 +509,184 @@ class IonBuilder : public MIRGenerator
     // If this script can use a lazy arguments object, it will be pre-created
     // here.
     MInstruction *lazyArguments_;
+};
+
+class CallInfo
+{
+    types::StackTypeSet *barrier_;
+    types::StackTypeSet *types_;
+
+    MDefinition *fun_;
+    MDefinition *thisArg_;
+    Vector<MDefinition *> args_;
+
+    bool constructing_;
+
+  public:
+    CallInfo(JSContext *cx, bool constructing)
+      : barrier_(NULL),
+        types_(NULL),
+        fun_(NULL),
+        thisArg_(NULL),
+        args_(cx),
+        constructing_(constructing)
+    { }
+
+    CallInfo(JSContext *cx, bool constructing,
+             types::StackTypeSet *types, types::StackTypeSet *barrier)
+      : barrier_(barrier),
+        types_(types),
+        fun_(NULL),
+        thisArg_(NULL),
+        args_(cx),
+        constructing_(constructing)
+    { }
+
+    bool init(CallInfo &callInfo) {
+        JS_ASSERT(constructing_ == callInfo.constructing());
+
+        fun_ = callInfo.fun();
+        thisArg_ = callInfo.thisArg();
+
+        if (!args_.append(callInfo.argv()->begin(), callInfo.argv()->end()))
+            return false;
+
+        if (callInfo.hasTypeInfo())
+            setTypeInfo(callInfo.types(), callInfo.barrier());
+
+        return true;
+    }
+
+    bool init(MBasicBlock *current, uint32_t argc) {
+        JS_ASSERT(args_.length() == 0);
+
+        // Get the arguments in the right order
+        if (!args_.reserve(argc))
+            return false;
+        for (int32_t i = argc; i > 0; i--) {
+            if (!args_.append(current->peek(-i)))
+                return false;
+        }
+        current->popn(argc);
+
+        // Get |this| and |fun|
+        setThis(current->pop());
+        setFun(current->pop());
+
+        return true;
+    }
+
+    void popFormals(MBasicBlock *current) {
+        current->popn(argc() + 2);
+    }
+
+    void pushFormals(MBasicBlock *current) {
+        current->push(fun());
+        current->push(thisArg());
+
+        for (uint32_t i = 0; i < argc(); i++)
+            current->push(getArg(i));
+    }
+
+    void setTypeInfo(types::StackTypeSet *types, types::StackTypeSet *barrier) {
+        types_ = types;
+        barrier_ = barrier;
+    }
+
+    bool hasTypeInfo() const {
+        JS_ASSERT_IF(barrier_, types_);
+        return types_;
+    }
+
+    uint32_t argc() {
+        return args_.length();
+    }
+
+    void setArgs(Vector<MDefinition *> *args) {
+        JS_ASSERT(args_.length() == 0);
+        args_.append(args->begin(), args->end());
+    }
+
+    Vector<MDefinition *> *argv() {
+        return &args_;
+    }
+
+    MDefinition *getArg(uint32_t i) {
+        JS_ASSERT(i < argc());
+        return args_[i];
+    }
+
+    MDefinition *thisArg() {
+        JS_ASSERT(thisArg_);
+        return thisArg_;
+    }
+
+    void setThis(MDefinition *thisArg) {
+        thisArg_ = thisArg;
+    }
+
+    bool constructing() {
+        return constructing_;
+    }
+
+    types::StackTypeSet *types() {
+        return types_;
+    }
+
+    types::StackTypeSet *barrier() {
+        return barrier_;
+    }
+
+    void wrapArgs(MBasicBlock *current) {
+        thisArg_ = wrap(current, thisArg_);
+        for (uint32_t i = 0; i < argc(); i++)
+            args_[i] = wrap(current, args_[i]);
+    }
+
+    void unwrapArgs() {
+        thisArg_ = unwrap(thisArg_);
+        for (uint32_t i = 0; i < argc(); i++)
+            args_[i] = unwrap(args_[i]);
+    }
+
+    MDefinition *fun() const {
+        JS_ASSERT(fun_);
+        return fun_;
+    }
+
+    void setFun(MDefinition *fun) {
+        JS_ASSERT(!fun->isPassArg());
+        fun_ = fun;
+    }
+
+    bool isWrapped() {
+        bool wrapped = thisArg()->isPassArg();
+
+#if DEBUG
+        for (uint32_t i = 0; i < argc(); i++)
+            JS_ASSERT(args_[i]->isPassArg() == wrapped);
+#endif
+
+        return wrapped;
+    }
+
+  private:
+    static MDefinition *unwrap(MDefinition *arg) {
+        JS_ASSERT(arg->isPassArg());
+        MPassArg *passArg = arg->toPassArg();
+        MBasicBlock *block = passArg->block();
+        MDefinition *wrapped = passArg->getArgument();
+        wrapped->setFoldedUnchecked();
+        passArg->replaceAllUsesWith(wrapped);
+        block->discard(passArg);
+        return wrapped;
+    }
+    static MDefinition *wrap(MBasicBlock *current, MDefinition *arg) {
+        JS_ASSERT(!arg->isPassArg());
+        MPassArg *passArg = MPassArg::New(arg);
+        current->add(passArg);
+        return passArg;
+    }
 };
 
 } // namespace ion

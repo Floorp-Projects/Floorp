@@ -27,6 +27,7 @@
 #include "mozilla/Services.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/GCAPI.h"
 #include "nsStringGlue.h"
 #include "nsITelemetry.h"
 #include "nsIFile.h"
