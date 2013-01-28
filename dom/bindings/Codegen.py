@@ -7041,6 +7041,9 @@ class CGBindingRoot(CGThing):
         # Do codegen for all the descriptors
         cgthings.extend([CGDescriptor(x) for x in descriptors])
 
+        # Do codegen for all the callback interfaces
+        cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors])
+
         # And make sure we have the right number of newlines at the end
         curr = CGWrapper(CGList(cgthings, "\n\n"), post="\n\n")
 
@@ -7779,6 +7782,20 @@ class CGCallbackFunction(CGCallback):
                 ],
             body="")]
 
+class CGCallbackInterface(CGCallback):
+    def __init__(self, descriptor):
+        iface = descriptor.interface
+        attrs = [m for m in iface.members if m.isAttr() and not m.isStatic()]
+        getters = [CallbackGetter(a, descriptor) for a in attrs]
+        setters = [CallbackSetter(a, descriptor) for a in attrs
+                   if not a.readonly]
+        methods = [m for m in iface.members
+                   if m.isMethod() and not m.isStatic()]
+        methods = [CallbackOperation(m, sig, descriptor) for m in methods
+                   for sig in m.signatures()]
+        CGCallback.__init__(self, iface, descriptor, "CallbackInterface",
+                            methods, getters=getters, setters=setters)
+
 class FakeMember():
     def __init__(self):
         self.treatUndefinedAs = self.treatNullAs = "Default"
@@ -7988,6 +8005,21 @@ class CallbackMember(CGNativeMember):
     def getArgcDecl(self):
         return CGGeneric("unsigned argc = %s;" % self.argCountStr);
 
+    @staticmethod
+    def ensureASCIIName(idlObject):
+        type = "attribute" if idlObject.isAttr() else "operation"
+        if re.match("[^\x20-\x7E]", idlObject.identifier.name):
+            raise SyntaxError('Callback %s name "%s" contains non-ASCII '
+                              "characters.  We can't handle that.  %s" %
+                              (type, idlObject.identifier.name,
+                               idlObject.location))
+        if re.match('"', idlObject.identifier.name):
+            raise SyntaxError("Callback %s name '%s' contains "
+                              "double-quote character.  We can't handle "
+                              "that.  %s" %
+                              (type, idlObject.identifier.name,
+                               idlObject.location))
+
 class CallbackMethod(CallbackMember):
     def __init__(self, sig, name, descriptorProvider, needThisHandling):
         CallbackMember.__init__(self, sig, name, descriptorProvider,
@@ -8024,6 +8056,101 @@ class CallCallback(CallbackMethod):
 
     def getCallableDecl(self):
         return "JS::Value callable = JS::ObjectValue(*mCallback);\n"
+
+class CallbackOperation(CallbackMethod):
+    def __init__(self, method, signature, descriptor):
+        self.singleOperation = descriptor.interface.isSingleOperationInterface()
+        self.ensureASCIIName(method)
+        self.methodName = method.identifier.name
+        CallbackMethod.__init__(self, signature,
+                                MakeNativeName(self.methodName),
+                                descriptor,
+                                self.singleOperation)
+
+    def getThisObj(self):
+        if not self.singleOperation:
+            return "mCallback"
+        # This relies on getCallableDecl declaring a boolean
+        # isCallable in the case when we're a single-operation
+        # interface.
+        return "isCallable ? aThisObj : mCallback"
+
+    def getCallableDecl(self):
+        replacements = {
+            "errorReturn" : self.getDefaultRetval(),
+            "methodName": self.methodName
+            }
+        getCallableFromProp = string.Template(
+                'if (!GetCallableProperty(cx, "${methodName}", &callable)) {\n'
+                '  aRv.Throw(NS_ERROR_UNEXPECTED);\n'
+                '  return${errorReturn};\n'
+                '}\n').substitute(replacements)
+        if not self.singleOperation:
+            return 'JS::Value callable;\n' + getCallableFromProp
+        return (
+            'bool isCallable = JS_ObjectIsCallable(cx, mCallback);\n'
+            'JS::Value callable;\n'
+            'if (isCallable) {\n'
+            '  callable = JS::ObjectValue(*mCallback);\n'
+            '} else {\n'
+            '%s'
+            '}\n' % CGIndenter(CGGeneric(getCallableFromProp)).define())
+
+class CallbackGetter(CallbackMember):
+    def __init__(self, attr, descriptor):
+        self.ensureASCIIName(attr)
+        self.attrName = attr.identifier.name
+        CallbackMember.__init__(self,
+                                (attr.type, []),
+                                # We're always fallible
+                                "Get" + MakeNativeName(attr.identifier.name),
+                                descriptor,
+                                needThisHandling=False)
+
+    def getRvalDecl(self):
+        return "JS::Value rval = JSVAL_VOID;\n"
+
+    def getCall(self):
+        replacements = {
+            "errorReturn" : self.getDefaultRetval(),
+            "attrName": self.attrName
+            }
+        return string.Template(
+            'if (!JS_GetProperty(cx, mCallback, "${attrName}", &rval)) {\n'
+            '  aRv.Throw(NS_ERROR_UNEXPECTED);\n'
+            '  return${errorReturn};\n'
+            '}\n').substitute(replacements);
+
+class CallbackSetter(CallbackMember):
+    def __init__(self, attr, descriptor):
+        self.ensureASCIIName(attr)
+        self.attrName = attr.identifier.name
+        CallbackMember.__init__(self,
+                                (BuiltinTypes[IDLBuiltinType.Types.void],
+                                 [FakeArgument(attr.type, attr)]),
+                                "Set" + MakeNativeName(attr.identifier.name),
+                                descriptor,
+                                needThisHandling=False)
+
+    def getRvalDecl(self):
+        # We don't need an rval
+        return ""
+
+    def getCall(self):
+        replacements = {
+            "errorReturn" : self.getDefaultRetval(),
+            "attrName": self.attrName,
+            "argv": "argv.begin()",
+            }
+        return string.Template(
+            'MOZ_ASSERT(argv.length() == 1);\n'
+            'if (!JS_SetProperty(cx, mCallback, "${attrName}", ${argv})) {\n'
+            '  aRv.Throw(NS_ERROR_UNEXPECTED);\n'
+            '  return${errorReturn};\n'
+            '}\n').substitute(replacements)
+
+    def getArgcDecl(self):
+        return None
 
 class GlobalGenRoots():
     """

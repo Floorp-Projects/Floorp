@@ -18,7 +18,13 @@ interface TestRenamedInterface {
 
 callback interface TestCallbackInterface {
   readonly attribute long foo;
+  attribute DOMString bar;
   void doSomething();
+  long doSomethingElse(DOMString arg, TestInterface otherArg);
+};
+
+callback interface TestSingleOperationCallbackInterface {
+  TestInterface doSomething(short arg, sequence<double> anotherArg);
 };
 
 enum TestEnum {
