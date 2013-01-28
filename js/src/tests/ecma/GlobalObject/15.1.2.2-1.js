@@ -150,27 +150,27 @@ new TestCase( SECTION,
 	      parseInt( "0XABCDEF") );
 
 for ( HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+")",    HEX_VALUE,  parseInt(HEX_STRING) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"')",    HEX_VALUE,  parseInt(HEX_STRING) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "0X0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+")",    HEX_VALUE,  parseInt(HEX_STRING) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"')",    HEX_VALUE,  parseInt(HEX_STRING) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+",16)",    HEX_VALUE,  parseInt(HEX_STRING,16) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"', 16)",    HEX_VALUE,  parseInt(HEX_STRING,16) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+",16)",    HEX_VALUE,  parseInt(HEX_STRING,16) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"', 16)",    HEX_VALUE,  parseInt(HEX_STRING,16) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+",null)",    HEX_VALUE,  parseInt(HEX_STRING,null) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"', null)",    HEX_VALUE,  parseInt(HEX_STRING,null) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+", void 0)",    HEX_VALUE,  parseInt(HEX_STRING, void 0) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"', void 0)",    HEX_VALUE,  parseInt(HEX_STRING, void 0) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 
@@ -180,7 +180,7 @@ for ( var space = " ", HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0;
       POWER < 15;
       POWER++, HEX_STRING = HEX_STRING +"f", space += " ")
 {
-  new TestCase( SECTION, "parseInt("+space+HEX_STRING+space+", void 0)",    HEX_VALUE,  parseInt(space+HEX_STRING+space, void 0) );
+  new TestCase( SECTION, "parseInt('"+space+HEX_STRING+space+"', void 0)",    HEX_VALUE,  parseInt(space+HEX_STRING+space, void 0) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 
@@ -188,73 +188,73 @@ new TestCase(SECTION, "parseInt(BOM + '123', 10)", 123, parseInt("\uFEFF" + "123
 
 // a few tests with negative numbers
 for ( HEX_STRING = "-0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+")",    HEX_VALUE,  parseInt(HEX_STRING) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"')",    HEX_VALUE,  parseInt(HEX_STRING) );
   HEX_VALUE -= Math.pow(16,POWER)*15;
 }
 
 // we should stop parsing when we get to a value that is not a numeric literal for the type we expect
 
 for ( HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+"g,16)",    HEX_VALUE,  parseInt(HEX_STRING+"g",16) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"g', 16)",    HEX_VALUE,  parseInt(HEX_STRING+"g",16) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+"g,16)",    HEX_VALUE,  parseInt(HEX_STRING+"G",16) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"G', 16)",    HEX_VALUE,  parseInt(HEX_STRING+"G",16) );
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 
 for ( HEX_STRING = "-0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+")",    HEX_VALUE,  parseInt(HEX_STRING) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"')",    HEX_VALUE,  parseInt(HEX_STRING) );
   HEX_VALUE -= Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "-0X0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+")",    HEX_VALUE,  parseInt(HEX_STRING) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"')",    HEX_VALUE,  parseInt(HEX_STRING) );
   HEX_VALUE -= Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "-0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+",16)",    HEX_VALUE,  parseInt(HEX_STRING,16) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"', 16)",    HEX_VALUE,  parseInt(HEX_STRING,16) );
   HEX_VALUE -= Math.pow(16,POWER)*15;
 }
 for ( HEX_STRING = "-0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
-  new TestCase( SECTION, "parseInt("+HEX_STRING+",16)",    HEX_VALUE,  parseInt(HEX_STRING,16) );
+  new TestCase( SECTION, "parseInt('"+HEX_STRING+"', 16)",    HEX_VALUE,  parseInt(HEX_STRING,16) );
   HEX_VALUE -= Math.pow(16,POWER)*15;
 }
 
-//  let us do some octal tests.  numbers that start with 0 and do not provid a radix should
-//  default to using "0" as a radix.
+// Numbers that start with 0 and do not provide a radix should use 10 as radix
+// per ES5, not octal (as it was in ES3).
 
 var OCT_STRING = "0";
 var OCT_VALUE = 0;
 
 for ( OCT_STRING = "0", OCT_VALUE = 0, POWER = 0; POWER < 15; POWER++, OCT_STRING = OCT_STRING +"7" ) {
-  new TestCase( SECTION, "parseInt("+OCT_STRING+")",    OCT_VALUE,  parseInt(OCT_STRING) );
-  OCT_VALUE += Math.pow(8,POWER)*7;
+  new TestCase( SECTION, "parseInt('"+OCT_STRING+"')",    OCT_VALUE,  parseInt(OCT_STRING) );
+  OCT_VALUE += Math.pow(10,POWER)*7;
 }
 
 for ( OCT_STRING = "-0", OCT_VALUE = 0, POWER = 0; POWER < 15; POWER++, OCT_STRING = OCT_STRING +"7" ) {
-  new TestCase( SECTION, "parseInt("+OCT_STRING+")",    OCT_VALUE,  parseInt(OCT_STRING) );
-  OCT_VALUE -= Math.pow(8,POWER)*7;
+  new TestCase( SECTION, "parseInt('"+OCT_STRING+"')",    OCT_VALUE,  parseInt(OCT_STRING) );
+  OCT_VALUE -= Math.pow(10,POWER)*7;
 }
 
-// should get the same results as above if we provid the radix of 8 (or 010)
+// should get octal-based results if we provid the radix of 8 (or 010)
 
 for ( OCT_STRING = "0", OCT_VALUE = 0, POWER = 0; POWER < 15; POWER++, OCT_STRING = OCT_STRING +"7" ) {
-  new TestCase( SECTION, "parseInt("+OCT_STRING+",8)",    OCT_VALUE,  parseInt(OCT_STRING,8) );
+  new TestCase( SECTION, "parseInt('"+OCT_STRING+"', 8)",    OCT_VALUE,  parseInt(OCT_STRING,8) );
   OCT_VALUE += Math.pow(8,POWER)*7;
 }
 for ( OCT_STRING = "-0", OCT_VALUE = 0, POWER = 0; POWER < 15; POWER++, OCT_STRING = OCT_STRING +"7" ) {
-  new TestCase( SECTION, "parseInt("+OCT_STRING+",010)",    OCT_VALUE,  parseInt(OCT_STRING,010) );
+  new TestCase( SECTION, "parseInt('"+OCT_STRING+"', 010)",    OCT_VALUE,  parseInt(OCT_STRING,010) );
   OCT_VALUE -= Math.pow(8,POWER)*7;
 }
 
 // we shall stop parsing digits when we get one that isn't a numeric literal of the type we think
 // it should be.
 for ( OCT_STRING = "0", OCT_VALUE = 0, POWER = 0; POWER < 15; POWER++, OCT_STRING = OCT_STRING +"7" ) {
-  new TestCase( SECTION, "parseInt("+OCT_STRING+"8,8)",    OCT_VALUE,  parseInt(OCT_STRING+"8",8) );
+  new TestCase( SECTION, "parseInt('"+OCT_STRING+"8', 8)",    OCT_VALUE,  parseInt(OCT_STRING+"8",8) );
   OCT_VALUE += Math.pow(8,POWER)*7;
 }
 for ( OCT_STRING = "-0", OCT_VALUE = 0, POWER = 0; POWER < 15; POWER++, OCT_STRING = OCT_STRING +"7" ) {
-  new TestCase( SECTION, "parseInt("+OCT_STRING+"8,010)",    OCT_VALUE,  parseInt(OCT_STRING+"8",010) );
+  new TestCase( SECTION, "parseInt('"+OCT_STRING+"8', 010)",    OCT_VALUE,  parseInt(OCT_STRING+"8",010) );
   OCT_VALUE -= Math.pow(8,POWER)*7;
 }
 
@@ -295,8 +295,8 @@ new TestCase( SECTION,
 
 new TestCase( SECTION,
 	      "parseInt( '01234567890', 0 )", 
-	      Number.NaN,    
-	      parseInt("01234567890",1) );
+	      1234567890,
+	      parseInt("01234567890", 0) );
 
 new TestCase( SECTION,
 	      "parseInt( '01234567890', 1 )", 
@@ -345,7 +345,7 @@ new TestCase( SECTION,
 
 new TestCase( SECTION,
 	      "parseInt( '01234567890', 10 )",
-	      1234567890,    
+	      1234567890,
 	      parseInt("01234567890",10) );
 
 // need more test cases with hex radix
