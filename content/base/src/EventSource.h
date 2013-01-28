@@ -75,7 +75,7 @@ public:
     return GetOwner();
   }
   static already_AddRefed<EventSource>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
+  Constructor(nsISupports* aOwner, const nsAString& aURL,
               const EventSourceInit& aEventSourceInitDict,
               ErrorResult& aRv);
 

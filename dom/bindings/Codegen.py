@@ -931,12 +931,29 @@ class CGClassConstructHook(CGAbstractStaticMethod):
 
     def generate_code(self):
         preamble = """
-  JSObject* obj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  JSObject* obj = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
 """
+        if self.descriptor.workers:
+            preArgs = ["cx", "obj"]
+        else:
+            preamble += """
+  nsISupports* global;
+  xpc_qsSelfRef globalRef;
+  {
+    nsresult rv;
+    JS::Value val = OBJECT_TO_JSVAL(obj);
+    rv = xpc_qsUnwrapArg<nsISupports>(cx, val, &global, &globalRef.ptr, &val);
+    if (NS_FAILED(rv)) {
+      return ThrowErrorMessage(cx, MSG_GLOBAL_NOT_NATIVE);
+    }
+  }
+"""
+            preArgs = ["global"]
+
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
-        callGenerator = CGMethodCall(nativeName, True, self.descriptor,
-                                     self._ctor)
+        callGenerator = CGMethodCall(preArgs, nativeName, True,
+                                     self.descriptor, self._ctor)
         return preamble + callGenerator.define();
 
 class CGClassConstructHookHolder(CGGeneric):
@@ -3593,7 +3610,7 @@ def isResultAlreadyAddRefed(descriptor, extendedAttributes):
 
 def needCx(returnType, arguments, extendedAttributes, descriptorProvider):
     return (typeNeedsCx(returnType, descriptorProvider, True) or
-            any(typeNeedsCx(a.type, descriptorProvider) for a in arguments) or
+            any(typeNeedsCx(a.type, descriptorProvider) for (a, _) in arguments) or
             'implicitJSContext' in extendedAttributes)
 
 class CGCallGenerator(CGThing):
@@ -3632,11 +3649,19 @@ class CGCallGenerator(CGThing):
         if isFallible:
             args.append(CGGeneric("rv"))
 
+        needsCx = needCx(returnType, arguments, extendedAttributes,
+                         descriptorProvider)
+
+        if not "cx" in argsPre and needsCx:
+            args.prepend(CGGeneric("cx"))
+
         # Build up our actual call
         self.cgRoot = CGList([], "\n")
 
         call = CGGeneric(nativeMethodName)
-        if not static:
+        if static:
+            call = CGWrapper(call, pre="%s::" % descriptorProvider.nativeType)
+        else: 
             call = CGWrapper(call, pre="%s->" % object)
         call = CGList([call, CGWrapper(args, pre="(", post=");")])
         if result is not None:
@@ -3684,9 +3709,9 @@ class CGPerSignatureCall(CGThing):
     # have ways of flagging things like JSContext* or optional_argc in
     # there.
 
-    def __init__(self, returnType, arguments, nativeMethodName, static,
-                 descriptor, idlNode, argConversionStartsAt=0, getter=False,
-                 setter=False):
+    def __init__(self, returnType, argsPre, arguments, nativeMethodName, static,
+                 descriptor, idlNode, argConversionStartsAt=0,
+                 getter=False, setter=False):
         assert idlNode.isMethod() == (not getter and not setter)
         assert idlNode.isAttr() == (getter or setter)
 
@@ -3697,6 +3722,7 @@ class CGPerSignatureCall(CGThing):
         self.extendedAttributes = descriptor.getExtendedAttributes(idlNode,
                                                                    getter=getter,
                                                                    setter=setter)
+        self.argsPre = argsPre
         self.arguments = arguments
         self.argCount = len(arguments)
         if self.argCount > argConversionStartsAt:
@@ -3711,26 +3737,6 @@ class CGPerSignatureCall(CGThing):
             elif idlNode.isMethod():
                 lenientFloatCode = ("*vp = JSVAL_VOID;\n"
                                     "return true;")
-
-        argsPre = []
-        if static:
-            nativeMethodName = "%s::%s" % (descriptor.nativeType,
-                                           nativeMethodName)
-            globalObjectType = "GlobalObject"
-            if descriptor.workers:
-                globalObjectType = "Worker" + globalObjectType
-            cgThings.append(CGGeneric("""%s global(cx, obj);
-if (global.Failed()) {
-  return false;
-}
-""" % globalObjectType))
-            argsPre.append("global")
-
-        needsCx = needCx(returnType, arguments, self.extendedAttributes,
-                         descriptor)
-        if needsCx and not (static and descriptor.workers):
-            argsPre.append("cx")
-
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
                                              self.getArgc(), self.descriptor,
                                              invalidEnumValueFatal=not setter,
@@ -3740,7 +3746,7 @@ if (global.Failed()) {
 
         cgThings.append(CGCallGenerator(
                     self.getErrorReport() if self.isFallible() else None,
-                    self.getArguments(), argsPre, returnType,
+                    self.getArguments(), self.argsPre, returnType,
                     self.extendedAttributes, descriptor, nativeMethodName,
                     static))
         self.cgRoot = CGList(cgThings, "\n")
@@ -3839,7 +3845,7 @@ class CGMethodCall(CGThing):
     A class to generate selection of a method signature from a set of
     signatures and generation of a call to that signature.
     """
-    def __init__(self, nativeMethodName, static, descriptor, method):
+    def __init__(self, argsPre, nativeMethodName, static, descriptor, method):
         CGThing.__init__(self)
 
         methodName = '"%s.%s"' % (descriptor.interface.identifier.name, method.identifier.name)
@@ -3854,7 +3860,7 @@ class CGMethodCall(CGThing):
             return requiredArgs
 
         def getPerSignatureCall(signature, argConversionStartsAt=0):
-            return CGPerSignatureCall(signature[0], signature[1],
+            return CGPerSignatureCall(signature[0], argsPre, signature[1],
                                       nativeMethodName, static, descriptor,
                                       method, argConversionStartsAt)
             
@@ -4142,9 +4148,13 @@ class CGGetterCall(CGPerSignatureCall):
     getter.
     """
     def __init__(self, returnType, nativeMethodName, descriptor, attr):
-        CGPerSignatureCall.__init__(self, returnType, [], nativeMethodName,
-                                    attr.isStatic(), descriptor, attr,
-                                    getter=True)
+        if attr.isStatic():
+            argsPre = [ "global" ]
+        else:
+            argsPre = []
+        CGPerSignatureCall.__init__(self, returnType, argsPre, [],
+                                    nativeMethodName, attr.isStatic(),
+                                    descriptor, attr, getter=True)
 
 class FakeArgument():
     """
@@ -4171,7 +4181,12 @@ class CGSetterCall(CGPerSignatureCall):
     setter.
     """
     def __init__(self, argType, nativeMethodName, descriptor, attr):
-        CGPerSignatureCall.__init__(self, None, [FakeArgument(argType, attr)],
+        if attr.isStatic():
+            argsPre = [ "global" ]
+        else:
+            argsPre = []
+        CGPerSignatureCall.__init__(self, None, argsPre,
+                                    [FakeArgument(argType, attr)],
                                     nativeMethodName, attr.isStatic(),
                                     descriptor, attr, setter=True)
     def wrap_return_value(self):
@@ -4240,11 +4255,37 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
     def definition_body(self):
+        isMainThread = toStringBool(not self.descriptor.workers)
         unwrap = CGGeneric("""js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
 if (!obj) {
   return false;
 }
-""")
+
+// We have to be careful to leave "obj" in its existing compartment, even
+// while we grab our global from the real underlying object, because we
+// use it for unwrapping the other arguments later.
+nsISupports* global;
+xpc_qsSelfRef globalRef;
+{
+  JS::Value val;
+  Maybe<JSAutoCompartment> ac;
+  if (js::IsWrapper(obj)) {
+    JSObject* realObj = XPCWrapper::Unwrap(cx, obj, false);
+    if (!realObj) {
+      return Throw<%s>(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+    }
+    ac.construct(cx, realObj);
+    val.setObject(*JS_GetGlobalForObject(cx, realObj));
+  } else {
+    val.setObject(*JS_GetGlobalForObject(cx, obj));
+  }
+
+  nsresult rv = xpc_qsUnwrapArg<nsISupports>(cx, val, &global, &globalRef.ptr,
+                                             &val);
+  if (NS_FAILED(rv)) {
+    return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+  }
+}""" % (isMainThread, isMainThread))
         return CGList([ CGIndenter(unwrap),
                         self.generate_code() ], "\n\n").define()
 
@@ -4286,8 +4327,8 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def definition_body(self):
         nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
                                                         self.method)
-        return CGMethodCall(nativeName, self.method.isStatic(), self.descriptor,
-                            self.method).define()
+        return CGMethodCall([], nativeName, self.method.isStatic(),
+                            self.descriptor, self.method).define()
 
     @staticmethod
     def makeNativeName(descriptor, method):
@@ -4329,7 +4370,8 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
     def generate_code(self):
         nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
                                                         self.method)
-        return CGMethodCall(nativeName, True, self.descriptor, self.method)
+        return CGMethodCall([ "global" ], nativeName, True, self.descriptor,
+                            self.method)
 
 class CGGenericGetter(CGAbstractBindingMethod):
     """
@@ -5638,7 +5680,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
 
         # We pass len(arguments) as the final argument so that the
         # CGPerSignatureCall won't do any argument conversion of its own.
-        CGPerSignatureCall.__init__(self, returnType, arguments, nativeName,
+        CGPerSignatureCall.__init__(self, returnType, "", arguments, nativeName,
                                     False, descriptor, operation,
                                     len(arguments))
 
@@ -7198,17 +7240,15 @@ class CGNativeMember(ClassMethod):
         if not 'infallible' in self.extendedAttrs:
             # Use aRv so it won't conflict with local vars named "rv"
             args.append(Argument("ErrorResult&", "aRv"))
-        # And jscontext bits.
-        if (self.passCxAsNeeded and
-            needCx(returnType, argList, self.extendedAttrs,
-                   self.descriptor)):
-            args.insert(0, Argument("JSContext*", "cx"))
         # And if we're static, a global
         if self.member.isStatic():
-            globalObjectType = "GlobalObject"
-            if self.descriptor.workers:
-                globalObjectType = "Worker" + globalObjectType
-            args.insert(0, Argument("const %s&" % globalObjectType, "global"))
+            args.insert(0, Argument("nsISupports*", "global"))
+        # And jscontext bits.  needCx expects a list of tuples, in each of which
+        # the first element is the actual argument
+        if (self.passCxAsNeeded and
+            needCx(returnType, ((a, "") for a in argList), self.extendedAttrs,
+                   self.descriptor)):
+            args.insert(0, Argument("JSContext*", "cx"))
         return args
 
     def doGetArgType(self, type, optional, isMember):

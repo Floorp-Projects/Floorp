@@ -122,25 +122,26 @@ public:
   // And now our actual WebIDL API
   // Constructors
   static
-  already_AddRefed<TestInterface>
-    Constructor(const GlobalObject&, ErrorResult&);
+  already_AddRefed<TestInterface> Constructor(nsISupports*, ErrorResult&);
   static
-  already_AddRefed<TestInterface>
-    Constructor(const GlobalObject&, const nsAString&, ErrorResult&);
+  already_AddRefed<TestInterface> Constructor(nsISupports*, const nsAString&,
+                                              ErrorResult&);
   static
-  already_AddRefed<TestInterface>
-    Constructor(const GlobalObject&, uint32_t, const Nullable<bool>&,
-                ErrorResult&);
+  already_AddRefed<TestInterface> Constructor(nsISupports*, uint32_t,
+                                              const Nullable<bool>&,
+                                              ErrorResult&);
   static
-  already_AddRefed<TestInterface>
-    Constructor(const GlobalObject&, TestInterface*, ErrorResult&);
+  already_AddRefed<TestInterface> Constructor(nsISupports*, TestInterface*,
+                                              ErrorResult&);
   static
-  already_AddRefed<TestInterface>
-    Constructor(const GlobalObject&, TestNonCastableInterface&, ErrorResult&);
+  already_AddRefed<TestInterface> Constructor(nsISupports*,
+                                              TestNonCastableInterface&,
+                                              ErrorResult&);
   /*  static
-  already_AddRefed<TestInterface>
-    Constructor(const GlobalObject&, uint32_t, uint32_t,
-                const TestInterfaceOrOnlyForUseInConstructor&, ErrorResult&);
+  already_AddRefed<TestInterface> Constructor(nsISupports*,
+                                              uint32_t, uint32_t,
+                                              const TestInterfaceOrOnlyForUseInConstructor&,
+                                              ErrorResult&);
   */
   
   // Integer types
@@ -474,11 +475,9 @@ public:
   void ExerciseTypedefInterfaces3(TestInterface&);
 
   // Static methods and attributes
-  static void StaticMethod(const GlobalObject&, bool);
-  static void StaticMethodWithContext(const GlobalObject&, JSContext*,
-                                      JS::Value);
-  static bool StaticAttribute(const GlobalObject&);
-  static void SetStaticAttribute(const GlobalObject&, bool);
+  static void StaticMethod(nsISupports*, bool);
+  static bool StaticAttribute(nsISupports*);
+  static void SetStaticAttribute(nsISupports*, bool);
 
   // Overload resolution tests
   bool Overload1(TestInterface&);
