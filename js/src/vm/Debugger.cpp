@@ -562,8 +562,8 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
             Value rval;
             bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, completion.address(),
                                  &rval);
-            Value nextValue;
-            JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, &nextValue);
+            RootedValue nextValue(cx);
+            JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, nextValue.address());
 
             /*
              * At this point, we are back in the debuggee compartment, and any error has
@@ -1257,7 +1257,7 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
 
     /* Call all the onStep handlers we found. */
     for (JSObject **p = frames.begin(); p != frames.end(); p++) {
-        JSObject *frame = *p;
+        RootedObject frame(cx, *p);
         Debugger *dbg = Debugger::fromChildJSObject(frame);
 
         Maybe<AutoCompartment> ac;
@@ -4332,11 +4332,11 @@ static JSBool
 DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "deleteProperty", args, dbg, obj);
-    Value nameArg = argc > 0 ? args[0] : UndefinedValue();
+    RootedValue nameArg(cx, argc > 0 ? args[0] : UndefinedValue());
 
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment->wrap(cx, &nameArg))
+    if (!cx->compartment->wrap(cx, nameArg.address()))
         return false;
 
     ErrorCopier ec(ac, dbg->toJSObject());
@@ -4442,7 +4442,7 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
      * Any JS exceptions thrown must be in the debugger compartment, so do
      * sanity checks and fallible conversions before entering the debuggee.
      */
-    Value calleev = ObjectValue(*obj);
+    RootedValue calleev(cx, ObjectValue(*obj));
     if (!obj->isCallable()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Object", "apply", obj->getClass()->name);
@@ -4491,7 +4491,7 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
      */
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment->wrap(cx, &calleev) || !cx->compartment->wrap(cx, thisv.address()))
+    if (!cx->compartment->wrap(cx, calleev.address()) || !cx->compartment->wrap(cx, thisv.address()))
         return false;
     for (unsigned i = 0; i < callArgc; i++) {
         if (!cx->compartment->wrap(cx, &callArgv[i]))
