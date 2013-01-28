@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/CallbackFunction.h"
+#include "mozilla/dom/CallbackObject.h"
 #include "jsfriendapi.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIXPConnect.h"
@@ -16,39 +16,41 @@
 namespace mozilla {
 namespace dom {
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CallbackFunction)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CallbackObject)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(CallbackFunction)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(CallbackFunction)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(CallbackObject)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(CallbackObject)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackFunction)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackObject)
   tmp->DropCallback();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CallbackFunction)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackFunction)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCallable)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackObject)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCallback)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-CallbackFunction::CallSetup::CallSetup(JSObject* const aCallable)
+CallbackObject::CallSetup::CallSetup(JSObject* const aCallback)
   : mCx(nullptr)
 {
-  xpc_UnmarkGrayObject(aCallable);
+  xpc_UnmarkGrayObject(aCallback);
 
-  // We need to produce a useful JSContext here.  Ideally one that the callable
+  // We need to produce a useful JSContext here.  Ideally one that the callback
   // is in some sense associated with, so that we can sort of treat it as a
-  // "script entry point".
+  // "script entry point".  Though once we actually have script entry points,
+  // we'll need to do the script entry point bits once we have an actual
+  // callable.
 
-  // First, find the real underlying callable.
-  JSObject* realCallable = js::UnwrapObject(aCallable);
+  // First, find the real underlying callback.
+  JSObject* realCallback = js::UnwrapObject(aCallback);
 
-  // Now get the nsIScriptGlobalObject for this callable.
+  // Now get the nsIScriptGlobalObject for this callback.
   JSContext* cx = nullptr;
   nsIScriptContext* ctx = nullptr;
-  nsIScriptGlobalObject* sgo = nsJSUtils::GetStaticScriptGlobal(realCallable);
+  nsIScriptGlobalObject* sgo = nsJSUtils::GetStaticScriptGlobal(realCallback);
   if (sgo) {
     // Make sure that if this is a window it's the current inner, since the
     // nsIScriptContext and hence JSContext are associated with the outer
@@ -98,10 +100,10 @@ CallbackFunction::CallSetup::CallSetup(JSObject* const aCallable)
 
   // Check that it's ok to run this callback at all.
   // FIXME: Bug 807371: we want a less silly check here.
-  // Make sure to unwrap aCallable before passing it in, because
+  // Make sure to unwrap aCallback before passing it in, because
   // getting principals from wrappers is silly.
   nsresult rv = nsContentUtils::GetSecurityManager()->
-    CheckFunctionAccess(cx, js::UnwrapObject(aCallable), nullptr);
+    CheckFunctionAccess(cx, js::UnwrapObject(aCallback), nullptr);
 
   // Construct a termination func holder even if we're not planning to
   // run any script.  We need this because we're going to call
@@ -116,14 +118,14 @@ CallbackFunction::CallSetup::CallSetup(JSObject* const aCallable)
     return;
   }
 
-  // Enter the compartment of our callable, so we can actually call it.
-  mAc.construct(cx, aCallable);
+  // Enter the compartment of our callback, so we can actually work with it.
+  mAc.construct(cx, aCallback);
 
   // And now we're ready to go.
   mCx = cx;
 }
 
-CallbackFunction::CallSetup::~CallSetup()
+CallbackObject::CallSetup::~CallSetup()
 {
   // First things first: if we have a JSContext, report any pending
   // errors on it.

@@ -46,7 +46,7 @@ CPPSRCS = \
   $(linked_binding_cpp_files) \
   $(filter %.cpp, $(globalgen_targets)) \
   BindingUtils.cpp \
-  CallbackFunction.cpp \
+  CallbackObject.cpp \
   DOMJSProxyHandler.cpp \
   $(NULL)
 
@@ -60,6 +60,7 @@ EXPORTS_$(binding_include_path) = \
   BindingDeclarations.h \
   BindingUtils.h \
   CallbackFunction.h \
+  CallbackObject.h \
   DOMJSClass.h \
   DOMJSProxyHandler.h \
   Errors.msg \
