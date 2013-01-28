@@ -2519,6 +2519,34 @@ for (uint32_t i = 0; i < length; ++i) {
 
         descriptor = descriptorProvider.getDescriptor(
             type.unroll().inner.identifier.name)
+
+        if (descriptor.interface.isCallback() and
+            descriptor.interface.identifier.name != "NodeFilter" and
+            descriptor.interface.identifier.name != "EventListener" and
+            descriptor.interface.identifier.name != "DOMTransaction"):
+            if descriptor.workers:
+                if type.nullable():
+                    declType = CGGeneric("JSObject*")
+                else:
+                    declType = CGGeneric("NonNull<JSObject>")
+                conversion = "  ${declName} = &${val}.toObject();\n"
+            else:
+                name = descriptor.interface.identifier.name
+                if type.nullable():
+                    declType = CGGeneric("nsRefPtr<%s>" % name);
+                else:
+                    declType = CGGeneric("OwningNonNull<%s>" % name)
+                conversion = (
+                    "  bool inited;\n"
+                    "  ${declName} = new %s(cx, ${obj}, &${val}.toObject(), &inited);\n"
+                    "  if (!inited) {\n"
+                    "%s\n"
+                    "  }\n" % (name, CGIndenter(exceptionCodeIndented).define()))
+            template = wrapObjectTemplate(conversion, type,
+                                          "${declName} = nullptr",
+                                          failureCode)
+            return (template, declType, None, isOptional)
+
         # This is an interface that we implement as a concrete class
         # or an XPCOM interface.
 
@@ -3333,7 +3361,11 @@ if (!returnArray) {
           CGIndenter(exceptionCodeIndented, 4).define())) +
                 setValue("JS::ObjectValue(*returnArray)"), False)
 
-    if type.isGeckoInterface():
+    if (type.isGeckoInterface() and
+        (not type.isCallbackInterface() or
+         type.unroll().inner.identifier.name == "EventListener" or
+         type.unroll().inner.identifier.name == "NodeFilter" or
+         type.unroll().inner.identifier.name == "DOMTransaction")):
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
             wrappingCode = ("if (!%s) {\n" % (result) +
@@ -3400,22 +3432,24 @@ if (!%(resultStr)s) {
         "exceptionCode" : exceptionCode } +
         setValue("JS::StringValue(%s_str)" % result), False)
 
-    if type.isCallback():
-        assert not type.isInterface()
-        # XXXbz we're going to assume that callback types are always
-        # nullable and always have [TreatNonCallableAsNull] for now.
+    if type.isCallback() or type.isCallbackInterface():
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
         if descriptorProvider.workers:
             return (setValue("JS::ObjectOrNullValue(%s)" % result, True), False)
 
-        wrapCode = (("if (%(result)s) {\n" +
-                     CGIndenter(CGGeneric(setValue(
-                            "JS::ObjectValue(*%(result)s->Callable())", True))).define() + "\n"
-                     "} else {\n" +
-                     CGIndenter(CGGeneric(setValue("JS::NullValue()"))).define() + "\n"
-                     "}") % { "result": result })
+        wrapCode = setValue(
+            "JS::ObjectValue(*GetCallbackFromCallbackObject(%(result)s))",
+            True)
+        if type.nullable():
+            wrapCode = (
+                "if (%(result)s) {\n" +
+                CGIndenter(CGGeneric(wrapCode)).define() + "\n"
+                "} else {\n" +
+                CGIndenter(CGGeneric(setValue("JS::NullValue()"))).define() + "\n"
+                "}")
+        wrapCode = wrapCode % { "result": result }
         return wrapCode, False
 
     if type.tag() == IDLType.Tags.any:
@@ -7305,7 +7339,11 @@ class CGNativeMember(ClassMethod):
                 type = type.inner
             return str(type), True, True
 
-        if type.isGeckoInterface():
+        if (type.isGeckoInterface() and
+            (not type.isCallbackInterface() or
+             type.unroll().inner.identifier.name == "NodeFilter" or
+             type.unroll().inner.identifier.name == "EventListener" or
+             type.unroll().inner.identifier.name == "DOMTransaction")):
             iface = type.unroll().inner
             argIsPointer = type.nullable() or iface.isExternal()
             forceOwningType = iface.isCallback() or isMember
@@ -7350,18 +7388,23 @@ class CGNativeMember(ClassMethod):
         if type.isEnum():
             return type.inner.identifier.name, False, True
 
-        if type.isCallback():
+        if type.isCallback() or type.isCallbackInterface():
+            forceOwningType = optional or isMember
             if type.nullable():
-                if optional:
+                if forceOwningType:
                     declType = "nsRefPtr<%s>"
                 else:
                     declType = "%s*"
             else:
-                if optional:
+                if forceOwningType:
                     declType = "OwningNonNull<%s>"
                 else:
                     declType = "%s&"
-            return declType % type.unroll().identifier.name, False, False
+            if type.isCallback():
+                name = type.unroll().identifier.name
+            else:
+                name = type.unroll().inner.identifier.name
+            return declType % name, False, False
 
         if type.isAny():
             return "JS::Value", False, False
