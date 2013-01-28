@@ -551,7 +551,7 @@ CanEmitCompareAtUses(MInstruction *ins)
 
     bool foundTest = false;
     for (MUseIterator iter(ins->usesBegin()); iter != ins->usesEnd(); iter++) {
-        MNode *node = iter->node();
+        MNode *node = iter->consumer();
         if (!node->isDefinition())
             return false;
         if (!node->toDefinition()->isTest())
