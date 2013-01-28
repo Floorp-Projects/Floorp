@@ -299,9 +299,6 @@ function matches(aA, aB)
 
 //---------------------------------------------------------------------------
 
-// XXX: note that read() looks for files relative to the path of the script,
-// not the path the script was invoked from.  Bug 835552 is open to fix this.
-
 let kUsageMsg =
 "Usage:\n\
 \n\
