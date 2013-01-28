@@ -13,6 +13,7 @@
 #include "js/HashTable.h"
 #include "gc/GCInternals.h"
 
+#include "jsobjinlines.h"
 #include "jsgcinlines.h"
 
 using namespace js;

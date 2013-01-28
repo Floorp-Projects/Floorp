@@ -192,7 +192,8 @@ StackFrame::prevpcSlow(InlinedSite **pinlined)
     JS_ASSERT(!(flags_ & HAS_PREVPC));
 #if defined(JS_METHODJIT) && defined(JS_MONOIC)
     StackFrame *p = prev();
-    mjit::JITScript *jit = p->script()->getJIT(p->isConstructing(), p->compartment()->compileBarriers());
+    mjit::JITScript *jit = p->script()->getJIT(p->isConstructing(),
+                                               p->compartment()->zone()->compileBarriers());
     prevpc_ = jit->nativeToPC(ncode_, &prevInline_);
     flags_ |= HAS_PREVPC;
     if (pinlined)

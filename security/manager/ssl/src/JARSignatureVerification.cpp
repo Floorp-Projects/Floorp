@@ -586,9 +586,9 @@ OpenSignedJARFile(nsIFile * aJarFile,
   }
 
   // Verify that the signature file is a valid signature of the SF file
-  if (!SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner,
-                                        &sfCalculatedDigest.get(), HASH_AlgSHA1,
-                                        false)) {
+  if (!SEC_PKCS7VerifyDetachedSignatureAtTime(p7_info, certUsageObjectSigner,
+                                              &sfCalculatedDigest.get(),
+                                              HASH_AlgSHA1, false, PR_Now())) {
     PRErrorCode error = PR_GetError();
     const char * errorName = PR_ErrorToName(error);
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Failed to verify detached signature: %s",

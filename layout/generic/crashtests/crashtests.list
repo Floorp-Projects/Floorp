@@ -71,12 +71,15 @@ load 366952-1.html
 load 367246-1.html
 load 368330-1.html
 load 368461-1.xhtml
+load 368568.html
 load 368860-1.html
 load 368863-1.html
 load 369038-1.xhtml
 load 369150-1.html
 load 369150-2.html
 load 369227-1.xhtml
+load 369542-1.html
+load 369542-2.html
 load 369547-1.html
 load 370699-1.html
 load 370794-1.html
@@ -88,6 +91,8 @@ load 371566-1.xhtml
 load 372376-1.xhtml
 load 373859-1.html
 load 373868-1.xhtml
+load 375462-1.html
+load 376419.html
 load 379217-1.xhtml
 asserts(1-2) load 379217-2.xhtml # Bug 439204
 load 379917-1.xhtml
@@ -104,9 +109,13 @@ load 382745-1.xhtml
 load 383089-1.html
 load 385265-1.xhtml
 load 385295-1.xhtml
+load 385344-1.html
+load 385344-2.html
 load 385414-1.html
 load 385414-2.html
 load 385426-1.html
+load 385526.html
+load 385681.html
 load 385885-1.xul
 load 386799-1.html
 load 386807-1.html
