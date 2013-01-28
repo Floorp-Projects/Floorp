@@ -224,7 +224,7 @@ nsWindow::DoDraw(void)
 
     nsIWidgetListener* listener = gWindowToRedraw->GetWidgetListener();
     if (listener) {
-        listener->WillPaintWindow(gWindowToRedraw, true);
+        listener->WillPaintWindow(gWindowToRedraw);
     }
 
     LayerManager* lm = gWindowToRedraw->GetLayerManager();

@@ -288,8 +288,7 @@ nsView* nsViewManager::GetDisplayRootFor(nsView* aView)
    aContext may be null, in which case layers should be used for
    rendering.
 */
-void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
-                            bool aWillSendDidPaint)
+void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion)
 {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
@@ -333,7 +332,7 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
 #endif
       mPresShell->Paint(aView, damageRegion,
                         nsIPresShell::PAINT_COMPOSITE |
-                        (aWillSendDidPaint ? nsIPresShell::PAINT_WILL_SEND_DID_PAINT : 0));
+                        nsIPresShell::PAINT_WILL_SEND_DID_PAINT);
 #ifdef DEBUG_INVALIDATIONS
       printf("--ENDCOMPOSITE--\n");
 #endif
@@ -615,7 +614,7 @@ void nsViewManager::InvalidateViews(nsView *aView)
   }
 }
 
-void nsViewManager::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
+void nsViewManager::WillPaintWindow(nsIWidget* aWidget)
 {
   if (aWidget) {
     nsView* view = nsView::GetViewFor(aWidget);
@@ -632,7 +631,7 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
 
   nsCOMPtr<nsIPresShell> shell = mPresShell;
   if (shell) {
-    shell->WillPaintWindow(aWillSendDidPaint);
+    shell->WillPaintWindow(true);
   }
 }
 
@@ -649,7 +648,7 @@ bool nsViewManager::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
   // destroyed it during CallWillPaintOnObservers (bug 378273).
   nsView* view = nsView::GetViewFor(aWidget);
   if (view && !aRegion.IsEmpty()) {
-    Refresh(view, aRegion, true);
+    Refresh(view, aRegion);
   }
 
   return true;
@@ -1117,7 +1116,7 @@ nsViewManager::ProcessPendingUpdates()
 
   // Flush things like reflows by calling WillPaint on observer presShells.
   if (mPresShell) {
-    CallWillPaintOnObservers(true);
+    CallWillPaintOnObservers();
   }
   ProcessPendingUpdatesForView(mRootView, true);
 }
@@ -1137,7 +1136,7 @@ nsViewManager::UpdateWidgetGeometry()
 }
 
 void
-nsViewManager::CallWillPaintOnObservers(bool aWillSendDidPaint)
+nsViewManager::CallWillPaintOnObservers()
 {
   NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!");
 
@@ -1149,7 +1148,7 @@ nsViewManager::CallWillPaintOnObservers(bool aWillSendDidPaint)
       if (vm->mRootView && vm->mRootView->IsEffectivelyVisible()) {
         nsCOMPtr<nsIPresShell> shell = vm->GetPresShell();
         if (shell) {
-          shell->WillPaint(aWillSendDidPaint);
+          shell->WillPaint(true);
         }
       }
     }

@@ -1034,7 +1034,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
     // Call WillPaintWindow to allow scripts etc. to run before we paint
     {
         if (mWidgetListener)
-            mWidgetListener->WillPaintWindow(this, true);
+            mWidgetListener->WillPaintWindow(this);
     }
 
     if (!mWidget)

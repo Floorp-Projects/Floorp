@@ -2683,7 +2683,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
     nsIWidgetListener* listener = mGeckoChild->GetWidgetListener();
     if (listener) {
-      listener->WillPaintWindow(mGeckoChild, false);
+      listener->WillPaintWindow(mGeckoChild);
     }
   }
   [super viewWillDraw];

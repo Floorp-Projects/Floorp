@@ -332,7 +332,7 @@ private:
   /**
    * Call WillPaint() on all view observers under this vm root.
    */
-  void CallWillPaintOnObservers(bool aWillSendDidPaint);
+  void CallWillPaintOnObservers();
   void ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsView* aView, nsView *aParent);
   void InvalidateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
@@ -340,7 +340,7 @@ private:
   void InvalidateViews(nsView *aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
-  void Refresh(nsView *aView, const nsIntRegion& aRegion, bool aWillSendDidPaint);
+  void Refresh(nsView *aView, const nsIntRegion& aRegion);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
@@ -377,7 +377,7 @@ private:
   // be deferred while refresh is disabled.
   bool IsPaintingAllowed() { return RootViewManager()->mRefreshDisableCount == 0; }
 
-  void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint);
+  void WillPaintWindow(nsIWidget* aWidget);
   bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
                    uint32_t aFlags);
   void DidPaintWindow();
