@@ -88,7 +88,7 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
      */
     EVAL("var x = 1.1; "
          "[''+x, 'a', '123456789', 'something'.substring(1), "
-         "{}, [], new Function('return 10;'), <xml/>];",
+         "{}, [], new Function('return 10;')];",
          root.addr());
 
     JSObject *array = JSVAL_TO_OBJECT(root.value());
