@@ -59,7 +59,8 @@ public:
     if (png_get_IHDR(mPNG, mInfo, &png_width, &png_height, &png_bit_depth,
                      &png_color_type, NULL, NULL, NULL)) {
 
-      return (png_color_type == PNG_COLOR_TYPE_RGB_ALPHA &&
+      return ((png_color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
+               png_color_type == PNG_COLOR_TYPE_RGB) &&
               png_bit_depth == 8);
     } else {
       return false;

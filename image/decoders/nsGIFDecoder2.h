@@ -35,7 +35,7 @@ private:
    * frame size information, etc. */
 
   void      BeginGIF();
-  nsresult  BeginImageFrame(uint16_t aDepth);
+  void      BeginImageFrame(uint16_t aDepth);
   void      EndImageFrame();
   void      FlushImageData();
   void      FlushImageData(uint32_t fromRow, uint32_t rows);
@@ -43,6 +43,8 @@ private:
   nsresult  GifWrite(const uint8_t * buf, uint32_t numbytes);
   uint32_t  OutputRow();
   bool      DoLzw(const uint8_t *q);
+  bool      SetHold(const uint8_t* buf, uint32_t count,
+                    const uint8_t* buf2 = nullptr, uint32_t count2 = 0);
 
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
