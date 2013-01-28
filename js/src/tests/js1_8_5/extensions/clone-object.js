@@ -1,4 +1,4 @@
-// |reftest| pref(javascript.options.xml.content,true) skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell)
 // -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
@@ -225,8 +225,8 @@ function test() {
     // Ignore properties with object-ids.
     var uri = "http://example.net";
     b = {x: 1, y: 2};
-    Object.defineProperty(b, QName(uri, "x"), {enumerable: true, value: 3});
-    Object.defineProperty(b, QName(uri, "y"), {enumerable: true, value: 5});
+    Object.defineProperty(b, Array(uri, "x"), {enumerable: true, value: 3});
+    Object.defineProperty(b, Array(uri, "y"), {enumerable: true, value: 5});
     check(b);
 }
 
