@@ -113,13 +113,17 @@ public:
   virtual bool RequestWindowClose(nsIWidget* aWidget) { return false; }
 
   /*
-   * Indicate that a paint is about to occur on this window.
+   * Indicate that a paint is about to occur on this window. This is called
+   * at a time when it's OK to change the geometry of this widget or of
+   * other widgets.
    */
   virtual void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint) { }
 
   /**
    * Paint the specified region of the window. Returns true if the
    * notification was handled.
+   * This is called at a time when it is not OK to change the geometry of
+   * this widget or of other widgets.
    */
   enum {
     SENT_WILL_PAINT = 1 << 0, /* WillPaintWindow has already been called */
@@ -129,7 +133,9 @@ public:
   virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags) { return false; }
 
   /**
-   * On some platforms, indicates that a paint occurred.
+   * Indicates that a paint occurred.
+   * This is called at a time when it is OK to change the geometry of
+   * this widget or of other widgets.
    */
   virtual void DidPaintWindow() { }
 
