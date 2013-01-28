@@ -164,7 +164,7 @@ DataChannelConnection::~DataChannelConnection()
   // TransportFlows must be released from the STS thread
   if (mTransportFlow && !IsSTSThread()) {
     MOZ_ASSERT(mSTS);
-    RUN_ON_THREAD(mSTS, WrapRunnableNM(ReleaseTransportFlow, mTransportFlow),
+    RUN_ON_THREAD(mSTS, WrapRunnableNM(ReleaseTransportFlow, mTransportFlow.forget()),
                   NS_DISPATCH_NORMAL);
   }
 }
