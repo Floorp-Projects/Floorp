@@ -1848,7 +1848,7 @@ RasterImage::DoImageDataComplete()
   // directly to the decoder in the AddSourceData() calls. This means we're
   // done, so we can shut down the decoder.
   if (!StoringSourceData()) {
-    RasterImage::FinishedSomeDecoding(this);
+    FinishedSomeDecoding();
   }
 
   // If there's a decoder open, synchronously decode the beginning of the image
@@ -2826,7 +2826,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mDecoder &&
       (mDecoder->IsSizeDecode() || mDecoder->GetDecodeFlags() != mFrameDecodeFlags))
   {
-    RasterImage::FinishedSomeDecoding(this, eShutdownIntent_NotNeeded);
+    FinishedSomeDecoding(eShutdownIntent_NotNeeded);
   }
 
   // If we don't have a decoder, create one 
@@ -2885,7 +2885,7 @@ RasterImage::SyncDecode()
   if (mDecoder &&
       (mDecoder->IsSizeDecode() || mDecoder->GetDecodeFlags() != mFrameDecodeFlags))
   {
-    RasterImage::FinishedSomeDecoding(this, eShutdownIntent_NotNeeded);
+    FinishedSomeDecoding(eShutdownIntent_NotNeeded);
   }
 
   // If we don't have a decoder, create one 
@@ -2916,7 +2916,7 @@ RasterImage::SyncDecode()
     nsRefPtr<DecodeRequest> request = mDecodeRequest;
     nsresult rv = ShutdownDecoder(eShutdownIntent_Done);
     CONTAINER_ENSURE_SUCCESS(rv);
-    RasterImage::FinishedSomeDecoding(this, eShutdownIntent_Done, request);
+    FinishedSomeDecoding(eShutdownIntent_Done, request);
   }
 
   // All good if no errors!
@@ -3205,7 +3205,7 @@ RasterImage::UnlockImage()
     PR_LOG(GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
            ("RasterImage[0x%p] canceling decode because image "
             "is now unlocked.", this));
-    RasterImage::FinishedSomeDecoding(this, eShutdownIntent_NotNeeded);
+    FinishedSomeDecoding(eShutdownIntent_NotNeeded);
     ForceDiscard();
     return NS_OK;
   }
@@ -3303,7 +3303,7 @@ RasterImage::DoError()
 
   // If we're mid-decode, shut down the decoder.
   if (mDecoder) {
-    FinishedSomeDecoding(this, eShutdownIntent_Error);
+    FinishedSomeDecoding(eShutdownIntent_Error);
   }
 
   // Put the container in an error state
@@ -3363,9 +3363,8 @@ RasterImage::GetFramesNotified(uint32_t *aFramesNotified)
 }
 #endif
 
-/* static */ void
-RasterImage::FinishedSomeDecoding(RasterImage* aImage,
-                                  eShutdownIntent aIntent /* = eShutdownIntent_Done */,
+void
+RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_Done */,
                                   DecodeRequest* aRequest /* = nullptr */)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -3374,12 +3373,12 @@ RasterImage::FinishedSomeDecoding(RasterImage* aImage,
   if (aRequest) {
     request = aRequest;
   } else {
-    request = aImage->mDecodeRequest;
+    request = mDecodeRequest;
   }
 
   // Ensure that, if the decoder is the last reference to the image, we don't
   // destroy it by destroying the decoder.
-  nsRefPtr<RasterImage> image = aImage;
+  nsRefPtr<RasterImage> image(this);
 
   bool done = false;
 
@@ -3388,7 +3387,8 @@ RasterImage::FinishedSomeDecoding(RasterImage* aImage,
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
     }
 
-    // If the decode finished, tell the image and shut down the decoder.
+    // If the decode finished, or we're specifically being told to shut down,
+    // tell the image and shut down the decoder.
     if (image->mDecoder->GetDecodeDone() || image->IsDecodeFinished() ||
         aIntent != eShutdownIntent_Done) {
       done = true;
@@ -3420,7 +3420,7 @@ RasterImage::FinishedSomeDecoding(RasterImage* aImage,
     }
   }
 
-  // If it have any frames, tell the image what happened to the most recent
+  // If it has any frames, tell the image what happened to the most recent
   // one. This will be better when frames are published to decoders instead of
   // decoders requesting them.
   if (image->GetNumFrames()) {
@@ -3430,7 +3430,7 @@ RasterImage::FinishedSomeDecoding(RasterImage* aImage,
     } else {
       rect = image->CurrentStatusTracker().GetInvalidRect();
     }
-    aImage->FrameUpdated(image->GetNumFrames() - 1, rect);
+    image->FrameUpdated(image->GetNumFrames() - 1, rect);
   }
 
   // Then, tell the observers what happened in the decoder.
@@ -3461,14 +3461,14 @@ RasterImage::DecodeWorker::~DecodeWorker()
   // Shut down all the decoders since we're going away.
   DecodeRequest* request = mASAPDecodeRequests.getFirst();
   while (request) {
-    RasterImage::FinishedSomeDecoding(request->mImage, eShutdownIntent_NotNeeded);
+    request->mImage->FinishedSomeDecoding(eShutdownIntent_NotNeeded);
 
     request = request->getNext();
   }
 
   request = mNormalDecodeRequests.getFirst();
   while (request) {
-    RasterImage::FinishedSomeDecoding(request->mImage, eShutdownIntent_NotNeeded);
+    request->mImage->FinishedSomeDecoding(eShutdownIntent_NotNeeded);
 
     request = request->getNext();
   }
@@ -3544,7 +3544,7 @@ RasterImage::DecodeWorker::DecodeABitOf(RasterImage* aImg)
   MOZ_ASSERT(NS_IsMainThread());
 
   DecodeSomeOfImage(aImg);
-  RasterImage::FinishedSomeDecoding(aImg);
+  aImg->FinishedSomeDecoding();
 
   // If we aren't yet finished decoding and we have more data in hand, add
   // this request to the back of the priority list.
@@ -3617,11 +3617,11 @@ RasterImage::DecodeWorker::Run()
 
       // If we have a new frame, let everybody know about it.
       if (image->mDecoder->GetFrameCount() != oldCount) {
-        DecodeDoneWorker::DidSomeDecoding(image, request);
+        DecodeDoneWorker::NotifyFinishedSomeDecoding(image, request);
       }
     } else {
       // Nothing more for us to do - let everyone know what happened.
-      DecodeDoneWorker::DidSomeDecoding(image, request);
+      DecodeDoneWorker::NotifyFinishedSomeDecoding(image, request);
     }
 
   } while ((TimeStamp::Now() - eventStart).ToMilliseconds() <= gMaxMSBeforeYield);
@@ -3644,7 +3644,7 @@ RasterImage::DecodeWorker::DecodeUntilSizeAvailable(RasterImage* aImg)
 
   nsresult rv = DecodeSomeOfImage(aImg, DECODE_TYPE_UNTIL_SIZE);
 
-  RasterImage::FinishedSomeDecoding(aImg);
+  aImg->FinishedSomeDecoding();
 
   return rv;
 }
@@ -3753,7 +3753,7 @@ RasterImage::DecodeDoneWorker::DecodeDoneWorker(RasterImage* image, DecodeReques
 {}
 
 void
-RasterImage::DecodeDoneWorker::DidSomeDecoding(RasterImage* image, DecodeRequest* request)
+RasterImage::DecodeDoneWorker::NotifyFinishedSomeDecoding(RasterImage* image, DecodeRequest* request)
 {
   nsCOMPtr<DecodeDoneWorker> worker = new DecodeDoneWorker(image, request);
   NS_DispatchToMainThread(worker);
@@ -3762,7 +3762,7 @@ RasterImage::DecodeDoneWorker::DidSomeDecoding(RasterImage* image, DecodeRequest
 NS_IMETHODIMP
 RasterImage::DecodeDoneWorker::Run()
 {
-  RasterImage::FinishedSomeDecoding(mImage, eShutdownIntent_Done, mRequest);
+  mImage->FinishedSomeDecoding(eShutdownIntent_Done, mRequest);
 
   // If we didn't finish decoding yet, try again
   if (mImage->mDecoder && !mImage->IsDecodeFinished() &&

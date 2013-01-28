@@ -72,7 +72,6 @@ public:
   nsIntRect mFrameRect;
   uint8_t *mCMSLine;
   uint8_t *interlacebuf;
-  uint8_t *mImageData;
   qcms_profile *mInProfile;
   qcms_transform *mTransform;
 

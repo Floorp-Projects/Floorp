@@ -15,6 +15,8 @@ namespace image {
 
 Decoder::Decoder(RasterImage &aImage)
   : mImage(aImage)
+  , mImageData(nullptr)
+  , mColormap(nullptr)
   , mDecodeFlags(0)
   , mDecodeDone(false)
   , mDataError(false)
