@@ -95,18 +95,18 @@ NewShortString(JSContext *cx, TwoByteChars chars)
 }
 
 static inline void
-StringWriteBarrierPost(JS::Zone *zone, JSString **strp)
+StringWriteBarrierPost(JSRuntime *rt, JSString **strp)
 {
 #ifdef JSGC_GENERATIONAL
-    zone->gcStoreBuffer.putRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
+    rt->gcStoreBuffer.putRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
 #endif
 }
 
 static inline void
-StringWriteBarrierPostRemove(JS::Zone *zone, JSString **strp)
+StringWriteBarrierPostRemove(JSRuntime *rt, JSString **strp)
 {
 #ifdef JSGC_GENERATIONAL
-    zone->gcStoreBuffer.removeRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
+    rt->gcStoreBuffer.removeRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
 #endif
 }
 
@@ -134,7 +134,7 @@ JSString::writeBarrierPost(JSString *str, void *addr)
 #ifdef JSGC_GENERATIONAL
     if (!str)
         return;
-    str->zone()->gcStoreBuffer.putCell((Cell **)addr);
+    str->runtime()->gcStoreBuffer.putCell((Cell **)addr);
 #endif
 }
 
@@ -178,8 +178,8 @@ JSRope::init(JSString *left, JSString *right, size_t length)
     d.lengthAndFlags = buildLengthAndFlags(length, ROPE_FLAGS);
     d.u1.left = left;
     d.s.u2.right = right;
-    js::StringWriteBarrierPost(zone(), &d.u1.left);
-    js::StringWriteBarrierPost(zone(), &d.s.u2.right);
+    js::StringWriteBarrierPost(runtime(), &d.u1.left);
+    js::StringWriteBarrierPost(runtime(), &d.s.u2.right);
 }
 
 template <js::AllowGC allowGC>
@@ -212,7 +212,7 @@ JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length
     d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_FLAGS);
     d.u1.chars = chars;
     d.s.u2.base = base;
-    js::StringWriteBarrierPost(zone(), reinterpret_cast<JSString **>(&d.s.u2.base));
+    js::StringWriteBarrierPost(runtime(), reinterpret_cast<JSString **>(&d.s.u2.base));
 }
 
 JS_ALWAYS_INLINE JSLinearString *
