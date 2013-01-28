@@ -176,6 +176,8 @@ BluetoothDevice::Create(nsPIDOMWindow* aOwner,
 void
 BluetoothDevice::Notify(const BluetoothSignal& aData)
 {
+  BT_LOG("[D] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
+
   if (aData.name().EqualsLiteral("PropertyChanged")) {
     NS_ASSERTION(aData.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue,
                  "PropertyChanged: Invalid value type");
