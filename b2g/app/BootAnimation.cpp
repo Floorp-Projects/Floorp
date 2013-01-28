@@ -297,7 +297,21 @@ AnimationFrame::ReadPngFrame(int outputFormat)
     png_structp pngread = png_create_read_struct(PNG_LIBPNG_VER_STRING,
                                                  nullptr, nullptr, nullptr);
 
+    if (!pngread)
+        return;
+
     png_infop pnginfo = png_create_info_struct(pngread);
+
+    if (!pnginfo) {
+        png_destroy_read_struct(&pngread, &pnginfo, nullptr);
+        return;
+    }
+
+    if (setjmp(png_jmpbuf(pngread))) {
+        // libpng reported an error and longjumped here.  Clean up and return.
+        png_destroy_read_struct(&pngread, &pnginfo, nullptr);
+        return;
+    }
 
     RawReadState state;
     state.start = file->GetData();
@@ -305,8 +319,6 @@ AnimationFrame::ReadPngFrame(int outputFormat)
     state.offset = 0;
 
     png_set_read_fn(pngread, &state, RawReader);
-
-    setjmp(png_jmpbuf(pngread));
 
     png_read_info(pngread, pnginfo);
 
