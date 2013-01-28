@@ -52,10 +52,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     global_(NULL),
     enterCompartmentDepth(0),
     allocator(this),
-#ifdef JSGC_GENERATIONAL
-    gcNursery(),
-    gcStoreBuffer(&gcNursery),
-#endif
     ionUsingBarriers_(false),
     gcScheduled(false),
     gcState(NoGC),
@@ -134,23 +130,6 @@ JSCompartment::init(JSContext *cx)
 
     if (cx)
         InitRandom(cx->runtime, &rngState);
-
-#ifdef JSGC_GENERATIONAL
-    /*
-     * If we are in the middle of post-barrier verification, we need to
-     * immediately begin collecting verification data on new compartments.
-     */
-    if (rt->gcVerifyPostData) {
-        if (!gcNursery.enable())
-            return false;
-
-        if (!gcStoreBuffer.enable())
-            return false;
-    } else {
-        gcNursery.disable();
-        gcStoreBuffer.disable();
-    }
-#endif
 
     enumerators = NativeIterator::allocateSentinel(cx);
     if (!enumerators)
