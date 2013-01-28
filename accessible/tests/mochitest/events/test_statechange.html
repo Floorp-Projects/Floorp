@@ -97,6 +97,45 @@
       }
     }
 
+    function dupeStateChange(aID, aAttr, aValue,
+                             aState, aIsExtraState, aIsEnabled)
+    {
+      this.eventSeq = [
+        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, getNode(aID))
+      ];
+
+      this.invoke = function dupeStateChange_invoke()
+      {
+        getNode(aID).setAttribute(aAttr, aValue);
+        getNode(aID).setAttribute(aAttr, aValue);
+      }
+
+      this.getID = function dupeStateChange_getID()
+      {
+        return "duped state change events";
+      }
+    }
+
+    function oppositeStateChange(aID, aAttr, aState, aIsExtraState)
+    {
+      this.eventSeq = [ ];
+      this.unexpectedEventSeq = [
+        new stateChangeChecker(aState, aIsExtraState, false, getNode(aID)),
+        new stateChangeChecker(aState, aIsExtraState, true, getNode(aID))
+      ];
+
+      this.invoke = function dupeStateChange_invoke()
+      {
+        getNode(aID).setAttribute(aAttr, "false");
+        getNode(aID).setAttribute(aAttr, "true");
+      }
+
+      this.getID = function dupeStateChange_getID()
+      {
+        return "opposite state change events";
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
 
@@ -123,6 +162,11 @@
                                              STATE_REQUIRED, false, true));
       gQueue.push(new stateChangeOnFileInput("file", "aria-invalid", "true",
                                              STATE_INVALID, false, true));
+
+      gQueue.push(new dupeStateChange("div", "aria-busy", "true",
+                                      STATE_BUSY, false, true));
+      gQueue.push(new oppositeStateChange("div", "aria-busy",
+                                          STATE_BUSY, false));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -162,6 +206,8 @@
   <input id="email" type='email'>
 
   <input id="file" type="file">
+
+  <div id="div"></div>
 
   <div id="eventdump"></div>
 </body>
