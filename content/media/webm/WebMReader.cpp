@@ -49,6 +49,7 @@ PRLogModuleInfo* gNesteggLog;
 
 static const unsigned NS_PER_USEC = 1000;
 static const double NS_PER_S = 1e9;
+static const double USEC_PER_S = 1e6;
 
 // If a seek request is within SEEK_DECODE_MARGIN microseconds of the
 // current time, decode ahead from the current frame rather than performing
@@ -918,6 +919,38 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   return DecodeToTarget(aTarget);
 }
 
+#ifdef MOZ_DASH
+bool WebMReader::IsDataCachedAtEndOfSubsegments()
+{
+  MediaResource* resource = mDecoder->GetResource();
+  NS_ENSURE_TRUE(resource, false);
+  if (resource->IsDataCachedToEndOfResource(0)) {
+     return true;
+  }
+
+  if (mClusterByteRanges.IsEmpty()) {
+    return false;
+  }
+
+  nsTArray<MediaByteRange> ranges;
+  nsresult rv = resource->GetCachedRanges(ranges);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (ranges.IsEmpty()) {
+    return false;
+  }
+
+  // Return true if data at the end of the final subsegment is cached.
+  uint32_t finalSubsegmentIndex = mClusterByteRanges.Length()-1;
+  uint64_t finalSubEndOffset = mClusterByteRanges[finalSubsegmentIndex].mEnd;
+  uint32_t finalRangeIndex = ranges.Length()-1;
+  uint64_t finalRangeStartOffset = ranges[finalRangeIndex].mStart;
+  uint64_t finalRangeEndOffset = ranges[finalRangeIndex].mEnd;
+
+  return (finalRangeStartOffset < finalSubEndOffset &&
+          finalSubEndOffset <= finalRangeEndOffset);
+}
+#endif
+
 nsresult WebMReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
 {
   MediaResource* resource = mDecoder->GetResource();
@@ -955,7 +988,29 @@ nsresult WebMReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
       if (rv) {
         double startTime = start * timecodeScale / NS_PER_S - aStartTime;
         double endTime = end * timecodeScale / NS_PER_S - aStartTime;
-
+#ifdef MOZ_DASH
+        // If this range extends to the end of a cluster, the true end time is
+        // the cluster's end timestamp. Since WebM frames do not have an end
+        // timestamp, a fully cached cluster must be reported with the correct
+        // end time of its final frame. Otherwise, buffered ranges could be
+        // reported with missing frames at cluster boundaries, specifically
+        // boundaries where stream switching has occurred.
+        if (!mClusterByteRanges.IsEmpty()) {
+          for (uint32_t clusterIndex = 0;
+               clusterIndex < (mClusterByteRanges.Length()-1);
+               clusterIndex++) {
+            if (ranges[index].mEnd >= mClusterByteRanges[clusterIndex].mEnd) {
+              double clusterEndTime =
+                  mClusterByteRanges[clusterIndex+1].mStartTime / USEC_PER_S;
+              if (endTime < clusterEndTime) {
+                LOG(PR_LOG_DEBUG, ("End of cluster: endTime becoming %0.3fs",
+                                   clusterEndTime));
+                endTime = clusterEndTime;
+              }
+            }
+          }
+        }
+#endif
         // If this range extends to the end of the file, the true end time
         // is the file's duration.
         if (resource->IsDataCachedToEndOfResource(ranges[index].mStart)) {

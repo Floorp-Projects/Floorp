@@ -64,6 +64,16 @@ nsTimeRanges::Add(double aStart, double aEnd)
   mRanges.AppendElement(TimeRange(aStart,aEnd));
 }
 
+double
+nsTimeRanges::GetFinalEndTime()
+{
+  if (mRanges.IsEmpty()) {
+    return -1.0;
+  }
+  uint32_t finalIndex = mRanges.Length() - 1;
+  return mRanges[finalIndex].mEnd;
+}
+
 void
 nsTimeRanges::Normalize()
 {

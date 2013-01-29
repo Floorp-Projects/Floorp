@@ -94,6 +94,10 @@ public:
   // thread only.
   void NetworkError();
 
+  // Called from reader during ReadMetadata. This should be ignored here, and
+  // instead, duration should be set following MPD parsing.
+  void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE { };
+
   // Set the duration of the media resource in units of seconds.
   // This is called via a channel listener if it can pick up the duration
   // from a content header. Must be called from the main thread only.
