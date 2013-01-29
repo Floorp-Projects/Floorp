@@ -520,7 +520,10 @@ struct sx {int dummy;};
 #include <netinet/ip_options.h>
 #endif
 
-#define SCTP_PRINTF(...)   printf(__VA_ARGS__)
+#define SCTP_PRINTF(...)                                  \
+	if (SCTP_BASE_VAR(debug_printf)) {                \
+		SCTP_BASE_VAR(debug_printf)(__VA_ARGS__); \
+	}
 
 #if defined(__FreeBSD__)
 #ifndef in6pcb

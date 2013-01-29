@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[scriptable, uuid(9277fe09-f0cc-4cd9-bbce-581dd94b0260)]
+[scriptable, uuid(a01362a0-5c45-11e2-bcfd-0800200c9a66)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -257,4 +257,16 @@ interface nsIHttpChannel : nsIChannel
      *         has been received (before onStartRequest).
      */
     boolean isNoCacheResponse();
+
+    /**
+     * Instructs the channel to immediately redirect to a new destination.
+     * Can only be called on channels not yet opened.
+     *
+     * This method provides no explicit conflict resolution. The last
+     * caller to call it wins.
+     *
+     * @throws NS_ERROR_ALREADY_OPENED if called after the channel
+     *         has been opened.
+     */
+    void redirectTo(in nsIURI aNewURI);
 };

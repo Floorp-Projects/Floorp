@@ -375,6 +375,17 @@ public:
   static nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame);
 
   /**
+   * GetScrolledRect returns the range of allowable scroll offsets
+   * for aScrolledFrame, assuming the scrollable overflow area is
+   * aScrolledFrameOverflowArea and the scrollport size is aScrollPortSize.
+   * aDirection is either NS_STYLE_DIRECTION_LTR or NS_STYLE_DIRECTION_RTL.
+   */
+  static nsRect GetScrolledRect(nsIFrame* aScrolledFrame,
+                                const nsRect& aScrolledFrameOverflowArea,
+                                const nsSize& aScrollPortSize,
+                                uint8_t aDirection);
+
+  /**
    * HasPseudoStyle returns true if aContent (whose primary style
    * context is aStyleContext) has the aPseudoElement pseudo-style
    * attached to it; returns false otherwise.

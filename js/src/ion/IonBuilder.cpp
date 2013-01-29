@@ -2957,14 +2957,16 @@ IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasic
     // would have been returned.
     JS_ASSERT(exits.length() > 0);
 
-    MPhi *retDef = NULL;
+    // In the case of a single return, no phi is necessary.
+    MPhi *phi = NULL;
     if (exits.length() > 1) {
-        retDef = MPhi::New(bottom->stackDepth());
-        bottom->addPhi(retDef);
+        phi = MPhi::New(bottom->stackDepth());
+        phi->initLength(exits.length());
+        bottom->addPhi(phi);
     }
 
-    for (MBasicBlock **it = exits.begin(), **end = exits.end(); it != end; ++it) {
-        MBasicBlock *exitBlock = *it;
+    for (size_t i = 0; i < exits.length(); i++) {
+        MBasicBlock *exitBlock = exits[i];
 
         MDefinition *rval = exitBlock->lastIns()->toReturn()->getOperand(0);
         exitBlock->discardLastIns();
@@ -2988,10 +2990,10 @@ IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasic
         if (exits.length() == 1)
             return rval;
 
-        retDef->addInput(rval);
+        phi->setOperand(i, rval);
     }
 
-    return retDef;
+    return phi;
 }
 
 bool
@@ -3529,11 +3531,16 @@ IonBuilder::inlineScriptedCalls(AutoObjectVector &targets, AutoObjectVector &ori
             MPhi *phi = MPhi::New(inlineBottom->stackDepth() - callInfo.argc() - 2);
             inlineBottom->addPhi(phi);
 
+            if (!phi->initLength(retvalDefns.length()))
+                return false;
+
+            size_t index = 0;
             MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end();
-            for (; it != end; ++it) {
-                if (!phi->addInput(*it))
-                    return false;
-            }
+            for (; it != end; it++, index++)
+                phi->setOperand(index, *it);
+
+            JS_ASSERT(index == retvalDefns.length());
+
             // retvalDefns should become a singleton vector of 'phi'
             retvalDefns.clear();
             if (!retvalDefns.append(phi))
@@ -3578,10 +3585,16 @@ IonBuilder::inlineScriptedCalls(AutoObjectVector &targets, AutoObjectVector &ori
         MPhi *phi = MPhi::New(bottom->stackDepth());
         bottom->addPhi(phi);
 
-        for (MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end(); it != end; ++it) {
-            if (!phi->addInput(*it))
-                return false;
-        }
+        if (!phi->initLength(retvalDefns.length()))
+            return false;
+
+        size_t index = 0;
+        MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end();
+        for (; it != end; it++, index++)
+            phi->setOperand(index, *it);
+
+        JS_ASSERT(index == retvalDefns.length());
+
         retvalDefn = phi;
     } else {
         retvalDefn = retvalDefns.back();
@@ -4216,10 +4229,13 @@ IonBuilder::makeCallHelper(HandleFunction target, CallInfo &callInfo,
             return NULL;
         }
 
-        MPassArg *newThis = MPassArg::New(create);
-
+        // Unwrap the MPassArg before discarding: it may have been captured by an MResumePoint.
+        thisArg->replaceAllUsesWith(thisArg->getArgument());
         thisArg->block()->discard(thisArg);
+
+        MPassArg *newThis = MPassArg::New(create);
         current->add(newThis);
+
         thisArg = newThis;
     }
 

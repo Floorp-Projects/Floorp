@@ -241,6 +241,12 @@ DoesNotParticipateInAutoDirection(const Element* aElement)
           nodeInfo->Equals(nsGkAtoms::textarea));
 }
 
+static inline bool
+IsBdiWithoutDirAuto(const Element* aElement)
+{
+  return aElement->IsHTML(nsGkAtoms::bdi) && !aElement->HasDirAuto();
+}
+
 /**
  * Returns true if aElement is one of the element whose text content should not
  * affect the direction of ancestors with dir=auto (though it may affect its own
@@ -250,7 +256,7 @@ static bool
 DoesNotAffectDirectionOfAncestors(const Element* aElement)
 {
   return (DoesNotParticipateInAutoDirection(aElement) ||
-          aElement->IsHTML(nsGkAtoms::bdi) ||
+          IsBdiWithoutDirAuto(aElement) ||
           aElement->HasFixedDir());
 }
 
@@ -643,7 +649,7 @@ void
 WalkDescendantsSetDirAuto(Element* aElement, bool aNotify)
 {
   if (!DoesNotParticipateInAutoDirection(aElement) &&
-      !aElement->IsHTML(nsGkAtoms::bdi)) {
+      !IsBdiWithoutDirAuto(aElement)) {
 
     bool setAncestorDirAutoFlag =
 #ifdef DEBUG

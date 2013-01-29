@@ -32,18 +32,6 @@ BooleanObject::create(JSContext *cx, bool b)
     return &boolobj;
 }
 
-inline BooleanObject *
-BooleanObject::createWithProto(JSContext *cx, bool b, JSObject &proto)
-{
-    JSObject *obj = NewObjectWithClassProto(cx, &BooleanClass, &proto, NULL,
-                                            gc::GetGCObjectKind(RESERVED_SLOTS));
-    if (!obj)
-        return NULL;
-    BooleanObject &boolobj = obj->asBoolean();
-    boolobj.setPrimitiveValue(b);
-    return &boolobj;
-}
-
 } // namespace js
 
 #endif /* BooleanObject_inl_h__ */
