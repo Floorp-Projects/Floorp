@@ -342,9 +342,8 @@ nsSVGAngle::SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateAngle(mAttrEnum);
 }
 
-nsresult
-nsSVGAngle::ToDOMAnimatedAngle(nsISupports **aResult,
-                               nsSVGElement *aSVGElement)
+already_AddRefed<SVGAnimatedAngle>
+nsSVGAngle::ToDOMAnimatedAngle(nsSVGElement *aSVGElement)
 {
   nsRefPtr<SVGAnimatedAngle> domAnimatedAngle =
     sSVGAnimatedAngleTearoffTable.GetTearoff(this);
@@ -353,8 +352,7 @@ nsSVGAngle::ToDOMAnimatedAngle(nsISupports **aResult,
     sSVGAnimatedAngleTearoffTable.AddTearoff(this, domAnimatedAngle);
   }
 
-  domAnimatedAngle.forget(aResult);
-  return NS_OK;
+  return domAnimatedAngle.forget();
 }
 
 SVGAnimatedAngle::~SVGAnimatedAngle()
