@@ -317,7 +317,7 @@ MediaDecoder::MediaDecoder() :
   mReentrantMonitor("media.decoder"),
   mPlayState(PLAY_STATE_PAUSED),
   mNextState(PLAY_STATE_PAUSED),
-  mResourceLoaded(false),
+  mCalledResourceLoaded(false),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
   mTriggerPlaybackEndedWhenSourceStreamFinishes(false),
@@ -650,6 +650,16 @@ void MediaDecoder::QueueMetadata(int64_t aPublishTime,
   mDecoderStateMachine->QueueMetadata(aPublishTime, aChannels, aRate, aHasAudio, aHasVideo, aTags);
 }
 
+bool
+MediaDecoder::IsDataCachedToEndOfResource()
+{
+  NS_ASSERTION(!mShuttingDown, "Don't call during shutdown!");
+  GetReentrantMonitor().AssertCurrentThreadIn();
+
+  return (mResource &&
+          mResource->IsDataCachedToEndOfResource(mDecoderPosition));
+}
+
 void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -675,7 +685,7 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
     mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
   }
 
-  if (!mResourceLoaded) {
+  if (!mCalledResourceLoaded) {
     StartProgress();
   } else if (mOwner) {
     // Resource was loaded during metadata loading, when progress
@@ -686,10 +696,10 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
   // Only inform the element of FirstFrameLoaded if not doing a load() in order
   // to fulfill a seek, otherwise we'll get multiple loadedfirstframe events.
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  bool resourceIsLoaded = !mResourceLoaded && mResource &&
-    mResource->IsDataCachedToEndOfResource(mDecoderPosition);
+  bool notifyResourceIsLoaded = !mCalledResourceLoaded &&
+                                IsDataCachedToEndOfResource();
   if (mOwner) {
-    mOwner->FirstFrameLoaded(resourceIsLoaded);
+    mOwner->FirstFrameLoaded(notifyResourceIsLoaded);
   }
 
   // This can run cache callbacks.
@@ -708,7 +718,7 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
     }
   }
 
-  if (resourceIsLoaded) {
+  if (notifyResourceIsLoaded) {
     ResourceLoaded();
   }
 
@@ -732,12 +742,12 @@ void MediaDecoder::ResourceLoaded()
     // If we are seeking or loading then the resource loaded notification we get
     // should be ignored, since it represents the end of the seek request.
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    if (mIgnoreProgressData || mResourceLoaded || mPlayState == PLAY_STATE_LOADING)
+    if (mIgnoreProgressData || mCalledResourceLoaded || mPlayState == PLAY_STATE_LOADING)
       return;
 
     Progress(false);
 
-    mResourceLoaded = true;
+    mCalledResourceLoaded = true;
     StopProgress();
   }
 

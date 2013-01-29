@@ -159,20 +159,29 @@ public:
   void PrepareForSwitch();
 
   // Returns true if the current thread is the state machine thread.
-  bool OnStateMachineThread() const;
+  bool OnStateMachineThread() const MOZ_OVERRIDE;
 
   // Returns true if the current thread is the decode thread.
-  bool OnDecodeThread() const;
+  bool OnDecodeThread() const MOZ_OVERRIDE;
 
   // Returns main decoder's monitor for synchronised access.
   ReentrantMonitor& GetReentrantMonitor() MOZ_OVERRIDE;
 
   // Called on the decode thread from WebMReader.
-  ImageContainer* GetImageContainer();
+  ImageContainer* GetImageContainer() MOZ_OVERRIDE;
 
   // Called when Metadata has been read; notifies that index data is read.
   // Called on the decode thread only.
   void OnReadMetadataCompleted() MOZ_OVERRIDE;
+
+  // Stop updating the bytes downloaded for progress notifications. Called
+  // when seeking to prevent wild changes to the progress notification.
+  // Must be called with the decoder monitor held.
+  void StopProgressUpdates() MOZ_OVERRIDE;
+
+  // Allow updating the bytes downloaded for progress notifications. Must
+  // be called with the decoder monitor held.
+  void StartProgressUpdates() MOZ_OVERRIDE;
 
   // Overridden to cleanup ref to |DASHDecoder|. Called on main thread only.
   void Shutdown() {
