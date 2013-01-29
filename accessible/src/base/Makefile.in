@@ -22,6 +22,7 @@ CPPSRCS = \
   Filters.cpp \
   ARIAStateMap.cpp \
   DocManager.cpp \
+  EventQueue.cpp \
   FocusManager.cpp \
   NotificationController.cpp \
   nsAccessNode.cpp \
