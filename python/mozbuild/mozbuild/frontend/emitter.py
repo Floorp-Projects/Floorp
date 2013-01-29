@@ -4,7 +4,13 @@
 
 from __future__ import unicode_literals
 
-from .data import DirectoryTraversal
+import os
+
+from .data import (
+    DirectoryTraversal,
+    ConfigFileSubstitution,
+)
+
 from .reader import MozbuildSandbox
 
 
@@ -41,6 +47,15 @@ class TreeMetadataEmitter(object):
         # We always emit a directory traversal descriptor. This is needed by
         # the recursive make backend.
         for o in self._emit_directory_traversal_from_sandbox(sandbox): yield o
+
+        for path in sandbox['CONFIGURE_SUBST_FILES']:
+            if os.path.isabs(path):
+                path = path[1:]
+
+            sub = ConfigFileSubstitution(sandbox)
+            sub.input_path = os.path.join(sandbox['SRCDIR'], '%s.in' % path)
+            sub.output_path = os.path.join(sandbox['OBJDIR'], path)
+            yield sub
 
     def _emit_directory_traversal_from_sandbox(self, sandbox):
         o = DirectoryTraversal(sandbox)

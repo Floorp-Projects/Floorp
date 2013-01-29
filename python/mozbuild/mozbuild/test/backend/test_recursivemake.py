@@ -101,5 +101,17 @@ class TestRecursiveMakeBackend(BackendTester):
             'PARALLEL_DIRS += p_external',
         ])
 
+    def test_substitute_config_files(self):
+        """Ensure substituted config files are produced."""
+        env = self._consume('substitute_config_files', RecursiveMakeBackend)
+
+        p = os.path.join(env.topobjdir, 'foo')
+        self.assertTrue(os.path.exists(p))
+        lines = [l.strip() for l in open(p, 'rt').readlines()]
+        self.assertEqual(lines, [
+            'TEST = foo',
+        ])
+
+
 if __name__ == '__main__':
     main()

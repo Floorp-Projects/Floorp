@@ -45,6 +45,14 @@ CONFIGS = {
         'non_global_defines': [],
         'substs': [],
     },
+    'substitute_config_files': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [
+            ('MOZ_FOO', 'foo'),
+            ('MOZ_BAR', 'bar'),
+        ],
+    },
 }
 
 

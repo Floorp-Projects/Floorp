@@ -293,6 +293,13 @@ add_tier_dir('t1', 'bat', static=True)
         e = sce.exception
         self.assertEqual(e.message, 'This is an error.')
 
+    def test_substitute_config_files(self):
+        sandbox = self.sandbox()
+
+        sandbox.exec_source('CONFIGURE_SUBST_FILES += ["foo", "bar"]',
+            'test.py')
+        self.assertEqual(sandbox['CONFIGURE_SUBST_FILES'], ['foo', 'bar'])
+
 
 if __name__ == '__main__':
     main()

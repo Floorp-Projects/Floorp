@@ -130,6 +130,16 @@ VARIABLES = {
     'PARALLEL_EXTERNAL_MAKE_DIRS': (list, [],
         """Parallel version of EXTERNAL_MAKE_DIRS.
         """),
+
+    'CONFIGURE_SUBST_FILES': (list, [],
+        """Output files that will be generated using configure-like substitution.
+
+        This is a substitute for AC_OUTPUT in autoconf. For each path in this
+        list, we will search for a file in the srcdir having the name
+        {path}.in. The contents of this file will be read and variable patterns
+        like @foo@ will be substituted with the values of the AC_SUBST
+        variables declared during configure.
+        """),
 }
 
 # The set of functions exposed to the sandbox.
