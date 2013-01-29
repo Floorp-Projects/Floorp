@@ -12,9 +12,8 @@
 
 interface SVGAnimatedEnumeration;
 
-interface SVGClipPathElement : SVGElement {
+interface SVGClipPathElement : SVGTransformableElement {
   readonly attribute SVGAnimatedEnumeration clipPathUnits;
-  readonly attribute SVGAnimatedTransformList transform;
 };
 
 SVGClipPathElement implements SVGUnitTypes;

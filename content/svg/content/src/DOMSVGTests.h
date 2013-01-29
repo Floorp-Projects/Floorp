@@ -6,28 +6,24 @@
 #ifndef MOZILLA_DOMSVGTESTS_H__
 #define MOZILLA_DOMSVGTESTS_H__
 
+#include "nsIDOMSVGTests.h"
 #include "nsStringFwd.h"
 #include "SVGStringList.h"
 #include "nsCOMPtr.h"
 
 class nsAttrValue;
 class nsIAtom;
-class nsIDOMSVGStringList;
 class nsString;
 
 namespace mozilla {
 class DOMSVGStringList;
 }
 
-#define MOZILLA_DOMSVGTESTS_IID \
-   { 0x92370da8, 0xda28, 0x4895, \
-     {0x9b, 0x1b, 0xe0, 0x06, 0x0d, 0xb7, 0x3f, 0xc3 } }
-
-class DOMSVGTests : public nsISupports
+class DOMSVGTests : public nsIDOMSVGTests
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGTESTS_IID)
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMSVGTESTS
 
   DOMSVGTests();
   virtual ~DOMSVGTests() {}
@@ -100,7 +96,5 @@ private:
   SVGStringList mStringListAttributes[3];
   static nsIAtom** sStringListNames[3];
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGTests, MOZILLA_DOMSVGTESTS_IID)
 
 #endif // MOZILLA_DOMSVGTESTS_H__

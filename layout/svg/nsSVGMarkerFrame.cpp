@@ -10,7 +10,7 @@
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
-#include "mozilla/dom/SVGMarkerElement.h"
+#include "nsSVGMarkerElement.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGPathGeometryFrame.h"
 
@@ -80,7 +80,7 @@ nsSVGMarkerFrame::GetCanvasTM(uint32_t aFor)
     return gfxMatrix();
   }
 
-  SVGMarkerElement *content = static_cast<SVGMarkerElement*>(mContent);
+  nsSVGMarkerElement *content = static_cast<nsSVGMarkerElement*>(mContent);
   
   mInUse2 = true;
   gfxMatrix markedTM = mMarkedFrame->GetCanvasTM(aFor);
@@ -106,7 +106,7 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
-  SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(mContent);
+  nsSVGMarkerElement *marker = static_cast<nsSVGMarkerElement*>(mContent);
 
   const nsSVGViewBoxRect viewBox = marker->GetViewBoxRect();
 
@@ -164,7 +164,7 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
-  SVGMarkerElement *content = static_cast<SVGMarkerElement*>(mContent);
+  nsSVGMarkerElement *content = static_cast<nsSVGMarkerElement*>(mContent);
 
   const nsSVGViewBoxRect viewBox = content->GetViewBoxRect();
 
@@ -204,7 +204,7 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 void
 nsSVGMarkerFrame::SetParentCoordCtxProvider(SVGSVGElement *aContext)
 {
-  SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(mContent);
+  nsSVGMarkerElement *marker = static_cast<nsSVGMarkerElement*>(mContent);
   marker->SetParentCoordCtxProvider(aContext);
 }
 

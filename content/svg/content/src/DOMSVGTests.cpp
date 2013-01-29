@@ -13,7 +13,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS0(DOMSVGTests)
+NS_IMPL_ISUPPORTS1(DOMSVGTests, nsIDOMSVGTests)
 
 nsIAtom** DOMSVGTests::sStringListNames[3] =
 {
@@ -27,12 +27,28 @@ DOMSVGTests::DOMSVGTests()
   mStringListAttributes[LANGUAGE].SetIsCommaSeparated(true);
 }
 
+/* readonly attribute nsIDOMSVGStringList requiredFeatures; */
+NS_IMETHODIMP
+DOMSVGTests::GetRequiredFeatures(nsIDOMSVGStringList * *aRequiredFeatures)
+{
+  *aRequiredFeatures = RequiredFeatures().get();
+  return NS_OK;
+}
+
 already_AddRefed<nsIDOMSVGStringList>
 DOMSVGTests::RequiredFeatures()
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
   return DOMSVGStringList::GetDOMWrapper(
            &mStringListAttributes[FEATURES], element, true, FEATURES).get();
+}
+
+/* readonly attribute nsIDOMSVGStringList requiredExtensions; */
+NS_IMETHODIMP
+DOMSVGTests::GetRequiredExtensions(nsIDOMSVGStringList * *aRequiredExtensions)
+{
+  *aRequiredExtensions = RequiredExtensions().get();
+  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGStringList>
@@ -43,12 +59,28 @@ DOMSVGTests::RequiredExtensions()
            &mStringListAttributes[EXTENSIONS], element, true, EXTENSIONS).get();
 }
 
+/* readonly attribute nsIDOMSVGStringList systemLanguage; */
+NS_IMETHODIMP
+DOMSVGTests::GetSystemLanguage(nsIDOMSVGStringList * *aSystemLanguage)
+{
+  *aSystemLanguage = SystemLanguage().get();
+  return NS_OK;
+}
+
 already_AddRefed<nsIDOMSVGStringList>
 DOMSVGTests::SystemLanguage()
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
   return DOMSVGStringList::GetDOMWrapper(
            &mStringListAttributes[LANGUAGE], element, true, LANGUAGE).get();
+}
+
+/* boolean hasExtension (in DOMString extension); */
+NS_IMETHODIMP
+DOMSVGTests::HasExtension(const nsAString & extension, bool *_retval)
+{
+  *_retval = HasExtension(extension);
+  return NS_OK;
 }
 
 bool
