@@ -184,6 +184,7 @@ webidl_files = \
   XMLHttpRequestUpload.webidl \
   XMLSerializer.webidl \
   XPathEvaluator.webidl \
+  XULElement.webidl \
   $(NULL)
 
 ifdef MOZ_WEBGL
