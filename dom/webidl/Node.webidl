@@ -82,7 +82,7 @@ interface Node : EventTarget {
   readonly attribute NamedNodeMap? attributes;
   // If we move namespaceURI, prefix and localName to Element they should return
   // a non-nullable type.
-  [Throws, Constant]
+  [Constant]
   readonly attribute DOMString? namespaceURI;
   [Constant]
   readonly attribute DOMString? prefix;
