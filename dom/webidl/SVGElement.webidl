@@ -34,20 +34,6 @@ interface SVGElement : Element {
   readonly attribute SVGSVGElement? ownerSVGElement;
   readonly attribute SVGElement? viewportElement;
 
-  // event handler IDL attributes
-  [SetterThrows]
-           attribute EventHandler onblur;
-  // We think the spec is wrong here.
-  //         attribute OnErrorEventHandler onerror;
-  [SetterThrows]
-           attribute EventHandler onerror;
-  [SetterThrows]
-           attribute EventHandler onfocus;
-  [SetterThrows]
-           attribute EventHandler onload;
-  [SetterThrows]
-           attribute EventHandler onscroll;
-
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchstart;
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
@@ -70,3 +56,4 @@ interface SVGElement : Element {
 };
 
 SVGElement implements GlobalEventHandlers;
+SVGElement implements NodeEventHandlers;

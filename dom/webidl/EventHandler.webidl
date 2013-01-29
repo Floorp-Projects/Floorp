@@ -137,3 +137,19 @@ interface GlobalEventHandlers {
            [SetterThrows]
            attribute EventHandler onmozpointerlockerror;
 };
+
+[NoInterfaceObject]
+interface NodeEventHandlers {
+           [SetterThrows]
+           attribute EventHandler onblur;
+  // We think the spec is wrong here.
+  //         attribute OnErrorEventHandler onerror;
+           [SetterThrows]
+           attribute EventHandler onerror;
+           [SetterThrows]
+           attribute EventHandler onfocus;
+           [SetterThrows]
+           attribute EventHandler onload;
+           [SetterThrows]
+           attribute EventHandler onscroll;
+};
