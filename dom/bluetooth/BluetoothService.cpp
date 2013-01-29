@@ -726,7 +726,6 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
 void
 BluetoothService::Notify(const BluetoothSignal& aData)
 {
-  InfallibleTArray<BluetoothNamedValue> arr(aData.value().get_ArrayOfBluetoothNamedValue());
   nsString type;
 
   JSContext* cx = nsContentUtils::GetSafeJSContext();
@@ -740,29 +739,34 @@ BluetoothService::Notify(const BluetoothSignal& aData)
     return;
   }
 
-  bool ok = SetJsObject(cx, obj, arr);
-  if (!ok) {
+  if (!SetJsObject(cx, aData.value(), obj)) {
     NS_WARNING("Failed to set properties of system message!");
     return;
   }
 
   if (aData.name().EqualsLiteral("RequestConfirmation")) {
-    NS_ASSERTION(arr.Length() == 3, "RequestConfirmation: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
+      "RequestConfirmation: Wrong length of parameters");
     type.AssignLiteral("bluetooth-requestconfirmation");
   } else if (aData.name().EqualsLiteral("RequestPinCode")) {
-    NS_ASSERTION(arr.Length() == 2, "RequestPinCode: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+      "RequestPinCode: Wrong length of parameters");
     type.AssignLiteral("bluetooth-requestpincode");
   } else if (aData.name().EqualsLiteral("RequestPasskey")) {
-    NS_ASSERTION(arr.Length() == 2, "RequestPinCode: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+      "RequestPinCode: Wrong length of parameters");
     type.AssignLiteral("bluetooth-requestpasskey");
   } else if (aData.name().EqualsLiteral("Authorize")) {
-    NS_ASSERTION(arr.Length() == 2, "Authorize: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+      "Authorize: Wrong length of parameters");
     type.AssignLiteral("bluetooth-authorize");
   } else if (aData.name().EqualsLiteral("Cancel")) {
-    NS_ASSERTION(arr.Length() == 0, "Cancel: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 0,
+      "Cancel: Wrong length of parameters");
     type.AssignLiteral("bluetooth-cancel");
   } else if (aData.name().EqualsLiteral("PairedStatusChanged")) {
-    NS_ASSERTION(arr.Length() == 1, "PairedStatusChagned: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 1,
+      "PairedStatusChagned: Wrong length of parameters");
     type.AssignLiteral("bluetooth-pairedstatuschanged");
   } else {
 #ifdef DEBUG
