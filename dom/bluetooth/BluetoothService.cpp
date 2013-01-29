@@ -314,8 +314,9 @@ BluetoothService::Cleanup()
 }
 
 void
-BluetoothService::RegisterBluetoothSignalHandler(const nsAString& aNodeName,
-                                                 BluetoothSignalObserver* aHandler)
+BluetoothService::RegisterBluetoothSignalHandler(
+                                              const nsAString& aNodeName,
+                                              BluetoothSignalObserver* aHandler)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aHandler);
@@ -331,8 +332,9 @@ BluetoothService::RegisterBluetoothSignalHandler(const nsAString& aNodeName,
 }
 
 void
-BluetoothService::UnregisterBluetoothSignalHandler(const nsAString& aNodeName,
-                                                   BluetoothSignalObserver* aHandler)
+BluetoothService::UnregisterBluetoothSignalHandler(
+                                              const nsAString& aNodeName,
+                                              BluetoothSignalObserver* aHandler)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aHandler);
