@@ -16,7 +16,6 @@
 
 class nsISMILAnimationElement;
 class nsSMILValue;
-class nsSVGOrientType;
 
 namespace mozilla {
 
@@ -28,6 +27,7 @@ static const unsigned short SVG_ANGLETYPE_RAD         = 3;
 static const unsigned short SVG_ANGLETYPE_GRAD        = 4;
 
 namespace dom {
+class nsSVGOrientType;
 class SVGAngle;
 class SVGAnimatedAngle;
 }
@@ -100,7 +100,7 @@ public:
   struct SMILOrient MOZ_FINAL : public nsISMILAttr
   {
   public:
-    SMILOrient(nsSVGOrientType* aOrientType,
+    SMILOrient(mozilla::dom::nsSVGOrientType* aOrientType,
                nsSVGAngle* aAngle,
                nsSVGElement* aSVGElement)
       : mOrientType(aOrientType)
@@ -111,7 +111,7 @@ public:
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGOrientType* mOrientType;
+    mozilla::dom::nsSVGOrientType* mOrientType;
     nsSVGAngle* mAngle;
     nsSVGElement* mSVGElement;
 
