@@ -128,3 +128,10 @@ class RecursiveMakeBackend(BuildBackend):
             fh.write('TOOL_DIRS += %s\n' % ' '.join(obj.test_tool_dirs))
             fh.write('endif\n')
 
+        if len(obj.external_make_dirs):
+            fh.write('DIRS += %s\n' % ' '.join(obj.external_make_dirs))
+
+        if len(obj.parallel_external_make_dirs):
+            fh.write('PARALLEL_DIRS += %s\n' %
+                ' '.join(obj.parallel_external_make_dirs))
+
