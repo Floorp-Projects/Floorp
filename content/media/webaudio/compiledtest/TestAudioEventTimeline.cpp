@@ -70,6 +70,12 @@ public:
     return mRv;
   }
 
+  ErrorResultMock& operator=(nsresult aRv)
+  {
+    mRv = aRv;
+    return *this;
+  }
+
 private:
   nsresult mRv;
 };
@@ -153,6 +159,8 @@ void TestInvalidEvents()
   timeline.ExponentialRampToValueAtTime(Infinity, 0.3, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
   timeline.ExponentialRampToValueAtTime(-Infinity, 0.4, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.ExponentialRampToValueAtTime(0, 0.5, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
   timeline.SetTargetAtTime(NaN, 0.4, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
@@ -316,6 +324,32 @@ void TestSetTargetZeroTimeConstant()
   is(timeline.GetValueAtTime(10.f), 20.f, "Should get the correct value with timeConstant == 0");
 }
 
+void TestExponentialInvalidPreviousZeroValue()
+{
+  Timeline timeline(0.f);
+
+  ErrorResultMock rv;
+
+  timeline.ExponentialRampToValueAtTime(1.f, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValue(1.f);
+  rv = NS_OK;
+  timeline.ExponentialRampToValueAtTime(1.f, 1.0, rv);
+  is(rv, NS_OK, "Should succeed this time");
+  timeline.CancelScheduledValues(0.0);
+  is(timeline.GetEventCount(), 0u, "Should have no events scheduled");
+  rv = NS_OK;
+  timeline.SetValueAtTime(0.f, 0.5, rv);
+  is(rv, NS_OK, "Should succeed");
+  timeline.ExponentialRampToValueAtTime(1.f, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.CancelScheduledValues(0.0);
+  is(timeline.GetEventCount(), 0u, "Should have no events scheduled");
+  rv = NS_OK;
+  timeline.ExponentialRampToValueAtTime(1.f, 1.0, rv);
+  is(rv, NS_OK, "Should succeed this time");
+}
+
 int main()
 {
   ScopedXPCOM xpcom("TestAudioEventTimeline");
@@ -337,6 +371,7 @@ int main()
   TestLinearRampAtSameTime();
   TestExponentialRampAtSameTime();
   TestSetTargetZeroTimeConstant();
+  TestExponentialInvalidPreviousZeroValue();
 
   return gFailCount > 0;
 }
