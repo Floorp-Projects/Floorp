@@ -3075,6 +3075,24 @@ let RIL = {
         this.operator.shortName !== shortName ||
         thisTuple !== networkTuple) {
 
+      this.operator.mcc = 0;
+      this.operator.mnc = 0;
+
+      if (networkTuple) {
+        try {
+          this._processNetworkTuple(networkTuple, this.operator);
+        } catch (e) {
+          debug("Error processing operator tuple: " + e);
+        }
+      } else {
+        // According to ril.h, the operator fields will be NULL when the operator
+        // is not currently registered. We can avoid trying to parse the numeric
+        // tuple in that case.
+        if (DEBUG) {
+          debug("Operator is currently unregistered");
+        }
+      }
+
       let networkName = this.updateNetworkName();
       if (networkName) {
         this.operator.longName = networkName.fullName;
@@ -3084,23 +3102,6 @@ let RIL = {
         this.operator.shortName = shortName;
       }
 
-      this.operator.mcc = 0;
-      this.operator.mnc = 0;
-
-      // According to ril.h, the operator fields will be NULL when the operator
-      // is not currently registered. We can avoid trying to parse the numeric
-      // tuple in that case.
-      if (DEBUG && !longName) {
-        debug("Operator is currently unregistered");
-      }
-
-      if (networkTuple) {
-        try {
-          this._processNetworkTuple(networkTuple, this.operator);
-        } catch (e) {
-          debug("Error processing operator tuple: " + e);
-        }
-      }
       if (ICCUtilsHelper.updateDisplayCondition()) {
         ICCUtilsHelper.handleICCInfoChange();
       }
