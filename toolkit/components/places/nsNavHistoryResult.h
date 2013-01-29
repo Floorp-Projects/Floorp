@@ -416,39 +416,6 @@ public:
 };
 
 
-// nsNavHistoryFullVisitResultNode
-
-#define NS_IMPLEMENT_FULLVISITRESULT \
-  NS_IMPLEMENT_VISITRESULT \
-  NS_IMETHOD GetVisitId(int64_t *aVisitId) \
-    { *aVisitId = mVisitId; return NS_OK; } \
-  NS_IMETHOD GetReferringVisitId(int64_t *aReferringVisitId) \
-    { *aReferringVisitId = mReferringVisitId; return NS_OK; } \
-  NS_IMETHOD GetTransitionType(int32_t *aTransitionType) \
-    { *aTransitionType = mTransitionType; return NS_OK; }
-
-class nsNavHistoryFullVisitResultNode : public nsNavHistoryVisitResultNode,
-                                        public nsINavHistoryFullVisitResultNode
-{
-public:
-  nsNavHistoryFullVisitResultNode(
-    const nsACString& aURI, const nsACString& aTitle, uint32_t aAccessCount,
-    PRTime aTime, const nsACString& aIconURI, int64_t aSession,
-    int64_t aVisitId, int64_t aReferringVisitId, int32_t aTransitionType);
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_COMMON_RESULTNODE_TO_BASE
-  NS_IMETHOD GetType(uint32_t* type)
-    { *type = nsNavHistoryResultNode::RESULT_TYPE_FULL_VISIT; return NS_OK; }
-  NS_IMPLEMENT_FULLVISITRESULT
-
-public:
-  int64_t mVisitId;
-  int64_t mReferringVisitId;
-  int32_t mTransitionType;
-};
-
-
 // nsNavHistoryContainerResultNode
 //
 //    This is the base class for all nodes that can have children. It is
