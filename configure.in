@@ -8516,6 +8516,12 @@ if test -n "$MOZ_PER_WINDOW_PRIVATE_BROWSING" ; then
     AC_DEFINE(MOZ_PER_WINDOW_PRIVATE_BROWSING)
 fi
 
+AC_SUBST(MOZ_JSDOWNLOADS)
+
+if test -n "$MOZ_JSDOWNLOADS" ; then
+    AC_DEFINE(MOZ_JSDOWNLOADS)
+fi
+
 dnl ========================================================
 dnl = Mac bundle name prefix
 dnl ========================================================
