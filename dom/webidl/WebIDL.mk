@@ -40,6 +40,7 @@ webidl_files = \
   DOMStringMap.webidl \
   DOMTokenList.webidl \
   DOMTransaction.webidl \
+  DummyBinding.webidl \
   DynamicsCompressorNode.webidl \
   Element.webidl \
   EventHandler.webidl \
