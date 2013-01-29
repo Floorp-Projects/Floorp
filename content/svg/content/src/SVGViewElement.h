@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGViewElement_h
 
 #include "nsIDOMSVGViewElement.h"
-#include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGElement.h"
 #include "nsSVGEnum.h"
 #include "nsSVGViewBox.h"
@@ -32,8 +31,7 @@ namespace dom {
 class SVGSVGElement;
 
 class SVGViewElement : public SVGViewElementBase,
-                       public nsIDOMSVGViewElement,
-                       public nsIDOMSVGFitToViewBox
+                       public nsIDOMSVGViewElement
 {
 protected:
   friend class mozilla::SVGFragmentIdentifier;
@@ -49,7 +47,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGVIEWELEMENT
-  NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
