@@ -66,7 +66,6 @@ function SI_CheckProperty()
   let cssLogic = computedView.cssLogic;
   let propertyInfo = cssLogic.getPropertyInfo("color");
   ok(propertyInfo.matchedRuleCount > 0, "color property has matching rules");
-  //ok(propertyInfo.unmatchedRuleCount > 0, "color property has unmatched rules");
 }
 
 function finishUp()
