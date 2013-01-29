@@ -3423,25 +3423,6 @@ private:
 };
 
 /***************************************************************************/
-
-// readable string conversions, static methods only
-class XPCStringConvert
-{
-public:
-
-    // If the string shares the readable's buffer, that buffer will
-    // get assigned to *sharedBuffer.  Otherwise null will be
-    // assigned.
-    static jsval ReadableToJSVal(JSContext *cx, const nsAString &readable,
-                                 nsStringBuffer** sharedBuffer);
-
-    static void ClearCache();
-
-private:
-    XPCStringConvert();         // not implemented
-};
-
-/***************************************************************************/
 // code for throwing exceptions into JS
 
 class XPCThrower
