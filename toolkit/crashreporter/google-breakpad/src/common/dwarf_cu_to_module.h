@@ -50,7 +50,6 @@
 
 namespace google_breakpad {
 
-using dwarf2reader::AttributeList;
 using dwarf2reader::DwarfAttribute;
 using dwarf2reader::DwarfForm;
 using dwarf2reader::DwarfLanguage;
@@ -93,21 +92,27 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
     FilePrivate *file_private;
   };
 
-  // An abstract base class for functors that handle DWARF line data
+  // An abstract base class for handlers that handle DWARF line data
   // for DwarfCUToModule. DwarfCUToModule could certainly just use
   // dwarf2reader::LineInfo itself directly, but decoupling things
   // this way makes unit testing a little easier.
-  class LineToModuleFunctor {
+  class LineToModuleHandler {
    public:
-    LineToModuleFunctor() { }
-    virtual ~LineToModuleFunctor() { }
+    LineToModuleHandler() { }
+    virtual ~LineToModuleHandler() { }
+
+    // Called at the beginning of a new compilation unit, prior to calling
+    // ReadProgram(). compilation_dir will indicate the path that the
+    // current compilation unit was compiled in, consistent with the
+    // DW_AT_comp_dir DIE.
+    virtual void StartCompilationUnit(const string& compilation_dir) = 0;
 
     // Populate MODULE and LINES with source file names and code/line
     // mappings, given a pointer to some DWARF line number data
     // PROGRAM, and an overestimate of its size. Add no zero-length
     // lines to LINES.
-    virtual void operator()(const char *program, uint64 length,
-                            Module *module, vector<Module::Line> *lines) = 0;
+    virtual void ReadProgram(const char *program, uint64 length,
+                             Module *module, vector<Module::Line> *lines) = 0;
   };
 
   // The interface DwarfCUToModule uses to report warnings. The member
@@ -187,7 +192,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
   // unit's line number data. Use REPORTER to report problems with the
   // data we find.
   DwarfCUToModule(FileContext *file_context,
-                  LineToModuleFunctor *line_reader,
+                  LineToModuleHandler *line_reader,
                   WarningReporter *reporter);
   ~DwarfCUToModule();
 
@@ -201,8 +206,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
                               enum DwarfForm form,
                               const string &data);
   bool EndAttributes();
-  DIEHandler *FindChildHandler(uint64 offset, enum DwarfTag tag,
-                               const AttributeList &attrs);
+  DIEHandler *FindChildHandler(uint64 offset, enum DwarfTag tag);
 
   // Assign all our source Lines to the Functions that cover their
   // addresses, and then add them to module_.
@@ -211,8 +215,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
   bool StartCompilationUnit(uint64 offset, uint8 address_size,
                             uint8 offset_size, uint64 cu_length,
                             uint8 dwarf_version);
-  bool StartRootDIE(uint64 offset, enum DwarfTag tag,
-                    const AttributeList& attrs);
+  bool StartRootDIE(uint64 offset, enum DwarfTag tag);
 
  private:
 
@@ -250,8 +253,8 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
   // owned by this DwarfCUToModule: the constructor sets them, and the
   // destructor deletes them.
 
-  // The functor to use to handle line number data.
-  LineToModuleFunctor *line_reader_;
+  // The handler to use to handle line number data.
+  LineToModuleHandler *line_reader_;
 
   // This compilation unit's context.
   CUContext *cu_context_;

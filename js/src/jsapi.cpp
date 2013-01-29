@@ -45,7 +45,6 @@
 #include "jsopcode.h"
 #include "jsprobes.h"
 #include "jsproxy.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "prmjtime.h"
@@ -68,6 +67,7 @@
 #include "js/MemoryMetrics.h"
 #include "vm/Debugger.h"
 #include "vm/NumericConversions.h"
+#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -76,12 +76,12 @@
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/ObjectImpl-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -348,7 +348,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             break;
           case 'S':
           case 'W':
-            str = ToString(cx, *sp);
+            str = ToString<CanGC>(cx, *sp);
             if (!str)
                 return JS_FALSE;
             *sp = STRING_TO_JSVAL(str);
@@ -416,7 +416,7 @@ JS_ConvertValue(JSContext *cx, jsval valueArg, JSType type, jsval *vp)
         ok = (obj != NULL);
         break;
       case JSTYPE_STRING:
-        str = ToString(cx, value);
+        str = ToString<CanGC>(cx, value);
         ok = (str != NULL);
         if (ok)
             *vp = STRING_TO_JSVAL(str);
@@ -481,7 +481,7 @@ JS_ValueToString(JSContext *cx, jsval valueArg)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
-    return ToString(cx, value);
+    return ToString<CanGC>(cx, value);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -802,12 +802,12 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcLastMarkSlice(false),
     gcSweepOnBackgroundThread(false),
     gcFoundBlackGrayEdges(false),
-    gcSweepingCompartments(NULL),
-    gcCompartmentGroupIndex(0),
-    gcCompartmentGroups(NULL),
-    gcCurrentCompartmentGroup(NULL),
+    gcSweepingZones(NULL),
+    gcZoneGroupIndex(0),
+    gcZoneGroups(NULL),
+    gcCurrentZoneGroup(NULL),
     gcSweepPhase(0),
-    gcSweepCompartment(NULL),
+    gcSweepZone(NULL),
     gcSweepKindIndex(0),
     gcAbortSweepAfterCurrentGroup(false),
     gcArenasAllocatedDuringSweep(NULL),
@@ -933,7 +933,7 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
     }
 
-    atomsCompartment->isSystemCompartment = true;
+    atomsCompartment->isSystem = true;
     atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
 
     if (!InitAtoms(this))
@@ -3134,7 +3134,7 @@ JS_ValueToId(JSContext *cx, jsval valueArg, jsid *idp)
     assertSameCompartment(cx, value);
 
     RootedId id(cx);
-    if (!ValueToId(cx, value, &id))
+    if (!ValueToId<CanGC>(cx, value, &id))
         return false;
 
     *idp = id;
@@ -6200,7 +6200,7 @@ JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
     CHECK_REQUEST(cx);
     Rooted<JSString*> lstr(cx, left);
     Rooted<JSString*> rstr(cx, right);
-    return js_ConcatStrings(cx, lstr, rstr);
+    return ConcatStrings<CanGC>(cx, lstr, rstr);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -7060,6 +7060,20 @@ JS_IndexToId(JSContext *cx, uint32_t index, jsid *idp)
     if (!IndexToId(cx, index, &id))
         return false;
     *idp = id;
+    return true;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, jsid *idp)
+{
+    RootedAtom atom(cx, AtomizeChars<CanGC>(cx, chars.start().get(), chars.length()));
+    if (!atom)
+        return false;
+#ifdef DEBUG
+    uint32_t dummy;
+    MOZ_ASSERT(!atom->isIndex(&dummy), "API misuse: |chars| must not encode an index");
+#endif
+    *idp = AtomToId(atom);
     return true;
 }
 

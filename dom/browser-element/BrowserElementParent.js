@@ -214,6 +214,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   addMessageListener("error", this._fireEventFromMsg);
   addMessageListener("scroll", this._fireEventFromMsg);
   addMessageListener("firstpaint", this._fireEventFromMsg);
+  addMessageListener("documentfirstpaint", this._fireEventFromMsg);
   addMessageListener("nextpaint", this._recvNextPaint);
   addMessageListener("keyevent", this._fireKeyEvent);
   addMessageListener("showmodalprompt", this._handleShowModalPrompt);

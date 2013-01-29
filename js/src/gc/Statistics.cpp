@@ -367,6 +367,7 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     ss.appendDecimal("Total Time", "ms", t(total));
     ss.appendNumber("Compartments Collected", "%d", "", collectedCount);
     ss.appendNumber("Total Compartments", "%d", "", compartmentCount);
+    ss.appendNumber("Total Zones", "%d", "", zoneCount);
     ss.appendNumber("MMU (20ms)", "%d", "%", int(mmu20 * 100));
     ss.appendNumber("MMU (50ms)", "%d", "%", int(mmu50 * 100));
     ss.appendDecimal("SCC Sweep Total", "ms", t(sccTotal));
@@ -447,6 +448,7 @@ Statistics::Statistics(JSRuntime *rt)
     fullFormat(false),
     gcDepth(0),
     collectedCount(0),
+    zoneCount(0),
     compartmentCount(0),
     nonincrementalReason(NULL),
     preBytes(0),
@@ -547,7 +549,7 @@ Statistics::endGC()
         int64_t sccTotal, sccLongest;
         sccDurations(&sccTotal, &sccLongest);
 
-        (*cb)(JS_TELEMETRY_GC_IS_COMPARTMENTAL, collectedCount == compartmentCount ? 0 : 1);
+        (*cb)(JS_TELEMETRY_GC_IS_COMPARTMENTAL, collectedCount == zoneCount ? 0 : 1);
         (*cb)(JS_TELEMETRY_GC_MS, t(total));
         (*cb)(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
         (*cb)(JS_TELEMETRY_GC_MARK_MS, t(phaseTimes[PHASE_MARK]));
@@ -568,9 +570,11 @@ Statistics::endGC()
 }
 
 void
-Statistics::beginSlice(int collectedCount, int compartmentCount, gcreason::Reason reason)
+Statistics::beginSlice(int collectedCount, int zoneCount, int compartmentCount,
+                       gcreason::Reason reason)
 {
     this->collectedCount = collectedCount;
+    this->zoneCount = zoneCount;
     this->compartmentCount = compartmentCount;
 
     bool first = runtime->gcIncrementalState == gc::NO_INCREMENTAL;
@@ -585,7 +589,7 @@ Statistics::beginSlice(int collectedCount, int compartmentCount, gcreason::Reaso
 
     // Slice callbacks should only fire for the outermost level
     if (++gcDepth == 1) {
-        bool wasFullGC = collectedCount == compartmentCount;
+        bool wasFullGC = collectedCount == zoneCount;
         if (GCSliceCallback cb = runtime->gcSliceCallback)
             (*cb)(runtime, first ? GC_CYCLE_BEGIN : GC_SLICE_BEGIN, GCDescription(!wasFullGC));
     }
@@ -608,7 +612,7 @@ Statistics::endSlice()
 
     // Slice callbacks should only fire for the outermost level
     if (--gcDepth == 0) {
-        bool wasFullGC = collectedCount == compartmentCount;
+        bool wasFullGC = collectedCount == zoneCount;
         if (GCSliceCallback cb = runtime->gcSliceCallback)
             (*cb)(runtime, last ? GC_CYCLE_END : GC_SLICE_END, GCDescription(!wasFullGC));
     }

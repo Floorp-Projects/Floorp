@@ -2,12 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function add_visit(aURI, aReferrer) {
-  return PlacesUtils.history.addVisit(aURI, Date.now() * 1000, aReferrer,
-                                      PlacesUtils.history.TRANSITION_TYPED,
-                                      false, 0);
-}
-
 function add_bookmark(aURI) {
   return PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                               aURI, PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -38,13 +32,14 @@ function onLibraryReady() {
   ContentTree = gLibrary.ContentTree;
   ok(ContentTree, "ContentTree is in scope");
 
-  tests.makeHistVisit();
-  tests.makeTag();
-  tests.focusTag();
-  waitForClipboard(function(aData) !!aData,
-                   tests.copyHistNode,
-                   onClipboardReady,
-                   PlacesUtils.TYPE_X_MOZ_PLACE);
+  tests.makeHistVisit(function() {
+    tests.makeTag();
+    tests.focusTag();
+    waitForClipboard(function(aData) !!aData,
+                     tests.copyHistNode,
+                     onClipboardReady,
+                     PlacesUtils.TYPE_X_MOZ_PLACE);
+  });
 }
 
 function onClipboardReady() {
@@ -67,13 +62,17 @@ function onClipboardReady() {
 
 let tests = {
 
-  makeHistVisit: function() {
+  makeHistVisit: function(aCallback) {
     // need to add a history object
     let testURI1 = NetUtil.newURI(MOZURISPEC);
     isnot(testURI1, null, "testURI is not null");
-    let visitId = add_visit(testURI1);
-    ok(visitId > 0, "A visit was added to the history");
-    ok(PlacesUtils.ghistory2.isVisited(testURI1), MOZURISPEC + " is a visited url.");
+    addVisits(
+      {uri: testURI1, transition: PlacesUtils.history.TRANSITION_TYPED},
+      window,
+      function() {
+        ok(PlacesUtils.ghistory2.isVisited(testURI1), MOZURISPEC + " is a visited url.");
+        aCallback();
+      });
   },
 
   makeTag: function() {

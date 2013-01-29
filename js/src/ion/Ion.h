@@ -252,9 +252,9 @@ bool SetIonContext(IonContext *ctx);
 
 bool CanIonCompileScript(JSContext *cx, UnrootedScript script);
 
-MethodStatus CanEnterAtBranch(JSContext *cx, HandleScript script,
+MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
                               AbstractFramePtr fp, jsbytecode *pc, bool isConstructing);
-MethodStatus CanEnter(JSContext *cx, HandleScript script, AbstractFramePtr fp,
+MethodStatus CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp,
                       bool isConstructing, bool newType);
 MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs);
 

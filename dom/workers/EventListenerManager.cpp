@@ -8,6 +8,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/Vector.h"
+#include "js/GCAPI.h"
 #include "mozilla/Util.h"
 #include "nsAutoJSValHolder.h"
 
@@ -77,8 +78,8 @@ struct ListenerData : PRCList
   static void
   Remove(JSContext* aCx, ListenerData* aListenerData)
   {
-    if (js::IsIncrementalBarrierNeeded(aCx)) {
-      js:: IncrementalReferenceBarrier(aListenerData->mListener);
+    if (JS::IsIncrementalBarrierNeeded(aCx)) {
+      JS:: IncrementalReferenceBarrier(aListenerData->mListener);
   }
 
     PR_REMOVE_LINK(aListenerData);

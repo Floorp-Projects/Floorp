@@ -18,7 +18,13 @@ interface TestRenamedInterface {
 
 callback interface TestCallbackInterface {
   readonly attribute long foo;
+  attribute DOMString bar;
   void doSomething();
+  long doSomethingElse(DOMString arg, TestInterface otherArg);
+};
+
+callback interface TestSingleOperationCallbackInterface {
+  TestInterface doSomething(short arg, sequence<double> anotherArg);
 };
 
 enum TestEnum {
@@ -427,6 +433,7 @@ interface TestInterface {
   // Static methods and attributes
   static attribute boolean staticAttribute;
   static void staticMethod(boolean arg);
+  static void staticMethodWithContext(any arg);
 
   // Overload resolution tests
   //void overload1(DOMString... strs);

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=715156
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 715156</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+
+  /** Test for Bug 715156 **/
+
+  function runTests() {
+    var doc = document.getElementById("testFrame").contentDocument;
+    var options = doc.createElement("select").options;
+    ok(Components.utils.isXrayWrapper(options), "should be an Xray wrapper");
+    var option = doc.createElement("option");
+    options[4] = option;
+    is(options.length, 5, "setting an indexed property through an Xray wrapper should work")
+    is(options[4], option, "setting an indexed property through an Xray wrapper should work")
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(runTests);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=715156">Mozilla Bug 715156</a>
+<p id="display"></p>
+<iframe id="testFrame"></iframe>
+<pre id="test">
+</pre>
+</body>
+</html>

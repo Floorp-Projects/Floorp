@@ -96,7 +96,7 @@ TEST(LinuxCoreDumperTest, VerifyDumpWithMultipleThreads) {
 
   // LinuxCoreDumper cannot determine the crash address and thus it always
   // sets the crash address to 0.
-  EXPECT_EQ(0, dumper.crash_address());
+  EXPECT_EQ(0U, dumper.crash_address());
   EXPECT_EQ(kCrashSignal, dumper.crash_signal());
   EXPECT_EQ(crash_generator.GetThreadId(kCrashThread),
             dumper.crash_thread());
@@ -105,6 +105,9 @@ TEST(LinuxCoreDumperTest, VerifyDumpWithMultipleThreads) {
   for (unsigned i = 0; i < kNumOfThreads; ++i) {
     ThreadInfo info;
     EXPECT_TRUE(dumper.GetThreadInfoByIndex(i, &info));
+    const void* stack;
+    size_t stack_len;
+    EXPECT_TRUE(dumper.GetStackInfo(&stack, &stack_len, info.stack_pointer));
     EXPECT_EQ(getpid(), info.ppid);
   }
 }

@@ -446,9 +446,11 @@ js::IndexToIdSlow<CanGC>(JSContext *cx, uint32_t index, MutableHandleId idp);
 template bool
 js::IndexToIdSlow<NoGC>(JSContext *cx, uint32_t index, FakeMutableHandle<jsid> idp);
 
+template <AllowGC allowGC>
 bool
 js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
-                          MutableHandleId idp, MutableHandleValue vp)
+                          typename MaybeRooted<jsid, allowGC>::MutableHandleType idp,
+                          typename MaybeRooted<Value, allowGC>::MutableHandleType vp)
 {
 #if JS_HAS_XML_SUPPORT
     if (idval.isObject()) {
@@ -459,6 +461,9 @@ js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
             vp.set(idval);
             return true;
         }
+
+        if (!allowGC)
+            return false;
 
         if (js_GetLocalNameFromFunctionQName(idobj, idp.address(), cx)) {
             vp.set(IdToValue(idp));
@@ -473,7 +478,7 @@ js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
     }
 #endif
 
-    JSAtom *atom = ToAtom<CanGC>(cx, idval);
+    JSAtom *atom = ToAtom<allowGC>(cx, idval);
     if (!atom)
         return false;
 
@@ -481,6 +486,14 @@ js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
     vp.setString(atom);
     return true;
 }
+
+template bool
+js::InternNonIntElementId<CanGC>(JSContext *cx, JSObject *obj, const Value &idval,
+                                 MutableHandleId idp, MutableHandleValue vp);
+
+template bool
+js::InternNonIntElementId<NoGC>(JSContext *cx, JSObject *obj, const Value &idval,
+                                FakeMutableHandle<jsid> idp, FakeMutableHandle<Value> vp);
 
 template<XDRMode mode>
 bool

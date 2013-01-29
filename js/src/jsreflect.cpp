@@ -3395,7 +3395,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         return JS_FALSE;
     }
 
-    RootedString src(cx, ToString(cx, JS_ARGV(cx, vp)[0]));
+    RootedString src(cx, ToString<CanGC>(cx, JS_ARGV(cx, vp)[0]));
     if (!src)
         return JS_FALSE;
 
@@ -3434,7 +3434,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
                 return JS_FALSE;
 
             if (!prop.isNullOrUndefined()) {
-                RootedString str(cx, ToString(cx, prop));
+                RootedString str(cx, ToString<CanGC>(cx, prop));
                 if (!str)
                     return JS_FALSE;
 

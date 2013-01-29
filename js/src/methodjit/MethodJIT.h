@@ -218,7 +218,7 @@ struct VMFrame
     inline unsigned chunkIndex();
 
     /* Get the inner script/PC in case of inlining. */
-    inline UnrootedScript script();
+    inline JSScript *script();
     inline jsbytecode *pc();
 
 #if defined(JS_CPU_SPARC)
@@ -914,7 +914,7 @@ enum CompileRequest
 };
 
 CompileStatus
-CanMethodJIT(JSContext *cx, HandleScript script, jsbytecode *pc,
+CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
              bool construct, CompileRequest request, StackFrame *sp);
 
 inline void
@@ -1064,10 +1064,9 @@ VMFrame::chunkIndex()
     return jit()->chunkIndex(regs.pc);
 }
 
-inline UnrootedScript
+inline JSScript *
 VMFrame::script()
 {
-    AutoAssertNoGC nogc;
     if (regs.inlined())
         return chunk()->inlineFrames()[regs.inlined()->inlineIndex].fun->nonLazyScript();
     return fp()->script();
@@ -1087,7 +1086,7 @@ VMFrame::pc()
 inline void *
 JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
 {
-    js::mjit::JITScript *jit = getJIT(constructing, compartment()->compileBarriers());
+    js::mjit::JITScript *jit = getJIT(constructing, zone()->compileBarriers());
     if (!jit)
         return NULL;
     js::mjit::JITChunk *chunk = jit->chunk(pc);

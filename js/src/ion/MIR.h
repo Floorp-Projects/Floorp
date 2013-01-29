@@ -3852,10 +3852,13 @@ class MStoreElement
     public MStoreElementCommon,
     public SingleObjectPolicy
 {
-    MStoreElement(MDefinition *elements, MDefinition *index, MDefinition *value) {
+    bool needsHoleCheck_;
+
+    MStoreElement(MDefinition *elements, MDefinition *index, MDefinition *value, bool needsHoleCheck) {
         initOperand(0, elements);
         initOperand(1, index);
         initOperand(2, value);
+        needsHoleCheck_ = needsHoleCheck;
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
     }
@@ -3863,8 +3866,9 @@ class MStoreElement
   public:
     INSTRUCTION_HEADER(StoreElement)
 
-    static MStoreElement *New(MDefinition *elements, MDefinition *index, MDefinition *value) {
-        return new MStoreElement(elements, index, value);
+    static MStoreElement *New(MDefinition *elements, MDefinition *index, MDefinition *value,
+                              bool needsHoleCheck) {
+        return new MStoreElement(elements, index, value, needsHoleCheck);
     }
     MDefinition *elements() const {
         return getOperand(0);
@@ -3880,6 +3884,12 @@ class MStoreElement
     }
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::Element);
+    }
+    bool needsHoleCheck() const {
+        return needsHoleCheck_;
+    }
+    bool fallible() const {
+        return needsHoleCheck();
     }
 };
 

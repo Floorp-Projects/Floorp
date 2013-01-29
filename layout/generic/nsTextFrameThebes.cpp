@@ -2030,8 +2030,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   gfxTextRun* textRun;
   gfxTextRunFactory::Parameters params =
       { mContext, finalUserData, &skipChars,
-        textBreakPointsAfterTransform.Elements(), textBreakPointsAfterTransform.Length(),
-        firstFrame->PresContext()->AppUnitsPerDevPixel() };
+        textBreakPointsAfterTransform.Elements(),
+        textBreakPointsAfterTransform.Length(),
+        int32_t(firstFrame->PresContext()->AppUnitsPerDevPixel())};
 
   if (mDoubleByteText) {
     const PRUnichar* text = static_cast<const PRUnichar*>(textPtr);

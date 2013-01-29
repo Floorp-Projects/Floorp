@@ -24,20 +24,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-/******************************************************************/
-/* nsTextStore                                                    */
-/******************************************************************/
-
-ITfThreadMgr*           nsTextStore::sTsfThreadMgr   = NULL;
-ITfDisplayAttributeMgr* nsTextStore::sDisplayAttrMgr = NULL;
-ITfCategoryMgr*         nsTextStore::sCategoryMgr    = NULL;
-DWORD         nsTextStore::sTsfClientId  = 0;
-nsTextStore*  nsTextStore::sTsfTextStore = NULL;
-
-UINT nsTextStore::sFlushTIPInputMessage  = 0;
-
 #ifdef PR_LOGGING
-
 /**
  * TSF related code should log its behavior even on release build especially
  * in the interface methods.
@@ -57,11 +44,157 @@ UINT nsTextStore::sFlushTIPInputMessage  = 0;
  */
 
 PRLogModuleInfo* sTextStoreLog = nullptr;
+#endif // #ifdef PR_LOGGING
+
+#define IS_SEARCH static_cast<InputScope>(50)
+
+/******************************************************************/
+/* InputScopeImpl                                                 */
+/******************************************************************/
+
+// InputScope property GUID
+static const GUID GUID_PROP_INPUTSCOPE =
+  { 0x1713dd5a, 0x68e7, 0x4a5b,
+    { 0x9a, 0xf6, 0x59, 0x2a, 0x59, 0x5c, 0x77, 0x8d } };
+
+class InputScopeImpl MOZ_FINAL : public ITfInputScope
+{
+public:
+  InputScopeImpl(const nsTArray<InputScope>& aList) :
+    mRefCnt(1),
+    mInputScopes(aList)
+  {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+      ("TSF: 0x%p InputScopeImpl()", this));
+  }
+
+  STDMETHODIMP_(ULONG) AddRef(void) { return ++mRefCnt; }
+
+  STDMETHODIMP_(ULONG) Release(void)
+  {
+    --mRefCnt;
+    if (mRefCnt) {
+      return mRefCnt;
+    }
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+      ("TSF: 0x%p InputScopeImpl::Release() final", this));
+    delete this;
+    return 0;
+  }
+
+  STDMETHODIMP QueryInterface(REFIID riid, void** ppv)
+  {
+    *ppv=NULL;
+    if ( (IID_IUnknown == riid) || (IID_ITfInputScope == riid) ) {
+      *ppv = static_cast<ITfInputScope*>(this);
+    }
+    if (*ppv) {
+      AddRef();
+      return S_OK;
+    }
+    return E_NOINTERFACE;
+  }
+
+  STDMETHODIMP GetInputScopes(InputScope** pprgInputScopes, UINT* pcCount)
+  {
+    uint32_t count = (mInputScopes.IsEmpty() ? 1 : mInputScopes.Length());
+
+    InputScope* pScope = (InputScope*) CoTaskMemAlloc(sizeof(InputScope) * count);
+    NS_ENSURE_TRUE(pScope, E_OUTOFMEMORY);
+
+    if (mInputScopes.IsEmpty()) {
+      *pScope = IS_DEFAULT;
+      *pcCount = 1;
+      *pprgInputScopes = pScope;
+      return S_OK;
+    }
+
+    *pcCount = 0;
+
+    for (uint32_t idx = 0; idx < count; idx++) {
+      *(pScope + idx) = mInputScopes[idx];
+      (*pcCount)++;
+    }
+
+    *pprgInputScopes = pScope;
+    return S_OK;
+  }
+
+  STDMETHODIMP GetPhrase(BSTR **ppbstrPhrases, UINT *pcCount) { return E_NOTIMPL; }
+  STDMETHODIMP GetRegularExpression(BSTR *pbstrRegExp) { return E_NOTIMPL; }
+  STDMETHODIMP GetSRGS(BSTR *pbstrSRGS) { return E_NOTIMPL; }
+  STDMETHODIMP GetXML(BSTR *pbstrXML) { return E_NOTIMPL; }
+
+private:
+  DWORD mRefCnt;
+  nsTArray<InputScope> mInputScopes;
+};
+
+/******************************************************************/
+/* nsTextStore                                                    */
+/******************************************************************/
+
+ITfThreadMgr*           nsTextStore::sTsfThreadMgr   = NULL;
+ITfDisplayAttributeMgr* nsTextStore::sDisplayAttrMgr = NULL;
+ITfCategoryMgr*         nsTextStore::sCategoryMgr    = NULL;
+DWORD         nsTextStore::sTsfClientId  = 0;
+nsTextStore*  nsTextStore::sTsfTextStore = NULL;
+
+UINT nsTextStore::sFlushTIPInputMessage  = 0;
+
+#ifdef PR_LOGGING
 
 static const char*
 GetBoolName(bool aBool)
 {
   return aBool ? "true" : "false";
+}
+
+static void
+HandleSeparator(nsCString& aDesc)
+{
+  if (!aDesc.IsEmpty()) {
+    aDesc.AppendLiteral(" | ");
+  }
+}
+
+static const nsCString
+GetFindFlagName(DWORD aFindFlag)
+{
+  nsAutoCString description;
+  if (!aFindFlag) {
+    description.AppendLiteral("no flags (0)");
+    return description;
+  }
+  if (aFindFlag & TS_ATTR_FIND_BACKWARDS) {
+    description.AppendLiteral("TS_ATTR_FIND_BACKWARDS");
+  }
+  if (aFindFlag & TS_ATTR_FIND_WANT_OFFSET) {
+    HandleSeparator(description);
+    description.AppendLiteral("TS_ATTR_FIND_WANT_OFFSET");
+  }
+  if (aFindFlag & TS_ATTR_FIND_UPDATESTART) {
+    HandleSeparator(description);
+    description.AppendLiteral("TS_ATTR_FIND_UPDATESTART");
+  }
+  if (aFindFlag & TS_ATTR_FIND_WANT_VALUE) {
+    HandleSeparator(description);
+    description.AppendLiteral("TS_ATTR_FIND_WANT_VALUE");
+  }
+  if (aFindFlag & TS_ATTR_FIND_WANT_END) {
+    HandleSeparator(description);
+    description.AppendLiteral("TS_ATTR_FIND_WANT_END");
+  }
+  if (aFindFlag & TS_ATTR_FIND_HIDDEN) {
+    HandleSeparator(description);
+    description.AppendLiteral("TS_ATTR_FIND_HIDDEN");
+  }
+  if (description.IsEmpty()) {
+    description.AppendLiteral("Unknown (");
+    description.AppendInt(static_cast<uint32_t>(aFindFlag));
+    description.AppendLiteral(")");
+  }
+  return description;
 }
 
 static const char*
@@ -79,6 +212,21 @@ GetIMEEnabledName(IMEState::Enabled aIMEEnabled)
     default:
       return "Invalid";
   }
+}
+
+static nsCString
+GetCLSIDNameStr(REFCLSID aCLSID)
+{
+  LPOLESTR str = nullptr;
+  HRESULT hr = ::StringFromCLSID(aCLSID, &str);
+  if (FAILED(hr) || !str || !str[0]) {
+    return EmptyCString();
+  }
+
+  nsAutoCString result;
+  result = NS_ConvertUTF16toUTF8(str);
+  ::CoTaskMemFree(str);
+  return result;
 }
 
 static nsCString
@@ -178,27 +326,19 @@ GetSinkMaskNameStr(DWORD aSinkMask)
     description.AppendLiteral("TS_AS_TEXT_CHANGE");
   }
   if (aSinkMask & TS_AS_SEL_CHANGE) {
-    if (!description.IsEmpty()) {
-      description.AppendLiteral(" | ");
-    }
+    HandleSeparator(description);
     description.AppendLiteral("TS_AS_SEL_CHANGE");
   }
   if (aSinkMask & TS_AS_LAYOUT_CHANGE) {
-    if (!description.IsEmpty()) {
-      description.AppendLiteral(" | ");
-    }
+    HandleSeparator(description);
     description.AppendLiteral("TS_AS_LAYOUT_CHANGE");
   }
   if (aSinkMask & TS_AS_ATTR_CHANGE) {
-    if (!description.IsEmpty()) {
-      description.AppendLiteral(" | ");
-    }
+    HandleSeparator(description);
     description.AppendLiteral("TS_AS_ATTR_CHANGE");
   }
   if (aSinkMask & TS_AS_STATUS_CHANGE) {
-    if (!description.IsEmpty()) {
-      description.AppendLiteral(" | ");
-    }
+    HandleSeparator(description);
     description.AppendLiteral("TS_AS_STATUS_CHANGE");
   }
   if (description.IsEmpty()) {
@@ -348,6 +488,8 @@ nsTextStore::nsTextStore()
   mTextChange.acpStart = INT32_MAX;
   mTextChange.acpOldEnd = mTextChange.acpNewEnd = 0;
   mLastDispatchedTextEvent = nullptr;
+  mInputScopeDetected = false;
+  mInputScopeRequested = false;
 }
 
 nsTextStore::~nsTextStore()
@@ -1587,6 +1729,81 @@ nsTextStore::InsertEmbedded(DWORD dwFlags,
   return E_NOTIMPL;
 }
 
+void
+nsTextStore::SetInputScope(const nsString& aHTMLInputType)
+{
+  mInputScopes.Clear();
+  if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
+    return;
+  }
+  
+  // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html
+  if (aHTMLInputType.EqualsLiteral("url")) {
+    mInputScopes.AppendElement(IS_URL);
+  } else if (aHTMLInputType.EqualsLiteral("search")) {
+    mInputScopes.AppendElement(IS_SEARCH);
+  } else if (aHTMLInputType.EqualsLiteral("email")) {
+    mInputScopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
+  } else if (aHTMLInputType.EqualsLiteral("password")) {
+    mInputScopes.AppendElement(IS_PASSWORD);
+  } else if (aHTMLInputType.EqualsLiteral("datetime") ||
+             aHTMLInputType.EqualsLiteral("datetime-local")) {
+    mInputScopes.AppendElement(IS_DATE_FULLDATE);
+    mInputScopes.AppendElement(IS_TIME_FULLTIME);
+  } else if (aHTMLInputType.EqualsLiteral("date") ||
+             aHTMLInputType.EqualsLiteral("month") ||
+             aHTMLInputType.EqualsLiteral("week")) {
+    mInputScopes.AppendElement(IS_DATE_FULLDATE);
+  } else if (aHTMLInputType.EqualsLiteral("time")) {
+    mInputScopes.AppendElement(IS_TIME_FULLTIME);
+  } else if (aHTMLInputType.EqualsLiteral("tel")) {
+    mInputScopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
+    mInputScopes.AppendElement(IS_TELEPHONE_LOCALNUMBER);
+  } else if (aHTMLInputType.EqualsLiteral("number")) {
+    mInputScopes.AppendElement(IS_NUMBER);
+  }
+}
+
+HRESULT
+nsTextStore::ProcessScopeRequest(DWORD dwFlags,
+                                 ULONG cFilterAttrs,
+                                 const TS_ATTRID *paFilterAttrs)
+{
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p nsTextStore::ProcessScopeRequest() called "
+          "cFilterAttrs=%d dwFlags=%s", this, cFilterAttrs,
+          GetFindFlagName(dwFlags).get()));
+
+  // This is a little weird! RequestSupportedAttrs gives us advanced notice
+  // of a support query via RetrieveRequestedAttrs for a specific attribute.
+  // RetrieveRequestedAttrs needs to return valid data for all attributes we
+  // support, but the text service will only want the input scope object
+  // returned in RetrieveRequestedAttrs if the dwFlags passed in here contains
+  // TS_ATTR_FIND_WANT_VALUE.
+  mInputScopeDetected = mInputScopeRequested = false;
+
+  // Currently we only support GUID_PROP_INPUTSCOPE
+  for (uint32_t idx = 0; idx < cFilterAttrs; ++idx) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: 0x%p   nsTextStore::ProcessScopeRequest() "
+            "requested attr=%s", this, GetCLSIDNameStr(paFilterAttrs[idx]).get()));
+    if (IsEqualGUID(paFilterAttrs[idx], GUID_PROP_INPUTSCOPE)) {
+      PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+             ("TSF: 0x%p   nsTextStore::ProcessScopeRequest() "
+              "GUID_PROP_INPUTSCOPE queried", this));
+      mInputScopeDetected = true;
+      if (dwFlags & TS_ATTR_FIND_WANT_VALUE) {
+        PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+               ("TSF: 0x%p   nsTextStore::ProcessScopeRequest() "
+                "TS_ATTR_FIND_WANT_VALUE specified", this));
+        mInputScopeRequested = true;
+      }
+      break;
+    }
+  }
+  return S_OK;
+}
+
 STDMETHODIMP
 nsTextStore::RequestSupportedAttrs(DWORD dwFlags,
                                    ULONG cFilterAttrs,
@@ -1594,10 +1811,10 @@ nsTextStore::RequestSupportedAttrs(DWORD dwFlags,
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::RequestSupportedAttrs() called "
-          "but not supported (S_OK)", this));
+          "cFilterAttrs=%d dwFlags=%s", this, cFilterAttrs,
+          GetFindFlagName(dwFlags).get()));
 
-  // no attributes defined
-  return S_OK;
+  return ProcessScopeRequest(dwFlags, cFilterAttrs, paFilterAttrs);
 }
 
 STDMETHODIMP
@@ -1608,10 +1825,11 @@ nsTextStore::RequestAttrsAtPosition(LONG acpPos,
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::RequestAttrsAtPosition() called "
-          "but not supported (S_OK)", this));
+          "acpPos=%d cFilterAttrs=%d dwFlags=%s", this, acpPos, cFilterAttrs,
+          GetFindFlagName(dwFlags).get()));
 
-  // no per character attributes defined
-  return S_OK;
+  return ProcessScopeRequest(dwFlags | TS_ATTR_FIND_WANT_VALUE,
+                             cFilterAttrs, paFilterAttrs);
 }
 
 STDMETHODIMP
@@ -1640,13 +1858,13 @@ nsTextStore::FindNextAttrTransition(LONG acpStart,
 {
   if (!pacpNext || !pfFound || !plFoundOffset) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::FindNextAttrTransition() FAILED due to "
+           ("TSF: 0x%p nsTextStore::FindNextAttrTransition() FAILED due to "
             "null argument", this));
     return E_INVALIDARG;
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p nsTextStore::FindNextAttrTransition() called "
+         ("TSF: 0x%p   nsTextStore::FindNextAttrTransition() called "
           "but not supported (S_OK)", this));
 
   // no per character attributes defined
@@ -1662,16 +1880,43 @@ nsTextStore::RetrieveRequestedAttrs(ULONG ulCount,
 {
   if (!pcFetched || !ulCount || !paAttrVals) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::RetrieveRequestedAttrs() FAILED due to "
+           ("TSF: 0x%p nsTextStore::RetrieveRequestedAttrs() FAILED due to "
             "null argument", this));
     return E_INVALIDARG;
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p nsTextStore::RetrieveRequestedAttrs() called "
-          "but not supported, *pcFetched=0 (S_OK)", this));
+         ("TSF: 0x%p   nsTextStore::RetrieveRequestedAttrs() called "
+          "ulCount=%d", this, ulCount));
 
-  // no attributes defined
+  if (mInputScopeDetected || mInputScopeRequested) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: 0x%p   nsTextStore::RetrieveRequestedAttrs() for "
+            "GUID_PROP_INPUTSCOPE: "
+            "mInputScopeDetected=%s mInputScopeRequested=%s",
+            this, GetBoolName(mInputScopeDetected),
+            GetBoolName(mInputScopeRequested)));
+
+    paAttrVals->idAttr = GUID_PROP_INPUTSCOPE;
+    paAttrVals->dwOverlapId = 0;
+    paAttrVals->varValue.vt = VT_EMPTY;
+    *pcFetched = 1;
+
+    if (mInputScopeRequested) {
+      paAttrVals->varValue.vt = VT_UNKNOWN;
+      paAttrVals->varValue.punkVal = (IUnknown*) new InputScopeImpl(mInputScopes);
+    }
+
+    mInputScopeDetected = mInputScopeRequested = false;
+    return S_OK;
+  }
+
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p   nsTextStore::RetrieveRequestedAttrs() called "
+          "for unknown TS_ATTRVAL, *pcFetched=0 (S_OK)", this));
+
+  paAttrVals->dwOverlapId = 0;
+  paAttrVals->varValue.vt = VT_EMPTY;
   *pcFetched = 0;
   return S_OK;
 }

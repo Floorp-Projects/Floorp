@@ -8,12 +8,12 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jslibmath.h"
-#include "jsscope.h"
 
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
 #include "vm/NumericConversions.h"
+#include "vm/Shape.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -974,7 +974,7 @@ mjit::Compiler::jsop_setelem_dense()
      * undefined.
      */
     types::StackTypeSet *types = frame.extra(obj).types;
-    if (cx->compartment->compileBarriers() && (!types || types->propertyNeedsBarrier(cx, JSID_VOID))) {
+    if (cx->zone()->compileBarriers() && (!types || types->propertyNeedsBarrier(cx, JSID_VOID))) {
         Label barrierStart = stubcc.masm.label();
         stubcc.linkExitDirect(masm.jump(), barrierStart);
 
@@ -1371,7 +1371,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
 
 #ifdef JSGC_INCREMENTAL_MJ
     // Write barrier.
-    if (cx->compartment->compileBarriers()) {
+    if (cx->zone()->compileBarriers()) {
         jsop_setelem_slow();
         return true;
     }
@@ -2482,7 +2482,7 @@ mjit::Compiler::jsop_initprop()
 
     RootedObject baseobj(cx, frame.extra(obj).initObject);
 
-    if (!baseobj || monitored(PC) || cx->compartment->compileBarriers()) {
+    if (!baseobj || monitored(PC) || cx->zone()->compileBarriers()) {
         if (monitored(PC) && script_ == outerScript)
             monitoredBytecodes.append(PC - script_->code);
 

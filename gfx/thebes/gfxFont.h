@@ -977,7 +977,7 @@ public:
         uint32_t     *mInitialBreaks;
         uint32_t      mInitialBreakCount;
         // The ratio to use to convert device pixels to application layout units
-        uint32_t      mAppUnitsPerDevUnit;
+        int32_t       mAppUnitsPerDevUnit;
     };
 
     virtual ~gfxTextRunFactory() {}
@@ -998,7 +998,7 @@ public:
  */
 class THEBES_API gfxGlyphExtents {
 public:
-    gfxGlyphExtents(uint32_t aAppUnitsPerDevUnit) :
+    gfxGlyphExtents(int32_t aAppUnitsPerDevUnit) :
         mAppUnitsPerDevUnit(aAppUnitsPerDevUnit) {
         MOZ_COUNT_CTOR(gfxGlyphExtents);
         mTightGlyphExtents.Init();
@@ -1035,7 +1035,7 @@ public:
     }
     void SetTightGlyphExtents(uint32_t aGlyphID, const gfxRect& aExtentsAppUnits);
 
-    uint32_t GetAppUnitsPerDevUnit() { return mAppUnitsPerDevUnit; }
+    int32_t GetAppUnitsPerDevUnit() { return mAppUnitsPerDevUnit; }
 
     size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
     size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
@@ -1097,7 +1097,7 @@ private:
 
     GlyphWidths             mContainedGlyphWidths;
     nsTHashtable<HashEntry> mTightGlyphExtents;
-    uint32_t                mAppUnitsPerDevUnit;
+    int32_t                 mAppUnitsPerDevUnit;
 };
 
 /**
@@ -1475,7 +1475,7 @@ public:
     // Get the glyphID of a space
     virtual uint32_t GetSpaceGlyph() = 0;
 
-    gfxGlyphExtents *GetOrCreateGlyphExtents(uint32_t aAppUnitsPerDevUnit);
+    gfxGlyphExtents *GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit);
 
     // You need to call SetupCairoFont on the aCR just before calling this
     virtual void SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID,
@@ -1805,7 +1805,7 @@ class gfxShapedText
 {
 public:
     gfxShapedText(uint32_t aLength, uint32_t aFlags,
-                  uint32_t aAppUnitsPerDevUnit)
+                  int32_t aAppUnitsPerDevUnit)
         : mLength(aLength)
         , mFlags(aFlags)
         , mAppUnitsPerDevUnit(aAppUnitsPerDevUnit)
@@ -2105,7 +2105,7 @@ public:
         return (Flags() & gfxTextRunFactory::TEXT_IS_8BIT) != 0;
     }
 
-    uint32_t GetAppUnitsPerDevUnit() const {
+    int32_t GetAppUnitsPerDevUnit() const {
         return mAppUnitsPerDevUnit;
     }
 
@@ -2248,7 +2248,7 @@ protected:
     // Shaping flags (direction, ligature-suppression)
     uint32_t                        mFlags;
 
-    uint32_t                        mAppUnitsPerDevUnit;
+    int32_t                         mAppUnitsPerDevUnit;
 };
 
 /*
@@ -3133,7 +3133,7 @@ public:
     template<typename T>
     gfxTextRun *MakeTextRun(const T *aString, uint32_t aLength,
                             gfxContext *aRefContext,
-                            uint32_t aAppUnitsPerDevUnit,
+                            int32_t aAppUnitsPerDevUnit,
                             uint32_t aFlags)
     {
         gfxTextRunFactory::Parameters params = {

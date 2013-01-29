@@ -86,6 +86,7 @@ struct Cell
     MOZ_ALWAYS_INLINE void unmark(uint32_t color) const;
 
     inline JSCompartment *compartment() const;
+    inline Zone *zone() const;
 
 #ifdef DEBUG
     inline bool isAligned() const;
@@ -444,12 +445,12 @@ struct ArenaHeader : public JS::shadow::ArenaHeader
         return allocKind < size_t(FINALIZE_LIMIT);
     }
 
-    void init(JSCompartment *comp, AllocKind kind) {
+    void init(Zone *zoneArg, AllocKind kind) {
         JS_ASSERT(!allocated());
         JS_ASSERT(!markOverflow);
         JS_ASSERT(!allocatedDuringIncremental);
         JS_ASSERT(!hasDelayedMarking);
-        compartment = comp;
+        zone = zoneArg;
 
         JS_STATIC_ASSERT(FINALIZE_LIMIT <= 255);
         allocKind = size_t(kind);
@@ -762,11 +763,11 @@ struct Chunk
         return info.numArenasFree != 0;
     }
 
-    inline void addToAvailableList(JSCompartment *compartment);
+    inline void addToAvailableList(Zone *zone);
     inline void insertToAvailableList(Chunk **insertPoint);
     inline void removeFromAvailableList();
 
-    ArenaHeader *allocateArena(JSCompartment *comp, AllocKind kind);
+    ArenaHeader *allocateArena(JS::Zone *zone, AllocKind kind);
 
     void releaseArena(ArenaHeader *aheader);
 
@@ -977,7 +978,13 @@ Cell::unmark(uint32_t color) const
 JSCompartment *
 Cell::compartment() const
 {
-    return arenaHeader()->compartment;
+    return arenaHeader()->zone;
+}
+
+Zone *
+Cell::zone() const
+{
+    return arenaHeader()->zone;
 }
 
 #ifdef DEBUG

@@ -95,18 +95,18 @@ NewShortString(JSContext *cx, TwoByteChars chars)
 }
 
 static inline void
-StringWriteBarrierPost(JSCompartment *comp, JSString **strp)
+StringWriteBarrierPost(JS::Zone *zone, JSString **strp)
 {
 #ifdef JSGC_GENERATIONAL
-    comp->gcStoreBuffer.putRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
+    zone->gcStoreBuffer.putRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
 #endif
 }
 
 static inline void
-StringWriteBarrierPostRemove(JSCompartment *comp, JSString **strp)
+StringWriteBarrierPostRemove(JS::Zone *zone, JSString **strp)
 {
 #ifdef JSGC_GENERATIONAL
-    comp->gcStoreBuffer.removeRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
+    zone->gcStoreBuffer.removeRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
 #endif
 }
 
@@ -119,10 +119,10 @@ JSString::writeBarrierPre(JSString *str)
     if (!str)
         return;
 
-    JSCompartment *comp = str->compartment();
-    if (comp->needsBarrier()) {
+    JS::Zone *zone = str->zone();
+    if (zone->needsBarrier()) {
         JSString *tmp = str;
-        MarkStringUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        MarkStringUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == str);
     }
 #endif
@@ -134,15 +134,15 @@ JSString::writeBarrierPost(JSString *str, void *addr)
 #ifdef JSGC_GENERATIONAL
     if (!str)
         return;
-    str->compartment()->gcStoreBuffer.putCell((Cell **)addr);
+    str->zone()->gcStoreBuffer.putCell((Cell **)addr);
 #endif
 }
 
 inline bool
-JSString::needWriteBarrierPre(JSCompartment *comp)
+JSString::needWriteBarrierPre(JS::Zone *zone)
 {
 #ifdef JSGC_INCREMENTAL
-    return comp->needsBarrier();
+    return zone->needsBarrier();
 #else
     return false;
 #endif
@@ -152,10 +152,10 @@ inline void
 JSString::readBarrier(JSString *str)
 {
 #ifdef JSGC_INCREMENTAL
-    JSCompartment *comp = str->compartment();
-    if (comp->needsBarrier()) {
+    JS::Zone *zone = str->zone();
+    if (zone->needsBarrier()) {
         JSString *tmp = str;
-        MarkStringUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
+        MarkStringUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
         JS_ASSERT(tmp == str);
     }
 #endif
@@ -178,8 +178,8 @@ JSRope::init(JSString *left, JSString *right, size_t length)
     d.lengthAndFlags = buildLengthAndFlags(length, ROPE_FLAGS);
     d.u1.left = left;
     d.s.u2.right = right;
-    js::StringWriteBarrierPost(compartment(), &d.u1.left);
-    js::StringWriteBarrierPost(compartment(), &d.s.u2.right);
+    js::StringWriteBarrierPost(zone(), &d.u1.left);
+    js::StringWriteBarrierPost(zone(), &d.s.u2.right);
 }
 
 template <js::AllowGC allowGC>
@@ -212,26 +212,24 @@ JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length
     d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_FLAGS);
     d.u1.chars = chars;
     d.s.u2.base = base;
-    js::StringWriteBarrierPost(compartment(), reinterpret_cast<JSString **>(&d.s.u2.base));
+    js::StringWriteBarrierPost(zone(), reinterpret_cast<JSString **>(&d.s.u2.base));
 }
 
 JS_ALWAYS_INLINE JSLinearString *
 JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *chars, size_t length)
 {
-    js::Rooted<JSLinearString*> base(cx, baseArg);
-
     /* Try to avoid long chains of dependent strings. */
-    while (base->isDependent())
-        base = base->asDependent().base();
+    while (baseArg->isDependent())
+        baseArg = baseArg->asDependent().base();
 
-    JS_ASSERT(base->isFlat());
+    JS_ASSERT(baseArg->isFlat());
 
     /*
      * The chars we are pointing into must be owned by something in the chain
      * of dependent or undepended strings kept alive by our base pointer.
      */
 #ifdef DEBUG
-    for (JSLinearString *b = base; ; b = b->base()) {
+    for (JSLinearString *b = baseArg; ; b = b->base()) {
         if (chars >= b->chars() && chars < b->chars() + b->length() &&
             length <= b->length() - (chars - b->chars()))
         {
@@ -248,7 +246,15 @@ JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *ch
     if (JSShortString::lengthFits(length))
         return js::NewShortString<js::CanGC>(cx, js::TwoByteChars(chars, length));
 
-    JSDependentString *str = (JSDependentString *)js_NewGCString<js::CanGC>(cx);
+    JSDependentString *str = (JSDependentString *)js_NewGCString<js::NoGC>(cx);
+    if (str) {
+        str->init(baseArg, chars, length);
+        return str;
+    }
+
+    js::Rooted<JSLinearString*> base(cx, baseArg);
+
+    str = (JSDependentString *)js_NewGCString<js::CanGC>(cx);
     if (!str)
         return NULL;
     str->init(base, chars, length);

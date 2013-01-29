@@ -346,6 +346,7 @@ interface TestExampleInterface {
   // Static methods and attributes
   static attribute boolean staticAttribute;
   static void staticMethod(boolean arg);
+  static void staticMethodWithContext(any arg);
 
   // Overload resolution tests
   //void overload1(DOMString... strs);

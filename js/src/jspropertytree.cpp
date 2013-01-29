@@ -10,11 +10,13 @@
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jspropertytree.h"
-#include "jsscope.h"
+
+#include "vm/Shape.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
+
+#include "vm/Shape-inl.h"
 
 using namespace js;
 
@@ -157,16 +159,16 @@ PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const Sta
 
 #ifdef JSGC_INCREMENTAL
         if (shape) {
-            JSCompartment *comp = shape->compartment();
-            if (comp->needsBarrier()) {
+            JS::Zone *zone = shape->zone();
+            if (zone->needsBarrier()) {
                 /*
                  * We need a read barrier for the shape tree, since these are weak
                  * pointers.
                  */
                 Shape *tmp = shape;
-                MarkShapeUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
+                MarkShapeUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
                 JS_ASSERT(tmp == shape);
-            } else if (comp->isGCSweeping() && !shape->isMarked() &&
+            } else if (zone->isGCSweeping() && !shape->isMarked() &&
                        !shape->arenaHeader()->allocatedDuringIncremental)
             {
                 /*

@@ -1014,6 +1014,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
         bool painted = false;
         nsIntRegion region = invalidRect;
 
+        mWidgetListener->WillPaintWindow(this);
+
         switch (GetLayerManager(nullptr)->GetBackendType()) {
             case mozilla::layers::LAYERS_BASIC: {
 
@@ -1051,6 +1053,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
             default:
                 NS_ERROR("Invalid layer manager");
         }
+
+        mWidgetListener->DidPaintWindow();
 
         // We had no covering child, so make sure we draw all the children,
         // starting from index 0.

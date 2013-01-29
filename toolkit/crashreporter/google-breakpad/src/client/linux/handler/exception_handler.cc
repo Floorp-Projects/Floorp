@@ -240,7 +240,7 @@ bool ExceptionHandler::InstallHandlersLocked() {
     return false;
 
   // Fail if unable to store all the old handlers.
-  for (unsigned i = 0; i < kNumHandledSignals; ++i) {
+  for (int i = 0; i < kNumHandledSignals; ++i) {
     if (sigaction(kExceptionSignals[i], NULL, &old_handlers[i]) == -1)
       return false;
   }
@@ -250,13 +250,13 @@ bool ExceptionHandler::InstallHandlersLocked() {
   sigemptyset(&sa.sa_mask);
 
   // Mask all exception signals when we're handling one of them.
-  for (unsigned i = 0; i < kNumHandledSignals; ++i)
+  for (int i = 0; i < kNumHandledSignals; ++i)
     sigaddset(&sa.sa_mask, kExceptionSignals[i]);
 
   sa.sa_sigaction = SignalHandler;
   sa.sa_flags = SA_ONSTACK | SA_SIGINFO;
 
-  for (unsigned i = 0; i < kNumHandledSignals; ++i) {
+  for (int i = 0; i < kNumHandledSignals; ++i) {
     if (sigaction(kExceptionSignals[i], &sa, NULL) == -1) {
       // At this point it is impractical to back out changes, and so failure to
       // install a signal is intentionally ignored.
@@ -273,7 +273,7 @@ void ExceptionHandler::RestoreHandlersLocked() {
   if (!handlers_installed)
     return;
 
-  for (unsigned i = 0; i < kNumHandledSignals; ++i) {
+  for (int i = 0; i < kNumHandledSignals; ++i) {
     if (sigaction(kExceptionSignals[i], &old_handlers[i], NULL) == -1) {
       signal(kExceptionSignals[i], SIG_DFL);
     }
@@ -291,6 +291,35 @@ void ExceptionHandler::RestoreHandlersLocked() {
 void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
   // All the exception signals are blocked at this point.
   pthread_mutex_lock(&handler_stack_mutex_);
+
+  // Sometimes, Breakpad runs inside a process where some other buggy code
+  // saves and restores signal handlers temporarily with 'signal'
+  // instead of 'sigaction'. This loses the SA_SIGINFO flag associated
+  // with this function. As a consequence, the values of 'info' and 'uc'
+  // become totally bogus, generally inducing a crash.
+  //
+  // The following code tries to detect this case. When it does, it
+  // resets the signal handlers with sigaction + SA_SIGINFO and returns.
+  // This forces the signal to be thrown again, but this time the kernel
+  // will call the function with the right arguments.
+  struct sigaction cur_handler;
+  if (sigaction(sig, NULL, &cur_handler) == 0 &&
+      (cur_handler.sa_flags & SA_SIGINFO) == 0) {
+    // Reset signal handler with the right flags.
+    sigemptyset(&cur_handler.sa_mask);
+    sigaddset(&cur_handler.sa_mask, sig);
+
+    cur_handler.sa_sigaction = SignalHandler;
+    cur_handler.sa_flags = SA_ONSTACK | SA_SIGINFO;
+
+    if (sigaction(sig, &cur_handler, NULL) == -1) {
+      // When resetting the handler fails, try to reset the
+      // default one to avoid an infinite loop here.
+      signal(sig, SIG_DFL);
+    }
+    pthread_mutex_unlock(&handler_stack_mutex_);
+    return;
+  }
 
   bool handled = false;
   for (int i = handler_stack_->size() - 1; !handled && i >= 0; --i) {
@@ -386,8 +415,11 @@ bool ExceptionHandler::HandleSignal(int sig, siginfo_t* info, void* uc) {
 // This is a public interface to HandleSignal that allows the client to
 // generate a crash dump. This function may run in a compromised context.
 bool ExceptionHandler::SimulateSignalDelivery(int sig) {
-  siginfo_t siginfo;
-  my_memset(&siginfo, 0, sizeof(siginfo_t));
+  siginfo_t siginfo = {};
+  // Mimic a trusted signal to allow tracing the process (see
+  // ExceptionHandler::HandleSignal().
+  siginfo.si_code = SI_USER;
+  siginfo.si_pid = getpid();
   struct ucontext context;
   getcontext(&context);
   return HandleSignal(sig, &siginfo, &context);
@@ -492,6 +524,7 @@ bool ExceptionHandler::DoDump(pid_t crashing_process, const void* context,
                               size_t context_size) {
   if (minidump_descriptor_.IsFD()) {
     return google_breakpad::WriteMinidump(minidump_descriptor_.fd(),
+                                          minidump_descriptor_.size_limit(),
                                           crashing_process,
                                           context,
                                           context_size,
@@ -499,6 +532,7 @@ bool ExceptionHandler::DoDump(pid_t crashing_process, const void* context,
                                           app_memory_list_);
   }
   return google_breakpad::WriteMinidump(minidump_descriptor_.path(),
+                                        minidump_descriptor_.size_limit(),
                                         crashing_process,
                                         context,
                                         context_size,

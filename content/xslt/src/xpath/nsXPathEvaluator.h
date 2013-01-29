@@ -17,6 +17,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
+namespace mozilla {
+namespace dom {
+class GlobalObject;
+}
+}
 class nsINode;
 
 /**
@@ -48,7 +53,8 @@ public:
     // WebIDL API
     JSObject* WrapObject(JSContext* aCx, JSObject* aScope);
     static already_AddRefed<nsXPathEvaluator>
-        Constructor(nsISupports* aGlobal, mozilla::ErrorResult& rv);
+        Constructor(const mozilla::dom::GlobalObject& aGlobal,
+                    mozilla::ErrorResult& rv);
     already_AddRefed<nsIDOMXPathExpression>
         CreateExpression(const nsAString& aExpression,
                          nsIDOMXPathNSResolver* aResolver,

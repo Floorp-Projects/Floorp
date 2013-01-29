@@ -60,10 +60,11 @@ typedef SSIZE_T ssize_t;
 
 #include "processor/range_map-inl.h"
 
+#include "common/scoped_ptr.h"
 #include "processor/basic_code_module.h"
 #include "processor/basic_code_modules.h"
 #include "processor/logging.h"
-#include "processor/scoped_ptr.h"
+
 
 
 namespace google_breakpad {
@@ -286,8 +287,8 @@ MinidumpStream::MinidumpStream(Minidump* minidump)
 
 MinidumpContext::MinidumpContext(Minidump* minidump)
     : MinidumpStream(minidump),
-      context_flags_(0),
-      context_() {
+      context_(),
+      context_flags_(0) {
 }
 
 
@@ -318,6 +319,14 @@ bool MinidumpContext::Read(u_int32_t expected_size) {
       Swap(&context_amd64->context_flags);
 
     u_int32_t cpu_type = context_amd64->context_flags & MD_CONTEXT_CPU_MASK;
+    if (cpu_type == 0) {
+      if (minidump_->GetContextCPUFlagsFromSystemInfo(&cpu_type)) {
+        context_amd64->context_flags |= cpu_type;
+      } else {
+        BPLOG(ERROR) << "Failed to preserve the current stream position";
+        return false;
+      }
+    }
 
     if (cpu_type != MD_CONTEXT_AMD64) {
       //TODO: fall through to switch below?
@@ -419,6 +428,15 @@ bool MinidumpContext::Read(u_int32_t expected_size) {
         context_flags |= MD_CONTEXT_ARM;
         context_flags &= ~MD_CONTEXT_ARM_OLD;
         cpu_type = MD_CONTEXT_ARM;
+      }
+    }
+
+    if (cpu_type == 0) {
+      if (minidump_->GetContextCPUFlagsFromSystemInfo(&cpu_type)) {
+        context_flags |= cpu_type;
+      } else {
+        BPLOG(ERROR) << "Failed to preserve the current stream position";
+        return false;
       }
     }
 
@@ -1354,14 +1372,14 @@ bool MinidumpThread::Read() {
   if (thread_.stack.memory.data_size == 0 ||
       thread_.stack.memory.data_size > numeric_limits<u_int64_t>::max() -
                                        thread_.stack.start_of_memory_range) {
+    // This is ok, but log an error anyway.
     BPLOG(ERROR) << "MinidumpThread has a memory region problem, " <<
                     HexString(thread_.stack.start_of_memory_range) << "+" <<
                     HexString(thread_.stack.memory.data_size);
-    return false;
+  } else {
+    memory_ = new MinidumpMemoryRegion(minidump_);
+    memory_->SetDescriptor(&thread_.stack);
   }
-
-  memory_ = new MinidumpMemoryRegion(minidump_);
-  memory_->SetDescriptor(&thread_.stack);
 
   valid_ = true;
   return true;
@@ -3814,6 +3832,72 @@ bool Minidump::Open() {
 
   BPLOG(INFO) << "Minidump opened minidump " << path_;
   return true;
+}
+
+bool Minidump::GetContextCPUFlagsFromSystemInfo(u_int32_t *context_cpu_flags) {
+  // Initialize output parameters
+  *context_cpu_flags = 0;
+
+  // Save the current stream position
+  off_t saved_position = Tell();
+  if (saved_position == -1) {
+    // Failed to save the current stream position.
+    // Returns true because the current position of the stream is preserved.
+    return true;
+  }
+
+  const MDRawSystemInfo* system_info =
+    GetSystemInfo() ? GetSystemInfo()->system_info() : NULL;
+
+  if (system_info != NULL) {
+    switch (system_info->processor_architecture) {
+      case MD_CPU_ARCHITECTURE_X86:
+        *context_cpu_flags = MD_CONTEXT_X86;
+        break;
+      case MD_CPU_ARCHITECTURE_MIPS:
+        *context_cpu_flags = MD_CONTEXT_MIPS;
+        break;
+      case MD_CPU_ARCHITECTURE_ALPHA:
+        *context_cpu_flags = MD_CONTEXT_ALPHA;
+        break;
+      case MD_CPU_ARCHITECTURE_PPC:
+        *context_cpu_flags = MD_CONTEXT_PPC;
+        break;
+      case MD_CPU_ARCHITECTURE_SHX:
+        *context_cpu_flags = MD_CONTEXT_SHX;
+        break;
+      case MD_CPU_ARCHITECTURE_ARM:
+        *context_cpu_flags = MD_CONTEXT_ARM;
+        break;
+      case MD_CPU_ARCHITECTURE_IA64:
+        *context_cpu_flags = MD_CONTEXT_IA64;
+        break;
+      case MD_CPU_ARCHITECTURE_ALPHA64:
+        *context_cpu_flags = 0;
+        break;
+      case MD_CPU_ARCHITECTURE_MSIL:
+        *context_cpu_flags = 0;
+        break;
+      case MD_CPU_ARCHITECTURE_AMD64:
+        *context_cpu_flags = MD_CONTEXT_AMD64;
+        break;
+      case MD_CPU_ARCHITECTURE_X86_WIN64:
+        *context_cpu_flags = 0;
+        break;
+      case MD_CPU_ARCHITECTURE_SPARC:
+        *context_cpu_flags = MD_CONTEXT_SPARC;
+        break;
+      case MD_CPU_ARCHITECTURE_UNKNOWN:
+        *context_cpu_flags = 0;
+        break;
+      default:
+        *context_cpu_flags = 0;
+        break;
+    }
+  }
+
+  // Restore position and return
+  return SeekSet(saved_position);
 }
 
 

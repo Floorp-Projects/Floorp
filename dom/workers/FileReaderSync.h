@@ -36,7 +36,7 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   static FileReaderSync*
-  Constructor(JSContext* aCx, JSObject* aGlobal, ErrorResult& aRv);
+  Constructor(const WorkerGlobalObject& aGlobal, ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
 

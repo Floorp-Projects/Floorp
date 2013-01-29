@@ -39,7 +39,7 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   static TextEncoder*
-  Constructor(JSContext* aCx, JSObject* aObj,
+  Constructor(const WorkerGlobalObject& aGlobal,
               const nsAString& aEncoding,
               ErrorResult& aRv);
 

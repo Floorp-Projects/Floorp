@@ -43,9 +43,9 @@ public:
     WIN2K3_VERSION    = 0x502,
     VISTA_VERSION     = 0x600,
     // WIN2K8_VERSION    = VISTA_VERSION,
-    WIN7_VERSION      = 0x601
+    WIN7_VERSION      = 0x601,
     // WIN2K8R2_VERSION  = WIN7_VERSION
-    // WIN8_VERSION      = 0x602
+    WIN8_VERSION      = 0x602
   };
   static WinVersion GetWindowsVersion();
 

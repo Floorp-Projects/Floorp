@@ -18,6 +18,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBuffer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannels)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  tmp->ClearJSChannels();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AudioBuffer)
@@ -51,6 +52,12 @@ AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aLength,
 }
 
 AudioBuffer::~AudioBuffer()
+{
+  ClearJSChannels();
+}
+
+void
+AudioBuffer::ClearJSChannels()
 {
   mChannels.Clear();
   NS_DROP_JS_OBJECTS(this, AudioBuffer);
