@@ -3542,7 +3542,8 @@ def typeNeedsCx(type, descriptorProvider, retVal=False):
 # Whenever this is modified, please update CGNativeMember.getRetvalInfo as
 # needed
 def getRetvalDeclarationForType(returnType, descriptorProvider,
-                                resultAlreadyAddRefed):
+                                resultAlreadyAddRefed,
+                                isMember=False):
     if returnType is None or returnType.isVoid():
         # Nothing to declare
         return None, False
@@ -3552,7 +3553,9 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             result = CGWrapper(result, pre="Nullable<", post=">")
         return result, False
     if returnType.isString():
-        return CGGeneric("nsString"), True
+        if isMember:
+            return CGGeneric("nsString"), True
+        return CGGeneric("DOMString"), True
     if returnType.isEnum():
         if returnType.nullable():
             raise TypeError("We don't support nullable enum return values")
@@ -3582,7 +3585,8 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         # sequence argument here.
         (result, _) = getRetvalDeclarationForType(returnType.inner,
                                                   descriptorProvider,
-                                                  resultAlreadyAddRefed)
+                                                  resultAlreadyAddRefed,
+                                                  isMember=True)
         result = CGWrapper(result, pre="nsTArray< ", post=" >")
         if nullable:
             result = CGWrapper(result, pre="Nullable< ", post=" >")
