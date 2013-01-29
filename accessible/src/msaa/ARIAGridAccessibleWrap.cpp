@@ -21,12 +21,6 @@ IMPL_IUNKNOWN_INHERITED1(ARIAGridAccessibleWrap,
                          AccessibleWrap,
                          ia2AccessibleTable)
 
-void
-ARIAGridAccessibleWrap::Shutdown()
-{
-  ia2AccessibleTable::mTable = nullptr;
-  ARIAGridAccessible::Shutdown();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // ARIAGridCellAccessibleWrap

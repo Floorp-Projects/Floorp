@@ -24,15 +24,13 @@ class ARIAGridAccessibleWrap : public ARIAGridAccessible,
 {
 public:
   ARIAGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    ARIAGridAccessible(aContent, aDoc), ia2AccessibleTable(this) {}
+    ARIAGridAccessible(aContent, aDoc) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  virtual void Shutdown() MOZ_OVERRIDE;
 };
 
 /**

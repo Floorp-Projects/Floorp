@@ -25,15 +25,13 @@ class HTMLTableAccessibleWrap : public HTMLTableAccessible,
 {
 public:
   HTMLTableAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    HTMLTableAccessible(aContent, aDoc), ia2AccessibleTable(this)  {}
+    HTMLTableAccessible(aContent, aDoc) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  virtual void Shutdown() MOZ_OVERRIDE;
 };
 
 
