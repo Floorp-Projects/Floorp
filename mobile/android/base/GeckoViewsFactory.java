@@ -5,6 +5,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.widget.IconTabWidget;
 import org.mozilla.gecko.widget.TabRow;
 import org.mozilla.gecko.widget.ThumbnailView;
 
@@ -80,6 +81,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new LinkTextView(context, attrs);
             else if (TextUtils.equals(viewName, "FindInPageBar"))
                 return new FindInPageBar(context, attrs);
+            else if (TextUtils.equals(viewName, "IconTabWidget"))
+                return new IconTabWidget(context, attrs);
             else if (TextUtils.equals(viewName, "MenuButton"))
                 return new MenuButton(context, attrs);
             else if (TextUtils.equals(viewName, "RemoteTabs"))
