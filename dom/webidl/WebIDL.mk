@@ -130,6 +130,7 @@ webidl_files = \
   SVGLinearGradientElement.webidl \
   SVGLineElement.webidl \
   SVGLocatableElement.webidl \
+  SVGMarkerElement.webidl \
   SVGMaskElement.webidl \
   SVGMatrix.webidl \
   SVGMetadataElement.webidl \
