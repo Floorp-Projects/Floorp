@@ -8,13 +8,10 @@
 #ifndef _ACCESSIBLE_TABLE_H
 #define _ACCESSIBLE_TABLE_H
 
+#include "nsISupports.h"
+
 #include "AccessibleTable.h"
 #include "AccessibleTable2.h"
-
-namespace mozilla {
-namespace a11y {
-
-class TableAccessible;
 
 class ia2AccessibleTable : public IAccessibleTable,
                            public IAccessibleTable2
@@ -164,13 +161,17 @@ public:
       /* [out, size_is(,*nRows)] */ long **selectedRows, 
       /* [out, retval] */ long *nRows);
 
-protected:
-  ia2AccessibleTable(TableAccessible* aTable) : mTable(aTable) {}
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
 
-  TableAccessible* mTable;
+private:
+  enum eItemsType {
+    ITEMSTYPE_CELLS,
+    ITEMSTYPE_COLUMNS,
+    ITEMSTYPE_ROWS
+  };
+
+  HRESULT GetSelectedItems(long **aItems, long *aItemsCount, eItemsType aType);
 };
-
-} // namespace a11y
-} // namespace mozilla
 
 #endif

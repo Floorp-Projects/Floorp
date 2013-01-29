@@ -22,16 +22,13 @@ class XULTreeGridAccessibleWrap : public XULTreeGridAccessible,
                                   public ia2AccessibleTable
 {
 public:
-  XULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    XULTreeGridAccessible(aContent, aDoc), ia2AccessibleTable(this) {}
+  XULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  virtual void Shutdown() MOZ_OVERRIDE;
 };
 
 /**

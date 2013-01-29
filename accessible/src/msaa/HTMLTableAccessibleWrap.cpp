@@ -20,12 +20,6 @@ IMPL_IUNKNOWN_INHERITED1(HTMLTableAccessibleWrap,
                          AccessibleWrap,
                          ia2AccessibleTable)
 
-void
-HTMLTableAccessibleWrap::Shutdown()
-{
-  ia2AccessibleTable::mTable = nullptr;
-  HTMLTableAccessible::Shutdown();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableCellAccessibleWrap

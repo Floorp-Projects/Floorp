@@ -11,6 +11,12 @@ using namespace mozilla::a11y;
 // XULListboxAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
+XULListboxAccessibleWrap::
+  XULListboxAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+  XULListboxAccessible(aContent, aDoc)
+{
+}
+
 NS_IMPL_ISUPPORTS_INHERITED0(XULListboxAccessibleWrap,
                              XULListboxAccessible)
 
@@ -19,12 +25,6 @@ IMPL_IUNKNOWN_QUERY_CLASS_COND(ia2AccessibleTable, IsMulticolumn());
 IMPL_IUNKNOWN_QUERY_CLASS(AccessibleWrap)
 IMPL_IUNKNOWN_QUERY_TAIL
 
-void
-XULListboxAccessibleWrap::Shutdown()
-{
-  ia2AccessibleTable::mTable = nullptr;
-  XULListboxAccessible::Shutdown();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULListCellAccessibleWrap
