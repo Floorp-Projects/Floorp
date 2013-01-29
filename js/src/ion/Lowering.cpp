@@ -1397,6 +1397,13 @@ LIRGenerator::visitConstantElements(MConstantElements *ins)
 }
 
 bool
+LIRGenerator::visitConvertElementsToDoubles(MConvertElementsToDoubles *ins)
+{
+    LInstruction *check = new LConvertElementsToDoubles(useRegister(ins->elements()));
+    return add(check, ins) && assignSafepoint(check, ins);
+}
+
+bool
 LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 {
     switch (ins->type()) {

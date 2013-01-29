@@ -4376,6 +4376,9 @@ IonBuilder::jsop_newarray(uint32_t count)
     if (!templateObject)
         return false;
 
+    if (oracle->arrayResultShouldHaveDoubleConversion(script(), pc))
+        templateObject->setShouldConvertDoubleElements();
+
     MNewArray *ins = new MNewArray(count, templateObject, MNewArray::NewArray_Allocating);
 
     current->add(ins);
@@ -4433,6 +4436,12 @@ IonBuilder::jsop_initelem_array()
     // Get the elements vector.
     MElements *elements = MElements::New(obj);
     current->add(elements);
+
+    if (obj->toNewArray()->templateObject()->shouldConvertDoubleElements()) {
+        MInstruction *valueDouble = MToDouble::New(value);
+        current->add(valueDouble);
+        value = valueDouble;
+    }
 
     // Store the value.
     MStoreElement *store = MStoreElement::New(elements, id, value, /* needsHoleCheck = */ false);
@@ -5416,8 +5425,19 @@ IonBuilder::jsop_getelem_dense()
     id = idInt32;
 
     // Get the elements vector.
-    MElements *elements = MElements::New(obj);
+    MInstruction *elements = MElements::New(obj);
     current->add(elements);
+
+    // If we can load the element as a definite double, make sure to check that
+    // the array has been converted to homogenous doubles first.
+    bool loadDouble = !barrier &&
+                      loopDepth_ &&
+                      !readOutOfBounds &&
+                      oracle->elementReadShouldAlwaysLoadDoubles(script(), pc);
+    if (loadDouble) {
+        JS_ASSERT(!needsHoleCheck && knownType == JSVAL_TYPE_DOUBLE);
+        elements = addConvertElementsToDoubles(elements);
+    }
 
     MInitializedLength *initLength = MInitializedLength::New(elements);
     current->add(initLength);
@@ -5431,7 +5451,7 @@ IonBuilder::jsop_getelem_dense()
         // hoisting.
         id = addBoundsCheck(id, initLength);
 
-        load = MLoadElement::New(elements, id, needsHoleCheck);
+        load = MLoadElement::New(elements, id, needsHoleCheck, loadDouble);
         current->add(load);
     } else {
         // This load may return undefined, so assume that we *can* read holes,
@@ -5640,6 +5660,13 @@ IonBuilder::jsop_setelem_dense()
     MInstruction *idInt32 = MToInt32::New(id);
     current->add(idInt32);
     id = idInt32;
+
+    // Ensure the value is a double, if double conversion might be needed.
+    if (oracle->elementWriteNeedsDoubleConversion(script(), pc)) {
+        MInstruction *valueDouble = MToDouble::New(value);
+        current->add(valueDouble);
+        value = valueDouble;
+    }
 
     // Get the elements vector.
     MElements *elements = MElements::New(obj);
@@ -6998,6 +7025,14 @@ IonBuilder::jsop_instanceof()
     current->push(ins);
 
     return resumeAfter(ins);
+}
+
+MInstruction *
+IonBuilder::addConvertElementsToDoubles(MDefinition *elements)
+{
+    MInstruction *convert = MConvertElementsToDoubles::New(elements);
+    current->add(convert);
+    return convert;
 }
 
 MInstruction *

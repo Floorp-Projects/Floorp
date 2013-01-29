@@ -284,6 +284,7 @@ class IonBuilder : public MIRGenerator
 
     MDefinition *walkScopeChain(unsigned hops);
 
+    MInstruction *addConvertElementsToDoubles(MDefinition *elements);
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
     MInstruction *addShapeGuard(MDefinition *obj, const UnrootedShape shape, BailoutKind bailoutKind);
 

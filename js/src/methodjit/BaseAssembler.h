@@ -1412,6 +1412,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
                     Address(result, elementsOffset + ObjectElements::offsetOfInitializedLength()));
             store32(Imm32(templateObject->getArrayLength()),
                     Address(result, elementsOffset + ObjectElements::offsetOfLength()));
+            store32(Imm32(templateObject->shouldConvertDoubleElements() ? 1 : 0),
+                    Address(result, elementsOffset + ObjectElements::offsetOfConvertDoubleElements()));
         } else {
             /*
              * Fixed slots of non-array objects are required to be initialized;

@@ -205,6 +205,10 @@ IonBuilder::inlineArray(uint32_t argc, bool constructing)
     if (!templateObject)
         return InliningStatus_Error;
 
+    bool convertDoubles = oracle->arrayResultShouldHaveDoubleConversion(script(), pc);
+    if (convertDoubles)
+        templateObject->setShouldConvertDoubleElements();
+
     MNewArray *ins = new MNewArray(initLength, templateObject, allocating);
     current->add(ins);
     current->push(ins);
@@ -222,7 +226,14 @@ IonBuilder::inlineArray(uint32_t argc, bool constructing)
             id = MConstant::New(Int32Value(i));
             current->add(id);
 
-            MStoreElement *store = MStoreElement::New(elements, id, argv[i + 1],
+            MDefinition *value = argv[i + 1];
+            if (convertDoubles) {
+                MInstruction *valueDouble = MToDouble::New(value);
+                current->add(valueDouble);
+                value = valueDouble;
+            }
+
+            MStoreElement *store = MStoreElement::New(elements, id, value,
                                                       /* needsHoleCheck = */ false);
             current->add(store);
         }
@@ -313,11 +324,24 @@ IonBuilder::inlineArrayPush(uint32_t argc, bool constructing)
     if (types::ArrayPrototypeHasIndexedProperty(cx, script))
         return InliningStatus_NotInlined;
 
+    types::StackTypeSet::DoubleConversion conversion = thisTypes->convertDoubleElements(cx);
+    if (conversion == types::StackTypeSet::AmbiguousDoubleConversion)
+        return InliningStatus_NotInlined;
+
     MDefinitionVector argv;
     if (!discardCall(argc, argv, current))
         return InliningStatus_Error;
 
-    MArrayPush *ins = MArrayPush::New(argv[0], argv[1]);
+    MDefinition *value = argv[1];
+    if (conversion == types::StackTypeSet::AlwaysConvertToDoubles ||
+        conversion == types::StackTypeSet::MaybeConvertToDoubles)
+    {
+        MInstruction *valueDouble = MToDouble::New(value);
+        current->add(valueDouble);
+        value = valueDouble;
+    }
+
+    MArrayPush *ins = MArrayPush::New(argv[0], value);
     current->add(ins);
     current->push(ins);
 

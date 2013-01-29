@@ -140,6 +140,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitSlots(MSlots *ins);
     bool visitElements(MElements *ins);
     bool visitConstantElements(MConstantElements *ins);
+    bool visitConvertElementsToDoubles(MConvertElementsToDoubles *ins);
     bool visitLoadSlot(MLoadSlot *ins);
     bool visitFunctionEnvironment(MFunctionEnvironment *ins);
     bool visitStoreSlot(MStoreSlot *ins);

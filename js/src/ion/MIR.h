@@ -3501,6 +3501,43 @@ class MConstantElements : public MNullaryInstruction
     }
 };
 
+// Passes through an object's elements, after ensuring it is entirely doubles.
+class MConvertElementsToDoubles
+  : public MUnaryInstruction
+{
+    MConvertElementsToDoubles(MDefinition *elements)
+      : MUnaryInstruction(elements)
+    {
+        setGuard();
+        setMovable();
+        setResultType(MIRType_Elements);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ConvertElementsToDoubles)
+
+    static MConvertElementsToDoubles *New(MDefinition *elements) {
+        return new MConvertElementsToDoubles(elements);
+    }
+
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        // This instruction can read and write to the elements' contents.
+        // However, it is alright to hoist this from loops which explicitly
+        // read or write to the elements: such reads and writes will use double
+        // values and can be reordered freely wrt this conversion, except that
+        // definite double loads must follow the conversion. The latter
+        // property is ensured by chaining this instruction with the elements
+        // themselves, in the same manner as MBoundsCheck.
+        return AliasSet::None();
+    }
+};
+
 // Load a dense array's initialized length from an elements vector.
 class MInitializedLength
   : public MUnaryInstruction
@@ -3793,10 +3830,12 @@ class MLoadElement
     public SingleObjectPolicy
 {
     bool needsHoleCheck_;
+    bool loadDoubles_;
 
-    MLoadElement(MDefinition *elements, MDefinition *index, bool needsHoleCheck)
+    MLoadElement(MDefinition *elements, MDefinition *index, bool needsHoleCheck, bool loadDoubles)
       : MBinaryInstruction(elements, index),
-        needsHoleCheck_(needsHoleCheck)
+        needsHoleCheck_(needsHoleCheck),
+        loadDoubles_(loadDoubles)
     {
         setResultType(MIRType_Value);
         setMovable();
@@ -3807,8 +3846,9 @@ class MLoadElement
   public:
     INSTRUCTION_HEADER(LoadElement)
 
-    static MLoadElement *New(MDefinition *elements, MDefinition *index, bool needsHoleCheck) {
-        return new MLoadElement(elements, index, needsHoleCheck);
+    static MLoadElement *New(MDefinition *elements, MDefinition *index,
+                             bool needsHoleCheck, bool loadDoubles) {
+        return new MLoadElement(elements, index, needsHoleCheck, loadDoubles);
     }
 
     TypePolicy *typePolicy() {
@@ -3822,6 +3862,9 @@ class MLoadElement
     }
     bool needsHoleCheck() const {
         return needsHoleCheck_;
+    }
+    bool loadDoubles() const {
+        return loadDoubles_;
     }
     bool fallible() const {
         return needsHoleCheck();
