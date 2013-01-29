@@ -146,9 +146,10 @@ NS_IMPL_ADDREF_INHERITED(SVGSVGElement,SVGSVGElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGSVGElement,SVGSVGElementBase)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGSVGElement)
-  NS_NODE_INTERFACE_TABLE4(SVGSVGElement, nsIDOMNode, nsIDOMElement,
+  NS_NODE_INTERFACE_TABLE5(SVGSVGElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
-                           nsIDOMSVGSVGElement)
+                           nsIDOMSVGSVGElement,
+                           nsIDOMSVGFitToViewBox)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSVGElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGSVGElementBase)
 
@@ -674,6 +675,15 @@ SVGSVGElement::GetElementById(const nsAString& elementId, ErrorResult& rv)
 }
 
 //----------------------------------------------------------------------
+// nsIDOMSVGFitToViewBox methods
+
+/* readonly attribute nsIDOMSVGAnimatedRect viewBox; */
+NS_IMETHODIMP
+SVGSVGElement::GetViewBox(nsIDOMSVGAnimatedRect * *aViewBox)
+{
+  *aViewBox = ViewBox().get();
+  return NS_OK;
+}
 
 already_AddRefed<nsIDOMSVGAnimatedRect>
 SVGSVGElement::ViewBox()
@@ -681,6 +691,15 @@ SVGSVGElement::ViewBox()
   nsCOMPtr<nsIDOMSVGAnimatedRect> rect;
   mViewBox.ToDOMAnimatedRect(getter_AddRefs(rect), this);
   return rect.forget();
+}
+
+/* readonly attribute SVGPreserveAspectRatio preserveAspectRatio; */
+NS_IMETHODIMP
+SVGSVGElement::GetPreserveAspectRatio(nsISupports
+                                      **aPreserveAspectRatio)
+{
+  *aPreserveAspectRatio = PreserveAspectRatio().get();
+  return NS_OK;
 }
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
