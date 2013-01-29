@@ -118,6 +118,18 @@ VARIABLES = {
         This variable is typically not populated directly. Instead, it is
         populated by calling add_tier_dir().
         """),
+
+    'EXTERNAL_MAKE_DIRS': (list, [],
+        """Directories that build with make but don't use moz.build files.
+
+        This is like DIRS except it implies that |make| is used to build the
+        directory and that the directory does not define itself with moz.build
+        files.
+        """),
+
+    'PARALLEL_EXTERNAL_MAKE_DIRS': (list, [],
+        """Parallel version of EXTERNAL_MAKE_DIRS.
+        """),
 }
 
 # The set of functions exposed to the sandbox.
