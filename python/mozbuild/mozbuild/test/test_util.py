@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import unicode_literals
 
@@ -8,9 +8,15 @@ import hashlib
 import unittest
 
 from mozfile.mozfile import NamedTemporaryFile
-from mozunit import main
+from mozunit import (
+    main,
+    MockedOpen,
+)
 
-from mozbuild.util import hash_file
+from mozbuild.util import (
+    FileAvoidWrite,
+    hash_file,
+)
 
 
 class TestHashing(unittest.TestCase):
@@ -42,6 +48,40 @@ class TestHashing(unittest.TestCase):
         actual = hash_file(temp.name)
 
         self.assertEqual(actual, expected)
+
+
+class TestFileAvoidWrite(unittest.TestCase):
+    def test_file_avoid_write(self):
+        with MockedOpen({'file': 'content'}):
+            # Overwriting an existing file replaces its content
+            with FileAvoidWrite('file') as file:
+                file.write('bazqux')
+            self.assertEqual(open('file', 'r').read(), 'bazqux')
+
+            # Creating a new file (obviously) stores its content
+            with FileAvoidWrite('file2') as file:
+                file.write('content')
+            self.assertEqual(open('file2').read(), 'content')
+
+        class MyMockedOpen(MockedOpen):
+            '''MockedOpen extension to raise an exception if something
+            attempts to write in an opened file.
+            '''
+            def __call__(self, name, mode):
+                if 'w' in mode:
+                    raise Exception, 'Unexpected open with write mode'
+                return MockedOpen.__call__(self, name, mode)
+
+        with MyMockedOpen({'file': 'content'}):
+            # Validate that MyMockedOpen works as intended
+            file = FileAvoidWrite('file')
+            file.write('foobar')
+            self.assertRaises(Exception, file.close)
+
+            # Check that no write actually happens when writing the
+            # same content as what already is in the file
+            with FileAvoidWrite('file') as file:
+                file.write('content')
 
 
 if __name__ == '__main__':
