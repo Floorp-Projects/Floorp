@@ -36,7 +36,11 @@ class BackendMakeFile(object):
         self.fh.write(buf)
 
     def close(self):
-        self.fh.write('BACKEND_OUTPUT_FILES += %s\n' % ' '.join(self.outputs))
+        if len(self.inputs):
+            self.fh.write('BACKEND_INPUT_FILES += %s\n' % ' '.join(self.inputs))
+
+        if len(self.outputs):
+            self.fh.write('BACKEND_OUTPUT_FILES += %s\n' % ' '.join(self.outputs))
 
         self.fh.close()
 
@@ -64,6 +68,8 @@ class RecursiveMakeBackend(BuildBackend):
 
         backend_file = self._backend_files.get(obj.srcdir,
             BackendMakeFile(obj.srcdir, obj.objdir))
+
+        backend_file.inputs |= obj.sandbox_all_paths
 
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)

@@ -43,6 +43,8 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertEqual(o.test_tool_dirs, [])
             self.assertEqual(len(o.tier_dirs), 0)
             self.assertEqual(len(o.tier_static_dirs), 0)
+            self.assertTrue(os.path.isabs(o.sandbox_main_path))
+            self.assertEqual(len(o.sandbox_all_paths), 1)
 
         reldirs = [o.relativedir for o in objs]
         self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'bar'])

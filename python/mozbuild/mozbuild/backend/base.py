@@ -9,8 +9,12 @@ from abc import (
     abstractmethod,
 )
 
+import os
+import sys
+
 from mach.mixin.logging import LoggingMixin
 
+from ..frontend.data import SandboxDerived
 from .configenvironment import ConfigEnvironment
 
 
@@ -52,6 +56,12 @@ class BuildBackend(LoggingMixin):
 
         for obj in objs:
             self.consume_object(obj)
+
+        # Write out a file indicating when this backend was last generated.
+        age_file = os.path.join(self.environment.topobjdir,
+            'backend.%s.built' % self.__class__.__name__)
+        with open(age_file, 'a'):
+            os.utime(age_file, None)
 
         self.consume_finished()
 
