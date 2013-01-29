@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_test import MarionetteTestCase, skip_if_b2g
+from marionette_test import MarionetteTestCase
 from errors import JavascriptException, MarionetteException, ScriptTimeoutException
 
 class TestExecuteAsyncContent(MarionetteTestCase):
@@ -19,6 +19,10 @@ class TestExecuteAsyncContent(MarionetteTestCase):
     def test_execute_async_timeout(self):
         self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "var x = 1;")
 
+    def test_execute_async_unique_timeout(self):
+        self.assertEqual(2, self.marionette.execute_async_script("setTimeout(function() {marionetteScriptFinished(2);}, 2000);", script_timeout=5000))
+        self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "setTimeout(function() {marionetteScriptFinished(3);}, 2000);")
+
     def test_no_timeout(self):
         self.marionette.set_script_timeout(10000)
         self.assertTrue(self.marionette.execute_async_script("""
@@ -26,7 +30,6 @@ class TestExecuteAsyncContent(MarionetteTestCase):
             setTimeout(function() { callback(true); }, 500);
             """))
 
-    @skip_if_b2g
     def test_execute_async_unload(self):
         self.marionette.set_script_timeout(5000)
         unload = """
@@ -69,7 +72,7 @@ class TestExecuteAsyncContent(MarionetteTestCase):
         self.assertRaises(JavascriptException, self.marionette.execute_async_script, """
 let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
-marionetteScriptFinished(1);
+marionetteScriptFinished(4);
 """)
 
     def test_sandbox_reuse(self):
@@ -97,11 +100,10 @@ class TestExecuteAsyncChrome(TestExecuteAsyncContent):
         pass
 
     def test_execute_permission(self):
-        self.assertEqual(1, self.marionette.execute_async_script("""
+        self.assertEqual(5, self.marionette.execute_async_script("""
 var c = Components.classes;
-marionetteScriptFinished(1);
+marionetteScriptFinished(5);
 """))
 
     def test_sandbox_reuse(self):
         pass
-
