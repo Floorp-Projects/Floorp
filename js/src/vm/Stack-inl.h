@@ -806,7 +806,11 @@ AbstractFramePtr::isDebuggerFrame() const
 {
     if (isStackFrame())
         return asStackFrame()->isDebuggerFrame();
+#ifdef JS_ION
+    return asBaselineFrame()->isDebuggerFrame();
+#else
     JS_NOT_REACHED("Invalid frame");
+#endif
     return false;
 }
 inline UnrootedScript
