@@ -196,10 +196,11 @@ class AliasSet {
         DynamicSlot       = 1 << 2, // A member of obj->slots.
         FixedSlot         = 1 << 3, // A member of obj->fixedSlots().
         TypedArrayElement = 1 << 4, // A typed array element.
-        Last              = TypedArrayElement,
+        DOMProperty       = 1 << 5, // A DOM property
+        Last              = DOMProperty,
         Any               = Last | (Last - 1),
 
-        NumCategories     = 5,
+        NumCategories     = 6,
 
         // Indicates load or store.
         Store_            = 1 << 31
@@ -5394,7 +5395,7 @@ class MGetDOMProperty
         setOperand(1, guard);
 
         // We are movable iff the jitinfo says we can be.
-        if (jitinfo->isConstant)
+        if (jitinfo->isPure)
             setMovable();
 
         setResultType(MIRType_Value);
@@ -5422,6 +5423,9 @@ class MGetDOMProperty
     bool isDomConstant() const {
         return info_->isConstant;
     }
+    bool isDomPure() const {
+        return info_->isPure;
+    }
     MDefinition *object() {
         return getOperand(0);
     }
@@ -5431,7 +5435,7 @@ class MGetDOMProperty
     }
 
     bool congruentTo(MDefinition *const &ins) const {
-        if (!isDomConstant())
+        if (!isDomPure())
             return false;
 
         if (!ins->isGetDOMProperty())
@@ -5449,6 +5453,10 @@ class MGetDOMProperty
         // conflict with anything
         if (isDomConstant())
             return AliasSet::None();
+        // Pure DOM attributes can only alias things that alias the world or
+        // explicitly alias DOM properties.
+        if (isDomPure())
+            return AliasSet::Load(AliasSet::DOMProperty);
         return AliasSet::Store(AliasSet::Any);
     }
 
