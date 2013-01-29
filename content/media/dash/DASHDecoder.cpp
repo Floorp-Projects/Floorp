@@ -1053,20 +1053,9 @@ DASHDecoder::Seek(double aTime)
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    // We want to stop the current series of downloads and restart later with
-    // the appropriate subsegment.
-
-    // 1 - Set the seeking flag, so that when current subsegments download (if
+    // Set the seeking flag, so that when current subsegments download (if
     // any), the next subsegment will not be downloaded.
     mSeeking = true;
-
-    // 2 - Cancel all current downloads to reset for seeking.
-    for (uint32_t i = 0; i < mAudioRepDecoders.Length(); i++) {
-      mAudioRepDecoders[i]->CancelByteRangeLoad();
-    }
-    for (uint32_t i = 0; i < mVideoRepDecoders.Length(); i++) {
-      mVideoRepDecoders[i]->CancelByteRangeLoad();
-    }
   }
 
   return MediaDecoder::Seek(aTime);
