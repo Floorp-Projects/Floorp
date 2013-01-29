@@ -5848,9 +5848,7 @@ class CGProxyUnwrap(CGAbstractMethod):
     def declare(self):
         return ""
     def definition_body(self):
-        return """  MOZ_ASSERT(js::IsProxy(obj));
-  if (js::GetProxyHandler(obj) != DOMProxyHandler::getInstance()) {
-    MOZ_ASSERT(xpc::WrapperFactory::IsXrayWrapper(obj));
+        return """  if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
     obj = js::UnwrapObject(obj);
   }
   MOZ_ASSERT(IsProxy(obj));
