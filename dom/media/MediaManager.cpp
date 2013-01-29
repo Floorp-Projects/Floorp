@@ -11,6 +11,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPopupWindowManager.h"
 #include "nsISupportsArray.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // For PR_snprintf
 #include "prprf.h"
@@ -381,6 +383,30 @@ public:
       new MediaOperationRunnable(MEDIA_START, mListener,
                                  mAudioSource, mVideoSource, false));
     mediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+      if (branch) {
+        int32_t aec = (int32_t) webrtc::kEcUnchanged;
+        int32_t agc = (int32_t) webrtc::kAgcUnchanged;
+        int32_t noise = (int32_t) webrtc::kNsUnchanged;
+        bool aec_on = false, agc_on = false, noise_on = false;
+
+        branch->GetBoolPref("media.peerconnection.aec_enabled", &aec_on);
+        branch->GetIntPref("media.peerconnection.aec", &aec);
+        branch->GetBoolPref("media.peerconnection.agc_enabled", &agc_on);
+        branch->GetIntPref("media.peerconnection.agc", &agc);
+        branch->GetBoolPref("media.peerconnection.noise_enabled", &noise_on);
+        branch->GetIntPref("media.peerconnection.noise", &noise);
+
+        mListener->AudioConfig(aec_on, (uint32_t) aec,
+                               agc_on, (uint32_t) agc,
+                               noise_on, (uint32_t) noise);
+      }
+    }
 
     // We're in the main thread, so no worries here either.
     nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success(mSuccess);

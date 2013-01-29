@@ -21,6 +21,8 @@
 #include "mozilla/StaticPtr.h"
 #include "prlog.h"
 
+#include "mtransport/runnable_utils.h"
+
 namespace mozilla {
 
 #ifdef PR_LOGGING
@@ -127,6 +129,20 @@ public:
   // implement in .cpp to avoid circular dependency with MediaOperationRunnable
   // Can be invoked from EITHER MainThread or MSG thread
   void Invalidate();
+
+  void
+  AudioConfig(bool aEchoOn, uint32_t aEcho,
+              bool aAgcOn, uint32_t aAGC,
+              bool aNoiseOn, uint32_t aNoise)
+  {
+    if (mAudioSource) {
+      RUN_ON_THREAD(mMediaThread,
+                    WrapRunnable(nsRefPtr<MediaEngineSource>(mAudioSource), // threadsafe
+                                 &MediaEngineSource::Config,
+                                 aEchoOn, aEcho, aAgcOn, aAGC, aNoiseOn, aNoise),
+                    NS_DISPATCH_NORMAL);
+    }
+  }
 
   void
   Remove()
