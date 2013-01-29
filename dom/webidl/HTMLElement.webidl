@@ -15,7 +15,6 @@
 interface DOMStringMap;
 interface HTMLMenuElement;
 
-// Hack to make sure that we initialize the touch prefs properly
 [PrefControlled]
 interface HTMLElement : Element {
   // metadata attributes
@@ -81,6 +80,19 @@ interface HTMLElement : Element {
   // FIXME Bug 810677 Move className from HTMLElement to Element
            attribute DOMString className;
 
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
+           attribute EventHandler ontouchstart;
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
+           attribute EventHandler ontouchend;
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
+           attribute EventHandler ontouchmove;
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
+           attribute EventHandler ontouchenter;
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
+           attribute EventHandler ontouchleave;
+  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
+           attribute EventHandler ontouchcancel;
+
   [SetterThrows]
            attribute EventHandler oncopy;
   [SetterThrows]
@@ -98,24 +110,7 @@ partial interface HTMLElement {
   readonly attribute long offsetHeight;
 };
 
-[NoInterfaceObject]
-interface TouchEventHandlers {
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchstart;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchend;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchmove;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchenter;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchleave;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchcancel;
-};
-
 HTMLElement implements GlobalEventHandlers;
 HTMLElement implements NodeEventHandlers;
-HTMLElement implements TouchEventHandlers;
 
 interface HTMLUnknownElement : HTMLElement {};
