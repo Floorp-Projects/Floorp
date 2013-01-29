@@ -163,6 +163,8 @@ BluetoothDevice::Create(nsPIDOMWindow* aWindow,
 void
 BluetoothDevice::Notify(const BluetoothSignal& aData)
 {
+  BT_LOG("[D] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
+
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("PropertyChanged")) {
     NS_ASSERTION(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue,
