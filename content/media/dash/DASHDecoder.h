@@ -162,6 +162,14 @@ public:
     return (-1);
   }
 
+  // Returns the total number of subsegments that have been loaded. Will enter
+  // monitor for read access off the decode thread.
+  uint32_t GetNumSubsegmentLoads() {
+    ReentrantMonitorConditionallyEnter mon(!OnDecodeThread(),
+                                           GetReentrantMonitor());
+    return mVideoSubsegmentLoads.Length();
+  }
+
   // Returns the index of the rep decoder used to load a subsegment. Will enter
   // monitor for read access off the decode thread.
   int32_t GetRepIdxForVideoSubsegmentLoad(int32_t aSubsegmentIdx)
