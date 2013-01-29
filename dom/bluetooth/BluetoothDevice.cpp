@@ -10,10 +10,8 @@
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
 
-#include "nsIDOMDOMRequest.h"
 #include "nsDOMClassInfo.h"
 #include "nsContentUtils.h"
-#include "nsTArrayHelpers.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 USING_BLUETOOTH_NAMESPACE
@@ -44,7 +42,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothDevice, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothDevice, nsDOMEventTargetHelper)
 
-BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aOwner,
+BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
                                  const nsAString& aAdapterPath,
                                  const BluetoothValue& aValue) :
   BluetoothPropertyContainer(BluetoothObjectType::TYPE_DEVICE),
@@ -53,7 +51,9 @@ BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aOwner,
   mAdapterPath(aAdapterPath),
   mIsRooted(false)
 {
-  BindToOwner(aOwner);
+  MOZ_ASSERT(aWindow);
+
+  BindToOwner(aWindow);
   const InfallibleTArray<BluetoothNamedValue>& values =
     aValue.get_ArrayOfBluetoothNamedValue();
   for (uint32_t i = 0; i < values.Length(); ++i) {
@@ -115,58 +115,46 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
     mUuids = value.get_ArrayOfnsString();
     nsresult rv;
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-    if (sc) {
-      rv =
-        nsTArrayToJSArray(sc->GetNativeContext(), mUuids, &mJsUuids);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Cannot set JS UUIDs object!");
-        return;
-      }
-      Root();
-    } else {
-      NS_WARNING("Could not get context!");
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (!SetJsObject(sc->GetNativeContext(), value, mJsUuids)) {
+      NS_WARNING("Cannot set JS UUIDs object!");
+      return;
     }
+    Root();
   } else if (name.EqualsLiteral("Services")) {
     mServices = value.get_ArrayOfnsString();
     nsresult rv;
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-    if (sc) {
-      rv =
-        nsTArrayToJSArray(sc->GetNativeContext(), mServices, &mJsServices);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Cannot set JS Services object!");
-        return;
-      }
-      Root();
-    } else {
-      NS_WARNING("Could not get context!");
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (!SetJsObject(sc->GetNativeContext(), value, mJsServices)) {
+      NS_WARNING("Cannot set JS Devices object!");
+      return;
     }
-#ifdef DEBUG
+    Root();
   } else {
     nsCString warningMsg;
     warningMsg.AssignLiteral("Not handling device property: ");
     warningMsg.Append(NS_ConvertUTF16toUTF8(name));
     NS_WARNING(warningMsg.get());
-#endif
   }
 }
 
 // static
 already_AddRefed<BluetoothDevice>
-BluetoothDevice::Create(nsPIDOMWindow* aOwner,
+BluetoothDevice::Create(nsPIDOMWindow* aWindow,
                         const nsAString& aAdapterPath,
                         const BluetoothValue& aValue)
 {
-  // Make sure we at least have a service
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindow);
+
   BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    NS_WARNING("BluetoothService not available!");
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(bs, nullptr);
 
-  nsRefPtr<BluetoothDevice> device = new BluetoothDevice(aOwner, aAdapterPath,
-                                                         aValue);
-
+  nsRefPtr<BluetoothDevice> device =
+    new BluetoothDevice(aWindow, aAdapterPath, aValue);
   bs->RegisterBluetoothSignalHandler(device->mPath, device);
 
   return device.forget();

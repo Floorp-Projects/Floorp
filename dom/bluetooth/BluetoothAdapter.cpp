@@ -14,13 +14,11 @@
 
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
-#include "nsDOMEvent.h"
 #include "nsIDOMBluetoothDeviceAddressEvent.h"
 #include "nsIDOMBluetoothDeviceEvent.h"
-#include "nsIDOMDOMRequest.h"
 #include "nsTArrayHelpers.h"
+#include "DOMRequest.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOMCIDInternal.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/ContentChild.h"
@@ -123,18 +121,20 @@ private:
 
 static int kCreatePairedDeviceTimeout = 50000; // unit: msec
 
-BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aOwner, const BluetoothValue& aValue)
-    : BluetoothPropertyContainer(BluetoothObjectType::TYPE_ADAPTER)
-    , mEnabled(false)
-    , mDiscoverable(false)
-    , mDiscovering(false)
-    , mPairable(false)
-    , mPowered(false)
-    , mJsUuids(nullptr)
-    , mJsDeviceAddresses(nullptr)
-    , mIsRooted(false)
+BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
+                                   const BluetoothValue& aValue)
+  : BluetoothPropertyContainer(BluetoothObjectType::TYPE_ADAPTER)
+  , mDiscoverable(false)
+  , mDiscovering(false)
+  , mPairable(false)
+  , mPowered(false)
+  , mJsUuids(nullptr)
+  , mJsDeviceAddresses(nullptr)
+  , mIsRooted(false)
 {
-  BindToOwner(aOwner);
+  MOZ_ASSERT(aWindow);
+
+  BindToOwner(aWindow);
   const InfallibleTArray<BluetoothNamedValue>& values =
     aValue.get_ArrayOfBluetoothNamedValue();
   for (uint32_t i = 0; i < values.Length(); ++i) {
@@ -147,8 +147,6 @@ BluetoothAdapter::~BluetoothAdapter()
   BluetoothService* bs = BluetoothService::Get();
   // We can be null on shutdown, where this might happen
   if (bs) {
-    // XXXbent I don't see anything about LOCAL_AGENT_PATH or REMOTE_AGENT_PATH
-    //         here. Probably a bug? Maybe use UnregisterAll.
     bs->UnregisterBluetoothSignalHandler(mPath, this);
   }
   Unroot();
@@ -187,8 +185,6 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     mAddress = value.get_nsString();
   } else if (name.EqualsLiteral("Path")) {
     mPath = value.get_nsString();
-  } else if (name.EqualsLiteral("Enabled")) {
-    mEnabled = value.get_bool();
   } else if (name.EqualsLiteral("Discoverable")) {
     mDiscoverable = value.get_bool();
   } else if (name.EqualsLiteral("Discovering")) {
@@ -207,33 +203,24 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     mUuids = value.get_ArrayOfnsString();
     nsresult rv;
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-    if (sc) {
-      rv =
-        nsTArrayToJSArray(sc->GetNativeContext(), mUuids, &mJsUuids);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Cannot set JS UUIDs object!");
-        return;
-      }
-      Root();
-    } else {
-      NS_WARNING("Could not get context!");
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (!SetJsObject(sc->GetNativeContext(), value, mJsUuids)) {
+      NS_WARNING("Cannot set JS UUIDs object!");
+      return;
     }
+    Root();
   } else if (name.EqualsLiteral("Devices")) {
     mDeviceAddresses = value.get_ArrayOfnsString();
     nsresult rv;
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-    if (sc) {
-      rv =
-        nsTArrayToJSArray(sc->GetNativeContext(), mDeviceAddresses,
-                          &mJsDeviceAddresses);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Cannot set JS Device Addresses object!");
-        return;
-      }
-      Root();
-    } else {
-      NS_WARNING("Could not get context!");
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (!SetJsObject(sc->GetNativeContext(), value, mJsDeviceAddresses)) {
+      NS_WARNING("Cannot set JS Devices object!");
+      return;
     }
+    Root();
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -246,16 +233,15 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
 
 // static
 already_AddRefed<BluetoothAdapter>
-BluetoothAdapter::Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue)
+BluetoothAdapter::Create(nsPIDOMWindow* aWindow, const BluetoothValue& aValue)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindow);
+
   BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    NS_WARNING("BluetoothService not available!");
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(bs, nullptr);
 
-  nsRefPtr<BluetoothAdapter> adapter = new BluetoothAdapter(aOwner, aValue);
-
+  nsRefPtr<BluetoothAdapter> adapter = new BluetoothAdapter(aWindow, aValue);
   bs->RegisterBluetoothSignalHandler(adapter->GetPath(), adapter);
 
   return adapter.forget();
