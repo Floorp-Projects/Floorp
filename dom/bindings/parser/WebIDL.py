@@ -2346,7 +2346,6 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
                 argument.resolve(self)
 
         self._treatNonCallableAsNull = False
-        self._workerOnly = False
 
     def isCallback(self):
         return True
@@ -2387,16 +2386,11 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isNonCallbackInterface() or other.isDate())
 
-    def isWorkerOnly(self):
-        return self._workerOnly
-
     def addExtendedAttributes(self, attrs):
         unhandledAttrs = []
         for attr in attrs:
             if attr.identifier() == "TreatNonCallableAsNull":
                 self._treatNonCallableAsNull = True
-            elif attr.identifier() == "WorkerOnly":
-                self._workerOnly = True
             else:
                 unhandledAttrs.append(attr)
         if len(unhandledAttrs) != 0:
