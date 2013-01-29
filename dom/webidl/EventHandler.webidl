@@ -153,3 +153,41 @@ interface NodeEventHandlers {
            [SetterThrows]
            attribute EventHandler onscroll;
 };
+
+[NoInterfaceObject]
+interface WindowEventHandlers {
+           [SetterThrows]
+           attribute EventHandler onafterprint;
+           [SetterThrows]
+           attribute EventHandler onbeforeprint;
+           [SetterThrows]
+           attribute BeforeUnloadEventHandler onbeforeunload;
+  //       For now, onerror comes from NodeEventHandlers
+  //       When we convert Window to WebIDL this may need to change.
+  //       [SetterThrows]
+  //       attribute OnErrorEventHandler onerror;
+           //(Not implemented)[SetterThrows]
+           //(Not implemented)attribute EventHandler onfullscreenchange;
+           //(Not implemented)[SetterThrows]
+           //(Not implemented)attribute EventHandler onfullscreenerror;
+           [SetterThrows]
+           attribute EventHandler onhashchange;
+           [SetterThrows]
+           attribute EventHandler onmessage;
+           [SetterThrows]
+           attribute EventHandler onoffline;
+           [SetterThrows]
+           attribute EventHandler ononline;
+           [SetterThrows]
+           attribute EventHandler onpagehide;
+           [SetterThrows]
+           attribute EventHandler onpageshow;
+           [SetterThrows]
+           attribute EventHandler onpopstate;
+           [SetterThrows]
+           attribute EventHandler onresize;
+           //(Not implemented)[SetterThrows]
+           //(Not implemented)attribute EventHandler onstorage;
+           [SetterThrows]
+           attribute EventHandler onunload;
+};
