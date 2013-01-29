@@ -10027,9 +10027,8 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     JS::CompileOptions options(aScx->GetNativeContext());
     options.setFileAndLine(filename, lineNo)
            .setVersion(JSVERSION_DEFAULT);
-    JS::Value ignored;
     aScx->EvaluateString(nsDependentString(script), *FastGetGlobalJSObject(),
-                         options, /*aCoerceToString = */ false, &ignored);
+                         options, /*aCoerceToString = */ false, nullptr);
   } else {
     nsCOMPtr<nsIVariant> dummy;
     nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
