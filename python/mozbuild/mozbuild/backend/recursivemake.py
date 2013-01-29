@@ -8,7 +8,10 @@ import logging
 import os
 
 from .base import BuildBackend
-from ..frontend.data import DirectoryTraversal
+from ..frontend.data import (
+    ConfigFileSubstitution,
+    DirectoryTraversal,
+)
 from ..util import FileAvoidWrite
 
 
@@ -73,6 +76,10 @@ class RecursiveMakeBackend(BuildBackend):
 
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)
+        elif isinstance(obj, ConfigFileSubstitution):
+            backend_file.inputs.add(obj.input_path)
+            backend_file.outputs.add(obj.output_path)
+            self.environment.create_config_file(obj.output_path)
 
         self._backend_files[obj.srcdir] = backend_file
 

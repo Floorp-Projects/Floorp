@@ -91,3 +91,22 @@ class DirectoryTraversal(SandboxDerived):
         self.tier_static_dirs = OrderedDict()
         self.external_make_dirs = []
         self.parallel_external_make_dirs = []
+
+
+class ConfigFileSubstitution(SandboxDerived):
+    """Describes a config file that will be generated using substitutions.
+
+    The output_path attribute defines the relative path from topsrcdir of the
+    output file to generate.
+    """
+    __slots__ = (
+        'input_path',
+        'output_path',
+    )
+
+    def __init__(self, sandbox):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.input_path = None
+        self.output_path = None
+
