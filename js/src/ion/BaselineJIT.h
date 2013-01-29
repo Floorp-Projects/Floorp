@@ -107,6 +107,9 @@ struct BaselineScript
     // Allocated space for optimized stubs.
     ICStubSpace optimizedStubSpace_;
 
+    // Native code offset right before the scope chain is initialized.
+    uint32_t prologueOffset_;
+
     // Bit set when discarding JIT code, to indicate this script is
     // on the stack and should not be discarded.
     bool active_;
@@ -122,9 +125,10 @@ struct BaselineScript
 
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
-    BaselineScript();
+    BaselineScript(uint32_t prologueOffset);
 
-    static BaselineScript *New(JSContext *cx, size_t icEntries, size_t pcMappingEntries);
+    static BaselineScript *New(JSContext *cx, uint32_t prologueOffset, size_t icEntries,
+                               size_t pcMappingEntries);
     static void Trace(JSTracer *trc, BaselineScript *script);
     static void Destroy(FreeOp *fop, BaselineScript *script);
 
@@ -140,6 +144,10 @@ struct BaselineScript
     }
     void resetActive() {
         active_ = false;
+    }
+
+    uint32_t prologueOffset() const {
+        return prologueOffset_;
     }
 
     ICEntry *icEntryList() {
