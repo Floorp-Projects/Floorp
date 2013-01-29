@@ -161,6 +161,8 @@ static const PRUnichar sHTMLTagUnicodeName_link[] =
   {'l', 'i', 'n', 'k', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_listing[] =
   {'l', 'i', 's', 't', 'i', 'n', 'g', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_main[] =
+  {'m', 'a', 'i', 'n', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_map[] =
   {'m', 'a', 'p', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_mark[] =
