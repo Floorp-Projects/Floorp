@@ -40,6 +40,11 @@ CONFIGS = {
             ('MOZ_BAR', 'bar'),
         ],
     },
+    'external_make_dirs': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [],
+    },
 }
 
 
