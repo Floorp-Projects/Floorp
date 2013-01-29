@@ -502,7 +502,7 @@ public:
   // from a content header. Must be called from the main thread only.
   virtual void SetDuration(double aDuration);
 
-  void SetMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
+  void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
 
   // Set a flag indicating whether seeking is supported
   virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;

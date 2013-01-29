@@ -24,6 +24,9 @@ public:
 
   void Add(double aStart, double aEnd);
 
+  // Returns the end time of the last range, or -1 if no ranges added.
+  double GetFinalEndTime();
+
   // See http://www.whatwg.org/html/#normalized-timeranges-object
   void Normalize();
 
