@@ -276,9 +276,12 @@ protected:
     // The number of event series we're currently capturing.
     int32_t mEventCaptureDepth;
 
+    nsRect mRect;
     nsIntSize mDimensions;
+    ScreenOrientation mOrientation;
     float mDPI;
     bool mShown;
+    bool mUpdatedDimensions;
 
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;
