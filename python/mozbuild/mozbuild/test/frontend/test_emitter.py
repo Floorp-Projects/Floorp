@@ -105,9 +105,9 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(objs[2], ConfigFileSubstitution)
 
         topobjdir = reader.config.topobjdir
-        self.assertEqual(objs[1].output_path,
+        self.assertEqual(os.path.normpath(objs[1].output_path),
             os.path.normpath(os.path.join(topobjdir, 'foo')))
-        self.assertEqual(objs[2].output_path,
+        self.assertEqual(os.path.normpath(objs[2].output_path),
             os.path.normpath(os.path.join(topobjdir, 'bar')))
 
 
