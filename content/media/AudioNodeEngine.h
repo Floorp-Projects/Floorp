@@ -101,6 +101,13 @@ void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                     float aOutput[WEBAUDIO_BLOCK_SIZE]);
 
 /**
+ * Vector copy-scaled operation.
+ */
+void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
+                                    const float aScale[WEBAUDIO_BLOCK_SIZE],
+                                    float aOutput[WEBAUDIO_BLOCK_SIZE]);
+
+/**
  * All methods of this class and its subclasses are called on the
  * MediaStreamGraph thread.
  */
