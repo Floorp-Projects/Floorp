@@ -72,7 +72,7 @@ private:
     double mDuration;
 
   private:
-    static bool IsValid(float value)
+    static bool IsValid(double value)
     {
       return MOZ_DOUBLE_IS_FINITE(value);
     }
