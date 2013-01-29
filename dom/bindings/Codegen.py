@@ -1923,10 +1923,18 @@ if (!ccx.IsValid()) {
 ${codeOnFailure}
 }
 
+nsISupports* supp = nullptr;
+if (XPCConvert::GetISupportsFromJSObject(${source}, &supp)) {
+  nsCOMPtr<nsIXPConnectWrappedNative> xpcwn = do_QueryInterface(supp);
+  if (xpcwn) {
+    supp = xpcwn->Native();
+  }
+}
+
 const nsIID& iid = NS_GET_IID(${nativeType});
 nsRefPtr<nsXPCWrappedJS> wrappedJS;
 rv = nsXPCWrappedJS::GetNewOrUsed(ccx, ${source}, iid,
-                                  NULL, getter_AddRefs(wrappedJS));
+                                  supp, getter_AddRefs(wrappedJS));
 if (NS_FAILED(rv) || !wrappedJS) {
 ${codeOnFailure}
 }
