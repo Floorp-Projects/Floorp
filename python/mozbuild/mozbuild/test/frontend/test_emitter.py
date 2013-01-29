@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 import os
 import unittest
 
+from mozunit import main
+
 from mozbuild.frontend.data import DirectoryTraversal
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
@@ -83,3 +85,6 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'foo_static', 'bar',
             'baz'])
 
+
+if __name__ == '__main__':
+    main()
