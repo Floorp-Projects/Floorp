@@ -102,8 +102,6 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
-  virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                         nsAString& aResult) const;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
