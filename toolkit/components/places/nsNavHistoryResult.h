@@ -303,8 +303,7 @@ public:
   }
   static bool IsTypeURI(uint32_t type) {
     return (type == nsINavHistoryResultNode::RESULT_TYPE_URI ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_VISIT ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_FULL_VISIT);
+            type == nsINavHistoryResultNode::RESULT_TYPE_VISIT);
   }
   bool IsURI() {
     uint32_t type;
@@ -312,8 +311,7 @@ public:
     return IsTypeURI(type);
   }
   static bool IsTypeVisit(uint32_t type) {
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_VISIT ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_FULL_VISIT);
+    return type == nsINavHistoryResultNode::RESULT_TYPE_VISIT;
   }
   bool IsVisit() {
     uint32_t type;
