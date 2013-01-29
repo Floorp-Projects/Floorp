@@ -1303,11 +1303,17 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
 
   if (CC_IS_AUDIO(mcap_id)) {
     std::vector<mozilla::AudioCodecConfig *> configs;
+
     // Instantiate an appropriate conduit
+    mozilla::RefPtr<mozilla::AudioSessionConduit> tx_conduit =
+      pc.impl()->media()->GetConduit(level, false);
+
     mozilla::RefPtr<mozilla::AudioSessionConduit> conduit =
-                    mozilla::AudioSessionConduit::Create();
+                    mozilla::AudioSessionConduit::Create(tx_conduit);
     if(!conduit)
       return VCM_ERROR;
+
+    pc.impl()->media()->AddConduit(level, true, conduit);
 
     mozilla::AudioCodecConfig *config_raw;
 
@@ -1953,11 +1959,16 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     mozilla::ScopedDeletePtr<mozilla::AudioCodecConfig> config(config_raw);
 
     // Instantiate an appropriate conduit
+    mozilla::RefPtr<mozilla::AudioSessionConduit> rx_conduit =
+      pc.impl()->media()->GetConduit(level, true);
+
     mozilla::RefPtr<mozilla::AudioSessionConduit> conduit =
-      mozilla::AudioSessionConduit::Create();
+      mozilla::AudioSessionConduit::Create(rx_conduit);
 
     if (!conduit || conduit->ConfigureSendMediaCodec(config))
       return VCM_ERROR;
+
+    pc.impl()->media()->AddConduit(level, false, conduit);
 
     mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
         new mozilla::MediaPipelineTransmit(
