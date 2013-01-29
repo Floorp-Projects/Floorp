@@ -652,17 +652,19 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                 // coalesce this new draw event with the one already in the queue
                 const nsIntRect& oldRect = mQueuedDrawEvent->Rect();
                 const nsIntRect& newRect = ae->Rect();
-                int combinedArea = (oldRect.width * oldRect.height) +
-                                   (newRect.width * newRect.height);
-
                 nsIntRect combinedRect = oldRect.Union(newRect);
+
+#if defined(DEBUG) || defined(FORCE_ALOG)
                 // XXX We may want to consider using regions instead of rectangles.
                 //     Print an error if we're upload a lot more than we would
                 //     if we handled this as two separate events.
+                int combinedArea = (oldRect.width * oldRect.height) +
+                                   (newRect.width * newRect.height);
                 int boundsArea = combinedRect.width * combinedRect.height;
                 if (boundsArea > combinedArea * 8)
                     ALOG("nsAppShell: Area of bounds greatly exceeds combined area: %d > %d",
                          boundsArea, combinedArea);
+#endif
 
                 // coalesce into the new draw event rather than the queued one because
                 // it is not always safe to move draws earlier in the queue; there may
