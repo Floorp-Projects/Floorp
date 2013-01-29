@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGPatternElement_h
 #define mozilla_dom_SVGPatternElement_h
 
-#include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGPatternElement.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGURIReference.h"
@@ -33,7 +32,6 @@ typedef nsSVGElement SVGPatternElementBase;
 class SVGPatternElement MOZ_FINAL : public SVGPatternElementBase,
                                     public nsIDOMSVGPatternElement,
                                     public nsIDOMSVGURIReference,
-                                    public nsIDOMSVGFitToViewBox,
                                     public nsIDOMSVGUnitTypes
 {
   friend class ::nsSVGPatternFrame;
@@ -55,9 +53,6 @@ public:
 
   // URI Reference
   NS_DECL_NSIDOMSVGURIREFERENCE
-
-  // FitToViewbox
-  NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
@@ -117,7 +112,7 @@ protected:
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 
-  // nsIDOMSVGFitToViewbox properties
+  // SVGFitToViewbox properties
   nsSVGViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 };
