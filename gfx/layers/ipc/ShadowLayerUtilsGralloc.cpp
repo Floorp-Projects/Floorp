@@ -294,6 +294,13 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
                                           uint32_t aCaps,
                                           SurfaceDescriptor* aBuffer)
 {
+  // Some GL implementations fail to render gralloc textures with
+  // width < 64.  There's not much point in gralloc'ing buffers that
+  // small anyway, so fall back on shared memory plus a texture
+  // upload.
+  if (aSize.width < 64) {
+    return false;
+  }
   SAMPLE_LABEL("ShadowLayerForwarder", "PlatformAllocBuffer");
   // Gralloc buffers are efficiently mappable as gfxImageSurface, so
   // no need to check |aCaps & MAP_AS_IMAGE_SURFACE|.
