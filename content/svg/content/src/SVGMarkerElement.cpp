@@ -76,8 +76,8 @@ NS_IMPL_ADDREF_INHERITED(SVGMarkerElement,SVGMarkerElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGMarkerElement,SVGMarkerElementBase)
 
 NS_INTERFACE_TABLE_HEAD(SVGMarkerElement)
-  NS_NODE_INTERFACE_TABLE5(SVGMarkerElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGFitToViewBox,
+  NS_NODE_INTERFACE_TABLE4(SVGMarkerElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement,
                            nsIDOMSVGMarkerElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGMarkerElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGMarkerElementBase)
@@ -122,14 +122,6 @@ SVGMarkerElement::SVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMarkerElement)
 
 //----------------------------------------------------------------------
-// nsIDOMSVGFitToViewBox methods
-
-/* readonly attribute nsIDOMSVGAnimatedRect viewBox; */
-  NS_IMETHODIMP SVGMarkerElement::GetViewBox(nsIDOMSVGAnimatedRect * *aViewBox)
-{
-  *aViewBox = ViewBox().get();
-  return NS_OK;
-}
 
 already_AddRefed<nsIDOMSVGAnimatedRect>
 SVGMarkerElement::ViewBox()
@@ -137,15 +129,6 @@ SVGMarkerElement::ViewBox()
   nsCOMPtr<nsIDOMSVGAnimatedRect> rect;
   mViewBox.ToDOMAnimatedRect(getter_AddRefs(rect), this);
   return rect.forget();
-}
-
-/* readonly attribute SVGPreserveAspectRatio preserveAspectRatio; */
-NS_IMETHODIMP
-SVGMarkerElement::GetPreserveAspectRatio(nsISupports
-                                         **aPreserveAspectRatio)
-{
-  *aPreserveAspectRatio = PreserveAspectRatio().get();
-  return NS_OK;
 }
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
