@@ -1478,6 +1478,222 @@
     "n_buckets": 20,
     "description": "Time spent shutting down plugins (ms)"
   },
+  "MOZ_SQLITE_OPEN_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite open() (ms)"
+  },
+  "MOZ_SQLITE_OPEN_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite open() (ms)"
+  },
+  "MOZ_SQLITE_TRUNCATE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite truncate() (ms)"
+  },
+  "MOZ_SQLITE_TRUNCATE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite truncate() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_READ_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_READ_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_READ_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_READ_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_READ_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_READ_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_READ_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_READ_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_WRITE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_WRITE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_WRITE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_WRITE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_WRITE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_WRITE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_WRITE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_WRITE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_SYNC_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_SYNC_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_SYNC_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_SYNC_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_SYNC_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_SYNC_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_SYNC_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_SYNC_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_READ_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite read() (bytes)"
+  },
+  "MOZ_SQLITE_PLACES_READ_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite read() (bytes)"
+  },
+  "MOZ_SQLITE_COOKIES_READ_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite read() (bytes)"
+  },
+  "MOZ_SQLITE_WEBAPPS_READ_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite read() (bytes)"
+  },
+  "MOZ_SQLITE_PLACES_WRITE_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite write (bytes)"
+  },
+  "MOZ_SQLITE_COOKIES_WRITE_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite write (bytes)"
+  },
+  "MOZ_SQLITE_WEBAPPS_WRITE_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite write (bytes)"
+  },
+  "MOZ_SQLITE_OTHER_WRITE_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite write (bytes)"
+  },
   "MOZ_STORAGE_ASYNC_REQUESTS_MS": {
     "kind": "exponential",
     "high": "32768",
