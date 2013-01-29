@@ -298,10 +298,21 @@ class TransportTest : public ::testing::Test {
     delete p2_;
   }
 
+  static void debug_printf(const char *format, ...) {
+    va_list ap;
+
+    va_start(ap, format);
+    vprintf(format, ap);
+    va_end(ap);
+  }
+
+
   static void SetUpTestCase() {
-    usrsctp_init(0, &TransportTestPeer::conn_output);
     if (sctp_logging) {
+      usrsctp_init(0, &TransportTestPeer::conn_output, debug_printf);
       usrsctp_sysctl_set_sctp_debug_on(0xffffffff);
+    } else {
+      usrsctp_init(0, &TransportTestPeer::conn_output, nullptr);
     }
   }
 
