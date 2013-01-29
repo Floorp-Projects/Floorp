@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,
@@ -52,7 +53,7 @@ public class TabsPanel extends LinearLayout
     private PanelView mPanelNormal;
     private PanelView mPanelPrivate;
     private PanelView mPanelRemote;
-    private LinearLayout mFooter;
+    private RelativeLayout mFooter;
     private TabsLayoutChangeListener mLayoutChangeListener;
 
     private IconTabWidget mTabWidget;
@@ -101,7 +102,7 @@ public class TabsPanel extends LinearLayout
         mPanelRemote = (RemoteTabs) findViewById(R.id.synced_tabs);
         mPanelRemote.setTabsPanel(this);
 
-        mFooter = (LinearLayout) findViewById(R.id.tabs_panel_footer);
+        mFooter = (RelativeLayout) findViewById(R.id.tabs_panel_footer);
 
         mAddTab = (ImageButton) findViewById(R.id.add_tab);
         mAddTab.setOnClickListener(new Button.OnClickListener() {
@@ -272,7 +273,7 @@ public class TabsPanel extends LinearLayout
     
         @Override
         public void onLightweightThemeChanged() {
-            LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_bg_repeat);
+            LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_dark_bg_repeat);
             if (drawable == null)
                 return;
 
@@ -282,7 +283,7 @@ public class TabsPanel extends LinearLayout
 
         @Override
         public void onLightweightThemeReset() {
-            setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            setBackgroundResource(R.drawable.tabs_tray_dark_bg_repeat);
         }
 
         @Override
