@@ -92,11 +92,11 @@ private:
  * call SetStringBuffer on this object, but only if it plans to keep holding a
  * strong ref to the stringbuffer!
  *
- * The proper way to store a value in this class is to either to nothing (which
- * leaves this as an empty string), to call SetStringBuffer with a non-null
- * stringbuffer, to call SetNull(), or to call AsAString() and set the value in
- * the resulting nsString.  These options are mutually exclusive!  Don't do more
- * than one of them.
+ * The proper way to store a value in this class is to either to do nothing
+ * (which leaves this as an empty string), to call SetStringBuffer with a
+ * non-null stringbuffer, to call SetNull(), or to call AsAString() and set the
+ * value in the resulting nsString.  These options are mutually exclusive!
+ * Don't do more than one of them.
  *
  * The proper way to extract a value is to check IsNull().  If not null, then
  * check HasStringBuffer().  If that's true, check for a zero length, and if the
