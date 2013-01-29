@@ -1251,8 +1251,15 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 {
   SAMPLE_LABEL("JS", "EvaluateString");
   MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
+  MOZ_ASSERT_IF(aCoerceToString, aRetValue);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-  *aRetValue = JSVAL_VOID;
+  // Unfortunately, the JS engine actually compiles scripts with a return value
+  // in a different, less efficient way.  Furthermore, it can't JIT them in many
+  // cases.  So we need to be explicitly told whether the caller cares about the
+  // return value.  Callers use null to indicate they don't care.
+  if (aRetValue) {
+    *aRetValue = JSVAL_VOID;
+  }
 
   if (!mScriptsEnabled) {
     return NS_OK;
@@ -1287,7 +1294,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     ok = JS::Evaluate(mContext, rootedScope, aOptions,
                       PromiseFlatString(aScript).get(),
                       aScript.Length(), aRetValue);
-    if (ok && !aRetValue->isUndefined() && aCoerceToString) {
+    if (ok && aCoerceToString && !aRetValue->isUndefined()) {
       JSString* str = JS_ValueToString(mContext, *aRetValue);
       ok = !!str;
       *aRetValue = ok ? JS::StringValue(str) : JS::UndefinedValue();
@@ -1296,7 +1303,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   }
 
   if (!ok) {
-    *aRetValue = JS::UndefinedValue();
+    if (aRetValue) {
+      *aRetValue = JS::UndefinedValue();
+    }
     // Tell XPConnect about any pending exceptions. This is needed
     // to avoid dropping JS exceptions in case we got here through
     // nested calls through XPConnect.
@@ -1308,7 +1317,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   ScriptEvaluated(true);
 
   // Wrap the return value into whatever compartment mContext was in.
-  if (!JS_WrapValue(mContext, aRetValue))
+  if (aRetValue && !JS_WrapValue(mContext, aRetValue))
     return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }

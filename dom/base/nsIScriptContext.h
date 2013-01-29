@@ -72,8 +72,10 @@ public:
    *                 internally, though 'originPrincipals' may be passed.
    * @param aCoerceToString if the return value is not JSVAL_VOID, convert it
    *                        to a string before returning.
-   * @param aRetValue the result of executing the script.
-   **/
+   * @param aRetValue the result of executing the script.  Pass null if you
+   *                  don't care about the result.  Note that asking for a
+   *                  result will deoptimize your script somewhat in many cases.
+   */
   virtual nsresult EvaluateString(const nsAString& aScript,
                                   JSObject& aScopeObject,
                                   JS::CompileOptions& aOptions,
