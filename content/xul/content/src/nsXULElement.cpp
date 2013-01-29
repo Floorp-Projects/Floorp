@@ -104,8 +104,9 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsICSSDeclaration.h"
 
-namespace css = mozilla::css;
-namespace dom = mozilla::dom;
+#include "mozilla/dom/XULElementBinding.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 
@@ -165,6 +166,8 @@ nsXULElement::nsXULElement(already_AddRefed<nsINodeInfo> aNodeInfo)
       mBindingParent(nullptr)
 {
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
+
+    SetIsDOMBinding();
 
     // We may be READWRITE by default; check.
     if (IsReadWriteTextElement()) {
@@ -400,11 +403,17 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                                      const nsAString& aValue,
                                      nsIDOMNodeList** aReturn)
 {
+    *aReturn = GetElementsByAttribute(aAttribute, aValue).get();
+    return NS_OK;
+}
+
+already_AddRefed<nsINodeList>
+nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
+                                     const nsAString& aValue)
+{
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
-    NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
     void* attrValue = new nsString(aValue);
-    NS_ENSURE_TRUE(attrValue, NS_ERROR_OUT_OF_MEMORY);
-    nsContentList *list = 
+    nsRefPtr<nsContentList> list =
         new nsContentList(this,
                           nsXULDocument::MatchAttribute,
                           nsContentUtils::DestroyMatchString,
@@ -412,10 +421,7 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                           true,
                           attrAtom,
                           kNameSpaceID_Unknown);
-    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(*aReturn = list);
-    return NS_OK;
+    return list.forget();
 }
 
 NS_IMETHODIMP
@@ -424,21 +430,32 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
                                        const nsAString& aValue,
                                        nsIDOMNodeList** aReturn)
 {
+    ErrorResult rv;
+    *aReturn =
+        GetElementsByAttributeNS(aNamespaceURI, aAttribute, aValue, rv).get();
+    return rv.ErrorCode();
+}
+
+already_AddRefed<nsINodeList>
+nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
+                                       const nsAString& aAttribute,
+                                       const nsAString& aValue,
+                                       ErrorResult& rv)
+{
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
-    NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
 
     int32_t nameSpaceId = kNameSpaceID_Wildcard;
     if (!aNamespaceURI.EqualsLiteral("*")) {
-      nsresult rv =
+      rv =
         nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
                                                               nameSpaceId);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (rv.Failed()) {
+          return nullptr;
+      }
     }
 
     void* attrValue = new nsString(aValue);
-    NS_ENSURE_TRUE(attrValue, NS_ERROR_OUT_OF_MEMORY);
-    
-    nsContentList *list = 
+    nsRefPtr<nsContentList> list =
         new nsContentList(this,
                           nsXULDocument::MatchAttribute,
                           nsContentUtils::DestroyMatchString,
@@ -446,10 +463,8 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
                           true,
                           attrAtom,
                           nameSpaceId);
-    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_ADDREF(*aReturn = list);
-    return NS_OK;
+    return list.forget();
 }
 
 nsEventListenerManager*
@@ -1176,50 +1191,71 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 NS_IMETHODIMP
 nsXULElement::GetResource(nsIRDFResource** aResource)
 {
+    ErrorResult rv;
+    *aResource = GetResource(rv).get();
+    return rv.ErrorCode();
+}
+
+already_AddRefed<nsIRDFResource>
+nsXULElement::GetResource(ErrorResult& rv)
+{
     nsAutoString id;
     GetAttr(kNameSpaceID_None, nsGkAtoms::ref, id);
     if (id.IsEmpty()) {
         GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
     }
 
-    if (!id.IsEmpty()) {
-        return nsXULContentUtils::RDFService()->
-            GetUnicodeResource(id, aResource);
+    if (id.IsEmpty()) {
+        return nullptr;
     }
-    *aResource = nullptr;
 
-    return NS_OK;
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = nsXULContentUtils::RDFService()->
+        GetUnicodeResource(id, getter_AddRefs(resource));
+    return resource.forget();
 }
-
 
 NS_IMETHODIMP
 nsXULElement::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
 {
-    nsCOMPtr<nsIXULTemplateBuilder> builder;
-    GetBuilder(getter_AddRefs(builder));
-
-    if (builder)
-        builder->GetDatabase(aDatabase);
-    else
-        *aDatabase = nullptr;
-
+    *aDatabase = GetDatabase().get();
     return NS_OK;
+}
+
+already_AddRefed<nsIRDFCompositeDataSource>
+nsXULElement::GetDatabase()
+{
+    nsCOMPtr<nsIXULTemplateBuilder> builder = GetBuilder();
+    if (!builder) {
+        return nullptr;
+    }
+
+    nsCOMPtr<nsIRDFCompositeDataSource> database;
+    builder->GetDatabase(getter_AddRefs(database));
+    return database.forget();
 }
 
 
 NS_IMETHODIMP
 nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 {
-    *aBuilder = nullptr;
-
-    // XXX sXBL/XBL2 issue! Owner or current document?
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(GetCurrentDoc());
-    if (xuldoc)
-        xuldoc->GetTemplateBuilderFor(this, aBuilder);
-
+    *aBuilder = GetBuilder().get();
     return NS_OK;
 }
 
+already_AddRefed<nsIXULTemplateBuilder>
+nsXULElement::GetBuilder()
+{
+    // XXX sXBL/XBL2 issue! Owner or current document?
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(GetCurrentDoc());
+    if (!xuldoc) {
+        return nullptr;
+    }
+
+    nsCOMPtr<nsIXULTemplateBuilder> builder;
+    xuldoc->GetTemplateBuilderFor(this, getter_AddRefs(builder));
+    return builder.forget();
+}
 
 //----------------------------------------------------------------------
 // Implementation methods
@@ -1269,29 +1305,45 @@ nsXULElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 NS_IMETHODIMP
 nsXULElement::GetControllers(nsIControllers** aResult)
 {
+    ErrorResult rv;
+    NS_IF_ADDREF(*aResult = GetControllers(rv));
+    return rv.ErrorCode();
+}
+
+nsIControllers*
+nsXULElement::GetControllers(ErrorResult& rv)
+{
     if (! Controllers()) {
         nsDOMSlots* slots = DOMSlots();
 
-        nsresult rv;
         rv = NS_NewXULControllers(nullptr, NS_GET_IID(nsIControllers),
                                   reinterpret_cast<void**>(&slots->mControllers));
 
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a controllers");
-        if (NS_FAILED(rv)) return rv;
+        NS_ASSERTION(NS_SUCCEEDED(rv.ErrorCode()),
+                     "unable to create a controllers");
+        if (rv.Failed()) {
+            return nullptr;
+        }
     }
 
-    *aResult = Controllers();
-    NS_IF_ADDREF(*aResult);
-    return NS_OK;
+    return Controllers();
 }
 
 NS_IMETHODIMP
 nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 {
-  *aResult = nullptr;
+    ErrorResult rv;
+    *aResult = GetBoxObject(rv).get();
+    return rv.ErrorCode();
+}
 
-  // XXX sXBL/XBL2 issue! Owner or current document?
-  return OwnerDoc()->GetBoxObjectFor(this, aResult);
+already_AddRefed<nsIBoxObject>
+nsXULElement::GetBoxObject(ErrorResult& rv)
+{
+    nsCOMPtr<nsIBoxObject> boxObject;
+    // XXX sXBL/XBL2 issue! Owner or current document?
+    rv = OwnerDoc()->GetBoxObjectFor(this, getter_AddRefs(boxObject));
+    return boxObject.forget();
 }
 
 // Methods for setting/getting attributes from nsIDOMXULElement
@@ -1311,26 +1363,19 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 
 #define NS_IMPL_XUL_BOOL_ATTR(_method, _atom)                       \
   NS_IMETHODIMP                                                     \
-  nsXULElement::Get##_method(bool* aResult)                       \
+  nsXULElement::Get##_method(bool* aResult)                         \
   {                                                                 \
-    *aResult = BoolAttrIsTrue(nsGkAtoms::_atom);                   \
-                                                                    \
+    *aResult = _method();                                           \
     return NS_OK;                                                   \
   }                                                                 \
   NS_IMETHODIMP                                                     \
-  nsXULElement::Set##_method(bool aValue)                         \
+  nsXULElement::Set##_method(bool aValue)                           \
   {                                                                 \
-    if (aValue)                                                     \
-      SetAttr(kNameSpaceID_None, nsGkAtoms::_atom,                 \
-              NS_LITERAL_STRING("true"), true);                  \
-    else                                                            \
-      UnsetAttr(kNameSpaceID_None, nsGkAtoms::_atom, true);     \
-                                                                    \
-    return NS_OK;                                                   \
+      SetXULBoolAttr(nsGkAtoms::_atom, aValue);                     \
+      return NS_OK;                                                 \
   }
 
 
-NS_IMPL_XUL_STRING_ATTR(Id, id)
 NS_IMPL_XUL_STRING_ATTR(ClassName, _class)
 NS_IMPL_XUL_STRING_ATTR(Align, align)
 NS_IMPL_XUL_STRING_ATTR(Dir, dir)
@@ -1418,24 +1463,32 @@ nsXULElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
     nsXULElement* otherEl = FromContent(otherContent);
     NS_ENSURE_TRUE(otherEl, NS_ERROR_NOT_IMPLEMENTED);
 
-    if (otherEl == this) {
+    ErrorResult rv;
+    SwapFrameLoaders(*otherEl, rv);
+    return rv.ErrorCode();
+}
+
+void
+nsXULElement::SwapFrameLoaders(nsXULElement& aOtherElement, ErrorResult& rv)
+{
+    if (&aOtherElement == this) {
         // nothing to do
-        return NS_OK;
+        return;
     }
 
     nsXULSlots *ourSlots = static_cast<nsXULSlots*>(GetExistingDOMSlots());
     nsXULSlots *otherSlots =
-        static_cast<nsXULSlots*>(otherEl->GetExistingDOMSlots());
+        static_cast<nsXULSlots*>(aOtherElement.GetExistingDOMSlots());
     if (!ourSlots || !ourSlots->mFrameLoader ||
         !otherSlots || !otherSlots->mFrameLoader) {
         // Can't handle swapping when there is nothing to swap... yet.
-        return NS_ERROR_NOT_IMPLEMENTED;
+        rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+        return;
     }
 
-    return
-        ourSlots->mFrameLoader->SwapWithOtherLoader(otherSlots->mFrameLoader,
-                                                    ourSlots->mFrameLoader,
-                                                    otherSlots->mFrameLoader);
+    rv = ourSlots->mFrameLoader->SwapWithOtherLoader(otherSlots->mFrameLoader,
+                                                     ourSlots->mFrameLoader,
+                                                     otherSlots->mFrameLoader);
 }
 
 NS_IMETHODIMP
@@ -1459,32 +1512,56 @@ nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 NS_IMETHODIMP
 nsXULElement::Focus()
 {
+    ErrorResult rv;
+    Focus(rv);
+    return rv.ErrorCode();
+}
+
+void
+nsXULElement::Focus(ErrorResult& rv)
+{
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     nsCOMPtr<nsIDOMElement> elem = do_QueryObject(this);
-    return fm ? fm->SetFocus(this, 0) : NS_OK;
+    if (fm) {
+        rv = fm->SetFocus(this, 0);
+    }
 }
 
 NS_IMETHODIMP
 nsXULElement::Blur()
 {
+    ErrorResult rv;
+    Blur(rv);
+    return rv.ErrorCode();
+}
+
+void
+nsXULElement::Blur(ErrorResult& rv)
+{
     if (!ShouldBlur(this))
-      return NS_OK;
+      return;
 
     nsIDocument* doc = GetCurrentDoc();
     if (!doc)
-      return NS_OK;
+      return;
 
     nsIDOMWindow* win = doc->GetWindow();
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (win && fm)
-      return fm->ClearFocus(win);
-    return NS_OK;
+    if (win && fm) {
+      rv = fm->ClearFocus(win);
+    }
 }
 
 NS_IMETHODIMP
 nsXULElement::Click()
 {
   return ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN);
+}
+
+void
+nsXULElement::Click(ErrorResult& rv)
+{
+  rv = Click();
 }
 
 nsresult
@@ -1792,7 +1869,7 @@ nsXULElement::ResetChromeMargins()
 }
 
 bool
-nsXULElement::BoolAttrIsTrue(nsIAtom* aName)
+nsXULElement::BoolAttrIsTrue(nsIAtom* aName) const
 {
     const nsAttrValue* attr =
         GetAttrInfo(kNameSpaceID_None, aName).mValue;
@@ -1828,6 +1905,12 @@ bool
 nsXULElement::IsEventAttributeName(nsIAtom *aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL);
+}
+
+JSObject*
+nsXULElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+    return dom::XULElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULPrototypeNode)

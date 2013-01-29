@@ -73,7 +73,6 @@ members = [
     'nsIDOMXULDocument.getBoxObjectFor',
 
     # dom/interfaces/css
-    'nsIDOMElementCSSInlineStyle.*',
     'nsIDOMRect.*',
 
     'nsIDOMEvent.type',
@@ -241,9 +240,6 @@ members = [
     'nsIDOMXPathResult.singleNodeValue',
     'nsIDOMNSXPathExpression.evaluateWithContext',
 
-    # dom/interfaces/xul
-    'nsIDOMXULElement.*',
-
     # layout/xul/base/public
     'nsIBoxObject.x',
     'nsIBoxObject.y',
@@ -349,15 +345,6 @@ nsIDOMStorage_Clear_customMethodCallCode = """
 customMethodCalls = {
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
-        },
-    'nsIDOMElementCSSInlineStyle_GetStyle': {
-        'thisType': 'nsStyledElement',
-        'code': '    /* XXXbz MathML elements inherit from nsStyledElement but\n'
-                '       don\'t actually implement GetStyle. */\n'
-                '    if (self->GetNameSpaceID() == kNameSpaceID_MathML)\n'
-                '      return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n'
-                '    nsIDOMCSSStyleDeclaration* result = self->Style();',
-        'canFail': False
         },
     'nsIDOMWindow_GetOnmouseenter' : {
         'thisType' : 'nsIDOMWindow',

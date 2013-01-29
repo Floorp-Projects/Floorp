@@ -1494,8 +1494,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     nsCOMPtr<nsIDOMDocument> ownerDoc;
     docShellElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
     ownerXULDoc = do_QueryInterface(ownerDoc);
-    nsCOMPtr<nsIDOMXULElement> XULElement(do_QueryInterface(docShellElement));
-    if (XULElement)
+    nsCOMPtr<mozilla::dom::Element> XULElement(do_QueryInterface(docShellElement));
+    if (XULElement && XULElement->IsXUL())
       XULElement->GetId(windowElementId);
   }
 

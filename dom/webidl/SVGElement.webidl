@@ -34,19 +34,6 @@ interface SVGElement : Element {
   readonly attribute SVGSVGElement? ownerSVGElement;
   readonly attribute SVGElement? viewportElement;
 
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchstart;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchend;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchmove;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchenter;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchleave;
-  [SetterThrows,Pref="dom.w3c_touch_events.expose"]
-           attribute EventHandler ontouchcancel;
-
   [SetterThrows]
            attribute EventHandler oncopy;
   [SetterThrows]
@@ -57,3 +44,4 @@ interface SVGElement : Element {
 
 SVGElement implements GlobalEventHandlers;
 SVGElement implements NodeEventHandlers;
+SVGElement implements TouchEventHandlers;
