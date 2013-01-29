@@ -447,7 +447,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_SETARG:
             modifiesArguments_ = true;
-            isIonInlineable = isJaegerInlineable = false;
+            isJaegerInlineable = false;
             break;
 
           case JSOP_GETPROP:
