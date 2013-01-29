@@ -45,10 +45,11 @@ PCMappingEntry::ToSlotLocation(const StackValue *stackVal)
     return SlotIgnore;
 }
 
-BaselineScript::BaselineScript()
+BaselineScript::BaselineScript(uint32_t prologueOffset)
   : method_(NULL),
     fallbackStubSpace_(),
     optimizedStubSpace_(),
+    prologueOffset_(prologueOffset),
     active_(false)
 { }
 
@@ -255,7 +256,7 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
 static const unsigned DataAlignment = sizeof(uintptr_t);
 
 BaselineScript *
-BaselineScript::New(JSContext *cx, size_t icEntries, size_t pcMappingEntries)
+BaselineScript::New(JSContext *cx, uint32_t prologueOffset, size_t icEntries, size_t pcMappingEntries)
 {
     size_t paddedBaselineScriptSize = AlignBytes(sizeof(BaselineScript), DataAlignment);
 
@@ -274,7 +275,7 @@ BaselineScript::New(JSContext *cx, size_t icEntries, size_t pcMappingEntries)
         return NULL;
 
     BaselineScript *script = reinterpret_cast<BaselineScript *>(buffer);
-    new (script) BaselineScript();
+    new (script) BaselineScript(prologueOffset);
 
     size_t offsetCursor = paddedBaselineScriptSize;
 
