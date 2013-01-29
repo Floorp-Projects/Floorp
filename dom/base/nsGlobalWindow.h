@@ -67,6 +67,8 @@
 #include "nsIIdleObserver.h"
 #include "nsIDOMWakeLock.h"
 
+#include "mozilla/dom/EventTarget.h"
+
 // JS includes
 #include "jsapi.h"
 
@@ -253,15 +255,14 @@ struct IdleObserverHolder
 // belonging to the same outer window, but that's an unimportant
 // side effect of inheriting PRCList).
 
-class nsGlobalWindow : public nsPIDOMWindow,
+class nsGlobalWindow : public mozilla::dom::EventTarget,
+                       public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
-                       public nsIDOMEventTarget,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
-                       public nsWrapperCache,
                        public PRCListStr,
                        public nsIDOMWindowPerformance,
                        public nsITouchEventReceiver,

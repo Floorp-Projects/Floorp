@@ -150,6 +150,7 @@ NS_INTERFACE_MAP_BEGIN(DocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,
