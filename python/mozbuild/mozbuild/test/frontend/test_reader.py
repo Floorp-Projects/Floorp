@@ -227,6 +227,16 @@ class TestBuildReader(unittest.TestCase):
         self.assertIn('Directory (foo) registered multiple times in DIRS',
             str(e))
 
+    def test_error_error_func(self):
+        reader = self.reader('reader-error-error-func')
+
+        with self.assertRaises(BuildReaderError) as bre:
+            list(reader.read_topsrcdir())
+
+        e = bre.exception
+        self.assertIn('A moz.build file called the error() function.', str(e))
+        self.assertIn('    Some error.', str(e))
+
 
 if __name__ == '__main__':
     main()
