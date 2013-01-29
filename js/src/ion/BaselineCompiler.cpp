@@ -42,6 +42,45 @@ BaselineCompiler::init()
     return true;
 }
 
+static bool
+CanResumeAfter(JSOp op)
+{
+    switch(op) {
+      case JSOP_NOP:
+      case JSOP_LABEL:
+      case JSOP_NOTEARG:
+      case JSOP_DUP:
+      case JSOP_DUP2:
+      case JSOP_SWAP:
+      case JSOP_PICK:
+      case JSOP_GOTO:
+      case JSOP_VOID:
+      case JSOP_UNDEFINED:
+      case JSOP_HOLE:
+      case JSOP_NULL:
+      case JSOP_TRUE:
+      case JSOP_FALSE:
+      case JSOP_ZERO:
+      case JSOP_ONE:
+      case JSOP_INT8:
+      case JSOP_INT32:
+      case JSOP_UINT16:
+      case JSOP_UINT24:
+      case JSOP_DOUBLE:
+      case JSOP_STRING:
+      case JSOP_OBJECT:
+      case JSOP_GETLOCAL:
+      case JSOP_SETLOCAL:
+      case JSOP_GETARG:
+      case JSOP_SETARG:
+      case JSOP_RETURN:
+      case JSOP_STOP:
+        return false;
+      default:
+        return true;
+    }
+}
+
 MethodStatus
 BaselineCompiler::compile()
 {
@@ -97,7 +136,7 @@ BaselineCompiler::compile()
         baselineScript->copyICEntries(&icEntries_[0], masm);
 
     if (pcMappingEntries_.length())
-        baselineScript->copyPCMappingEntries(&pcMappingEntries_[0]);
+        baselineScript->copyPCMappingEntries(&pcMappingEntries_[0], masm);
 
     // Adopt fallback stubs from the compiler into the baseline script.
     baselineScript->adoptFallbackStubs(&stubSpace_);
@@ -165,6 +204,12 @@ BaselineCompiler::emitPrologue()
     masm.moveValue(UndefinedValue(), R0);
     for (size_t i = 0; i < frame.nlocals(); i++)
         masm.pushValue(R0);
+
+    // Always add a PC mapping at the beginning.
+    // This happens before scope chain is initialized because Ion
+    // can bail out before a scope chain is initialized.
+    if (!addPCMappingEntry())
+        return Method_Error;
 
     // Initialize the scope chain before any operation that may
     // call into the VM and trigger a GC.
@@ -336,13 +381,9 @@ bool
 BaselineCompiler::emitDebugTrap()
 {
     JS_ASSERT(debugMode_);
+    JS_ASSERT(frame.numUnsyncedSlots() == 0);
 
     bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(pc);
-
-    // Add a pc mapping entry, so that we can toggle this trap later.
-    frame.syncStack(0);
-    if (!addPCMappingEntry())
-        return false;
 
     // Emit patchable call to debug trap handler.
     IonCode *handler = cx->compartment->ionCompartment()->debugTrapHandler(cx);
@@ -368,21 +409,46 @@ BaselineCompiler::emitBody()
 {
     JS_ASSERT(pc == script->code);
 
+    // Flag to indicate if ion code can resume into baseline code after the
+    // previously handled op (i.e. before the current op).
+    bool canResumeAfterPrevious = false;
+
     while (true) {
         SPEW_OPCODE();
         JSOp op = JSOp(*pc);
-        IonSpew(IonSpew_BaselineOp, "Compiling op: %s", js_CodeName[op]);
+        IonSpew(IonSpew_BaselineOp, "Compiling op @ %d: %s",
+                (int) (pc - script->code), js_CodeName[op]);
 
         // Fully sync the stack if there are incoming jumps.
         analyze::Bytecode *code = script->analysis()->maybeCode(pc);
-        if (code && code->jumpTarget) {
+        bool isJumpTarget = code && code->jumpTarget;
+        if (isJumpTarget) {
             frame.syncStack(0);
             frame.setStackDepth(code->stackDepth);
         }
 
+        // Always sync in debug mode.
+        if (debugMode_)
+            frame.syncStack(0);
+
+        // At the beginning of any op, at most the top 2 stack-values are unsynced.
+        if (frame.stackDepth() > 2)
+            frame.syncStack(2);
+
         frame.assertValidState(pc);
 
         masm.bind(labelOf(pc));
+
+        // We need to add a PC -> native mapping entry for the upcoming op if one
+        // of the following is true:
+        //  1. The pc is a jumptarget.
+        //  2. Baseline can be resumed after the previously handled op.
+        //  3. Op is a JSOP_ENTERBLOCK, for catch blocks.
+        //  4. We're in debug mode.
+        if (isJumpTarget || canResumeAfterPrevious || op == JSOP_ENTERBLOCK || debugMode_) {
+            if (!addPCMappingEntry())
+                return Method_Error;
+        }
 
         // Emit traps for breakpoints and step mode.
         if (debugMode_ && !emitDebugTrap())
@@ -404,6 +470,7 @@ BaselineCompiler::emitBody()
 OPCODE_LIST(EMIT_OP)
 #undef EMIT_OP
         }
+        canResumeAfterPrevious = CanResumeAfter(op);
 
         if (op == JSOP_STOP)
             break;
@@ -1400,11 +1467,6 @@ static const VMFunction EnterBlockInfo = FunctionInfo<EnterBlockFn>(ion::EnterBl
 bool
 BaselineCompiler::emit_JSOP_ENTERBLOCK()
 {
-    // ENTERBLOCK is emitted at the start of catch blocks. Record the native
-    // code offset so that the exception handler can jump here.
-    if (!addPCMappingEntry())
-        return false;
-
     StaticBlockObject &blockObj = script->getObject(pc)->asStaticBlock();
     for (size_t i = 0; i < blockObj.slotCount(); i++)
         frame.push(UndefinedValue());
