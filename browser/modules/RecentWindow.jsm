@@ -26,13 +26,8 @@ this.RecentWindow = {
    *        in both groups, don't specify the private property.
    */
   getMostRecentBrowserWindow: function RW_getMostRecentBrowserWindow(aOptions) {
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
     let checkPrivacy = typeof aOptions == "object" &&
                        "private" in aOptions;
-#else
-    // In global PB builds, always ignore the requested privacy status
-    let checkPrivacy = false;
-#endif
 
     function isSuitableBrowserWindow(win) {
       return (!win.closed &&

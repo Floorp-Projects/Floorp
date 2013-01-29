@@ -19,9 +19,6 @@
 #include "nsStreamUtils.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include <algorithm>
-#if !(defined(MOZ_PER_WINDOW_PRIVATE_BROWSING)) && defined(DEBUG)
-#include "nsIPrivateBrowsingService.h"
-#endif
 
 using namespace mozilla::places;
 using namespace mozilla::storage;
@@ -455,30 +452,6 @@ AsyncFetchAndSetIconForPage::AsyncFetchAndSetIconForPage(
   , mPage(aPage)
   , mFaviconLoadPrivate(aFaviconLoadType == nsIFaviconService::FAVICON_LOAD_PRIVATE)
 {
-#if !(defined(MOZ_PER_WINDOW_PRIVATE_BROWSING)) && defined(DEBUG)
-  // This code makes sure that in global private browsing mode, the flag
-  // passed to us matches the global PB mode.  This can be removed when
-  // per-window private browsing has been turned on.
-  nsCOMPtr<nsIPrivateBrowsingService> pbService =
-    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-  if (pbService) {
-    bool inPrivateBrowsing = false;
-    if (NS_SUCCEEDED(pbService->GetPrivateBrowsingEnabled(&inPrivateBrowsing))) {
-      // In one specific case that we know of, it is possible for these flags
-      // to not match (bug 801151).  We mostly care about the cases where the
-      // global private browsing mode is on, but the favicon load is not marked
-      // as private, as those cases will cause privacy leaks.  But because
-      // fixing bug 801151 properly is going to mean tons of really dirty and
-      // fragile work which might cause other types of problems, we fatally
-      // assert the condition which would be a privacy leak, and non-fatally
-      // assert the other side of the condition which would designate a bug,
-      // but not a privacy sensitive one.
-      MOZ_ASSERT_IF(inPrivateBrowsing && !mFaviconLoadPrivate, false);
-      NS_ASSERTION(inPrivateBrowsing == mFaviconLoadPrivate,
-                   "The favicon load flag and the global PB flag do not match");
-    }
-  }
-#endif
 }
 
 AsyncFetchAndSetIconForPage::~AsyncFetchAndSetIconForPage()

@@ -511,17 +511,12 @@ nsBrowserContentHandler.prototype = {
     }
     if (cmdLine.handleFlag("silent", false))
       cmdLine.preventDefault = true;
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
     if (cmdLine.handleFlag("private-window", false)) {
       openWindow(null, this.chromeURL, "_blank",
         "chrome,dialog=no,private,all" + this.getFeatures(cmdLine),
         "about:privatebrowsing");
       cmdLine.preventDefault = true;
     }
-#else
-    if (cmdLine.findFlag("private-toggle", false) >= 0)
-      cmdLine.preventDefault = true;
-#endif
 
     var searchParam = cmdLine.handleFlagWithParam("search", false);
     if (searchParam) {
@@ -531,11 +526,7 @@ nsBrowserContentHandler.prototype = {
 
     // The global PB Service consumes this flag, so only eat it in per-window
     // PB builds.
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
     if (cmdLine.handleFlag("private", false)) {
-#else
-    if (cmdLine.findFlag("private", false) >= 0) {
-#endif
       PrivateBrowsingUtils.enterTemporaryAutoStartMode();
     }
 

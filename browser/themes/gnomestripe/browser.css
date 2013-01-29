@@ -2659,12 +2659,10 @@ chatbox[minimized="true"] {
   min-width: 0;
 }
 
-%ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 #main-window[privatebrowsingmode=temporary] #TabsToolbar::before {
   display: -moz-box;
   content: "";
   background: url("chrome://browser/skin/privatebrowsing-mask.png") center no-repeat;
   width: 40px;
 }
-%endif
 
