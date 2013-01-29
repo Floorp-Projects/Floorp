@@ -620,11 +620,6 @@ var proxyAuthinfo = {
 
 var prefs = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefBranch);
-var pb;
-try {
-    pb = Cc["@mozilla.org/privatebrowsing;1"].
-         getService(Ci.nsIPrivateBrowsingService);
-} catch (e) {}
 
 const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
 ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
@@ -1119,25 +1114,6 @@ proxyAuthinfo.username = "";
 proxyAuthinfo.password = "";
 proxyAuthinfo.realm    = "Proxy Realm";
 proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
-
-if (pb) {
-  prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-  pb.privateBrowsingEnabled = true;
-
-  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-  startCallbackTimer();
-  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-
-  ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
-  is(time1, time2, "Checking that timeLastUsed was not updated");
-  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
-  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
-
-  pb.privateBrowsingEnabled = false;
-  prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
-}
 
 
 prefs.clearUserPref("signon.autologin.proxy");

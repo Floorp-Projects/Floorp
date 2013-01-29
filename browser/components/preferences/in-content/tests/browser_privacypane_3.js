@@ -10,11 +10,7 @@ function test() {
     let tmpdir = extractJarToTmp(jar);
     rootDir = "file://" + tmpdir.path + '/';
   }
-  try {
-    loader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
-  } catch(x) {
-    loader.loadSubScript(rootDir + "privacypane_tests.js", this);
-  }
+  loader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
 
   run_test_subset([
     test_custom_retention("rememberHistory", "remember"),
