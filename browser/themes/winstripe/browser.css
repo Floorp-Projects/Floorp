@@ -3355,7 +3355,6 @@ chatbox[minimized="true"] {
   min-width: 0;
 }
 
-%ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 #main-window[privatebrowsingmode=temporary] #toolbar-menubar {
   background-image: url("chrome://browser/skin/privatebrowsing-dark.png");
   background-position: top right;
@@ -3371,5 +3370,4 @@ chatbox[minimized="true"] {
   width: 20px;
   height: 16px;
 }
-%endif
 

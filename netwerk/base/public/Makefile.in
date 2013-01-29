@@ -62,6 +62,7 @@ XPIDLSRCS	= \
 		nsIPermission.idl \
 		nsIPermissionManager.idl \
 		nsIPrivateBrowsingChannel.idl \
+		nsIPrivateBrowsingServiceObsolete.idl \
 		nsIProgressEventSink.idl \
 		nsIPrompt.idl \
 		nsIProtocolProxyService.idl \
@@ -123,12 +124,6 @@ XPIDLSRCS	= \
 
 ifdef MOZ_TOOLKIT_SEARCH
 XPIDLSRCS	+= nsIBrowserSearchService.idl
-endif
-
-ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-XPIDLSRCS	+= nsIPrivateBrowsingServiceObsolete.idl
-else
-XPIDLSRCS	+= nsIPrivateBrowsingService.idl
 endif
 
 EXPORTS		= \

@@ -14,10 +14,6 @@
 #include "nsIRandomGenerator.h"
 #endif
 
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-#include "nsIPrivateBrowsingService.h"
-#endif
-
 // The length of guids that are used by history and bookmarks.
 #define GUID_LENGTH 12
 
@@ -414,23 +410,6 @@ AsyncStatementTelemetryTimer::HandleCompletion(uint16_t aReason)
     Telemetry::AccumulateTimeDelta(mHistogramId, mStart);
   }
   return NS_OK;
-}
-
-void
-EnsureNotGlobalPrivateBrowsing()
-{
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-  // This code makes sure that certain code is not invoked when global private
-  // browsing is enabled.
-  nsCOMPtr<nsIPrivateBrowsingService> pbService =
-      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-  if (pbService) {
-    bool inPrivateBrowsing = false;
-    if (NS_SUCCEEDED(pbService->GetPrivateBrowsingEnabled(&inPrivateBrowsing))) {
-      MOZ_ASSERT(!inPrivateBrowsing);
-    }
-  }
-#endif
 }
 
 } // namespace places

@@ -76,12 +76,6 @@ SessionStartup.prototype = {
     if (PrivateBrowsingUtils.permanentPrivateBrowsing)
       return;
 
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    let pbs = Cc["@mozilla.org/privatebrowsing;1"].
-              getService(Ci.nsIPrivateBrowsingService);
-    if (pbs.lastChangedByCommandLine)
-      return;
-#endif
     _SessionFile.read().then(
       this._onSessionFileRead.bind(this)
     );
