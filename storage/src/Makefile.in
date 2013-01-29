@@ -63,6 +63,7 @@ CPPSRCS = \
   StorageBaseStatementInternal.cpp \
   SQLCollations.cpp \
   VacuumManager.cpp \
+  TelemetryVFS.cpp \
   FileSystemModule.cpp \
   $(NULL)
 
