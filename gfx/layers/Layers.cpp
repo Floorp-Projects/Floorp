@@ -260,13 +260,6 @@ LayerManager::GetScrollableLayers(nsTArray<Layer*>& aArray)
   }
 }
 
-bool ThebesLayer::UseTiledThebes()
-{
-  static bool useTiledThebesLayer =
-    Preferences::GetBool("gfx.use_tiled_thebes", false);
-  return useTiledThebesLayer;
-}
-
 already_AddRefed<gfxASurface>
 LayerManager::CreateOptimalSurface(const gfxIntSize &aSize,
                                    gfxASurface::gfxImageFormat aFormat)
