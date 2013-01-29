@@ -3,6 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # definitions to control what gets built in webrtc
+# NOTE!!! if you change something here, due to .gyp files not
+# being reprocessed on .gypi changes, run this before building:
+# "find . -name '*.gyp' | xargs touch"
 {
   'variables': {
     # basic stuff for everything
@@ -13,6 +16,8 @@
     'include_tests': 0,
     'use_system_libjpeg': 1,
     'use_system_libvpx': 1,
+# Creates AEC internal sample dump files in current directory
+#    'aec_debug_dump': 1,
 
     # codec enable/disables:
     # Note: if you change one here, you must modify shared_libs.mk!
