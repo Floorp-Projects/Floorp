@@ -101,40 +101,42 @@ public:
         , mService(service)
     { }
 
-    void AddListener(nsIConsoleListener* listener) {
-        mListeners.AppendObject(listener);
-    }
-
     NS_DECL_NSIRUNNABLE
 
 private:
     nsCOMPtr<nsIConsoleMessage> mMessage;
     nsRefPtr<nsConsoleService> mService;
-    nsCOMArray<nsIConsoleListener> mListeners;
 };
+
+typedef nsCOMArray<nsIConsoleListener> ListenerArrayType;
+
+PLDHashOperator
+CollectCurrentListeners(nsISupports* aKey, nsIConsoleListener* aValue,
+                        void* closure)
+{
+    ListenerArrayType* listeners = static_cast<ListenerArrayType*>(closure);
+    listeners->AppendObject(aValue);
+    return PL_DHASH_NEXT;
+}
 
 NS_IMETHODIMP
 LogMessageRunnable::Run()
 {
     MOZ_ASSERT(NS_IsMainThread());
 
+    // Snapshot of listeners so that we don't reenter this hash during
+    // enumeration.
+    nsCOMArray<nsIConsoleListener> listeners;
+    mService->EnumerateListeners(CollectCurrentListeners, &listeners);
+
     mService->SetIsDelivering();
 
-    for (int32_t i = 0; i < mListeners.Count(); ++i)
-        mListeners[i]->Observe(mMessage);
+    for (int32_t i = 0; i < listeners.Count(); ++i)
+        listeners[i]->Observe(mMessage);
 
     mService->SetDoneDelivering();
 
     return NS_OK;
-}
-
-PLDHashOperator
-CollectCurrentListeners(nsISupports* aKey, nsIConsoleListener* aValue,
-                        void* closure)
-{
-    LogMessageRunnable* r = static_cast<LogMessageRunnable*>(closure);
-    r->AddListener(aValue);
-    return PL_DHASH_NEXT;
 }
 
 } // anonymous namespace
@@ -205,16 +207,8 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage *message, nsConsoleServic
             mFull = true;
         }
 
-        /*
-         * Copy the listeners into the snapshot array - in case a listener
-         * is removed during an Observe(...) notification. If there are no
-         * listeners, don't bother to create the Runnable, since we don't
-         * need to run it and it will hold onto the memory for the message
-         * unnecessarily.
-         */
         if (mListeners.Count() > 0) {
             r = new LogMessageRunnable(message, this);
-            mListeners.EnumerateRead(CollectCurrentListeners, r);
         }
     }
 
@@ -225,6 +219,14 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage *message, nsConsoleServic
         NS_DispatchToMainThread(r);
 
     return NS_OK;
+}
+
+void
+nsConsoleService::EnumerateListeners(ListenerHash::EnumReadFunction aFunction,
+                                     void* aClosure)
+{
+    MutexAutoLock lock(mLock);
+    mListeners.EnumerateRead(aFunction, aClosure);
 }
 
 NS_IMETHODIMP
