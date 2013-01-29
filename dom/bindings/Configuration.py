@@ -62,9 +62,32 @@ class Configuration:
             descriptor.uniqueImplementation = len(otherDescriptors) == 1
 
         self.enums = [e for e in parseData if e.isEnum()]
+
+        # Figure out what our main-thread and worker dictionaries and callbacks
+        # are.
+        mainTypes = set()
+        for descriptor in self.getDescriptors(workers=False, isExternal=False):
+            mainTypes |= set(getFlatTypes(getTypesFromDescriptor(descriptor)))
+        (mainCallbacks, mainDictionaries) = findCallbacksAndDictionaries(mainTypes)
+
+        workerTypes = set();
+        for descriptor in self.getDescriptors(workers=True, isExternal=False):
+            workerTypes |= set(getFlatTypes(getTypesFromDescriptor(descriptor)))
+        (workerCallbacks, workerDictionaries) = findCallbacksAndDictionaries(workerTypes)
+
         self.dictionaries = [d for d in parseData if d.isDictionary()]
         self.callbacks = [c for c in parseData if
                           c.isCallback() and not c.isInterface()]
+
+        def flagWorkerOrMainThread(items, main, worker):
+            for item in items:
+                if item in main:
+                    item.setUserData("mainThread", True)
+                if item in worker:
+                    item.setUserData("workers", True)
+        flagWorkerOrMainThread(self.dictionaries, mainDictionaries,
+                               workerDictionaries);
+        flagWorkerOrMainThread(self.callbacks, mainCallbacks, workerCallbacks)
 
         # Keep the descriptor list sorted for determinism.
         self.descriptors.sort(lambda x,y: cmp(x.name, y.name))
@@ -95,14 +118,26 @@ class Configuration:
         return curr
     def getEnums(self, webIDLFile):
         return filter(lambda e: e.filename() == webIDLFile, self.enums)
-    def getDictionaries(self, webIDLFile=None):
-        if not webIDLFile:
-            return self.dictionaries
-        return filter(lambda d: d.filename() == webIDLFile, self.dictionaries)
-    def getCallbacks(self, webIDLFile=None):
-        if not webIDLFile:
-            return self.callbacks
-        return filter(lambda d: d.filename() == webIDLFile, self.callbacks)
+
+    @staticmethod
+    def _filterForFileAndWorkers(items, filters):
+        """Gets the items that match the given filters."""
+        for key, val in filters.iteritems():
+            if key == 'webIDLFile':
+                items = filter(lambda x: x.filename() == val, items)
+            elif key == 'workers':
+                if val:
+                    items = filter(lambda x: x.getUserData("workers", False), items)
+                else:
+                    items = filter(lambda x: x.getUserData("mainThread", False), items)
+            else:
+                assert(0) # Unknown key
+        return items
+    def getDictionaries(self, **filters):
+        return self._filterForFileAndWorkers(self.dictionaries, filters)
+    def getCallbacks(self, **filters):
+        return self._filterForFileAndWorkers(self.callbacks, filters)
+
     def getDescriptor(self, interfaceName, workers):
         """
         Gets the appropriate descriptor for the given interface name
@@ -407,3 +442,82 @@ class Descriptor(DescriptorProvider):
     def needsConstructHookHolder(self):
         assert self.interface.hasInterfaceObject()
         return not self.hasInstanceInterface and not self.interface.isCallback()
+
+# Some utility methods
+def getTypesFromDescriptor(descriptor):
+    """
+    Get all argument and return types for all members of the descriptor
+    """
+    members = [m for m in descriptor.interface.members]
+    if descriptor.interface.ctor():
+        members.append(descriptor.interface.ctor())
+    signatures = [s for m in members if m.isMethod() for s in m.signatures()]
+    types = []
+    for s in signatures:
+        assert len(s) == 2
+        (returnType, arguments) = s
+        types.append(returnType)
+        types.extend(a.type for a in arguments)
+
+    types.extend(a.type for a in members if a.isAttr())
+    return types
+
+def getFlatTypes(types):
+    retval = set()
+    for type in types:
+        type = type.unroll()
+        if type.isUnion():
+            retval |= set(type.flatMemberTypes)
+        else:
+            retval.add(type)
+    return retval
+
+def getTypesFromDictionary(dictionary):
+    """
+    Get all member types for this dictionary
+    """
+    types = []
+    curDict = dictionary
+    while curDict:
+        types.extend([m.type for m in curDict.members])
+        curDict = curDict.parent
+    return types
+
+def getTypesFromCallback(callback):
+    """
+    Get the types this callback depends on: its return type and the
+    types of its arguments.
+    """
+    sig = callback.signatures()[0]
+    types = [sig[0]] # Return type
+    types.extend(arg.type for arg in sig[1]) # Arguments
+    return types
+
+def findCallbacksAndDictionaries(inputTypes):
+    """
+    Ensure that all callbacks and dictionaries reachable from types end up in
+    the returned callbacks and dictionaries sets.
+
+    Note that we assume that our initial invocation already includes all types
+    reachable via descriptors in "types", so we only have to deal with things
+    that are themeselves reachable via callbacks and dictionaries.
+    """
+    def doFindCallbacksAndDictionaries(types, callbacks, dictionaries):
+        unhandledTypes = set()
+        for type in types:
+            if type.isCallback() and type not in callbacks:
+                unhandledTypes |= getFlatTypes(getTypesFromCallback(type))
+                callbacks.add(type)
+            elif type.isDictionary() and type.inner not in dictionaries:
+                d = type.inner
+                unhandledTypes |= getFlatTypes(getTypesFromDictionary(d))
+                while d:
+                    dictionaries.add(d)
+                    d = d.parent
+        if len(unhandledTypes) != 0:
+            doFindCallbacksAndDictionaries(unhandledTypes, callbacks, dictionaries)
+
+    retCallbacks = set()
+    retDictionaries = set()
+    doFindCallbacksAndDictionaries(inputTypes, retCallbacks, retDictionaries)
+    return (retCallbacks, retDictionaries)
