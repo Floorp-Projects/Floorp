@@ -196,6 +196,19 @@ FUNCTIONS = {
         add_tier_dir('base', 'foo', static=True)
         """),
 
+    'warning': ('_warning', (str,),
+        """Issue a warning.
+
+        Warnings are string messages that are printed during execution.
+
+        Warnings are ignored during execution.
+        """),
+
+    'error': ('_error', (str,),
+        """Issue a fatal error.
+
+        If this function is called, processing is aborted immediately.
+        """),
 }
 
 # Special variables. These complement VARIABLES.

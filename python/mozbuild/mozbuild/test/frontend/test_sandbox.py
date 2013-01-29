@@ -10,7 +10,10 @@ import unittest
 
 from mozunit import main
 
-from mozbuild.frontend.reader import MozbuildSandbox
+from mozbuild.frontend.reader import (
+    MozbuildSandbox,
+    SandboxCalledError,
+)
 
 from mozbuild.frontend.sandbox import (
     SandboxExecutionError,
@@ -280,6 +283,16 @@ add_tier_dir('t1', 'bat', static=True)
 
         self.assertEqual(sandbox['EXTERNAL_MAKE_DIRS'], ['foo'])
         self.assertEqual(sandbox['PARALLEL_EXTERNAL_MAKE_DIRS'], ['bar'])
+
+    def test_error(self):
+        sandbox = self.sandbox()
+
+        with self.assertRaises(SandboxCalledError) as sce:
+            sandbox.exec_source('error("This is an error.")', 'test.py')
+
+        e = sce.exception
+        self.assertEqual(e.message, 'This is an error.')
+
 
 if __name__ == '__main__':
     main()
