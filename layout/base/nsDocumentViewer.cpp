@@ -3656,6 +3656,10 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
   if (mPrintEngine->HasPrintCallbackCanvas()) {
     mBeforeAndAfterPrint = beforeAndAfterPrint;
   }
+  dom::Element* root = mDocument->GetRootElement();
+  if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint)) {
+    mPrintEngine->SetDisallowSelectionPrint(true);
+  }
   rv = mPrintEngine->Print(aPrintSettings, aWebProgressListener);
   if (NS_FAILED(rv)) {
     OnDonePrinting();
