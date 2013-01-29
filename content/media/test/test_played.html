@@ -207,7 +207,7 @@ function createTestArray() {
 }
 
 function startTest(test, token) {
-  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var elemType = getMajorMimeType(test.type);
   var element = document.createElement(elemType);
   element.src = test.name;
   element.token = token;
