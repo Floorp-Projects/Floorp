@@ -293,26 +293,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                         mozilla::RefPtr<mozilla::TransportFlow> aFlow) {
     int index_inner = aIndex * 2 + (aRtcp ? 1 : 0);
 
-    MOZ_ASSERT(!mTransportFlows[index_inner]);
     mTransportFlows[index_inner] = aFlow;
-  }
-
-  mozilla::RefPtr<mozilla::AudioSessionConduit> GetConduit(int aStreamIndex, bool aReceive) {
-    int index_inner = aStreamIndex * 2 + (aReceive ? 0 : 1);
-
-    if (mAudioConduits.find(index_inner) == mAudioConduits.end())
-      return NULL;
-
-    return mAudioConduits[index_inner];
-  }
-
-  // Add a conduit
-  void AddConduit(int aIndex, bool aReceive,
-                  const mozilla::RefPtr<mozilla::AudioSessionConduit> &aConduit) {
-    int index_inner = aIndex * 2 + (aReceive ? 0 : 1);
-
-    MOZ_ASSERT(!mAudioConduits[index_inner]);
-    mAudioConduits[index_inner] = aConduit;
   }
 
   // ICE state signals
@@ -349,10 +330,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Transport flows: even is RTP, odd is RTCP
   std::map<int, mozilla::RefPtr<mozilla::TransportFlow> > mTransportFlows;
-
-  // Conduits: even is receive, odd is transmit (for easier correlation with
-  // flows)
-  std::map<int, mozilla::RefPtr<mozilla::AudioSessionConduit> > mAudioConduits;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };
