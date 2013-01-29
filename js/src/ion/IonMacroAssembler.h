@@ -678,6 +678,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void printf(const char *output);
     void printf(const char *output, Register value);
+
+    void copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp);
+
 };
 
 static inline Assembler::Condition
