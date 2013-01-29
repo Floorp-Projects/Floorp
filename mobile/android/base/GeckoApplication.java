@@ -10,6 +10,7 @@ public class GeckoApplication extends Application {
 
     private boolean mInited;
     private boolean mInBackground;
+    private boolean mPausedGecko;
 
     private LightweightTheme mLightweightTheme;
 
@@ -32,17 +33,28 @@ public class GeckoApplication extends Application {
         mInited = true;
     }
 
-    protected void onActivityPause(GeckoActivity activity) {
+    protected void onActivityPause(GeckoActivityStatus activity) {
         mInBackground = true;
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
+        if ((activity.isFinishing() == false) &&
+            (activity.isGeckoActivityOpened() == false)) {
+            // Notify Gecko that we are pausing; the cache service will be
+            // shutdown, closing the disk cache cleanly. If the android
+            // low memory killer subsequently kills us, the disk cache will
+            // be left in a consistent state, avoiding costly cleanup and
+            // re-creation. 
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
+            mPausedGecko = true;
+        }
         GeckoConnectivityReceiver.getInstance().stop();
         GeckoNetworkManager.getInstance().stop();
     }
 
-    protected void onActivityResume(GeckoActivity activity) {
-        if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning))
+    protected void onActivityResume(GeckoActivityStatus activity) {
+        if (mPausedGecko) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
+            mPausedGecko = false;
+        }
         GeckoConnectivityReceiver.getInstance().start();
         GeckoNetworkManager.getInstance().start();
 
