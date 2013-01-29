@@ -283,6 +283,7 @@ class FrameInfo
 
     void sync(StackValue *val);
     void syncStack(uint32_t uses);
+    uint32_t numUnsyncedSlots();
     void popRegsAndSync(uint32_t uses);
 
     inline void assertSyncedStack() const {

@@ -10,6 +10,7 @@
 
 #include "jscntxt.h"
 #include "ion/BaselineFrameInfo.h"
+#include "ion/IonSpewer.h"
 #include "ion/BaselineIC.h"
 #include "ion/IonMacroAssembler.h"
 
@@ -77,8 +78,21 @@ class BaselineCompilerShared
         return script->function();
     }
 
-    bool addPCMappingEntry() {
-        frame.assertSyncedStack();
+    uint8_t getStackTopSlotInfo() {
+        JS_ASSERT(frame.numUnsyncedSlots() <= 2);
+        switch (frame.numUnsyncedSlots()) {
+          case 0:
+            return PCMappingEntry::MakeSlotInfo();
+          case 1:
+            return PCMappingEntry::MakeSlotInfo(PCMappingEntry::ToSlotLocation(frame.peek(-1)));
+          case 2:
+          default:
+            return PCMappingEntry::MakeSlotInfo(PCMappingEntry::ToSlotLocation(frame.peek(-1)),
+                                                PCMappingEntry::ToSlotLocation(frame.peek(-2)));
+        }
+    }
+
+    bool addPCMappingEntry(uint32_t nativeOffset, uint8_t slotInfo) {
 
         // Don't add multiple entries for a single pc.
         size_t nentries = pcMappingEntries_.length();
@@ -89,9 +103,21 @@ class BaselineCompilerShared
 
         PCMappingEntry entry;
         entry.pcOffset = pc - script->code;
-        entry.nativeOffset = masm.currentOffset();
+        entry.nativeOffset = nativeOffset;
+        entry.slotInfo = slotInfo;
+
+        IonSpew(IonSpew_BaselineScripts, "PCMapping (%s:%u): %u => %u (%u:%u:%u)!",
+                        script->filename, script->lineno,
+                        entry.pcOffset, entry.nativeOffset,
+                        (entry.slotInfo & 0x3),
+                        ((entry.slotInfo >> 2) & 0x3),
+                        ((entry.slotInfo >> 4) & 0x3));
 
         return pcMappingEntries_.append(entry);
+    }
+
+    bool addPCMappingEntry() {
+        return addPCMappingEntry(masm.currentOffset(), getStackTopSlotInfo());
     }
 
     template <typename T>

@@ -32,6 +32,18 @@ ICStubSpace::StubSpaceFor(JSScript *script)
     return script->baselineScript()->optimizedStubSpace();
 }
 
+/* static */ PCMappingEntry::SlotLocation
+PCMappingEntry::ToSlotLocation(const StackValue *stackVal)
+{
+    if (stackVal->kind() == StackValue::Register) {
+        if (stackVal->reg() == R0)
+            return SlotInR0;
+        JS_ASSERT(stackVal->reg() == R1);
+        return SlotInR1;
+    }
+    JS_ASSERT(stackVal->kind() != StackValue::Stack);
+    return SlotIgnore;
+}
 
 BaselineScript::BaselineScript()
   : method_(NULL),
@@ -370,10 +382,13 @@ BaselineScript::pcMappingEntry(size_t index)
 }
 
 void
-BaselineScript::copyPCMappingEntries(const PCMappingEntry *entries)
+BaselineScript::copyPCMappingEntries(const PCMappingEntry *entries, MacroAssembler &masm)
 {
-    for (uint32_t i = 0; i < numPCMappingEntries(); i++)
-        pcMappingEntry(i) = entries[i];
+    for (uint32_t i = 0; i < numPCMappingEntries(); i++) {
+        PCMappingEntry &ent = pcMappingEntry(i);
+        ent = entries[i];
+        ent.fixupNativeOffset(masm);
+    }
 }
 
 uint8_t *

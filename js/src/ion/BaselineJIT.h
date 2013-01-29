@@ -12,13 +12,14 @@
 #include "jscompartment.h"
 
 #include "IonCode.h"
-#include "ion/IonMacroAssembler.h"
+#include "IonMacroAssembler.h"
 
 #include "ds/LifoAlloc.h"
 
 namespace js {
 namespace ion {
 
+class StackValue;
 struct ICEntry;
 
 // ICStubSpace is an abstraction for allocation policy and storage for stub data.
@@ -49,8 +50,49 @@ struct ICStubSpace
 // Stores the native code offset for a bytecode pc.
 struct PCMappingEntry
 {
+    enum SlotLocation { SlotInR0 = 0, SlotInR1 = 1, SlotIgnore = 3 };
+
+    static inline bool ValidSlotLocation(SlotLocation loc) {
+        return (loc == SlotInR0) || (loc == SlotInR1) || (loc == SlotIgnore);
+    }
+
     uint32_t pcOffset;
     uint32_t nativeOffset;
+    // SlotInfo encoding:
+    //  Bits 0 & 1: number of slots at top of stack which are unsynced.
+    //  Bits 2 & 3: SlotLocation of top slot value (only relevant if numUnsynced > 0).
+    //  Bits 3 & 4: SlotLocation of next slot value (only relevant if numUnsynced > 1).
+    uint8_t slotInfo;
+
+    void fixupNativeOffset(MacroAssembler &masm) {
+        CodeOffsetLabel offset(nativeOffset);
+        offset.fixup(&masm);
+        JS_ASSERT(offset.offset() <= UINT32_MAX);
+        nativeOffset = (uint32_t) offset.offset();
+    }
+
+    static SlotLocation ToSlotLocation(const StackValue *stackVal);
+    inline static uint8_t MakeSlotInfo() { return static_cast<uint8_t>(0); }
+    inline static uint8_t MakeSlotInfo(SlotLocation topSlotLoc) {
+        JS_ASSERT(ValidSlotLocation(topSlotLoc));
+        return static_cast<uint8_t>(1) | (static_cast<uint8_t>(topSlotLoc)) << 2;
+    }
+    inline static uint8_t MakeSlotInfo(SlotLocation topSlotLoc, SlotLocation nextSlotLoc) {
+        JS_ASSERT(ValidSlotLocation(topSlotLoc));
+        JS_ASSERT(ValidSlotLocation(nextSlotLoc));
+        return static_cast<uint8_t>(2) | (static_cast<uint8_t>(topSlotLoc) << 2)
+                                       | (static_cast<uint8_t>(nextSlotLoc) << 4);
+    }
+
+    inline static int SlotInfoNumUnsynced(uint8_t slotInfo) {
+        return static_cast<int>(slotInfo & 0x3);
+    }
+    inline static SlotLocation SlotInfoTopSlotLocation(uint8_t slotInfo) {
+        return static_cast<SlotLocation>((slotInfo >> 2) & 0x3);
+    }
+    inline static SlotLocation SlotInfoNextSlotLocation(uint8_t slotInfo) {
+        return static_cast<SlotLocation>((slotInfo >> 4) & 0x3);
+    }
 };
 
 struct BaselineScript
@@ -139,7 +181,7 @@ struct BaselineScript
     }
 
     PCMappingEntry &pcMappingEntry(size_t index);
-    void copyPCMappingEntries(const PCMappingEntry *entries);
+    void copyPCMappingEntries(const PCMappingEntry *entries, MacroAssembler &masm);
     uint8_t *nativeCodeForPC(HandleScript script, jsbytecode *pc);
 
     // Toggle debug traps (used for breakpoints and step mode) in the script.

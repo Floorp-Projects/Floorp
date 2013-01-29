@@ -21,6 +21,7 @@ BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, HandleScript scrip
     frame(cx, script, masm),
     stubSpace_(),
     icEntries_(),
+    pcMappingEntries_(),
     icLoadLabels_(),
     pushedBeforeCall_(0),
     inCall_(false)
