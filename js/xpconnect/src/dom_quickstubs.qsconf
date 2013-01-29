@@ -46,12 +46,7 @@ members = [
     'nsIDOMWindow.onmouseleave',
     'nsIDOMWindowPerformance.performance',
     'nsIDOMJSWindow.dump',
-    'nsIDOMScreen.top',
-    'nsIDOMScreen.height',
-    'nsIDOMScreen.width',
-    'nsIDOMScreen.left',
     'nsIDOMClientRect.*',
-    'nsIDOMPaintRequest.*',
     # nsLocationSH has ~ALLOW_PROP_MODS_TO_PROTOTYPE, so don't try.
     #'nsIDOMLocation.hostname',
     #'nsIDOMLocation.href',
@@ -64,16 +59,10 @@ members = [
     'nsIDOMCanvasPattern.*',
 
     # dom/interfaces/core
-    'nsIDOMCharacterData.data',
-    'nsIDOMCharacterData.length',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
-    'nsIDOMText.splitText',
     'nsIDOMDOMStringList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
-
-    # dom/interfaces/css
-    'nsIDOMRect.*',
 
     'nsIDOMEvent.type',
     'nsIDOMEvent.target',
@@ -307,20 +296,8 @@ irregularFilenames = {
     }
 
 customIncludes = [
-    'nsINode.h',
-    'nsIContent.h',
-    'nsIDocument.h',
-    'nsCSSPropertiesQS.h',
-    'nsDOMTokenList.h',
-    'nsGenericDOMDataNode.h',
-    'mozilla/dom/Element.h',
-    'nsGenericHTMLElement.h',
-    'nsSVGElement.h',
     'nsDOMQS.h',
-    'nsDOMStringMap.h',
-    'HTMLPropertiesCollection.h',
     'nsHTMLMenuElement.h',
-    'nsICSSDeclaration.h',
     'mozilla/dom/NodeBinding.h',
     'mozilla/dom/ElementBinding.h',
     'mozilla/dom/HTMLElementBinding.h',
