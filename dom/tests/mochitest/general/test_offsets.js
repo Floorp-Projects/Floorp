@@ -60,6 +60,7 @@ function testElement(element)
                               offsetParent, element.id);
 
   var scrollWidth, scrollHeight, clientWidth, clientHeight;
+  var doScrollCheck = true;
   if (element.id == "scrollbox") {
     var lastchild = $("lastline");
     scrollWidth = lastchild.getBoundingClientRect().width + paddingLeft + paddingRight;
@@ -69,18 +70,29 @@ function testElement(element)
     scrollHeight = contentsHeight + paddingTop + paddingBottom;
     clientWidth = paddingLeft + width + paddingRight - scrollbarWidth;
     clientHeight = paddingTop + height + paddingBottom - scrollbarHeight;
-  }
-  else {
-    scrollWidth = paddingLeft + width + paddingRight;
-    scrollHeight = paddingTop + height + paddingBottom;
+  } else {
     clientWidth = paddingLeft + width + paddingRight;
     clientHeight = paddingTop + height + paddingBottom;
+    if (element.id == "overflow-visible") {
+      scrollWidth = 200;
+      scrollHeight = 201;
+    } else if (element.scrollWidth > clientWidth ||
+               element.scrollHeight > clientHeight) {
+      // The element overflows. Don't check scrollWidth/scrollHeight since the
+      // above calculation is not correct.
+      doScrollCheck = false;
+    } else {
+      scrollWidth = clientWidth;
+      scrollHeight = clientHeight;
+    }
   }
 
-  if (element instanceof SVGElement)
-    checkScrollState(element, 0, 0, 0, 0, element.id);
-  else
-    checkScrollState(element, 0, 0, scrollWidth, scrollHeight, element.id);
+  if (doScrollCheck) {
+    if (element instanceof SVGElement)
+      checkScrollState(element, 0, 0, 0, 0, element.id);
+     else
+      checkScrollState(element, 0, 0, scrollWidth, scrollHeight, element.id);
+  }
 
   if (element instanceof SVGElement)
     checkClientState(element, 0, 0, 0, 0, element.id);
