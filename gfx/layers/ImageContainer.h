@@ -444,15 +444,6 @@ public:
   }
 
   /**
-   * Resets the paint count to zero.
-   * Can be called from any thread.
-   */
-  void ResetPaintCount() {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mPaintCount = 0;
-  }
-
-  /**
    * Increments mPaintCount if this is the first time aPainted has been
    * painted, and sets mPaintTime if the painted image is the current image.
    * current image.  Can be called from any thread.

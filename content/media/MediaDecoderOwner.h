@@ -56,7 +56,6 @@ public:
   virtual void MetadataLoaded(int aChannels,
                               int aRate,
                               bool aHasAudio,
-                              bool aHasVideo,
                               const MetadataTags* aTags) = 0;
 
   // Called by the video decoder object, on the main thread,
