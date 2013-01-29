@@ -18,12 +18,14 @@
 #include "voice_engine/include/voe_file.h"
 #include "voice_engine/include/voe_network.h"
 #include "voice_engine/include/voe_external_media.h"
+#include "voice_engine/include/voe_audio_processing.h"
 
 //Some WebRTC types for short notations
  using webrtc::VoEBase;
  using webrtc::VoENetwork;
  using webrtc::VoECodec;
  using webrtc::VoEExternalMedia;
+ using webrtc::VoEAudioProcessing;
 
 /** This file hosts several structures identifying different aspects
  * of a RTP Session.
@@ -146,7 +148,10 @@ public:
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
                       mChannel(-1),
-                      mCurSendCodecConfig(NULL)
+                      mCurSendCodecConfig(NULL),
+                      mCaptureDelay(150),
+                      mEchoOn(true),
+                      mEchoCancel(webrtc::kEcAec)
   {
   }
 
@@ -191,6 +196,7 @@ private:
   webrtc::VoEBase*     mPtrVoEBase;
   webrtc::VoECodec*    mPtrVoECodec;
   webrtc::VoEExternalMedia* mPtrVoEXmedia;
+  webrtc::VoEAudioProcessing* mPtrVoEProcessing;
 
   //engine states of our interets
   bool mEngineTransmitting; // If true => VoiceEngine Send-subsystem is up
@@ -200,6 +206,12 @@ private:
   int mChannel;
   RecvCodecList    mRecvCodecList;
   AudioCodecConfig* mCurSendCodecConfig;
+
+  // Current "capture" delay (really output plus input delay)
+  int32_t mCaptureDelay;
+
+  bool mEchoOn;
+  webrtc::EcModes  mEchoCancel;
 };
 
 } // end namespace
