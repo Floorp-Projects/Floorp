@@ -81,9 +81,6 @@ public:
   // thread only.
   void LoadNextByteRange();
 
-  // Cancels current byte range loads. Called on the main thread only.
-  void CancelByteRangeLoad();
-
   // Returns true if the subsegment is already in the media cache.
   bool IsSubsegmentCached(int32_t aSubsegmentIdx);
 
