@@ -486,9 +486,19 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
             JSObject* cur = unsafeObj ? unsafeObj : obj;
             nsISupports *identity;
             if (mozilla::dom::UnwrapDOMObjectToISupports(cur, identity)) {
-                nsCOMPtr<nsISupports> supp;
-                identity->QueryInterface(*iid, getter_AddRefs(supp));
-                *bp = supp;
+                nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(identity);
+                if (!ci) {
+                    // No classinfo means we're not implementing interfaces and all
+                    return NS_OK;
+                }
+
+                XPCCallContext ccx(JS_CALLER, cx);
+
+                AutoMarkingNativeSetPtr set(ccx);
+                set = XPCNativeSet::GetNewOrUsed(ccx, ci);
+                if (!set)
+                    return NS_ERROR_FAILURE;
+                *bp = set->HasInterfaceWithAncestor(iid);
                 return NS_OK;
             }
         }
