@@ -27,9 +27,7 @@ let LOG = OS.Shared.LOG.bind(OS.Shared, "Controller");
 let isTypedArray = OS.Shared.isTypedArray;
 
 // A simple flag used to control debugging messages.
-// FIXME: Once this library has been battle-tested, this flag will
-// either be removed or replaced with a preference.
-const DEBUG = false;
+let DEBUG = OS.Shared.DEBUG;
 
 // The constructor for file errors.
 let OSError;
@@ -109,6 +107,22 @@ let Scheduler = {
     );
   }
 };
+
+// Update worker's DEBUG flag.
+Scheduler.post("SET_DEBUG", [DEBUG]);
+
+// Define a new getter and setter for OS.Shared.DEBUG to be able to watch
+// for changes to it and update worker's DEBUG accordingly.
+Object.defineProperty(OS.Shared, "DEBUG", {
+    configurable: true,
+    get: function () {
+        return DEBUG;
+    },
+    set: function (newVal) {
+        Scheduler.post("SET_DEBUG", [newVal]);
+        DEBUG = newVal;
+    }
+});
 
 /**
  * Representation of a file, with asynchronous methods.
@@ -533,6 +547,14 @@ if (OS.Constants.Win) {
 
 File.Info.fromMsg = function fromMsg(value) {
   return new File.Info(value);
+};
+
+/**
+ * Get worker's current DEBUG flag.
+ * Note: This is used for testing purposes.
+ */
+File.GET_DEBUG = function GET_DEBUG() {
+  return Scheduler.post("GET_DEBUG");
 };
 
 /**
