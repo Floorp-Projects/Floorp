@@ -417,6 +417,10 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
   DBusError err;
   dbus_error_init(&err);
 
+  BT_LOG("%s: %s, %s", __FUNCTION__,
+                       dbus_message_get_path(msg),
+                       dbus_message_get_member(msg));
+
   nsString signalPath = NS_ConvertUTF8toUTF16(dbus_message_get_path(msg));
   nsString signalName = NS_ConvertUTF8toUTF16(dbus_message_get_member(msg));
   nsString errorStr;
@@ -1312,9 +1316,15 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   }
 
   DBusError err;
+  dbus_error_init(&err);
+
   nsString signalPath;
   nsString signalName;
-  dbus_error_init(&err);
+
+  BT_LOG("%s: %s, %s", __FUNCTION__,
+                       dbus_message_get_path(aMsg),
+                       dbus_message_get_member(aMsg));
+
   signalPath = NS_ConvertUTF8toUTF16(dbus_message_get_path(aMsg));
   signalName = NS_ConvertUTF8toUTF16(dbus_message_get_member(aMsg));
   nsString errorStr;

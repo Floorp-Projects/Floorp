@@ -208,6 +208,8 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
 void
 BluetoothManager::Notify(const BluetoothSignal& aData)
 {
+  BT_LOG("[M] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
+
   if (aData.name().EqualsLiteral("AdapterAdded")) {
     DispatchTrustedEvent(NS_LITERAL_STRING("adapteradded"));
   } else {
