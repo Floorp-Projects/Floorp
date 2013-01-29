@@ -51,8 +51,12 @@ public:
     *aValue = JSVAL_VOID;
 
     const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
+    if (v.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
+      NS_WARNING("Not a BluetoothNamedValue array!");
+      SetError(NS_LITERAL_STRING("BluetoothReplyTypeError"));
+      return false;
+    }
 
-    MOZ_ASSERT(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
     const InfallibleTArray<BluetoothNamedValue>& values =
       v.get_ArrayOfBluetoothNamedValue();
     nsCOMPtr<nsIDOMBluetoothAdapter> adapter;
