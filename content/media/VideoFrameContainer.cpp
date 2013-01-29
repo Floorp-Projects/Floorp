@@ -67,15 +67,7 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   mPaintTarget = aTargetTime;
 }
 
-void VideoFrameContainer::Reset()
-{
-  ClearCurrentFrame(true);
-  Invalidate();
-  mPaintDelay = TimeDuration();
-  mImageContainer->ResetPaintCount();
-}
-
-void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
+void VideoFrameContainer::ClearCurrentFrame()
 {
   MutexAutoLock lock(mMutex);
 
@@ -84,7 +76,6 @@ void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
   nsRefPtr<Image> kungFuDeathGrip;
   kungFuDeathGrip = mImageContainer->LockCurrentImage();
   mImageContainer->UnlockCurrentImage();
-  mImageSizeChanged = aResetSize;
 
   mImageContainer->SetCurrentImage(nullptr);
 
