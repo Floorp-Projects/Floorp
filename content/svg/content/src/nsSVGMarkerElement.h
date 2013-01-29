@@ -3,26 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGMarkerElement_h
-#define mozilla_dom_SVGMarkerElement_h
+#ifndef __NS_SVGMARKERELEMENT_H__
+#define __NS_SVGMARKERELEMENT_H__
 
 #include "gfxMatrix.h"
+#include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGMarkerElement.h"
 #include "nsSVGAngle.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "nsSVGElement.h"
+#include "SVGGraphicsElement.h"
 #include "mozilla/Attributes.h"
-
-class nsSVGMarkerFrame;
-
-nsresult NS_NewSVGMarkerElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo> aNodeInfo);
-
-namespace mozilla {
-namespace dom {
 
 class nsSVGOrientType
 {
@@ -47,8 +40,8 @@ public:
   uint16_t GetAnimValue() const
     { return mAnimVal; }
 
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration>
-    ToDOMAnimatedEnum(nsSVGElement* aSVGElement);
+  nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
+                             nsSVGElement* aSVGElement);
 
 private:
   nsSVGEnumValue mAnimVal;
@@ -75,24 +68,27 @@ private:
   };
 };
 
-typedef nsSVGElement SVGMarkerElementBase;
+typedef mozilla::dom::SVGGraphicsElement nsSVGMarkerElementBase;
 
-class SVGMarkerElement : public SVGMarkerElementBase,
-                         public nsIDOMSVGMarkerElement
+class nsSVGMarkerElement : public nsSVGMarkerElementBase,
+                           public nsIDOMSVGMarkerElement,
+                           public nsIDOMSVGFitToViewBox
 {
-  friend class ::nsSVGMarkerFrame;
+  friend class nsSVGMarkerFrame;
 
 protected:
-  friend nsresult (::NS_NewSVGMarkerElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
+  friend nsresult NS_NewSVGMarkerElement(nsIContent **aResult,
+                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
+  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
+
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGMARKERELEMENT
+  NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -123,27 +119,13 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
-
-  // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
-  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
-  already_AddRefed<SVGAnimatedLength> RefX();
-  already_AddRefed<SVGAnimatedLength> RefY();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> MarkerUnits();
-  already_AddRefed<SVGAnimatedLength> MarkerWidth();
-  already_AddRefed<SVGAnimatedLength> MarkerHeight();
-  already_AddRefed<nsIDOMSVGAnimatedEnumeration> OrientType();
-  already_AddRefed<SVGAnimatedAngle> OrientAngle();
-  // We can use the XPIDL SetOrientToAuto
-  void SetOrientToAngle(SVGAngle& angle, ErrorResult& rv);
-
 protected:
 
   virtual bool ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 
-  void SetParentCoordCtxProvider(SVGSVGElement *aContext);
+  void SetParentCoordCtxProvider(mozilla::dom::SVGSVGElement *aContext);
 
   virtual LengthAttributesInfo GetLengthInfo();
   virtual AngleAttributesInfo GetAngleInfo();
@@ -170,11 +152,8 @@ protected:
   // derived properties (from 'orient') handled separately
   nsSVGOrientType                        mOrientType;
 
-  SVGSVGElement                         *mCoordCtx;
+  mozilla::dom::SVGSVGElement                       *mCoordCtx;
   nsAutoPtr<gfxMatrix>                   mViewBoxToViewportTransform;
 };
 
-} // namespace dom
-} // namespace mozilla
-
-#endif // mozilla_dom_SVGMarkerElement_h
+#endif
