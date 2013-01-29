@@ -66,7 +66,9 @@ namespace ion {
     /* Inline caches. */                    \
     _(BaselineIC)                           \
     /* Inline cache fallbacks. */           \
-    _(BaselineICFallback)
+    _(BaselineICFallback)                   \
+    /* OSR from Baseline => Ion. */         \
+    _(BaselineOSR)
 
 
 enum IonSpewChannel {

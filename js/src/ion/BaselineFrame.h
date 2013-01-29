@@ -121,7 +121,7 @@ class BaselineFrame
     }
 
     unsigned numActualArgs() const {
-        return *(unsigned *)(reinterpret_cast<const uint8_t *>(this) +
+        return *(size_t *)(reinterpret_cast<const uint8_t *>(this) +
                              BaselineFrame::Size() +
                              offsetOfNumActualArgs());
     }
@@ -195,6 +195,9 @@ class BaselineFrame
     bool isEvalFrame() const {
         return false;
     }
+    bool isDebuggerFrame() const {
+        return false;
+    }
     bool isNonStrictDirectEvalFrame() const {
         return false;
     }
@@ -223,6 +226,12 @@ class BaselineFrame
     }
     static size_t Size() {
         return sizeof(BaselineFrame);
+    }
+
+    // Obtain a baseline frame pointer from the corresponding IonJSFrameLayout pointer.
+    static BaselineFrame *FromIonJSFrame(IonJSFrameLayout *frame) {
+        size_t adjust = FramePointerOffset + BaselineFrame::Size();
+        return reinterpret_cast<BaselineFrame *>(reinterpret_cast<uint8_t *>(frame) - adjust);
     }
 
     // The reverseOffsetOf methods below compute the offset relative to the

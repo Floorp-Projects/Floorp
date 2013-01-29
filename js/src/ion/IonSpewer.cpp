@@ -243,6 +243,7 @@ ion::CheckLogging()
             "  bl-op      Baseline compiler detailed op-specific messages\n"
             "  bl-ic      Baseline inline-cache messages\n"
             "  bl-ic-fb   Baseline IC fallback stub messages\n"
+            "  bl-osr     Baseline IC OSR messages\n"
             "  bl-all     All baseline spew\n"
             "\n"
         );
@@ -298,12 +299,15 @@ ion::CheckLogging()
         EnableChannel(IonSpew_BaselineIC);
     if (ContainsFlag(env, "bl-ic-fb"))
         EnableChannel(IonSpew_BaselineICFallback);
+    if (ContainsFlag(env, "bl-osr"))
+        EnableChannel(IonSpew_BaselineOSR);
     if (ContainsFlag(env, "bl-all")) {
         EnableChannel(IonSpew_BaselineAbort);
         EnableChannel(IonSpew_BaselineScripts);
         EnableChannel(IonSpew_BaselineOp);
         EnableChannel(IonSpew_BaselineIC);
         EnableChannel(IonSpew_BaselineICFallback);
+        EnableChannel(IonSpew_BaselineOSR);
     }
 
     if (LoggingBits != 0)
