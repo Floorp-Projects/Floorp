@@ -1373,10 +1373,6 @@ nsDocument::~nsDocument()
            ("DOCUMENT %p destroyed", this));
 #endif
 
-#ifdef DEBUG
-  nsCycleCollector_DEBUG_wasFreed(static_cast<nsIDocument*>(this));
-#endif
-
   NS_ASSERTION(!mIsShowing, "Destroying a currently-showing document");
 
   mInDestructor = true;
