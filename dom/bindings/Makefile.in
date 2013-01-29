@@ -87,6 +87,7 @@ LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/content/xslt/src/base \
   -I$(topsrcdir)/content/xslt/src/xpath \
   -I$(topsrcdir)/content/xml/content/src \
+  -I$(topsrcdir)/content/xul/content/src \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
