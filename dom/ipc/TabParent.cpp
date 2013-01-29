@@ -85,9 +85,12 @@ TabParent::TabParent(const TabContext& aContext)
   , mIMECompositionStart(0)
   , mIMESeqno(0)
   , mEventCaptureDepth(0)
+  , mRect(0, 0, 0, 0)
   , mDimensions(0, 0)
+  , mOrientation(0)
   , mDPI(0)
   , mShown(false)
+  , mUpdatedDimensions(false)
   , mMarkedDestroying(false)
   , mIsDestroyed(false)
 {
@@ -265,12 +268,20 @@ TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
   }
   hal::ScreenConfiguration config;
   hal::GetCurrentScreenConfiguration(&config);
+  ScreenOrientation orientation = config.orientation();
 
-  unused << SendUpdateDimensions(rect, size, config.orientation());
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->NotifyDimensionsChanged(size.width, size.height);
+  if (!mUpdatedDimensions || mOrientation != orientation ||
+      mDimensions != size || !mRect.IsEqualEdges(rect)) {
+    mUpdatedDimensions = true;
+    mRect = rect;
+    mDimensions = size;
+    mOrientation = orientation;
+
+    unused << SendUpdateDimensions(mRect, mDimensions, mOrientation);
+    if (RenderFrameParent* rfp = GetRenderFrame()) {
+      rfp->NotifyDimensionsChanged(mDimensions.width, mDimensions.height);
+    }
   }
-  mDimensions = size;
 }
 
 void
