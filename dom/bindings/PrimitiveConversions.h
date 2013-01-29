@@ -273,7 +273,7 @@ PrimitiveConversionTraits_Clamp(JSContext* cx, const double& d, T* retval)
   // the correct result.  If N is even, plus or minus N is the correct result.
   double toTruncate = (d < 0) ? d - 0.5 : d + 0.5;
 
-  T truncated(toTruncate);
+  T truncated = static_cast<T>(toTruncate);
 
   if (truncated == toTruncate) {
     /*
@@ -339,8 +339,8 @@ bool ValueToPrimitive(JSContext* cx, JS::Value v, T* retval)
   if (!PrimitiveConversionTraits<T, B>::converter(cx, v, &t))
     return false;
 
-  *retval =
-    static_cast<typename PrimitiveConversionTraits<T, B>::intermediateType>(t);
+  *retval = static_cast<T>(
+    static_cast<typename PrimitiveConversionTraits<T, B>::intermediateType>(t));
   return true;
 }
 
