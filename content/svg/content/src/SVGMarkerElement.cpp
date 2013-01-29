@@ -292,19 +292,6 @@ SVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
 // nsSVGElement methods
 
 bool
-SVGMarkerElement::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                          nsAString &aResult) const
-{
-  if (aNameSpaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::orient &&
-      mOrientType.GetBaseValue() == SVG_MARKER_ORIENT_AUTO) {
-    aResult.AssignLiteral("auto");
-    return true;
-  }
-  return SVGMarkerElementBase::GetAttr(aNameSpaceID, aName, aResult);
-}
-
-bool
 SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
