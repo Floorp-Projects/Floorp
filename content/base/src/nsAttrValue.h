@@ -20,9 +20,10 @@
 #include "nsCOMPtr.h"
 #include "SVGAttrValueWrapper.h"
 #include "nsTArrayForwardDeclare.h"
+#include "nsIAtom.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 class nsAString;
-class nsIAtom;
 class nsIDocument;
 class nsStyledElementNotElementCSSInlineStyle;
 struct MiscContainer;
@@ -159,6 +160,8 @@ public:
   void SwapValueWith(nsAttrValue& aOther);
 
   void ToString(nsAString& aResult) const;
+  inline void ToString(mozilla::dom::DOMString& aResult) const;
+
   /**
    * Returns the value of this object as an atom. If necessary, the value will
    * first be serialised using ToString before converting to an atom.
@@ -462,6 +465,32 @@ inline bool
 nsAttrValue::IsEmptyString() const
 {
   return !mBits;
+}
+
+inline void
+nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const
+{
+  switch (Type()) {
+    case eString:
+    {
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
+      if (str) {
+        aResult.SetStringBuffer(str, str->StorageSize()/sizeof(PRUnichar) - 1);
+      }
+      // else aResult is already empty
+      return;
+    }
+    case eAtom:
+    {
+      nsIAtom *atom = static_cast<nsIAtom*>(GetPtr());
+      aResult.SetStringBuffer(atom->GetStringBuffer(), atom->GetLength());
+      break;
+    }
+    default:
+    {
+      ToString(aResult.AsAString());
+    }
+  }
 }
 
 #endif
