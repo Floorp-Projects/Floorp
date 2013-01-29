@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGMarkerElement_h
 
 #include "gfxMatrix.h"
-#include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGMarkerElement.h"
 #include "nsSVGAngle.h"
 #include "nsSVGEnum.h"
@@ -79,8 +78,7 @@ private:
 typedef nsSVGElement SVGMarkerElementBase;
 
 class SVGMarkerElement : public SVGMarkerElementBase,
-                         public nsIDOMSVGMarkerElement,
-                         public nsIDOMSVGFitToViewBox
+                         public nsIDOMSVGMarkerElement
 {
   friend class ::nsSVGMarkerFrame;
 
@@ -95,7 +93,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGMARKERELEMENT
-  NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
