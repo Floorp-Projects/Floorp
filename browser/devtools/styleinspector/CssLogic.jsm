@@ -23,8 +23,7 @@
  *   standard DOM API, but more inline with the definition in the spec.
  *
  * - CssPropertyInfo contains style information for a single property for the
- *   highlighted element. It divides the CSS rules on the page into matched and
- *   unmatched rules.
+ *   highlighted element.
  * - CssSelectorInfo is a wrapper around CssSelector, which adds sorting with
  *   reference to the selected element.
  */
@@ -120,13 +119,11 @@ CssLogic.prototype = {
   // processMatchedSelectors().
   _passId: 0,
 
-  // Used for tracking matched CssSelector objects, such that we can skip them
-  // in processUnmatchedSelectors().
+  // Used for tracking matched CssSelector objects.
   _matchId: 0,
 
   _matchedRules: null,
   _matchedSelectors: null,
-  _unmatchedSelectors: null,
 
   domUtils: Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils),
 
@@ -142,7 +139,6 @@ CssLogic.prototype = {
     this._sheetsCached = false;
     this._matchedRules = null;
     this._matchedSelectors = null;
-    this._unmatchedSelectors = null;
   },
 
   /**
@@ -177,7 +173,6 @@ CssLogic.prototype = {
 
     this._matchedRules = null;
     this._matchedSelectors = null;
-    this._unmatchedSelectors = null;
     let win = this.viewedDocument.defaultView;
     this._computedStyle = win.getComputedStyle(this.viewedElement, "");
   },
@@ -220,7 +215,6 @@ CssLogic.prototype = {
     if (needFullUpdate) {
       this._matchedRules = null;
       this._matchedSelectors = null;
-      this._unmatchedSelectors = null;
       this._propertyInfos = {};
     } else {
       // Update the CssPropertyInfo objects.
@@ -468,7 +462,6 @@ CssLogic.prototype = {
     }
 
     this._matchedSelectors = [];
-    this._unmatchedSelectors = null;
     this._passId++;
 
     for (let i = 0; i < this._matchedRules.length; i++) {
@@ -511,52 +504,6 @@ CssLogic.prototype = {
              element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE);
 
     return false;
-  },
-
-  /**
-   * Process the CssSelector object that do not match the highlighted elements,
-   * nor its parents. Your callback function is invoked for every such
-   * CssSelector object. You receive one argument: the CssSelector object.
-   *
-   * The list of unmatched selectors is cached.
-   *
-   * @param {function} aCallback the function you want to execute for each of
-   * the unmatched selectors.
-   * @param {object} aScope the scope you want for the callback function. aScope
-   * will be the this object when aCallback executes.
-   */
-  processUnmatchedSelectors: function CL_processUnmatchedSelectors(aCallback, aScope)
-  {
-    if (this._unmatchedSelectors) {
-      if (aCallback) {
-        this._unmatchedSelectors.forEach(aCallback, aScope);
-      }
-      return;
-    }
-
-    if (!this._matchedSelectors) {
-      this.processMatchedSelectors();
-    }
-
-    this._unmatchedSelectors = [];
-
-    this.forEachSheet(function (aSheet) {
-      // We do not show unmatched selectors from system stylesheets
-      if (!aSheet.contentSheet || aSheet.disabled || !aSheet.mediaMatches) {
-        return;
-      }
-
-      aSheet.forEachRule(function (aRule) {
-        aRule.selectors.forEach(function (aSelector) {
-          if (aSelector._matchId !== this._matchId) {
-            this._unmatchedSelectors.push(aSelector);
-            if (aCallback) {
-              aCallback.call(aScope, aSelector);
-            }
-          }
-        }, this);
-      }, this);
-    }, this);
   },
 
   /**
@@ -665,95 +612,6 @@ CssLogic.prototype = {
       }
     } while ((element = element.parentNode) &&
               element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE);
-  },
-
-  /**
-   * Check if the highlighted element or it's parents have unmatched selectors.
-   *
-   * Please note that this method is far slower than hasMatchedSelectors()
-   * because it needs to do a lot more checks in the DOM.
-   *
-   * @param {array} aProperties The list of properties you want to check if they
-   * have unmatched selectors or not.
-   * @return {object} An object that tells for each property if it has unmatched
-   * selectors or not. Object keys are property names and values are booleans.
-   */
-  hasUnmatchedSelectors: function CL_hasUnmatchedSelectors(aProperties)
-  {
-    if (!this._matchedRules) {
-      this._buildMatchedRules();
-    }
-
-    let result = {};
-
-    this.forSomeSheets(function (aSheet) {
-      if (!aSheet.contentSheet || aSheet.disabled || !aSheet.mediaMatches) {
-        return false;
-      }
-
-      return aSheet.forSomeRules(function (aRule) {
-        let unmatched = aRule._matchId !== this._matchId ||
-                        this._ruleHasUnmatchedSelector(aRule);
-        if (!unmatched) {
-          return false;
-        }
-
-        aProperties = aProperties.filter(function(aProperty) {
-          if (!aRule.getPropertyValue(aProperty)) {
-            // Keep this property for the next rule. We need to find a rule
-            // which has the property.
-            return true;
-          }
-
-          result[aProperty] = true;
-
-          // We found a rule that has the current property while it does not
-          // match the current element. We can remove this property from the
-          // array.
-          return false;
-        });
-
-        return aProperties.length == 0;
-      }, this);
-    }, this);
-
-    aProperties.forEach(function(aProperty) { result[aProperty] = false; });
-
-    return result;
-  },
-
-  /**
-   * Check if a CssRule has an unmatched selector for the highlighted element or
-   * its parents.
-   *
-   * @private
-   * @param {CssRule} aRule The rule you want to check if it has an unmatched
-   * selector.
-   * @return {boolean} True if the rule has an unmatched selector, false
-   * otherwise.
-   */
-  _ruleHasUnmatchedSelector: function CL__ruleHasUnmatchedSelector(aRule)
-  {
-    if (!aRule._cssSheet && aRule.sourceElement) {
-      // CssRule wraps element.style, which never has unmatched selectors.
-      return false;
-    }
-
-    let element = this.viewedElement;
-    let selectors = aRule.selectors;
-
-    do {
-      selectors = selectors.filter(function(aSelector) {
-        return !element.mozMatchesSelector(aSelector);
-      });
-
-      if (selectors.length == 0) {
-        break;
-      }
-    } while ((element = element.parentNode) &&
-             element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE);
-
-    return selectors.length > 0;
   },
 
   /**
@@ -1546,9 +1404,9 @@ CssSelector.prototype = {
  * A cache of information about the matched rules, selectors and values attached
  * to a CSS property, for the highlighted element.
  *
- * The heart of the CssPropertyInfo object is the _findMatchedSelectors() and
- * _findUnmatchedSelectors() methods. These are invoked when the PropertyView
- * tries to access the .matchedSelectors and .unmatchedSelectors arrays.
+ * The heart of the CssPropertyInfo object is the _findMatchedSelectors()
+ * method. This are invoked when the PropertyView tries to access the
+ * .matchedSelectors array.
  * Results are cached, for later reuse.
  *
  * @param {CssLogic} aCssLogic Reference to the parent CssLogic instance
@@ -1570,7 +1428,6 @@ function CssPropertyInfo(aCssLogic, aProperty)
   // counted. This includes rules that come from filtered stylesheets (those
   // that have sheetAllowed = false).
   this._matchedSelectors = null;
-  this._unmatchedSelectors = null;
 }
 
 CssPropertyInfo.prototype = {
@@ -1614,23 +1471,6 @@ CssPropertyInfo.prototype = {
   },
 
   /**
-   * Retrieve the number of unmatched rules.
-   *
-   * @return {number} the number of rules that do not match the highlighted
-   * element or its parents.
-   */
-  get unmatchedRuleCount()
-  {
-    if (!this._unmatchedSelectors) {
-      this._findUnmatchedSelectors();
-    } else if (this.needRefilter) {
-      this._refilterSelectors();
-    }
-
-    return this._unmatchedRuleCount;
-  },
-
-  /**
    * Retrieve the array holding CssSelectorInfo objects for each of the matched
    * selectors, from each of the matched rules. Only selectors coming from
    * allowed stylesheets are included in the array.
@@ -1647,25 +1487,6 @@ CssPropertyInfo.prototype = {
     }
 
     return this._matchedSelectors;
-  },
-
-  /**
-   * Retrieve the array holding CssSelectorInfo objects for each of the
-   * unmatched selectors, from each of the unmatched rules. Only selectors
-   * coming from allowed stylesheets are included in the array.
-   *
-   * @return {array} the list of CssSelectorInfo objects of selectors that do
-   * not match the highlighted element or its parents.
-   */
-  get unmatchedSelectors()
-  {
-    if (!this._unmatchedSelectors) {
-      this._findUnmatchedSelectors();
-    } else if (this.needRefilter) {
-      this._refilterSelectors();
-    }
-
-    return this._unmatchedSelectors;
   },
 
   /**
@@ -1726,53 +1547,8 @@ CssPropertyInfo.prototype = {
   },
 
   /**
-   * Find the selectors that do not match the highlighted element and its
-   * parents.
-   * @private
-   */
-  _findUnmatchedSelectors: function CssPropertyInfo_findUnmatchedSelectors()
-  {
-    this._unmatchedSelectors = [];
-    this._unmatchedRuleCount = 0;
-    this.needRefilter = false;
-    this._cssLogic._passId++;
-
-    this._cssLogic.processUnmatchedSelectors(this._processUnmatchedSelector,
-        this);
-
-    // Sort the selectors by specificity.
-    this._unmatchedSelectors.sort(function(aSelectorInfo1, aSelectorInfo2) {
-      return aSelectorInfo1.compareTo(aSelectorInfo2);
-    });
-  },
-
-  /**
-   * Process an unmatched CssSelector object. Note that in order to avoid
-   * information overload we DO NOT show unmatched system rules.
-   *
-   * @private
-   * @param {CssSelector} aSelector the unmatched CssSelector object.
-   */
-  _processUnmatchedSelector: function CPI_processUnmatchedSelector(aSelector)
-  {
-    let cssRule = aSelector._cssRule;
-    let value = cssRule.getPropertyValue(this.property);
-    if (value) {
-      let selectorInfo = new CssSelectorInfo(aSelector, this.property, value,
-          CssLogic.STATUS.UNMATCHED);
-      this._unmatchedSelectors.push(selectorInfo);
-      if (this._cssLogic._passId != cssRule._passId) {
-        if (cssRule.sheetAllowed) {
-          this._unmatchedRuleCount++;
-        }
-        cssRule._passId = this._cssLogic._passId;
-      }
-    }
-  },
-
-  /**
-   * Refilter the matched and unmatched selectors arrays when the
-   * CssLogic.sourceFilter changes. This allows for quick filter changes.
+   * Refilter the matched selectors array when the CssLogic.sourceFilter
+   * changes. This allows for quick filter changes.
    * @private
    */
   _refilterSelectors: function CssPropertyInfo_refilterSelectors()
@@ -1795,12 +1571,6 @@ CssPropertyInfo.prototype = {
       this._matchedRuleCount = ruleCount;
     }
 
-    if (this._unmatchedSelectors) {
-      ruleCount = 0;
-      this._unmatchedSelectors.forEach(iterator);
-      this._unmatchedRuleCount = ruleCount;
-    }
-
     this.needRefilter = false;
   },
 
@@ -1813,10 +1583,10 @@ CssPropertyInfo.prototype = {
 /**
  * A class that holds information about a given CssSelector object.
  *
- * Instances of this class are given to CssHtmlTree in the arrays of matched and
- * unmatched selectors. Each such object represents a displayable row in the
- * PropertyView objects. The information given by this object blends data coming
- * from the CssSheet, CssRule and from the CssSelector that own this object.
+ * Instances of this class are given to CssHtmlTree in the array of matched
+ * selectors. Each such object represents a displayable row in the PropertyView
+ * objects. The information given by this object blends data coming from the
+ * CssSheet, CssRule and from the CssSelector that own this object.
  *
  * @param {CssSelector} aSelector The CssSelector object for which to present information.
  * @param {string} aProperty The property for which information should be retrieved.
