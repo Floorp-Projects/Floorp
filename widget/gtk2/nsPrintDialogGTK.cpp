@@ -36,7 +36,7 @@ using namespace mozilla::widget;
 
 static const char header_footer_tags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
 
-#define CUSTOM_VALUE_INDEX ArrayLength(header_footer_tags)
+#define CUSTOM_VALUE_INDEX gint(ArrayLength(header_footer_tags))
 
 static GtkWindow *
 get_gtk_window_for_nsiwidget(nsIWidget *widget)
