@@ -9,7 +9,10 @@ import unittest
 
 from mozunit import main
 
-from mozbuild.frontend.data import DirectoryTraversal
+from mozbuild.frontend.data import (
+    ConfigFileSubstitution,
+    DirectoryTraversal,
+)
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
 
@@ -89,6 +92,23 @@ class TestEmitterBasic(unittest.TestCase):
         reldirs = [o.relativedir for o in objs]
         self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'foo_static', 'bar',
             'baz'])
+
+    def test_config_file_substitution(self):
+        reader = self.reader('config-file-substitution')
+        emitter = TreeMetadataEmitter(reader.config)
+
+        objs = list(emitter.emit(reader.read_topsrcdir()))
+        self.assertEqual(len(objs), 3)
+
+        self.assertIsInstance(objs[0], DirectoryTraversal)
+        self.assertIsInstance(objs[1], ConfigFileSubstitution)
+        self.assertIsInstance(objs[2], ConfigFileSubstitution)
+
+        topobjdir = reader.config.topobjdir
+        self.assertEqual(objs[1].output_path,
+            os.path.normpath(os.path.join(topobjdir, 'foo')))
+        self.assertEqual(objs[2].output_path,
+            os.path.normpath(os.path.join(topobjdir, 'bar')))
 
 
 if __name__ == '__main__':
