@@ -358,7 +358,6 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGSwitchElement.h"
 #include "nsIDOMSVGSymbolElement.h"
-#include "nsIDOMSVGTests.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGTitleElement.h"
@@ -2991,7 +2990,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
 
 #define DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTests)           \
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
 
   // XXX - the proto chain stuff is sort of hackish, because of the MI in
@@ -3025,7 +3023,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimateElement, nsIDOMSVGAnimateElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimationElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTests)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimateElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementTimeControl)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
@@ -3034,7 +3031,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimateTransformElement,
                           nsIDOMSVGAnimateTransformElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimationElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTests)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimateTransformElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementTimeControl)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
@@ -3043,7 +3039,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimateMotionElement,
                           nsIDOMSVGAnimateMotionElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimationElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTests)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimateMotionElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementTimeControl)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
@@ -3052,7 +3047,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGSetElement,
                           nsIDOMSVGSetElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimationElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTests)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGSetElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementTimeControl)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
@@ -3352,7 +3346,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGSymbolElement, nsIDOMSVGSymbolElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGSymbolElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTests)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFitToViewBox)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
