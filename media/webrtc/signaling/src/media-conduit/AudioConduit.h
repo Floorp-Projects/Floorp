@@ -143,6 +143,8 @@ public:
 
 
   WebrtcAudioConduit():
+                      mOtherDirection(NULL),
+                      mShutDown(false),
                       mVoiceEngine(NULL),
                       mTransport(NULL),
                       mEngineTransmitting(false),
@@ -157,7 +159,7 @@ public:
 
   virtual ~WebrtcAudioConduit();
 
-  MediaConduitErrorCode Init();
+  MediaConduitErrorCode Init(WebrtcAudioConduit *other);
 
 private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) MOZ_DELETE;
@@ -190,6 +192,12 @@ private:
   //Utility function to dump recv codec database
   void DumpCodecDB() const;
 
+  WebrtcAudioConduit*  mOtherDirection;
+  // Other side has shut down our channel and related items already
+  bool mShutDown;
+
+  // These are shared by both directions.  They're released by the last
+  // conduit to die
   webrtc::VoiceEngine* mVoiceEngine;
   mozilla::RefPtr<TransportInterface> mTransport;
   webrtc::VoENetwork*  mPtrVoENetwork;
