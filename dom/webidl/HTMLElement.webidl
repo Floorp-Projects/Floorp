@@ -21,16 +21,16 @@ interface HTMLElement : Element {
            attribute DOMString title;
            attribute DOMString lang;
   //         attribute boolean translate;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString dir;
   [Constant]
   readonly attribute DOMStringMap dataset;
 
   // microdata 
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute boolean itemScope;
   [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemType;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString itemId;
   [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemRef;
   [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemProp;
@@ -40,28 +40,31 @@ interface HTMLElement : Element {
            attribute any itemValue;
 
   // user interaction
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute boolean hidden;
   void click();
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute long tabIndex;
   [Throws]
   void focus();
   [Throws]
   void blur();
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString accessKey;
+  [Pure]
   readonly attribute DOMString accessKeyLabel;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute boolean draggable;
   //[PutForwards=value] readonly attribute DOMSettableTokenList dropzone;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString contentEditable;
+  [Pure]
   readonly attribute boolean isContentEditable;
+  [Pure]
   readonly attribute HTMLMenuElement? contextMenu;
   //[SetterThrows]
   //         attribute HTMLMenuElement? contextMenu;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute boolean spellcheck;
 
   // command API
@@ -103,6 +106,7 @@ interface HTMLElement : Element {
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-htmlelement-interface
 partial interface HTMLElement {
+  // CSSOM things are not [Pure] because they can flush
   readonly attribute Element? offsetParent;
   readonly attribute long offsetTop;
   readonly attribute long offsetLeft;
