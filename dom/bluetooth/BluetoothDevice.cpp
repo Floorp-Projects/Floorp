@@ -6,7 +6,6 @@
 
 #include "base/basictypes.h"
 #include "BluetoothDevice.h"
-#include "BluetoothPropertyEvent.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
@@ -27,12 +26,12 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BluetoothDevice,
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsServices)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothDevice, 
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothDevice,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothDevice, 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothDevice,
                                                 nsDOMEventTargetHelper)
   tmp->Unroot();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -176,23 +175,16 @@ BluetoothDevice::Create(nsPIDOMWindow* aOwner,
 void
 BluetoothDevice::Notify(const BluetoothSignal& aData)
 {
+  BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("PropertyChanged")) {
-    NS_ASSERTION(aData.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue,
+    NS_ASSERTION(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue,
                  "PropertyChanged: Invalid value type");
-    InfallibleTArray<BluetoothNamedValue> arr(aData.value().get_ArrayOfBluetoothNamedValue());
+     const InfallibleTArray<BluetoothNamedValue>& arr =
+       v.get_ArrayOfBluetoothNamedValue();
 
-    NS_ASSERTION(arr.Length() == 1, "Got more than one property in a change message!");
-    BluetoothNamedValue v = arr[0];
-    nsString name = v.name();
-
-    SetPropertyByValue(v);
-    if (name.EqualsLiteral("Connected")) {
-      DispatchTrustedEvent(mConnected ? NS_LITERAL_STRING("connected")
-                           : NS_LITERAL_STRING("disconnected"));
-    } else {
-      nsRefPtr<BluetoothPropertyEvent> e = BluetoothPropertyEvent::Create(name);
-      e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("propertychanged"));
-    }
+    NS_ASSERTION(arr.Length() == 1,
+                 "Got more than one property in a change message!");
+    SetPropertyByValue(arr[0]);
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
