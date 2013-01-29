@@ -40,10 +40,13 @@
 # endif
 #endif
 
-#define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
-#define BLUETOOTH_ENABLED_SETTING "bluetooth.enabled"
+#define MOZSETTINGS_CHANGED_ID      "mozsettings-changed"
+#define BLUETOOTH_ENABLED_SETTING   "bluetooth.enabled"
+#define BLUETOOTH_DEBUGGING_SETTING "bluetooth.debugging.enabled"
 
 #define DEFAULT_SHUTDOWN_TIMER_MS 5000
+
+bool gBluetoothDebugFlag = false;
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -553,37 +556,58 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
     return NS_OK;
   }
 
+  // First, check if the string equals to BLUETOOTH_DEBUGGING_SETTING
   JSBool match;
-  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_ENABLED_SETTING,
-                            &match)) {
+  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_DEBUGGING_SETTING, &match)) {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!match) {
+  if (match) {
+    JS::Value value;
+    if (!JS_GetProperty(cx, &obj, "value", &value)) {
+      MOZ_ASSERT(!JS_IsExceptionPending(cx));
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (!value.isBoolean()) {
+      MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.debugging.enabled'!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    SWITCH_BT_DEBUG(value.toBoolean());
+
     return NS_OK;
   }
 
-  JS::Value value;
-  if (!JS_GetProperty(cx, &obj, "value", &value)) {
+  // Second, check if the string is BLUETOOTH_ENABLED_SETTING
+  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_ENABLED_SETTING, &match)) {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!value.isBoolean()) {
-    MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.enabled'!");
-    return NS_ERROR_UNEXPECTED;
+  if (match) {
+    JS::Value value;
+    if (!JS_GetProperty(cx, &obj, "value", &value)) {
+      MOZ_ASSERT(!JS_IsExceptionPending(cx));
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (!value.isBoolean()) {
+      MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.enabled'!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (gToggleInProgress || value.toBoolean() == IsEnabled()) {
+      // Nothing to do here.
+      return NS_OK;
+    }
+
+    gToggleInProgress = true;
+
+    nsresult rv = StartStopBluetooth(value.toBoolean());
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  if (gToggleInProgress || value.toBoolean() == IsEnabled()) {
-    // Nothing to do here.
-    return NS_OK;
-  }
-
-  gToggleInProgress = true;
-
-  nsresult rv = StartStopBluetooth(value.toBoolean());
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
