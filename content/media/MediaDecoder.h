@@ -658,7 +658,6 @@ public:
                      int aChannels,
                      int aRate,
                      bool aHasAudio,
-                     bool aHasVideo,
                      MetadataTags* aTags);
 
   /******
@@ -677,7 +676,7 @@ public:
 
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
-  void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags);
+  void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags);
 
   // Called when the first frame has been loaded.
   // Call on the main thread only.
