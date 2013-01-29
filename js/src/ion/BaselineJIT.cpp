@@ -89,7 +89,9 @@ CheckFrame(StackFrame *fp)
     }
 
     if (fp->isDebuggerFrame()) {
-        IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: debugger frame!");
+        // Debugger eval-in-frame. These are likely short-running scripts so
+        // don't bother compiling them for now.
+        IonSpew(IonSpew_BaselineAbort, "debugger frame");
         return false;
     }
 
@@ -225,11 +227,6 @@ ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp, boo
     // Skip if the script has been disabled.
     if (script->baseline == BASELINE_DISABLED_SCRIPT)
         return Method_Skipped;
-
-    if (cx->compartment->debugMode()) {
-        IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: Not compiling in debug mode!");
-        return Method_CantCompile;
-    }
 
     // If constructing, allocate a new |this| object.
     if (fp->isConstructing() && fp->functionThis().isPrimitive()) {
