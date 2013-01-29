@@ -288,9 +288,6 @@ TabTracker.prototype = {
     switch (aTopic) {
       case "weave:engine:start-tracking":
         if (!this._enabled) {
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-          Svc.Obs.add("private-browsing", this);
-#endif
           Svc.Obs.add("domwindowopened", this);
           let wins = Services.wm.getEnumerator("navigator:browser");
           while (wins.hasMoreElements())
@@ -300,9 +297,6 @@ TabTracker.prototype = {
         break;
       case "weave:engine:stop-tracking":
         if (this._enabled) {
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-          Svc.Obs.remove("private-browsing", this);
-#endif
           Svc.Obs.remove("domwindowopened", this);
           let wins = Services.wm.getEnumerator("navigator:browser");
           while (wins.hasMoreElements())
@@ -319,11 +313,6 @@ TabTracker.prototype = {
           self._registerListenersForWindow(aSubject);
         }, false);
         break;
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-      case "private-browsing":
-        if (aData == "enter" && !PrivateBrowsingUtils.permanentPrivateBrowsing)
-          this.modified = false;
-#endif
     }
   },
 

@@ -1330,11 +1330,8 @@ var gBrowserInit = {
     ss.init(window);
 
     // Enable the Restore Last Session command if needed
-    if (ss.canRestoreLastSession
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-        && !PrivateBrowsingUtils.isWindowPrivate(window)
-#endif
-        )
+    if (ss.canRestoreLastSession &&
+        !PrivateBrowsingUtils.isWindowPrivate(window))
       goSetCommandEnabled("Browser:RestoreLastSession", true);
 
     PlacesToolbarHelper.init();
@@ -1551,10 +1548,6 @@ var gBrowserInit = {
 
     PlacesStarButton.uninit();
 
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    gPrivateBrowsingUI.uninit();
-#endif
-
     TabsOnTop.uninit();
 
     TabsInTitlebar.uninit();
@@ -1700,10 +1693,6 @@ var gBrowserInit = {
     }
 
     BrowserOffline.uninit();
-
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    gPrivateBrowsingUI.uninit();
-#endif
   },
 #endif
 
@@ -2510,11 +2499,8 @@ function BrowserOnAboutPageLoad(document) {
 
     let ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
              getService(Components.interfaces.nsISessionStore);
-    if (ss.canRestoreLastSession
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-        && !PrivateBrowsingUtils.isWindowPrivate(window)
-#endif
-        )
+    if (ss.canRestoreLastSession &&
+        !PrivateBrowsingUtils.isWindowPrivate(window))
       document.getElementById("launcher").setAttribute("session", "true");
 
     // Inject search engine and snippets URL.
@@ -3535,11 +3521,7 @@ function OpenBrowserWindow(options)
   var wintype = document.documentElement.getAttribute('windowtype');
 
   var extraFeatures = "";
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
   if (options && options.private) {
-#else
-  if (gPrivateBrowsingUI.privateBrowsingEnabled) {
-#endif
     extraFeatures = ",private";
     // Force the new window to load about:privatebrowsing instead of the default home page
     defaultArgs = "about:privatebrowsing";
@@ -6920,15 +6902,6 @@ function getTabModalPromptBox(aWindow) {
 function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
 
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-
-# We define a new gPrivateBrowsingUI object, as the per-window PB implementation
-# is completely different to the global PB one.  Specifically, the per-window
-# PB implementation does not expose many APIs on the gPrivateBrowsingUI object,
-# and only uses it as a way to initialize and uninitialize private browsing
-# windows.  While we could use #ifdefs all around the global PB mode code to
-# make it work in both modes, the amount of duplicated code is small and the
-# code is much more readable this way.
 let gPrivateBrowsingUI = {
   init: function PBUI_init() {
     // Do nothing for normal windows
@@ -6965,243 +6938,6 @@ let gPrivateBrowsingUI = {
   }
 };
 
-#else
-
-let gPrivateBrowsingUI = {
-  _privateBrowsingService: null,
-  _searchBarValue: null,
-  _findBarValue: null,
-  _inited: false,
-
-  init: function PBUI_init() {
-    Services.obs.addObserver(this, "private-browsing", false);
-    Services.obs.addObserver(this, "private-browsing-transition-complete", false);
-
-    this._privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
-                                   getService(Ci.nsIPrivateBrowsingService);
-
-    if (this.privateBrowsingEnabled)
-      this.onEnterPrivateBrowsing(true);
-
-    this._inited = true;
-  },
-
-  uninit: function PBUI_unint() {
-    if (!this._inited)
-      return;
-
-    Services.obs.removeObserver(this, "private-browsing");
-    Services.obs.removeObserver(this, "private-browsing-transition-complete");
-  },
-
-  get _disableUIOnToggle() {
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing)
-      return false;
-
-    try {
-      return !gPrefService.getBoolPref("browser.privatebrowsing.keep_current_session");
-    }
-    catch (e) {
-      return true;
-    }
-  },
-
-  observe: function PBUI_observe(aSubject, aTopic, aData) {
-    if (aTopic == "private-browsing") {
-      if (aData == "enter")
-        this.onEnterPrivateBrowsing();
-      else if (aData == "exit")
-        this.onExitPrivateBrowsing();
-    }
-    else if (aTopic == "private-browsing-transition-complete") {
-      if (this._disableUIOnToggle) {
-        document.getElementById("Tools:PrivateBrowsing")
-                .removeAttribute("disabled");
-      }
-    }
-  },
-
-  _shouldEnter: function PBUI__shouldEnter() {
-    try {
-      // Never prompt if the session is not going to be closed, or if user has
-      // already requested not to be prompted.
-      if (gPrefService.getBoolPref("browser.privatebrowsing.dont_prompt_on_enter") ||
-          gPrefService.getBoolPref("browser.privatebrowsing.keep_current_session"))
-        return true;
-    }
-    catch (ex) { }
-
-    var bundleService = Services.strings;
-    var pbBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
-    var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
-
-    var appName = brandBundle.GetStringFromName("brandShortName");
-# On Mac, use the header as the title.
-#ifdef XP_MACOSX
-    var dialogTitle = pbBundle.GetStringFromName("privateBrowsingMessageHeader");
-    var header = "";
-#else
-    var dialogTitle = pbBundle.GetStringFromName("privateBrowsingDialogTitle");
-    var header = pbBundle.GetStringFromName("privateBrowsingMessageHeader") + "\n\n";
-#endif
-    var message = pbBundle.formatStringFromName("privateBrowsingMessage", [appName], 1);
-
-    var ps = Services.prompt;
-
-    var flags = ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
-                ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1 +
-                ps.BUTTON_POS_0_DEFAULT;
-
-    var neverAsk = {value:false};
-    var button0Title = pbBundle.GetStringFromName("privateBrowsingYesTitle");
-    var button1Title = pbBundle.GetStringFromName("privateBrowsingNoTitle");
-    var neverAskText = pbBundle.GetStringFromName("privateBrowsingNeverAsk");
-
-    var result;
-    var choice = ps.confirmEx(null, dialogTitle, header + message,
-                              flags, button0Title, button1Title, null,
-                              neverAskText, neverAsk);
-
-    switch (choice) {
-    case 0: // Start Private Browsing
-      result = true;
-      if (neverAsk.value)
-        gPrefService.setBoolPref("browser.privatebrowsing.dont_prompt_on_enter", true);
-      break;
-    case 1: // Keep
-      result = false;
-      break;
-    }
-
-    return result;
-  },
-
-  onEnterPrivateBrowsing: function PBUI_onEnterPrivateBrowsing(aOnWindowOpen) {
-    if (BrowserSearch.searchBar)
-      this._searchBarValue = BrowserSearch.searchBar.textbox.value;
-
-    if (gFindBarInitialized)
-      this._findBarValue = gFindBar.getElement("findbar-textbox").value;
-
-    this._setPBMenuTitle("stop");
-
-    // Disable the Clear Recent History... menu item when in PB mode
-    // temporary fix until bug 463607 is fixed
-    document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
-
-    let docElement = document.documentElement;
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      // Disable the menu item in auto-start mode
-      document.getElementById("privateBrowsingItem")
-              .setAttribute("disabled", "true");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_privateBrowsing")
-              .setAttribute("disabled", "true");
-#endif
-      document.getElementById("Tools:PrivateBrowsing")
-              .setAttribute("disabled", "true");
-      if (window.location.href == getBrowserURL())
-        docElement.setAttribute("privatebrowsingmode", "permanent");
-    }
-    else if (window.location.href == getBrowserURL()) {
-      // Adjust the window's title
-      docElement.setAttribute("title",
-        docElement.getAttribute("title_privatebrowsing"));
-      docElement.setAttribute("titlemodifier",
-        docElement.getAttribute("titlemodifier_privatebrowsing"));
-      docElement.setAttribute("privatebrowsingmode", "temporary");
-      gBrowser.updateTitlebar();
-    }
-
-    if (!aOnWindowOpen && this._disableUIOnToggle)
-      document.getElementById("Tools:PrivateBrowsing")
-              .setAttribute("disabled", "true");
-  },
-
-  onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
-    if (BrowserSearch.searchBar) {
-      let searchBox = BrowserSearch.searchBar.textbox;
-      searchBox.reset();
-      if (this._searchBarValue) {
-        searchBox.value = this._searchBarValue;
-        this._searchBarValue = null;
-      }
-    }
-
-    if (gURLBar) {
-      gURLBar.editor.transactionManager.clear();
-    }
-
-    // Re-enable the Clear Recent History... menu item on exit of PB mode
-    // temporary fix until bug 463607 is fixed
-    document.getElementById("Tools:Sanitize").removeAttribute("disabled");
-
-    if (gFindBarInitialized) {
-      let findbox = gFindBar.getElement("findbar-textbox");
-      findbox.reset();
-      if (this._findBarValue) {
-        findbox.value = this._findBarValue;
-        this._findBarValue = null;
-      }
-    }
-
-    this._setPBMenuTitle("start");
-
-    if (window.location.href == getBrowserURL()) {
-      // Adjust the window's title
-      let docElement = document.documentElement;
-      docElement.setAttribute("title",
-        docElement.getAttribute("title_normal"));
-      docElement.setAttribute("titlemodifier",
-        docElement.getAttribute("titlemodifier_normal"));
-      docElement.removeAttribute("privatebrowsingmode");
-    }
-
-    // Enable the menu item in after exiting the auto-start mode
-    document.getElementById("privateBrowsingItem")
-            .removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_privateBrowsing")
-            .removeAttribute("disabled");
-#endif
-    document.getElementById("Tools:PrivateBrowsing")
-            .removeAttribute("disabled");
-
-    gLastOpenDirectory.reset();
-
-    if (this._disableUIOnToggle)
-      document.getElementById("Tools:PrivateBrowsing")
-              .setAttribute("disabled", "true");
-  },
-
-  _setPBMenuTitle: function PBUI__setPBMenuTitle(aMode) {
-    let pbMenuItem = document.getElementById("privateBrowsingItem");
-    pbMenuItem.setAttribute("label", pbMenuItem.getAttribute(aMode + "label"));
-    pbMenuItem.setAttribute("accesskey", pbMenuItem.getAttribute(aMode + "accesskey"));
-#ifdef MENUBAR_CAN_AUTOHIDE
-    let appmenupbMenuItem = document.getElementById("appmenu_privateBrowsing");
-    appmenupbMenuItem.setAttribute("label", appmenupbMenuItem.getAttribute(aMode + "label"));
-    appmenupbMenuItem.setAttribute("accesskey", appmenupbMenuItem.getAttribute(aMode + "accesskey"));
-#endif
-  },
-
-  toggleMode: function PBUI_toggleMode() {
-    // prompt the users on entering the private mode, if needed
-    if (!this.privateBrowsingEnabled)
-      if (!this._shouldEnter())
-        return;
-
-    this._privateBrowsingService.privateBrowsingEnabled =
-      !this.privateBrowsingEnabled;
-  },
-
-  get privateBrowsingEnabled() {
-    return this._privateBrowsingService.privateBrowsingEnabled;
-  }
-};
-
-#endif
-
 
 /**
  * Switch to a tab that has a given URI, and focusses its browser window.
@@ -7218,14 +6954,12 @@ let gPrivateBrowsingUI = {
 function switchToTabHavingURI(aURI, aOpenNew) {
   // This will switch to the tab in aWindow having aURI, if present.
   function switchIfURIInWindow(aWindow) {
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
     // Only switch to the tab if neither the source and desination window are
     // private.
     if (PrivateBrowsingUtils.isWindowPrivate(window) ||
         PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
       return false;
     }
-#endif
 
     let browsers = aWindow.gBrowser.browsers;
     for (let i = 0; i < browsers.length; i++) {

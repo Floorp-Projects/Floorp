@@ -74,12 +74,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "_winShellService",
                                    "@mozilla.org/browser/shell-service;1",
                                    "nsIWindowsShellService");
 
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-XPCOMUtils.defineLazyServiceGetter(this, "_privateBrowsingSvc",
-                                   "@mozilla.org/privatebrowsing;1",
-                                   "nsIPrivateBrowsingService");
-#endif
-
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -129,7 +123,6 @@ var tasksCfg = [
                             // shutdown. Thus true for consistency.
   },
 
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
   // Open new private window
   {
     get title()       _getString("taskbar.tasks.newPrivateWindow.label"),
@@ -140,33 +133,6 @@ var tasksCfg = [
     close:            true, // No point, but we don't always update the list on
                             // shutdown. Thus true for consistency.
   },
-#else
-  // Toggle the Private Browsing mode
-  {
-    get title() {
-      if (_privateBrowsingSvc.privateBrowsingEnabled)
-        return _getString("taskbar.tasks.exitPrivacyMode.label");
-      else
-        return _getString("taskbar.tasks.enterPrivacyMode.label");
-    },
-    get description() {
-      if (_privateBrowsingSvc.privateBrowsingEnabled)
-        return _getString("taskbar.tasks.exitPrivacyMode.description");
-      else
-        return _getString("taskbar.tasks.enterPrivacyMode.description");
-    },
-    args:             "-private-toggle",
-    iconIndex:        4, // Private browsing mode icon
-    get open() {
-      // Don't show when inside permanent private browsing mode
-      return !PrivateBrowsingUtils.permanentPrivateBrowsing;
-    },
-    get close() {
-      // Don't show when inside permanent private browsing mode
-      return !PrivateBrowsingUtils.permanentPrivateBrowsing;
-    },
-  },
-#endif
 ];
 
 /////////////////////////////////////////////////////////////////////////////
@@ -526,9 +492,6 @@ this.WinTaskbarJumpList =
   },
 
   _initObs: function WTBJL__initObs() {
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    Services.obs.addObserver(this, "private-browsing", false);
-#endif
     // If the browser is closed while in private browsing mode, the "exit"
     // notification is fired on quit-application-granted.
     // History cleanup can happen at profile-change-teardown.
@@ -538,9 +501,6 @@ this.WinTaskbarJumpList =
   },
  
   _freeObs: function WTBJL__freeObs() {
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    Services.obs.removeObserver(this, "private-browsing");
-#endif
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
@@ -606,11 +566,6 @@ this.WinTaskbarJumpList =
       case "browser:purge-session-history":
         this.update();
       break;
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-      case "private-browsing":
-        this.update();
-      break;
-#endif
       case "idle":
         if (this._timer) {
           this._timer.cancel();

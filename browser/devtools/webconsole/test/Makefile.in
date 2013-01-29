@@ -123,12 +123,6 @@ MOCHITEST_BROWSER_FILES += \
         $(NULL)
 endif
 
-ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-MOCHITEST_BROWSER_FILES += \
-        browser_webconsole_bug_618311_private_browsing.js \
-        $(NULL)
-endif
-
 MOCHITEST_BROWSER_FILES += \
 	test-console.html \
 	test-network.html \

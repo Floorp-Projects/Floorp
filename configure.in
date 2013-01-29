@@ -8510,11 +8510,6 @@ AC_SUBST(MOZ_OS2_TOOLS)
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_LINKER_EXTRACT)
-AC_SUBST(MOZ_PER_WINDOW_PRIVATE_BROWSING)
-
-if test -n "$MOZ_PER_WINDOW_PRIVATE_BROWSING" ; then
-    AC_DEFINE(MOZ_PER_WINDOW_PRIVATE_BROWSING)
-fi
 
 dnl ========================================================
 dnl = Mac bundle name prefix
@@ -9063,7 +9058,6 @@ MOZ_WIDGET_TOOLKIT=${MOZ_WIDGET_TOOLKIT} \
 UNIVERSAL_BINARY=${UNIVERSAL_BINARY} \
 MOZ_CRASHREPORTER=${MOZ_CRASHREPORTER} \
 MOZ_APP_NAME=${MOZ_APP_NAME} \
-MOZ_PER_WINDOW_PRIVATE_BROWSING=${MOZ_PER_WINDOW_PRIVATE_BROWSING} \
   $PYTHON ${_topsrcdir}/config/writemozinfo.py ./mozinfo.json.tmp
 if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
   rm ./mozinfo.json.tmp

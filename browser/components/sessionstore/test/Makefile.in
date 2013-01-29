@@ -25,6 +25,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_form_restore_events_sample.html \
 	browser_formdata_format.js \
 	browser_formdata_format_sample.html \
+	browser_248970_b_perwindowpb.js \
 	browser_248970_b_sample.html \
 	browser_339445.js \
 	browser_339445_sample.html \
@@ -32,10 +33,12 @@ MOCHITEST_BROWSER_FILES = \
 	browser_346337.js \
 	browser_346337_sample.html \
 	browser_350525.js \
+	browser_354894_perwindowpb.js \
 	browser_367052.js \
 	browser_393716.js \
 	browser_394759_basic.js \
 	browser_394759_behavior.js \
+	browser_394759_perwindowpb.js \
 	browser_394759_purge.js \
 	browser_408470.js \
 	browser_408470_sample.html \
@@ -132,26 +135,11 @@ MOCHITEST_BROWSER_FILES = \
 	browser_739531.js \
 	browser_739531_sample.html \
 	browser_739805.js \
+	browser_819510_perwindowpb.js \
 	$(filter disabled-for-intermittent-failures--bug-766044, browser_459906_empty.html) \
 	$(filter disabled-for-intermittent-failures--bug-766044, browser_459906_sample.html) \
 	$(filter disabled-for-intermittent-failures--bug-765389, browser_461743_sample.html) \
 	$(NULL)
-
-ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-MOCHITEST_BROWSER_FILES += \
-	browser_354894_perwindowpb.js \
-	browser_394759_perwindowpb.js \
-	browser_819510_perwindowpb.js \
-	$(NULL)
-else
-MOCHITEST_BROWSER_FILES += \
-	browser_248970_a.js \
-	browser_248970_b.js \
-	browser_248970_b_perwindowpb.js \
-	browser_354894.js \
-	browser_394759_privatebrowsing.js \
-	$(NULL)
-endif
 
 # Disabled on Windows for frequent intermittent failures
 ifneq ($(OS_ARCH), WINNT)
