@@ -120,6 +120,7 @@ MapAllocToTraceKind(AllocKind kind)
     return map[kind];
 }
 
+#ifdef JSGC_GENERATIONAL
 static inline bool
 IsNurseryAllocable(AllocKind kind)
 {
@@ -152,6 +153,7 @@ IsNurseryAllocable(AllocKind kind)
     JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == FINALIZE_LIMIT);
     return map[kind];
 }
+#endif
 
 static inline bool
 IsBackgroundFinalized(AllocKind kind)
@@ -487,6 +489,13 @@ struct GCPtrHasher
 
 typedef HashMap<void *, uint32_t, GCPtrHasher, SystemAllocPolicy> GCLocks;
 
+typedef enum JSGCRootType {
+    JS_GC_ROOT_VALUE_PTR,
+    JS_GC_ROOT_STRING_PTR,
+    JS_GC_ROOT_OBJECT_PTR,
+    JS_GC_ROOT_SCRIPT_PTR
+} JSGCRootType;
+
 struct RootInfo {
     RootInfo() {}
     RootInfo(const char *name, JSGCRootType type) : name(name), type(type) {}
@@ -499,6 +508,21 @@ typedef js::HashMap<void *,
                     js::DefaultHasher<void *>,
                     js::SystemAllocPolicy> RootedValueMap;
 
+extern JSBool
+AddValueRoot(JSContext *cx, js::Value *vp, const char *name);
+
+extern JSBool
+AddValueRootRT(JSRuntime *rt, js::Value *vp, const char *name);
+
+extern JSBool
+AddStringRoot(JSContext *cx, JSString **rp, const char *name);
+
+extern JSBool
+AddObjectRoot(JSContext *cx, JSObject **rp, const char *name);
+
+extern JSBool
+AddScriptRoot(JSContext *cx, JSScript **rp, const char *name);
+
 } /* namespace js */
 
 extern JSBool
@@ -507,12 +531,6 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes);
 extern void
 js_FinishGC(JSRuntime *rt);
 
-extern JSBool
-js_AddRoot(JSContext *cx, js::Value *vp, const char *name);
-
-extern JSBool
-js_AddGCThingRoot(JSContext *cx, void **rp, const char *name);
-
 /* Table of pointers with count valid members. */
 typedef struct JSPtrTable {
     size_t      count;
@@ -520,10 +538,10 @@ typedef struct JSPtrTable {
 } JSPtrTable;
 
 extern JSBool
-js_LockGCThingRT(JSRuntime *rt, void *thing);
+js_LockThing(JSRuntime *rt, void *thing);
 
 extern void
-js_UnlockGCThingRT(JSRuntime *rt, void *thing);
+js_UnlockThing(JSRuntime *rt, void *thing);
 
 namespace js {
 
