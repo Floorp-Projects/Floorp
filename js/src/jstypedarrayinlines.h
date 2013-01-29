@@ -28,7 +28,7 @@ js::ArrayBufferObject::setElementsHeader(js::ObjectElements *header, uint32_t by
     header->capacity = bytes / sizeof(js::Value);
     header->initializedLength = bytes;
     header->length = 0;
-    header->unused = 0;
+    header->convertDoubleElements = 0;
 }
 
 inline uint32_t

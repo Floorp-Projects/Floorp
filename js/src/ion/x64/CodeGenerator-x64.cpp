@@ -251,7 +251,16 @@ bool
 CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
 {
     Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
-    loadUnboxedValue(source, load->mir()->type(), load->output());
+
+    if (load->mir()->loadDoubles()) {
+        FloatRegister fpreg = ToFloatRegister(load->output());
+        if (source.kind() == Operand::REG_DISP)
+            masm.loadDouble(source.toAddress(), fpreg);
+        else
+            masm.loadDouble(source.toBaseIndex(), fpreg);
+    } else {
+        loadUnboxedValue(source, load->mir()->type(), load->output());
+    }
 
     JS_ASSERT(!load->mir()->needsHoleCheck());
     return true;

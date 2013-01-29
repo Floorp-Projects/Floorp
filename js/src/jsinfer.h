@@ -637,6 +637,26 @@ class StackTypeSet : public TypeSet
 
         return true;
     }
+
+    enum DoubleConversion {
+        /* All types in the set should use eager double conversion. */
+        AlwaysConvertToDoubles,
+
+        /* Some types in the set should use eager double conversion. */
+        MaybeConvertToDoubles,
+
+        /* No types should use eager double conversion. */
+        DontConvertToDoubles,
+
+        /* Some types should use eager double conversion, others cannot. */
+        AmbiguousDoubleConversion
+    };
+
+    /*
+     * Whether known double optimizations are possible for element accesses on
+     * objects in this type set.
+     */
+    DoubleConversion convertDoubleElements(JSContext *cx);
 };
 
 /*

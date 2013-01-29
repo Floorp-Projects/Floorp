@@ -356,6 +356,8 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
                 Address(obj, elementsOffset + ObjectElements::offsetOfInitializedLength()));
         store32(Imm32(templateObject->getArrayLength()),
                 Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
+        store32(Imm32(templateObject->shouldConvertDoubleElements() ? 1 : 0),
+                Address(obj, elementsOffset + ObjectElements::offsetOfConvertDoubleElements()));
     } else {
         storePtr(ImmWord(emptyObjectElements), Address(obj, JSObject::offsetOfElements()));
 

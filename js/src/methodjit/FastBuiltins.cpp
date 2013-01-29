@@ -414,13 +414,20 @@ mjit::Compiler::compileStringFromCode(FrameEntry *arg)
 }
 
 CompileStatus
-mjit::Compiler::compileArrayPush(FrameEntry *thisValue, FrameEntry *arg)
+mjit::Compiler::compileArrayPush(FrameEntry *thisValue, FrameEntry *arg,
+                                 types::StackTypeSet::DoubleConversion conversion)
 {
     /* This behaves like an assignment this[this.length] = arg; */
 
     /* Filter out silly cases. */
     if (frame.haveSameBacking(thisValue, arg) || thisValue->isConstant())
         return Compile_InlineAbort;
+
+    if (conversion == types::StackTypeSet::AlwaysConvertToDoubles ||
+        conversion == types::StackTypeSet::MaybeConvertToDoubles)
+    {
+        frame.ensureDouble(arg);
+    }
 
     /* Allocate registers. */
     ValueRemat vr;
@@ -765,6 +772,16 @@ mjit::Compiler::compileArrayWithArgs(uint32_t argc)
 
     JS_ASSERT(templateObject->getDenseCapacity() >= argc);
 
+    types::StackTypeSet::DoubleConversion conversion =
+        script->analysis()->pushedTypes(PC, 0)->convertDoubleElements(cx);
+    if (conversion == types::StackTypeSet::AlwaysConvertToDoubles) {
+        templateObject->setShouldConvertDoubleElements();
+        for (unsigned i = 0; i < argc; i++) {
+            FrameEntry *arg = frame.peek(-(int32_t)argc + i);
+            frame.ensureDouble(arg);
+        }
+    }
+
     RegisterID result = frame.allocReg();
     Jump emptyFreeList = getNewObject(cx, result, templateObject);
     stubcc.linkExit(emptyFreeList, Uses(0));
@@ -1004,7 +1021,9 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
                 !thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
                                            types::OBJECT_FLAG_LENGTH_OVERFLOW) &&
                 !types::ArrayPrototypeHasIndexedProperty(cx, outerScript)) {
-                return compileArrayPush(thisValue, arg);
+                types::StackTypeSet::DoubleConversion conversion = thisTypes->convertDoubleElements(cx);
+                if (conversion != types::StackTypeSet::AmbiguousDoubleConversion)
+                    return compileArrayPush(thisValue, arg, conversion);
             }
         }
         if (native == js::array_concat && argType == JSVAL_TYPE_OBJECT &&

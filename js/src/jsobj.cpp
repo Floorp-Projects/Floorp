@@ -3185,7 +3185,7 @@ js::DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
             if (result == JSObject::ED_FAILED)
                 return false;
             if (result == JSObject::ED_OK) {
-                obj->setDenseElement(index, value);
+                obj->setDenseElementMaybeConvertDouble(index, value);
                 if (!CallAddPropertyHookDense(cx, clasp, obj, index, value)) {
                     JSObject::setDenseElementHole(cx, obj, index);
                     return false;
