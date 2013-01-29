@@ -3,6 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioConduit.h"
+#include "nsCOMPtr.h"
+#include "mozilla/Services.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+
 #include "CSFLog.h"
 #include "voice_engine/include/voe_errors.h"
 
@@ -49,6 +55,11 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
     mPtrVoEXmedia->SetExternalRecordingStatus(false);
     mPtrVoEXmedia->SetExternalPlayoutStatus(false);
     mPtrVoEXmedia->Release();
+  }
+
+  if(mPtrVoEProcessing)
+  {
+    mPtrVoEProcessing->Release();
   }
 
   //Deal with the transport
@@ -123,6 +134,12 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
   if(!(mPtrVoECodec = VoECodec::GetInterface(mVoiceEngine)))
   {
     CSFLogError(logTag, "%s Unable to initialize VoEBCodec", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
+
+  if(!(mPtrVoEProcessing = VoEAudioProcessing::GetInterface(mVoiceEngine)))
+  {
+    CSFLogError(logTag, "%s Unable to initialize VoEProcessing", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
 
@@ -232,6 +249,33 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
       return kMediaConduitInvalidSendCodec;
     }
 
+    return kMediaConduitUnknownError;
+  }
+
+  // TEMPORARY - see bug 694814 comment 2
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+    if (branch) {
+      int32_t aec = 0; // 0 == unchanged
+      bool aec_on = false;
+
+      branch->GetBoolPref("media.peerconnection.aec_enabled", &aec_on);
+      branch->GetIntPref("media.peerconnection.aec", &aec);
+
+      CSFLogDebug(logTag,"Audio config: aec: %d", aec_on ? aec : -1);
+      mEchoOn = aec_on;
+      if (static_cast<webrtc::EcModes>(aec) != webrtc::kEcUnchanged)
+        mEchoCancel = static_cast<webrtc::EcModes>(aec);
+
+      branch->GetIntPref("media.peerconnection.capture_delay", &mCaptureDelay);
+    }
+  }
+
+  if (0 != (error = mPtrVoEProcessing->SetEcStatus(mEchoOn, mEchoCancel))) {
+    CSFLogError(logTag,"%s Error setting EVStatus: %d ",__FUNCTION__, error);
     return kMediaConduitUnknownError;
   }
 
@@ -404,7 +448,7 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
     return kMediaConduitSessionNotInited;
   }
 
-
+  capture_delay = mCaptureDelay;
   //Insert the samples
   if(mPtrVoEXmedia->ExternalRecordingInsertData(audio_data,
                                                 lengthSamples,
@@ -748,4 +792,3 @@ WebrtcAudioConduit::DumpCodecDB() const
     }
  }
 }// end namespace
-
