@@ -40,20 +40,24 @@ interface nsIAtom : nsISupports
 
 %{C++
   // note this is NOT virtual so this won't muck with the vtable!
-  inline bool Equals(const nsAString& aString) {
+  inline bool Equals(const nsAString& aString) const {
     return aString.Equals(nsDependentString(mString, mLength));
   }
 
-  inline const PRUnichar* GetUTF16String() {
+  inline const PRUnichar* GetUTF16String() const {
     return mString;
   }
 
-  inline const uint32_t GetLength() {
+  inline const uint32_t GetLength() const {
     return mLength;
   }
 
   inline void ToString(nsAString& aBuf) {
     nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
+  }
+
+  inline nsStringBuffer* GetStringBuffer() const {
+    return nsStringBuffer::FromData(mString);
   }
 
   /**
