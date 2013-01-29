@@ -520,4 +520,16 @@ DASHRepDecoder::ReleaseStateMachine()
   MediaDecoder::ReleaseStateMachine();
 }
 
+void DASHRepDecoder::StopProgressUpdates()
+{
+  NS_ENSURE_TRUE_VOID(mMainDecoder);
+  MediaDecoder::StopProgressUpdates();
+}
+
+void DASHRepDecoder::StartProgressUpdates()
+{
+  NS_ENSURE_TRUE_VOID(mMainDecoder);
+  MediaDecoder::StartProgressUpdates();
+}
+
 } // namespace mozilla
