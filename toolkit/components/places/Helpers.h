@@ -264,11 +264,6 @@ private:
   const TimeStamp mStart;
 };
 
-/**
- * Used to abort if global private browsing is in use.
- */
-void EnsureNotGlobalPrivateBrowsing();
-
 } // namespace places
 } // namespace mozilla
 

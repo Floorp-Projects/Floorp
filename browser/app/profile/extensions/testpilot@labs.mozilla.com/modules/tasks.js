@@ -162,14 +162,6 @@ var TestPilotTask = {
     // Called by extension core when Firefox is shutting down.
   },
 
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-  onEnterPrivateBrowsing: function TestPilotTask_onEnterPrivate() {
-  },
-
-  onExitPrivateBrowsing: function TestPilotTask_onExitPrivate() {
-  },
-#endif
-
   onNewWindow: function TestPilotTask_onNewWindow(window) {
   },
 
@@ -533,30 +525,6 @@ TestPilotExperiment.prototype = {
       }
     }
   },
-
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-  onEnterPrivateBrowsing: function TestPilotExperiment_onEnterPrivate() {
-    this._logger.trace("Task is entering private browsing.");
-    if (this.experimentIsRunning()) {
-      try {
-        this._handlers.onEnterPrivateBrowsing();
-      } catch(e) {
-        this._dataStore.logException("onEnterPrivateBrowsing: " + e);
-      }
-    }
-  },
-
-  onExitPrivateBrowsing: function TestPilotExperiment_onExitPrivate() {
-    this._logger.trace("Task is exiting private browsing.");
-    if (this.experimentIsRunning()) {
-      try {
-        this._handlers.onExitPrivateBrowsing();
-      } catch(e) {
-        this._dataStore.logException("onExitPrivateBrowsing: " + e);
-      }
-    }
-  },
-#endif
 
   getStudyMetadata: function TestPilotExperiment_getStudyMetadata() {
     try {
