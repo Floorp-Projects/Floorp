@@ -40,7 +40,6 @@ webidl_files = \
   DOMStringMap.webidl \
   DOMTokenList.webidl \
   DOMTransaction.webidl \
-  DummyBinding.webidl \
   DynamicsCompressorNode.webidl \
   Element.webidl \
   EventHandler.webidl \
@@ -98,7 +97,6 @@ webidl_files = \
   ProcessingInstruction.webidl \
   Rect.webidl \
   RGBColor.webidl \
-  RTCIceServer.webidl \
   Screen.webidl \
   SVGAElement.webidl \
   SVGAltGlyphElement.webidl \
@@ -193,6 +191,7 @@ endif
 ifdef MOZ_WEBRTC
 webidl_files += \
   MediaStreamList.webidl \
+  RTCIceServer.webidl \
   $(NULL)
 endif
 
