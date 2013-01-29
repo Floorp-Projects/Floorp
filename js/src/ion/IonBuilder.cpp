@@ -3097,9 +3097,6 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32_t argc)
 {
     AssertCanGC();
 
-    if (inliningDepth >= js_IonOptions.maxInlineDepth)
-        return false;
-
     // For "small" functions, we should be more aggressive about inlining.
     // This is based on the following intuition:
     //  1. The call overhead for a small function will likely be a much
@@ -3115,6 +3112,7 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32_t argc)
 
     uint32_t totalSize = 0;
     uint32_t checkUses = js_IonOptions.usesBeforeInlining;
+    uint32_t maxInlineDepth = js_IonOptions.maxInlineDepth;
     bool allFunctionsAreSmall = true;
     RootedFunction target(cx);
     RootedScript targetScript(cx);
@@ -3138,8 +3136,13 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32_t argc)
             return false;
         }
     }
-    if (allFunctionsAreSmall)
+    if (allFunctionsAreSmall) {
         checkUses = js_IonOptions.smallFunctionUsesBeforeInlining;
+        maxInlineDepth = js_IonOptions.smallFunctionMaxInlineDepth;
+    }
+
+    if (inliningDepth >= maxInlineDepth)
+        return false;
 
     if (script()->getUseCount() < checkUses) {
         IonSpew(IonSpew_Inlining, "Not inlining, caller is not hot");
