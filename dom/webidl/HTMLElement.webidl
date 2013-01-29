@@ -76,20 +76,6 @@ interface HTMLElement : Element {
   [Constant]
   readonly attribute CSSStyleDeclaration style;
 
-  // event handler IDL attributes
-  [SetterThrows]
-           attribute EventHandler onblur;
-  // We think the spec is wrong here.
-  //         attribute OnErrorEventHandler onerror;
-  [SetterThrows]
-           attribute EventHandler onerror;
-  [SetterThrows]
-           attribute EventHandler onfocus;
-  [SetterThrows]
-           attribute EventHandler onload;
-  [SetterThrows]
-           attribute EventHandler onscroll;
-
   // Mozilla specific stuff
   // FIXME Bug 810677 Move className from HTMLElement to Element
            attribute DOMString className;
@@ -125,5 +111,6 @@ partial interface HTMLElement {
 };
 
 HTMLElement implements GlobalEventHandlers;
+HTMLElement implements NodeEventHandlers;
 
 interface HTMLUnknownElement : HTMLElement {};

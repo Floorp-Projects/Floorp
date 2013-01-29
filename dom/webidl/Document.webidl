@@ -142,18 +142,6 @@ partial interface Document {
   //(HTML only)DOMString queryCommandValue(DOMString commandId);
   //(Not implemented)readonly attribute HTMLCollection commands;
 
-  // event handler IDL attributes
-           [SetterThrows]
-           attribute EventHandler onblur;
-           [SetterThrows]
-           attribute EventHandler onerror;
-           [SetterThrows]
-           attribute EventHandler onfocus;
-           [SetterThrows]
-           attribute EventHandler onload;
-           [SetterThrows]
-           attribute EventHandler onscroll;
-
   // special event handler IDL attributes that only apply to Document objects
   [LenientThis, SetterThrows] attribute EventHandler onreadystatechange;
 
@@ -347,3 +335,4 @@ partial interface Document {
 
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
+Document implements NodeEventHandlers;
