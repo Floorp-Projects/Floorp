@@ -17,6 +17,8 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
+#include "js/GCAPI.h"
+
 struct JSCompartment;
 
 namespace js {
@@ -84,7 +86,7 @@ struct Statistics {
     void beginPhase(Phase phase);
     void endPhase(Phase phase);
 
-    void beginSlice(int collectedCount, int compartmentCount, gcreason::Reason reason);
+    void beginSlice(int collectedCount, int zoneCount, int compartmentCount, gcreason::Reason reason);
     void endSlice();
 
     void reset(const char *reason) { slices.back().resetReason = reason; }
@@ -116,6 +118,7 @@ struct Statistics {
     int gcDepth;
 
     int collectedCount;
+    int zoneCount;
     int compartmentCount;
     const char *nonincrementalReason;
 
@@ -175,12 +178,13 @@ struct Statistics {
 
 struct AutoGCSlice
 {
-    AutoGCSlice(Statistics &stats, int collectedCount, int compartmentCount, gcreason::Reason reason
+    AutoGCSlice(Statistics &stats, int collectedCount, int zoneCount, int compartmentCount,
+                gcreason::Reason reason
                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : stats(stats)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        stats.beginSlice(collectedCount, compartmentCount, reason);
+        stats.beginSlice(collectedCount, zoneCount, compartmentCount, reason);
     }
     ~AutoGCSlice() { stats.endSlice(); }
 

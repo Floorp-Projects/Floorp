@@ -16,6 +16,7 @@
 #include "nsStringGlue.h"
 #include "jsapi.h"
 #include "mozilla/Util.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,6 +33,54 @@ protected:
 struct EnumEntry {
   const char* value;
   size_t length;
+};
+
+class NS_STACK_CLASS GlobalObject
+{
+public:
+  GlobalObject(JSContext* aCx, JSObject* aObject);
+
+  nsISupports* Get() const
+  {
+    return mGlobalObject;
+  }
+
+  bool Failed() const
+  {
+    return !Get();
+  }
+
+private:
+  js::RootedObject mGlobalJSObject;
+  nsISupports* mGlobalObject;
+  nsCOMPtr<nsISupports> mGlobalObjectRef;
+};
+
+class NS_STACK_CLASS WorkerGlobalObject
+{
+public:
+  WorkerGlobalObject(JSContext* aCx, JSObject* aObject);
+
+  JSObject* Get() const
+  {
+    return mGlobalJSObject;
+  }
+  // The context that this returns is not guaranteed to be in the compartment of
+  // the object returned from Get(), in fact it's generally in the caller's
+  // compartment.
+  JSContext* GetContext() const
+  {
+    return mCx;
+  }
+
+  bool Failed() const
+  {
+    return !Get();
+  }
+
+private:
+  js::RootedObject mGlobalJSObject;
+  JSContext* mCx;
 };
 
 } // namespace dom

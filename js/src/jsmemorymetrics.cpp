@@ -14,13 +14,13 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jsscope.h"
 #include "jsscript.h"
 
-#include "jsobjinlines.h"
-
-#include "ion/IonCode.h"
 #include "ion/Ion.h"
+#include "ion/IonCode.h"
+#include "vm/Shape.h"
+
+#include "jsobjinlines.h"
 
 using namespace js;
 
@@ -334,7 +334,7 @@ JS::SystemCompartmentCount(const JSRuntime *rt)
 {
     size_t n = 0;
     for (size_t i = 0; i < rt->compartments.length(); i++) {
-        if (rt->compartments[i]->isSystemCompartment)
+        if (rt->compartments[i]->zone()->isSystem)
             ++n;
     }
     return n;
@@ -345,7 +345,7 @@ JS::UserCompartmentCount(const JSRuntime *rt)
 {
     size_t n = 0;
     for (size_t i = 0; i < rt->compartments.length(); i++) {
-        if (!rt->compartments[i]->isSystemCompartment)
+        if (!rt->compartments[i]->zone()->isSystem)
             ++n;
     }
     return n;

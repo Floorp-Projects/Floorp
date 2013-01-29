@@ -45,16 +45,18 @@ function runTests() {
   yield clearHistory(true);
 
   // Retry until the file is gone because Windows locks it sometimes.
-  while (file.exists()) {
+  clearFile(file, URL);
+}
+
+function clearFile(aFile, aURL) {
+  if (aFile.exists())
     // Re-add our URL to the history so that history observer's onDeleteURI()
     // is called again.
-    let time = Date.now() * 1000;
-    let trans = Ci.nsINavHistoryService.TRANSITION_LINK;
-    PlacesUtils.history.addVisit(makeURI(URL), time, null, trans, false, 0);
-
-    // Try again...
-    yield clearHistory(true);
-  }
+    addVisits(makeURI(aURL), function() {
+      // Try again...
+      yield clearHistory(true);
+      clearFile(aFile, aURL);
+    });
 }
 
 function clearHistory(aUseRange) {

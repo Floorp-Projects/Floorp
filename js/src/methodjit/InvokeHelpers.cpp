@@ -9,7 +9,6 @@
 
 #include "jsanalyze.h"
 #include "jscntxt.h"
-#include "jsscope.h"
 #include "jsobj.h"
 #include "jslibmath.h"
 #include "jsiter.h"
@@ -26,15 +25,17 @@
 #include "methodjit/BaseCompiler.h"
 #include "methodjit/ICRepatcher.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 
 #include "jsinterpinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
 
 #include "StubCalls-inl.h"
+
+#include "vm/Shape-inl.h"
 
 #include "jsautooplen.h"
 
@@ -369,7 +370,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
      * will be constructing a new type object for 'this'.
      */
     if (!newType) {
-        if (JITScript *jit = newscript->getJIT(regs.fp()->isConstructing(), cx->compartment->compileBarriers())) {
+        if (JITScript *jit = newscript->getJIT(regs.fp()->isConstructing(), cx->zone()->compileBarriers())) {
             if (jit->invokeEntry) {
                 *pret = jit->invokeEntry;
 
@@ -394,8 +395,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
 
     JS_CHECK_RECURSION(cx, return false);
 
-    RootedScript script(cx, newscript);
-    bool ok = RunScript(cx, script, cx->fp());
+    bool ok = RunScript(cx, cx->fp());
     f.cx->stack.popInlineFrame(regs);
 
     if (ok) {
@@ -647,7 +647,7 @@ js_InternalThrow(VMFrame &f)
      */
     cx->jaegerRuntime().setLastUnfinished(Jaeger_Unfinished);
 
-    if (!JSScript::ensureRanAnalysis(cx, script)) {
+    if (!script->ensureRanAnalysis(cx)) {
         js_ReportOutOfMemory(cx);
         return NULL;
     }
@@ -792,7 +792,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
     JSOp op = JSOp(*pc);
 
-    if (!JSScript::ensureRanAnalysis(cx, script)) {
+    if (!script->ensureRanAnalysis(cx)) {
         js_ReportOutOfMemory(cx);
         return js_InternalThrow(f);
     }

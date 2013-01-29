@@ -8,17 +8,17 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsprf.h"
-#include "jsscope.h"
 #include "jsstr.h"
 #include "jsxml.h"
 
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
+#include "vm/Shape.h"
 
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 
 #include "ion/IonCode.h"
+#include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
@@ -119,8 +119,8 @@ CheckMarkedThing(JSTracer *trc, T *thing)
 {
     JS_ASSERT(trc);
     JS_ASSERT(thing);
-    JS_ASSERT(thing->compartment());
-    JS_ASSERT(thing->compartment()->rt == trc->runtime);
+    JS_ASSERT(thing->zone());
+    JS_ASSERT(thing->zone()->rt == trc->runtime);
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
 
     DebugOnly<JSRuntime *> rt = trc->runtime;
@@ -132,16 +132,16 @@ CheckMarkedThing(JSTracer *trc, T *thing)
     rt->assertValidThread();
 #endif
 
-    JS_ASSERT_IF(thing->compartment()->requireGCTracer(), IS_GC_MARKING_TRACER(trc));
+    JS_ASSERT_IF(thing->zone()->requireGCTracer(), IS_GC_MARKING_TRACER(trc));
 
     JS_ASSERT(thing->isAligned());
 
     JS_ASSERT_IF(rt->gcStrictCompartmentChecking,
-                 thing->compartment()->isCollecting() ||
+                 thing->zone()->isCollecting() ||
                  thing->compartment() == rt->atomsCompartment);
 
     JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && ((GCMarker *)trc)->getMarkColor() == GRAY,
-                 thing->compartment()->isGCMarkingGray() ||
+                 thing->zone()->isGCMarkingGray() ||
                  thing->compartment() == rt->atomsCompartment);
 
     /*
@@ -176,7 +176,7 @@ MarkInternal(JSTracer *trc, T **thingp)
      * GC.
      */
     if (!trc->callback) {
-        if (thing->compartment()->isGCMarking()) {
+        if (thing->zone()->isGCMarking()) {
             PushMarkStack(AsGCMarker(trc), thing);
             thing->compartment()->maybeAlive = true;
         }
@@ -259,8 +259,8 @@ IsMarked(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
-    JSCompartment *c = (*thingp)->compartment();
-    if (!c->isCollecting() || c->isGCFinished())
+    Zone *zone = (*thingp)->zone();
+    if (!zone->isCollecting() || zone->isGCFinished())
         return true;
     return (*thingp)->isMarked();
 }
@@ -271,7 +271,7 @@ IsAboutToBeFinalized(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
-    if (!(*thingp)->compartment()->isGCSweeping())
+    if (!(*thingp)->zone()->isGCSweeping())
         return false;
     return !(*thingp)->isMarked();
 }
@@ -644,7 +644,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, RawObject src, Cell *cell)
     if (!IS_GC_MARKING_TRACER(trc))
         return true;
 
-    JSCompartment *c = cell->compartment();
+    JS::Zone *zone = cell->zone();
     uint32_t color = AsGCMarker(trc)->getMarkColor();
 
     JS_ASSERT(color == BLACK || color == GRAY);
@@ -657,12 +657,12 @@ ShouldMarkCrossCompartment(JSTracer *trc, RawObject src, Cell *cell)
          * but the source was marked black by the conservative scanner.
          */
         if (cell->isMarked(GRAY)) {
-            JS_ASSERT(!cell->compartment()->isCollecting());
+            JS_ASSERT(!zone->isCollecting());
             trc->runtime->gcFoundBlackGrayEdges = true;
         }
-        return c->isGCMarking();
+        return zone->isGCMarking();
     } else {
-        if (c->isGCMarkingBlack()) {
+        if (zone->isGCMarkingBlack()) {
             /*
              * The destination compartment is being not being marked gray now,
              * but it will be later, so record the cell so it can be marked gray
@@ -672,7 +672,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, RawObject src, Cell *cell)
                 DelayCrossCompartmentGrayMarking(src);
             return false;
         }
-        return c->isGCMarkingGray();
+        return zone->isGCMarkingGray();
     }
 }
 
@@ -729,10 +729,10 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
 /*** Push Mark Stack ***/
 
 #define JS_COMPARTMENT_ASSERT(rt, thing)                                \
-    JS_ASSERT((thing)->compartment()->isGCMarking())
+    JS_ASSERT((thing)->zone()->isGCMarking())
 
 #define JS_COMPARTMENT_ASSERT_STR(rt, thing)                            \
-    JS_ASSERT((thing)->compartment()->isGCMarking() ||                  \
+    JS_ASSERT((thing)->zone()->isGCMarking() ||                         \
               (thing)->compartment() == (rt)->atomsCompartment);
 
 #if JS_HAS_XML_SUPPORT
@@ -1660,7 +1660,7 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 }
 
 JS_FRIEND_API(void)
-js::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
+JS::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
 {
     JS_ASSERT(kind != JSTRACE_SHAPE);
 

@@ -146,7 +146,7 @@ mjit::Compiler::compile()
     if (status != Compile_Okay && status != Compile_Retry) {
         if (!outerScript->ensureHasMJITInfo(cx))
             return Compile_Error;
-        JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing, cx->compartment->compileBarriers());
+        JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing, cx->zone()->compileBarriers());
         JSScript::ReleaseCode(cx->runtime->defaultFreeOp(), jith);
         jith->setUnjittable();
 
@@ -163,7 +163,7 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::checkAnalysis(HandleScript script)
 {
-    if (!JSScript::ensureRanAnalysis(cx, script))
+    if (!script->ensureRanAnalysis(cx))
         return Compile_Error;
 
     if (!script->analysis()->jaegerCompileable()) {
@@ -171,7 +171,7 @@ mjit::Compiler::checkAnalysis(HandleScript script)
         return Compile_Abort;
     }
 
-    if (cx->typeInferenceEnabled() && !JSScript::ensureRanInference(cx, script))
+    if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
         return Compile_Error;
 
     ScriptAnalysis *analysis = script->analysis();
@@ -674,10 +674,9 @@ mjit::SetChunkLimit(uint32_t limit)
 }
 
 JITScript *
-MakeJITScript(JSContext *cx, HandleScript script)
+MakeJITScript(JSContext *cx, JSScript *script)
 {
-    AssertCanGC();
-    if (!JSScript::ensureRanAnalysis(cx, script))
+    if (!script->ensureRanAnalysis(cx))
         return NULL;
 
     ScriptAnalysis *analysis = script->analysis();
@@ -692,7 +691,7 @@ MakeJITScript(JSContext *cx, HandleScript script)
         if (!chunks.append(desc))
             return NULL;
     } else {
-        if (!JSScript::ensureRanInference(cx, script))
+        if (!script->ensureRanInference(cx))
             return NULL;
 
         /* Outgoing edges within the current chunk. */
@@ -982,7 +981,7 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, jsbytecode *pc, CompileReque
 }
 
 CompileStatus
-mjit::CanMethodJIT(JSContext *cx, HandleScript script, jsbytecode *pc,
+mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
                    bool construct, CompileRequest request, StackFrame *frame)
 {
     bool compiledOnce = false;
@@ -1016,7 +1015,7 @@ mjit::CanMethodJIT(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     if (script->hasMJITInfo()) {
-        JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->compileBarriers());
+        JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->zone()->compileBarriers());
         if (jith->isUnjittable())
             return Compile_Abort;
     }
@@ -1041,7 +1040,7 @@ mjit::CanMethodJIT(JSContext *cx, HandleScript script, jsbytecode *pc,
     if (!script->ensureHasMJITInfo(cx))
         return Compile_Error;
 
-    JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->compileBarriers());
+    JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->zone()->compileBarriers());
 
     JITScript *jit;
     if (jith->isEmpty()) {
@@ -2086,6 +2085,9 @@ mjit::Compiler::generateMethod()
         }
     }
 
+    /* Use a common root to avoid frequent re-rooting. */
+    RootedPropertyName name0(cx);
+
     for (;;) {
         JSOp op = JSOp(*PC);
         int trap = stubs::JSTRAP_NONE;
@@ -2298,9 +2300,6 @@ mjit::Compiler::generateMethod()
          */
         if (script_->hasScriptCounts && JOF_OPTYPE(op) == JOF_JUMP)
             updatePCCounts(PC, &countsUpdated);
-
-        /* Use a common root to avoid frequent re-rooting. */
-        RootedPropertyName name0(cx);
 
     /**********************
      * BEGIN COMPILER OPS *
@@ -5655,7 +5654,7 @@ mjit::Compiler::jsop_setprop(HandlePropertyName name, bool popGuaranteed)
             if (!isObject)
                 notObject = frame.testObject(Assembler::NotEqual, lhs);
 #ifdef JSGC_INCREMENTAL_MJ
-            if (cx->compartment->compileBarriers() && propertyTypes->needsBarrier(cx)) {
+            if (cx->zone()->compileBarriers() && propertyTypes->needsBarrier(cx)) {
                 /* Write barrier. */
                 Jump j = masm.testGCThing(Address(reg, JSObject::getFixedSlotOffset(slot)));
                 stubcc.linkExit(j, Uses(0));
@@ -5688,7 +5687,7 @@ mjit::Compiler::jsop_setprop(HandlePropertyName name, bool popGuaranteed)
 
 #ifdef JSGC_INCREMENTAL_MJ
     /* Write barrier. We don't have type information for JSOP_SETNAME. */
-    if (cx->compartment->compileBarriers() &&
+    if (cx->zone()->compileBarriers() &&
         (!types || JSOp(*PC) == JSOP_SETNAME || types->propertyNeedsBarrier(cx, id)))
     {
         jsop_setprop_slow(name);
@@ -6064,7 +6063,7 @@ mjit::Compiler::jsop_aliasedArg(unsigned arg, bool get, bool poppedAfter)
         frame.push(Address(reg), type, true /* = reuseBase */);
     } else {
 #ifdef JSGC_INCREMENTAL_MJ
-        if (cx->compartment->compileBarriers()) {
+        if (cx->zone()->compileBarriers()) {
             /* Write barrier. */
             stubcc.linkExit(masm.testGCThing(Address(reg)), Uses(0));
             stubcc.leave();
@@ -6107,7 +6106,7 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
         finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
     } else {
 #ifdef JSGC_INCREMENTAL_MJ
-        if (cx->compartment->compileBarriers()) {
+        if (cx->zone()->compileBarriers()) {
             /* Write barrier. */
             stubcc.linkExit(masm.testGCThing(addr), Uses(0));
             stubcc.leave();
@@ -6262,7 +6261,7 @@ mjit::Compiler::iter(unsigned flags)
      * Write barrier for stores to the iterator. We only need to take a write
      * barrier if NativeIterator::obj is actually going to change.
      */
-    if (cx->compartment->compileBarriers()) {
+    if (cx->zone()->compileBarriers()) {
         Jump j = masm.branchPtr(Assembler::NotEqual,
                                 Address(nireg, offsetof(NativeIterator, obj)), reg);
         stubcc.linkExit(j, Uses(1));
@@ -6673,7 +6672,7 @@ mjit::Compiler::jsop_setgname(HandlePropertyName name, bool popGuaranteed)
             RegisterID reg = frame.allocReg();
 #ifdef JSGC_INCREMENTAL_MJ
             /* Write barrier. */
-            if (cx->compartment->compileBarriers() && types->needsBarrier(cx)) {
+            if (cx->zone()->compileBarriers() && types->needsBarrier(cx)) {
                 stubcc.linkExit(masm.jump(), Uses(0));
                 stubcc.leave();
                 stubcc.masm.move(ImmPtr(value), Registers::ArgReg1);
@@ -6691,7 +6690,7 @@ mjit::Compiler::jsop_setgname(HandlePropertyName name, bool popGuaranteed)
 
 #ifdef JSGC_INCREMENTAL_MJ
     /* Write barrier. */
-    if (cx->compartment->compileBarriers()) {
+    if (cx->zone()->compileBarriers()) {
         jsop_setgname_slow(name);
         return true;
     }

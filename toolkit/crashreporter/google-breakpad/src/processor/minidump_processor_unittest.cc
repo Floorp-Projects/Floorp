@@ -39,6 +39,7 @@
 #include <utility>
 
 #include "breakpad_googletest_includes.h"
+#include "common/scoped_ptr.h"
 #include "common/using_std_string.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
@@ -50,7 +51,7 @@
 #include "google_breakpad/processor/stack_frame.h"
 #include "google_breakpad/processor/symbol_supplier.h"
 #include "processor/logging.h"
-#include "processor/scoped_ptr.h"
+#include "processor/stackwalker_unittest_utils.h"
 
 using std::map;
 
@@ -64,27 +65,86 @@ class MockMinidump : public Minidump {
   MOCK_CONST_METHOD0(path, string());
   MOCK_CONST_METHOD0(header, const MDRawHeader*());
   MOCK_METHOD0(GetThreadList, MinidumpThreadList*());
+  MOCK_METHOD0(GetSystemInfo, MinidumpSystemInfo*());
+  MOCK_METHOD0(GetBreakpadInfo, MinidumpBreakpadInfo*());
+  MOCK_METHOD0(GetException, MinidumpException*());
+  MOCK_METHOD0(GetAssertion, MinidumpAssertion*());
+  MOCK_METHOD0(GetModuleList, MinidumpModuleList*());
 };
-}
+
+class MockMinidumpThreadList : public MinidumpThreadList {
+ public:
+  MockMinidumpThreadList() : MinidumpThreadList(NULL) {}
+
+  MOCK_CONST_METHOD0(thread_count, unsigned int());
+  MOCK_CONST_METHOD1(GetThreadAtIndex, MinidumpThread*(unsigned int));
+};
+
+class MockMinidumpThread : public MinidumpThread {
+ public:
+  MockMinidumpThread() : MinidumpThread(NULL) {}
+
+  MOCK_CONST_METHOD1(GetThreadID, bool(u_int32_t*));
+  MOCK_METHOD0(GetContext, MinidumpContext*());
+  MOCK_METHOD0(GetMemory, MinidumpMemoryRegion*());
+};
+
+// This is crappy, but MinidumpProcessor really does want a
+// MinidumpMemoryRegion.
+class MockMinidumpMemoryRegion : public MinidumpMemoryRegion {
+ public:
+  MockMinidumpMemoryRegion(u_int64_t base, const string& contents) :
+      MinidumpMemoryRegion(NULL) {
+    region_.Init(base, contents);
+  }
+
+  u_int64_t GetBase() const { return region_.GetBase(); }
+  u_int32_t GetSize() const { return region_.GetSize(); }
+
+  bool GetMemoryAtAddress(u_int64_t address, u_int8_t  *value) const {
+    return region_.GetMemoryAtAddress(address, value);
+  }
+  bool GetMemoryAtAddress(u_int64_t address, u_int16_t *value) const {
+    return region_.GetMemoryAtAddress(address, value);
+  }
+  bool GetMemoryAtAddress(u_int64_t address, u_int32_t *value) const {
+    return region_.GetMemoryAtAddress(address, value);
+  }
+  bool GetMemoryAtAddress(u_int64_t address, u_int64_t *value) const {
+    return region_.GetMemoryAtAddress(address, value);
+  }
+
+  MockMemoryRegion region_;
+};
+
+}  // namespace google_breakpad
 
 namespace {
 
 using google_breakpad::BasicSourceLineResolver;
 using google_breakpad::CallStack;
 using google_breakpad::CodeModule;
+using google_breakpad::MinidumpContext;
+using google_breakpad::MinidumpMemoryRegion;
 using google_breakpad::MinidumpProcessor;
+using google_breakpad::MinidumpSystemInfo;
 using google_breakpad::MinidumpThreadList;
 using google_breakpad::MinidumpThread;
 using google_breakpad::MockMinidump;
+using google_breakpad::MockMinidumpMemoryRegion;
+using google_breakpad::MockMinidumpThread;
+using google_breakpad::MockMinidumpThreadList;
 using google_breakpad::ProcessState;
 using google_breakpad::scoped_ptr;
 using google_breakpad::SymbolSupplier;
 using google_breakpad::SystemInfo;
 using ::testing::_;
+using ::testing::DoAll;
 using ::testing::Mock;
 using ::testing::Ne;
 using ::testing::Property;
 using ::testing::Return;
+using ::testing::SetArgumentPointee;
 
 static const char *kSystemInfoOS = "Windows NT";
 static const char *kSystemInfoOSShort = "windows";
@@ -206,23 +266,27 @@ void TestSymbolSupplier::FreeSymbolData(const CodeModule *module) {
   }
 }
 
-// A mock symbol supplier that always returns NOT_FOUND; one current
-// use for testing the processor's caching of symbol lookups.
-class MockSymbolSupplier : public SymbolSupplier {
+// A test system info stream, just returns values from the
+// MDRawSystemInfo fed to it.
+class TestMinidumpSystemInfo : public MinidumpSystemInfo {
  public:
-  MockSymbolSupplier() { }
-  MOCK_METHOD3(GetSymbolFile, SymbolResult(const CodeModule*,
-                                           const SystemInfo*,
-                                           string*));
-  MOCK_METHOD4(GetSymbolFile, SymbolResult(const CodeModule*,
-                                           const SystemInfo*,
-                                           string*,
-                                           string*));
-  MOCK_METHOD4(GetCStringSymbolData, SymbolResult(const CodeModule*,
-                                                  const SystemInfo*,
-                                                  string*,
-                                                  char**));
-  MOCK_METHOD1(FreeSymbolData, void(const CodeModule*));
+  TestMinidumpSystemInfo(MDRawSystemInfo info) :
+      MinidumpSystemInfo(NULL) {
+    valid_ = true;
+    system_info_ = info;
+    csd_version_ = new string("");
+  }
+};
+
+// A test minidump context, just returns the MDRawContextX86
+// fed to it.
+class TestMinidumpContext : public MinidumpContext {
+public:
+  TestMinidumpContext(const MDRawContextX86& context) : MinidumpContext(NULL) {
+    valid_ = true;
+    context_.x86 = new MDRawContextX86(context);
+    context_flags_ = MD_CONTEXT_X86;
+  }
 };
 
 class MinidumpProcessorTest : public ::testing::Test {
@@ -245,11 +309,15 @@ TEST_F(MinidumpProcessorTest, TestCorruptMinidumps) {
   fakeHeader.time_date_stamp = 0;
   EXPECT_CALL(dump, header()).WillOnce(Return((MDRawHeader*)NULL)).
       WillRepeatedly(Return(&fakeHeader));
+
   EXPECT_EQ(processor.Process(&dump, &state),
             google_breakpad::PROCESS_ERROR_NO_MINIDUMP_HEADER);
 
   EXPECT_CALL(dump, GetThreadList()).
       WillOnce(Return((MinidumpThreadList*)NULL));
+  EXPECT_CALL(dump, GetSystemInfo()).
+    WillRepeatedly(Return((MinidumpSystemInfo*)NULL));
+
   EXPECT_EQ(processor.Process(&dump, &state),
             google_breakpad::PROCESS_ERROR_NO_THREAD_LIST);
 }
@@ -372,6 +440,113 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
   ASSERT_EQ(processor.Process(minidump_file, &state),
             google_breakpad::PROCESS_SYMBOL_SUPPLIER_INTERRUPTED);
 }
+
+TEST_F(MinidumpProcessorTest, TestThreadMissingMemory) {
+  MockMinidump dump;
+  EXPECT_CALL(dump, path()).WillRepeatedly(Return("mock minidump"));
+  EXPECT_CALL(dump, Read()).WillRepeatedly(Return(true));
+
+  MDRawHeader fake_header;
+  fake_header.time_date_stamp = 0;
+  EXPECT_CALL(dump, header()).WillRepeatedly(Return(&fake_header));
+
+  MDRawSystemInfo raw_system_info;
+  memset(&raw_system_info, 0, sizeof(raw_system_info));
+  raw_system_info.processor_architecture = MD_CPU_ARCHITECTURE_X86;
+  raw_system_info.platform_id = MD_OS_WIN32_NT;
+  TestMinidumpSystemInfo dump_system_info(raw_system_info);
+
+  EXPECT_CALL(dump, GetSystemInfo()).
+      WillRepeatedly(Return(&dump_system_info));
+
+  MockMinidumpThreadList thread_list;
+  EXPECT_CALL(dump, GetThreadList()).
+      WillOnce(Return(&thread_list));
+
+  // Return a thread missing stack memory.
+  MockMinidumpThread no_memory_thread;
+  EXPECT_CALL(no_memory_thread, GetThreadID(_)).
+    WillRepeatedly(DoAll(SetArgumentPointee<0>(1),
+                         Return(true)));
+  EXPECT_CALL(no_memory_thread, GetMemory()).
+    WillRepeatedly(Return((MinidumpMemoryRegion*)NULL));
+
+  MDRawContextX86 no_memory_thread_raw_context;
+  memset(&no_memory_thread_raw_context, 0,
+         sizeof(no_memory_thread_raw_context));
+  no_memory_thread_raw_context.context_flags = MD_CONTEXT_X86_FULL;
+  const u_int32_t kExpectedEIP = 0xabcd1234;
+  no_memory_thread_raw_context.eip = kExpectedEIP;
+  TestMinidumpContext no_memory_thread_context(no_memory_thread_raw_context);
+  EXPECT_CALL(no_memory_thread, GetContext()).
+    WillRepeatedly(Return(&no_memory_thread_context));
+
+  EXPECT_CALL(thread_list, thread_count()).
+    WillRepeatedly(Return(1));
+  EXPECT_CALL(thread_list, GetThreadAtIndex(0)).
+    WillOnce(Return(&no_memory_thread));
+
+  MinidumpProcessor processor((SymbolSupplier*)NULL, NULL);
+  ProcessState state;
+  EXPECT_EQ(processor.Process(&dump, &state),
+            google_breakpad::PROCESS_OK);
+
+  // Should have a single thread with a single frame in it.
+  ASSERT_EQ(1U, state.threads()->size());
+  ASSERT_EQ(1U, state.threads()->at(0)->frames()->size());
+  ASSERT_EQ(kExpectedEIP, state.threads()->at(0)->frames()->at(0)->instruction);
+}
+
+TEST_F(MinidumpProcessorTest, TestThreadMissingContext) {
+  MockMinidump dump;
+  EXPECT_CALL(dump, path()).WillRepeatedly(Return("mock minidump"));
+  EXPECT_CALL(dump, Read()).WillRepeatedly(Return(true));
+
+  MDRawHeader fake_header;
+  fake_header.time_date_stamp = 0;
+  EXPECT_CALL(dump, header()).WillRepeatedly(Return(&fake_header));
+
+  MDRawSystemInfo raw_system_info;
+  memset(&raw_system_info, 0, sizeof(raw_system_info));
+  raw_system_info.processor_architecture = MD_CPU_ARCHITECTURE_X86;
+  raw_system_info.platform_id = MD_OS_WIN32_NT;
+  TestMinidumpSystemInfo dump_system_info(raw_system_info);
+
+  EXPECT_CALL(dump, GetSystemInfo()).
+      WillRepeatedly(Return(&dump_system_info));
+
+  MockMinidumpThreadList thread_list;
+  EXPECT_CALL(dump, GetThreadList()).
+      WillOnce(Return(&thread_list));
+
+  // Return a thread missing a thread context.
+  MockMinidumpThread no_context_thread;
+  EXPECT_CALL(no_context_thread, GetThreadID(_)).
+    WillRepeatedly(DoAll(SetArgumentPointee<0>(1),
+                         Return(true)));
+  EXPECT_CALL(no_context_thread, GetContext()).
+    WillRepeatedly(Return((MinidumpContext*)NULL));
+
+  // The memory contents don't really matter here, since it won't be used.
+  MockMinidumpMemoryRegion no_context_thread_memory(0x1234, "xxx");
+  EXPECT_CALL(no_context_thread, GetMemory()).
+    WillRepeatedly(Return(&no_context_thread_memory));
+
+  EXPECT_CALL(thread_list, thread_count()).
+    WillRepeatedly(Return(1));
+  EXPECT_CALL(thread_list, GetThreadAtIndex(0)).
+    WillOnce(Return(&no_context_thread));
+
+  MinidumpProcessor processor((SymbolSupplier*)NULL, NULL);
+  ProcessState state;
+  EXPECT_EQ(processor.Process(&dump, &state),
+            google_breakpad::PROCESS_OK);
+
+  // Should have a single thread with zero frames.
+  ASSERT_EQ(1U, state.threads()->size());
+  ASSERT_EQ(0U, state.threads()->at(0)->frames()->size());
+}
+
 }  // namespace
 
 int main(int argc, char *argv[]) {

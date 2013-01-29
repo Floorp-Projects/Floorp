@@ -32,7 +32,7 @@
 #include <cassert>
 #include <list>
 #include "client/windows/common/auto_critical_section.h"
-#include "processor/scoped_ptr.h"
+#include "common/scoped_ptr.h"
 
 #include "client/windows/crash_generation/client_info.h"
 

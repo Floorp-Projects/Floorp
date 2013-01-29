@@ -1,0 +1,18 @@
+<html class="reftest-print">
+<head>
+<title>Testcase Bug 363729 – Crash [@ nsIFrame::GetPositionIgnoringScrolling] on print preview that uses position: fixed</title>
+</head>
+<body>
+This page should not crash on print preview
+<span style="position: fixed; page-break-after: always;"></span>
+<dir>
+<span style="display: inline-table; position: fixed; page-break-after: always;">
+
+<span style="position: absolute;">
+<span style=" position: fixed;"></span>
+</span>
+
+</span>
+</dir>
+</body>
+</html>

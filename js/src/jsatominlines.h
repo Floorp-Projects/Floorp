@@ -48,8 +48,10 @@ ToAtom(JSContext *cx, const js::Value &v)
     return AtomizeString<allowGC>(cx, str);
 }
 
+template <AllowGC allowGC>
 inline bool
-ValueToId(JSContext* cx, JSObject *obj, const Value &v, MutableHandleId idp)
+ValueToId(JSContext* cx, JSObject *obj, const Value &v,
+          typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
 {
     int32_t i;
     if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
@@ -57,13 +59,15 @@ ValueToId(JSContext* cx, JSObject *obj, const Value &v, MutableHandleId idp)
         return true;
     }
 
-    return InternNonIntElementId(cx, obj, v, idp);
+    return InternNonIntElementId<allowGC>(cx, obj, v, idp);
 }
 
+template <AllowGC allowGC>
 inline bool
-ValueToId(JSContext* cx, const Value &v, MutableHandleId idp)
+ValueToId(JSContext* cx, const Value &v,
+          typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
 {
-    return ValueToId(cx, NULL, v, idp);
+    return ValueToId<allowGC>(cx, NULL, v, idp);
 }
 
 /*

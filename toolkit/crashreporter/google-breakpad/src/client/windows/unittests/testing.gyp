@@ -36,7 +36,7 @@
   'targets': [
     {
       'target_name': 'gtest',
-      'type': '<(library)',
+      'type': 'static_library',
       'include_dirs': [
         '<(DEPTH)/testing/include',
         '<(DEPTH)/testing/gtest',
@@ -54,7 +54,7 @@
     },
     {
       'target_name': 'gmock',
-      'type': '<(library)',
+      'type': 'static_library',
       'include_dirs': [
         '<(DEPTH)/testing/include',
         '<(DEPTH)/testing/',

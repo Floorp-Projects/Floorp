@@ -452,6 +452,7 @@ class StackFrame
     Value *base() const { return slots() + script()->nfixed; }
     Value *formals() const { return (Value *)this - fun()->nargs; }
     Value *actuals() const { return formals() - (flags_ & OVERFLOW_ARGS ? 2 + u.nactual : 0); }
+    unsigned nactual() const { return u.nactual; }
 
   private:
     friend class FrameRegs;

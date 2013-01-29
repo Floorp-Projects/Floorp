@@ -19,6 +19,7 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="head.js" />
 
   <body xmlns="http://www.w3.org/1999/xhtml" />
 
@@ -51,46 +52,46 @@
       // Add some visits.
       let vtime = Date.now() * 1000;
       const ttype = PlacesUtils.history.TRANSITION_TYPED;
-      PlacesUtils.history
-                 .addVisit(Services.io.newURI("http://example.tld/", null, null),
-                           vtime, null, ttype, false, 0);
-      PlacesUtils.history
-                 .addVisit(Services.io.newURI("http://example2.tld/", null, null),
-                           vtime++, null, ttype, false, 0);
-      PlacesUtils.history
-                 .addVisit(Services.io.newURI("http://exmample3.tld/", null, null),
-                           vtime++, null, ttype, false, 0);
 
-      // Make a history query.
-      let query = PlacesUtils.history.getNewQuery();
-      let opts = PlacesUtils.history.getNewQueryOptions();
-      let queryURI = PlacesUtils.history.queriesToQueryString([query], 1, opts);
+      addVisits(
+        [{ uri: Services.io.newURI("http://example.tld/", null, null),
+           visitDate: vtime, transition: ttype },
+         { uri: Services.io.newURI("http://example2.tld/", null, null),
+           visitDate: vtime++, transition: ttype },
+         { uri: Services.io.newURI("http://example3.tld/", null, null),
+           visitDate: vtime++, transition: ttype }],
+         function() {
+           // Make a history query.
+           let query = PlacesUtils.history.getNewQuery();
+           let opts = PlacesUtils.history.getNewQueryOptions();
+           let queryURI = PlacesUtils.history.queriesToQueryString([query], 1, opts);
 
-      // Setup the places tree contents.
-      var tree = document.getElementById("tree");
-      tree.place = queryURI;
+           // Setup the places tree contents.
+           var tree = document.getElementById("tree");
+           tree.place = queryURI;
 
-      // loop through the rows and check formatting
-      let treeView = tree.view;
-      for (let i = 0; i < rc; i++) {
-        selection.select(rc);
-        let node = tree.selectedNode;
-        ok(true, "found " + node.title);
-      }
-      let rc = treeView.rowCount;
-      is(rc, 3, "Rows found.");
-      let selection = treeView.selection;
-      for (let i = 0; i < rc; i++) {
-        selection.select(0);
-        let node = tree.selectedNode;
-        tree.controller.remove("Removing page");
-        ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
-           node.uri + " removed.");
-        ok(treeView.rowCount == rc - i - 1, "Rows count decreased");
-      }
+           // loop through the rows and check formatting
+           let treeView = tree.view;
+           for (let i = 0; i < rc; i++) {
+             selection.select(rc);
+             let node = tree.selectedNode;
+             ok(true, "found " + node.title);
+           }
+           let rc = treeView.rowCount;
+           is(rc, 3, "Rows found.");
+           let selection = treeView.selection;
+           for (let i = 0; i < rc; i++) {
+             selection.select(0);
+             let node = tree.selectedNode;
+             tree.controller.remove("Removing page");
+             ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
+               node.uri + " removed.");
+             ok(treeView.rowCount == rc - i - 1, "Rows count decreased");
+           }
 
-      // Cleanup.
-      waitForClearHistory(SimpleTest.finish);
+           // Cleanup.
+           waitForClearHistory(SimpleTest.finish);
+         });
     }
 
     /**

@@ -333,18 +333,16 @@ NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
     return NS_NewSVGSwitchElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::view)
     return NS_NewSVGViewElement(aResult, aNodeInfo);
-  if (NS_SMILEnabled()) {
-    if (name == nsGkAtoms::animate)
-      return NS_NewSVGAnimateElement(aResult, aNodeInfo);
-    if (name == nsGkAtoms::animateTransform)
-      return NS_NewSVGAnimateTransformElement(aResult, aNodeInfo);
-    if (name == nsGkAtoms::animateMotion)
-      return NS_NewSVGAnimateMotionElement(aResult, aNodeInfo);
-    if (name == nsGkAtoms::mpath)
-      return NS_NewSVGMPathElement(aResult, aNodeInfo);
-    if (name == nsGkAtoms::set)
-      return NS_NewSVGSetElement(aResult, aNodeInfo);
-  }
+  if (name == nsGkAtoms::animate)
+    return NS_NewSVGAnimateElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::animateTransform)
+    return NS_NewSVGAnimateTransformElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::animateMotion)
+    return NS_NewSVGAnimateMotionElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::mpath)
+    return NS_NewSVGMPathElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::set)
+    return NS_NewSVGSetElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard svg element:
   return NS_NewSVGUnknownElement(aResult, aNodeInfo);

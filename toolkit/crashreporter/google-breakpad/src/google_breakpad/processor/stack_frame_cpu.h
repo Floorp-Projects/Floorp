@@ -70,12 +70,15 @@ struct StackFrameX86 : public StackFrame {
     CONTEXT_VALID_ALL  = -1
   };
 
- StackFrameX86()
+  StackFrameX86()
      : context(),
        context_validity(CONTEXT_VALID_NONE),
        windows_frame_info(NULL),
        cfi_frame_info(NULL) {}
   ~StackFrameX86();
+
+  // Overriden to return the return address as saved on the stack.
+  virtual u_int64_t ReturnAddress() const;
 
   // Register state.  This is only fully valid for the topmost frame in a
   // stack.  In other frames, the values of nonvolatile registers may be
@@ -146,6 +149,9 @@ struct StackFrameAMD64 : public StackFrame {
   };
 
   StackFrameAMD64() : context(), context_validity(CONTEXT_VALID_NONE) {}
+
+  // Overriden to return the return address as saved on the stack.
+  virtual u_int64_t ReturnAddress() const;
 
   // Register state. This is only fully valid for the topmost frame in a
   // stack. In other frames, which registers are present depends on what
@@ -220,7 +226,7 @@ struct StackFrameARM : public StackFrame {
   // Return the ContextValidity flag for register rN.
   static ContextValidity RegisterValidFlag(int n) {
     return ContextValidity(1 << n);
-  } 
+  }
 
   // Register state.  This is only fully valid for the topmost frame in a
   // stack.  In other frames, the values of nonvolatile registers may be

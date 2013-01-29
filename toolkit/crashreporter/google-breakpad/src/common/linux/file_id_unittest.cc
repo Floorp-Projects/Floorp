@@ -99,7 +99,7 @@ public:
   void GetElfContents(ELF& elf) {
     string contents;
     ASSERT_TRUE(elf.GetContents(&contents));
-    ASSERT_LT(0, contents.size());
+    ASSERT_LT(0U, contents.size());
 
     elfdata_v.clear();
     elfdata_v.insert(elfdata_v.begin(), contents.begin(), contents.end());

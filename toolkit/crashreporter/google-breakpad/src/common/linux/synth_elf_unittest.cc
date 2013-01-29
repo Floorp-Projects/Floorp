@@ -55,7 +55,7 @@ public:
 };
 
 TEST_F(StringTableTest, Empty) {
-  EXPECT_EQ(1, table.Size());
+  EXPECT_EQ(1U, table.Size());
   string contents;
   ASSERT_TRUE(table.GetContents(&contents));
   const char* kExpectedContents = "\0";
@@ -63,7 +63,7 @@ TEST_F(StringTableTest, Empty) {
                       contents.c_str(),
                       contents.size()));
   ASSERT_TRUE(table.empty_string.IsKnownConstant());
-  EXPECT_EQ(0, table.empty_string.Value());
+  EXPECT_EQ(0U, table.empty_string.Value());
 }
 
 TEST_F(StringTableTest, Basic) {
@@ -84,7 +84,7 @@ TEST_F(StringTableTest, Basic) {
                       contents.size()));
   // empty_string is at zero, other strings start at 1.
   ASSERT_TRUE(l1.IsKnownConstant());
-  EXPECT_EQ(1, l1.Value());
+  EXPECT_EQ(1U, l1.Value());
   // Each string has an extra byte for a trailing null.
   EXPECT_EQ(1 + s1.length() + 1, l2.Value());
   EXPECT_EQ(1 + s1.length() + 1 + s2.length() + 1, l3.Value());
@@ -105,7 +105,7 @@ TEST_F(StringTableTest, Duplicates) {
   EXPECT_EQ(0, memcmp(kExpectedContents,
                       contents.c_str(),
                       contents.size()));
-  EXPECT_EQ(0, table.empty_string.Value());
+  EXPECT_EQ(0U, table.empty_string.Value());
   EXPECT_EQ(table.empty_string.Value(), l3.Value());
   EXPECT_EQ(l2.Value(), l4.Value());
 }
@@ -209,12 +209,12 @@ TEST_F(BasicElf, EmptyLE32) {
   EXPECT_EQ(0, memcmp(kIdent, header->e_ident, sizeof(kIdent)));
   EXPECT_EQ(ET_EXEC, header->e_type);
   EXPECT_EQ(EM_386, header->e_machine);
-  EXPECT_EQ(EV_CURRENT, header->e_version);
-  EXPECT_EQ(0, header->e_entry);
-  EXPECT_EQ(0, header->e_phoff);
+  EXPECT_EQ(static_cast<unsigned int>(EV_CURRENT), header->e_version);
+  EXPECT_EQ(0U, header->e_entry);
+  EXPECT_EQ(0U, header->e_phoff);
   EXPECT_EQ(sizeof(Elf32_Ehdr) + kStringTableSize + kStringTableAlign,
             header->e_shoff);
-  EXPECT_EQ(0, header->e_flags);
+  EXPECT_EQ(0U, header->e_flags);
   EXPECT_EQ(sizeof(Elf32_Ehdr), header->e_ehsize);
   EXPECT_EQ(sizeof(Elf32_Phdr), header->e_phentsize);
   EXPECT_EQ(0, header->e_phnum);
@@ -248,12 +248,12 @@ TEST_F(BasicElf, EmptyLE64) {
   EXPECT_EQ(0, memcmp(kIdent, header->e_ident, sizeof(kIdent)));
   EXPECT_EQ(ET_EXEC, header->e_type);
   EXPECT_EQ(EM_X86_64, header->e_machine);
-  EXPECT_EQ(EV_CURRENT, header->e_version);
-  EXPECT_EQ(0, header->e_entry);
-  EXPECT_EQ(0, header->e_phoff);
+  EXPECT_EQ(static_cast<unsigned int>(EV_CURRENT), header->e_version);
+  EXPECT_EQ(0U, header->e_entry);
+  EXPECT_EQ(0U, header->e_phoff);
   EXPECT_EQ(sizeof(Elf64_Ehdr) + kStringTableSize + kStringTableAlign,
             header->e_shoff);
-  EXPECT_EQ(0, header->e_flags);
+  EXPECT_EQ(0U, header->e_flags);
   EXPECT_EQ(sizeof(Elf64_Ehdr), header->e_ehsize);
   EXPECT_EQ(sizeof(Elf64_Phdr), header->e_phentsize);
   EXPECT_EQ(0, header->e_phnum);

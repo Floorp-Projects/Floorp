@@ -219,14 +219,16 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
 }
 
 MethodStatus
-ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
+ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, bool newType)
 {
     // Skip if baseline compilation is disabledf in options.
     JS_ASSERT(ion::IsBaselineEnabled(cx));
 
     // Skip if the script has been disabled.
-    if (script->baseline == BASELINE_DISABLED_SCRIPT)
+    if (scriptArg->baseline == BASELINE_DISABLED_SCRIPT)
         return Method_Skipped;
+
+    RootedScript script(cx, scriptArg);
 
     // If constructing, allocate a new |this| object.
     if (fp->isConstructing() && fp->functionThis().isPrimitive()) {

@@ -1,0 +1,23 @@
+<html>
+<head>
+<title>Testcase bug 363448 - Crash [@ nsCachedStyleData::GetStyleData] with testcase, using floating and absolutely positioned iframes</title>
+</head>
+<body>
+This page should not crash Mozilla
+<div style="width:300px;">
+  <span id="b">
+    <iframe style="float: left;" id="a"></iframe>
+    <wbr>text
+    <iframe id="c" style="position: absolute;"></iframe>
+  </span>
+</div>
+
+<script>
+function stirdom(){
+  document.body.appendChild(document.getElementById('a'));
+  document.getElementById('b').appendChild(document.getElementById('c'));
+}
+setTimeout(stirdom,200);
+</script>
+</body>
+</html>

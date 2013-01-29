@@ -2008,7 +2008,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     // Dispatch WillPaintWindow notification to allow scripts etc. to run
     // before we paint
     {
-        listener->WillPaintWindow(this, true);
+        listener->WillPaintWindow(this);
 
         // If the window has been destroyed during the will paint notification,
         // there is nothing left to do.
@@ -2127,7 +2127,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         nsBaseWidget::AutoLayerManagerSetup
           setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
 
-        listener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+        listener->PaintWindow(this, region, 0);
         listener->DidPaintWindow();
 
         g_free(rects);
@@ -2137,7 +2137,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(region);
 
-        listener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+        listener->PaintWindow(this, region, 0);
         listener->DidPaintWindow();
 
         g_free(rects);
@@ -2200,7 +2200,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     bool painted = false;
     {
       AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
-      painted = listener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+      painted = listener->PaintWindow(this, region, 0);
     }
 
 #ifdef MOZ_X11

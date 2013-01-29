@@ -41,7 +41,7 @@
 
 #include <string>
 
-#include "processor/scoped_ptr.h"
+#include "common/scoped_ptr.h"
 
 #if !TARGET_OS_IPHONE
 #include "client/mac/crash_generation/crash_generation_client.h"

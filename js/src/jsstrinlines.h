@@ -31,7 +31,7 @@ class RopeBuilder {
     {}
 
     inline bool append(HandleString str) {
-        res = js_ConcatStrings(cx, res, str);
+        res = ConcatStrings<CanGC>(cx, res, str);
         return !!res;
     }
 

@@ -702,13 +702,36 @@ HandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope, T* value,
                                                   nullptr, true);
 }
 
-// Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
-template <template <typename> class SmartPtr, class T>
-MOZ_ALWAYS_INLINE bool
-HandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope,
-                                const SmartPtr<T>& value, JS::Value* vp)
+// Helper for calling HandleNewBindingWrappingFailure with smart pointers
+// (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
+HAS_MEMBER(get)
+
+template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+struct HandleNewBindingWrappingFailureHelper
 {
-  return HandleNewBindingWrappingFailure(cx, scope, value.get(), vp);
+  static inline bool Wrap(JSContext* cx, JSObject* scope, const T& value,
+                          JS::Value* vp)
+  {
+    return HandleNewBindingWrappingFailure(cx, scope, value.get(), vp);
+  }
+};
+
+template <class T>
+struct HandleNewBindingWrappingFailureHelper<T, false>
+{
+  static inline bool Wrap(JSContext* cx, JSObject* scope, T& value,
+                          JS::Value* vp)
+  {
+    return HandleNewBindingWrappingFailure(cx, scope, &value, vp);
+  }
+};
+
+template<class T>
+inline bool
+HandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope, T& value,
+                                JS::Value* vp)
+{
+  return HandleNewBindingWrappingFailureHelper<T>::Wrap(cx, scope, value, vp);
 }
 
 template<bool Fatal>
@@ -1118,8 +1141,6 @@ WrapCallThisObject(JSContext* cx, JSObject* scope, const T& p)
 
 // Helper for calling WrapNewBindingObject with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
-HAS_MEMBER(get)
-
 template <class T, bool isSmartPtr=HasgetMember<T>::Value>
 struct WrapNewBindingObjectHelper
 {
@@ -1146,6 +1167,41 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T& value,
                      JS::Value* vp)
 {
   return WrapNewBindingObjectHelper<T>::Wrap(cx, scope, value, vp);
+}
+
+template <class T>
+inline JSObject*
+GetCallbackFromCallbackObject(T* aObj)
+{
+  return aObj->Callback();
+}
+
+// Helper for getting the callback JSObject* of a smart ptr around a
+// CallbackObject or a reference to a CallbackObject or something like
+// that.
+template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+struct GetCallbackFromCallbackObjectHelper
+{
+  static inline JSObject* Get(const T& aObj)
+  {
+    return GetCallbackFromCallbackObject(aObj.get());
+  }
+};
+
+template <class T>
+struct GetCallbackFromCallbackObjectHelper<T, false>
+{
+  static inline JSObject* Get(T& aObj)
+  {
+    return GetCallbackFromCallbackObject(&aObj);
+  }
+};
+
+template<class T>
+inline JSObject*
+GetCallbackFromCallbackObject(T& aObj)
+{
+  return GetCallbackFromCallbackObjectHelper<T>::Get(aObj);
 }
 
 static inline bool

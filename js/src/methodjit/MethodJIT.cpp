@@ -5,24 +5,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MethodJIT.h"
-#include "Logging.h"
-#include "assembler/jit/ExecutableAllocator.h"
-#include "assembler/assembler/RepatchBuffer.h"
-#include "gc/Marking.h"
-#include "js/MemoryMetrics.h"
 #include "BaseAssembler.h"
 #include "Compiler.h"
-#include "MonoIC.h"
-#include "PolyIC.h"
-#include "TrampolineCompiler.h"
 #include "jscntxtinlines.h"
 #include "jscompartment.h"
-#include "jsscope.h"
+#include "Logging.h"
+#include "MethodJIT.h"
+#include "MonoIC.h"
+#include "PolyIC.h"
+#include "Retcon.h"
+#include "TrampolineCompiler.h"
+
+#include "assembler/assembler/RepatchBuffer.h"
+#include "assembler/jit/ExecutableAllocator.h"
+#include "gc/Marking.h"
 #include "ion/Ion.h"
 #include "ion/IonCode.h"
 #include "ion/IonCompartment.h"
-#include "methodjit/Retcon.h"
+#include "js/MemoryMetrics.h"
+#include "vm/Shape.h"
 
 #include "jsgcinlines.h"
 #include "jsinterpinlines.h"
@@ -1103,7 +1104,7 @@ JaegerStatus
 mjit::JaegerShot(JSContext *cx, bool partial)
 {
     StackFrame *fp = cx->fp();
-    JITScript *jit = fp->script()->getJIT(fp->isConstructing(), cx->compartment->compileBarriers());
+    JITScript *jit = fp->script()->getJIT(fp->isConstructing(), cx->zone()->compileBarriers());
 
     JS_ASSERT(cx->regs().pc == fp->script()->code);
 
@@ -1333,8 +1334,8 @@ JITScript::destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses)
          * Write barrier: Before we destroy the chunk, trace through the objects
          * it holds.
          */
-        if (script->compartment()->needsBarrier())
-            desc.chunk->trace(script->compartment()->barrierTracer());
+        if (script->zone()->needsBarrier())
+            desc.chunk->trace(script->zone()->barrierTracer());
 
         Probes::discardMJITCode(fop, this, desc.chunk, desc.chunk->code.m_code.executableAddress());
         fop->delete_(desc.chunk);
@@ -1385,7 +1386,7 @@ JITScript::trace(JSTracer *trc)
 static ic::PICInfo *
 GetPIC(JSContext *cx, JSScript *script, jsbytecode *pc, bool constructing)
 {
-    JITScript *jit = script->getJIT(constructing, cx->compartment->needsBarrier());
+    JITScript *jit = script->getJIT(constructing, cx->zone()->needsBarrier());
     if (!jit)
         return NULL;
 

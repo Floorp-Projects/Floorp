@@ -179,7 +179,12 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
 
     IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p (line %d)",
             pcOff, (void *)script(), PCToLineNumber(script(), regs.pc));
-    JS_ASSERT(exprStackSlots == js_ReconstructStackDepth(cx, script(), regs.pc));
+
+    // For fun.apply({}, arguments) the reconstructStackDepth will be atleast 4,
+    // but it could be that we inlined the funapply. In that case exprStackSlots,
+    // will have the real arguments in the slots and not always be equal.
+    JS_ASSERT_IF(JSOp(*regs.pc) != JSOP_FUNAPPLY,
+                 exprStackSlots == js_ReconstructStackDepth(cx, script(), regs.pc));
 }
 
 static StackFrame *
@@ -192,8 +197,11 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     // which will not be the case when we inline getters (in which case it would be a
     // JSOP_GETPROP). That will have to be handled differently.
     FrameRegs &regs = cx->regs();
-    JS_ASSERT(JSOp(*regs.pc) == JSOP_CALL || JSOp(*regs.pc) == JSOP_NEW);
+    JS_ASSERT(JSOp(*regs.pc) == JSOP_CALL || JSOp(*regs.pc) == JSOP_NEW ||
+              JSOp(*regs.pc) == JSOP_FUNAPPLY);
     int callerArgc = GET_ARGC(regs.pc);
+    if (JSOp(*regs.pc) == JSOP_FUNAPPLY)
+        callerArgc = callerFrame->nactual();
     const Value &calleeVal = regs.sp[-callerArgc - 2];
 
     RootedFunction fun(cx, calleeVal.toObject().toFunction());

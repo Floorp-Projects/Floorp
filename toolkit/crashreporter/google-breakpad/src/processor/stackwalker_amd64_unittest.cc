@@ -31,8 +31,8 @@
 
 // stackwalker_amd64_unittest.cc: Unit tests for StackwalkerAMD64 class.
 
-#include <string>
 #include <string.h>
+#include <string>
 #include <vector>
 
 #include "breakpad_googletest_includes.h"
@@ -48,6 +48,7 @@
 
 using google_breakpad::BasicSourceLineResolver;
 using google_breakpad::CallStack;
+using google_breakpad::StackFrameSymbolizer;
 using google_breakpad::StackFrame;
 using google_breakpad::StackFrameAMD64;
 using google_breakpad::StackwalkerAMD64;
@@ -112,7 +113,7 @@ class StackwalkerAMD64Fixture {
     for (size_t i = 0; i < sizeof(*raw_context); i++)
       reinterpret_cast<u_int8_t *>(raw_context)[i] = (x += 17);
   }
-  
+
   SystemInfo system_info;
   MDRawContextAMD64 raw_context;
   Section stack_section;
@@ -138,8 +139,9 @@ TEST_F(SanityCheck, NoResolver) {
   raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = 0x8000000080000000ULL;
 
+  StackFrameSymbolizer frame_symbolizer(NULL, NULL);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
-                          NULL, NULL);
+                          &frame_symbolizer);
   // This should succeed even without a resolver or supplier.
   ASSERT_TRUE(walker.Walk(&call_stack));
   frames = call_stack.frames();
@@ -158,8 +160,27 @@ TEST_F(GetContextFrame, Simple) {
   raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = 0x8000000080000000ULL;
 
+  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
-                          &supplier, &resolver);
+                          &frame_symbolizer);
+  ASSERT_TRUE(walker.Walk(&call_stack));
+  frames = call_stack.frames();
+  ASSERT_GE(1U, frames->size());
+  StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(0));
+  // Check that the values from the original raw context made it
+  // through to the context in the stack frame.
+  EXPECT_EQ(0, memcmp(&raw_context, &frame->context, sizeof(raw_context)));
+}
+
+// The stackwalker should be able to produce the context frame even
+// without stack memory present.
+TEST_F(GetContextFrame, NoStackMemory) {
+  raw_context.rip = 0x40000000c0000200ULL;
+  raw_context.rbp = 0x8000000080000000ULL;
+
+  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
+  StackwalkerAMD64 walker(&system_info, &raw_context, NULL, &modules,
+                          &frame_symbolizer);
   ASSERT_TRUE(walker.Walk(&call_stack));
   frames = call_stack.frames();
   ASSERT_GE(1U, frames->size());
@@ -207,13 +228,14 @@ TEST_F(GetCallerFrame, ScanWithoutSymbols) {
     .Append(32, 0);                     // end of stack
 
   RegionFromSection();
-    
+
   raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = frame1_rbp.Value();
   raw_context.rsp = stack_section.start().Value();
 
+  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
-                          &supplier, &resolver);
+                          &frame_symbolizer);
   ASSERT_TRUE(walker.Walk(&call_stack));
   frames = call_stack.frames();
   ASSERT_EQ(3U, frames->size());
@@ -267,7 +289,7 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
     .Append(32, 0)                      // end of stack
     .Mark(&frame1_rbp);
   RegionFromSection();
-    
+
   raw_context.rip = 0x40000000c0000200ULL;
   raw_context.rbp = frame1_rbp.Value();
   raw_context.rsp = stack_section.start().Value();
@@ -279,8 +301,9 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
                    // The calling frame's function.
                    "FUNC 100 400 10 echidna\n");
 
+  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
-                          &supplier, &resolver);
+                          &frame_symbolizer);
   ASSERT_TRUE(walker.Walk(&call_stack));
   frames = call_stack.frames();
   ASSERT_EQ(2U, frames->size());
@@ -343,8 +366,9 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
                    // The calling frame's function.
                    "FUNC 100 400 10 yeti\n");
 
+  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
-                          &supplier, &resolver);
+                          &frame_symbolizer);
   ASSERT_TRUE(walker.Walk(&call_stack));
   frames = call_stack.frames();
   ASSERT_EQ(2U, frames->size());
@@ -418,8 +442,9 @@ struct CFIFixture: public StackwalkerAMD64Fixture {
     RegionFromSection();
     raw_context.rsp = stack_section.start().Value();
 
+    StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
     StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
-                          &supplier, &resolver);
+                            &frame_symbolizer);
     ASSERT_TRUE(walker.Walk(&call_stack));
     frames = call_stack.frames();
     ASSERT_EQ(2U, frames->size());

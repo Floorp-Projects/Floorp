@@ -35,9 +35,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "common/scoped_ptr.h"
 #include "google_breakpad/processor/minidump.h"
 #include "processor/logging.h"
-#include "processor/scoped_ptr.h"
 
 namespace {
 

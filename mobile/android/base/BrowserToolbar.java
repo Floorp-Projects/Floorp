@@ -1161,10 +1161,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         }
     }
 
-    public void destroy() {
-        // The action-items views are reused on rotation.
-        // Remove them from their parent, so they can be re-attached to new parent.
-        mActionItemBar.removeAllViews();
+    public void onDestroy() {
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     public boolean openOptionsMenu() {

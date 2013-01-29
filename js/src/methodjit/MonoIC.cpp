@@ -8,12 +8,14 @@
 #include "jscntxt.h"
 #include "jsnum.h"
 #include "jsobj.h"
-#include "jsscope.h"
 
+#include "assembler/assembler/CodeLocation.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/MacroAssembler.h"
-#include "assembler/assembler/CodeLocation.h"
-
+#include "builtin/RegExp.h"
+#ifdef JS_ION
+# include "ion/IonMacroAssembler.h"
+#endif
 #include "methodjit/CodeGenIncludes.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/ICRepatcher.h"
@@ -21,18 +23,14 @@
 #include "methodjit/MonoIC.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/StubCalls.h"
-
-#include "builtin/RegExp.h"
+#include "vm/Shape.h"
 
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "methodjit/StubCalls-inl.h"
-#ifdef JS_ION
-# include "ion/IonMacroAssembler.h"
-#endif
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -876,7 +874,7 @@ class CallCompiler : public BaseCompiler
         masm.loadPtr(Address(t0, JSScript::offsetOfMJITInfo()), t0);
         Jump hasNoJitInfo = masm.branchPtr(Assembler::Equal, t0, ImmPtr(NULL));
         size_t offset = JSScript::JITScriptSet::jitHandleOffset(callingNew,
-                                                                f.cx->compartment->compileBarriers());
+                                                                f.cx->zone()->compileBarriers());
         masm.loadPtr(Address(t0, offset), t0);
         Jump hasNoJitCode = masm.branchPtr(Assembler::BelowOrEqual, t0,
                                            ImmPtr(JSScript::JITScriptHandle::UNJITTABLE));
@@ -964,7 +962,7 @@ class CallCompiler : public BaseCompiler
     bool patchInlinePath(JSScript *script, JSObject *obj)
     {
         JS_ASSERT(ic.frameSize.isStatic());
-        JITScript *jit = script->getJIT(callingNew, f.cx->compartment->compileBarriers());
+        JITScript *jit = script->getJIT(callingNew, f.cx->zone()->compileBarriers());
 
         /* Very fast path. */
         Repatcher repatch(f.chunk());

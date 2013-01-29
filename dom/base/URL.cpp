@@ -17,30 +17,32 @@ namespace mozilla {
 namespace dom {
 
 void
-URL::CreateObjectURL(nsISupports* aGlobal, nsIDOMBlob* aBlob,
+URL::CreateObjectURL(const GlobalObject& aGlobal, nsIDOMBlob* aBlob,
                      const objectURLOptions& aOptions,
-                     nsAString& aResult,
+                     nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal, aBlob, NS_LITERAL_CSTRING(BLOBURI_SCHEME),
-                          aOptions, aResult, aError);
+  CreateObjectURLInternal(aGlobal.Get(), aBlob,
+                          NS_LITERAL_CSTRING(BLOBURI_SCHEME), aOptions, aResult,
+                          aError);
 }
 
 void
-URL::CreateObjectURL(nsISupports* aGlobal, nsIDOMMediaStream* aStream,
+URL::CreateObjectURL(const GlobalObject& aGlobal, nsIDOMMediaStream* aStream,
                      const mozilla::dom::objectURLOptions& aOptions,
-                     nsAString& aResult,
+                     nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal, aStream, NS_LITERAL_CSTRING(MEDIASTREAMURI_SCHEME),
-                          aOptions, aResult, aError);
+  CreateObjectURLInternal(aGlobal.Get(), aStream,
+                          NS_LITERAL_CSTRING(MEDIASTREAMURI_SCHEME), aOptions,
+                          aResult, aError);
 }
 
 void
 URL::CreateObjectURLInternal(nsISupports* aGlobal, nsISupports* aObject,
                              const nsACString& aScheme,
                              const mozilla::dom::objectURLOptions& aOptions,
-                             nsAString& aResult,
+                             nsString& aResult,
                              ErrorResult& aError)
 {
   nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal);
@@ -68,9 +70,9 @@ URL::CreateObjectURLInternal(nsISupports* aGlobal, nsISupports* aObject,
 }
 
 void
-URL::RevokeObjectURL(nsISupports* aGlobal, const nsAString& aURL)
+URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL)
 {
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal.Get());
   nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
   NS_PRECONDITION(!window || window->IsInnerWindow(),
                   "Should be inner window");

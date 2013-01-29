@@ -1710,10 +1710,10 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
             srcSubRect.MoveBy(-srcTextureRect.x, -srcTextureRect.y);
             srcSubInDstRect.MoveBy(-dstTextureRect.x, -dstTextureRect.y);
 
-            float dx0 = 2.0 * float(srcSubInDstRect.x) / float(dstSize.width) - 1.0;
-            float dy0 = 2.0 * float(srcSubInDstRect.y) / float(dstSize.height) - 1.0;
-            float dx1 = 2.0 * float(srcSubInDstRect.x + srcSubInDstRect.width) / float(dstSize.width) - 1.0;
-            float dy1 = 2.0 * float(srcSubInDstRect.y + srcSubInDstRect.height) / float(dstSize.height) - 1.0;
+            float dx0 = 2.0f * float(srcSubInDstRect.x) / float(dstSize.width) - 1.0f;
+            float dy0 = 2.0f * float(srcSubInDstRect.y) / float(dstSize.height) - 1.0f;
+            float dx1 = 2.0f * float(srcSubInDstRect.x + srcSubInDstRect.width) / float(dstSize.width) - 1.0f;
+            float dy1 = 2.0f * float(srcSubInDstRect.y + srcSubInDstRect.height) / float(dstSize.height) - 1.0f;
             PushViewportRect(nsIntRect(0, 0, dstSize.width, dstSize.height));
 
             RectTriangles rects;

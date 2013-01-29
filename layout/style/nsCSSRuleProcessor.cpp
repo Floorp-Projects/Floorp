@@ -1161,6 +1161,11 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::windows_compositor);
   }
 
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsGlass, &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::windows_glass);
+  }
+
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsClassic, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::windows_classic);

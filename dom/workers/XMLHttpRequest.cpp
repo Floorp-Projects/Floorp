@@ -1484,17 +1484,17 @@ XMLHttpRequest::_finalize(JSFreeOp* aFop)
 
 // static
 XMLHttpRequest*
-XMLHttpRequest::Constructor(JSContext* aCx,
-                            JSObject* aGlobal,
+XMLHttpRequest::Constructor(const WorkerGlobalObject& aGlobal,
                             const MozXMLHttpRequestParametersWorkers& aParams,
                             ErrorResult& aRv)
 {
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  JSContext* cx = aGlobal.GetContext();
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
   MOZ_ASSERT(workerPrivate);
 
-  nsRefPtr<XMLHttpRequest> xhr = new XMLHttpRequest(aCx, workerPrivate);
+  nsRefPtr<XMLHttpRequest> xhr = new XMLHttpRequest(cx, workerPrivate);
 
-  if (!Wrap(aCx, aGlobal, xhr)) {
+  if (!Wrap(cx, aGlobal.Get(), xhr)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return NULL;
   }
