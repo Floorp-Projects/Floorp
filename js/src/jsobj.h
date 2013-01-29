@@ -589,6 +589,7 @@ class JSObject : public js::ObjectImpl
     inline void ensureDenseInitializedLength(JSContext *cx, unsigned index, unsigned extra);
     inline void setDenseElement(unsigned idx, const js::Value &val);
     inline void initDenseElement(unsigned idx, const js::Value &val);
+    inline void setDenseElementMaybeConvertDouble(unsigned idx, const js::Value &val);
     static inline void setDenseElementWithType(JSContext *cx, js::HandleObject obj,
                                                unsigned idx, const js::Value &val);
     static inline void initDenseElementWithType(JSContext *cx, js::HandleObject obj,
@@ -600,6 +601,8 @@ class JSObject : public js::ObjectImpl
     inline void initDenseElements(unsigned dstStart, const js::Value *src, unsigned count);
     inline void moveDenseElements(unsigned dstStart, unsigned srcStart, unsigned count);
     inline void moveDenseElementsUnbarriered(unsigned dstStart, unsigned srcStart, unsigned count);
+    inline bool shouldConvertDoubleElements();
+    inline void setShouldConvertDoubleElements();
 
     /* Packed information for this object's elements. */
     inline void markDenseElementsNotPacked(JSContext *cx);
