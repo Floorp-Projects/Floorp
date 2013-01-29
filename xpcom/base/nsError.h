@@ -6,11 +6,12 @@
 #ifndef nsError_h__
 #define nsError_h__
 
+#include "mozilla/Likely.h"
+#include "mozilla/TypedEnum.h"
+
 #ifndef nscore_h___
 #include "nscore.h"  /* needed for nsresult */
 #endif
-#include "mozilla/Attributes.h"
-#include "mozilla/Likely.h"
 
 /*
  * To add error code to your module, you need to do the following:
