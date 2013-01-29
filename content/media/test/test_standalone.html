@@ -18,8 +18,8 @@ for (var i=0; i<gSmallTests.length; ++i) {
 
   // We can't play WAV files in stand alone documents, so just don't
   // run the test on non-video content types.
-  var isVideo = /^video/.test(test.type) ? true : false;
-  if (!isVideo || !document.createElement("video").canPlayType(test.type))
+  var tag = getMajorMimeType(test.type);
+  if (tag != "video" || !document.createElement("video").canPlayType(test.type))
     continue;
   
   var f = document.createElement("iframe");
