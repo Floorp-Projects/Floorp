@@ -89,6 +89,11 @@ public:
   /* Stop the device and release the corresponding MediaStream */
   virtual nsresult Stop(SourceMediaStream *aSource, TrackID aID) = 0;
 
+  /* Change device configuration.  */
+  virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
+                          bool aAgcOn, uint32_t aAGC,
+                          bool aNoiseOn, uint32_t aNoise) = 0;
+
   /* Return false if device is currently allocated or started */
   bool IsAvailable() {
     if (mState == kAllocated || mState == kStarted) {
