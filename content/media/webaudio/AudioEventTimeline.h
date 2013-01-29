@@ -7,8 +7,10 @@
 #ifndef AudioEventTimeline_h_
 #define AudioEventTimeline_h_
 
-#include "mozilla/Attributes.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/TypedEnum.h"
+
 #include "nsTArray.h"
 #include "math.h"
 
