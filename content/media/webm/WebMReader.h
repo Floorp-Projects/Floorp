@@ -208,6 +208,9 @@ public:
   // Seeks to the beginning of the specified cluster. Called on the decode
   // thread.
   void SeekToCluster(uint32_t aIdx);
+
+  // Returns true if data at the end of the final subsegment has been cached.
+  bool IsDataCachedAtEndOfSubsegments() MOZ_OVERRIDE;
 #endif
 
 protected:

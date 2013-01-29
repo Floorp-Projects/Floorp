@@ -236,6 +236,16 @@ private:
       return mSubReaderList.Length();
     }
 
+    // Returns true if |mSubReaderList| is empty. Will assert that threads
+    // other than the decode thread are "in monitor".
+    bool IsEmpty() const
+    {
+      NS_ASSERTION(mReader->GetDecoder(), "Decoder is null!");
+      if (!mReader->GetDecoder()->OnDecodeThread()) {
+        mReader->GetDecoder()->GetReentrantMonitor().AssertCurrentThreadIn();
+      }
+      return mSubReaderList.IsEmpty();
+    }
     // Override '[]' to assert threads other than the decode thread are "in
     // monitor" for accessing individual elems. Note: elems returned do not
     // have monitor assertions builtin like |MonitoredSubReader| objects.

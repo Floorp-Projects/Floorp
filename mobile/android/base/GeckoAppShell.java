@@ -261,17 +261,20 @@ public class GeckoAppShell
 
     public static native void onFullScreenPluginHidden(View view);
 
-    private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
-        private String mFile = "";
-        private String mMimeType = "";
-        private MediaScannerConnection mScanner = null;
+    private static final class GeckoMediaScannerClient implements MediaScannerConnectionClient {
+        private final String mFile;
+        private final String mMimeType;
+        private MediaScannerConnection mScanner;
 
-        public GeckoMediaScannerClient(Context aContext, String aFile, String aMimeType) {
-            mFile = aFile;
-            mMimeType = aMimeType;
-            mScanner = new MediaScannerConnection(aContext, this);
-            if (mScanner != null)
-                mScanner.connect();
+        public static void startScan(Context context, String file, String mimeType) {
+            new GeckoMediaScannerClient(context, file, mimeType);
+        }
+
+        private GeckoMediaScannerClient(Context context, String file, String mimeType) {
+            mFile = file;
+            mMimeType = mimeType;
+            mScanner = new MediaScannerConnection(context, this);
+            mScanner.connect();
         }
 
         public void onMediaScannerConnected() {
@@ -337,7 +340,6 @@ public class GeckoAppShell
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
-        GeckoProfile profile = GeckoProfile.get(context);
 
         File cacheFile = getCacheDir(context);
         putenv("GRE_HOME=" + getGREDir(context).getPath());
@@ -1710,7 +1712,7 @@ public class GeckoAppShell
 
     public static void scanMedia(String aFile, String aMimeType) {
         Context context = GeckoApp.mAppContext;
-        GeckoMediaScannerClient client = new GeckoMediaScannerClient(context, aFile, aMimeType);
+        GeckoMediaScannerClient.startScan(context, aFile, aMimeType);
     }
 
     public static byte[] getIconForExtension(String aExt, int iconSize) {
@@ -2249,7 +2251,7 @@ public class GeckoAppShell
         if (GeckoApp.mAppContext != null)
             GeckoApp.mAppContext.notifyCheckUpdateResult(result);
     }
-    
+
     public static boolean unlockProfile() {
         // Try to kill any zombie Fennec's that might be running
         GeckoAppShell.killAnyZombies();
@@ -2257,11 +2259,7 @@ public class GeckoAppShell
         // Then force unlock this profile
         GeckoProfile profile = GeckoApp.mAppContext.getProfile();
         File lock = profile.getFile(".parentlock");
-        if (lock.exists()) {
-            lock.delete();
-            return true;
-        }
-        return false;
+        return lock.exists() && lock.delete();
     }
 
     public static String getProxyForURI(String spec, String scheme, String host, int port) {

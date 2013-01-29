@@ -824,6 +824,8 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
       } else {
         ClearHasValidDir();
         ClearHasFixedDir();
+        ClearHasDirAuto();
+        ClearHasDirAutoSet();
         if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
           SetHasDirAuto();
         } else {

@@ -54,6 +54,7 @@ protected:
                              const OptionalURIParams&   originalUri,
                              const OptionalURIParams&   docUri,
                              const OptionalURIParams&   referrerUri,
+                             const OptionalURIParams&   internalRedirectUri,
                              const uint32_t&            loadFlags,
                              const RequestHeaderTuples& requestHeaders,
                              const nsHttpAtom&          requestMethod,
@@ -77,7 +78,8 @@ protected:
   virtual bool RecvResume();
   virtual bool RecvCancel(const nsresult& status);
   virtual bool RecvRedirect2Verify(const nsresult& result,
-                                   const RequestHeaderTuples& changedHeaders);
+                                   const RequestHeaderTuples& changedHeaders,
+                                   const OptionalURIParams&   apiRedirectUri);
   virtual bool RecvUpdateAssociatedContentSecurity(const int32_t& broken,
                                                    const int32_t& no);
   virtual bool RecvDocumentChannelCleanup();

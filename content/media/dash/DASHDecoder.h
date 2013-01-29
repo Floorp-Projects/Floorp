@@ -91,6 +91,10 @@ public:
   // decoders. Called on the decode thread.
   void OnReadMetadataCompleted(DASHRepDecoder* aRepDecoder);
 
+  // Returns true if all subsegments from current decode position are
+  // downloaded. Must be in monitor. Call from any thread.
+  bool IsDataCachedToEndOfResource() MOZ_OVERRIDE;
+
   // Refers to downloading data bytes, i.e. non metadata.
   // Returns true if |aRepDecoder| is an active audio or video sub decoder AND
   // if metadata for all audio or video decoders has been read.
@@ -162,6 +166,14 @@ public:
     return (-1);
   }
 
+  // Returns the total number of subsegments that have been loaded. Will enter
+  // monitor for read access off the decode thread.
+  uint32_t GetNumSubsegmentLoads() {
+    ReentrantMonitorConditionallyEnter mon(!OnDecodeThread(),
+                                           GetReentrantMonitor());
+    return mVideoSubsegmentLoads.Length();
+  }
+
   // Returns the index of the rep decoder used to load a subsegment. Will enter
   // monitor for read access off the decode thread.
   int32_t GetRepIdxForVideoSubsegmentLoad(int32_t aSubsegmentIdx)
@@ -206,6 +218,15 @@ public:
   // so recompute it. The monitor must be held. Will be forwarded to current
   // audio and video rep decoders.
   void UpdatePlaybackRate() MOZ_OVERRIDE;
+
+  // Stop updating the bytes downloaded for progress notifications. Called
+  // when seeking to prevent wild changes to the progress notification.
+  // Forwarded to sub-decoders. Must be called with the decoder monitor held.
+  void StopProgressUpdates() MOZ_OVERRIDE;
+
+  // Allow updating the bytes downloaded for progress notifications.
+  // Forwarded to sub-decoders. Must be called with the decoder monitor held.
+  void StartProgressUpdates() MOZ_OVERRIDE;
 
   // Used to estimate rates of data passing through the decoder's channel.
   // Records activity starting on the channel. The monitor must be held.

@@ -58,6 +58,9 @@ public:
   // Should be implemented by a sub-reader, e.g. |nsDASHWebMReader|.
   virtual void RequestSwitchAtSubsegment(int32_t aCluster,
                                          MediaDecoderReader* aNextReader) = 0;
+
+  // Returns true if data at the end of the final subsegment has been cached.
+  virtual bool IsDataCachedAtEndOfSubsegments() = 0;
 };
 
 }// namespace mozilla
