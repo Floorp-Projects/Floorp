@@ -1758,8 +1758,6 @@ InMemoryDataSource::ResourceEnumerator(PLDHashTable* aTable,
 NS_IMETHODIMP
 InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
 {
-    nsresult rv;
-
     nsCOMArray<nsIRDFNode> nodes;
     if (!nodes.SetCapacity(mForwardArcs.entryCount)) {
       return NS_ERROR_OUT_OF_MEMORY;
