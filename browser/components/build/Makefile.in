@@ -44,11 +44,6 @@ SHARED_LIBRARY_LIBS = \
 	../dirprovider/$(LIB_PREFIX)browserdir_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-LOCAL_INCLUDES += -I$(srcdir)/../privatebrowsing/src
-SHARED_LIBRARY_LIBS += ../privatebrowsing/src/$(LIB_PREFIX)privatebrowsing_s.$(LIB_SUFFIX)
-endif
-
 ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif

@@ -25,9 +25,6 @@
 #include "AboutRedirector.h"
 #include "nsIAboutModule.h"
 
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-#include "nsPrivateBrowsingServiceWrapper.h"
-#endif
 #include "nsNetCID.h"
 
 using namespace mozilla::browser;
@@ -49,10 +46,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEHistoryEnumerator)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFeedSniffer)
 
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrivateBrowsingServiceWrapper, Init)
-#endif
-
 NS_DEFINE_NAMED_CID(NS_BROWSERDIRECTORYPROVIDER_CID);
 #if defined(XP_WIN)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
@@ -65,9 +58,6 @@ NS_DEFINE_NAMED_CID(NS_BROWSER_ABOUT_REDIRECTOR_CID);
 NS_DEFINE_NAMED_CID(NS_WINIEHISTORYENUMERATOR_CID);
 #elif defined(XP_MACOSX)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
-#endif
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-NS_DEFINE_NAMED_CID(NS_PRIVATE_BROWSING_SERVICE_WRAPPER_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
@@ -83,9 +73,6 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_WINIEHISTORYENUMERATOR_CID, false, NULL, nsIEHistoryEnumeratorConstructor },
 #elif defined(XP_MACOSX)
     { &kNS_SHELLSERVICE_CID, false, NULL, nsMacShellServiceConstructor },
-#endif
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    { &kNS_PRIVATE_BROWSING_SERVICE_WRAPPER_CID, false, NULL, nsPrivateBrowsingServiceWrapperConstructor },
 #endif
     { NULL }
 };
@@ -124,9 +111,6 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_IEHISTORYENUMERATOR_CONTRACTID, &kNS_WINIEHISTORYENUMERATOR_CID },
 #elif defined(XP_MACOSX)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
-#endif
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    { NS_PRIVATE_BROWSING_SERVICE_CONTRACTID, &kNS_PRIVATE_BROWSING_SERVICE_WRAPPER_CID },
 #endif
     { NULL }
 };

@@ -137,13 +137,9 @@ nsContextMenu.prototype = {
     }
 
     var shouldShow = this.onSaveableLink || isMailtoInternal || this.onPlainTextLink;
-#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
     var isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
     this.showItem("context-openlink", shouldShow && !isWindowPrivate);
     this.showItem("context-openlinkprivate", shouldShow);
-#else
-    this.showItem("context-openlink", shouldShow);
-#endif
     this.showItem("context-openlinkintab", shouldShow);
     this.showItem("context-openlinkincurrent", this.onPlainTextLink);
     this.showItem("context-sep-open", shouldShow);

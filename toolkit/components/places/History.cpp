@@ -2457,8 +2457,6 @@ History::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aSource);
 
-  ENSURE_NOT_PRIVATE_BROWSING;
-
   if (mShuttingDown) {
     return NS_OK;
   }
