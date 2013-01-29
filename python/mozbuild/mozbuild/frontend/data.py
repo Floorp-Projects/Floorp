@@ -34,12 +34,19 @@ class SandboxDerived(TreeMetadata):
     __slots__ = (
         'objdir',
         'relativedir',
+        'sandbox_all_paths',
+        'sandbox_path',
         'srcdir',
         'topobjdir',
         'topsrcdir',
     )
 
     def __init__(self, sandbox):
+        # Capture the files that were evaluated to build this sandbox.
+        self.sandbox_main_path = sandbox.main_path
+        self.sandbox_all_paths = sandbox.all_paths
+
+        # Basic directory state.
         self.topsrcdir = sandbox['TOPSRCDIR']
         self.topobjdir = sandbox['TOPOBJDIR']
 

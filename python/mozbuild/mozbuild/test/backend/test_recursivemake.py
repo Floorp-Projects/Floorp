@@ -20,6 +20,8 @@ class TestRecursiveMakeBackend(BackendTester):
     def test_basic(self):
         """Ensure the RecursiveMakeBackend works without error."""
         env = self._consume('stub0', RecursiveMakeBackend)
+        self.assertTrue(os.path.exists(os.path.join(env.topobjdir,
+            'backend.RecursiveMakeBackend.built')))
 
     def test_output_files(self):
         """Ensure proper files are generated."""
@@ -60,7 +62,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         p = os.path.join(env.topobjdir, 'backend.mk')
 
-        lines = [l.strip() for l in open(p, 'rt').readlines()[1:-1]]
+        lines = [l.strip() for l in open(p, 'rt').readlines()[1:-2]]
         self.assertEqual(lines, [
             'DIRS := dir1',
             'PARALLEL_DIRS := dir2',

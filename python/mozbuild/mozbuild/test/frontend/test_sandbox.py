@@ -117,6 +117,8 @@ class TestSandbox(unittest.TestCase):
         sandbox.exec_source('foo = True', 'foo.py')
 
         self.assertNotIn('foo', sandbox)
+        self.assertEqual(sandbox.main_path, 'foo.py')
+        self.assertEqual(sandbox.all_paths, set(['foo.py']))
 
     def test_exec_compile_error(self):
         sandbox = self.sandbox()
@@ -126,6 +128,7 @@ class TestSandbox(unittest.TestCase):
 
         self.assertEqual(se.exception.file_stack, ['foo.py'])
         self.assertIsInstance(se.exception.exc_value, SyntaxError)
+        self.assertEqual(sandbox.main_path, 'foo.py')
 
     def test_exec_import_denied(self):
         sandbox = self.sandbox()
@@ -210,6 +213,9 @@ add_tier_dir('t1', 'bat', static=True)
         sandbox.exec_file('moz.build')
 
         self.assertEqual(sandbox['DIRS'], ['foo', 'bar'])
+        self.assertEqual(sandbox.main_path,
+            os.path.join(sandbox['TOPSRCDIR'], 'moz.build'))
+        self.assertEqual(len(sandbox.all_paths), 2)
 
     def test_include_outside_topsrcdir(self):
         sandbox = self.sandbox(data_path='include-outside-topsrcdir')
