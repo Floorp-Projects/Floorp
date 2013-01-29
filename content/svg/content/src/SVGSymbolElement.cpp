@@ -28,7 +28,7 @@ NS_IMPL_RELEASE_INHERITED(SVGSymbolElement,SVGSymbolElementBase)
 NS_INTERFACE_TABLE_HEAD(SVGSymbolElement)
   NS_NODE_INTERFACE_TABLE6(SVGSymbolElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGFitToViewBox,
-                           nsIDOMSVGSymbolElement, nsIDOMSVGTests)
+                           nsIDOMSVGSymbolElement, DOMSVGTests)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSymbolElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGSymbolElementBase)
 
