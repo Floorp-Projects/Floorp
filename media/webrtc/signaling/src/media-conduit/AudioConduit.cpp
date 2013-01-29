@@ -8,6 +8,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsThreadUtils.h"
 
 #include "CSFLog.h"
 #include "voice_engine/include/voe_errors.h"
@@ -23,11 +24,13 @@ const unsigned int WebrtcAudioConduit::CODEC_PLNAME_SIZE = 32;
 /**
  * Factory Method for AudioConduit
  */
-mozilla::RefPtr<AudioSessionConduit> AudioSessionConduit::Create()
+mozilla::RefPtr<AudioSessionConduit> AudioSessionConduit::Create(AudioSessionConduit *aOther)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
   WebrtcAudioConduit* obj = new WebrtcAudioConduit();
-  if(obj->Init() != kMediaConduitNoError)
+  if(obj->Init(static_cast<WebrtcAudioConduit*>(aOther)) != kMediaConduitNoError)
   {
     CSFLogError(logTag,  "%s AudioConduit Init Failed ", __FUNCTION__);
     delete obj;
@@ -42,6 +45,8 @@ mozilla::RefPtr<AudioSessionConduit> AudioSessionConduit::Create()
  */
 WebrtcAudioConduit::~WebrtcAudioConduit()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   for(std::vector<AudioCodecConfig*>::size_type i=0;i < mRecvCodecList.size();i++)
   {
@@ -50,10 +55,13 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
 
   delete mCurSendCodecConfig;
 
+  // The first one of a pair to be deleted shuts down media for both
   if(mPtrVoEXmedia)
   {
-    mPtrVoEXmedia->SetExternalRecordingStatus(false);
-    mPtrVoEXmedia->SetExternalPlayoutStatus(false);
+    if (!mShutDown) {
+      mPtrVoEXmedia->SetExternalRecordingStatus(false);
+      mPtrVoEXmedia->SetExternalPlayoutStatus(false);
+    }
     mPtrVoEXmedia->Release();
   }
 
@@ -65,7 +73,9 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
   //Deal with the transport
   if(mPtrVoENetwork)
   {
-    mPtrVoENetwork->DeRegisterExternalTransport(mChannel);
+    if (!mShutDown) {
+      mPtrVoENetwork->DeRegisterExternalTransport(mChannel);
+    }
     mPtrVoENetwork->Release();
   }
 
@@ -76,47 +86,69 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
 
   if(mPtrVoEBase)
   {
-    mPtrVoEBase->StopPlayout(mChannel);
-    mPtrVoEBase->StopSend(mChannel);
-    mPtrVoEBase->StopReceive(mChannel);
-    mPtrVoEBase->DeleteChannel(mChannel);
-    mPtrVoEBase->Terminate();
+    if (!mShutDown) {
+      mPtrVoEBase->StopPlayout(mChannel);
+      mPtrVoEBase->StopSend(mChannel);
+      mPtrVoEBase->StopReceive(mChannel);
+      mPtrVoEBase->DeleteChannel(mChannel);
+      mPtrVoEBase->Terminate();
+    }
     mPtrVoEBase->Release();
   }
 
-  if(mVoiceEngine)
+  if (mOtherDirection)
   {
-    webrtc::VoiceEngine::Delete(mVoiceEngine);
+    // mOtherDirection owns these now!
+    mOtherDirection->mOtherDirection = NULL;
+    // let other side we terminated the channel
+    mOtherDirection->mShutDown = true;
+    mVoiceEngine = nullptr;
+  } else {
+    // only one opener can call Delete.  Have it be the last to close.
+    if(mVoiceEngine)
+    {
+      webrtc::VoiceEngine::Delete(mVoiceEngine);
+    }
   }
 }
 
 /*
  * WebRTCAudioConduit Implementation
  */
-MediaConduitErrorCode WebrtcAudioConduit::Init()
+MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
 {
-  CSFLogDebug(logTag,  "%s ", __FUNCTION__);
+  CSFLogDebug(logTag,  "%s this=%p other=%p", __FUNCTION__, this, other);
 
-  //Per WebRTC APIs below function calls return NULL on failure
-  if(!(mVoiceEngine = webrtc::VoiceEngine::Create()))
-  {
-    CSFLogError(logTag, "%s Unable to create voice engine", __FUNCTION__);
-    return kMediaConduitSessionNotInited;
-  }
+  if (other) {
+    MOZ_ASSERT(!other->mOtherDirection);
+    other->mOtherDirection = this;
+    mOtherDirection = other;
 
-  PRLogModuleInfo *logs = GetWebRTCLogInfo();
-  if (!gWebrtcTraceLoggingOn && logs && logs->level > 0) {
-    // no need to a critical section or lock here
-    gWebrtcTraceLoggingOn = 1;
-
-    const char *file = PR_GetEnv("WEBRTC_TRACE_FILE");
-    if (!file) {
-      file = "WebRTC.log";
+    // only one can call ::Create()/GetVoiceEngine()
+    MOZ_ASSERT(other->mVoiceEngine);
+    mVoiceEngine = other->mVoiceEngine;
+  } else {
+    //Per WebRTC APIs below function calls return NULL on failure
+    if(!(mVoiceEngine = webrtc::VoiceEngine::Create()))
+    {
+      CSFLogError(logTag, "%s Unable to create voice engine", __FUNCTION__);
+      return kMediaConduitSessionNotInited;
     }
-    CSFLogDebug(logTag,  "%s Logging webrtc to %s level %d", __FUNCTION__,
-                file, logs->level);
-    mVoiceEngine->SetTraceFilter(logs->level);
-    mVoiceEngine->SetTraceFile(file);
+
+    PRLogModuleInfo *logs = GetWebRTCLogInfo();
+    if (!gWebrtcTraceLoggingOn && logs && logs->level > 0) {
+      // no need to a critical section or lock here
+      gWebrtcTraceLoggingOn = 1;
+
+      const char *file = PR_GetEnv("WEBRTC_TRACE_FILE");
+      if (!file) {
+        file = "WebRTC.log";
+      }
+      CSFLogDebug(logTag,  "%s Logging webrtc to %s level %d", __FUNCTION__,
+                  file, logs->level);
+      mVoiceEngine->SetTraceFilter(logs->level);
+      mVoiceEngine->SetTraceFile(file);
+    }
   }
 
   if(!(mPtrVoEBase = VoEBase::GetInterface(mVoiceEngine)))
@@ -149,44 +181,47 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
     return kMediaConduitSessionNotInited;
   }
 
-  // init the engine with our audio device layer
-  if(mPtrVoEBase->Init() == -1)
-  {
-    CSFLogError(logTag, "%s VoiceEngine Base Not Initialized", __FUNCTION__);
-    return kMediaConduitSessionNotInited;
-  }
+  if (other) {
+    mChannel = other->mChannel;
+  } else {
+    // init the engine with our audio device layer
+    if(mPtrVoEBase->Init() == -1)
+    {
+      CSFLogError(logTag, "%s VoiceEngine Base Not Initialized", __FUNCTION__);
+      return kMediaConduitSessionNotInited;
+    }
 
-  if( (mChannel = mPtrVoEBase->CreateChannel()) == -1)
-  {
-    CSFLogError(logTag, "%s VoiceEngine Channel creation failed",__FUNCTION__);
-    return kMediaConduitChannelError;
-  }
+    if( (mChannel = mPtrVoEBase->CreateChannel()) == -1)
+    {
+      CSFLogError(logTag, "%s VoiceEngine Channel creation failed",__FUNCTION__);
+      return kMediaConduitChannelError;
+    }
 
-  CSFLogDebug(logTag, "%s Channel Created %d ",__FUNCTION__, mChannel);
+    CSFLogDebug(logTag, "%s Channel Created %d ",__FUNCTION__, mChannel);
 
-  if(mPtrVoENetwork->RegisterExternalTransport(mChannel, *this) == -1)
-  {
-    CSFLogError(logTag, "%s VoiceEngine, External Transport Failed",__FUNCTION__);
-    return kMediaConduitTransportRegistrationFail;
-  }
+    if(mPtrVoENetwork->RegisterExternalTransport(mChannel, *this) == -1)
+    {
+      CSFLogError(logTag, "%s VoiceEngine, External Transport Failed",__FUNCTION__);
+      return kMediaConduitTransportRegistrationFail;
+    }
 
-  if(mPtrVoEXmedia->SetExternalRecordingStatus(true) == -1)
-  {
-    CSFLogError(logTag, "%s SetExternalRecordingStatus Failed %d",__FUNCTION__,
-                                                      mPtrVoEBase->LastError());
-    return kMediaConduitExternalPlayoutError;
-  }
+    if(mPtrVoEXmedia->SetExternalRecordingStatus(true) == -1)
+    {
+      CSFLogError(logTag, "%s SetExternalRecordingStatus Failed %d",__FUNCTION__,
+                  mPtrVoEBase->LastError());
+      return kMediaConduitExternalPlayoutError;
+    }
 
-  if(mPtrVoEXmedia->SetExternalPlayoutStatus(true) == -1)
-  {
-    CSFLogError(logTag, "%s SetExternalPlayoutStatus Failed %d ",__FUNCTION__,
-                                                     mPtrVoEBase->LastError());
-    return kMediaConduitExternalRecordingError;
+    if(mPtrVoEXmedia->SetExternalPlayoutStatus(true) == -1)
+    {
+      CSFLogError(logTag, "%s SetExternalPlayoutStatus Failed %d ",__FUNCTION__,
+                  mPtrVoEBase->LastError());
+      return kMediaConduitExternalRecordingError;
+    }
+    CSFLogDebug(logTag ,  "%s AudioSessionConduit Initialization Done (%p)",__FUNCTION__, this);
   }
-  CSFLogDebug(logTag ,  "%s AudioSessionConduit Initialization Done",__FUNCTION__);
   return kMediaConduitNoError;
 }
-
 
 // AudioSessionConduit Implementation
 MediaConduitErrorCode
@@ -588,34 +623,53 @@ WebrtcAudioConduit::ReceivedRTCPPacket(const void *data, int len)
 
 int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
 {
-  CSFLogDebug(logTag,  "%s : channel %d",__FUNCTION__,channel);
+  CSFLogDebug(logTag,  "%s : channel %d %s",__FUNCTION__,channel,
+              (mEngineReceiving && mOtherDirection) ? "(using mOtherDirection)" : "");
 
-   if(mTransport && (mTransport->SendRtpPacket(data, len) == NS_OK))
-   {
+  if (mEngineReceiving)
+  {
+    if (mOtherDirection)
+    {
+      return mOtherDirection->SendPacket(channel, data, len);
+    }
+    CSFLogDebug(logTag,  "%s : Asked to send RTP without an RTP sender",
+                __FUNCTION__, channel);
+    return -1;
+  } else {
+    if(mTransport && (mTransport->SendRtpPacket(data, len) == NS_OK))
+    {
       CSFLogDebug(logTag, "%s Sent RTP Packet ", __FUNCTION__);
       return len;
-   } else {
-     CSFLogError(logTag, "%s RTP Packet Send Failed ", __FUNCTION__);
-     return -1;
-   }
-
+    } else {
+      CSFLogError(logTag, "%s RTP Packet Send Failed ", __FUNCTION__);
+      return -1;
+    }
+  }
 }
 
 int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, int len)
 {
   CSFLogDebug(logTag,  "%s : channel %d", __FUNCTION__, channel);
 
-  // can't enable this assertion, because we do.  Suppress it
-  // NS_ASSERTION(mEngineReceiving,"We shouldn't send RTCP on the receiver side");
-  if(mEngineReceiving && mTransport && mTransport->SendRtcpPacket(data, len) == NS_OK)
+  if (mEngineTransmitting)
   {
-    CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
-    return len;
-  } else {
-    CSFLogError(logTag, "%s RTCP Packet Send Failed ", __FUNCTION__);
+    if (mOtherDirection)
+    {
+      return mOtherDirection->SendRTCPPacket(channel, data, len);
+    }
+    CSFLogDebug(logTag,  "%s : Asked to send RTCP without an RTP receiver",
+                __FUNCTION__, channel);
     return -1;
+  } else {
+    if(mTransport && mTransport->SendRtcpPacket(data, len) == NS_OK)
+    {
+      CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
+      return len;
+    } else {
+      CSFLogError(logTag, "%s RTCP Packet Send Failed ", __FUNCTION__);
+      return -1;
+    }
   }
-
 }
 
 /**
