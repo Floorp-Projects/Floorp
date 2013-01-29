@@ -98,7 +98,9 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
      * check any calls that were inlined.
      */
     if (fun->isInterpreted()) {
-        fun->getOrCreateScript(cx)->uninlineable = true;
+        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
+            return false;
+        fun->nonLazyScript()->uninlineable = true;
         MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
     }
 
@@ -324,9 +326,10 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
         RootedValue v(cx);
         if (JSID_IS_ATOM(id, cx->names().length)) {
-            //FIXME: bug 810715 - deal with lazy interpreted functions with default args
-            uint16_t defaults = fun->hasScript() ? fun->nonLazyScript()->ndefaults : 0;
-            v.setInt32(fun->nargs - defaults - fun->hasRest());
+            if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
+                return false;
+            uint16_t ndefaults = fun->hasScript() ? fun->nonLazyScript()->ndefaults : 0;
+            v.setInt32(fun->nargs - ndefaults - fun->hasRest());
         } else {
             v.setString(fun->atom() == NULL ?  cx->runtime->emptyString : fun->atom());
         }
