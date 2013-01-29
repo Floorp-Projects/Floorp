@@ -6013,7 +6013,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
             nsCOMPtr<nsIDOMTouch> oldTouch;
             gCaptureTouchList.Get(id, getter_AddRefs(oldTouch));
             if (oldTouch) {
-              nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+              nsCOMPtr<nsIDOMEventTarget> targetPtr;
               oldTouch->GetTarget(getter_AddRefs(targetPtr));
               domtouch->SetTarget(targetPtr);
               gCaptureTouchList.Put(id, touch);
@@ -6093,7 +6093,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
             break;
           }
   
-          nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+          nsCOMPtr<nsIDOMEventTarget> targetPtr;
           oldTouch->GetTarget(getter_AddRefs(targetPtr));
           nsCOMPtr<nsIContent> content = do_QueryInterface(targetPtr);
           if (!content) {
@@ -6463,7 +6463,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           if (!oldTouch) {
             continue;
           }
-          nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+          nsCOMPtr<nsIDOMEventTarget> targetPtr;
           oldTouch->GetTarget(getter_AddRefs(targetPtr));
 
           mCurrentEventContent = do_QueryInterface(targetPtr);
@@ -6501,7 +6501,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
             haveChanged = true;
           }
 
-          nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+          nsCOMPtr<nsIDOMEventTarget> targetPtr;
           oldTouch->GetTarget(getter_AddRefs(targetPtr));
           if (!targetPtr) {
             touches.RemoveElementAt(i);
@@ -6654,7 +6654,7 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
       continue;
     }
 
-    nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+    nsCOMPtr<nsIDOMEventTarget> targetPtr;
     touch->GetTarget(getter_AddRefs(targetPtr));
     nsCOMPtr<nsIContent> content = do_QueryInterface(targetPtr);
     if (!content) {
