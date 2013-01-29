@@ -145,14 +145,10 @@ interface nsIStreamBufferAccess : nsISupports
 #define NS_GET16(p)             NS_SWAP16(*(uint16_t*)(p))
 #define NS_GET32(p)             NS_SWAP32(*(uint32_t*)(p))
 #define NS_GET64(p)             NS_SWAP64(*(uint64_t*)(p))
-#define NS_GET_FLOAT(p)         ((float)NS_SWAP32(*(uint32_t*)(p)))
-#define NS_GET_DOUBLE(p)        ((double)NS_SWAP64(*(uint64_t*)(p)))
 
 #define NS_PUT8(p,x)            (*(uint8_t*)(p) = (x))
 #define NS_PUT16(p,x)           (*(uint16_t*)(p) = NS_SWAP16(x))
 #define NS_PUT32(p,x)           (*(uint32_t*)(p) = NS_SWAP32(x))
 #define NS_PUT64(p,x)           (*(uint64_t*)(p) = NS_SWAP64(x))
-#define NS_PUT_FLOAT(p,x)       (*(uint32_t*)(p) = NS_SWAP32(*(uint32_t*)&(x)))
-#define NS_PUT_DOUBLE(p,x)      (*(uint64_t*)(p) = NS_SWAP64(*(uint64_t*)&(x)))
 
 %}
