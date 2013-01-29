@@ -39,6 +39,25 @@
 #define PREF_TS_SYNCHRONOUS "toolkit.storage.synchronous"
 #define PREF_TS_SYNCHRONOUS_DEFAULT 1
 
+/**
+ * This preference is a workaround to allow users/sysadmins to identify
+ * that the profile exists on an NFS share whose implementation is
+ * incompatible with SQLite's default locking implementation.  Bug
+ * 433129 attempted to automatically identify such file-systems, but a
+ * reliable way was not found and it was determined that the fallback
+ * locking is slower than POSIX locking, so we do not want to do it by
+ * default.
+ */
+#define PREF_NFS_FILESYSTEM   "storage.nfs_filesystem"
+
+#if defined(XP_WIN)
+#define STANDARD_VFS "win32"
+#define NFS_VFS "win32"
+#else
+#define STANDARD_VFS "unix"
+#define NFS_VFS "unix-excl"
+#endif
+
 namespace mozilla {
 namespace storage {
 
@@ -229,11 +248,13 @@ public:
   ServiceMainThreadInitializer(Service *aService,
                                nsIObserver *aObserver,
                                nsIXPConnect **aXPConnectPtr,
-                               int32_t *aSynchronousPrefValPtr)
+                               int32_t *aSynchronousPrefValPtr,
+                               const char **aVFSNamePtr)
   : mService(aService)
   , mObserver(aObserver)
   , mXPConnectPtr(aXPConnectPtr)
   , mSynchronousPrefValPtr(aSynchronousPrefValPtr)
+  , mVFSNamePtr(aVFSNamePtr)
   {
   }
 
@@ -268,6 +289,13 @@ public:
       Preferences::GetInt(PREF_TS_SYNCHRONOUS, PREF_TS_SYNCHRONOUS_DEFAULT);
     ::PR_ATOMIC_SET(mSynchronousPrefValPtr, synchronous);
 
+    // Likewise for whether we're on an NFS filesystem.
+    if (Preferences::GetBool(PREF_NFS_FILESYSTEM)) {
+      *mVFSNamePtr = NFS_VFS;
+    } else {
+      *mVFSNamePtr = STANDARD_VFS;
+    }
+
     // Create and register our SQLite memory reporters.  Registration can only
     // happen on the main thread (otherwise you'll get cryptic crashes).
     mService->mStorageSQLiteReporter = new NS_MEMORY_REPORTER_NAME(StorageSQLite);
@@ -283,6 +311,7 @@ private:
   nsIObserver *mObserver;
   nsIXPConnect **mXPConnectPtr;
   int32_t *mSynchronousPrefValPtr;
+  const char **mVFSNamePtr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,9 +388,17 @@ Service::getSynchronousPref()
   return sSynchronousPref;
 }
 
+const char *Service::sVFSName;
+
+// static
+const char *
+Service::getVFSName()
+{
+  return sVFSName;
+}
+
 Service::Service()
 : mMutex("Service::mMutex")
-, mSqliteVFS(nullptr)
 , mRegistrationMutex("Service::mRegistrationMutex")
 , mConnections()
 , mStorageSQLiteReporter(nullptr)
@@ -374,13 +411,9 @@ Service::~Service()
   (void)::NS_UnregisterMemoryReporter(mStorageSQLiteReporter);
   (void)::NS_UnregisterMemoryMultiReporter(mStorageSQLiteMultiReporter);
 
-  int rc = sqlite3_vfs_unregister(mSqliteVFS);
-  if (rc != SQLITE_OK)
-    NS_WARNING("Failed to unregister sqlite vfs wrapper.");
-
   // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
   // there is nothing actionable we can do in that case.
-  rc = ::sqlite3_shutdown();
+  int rc = ::sqlite3_shutdown();
   if (rc != SQLITE_OK)
     NS_WARNING("sqlite3 did not shutdown cleanly.");
 
@@ -388,8 +421,6 @@ Service::~Service()
   NS_ASSERTION(shutdownObserved, "Shutdown was not observed!");
 
   gService = nullptr;
-  delete mSqliteVFS;
-  mSqliteVFS = nullptr;
 }
 
 void
@@ -430,8 +461,6 @@ Service::shutdown()
 {
   NS_IF_RELEASE(sXPConnect);
 }
-
-sqlite3_vfs *ConstructTelemetryVFS();
 
 #ifdef MOZ_STORAGE_MEMORY
 #  include "mozmemory.h"
@@ -566,22 +595,14 @@ Service::initialize()
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
 
-  mSqliteVFS = ConstructTelemetryVFS();
-  if (mSqliteVFS) {
-    rc = sqlite3_vfs_register(mSqliteVFS, 1);
-    if (rc != SQLITE_OK)
-      return convertResultCode(rc);
-  } else {
-    NS_WARNING("Failed to register telemetry VFS");
-  }
-
   // Set the default value for the toolkit.storage.synchronous pref.  It will be
   // updated with the user preference on the main thread.
   sSynchronousPref = PREF_TS_SYNCHRONOUS_DEFAULT;
 
   // Run the things that need to run on the main thread there.
   nsCOMPtr<nsIRunnable> event =
-    new ServiceMainThreadInitializer(this, this, &sXPConnect, &sSynchronousPref);
+    new ServiceMainThreadInitializer(this, this, &sXPConnect, &sSynchronousPref,
+                                     &sVFSName);
   if (event && ::NS_IsMainThread()) {
     (void)event->Run();
   }

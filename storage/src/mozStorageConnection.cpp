@@ -502,7 +502,7 @@ Connection::initialize(nsIFile *aDatabaseFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   int srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn,
-                              mFlags, NULL);
+                              mFlags, mStorageService->getVFSName());
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
@@ -531,7 +531,8 @@ Connection::initialize(nsIFileURL *aFileURL)
   rv = aFileURL->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, NULL);
+  int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags,
+                              mStorageService->getVFSName());
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
