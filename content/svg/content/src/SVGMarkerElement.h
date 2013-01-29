@@ -48,8 +48,8 @@ public:
   uint16_t GetAnimValue() const
     { return mAnimVal; }
 
-  nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
-                             nsSVGElement* aSVGElement);
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+    ToDOMAnimatedEnum(nsSVGElement* aSVGElement);
 
 private:
   nsSVGEnumValue mAnimVal;
@@ -88,6 +88,7 @@ protected:
   friend nsresult (::NS_NewSVGMarkerElement(nsIContent **aResult,
                                             already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
 public:
   // interfaces:
@@ -125,6 +126,20 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
+  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+  already_AddRefed<SVGAnimatedLength> RefX();
+  already_AddRefed<SVGAnimatedLength> RefY();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> MarkerUnits();
+  already_AddRefed<SVGAnimatedLength> MarkerWidth();
+  already_AddRefed<SVGAnimatedLength> MarkerHeight();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> OrientType();
+  already_AddRefed<SVGAnimatedAngle> OrientAngle();
+  // We can use the XPIDL SetOrientToAuto
+  void SetOrientToAngle(SVGAngle& angle, ErrorResult& rv);
+
 protected:
 
   virtual bool ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
