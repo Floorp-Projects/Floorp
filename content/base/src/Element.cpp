@@ -514,20 +514,6 @@ Element::GetOffsetRect(nsRect& aRect)
   return nullptr;
 }
 
-nsIntSize
-Element::GetPaddingRectSize()
-{
-  nsIFrame* frame = GetStyledFrame();
-  if (!frame) {
-    return nsIntSize(0, 0);
-  }
-
-  NS_ASSERTION(frame->GetParent(), "Styled frame has no parent");
-  nsRect rcFrame = nsLayoutUtils::GetAllInFlowPaddingRectsUnion(frame, frame->GetParent());
-  return nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width),
-                   nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height));
-}
-
 nsIScrollableFrame*
 Element::GetScrollFrame(nsIFrame **aStyledFrame)
 {
@@ -597,6 +583,20 @@ Element::ScrollIntoView(bool aTop)
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
+static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame)
+{
+  if (!aFrame) {
+    return nsSize(0,0);
+  }
+
+  nsRect paddingRect = aFrame->GetPaddingRectRelativeToSelf();
+  nsOverflowAreas overflowAreas(paddingRect, paddingRect);
+  nsLayoutUtils::UnionChildOverflow(aFrame, overflowAreas);
+  return nsLayoutUtils::GetScrolledRect(aFrame,
+      overflowAreas.ScrollableOverflow(), paddingRect.Size(),
+      aFrame->GetStyleVisibility()->mDirection).Size();
+}
+
 int32_t
 Element::ScrollHeight()
 {
@@ -604,11 +604,13 @@ Element::ScrollHeight()
     return 0;
 
   nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return GetPaddingRectSize().height;
+  nscoord height;
+  if (sf) {
+    height = sf->GetScrollRange().height + sf->GetScrollPortRect().height;
+  } else {
+    height = GetScrollRectSizeForOverflowVisibleFrame(GetStyledFrame()).height;
   }
 
-  nscoord height = sf->GetScrollRange().height + sf->GetScrollPortRect().height;
   return nsPresContext::AppUnitsToIntCSSPixels(height);
 }
 
@@ -619,11 +621,13 @@ Element::ScrollWidth()
     return 0;
 
   nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return GetPaddingRectSize().width;
+  nscoord width;
+  if (sf) {
+    width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
+  } else {
+    width = GetScrollRectSizeForOverflowVisibleFrame(GetStyledFrame()).width;
   }
 
-  nscoord width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
   return nsPresContext::AppUnitsToIntCSSPixels(width);
 }
 
