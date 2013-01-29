@@ -33,6 +33,8 @@ browser.jar:
   skin/classic/browser/identity-icons-https@2x.png
   skin/classic/browser/identity-icons-https-ev.png
   skin/classic/browser/identity-icons-https-ev@2x.png
+  skin/classic/browser/identity-icons-https-mixed-active.png
+  skin/classic/browser/identity-icons-https-mixed-active@2x.png
   skin/classic/browser/Info.png
   skin/classic/browser/KUI-background.png
   skin/classic/browser/KUI-close.png
