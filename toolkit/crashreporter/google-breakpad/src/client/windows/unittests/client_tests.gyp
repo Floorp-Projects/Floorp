@@ -36,8 +36,10 @@
       'target_name': 'client_tests',
       'type': 'executable',
       'sources': [
+        'exception_handler_test.h',
         'exception_handler_test.cc',
         'exception_handler_death_test.cc',
+        'exception_handler_nesting_test.cc',
         'minidump_test.cc',
         'dump_analysis.cc',
         'dump_analysis.h',

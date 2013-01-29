@@ -7,10 +7,10 @@
 
 #include "jscompartment.h"
 #include "jsiter.h"
-#include "jsscope.h"
 
 #include "GlobalObject.h"
 #include "ScopeObject.h"
+#include "Shape.h"
 #include "Xdr.h"
 
 #include "jsatominlines.h"
@@ -1687,7 +1687,7 @@ DebugScopes::addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &
         return false;
     }
 
-    HashTableWriteBarrierPost(cx->compartment, &scopes->proxiedScopes, &scope);
+    HashTableWriteBarrierPost(cx->zone(), &scopes->proxiedScopes, &scope);
     return true;
 }
 

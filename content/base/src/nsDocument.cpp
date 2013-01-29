@@ -5895,9 +5895,8 @@ nsDocument::GetAnimationController()
   // one and only SVG documents and the like will call this
   if (mAnimationController)
     return mAnimationController;
-  // Refuse to create an Animation Controller if SMIL is disabled, and also
-  // for data documents.
-  if (!NS_SMILEnabled() || mLoadedAsData || mLoadedAsInteractiveData)
+  // Refuse to create an Animation Controller for data documents.
+  if (mLoadedAsData || mLoadedAsInteractiveData)
     return nullptr;
 
   mAnimationController = new nsSMILAnimationController(this);
@@ -10450,15 +10449,15 @@ nsDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
 }
 
 already_AddRefed<nsIDocument>
-nsIDocument::Constructor(nsISupports* aGlobal, ErrorResult& rv)
+nsIDocument::Constructor(const GlobalObject& aGlobal, ErrorResult& rv)
 {
-  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aGlobal.Get());
   if (!global) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(aGlobal.Get());
   if (!prin) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

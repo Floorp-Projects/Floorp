@@ -17,6 +17,7 @@
 #include "js/HashTable.h"
 #include "gc/GCInternals.h"
 
+#include "jsobjinlines.h"
 #include "jsgcinlines.h"
 
 #ifdef MOZ_VALGRIND
@@ -506,10 +507,12 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
     rt->gcVerifyPreData = trc;
     rt->gcIncrementalState = MARK;
     rt->gcMarker.start();
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt); !c.done(); c.next())
         PurgeJITCaches(c);
-        c->setNeedsBarrier(true, JSCompartment::UpdateIon);
-        c->allocator.arenas.purge();
+
+    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+        zone->setNeedsBarrier(true, Zone::UpdateIon);
+        zone->allocator.arenas.purge();
     }
 
     return;
@@ -581,13 +584,15 @@ gc::EndVerifyPreBarriers(JSRuntime *rt)
     bool compartmentCreated = false;
 
     /* We need to disable barriers before tracing, which may invoke barriers. */
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (!c->needsBarrier())
+    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (!zone->needsBarrier())
             compartmentCreated = true;
 
-        PurgeJITCaches(c);
-        c->setNeedsBarrier(false, JSCompartment::UpdateIon);
+        zone->setNeedsBarrier(false, Zone::UpdateIon);
     }
+
+    for (CompartmentsIter c(rt); !c.done(); c.next())
+        PurgeJITCaches(c);
 
     /*
      * We need to bump gcNumber so that the methodjit knows that jitcode has

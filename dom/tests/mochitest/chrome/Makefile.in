@@ -59,6 +59,7 @@ MOCHITEST_CHROME_FILES = \
 		file_DOM_element_instanceof.xul \
 		test_bug830858.xul \
 		file_bug830858.xul \
+		test_indexedSetter.html \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))

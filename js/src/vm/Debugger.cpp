@@ -109,7 +109,7 @@ ReportObjectRequired(JSContext *cx)
 bool
 ValueToIdentifier(JSContext *cx, const Value &v, MutableHandleId id)
 {
-    if (!ValueToId(cx, v, id))
+    if (!ValueToId<CanGC>(cx, v, id))
         return false;
     if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {
         RootedValue val(cx, v);
@@ -704,7 +704,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
                 js_ReportOutOfMemory(cx);
                 return false;
             }
-            HashTableWriteBarrierPost(cx->compartment, &objects, obj);
+            HashTableWriteBarrierPost(cx->zone(), &objects, obj);
 
             if (obj->compartment() != object->compartment()) {
                 CrossCompartmentKey key(CrossCompartmentKey::DebuggerObject, object, obj);
@@ -1424,7 +1424,7 @@ Debugger::markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer)
      * compartments.
      */
     for (Debugger *dbg = rt->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
-        if (!dbg->object->compartment()->isCollecting())
+        if (!dbg->object->zone()->isCollecting())
             dbg->markKeysInCompartment(tracer);
     }
 }
@@ -1474,7 +1474,7 @@ Debugger::markAllIteratively(GCMarker *trc)
                  *   - it actually has hooks that might be called
                  */
                 HeapPtrObject &dbgobj = dbg->toJSObjectRef();
-                if (!dbgobj->compartment()->isGCMarking())
+                if (!dbgobj->zone()->isGCMarking())
                     continue;
 
                 bool dbgMarked = IsObjectMarked(&dbgobj);
@@ -1587,7 +1587,7 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
 }
 
 /* static */ void
-Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder<JSCompartment> &finder)
+Debugger::findCompartmentEdges(Zone *zone, js::gc::ComponentFinder<Zone> &finder)
 {
     /*
      * For debugger cross compartment wrappers, add edges in the opposite
@@ -1595,13 +1595,13 @@ Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder<JSCo
      * This ensure that debuggers and their debuggees are finalized in the same
      * group.
      */
-    for (Debugger *dbg = comp->rt->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
-        JSCompartment *w = dbg->object->compartment();
-        if (w == comp || !w->isGCMarking())
+    for (Debugger *dbg = zone->rt->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
+        Zone *w = dbg->object->zone();
+        if (w == zone || !w->isGCMarking())
             continue;
-        if (dbg->scripts.hasKeyInCompartment(comp) ||
-            dbg->objects.hasKeyInCompartment(comp) ||
-            dbg->environments.hasKeyInCompartment(comp))
+        if (dbg->scripts.hasKeyInZone(zone) ||
+            dbg->objects.hasKeyInZone(zone) ||
+            dbg->environments.hasKeyInZone(zone))
         {
             finder.addEdgeTo(w);
         }
@@ -3073,7 +3073,7 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
                 RootedId id(cx);
                 offsets = NewDenseEmptyArray(cx);
                 if (!offsets ||
-                    !ValueToId(cx, NumberValue(lineno), &id))
+                    !ValueToId<CanGC>(cx, NumberValue(lineno), &id))
                 {
                     return false;
                 }
@@ -4145,7 +4145,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyDescriptor", args, dbg, obj);
 
     RootedId id(cx);
-    if (!ValueToId(cx, argc >= 1 ? args[0] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, argc >= 1 ? args[0] : UndefinedValue(), &id))
         return false;
 
     /* Bug: This can cause the debuggee to run! */
@@ -4236,7 +4236,7 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Object.defineProperty", 2);
 
     RootedId id(cx);
-    if (!ValueToId(cx, args[0], &id))
+    if (!ValueToId<CanGC>(cx, args[0], &id))
         return false;
 
     const Value &descval = args[1];

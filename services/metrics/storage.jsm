@@ -4,6 +4,8 @@
 
 "use strict";
 
+#ifndef MERGED_COMPARTMENT
+
 this.EXPORTED_SYMBOLS = [
   "DailyValues",
   "MetricsStorageBackend",
@@ -13,14 +15,16 @@ this.EXPORTED_SYMBOLS = [
 
 const {utils: Cu} = Components;
 
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+#endif
+
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/utils.js");
 
-
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 // These do not account for leap seconds. Meh.
 function dateToDays(date) {
@@ -1201,6 +1205,21 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
           yield conn.execute(SQL[name], params);
         }
       });
+    });
+  },
+
+  /**
+   * Reduce memory usage as much as possible.
+   *
+   * This returns a promise that will be resolved on completion.
+   *
+   * @return Promise<>
+   */
+  compact: function () {
+    let self = this;
+    return this.enqueueOperation(function doCompact() {
+      self._connection.discardCachedStatements();
+      return self._connection.shrinkMemory();
     });
   },
 

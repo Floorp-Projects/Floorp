@@ -1,0 +1,18 @@
+<html><head>
+<style>
+object::before { content:"before text";}
+</style>
+<script>
+function doe(){
+document.getElementById('a').setAttribute('style', 'overflow: scroll; font-family: Hiragino Kaku Gothic Std;');
+}
+setTimeout(doe,500);
+</script>
+</head>
+<body>
+<div style="text-align: right;width: -moz-intrinsic;">
+<object style="white-space: -moz-pre-wrap; word-spacing: 10px;"><span id="a">
+</span></object>
+</div>
+</body>
+</html>

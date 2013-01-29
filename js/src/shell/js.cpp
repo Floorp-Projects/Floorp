@@ -37,7 +37,6 @@
 #include "jsobj.h"
 #include "json.h"
 #include "jsreflect.h"
-#include "jsscope.h"
 #include "jsscript.h"
 #include "jstypedarray.h"
 #include "jstypedarrayinlines.h"
@@ -49,6 +48,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "methodjit/MethodJIT.h"
+#include "vm/Shape.h"
 
 #include "prmjtime.h"
 

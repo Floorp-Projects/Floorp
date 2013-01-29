@@ -10,13 +10,6 @@
 
 #include "NumberObject.h"
 
-inline js::NumberObject &
-JSObject::asNumber()
-{
-    JS_ASSERT(isNumber());
-    return *static_cast<js::NumberObject *>(this);
-}
-
 namespace js {
 
 inline NumberObject *

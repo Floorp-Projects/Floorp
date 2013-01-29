@@ -147,7 +147,7 @@ TEST(Context, ARM) {
 TEST(ContextDeathTest, X86BadFlags) {
   Dump dump(0, kLittleEndian);
   MDRawContextX86 raw;
-  raw.context_flags = 0;
+  raw.context_flags = MD_CONTEXT_AMD64;
   ASSERT_DEATH(Context context(dump, raw);,
                "context\\.context_flags & (0x[0-9a-f]+|MD_CONTEXT_X86)");
 }

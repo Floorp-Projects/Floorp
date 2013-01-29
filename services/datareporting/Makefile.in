@@ -11,15 +11,18 @@ include $(DEPTH)/config/autoconf.mk
 
 TEST_DIRS += tests
 
-MODULES_FILES := policy.jsm sessions.jsm
-MODULES_DEST = $(FINAL_TARGET)/modules/services/datareporting
-INSTALL_TARGETS += MODULES
+MODULES := policy.jsm sessions.jsm
+MODULES_PATH = $(FINAL_TARGET)/modules/services/datareporting
+PP_TARGETS += MODULES
 
 TESTING_JS_MODULES := $(addprefix modules-testing/,mocks.jsm)
 TESTING_JS_MODULE_DIR := services/datareporting
 
 EXTRA_COMPONENTS := \
   DataReporting.manifest \
+  $(NULL)
+
+EXTRA_PP_COMPONENTS := \
   DataReportingService.js \
   $(NULL)
 

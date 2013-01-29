@@ -294,10 +294,44 @@ TransformTo565(png_structp png_ptr, png_row_infop row_info, png_bytep data)
 void
 AnimationFrame::ReadPngFrame(int outputFormat)
 {
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
+    static const png_byte unused_chunks[] =
+        { 98,  75,  71,  68, '\0',   /* bKGD */
+          99,  72,  82,  77, '\0',   /* cHRM */
+         104,  73,  83,  84, '\0',   /* hIST */
+         105,  67,  67,  80, '\0',   /* iCCP */
+         105,  84,  88, 116, '\0',   /* iTXt */
+         111,  70,  70, 115, '\0',   /* oFFs */
+         112,  67,  65,  76, '\0',   /* pCAL */
+         115,  67,  65,  76, '\0',   /* sCAL */
+         112,  72,  89, 115, '\0',   /* pHYs */
+         115,  66,  73,  84, '\0',   /* sBIT */
+         115,  80,  76,  84, '\0',   /* sPLT */
+         116,  69,  88, 116, '\0',   /* tEXt */
+         116,  73,  77,  69, '\0',   /* tIME */
+         122,  84,  88, 116, '\0'};  /* zTXt */
+    static const png_byte tRNS_chunk[] =
+        {116,  82,  78,  83, '\0'};  /* tRNS */
+#endif
+
     png_structp pngread = png_create_read_struct(PNG_LIBPNG_VER_STRING,
                                                  nullptr, nullptr, nullptr);
 
+    if (!pngread)
+        return;
+
     png_infop pnginfo = png_create_info_struct(pngread);
+
+    if (!pnginfo) {
+        png_destroy_read_struct(&pngread, &pnginfo, nullptr);
+        return;
+    }
+
+    if (setjmp(png_jmpbuf(pngread))) {
+        // libpng reported an error and longjumped here.  Clean up and return.
+        png_destroy_read_struct(&pngread, &pnginfo, nullptr);
+        return;
+    }
 
     RawReadState state;
     state.start = file->GetData();
@@ -306,12 +340,23 @@ AnimationFrame::ReadPngFrame(int outputFormat)
 
     png_set_read_fn(pngread, &state, RawReader);
 
-    setjmp(png_jmpbuf(pngread));
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
+    /* Ignore unused chunks */
+    png_set_keep_unknown_chunks(pngread, 1, unused_chunks,
+                               (int)sizeof(unused_chunks)/5);
+
+    /* Ignore the tRNS chunk if we only want opaque output */
+    if (outputFormat == HAL_PIXEL_FORMAT_RGB_888 ||
+        outputFormat == HAL_PIXEL_FORMAT_RGB_565) {
+        png_set_keep_unknown_chunks(pngread, 1, tRNS_chunk, 1);
+    }
+#endif
 
     png_read_info(pngread, pnginfo);
 
     width = png_get_image_width(pngread, pnginfo);
     height = png_get_image_height(pngread, pnginfo);
+
     switch (outputFormat) {
     case HAL_PIXEL_FORMAT_BGRA_8888:
         png_set_bgr(pngread);
@@ -347,6 +392,7 @@ AnimationFrame::ReadPngFrame(int outputFormat)
     rows[height] = nullptr;
     png_set_strip_16(pngread);
     png_set_palette_to_rgb(pngread);
+    png_set_gray_to_rgb(pngread);
     png_read_image(pngread, (png_bytepp)&rows.front());
     png_destroy_read_struct(&pngread, &pnginfo, nullptr);
 }

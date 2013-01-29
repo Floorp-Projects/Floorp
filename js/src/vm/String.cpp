@@ -201,7 +201,7 @@ JSRope::flattenInternal(JSContext *maybecx)
     jschar *wholeChars;
     JSString *str = this;
     jschar *pos;
-    JSCompartment *comp = compartment();
+    Zone *zone = this->zone();
 
     if (this->leftChild()->isExtensible()) {
         JSExtensibleString &left = this->leftChild()->asExtensible();
@@ -219,8 +219,8 @@ JSRope::flattenInternal(JSContext *maybecx)
             JS_STATIC_ASSERT(!(EXTENSIBLE_FLAGS & DEPENDENT_FLAGS));
             left.d.lengthAndFlags = bits ^ (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS);
             left.d.s.u2.base = (JSLinearString *)this;  /* will be true on exit */
-            StringWriteBarrierPostRemove(comp, &left.d.u1.left);
-            StringWriteBarrierPost(comp, (JSString **)&left.d.s.u2.base);
+            StringWriteBarrierPostRemove(zone, &left.d.u1.left);
+            StringWriteBarrierPost(zone, (JSString **)&left.d.s.u2.base);
             goto visit_right_child;
         }
     }
@@ -237,7 +237,7 @@ JSRope::flattenInternal(JSContext *maybecx)
 
         JSString &left = *str->d.u1.left;
         str->d.u1.chars = pos;
-        StringWriteBarrierPostRemove(comp, &str->d.u1.left);
+        StringWriteBarrierPostRemove(zone, &str->d.u1.left);
         if (left.isRope()) {
             left.d.s.u3.parent = str;          /* Return to this when 'left' done, */
             left.d.lengthAndFlags = 0x200;     /* but goto visit_right_child. */
@@ -267,14 +267,14 @@ JSRope::flattenInternal(JSContext *maybecx)
             str->d.lengthAndFlags = buildLengthAndFlags(wholeLength, EXTENSIBLE_FLAGS);
             str->d.u1.chars = wholeChars;
             str->d.s.u2.capacity = wholeCapacity;
-            StringWriteBarrierPostRemove(comp, &str->d.u1.left);
-            StringWriteBarrierPostRemove(comp, &str->d.s.u2.right);
+            StringWriteBarrierPostRemove(zone, &str->d.u1.left);
+            StringWriteBarrierPostRemove(zone, &str->d.s.u2.right);
             return &this->asFlat();
         }
         size_t progress = str->d.lengthAndFlags;
         str->d.lengthAndFlags = buildLengthAndFlags(pos - str->d.u1.chars, DEPENDENT_FLAGS);
         str->d.s.u2.base = (JSLinearString *)this;       /* will be true on exit */
-        StringWriteBarrierPost(comp, (JSString **)&str->d.s.u2.base);
+        StringWriteBarrierPost(zone, (JSString **)&str->d.s.u2.base);
         str = str->d.s.u3.parent;
         if (progress == 0x200)
             goto visit_right_child;
@@ -287,7 +287,7 @@ JSFlatString *
 JSRope::flatten(JSContext *maybecx)
 {
 #if JSGC_INCREMENTAL
-    if (compartment()->needsBarrier())
+    if (zone()->needsBarrier())
         return flattenInternal<WithIncrementalBarrier>(maybecx);
     else
         return flattenInternal<NoBarrier>(maybecx);
@@ -297,10 +297,10 @@ JSRope::flatten(JSContext *maybecx)
 }
 
 template <AllowGC allowGC>
-static inline JSString *
-ConcatStringsMaybeAllowGC(JSContext *cx,
-                          typename MaybeRooted<JSString*, allowGC>::HandleType left,
-                          typename MaybeRooted<JSString*, allowGC>::HandleType right)
+JSString *
+js::ConcatStrings(JSContext *cx,
+                  typename MaybeRooted<JSString*, allowGC>::HandleType left,
+                  typename MaybeRooted<JSString*, allowGC>::HandleType right)
 {
     JS_ASSERT_IF(!left->isAtom(), left->compartment() == cx->compartment);
     JS_ASSERT_IF(!right->isAtom(), right->compartment() == cx->compartment);
@@ -339,18 +339,11 @@ ConcatStringsMaybeAllowGC(JSContext *cx,
     return JSRope::new_<allowGC>(cx, left, right, wholeLength);
 }
 
-JSString *
-js_ConcatStrings(JSContext *cx, HandleString left, HandleString right)
-{
-    return ConcatStringsMaybeAllowGC<CanGC>(cx, left, right);
-}
+template JSString *
+js::ConcatStrings<CanGC>(JSContext *cx, HandleString left, HandleString right);
 
-JSString *
-js::ConcatStringsNoGC(JSContext *cx, JSString *left, JSString *right)
-{
-    AutoAssertNoGCOrException nogc(cx);
-    return ConcatStringsMaybeAllowGC<NoGC>(cx, left, right);
-}
+template JSString *
+js::ConcatStrings<NoGC>(JSContext *cx, JSString *left, JSString *right);
 
 JSFlatString *
 JSDependentString::undepend(JSContext *cx)

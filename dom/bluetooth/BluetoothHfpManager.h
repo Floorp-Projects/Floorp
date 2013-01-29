@@ -61,10 +61,11 @@ public:
   void Disconnect();
   bool Listen();
 
-  void CallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
-                        const nsAString& aNumber, bool aIsActive);
-  void EnumerateCallState(uint32_t aCallIndex, uint16_t aCallState,
-                          const nsAString& aNumber, bool aIsActive);
+  /**
+   * @param aSend A boolean indicates whether we need to notify headset or not
+   */
+  void HandleCallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
+                              const nsAString& aNumber, bool aSend);
 
 private:
   class GetVolumeTask;
@@ -80,14 +81,16 @@ private:
 
   bool Init();
   void Cleanup();
-  void NotifyDialer(const nsAString& aCommand);
-  void NotifySettings();
   void Reset();
   void ResetCallArray();
-  bool SendCommand(const char* aCommand, const uint16_t aValue = 0);
+
+  void NotifyDialer(const nsAString& aCommand);
+  void NotifySettings();
+
+  bool SendCommand(const char* aCommand, uint8_t aValue = 0);
   bool SendLine(const char* aMessage);
-  void SetupCIND(uint32_t aCallIndex, uint16_t aCallState,
-                 const nsAString& aNumber, bool aInitial);
+  void UpdateCIND(uint8_t aType, uint8_t aValue, bool aSend);
+
   virtual void OnConnectSuccess() MOZ_OVERRIDE;
   virtual void OnConnectError() MOZ_OVERRIDE;
   virtual void OnDisconnect() MOZ_OVERRIDE;

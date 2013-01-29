@@ -14,5 +14,7 @@ function run_test() {
     let resource = "resource://gre/modules/services/healthreport/" + m;
     Components.utils.import(resource, {});
   }
+
+  Components.utils.import("resource://gre/modules/HealthReport.jsm", {});
 }
 

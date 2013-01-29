@@ -32,6 +32,7 @@ add_task(function test_collect_smoketest() {
   let serializer = m.serializer(m.SERIALIZE_JSON);
   let d = serializer.singular(data.singular);
 
+  do_check_eq(d._v, 1);
   do_check_true(d.cpuCount > 0);
   do_check_neq(d.name, null);
 

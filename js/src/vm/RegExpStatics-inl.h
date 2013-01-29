@@ -433,7 +433,7 @@ RegExpStatics::updateLazily(JSContext *cx, JSLinearString *input,
     JS_ASSERT(input && shared);
     aboutToWrite();
 
-    BarrieredSetPair<JSString, JSLinearString>(cx->compartment,
+    BarrieredSetPair<JSString, JSLinearString>(cx->zone(),
                                                pendingInput, input,
                                                matchesInput, input);
     if (regexp.initialized())
@@ -455,7 +455,7 @@ RegExpStatics::updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchP
     this->regexp.release();
     this->lastIndex = size_t(-1);
 
-    BarrieredSetPair<JSString, JSLinearString>(cx->compartment,
+    BarrieredSetPair<JSString, JSLinearString>(cx->zone(),
                                                pendingInput, input,
                                                matchesInput, input);
 

@@ -29,9 +29,10 @@ public:
 
   // WebIDL API
   static already_AddRefed<nsDOMSerializer>
-  Constructor(nsISupports* aOwner, mozilla::ErrorResult& rv)
+  Constructor(const mozilla::dom::GlobalObject& aOwner,
+              mozilla::ErrorResult& rv)
   {
-    nsRefPtr<nsDOMSerializer> domSerializer = new nsDOMSerializer(aOwner);
+    nsRefPtr<nsDOMSerializer> domSerializer = new nsDOMSerializer(aOwner.Get());
     return domSerializer.forget();
   }
 

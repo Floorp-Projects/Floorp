@@ -72,10 +72,7 @@ struct ThreadInfo {
   pid_t tgid;   // thread group id
   pid_t ppid;   // parent process
 
-  // Even on platforms where the stack grows down, the following will point to
-  // the smallest address in the stack.
-  const void* stack;  // pointer to the stack area
-  size_t stack_len;  // length of the stack to copy
+  uintptr_t stack_pointer;  // thread stack pointer
 
 
 #if defined(__i386) || defined(__x86_64)

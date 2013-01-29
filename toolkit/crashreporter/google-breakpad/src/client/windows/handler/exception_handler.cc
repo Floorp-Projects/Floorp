@@ -44,6 +44,9 @@ namespace google_breakpad {
 static const int kWaitForHandlerThreadMs = 60000;
 static const int kExceptionHandlerThreadInitialStackSize = 64 * 1024;
 
+// As documented on MSDN, on failure SuspendThread returns (DWORD) -1
+static const DWORD kFailedToSuspendThread = static_cast<DWORD>(-1);
+
 // This is passed as the context to the MinidumpWriteDump callback.
 typedef struct {
   AppMemoryList::const_iterator iter;
@@ -747,7 +750,7 @@ bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
   EXCEPTION_RECORD ex;
   CONTEXT ctx;
   EXCEPTION_POINTERS exinfo = { NULL, NULL };
-  DWORD last_suspend_count = -1;
+  DWORD last_suspend_count = kFailedToSuspendThread;
   HANDLE child_thread_handle = OpenThread(THREAD_GET_CONTEXT |
                                           THREAD_QUERY_INFORMATION |
                                           THREAD_SUSPEND_RESUME,
@@ -757,7 +760,7 @@ bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
   // non-fatal error.
   if (child_thread_handle != NULL) {
     last_suspend_count = SuspendThread(child_thread_handle);
-    if (last_suspend_count >= 0) {
+    if (last_suspend_count != kFailedToSuspendThread) {
       ctx.ContextFlags = CONTEXT_ALL;
       if (GetThreadContext(child_thread_handle, &ctx)) {
         memset(&ex, 0, sizeof(ex));
@@ -780,7 +783,7 @@ bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
       exinfo.ExceptionRecord ? &exinfo : NULL,
       NULL, child, false);
 
-  if (last_suspend_count >= 0) {
+  if (last_suspend_count != kFailedToSuspendThread) {
     ResumeThread(child_thread_handle);
   }
 

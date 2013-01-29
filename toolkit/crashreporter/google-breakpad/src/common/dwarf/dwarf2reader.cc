@@ -500,7 +500,7 @@ void CompilationUnit::ProcessDIEs() {
 
     const Abbrev& abbrev = abbrevs_->at(static_cast<size_t>(abbrev_num));
     const enum DwarfTag tag = abbrev.tag;
-    if (!handler_->StartDIE(absolute_offset, tag, abbrev.attributes)) {
+    if (!handler_->StartDIE(absolute_offset, tag)) {
       dieptr = SkipDIE(dieptr, abbrev);
     } else {
       dieptr = ProcessDIE(absolute_offset, dieptr, abbrev);

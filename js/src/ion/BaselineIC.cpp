@@ -529,7 +529,7 @@ DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, IonJSFrameLayout *f
     // We should only ever get here if ion is enabled.
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(infoPtr);
-    *infoPtr = false;
+    *infoPtr = NULL;
 
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);

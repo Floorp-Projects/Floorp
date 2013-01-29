@@ -44,9 +44,9 @@
 #include <string>
 #include <utility>
 
+#include "common/scoped_ptr.h"
 #include "common/using_std_string.h"
 #include "processor/module_factory.h"
-#include "processor/scoped_ptr.h"
 
 using std::map;
 using std::make_pair;

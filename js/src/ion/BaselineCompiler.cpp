@@ -205,12 +205,6 @@ BaselineCompiler::emitPrologue()
     for (size_t i = 0; i < frame.nlocals(); i++)
         masm.pushValue(R0);
 
-    // Always add a PC mapping at the beginning.
-    // This happens before scope chain is initialized because Ion
-    // can bail out before a scope chain is initialized.
-    if (!addPCMappingEntry())
-        return Method_Error;
-
     // Initialize the scope chain before any operation that may
     // call into the VM and trigger a GC.
     if (!initScopeChain())

@@ -380,7 +380,7 @@ public:
   virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) MOZ_OVERRIDE;
   virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) MOZ_OVERRIDE;
   virtual bool RequestWindowClose(nsIWidget* aWidget) MOZ_OVERRIDE;
-  virtual void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint) MOZ_OVERRIDE;
+  virtual void WillPaintWindow(nsIWidget* aWidget) MOZ_OVERRIDE;
   virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags) MOZ_OVERRIDE;
   virtual void DidPaintWindow() MOZ_OVERRIDE;
   virtual void RequestRepaint() MOZ_OVERRIDE;

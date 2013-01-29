@@ -20,12 +20,12 @@ public:
 
   // The WebIDL constructor.
   static already_AddRefed<TextDecoder>
-  Constructor(nsISupports* aGlobal,
+  Constructor(const GlobalObject& aGlobal,
               const nsAString& aEncoding,
               const TextDecoderOptions& aOptions,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextDecoder> txtDecoder = new TextDecoder(aGlobal);
+    nsRefPtr<TextDecoder> txtDecoder = new TextDecoder(aGlobal.Get());
     txtDecoder->Init(aEncoding, aOptions.mFatal, aRv);
     if (aRv.Failed()) {
       return nullptr;

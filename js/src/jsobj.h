@@ -1128,12 +1128,15 @@ class ValueArray {
     ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
 };
 
-extern JSBool
-js_HasOwnProperty(JSContext *cx, js::LookupGenericOp lookup, js::HandleObject obj, js::HandleId id,
-                  js::MutableHandleObject objp, js::MutableHandleShape propp);
-
-
 namespace js {
+
+template <AllowGC allowGC>
+extern JSBool
+HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
+               typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+               typename MaybeRooted<jsid, allowGC>::HandleType id,
+               typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+               typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
 
 bool
 IsStandardClassResolved(JSObject *obj, js::Class *clasp);

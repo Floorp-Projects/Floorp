@@ -137,7 +137,7 @@ ComponentFinder<Node>::getResultsList()
 
 template<class Node>
 /* static */ void
-ComponentFinder<Node>::mergeCompartmentGroups(Node *first)
+ComponentFinder<Node>::mergeGroups(Node *first)
 {
     for (Node *v = first; v; v = v->gcNextGraphNode)
         v->gcNextGraphComponent = NULL;

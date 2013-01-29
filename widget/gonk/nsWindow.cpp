@@ -222,14 +222,21 @@ nsWindow::DoDraw(void)
     nsIntRegion region = gWindowToRedraw->mDirtyRegion;
     gWindowToRedraw->mDirtyRegion.SetEmpty();
 
+    nsIWidgetListener* listener = gWindowToRedraw->GetWidgetListener();
+    if (listener) {
+        listener->WillPaintWindow(gWindowToRedraw);
+    }
+
     LayerManager* lm = gWindowToRedraw->GetLayerManager();
     if (mozilla::layers::LAYERS_OPENGL == lm->GetBackendType()) {
         LayerManagerOGL* oglm = static_cast<LayerManagerOGL*>(lm);
         oglm->SetClippingRegion(region);
         oglm->SetWorldTransform(sRotationMatrix);
 
-        if (nsIWidgetListener* listener = gWindowToRedraw->GetWidgetListener())
-          listener->PaintWindow(gWindowToRedraw, region, 0);
+        listener = gWindowToRedraw->GetWidgetListener();
+        if (listener) {
+            listener->PaintWindow(gWindowToRedraw, region, 0);
+        }
     } else if (mozilla::layers::LAYERS_BASIC == lm->GetBackendType()) {
         MOZ_ASSERT(sFramebufferOpen || sUsingOMTC);
         nsRefPtr<gfxASurface> targetSurface;
@@ -249,8 +256,10 @@ nsWindow::DoDraw(void)
                 gWindowToRedraw, ctx, mozilla::layers::BUFFER_NONE,
                 ScreenRotation(EffectiveScreenRotation()));
 
-            if (nsIWidgetListener* listener = gWindowToRedraw->GetWidgetListener())
-              listener->PaintWindow(gWindowToRedraw, region, 0);
+            listener = gWindowToRedraw->GetWidgetListener();
+            if (listener) {
+                listener->PaintWindow(gWindowToRedraw, region, 0);
+            }
         }
 
         if (!sUsingOMTC) {
@@ -259,6 +268,11 @@ nsWindow::DoDraw(void)
         }
     } else {
         NS_RUNTIMEABORT("Unexpected layer manager type");
+    }
+
+    listener = gWindowToRedraw->GetWidgetListener();
+    if (listener) {
+        listener->DidPaintWindow();
     }
 }
 

@@ -54,7 +54,6 @@ MOCHITEST_FILES = \
 		test_pointer-events-4.xhtml \
 		test_scientific.html \
 		scientific-helper.svg \
-		test_SVGAnimatedImageSMILDisabled.html \
 		animated-svg-image-helper.html \
 		animated-svg-image-helper.svg \
 		test_stroke-linecap-hit-testing.xhtml \

@@ -92,7 +92,7 @@ function testBreadcrumbs(node)
 function _clickOnInspectMenuItem(node) {
   document.popupNode = node;
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  var contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
+  var contextMenu = new nsContextMenu(contentAreaContextMenu);
   return contextMenu.inspectNode();
 }
 
@@ -142,4 +142,3 @@ function test()
 
   content.location = "data:text/html,basic tests for inspector";
 }
-

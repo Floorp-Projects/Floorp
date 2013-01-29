@@ -355,7 +355,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMMutationObserver)
 
   static already_AddRefed<nsDOMMutationObserver>
-  Constructor(nsISupports* aGlobal, mozilla::dom::MutationCallback& aCb,
+  Constructor(const mozilla::dom::GlobalObject& aGlobal,
+              mozilla::dom::MutationCallback& aCb,
               mozilla::ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,

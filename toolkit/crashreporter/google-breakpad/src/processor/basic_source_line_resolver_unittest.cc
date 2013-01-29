@@ -32,6 +32,7 @@
 #include <string>
 
 #include "breakpad_googletest_includes.h"
+#include "common/scoped_ptr.h"
 #include "common/using_std_string.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/code_module.h"
@@ -39,7 +40,6 @@
 #include "google_breakpad/processor/memory_region.h"
 #include "processor/linked_ptr.h"
 #include "processor/logging.h"
-#include "processor/scoped_ptr.h"
 #include "processor/windows_frame_info.h"
 #include "processor/cfi_frame_info.h"
 
@@ -184,20 +184,20 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
   resolver.FillSourceLineInfo(&frame);
   ASSERT_FALSE(frame.module);
   ASSERT_TRUE(frame.function_name.empty());
-  ASSERT_EQ(frame.function_base, 0);
+  ASSERT_EQ(frame.function_base, 0U);
   ASSERT_TRUE(frame.source_file_name.empty());
   ASSERT_EQ(frame.source_line, 0);
-  ASSERT_EQ(frame.source_line_base, 0);
+  ASSERT_EQ(frame.source_line_base, 0U);
 
   frame.module = &module1;
   resolver.FillSourceLineInfo(&frame);
   ASSERT_EQ(frame.function_name, "Function1_1");
   ASSERT_TRUE(frame.module);
   ASSERT_EQ(frame.module->code_file(), "module1");
-  ASSERT_EQ(frame.function_base, 0x1000);
+  ASSERT_EQ(frame.function_base, 0x1000U);
   ASSERT_EQ(frame.source_file_name, "file1_1.cc");
   ASSERT_EQ(frame.source_line, 44);
-  ASSERT_EQ(frame.source_line_base, 0x1000);
+  ASSERT_EQ(frame.source_line_base, 0x1000U);
   windows_frame_info.reset(resolver.FindWindowsFrameInfo(&frame));
   ASSERT_TRUE(windows_frame_info.get());
   ASSERT_EQ(windows_frame_info->type_, WindowsFrameInfo::STACK_INFO_FRAME_DATA);
@@ -346,16 +346,16 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
   frame.module = &module2;
   resolver.FillSourceLineInfo(&frame);
   ASSERT_EQ(frame.function_name, "Function2_2");
-  ASSERT_EQ(frame.function_base, 0x2170);
+  ASSERT_EQ(frame.function_base, 0x2170U);
   ASSERT_TRUE(frame.module);
   ASSERT_EQ(frame.module->code_file(), "module2");
   ASSERT_EQ(frame.source_file_name, "file2_2.cc");
   ASSERT_EQ(frame.source_line, 21);
-  ASSERT_EQ(frame.source_line_base, 0x2180);
+  ASSERT_EQ(frame.source_line_base, 0x2180U);
   windows_frame_info.reset(resolver.FindWindowsFrameInfo(&frame));
   ASSERT_TRUE(windows_frame_info.get());
   ASSERT_EQ(windows_frame_info->type_, WindowsFrameInfo::STACK_INFO_FRAME_DATA);
-  ASSERT_EQ(windows_frame_info->prolog_size, 1);
+  ASSERT_EQ(windows_frame_info->prolog_size, 1U);
 
   frame.instruction = 0x216f;
   resolver.FillSourceLineInfo(&frame);

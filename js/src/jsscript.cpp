@@ -25,7 +25,6 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsscope.h"
 #include "jsscript.h"
 
 #include "gc/Marking.h"
@@ -37,6 +36,7 @@
 #include "ion/BaselineJIT.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
+#include "vm/Shape.h"
 #include "vm/Xdr.h"
 
 #include "jsinferinlines.h"
@@ -2607,7 +2607,7 @@ JSScript::markChildren(JSTracer *trc)
     // JSScript::Create(), but not yet finished initializing it with
     // fullyInitFromEmitter() or fullyInitTrivial().
 
-    JS_ASSERT_IF(trc->runtime->gcStrictCompartmentChecking, compartment()->isCollecting());
+    JS_ASSERT_IF(trc->runtime->gcStrictCompartmentChecking, zone()->isCollecting());
 
     for (uint32_t i = 0; i < natoms; ++i) {
         if (atoms[i])

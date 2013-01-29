@@ -17,6 +17,7 @@
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"
+#include "XPCWrapper.h"
 #include "XrayWrapper.h"
 
 namespace mozilla {
@@ -1436,6 +1437,54 @@ ReparentWrapper(JSContext* aCx, JSObject* aObj)
   }
 
   return NS_OK;
+}
+
+template<bool mainThread>
+inline JSObject*
+GetGlobalObject(JSContext* aCx, JSObject* aObject,
+                Maybe<JSAutoCompartment>& aAutoCompartment)
+{
+  if (js::IsWrapper(aObject)) {
+    aObject = XPCWrapper::Unwrap(aCx, aObject, false);
+    if (!aObject) {
+      Throw<mainThread>(aCx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+      return nullptr;
+    }
+    aAutoCompartment.construct(aCx, aObject);
+  }
+
+  return JS_GetGlobalForObject(aCx, aObject);
+}
+
+GlobalObject::GlobalObject(JSContext* aCx, JSObject* aObject)
+  : mGlobalJSObject(aCx)
+{
+  Maybe<JSAutoCompartment> ac;
+  mGlobalJSObject = GetGlobalObject<true>(aCx, aObject, ac);
+  if (!mGlobalJSObject) {
+    return;
+  }
+
+  JS::Value val;
+  val.setObject(*mGlobalJSObject);
+
+  // Switch this to UnwrapDOMObjectToISupports once our global objects are
+  // using new bindings.
+  nsresult rv = xpc_qsUnwrapArg<nsISupports>(aCx, val, &mGlobalObject,
+                                             static_cast<nsISupports**>(getter_AddRefs(mGlobalObjectRef)),
+                                             &val);
+  if (NS_FAILED(rv)) {
+    mGlobalObject = nullptr;
+    Throw<true>(aCx, NS_ERROR_XPC_BAD_CONVERT_JS);
+  }
+}
+
+WorkerGlobalObject::WorkerGlobalObject(JSContext* aCx, JSObject* aObject)
+  : mGlobalJSObject(aCx),
+    mCx(aCx)
+{
+  Maybe<JSAutoCompartment> ac;
+  mGlobalJSObject = GetGlobalObject<false>(aCx, aObject, ac);
 }
 
 } // namespace dom

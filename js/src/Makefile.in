@@ -108,7 +108,6 @@ CPPSRCS		= \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
 		jsreflect.cpp \
-		jsscope.cpp \
 		jsscript.cpp \
 		jsstr.cpp \
 		jstypedarray.cpp \
@@ -130,6 +129,7 @@ CPPSRCS		= \
 		Object.cpp \
 		ObjectImpl.cpp \
 		ScopeObject.cpp \
+		Shape.cpp \
 		Stack.cpp \
 		String.cpp \
 		BytecodeCompiler.cpp \
@@ -228,6 +228,7 @@ EXPORTS_js = \
 		CharacterEncoding.h \
 		HashTable.h \
 		HeapAPI.h \
+		GCAPI.h \
 		LegacyIntTypes.h \
 		MemoryMetrics.h \
 		TemplateLib.h \

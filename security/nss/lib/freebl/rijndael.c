@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: rijndael.c,v 1.29 2013/01/15 02:36:11 rrelyea%redhat.com Exp $ */
+/* $Id: rijndael.c,v 1.30 2013/01/25 18:02:53 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -1110,10 +1110,13 @@ AES_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 	baseencrypt = PR_TRUE;
 	break;
     }
+    /* make sure enough is initializes so we can safely call Destroy */
+    cx->worker_cx = NULL;
+    cx->destroy = NULL;
     rv = aes_InitContext(cx, key, keysize, iv, basemode, 
 					baseencrypt, blocksize);
     if (rv != SECSuccess) {
-	AES_DestroyContext(cx, PR_TRUE);
+	AES_DestroyContext(cx, PR_FALSE);
 	return rv;
     }
 
@@ -1160,7 +1163,7 @@ AES_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 	/* no, just destroy the existing context */
 	cx->destroy = NULL; /* paranoia, though you can see a dozen lines */
 			    /* below that this isn't necessary */
-	AES_DestroyContext(cx, PR_TRUE);
+	AES_DestroyContext(cx, PR_FALSE);
 	return SECFailure;
     }
     return SECSuccess;
@@ -1196,9 +1199,10 @@ AES_CreateContext(const unsigned char *key, const unsigned char *iv,
 void 
 AES_DestroyContext(AESContext *cx, PRBool freeit)
 {
-/*  memset(cx, 0, sizeof *cx); */
     if (cx->worker_cx && cx->destroy) {
 	(*cx->destroy)(cx->worker_cx, PR_TRUE);
+	cx->worker_cx = NULL;
+	cx->destroy = NULL;
     }
     if (freeit)
 	PORT_Free(cx);
