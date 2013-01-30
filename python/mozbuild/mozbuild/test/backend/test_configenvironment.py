@@ -1,55 +1,23 @@
-from __future__ import with_statement
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import os, posixpath
 from StringIO import StringIO
 import unittest
 from mozunit import main, MockedOpen
-import ConfigStatus
-from ConfigStatus import FileAvoidWrite
+
+import mozbuild.backend.configenvironment as ConfigStatus
 
 class ConfigEnvironment(ConfigStatus.ConfigEnvironment):
-    def __init__(self, **args):
-        ConfigStatus.ConfigEnvironment.__init__(self, **args)
+    def __init__(self, *args, **kwargs):
+        ConfigStatus.ConfigEnvironment.__init__(self, *args, **kwargs)
         # Be helpful to unit tests
         if not 'top_srcdir' in self.substs:
             if os.path.isabs(self.topsrcdir):
                 self.substs['top_srcdir'] = self.topsrcdir.replace(os.sep, '/')
             else:
-                self.substs['top_srcdir'] = ConfigStatus.relpath(self.topsrcdir, self.topobjdir).replace(os.sep, '/')
-
-class TestFileAvoidWrite(unittest.TestCase):
-    def test_file_avoid_write(self):
-        '''Test the FileAvoidWrite class
-        '''
-        with MockedOpen({'file': 'content'}):
-            # Overwriting an existing file replaces its content
-            with FileAvoidWrite('file') as file:
-                file.write('bazqux')
-            self.assertEqual(open('file', 'r').read(), 'bazqux')
-
-            # Creating a new file (obviously) stores its content
-            with FileAvoidWrite('file2') as file:
-                file.write('content')
-            self.assertEqual(open('file2').read(), 'content')
-
-        class MyMockedOpen(MockedOpen):
-            '''MockedOpen extension to raise an exception if something
-            attempts to write in an opened file.
-            '''
-            def __call__(self, name, mode):
-                if 'w' in mode:
-                    raise Exception, 'Unexpected open with write mode'
-                return MockedOpen.__call__(self, name, mode)
-
-        with MyMockedOpen({'file': 'content'}):
-            # Validate that MyMockedOpen works as intended
-            file = FileAvoidWrite('file')
-            file.write('foobar')
-            self.assertRaises(Exception, file.close)
-
-            # Check that no write actually happens when writing the
-            # same content as what already is in the file
-            with FileAvoidWrite('file') as file:
-                file.write('content')
+                self.substs['top_srcdir'] = os.path.relpath(self.topsrcdir, self.topobjdir).replace(os.sep, '/')
 
 
 class TestEnvironment(unittest.TestCase):
@@ -57,7 +25,7 @@ class TestEnvironment(unittest.TestCase):
         '''Test the automatically set values of ACDEFINES, ALLDEFINES
         and ALLSUBSTS.
         '''
-        env = ConfigEnvironment(
+        env = ConfigEnvironment('.', '.',
                   defines = [ ('foo', 'bar'), ('baz', 'qux 42'),
                               ('abc', 'def'), ('extra', 'foobar') ],
                   non_global_defines = ['extra', 'ignore'],
@@ -86,7 +54,7 @@ zzz = "abc def"''')
 @foo@
 @bar@
 '''}):
-            env = ConfigEnvironment(substs = [ ('foo', 'bar baz') ])
+            env = ConfigEnvironment('.', '.', substs = [ ('foo', 'bar baz') ])
             env.create_config_file('file')
             self.assertEqual(open('file', 'r').read(), '''#ifdef foo
 bar baz
@@ -113,7 +81,7 @@ bar baz
   #     define   foo   42   
 #endif
 '''}):
-            env = ConfigEnvironment(defines = [ ('foo', 'baz qux'), ('baz', 1) ])
+            env = ConfigEnvironment('.', '.', defines = [ ('foo', 'baz qux'), ('baz', 1) ])
             env.create_config_header('file')
             self.assertEqual(open('file','r').read(), '''
 /* Comment */

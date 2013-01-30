@@ -366,15 +366,17 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     hwcLayer.compositionType = HWC_USE_COPYBIT;
 
     if (!fillColor) {
-        if (transform.xx == 0) {
-            if (transform.xy < 0) {
+        gfxMatrix rotation = transform * aGLWorldTransform;
+        // Compute fuzzy equal like PreservesAxisAlignedRectangles()
+        if (fabs(rotation.xx) < 1e-6) {
+            if (rotation.xy < 0) {
                 hwcLayer.transform = HWC_TRANSFORM_ROT_90;
                 LOGD("Layer buffer rotated 90 degrees");
             } else {
                 hwcLayer.transform = HWC_TRANSFORM_ROT_270;
                 LOGD("Layer buffer rotated 270 degrees");
             }
-        } else if (transform.xx < 0) {
+        } else if (rotation.xx < 0) {
             hwcLayer.transform = HWC_TRANSFORM_ROT_180;
             LOGD("Layer buffer rotated 180 degrees");
         } else {
@@ -400,6 +402,11 @@ bool
 HwcComposer2D::TryRender(Layer* aRoot,
                          const gfxMatrix& aGLWorldTransform)
 {
+    if (!aGLWorldTransform.PreservesAxisAlignedRectangles()) {
+        LOGD("Render aborted. World transform has non-square angle rotation");
+        return false;
+    }
+
     MOZ_ASSERT(Initialized());
     if (mList) {
         mList->numHwLayers = 0;
