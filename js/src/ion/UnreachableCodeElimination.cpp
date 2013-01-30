@@ -112,7 +112,7 @@ void
 UnreachableCodeElimination::removeUsesFromUnmarkedBlocks(MDefinition *instr)
 {
     for (MUseIterator iter(instr->usesBegin()); iter != instr->usesEnd(); ) {
-        if (!iter->node()->block()->isMarked())
+        if (!iter->consumer()->block()->isMarked())
             iter = instr->removeUse(iter);
         else
             iter++;

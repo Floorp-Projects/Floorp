@@ -38,9 +38,12 @@ LOCAL_INCLUDES = \
 
 DEFINES = \
   -DINET=1 \
-  -DINET6=1 \
   -DSCTP_DEBUG=1 \
   $(NULL)
+
+ifneq ($(OS_TARGET),Android)
+DEFINES += -DINET6=1
+endif
 
 ifeq ($(OS_TARGET),WINNT)
 DEFINES += -D__Userspace_os_Windows=1

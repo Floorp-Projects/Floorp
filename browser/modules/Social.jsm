@@ -84,9 +84,6 @@ this.Social = {
     }
 
     if (!this._addedObservers) {
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-      Services.obs.addObserver(this, "private-browsing", false);
-#endif
       Services.obs.addObserver(this, "social:pref-changed", false);
       this._addedObservers = true;
     }
@@ -133,22 +130,6 @@ this.Social = {
   },
 
   observe: function(aSubject, aTopic, aData) {
-#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-    if (aTopic == "private-browsing") {
-      if (aData == "enter") {
-        this._enabledBeforePrivateBrowsing = this.enabled;
-        this.enabled = false;
-      } else if (aData == "exit") {
-        // if the user has explicitly re-enabled social in PB mode, then upon
-        // leaving we want to tear the world down then reenable to prevent
-        // information leaks during this transition.
-        // The next 2 lines rely on the fact that setting this.enabled to
-        // its current value doesn't actually do anything...
-        this.enabled = false;
-        this.enabled = this._enabledBeforePrivateBrowsing;
-      }
-    } else
-#endif
     if (aTopic == "social:pref-changed") {
       // Make sure our provider's enabled state matches the overall state of the
       // social components.

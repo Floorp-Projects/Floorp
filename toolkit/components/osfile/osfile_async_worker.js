@@ -12,15 +12,12 @@ if (this.Components) {
 (function(exports) {
   "use strict";
 
-  // A simple flag used to control debugging messages.
-  // FIXME: Once this library has been battle-tested, this flag will
-  // either be removed or replaced with a pref.
-  const DEBUG = false;
-
    try {
      importScripts("resource://gre/modules/osfile.jsm");
 
      let LOG = exports.OS.Shared.LOG.bind(exports.OS.Shared.LOG, "Agent");
+     // A simple flag used to control debugging messages.
+     let DEBUG = exports.OS.Shared.DEBUG;
 
      /**
       * Communications with the controller.
@@ -201,6 +198,15 @@ if (this.Components) {
       * back the results.
       */
      let Agent = {
+       // Update DEBUG flag message from controller.
+       SET_DEBUG: function SET_DEBUG (aDEBUG) {
+         DEBUG = aDEBUG;
+       },
+       // Return current DEBUG value to controller.
+       // Note: This is used for testing purposes.
+       GET_DEBUG: function GET_DEBUG () {
+         return DEBUG;
+       },
        // Functions of OS.File
        stat: function stat(path) {
          return exports.OS.File.Info.toMsg(

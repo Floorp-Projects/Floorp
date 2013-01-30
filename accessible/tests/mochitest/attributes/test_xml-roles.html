@@ -27,6 +27,7 @@
       testAttrs("main", {"xml-roles" : "main"}, true); // // ARIA override
       testAttrs("form", {"xml-roles" : "form"}, true);
       testAttrs("article", {"xml-roles" : "article"}, true);
+      testAttrs("main_element", {"xml-roles" : "main"}, true);
 
       SimpleTest.finish();
     }
@@ -79,6 +80,7 @@
   <article id="main" role="main">a main area</article>
   <article id="form" role="form">a form area</article>
   <article id="article">article</article>
+  <main id="main_element">another main area</main>
 
 </body>
 </html>

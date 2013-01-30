@@ -77,19 +77,6 @@ let WebAppRT = {
     
         // Otherwise, see if the apps launch path is this url
         if (manifest.fullLaunchPath() == aUrl) {
-          // remove the old shortuct
-          sendMessageToJava({
-            gecko: {
-              type: "Shortcut:Remove",
-              title: manifest.name,
-              url: manifest.fullLaunchPath(),
-              origin: app.origin,
-              shortcutType: "webapp"
-            }
-          });
-          WebappsUI.createShortcut(manifest.name, manifest.fullLaunchPath(),
-                                   WebappsUI.getBiggestIcon(manifest.icons, app.origin), "webapp");
-
           BrowserApp.manifestUrl = app.manifestURL;
           deferred.resolve(aUrl);
           return;

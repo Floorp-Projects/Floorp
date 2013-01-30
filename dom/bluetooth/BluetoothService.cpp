@@ -40,10 +40,13 @@
 # endif
 #endif
 
-#define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
-#define BLUETOOTH_ENABLED_SETTING "bluetooth.enabled"
+#define MOZSETTINGS_CHANGED_ID      "mozsettings-changed"
+#define BLUETOOTH_ENABLED_SETTING   "bluetooth.enabled"
+#define BLUETOOTH_DEBUGGING_SETTING "bluetooth.debugging.enabled"
 
 #define DEFAULT_SHUTDOWN_TIMER_MS 5000
+
+bool gBluetoothDebugFlag = false;
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -314,11 +317,14 @@ BluetoothService::Cleanup()
 }
 
 void
-BluetoothService::RegisterBluetoothSignalHandler(const nsAString& aNodeName,
-                                                 BluetoothSignalObserver* aHandler)
+BluetoothService::RegisterBluetoothSignalHandler(
+                                              const nsAString& aNodeName,
+                                              BluetoothSignalObserver* aHandler)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aHandler);
+
+  BT_LOG("[S] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aNodeName).get());
 
   BluetoothSignalObserverList* ol;
   if (!mBluetoothSignalObserverTable.Get(aNodeName, &ol)) {
@@ -331,11 +337,14 @@ BluetoothService::RegisterBluetoothSignalHandler(const nsAString& aNodeName,
 }
 
 void
-BluetoothService::UnregisterBluetoothSignalHandler(const nsAString& aNodeName,
-                                                   BluetoothSignalObserver* aHandler)
+BluetoothService::UnregisterBluetoothSignalHandler(
+                                              const nsAString& aNodeName,
+                                              BluetoothSignalObserver* aHandler)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aHandler);
+
+  BT_LOG("[S] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aNodeName).get());
 
   BluetoothSignalObserverList* ol;
   if (mBluetoothSignalObserverTable.Get(aNodeName, &ol)) {
@@ -551,37 +560,58 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
     return NS_OK;
   }
 
+  // First, check if the string equals to BLUETOOTH_DEBUGGING_SETTING
   JSBool match;
-  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_ENABLED_SETTING,
-                            &match)) {
+  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_DEBUGGING_SETTING, &match)) {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!match) {
+  if (match) {
+    JS::Value value;
+    if (!JS_GetProperty(cx, &obj, "value", &value)) {
+      MOZ_ASSERT(!JS_IsExceptionPending(cx));
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (!value.isBoolean()) {
+      MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.debugging.enabled'!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    SWITCH_BT_DEBUG(value.toBoolean());
+
     return NS_OK;
   }
 
-  JS::Value value;
-  if (!JS_GetProperty(cx, &obj, "value", &value)) {
+  // Second, check if the string is BLUETOOTH_ENABLED_SETTING
+  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_ENABLED_SETTING, &match)) {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!value.isBoolean()) {
-    MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.enabled'!");
-    return NS_ERROR_UNEXPECTED;
+  if (match) {
+    JS::Value value;
+    if (!JS_GetProperty(cx, &obj, "value", &value)) {
+      MOZ_ASSERT(!JS_IsExceptionPending(cx));
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (!value.isBoolean()) {
+      MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.enabled'!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (gToggleInProgress || value.toBoolean() == IsEnabled()) {
+      // Nothing to do here.
+      return NS_OK;
+    }
+
+    gToggleInProgress = true;
+
+    nsresult rv = StartStopBluetooth(value.toBoolean());
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  if (gToggleInProgress || value.toBoolean() == IsEnabled()) {
-    // Nothing to do here.
-    return NS_OK;
-  }
-
-  gToggleInProgress = true;
-
-  nsresult rv = StartStopBluetooth(value.toBoolean());
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -726,7 +756,6 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
 void
 BluetoothService::Notify(const BluetoothSignal& aData)
 {
-  InfallibleTArray<BluetoothNamedValue> arr(aData.value().get_ArrayOfBluetoothNamedValue());
   nsString type;
 
   JSContext* cx = nsContentUtils::GetSafeJSContext();
@@ -740,29 +769,36 @@ BluetoothService::Notify(const BluetoothSignal& aData)
     return;
   }
 
-  bool ok = SetJsObject(cx, obj, arr);
-  if (!ok) {
+  if (!SetJsObject(cx, aData.value(), obj)) {
     NS_WARNING("Failed to set properties of system message!");
     return;
   }
 
+  BT_LOG("[S] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
+
   if (aData.name().EqualsLiteral("RequestConfirmation")) {
-    NS_ASSERTION(arr.Length() == 3, "RequestConfirmation: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
+      "RequestConfirmation: Wrong length of parameters");
     type.AssignLiteral("bluetooth-requestconfirmation");
   } else if (aData.name().EqualsLiteral("RequestPinCode")) {
-    NS_ASSERTION(arr.Length() == 2, "RequestPinCode: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+      "RequestPinCode: Wrong length of parameters");
     type.AssignLiteral("bluetooth-requestpincode");
   } else if (aData.name().EqualsLiteral("RequestPasskey")) {
-    NS_ASSERTION(arr.Length() == 2, "RequestPinCode: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+      "RequestPinCode: Wrong length of parameters");
     type.AssignLiteral("bluetooth-requestpasskey");
   } else if (aData.name().EqualsLiteral("Authorize")) {
-    NS_ASSERTION(arr.Length() == 2, "Authorize: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+      "Authorize: Wrong length of parameters");
     type.AssignLiteral("bluetooth-authorize");
   } else if (aData.name().EqualsLiteral("Cancel")) {
-    NS_ASSERTION(arr.Length() == 0, "Cancel: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 0,
+      "Cancel: Wrong length of parameters");
     type.AssignLiteral("bluetooth-cancel");
   } else if (aData.name().EqualsLiteral("PairedStatusChanged")) {
-    NS_ASSERTION(arr.Length() == 1, "PairedStatusChagned: Wrong length of parameters");
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 1,
+      "PairedStatusChagned: Wrong length of parameters");
     type.AssignLiteral("bluetooth-pairedstatuschanged");
   } else {
 #ifdef DEBUG

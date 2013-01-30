@@ -155,6 +155,7 @@ int getifaddrs(ifaddrs** result)
                             if (family == AF_INET || family == AF_INET6) {
                                 ifaddrs *next = *result;
                                 *result = new ifaddrs;
+                                memset(*result, 0, sizeof(ifaddrs));
                                 (*result)->ifa_next = next;
                                 if (!ifa_setNameAndFlagsByIndex(*result, address->ifa_index)) {
                                     return -1;
@@ -176,11 +177,13 @@ int getifaddrs(ifaddrs** result)
 
 // Source-compatible with the BSD function.
 void freeifaddrs(ifaddrs* addresses) {
-    ifaddrs* next = addresses;
-    while (next != NULL) {
-        delete[] next->ifa_name;
-        delete next->ifa_addr;
-        delete next->ifa_netmask;
-        next = addresses->ifa_next;
+    ifaddrs* self = addresses;
+    while (self != NULL) {
+        delete[] self->ifa_name;
+        delete self->ifa_addr;
+        delete self->ifa_netmask;
+        ifaddrs* next = self->ifa_next;
+        delete self;
+        self = next;
     }
 }

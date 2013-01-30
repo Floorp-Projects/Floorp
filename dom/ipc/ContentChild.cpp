@@ -1165,7 +1165,7 @@ ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
                                              aMountGeneration);
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    nsString stateStr(NS_ConvertUTF8toUTF16(volume->StateStr()));
+    NS_ConvertUTF8toUTF16 stateStr(volume->StateStr());
     obs->NotifyObservers(volume, NS_VOLUME_STATE_CHANGED, stateStr.get());
 #else
     // Remove warnings about unused arguments

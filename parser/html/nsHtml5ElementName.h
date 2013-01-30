@@ -198,6 +198,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_MARK;
     static nsHtml5ElementName* ELT_MASK;
     static nsHtml5ElementName* ELT_MEAN;
+    static nsHtml5ElementName* ELT_MAIN;
     static nsHtml5ElementName* ELT_MSUP;
     static nsHtml5ElementName* ELT_MENU;
     static nsHtml5ElementName* ELT_MROW;

@@ -45,7 +45,8 @@ public:
   }
   virtual nsIDOMEventTarget* GetParentTarget() { return mParent; }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowRoot, nsIDOMEventTarget)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsWindowRoot,
+                                                         nsIDOMEventTarget)
 
 protected:
   // Members
