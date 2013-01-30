@@ -866,6 +866,13 @@ bool operator==( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubst
   }
 
 inline
+bool operator==( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::char_type* rhs )
+  {
+    return lhs.Equals(rhs);
+  }
+
+
+inline
 bool operator>=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
   {
     return Compare(lhs, rhs)>=0;

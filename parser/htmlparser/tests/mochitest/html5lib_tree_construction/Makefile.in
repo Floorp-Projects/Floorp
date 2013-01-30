@@ -59,6 +59,7 @@ MOCHITEST_FILES =	adoption01.dat \
 		tricky01.dat \
 		webkit01.dat \
 		webkit02.dat \
+		main-element.dat \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

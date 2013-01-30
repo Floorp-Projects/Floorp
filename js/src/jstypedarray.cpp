@@ -2501,7 +2501,7 @@ TypedArrayTemplate<double>::copyIndexToValue(JSObject *tarray, uint32_t index,
 }
 
 JSBool
-DataViewObject::construct(JSContext *cx, JSObject *bufobj, const CallArgs &args, JSObject *proto)
+DataViewObject::construct(JSContext *cx, JSObject *bufobj, const CallArgs &args, HandleObject proto)
 {
     if (!bufobj->isArrayBuffer()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
@@ -2585,7 +2585,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    return construct(cx, bufobj, args, NULL);
+    return construct(cx, bufobj, args, NullPtr());
 }
 
 /* static */ bool

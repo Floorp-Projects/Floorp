@@ -1127,6 +1127,8 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
 
     IonContext ictx(cx, cx->compartment, temp);
 
+    types::AutoEnterAnalysis enter(cx);
+
     if (!cx->compartment->ensureIonCompartmentExists(cx))
         return AbortReason_Alloc;
 
@@ -1137,7 +1139,6 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
     if (!info)
         return AbortReason_Alloc;
 
-    types::AutoEnterAnalysis enter(cx);
     TypeInferenceOracle oracle;
 
     if (!oracle.init(cx, script))

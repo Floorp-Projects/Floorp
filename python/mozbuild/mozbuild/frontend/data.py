@@ -34,12 +34,19 @@ class SandboxDerived(TreeMetadata):
     __slots__ = (
         'objdir',
         'relativedir',
+        'sandbox_all_paths',
+        'sandbox_path',
         'srcdir',
         'topobjdir',
         'topsrcdir',
     )
 
     def __init__(self, sandbox):
+        # Capture the files that were evaluated to build this sandbox.
+        self.sandbox_main_path = sandbox.main_path
+        self.sandbox_all_paths = sandbox.all_paths
+
+        # Basic directory state.
         self.topsrcdir = sandbox['TOPSRCDIR']
         self.topobjdir = sandbox['TOPOBJDIR']
 
@@ -68,6 +75,8 @@ class DirectoryTraversal(SandboxDerived):
         'test_tool_dirs',
         'tier_dirs',
         'tier_static_dirs',
+        'external_make_dirs',
+        'parallel_external_make_dirs',
     )
 
     def __init__(self, sandbox):
@@ -80,3 +89,24 @@ class DirectoryTraversal(SandboxDerived):
         self.test_tool_dirs = []
         self.tier_dirs = OrderedDict()
         self.tier_static_dirs = OrderedDict()
+        self.external_make_dirs = []
+        self.parallel_external_make_dirs = []
+
+
+class ConfigFileSubstitution(SandboxDerived):
+    """Describes a config file that will be generated using substitutions.
+
+    The output_path attribute defines the relative path from topsrcdir of the
+    output file to generate.
+    """
+    __slots__ = (
+        'input_path',
+        'output_path',
+    )
+
+    def __init__(self, sandbox):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.input_path = None
+        self.output_path = None
+

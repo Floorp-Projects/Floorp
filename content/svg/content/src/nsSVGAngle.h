@@ -16,7 +16,6 @@
 
 class nsISMILAnimationElement;
 class nsSMILValue;
-class nsSVGOrientType;
 
 namespace mozilla {
 
@@ -28,6 +27,7 @@ static const unsigned short SVG_ANGLETYPE_RAD         = 3;
 static const unsigned short SVG_ANGLETYPE_GRAD        = 4;
 
 namespace dom {
+class nsSVGOrientType;
 class SVGAngle;
 class SVGAnimatedAngle;
 }
@@ -68,8 +68,8 @@ public:
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
 
   static nsresult ToDOMSVGAngle(nsISupports **aResult);
-  nsresult ToDOMAnimatedAngle(nsISupports **aResult,
-                              nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAnimatedAngle>
+    ToDOMAnimatedAngle(nsSVGElement* aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
 
@@ -88,8 +88,8 @@ private:
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, nsSVGElement *aSVGElement);
-  nsresult ToDOMBaseVal(mozilla::dom::SVGAngle **aResult, nsSVGElement* aSVGElement);
-  nsresult ToDOMAnimVal(mozilla::dom::SVGAngle **aResult, nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAngle> ToDOMBaseVal(nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAngle> ToDOMAnimVal(nsSVGElement* aSVGElement);
 
 public:
   // We do not currently implemente a SMILAngle struct because in SVG 1.1 the
@@ -100,7 +100,7 @@ public:
   struct SMILOrient MOZ_FINAL : public nsISMILAttr
   {
   public:
-    SMILOrient(nsSVGOrientType* aOrientType,
+    SMILOrient(mozilla::dom::nsSVGOrientType* aOrientType,
                nsSVGAngle* aAngle,
                nsSVGElement* aSVGElement)
       : mOrientType(aOrientType)
@@ -111,7 +111,7 @@ public:
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGOrientType* mOrientType;
+    mozilla::dom::nsSVGOrientType* mOrientType;
     nsSVGAngle* mAngle;
     nsSVGElement* mSVGElement;
 

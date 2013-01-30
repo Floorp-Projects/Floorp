@@ -11,6 +11,7 @@
 
 #include "sigslot.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
@@ -65,7 +66,7 @@ class TransportLayer : public sigslot::has_slots<> {
     if (target_) {
       nsIThread *thr;
 
-      nsresult rv = NS_GetCurrentThread(&thr);
+      DebugOnly<nsresult> rv = NS_GetCurrentThread(&thr);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
 
       if (target_ != thr) {

@@ -37,6 +37,7 @@ from mozbuild.util import (
 )
 
 from .sandbox import (
+    SandboxError,
     SandboxExecutionError,
     SandboxLoadError,
     Sandbox,
@@ -57,6 +58,14 @@ else:
 
 def log(logger, level, action, params, formatter):
     logger.log(level, formatter, extra={'action': action, 'params': params})
+
+
+class SandboxCalledError(SandboxError):
+    """Represents an error resulting from calling the error() function."""
+
+    def __init__(self, file_stack, message):
+        SandboxError.__init__(self, file_stack)
+        self.message = message
 
 
 class MozbuildSandbox(Sandbox):
@@ -165,6 +174,13 @@ class MozbuildSandbox(Sandbox):
         # exec_file() handles normalization and verification of the path.
         self.exec_file(path)
 
+    def _warning(self, message):
+        # FUTURE consider capturing warnings in a variable instead of printing.
+        print('WARNING: %s' % message, file=sys.stderr)
+
+    def _error(self, message):
+        raise SandboxCalledError(self._execution_stack, message)
+
 
 class SandboxValidationError(Exception):
     """Represents an error encountered when validating sandbox results."""
@@ -187,10 +203,12 @@ class BuildReaderError(Exception):
     which affect error messages, of course).
     """
     def __init__(self, file_stack, trace, sandbox_exec_error=None,
-        sandbox_load_error=None, validation_error=None, other_error=None):
+        sandbox_load_error=None, validation_error=None, other_error=None,
+        sandbox_called_error=None):
 
         self.file_stack = file_stack
         self.trace = trace
+        self.sandbox_called_error = sandbox_called_error
         self.sandbox_exec = sandbox_exec_error
         self.sandbox_load = sandbox_load_error
         self.validation_error = validation_error
@@ -218,7 +236,8 @@ class BuildReaderError(Exception):
 
     @property
     def sandbox_error(self):
-        return self.sandbox_exec or self.sandbox_load
+        return self.sandbox_exec or self.sandbox_load or \
+            self.sandbox_called_error
 
     def __str__(self):
         s = StringIO()
@@ -260,7 +279,15 @@ class BuildReaderError(Exception):
     def _print_sandbox_error(self, s):
         # Try to find the frame of the executed code.
         script_frame = None
-        for frame in traceback.extract_tb(self.sandbox_error.trace):
+
+        # We don't currently capture the trace for SandboxCalledError.
+        # Therefore, we don't get line numbers from the moz.build file.
+        # FUTURE capture this.
+        trace = getattr(self.sandbox_error, 'trace', None)
+        frames = []
+        if trace:
+            frames = traceback.extract_tb(trace)
+        for frame in frames:
             if frame[0] == self.actual_file:
                 script_frame = frame
 
@@ -276,11 +303,26 @@ class BuildReaderError(Exception):
             s.write('    %s\n' % script_frame[3])
             s.write('\n')
 
+        if self.sandbox_called_error is not None:
+            self._print_sandbox_called_error(s)
+            return
+
         if self.sandbox_load is not None:
             self._print_sandbox_load_error(s)
             return
 
         self._print_sandbox_exec_error(s)
+
+    def _print_sandbox_called_error(self, s):
+        assert self.sandbox_called_error is not None
+
+        s.write('A moz.build file called the error() function.\n')
+        s.write('\n')
+        s.write('The error it encountered is:\n')
+        s.write('\n')
+        s.write('    %s\n' % self.sandbox_called_error.message)
+        s.write('\n')
+        s.write('Correct the error condition and try again.\n')
 
     def _print_sandbox_load_error(self, s):
         assert self.sandbox_load is not None
@@ -478,6 +520,10 @@ class BuildReader(object):
 
         except BuildReaderError as bre:
             raise bre
+
+        except SandboxCalledError as sce:
+            raise BuildReaderError(list(self._execution_stack),
+                sys.exc_info()[2], sandbox_called_error=sce)
 
         except SandboxExecutionError as se:
             raise BuildReaderError(list(self._execution_stack),
