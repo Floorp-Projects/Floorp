@@ -63,6 +63,8 @@ public class BrowserDB {
 
         public Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
 
+        public boolean isVisited(ContentResolver cr, String uri);
+
         public boolean isBookmark(ContentResolver cr, String uri);
 
         public boolean isReadingListItem(ContentResolver cr, String uri);
@@ -186,7 +188,11 @@ public class BrowserDB {
     public static String getUrlForKeyword(ContentResolver cr, String keyword) {
         return sDb.getUrlForKeyword(cr, keyword);
     }
-    
+
+    public static boolean isVisited(ContentResolver cr, String uri) {
+        return sDb.isVisited(cr, uri);
+    }
+
     public static boolean isBookmark(ContentResolver cr, String uri) {
         return sDb.isBookmark(cr, uri);
     }
