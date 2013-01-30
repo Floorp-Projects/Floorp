@@ -170,6 +170,36 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_IS_SECURE       = 0x00000002;
 
   /**
+   * Mixed active content flags
+   *
+   * May be set in addition to the State Security Flags, to indicate that
+   * mixed active content has been encountered.
+   *
+   * STATE_BLOCKED_MIXED_ACTIVE_CONTENT
+   *   Mixed active content has been blocked from loading.
+   *
+   * STATE_LOADED_MIXED_ACTIVE_CONTENT
+   *   Mixed active content has been loaded. State should be STATE_IS_BROKEN.
+   */
+  const unsigned long STATE_BLOCKED_MIXED_ACTIVE_CONTENT  = 0x00000010;
+  const unsigned long STATE_LOADED_MIXED_ACTIVE_CONTENT   = 0x00000020;
+
+  /**
+   * Mixed display content flags
+   *
+   * May be set in addition to the State Security Flags, to indicate that
+   * mixed display content has been encountered.
+   *
+   * STATE_BLOCKED_MIXED_DISPLAY_CONTENT
+   *   Mixed display content has been blocked from loading.
+   *
+   * STATE_LOADED_MIXED_DISPLAY_CONTENT
+   *   Mixed display content has been loaded. State should be STATE_IS_BROKEN.
+   */
+  const unsigned long STATE_BLOCKED_MIXED_DISPLAY_CONTENT = 0x00000100;
+  const unsigned long STATE_LOADED_MIXED_DISPLAY_CONTENT  = 0x00000200;
+
+  /**
    * Security Strength Flags
    *
    * These flags describe the security strength and accompany STATE_IS_SECURE

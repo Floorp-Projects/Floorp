@@ -463,6 +463,38 @@ public:
   }
 
   /**
+   * Get the has mixed display content loaded flag for this document.
+   */
+  bool GetHasMixedDisplayContentLoaded()
+  {
+    return mHasMixedDisplayContentLoaded;
+  }
+
+  /**
+   * Set the has mixed display content loaded flag for this document.
+   */
+  void SetHasMixedDisplayContentLoaded(bool aHasMixedDisplayContentLoaded)
+  {
+    mHasMixedDisplayContentLoaded = aHasMixedDisplayContentLoaded;
+  }
+
+  /**
+   * Get mixed display content blocked flag for this document.
+   */
+  bool GetHasMixedDisplayContentBlocked()
+  {
+    return mHasMixedDisplayContentBlocked;
+  }
+
+  /**
+   * Set the mixed display content blocked flag for this document.
+   */
+  void SetHasMixedDisplayContentBlocked(bool aHasMixedDisplayContentBlocked)
+  {
+    mHasMixedDisplayContentBlocked = aHasMixedDisplayContentBlocked;
+  }
+
+  /**
    * Get the sandbox flags for this document.
    * @see nsSandboxFlags.h for the possible flags
    */
@@ -2183,6 +2215,12 @@ protected:
 
   // True if a document has blocked Mixed Active Script (see nsMixedContentBlocker.cpp)
   bool mHasMixedActiveContentBlocked;
+
+  // True if a document has loaded Mixed Display/Passive Content (see nsMixedContentBlocker.cpp)
+  bool mHasMixedDisplayContentLoaded;
+
+  // True if a document has blocked Mixed Display/Passive Content (see nsMixedContentBlocker.cpp)
+  bool mHasMixedDisplayContentBlocked;
 
   // True if DisallowBFCaching has been called on this document.
   bool mBFCacheDisallowed;
