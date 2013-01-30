@@ -64,6 +64,30 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "has-ctypes", &value))
         return false;
 
+#ifdef JS_CPU_X86
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "x86", &value))
+        return false;
+
+#ifdef JS_CPU_X64
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "x64", &value))
+        return false;
+
+#ifdef MOZ_ASAN
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "asan", &value))
+        return false;
+
 #ifdef JS_GC_ZEAL
     value = BooleanValue(true);
 #else
