@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include "mozilla/TypedEnum.h"
-
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
