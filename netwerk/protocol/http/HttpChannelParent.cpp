@@ -132,6 +132,11 @@ HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
                                  const bool&                allowSpdy)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri) {
+    // URIParams does MOZ_ASSERT if null, but we need to protect opt builds from
+    // null deref here.
+    return false;
+  }
   nsCOMPtr<nsIURI> originalUri = DeserializeURI(aOriginalURI);
   nsCOMPtr<nsIURI> docUri = DeserializeURI(aDocURI);
   nsCOMPtr<nsIURI> referrerUri = DeserializeURI(aReferrerURI);
