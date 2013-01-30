@@ -79,6 +79,11 @@ public class AboutHomeContent extends ScrollView
     private static int mNumberOfTopSites;
     private static int mNumberOfCols;
 
+    public static enum UnpinFlags {
+        REMOVE_PIN,
+        REMOVE_HISTORY
+    }
+
     static enum UpdateFlags {
         TOP_SITES,
         PREVIOUS_TABS,
@@ -210,11 +215,13 @@ public class AboutHomeContent extends ScrollView
                 // force all items to be visible all the time
                 View view = mTopSitesGrid.getChildAt(info.position);
                 TopSitesViewHolder holder = (TopSitesViewHolder) view.getTag();
-                if (holder.isPinned()) {
+                if (TextUtils.isEmpty(holder.getUrl())) {
+                    menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
+                    menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
+                    menu.findItem(R.id.abouthome_topsites_remove).setVisible(false);
+                } else if (holder.isPinned()) {
                     menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                 } else {
-                    if (TextUtils.isEmpty(holder.getUrl()))
-                        menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                 }
             }
@@ -1013,18 +1020,21 @@ public class AboutHomeContent extends ScrollView
         holder.setPinned(false);
     }
 
-    public void unpinSite() {
+    public void unpinSite(final UnpinFlags flags) {
         final int position = mTopSitesGrid.getSelectedPosition();
-        View v = mTopSitesGrid.getChildAt(position);
-        TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-
+        final View v = mTopSitesGrid.getChildAt(position);
+        final TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+        final String url = holder.getUrl();
         // Quickly update the view so that there isn't as much lag between the request and response
         clearThumbnail(holder);
         (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
             @Override
             public Void doInBackground(Void... params) {
-                ContentResolver resolver = mActivity.getContentResolver();
+                final ContentResolver resolver = mActivity.getContentResolver();
                 BrowserDB.unpinSite(resolver, position);
+                if (flags == UnpinFlags.REMOVE_HISTORY) {
+                    BrowserDB.removeHistoryEntry(resolver, url);
+                }
                 return null;
             }
         }).execute();
