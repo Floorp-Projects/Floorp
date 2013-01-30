@@ -191,8 +191,6 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aFaviconURI);
 
-  ENSURE_NOT_PRIVATE_BROWSING;
-
   // If we are about to expire all favicons, don't bother setting a new one.
   if (mFaviconsExpirationRunning) {
     return NS_OK;

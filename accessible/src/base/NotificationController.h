@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NotificationController_h_
-#define NotificationController_h_
+#ifndef mozilla_a11y_NotificationController_h_
+#define mozilla_a11y_NotificationController_h_
 
-#include "AccEvent.h"
+#include "EventQueue.h"
+
 #include "nsCycleCollectionParticipant.h"
 #include "nsRefreshDriver.h"
 
@@ -84,7 +85,8 @@ private:
 /**
  * Used to process notifications from core for the document accessible.
  */
-class NotificationController : public nsARefreshObserver
+class NotificationController : public EventQueue,
+                               public nsARefreshObserver
 {
 public:
   NotificationController(DocAccessible* aDocument, nsIPresShell* aPresShell);
@@ -103,7 +105,11 @@ public:
   /**
    * Put an accessible event into the queue to process it later.
    */
-  void QueueEvent(AccEvent* aEvent);
+  void QueueEvent(AccEvent* aEvent)
+  {
+    if (PushEvent(aEvent))
+      ScheduleProcessing();
+  }
 
   /**
    * Schedule binding the child document to the tree of this document.
@@ -198,46 +204,6 @@ private:
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime);
 
-  // Event queue processing
-  /**
-   * Coalesce redundant events from the queue.
-   */
-  void CoalesceEvents();
-
-  /**
-   * Coalesce events from the same subtree.
-   */
-  void CoalesceReorderEvents(AccEvent* aTailEvent);
-
-  /**
-   * Coalesce two selection change events within the same select control.
-   */
-  void CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
-                               AccSelChangeEvent* aThisEvent,
-                               uint32_t aThisIndex);
-
-  /**
-   * Coalesce text change events caused by sibling hide events.
-   */
-  void CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
-                                   AccHideEvent* aThisEvent);
-  void CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
-                                   AccShowEvent* aThisEvent);
-
-  /**
-    * Create text change event caused by hide or show event. When a node is
-    * hidden/removed or shown/appended, the text in an ancestor hyper text will
-    * lose or get new characters.
-    */
-   void CreateTextChangeEventFor(AccMutationEvent* aEvent);
-
-  // Event queue processing
-
-  /**
-   * Process events from the queue and fires events.
-   */
-  void ProcessEventQueue();
-
 private:
   /**
    * Indicates whether we're waiting on an event queue processing from our
@@ -249,11 +215,6 @@ private:
     eRefreshProcessingForUpdate
   };
   eObservingState mObservingState;
-
-  /**
-   * The document accessible reference owning this queue.
-   */
-  nsRefPtr<DocAccessible> mDocument;
 
   /**
    * The presshell of the document accessible.
@@ -343,15 +304,9 @@ private:
    * use SwapElements() on it.
    */
   nsTArray<nsRefPtr<Notification> > mNotifications;
-
-  /**
-   * Pending events array. Don't make this an nsAutoTArray; we use
-   * SwapElements() on it.
-   */
-  nsTArray<nsRefPtr<AccEvent> > mEvents;
 };
 
 } // namespace a11y
 } // namespace mozilla
 
-#endif
+#endif // mozilla_a11y_NotificationController_h_

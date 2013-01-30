@@ -53,6 +53,9 @@ MOCHITEST_FILES = \
     test_maxforms_3.html \
     test_notifications.html \
     test_notifications_popup.html \
+    privbrowsing_perwindowpb_iframe.html \
+    test_privbrowsing_perwindowpb.html \
+    $(filter disabled-for-intermittent-failures--bug-835904, test_prompt.html) \
     test_prompt_async.html \
     test_xhr.html \
     test_xml_load.html \
@@ -81,24 +84,6 @@ MOCHITEST_FILES = \
     subtst_notifications_11_popup.html \
     subtst_prompt_async.html \
     $(NULL)
-
-ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-MOCHITEST_FILES += \
-    test_privbrowsing.html \
-    $(NULL)
-
-ifneq ($(OS_TARGET),Linux)
-MOCHITEST_FILES += \
-    test_prompt.html \
-    $(NULL)
-endif
-
-else
-MOCHITEST_FILES += \
-    privbrowsing_perwindowpb_iframe.html \
-    test_privbrowsing_perwindowpb.html \
-    $(NULL)
-endif
 
 # This test doesn't pass because we can't ensure a cross-platform
 # event that occurs between DOMContentLoaded and Pageload

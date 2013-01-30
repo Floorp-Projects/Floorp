@@ -16,39 +16,6 @@ interface HTMLFrameSetElement : HTMLElement {
   attribute DOMString cols;
   [SetterThrows]
   attribute DOMString rows;
-  [SetterThrows]
-  attribute EventHandler onafterprint;
-  [SetterThrows]
-  attribute EventHandler onbeforeprint;
-  [SetterThrows]
-  attribute BeforeUnloadEventHandler onbeforeunload;
-  //[SetterThrows]
-  //attribute EventHandler onblur;
-  //[SetterThrows]
-  //attribute EventHandler onerror;
-  //[SetterThrows]
-  //attribute EventHandler onfocus;
-  [SetterThrows]
-  attribute EventHandler onhashchange;
-  //attribute EventHandler onload;
-  [SetterThrows]
-  attribute EventHandler onmessage;
-  [SetterThrows]
-  attribute EventHandler onoffline;
-  [SetterThrows]
-  attribute EventHandler ononline;
-  [SetterThrows]
-  attribute EventHandler onpagehide;
-  [SetterThrows]
-  attribute EventHandler onpageshow;
-  [SetterThrows]
-  attribute EventHandler onpopstate;
-  [SetterThrows]
-  attribute EventHandler onresize;
-  //[SetterThrows]
-  //attribute EventHandler onscroll;
-  //[SetterThrows]
-  //attribute EventHandler onstorage;
-  [SetterThrows]
-  attribute EventHandler onunload;
 };
+
+HTMLFrameSetElement implements WindowEventHandlers;

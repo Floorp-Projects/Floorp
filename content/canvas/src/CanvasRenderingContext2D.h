@@ -24,7 +24,7 @@
 #define NS_CANVASPATTERNAZURE_PRIVATE_IID \
     {0xc9bacc25, 0x28da, 0x421e, {0x9a, 0x4b, 0xbb, 0xd6, 0x93, 0x05, 0x12, 0xbc}}
 
-class nsIDOMXULElement;
+class nsXULElement;
 
 namespace mozilla {
 namespace gfx {
@@ -163,10 +163,13 @@ public:
     return CurrentState().globalAlpha;
   }
 
+  // Useful for silencing cast warnings
+  static mozilla::gfx::Float ToFloat(double aValue) { return mozilla::gfx::Float(aValue); }
+
   void SetGlobalAlpha(double globalAlpha)
   {
     if (globalAlpha >= 0.0 && globalAlpha <= 1.0) {
-      CurrentState().globalAlpha = globalAlpha;
+      CurrentState().globalAlpha = ToFloat(globalAlpha);
     }
   }
 
@@ -204,7 +207,7 @@ public:
 
   void SetShadowOffsetX(double shadowOffsetX)
   {
-    CurrentState().shadowOffset.x = shadowOffsetX;
+    CurrentState().shadowOffset.x = ToFloat(shadowOffsetX);
   }
 
   double ShadowOffsetY()
@@ -214,7 +217,7 @@ public:
 
   void SetShadowOffsetY(double shadowOffsetY)
   {
-    CurrentState().shadowOffset.y = shadowOffsetY;
+    CurrentState().shadowOffset.y = ToFloat(shadowOffsetY);
   }
 
   double ShadowBlur()
@@ -225,7 +228,7 @@ public:
   void SetShadowBlur(double shadowBlur)
   {
     if (shadowBlur >= 0.0) {
-      CurrentState().shadowBlur = shadowBlur;
+      CurrentState().shadowBlur = ToFloat(shadowBlur);
     }
   }
 
@@ -297,7 +300,7 @@ public:
   void SetLineWidth(double width)
   {
     if (width > 0.0) {
-      CurrentState().lineWidth = width;
+      CurrentState().lineWidth = ToFloat(width);
     }
   }
   void GetLineCap(nsAString& linecap);
@@ -313,7 +316,7 @@ public:
   void SetMiterLimit(double miter)
   {
     if (miter > 0.0) {
-      CurrentState().miterLimit = miter;
+      CurrentState().miterLimit = ToFloat(miter);
     }
   }
 
@@ -344,10 +347,10 @@ public:
     EnsureWritablePath();
 
     if (mPathBuilder) {
-      mPathBuilder->MoveTo(mozilla::gfx::Point(x, y));
+      mPathBuilder->MoveTo(mozilla::gfx::Point(ToFloat(x), ToFloat(y)));
     } else {
       mDSPathBuilder->MoveTo(mTarget->GetTransform() *
-                             mozilla::gfx::Point(x, y));
+                             mozilla::gfx::Point(ToFloat(x), ToFloat(y)));
     }
   }
 
@@ -355,7 +358,7 @@ public:
   {
     EnsureWritablePath();
     
-    LineTo(mozilla::gfx::Point(x, y));
+    LineTo(mozilla::gfx::Point(ToFloat(x), ToFloat(y)));
   }
 
   void QuadraticCurveTo(double cpx, double cpy, double x, double y)
@@ -363,14 +366,14 @@ public:
     EnsureWritablePath();
 
     if (mPathBuilder) {
-      mPathBuilder->QuadraticBezierTo(mozilla::gfx::Point(cpx, cpy),
-                                      mozilla::gfx::Point(x, y));
+      mPathBuilder->QuadraticBezierTo(mozilla::gfx::Point(ToFloat(cpx), ToFloat(cpy)),
+                                      mozilla::gfx::Point(ToFloat(x), ToFloat(y)));
     } else {
       mozilla::gfx::Matrix transform = mTarget->GetTransform();
       mDSPathBuilder->QuadraticBezierTo(transform *
-                                        mozilla::gfx::Point(cpx, cpy),
+                                        mozilla::gfx::Point(ToFloat(cpx), ToFloat(cpy)),
                                         transform *
-                                        mozilla::gfx::Point(x, y));
+                                        mozilla::gfx::Point(ToFloat(x), ToFloat(y)));
     }
   }
 
@@ -378,9 +381,9 @@ public:
   {
     EnsureWritablePath();
 
-    BezierTo(mozilla::gfx::Point(cp1x, cp1y),
-             mozilla::gfx::Point(cp2x, cp2y),
-             mozilla::gfx::Point(x, y));
+    BezierTo(mozilla::gfx::Point(ToFloat(cp1x), ToFloat(cp1y)),
+             mozilla::gfx::Point(ToFloat(cp2x), ToFloat(cp2y)),
+             mozilla::gfx::Point(ToFloat(x), ToFloat(y)));
   }
 
   void ArcTo(double x1, double y1, double x2, double y2, double radius,
@@ -435,7 +438,7 @@ public:
   void DrawWindow(nsIDOMWindow* window, double x, double y, double w, double h,
                   const nsAString& bgColor, uint32_t flags,
                   mozilla::ErrorResult& error);
-  void AsyncDrawXULElement(nsIDOMXULElement* elem, double x, double y, double w,
+  void AsyncDrawXULElement(nsXULElement& elem, double x, double y, double w,
                            double h, const nsAString& bgColor, uint32_t flags,
                            mozilla::ErrorResult& error);
 

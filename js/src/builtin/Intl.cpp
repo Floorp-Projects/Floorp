@@ -12,10 +12,12 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
+#include "jsinterp.h"
 #include "jsobj.h"
 
 #include "builtin/Intl.h"
 #include "vm/GlobalObject.h"
+#include "vm/Stack.h"
 
 #include "jsobjinlines.h"
 
@@ -27,8 +29,23 @@ static bool
 IntlInitialize(JSContext *cx, HandleObject obj, Handle<PropertyName*> initializer,
                HandleValue locales, HandleValue options)
 {
-    // ??? stub - initializer to be implemented as self-hosted function
-    return true;
+    RootedValue initializerValue(cx);
+    if (!cx->global()->getIntrinsicValue(cx, initializer, &initializerValue))
+        return false;
+    JS_ASSERT(initializerValue.isObject());
+    JS_ASSERT(initializerValue.toObject().isFunction());
+
+    InvokeArgsGuard args;
+    if (!cx->stack.pushInvokeArgs(cx, 3, &args))
+        return false;
+
+    args.setCallee(initializerValue);
+    args.setThis(NullValue());
+    args[0] = ObjectValue(*obj);
+    args[1] = locales;
+    args[2] = options;
+
+    return Invoke(cx, args);
 }
 
 /******************** Collator ********************/
@@ -55,10 +72,12 @@ collator_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 static JSFunctionSpec collator_static_methods[] = {
+    {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_Collator_supportedLocalesOf"},
     JS_FS_END
 };
 
 static JSFunctionSpec collator_methods[] = {
+    {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_Collator_resolvedOptions"},
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, collator_toSource, 0, 0),
 #endif
@@ -139,6 +158,21 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
     if (!JS_DefineFunctions(cx, proto, collator_methods))
         return NULL;
 
+    /*
+     * Install the getter for Collator.prototype.compare, which returns a bound
+     * comparison function for the specified Collator object (suitable for
+     * passing to methods like Array.prototype.sort).
+     */
+    RootedValue getter(cx);
+    if (!cx->global()->getIntrinsicValue(cx, cx->names().CollatorCompare, &getter))
+        return NULL;
+    RootedValue undefinedValue(cx, UndefinedValue());
+    if (!JSObject::defineProperty(cx, proto, cx->names().compare, undefinedValue,
+                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                                  NULL, JSPROP_GETTER)) {
+        return NULL;
+    }
+
     // 10.2.1 and 10.3
     RootedValue locales(cx, UndefinedValue());
     RootedValue options(cx, UndefinedValue());
@@ -190,10 +224,12 @@ numberFormat_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 static JSFunctionSpec numberFormat_static_methods[] = {
+    {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_NumberFormat_supportedLocalesOf"},
     JS_FS_END
 };
 
 static JSFunctionSpec numberFormat_methods[] = {
+    {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_NumberFormat_resolvedOptions"},
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, numberFormat_toSource, 0, 0),
 #endif
@@ -274,6 +310,21 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
     if (!JS_DefineFunctions(cx, proto, numberFormat_methods))
         return NULL;
 
+    /*
+     * Install the getter for NumberFormat.prototype.format, which returns a
+     * bound formatting function for the specified NumberFormat object (suitable
+     * for passing to methods like Array.prototype.map).
+     */
+    RootedValue getter(cx);
+    if (!cx->global()->getIntrinsicValue(cx, cx->names().NumberFormatFormat, &getter))
+        return NULL;
+    RootedValue undefinedValue(cx, UndefinedValue());
+    if (!JSObject::defineProperty(cx, proto, cx->names().format, undefinedValue,
+                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                                  NULL, JSPROP_GETTER)) {
+        return NULL;
+    }
+
     // 11.2.1 and 11.3
     RootedValue locales(cx, UndefinedValue());
     RootedValue options(cx, UndefinedValue());
@@ -325,10 +376,12 @@ dateTimeFormat_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 static JSFunctionSpec dateTimeFormat_static_methods[] = {
+    {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_DateTimeFormat_supportedLocalesOf"},
     JS_FS_END
 };
 
 static JSFunctionSpec dateTimeFormat_methods[] = {
+    {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_DateTimeFormat_resolvedOptions"},
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, dateTimeFormat_toSource, 0, 0),
 #endif
@@ -408,6 +461,21 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
     // 12.3.2 and 12.3.3
     if (!JS_DefineFunctions(cx, proto, dateTimeFormat_methods))
         return NULL;
+
+    /*
+     * Install the getter for DateTimeFormat.prototype.format, which returns a
+     * bound formatting function for the specified DateTimeFormat object
+     * (suitable for passing to methods like Array.prototype.map).
+     */
+    RootedValue getter(cx);
+    if (!cx->global()->getIntrinsicValue(cx, cx->names().DateTimeFormatFormat, &getter))
+        return NULL;
+    RootedValue undefinedValue(cx, UndefinedValue());
+    if (!JSObject::defineProperty(cx, proto, cx->names().format, undefinedValue,
+                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                                  NULL, JSPROP_GETTER)) {
+        return NULL;
+    }
 
     // 12.2.1 and 12.3
     RootedValue locales(cx, UndefinedValue());
@@ -493,12 +561,17 @@ js_InitIntlClass(JSContext *cx, HandleObject obj)
     if (!JS_DefineFunctions(cx, Intl, intl_static_methods))
         return NULL;
 
-    if (!InitCollatorClass(cx, Intl, global))
-        return NULL;
-    if (!InitNumberFormatClass(cx, Intl, global))
-        return NULL;
-    if (!InitDateTimeFormatClass(cx, Intl, global))
-        return NULL;
+    // Skip initialization of the Intl constructors during initialization of the
+    // self-hosting global as we may get here before self-hosted code is compiled,
+    // and no core code refers to the Intl classes.
+    if (!cx->runtime->isSelfHostingGlobal(cx->global())) {
+        if (!InitCollatorClass(cx, Intl, global))
+            return NULL;
+        if (!InitNumberFormatClass(cx, Intl, global))
+            return NULL;
+        if (!InitDateTimeFormatClass(cx, Intl, global))
+            return NULL;
+    }
 
     MarkStandardClassInitializedNoProto(global, &IntlClass);
 
@@ -508,7 +581,9 @@ js_InitIntlClass(JSContext *cx, HandleObject obj)
 bool
 GlobalObject::initIntlObject(JSContext *cx, Handle<GlobalObject*> global)
 {
-    RootedObject Intl(cx, NewObjectWithClassProto(cx, &IntlClass, NULL, global));
+    RootedObject Intl(cx);
+    Intl = NewObjectWithGivenProto(cx, &IntlClass,
+                                   global->getOrCreateObjectPrototype(cx), global);
     if (!Intl || !JSObject::setSingletonType(cx, Intl))
         return false;
 

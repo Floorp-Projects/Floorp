@@ -141,15 +141,6 @@ BluetoothServiceChildProcess::StartDiscoveryInternal(
 }
 
 nsresult
-BluetoothServiceChildProcess::GetProperties(BluetoothObjectType aType,
-                                            const nsAString& aPath,
-                                            BluetoothReplyRunnable* aRunnable)
-{
-  SendRequest(aRunnable, GetPropertyRequest(aType, nsString(aPath)));
-  return NS_OK;
-}
-
-nsresult
 BluetoothServiceChildProcess::SetProperty(BluetoothObjectType aType,
                                           const nsAString& aPath,
                                           const BluetoothNamedValue& aValue,

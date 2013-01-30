@@ -8,7 +8,11 @@
 from __future__ import unicode_literals
 
 import copy
+import errno
 import hashlib
+import os
+
+from StringIO import StringIO
 
 
 def hash_file(path):
@@ -83,4 +87,53 @@ class ReadOnlyDefaultDict(DefaultOnReadDict, ReadOnlyDict):
     """A read-only dictionary that supports default values on retrieval."""
     def __init__(self, d, defaults=None, global_default=undefined):
         DefaultOnReadDict.__init__(self, d, defaults, global_default)
+
+
+def ensureParentDir(path):
+    """Ensures the directory parent to the given file exists."""
+    d = os.path.dirname(path)
+    if d and not os.path.exists(path):
+        try:
+            os.makedirs(d)
+        except OSError, error:
+            if error.errno != errno.EEXIST:
+                raise
+
+
+class FileAvoidWrite(StringIO):
+    """File-like object that buffers output and only writes if content changed.
+
+    We create an instance from an existing filename. New content is written to
+    it. When we close the file object, if the content in the in-memory buffer
+    differs from what is on disk, then we write out the new content. Otherwise,
+    the original file is untouched.
+    """
+    def __init__(self, filename):
+        StringIO.__init__(self)
+        self.filename = filename
+
+    def close(self):
+        buf = self.getvalue()
+        StringIO.close(self)
+        try:
+            existing = open(self.filename, 'rU')
+        except IOError:
+            pass
+        else:
+            try:
+                if existing.read() == buf:
+                    return
+            except IOError:
+                pass
+            finally:
+                existing.close()
+
+        ensureParentDir(self.filename)
+        with open(self.filename, 'w') as file:
+            file.write(buf)
+
+    def __enter__(self):
+        return self
+    def __exit__(self, type, value, traceback):
+        self.close()
 

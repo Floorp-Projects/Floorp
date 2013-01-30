@@ -8,7 +8,6 @@
 #define mozilla_dom_bluetooth_bluetoothutils_h__
 
 #include "BluetoothCommon.h"
-#include "nsTArray.h"
 
 struct JSContext;
 class JSObject;
@@ -21,8 +20,8 @@ class BluetoothReplyRunnable;
 
 bool
 SetJsObject(JSContext* aContext,
-            JSObject* aObj,
-            const InfallibleTArray<BluetoothNamedValue>& aData);
+            const BluetoothValue& aValue,
+            JSObject* aObj);
 
 nsString
 GetObjectPathFromAddress(const nsAString& aAdapterPath,

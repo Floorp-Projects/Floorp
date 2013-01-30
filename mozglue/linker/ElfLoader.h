@@ -47,6 +47,25 @@ extern "C" {
 }
 
 /**
+ * Specialize RefCounted template for LibHandle. We may get references to
+ * LibHandles during the execution of their destructor, so we need
+ * RefCounted<LibHandle>::Release to support some reentrancy. See further
+ * below.
+ */
+class LibHandle;
+
+namespace mozilla {
+
+template <> inline void RefCounted<LibHandle>::Release();
+
+template <> inline RefCounted<LibHandle>::~RefCounted()
+{
+  MOZ_ASSERT(refCnt == 0x7fffdead);
+}
+
+} /* namespace mozilla */
+
+/**
  * Abstract class for loaded libraries. Libraries may be loaded through the
  * system linker or this linker, both cases will be derived from this class.
  */
@@ -142,6 +161,36 @@ private:
   int directRefCnt;
   char *path;
 };
+
+/**
+ * Specialized RefCounted<LibHandle>::Release. Under normal operation, when
+ * refCnt reaches 0, the LibHandle is deleted. Its refCnt is however increased
+ * to 1 on normal builds, and 0x7fffdead on debug builds so that the LibHandle
+ * can still be referenced while the destructor is executing. The refCnt is
+ * allowed to grow > 0x7fffdead, but not to decrease under that value, which
+ * would mean too many Releases from within the destructor.
+ */
+namespace mozilla {
+
+template <> inline void RefCounted<LibHandle>::Release() {
+#ifdef DEBUG
+  if (refCnt > 0x7fff0000)
+    MOZ_ASSERT(refCnt > 0x7fffdead);
+#endif
+  MOZ_ASSERT(refCnt > 0);
+  if (refCnt > 0) {
+    if (0 == --refCnt) {
+#ifdef DEBUG
+      refCnt = 0x7fffdead;
+#else
+      refCnt = 1;
+#endif
+      delete static_cast<LibHandle*>(this);
+    }
+  }
+}
+
+} /* namespace mozilla */
 
 /**
  * Class handling libraries loaded by the system linker

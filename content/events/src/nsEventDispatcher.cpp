@@ -490,7 +490,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   if (aEvent->mFlags.mRetargetToNonNativeAnonymous) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(target);
     if (content && content->IsInNativeAnonymousSubtree()) {
-      nsCOMPtr<nsPIDOMEventTarget> newTarget =
+      nsCOMPtr<nsIDOMEventTarget> newTarget =
         do_QueryInterface(content->FindFirstNonChromeOnlyAccessContent());
       NS_ENSURE_STATE(newTarget);
 
