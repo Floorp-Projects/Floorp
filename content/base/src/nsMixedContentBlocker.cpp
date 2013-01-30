@@ -75,7 +75,11 @@ public:
 
 
     if (mType == eMixedScript) {
-      rootDoc->SetHasMixedActiveContentLoaded(true);
+       // See if the pref will change here. If it will, only then do we need to call OnSecurityChange() to update the UI.
+       if (rootDoc->GetHasMixedActiveContentLoaded()) {
+         return NS_OK;
+       }
+       rootDoc->SetHasMixedActiveContentLoaded(true);
 
       // Update the security UI in the tab with the allowed mixed content
       nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
@@ -88,8 +92,6 @@ public:
           //Do Nothing for now; state will already be set STATE_IS_BROKEN
         }
     }
-
-
 
     return NS_OK;
   }
@@ -362,13 +364,21 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     // unless the user has choosen to override the pref
     if (allowMixedContent) {
        *aDecision = nsIContentPolicy::ACCEPT;
+       // See if the pref will change here. If it will, only then do we need to call OnSecurityChange() to update the UI.
+       if (rootDoc->GetHasMixedActiveContentLoaded()) {
+         return NS_OK;
+       }
        rootDoc->SetHasMixedActiveContentLoaded(true);
     } else {
        *aDecision = nsIContentPolicy::REJECT_REQUEST;
+       // See if the pref will change here. If it will, only then do we need to call OnSecurityChange() to update the UI.
+       if (rootDoc->GetHasMixedActiveContentBlocked()) {
+         return NS_OK;
+       }
        rootDoc->SetHasMixedActiveContentBlocked(true);
     }
 
-    // Call eventsink to invoke the Mixed Content UI
+    // Call eventsink to invoke the Mixed Content UI if it should change based on this load. 
     nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
     if (eventSink) {
       if (!allowMixedContent) {
