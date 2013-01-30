@@ -745,7 +745,7 @@ protected:
     nsCOMPtr<nsIChannel>       mFailedChannel;
     uint32_t                   mFailedLoadType;
 
-    // Set in DoURILoad when the LOAD_MIXED_CONTENT flag is set.
+    // Set in DoURILoad when the LOAD_RELOAD_ALLOW_MIXED_CONTENT flag is set.
     // Checked in nsMixedContentBlocker, to see if the channels match.
     nsCOMPtr<nsIChannel>       mMixedContentChannel;
 
