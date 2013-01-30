@@ -333,7 +333,8 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   NS_ENSURE_TRUE(docShell, NS_OK);
   bool rootHasSecureConnection = false;
   bool allowMixedContent = false;
-  rv = docShell->GetAllowMixedContentAndConnectionData(&rootHasSecureConnection, &allowMixedContent);
+  bool isRootDocShell = false;
+  rv = docShell->GetAllowMixedContentAndConnectionData(&rootHasSecureConnection, &allowMixedContent, &isRootDocShell);
   if (NS_FAILED(rv)) {
      return rv;
   }
