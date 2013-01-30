@@ -36,6 +36,12 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 //-----------------------------------------------------------------------------
 
+// Ignore any LOG macro that we inherit from arbitrary headers. (We define our
+// own LOG macro below.)
+#ifdef LOG
+#undef LOG
+#endif
+
 #if defined(PR_LOGGING)
 //
 // set NSPR_LOG_MODULES=nsJarProtocol:5
@@ -43,6 +49,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 static PRLogModuleInfo *gJarProtocolLog = nullptr;
 #endif
 
+// If you ever want to define PR_FORCE_LOGGING in this file, see bug 545995
 #define LOG(args)     PR_LOG(gJarProtocolLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gJarProtocolLog, 4)
 

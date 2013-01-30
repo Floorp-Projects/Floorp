@@ -1850,6 +1850,12 @@ nsDocument::Init()
   return NS_OK;
 }
 
+nsHTMLDocument*
+nsIDocument::AsHTMLDocument()
+{
+  return IsHTML() ? static_cast<nsHTMLDocument*>(this) : nullptr;
+}
+
 void
 nsIDocument::DeleteAllProperties()
 {

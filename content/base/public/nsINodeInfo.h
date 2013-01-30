@@ -132,7 +132,7 @@ public:
   /*
    * Get the namespace URI for a node, if the node has a namespace URI.
    */
-  virtual nsresult GetNamespaceURI(nsAString& aNameSpaceURI) const = 0;
+  virtual void GetNamespaceURI(nsAString& aNameSpaceURI) const = 0;
 
   /*
    * Get the namespace ID for a node if the node has a namespace, if not this

@@ -11,7 +11,6 @@
 #include "nsSVGElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "nsIDOMSVGFitToViewBox.h"
 #include "nsGkAtoms.h"
 
 nsresult NS_NewSVGSymbolElement(nsIContent **aResult,
@@ -24,8 +23,7 @@ typedef nsSVGElement SVGSymbolElementBase;
 
 class SVGSymbolElement MOZ_FINAL : public SVGSymbolElementBase,
                                    public nsIDOMSVGSymbolElement,
-                                   public DOMSVGTests,
-                                   public nsIDOMSVGFitToViewBox
+                                   public DOMSVGTests
 {
 protected:
   friend nsresult (::NS_NewSVGSymbolElement(nsIContent **aResult,
@@ -38,7 +36,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGSYMBOLELEMENT
-  NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE

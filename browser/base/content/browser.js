@@ -1265,7 +1265,7 @@ var gBrowserInit = {
 
     gBrowser.addEventListener("pageshow", function(event) {
       // Filter out events that are not about the document load we are interested in
-      if (content && event.target == content.document)
+      if (event.target == content.document)
         setTimeout(pageShowEventHandlers, 0, event);
     }, true);
 

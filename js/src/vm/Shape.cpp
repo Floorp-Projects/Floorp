@@ -1092,6 +1092,24 @@ JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag_, GenerateSha
     return true;
 }
 
+bool
+JSObject::clearFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag)
+{
+    JS_ASSERT(inDictionaryMode());
+    JS_ASSERT(lastProperty()->getObjectFlags() & flag);
+
+    RootedObject self(cx, this);
+
+    StackBaseShape base(self->lastProperty());
+    base.flags &= ~flag;
+    UnrootedUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
+    if (!nbase)
+        return false;
+
+    self->lastProperty()->base()->adoptUnowned(nbase);
+    return true;
+}
+
 /* static */ UnrootedShape
 Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, TaggedProto proto, Shape *last)
 {
