@@ -1567,6 +1567,17 @@ nsDisplayBackgroundImage::~nsDisplayBackgroundImage()
 #endif
 }
 
+#ifdef MOZ_DUMP_PAINTING
+void
+nsDisplayBackgroundImage::WriteDebugInfo(FILE *aOutput)
+{
+  if (mIsThemed) {
+    fprintf(aOutput, "(themed, appearance:%d) ", mFrame->GetStyleDisplay()->mAppearance);
+  }
+
+}
+#endif
+
 /*static*/ nsresult
 nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                                      nsIFrame* aFrame,
