@@ -13,20 +13,6 @@
 namespace mozilla {
 namespace gfx {
 
-// XXX - <algorithm> conflicts with exceptions on 10.6. Define our own gfx_min/gfx_max
-// functions here. Avoid min/max to avoid conflicts with existing #defines on windows.
-template<typename T>
-T gfx_min(T aVal1, T aVal2)
-{
-  return (aVal1 < aVal2) ? aVal1 : aVal2;
-}
-
-template<typename T>
-T gfx_max(T aVal1, T aVal2)
-{
-  return (aVal1 > aVal2) ? aVal1 : aVal2;
-}
-
 /**
  * Rectangles have two interpretations: a set of (zero-size) points,
  * and a rectangular area of the plane. Most rectangle operations behave
