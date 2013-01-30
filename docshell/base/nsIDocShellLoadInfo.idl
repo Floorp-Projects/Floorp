@@ -17,7 +17,7 @@ interface nsISHEntry;
 
 typedef long nsDocShellInfoLoadType;
 
-[scriptable, uuid(92a0a637-373e-4647-9476-ead11e005c75)]
+[scriptable, uuid(5b041ea4-6655-434c-b3d3-cbbc9441f86a)]
 interface nsIDocShellLoadInfo : nsISupports
 {
     /** This is the referrer for the load. */
@@ -61,6 +61,7 @@ interface nsIDocShellLoadInfo : nsISupports
     const long loadNormalBypassProxyAndCache = 16;
     const long loadPushState = 17;                 // history.pushState or replaceState
     const long loadReplaceBypassCache = 18;
+    const long loadMixedContent = 19;
 
     /** Contains a load type as specified by the load* constants */
     attribute nsDocShellInfoLoadType loadType;
