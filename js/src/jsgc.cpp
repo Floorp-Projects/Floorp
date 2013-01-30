@@ -1160,8 +1160,8 @@ JSCompartment::reduceGCTriggerBytes(size_t amount)
     gcTriggerBytes -= amount;
 }
 
-Allocator::Allocator(JSCompartment *compartment)
-  : compartment(compartment)
+Allocator::Allocator(Zone *zone)
+  : zone(zone)
 {}
 
 inline void
