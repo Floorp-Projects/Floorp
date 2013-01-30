@@ -784,6 +784,9 @@ ion::ToggleBarriers(JSCompartment *comp, bool needs)
         if (script->hasIonScript())
             script->ion->toggleBarriers(needs);
     }
+
+    if (comp->ionCompartment())
+        comp->ionCompartment()->toggleBaselineStubBarriers(needs);
 }
 
 namespace js {

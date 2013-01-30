@@ -454,3 +454,12 @@ ion::FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script)
     BaselineScript::Destroy(fop, script->baseline);
     script->baseline = NULL;
 }
+
+void
+ion::IonCompartment::toggleBaselineStubBarriers(bool enabled)
+{
+    for (ICStubCodeMap::Enum e(*stubCodes_); !e.empty(); e.popFront()) {
+        IonCode *code = *e.front().value.unsafeGet();
+        code->togglePreBarriers(enabled);
+    }
+}

@@ -75,13 +75,13 @@ class WeakCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
 template <class Key, class Value,
           class HashPolicy = DefaultHasher<Key>,
           class AllocPolicy = RuntimeAllocPolicy>
-class WeakValueCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
-  private:
+class WeakValueCache : public HashMap<Key, Value, HashPolicy, AllocPolicy>
+{
+  public:
     typedef HashMap<Key, Value, HashPolicy, AllocPolicy> Base;
     typedef typename Base::Range Range;
     typedef typename Base::Enum Enum;
 
-  public:
     explicit WeakValueCache(JSRuntime *rt) : Base(rt) { }
     explicit WeakValueCache(JSContext *cx) : Base(cx) { }
 

@@ -131,6 +131,8 @@ class IonCompartment
         return stubCodes_->add(p, key, stubCode.get());
     }
 
+    void toggleBaselineStubBarriers(bool enabled);
+
   public:
     IonCompartment(IonRuntime *rt);
     ~IonCompartment();
