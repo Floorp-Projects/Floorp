@@ -490,11 +490,11 @@ class TransportConduitTest : public ::testing::Test
   {
     //get pointer to AudioSessionConduit
     int err=0;
-    mAudioSession = mozilla::AudioSessionConduit::Create(NULL);
+    mAudioSession = mozilla::AudioSessionConduit::Create();
     if( !mAudioSession )
       ASSERT_NE(mAudioSession, (void*)NULL);
 
-    mAudioSession2 = mozilla::AudioSessionConduit::Create(NULL);
+    mAudioSession2 = mozilla::AudioSessionConduit::Create();
     if( !mAudioSession2 )
       ASSERT_NE(mAudioSession2, (void*)NULL);
 
