@@ -102,6 +102,9 @@ EmitCallVM(IonCode *target, MacroAssembler &masm)
     masm.call(target);
 }
 
+// Size of vales pushed by EmitEnterStubFrame.
+static const uint32_t STUB_FRAME_SIZE = 4 * sizeof(void *);
+
 inline void
 EmitEnterStubFrame(MacroAssembler &masm, Register)
 {
@@ -113,6 +116,9 @@ EmitEnterStubFrame(MacroAssembler &masm, Register)
     masm.subq(BaselineStackReg, ScratchReg);
 
     masm.storePtr(ScratchReg, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+
+    // Note: when making changes here,  don't forget to update STUB_FRAME_SIZE
+    // if needed.
 
     // Push frame descriptor and return address.
     masm.makeFrameDescriptor(ScratchReg, IonFrame_BaselineJS);
@@ -197,9 +203,11 @@ EmitUnstowICValues(MacroAssembler &masm, int values)
 }
 
 inline void
-EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code)
+EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code, uint32_t objectOffset)
 {
     // R0 contains the value that needs to be typechecked.
+    // The object we're updating is a boxed Value on the stack, at offset
+    // objectOffset from rsp, excluding the return address.
 
     // Save the current BaselineStubReg to stack
     masm.push(BaselineStubReg);
@@ -224,7 +232,10 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code)
     // If the IC failed, then call the update fallback function.
     EmitEnterStubFrame(masm, R1.scratchReg());
 
+    masm.loadValue(Address(rsp, STUB_FRAME_SIZE + objectOffset), R1);
+
     masm.pushValue(R0);
+    masm.pushValue(R1);
     masm.push(BaselineStubReg);
 
     EmitCallVM(code, masm);
