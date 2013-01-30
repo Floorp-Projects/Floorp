@@ -16,7 +16,7 @@
 
 // Logging context
 using namespace mozilla;
-MOZ_MTLOG_MODULE("mediapipeline");
+MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
 
