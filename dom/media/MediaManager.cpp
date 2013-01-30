@@ -148,7 +148,7 @@ public:
   DeviceSuccessCallbackRunnable(
     already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
-    const nsTArray<nsCOMPtr<nsIMediaDevice> >& aDevices)
+    nsTArray<nsCOMPtr<nsIMediaDevice> >* aDevices)
     : mSuccess(aSuccess)
     , mError(aError)
     , mDevices(aDevices) {}
@@ -164,7 +164,7 @@ public:
     nsCOMPtr<nsIWritableVariant> devices =
       do_CreateInstance("@mozilla.org/variant;1");
 
-    int32_t len = mDevices.Length();
+    int32_t len = mDevices->Length();
     if (len == 0) {
       // XXX
       // We should in the future return an empty array, and dynamically add
@@ -176,12 +176,12 @@ public:
 
     nsTArray<nsIMediaDevice*> tmp(len);
     for (int32_t i = 0; i < len; i++) {
-      tmp.AppendElement(mDevices.ElementAt(i));
+      tmp.AppendElement(mDevices->ElementAt(i));
     }
 
     devices->SetAsArray(nsIDataType::VTYPE_INTERFACE,
                         &NS_GET_IID(nsIMediaDevice),
-                        mDevices.Length(),
+                        mDevices->Length(),
                         const_cast<void*>(
                           static_cast<const void*>(tmp.Elements())
                         ));
@@ -193,7 +193,7 @@ public:
 private:
   already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
-  nsTArray<nsCOMPtr<nsIMediaDevice> > mDevices;
+  nsAutoPtr<nsTArray<nsCOMPtr<nsIMediaDevice> > > mDevices;
 };
 
 // Handle removing GetUserMediaCallbackMediaStreamListener from main thread
@@ -777,7 +777,7 @@ public:
     }
 
     NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(
-      mSuccess, mError, *devices
+      mSuccess, mError, devices // give ownership of the nsTArray to the runnable
     ));
     return NS_OK;
   }
