@@ -14,9 +14,9 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://services-common/bagheeraclient.js");
+Cu.import("resource://services-common/async.js");
 #endif
 
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/utils.js");
