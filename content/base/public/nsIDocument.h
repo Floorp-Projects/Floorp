@@ -34,6 +34,7 @@ class nsDOMNavigationTiming;
 class nsEventStates;
 class nsFrameLoader;
 class nsHTMLCSSStyleSheet;
+class nsHTMLDocument;
 class nsHTMLStyleSheet;
 class nsIAtom;
 class nsIBFCacheEntry;
@@ -1973,6 +1974,8 @@ public:
                     const mozilla::dom::Sequence<nsRefPtr<nsIDOMTouch> >& aTouches);
   already_AddRefed<nsIDOMTouchList>
     CreateTouchList(const mozilla::dom::Sequence<nsRefPtr<nsIDOMTouch> >& aTouches);
+
+  nsHTMLDocument* AsHTMLDocument();
 
 private:
   uint64_t mWarnedAbout;
