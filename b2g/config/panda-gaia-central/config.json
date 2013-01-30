@@ -20,5 +20,6 @@
             "vcs": "hgtool",
             "root": "http://hg.mozilla.org/gaia-l10n"
         }
-    }
+    },
+    "upload_platform": "panda_gaia_central"
 }
