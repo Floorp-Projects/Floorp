@@ -11,6 +11,34 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 
+extern bool gBluetoothDebugFlag;
+
+#define SWITCH_BT_DEBUG(V) (gBluetoothDebugFlag = V)
+
+#undef BT_LOG
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define BT_LOG(args...)                                              \
+  do {                                                               \
+    if (gBluetoothDebugFlag) {                                       \
+      __android_log_print(ANDROID_LOG_INFO, "GeckoBluetooth", args); \
+    }                                                                \
+  } while(0)
+
+#define BT_WARNING(args...)                                          \
+  __android_log_print(ANDROID_LOG_WARN, "GeckoBluetooth", args)
+
+#else
+#define BT_LOG(args, ...)                                            \
+  do {                                                               \
+    if (gBluetoothDebugFlag) {                                       \
+      printf(args, ##__VA_ARGS__);                                   \
+    }                                                                \
+  } while(0)
+
+#define BT_WARNING(args, ...) printf(args, ##__VA_ARGS__)
+#endif
+
 #define BEGIN_BLUETOOTH_NAMESPACE \
   namespace mozilla { namespace dom { namespace bluetooth {
 #define END_BLUETOOTH_NAMESPACE \

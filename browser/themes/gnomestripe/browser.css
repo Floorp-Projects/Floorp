@@ -1019,6 +1019,10 @@ toolbar[iconsize="small"] #webrtc-status-button {
   list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
 }
 
+.mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active.png);
+}
+
 #identity-box:hover > #page-proxy-favicon {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
@@ -2659,12 +2663,10 @@ chatbox[minimized="true"] {
   min-width: 0;
 }
 
-%ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
 #main-window[privatebrowsingmode=temporary] #TabsToolbar::before {
   display: -moz-box;
   content: "";
   background: url("chrome://browser/skin/privatebrowsing-mask.png") center no-repeat;
   width: 40px;
 }
-%endif
 

@@ -514,20 +514,6 @@ Element::GetOffsetRect(nsRect& aRect)
   return nullptr;
 }
 
-nsIntSize
-Element::GetPaddingRectSize()
-{
-  nsIFrame* frame = GetStyledFrame();
-  if (!frame) {
-    return nsIntSize(0, 0);
-  }
-
-  NS_ASSERTION(frame->GetParent(), "Styled frame has no parent");
-  nsRect rcFrame = nsLayoutUtils::GetAllInFlowPaddingRectsUnion(frame, frame->GetParent());
-  return nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width),
-                   nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height));
-}
-
 nsIScrollableFrame*
 Element::GetScrollFrame(nsIFrame **aStyledFrame)
 {
@@ -597,6 +583,20 @@ Element::ScrollIntoView(bool aTop)
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
+static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame)
+{
+  if (!aFrame) {
+    return nsSize(0,0);
+  }
+
+  nsRect paddingRect = aFrame->GetPaddingRectRelativeToSelf();
+  nsOverflowAreas overflowAreas(paddingRect, paddingRect);
+  nsLayoutUtils::UnionChildOverflow(aFrame, overflowAreas);
+  return nsLayoutUtils::GetScrolledRect(aFrame,
+      overflowAreas.ScrollableOverflow(), paddingRect.Size(),
+      aFrame->GetStyleVisibility()->mDirection).Size();
+}
+
 int32_t
 Element::ScrollHeight()
 {
@@ -604,11 +604,13 @@ Element::ScrollHeight()
     return 0;
 
   nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return GetPaddingRectSize().height;
+  nscoord height;
+  if (sf) {
+    height = sf->GetScrollRange().height + sf->GetScrollPortRect().height;
+  } else {
+    height = GetScrollRectSizeForOverflowVisibleFrame(GetStyledFrame()).height;
   }
 
-  nscoord height = sf->GetScrollRange().height + sf->GetScrollPortRect().height;
   return nsPresContext::AppUnitsToIntCSSPixels(height);
 }
 
@@ -619,11 +621,13 @@ Element::ScrollWidth()
     return 0;
 
   nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    return GetPaddingRectSize().width;
+  nscoord width;
+  if (sf) {
+    width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
+  } else {
+    width = GetScrollRectSizeForOverflowVisibleFrame(GetStyledFrame()).width;
   }
 
-  nscoord width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
   return nsPresContext::AppUnitsToIntCSSPixels(width);
 }
 
@@ -694,7 +698,7 @@ Element::GetClientRects(ErrorResult& aError)
 
 
 void
-Element::GetAttribute(const nsAString& aName, nsString& aReturn)
+Element::GetAttribute(const nsAString& aName, DOMString& aReturn)
 {
   const nsAttrValue* val =
     mAttrsAndChildren.GetAttr(aName,
@@ -706,9 +710,9 @@ Element::GetAttribute(const nsAString& aName, nsString& aReturn)
     if (IsXUL()) {
       // XXX should be SetDOMStringToNull(aReturn);
       // See bug 232598
-      aReturn.Truncate();
+      // aReturn is already empty
     } else {
-      SetDOMStringToNull(aReturn);
+      aReturn.SetNull();
     }
   }
 }
@@ -1957,23 +1961,10 @@ bool
 Element::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                  nsAString& aResult) const
 {
-  NS_ASSERTION(nullptr != aName, "must have attribute name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-               "must have a real namespace ID!");
-
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
-  if (!val) {
-    // Since we are returning a success code we'd better do
-    // something about the out parameters (someone may have
-    // given us a non-empty string).
-    aResult.Truncate();
-    
-    return false;
-  }
-
-  val->ToString(aResult);
-
-  return true;
+  DOMString str;
+  bool haveAttr = GetAttr(aNameSpaceID, aName, str);
+  str.ToString(aResult);
+  return haveAttr;
 }
 
 bool

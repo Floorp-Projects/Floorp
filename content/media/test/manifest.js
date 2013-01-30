@@ -27,6 +27,7 @@ var gProgressTests = [
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942 },
   { name:"seek.webm", type:"video/webm", duration:3.966, size:215529 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56, size:383631 },
+  { name:"dash-manifest.mpd", type:"application/dash+xml", duration:3.966 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -38,6 +39,7 @@ var gPlayedTests = [
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
   { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
+  { name:"dash-manifest.mpd", type:"application/dash+xml", duration:3.966 },
 ];
 
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
@@ -161,6 +163,9 @@ var gPlayTests = [
   { name:"small-shot.mp3", type:"audio/mpeg", duration:0.27 },
   { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
 
+  // DASH WebM MPD
+  { name:"dash-manifest.mpd", type:"application/dash+xml", duration:3.966 },
+
   // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }
 ];
@@ -256,6 +261,12 @@ var gInfoLeakTests = [
     type: 'video/webm',
     src: fileUriToSrc("tests/content/media/test/404.webm", false),
   }, {
+    type: 'application/dash+xml',
+    src: fileUriToSrc("tests/content/media/test/dash-manifest.mpd", true),
+  }, {
+    type: 'application/dash+xml',
+    src: fileUriToSrc("tests/content/media/test/404.mpd", false),
+  }, {
     type: 'video/ogg',
     src: 'http://localhost/404.ogv',
   }, {
@@ -264,6 +275,9 @@ var gInfoLeakTests = [
   }, {
     type: 'video/webm',
     src: 'http://localhost/404.webm',
+  }, {
+    type: 'application/dash+xml',
+    src: 'http://localhost/404.mpd',
   }, {
     type: 'video/ogg',
     src: 'http://example.com/tests/content/media/test/test_info_leak.html'

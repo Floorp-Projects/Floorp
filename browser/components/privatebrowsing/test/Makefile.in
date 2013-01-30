@@ -12,15 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_privatebrowsing
 
-# Most xpcshell PB tests use the global PB service, which means that we should
-# not attempt to run them in regular builds.  We should look at the list and
-# decide which ones of them should be ported to the browser/perwindow suite
-# in the future.
-
-ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
-XPCSHELL_TESTS	= unit
-endif
-
 DIRS +=	browser \
 		$(NULL)
 

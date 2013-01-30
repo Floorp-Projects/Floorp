@@ -3447,8 +3447,6 @@ nsNavHistory::SetPageTitle(nsIURI* aURI,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
-  ENSURE_NOT_PRIVATE_BROWSING;
-
   // if aTitle is empty we want to clear the previous title.
   // We don't want to set it to an empty string, but to a NULL value,
   // so we use SetIsVoid and SetPageTitleInternal will take care of that
@@ -3676,8 +3674,6 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     NS_ENSURE_SUCCESS(rv, rv);
     if (isPrivate)
       return NS_OK;
-
-    ENSURE_NOT_PRIVATE_BROWSING;
 
     nsCOMPtr<nsIAutoCompletePopup> popup;
     input->GetPopup(getter_AddRefs(popup));
@@ -5090,8 +5086,6 @@ nsresult
 nsNavHistory::AutoCompleteFeedback(int32_t aIndex,
                                    nsIAutoCompleteController *aController)
 {
-  ENSURE_NOT_PRIVATE_BROWSING;
-
   nsCOMPtr<mozIStorageAsyncStatement> stmt = mDB->GetAsyncStatement(
     "INSERT OR REPLACE INTO moz_inputhistory "
     // use_count will asymptotically approach the max of 10.

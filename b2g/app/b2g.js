@@ -445,6 +445,10 @@ pref("media.volume.steps", 10);
 //Enable/disable marionette server, set listening port
 pref("marionette.defaultPrefs.enabled", true);
 pref("marionette.defaultPrefs.port", 2828);
+#ifndef MOZ_WIDGET_GONK
+// On desktop builds, we need to force the socket to listen on localhost only
+pref("marionette.force-local", true);
+#endif
 #endif
 
 #ifdef MOZ_UPDATER

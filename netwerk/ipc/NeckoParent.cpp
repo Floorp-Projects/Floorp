@@ -268,6 +268,11 @@ NeckoParent::AllocPTCPSocket(const nsString& aHost,
                              const nsString& aBinaryType,
                              PBrowserParent* aBrowser)
 {
+  if (UsingNeckoIPCSecurity() && !aBrowser) {
+    printf_stderr("NeckoParent::AllocPTCPSocket: FATAL error: no browser present \
+                   KILLING CHILD PROCESS\n");
+    return nullptr;
+  }
   TCPSocketParent* p = new TCPSocketParent();
   p->AddRef();
   return p;
