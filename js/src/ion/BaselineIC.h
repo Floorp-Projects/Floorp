@@ -305,6 +305,7 @@ class ICEntry
     _(Call_Native)              \
                                 \
     _(GetElem_Fallback)         \
+    _(GetElem_String)           \
     _(GetElem_Dense)            \
                                 \
     _(SetElem_Fallback)         \
@@ -1593,6 +1594,33 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
             if (!stub->initMonitoringChain(cx, space))
                 return NULL;
             return stub;
+        }
+    };
+};
+
+class ICGetElem_String : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICGetElem_String(IonCode *stubCode)
+      : ICStub(ICStub::GetElem_String, stubCode) {}
+
+  public:
+    static inline ICGetElem_String *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICGetElem_String>(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::GetElem_String) {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetElem_String::New(space, getStubCode());
         }
     };
 };

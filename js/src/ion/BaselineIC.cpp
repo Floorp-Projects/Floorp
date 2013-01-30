@@ -1645,6 +1645,16 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
         return true;
     }
 
+    if (lhs.isString() && rhs.isInt32() && res.isString() && !stub->hasStub(ICStub::GetElem_String)) {
+        ICGetElem_String::Compiler compiler(cx);
+        ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!stringStub)
+            return false;
+
+        stub->addNewStub(stringStub);
+        return true;
+    }
+
     // Try to generate new stubs.
     if (!lhs.isObject())
         return true;
@@ -1680,6 +1690,60 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoGetElemFallbackInfo, masm);
+}
+
+//
+// GetElem_String
+//
+
+bool
+ICGetElem_String::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestString(Assembler::NotEqual, R0, &failure);
+    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratchReg = regs.takeAny();
+
+    // Unbox string in R0.
+    Register str = masm.extractString(R0, ExtractTemp0);
+
+    // Load string lengthAndFlags
+    Address lengthAndFlagsAddr(str, JSString::offsetOfLengthAndFlags());
+    masm.loadPtr(lengthAndFlagsAddr, scratchReg);
+
+    // Check for non-linear strings.
+    masm.branchTest32(Assembler::Zero, scratchReg, Imm32(JSString::FLAGS_MASK), &failure);
+
+    // Unbox key.
+    Register key = masm.extractInt32(R1, ExtractTemp1);
+
+    // Extract length and bounds check.
+    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), scratchReg);
+    masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
+
+    // Get char code.
+    Address charsAddr(str, JSString::offsetOfChars());
+    masm.loadPtr(charsAddr, scratchReg);
+    masm.load16ZeroExtend(BaseIndex(scratchReg, key, TimesTwo, 0), scratchReg);
+
+    // Check if char code >= UNIT_STATIC_LIMIT.
+    masm.branch32(Assembler::AboveOrEqual, scratchReg, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
+                  &failure);
+
+    // Load static string.
+    masm.movePtr(ImmWord(&cx->compartment->rt->staticStrings.unitStaticTable), str);
+    masm.loadPtr(BaseIndex(str, scratchReg, ScalePointer), str);
+
+    // Return.
+    masm.tagValue(JSVAL_TYPE_STRING, str, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //
