@@ -362,6 +362,14 @@ Sync11Service.prototype = {
     // registering an observer.
     Utils.nextTick(function onNextTick() {
       this.status.ready = true;
+
+      // UI code uses the flag on the XPCOM service so it doesn't have
+      // to load a bunch of modules.
+      let xps = Cc["@mozilla.org/weave/service;1"]
+                  .getService(Ci.nsISupports)
+                  .wrappedJSObject;
+      xps.ready = true;
+
       Svc.Obs.notify("weave:service:ready");
     }.bind(this));
   },
