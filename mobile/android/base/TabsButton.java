@@ -59,7 +59,7 @@ public class TabsButton extends ShapedButton {
 
         int width = getMeasuredWidth();
         int height = getMeasuredHeight();
-        float curve = height * 1.125f;
+        int curve = (int) (height * 1.125f);
 
         // The bounds for the rectangle to carve the curves.
         float left;
