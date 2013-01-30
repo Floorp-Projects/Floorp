@@ -184,10 +184,11 @@ class JSAPITest
             return false; \
     } while (false)
 
-    bool checkSame(jsval actual, jsval expected,
+    bool checkSame(jsval actualArg, jsval expectedArg,
                    const char *actualExpr, const char *expectedExpr,
                    const char *filename, int lineno) {
         JSBool same;
+        js::RootedValue actual(cx, actualArg), expected(cx, expectedArg);
         return (JS_SameValue(cx, actual, expected, &same) && same) ||
                fail(JSAPITestString("CHECK_SAME failed: expected JS_SameValue(cx, ") +
                     actualExpr + ", " + expectedExpr + "), got !JS_SameValue(cx, " +
