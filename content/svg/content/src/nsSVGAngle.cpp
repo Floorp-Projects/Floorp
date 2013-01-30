@@ -217,8 +217,8 @@ nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-nsresult
-nsSVGAngle::ToDOMBaseVal(SVGAngle **aResult, nsSVGElement *aSVGElement)
+already_AddRefed<SVGAngle>
+nsSVGAngle::ToDOMBaseVal(nsSVGElement *aSVGElement)
 {
   nsRefPtr<SVGAngle> domBaseVal =
     sBaseSVGAngleTearoffTable.GetTearoff(this);
@@ -227,12 +227,11 @@ nsSVGAngle::ToDOMBaseVal(SVGAngle **aResult, nsSVGElement *aSVGElement)
     sBaseSVGAngleTearoffTable.AddTearoff(this, domBaseVal);
   }
 
-  domBaseVal.forget(aResult);
-  return NS_OK;
+  return domBaseVal.forget();
 }
 
-nsresult
-nsSVGAngle::ToDOMAnimVal(SVGAngle **aResult, nsSVGElement *aSVGElement)
+already_AddRefed<SVGAngle>
+nsSVGAngle::ToDOMAnimVal(nsSVGElement *aSVGElement)
 {
   nsRefPtr<SVGAngle> domAnimVal =
     sAnimSVGAngleTearoffTable.GetTearoff(this);
@@ -241,8 +240,7 @@ nsSVGAngle::ToDOMAnimVal(SVGAngle **aResult, nsSVGElement *aSVGElement)
     sAnimSVGAngleTearoffTable.AddTearoff(this, domAnimVal);
   }
 
-  domAnimVal.forget(aResult);
-  return NS_OK;
+  return domAnimVal.forget();
 }
 
 SVGAngle::~SVGAngle()
