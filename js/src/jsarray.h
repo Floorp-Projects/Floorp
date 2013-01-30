@@ -15,9 +15,6 @@
 #include "jsatom.h"
 #include "jsobj.h"
 
-/* Small arrays are dense, no matter what. */
-const unsigned MIN_SPARSE_INDEX = 512;
-
 namespace js {
 /* 2^32-2, inclusive */
 const uint32_t MAX_ARRAY_INDEX = 4294967294u;
@@ -28,14 +25,13 @@ js_IdIsIndex(jsid id, uint32_t *indexp)
 {
     if (JSID_IS_INT(id)) {
         int32_t i = JSID_TO_INT(id);
-        if (i < 0)
-            return JS_FALSE;
+        JS_ASSERT(i >= 0);
         *indexp = (uint32_t)i;
-        return JS_TRUE;
+        return true;
     }
 
     if (JS_UNLIKELY(!JSID_IS_STRING(id)))
-        return JS_FALSE;
+        return false;
 
     return js::StringIsArrayIndex(JSID_TO_ATOM(id), indexp);
 }
