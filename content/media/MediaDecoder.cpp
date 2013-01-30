@@ -188,14 +188,18 @@ void MediaDecoder::DestroyDecodedStream()
 
   // All streams are having their SourceMediaStream disconnected, so they
   // need to be explicitly blocked again.
-  for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
+  for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
     OutputStreamData& os = mOutputStreams[i];
     // During cycle collection, nsDOMMediaStream can be destroyed and send
     // its Destroy message before this decoder is destroyed. So we have to
     // be careful not to send any messages after the Destroy().
-    if (!os.mStream->IsDestroyed()) {
-      os.mStream->ChangeExplicitBlockerCount(1);
+    if (os.mStream->IsDestroyed()) {
+      // Probably the DOM MediaStream was GCed. Clean up.
+      os.mPort->Destroy();
+      mOutputStreams.RemoveElementAt(i);
+      continue;
     }
+    os.mStream->ChangeExplicitBlockerCount(1);
     // Explicitly remove all existing ports. This is not strictly necessary but it's
     // good form.
     os.mPort->Destroy();
@@ -220,8 +224,15 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
   // Note that the delay between removing ports in DestroyDecodedStream
   // and adding new ones won't cause a glitch since all graph operations
   // between main-thread stable states take effect atomically.
-  for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
-    ConnectDecodedStreamToOutputStream(&mOutputStreams[i]);
+  for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
+    OutputStreamData& os = mOutputStreams[i];
+    if (os.mStream->IsDestroyed()) {
+      // Probably the DOM MediaStream was GCed. Clean up.
+      // No need to destroy the port; all ports have been destroyed here.
+      mOutputStreams.RemoveElementAt(i);
+      continue;
+    }
+    ConnectDecodedStreamToOutputStream(&os);
   }
 
   mDecodedStream->mHaveBlockedForPlayState = mPlayState != PLAY_STATE_PLAYING;
@@ -244,7 +255,7 @@ void MediaDecoder::NotifyDecodedStreamMainThreadStateChanged()
 }
 
 void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
-                                       bool aFinishWhenEnded)
+                                   bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(PR_LOG_DEBUG, ("MediaDecoder::AddOutputStream this=%p aStream=%p!",
@@ -641,13 +652,12 @@ void MediaDecoder::QueueMetadata(int64_t aPublishTime,
                                  int aChannels,
                                  int aRate,
                                  bool aHasAudio,
-                                 bool aHasVideo,
                                  MetadataTags* aTags)
 {
   NS_ASSERTION(mDecoderStateMachine->OnDecodeThread(),
                "Should be on decode thread.");
   GetReentrantMonitor().AssertCurrentThreadIn();
-  mDecoderStateMachine->QueueMetadata(aPublishTime, aChannels, aRate, aHasAudio, aHasVideo, aTags);
+  mDecoderStateMachine->QueueMetadata(aPublishTime, aChannels, aRate, aHasAudio, aTags);
 }
 
 bool
@@ -660,7 +670,7 @@ MediaDecoder::IsDataCachedToEndOfResource()
           mResource->IsDataCachedToEndOfResource(mDecoderPosition));
 }
 
-void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags)
+void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mShuttingDown) {
@@ -682,7 +692,7 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
+    mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aTags);
   }
 
   if (!mCalledResourceLoaded) {
@@ -811,12 +821,17 @@ void MediaDecoder::PlaybackEnded()
 
     for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
       OutputStreamData& os = mOutputStreams[i];
+      if (os.mStream->IsDestroyed()) {
+        // Probably the DOM MediaStream was GCed. Clean up.
+        os.mPort->Destroy();
+        mOutputStreams.RemoveElementAt(i);
+        continue;
+      }
       if (os.mFinishWhenEnded) {
         // Shouldn't really be needed since mDecodedStream should already have
         // finished, but doesn't hurt.
         os.mStream->Finish();
         os.mPort->Destroy();
-        os.mPort = nullptr;
         // Not really needed but it keeps the invariant that a stream not
         // connected to mDecodedStream is explicity blocked.
         os.mStream->ChangeExplicitBlockerCount(1);

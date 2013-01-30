@@ -43,7 +43,7 @@ import java.util.ArrayList;
 
 public class GeckoPreferences
     extends PreferenceActivity
-    implements OnPreferenceChangeListener, GeckoEventListener
+    implements OnPreferenceChangeListener, GeckoEventListener, GeckoActivityStatus
 {
     private static final String LOGTAG = "GeckoPreferences";
 
@@ -83,6 +83,24 @@ public class GeckoPreferences
     protected void onDestroy() {
         super.onDestroy();
         unregisterEventListener("Sanitize:Finished");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (getApplication() instanceof GeckoApplication) {
+            ((GeckoApplication) getApplication()).onActivityPause(this);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (getApplication() instanceof GeckoApplication) {
+            ((GeckoApplication) getApplication()).onActivityResume(this);
+        }
     }
 
     public void handleMessage(String event, JSONObject message) {
@@ -444,5 +462,9 @@ public class GeckoPreferences
 
     private void unregisterEventListener(String event) {
         GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
+    }
+
+    public boolean isGeckoActivityOpened() {
+        return false;
     }
 }

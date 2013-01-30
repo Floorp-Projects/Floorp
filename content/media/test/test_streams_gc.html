@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test garbage collection of captured stream (bug 806754)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body onload="doTest()">
+<audio id="a"></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var a = document.getElementById('a');
+a.src = getPlayableAudio(gSmallTests).name;
+
+function forceGC() {
+  SpecialPowers.gc();
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+}
+
+function doTest() {
+  a.mozCaptureStreamUntilEnded();
+
+  a.addEventListener("seeked", function() {
+    a.play();
+
+    a.addEventListener("play", function() {
+      a.addEventListener("ended", function() {
+        ok(true, "GC completed OK");
+        SimpleTest.finish();
+      }, false);
+    }, false);
+  }, false);
+
+  a.currentTime = a.duration;
+  
+  setTimeout(forceGC, 0);
+}
+</script>
+</pre>
+</body>
+</html>

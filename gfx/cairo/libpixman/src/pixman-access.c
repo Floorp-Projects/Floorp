@@ -32,8 +32,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "pixman-private.h"
 #include "pixman-accessor.h"
+#include "pixman-private.h"
 
 #define CONVERT_RGB24_TO_Y15(s)						\
     (((((s) >> 16) & 0xff) * 153 +					\
@@ -210,6 +210,7 @@ get_shifts (pixman_format_code_t  format,
 	break;
 
     case PIXMAN_TYPE_ARGB:
+    case PIXMAN_TYPE_ARGB_SRGB:
 	*b = 0;
 	*g = *b + PIXMAN_FORMAT_B (format);
 	*r = *g + PIXMAN_FORMAT_G (format);
@@ -1065,6 +1066,130 @@ fetch_pixel_generic_64 (bits_image_t *image,
     return result;
 }
 
+/* The 32_sRGB paths should be deleted after narrow processing
+ * is no longer invoked for formats that are considered wide.
+ * (Also see fetch_pixel_generic_lossy_32) */
+static void
+fetch_scanline_a8r8g8b8_32_sRGB (pixman_image_t *image,
+                                 int             x,
+                                 int             y,
+                                 int             width,
+                                 uint32_t       *buffer,
+                                 const uint32_t *mask)
+{
+    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
+    const uint32_t *pixel = (uint32_t *)bits + x;
+    const uint32_t *end = pixel + width;
+    uint32_t tmp;
+    
+    while (pixel < end)
+    {
+	tmp = READ (image, pixel++);
+	*buffer++ =                 (tmp >> 24)               << 24
+		  | (srgb_to_linear[(tmp >> 16) & 0xff] >> 8) << 16
+		  | (srgb_to_linear[(tmp >>  8) & 0xff] >> 8) <<  8
+		  | (srgb_to_linear[(tmp >>  0) & 0xff] >> 8) <<  0;
+    }
+}
+
+static void
+fetch_scanline_a8r8g8b8_64_sRGB (pixman_image_t *image,
+                                 int             x,
+                                 int             y,
+                                 int             width,
+                                 uint32_t       *b,
+                                 const uint32_t *mask)
+{
+    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
+    const uint32_t *pixel = (uint32_t *)bits + x;
+    const uint32_t *end = pixel + width;
+    uint64_t *buffer = (uint64_t *)b;
+    uint32_t tmp;
+    
+    while (pixel < end)
+    {
+	tmp = READ (image, pixel++);
+	*buffer++ = (uint64_t)               ((tmp >> 24) * 257)  << 48
+		  | (uint64_t) srgb_to_linear[(tmp >> 16) & 0xff] << 32
+		  | (uint64_t) srgb_to_linear[(tmp >>  8) & 0xff] << 16
+		  | (uint64_t) srgb_to_linear[(tmp >>  0) & 0xff] <<  0;
+    }
+}
+
+static uint32_t
+fetch_pixel_a8r8g8b8_32_sRGB (bits_image_t *image,
+			      int           offset,
+			      int           line)
+{
+    uint32_t *bits = image->bits + line * image->rowstride;
+    uint32_t tmp = READ (image, bits + offset);
+    return                 (tmp >> 24)               << 24
+	 | (srgb_to_linear[(tmp >> 16) & 0xff] >> 8) << 16
+	 | (srgb_to_linear[(tmp >>  8) & 0xff] >> 8) <<  8
+	 | (srgb_to_linear[(tmp >>  0) & 0xff] >> 8) <<  0;
+}
+
+static uint64_t
+fetch_pixel_a8r8g8b8_64_sRGB (bits_image_t *image,
+			      int           offset,
+			      int	    line)
+{
+    uint32_t *bits = image->bits + line * image->rowstride;
+    uint32_t tmp = READ (image, bits + offset);
+    return (uint64_t)               ((tmp >> 24) * 257)  << 48
+	 | (uint64_t) srgb_to_linear[(tmp >> 16) & 0xff] << 32
+	 | (uint64_t) srgb_to_linear[(tmp >>  8) & 0xff] << 16
+	 | (uint64_t) srgb_to_linear[(tmp >>  0) & 0xff] <<  0;
+}
+
+static void
+store_scanline_a8r8g8b8_32_sRGB (bits_image_t   *image,
+                                 int             x,
+                                 int             y,
+                                 int             width,
+                                 const uint32_t *v)
+{
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint64_t *values = (uint64_t *)v;
+    uint32_t *pixel = bits + x;
+    uint64_t tmp;
+    int i;
+    
+    for (i = 0; i < width; ++i)
+    {
+	tmp = values[i];
+	WRITE (image, pixel++,
+		  ((uint32_t)     (tmp >> 24     )          << 24)
+		| (linear_to_srgb[(tmp >> 16 << 4) & 0xfff] << 16)
+		| (linear_to_srgb[(tmp >>  8 << 4) & 0xfff] <<  8)
+		| (linear_to_srgb[(tmp >>  0 << 4) & 0xfff] <<  0));
+    }
+}
+
+static void
+store_scanline_a8r8g8b8_64_sRGB (bits_image_t  *image,
+                                int             x,
+                                int             y,
+                                int             width,
+                                const uint32_t *v)
+{
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint64_t *values = (uint64_t *)v;
+    uint32_t *pixel = bits + x;
+    uint64_t tmp;
+    int i;
+    
+    for (i = 0; i < width; ++i)
+    {
+	tmp = values[i];
+	WRITE (image, pixel++,
+		  ((uint32_t)     (tmp >> 56)          << 24)
+		| (linear_to_srgb[(tmp >> 36) & 0xfff] << 16)
+		| (linear_to_srgb[(tmp >> 20) & 0xfff] <<  8)
+		| (linear_to_srgb[(tmp >>  4) & 0xfff] <<  0));
+    }
+}
+
 /*
  * XXX: The transformed fetch path only works at 32-bpp so far.  When all
  * paths have wide versions, this can be removed.
@@ -1131,6 +1256,13 @@ static const format_info_t accessors[] =
     FORMAT_INFO (r8g8b8a8),
     FORMAT_INFO (r8g8b8x8),
     FORMAT_INFO (x14r6g6b6),
+
+/* sRGB formats */
+  { PIXMAN_a8r8g8b8_sRGB,
+    fetch_scanline_a8r8g8b8_32_sRGB,
+    fetch_scanline_a8r8g8b8_64_sRGB,
+    fetch_pixel_a8r8g8b8_32_sRGB, fetch_pixel_a8r8g8b8_64_sRGB,
+    store_scanline_a8r8g8b8_32_sRGB, store_scanline_a8r8g8b8_64_sRGB },
 
 /* 24bpp formats */
     FORMAT_INFO (r8g8b8),

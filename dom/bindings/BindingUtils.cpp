@@ -575,9 +575,9 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
     return Throw<true>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }
 
-  nsIJSID* iid;
+  nsIJSIID* iid;
   xpc_qsSelfRef iidRef;
-  if (NS_FAILED(xpc_qsUnwrapArg<nsIJSID>(cx, argv[0], &iid, &iidRef.ptr,
+  if (NS_FAILED(xpc_qsUnwrapArg<nsIJSIID>(cx, argv[0], &iid, &iidRef.ptr,
                                           &argv[0]))) {
     return Throw<true>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }

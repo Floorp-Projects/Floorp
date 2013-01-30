@@ -29,12 +29,6 @@ public:
   }
   ~SVGAnimatedAngle();
 
-  NS_IMETHOD GetBaseVal(nsISupports **aBaseVal)
-    { *aBaseVal = BaseVal().get(); return NS_OK; }
-
-  NS_IMETHOD GetAnimVal(nsISupports **aAnimVal)
-    { *aAnimVal = AnimVal().get(); return NS_OK; }
-
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);

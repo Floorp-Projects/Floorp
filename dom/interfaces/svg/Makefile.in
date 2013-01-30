@@ -39,7 +39,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGEvent.idl \
 		nsIDOMSVGFilterElement.idl \
 		nsIDOMSVGFilters.idl \
-		nsIDOMSVGFitToViewBox.idl \
 		nsIDOMSVGForeignObjectElem.idl \
 		nsIDOMSVGGElement.idl \
 		nsIDOMSVGGradientElement.idl \
@@ -65,7 +64,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGStyleElement.idl \
 		nsIDOMSVGSwitchElement.idl \
 		nsIDOMSVGSymbolElement.idl \
-		nsIDOMSVGTests.idl \
 		nsIDOMSVGTextContentElement.idl \
 		nsIDOMSVGTextElement.idl \
 		nsIDOMSVGTextPathElement.idl \

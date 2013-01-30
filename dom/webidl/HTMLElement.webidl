@@ -15,23 +15,22 @@
 interface DOMStringMap;
 interface HTMLMenuElement;
 
-// Hack to make sure that we initialize the touch prefs properly
 [PrefControlled]
 interface HTMLElement : Element {
   // metadata attributes
            attribute DOMString title;
            attribute DOMString lang;
   //         attribute boolean translate;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString dir;
   [Constant]
   readonly attribute DOMStringMap dataset;
 
   // microdata 
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute boolean itemScope;
   [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemType;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString itemId;
   [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemRef;
   [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemProp;
@@ -41,28 +40,31 @@ interface HTMLElement : Element {
            attribute any itemValue;
 
   // user interaction
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute boolean hidden;
   void click();
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute long tabIndex;
   [Throws]
   void focus();
   [Throws]
   void blur();
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString accessKey;
+  [Pure]
   readonly attribute DOMString accessKeyLabel;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute boolean draggable;
   //[PutForwards=value] readonly attribute DOMSettableTokenList dropzone;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString contentEditable;
+  [Pure]
   readonly attribute boolean isContentEditable;
+  [Pure]
   readonly attribute HTMLMenuElement? contextMenu;
   //[SetterThrows]
   //         attribute HTMLMenuElement? contextMenu;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute boolean spellcheck;
 
   // command API
@@ -81,25 +83,6 @@ interface HTMLElement : Element {
   // FIXME Bug 810677 Move className from HTMLElement to Element
            attribute DOMString className;
 
-  [SetterThrows]
-           attribute EventHandler oncopy;
-  [SetterThrows]
-           attribute EventHandler oncut;
-  [SetterThrows]
-           attribute EventHandler onpaste;
-};
-
-// http://dev.w3.org/csswg/cssom-view/#extensions-to-the-htmlelement-interface
-partial interface HTMLElement {
-  readonly attribute Element? offsetParent;
-  readonly attribute long offsetTop;
-  readonly attribute long offsetLeft;
-  readonly attribute long offsetWidth;
-  readonly attribute long offsetHeight;
-};
-
-[NoInterfaceObject]
-interface TouchEventHandlers {
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchstart;
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
@@ -112,10 +95,26 @@ interface TouchEventHandlers {
            attribute EventHandler ontouchleave;
   [SetterThrows,Pref="dom.w3c_touch_events.expose"]
            attribute EventHandler ontouchcancel;
+
+  [SetterThrows]
+           attribute EventHandler oncopy;
+  [SetterThrows]
+           attribute EventHandler oncut;
+  [SetterThrows]
+           attribute EventHandler onpaste;
+};
+
+// http://dev.w3.org/csswg/cssom-view/#extensions-to-the-htmlelement-interface
+partial interface HTMLElement {
+  // CSSOM things are not [Pure] because they can flush
+  readonly attribute Element? offsetParent;
+  readonly attribute long offsetTop;
+  readonly attribute long offsetLeft;
+  readonly attribute long offsetWidth;
+  readonly attribute long offsetHeight;
 };
 
 HTMLElement implements GlobalEventHandlers;
 HTMLElement implements NodeEventHandlers;
-HTMLElement implements TouchEventHandlers;
 
 interface HTMLUnknownElement : HTMLElement {};

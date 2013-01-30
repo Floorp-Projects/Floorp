@@ -1237,8 +1237,12 @@ RadioInterfaceLayer.prototype = {
         call.isActive = false;
         if (this._activeCall &&
             this._activeCall.callIndex == call.callIndex) {
-          // Previously active call is not active now. Disable audio.
+          // Previously active call is not active now.
           this._activeCall = null;
+        }
+
+        if (!this._activeCall) {
+          // No active call. Disable the audio.
           gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
           debug("No active call, put audio system into PHONE_STATE_NORMAL: "
                 + gAudioManager.phoneState);
