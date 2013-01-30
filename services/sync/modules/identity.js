@@ -8,10 +8,17 @@ this.EXPORTED_SYMBOLS = ["IdentityManager"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/util.js");
+
+// Lazy import to prevent unnecessary load on startup.
+for (let symbol of ["BulkKeyBundle", "SyncKeyBundle"]) {
+  XPCOMUtils.defineLazyModuleGetter(this, symbol,
+                                    "resource://services-sync/keys.js",
+                                    symbol);
+}
 
 /**
  * Manages identity and authentication for Sync.
