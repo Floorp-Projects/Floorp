@@ -260,13 +260,13 @@ gfxAndroidPlatform::FontHintingEnabled()
     // XXX when gecko-android-java is used as an "app runtime", we may
     // want to re-enable hinting for non-browser processes there.
     return false;
-#endif
+#endif //  MOZ_USING_ANDROID_JAVA_WIDGETS
 
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
     // On B2G, the UX preference is currently to keep hinting disabled
     // for all text (see bug 829523).
     return false;
-#endif //  MOZ_USING_ANDROID_JAVA_WIDGETS
+#endif
 
     // Currently, we don't have any other targets, but if/when we do,
     // decide how to handle them here.
@@ -288,7 +288,7 @@ gfxAndroidPlatform::RequiresLinearZoom()
     return true;
 #endif
 
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
     // On B2G, we need linear zoom for the browser, but otherwise prefer
     // the improved glyph spacing that results from respecting the device
     // pixel resolution for glyph layout (see bug 816614).
