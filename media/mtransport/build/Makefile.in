@@ -37,7 +37,6 @@ EXPORTS_mtransport = \
   ../transportlayerprsock.h \
   ../m_cpp_utils.h \
   ../runnable_utils.h \
-  ../runnable_utils_generated.h \
   ../sigslot.h \
   $(NULL)
 
