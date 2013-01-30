@@ -31,6 +31,7 @@ class PeerConnectionCtx : public CSF::CC_Observer {
  public:
   static nsresult InitializeGlobal(nsIThread *mainThread);
   static PeerConnectionCtx* GetInstance();
+  static bool isActive();
   static void Destroy();
 
   // Implementations of CC_Observer methods
