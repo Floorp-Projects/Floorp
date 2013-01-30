@@ -53,7 +53,6 @@ using namespace mozilla;
 
 using namespace mozilla::gl;
 
-typedef nsNPAPIPluginInstance::TextureInfo TextureInfo;
 typedef nsNPAPIPluginInstance::VideoInfo VideoInfo;
 
 class PluginEventRunnable : public nsRunnable
@@ -101,7 +100,7 @@ public:
   {
   }
 
-  TextureInfo Lock()
+  nsNPAPIPluginInstance::TextureInfo Lock()
   {
     if (!EnsureGLContext()) {
       mTextureInfo.mTexture = 0;
@@ -116,7 +115,7 @@ public:
     return mTextureInfo;
   }
 
-  void Release(TextureInfo& aTextureInfo)
+  void Release(nsNPAPIPluginInstance::TextureInfo& aTextureInfo)
   { 
     mTextureInfo = aTextureInfo;
     mLock.Unlock();
@@ -146,7 +145,7 @@ public:
   }
 
 private:
-  TextureInfo mTextureInfo;
+  nsNPAPIPluginInstance::TextureInfo mTextureInfo;
  
   Mutex mLock;
 };
@@ -952,13 +951,13 @@ GLContext* nsNPAPIPluginInstance::GLContext()
   return sPluginContext;
 }
 
-TextureInfo nsNPAPIPluginInstance::LockContentTexture()
+nsNPAPIPluginInstance::TextureInfo nsNPAPIPluginInstance::LockContentTexture()
 {
   EnsureSharedTexture();
   return mContentTexture->Lock();
 }
 
-void nsNPAPIPluginInstance::ReleaseContentTexture(TextureInfo& aTextureInfo)
+void nsNPAPIPluginInstance::ReleaseContentTexture(nsNPAPIPluginInstance::TextureInfo& aTextureInfo)
 {
   EnsureSharedTexture();
   mContentTexture->Release(aTextureInfo);

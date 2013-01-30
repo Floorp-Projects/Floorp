@@ -378,24 +378,6 @@ function restoreTab(callback, index, win) {
 }
 
 // ----------
-function togglePrivateBrowsing(callback) {
-  let topic = "private-browsing-transition-complete";
-
-  Services.obs.addObserver(function observe() {
-    Services.obs.removeObserver(observe, topic);
-
-    // use executeSoon() to let Panorama load its group data from the session
-    // before we call afterAllTabsLoaded()
-    executeSoon(function () afterAllTabsLoaded(callback));
-  }, topic, false);
-
-  let pb = Cc["@mozilla.org/privatebrowsing;1"].
-           getService(Ci.nsIPrivateBrowsingService);
-
-  pb.privateBrowsingEnabled = !pb.privateBrowsingEnabled;
-}
-
-// ----------
 function goToNextGroup(win) {
   win = win || window;
 

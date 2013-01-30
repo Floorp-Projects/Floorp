@@ -67,6 +67,8 @@
 #include "nsIIdleObserver.h"
 #include "nsIDOMWakeLock.h"
 
+#include "mozilla/dom/EventTarget.h"
+
 // JS includes
 #include "jsapi.h"
 
@@ -253,15 +255,14 @@ struct IdleObserverHolder
 // belonging to the same outer window, but that's an unimportant
 // side effect of inheriting PRCList).
 
-class nsGlobalWindow : public nsPIDOMWindow,
+class nsGlobalWindow : public mozilla::dom::EventTarget,
+                       public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
-                       public nsIDOMEventTarget,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
-                       public nsWrapperCache,
                        public PRCListStr,
                        public nsIDOMWindowPerformance,
                        public nsITouchEventReceiver,
@@ -405,12 +406,12 @@ public:
   static nsGlobalWindow *FromSupports(nsISupports *supports)
   {
     // Make sure this matches the casts we do in QueryInterface().
-    return (nsGlobalWindow *)(nsIScriptGlobalObject *)supports;
+    return (nsGlobalWindow *)(nsIDOMEventTarget *)supports;
   }
   static nsISupports *ToSupports(nsGlobalWindow *win)
   {
     // Make sure this matches the casts we do in QueryInterface().
-    return (nsISupports *)(nsIScriptGlobalObject *)win;
+    return (nsISupports *)(nsIDOMEventTarget *)win;
   }
   static nsGlobalWindow *FromWrapper(nsIXPConnectWrappedNative *wrapper)
   {
@@ -529,7 +530,7 @@ public:
   friend class WindowStateHolder;
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindow,
-                                                                   nsIScriptGlobalObject)
+                                                                   nsIDOMEventTarget)
 
   virtual NS_HIDDEN_(JSObject*)
     GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey);

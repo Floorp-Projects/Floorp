@@ -26,57 +26,7 @@ class ErrorResult;
 
 namespace dom {
 
-namespace detail {
-
-// This class wraps a JS typed array so that AudioEventTimeline does not need
-// to know about JSObjects directly.
-class FloatArrayWrapper
-{
-public:
-  FloatArrayWrapper() // creates an uninitialized object
-  {
-  }
-  FloatArrayWrapper(const Float32Array& array)
-  {
-    mArray.construct(array);
-  }
-  FloatArrayWrapper(const FloatArrayWrapper& rhs)
-  {
-    MOZ_ASSERT(!rhs.mArray.empty());
-    mArray.construct(rhs.mArray.ref());
-  }
-
-  FloatArrayWrapper& operator=(const FloatArrayWrapper& rhs)
-  {
-    MOZ_ASSERT(!rhs.mArray.empty());
-    mArray.destroyIfConstructed();
-    mArray.construct(rhs.mArray.ref());
-    return *this;
-  }
-
-  // Expose the API used by AudioEventTimeline
-  float* Data() const
-  {
-    MOZ_ASSERT(inited());
-    return mArray.ref().Data();
-  }
-  uint32_t Length() const
-  {
-    MOZ_ASSERT(inited());
-    return mArray.ref().Length();
-  }
-  bool inited() const
-  {
-    return !mArray.empty();
-  }
-
-private:
-  Maybe<Float32Array> mArray;
-};
-
-}
-
-typedef AudioEventTimeline<detail::FloatArrayWrapper, ErrorResult> AudioParamTimeline;
+typedef AudioEventTimeline<ErrorResult> AudioParamTimeline;
 
 class AudioParam MOZ_FINAL : public nsWrapperCache,
                              public EnableWebAudioCheck,
@@ -104,12 +54,30 @@ public:
   // object.
   void SetValueCurveAtTime(JSContext* cx, const Float32Array& aValues, double aStartTime, double aDuration, ErrorResult& aRv)
   {
-    AudioParamTimeline::SetValueCurveAtTime(detail::FloatArrayWrapper(aValues),
+    AudioParamTimeline::SetValueCurveAtTime(aValues.Data(), aValues.Length(),
                                             aStartTime, aDuration, aRv);
+  }
+
+  float MinValue() const
+  {
+    return mMinValue;
+  }
+
+  float MaxValue() const
+  {
+    return mMaxValue;
+  }
+
+  float DefaultValue() const
+  {
+    return mDefaultValue;
   }
 
 private:
   nsRefPtr<AudioContext> mContext;
+  const float mDefaultValue;
+  const float mMinValue;
+  const float mMaxValue;
 };
 
 }

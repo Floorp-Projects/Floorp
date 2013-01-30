@@ -280,23 +280,6 @@ DASHRepDecoder::LoadNextByteRange()
   }
 }
 
-void
-DASHRepDecoder::CancelByteRangeLoad()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  NS_ASSERTION(mResource, "Error: resource is reported as null!");
-
-  if (mCurrentByteRange.IsNull() || mSubsegmentIdx < 0) {
-    LOG1("Canceling current byte range load: none to cancel.");
-    return;
-  }
-  LOG("Canceling current byte range load: [%lld] to [%lld] subsegment "
-      "[%lld]", mCurrentByteRange.mStart, mCurrentByteRange.mEnd,
-      mSubsegmentIdx);
-
-  mResource->CancelByteRangeOpen();
-}
-
 bool
 DASHRepDecoder::IsSubsegmentCached(int32_t aSubsegmentIdx)
 {
@@ -518,6 +501,18 @@ DASHRepDecoder::ReleaseStateMachine()
   mReader = nullptr;
 
   MediaDecoder::ReleaseStateMachine();
+}
+
+void DASHRepDecoder::StopProgressUpdates()
+{
+  NS_ENSURE_TRUE_VOID(mMainDecoder);
+  MediaDecoder::StopProgressUpdates();
+}
+
+void DASHRepDecoder::StartProgressUpdates()
+{
+  NS_ENSURE_TRUE_VOID(mMainDecoder);
+  MediaDecoder::StartProgressUpdates();
 }
 
 } // namespace mozilla

@@ -1822,7 +1822,7 @@ public:
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-        if (gUseBackingSurface) {
+        if (gUseBackingSurface && aSize.width >= 64) {
             mGLContext->MakeCurrent(true);
             PixelFormat format = PixelFormatForImage(mUpdateFormat);
             uint32_t usage = GraphicBuffer::USAGE_HW_TEXTURE |

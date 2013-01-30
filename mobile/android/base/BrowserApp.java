@@ -101,6 +101,17 @@ abstract public class BrowserApp extends GeckoApp
                         showAboutHome();
                     else
                         hideAboutHome();
+
+                    final TabsPanel.Panel panel = tab.isPrivate()
+                                                ? TabsPanel.Panel.PRIVATE_TABS
+                                                : TabsPanel.Panel.NORMAL_TABS;
+                    if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel) {
+                        mMainHandler.post(new Runnable() {
+                            public void run() {
+                                showTabs(panel);
+                            }
+                        });
+                    }
                 }
                 break;
             case LOAD_ERROR:

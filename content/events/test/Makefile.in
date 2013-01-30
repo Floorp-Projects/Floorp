@@ -100,6 +100,7 @@ MOCHITEST_FILES = \
 		test_bug742376.html \
 		test_dragstart.html \
 		test_bug812744.html \
+		test_addEventListenerExtraArg.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \

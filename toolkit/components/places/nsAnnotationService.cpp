@@ -344,8 +344,6 @@ nsAnnotationService::SetPageAnnotationString(nsIURI* aURI,
 {
   NS_ENSURE_ARG(aURI);
 
-  ENSURE_NOT_PRIVATE_BROWSING;
-
   nsresult rv = SetAnnotationStringInternal(aURI, 0, aName, aValue,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -417,8 +415,6 @@ nsAnnotationService::SetPageAnnotationInt32(nsIURI* aURI,
                                             uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
-
-  ENSURE_NOT_PRIVATE_BROWSING;
 
   nsresult rv = SetAnnotationInt32Internal(aURI, 0, aName, aValue,
                                            aFlags, aExpiration);
@@ -492,8 +488,6 @@ nsAnnotationService::SetPageAnnotationInt64(nsIURI* aURI,
 {
   NS_ENSURE_ARG(aURI);
 
-  ENSURE_NOT_PRIVATE_BROWSING;
-
   nsresult rv = SetAnnotationInt64Internal(aURI, 0, aName, aValue,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -565,8 +559,6 @@ nsAnnotationService::SetPageAnnotationDouble(nsIURI* aURI,
                                              uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
-
-  ENSURE_NOT_PRIVATE_BROWSING;
 
   nsresult rv = SetAnnotationDoubleInternal(aURI, 0, aName, aValue,
                                             aFlags, aExpiration);
@@ -646,8 +638,6 @@ nsAnnotationService::SetPageAnnotationBinary(nsIURI* aURI,
                                              uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
-
-  ENSURE_NOT_PRIVATE_BROWSING;
 
   nsresult rv = SetAnnotationBinaryInternal(aURI, 0, aName, aData, aDataLen,
                                             aMimeType, aFlags, aExpiration);
@@ -1657,8 +1647,6 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
 {
   NS_ENSURE_ARG(aSourceURI);
   NS_ENSURE_ARG(aDestURI);
-
-  ENSURE_NOT_PRIVATE_BROWSING;
 
   mozStorageTransaction transaction(mDB->MainConn(), false);
 
