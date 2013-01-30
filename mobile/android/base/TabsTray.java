@@ -191,10 +191,8 @@ public class TabsTray extends ListView
         // Updates the selected position in the list so that it will be scrolled to the right place.
         private void updateSelectedPosition() {
             int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
-            if (selected == -1)
-                return;
-
-            TabsTray.this.setItemChecked(selected, true);
+            for (int i=0; i < getCount(); i++)
+                 TabsTray.this.setItemChecked(i, (i == selected));
         }
 
         public void clear() {
