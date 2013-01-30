@@ -10,6 +10,8 @@
 
 #include "mozilla/Attributes.h"
 
+#if defined(__cplusplus)
+
 #if defined(__clang__)
    /*
     * Per Clang documentation, "Note that marketing version numbers should not
@@ -210,5 +212,7 @@
      inline int& operator<<=(int&, const Name::Enum&) MOZ_DELETE; \
      inline int& operator>>=(int&, const Name::Enum&) MOZ_DELETE;
 #endif
+
+#endif /* __cplusplus */
 
 #endif  /* mozilla_TypedEnum_h_ */
