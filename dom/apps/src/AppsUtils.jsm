@@ -81,8 +81,14 @@ this.AppsUtils = {
                                                                  aPermission);
       return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
     };
-    res.QueryInterface = XPCOMUtils.generateQI([Ci.mozIDOMApplication,
-                                                Ci.mozIApplication]);
+    res.QueryInterface = function(aIID) {
+      if (aIID.equals(Ci.mozIDOMApplication) ||
+          aIID.equals(Ci.mozIApplication) ||
+          aIID.equals(Ci.nsISupports))
+        return this;
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    }
+
     return res;
   },
 
