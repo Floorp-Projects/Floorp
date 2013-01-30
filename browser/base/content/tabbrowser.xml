@@ -1780,10 +1780,6 @@
 
               // update tab close buttons state
               this.tabContainer.adjustTabstrip();
-
-              setTimeout(function(tabs) {
-                tabs._lastTabClosedByMouse = false;
-              }, 0, this.tabContainer);
             }
 
             // update first-tab/last-tab/beforeselected/afterselected attributes
@@ -2828,10 +2824,13 @@
           return; // Ignore vertical events
 
         var tabs = document.getBindingParent(this);
-        tabs.removeAttribute("overflow");
 
-        if (tabs._lastTabClosedByMouse)
-          tabs._expandSpacerBy(this._scrollButtonDown.clientWidth);
+        if (tabs.hasAttribute("dontresize") || tabs.hasAttribute("using-closing-tabs-spacer")) {
+          tabs.mTabstrip._scrollButtonUp.style.visibility = "hidden";
+          tabs.mTabstrip._scrollButtonDown.style.visibility = "hidden";
+        } else {
+          tabs.removeAttribute("overflow");
+        }
 
         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser.removeTab,
                                               tabs.tabbrowser);
@@ -2876,8 +2875,7 @@
                            command="cmd_newNavigatorTab"
                            onclick="checkForMiddleClick(this, event);"
                            tooltiptext="&newTabButton.tooltip;"/>
-        <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"
-                    style="width: 0;"/>
+        <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"/>
       </xul:arrowscrollbox>
     </content>
 
@@ -3074,8 +3072,6 @@
         document.getAnonymousElementByAttribute(this, "anonid", "closing-tabs-spacer");
       </field>
 
-      <field name="_lastTabClosedByMouse">false</field>
-
       <field name="_delayResizingRule" readonly="true"><![CDATA[
         const href = "chrome://browser/content/browser.css";
         const selector = ".tabbrowser-tabs[dontresize] > .tabbrowser-tab[fadein]:not([pinned])";
@@ -3098,60 +3094,48 @@
           var isEndTab = (aTab._tPos > tabs[tabs.length-1]._tPos);
           var tabWidth = aTab.getBoundingClientRect().width;
 
-          this._lastTabClosedByMouse = true;
+          // Locking is neither in effect nor needed, so let tabs expand normally.
+          if (isEndTab && !this.hasAttribute("dontresize"))
+            return;
 
-          if (this.getAttribute("overflow") == "true") {
-            // Don't need to do anything if we're in overflow mode and aren't scrolled
-            // all the way to the right, or if we're closing the last tab.
-            if (isEndTab || !this.mTabstrip._scrollButtonDown.disabled)
-              return;
+          // Let spacer grow to the maximum and lock it, then let tabs expand normally
+          if (isEndTab) {
+            let spacer = this._closingTabsSpacer;
+            spacer.style.MozBoxFlex = 1;
+            spacer.style.minWidth = getComputedStyle(spacer).width;
+            spacer.style.MozBoxFlex = "";
 
-            // If the tab has an owner that will become the active tab, the owner will
-            // be to the left of it, so we actually want the left tab to slide over.
-            // This can't be done as easily in non-overflow mode, so we don't bother.
-            if (aTab.owner)
-              return;
+            this.setAttribute("dontanimate", "true");
+            this.removeAttribute("dontresize");
+            this.clientTop;
+            this.removeAttribute("dontanimate");
+            return;
+          }
 
-            this._expandSpacerBy(tabWidth);
-          } else { // non-overflow mode
-            // Locking is neither in effect nor needed, so let tabs expand normally.
-            if (isEndTab && !this.hasAttribute("dontresize"))
-              return;
-
-            // Let spacer grow to the maximum and lock it, then let tabs expand normally
-            if (isEndTab) {
-              let spacer = this._closingTabsSpacer;
-              spacer.style.MozBoxFlex = 1;
-              spacer.style.minWidth = getComputedStyle(spacer).width;
-              spacer.style.MozBoxFlex = "";
-
-              this.setAttribute("dontanimate", "true");
-              this.removeAttribute("dontresize");
-              this.clientTop;
-              this.removeAttribute("dontanimate");
-              return;
-            }
-
-            if (this.hasAttribute("dontresize"))
-              return;
-
+          if (!this.hasAttribute("dontresize")) {
             this._delayResizingRule.style.setProperty("max-width", tabWidth + "px", "important");
             this.setAttribute("dontanimate", "true");
             this.setAttribute("dontresize", "true");
             this.clientTop; // flush styles to skip animation; see bug 649247
             this.removeAttribute("dontanimate");
-            this.tabbrowser.addEventListener("mousemove", this, false);
-            window.addEventListener("mouseout", this, false);
           }
-        ]]></body>
-      </method>
 
-      <method name="_expandSpacerBy">
-        <parameter name="pixels"/>
-        <body><![CDATA[
-          let spacer = this._closingTabsSpacer;
-          spacer.style.width = parseFloat(spacer.style.width) + pixels + "px";
-          this.setAttribute("using-closing-tabs-spacer", "true");
+          if (!this.mTabstrip._scrollButtonUp.disabled) {
+            let spacer = this._closingTabsSpacer;
+            let width = parseFloat(spacer.style.minWidth) || 0;
+            width += tabWidth;
+
+            if (!this.mTabstrip._scrollButtonDown.disabled) {
+              let scrollbox = this.mTabstrip._scrollbox;
+              width -= scrollbox.scrollLeftMax - scrollbox.scrollLeft;
+            }
+
+            if (width >= 0) {
+              spacer.style.minWidth = width + "px";
+              this.setAttribute("using-closing-tabs-spacer", "true");
+            }
+          }
+
           this.tabbrowser.addEventListener("mousemove", this, false);
           window.addEventListener("mouseout", this, false);
         ]]></body>
@@ -3162,12 +3146,15 @@
           this.tabbrowser.removeEventListener("mousemove", this, false);
           window.removeEventListener("mouseout", this, false);
 
-          if (this.hasAttribute("using-closing-tabs-spacer")) {
-            this.removeAttribute("using-closing-tabs-spacer");
-            this._closingTabsSpacer.style.width = 0;
-          }
           this._closingTabsSpacer.style.minWidth = "";
+          this.removeAttribute("using-closing-tabs-spacer");
           this.removeAttribute("dontresize");
+
+          if (this.hasAttribute("overflow") && this.mTabstrip._scrollbox.scrollWidth <= this.mTabstrip._scrollbox.clientWidth) {
+            this.mTabstrip._scrollButtonUp.style.visibility = "";
+            this.mTabstrip._scrollButtonDown.style.visibility = "";
+            this.removeAttribute("overflow");
+          }
         ]]></body>
       </method>
 
