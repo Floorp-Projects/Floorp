@@ -1825,13 +1825,18 @@ builtinNames = {
     IDLType.Tags.double: 'double'
 }
 
-numericTags = [
-    IDLType.Tags.int8, IDLType.Tags.uint8,
-    IDLType.Tags.int16, IDLType.Tags.uint16,
-    IDLType.Tags.int32, IDLType.Tags.uint32,
-    IDLType.Tags.int64, IDLType.Tags.uint64,
-    IDLType.Tags.float, IDLType.Tags.double
-    ]
+numericSuffixes = {
+    IDLType.Tags.int8: '',
+    IDLType.Tags.uint8: '',
+    IDLType.Tags.int16: '',
+    IDLType.Tags.uint16: '',
+    IDLType.Tags.int32: '',
+    IDLType.Tags.uint32: 'U',
+    IDLType.Tags.int64: 'LL',
+    IDLType.Tags.uint64: 'ULL',
+    IDLType.Tags.float: 'F',
+    IDLType.Tags.double: 'D'
+}
 
 class CastableObjectUnwrapper():
     """
@@ -2987,8 +2992,9 @@ for (uint32_t i = 0; i < length; ++i) {
         # We already handled IDLNullValue, so just deal with the other ones
         not isinstance(defaultValue, IDLNullValue)):
         tag = defaultValue.type.tag()
-        if tag in numericTags:
-            defaultStr = defaultValue.value
+        if tag in numericSuffixes:
+            # Some numeric literals require a suffix to compile without warnings
+            defaultStr = "%s%s" % (defaultValue.value, numericSuffixes[tag])
         else:
             assert(tag == IDLType.Tags.bool)
             defaultStr = toStringBool(defaultValue.value)
@@ -3093,9 +3099,9 @@ def convertConstIDLValueToJSVal(value):
                IDLType.Tags.uint16, IDLType.Tags.int32]:
         return "INT_TO_JSVAL(%s)" % (value.value)
     if tag == IDLType.Tags.uint32:
-        return "UINT_TO_JSVAL(%s)" % (value.value)
+        return "UINT_TO_JSVAL(%sU)" % (value.value)
     if tag in [IDLType.Tags.int64, IDLType.Tags.uint64]:
-        return "DOUBLE_TO_JSVAL(%s)" % (value.value)
+        return "DOUBLE_TO_JSVAL(%s%s)" % (value.value, numericSuffixes[tag])
     if tag == IDLType.Tags.bool:
         return "JSVAL_TRUE" if value.value else "JSVAL_FALSE"
     if tag in [IDLType.Tags.float, IDLType.Tags.double]:
