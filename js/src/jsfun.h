@@ -200,9 +200,9 @@ class JSFunction : public JSObject
     js::UnrootedScript getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
         if (isInterpretedLazy()) {
-            js::MaybeCheckStackRoots(cx);
             js::RootedFunction self(cx, this);
-            if (!initializeLazyScript(cx))
+            js::MaybeCheckStackRoots(cx);
+            if (!self->initializeLazyScript(cx))
                 return js::UnrootedScript(NULL);
             return self->u.i.script_;
         }

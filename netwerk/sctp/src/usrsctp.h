@@ -846,7 +846,8 @@ struct sctp_timeouts {
 
 void
 usrsctp_init(uint16_t,
-             int (*)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df));
+             int (*)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df),
+             void (*)(const char *, ...));
 
 struct socket *
 usrsctp_socket(int domain, int type, int protocol,
@@ -968,7 +969,7 @@ usrsctp_register_address(void *);
 void
 usrsctp_deregister_address(void *);
 
-#define SCTP_DUMP_OUTBOUND 0
+#define SCTP_DUMP_OUTBOUND 1
 #define SCTP_DUMP_INBOUND  0
 
 char *

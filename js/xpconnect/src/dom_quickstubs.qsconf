@@ -46,12 +46,7 @@ members = [
     'nsIDOMWindow.onmouseleave',
     'nsIDOMWindowPerformance.performance',
     'nsIDOMJSWindow.dump',
-    'nsIDOMScreen.top',
-    'nsIDOMScreen.height',
-    'nsIDOMScreen.width',
-    'nsIDOMScreen.left',
     'nsIDOMClientRect.*',
-    'nsIDOMPaintRequest.*',
     # nsLocationSH has ~ALLOW_PROP_MODS_TO_PROTOTYPE, so don't try.
     #'nsIDOMLocation.hostname',
     #'nsIDOMLocation.href',
@@ -64,22 +59,10 @@ members = [
     'nsIDOMCanvasPattern.*',
 
     # dom/interfaces/core
-    'nsIDOMCharacterData.data',
-    'nsIDOMCharacterData.length',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
-    'nsIDOMText.splitText',
     'nsIDOMDOMStringList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
-
-    # dom/interfaces/css
-    'nsIDOMElementCSSInlineStyle.*',
-    'nsIDOMRect.*',
-
-    # dom/interfaces/events
-    'nsIDOMEventTarget.addEventListener',
-    'nsIDOMEventTarget.removeEventListener',
-    'nsIDOMEventTarget.dispatchEvent',
 
     'nsIDOMEvent.type',
     'nsIDOMEvent.target',
@@ -246,9 +229,6 @@ members = [
     'nsIDOMXPathResult.singleNodeValue',
     'nsIDOMNSXPathExpression.evaluateWithContext',
 
-    # dom/interfaces/xul
-    'nsIDOMXULElement.*',
-
     # layout/xul/base/public
     'nsIBoxObject.x',
     'nsIBoxObject.y',
@@ -316,20 +296,8 @@ irregularFilenames = {
     }
 
 customIncludes = [
-    'nsINode.h',
-    'nsIContent.h',
-    'nsIDocument.h',
-    'nsCSSPropertiesQS.h',
-    'nsDOMTokenList.h',
-    'nsGenericDOMDataNode.h',
-    'mozilla/dom/Element.h',
-    'nsGenericHTMLElement.h',
-    'nsSVGElement.h',
     'nsDOMQS.h',
-    'nsDOMStringMap.h',
-    'HTMLPropertiesCollection.h',
     'nsHTMLMenuElement.h',
-    'nsICSSDeclaration.h',
     'mozilla/dom/NodeBinding.h',
     'mozilla/dom/ElementBinding.h',
     'mozilla/dom/HTMLElementBinding.h',
@@ -337,6 +305,7 @@ customIncludes = [
     'mozilla/dom/SVGElementBinding.h',
     'nsPerformance.h',
     'mozilla/dom/HTMLDocumentBinding.h',
+    'mozilla/dom/EventTargetBinding.h',
     ]
 
 customReturnInterfaces = [
@@ -353,15 +322,6 @@ nsIDOMStorage_Clear_customMethodCallCode = """
 customMethodCalls = {
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
-        },
-    'nsIDOMElementCSSInlineStyle_GetStyle': {
-        'thisType': 'nsStyledElement',
-        'code': '    /* XXXbz MathML elements inherit from nsStyledElement but\n'
-                '       don\'t actually implement GetStyle. */\n'
-                '    if (self->GetNameSpaceID() == kNameSpaceID_MathML)\n'
-                '      return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n'
-                '    nsIDOMCSSStyleDeclaration* result = self->Style();',
-        'canFail': False
         },
     'nsIDOMWindow_GetOnmouseenter' : {
         'thisType' : 'nsIDOMWindow',
@@ -393,4 +353,5 @@ newBindingProperties = {
     'nsIDOMDocument': 'mozilla::dom::DocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMSVGElement': 'mozilla::dom::SVGElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMHTMLDocument': 'mozilla::dom::HTMLDocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMEventTarget': 'mozilla::dom::EventTargetBinding::sNativePropertyHooks.mNativeProperties.regular',
     }

@@ -351,6 +351,8 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
   }
   for (uint32_t i = 0; i < len; i++) {
     nsresult rv;
+    // XXXbz once this moves to WebIDL, remove the RTCIceServer hack
+    // in DummyBinding.webidl.
     RTCIceServer server;
     {
       JS::Value v;

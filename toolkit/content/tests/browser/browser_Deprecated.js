@@ -67,10 +67,7 @@ let tests = [
 // When pref is unset Deprecated.warning should not log anything.
 {
   deprecatedFunction: basicDeprecatedFunction,
-  expectedObservation: function (aMessage) {
-    // Nothing should be logged when pref is false.
-    ok(false, "Deprecated warning should not log anything when pref is unset.");
-  },
+  expectedObservation: null,
   // Set pref to false.
   logWarnings: false
 },
@@ -81,11 +78,13 @@ let tests = [
     testAMessage(aMessage);
     ok(aMessage.errorMessage.indexOf("deprecationFunctionCustomCallstack") > 0,
       "Callstack is correctly logged.");
-    finish();
   },
   // Set pref to true.
   logWarnings: true
 }];
+
+// Which test are we running now?
+let idx = -1;
 
 function test() {
   waitForExplicitFinish();
@@ -93,8 +92,7 @@ function test() {
   // Check if Deprecated is loaded.
   ok(Deprecated, "Deprecated object exists");
 
-  // Run all test cases.
-  tests.forEach(testDeprecated);
+  nextTest();
 }
 
 // Test Consle Message attributes.
@@ -106,7 +104,17 @@ function testAMessage (aMessage) {
     "URL is correctly logged.");
 }
 
-function testDeprecated (test) {
+function nextTest() {
+  idx++;
+
+  if (idx == tests.length) {
+    finish();
+    return;
+  }
+
+  info("Running test #" + idx);
+  let test = tests[idx];
+
   // Deprecation warnings will be logged only when the preference is set.
   if (typeof test.logWarnings !== "undefined") {
     Services.prefs.setBoolPref(PREF_DEPRECATION_WARNINGS, test.logWarnings);
@@ -125,13 +133,25 @@ function testDeprecated (test) {
       }
       ok(aMessage instanceof Ci.nsIScriptError,
         "Deprecation log message is an instance of type nsIScriptError.");
-      test.expectedObservation(aMessage);
+
+
+      if (test.expectedObservation === null) {
+        ok(false, "Deprecated warning not expected");
+      }
+      else {
+        test.expectedObservation(aMessage);
+      }
+
+      Services.console.unregisterListener(consoleListener);
+      executeSoon(nextTest);
     }
   };
-  // Register a listener that contains the tests.
   Services.console.registerListener(consoleListener);
-  // Run the deprecated function.
   test.deprecatedFunction();
-  // Unregister a listener.
-  Services.console.unregisterListener(consoleListener);
+  if (test.expectedObservation === null) {
+    executeSoon(function() {
+      Services.console.unregisterListener(consoleListener);
+      executeSoon(nextTest);
+    });
+  }
 }

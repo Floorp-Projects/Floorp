@@ -316,43 +316,131 @@ DASHReader::GetBuffered(nsTimeRanges* aBuffered,
   MediaResource* resource = nullptr;
   AbstractMediaDecoder* decoder = nullptr;
 
-  // Need to find intersect of |nsTimeRanges| for audio and video.
   nsTimeRanges audioBuffered, videoBuffered;
-  uint32_t audioRangeCount, videoRangeCount;
+  uint32_t audioRangeCount = 0, videoRangeCount = 0;
+  bool audioCachedAtEnd = false, videoCachedAtEnd = false;
 
   nsresult rv = NS_OK;
 
-  // First, get buffered ranges for sub-readers.
+  // Get all audio and video buffered ranges. Include inactive streams, since
+  // we may have carried out a seek and future subsegments may be in currently
+  // inactive decoders.
   ReentrantMonitorConditionallyEnter mon(!mDecoder->OnDecodeThread(),
                                          mDecoder->GetReentrantMonitor());
-  if (mAudioReader) {
-    decoder = mAudioReader->GetDecoder();
+  for (uint32_t i = 0; i < mAudioReaders.Length(); i++) {
+    decoder = mAudioReaders[i]->GetDecoder();
     NS_ENSURE_TRUE(decoder, NS_ERROR_NULL_POINTER);
     resource = decoder->GetResource();
     NS_ENSURE_TRUE(resource, NS_ERROR_NULL_POINTER);
     resource->Pin();
-    rv = mAudioReader->GetBuffered(&audioBuffered, aStartTime);
+    rv = mAudioReaders[i]->GetBuffered(&audioBuffered, aStartTime);
     NS_ENSURE_SUCCESS(rv, rv);
+    // If data was cached at the end, then the final timestamp refers to the
+    // end of the data. Use this later to extend end time if necessary.
+    if (!audioCachedAtEnd) {
+      audioCachedAtEnd = mAudioReaders[i]->IsDataCachedAtEndOfSubsegments();
+    }
     resource->Unpin();
-    rv = audioBuffered.GetLength(&audioRangeCount);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
-  if (mVideoReader) {
-    decoder = mVideoReader->GetDecoder();
+  for (uint32_t i = 0; i < mVideoReaders.Length(); i++) {
+    decoder = mVideoReaders[i]->GetDecoder();
     NS_ENSURE_TRUE(decoder, NS_ERROR_NULL_POINTER);
     resource = decoder->GetResource();
     NS_ENSURE_TRUE(resource, NS_ERROR_NULL_POINTER);
     resource->Pin();
-    rv = mVideoReader->GetBuffered(&videoBuffered, aStartTime);
+    rv = mVideoReaders[i]->GetBuffered(&videoBuffered, aStartTime);
     NS_ENSURE_SUCCESS(rv, rv);
+    // If data was cached at the end, then the final timestamp refers to the
+    // end of the data. Use this later to extend end time if necessary.
+    if (!videoCachedAtEnd) {
+      videoCachedAtEnd = mVideoReaders[i]->IsDataCachedAtEndOfSubsegments();
+    }
     resource->Unpin();
-    rv = videoBuffered.GetLength(&videoRangeCount);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Now determine buffered data for available sub-readers.
-  if (mAudioReader && mVideoReader) {
-    // Calculate intersecting ranges.
+  audioBuffered.Normalize();
+  videoBuffered.Normalize();
+
+  rv = audioBuffered.GetLength(&audioRangeCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = videoBuffered.GetLength(&videoRangeCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef PR_LOGGING
+  double start = 0, end = 0;
+  for (uint32_t i = 0; i < audioRangeCount; i++) {
+    rv = audioBuffered.Start(i, &start);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = audioBuffered.End(i, &end);
+    NS_ENSURE_SUCCESS(rv, rv);
+    LOG("audioBuffered[%d] = (%f, %f)",
+        i, start, end);
+  }
+  for (uint32_t i = 0; i < videoRangeCount; i++) {
+    rv = videoBuffered.Start(i, &start);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = videoBuffered.End(i, &end);
+    NS_ENSURE_SUCCESS(rv, rv);
+    LOG("videoBuffered[%d] = (%f, %f)",
+        i, start, end);
+  }
+#endif
+
+  // If audio and video are cached to the end of their subsegments, extend the
+  // end time of the shorter of the two. Presentation of the shorter stream
+  // will stop at the end, while the other continues until the combined
+  // playback is complete.
+  // Note: Only in cases where the shorter stream is fully cached, and the
+  // longer stream is partially cached, but with more time buffered than the
+  // shorter stream.
+  //
+  // Audio ========|
+  //               20
+  // Video ============|----|
+  //                   30   40
+  // Combo ============|      <----- End time EXTENDED.
+  //
+  // For example, audio is fully cached to 20s, but video is partially cached
+  // to 30s, full duration 40s. In this case, the buffered end time should be
+  // extended to the video's end time.
+  //
+  // Audio =================|
+  //                        40
+  // Video ========|----|
+  //               20   30
+  // Combo ========|          <------ End time NOT EXTENDED.
+  //
+  // Conversely, if the longer stream is fully cached, but the shorter one is
+  // not, no extension of end time should occur - we should consider the
+  // partially cached, shorter end time to be the end time of the combined
+  // stream
+
+  if (audioCachedAtEnd || videoCachedAtEnd) {
+    NS_ENSURE_TRUE(audioRangeCount, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(videoRangeCount, NS_ERROR_FAILURE);
+
+    double audioEndTime = 0, videoEndTime = 0;
+    // Get end time of the last range of buffered audio.
+    audioEndTime = audioBuffered.GetFinalEndTime();
+    NS_ENSURE_TRUE(audioEndTime > 0, NS_ERROR_ILLEGAL_VALUE);
+    // Get end time of the last range of buffered video.
+    videoEndTime = videoBuffered.GetFinalEndTime();
+    NS_ENSURE_TRUE(videoEndTime > 0, NS_ERROR_ILLEGAL_VALUE);
+
+    // API for nsTimeRanges requires extending through adding and normalizing.
+    if (videoCachedAtEnd && audioEndTime > videoEndTime) {
+      videoBuffered.Add(videoEndTime, audioEndTime);
+      videoBuffered.Normalize();
+      LOG("videoBuffered extended to %f", audioEndTime);
+    } else if (audioCachedAtEnd && videoEndTime > audioEndTime) {
+      audioBuffered.Add(audioEndTime, videoEndTime);
+      audioBuffered.Normalize();
+      LOG("audioBuffered extended to %f", videoEndTime);
+    }
+  }
+
+  // Calculate intersecting ranges for video and audio.
+  if (!mAudioReaders.IsEmpty() && !mVideoReaders.IsEmpty()) {
     for (uint32_t i = 0; i < audioRangeCount; i++) {
       // |A|udio, |V|ideo, |I|ntersect.
       double startA, startV, startI;
@@ -382,9 +470,9 @@ DASHReader::GetBuffered(nsTimeRanges* aBuffered,
         aBuffered->Add(startI, endI);
       }
     }
-  } else if (mAudioReader) {
+  } else if (!mAudioReaders.IsEmpty()) {
     *aBuffered = audioBuffered;
-  } else if (mVideoReader) {
+  } else if (!mVideoReaders.IsEmpty()) {
     *aBuffered = videoBuffered;
   } else {
     return NS_ERROR_NOT_INITIALIZED;

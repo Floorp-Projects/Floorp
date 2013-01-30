@@ -2212,30 +2212,6 @@
     "kind": "boolean",
     "description": "XMLHttpRequest response was of type multipart/x-mixed-replace."
   },
-  "PRIVATE_BROWSING_TRANSITION_ENTER_PREPARATION_MS": {
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "description": "Time spent on private browsing enter transition, excluding session restore (ms)"
-  },
-  "PRIVATE_BROWSING_TRANSITION_ENTER_TOTAL_MS": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 50,
-    "description": "Time spent on private browsing enter transition, including session restore (ms)"
-  },
-  "PRIVATE_BROWSING_TRANSITION_EXIT_PREPARATION_MS": {
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "description": "Time spent on private browsing exit transition, excluding session restore (ms)"
-  },
-  "PRIVATE_BROWSING_TRANSITION_EXIT_TOTAL_MS": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 50,
-    "description": "Time spent on private browsing exit transition, including session restore (ms)"
-  },
   "DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT": {
     "kind": "exponential",
     "high": "3000",

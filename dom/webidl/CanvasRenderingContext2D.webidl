@@ -18,7 +18,6 @@ interface HTMLCanvasElement;
 interface HTMLVideoElement;
 interface TextMetrics;
 interface Window;
-interface XULElement;
 
 enum CanvasWindingRule { "nonzero", "evenodd" };
 

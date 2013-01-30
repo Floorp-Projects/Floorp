@@ -60,11 +60,6 @@ public:
                          BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult
-  GetProperties(BluetoothObjectType aType,
-                const nsAString& aPath,
-                BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
-
-  virtual nsresult
   SetProperty(BluetoothObjectType aType,
               const nsAString& aPath,
               const BluetoothNamedValue& aValue,

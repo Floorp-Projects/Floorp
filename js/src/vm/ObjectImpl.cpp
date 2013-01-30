@@ -77,7 +77,7 @@ CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
  * Reject non-callable getters and setters.
  */
 bool
-PropDesc::unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, JSObject *obj,
+PropDesc::unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, HandleObject obj,
                                     PropDesc *unwrapped) const
 {
     MOZ_ASSERT(!isUndefined());
@@ -123,7 +123,7 @@ PropDesc::unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, JSObject *obj,
  * so reconstitute desc->pd_ if needed.
  */
 bool
-PropDesc::wrapInto(JSContext *cx, JSObject *obj, const jsid &id, jsid *wrappedId,
+PropDesc::wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappedId,
                    PropDesc *desc) const
 {
     MOZ_ASSERT(!isUndefined());
