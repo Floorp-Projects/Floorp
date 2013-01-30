@@ -7,7 +7,6 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/utils.js");
 
@@ -257,6 +256,8 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DataReportingService]);
 
 #define MERGED_COMPARTMENT
 
+#include ../common/observers.js
+;
 #include policy.jsm
 ;
 #include sessions.jsm
