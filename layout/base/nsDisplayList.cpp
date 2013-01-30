@@ -2179,10 +2179,6 @@ nsDisplayBackgroundImage::GetBoundsInternal() {
   }
 
   nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
-    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    borderBox = frame->CanvasArea() + ToReferenceFrame();
-  }
   const nsStyleBackground::Layer& layer = mBackgroundStyle->mLayers[mLayer];
   return nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
                                                 borderBox, *mBackgroundStyle, layer);
