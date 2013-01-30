@@ -34,6 +34,36 @@ let gSyncPane = {
   },
 
   init: function () {
+    // If the Service hasn't finished initializing, wait for it.
+    let xps = Components.classes["@mozilla.org/weave/service;1"]
+                                .getService(Components.interfaces.nsISupports)
+                                .wrappedJSObject;
+
+    if (xps.ready) {
+      this._init();
+      return;
+    }
+
+    let onUnload = function () {
+      window.removeEventListener("unload", onUnload, false);
+      try {
+        Services.obs.removeObserver(onReady, "weave:service:ready");
+      } catch (e) {}
+    };
+
+    let onReady = function () {
+      Services.obs.removeObserver(onReady, "weave:service:ready");
+      window.removeEventListener("unload", onUnload, false);
+      this._init();
+    }.bind(this);
+
+    Services.obs.addObserver(onReady, "weave:service:ready", false);
+    window.addEventListener("unload", onUnload, false);
+
+    xps.ensureLoaded();
+  },
+
+  _init: function () {
     let topics = ["weave:service:login:error",
                   "weave:service:login:finish",
                   "weave:service:start-over",
