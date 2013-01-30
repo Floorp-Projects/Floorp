@@ -159,8 +159,6 @@ let gInitialPages = [
 
 #ifdef MOZ_DATA_REPORTING
 #include browser-data-submission-info-bar.js
-
-let gDataNotificationInfoBar = new DataNotificationInfoBar();
 #endif
 
 #ifdef MOZ_SERVICES_SYNC
