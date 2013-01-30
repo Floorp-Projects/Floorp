@@ -229,19 +229,24 @@ IonRuntime::generateInvalidator(JSContext *cx)
     const int sizeOfRetval = sizeof(size_t)*2;
     masm.reserveStack(sizeOfRetval);
     masm.mov(sp, r1);
-    masm.setupAlignedABICall(2);
+    const int sizeOfBailoutInfo = sizeof(void *)*2;
+    masm.reserveStack(sizeOfBailoutInfo);
+    masm.mov(sp, r2);
+    masm.setupAlignedABICall(3);
     masm.passABIArg(r0);
     masm.passABIArg(r1);
+    masm.passABIArg(r2);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InvalidationBailout));
 
-    masm.ma_ldr(Address(sp, 0), r1);
+    masm.ma_ldr(Address(sp, 0), r2);
+    masm.ma_ldr(Address(sp, sizeOfBailoutInfo), r1);
     // Remove the return address, the IonScript, the register state
     // (InvaliationBailoutStack) and the space that was allocated for the return value
-    masm.ma_add(sp, Imm32(sizeof(InvalidationBailoutStack) + sizeOfRetval), sp);
+    masm.ma_add(sp, Imm32(sizeof(InvalidationBailoutStack) + sizeOfRetval + sizeOfBailoutInfo), sp);
     // remove the space that this frame was using before the bailout
     // (computed by InvalidationBailout)
     masm.ma_add(sp, r1, sp);
-    masm.generateBailoutTail(r1);
+    masm.generateBailoutTail(r1, r2);
     Linker linker(masm);
     IonCode *code = linker.newCode(cx);
     IonSpew(IonSpew_Invalidate, "   invalidation thunk created at %p", (void *) code->raw());
@@ -249,7 +254,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateArgumentsRectifier(JSContext *cx)
+IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
 {
     MacroAssembler masm(cx);
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
@@ -315,6 +320,8 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx)
     masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonCode::offsetOfCode())), r3);
     masm.ma_callIonHalfPush(r3);
 
+    uint32_t returnOffset = masm.currentOffset();
+
     // arg1
     //  ...
     // argN
@@ -339,7 +346,12 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx)
 
     masm.ret();
     Linker linker(masm);
-    return linker.newCode(cx);
+    IonCode *code = linker.newCode(cx);
+
+    CodeOffsetLabel returnLabel(returnOffset);
+    returnLabel.fixup(&masm);
+    *returnAddrOut = (void *) (code->raw() + returnLabel.offset());
+    return code;
 }
 
 static void
@@ -392,7 +404,10 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32_t frameClass)
     // STEP 1c: Call the bailout function, giving a pointer to the
     //          structure we just blitted onto the stack
     masm.ma_mov(sp, r0);
-    masm.setupAlignedABICall(1);
+    const int sizeOfBailoutInfo = sizeof(void *)*2;
+    masm.reserveStack(sizeOfBailoutInfo);
+    masm.mov(sp, r1);
+    masm.setupAlignedABICall(2);
 
     // Copy the present stack pointer into a temp register (it happens to be the
     // argument register)
@@ -404,9 +419,12 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32_t frameClass)
 
     // Set the old (4-byte aligned) value of the sp as the first argument
     masm.passABIArg(r0);
+    masm.passABIArg(r1);
 
     // Sp % 8 == 0
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
+    masm.ma_ldr(Address(sp, 0), r2);
+    masm.ma_add(sp, Imm32(sizeOfBailoutInfo), sp);
     // Common size of a bailout frame.
     uint32_t bailoutFrameSize = sizeof(void *) + // frameClass
                               sizeof(double) * FloatRegisters::Total +
@@ -431,7 +449,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32_t frameClass)
                           + bailoutFrameSize) // everything else that was pushed on the stack
                     , sp);
     }
-    masm.generateBailoutTail(r1);
+    masm.generateBailoutTail(r1, r2);
 }
 
 IonCode *

@@ -499,6 +499,10 @@ class ICStub
         return IonCode::FromExecutable(stubCode_);
     }
 
+    inline uint8_t *rawStubCode() const {
+        return stubCode_;
+    }
+
     // This method is not valid on TypeUpdate stub chains!
     inline ICFallbackStub *getChainFallback() {
         ICStub *lastStub = this;
@@ -706,6 +710,9 @@ class ICStubCompiler
     }
 
     virtual bool generateStubCode(MacroAssembler &masm) = 0;
+    virtual bool postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> genCode) {
+        return true;
+    }
     IonCode *getStubCode();
 
     ICStubCompiler(JSContext *cx, ICStub::Kind kind)
@@ -2261,7 +2268,9 @@ class ICCall_Scripted : public ICMonitoredStub
       protected:
         ICStub *firstMonitorStub_;
         RootedFunction callee_;
+        uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
+        bool postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code);
 
       public:
         Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee)

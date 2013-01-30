@@ -170,6 +170,10 @@ class IonBaselineStubFrameLayout : public IonCommonFrameLayout
     static inline size_t Size() {
         return sizeof(IonBaselineStubFrameLayout);
     }
+
+    static inline size_t reverseOffsetOfSavedFramePtr() {
+        return -(2 * sizeof(void *));
+    }
 };
 
 class IonNativeExitFrameLayout;

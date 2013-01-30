@@ -33,11 +33,13 @@ FallbackICSpew(JSContext *cx, ICFallbackStub *stub, const char *fmt, ...)
         vsnprintf(fmtbuf, 100, fmt, args);
         va_end(args);
 
-        IonSpew(IonSpew_BaselineICFallback, "Fallback hit for (%s:%d) (pc=%d) (line=%d): %s",
+        IonSpew(IonSpew_BaselineICFallback,
+                "Fallback hit for (%s:%d) (pc=%d,line=%d,uses=%d): %s",
                 script->filename,
                 script->lineno,
                 (int) (pc - script->code),
                 PCToLineNumber(script, pc),
+                script->getUseCount(),
                 fmtbuf);
     }
 }
@@ -236,6 +238,10 @@ ICStubCompiler::getStubCode()
     if (!newStubCode)
         return NULL;
 
+    // After generating code, run postGenerateStubCode()
+    if (!postGenerateStubCode(masm, newStubCode))
+        return NULL;
+
     // All barriers are emitted off-by-default, enable them if needed.
     if (cx->zone()->needsBarrier())
         newStubCode->togglePreBarriers(true);
@@ -327,6 +333,7 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, IonJSFrameLayout *fr
     // If this is not a JSOP_LOOPENTRY, don't OSR, but also don't reset the loop count,
     // since we may hit a proper UseCount check within the function body.
     if (JSOp(*pc) != JSOP_LOOPENTRY) {
+        IonSpew(IonSpew_BaselineICFallback, "  Not at LOOPENTRY.");
         // If not a loop entry, it must be a function-entry UseCount.
         JS_ASSERT(pc == script->code);
         return true;
@@ -551,10 +558,6 @@ DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, IonJSFrameLayout *f
     void *jitcode = NULL;
     if (!EnsureCanEnterIon(cx, stub, frame, script, pc, &jitcode))
         return false;
-
-    // FIXME FIXME FIXME
-    jitcode = NULL; // Remove this to fully enable OSR into Ion.
-    // FIXME FIXME FIXME
 
     if (!jitcode)
         return true;
@@ -2704,6 +2707,7 @@ ICCall_Scripted::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.bind(&noUnderflow);
     masm.callIon(code);
+    returnOffset_ = masm.currentOffset();
 
     EmitLeaveStubFrame(masm, true);
 
@@ -2712,6 +2716,15 @@ ICCall_Scripted::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICCall_Scripted::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code)
+{
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment->ionCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
