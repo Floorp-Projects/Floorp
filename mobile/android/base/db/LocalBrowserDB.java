@@ -339,6 +339,12 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { String.valueOf(id) });
     }
 
+    public void removeHistoryEntry(ContentResolver cr, String url) {
+        int deleted = cr.delete(mHistoryUriWithProfile,
+                  History.URL + " = ?",
+                  new String[] { url });
+    }
+
     public void clearHistory(ContentResolver cr) {
         cr.delete(mHistoryUriWithProfile, null, null);
     }
