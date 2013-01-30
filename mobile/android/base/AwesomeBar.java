@@ -72,6 +72,7 @@ public class AwesomeBar extends GeckoActivity {
     private ContentResolver mResolver;
     private ContextMenuSubject mContextMenuSubject;
     private boolean mIsUsingSwype;
+    private boolean mDelayRestartInput;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -326,11 +327,24 @@ public class AwesomeBar extends GeckoActivity {
         mGoButton.setImageResource(imageResource);
         mGoButton.setContentDescription(contentDescription);
 
+        InputMethodManager imm = InputMethods.getInputMethodManager(mText.getContext());
+        if (imm == null) {
+            return;
+        }
         int actionBits = mText.getImeOptions() & EditorInfo.IME_MASK_ACTION;
         if (actionBits != imeAction) {
-            InputMethodManager imm = (InputMethodManager) mText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             int optionBits = mText.getImeOptions() & ~EditorInfo.IME_MASK_ACTION;
             mText.setImeOptions(optionBits | imeAction);
+
+            mDelayRestartInput = InputMethods.shouldDelayAwesomebarUpdate(mText.getContext());
+            if (!mDelayRestartInput) {
+                imm.restartInput(mText);
+            }
+        } else if (mDelayRestartInput) {
+            // Only call delayed restartInput when actionBits == imeAction
+            // so if there are two restarts in a row, the first restarts will
+            // be discarded and the second restart will be properly delayed
+            mDelayRestartInput = false;
             imm.restartInput(mText);
         }
     }
