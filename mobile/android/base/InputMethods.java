@@ -21,8 +21,10 @@ final class InputMethods {
     public static final String METHOD_GOOGLE_JAPANESE_INPUT = "com.google.android.inputmethod.japanese/.MozcService";
     public static final String METHOD_IWNN = "jp.co.omronsoft.iwnnime.ml/.standardcommon.IWnnLanguageSwitcher";
     public static final String METHOD_OPENWNN_PLUS = "com.owplus.ime.openwnnplus/.OpenWnnJAJP";
+    public static final String METHOD_SAMSUNG = "com.sec.android.inputmethod/.SamsungKeypad";
     public static final String METHOD_SIMEJI = "com.adamrocker.android.input.simeji/.OpenWnnSimeji";
     public static final String METHOD_STOCK_LATINIME = "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME";
+    public static final String METHOD_SWIFTKEY = "com.touchtype.swiftkey/com.touchtype.KeyboardService";
     public static final String METHOD_SWYPE = "com.swype.android.inputmethod/.SwypeInputMethod";
     public static final String METHOD_SWYPE_BETA = "com.nuance.swype.input/.IME";
 
@@ -90,5 +92,11 @@ final class InputMethods {
         // Stock latin IME on Android 4.2 and above
         return Build.VERSION.SDK_INT >= 17 &&
                METHOD_STOCK_LATINIME.equals(inputMethod);
+    }
+
+    public static boolean shouldDelayAwesomebarUpdate(Context context) {
+        String inputMethod = getCurrentInputMethod(context);
+        return METHOD_SAMSUNG.equals(inputMethod) ||
+               METHOD_SWIFTKEY.equals(inputMethod);
     }
 }
