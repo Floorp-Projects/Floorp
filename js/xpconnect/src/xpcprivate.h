@@ -2910,7 +2910,7 @@ public:
     }
     void SetWrapper(JSObject *obj)
     {
-        js::IncrementalReferenceBarrier(GetWrapperPreserveColor());
+        js::IncrementalObjectBarrier(GetWrapperPreserveColor());
         intptr_t newval = intptr_t(obj) | (mWrapperWord & FLAG_MASK);
         mWrapperWord = newval;
     }
@@ -3420,25 +3420,6 @@ public:
 private:
     XPCConvert(); // not implemented
 
-};
-
-/***************************************************************************/
-
-// readable string conversions, static methods only
-class XPCStringConvert
-{
-public:
-
-    // If the string shares the readable's buffer, that buffer will
-    // get assigned to *sharedBuffer.  Otherwise null will be
-    // assigned.
-    static jsval ReadableToJSVal(JSContext *cx, const nsAString &readable,
-                                 nsStringBuffer** sharedBuffer);
-
-    static void ClearCache();
-
-private:
-    XPCStringConvert();         // not implemented
 };
 
 /***************************************************************************/

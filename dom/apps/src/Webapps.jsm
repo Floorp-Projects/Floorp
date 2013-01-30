@@ -2265,7 +2265,7 @@ this.DOMApplicationRegistry = {
 
     let deviceStorage = Services.wm.getMostRecentWindow("navigator:browser")
                                 .navigator.getDeviceStorage("apps");
-    let req = deviceStorage.stat();
+    let req = deviceStorage.freeSpace();
     req.onsuccess = req.onerror = function statResult(e) {
       // Even if we could not retrieve the device storage free space, we try
       // to download the package.
@@ -2274,7 +2274,7 @@ this.DOMApplicationRegistry = {
         return;
       }
 
-      let freeBytes = e.target.result.freeBytes;
+      let freeBytes = e.target.result;
       if (freeBytes) {
         debug("Free storage: " + freeBytes + ". Download size: " +
               aApp.downloadSize);
@@ -2298,8 +2298,10 @@ this.DOMApplicationRegistry = {
 
       dump("-- webapps.js uninstall " + app.manifestURL + "\n");
 
-      if (!app.removable)
-        return;
+      if (!app.removable) {
+        debug("Error: cannot unintall a non-removable app.");
+        break;
+      }
 
       // Check if we are downloading something for this app, and cancel the
       // download if needed.
@@ -2343,6 +2345,9 @@ this.DOMApplicationRegistry = {
       return;
     }
 
+    // Fall-through, fails to uninstall the desired app because:
+    //   - we cannot find the app to be uninstalled.
+    //   - the app to be uninstalled is not removable.
     aMm.sendAsyncMessage("Webapps:Uninstall:Return:KO", aData);
   },
 

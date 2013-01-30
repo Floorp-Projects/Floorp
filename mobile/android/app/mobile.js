@@ -674,6 +674,3 @@ pref("app.orientation.default", "");
 // On memory pressure, release dirty but unused pages held by jemalloc
 // back to the system.
 pref("memory.free_dirty_pages", true);
-
-// Enable tiled layers rendering by default on android
-pref("gfx.use_tiled_thebes", true);

@@ -689,8 +689,12 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
         const RootEntry &entry = r.front();
         const char *name = entry.value.name ? entry.value.name : "root";
-        if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
-            MarkGCThingRoot(trc, reinterpret_cast<void **>(entry.key), name);
+        if (entry.value.type == JS_GC_ROOT_STRING_PTR)
+            MarkStringRoot(trc, reinterpret_cast<JSString **>(entry.key), name);
+        else if (entry.value.type == JS_GC_ROOT_OBJECT_PTR)
+            MarkObjectRoot(trc, reinterpret_cast<JSObject **>(entry.key), name);
+        else if (entry.value.type == JS_GC_ROOT_SCRIPT_PTR)
+            MarkScriptRoot(trc, reinterpret_cast<JSScript **>(entry.key), name);
         else
             MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
     }

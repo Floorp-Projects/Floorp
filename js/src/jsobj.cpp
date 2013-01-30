@@ -2524,10 +2524,10 @@ JSObject::willBeSparseElements(unsigned requiredCapacity, unsigned newElementsHi
     unsigned cap = getDenseCapacity();
     JS_ASSERT(requiredCapacity >= cap);
 
-    if (requiredCapacity >= JSObject::NELEMENTS_LIMIT)
+    if (requiredCapacity >= NELEMENTS_LIMIT)
         return true;
 
-    unsigned minimalDenseCount = requiredCapacity / 4;
+    unsigned minimalDenseCount = requiredCapacity / SPARSE_DENSITY_RATIO;
     if (newElementsHint >= minimalDenseCount)
         return false;
     minimalDenseCount -= newElementsHint;
@@ -2542,6 +2542,119 @@ JSObject::willBeSparseElements(unsigned requiredCapacity, unsigned newElementsHi
             return false;
     }
     return true;
+}
+
+/* static */ JSObject::EnsureDenseResult
+JSObject::maybeDensifySparseElements(JSContext *cx, HandleObject obj)
+{
+    /* This should only be called after adding a sparse index to an object. */
+    JS_ASSERT(JSID_IS_INT(obj->lastProperty()->propid()));
+
+    /*
+     * Wait until after the object goes into dictionary mode, which must happen
+     * when sparsely packing any array with more than MIN_SPARSE_INDEX elements
+     * (see PropertyTree::MAX_HEIGHT).
+     */
+    if (!obj->inDictionaryMode())
+        return ED_SPARSE;
+
+    /*
+     * Only measure the number of indexed properties every log(n) times when
+     * populating the object.
+     */
+    uint32_t slotSpan = obj->slotSpan();
+    if (slotSpan != RoundUpPow2(slotSpan))
+        return ED_SPARSE;
+
+    /* Watch for conditions under which an object's elements cannot be dense. */
+    if (!obj->isExtensible() || obj->watched())
+        return ED_SPARSE;
+
+    /*
+     * The indexes in the object need to be sufficiently dense before they can
+     * be converted to dense mode.
+     */
+    uint32_t numDenseElements = 0;
+    uint32_t newInitializedLength = 0;
+
+    RootedShape shape(cx, obj->lastProperty());
+    while (!shape->isEmptyShape()) {
+        uint32_t index;
+        if (js_IdIsIndex(shape->propid(), &index)) {
+            if (shape->attributes() == JSPROP_ENUMERATE &&
+                shape->hasDefaultGetter() &&
+                shape->hasDefaultSetter())
+            {
+                numDenseElements++;
+                newInitializedLength = Max(newInitializedLength, index + 1);
+            } else {
+                /*
+                 * For simplicity, only densify the object if all indexed
+                 * properties can be converted to dense elements.
+                 */
+                return ED_SPARSE;
+            }
+        }
+        shape = shape->previous();
+    }
+
+    if (numDenseElements * SPARSE_DENSITY_RATIO < newInitializedLength)
+        return ED_SPARSE;
+
+    if (newInitializedLength >= NELEMENTS_LIMIT)
+        return ED_SPARSE;
+
+    /*
+     * This object meets all necessary restrictions, convert all indexed
+     * properties into dense elements.
+     */
+
+    if (!obj->growElements(cx, newInitializedLength))
+        return ED_FAILED;
+
+    obj->ensureDenseInitializedLength(cx, newInitializedLength, 0);
+
+    RootedValue value(cx);
+
+    shape = obj->lastProperty();
+    while (!shape->isEmptyShape()) {
+        jsid id = shape->propid();
+        uint32_t index;
+        if (js_IdIsIndex(id, &index)) {
+            value = obj->getSlot(shape->slot());
+
+            /*
+             * When removing a property from a dictionary, the specified
+             * property will be removed from the dictionary list and the
+             * last property will then be changed due to reshaping the object.
+             * Compute the next shape in the traverse, watching for such
+             * removals from the list.
+             */
+            if (shape != obj->lastProperty()) {
+                shape = shape->previous();
+                if (!obj->removeProperty(cx, id))
+                    return ED_FAILED;
+            } else {
+                if (!obj->removeProperty(cx, id))
+                    return ED_FAILED;
+                shape = obj->lastProperty();
+            }
+
+            obj->setDenseElement(index, value);
+        } else {
+            shape = shape->previous();
+        }
+    }
+
+    /*
+     * All indexed properties on the object are now dense, clear the indexed
+     * flag so that we will not start using sparse indexes again if we need
+     * to grow the object.
+     */
+    if (!obj->clearFlag(cx, BaseShape::INDEXED))
+        return ED_FAILED;
+
+    return ED_OK;
 }
 
 bool
@@ -3055,8 +3168,10 @@ CallAddPropertyHook(JSContext *cx, Class *clasp, HandleObject obj, HandleShape s
         RootedValue value(cx, nominal);
 
         Rooted<jsid> id(cx, shape->propid());
-        if (!CallJSPropertyOp(cx, clasp->addProperty, obj, id, &value))
+        if (!CallJSPropertyOp(cx, clasp->addProperty, obj, id, &value)) {
+            obj->removeProperty(cx, shape->propid());
             return false;
+        }
         if (value.get() != nominal) {
             if (shape->hasSlot())
                 JSObject::nativeSetSlotWithType(cx, obj, shape, value);
@@ -3082,10 +3197,71 @@ CallAddPropertyHookDense(JSContext *cx, Class *clasp, HandleObject obj, uint32_t
         RootedValue value(cx, nominal);
 
         Rooted<jsid> id(cx, INT_TO_JSID(index));
-        if (!CallJSPropertyOp(cx, clasp->addProperty, obj, id, &value))
+        if (!CallJSPropertyOp(cx, clasp->addProperty, obj, id, &value)) {
+            JSObject::setDenseElementHole(cx, obj, index);
             return false;
+        }
         if (value.get() != nominal)
             JSObject::setDenseElementWithType(cx, obj, index, value);
+    }
+    return true;
+}
+
+static inline bool
+DefinePropertyOrElement(JSContext *cx, HandleObject obj, HandleId id,
+                        PropertyOp getter, StrictPropertyOp setter,
+                        unsigned attrs, unsigned flags, int shortid,
+                        HandleValue value, bool callSetterAfterwards, bool setterIsStrict)
+{
+    /* Use dense storage for new indexed properties where possible. */
+    if (JSID_IS_INT(id) &&
+        getter == JS_PropertyStub &&
+        setter == JS_StrictPropertyStub &&
+        attrs == JSPROP_ENUMERATE &&
+        (!obj->isIndexed() || !obj->nativeContains(cx, id)))
+    {
+        uint32_t index = JSID_TO_INT(id);
+        JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, index, 1);
+        if (result == JSObject::ED_FAILED)
+            return false;
+        if (result == JSObject::ED_OK) {
+            obj->setDenseElementMaybeConvertDouble(index, value);
+            return CallAddPropertyHookDense(cx, obj->getClass(), obj, index, value);
+        }
+    }
+
+    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
+
+    RootedShape shape(cx, JSObject::putProperty(cx, obj, id, getter, setter, SHAPE_INVALID_SLOT,
+                                                attrs, flags, shortid));
+    if (!shape)
+        return false;
+
+    if (shape->hasSlot())
+        obj->nativeSetSlot(shape->slot(), value);
+
+    /*
+     * Clear any existing dense index after adding a sparse indexed property,
+     * and investigate converting the object to dense indexes.
+     */
+    if (JSID_IS_INT(id)) {
+        uint32_t index = JSID_TO_INT(id);
+        JSObject::removeDenseElementForSparseIndex(cx, obj, index);
+        JSObject::EnsureDenseResult result = JSObject::maybeDensifySparseElements(cx, obj);
+        if (result == JSObject::ED_FAILED)
+            return false;
+        if (result == JSObject::ED_OK) {
+            JS_ASSERT(setter == JS_StrictPropertyStub);
+            return CallAddPropertyHookDense(cx, obj->getClass(), obj, index, value);
+        }
+    }
+
+    if (!CallAddPropertyHook(cx, obj->getClass(), obj, shape, value))
+        return false;
+
+    if (callSetterAfterwards && setter != JS_StrictPropertyStub) {
+        RootedValue nvalue(cx, value);
+        return js_NativeSet(cx, obj, obj, shape, setterIsStrict, &nvalue);
     }
     return true;
 }
@@ -3148,7 +3324,7 @@ js::DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
     /*
      * Purge the property cache of any properties named by id that are about
      * to be shadowed in obj's scope chain unless it is known a priori that it
-     * is not possible. We do this before locking obj to avoid nesting locks.
+     * is not possible.
      */
     if (!(defineHow & DNP_DONT_PURGE)) {
         if (!js_PurgeScopeChain(cx, obj, id))
@@ -3173,47 +3349,14 @@ js::DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
     }
 
     if (!shape) {
-        /* Use dense storage for new indexed properties where possible. */
-        if (JSID_IS_INT(id) &&
-            getter == JS_PropertyStub &&
-            setter == JS_StrictPropertyStub &&
-            attrs == JSPROP_ENUMERATE &&
-            (!obj->isIndexed() || !obj->nativeContains(cx, id)))
-        {
-            uint32_t index = JSID_TO_INT(id);
-            JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, index, 1);
-            if (result == JSObject::ED_FAILED)
-                return false;
-            if (result == JSObject::ED_OK) {
-                obj->setDenseElement(index, value);
-                if (!CallAddPropertyHookDense(cx, clasp, obj, index, value)) {
-                    JSObject::setDenseElementHole(cx, obj, index);
-                    return false;
-                }
-                return true;
-            }
-        }
-
-        shape = JSObject::putProperty(cx, obj, id, getter, setter, SHAPE_INVALID_SLOT,
-                                      attrs, flags, shortid);
-        if (!shape)
-            return false;
-
-        /* Clear any existing dense index after adding a sparse indexed property. */
-        if (JSID_IS_INT(id))
-            JSObject::removeDenseElementForSparseIndex(cx, obj, JSID_TO_INT(id));
+        return DefinePropertyOrElement(cx, obj, id, getter, setter,
+                                       attrs, flags, shortid, value, false, false);
     }
 
-    /* Store valueCopy before calling addProperty, in case the latter GC's. */
     if (shape->hasSlot())
         obj->nativeSetSlot(shape->slot(), value);
 
-    if (!CallAddPropertyHook(cx, clasp, obj, shape, value)) {
-        obj->removeProperty(cx, id);
-        return false;
-    }
-
-    return shape;
+    return CallAddPropertyHook(cx, clasp, obj, shape, value);
 }
 
 /*
@@ -3554,7 +3697,7 @@ js_NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Handl
 
 JSBool
 js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
-             HandleShape shape, bool added, bool strict, MutableHandleValue vp)
+             HandleShape shape, bool strict, MutableHandleValue vp)
 {
     JS_ASSERT(obj->isNative());
 
@@ -3898,7 +4041,6 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     Class *clasp;
     PropertyOp getter;
     StrictPropertyOp setter;
-    bool added;
 
     JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_UNQUALIFIED)) == 0);
 
@@ -4038,7 +4180,6 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
         return true;
     }
 
-    added = false;
     if (!shape) {
         if (!obj->isExtensible()) {
             /* Error in strict mode code, warn with strict option, otherwise do nothing. */
@@ -4046,65 +4187,24 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
                 return obj->reportNotExtensible(cx);
             if (cx->hasStrictOption())
                 return obj->reportNotExtensible(cx, JSREPORT_STRICT | JSREPORT_WARNING);
-            return JS_TRUE;
+            return true;
         }
 
-        /* Use dense storage for new indexed properties where possible. */
-        if (JSID_IS_INT(id) &&
-            getter == JS_PropertyStub &&
-            setter == JS_StrictPropertyStub &&
-            attrs == JSPROP_ENUMERATE)
-        {
-            uint32_t index = JSID_TO_INT(id);
-            JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, index, 1);
-            if (result == JSObject::ED_FAILED)
-                return false;
-            if (result == JSObject::ED_OK) {
-                obj->setDenseElement(index, UndefinedValue());
-                if (!CallAddPropertyHookDense(cx, clasp, obj, index, vp)) {
-                    JSObject::setDenseElementHole(cx, obj, index);
-                    return false;
-                }
-                JSObject::setDenseElementWithType(cx, obj, index, vp);
-                return true;
-            }
-        }
-
-        /*
-         * Purge the property cache of now-shadowed id in obj's scope chain.
-         * Do this early, before locking obj to avoid nesting locks.
-         */
+        /* Purge the property cache of now-shadowed id in obj's scope chain. */
         if (!js_PurgeScopeChain(cx, obj, id))
-            return JS_FALSE;
+            return false;
 
-        shape = JSObject::putProperty(cx, obj, id, getter, setter, SHAPE_INVALID_SLOT,
-                                      attrs, flags, shortid);
-        if (!shape)
-            return JS_FALSE;
+        if (getter == JS_PropertyStub)
+            AddTypePropertyId(cx, obj, id, vp);
 
-        /* Clear any existing dense index after adding a sparse indexed property. */
-        if (JSID_IS_INT(id))
-            JSObject::removeDenseElementForSparseIndex(cx, obj, JSID_TO_INT(id));
-
-        /*
-         * Initialize the new property value (passed to setter) to undefined.
-         * Note that we store before calling addProperty, to match the order
-         * in DefineNativeProperty.
-         */
-        if (shape->hasSlot())
-            obj->nativeSetSlot(shape->slot(), UndefinedValue());
-
-        if (!CallAddPropertyHook(cx, clasp, obj, shape, vp)) {
-            obj->removeProperty(cx, id);
-            return JS_FALSE;
-        }
-        added = true;
+        return DefinePropertyOrElement(cx, obj, id, getter, setter,
+                                       attrs, flags, shortid, vp, true, strict);
     }
 
-    if ((defineHow & DNP_CACHE_RESULT) && !added)
+    if (defineHow & DNP_CACHE_RESULT)
         cx->propertyCache().fill(cx, obj, obj, shape);
 
-    return js_NativeSet(cx, obj, receiver, shape, added, strict, vp);
+    return js_NativeSet(cx, obj, receiver, shape, strict, vp);
 }
 
 JSBool

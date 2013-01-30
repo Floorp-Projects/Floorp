@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGSVGElement_h
 
 #include "mozilla/dom/FromParser.h"
-#include "nsIDOMSVGFitToViewBox.h"
 #include "nsISVGPoint.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsSVGEnum.h"
@@ -80,8 +79,7 @@ public:
 typedef SVGGraphicsElement SVGSVGElementBase;
 
 class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase,
-                                public nsIDOMSVGSVGElement,
-                                public nsIDOMSVGFitToViewBox
+                                public nsIDOMSVGSVGElement
 {
   friend class ::nsSVGOuterSVGFrame;
   friend class ::nsSVGInnerSVGFrame;
@@ -101,7 +99,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGSVGElement, SVGSVGElementBase)
   NS_DECL_NSIDOMSVGSVGELEMENT
-  NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE

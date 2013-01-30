@@ -64,6 +64,7 @@
 .altmacro
 .p2align 2
 
+#include "pixman-private.h"
 #include "pixman-arm-neon-asm.h"
 
 /*
@@ -488,12 +489,12 @@ fname:
     vmull.u8  q1, d0, d28
     vmlal.u8  q1, d1, d29
     /* 5 cycles bubble */
-    vshll.u16 q0, d2, #8
+    vshll.u16 q0, d2, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
     /* 5 cycles bubble */
     bilinear_duplicate_mask mask_fmt, 1, d4
-    vshrn.u32 d0, q0, #16
+    vshrn.u32 d0, q0, #(2 * BILINEAR_INTERPOLATION_BITS)
     /* 3 cycles bubble */
     vmovn.u16 d0, q0
     /* 1 cycle bubble */
@@ -514,16 +515,16 @@ fname:
                 q1, q11, d0, d1, d20, d21, d22, d23
     bilinear_load_mask mask_fmt, 2, d4
     bilinear_load_dst dst_fmt, op, 2, d18, d19, q9
-    vshll.u16 q0, d2, #8
+    vshll.u16 q0, d2, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
-    vshll.u16 q10, d22, #8
+    vshll.u16 q10, d22, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16 q10, d22, d31
     vmlal.u16 q10, d23, d31
-    vshrn.u32 d0, q0, #16
-    vshrn.u32 d1, q10, #16
+    vshrn.u32 d0, q0, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32 d1, q10, #(2 * BILINEAR_INTERPOLATION_BITS)
     bilinear_duplicate_mask mask_fmt, 2, d4
-    vshr.u16  q15, q12, #8
+    vshr.u16  q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vadd.u16  q12, q12, q13
     vmovn.u16 d0, q0
     bilinear_interleave_src_dst \
@@ -544,29 +545,29 @@ fname:
                 q3, q9,  d4, d5, d16, d17, d18, d19
     pld       [TMP1, PF_OFFS]
     sub       TMP1, TMP1, STRIDE
-    vshll.u16 q0, d2, #8
+    vshll.u16 q0, d2, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
-    vshll.u16 q10, d22, #8
+    vshll.u16 q10, d22, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16 q10, d22, d31
     vmlal.u16 q10, d23, d31
-    vshr.u16  q15, q12, #8
-    vshll.u16 q2, d6, #8
+    vshr.u16  q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
+    vshll.u16 q2, d6, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16 q2, d6, d30
     vmlal.u16 q2, d7, d30
-    vshll.u16 q8, d18, #8
+    vshll.u16 q8, d18, #BILINEAR_INTERPOLATION_BITS
     bilinear_load_mask mask_fmt, 4, d22
     bilinear_load_dst dst_fmt, op, 4, d2, d3, q1
     pld       [TMP1, PF_OFFS]
     vmlsl.u16 q8, d18, d31
     vmlal.u16 q8, d19, d31
     vadd.u16  q12, q12, q13
-    vshrn.u32 d0, q0, #16
-    vshrn.u32 d1, q10, #16
-    vshrn.u32 d4, q2, #16
-    vshrn.u32 d5, q8, #16
+    vshrn.u32 d0, q0, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32 d1, q10, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32 d4, q2, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32 d5, q8, #(2 * BILINEAR_INTERPOLATION_BITS)
     bilinear_duplicate_mask mask_fmt, 4, d22
-    vshr.u16  q15, q12, #8
+    vshr.u16  q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vmovn.u16 d0, q0
     vmovn.u16 d1, q2
     vadd.u16  q12, q12, q13
@@ -694,13 +695,13 @@ pixman_asm_function fname
     blt       0f
     tst       OUT, #(1 << dst_bpp_shift)
     beq       0f
-    vshr.u16  q15, q12, #8
+    vshr.u16  q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vadd.u16  q12, q12, q13
     bilinear_process_last_pixel
     sub       WIDTH, WIDTH, #1
 0:
     vadd.u16  q13, q13, q13
-    vshr.u16  q15, q12, #8
+    vshr.u16  q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vadd.u16  q12, q12, q13
 
     cmp       WIDTH, #2
@@ -921,7 +922,7 @@ pixman_asm_function fname
     vmull.u8    q10, d22, d28
     vmlal.u8    q10, d23, d29
 
-    vshll.u16   q0, d16, #8
+    vshll.u16   q0, d16, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16   q0, d16, d30
     vmlal.u16   q0, d17, d30
 
@@ -932,27 +933,27 @@ pixman_asm_function fname
     vmull.u8    q11, d16, d28
     vmlal.u8    q11, d17, d29
 
-    vshll.u16   q1, d18, #8
+    vshll.u16   q1, d18, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16   q1, d18, d31
     vmlal.u16   q1, d19, d31
-    vshr.u16    q15, q12, #8
+    vshr.u16    q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vadd.u16    q12, q12, q13
 .endm
 
 .macro bilinear_over_8888_8888_process_pixblock_tail
-    vshll.u16   q2, d20, #8
+    vshll.u16   q2, d20, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16   q2, d20, d30
     vmlal.u16   q2, d21, d30
-    vshll.u16   q3, d22, #8
+    vshll.u16   q3, d22, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16   q3, d22, d31
     vmlal.u16   q3, d23, d31
-    vshrn.u32   d0, q0, #16
-    vshrn.u32   d1, q1, #16
+    vshrn.u32   d0, q0, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32   d1, q1, #(2 * BILINEAR_INTERPOLATION_BITS)
     vld1.32     {d2, d3}, [OUT, :128]
     pld         [OUT, #(prefetch_offset * 4)]
-    vshrn.u32   d4, q2, #16
-    vshr.u16    q15, q12, #8
-    vshrn.u32   d5, q3, #16
+    vshrn.u32   d4, q2, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshr.u16    q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32   d5, q3, #(2 * BILINEAR_INTERPOLATION_BITS)
     vmovn.u16   d6, q0
     vmovn.u16   d7, q2
     vuzp.8      d6, d7
@@ -975,7 +976,7 @@ pixman_asm_function fname
 .endm
 
 .macro bilinear_over_8888_8888_process_pixblock_tail_head
-                                            vshll.u16   q2, d20, #8
+                                            vshll.u16   q2, d20, #BILINEAR_INTERPOLATION_BITS
     mov         TMP1, X, asr #16
     add         X, X, UX
     add         TMP1, TOP, TMP1, asl #2
@@ -984,21 +985,21 @@ pixman_asm_function fname
     add         X, X, UX
     add         TMP2, TOP, TMP2, asl #2
                                             vmlal.u16   q2, d21, d30
-                                            vshll.u16   q3, d22, #8
+                                            vshll.u16   q3, d22, #BILINEAR_INTERPOLATION_BITS
     vld1.32     {d20}, [TMP1], STRIDE
                                             vmlsl.u16   q3, d22, d31
                                             vmlal.u16   q3, d23, d31
     vld1.32     {d21}, [TMP1]
     vmull.u8    q8, d20, d28
     vmlal.u8    q8, d21, d29
-                                            vshrn.u32   d0, q0, #16
-                                            vshrn.u32   d1, q1, #16
+                                            vshrn.u32   d0, q0, #(2 * BILINEAR_INTERPOLATION_BITS)
+                                            vshrn.u32   d1, q1, #(2 * BILINEAR_INTERPOLATION_BITS)
                                             vld1.32     {d2, d3}, [OUT, :128]
                                             pld         [OUT, PF_OFFS]
-                                            vshrn.u32   d4, q2, #16
-                                            vshr.u16    q15, q12, #8
+                                            vshrn.u32   d4, q2, #(2 * BILINEAR_INTERPOLATION_BITS)
+                                            vshr.u16    q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vld1.32     {d22}, [TMP2], STRIDE
-                                            vshrn.u32   d5, q3, #16
+                                            vshrn.u32   d5, q3, #(2 * BILINEAR_INTERPOLATION_BITS)
                                             vmovn.u16   d6, q0
     vld1.32     {d23}, [TMP2]
     vmull.u8    q9, d22, d28
@@ -1022,7 +1023,7 @@ pixman_asm_function fname
     vmlal.u8    q10, d23, d29
                                             vmull.u8    q11, d2, d4
                                             vmull.u8    q2, d3, d4
-    vshll.u16   q0, d16, #8
+    vshll.u16   q0, d16, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16   q0, d16, d30
                                             vrshr.u16   q1, q11, #8
     vmlal.u16   q0, d17, d30
@@ -1037,12 +1038,12 @@ pixman_asm_function fname
     vmull.u8    q11, d16, d28
     vmlal.u8    q11, d17, d29
                                             vuzp.8      d6, d7
-    vshll.u16   q1, d18, #8
+    vshll.u16   q1, d18, #BILINEAR_INTERPOLATION_BITS
                                             vuzp.8      d6, d7
     vmlsl.u16   q1, d18, d31
                                             vadd.u16    q12, q12, q13
     vmlal.u16   q1, d19, d31
-    vshr.u16    q15, q12, #8
+    vshr.u16    q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vadd.u16    q12, q12, q13
                                             vst1.32     {d6, d7}, [OUT, :128]!
 .endm
@@ -1081,14 +1082,14 @@ pixman_asm_function fname
     vmull.u8    q3, d2, d28
     vmlal.u8    q2, d1, d29
     vmlal.u8    q3, d3, d29
-    vshll.u16   q0, d4, #8
-    vshll.u16   q1, d6, #8
+    vshll.u16   q0, d4, #BILINEAR_INTERPOLATION_BITS
+    vshll.u16   q1, d6, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16   q0, d4, d30
     vmlsl.u16   q1, d6, d31
     vmlal.u16   q0, d5, d30
     vmlal.u16   q1, d7, d31
-    vshrn.u32   d0, q0, #16
-    vshrn.u32   d1, q1, #16
+    vshrn.u32   d0, q0, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32   d1, q1, #(2 * BILINEAR_INTERPOLATION_BITS)
     vld1.32     {d2}, [TMP3], STRIDE
     vld1.32     {d3}, [TMP3]
     pld         [TMP4, PF_OFFS]
@@ -1099,7 +1100,7 @@ pixman_asm_function fname
     vmlal.u8    q3, d3, d29
     vmull.u8    q1, d4, d28
     vmlal.u8    q1, d5, d29
-    vshr.u16    q15, q12, #8
+    vshr.u16    q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vld1.32     {d22[0]}, [MASK]!
     pld         [MASK, #prefetch_offset]
     vadd.u16    q12, q12, q13
@@ -1107,17 +1108,17 @@ pixman_asm_function fname
 .endm
 
 .macro bilinear_over_8888_8_8888_process_pixblock_tail
-    vshll.u16   q9, d6, #8
-    vshll.u16   q10, d2, #8
+    vshll.u16   q9, d6, #BILINEAR_INTERPOLATION_BITS
+    vshll.u16   q10, d2, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16   q9, d6, d30
     vmlsl.u16   q10, d2, d31
     vmlal.u16   q9, d7, d30
     vmlal.u16   q10, d3, d31
-    vshr.u16    q15, q12, #8
+    vshr.u16    q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vadd.u16    q12, q12, q13
     vdup.32     d22, d22[0]
-    vshrn.u32   d18, q9, #16
-    vshrn.u32   d19, q10, #16
+    vshrn.u32   d18, q9, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32   d19, q10, #(2 * BILINEAR_INTERPOLATION_BITS)
     vmovn.u16   d17, q9
     vld1.32     {d18, d19}, [OUT, :128]
     pld         [OUT, PF_OFFS]
@@ -1146,11 +1147,11 @@ pixman_asm_function fname
 .endm
 
 .macro bilinear_over_8888_8_8888_process_pixblock_tail_head
-                                            vshll.u16   q9, d6, #8
+                                            vshll.u16   q9, d6, #BILINEAR_INTERPOLATION_BITS
     mov         TMP1, X, asr #16
     add         X, X, UX
     add         TMP1, TOP, TMP1, asl #2
-                                            vshll.u16   q10, d2, #8
+                                            vshll.u16   q10, d2, #BILINEAR_INTERPOLATION_BITS
     vld1.32     {d0}, [TMP1], STRIDE
     mov         TMP2, X, asr #16
     add         X, X, UX
@@ -1167,12 +1168,12 @@ pixman_asm_function fname
     mov         TMP4, X, asr #16
     add         X, X, UX
     add         TMP4, TOP, TMP4, asl #2
-                                            vshr.u16    q15, q12, #8
+                                            vshr.u16    q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
                                             vadd.u16    q12, q12, q13
     vld1.32     {d3}, [TMP2]
                                             vdup.32     d22, d22[0]
-                                            vshrn.u32   d18, q9, #16
-                                            vshrn.u32   d19, q10, #16
+                                            vshrn.u32   d18, q9, #(2 * BILINEAR_INTERPOLATION_BITS)
+                                            vshrn.u32   d19, q10, #(2 * BILINEAR_INTERPOLATION_BITS)
     vmull.u8    q2, d0, d28
     vmull.u8    q3, d2, d28
                                             vmovn.u16   d17, q9
@@ -1182,8 +1183,8 @@ pixman_asm_function fname
     vmlal.u8    q3, d3, d29
                                             vuzp.8      d16, d17
                                             vuzp.8      d18, d19
-    vshll.u16   q0, d4, #8
-    vshll.u16   q1, d6, #8
+    vshll.u16   q0, d4, #BILINEAR_INTERPOLATION_BITS
+    vshll.u16   q1, d6, #BILINEAR_INTERPOLATION_BITS
                                             vuzp.8      d16, d17
                                             vuzp.8      d18, d19
     vmlsl.u16   q0, d4, d30
@@ -1194,8 +1195,8 @@ pixman_asm_function fname
     vmlal.u16   q1, d7, d31
                                             vrsra.u16   q10, q10, #8
                                             vrsra.u16   q11, q11, #8
-    vshrn.u32   d0, q0, #16
-    vshrn.u32   d1, q1, #16
+    vshrn.u32   d0, q0, #(2 * BILINEAR_INTERPOLATION_BITS)
+    vshrn.u32   d1, q1, #(2 * BILINEAR_INTERPOLATION_BITS)
                                             vrshrn.u16  d16, q10, #8
                                             vrshrn.u16  d17, q11, #8
     vld1.32     {d2}, [TMP3], STRIDE
@@ -1216,7 +1217,7 @@ pixman_asm_function fname
                                             vraddhn.u16 d18, q9, q10
                                             vraddhn.u16 d19, q15, q11
     vmlal.u8    q1, d5, d29
-    vshr.u16    q15, q12, #8
+    vshr.u16    q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
                                             vqadd.u8    q9, q8, q9
     vld1.32     {d22[0]}, [MASK]!
                                             vuzp.8      d18, d19

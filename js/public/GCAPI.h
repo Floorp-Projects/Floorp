@@ -159,10 +159,13 @@ extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSContext *cx);
 
 extern JS_FRIEND_API(void)
-IncrementalReferenceBarrier(void *ptr);
+IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind);
 
 extern JS_FRIEND_API(void)
 IncrementalValueBarrier(const Value &v);
+
+extern JS_FRIEND_API(void)
+IncrementalObjectBarrier(JSObject *obj);
 
 extern JS_FRIEND_API(void)
 PokeGC(JSRuntime *rt);
@@ -185,7 +188,7 @@ class ObjectPtr
 
     void finalize(JSRuntime *rt) {
         if (IsIncrementalBarrierNeeded(rt))
-            IncrementalReferenceBarrier(value);
+            IncrementalObjectBarrier(value);
         value = NULL;
     }
 
@@ -194,11 +197,11 @@ class ObjectPtr
     JSObject *get() const { return value; }
 
     void writeBarrierPre(JSRuntime *rt) {
-        IncrementalReferenceBarrier(value);
+        IncrementalObjectBarrier(value);
     }
 
     ObjectPtr &operator=(JSObject *obj) {
-        IncrementalReferenceBarrier(value);
+        IncrementalObjectBarrier(value);
         value = obj;
         return *this;
     }
@@ -229,7 +232,7 @@ ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
     if (GCThingIsMarkedGray(thing))
         UnmarkGrayGCThingRecursively(thing, kind);
     else if (IsIncrementalBarrierNeededOnGCThing(thing, kind))
-        IncrementalReferenceBarrier(thing);
+        IncrementalReferenceBarrier(thing, kind);
 }
 
 static JS_ALWAYS_INLINE void

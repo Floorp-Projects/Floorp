@@ -1263,6 +1263,9 @@ struct JSJitInfo {
     OpType type;
     bool isInfallible;      /* Is op fallible? False in setters. */
     bool isConstant;        /* Getting a construction-time constant? */
+    bool isPure;            /* As long as no non-pure DOM things happen, will
+                               keep returning the same value for the given
+                               "this" object" */
     JSValueType returnType; /* The return type tag.  Might be JSVAL_TYPE_UNKNOWN */
 };
 
