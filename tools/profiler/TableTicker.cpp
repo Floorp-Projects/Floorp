@@ -820,11 +820,6 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   // Start with the current function.
   StackWalkCallback(aSample->pc, aSample->sp, &array);
 
-  void *platformData = nullptr;
-#ifdef XP_WIN
-  platformData = aSample->context;
-#endif
-
   uint32_t maxFrames = array.size - array.count;
 #ifdef XP_MACOSX
   pthread_t pt = GetProfiledThread(platform_data());
@@ -837,6 +832,11 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
                                maxFrames, &array,
                                reinterpret_cast<void**>(aSample->fp), stackEnd);
 #else
+  void *platformData = nullptr;
+#ifdef XP_WIN
+  platformData = aSample->context;
+#endif // XP_WIN
+
   nsresult rv = NS_StackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
                              &array, thread, platformData);
 #endif
