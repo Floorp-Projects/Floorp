@@ -43,6 +43,7 @@
                                     style="@style/TabsList"
                                     android:layout_width="fill_parent"
                                     android:layout_height="fill_parent"
+                                    android:choiceMode="singleChoice"
                                     android:visibility="gone"
                                     gecko:tabs="tabs_private"/>
 
