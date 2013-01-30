@@ -128,7 +128,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
                                              sizeof(fingerprint_),
                                              &fingerprint_len_);
     EXPECT_TRUE(NS_SUCCEEDED(res));
-    EXPECT_EQ(20, fingerprint_len_);
+    EXPECT_EQ(20u, fingerprint_len_);
   }
 
   ~TransportTestPeer() {
