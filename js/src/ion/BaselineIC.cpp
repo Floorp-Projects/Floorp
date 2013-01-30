@@ -131,6 +131,12 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &propStub->holderShape(), "baseline-getprop-stub-holdershape");
         break;
       }
+      case ICStub::SetProp_Native: {
+        ICSetProp_Native *propStub = toSetProp_Native();
+        MarkShape(trc, &propStub->shape(), "baseline-setprop-stub-shape");
+        MarkTypeObject(trc, &propStub->type(), "baseline-setprop-stub-type");
+        break;
+      }
       default:
         break;
     }
@@ -263,14 +269,14 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 }
 
 bool
-ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm)
+ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm, uint32_t objectOffset)
 {
     IonCompartment *ion = cx->compartment->ionCompartment();
     IonCode *code = ion->getVMWrapper(DoTypeUpdateFallbackInfo);
     if (!code)
         return false;
 
-    EmitCallTypeUpdateIC(masm, code);
+    EmitCallTypeUpdateIC(masm, code, objectOffset);
     return true;
 }
 
@@ -930,16 +936,25 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, ICStubSpace *space, HandleVa
 // TypeUpdate_Fallback
 //
 static bool
-DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue value)
+DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue objval, HandleValue value)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
     FallbackICSpew(cx, stub->getChainFallback(), "TypeUpdate(%s)",
                    ICStub::KindString(stub->kind()));
 
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedObject obj(cx, &objval.toObject());
+
     switch(stub->kind()) {
       case ICStub::SetElem_Dense: {
-        RootedTypeObject type(cx, stub->toSetElem_Dense()->type());
-        type->addPropertyType(cx, JSID_VOID, value);
+        JS_ASSERT(obj->isNative());
+        types::AddTypePropertyId(cx, obj, JSID_VOID, value);
+        break;
+      }
+      case ICStub::SetProp_Native: {
+        JS_ASSERT(obj->isNative());
+        jsbytecode *pc = stub->getChainFallback()->icEntry()->pc(script);
+        RootedPropertyName name(cx, script->getName(pc));
+        types::AddTypePropertyId(cx, obj, NameToId(name), value);
         break;
       }
       default:
@@ -950,7 +965,7 @@ DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue value)
     return stub->addUpdateStubForValue(cx, ICStubSpace::StubSpaceFor(script), value);
 }
 
-typedef bool (*DoTypeUpdateFallbackFn)(JSContext *, ICUpdatedStub *, HandleValue);
+typedef bool (*DoTypeUpdateFallbackFn)(JSContext *, ICUpdatedStub *, HandleValue, HandleValue);
 const VMFunction DoTypeUpdateFallbackInfo =
     FunctionInfo<DoTypeUpdateFallbackFn>(DoTypeUpdateFallback);
 
@@ -1811,7 +1826,7 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadValue(Address(BaselineStackReg, 2 * sizeof(Value) + ICStackValueOffset), R0);
 
     // Call the type-update stub.
-    if (!callTypeUpdateIC(masm))
+    if (!callTypeUpdateIC(masm, sizeof(Value)))
         return false;
 
     // Unstow R0 and R1 (object and key)
@@ -2230,6 +2245,38 @@ ICGetPropNativeCompiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+// Attach an optimized stub for a SETPROP/SETGNAME/SETNAME op.
+static bool
+TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stub,
+                     HandleObject obj, HandleId id, bool *attached)
+{
+    JS_ASSERT(!*attached);
+
+    if (!obj->isNative() || obj->watched())
+        return true;
+
+    // The property must be found, and it must be found as a normal data property.
+    RootedShape shape(cx, obj->nativeLookup(cx, id));
+    if (!shape || !shape->hasSlot() || !shape->hasDefaultSetter() || !shape->writable())
+        return true;
+
+    bool isFixedSlot = obj->isFixedSlot(shape->slot());
+    uint32_t offset = isFixedSlot
+                      ? JSObject::getFixedSlotOffset(shape->slot())
+                      : obj->dynamicSlotIndex(shape->slot()) * sizeof(Value);
+
+
+    RootedTypeObject type(cx, obj->getType(cx));
+    ICSetProp_Native::Compiler compiler(cx, type, obj->lastProperty(), isFixedSlot, offset);
+    ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+    if (!newStub)
+        return false;
+
+    stub->addNewStub(newStub);
+    *attached = true;
+    return true;
+}
+
 //
 // SetProp_Fallback
 //
@@ -2268,6 +2315,12 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
         return true;
     }
 
+    bool attached = false;
+    if (!TryAttachSetPropStub(cx, script, stub, obj, id, &attached))
+        return false;
+    if (attached)
+        return true;
+
     return true;
 }
 
@@ -2288,6 +2341,57 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoSetPropFallbackInfo, masm);
+}
+
+bool
+ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+
+    // Guard input is an object.
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratch = regs.takeAny();
+
+    // Unbox and shape guard.
+    Register objReg = masm.extractObject(R0, ExtractTemp0);
+    masm.loadPtr(Address(BaselineStubReg, ICSetProp_Native::offsetOfShape()), scratch);
+    masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
+
+    // Guard that the type object matches.
+    masm.loadPtr(Address(BaselineStubReg, ICSetProp_Native::offsetOfType()), scratch);
+    masm.branchPtr(Assembler::NotEqual, Address(objReg, JSObject::offsetOfType()), scratch,
+                   &failure);
+
+    // Stow both R0 and R1 (object and value).
+    EmitStowICValues(masm, 2);
+
+    // Type update stub expects the value to check in R0.
+    masm.moveValue(R1, R0);
+
+    // Call the type-update stub.
+    if (!callTypeUpdateIC(masm, sizeof(Value)))
+        return false;
+
+    // Unstow R0 and R1 (object and key)
+    EmitUnstowICValues(masm, 2);
+
+    if (!isFixedSlot_)
+        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
+
+    // Perform the store.
+    masm.load32(Address(BaselineStubReg, ICSetProp_Native::offsetOfOffset()), scratch);
+    masm.storeValue(R1, BaseIndex(objReg, scratch, TimesOne));
+
+    // The RHS has to be in R0.
+    masm.moveValue(R1, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //

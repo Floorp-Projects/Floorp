@@ -319,7 +319,8 @@ class ICEntry
     _(GetProp_Native)           \
     _(GetProp_NativePrototype)  \
                                 \
-    _(SetProp_Fallback)
+    _(SetProp_Fallback)         \
+    _(SetProp_Native)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -717,7 +718,7 @@ class ICStubCompiler
 
     // Emits a call to a type-update IC, assuming that the value to be
     // checked is already in R0.
-    bool callTypeUpdateIC(MacroAssembler &masm);
+    bool callTypeUpdateIC(MacroAssembler &masm, uint32_t objectOffset);
 
     inline GeneralRegisterSet availableGeneralRegs(size_t numInputs) const {
         GeneralRegisterSet regs(GeneralRegisterSet::All());
@@ -2079,6 +2080,75 @@ class ICSetProp_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICSetProp_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// Optimized SETPROP/SETGNAME/SETNAME stub.
+class ICSetProp_Native : public ICUpdatedStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrTypeObject type_;
+    HeapPtrShape shape_;
+    uint32_t offset_;
+
+    ICSetProp_Native(IonCode *stubCode, HandleTypeObject type, HandleShape shape, uint32_t offset)
+      : ICUpdatedStub(SetProp_Native, stubCode),
+        type_(type),
+        shape_(shape),
+        offset_(offset)
+    {}
+
+  public:
+    static inline ICSetProp_Native *New(ICStubSpace *space, IonCode *code, HandleTypeObject type,
+                                        HandleShape shape, uint32_t offset)
+    {
+        return space->allocate<ICSetProp_Native>(code, type, shape, offset);
+    }
+    HeapPtrTypeObject &type() {
+        return type_;
+    }
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    static size_t offsetOfType() {
+        return offsetof(ICSetProp_Native, type_);
+    }
+    static size_t offsetOfShape() {
+        return offsetof(ICSetProp_Native, shape_);
+    }
+    static size_t offsetOfOffset() {
+        return offsetof(ICSetProp_Native, offset_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        HandleTypeObject type_;
+        RootedShape shape_;
+        bool isFixedSlot_;
+        uint32_t offset_;
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
+        }
+
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, HandleTypeObject type, Shape *shape, bool isFixedSlot, uint32_t offset)
+          : ICStubCompiler(cx, ICStub::SetProp_Native),
+            type_(type),
+            shape_(cx, shape),
+            isFixedSlot_(isFixedSlot),
+            offset_(offset)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type_, shape_, offset_);
+            if (!stub || !stub->initUpdatingChain(cx, space))
+                return NULL;
+            return stub;
         }
     };
 };
