@@ -671,7 +671,7 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoCString msg((const char*)aMessage->mData.get());
+  nsAutoCString msg((const char*)aMessage->mData.get(), aMessage->mSize);
   msg.StripWhitespace();
 
   nsTArray<nsCString> atCommandValues;
