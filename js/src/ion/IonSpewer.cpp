@@ -244,6 +244,7 @@ ion::CheckLogging()
             "  bl-ic      Baseline inline-cache messages\n"
             "  bl-ic-fb   Baseline IC fallback stub messages\n"
             "  bl-osr     Baseline IC OSR messages\n"
+            "  bl-bails   Baseline bailouts\n"
             "  bl-all     All baseline spew\n"
             "\n"
         );
@@ -301,6 +302,8 @@ ion::CheckLogging()
         EnableChannel(IonSpew_BaselineICFallback);
     if (ContainsFlag(env, "bl-osr"))
         EnableChannel(IonSpew_BaselineOSR);
+    if (ContainsFlag(env, "bl-bails"))
+        EnableChannel(IonSpew_BaselineBailouts);
     if (ContainsFlag(env, "bl-all")) {
         EnableChannel(IonSpew_BaselineAbort);
         EnableChannel(IonSpew_BaselineScripts);
@@ -308,6 +311,7 @@ ion::CheckLogging()
         EnableChannel(IonSpew_BaselineIC);
         EnableChannel(IonSpew_BaselineICFallback);
         EnableChannel(IonSpew_BaselineOSR);
+        EnableChannel(IonSpew_BaselineBailouts);
     }
 
     if (LoggingBits != 0)

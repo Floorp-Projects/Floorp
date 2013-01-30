@@ -206,9 +206,11 @@ BaselineCompiler::emitPrologue()
     masm.store32(Imm32(0), frame.addressOfFlags());
 
     // Initialize locals to |undefined|. Use R0 to minimize code size.
-    masm.moveValue(UndefinedValue(), R0);
-    for (size_t i = 0; i < frame.nlocals(); i++)
-        masm.pushValue(R0);
+    if (frame.nlocals() > 0) {
+        masm.moveValue(UndefinedValue(), R0);
+        for (size_t i = 0; i < frame.nlocals(); i++)
+            masm.pushValue(R0);
+    }
 
     // Record the offset of the prologue, because Ion can bailout before
     // the scope chain is initialized.
@@ -414,7 +416,8 @@ BaselineCompiler::emitBody()
 
     // Flag to indicate if ion code can resume into baseline code after the
     // previously handled op (i.e. before the current op).
-    bool canResumeAfterPrevious = false;
+    // Set this to true at the start so we emit a PC mapping for the first op.
+    bool canResumeAfterPrevious = true;
 
     while (true) {
         SPEW_OPCODE();
@@ -444,6 +447,7 @@ BaselineCompiler::emitBody()
 
         // We need to add a PC -> native mapping entry for the upcoming op if one
         // of the following is true:
+        //  0. The op is the first op of the script (we init canResumeAfterPrevious to true).
         //  1. The pc is a jumptarget.
         //  2. Baseline can be resumed after the previously handled op.
         //  3. Op is a JSOP_ENTERBLOCK, for catch blocks.

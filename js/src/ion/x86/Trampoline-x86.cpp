@@ -188,23 +188,29 @@ IonRuntime::generateInvalidator(JSContext *cx)
     for (uint32_t i = 0; i < FloatRegisters::Total; i++)
         masm.movsd(FloatRegister::FromCode(i), Operand(esp, i * sizeof(double)));
 
-    masm.movl(esp, ebx); // Argument to ion::InvalidationBailout.
+    masm.movl(esp, eax); // Argument to ion::InvalidationBailout.
 
     // Make space for InvalidationBailout's frameSize outparam.
     masm.reserveStack(sizeof(size_t));
+    masm.movl(esp, ebx);
+
+    // Make space for InvalidationBailout's bailoutInfo outparam.
+    masm.reserveStack(sizeof(void *));
     masm.movl(esp, ecx);
 
-    masm.setupUnalignedABICall(2, edx);
+    masm.setupUnalignedABICall(3, edx);
+    masm.passABIArg(eax);
     masm.passABIArg(ebx);
     masm.passABIArg(ecx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InvalidationBailout));
 
+    masm.pop(ecx); // Get bailoutInfo outparam.
     masm.pop(ebx); // Get the frameSize outparam.
 
     // Pop the machine state and the dead frame.
     masm.lea(Operand(esp, ebx, TimesOne, sizeof(InvalidationBailoutStack)), esp);
 
-    masm.generateBailoutTail(edx);
+    masm.generateBailoutTail(edx, ecx);
 
     Linker linker(masm);
     IonCode *code = linker.newCode(cx);
@@ -213,7 +219,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateArgumentsRectifier(JSContext *cx)
+IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
 {
     MacroAssembler masm(cx);
 
@@ -231,6 +237,10 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx)
 
     masm.moveValue(UndefinedValue(), ebx, edi);
 
+    // NOTE: The fact that x86 ArgumentsRectifier saves the FramePointer is relied upon
+    // by the baseline bailout code.  If this changes, fix that code!  See
+    // BaselineJIT.cpp/BaselineStackBuilder::calculatePrevFramePtr, and
+    // BaselineJIT.cpp/InitFromBailout.  Check for the |#if defined(JS_CPU_X86)| portions.
     masm.push(FramePointer);
     masm.movl(esp, FramePointer); // Save %esp.
 
@@ -287,6 +297,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx)
     masm.loadBaselineOrIonCode(eax, NULL);
     masm.movl(Operand(eax, IonCode::offsetOfCode()), eax);
     masm.call(eax);
+    uint32_t returnOffset = masm.currentOffset();
 
     // Remove the rectifier frame.
     masm.pop(ebx);            // ebx <- descriptor with FrameType.
@@ -302,7 +313,12 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
-    return linker.newCode(cx);
+    IonCode *code = linker.newCode(cx);
+
+    CodeOffsetLabel returnLabel(returnOffset);
+    returnLabel.fixup(&masm);
+    *returnAddrOut = (void *) (code->raw() + returnLabel.offset());
+    return code;
 }
 
 static void
@@ -324,10 +340,17 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     // The current stack pointer is the first argument to ion::Bailout.
     masm.movl(esp, eax);
 
+    // Make space for Bailout's baioutInfo outparam.
+    masm.reserveStack(sizeof(void *));
+    masm.movl(esp, ebx);
+
     // Call the bailout function. This will correct the size of the bailout.
-    masm.setupUnalignedABICall(1, ecx);
+    masm.setupUnalignedABICall(2, ecx);
     masm.passABIArg(eax);
+    masm.passABIArg(ebx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
+
+    masm.pop(ebx); // Get bailoutInfo outparam.
 
     // Common size of stuff we've pushed.
     const uint32_t BailoutDataSize = sizeof(void *) + // frameClass
@@ -354,7 +377,7 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
         masm.addl(Imm32(BailoutDataSize + sizeof(void *) + frameSize), esp);
     }
 
-    masm.generateBailoutTail(edx);
+    masm.generateBailoutTail(edx, ebx);
 }
 
 IonCode *

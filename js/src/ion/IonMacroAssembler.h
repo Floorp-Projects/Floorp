@@ -537,7 +537,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void maybeRemoveOsrFrame(Register scratch);
 
     // Generates code used to complete a bailout.
-    void generateBailoutTail(Register scratch);
+    void generateBailoutTail(Register scratch, Register bailoutInfo);
 
     // These functions exist as small wrappers around sites where execution can
     // leave the currently running stream of instructions. They exist so that
