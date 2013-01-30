@@ -74,6 +74,8 @@
 #include "nsIPrivacyTransitionObserver.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIChannel.h"
 #include "IHistory.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
@@ -1145,6 +1147,9 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadReplaceBypassCache:
         loadType = LOAD_REPLACE_BYPASS_CACHE;
         break;
+    case nsIDocShellLoadInfo::loadMixedContent:
+        loadType = LOAD_MIXED_CONTENT;
+        break;
     default:
         NS_NOTREACHED("Unexpected nsDocShellInfoLoadType value");
     }
@@ -1215,6 +1220,9 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(uint32_t aLoadType)
         break;
     case LOAD_REPLACE_BYPASS_CACHE:
         docShellLoadType = nsIDocShellLoadInfo::loadReplaceBypassCache;
+        break;
+    case LOAD_MIXED_CONTENT:
+        docShellLoadType = nsIDocShellLoadInfo::loadMixedContent;
         break;
     default:
         NS_NOTREACHED("Unexpected load type value");
@@ -1960,10 +1968,18 @@ nsDocShell::GetChannelIsUnsafe(bool *aUnsafe)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetHasMixedActiveContentLoaded(bool *aHasMixedActiveContentLoaded)
+nsDocShell::GetHasMixedActiveContentLoaded(bool* aHasMixedActiveContentLoaded)
 {
     nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
     *aHasMixedActiveContentLoaded = doc && doc->GetHasMixedActiveContentLoaded();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetHasMixedActiveContentBlocked(bool* aHasMixedActiveContentBlocked)
+{
+    nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
+    *aHasMixedActiveContentBlocked = doc && doc->GetHasMixedActiveContentBlocked();
     return NS_OK;
 }
 
@@ -5308,6 +5324,68 @@ nsDocShell::GetSandboxFlags(uint32_t  *aSandboxFlags)
 {
     *aSandboxFlags = mSandboxFlags;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetMixedContentChannel(nsIChannel* aMixedContentChannel)
+{
+#ifdef DEBUG
+     // Get the root docshell.
+     nsCOMPtr<nsIDocShellTreeItem> root;
+     GetSameTypeRootTreeItem(getter_AddRefs(root));
+     NS_WARN_IF_FALSE(
+       root.get() == static_cast<nsIDocShellTreeItem *>(this), 
+       "Setting mMixedContentChannel on a docshell that is not the root docshell"
+     );
+#endif
+     mMixedContentChannel = aMixedContentChannel;
+     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetMixedContentChannel(nsIChannel **aMixedContentChannel)
+{
+    NS_ENSURE_ARG_POINTER(aMixedContentChannel);
+    NS_IF_ADDREF(*aMixedContentChannel = mMixedContentChannel);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetAllowMixedContentAndConnectionData(bool* aRootHasSecureConnection, bool* aAllowMixedContent)
+{
+  *aRootHasSecureConnection = false;
+  *aAllowMixedContent = false;
+
+  nsCOMPtr<nsIDocShellTreeItem> currentDocShellTreeItem = static_cast<nsIDocShellTreeItem *>(this);
+  NS_ASSERTION(currentDocShellTreeItem, "No DocShellTreeItem from docshell");
+
+  nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+  currentDocShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+  NS_ASSERTION(sameTypeRoot, "No document shell root tree item from document shell tree item!");
+
+  // now get the document from sameTypeRoot
+  nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(sameTypeRoot);
+  NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
+
+//  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(rootDoc);
+//  nsCOMPtr<nsIPrincipal> rootPrincipal = prin->GetPrincipal();
+  nsCOMPtr<nsIPrincipal> rootPrincipal = rootDoc->NodePrincipal();
+  NS_ASSERTION(rootPrincipal, "No root principal from root document");
+  nsCOMPtr<nsIURI> rootUri;
+  rootPrincipal->GetURI(getter_AddRefs(rootUri));
+  NS_ASSERTION(rootUri, "No root uri from root principal");
+  nsresult rv = rootUri->SchemeIs("https", aRootHasSecureConnection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check the root doc's channel against the root docShell's mMixedContentChannel to see
+  // if they are the same.  If they are the same, the user has overriden
+  // the block.
+  nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(sameTypeRoot);
+  nsCOMPtr<nsIChannel> mixedChannel;
+  rootDocShell->GetMixedContentChannel(getter_AddRefs(mixedChannel));
+  *aAllowMixedContent = mixedChannel && (mixedChannel == rootDoc->GetChannel());
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -9326,6 +9404,14 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             rv = channel->SetContentDispositionFilename(aFileName);
             NS_ENSURE_SUCCESS(rv, rv);
         }
+    }
+
+    if (mLoadType == LOAD_MIXED_CONTENT) {
+          rv = SetMixedContentChannel(channel);
+          NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+          rv = SetMixedContentChannel(nullptr);
+          NS_ENSURE_SUCCESS(rv, rv);
     }
 
     //hack
