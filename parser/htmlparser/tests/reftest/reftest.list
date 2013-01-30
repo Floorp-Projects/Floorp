@@ -21,3 +21,4 @@ skip-if(B2G) == bug696651-2.html bug696651-2-ref.html
 == view-source:bug700260-1.html view-source:bug700260-1-ref.html
 == view-source:bug704667-1.html bug704667-1-ref.html
 == view-source:bug731234-1.html bug731234-1-ref.html
+== bug820508-1.html bug820508-1-ref.html

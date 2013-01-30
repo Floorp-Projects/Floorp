@@ -1380,10 +1380,13 @@ StackIter::settleOnNewState()
             containsCall = data_.seg_->contains(data_.calls_);
 
             /* Eval-in-frame allows jumping into the middle of a segment. */
-            if (containsFrame && data_.seg_->fp() != data_.fp_) {
+            if (containsFrame &&
+                (data_.seg_->fp() != data_.fp_ || data_.seg_->maybeCalls() != data_.calls_))
+            {
                 /* Avoid duplicating logic; seg_ contains fp_, so no iloop. */
                 StackIter tmp = *this;
                 tmp.startOnSegment(data_.seg_);
+                tmp.settleOnNewState();
                 while (!tmp.isScript() || tmp.data_.fp_ != data_.fp_)
                     ++tmp;
                 JS_ASSERT(tmp.isScript() &&

@@ -37,9 +37,3 @@
     }                                                                          \
     return _sInstance;                                                         \
   }
-
-#if !defined(MOZ_PER_WINDOW_PRIVATE_BROWSING) || !defined(DEBUG)
-#  define ENSURE_NOT_PRIVATE_BROWSING /* nothing */
-#else
-#  define ENSURE_NOT_PRIVATE_BROWSING EnsureNotGlobalPrivateBrowsing()
-#endif

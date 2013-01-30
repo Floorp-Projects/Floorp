@@ -92,7 +92,8 @@ static void RollUpPopups()
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE_VOID(rollupListener);
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-  NS_ENSURE_TRUE_VOID(rollupWidget);
+  if (!rollupWidget)
+    return;
   rollupListener->Rollup(0, nullptr);
 }
 

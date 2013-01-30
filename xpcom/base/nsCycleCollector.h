@@ -97,11 +97,6 @@ struct nsCycleCollectionJSRuntime
 void nsCycleCollector_registerJSRuntime(nsCycleCollectionJSRuntime *rt);
 void nsCycleCollector_forgetJSRuntime();
 
-#ifdef DEBUG
-void nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n);
-void nsCycleCollector_DEBUG_wasFreed(nsISupports *n);
-#endif
-
 #define NS_CYCLE_COLLECTOR_LOGGER_CID \
 { 0x58be81b4, 0x39d2, 0x437c, \
 { 0x94, 0xea, 0xae, 0xde, 0x2c, 0x62, 0x08, 0xd3 } }

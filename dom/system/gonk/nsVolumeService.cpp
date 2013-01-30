@@ -129,8 +129,8 @@ NS_IMETHODIMP nsVolumeService::BroadcastVolume(const nsAString& aVolName)
   nsCOMPtr<nsIObserverService> obs = GetObserverService();
   NS_ENSURE_TRUE(obs, NS_NOINTERFACE);
 
-  DBG("nsVolumeService::BroadcastVolume for '%s'", vol->NameStr());
-  nsString stateStr(NS_ConvertUTF8toUTF16(vol->StateStr()));
+  DBG("nsVolumeService::BroadcastVolume for '%s'", vol->NameStr().get());
+  NS_ConvertUTF8toUTF16 stateStr(vol->StateStr());
   obs->NotifyObservers(vol, NS_VOLUME_STATE_CHANGED, stateStr.get());
   return NS_OK;
 }
@@ -269,7 +269,7 @@ void nsVolumeService::UpdateVolume(const nsVolume* aVolume)
   if (!obs) {
     return;
   }
-  nsString stateStr(NS_ConvertUTF8toUTF16(vol->StateStr()));
+  NS_ConvertUTF8toUTF16 stateStr(vol->StateStr());
   obs->NotifyObservers(vol, NS_VOLUME_STATE_CHANGED, stateStr.get());
 }
 
@@ -291,8 +291,8 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     DBG("UpdateVolumeRunnable::Run '%s' state %s gen %d locked %d",
-        mVolume->NameStr(), mVolume->StateStr(), mVolume->MountGeneration(),
-        (int)mVolume->IsMountLocked());
+        mVolume->NameStr().get(), mVolume->StateStr(),
+        mVolume->MountGeneration(), (int)mVolume->IsMountLocked());
 
     mVolumeService->UpdateVolume(mVolume);
     mVolumeService = NULL;

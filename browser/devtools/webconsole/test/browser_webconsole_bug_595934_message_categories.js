@@ -132,7 +132,8 @@ let TestObserver = {
 
 function consoleOpened(hud) {
   output = hud.outputNode;
-  output.addEventListener("DOMNodeInserted", onDOMNodeInserted, false);
+
+  nodeInsertedListener.observe(output, {childList: true});
   jsterm = hud.jsterm;
 
   Services.console.registerListener(TestObserver);
@@ -150,6 +151,7 @@ function testNext() {
   pageError = false;
 
   pos++;
+  info("testNext: #" + pos);
   if (pos < TESTS.length) {
     waitForSuccess({
       timeout: 10000,
@@ -199,17 +201,26 @@ function testNext() {
 
 function testEnd() {
   Services.console.unregisterListener(TestObserver);
-  output.removeEventListener("DOMNodeInserted", onDOMNodeInserted, false);
+  nodeInsertedListener.disconnect();
   TestObserver = output = jsterm = null;
 }
 
-function onDOMNodeInserted(aEvent) {
-  let textContent = output.textContent;
-  foundText = textContent.indexOf(TESTS[pos].matchString) > -1;
-  if (foundText) {
-    ok(foundText, "test #" + pos + ": message found '" + TESTS[pos].matchString + "'");
+var nodeInsertedListener = new MutationObserver(function(mutations) {
+  if (testEnded) {
+    return;
   }
-}
+
+  for (var mutation of mutations) {
+    if (mutation.addedNodes) {
+      let textContent = output.textContent;
+      foundText = textContent.indexOf(TESTS[pos].matchString) > -1;
+      if (foundText) {
+        ok(foundText, "test #" + pos + ": message found '" + TESTS[pos].matchString + "'");
+      }
+      return;
+    }
+  }
+});
 
 function test() {
   requestLongerTimeout(2);

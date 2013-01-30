@@ -1184,6 +1184,9 @@ HyperTextAccessible::NativeAttributes()
   else if (mContent->Tag() == nsGkAtoms::article)
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("article"));
+  else if (mContent->Tag() == nsGkAtoms::main)
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
+                           NS_LITERAL_STRING("main"));
 
   return attributes.forget();
 }

@@ -118,6 +118,28 @@ VARIABLES = {
         This variable is typically not populated directly. Instead, it is
         populated by calling add_tier_dir().
         """),
+
+    'EXTERNAL_MAKE_DIRS': (list, [],
+        """Directories that build with make but don't use moz.build files.
+
+        This is like DIRS except it implies that |make| is used to build the
+        directory and that the directory does not define itself with moz.build
+        files.
+        """),
+
+    'PARALLEL_EXTERNAL_MAKE_DIRS': (list, [],
+        """Parallel version of EXTERNAL_MAKE_DIRS.
+        """),
+
+    'CONFIGURE_SUBST_FILES': (list, [],
+        """Output files that will be generated using configure-like substitution.
+
+        This is a substitute for AC_OUTPUT in autoconf. For each path in this
+        list, we will search for a file in the srcdir having the name
+        {path}.in. The contents of this file will be read and variable patterns
+        like @foo@ will be substituted with the values of the AC_SUBST
+        variables declared during configure.
+        """),
 }
 
 # The set of functions exposed to the sandbox.
@@ -184,6 +206,19 @@ FUNCTIONS = {
         add_tier_dir('base', 'foo', static=True)
         """),
 
+    'warning': ('_warning', (str,),
+        """Issue a warning.
+
+        Warnings are string messages that are printed during execution.
+
+        Warnings are ignored during execution.
+        """),
+
+    'error': ('_error', (str,),
+        """Issue a fatal error.
+
+        If this function is called, processing is aborted immediately.
+        """),
 }
 
 # Special variables. These complement VARIABLES.

@@ -30,18 +30,9 @@ _BROWSER_FILES = \
 	browser_newtab_bug735987.js \
 	browser_newtab_bug752841.js \
 	browser_newtab_bug765628.js \
+	browser_newtab_perwindow_private_browsing.js \
 	head.js \
 	$(NULL)
-
-ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
-_BROWSER_FILES += \
-        browser_newtab_perwindow_private_browsing.js \
-        $(NULL)
-else
-_BROWSER_FILES += \
-        browser_newtab_private_browsing.js \
-        $(NULL)
-endif
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

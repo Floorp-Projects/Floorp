@@ -1157,6 +1157,18 @@ HttpBaseChannel::GetRequestSucceeded(bool *aValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::RedirectTo(nsIURI *newURI)
+{
+  // We can only redirect unopened channels
+  ENSURE_CALLED_BEFORE_CONNECT();
+
+  // The redirect is stored internally for use in AsyncOpen
+  mAPIRedirectToURI = newURI;
+
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIHttpChannelInternal
 //-----------------------------------------------------------------------------

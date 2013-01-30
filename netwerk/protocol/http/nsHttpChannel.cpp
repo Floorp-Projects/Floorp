@@ -1533,18 +1533,17 @@ nsHttpChannel::HandleAsyncRedirectChannelToHttps()
         return;
     }
 
-    nsresult rv = AsyncRedirectChannelToHttps();
+    nsresult rv = StartRedirectChannelToHttps();
     if (NS_FAILED(rv))
-        ContinueAsyncRedirectChannelToHttps(rv);
+        ContinueAsyncRedirectChannelToURI(rv);
 }
 
 nsresult
-nsHttpChannel::AsyncRedirectChannelToHttps()
+nsHttpChannel::StartRedirectChannelToHttps()
 {
     nsresult rv = NS_OK;
     LOG(("nsHttpChannel::HandleAsyncRedirectChannelToHttps() [STS]\n"));
 
-    nsCOMPtr<nsIChannel> newChannel;
     nsCOMPtr<nsIURI> upgradedURI;
 
     rv = mURI->Clone(getter_AddRefs(upgradedURI));
@@ -1566,6 +1565,36 @@ nsHttpChannel::AsyncRedirectChannelToHttps()
     else
         upgradedURI->SetPort(oldPort);
 
+    return StartRedirectChannelToURI(upgradedURI);
+}
+
+void
+nsHttpChannel::HandleAsyncAPIRedirect()
+{
+    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    NS_PRECONDITION(mAPIRedirectToURI, "How did that happen?");
+
+    if (mSuspendCount) {
+        LOG(("Waiting until resume to do async API redirect [this=%p]\n", this));
+        mCallOnResume = &nsHttpChannel::HandleAsyncAPIRedirect;
+        return;
+    }
+
+    nsresult rv = StartRedirectChannelToURI(mAPIRedirectToURI);
+    if (NS_FAILED(rv))
+        ContinueAsyncRedirectChannelToURI(rv);
+
+    return;
+}
+
+nsresult
+nsHttpChannel::StartRedirectChannelToURI(nsIURI *upgradedURI)
+{
+    nsresult rv = NS_OK;
+    LOG(("nsHttpChannel::StartRedirectChannelToURI()\n"));
+
+    nsCOMPtr<nsIChannel> newChannel;
+
     nsCOMPtr<nsIIOService> ioService;
     rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1581,7 +1610,7 @@ nsHttpChannel::AsyncRedirectChannelToHttps()
     uint32_t flags = nsIChannelEventSink::REDIRECT_PERMANENT;
 
     PushRedirectAsyncFunc(
-        &nsHttpChannel::ContinueAsyncRedirectChannelToHttps);
+        &nsHttpChannel::ContinueAsyncRedirectChannelToURI);
     rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, flags);
 
     if (NS_SUCCEEDED(rv))
@@ -1589,15 +1618,19 @@ nsHttpChannel::AsyncRedirectChannelToHttps()
 
     if (NS_FAILED(rv)) {
         AutoRedirectVetoNotifier notifier(this);
+
+        /* Remove the async call to ContinueAsyncRedirectChannelToURI().
+         * It is called directly by our callers upon return (to clean up
+         * the failed redirect). */
         PopRedirectAsyncFunc(
-            &nsHttpChannel::ContinueAsyncRedirectChannelToHttps);
+            &nsHttpChannel::ContinueAsyncRedirectChannelToURI);
     }
 
     return rv;
 }
 
 nsresult
-nsHttpChannel::ContinueAsyncRedirectChannelToHttps(nsresult rv)
+nsHttpChannel::ContinueAsyncRedirectChannelToURI(nsresult rv)
 {
     if (NS_SUCCEEDED(rv))
         rv = OpenRedirectChannel(rv);
@@ -4354,9 +4387,13 @@ nsHttpChannel::BeginConnect()
     nsresult rv;
 
     // notify "http-on-modify-request" observers
-    gHttpHandler->OnModifyRequest(this);
+    CallOnModifyRequestObservers();
 
-    mRequestObserversCalled = true;
+    // Check to see if we should redirect this channel elsewhere by
+    // nsIHttpChannel.redirectTo API request
+    if (mAPIRedirectToURI) {
+        return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+    }
 
     // If mTimingEnabled flag is not set after OnModifyRequest() then
     // clear the already recorded AsyncOpen value for consistency.
@@ -5509,7 +5546,7 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     AddCookiesToRequest();
     
     // notify "http-on-modify-request" observers
-    gHttpHandler->OnModifyRequest(this);
+    CallOnModifyRequestObservers();
 
     mIsPending = true;
 
