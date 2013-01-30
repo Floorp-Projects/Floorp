@@ -367,6 +367,7 @@ class JSObject : public js::ObjectImpl
 
     bool setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag,
                  GenerateShape generateShape = GENERATE_NONE);
+    bool clearFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag);
 
   public:
     inline bool nativeEmpty() const;
@@ -627,11 +628,26 @@ class JSObject : public js::ObjectImpl
     /* Convert all dense elements to sparse properties. */
     static bool sparsifyDenseElements(JSContext *cx, js::HandleObject obj);
 
+    /* Small objects are dense, no matter what. */
+    static const unsigned MIN_SPARSE_INDEX = 1000;
+
+    /*
+     * Element storage for an object will be sparse if fewer than 1/8 indexes
+     * are filled in.
+     */
+    static const unsigned SPARSE_DENSITY_RATIO = 8;
+
     /*
      * Check if after growing the object's elements will be too sparse.
      * newElementsHint is an estimated number of elements to be added.
      */
     bool willBeSparseElements(unsigned requiredCapacity, unsigned newElementsHint);
+
+    /*
+     * After adding a sparse index to obj, see if it should be converted to use
+     * dense elements.
+     */
+    static EnsureDenseResult maybeDensifySparseElements(JSContext *cx, js::HandleObject obj);
 
     /* Array specific accessors. */
     inline uint32_t getArrayLength() const;
@@ -1331,7 +1347,7 @@ js_NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pob
 
 extern JSBool
 js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> receiver,
-             js::Handle<js::Shape*> shape, bool added, bool strict, js::MutableHandleValue vp);
+             js::Handle<js::Shape*> shape, bool strict, js::MutableHandleValue vp);
 
 namespace js {
 
