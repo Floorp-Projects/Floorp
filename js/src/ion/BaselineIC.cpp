@@ -236,6 +236,10 @@ ICStubCompiler::getStubCode()
     if (!newStubCode)
         return NULL;
 
+    // All barriers are emitted off-by-default, enable them if needed.
+    if (cx->zone()->needsBarrier())
+        newStubCode->togglePreBarriers(true);
+
     // Cache newly compiled stubcode.
     if (!ion->putStubCode(stubKey, newStubCode))
         return NULL;
@@ -1848,6 +1852,7 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
 
     // It's safe to overwrite R0 now.
     masm.loadValue(Address(BaselineStackReg, ICStackValueOffset), R0);
+    masm.patchableCallPreBarrier(element, MIRType_Value);
     masm.storeValue(R0, element);
     EmitReturnFromIC(masm);
 
@@ -2382,6 +2387,7 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Perform the store.
     masm.load32(Address(BaselineStubReg, ICSetProp_Native::offsetOfOffset()), scratch);
+    masm.patchableCallPreBarrier(BaseIndex(objReg, scratch, TimesOne), MIRType_Value);
     masm.storeValue(R1, BaseIndex(objReg, scratch, TimesOne));
 
     // The RHS has to be in R0.
