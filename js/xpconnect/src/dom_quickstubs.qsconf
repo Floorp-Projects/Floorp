@@ -76,11 +76,6 @@ members = [
     'nsIDOMElementCSSInlineStyle.*',
     'nsIDOMRect.*',
 
-    # dom/interfaces/events
-    'nsIDOMEventTarget.addEventListener',
-    'nsIDOMEventTarget.removeEventListener',
-    'nsIDOMEventTarget.dispatchEvent',
-
     'nsIDOMEvent.type',
     'nsIDOMEvent.target',
     'nsIDOMEvent.currentTarget',
@@ -337,6 +332,7 @@ customIncludes = [
     'mozilla/dom/SVGElementBinding.h',
     'nsPerformance.h',
     'mozilla/dom/HTMLDocumentBinding.h',
+    'mozilla/dom/EventTargetBinding.h',
     ]
 
 customReturnInterfaces = [
@@ -393,4 +389,5 @@ newBindingProperties = {
     'nsIDOMDocument': 'mozilla::dom::DocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMSVGElement': 'mozilla::dom::SVGElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMHTMLDocument': 'mozilla::dom::HTMLDocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMEventTarget': 'mozilla::dom::EventTargetBinding::sNativePropertyHooks.mNativeProperties.regular',
     }

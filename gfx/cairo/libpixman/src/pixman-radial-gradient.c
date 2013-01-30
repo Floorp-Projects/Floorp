@@ -671,9 +671,9 @@ radial_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 void
 _pixman_radial_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter)
 {
-    if (iter->flags & ITER_16)
+    if (iter->iter_flags & ITER_16)
 	iter->get_scanline = radial_get_scanline_16;
-    else if (iter->flags & ITER_NARROW)
+    else if (iter->iter_flags & ITER_NARROW)
 	iter->get_scanline = radial_get_scanline_narrow;
     else
 	iter->get_scanline = radial_get_scanline_wide;

@@ -1,9 +1,32 @@
+#ifndef PIXMAN_PRIVATE_H
+#define PIXMAN_PRIVATE_H
+
+/*
+ * The defines which are shared between C and assembly code
+ */
+
+/* bilinear interpolation precision (must be <= 8) */
+#ifndef MOZILLA_VERSION
+#error "Need mozilla headers"
+#endif
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+#define LOW_QUALITY_INTERPOLATION
+#define LOWER_QUALITY_INTERPOLATION
+#define BILINEAR_INTERPOLATION_BITS 4
+#else
+#define BILINEAR_INTERPOLATION_BITS 8
+#endif
+#define BILINEAR_INTERPOLATION_RANGE (1 << BILINEAR_INTERPOLATION_BITS)
+
+/*
+ * C specific part
+ */
+
+#ifndef __ASSEMBLER__
+
 #ifndef PACKAGE
 #  error config.h must be included before pixman-private.h
 #endif
-
-#ifndef PIXMAN_PRIVATE_H
-#define PIXMAN_PRIVATE_H
 
 #define PIXMAN_DISABLE_DEPRECATED
 #define PIXMAN_USE_INTERNAL_API
@@ -13,6 +36,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stddef.h>
 
 #include "pixman-compiler.h"
 
@@ -154,9 +178,6 @@ struct bits_image
     uint32_t *                 free_me;
     int                        rowstride;  /* in number of uint32_t's */
 
-    fetch_scanline_t           get_scanline_32;
-    fetch_scanline_t           get_scanline_64;
-
     fetch_scanline_t           fetch_scanline_16;
 
     fetch_scanline_t           fetch_scanline_32;
@@ -229,13 +250,15 @@ struct pixman_iter_t
     int				x, y;
     int				width;
     int				height;
-    iter_flags_t		flags;
+    iter_flags_t		iter_flags;
+    uint32_t			image_flags;
 
     /* These function pointers are initialized by the implementation */
     pixman_iter_get_scanline_t	get_scanline;
     pixman_iter_write_back_t	write_back;
 
     /* These fields are scratch data that implementations can use */
+    void *			data;
     uint8_t *			bits;
     int				stride;
 };
@@ -530,7 +553,8 @@ _pixman_implementation_src_iter_init (pixman_implementation_t       *imp,
 				      int                            width,
 				      int                            height,
 				      uint8_t                       *buffer,
-				      iter_flags_t                   flags);
+				      iter_flags_t                   flags,
+				      uint32_t                       image_flags);
 
 void
 _pixman_implementation_dest_iter_init (pixman_implementation_t       *imp,
@@ -541,7 +565,8 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t       *imp,
 				       int                            width,
 				       int                            height,
 				       uint8_t                       *buffer,
-				       iter_flags_t                   flags);
+				       iter_flags_t                   flags,
+				       uint32_t                       image_flags);
 
 /* Specific implementations */
 pixman_implementation_t *
@@ -553,7 +578,7 @@ _pixman_implementation_create_fast_path (pixman_implementation_t *fallback);
 pixman_implementation_t *
 _pixman_implementation_create_noop (pixman_implementation_t *fallback);
 
-#if defined USE_X86_MMX || defined USE_ARM_IWMMXT
+#if defined USE_X86_MMX || defined USE_ARM_IWMMXT || defined USE_LOONGSON_MMI
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *fallback);
 #endif
@@ -583,14 +608,44 @@ pixman_implementation_t *
 _pixman_implementation_create_vmx (pixman_implementation_t *fallback);
 #endif
 
+pixman_bool_t
+_pixman_implementation_disabled (const char *name);
+
+pixman_implementation_t *
+_pixman_x86_get_implementations (pixman_implementation_t *imp);
+
+pixman_implementation_t *
+_pixman_arm_get_implementations (pixman_implementation_t *imp);
+
+pixman_implementation_t *
+_pixman_ppc_get_implementations (pixman_implementation_t *imp);
+
+pixman_implementation_t *
+_pixman_mips_get_implementations (pixman_implementation_t *imp);
+
 pixman_implementation_t *
 _pixman_choose_implementation (void);
 
+pixman_bool_t
+_pixman_disabled (const char *name);
 
 
 /*
  * Utilities
  */
+pixman_bool_t
+_pixman_compute_composite_region32 (pixman_region32_t * region,
+				    pixman_image_t *    src_image,
+				    pixman_image_t *    mask_image,
+				    pixman_image_t *    dest_image,
+				    int32_t             src_x,
+				    int32_t             src_y,
+				    int32_t             mask_x,
+				    int32_t             mask_y,
+				    int32_t             dest_x,
+				    int32_t             dest_y,
+				    int32_t             width,
+				    int32_t             height);
 uint32_t *
 _pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 
@@ -699,6 +754,18 @@ _pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 	    dest, FAST_PATH_STD_DEST_FLAGS,				\
 	    func) }
 
+extern pixman_implementation_t *global_implementation;
+
+static force_inline pixman_implementation_t *
+get_implementation (void)
+{
+#ifndef TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR
+    if (!global_implementation)
+	global_implementation = _pixman_choose_implementation ();
+#endif
+    return global_implementation;
+}
+
 /* Memory allocation helpers */
 void *
 pixman_malloc_ab (unsigned int n, unsigned int b);
@@ -748,6 +815,50 @@ pixman_bool_t
 pixman_region16_copy_from_region32 (pixman_region16_t *dst,
                                     pixman_region32_t *src);
 
+/* Doubly linked lists */
+typedef struct pixman_link_t pixman_link_t;
+struct pixman_link_t
+{
+    pixman_link_t *next;
+    pixman_link_t *prev;
+};
+
+typedef struct pixman_list_t pixman_list_t;
+struct pixman_list_t
+{
+    pixman_link_t *head;
+    pixman_link_t *tail;
+};
+
+static force_inline void
+pixman_list_init (pixman_list_t *list)
+{
+    list->head = (pixman_link_t *)list;
+    list->tail = (pixman_link_t *)list;
+}
+
+static force_inline void
+pixman_list_prepend (pixman_list_t *list, pixman_link_t *link)
+{
+    link->next = list->head;
+    link->prev = (pixman_link_t *)list;
+    list->head->prev = link;
+    list->head = link;
+}
+
+static force_inline void
+pixman_list_unlink (pixman_link_t *link)
+{
+    link->prev->next = link->next;
+    link->next->prev = link->prev;
+}
+
+static force_inline void
+pixman_list_move_to_front (pixman_list_t *list, pixman_link_t *link)
+{
+    pixman_list_unlink (link);
+    pixman_list_prepend (list, link);
+}
 
 /* Misc macros */
 
@@ -800,7 +911,8 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
     (PIXMAN_FORMAT_A (f) > 8 ||						\
      PIXMAN_FORMAT_R (f) > 8 ||						\
      PIXMAN_FORMAT_G (f) > 8 ||						\
-     PIXMAN_FORMAT_B (f) > 8)
+     PIXMAN_FORMAT_B (f) > 8 ||						\
+     PIXMAN_FORMAT_TYPE (f) == PIXMAN_TYPE_ARGB_SRGB)
 
 #ifdef WORDS_BIGENDIAN
 #   define SCREEN_SHIFT_LEFT(x,n)	((x) << (n))
@@ -995,5 +1107,19 @@ void pixman_timer_register (pixman_timer_t *timer);
     }
 
 #endif /* PIXMAN_TIMERS */
+
+/* sRGB<->linear conversion tables. Linear color space is the same
+ * as sRGB but the components are in linear light (gamma 1.0).
+ *
+ * linear_to_srgb maps linear value from 0 to 4095 ([0.0, 1.0])
+ * and returns 8-bit sRGB value.
+ *
+ * srgb_to_linear maps 8-bit sRGB value to 16-bit linear value
+ * with range 0 to 65535 ([0.0, 1.0]).
+ */
+extern const uint8_t linear_to_srgb[4096];
+extern const uint16_t srgb_to_linear[256];
+
+#endif /* __ASSEMBLER__ */
 
 #endif /* PIXMAN_PRIVATE_H */

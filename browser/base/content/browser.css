@@ -52,6 +52,14 @@ tabbrowser {
               opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
 }
 
+.tabbrowser-tabs[dontresize] > .tabbrowser-tab[fadein]:not([pinned]) {
+  /* controlled in tabbrowser.xml */
+}
+
+.tabbrowser-tabs[dontanimate] > .tabbrowser-tab {
+  transition: none !important;
+}
+
 .tab-throbber:not([fadein]):not([pinned]),
 .tab-label:not([fadein]):not([pinned]),
 .tab-icon-image:not([fadein]):not([pinned]),

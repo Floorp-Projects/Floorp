@@ -31,7 +31,7 @@ enum VisibilityState { "hidden", "visible" };
 /* http://dom.spec.whatwg.org/#interface-document */
 [Constructor]
 interface Document : Node {
-  [Throws, Constant]
+  [Throws]
   readonly attribute DOMImplementation implementation;
   readonly attribute DOMString URL;
   readonly attribute DOMString documentURI;
@@ -142,124 +142,12 @@ partial interface Document {
   //(HTML only)DOMString queryCommandValue(DOMString commandId);
   //(Not implemented)readonly attribute HTMLCollection commands;
 
-  // event handler IDL attributes
-           [SetterThrows]
-           attribute EventHandler onabort;
-           [SetterThrows]
-           attribute EventHandler onblur;
-  //(Not implemented)         attribute EventHandler oncancel;
-           [SetterThrows]
-           attribute EventHandler oncanplay;
-           [SetterThrows]
-           attribute EventHandler oncanplaythrough;
-           [SetterThrows]
-           attribute EventHandler onchange;
-           [SetterThrows]
-           attribute EventHandler onclick;
-  //(Not implemented)         attribute EventHandler onclose;
-           [SetterThrows]
-           attribute EventHandler oncontextmenu;
-  //(Not implemented)         attribute EventHandler oncuechange;
-           [SetterThrows]
-           attribute EventHandler ondblclick;
-           [SetterThrows]
-           attribute EventHandler ondrag;
-           [SetterThrows]
-           attribute EventHandler ondragend;
-           [SetterThrows]
-           attribute EventHandler ondragenter;
-           [SetterThrows]
-           attribute EventHandler ondragleave;
-           [SetterThrows]
-           attribute EventHandler ondragover;
-           [SetterThrows]
-           attribute EventHandler ondragstart;
-           [SetterThrows]
-           attribute EventHandler ondrop;
-           [SetterThrows]
-           attribute EventHandler ondurationchange;
-           [SetterThrows]
-           attribute EventHandler onemptied;
-           [SetterThrows]
-           attribute EventHandler onended;
-           [SetterThrows]
-           attribute EventHandler onerror;
-           [SetterThrows]
-           attribute EventHandler onfocus;
-           [SetterThrows]
-           attribute EventHandler oninput;
-           [SetterThrows]
-           attribute EventHandler oninvalid;
-           [SetterThrows]
-           attribute EventHandler onkeydown;
-           [SetterThrows]
-           attribute EventHandler onkeypress;
-           [SetterThrows]
-           attribute EventHandler onkeyup;
-           [SetterThrows]
-           attribute EventHandler onload;
-           [SetterThrows]
-           attribute EventHandler onloadeddata;
-           [SetterThrows]
-           attribute EventHandler onloadedmetadata;
-           [SetterThrows]
-           attribute EventHandler onloadstart;
-           [SetterThrows]
-           attribute EventHandler onmousedown;
-           [SetterThrows]
-           attribute EventHandler onmousemove;
-           [SetterThrows]
-           attribute EventHandler onmouseout;
-           [SetterThrows]
-           attribute EventHandler onmouseover;
-           [SetterThrows]
-           attribute EventHandler onmouseup;
-  //(Not implemented)         attribute EventHandler onmousewheel;
-           [SetterThrows]
-           attribute EventHandler onpause;
-           [SetterThrows]
-           attribute EventHandler onplay;
-           [SetterThrows]
-           attribute EventHandler onplaying;
-           [SetterThrows]
-           attribute EventHandler onprogress;
-           [SetterThrows]
-           attribute EventHandler onratechange;
-           [SetterThrows]
-           attribute EventHandler onreset;
-           [SetterThrows]
-           attribute EventHandler onscroll;
-           [SetterThrows]
-           attribute EventHandler onseeked;
-           [SetterThrows]
-           attribute EventHandler onseeking;
-           [SetterThrows]
-           attribute EventHandler onselect;
-           [SetterThrows]
-           attribute EventHandler onshow;
-           [SetterThrows]
-           attribute EventHandler onstalled;
-           [SetterThrows]
-           attribute EventHandler onsubmit;
-           [SetterThrows]
-           attribute EventHandler onsuspend;
-           [SetterThrows]
-           attribute EventHandler ontimeupdate;
-           [SetterThrows]
-           attribute EventHandler onvolumechange;
-           [SetterThrows]
-           attribute EventHandler onwaiting;
-
   // special event handler IDL attributes that only apply to Document objects
   [LenientThis, SetterThrows] attribute EventHandler onreadystatechange;
 
   // Gecko extensions?
   [LenientThis, SetterThrows] attribute EventHandler onmouseenter;
   [LenientThis, SetterThrows] attribute EventHandler onmouseleave;
-  [SetterThrows] attribute EventHandler onmozfullscreenchange;
-  [SetterThrows] attribute EventHandler onmozfullscreenerror;
-  [SetterThrows] attribute EventHandler onmozpointerlockchange;
-  [SetterThrows] attribute EventHandler onmozpointerlockerror;
   [SetterThrows] attribute EventHandler onwheel;
   [SetterThrows] attribute EventHandler oncopy;
   [SetterThrows] attribute EventHandler oncut;
@@ -446,3 +334,5 @@ partial interface Document {
 };
 
 Document implements XPathEvaluator;
+Document implements GlobalEventHandlers;
+Document implements NodeEventHandlers;

@@ -388,10 +388,7 @@ JSObject::setArrayLength(JSContext *cx, js::HandleObject obj, uint32_t length)
     JS_ASSERT(obj->isArray());
 
     if (length > INT32_MAX) {
-        /*
-         * Mark the type of this object as possibly not a dense array, per the
-         * requirements of OBJECT_FLAG_NON_DENSE_ARRAY.
-         */
+        /* Track objects with overflowing lengths in type information. */
         js::types::MarkTypeObjectFlags(cx, obj,
                                        js::types::OBJECT_FLAG_LENGTH_OVERFLOW);
         jsid lengthId = js::NameToId(cx->names().length);
@@ -428,6 +425,20 @@ JSObject::getDenseCapacity()
 }
 
 inline bool
+JSObject::shouldConvertDoubleElements()
+{
+    JS_ASSERT(isNative());
+    return getElementsHeader()->convertDoubleElements;
+}
+
+inline void
+JSObject::setShouldConvertDoubleElements()
+{
+    JS_ASSERT(isArray() && !hasEmptyElements());
+    getElementsHeader()->convertDoubleElements = 1;
+}
+
+inline bool
 JSObject::ensureElements(JSContext *cx, uint32_t capacity)
 {
     if (capacity > getDenseCapacity())
@@ -451,6 +462,15 @@ JSObject::setDenseElement(unsigned idx, const js::Value &val)
 }
 
 inline void
+JSObject::setDenseElementMaybeConvertDouble(unsigned idx, const js::Value &val)
+{
+    if (val.isInt32() && shouldConvertDoubleElements())
+        setDenseElement(idx, js::DoubleValue(val.toInt32()));
+    else
+        setDenseElement(idx, val);
+}
+
+inline void
 JSObject::initDenseElement(unsigned idx, const js::Value &val)
 {
     JS_ASSERT(isNative() && idx < getDenseInitializedLength());
@@ -462,13 +482,14 @@ JSObject::setDenseElementWithType(JSContext *cx, js::HandleObject obj, unsigned 
                                   const js::Value &val)
 {
     js::types::AddTypePropertyId(cx, obj, JSID_VOID, val);
-    obj->setDenseElement(idx, val);
+    obj->setDenseElementMaybeConvertDouble(idx, val);
 }
 
 /* static */ inline void
 JSObject::initDenseElementWithType(JSContext *cx, js::HandleObject obj, unsigned idx,
                                    const js::Value &val)
 {
+    JS_ASSERT(!obj->shouldConvertDoubleElements());
     js::types::AddTypePropertyId(cx, obj, JSID_VOID, val);
     obj->initDenseElement(idx, val);
 }

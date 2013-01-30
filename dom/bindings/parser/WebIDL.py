@@ -2194,6 +2194,14 @@ class IDLAttribute(IDLInterfaceMember):
             raise WebIDLError("Readonly attributes must not be flagged as "
                               "[SetterThrows]",
                               [self.location])
+        elif (((identifier == "Throws" or identifier == "GetterThrows") and
+               (self.getExtendedAttribute("Pure") or
+                self.getExtendedAttribute("Constant"))) or
+              ((identifier == "Pure" or identifier == "Constant") and
+               (self.getExtendedAttribute("Throws") or
+                self.getExtendedAttribute("GetterThrows")))):
+            raise WebIDLError("Throwing things can't be [Pure] or [Constant]",
+                              [attr.location])
         elif identifier == "LenientThis":
             if not attr.noArguments():
                 raise WebIDLError("[LenientThis] must take no arguments",
@@ -2346,7 +2354,6 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
                 argument.resolve(self)
 
         self._treatNonCallableAsNull = False
-        self._workerOnly = False
 
     def isCallback(self):
         return True
@@ -2387,16 +2394,11 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isNonCallbackInterface() or other.isDate())
 
-    def isWorkerOnly(self):
-        return self._workerOnly
-
     def addExtendedAttributes(self, attrs):
         unhandledAttrs = []
         for attr in attrs:
             if attr.identifier() == "TreatNonCallableAsNull":
                 self._treatNonCallableAsNull = True
-            elif attr.identifier() == "WorkerOnly":
-                self._workerOnly = True
             else:
                 unhandledAttrs.append(attr)
         if len(unhandledAttrs) != 0:
@@ -2742,8 +2744,11 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                               "[Unforgeable]",
                               [attr.location, self.location])
         elif identifier == "Constant":
-            raise WebIDLError("Methods must not be flagged as "
-                              "[Constant]",
+            raise WebIDLError("Methods must not be flagged as [Constant]",
+                              [attr.location, self.location]);
+        elif identifier == "Pure":
+            raise WebIDLError("Methods must not be flagged as [Pure] and if "
+                              "that changes, don't forget to check for [Throws]",
                               [attr.location, self.location]);
         elif identifier == "PutForwards":
             raise WebIDLError("Only attributes support [PutForwards]",

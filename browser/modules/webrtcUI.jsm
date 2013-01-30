@@ -118,19 +118,30 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
 
     let deviceIndex = 0;
     for (let device of devices) {
-      let menuitem = chromeDoc.createElement("menuitem");
-      menuitem.setAttribute("value", deviceIndex);
-      menuitem.setAttribute("label", device.name);
-      menuitem.setAttribute("tooltiptext", device.name);
-      menupopup.appendChild(menuitem);
+      addDeviceToList(menupopup, device.name, deviceIndex);
       deviceIndex++;
     }
   }
 
+  function addDeviceToList(menupopup, deviceName, deviceIndex) {
+    let menuitem = chromeDoc.createElement("menuitem");
+    menuitem.setAttribute("value", deviceIndex);
+    menuitem.setAttribute("label", deviceName);
+    menuitem.setAttribute("tooltiptext", deviceName);
+    menupopup.appendChild(menuitem);
+  }
+
   chromeDoc.getElementById("webRTC-selectCamera").hidden = !videoDevices.length;
   chromeDoc.getElementById("webRTC-selectMicrophone").hidden = !audioDevices.length;
-  listDevices(chromeDoc.getElementById("webRTC-selectCamera-menupopup"), videoDevices);
-  listDevices(chromeDoc.getElementById("webRTC-selectMicrophone-menupopup"), audioDevices);
+
+  let camMenupopup = chromeDoc.getElementById("webRTC-selectCamera-menupopup");
+  let micMenupopup = chromeDoc.getElementById("webRTC-selectMicrophone-menupopup");
+  listDevices(camMenupopup, videoDevices);
+  listDevices(micMenupopup, audioDevices);
+  if (requestType == "CameraAndMicrophone") {
+    addDeviceToList(camMenupopup, stringBundle.getString("getUserMedia.noVideo.label"), "-1");
+    addDeviceToList(micMenupopup, stringBundle.getString("getUserMedia.noAudio.label"), "-1");
+  }
 
   let mainAction = {
     label: PluralForm.get(requestType == "CameraAndMicrophone" ? 2 : 1,
@@ -141,12 +152,20 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
                              .createInstance(Ci.nsISupportsArray);
       if (videoDevices.length) {
         let videoDeviceIndex = chromeDoc.getElementById("webRTC-selectCamera-menulist").value;
-        allowedDevices.AppendElement(videoDevices[videoDeviceIndex]);
+        if (videoDeviceIndex != "-1")
+          allowedDevices.AppendElement(videoDevices[videoDeviceIndex]);
       }
       if (audioDevices.length) {
         let audioDeviceIndex = chromeDoc.getElementById("webRTC-selectMicrophone-menulist").value;
-        allowedDevices.AppendElement(audioDevices[audioDeviceIndex]);
+        if (audioDeviceIndex != "-1")
+          allowedDevices.AppendElement(audioDevices[audioDeviceIndex]);
       }
+
+      if (allowedDevices.Count() == 0) {
+        Services.obs.notifyObservers(null, "getUserMedia:response:deny", aCallID);
+        return;
+      }
+
       Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
 
       // Show browser-specific indicator for the active camera/mic access.

@@ -178,6 +178,15 @@ pref("media.gstreamer.enabled", true);
 pref("media.navigator.enabled", true);
 pref("media.peerconnection.enabled", false);
 pref("media.navigator.permission.disabled", false);
+// These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
+// kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each 
+// setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.
+pref("media.peerconnection.aec_enabled", true);
+pref("media.peerconnection.aec", 1);
+pref("media.peerconnection.agc_enabled", false);
+pref("media.peerconnection.agc", 1);
+pref("media.peerconnection.noise_enabled", false);
+pref("media.peerconnection.noise", 1);
 #else
 #ifdef ANDROID
 pref("media.navigator.enabled", true);
@@ -341,6 +350,9 @@ pref("browser.frames.enabled", true);
 
 // Number of characters to consider emphasizing for rich autocomplete results
 pref("toolkit.autocomplete.richBoundaryCutoff", 200);
+
+// Variable controlling logging for osfile.
+pref("toolkit.osfile.log", false);
 
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);

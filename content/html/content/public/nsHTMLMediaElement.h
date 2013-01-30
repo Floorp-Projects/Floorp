@@ -120,7 +120,6 @@ public:
   virtual void MetadataLoaded(int aChannels,
                               int aRate,
                               bool aHasAudio,
-                              bool aHasVideo,
                               const MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
@@ -475,12 +474,6 @@ protected:
    * to be run on the main thread's event loop.
    */
   void QueueSelectResourceTask();
-
-  /**
-   * When loading a new source on an existing media element, make sure to reset
-   * everything that is accessible using the media element API.
-   */
-  void ResetState();
 
   /**
    * The resource-fetch algorithm step of the load algorithm.
