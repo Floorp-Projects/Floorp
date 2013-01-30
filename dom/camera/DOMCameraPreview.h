@@ -26,7 +26,7 @@ protected:
   enum { TRACK_VIDEO = 1 };
 
 public:
-  DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWidth, uint32_t aHeight, uint32_t aFramesPerSecond = 30);
+  DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWidth, uint32_t aHeight, uint64_t aWindowId, uint32_t aFramesPerSecond = 30);
   bool ReceiveFrame(void* aBuffer, ImageFormat aFormat, mozilla::FrameBuilder aBuilder);
   bool HaveEnoughBuffered();
 
