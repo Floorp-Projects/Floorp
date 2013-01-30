@@ -133,6 +133,7 @@ webidl_files = \
   SVGLinearGradientElement.webidl \
   SVGLineElement.webidl \
   SVGLocatableElement.webidl \
+  SVGMarkerElement.webidl \
   SVGMaskElement.webidl \
   SVGMatrix.webidl \
   SVGMetadataElement.webidl \
@@ -184,7 +185,6 @@ webidl_files = \
   XMLHttpRequestUpload.webidl \
   XMLSerializer.webidl \
   XPathEvaluator.webidl \
-  XULElement.webidl \
   $(NULL)
 
 ifdef MOZ_WEBGL

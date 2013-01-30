@@ -21,6 +21,10 @@
 #include "mozilla/StaticPtr.h"
 #include "prlog.h"
 
+#ifdef MOZ_WEBRTC
+#include "mtransport/runnable_utils.h"
+#endif
+
 namespace mozilla {
 
 #ifdef PR_LOGGING
@@ -127,6 +131,23 @@ public:
   // implement in .cpp to avoid circular dependency with MediaOperationRunnable
   // Can be invoked from EITHER MainThread or MSG thread
   void Invalidate();
+
+  void
+  AudioConfig(bool aEchoOn, uint32_t aEcho,
+              bool aAgcOn, uint32_t aAGC,
+              bool aNoiseOn, uint32_t aNoise)
+  {
+    if (mAudioSource) {
+#ifdef MOZ_WEBRTC
+      // Right now these configs are only of use if webrtc is available
+      RUN_ON_THREAD(mMediaThread,
+                    WrapRunnable(nsRefPtr<MediaEngineSource>(mAudioSource), // threadsafe
+                                 &MediaEngineSource::Config,
+                                 aEchoOn, aEcho, aAgcOn, aAGC, aNoiseOn, aNoise),
+                    NS_DISPATCH_NORMAL);
+#endif
+    }
+  }
 
   void
   Remove()

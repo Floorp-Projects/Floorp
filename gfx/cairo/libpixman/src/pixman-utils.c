@@ -184,6 +184,22 @@ pixman_malloc_abc (unsigned int a,
 	return malloc (a * b * c);
 }
 
+static void
+unorm_to_unorm_params (int in_width, int out_width, uint32_t *factor, int *shift)
+{
+    int w = 0;
+
+    *factor = 0;
+    while (in_width != 0 && w < out_width)
+    {
+	*factor |= 1 << w;
+	w += in_width;
+    }
+
+    /* Did we generate too many bits? */
+    *shift = w - out_width;
+}
+
 /*
  * This function expands images from ARGB8 format to ARGB16.  To preserve
  * precision, it needs to know the original source format.  For example, if the
@@ -213,7 +229,14 @@ pixman_expand (uint64_t *           dst,
                   r_mask = ~(~0 << r_size),
                   g_mask = ~(~0 << g_size),
                   b_mask = ~(~0 << b_size);
+    uint32_t au_factor, ru_factor, gu_factor, bu_factor;
+    int au_shift, ru_shift, gu_shift, bu_shift;
     int i;
+
+    unorm_to_unorm_params (a_size, 16, &au_factor, &au_shift);
+    unorm_to_unorm_params (r_size, 16, &ru_factor, &ru_shift);
+    unorm_to_unorm_params (g_size, 16, &gu_factor, &gu_shift);
+    unorm_to_unorm_params (b_size, 16, &bu_factor, &bu_shift);
 
     /* Start at the end so that we can do the expansion in place
      * when src == dst
@@ -227,7 +250,7 @@ pixman_expand (uint64_t *           dst,
 	if (a_size)
 	{
 	    a = (pixel >> a_shift) & a_mask;
-	    a16 = unorm_to_unorm (a, a_size, 16);
+            a16 = a * au_factor >> au_shift;
 	}
 	else
 	{
@@ -239,9 +262,9 @@ pixman_expand (uint64_t *           dst,
 	    r = (pixel >> r_shift) & r_mask;
 	    g = (pixel >> g_shift) & g_mask;
 	    b = (pixel >> b_shift) & b_mask;
-	    r16 = unorm_to_unorm (r, r_size, 16);
-	    g16 = unorm_to_unorm (g, g_size, 16);
-	    b16 = unorm_to_unorm (b, b_size, 16);
+            r16 = r * ru_factor >> ru_shift;
+            g16 = g * gu_factor >> gu_shift;
+            b16 = b * bu_factor >> bu_shift;
 	}
 	else
 	{

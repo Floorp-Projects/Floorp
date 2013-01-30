@@ -29,7 +29,7 @@
 void
 _pixman_solid_fill_iter_init (pixman_image_t *image, pixman_iter_t  *iter)
 {
-    if (iter->flags & ITER_NARROW)
+    if (iter->iter_flags & ITER_NARROW)
     {
 	uint32_t *b = (uint32_t *)iter->buffer;
 	uint32_t *e = b + iter->width;

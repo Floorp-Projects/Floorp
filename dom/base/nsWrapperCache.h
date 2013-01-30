@@ -7,7 +7,6 @@
 #define nsWrapperCache_h___
 
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/Assertions.h"
 
 class JSObject;
 struct JSContext;
@@ -162,7 +161,6 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    MOZ_ASSERT(!IsDOMBinding(), "Someone forgot to override WrapObject");
     *triedToWrap = false;
     return nullptr;
   }
