@@ -242,8 +242,18 @@ PeerConnectionImpl::PeerConnectionImpl()
 PeerConnectionImpl::~PeerConnectionImpl()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
+  if (PeerConnectionCtx::isActive()) {
+    PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
+  } else {
+    CSFLogErrorS(logTag, "PeerConnectionCtx is already gone. Ignoring...");
+  }
+
   CloseInt(false);
+
+#ifdef MOZILLA_INTERNAL_API
+  // Deregister as an NSS Shutdown Object
+  shutdown(calledFromObject);
+#endif
 
   // Since this and Initialize() occur on MainThread, they can't both be
   // running at once
@@ -1134,6 +1144,20 @@ PeerConnectionImpl::ShutdownMedia(bool aIsSynchronous)
                                       &PeerConnectionMedia::SelfDestruct),
                 aIsSynchronous ? NS_DISPATCH_SYNC : NS_DISPATCH_NORMAL);
 }
+
+#ifdef MOZILLA_INTERNAL_API
+// If NSS is shutting down, then we need to get rid of the DTLS
+// identity right now; otherwise, we'll cause wreckage when we do
+// finally deallocate it in our destructor.
+void
+PeerConnectionImpl::virtualDestroyNSSReference()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  CSFLogDebugS(logTag, __FUNCTION__ << ": "
+               << "NSS shutting down; freeing our DtlsIdentity.");
+  mIdentity = nullptr;
+}
+#endif
 
 void
 PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
