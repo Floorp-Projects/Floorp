@@ -10,7 +10,10 @@ import unittest
 
 from mozunit import main
 
-from mozbuild.frontend.reader import MozbuildSandbox
+from mozbuild.frontend.reader import (
+    MozbuildSandbox,
+    SandboxCalledError,
+)
 
 from mozbuild.frontend.sandbox import (
     SandboxExecutionError,
@@ -117,6 +120,8 @@ class TestSandbox(unittest.TestCase):
         sandbox.exec_source('foo = True', 'foo.py')
 
         self.assertNotIn('foo', sandbox)
+        self.assertEqual(sandbox.main_path, 'foo.py')
+        self.assertEqual(sandbox.all_paths, set(['foo.py']))
 
     def test_exec_compile_error(self):
         sandbox = self.sandbox()
@@ -126,6 +131,7 @@ class TestSandbox(unittest.TestCase):
 
         self.assertEqual(se.exception.file_stack, ['foo.py'])
         self.assertIsInstance(se.exception.exc_value, SyntaxError)
+        self.assertEqual(sandbox.main_path, 'foo.py')
 
     def test_exec_import_denied(self):
         sandbox = self.sandbox()
@@ -210,6 +216,9 @@ add_tier_dir('t1', 'bat', static=True)
         sandbox.exec_file('moz.build')
 
         self.assertEqual(sandbox['DIRS'], ['foo', 'bar'])
+        self.assertEqual(sandbox.main_path,
+            os.path.join(sandbox['TOPSRCDIR'], 'moz.build'))
+        self.assertEqual(len(sandbox.all_paths), 2)
 
     def test_include_outside_topsrcdir(self):
         sandbox = self.sandbox(data_path='include-outside-topsrcdir')
@@ -266,6 +275,30 @@ add_tier_dir('t1', 'bat', static=True)
         sandbox.exec_file('moz.build')
 
         self.assertEqual(sandbox['DIRS'], ['foo'])
+
+    def test_external_make_dirs(self):
+        sandbox = self.sandbox()
+        sandbox.exec_source('EXTERNAL_MAKE_DIRS += ["foo"]', 'test.py')
+        sandbox.exec_source('PARALLEL_EXTERNAL_MAKE_DIRS += ["bar"]', 'test.py')
+
+        self.assertEqual(sandbox['EXTERNAL_MAKE_DIRS'], ['foo'])
+        self.assertEqual(sandbox['PARALLEL_EXTERNAL_MAKE_DIRS'], ['bar'])
+
+    def test_error(self):
+        sandbox = self.sandbox()
+
+        with self.assertRaises(SandboxCalledError) as sce:
+            sandbox.exec_source('error("This is an error.")', 'test.py')
+
+        e = sce.exception
+        self.assertEqual(e.message, 'This is an error.')
+
+    def test_substitute_config_files(self):
+        sandbox = self.sandbox()
+
+        sandbox.exec_source('CONFIGURE_SUBST_FILES += ["foo", "bar"]',
+            'test.py')
+        self.assertEqual(sandbox['CONFIGURE_SUBST_FILES'], ['foo', 'bar'])
 
 
 if __name__ == '__main__':
