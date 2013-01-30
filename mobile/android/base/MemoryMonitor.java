@@ -89,17 +89,10 @@ class MemoryMonitor extends BroadcastReceiver {
             // includes TRIM_MEMORY_BACKGROUND
             increaseMemoryPressure(MEMORY_PRESSURE_CLEANUP);
         } else {
-            if (Build.VERSION.SDK_INT < 16) {
-                // in SDK 14 and 15 we don't have these extra fine-grained levels so
-                // just default to low (we already know it's < TRIM_MEMORY_UI_HIDDEN)
-                increaseMemoryPressure(MEMORY_PRESSURE_LOW);
-            } else if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
-                increaseMemoryPressure(MEMORY_PRESSURE_HIGH);
-            } else if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
-                increaseMemoryPressure(MEMORY_PRESSURE_MEDIUM);
-            } else {
-                increaseMemoryPressure(MEMORY_PRESSURE_LOW);
-            }
+            // levels down here mean gecko is the foreground process so we
+            // should be less aggressive with wiping memory as it may impact
+            // user experience.
+            increaseMemoryPressure(MEMORY_PRESSURE_LOW);
         }
     }
 
