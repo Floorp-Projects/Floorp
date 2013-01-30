@@ -88,8 +88,8 @@ private:
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, nsSVGElement *aSVGElement);
-  nsresult ToDOMBaseVal(mozilla::dom::SVGAngle **aResult, nsSVGElement* aSVGElement);
-  nsresult ToDOMAnimVal(mozilla::dom::SVGAngle **aResult, nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAngle> ToDOMBaseVal(nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAngle> ToDOMAnimVal(nsSVGElement* aSVGElement);
 
 public:
   // We do not currently implemente a SMILAngle struct because in SVG 1.1 the
