@@ -25,11 +25,21 @@ function debug(msg) {
 }
 
 function sendAsyncMsg(msg, data) {
-  sendAsyncMessage('browser-element-api:' + msg, data);
+  if (!data) {
+    data = { };
+  }
+
+  data.msg_name = msg;
+  sendAsyncMessage('browser-element-api:call', data);
 }
 
 function sendSyncMsg(msg, data) {
-  return sendSyncMessage('browser-element-api:' + msg, data);
+  if (!data) {
+    data = { };
+  }
+
+  data.msg_name = msg;
+  return sendSyncMessage('browser-element-api:call', data);
 }
 
 /**
@@ -116,29 +126,34 @@ BrowserElementChild.prototype = {
       sendAsyncMsg('firstpaint');
     });
 
-    var self = this;
-    function addMsgListener(msg, handler) {
-      addMessageListener('browser-element-api:' + msg, handler.bind(self));
+    let self = this;
+
+    let mmCalls = {
+      "purge-history": this._recvPurgeHistory,
+      "get-screenshot": this._recvGetScreenshot,
+      "set-visible": this._recvSetVisible,
+      "get-visible": this._recvVisible,
+      "send-mouse-event": this._recvSendMouseEvent,
+      "send-touch-event": this._recvSendTouchEvent,
+      "get-can-go-back": this._recvCanGoBack,
+      "get-can-go-forward": this._recvCanGoForward,
+      "go-back": this._recvGoBack,
+      "go-forward": this._recvGoForward,
+      "reload": this._recvReload,
+      "stop": this._recvStop,
+      "unblock-modal-prompt": this._recvStopWaiting,
+      "fire-ctx-callback": this._recvFireCtxCallback,
+      "owner-visibility-change": this._recvOwnerVisibilityChange,
+      "exit-fullscreen": this._recvExitFullscreen.bind(this),
+      "activate-next-paint-listener": this._activateNextPaintListener.bind(this),
+      "deactivate-next-paint-listener": this._deactivateNextPaintListener.bind(this)
     }
 
-    addMsgListener("purge-history", this._recvPurgeHistory);
-    addMsgListener("get-screenshot", this._recvGetScreenshot);
-    addMsgListener("set-visible", this._recvSetVisible);
-    addMsgListener("get-visible", this._recvVisible);
-    addMsgListener("send-mouse-event", this._recvSendMouseEvent);
-    addMsgListener("send-touch-event", this._recvSendTouchEvent);
-    addMsgListener("get-can-go-back", this._recvCanGoBack);
-    addMsgListener("get-can-go-forward", this._recvCanGoForward);
-    addMsgListener("go-back", this._recvGoBack);
-    addMsgListener("go-forward", this._recvGoForward);
-    addMsgListener("reload", this._recvReload);
-    addMsgListener("stop", this._recvStop);
-    addMsgListener("unblock-modal-prompt", this._recvStopWaiting);
-    addMsgListener("fire-ctx-callback", this._recvFireCtxCallback);
-    addMsgListener("owner-visibility-change", this._recvOwnerVisibilityChange);
-    addMsgListener("exit-fullscreen", this._recvExitFullscreen.bind(this));
-    addMsgListener("activate-next-paint-listener", this._activateNextPaintListener.bind(this));
-    addMsgListener("deactivate-next-paint-listener", this._deactivateNextPaintListener.bind(this));
+    addMessageListener("browser-element-api:call", function(aMessage) {
+      if (aMessage.data.msg_name in mmCalls) {
+        return mmCalls[aMessage.data.msg_name].apply(self, arguments);
+      }
+    });
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);
@@ -186,7 +201,7 @@ BrowserElementChild.prototype = {
       return;
     switch (topic) {
       case 'fullscreen-origin-change':
-        sendAsyncMsg('fullscreen-origin-change', data);
+        sendAsyncMsg('fullscreen-origin-change', { _payload_: data });
         break;
       case 'ask-parent-to-exit-fullscreen':
         sendAsyncMsg('exit-fullscreen');
@@ -342,7 +357,7 @@ BrowserElementChild.prototype = {
     // Ignore titlechanges which don't come from the top-level
     // <iframe mozbrowser> window.
     if (win == content) {
-      sendAsyncMsg('titlechange', e.target.title);
+      sendAsyncMsg('titlechange', { _payload_: e.target.title });
     }
     else {
       debug("Not top level!");
@@ -360,7 +375,7 @@ BrowserElementChild.prototype = {
       // Ignore iconchanges which don't come from the top-level
       // <iframe mozbrowser> window.
       if (win == content) {
-        sendAsyncMsg('iconchange', e.target.href);
+        sendAsyncMsg('iconchange', { _payload_: e.target.href });
       }
       else {
         debug("Not top level!");
@@ -762,7 +777,7 @@ BrowserElementChild.prototype = {
       location = Cc["@mozilla.org/docshell/urifixup;1"]
         .getService(Ci.nsIURIFixup).createExposableURI(location);
 
-      sendAsyncMsg('locationchange', location.spec);
+      sendAsyncMsg('locationchange', { _payload_: location.spec });
     },
 
     onStateChange: function(webProgress, request, stateFlags, status) {
@@ -787,7 +802,7 @@ BrowserElementChild.prototype = {
 
         // TODO See nsDocShell::DisplayLoadError for a list of all the error
         // codes (the status param) we should eventually handle here.
-        sendAsyncMsg('error', {type: 'other'});
+        sendAsyncMsg('error', { type: 'other' });
       }
     },
 
@@ -814,7 +829,7 @@ BrowserElementChild.prototype = {
       // XXX Until bug 764496 is fixed, this will always return false.
       var isEV = !!(state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
 
-      sendAsyncMsg('securitychange', {state: stateDesc, extendedValidation: isEV});
+      sendAsyncMsg('securitychange', { state: stateDesc, extendedValidation: isEV });
     },
 
     onStatusChange: function(webProgress, request, status, message) {},
