@@ -1620,6 +1620,16 @@ nsHTMLDocument::Open(JSContext* cx,
     if (rv.Failed()) {
       return nullptr;
     }
+
+    // If the user has allowed mixed content on the rootDoc, then we should propogate it
+    // down to the new document channel.
+    bool rootHasSecureConnection = false;
+    bool allowMixedContent = false;
+    bool isDocShellRoot = false;
+    nsresult rvalue = shell->GetAllowMixedContentAndConnectionData(&rootHasSecureConnection, &allowMixedContent, &isDocShellRoot);
+    if (NS_SUCCEEDED(rvalue) && allowMixedContent && isDocShellRoot) {
+       shell->SetMixedContentChannel(channel);
+    }
   }
 
   // Before we reset the doc notify the globalwindow of the change,
