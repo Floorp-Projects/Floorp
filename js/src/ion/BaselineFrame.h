@@ -63,8 +63,24 @@ class BaselineFrame
     size_t frameSize() const {
         return frameSize_;
     }
+    void setFrameSize(size_t frameSize) {
+        frameSize_ = frameSize;
+    }
+    inline size_t *addressOfFrameSize() {
+        return &frameSize_;
+    }
     UnrootedObject scopeChain() const {
         return scopeChain_;
+    }
+    void setScopeChain(JSObject *scopeChain) {
+        scopeChain_ = scopeChain;
+    }
+    inline JSObject **addressOfScopeChain() {
+        return &scopeChain_;
+    }
+
+    inline Value *addressOfScratchValue() {
+        return reinterpret_cast<Value *>(&loScratchValue_);
     }
 
     inline void pushOnScopeChain(ScopeObject &scope);
@@ -154,23 +170,37 @@ class BaselineFrame
         flags_ |= HAS_RVAL;
         *returnValue() = v;
     }
+    inline Value *addressOfReturnValue() {
+        return reinterpret_cast<Value *>(&loReturnValue_);
+    }
 
     bool hasBlockChain() const {
         return (flags_ & HAS_BLOCKCHAIN) && blockChain_;
     }
-
     StaticBlockObject &blockChain() const {
         JS_ASSERT(hasBlockChain());
         return *blockChain_;
     }
-
     StaticBlockObject *maybeBlockChain() const {
         return hasBlockChain() ? blockChain_ : NULL;
     }
-
     void setBlockChain(StaticBlockObject &block) {
         flags_ |= HAS_BLOCKCHAIN;
         blockChain_ = &block;
+    }
+    void setBlockChainNull() {
+        JS_ASSERT(!hasBlockChain());
+        blockChain_ = NULL;
+    }
+    StaticBlockObject **addressOfBlockChain() {
+        return &blockChain_;
+    }
+
+    void setFlags(uint32_t flags) {
+        flags_ = flags;
+    }
+    uint32_t *addressOfFlags() {
+        return &flags_;
     }
 
     inline bool pushBlock(JSContext *cx, Handle<StaticBlockObject *> block);

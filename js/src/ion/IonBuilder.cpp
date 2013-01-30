@@ -206,6 +206,12 @@ IonBuilder::canInlineTarget(JSFunction *target)
         return false;
     }
 
+    // Don't inline functions which don't have baseline scripts compiled for them.
+    if (!inlineScript->hasBaselineScript()) {
+        IonSpew(IonSpew_Inlining, "Cannot inline target with no baseline jitcode");
+        return false;
+    }
+
     // Allow inlining of recursive calls, but only one level deep.
     IonBuilder *builder = callerBuilder_;
     while (builder) {

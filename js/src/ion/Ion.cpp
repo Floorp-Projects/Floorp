@@ -139,6 +139,7 @@ IonRuntime::IonRuntime()
     enterJIT_(NULL),
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
+    argumentsRectifierReturnAddr_(NULL),
     invalidator_(NULL),
     debugTrapHandler_(NULL),
     functionWrappers_(NULL)
@@ -186,7 +187,7 @@ IonRuntime::initialize(JSContext *cx)
     if (!bailoutHandler_)
         return false;
 
-    argumentsRectifier_ = generateArgumentsRectifier(cx);
+    argumentsRectifier_ = generateArgumentsRectifier(cx, &argumentsRectifierReturnAddr_);
     if (!argumentsRectifier_)
         return false;
 
@@ -217,7 +218,8 @@ IonRuntime::initialize(JSContext *cx)
 IonCompartment::IonCompartment(IonRuntime *rt)
   : rt(rt),
     flusher_(NULL),
-    stubCodes_(NULL)
+    stubCodes_(NULL),
+    baselineCallReturnAddr_(NULL)
 {
 }
 
@@ -289,6 +291,10 @@ void
 IonCompartment::sweep(FreeOp *fop)
 {
     stubCodes_->sweep(fop);
+
+    // If the sweep removed the ICCall_Scripted stub, NULL the baselineCallReturnAddr_ field.
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Scripted)))
+        baselineCallReturnAddr_ = NULL;
 }
 
 IonCode *
@@ -1377,6 +1383,12 @@ Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, boo
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
 
+    if (!script->hasBaselineScript()) {
+        IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d (has no baseline script)",
+                    script->filename, script->lineno);
+        return Method_Skipped;
+    }
+
     if (cx->compartment->debugMode()) {
         IonSpew(IonSpew_Abort, "debugging");
         return Method_CantCompile;
@@ -1814,6 +1826,24 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
         RawScript script = it.script();
         if (!script->hasIonScript())
             continue;
+
+        // If it's on the stack with an ion-compiled script, and it has a baseline script,
+        // then keep the baseline script around (by marking it active), since bailouts from
+        // the ion jitcode might need to re-enter into the baseline jitcode.
+        if (invalidateAll && it.script()->hasBaselineScript()) {
+            it.script()->baselineScript()->setActive();
+
+            // Mark baseline scripts for any inlined scripts as well.
+            JSContext *cx = GetIonContext()->cx;
+            InlineFrameIterator inlineIter(cx, &it);
+            for (;;) {
+                if (inlineIter.script()->hasBaselineScript())
+                    inlineIter.script()->baselineScript()->setActive();
+                if (!inlineIter.more())
+                    break;
+                ++inlineIter;
+            }
+        }
 
         if (!invalidateAll && !script->ion->invalidated())
             continue;

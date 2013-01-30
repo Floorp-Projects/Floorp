@@ -10,6 +10,7 @@
 #include "BaselineJIT.h"
 #include "CompileInfo.h"
 #include "IonSpewer.h"
+#include "IonFrames-inl.h"
 
 #include "vm/Stack-inl.h"
 
@@ -338,6 +339,26 @@ BaselineScript::icEntryFromReturnOffset(CodeOffsetLabel returnOffset)
     return icEntry(0);
 }
 
+uint8_t *
+BaselineScript::returnAddressForIC(const ICEntry &ent)
+{
+    return method()->raw() + ent.returnOffset().offset();
+}
+
+ICEntry &
+BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
+{
+    // FIXME: Change this to something better than linear search (binary probe)?
+    for (size_t i = 0; i < numICEntries(); i++) {
+        ICEntry &entry = icEntry(i);
+        if (entry.pcOffset() == pcOffset)
+            return entry;
+    }
+
+    JS_NOT_REACHED("No cache");
+    return icEntry(0);
+}
+
 ICEntry &
 BaselineScript::icEntryFromReturnAddress(uint8_t *returnAddr)
 {
@@ -397,7 +418,6 @@ BaselineScript::nativeCodeForPC(HandleScript script, jsbytecode *pc)
     JS_ASSERT(script->baseline == this);
 
     uint32_t pcOffset = pc - script->code;
-
     for (size_t i = 0; i < numPCMappingEntries(); i++) {
         PCMappingEntry &entry = pcMappingEntry(i);
         if (entry.pcOffset == pcOffset)
@@ -406,6 +426,22 @@ BaselineScript::nativeCodeForPC(HandleScript script, jsbytecode *pc)
 
     JS_NOT_REACHED("Invalid pc");
     return NULL;
+}
+
+uint8_t
+BaselineScript::slotInfoForPC(HandleScript script, jsbytecode *pc)
+{
+    JS_ASSERT(script->baseline == this);
+
+    uint32_t pcOffset = pc - script->code;
+    for (size_t i = 0; i < numPCMappingEntries(); i++) {
+        PCMappingEntry &entry = pcMappingEntry(i);
+        if (entry.pcOffset == pcOffset)
+            return entry.slotInfo;
+    }
+
+    JS_NOT_REACHED("Invalid pc");
+    return 0xff;
 }
 
 void
