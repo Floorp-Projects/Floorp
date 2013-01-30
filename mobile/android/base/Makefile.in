@@ -958,6 +958,9 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/menu_pb.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
   res/drawable-large-mdpi-v11/tabs_menu.png \
+  res/drawable-large-mdpi-v11/tabs_normal.png \
+  res/drawable-large-mdpi-v11/tabs_private.png \
+  res/drawable-large-mdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
@@ -985,6 +988,9 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/menu_pb.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
   res/drawable-large-hdpi-v11/tabs_menu.png \
+  res/drawable-large-hdpi-v11/tabs_normal.png \
+  res/drawable-large-hdpi-v11/tabs_private.png \
+  res/drawable-large-hdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
@@ -1012,6 +1018,9 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/menu_pb.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
   res/drawable-large-xhdpi-v11/tabs_menu.png \
+  res/drawable-large-xhdpi-v11/tabs_normal.png \
+  res/drawable-large-xhdpi-v11/tabs_private.png \
+  res/drawable-large-xhdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
@@ -1024,9 +1033,6 @@ RES_DRAWABLE_XLARGE_MDPI_V11 = \
   res/drawable-xlarge-mdpi-v11/tabs_level.xml \
   res/drawable-xlarge-mdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-mdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-mdpi-v11/tabs_normal.png \
-  res/drawable-xlarge-mdpi-v11/tabs_private.png \
-  res/drawable-xlarge-mdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_HDPI_V11 = \
@@ -1037,9 +1043,6 @@ RES_DRAWABLE_XLARGE_HDPI_V11 = \
   res/drawable-xlarge-hdpi-v11/menu_pb.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-hdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-hdpi-v11/tabs_normal.png \
-  res/drawable-xlarge-hdpi-v11/tabs_private.png \
-  res/drawable-xlarge-hdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_XHDPI_V11 = \
@@ -1050,9 +1053,6 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   res/drawable-xlarge-xhdpi-v11/menu_pb.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted.png \
   res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_normal.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_private.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_COLOR = \
