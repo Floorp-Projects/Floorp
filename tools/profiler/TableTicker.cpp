@@ -844,7 +844,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
     aProfile.addTag(ProfileEntry('s', "(root)"));
 
     ProfileStack* stack = aProfile.GetStack();
-    int pseudoStackPos = 0;
+    uint32_t pseudoStackPos = 0;
 
     /* We have two stacks, the native C stack we extracted from unwinding,
      * and the pseudostack we managed during execution. We want to consolidate
