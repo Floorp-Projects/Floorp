@@ -1680,8 +1680,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 {
   // TODO: temporary until bug 635240 and 773205 are fixed.
-  if (mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE ||
-      mType == NS_FORM_INPUT_TIME) {
+  if (IsExperimentalMobileType(mType)) {
     *aResult = false;
     return NS_OK;
   }
@@ -2773,9 +2772,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
                (IsSingleLineTextControl(false, mType) ||
-                mType == NS_FORM_INPUT_NUMBER ||
-                mType == NS_FORM_INPUT_TIME ||
-                mType == NS_FORM_INPUT_DATE)) {
+                IsExperimentalMobileType(mType))) {
             FireChangeEventIfNeeded();   
             rv = MaybeSubmitForm(aVisitor.mPresContext);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -3288,9 +3285,7 @@ nsHTMLInputElement::ParseAttribute(int32_t aNamespaceID,
       bool success = aResult.ParseEnumValue(aValue, kInputTypeTable, false);
       if (success) {
         newType = aResult.GetEnumValue();
-        if ((newType == NS_FORM_INPUT_NUMBER ||
-             newType == NS_FORM_INPUT_TIME ||
-             newType == NS_FORM_INPUT_DATE) && 
+        if (IsExperimentalMobileType(newType) &&
             !Preferences::GetBool("dom.experimental_forms", false)) {
           newType = kInputDefaultType->value;
           aResult.SetTo(newType, &aValue);
@@ -4445,8 +4440,7 @@ bool
 nsHTMLInputElement::DoesPatternApply() const
 {
   // TODO: temporary until bug 635240 and bug 773205 are fixed.
-  if (mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE ||
-      mType == NS_FORM_INPUT_TIME) {
+  if (IsExperimentalMobileType(mType)) {
     return false;
   }
 
