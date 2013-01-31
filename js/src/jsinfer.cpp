@@ -2431,6 +2431,9 @@ FindPreviousInnerInitializer(HandleScript script, jsbytecode *initpc)
     if (!script->hasAnalysis())
         return NULL;
 
+    if (!script->analysis()->maybeCode(initpc))
+        return NULL;
+
     /*
      * Pattern match the following bytecode, which will appear between
      * adjacent initializer elements:

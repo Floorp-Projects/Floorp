@@ -474,6 +474,7 @@ bool DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn);
 bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok);
 
 bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
+bool HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame);
 
 bool NewArgumentsObject(JSContext *cx, BaselineFrame *frame, MutableHandleValue res);
 

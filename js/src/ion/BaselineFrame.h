@@ -252,6 +252,7 @@ class BaselineFrame
     inline void popBlock(JSContext *cx);
 
     bool strictEvalPrologue(JSContext *cx);
+    bool heavyweightFunPrologue(JSContext *cx);
 
     void initArgsObj(ArgumentsObject &argsobj) {
         JS_ASSERT(script()->needsArgsObj());

@@ -65,3 +65,18 @@ BaselineFrame::strictEvalPrologue(JSContext *cx)
     flags_ |= HAS_CALL_OBJ;
     return true;
 }
+
+bool
+BaselineFrame::heavyweightFunPrologue(JSContext *cx)
+{
+    JS_ASSERT(isNonEvalFunctionFrame());
+    JS_ASSERT(fun()->isHeavyweight());
+
+    CallObject *callobj = CallObject::createForFunction(cx, this);
+    if (!callobj)
+        return false;
+
+    pushOnScopeChain(*callobj);
+    flags_ |= HAS_CALL_OBJ;
+    return true;
+}
