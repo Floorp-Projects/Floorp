@@ -340,7 +340,9 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             }
         } else if (length == 1) {
             try {
-                builder.setView(applyInputStyle(mInputs[0].getView()));
+                ScrollView view = new ScrollView(GeckoApp.mAppContext);
+                view.addView(mInputs[0].getView());
+                builder.setView(applyInputStyle(view));
             } catch(UnsupportedOperationException ex) {
                 // We cannot display these input widgets with this sdk version,
                 // do not display any dialog and finish the prompt now.
@@ -348,22 +350,22 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 return;
             }
         } else if (length > 1) {
-            LinearLayout linearLayout = new LinearLayout(GeckoApp.mAppContext);
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
             try {
+                LinearLayout linearLayout = new LinearLayout(GeckoApp.mAppContext);
+                linearLayout.setOrientation(LinearLayout.VERTICAL);
                 for (int i = 0; i < length; i++) {
                     View content = mInputs[i].getView();
                     linearLayout.addView(content);
                 }
+                ScrollView view = new ScrollView(GeckoApp.mAppContext);
+                view.addView(linearLayout);
+                builder.setView(applyInputStyle(view));
             } catch(UnsupportedOperationException ex) {
                 // We cannot display these input widgets with this sdk version,
                 // do not display any dialog and finish the prompt now.
                 finishDialog("{\"button\": -1}");
                 return;
             }
-            ScrollView view = new ScrollView(GeckoApp.mAppContext);
-            view.addView(linearLayout);
-            builder.setView(applyInputStyle(view));
         }
 
         length = mButtons == null ? 0 : mButtons.length;
