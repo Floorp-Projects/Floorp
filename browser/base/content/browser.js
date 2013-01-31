@@ -3763,6 +3763,44 @@ function updateEditUIVisibility()
 }
 
 /**
+ * Makes the Character Encoding menu enabled or disabled as appropriate.
+ * To be called when the View menu or the app menu is opened.
+ */
+function updateCharacterEncodingMenuState()
+{
+  let charsetMenu = document.getElementById("charsetMenu");
+  let appCharsetMenu = document.getElementById("appmenu_charsetMenu");
+  let appDevCharsetMenu =
+    document.getElementById("appmenu_developer_charsetMenu");
+  // gBrowser is null on Mac when the menubar shows in the context of
+  // non-browser windows. The above elements may be null depending on 
+  // what parts of the menubar are present. E.g. no app menu on Mac.
+  if (gBrowser &&
+      gBrowser.docShell &&
+      gBrowser.docShell.mayEnableCharacterEncodingMenu) {
+    if (charsetMenu) {
+      charsetMenu.removeAttribute("disabled");
+    }
+    if (appCharsetMenu) {
+      appCharsetMenu.removeAttribute("disabled");
+    }
+    if (appDevCharsetMenu) {
+      appDevCharsetMenu.removeAttribute("disabled");
+    }
+  } else {
+    if (charsetMenu) {
+      charsetMenu.setAttribute("disabled", "true");
+    }
+    if (appCharsetMenu) {
+      appCharsetMenu.setAttribute("disabled", "true");
+    }
+    if (appDevCharsetMenu) {
+      appDevCharsetMenu.setAttribute("disabled", "true");
+    }
+  }
+}
+
+/**
  * Returns true if |aMimeType| is text-based, false otherwise.
  *
  * @param aMimeType
