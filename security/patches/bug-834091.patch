@@ -208,7 +208,7 @@ diff -u -8 -p -r1.39 smime.def
  ;+    local:
  ;+       *;
  ;+};
-+;+NSS_3.14.2 {    # NSS 3.14.2 release
++;+NSS_3.14.3 {    # NSS 3.14.3 release
 +;+    global:
 +SEC_PKCS7VerifyDetachedSignatureAtTime;
 +;+    local:

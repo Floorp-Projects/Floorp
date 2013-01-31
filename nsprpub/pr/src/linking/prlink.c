@@ -959,12 +959,19 @@ PR_UnloadLibrary(PRLibrary *lib)
     int result = 0;
     PRStatus status = PR_SUCCESS;
 
-    if ((lib == 0) || (lib->refCount <= 0)) {
+    if (lib == 0) {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return PR_FAILURE;
     }
 
     PR_EnterMonitor(pr_linker_lock);
+
+    if (lib->refCount <= 0) {
+        PR_ExitMonitor(pr_linker_lock);
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+
     if (--lib->refCount > 0) {
     PR_LOG(_pr_linker_lm, PR_LOG_MIN,
            ("%s decr => %d",

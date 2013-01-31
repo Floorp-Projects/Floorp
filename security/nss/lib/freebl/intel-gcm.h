@@ -1,3 +1,24 @@
+/******************************************************************************/
+/* LICENSE:                                                                   */
+/* This submission to NSS is to be made available under the terms of the      */
+/* Mozilla Public License, v. 2.0. You can obtain one at http:                */
+/* //mozilla.org/MPL/2.0/.                                                    */
+/******************************************************************************/
+/* Copyright(c) 2013, Intel Corp.                                             */
+/******************************************************************************/
+/* Reference:                                                                 */
+/* [1] Shay Gueron, Michael E. Kounavis: Intel® Carry-Less Multiplication     */
+/*     Instruction and its Usage for Computing the GCM Mode (Rev. 2.01)       */
+/*     http://software.intel.com/sites/default/files/article/165685/clmul-wp-r*/
+/*ev-2.01-2012-09-21.pdf                                                      */
+/* [2] S. Gueron, M. E. Kounavis: Efficient Implementation of the Galois      */
+/*     Counter Mode Using a Carry-less Multiplier and a Fast Reduction        */
+/*     Algorithm. Information Processing Letters 110: 549–553 (2010).         */
+/* [3] S. Gueron: AES Performance on the 2nd Generation Intel® Core™ Processor*/
+/*     Family (to be posted) (2012).                                          */
+/* [4] S. Gueron: Fast GHASH computations for speeding up AES-GCM (to be      */
+/*     published) (2012).                                                     */
+
 #ifndef INTEL_GCM_H
 #define INTEL_GCM_H 1
 
