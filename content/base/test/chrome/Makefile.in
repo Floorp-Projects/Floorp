@@ -57,4 +57,7 @@ MOCHITEST_CHROME_FILES = \
     frame_bug814638.xul \
     $(NULL)
 
+MOCHITEST_BROWSER_FILES = \
+    browser_bug822367.js \
+
 include $(topsrcdir)/config/rules.mk
