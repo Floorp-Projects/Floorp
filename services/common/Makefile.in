@@ -10,15 +10,19 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 modules := \
-  async.js \
   log4moz.js \
-  observers.js \
   preferences.js \
-  rest.js \
   storageservice.js \
   stringbundle.js \
   tokenserverclient.js \
   utils.js \
+  $(NULL)
+
+pp_modules := \
+  async.js \
+  bagheeraclient.js \
+  observers.js \
+  rest.js \
   $(NULL)
 
 testing_modules := \
@@ -44,7 +48,7 @@ INSTALL_TARGETS += MODULES
 TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
 TESTING_JS_MODULE_DIR := services-common
 
-PP_JS_MODULES := bagheeraclient.js
+PP_JS_MODULES := $(pp_modules)
 PP_JS_MODULES_PATH = $(FINAL_TARGET)/modules/services-common
 PP_TARGETS += PP_JS_MODULES
 

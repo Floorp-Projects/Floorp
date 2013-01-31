@@ -14,9 +14,28 @@ let WeaveGlue = {
   _progressMax: null,
 
   init: function init() {
-    if (this._bundle)
+    if (this._bundle) {
       return;
+    }
 
+    let service = Components.classes["@mozilla.org/weave/service;1"]
+                                    .getService(Components.interfaces.nsISupports)
+                                    .wrappedJSObject;
+
+    if (service.ready) {
+      this._init();
+      return;
+    }
+
+    Services.obs.addObserver(function onReady() {
+      Services.obs.removeObserver(onReady, "weave:service:ready");
+      this._init();
+    }.bind(this), "weave:service:ready", false);
+
+    service.ensureLoaded();
+  },
+
+  _init: function () {
     this._bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
     this._msg = document.getElementById("prefs-messages");
 

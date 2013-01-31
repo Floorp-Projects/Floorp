@@ -24,6 +24,8 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 // issue.
 #define MERGED_COMPARTMENT
 
+#include ../common/async.js
+;
 #include ../common/bagheeraclient.js
 ;
 #include ../metrics/Metrics.jsm
