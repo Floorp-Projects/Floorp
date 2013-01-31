@@ -854,6 +854,12 @@ nsIContent::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   return false;
 }
 
+bool
+nsIContent::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
+{
+  return IsElement() && AsElement()->HasAttr(aNameSpaceID, aName);
+}
+
 const nsAttrValue*
 FragmentOrElement::DoGetClasses() const
 {
