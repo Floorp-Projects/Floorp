@@ -109,6 +109,18 @@ GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void 
     return iter.script();
 }
 
+inline BaselineFrame *
+GetTopBaselineFrame(JSContext *cx)
+{
+    IonFrameIterator iter(cx->mainThread().ionTop);
+    JS_ASSERT(iter.type() == IonFrame_Exit);
+    ++iter;
+    if (iter.isBaselineStub())
+        ++iter;
+    JS_ASSERT(iter.isBaselineJS());
+    return iter.baselineFrame();
+}
+
 } // namespace ion
 } // namespace js
 

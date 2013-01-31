@@ -51,7 +51,7 @@ BaselineScript::BaselineScript(uint32_t prologueOffset)
     fallbackStubSpace_(),
     optimizedStubSpace_(),
     prologueOffset_(prologueOffset),
-    active_(false)
+    flags_(0)
 { }
 
 static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12; //XXX

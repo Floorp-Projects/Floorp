@@ -653,8 +653,11 @@ AbstractFramePtr::callObj() const
 {
     if (isStackFrame())
         return asStackFrame()->callObj();
+#ifdef JS_ION
+    return asBaselineFrame()->callObj();
+#else
     JS_NOT_REACHED("Invalid frame");
-    return asStackFrame()->callObj();
+#endif
 }
 
 inline JSCompartment *
@@ -727,8 +730,11 @@ AbstractFramePtr::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     if (isStackFrame())
         return asStackFrame()->unaliasedActual(i, checkAliasing);
+#ifdef JS_ION
+    return asBaselineFrame()->unaliasedActual(i, checkAliasing);
+#else
     JS_NOT_REACHED("Invalid frame");
-    return asStackFrame()->unaliasedActual(i);
+#endif
 }
 
 inline JSGenerator *
@@ -938,16 +944,22 @@ AbstractFramePtr::hasArgsObj() const
 {
     if (isStackFrame())
         return asStackFrame()->hasArgsObj();
+#ifdef JS_ION
+    return asBaselineFrame()->hasArgsObj();
+#else
     JS_NOT_REACHED("Invalid frame");
-    return false;
+#endif
 }
 inline ArgumentsObject &
 AbstractFramePtr::argsObj() const
 {
     if (isStackFrame())
         return asStackFrame()->argsObj();
+#ifdef JS_ION
+    return asBaselineFrame()->argsObj();
+#else
     JS_NOT_REACHED("Invalid frame");
-    return asStackFrame()->argsObj();
+#endif
 }
 inline void
 AbstractFramePtr::initArgsObj(ArgumentsObject &argsobj) const
@@ -956,7 +968,11 @@ AbstractFramePtr::initArgsObj(ArgumentsObject &argsobj) const
         asStackFrame()->initArgsObj(argsobj);
         return;
     }
+#ifdef JS_ION
+    asBaselineFrame()->initArgsObj(argsobj);
+#else
     JS_NOT_REACHED("Invalid frame");
+#endif
 }
 inline bool
 AbstractFramePtr::copyRawFrameSlots(AutoValueVector *vec) const

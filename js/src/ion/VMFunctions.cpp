@@ -567,6 +567,16 @@ StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 }
 
 bool
+NewArgumentsObject(JSContext *cx, BaselineFrame *frame, MutableHandleValue res)
+{
+    ArgumentsObject *obj = ArgumentsObject::createExpected(cx, frame);
+    if (!obj)
+        return false;
+    res.setObject(*obj);
+    return true;
+}
+
+bool
 HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn)
 {
     *mustReturn = false;

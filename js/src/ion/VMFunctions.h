@@ -475,8 +475,9 @@ bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok);
 
 bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
 
-bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn);
+bool NewArgumentsObject(JSContext *cx, BaselineFrame *frame, MutableHandleValue res);
 
+bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn);
 bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool *mustReturn);
 
 bool EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block);
