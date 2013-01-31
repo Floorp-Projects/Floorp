@@ -73,6 +73,14 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET sock, int how, void *cb_arg);
 
 char *nr_ice_candidate_type_names[]={0,"host","srflx","prflx","relay",0};
 
+static const char *nr_ctype_name(nr_ice_candidate_type ctype) {
+  assert(ctype<CTYPE_MAX && ctype>0);
+  if (ctype <= 0 || ctype >= CTYPE_MAX) {
+    return "ERROR";
+  }
+  return nr_ice_candidate_type_names[ctype];
+}
+
 int nr_ice_candidate_create(nr_ice_ctx *ctx,char *label,nr_ice_component *comp,nr_ice_socket *isock, nr_socket *osock, nr_ice_candidate_type ctype, nr_ice_stun_server *stun_server, UCHAR component_id, nr_ice_candidate **candp)
   {
     nr_ice_candidate *cand=0;
@@ -94,7 +102,7 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,char *label,nr_ice_component *comp,n
     cand->stream=comp->stream;
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): creating candidate %s with type %s",
-      ctx->label,label,nr_ice_candidate_type_names[ctype]);
+      ctx->label,label,nr_ctype_name(ctype));
 
     /* Extract the addr as the base */
     if(r=nr_socket_getaddr(cand->isock->sock,&cand->base))
@@ -121,6 +129,9 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,char *label,nr_ice_component *comp,n
 
     _status=0;
   abort:
+    if (_status){
+      nr_ice_candidate_destroy(&cand);
+    }
     return(_status);
   }
 
@@ -161,6 +172,9 @@ int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_c
 
     _status=0;
   abort:
+    if (_status){
+      nr_ice_candidate_destroy(&cand);
+    }
     return(_status);
   }
 
@@ -435,6 +449,9 @@ static void nr_ice_start_relay_turn_timer_cb(NR_SOCKET s, int how, void *cb_arg)
       ABORT(r);
 
     assert((sizeof(cand->u.relayed.turn->stun_ctx)/sizeof(*cand->u.relayed.turn->stun_ctx))==3);
+#if __STDC_VERSION__ >= 201112L
+    _Static_assert((sizeof(cand->u.relayed.turn->stun_ctx)/sizeof(*cand->u.relayed.turn->stun_ctx))==3, "Invalid array size");
+#endif
     for(i=0;i<3;i++){
       if(cand->u.relayed.turn->stun_ctx[i]&&cand->u.relayed.turn->stun_ctx[i]->request){
         if(r=nr_ice_ctx_remember_id(cand->ctx, cand->u.relayed.turn->stun_ctx[i]->request))
@@ -623,7 +640,7 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
       ABORT(r);
     snprintf(attr,maxlen,"candidate:%s %d UDP %u %s %d typ %s",
       cand->foundation, cand->component_id, cand->priority, addr, port,
-      nr_ice_candidate_type_names[cand->type]);
+      nr_ctype_name(cand->type));
 
     len=strlen(attr); attr+=len; maxlen-=len;
 
@@ -650,7 +667,8 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
         snprintf(attr,maxlen," raddr %s rport %d",addr,port);
         break;
       default:
-        UNIMPLEMENTED;
+        assert(0);
+        ABORT(R_INTERNAL);
         break;
     }
     _status=0;
