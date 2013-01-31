@@ -39,7 +39,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_socket.c,v 1.2 2008/04/28 17:59:01 e
 #include "ice_ctx.h"
 #include "stun.h"
 
-    
+
 static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     int r;
@@ -56,7 +56,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     nr_socket *stun_srv_sock=sock->sock;
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Socket ready to read",sock->ctx->label);
-    
+
     /* Re-arm first! */
     NR_ASYNC_WAIT(s,how,nr_ice_socket_readable_cb,cb_arg);
 
@@ -125,7 +125,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
                    other kinds of indication */
                 nr_transport_addr n_addr;
                 size_t n_len;
-                
+
                 r=nr_turn_client_rewrite_indication_data(buf,len,&n_len,&n_addr);
                 if(!r){
                   r_log(LOG_ICE,LOG_DEBUG,"Unwrapped a data indication.");
@@ -145,7 +145,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
         }
         if(!r){
           break;
-        }        
+        }
 
         sc1=sc2;
       }
@@ -158,7 +158,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     }
     else{
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Message is not STUN",sock->ctx->label);
-      
+
       nr_ice_ctx_deliver_packet(sock->ctx, sock->component, &addr, buf, len);
     }
 
@@ -180,7 +180,7 @@ int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsoc
 
     TAILQ_INIT(&sock->candidates);
     TAILQ_INIT(&sock->stun_ctxs);
-    
+
     nr_socket_getfd(nsock,&fd);
     NR_ASYNC_WAIT(fd,NR_ASYNC_WAIT_READ,nr_ice_socket_readable_cb,sock);
 
@@ -197,16 +197,16 @@ int nr_ice_socket_destroy(nr_ice_socket **isockp)
   {
     nr_ice_stun_ctx *s1,*s2;
     nr_ice_socket *isock;
-    
+
     if(!isockp || !*isockp)
       return(0);
-    
+
     isock=*isockp;
     *isockp=0;
 
     /* Close the socket */
     nr_ice_socket_close(isock);
-    
+
     /* The STUN server */
     nr_stun_server_ctx_destroy(&isock->stun_server);
 
@@ -217,7 +217,7 @@ int nr_ice_socket_destroy(nr_ice_socket **isockp)
     }
 
     RFREE(isock);
-    
+
     return(0);
   }
 
@@ -241,7 +241,7 @@ int nr_ice_socket_close(nr_ice_socket *isock)
       NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_WRITE);
       nr_socket_destroy(&isock->sock);
     }
-    
+
     return(0);
   }
 
@@ -257,7 +257,7 @@ int nr_ice_socket_register_stun_client(nr_ice_socket *sock, nr_stun_client_ctx *
     sc->u.client=srv;
 
     TAILQ_INSERT_TAIL(&sock->stun_ctxs,sc,entry);
-    
+
     *handle=sc;
 
     _status=0;
@@ -313,7 +313,7 @@ int nr_ice_socket_deregister(nr_ice_socket *sock, void *handle)
 
     if(!sc)
       return(0);
-    
+
     sc->type=NR_ICE_STUN_NONE;
 
     return(0);

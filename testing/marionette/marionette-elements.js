@@ -98,7 +98,7 @@ ElementManager.prototype = {
       throw new ElementException("Element has not been seen before", 17, null);
     }
     el = el;
-    if (!(el.ownerDocument == win.document)) {
+    if (!(el.ownerDocument.isEqualNode(win.document))) {
       throw new ElementException("Stale element reference", 10, null);
     }
     return el;

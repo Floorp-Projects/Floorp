@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=655297
+-->
+<head>
+  <title>Test for Bug 655297</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=655297">Mozilla Bug 655297</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+    <p>0</p> <p>1</p> <p>2</p> <p>3</p> <p>4</p>
+    <p>5</p> <p>6</p> <p>7</p> <p>8</p> <p>9</p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 655297 **/
+
+var map = WeakMap();
+function f() {
+    var paras = document.getElementsByTagName("p");
+    for (var i = 0; i < paras.length; i++)
+        map.set(paras[i], "ok");
+}
+function g() {
+    var paras = document.getElementsByTagName("p");
+    for (var i = 0; i < paras.length; i++) {
+        if (map.get(paras[i]) != "ok") {
+            return false;
+	}
+    }
+    return true;
+}
+
+f();
+SpecialPowers.forceGC();
+ok(g(), "Failed to keep XPCWrappedNative used as WeakMap key alive.");
+
+</script>
+
+
+</pre>
+</body>
+</html>

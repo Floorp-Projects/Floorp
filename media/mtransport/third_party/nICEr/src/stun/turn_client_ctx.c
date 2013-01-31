@@ -441,7 +441,7 @@ nr_turn_client_relay_indication_data(nr_socket *sock, const UCHAR *msg, size_t l
 
     params.data.data = (UCHAR*)msg;
     params.data.len = len;
- 
+
     if ((r=nr_stun_build_send_indication(&params, &ind)))
         ABORT(r);
 

@@ -732,6 +732,14 @@ RILContentHelper.prototype = {
 
   unregisterTelephonyCallback: function unregisteTelephonyCallback(callback) {
     this.unregisterCallback("_telephonyCallbacks", callback);
+
+    // We also need to make sure the callback is removed from
+    // _enumerateTelephonyCallbacks.
+    let index = this._enumerateTelephonyCallbacks.indexOf(callback);
+    if (index != -1) {
+      this._enumerateTelephonyCallbacks.splice(index, 1);
+      if (DEBUG) debug("Unregistered enumerateTelephony callback: " + callback);
+    }
   },
 
   registerVoicemailCallback: function registerVoicemailCallback(callback) {

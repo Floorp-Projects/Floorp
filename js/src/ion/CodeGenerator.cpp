@@ -4533,10 +4533,12 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir)
     Label fail;
     if (key.isConstant()) {
         Address source(scratch, key.constant() * width);
-        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(), &fail);
+        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(),
+                                out.scratchReg(), &fail);
     } else {
         BaseIndex source(scratch, key.reg(), ScaleFromElemWidth(width));
-        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(), &fail);
+        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(),
+                                out.scratchReg(), &fail);
     }
 
     if (fail.used() && !bailoutFrom(&fail, lir->snapshot()))

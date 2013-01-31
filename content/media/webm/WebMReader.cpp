@@ -264,11 +264,13 @@ nsresult WebMReader::ReadMetadata(VideoInfo* aInfo,
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
+#ifdef MOZ_DASH
   LOG(PR_LOG_DEBUG, ("Reader [%p] for Decoder [%p]: Reading WebM Metadata: "
                      "init bytes [%d - %d] cues bytes [%d - %d]",
                      this, mDecoder,
                      mInitByteRange.mStart, mInitByteRange.mEnd,
                      mCuesByteRange.mStart, mCuesByteRange.mEnd));
+#endif
   nestegg_io io;
   io.read = webm_read;
   io.seek = webm_seek;

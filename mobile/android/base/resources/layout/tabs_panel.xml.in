@@ -7,15 +7,14 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
 
-    <LinearLayout android:id="@+id/tabs_panel_header"
-                  android:layout_width="fill_parent"
-                  android:layout_height="@dimen/browser_toolbar_height"
-                  android:orientation="vertical">
+    <RelativeLayout android:id="@+id/tabs_panel_header"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/browser_toolbar_height">
 
         <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
               android:layout_width="fill_parent"
-              android:layout_height="0dip"
-              android:layout_weight="1.0">
+              android:layout_height="fill_parent"
+              android:background="@drawable/tabs_tray_dark_bg_repeat">
 
             <include layout="@layout/tabs_panel_header"/>
 
@@ -23,9 +22,10 @@
 
         <View android:layout_width="fill_parent"
               android:layout_height="2dp"
-              android:background="#FF313131"/>
+              android:layout_alignParentBottom="true"
+              android:background="#1A000000"/>
 
-    </LinearLayout>
+    </RelativeLayout>
 
     <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
           android:layout_width="fill_parent"
@@ -35,6 +35,7 @@
                                     style="@style/TabsList"
                                     android:layout_width="fill_parent"
                                     android:layout_height="fill_parent"
+                                    android:choiceMode="singleChoice"
                                     android:visibility="gone"
                                     gecko:tabs="tabs_normal"/>
 
@@ -42,6 +43,7 @@
                                     style="@style/TabsList"
                                     android:layout_width="fill_parent"
                                     android:layout_height="fill_parent"
+                                    android:choiceMode="singleChoice"
                                     android:visibility="gone"
                                     gecko:tabs="tabs_private"/>
 

@@ -19,7 +19,12 @@ function log(msg) {
 
 #ifdef MOZ_WIDGET_GONK
 let librecovery = (function() {
-  let library = ctypes.open("librecovery.so");
+  try {
+    let library = ctypes.open("librecovery.so");
+  } catch (e) {
+    log("Unable to open librecovery.so");
+    throw Cr.NS_ERROR_FAILURE;
+  }
   let FotaUpdateStatus = new ctypes.StructType("FotaUpdateStatus", [
                                                 { result: ctypes.int },
                                                 { updatePath: ctypes.char.ptr }
@@ -73,7 +78,6 @@ RecoveryService.prototype = {
       log("Error: FOTA install failed");
     }
 #endif
-
     throw Cr.NS_ERROR_FAILURE;
   },
 
@@ -81,6 +85,7 @@ RecoveryService.prototype = {
     let status =  Ci.nsIRecoveryService.FOTA_UPDATE_UNKNOWN;
 #ifdef MOZ_WIDGET_GONK
     let cStatus = librecovery.FotaUpdateStatus();
+
     if (librecovery.getFotaUpdateStatus(cStatus.address()) == 0) {
       status = cStatus.result;
     }

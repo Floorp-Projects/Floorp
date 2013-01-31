@@ -48,6 +48,7 @@ EXTRA_COMPONENTS = \
 
 EXTRA_JS_MODULES = \
   BrowserElementPromptService.jsm \
+  BrowserElementParent.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
