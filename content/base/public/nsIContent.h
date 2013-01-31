@@ -383,8 +383,10 @@ public:
    * @param aNameSpaceId the namespace id of the attribute
    * @param aAttr the attribute name
    * @return whether an attribute exists
+   *
+   * Implemented inline in Element.h
    */
-  virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const = 0;
+  bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
 
   /**
    * Test whether this content node's given attribute has the given value.  If
