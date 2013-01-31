@@ -2210,6 +2210,9 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     let descriptor = this._initialDescriptor;
     let name = this._nameString;
 
+    if (this.ownerView.eval) {
+      this._target.setAttribute("editable", "");
+    }
     if (!descriptor.configurable) {
       this._target.setAttribute("non-configurable", "");
     }
