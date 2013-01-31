@@ -1282,7 +1282,7 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
         aResultString.AppendPrintf("%04.0f-%02.0f-%02.0f", year.toNumber(),
                                    month.toNumber() + 1, day.toNumber());
 
-	return true;
+        return true;
       }
     case NS_FORM_INPUT_TIME:
       {
@@ -1311,7 +1311,7 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
         } else {
           aResultString.AppendPrintf("%02d:%02d", hours, minutes);
         }
-      
+
         return true;
       }
     default:
@@ -1445,8 +1445,8 @@ nsHTMLInputElement::SetValueAsNumber(double aValueAsNumber)
 double
 nsHTMLInputElement::GetMinimum() const
 {
-  // Should only be used for <input type='number'/'date'> for the moment.
-  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE);
+  MOZ_ASSERT(DoesValueAsNumberApply(),
+             "GetMinAsDouble() should only be used for types that allow .valueAsNumber");
 
   // Once we add support for types that have a default minimum/maximum, take
   // account of the default minimum here.
@@ -1465,8 +1465,8 @@ nsHTMLInputElement::GetMinimum() const
 double
 nsHTMLInputElement::GetMaximum() const
 {
-  // Should only be used for <input type='number'/'date'> for the moment.
-  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE);
+  MOZ_ASSERT(DoesValueAsNumberApply(),
+             "GetMaxAsDouble() should only be used for types that allow .valueAsNumber");
 
   // Once we add support for types that have a default minimum/maximum, take
   // account of the default maximum here.
@@ -4460,6 +4460,7 @@ nsHTMLInputElement::DoesMinMaxApply() const
   {
     case NS_FORM_INPUT_NUMBER:
     case NS_FORM_INPUT_DATE:
+    case NS_FORM_INPUT_TIME:
     // TODO:
     // case NS_FORM_INPUT_RANGE:
     // All date/time types.
@@ -4479,8 +4480,6 @@ nsHTMLInputElement::DoesMinMaxApply() const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
-    // TODO: temp until bug 781572 is fixed.
-    case NS_FORM_INPUT_TIME:
       return false;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
@@ -4495,8 +4494,7 @@ nsHTMLInputElement::DoesMinMaxApply() const
 double
 nsHTMLInputElement::GetStep() const
 {
-  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_DATE,
-             "We can't be there if type!=number or date!");
+  MOZ_ASSERT(DoesStepApply(), "GetStep() can only be called if @step applies");
 
   // NOTE: should be defaultStep, which is 1 for type=number and date.
   double step = 1;
@@ -4656,8 +4654,7 @@ nsHTMLInputElement::HasPatternMismatch() const
 bool
 nsHTMLInputElement::IsRangeOverflow() const
 {
-  // Ignore type=time until bug 781572 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_TIME) {
+  if (!DoesMinMaxApply()) {
     return false;
   }
 
@@ -4950,7 +4947,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
         MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(maximum));
 
         maxStr.AppendFloat(maximum);
-      } else if (mType == NS_FORM_INPUT_DATE) {
+      } else if (mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_TIME) {
         GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
       } else {
         NS_NOTREACHED("Unexpected input type");
@@ -4973,7 +4970,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
         MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(minimum));
 
         minStr.AppendFloat(minimum);
-      } else if (mType == NS_FORM_INPUT_DATE) {
+      } else if (mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_TIME) {
         GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
       } else {
         NS_NOTREACHED("Unexpected input type");
@@ -5477,13 +5474,16 @@ nsHTMLInputElement::UpdateValidityUIBits(bool aIsFocused)
 void
 nsHTMLInputElement::UpdateHasRange()
 {
+  /*
+   * There is a range if min/max applies for the type and if the element
+   * currently have a valid min or max.
+   */
+
   mHasRange = false;
 
-  if (mType != NS_FORM_INPUT_NUMBER && mType != NS_FORM_INPUT_DATE) {
+  if (!DoesMinMaxApply()) {
     return;
   }
-
-  // <input type=number> has a range if min or max is a valid double.
 
   double minimum = GetMinimum();
   if (!MOZ_DOUBLE_IS_NaN(minimum)) {
