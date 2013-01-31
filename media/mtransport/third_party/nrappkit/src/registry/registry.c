@@ -8,37 +8,37 @@
  *
  *    Datastore for tracking configuration and related info.
  *
- *    
+ *
  *    Copyright (C) 2005, Network Resonance, Inc.
  *    Copyright (C) 2006, Network Resonance, Inc.
  *    All Rights Reserved
- *    
+ *
  *    Redistribution and use in source and binary forms, with or without
  *    modification, are permitted provided that the following conditions
  *    are met:
- *    
+ *
  *    1. Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
  *    2. Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
  *    3. Neither the name of Network Resonance, Inc. nor the name of any
- *       contributors to this software may be used to endorse or promote 
+ *       contributors to this software may be used to endorse or promote
  *       products derived from this software without specific prior written
  *       permission.
- *    
+ *
  *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
  *    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- *    ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
- *    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- *    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ *    ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ *    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  *    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *    POSSIBILITY OF SUCH DAMAGE.
- *    
+ *
  *
  */
 
@@ -67,7 +67,7 @@
 static nr_registry_module *reg_vtbl = 0;
 
 /* must be in the order the types are numbered */
-static char *typenames[] = { "char", "UCHAR", "INT2", "UINT2", "INT4", "UINT4", "INT8", "UINT8", "double", "Data", "string", "registry" }; 
+static char *typenames[] = { "char", "UCHAR", "INT2", "UINT2", "INT4", "UINT4", "INT8", "UINT8", "double", "Data", "string", "registry" };
 
 int NR_LOG_REGISTRY=0;
 
@@ -410,35 +410,35 @@ NR_reg_get2_bytes(NR_registry parent, char *child, UCHAR *out, size_t size, size
 {
     int r, _status;
     NR_registry registry;
-  
+
     if ((r=NR_reg_make_registry(parent, child, registry)))
       ABORT(r);
-  
+
     if ((r=NR_reg_get_bytes(registry, out, size, length)))
       ABORT(r);
-  
+
     _status = 0;
-abort:                                                               
+abort:
     return (_status);
 }
- 
+
 int
 NR_reg_get2_string(NR_registry parent, char *child, char *out, size_t size)
 {
     int r, _status;
     NR_registry registry;
-  
+
     if ((r=NR_reg_make_registry(parent, child, registry)))
       ABORT(r);
-  
+
     if ((r=NR_reg_get_string(registry, out, size)))
       ABORT(r);
-  
+
     _status = 0;
-abort:                                                               
+abort:
     return (_status);
 }
- 
+
 /* More convenience functions: the same as their parents but they
    take a prefix and a suffix */
 #define NRSET2(func, type, set) \
@@ -524,12 +524,12 @@ NR_reg_make_child_registry(NR_registry parent, NR_registry descendant, unsigned 
 int
 NR_reg_get2_child_count(NR_registry base, NR_registry name, unsigned int *count)
   {
-    int r, _status;                                                    
-    NR_registry registry;                                              
-    
+    int r, _status;
+    NR_registry registry;
+
     if ((r=nr_c2ru_make_registry(base, name, registry)))
       ABORT(r);
-    
+
     if (r=NR_reg_get_child_count(registry,count))
       ABORT(r);
 
@@ -546,7 +546,7 @@ NR_reg_get2_child_registry(NR_registry base, NR_registry name, unsigned int i, N
 
     if ((r=nr_c2ru_make_registry(base, name, registry)))
       ABORT(r);
-    
+
     if (r=NR_reg_get_child_registry(registry, i, child))
       ABORT(r);
 
@@ -579,7 +579,7 @@ NR_reg_make_registry(NR_registry parent, char *child, NR_registry out)
 
     if (out != parent)
         strcpy(out, parent);
- 
+
     c = &(out[plen]);
 
     if (parent[0] != '\0') {
@@ -594,7 +594,7 @@ NR_reg_make_registry(NR_registry parent, char *child, NR_registry out)
     }
     if (i == 0 || child[i-1] == '.')
         ABORT(R_BAD_ARGS);
- 
+
     *c = '\0';
 
     _status = 0;

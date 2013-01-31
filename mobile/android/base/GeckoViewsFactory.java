@@ -5,6 +5,8 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.widget.IconTabWidget;
+import org.mozilla.gecko.widget.TabRow;
 import org.mozilla.gecko.widget.ThumbnailView;
 
 import android.content.Context;
@@ -79,16 +81,22 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new LinkTextView(context, attrs);
             else if (TextUtils.equals(viewName, "FindInPageBar"))
                 return new FindInPageBar(context, attrs);
+            else if (TextUtils.equals(viewName, "IconTabWidget"))
+                return new IconTabWidget(context, attrs);
             else if (TextUtils.equals(viewName, "MenuButton"))
                 return new MenuButton(context, attrs);
             else if (TextUtils.equals(viewName, "RemoteTabs"))
                 return new RemoteTabs(context, attrs);
+            else if (TextUtils.equals(viewName, "TabRow"))
+                return new TabRow(context, attrs);
             else if (TextUtils.equals(viewName, "TabsButton"))
                 return new TabsButton(context, attrs);
             else if (TextUtils.equals(viewName, "TabsPanel"))
                 return new TabsPanel(context, attrs);
             else if (TextUtils.equals(viewName, "TabsTray"))
                 return new TabsTray(context, attrs);
+            else if (TextUtils.equals(viewName, "ThumbnailView"))
+                return new ThumbnailView(context, attrs);
             else if (TextUtils.equals(viewName, "TextSelectionHandle"))
                 return new TextSelectionHandle(context, attrs);
             else if (TextUtils.equals(viewName, "gfx.LayerView"))
@@ -113,8 +121,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new GeckoTextSwitcher(context, attrs);
             else if (TextUtils.equals(viewName, "TextView"))
                 return new GeckoTextView(context, attrs);
-            else if (TextUtils.equals(viewName, "widget.ThumbnailView"))
-                return new ThumbnailView(context, attrs);
             else
                 Log.d(LOGTAG, "Warning: unknown custom view: " + viewName);
         }

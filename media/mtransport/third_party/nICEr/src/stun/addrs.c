@@ -190,7 +190,7 @@ stun_grab_addrs(char *name, int addrcount, struct ifa_msghdr *ifam, nr_transport
         addrcount--;
 
         if (*count >= maxaddrs) {
-            r_log(NR_LOG_STUN, LOG_WARNING, "Address list truncated at %d out of entries", maxaddrs, maxaddrs+addrcount);
+            r_log(NR_LOG_STUN, LOG_WARNING, "Address list truncated at %d out of %d entries", maxaddrs, maxaddrs+addrcount);
             break;
         }
 
@@ -297,7 +297,7 @@ static int nr_win32_get_adapter_friendly_name(char *adapter_GUID, char **friendl
     int r,_status;
     HKEY adapter_reg;
     TCHAR adapter_key[_NR_MAX_KEY_LENGTH];
-	TCHAR keyval_buf[_NR_MAX_KEY_LENGTH];
+    TCHAR keyval_buf[_NR_MAX_KEY_LENGTH];
     TCHAR adapter_GUID_tchar[_NR_MAX_NAME_LENGTH];
     DWORD keyval_len, key_type;
     size_t converted_chars, newlen;
@@ -315,7 +315,7 @@ static int nr_win32_get_adapter_friendly_name(char *adapter_GUID, char **friendl
     _tcscat_s(adapter_key, _NR_MAX_KEY_LENGTH, adapter_GUID_tchar);
     _tcscat_s(adapter_key, _NR_MAX_KEY_LENGTH, TEXT("\\Connection"));
 
-	r = RegOpenKeyEx(HKEY_LOCAL_MACHINE, adapter_key, 0, KEY_READ, &adapter_reg);
+    r = RegOpenKeyEx(HKEY_LOCAL_MACHINE, adapter_key, 0, KEY_READ, &adapter_reg);
 
     if (r != ERROR_SUCCESS) {
       r_log(NR_LOG_STUN, LOG_ERR, "Got error %d opening adapter reg key\n", r);
@@ -332,7 +332,7 @@ static int nr_win32_get_adapter_friendly_name(char *adapter_GUID, char **friendl
     newlen = wcslen(keyval_buf)+1;
     my_fn = (char *) RCALLOC(newlen);
     if (!my_fn) {
-      ABORT(R_NO_MEMORY); 
+      ABORT(R_NO_MEMORY);
     }
     wcstombs_s(&converted_chars, my_fn, newlen, keyval_buf, _TRUNCATE);
 #else
@@ -392,7 +392,7 @@ stun_get_win32_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
       r_log(NR_LOG_STUN, LOG_DEBUG, "Adapter Description = %s", pAdapter->Description);
 
       if ((r = nr_win32_get_adapter_friendly_name(pAdapter->AdapterName, &friendly_name))) {
-        r_log(NR_LOG_STUN, LOG_ERR, "Error %d getting friendly name for adapter with GUID = %s", r, 
+        r_log(NR_LOG_STUN, LOG_ERR, "Error %d getting friendly name for adapter with GUID = %s", r,
               pAdapter->AdapterName);
         ABORT(r);
       }
@@ -409,10 +409,10 @@ stun_get_win32_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
         *c = '_';
          c = strchr(munged_ifname, ' ');
       }
-      c = strchr(munged_ifname, '.'); 
+      c = strchr(munged_ifname, '.');
       while (c != NULL) {
         *c = '+';
-         c = strchr(munged_ifname, '+'); 
+         c = strchr(munged_ifname, '+');
       }
 
       r_log(NR_LOG_STUN, LOG_INFO, "Converted ifname: %s", munged_ifname);
@@ -426,7 +426,7 @@ stun_get_win32_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
         r_log(NR_LOG_STUN, LOG_INFO, "Adapter %s address: %s", munged_ifname, pAddrString->IpAddress.String);
 
         addrs[n].ip_version=NR_IPV4;
-        addrs[n].protocol = IPPROTO_UDP; 
+        addrs[n].protocol = IPPROTO_UDP;
 
         addrs[n].u.addr4.sin_family=PF_INET;
         addrs[n].u.addr4.sin_port=0;
@@ -482,7 +482,7 @@ stun_get_win32_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
       r_log(NR_LOG_STUN, LOG_ERR, "Error getting buf len from GetAdaptersAddresses()");
       ABORT(R_INTERNAL);
     }
-        
+
     AdapterAddresses = (PIP_ADAPTER_ADDRESSES) RMALLOC(buflen);
     if (AdapterAddresses == NULL) {
       r_log(NR_LOG_STUN, LOG_ERR, "Error allocating buf for GetAdaptersAddresses()");
@@ -501,26 +501,26 @@ stun_get_win32_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
 
     for (tmpAddress = AdapterAddresses; tmpAddress != NULL; tmpAddress = tmpAddress->Next) {
       char *c;
-        
+
       if (tmpAddress->OperStatus != IfOperStatusUp)
         continue;
 
       snprintf(munged_ifname, IFNAMSIZ, "%S%c", tmpAddress->FriendlyName, 0);
       /* replace spaces with underscores */
-      c = strchr(munged_ifname, ' '); 
+      c = strchr(munged_ifname, ' ');
       while (c != NULL) {
         *c = '_';
-         c = strchr(munged_ifname, ' '); 
+         c = strchr(munged_ifname, ' ');
       }
-      c = strchr(munged_ifname, '.'); 
+      c = strchr(munged_ifname, '.');
       while (c != NULL) {
         *c = '+';
-         c = strchr(munged_ifname, '+'); 
+         c = strchr(munged_ifname, '+');
       }
 
       if ((tmpAddress->IfIndex != 0) || (tmpAddress->Ipv6IfIndex != 0)) {
         IP_ADAPTER_UNICAST_ADDRESS *u = 0;
-        
+
         for (u = tmpAddress->FirstUnicastAddress; u != 0; u = u->Next) {
           SOCKET_ADDRESS *sa_addr = &u->Address;
 
@@ -635,7 +635,7 @@ nr_stun_is_duplicate_addr(nr_transport_addr addrs[], int count, nr_transport_add
 
     for (i = 0; i < count; ++i) {
         different = nr_transport_addr_cmp(&addrs[i], addr, NR_TRANSPORT_ADDR_CMP_MODE_ALL);
-        if (!different) 
+        if (!different)
             return 1;  /* duplicate */
     }
 

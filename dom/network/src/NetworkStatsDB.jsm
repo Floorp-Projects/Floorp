@@ -29,7 +29,7 @@ this.NetworkStatsDB = function NetworkStatsDB(aGlobal) {
   if (DEBUG) {
     debug("Constructor");
   }
-  this.initDBHelper(DB_NAME, DB_VERSION, STORE_NAME, aGlobal);
+  this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME], aGlobal);
 }
 
 NetworkStatsDB.prototype = {
@@ -42,7 +42,7 @@ NetworkStatsDB.prototype = {
     function errorCb(error) {
       txnCb(error, null);
     }
-    return this.newTxn(txn_type, callback, successCb, errorCb);
+    return this.newTxn(txn_type, STORE_NAME, callback, successCb, errorCb);
   },
 
   upgradeSchema: function upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {

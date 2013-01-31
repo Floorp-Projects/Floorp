@@ -34,8 +34,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0xe2985850, 0x81ca, 0x4b5d, \
-  { 0xb0, 0xf3, 0xe3, 0x95, 0xd5, 0x0d, 0x85, 0x64 } }
+{ 0x8a8b4b1d, 0x72d8, 0x428e, \
+ { 0x95, 0x75, 0xf9, 0x18, 0xba, 0xf6, 0x9e, 0xa1 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -372,8 +372,8 @@ public:
    * @returns true if the attribute was set (even when set to empty string)
    *          false when not set.
    */
-  virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName, 
-                         nsAString& aResult) const = 0;
+  bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+               nsAString& aResult) const;
 
   /**
    * Determine if an attribute has been set (empty string or otherwise).
@@ -382,7 +382,7 @@ public:
    * @param aAttr the attribute name
    * @return whether an attribute exists
    */
-  virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const = 0;
+  bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
 
   /**
    * Test whether this content node's given attribute has the given value.  If
@@ -394,13 +394,10 @@ public:
    * @param aValue The value to compare to.
    * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
    */
-  virtual bool AttrValueIs(int32_t aNameSpaceID,
-                             nsIAtom* aName,
-                             const nsAString& aValue,
-                             nsCaseTreatment aCaseSensitive) const
-  {
-    return false;
-  }
+  bool AttrValueIs(int32_t aNameSpaceID,
+                   nsIAtom* aName,
+                   const nsAString& aValue,
+                   nsCaseTreatment aCaseSensitive) const;
   
   /**
    * Test whether this content node's given attribute has the given value.  If
@@ -412,13 +409,10 @@ public:
    * @param aValue The value to compare to.  Must not be null.
    * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
    */
-  virtual bool AttrValueIs(int32_t aNameSpaceID,
-                             nsIAtom* aName,
-                             nsIAtom* aValue,
-                             nsCaseTreatment aCaseSensitive) const
-  {
-    return false;
-  }
+  bool AttrValueIs(int32_t aNameSpaceID,
+                   nsIAtom* aName,
+                   nsIAtom* aValue,
+                   nsCaseTreatment aCaseSensitive) const;
   
   enum {
     ATTR_MISSING = -1,

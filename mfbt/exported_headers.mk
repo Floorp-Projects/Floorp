@@ -33,8 +33,9 @@ EXPORTS_mozilla += \
   SplayTree.h \
   StandardInteger.h \
   ThreadLocal.h \
-  TypeTraits.h \
+  TypedEnum.h \
   Types.h \
+  TypeTraits.h \
   Util.h \
   WeakPtr.h \
   $(NULL)

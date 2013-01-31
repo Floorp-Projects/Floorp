@@ -919,6 +919,9 @@ nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
   if (this == mViewManager->GetRootView()) {
     nsRefPtr<nsDeviceContext> devContext;
     mViewManager->GetDeviceContext(*getter_AddRefs(devContext));
+    // ensure DPI is up-to-date, in case of window being opened and sized
+    // on a non-default-dpi display (bug 829963)
+    devContext->CheckDPIChange();
     int32_t p2a = devContext->AppUnitsPerDevPixel();
     mViewManager->SetWindowDimensions(NSIntPixelsToAppUnits(aWidth, p2a),
                                       NSIntPixelsToAppUnits(aHeight, p2a));

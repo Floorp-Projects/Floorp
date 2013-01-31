@@ -62,15 +62,6 @@ public:
   {
     return NS_OK;
   }
-  virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName, 
-                       nsAString& aResult) const
-  {
-    return false;
-  }
-  virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
-  {
-    return false;
-  }
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute, 
                              bool aNotify)
   {

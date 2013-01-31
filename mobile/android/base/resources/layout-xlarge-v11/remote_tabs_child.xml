@@ -8,20 +8,20 @@
               android:layout_height="@dimen/remote_tab_child_row_height"
               android:gravity="center_vertical"
               android:orientation="vertical"
-              android:background="@drawable/tabs_tray_default_selector"
+              android:background="@drawable/action_bar_button"
               android:paddingLeft="2dp"
               android:paddingRight="2dp">
 
     <TextView android:id="@+id/tab"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
-              style="@style/RemoteTabRowTextAppearance"
+              style="@style/TabRowTextAppearance"
               android:textSize="14sp"/>
 
     <TextView android:id="@+id/url"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
-              style="@style/RemoteTabRowTextAppearance.Url"
+              style="@style/TabRowTextAppearance.Url"
               android:textSize="12sp"/>
 
 </LinearLayout>

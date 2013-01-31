@@ -167,6 +167,9 @@ function runTests()
   is(marker.orientAngle.animVal.value, 30, "angle animVal");
   is(marker.getAttribute("orient"), "30deg", "angle attribute");
 
+  marker.setAttribute("orient", "auto");
+  is(marker.getAttribute("orient"), "auto", "checking 'auto' string preserved");
+
   marker.setAttribute("orient", "");
   ok(marker.getAttribute("orient") === "", "empty angle attribute");
   marker.removeAttribute("orient");

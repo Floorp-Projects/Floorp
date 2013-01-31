@@ -159,8 +159,6 @@ let gInitialPages = [
 
 #ifdef MOZ_DATA_REPORTING
 #include browser-data-submission-info-bar.js
-
-let gDataNotificationInfoBar = new DataNotificationInfoBar();
 #endif
 
 #ifdef MOZ_SERVICES_SYNC
@@ -172,9 +170,7 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
   if (WINTASKBAR_CONTRACTID in Cc &&
       Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
-    let temp = {};
-    Cu.import("resource:///modules/WindowsPreviewPerTab.jsm", temp);
-    let AeroPeek = temp.AeroPeek;
+    let AeroPeek = Cu.import("resource:///modules/WindowsPreviewPerTab.jsm", {}).AeroPeek;
     return {
       onOpenWindow: function () {
         AeroPeek.onOpenWindow(window);
@@ -1265,7 +1261,7 @@ var gBrowserInit = {
 
     gBrowser.addEventListener("pageshow", function(event) {
       // Filter out events that are not about the document load we are interested in
-      if (event.target == content.document)
+      if (content && event.target == content.document)
         setTimeout(pageShowEventHandlers, 0, event);
     }, true);
 
@@ -1350,10 +1346,9 @@ var gBrowserInit = {
 
 #ifdef XP_WIN
       if (Win7Features) {
-        let tempScope = {};
-        Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm",
-                  tempScope);
-        tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
+        let DownloadTaskbarProgress =
+          Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
+        DownloadTaskbarProgress.onBrowserWindowLoad(window);
       }
 #endif
     }, 10000);
@@ -7117,15 +7112,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevToolsBrowser",
                                   "resource:///modules/devtools/gDevTools.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
-  let tempScope = {};
-  Cu.import("resource:///modules/HUDService.jsm", tempScope);
-  try {
-    return tempScope.HUDService.consoleUI;
-  }
-  catch (ex) {
-    Components.utils.reportError(ex);
-    return null;
-  }
+  return Cu.import("resource:///modules/HUDService.jsm", {}).HUDService.consoleUI;
 });
 
 // Prompt user to restart the browser in safe mode
