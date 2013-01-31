@@ -12,6 +12,7 @@
 #include "SMILEnumType.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/SVGAnimatedPreserveAspectRatioBinding.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

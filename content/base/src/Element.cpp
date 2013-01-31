@@ -1728,6 +1728,23 @@ Element::MaybeCheckSameAttrVal(int32_t aNamespaceID,
   return false;
 }
 
+bool
+Element::OnlyNotifySameValueSet(int32_t aNamespaceID, nsIAtom* aName,
+                                nsIAtom* aPrefix,
+                                const nsAttrValueOrString& aValue,
+                                bool aNotify, nsAttrValue& aOldValue,
+                                uint8_t* aModType, bool* aHasListeners)
+{
+  if (!MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
+                             aOldValue, aModType, aHasListeners)) {
+    return false;
+  }
+
+  nsAutoScriptBlocker scriptBlocker;
+  nsNodeUtils::AttributeSetToCurrentValue(this, aNamespaceID, aName);
+  return true;
+}
+
 nsresult
 Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
                  nsIAtom* aPrefix, const nsAString& aValue,

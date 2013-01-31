@@ -10,6 +10,7 @@
 
 class nsIDOMHTMLTableElement;
 class nsIDOMHTMLTableSectionElement;
+class nsContentList;
 
 namespace mozilla {
 namespace dom {
