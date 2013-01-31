@@ -144,7 +144,7 @@ public:
   };
 
   TestObserver(sipcc::PeerConnectionImpl *peerConnection) :
-    state(stateNoResponse),
+    state(stateNoResponse), addIceSuccessCount(0),
     onAddStreamCalled(false),
     pc(peerConnection) {
   }
@@ -160,6 +160,7 @@ public:
   char *lastString;
   uint32_t lastStatusCode;
   uint32_t lastStateType;
+  int addIceSuccessCount;
   bool onAddStreamCalled;
 
 private:
@@ -351,6 +352,24 @@ TestObserver::OnRemoveTrack()
 NS_IMETHODIMP
 TestObserver::FoundIceCandidate(const char* strCandidate)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TestObserver::OnAddIceCandidateSuccess(uint32_t code)
+{
+  lastStatusCode = code;
+  state = stateSuccess;
+  addIceSuccessCount++;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TestObserver::OnAddIceCandidateError(uint32_t code)
+{
+  lastStatusCode = code;
+  state = stateError;
+  cout << "onAddIceCandidateError = " << code << endl;
   return NS_OK;
 }
 
@@ -699,18 +718,24 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
   }
 
   void DoTrickleIce(ParsedSDP &sdp) {
+    int expectAddIce = 0;
+    pObserver->addIceSuccessCount = 0;
     for (std::multimap<int, std::string>::iterator it = sdp.ice_candidates_.begin();
          it != sdp.ice_candidates_.end(); ++it) {
       if ((*it).first != 0) {
         std::cerr << "Adding trickle ICE candidate " << (*it).second << std::endl;
-
         ASSERT_TRUE(NS_SUCCEEDED(pc->AddIceCandidate((*it).second.c_str(), "", (*it).first)));
+        expectAddIce++;
       }
     }
+    ASSERT_TRUE_WAIT(pObserver->addIceSuccessCount == expectAddIce,
+                     kDefaultTimeout);
   }
 
 
   void DoTrickleIceChrome(ParsedSDP &sdp) {
+    int expectAddIce = 0;
+    pObserver->addIceSuccessCount = 0;
     for (std::multimap<int, std::string>::iterator it = sdp.ice_candidates_.begin();
          it != sdp.ice_candidates_.end(); ++it) {
       if ((*it).first != 0) {
@@ -718,8 +743,11 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
         std::cerr << "Adding trickle ICE candidate " << candidate << std::endl;
 
         ASSERT_TRUE(NS_SUCCEEDED(pc->AddIceCandidate(candidate.c_str(), "", (*it).first)));
+        expectAddIce++;
       }
     }
+    ASSERT_TRUE_WAIT(pObserver->addIceSuccessCount == expectAddIce,
+                     kDefaultTimeout);
   }
 
 
@@ -729,8 +757,16 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
     return state == sipcc::PeerConnectionImpl::kIceConnected;
   }
 
-  void AddIceCandidate(const char* candidate, const char* mid, unsigned short level) {
+  void AddIceCandidate(const char* candidate, const char* mid, unsigned short level,
+                       bool expectSuccess) {
+    pObserver->state = TestObserver::stateNoResponse;
     pc->AddIceCandidate(candidate, mid, level);
+    ASSERT_TRUE_WAIT(pObserver->state != TestObserver::stateNoResponse,
+                     kDefaultTimeout);
+    ASSERT_TRUE(pObserver->state ==
+                expectSuccess ? TestObserver::stateSuccess :
+                                TestObserver::stateError
+               );
   }
 
   int GetPacketsReceived(int stream) {
@@ -1016,7 +1052,12 @@ public:
                                const char * candidate, const char * mid,
                                unsigned short level, uint32_t sdpCheck) {
     a1_.CreateOffer(constraints, OFFER_AV, sdpCheck);
-    a1_.AddIceCandidate(candidate, mid, level);
+    a1_.AddIceCandidate(candidate, mid, level, true);
+  }
+
+  void AddIceCandidateEarly(const char * candidate, const char * mid,
+                            unsigned short level) {
+    a1_.AddIceCandidate(candidate, mid, level, false);
   }
 
  protected:
@@ -1340,6 +1381,13 @@ TEST_F(SignalingTest, CreateOfferAddCandidate)
   CreateOfferAddCandidate(constraints, strSampleCandidate.c_str(),
                           strSampleMid.c_str(), nSamplelevel,
                           SHOULD_SENDRECV_AV);
+}
+
+TEST_F(SignalingTest, AddIceCandidateEarly)
+{
+  sipcc::MediaConstraints constraints;
+  AddIceCandidateEarly(strSampleCandidate.c_str(),
+                       strSampleMid.c_str(), nSamplelevel);
 }
 
 // XXX adam@nostrum.com -- This test seems questionable; we need to think
