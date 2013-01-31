@@ -112,9 +112,19 @@ struct BaselineScript
     // Native code offset right before the scope chain is initialized.
     uint32_t prologueOffset_;
 
-    // Bit set when discarding JIT code, to indicate this script is
-    // on the stack and should not be discarded.
-    bool active_;
+  public:
+    enum Flag {
+        // Flag set by JSScript::argumentsOptimizationFailed. Similar to
+        // JSScript::needsArgsObj_, but can be read from JIT code.
+        NEEDS_ARGS_OBJ = 1 << 0,
+
+        // Flag set when discarding JIT code, to indicate this script is
+        // on the stack and should not be discarded.
+        ACTIVE         = 1 << 1
+    };
+
+  private:
+    uint32_t flags_;
 
   private:
     void trace(JSTracer *trc);
@@ -139,13 +149,17 @@ struct BaselineScript
     }
 
     bool active() const {
-        return active_;
+        return flags_ & ACTIVE;
     }
     void setActive() {
-        active_ = true;
+        flags_ |= ACTIVE;
     }
     void resetActive() {
-        active_ = false;
+        flags_ &= ~ACTIVE;
+    }
+
+    void setNeedsArgsObj() {
+        flags_ |= NEEDS_ARGS_OBJ;
     }
 
     uint32_t prologueOffset() const {
@@ -174,8 +188,12 @@ struct BaselineScript
         return method_;
     }
     void setMethod(IonCode *code) {
-        //JS_ASSERT(!invalidated());
+        JS_ASSERT(!method_);
         method_ = code;
+    }
+
+    void toggleBarriers(bool enabled) {
+        method()->togglePreBarriers(enabled);
     }
 
     ICEntry &icEntry(size_t index);
@@ -204,6 +222,10 @@ struct BaselineScript
     // If |pc| is NULL, toggle traps for all ops in the script. Else, only
     // toggle traps at |pc|.
     void toggleDebugTraps(UnrootedScript script, jsbytecode *pc);
+
+    static size_t offsetOfFlags() {
+        return offsetof(BaselineScript, flags_);
+    }
 };
 
 inline bool IsBaselineEnabled(JSContext *cx)

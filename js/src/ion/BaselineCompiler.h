@@ -117,6 +117,7 @@ namespace ion {
     _(JSOP_LEAVEBLOCK)         \
     _(JSOP_EXCEPTION)          \
     _(JSOP_DEBUGGER)           \
+    _(JSOP_ARGUMENTS)          \
     _(JSOP_POPV)               \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETURN)             \
@@ -195,6 +196,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitTest(bool branchIfTrue);
     bool emitAndOr(bool branchIfTrue);
     bool emitCall();
+
+    bool emitFormalArgAccess(uint32_t arg, bool get);
 };
 
 } // namespace ion

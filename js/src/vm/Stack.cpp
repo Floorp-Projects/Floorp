@@ -1985,7 +1985,10 @@ StackIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
       case SCRIPTED:
         return interpFrame()->unaliasedActual(i, checkAliasing);
       case ION:
-        break;
+#ifdef JS_ION
+        JS_ASSERT(data_.ionFrames_.isBaselineJS());
+        return data_.ionFrames_.baselineFrame()->unaliasedActual(i, checkAliasing);
+#endif
       case NATIVE:
         break;
     }
@@ -2033,10 +2036,13 @@ StackIter::hasArgsObj() const
     switch (data_.state_) {
       case DONE:
         break;
-      case ION:
-        break;
       case SCRIPTED:
         return interpFrame()->hasArgsObj();
+      case ION:
+#ifdef JS_ION
+        JS_ASSERT(data_.ionFrames_.isBaselineJS());
+        return data_.ionFrames_.baselineFrame()->hasArgsObj();
+#endif
       case NATIVE:
         break;
     }

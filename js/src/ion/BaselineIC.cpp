@@ -1639,7 +1639,18 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
 
     // Don't pass lhs directly, we need it when generating stubs.
     RootedValue lhsCopy(cx, lhs);
-    if (!GetElementMonitored(cx, &lhsCopy, rhs, res))
+
+    bool isOptimizedArgs = false;
+    if (lhs.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+        // Handle optimized arguments[i] access.
+        BaselineFrame *frame = GetTopBaselineFrame(cx);
+        if (!GetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res, &isOptimizedArgs))
+            return false;
+        if (isOptimizedArgs)
+            types::TypeScript::Monitor(cx, res);
+    }
+
+    if (!isOptimizedArgs && !GetElementMonitored(cx, &lhsCopy, rhs, res))
         return false;
 
     if (stub->numOptimizedStubs() >= ICGetElem_Fallback::MAX_OPTIMIZED_STUBS) {
@@ -2154,7 +2165,8 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallbac
 }
 
 static bool
-DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, MutableHandleValue res)
+DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue val,
+                  MutableHandleValue res)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
@@ -2165,6 +2177,17 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, Muta
 
     RootedPropertyName name(cx, script->getName(pc));
     RootedId id(cx, NameToId(name));
+
+    if (op == JSOP_LENGTH && val.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+        // Handle arguments.length access.
+        BaselineFrame *frame = GetTopBaselineFrame(cx);
+        if (IsOptimizedArguments(frame, val.address())) {
+            // TODO: attach optimized stub.
+            res.setInt32(frame->numActualArgs());
+            types::TypeScript::Monitor(cx, script, pc, res);
+            return true;
+        }
+    }
 
     RootedObject obj(cx, ToObjectFromStack(cx, val));
     if (!obj)
@@ -2210,7 +2233,8 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, HandleValue val, Muta
     return true;
 }
 
-typedef bool (*DoGetPropFallbackFn)(JSContext *, ICGetProp_Fallback *, HandleValue, MutableHandleValue);
+typedef bool (*DoGetPropFallbackFn)(JSContext *, ICGetProp_Fallback *, MutableHandleValue,
+                                    MutableHandleValue);
 static const VMFunction DoGetPropFallbackInfo = FunctionInfo<DoGetPropFallbackFn>(DoGetPropFallback);
 
 bool
@@ -2534,6 +2558,11 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
     RootedValue thisv(cx, vp[1]);
 
     Value *args = vp + 2;
+
+    if (op == JSOP_FUNAPPLY && argc == 2 && args[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+        BaselineFrame *frame = GetTopBaselineFrame(cx);
+        GuardFunApplyArgumentsOptimization(cx, frame, callee, args, argc);
+    }
 
     bool attachedStub;
     if (!TryAttachCallStub(cx, stub, script, op, argc, vp, res, &attachedStub))
