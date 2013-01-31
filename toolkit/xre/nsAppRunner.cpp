@@ -26,7 +26,6 @@
 #include "mozilla/Util.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Telemetry.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/AppData.h"
@@ -1709,8 +1708,6 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
   ScopedXPCOMStartup xpcom;
   rv = xpcom.Initialize();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mozilla::Telemetry::WriteFailedProfileLock(aProfileDir);
 
   rv = xpcom.SetWindowCreator(aNative);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
