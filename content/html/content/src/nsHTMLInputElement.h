@@ -711,6 +711,15 @@ protected:
    */
   nsresult ApplyStep(int32_t aStep);
 
+  /**
+   * Returns if the current type is an experimental mobile type.
+   */
+  static bool IsExperimentalMobileType(uint8_t aType)
+  {
+    return aType == NS_FORM_INPUT_NUMBER || aType == NS_FORM_INPUT_DATE ||
+           aType == NS_FORM_INPUT_TIME;
+  }
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /*
