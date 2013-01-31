@@ -339,36 +339,6 @@ class CodeLabel : public TempObject
     }
 };
 
-// Deferred data is a chunk of data that cannot be computed until an assembly
-// buffer has been fully allocated, but should be attached to the final code
-// stream. At the time deferred data is emitted, the code buffer has been
-// completely allocated.
-class DeferredData : public TempObject
-{
-    // Label, which before linking is unbound.
-    AbsoluteLabel label_;
-
-    // Offset from the start of the data section.
-    int32_t offset_;
-
-  public:
-    DeferredData() : offset_(-1)
-    { }
-    int32_t offset() const {
-        JS_ASSERT(offset_ > -1);
-        return offset_;
-    }
-    void setOffset(int32_t offset) {
-        offset_ = offset;
-    }
-    AbsoluteLabel *label() {
-        return &label_;
-    }
-
-    // Must copy pending data into the buffer.
-    virtual void copy(IonCode *code, uint8_t *buffer) const = 0;
-};
-
 // Location of a jump or label in a generated IonCode block, relative to the
 // start of the block.
 
