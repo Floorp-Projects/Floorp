@@ -1007,8 +1007,8 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
 {
   nsresult rv = GetValueInternal(aValue);
 
-  // Don't return non-sanitized value for number inputs.
-  if (mType == NS_FORM_INPUT_NUMBER) {
+  // Don't return non-sanitized value for types that are experimental on mobile.
+  if (IsExperimentalMobileType(mType)) {
     SanitizeValue(aValue);
   }
 
@@ -2482,8 +2482,10 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Fire onchange (if necessary), before we do the blur, bug 357684.
   if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
-    // In number inputs we can't allow the user to set an invalid value.
-    if (mType == NS_FORM_INPUT_NUMBER) {
+    // Experimental mobile types rely on the system UI to prevent users to not
+    // set invalid values but we have to be extra-careful. Especially if the
+    // option has been enabled on desktop.
+    if (IsExperimentalMobileType(mType)) {
       nsAutoString aValue;
       GetValueInternal(aValue);
       SetValueInternal(aValue, false, false);
@@ -2773,7 +2775,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                keyEvent->keyCode == NS_VK_ENTER) &&
                (IsSingleLineTextControl(false, mType) ||
                 IsExperimentalMobileType(mType))) {
-            FireChangeEventIfNeeded();   
+            FireChangeEventIfNeeded();
             rv = MaybeSubmitForm(aVisitor.mPresContext);
             NS_ENSURE_SUCCESS(rv, rv);
           }
