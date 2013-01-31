@@ -30,24 +30,33 @@ interface Node : EventTarget {
   const unsigned short NOTATION_NODE = 12; // historical
   [Constant]
   readonly attribute unsigned short nodeType;
+  [Pure]
   readonly attribute DOMString nodeName;
 
+  [Pure]
   readonly attribute DOMString? baseURI;
 
+  [Pure]
   readonly attribute Document? ownerDocument;
+  [Pure]
   readonly attribute Node? parentNode;
+  [Pure]
   readonly attribute Element? parentElement;
   boolean hasChildNodes();
   [Constant]
   readonly attribute NodeList childNodes;
+  [Pure]
   readonly attribute Node? firstChild;
+  [Pure]
   readonly attribute Node? lastChild;
+  [Pure]
   readonly attribute Node? previousSibling;
+  [Pure]
   readonly attribute Node? nextSibling;
 
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString? nodeValue;
-  [SetterThrows]
+  [SetterThrows, Pure]
            attribute DOMString? textContent;
   [Throws]
   Node insertBefore(Node node, Node? child);
@@ -82,7 +91,7 @@ interface Node : EventTarget {
   readonly attribute NamedNodeMap? attributes;
   // If we move namespaceURI, prefix and localName to Element they should return
   // a non-nullable type.
-  [Throws, Constant]
+  [Constant]
   readonly attribute DOMString? namespaceURI;
   [Constant]
   readonly attribute DOMString? prefix;

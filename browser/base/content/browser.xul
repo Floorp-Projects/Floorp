@@ -473,6 +473,17 @@
         <label id="geolocation-learnmore-link" class="text-link"/>
       </popupnotificationcontent>
     </popupnotification>
+
+    <popupnotification id="mixed-content-blocked-notification" hidden="true">
+      <popupnotificationcontent orient="vertical" align="start">
+        <separator/>
+        <description id="mixed-content-blocked-moreinfo">&mixedContentBlocked.moreinfo;</description>
+        <separator/>
+        <label id="mixed-content-blocked-helplink" class="text-link"
+               value="&mixedContentBlocked.helplink;"/>
+      </popupnotificationcontent>
+    </popupnotification>
+
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
@@ -587,6 +598,7 @@
             <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="blocked-plugins-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="mixed-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
           </box>

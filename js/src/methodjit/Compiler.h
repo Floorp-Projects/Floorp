@@ -716,7 +716,7 @@ private:
     void jsop_initmethod();
     void jsop_initprop();
     void jsop_initelem_array();
-    void jsop_setelem_dense();
+    void jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion);
 #ifdef JS_METHODJIT_TYPED_ARRAY
     void jsop_setelem_typed(int atype);
     void convertForTypedArray(int atype, ValueRemat *vr, bool *allocated);
@@ -780,7 +780,8 @@ private:
     CompileStatus compileMathMinMaxInt(FrameEntry *arg1, FrameEntry *arg2,
                                        Assembler::Condition cond);
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
-    CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
+    CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg,
+                                   types::StackTypeSet::DoubleConversion conversion);
     CompileStatus compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *argTypes,
                                      FrameEntry *thisValue, FrameEntry *argValue);
     CompileStatus compileArrayPopShift(FrameEntry *thisv, bool isPacked, bool isArrayPop);

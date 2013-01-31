@@ -191,7 +191,8 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
 				      int			 width,
 				      int			 height,
 				      uint8_t			*buffer,
-				      iter_flags_t		 flags)
+				      iter_flags_t		 iter_flags,
+				      uint32_t                   image_flags)
 {
     iter->image = image;
     iter->buffer = (uint32_t *)buffer;
@@ -199,7 +200,8 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
     iter->y = y;
     iter->width = width;
     iter->height = height;
-    iter->flags = flags;
+    iter->iter_flags = iter_flags;
+    iter->image_flags = image_flags;
 
     (*imp->src_iter_init) (imp, iter);
 }
@@ -213,7 +215,8 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
 				       int			 width,
 				       int			 height,
 				       uint8_t			*buffer,
-				       iter_flags_t		 flags)
+				       iter_flags_t		 iter_flags,
+				       uint32_t                  image_flags)
 {
     iter->image = image;
     iter->buffer = (uint32_t *)buffer;
@@ -221,7 +224,59 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
     iter->y = y;
     iter->width = width;
     iter->height = height;
-    iter->flags = flags;
+    iter->iter_flags = iter_flags;
+    iter->image_flags = image_flags;
 
     (*imp->dest_iter_init) (imp, iter);
+}
+
+pixman_bool_t
+_pixman_disabled (const char *name)
+{
+    const char *env;
+
+    if ((env = getenv ("PIXMAN_DISABLE")))
+    {
+	do
+	{
+	    const char *end;
+	    int len;
+
+	    if ((end = strchr (env, ' ')))
+		len = end - env;
+	    else
+		len = strlen (env);
+
+	    if (strlen (name) == len && strncmp (name, env, len) == 0)
+	    {
+		printf ("pixman: Disabled %s implementation\n", name);
+		return TRUE;
+	    }
+
+	    env += len;
+	}
+	while (*env++);
+    }
+
+    return FALSE;
+}
+
+pixman_implementation_t *
+_pixman_choose_implementation (void)
+{
+    pixman_implementation_t *imp;
+
+    imp = _pixman_implementation_create_general();
+
+    if (!_pixman_disabled ("fast"))
+	imp = _pixman_implementation_create_fast_path (imp);
+
+    imp = _pixman_x86_get_implementations (imp);
+    imp = _pixman_arm_get_implementations (imp);
+    imp = _pixman_ppc_get_implementations (imp);
+    imp = _pixman_mips_get_implementations (imp);
+
+    imp = _pixman_implementation_create_noop (imp);
+
+    return imp;
 }

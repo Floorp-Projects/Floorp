@@ -285,7 +285,29 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
 
   if (ev && (*aState & STATE_IS_SECURE))
     *aState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
-  
+
+  nsCOMPtr<nsPIDOMWindow> piwin = do_QueryReferent(mWindow);
+  MOZ_ASSERT(piwin);
+
+  nsIDocShell* docShell = piwin->GetDocShell();
+  MOZ_ASSERT(docShell);
+
+  // Has a Mixed Content Load initiated in nsMixedContentBlocker?
+  // If so, the state should be broken; overriding the previous state
+  // set by the lock parameter.
+  if (docShell->GetHasMixedActiveContentLoaded())
+    *aState = STATE_IS_BROKEN | nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
+
+  if (docShell->GetHasMixedDisplayContentLoaded())
+    *aState = STATE_IS_BROKEN | nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+
+  // Has Mixed Content Been Blocked in nsMixedContentBlocker?
+  if (docShell->GetHasMixedActiveContentBlocked())
+    *aState |= nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+
+  if (docShell->GetHasMixedDisplayContentBlocked())
+    *aState |= nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
+
   return NS_OK;
 }
 

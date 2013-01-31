@@ -2123,6 +2123,21 @@ class LElements : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// If necessary, convert any int32 elements in a vector into doubles.
+class LConvertElementsToDoubles : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(ConvertElementsToDoubles)
+
+    LConvertElementsToDoubles(const LAllocation &elements) {
+        setOperand(0, elements);
+    }
+
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+};
+
 // Load a dense array's initialized length from an elements vector.
 class LInitializedLength : public LInstructionHelper<1, 1, 0>
 {

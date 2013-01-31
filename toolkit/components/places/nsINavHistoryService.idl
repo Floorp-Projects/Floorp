@@ -51,10 +51,15 @@ interface nsINavHistoryResultNode : nsISupports
    */
   const unsigned long RESULT_TYPE_URI = 0;               // nsINavHistoryResultNode
   const unsigned long RESULT_TYPE_VISIT = 1;             // nsINavHistoryVisitResultNode
-  const unsigned long RESULT_TYPE_FULL_VISIT = 2;        // nsINavHistoryFullVisitResultNode
+
+  // Full visit nodes are deprecated and unsupported.
+  // This line exists just to avoid reusing the value:
+  // const unsigned long RESULT_TYPE_FULL_VISIT = 2;        // nsINavHistoryFullVisitResultNode
+
   // Dynamic containers are deprecated and unsupported.
-  // This const exists just to avoid reusing the value.
-  const unsigned long RESULT_TYPE_DYNAMIC_CONTAINER = 4; // nsINavHistoryContainerResultNode
+  // This const exists just to avoid reusing the value:
+  // const unsigned long RESULT_TYPE_DYNAMIC_CONTAINER = 4; // nsINavHistoryContainerResultNode
+
   const unsigned long RESULT_TYPE_QUERY = 5;             // nsINavHistoryQueryResultNode
   const unsigned long RESULT_TYPE_FOLDER = 6;            // nsINavHistoryQueryResultNode
   const unsigned long RESULT_TYPE_SEPARATOR = 7;         // nsINavHistoryResultNode
@@ -162,33 +167,6 @@ interface nsINavHistoryVisitResultNode : nsINavHistoryResultNode
    * grouping when a tree view is sorted by date.
    */
   readonly attribute long long sessionId;
-};
-
-
-/**
- * This structure will be returned when you request RESULT_TYPE_FULL_VISIT in
- * the query options. This includes uncommonly used information about each
- * visit.
- */
-[scriptable, uuid(c49fd9d5-56e2-43eb-932c-f933f28cba85)]
-interface nsINavHistoryFullVisitResultNode : nsINavHistoryVisitResultNode
-{
-  /**
-   * This indicates the visit ID of the visit.
-   */
-  readonly attribute long long visitId;
-
-  /**
-   * This indicates the referring visit ID of the visit. The referrer should
-   * have the same sessionId.
-   */
-  readonly attribute long long referringVisitId;
-
-  /**
-   * Indicates the transition type of the visit.
-   * One of nsINavHistoryService.TRANSITION_*
-   */
-  readonly attribute long transitionType;
 };
 
 

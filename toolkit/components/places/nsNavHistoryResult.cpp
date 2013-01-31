@@ -302,24 +302,6 @@ nsNavHistoryVisitResultNode::nsNavHistoryVisitResultNode(
 {
 }
 
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryFullVisitResultNode,
-                             nsNavHistoryVisitResultNode,
-                             nsINavHistoryFullVisitResultNode)
-
-nsNavHistoryFullVisitResultNode::nsNavHistoryFullVisitResultNode(
-    const nsACString& aURI, const nsACString& aTitle, uint32_t aAccessCount,
-    PRTime aTime, const nsACString& aIconURI, int64_t aSession,
-    int64_t aVisitId, int64_t aReferringVisitId, int32_t aTransitionType) :
-  nsNavHistoryVisitResultNode(aURI, aTitle, aAccessCount, aTime, aIconURI,
-                              aSession),
-  mVisitId(aVisitId),
-  mReferringVisitId(aReferringVisitId),
-  mTransitionType(aTransitionType)
-{
-}
-
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResult)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildren)
