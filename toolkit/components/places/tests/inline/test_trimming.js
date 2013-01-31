@@ -138,8 +138,8 @@ add_autocomplete_test([
   "https://www.mozilla.org/啊-test",
   { autoFilled: "https://www.mozilla.org/啊-test", completed: "https://www.mozilla.org/啊-test" },
   function () {
-    addVisits({ uri: NetUtil.newURI("https://www.mozilla.org/啊-test"),
-                transition: TRANSITION_TYPED });
+    promiseAddVisits({ uri: NetUtil.newURI("https://www.mozilla.org/啊-test"),
+                       transition: TRANSITION_TYPED });
   },
 ]);
 
@@ -148,8 +148,8 @@ add_autocomplete_test([
   "https://test.moz.org/t",
   { autoFilled: "https://test.moz.org/test/", completed: "https://test.moz.org/test/" },
   function () {
-    addVisits({ uri: NetUtil.newURI("http://test.moz.org/test/"),
-                transition: TRANSITION_TYPED });
+    promiseAddVisits({ uri: NetUtil.newURI("http://test.moz.org/test/"),
+                       transition: TRANSITION_TYPED });
   },
 ]);
 
@@ -158,7 +158,7 @@ add_autocomplete_test([
   "https://test.moz",
   { autoFilled: "https://test.moz.org/", completed: "https://test.moz.org/" },
   function () {
-    addVisits({ uri: NetUtil.newURI("http://test.moz.org/test/"),
-                transition: TRANSITION_TYPED });
+    promiseAddVisits({ uri: NetUtil.newURI("http://test.moz.org/test/"),
+                       transition: TRANSITION_TYPED });
   },
 ]);

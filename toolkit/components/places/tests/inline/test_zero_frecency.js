@@ -10,8 +10,8 @@ add_autocomplete_test([
   "moz",
   function () {
     Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
-    addVisits({ uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
-                transition: TRANSITION_FRAMED_LINK });
+    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
+                       transition: TRANSITION_FRAMED_LINK });
   }
 ]);
 
@@ -21,7 +21,7 @@ add_autocomplete_test([
   "mozilla.org/f",
   function () {
     Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
-    addVisits({ uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
-                transition: TRANSITION_FRAMED_LINK });
+    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
+                       transition: TRANSITION_FRAMED_LINK });
   }
 ]);
