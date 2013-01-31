@@ -397,14 +397,13 @@ public:
    * @param aName The name atom of the attribute.  Must not be null.
    * @param aValue The value to compare to.
    * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
+   *
+   * Implemented inline in Element.h
    */
-  virtual bool AttrValueIs(int32_t aNameSpaceID,
-                             nsIAtom* aName,
-                             const nsAString& aValue,
-                             nsCaseTreatment aCaseSensitive) const
-  {
-    return false;
-  }
+  bool AttrValueIs(int32_t aNameSpaceID,
+                   nsIAtom* aName,
+                   const nsAString& aValue,
+                   nsCaseTreatment aCaseSensitive) const;
   
   /**
    * Test whether this content node's given attribute has the given value.  If
@@ -415,14 +414,13 @@ public:
    * @param aName The name atom of the attribute.  Must not be null.
    * @param aValue The value to compare to.  Must not be null.
    * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
+   *
+   * Implemented inline in Element.h
    */
-  virtual bool AttrValueIs(int32_t aNameSpaceID,
-                             nsIAtom* aName,
-                             nsIAtom* aValue,
-                             nsCaseTreatment aCaseSensitive) const
-  {
-    return false;
-  }
+  bool AttrValueIs(int32_t aNameSpaceID,
+                   nsIAtom* aName,
+                   nsIAtom* aValue,
+                   nsCaseTreatment aCaseSensitive) const;
   
   enum {
     ATTR_MISSING = -1,
