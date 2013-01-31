@@ -280,11 +280,20 @@
 }
 
 .dbg-expression-delete {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  opacity: 0;
 }
 
 .dbg-expression-delete:not(:hover) {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.dbg-expression-delete:hover {
+  opacity: 1;
+}
+
+.dbg-expression:hover > .dbg-expression-delete:not(:hover) {
   opacity: 0.5;
+  transition: opacity 0.2s ease-in-out;
 }
 
 /**
@@ -296,9 +305,22 @@
   min-height: 10px;
 }
 
+.dbg-variable-delete {
+  opacity: 0;
+}
+
 .dbg-variable-delete:not(:hover) {
   -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.dbg-variable-delete:hover {
+  opacity: 1;
+}
+
+.variable-or-property:hover > .title > .dbg-variable-delete:not(:hover),
+.variable-or-property:focus > .title > .dbg-variable-delete:not(:hover) {
   opacity: 0.5;
+  transition: opacity 0.2s ease-in-out;
 }
 
 .dbg-variable-edit {
