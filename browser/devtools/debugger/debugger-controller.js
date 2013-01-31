@@ -429,6 +429,9 @@ function StackFrames() {
   this._onFrames = this._onFrames.bind(this);
   this._onFramesCleared = this._onFramesCleared.bind(this);
   this._afterFramesCleared = this._afterFramesCleared.bind(this);
+  this._fetchScopeVariables = this._fetchScopeVariables.bind(this);
+  this._fetchVarProperties = this._fetchVarProperties.bind(this);
+  this._addVarExpander = this._addVarExpander.bind(this);
   this.evaluate = this.evaluate.bind(this);
 }
 
@@ -687,7 +690,7 @@ StackFrames.prototype = {
       // Handle additions to the innermost scope.
       if (environment == frame.environment) {
         this._insertScopeFrameReferences(scope, frame);
-        this._fetchScopeVariables(scope, environment);
+        this._addScopeExpander(scope, environment);
         // Always expand the innermost scope by default.
         scope.expand();
       }
@@ -713,12 +716,12 @@ StackFrames.prototype = {
    *        The scope's environment.
    */
   _addScopeExpander: function SF__addScopeExpander(aScope, aEnv) {
-    let callback = this._fetchScopeVariables.bind(this, aScope, aEnv);
+    aScope._sourceEnvironment = aEnv;
 
     // It's a good idea to be prepared in case of an expansion.
-    aScope.addEventListener("mouseover", callback, false);
+    aScope.addEventListener("mouseover", this._fetchScopeVariables, false);
     // Make sure that variables are always available on expansion.
-    aScope.onexpand = callback;
+    aScope.onexpand = this._fetchScopeVariables;
   },
 
   /**
@@ -735,15 +738,15 @@ StackFrames.prototype = {
     if (VariablesView.isPrimitive({ value: aGrip })) {
       return;
     }
-    let callback = this._fetchVarProperties.bind(this, aVar, aGrip);
+    aVar._sourceGrip = aGrip;
 
     // Some variables are likely to contain a very large number of properties.
     // It's a good idea to be prepared in case of an expansion.
     if (aVar.name == "window" || aVar.name == "this") {
-      aVar.addEventListener("mouseover", callback, false);
+      aVar.addEventListener("mouseover", this._fetchVarProperties, false);
     }
     // Make sure that properties are always available on expansion.
-    aVar.onexpand = callback;
+    aVar.onexpand = this._fetchVarProperties;
   },
 
   /**
@@ -791,21 +794,20 @@ StackFrames.prototype = {
    *
    * @param Scope aScope
    *        The scope where the variables will be placed into.
-   * @param object aEnv
-   *        The scope's environment.
    */
-  _fetchScopeVariables: function SF__fetchScopeVariables(aScope, aEnv) {
+  _fetchScopeVariables: function SF__fetchScopeVariables(aScope) {
     // Fetch the variables only once.
     if (aScope._fetched) {
       return;
     }
     aScope._fetched = true;
+    let env = aScope._sourceEnvironment;
 
-    switch (aEnv.type) {
+    switch (env.type) {
       case "with":
       case "object":
         // Add nodes for every variable in scope.
-        this.activeThread.pauseGrip(aEnv.object).getPrototypeAndProperties(function(aResponse) {
+        this.activeThread.pauseGrip(env.object).getPrototypeAndProperties(function(aResponse) {
           this._insertScopeVariables(aResponse.ownProperties, aScope);
 
           // Signal that variables have been fetched.
@@ -816,15 +818,15 @@ StackFrames.prototype = {
       case "block":
       case "function":
         // Add nodes for every argument and every other variable in scope.
-        this._insertScopeArguments(aEnv.bindings.arguments, aScope);
-        this._insertScopeVariables(aEnv.bindings.variables, aScope);
+        this._insertScopeArguments(env.bindings.arguments, aScope);
+        this._insertScopeVariables(env.bindings.variables, aScope);
 
         // No need to signal that variables have been fetched, since
         // the scope arguments and variables are already attached to the
         // environment bindings, so pausing the active thread is unnecessary.
         break;
       default:
-        Cu.reportError("Unknown Debugger.Environment type: " + aEnv.type);
+        Cu.reportError("Unknown Debugger.Environment type: " + env.type);
         break;
     }
   },
@@ -902,27 +904,27 @@ StackFrames.prototype = {
    *
    * @param Variable aVar
    *        The variable where the properties will be placed into.
-   * @param any aGrip
-   *        The grip of the variable.
    */
-  _fetchVarProperties: function SF__fetchVarProperties(aVar, aGrip) {
+  _fetchVarProperties: function SF__fetchVarProperties(aVar) {
     // Fetch the properties only once.
     if (aVar._fetched) {
       return;
     }
     aVar._fetched = true;
+    let grip = aVar._sourceGrip;
 
-    this.activeThread.pauseGrip(aGrip).getPrototypeAndProperties(function(aResponse) {
+    this.activeThread.pauseGrip(grip).getPrototypeAndProperties(function(aResponse) {
       let { ownProperties, prototype } = aResponse;
-      let sortable = VARIABLES_VIEW_NON_SORTABLE.indexOf(aGrip.class) == -1;
+      let sortable = VARIABLES_VIEW_NON_SORTABLE.indexOf(grip.class) == -1;
 
       // Add all the variable properties.
       if (ownProperties) {
-        aVar.addProperties(ownProperties, { sorted: sortable });
-        // Expansion handlers must be set after the properties are added.
-        for (let name in ownProperties) {
-          this._addVarExpander(aVar.get(name), ownProperties[name].value);
-        }
+        aVar.addProperties(ownProperties, {
+          // Not all variables need to force sorted properties.
+          sorted: sortable,
+          // Expansion handlers must be set after the properties are added.
+          callback: this._addVarExpander
+        });
       }
 
       // Add the variable's __proto__.
