@@ -466,7 +466,7 @@ public:
   // the inlined nsAttrValue bits for C++ callers.
   bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                nsAString& aResult) const;
-  virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
+  inline bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
   // aCaseSensitive == eIgnoreCaase means ASCII case-insensitive matching.
   virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
                              const nsAString& aValue,
@@ -1166,6 +1166,16 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
 
+inline bool
+Element::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
+{
+  NS_ASSERTION(nullptr != aName, "must have attribute name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
+               "must have a real namespace ID!");
+
+  return mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID) >= 0;
+}
+
 } // namespace dom
 } // namespace mozilla
 
@@ -1195,6 +1205,12 @@ inline bool nsIContent::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   aResult.Truncate();
   return false;
 }
+
+inline bool nsIContent::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
+{
+  return IsElement() && AsElement()->HasAttr(aNameSpaceID, aName);
+}
+
 
 /**
  * Macros to implement Clone(). _elementName is the class for which to implement
