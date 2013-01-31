@@ -152,11 +152,6 @@ function todo(a, message)
     postMsg("TODO: " + message);
 }
 
-function todoSecurityState(expectedState, message)
-{
-  isSecurityState(expectedState, message, todo);
-}
-
 function isSecurityState(expectedState, message, test)
 {
   if (!test)

@@ -1456,11 +1456,19 @@ CodeGeneratorARM::visitLoadElementT(LLoadElementT *load)
 {
     Register base = ToRegister(load->elements());
     if (load->mir()->type() == MIRType_Double) {
+        FloatRegister fpreg = ToFloatRegister(load->output());
         if (load->index()->isConstant()) {
             Address source(base, ToInt32(load->index()) * sizeof(Value));
-            masm.loadInt32OrDouble(source, ToFloatRegister(load->output()));
+            if (load->mir()->loadDoubles())
+                masm.loadDouble(source, fpreg);
+            else
+                masm.loadInt32OrDouble(source, fpreg);
         } else {
-            masm.loadInt32OrDouble(base, ToRegister(load->index()), ToFloatRegister(load->output()));
+            Register index = ToRegister(load->index());
+            if (load->mir()->loadDoubles())
+                masm.loadDouble(BaseIndex(base, index, TimesEight), fpreg);
+            else
+                masm.loadInt32OrDouble(base, index, fpreg);
         }
     } else {
         if (load->index()->isConstant()) {

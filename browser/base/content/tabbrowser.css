@@ -47,11 +47,12 @@ tabpanels {
 }
 
 .closing-tabs-spacer {
+  min-width: 0;
   pointer-events: none;
 }
 
 .tabbrowser-tabs:not(:hover) > .tabbrowser-arrowscrollbox > .closing-tabs-spacer {
-  transition: width .15s ease-out;
+  transition: min-width 150ms ease-out;
 }
 
 /**

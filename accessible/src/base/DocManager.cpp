@@ -195,7 +195,8 @@ DocManager::OnStateChange(nsIWebProgress* aWebProgress,
   if (loadType == LOAD_RELOAD_NORMAL ||
       loadType == LOAD_RELOAD_BYPASS_CACHE ||
       loadType == LOAD_RELOAD_BYPASS_PROXY ||
-      loadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE) {
+      loadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE ||
+      loadType == LOAD_RELOAD_ALLOW_MIXED_CONTENT) {
     isReloading = true;
   }
 
