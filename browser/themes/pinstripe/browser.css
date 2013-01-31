@@ -3095,6 +3095,15 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
+#mixed-content-blocked-notification-icon {
+  list-style-image: url(chrome://browser/skin/mixed-content-blocked-16.png);
+}
+@media (min-resolution: 2dppx) {
+  #mixed-content-blocked-notification-icon {
+    list-style-image: url(chrome://browser/skin/mixed-content-blocked-16@2x.png);
+  }
+}
+
 #webRTC-shareDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }
@@ -3186,6 +3195,19 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .popup-notification-icon[popupid="webapps-install"] {
   list-style-image: url(chrome://browser/skin/webapps-64.png);
+}
+
+.popup-notification-icon[popupid="mixed-content-blocked"] {
+  list-style-image: url(chrome://browser/skin/mixed-content-blocked-64.png);
+}
+@media (min-resolution: 2dppx) {
+  .popup-notification-icon[popupid="mixed-content-blocked"] {
+    list-style-image: url(chrome://browser/skin/mixed-content-blocked-64@2x.png);
+  }
+}
+
+#mixed-content-blocked-helplink {
+  margin: 0px;
 }
 
 .popup-notification-icon[popupid="webRTC-sharingDevices"],
