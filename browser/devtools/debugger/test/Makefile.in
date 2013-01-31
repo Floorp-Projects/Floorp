@@ -32,9 +32,11 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_propertyview-08.js \
 	browser_dbg_propertyview-09.js \
 	browser_dbg_propertyview-10.js \
-	browser_dbg_propertyview-edit.js \
+	browser_dbg_propertyview-edit-value.js \
 	browser_dbg_propertyview-edit-watch.js \
-	browser_dbg_propertyview-big-data.js \
+	browser_dbg_propertyview-data-big.js \
+	browser_dbg_propertyview-data-getset-01.js \
+	browser_dbg_propertyview-data-getset-02.js \
 	browser_dbg_propertyview-data.js \
 	browser_dbg_propertyview-filter-01.js \
 	browser_dbg_propertyview-filter-02.js \
