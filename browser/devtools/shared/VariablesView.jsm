@@ -1880,6 +1880,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * @param object aOptions [optional]
    *        Additional options for adding the properties. Supported options:
    *        - sorted: true to sort all the properties before adding them
+   *        - callback: function invoked after each property is added
    */
   addProperties: function V_addProperties(aProperties, aOptions = {}) {
     let propertyNames = Object.keys(aProperties);
@@ -1890,7 +1891,12 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     }
     // Add the properties to the current scope.
     for (let name of propertyNames) {
-      this.addProperty(name, aProperties[name]);
+      let descriptor = aProperties[name];
+      let property = this.addProperty(name, descriptor);
+
+      if (aOptions.callback) {
+        aOptions.callback(property, descriptor.value);
+      }
     }
   },
 
@@ -1933,6 +1939,20 @@ create({ constructor: Variable, proto: Scope.prototype }, {
   },
 
   /**
+   * Populates a specific variable or property instance to contain all the
+   * properties of an object
+   *
+   * @param Variable | Property aVar
+   *        The target variable to populate.
+   * @param object aObject [optional]
+   *        The raw object you want to display. If unspecified, the object is
+   *        assumed to be defined in a _sourceValue property on the target.
+   */
+  _populateTarget: function V__populateTarget(aVar, aObject = aVar._sourceValue) {
+    aVar.populate(aObject);
+  },
+
+  /**
    * Adds a property for this variable based on a raw value descriptor.
    *
    * @param string aName
@@ -1948,11 +1968,12 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     descriptor.value = VariablesView.getGrip(aValue);
 
     let propertyItem = this.addProperty(aName, descriptor);
+    propertyItem._sourceValue = aValue;
 
     // Add an 'onexpand' callback for the property, lazily handling
     // the addition of new child properties.
     if (!VariablesView.isPrimitive(descriptor)) {
-      propertyItem.onexpand = this.populate.bind(propertyItem, aValue);
+      propertyItem.onexpand = this._populateTarget;
     }
   },
 
@@ -1970,8 +1991,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     descriptor.get = VariablesView.getGrip(aDescriptor.get);
     descriptor.set = VariablesView.getGrip(aDescriptor.set);
 
-    let propertyItem = this.addProperty(aName, descriptor);
-    return propertyItem;
+    this.addProperty(aName, descriptor);
   },
 
   /**
