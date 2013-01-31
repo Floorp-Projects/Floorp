@@ -23,6 +23,7 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsIConstraintValidation.h"
 #include "nsIWidget.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {

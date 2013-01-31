@@ -10,6 +10,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
+#include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Font)
 DOMCI_NODE_DATA(HTMLFontElement, mozilla::dom::HTMLFontElement)

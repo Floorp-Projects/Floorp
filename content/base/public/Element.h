@@ -47,6 +47,7 @@
 #include "nsEvent.h"
 #include "nsAttrValue.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "nsIHTMLCollection.h"
 
 class nsIDOMEventListener;
 class nsIFrame;
@@ -62,7 +63,6 @@ class nsAttrValueOrString;
 class ContentUnbinder;
 class nsClientRect;
 class nsClientRectList;
-class nsIHTMLCollection;
 class nsContentList;
 class nsDOMTokenList;
 struct nsRect;
@@ -447,16 +447,7 @@ public:
                               nsIAtom* aPrefix,
                               const nsAttrValueOrString& aValue,
                               bool aNotify, nsAttrValue& aOldValue,
-                              uint8_t* aModType, bool* aHasListeners)
-  {
-    if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
-                              aOldValue, aModType, aHasListeners)) {
-      nsAutoScriptBlocker scriptBlocker;
-      nsNodeUtils::AttributeSetToCurrentValue(this, aNamespaceID, aName);
-      return true;
-    }
-    return false;
-  }
+                              uint8_t* aModType, bool* aHasListeners);
 
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, bool aNotify);
