@@ -30,9 +30,16 @@ function run_test() {
 
   _("Observers are notified of startup");
   do_test_pending();
+
+  let xps = Cc["@mozilla.org/weave/service;1"]
+              .getService(Ci.nsISupports)
+              .wrappedJSObject;
+
   do_check_false(Service.status.ready);
+  do_check_false(xps.ready);
   Observers.add("weave:service:ready", function (subject, data) {
     do_check_true(Service.status.ready);
+    do_check_true(xps.ready);
 
     // Clean up.
     Svc.Prefs.resetBranch("");
