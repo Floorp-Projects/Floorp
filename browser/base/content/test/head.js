@@ -1,3 +1,7 @@
+var Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/commonjs/promise/core.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
