@@ -1417,7 +1417,7 @@ Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, boo
         return Method_Compiled;
     }
 
-    if (cx->methodJitEnabled) {
+    if (cx->methodJitEnabled || IsBaselineEnabled(cx)) {
         // If JM is enabled we use getUseCount instead of incUseCount to avoid
         // bumping the use count twice.
         if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
