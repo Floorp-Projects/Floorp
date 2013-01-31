@@ -38,10 +38,11 @@ typedef enum {
     evSetLocalDesc = SETLOCALDESC,
     evSetRemoteDesc = SETREMOTEDESC,
     evUpdateLocalDesc = UPDATELOCALDESC,
-    evUpdateRemoteDesc = UPDATEREMOTEDESC,
     evSetLocalDescError = SETLOCALDESCERROR,
     evSetRemoteDescError = SETREMOTEDESCERROR,
     evOnRemoteStreamAdd = REMOTESTREAMADD,
+    evAddIceCandidate = ADDICECANDIDATE,
+    evAddIceCandidateError = ADDICECANDIDATEERROR,
     evMaxEvent
 } call_events;
 
@@ -162,8 +163,9 @@ void ui_set_remote_description(call_events event, line_t nLine, callid_t nCallID
 
 void ui_update_local_description(call_events event, line_t nLine, callid_t nCallID,
                  	 uint16_t call_instance_id, string_t sdp);
-void ui_update_remote_description(call_events event, line_t nLine, callid_t nCallID,
-                 	 uint16_t call_instance_id, string_t sdp);
+
+void ui_ice_candidate_add(call_events event, line_t nLine, callid_t nCallID,
+                         uint16_t call_instance_id, string_t sdp);
 
 void ui_on_remote_stream_added(call_events event, line_t nLine, callid_t nCallID,
                      uint16_t call_instance_id, cc_media_remote_track_table_t media_tracks);

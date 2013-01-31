@@ -59,7 +59,9 @@ interface nsIDOMRTCPeerConnection : nsISupports
     [optional] in jsval constraints,
     [optional] in bool restart);
 
-  void addIceCandidate(in nsIDOMRTCIceCandidate candidate);
+  void addIceCandidate(in nsIDOMRTCIceCandidate candidate,
+    [optional] in RTCPeerConnectionCallback successCallback,
+    [optional] in RTCPeerConnectionCallback failureCallback);
 
   void addStream(in nsIDOMMediaStream stream,
     [optional] in jsval constraints);
