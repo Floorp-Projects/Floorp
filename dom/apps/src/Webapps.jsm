@@ -2236,13 +2236,17 @@ this.DOMApplicationRegistry = {
                   if (!app.staged) {
                     app.staged = { };
                   }
-                  app.staged.packageEtag =
-                    requestChannel.getResponseHeader("Etag");
+                  try {
+                    app.staged.packageEtag =
+                      requestChannel.getResponseHeader("Etag");
+                  } catch(e) { }
                   app.staged.packageHash = aHash;
                   app.staged.appStatus =
                     AppsUtils.getAppManifestStatus(manifest);
                 } else {
-                  app.packageEtag = requestChannel.getResponseHeader("Etag");
+                  try {
+                    app.packageEtag = requestChannel.getResponseHeader("Etag");
+                  } catch(e) { }
                   app.packageHash = aHash;
                   app.appStatus = AppsUtils.getAppManifestStatus(manifest);
                 }
