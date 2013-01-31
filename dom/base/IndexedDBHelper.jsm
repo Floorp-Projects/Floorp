@@ -46,30 +46,32 @@ IndexedDBHelper.prototype = {
    */
   open: function open(aSuccessCb, aFailureCb) {
     let self = this;
-    debug("Try to open database:" + self.dbName + " " + self.dbVersion);
+    if (DEBUG) debug("Try to open database:" + self.dbName + " " + self.dbVersion);
     let req = this.dbGlobal.indexedDB.open(this.dbName, this.dbVersion);
     req.onsuccess = function (event) {
-      debug("Opened database:" + self.dbName + " " + self.dbName);
+      if (DEBUG) debug("Opened database:" + self.dbName + " " + self.dbName);
       self._db = event.target.result;
       self._db.onversionchange = function(event) {
-        debug("WARNING: DB modified from a different window.");
+        if (DEBUG) debug("WARNING: DB modified from a different window.");
       }
       aSuccessCb();
     };
 
     req.onupgradeneeded = function (aEvent) {
-      debug("Database needs upgrade:" + self.dbName + aEvent.oldVersion + aEvent.newVersion);
-      debug("Correct new database version:" + aEvent.newVersion == this.dbVersion);
+      if (DEBUG) {
+        debug("Database needs upgrade:" + self.dbName + aEvent.oldVersion + aEvent.newVersion);
+        debug("Correct new database version:" + aEvent.newVersion == this.dbVersion);
+      }
 
       let _db = aEvent.target.result;
       self.upgradeSchema(req.transaction, _db, aEvent.oldVersion, aEvent.newVersion);
     };
     req.onerror = function (aEvent) {
-      debug("Failed to open database:" + self.dbName);
+      if (DEBUG) debug("Failed to open database:" + self.dbName);
       aFailureCb(aEvent.target.errorMessage);
     };
     req.onblocked = function (aEvent) {
-      debug("Opening database request is blocked.");
+      if (DEBUG) debug("Opening database request is blocked.");
     };
   },
 
@@ -83,7 +85,7 @@ IndexedDBHelper.prototype = {
    */
   ensureDB: function ensureDB(aSuccessCb, aFailureCb) {
     if (this._db) {
-      debug("ensureDB: already have a database, returning early.");
+      if (DEBUG) debug("ensureDB: already have a database, returning early.");
       aSuccessCb();
       return;
     }
@@ -106,18 +108,18 @@ IndexedDBHelper.prototype = {
    */
   newTxn: function newTxn(txn_type, callback, successCb, failureCb) {
     this.ensureDB(function () {
-      debug("Starting new transaction" + txn_type);
+      if (DEBUG) debug("Starting new transaction" + txn_type);
       let txn = this._db.transaction(this.dbName, txn_type);
-      debug("Retrieving object store", this.dbName);
+      if (DEBUG) debug("Retrieving object store", this.dbName);
       let store = txn.objectStore(this.dbStoreName);
 
       txn.oncomplete = function (event) {
-        debug("Transaction complete. Returning to callback.");
+        if (DEBUG) debug("Transaction complete. Returning to callback.");
         successCb(txn.result);
       };
 
       txn.onabort = function (event) {
-        debug("Caught error on transaction");
+        if (DEBUG) debug("Caught error on transaction");
         /*
          * event.target.error may be null
          * if txn was aborted by calling txn.abort()
