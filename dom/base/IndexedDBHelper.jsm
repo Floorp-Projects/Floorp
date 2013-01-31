@@ -12,7 +12,7 @@ if (DEBUG) {
   debug = function (s) {}
 }
 
-const Cu = Components.utils; 
+const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -24,7 +24,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 this.IndexedDBHelper = function IndexedDBHelper() {}
 
 IndexedDBHelper.prototype = {
-  
+
   // Cache the database
   _db: null,
 
@@ -38,7 +38,7 @@ IndexedDBHelper.prototype = {
   /**
    * Open a new database.
    * User has to provide upgradeSchema.
-   * 
+   *
    * @param successCb
    *        Success callback to call once database is open.
    * @param failureCb
@@ -77,7 +77,7 @@ IndexedDBHelper.prototype = {
 
   /**
    * Use the cached DB or open a new one.
-   * 
+   *
    * @param successCb
    *        Success callback to call.
    * @param failureCb
@@ -94,24 +94,26 @@ IndexedDBHelper.prototype = {
 
   /**
    * Start a new transaction.
-   * 
+   *
    * @param txn_type
    *        Type of transaction (e.g. "readwrite")
+   * @param store_name
+   *        The object store you want to be passed to the callback
    * @param callback
    *        Function to call when the transaction is available. It will
-   *        be invoked with the transaction and the 'aDBStoreName' object store.
+   *        be invoked with the transaction and the `store' object store.
    * @param successCb
    *        Success callback to call on a successful transaction commit.
    *        The result is stored in txn.result.
    * @param failureCb
    *        Error callback to call when an error is encountered.
    */
-  newTxn: function newTxn(txn_type, callback, successCb, failureCb) {
+  newTxn: function newTxn(txn_type, store_name, callback, successCb, failureCb) {
     this.ensureDB(function () {
       if (DEBUG) debug("Starting new transaction" + txn_type);
-      let txn = this._db.transaction(this.dbName, txn_type);
+      let txn = this._db.transaction(this.dbStoreNames, txn_type);
       if (DEBUG) debug("Retrieving object store", this.dbName);
-      let store = txn.objectStore(this.dbStoreName);
+      let store = txn.objectStore(store_name);
 
       txn.oncomplete = function (event) {
         if (DEBUG) debug("Transaction complete. Returning to callback.");
@@ -135,7 +137,7 @@ IndexedDBHelper.prototype = {
 
   /**
    * Initialize the DB. Does not call open.
-   * 
+   *
    * @param aDBName
    *        DB name for the open call.
    * @param aDBVersion
@@ -145,10 +147,10 @@ IndexedDBHelper.prototype = {
    * @param aGlobal
    *        Global object that has indexedDB property.
    */
-  initDBHelper: function initDBHelper(aDBName, aDBVersion, aDBStoreName, aGlobal) {
+  initDBHelper: function initDBHelper(aDBName, aDBVersion, aDBStoreNames, aGlobal) {
     this.dbName = aDBName;
     this.dbVersion = aDBVersion;
-    this.dbStoreName = aDBStoreName;
+    this.dbStoreNames = aDBStoreNames;
     this.dbGlobal = aGlobal;
   }
 }
