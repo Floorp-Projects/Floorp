@@ -115,7 +115,6 @@ public:
                            bool aNotify);
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
-  virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom *aAttribute) const;
   virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const;
   virtual uint32_t GetAttrCount() const;
   virtual const nsTextFragment *GetText();

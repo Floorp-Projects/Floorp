@@ -1968,16 +1968,6 @@ Element::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 bool
-Element::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
-{
-  NS_ASSERTION(nullptr != aName, "must have attribute name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-               "must have a real namespace ID!");
-
-  return mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID) >= 0;
-}
-
-bool
 Element::AttrValueIs(int32_t aNameSpaceID,
                      nsIAtom* aName,
                      const nsAString& aValue,
