@@ -371,9 +371,11 @@ public:
    * @param aResult the value (may legitimately be the empty string) [OUT]
    * @returns true if the attribute was set (even when set to empty string)
    *          false when not set.
+   *
+   * Implemented inline in Element.h
    */
-  virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName, 
-                         nsAString& aResult) const = 0;
+  bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+               nsAString& aResult) const;
 
   /**
    * Determine if an attribute has been set (empty string or otherwise).
