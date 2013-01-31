@@ -236,8 +236,6 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Feedback:MaybeLater");
         registerEventListener("Dex:Load");
         registerEventListener("Telemetry:Gather");
-
-        Distribution.init(this);
     }
 
     @Override

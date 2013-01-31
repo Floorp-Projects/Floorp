@@ -294,7 +294,6 @@ DIST_FILES += \
   update.locale \
   removed-files \
   recommended-addons.json \
-  distribution \
   $(NULL)
 
 ifdef MOZ_ENABLE_SZIP
