@@ -86,6 +86,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "nsIAppsService.h"
+#include "sampler.h"
 
 #include "jsapi.h"
 #include "nsHTMLIFrameElement.h"
