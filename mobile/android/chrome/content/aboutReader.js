@@ -458,7 +458,7 @@ AboutReader.prototype = {
 
     this._creditsElement.innerHTML = article.byline;
 
-    this._titleElement.innerHTML = article.title;
+    this._titleElement.textContent = article.title;
     this._doc.title = article.title;
 
     this._headerElement.style.display = "block";

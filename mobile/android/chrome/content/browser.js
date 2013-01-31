@@ -7838,8 +7838,12 @@ let Reader = {
 
       // Append URL to the article data. specIgnoringRef will ignore any hash
       // in the URL.
-      if (article)
+      if (article) {
         article.url = uri.specIgnoringRef;
+        let flags = Ci.nsIDocumentEncoder.OutputSelectionOnly | Ci.nsIDocumentEncoder.OutputAbsoluteLinks;
+        article.title = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils)
+                                                        .convertToPlainText(article.title, flags, 0);
+      }
 
       callback(article);
     };
