@@ -567,6 +567,12 @@ StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 }
 
 bool
+HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame)
+{
+    return frame->heavyweightFunPrologue(cx);
+}
+
+bool
 NewArgumentsObject(JSContext *cx, BaselineFrame *frame, MutableHandleValue res)
 {
     ArgumentsObject *obj = ArgumentsObject::createExpected(cx, frame);
