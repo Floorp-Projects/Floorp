@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=792935
+-->
+<head>
+  <title>Test for Bug 792935 - DASH Stream Switching</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=792935">Mozilla Bug 792935</a>
+  
+</div>
+<pre id="test">
+<script type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function createTestArray() {
+  var tests = [];
+  var tmpVid = document.createElement("video");
+
+  for (var testNum=0; testNum<gStreamSwitchTests.length; testNum++) {
+    var test = gStreamSwitchTests[testNum];
+    if (!tmpVid.canPlayType(test.type)) {
+      continue;
+    }
+    tests.push(test);
+  }
+  return tests;
+}
+
+function ended(evt) {
+  var v = evt.target;
+  if (v.parentNode) {
+    v.parentNode.removeChild(v);
+  }
+  ok(true, "Fully played DASH video implies correct byte ranges downloaded.");
+  dump("STREAM-SWITCH-TEST: Finished " + v._name + "\n");
+  manager.finished(v.token);
+}
+
+function error(evt) {
+  var v = evt.target;
+  ok(false, "Error suggests wrong byte range requested for " + v._name);
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  manager.started(token);
+  v.type = test.type;
+  v.src = test.name;
+  v._name = test.name + " stream switch test";
+  v.token = token;
+  v.autoplay = true;
+
+  v.addEventListener("error", error, false);
+  v.addEventListener("ended", ended, false);
+
+  dump("STREAM-SWITCH-TEST: Started " + name + "\n");
+  document.body.appendChild(v);
+}
+
+var testArray = createTestArray();
+if (testArray && testArray.length > 0) {
+  manager.runTests(testArray, startTest);
+} else {
+  var v = document.createElement('video');
+  var canPlay = v.canPlayType("application/dash+xml");
+  // If the test array is empty even though DASH is enabled, the test should
+  // fail, i.e. canPlay should be false when testArray is empty.
+  todo(canPlay, "No types supported - DASH " +
+                (canPlay ? "enabled" : "disabled"));
+}  
+
+</script>
+</pre>
+</body>
+</html>
