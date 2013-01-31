@@ -411,6 +411,8 @@ nsFrameLoader::ReallyStartLoadingInternal()
 {
   NS_ENSURE_STATE(mURIToLoad && mOwnerContent && mOwnerContent->IsInDoc());
 
+  SAMPLE_LABEL("nsFrameLoader", "ReallyStartLoading");
+
   nsresult rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
     return rv;
@@ -2029,6 +2031,8 @@ nsFrameLoader::TryRemoteBrowser()
   if (NS_FAILED(window->GetChromeFlags(&chromeFlags))) {
     return false;
   }
+
+  SAMPLE_LABEL("nsFrameLoader", "CreateRemoteBrowser");
 
   MutableTabContext context;
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
