@@ -385,6 +385,10 @@
   -moz-padding-end: 4px;
 }
 
+.variable[editable] > .title > .value {
+  cursor: text;
+}
+
 .variable:not([non-header]) > .details {
   -moz-margin-start: 10px;
 }
@@ -416,6 +420,10 @@
 .property > .title > .value {
   -moz-padding-start: 6px;
   -moz-padding-end: 4px;
+}
+
+.property[editable] > .title > .value {
+  cursor: text;
 }
 
 .property:not([non-header]) > .details {
