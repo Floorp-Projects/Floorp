@@ -2575,6 +2575,16 @@ JSScript::clearBreakpointsIn(FreeOp *fop, js::Debugger *dbg, RawObject handler)
     }
 }
 
+bool
+JSScript::hasBreakpointsAt(jsbytecode *pc)
+{
+    BreakpointSite *site = getBreakpointSite(pc);
+    if (!site)
+        return false;
+
+    return site->enabledCount > 0 || site->trapHandler;
+}
+
 void
 JSScript::clearTraps(FreeOp *fop)
 {

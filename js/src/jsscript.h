@@ -881,7 +881,7 @@ class JSScript : public js::gc::Cell
     void destroyDebugScript(js::FreeOp *fop);
 
   public:
-    bool hasBreakpointsAt(jsbytecode *pc) { return !!getBreakpointSite(pc); }
+    bool hasBreakpointsAt(jsbytecode *pc);
     bool hasAnyBreakpointsOrStepMode() { return hasDebugScript; }
 
     js::BreakpointSite *getBreakpointSite(jsbytecode *pc)
