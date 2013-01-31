@@ -702,6 +702,26 @@ class MConstant : public MNullaryInstruction
         return AliasSet::None();
     }
 
+    void analyzeTruncateBackward();
+
+    // Returns true if constant is integer between -2^33 & 2^33,
+    // Max cap could be 2^53, if not for the 20 additions hack.
+    bool isBigIntOutput() {
+        if (value_.isInt32())
+            return true;
+        if (value_.isDouble()) {
+            double value = value_.toDouble();
+            int64_t valint = value;
+            int64_t max = 1LL<<33;
+            if (double(valint) != value)
+                return false;
+            if (valint < 0)
+                valint = -valint;
+            return valint < max;
+        }
+        return false;
+    }
+
     void computeRange();
 };
 
@@ -2653,11 +2673,11 @@ class MAdd : public MBinaryArithInstruction
     // This is an add, so the return value is from only
     // integer sources if we know we return an int32
     // or it has been explicitly marked as being a large int.
-    virtual bool isBigIntOutput() {
+    bool isBigIntOutput() {
         return (type() == MIRType_Int32) || isBigInt_;
     }
     // An add will produce a big int if both of its sources are big ints.
-    virtual void recalculateBigInt() {
+    void recalculateBigInt() {
         isBigInt_ = (lhs()->isBigIntOutput() && rhs()->isBigIntOutput());
     }
 };
