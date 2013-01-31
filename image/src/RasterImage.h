@@ -761,6 +761,10 @@ private: // data
 
   bool                       mInUpdateImageContainer:1;
 
+  // Whether, once we are done doing a size decode, we should immediately kick
+  // off a full decode.
+  bool                       mWantFullDecode:1;
+
   // Decoding
   nsresult WantDecodedFrames();
   nsresult SyncDecode();
