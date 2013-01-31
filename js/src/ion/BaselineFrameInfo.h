@@ -247,35 +247,38 @@ class FrameInfo
 #endif
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfLocal(local));
     }
-    inline Address addressOfArg(size_t arg) const {
+    Address addressOfArg(size_t arg) const {
         JS_ASSERT(arg < nargs());
         return Address(BaselineFrameReg, BaselineFrame::offsetOfArg(arg));
     }
-    inline Address addressOfThis() const {
+    Address addressOfThis() const {
         return Address(BaselineFrameReg, BaselineFrame::offsetOfThis());
     }
-    inline Address addressOfCallee() const {
+    Address addressOfCallee() const {
         return Address(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
     }
-    inline Address addressOfScopeChain() const {
+    Address addressOfScopeChain() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScopeChain());
     }
-    inline Address addressOfBlockChain() const {
+    Address addressOfBlockChain() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfBlockChain());
     }
-    inline Address addressOfFlags() const {
+    Address addressOfFlags() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
     }
-    inline Address addressOfReturnValue() const {
+    Address addressOfEvalScript() const {
+        return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfEvalScript());
+    }
+    Address addressOfReturnValue() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfReturnValue());
     }
-    inline Address addressOfStackValue(const StackValue *value) const {
+    Address addressOfStackValue(const StackValue *value) const {
         JS_ASSERT(value->kind() == StackValue::Stack);
         size_t slot = value - &stack[0];
         JS_ASSERT(slot < stackDepth());
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfLocal(nlocals() + slot));
     }
-    inline Address addressOfScratchValue() const {
+    Address addressOfScratchValue() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScratchValue());
     }
 

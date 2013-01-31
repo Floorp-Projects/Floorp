@@ -79,12 +79,6 @@ class AutoDestroyAllocator
 static bool
 CheckFrame(StackFrame *fp)
 {
-    if (fp->isEvalFrame()) {
-        // Eval frames are not yet supported.
-        IonSpew(IonSpew_BaselineAbort, "BASELINE FIXME: eval frame!");
-        return false;
-    }
-
     if (fp->isGeneratorFrame()) {
         IonSpew(IonSpew_BaselineAbort, "generator frame");
         return false;
@@ -107,7 +101,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
     JS_ASSERT(ion::IsBaselineEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
 
-    EnterIonCode enter = cx->compartment->ionCompartment()->enterJIT();
+    EnterIonCode enter = cx->compartment->ionCompartment()->enterBaselineJIT();
 
     // maxArgc is the maximum of arguments between the number of actual
     // arguments and the number of formal arguments. It accounts for |this|.
@@ -117,7 +111,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
     RootedValue thisv(cx);
 
     void *calleeToken;
-    if (fp->isFunctionFrame()) {
+    if (fp->isNonEvalFunctionFrame()) {
         // CountArgSlot include |this| and the |scopeChain|.
         maxArgc = CountArgSlots(fp->fun()) - 1; // -1 = discard |scopeChain|
         maxArgv = fp->formals() - 1;            // -1 = include |this|
@@ -142,7 +136,11 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
         }
         calleeToken = CalleeToToken(&fp->callee());
     } else {
-        calleeToken = CalleeToToken(fp->script());
+        // For eval function frames, set the callee token to the enclosing function.
+        if (fp->isFunctionFrame())
+            calleeToken = CalleeToToken(&fp->callee());
+        else
+            calleeToken = CalleeToToken(fp->script());
         thisv = fp->thisValue();
         maxArgc = 1;
         maxArgv = thisv.address();
@@ -158,8 +156,10 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-        // Single transition point from Interpreter to Ion.
-        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, &result);
+        JSObject *evalScopeChain = fp->isEvalFrame() ? fp->scopeChain() : NULL;
+
+        // Single transition point from Interpreter to Baseline.
+        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, evalScopeChain, &result);
     }
 
     JS_ASSERT(fp == cx->fp());

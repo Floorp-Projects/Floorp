@@ -22,12 +22,13 @@ using namespace js;
 using namespace js::ion;
 
 enum EnterJitEbpArgumentOffset {
-    ARG_JITCODE     = 2 * sizeof(void *),
-    ARG_ARGC        = 3 * sizeof(void *),
-    ARG_ARGV        = 4 * sizeof(void *),
-    ARG_STACKFRAME  = 5 * sizeof(void *),
-    ARG_CALLEETOKEN = 6 * sizeof(void *),
-    ARG_RESULT      = 7 * sizeof(void *)
+    ARG_JITCODE         = 2 * sizeof(void *),
+    ARG_ARGC            = 3 * sizeof(void *),
+    ARG_ARGV            = 4 * sizeof(void *),
+    ARG_STACKFRAME      = 5 * sizeof(void *),
+    ARG_CALLEETOKEN     = 6 * sizeof(void *),
+    ARG_EVAL_SCOPECHAIN = 7 * sizeof(void *),
+    ARG_RESULT          = 8 * sizeof(void *)
 };
 
 /*
@@ -35,7 +36,7 @@ enum EnterJitEbpArgumentOffset {
  * using the standard cdecl calling convention.
  */
 IonCode *
-IonRuntime::generateEnterJIT(JSContext *cx)
+IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 {
     MacroAssembler masm(cx);
 
@@ -122,6 +123,9 @@ IonRuntime::generateEnterJIT(JSContext *cx)
     masm.subl(esp, esi);
     masm.makeFrameDescriptor(esi, IonFrame_Entry);
     masm.push(esi);
+
+    if (type == EnterJitBaseline)
+        masm.movl(Operand(ebp, ARG_EVAL_SCOPECHAIN), R1.scratchReg());
 
     /***************************************************************
         Call passed-in code, get return value and fill in the

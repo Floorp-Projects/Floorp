@@ -513,6 +513,16 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
 {
     *mustReturn = false;
 
+    if (frame->isEvalFrame()) {
+        // For eval frames, ScopeIter needs access to the previous frame.
+        // To avoid quadratic behavior, initialize the evalPrev_ field
+        // here.
+        ScriptFrameIter iter(cx);
+        JS_ASSERT(iter.abstractFramePtr() == AbstractFramePtr(frame));
+        ++iter;
+        frame->setEvalPrev(iter.abstractFramePtr());
+    }
+
     JSTrapStatus status = ScriptDebugPrologue(cx, frame);
     switch (status) {
       case JSTRAP_CONTINUE:
@@ -548,6 +558,12 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
     }
 
     return ok;
+}
+
+bool
+StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
+{
+    return frame->strictEvalPrologue(cx);
 }
 
 bool

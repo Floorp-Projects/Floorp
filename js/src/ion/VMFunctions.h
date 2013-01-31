@@ -473,6 +473,8 @@ bool CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval);
 bool DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn);
 bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok);
 
+bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
+
 bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn);
 
 bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool *mustReturn);
