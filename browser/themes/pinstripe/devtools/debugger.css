@@ -311,6 +311,11 @@
  * Scope element
  */
 
+.scope:focus > .title {
+  background: Highlight;
+  color: HighlightText;
+}
+
 .scope > .title {
   text-shadow: 0 1px #222;
   color: #fff;
@@ -342,9 +347,18 @@
   transition-duration: 0.4s;
 }
 
+.variable:focus > .title {
+  background: Highlight;
+  color: HighlightText;
+  border-radius: 4px;
+}
+
 .variable > .title > .name {
-  color: #048;
   font-weight: 600;
+}
+
+.variable:not(:focus) > .title > .name {
+  color: #048;
 }
 
 .variable > .title > .value {
@@ -370,7 +384,13 @@
   transition-duration: 0.4s;
 }
 
-.property > .title > .name {
+.property:focus > .title {
+  background: Highlight;
+  color: HighlightText;
+  border-radius: 4px;
+}
+
+.property:not(:focus) > .title > .name {
   color: #881090;
 }
 
@@ -384,7 +404,7 @@
 }
 
 /**
- * Non enumerable, configurable and writable variables and properties.
+ * Non enumerable, configurable and writable variables and properties
  */
 
 .variable[proto] > .title > .name,
@@ -422,8 +442,8 @@
   }
 }
 
-.variable[exception] > .title > .name,
-.property[exception] > .title > .name {
+.variable[exception]:not(:focus) > .title > .name,
+.property[exception]:not(:focus) > .title > .name {
   color: #a00;
   text-shadow: 0 0 8px #fcc;
 }
@@ -476,28 +496,28 @@
  * Token value colors
  */
 
-.token-undefined {
+.variable-or-property:not(:focus) > .title > .token-undefined {
   color: #bbb;
 }
 
-.token-null {
+.variable-or-property:not(:focus) > .title > .token-null {
   color: #999;
 }
 
-.token-boolean {
+.variable-or-property:not(:focus) > .title > .token-boolean {
   color: #777;
 }
 
-.token-number {
+.variable-or-property:not(:focus) > .title > .token-number {
   color: #c40a16;
 }
 
-.token-string {
+.variable-or-property:not(:focus) > .title > .token-string {
   max-width: 30em;
   color: #1c00cf;
 }
 
-.token-other {
+.variable-or-property:not(:focus) > .title > .token-other {
   color: #333;
 }
 

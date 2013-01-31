@@ -69,7 +69,7 @@ function testModification(aVar, aCallback, aNewValue, aNewResult) {
     EventUtils.sendKey("RETURN", gDebugger);
   }
 
-  EventUtils.sendMouseEvent({ type: "click" },
+  EventUtils.sendMouseEvent({ type: "mousedown" },
     aVar.querySelector(".value"),
     gDebugger);
 
