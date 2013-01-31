@@ -120,11 +120,11 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
  * arguments object.
  */
 static inline bool
-IsOptimizedArguments(StackFrame *fp, Value *vp)
+IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
 {
     AutoAssertNoGC nogc;
-    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS) && fp->script()->needsArgsObj())
-        *vp = ObjectValue(fp->argsObj());
+    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj())
+        *vp = ObjectValue(frame.argsObj());
     return vp->isMagic(JS_OPTIMIZED_ARGUMENTS);
 }
 
@@ -133,21 +133,30 @@ IsOptimizedArguments(StackFrame *fp, Value *vp)
  * However, this speculation must be guarded before calling 'apply' in case it
  * is not the builtin Function.prototype.apply.
  */
+static bool
+GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, HandleValue callee,
+                                   Value *args, uint32_t argc)
+{
+    if (argc == 2 && IsOptimizedArguments(frame, &args[1])) {
+        if (!IsNativeFunction(callee, js_fun_apply)) {
+            RootedScript script(cx, frame.script());
+            if (!JSScript::argumentsOptimizationFailed(cx, script))
+                return false;
+            args[1] = ObjectValue(frame.argsObj());
+        }
+    }
+
+    return true;
+}
+
 static inline bool
 GuardFunApplyArgumentsOptimization(JSContext *cx)
 {
     AssertCanGC();
     FrameRegs &regs = cx->regs();
-    if (IsOptimizedArguments(regs.fp(), &regs.sp[-1])) {
-        CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
-            RootedScript script(cx, regs.fp()->script());
-            if (!JSScript::argumentsOptimizationFailed(cx, script))
-                return false;
-            regs.sp[-1] = ObjectValue(regs.fp()->argsObj());
-        }
-    }
-    return true;
+    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+    return GuardFunApplyArgumentsOptimization(cx, cx->fp(), args.calleev(), args.array(),
+                                              args.length());
 }
 
 /*
@@ -863,6 +872,32 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
 }
 
 static JS_ALWAYS_INLINE bool
+GetElemOptimizedArguments(JSContext *cx, AbstractFramePtr frame, MutableHandleValue lref,
+                          HandleValue rref, MutableHandleValue res, bool *done)
+{
+    JS_ASSERT(!*done);
+
+    if (IsOptimizedArguments(frame, lref.address())) {
+        if (rref.isInt32()) {
+            int32_t i = rref.toInt32();
+            if (i >= 0 && uint32_t(i) < frame.numActualArgs()) {
+                res.set(frame.unaliasedActual(i));
+                *done = true;
+                return true;
+            }
+        }
+
+        RootedScript script(cx, frame.script());
+        if (!JSScript::argumentsOptimizationFailed(cx, script))
+            return false;
+
+        lref.set(ObjectValue(frame.argsObj()));
+    }
+
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
 GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue rref,
                     MutableHandleValue res)
 {
@@ -881,22 +916,11 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
         }
     }
 
-    StackFrame *fp = cx->fp();
-    if (IsOptimizedArguments(fp, lref.address())) {
-        if (rref.isInt32()) {
-            int32_t i = rref.toInt32();
-            if (i >= 0 && uint32_t(i) < fp->numActualArgs()) {
-                res.set(fp->unaliasedActual(i));
-                return true;
-            }
-        }
-
-        RootedScript script(cx, fp->script());
-        if (!JSScript::argumentsOptimizationFailed(cx, script))
-            return false;
-
-        lref.set(ObjectValue(fp->argsObj()));
-    }
+    bool done = false;
+    if (!GetElemOptimizedArguments(cx, cx->fp(), lref, rref, res, &done))
+        return false;
+    if (done)
+        return true;
 
     bool isObject = lref.isObject();
     JSObject *obj = ToObjectFromStack(cx, lref);
