@@ -75,7 +75,7 @@ this.DOMApplicationRegistry = {
                      "Webapps:GetSelf", "Webapps:CheckInstalled",
                      "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                      "Webapps:Launch", "Webapps:GetAll",
-                     "Webapps:InstallPackage", "Webapps:GetAppInfo",
+                     "Webapps:InstallPackage",
                      "Webapps:GetList", "Webapps:RegisterForMessages",
                      "Webapps:UnregisterForMessages",
                      "Webapps:CancelDownload", "Webapps:CheckForUpdate",
@@ -798,14 +798,6 @@ this.DOMApplicationRegistry = {
       case "Webapps:InstallPackage":
         this.doInstallPackage(msg, mm);
         break;
-      case "Webapps:GetAppInfo":
-        if (!this.webapps[msg.id]) {
-          debug("No webapp for " + msg.id);
-          return null;
-        }
-        return { "basePath":  this.webapps[msg.id].basePath + "/",
-                 "isCoreApp": !this.webapps[msg.id].removable };
-        break;
       case "Webapps:RegisterForMessages":
         this.addMessageListener(msg, mm);
         break;
@@ -834,6 +826,15 @@ this.DOMApplicationRegistry = {
         this.notifyAppsRegistryReady();
         break;
     }
+  },
+
+  getAppInfo: function getAppInfo(aAppId) {
+    if (!this.webapps[aAppId]) {
+      debug("No webapp for " + aAppId);
+      return null;
+    }
+    return { "basePath":  this.webapps[aAppId].basePath + "/",
+             "isCoreApp": !this.webapps[aAppId].removable };
   },
 
   // Some messages can be listened by several content processes:
