@@ -993,7 +993,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   bool topMarginRoot, bottomMarginRoot;
   IsMarginRoot(&topMarginRoot, &bottomMarginRoot);
-  nsBlockReflowState state(*reflowState, aPresContext, this, aMetrics,
+  nsBlockReflowState state(*reflowState, aPresContext, this,
                            topMarginRoot, bottomMarginRoot, needFloatManager);
 
 #ifdef IBMBIDI
