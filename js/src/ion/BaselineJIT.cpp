@@ -156,7 +156,9 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-        JSObject *evalScopeChain = fp->isEvalFrame() ? fp->scopeChain() : NULL;
+        JSObject *evalScopeChain = NULL;
+        if (fp->isEvalFrame())
+            evalScopeChain = fp->scopeChain();
 
         // Single transition point from Interpreter to Baseline.
         enter(jitcode, maxArgc, maxArgv, fp, calleeToken, evalScopeChain, &result);

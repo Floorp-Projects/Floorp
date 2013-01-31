@@ -13,9 +13,9 @@
 
 #include "methodjit/MethodJIT.h"
 #include "vm/Stack.h"
+#ifdef JS_ION
 #include "ion/BaselineFrame.h"
 #include "ion/BaselineFrame-inl.h"
-#ifdef JS_ION
 #include "ion/IonFrameIterator-inl.h"
 #endif
 #include "jsscriptinlines.h"
