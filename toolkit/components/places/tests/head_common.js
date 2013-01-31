@@ -913,23 +913,6 @@ function promiseAddVisits(aPlaceInfo)
 }
 
 /**
- * Asynchronously adds visits to a page, then either invokes a callback function
- * on success, or reports a test error on failure.
- *
- * @deprecated Use promiseAddVisits instead.
- */
-function addVisits(aPlaceInfo, aCallback, aStack)
-{
-  let stack = aStack || Components.stack.caller;
-  promiseAddVisits(aPlaceInfo).then(
-    aCallback,
-    function addVisits_onFailure(ex) {
-      do_throw(ex, stack);
-    }
-  );
-}
-
-/**
  * Asynchronously check a url is visited.
  *
  * @param aURI
