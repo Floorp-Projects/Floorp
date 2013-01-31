@@ -109,6 +109,6 @@ SettingsDB.prototype = {
 
   init: function init(aGlobal) {
     this.initDBHelper(SETTINGSDB_NAME, SETTINGSDB_VERSION,
-                      SETTINGSSTORE_NAME, aGlobal);
+                      [SETTINGSSTORE_NAME], aGlobal);
   }
 }

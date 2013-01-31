@@ -34,7 +34,7 @@ AlarmDB.prototype = {
   init: function init(aGlobal) {
     debug("init()");
 
-    this.initDBHelper(ALARMDB_NAME, ALARMDB_VERSION, ALARMSTORE_NAME, aGlobal);
+    this.initDBHelper(ALARMDB_NAME, ALARMDB_VERSION, [ALARMSTORE_NAME], aGlobal);
   },
 
   upgradeSchema: function upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
@@ -64,7 +64,8 @@ AlarmDB.prototype = {
     debug("add()");
 
     this.newTxn(
-      "readwrite", 
+      "readwrite",
+      ALARMSTORE_NAME,
       function txnCb(aTxn, aStore) {
         debug("Going to add " + JSON.stringify(aAlarm));
         aStore.put(aAlarm).onsuccess = function setTxnResult(aEvent) {
@@ -72,7 +73,7 @@ AlarmDB.prototype = {
           debug("Request successful. New record ID: " + aTxn.result);
         };
       },
-      aSuccessCb, 
+      aSuccessCb,
       aErrorCb
     );
   },
@@ -93,7 +94,8 @@ AlarmDB.prototype = {
     debug("remove()");
 
     this.newTxn(
-      "readwrite", 
+      "readwrite",
+      ALARMSTORE_NAME,
       function txnCb(aTxn, aStore) {
         debug("Going to remove " + aId);
 
@@ -114,8 +116,8 @@ AlarmDB.prototype = {
 
           aStore.delete(aId);
         };
-      }, 
-      aSuccessCb, 
+      },
+      aSuccessCb,
       aErrorCb
     );
   },
@@ -134,7 +136,8 @@ AlarmDB.prototype = {
     debug("getAll()");
 
     this.newTxn(
-      "readonly", 
+      "readonly",
+      ALARMSTORE_NAME,
       function txnCb(aTxn, aStore) {
         if (!aTxn.result)
           aTxn.result = [];
@@ -147,8 +150,8 @@ AlarmDB.prototype = {
 
           debug("Request successful. Record count: " + aTxn.result.length);
         };
-      }, 
-      aSuccessCb, 
+      },
+      aSuccessCb,
       aErrorCb
     );
   }
