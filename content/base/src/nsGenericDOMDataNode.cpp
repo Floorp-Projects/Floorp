@@ -577,12 +577,6 @@ nsGenericDOMDataNode::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
   return NS_OK;
 }
 
-bool
-nsGenericDOMDataNode::HasAttr(int32_t aNameSpaceID, nsIAtom *aAttribute) const
-{
-  return false;
-}
-
 const nsAttrName*
 nsGenericDOMDataNode::GetAttrNameAt(uint32_t aIndex) const
 {
