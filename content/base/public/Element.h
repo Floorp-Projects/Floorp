@@ -462,8 +462,10 @@ public:
                            const nsAString& aValue, bool aNotify);
   nsresult SetParsedAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                          nsAttrValue& aParsedValue, bool aNotify);
-  virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                       nsAString& aResult) const;
+  // GetAttr is not inlined on purpose, to keep down codesize from all
+  // the inlined nsAttrValue bits for C++ callers.
+  bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+               nsAString& aResult) const;
   virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
   // aCaseSensitive == eIgnoreCaase means ASCII case-insensitive matching.
   virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
