@@ -68,7 +68,7 @@ function testFrameEval() {
       ok(scope, "There should be a wach expressions scope in the variables view");
       is(scope._store.size, 5, "There should be 5 evaluations availalble");
 
-      is(scope.get("this")._isShown, true,
+      is(scope.get("this")._isContentVisible, true,
         "Should have the right visibility state for 'this'.");
       is(scope.get("this").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'this'.");
@@ -79,7 +79,7 @@ function testFrameEval() {
       is(scope.get("this").value.class, "Proxy",
         "Should have the right value type for 'this'.");
 
-      is(scope.get("ermahgerd")._isShown, true,
+      is(scope.get("ermahgerd")._isContentVisible, true,
         "Should have the right visibility state for 'ermahgerd'.");
       is(scope.get("ermahgerd").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'ermahgerd'.");
@@ -90,7 +90,7 @@ function testFrameEval() {
       is(scope.get("ermahgerd").value.class, "Function",
         "Should have the right value type for 'ermahgerd'.");
 
-      is(scope.get("aArg")._isShown, true,
+      is(scope.get("aArg")._isContentVisible, true,
         "Should have the right visibility state for 'aArg'.");
       is(scope.get("aArg").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'aArg'.");
@@ -99,7 +99,7 @@ function testFrameEval() {
       is(scope.get("aArg").value, undefined,
         "Should have the right value for 'aArg'.");
 
-      is(scope.get("document.title")._isShown, true,
+      is(scope.get("document.title")._isContentVisible, true,
         "Should have the right visibility state for 'document.title'.");
       is(scope.get("document.title").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'document.title'.");
@@ -110,7 +110,7 @@ function testFrameEval() {
       is(typeof scope.get("document.title").value, "string",
         "Should have the right value type for 'document.title'.");
 
-      is(scope.get("document.title = 42")._isShown, true,
+      is(scope.get("document.title = 42")._isContentVisible, true,
         "Should have the right visibility state for 'document.title = 42'.");
       is(scope.get("document.title = 42").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'document.title = 42'.");
