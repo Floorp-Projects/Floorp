@@ -2547,9 +2547,6 @@ JSObject::willBeSparseElements(unsigned requiredCapacity, unsigned newElementsHi
 /* static */ JSObject::EnsureDenseResult
 JSObject::maybeDensifySparseElements(JSContext *cx, HandleObject obj)
 {
-    /* This should only be called after adding a sparse index to an object. */
-    JS_ASSERT(JSID_IS_INT(obj->lastProperty()->propid()));
-
     /*
      * Wait until after the object goes into dictionary mode, which must happen
      * when sparsely packing any array with more than MIN_SPARSE_INDEX elements
@@ -2609,8 +2606,10 @@ JSObject::maybeDensifySparseElements(JSContext *cx, HandleObject obj)
      * properties into dense elements.
      */
 
-    if (!obj->growElements(cx, newInitializedLength))
-        return ED_FAILED;
+    if (newInitializedLength > obj->getDenseCapacity()) {
+        if (!obj->growElements(cx, newInitializedLength))
+            return ED_FAILED;
+    }
 
     obj->ensureDenseInitializedLength(cx, newInitializedLength, 0);
 
