@@ -11,6 +11,8 @@
 #include "jsstr.h"
 #include "jsfriendapi.h"
 
+#include "jsscriptinlines.h"
+
 static JSScript *
 CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
                                         JSPrincipals *principals, JSPrincipals *originPrincipals,
@@ -45,7 +47,7 @@ FreezeThaw(JSContext *cx, JSScript *script)
         return NULL;
 
     // thaw
-    script = JS_DecodeScript(cx, memory, nbytes, script->principals, script->originPrincipals);
+    script = JS_DecodeScript(cx, memory, nbytes, script->principals(), script->originPrincipals);
     js_free(memory);
     return script;
 }
@@ -68,7 +70,8 @@ FreezeThaw(JSContext *cx, JS::HandleObject funobj)
     // thaw
     JSScript *script = GetScript(cx, funobj);
     JSObject *funobj2 = JS_DecodeInterpretedFunction(cx, memory, nbytes,
-                                          script->principals, script->originPrincipals);
+                                                     script->principals(),
+                                                     script->originPrincipals);
     js_free(memory);
     return funobj2;
 }
@@ -83,19 +86,8 @@ BEGIN_TEST(testXDR_principals)
     JSScript *script;
     JSCompartment *compartment = js::GetContextCompartment(cx);
     for (int i = TEST_FIRST; i != TEST_END; ++i) {
-        script = createScriptViaXDR(NULL, NULL, i);
-        CHECK(script);
-        CHECK(!JS_GetScriptPrincipals(script));
-        CHECK(!JS_GetScriptOriginPrincipals(script));
-
-        script = createScriptViaXDR(NULL, NULL, i);
-        CHECK(script);
-        CHECK(!JS_GetScriptPrincipals(script));
-        CHECK(!JS_GetScriptOriginPrincipals(script));
-
         // Appease the new JSAPI assertions. The stuff being tested here is
         // going away anyway.
-        JSPrincipals *old = JS_GetCompartmentPrincipals(compartment);
         JS_SetCompartmentPrincipals(compartment, &testPrincipals[0]);
         script = createScriptViaXDR(&testPrincipals[0], NULL, i);
         CHECK(script);
@@ -111,12 +103,6 @@ BEGIN_TEST(testXDR_principals)
         CHECK(script);
         CHECK(JS_GetScriptPrincipals(script) == &testPrincipals[0]);
         CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[1]);
-
-        script = createScriptViaXDR(NULL, &testPrincipals[1], i);
-        CHECK(script);
-        CHECK(!JS_GetScriptPrincipals(script));
-        CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[1]);
-        JS_SetCompartmentPrincipals(compartment, old);
     }
 
     return true;
