@@ -177,7 +177,6 @@
  */
 
 #stackframes\+breakpoints {
-  background-color: white;
   min-width: 50px;
 }
 
@@ -190,7 +189,6 @@
  */
 
 #variables\+expressions {
-  background-color: white;
   min-width: 50px;
 }
 
@@ -203,7 +201,6 @@
  */
 
 #stackframes {
-  background-color: white;
   min-height: 10px;
 }
 
@@ -225,7 +222,6 @@
  */
 
 #breakpoints {
-  background-color: white;
   min-height: 10px;
 }
 
@@ -259,7 +255,6 @@
  */
 
 #expressions {
-  background-color: white;
   min-height: 10px;
   max-height: 125px;
 }
@@ -301,7 +296,6 @@
  */
 
 #variables {
-  background-color: white;
   min-height: 10px;
 }
 
@@ -367,7 +361,6 @@
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
   border-bottom: 1px solid #eee;
-  background: #fff;
   transition: background 1s ease-in-out;
 }
 
@@ -408,7 +401,6 @@
  */
 
 .property {
-  background: #fff;
   transition: background 1s ease-in-out;
 }
 
@@ -503,16 +495,21 @@
  * Variables and properties editing
  */
 
-#variables .element-value-input {
-  overflow: hidden;
-  max-width: 30em;
-  -moz-margin-start: 5px !important;
+.element-value-input {
+  -moz-margin-start: 4px !important;
 }
 
-#variables .element-name-input {
-  -moz-margin-start: -1px !important;
+.element-name-input {
+  -moz-margin-start: -2px !important;
   color: #048;
   font-weight: 600;
+}
+
+.element-value-input,
+.element-name-input {
+  max-width: 30em;
+  border: 1px solid #999 !important;
+  box-shadow: 1px 2px 4px #aaa;
 }
 
 /**
