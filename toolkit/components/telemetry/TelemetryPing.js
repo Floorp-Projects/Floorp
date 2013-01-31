@@ -151,10 +151,6 @@ function getSimpleMeasurements() {
   if (shutdownDuration)
     ret.shutdownDuration = shutdownDuration;
 
-  let failedProfileLockCount = Telemetry.failedProfileLockCount;
-  if (failedProfileLockCount)
-    ret.failedProfileLockCount = failedProfileLockCount;
-
   return ret;
 }
 
