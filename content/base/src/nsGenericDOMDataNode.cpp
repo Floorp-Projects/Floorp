@@ -578,15 +578,6 @@ nsGenericDOMDataNode::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
 }
 
 bool
-nsGenericDOMDataNode::GetAttr(int32_t aNameSpaceID, nsIAtom *aAttr,
-                              nsAString& aResult) const
-{
-  aResult.Truncate();
-
-  return false;
-}
-
-bool
 nsGenericDOMDataNode::HasAttr(int32_t aNameSpaceID, nsIAtom *aAttribute) const
 {
   return false;
