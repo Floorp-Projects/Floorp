@@ -42,6 +42,9 @@ add_task(function test_register_provider() {
     failed = false;
   }
 
+  collector.unregisterProvider(dummy.name);
+  do_check_eq(collector._providers.size, 0);
+
   yield storage.close();
 });
 
