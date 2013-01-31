@@ -1302,6 +1302,10 @@ toolbar[iconsize="small"] #webrtc-status-button {
   }
 }
 
+#mixed-content-blocked-notification-icon {
+  list-style-image: url(chrome://browser/skin/mixed-content-blocked-16.png);
+}
+
 #webRTC-shareDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
 }

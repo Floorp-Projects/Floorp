@@ -610,6 +610,15 @@ MOCHITEST_FILES_B = \
     test_mixed_content_blocker_bug803225.html \
     file_mixed_content_main_bug803225.html \
     file_mixed_content_main_bug803225_websocket_wsh.py \
+    file_bug822367_1.html \
+    file_bug822367_1.js \
+    file_bug822367_2.html \
+    file_bug822367_3.html \
+    file_bug822367_4.html \
+    file_bug822367_4.js \
+    file_bug822367_4B.html \
+    file_bug822367_5.html \
+    file_bug822367_6.html \
     bug803225_test_mailto.html \
 		test_bug789856.html \
 		file_bug804395.jar \

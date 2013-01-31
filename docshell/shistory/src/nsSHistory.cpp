@@ -874,11 +874,15 @@ nsSHistory::Reload(uint32_t aReloadFlags)
   {
     loadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
   }
+  else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT)
+  {
+    loadType = nsIDocShellLoadInfo::loadMixedContent;
+  }
   else
   {
     loadType = nsIDocShellLoadInfo::loadReloadNormal;
   }
-  
+
   // We are reloading. Send Reload notifications.
   // nsDocShellLoadFlagType is not public, where as nsIWebNavigation
   // is public. So send the reload notifications with the

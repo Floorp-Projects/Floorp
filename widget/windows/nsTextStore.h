@@ -16,7 +16,13 @@
 
 #include <msctf.h>
 #include <textstor.h>
-#include <InputScope.h>
+
+// GUID_PROP_INPUTSCOPE is declared in inputscope.h using INIT_GUID.
+// With initguid.h, we get its instance instead of extern declaration.
+#ifdef INPUTSCOPE_INIT_GUID
+#include <initguid.h>
+#endif
+#include <inputscope.h>
 
 struct ITfThreadMgr;
 struct ITfDocumentMgr;
