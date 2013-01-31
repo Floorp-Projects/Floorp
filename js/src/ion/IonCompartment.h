@@ -19,8 +19,13 @@ namespace ion {
 
 class FrameSizeClass;
 
+enum EnterJitType {
+    EnterJitBaseline = 0,
+    EnterJitOptimized = 1
+};
+
 typedef void (*EnterIonCode)(void *code, int argc, Value *argv, StackFrame *fp,
-                             CalleeToken calleeToken, Value *vp);
+                             CalleeToken calleeToken, JSObject *evalScopeChain, Value *vp);
 
 class IonActivation;
 class IonBuilder;
@@ -36,6 +41,9 @@ class IonRuntime
 
     // Trampoline for entering JIT code. Contains OSR prologue.
     IonCode *enterJIT_;
+
+    // Trampoline for entering baseline JIT code.
+    IonCode *enterBaselineJIT_;
 
     // Vector mapping frame class sizes to bailout tables.
     Vector<IonCode*, 4, SystemAllocPolicy> bailoutTables_;
@@ -63,7 +71,7 @@ class IonRuntime
     VMWrapperMap *functionWrappers_;
 
   private:
-    IonCode *generateEnterJIT(JSContext *cx);
+    IonCode *generateEnterJIT(JSContext *cx, EnterJitType type);
     IonCode *generateArgumentsRectifier(JSContext *cx, void **returnAddrOut);
     IonCode *generateBailoutTable(JSContext *cx, uint32_t frameClass);
     IonCode *generateBailoutHandler(JSContext *cx);
@@ -179,6 +187,10 @@ class IonCompartment
 
     EnterIonCode enterJIT() {
         return rt->enterJIT_->as<EnterIonCode>();
+    }
+
+    EnterIonCode enterBaselineJIT() {
+        return rt->enterBaselineJIT_->as<EnterIonCode>();
     }
 
     IonCode *valuePreBarrier() {

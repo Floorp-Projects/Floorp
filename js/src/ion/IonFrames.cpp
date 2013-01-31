@@ -166,6 +166,8 @@ IonFrameIterator::script() const
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(isScripted());
+    if (isBaselineJS())
+        return baselineFrame()->script();
     RawScript script = ScriptFromCalleeToken(calleeToken());
     JS_ASSERT(script);
     return script;

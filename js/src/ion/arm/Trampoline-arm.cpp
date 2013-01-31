@@ -60,6 +60,7 @@ struct EnterJITStack
     // argv == r2
     // frame == r3
     CalleeToken token;
+    JSObject *evalScopeChain;
     Value *vp;
 };
 
@@ -67,11 +68,11 @@ struct EnterJITStack
  * This method generates a trampoline on x86 for a c++ function with
  * the following signature:
  *   void enter(void *code, int argc, Value *argv, StackFrame *fp, CalleeToken
- *              calleeToken, Value *vp)
+ *              calleeToken, JSObject *evalScopeChain, Value *vp)
  *   ...using standard EABI calling convention
  */
 IonCode *
-IonRuntime::generateEnterJIT(JSContext *cx)
+IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 {
 
     const Register reg_code  = r0;
@@ -81,6 +82,7 @@ IonRuntime::generateEnterJIT(JSContext *cx)
 
     const Address slot_token(sp, offsetof(EnterJITStack, token));
     const Address slot_vp(sp, offsetof(EnterJITStack, vp));
+    const Address slot_evalScopeChain(sp, offsetof(EnterJITStack, evalScopeChain));
 
     JS_ASSERT(OsrFrameReg == reg_frame);
 
@@ -111,6 +113,10 @@ IonRuntime::generateEnterJIT(JSContext *cx)
 
     // Load calleeToken into r9.
     masm.loadPtr(slot_token, r9);
+
+    // Load eval scope chain.
+    if (type == EnterJitBaseline)
+        masm.loadPtr(slot_evalScopeChain, r11);
 
     // Load the number of actual arguments into r10.
     masm.loadPtr(slot_vp, r10);
@@ -164,6 +170,12 @@ IonRuntime::generateEnterJIT(JSContext *cx)
     masm.transferReg(r9);  // [sp',8]  = callee token
     masm.transferReg(r10); // [sp',12]  = actual arguments
     masm.finishDataTransfer();
+
+    if (type == EnterJitBaseline) {
+        // Load the eval scope chain in R1.
+        JS_ASSERT(R1.scratchReg() != r0);
+        masm.ma_mov(r11, R1.scratchReg());
+    }
 
     // Call the function.
     masm.ma_callIonNoPush(r0);

@@ -1749,8 +1749,12 @@ StackIter::isGlobalFrame() const
       case SCRIPTED:
         return interpFrame()->isGlobalFrame();
       case ION:
+#ifdef JS_ION
+        if (data_.ionFrames_.isBaselineJS())
+            return data_.ionFrames_.baselineFrame()->isGlobalFrame();
         JS_ASSERT(!script()->isForEval());
         return !script()->function();
+#endif
       case NATIVE:
         return false;
     }
@@ -1767,6 +1771,12 @@ StackIter::isEvalFrame() const
       case SCRIPTED:
         return interpFrame()->isEvalFrame();
       case ION:
+#ifdef JS_ION
+        if (data_.ionFrames_.isBaselineJS())
+            return data_.ionFrames_.baselineFrame()->isEvalFrame();
+        JS_ASSERT(!script()->isForEval());
+        return false;
+#endif
       case NATIVE:
         return false;
     }
@@ -1864,6 +1874,22 @@ StackIter::updatePcQuadratic()
       case ION:
 #ifdef JS_ION
         if (data_.ionFrames_.isBaselineJS()) {
+            ion::BaselineFrame *frame = data_.ionFrames_.baselineFrame();
+            ion::IonActivation *activation = data_.ionActivations_.activation();
+
+            // IonActivationIterator::top may be invalid, so create a new
+            // activation iterator.
+            data_.ionActivations_ = ion::IonActivationIterator(data_.cx_);
+            while (data_.ionActivations_.activation() != activation)
+                ++data_.ionActivations_;
+
+            // Look for the current frame.
+            data_.ionFrames_ = ion::IonFrameIterator(data_.ionActivations_);
+            while (!data_.ionFrames_.isBaselineJS() || data_.ionFrames_.baselineFrame() != frame)
+                ++data_.ionFrames_;
+
+            // Update the pc.
+            JS_ASSERT(data_.ionFrames_.baselineFrame() == frame);
             data_.ionFrames_.baselineScriptAndPc(NULL, &data_.pc_);
             return;
         }
