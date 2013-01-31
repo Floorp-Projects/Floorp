@@ -534,7 +534,7 @@ JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
 JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSScript *script)
 {
-    return script->principals;
+    return script->principals();
 }
 
 JS_PUBLIC_API(JSPrincipals *)
@@ -902,7 +902,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     if (script->hasTrynotes())
         nbytes += sizeof(TryNoteArray) + script->trynotes()->length * sizeof(JSTryNote);
 
-    principals = script->principals;
+    principals = script->principals();
     if (principals) {
         JS_ASSERT(principals->refcount);
         pbytes = sizeof *principals;
