@@ -702,7 +702,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 }
 
 void
-MacroAssembler::loadBaselineOrIonCode(Register script, Label *failure)
+MacroAssembler::loadBaselineOrIonCode(Register script, Register scratch, Label *failure)
 {
     Label noIonScript, done;
     Address scriptIon(script, offsetof(JSScript, ion));
@@ -710,8 +710,13 @@ MacroAssembler::loadBaselineOrIonCode(Register script, Label *failure)
               &noIonScript);
     {
         // Load IonScript method.
-        loadPtr(scriptIon, script);
-        loadPtr(Address(script, IonScript::offsetOfMethod()), script);
+        loadPtr(scriptIon, scratch);
+
+        // Check bailoutExpected flag
+        Address bailoutExpected(scratch, IonScript::offsetOfBailoutExpected());
+        branch32(Assembler::NotEqual, bailoutExpected, Imm32(0), &noIonScript);
+
+        loadPtr(Address(scratch, IonScript::offsetOfMethod()), script);
         jump(&done);
     }
     bind(&noIonScript);

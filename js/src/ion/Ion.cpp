@@ -478,7 +478,7 @@ IonScript::IonScript()
     osrEntryOffset_(0),
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
-    bailoutExpected_(false),
+    bailoutExpected_(0),
     snapshots_(0),
     snapshotsSize_(0),
     bailoutTable_(0),
@@ -1389,7 +1389,7 @@ Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, boo
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
 
-    if (!script->hasBaselineScript()) {
+    if (IsBaselineEnabled(cx) && !script->hasBaselineScript()) {
         IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d (has no baseline script)",
                     script->filename, script->lineno);
         return Method_Skipped;
