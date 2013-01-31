@@ -860,6 +860,26 @@ nsIContent::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
   return IsElement() && AsElement()->HasAttr(aNameSpaceID, aName);
 }
 
+bool
+nsIContent::AttrValueIs(int32_t aNameSpaceID,
+                        nsIAtom* aName,
+                        const nsAString& aValue,
+                        nsCaseTreatment aCaseSensitive) const
+{
+  return IsElement() &&
+    AsElement()->AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
+}
+
+bool
+nsIContent::AttrValueIs(int32_t aNameSpaceID,
+                        nsIAtom* aName,
+                        nsIAtom* aValue,
+                        nsCaseTreatment aCaseSensitive) const
+{
+  return IsElement() &&
+    AsElement()->AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
+}
+
 const nsAttrValue*
 FragmentOrElement::DoGetClasses() const
 {
