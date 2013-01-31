@@ -112,6 +112,16 @@ struct IonOptions
     // Default: 3
     uint32_t maxInlineDepth;
 
+    // The maximum inlining depth for functions.
+    //
+    // Inlining small functions has almost no compiling overhead
+    // and removes the otherwise needed call overhead.
+    // The value is currently very low.
+    // Actually it is only needed to make sure we don't blow out the stack.
+    //
+    // Default: 10
+    uint32_t smallFunctionMaxInlineDepth;
+
     // The bytecode length limit for small function.
     //
     // The default for this was arrived at empirically via benchmarking.
@@ -191,6 +201,7 @@ struct IonOptions
         usesBeforeInlining(usesBeforeCompile),
         maxStackArgs(4096),
         maxInlineDepth(3),
+        smallFunctionMaxInlineDepth(10),
         smallFunctionMaxBytecodeLength(100),
         smallFunctionUsesBeforeInlining(usesBeforeInlining / 4),
         polyInlineMax(4),

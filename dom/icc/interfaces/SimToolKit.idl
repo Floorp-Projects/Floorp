@@ -592,14 +592,31 @@ dictionary MozStkLocalInfo
   DOMString language;
 };
 
+dictionary MozStkLanguageSelectionEvent
+{
+  /**
+   * The type of this event.
+   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_LANGUAGE_SELECTION.
+   */
+  unsigned short eventType;
+
+  /**
+   * Language Information
+   *
+   * @see ISO 639-1, Alpha-2 code
+   *      "de" for German, "en" for English, "zh" for Chinese, etc.
+   */
+  DOMString language;
+};
+
 dictionary MozStkGeneralEvent
 {
   /**
    * The type of this event, MozStkGeneralEvent can be used for all Stk Event
    * requires no more parameter than event type, including
-   * nsIDOMMozIccManager.STK_EVENT_TYPE_USER_ACTIVITY
-   * nsIDOMMozIccManager.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE
-   * HCI Connectivity Event(Not defined in interface yet)
+   * nsIDOMMozIccManager.STK_EVENT_TYPE_USER_ACTIVITY.
+   * nsIDOMMozIccManager.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE.
+   * HCI Connectivity Event(Not defined in interface yet).
    */
   unsigned short eventType;
 };

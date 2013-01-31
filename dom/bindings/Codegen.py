@@ -1825,13 +1825,18 @@ builtinNames = {
     IDLType.Tags.double: 'double'
 }
 
-numericTags = [
-    IDLType.Tags.int8, IDLType.Tags.uint8,
-    IDLType.Tags.int16, IDLType.Tags.uint16,
-    IDLType.Tags.int32, IDLType.Tags.uint32,
-    IDLType.Tags.int64, IDLType.Tags.uint64,
-    IDLType.Tags.float, IDLType.Tags.double
-    ]
+numericSuffixes = {
+    IDLType.Tags.int8: '',
+    IDLType.Tags.uint8: '',
+    IDLType.Tags.int16: '',
+    IDLType.Tags.uint16: '',
+    IDLType.Tags.int32: '',
+    IDLType.Tags.uint32: 'U',
+    IDLType.Tags.int64: 'LL',
+    IDLType.Tags.uint64: 'ULL',
+    IDLType.Tags.float: 'F',
+    IDLType.Tags.double: 'D'
+}
 
 class CastableObjectUnwrapper():
     """
@@ -2987,8 +2992,9 @@ for (uint32_t i = 0; i < length; ++i) {
         # We already handled IDLNullValue, so just deal with the other ones
         not isinstance(defaultValue, IDLNullValue)):
         tag = defaultValue.type.tag()
-        if tag in numericTags:
-            defaultStr = defaultValue.value
+        if tag in numericSuffixes:
+            # Some numeric literals require a suffix to compile without warnings
+            defaultStr = "%s%s" % (defaultValue.value, numericSuffixes[tag])
         else:
             assert(tag == IDLType.Tags.bool)
             defaultStr = toStringBool(defaultValue.value)
@@ -3093,9 +3099,9 @@ def convertConstIDLValueToJSVal(value):
                IDLType.Tags.uint16, IDLType.Tags.int32]:
         return "INT_TO_JSVAL(%s)" % (value.value)
     if tag == IDLType.Tags.uint32:
-        return "UINT_TO_JSVAL(%s)" % (value.value)
+        return "UINT_TO_JSVAL(%sU)" % (value.value)
     if tag in [IDLType.Tags.int64, IDLType.Tags.uint64]:
-        return "DOUBLE_TO_JSVAL(%s)" % (value.value)
+        return "DOUBLE_TO_JSVAL(%s%s)" % (value.value, numericSuffixes[tag])
     if tag == IDLType.Tags.bool:
         return "JSVAL_TRUE" if value.value else "JSVAL_FALSE"
     if tag in [IDLType.Tags.float, IDLType.Tags.double]:
@@ -4547,11 +4553,13 @@ class CGMemberJITInfo(CGThing):
         return ""
 
     def defineJitInfo(self, infoName, opName, opType, infallible, constant,
-                      returnTypes):
+                      pure, returnTypes):
+        assert(not constant or pure) # constants are always pure
         protoID = "prototypes::id::%s" % self.descriptor.name
         depth = "PrototypeTraits<%s>::Depth" % protoID
         failstr = toStringBool(infallible)
         conststr = toStringBool(constant)
+        purestr = toStringBool(pure)
         returnType = reduce(CGMemberJITInfo.getSingleReturnType, returnTypes,
                             "")
         return ("\n"
@@ -4562,26 +4570,30 @@ class CGMemberJITInfo(CGThing):
                 "  JSJitInfo::%s,\n"
                 "  %s,  /* isInfallible. False in setters. */\n"
                 "  %s,  /* isConstant. Only relevant for getters. */\n"
+                "  %s,  /* isPure.  Only relevant for getters. */\n"
                 "  %s   /* returnType.  Only relevant for getters/methods. */\n"
                 "};\n" % (infoName, opName, protoID, depth, opType, failstr,
-                          conststr, returnType))
+                          conststr, purestr, returnType))
 
     def define(self):
         if self.member.isAttr():
             getterinfo = ("%s_getterinfo" % self.member.identifier.name)
             getter = ("(JSJitPropertyOp)get_%s" % self.member.identifier.name)
             getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
-            getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             getterconst = self.member.getExtendedAttribute("Constant")
+            getterpure = getterconst or self.member.getExtendedAttribute("Pure")
+            assert (getterinfal or (not getterconst and not getterpure))
+
+            getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             result = self.defineJitInfo(getterinfo, getter, "Getter",
-                                        getterinfal, getterconst,
+                                        getterinfal, getterconst, getterpure,
                                         [self.member.type])
             if not self.member.readonly or self.member.getExtendedAttribute("PutForwards") is not None:
                 setterinfo = ("%s_setterinfo" % self.member.identifier.name)
                 setter = ("(JSJitPropertyOp)set_%s" % self.member.identifier.name)
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, "Setter",
-                                             False, False,
+                                             False, False, False,
                                              [BuiltinTypes[IDLBuiltinType.Types.void]])
             return result
         if self.member.isMethod():
@@ -4593,18 +4605,22 @@ class CGMemberJITInfo(CGThing):
             # Methods are infallible if they are infallible, have no arguments
             # to unwrap, and have a return type that's infallible to wrap up for
             # return.
-            methodInfal = False
             sigs = self.member.signatures()
-            if len(sigs) == 1:
-                # Don't handle overloading. If there's more than one signature,
+            if len(sigs) != 1:
+                # Don't handle overloading.  If there's more than one signature,
                 # one of them must take arguments.
+                methodInfal = False
+            else:
                 sig = sigs[0]
-                if len(sig[1]) == 0 and infallibleForMember(self.member, sig[0], self.descriptor):
-                    # No arguments and infallible return boxing
-                    methodInfal = True
+                if (len(sig[1]) != 0 or
+                    not infallibleForMember(self.member, sig[0], self.descriptor)):
+                    # We have arguments or our return-value boxing can fail
+                    methodInfal = False
+                else:
+                    methodInfal = "infallible" in self.descriptor.getExtendedAttributes(self.member)
 
             result = self.defineJitInfo(methodinfo, method, "Method",
-                                        methodInfal, False,
+                                        methodInfal, False, False,
                                         [s[0] for s in sigs])
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
