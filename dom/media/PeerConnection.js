@@ -552,7 +552,7 @@ PeerConnection.prototype = {
     return Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  addIceCandidate: function(cand, onSuccess, onError) {
+  addIceCandidate: function(cand) {
     if (!cand) {
       throw new Error ("NULL candidate passed to addIceCandidate!");
     }
@@ -561,13 +561,10 @@ PeerConnection.prototype = {
       throw new Error ("Invalid candidate passed to addIceCandidate!");
     }
 
-    this._onAddIceCandidateSuccess = onSuccess;
-    this._onAddIceCandidateError = onError;
-
     this._queueOrRun({
       func: this._pc.addIceCandidate,
       args: [cand.candidate, cand.sdpMid || "", cand.sdpMLineIndex],
-      wait: true
+      wait: false
     });
   },
 
@@ -757,22 +754,6 @@ PeerConnectionObserver.prototype = {
     this._dompc._pendingType = null;
     if (this._dompc._onSetRemoteDescriptionFailure) {
       this._dompc._onSetRemoteDescriptionFailure.onCallback(code);
-    }
-    this._dompc._executeNext();
-  },
-
-  onAddIceCandidateSuccess: function(code) {
-    this._dompc._pendingType = null;
-    if (this._dompc._onAddIceCandidateSuccess) {
-      this._dompc._onAddIceCandidateSuccess.onCallback(code);
-    }
-    this._dompc._executeNext();
-  },
-
-  onAddIceCandidateError: function(code) {
-    this._dompc._pendingType = null;
-    if (this._dompc._onAddIceCandidateError) {
-      this._dompc._onAddIceCandidateError.onCallback(code);
     }
     this._dompc._executeNext();
   },
