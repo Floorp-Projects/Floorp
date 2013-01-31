@@ -111,7 +111,16 @@ this.DOMApplicationRegistry = {
   getWebAppsBasePath: function getWebAppsBasePath() {
     debug("getWebAppsBasePath() not yet supported on child!");
     return null;
-  }
+  },
+
+  getAppInfo: function getAppInfo(aAppId) {
+    if (!this.webapps[aAppId]) {
+      debug("No webapp for " + aAppId);
+      return null;
+    }
+    return { "basePath":  this.webapps[aAppId].basePath + "/",
+             "isCoreApp": !this.webapps[aAppId].removable };
+  },
 }
 
 DOMApplicationRegistry.init();
