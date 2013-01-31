@@ -24,6 +24,9 @@ BaselineFrame::trace(JSTracer *trc)
     if (isEvalFrame())
         gc::MarkScriptRoot(trc, &evalScript_, "baseline-evalscript");
 
+    if (hasArgsObj())
+        gc::MarkObjectRoot(trc, &argsObj_, "baseline-args-obj");
+
     // Mark locals and stack values.
     size_t nvalues = numValueSlots();
     if (nvalues > 0) {
