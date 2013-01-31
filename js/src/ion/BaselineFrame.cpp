@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BaselineFrame.h"
+#include "vm/ScopeObject.h"
 
 using namespace js;
 using namespace js::ion;
@@ -19,6 +20,9 @@ BaselineFrame::trace(JSTracer *trc)
     // Mark return value.
     if (hasReturnValue())
         gc::MarkValueRoot(trc, returnValue(), "baseline-rval");
+
+    if (isEvalFrame())
+        gc::MarkScriptRoot(trc, &evalScript_, "baseline-evalscript");
 
     // Mark locals and stack values.
     size_t nvalues = numValueSlots();
@@ -41,5 +45,19 @@ BaselineFrame::copyRawFrameSlots(AutoValueVector *vec) const
     PodCopy(vec->begin(), formals(), nformals);
     for (unsigned i = 0; i < nfixed; i++)
         (*vec)[nformals + i] = *valueSlot(i);
+    return true;
+}
+
+bool
+BaselineFrame::strictEvalPrologue(JSContext *cx)
+{
+    JS_ASSERT(isStrictEvalFrame());
+
+    CallObject *callobj = CallObject::createForStrictEval(cx, this);
+    if (!callobj)
+        return false;
+
+    pushOnScopeChain(*callobj);
+    flags_ |= HAS_CALL_OBJ;
     return true;
 }

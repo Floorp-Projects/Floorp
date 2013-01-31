@@ -22,11 +22,12 @@ using namespace js::ion;
 
 /* This method generates a trampoline on x64 for a c++ function with
  * the following signature:
- *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
+ *   JSBool blah(void *code, int argc, Value *argv, JSObject *evalScopeChain,
+ *               Value *vp)
  *   ...using standard x64 fastcall calling convention
  */
 IonCode *
-IonRuntime::generateEnterJIT(JSContext *cx)
+IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 {
     MacroAssembler masm(cx);
 
@@ -37,10 +38,12 @@ IonRuntime::generateEnterJIT(JSContext *cx)
 
 #if defined(_WIN64)
     const Operand token  = Operand(rbp, 16 + ShadowStackSpace);
-    const Operand result = Operand(rbp, 24 + ShadowStackSpace);
+    const Operand evalScopeChain = Operand(rbp, 24 + ShadowStackSpace);
+    const Operand result = Operand(rbp, 32 + ShadowStackSpace);
 #else
-    const Register token  = IntArgReg4;
-    const Register result = IntArgReg5;
+    const Register token = IntArgReg4;
+    const Register evalScopeChain = IntArgReg5;
+    const Operand result = Operand(rbp, 16 + ShadowStackSpace);
 #endif
 
     // Save old stack frame pointer, set new stack frame pointer.
@@ -133,6 +136,11 @@ IonRuntime::generateEnterJIT(JSContext *cx)
     // Create a frame descriptor.
     masm.makeFrameDescriptor(r14, IonFrame_Entry);
     masm.push(r14);
+
+    if (type == EnterJitBaseline) {
+        JS_ASSERT(R1.scratchReg() != reg_code);
+        masm.movq(evalScopeChain, R1.scratchReg());
+    }
 
     // Call function.
     masm.call(reg_code);

@@ -97,6 +97,9 @@ BaselineCompiler::compile()
         return Method_CantCompile;
     }
 
+    if (!script->ensureRanAnalysis(cx))
+        return Method_Error;
+
     // Pin analysis info during compilation.
     types::AutoEnterAnalysis autoEnterAnalysis(cx);
 
@@ -202,8 +205,18 @@ BaselineCompiler::emitPrologue()
     masm.subPtr(Imm32(BaselineFrame::Size()), BaselineStackReg);
     masm.checkStackAlignment();
 
+    // Initialize BaselineFrame. For eval scripts, the scope chain
+    // is passed in R1, so we have to be careful not to clobber
+    // it.
+
     // Initialize BaselineFrame::flags.
-    masm.store32(Imm32(0), frame.addressOfFlags());
+    uint32_t flags = 0;
+    if (script->isForEval())
+        flags |= BaselineFrame::EVAL;
+    masm.store32(Imm32(flags), frame.addressOfFlags());
+
+    if (script->isForEval())
+        masm.storePtr(ImmGCPtr(script), frame.addressOfEvalScript());
 
     // Initialize locals to |undefined|. Use R0 to minimize code size.
     if (frame.nlocals() > 0) {
@@ -290,6 +303,10 @@ BaselineCompiler::emitDebugPrologue()
     return true;
 }
 
+typedef bool (*StrictEvalPrologueFn)(JSContext *, BaselineFrame *);
+static const VMFunction StrictEvalPrologueInfo =
+    FunctionInfo<StrictEvalPrologueFn>(ion::StrictEvalPrologue);
+
 bool
 BaselineCompiler::initScopeChain()
 {
@@ -307,10 +324,21 @@ BaselineCompiler::initScopeChain()
         // Once we compile heavy-weight functions, we should create a new
         // call object here.
         JS_ASSERT(!fun->isHeavyweight());
-    } else {
-        // Once we compile eval scripts, we should create a call object.
-        JS_ASSERT(!script->isForEval());
+    } else if (script->isForEval()) {
+        // The scope chain is in R1.
+        masm.storePtr(R1.scratchReg(), frame.addressOfScopeChain());
 
+        if (script->strict) {
+            // Strict eval needs its own call object.
+            prepareVMCall();
+
+            masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+            pushArg(R0.scratchReg());
+
+            if (!callVM(StrictEvalPrologueInfo))
+                return false;
+        }
+    } else {
         // For global scripts, the scope chain is the global object.
         masm.storePtr(ImmGCPtr(&script->global()), frame.addressOfScopeChain());
     }
@@ -1604,5 +1632,31 @@ BaselineCompiler::emit_JSOP_STOP()
     JS_ASSERT(frame.stackDepth() == 0);
 
     masm.moveValue(UndefinedValue(), JSReturnOperand);
+
+    if (!script->noScriptRval) {
+        // Return the value in the return value slot, if any.
+        Label done;
+        Address flags = frame.addressOfFlags();
+        masm.branchTest32(Assembler::Zero, flags, Imm32(BaselineFrame::HAS_RVAL), &done);
+        masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
+        masm.bind(&done);
+    }
+
     return emitReturn();
+}
+
+bool
+BaselineCompiler::emit_JSOP_SETRVAL()
+{
+    // Store to the frame's return value slot.
+    storeValue(frame.peek(-1), frame.addressOfReturnValue(), R2);
+    masm.or32(Imm32(BaselineFrame::HAS_RVAL), frame.addressOfFlags());
+    frame.pop();
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_POPV()
+{
+    return emit_JSOP_SETRVAL();
 }

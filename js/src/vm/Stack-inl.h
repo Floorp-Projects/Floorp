@@ -755,8 +755,11 @@ AbstractFramePtr::hasCallObj() const
 {
     if (isStackFrame())
         return asStackFrame()->hasCallObj();
+#ifdef JS_ION
+    return asBaselineFrame()->hasCallObj();
+#else
     JS_NOT_REACHED("Invalid frame");
-    return false;
+#endif
 }
 inline bool
 AbstractFramePtr::isGeneratorFrame() const
@@ -997,8 +1000,11 @@ AbstractFramePtr::evalPrev() const
     JS_ASSERT(isEvalFrame());
     if (isStackFrame())
         return AbstractFramePtr(asStackFrame()->prev());
+#ifdef JS_ION
+    return asBaselineFrame()->evalPrev();
+#else
     JS_NOT_REACHED("Invalid frame");
-    return NullFramePtr();
+#endif
 }
 
 inline Value &
