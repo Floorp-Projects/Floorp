@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(23fdd971-8db1-48ef-b9b3-99dbf60f04dd)]
+[scriptable, uuid(e70ba4cc-7ccd-41fe-a75c-e4042233a8cb)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -47,6 +47,12 @@ interface nsITelemetry : nsISupports
    * to shutdown.  Reads as 0 to indicate failure.
    */
   readonly attribute uint32_t lastShutdownDuration;
+
+  /**
+   * The number of failed profile lock attempts that have occurred prior to 
+   * successfully locking the profile
+   */
+  readonly attribute uint32_t failedProfileLockCount;
 
   /*
    * An object containing information about slow SQL statements.
