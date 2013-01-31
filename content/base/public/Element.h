@@ -121,8 +121,8 @@ class UndoManager;
 
 // IID for the dom::Element interface
 #define NS_ELEMENT_IID \
-{ 0xc6c049a1, 0x96e8, 0x4580, \
-  { 0xa6, 0x93, 0xb9, 0x5f, 0x53, 0xbe, 0xe8, 0x1c } }
+{ 0xcae9f7e7, 0x6163, 0x47b5, \
+ { 0xa1, 0x63, 0x30, 0xc8, 0x1d, 0x2d, 0x79, 0x39 } }
 
 class Element : public FragmentOrElement
 {
@@ -468,12 +468,12 @@ public:
                nsAString& aResult) const;
   inline bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
   // aCaseSensitive == eIgnoreCaase means ASCII case-insensitive matching.
-  virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
-                             const nsAString& aValue,
-                             nsCaseTreatment aCaseSensitive) const;
-  virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
-                             nsIAtom* aValue,
-                             nsCaseTreatment aCaseSensitive) const;
+  inline bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
+                          const nsAString& aValue,
+                          nsCaseTreatment aCaseSensitive) const;
+  inline bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
+                          nsIAtom* aValue,
+                          nsCaseTreatment aCaseSensitive) const;
   virtual int32_t FindAttrValueIn(int32_t aNameSpaceID,
                                   nsIAtom* aName,
                                   AttrValuesArray* aValues,
@@ -1174,6 +1174,33 @@ Element::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
                "must have a real namespace ID!");
 
   return mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID) >= 0;
+}
+
+inline bool
+Element::AttrValueIs(int32_t aNameSpaceID,
+                     nsIAtom* aName,
+                     const nsAString& aValue,
+                     nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+
+  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
+  return val && val->Equals(aValue, aCaseSensitive);
+}
+
+inline bool
+Element::AttrValueIs(int32_t aNameSpaceID,
+                     nsIAtom* aName,
+                     nsIAtom* aValue,
+                     nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+  NS_ASSERTION(aValue, "Null value atom");
+
+  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
+  return val && val->Equals(aValue, aCaseSensitive);
 }
 
 } // namespace dom
