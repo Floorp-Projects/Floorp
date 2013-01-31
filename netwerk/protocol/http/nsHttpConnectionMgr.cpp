@@ -545,6 +545,63 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
     ProcessAllSpdyPendingQ();
 }
 
+void
+nsHttpConnectionMgr::ReportSpdyCWNDSetting(nsHttpConnectionInfo *ci,
+                                           uint32_t cwndValue)
+{
+    if (!gHttpHandler->UseSpdyPersistentSettings())
+        return;
+
+    if (!ci)
+        return;
+
+    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
+    if (!ent)
+        return;
+
+    ent = GetSpdyPreferredEnt(ent);
+    if (!ent) // just to be thorough - but that map should always exist
+        return;
+
+    cwndValue = std::max(2U, cwndValue);
+    cwndValue = std::min(128U, cwndValue);
+
+    ent->mSpdyCWND = cwndValue;
+    ent->mSpdyCWNDTimeStamp = TimeStamp::Now();
+    return;
+}
+
+// a value of 0 means no setting is available
+uint32_t
+nsHttpConnectionMgr::GetSpdyCWNDSetting(nsHttpConnectionInfo *ci)
+{
+    if (!gHttpHandler->UseSpdyPersistentSettings())
+        return 0;
+
+    if (!ci)
+        return 0;
+
+    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
+    if (!ent)
+        return 0;
+
+    ent = GetSpdyPreferredEnt(ent);
+    if (!ent) // just to be thorough - but that map should always exist
+        return 0;
+
+    if (ent->mSpdyCWNDTimeStamp.IsNull())
+        return 0;
+
+    // For privacy tracking reasons, and the fact that CWND is not
+    // meaningful after some time, we don't honor stored CWND after 8
+    // hours.
+    TimeDuration age = TimeStamp::Now() - ent->mSpdyCWNDTimeStamp;
+    if (age.ToMilliseconds() > (1000 * 60 * 60 * 8))
+        return 0;
+
+    return ent->mSpdyCWND;
+}
+
 bool
 nsHttpConnectionMgr::GetSpdyAlternateProtocol(nsACString &hostPortKey)
 {
@@ -2958,6 +3015,7 @@ nsConnectionEntry::nsConnectionEntry(nsHttpConnectionInfo *ci)
     , mYellowConnection(nullptr)
     , mGreenDepth(kPipelineOpen)
     , mPipeliningPenalty(0)
+    , mSpdyCWND(0)
     , mUsingSpdy(false)
     , mTestedSpdy(false)
     , mSpdyPreferred(false)
