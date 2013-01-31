@@ -12,6 +12,8 @@
 #include "nsRuleData.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLTableRowElementBinding.h"
+#include "nsContentList.h"
+#include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableRow)
 DOMCI_NODE_DATA(HTMLTableRowElement, mozilla::dom::HTMLTableRowElement)

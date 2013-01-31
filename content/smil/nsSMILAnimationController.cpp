@@ -14,6 +14,7 @@
 #include "nsIDOMSVGAnimationElement.h"
 #include "nsSMILTimedElement.h"
 #include <algorithm>
+#include "mozilla/AutoRestore.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

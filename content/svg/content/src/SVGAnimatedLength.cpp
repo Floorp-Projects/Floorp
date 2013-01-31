@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGAnimatedLengthBinding.h"
+#include "nsContentUtils.h"
 
 DOMCI_DATA(SVGAnimatedLength, mozilla::dom::SVGAnimatedLength)
 
