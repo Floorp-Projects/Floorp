@@ -736,6 +736,10 @@ const gFormSubmitObserver = {
 // the capturing phase and call stopPropagation on every event.
 
 let gGestureSupport = {
+  _currentRotation: 0,
+  _lastRotateDelta: 0,
+  _rotateMomentumThreshold: .75,
+
   /**
    * Add or remove mouse gesture event listeners
    *
@@ -795,6 +799,10 @@ let gGestureSupport = {
       case "MozTapGesture":
         aEvent.preventDefault();
         this._doAction(aEvent, ["tap"]);
+        break;
+      case "MozRotateGesture":
+        aEvent.preventDefault();
+        this._doAction(aEvent, ["twist", "end"]);
         break;
       /* case "MozPressTapGesture":
         break; */
@@ -912,7 +920,7 @@ let gGestureSupport = {
           let cmdEvent = document.createEvent("xulcommandevent");
           cmdEvent.initCommandEvent("command", true, true, window, 0,
                                     aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKey,
-                                    aEvent.metaKey, null);
+                                    aEvent.metaKey, aEvent);
           node.dispatchEvent(cmdEvent);
         }
       } else {
@@ -971,6 +979,123 @@ let gGestureSupport = {
     catch (e) {
       return aDef;
     }
+  },
+
+  /**
+   * Perform rotation for ImageDocuments
+   *
+   * @param aEvent
+   *        The MozRotateGestureUpdate event triggering this call
+   */
+  rotate: function(aEvent) {
+    if (!(content.document instanceof ImageDocument))
+      return;
+
+    let contentElement = content.document.body.firstElementChild;
+    if (!contentElement)
+      return;
+
+    this.rotation = Math.round(this.rotation + aEvent.delta);
+    contentElement.style.transform = "rotate(" + this.rotation + "deg)";
+    this._lastRotateDelta = aEvent.delta;
+  },
+
+  /**
+   * Perform a rotation end for ImageDocuments
+   */
+  rotateEnd: function() {
+    if (!(content.document instanceof ImageDocument))
+      return;
+
+    let contentElement = content.document.body.firstElementChild;
+    if (!contentElement)
+      return;
+
+    let transitionRotation = 0;
+
+    // The reason that 360 is allowed here is because when rotating between
+    // 315 and 360, setting rotate(0deg) will cause it to rotate the wrong
+    // direction around--spinning wildly.
+    if (this.rotation <= 45)
+      transitionRotation = 0;
+    else if (this.rotation > 45 && this.rotation <= 135)
+      transitionRotation = 90;
+    else if (this.rotation > 135 && this.rotation <= 225)
+      transitionRotation = 180;
+    else if (this.rotation > 225 && this.rotation <= 315)
+      transitionRotation = 270;
+    else
+      transitionRotation = 360;
+
+    // If we're going fast enough, and we didn't already snap ahead of rotation,
+    // then snap ahead of rotation to simulate momentum
+    if (this._lastRotateDelta > this._rotateMomentumThreshold &&
+        this.rotation > transitionRotation)
+      transitionRotation += 90;
+    else if (this._lastRotateDelta < -1 * this._rotateMomentumThreshold &&
+             this.rotation < transitionRotation)
+      transitionRotation -= 90;
+
+    contentElement.classList.add("completeRotation");
+    contentElement.addEventListener("transitionend", this._clearCompleteRotation);
+
+    contentElement.style.transform = "rotate(" + transitionRotation + "deg)";
+    this.rotation = transitionRotation;
+  },
+
+  /**
+   * Gets the current rotation for the ImageDocument
+   */
+  get rotation() {
+    return this._currentRotation;
+  },
+
+  /**
+   * Sets the current rotation for the ImageDocument
+   *
+   * @param aVal
+   *        The new value to take.  Can be any value, but it will be bounded to
+   *        0 inclusive to 360 exclusive.
+   */
+  set rotation(aVal) {
+    this._currentRotation = aVal % 360;
+    if (this._currentRotation < 0)
+      this._currentRotation += 360;
+    return this._currentRotation;
+  },
+
+  /**
+   * When the location/tab changes, need to reload the current rotation for the
+   * image
+   */
+  restoreRotationState: function() {
+    if (!(content.document instanceof ImageDocument))
+      return;
+
+    let contentElement = content.document.body.firstElementChild;
+    let transformValue = content.window.getComputedStyle(contentElement, null)
+                                       .transform;
+
+    if (transformValue == "none") {
+      this.rotation = 0;
+      return;
+    }
+
+    // transformValue is a rotation matrix--split it and do mathemagic to
+    // obtain the real rotation value
+    transformValue = transformValue.split("(")[1]
+                                   .split(")")[0]
+                                   .split(",");
+    this.rotation = Math.round(Math.atan2(transformValue[1], transformValue[0]) *
+                               (180 / Math.PI));
+  },
+
+  /**
+   * Removes the transition rule by removing the completeRotation class
+   */
+  _clearCompleteRotation: function() {
+    this.classList.remove("completeRotation");
+    this.removeEventListener("transitionend", this._clearCompleteRotation);
   },
 };
 
@@ -4221,6 +4346,8 @@ var XULBrowserWindow = {
       }
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
+
+    gGestureSupport.restoreRotationState();
 
     // See bug 358202, when tabs are switched during a drag operation,
     // timers don't fire on windows (bug 203573)
