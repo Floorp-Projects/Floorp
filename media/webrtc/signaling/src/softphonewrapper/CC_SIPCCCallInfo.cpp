@@ -138,6 +138,9 @@ std::string CC_SIPCCCallInfo::callStateToString (cc_call_state_t state)
       case UPDATELOCALDESC:
         statestr = "UPDATELOCALDESC";
         break;
+      case UPDATEREMOTEDESC:
+        statestr = "UPDATEREMOTEDESC";
+        break;
       case SETLOCALDESCERROR:
         statestr = "SETLOCALDESCERROR";
         break;
@@ -146,12 +149,6 @@ std::string CC_SIPCCCallInfo::callStateToString (cc_call_state_t state)
         break;
       case REMOTESTREAMADD:
         statestr = "REMOTESTREAMADD";
-        break;
-      case ADDICECANDIDATE:
-        statestr = "ADDICECANDIDATE";
-        break;
-      case ADDICECANDIDATEERROR:
-        statestr = "ADDICECANDIDATEERROR";
         break;
       default:
         break;

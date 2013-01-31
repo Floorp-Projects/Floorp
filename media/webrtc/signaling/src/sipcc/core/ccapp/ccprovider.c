@@ -1319,7 +1319,6 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
              sessUpd->eventID == SET_REMOTE_DESC ||
              sessUpd->eventID == UPDATE_LOCAL_DESC  ||
              sessUpd->eventID == UPDATE_REMOTE_DESC ||
-             sessUpd->eventID == ICE_CANDIDATE_ADD ||
              sessUpd->eventID == REMOTE_STREAM_ADD ) {
 
             CCAPP_DEBUG(DEB_F_PREFIX"CALL_SESSION_CREATED for session id 0x%x event is 0x%x \n",
@@ -1362,7 +1361,6 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
             sessUpd->eventID == SET_REMOTE_DESC ||
             sessUpd->eventID == UPDATE_LOCAL_DESC ||
             sessUpd->eventID == UPDATE_REMOTE_DESC ||
-            sessUpd->eventID == ICE_CANDIDATE_ADD ||
             sessUpd->eventID == REMOTE_STREAM_ADD ) {
             data->attr = sessUpd->update.ccSessionUpd.data.state_data.attr;
             data->inst = sessUpd->update.ccSessionUpd.data.state_data.inst;
@@ -1393,7 +1391,6 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
             case SET_REMOTE_DESC:
             case UPDATE_LOCAL_DESC:
             case UPDATE_REMOTE_DESC:
-            case ICE_CANDIDATE_ADD:
                 data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
                 /* Fall through to the next case... */
             case REMOTE_STREAM_ADD:
@@ -1731,7 +1728,6 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
     case SET_REMOTE_DESC:
     case UPDATE_LOCAL_DESC:
     case UPDATE_REMOTE_DESC:
-    case ICE_CANDIDATE_ADD:
         data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
         /* Fall through to the next case... */
     case REMOTE_STREAM_ADD:
