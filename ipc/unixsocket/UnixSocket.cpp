@@ -47,6 +47,7 @@ public:
                  const nsACString& aAddress)
     : mConsumer(aConsumer)
     , mIOLoop(nullptr)
+    , mTask(nullptr)
     , mFd(-1)
     , mConnector(aConnector)
     , mCurrentTaskIsCanceled(false)
