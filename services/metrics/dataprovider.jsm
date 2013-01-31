@@ -392,6 +392,20 @@ this.Provider = function () {
 
 Provider.prototype = Object.freeze({
   /**
+   * Whether the provider provides only constant data.
+   *
+   * If this is true, the provider likely isn't instantiated until
+   * `collectConstantData` is called and the provider may be torn down after
+   * this function has finished.
+   *
+   * This is an optimization so provider instances aren't dead weight while the
+   * application is running.
+   *
+   * This must be set on the prototype for the optimization to be realized.
+   */
+  constantOnly: false,
+
+  /**
    * Obtain a `Measurement` from its name and version.
    *
    * If the measurement is not found, an Error is thrown.

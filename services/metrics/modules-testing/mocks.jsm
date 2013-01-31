@@ -7,6 +7,7 @@
 this.EXPORTED_SYMBOLS = [
   "DummyMeasurement",
   "DummyProvider",
+  "DummyConstantProvider",
 ];
 
 const {utils: Cu} = Components;
@@ -85,5 +86,16 @@ DummyProvider.prototype = {
     }.bind(this));
   },
 
+};
+
+
+this.DummyConstantProvider = function () {
+  DummyProvider.call(this, "DummyConstantProvider");
+}
+
+DummyConstantProvider.prototype = {
+  __proto__: DummyProvider.prototype,
+
+  constantOnly: true,
 };
 

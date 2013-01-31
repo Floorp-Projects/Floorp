@@ -171,6 +171,39 @@ add_task(function test_register_providers_from_category_manager() {
   reporter._shutdown();
 });
 
+// Constant only providers are only initialized at constant collect
+// time.
+add_task(function test_constant_only_providers() {
+  const category = "healthreporter-constant-only";
+
+  let cm = Cc["@mozilla.org/categorymanager;1"]
+             .getService(Ci.nsICategoryManager);
+  cm.addCategoryEntry(category, "DummyProvider",
+                      "resource://testing-common/services/metrics/mocks.jsm",
+                      false, true);
+  cm.addCategoryEntry(category, "DummyConstantProvider",
+                      "resource://testing-common/services/metrics/mocks.jsm",
+                      false, true);
+
+  let reporter = yield getReporter("constant_only_providers");
+  do_check_eq(reporter._collector._providers.size, 0);
+  yield reporter.registerProvidersFromCategoryManager(category);
+  do_check_eq(reporter._collector._providers.size, 1);
+  do_check_true(reporter._storage.hasProvider("DummyProvider"));
+  do_check_false(reporter._storage.hasProvider("DummyConstantProvider"));
+
+  yield reporter.collectMeasurements();
+
+  do_check_eq(reporter._collector._providers.size, 1);
+  do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
+
+  let mID = reporter._storage.measurementID("DummyConstantProvider", "DummyMeasurement", 1);
+  let values = yield reporter._storage.getMeasurementValues(mID);
+  do_check_true(values.singular.size > 0);
+
+  reporter._shutdown();
+});
+
 add_task(function test_json_payload_simple() {
   let reporter = yield getReporter("json_payload_simple");
 
