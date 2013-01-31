@@ -339,9 +339,7 @@ let manifestCache = {
 
   // Gets an entry from the cache, and populates the cache if needed.
   get : function mcache_get(aManifestURL, aManifest, aWindow) {
-    dump("-- manifestCache::get() " + aManifestURL + "\n");
     if (!(aManifestURL in this._cache)) {
-      dump("\twrapping\n");
       this._cache[aManifestURL] = ObjectWrapper.wrap(aManifest, aWindow);
     }
     return this._cache[aManifestURL];
@@ -349,15 +347,12 @@ let manifestCache = {
 
   // Invalidates an entry in the cache.
   evict: function mcache_evict(aManifestURL) {
-    dump("-- manifestCache::evict() " + aManifest + "\n");
     if (aManifestURL in this._cache) {
-      dump("\tfound entry!\n");
       delete this._cache[aManifestURL];
     }
   },
 
   clear: function mcache_clear() {
-    dump("-- manifestCache::clear()\n");
     this._cache = { };
   }
 }
