@@ -81,6 +81,16 @@ Collector.prototype = Object.freeze({
     return deferred.promise;
   },
 
+  /**
+   * Remove a named provider from the collector.
+   *
+   * It is the caller's responsibility to shut down the provider
+   * instance.
+   */
+  unregisterProvider: function (name) {
+    this._providers.delete(name);
+  },
+
   _popAndInitProvider: function () {
     if (!this._providerInitQueue.length || this._providerInitializing) {
       return;
