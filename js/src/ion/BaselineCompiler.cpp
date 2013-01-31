@@ -87,11 +87,6 @@ BaselineCompiler::compile()
     IonSpew(IonSpew_BaselineScripts, "Baseline compiling script %s:%d (%p)",
             script->filename, script->lineno, script.get());
 
-    if (script->needsArgsObj()) {
-        IonSpew(IonSpew_BaselineAbort, "Script needs arguments object");
-        return Method_CantCompile;
-    }
-
     if (function() && function()->isHeavyweight()) {
         IonSpew(IonSpew_BaselineAbort, "FIXME compile heavy weight functions");
         return Method_CantCompile;
@@ -1400,14 +1395,65 @@ BaselineCompiler::emit_JSOP_SETLOCAL()
 }
 
 bool
+BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
+{
+    // Fast path: the script does not use |arguments|, or is strict. In strict
+    // mode, formals do not alias the arguments object.
+    if (!script->argumentsHasVarBinding() || script->strict) {
+        if (get) {
+            frame.pushArg(arg);
+        } else {
+            // See the comment in emit_JSOP_SETLOCAL.
+            frame.syncStack(1);
+            storeValue(frame.peek(-1), frame.addressOfArg(arg), R0);
+        }
+
+        return true;
+    }
+
+    // Sync so that we can use R0.
+    frame.syncStack(0);
+
+    // If the script is known to have an arguments object, we can just use it.
+    // Else, we *may* have an arguments object (because we can't invalidate
+    // when needsArgsObj becomes |true|), so we have to test HAS_ARGS_OBJ.
+    Label done;
+    if (!script->needsArgsObj()) {
+        Label hasArgsObj;
+        masm.branchTest32(Assembler::NonZero, frame.addressOfFlags(),
+                          Imm32(BaselineFrame::HAS_ARGS_OBJ), &hasArgsObj);
+        if (get)
+            masm.loadValue(frame.addressOfArg(arg), R0);
+        else
+            storeValue(frame.peek(-1), frame.addressOfArg(arg), R0);
+        masm.jump(&done);
+        masm.bind(&hasArgsObj);
+    }
+
+    // Load the arguments object data vector.
+    Register reg = R2.scratchReg();
+    masm.loadPtr(Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj()), reg);
+    masm.loadPrivate(Address(reg, ArgumentsObject::getDataSlotOffset()), reg);
+
+    // Load/store the argument.
+    Address argAddr(reg, ArgumentsData::offsetOfArgs() + arg * sizeof(Value));
+    if (get) {
+        masm.loadValue(argAddr, R0);
+        frame.push(R0);
+    } else {
+        masm.patchableCallPreBarrier(argAddr, MIRType_Value);
+        storeValue(frame.peek(-1), argAddr, R0);
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETARG()
 {
-    // Arguments object is not yet supported.
-    JS_ASSERT(!script->argsObjAliasesFormals());
-
     uint32_t arg = GET_SLOTNO(pc);
-    frame.pushArg(arg);
-    return true;
+    return emitFormalArgAccess(arg, /* get = */ true);
 }
 
 bool
@@ -1419,15 +1465,8 @@ BaselineCompiler::emit_JSOP_CALLARG()
 bool
 BaselineCompiler::emit_JSOP_SETARG()
 {
-    // Arguments object is not yet supported.
-    JS_ASSERT(!script->argsObjAliasesFormals());
-
-    // See the comment in JSOP_SETLOCAL.
-    frame.syncStack(1);
-
     uint32_t arg = GET_SLOTNO(pc);
-    storeValue(frame.peek(-1), frame.addressOfArg(arg), R0);
-    return true;
+    return emitFormalArgAccess(arg, /* get = */ false);
 }
 
 bool
@@ -1659,4 +1698,44 @@ bool
 BaselineCompiler::emit_JSOP_POPV()
 {
     return emit_JSOP_SETRVAL();
+}
+
+typedef bool (*NewArgumentsObjectFn)(JSContext *, BaselineFrame *, MutableHandleValue);
+static const VMFunction NewArgumentsObjectInfo =
+    FunctionInfo<NewArgumentsObjectFn>(ion::NewArgumentsObject);
+
+bool
+BaselineCompiler::emit_JSOP_ARGUMENTS()
+{
+    frame.syncStack(0);
+
+    Label done;
+    if (!script->needsArgsObj()) {
+        // We assume the script does not need an arguments object. However, this
+        // assumption can be invalidated later, see argumentsOptimizationFailed
+        // in JSScript. Because we can't invalidate baseline JIT code, we set a
+        // flag on BaselineScript when that happens and guard on it here.
+        masm.moveValue(MagicValue(JS_OPTIMIZED_ARGUMENTS), R0);
+
+        // Load script->baseline.
+        Register scratch = R1.scratchReg();
+        masm.movePtr(ImmGCPtr(script), scratch);
+        masm.loadPtr(Address(scratch, offsetof(JSScript, baseline)), scratch);
+
+        // If we don't need an arguments object, skip the VM call.
+        masm.branchTest32(Assembler::Zero, Address(scratch, BaselineScript::offsetOfFlags()),
+                          Imm32(BaselineScript::NEEDS_ARGS_OBJ), &done);
+    }
+
+    prepareVMCall();
+
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(NewArgumentsObjectInfo))
+        return false;
+
+    masm.bind(&done);
+    frame.push(R0);
+    return true;
 }

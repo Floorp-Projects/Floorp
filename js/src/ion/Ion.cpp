@@ -793,6 +793,8 @@ ion::ToggleBarriers(JSCompartment *comp, bool needs)
         UnrootedScript script = i.get<JSScript>();
         if (script->hasIonScript())
             script->ion->toggleBarriers(needs);
+        if (script->hasBaselineScript())
+            script->baseline->toggleBarriers(needs);
     }
 
     if (comp->ionCompartment())

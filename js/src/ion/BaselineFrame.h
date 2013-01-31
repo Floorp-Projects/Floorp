@@ -49,11 +49,14 @@ class BaselineFrame
         // The evalPrev_ field has been initialized.
         HAS_EVAL_PREV    = 1 << 3,
 
+        // Frame has an arguments object, argsObj_.
+        HAS_ARGS_OBJ     = 1 << 4,
+
         // See StackFrame::PREV_UP_TO_DATE.
-        PREV_UP_TO_DATE  = 1 << 4,
+        PREV_UP_TO_DATE  = 1 << 5,
 
         // Eval frame, see the "eval frames" comment.
-        EVAL             = 1 << 5
+        EVAL             = 1 << 6
     };
 
   protected: // Silence Clang warning about unused private fields.
@@ -61,22 +64,18 @@ class BaselineFrame
     // compiler may add some padding between the fields.
     uint32_t loScratchValue_;
     uint32_t hiScratchValue_;
-    uint32_t loReturnValue_;
+    uint32_t loReturnValue_;        // If HAS_RVAL, the frame's return value.
     uint32_t hiReturnValue_;
     size_t frameSize_;
-    JSObject *scopeChain_;
-    StaticBlockObject *blockChain_;
-    JSScript *evalScript_;
+    JSObject *scopeChain_;          // Scope chain (always initialized).
+    StaticBlockObject *blockChain_; // If HAS_BLOCKCHAIN, the static block chain.
+    JSScript *evalScript_;          // If isEvalFrame(), the current eval script.
+    ArgumentsObject *argsObj_;      // If HAS_ARGS_OBJ, the arguments object.
     uint32_t flags_;
 
     // In debug mode, evalPrev_ is a pointer to the previous frame
     // for eval frames. Only valid if HAS_EVAL_PREV is set.
     AbstractFramePtr evalPrev_;
-
-#if JS_BITS_PER_WORD == 32
-    // Keep frame 8-byte aligned.
-    uint32_t padding_;
-#endif
 
   public:
     // Distance between the frame pointer and the frame header (return address).
@@ -154,6 +153,13 @@ class BaselineFrame
         return formals()[i];
     }
 
+    Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const {
+        JS_ASSERT(i < numActualArgs());
+        JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
+        JS_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
+        return actuals()[i];
+    }
+
     Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing) const {
 #ifdef DEBUG
         CheckLocalUnaliased(checkAliasing, script(), maybeBlockChain(), i);
@@ -225,6 +231,16 @@ class BaselineFrame
         return flags_ & HAS_CALL_OBJ;
     }
 
+    CallObject &callObj() const {
+        JS_ASSERT(hasCallObj());
+        JS_ASSERT(fun()->isHeavyweight());
+
+        JSObject *obj = scopeChain();
+        while (!obj->isCall())
+            obj = obj->enclosingScope();
+        return obj->asCall();
+    }
+
     void setFlags(uint32_t flags) {
         flags_ = flags;
     }
@@ -236,6 +252,20 @@ class BaselineFrame
     inline void popBlock(JSContext *cx);
 
     bool strictEvalPrologue(JSContext *cx);
+
+    void initArgsObj(ArgumentsObject &argsobj) {
+        JS_ASSERT(script()->needsArgsObj());
+        flags_ |= HAS_ARGS_OBJ;
+        argsObj_ = &argsobj;
+    }
+    bool hasArgsObj() const {
+        return flags_ & HAS_ARGS_OBJ;
+    }
+    ArgumentsObject &argsObj() const {
+        JS_ASSERT(hasArgsObj());
+        JS_ASSERT(script()->needsArgsObj());
+        return *argsObj_;
+    }
 
     bool prevUpToDate() const {
         return flags_ & PREV_UP_TO_DATE;
@@ -332,6 +362,9 @@ class BaselineFrame
     }
     static size_t reverseOffsetOfBlockChain() {
         return -BaselineFrame::Size() + offsetof(BaselineFrame, blockChain_);
+    }
+    static size_t reverseOffsetOfArgsObj() {
+        return -BaselineFrame::Size() + offsetof(BaselineFrame, argsObj_);
     }
     static size_t reverseOffsetOfFlags() {
         return -BaselineFrame::Size() + offsetof(BaselineFrame, flags_);
