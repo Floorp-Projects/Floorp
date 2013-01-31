@@ -468,6 +468,13 @@ int nr_ice_get_global_attributes(nr_ice_ctx *ctx,char ***attrsp, int *attrctp)
 
     _status=0;
   abort:
+    if (_status){
+      if (attrs){
+        RFREE(attrs[0]);
+        RFREE(attrs[1]);
+      }
+      RFREE(attrs);
+    }
     return(_status);
   }
 
@@ -545,6 +552,9 @@ int nr_ice_ctx_remember_id(nr_ice_ctx *ctx, nr_stun_message *msg)
         ABORT(R_NO_MEMORY);
 
     assert(sizeof(xid->id) == sizeof(msg->header.id));
+#if __STDC_VERSION__ >= 201112L
+    _Static_assert(sizeof(xid->id) == sizeof(msg->header.id),"Message ID Size Mismatch");
+#endif
     memcpy(xid->id, &msg->header.id, sizeof(xid->id));
 
     STAILQ_INSERT_TAIL(&ctx->ids,xid,entry);

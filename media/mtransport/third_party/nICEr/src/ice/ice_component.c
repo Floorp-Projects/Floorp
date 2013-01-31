@@ -418,8 +418,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
         goto next_pair;
       remote_addr_matched = 1;
 
-      if(pair->state==NR_ICE_PAIR_STATE_FAILED ||
-        pair->state==NR_ICE_PAIR_STATE_FAILED){
+      if(pair->state==NR_ICE_PAIR_STATE_FAILED){
         found_invalid=pair;
         goto next_pair;
       }
