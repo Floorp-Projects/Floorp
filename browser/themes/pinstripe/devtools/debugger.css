@@ -301,8 +301,15 @@
   opacity: 0.5;
 }
 
+.dbg-variable-edit {
+  background: url("chrome://browser/skin/tabview/edit-light.png") center no-repeat;
+  width: 20px;
+  height: 16px;
+  cursor: pointer;
+}
+
 .dbg-variable-throbber {
-  background: url("chrome://global/skin/icons/loading_16.png");
+  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
   width: 16px;
   height: 16px;
 }
@@ -323,7 +330,7 @@
 
 .scope > .details {
   -moz-margin-start: 2px;
-  -moz-margin-end: 2px;
+  -moz-margin-end: 1px;
 }
 
 .scope > .details.nonenum:not(:empty) {

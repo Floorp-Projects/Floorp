@@ -225,6 +225,16 @@ VariablesView.prototype = {
   editableNameTooltip: STR.GetStringFromName("variablesEditableNameTooltip"),
 
   /**
+   * The tooltip text shown on a variable or property's edit button if an
+   * |eval| function is provided and a getter/setter descriptor is present,
+   * in order to change the variable or property to a plain value.
+   *
+   * This flag is applied recursively onto each scope in this view and
+   * affects only the child nodes when they're created.
+   */
+  editButtonTooltip: STR.GetStringFromName("variablesEditButtonTooltip"),
+
+  /**
    * The tooltip text shown on a variable or property's delete button if a
    * |delete| function is provided, in order to delete the variable or property.
    *
@@ -885,6 +895,133 @@ VariablesView.prototype = {
 };
 
 /**
+ * Generates the string evaluated when performing simple value changes.
+ *
+ * @param Variable | Property aItem
+ *        The current variable or property.
+ * @param string aCurrentString
+ *        The trimmed user inputted string.
+ * @return string
+ *         The string to be evaluated.
+ */
+VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString) {
+  return aItem._symbolicName + "=" + aCurrentString;
+};
+
+/**
+ * Generates the string evaluated when overriding getters and setters with
+ * plain values.
+ *
+ * @param Property aItem
+ *        The current getter or setter property.
+ * @param string aCurrentString
+ *        The trimmed user inputted string.
+ * @return string
+ *         The string to be evaluated.
+ */
+VariablesView.overrideValueEvalMacro = function(aItem, aCurrentString) {
+  let property = "\"" + aItem._nameString + "\"";
+  let parent = aItem.ownerView._symbolicName || "this";
+
+  return "Object.defineProperty(" + parent + "," + property + "," +
+    "{ value: " + aCurrentString +
+    ", enumerable: " + parent + ".propertyIsEnumerable(" + property + ")" +
+    ", configurable: true" +
+    ", writable: true" +
+    "})";
+};
+
+/**
+ * Generates the string evaluated when performing getters and setters changes.
+ *
+ * @param Property aItem
+ *        The current getter or setter property.
+ * @param string aCurrentString
+ *        The trimmed user inputted string.
+ * @return string
+ *         The string to be evaluated.
+ */
+VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString) {
+  let type = aItem._nameString;
+  let propertyObject = aItem.ownerView;
+  let parentObject = propertyObject.ownerView;
+  let property = "\"" + propertyObject._nameString + "\"";
+  let parent = parentObject._symbolicName || "this";
+
+  switch (aCurrentString) {
+    case "":
+    case "null":
+    case "undefined":
+      let mirrorType = type == "get" ? "set" : "get";
+      let mirrorLookup = type == "get" ? "__lookupSetter__" : "__lookupGetter__";
+
+      // If the parent object will end up without any getter or setter,
+      // morph it into a plain value.
+      if ((type == "set" && propertyObject.getter.type == "undefined") ||
+          (type == "get" && propertyObject.setter.type == "undefined")) {
+        return VariablesView.overrideValueEvalMacro(propertyObject, "undefined");
+      }
+
+      // Construct and return the getter/setter removal evaluation string.
+      // e.g: Object.defineProperty(foo, "bar", {
+      //   get: foo.__lookupGetter__("bar"),
+      //   set: undefined,
+      //   enumerable: true,
+      //   configurable: true
+      // })
+      return "Object.defineProperty(" + parent + "," + property + "," +
+        "{" + mirrorType + ":" + parent + "." + mirrorLookup + "(" + property + ")" +
+        "," + type + ":" + undefined +
+        ", enumerable: " + parent + ".propertyIsEnumerable(" + property + ")" +
+        ", configurable: true" +
+        "})";
+
+    default:
+      // Wrap statements inside a function declaration if not already wrapped.
+      if (aCurrentString.indexOf("function") != 0) {
+        let header = "function(" + (type == "set" ? "value" : "") + ")";
+        let body = "";
+        // If there's a return statement explicitly written, always use the
+        // standard function definition syntax
+        if (aCurrentString.indexOf("return ") != -1) {
+          body = "{" + aCurrentString + "}";
+        }
+        // If block syntax is used, use the whole string as the function body.
+        else if (aCurrentString.indexOf("{") == 0) {
+          body = aCurrentString;
+        }
+        // Prefer an expression closure.
+        else {
+          body = "(" + aCurrentString + ")";
+        }
+        aCurrentString = header + body;
+      }
+
+      // Determine if a new getter or setter should be defined.
+      let defineType = type == "get" ? "__defineGetter__" : "__defineSetter__";
+
+      // Make sure all quotes are escaped in the expression's syntax,
+      let defineFunc = "eval(\"(" + aCurrentString.replace(/"/g, "\\$&") + ")\")";
+
+      // Construct and return the getter/setter evaluation string.
+      // e.g: foo.__defineGetter__("bar", eval("(function() { return 42; })"))
+      return parent + "." + defineType + "(" + property + "," + defineFunc + ")";
+  }
+};
+
+/**
+ * Function invoked when a getter or setter is deleted.
+ *
+ * @param Property aItem
+ *        The current getter or setter property.
+ */
+VariablesView.getterOrSetterDeleteCallback = function(aItem) {
+  aItem._disable();
+  aItem.ownerView.eval(VariablesView.getterOrSetterEvalMacro(aItem, ""));
+  return true; // Don't hide the element.
+};
+
+/**
  * A Scope is an object holding Variable instances.
  * Iterable via "for (let [name, variable] in instance) { }".
  *
@@ -911,6 +1048,7 @@ function Scope(aView, aName, aFlags = {}) {
   this.delete = aView.delete;
   this.editableValueTooltip = aView.editableValueTooltip;
   this.editableNameTooltip = aView.editableNameTooltip;
+  this.editButtonTooltip = aView.editButtonTooltip;
   this.deleteButtonTooltip = aView.deleteButtonTooltip;
   this.descriptorTooltip = aView.descriptorTooltip;
   this.contextMenuId = aView.contextMenuId;
@@ -1636,6 +1774,7 @@ Scope.prototype = {
   delete: null,
   editableValueTooltip: "",
   editableNameTooltip: "",
+  editButtonTooltip: "",
   deleteButtonTooltip: "",
   descriptorTooltip: true,
   contextMenuId: "",
@@ -1681,10 +1820,6 @@ function Variable(aScope, aName, aDescriptor) {
   this._displayTooltip = this._displayTooltip.bind(this);
   this._activateNameInput = this._activateNameInput.bind(this);
   this._activateValueInput = this._activateValueInput.bind(this);
-  this._deactivateNameInput = this._deactivateNameInput.bind(this);
-  this._deactivateValueInput = this._deactivateValueInput.bind(this);
-  this._onNameInputKeyPress = this._onNameInputKeyPress.bind(this);
-  this._onValueInputKeyPress = this._onValueInputKeyPress.bind(this);
 
   Scope.call(this, aScope, aName, this._initialDescriptor = aDescriptor);
   this.setGrip(aDescriptor.value);
@@ -1886,6 +2021,11 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (!this._nameString) {
       return;
     }
+    // Getters and setters should display grip information in sub-properties.
+    if (!this._isUndefined && (this.getter || this.setter)) {
+      this._valueLabel.setAttribute("value", "");
+      return;
+    }
 
     if (aGrip === undefined) {
       aGrip = { type: "undefined" };
@@ -1965,20 +2105,27 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this._title.appendChild(separatorLabel);
     this._title.appendChild(valueLabel);
 
-    let isPrimitive = VariablesView.isPrimitive(descriptor);
-    let isUndefined = VariablesView.isUndefined(descriptor);
+    let isPrimitive = this._isPrimitive = VariablesView.isPrimitive(descriptor);
+    let isUndefined = this._isUndefined = VariablesView.isUndefined(descriptor);
 
     if (isPrimitive || isUndefined) {
       this.hideArrow();
     }
     if (!isUndefined && (descriptor.get || descriptor.set)) {
-      // FIXME: editing getters and setters is not allowed yet. Bug 831794.
-      this.eval = null;
-      this.addProperty("get", { value: descriptor.get });
-      this.addProperty("set", { value: descriptor.set });
-      this.expand();
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
+
+      this.delete = VariablesView.getterOrSetterDeleteCallback;
+      this.evaluationMacro = VariablesView.overrideValueEvalMacro;
+
+      let getter = this.addProperty("get", { value: descriptor.get });
+      let setter = this.addProperty("set", { value: descriptor.set });
+      getter.evaluationMacro = VariablesView.getterOrSetterEvalMacro;
+      setter.evaluationMacro = VariablesView.getterOrSetterEvalMacro;
+
+      getter.hideArrow();
+      setter.hideArrow();
+      this.expand();
     }
   },
 
@@ -1986,11 +2133,21 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * Adds specific nodes for this variable based on custom flags.
    */
   _customizeVariable: function V__customizeVariable() {
+    if (this.ownerView.eval) {
+      if (!this._isUndefined && (this.getter || this.setter)) {
+        let editNode = this._editNode = this.document.createElement("toolbarbutton");
+        editNode.className = "plain dbg-variable-edit";
+        editNode.addEventListener("mousedown", this._onEdit.bind(this), false);
+        this._title.appendChild(editNode);
+      }
+    }
     if (this.ownerView.delete) {
-      let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
-      deleteNode.className = "plain dbg-variable-delete devtools-closebutton";
-      deleteNode.addEventListener("click", this._onDelete.bind(this), false);
-      this._title.appendChild(deleteNode);
+      if (!this._isUndefined || !(this.ownerView.getter && this.ownerView.setter)) {
+        let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
+        deleteNode.className = "plain dbg-variable-delete devtools-closebutton";
+        deleteNode.addEventListener("click", this._onDelete.bind(this), false);
+        this._title.appendChild(deleteNode);
+      }
     }
     if (this.ownerView.contextMenuId) {
       this._title.setAttribute("context", this.ownerView.contextMenuId);
@@ -2031,6 +2188,9 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       this._target.appendChild(tooltip);
       this._target.setAttribute("tooltip", tooltip.id);
     }
+    if (this.ownerView.eval && !this._isUndefined && (this.getter || this.setter)) {
+      this._editNode.setAttribute("tooltiptext", this.ownerView.editButtonTooltip);
+    }
     if (this.ownerView.eval) {
       this._valueLabel.setAttribute("tooltiptext", this.ownerView.editableValueTooltip);
     }
@@ -2056,7 +2216,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (!descriptor.enumerable) {
       this._target.setAttribute("non-enumerable", "");
     }
-    if (!descriptor.writable) {
+    if (!descriptor.writable && !this.ownerView.get && !this.ownerView.set) {
       this._target.setAttribute("non-writable", "");
     }
     if (name == "this") {
@@ -2158,6 +2318,9 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       e.stopPropagation();
     }
 
+    this._onNameInputKeyPress = this._onNameInputKeyPress.bind(this);
+    this._deactivateNameInput = this._deactivateNameInput.bind(this);
+
     this._activateInput(this._name, "element-name-input", {
       onKeypress: this._onNameInputKeyPress,
       onBlur: this._deactivateNameInput
@@ -2194,6 +2357,9 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       e.stopPropagation();
     }
 
+    this._onValueInputKeyPress = this._onValueInputKeyPress.bind(this);
+    this._deactivateValueInput = this._deactivateValueInput.bind(this);
+
     this._activateInput(this._valueLabel, "element-value-input", {
       onKeypress: this._onValueInputKeyPress,
       onBlur: this._deactivateValueInput
@@ -2214,11 +2380,18 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * Disables this variable prior to a new name switch or value evaluation.
    */
   _disable: function V__disable() {
-    this.twisty = false;
+    this.hideArrow();
     this._separatorLabel.hidden = true;
     this._valueLabel.hidden = true;
     this._enum.hidden = true;
     this._nonenum.hidden = true;
+
+    if (this._editNode) {
+      this._editNode.hidden = true;
+    }
+    if (this._deleteNode) {
+      this._deleteNode.hidden = true;
+    }
   },
 
   /**
@@ -2248,9 +2421,15 @@ create({ constructor: Variable, proto: Scope.prototype }, {
 
     if (initialString != currentString) {
       this._disable();
-      this.ownerView.eval(this._symbolicName + "=" + currentString);
+      this.ownerView.eval(this.evaluationMacro(this, currentString.trim()));
     }
   },
+
+  /**
+   * The current macro used to generate the string evaluated when performing
+   * a variable or property value change.
+   */
+  evaluationMacro: VariablesView.simpleValueEvalMacro,
 
   /**
    * The key press listener for this variable's editable name textbox.
@@ -2291,6 +2470,15 @@ create({ constructor: Variable, proto: Scope.prototype }, {
   },
 
   /**
+   * The click listener for the edit button.
+   */
+  _onEdit: function V__onEdit(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this._activateValueInput();
+  },
+
+  /**
    * The click listener for the delete button.
    */
   _onDelete: function V__onDelete(e) {
@@ -2298,16 +2486,20 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     e.stopPropagation();
 
     if (this.ownerView.delete) {
-      this.ownerView.delete(this);
-      this.hide();
+      if (!this.ownerView.delete(this)) {
+        this.hide();
+      }
     }
   },
 
   _symbolicName: "",
   _absoluteName: "",
   _initialDescriptor: null,
+  _isPrimitive: false,
+  _isUndefined: false,
   _separatorLabel: null,
   _valueLabel: null,
+  _editNode: null,
   _deleteNode: null,
   _tooltip: null,
   _valueGrip: null,
