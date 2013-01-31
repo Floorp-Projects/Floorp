@@ -952,8 +952,6 @@ function WatchExpressionsView() {
   this._onClose = this._onClose.bind(this);
   this._onBlur = this._onBlur.bind(this);
   this._onKeyPress = this._onKeyPress.bind(this);
-  this._onMouseOver = this._onMouseOver.bind(this);
-  this._onMouseOut = this._onMouseOut.bind(this);
 }
 
 create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
@@ -1120,8 +1118,6 @@ create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
     closeNode.addEventListener("click", this._onClose, false);
     inputNode.addEventListener("blur", this._onBlur, false);
     inputNode.addEventListener("keypress", this._onKeyPress, false);
-    aElementNode.addEventListener("mouseover", this._onMouseOver, false);
-    aElementNode.addEventListener("mouseout", this._onMouseOut, false);
 
     aElementNode.appendChild(arrowNode);
     aElementNode.appendChild(inputNode);
@@ -1200,10 +1196,7 @@ create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
     }
     // Expression is eligible.
     else {
-      // Save the watch expression code string.
       expressionItem.attachment.currentExpression = newExpression;
-      // Make sure the close button is hidden when the textbox is unfocused.
-      expressionItem.target.closeNode.hidden = true;
     }
 
     // Synchronize with the controller's watch expressions store.
@@ -1221,20 +1214,6 @@ create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
         DebuggerView.editor.focus();
         return;
     }
-  },
-
-  /**
-   * The mouse over listener for a watch expression.
-   */
-  _onMouseOver: function DVWE__onMouseOver({ target: element }) {
-    this.getItemForElement(element).target.closeNode.hidden = false;
-  },
-
-  /**
-   * The mouse out listener for a watch expression.
-   */
-  _onMouseOut: function DVWE__onMouseOut({ target: element }) {
-    this.getItemForElement(element).target.closeNode.hidden = true;
   },
 
   /**
