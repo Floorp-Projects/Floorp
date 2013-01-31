@@ -19,30 +19,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=635499
 
 /** Test for Bug 635499 **/
 
-var types = [
-  [ 'hidden',         false ],
-  [ 'text',           false ],
-  [ 'search',         false ],
-  [ 'tel',            false ],
-  [ 'url',            false ],
-  [ 'email',          false ],
-  [ 'password',       false ],
-  [ 'datetime',       true,  true ],
-  [ 'date',           true ],
-  [ 'month',          true,  true ],
-  [ 'week',           true,  true ],
-  [ 'time',           true ],
-  [ 'datetime-local', true,  true ],
-  [ 'number',         true ],
-  [ 'range',          true,  true ],
-  [ 'color',          false, true ],
-  [ 'checkbox',       false ],
-  [ 'radio',          false ],
-  [ 'file',           false ],
-  [ 'submit',         false ],
-  [ 'image',          false ],
-  [ 'reset',          false ],
-  [ 'button',         false ],
+var data = [
+  { type: 'hidden', apply: false },
+  { type: 'text', apply: false },
+  { type: 'search', apply: false },
+  { type: 'tel', apply: false },
+  { type: 'url', apply: false },
+  { type: 'email', apply: false },
+  { type: 'password', apply: false },
+  { type: 'datetime', apply: true, todo: true },
+  { type: 'date', apply: true },
+  { type: 'month', apply: true, todo: true },
+  { type: 'week', apply: true, todo: true },
+  { type: 'time', apply: true },
+  { type: 'datetime-local', apply: true, todo: true },
+  { type: 'number', apply: true },
+  { type: 'range', apply: true, todo: true },
+  { type: 'color', apply: false, todo: true },
+  { type: 'checkbox', apply: false },
+  { type: 'radio', apply: false },
+  { type: 'file', apply: false },
+  { type: 'submit', apply: false },
+  { type: 'image', apply: false },
+  { type: 'reset', apply: false },
+  { type: 'button', apply: false },
 ];
 
 var input = document.createElement("input");
@@ -79,117 +79,205 @@ function checkValidity(aElement, aValidity, aApply, aRangeApply)
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
-for (var data of types) {
-  input.type = data[0];
-  var apply = data[1];
+for (var test of data) {
+  input.type = test.type;
+  var apply = test.apply;
 
-  if (data[2]) {
-    todo_is(input.type, data[0], data[0] + " isn't implemented yet");
-    continue;
-  }
-
-  if (input.type == 'time') {
+  if (test.todo) {
+    todo_is(input.type, test.type, test.type + " isn't implemented yet");
     continue;
   }
 
   checkValidity(input, true, apply, false);
 
-  if (input.type == 'date') {
-    input.max = '2012-06-27';
-  } else {
-    input.max = '2';
+  switch (input.type) {
+    case 'hidden':
+    case 'text':
+    case 'search':
+    case 'password':
+    case 'url':
+    case 'tel':
+    case 'email':
+    case 'number':
+    case 'checkbox':
+    case 'radio':
+    case 'file':
+    case 'submit':
+    case 'reset':
+    case 'button':
+    case 'image':
+      input.max = '-1';
+      break;
+    case 'date':
+      input.max = '2012-06-27';
+      break;
+    case 'time':
+      input.max = '02:20';
+      break;
+    default:
+      ok(false, 'please, add a case for this new type (' + input.type + ')');
   }
 
   checkValidity(input, true, apply, apply);
 
-  if (input.type == 'url') {
-    input.value = 'http://mozilla.org';
-    checkValidity(input, true, apply, apply);
-  } else if (input.type == 'email') {
-    input.value = 'foo@bar.com';
-    checkValidity(input, true, apply, apply);
-  } else if (input.type == 'file') {
-    // Need privileges to set a filename with .value.
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  switch (input.type) {
+    case 'text':
+    case 'hidden':
+    case 'search':
+    case 'password':
+    case 'tel':
+    case 'radio':
+    case 'checkbox':
+    case 'reset':
+    case 'button':
+    case 'submit':
+    case 'image':
+      input.value = '0';
+      checkValidity(input, true, apply, apply);
+      break;
+    case 'url':
+      input.value = 'http://mozilla.org';
+      checkValidity(input, true, apply, apply);
+      break;
+    case 'email':
+      input.value = 'foo@bar.com';
+      checkValidity(input, true, apply, apply);
+      break;
+    case 'file':
+      // Need privileges to set a filename with .value.
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                           .getService(Components.interfaces.nsIProperties);
-    var file = dirSvc.get("ProfD", Components.interfaces.nsIFile);
-    file.append('635499_file');
-    var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].
-                    createInstance(Components.interfaces.nsIFileOutputStream);
-    outStream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
-                   0666, 0);
-    outStream.write("foo", 3);
-    outStream.close();
+      var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                             .getService(Components.interfaces.nsIProperties);
+      var file = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+      file.append('635499_file');
+      var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].
+                      createInstance(Components.interfaces.nsIFileOutputStream);
+      outStream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
+                     0666, 0);
+      outStream.write("foo", 3);
+      outStream.close();
 
-    input.value = file.path;
-    checkValidity(input, true, apply, apply);
+      input.value = file.path;
+      checkValidity(input, true, apply, apply);
 
-    file.remove(false);
-  } else if (input.type == 'date') {
-    input.value = '2012-06-26';
-    checkValidity(input, true, apply, apply);
+      file.remove(false);
+      break;
+    case 'date':
+      input.max = '2012-06-27';
+      input.value = '2012-06-26';
+      checkValidity(input, true, apply, apply);
 
-    input.value = '2012-06-27';
-    checkValidity(input, true, apply, apply);
+      input.value = '2012-06-27';
+      checkValidity(input, true, apply, apply);
 
-    input.value = 'foo';
-    checkValidity(input, true, apply, apply);
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
 
-    input.value = '2012-06-28';
-    checkValidity(input, false, apply, apply);
+      input.value = '2012-06-28';
+      checkValidity(input, false, apply, apply);
 
-    input.max = '2012-06-30';
-    checkValidity(input, true, apply, apply);
+      input.max = '2012-06-30';
+      checkValidity(input, true, apply, apply);
 
-    input.value = '2012-07-05';
-    checkValidity(input, false, apply, apply);
+      input.value = '2012-07-05';
+      checkValidity(input, false, apply, apply);
 
-    input.value = '1000-01-01';
-    checkValidity(input, true, apply, apply);
+      input.value = '1000-01-01';
+      checkValidity(input, true, apply, apply);
 
-    input.value = '20120-01-01';
-    checkValidity(input, false, apply, apply);
+      input.value = '20120-01-01';
+      checkValidity(input, false, apply, apply);
 
-    input.max = '0050-01-01';
-    checkValidity(input, false, apply, apply);
+      input.max = '0050-01-01';
+      checkValidity(input, false, apply, apply);
 
-    input.value = '0049-01-01';
-    checkValidity(input, true, apply, apply);
-  } else {
-    input.value = '1';
-    checkValidity(input, true, apply, apply);
+      input.value = '0049-01-01';
+      checkValidity(input, true, apply, apply);
 
-    input.value = '2';
-    checkValidity(input, true, apply, apply);
+      input.max = '';
+      checkValidity(input, true, apply, false);
 
-    input.value = 'foo';
-    checkValidity(input, true, apply, apply);
+      input.max = 'foo';
+      checkValidity(input, true, apply, false);
 
-    input.value = '3';
-    checkValidity(input, false, apply, apply);
+      break;
+    case 'number':
+      input.max = '2';
+      input.value = '1';
+      checkValidity(input, true, apply, apply);
 
-    input.max = '5';
-    checkValidity(input, true, apply, apply);
+      input.value = '2';
+      checkValidity(input, true, apply, apply);
 
-    input.value = '42';
-    checkValidity(input, false, apply, apply);
-  }
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
 
-  input.max = '';
-  checkValidity(input, true, apply, false);
+      input.value = '3';
+      checkValidity(input, false, apply, apply);
 
-  input.max = 'foo';
-  checkValidity(input, true, apply, false);
+      input.max = '5';
+      checkValidity(input, true, apply, apply);
 
-  // Check that we correctly convert input.max to a double in validationMessage.
-  if (input.type == 'number') {
-    input.max = "4.333333333333333333333333333333333331";
-    input.value = "5";
-    is(input.validationMessage,
-       "Please select a value that is lower than 4.33333333333333.",
-       "validation message");
+      input.value = '42';
+      checkValidity(input, false, apply, apply);
+
+      input.max = '';
+      checkValidity(input, true, apply, false);
+
+      input.max = 'foo';
+      checkValidity(input, true, apply, false);
+
+      // Check that we correctly convert input.max to a double in validationMessage.
+      if (input.type == 'number') {
+        input.max = "4.333333333333333333333333333333333331";
+        input.value = "5";
+        is(input.validationMessage,
+           "Please select a value that is lower than 4.33333333333333.",
+           "validation message");
+      }
+
+      break;
+    case 'time':
+      input.max = '10:10';
+      input.value = '10:09';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '10:10';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '10:10:00';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '10:10:00.000';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '10:11';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '10:10:00.001';
+      checkValidity(input, false, apply, apply);
+
+      input.max = '01:00:00.01';
+      input.value = '01:00:00.001';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '01:00:00';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '01:00:00.1';
+      checkValidity(input, false, apply, apply);
+
+      input.max = '';
+      checkValidity(input, true, apply, false);
+
+      input.max = 'foo';
+      checkValidity(input, true, apply, false);
+
+      break;
   }
 
   // Cleaning up,
