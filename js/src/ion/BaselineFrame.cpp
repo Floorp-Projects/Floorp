@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BaselineFrame.h"
+#include "BaselineFrame-inl.h"
 #include "vm/ScopeObject.h"
 
 using namespace js;

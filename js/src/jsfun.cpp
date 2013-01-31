@@ -855,6 +855,7 @@ js_fun_call(JSContext *cx, unsigned argc, Value *vp)
     return ok;
 }
 
+#ifdef JS_ION
 static bool
 PushBaselineFunApplyArguments(JSContext *cx, ion::IonFrameIterator &frame, InvokeArgsGuard &args,
                               Value *vp)
@@ -873,6 +874,7 @@ PushBaselineFunApplyArguments(JSContext *cx, ion::IonFrameIterator &frame, Invok
     frame.forEachCanonicalActualArg(CopyTo(args.array()), 0, -1);
     return true;
 }
+#endif
 
 /* ES5 15.3.4.3 */
 JSBool
