@@ -334,6 +334,18 @@ MConstant::MConstant(const js::Value &vp)
     setMovable();
 }
 
+void
+MConstant::analyzeTruncateBackward()
+{
+    if (js::ion::EdgeCaseAnalysis::AllUsesTruncate(this) &&
+        value_.isDouble() && isBigIntOutput())
+    {
+        // Truncate the double to int, since all uses truncates it.
+        value_.setInt32(ToInt32(value_.toDouble()));
+        setResultType(MIRType_Int32);
+    }
+}
+
 HashNumber
 MConstant::valueHash() const
 {
@@ -982,9 +994,8 @@ MMod::fallible()
 void
 MAdd::analyzeTruncateBackward()
 {
-    if (!isTruncated()) {
+    if (!isTruncated())
         setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
-    }
     if (isTruncated() && isTruncated() < 20) {
         // Super obvious optimization... If this operation is a double
         // BUT it happens to look like a large precision int that eventually
