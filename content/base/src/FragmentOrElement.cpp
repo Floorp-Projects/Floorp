@@ -843,6 +843,43 @@ nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return NS_OK;
 }
 
+bool
+nsIContent::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                    nsAString& aResult) const
+{
+  if (IsElement()) {
+    return AsElement()->GetAttr(aNameSpaceID, aName, aResult);
+  }
+  aResult.Truncate();
+  return false;
+}
+
+bool
+nsIContent::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
+{
+  return IsElement() && AsElement()->HasAttr(aNameSpaceID, aName);
+}
+
+bool
+nsIContent::AttrValueIs(int32_t aNameSpaceID,
+                        nsIAtom* aName,
+                        const nsAString& aValue,
+                        nsCaseTreatment aCaseSensitive) const
+{
+  return IsElement() &&
+    AsElement()->AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
+}
+
+bool
+nsIContent::AttrValueIs(int32_t aNameSpaceID,
+                        nsIAtom* aName,
+                        nsIAtom* aValue,
+                        nsCaseTreatment aCaseSensitive) const
+{
+  return IsElement() &&
+    AsElement()->AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
+}
+
 const nsAttrValue*
 FragmentOrElement::DoGetClasses() const
 {

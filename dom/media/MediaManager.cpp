@@ -11,6 +11,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPopupWindowManager.h"
 #include "nsISupportsArray.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // For PR_snprintf
 #include "prprf.h"
@@ -148,7 +150,7 @@ public:
   DeviceSuccessCallbackRunnable(
     already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
-    const nsTArray<nsCOMPtr<nsIMediaDevice> >& aDevices)
+    nsTArray<nsCOMPtr<nsIMediaDevice> >* aDevices)
     : mSuccess(aSuccess)
     , mError(aError)
     , mDevices(aDevices) {}
@@ -164,7 +166,7 @@ public:
     nsCOMPtr<nsIWritableVariant> devices =
       do_CreateInstance("@mozilla.org/variant;1");
 
-    int32_t len = mDevices.Length();
+    int32_t len = mDevices->Length();
     if (len == 0) {
       // XXX
       // We should in the future return an empty array, and dynamically add
@@ -176,12 +178,12 @@ public:
 
     nsTArray<nsIMediaDevice*> tmp(len);
     for (int32_t i = 0; i < len; i++) {
-      tmp.AppendElement(mDevices.ElementAt(i));
+      tmp.AppendElement(mDevices->ElementAt(i));
     }
 
     devices->SetAsArray(nsIDataType::VTYPE_INTERFACE,
                         &NS_GET_IID(nsIMediaDevice),
-                        mDevices.Length(),
+                        mDevices->Length(),
                         const_cast<void*>(
                           static_cast<const void*>(tmp.Elements())
                         ));
@@ -193,7 +195,7 @@ public:
 private:
   already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
-  nsTArray<nsCOMPtr<nsIMediaDevice> > mDevices;
+  nsAutoPtr<nsTArray<nsCOMPtr<nsIMediaDevice> > > mDevices;
 };
 
 // Handle removing GetUserMediaCallbackMediaStreamListener from main thread
@@ -381,6 +383,33 @@ public:
       new MediaOperationRunnable(MEDIA_START, mListener,
                                  mAudioSource, mVideoSource, false));
     mediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+
+#ifdef MOZ_WEBRTC
+    // Right now these configs are only of use if webrtc is available
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+      if (branch) {
+        int32_t aec = (int32_t) webrtc::kEcUnchanged;
+        int32_t agc = (int32_t) webrtc::kAgcUnchanged;
+        int32_t noise = (int32_t) webrtc::kNsUnchanged;
+        bool aec_on = false, agc_on = false, noise_on = false;
+
+        branch->GetBoolPref("media.peerconnection.aec_enabled", &aec_on);
+        branch->GetIntPref("media.peerconnection.aec", &aec);
+        branch->GetBoolPref("media.peerconnection.agc_enabled", &agc_on);
+        branch->GetIntPref("media.peerconnection.agc", &agc);
+        branch->GetBoolPref("media.peerconnection.noise_enabled", &noise_on);
+        branch->GetIntPref("media.peerconnection.noise", &noise);
+
+        mListener->AudioConfig(aec_on, (uint32_t) aec,
+                               agc_on, (uint32_t) agc,
+                               noise_on, (uint32_t) noise);
+      }
+    }
+#endif
 
     // We're in the main thread, so no worries here either.
     nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success(mSuccess);
@@ -777,7 +806,7 @@ public:
     }
 
     NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(
-      mSuccess, mError, *devices
+      mSuccess, mError, devices // give ownership of the nsTArray to the runnable
     ));
     return NS_OK;
   }

@@ -28,11 +28,9 @@ public class testNewTab extends BaseTest {
         tabCount = mDriver.findElement(activity, "tabs_count");
         tabs = mDriver.findElement(activity, "tabs");
         addTab = mDriver.findElement(activity, "add_tab");
-        closeTab = mDriver.findElement(activity, "close");
         mAsserter.ok(tabCount != null &&
                      tabs != null &&
-                     addTab != null &&
-                     closeTab != null,
+                     addTab != null, 
                      "Checking elements", "all elements present");
 
         int expectedTabCount = 1;
@@ -53,7 +51,7 @@ public class testNewTab extends BaseTest {
         mAsserter.is(tabCountInt, expectedTabCount, "Number of tabs increased");
 
         // cleanup: close all opened tabs
-        closeTabs();
+        //closeTabs();
     }
 
     private void closeTabs() {

@@ -71,7 +71,11 @@ class MemoryMonitor extends BroadcastReceiver {
 
     public void onLowMemory() {
         Log.d(LOGTAG, "onLowMemory() notification received");
-        increaseMemoryPressure(MEMORY_PRESSURE_HIGH);
+        if (increaseMemoryPressure(MEMORY_PRESSURE_HIGH)) {
+            // We need to wait on Gecko here, because if we haven't reduced
+            // memory usage enough when we return from this, Android will kill us.
+            GeckoAppShell.geckoEventSync();
+        }
     }
 
     public void onTrimMemory(int level) {
@@ -89,17 +93,10 @@ class MemoryMonitor extends BroadcastReceiver {
             // includes TRIM_MEMORY_BACKGROUND
             increaseMemoryPressure(MEMORY_PRESSURE_CLEANUP);
         } else {
-            if (Build.VERSION.SDK_INT < 16) {
-                // in SDK 14 and 15 we don't have these extra fine-grained levels so
-                // just default to low (we already know it's < TRIM_MEMORY_UI_HIDDEN)
-                increaseMemoryPressure(MEMORY_PRESSURE_LOW);
-            } else if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
-                increaseMemoryPressure(MEMORY_PRESSURE_HIGH);
-            } else if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
-                increaseMemoryPressure(MEMORY_PRESSURE_MEDIUM);
-            } else {
-                increaseMemoryPressure(MEMORY_PRESSURE_LOW);
-            }
+            // levels down here mean gecko is the foreground process so we
+            // should be less aggressive with wiping memory as it may impact
+            // user experience.
+            increaseMemoryPressure(MEMORY_PRESSURE_LOW);
         }
     }
 
@@ -123,12 +120,12 @@ class MemoryMonitor extends BroadcastReceiver {
         }
     }
 
-    private void increaseMemoryPressure(int level) {
+    private boolean increaseMemoryPressure(int level) {
         int oldLevel;
         synchronized (this) {
             // bump up our level if we're not already higher
             if (mMemoryPressure > level) {
-                return;
+                return false;
             }
             oldLevel = mMemoryPressure;
             mMemoryPressure = level;
@@ -145,7 +142,7 @@ class MemoryMonitor extends BroadcastReceiver {
             // if we're not going to a higher level we probably don't
             // need to run another round of the same memory reductions
             // we did on the last memory pressure increase.
-            return;
+            return false;
         }
 
         // TODO hook in memory-reduction stuff for different levels here
@@ -154,16 +151,9 @@ class MemoryMonitor extends BroadcastReceiver {
                 GeckoAppShell.onLowMemory();
             }
 
-            if (level >= MEMORY_PRESSURE_HIGH) {
-                // We need to wait on Gecko here, because this is normally called
-                // from Activity.onLowMemory. If we haven't reduced memory usage
-                // enough when we return from that, Android will kill us.
-                // Activity.onTrimMemory is more of a suggestion.
-                GeckoAppShell.geckoEventSync();
-            }
-
             Favicons.getInstance().clearMemCache();
         }
+        return true;
     }
 
     private boolean decreaseMemoryPressure() {

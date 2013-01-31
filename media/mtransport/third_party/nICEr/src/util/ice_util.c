@@ -56,7 +56,7 @@ int nr_concat_strings(char **outp,...)
 
     if(!(out=RMALLOC(len+1)))
       ABORT(R_NO_MEMORY);
-    
+
     *outp=out;
 
     va_start(ap,outp);
@@ -68,7 +68,7 @@ int nr_concat_strings(char **outp,...)
     va_end(ap);
 
     *out=0;
-    
+
     _status=0;
   abort:
     return(_status);

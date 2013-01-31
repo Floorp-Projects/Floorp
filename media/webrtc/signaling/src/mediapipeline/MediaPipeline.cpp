@@ -43,7 +43,7 @@ using namespace mozilla;
 
 
 // Logging context
-MOZ_MTLOG_MODULE("mediapipeline");
+MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
 

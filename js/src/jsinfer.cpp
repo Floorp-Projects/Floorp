@@ -2027,6 +2027,8 @@ StackTypeSet::convertDoubleElements(JSContext *cx)
         if (!types)
             return AmbiguousDoubleConversion;
 
+        types->addFreeze(cx);
+
         // We can't convert to double elements for objects which do not have
         // double in their element types (as the conversion may render the type
         // information incorrect), nor for non-array objects (as their elements

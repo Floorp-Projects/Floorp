@@ -722,6 +722,15 @@ AbstractFramePtr::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
 #endif
 }
 
+inline Value &
+AbstractFramePtr::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
+{
+    if (isStackFrame())
+        return asStackFrame()->unaliasedActual(i, checkAliasing);
+    JS_NOT_REACHED("Invalid frame");
+    return asStackFrame()->unaliasedActual(i);
+}
+
 inline JSGenerator *
 AbstractFramePtr::maybeSuspendedGenerator(JSRuntime *rt) const
 {

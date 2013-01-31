@@ -36,7 +36,7 @@
 #include "gtest_utils.h"
 
 using namespace mozilla;
-MOZ_MTLOG_MODULE("mediapipeline");
+MOZ_MTLOG_MODULE("mediapipeline")
 
 MtransportTestUtils *test_utils;
 
@@ -48,7 +48,7 @@ class TestAgent {
       audio_prsock_(new TransportLayerPrsock()),
       audio_dtls_(new TransportLayerDtls()),
       audio_config_(109, "opus", 48000, 480, 1, 64000),
-      audio_conduit_(mozilla::AudioSessionConduit::Create()),
+      audio_conduit_(mozilla::AudioSessionConduit::Create(NULL)),
       audio_(),
       audio_pipeline_(),
       video_flow_(new TransportFlow()),

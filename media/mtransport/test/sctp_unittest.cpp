@@ -181,7 +181,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     int r = usrsctp_sendv(sctp_, buf, sizeof(buf), nullptr, 0,
                           static_cast<void *>(&info),
                           sizeof(info), SCTP_SENDV_SNDINFO, 0);
-    ASSERT_EQ(sizeof(buf), r);
+    ASSERT_TRUE(r >= 0);
+    ASSERT_EQ(sizeof(buf), (size_t)r);
 
     ++sent_;
   }

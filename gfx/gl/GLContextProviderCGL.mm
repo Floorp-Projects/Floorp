@@ -430,9 +430,6 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
         return nullptr;
     }
 
-    NSView *childView = (NSView *)aWidget->GetNativeData(NS_NATIVE_WIDGET);
-    [context setView:childView];
-
     // make the context transparent
     nsRefPtr<GLContextCGL> glContext = new GLContextCGL(ContextFormat(ContextFormat::BasicRGB24),
                                                         shareContext,

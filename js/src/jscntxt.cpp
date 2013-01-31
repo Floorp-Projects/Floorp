@@ -1343,7 +1343,13 @@ JSRuntime::setGCMaxMallocBytes(size_t value)
 }
 
 void
-JSRuntime::updateMallocCounter(JSCompartment *comp, size_t nbytes)
+JSRuntime::updateMallocCounter(size_t nbytes)
+{
+    updateMallocCounter(NULL, nbytes);
+}
+
+void
+JSRuntime::updateMallocCounter(JS::Zone *zone, size_t nbytes)
 {
     /* We tolerate any thread races when updating gcMallocBytes. */
     ptrdiff_t oldCount = gcMallocBytes;
@@ -1351,14 +1357,20 @@ JSRuntime::updateMallocCounter(JSCompartment *comp, size_t nbytes)
     gcMallocBytes = newCount;
     if (JS_UNLIKELY(newCount <= 0 && oldCount > 0))
         onTooMuchMalloc();
-    else if (comp)
-        comp->updateMallocCounter(nbytes);
+    else if (zone)
+        zone->updateMallocCounter(nbytes);
 }
 
 JS_FRIEND_API(void)
 JSRuntime::onTooMuchMalloc()
 {
     TriggerGC(this, gcreason::TOO_MUCH_MALLOC);
+}
+
+JS_FRIEND_API(void *)
+JSRuntime::onOutOfMemory(void *p, size_t nbytes)
+{
+    return onOutOfMemory(p, nbytes, NULL);
 }
 
 JS_FRIEND_API(void *)

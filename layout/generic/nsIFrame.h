@@ -31,7 +31,7 @@
 #include "nsAlgorithm.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "FramePropertyTable.h"
-#include "mozilla/Attributes.h"
+#include "mozilla/TypedEnum.h"
 #include <algorithm>
 
 #ifdef ACCESSIBILITY

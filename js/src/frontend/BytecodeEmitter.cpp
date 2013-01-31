@@ -4836,7 +4836,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         Rooted<JSScript*> parent(cx, bce->script);
         Rooted<JSObject*> enclosingScope(cx, EnclosingStaticScope(bce));
         CompileOptions options(cx);
-        options.setPrincipals(parent->principals)
+        options.setPrincipals(parent->principals())
                .setOriginPrincipals(parent->originPrincipals)
                .setCompileAndGo(parent->compileAndGo)
                .setNoScriptRval(false)
