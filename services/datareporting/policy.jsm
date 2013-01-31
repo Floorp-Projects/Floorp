@@ -306,7 +306,7 @@ DataReportingPolicy.prototype = Object.freeze({
    * THERE ARE POTENTIAL LEGAL IMPLICATIONS OF CHANGING THIS VALUE. Check with
    * Privacy and/or Legal before modifying.
    */
-  IMPLICIT_ACCEPTANCE_INTERVAL_MSEC: 5 * 60 * 1000,
+  IMPLICIT_ACCEPTANCE_INTERVAL_MSEC: 8 * 60 * 60 * 1000,
 
   /**
    *  How often to poll to see if we need to do something.
