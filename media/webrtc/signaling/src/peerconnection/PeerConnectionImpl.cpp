@@ -174,6 +174,14 @@ public:
         mObserver->OnSetRemoteDescriptionError(mCode);
         break;
 
+      case ADDICECANDIDATE:
+        mObserver->OnAddIceCandidateSuccess(mCode);
+        break;
+
+      case ADDICECANDIDATEERROR:
+        mObserver->OnAddIceCandidateError(mCode);
+        break;
+
       case REMOTESTREAMADD:
         {
           nsDOMMediaStream* stream = nullptr;
@@ -200,7 +208,6 @@ public:
         }
 
       case UPDATELOCALDESC:
-      case UPDATEREMOTEDESC:
         /* No action necessary */
         break;
 
@@ -1183,7 +1190,7 @@ PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
       break;
 
     case SETREMOTEDESC:
-    case UPDATEREMOTEDESC:
+    case ADDICECANDIDATE:
       mRemoteSDP = aInfo->getSDP();
       break;
 
