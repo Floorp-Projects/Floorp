@@ -133,6 +133,9 @@ static PRLogModuleInfo* gJSDiagnostics;
 
 #define JAVASCRIPT nsIProgrammingLanguage::JAVASCRIPT
 
+// Large value used to specify that a script should run essentially forever
+#define NS_UNLIMITED_SCRIPT_RUNTIME (0x40000000LL << 32)
+
 // if you add statics here, add them to the list in nsJSRuntime::Startup
 
 static nsITimer *sGCTimer;
@@ -886,8 +889,13 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     // Allow the script to continue running
 
     if (neverShowDlgChk) {
-      Preferences::SetInt(isTrackingChromeCodeTime ?
-        "dom.max_chrome_script_run_time" : "dom.max_script_run_time", 0);
+      if (isTrackingChromeCodeTime) {
+        Preferences::SetInt("dom.max_chrome_script_run_time", 0);
+        sMaxChromeScriptRunTime = NS_UNLIMITED_SCRIPT_RUNTIME;
+      } else {
+        Preferences::SetInt("dom.max_script_run_time", 0);
+        sMaxScriptRunTime = NS_UNLIMITED_SCRIPT_RUNTIME;
+      }
     }
 
     ctx->mOperationCallbackTime = PR_Now();
@@ -3377,8 +3385,7 @@ MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
 
   PRTime t;
   if (time <= 0) {
-    // Let scripts run for a really, really long time.
-    t = 0x40000000LL << 32;
+    t = NS_UNLIMITED_SCRIPT_RUNTIME;
   } else {
     t = time * PR_USEC_PER_SEC;
   }
