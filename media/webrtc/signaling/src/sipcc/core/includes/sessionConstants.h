@@ -222,7 +222,8 @@ typedef enum {
     SET_REMOTE_DESC,
     UPDATE_LOCAL_DESC,
     UPDATE_REMOTE_DESC,
-    REMOTE_STREAM_ADD
+    REMOTE_STREAM_ADD,
+    ICE_CANDIDATE_ADD
 } group_call_event_t;
 
 /* File Player Session Events */
