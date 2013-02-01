@@ -38,7 +38,7 @@ add_test(function test_failing() {
 '''
 
 ADD_TASK_SINGLE = '''
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 function run_test() { run_next_test(); }
 
@@ -49,7 +49,7 @@ add_task(function test_task() {
 '''
 
 ADD_TASK_MULTIPLE = '''
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 function run_test() { run_next_test(); }
 
@@ -63,7 +63,7 @@ add_task(function test_2() {
 '''
 
 ADD_TASK_REJECTED = '''
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 function run_test() { run_next_test(); }
 
@@ -73,7 +73,7 @@ add_task(function test_failing() {
 '''
 
 ADD_TASK_FAILURE_INSIDE = '''
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 function run_test() { run_next_test(); }
 

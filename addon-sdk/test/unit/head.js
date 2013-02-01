@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 let run_promise_tests = function run_promise_tests(tests, cb) {
   let timer = Components.classes["@mozilla.org/timer;1"]
