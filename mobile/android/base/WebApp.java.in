@@ -36,7 +36,6 @@ import org.mozilla.gecko.WebAppAllocator;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.DoorHangerPopup;
 import org.json.JSONObject;
 
 public class WebApp extends GeckoApp {
