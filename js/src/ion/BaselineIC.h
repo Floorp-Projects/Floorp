@@ -189,6 +189,7 @@ namespace ion {
 //
 
 class ICStub;
+class ICFallbackStub;
 
 //
 // An entry in the Baseline IC descriptor table.
@@ -241,6 +242,8 @@ class ICEntry
         JS_ASSERT(hasStub());
         return firstStub_;
     }
+
+    ICFallbackStub *fallbackStub() const;
 
     void setFirstStub(ICStub *stub) {
         firstStub_ = stub;
@@ -643,6 +646,10 @@ class ICMonitoredFallbackStub : public ICFallbackStub
     inline ICTypeMonitor_Fallback *fallbackMonitorStub() const {
         return fallbackMonitorStub_;
     }
+
+    static inline size_t offsetOfFallbackMonitorStub() {
+        return offsetof(ICMonitoredFallbackStub, fallbackMonitorStub_);
+    }
 };
 
 // Updated stubs are IC stubs that use a TypeUpdate IC to track
@@ -907,6 +914,10 @@ class ICTypeMonitor_Fallback : public ICStub
 
     inline ICStub *firstMonitorStub() const {
         return firstMonitorStub_;
+    }
+
+    static inline size_t offsetOfFirstMonitorStub() {
+        return offsetof(ICTypeMonitor_Fallback, firstMonitorStub_);
     }
 
     inline uint32_t numOptimizedMonitorStubs() const {
@@ -2222,7 +2233,9 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
     // Compiler for this stub kind.
     class Compiler : public ICCallStubCompiler {
       protected:
+        uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
+        bool postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code);
 
       public:
         Compiler(JSContext *cx)
@@ -2268,9 +2281,7 @@ class ICCall_Scripted : public ICMonitoredStub
       protected:
         ICStub *firstMonitorStub_;
         RootedFunction callee_;
-        uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
-        bool postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code);
 
       public:
         Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee)
