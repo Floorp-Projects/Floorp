@@ -160,9 +160,7 @@ const CONTACT_CONTRACTID = "@mozilla.org/contact;1";
 const CONTACT_CID        = Components.ID("{da0f7040-388b-11e1-b86c-0800200c9a66}");
 const nsIDOMContact      = Components.interfaces.nsIDOMContact;
 
-function Contact() {
-  if (DEBUG) debug("Contact constr: ");
-};
+function Contact() { };
 
 Contact.prototype = {
   __exposedProps__: {
@@ -334,6 +332,9 @@ ContactManager.prototype = {
   set oncontactchange(aCallback) {
     if (DEBUG) debug("set oncontactchange");
     let allowCallback = function() {
+      if (!this._oncontactchange) {
+        cpmm.sendAsyncMessage("Contacts:RegisterForMessages");
+      }
       this._oncontactchange = aCallback;
     }.bind(this);
     let cancelCallback = function() {
@@ -399,15 +400,6 @@ ContactManager.prototype = {
         req = this.getRequest(msg.requestID);
         if (req)
           Services.DOMRequest.fireSuccess(req.request, null);
-
-        // Fire oncontactchange event
-        if (this._oncontactchange) {
-          let event = new this._window.MozContactChangeEvent("contactchanged", {
-            contactID: msg.contactID,
-            reason: req.reason
-          });
-          this._oncontactchange.handleEvent(event);
-        }
         break;
       case "Contacts:Find:Return:KO":
       case "Contact:Save:Return:KO":
@@ -431,7 +423,18 @@ ContactManager.prototype = {
           req.cancel();
         }
         break;
-      default: 
+      case "Contact:Changed":
+        // Fire oncontactchange event
+        if (DEBUG) debug("Contacts:ContactChanged: " + msg.contactID + ", " + msg.reason);
+        if (this._oncontactchange) {
+          let event = new this._window.MozContactChangeEvent("contactchanged", {
+            contactID: msg.contactID,
+            reason: msg.reason
+          });
+          this._oncontactchange.handleEvent(event);
+        }
+        break;
+      default:
         if (DEBUG) debug("Wrong message: " + aMessage.name);
     }
     this.removeRequest(msg.requestID);
@@ -599,6 +602,7 @@ ContactManager.prototype = {
                               "Contact:Remove:Return:OK", "Contact:Remove:Return:KO",
                               "Contacts:GetSimContacts:Return:OK",
                               "Contacts:GetSimContacts:Return:KO",
+                              "Contact:Changed",
                               "PermissionPromptHelper:AskPermission:OK"]);
   },
 
