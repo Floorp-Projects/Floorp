@@ -19,7 +19,7 @@
 #include "MediaBufferDecoder.h"
 
 struct JSContext;
-struct JSObject;
+class JSObject;
 class nsIDOMWindow;
 
 namespace mozilla {
