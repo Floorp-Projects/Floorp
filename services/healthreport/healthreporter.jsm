@@ -24,6 +24,7 @@ Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 
@@ -35,6 +36,12 @@ const DAYS_IN_PAYLOAD = 180;
 
 const DEFAULT_DATABASE_NAME = "healthreport.sqlite";
 
+const TELEMETRY_INIT = "HEALTHREPORT_INIT_MS";
+const TELEMETRY_GENERATE_PAYLOAD = "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS";
+const TELEMETRY_PAYLOAD_SIZE = "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES";
+const TELEMETRY_SAVE_LAST_PAYLOAD = "HEALTHREPORT_SAVE_LAST_PAYLOAD_MS";
+const TELEMETRY_UPLOAD = "HEALTHREPORT_UPLOAD_MS";
+const TELEMETRY_SHUTDOWN_DELAY = "HEALTHREPORT_SHUTDOWN_DELAY_MS";
 
 /**
  * Coordinates collection and submission of health report metrics.
@@ -130,6 +137,8 @@ function HealthReporter(branch, policy, sessionRecorder) {
   this._shutdownCompleteCallback = null;
 
   this._constantOnlyProviders = {};
+
+  TelemetryStopwatch.start(TELEMETRY_INIT, this);
 
   this._ensureDirectoryExists(this._stateDir)
       .then(this._onStateDirCreated.bind(this),
@@ -248,6 +257,7 @@ HealthReporter.prototype = Object.freeze({
   //----------------------------------------------------
 
   _onInitError: function (error) {
+    TelemetryStopwatch.cancel(TELEMETRY_INIT, this);
     this._log.error("Error during initialization: " +
                     CommonUtils.exceptionStr(error));
     this._initializeHadError = true;
@@ -303,6 +313,7 @@ HealthReporter.prototype = Object.freeze({
   },
 
   _onCollectorInitialized: function () {
+    TelemetryStopwatch.finish(TELEMETRY_INIT, this);
     this._log.debug("Collector initialized.");
     this._collectorInProgress = false;
 
@@ -442,9 +453,14 @@ HealthReporter.prototype = Object.freeze({
       return;
     }
 
-    this._shutdownCompleteCallback = Async.makeSpinningCallback();
-    this._shutdownCompleteCallback.wait();
-    this._shutdownCompleteCallback = null;
+    TelemetryStopwatch.start(TELEMETRY_SHUTDOWN_DELAY, this);
+    try {
+      this._shutdownCompleteCallback = Async.makeSpinningCallback();
+      this._shutdownCompleteCallback.wait();
+      this._shutdownCompleteCallback = null;
+    } finally {
+      TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN_DELAY, this);
+    }
   },
 
   /**
@@ -652,7 +668,21 @@ HealthReporter.prototype = Object.freeze({
   },
 
   getJSONPayload: function () {
-    return Task.spawn(this._getJSONPayload.bind(this, this._now()));
+    TelemetryStopwatch.start(TELEMETRY_GENERATE_PAYLOAD, this);
+    let deferred = Promise.defer();
+
+    Task.spawn(this._getJSONPayload.bind(this, this._now())).then(
+      function onResult(result) {
+        TelemetryStopwatch.finish(TELEMETRY_GENERATE_PAYLOAD, this);
+        deferred.resolve(result);
+      }.bind(this),
+      function onError(error) {
+        TelemetryStopwatch.cancel(TELEMETRY_GENERATE_PAYLOAD, this);
+        deferred.reject(error);
+      }.bind(this)
+    );
+
+    return deferred.promise;
   },
 
   _getJSONPayload: function (now) {
@@ -806,9 +836,30 @@ HealthReporter.prototype = Object.freeze({
 
     return Task.spawn(function doUpload() {
       let payload = yield this.getJSONPayload();
-      yield this._saveLastPayload(payload);
-      let result = yield client.uploadJSON(this.serverNamespace, id, payload,
-                                           this.lastSubmitID);
+
+      let histogram = Services.telemetry.getHistogramById(TELEMETRY_PAYLOAD_SIZE);
+      histogram.add(payload.length);
+
+      TelemetryStopwatch.start(TELEMETRY_SAVE_LAST_PAYLOAD, this);
+      try {
+        yield this._saveLastPayload(payload);
+        TelemetryStopwatch.finish(TELEMETRY_SAVE_LAST_PAYLOAD, this);
+      } catch (ex) {
+        TelemetryStopwatch.cancel(TELEMETRY_SAVE_LAST_PAYLOAD, this);
+        throw ex;
+      }
+
+      TelemetryStopwatch.start(TELEMETRY_UPLOAD, this);
+      let result;
+      try {
+        result = yield client.uploadJSON(this.serverNamespace, id, payload,
+                                         this.lastSubmitID);
+        TelemetryStopwatch.finish(TELEMETRY_UPLOAD, this);
+      } catch (ex) {
+        TelemetryStopwatch.cancel(TELEMETRY_UPLOAD, this);
+        throw ex;
+      }
+
       yield this._onBagheeraResult(request, false, result);
     }.bind(this));
   },
