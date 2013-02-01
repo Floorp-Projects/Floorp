@@ -1922,7 +1922,8 @@ class MPassArg : public MUnaryInstruction
 // Converts a primitive (either typed or untyped) to a double. If the input is
 // not primitive at runtime, a bailout occurs.
 class MToDouble
-  : public MUnaryInstruction
+  : public MUnaryInstruction,
+    public ToDoublePolicy
 {
     MToDouble(MDefinition *def)
       : MUnaryInstruction(def)
@@ -1936,6 +1937,10 @@ class MToDouble
     static MToDouble *New(MDefinition *def)
     {
         return new MToDouble(def);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 
     MDefinition *foldsTo(bool useValueNumbers);

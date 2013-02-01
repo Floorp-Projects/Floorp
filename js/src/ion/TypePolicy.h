@@ -138,6 +138,16 @@ class DoublePolicy : public BoxInputsPolicy
     }
 };
 
+// Box objects or strings as an input to a ToDouble instruction.
+class ToDoublePolicy : public BoxInputsPolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *def);
+    bool adjustInputs(MInstruction *def) {
+        return staticAdjustInputs(def);
+    }
+};
+
 template <unsigned Op>
 class ObjectPolicy : public BoxInputsPolicy
 {
