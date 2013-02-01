@@ -932,17 +932,22 @@ function addVisits(aPlaceInfo, aCallback, aStack)
 /**
  * Asynchronously check a url is visited.
  *
- * @param aURI The URI.
+ * @param aURI
+ *        The URI.
+ *
  * @return {Promise}
  * @resolves When the check has been added successfully.
  * @rejects JavaScript exception.
  */
-function promiseIsURIVisited(aURI) {
+function promiseIsURIVisited(aURI)
+{
   let deferred = Promise.defer();
-
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+  let history = Cc["@mozilla.org/browser/history;1"]
+                  .getService(Ci.mozIAsyncHistory);
+  history.isURIVisited(aURI, function(aURI, aIsVisited) {
     deferred.resolve(aIsVisited);
   });
 
   return deferred.promise;
 }
+
