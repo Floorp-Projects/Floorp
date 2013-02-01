@@ -950,6 +950,17 @@ this.DOMApplicationRegistry = {
       return;
     }
 
+    // If the caller is trying to start a download but we have nothing to
+    // download, send an error.
+    if (!app.downloadAvailable) {
+      this.broadcastMessage("Webapps:PackageEvent",
+                            { type: "canceled",
+                              manifestURL: app.manifestURL,
+                              app: app,
+                              error: "NO_DOWNLOAD_AVAILABLE" });
+      return;
+    }
+
     // First of all, we check if the download is supposed to update an
     // already installed application.
     let isUpdate = (app.installState == "installed");
