@@ -176,7 +176,10 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   //
   // TYPE_OBJECT_SUBREQUEST could actually be either active content (e.g. a
   // script that a plugin will execute) or display content (e.g. Flash video
-  // content).
+  // content).  Until we have a way to determine active vs passive content
+  // from plugin requests (bug 836352), we will treat this as passive content.
+  // This is to prevent false positives from causing users to become
+  // desensitized to the mixed content blocker.
   //
   // TYPE_CSP_REPORT: High-risk because they directly leak information about
   // the content of the page, and because blocking them does not have any
@@ -236,6 +239,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     // these will be blocked according to the mixed display preference
     case TYPE_IMAGE:
     case TYPE_MEDIA:
+    case TYPE_OBJECT_SUBREQUEST:
     case TYPE_PING:
       classification = eMixedDisplay;
       break;
@@ -247,7 +251,6 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     case TYPE_DTD:
     case TYPE_FONT:
     case TYPE_OBJECT:
-    case TYPE_OBJECT_SUBREQUEST:
     case TYPE_SCRIPT:
     case TYPE_STYLESHEET:
     case TYPE_SUBDOCUMENT:
