@@ -1676,13 +1676,6 @@ let SessionStoreInternal = {
     let lastWindow = this._getMostRecentBrowserWindow();
     let canUseLastWindow = lastWindow &&
                            !lastWindow.__SS_lastSessionWindowID;
-    let lastSessionFocusedWindow = null;
-    this.windowToFocus = lastWindow;
-
-    // move the last focused window to the start of the array so that we
-    // minimize window movement (see bug 669272)
-    lastSessionState.windows.unshift(
-      lastSessionState.windows.splice(lastSessionState.selectedWindow - 1, 1)[0]);
 
     // Restore into windows or open new ones as needed.
     for (let i = 0; i < lastSessionState.windows.length; i++) {
@@ -1720,18 +1713,9 @@ let SessionStoreInternal = {
         //        weirdness but we will still merge other extData.
         //        Bug 588217 should make this go away by merging the group data.
         this.restoreWindow(windowToUse, { windows: [winState] }, canOverwriteTabs, true);
-        if (i == 0)
-          lastSessionFocusedWindow = windowToUse;
-
-        // if we overwrote the tabs for our last focused window, we should
-        // give focus to the window that had it in the previous session
-        if (canOverwriteTabs && windowToUse == lastWindow)
-          this.windowToFocus = lastSessionFocusedWindow;
       }
       else {
-        let win = this._openWindowWithState({ windows: [winState] });
-        if (i == 0)
-          lastSessionFocusedWindow = win;
+        this._openWindowWithState({ windows: [winState] });
       }
     }
 
@@ -2654,17 +2638,17 @@ let SessionStoreInternal = {
     var winData;
     if (!root.selectedWindow || root.selectedWindow > root.windows.length) {
       root.selectedWindow = 0;
-    } else {
-      // put the selected window at the beginning of the array to ensure that
-      // it gets restored first
-      root.windows.unshift(root.windows.splice(root.selectedWindow - 1, 1)[0]);
     }
+
     // open new windows for all further window entries of a multi-window session
     // (unless they don't contain any tab data)
     for (var w = 1; w < root.windows.length; w++) {
       winData = root.windows[w];
       if (winData && winData.tabs && winData.tabs[0]) {
         var window = this._openWindowWithState({ windows: [winData] });
+        if (w == root.selectedWindow - 1) {
+          this.windowToFocus = window;
+        }
       }
     }
     winData = root.windows[0];
