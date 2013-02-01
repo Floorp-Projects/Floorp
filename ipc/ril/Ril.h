@@ -7,45 +7,33 @@
 #ifndef mozilla_ipc_Ril_h
 #define mozilla_ipc_Ril_h 1
 
-#include "mozilla/RefPtr.h"
-
-namespace base {
-class MessageLoop;
-}
+#include <mozilla/dom/workers/Workers.h>
+#include <mozilla/ipc/UnixSocket.h>
 
 namespace mozilla {
 namespace ipc {
 
-
-/*
- * Represents raw data going to or coming from the RIL socket. Can
- * actually contain multiple RIL parcels in the data block, and may
- * also contain incomplete parcels on the front or back. Actual parcel
- * construction is handled in the worker thread.
- */
-struct RilRawData
-{
-    static const size_t MAX_DATA_SIZE = 1024;
-    uint8_t mData[MAX_DATA_SIZE];
-
-    // Number of octets in mData.
-    size_t mSize;
-};
-
-class RilConsumer : public RefCounted<RilConsumer>
+class RilConsumer : public mozilla::ipc::UnixSocketConsumer
 {
 public:
-    virtual ~RilConsumer() { }
-    virtual void MessageReceived(RilRawData* aMessage) { }
+  RilConsumer(mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
+  virtual ~RilConsumer() { }
+
+  void Shutdown();
+
+private:
+  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage);
+
+  virtual void OnConnectSuccess();
+  virtual void OnConnectError();
+  virtual void OnDisconnect();
+
+private:
+  nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
+  bool mShutdown;
 };
 
-bool StartRil(RilConsumer* aConsumer);
-
-bool SendRilRawData(RilRawData** aMessage);
-
-void StopRil();
-
 } // namespace ipc
-} // namepsace mozilla
+} // namespace mozilla
 
 #endif // mozilla_ipc_Ril_h
