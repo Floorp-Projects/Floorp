@@ -8,8 +8,9 @@
 function test() {
   // initialization
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/" +
-                   "privatebrowsing/test/browser/perwindow/" + 
+                   "privatebrowsing/test/browser/perwindow/" +
                    "browser_privatebrowsing_cookieacceptdialog.html";
+  const BLANK_URL = "http://mochi.test:8888/";
   let cp = Cc["@mozilla.org/embedcomp/cookieprompt-service;1"].
            getService(Ci.nsICookiePromptService);
 
@@ -37,8 +38,7 @@ function test() {
             ok(!remember.hasAttribute("disabled"),
                "The checkbox should not be disabled");
 
-          win.close();
-          executeSoon(callback);
+          waitForWindowClose(win, callback);
         });
       }, false);
     }
@@ -110,7 +110,16 @@ function test() {
   function testOnWindow(aIsPrivate, aCallback) {
     whenNewWindowLoaded({private: aIsPrivate}, function(aWin) {
       windowsToClose.push(aWin);
-      aCallback(aWin);
+      let selectedBrowser = aWin.gBrowser.selectedBrowser;
+      selectedBrowser.addEventListener("load", function onLoad() {
+        if (aWin.content.location.href != BLANK_URL) {
+          selectedBrowser.loadURI(BLANK_URL);
+          return;
+        }
+        selectedBrowser.removeEventListener("load", onLoad, true);
+        aCallback(aWin);
+      }, true);
+      selectedBrowser.loadURI(BLANK_URL);
     });
   }
 

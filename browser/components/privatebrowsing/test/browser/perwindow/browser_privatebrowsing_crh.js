@@ -23,7 +23,7 @@ function test() {
   };
 
   let windowsToClose = [];
-  let testURI = "about:blank";
+  let testURI = "http://mochi.test:8888/";
 
   function testOnWindow(aIsPrivate, aCallback) {
     whenNewWindowLoaded({private: aIsPrivate}, function(aWin) {
