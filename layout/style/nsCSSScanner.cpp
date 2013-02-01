@@ -48,27 +48,11 @@ static const uint8_t gLexTable[] = {
 // `   a   b   c    d    e    f    g   h   i   j   k   l   m   n   o
    U,UXSI,UXSI,UXSI,UXSI,UXSI,UXSI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
 // p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,U,  U,  U,  U,  0,
-// U+008*
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-// U+009*
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-// U+00A*
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
-// U+00B*
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
-// U+00C*
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
-// U+00D*
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
-// U+00E*
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
-// U+00F*
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,U,  U,  U,  U,  0
 };
 
-MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(gLexTable) == 256,
-                  "gLexTable expected to cover all 2^8 possible PRUint8s");
+MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(gLexTable) == 128,
+                  "gLexTable expected to cover all 128 ASCII characters");
 
 #undef W
 #undef S
@@ -83,7 +67,7 @@ static inline bool
 IsIdentStart(int32_t aChar)
 {
   return aChar >= 0 &&
-    (aChar >= 256 || (gLexTable[aChar] & START_IDENT) != 0);
+    (aChar >= 128 || (gLexTable[aChar] & START_IDENT) != 0);
 }
 
 static inline bool
@@ -95,7 +79,7 @@ StartsIdent(int32_t aFirstChar, int32_t aSecondChar)
 
 static inline bool
 IsWhitespace(int32_t ch) {
-  return uint32_t(ch) < 256 && (gLexTable[ch] & IS_WHITESPACE) != 0;
+  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_WHITESPACE) != 0;
 }
 
 static inline bool
@@ -105,17 +89,17 @@ IsDigit(int32_t ch) {
 
 static inline bool
 IsHexDigit(int32_t ch) {
-  return uint32_t(ch) < 256 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
+  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
 }
 
 static inline bool
 IsIdent(int32_t ch) {
-  return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_IDENT) != 0);
+  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_IDENT) != 0);
 }
 
 static inline bool
 IsURLChar(int32_t ch) {
-  return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_URL_CHAR) != 0);
+  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_URL_CHAR) != 0);
 }
 
 static inline uint32_t
