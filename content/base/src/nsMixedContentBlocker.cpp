@@ -364,10 +364,15 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   nsCOMPtr<nsIDocShell> rootShell = do_GetInterface(sameTypeRoot);
   NS_ASSERTION(rootShell, "No root docshell from document shell root tree item.");
   uint32_t State = nsIWebProgressListener::STATE_IS_BROKEN;
-  nsCOMPtr<nsISecureBrowserUI> SecurityUI;
-  rootShell->GetSecurityUI(getter_AddRefs(SecurityUI));
-  NS_ASSERTION(SecurityUI, "No SecurityUI from the root docShell.");
-  nsresult stateRV = SecurityUI->GetState(&State);
+  nsCOMPtr<nsISecureBrowserUI> securityUI;
+  rootShell->GetSecurityUI(getter_AddRefs(securityUI));
+  // If there is no securityUI, document doesn't have a security state.
+  // Allow load and return early.
+  if (!securityUI) {
+    *aDecision = nsIContentPolicy::ACCEPT;
+    return NS_OK;
+  }
+  nsresult stateRV = securityUI->GetState(&State);
 
   // If the content is display content, and the pref says display content should be blocked, block it.
   if (sBlockMixedDisplay && classification == eMixedDisplay) {
