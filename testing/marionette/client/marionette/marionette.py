@@ -50,11 +50,11 @@ class HTMLElement(object):
     def click(self):
         return self.marionette._send_message('clickElement', 'ok', element=self.id)
 
-    def single_tap(self):
-        return self.marionette._send_message('singleTap', 'ok', element=self.id)
+    def single_tap(self, x=None, y=None):
+        return self.marionette._send_message('singleTap', 'ok', element=self.id, x=x, y=y)
 
-    def double_tap(self):
-        return self.marionette._send_message('doubleTap', 'ok', element=self.id)
+    def double_tap(self, x=None, y=None):
+        return self.marionette._send_message('doubleTap', 'ok', element=self.id, x=x, y=y)
 
     @property
     def text(self):

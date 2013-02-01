@@ -745,12 +745,18 @@ function singleTap(msg) {
   let el;
   try {
     el = elementManager.getKnownElement(msg.json.value, curWindow);
+    let x = msg.json.corx;
+    let y = msg.json.cory;
     if (!checkVisible(el, command_id)) {
       sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
       return;
     }
-    let x = '50%';
-    let y = '50%';
+    if (x == null) {
+      x = '50%';
+    }
+    if (y == null) {
+      y = '50%';
+    }
     let c = coordinates(el, x, y);
     touch(el, 3000, [c.x0, c.x0], [c.y0, c.y0], null);
     sendOk(msg.json.command_id);
@@ -768,12 +774,18 @@ function doubleTap(msg) {
   let el;
   try {
     el = elementManager.getKnownElement(msg.json.value, curWindow);
+    let x = msg.json.corx;
+    let y = msg.json.cory;
     if (!checkVisible(el, command_id)) {
       sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
       return;
     }
-    let x = '50%';
-    let y = '50%';
+    if (x == null){
+      x = '50%';
+    }
+    if (y == null){
+      y = '50%';
+    }
     let c = coordinates(el, x, y);
     touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], function() {
       // When the first tap is done, start a timer for interval ms
