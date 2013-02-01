@@ -30,6 +30,7 @@ CPPSRCS := \
   DynamicsCompressorNode.cpp \
   EnableWebAudioCheck.cpp \
   GainNode.cpp \
+  MediaBufferDecoder.cpp \
   PannerNode.cpp \
   $(NULL)
 

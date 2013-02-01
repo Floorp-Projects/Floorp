@@ -28,7 +28,7 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 // Uncomment to enable verbose per-sample logging.
 //#define LOG_SAMPLE_DECODE 1
 
-WMFReader::WMFReader(MediaDecoder* aDecoder)
+WMFReader::WMFReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
     mSourceReader(nullptr),
     mAudioChannels(0),

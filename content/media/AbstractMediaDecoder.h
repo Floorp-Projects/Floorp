@@ -25,6 +25,10 @@ class TimedMetadata;
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
+static inline bool IsCurrentThread(nsIThread* aThread) {
+  return NS_GetCurrentThread() == aThread;
+}
+
 /**
  * The AbstractMediaDecoder class describes the public interface for a media decoder
  * and is used by the MediaReader classes.

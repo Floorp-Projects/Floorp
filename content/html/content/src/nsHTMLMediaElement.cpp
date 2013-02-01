@@ -2161,10 +2161,11 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
 already_AddRefed<MediaDecoder>
 nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 {
+  // If you change this list to add support for new decoders for codecs that
+  // can be used by <audio>, please consider updating MediaDecodeTask::CreateDecoder
+  // as well.
 
 #ifdef MOZ_GSTREAMER
-  // When enabled, use GStreamer for H.264, but not for codecs handled by our
-  // bundled decoders, unless the "media.prefer-gstreamer" pref is set.
   if (DecoderTraits::IsGStreamerSupportedType(aType)) {
     nsRefPtr<GStreamerDecoder> decoder = new GStreamerDecoder();
     if (decoder->Init(this)) {
