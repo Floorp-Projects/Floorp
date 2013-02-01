@@ -16,6 +16,8 @@ LIBXUL_LIBRARY 	= 1
 
 EXPORTS		+= \
 		WMFDecoder.h \
+		WMFReader.h \
+		WMF.h \
 		$(NULL)
 
 CPPSRCS		= \

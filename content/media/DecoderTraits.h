@@ -53,6 +53,8 @@ public:
 #endif
 
 #ifdef MOZ_GSTREAMER
+  // When enabled, use GStreamer for H.264, but not for codecs handled by our
+  // bundled decoders, unless the "media.prefer-gstreamer" pref is set.
   static bool IsGStreamerSupportedType(const nsACString& aType);
   static bool IsH264Type(const nsACString& aType);
 #endif
