@@ -138,10 +138,6 @@ PeerConnectionCtx* PeerConnectionCtx::GetInstance() {
   return gInstance;
 }
 
-bool PeerConnectionCtx::isActive() {
-  return gInstance;
-}
-
 void PeerConnectionCtx::Destroy() {
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
