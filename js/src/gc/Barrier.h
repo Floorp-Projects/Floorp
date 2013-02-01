@@ -115,8 +115,6 @@
  * assigned for the first time.
  */
 
-struct JSXML;
-
 namespace js {
 
 template<class T, typename Unioned = uintptr_t>
@@ -337,7 +335,6 @@ typedef HeapPtr<JSScript> HeapPtrScript;
 typedef HeapPtr<Shape> HeapPtrShape;
 typedef HeapPtr<BaseShape> HeapPtrBaseShape;
 typedef HeapPtr<types::TypeObject> HeapPtrTypeObject;
-typedef HeapPtr<JSXML> HeapPtrXML;
 
 /* Useful for hashtables with a HeapPtr as key. */
 template<class T>

@@ -160,9 +160,6 @@ struct CompartmentStats
       , gcHeapScripts(0)
       , gcHeapTypeObjects(0)
       , gcHeapIonCodes(0)
-#if JS_HAS_XML_SUPPORT
-      , gcHeapXML(0)
-#endif
       , objectsExtra()
       , stringCharsNonHuge(0)
       , shapesExtraTreeTables(0)
@@ -199,9 +196,6 @@ struct CompartmentStats
       , gcHeapScripts(other.gcHeapScripts)
       , gcHeapTypeObjects(other.gcHeapTypeObjects)
       , gcHeapIonCodes(other.gcHeapIonCodes)
-#if JS_HAS_XML_SUPPORT
-      , gcHeapXML(other.gcHeapXML)
-#endif
       , objectsExtra(other.objectsExtra)
       , stringCharsNonHuge(other.stringCharsNonHuge)
       , shapesExtraTreeTables(other.shapesExtraTreeTables)
@@ -243,9 +237,6 @@ struct CompartmentStats
     size_t gcHeapScripts;
     size_t gcHeapTypeObjects;
     size_t gcHeapIonCodes;
-#if JS_HAS_XML_SUPPORT
-    size_t gcHeapXML;
-#endif
     ObjectsExtraSizes objectsExtra;
 
     size_t stringCharsNonHuge;
@@ -286,9 +277,6 @@ struct CompartmentStats
         ADD(gcHeapScripts);
         ADD(gcHeapTypeObjects);
         ADD(gcHeapIonCodes);
-    #if JS_HAS_XML_SUPPORT
-        ADD(gcHeapXML);
-    #endif
         objectsExtra.add(cStats.objectsExtra);
 
         ADD(stringCharsNonHuge);

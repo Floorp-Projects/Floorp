@@ -3617,13 +3617,27 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
     if (sdpmode == FALSE) {
-
+        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+            dcb->caller_id.call_instance_id, strlib_empty());
         return (SM_RC_END);
     }
 
     if (dcb == NULL) {
         FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+            dcb->caller_id.call_instance_id, strlib_empty());
         return SM_RC_CLEANUP;
+    }
+
+    if (!dcb->sdp) {
+        FSM_DEBUG_SM(DEB_F_PREFIX"dcb->sdp is NULL. Has the "
+            "remote description been set yet?\n",
+            DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+
+        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+            dcb->caller_id.call_instance_id, strlib_empty());
+
+        return SM_RC_END;
     }
 
     /* Perform level lookup based on mid value */
@@ -3665,10 +3679,12 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
     remote_sdp = sipsdp_write_to_buf(dcb->sdp->dest_sdp, &remote_sdp_len);
 
     if (!remote_sdp) {
+        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+            dcb->caller_id.call_instance_id, strlib_empty());
         return (SM_RC_END);
     }
 
-    ui_update_remote_description(evUpdateRemoteDesc, line, call_id,
+    ui_ice_candidate_add(evAddIceCandidate, line, call_id,
         dcb->caller_id.call_instance_id, strlib_malloc(remote_sdp,-1));
 
     free(remote_sdp);

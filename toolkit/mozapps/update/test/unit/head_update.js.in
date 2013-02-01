@@ -1411,8 +1411,7 @@ function checkCallbackAppLog() {
               "and the expected command line arguments passed to it");
   do_check_eq(logContents, expectedLogContents);
 
-  // Use a timeout to give any files that were in use additional time to close.
-  do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+  removeCallbackCopy();
 }
 
 /**
@@ -1442,7 +1441,7 @@ function checkCallbackServiceLog() {
               "and the expected command line arguments passed to it");
   do_check_eq(logContents, expectedLogContents);
 
-  do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+  removeCallbackCopy();
 }
 
 function removeCallbackCopy() {

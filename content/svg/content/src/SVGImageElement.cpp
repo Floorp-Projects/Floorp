@@ -14,6 +14,7 @@
 #include "imgINotificationObserver.h"
 #include "gfxContext.h"
 #include "mozilla/dom/SVGImageElementBinding.h"
+#include "nsContentUtils.h"
 
 DOMCI_NODE_DATA(SVGImageElement, mozilla::dom::SVGImageElement)
 

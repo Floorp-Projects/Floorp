@@ -9,7 +9,7 @@
 #include "nsAString.h"
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"
-#include "nsContentUtils.h"
+#include "nsContentUtils.h" // For ASCIIToLower().
 
 typedef nsCaseInsensitiveStringComparator txCaseInsensitiveStringComparator;
 

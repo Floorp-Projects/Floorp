@@ -66,23 +66,4 @@ ASTDEF(AST_ARRAY_PATT,            "ArrayPattern",                   "arrayPatter
 ASTDEF(AST_OBJECT_PATT,           "ObjectPattern",                  "objectPattern")
 ASTDEF(AST_PROP_PATT,             "Property",                       "propertyPattern")
 
-ASTDEF(AST_XMLANYNAME,            "XMLAnyName",                     "xmlAnyName")
-ASTDEF(AST_XMLATTR_SEL,           "XMLAttributeSelector",           "xmlAttributeSelector")
-ASTDEF(AST_XMLESCAPE,             "XMLEscape",                      "xmlEscape")
-ASTDEF(AST_XMLFILTER,             "XMLFilterExpression",            "xmlFilterExpression")
-ASTDEF(AST_XMLDEFAULT,            "XMLDefaultDeclaration",          "xmlDefaultDeclaration")
-ASTDEF(AST_XMLQUAL,               "XMLQualifiedIdentifier",         "xmlQualifiedIdentifier")
-ASTDEF(AST_XMLFUNCQUAL,           "XMLFunctionQualifiedIdentifier", "xmlFunctionQualifiedIdentifier")
-ASTDEF(AST_XMLELEM,               "XMLElement",                     "xmlElement")
-ASTDEF(AST_XMLTEXT,               "XMLText",                        "xmlText")
-ASTDEF(AST_XMLLIST,               "XMLList",                        "xmlList")
-ASTDEF(AST_XMLSTART,              "XMLStartTag",                    "xmlStartTag")
-ASTDEF(AST_XMLEND,                "XMLEndTag",                      "xmlEndTag")
-ASTDEF(AST_XMLPOINT,              "XMLPointTag",                    "xmlPointTag")
-ASTDEF(AST_XMLNAME,               "XMLName",                        "xmlName")
-ASTDEF(AST_XMLATTR,               "XMLAttribute",                   "xmlAttribute")
-ASTDEF(AST_XMLCDATA,              "XMLCdata",                       "xmlCdata")
-ASTDEF(AST_XMLCOMMENT,            "XMLComment",                     "xmlComment")
-ASTDEF(AST_XMLPI,                 "XMLProcessingInstruction",       "xmlProcessingInstruction")
-
 /* AST_LIMIT = last + 1 */

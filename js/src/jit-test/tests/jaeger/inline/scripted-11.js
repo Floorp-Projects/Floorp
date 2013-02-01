@@ -5,7 +5,6 @@ function f(x) {
 }
 
 function g(x) {
-  var a = <a></a>;
   eval("what = true");
 }
 

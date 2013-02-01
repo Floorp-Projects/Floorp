@@ -423,19 +423,6 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
-#if JS_HAS_XML_SUPPORT
-      case NAMESPACES: {
-        JSXMLArray<JSObject> &array = static_cast<AutoNamespaceArray *>(this)->array;
-        MarkObjectRange(trc, array.length, array.vector, "JSXMLArray.vector");
-        js_XMLArrayCursorTrace(trc, array.cursors);
-        return;
-      }
-
-      case XML:
-        js_TraceXML(trc, static_cast<AutoXMLRooter *>(this)->xml);
-        return;
-#endif
-
       case OBJECT:
         if (static_cast<AutoObjectRooter *>(this)->obj)
             MarkObjectRoot(trc, &static_cast<AutoObjectRooter *>(this)->obj,

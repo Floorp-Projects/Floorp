@@ -1071,7 +1071,9 @@ void
 nsAutoCompleteController::AfterSearches()
 {
   mResultCache.Clear();
-  if (mSearchesFailed == mSearches.Count())
+  // nsCOMArray::Count() returns a signed value; we have to cast it to unsigned
+  // when comparing it to unsigned, or compilers will complain.
+  if (mSearchesFailed == static_cast<uint32_t>(mSearches.Count()))
     PostSearchCleanup();
 }
 
@@ -1122,7 +1124,9 @@ nsAutoCompleteController::StartSearches()
       return rv;
     StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE);
 
-    if (mSearches.Count() == immediateSearchesCount) {
+    // nsCOMArray::Count() returns a signed value; we have to cast it to
+    // unsigned when comparing it to unsigned, or compilers will complain.
+    if (static_cast<uint32_t>(mSearches.Count()) == immediateSearchesCount) {
       // Either all searches are immediate, or the timeout is 0.  In the
       // latter case we still have to execute the delayed searches, otherwise
       // this will be a no-op.

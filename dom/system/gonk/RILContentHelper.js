@@ -319,7 +319,7 @@ CellBroadcastEtwsInfo.prototype = {
 
 function RILContentHelper() {
   this.rilContext = {
-    cardState:            RIL.GECKO_CARDSTATE_UNAVAILABLE,
+    cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
     iccInfo:              new MobileICCInfo(),
     voiceConnectionInfo:  new MobileConnectionInfo(),
     dataConnectionInfo:   new MobileConnectionInfo()

@@ -9,7 +9,7 @@ function testCaseTypeMismatchBadness()
         break;
 
       case "":
-      case <x/>:
+      case {}:
         break;
     }
   }

@@ -53,7 +53,6 @@ Fake_AudioGenerator(nsDOMMediaStream* aStream) : mStream(aStream), mCount(0) {
 
     // Make a track
     mozilla::AudioSegment *segment = new mozilla::AudioSegment();
-    segment->Init(1); // 1 Channel
     mStream->GetStream()->AsSourceStream()->AddTrack(1, 16000, 0, segment);
 
     // Set the timer
@@ -71,7 +70,6 @@ Fake_AudioGenerator(nsDOMMediaStream* aStream) : mStream(aStream), mCount(0) {
     }
 
     mozilla::AudioSegment segment;
-    segment.Init(1);
     nsAutoTArray<const int16_t*,1> channelData;
     channelData.AppendElement(data);
     segment.AppendFrames(samples.forget(), channelData, 1600);
