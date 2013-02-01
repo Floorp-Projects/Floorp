@@ -2577,6 +2577,7 @@ var LightWeightThemeWebInstaller = {
 
 var UserAgent = {
   DESKTOP_UA: null,
+  YOUTUBE_DOMAIN: /\.?youtube\.com$/,
 
   init: function ua_init() {
     Services.obs.addObserver(this, "DesktopMode:Change", false);
@@ -2633,10 +2634,11 @@ var UserAgent = {
         if (tab == null)
           break;
 
-        if (/\.?youtube\.com$/.test(channel.URI.host)) {
+        if (this.YOUTUBE_DOMAIN.test(channel.URI.host)) {
           let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
-          if (ua.indexOf("Android; Tablet;") !== -1) {
-            ua = ua.replace("Android; Tablet;", "Android; Mobile;");
+          // Send the phone UA to youtube if this is a tablet
+          if (ua.indexOf("Android; Mobile;") === -1) {
+            ua = ua.replace("Android;", "Android; Mobile;");
             channel.setRequestHeader("User-Agent", ua, false);
           }
         }
