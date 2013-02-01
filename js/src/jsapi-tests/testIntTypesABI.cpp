@@ -17,6 +17,9 @@
 #include "jspubtd.h"
 #include "jstypes.h"
 
+#include "js/Anchor.h"
+#include "js/CharacterEncoding.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
 #include "js/MemoryMetrics.h"
