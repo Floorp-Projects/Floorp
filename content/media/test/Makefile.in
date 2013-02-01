@@ -349,6 +349,9 @@ MOCHITEST_FILES += \
     dash/dash-webm-video-320x180.webm \
     dash/dash-webm-video-428x240.webm \
     dash/dash-webm-audio-128k.webm \
+    dash/dash-manifest-garbled.mpd \
+    dash/dash-manifest-garbled-webm.mpd \
+    dash/garbled.webm \
     $(NULL)
 else
 MOCHITEST_FILES += \
