@@ -5,15 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
 const LAZY_EXPAND_DELAY = 50; // ms
 const LAZY_APPEND_DELAY = 100; // ms
 const LAZY_APPEND_BATCH = 100; // nodes
+const PAGE_SIZE_SCROLL_HEIGHT_RATIO = 100;
+const PAGE_SIZE_MAX_JUMPS = 30;
 const SEARCH_ACTION_MAX_DELAY = 1000; // ms
+const ELEMENT_INPUT_DEFAULT_WIDTH = 100; // px
+const ELEMENT_INPUT_EXTRA_SPACE = 4; // px
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this,
   "WebConsoleUtils", "resource://gre/modules/devtools/WebConsoleUtils.jsm");
@@ -40,6 +47,7 @@ const STR = Services.strings.createBundle(DBG_STRINGS_URI);
  */
 this.VariablesView = function VariablesView(aParentNode) {
   this._store = new Map();
+  this._itemsByElement = new WeakMap();
   this._prevHierarchy = new Map();
   this._currHierarchy = new Map();
 
@@ -48,9 +56,12 @@ this.VariablesView = function VariablesView(aParentNode) {
 
   this._onSearchboxInput = this._onSearchboxInput.bind(this);
   this._onSearchboxKeyPress = this._onSearchboxKeyPress.bind(this);
+  this._onViewKeyPress = this._onViewKeyPress.bind(this);
 
   // Create an internal list container.
-  this._list = this.document.createElement("vbox");
+  this._list = this.document.createElement("scrollbox");
+  this._list.setAttribute("orient", "vertical");
+  this._list.addEventListener("keypress", this._onViewKeyPress, false);
   this._parent.appendChild(this._list);
 };
 
@@ -82,6 +93,7 @@ VariablesView.prototype = {
     let scope = new Scope(this, aName);
     this._store.set(scope.id, scope);
     this._currHierarchy.set(aName, scope);
+    this._itemsByElement.set(scope._target, scope);
     scope.header = !!aName;
     return scope;
   },
@@ -112,6 +124,8 @@ VariablesView.prototype = {
     }
 
     this._store = new Map();
+    this._itemsByElement = new WeakMap();
+
     this._appendEmptyNotice();
     this._toggleSearchVisibility(false);
   },
@@ -133,11 +147,17 @@ VariablesView.prototype = {
    */
   _emptySoon: function VV__emptySoon(aTimeout) {
     let prevList = this._list;
-    let currList = this._list = this.document.createElement("vbox");
+    let currList = this._list = this.document.createElement("scrollbox");
+
     this._store = new Map();
+    this._itemsByElement = new WeakMap();
 
     this._emptyTimeout = this.window.setTimeout(function() {
       this._emptyTimeout = null;
+
+      prevList.removeEventListener("keypress", this._onViewKeyPress, false);
+      currList.addEventListener("keypress", this._onViewKeyPress, false);
+      currList.setAttribute("orient", "vertical");
 
       this._parent.removeChild(prevList);
       this._parent.appendChild(currList);
@@ -205,6 +225,16 @@ VariablesView.prototype = {
    * affects only the child nodes when they're created.
    */
   editableNameTooltip: STR.GetStringFromName("variablesEditableNameTooltip"),
+
+  /**
+   * The tooltip text shown on a variable or property's edit button if an
+   * |eval| function is provided and a getter/setter descriptor is present,
+   * in order to change the variable or property to a plain value.
+   *
+   * This flag is applied recursively onto each scope in this view and
+   * affects only the child nodes when they're created.
+   */
+  editButtonTooltip: STR.GetStringFromName("variablesEditButtonTooltip"),
 
   /**
    * The tooltip text shown on a variable or property's delete button if a
@@ -468,12 +498,71 @@ VariablesView.prototype = {
    */
   expandFirstSearchResults: function VV_expandFirstSearchResults() {
     for (let [, scope] of this._store) {
-      for (let [, variable] of scope._store) {
-        if (variable._isMatch) {
-          variable.expand();
-          break;
-        }
+      let match = scope._firstMatch;
+      if (match) {
+        match.expand();
       }
+    }
+  },
+
+  /**
+   * Focuses the first visible variable or property in this container.
+   */
+  focusFirstVisibleNode: function VV_focusFirstVisibleNode() {
+    let property, variable, scope;
+
+    for (let [, item] of this._currHierarchy) {
+      if (!item.focusable) {
+        continue;
+      }
+      if (item instanceof Property) {
+        property = item;
+        break;
+      } else if (item instanceof Variable) {
+        variable = item;
+        break;
+      } else if (item instanceof Scope) {
+        scope = item;
+        break;
+      }
+    }
+    if (scope) {
+      this._focusItem(scope);
+    } else if (variable) {
+      this._focusItem(variable);
+    } else if (property) {
+      this._focusItem(property);
+    }
+    this._parent.scrollTop = 0;
+    this._parent.scrollLeft = 0;
+  },
+
+  /**
+   * Focuses the last visible variable or property in this container.
+   */
+  focusLastVisibleNode: function VV_focusLastVisibleNode() {
+    let property, variable, scope;
+
+    for (let [, item] of this._currHierarchy) {
+      if (!item.focusable) {
+        continue;
+      }
+      if (item instanceof Property) {
+        property = item;
+      } else if (item instanceof Variable) {
+        variable = item;
+      } else if (item instanceof Scope) {
+        scope = item;
+      }
+    }
+    if (property && (!variable || property.isDescendantOf(variable))) {
+      this._focusItem(property);
+    } else if (variable && (!scope || variable.isDescendantOf(scope))) {
+      this._focusItem(variable);
+    } else if (scope) {
+      this._focusItem(scope);
+      this._parent.scrollTop = this._parent.scrollHeight;
+      this._parent.scrollLeft = 0;
     }
   },
 
@@ -486,32 +575,249 @@ VariablesView.prototype = {
    *         The matched scope, or null if nothing is found.
    */
   getScopeForNode: function VV_getScopeForNode(aNode) {
-    for (let [, scope] of this._store) {
-      if (scope._target == aNode) {
-        return scope;
-      }
+    let item = this._itemsByElement.get(aNode);
+    if (item && !(item instanceof Variable) && !(item instanceof Property)) {
+      return item;
     }
     return null;
   },
 
   /**
-   * Recursively searches all the scopes for the variable or property
+   * Recursively searches this container for the scope, variable or property
    * displayed by the specified node.
    *
    * @param nsIDOMNode aNode
    *        The node to search for.
-   * @return Variable | Property
-   *         The matched variable or property, or null if nothing is found.
+   * @return Scope | Variable | Property
+   *         The matched scope, variable or property, or null if nothing is found.
    */
-  getVariableOrPropertyForNode: function VV_getVariableOrPropertyForNode(aNode) {
-    for (let [, scope] of this._store) {
-      let match = scope.find(aNode);
-      if (match) {
-        return match;
-      }
-    }
-    return null;
+  getItemForNode: function VV_getItemForNode(aNode) {
+    return this._itemsByElement.get(aNode);
   },
+
+  /**
+   * Gets the currently focused scope, variable or property in this view.
+   *
+   * @return Scope | Variable | Property
+   *         The focused scope, variable or property, or null if nothing is found.
+   */
+  getFocusedItem: function VV_getFocusedItem() {
+    let focused = this.document.commandDispatcher.focusedElement;
+    return this.getItemForNode(focused);
+  },
+
+  /**
+   * Focuses the next scope, variable or property in this view.
+   * @see VariablesView.prototype._focusChange
+   */
+  focusNextItem: function VV_focusNextItem(aMaintainViewFocusedFlag)
+    this._focusChange("advanceFocus", aMaintainViewFocusedFlag),
+
+  /**
+   * Focuses the previous scope, variable or property in this view.
+   * @see VariablesView.prototype._focusChange
+   */
+  focusPrevItem: function VV_focusPrevItem(aMaintainViewFocusedFlag)
+    this._focusChange("rewindFocus", aMaintainViewFocusedFlag),
+
+  /**
+   * Focuses the next or previous scope, variable or property in this view.
+   *
+   * @param string aDirection
+   *        Either "advanceFocus" or "rewindFocus".
+   * @param boolean aMaintainViewFocusedFlag
+   *        True too keep this view focused if the element is out of bounds.
+   * @return boolean
+   *         True if the focus went out of bounds and the first or last element
+   *         in this view was focused instead.
+   */
+  _focusChange: function VV__changeFocus(aDirection, aMaintainViewFocusedFlag) {
+    let commandDispatcher = this.document.commandDispatcher;
+    let item;
+
+    do {
+      commandDispatcher[aDirection]();
+
+      // If maintaining this view focused is not mandatory, a simple
+      // "advanceFocus" or "rewindFocus" command dispatch is sufficient.
+      if (!aMaintainViewFocusedFlag) {
+        return false;
+      }
+
+      // Make sure the newly focused target is a part of this view.
+      item = this.getFocusedItem();
+      if (!item) {
+        if (aDirection == "advanceFocus") {
+          this.focusLastVisibleNode();
+        } else {
+          this.focusFirstVisibleNode();
+        }
+        // Focus went out of bounds so the first or last element in this view
+        // was focused instead.
+        return true;
+      }
+    } while (!item.focusable);
+
+    // Focus remained within bounds.
+    return false;
+  },
+
+  /**
+   * Focuses a scope, variable or property and makes sure it's visible.
+   *
+   * @param aItem Scope | Variable | Property
+   *        The item to focus.
+   * @param boolean aCollapseFlag
+   *        True if the focused item should also be collapsed.
+   * @return boolean
+   *         True if the item was successfully focused.
+   */
+  _focusItem: function VV__focusItem(aItem, aCollapseFlag) {
+    if (!aItem.focusable) {
+      return false;
+    }
+    if (aCollapseFlag) {
+      aItem.collapse();
+    }
+    aItem._target.focus();
+
+    let boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+    boxObject.ensureElementIsVisible(aItem._title);
+    boxObject.scrollBy(-this._list.clientWidth, 0);
+    return true;
+  },
+
+  /**
+   * Listener handling a key press event on the view.
+   */
+  _onViewKeyPress: function VV__onViewKeyPress(e) {
+    let item = this.getFocusedItem();
+
+    switch (e.keyCode) {
+      case e.DOM_VK_UP:
+      case e.DOM_VK_DOWN:
+      case e.DOM_VK_LEFT:
+      case e.DOM_VK_RIGHT:
+      case e.DOM_VK_PAGE_UP:
+      case e.DOM_VK_PAGE_DOWN:
+      case e.DOM_VK_HOME:
+      case e.DOM_VK_END:
+        // Prevent scrolling when pressing navigation keys.
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    switch (e.keyCode) {
+      case e.DOM_VK_UP:
+        // Always rewind focus.
+        this.focusPrevItem(true);
+        return;
+
+      case e.DOM_VK_DOWN:
+        // Only expand scopes before advancing focus.
+        if (!(item instanceof Variable) &&
+            !(item instanceof Property) &&
+            !item._isExpanded && item._isArrowVisible) {
+          item.expand();
+        } else {
+          this.focusNextItem(true);
+        }
+        return;
+
+      case e.DOM_VK_LEFT:
+        // If this is a collapsed or un-expandable item that has an expandable
+        // variable or property parent, collapse and focus the owner view.
+        if (!item._isExpanded || !item._isArrowVisible) {
+          let ownerView = item.ownerView;
+          if ((ownerView instanceof Variable ||
+               ownerView instanceof Property) &&
+               ownerView._isExpanded && ownerView._isArrowVisible) {
+            if (this._focusItem(ownerView, true)) {
+              return;
+            }
+          }
+        }
+        // Collapse scopes, variables and properties before rewinding focus.
+        if (item._isExpanded && item._isArrowVisible) {
+          item.collapse();
+        } else {
+          this.focusPrevItem(true);
+        }
+        return;
+
+      case e.DOM_VK_RIGHT:
+        // Expand scopes, variables and properties before advancing focus.
+        if (!item._isExpanded && item._isArrowVisible) {
+          item.expand();
+        } else {
+          this.focusNextItem(true);
+        }
+        return;
+
+      case e.DOM_VK_PAGE_UP:
+        // Rewind a certain number of elements based on the container height.
+        var jumps = this.pageSize || Math.min(Math.floor(this._list.scrollHeight /
+          PAGE_SIZE_SCROLL_HEIGHT_RATIO),
+          PAGE_SIZE_MAX_JUMPS);
+
+        while (jumps--) {
+          if (this.focusPrevItem(true)) {
+            return;
+          }
+        }
+        return;
+
+      case e.DOM_VK_PAGE_DOWN:
+        // Advance a certain number of elements based on the container height.
+        var jumps = this.pageSize || Math.min(Math.floor(this._list.scrollHeight /
+          PAGE_SIZE_SCROLL_HEIGHT_RATIO),
+          PAGE_SIZE_MAX_JUMPS);
+
+        while (jumps--) {
+          if (this.focusNextItem(true)) {
+            return;
+          }
+        }
+        return;
+
+      case e.DOM_VK_HOME:
+        this.focusFirstVisibleNode();
+        return;
+
+      case e.DOM_VK_END:
+        this.focusLastVisibleNode();
+        return;
+
+      case e.DOM_VK_RETURN:
+      case e.DOM_VK_ENTER:
+        // Start editing the value or name of the variable or property.
+        if (item instanceof Variable ||
+            item instanceof Property) {
+          if (e.metaKey || e.altKey || e.shiftKey) {
+            item._activateNameInput();
+          } else {
+            item._activateValueInput();
+          }
+        }
+        return;
+
+      case e.DOM_VK_DELETE:
+      case e.DOM_VK_BACK_SPACE:
+        // Delete the variable or property if allowed.
+        if (item instanceof Variable ||
+            item instanceof Property) {
+          item._onDelete(e);
+        }
+        return;
+    }
+  },
+
+  /**
+   * The number of elements in this container to jump when Page Up or Page Down
+   * keys are pressed. If falsy, then the page size will be based on the
+   * container height.
+   */
+  pageSize: 0,
 
   /**
    * Sets the text displayed in this container when there are no available items.
@@ -591,6 +897,133 @@ VariablesView.prototype = {
 };
 
 /**
+ * Generates the string evaluated when performing simple value changes.
+ *
+ * @param Variable | Property aItem
+ *        The current variable or property.
+ * @param string aCurrentString
+ *        The trimmed user inputted string.
+ * @return string
+ *         The string to be evaluated.
+ */
+VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString) {
+  return aItem._symbolicName + "=" + aCurrentString;
+};
+
+/**
+ * Generates the string evaluated when overriding getters and setters with
+ * plain values.
+ *
+ * @param Property aItem
+ *        The current getter or setter property.
+ * @param string aCurrentString
+ *        The trimmed user inputted string.
+ * @return string
+ *         The string to be evaluated.
+ */
+VariablesView.overrideValueEvalMacro = function(aItem, aCurrentString) {
+  let property = "\"" + aItem._nameString + "\"";
+  let parent = aItem.ownerView._symbolicName || "this";
+
+  return "Object.defineProperty(" + parent + "," + property + "," +
+    "{ value: " + aCurrentString +
+    ", enumerable: " + parent + ".propertyIsEnumerable(" + property + ")" +
+    ", configurable: true" +
+    ", writable: true" +
+    "})";
+};
+
+/**
+ * Generates the string evaluated when performing getters and setters changes.
+ *
+ * @param Property aItem
+ *        The current getter or setter property.
+ * @param string aCurrentString
+ *        The trimmed user inputted string.
+ * @return string
+ *         The string to be evaluated.
+ */
+VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString) {
+  let type = aItem._nameString;
+  let propertyObject = aItem.ownerView;
+  let parentObject = propertyObject.ownerView;
+  let property = "\"" + propertyObject._nameString + "\"";
+  let parent = parentObject._symbolicName || "this";
+
+  switch (aCurrentString) {
+    case "":
+    case "null":
+    case "undefined":
+      let mirrorType = type == "get" ? "set" : "get";
+      let mirrorLookup = type == "get" ? "__lookupSetter__" : "__lookupGetter__";
+
+      // If the parent object will end up without any getter or setter,
+      // morph it into a plain value.
+      if ((type == "set" && propertyObject.getter.type == "undefined") ||
+          (type == "get" && propertyObject.setter.type == "undefined")) {
+        return VariablesView.overrideValueEvalMacro(propertyObject, "undefined");
+      }
+
+      // Construct and return the getter/setter removal evaluation string.
+      // e.g: Object.defineProperty(foo, "bar", {
+      //   get: foo.__lookupGetter__("bar"),
+      //   set: undefined,
+      //   enumerable: true,
+      //   configurable: true
+      // })
+      return "Object.defineProperty(" + parent + "," + property + "," +
+        "{" + mirrorType + ":" + parent + "." + mirrorLookup + "(" + property + ")" +
+        "," + type + ":" + undefined +
+        ", enumerable: " + parent + ".propertyIsEnumerable(" + property + ")" +
+        ", configurable: true" +
+        "})";
+
+    default:
+      // Wrap statements inside a function declaration if not already wrapped.
+      if (aCurrentString.indexOf("function") != 0) {
+        let header = "function(" + (type == "set" ? "value" : "") + ")";
+        let body = "";
+        // If there's a return statement explicitly written, always use the
+        // standard function definition syntax
+        if (aCurrentString.indexOf("return ") != -1) {
+          body = "{" + aCurrentString + "}";
+        }
+        // If block syntax is used, use the whole string as the function body.
+        else if (aCurrentString.indexOf("{") == 0) {
+          body = aCurrentString;
+        }
+        // Prefer an expression closure.
+        else {
+          body = "(" + aCurrentString + ")";
+        }
+        aCurrentString = header + body;
+      }
+
+      // Determine if a new getter or setter should be defined.
+      let defineType = type == "get" ? "__defineGetter__" : "__defineSetter__";
+
+      // Make sure all quotes are escaped in the expression's syntax,
+      let defineFunc = "eval(\"(" + aCurrentString.replace(/"/g, "\\$&") + ")\")";
+
+      // Construct and return the getter/setter evaluation string.
+      // e.g: foo.__defineGetter__("bar", eval("(function() { return 42; })"))
+      return parent + "." + defineType + "(" + property + "," + defineFunc + ")";
+  }
+};
+
+/**
+ * Function invoked when a getter or setter is deleted.
+ *
+ * @param Property aItem
+ *        The current getter or setter property.
+ */
+VariablesView.getterOrSetterDeleteCallback = function(aItem) {
+  aItem._disable();
+  aItem.ownerView.eval(VariablesView.getterOrSetterEvalMacro(aItem, ""));
+  return true; // Don't hide the element.
+};
+
+/**
  * A Scope is an object holding Variable instances.
  * Iterable via "for (let [name, variable] in instance) { }".
  *
@@ -604,8 +1037,7 @@ VariablesView.prototype = {
 function Scope(aView, aName, aFlags = {}) {
   this.ownerView = aView;
 
-  this.expand = this.expand.bind(this);
-  this.toggle = this.toggle.bind(this);
+  this._onClick = this._onClick.bind(this);
   this._openEnum = this._openEnum.bind(this);
   this._openNonEnum = this._openNonEnum.bind(this);
   this._batchAppend = this._batchAppend.bind(this);
@@ -618,6 +1050,7 @@ function Scope(aView, aName, aFlags = {}) {
   this.delete = aView.delete;
   this.editableValueTooltip = aView.editableValueTooltip;
   this.editableNameTooltip = aView.editableNameTooltip;
+  this.editButtonTooltip = aView.editButtonTooltip;
   this.deleteButtonTooltip = aView.deleteButtonTooltip;
   this.descriptorTooltip = aView.descriptorTooltip;
   this.contextMenuId = aView.contextMenuId;
@@ -656,6 +1089,7 @@ Scope.prototype = {
     let variable = new Variable(this, aName, aDescriptor);
     this._store.set(aName, variable);
     this._variablesView._currHierarchy.set(variable._absoluteName, variable);
+    this._variablesView._itemsByElement.set(variable._target, variable);
     variable.header = !!aName;
     return variable;
   },
@@ -697,11 +1131,44 @@ Scope.prototype = {
   },
 
   /**
+   * Determines if this scope is a direct child of a parent variables view,
+   * scope, variable or property.
+   *
+   * @param VariablesView | Scope | Variable | Property
+   *        The parent to check.
+   * @return boolean
+   *         True if the specified item is a direct child, false otherwise.
+   */
+  isChildOf: function S_isChildOf(aParent) {
+    return this.ownerView == aParent;
+  },
+
+  /**
+   * Determines if this scope is a descendant of a parent variables view,
+   * scope, variable or property.
+   *
+   * @param VariablesView | Scope | Variable | Property
+   *        The parent to check.
+   * @return boolean
+   *         True if the specified item is a descendant, false otherwise.
+   */
+  isDescendantOf: function S_isDescendantOf(aParent) {
+    if (this.isChildOf(aParent)) {
+      return true;
+    }
+    if (this.ownerView instanceof Scope ||
+        this.ownerView instanceof Variable ||
+        this.ownerView instanceof Property) {
+      return this.ownerView.isDescendantOf(aParent);
+    }
+  },
+
+  /**
    * Shows the scope.
    */
   show: function S_show() {
     this._target.hidden = false;
-    this._isShown = true;
+    this._isContentVisible = true;
 
     if (this.onshow) {
       this.onshow(this);
@@ -713,7 +1180,7 @@ Scope.prototype = {
    */
   hide: function S_hide() {
     this._target.hidden = true;
-    this._isShown = false;
+    this._isContentVisible = false;
 
     if (this.onhide) {
       this.onhide(this);
@@ -738,7 +1205,7 @@ Scope.prototype = {
       // Start spinning a throbber in this scope's title and allow a few
       // milliseconds for it to be painted.
       this._startThrobber();
-      this.window.setTimeout(this.expand, LAZY_EXPAND_DELAY);
+      this.window.setTimeout(this.expand.bind(this), LAZY_EXPAND_DELAY);
       return;
     }
 
@@ -787,7 +1254,7 @@ Scope.prototype = {
     // Make sure the scope and its contents are visibile.
     for (let [, variable] of this._store) {
       variable.header = true;
-      variable._match = true;
+      variable._matched = true;
     }
     if (this.ontoggle) {
       this.ontoggle(this);
@@ -844,7 +1311,7 @@ Scope.prototype = {
    * Gets the visibility state.
    * @return boolean
    */
-  get visible() this._isShown,
+  get visible() this._isContentVisible,
 
   /**
    * Gets the expanded state.
@@ -863,6 +1330,12 @@ Scope.prototype = {
    * @return boolean
    */
   get twisty() this._isArrowVisible,
+
+  /**
+   * Gets the expand lock state.
+   * @return boolean
+   */
+  get locked() this._locked,
 
   /**
    * Sets the visibility state.
@@ -889,16 +1362,35 @@ Scope.prototype = {
   set twisty(aFlag) aFlag ? this.showArrow() : this.hideArrow(),
 
   /**
-   * Gets the expand lock state.
-   * @return boolean
-   */
-  get locked() this._locked,
-
-  /**
    * Sets the expand lock state.
    * @param boolean aFlag
    */
   set locked(aFlag) this._locked = aFlag,
+
+  /**
+   * Specifies if this target node may be focused.
+   * @return boolean
+   */
+  get focusable() {
+    // Check if this target node is actually visibile.
+    if (!this._nameString ||
+        !this._isContentVisible ||
+        !this._isHeaderVisible ||
+        !this._isMatch) {
+      return false;
+    }
+    // Check if all parent objects are expanded.
+    let item = this;
+    while ((item = item.ownerView) &&  /* Parent object exists. */
+           (item instanceof Scope ||
+            item instanceof Variable ||
+            item instanceof Property)) {
+      if (!item._isExpanded) {
+        return false;
+      }
+    }
+    return true;
+  },
 
   /**
    * Adds an event listener for a certain event on this scope's title.
@@ -998,7 +1490,18 @@ Scope.prototype = {
    * Adds the necessary event listeners for this scope.
    */
   _addEventListeners: function S__addEventListeners() {
-    this._title.addEventListener("mousedown", this.toggle, false);
+    this._title.addEventListener("mousedown", this._onClick, false);
+  },
+
+  /**
+   * The click listener for this scope's title.
+   */
+  _onClick: function S__onClick(e) {
+    if (e.target == this._inputNode) {
+      return;
+    }
+    this.toggle();
+    this._variablesView._focusItem(this);
   },
 
   /**
@@ -1157,11 +1660,11 @@ Scope.prototype = {
       // Non-matched variables or properties require a corresponding attribute.
       if (!lowerCaseName.contains(aLowerCaseQuery) &&
           !lowerCaseValue.contains(aLowerCaseQuery)) {
-        variable._match = false;
+        variable._matched = false;
       }
       // Variable or property is matched.
       else {
-        variable._match = true;
+        variable._matched = true;
 
         // If the variable was ever expanded, there's a possibility it may
         // contain some matched properties, so make sure they're visible
@@ -1184,7 +1687,7 @@ Scope.prototype = {
                 variable instanceof Property)) {
 
           // Show and expand the parent, as it is certainly accessible.
-          variable._match = true;
+          variable._matched = true;
           aLowerCaseQuery && variable.expand();
         }
       }
@@ -1199,10 +1702,10 @@ Scope.prototype = {
   },
 
   /**
-   * Sets if this object instance is a match or non-match.
+   * Sets if this object instance is a matched or non-matched item.
    * @param boolean aStatus
    */
-  set _match(aStatus) {
+  set _matched(aStatus) {
     if (this._isMatch == aStatus) {
       return;
     }
@@ -1213,6 +1716,25 @@ Scope.prototype = {
       this._isMatch = false;
       this.target.setAttribute("non-match", "");
     }
+  },
+
+  /**
+   * Gets the first search results match in this scope.
+   * @return Variable | Property
+   */
+  get _firstMatch() {
+    for (let [, variable] of this._store) {
+      let match;
+      if (variable._isMatch) {
+        match = variable;
+      } else {
+        match = variable._firstMatch;
+      }
+      if (match) {
+        return match;
+      }
+    }
+    return null;
   },
 
   /**
@@ -1257,6 +1779,7 @@ Scope.prototype = {
   delete: null,
   editableValueTooltip: "",
   editableNameTooltip: "",
+  editButtonTooltip: "",
   deleteButtonTooltip: "",
   descriptorTooltip: true,
   contextMenuId: "",
@@ -1269,10 +1792,10 @@ Scope.prototype = {
   _batchItems: null,
   _batchTimeout: null,
   _locked: false,
-  _isShown: true,
   _isExpanding: false,
   _isExpanded: false,
   _wasToggled: false,
+  _isContentVisible: true,
   _isHeaderVisible: true,
   _isArrowVisible: true,
   _isMatch: true,
@@ -1302,10 +1825,6 @@ function Variable(aScope, aName, aDescriptor) {
   this._displayTooltip = this._displayTooltip.bind(this);
   this._activateNameInput = this._activateNameInput.bind(this);
   this._activateValueInput = this._activateValueInput.bind(this);
-  this._deactivateNameInput = this._deactivateNameInput.bind(this);
-  this._deactivateValueInput = this._deactivateValueInput.bind(this);
-  this._onNameInputKeyPress = this._onNameInputKeyPress.bind(this);
-  this._onValueInputKeyPress = this._onValueInputKeyPress.bind(this);
 
   Scope.call(this, aScope, aName, this._initialDescriptor = aDescriptor);
   this.setGrip(aDescriptor.value);
@@ -1342,6 +1861,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     let property = new Property(this, aName, aDescriptor);
     this._store.set(aName, property);
     this._variablesView._currHierarchy.set(property._absoluteName, property);
+    this._variablesView._itemsByElement.set(property._target, property);
     property.header = !!aName;
     return property;
   },
@@ -1365,6 +1885,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * @param object aOptions [optional]
    *        Additional options for adding the properties. Supported options:
    *        - sorted: true to sort all the properties before adding them
+   *        - callback: function invoked after each property is added
    */
   addProperties: function V_addProperties(aProperties, aOptions = {}) {
     let propertyNames = Object.keys(aProperties);
@@ -1375,7 +1896,12 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     }
     // Add the properties to the current scope.
     for (let name of propertyNames) {
-      this.addProperty(name, aProperties[name]);
+      let descriptor = aProperties[name];
+      let property = this.addProperty(name, descriptor);
+
+      if (aOptions.callback) {
+        aOptions.callback(property, descriptor.value);
+      }
     }
   },
 
@@ -1418,6 +1944,20 @@ create({ constructor: Variable, proto: Scope.prototype }, {
   },
 
   /**
+   * Populates a specific variable or property instance to contain all the
+   * properties of an object
+   *
+   * @param Variable | Property aVar
+   *        The target variable to populate.
+   * @param object aObject [optional]
+   *        The raw object you want to display. If unspecified, the object is
+   *        assumed to be defined in a _sourceValue property on the target.
+   */
+  _populateTarget: function V__populateTarget(aVar, aObject = aVar._sourceValue) {
+    aVar.populate(aObject);
+  },
+
+  /**
    * Adds a property for this variable based on a raw value descriptor.
    *
    * @param string aName
@@ -1433,11 +1973,12 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     descriptor.value = VariablesView.getGrip(aValue);
 
     let propertyItem = this.addProperty(aName, descriptor);
+    propertyItem._sourceValue = aValue;
 
     // Add an 'onexpand' callback for the property, lazily handling
     // the addition of new child properties.
     if (!VariablesView.isPrimitive(descriptor)) {
-      propertyItem.onexpand = this.populate.bind(propertyItem, aValue);
+      propertyItem.onexpand = this._populateTarget;
     }
   },
 
@@ -1455,8 +1996,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     descriptor.get = VariablesView.getGrip(aDescriptor.get);
     descriptor.set = VariablesView.getGrip(aDescriptor.set);
 
-    let propertyItem = this.addProperty(aName, descriptor);
-    return propertyItem;
+    this.addProperty(aName, descriptor);
   },
 
   /**
@@ -1506,6 +2046,11 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (!this._nameString) {
       return;
     }
+    // Getters and setters should display grip information in sub-properties.
+    if (!this._isUndefined && (this.getter || this.setter)) {
+      this._valueLabel.setAttribute("value", "");
+      return;
+    }
 
     if (aGrip === undefined) {
       aGrip = { type: "undefined" };
@@ -1536,7 +2081,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    */
   _init: function V__init(aName, aDescriptor) {
     this._idString = generateId(this._nameString = aName);
-    this._displayScope(aName, "variable");
+    this._displayScope(aName, "variable variable-or-property");
 
     // Don't allow displaying variable information there's no name available.
     if (this._nameString) {
@@ -1585,20 +2130,27 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this._title.appendChild(separatorLabel);
     this._title.appendChild(valueLabel);
 
-    let isPrimitive = VariablesView.isPrimitive(descriptor);
-    let isUndefined = VariablesView.isUndefined(descriptor);
+    let isPrimitive = this._isPrimitive = VariablesView.isPrimitive(descriptor);
+    let isUndefined = this._isUndefined = VariablesView.isUndefined(descriptor);
 
     if (isPrimitive || isUndefined) {
       this.hideArrow();
     }
     if (!isUndefined && (descriptor.get || descriptor.set)) {
-      // FIXME: editing getters and setters is not allowed yet. Bug 831794.
-      this.eval = null;
-      this.addProperty("get", { value: descriptor.get });
-      this.addProperty("set", { value: descriptor.set });
-      this.expand();
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
+
+      this.delete = VariablesView.getterOrSetterDeleteCallback;
+      this.evaluationMacro = VariablesView.overrideValueEvalMacro;
+
+      let getter = this.addProperty("get", { value: descriptor.get });
+      let setter = this.addProperty("set", { value: descriptor.set });
+      getter.evaluationMacro = VariablesView.getterOrSetterEvalMacro;
+      setter.evaluationMacro = VariablesView.getterOrSetterEvalMacro;
+
+      getter.hideArrow();
+      setter.hideArrow();
+      this.expand();
     }
   },
 
@@ -1606,11 +2158,21 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * Adds specific nodes for this variable based on custom flags.
    */
   _customizeVariable: function V__customizeVariable() {
+    if (this.ownerView.eval) {
+      if (!this._isUndefined && (this.getter || this.setter)) {
+        let editNode = this._editNode = this.document.createElement("toolbarbutton");
+        editNode.className = "plain dbg-variable-edit";
+        editNode.addEventListener("mousedown", this._onEdit.bind(this), false);
+        this._title.appendChild(editNode);
+      }
+    }
     if (this.ownerView.delete) {
-      let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
-      deleteNode.className = "plain dbg-variable-delete devtools-closebutton";
-      deleteNode.addEventListener("click", this._onDelete.bind(this), false);
-      this._title.appendChild(deleteNode);
+      if (!this._isUndefined || !(this.ownerView.getter && this.ownerView.setter)) {
+        let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
+        deleteNode.className = "plain dbg-variable-delete devtools-closebutton";
+        deleteNode.addEventListener("click", this._onDelete.bind(this), false);
+        this._title.appendChild(deleteNode);
+      }
     }
     if (this.ownerView.contextMenuId) {
       this._title.setAttribute("context", this.ownerView.contextMenuId);
@@ -1651,6 +2213,9 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       this._target.appendChild(tooltip);
       this._target.setAttribute("tooltip", tooltip.id);
     }
+    if (this.ownerView.eval && !this._isUndefined && (this.getter || this.setter)) {
+      this._editNode.setAttribute("tooltiptext", this.ownerView.editButtonTooltip);
+    }
     if (this.ownerView.eval) {
       this._valueLabel.setAttribute("tooltiptext", this.ownerView.editableValueTooltip);
     }
@@ -1670,13 +2235,16 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     let descriptor = this._initialDescriptor;
     let name = this._nameString;
 
+    if (this.ownerView.eval) {
+      this._target.setAttribute("editable", "");
+    }
     if (!descriptor.configurable) {
       this._target.setAttribute("non-configurable", "");
     }
     if (!descriptor.enumerable) {
       this._target.setAttribute("non-enumerable", "");
     }
-    if (!descriptor.writable) {
+    if (!descriptor.writable && !this.ownerView.get && !this.ownerView.set) {
       this._target.setAttribute("non-writable", "");
     }
     if (name == "this") {
@@ -1694,10 +2262,9 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * Adds the necessary event listeners for this variable.
    */
   _addEventListeners: function V__addEventListeners() {
-    this._arrow.addEventListener("mousedown", this.toggle, false);
-    this._name.addEventListener("mousedown", this.toggle, false);
     this._name.addEventListener("dblclick", this._activateNameInput, false);
-    this._valueLabel.addEventListener("click", this._activateValueInput, false);
+    this._valueLabel.addEventListener("mousedown", this._activateValueInput, false);
+    this._title.addEventListener("mousedown", this._onClick, false);
   },
 
   /**
@@ -1718,8 +2285,14 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     let input = this.document.createElement("textbox");
     input.setAttribute("value", initialString);
     input.className = "plain " + aClassName;
-    input.width = this._target.clientWidth;
 
+    // Can't use clientWidth because labels may have extra unnecessary padding.
+    let style = this.window.getComputedStyle(aLabel);
+    input.width = (parseInt(style.getPropertyValue("width")) ||
+      ELEMENT_INPUT_DEFAULT_WIDTH) + // If no content was previously available.
+      ELEMENT_INPUT_EXTRA_SPACE; // Extra space added for editing.
+
+    // Replace the specified label with a textbox input element.
     aLabel.parentNode.replaceChild(input, aLabel);
     input.select();
 
@@ -1740,6 +2313,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this.hideArrow();
     this._locked = true;
 
+    this._inputNode = input;
     this._stopThrobber();
   },
 
@@ -1760,6 +2334,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     this.twisty = this._prevExpandable;
     this.expanded = this._prevExpanded;
 
+    this._inputNode = null;
     this._stopThrobber();
   },
 
@@ -1774,6 +2349,14 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (!this.ownerView.switch) {
       return;
     }
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    this._onNameInputKeyPress = this._onNameInputKeyPress.bind(this);
+    this._deactivateNameInput = this._deactivateNameInput.bind(this);
+
     this._activateInput(this._name, "element-name-input", {
       onKeypress: this._onNameInputKeyPress,
       onBlur: this._deactivateNameInput
@@ -1805,6 +2388,14 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (!this.ownerView.eval) {
       return;
     }
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    this._onValueInputKeyPress = this._onValueInputKeyPress.bind(this);
+    this._deactivateValueInput = this._deactivateValueInput.bind(this);
+
     this._activateInput(this._valueLabel, "element-value-input", {
       onKeypress: this._onValueInputKeyPress,
       onBlur: this._deactivateValueInput
@@ -1825,11 +2416,18 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * Disables this variable prior to a new name switch or value evaluation.
    */
   _disable: function V__disable() {
-    this.twisty = false;
+    this.hideArrow();
     this._separatorLabel.hidden = true;
     this._valueLabel.hidden = true;
     this._enum.hidden = true;
     this._nonenum.hidden = true;
+
+    if (this._editNode) {
+      this._editNode.hidden = true;
+    }
+    if (this._deleteNode) {
+      this._deleteNode.hidden = true;
+    }
   },
 
   /**
@@ -1859,21 +2457,31 @@ create({ constructor: Variable, proto: Scope.prototype }, {
 
     if (initialString != currentString) {
       this._disable();
-      this.ownerView.eval(this._symbolicName + "=" + currentString);
+      this.ownerView.eval(this.evaluationMacro(this, currentString.trim()));
     }
   },
+
+  /**
+   * The current macro used to generate the string evaluated when performing
+   * a variable or property value change.
+   */
+  evaluationMacro: VariablesView.simpleValueEvalMacro,
 
   /**
    * The key press listener for this variable's editable name textbox.
    */
   _onNameInputKeyPress: function V__onNameInputKeyPress(e) {
+    e.stopPropagation();
+
     switch(e.keyCode) {
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
         this._saveNameInput(e);
+        this._variablesView._focusItem(this);
         return;
       case e.DOM_VK_ESCAPE:
         this._deactivateNameInput(e);
+        this._variablesView._focusItem(this);
         return;
     }
   },
@@ -1882,33 +2490,53 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * The key press listener for this variable's editable value textbox.
    */
   _onValueInputKeyPress: function V__onValueInputKeyPress(e) {
+    e.stopPropagation();
+
     switch(e.keyCode) {
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
         this._saveValueInput(e);
+        this._variablesView._focusItem(this);
         return;
       case e.DOM_VK_ESCAPE:
         this._deactivateValueInput(e);
+        this._variablesView._focusItem(this);
         return;
     }
   },
 
   /**
+   * The click listener for the edit button.
+   */
+  _onEdit: function V__onEdit(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this._activateValueInput();
+  },
+
+  /**
    * The click listener for the delete button.
    */
-  _onDelete: function V__onDelete() {
-    this.hide();
+  _onDelete: function V__onDelete(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
     if (this.ownerView.delete) {
-      this.ownerView.delete(this);
+      if (!this.ownerView.delete(this)) {
+        this.hide();
+      }
     }
   },
 
   _symbolicName: "",
   _absoluteName: "",
   _initialDescriptor: null,
+  _isPrimitive: false,
+  _isUndefined: false,
   _separatorLabel: null,
   _valueLabel: null,
+  _inputNode: null,
+  _editNode: null,
   _deleteNode: null,
   _tooltip: null,
   _valueGrip: null,
@@ -1946,7 +2574,7 @@ create({ constructor: Property, proto: Variable.prototype }, {
    */
   _init: function P__init(aName, aDescriptor) {
     this._idString = generateId(this._nameString = aName);
-    this._displayScope(aName, "property");
+    this._displayScope(aName, "property variable-or-property");
 
     // Don't allow displaying property information there's no name available.
     if (this._nameString) {
