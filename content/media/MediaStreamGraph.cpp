@@ -1092,11 +1092,17 @@ namespace {
 
 class MediaStreamGraphThreadRunnable : public nsRunnable {
 public:
+  explicit MediaStreamGraphThreadRunnable(MediaStreamGraphImpl* aGraph)
+    : mGraph(aGraph)
+  {
+  }
   NS_IMETHOD Run()
   {
-    gGraph->RunThread();
+    mGraph->RunThread();
     return NS_OK;
   }
+private:
+  MediaStreamGraphImpl* mGraph;
 };
 
 class MediaStreamGraphShutDownRunnable : public nsRunnable {
@@ -1200,7 +1206,7 @@ MediaStreamGraphImpl::RunInStableState()
       // Start the thread now. We couldn't start it earlier because
       // the graph might exit immediately on finding it has no streams. The
       // first message for a new graph must create a stream.
-      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable();
+      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable(this);
       NS_NewThread(getter_AddRefs(mThread), event);
     }
 
@@ -1232,7 +1238,7 @@ MediaStreamGraphImpl::RunInStableState()
         // Revive the MediaStreamGraph since we have more messages going to it.
         // Note that we need to put messages into its queue before reviving it,
         // or it might exit immediately.
-        nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable();
+        nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable(this);
         mThread->Dispatch(event, 0);
       }
     }
