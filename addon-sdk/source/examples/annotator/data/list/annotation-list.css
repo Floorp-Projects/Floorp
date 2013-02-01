@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#annotation-list .annotation-details
+  {
+  padding: 10px;
+  margin: 10px;
+  border: solid 3px #EEE;
+  background-color: white;
+  }
+
+#annotation-list .url, .selection-text, .annotation-text
+  {
+  padding: 5px;
+  margin: 5px;
+  }
+
+#annotation-list .selection-text,#annotation-list .annotation-text
+  {
+  border: solid 1px #EEE;
+  }
+
+#annotation-list .annotation-text
+  {
+  font-style: italic;
+  }
+
+body
+  {
+  background-color: #F5F5F5;
+  font: 100% arial, helvetica, sans-serif;
+  }
+
+h1
+  {
+  font-family: georgia,serif;
+  font-size: 1.5em;
+  text-align:center;
+  }

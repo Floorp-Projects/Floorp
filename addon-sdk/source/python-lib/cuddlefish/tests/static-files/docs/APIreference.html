@@ -1,0 +1,469 @@
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+
+  <base target="_blank"/>
+
+  <link rel="stylesheet" type="text/css" media="all"
+
+        href="../../../css/base.css" />
+
+  <link rel="stylesheet" type="text/css" media="all"
+
+        href="../../../css/apidocs.css" />
+
+  <title>Add-on SDK Documentation</title>
+
+  <style type="text/css">
+
+    body {
+
+      border: 50px solid #FFFFFF;
+
+    }
+
+  </style>
+
+
+
+  <script type="text/javascript">
+
+    function rewrite_links() {
+
+      var images = document.getElementsByTagName("img");
+
+      for (var i = 0; i < images.length; i++) {
+
+        var before = images[i].src.split("packages/")[0];
+
+        var after = images[i].src.split("/docs")[1];
+
+        images[i].src = before + after;
+
+      }
+
+    }
+
+    </script>
+
+</head>
+
+
+
+<body onload = "rewrite_links()">
+
+<div id="APIsample_module_api_docs" class="module_api_docs">
+  <h1>APIsample</h1>
+  <div class="module_description"><!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    
+    <h1>Title</h1>
+    <p>Some text here</p>
+    <p>This text appears between the API blocks.</p>
+    <p>Wooo, more text.</p>
+    <p>Some more text here, at the end of the file.</p>
+  </div>
+  
+  <div class="api_reference">
+    <h2 class="api_header">API Reference</h2>
+    
+    <div class="api_component_group">
+      <h3 class="api_header">Classes</h3>
+      
+      <div class="api_component">
+        <h4 class="api_name">empty-class</h4>
+        <p>This class contains nothing.</p>
+      </div>
+      
+      <div class="api_component">
+        <h4 class="api_name">only-one-ctor</h4>
+        <p>This class contains only one constructor.</p>
+        <div class="api_component_group">
+          <h5 class="api_header">Constructors</h5>
+          
+          <div class="api_component">
+            <h6 class="api_name">one-constructor(options)</h6>
+            
+            <div class="parameter_set">
+              <div class="api_component">
+                <div class="api_name">[ options ]</div>
+                <p>An object-bag of goodies.</p>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+        </div>
+        
+      </div>
+      
+      <div class="api_component">
+        <h4 class="api_name">two-ctors</h4>
+        <p>This class contains two constructors.</p>
+        <div class="api_component_group">
+          <h5 class="api_header">Constructors</h5>
+          
+          <div class="api_component">
+            <h6 class="api_name">one-constructor(options)</h6>
+            <p>The first constructor.</p>
+            <div class="parameter_set">
+              <div class="api_component">
+                <div class="api_name">[ options ]</div>
+                <p>An object-bag of goodies.</p>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+          <div class="api_component">
+            <h6 class="api_name">another-constructor(options)</h6>
+            <p>The second constructor.</p>
+            <div class="parameter_set">
+              <div class="api_component">
+                <div class="api_name">[ options ]</div>
+                <p>An object-bag of goodies.</p>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+        </div>
+        
+      </div>
+      
+      <div class="api_component">
+        <h4 class="api_name">ctor-and-method</h4>
+        <p>This class contains one constructor and one method.</p>
+        <div class="api_component_group">
+          <h5 class="api_header">Constructors</h5>
+          
+          <div class="api_component">
+            <h6 class="api_name">one-constructor(options)</h6>
+            <p>The first constructor.</p>
+            <div class="parameter_set">
+              <div class="api_component">
+                <div class="api_name">[ options ]</div>
+                <p>An object-bag of goodies.</p>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+        </div>
+        
+        <div class="api_component_group">
+          <h5 class="api_header">Methods</h5>
+          
+          <div class="api_component">
+            <h6 class="api_name">a-method(options)</h6>
+            <p>Does things.</p>
+            <div class="parameter_set">
+              <div class="api_component">
+                <div class="api_name">[ options ]</div>
+                <p>An argument.</p>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+        </div>
+        
+      </div>
+      
+      <div class="api_component">
+        <h4 class="api_name">ctor-method-prop-event</h4>
+        <p>This class contains one constructor, one method, one property and an event.</p>
+        <div class="api_component_group">
+          <h5 class="api_header">Constructors</h5>
+          
+          <div class="api_component">
+            <h6 class="api_name">one-constructor(options)</h6>
+            <p>The first constructor.</p>
+            <div class="parameter_set">
+              <div class="api_component">
+                <div class="api_name">[ options ]</div>
+                <p>An object-bag of goodies.</p>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+        </div>
+        
+        <div class="api_component_group">
+          <h5 class="api_header">Methods</h5>
+          
+          <div class="api_component">
+            <h6 class="api_name">a-method(options)</h6>
+            <p>Does things.</p>
+            <div class="parameter_set">
+              <div class="api_component">
+                <div class="api_name">[ options ]</div>
+                <p>An argument.</p>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+        </div>
+        
+        <div class="api_component_group">
+          <h5 class="api_header">Properties</h5>
+          
+          <div class="api_component">
+            <h6 class="api_name">a-property : <span class="datatype">bool</span></h6>
+            <p>Represents stuff.</p>
+          </div>
+          
+        </div>
+        
+        <div class="api_component_group">
+          <h5 class="api_header">Events</h5>
+          
+          <div class="api_component">
+            <h6 class="api_name">message</h6>
+            <p>Event emitted when the content script sends a message to the add-on.</p>
+            <div class="parameter_set">
+              <div class="api_component">
+                <div class="api_name"><span class="datatype">JSON</span></div>
+                <p>The message itself as a JSON-serialized object.</p>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+        </div>
+        
+      </div>
+      
+    </div>
+    
+    <div class="api_component_group">
+      <h3 class="api_header">Functions</h3>
+      
+      <div class="api_component">
+        <h4 class="api_name">test(argOne, argTwo, argThree, options)</h4>
+        <p>This is a function which does nothing in particular.</p>
+        <div class="parameter_set">
+          <div class="api_component">
+            <div class="api_name">argOne : <span class="datatype">string</span></div>
+            <p>This is the first argument.</p>
+          </div>
+          
+          <div class="api_component">
+            <div class="api_name">[ argTwo : <span class="datatype">bool</span> ]</div>
+            <p>This is the second argument.</p>
+          </div>
+          
+          <div class="api_component">
+            <div class="api_name">[ argThree = default : <span class="datatype">uri</span> ]</div>
+            <p>This is the third and final argument. And this is
+            a test of the ability to do multiple lines of
+            text.</p>
+          </div>
+          
+          <div class="api_component">
+            <div class="api_name">[ options ]</div>
+            <p>Options Bag</p>
+            <div class="api_component">
+              <div class="api_name">[ style : <span class="datatype">string</span> ]</div>
+              <p>Some style information.</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ secondToLastOption = True : <span class="datatype">bool</span> ]</div>
+              <p>The last property.</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ lastOption : <span class="datatype">uri</span> ]</div>
+              <p>And this time we have
+              A multiline description
+              Written as haiku</p>
+            </div>
+            
+          </div>
+          
+        </div>
+        
+        <div class="returns">Returns: <span class="datatype">object</span>
+        </div>
+        
+      </div>
+      
+      <div class="api_component">
+        <h4 class="api_name">append(options)</h4>
+        <p>This is a list of options to specify modifications to your slideBar instance.</p>
+        <div class="parameter_set">
+          <div class="api_component">
+            <div class="api_name">options</div>
+            <p>Pass in all of your options here.</p>
+            <div class="api_component">
+              <div class="api_name">[ icon : <span class="datatype">uri</span> ]</div>
+              <p>The HREF of an icon to show as the method of accessing your features slideBar</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ html : <span class="datatype">string/xml</span> ]</div>
+              <p>The content of the feature, either as an HTML string,
+              or an E4X document fragment.</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ url : <span class="datatype">uri</span> ]</div>
+              <p>The url to load into the content area of the feature</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ width : <span class="datatype">int</span> ]</div>
+              <p>Width of the content area and the selected slide size</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ persist : <span class="datatype">bool</span> ]</div>
+              <p>Default slide behavior when being selected as follows:
+              If true: blah; If false: double blah.</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ autoReload : <span class="datatype">bool</span> ]</div>
+              <p>Automatically reload content on select</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ onClick : <span class="datatype">function</span> ]</div>
+              <p>Callback when the icon is clicked</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ onSelect : <span class="datatype">function</span> ]</div>
+              <p>Callback when the feature is selected</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ onReady : <span class="datatype">function</span> ]</div>
+              <p>Callback when featured is loaded</p>
+            </div>
+            
+          </div>
+          
+        </div>
+        
+      </div>
+      
+      <div class="api_component">
+        <h4 class="api_name">cool-func.dot(howMuch, double, options, onemore, options2)</h4>
+        
+        <div class="parameter_set">
+          <div class="api_component">
+            <div class="api_name">howMuch : <span class="datatype">string</span></div>
+            <p>How much cool it is.</p>
+          </div>
+          
+          <div class="api_component">
+            <div class="api_name">[ double = true : <span class="datatype">bool</span> ]</div>
+            <p>In case you just really need to double it.</p>
+          </div>
+          
+          <div class="api_component">
+            <div class="api_name">[ options ]</div>
+            <p>An object-bag of goodies.</p>
+            <div class="api_component">
+              <div class="api_name">callback : <span class="datatype">function</span></div>
+              <p>The callback</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ random : <span class="datatype">bool</span> ]</div>
+              <p>Do something random?</p>
+            </div>
+            
+          </div>
+          
+          <div class="api_component">
+            <div class="api_name">[ onemore : <span class="datatype">bool</span> ]</div>
+            <p>One more paramater</p>
+          </div>
+          
+          <div class="api_component">
+            <div class="api_name">[ options2 ]</div>
+            <p>This is a full description of something
+            that really sucks. Because I now have a multiline
+            description of this thingy.</p>
+            <div class="api_component">
+              <div class="api_name">monkey : <span class="datatype">string</span></div>
+              <p>You heard me right</p>
+            </div>
+            
+            <div class="api_component">
+              <div class="api_name">[ freak = true : <span class="datatype">bool</span> ]</div>
+              <p>Yes, you are a freak.</p>
+            </div>
+            
+          </div>
+          
+        </div>
+        
+        <div class="returns">Returns: <span class="datatype">string</span><p>A value telling you just how cool you are.
+          A boa-constructor!
+          This description can go on for a while, and can even contain
+          some <strong>realy</strong> fancy things. Like <code>code</code>, or even
+          ~~~~{.javascript}
+          // Some code!
+          ~~~~</p>
+        </div>
+        
+      </div>
+      
+      <div class="api_component">
+        <h4 class="api_name">random()</h4>
+        <p>A function that returns a random integer between 0 and 10.</p>
+        <div class="returns">Returns: <span class="datatype">int</span><p>The random number.</p>
+        </div>
+        
+      </div>
+      
+    </div>
+    
+    <div class="api_component_group">
+      <h3 class="api_header">Events</h3>
+      
+      <div class="api_component">
+        <h4 class="api_name">open</h4>
+        <p>A module-level event called open.</p>
+        <div class="parameter_set">
+          <div class="api_component">
+            <div class="api_name"><span class="datatype">bool</span></div>
+            <p>Yes, it's open.</p>
+          </div>
+          
+        </div>
+        
+      </div>
+      
+    </div>
+    
+  </div>
+  
+</div>
+
+</body>
+
+
+
+</html>
+

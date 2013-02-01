@@ -1,0 +1,4 @@
+{ "name": "four-a",
+  "directories": {"lib": "lib"},
+  "main": "./topfiles/main.js"
+}
