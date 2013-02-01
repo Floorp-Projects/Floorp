@@ -136,6 +136,7 @@ struct RuntimeSizes
     size_t gcMarker;
     size_t mathCache;
     size_t scriptFilenames;
+    size_t scriptData;
     size_t scriptSources;
 };
 
