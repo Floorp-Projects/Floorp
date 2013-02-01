@@ -12,20 +12,22 @@ Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
+  Services.obs.addObserver(this, "lightweight-theme-apply", false);
 
   this._update(LightweightThemeManager.currentThemeForDisplay);
 }
 
 LightweightThemeConsumer.prototype = {
   observe: function (aSubject, aTopic, aData) {
-    if (aTopic != "lightweight-theme-styling-update")
-      return;
-
-    this._update(JSON.parse(aData));
+    if (aTopic == "lightweight-theme-styling-update")
+      this._update(JSON.parse(aData));
+    else if (aTopic == "lightweight-theme-apply")
+      this._update(LightweightThemeManager.currentThemeForDisplay);
   },
 
   destroy: function () {
     Services.obs.removeObserver(this, "lightweight-theme-styling-update");
+    Services.obs.removeObserver(this, "lightweight-theme-apply");
     this._doc = null;
   },
 
