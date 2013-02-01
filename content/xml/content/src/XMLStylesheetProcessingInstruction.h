@@ -23,12 +23,21 @@ public:
   }
   virtual ~XMLStylesheetProcessingInstruction();
 
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap);
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
   // CC
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLStylesheetProcessingInstruction,
                                            ProcessingInstruction)
+
+  using nsStyleLinkElement::GetSheet;
+  nsIStyleSheet* GetSheet()
+  {
+    return GetStyleSheet();
+  }
 
   // nsIDOMNode
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
@@ -48,6 +57,7 @@ public:
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
   virtual nsXPCClassInfo* GetClassInfo();
+
 protected:
   nsCOMPtr<nsIURI> mOverriddenBaseURI;
 

@@ -182,6 +182,7 @@ webidl_files = \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \
   XMLSerializer.webidl \
+  XMLStylesheetProcessingInstruction.webidl \
   XPathEvaluator.webidl \
   XULElement.webidl \
   $(NULL)
