@@ -61,6 +61,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
    ok(win.XPathEvaluator.toString().indexOf("XPathEvaluator") >= 0,
       "Can access content window.XPathEvaluator");
 
+   var nativeToString =
+       ("" + String.replace).replace("replace", "EventTarget");
+   var eventTargetToString = "" + win.EventTarget;
+   ok(eventTargetToString.indexOf(nativeToString) > -1,
+      "Stringifying a DOM interface object should return the same string as " +
+      "stringifying a native function." + " " + eventTargetToString + " " + nativeToString);
+
    is(win.XPathResult.NUMBER_TYPE, 1, "can access constants on constructors");
    is(typeof win.IDBKeyRange.bound, "function", "can access crazy IDBKeyRange static functions");
 

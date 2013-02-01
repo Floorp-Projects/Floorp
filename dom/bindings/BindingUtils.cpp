@@ -1260,14 +1260,19 @@ NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
     } else {
       if (IsDOMProxy(obj)) {
         str = js::GetProxyHandler(obj)->obj_toString(cx, obj);
-      } else if (IsDOMClass(JS_GetClass(obj)) ||
-                 IsDOMIfaceAndProtoClass(JS_GetClass(obj))) {
-        str = ConcatJSString(cx, "[object ",
-                             JS_NewStringCopyZ(cx, JS_GetClass(obj)->name),
-                                               "]");
       } else {
-        MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
-        str = JS_DecompileFunction(cx, JS_GetObjectFunction(obj), 0);
+        js::Class* clasp = js::GetObjectClass(obj);
+        if (IsDOMClass(clasp)) {
+          str = ConcatJSString(cx, "[object ",
+                               JS_NewStringCopyZ(cx, clasp->name), "]");
+        } else if (IsDOMIfaceAndProtoClass(clasp)) {
+          const DOMIfaceAndProtoJSClass* ifaceAndProtoJSClass =
+            DOMIfaceAndProtoJSClass::FromJSClass(clasp);
+          str = JS_NewStringCopyZ(cx, ifaceAndProtoJSClass->mToString);
+        } else {
+          MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
+          str = JS_DecompileFunction(cx, JS_GetObjectFunction(obj), 0);
+        }
       }
       str = ConcatJSString(cx, pre, str, post);
     }
