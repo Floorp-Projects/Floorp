@@ -153,10 +153,10 @@ function treeObjSort(a, b) {
 function ProfileTreeManager() {
   this.treeView = new TreeView();
   this.treeView.setColumns([
-    { name: "sampleCount", title: "Running time" },
-    { name: "selfSampleCount", title: "Self" },
+    { name: "sampleCount", title: gStrings["Running Time"] },
+    { name: "selfSampleCount", title: gStrings["Self"] },
     { name: "resource", title: "" },
-    { name: "symbolName", title: "Symbol Name"}
+    { name: "symbolName", title: gStrings["Symbol Name"] }
   ]);
   var self = this;
   this.treeView.addEventListener("select", function (frameData) {
@@ -752,7 +752,7 @@ RangeSelector.prototype = {
     var newFilterChain = gSampleFilters.concat({ type: "RangeSampleFilter", start: start, end: end });
     var self = this;
     self._transientRestrictionEnteringAffordance = gBreadcrumbTrail.add({
-      title: "Sample Range [" + start + ", " + (end + 1) + "]",
+      title: gStrings["Sample Range"] + " [" + start + ", " + (end + 1) + "]",
       enterCallback: function () {
         gSampleFilters = newFilterChain;
         self.collapseHistogramSelection();
@@ -1774,7 +1774,7 @@ function enterFinishedProfileUI() {
 
   var currentBreadcrumb = gSampleFilters;
   gBreadcrumbTrail.add({
-    title: "Complete Profile",
+    title: gStrings["Complete Profile"],
     enterCallback: function () {
       gSampleFilters = [];
       filtersChanged();

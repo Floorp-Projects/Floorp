@@ -40,7 +40,7 @@ function testFrameParameters()
       is(frames.querySelectorAll(".dbg-stackframe").length, 3,
         "Should have three frames.");
 
-      is(localNodes.length + localNonEnums.length, 11,
+      is(localNodes.length + localNonEnums.length, 12,
         "The localScope and localNonEnums should contain all the created variable elements.");
 
       is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Proxy]",
@@ -74,9 +74,9 @@ function testFrameParameters()
         "The global scope should be collapsed by default.");
 
 
-      let thisNode = gVars.getVariableOrPropertyForNode(localNodes[0]);
-      let argumentsNode = gVars.getVariableOrPropertyForNode(localNodes[8]);
-      let cNode = gVars.getVariableOrPropertyForNode(localNodes[10]);
+      let thisNode = gVars.getItemForNode(localNodes[0]);
+      let argumentsNode = gVars.getItemForNode(localNodes[8]);
+      let cNode = gVars.getItemForNode(localNodes[10]);
 
       is(thisNode.expanded, false,
         "The thisNode should not be expanded at this point.");
@@ -180,20 +180,20 @@ function testFrameParameters()
           "Should have the right value for 'c.c'.");
 
 
-        is(gVars.getVariableOrPropertyForNode(
+        is(gVars.getItemForNode(
            cNode.target.querySelectorAll(".property")[0]).target,
            cNode.target.querySelectorAll(".property")[0],
-          "getVariableOrPropertyForNode([0]) didn't return the expected property.");
+          "getItemForNode([0]) didn't return the expected property.");
 
-        is(gVars.getVariableOrPropertyForNode(
+        is(gVars.getItemForNode(
            cNode.target.querySelectorAll(".property")[1]).target,
            cNode.target.querySelectorAll(".property")[1],
-          "getVariableOrPropertyForNode([1]) didn't return the expected property.");
+          "getItemForNode([1]) didn't return the expected property.");
 
-        is(gVars.getVariableOrPropertyForNode(
+        is(gVars.getItemForNode(
            cNode.target.querySelectorAll(".property")[2]).target,
            cNode.target.querySelectorAll(".property")[2],
-          "getVariableOrPropertyForNode([2]) didn't return the expected property.");
+          "getItemForNode([2]) didn't return the expected property.");
 
 
         is(cNode.find(
