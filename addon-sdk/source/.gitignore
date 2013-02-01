@@ -1,0 +1,20 @@
+local.json
+python-lib/cuddlefish/app-extension/components/jetpack.xpt
+testdocs.tgz
+jetpack-sdk-docs.tgz
+.test_tmp/
+doc/dev-guide/
+doc/index.html
+doc/modules/
+doc/status.md5
+packages/*
+
+# Python
+*.pyc
+
+# OSX
+*.DS_Store
+
+# Windows
+*Thumbs.db
+

@@ -1,0 +1,6 @@
+{
+  "id": "simplest-test",
+  "directories": {
+    "lib": "."
+  }
+}

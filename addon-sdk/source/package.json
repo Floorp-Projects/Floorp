@@ -1,0 +1,10 @@
+{
+    "name": "addon-sdk",
+    "description": "Add-on development made easy.",
+    "keywords": [
+      "javascript", "engine", "addon", "extension",
+      "xulrunner", "firefox", "browser"
+    ],
+    "loader": "lib/sdk/loader/cuddlefish.js",
+    "license": "MPL 2.0"
+}
