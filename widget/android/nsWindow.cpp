@@ -1766,6 +1766,19 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     if (ae->Action() == AndroidGeckoEvent::IME_ACKNOWLEDGE_FOCUS) {
         MOZ_ASSERT(mIMEMaskEventsCount > 0);
         mIMEMaskEventsCount--;
+        if (!mIMEMaskEventsCount) {
+            // The focusing handshake sequence is complete, and Java is waiting
+            // on Gecko. Now we can notify Java of the newly focused content
+            mIMETextChanges.Clear();
+            mIMESelectionChanged = false;
+            // OnIMETextChange also notifies selection
+            // Use 'INT32_MAX / 2' here because subsequent text changes might
+            // combine with this text change, and overflow might occur if
+            // we just use INT32_MAX
+            OnIMETextChange(0, INT32_MAX / 2, INT32_MAX / 2);
+            FlushIMEChanges();
+        }
+        AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
         return;
     }
     if (mIMEMaskEventsCount > 0) {
@@ -2069,16 +2082,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
 {
     ALOGIME("IME: OnIMEFocusChange: f=%d", aFocus);
 
-    if (aFocus) {
-        mIMETextChanges.Clear();
-        mIMESelectionChanged = false;
-        // OnIMETextChange also notifies selection
-        // Use 'INT32_MAX / 2' here because subsequent text changes might
-        // combine with this text change, and overflow might occur if
-        // we just use INT32_MAX
-        OnIMETextChange(0, INT32_MAX / 2, INT32_MAX / 2);
-        FlushIMEChanges();
-    } else {
+    if (!aFocus) {
         // Mask events because we lost focus. On the next focus event, Gecko will notify
         // Java, and Java will send an acknowledge focus event back to Gecko. That is
         // where we unmask event handling
