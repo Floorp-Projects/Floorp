@@ -319,7 +319,7 @@ Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, 
         return false;
 
     /*
-     * |with (it) color='red';| ends up here.
+     * |with (it) color;| ends up here, as do XML filter-expressions.
      * Avoid exposing the With object to native setters.
      */
     if (obj->isWith()) {

@@ -201,7 +201,9 @@ JS::CheckStackRoots(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-    if (rt->gcZeal_ != ZealStackRootingValue)
+    if (rt->gcZeal_ != ZealStackRootingSafeValue && rt->gcZeal_ != ZealStackRootingValue)
+        return;
+    if (rt->gcZeal_ == ZealStackRootingSafeValue && !rt->gcExactScanningEnabled)
         return;
 
     // If this assertion fails, it means that an AutoAssertNoGC was placed
@@ -646,7 +648,8 @@ void
 gc::StartVerifyPostBarriers(JSRuntime *rt)
 {
 #ifdef JSGC_GENERATIONAL
-    if (rt->gcVerifyPostData ||
+    if (!rt->gcExactScanningEnabled ||
+        rt->gcVerifyPostData ||
         rt->gcIncrementalState != NO_INCREMENTAL)
     {
         return;
@@ -730,6 +733,9 @@ js::gc::EndVerifyPostBarriers(JSRuntime *rt)
     VerifyPostTracer *trc = (VerifyPostTracer *)rt->gcVerifyPostData;
     JS_TracerInit(trc, rt, PostVerifierVisitEdge);
     trc->count = 0;
+
+    if (!rt->gcExactScanningEnabled)
+        goto oom;
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->gcStoreBuffer.hasOverflowed())

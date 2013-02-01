@@ -119,6 +119,7 @@ CPPSRCS		= \
 		Monitor.cpp \
 		ForkJoin.cpp \
 		jswrapper.cpp \
+		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
 		ArgumentsObject.cpp \

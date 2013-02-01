@@ -13,6 +13,7 @@
 #include "jslibmath.h"
 #include "jsiter.h"
 #include "jsnum.h"
+#include "jsxml.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jstypes.h"
@@ -484,7 +485,19 @@ StubEqualityOp(VMFrame &f)
         if (!EqualStrings(cx, l, r, &equal))
             return false;
         cond = equal == EQ;
-    } else if (SameType(lval, rval)) {
+    } else
+#if JS_HAS_XML_SUPPORT
+    if ((lval.isObject() && lval.toObject().isXML()) ||
+        (rval.isObject() && rval.toObject().isXML()))
+    {
+        JSBool equal;
+        if (!js_TestXMLEquality(cx, lval, rval, &equal))
+            return false;
+        cond = !!equal == EQ;
+    } else
+#endif
+
+    if (SameType(lval, rval)) {
         JS_ASSERT(!lval.isString());    /* this case is handled above */
         if (lval.isDouble()) {
             double l = lval.toDouble();
@@ -584,7 +597,18 @@ stubs::Add(VMFrame &f)
         rstr = rval.toString();
         goto string_concat;
 
-    } else {
+    } else
+#if JS_HAS_XML_SUPPORT
+    if (lval.isObject() && lval.toObject().isXML() &&
+        rval.isObject() && rval.toObject().isXML()) {
+        if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), &rval))
+            THROW();
+        regs.sp[-2] = rval;
+        regs.sp--;
+        TypeScript::MonitorUnknown(cx, f.script(), f.pc());
+    } else
+#endif
+    {
         bool lIsObject = lval.isObject(), rIsObject = rval.isObject();
         if (!ToPrimitive(f.cx, &lval))
             THROW();

@@ -64,6 +64,9 @@ CompartmentStats::gcHeapThingsSize()
     n += gcHeapScripts;
     n += gcHeapTypeObjects;
     n += gcHeapIonCodes;
+#if JS_HAS_XML_SUPPORT
+    n += gcHeapXML;
+#endif
 
 #ifdef DEBUG
     size_t n2 = n;
@@ -246,6 +249,13 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         cStats->typeInference.typeObjects += obj->sizeOfExcludingThis(rtStats->mallocSizeOf);
         break;
     }
+#if JS_HAS_XML_SUPPORT
+    case JSTRACE_XML:
+    {
+        cStats->gcHeapXML += thingSize;
+        break;
+    }
+#endif
     }
     // Yes, this is a subtraction:  see StatsArenaCallback() for details.
     cStats->gcHeapUnusedGcThings -= thingSize;
