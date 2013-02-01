@@ -40,7 +40,7 @@ function testFrameParameters()
       is(frames.querySelectorAll(".dbg-stackframe").length, 3,
         "Should have three frames.");
 
-      is(localNodes.length, 11,
+      is(localNodes.length, 12,
         "The localScope should contain all the created variable elements.");
 
       is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Proxy]",
