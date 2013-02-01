@@ -713,7 +713,6 @@ video > xul|videocontrols, audio > xul|videocontrols {
 video:not([controls]) > xul|videocontrols,
 audio:not([controls]) > xul|videocontrols {
   visibility: hidden;
-  -moz-binding: none;
 }
 
 audio:not([controls]) {
