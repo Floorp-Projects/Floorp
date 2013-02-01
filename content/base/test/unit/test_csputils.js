@@ -682,6 +682,55 @@ test(function test_FrameAncestor_TLD_defaultPorts() {
       do_check_false(cspr.permits("https://three:81", SD.FRAME_ANCESTORS));
      });
 
+test(function test_FrameAncestor_ignores_userpass_bug779918() {
+      var cspr;
+      var SD = CSPRep.SRC_DIRECTIVES_OLD;
+      var self = "http://self.com/bar";
+      var testPolicy = "default-src 'self'; frame-ancestors 'self'";
+
+      cspr = CSPRep.fromString(testPolicy, URI(self));
+
+      // wrapped in URI() because of source parsing
+      do_check_true(cspr.permits(URI("http://username:password@self.com/foo"), SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits(URI("http://other:pass1@self.com/foo"), SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits(URI("http://self.com:80/foo"), SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits(URI("http://self.com/foo"), SD.FRAME_ANCESTORS));
+
+      // construct fake ancestry with CSP applied to the child.
+      // [aChildUri] -> [aParentUri] -> (root/top)
+      // and then test "permitsAncestry" on the child/self docshell.
+      function testPermits(aChildUri, aParentUri, aContext) {
+        let cspObj = Cc["@mozilla.org/contentsecuritypolicy;1"]
+                       .createInstance(Ci.nsIContentSecurityPolicy);
+        cspObj.refinePolicy(testPolicy, aChildUri, false);
+        let docshellparent = Cc["@mozilla.org/docshell;1"]
+                               .createInstance(Ci.nsIDocShell);
+        let docshellchild  = Cc["@mozilla.org/docshell;1"]
+                               .createInstance(Ci.nsIDocShell);
+        docshellparent.setCurrentURI(aParentUri);
+        docshellchild.setCurrentURI(aChildUri);
+        docshellparent.QueryInterface(Ci.nsIDocShellTreeNode)
+                      .addChild(docshellchild);
+        return cspObj.permitsAncestry(docshellchild);
+      };
+
+      // check parent without userpass
+      do_check_true(testPermits(URI("http://username:password@self.com/foo"),
+                                URI("http://self.com/bar")));
+      do_check_true(testPermits(URI("http://user1:pass1@self.com/foo"),
+                                URI("http://self.com/bar")));
+      do_check_true(testPermits(URI("http://self.com/foo"),
+                                URI("http://self.com/bar")));
+
+      // check parent with userpass
+      do_check_true(testPermits(URI("http://username:password@self.com/foo"),
+                                URI("http://username:password@self.com/bar")));
+      do_check_true(testPermits(URI("http://user1:pass1@self.com/foo"),
+                                URI("http://username:password@self.com/bar")));
+      do_check_true(testPermits(URI("http://self.com/foo"),
+                                URI("http://username:password@self.com/bar")));
+     });
+
 test(function test_CSP_ReportURI_parsing() {
       var cspr;
       var SD = CSPRep.SRC_DIRECTIVES_OLD;
