@@ -124,8 +124,7 @@ abstract public class GeckoApp
     private static enum StartupAction {
         NORMAL,     /* normal application start */
         URL,        /* launched with a passed URL */
-        PREFETCH,   /* launched with a passed URL that we prefetch */
-        REDIRECTOR  /* launched with a passed URL in our redirect list */
+        PREFETCH    /* launched with a passed URL that we prefetch */
     }
 
     public static final String ACTION_ALERT_CLICK   = "org.mozilla.gecko.ACTION_ALERT_CLICK";
@@ -1637,21 +1636,8 @@ abstract public class GeckoApp
 
         Uri data = intent.getData();
         if (data != null && "http".equals(data.getScheme())) {
-            Intent copy = new Intent(intent);
-            copy.setAction(ACTION_LOAD);
-            if (isHostOnRedirectWhitelist(data.getHost())) {
-                startupAction = StartupAction.REDIRECTOR;
-                GeckoAppShell.getHandler().post(new RedirectorRunnable(copy));
-                // We're going to handle this uri with the redirector, so setting
-                // the action to MAIN and clearing the uri data prevents us from
-                // loading it twice
-                intent.setAction(Intent.ACTION_MAIN);
-                intent.setData(null);
-                passedUri = null;
-            } else {
-                startupAction = StartupAction.PREFETCH;
-                GeckoAppShell.getHandler().post(new PrefetchRunnable(copy));
-            }
+            startupAction = StartupAction.PREFETCH;
+            GeckoAppShell.getHandler().post(new PrefetchRunnable(data.toString()));
         }
 
         Tabs.registerOnTabsChangedListener(this);
@@ -1928,87 +1914,30 @@ abstract public class GeckoApp
     abstract public String getUAStringForHost(String host);
 
     class PrefetchRunnable implements Runnable {
-        Intent mIntent;
-        protected HttpURLConnection mConnection = null;
-        PrefetchRunnable(Intent intent) {
-            mIntent = intent;
+        private String mPrefetchUrl;
+
+        PrefetchRunnable(String prefetchUrl) {
+            mPrefetchUrl = prefetchUrl;
         }
 
-        private void afterLoad() { }
-
+        @Override
         public void run() {
+            HttpURLConnection connection = null;
             try {
-                // this class should only be initialized with an intent with non-null data
-                URL url = new URL(mIntent.getData().toString());
+                URL url = new URL(mPrefetchUrl);
                 // data url should have an http scheme
-                mConnection = (HttpURLConnection) url.openConnection();
-                mConnection.setRequestProperty("User-Agent", getUAStringForHost(url.getHost()));
-                mConnection.setInstanceFollowRedirects(false);
-                mConnection.setRequestMethod("GET");
-                mConnection.connect();
-                afterLoad();
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("User-Agent", getUAStringForHost(url.getHost()));
+                connection.setInstanceFollowRedirects(false);
+                connection.setRequestMethod("GET");
+                connection.connect();
             } catch (Exception e) {
-                Log.w(LOGTAG, "unexpected exception, passing url directly to Gecko but we should explicitly catch this", e);
-                mIntent.putExtra("prefetched", 1);
+                Log.e(LOGTAG, "Exception prefetching URL", e);
             } finally {
-                if (mConnection != null)
-                    mConnection.disconnect();
+                if (connection != null)
+                    connection.disconnect();
             }
         }
-    }
-
-    class RedirectorRunnable extends PrefetchRunnable {
-        RedirectorRunnable(Intent intent) {
-            super(intent);
-        }
-        private void afterLoad() {
-            try {
-                int code = mConnection.getResponseCode();
-                if (code >= 300 && code < 400) {
-                    String location = mConnection.getHeaderField("Location");
-                    Uri data;
-                    if (location != null &&
-                        (data = Uri.parse(location)) != null &&
-                        !"about".equals(data.getScheme()) && 
-                        !"chrome".equals(data.getScheme())) {
-                        mIntent.setData(data);
-                    } else {
-                        mIntent.putExtra("prefetched", 1);
-                    }
-                } else {
-                    mIntent.putExtra("prefetched", 1);
-                }
-            } catch (IOException ioe) {
-                Log.w(LOGTAG, "Exception trying to pre-fetch redirected URL.", ioe);
-                mIntent.putExtra("prefetched", 1);
-            }
-        }
-        public void run() {
-            super.run();
-
-            mMainHandler.postAtFrontOfQueue(new Runnable() {
-                public void run() {
-                    onNewIntent(mIntent);
-                }
-            });
-        }
-    }
-
-    private final String kRedirectWhiteListArray[] = new String[] { 
-        "t.co",
-        "bit.ly",
-        "moz.la",
-        "aje.me",
-        "facebook.com",
-        "goo.gl",
-        "tinyurl.com"
-    };
-    
-    private final CopyOnWriteArrayList<String> kRedirectWhiteList =
-        new CopyOnWriteArrayList<String>(kRedirectWhiteListArray);
-
-    private boolean isHostOnRedirectWhitelist(String host) {
-        return kRedirectWhiteList.contains(host);
     }
 
     @Override
@@ -2031,24 +1960,6 @@ abstract public class GeckoApp
         if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0)
             return;
 
-        if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.Launched)) {
-            Uri data = intent.getData();
-            Bundle bundle = intent.getExtras();
-            // if the intent has data (i.e. a URI to be opened) and the scheme
-            // is either http, we'll prefetch it, which means warming
-            // up the radio and DNS cache by connecting and parsing the redirect
-            // if the return code is between 300 and 400
-            if (data != null && 
-                "http".equals(data.getScheme()) &&
-                (bundle == null || bundle.getInt("prefetched", 0) != 1)) {
-                if (isHostOnRedirectWhitelist(data.getHost())) {
-                    GeckoAppShell.getHandler().post(new RedirectorRunnable(intent));
-                    return;
-                } else {
-                    GeckoAppShell.getHandler().post(new PrefetchRunnable(intent));
-                }
-            }
-        }
         final String action = intent.getAction();
 
         if (Intent.ACTION_MAIN.equals(action)) {
