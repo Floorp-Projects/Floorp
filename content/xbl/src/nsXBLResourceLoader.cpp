@@ -39,6 +39,27 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXBLResourceLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXBLResourceLoader)
 
+struct nsXBLResource
+{
+  nsXBLResource* mNext;
+  nsIAtom* mType;
+  nsString mSrc;
+
+  nsXBLResource(nsIAtom* aType, const nsAString& aSrc)
+  {
+    MOZ_COUNT_CTOR(nsXBLResource);
+    mNext = nullptr;
+    mType = aType;
+    mSrc = aSrc;
+  }
+
+  ~nsXBLResource()
+  {
+    MOZ_COUNT_DTOR(nsXBLResource);
+    NS_CONTENT_DELETE_LIST_MEMBER(nsXBLResource, this, mNext);
+  }
+};
+
 nsXBLResourceLoader::nsXBLResourceLoader(nsXBLPrototypeBinding* aBinding,
                                          nsXBLPrototypeResources* aResources)
 :mBinding(aBinding),
