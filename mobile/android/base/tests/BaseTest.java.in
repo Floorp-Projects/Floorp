@@ -50,6 +50,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private String mLogFile;
     protected String mProfile;
     private static ListView bookmarkList;
+    private static ListView historyList;
 
     protected void blockForGeckoReady() {
         try {
@@ -411,6 +412,27 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
         }, MAX_WAIT_MS);
         return bookmarkList;
+    }
+
+    public ListView getHistoryList() {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.clickOnText("History");
+
+        historyList = null;
+        mSolo.waitForText("Today|Yesterday");
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+                final ArrayList<ListView> views = mSolo.getCurrentListViews();
+                for (ListView view : views) {
+                    if (view.getTag().equals("history")) {
+                        historyList = view;
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }, MAX_WAIT_MS);
+        return historyList;
     }
 
     public long addOrUpdateBookmark(String title, String url, boolean bookmarklet) {
