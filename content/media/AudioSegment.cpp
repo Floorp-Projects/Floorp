@@ -6,6 +6,7 @@
 #include "AudioSegment.h"
 
 #include "AudioStream.h"
+#include "AudioChannelFormat.h"
 
 namespace mozilla {
 
@@ -87,30 +88,87 @@ AudioSegment::ApplyVolume(float aVolume)
   }
 }
 
-static const int STATIC_AUDIO_SAMPLES = 10000;
+static const int AUDIO_PROCESSING_FRAMES = 640; /* > 10ms of 48KHz audio */
+static const int GUESS_AUDIO_CHANNELS = 2;
+static const uint8_t gZeroChannel[MAX_AUDIO_SAMPLE_SIZE*AUDIO_PROCESSING_FRAMES] = {0};
 
 void
 AudioSegment::WriteTo(AudioStream* aOutput)
 {
-  NS_ASSERTION(mChannels == aOutput->GetChannels(), "Wrong number of channels");
-  nsAutoTArray<AudioDataValue,STATIC_AUDIO_SAMPLES> buf;
+  uint32_t outputChannels = aOutput->GetChannels();
+  nsAutoTArray<AudioDataValue,AUDIO_PROCESSING_FRAMES*GUESS_AUDIO_CHANNELS> buf;
+  nsAutoTArray<const void*,GUESS_AUDIO_CHANNELS> channelData;
+  nsAutoTArray<float,AUDIO_PROCESSING_FRAMES*GUESS_AUDIO_CHANNELS> downmixConversionBuffer;
+  nsAutoTArray<float,AUDIO_PROCESSING_FRAMES*GUESS_AUDIO_CHANNELS> downmixOutputBuffer;
+
   for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
-    if (uint64_t(mChannels)*c.mDuration > INT32_MAX) {
-      NS_ERROR("Buffer overflow");
-      return;
+    TrackTicks offset = 0;
+    while (offset < c.mDuration) {
+      TrackTicks durationTicks =
+        std::min<TrackTicks>(c.mDuration - offset, AUDIO_PROCESSING_FRAMES);
+      if (uint64_t(outputChannels)*durationTicks > INT32_MAX || offset > INT32_MAX) {
+        NS_ERROR("Buffer overflow");
+        return;
+      }
+      uint32_t duration = uint32_t(durationTicks);
+      buf.SetLength(outputChannels*duration);
+      if (c.mBuffer) {
+        channelData.SetLength(c.mChannelData.Length());
+        for (uint32_t i = 0; i < channelData.Length(); ++i) {
+          channelData[i] =
+            AddAudioSampleOffset(c.mChannelData[i], c.mBufferFormat, int32_t(offset));
+        }
+
+        if (channelData.Length() < outputChannels) {
+          // Up-mix. Note that this might actually make channelData have more
+          // than outputChannels temporarily.
+          AudioChannelsUpMix(&channelData, outputChannels, gZeroChannel);
+        }
+
+        if (channelData.Length() > outputChannels) {
+          // Down-mix.
+          if (c.mBufferFormat != AUDIO_FORMAT_FLOAT32) {
+            NS_ASSERTION(c.mBufferFormat == AUDIO_FORMAT_S16, "unknown format");
+            downmixConversionBuffer.SetLength(duration*channelData.Length());
+            for (uint32_t i = 0; i < channelData.Length(); ++i) {
+              float* conversionBuf = downmixConversionBuffer.Elements() + (i*duration);
+              const int16_t* sourceBuf = static_cast<const int16_t*>(channelData[i]);
+              for (uint32_t j = 0; j < duration; ++j) {
+                conversionBuf[j] = AudioSampleToFloat(sourceBuf[j]);
+              }
+              channelData[i] = conversionBuf;
+            }
+          }
+
+          downmixOutputBuffer.SetLength(duration*outputChannels);
+          nsAutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannelBuffers;
+          nsAutoTArray<const void*,GUESS_AUDIO_CHANNELS> outputChannelData;
+          outputChannelBuffers.SetLength(outputChannels);
+          outputChannelData.SetLength(outputChannels);
+          for (uint32_t i = 0; i < outputChannels; ++i) {
+            outputChannelData[i] = outputChannelBuffers[i] =
+                downmixOutputBuffer.Elements() + duration*i;
+          }
+          AudioChannelsDownMix(channelData, outputChannelBuffers.Elements(),
+                               outputChannels, duration);
+          InterleaveAndConvertBuffer(outputChannelData.Elements(), AUDIO_FORMAT_FLOAT32,
+                                     duration, c.mVolume,
+                                     outputChannels,
+                                     buf.Elements());
+        } else {
+          InterleaveAndConvertBuffer(channelData.Elements(), c.mBufferFormat,
+                                     duration, c.mVolume,
+                                     outputChannels,
+                                     buf.Elements());
+        }
+      } else {
+        // Assumes that a bit pattern of zeroes == 0.0f
+        memset(buf.Elements(), 0, buf.Length()*sizeof(AudioDataValue));
+      }
+      aOutput->Write(buf.Elements(), int32_t(duration));
+      offset += duration;
     }
-    buf.SetLength(int32_t(mChannels*c.mDuration));
-    if (c.mBuffer) {
-      InterleaveAndConvertBuffer(c.mChannelData.Elements(), c.mBufferFormat,
-                                 int32_t(c.mDuration), c.mVolume,
-                                 aOutput->GetChannels(),
-                                 buf.Elements());
-    } else {
-      // Assumes that a bit pattern of zeroes == 0.0f
-      memset(buf.Elements(), 0, buf.Length()*sizeof(AudioDataValue));
-    }
-    aOutput->Write(buf.Elements(), int32_t(c.mDuration));
   }
   aOutput->Start();
 }
