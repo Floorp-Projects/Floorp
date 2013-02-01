@@ -18,7 +18,7 @@ enum {
   SURROUND_SR
 };
 
-static const int CUSTOM_CHANNEL_LAYOUTS = 6;
+static const uint32_t CUSTOM_CHANNEL_LAYOUTS = 6;
 
 uint32_t
 GetAudioChannelsSuperset(uint32_t aChannels1, uint32_t aChannels2)
