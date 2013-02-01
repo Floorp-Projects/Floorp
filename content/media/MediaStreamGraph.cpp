@@ -1131,13 +1131,19 @@ private:
 
 class MediaStreamGraphStableStateRunnable : public nsRunnable {
 public:
+  explicit MediaStreamGraphStableStateRunnable(MediaStreamGraphImpl* aGraph)
+    : mGraph(aGraph)
+  {
+  }
   NS_IMETHOD Run()
   {
-    if (gGraph) {
-      gGraph->RunInStableState();
+    if (mGraph) {
+      mGraph->RunInStableState();
     }
     return NS_OK;
   }
+private:
+  MediaStreamGraphImpl* mGraph;
 };
 
 /*
@@ -1267,7 +1273,7 @@ MediaStreamGraphImpl::EnsureRunInStableState()
   if (mPostedRunInStableState)
     return;
   mPostedRunInStableState = true;
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable();
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this);
   nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
   if (appShell) {
     appShell->RunInStableState(event);
@@ -1284,7 +1290,7 @@ MediaStreamGraphImpl::EnsureStableStateEventPosted()
   if (mPostedRunInStableStateEvent)
     return;
   mPostedRunInStableStateEvent = true;
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable();
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this);
   NS_DispatchToMainThread(event);
 }
 
