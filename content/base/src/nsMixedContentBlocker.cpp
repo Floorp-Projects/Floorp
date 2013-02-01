@@ -84,7 +84,15 @@ public:
       // Update the security UI in the tab with the allowed mixed active content
       nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
       if (eventSink) {
-        eventSink->OnSecurityChange(mContext, (nsIWebProgressListener::STATE_IS_BROKEN | nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
+        // If mixed display content is loaded, make sure to include that in the state.
+        if (rootDoc->GetHasMixedDisplayContentLoaded()) {
+          eventSink->OnSecurityChange(mContext, (nsIWebProgressListener::STATE_IS_BROKEN |
+          nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT |
+          nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
+        } else {
+          eventSink->OnSecurityChange(mContext, (nsIWebProgressListener::STATE_IS_BROKEN |
+          nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
+        }
       }
 
     } else if (mType == eMixedDisplay) {
@@ -97,7 +105,15 @@ public:
       // Update the security UI in the tab with the allowed mixed display content.
       nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
       if (eventSink) {
-        eventSink->OnSecurityChange(mContext, (nsIWebProgressListener::STATE_IS_BROKEN | nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
+        // If mixed active content is loaded, make sure to include that in the state.
+        if (rootDoc->GetHasMixedActiveContentLoaded()) {
+          eventSink->OnSecurityChange(mContext, (nsIWebProgressListener::STATE_IS_BROKEN |
+          nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT |
+          nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
+        } else {
+          eventSink->OnSecurityChange(mContext, (nsIWebProgressListener::STATE_IS_BROKEN |
+          nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
+        }
       }
     }
 
@@ -405,9 +421,12 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
          // User has decided to override the pref and the root is https, so change the Security State.
          if (rootDoc->GetHasMixedDisplayContentLoaded()) {
            // If mixed display content is loaded, make sure to include that in the state.
-           eventSink->OnSecurityChange(aRequestingContext, (nsIWebProgressListener::STATE_IS_BROKEN | nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT | nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
+           eventSink->OnSecurityChange(aRequestingContext, (nsIWebProgressListener::STATE_IS_BROKEN |
+           nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT |
+           nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
          } else {
-           eventSink->OnSecurityChange(aRequestingContext, (nsIWebProgressListener::STATE_IS_BROKEN | nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
+           eventSink->OnSecurityChange(aRequestingContext, (nsIWebProgressListener::STATE_IS_BROKEN |
+           nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
          }
          return NS_OK;
        } else {
