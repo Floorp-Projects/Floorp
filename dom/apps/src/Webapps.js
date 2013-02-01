@@ -263,17 +263,7 @@ WebappsRegistry.prototype = {
   classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplicationRegistry,
-#ifdef MOZ_PHOENIX
-# Firefox Desktop: installPackage not implemented
-#elifdef ANDROID
-#ifndef MOZ_WIDGET_GONK
-# Firefox Android (Fennec): installPackage not implemented
-#else
-# B2G Gonk: installPackage implemented
-                                         Ci.mozIDOMApplicationRegistry2,
-#endif
-#else
-# B2G Desktop and others: installPackage implementation status varies
+#ifdef MOZ_B2G
                                          Ci.mozIDOMApplicationRegistry2,
 #endif
                                          Ci.nsIDOMGlobalPropertyInitializer]),
@@ -281,17 +271,7 @@ WebappsRegistry.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),
                                     contractID: "@mozilla.org/webapps;1",
                                     interfaces: [Ci.mozIDOMApplicationRegistry,
-#ifdef MOZ_PHOENIX
-# Firefox Desktop: installPackage not implemented
-#elifdef ANDROID
-#ifndef MOZ_WIDGET_GONK
-# Firefox Android (Fennec): installPackage not implemented
-#else
-# B2G Gonk: installPackage implemented
-                                                 Ci.mozIDOMApplicationRegistry2,
-#endif
-#else
-# B2G Desktop and others: installPackage implementation status varies
+#ifdef MOZ_B2G
                                                  Ci.mozIDOMApplicationRegistry2,
 #endif
                                                  ],
