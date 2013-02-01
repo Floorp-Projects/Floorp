@@ -310,6 +310,8 @@ tier_platform_dirs    += toolkit/system/dbus
 endif
 endif
 
+tier_platform_dirs += addon-sdk
+
 ifdef MOZ_MAPINFO
 tier_platform_dirs	+= tools/codesighs
 endif
