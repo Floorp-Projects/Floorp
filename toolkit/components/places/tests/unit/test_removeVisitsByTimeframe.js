@@ -46,15 +46,14 @@ var tests = [
       }
       resultRoot.containerOpen = false;
 
-      print("asyncHistory.isURIVisited should return true.");
-      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
-        do_check_true(aIsVisited);
+      print("nsIGlobalHistory2.isVisited should return true.");
+      do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
+                    isVisited(TEST_URI));
 
-        promiseAsyncUpdates().then(function () {
-          print("Frecency should be positive.")
-          do_check_true(frecencyForUrl(TEST_URI) > 0);
-          run_next_test();
-        });
+      promiseAsyncUpdates().then(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
       });
     }
   },
@@ -99,15 +98,14 @@ var tests = [
       }
       resultRoot.containerOpen = false;
 
-      print("asyncHistory.isURIVisited should return true.");
-      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
-        do_check_true(aIsVisited);
+      print("nsIGlobalHistory2.isVisited should return true.");
+      do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
+                    isVisited(TEST_URI));
 
-        promiseAsyncUpdates().then(function () {
-          print("Frecency should be positive.")
-          do_check_true(frecencyForUrl(TEST_URI) > 0);
-          run_next_test();
-        });
+      promiseAsyncUpdates().then(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
       });
     }
   },
@@ -145,15 +143,14 @@ var tests = [
       }
       resultRoot.containerOpen = false;
 
-      print("asyncHistory.isURIVisited should return true.");
-      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
-        do_check_true(aIsVisited);
+      print("nsIGlobalHistory2.isVisited should return true.");
+      do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
+                    isVisited(TEST_URI));
 
-        promiseAsyncUpdates().then(function () {
-          print("Frecency should be positive.")
-          do_check_true(frecencyForUrl(TEST_URI) > 0);
-          run_next_test();
-        });
+      promiseAsyncUpdates().then(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
       });
     }
   },
@@ -198,15 +195,14 @@ var tests = [
       }
       resultRoot.containerOpen = false;
 
-      print("asyncHistory.isURIVisited should return true.");
-      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
-        do_check_true(aIsVisited);
+      print("nsIGlobalHistory2.isVisited should return true.");
+      do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
+                    isVisited(TEST_URI));
 
-        promiseAsyncUpdates().then(function () {
-          print("Frecency should be positive.")
-          do_check_true(frecencyForUrl(TEST_URI) > 0);
-          run_next_test();
-        });
+      promiseAsyncUpdates().then(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
       });
     }
   },
@@ -239,11 +235,10 @@ var tests = [
       do_check_eq(resultRoot.childCount, 0);
       resultRoot.containerOpen = false;
 
-      print("asyncHistory.isURIVisited should return false.");
-      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
-        do_check_false(aIsVisited);
-        run_next_test();
-      });
+      print("nsIGlobalHistory2.isVisited should return false.");
+      do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
+                       isVisited(TEST_URI));
+      run_next_test();
     }
   },
 
@@ -275,15 +270,14 @@ var tests = [
       do_check_eq(resultRoot.childCount, 0);
       resultRoot.containerOpen = false;
 
-      print("asyncHistory.isURIVisited should return false.");
-      PlacesUtils.asyncHistory.isURIVisited(PLACE_URI, function(aURI, aIsVisited) {
-        do_check_false(aIsVisited);
+      print("nsIGlobalHistory2.isVisited should return false.");
+      do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
+                       isVisited(PLACE_URI));
 
-        promiseAsyncUpdates().then(function () {
-          print("Frecency should be zero.")
-          do_check_eq(frecencyForUrl(PLACE_URL), 0);
-          run_next_test();
-        });
+      promiseAsyncUpdates().then(function () {
+        print("Frecency should be zero.")
+        do_check_eq(frecencyForUrl(PLACE_URL), 0);
+        run_next_test();
       });
     }
   },
@@ -323,18 +317,17 @@ var tests = [
       do_check_eq(resultRoot.childCount, 0);
       resultRoot.containerOpen = false;
 
-      print("asyncHistory.isURIVisited should return false.");
-      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
-        do_check_false(aIsVisited);
+      print("nsIGlobalHistory2.isVisited should return false.");
+      do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
+                       isVisited(TEST_URI));
 
-        print("nsINavBookmarksService.isBookmarked should return true.");
-        do_check_true(bmsvc.isBookmarked(TEST_URI));
+      print("nsINavBookmarksService.isBookmarked should return true.");
+      do_check_true(bmsvc.isBookmarked(TEST_URI));
 
-        promiseAsyncUpdates().then(function () {
-          print("Frecency should be negative.")
-          do_check_true(frecencyForUrl(TEST_URI) < 0);
-          run_next_test();
-        });
+      promiseAsyncUpdates().then(function () {
+        print("Frecency should be negative.")
+        do_check_true(frecencyForUrl(TEST_URI) < 0);
+        run_next_test();
       });
     }
   },
