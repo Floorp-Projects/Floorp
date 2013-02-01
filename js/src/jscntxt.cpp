@@ -145,6 +145,10 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *rtS
     rtSizes->scriptFilenames = scriptFilenameTable.sizeOfExcludingThis(mallocSizeOf);
     for (ScriptFilenameTable::Range r = scriptFilenameTable.all(); !r.empty(); r.popFront())
         rtSizes->scriptFilenames += mallocSizeOf(r.front());
+
+    rtSizes->scriptData = scriptDataTable.sizeOfExcludingThis(mallocSizeOf);
+    for (ScriptDataTable::Range r = scriptDataTable.all(); !r.empty(); r.popFront())
+        rtSizes->scriptData += mallocSizeOf(r.front());
 }
 
 size_t
