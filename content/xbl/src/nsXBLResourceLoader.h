@@ -6,7 +6,6 @@
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsCOMArray.h"
-#include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsIContent;
@@ -15,27 +14,10 @@ class nsIScriptContext;
 class nsSupportsHashtable;
 class nsXBLPrototypeResources;
 class nsXBLPrototypeBinding;
+struct nsXBLResource;
 
 // *********************************************************************/
 // The XBLResourceLoader class
-
-struct nsXBLResource {
-  nsXBLResource* mNext;
-  nsIAtom* mType;
-  nsString mSrc;
-
-  nsXBLResource(nsIAtom* aType, const nsAString& aSrc) {
-    MOZ_COUNT_CTOR(nsXBLResource);
-    mNext = nullptr;
-    mType = aType;
-    mSrc = aSrc;
-  }
-
-  ~nsXBLResource() { 
-    MOZ_COUNT_DTOR(nsXBLResource);  
-    NS_CONTENT_DELETE_LIST_MEMBER(nsXBLResource, this, mNext);
-  }
-};
 
 class nsXBLResourceLoader : public nsICSSLoaderObserver
 {
