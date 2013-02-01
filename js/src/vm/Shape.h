@@ -441,7 +441,7 @@ typedef HashSet<ReadBarriered<UnownedBaseShape>,
 
 class Shape : public js::gc::Cell
 {
-    friend struct ::JSObject;
+    friend class ::JSObject;
     friend class ::JSFunction;
     friend class js::Bindings;
     friend class js::ObjectImpl;
