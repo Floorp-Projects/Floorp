@@ -43,6 +43,8 @@
              oncommand="DebuggerView.Filtering._doLineSearch()"/>
     <command id="variableSearchCommand"
              oncommand="DebuggerView.Filtering._doVariableSearch()"/>
+    <command id="variablesFocusCommand"
+             oncommand="DebuggerView.Filtering._doVariablesFocus()"/>
     <command id="addBreakpointCommand"
              oncommand="DebuggerView.Breakpoints._onCmdAddBreakpoint()"/>
     <command id="addConditionalBreakpointCommand"
@@ -108,6 +110,11 @@
                 accesskey="&debuggerUI.searchVariable.key;"
                 key="variableSearchKey"
                 command="variableSearchCommand"/>
+      <menuitem id="se-dbg-cMenu-focusVariables"
+                label="&debuggerUI.focusVariables;"
+                accesskey="&debuggerUI.focusVariables.key;"
+                key="variablesFocusKey"
+                command="variablesFocusCommand"/>
     </menupopup>
 
     <menupopup id="debuggerWatchExpressionsContextMenu">
@@ -184,6 +191,10 @@
          key="&debuggerUI.searchVariable.key;"
          modifiers="accel alt"
          command="variableSearchCommand"/>
+    <key id="variablesFocusKey"
+         key="&debuggerUI.focusVariables.key;"
+         modifiers="accel shift"
+         command="variablesFocusCommand"/>
     <key id="addBreakpointKey"
          key="&debuggerUI.seMenuBreak.key;"
          modifiers="accel"

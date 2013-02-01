@@ -10,6 +10,11 @@
 <?xml-stylesheet href="chrome://browser/content/splitview.css"?>
 <?xml-stylesheet href="chrome://browser/content/profiler.css"?>
 
+<!DOCTYPE window [
+<!ENTITY % profilerDTD SYSTEM "chrome://browser/locale/devtools/profiler.dtd">
+  %profilerDTD;
+]>
+
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <box flex="1" id="profiler-chrome" class="splitview-root">
     <box class="splitview-controller" width="180px">
@@ -29,7 +34,7 @@
         <toolbar class="devtools-toolbar" mode="full">
           <toolbarbutton id="profiler-create"
                          class="devtools-toolbarbutton"
-                         label="New"
+                         label="&profilerNew.label;"
                          disabled="true"/>
         </toolbar>
       </box> <!-- splitview-nav-container -->
