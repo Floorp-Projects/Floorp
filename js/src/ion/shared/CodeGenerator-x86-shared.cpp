@@ -1005,7 +1005,7 @@ CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
 class OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorX86Shared>
 {
     MTableSwitch *mir_;
-    CodeLabel *jumpLabel_;
+    CodeLabel jumpLabel_;
 
     bool accept(CodeGeneratorX86Shared *codegen) {
         return codegen->visitOutOfLineTableSwitch(this);
@@ -1013,15 +1013,15 @@ class OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorX86Shared>
 
   public:
     OutOfLineTableSwitch(MTableSwitch *mir)
-      : mir_(mir), jumpLabel_(new CodeLabel)
+      : mir_(mir)
     {}
 
     MTableSwitch *mir() const {
         return mir_;
     }
 
-    CodeLabel *jumpLabel() const {
-        return jumpLabel_;
+    CodeLabel *jumpLabel() {
+        return &jumpLabel_;
     }
 };
 
@@ -1032,7 +1032,7 @@ CodeGeneratorX86Shared::visitOutOfLineTableSwitch(OutOfLineTableSwitch *ool)
 
     masm.align(sizeof(void*));
     masm.bind(ool->jumpLabel()->src());
-    if (!masm.addCodeLabel(ool->jumpLabel()))
+    if (!masm.addCodeLabel(*ool->jumpLabel()))
         return false;
 
     for (size_t i = 0; i < mir->numCases(); i++) {
@@ -1042,9 +1042,9 @@ CodeGeneratorX86Shared::visitOutOfLineTableSwitch(OutOfLineTableSwitch *ool)
 
         // The entries of the jump table need to be absolute addresses and thus
         // must be patched after codegen is finished.
-        CodeLabel *cl = new CodeLabel();
-        masm.writeCodePointer(cl->dest());
-        cl->src()->bind(caseoffset);
+        CodeLabel cl;
+        masm.writeCodePointer(cl.dest());
+        cl.src()->bind(caseoffset);
         if (!masm.addCodeLabel(cl))
             return false;
     }
