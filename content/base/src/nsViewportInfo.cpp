@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsViewportInfo.h"
+#include "mozilla/Assertions.h"
 #include <algorithm>
 
 void

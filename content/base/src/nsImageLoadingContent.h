@@ -17,15 +17,19 @@
 #include "imgIOnloadBlocker.h"
 #include "mozilla/CORSMode.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h" // NS_CONTENT_DELETE_LIST_MEMBER
 #include "nsEventStates.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIRequest.h"
+#include "mozilla/ErrorResult.h"
+#include "nsAutoPtr.h"
 
 class nsIURI;
 class nsIDocument;
 class imgILoader;
 class nsIIOService;
+class nsPresContext;
+class nsIContent;
+class imgRequestProxy;
 
 class nsImageLoadingContent : public nsIImageLoadingContent,
                               public imgIOnloadBlocker
@@ -186,17 +190,8 @@ private:
    * Struct used to manage the image observers.
    */
   struct ImageObserver {
-    ImageObserver(imgINotificationObserver* aObserver) :
-      mObserver(aObserver),
-      mNext(nullptr)
-    {
-      MOZ_COUNT_CTOR(ImageObserver);
-    }
-    ~ImageObserver()
-    {
-      MOZ_COUNT_DTOR(ImageObserver);
-      NS_CONTENT_DELETE_LIST_MEMBER(ImageObserver, this, mNext);
-    }
+    ImageObserver(imgINotificationObserver* aObserver);
+    ~ImageObserver();
 
     nsCOMPtr<imgINotificationObserver> mObserver;
     ImageObserver* mNext;
