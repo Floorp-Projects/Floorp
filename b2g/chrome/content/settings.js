@@ -205,13 +205,23 @@ SettingsListener.observe('devtools.debugger.remote-enabled', false, function(val
   value ? RemoteDebugger.start() : RemoteDebugger.stop();
 
 #ifdef MOZ_WIDGET_GONK
+  let enableAdb = value;
+
+  if (Services.prefs.getBoolPref('marionette.defaultPrefs.enabled')) {
+    // Marionette is enabled. Force adb on, since marionette requires remote
+    // debugging to be disabled (we don't want adb to track the remote debugger
+    // setting).
+
+    enableAdb = true;
+  }
+
   // Configure adb.
   try {
     let currentConfig = libcutils.property_get("persist.sys.usb.config");
     let configFuncs = currentConfig.split(",");
     let adbIndex = configFuncs.indexOf("adb");
 
-    if (value) {
+    if (enableAdb) {
       // Add adb to the list of functions, if not already present
       if (adbIndex < 0) {
         configFuncs.push("adb");
