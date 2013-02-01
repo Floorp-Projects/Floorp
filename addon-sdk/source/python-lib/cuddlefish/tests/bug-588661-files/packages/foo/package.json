@@ -1,0 +1,4 @@
+{
+  "loader": "lib/foo-loader.js",
+  "dependencies": ["bar"]
+}
