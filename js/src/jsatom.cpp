@@ -24,7 +24,6 @@
 #include "jsnum.h"
 #include "jsstr.h"
 #include "jsversion.h"
-#include "jsxml.h"
 
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
@@ -57,7 +56,6 @@ const char * js::TypeStrings[] = {
     js_number_str,
     js_boolean_str,
     js_null_str,
-    js_xml_str,
 };
 
 #define DEFINE_PROTO_STRING(name,code,init) const char js_##name##_str[] = #name;
@@ -452,32 +450,6 @@ js::InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
                           typename MaybeRooted<jsid, allowGC>::MutableHandleType idp,
                           typename MaybeRooted<Value, allowGC>::MutableHandleType vp)
 {
-#if JS_HAS_XML_SUPPORT
-    if (idval.isObject()) {
-        JSObject *idobj = &idval.toObject();
-
-        if (obj && obj->isXML()) {
-            idp.set(OBJECT_TO_JSID(idobj));
-            vp.set(idval);
-            return true;
-        }
-
-        if (!allowGC)
-            return false;
-
-        if (js_GetLocalNameFromFunctionQName(idobj, idp.address(), cx)) {
-            vp.set(IdToValue(idp));
-            return true;
-        }
-
-        if (!obj && idobj->isXMLId()) {
-            idp.set(OBJECT_TO_JSID(idobj));
-            vp.set(idval);
-            return JS_TRUE;
-        }
-    }
-#endif
-
     JSAtom *atom = ToAtom<allowGC>(cx, idval);
     if (!atom)
         return false;

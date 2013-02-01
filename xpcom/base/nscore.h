@@ -325,8 +325,6 @@ typedef unsigned long nsrefcnt;
 typedef uint32_t nsrefcnt;
 #endif
 
-#include "nsError.h"
-
 /* ------------------------------------------------------------------------ */
 /* Casting macros for hiding C++ features from older compilers */
 

@@ -1670,24 +1670,19 @@ void ui_update_local_description(call_events event, line_t nLine, callid_t nCall
 }
 
 /**
- *  Let PeerConnection know about an updated remote session description
+ * Send data from addIceCandidate to the UI
  *
- *  @return none
+ * @return none
  */
 
-void ui_update_remote_description(call_events event, line_t nLine, callid_t nCallID,
-                 	 uint16_t call_instance_id, string_t sdp)
+void ui_ice_candidate_add(call_events event, line_t nLine, callid_t nCallID,
+                 	  uint16_t call_instance_id, string_t sdp)
 {
     TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d call_instance=%d\n",
-              DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__),
-              event, call_instance_id);
+              DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__), event, call_instance_id);
 
-    post_message_helper(UPDATE_REMOTE_DESC, event, nLine, nCallID,
-                        call_instance_id, sdp, PC_OK);
-
-    return;
+    post_message_helper(ICE_CANDIDATE_ADD, event, nLine, nCallID, call_instance_id, sdp, PC_OK);
 }
-
 
 /**
  *  Send Remote Stream data to the UI

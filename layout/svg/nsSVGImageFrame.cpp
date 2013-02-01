@@ -18,6 +18,7 @@
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
 #include "mozilla/dom/SVGImageElement.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

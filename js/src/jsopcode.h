@@ -64,7 +64,6 @@ typedef enum JSOp {
 #define JOF_NAME          (1U<<5) /* name operation */
 #define JOF_PROP          (2U<<5) /* obj.prop operation */
 #define JOF_ELEM          (3U<<5) /* obj[index] operation */
-#define JOF_XMLNAME       (4U<<5) /* XML name: *, a::b, @a, @a::b, etc. */
 #define JOF_MODEMASK      (7U<<5) /* mask for above addressing modes */
 #define JOF_SET           (1U<<8) /* set (i.e., assignment) operation */
 #define JOF_DEL           (1U<<9) /* delete operation */
@@ -239,33 +238,6 @@ extern const char       js_EscapeMap[];
 extern JSString *
 js_QuoteString(JSContext *cx, JSString *str, jschar quote);
 
-/*
- * JSPrinter operations, for printf style message formatting.  The return
- * value from js_GetPrinterOutput() is the printer's cumulative output, in
- * a GC'ed string.
- *
- * strict is true if the context in which the output will appear has
- * already been marked as strict, thus indicating that nested
- * functions need not be re-marked with a strict directive.  It should
- * be false in the outermost printer.
- */
-
-extern JSPrinter *
-js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
-              unsigned indent, JSBool pretty, JSBool grouped, JSBool strict);
-
-extern void
-js_DestroyPrinter(JSPrinter *jp);
-
-extern JSString *
-js_GetPrinterOutput(JSPrinter *jp);
-
-extern int
-js_printf(JSPrinter *jp, const char *format, ...);
-
-extern JSBool
-js_puts(JSPrinter *jp, const char *s);
-
 #define GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom)                       \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(js_CodeSpec[*(pc)].format & JOF_ATOM);                      \
@@ -289,24 +261,6 @@ extern unsigned
 StackDefs(JSScript *script, jsbytecode *pc);
 
 }  /* namespace js */
-
-/*
- * Decompilers, for script, function, and expression pretty-printing.
- */
-
-/*
- * Some C++ compilers treat the language linkage (extern "C" vs.
- * extern "C++") as part of function (and thus pointer-to-function)
- * types. The use of this typedef (defined in "C") ensures that
- * js_DecompileToString's definition (in "C++") gets matched up with
- * this declaration.
- */
-typedef JSBool (* JSDecompilerPtr)(JSPrinter *);
-
-extern JSString *
-js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
-                     unsigned indent, JSBool pretty, JSBool grouped, JSBool strict,
-                     JSDecompilerPtr decompiler);
 
 /*
  * Given bytecode address pc in script's main program code, return the operand

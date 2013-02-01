@@ -1,4 +1,3 @@
-// |reftest| pref(javascript.options.xml.content,true)
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,19 +44,6 @@ function test()
   catch(ex)
   {
   }
-
-// Assertion failure: dn_kind == JSDefinition::VAR || dn_kind == JSDefinition::CONST, at ../jsemit.cpp:2187
-
-// ===
-  "" + (function(){L:if (*::*){ var x } function x(){}})
-
-// Assertion failure: slot < StackDepth(jp->script), at ../jsopcode.cpp:1329
-// ===
-    "" + (function(){if (*::*){ var x } function x(){}})
-
-// Assertion failure: (uintN)i < ss->top, at ../jsopcode.cpp:2825
-// ===
-    "" + (function(){{<y/>; throw <z/>;for(var x = [] in false) return } function x(){}})
 
 // Assertion failure: ss->printer->pcstack, at ../jsopcode.cpp:909
 // ===

@@ -39,10 +39,6 @@
 
 #include "jsscriptinlines.h"
 
-#if JS_HAS_XML_SUPPORT
-#include "jsxml.h"
-#endif
-
 using namespace js;
 using namespace js::frontend;
 using namespace js::unicode;
@@ -132,8 +128,6 @@ TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
     listenerTSData(),
     tokenbuf(cx),
     version(options.version),
-    banXML(VersionHasAllowXML(options.version) ? 0 : 1),
-    moarXML(VersionHasMoarXML(options.version)),
     cx(cx),
     originPrincipals(JSScript::normalizeOriginPrincipals(options.principals,
                                                          options.originPrincipals)),
@@ -620,475 +614,6 @@ TokenStream::reportStrictWarningErrorNumberVA(ParseNode *pn, unsigned errorNumbe
     return reportCompileErrorNumberVA(NULL, JSREPORT_STRICT | JSREPORT_WARNING, errorNumber, args);
 }
 
-#if JS_HAS_XML_SUPPORT
-
-bool
-TokenStream::getXMLEntity()
-{
-    ptrdiff_t offset, length, i;
-    int c, d;
-    bool ispair;
-    jschar *bp, digit;
-    char *bytes;
-    JSErrNum msg;
-
-    CharBuffer &tb = tokenbuf;
-
-    /* Put the entity, including the '&' already scanned, in tokenbuf. */
-    offset = tb.length();
-    if (!tb.append('&'))
-        return false;
-    while ((c = getChar()) != ';') {
-        if (c == EOF || c == '\n') {
-            reportError(JSMSG_END_OF_XML_ENTITY);
-            return false;
-        }
-        if (!tb.append(c))
-            return false;
-    }
-
-    /* Let length be the number of jschars after the '&', including the ';'. */
-    length = tb.length() - offset;
-    bp = tb.begin() + offset;
-    c = d = 0;
-    ispair = false;
-    if (length > 2 && bp[1] == '#') {
-        /* Match a well-formed XML Character Reference. */
-        i = 2;
-        if (length > 3 && (bp[i] == 'x' || bp[i] == 'X')) {
-            if (length > 9)     /* at most 6 hex digits allowed */
-                goto badncr;
-            while (++i < length) {
-                digit = bp[i];
-                if (!JS7_ISHEX(digit))
-                    goto badncr;
-                c = (c << 4) + JS7_UNHEX(digit);
-            }
-        } else {
-            while (i < length) {
-                digit = bp[i++];
-                if (!JS7_ISDEC(digit))
-                    goto badncr;
-                c = (c * 10) + JS7_UNDEC(digit);
-                if (c < 0)
-                    goto badncr;
-            }
-        }
-
-        if (0x10000 <= c && c <= 0x10FFFF) {
-            /* Form a surrogate pair (c, d) -- c is the high surrogate. */
-            d = 0xDC00 + (c & 0x3FF);
-            c = 0xD7C0 + (c >> 10);
-            ispair = true;
-        } else {
-            /* Enforce the http://www.w3.org/TR/REC-xml/#wf-Legalchar WFC. */
-            if (c != 0x9 && c != 0xA && c != 0xD &&
-                !(0x20 <= c && c <= 0xD7FF) &&
-                !(0xE000 <= c && c <= 0xFFFD)) {
-                goto badncr;
-            }
-        }
-    } else {
-        /* Try to match one of the five XML 1.0 predefined entities. */
-        switch (length) {
-          case 3:
-            if (bp[2] == 't') {
-                if (bp[1] == 'l')
-                    c = '<';
-                else if (bp[1] == 'g')
-                    c = '>';
-            }
-            break;
-          case 4:
-            if (bp[1] == 'a' && bp[2] == 'm' && bp[3] == 'p')
-                c = '&';
-            break;
-          case 5:
-            if (bp[3] == 'o') {
-                if (bp[1] == 'a' && bp[2] == 'p' && bp[4] == 's')
-                    c = '\'';
-                else if (bp[1] == 'q' && bp[2] == 'u' && bp[4] == 't')
-                    c = '"';
-            }
-            break;
-        }
-        if (c == 0) {
-            msg = JSMSG_UNKNOWN_XML_ENTITY;
-            goto bad;
-        }
-    }
-
-    /* If we matched, retract tokenbuf and store the entity's value. */
-    *bp++ = (jschar) c;
-    if (ispair)
-        *bp++ = (jschar) d;
-    tb.shrinkBy(tb.end() - bp);
-    return true;
-
-  badncr:
-    msg = JSMSG_BAD_XML_NCR;
-  bad:
-    /* No match: throw a TypeError per ECMA-357 10.3.2.1 step 8(a). */
-    JS_ASSERT((tb.end() - bp) >= 1);
-    TwoByteChars tbchars(bp + 1, (tb.end() - bp) - 1);
-    bytes = LossyTwoByteCharsToNewLatin1CharsZ(cx, tbchars).c_str();
-    if (bytes) {
-        reportError(msg, bytes);
-        js_free(bytes);
-    }
-    return false;
-}
-
-bool
-TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
-{
-    TokenKind tt;
-    int c, qc;
-    Token *tp;
-    JSAtom *atom;
-
-    /*
-     * Look for XML text.
-     */
-    if (flags & TSF_XMLTEXTMODE) {
-        tt = TOK_XMLSPACE;      /* veto if non-space, return TOK_XMLTEXT */
-        tp = newToken(0);
-        tokenbuf.clear();
-        qc = (flags & TSF_XMLONLYMODE) ? '<' : '{';
-
-        while ((c = getChar()) != qc && c != '<' && c != EOF) {
-            if (c == '&' && qc == '<') {
-                if (!getXMLEntity())
-                    goto error;
-                tt = TOK_XMLTEXT;
-                continue;
-            }
-
-            if (!IsXMLSpace(c))
-                tt = TOK_XMLTEXT;
-            if (!tokenbuf.append(c))
-                goto error;
-        }
-        ungetChar(c);
-
-        if (tokenbuf.empty()) {
-            atom = NULL;
-        } else {
-            atom = atomize(cx, tokenbuf);
-            if (!atom)
-                goto error;
-        }
-        tp->pos.end.lineno = lineno;
-        tp->setAtom(JSOP_STRING, atom);
-        goto out;
-    }
-
-    /*
-     * XML tags.
-     */
-    else {
-        JS_ASSERT(flags & TSF_XMLTAGMODE);
-        tp = newToken(0);
-        c = getChar();
-        if (c != EOF && IsXMLSpace(c)) {
-            do {
-                c = getChar();
-                if (c == EOF)
-                    break;
-            } while (IsXMLSpace(c));
-            ungetChar(c);
-            tp->pos.end.lineno = lineno;
-            tt = TOK_XMLSPACE;
-            goto out;
-        }
-
-        if (c == EOF) {
-            tt = TOK_EOF;
-            goto out;
-        }
-
-        tokenbuf.clear();
-        if (IsXMLNamespaceStart(c)) {
-            bool sawColon = false;
-
-            if (!tokenbuf.append(c))
-                goto error;
-            while ((c = getChar()) != EOF && IsXMLNamePart(c)) {
-                if (c == ':') {
-                    int nextc;
-
-                    if (sawColon ||
-                        (nextc = peekChar(),
-                         ((flags & TSF_XMLONLYMODE) || nextc != '{') &&
-                         !IsXMLNamePart(nextc))) {
-                        reportError(JSMSG_BAD_XML_QNAME);
-                        goto error;
-                    }
-                    sawColon = true;
-                }
-
-                if (!tokenbuf.append(c))
-                    goto error;
-            }
-
-            ungetChar(c);
-            atom = atomize(cx, tokenbuf);
-            if (!atom)
-                goto error;
-            tp->setAtom(JSOP_STRING, atom);
-            tt = TOK_XMLNAME;
-            goto out;
-        }
-
-        switch (c) {
-          case '{':
-            if (flags & TSF_XMLONLYMODE)
-                goto bad_xml_char;
-            tt = TOK_LC;
-            goto out;
-
-          case '=':
-            tt = TOK_ASSIGN;
-            goto out;
-
-          case '"':
-          case '\'':
-            qc = c;
-            while ((c = getChar()) != qc) {
-                if (c == EOF) {
-                    reportError(JSMSG_UNTERMINATED_STRING);
-                    goto error;
-                }
-
-                /*
-                 * XML attribute values are double-quoted when pretty-printed,
-                 * so escape " if it is expressed directly in a single-quoted
-                 * attribute value.
-                 */
-                if (c == '"' && !(flags & TSF_XMLONLYMODE)) {
-                    JS_ASSERT(qc == '\'');
-                    if (!tokenbuf.append(js_quot_entity_str,
-                                     strlen(js_quot_entity_str)))
-                        goto error;
-                    continue;
-                }
-
-                if (c == '&' && (flags & TSF_XMLONLYMODE)) {
-                    if (!getXMLEntity())
-                        goto error;
-                    continue;
-                }
-
-                if (!tokenbuf.append(c))
-                    goto error;
-            }
-            atom = atomize(cx, tokenbuf);
-            if (!atom)
-                goto error;
-            tp->pos.end.lineno = lineno;
-            tp->setAtom(JSOP_STRING, atom);
-            tt = TOK_XMLATTR;
-            goto out;
-
-          case '>':
-            tt = TOK_XMLTAGC;
-            goto out;
-
-          case '/':
-            if (matchChar('>')) {
-                tt = TOK_XMLPTAGC;
-                goto out;
-            }
-            /* FALL THROUGH */
-
-          bad_xml_char:
-          default:
-            reportError(JSMSG_BAD_XML_CHARACTER);
-            goto error;
-        }
-        JS_NOT_REACHED("getXMLTextOrTag 1");
-    }
-    JS_NOT_REACHED("getXMLTextOrTag 2");
-
-  out:
-    *ttp = tt;
-    *tpp = tp;
-    return true;
-
-  error:
-    *ttp = TOK_ERROR;
-    *tpp = tp;
-    return false;
-}
-
-/*
- * After much testing, it's clear that Postel's advice to protocol designers
- * ("be liberal in what you accept, and conservative in what you send") invites
- * a natural-law repercussion for JS as "protocol":
- *
- * "If you are liberal in what you accept, others will utterly fail to be
- *  conservative in what they send."
- *
- * Which means you will get <!-- comments to end of line in the middle of .js
- * files, and after if conditions whose then statements are on the next line,
- * and other wonders.  See at least the following bugs:
- * - https://bugzilla.mozilla.org/show_bug.cgi?id=309242
- * - https://bugzilla.mozilla.org/show_bug.cgi?id=309712
- * - https://bugzilla.mozilla.org/show_bug.cgi?id=310993
- *
- * So without JSOPTION_MOAR_XML, we changed around Firefox 1.5 never to scan an
- * XML comment or CDATA literal.  Instead, we always scan <! as the start of an
- * HTML comment hack to end of line, used since Netscape 2 to hide script tag
- * content from script-unaware browsers.
- *
- * But this still leaves XML resources with certain internal structure
- * vulnerable to being loaded as script cross-origin, and some internal data
- * stolen, so for Firefox 3.5 and beyond, we reject programs whose source
- * consists only of XML literals. See:
- *
- * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
- *
- * The check for this is in js::frontend::CompileScript.
- */
-bool
-TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
-{
-    TokenKind tt;
-    int c;
-    Token *tp = *tpp;
-
-    /* Check for XML comment or CDATA section. */
-    if (matchChar('!')) {
-        tokenbuf.clear();
-
-        /* Scan XML comment. */
-        if (matchChar('-')) {
-            if (!matchChar('-'))
-                goto bad_xml_markup;
-            while ((c = getChar()) != '-' || !matchChar('-')) {
-                if (c == EOF)
-                    goto bad_xml_markup;
-                if (!tokenbuf.append(c))
-                    goto error;
-            }
-            if (!matchChar('>'))
-                goto bad_xml_markup;
-
-            JSAtom *commentText = atomize(cx, tokenbuf);
-            if (!commentText)
-                goto error;
-            tp->setAtom(JSOP_XMLCOMMENT, commentText);
-            tp->pos.end.lineno = lineno;
-            tt = TOK_XMLCOMMENT;
-            goto out;
-        }
-
-        /* Scan CDATA section. */
-        if (matchChar('[')) {
-            jschar cp[6];
-            if (peekChars(6, cp) &&
-                cp[0] == 'C' &&
-                cp[1] == 'D' &&
-                cp[2] == 'A' &&
-                cp[3] == 'T' &&
-                cp[4] == 'A' &&
-                cp[5] == '[') {
-                skipChars(6);
-                while ((c = getChar()) != ']' ||
-                       !peekChars(2, cp) ||
-                       cp[0] != ']' ||
-                       cp[1] != '>') {
-                    if (c == EOF)
-                        goto bad_xml_markup;
-                    if (!tokenbuf.append(c))
-                        goto error;
-                }
-                consumeKnownChar(']');
-                consumeKnownChar('>');
-
-                JSAtom *cdataContent = atomize(cx, tokenbuf);
-                if (!cdataContent)
-                    goto error;
-
-                tp->setAtom(JSOP_XMLCDATA, cdataContent);
-                tp->pos.end.lineno = lineno;
-                tt = TOK_XMLCDATA;
-                goto out;
-            }
-            goto bad_xml_markup;
-        }
-    }
-
-    /* Check for processing instruction. */
-    if (matchChar('?')) {
-        bool inTarget = true;
-        size_t targetLength = 0;
-        ptrdiff_t contentIndex = -1;
-
-        tokenbuf.clear();
-        while ((c = getChar()) != '?' || peekChar() != '>') {
-            if (c == EOF)
-                goto bad_xml_markup;
-            if (inTarget) {
-                if (IsXMLSpace(c)) {
-                    if (tokenbuf.empty())
-                        goto bad_xml_markup;
-                    inTarget = false;
-                } else {
-                    if (!(tokenbuf.empty()
-                          ? IsXMLNamespaceStart(c)
-                          : IsXMLNamespacePart(c))) {
-                        goto bad_xml_markup;
-                    }
-                    ++targetLength;
-                }
-            } else {
-                if (contentIndex < 0 && !IsXMLSpace(c))
-                    contentIndex = tokenbuf.length();
-            }
-            if (!tokenbuf.append(c))
-                goto error;
-        }
-        if (targetLength == 0)
-            goto bad_xml_markup;
-
-        JSAtom *data;
-        if (contentIndex < 0) {
-            data = cx->names().empty;
-        } else {
-            data = AtomizeChars<CanGC>(cx, tokenbuf.begin() + contentIndex,
-                                       tokenbuf.length() - contentIndex);
-            if (!data)
-                goto error;
-        }
-        tokenbuf.shrinkBy(tokenbuf.length() - targetLength);
-        consumeKnownChar('>');
-        JSAtom *target = atomize(cx, tokenbuf);
-        if (!target)
-            goto error;
-        tp->setProcessingInstruction(target->asPropertyName(), data);
-        tp->pos.end.lineno = lineno;
-        tt = TOK_XMLPI;
-        goto out;
-    }
-
-    /* An XML start-of-tag character. */
-    tt = matchChar('/') ? TOK_XMLETAGO : TOK_XMLSTAGO;
-
-  out:
-    *ttp = tt;
-    *tpp = tp;
-    return true;
-
-  bad_xml_markup:
-    reportError(JSMSG_BAD_XML_MARKUP);
-  error:
-    *ttp = TOK_ERROR;
-    *tpp = tp;
-    return false;
-}
-#endif /* JS_HAS_XML_SUPPORT */
-
 /*
  * We have encountered a '\': check for a Unicode escape sequence after it.
  * Return 'true' and the character code value (by value) if we found a
@@ -1302,19 +827,9 @@ IsTokenSane(Token *tp)
         if (tp->pos.begin.index > tp->pos.end.index)
             return false;
     } else {
-        /* Only certain token kinds can be multi-line. */
-        switch (tp->type) {
-          case TOK_STRING:
-          case TOK_XMLATTR:
-          case TOK_XMLSPACE:
-          case TOK_XMLTEXT:
-          case TOK_XMLCOMMENT:
-          case TOK_XMLCDATA:
-          case TOK_XMLPI:
-            break;
-          default:
+        /* Only string tokens can be multi-line. */
+        if (tp->type != TOK_STRING)
             return false;
-        }
     }
     return true;
 }
@@ -1439,20 +954,10 @@ TokenStream::getTokenInternal()
     Token *tp;
     FirstCharKind c1kind;
     const jschar *numStart;
-    bool hasFracOrExp;
+    bool hasExp;
+    DecimalPoint decimalPoint;
     const jschar *identStart;
     bool hadUnicodeEscape;
-
-#if JS_HAS_XML_SUPPORT
-    /*
-     * Look for XML text and tags.
-     */
-    if (flags & (TSF_XMLTEXTMODE|TSF_XMLTAGMODE)) {
-        if (!getXMLTextOrTag(&tt, &tp))
-            goto error;
-        goto out;
-    }
-#endif
 
   retry:
     if (JS_UNLIKELY(!userbuf.hasRawChars())) {
@@ -1594,6 +1099,8 @@ TokenStream::getTokenInternal()
         c = getCharIgnoreEOL();
         if (JS7_ISDEC(c)) {
             numStart = userbuf.addressOfNextRawChar() - 2;
+            decimalPoint = HasDecimal;
+            hasExp = false;
             goto decimal_dot;
         }
         if (c == '.') {
@@ -1603,10 +1110,6 @@ TokenStream::getTokenInternal()
                 goto out;
             }
             ungetCharIgnoreEOL(qc);
-#if JS_HAS_XML_SUPPORT
-            tt = TOK_DBLDOT;
-            goto out;
-#endif
         }
         ungetCharIgnoreEOL(c);
         tt = TOK_DOT;
@@ -1740,19 +1243,20 @@ TokenStream::getTokenInternal()
         numStart = userbuf.addressOfNextRawChar() - 1;
 
       decimal:
-        hasFracOrExp = false;
+        decimalPoint = NoDecimal;
+        hasExp = false;
         while (JS7_ISDEC(c))
             c = getCharIgnoreEOL();
 
         if (c == '.') {
+            decimalPoint = HasDecimal;
           decimal_dot:
-            hasFracOrExp = true;
             do {
                 c = getCharIgnoreEOL();
             } while (JS7_ISDEC(c));
         }
         if (c == 'e' || c == 'E') {
-            hasFracOrExp = true;
+            hasExp = true;
             c = getCharIgnoreEOL();
             if (c == '+' || c == '-')
                 c = getCharIgnoreEOL();
@@ -1779,25 +1283,19 @@ TokenStream::getTokenInternal()
          */
         double dval;
         const jschar *dummy;
-        if (!hasFracOrExp) {
+        if (!((decimalPoint == HasDecimal) || hasExp)) {
             if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), 10, &dummy, &dval))
                 goto error;
         } else {
             if (!js_strtod(cx, numStart, userbuf.addressOfNextRawChar(), &dummy, &dval))
                 goto error;
         }
-        tp->setNumber(dval);
+        tp->setNumber(dval, decimalPoint);
         tt = TOK_NUMBER;
         goto out;
     }
 
     if (c1kind == Colon) {
-#if JS_HAS_XML_SUPPORT
-        if (matchChar(':')) {
-            tt = TOK_DBLCOLON;
-            goto out;
-        }
-#endif
         tp->t_op = JSOP_NOP;
         tt = TOK_COLON;
         goto out;
@@ -1871,7 +1369,7 @@ TokenStream::getTokenInternal()
         const jschar *dummy;
         if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), radix, &dummy, &dval))
             goto error;
-        tp->setNumber(dval);
+        tp->setNumber(dval, NoDecimal);
         tt = TOK_NUMBER;
         goto out;
     }
@@ -1935,21 +1433,7 @@ TokenStream::getTokenInternal()
         }
         break;
 
-#if JS_HAS_XML_SUPPORT
-      case '@':
-        tt = TOK_AT;
-        break;
-#endif
-
       case '<':
-#if JS_HAS_XML_SUPPORT
-        if ((flags & TSF_OPERAND) && allowsXML() && (hasMoarXML() || peekChar() != '!')) {
-            if (!getXMLMarkup(&tt, &tp))
-                goto error;
-            goto out;
-        }
-#endif
-
         /* NB: treat HTML begin-comment as comment-till-end-of-line */
         if (matchChar('!')) {
             if (matchChar('-')) {
@@ -2276,23 +1760,6 @@ TokenKindToString(TokenKind tt)
       case TOK_THROW:           return "TOK_THROW";
       case TOK_INSTANCEOF:      return "TOK_INSTANCEOF";
       case TOK_DEBUGGER:        return "TOK_DEBUGGER";
-      case TOK_XMLSTAGO:        return "TOK_XMLSTAGO";
-      case TOK_XMLETAGO:        return "TOK_XMLETAGO";
-      case TOK_XMLPTAGC:        return "TOK_XMLPTAGC";
-      case TOK_XMLTAGC:         return "TOK_XMLTAGC";
-      case TOK_XMLNAME:         return "TOK_XMLNAME";
-      case TOK_XMLATTR:         return "TOK_XMLATTR";
-      case TOK_XMLSPACE:        return "TOK_XMLSPACE";
-      case TOK_XMLTEXT:         return "TOK_XMLTEXT";
-      case TOK_XMLCOMMENT:      return "TOK_XMLCOMMENT";
-      case TOK_XMLCDATA:        return "TOK_XMLCDATA";
-      case TOK_XMLPI:           return "TOK_XMLPI";
-      case TOK_AT:              return "TOK_AT";
-      case TOK_DBLCOLON:        return "TOK_DBLCOLON";
-      case TOK_DBLDOT:          return "TOK_DBLDOT";
-      case TOK_FILTER:          return "TOK_FILTER";
-      case TOK_XMLELEM:         return "TOK_XMLELEM";
-      case TOK_XMLLIST:         return "TOK_XMLLIST";
       case TOK_YIELD:           return "TOK_YIELD";
       case TOK_LEXICALSCOPE:    return "TOK_LEXICALSCOPE";
       case TOK_LET:             return "TOK_LET";

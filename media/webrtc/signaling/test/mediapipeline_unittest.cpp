@@ -166,7 +166,6 @@ class TestAgentReceive : public TestAgent {
     audio->SetPullEnabled(true);
 
     mozilla::AudioSegment* segment= new mozilla::AudioSegment();
-    segment->Init(1);
     audio->AddTrack(0, 100, 0, segment);
     audio->AdvanceKnownTracksTime(mozilla::STREAM_TIME_MAX);
 

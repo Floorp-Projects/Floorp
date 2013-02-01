@@ -214,7 +214,7 @@ function RadioInterfaceLayer() {
 
   this.rilContext = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
-    cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
+    cardState:      RIL.GECKO_CARDSTATE_UNKNOWN,
     icc:            null,
 
     // These objects implement the nsIDOMMozMobileConnectionInfo interface,

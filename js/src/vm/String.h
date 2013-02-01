@@ -836,8 +836,8 @@ class StaticStrings
  *   - uint32_t indexes,
  *   - PropertyName strings which don't encode uint32_t indexes, and
  *   - jsspecial special properties (non-ES5 properties like object-valued
- *     jsids, JSID_EMPTY, JSID_VOID, E4X's default XML namespace, and maybe in
- *     the future Harmony-proposed private names).
+ *     jsids, JSID_EMPTY, JSID_VOID, and maybe in the future Harmony-proposed
+ *     private names).
  */
 class PropertyName : public JSAtom
 {};

@@ -745,33 +745,35 @@ Assembler::trace(JSTracer *trc)
 }
 
 void
-Assembler::processDeferredData(IonCode *code, uint8_t *data)
-{
-    // Deferred Data is something like Pools for X86.
-    // Since ARM has competent pools, this isn't actually used.
-    // Except of course, for SwitchTables.  Those are really shoehorned
-    // in and don't take up any space in the instruction stream, so dataSize()
-    // is still 0.
-    // NOTE: this means arm will in fact break if the for loop is removed.
-    JS_ASSERT(dataSize() == 0);
-
-    for (size_t i = 0; i < data_.length(); i++) {
-        DeferredData *deferred = data_[i];
-        //Bind(code, deferred->label(), data + deferred->offset());
-        deferred->copy(code, data + deferred->offset());
-    }
-
-}
-
-// As far as I can tell, CodeLabels were supposed to be used in switch tables
-// and they aren't used there, nor anywhere else.
-void
 Assembler::processCodeLabels(IonCode *code)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
-        //Bind(code, label->dest(), code->raw() + label->src()->offset());
-        JS_NOT_REACHED("dead code?");
+        CodeLabel *label = codeLabels_[i];
+        Bind(code, label->dest(), code->raw() + actualOffset(label->src()->offset()));
     }
+}
+
+void
+Assembler::writeCodePointer(AbsoluteLabel *absoluteLabel) {
+    JS_ASSERT(!absoluteLabel->bound());
+    BufferOffset off = writeInst(-1);
+
+    // x86/x64 makes general use of AbsoluteLabel and weaves a linked list of
+    // uses of an AbsoluteLabel through the assembly. ARM only uses labels
+    // for the case statements of switch jump tables. Thus, for simplicity, we
+    // simply treat the AbsoluteLabel as a label and bind it to the offset of
+    // the jump table entry that needs to be patched.
+    LabelBase *label = absoluteLabel;
+    label->bind(off.getOffset());
+}
+
+void
+Assembler::Bind(IonCode *code, AbsoluteLabel *label, const void *address)
+{
+    // See writeCodePointer comment.
+    uint8_t *raw = code->raw();
+    uint32_t off = actualOffset(label->offset());
+    *reinterpret_cast<const void **>(raw + off) = address;
 }
 
 Assembler::Condition
@@ -1142,16 +1144,6 @@ Assembler::oom() const
 }
 
 bool
-Assembler::addDeferredData(DeferredData *data, size_t bytes)
-{
-    data->setOffset(dataBytesNeeded_);
-    dataBytesNeeded_ += bytes;
-    if (dataBytesNeeded_ >= MAX_BUFFER_SIZE)
-        return false;
-    return data_.append(data);
-}
-
-bool
 Assembler::addCodeLabel(CodeLabel *label)
 {
     return codeLabels_.append(label);
@@ -1185,15 +1177,9 @@ Assembler::preBarrierTableBytes() const
 
 // Size of the data table, in bytes.
 size_t
-Assembler::dataSize() const
-{
-    return dataBytesNeeded_;
-}
-size_t
 Assembler::bytesNeeded() const
 {
     return size() +
-        dataSize() +
         jumpRelocationTableBytes() +
         dataRelocationTableBytes() +
         preBarrierTableBytes();
@@ -2165,19 +2151,6 @@ void
 Assembler::leaveNoPool()
 {
     m_buffer.leaveNoPool();
-}
-
-BufferOffset
-Assembler::as_jumpPool(uint32_t numCases)
-{
-    if (numCases == 0)
-        return BufferOffset();
-
-    BufferOffset ret = writeInst(-1);
-    for (uint32_t i = 1; i < numCases; i++)
-        writeInst(-1);
-
-    return ret;
 }
 
 ptrdiff_t

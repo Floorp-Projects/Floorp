@@ -990,9 +990,14 @@ static short vcmGetDtlsIdentity_m(const char *peerconnection,
   unsigned char digest[TransportLayerDtls::kMaxDigestLength];
   size_t digest_len;
 
-  nsresult res = pc.impl()->GetIdentity()->ComputeFingerprint("sha-256", digest,
-                                                               sizeof(digest),
-                                                               &digest_len);
+  mozilla::RefPtr<DtlsIdentity> id = pc.impl()->GetIdentity();
+
+  if (!id) {
+    return VCM_ERROR;
+  }
+
+  nsresult res = id->ComputeFingerprint("sha-256", digest, sizeof(digest),
+                                        &digest_len);
   if (!NS_SUCCEEDED(res)) {
     CSFLogError( logTag, "%s: Could not compute identity fingerprint", __FUNCTION__);
     return VCM_ERROR;
@@ -2640,7 +2645,11 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
     // TODO(ekr@rtfm.com): implement the actpass logic above.
     dtls->SetRole(pc->GetRole() == sipcc::PeerConnectionImpl::kRoleOfferer ?
                   TransportLayerDtls::SERVER : TransportLayerDtls::CLIENT);
-    dtls->SetIdentity(pc->GetIdentity());
+    mozilla::RefPtr<DtlsIdentity> pcid = pc->GetIdentity();
+    if (!pcid) {
+      return nullptr;
+    }
+    dtls->SetIdentity(pcid);
 
     unsigned char remote_digest[TransportLayerDtls::kMaxDigestLength];
     size_t digest_len;

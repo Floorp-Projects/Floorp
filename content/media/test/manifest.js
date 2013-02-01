@@ -195,6 +195,13 @@ var gInvalidTests = [
   { name:"invalid-cmap-s1c2.opus", type:"audio/ogg; codecs=opus"},
 ];
 
+// Files to test for stream switching. Note: media files referenced in DASH MPD
+// files should be accessed via dash_detect_stream_switch.sjs.
+var gStreamSwitchTests = [
+  { name:"dash-manifest-sjs.mpd", type:"application/dash+xml",
+    width:320, height:180, duration:3.966 }
+];
+
 // Converts a path/filename to a file:// URI which we can load from disk.
 // Optionally checks whether the file actually exists on disk at the location
 // we've specified.
@@ -350,6 +357,8 @@ var gDecodeErrorTests = [
   // Invalid files
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },
+  { name:"dash-manifest-garbled.mpd", type:"application/dash+xml" },
+  { name:"dash-manifest-garbled-webm.mpd", type:"application/dash+xml" },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
