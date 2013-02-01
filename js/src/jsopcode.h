@@ -64,6 +64,7 @@ typedef enum JSOp {
 #define JOF_NAME          (1U<<5) /* name operation */
 #define JOF_PROP          (2U<<5) /* obj.prop operation */
 #define JOF_ELEM          (3U<<5) /* obj[index] operation */
+#define JOF_XMLNAME       (4U<<5) /* XML name: *, a::b, @a, @a::b, etc. */
 #define JOF_MODEMASK      (7U<<5) /* mask for above addressing modes */
 #define JOF_SET           (1U<<8) /* set (i.e., assignment) operation */
 #define JOF_DEL           (1U<<9) /* delete operation */

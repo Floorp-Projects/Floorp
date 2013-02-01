@@ -173,6 +173,8 @@ ObjectWrapperChild::jsval_to_JSVariant(JSContext* cx, jsval from, JSVariant* to)
     case JSTYPE_BOOLEAN:
         *to = !!JSVAL_TO_BOOLEAN(from);
         return true;
+    case JSTYPE_XML:
+        // fall through
     default:
         return false;
     }

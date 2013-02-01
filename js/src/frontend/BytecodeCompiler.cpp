@@ -158,6 +158,13 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr
         }
     }
 
+    ParseNode *pn;
+#if JS_HAS_XML_SUPPORT
+    pn = NULL;
+    bool onlyXML;
+    onlyXML = true;
+#endif
+
     TokenStream &tokenStream = parser.tokenStream;
     bool canHaveDirectives = true;
     for (;;) {
@@ -169,7 +176,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr
             return UnrootedScript(NULL);
         }
 
-        ParseNode *pn = parser.statement();
+        pn = parser.statement();
         if (!pn)
             return UnrootedScript(NULL);
 
@@ -186,11 +193,28 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr
         if (!EmitTree(cx, &bce, pn))
             return UnrootedScript(NULL);
 
+#if JS_HAS_XML_SUPPORT
+        if (!pn->isKind(PNK_SEMI) || !pn->pn_kid || !pn->pn_kid->isXMLItem())
+            onlyXML = false;
+#endif
         parser.freeTree(pn);
     }
 
     if (!SetSourceMap(cx, tokenStream, ss, script))
         return UnrootedScript(NULL);
+
+#if JS_HAS_XML_SUPPORT
+    /*
+     * Prevent XML data theft via <script src="http://victim.com/foo.xml">.
+     * For background, see:
+     *
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
+     */
+    if (pn && onlyXML && !callerFrame) {
+        parser.reportError(NULL, JSMSG_XML_WHOLE_PROGRAM);
+        return UnrootedScript(NULL);
+    }
+#endif
 
     // It's an error to use |arguments| in a function that has a rest parameter.
     if (callerFrame && callerFrame.isFunctionFrame() && callerFrame.fun()->hasRest()) {

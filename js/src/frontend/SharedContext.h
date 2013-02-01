@@ -196,7 +196,8 @@ class FunctionBox : public ObjectBox, public SharedContext
     size_t          bufStart;
     size_t          bufEnd;
     uint16_t        ndefaults;
-    bool            inWith:1;               /* some enclosing scope is a with-statement */
+    bool            inWith:1;               /* some enclosing scope is a with-statement
+                                               or E4X filter-expression */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
 
     FunctionContextFlags funCxFlags;
