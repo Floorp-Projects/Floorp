@@ -77,6 +77,18 @@ MarkScriptFilename(JSRuntime *rt, const char *filename)
         ScriptFilenameEntry::fromFilename(filename)->marked = true;
 }
 
+inline void
+MarkScriptBytecode(JSRuntime *rt, const jsbytecode *bytecode)
+{
+    /*
+     * As an invariant, a ScriptBytecodeEntry should not be 'marked' outside of
+     * a GC. Since SweepScriptBytecodes is only called during a full gc,
+     * to preserve this invariant, only mark during a full gc.
+     */
+    if (rt->gcIsFull)
+        SharedScriptData::fromBytecode(bytecode)->marked = true;
+}
+
 } // namespace js
 
 inline void
