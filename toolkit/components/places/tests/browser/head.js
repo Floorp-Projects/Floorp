@@ -6,7 +6,7 @@ const TRANSITION_TYPED = Ci.nsINavHistoryService.TRANSITION_TYPED;
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/commonjs/promise/core.js");
+                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 /**
  * Allows waiting for an observer notification once.
