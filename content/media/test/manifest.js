@@ -357,6 +357,8 @@ var gDecodeErrorTests = [
   // Invalid files
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },
+  { name:"dash-manifest-garbled.mpd", type:"application/dash+xml" },
+  { name:"dash-manifest-garbled-webm.mpd", type:"application/dash+xml" },
 
   { name:"bogus.duh", type:"bogus/duh" }
 ];
