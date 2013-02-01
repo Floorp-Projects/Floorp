@@ -19,6 +19,9 @@
  * Represents the target of a download, for example a file in the global
  * downloads directory, or a file in the system temporary directory.
  *
+ * DownloadError
+ * Provides detailed information about a download failure.
+ *
  * DownloadSaver
  * Template for an object that actually transfers the data for the download.
  *
@@ -32,6 +35,7 @@ this.EXPORTED_SYMBOLS = [
   "Download",
   "DownloadSource",
   "DownloadTarget",
+  "DownloadError",
   "DownloadSaver",
   "DownloadCopySaver",
 ];
@@ -93,6 +97,13 @@ Download.prototype = {
    * false while the download is paused.
    */
   done: false,
+
+  /**
+   * When the download fails, this is set to a DownloadError instance indicating
+   * the cause of the failure.  If the download has been completed successfully
+   * or has been canceled, this property is null.
+   */
+  error: null,
 
   /**
    * Indicates whether this download's "progress" property is able to report
@@ -166,6 +177,9 @@ Download.prototype = {
       try {
         yield this.saver.execute();
         this.progress = 100;
+      } catch (ex) {
+        this.error = ex;
+        throw ex;
       } finally {
         this.done = true;
         this._notifyChange();
@@ -239,6 +253,64 @@ DownloadTarget.prototype = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+//// DownloadError
+
+/**
+ * Provides detailed information about a download failure.
+ *
+ * @param aResult
+ *        The result code associated with the error.
+ * @param aMessage
+ *        The message to be displayed, or null to use the message associated
+ *        with the result code.
+ * @param aInferCause
+ *        If true, attempts to determine if the cause of the download is a
+ *        network failure or a local file failure, based on a set of known
+ *        values of the result code.  This is useful when the error is received
+ *        by a component that handles both aspects of the download.
+ */
+function DownloadError(aResult, aMessage, aInferCause)
+{
+  const NS_ERROR_MODULE_BASE_OFFSET = 0x45;
+  const NS_ERROR_MODULE_NETWORK = 6;
+  const NS_ERROR_MODULE_FILES = 13;
+
+  // Set the error name used by the Error object prototype first.
+  this.name = "DownloadError";
+  this.result = aResult || Cr.NS_ERROR_FAILURE;
+  if (aMessage) {
+    this.message = aMessage;
+  } else {
+    let exception = new Components.Exception(this.result);
+    this.message = exception.toString();
+  }
+  if (aInferCause) {
+    let module = ((aResult & 0x7FFF0000) >> 16) - NS_ERROR_MODULE_BASE_OFFSET;
+    this.becauseSourceFailed = (module == NS_ERROR_MODULE_NETWORK);
+    this.becauseTargetFailed = (module == NS_ERROR_MODULE_FILES);
+  }
+}
+
+DownloadError.prototype = {
+  __proto__: Error.prototype,
+
+  /**
+   * The result code associated with this error.
+   */
+  result: false,
+
+  /**
+   * Indicates an error occurred while reading from the remote location.
+   */
+  becauseSourceFailed: false,
+
+  /**
+   * Indicates an error occurred while writing to the local target.
+   */
+  becauseTargetFailed: false,
+};
+
+////////////////////////////////////////////////////////////////////////////////
 //// DownloadSaver
 
 /**
@@ -274,7 +346,7 @@ DownloadSaver.prototype = {
 function DownloadCopySaver() { }
 
 DownloadCopySaver.prototype = {
-  __proto__: DownloadSaver,
+  __proto__: DownloadSaver.prototype,
 
   /**
    * Implements "DownloadSaver.execute".
@@ -296,8 +368,9 @@ DownloadCopySaver.prototype = {
           if (Components.isSuccessCode(aStatus)) {
             deferred.resolve();
           } else {
-            deferred.reject(new Components.Exception("Download failed.",
-                                                     aStatus));
+            // Infer the origin of the error from the failure code, because
+            // BackgroundFileSaver does not provide more specific data.
+            deferred.reject(new DownloadError(aStatus, null, true));
           }
 
           // Free the reference cycle, in order to release resources earlier.

@@ -34,10 +34,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
+const ServerSocket = Components.Constructor(
+                                "@mozilla.org/network/server-socket;1",
+                                "nsIServerSocket",
+                                "init");
+
 const HTTP_SERVER_PORT = 4444;
 const HTTP_BASE = "http://localhost:" + HTTP_SERVER_PORT;
 
+const FAKE_SERVER_PORT = 4445;
+const FAKE_BASE = "http://localhost:" + FAKE_SERVER_PORT;
+
 const TEST_SOURCE_URI = NetUtil.newURI(HTTP_BASE + "/source.txt");
+const TEST_FAKE_SOURCE_URI = NetUtil.newURI(FAKE_BASE + "/source.txt");
+
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 const TEST_DATA_SHORT = "This test string is downloaded.";
 
@@ -105,6 +115,24 @@ function promiseVerifyContents(aFile, aExpectedContents)
     deferred.resolve();
   });
   return deferred.promise;
+}
+
+/**
+ * Starts a socket listener that closes each incoming connection.
+ *
+ * @returns nsIServerSocket that listens for connections.  Call its "close"
+ *          method to stop listening and free the server port.
+ */
+function startFakeServer()
+{
+  let serverSocket = new ServerSocket(FAKE_SERVER_PORT, true, -1);
+  serverSocket.asyncListen({
+    onSocketAccepted: function (aServ, aTransport) {
+      aTransport.close(Cr.NS_BINDING_ABORTED);
+    },
+    onStopListening: function () { },
+  });
+  return serverSocket;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
