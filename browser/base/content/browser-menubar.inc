@@ -366,7 +366,11 @@
                           key="showAllHistoryKb"
 #endif
                           command="Browser:ShowAllHistory"/>
-                <menuseparator id="showAllHistorySeparator"/>
+                <menuitem id="sanitizeItem"
+                          label="&clearRecentHistory.label;"
+                          key="key_sanitize"
+                          command="Tools:Sanitize"/>
+                <menuseparator id="sanitizeSeparator"/>
 #ifdef MOZ_SERVICES_SYNC
                 <menuitem id="sync-tabs-menuitem"
                           class="syncTabsMenuItem"
@@ -598,12 +602,6 @@
                         key="key_viewInfo"
 #endif
                         command="View:PageInfo"/>
-              <menuseparator id="sanitizeSeparator"/>
-              <menuitem id="sanitizeItem"
-                        accesskey="&clearRecentHistory.accesskey;"
-                        label="&clearRecentHistory.label;"
-                        key="key_sanitize"
-                        command="Tools:Sanitize"/>
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
