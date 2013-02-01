@@ -34,12 +34,13 @@ FallbackICSpew(JSContext *cx, ICFallbackStub *stub, const char *fmt, ...)
         va_end(args);
 
         IonSpew(IonSpew_BaselineICFallback,
-                "Fallback hit for (%s:%d) (pc=%d,line=%d,uses=%d): %s",
+                "Fallback hit for (%s:%d) (pc=%d,line=%d,uses=%d,stubs=%d): %s",
                 script->filename,
                 script->lineno,
                 (int) (pc - script->code),
                 PCToLineNumber(script, pc),
                 script->getUseCount(),
+                (int) stub->numOptimizedStubs(),
                 fmtbuf);
     }
 }
@@ -1814,6 +1815,19 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
+DenseSetElemStubExists(JSContext *cx, ICSetElem_Fallback *stub, HandleObject obj)
+{
+    for (ICStub *cur = stub->icEntry()->firstStub(); cur != stub; cur = cur->next()) {
+        if (!cur->isSetElem_Dense())
+            continue;
+        ICSetElem_Dense *dense = cur->toSetElem_Dense();
+        if (obj->lastProperty() == dense->shape() && obj->getType(cx) == dense->type())
+            return true;
+    }
+    return false;
+}
+
+static bool
 DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, HandleValue objv,
                   HandleValue index)
 {
@@ -1834,9 +1848,11 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
     }
 
     // Try to generate new stubs.
-    if (obj->isNative() && index.isInt32()) {
+    if (obj->isNative() && index.isInt32() && !DenseSetElemStubExists(cx, stub, obj)) {
         RootedTypeObject type(cx, obj->getType(cx));
         ICSetElem_Dense::Compiler compiler(cx, obj->lastProperty(), type);
+        IonSpew(IonSpew_BaselineIC, "  Generating SetElem Native[Int32]=Value stub."
+                                    " (shape=%p, type=%p)", obj->lastProperty(), type.get());
         ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!denseStub)
             return false;
