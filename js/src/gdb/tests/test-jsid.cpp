@@ -7,6 +7,7 @@ FRAGMENT(jsid, simple) {
   jsid int_id = INT_TO_JSID(1729);
   jsid void_id = JSID_VOID;
   js::Rooted<jsid> object_id(cx, OBJECT_TO_JSID(JS_GetGlobalObject(cx)));
+  jsid xml_id = JS_DEFAULT_XML_NAMESPACE_ID;
 
   breakpoint();
 
@@ -16,4 +17,5 @@ FRAGMENT(jsid, simple) {
   (void) int_id;
   (void) void_id;
   (void) object_id;
+  (void) xml_id;
 }

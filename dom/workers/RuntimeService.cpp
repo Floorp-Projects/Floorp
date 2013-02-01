@@ -151,6 +151,7 @@ enum {
   PREF_methodjit,
   PREF_methodjit_always,
   PREF_typeinference,
+  PREF_allow_xml,
   PREF_jit_hardening,
   PREF_mem_max,
   PREF_ion,
@@ -171,6 +172,7 @@ const char* gPrefsToWatch[] = {
   JS_OPTIONS_DOT_STR "methodjit.content",
   JS_OPTIONS_DOT_STR "methodjit_always",
   JS_OPTIONS_DOT_STR "typeinference",
+  JS_OPTIONS_DOT_STR "allow_xml",
   JS_OPTIONS_DOT_STR "jit_hardening",
   JS_OPTIONS_DOT_STR "mem.max",
   JS_OPTIONS_DOT_STR "ion.content",
@@ -227,6 +229,9 @@ PrefCallback(const char* aPrefName, void* aClosure)
     }
     if (Preferences::GetBool(gPrefsToWatch[PREF_ion])) {
       newOptions |= JSOPTION_ION;
+    }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_allow_xml])) {
+      newOptions |= JSOPTION_ALLOW_XML;
     }
 
     RuntimeService::SetDefaultJSContextOptions(newOptions);

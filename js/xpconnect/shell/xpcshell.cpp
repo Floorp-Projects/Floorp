@@ -702,6 +702,8 @@ static const struct JSOption {
     {"atline",          JSOPTION_ATLINE},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
+    {"allow_xml",       JSOPTION_ALLOW_XML},
+    {"moar_xml",        JSOPTION_MOAR_XML},
     {"strict_mode",     JSOPTION_STRICT_MODE},
 };
 
@@ -1129,7 +1131,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-PsSwWCijmIn] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-PsSwWxCijmIn] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -1153,6 +1155,9 @@ ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
             JS_ToggleOptions(cx, JSOPTION_WERROR);
         case 's':
             JS_ToggleOptions(cx, JSOPTION_STRICT);
+            break;
+        case 'x':
+            JS_ToggleOptions(cx, JSOPTION_MOAR_XML);
             break;
         case 'm':
             JS_ToggleOptions(cx, JSOPTION_METHODJIT);
@@ -1825,6 +1830,7 @@ main(int argc, char **argv, char **envp)
         argv++;
         ProcessArgsForCompartment(cx, argv, argc);
 
+        JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ALLOW_XML);
         xpc_LocalizeContext(cx);
 
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());

@@ -13,6 +13,7 @@
 #include "jsfriendapi.h"
 #include "jsinterp.h"
 #include "jsprobes.h"
+#include "jsxml.h"
 #include "jsgc.h"
 
 #include "builtin/Object.h" // For js::obj_construct
@@ -133,6 +134,31 @@ struct PreserveRegsGuard
     JSContext *cx;
     FrameRegs &regs_;
 };
+
+#if JS_HAS_XML_SUPPORT
+
+class AutoNamespaceArray : protected AutoGCRooter {
+  public:
+    AutoNamespaceArray(JSContext *cx)
+        : AutoGCRooter(cx, NAMESPACES), context(cx) {
+        array.init();
+    }
+
+    ~AutoNamespaceArray() {
+        array.finish(context->runtime->defaultFreeOp());
+    }
+
+    uint32_t length() const { return array.length; }
+
+  private:
+    JSContext *context;
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  public:
+    JSXMLArray<JSObject> array;
+};
+
+#endif /* JS_HAS_XML_SUPPORT */
 
 #ifdef JS_CRASH_DIAGNOSTICS
 class CompartmentChecker

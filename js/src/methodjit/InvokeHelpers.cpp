@@ -13,6 +13,7 @@
 #include "jslibmath.h"
 #include "jsiter.h"
 #include "jsnum.h"
+#include "jsxml.h"
 #include "jsbool.h"
 #include "jstypes.h"
 

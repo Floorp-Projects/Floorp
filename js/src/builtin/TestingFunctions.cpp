@@ -176,6 +176,14 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "methodjit", &value))
         return false;
 
+#ifdef JS_HAS_XML_SUPPORT
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "e4x", &value))
+        return false;
+
     *vp = ObjectValue(*info);
     return true;
 }
@@ -630,6 +638,9 @@ static const struct TraceKindPair {
     { "all",        -1                  },
     { "object",     JSTRACE_OBJECT      },
     { "string",     JSTRACE_STRING      },
+#if JS_HAS_XML_SUPPORT
+    { "xml",        JSTRACE_XML         },
+#endif
 };
 
 static JSBool
@@ -899,8 +910,8 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "countHeap([start[, kind]])",
 "  Count the number of live GC things in the heap or things reachable from\n"
 "  start when it is given and is not null. kind is either 'all' (default) to\n"
-"  count all things or one of 'object', 'double', 'string', 'function'\n"
-"  to count only things of that kind."),
+"  count all things or one of 'object', 'double', 'string', 'function',\n"
+"  'qname', 'namespace', 'xml' to count only things of that kind."),
 
     JS_FN_HELP("makeFinalizeObserver", MakeFinalizeObserver, 0, 0,
 "makeFinalizeObserver()",
@@ -926,8 +937,8 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "    3: Collect when the window paints (browser only)\n"
 "    4: Verify pre write barriers between instructions\n"
 "    5: Verify pre write barriers between paints\n"
-"    6: Verify stack rooting\n"
-"    7: Verify stack rooting (yes, it's the same as 6)\n"
+"    6: Verify stack rooting (ignoring XML and Reflect)\n"
+"    7: Verify stack rooting (all roots)\n"
 "    8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
 "    9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
 "   10: Incremental GC in multiple slices\n"
