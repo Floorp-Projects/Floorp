@@ -28,7 +28,7 @@ class AssemblerX86Shared
         { }
     };
 
-    js::Vector<CodeLabel *, 0, SystemAllocPolicy> codeLabels_;
+    js::Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
@@ -170,7 +170,7 @@ class AssemblerX86Shared
     void copyDataRelocationTable(uint8_t *dest);
     void copyPreBarrierTable(uint8_t *dest);
 
-    bool addCodeLabel(CodeLabel *label) {
+    bool addCodeLabel(CodeLabel label) {
         return codeLabels_.append(label);
     }
 

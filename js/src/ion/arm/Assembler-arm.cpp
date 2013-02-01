@@ -748,8 +748,8 @@ void
 Assembler::processCodeLabels(IonCode *code)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
-        CodeLabel *label = codeLabels_[i];
-        Bind(code, label->dest(), code->raw() + actualOffset(label->src()->offset()));
+        CodeLabel label = codeLabels_[i];
+        Bind(code, label.dest(), code->raw() + actualOffset(label.src()->offset()));
     }
 }
 
@@ -1144,7 +1144,7 @@ Assembler::oom() const
 }
 
 bool
-Assembler::addCodeLabel(CodeLabel *label)
+Assembler::addCodeLabel(CodeLabel label)
 {
     return codeLabels_.append(label);
 }
