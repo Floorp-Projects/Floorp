@@ -2835,6 +2835,8 @@ let RIL = {
         newCardState = GECKO_CARDSTATE_READY;
         break;
       case CARD_APPSTATE_UNKNOWN:
+        newCardState = GECKO_CARDSTATE_UNKNOWN;
+        break;
       case CARD_APPSTATE_DETECTED:
       default:
         newCardState = GECKO_CARDSTATE_NOT_READY;

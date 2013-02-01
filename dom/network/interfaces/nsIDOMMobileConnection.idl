@@ -29,7 +29,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   /**
    * Indicates the state of the device's ICC card.
    *
-   * Possible values: null, 'absent', 'pinRequired', 'pukRequired',
+   * Possible values: null, 'unknown', 'absent', 'pinRequired', 'pukRequired',
    * 'networkLocked', 'ready'.
    */
   readonly attribute DOMString cardState;
