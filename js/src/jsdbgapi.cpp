@@ -95,7 +95,7 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
     }
 
     RootedValue rval(cx);
-    JSTrapStatus status = Debugger::onEnterFrame(cx, rval.address());
+    JSTrapStatus status = Debugger::onEnterFrame(cx, &rval);
     switch (status) {
       case JSTRAP_CONTINUE:
         break;
@@ -142,12 +142,12 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
         return JSTRAP_CONTINUE;
 
     /* Call debugger throw hook if set. */
-    Value rval;
+    RootedValue rval(cx);
     JSTrapStatus status = Debugger::onExceptionUnwind(cx, &rval);
     if (status == JSTRAP_CONTINUE) {
         if (JSThrowHook handler = cx->runtime->debugHooks.throwHook) {
             RootedScript script(cx, frame.script());
-            status = handler(cx, script, pc, &rval, cx->runtime->debugHooks.throwHookData);
+            status = handler(cx, script, pc, rval.address(), cx->runtime->debugHooks.throwHookData);
         }
     }
 
