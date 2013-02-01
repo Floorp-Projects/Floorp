@@ -916,7 +916,7 @@ class ArrayBufferObject;
  */
 class ObjectElements
 {
-    friend struct ::JSObject;
+    friend class ::JSObject;
     friend class ObjectImpl;
     friend class ArrayBufferObject;
 
