@@ -351,6 +351,18 @@ template bool BoxPolicy<0>::staticAdjustInputs(MInstruction *ins);
 template bool BoxPolicy<1>::staticAdjustInputs(MInstruction *ins);
 template bool BoxPolicy<2>::staticAdjustInputs(MInstruction *ins);
 
+bool
+ToDoublePolicy::staticAdjustInputs(MInstruction *ins)
+{
+    MDefinition *in = ins->getOperand(0);
+    if (in->type() != MIRType_Object && in->type() != MIRType_String)
+        return true;
+
+    in = boxAt(ins, in);
+    ins->replaceOperand(0, in);
+    return true;
+}
+
 template <unsigned Op>
 bool
 ObjectPolicy<Op>::staticAdjustInputs(MInstruction *ins)
