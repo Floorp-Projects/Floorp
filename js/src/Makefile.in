@@ -190,7 +190,6 @@ INSTALLED_HEADERS = \
 		jsutil.h \
 		jsversion.h \
 		jswrapper.h \
-		jsval.h \
 		$(NULL)
 
 ######################################################
@@ -232,6 +231,7 @@ EXPORTS_js = \
 		MemoryMetrics.h \
 		TemplateLib.h \
 		Utility.h \
+		Value.h \
 		Vector.h \
 		$(NULL)
 

@@ -19,7 +19,6 @@
 #include "jsprf.h"
 #include "jsiter.h"
 #include "jsbool.h"
-#include "jsval.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsarray.h"

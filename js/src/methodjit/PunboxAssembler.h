@@ -9,9 +9,9 @@
 #define jsjaeger_assembler64_h__
 
 #include "assembler/assembler/MacroAssembler.h"
+#include "js/Value.h"
 #include "methodjit/MachineRegs.h"
 #include "methodjit/RematInfo.h"
-#include "jsval.h"
 
 namespace js {
 namespace mjit {

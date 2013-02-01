@@ -5,12 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsvalimpl_h__
-#define jsvalimpl_h__
+/* JS::Value implementation. */
 
-/*
- * Implementation details for js::Value in jsapi.h.
- */
+#ifndef js_Value_h___
+#define js_Value_h___
 
 #include "js/Utility.h"
 
@@ -838,4 +836,4 @@ static jsval_layout JSVAL_TO_IMPL(JS::Value);
 static JS::Value IMPL_TO_JSVAL(jsval_layout);
 #endif
 
-#endif /* jsvalimpl_h__ */
+#endif /* js_Value_h___ */
