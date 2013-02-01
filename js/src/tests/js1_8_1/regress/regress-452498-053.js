@@ -1,4 +1,3 @@
-// |reftest| pref(javascript.options.xml.content,true)
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.
@@ -41,7 +40,7 @@ function test()
 // pn->pn_used is 1
   try
   {
-    @foo; 0;
+    true; 0;
   }
   catch(ex)
   {
@@ -62,7 +61,7 @@ function test()
 // Another case where some optimization is going on.
   try
   {
-    if (true && @foo) ;
+    if (true && foo) ;
   }
   catch(ex)
   {

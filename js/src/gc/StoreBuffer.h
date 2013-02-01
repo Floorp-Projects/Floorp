@@ -12,9 +12,6 @@
 #ifndef JSGC_USE_EXACT_ROOTING
 # error "Generational GC requires exact rooting."
 #endif
-#ifdef JSGC_HAS_XML_SUPPORT
-# error "E4X must be disabled to enable generational GC."
-#endif
 
 #include "jsgc.h"
 #include "jsalloc.h"

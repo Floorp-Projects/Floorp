@@ -557,34 +557,39 @@ function appendAboutMemoryMain(aBody, aProcess, aHasMozMallocUsableSize,
   getTreesByProcess(aProcess, treesByProcess, degeneratesByProcess,
                     heapTotalByProcess, aForceShowSmaps);
 
-  // Sort our list of processes.  Always start with the main process, then sort
-  // by resident size (descending).  Processes with no resident reporter go at
-  // the end of the list.
+  // Sort our list of processes.
   let processes = Object.keys(treesByProcess);
-  processes.sort(function(a, b) {
-    assert(a != b, "Elements of Object.keys() should be unique, but " +
-                   "saw duplicate " + a + " elem.");
+  processes.sort(function(aProcessA, aProcessB) {
+    assert(aProcessA != aProcessB,
+           "Elements of Object.keys() should be unique, but " +
+           "saw duplicate '" + aProcessA + "' elem.");
 
-    if (a == gUnnamedProcessStr) {
+    // Always put the main process first.
+    if (aProcessA == gUnnamedProcessStr) {
       return -1;
     }
-
-    if (b == gUnnamedProcessStr) {
+    if (aProcessB == gUnnamedProcessStr) {
       return 1;
     }
 
-    let nodeA = degeneratesByProcess[a]['resident'];
-    let nodeB = degeneratesByProcess[b]['resident'];
+    // Then sort by resident size.
+    let nodeA = degeneratesByProcess[aProcessA]['resident'];
+    let nodeB = degeneratesByProcess[aProcessB]['resident'];
+    let residentA = nodeA ? nodeA._amount : -1;
+    let residentB = nodeB ? nodeB._amount : -1;
 
-    if (nodeA && nodeB) {
-      return TreeNode.compareAmounts(nodeA, nodeB);
-    }
-
-    if (nodeA) {
+    if (residentA > residentB) {
       return -1;
     }
+    if (residentA < residentB) {
+      return 1;
+    }
 
-    if (nodeB) {
+    // Then sort by process name.
+    if (aProcessA < aProcessB) {
+      return -1;
+    }
+    if (aProcessA > aProcessB) {
       return 1;
     }
 
@@ -878,8 +883,17 @@ TreeNode.prototype = {
   }
 };
 
+// Sort TreeNodes first by size, then by name.  This is particularly important
+// for the about:memory tests, which need a predictable ordering of reporters
+// which have the same amount.
 TreeNode.compareAmounts = function(a, b) {
-  return b._amount - a._amount;
+  if (a._amount > b._amount) {
+    return -1;
+  }
+  if (a._amount < b._amount) {
+    return 1;
+  }
+  return TreeNode.compareUnsafeNames(a, b);
 };
 
 TreeNode.compareUnsafeNames = function(a, b) {

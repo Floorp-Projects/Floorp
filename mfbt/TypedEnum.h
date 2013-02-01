@@ -10,6 +10,8 @@
 
 #include "mozilla/Attributes.h"
 
+#if defined(__cplusplus)
+
 #if defined(__clang__)
    /*
     * Per Clang documentation, "Note that marketing version numbers should not
@@ -25,14 +27,9 @@
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-#    if __GNUC__ > 4
+#    if MOZ_GCC_VERSION_AT_LEAST(4, 5, 1)
 #      define MOZ_HAVE_CXX11_ENUM_TYPE
 #      define MOZ_HAVE_CXX11_STRONG_ENUMS
-#    elif __GNUC__ == 4
-#      if __GNUC_MINOR__ >= 5
-#        define MOZ_HAVE_CXX11_ENUM_TYPE
-#        define MOZ_HAVE_CXX11_STRONG_ENUMS
-#      endif
 #    endif
 #  endif
 #elif defined(_MSC_VER)
@@ -210,5 +207,7 @@
      inline int& operator<<=(int&, const Name::Enum&) MOZ_DELETE; \
      inline int& operator>>=(int&, const Name::Enum&) MOZ_DELETE;
 #endif
+
+#endif /* __cplusplus */
 
 #endif  /* mozilla_TypedEnum_h_ */

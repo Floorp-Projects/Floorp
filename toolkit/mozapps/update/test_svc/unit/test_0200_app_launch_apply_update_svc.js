@@ -151,14 +151,6 @@ function end_test() {
   updaterIni.append(FILE_UPDATER_INI_BAK);
   updaterIni.moveTo(processDir, FILE_UPDATER_INI);
 
-  // Remove the copy of the application executable used for the test on
-  // Windows if it exists.
-  let appBinCopy = processDir.clone();
-  appBinCopy.append(FILE_WIN_TEST_EXE);
-  if (appBinCopy.exists()) {
-    appBinCopy.remove(false);
-  }
-
   // Remove the files added by the update.
   let updateTestDir = getUpdateTestDir();
   try {

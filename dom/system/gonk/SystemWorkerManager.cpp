@@ -64,6 +64,24 @@ public:
   virtual bool RunTask(JSContext *aCx);
 };
 
+class SendRilSocketDataTask : public nsRunnable
+{
+public:
+  SendRilSocketDataTask(UnixSocketRawData *aRawData)
+    : mRawData(aRawData)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    SystemWorkerManager::SendRilRawData(mRawData);
+    return NS_OK;
+  }
+
+private:
+  UnixSocketRawData *mRawData;
+};
+
 JSBool
 PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -76,7 +94,6 @@ PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
 
   jsval v = JS_ARGV(cx, vp)[0];
 
-  nsAutoPtr<RilRawData> rm(new RilRawData());
   JSAutoByteString abs;
   void *data;
   size_t size;
@@ -111,16 +128,11 @@ PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
     return false;
   }
 
-  if (size > RilRawData::MAX_DATA_SIZE) {
-    JS_ReportError(cx, "Passed-in data is too large");
-    return false;
-  }
+  UnixSocketRawData* raw = new UnixSocketRawData(size);
+  memcpy(raw->mData, data, raw->mSize);
 
-  rm->mSize = size;
-  memcpy(rm->mData, data, size);
-
-  RilRawData *tosend = rm.forget();
-  JS_ALWAYS_TRUE(SendRilRawData(&tosend));
+  nsRefPtr<SendRilSocketDataTask> task = new SendRilSocketDataTask(raw);
+  NS_DispatchToMainThread(task);
   return true;
 }
 
@@ -135,51 +147,6 @@ ConnectWorkerToRIL::RunTask(JSContext *aCx)
 
   return !!JS_DefineFunction(aCx, workerGlobal, "postRILMessage", PostToRIL, 1,
                              0);
-}
-
-class RILReceiver : public RilConsumer
-{
-  class DispatchRILEvent : public WorkerTask
-  {
-  public:
-    DispatchRILEvent(RilRawData *aMessage)
-      : mMessage(aMessage)
-    { }
-
-    virtual bool RunTask(JSContext *aCx);
-
-  private:
-    nsAutoPtr<RilRawData> mMessage;
-  };
-
-public:
-  RILReceiver(WorkerCrossThreadDispatcher *aDispatcher)
-    : mDispatcher(aDispatcher)
-  { }
-
-  virtual void MessageReceived(RilRawData *aMessage) {
-    nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(aMessage));
-    mDispatcher->PostTask(dre);
-  }
-
-private:
-  nsRefPtr<WorkerCrossThreadDispatcher> mDispatcher;
-};
-
-bool
-RILReceiver::DispatchRILEvent::RunTask(JSContext *aCx)
-{
-  JSObject *obj = JS_GetGlobalObject(aCx);
-
-  JSObject *array = JS_NewUint8Array(aCx, mMessage->mSize);
-  if (!array) {
-    return false;
-  }
-
-  memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
-  jsval argv[] = { OBJECT_TO_JSVAL(array) };
-  return JS_CallFunctionName(aCx, obj, "onRILMessage", NS_ARRAY_LENGTH(argv),
-                             argv, argv);
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -406,7 +373,10 @@ SystemWorkerManager::Shutdown()
   ShutdownAutoMounter();
 #endif
 
-  StopRil();
+  if (mRilConsumer) {
+    mRilConsumer->Shutdown();
+    mRilConsumer = nullptr;
+  }
 
 #ifdef MOZ_WIDGET_GONK
   StopNetd();
@@ -455,6 +425,17 @@ SystemWorkerManager::GetInterfaceRequestor()
   return gInstance;
 }
 
+bool
+SystemWorkerManager::SendRilRawData(UnixSocketRawData* aRaw)
+{
+  if (!gInstance->mRilConsumer) {
+    // Probably shuting down.
+    delete aRaw;
+    return true;
+  }
+  return gInstance->mRilConsumer->SendSocketData(aRaw);
+}
+
 NS_IMETHODIMP
 SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
 {
@@ -497,8 +478,7 @@ SystemWorkerManager::RegisterRilWorker(const JS::Value& aWorker,
   }
 
   // Now that we're set up, connect ourselves to the RIL thread.
-  mozilla::RefPtr<RILReceiver> receiver = new RILReceiver(wctd);
-  StartRil(receiver);
+  mRilConsumer = new RilConsumer(wctd);
   return NS_OK;
 }
 

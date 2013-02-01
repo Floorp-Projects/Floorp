@@ -505,6 +505,9 @@ int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state)
     if (state == str->ice_state)
       return 0;
 
+    assert(state < sizeof(nr_ice_media_stream_states)/sizeof(char *));
+    assert(str->ice_state < sizeof(nr_ice_media_stream_states)/sizeof(char *));
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): stream %s state %s->%s",
       str->pctx->label,str->label,
       nr_ice_media_stream_states[str->ice_state],

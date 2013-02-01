@@ -165,9 +165,6 @@ def _parse_one(testcase, xul_tester):
             if xul_tester.test("xulRuntime.OS == 'Darwin'"):
                 testcase.expect = testcase.enable = False
             pos += 1
-        elif parts[pos] == 'pref(javascript.options.xml.content,true)':
-            testcase.options += ['-e', 'options("allow_xml");']
-            pos += 1
         else:
             print 'warning: invalid manifest line element "%s"'%parts[pos]
             pos += 1

@@ -25,6 +25,7 @@
 #include "sampler.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/Preferences.h"
+#include "nsContentUtils.h"
 
 /**
    XXX TODO XXX

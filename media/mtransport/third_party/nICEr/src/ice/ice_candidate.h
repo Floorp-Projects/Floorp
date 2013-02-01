@@ -39,7 +39,7 @@ using namespace std;
 extern "C" {
 #endif /* __cplusplus */
 
-typedef enum {HOST=1, SERVER_REFLEXIVE, PEER_REFLEXIVE, RELAYED} nr_ice_candidate_type;
+typedef enum {HOST=1, SERVER_REFLEXIVE, PEER_REFLEXIVE, RELAYED, CTYPE_MAX} nr_ice_candidate_type;
 
 struct nr_ice_candidate_ {
   char *label;

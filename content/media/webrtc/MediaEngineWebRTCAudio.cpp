@@ -149,7 +149,6 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   }
 
   AudioSegment* segment = new AudioSegment();
-  segment->Init(CHANNELS);
   aStream->AddTrack(aID, SAMPLE_FREQUENCY, 0, segment);
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
   LOG(("Initial audio"));
@@ -363,7 +362,6 @@ MediaEngineWebRTCAudioSource::Process(const int channel,
     memcpy(dest, audio10ms, length * sizeof(sample));
 
     AudioSegment segment;
-    segment.Init(CHANNELS);
     nsAutoTArray<const sample*,1> channels;
     channels.AppendElement(dest);
     segment.AppendFrames(buffer.forget(), channels, length);

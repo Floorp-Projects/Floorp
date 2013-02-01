@@ -1,4 +1,3 @@
-// |reftest| pref(javascript.options.xml.content,true)
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,11 +20,6 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
-
-// Assertion failure: cg->upvars.lookup(atom), at ../jsemit.cpp:2034
-
-  (function(){for(var x in (x::window = x for (x in []))[[]]){}})();
-  reportCompare(expect, actual, summary + ': 1');
 
 // crash [@ js_Interpret]
   (eval("(function(){ this.watch(\"x\", function () { new function ()y } ); const y });"))();

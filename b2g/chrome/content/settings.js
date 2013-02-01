@@ -205,13 +205,37 @@ SettingsListener.observe('devtools.debugger.remote-enabled', false, function(val
   value ? RemoteDebugger.start() : RemoteDebugger.stop();
 
 #ifdef MOZ_WIDGET_GONK
+  let enableAdb = value;
+
+  if (Services.prefs.getBoolPref('marionette.defaultPrefs.enabled')) {
+    // Marionette is enabled. Force adb on, since marionette requires remote
+    // debugging to be disabled (we don't want adb to track the remote debugger
+    // setting).
+
+    enableAdb = true;
+  }
+
   // Configure adb.
   try {
-    let current = libcutils.property_get("persist.sys.usb.config");
-    let prefix = current.replace(/,adb/, "");
-    libcutils.property_set("persist.sys.usb.config",
-                           prefix + (value ? ",adb" : ""));
-    current = libcutils.property_get("persist.sys.usb.config");
+    let currentConfig = libcutils.property_get("persist.sys.usb.config");
+    let configFuncs = currentConfig.split(",");
+    let adbIndex = configFuncs.indexOf("adb");
+
+    if (enableAdb) {
+      // Add adb to the list of functions, if not already present
+      if (adbIndex < 0) {
+        configFuncs.push("adb");
+      }
+    } else {
+      // Remove adb from the list of functions, if present
+      if (adbIndex >= 0) {
+        configFuncs.splice(adbIndex,1);
+      }
+    }
+    let newConfig = configFuncs.join(",");
+    if (newConfig != currentConfig) {
+      libcutils.property_set("persist.sys.usb.config", newConfig);
+    }
   } catch(e) {
     dump("Error configuring adb: " + e);
   }
