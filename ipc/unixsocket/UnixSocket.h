@@ -159,10 +159,13 @@ public:
    *
    * @param aConnector Connector object for socket type specific functions
    * @param aAddress Address to connect to.
+   * @param aDelayMs Time delay in milli-seconds.
    *
    * @return true on connect task started, false otherwise.
    */
-  bool ConnectSocket(UnixSocketConnector* aConnector, const char* aAddress);
+  bool ConnectSocket(UnixSocketConnector* aConnector,
+                     const char* aAddress,
+                     int aDelayMs = 0);
 
   /** 
    * Starts a task on the socket that will try to accept a new connection in a
