@@ -711,6 +711,7 @@ public:
     : mSource(aSource)
     , mDest(aDest)
     , mFlags(aFlags)
+    , mGraph(nullptr)
   {
     MOZ_COUNT_CTOR(MediaInputPort);
   }
@@ -751,6 +752,10 @@ public:
    */
   MediaStreamGraphImpl* GraphImpl();
   MediaStreamGraph* Graph();
+  /**
+   * Sets the graph that owns this stream.  Should only be called once.
+   */
+  void SetGraphImpl(MediaStreamGraphImpl* aGraph);
 
 protected:
   friend class MediaStreamGraphImpl;
@@ -760,6 +765,9 @@ protected:
   MediaStream* mSource;
   ProcessedMediaStream* mDest;
   uint32_t mFlags;
+
+  // Our media stream graph
+  MediaStreamGraphImpl* mGraph;
 };
 
 /**

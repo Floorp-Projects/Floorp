@@ -1794,13 +1794,20 @@ MediaInputPort::Destroy()
 MediaStreamGraphImpl*
 MediaInputPort::GraphImpl()
 {
-  return gGraph;
+  return mGraph;
 }
 
 MediaStreamGraph*
 MediaInputPort::Graph()
 {
-  return gGraph;
+  return mGraph;
+}
+
+void
+MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
+{
+  MOZ_ASSERT(!mGraph, "Should only be called once");
+  mGraph = aGraph;
 }
 
 already_AddRefed<MediaInputPort>
@@ -1822,6 +1829,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags)
     nsRefPtr<MediaInputPort> mPort;
   };
   nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, this, aFlags);
+  port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(new Message(port));
   return port.forget();
 }
