@@ -10,7 +10,7 @@
 this.EXPORTED_SYMBOLS = ["PromiseWorker"];
 
 // The library of promises.
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js", this);
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
 
 /**
  * An implementation of queues (FIFO).

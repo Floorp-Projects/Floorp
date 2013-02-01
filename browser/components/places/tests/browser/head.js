@@ -143,5 +143,5 @@ function addVisits(aPlaceInfo, aWindow, aCallback, aStack) {
 }
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/commonjs/promise/core.js");
+  "resource://gre/modules/commonjs/sdk/core/promise.js");
 

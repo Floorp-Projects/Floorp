@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/commonjs/promise/core.js");
+                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 var downloadUtils = { };
 XPCOMUtils.defineLazyServiceGetter(downloadUtils,

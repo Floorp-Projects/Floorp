@@ -20,7 +20,7 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/commonjs/promise/core.js");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
