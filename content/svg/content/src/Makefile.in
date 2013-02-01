@@ -92,7 +92,6 @@ CPPSRCS		= \
 		SVGLengthList.cpp \
 		SVGLengthListSMILType.cpp \
 		SVGLineElement.cpp \
-		SVGLocatableElement.cpp \
 		SVGMarkerElement.cpp \
 		SVGMaskElement.cpp \
 		SVGMatrix.cpp \
@@ -176,7 +175,6 @@ EXPORTS_mozilla/dom = \
 	SVGGraphicsElement.h \
 	SVGImageElement.h \
 	SVGLineElement.h \
-	SVGLocatableElement.h \
 	SVGMarkerElement.h \
 	SVGMaskElement.h \
 	SVGMatrix.h \

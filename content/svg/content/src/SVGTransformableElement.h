@@ -6,30 +6,38 @@
 #ifndef SVGTransformableElement_h
 #define SVGTransformableElement_h
 
-#include "mozilla/dom/SVGLocatableElement.h"
+#include "nsSVGElement.h"
 #include "gfxMatrix.h"
 #include "SVGAnimatedTransformList.h"
 
-#define MOZILLA_SVGTRANSFORMABLEELEMENT_IID \
-  { 0x77888cba, 0x0b43, 0x4654, \
-    {0x96, 0x3c, 0xf5, 0x50, 0xfc, 0xb5, 0x5e, 0x32}}
+class nsIDOMSVGRect;
 
 namespace mozilla {
 class DOMSVGAnimatedTransformList;
 
 namespace dom {
-class SVGTransformableElement : public SVGLocatableElement
+
+class SVGGraphicsElement;
+class SVGMatrix;
+
+class SVGTransformableElement : public nsSVGElement
 {
 public:
   SVGTransformableElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : SVGLocatableElement(aNodeInfo) {}
+    : nsSVGElement(aNodeInfo) {}
   virtual ~SVGTransformableElement() {}
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_SVGTRANSFORMABLEELEMENT_IID)
   NS_DECL_ISUPPORTS_INHERITED
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedTransformList> Transform();
+  nsSVGElement* GetNearestViewportElement();
+  nsSVGElement* GetFarthestViewportElement();
+  already_AddRefed<nsIDOMSVGRect> GetBBox(ErrorResult& rv);
+  already_AddRefed<SVGMatrix> GetCTM();
+  already_AddRefed<SVGMatrix> GetScreenCTM();
+  already_AddRefed<SVGMatrix> GetTransformToElement(SVGGraphicsElement& aElement,
+                                                    ErrorResult& rv);
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -60,9 +68,6 @@ protected:
   // XXX maybe move this to property table, to save space on un-animated elems?
   nsAutoPtr<gfxMatrix> mAnimateMotionTransform;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(SVGTransformableElement,
-                              MOZILLA_SVGTRANSFORMABLEELEMENT_IID)
 
 } // namespace dom
 } // namespace mozilla
