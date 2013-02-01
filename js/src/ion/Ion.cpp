@@ -296,8 +296,8 @@ IonCompartment::sweep(FreeOp *fop)
 {
     stubCodes_->sweep(fop);
 
-    // If the sweep removed the ICCall_Scripted stub, NULL the baselineCallReturnAddr_ field.
-    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Scripted)))
+    // If the sweep removed the ICCall_Fallback stub, NULL the baselineCallReturnAddr_ field.
+    if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback)))
         baselineCallReturnAddr_ = NULL;
 }
 

@@ -47,6 +47,12 @@ FallbackICSpew(JSContext *cx, ICFallbackStub *stub, const char *fmt, ...)
 #define FallbackICSpew(...)
 #endif
 
+ICFallbackStub *
+ICEntry::fallbackStub() const
+{
+    return firstStub()->getChainFallback();
+}
+
 void
 ICStub::markCode(JSTracer *trc, const char *name)
 {
@@ -2648,8 +2654,32 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
         return false;
 
     EmitLeaveStubFrame(masm);
-
     EmitReturnFromIC(masm);
+
+    // The following asmcode is only used when an Ion inlined frame bails out into
+    // baseline jitcode.  The return address pushed onto the reconstructed baseline stack
+    // points here.
+    returnOffset_ = masm.currentOffset();
+
+    EmitLeaveStubFrame(masm, true);
+
+    // At this point, BaselineStubReg points to the ICCall_Fallback stub, which is NOT
+    // a MonitoredStub, but rather a MonitoredFallbackStub.  To use EmitEnterTypeMonitorIC,
+    // first load the ICTypeMonitor_Fallback stub into BaselineStubReg.  Then, use
+    // EmitEnterTypeMonitorIC with a custom struct offset.
+    masm.loadPtr(Address(BaselineStubReg, ICMonitoredFallbackStub::offsetOfFallbackMonitorStub()),
+                 BaselineStubReg);
+    EmitEnterTypeMonitorIC(masm, ICTypeMonitor_Fallback::offsetOfFirstMonitorStub());
+
+    return true;
+}
+
+bool
+ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code)
+{
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment->ionCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
@@ -2738,7 +2768,6 @@ ICCall_Scripted::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.bind(&noUnderflow);
     masm.callIon(code);
-    returnOffset_ = masm.currentOffset();
 
     EmitLeaveStubFrame(masm, true);
 
@@ -2747,15 +2776,6 @@ ICCall_Scripted::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICCall_Scripted::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code)
-{
-    CodeOffsetLabel offset(returnOffset_);
-    offset.fixup(&masm);
-    cx->compartment->ionCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
