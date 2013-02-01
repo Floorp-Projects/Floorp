@@ -77,11 +77,11 @@ var gAllTests = [
         wh.checkPrefCheckbox("history", false);
 
         wh.cancelDialog();
-        yield promiseHistoryClearedState(uris, false);
+        ensureHistoryClearedState(uris, false);
 
         // OK, done, cleanup after ourselves.
         blankSlate();
-        yield promiseHistoryClearedState(uris, true);
+        ensureHistoryClearedState(uris, true);
       });
     });
   },
@@ -133,16 +133,16 @@ var gAllTests = [
         // hour are cleared.
         wh.checkPrefCheckbox("history", true);
         wh.acceptDialog();
-        yield promiseHistoryClearedState(uris, true);
+        ensureHistoryClearedState(uris, true);
         ensureDownloadsClearedState(downloadIDs, true);
 
         // Make sure visits and downloads > 1 hour still exist.
-        yield promiseHistoryClearedState(olderURIs, false);
+        ensureHistoryClearedState(olderURIs, false);
         ensureDownloadsClearedState(olderDownloadIDs, false);
 
         // OK, done, cleanup after ourselves.
         blankSlate();
-        yield promiseHistoryClearedState(olderURIs, true);
+        ensureHistoryClearedState(olderURIs, true);
         ensureDownloadsClearedState(olderDownloadIDs, true);
       });
     });
@@ -187,13 +187,13 @@ var gAllTests = [
         wh.acceptDialog();
 
         // Of the three only form entries should be cleared.
-        yield promiseHistoryClearedState(uris, false);
+        ensureHistoryClearedState(uris, false);
         ensureDownloadsClearedState(downloadIDs, false);
         ensureFormEntriesClearedState(formEntries, true);
 
         // OK, done, cleanup after ourselves.
         blankSlate();
-        yield promiseHistoryClearedState(uris, true);
+        ensureHistoryClearedState(uris, true);
         ensureDownloadsClearedState(downloadIDs, true);
       });
     });
@@ -222,7 +222,7 @@ var gAllTests = [
         wh.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
         wh.checkPrefCheckbox("history", true);
         wh.acceptDialog();
-        yield promiseHistoryClearedState(uris, true);
+        ensureHistoryClearedState(uris, true);
       });
     });
   }
@@ -503,6 +503,45 @@ function blankSlate() {
 }
 
 /**
+ * Waits for all pending async statements on the default connection, before
+ * proceeding with aCallback.
+ *
+ * @param aCallback
+ *        Function to be called when done.
+ * @param aScope
+ *        Scope for the callback.
+ * @param aArguments
+ *        Arguments array for the callback.
+ *
+ * @note The result is achieved by asynchronously executing a query requiring
+ *       a write lock.  Since all statements on the same connection are
+ *       serialized, the end of this write operation means that all writes are
+ *       complete.  Note that WAL makes so that writers don't block readers, but
+ *       this is a problem only across different connections.
+ */
+function waitForAsyncUpdates(aCallback, aScope, aArguments)
+{
+  let scope = aScope || this;
+  let args = aArguments || [];
+  let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                              .DBConnection;
+  let begin = db.createAsyncStatement("BEGIN EXCLUSIVE");
+  begin.executeAsync();
+  begin.finalize();
+
+  let commit = db.createAsyncStatement("COMMIT");
+  commit.executeAsync({
+    handleResult: function() {},
+    handleError: function() {},
+    handleCompletion: function(aReason)
+    {
+      aCallback.apply(scope, args);
+    }
+  });
+  commit.finalize();
+}
+
+/**
  * Checks to see if the download with the specified ID exists.
  *
  * @param  aID
@@ -572,6 +611,22 @@ function ensureFormEntriesClearedState(aFormEntries, aShouldBeCleared) {
 }
 
 /**
+ * Ensures that the specified URIs are either cleared or not.
+ *
+ * @param aURIs
+ *        Array of page URIs
+ * @param aShouldBeCleared
+ *        True if each visit to the URI should be cleared, false otherwise
+ */
+function ensureHistoryClearedState(aURIs, aShouldBeCleared) {
+  let niceStr = aShouldBeCleared ? "no longer" : "still";
+  aURIs.forEach(function (aURI) {
+    is(PlacesUtils.bhistory.isVisited(aURI), !aShouldBeCleared,
+       "history visit " + aURI.spec + " should " + niceStr + " exist");
+  });
+}
+
+/**
  * Opens the sanitize dialog and runs a callback once it's finished loading.
  * 
  * @param aOnloadCallback
@@ -590,11 +645,8 @@ function openWindow(aOnloadCallback) {
         // Some exceptions that reach here don't reach the test harness, but
         // ok()/is() do...
         try {
-          Task.spawn(function() {
-            aOnloadCallback(win);
-          }).then(function() {
-            waitForAsyncUpdates(doNextTest);
-          });
+          aOnloadCallback(win);
+          waitForAsyncUpdates(doNextTest);
         }
         catch (exc) {
           win.close();

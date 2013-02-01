@@ -53,7 +53,7 @@ var tests = {
         case "got-panel-message":
           ok(true, "got panel message");
           // Check the panel isn't in our history.
-          gURLsNotRemembered.push(e.data.location);
+          ensureSocialUrlNotRemembered(e.data.location);
           break;
         case "got-social-panel-visibility":
           if (e.data.result == "shown") {
