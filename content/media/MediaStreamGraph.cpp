@@ -1323,13 +1323,20 @@ MediaStream::Init()
 MediaStreamGraphImpl*
 MediaStream::GraphImpl()
 {
-  return gGraph;
+  return mGraph;
 }
 
 MediaStreamGraph*
 MediaStream::Graph()
 {
-  return gGraph;
+  return mGraph;
+}
+
+void
+MediaStream::SetGraphImpl(MediaStreamGraphImpl* aGraph)
+{
+  MOZ_ASSERT(!mGraph, "Should only be called once");
+  mGraph = aGraph;
 }
 
 StreamTime
@@ -1930,7 +1937,9 @@ MediaStreamGraph::CreateSourceStream(nsDOMMediaStream* aWrapper)
 {
   SourceMediaStream* stream = new SourceMediaStream(aWrapper);
   NS_ADDREF(stream);
-  static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
   return stream;
 }
 
@@ -1939,7 +1948,9 @@ MediaStreamGraph::CreateTrackUnionStream(nsDOMMediaStream* aWrapper)
 {
   TrackUnionStream* stream = new TrackUnionStream(aWrapper);
   NS_ADDREF(stream);
-  static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
   return stream;
 }
 
@@ -1948,7 +1959,9 @@ MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine)
 {
   AudioNodeStream* stream = new AudioNodeStream(aEngine);
   NS_ADDREF(stream);
-  static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
   return stream;
 }
 
