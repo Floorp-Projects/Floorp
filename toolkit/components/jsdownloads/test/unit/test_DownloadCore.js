@@ -133,3 +133,67 @@ add_task(function test_download_intermediate_progress()
 
   yield promiseVerifyContents(targetFile, TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
+
+/**
+ * Ensures download error details are reported on network failures.
+ */
+add_task(function test_download_error_source()
+{
+  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+
+  let serverSocket = startFakeServer();
+  try {
+    let download = yield Downloads.createDownload({
+      source: { uri: TEST_FAKE_SOURCE_URI },
+      target: { file: targetFile },
+      saver: { type: "copy" },
+    });
+
+    do_check_true(download.error === null);
+
+    try {
+      yield download.start();
+      do_throw("The download should have failed.");
+    } catch (ex if ex instanceof Downloads.Error && ex.becauseSourceFailed) {
+      // A specific error object is thrown when reading from the source fails.
+    }
+
+    do_check_true(download.done);
+    do_check_true(download.error !== null);
+    do_check_true(download.error.becauseSourceFailed);
+    do_check_false(download.error.becauseTargetFailed);
+  } finally {
+    serverSocket.close();
+  }
+});
+
+/**
+ * Ensures download error details are reported on local writing failures.
+ */
+add_task(function test_download_error_target()
+{
+  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+
+  // Create a file without write access permissions.
+  targetFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0);
+
+  let download = yield Downloads.createDownload({
+    source: { uri: TEST_SOURCE_URI },
+    target: { file: targetFile },
+    saver: { type: "copy" },
+  });
+
+  do_check_true(download.error === null);
+
+  try {
+    yield download.start();
+    do_throw("The download should have failed.");
+  } catch (ex if ex instanceof Downloads.Error && ex.becauseTargetFailed) {
+    // A specific error object is thrown when writing to the target fails.
+  }
+
+  do_check_true(download.done);
+  do_check_true(download.error !== null);
+  do_check_true(download.error.becauseTargetFailed);
+  do_check_false(download.error.becauseSourceFailed);
+});
