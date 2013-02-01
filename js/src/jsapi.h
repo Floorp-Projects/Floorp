@@ -18,22 +18,21 @@
 #include "mozilla/StandardInteger.h"
 #include "mozilla/ThreadLocal.h"
 
+#include <limits> /* for std::numeric_limits */
 #include <stddef.h>
 #include <stdio.h>
+
 #include "js-config.h"
+#include "jsalloc.h"
 #include "jspubtd.h"
 #include "jsutil.h"
 #include "jsval.h"
 
-#include "js/Utility.h"
 #include "gc/Root.h"
-
-#include <limits> /* for std::numeric_limits */
-
-#include "jsalloc.h"
-#include "js/Vector.h"
-#include "js/HashTable.h"
 #include "js/CharacterEncoding.h"
+#include "js/HashTable.h"
+#include "js/Utility.h"
+#include "js/Vector.h"
 
 /************************************************************************/
 
