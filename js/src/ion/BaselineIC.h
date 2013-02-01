@@ -313,6 +313,7 @@ class ICEntry
                                 \
     _(SetElem_Fallback)         \
     _(SetElem_Dense)            \
+    _(SetElem_DenseAdd)         \
                                 \
     _(GetName_Fallback)         \
     _(GetName_Global)           \
@@ -1775,6 +1776,91 @@ class ICSetElem_Dense : public ICUpdatedStub
 
         ICStub *getStub(ICStubSpace *space) {
             ICSetElem_Dense *stub = ICSetElem_Dense::New(space, getStubCode(), shape_, type_);
+            if (!stub || !stub->initUpdatingChain(cx, space))
+                return NULL;
+            return stub;
+        }
+    };
+};
+
+class ICSetElem_DenseAdd : public ICUpdatedStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrShape shape_;
+    HeapPtrTypeObject type_;
+    HeapPtrObject lastProto_;
+    HeapPtrShape lastProtoShape_;
+
+    ICSetElem_DenseAdd(IonCode *stubCode, HandleShape shape, HandleTypeObject type,
+                       HandleObject lastProto, HandleShape lastProtoShape)
+      : ICUpdatedStub(SetElem_DenseAdd, stubCode),
+        shape_(shape),
+        type_(type),
+        lastProto_(lastProto),
+        lastProtoShape_(lastProtoShape)
+    {}
+
+  public:
+    static inline ICSetElem_DenseAdd *New(ICStubSpace *space, IonCode *code,
+                                          HandleShape shape, HandleTypeObject type,
+                                          HandleObject lastProto, HandleShape lastProtoShape)
+    {
+        return space->allocate<ICSetElem_DenseAdd>(code, shape, type, lastProto, lastProtoShape);
+    }
+
+    static size_t offsetOfShape() {
+        return offsetof(ICSetElem_DenseAdd, shape_);
+    }
+    static size_t offsetOfType() {
+        return offsetof(ICSetElem_DenseAdd, type_);
+    }
+    static size_t offsetOfLastProto() {
+        return offsetof(ICSetElem_DenseAdd, lastProto_);
+    }
+    static size_t offsetOfLastProtoShape() {
+        return offsetof(ICSetElem_DenseAdd, lastProtoShape_);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    HeapPtrTypeObject &type() {
+        return type_;
+    }
+    HeapPtrObject &lastProto() {
+        return lastProto_;
+    }
+    HeapPtrShape &lastProtoShape() {
+        return lastProtoShape_;
+    }
+
+    class Compiler : public ICStubCompiler {
+        RootedShape shape_;
+
+        // Compiler is only live on stack during compilation, it should
+        // outlive any RootedTypeObject it's passed.  So it can just
+        // use the handle.
+        HandleTypeObject type_;
+
+        RootedObject lastProto_;
+        RootedShape lastProtoShape_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, UnrootedShape shape, HandleTypeObject type,
+                 UnrootedObject lastProto, UnrootedShape lastProtoShape)
+          : ICStubCompiler(cx, ICStub::SetElem_DenseAdd),
+            shape_(cx, shape),
+            type_(type),
+            lastProto_(cx, lastProto),
+            lastProtoShape_(cx, lastProtoShape)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            ICSetElem_DenseAdd *stub = ICSetElem_DenseAdd::New(space, getStubCode(), shape_, type_,
+                                                               lastProto_, lastProtoShape_);
             if (!stub || !stub->initUpdatingChain(cx, space))
                 return NULL;
             return stub;
