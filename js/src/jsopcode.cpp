@@ -6810,29 +6810,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
     buf.append('{');
     AppendJSONProperty(buf, "text", NO_COMMA);
 
-    Vector<DecompiledOpcode> decompiledOpcodes(cx);
-    if (!decompiledOpcodes.reserve(script->length))
-        return false;
-
-    for (unsigned i = 0; i < script->length; i++)
-        decompiledOpcodes.infallibleAppend(DecompiledOpcode());
-
-    JSFunction *fun = script->function();
-    JSPrinter *jp = js_NewPrinter(cx, "", fun, 4, true, false, false);
-    if (!jp)
-        return false;
-    AutoDestroyPrinter destroy(jp);
-
-    jp->decompiledOpcodes = &decompiledOpcodes;
-
-    if (fun) {
-        if (!DecompileFunction(jp))
-            return false;
-    } else {
-        if (!DecompileScript(jp, script))
-            return false;
-    }
-    JSString *str = js_GetPrinterOutput(jp);
+    JSString *str = JS_DecompileScript(cx, script, NULL, 0);
     if (!str || !(str = ValueToSource(cx, StringValue(str))))
         return false;
 
@@ -6874,28 +6852,18 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
             buf.append('\"');
         }
 
-        DecompiledOpcode *search = &decompiledOpcodes[offset];
-        size_t textBias = 0;
-        while (search->parent) {
-            textBias += search->parentOffset;
-            if (search->parenthesized)
-                textBias++;
-            search = &decompiledOpcodes[search->parent - script->code];
-        }
-
-        int32_t printedOffset = search->parentOffset;
-        if (printedOffset != -1) {
-            printedOffset += textBias;
-            if (search->parenthesized)
-                printedOffset++;
-            AppendJSONProperty(buf, "textOffset");
-            NumberValueToStringBuffer(cx, Int32Value(printedOffset), buf);
-        }
-
-        const char *text = decompiledOpcodes[offset].text;
-        if (text && *text != 0) {
+        {
+            ExpressionDecompiler ed(cx, script, script->function());
+            if (!ed.init())
+                return false;
+            if (!ed.decompilePC(pc))
+                return false;
+            char *text;
+            if (!ed.getOutput(&text))
+                return false;
             AppendJSONProperty(buf, "text");
             JSString *str = JS_NewStringCopyZ(cx, text);
+            js_free(text);
             if (!str || !(str = ValueToSource(cx, StringValue(str))))
                 return false;
             buf.append(str);
