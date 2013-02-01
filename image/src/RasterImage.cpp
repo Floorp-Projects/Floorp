@@ -487,12 +487,14 @@ RasterImage::Init(const char* aMimeType,
   }
 
   // Instantiate the decoder
-  //
-  // If we're doing decode-on-draw, we want to do a quick first pass to get
-  // the size but nothing else. We instantiate another decoder later to do
-  // the full decoding.
-  nsresult rv = InitDecoder(/* aDoSizeDecode = */ StoringSourceData());
+  nsresult rv = InitDecoder(/* aDoSizeDecode = */ true);
   CONTAINER_ENSURE_SUCCESS(rv);
+
+  // If we aren't storing source data, we want to switch from a size decode to
+  // a full decode as soon as possible.
+  if (!StoringSourceData()) {
+    mWantFullDecode = true;
+  }
 
   // Mark us as initialized
   mInitialized = true;
@@ -1195,8 +1197,6 @@ RasterImage::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeO
   size_t n = mSourceData.SizeOfExcludingThis(aMallocSizeOf);
   if (n == 0) {
     n = mSourceData.Length();
-    NS_ABORT_IF_FALSE(StoringSourceData() || (n == 0),
-                      "Non-zero source data size when we aren't storing it?");
   }
   return n;
 }
@@ -1765,8 +1765,10 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
     }
   }
 
-  // If we're not storing source data, write it directly to the decoder
-  if (!StoringSourceData()) {
+  // If we're not storing source data and we've previously gotten the size,
+  // write the data directly to the decoder. (If we haven't gotten the size,
+  // we'll queue up the data and write it out when we do.)
+  if (!StoringSourceData() && mHasSize) {
     rv = WriteToDecoder(aBuffer, aCount);
     CONTAINER_ENSURE_SUCCESS(rv);
 
@@ -1844,13 +1846,6 @@ RasterImage::DoImageDataComplete()
 
   // This call should come straight from necko - no reentrancy allowed
   NS_ABORT_IF_FALSE(!mInDecoder, "Re-entrant call to AddSourceData!");
-
-  // If we're not storing any source data, then all the data was written
-  // directly to the decoder in the AddSourceData() calls. This means we're
-  // done, so we can shut down the decoder.
-  if (!StoringSourceData()) {
-    FinishedSomeDecoding();
-  }
 
   // If there's a decoder open, synchronously decode the beginning of the image
   // to check for errors and get the image's size.  (If we already have the
@@ -1942,7 +1937,7 @@ RasterImage::OnNewSourceData()
   // Only supported for multipart channels. It wouldn't be too hard to change this,
   // but it would involve making sure that things worked for decode-on-draw and
   // discarding. Presently there's no need for this, so we don't.
-  NS_ABORT_IF_FALSE(mMultipart, "NewSourceData not supported for multipart");
+  NS_ABORT_IF_FALSE(mMultipart, "NewSourceData only supported for multipart");
   if (!mMultipart)
     return NS_ERROR_ILLEGAL_VALUE;
 
@@ -1960,8 +1955,11 @@ RasterImage::OnNewSourceData()
   // Reset some flags
   mDecoded = false;
   mHasSourceData = false;
+  mHasSize = false;
+  mWantFullDecode = true;
 
-  rv = InitDecoder(/* aDoSizeDecode = */ StoringSourceData());
+  // We always need the size first.
+  rv = InitDecoder(/* aDoSizeDecode = */ true);
   CONTAINER_ENSURE_SUCCESS(rv);
 
   return NS_OK;
@@ -2574,7 +2572,7 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
 
   // If we're doing a two-pass decode, make sure we actually get size before
   // doing a full decode.
-  if (StoringSourceData() && !aDoSizeDecode) {
+  if (!aDoSizeDecode) {
     NS_ABORT_IF_FALSE(mHasSize, "Must do a size decode before a full decode!");
   }
 
@@ -2633,7 +2631,7 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
       // to go negative, which is not kosher.
       if (sMaxDecodeCount > 0) {
         Telemetry::GetHistogramById(Telemetry::IMAGE_MAX_DECODE_COUNT)->Subtract(sMaxDecodeCount);
-  }
+      }
       sMaxDecodeCount = mDecodeCount;
       Telemetry::GetHistogramById(Telemetry::IMAGE_MAX_DECODE_COUNT)->Add(sMaxDecodeCount);
     }
@@ -2699,7 +2697,12 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
     return NS_ERROR_FAILURE;
   }
 
-  // Reset number of decoded bytes
+  // If we finished a full decode, and we're not meant to be storing source
+  // data, stop storing it.
+  if (!wasSizeDecode && !StoringSourceData()) {
+    mSourceData.Clear();
+  }
+
   mBytesDecoded = 0;
 
   return NS_OK;
@@ -2794,14 +2797,6 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mError)
     return NS_ERROR_FAILURE;
 
-  // If we're fully decoded, we have nothing to do
-  if (mDecoded)
-    return NS_OK;
-
-  // If we're not storing source data, we have nothing to do
-  if (!StoringSourceData())
-    return NS_OK;
-
   // If we've already got a full decoder running, and have already
   // decoded some bytes, we have nothing to do
   if (mDecoder && !mDecoder->IsSizeDecode() && mBytesDecoded) {
@@ -2838,16 +2833,20 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     }
   }
 
+  // If we're fully decoded, we have nothing to do. This has to be after
+  // DecodeUntilSizeAvailable because it can result in a synchronous decode if
+  // we're already waiting on a full decode.
+  if (mDecoded)
+    return NS_OK;
+
   // If we have a size decode open, interrupt it and shut it down; or if
   // the decoder has different flags than what we need
-  if (mDecoder && mDecoder->GetDecodeFlags() != mFrameDecodeFlags)
-  {
+  if (mDecoder && mDecoder->GetDecodeFlags() != mFrameDecodeFlags) {
     FinishedSomeDecoding(eShutdownIntent_NotNeeded);
   }
 
   // If we don't have a decoder, create one 
   if (!mDecoder) {
-    NS_ABORT_IF_FALSE(mFrames.IsEmpty(), "Trying to decode to non-empty frame-array");
     rv = InitDecoder(/* aDoSizeDecode = */ false);
 
     CONTAINER_ENSURE_SUCCESS(rv);
@@ -2882,10 +2881,6 @@ RasterImage::SyncDecode()
 
   SAMPLE_LABEL_PRINTF("RasterImage", "SyncDecode", "%s", GetURIString().get());;
 
-  // If we're not storing source data, there isn't much to do here
-  if (!StoringSourceData())
-    return NS_OK;
-
   // We really have no good way of forcing a synchronous decode if we're being
   // called in a re-entrant manner (ie, from an event listener fired by a
   // decoder), because the decoding machinery is already tied up. We thus explicitly
@@ -2918,7 +2913,6 @@ RasterImage::SyncDecode()
 
   // If we don't have a decoder, create one 
   if (!mDecoder) {
-    NS_ABORT_IF_FALSE(mFrames.IsEmpty(), "Trying to decode to non-empty frame-array");
     rv = InitDecoder(/* aDoSizeDecode = */ false);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
@@ -3291,12 +3285,6 @@ RasterImage::IsDecodeFinished()
   // Precondition
   NS_ABORT_IF_FALSE(mDecoder, "Can't call IsDecodeFinished() without decoder!");
 
-  // If we aren't storing source data, just presume that it's OK to shut down
-  // the decoder as we always write all the data we get.
-  if (!StoringSourceData()) {
-    return true;
-  }
-
   // Assume it's not finished
   bool decodeFinished = false;
 
@@ -3473,10 +3461,16 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     image->mStatusTracker->SyncNotifyDecodeState();
   }
 
-  if (done) {
-    // If we were a size decode and a full decode was requested, now's the time.
-    if (wasSize && image->mWantFullDecode) {
-      image->mWantFullDecode = false;
+  // If we were a size decode and a full decode was requested, now's the time.
+  if (done && wasSize && image->mWantFullDecode) {
+    image->mWantFullDecode = false;
+
+    // If we're not meant to be storing source data and we just got the size,
+    // we need to synchronously flush all the data we got to a full decoder.
+    // When that decoder is shut down, we'll also clear our source data.
+    if (!image->StoringSourceData()) {
+      image->SyncDecode();
+    } else {
       image->RequestDecode();
     }
   }
