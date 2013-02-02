@@ -64,13 +64,11 @@ var ContextMenus = {
 
     let manifest = this.target.manifest;
     gChromeWin.sendMessageToJava({
-      gecko: {
-        type: "Shortcut:Remove",
-        title: manifest.name,
-        url: manifest.fullLaunchPath(),
-        origin: this.target.app.origin,
-        shortcutType: "webapp"
-      }
+      type: "Shortcut:Remove",
+      title: manifest.name,
+      url: manifest.fullLaunchPath(),
+      origin: this.target.app.origin,
+      shortcutType: "webapp"
     });
     this.target = null;
   }

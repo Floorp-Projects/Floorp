@@ -202,12 +202,10 @@ AboutReader.prototype = {
         dump("Reader:Add (in reader) success=" + success);
 
         gChromeWin.sendMessageToJava({
-          gecko: {
-            type: "Reader:Added",
-            success: success,
-            title: this._article.title,
-            url: this._article.url,
-          }
+          type: "Reader:Added",
+          success: success,
+          title: this._article.title,
+          url: this._article.url,
         });
       }.bind(this));
     } else {
@@ -215,10 +213,8 @@ AboutReader.prototype = {
         dump("Reader:Remove (in reader) success=" + success);
 
         gChromeWin.sendMessageToJava({
-          gecko: {
-            type: "Reader:Removed",
-            url: this._article.url
-          }
+          type: "Reader:Removed",
+          url: this._article.url
         });
       }.bind(this));
     }
@@ -228,11 +224,7 @@ AboutReader.prototype = {
     if (!this._article)
       return;
 
-    gChromeWin.sendMessageToJava({
-      gecko: {
-        type: "Reader:GoToReadingList"
-      }
-    });
+    gChromeWin.sendMessageToJava({ type: "Reader:GoToReadingList" });
   },
 
   _onShare: function Reader_onShare() {
@@ -240,11 +232,9 @@ AboutReader.prototype = {
       return;
 
     gChromeWin.sendMessageToJava({
-      gecko: {
-        type: "Reader:Share",
-        url: this._article.url,
-        title: this._article.title
-      }
+      type: "Reader:Share",
+      url: this._article.url,
+      title: this._article.title
     });
   },
 
@@ -363,10 +353,8 @@ AboutReader.prototype = {
 
   _requestFavicon: function Reader_requestFavicon() {
     gChromeWin.sendMessageToJava({
-      gecko: {
-        type: "Reader:FaviconRequest",
-        url: this._article.url
-      }
+      type: "Reader:FaviconRequest",
+      url: this._article.url
     });
   },
 

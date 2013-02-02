@@ -203,17 +203,13 @@ var BrowserApp = {
 
     window.addEventListener("fullscreen", function() {
       sendMessageToJava({
-        gecko: {
-          type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
-        }
+        type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
       });
     }, false);
 
     window.addEventListener("mozfullscreenchange", function() {
       sendMessageToJava({
-        gecko: {
-          type: document.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
-        }
+        type: document.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
       });
 
       if (document.mozFullScreen)
@@ -305,11 +301,7 @@ var BrowserApp = {
     this.gUseLowPrecision = Services.prefs.getBoolPref("layers.low-precision-buffer");
 
     // notify java that gecko has loaded
-    sendMessageToJava({
-      gecko: {
-        type: "Gecko:Ready"
-      }
-    });
+    sendMessageToJava({ type: "Gecko:Ready" });
 
 #ifdef MOZ_SAFE_BROWSING
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
@@ -410,11 +402,9 @@ var BrowserApp = {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title || url;
         sendMessageToJava({
-          gecko: {
-            type: "Bookmark:Insert",
-            url: url,
-            title: title
-          }
+          type: "Bookmark:Insert",
+          url: url,
+          title: title
         });
       });
 
@@ -472,11 +462,9 @@ var BrowserApp = {
            type = "";
         }
         sendMessageToJava({
-          gecko: {
-            type: "Share:Image",
-            url: src,
-            mime: type,
-          }
+          type: "Share:Image",
+          url: src,
+          mime: type,
         });
       });
 
@@ -493,10 +481,8 @@ var BrowserApp = {
       function(aTarget) {
         let src = aTarget.src;
         sendMessageToJava({
-          gecko: {
-            type: "Wallpaper:Set",
-            url: src
-          }
+          type: "Wallpaper:Set",
+          url: src
         });
       });
 
@@ -686,12 +672,10 @@ var BrowserApp = {
       let tab = this.getTabForBrowser(aBrowser);
       if (tab) {
         let message = {
-          gecko: {
-            type: "Content:LoadError",
-            tabID: tab.id,
-            uri: aBrowser.currentURI.spec,
-            title: aBrowser.contentTitle
-          }
+          type: "Content:LoadError",
+          tabID: tab.id,
+          uri: aBrowser.currentURI.spec,
+          title: aBrowser.contentTitle
         };
         sendMessageToJava(message);
         dump("Handled load error: " + e)
@@ -734,10 +718,8 @@ var BrowserApp = {
     }
 
     let message = {
-      gecko: {
-        type: "Tab:Close",
-        tabID: aTab.id
-      }
+      type: "Tab:Close",
+      tabID: aTab.id
     };
     sendMessageToJava(message);
   },
@@ -770,10 +752,8 @@ var BrowserApp = {
       return;
 
     let message = {
-      gecko: {
-        type: "Tab:Select",
-        tabID: aTab.id
-      }
+      type: "Tab:Select",
+      tabID: aTab.id
     };
     sendMessageToJava(message);
   },
@@ -967,11 +947,9 @@ var BrowserApp = {
       }
 
       sendMessageToJava({
-        gecko: {
-          type: "Preferences:Data",
-          requestId: json.requestId,    // opaque request identifier, can be any string/int/whatever
-          preferences: prefs
-        }
+        type: "Preferences:Data",
+        requestId: json.requestId,    // opaque request identifier, can be any string/int/whatever
+        preferences: prefs
       });
     } catch (e) {}
   },
@@ -1050,10 +1028,8 @@ var BrowserApp = {
     }
 
     sendMessageToJava({
-      gecko: {
-        type: "Sanitize:Finished",
-        success: success
-      }
+      type: "Sanitize:Finished",
+      success: success
     });
   },
 
@@ -1224,7 +1200,7 @@ var BrowserApp = {
                       getService(Ci.nsILoginManagerStorage);
         storage.init();
 
-        sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
+        sendMessageToJava({ type: "Passwords:Init:Return" });
         Services.obs.removeObserver(this, "Passwords:Init", false);
         break;
       }
@@ -1233,13 +1209,13 @@ var BrowserApp = {
         let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
         // Force creation/upgrade of formhistory.sqlite
         let db = fh.DBConnection;
-        sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
+        sendMessageToJava({ type: "FormHistory:Init:Return" });
         Services.obs.removeObserver(this, "FormHistory:Init", false);
         break;
       }
 
       case "sessionstore-state-purge-complete":
-        sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
+        sendMessageToJava({ type: "Session:StatePurged" });
         break;
 
       case "ToggleProfiling": {
@@ -1254,7 +1230,7 @@ var BrowserApp = {
       }
 
       case "gather-telemetry":
-        sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
+        sendMessageToJava({ type: "Telemetry:Gather" });
         break;
 
       default:
@@ -1291,22 +1267,18 @@ var NativeWindow = {
 
   loadDex: function(zipFile, implClass) {
     sendMessageToJava({
-      gecko: {
-        type: "Dex:Load",
-        zipfile: zipFile,
-        impl: implClass || "Main"
-      }
+      type: "Dex:Load",
+      zipfile: zipFile,
+      impl: implClass || "Main"
     });
   },
 
   toast: {
     show: function(aMessage, aDuration) {
       sendMessageToJava({
-        gecko: {
-          type: "Toast:Show",
-          message: aMessage,
-          duration: aDuration
-        }
+        type: "Toast:Show",
+        message: aMessage,
+        duration: aDuration
       });
     }
   },
@@ -1331,14 +1303,14 @@ var NativeWindow = {
       options.type = "Menu:Add";
       options.id = this._menuId;
 
-      sendMessageToJava({ gecko: options });
+      sendMessageToJava(options);
       this._callbacks[this._menuId] = options.callback;
       this._menuId++;
       return this._menuId - 1;
     },
 
     remove: function(aId) {
-      sendMessageToJava({ gecko: {type: "Menu:Remove", id: aId }});
+      sendMessageToJava({ type: "Menu:Remove", id: aId });
     },
 
     update: function(aId, aOptions) {
@@ -1346,11 +1318,9 @@ var NativeWindow = {
         return;
 
       sendMessageToJava({
-        gecko: {
-          type: "Menu:Update", 
-          id: aId,
-          options: aOptions
-        }
+        type: "Menu:Update", 
+        id: aId,
+        options: aOptions
       });
     }
   },
@@ -1385,25 +1355,23 @@ var NativeWindow = {
 
       this._promptId++;
       let json = {
-        gecko: {
-          type: "Doorhanger:Add",
-          message: aMessage,
-          value: aValue,
-          buttons: aButtons,
-          // use the current tab if none is provided
-          tabID: aTabID || BrowserApp.selectedTab.id,
-          options: aOptions || {}
-        }
+        type: "Doorhanger:Add",
+        message: aMessage,
+        value: aValue,
+        buttons: aButtons,
+        // use the current tab if none is provided
+        tabID: aTabID || BrowserApp.selectedTab.id,
+        options: aOptions || {}
       };
       sendMessageToJava(json);
     },
 
     hide: function(aValue, aTabID) {
-      sendMessageToJava({ gecko: {
+      sendMessageToJava({
         type: "Doorhanger:Remove",
         value: aValue,
         tabID: aTabID
-      }});
+      });
     }
   },
 
@@ -1782,11 +1750,9 @@ var NativeWindow = {
         return;
 
       let msg = {
-        gecko: {
-          type: "Prompt:Show",
-          title: title,
-          listitems: itemArray
-        }
+        type: "Prompt:Show",
+        title: title,
+        listitems: itemArray
       };
       let data = JSON.parse(sendMessageToJava(msg));
       if (data.button == -1) {
@@ -2121,10 +2087,8 @@ var SelectionHandler = {
     this.positionHandles();
 
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:ShowHandles",
-        handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
-      }
+      type: "TextSelection:ShowHandles",
+      handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
     });
 
     if (aElement instanceof Ci.nsIDOMNSEditableElement)
@@ -2248,10 +2212,8 @@ var SelectionHandler = {
  
     this._activeType = this.TYPE_NONE;
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:HideHandles",
-        handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
-      }
+      type: "TextSelection:HideHandles",
+      handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
     });
 
 
@@ -2362,10 +2324,8 @@ var SelectionHandler = {
     this.positionHandles();
 
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:ShowHandles",
-        handles: [this.HANDLE_TYPE_MIDDLE]
-      }
+      type: "TextSelection:ShowHandles",
+      handles: [this.HANDLE_TYPE_MIDDLE]
     });
   },
 
@@ -2374,10 +2334,8 @@ var SelectionHandler = {
     this._cleanUp();
 
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:HideHandles",
-        handles: [this.HANDLE_TYPE_MIDDLE]
-      }
+      type: "TextSelection:HideHandles",
+      handles: [this.HANDLE_TYPE_MIDDLE]
     });
   },
 
@@ -2427,11 +2385,9 @@ var SelectionHandler = {
     }
 
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:PositionHandles",
-        positions: positions,
-        rtl: this._isRTL
-      }
+      type: "TextSelection:PositionHandles",
+      positions: positions,
+      rtl: this._isRTL
     });
   },
 
@@ -2841,18 +2797,16 @@ Tab.prototype = {
       this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
 
       let message = {
-        gecko: {
-          type: "Tab:Added",
-          tabID: this.id,
-          uri: uri,
-          parentId: ("parentId" in aParams) ? aParams.parentId : -1,
-          external: ("external" in aParams) ? aParams.external : false,
-          selected: ("selected" in aParams) ? aParams.selected : true,
-          title: title,
-          delayLoad: aParams.delayLoad || false,
-          desktopMode: this.desktopMode,
-          isPrivate: isPrivate
-        }
+        type: "Tab:Added",
+        tabID: this.id,
+        uri: uri,
+        parentId: ("parentId" in aParams) ? aParams.parentId : -1,
+        external: ("external" in aParams) ? aParams.external : false,
+        selected: ("selected" in aParams) ? aParams.selected : true,
+        title: title,
+        delayLoad: aParams.delayLoad || false,
+        desktopMode: this.desktopMode,
+        isPrivate: isPrivate
       };
       sendMessageToJava(message);
 
@@ -2905,12 +2859,10 @@ Tab.prototype = {
         this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
       } catch(e) {
         let message = {
-          gecko: {
-            type: "Content:LoadError",
-            tabID: this.id,
-            uri: this.browser.currentURI.spec,
-            title: this.browser.contentTitle
-          }
+          type: "Content:LoadError",
+          tabID: this.id,
+          uri: this.browser.currentURI.spec,
+          title: this.browser.contentTitle
         };
         sendMessageToJava(message);
         dump("Handled load error: " + e);
@@ -2937,11 +2889,9 @@ Tab.prototype = {
     if (this.desktopMode != aDesktopMode) {
       this.desktopMode = aDesktopMode;
       sendMessageToJava({
-        gecko: {
-          type: "DesktopMode:Changed",
-          desktopMode: aDesktopMode,
-          tabId: this.id
-        }
+        type: "DesktopMode:Changed",
+        desktopMode: aDesktopMode,
+        tabId: this.id
       });
     }
 
@@ -3391,11 +3341,9 @@ Tab.prototype = {
         }
 
         sendMessageToJava({
-          gecko: {
-            type: "DOMContentLoaded",
-            tabID: this.id,
-            bgColor: backgroundColor
-          }
+          type: "DOMContentLoaded",
+          tabID: this.id,
+          bgColor: backgroundColor
         });
 
         // Attach a listener to watch for "click" events bubbling up from error
@@ -3469,7 +3417,7 @@ Tab.prototype = {
           size: maxSize
         };
 
-        sendMessageToJava({ gecko: json });
+        sendMessageToJava(json);
         break;
       }
 
@@ -3482,11 +3430,9 @@ Tab.prototype = {
           return;
 
         sendMessageToJava({
-          gecko: {
-            type: "DOMTitleChanged",
-            tabID: this.id,
-            title: aEvent.target.title.substring(0, 255)
-          }
+          type: "DOMTitleChanged",
+          tabID: this.id,
+          title: aEvent.target.title.substring(0, 255)
         });
         break;
       }
@@ -3500,10 +3446,8 @@ Tab.prototype = {
           aEvent.preventDefault();
 
           sendMessageToJava({
-            gecko: {
-              type: "DOMWindowClose",
-              tabID: this.id
-            }
+            type: "DOMWindowClose",
+            tabID: this.id
           });
         }
         break;
@@ -3550,10 +3494,8 @@ Tab.prototype = {
           return;
 
         sendMessageToJava({
-          gecko: {
-            type: "Content:PageShow",
-            tabID: this.id
-          }
+          type: "Content:PageShow",
+          tabID: this.id
         });
 
         // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
@@ -3578,10 +3520,8 @@ Tab.prototype = {
           this.savedArticle = article;
 
           sendMessageToJava({
-            gecko: {
-              type: "Content:ReaderEnabled",
-              tabID: this.id
-            }
+            type: "Content:ReaderEnabled",
+            tabID: this.id
           });
         }.bind(this));
       }
@@ -3621,14 +3561,12 @@ Tab.prototype = {
       } catch (e) { }
 
       let message = {
-        gecko: {
-          type: "Content:StateChange",
-          tabID: this.id,
-          uri: uri,
-          state: aStateFlags,
-          showProgress: showProgress,
-          success: success
-        }
+        type: "Content:StateChange",
+        tabID: this.id,
+        uri: uri,
+        state: aStateFlags,
+        showProgress: showProgress,
+        success: success
       };
       sendMessageToJava(message);
 
@@ -3667,14 +3605,12 @@ Tab.prototype = {
     this.clickToPlayPluginsActivated = false;
 
     let message = {
-      gecko: {
-        type: "Content:LocationChange",
-        tabID: this.id,
-        uri: fixedURI.spec,
-        documentURI: documentURI,
-        contentType: (contentType ? contentType : ""),
-        sameDocument: sameDocument
-      }
+      type: "Content:LocationChange",
+      tabID: this.id,
+      uri: fixedURI.spec,
+      documentURI: documentURI,
+      contentType: (contentType ? contentType : ""),
+      sameDocument: sameDocument
     };
 
     sendMessageToJava(message);
@@ -3704,11 +3640,9 @@ Tab.prototype = {
     let identity = IdentityHandler.checkIdentity(aState, this.browser);
 
     let message = {
-      gecko: {
-        type: "Content:SecurityChange",
-        tabID: this.id,
-        identity: identity
-      }
+      type: "Content:SecurityChange",
+      tabID: this.id,
+      identity: identity
     };
 
     sendMessageToJava(message);
@@ -3722,19 +3656,17 @@ Tab.prototype = {
 
   _sendHistoryEvent: function(aMessage, aParams) {
     let message = {
-      gecko: {
-        type: "SessionHistory:" + aMessage,
-        tabID: this.id,
-      }
+      type: "SessionHistory:" + aMessage,
+      tabID: this.id,
     };
 
     if (aParams) {
       if ("url" in aParams)
-        message.gecko.url = aParams.url;
+        message.url = aParams.url;
       if ("index" in aParams)
-        message.gecko.index = aParams.index;
+        message.index = aParams.index;
       if ("numEntries" in aParams)
-        message.gecko.numEntries = aParams.numEntries;
+        message.numEntries = aParams.numEntries;
     }
 
     sendMessageToJava(message);
@@ -3895,14 +3827,14 @@ Tab.prototype = {
   },
 
   sendViewportMetadata: function sendViewportMetadata() {
-    sendMessageToJava({ gecko: {
+    sendMessageToJava({
       type: "Tab:ViewportMetadata",
       allowZoom: this.metadata.allowZoom,
       defaultZoom: this.metadata.defaultZoom || 0,
       minZoom: this.metadata.minZoom || 0,
       maxZoom: this.metadata.maxZoom || 0,
       tabID: this.id
-    }});
+    });
   },
 
   setBrowserSize: function(aWidth, aHeight) {
@@ -4067,7 +3999,7 @@ var BrowserEventHandler = {
         // Discard if it's the top-level scrollable, we let Java handle this
         let doc = BrowserApp.selectedBrowser.contentDocument;
         if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
-          sendMessageToJava({ gecko: { type: "Panning:Override" } });
+          sendMessageToJava({ type: "Panning:Override" });
       }
     }
 
@@ -4105,10 +4037,8 @@ var BrowserEventHandler = {
 
       tab.hasTouchListener = true;
       sendMessageToJava({
-        gecko: {
-          type: "Tab:HasTouchListener",
-          tabID: tab.id
-        }
+        type: "Tab:HasTouchListener",
+        tabID: tab.id
       });
       return;
     } else if (aTopic == "nsPref:changed") {
@@ -4157,7 +4087,7 @@ var BrowserEventHandler = {
           if (this._scrollableElement == null ||
               this._scrollableElement == doc.body ||
               this._scrollableElement == doc.documentElement) {
-            sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
+            sendMessageToJava({ type: "Panning:CancelOverride" });
             return;
           }
 
@@ -4167,10 +4097,10 @@ var BrowserEventHandler = {
         // Scroll the scrollable element
         if (this._elementCanScroll(this._scrollableElement, x, y)) {
           this._scrollElementBy(this._scrollableElement, x, y);
-          sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: true } });
+          sendMessageToJava({ type: "Gesture:ScrollAck", scrolled: true });
           SelectionHandler.subdocumentScrolled(this._scrollableElement);
         } else {
-          sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: false } });
+          sendMessageToJava({ type: "Gesture:ScrollAck", scrolled: false });
         }
 
         break;
@@ -4232,7 +4162,7 @@ var BrowserEventHandler = {
 
   _zoomOut: function() {
     BrowserEventHandler.resetMaxLineBoxWidth();
-    sendMessageToJava({ gecko: { type: "Browser:ZoomToPageWidth"} });
+    sendMessageToJava({ type: "Browser:ZoomToPageWidth" });
   },
 
   _isRectZoomedIn: function(aRect, aViewport) {
@@ -4329,7 +4259,7 @@ var BrowserEventHandler = {
       BrowserEventHandler.resetMaxLineBoxWidth();
     }
 
-    sendMessageToJava({ gecko: rect });
+    sendMessageToJava(rect);
   },
 
   _zoomInAndSnapToElement: function(aX, aY, aElement) {
@@ -4350,7 +4280,7 @@ var BrowserEventHandler = {
     rect.w = viewport.cssWidth;
     rect.h = viewport.cssHeight;
 
-    sendMessageToJava({ gecko: rect });
+    sendMessageToJava(rect);
    },
 
    onPinch: function(aData) {
@@ -5210,12 +5140,10 @@ var FormAssistant = {
 
     let positionData = this._getElementPositionData(aElement);
     sendMessageToJava({
-      gecko: {
-        type:  "FormAssist:AutoComplete",
-        suggestions: suggestions,
-        rect: positionData.rect,
-        zoom: positionData.zoom
-      }
+      type:  "FormAssist:AutoComplete",
+      suggestions: suggestions,
+      rect: positionData.rect,
+      zoom: positionData.zoom
     });
 
     // Keep track of input element so we can fill it in if the user
@@ -5247,21 +5175,17 @@ var FormAssistant = {
 
     let positionData = this._getElementPositionData(aElement);
     sendMessageToJava({
-      gecko: {
-        type: "FormAssist:ValidationMessage",
-        validationMessage: aElement.validationMessage,
-        rect: positionData.rect,
-        zoom: positionData.zoom
-      }
+      type: "FormAssist:ValidationMessage",
+      validationMessage: aElement.validationMessage,
+      rect: positionData.rect,
+      zoom: positionData.zoom
     });
 
     return true;
   },
 
   _hideFormAssistPopup: function _hideFormAssistPopup() {
-    sendMessageToJava({
-      gecko: { type:  "FormAssist:Hide" }
-    });
+    sendMessageToJava({ type: "FormAssist:Hide" });
   }
 };
 
@@ -6018,10 +5942,8 @@ var ClipboardHelper = {
   share: function() {
     let selectedText = SelectionHandler.endSelection();
     sendMessageToJava({
-      gecko: {
-        type: "Share:Text",
-        text: selectedText
-      }
+      type: "Share:Text",
+      text: selectedText
     });
   },
 
@@ -6454,11 +6376,9 @@ var PermissionsHelper = {
           host = uri.spec;
         }
         sendMessageToJava({
-          gecko: {
-            type: "Permissions:Data",
-            host: host,
-            permissions: permissions
-          }
+          type: "Permissions:Data",
+          host: host,
+          permissions: permissions
         });
         break;
  
@@ -6607,10 +6527,8 @@ var MasterPassword = {
     prefs.push(pref);
 
     sendMessageToJava({
-      gecko: {
-        type: "Preferences:Data",
-        preferences: prefs
-      }
+      type: "Preferences:Data",
+      preferences: prefs
     });
   }
 };
@@ -6647,10 +6565,8 @@ var CharacterEncoding = {
     } catch (e) { /* Optional */ }
 
     sendMessageToJava({
-      gecko: {
-        type: "CharEncoding:State",
-        visible: showCharEncoding
-      }
+      type: "CharEncoding:State",
+      visible: showCharEncoding
     });
   },
 
@@ -6692,11 +6608,9 @@ var CharacterEncoding = {
     }
 
     sendMessageToJava({
-      gecko: {
-        type: "CharEncoding:Data",
-        charsets: this._charsets,
-        selected: selected
-      }
+      type: "CharEncoding:Data",
+      charsets: this._charsets,
+      selected: selected
     });
   },
 
@@ -6878,7 +6792,7 @@ OverscrollController.prototype = {
   },
 
   doCommand : function doCommand(aCommand){
-    sendMessageToJava({ gecko: { type: "ToggleChrome:Focus" } });
+    sendMessageToJava({ type: "ToggleChrome:Focus" });
   },
 
   onEvent : function onEvent(aEvent) { }
@@ -6928,15 +6842,13 @@ var SearchEngines = {
     }
 
     sendMessageToJava({
-      gecko: {
-        type: "SearchEngines:Data",
-        searchEngines: searchEngines,
-        suggest: {
-          engine: suggestEngine,
-          template: suggestTemplate,
-          enabled: Services.prefs.getBoolPref(this.PREF_SUGGEST_ENABLED),
-          prompted: Services.prefs.getBoolPref(this.PREF_SUGGEST_PROMPTED)
-        }
+      type: "SearchEngines:Data",
+      searchEngines: searchEngines,
+      suggest: {
+        engine: suggestEngine,
+        template: suggestTemplate,
+        enabled: Services.prefs.getBoolPref(this.PREF_SUGGEST_ENABLED),
+        prompted: Services.prefs.getBoolPref(this.PREF_SUGGEST_PROMPTED)
       }
     });
   },
@@ -7151,10 +7063,8 @@ var WebappsUI = {
         break;
       case "webapps-sync-uninstall":
         sendMessageToJava({
-          gecko: {
-            type: "WebApps:Uninstall",
-            origin: data.origin
-          }
+          type: "WebApps:Uninstall",
+          origin: data.origin
         });
         break;
     }
@@ -7204,13 +7114,11 @@ var WebappsUI = {
       this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
         (function(scaledIcon, fullsizeIcon) {
           let profilePath = sendMessageToJava({
-            gecko: {
-              type: "WebApps:Install",
-              name: manifest.name,
-              manifestURL: aData.app.manifestURL,
-              origin: aData.app.origin,
-              iconURL: scaledIcon,
-            }
+            type: "WebApps:Install",
+            name: manifest.name,
+            manifestURL: aData.app.manifestURL,
+            origin: aData.app.origin,
+            iconURL: scaledIcon,
           });
 
           // if java returned a profile path to us, try to use it to pre-populate the app cache
@@ -7270,11 +7178,9 @@ var WebappsUI = {
 
   openURL: function openURL(aManifestURL, aOrigin) {
     sendMessageToJava({
-      gecko: {
-        type: "WebApps:Open",
-        manifestURL: aManifestURL,
-        origin: aOrigin
-      }
+      type: "WebApps:Open",
+      manifestURL: aManifestURL,
+      origin: aOrigin
     });
   },
 
@@ -7621,12 +7527,10 @@ let Reader = {
           this.log("Reader:Add success=" + success + ", url=" + url + ", title=" + title);
 
           sendMessageToJava({
-            gecko: {
-              type: "Reader:Added",
-              success: success,
-              title: title,
-              url: url,
-            }
+            type: "Reader:Added",
+            success: success,
+            title: title,
+            url: url,
           });
         }.bind(this);
 

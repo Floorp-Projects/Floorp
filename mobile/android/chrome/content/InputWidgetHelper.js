@@ -36,7 +36,7 @@ var InputWidgetHelper = {
       ]
     };
 
-    let data = JSON.parse(sendMessageToJava({ gecko: msg }));
+    let data = JSON.parse(sendMessageToJava(msg));
 
     let changed = false;
     if (data.button == -1) {
