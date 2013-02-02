@@ -120,6 +120,8 @@ class MediaPipeline : public sigslot::has_slots<> {
   int rtp_packets_received() const { return rtp_packets_received_; }
   int rtcp_packets_received() const { return rtp_packets_received_; }
 
+  MediaSessionConduit *Conduit() { return conduit_; }
+
   // Thread counting
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPipeline)
 
