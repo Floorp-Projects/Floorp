@@ -52,16 +52,24 @@ Decoder::Init()
 
   // Implementation-specific initialization
   InitInternal();
+
   mInitialized = true;
 }
 
 // Initializes a decoder whose image and observer is already being used by a
 // parent decoder
 void
-Decoder::InitSharedDecoder()
+Decoder::InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
+                           uint32_t* colormap, uint32_t colormapSize)
 {
   // No re-initializing
   NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
+  NS_ABORT_IF_FALSE(mObserver, "Need an observer!");
+
+  mImageData = imageData;
+  mImageDataLength = imageDataLength;
+  mColormap = colormap;
+  mColormapSize = colormapSize;
 
   // Implementation-specific initialization
   InitInternal();
@@ -81,35 +89,26 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
   if (HasDataError())
     return;
 
+  nsresult rv = NS_OK;
+
+  // Preallocate a frame if we've been asked to.
+  if (mNeedsNewFrame) {
+    rv = AllocateFrame();
+    if (NS_FAILED(rv)) {
+      PostDataError();
+      return;
+    }
+  }
+
   // Pass the data along to the implementation
   WriteInternal(aBuffer, aCount);
 
   // If the decoder told us that it needs a new frame to proceed, let's create
   // one and call it again.
   while (mNeedsNewFrame && !HasDataError()) {
-    nsresult rv;
-    if (mNewFrameData.mPaletteDepth) {
-      rv = mImage.EnsureFrame(mNewFrameData.mFrameNum, mNewFrameData.mOffsetX,
-                              mNewFrameData.mOffsetY, mNewFrameData.mWidth,
-                              mNewFrameData.mHeight, mNewFrameData.mFormat,
-                              mNewFrameData.mPaletteDepth,
-                              &mImageData, &mImageDataLength,
-                              &mColormap, &mColormapSize);
-    } else {
-      rv = mImage.EnsureFrame(mNewFrameData.mFrameNum, mNewFrameData.mOffsetX,
-                              mNewFrameData.mOffsetY, mNewFrameData.mWidth,
-                              mNewFrameData.mHeight, mNewFrameData.mFormat,
-                              &mImageData, &mImageDataLength);
-    }
-
-    // Release our new frame data before talking to anyone else so they can
-    // tell us if they need yet another.
-    mNeedsNewFrame = false;
+    nsresult rv = AllocateFrame();
 
     if (NS_SUCCEEDED(rv)) {
-      // We've now created our frame, so be sure we keep track of it correctly.
-      PostFrameStart();
-
       // Tell the decoder to use the data it saved when it asked for a new frame.
       WriteInternal(nullptr, 0);
     } else {
@@ -187,6 +186,37 @@ Decoder::FinishSharedDecoder()
   if (!HasError()) {
     FinishInternal();
   }
+}
+
+nsresult
+Decoder::AllocateFrame()
+{
+  MOZ_ASSERT(mNeedsNewFrame);
+
+  nsresult rv;
+  if (mNewFrameData.mPaletteDepth) {
+    rv = mImage.EnsureFrame(mNewFrameData.mFrameNum, mNewFrameData.mOffsetX,
+                            mNewFrameData.mOffsetY, mNewFrameData.mWidth,
+                            mNewFrameData.mHeight, mNewFrameData.mFormat,
+                            mNewFrameData.mPaletteDepth,
+                            &mImageData, &mImageDataLength,
+                            &mColormap, &mColormapSize);
+  } else {
+    rv = mImage.EnsureFrame(mNewFrameData.mFrameNum, mNewFrameData.mOffsetX,
+                            mNewFrameData.mOffsetY, mNewFrameData.mWidth,
+                            mNewFrameData.mHeight, mNewFrameData.mFormat,
+                            &mImageData, &mImageDataLength);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    PostFrameStart();
+  }
+
+  // Mark ourselves as not needing another frame before talking to anyone else
+  // so they can tell us if they need yet another.
+  mNeedsNewFrame = false;
+
+  return rv;
 }
 
 void
