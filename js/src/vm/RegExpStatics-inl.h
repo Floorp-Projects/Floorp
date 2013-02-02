@@ -21,21 +21,16 @@ class RegExpStatics
     VectorMatchPairs        matches;
     HeapPtr<JSLinearString> matchesInput;
 
-    /*
-     * The previous RegExp input, used to resolve lazy state.
-     * A raw RegExpShared cannot be stored because it may be in
-     * a different compartment via evalcx().
-     */
-    HeapPtr<JSAtom>         lazySource;
-    RegExpFlag              lazyFlags;
-    size_t                  lazyIndex;
+    /* The previous RegExp input, used to resolve lazy state. */
+    RegExpHeapGuard         regexp;
+    size_t                  lastIndex;
 
     /* The latest RegExp input, set before execution. */
     HeapPtr<JSString>       pendingInput;
     RegExpFlag              flags;
 
     /*
-     * If true, |matchesInput| and the |lazy*| fields may be used
+     * If true, |matchesInput|, |regexp|, and |lastIndex| may be used
      * to replay the last executed RegExp, and |matches| is invalid.
      */
     bool                    pendingLazyEvaluation;
@@ -123,12 +118,12 @@ class RegExpStatics
          * Changes to this function must also be reflected in
          * RegExpStatics::AutoRooter::trace().
          */
-        if (matchesInput)
-            MarkString(trc, &matchesInput, "res->matchesInput");
-        if (lazySource)
-            MarkString(trc, &lazySource, "res->lazySource");
         if (pendingInput)
             MarkString(trc, &pendingInput, "res->pendingInput");
+        if (matchesInput)
+            MarkString(trc, &matchesInput, "res->matchesInput");
+        if (regexp.initialized())
+            regexp->trace(trc);
     }
 
     /* Value creators. */
@@ -398,16 +393,20 @@ RegExpStatics::copyTo(RegExpStatics &dst)
     if (!pendingLazyEvaluation)
         dst.matches.initArrayFrom(matches);
 
+    if (regexp.initialized())
+        dst.regexp.init(*regexp);
+    else
+        dst.regexp.release();
+
     dst.matchesInput = matchesInput;
-    dst.lazySource = lazySource;
-    dst.lazyFlags = lazyFlags;
-    dst.lazyIndex = lazyIndex;
+    dst.lastIndex = lastIndex;
     dst.pendingInput = pendingInput;
     dst.flags = flags;
     dst.pendingLazyEvaluation = pendingLazyEvaluation;
 
-    JS_ASSERT_IF(pendingLazyEvaluation, lazySource);
+    JS_ASSERT_IF(pendingLazyEvaluation, regexp.initialized());
     JS_ASSERT_IF(pendingLazyEvaluation, matchesInput);
+    JS_ASSERT(regexp.initialized() == dst.regexp.initialized());
 }
 
 inline void
@@ -437,10 +436,11 @@ RegExpStatics::updateLazily(JSContext *cx, JSLinearString *input,
     BarrieredSetPair<JSString, JSLinearString>(cx->zone(),
                                                pendingInput, input,
                                                matchesInput, input);
+    if (regexp.initialized())
+        regexp.release();
+    regexp.init(*shared);
 
-    lazySource = shared->source;
-    lazyFlags = shared->flags;
-    lazyIndex = lastIndex;
+    this->lastIndex = lastIndex;
     pendingLazyEvaluation = true;
 }
 
@@ -452,8 +452,8 @@ RegExpStatics::updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchP
 
     /* Unset all lazy state. */
     pendingLazyEvaluation = false;
-    this->lazySource = NULL;
-    this->lazyIndex = size_t(-1);
+    this->regexp.release();
+    this->lastIndex = size_t(-1);
 
     BarrieredSetPair<JSString, JSLinearString>(cx->zone(),
                                                pendingInput, input,
@@ -474,9 +474,8 @@ RegExpStatics::clear()
 
     matches.forgetArray();
     matchesInput = NULL;
-    lazySource = NULL;
-    lazyFlags = RegExpFlag(0);
-    lazyIndex = size_t(-1);
+    regexp.release();
+    lastIndex = size_t(-1);
     pendingInput = NULL;
     flags = RegExpFlag(0);
     pendingLazyEvaluation = false;
@@ -537,9 +536,9 @@ RegExpStatics::checkInvariants()
 {
 #ifdef DEBUG
     if (pendingLazyEvaluation) {
-        JS_ASSERT(lazySource);
-        JS_ASSERT(matchesInput);
-        JS_ASSERT(lazyIndex != size_t(-1));
+        JS_ASSERT(regexp.initialized());
+        JS_ASSERT(pendingInput);
+        JS_ASSERT(lastIndex != size_t(-1));
         return;
     }
 
