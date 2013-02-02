@@ -33,11 +33,8 @@ var testParts = [
   // "special" bad MIME type that indicates that the necko
   // multipart/x-mixed-replace parser wasn't able to parse it.
   [0, "rillybad.jpg"],
-  // Bad.jpg is bad such that it sniffs as a JPEG, and therefore doesn't change
-  // what's been decoded (since the RasterImage isn't deleted), so its width
-  // needs to be the same as the previous image.
   [80, "damon.jpg"],
-  [80, "bad.jpg"],
+  [0, "bad.jpg"],
   [1, "red.png"],
   [0, "invalid.jpg"],
   [40, "animated-gif2.gif"]
