@@ -1357,7 +1357,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     CSFLogDebug(logTag, "Created audio pipeline %p, conduit=%p, pc_stream=%d pc_track=%d",
                 pipeline.get(), conduit.get(), pc_stream_id, pc_track_id);
 
-    stream->StorePipeline(pc_track_id, pipeline);
+    stream->StorePipeline(pc_track_id, false, pipeline);
   } else if (CC_IS_VIDEO(mcap_id)) {
 
     std::vector<mozilla::VideoCodecConfig *> configs;
@@ -1401,7 +1401,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     CSFLogDebug(logTag, "Created video pipeline %p, conduit=%p, pc_stream=%d pc_track=%d",
                 pipeline.get(), conduit.get(), pc_stream_id, pc_track_id);
 
-    stream->StorePipeline(pc_track_id, pipeline);
+    stream->StorePipeline(pc_track_id, true, pipeline);
   } else {
     CSFLogError(logTag, "%s: mcap_id unrecognized", __FUNCTION__);
     return VCM_ERROR;
