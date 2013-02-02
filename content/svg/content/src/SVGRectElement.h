@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGRectElement_h
 
 #include "nsSVGPathGeometryElement.h"
-#include "nsIDOMSVGRectElement.h"
 #include "nsSVGLength2.h"
 
 nsresult NS_NewSVGRectElement(nsIContent **aResult,
@@ -19,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGRectElement MOZ_FINAL : public SVGRectElementBase,
-                                 public nsIDOMSVGRectElement
+                                 public nsIDOMSVGElement
 {
 protected:
   SVGRectElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -30,7 +29,6 @@ protected:
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGRECTELEMENT
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -44,8 +42,6 @@ public:
   virtual void ConstructPath(gfxContext *aCtx);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
