@@ -8,8 +8,6 @@
 #include "mozilla/dom/SVGLineElementBinding.h"
 #include "gfxContext.h"
 
-DOMCI_NODE_DATA(SVGLineElement, mozilla::dom::SVGLineElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Line)
 
 namespace mozilla {
@@ -32,15 +30,9 @@ nsSVGElement::LengthInfo SVGLineElement::sLengthInfo[4] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGLineElement,SVGLineElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGLineElement,SVGLineElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGLineElement)
-  NS_NODE_INTERFACE_TABLE4(SVGLineElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGLineElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGLineElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGLineElementBase)
+NS_IMPL_ISUPPORTS_INHERITED3(SVGLineElement, SVGLineElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -57,26 +49,11 @@ SVGLineElement::SVGLineElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGLineElement)
 
 //----------------------------------------------------------------------
-// nsIDOMSVGLineElement methods
-
-/* readonly attribute nsIDOMSVGAnimatedLength cx; */
-NS_IMETHODIMP SVGLineElement::GetX1(nsIDOMSVGAnimatedLength * *aX1)
-{
-  *aX1 = X1().get();
-  return NS_OK;
-}
 
 already_AddRefed<SVGAnimatedLength>
 SVGLineElement::X1()
 {
   return mLengthAttributes[ATTR_X1].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength cy; */
-NS_IMETHODIMP SVGLineElement::GetY1(nsIDOMSVGAnimatedLength * *aY1)
-{
-  *aY1 = Y1().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -85,24 +62,10 @@ SVGLineElement::Y1()
   return mLengthAttributes[ATTR_Y1].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength rx; */
-NS_IMETHODIMP SVGLineElement::GetX2(nsIDOMSVGAnimatedLength * *aX2)
-{
-  *aX2 = X2().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGLineElement::X2()
 {
   return mLengthAttributes[ATTR_X2].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength ry; */
-NS_IMETHODIMP SVGLineElement::GetY2(nsIDOMSVGAnimatedLength * *aY2)
-{
-  *aY2 = Y2().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -110,7 +73,6 @@ SVGLineElement::Y2()
 {
   return mLengthAttributes[ATTR_Y2].ToDOMAnimatedLength(this);
 }
-
 
 //----------------------------------------------------------------------
 // nsIContent methods
