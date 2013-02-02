@@ -127,6 +127,7 @@ CPPSRCS		= \
 		GlobalObject.cpp \
 		Object.cpp \
 		ObjectImpl.cpp \
+		PropertyKey.cpp \
 		ScopeObject.cpp \
 		Shape.cpp \
 		Stack.cpp \
@@ -230,6 +231,7 @@ EXPORTS_js = \
 		HeapAPI.h \
 		LegacyIntTypes.h \
 		MemoryMetrics.h \
+		PropertyKey.h \
 		TemplateLib.h \
 		Utility.h \
 		Value.h \
