@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1358893928000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1359495205000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -207,6 +207,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i258" id="helperbar@helperbar.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i46" id="{841468a1-d7f4-4bd3-84e6-bb0f13a06c64}">
                         <versionRange  minVersion="0.1" maxVersion="*">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
@@ -300,6 +304,10 @@
                   </emItem>
       <emItem  blockID="i76" id="crossriderapp3924@crossrider.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i262" id="{167d9323-f7cc-48f5-948a-6f012831a69f}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i196" id="info@wxdownloadmanager.com">
@@ -509,7 +517,11 @@
                   <match name="filename" exp="AdobePDFViewerNPAPI\.plugin" />                      <versionRange  minVersion="0" maxVersion="10.1.3" severity="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p94">
-                  <match name="filename" exp="Flash\ Player\.plugin" />                      <versionRange  minVersion="0" maxVersion="10.2.159.1" severity="0"></versionRange>
+                  <match name="filename" exp="Flash\ Player\.plugin" />                                    <versionRange  minVersion="0" maxVersion="10.2.159.1" severity="0">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="0" maxVersion="17.*" />
+                          </targetApplication>
+                  </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p102">
                   <match name="filename" exp="npmozax\.dll" />                      <versionRange  minVersion="0" maxVersion="*"></versionRange>
@@ -679,6 +691,13 @@
                   </pluginItem>
       <pluginItem  blockID="p254">
                   <match name="filename" exp="PDF Browser Plugin\.plugin" />                                    <versionRange  minVersion="0" maxVersion="2.4.2" severity="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="18.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p260">
+                  <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="0" maxVersion="10.2.9999" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="18.0a1" maxVersion="*" />
                           </targetApplication>
