@@ -135,7 +135,7 @@ Sanitizer.prototype = {
     history: {
       clear: function ()
       {
-        sendMessageToJava({ gecko: { type: "Sanitize:ClearHistory" } });
+        sendMessageToJava({ type: "Sanitize:ClearHistory" });
 
         try {
           Services.obs.notifyObservers(null, "browser:purge-session-history", "");
