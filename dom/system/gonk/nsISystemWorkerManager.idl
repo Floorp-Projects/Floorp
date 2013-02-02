@@ -11,6 +11,5 @@
 interface nsISystemWorkerManager : nsISupports
 {
   [implicit_jscontext]
-  void registerRilWorker(in unsigned long aClientId,
-                         in jsval aWorker);
+  void registerRilWorker(in jsval aWorker);
 };
