@@ -615,15 +615,6 @@ var gCheckingPage = {
     /**
      * See nsIUpdateCheckListener
      */
-    onProgress: function(request, position, totalSize) {
-      var pm = document.getElementById("checkingProgress");
-      pm.mode = "normal";
-      pm.value = Math.floor(100 * (position / totalSize));
-    },
-
-    /**
-     * See nsIUpdateCheckListener
-     */
     onCheckComplete: function(request, updates, updateCount) {
       var aus = CoC["@mozilla.org/updates/update-service;1"].
                 getService(CoI.nsIApplicationUpdateService);
