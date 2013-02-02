@@ -100,6 +100,12 @@ RegExpObject::setSticky(bool enabled)
     setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
 }
 
+inline void
+RegExpShared::writeBarrierPre()
+{
+    JSString::writeBarrierPre(source);
+}
+
 /* This function should be deleted once bad Android platforms phase out. See bug 604774. */
 inline bool
 RegExpShared::isJITRuntimeEnabled(JSContext *cx)
@@ -161,6 +167,34 @@ RegExpGuard::release()
         re_->decRef();
         re_ = NULL;
         source_ = NULL;
+    }
+}
+
+RegExpHeapGuard::RegExpHeapGuard(RegExpShared &re)
+{
+    init(re);
+}
+
+RegExpHeapGuard::~RegExpHeapGuard()
+{
+    release();
+}
+
+inline void
+RegExpHeapGuard::init(RegExpShared &re)
+{
+    JS_ASSERT(!initialized());
+    re_ = &re;
+    re_->incRef();
+}
+
+inline void
+RegExpHeapGuard::release()
+{
+    if (re_) {
+        re_->writeBarrierPre();
+        re_->decRef();
+        re_ = NULL;
     }
 }
 

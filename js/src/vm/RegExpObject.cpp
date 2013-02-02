@@ -645,6 +645,17 @@ RegExpCompartment::RegExpCompartment(JSRuntime *rt)
 RegExpCompartment::~RegExpCompartment()
 {
     JS_ASSERT(map_.empty());
+
+    /*
+     * RegExpStatics may have prevented a single RegExpShared from
+     * being collected during RegExpCompartment::sweep().
+     */
+    for (PendingSet::Enum e(inUse_); !e.empty(); e.popFront()) {
+        RegExpShared *shared = e.front();
+        JS_ASSERT(shared->activeUseCount == 0);
+        js_delete(shared);
+        e.removeFront();
+    }
     JS_ASSERT(inUse_.empty());
 }
 
