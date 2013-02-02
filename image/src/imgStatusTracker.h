@@ -180,6 +180,8 @@ public:
 
   void MaybeUnblockOnload();
 
+  void RecordError();
+
   bool IsMultipart() const { return mIsMultipart; }
 
   // Weak pointer getters - no AddRefs.
