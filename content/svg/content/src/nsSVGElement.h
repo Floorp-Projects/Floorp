@@ -21,8 +21,8 @@
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
 #include "nsSVGClass.h"
+#include "nsIDOMSVGElement.h"
 
-class nsIDOMSVGElement;
 class nsIDOMSVGSVGElement;
 class nsSVGAngle;
 class nsSVGBoolean;
