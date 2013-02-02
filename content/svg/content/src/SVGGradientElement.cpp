@@ -14,12 +14,8 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsIDOMSVGGradientElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsSVGElement.h"
-
-DOMCI_NODE_DATA(SVGRadialGradientElement, mozilla::dom::SVGRadialGradientElement)
-DOMCI_NODE_DATA(SVGLinearGradientElement, mozilla::dom::SVGLinearGradientElement)
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(LinearGradient)
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(RadialGradient)
@@ -30,9 +26,9 @@ namespace dom {
 //--------------------- Gradients------------------------
 
 nsSVGEnumMapping SVGGradientElement::sSpreadMethodMap[] = {
-  {&nsGkAtoms::pad, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD},
-  {&nsGkAtoms::reflect, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT},
-  {&nsGkAtoms::repeat, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT},
+  {&nsGkAtoms::pad, SVG_SPREADMETHOD_PAD},
+  {&nsGkAtoms::reflect, SVG_SPREADMETHOD_REFLECT},
+  {&nsGkAtoms::repeat, SVG_SPREADMETHOD_REPEAT},
   {nullptr, 0}
 };
 
@@ -44,7 +40,7 @@ nsSVGElement::EnumInfo SVGGradientElement::sEnumInfo[2] =
   },
   { &nsGkAtoms::spreadMethod,
     sSpreadMethodMap,
-    nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD
+    SVG_SPREADMETHOD_PAD
   }
 };
 
@@ -90,20 +86,10 @@ SVGGradientElement::GetStringInfo()
                               ArrayLength(sStringInfo));
 }
 
-//----------------------------------------------------------------------
-// nsIDOMSVGGradientElement methods
-
-/* readonly attribute nsIDOMSVGAnimatedEnumeration gradientUnits; */
 already_AddRefed<nsIDOMSVGAnimatedEnumeration>
 SVGGradientElement::GradientUnits()
 {
   return mEnumAttributes[GRADIENTUNITS].ToDOMAnimatedEnum(this);
-}
-
-NS_IMETHODIMP SVGGradientElement::GetGradientUnits(nsIDOMSVGAnimatedEnumeration * *aGradientUnits)
-{
-  *aGradientUnits = GradientUnits().get();
-  return NS_OK;
 }
 
 /* readonly attribute SVGAnimatedTransformList gradientTransform; */
@@ -116,23 +102,10 @@ SVGGradientElement::GradientTransform()
            GetAnimatedTransformList(DO_ALLOCATE), this);
 }
 
-NS_IMETHODIMP SVGGradientElement::GetGradientTransform(nsISupports * *aGradientTransform)
-{
-  *aGradientTransform = GradientTransform().get();
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMSVGAnimatedEnumeration spreadMethod; */
 already_AddRefed<nsIDOMSVGAnimatedEnumeration>
 SVGGradientElement::SpreadMethod()
 {
   return mEnumAttributes[SPREADMETHOD].ToDOMAnimatedEnum(this);
-}
-
-NS_IMETHODIMP SVGGradientElement::GetSpreadMethod(nsIDOMSVGAnimatedEnumeration * *aSpreadMethod)
-{
-  *aSpreadMethod = SpreadMethod().get();
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -189,16 +162,9 @@ nsSVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGLinearGradientElement,SVGLinearGradientElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGLinearGradientElement,SVGLinearGradientElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGLinearGradientElement)
-  NS_NODE_INTERFACE_TABLE5(SVGLinearGradientElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGGradientElement,
-                           nsIDOMSVGLinearGradientElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGLinearGradientElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGLinearGradientElementBase)
+NS_IMPL_ISUPPORTS_INHERITED3(SVGLinearGradientElement, SVGLinearGradientElementBase,
+                             nsIDOMNode,
+                             nsIDOMElement, nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -214,26 +180,11 @@ SVGLinearGradientElement::SVGLinearGradientElement(already_AddRefed<nsINodeInfo>
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGLinearGradientElement)
 
 //----------------------------------------------------------------------
-// nsIDOMSVGLinearGradientElement methods
-
-/* readonly attribute nsIDOMSVGAnimatedLength x1; */
-NS_IMETHODIMP SVGLinearGradientElement::GetX1(nsIDOMSVGAnimatedLength * *aX1)
-{
-  *aX1 = X1().get();
-  return NS_OK;
-}
 
 already_AddRefed<SVGAnimatedLength>
 SVGLinearGradientElement::X1()
 {
   return mLengthAttributes[ATTR_X1].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength y1; */
-NS_IMETHODIMP SVGLinearGradientElement::GetY1(nsIDOMSVGAnimatedLength * *aY1)
-{
-  *aY1 = Y1().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -242,24 +193,10 @@ SVGLinearGradientElement::Y1()
   return mLengthAttributes[ATTR_Y1].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength x2; */
-NS_IMETHODIMP SVGLinearGradientElement::GetX2(nsIDOMSVGAnimatedLength * *aX2)
-{
-  *aX2 = X2().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGLinearGradientElement::X2()
 {
   return mLengthAttributes[ATTR_X2].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength y2; */
-NS_IMETHODIMP SVGLinearGradientElement::GetY2(nsIDOMSVGAnimatedLength * *aY2)
-{
-  *aY2 = Y2().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -267,7 +204,6 @@ SVGLinearGradientElement::Y2()
 {
   return mLengthAttributes[ATTR_Y2].ToDOMAnimatedLength(this);
 }
-
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
@@ -309,16 +245,9 @@ nsSVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[5] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGRadialGradientElement, SVGRadialGradientElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGRadialGradientElement, SVGRadialGradientElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGRadialGradientElement)
-  NS_NODE_INTERFACE_TABLE5(SVGRadialGradientElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGGradientElement,
-                           nsIDOMSVGRadialGradientElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGRadialGradientElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGRadialGradientElementBase)
+NS_IMPL_ISUPPORTS_INHERITED3(SVGRadialGradientElement, SVGRadialGradientElementBase,
+                             nsIDOMNode,
+                             nsIDOMElement, nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -334,26 +263,11 @@ SVGRadialGradientElement::SVGRadialGradientElement(already_AddRefed<nsINodeInfo>
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGRadialGradientElement)
 
 //----------------------------------------------------------------------
-// nsIDOMSVGRadialGradientElement methods
-
-/* readonly attribute nsIDOMSVGAnimatedLength cx; */
-NS_IMETHODIMP SVGRadialGradientElement::GetCx(nsIDOMSVGAnimatedLength * *aCx)
-{
-  *aCx = Cx().get();
-  return NS_OK;
-}
 
 already_AddRefed<SVGAnimatedLength>
 SVGRadialGradientElement::Cx()
 {
   return mLengthAttributes[ATTR_CX].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength cy; */
-NS_IMETHODIMP SVGRadialGradientElement::GetCy(nsIDOMSVGAnimatedLength * *aCy)
-{
-  *aCy = Cy().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -362,37 +276,16 @@ SVGRadialGradientElement::Cy()
   return mLengthAttributes[ATTR_CY].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength r; */
-NS_IMETHODIMP SVGRadialGradientElement::GetR(nsIDOMSVGAnimatedLength * *aR)
-{
-  *aR = R().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGRadialGradientElement::R()
 {
   return mLengthAttributes[ATTR_R].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength fx; */
-NS_IMETHODIMP SVGRadialGradientElement::GetFx(nsIDOMSVGAnimatedLength * *aFx)
-{
-  *aFx = Fx().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGRadialGradientElement::Fx()
 {
   return mLengthAttributes[ATTR_FX].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength fy; */
-NS_IMETHODIMP SVGRadialGradientElement::GetFy(nsIDOMSVGAnimatedLength * *aFy)
-{
-  *aFy = Fy().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
