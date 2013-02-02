@@ -2091,10 +2091,6 @@ UpdateService.prototype = {
     this._attemptResume();
   },
 
-  // nsIUpdateCheckListener
-  onProgress: function AUS_onProgress(request, position, totalSize) {
-  },
-
   onCheckComplete: function AUS_onCheckComplete(request, updates, updateCount) {
     this._selectAndInstallUpdate(updates);
   },
@@ -3077,22 +3073,11 @@ Checker.prototype = {
     var self = this;
     this._request.addEventListener("error", function(event) { self.onError(event); } ,false);
     this._request.addEventListener("load", function(event) { self.onLoad(event); }, false);
-    this._request.addEventListener("progress", function(event) { self.onProgress(event); }, false);
 
     LOG("Checker:checkForUpdates - sending request to: " + url);
     this._request.send(null);
 
     this._callback = listener;
-  },
-
-  /**
-   * When progress associated with the XMLHttpRequest is received.
-   * @param   event
-   *          The nsIDOMLSProgressEvent for the load.
-   */
-  onProgress: function UC_onProgress(event) {
-    LOG("Checker:onProgress - " + event.position + "/" + event.totalSize);
-    this._callback.onProgress(event.target, event.position, event.totalSize);
   },
 
   /**
@@ -3214,7 +3199,7 @@ Checker.prototype = {
   /**
    * There was an error of some kind during the XMLHttpRequest
    * @param   event
-   *          The nsIDOMEvent for the load
+   *          The nsIDOMEvent for the error
    */
   onError: function UC_onError(event) {
     var request = event.target;
