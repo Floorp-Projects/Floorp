@@ -11,7 +11,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsISMILAnimationElement.h"
-#include "nsIDOMSVGAnimationElement.h"
 #include "nsSMILTimedElement.h"
 #include <algorithm>
 #include "mozilla/AutoRestore.h"

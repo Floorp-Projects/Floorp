@@ -317,8 +317,6 @@
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMSVGMpathElement.h"
-#include "nsIDOMSVGAnimationElement.h"
-#include "nsIDOMElementTimeControl.h"
 #include "nsIDOMTimeEvent.h"
 #include "nsIDOMSVGCircleElement.h"
 #include "nsIDOMSVGClipPathElement.h"
