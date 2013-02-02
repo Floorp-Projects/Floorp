@@ -192,7 +192,6 @@ DOMCI_CLASS(SVGDocument)
 
 // SVG element classes
 DOMCI_CLASS(SVGAElement)
-DOMCI_CLASS(SVGAltGlyphElement)
 DOMCI_CLASS(SVGAnimateElement)
 DOMCI_CLASS(SVGAnimateTransformElement)
 DOMCI_CLASS(SVGAnimateMotionElement)
