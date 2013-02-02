@@ -128,6 +128,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // orient
 #define NS_STYLE_ORIENT_HORIZONTAL 0
 #define NS_STYLE_ORIENT_VERTICAL   1
+#define NS_STYLE_ORIENT_AUTO       2
 
 // stack-sizing
 #define NS_STYLE_STACK_SIZING_IGNORE         0

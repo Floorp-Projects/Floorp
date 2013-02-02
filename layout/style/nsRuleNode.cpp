@@ -5050,7 +5050,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   SetDiscrete(*aRuleData->ValueForOrient(),
               display->mOrient, canStoreInRuleTree,
               SETDSC_ENUMERATED, parentDisplay->mOrient,
-              NS_STYLE_ORIENT_HORIZONTAL, 0, 0, 0, 0);
+              NS_STYLE_ORIENT_AUTO, 0, 0, 0, 0);
 
   COMPUTE_END_RESET(Display, display)
 }
