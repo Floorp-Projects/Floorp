@@ -15,7 +15,6 @@ MODULE		= dom
 XPIDL_MODULE	= dom_smil
 
 XPIDLSRCS	= \
-		nsIDOMElementTimeControl.idl \
 		nsIDOMTimeEvent.idl \
 		$(NULL)
 

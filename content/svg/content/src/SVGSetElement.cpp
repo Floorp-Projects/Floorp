@@ -20,9 +20,9 @@ SVGSetElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED4(SVGSetElement, SVGAnimationElement,
+NS_IMPL_ISUPPORTS_INHERITED3(SVGSetElement, SVGAnimationElement,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement, nsIDOMSVGAnimationElement)
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation

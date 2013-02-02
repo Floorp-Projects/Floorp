@@ -7,8 +7,6 @@
 #define mozilla_dom_SVGAnimationElement_h
 
 #include "DOMSVGTests.h"
-#include "nsIDOMElementTimeControl.h"
-#include "nsIDOMSVGAnimationElement.h"
 #include "nsISMILAnimationElement.h"
 #include "nsReferencedElement.h"
 #include "nsSMILTimedElement.h"
@@ -21,8 +19,7 @@ namespace dom {
 
 class SVGAnimationElement : public SVGAnimationElementBase,
                             public DOMSVGTests,
-                            public nsISMILAnimationElement,
-                            public nsIDOMElementTimeControl
+                            public nsISMILAnimationElement
 {
 protected:
   SVGAnimationElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -34,8 +31,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGAnimationElement,
                                            SVGAnimationElementBase)
-  NS_DECL_NSIDOMSVGANIMATIONELEMENT
-  NS_DECL_NSIDOMELEMENTTIMECONTROL
 
   // nsIContent specializations
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
