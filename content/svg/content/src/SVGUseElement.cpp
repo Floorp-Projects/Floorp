@@ -8,7 +8,6 @@
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/SVGUseElementBinding.h"
-#include "nsIDOMSVGGElement.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "nsIDOMSVGSymbolElement.h"
