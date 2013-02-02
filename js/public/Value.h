@@ -561,22 +561,6 @@ JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
     return ltag == rtag || (ltag < JSVAL_TAG_CLEAR && rtag < JSVAL_TAG_CLEAR);
 }
 
-static MOZ_ALWAYS_INLINE jsval_layout
-PRIVATE_UINT32_TO_JSVAL_IMPL(uint32_t ui)
-{
-    jsval_layout l;
-    l.s.tag = (JSValueTag)0;
-    l.s.payload.u32 = ui;
-    MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
-    return l;
-}
-
-static MOZ_ALWAYS_INLINE uint32_t
-JSVAL_TO_PRIVATE_UINT32_IMPL(jsval_layout l)
-{
-    return l.s.payload.u32;
-}
-
 static MOZ_ALWAYS_INLINE JSValueType
 JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
 {
@@ -807,22 +791,6 @@ JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
     uint64_t lbits = lhs.asBits, rbits = rhs.asBits;
     return (lbits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE && rbits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE) ||
            (((lbits ^ rbits) & 0xFFFF800000000000LL) == 0);
-}
-
-static MOZ_ALWAYS_INLINE jsval_layout
-PRIVATE_UINT32_TO_JSVAL_IMPL(uint32_t ui)
-{
-    jsval_layout l;
-    l.asBits = (uint64_t)ui;
-    MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
-    return l;
-}
-
-static MOZ_ALWAYS_INLINE uint32_t
-JSVAL_TO_PRIVATE_UINT32_IMPL(jsval_layout l)
-{
-    MOZ_ASSERT((l.asBits >> 32) == 0);
-    return (uint32_t)l.asBits;
 }
 
 static MOZ_ALWAYS_INLINE JSValueType
@@ -1200,19 +1168,13 @@ class Value
 
     MOZ_ALWAYS_INLINE
     void setPrivateUint32(uint32_t ui) {
-        data = PRIVATE_UINT32_TO_JSVAL_IMPL(ui);
+        MOZ_ASSERT(uint32_t(int32_t(ui)) == ui);
+        setInt32(int32_t(ui));
     }
 
     MOZ_ALWAYS_INLINE
     uint32_t toPrivateUint32() const {
-        MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(data));
-        return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
-    }
-
-    MOZ_ALWAYS_INLINE
-    uint32_t &getPrivateUint32Ref() {
-        MOZ_ASSERT(isDouble());
-        return data.s.payload.u32;
+        return uint32_t(toInt32());
     }
 
     /*
