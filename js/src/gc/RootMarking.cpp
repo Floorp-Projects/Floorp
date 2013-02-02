@@ -633,11 +633,12 @@ RegExpStatics::AutoRooter::trace(JSTracer *trc)
     if (statics->matchesInput)
         MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->matchesInput),
                        "RegExpStatics::AutoRooter matchesInput");
+    if (statics->lazySource)
+        MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->lazySource),
+                       "RegExpStatics::AutoRooter lazySource");
     if (statics->pendingInput)
         MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->pendingInput),
                        "RegExpStatics::AutoRooter pendingInput");
-    if (statics->regexp.initialized())
-        statics->regexp->trace(trc);
 }
 
 void
