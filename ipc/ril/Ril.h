@@ -16,8 +16,7 @@ namespace ipc {
 class RilConsumer : public mozilla::ipc::UnixSocketConsumer
 {
 public:
-  RilConsumer(unsigned long aClientId,
-              mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
+  RilConsumer(mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
   virtual ~RilConsumer() { }
 
   void Shutdown();
@@ -31,8 +30,6 @@ private:
 
 private:
   nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
-  unsigned long mClientId;
-  nsCString mAddress;
   bool mShutdown;
 };
 
