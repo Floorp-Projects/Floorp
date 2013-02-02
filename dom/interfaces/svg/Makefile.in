@@ -30,7 +30,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGEvent.idl \
 		nsIDOMSVGFilterElement.idl \
 		nsIDOMSVGFilters.idl \
-		nsIDOMSVGForeignObjectElem.idl \
 		nsIDOMSVGGElement.idl \
 		nsIDOMSVGGradientElement.idl \
 		nsIDOMSVGImageElement.idl \
