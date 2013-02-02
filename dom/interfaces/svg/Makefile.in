@@ -27,7 +27,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGClipPathElement.idl \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
-		nsIDOMSVGEllipseElement.idl \
 		nsIDOMSVGEvent.idl \
 		nsIDOMSVGFilterElement.idl \
 		nsIDOMSVGFilters.idl \
