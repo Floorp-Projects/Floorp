@@ -139,7 +139,11 @@ nsBMPDecoder::FinishInternal()
         nsIntRect r(0, 0, mBIH.width, GetHeight());
         PostInvalidation(r);
 
-        PostFrameStop();
+        if (mUseAlphaData) {
+          PostFrameStop(RasterImage::kFrameHasAlpha);
+        } else {
+          PostFrameStop(RasterImage::kFrameOpaque);
+        }
         PostDecodeDone();
     }
 }
@@ -193,7 +197,6 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     if (!aCount || !mCurLine)
         return;
 
-    nsresult rv;
     if (mPos < BFH_INTERNAL_LENGTH) { /* In BITMAPFILEHEADER */
         uint32_t toCopy = BFH_INTERNAL_LENGTH - mPos;
         if (toCopy > aCount)
@@ -308,34 +311,19 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           return;
         }
 
-        uint32_t imageLength;
-        if (mBIH.compression == BI_RLE8 || mBIH.compression == BI_RLE4 || 
-            mBIH.compression == BI_ALPHABITFIELDS) {
-            rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                    gfxASurface::ImageFormatARGB32,
-                                    (uint8_t**)&mImageData, &imageLength);
-        } else {
+        if (mBIH.compression != BI_RLE8 && mBIH.compression != BI_RLE4 &&
+            mBIH.compression != BI_ALPHABITFIELDS) {
             // mRow is not used for RLE encoded images
             mRow = (uint8_t*)moz_malloc((mBIH.width * mBIH.bpp) / 8 + 4);
             // + 4 because the line is padded to a 4 bit boundary, but I don't want
             // to make exact calculations here, that's unnecessary.
             // Also, it compensates rounding error.
             if (!mRow) {
-                PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-                return;
-            }
-
-            if (mUseAlphaData) {
-              rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                      gfxASurface::ImageFormatARGB32,
-                                      (uint8_t**)&mImageData, &imageLength);
-            } else {
-              rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                      gfxASurface::ImageFormatRGB24,
-                                      (uint8_t**)&mImageData, &imageLength);
+              PostDataError();
+              return;
             }
         }
-        if (NS_FAILED(rv) || !mImageData) {
+        if (!mImageData) {
             PostDecoderError(NS_ERROR_FAILURE);
             return;
         }
@@ -343,11 +331,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         // Prepare for transparency
         if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
             // Clear the image, as the RLE may jump over areas
-            memset(mImageData, 0, imageLength);
+            memset(mImageData, 0, mImageDataLength);
         }
-
-        // Tell the superclass we're starting a frame
-        PostFrameStart();
     }
 
     if (mColors && mPos >= mLOH) {
