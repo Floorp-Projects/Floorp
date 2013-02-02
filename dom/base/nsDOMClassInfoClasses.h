@@ -293,8 +293,6 @@ DOMCI_CLASS(XMLHttpProgressEvent)
 DOMCI_CLASS(ClientRect)
 DOMCI_CLASS(ClientRectList)
 
-DOMCI_CLASS(SVGForeignObjectElement)
-
 DOMCI_CLASS(XULCommandEvent)
 DOMCI_CLASS(CommandEvent)
 DOMCI_CLASS(OfflineResourceList)
