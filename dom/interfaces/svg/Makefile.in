@@ -37,7 +37,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGSVGElement.idl \
-		nsIDOMSVGStopElement.idl \
 		nsIDOMSVGStringList.idl \
 		nsIDOMSVGStyleElement.idl \
 		nsIDOMSVGSwitchElement.idl \
