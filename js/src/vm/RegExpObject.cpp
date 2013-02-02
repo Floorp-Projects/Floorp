@@ -159,20 +159,6 @@ MatchPairs::displace(size_t disp)
     }
 }
 
-inline void
-MatchPairs::checkAgainst(size_t inputLength)
-{
-#if DEBUG
-    for (size_t i = 0; i < pairCount_; i++) {
-        const MatchPair &p = pair(i);
-        JS_ASSERT(p.check());
-        if (p.isUndefined())
-            continue;
-        JS_ASSERT(size_t(p.limit) <= inputLength);
-    }
-#endif
-}
-
 bool
 ScopedMatchPairs::allocOrExpandArray(size_t pairCount)
 {
@@ -312,7 +298,7 @@ RegExpObject::assignInitialShape(JSContext *cx)
     return self->addDataProperty(cx, cx->names().sticky, STICKY_FLAG_SLOT, attrs);
 }
 
-inline bool
+bool
 RegExpObject::init(JSContext *cx, HandleAtom source, RegExpFlag flags)
 {
     Rooted<RegExpObject *> self(cx, this);
@@ -645,17 +631,6 @@ RegExpCompartment::RegExpCompartment(JSRuntime *rt)
 RegExpCompartment::~RegExpCompartment()
 {
     JS_ASSERT(map_.empty());
-
-    /*
-     * RegExpStatics may have prevented a single RegExpShared from
-     * being collected during RegExpCompartment::sweep().
-     */
-    for (PendingSet::Enum e(inUse_); !e.empty(); e.popFront()) {
-        RegExpShared *shared = e.front();
-        JS_ASSERT(shared->activeUseCount == 0);
-        js_delete(shared);
-        e.removeFront();
-    }
     JS_ASSERT(inUse_.empty());
 }
 
@@ -691,7 +666,7 @@ RegExpCompartment::sweep(JSRuntime *rt)
     }
 }
 
-inline bool
+bool
 RegExpCompartment::get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g)
 {
     Key key(source, flags);
