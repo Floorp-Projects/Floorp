@@ -2618,6 +2618,13 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   mDecoder->SetObserver(mDecodeRequest->mStatusTracker->GetDecoderObserver());
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
+  if (!aDoSizeDecode) {
+    // We already have the size; tell the decoder so it can preallocate a
+    // frame.  By default, we create an ARGB frame with no offset. If decoders
+    // need a different type, they need to ask for it themselves.
+    mDecoder->NeedNewFrame(0, 0, 0, mSize.width, mSize.height,
+                           gfxASurface::ImageFormatARGB32);
+  }
   mDecoder->Init();
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 

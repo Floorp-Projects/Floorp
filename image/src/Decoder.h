@@ -34,7 +34,8 @@ public:
    *
    * Notifications Sent: TODO
    */
-  void InitSharedDecoder();
+  void InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
+                         uint32_t* colormap, uint32_t colormapSize);
 
   /**
    * Writes data to the decoder.
@@ -134,6 +135,18 @@ public:
 
   ImageMetadata& GetImageMetadata() { return mImageMetadata; }
 
+  // Tell the decoder infrastructure to allocate a frame. By default, frame 0
+  // is created as an ARGB frame with no offset and with size width * height.
+  // If decoders need something different, they must ask for it.
+  // This is called by decoders when they need a new frame. These decoders
+  // must then save the data they have been sent but not yet processed and
+  // return from WriteInternal. When the new frame is created, WriteInternal
+  // will be called again with nullptr and 0 as arguments.
+  void NeedNewFrame(uint32_t frameNum, uint32_t x_offset, uint32_t y_offset,
+                    uint32_t width, uint32_t height,
+                    gfxASurface::gfxImageFormat format,
+                    uint8_t palette_depth = 0);
+
 protected:
 
   /*
@@ -184,14 +197,9 @@ protected:
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
 
-  // This is called by decoders when they need a new frame. These decoders
-  // must then save the data they have been sent but not yet processed and
-  // return from WriteInternal. When the new frame is created, WriteInternal
-  // will be called again with nullptr and 0 as arguments.
-  void NeedNewFrame(uint32_t frameNum, uint32_t x_offset, uint32_t y_offset,
-                    uint32_t width, uint32_t height,
-                    gfxASurface::gfxImageFormat format,
-                    uint8_t palette_depth = 0);
+  // Try to allocate a frame as described in mNewFrameData and return the
+  // status code from that attempt. Clears mNewFrameData.
+  nsresult AllocateFrame();
 
   /*
    * Member variables.
