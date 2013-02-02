@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGAnimateMotionElement MOZ_FINAL : public SVGAnimationElement,
-                                          public nsIDOMSVGAnimationElement
+                                          public nsIDOMSVGElement
 {
 protected:
   SVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -35,7 +35,6 @@ public:
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_FORWARD_NSIDOMSVGELEMENT(SVGAnimationElement::)
-  NS_FORWARD_NSIDOMSVGANIMATIONELEMENT(SVGAnimationElement::)
 
   // nsIDOMNode specializations
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
