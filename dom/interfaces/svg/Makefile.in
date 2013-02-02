@@ -35,7 +35,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGMarkerElement.idl \
 		nsIDOMSVGMaskElement.idl \
 		nsIDOMSVGNumber.idl \
-		nsIDOMSVGPolygonElement.idl \
 		nsIDOMSVGPolylineElement.idl \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGRectElement.idl \
