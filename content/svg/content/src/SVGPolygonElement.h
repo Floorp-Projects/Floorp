@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGPolygonElement_h
 
 #include "nsSVGPolyElement.h"
-#include "nsIDOMSVGPolygonElement.h"
 
 nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
                                  already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -18,7 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGPolygonElement MOZ_FINAL : public SVGPolygonElementBase,
-                                    public nsIDOMSVGPolygonElement
+                                    public nsIDOMSVGElement
 {
 protected:
   SVGPolygonElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -30,7 +29,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGPOLYGONELEMENT
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -42,8 +40,6 @@ public:
   virtual void ConstructPath(gfxContext *aCtx);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 };
