@@ -143,7 +143,7 @@ public:
     }
   }
 
-  virtual void OnStopRequest(bool aLastPart)
+  virtual void OnStopRequest(bool aLastPart, nsresult aStatus)
   {
     NS_NOTREACHED("imgStatusTrackerNotifyingObserver(imgDecoderObserver)::OnStopRequest");
   }
@@ -183,6 +183,11 @@ public:
     while (iter.HasMore()) {
       mTracker->SendImageIsAnimated(iter.GetNext());
     }
+  }
+
+  virtual void OnError()
+  {
+    mTracker->RecordError();
   }
 
 private:
@@ -252,9 +257,10 @@ public:
     mTracker->RecordUnblockOnload();
   }
 
-  virtual void OnStopRequest(bool aLastPart) MOZ_OVERRIDE
+  virtual void OnStopRequest(bool aLastPart, nsresult aStatus) MOZ_OVERRIDE
   {
-    NS_NOTREACHED("imgStatusTrackerObserver::(imgDecoderObserver)::OnStopRequest");
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopRequest");
+    mTracker->RecordStopRequest(aLastPart, aStatus);
   }
 
   virtual void OnDiscard() MOZ_OVERRIDE
@@ -275,6 +281,12 @@ public:
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnImageIsAnimated");
     mTracker->RecordImageIsAnimated();
+  }
+
+  virtual void OnError() MOZ_OVERRIDE
+  {
+    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnError");
+    mTracker->RecordError();
   }
 
 private:
@@ -508,7 +520,9 @@ imgStatusTracker::SyncNotifyState(nsTObserverArray<imgRequestProxy*>& proxies,
 void
 imgStatusTracker::SyncAndSyncNotifyDifference(imgStatusTracker* other)
 {
-  // We must not modify or notify for the begin-load state, which happens from Necko callbacks.
+  LOG_SCOPE(GetImgLog(), "imgStatusTracker::SyncAndSyncNotifyDifference");
+
+  // We must not modify or notify for the start-load state, which happens from Necko callbacks.
   uint32_t loadState = mState & stateRequestStarted;
   uint32_t diffState = ~mState & other->mState & ~stateRequestStarted;
   bool unblockedOnload = mState & stateBlockingOnload && !(other->mState & stateBlockingOnload);
@@ -595,6 +609,8 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
 void
 imgStatusTracker::SyncNotifyDecodeState()
 {
+  LOG_SCOPE(GetImgLog(), "imgStatusTracker::SyncNotifyDecodeState");
+
   SyncNotifyState(mConsumers, !!mImage, mState & ~stateRequestStarted, mInvalidRect, mHadLastPart);
 
   mInvalidRect.SetEmpty();
@@ -655,7 +671,7 @@ void
 imgStatusTracker::RecordCancel()
 {
   if (!(mImageStatus & imgIRequest::STATUS_LOAD_PARTIAL))
-    mImageStatus |= imgIRequest::STATUS_ERROR;
+    mImageStatus = imgIRequest::STATUS_ERROR;
 }
 
 void
@@ -851,6 +867,7 @@ imgStatusTracker::RecordStartRequest()
   mState &= ~stateDecodeStopped;
   mState &= ~stateRequestStopped;
   mState &= ~stateBlockingOnload;
+  mState &= ~stateImageIsAnimated;
 
   mState |= stateRequestStarted;
 }
@@ -993,17 +1010,25 @@ imgStatusTracker::MaybeUnblockOnload()
 }
 
 void
+imgStatusTracker::RecordError()
+{
+  mImageStatus = imgIRequest::STATUS_ERROR;
+}
+
+void
 imgStatusTracker::FireFailureNotification()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Some kind of problem has happened with image decoding.
   // Report the URI to net:failed-to-process-uri-conent observers.
-  nsCOMPtr<nsIURI> uri = GetImage()->GetURI();
-  if (uri) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->NotifyObservers(uri, "net:failed-to-process-uri-content", nullptr);
+  if (GetImage()) {
+    nsCOMPtr<nsIURI> uri = GetImage()->GetURI();
+    if (uri) {
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+      if (os) {
+        os->NotifyObservers(uri, "net:failed-to-process-uri-content", nullptr);
+      }
     }
   }
 }

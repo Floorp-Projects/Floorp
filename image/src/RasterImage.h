@@ -343,6 +343,8 @@ private:
     }
   }
 
+  nsresult OnImageDataCompleteCore(nsIRequest* aRequest, nsISupports*, nsresult aStatus);
+
   struct Anim
   {
     //! Area of the first frame that needs to be redrawn on subsequent loops.
@@ -546,8 +548,8 @@ private:
     nsRefPtr<DecodeRequest> mRequest;
   };
 
-  void FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
-                            DecodeRequest* request = nullptr);
+  nsresult FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
+                                DecodeRequest* request = nullptr);
 
   void DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                                     gfxContext *aContext,
