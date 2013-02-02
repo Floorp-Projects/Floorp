@@ -34,7 +34,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGLength.idl \
 		nsIDOMSVGMarkerElement.idl \
 		nsIDOMSVGMaskElement.idl \
-		nsIDOMSVGMetadataElement.idl \
 		nsIDOMSVGMpathElement.idl \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGPathElement.idl \
