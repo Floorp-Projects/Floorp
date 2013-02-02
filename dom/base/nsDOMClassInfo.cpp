@@ -329,7 +329,6 @@
 #include "nsIDOMSVGMaskElement.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGStopElement.h"
 #include "nsIDOMSVGStyleElement.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGSwitchElement.h"
@@ -1109,8 +1108,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGMarkerElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGMaskElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGStopElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGStyleElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -3120,11 +3117,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGStopElement, nsIDOMSVGStopElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStopElement)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-  
   DOM_CLASSINFO_MAP_BEGIN(SVGStyleElement, nsIDOMSVGStyleElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStyleElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
