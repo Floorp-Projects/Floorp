@@ -316,7 +316,6 @@
 #include "nsIDOMSVGAnimatedNumber.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAnimatedString.h"
-#include "nsIDOMSVGAnimateElement.h"
 #include "nsIDOMSVGAnimateTransformElement.h"
 #include "nsIDOMSVGAnimateMotionElement.h"
 #include "nsIDOMSVGMpathElement.h"
@@ -1071,8 +1070,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // SVG element classes
   NS_DEFINE_CLASSINFO_DATA(SVGAElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGAnimateElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimateTransformElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -3010,13 +3007,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGAnimateElement, nsIDOMSVGAnimateElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimationElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimateElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementTimeControl)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimateTransformElement,
