@@ -25,7 +25,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimatedString.idl \
 		nsIDOMSVGClipPathElement.idl \
-		nsIDOMSVGDefsElement.idl \
 		nsIDOMSVGDescElement.idl \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
