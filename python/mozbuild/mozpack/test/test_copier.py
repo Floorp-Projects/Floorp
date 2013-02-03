@@ -59,6 +59,7 @@ class TestFileRegistry(MatchTestTemplate, unittest.TestCase):
         self.registry.remove('bar')
         self.assertEqual(self.registry.paths(), [])
 
+        self.prepare_match_test()
         self.do_match_test()
         self.assertTrue(self.checked)
         self.assertEqual(self.registry.paths(), [
