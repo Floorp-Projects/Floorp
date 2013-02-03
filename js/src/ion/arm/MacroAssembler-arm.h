@@ -330,6 +330,14 @@ class MacroAssemblerARM : public Assembler
     void ma_callIonHalfPush(const Register reg);
 
     void ma_call(void *dest);
+
+    // Float registers can only be loaded/stored in continuous runs
+    // when using vstm/vldm.
+    // This function breaks set into continuous runs and loads/stores
+    // them at [rm]. rm will be modified, but returned to its initial value.
+    // Returns the offset from [dm] for the logical next load/store.
+    int32_t transferMultipleByRuns(FloatRegisterSet set, LoadStore ls,
+                                   Register rm, DTMMode mode);
 };
 
 class MacroAssemblerARMCompat : public MacroAssemblerARM
