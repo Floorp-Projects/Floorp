@@ -538,13 +538,6 @@ TabParent::SetDocShell(nsIDocShell *aDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TabParent::GetTooltipText(nsAString & aTooltipText)
-{
-  aTooltipText.Truncate();
-  return NS_OK;
-}
-
 PDocumentRendererParent*
 TabParent::AllocPDocumentRenderer(const nsRect& documentRect,
                                   const gfxMatrix& transform,
