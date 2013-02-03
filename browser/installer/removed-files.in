@@ -96,6 +96,7 @@ defaults/pref/bug259708.js
 defaults/pref/bug307259.js
 defaults/pref/reporter.js
 defaults/pref/security-prefs.js
+defaults/pref/services-aitc.js
 defaults/pref/winpref.js
 defaults/pref/xpinstall.js
 defaults/preferences/services-aitc.js
@@ -882,6 +883,8 @@ xpicleanup@BIN_SUFFIX@
   chrome/pippki.jar
   chrome/toolkit.jar
   components/addonManager.js
+  components/Aitc.js
+  components/AitcComponents.manifest
   components/amContentHandler.js
   components/amWebInstallListener.js
   components/binary.manifest
