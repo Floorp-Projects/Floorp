@@ -1728,6 +1728,23 @@ Element::MaybeCheckSameAttrVal(int32_t aNamespaceID,
   return false;
 }
 
+bool
+Element::OnlyNotifySameValueSet(int32_t aNamespaceID, nsIAtom* aName,
+                                nsIAtom* aPrefix,
+                                const nsAttrValueOrString& aValue,
+                                bool aNotify, nsAttrValue& aOldValue,
+                                uint8_t* aModType, bool* aHasListeners)
+{
+  if (!MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
+                             aOldValue, aModType, aHasListeners)) {
+    return false;
+  }
+
+  nsAutoScriptBlocker scriptBlocker;
+  nsNodeUtils::AttributeSetToCurrentValue(this, aNamespaceID, aName);
+  return true;
+}
+
 nsresult
 Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
                  nsIAtom* aPrefix, const nsAString& aValue,
@@ -1965,43 +1982,6 @@ Element::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   bool haveAttr = GetAttr(aNameSpaceID, aName, str);
   str.ToString(aResult);
   return haveAttr;
-}
-
-bool
-Element::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
-{
-  NS_ASSERTION(nullptr != aName, "must have attribute name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-               "must have a real namespace ID!");
-
-  return mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID) >= 0;
-}
-
-bool
-Element::AttrValueIs(int32_t aNameSpaceID,
-                     nsIAtom* aName,
-                     const nsAString& aValue,
-                     nsCaseTreatment aCaseSensitive) const
-{
-  NS_ASSERTION(aName, "Must have attr name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
-
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
-  return val && val->Equals(aValue, aCaseSensitive);
-}
-
-bool
-Element::AttrValueIs(int32_t aNameSpaceID,
-                     nsIAtom* aName,
-                     nsIAtom* aValue,
-                     nsCaseTreatment aCaseSensitive) const
-{
-  NS_ASSERTION(aName, "Must have attr name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
-  NS_ASSERTION(aValue, "Null value atom");
-
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
-  return val && val->Equals(aValue, aCaseSensitive);
 }
 
 int32_t

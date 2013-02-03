@@ -1252,11 +1252,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   padding: 2px 2px;
 }
 
-.urlbar-icon:-moz-system-metric(touch-enabled) {
-  -moz-margin-end: 1px !important;
-  padding: 0 3px !important;
-}
-
 .urlbar-icon:hover {
   background-image: radial-gradient(circle closest-side, hsla(200,100%,70%,.3), hsla(200,100%,70%,0));
 }
@@ -1381,10 +1376,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   width: auto;
   list-style-image: url("chrome://browser/skin/urlbar-history-dropmarker.png");
   -moz-image-region: rect(0px, 11px, 14px, 0px);
-}
-
-.urlbar-history-dropmarker:-moz-system-metric(touch-enabled) {
-  min-width: 6.4mozmm;
 }
 
 .urlbar-history-dropmarker:hover {
@@ -1928,10 +1919,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://global/skin/icons/close.png");
 }
 
-.tab-close-button:-moz-system-metric(touch-enabled) {
-  transform: scale(1.2);
-}
-
 .tab-close-button:hover,
 .tab-close-button:hover[selected="true"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
@@ -1947,22 +1934,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Tab scrollbox arrow, tabstrip new tab and all-tabs buttons */
-
-@media (-moz-touch-enabled) {
-  .tabbrowser-arrowscrollbox > .scrollbutton-up,
-  .tabbrowser-arrowscrollbox > .scrollbutton-down,
-  #TabsToolbar .toolbarbutton-1 {
-    min-width: 8.1mozmm;
-  }
-
-  .tabs-newtab-button {
-    min-width: 10mozmm;
-  }
-
-  .tab-content {
-    min-height: calc(6.8mozmm - 7px); /* subtract borders from the desired height */
-  }
-}
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {

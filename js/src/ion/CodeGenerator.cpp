@@ -2372,13 +2372,10 @@ static const VMFunction stringsNotEqualInfo =
     FunctionInfo<StringCompareFn>(ion::StringsEqual<false>);
 
 bool
-CodeGenerator::visitCompareS(LCompareS *lir)
+CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
+                            Register output, Register temp)
 {
-    JSOp op = lir->mir()->jsop();
-    Register left = ToRegister(lir->left());
-    Register right = ToRegister(lir->right());
-    Register output = ToRegister(lir->output());
-    Register temp = ToRegister(lir->temp());
+    JS_ASSERT(lir->isCompareS() || lir->isCompareStrictS());
 
     OutOfLineCode *ool = NULL;
     if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
@@ -2421,6 +2418,45 @@ CodeGenerator::visitCompareS(LCompareS *lir)
 
     masm.bind(ool->rejoin());
     return true;
+}
+
+bool
+CodeGenerator::visitCompareStrictS(LCompareStrictS *lir)
+{
+    JSOp op = lir->mir()->jsop();
+    JS_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
+
+    const ValueOperand leftV = ToValue(lir, LCompareStrictS::Lhs);
+    Register right = ToRegister(lir->right());
+    Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp0());
+
+    Label string, done;
+
+    masm.branchTestString(Assembler::Equal, leftV, &string);
+    masm.move32(Imm32(op == JSOP_STRICTNE), output);
+    masm.jump(&done);
+
+    masm.bind(&string);
+    Register left = masm.extractString(leftV, ToRegister(lir->temp1()));
+    if (!emitCompareS(lir, op, left, right, output, temp))
+        return false;
+
+    masm.bind(&done);
+
+    return true;
+}
+
+bool
+CodeGenerator::visitCompareS(LCompareS *lir)
+{
+    JSOp op = lir->mir()->jsop();
+    Register left = ToRegister(lir->left());
+    Register right = ToRegister(lir->right());
+    Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+
+    return emitCompareS(lir, op, left, right, output, temp);
 }
 
 typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, JSBool *);
@@ -4533,10 +4569,12 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir)
     Label fail;
     if (key.isConstant()) {
         Address source(scratch, key.constant() * width);
-        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(), &fail);
+        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(),
+                                out.scratchReg(), &fail);
     } else {
         BaseIndex source(scratch, key.reg(), ScaleFromElemWidth(width));
-        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(), &fail);
+        masm.loadFromTypedArray(arrayType, source, out, lir->mir()->allowDouble(),
+                                out.scratchReg(), &fail);
     }
 
     if (fail.used() && !bailoutFrom(&fail, lir->snapshot()))

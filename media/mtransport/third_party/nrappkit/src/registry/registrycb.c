@@ -8,37 +8,37 @@
  *
  *    Callback-related functions
  *
- *    
+ *
  *    Copyright (C) 2005, Network Resonance, Inc.
  *    Copyright (C) 2006, Network Resonance, Inc.
  *    All Rights Reserved
- *    
+ *
  *    Redistribution and use in source and binary forms, with or without
  *    modification, are permitted provided that the following conditions
  *    are met:
- *    
+ *
  *    1. Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
  *    2. Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
  *    3. Neither the name of Network Resonance, Inc. nor the name of any
- *       contributors to this software may be used to endorse or promote 
+ *       contributors to this software may be used to endorse or promote
  *       products derived from this software without specific prior written
  *       permission.
- *    
+ *
  *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
  *    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- *    ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
- *    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- *    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ *    ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ *    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  *    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *    POSSIBILITY OF SUCH DAMAGE.
- *    
+ *
  *
  */
 
@@ -178,7 +178,7 @@ nr_reg_register_callback(NR_registry name, char action, void (*cb)(void *cb_arg,
 
     _status=0;
   abort:
-    r_log(NR_LOG_REGISTRY, LOG_DEBUG, "register callback %X on '%s' for '%s' %s", cb, name, nr_reg_action_name(action), (_status ? "FAILED" : "succeeded"));
+    r_log(NR_LOG_REGISTRY, LOG_DEBUG, "register callback %p on '%s' for '%s' %s", cb, name, nr_reg_action_name(action), (_status ? "FAILED" : "succeeded"));
 
     if (_status) {
       if (create_info && info) RFREE(info);
@@ -231,7 +231,7 @@ nr_reg_unregister_callback(char *name, char action, void (*cb)(void *cb_arg, cha
 
     _status=0;
   abort:
-    r_log(NR_LOG_REGISTRY, LOG_DEBUG, "unregister callback %X on '%s' for '%s' %s", cb, name, nr_reg_action_name(action), (_status ? "FAILED" : "succeeded"));
+    r_log(NR_LOG_REGISTRY, LOG_DEBUG, "unregister callback %p on '%s' for '%s' %s", cb, name, nr_reg_action_name(action), (_status ? "FAILED" : "succeeded"));
 
     return(_status);
 }
@@ -323,7 +323,7 @@ nr_reg_raise_event_recurse(char *name, char *tmp, int action)
 
         if (info->action == action) {
           r_log(NR_LOG_REGISTRY, LOG_DEBUG,
-                "Invoking callback %X for '%s'",
+                "Invoking callback %p for '%s'",
                 info->cb,
                 nr_reg_action_name(info->action));
 
@@ -331,7 +331,7 @@ nr_reg_raise_event_recurse(char *name, char *tmp, int action)
         }
         else {
           r_log(NR_LOG_REGISTRY, LOG_DEBUG,
-                "Skipping callback %X for '%s'",
+                "Skipping callback %p for '%s'",
                 info->cb,
                 nr_reg_action_name(info->action));
         }

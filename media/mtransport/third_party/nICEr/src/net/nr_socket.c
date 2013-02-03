@@ -68,7 +68,7 @@ int nr_socket_destroy(nr_socket **sockp)
     sock->vtbl->destroy(&sock->obj);
 
     RFREE(sock);
-    
+
     return(0);
   }
 
@@ -89,7 +89,7 @@ int nr_socket_getfd(nr_socket *sock, NR_SOCKET *fd)
   {
     return sock->vtbl->getfd(sock->obj, fd);
   }
-  
+
 int nr_socket_getaddr(nr_socket *sock, nr_transport_addr *addrp)
   {
     return sock->vtbl->getaddr(sock->obj, addrp);

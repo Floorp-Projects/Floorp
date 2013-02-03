@@ -1,9 +1,9 @@
 /* vim: set ts=4 sw=4 tw=99 et: */
 
 function J(i) {
-    /* Cause a branch to build. */
+    /* Cause a branch to build(?) */
     if (i % 3)
-        <xml></xml>
+        [1,2,3]
 }
 
 function h(i) {
@@ -16,8 +16,8 @@ function h(i) {
 }
 
 function g(i) {
-    /* Method JIT will try to remove this frame. */
-    if (i == 14) { <xml></xml> }
+    /* Method JIT will try to remove this frame(?) */
+    if (i == 14) { with ({}); }
     return h(i);
 }
 

@@ -1059,12 +1059,6 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
         }
         // else...
 
-        // XXX E4X breaks the world. Don't try wrapping E4X objects!
-        // This hack can be removed (or changed accordingly) when the
-        // DOM <-> E4X bindings are complete, see bug 270553
-        if (JS_TypeOfValue(cx, OBJECT_TO_JSVAL(src)) == JSTYPE_XML)
-            return false;
-
         // Deal with slim wrappers here.
         if (GetISupportsFromJSObject(inner ? inner : src, &iface)) {
             if (iface)

@@ -28,13 +28,11 @@ class AssemblerX86Shared
         { }
     };
 
-    js::Vector<DeferredData *, 0, SystemAllocPolicy> data_;
     js::Vector<CodeLabel *, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
     CompactBufferWriter preBarriers_;
-    size_t dataBytesNeeded_;
     bool enoughMemory_;
 
     void writeDataRelocation(const Value &val) {
@@ -139,8 +137,7 @@ class AssemblerX86Shared
     }
 
     AssemblerX86Shared()
-      : dataBytesNeeded_(0),
-        enoughMemory_(true)
+      : enoughMemory_(true)
     {
     }
 
@@ -168,20 +165,11 @@ class AssemblerX86Shared
     }
 
     void executableCopy(void *buffer);
-    void processDeferredData(IonCode *code, uint8_t *data);
     void processCodeLabels(IonCode *code);
     void copyJumpRelocationTable(uint8_t *dest);
     void copyDataRelocationTable(uint8_t *dest);
     void copyPreBarrierTable(uint8_t *dest);
 
-    bool addDeferredData(DeferredData *data, size_t bytes) {
-        data->setOffset(dataBytesNeeded_);
-        dataBytesNeeded_ += bytes;
-        if (dataBytesNeeded_ >= MAX_BUFFER_SIZE)
-            return false;
-        return data_.append(data);
-    }
-    
     bool addCodeLabel(CodeLabel *label) {
         return codeLabels_.append(label);
     }
@@ -201,12 +189,8 @@ class AssemblerX86Shared
         return preBarriers_.length();
     }
     // Size of the data table, in bytes.
-    size_t dataSize() const {
-        return dataBytesNeeded_;
-    }
     size_t bytesNeeded() const {
         return size() +
-               dataSize() +
                jumpRelocationTableBytes() +
                dataRelocationTableBytes() +
                preBarrierTableBytes();
@@ -215,6 +199,13 @@ class AssemblerX86Shared
   public:
     void align(int alignment) {
         masm.align(alignment);
+    }
+    void writeCodePointer(AbsoluteLabel *label) {
+        JS_ASSERT(!label->bound());
+        // Thread the patch list through the unpatched address word in the
+        // instruction stream.
+        masm.jumpTablePointer(label->prev());
+        label->setPrev(masm.size());
     }
     void movl(const Imm32 &imm32, const Register &dest) {
         masm.movl_i32r(imm32.value, dest.code());

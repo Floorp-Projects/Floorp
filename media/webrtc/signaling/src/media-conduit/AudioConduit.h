@@ -18,12 +18,14 @@
 #include "voice_engine/include/voe_file.h"
 #include "voice_engine/include/voe_network.h"
 #include "voice_engine/include/voe_external_media.h"
+#include "voice_engine/include/voe_audio_processing.h"
 
 //Some WebRTC types for short notations
  using webrtc::VoEBase;
  using webrtc::VoENetwork;
  using webrtc::VoECodec;
  using webrtc::VoEExternalMedia;
+ using webrtc::VoEAudioProcessing;
 
 /** This file hosts several structures identifying different aspects
  * of a RTP Session.
@@ -141,18 +143,26 @@ public:
 
 
   WebrtcAudioConduit():
+                      mOtherDirection(NULL),
+                      mShutDown(false),
                       mVoiceEngine(NULL),
                       mTransport(NULL),
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
                       mChannel(-1),
-                      mCurSendCodecConfig(NULL)
+                      mCurSendCodecConfig(NULL),
+                      mCaptureDelay(150),
+                      mEchoOn(true),
+                      mEchoCancel(webrtc::kEcAec)
   {
   }
 
   virtual ~WebrtcAudioConduit();
 
-  MediaConduitErrorCode Init();
+  MediaConduitErrorCode Init(WebrtcAudioConduit *other);
+
+  int GetChannel() { return mChannel; }
+  webrtc::VoiceEngine* GetVoiceEngine() { return mVoiceEngine; }
 
 private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) MOZ_DELETE;
@@ -185,12 +195,19 @@ private:
   //Utility function to dump recv codec database
   void DumpCodecDB() const;
 
+  WebrtcAudioConduit*  mOtherDirection;
+  // Other side has shut down our channel and related items already
+  bool mShutDown;
+
+  // These are shared by both directions.  They're released by the last
+  // conduit to die
   webrtc::VoiceEngine* mVoiceEngine;
   mozilla::RefPtr<TransportInterface> mTransport;
   webrtc::VoENetwork*  mPtrVoENetwork;
   webrtc::VoEBase*     mPtrVoEBase;
   webrtc::VoECodec*    mPtrVoECodec;
   webrtc::VoEExternalMedia* mPtrVoEXmedia;
+  webrtc::VoEAudioProcessing* mPtrVoEProcessing;
 
   //engine states of our interets
   bool mEngineTransmitting; // If true => VoiceEngine Send-subsystem is up
@@ -200,6 +217,12 @@ private:
   int mChannel;
   RecvCodecList    mRecvCodecList;
   AudioCodecConfig* mCurSendCodecConfig;
+
+  // Current "capture" delay (really output plus input delay)
+  int32_t mCaptureDelay;
+
+  bool mEchoOn;
+  webrtc::EcModes  mEchoCancel;
 };
 
 } // end namespace

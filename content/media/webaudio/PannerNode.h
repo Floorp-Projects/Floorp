@@ -9,8 +9,8 @@
 
 #include "AudioNode.h"
 #include "AudioParam.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/TypedEnum.h"
 #include "ThreeDPoint.h"
 
 namespace mozilla {

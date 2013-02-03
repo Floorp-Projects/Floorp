@@ -151,7 +151,7 @@ class VersionFlag(object):
         elif len(value) > 1 and value[0] in ['<', '>']:
             if value[1] == '=':
                 if len(value) < 3:
-                   return errors.fatal('Malformed flag: %s' % definition)
+                    return errors.fatal('Malformed flag: %s' % definition)
                 self.values.append((value[0:2], LooseVersion(value[2:])))
             else:
                 self.values.append((value[0], LooseVersion(value[1:])))

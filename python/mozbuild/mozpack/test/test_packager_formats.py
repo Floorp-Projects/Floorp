@@ -233,7 +233,6 @@ class TestOmniJarFormatter(TestWithTmpDir):
             'app/components/foo.so', 'app/foo'
         ])
 
-
     def test_omnijar_is_resource(self):
         registry = FileRegistry()
         f = OmniJarFormatter(registry, 'omni.foo', non_resources=[
@@ -250,12 +249,13 @@ class TestOmniJarFormatter(TestWithTmpDir):
             self.assertTrue(f.is_resource(base + 'components/foo.js'))
             self.assertFalse(f.is_resource(base + 'components/foo.so'))
             self.assertTrue(f.is_resource(base + 'res/foo.css'))
-            self.assertFalse( f.is_resource(base + 'res/cursors/foo.png'))
+            self.assertFalse(f.is_resource(base + 'res/cursors/foo.png'))
             self.assertFalse(f.is_resource(base + 'res/MainMenu.nib/'))
             self.assertTrue(f.is_resource(base + 'defaults/pref/foo.js'))
             self.assertFalse(
                 f.is_resource(base + 'defaults/pref/channel-prefs.js'))
-            self.assertTrue(f.is_resource(base + 'defaults/preferences/foo.js'))
+            self.assertTrue(
+                f.is_resource(base + 'defaults/preferences/foo.js'))
             self.assertFalse(
                 f.is_resource(base + 'defaults/preferences/channel-prefs.js'))
             self.assertTrue(f.is_resource(base + 'modules/foo.jsm'))

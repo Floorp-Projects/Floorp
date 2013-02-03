@@ -303,6 +303,7 @@ class AbstractFramePtr
     inline Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
     inline Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
     inline Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
+    inline Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
 
     inline bool prevUpToDate() const;
     inline void setPrevUpToDate() const;
@@ -700,9 +701,8 @@ class StackFrame
     /*
      * With
      *
-     * Entering/leaving a with (or E4X filter) block pushes/pops an object 
-     * on the scope chain. Pushing uses pushOnScopeChain, popping should use
-     * popWith.
+     * Entering/leaving a |with| block pushes/pops an object on the scope chain.
+     * Pushing uses pushOnScopeChain, popping should use popWith.
      */
 
     void popWith(JSContext *cx);

@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGAnimatedNumberListBinding.h"
+#include "nsContentUtils.h"
 
 // See the architecture comment in this file's header.
 

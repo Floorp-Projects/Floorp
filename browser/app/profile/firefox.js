@@ -521,9 +521,10 @@ pref("browser.gesture.pinch.out.shift", "");
 pref("browser.gesture.pinch.in.shift", "");
 #endif
 pref("browser.gesture.twist.latched", false);
-pref("browser.gesture.twist.threshold", 25);
-pref("browser.gesture.twist.right", "");
-pref("browser.gesture.twist.left", "");
+pref("browser.gesture.twist.threshold", 0);
+pref("browser.gesture.twist.right", "cmd_gestureRotateRight");
+pref("browser.gesture.twist.left", "cmd_gestureRotateLeft");
+pref("browser.gesture.twist.end", "cmd_gestureRotateEnd");
 pref("browser.gesture.tap", "cmd_fullZoomReset");
 
 // 0: Nothing happens

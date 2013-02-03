@@ -1,4 +1,3 @@
-// |reftest| pref(javascript.options.xml.content,true)
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,8 +36,6 @@ function f2(a) { [x for (x in yield) if (y in (a))] }
 function f3(a) { ([x for (x in yield) for (y in (a))]) }
 function f4(a) { ([x for (x in yield) if (y in (a))]) }
 
-function f5() { print(<a>{yield}</a>, (0)) }
-function f6() { print(<>{yield}</>, (0)) }
 function f7() { print({a:yield},(0)) }
 
 function f8() { ([yield], (0)) }
@@ -52,8 +49,6 @@ testGenerator(f1, "top-level array comprehension with paren expr in for-block");
 testGenerator(f2, "top-level array comprehension with paren expr in if-block");
 testGenerator(f3, "parenthesized array comprehension with paren expr in for-block");
 testGenerator(f4, "parenthesized array comprehension with paren expr in if-block");
-testGenerator(f5, "xml literal");
-testGenerator(f6, "xml list literal");
 testGenerator(f7, "object literal");
 testGenerator(f8, "array literal in paren exp");
 testGenerator(f9, "let-expression in paren exp");

@@ -32,7 +32,6 @@ using namespace mozilla::layout;
 nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                                        nsPresContext* aPresContext,
                                        nsBlockFrame* aFrame,
-                                       const nsHTMLReflowMetrics& aMetrics,
                                        bool aTopMarginRoot,
                                        bool aBottomMarginRoot,
                                        bool aBlockNeedsFloatManager)
@@ -77,7 +76,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
   mReflowStatus = NS_FRAME_COMPLETE;
 
-  mPresContext = aPresContext;
   mNextInFlow = static_cast<nsBlockFrame*>(mBlock->GetNextInFlow());
 
   NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aReflowState.ComputedWidth(),

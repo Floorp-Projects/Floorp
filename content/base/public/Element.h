@@ -47,6 +47,7 @@
 #include "nsEvent.h"
 #include "nsAttrValue.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "nsIHTMLCollection.h"
 
 class nsIDOMEventListener;
 class nsIFrame;
@@ -62,7 +63,6 @@ class nsAttrValueOrString;
 class ContentUnbinder;
 class nsClientRect;
 class nsClientRectList;
-class nsIHTMLCollection;
 class nsContentList;
 class nsDOMTokenList;
 struct nsRect;
@@ -121,8 +121,8 @@ class UndoManager;
 
 // IID for the dom::Element interface
 #define NS_ELEMENT_IID \
-{ 0xc6c049a1, 0x96e8, 0x4580, \
-  { 0xa6, 0x93, 0xb9, 0x5f, 0x53, 0xbe, 0xe8, 0x1c } }
+{ 0xcae9f7e7, 0x6163, 0x47b5, \
+ { 0xa1, 0x63, 0x30, 0xc8, 0x1d, 0x2d, 0x79, 0x39 } }
 
 class Element : public FragmentOrElement
 {
@@ -447,31 +447,24 @@ public:
                               nsIAtom* aPrefix,
                               const nsAttrValueOrString& aValue,
                               bool aNotify, nsAttrValue& aOldValue,
-                              uint8_t* aModType, bool* aHasListeners)
-  {
-    if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
-                              aOldValue, aModType, aHasListeners)) {
-      nsAutoScriptBlocker scriptBlocker;
-      nsNodeUtils::AttributeSetToCurrentValue(this, aNamespaceID, aName);
-      return true;
-    }
-    return false;
-  }
+                              uint8_t* aModType, bool* aHasListeners);
 
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, bool aNotify);
   nsresult SetParsedAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                          nsAttrValue& aParsedValue, bool aNotify);
-  virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                       nsAString& aResult) const;
-  virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
+  // GetAttr is not inlined on purpose, to keep down codesize from all
+  // the inlined nsAttrValue bits for C++ callers.
+  bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+               nsAString& aResult) const;
+  inline bool HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const;
   // aCaseSensitive == eIgnoreCaase means ASCII case-insensitive matching.
-  virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
-                             const nsAString& aValue,
-                             nsCaseTreatment aCaseSensitive) const;
-  virtual bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
-                             nsIAtom* aValue,
-                             nsCaseTreatment aCaseSensitive) const;
+  inline bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
+                          const nsAString& aValue,
+                          nsCaseTreatment aCaseSensitive) const;
+  inline bool AttrValueIs(int32_t aNameSpaceID, nsIAtom* aName,
+                          nsIAtom* aValue,
+                          nsCaseTreatment aCaseSensitive) const;
   virtual int32_t FindAttrValueIn(int32_t aNameSpaceID,
                                   nsIAtom* aName,
                                   AttrValuesArray* aValues,
@@ -1163,6 +1156,43 @@ private:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
+
+inline bool
+Element::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
+{
+  NS_ASSERTION(nullptr != aName, "must have attribute name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
+               "must have a real namespace ID!");
+
+  return mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID) >= 0;
+}
+
+inline bool
+Element::AttrValueIs(int32_t aNameSpaceID,
+                     nsIAtom* aName,
+                     const nsAString& aValue,
+                     nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+
+  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
+  return val && val->Equals(aValue, aCaseSensitive);
+}
+
+inline bool
+Element::AttrValueIs(int32_t aNameSpaceID,
+                     nsIAtom* aName,
+                     nsIAtom* aValue,
+                     nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+  NS_ASSERTION(aValue, "Null value atom");
+
+  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
+  return val && val->Equals(aValue, aCaseSensitive);
+}
 
 } // namespace dom
 } // namespace mozilla

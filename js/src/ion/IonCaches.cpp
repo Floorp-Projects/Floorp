@@ -999,7 +999,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Mu
 
     RootedId id(cx, NameToId(name));
     if (obj->getOps()->getProperty) {
-        if (!GetPropertyGenericMaybeCallXML(cx, JSOp(*pc), obj, id, vp))
+        if (!JSObject::getGeneric(cx, obj, obj, id, vp))
             return false;
     } else {
         if (!GetPropertyHelper(cx, obj, id, 0, vp))

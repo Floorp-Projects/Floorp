@@ -3815,15 +3815,6 @@ MOZ_ARG_WITH_STRING(jitreport-granularity,
 AC_DEFINE_UNQUOTED(JS_DEFAULT_JITREPORT_GRANULARITY, $JITREPORT_GRANULARITY)
 
 dnl ========================================================
-dnl = E4X support (ECMA-357)
-dnl ========================================================
-JS_HAS_XML_SUPPORT=1
-MOZ_ARG_DISABLE_BOOL(e4x,
-[  --disable-e4x           Disable JS support for XML (ECMA-357)],
-    JS_HAS_XML_SUPPORT=0 )
-AC_DEFINE_UNQUOTED(JS_HAS_XML_SUPPORT, $JS_HAS_XML_SUPPORT)
-
-dnl ========================================================
 dnl =
 dnl = Misc. Options
 dnl =

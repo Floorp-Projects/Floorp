@@ -93,7 +93,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.SynchronousQueue;
 import java.net.ProxySelector;
 import java.net.Proxy;
@@ -630,34 +629,49 @@ public class GeckoAppShell
         }
     }
 
-    private static CountDownLatch sGeckoPendingAcks = null;
+    private static final GeckoEvent sSyncEvent = GeckoEvent.createSyncEvent();
+    private static boolean sWaitingForSyncAck;
 
     // Block the current thread until the Gecko event loop is caught up
-    synchronized public static void geckoEventSync() {
+    public static void geckoEventSync() {
         long time = SystemClock.uptimeMillis();
+        boolean isMainThread = (GeckoApp.mAppContext.getMainLooper().getThread() == Thread.currentThread());
 
-        sGeckoPendingAcks = new CountDownLatch(1);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createSyncEvent());
-        while (sGeckoPendingAcks.getCount() != 0) {
-            try {
-                sGeckoPendingAcks.await();
-            } catch(InterruptedException e) {}
-        }
-        sGeckoPendingAcks = null;
+        synchronized (sSyncEvent) {
+            if (sWaitingForSyncAck) {
+                // should never happen since we always leave it as false when we exit this function.
+                Log.e(LOGTAG, "geckoEventSync() may have been called twice concurrently!", new Exception());
+                // fall through for graceful handling
+            }
 
-        time = SystemClock.uptimeMillis() - time;
-        if (time > 500) {
-            Log.w(LOGTAG, "Gecko event sync took too long! (" + time + " ms)", new Exception());
-        } else {
-            Log.d(LOGTAG, "Gecko event sync took " + time + " ms");
+            GeckoAppShell.sendEventToGecko(sSyncEvent);
+            sWaitingForSyncAck = true;
+            while (true) {
+                try {
+                    sSyncEvent.wait(100);
+                } catch (InterruptedException ie) {
+                }
+                if (!sWaitingForSyncAck) {
+                    // response received
+                    break;
+                }
+                long waited = SystemClock.uptimeMillis() - time;
+                Log.d(LOGTAG, "Gecko event sync taking too long: " + waited + "ms");
+                if (isMainThread && waited >= 4000) {
+                    Log.w(LOGTAG, "Gecko event sync took too long, aborting!", new Exception());
+                    sWaitingForSyncAck = false;
+                    break;
+                }
+            }
         }
     }
 
     // Signal the Java thread that it's time to wake up
     public static void acknowledgeEventSync() {
-        CountDownLatch tmp = sGeckoPendingAcks;
-        if (tmp != null)
-            tmp.countDown();
+        synchronized (sSyncEvent) {
+            sWaitingForSyncAck = false;
+            sSyncEvent.notifyAll();
+        }
     }
 
     public static void enableLocation(final boolean enable) {

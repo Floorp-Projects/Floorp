@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -873,30 +874,14 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           }
 
           if (langID != nsIProgrammingLanguage::UNKNOWN) {
-            // Get the version string, and ensure the language supports it.
-            nsAutoString versionName;
-            rv = parser.GetParameter("version", versionName);
+              // Get the version string, and ensure the language supports it.
+              nsAutoString versionName;
+              rv = parser.GetParameter("version", versionName);
 
-            if (NS_SUCCEEDED(rv)) {
-              version = nsContentUtils::ParseJavascriptVersion(versionName);
-            } else if (rv != NS_ERROR_INVALID_ARG) {
-              return rv;
-            }
-          }
-          // Some js specifics yet to be abstracted.
-          if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-              // By default scripts in XUL documents have E4X turned on. This
-              // is still OK if version is JSVERSION_UNKNOWN (-1),
-              version = js::VersionSetMoarXML(JSVersion(version), true);
-
-              nsAutoString value;
-              rv = parser.GetParameter("e4x", value);
-              if (NS_FAILED(rv)) {
-                  if (rv != NS_ERROR_INVALID_ARG)
-                      return rv;
-              } else {
-                  if (value.Length() == 1 && value[0] == '0')
-                    version = js::VersionSetMoarXML(JSVersion(version), false);
+              if (NS_SUCCEEDED(rv)) {
+                  version = nsContentUtils::ParseJavascriptVersion(versionName);
+              } else if (rv != NS_ERROR_INVALID_ARG) {
+                  return rv;
               }
           }
       }
@@ -907,10 +892,6 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           nsAutoString lang(aAttributes[1]);
           if (nsContentUtils::IsJavaScriptLanguage(lang, &version)) {
               langID = nsIProgrammingLanguage::JAVASCRIPT;
-
-              // Even when JS version < 1.6 is specified, E4X is
-              // turned on in XUL.
-              version = js::VersionSetMoarXML(JSVersion(version), true);
           }
       }
       aAttributes += 2;
