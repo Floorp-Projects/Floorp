@@ -171,4 +171,4 @@ def unpack(source):
         if mozpack.path.split(p)[0] not in STARTUP_CACHE_PATHS:
             packager.add(p, f)
     packager.close()
-    copier.copy(source)
+    copier.copy(source, skip_if_older=False)

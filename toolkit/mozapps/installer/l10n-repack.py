@@ -180,7 +180,7 @@ def repack(source, l10n, non_resources=[]):
         assert isinstance(copier[path], Jarrer)
         copier[path].preload([l.replace(locale, l10n_locale) for l in log])
 
-    copier.copy(source)
+    copier.copy(source, skip_if_older=False)
     generate_precomplete(source)
 
 
