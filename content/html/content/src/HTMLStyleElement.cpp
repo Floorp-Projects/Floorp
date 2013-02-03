@@ -102,7 +102,10 @@ HTMLStyleElement::SetDisabled(bool aDisabled, ErrorResult& aError)
     return;
   }
 
-  aError.Throw(ss->SetDisabled(aDisabled));
+  nsresult result = ss->SetDisabled(aDisabled);
+  if (NS_FAILED(result)) {
+    aError.Throw(result);
+  }
 }
 
 NS_IMPL_STRING_ATTR(HTMLStyleElement, Media, media)
