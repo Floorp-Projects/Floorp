@@ -7,7 +7,6 @@ Replace localized parts of a packaged directory with data from a langpack
 directory.
 '''
 
-import sys
 import os
 import mozpack.path
 from mozpack.packager.formats import (

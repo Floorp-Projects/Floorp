@@ -28,8 +28,6 @@ import buildconfig
 from argparse import ArgumentParser
 from createprecomplete import generate_precomplete
 import os
-import re
-import sys
 from StringIO import StringIO
 import subprocess
 import platform
@@ -328,7 +326,8 @@ def main():
             libname = '%s%s' % (libbase, buildconfig.substs['DLL_SUFFIX'])
             if copier.contains(libname):
                 copier.add(libbase + '.chk',
-                           LibSignFile(os.path.join(args.destination, libname)))
+                           LibSignFile(os.path.join(args.destination,
+                                                    libname)))
 
     # Setup preloading
     if args.jarlogs:
