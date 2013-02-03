@@ -28,8 +28,6 @@ import buildconfig
 from argparse import ArgumentParser
 from createprecomplete import generate_precomplete
 import os
-import re
-import sys
 from StringIO import StringIO
 import subprocess
 import platform
@@ -94,12 +92,12 @@ class LibSignFile(File):
     '''
     File class for shlibsign signatures.
     '''
-    def copy(self, dest):
+    def copy(self, dest, skip_if_older=True):
         assert isinstance(dest, basestring)
         # os.path.getmtime returns a result in seconds with precision up to the
         # microsecond. But microsecond is too precise because shutil.copystat
         # only copies milliseconds, and seconds is not enough precision.
-        if os.path.exists(dest) and \
+        if os.path.exists(dest) and skip_if_older and \
                 int(os.path.getmtime(self.path) * 1000) <= \
                 int(os.path.getmtime(dest) * 1000):
             return False
@@ -296,7 +294,8 @@ def main():
 
     with errors.accumulate():
         if args.unify:
-            finder = UnifiedBuildFinder(args.source, args.unify,
+            finder = UnifiedBuildFinder(FileFinder(args.source),
+                                        FileFinder(args.unify),
                                         minify=args.minify)
         else:
             finder = FileFinder(args.source, minify=args.minify)
@@ -328,7 +327,8 @@ def main():
             libname = '%s%s' % (libbase, buildconfig.substs['DLL_SUFFIX'])
             if copier.contains(libname):
                 copier.add(libbase + '.chk',
-                           LibSignFile(os.path.join(args.destination, libname)))
+                           LibSignFile(os.path.join(args.destination,
+                                                    libname)))
 
     # Setup preloading
     if args.jarlogs:
