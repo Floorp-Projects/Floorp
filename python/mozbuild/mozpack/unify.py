@@ -11,14 +11,11 @@ from mozpack.files import (
 )
 from mozpack.executables import (
     MACHO_SIGNATURES,
-    may_strip,
-    strip,
 )
 from mozpack.mozjar import JarReader
 from mozpack.errors import errors
 from tempfile import mkstemp
 import mozpack.path
-import shutil
 import struct
 import os
 import subprocess
@@ -44,13 +41,14 @@ class UnifiedExecutableFile(BaseFile):
     '''
     File class for executable and library files that to be unified with 'lipo'.
     '''
-    def __init__(self, path1, path2):
+    def __init__(self, executable1, executable2):
         '''
-        Initialize a UnifiedExecutableFile with the path to both non-fat Mach-O
-        executables to be unified.
+        Initialize a UnifiedExecutableFile with a pair of ExecutableFiles to
+        be unified. They are expected to be non-fat Mach-O executables.
         '''
-        self.path1 = path1
-        self.path2 = path2
+        assert isinstance(executable1, ExecutableFile)
+        assert isinstance(executable2, ExecutableFile)
+        self._executables = (executable1, executable2)
 
     def copy(self, dest, skip_if_older=True):
         '''
@@ -61,13 +59,11 @@ class UnifiedExecutableFile(BaseFile):
         assert isinstance(dest, basestring)
         tmpfiles = []
         try:
-            for p in [self.path1, self.path2]:
+            for e in self._executables:
                 fd, f = mkstemp()
                 os.close(fd)
                 tmpfiles.append(f)
-                shutil.copy2(p, f)
-                if may_strip(f):
-                    strip(f)
+                e.copy(f, skip_if_older=False)
             subprocess.call(['lipo', '-create'] + tmpfiles + ['-output', dest])
         finally:
             for f in tmpfiles:
@@ -111,7 +107,7 @@ class UnifiedFinder(BaseFinder):
             if p in files1:
                 if may_unify_binary(files1[p]) and \
                         may_unify_binary(f):
-                    yield p, UnifiedExecutableFile(files1[p].path, f.path)
+                    yield p, UnifiedExecutableFile(files1[p], f)
                 else:
                     err = errors.count
                     unified = self.unify_file(p, files1[p], f)
