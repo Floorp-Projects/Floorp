@@ -57,6 +57,7 @@ webidl_files = \
   GainNode.webidl \
   HTMLAnchorElement.webidl \
   HTMLBodyElement.webidl \
+  HTMLBRElement.webidl \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
   HTMLDivElement.webidl \

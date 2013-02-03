@@ -8,6 +8,7 @@
 
 #include "nsIDOMHTMLBRElement.h"
 #include "nsGenericHTMLElement.h"
+#include "nsGkAtoms.h"
 
 namespace mozilla {
 namespace dom {
@@ -43,6 +44,18 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  bool Clear()
+  {
+    return GetBoolAttr(nsGkAtoms::clear);
+  }
+  void SetClear(const nsAString& aClear, ErrorResult& aError)
+  {
+    return SetHTMLAttr(nsGkAtoms::clear, aClear, aError);
+  }
+
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap);
 };
 
 } // namespace dom
