@@ -294,7 +294,8 @@ def main():
 
     with errors.accumulate():
         if args.unify:
-            finder = UnifiedBuildFinder(args.source, args.unify,
+            finder = UnifiedBuildFinder(FileFinder(args.source),
+                                        FileFinder(args.unify),
                                         minify=args.minify)
         else:
             finder = FileFinder(args.source, minify=args.minify)

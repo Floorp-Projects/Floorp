@@ -15,7 +15,9 @@ from mozpack.executables import (
 from mozpack.chrome.manifest import ManifestEntry
 from io import BytesIO
 from mozpack.errors import ErrorMessage
+from mozpack.mozjar import JarReader
 import mozpack.path
+from collections import OrderedDict
 
 
 class Dest(object):
@@ -321,13 +323,10 @@ class MinifiedProperties(BaseFile):
                                if not l.startswith('#')))
 
 
-class FileFinder(object):
-    '''
-    Helper to get appropriate BaseFile instances from the file system.
-    '''
+class BaseFinder(object):
     def __init__(self, base, minify=False):
         '''
-        Create a FileFinder for files under the given base directory. The
+        Initializes the instance with a reference base directory. The
         optional minify argument specifies whether file types supporting
         minification (currently only "*.properties") should be minified.
         '''
@@ -339,18 +338,65 @@ class FileFinder(object):
         Yield path, BaseFile_instance pairs for all files under the base
         directory and its subdirectories that match the given pattern. See the
         mozpack.path.match documentation for a description of the handled
-        patterns. Note all files with a name starting with a '.' are ignored
-        when scanning directories, but are not ignored when explicitely
-        requested.
+        patterns.
         '''
         while pattern.startswith('/'):
             pattern = pattern[1:]
-        return self._find(pattern)
+        for p, f in self._find(pattern):
+            yield p, self._minify_file(p, f)
+
+    def __iter__(self):
+        '''
+        Iterates over all files under the base directory (excluding files
+        starting with a '.' and files at any level under a directory starting
+        with a '.').
+            for path, file in finder:
+                ...
+        '''
+        return self.find('')
+
+    def __contains__(self, pattern):
+        raise RuntimeError("'in' operator forbidden for %s. Use contains()." %
+                           self.__class__.__name__)
+
+    def contains(self, pattern):
+        '''
+        Return whether some files under the base directory match the given
+        pattern. See the mozpack.path.match documentation for a description of
+        the handled patterns.
+        '''
+        return any(self.find(pattern))
+
+    def _minify_file(self, path, file):
+        '''
+        Return an appropriate MinifiedSomething wrapper for the given BaseFile
+        instance (file), according to the file type (determined by the given
+        path), if the FileFinder was created with minification enabled.
+        Otherwise, just return the given BaseFile instance.
+        Currently, only "*.properties" files are handled.
+        '''
+        if self._minify and not isinstance(file, ExecutableFile):
+            if path.endswith('.properties'):
+                return MinifiedProperties(file)
+        return file
+
+
+class FileFinder(BaseFinder):
+    '''
+    Helper to get appropriate BaseFile instances from the file system.
+    '''
+    def __init__(self, base, **kargs):
+        '''
+        Create a FileFinder for files under the given base directory.
+        '''
+        BaseFinder.__init__(self, base, **kargs)
 
     def _find(self, pattern):
         '''
         Actual implementation of FileFinder.find(), dispatching to specialized
         member functions depending on what kind of pattern was given.
+        Note all files with a name starting with a '.' are ignored when
+        scanning directories, but are not ignored when explicitely requested.
         '''
         if '*' in pattern:
             return self._find_glob('', mozpack.path.split(pattern))
@@ -384,7 +430,7 @@ class FileFinder(object):
         if is_executable(srcpath):
             yield path, ExecutableFile(srcpath)
         else:
-            yield path, self._minify_file(srcpath, File(srcpath))
+            yield path, File(srcpath)
 
     def _find_glob(self, base, pattern):
         '''
@@ -418,37 +464,35 @@ class FileFinder(object):
                                         pattern[1:]):
                 yield p, f
 
-    def __iter__(self):
-        '''
-        Iterates over all files under the base directory (excluding files
-        starting with a '.' and files at any level under a directory starting
-        with a '.').
-            for path, file in finder:
-                ...
-        '''
-        return self.find('')
 
-    def __contains__(self, pattern):
-        raise RuntimeError("'in' operator forbidden for %s. Use contains()." %
-                           self.__class__.__name__)
+class JarFinder(BaseFinder):
+    '''
+    Helper to get appropriate DeflatedFile instances from a JarReader.
+    '''
+    def __init__(self, base, reader, **kargs):
+        '''
+        Create a JarFinder for files in the given JarReader. The base argument
+        is used as an indication of the Jar file location.
+        '''
+        assert isinstance(reader, JarReader)
+        BaseFinder.__init__(self, base, **kargs)
+        self._files = OrderedDict((f.filename, f) for f in reader)
 
-    def contains(self, pattern):
+    def _find(self, pattern):
         '''
-        Return whether some files under the base directory match the given
-        pattern. See the mozpack.path.match documentation for a description of
-        the handled patterns.
+        Actual implementation of JarFinder.find(), dispatching to specialized
+        member functions depending on what kind of pattern was given.
         '''
-        return any(self.find(pattern))
-
-    def _minify_file(self, path, file):
-        '''
-        Return an appropriate MinifiedSomething wrapper for the given BaseFile
-        instance (file), according to the file type (determined by the given
-        path), if the FileFinder was created with minification enabled.
-        Otherwise, just return the given BaseFile instance.
-        Currently, only "*.properties" files are handled.
-        '''
-        if self._minify:
-            if path.endswith('.properties'):
-                return MinifiedProperties(file)
-        return file
+        if '*' in pattern:
+            for p in self._files:
+                if mozpack.path.match(p, pattern):
+                    yield p, DeflatedFile(self._files[p])
+        elif pattern == '':
+            for p in self._files:
+                yield p, DeflatedFile(self._files[p])
+        elif pattern in self._files:
+            yield pattern, DeflatedFile(self._files[pattern])
+        else:
+            for p in self._files:
+                if mozpack.path.basedir(p, [pattern]) == pattern:
+                    yield p, DeflatedFile(self._files[p])
