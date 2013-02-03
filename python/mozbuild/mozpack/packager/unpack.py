@@ -25,7 +25,6 @@ from mozpack.packager.formats import (
     STARTUP_CACHE_PATHS,
 )
 from urlparse import urlparse
-from collections import OrderedDict
 
 
 class UnpackFinder(FileFinder):

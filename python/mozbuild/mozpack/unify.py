@@ -123,7 +123,6 @@ class UnifiedFinder(FileFinder):
         if not isinstance(file1, ExecutableFile) and \
                 not isinstance(file2, ExecutableFile):
             from difflib import unified_diff
-            import sys
             for line in unified_diff(file1.open().readlines(),
                                      file2.open().readlines(),
                                      os.path.join(self._base1.base, path),

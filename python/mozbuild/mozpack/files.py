@@ -288,7 +288,7 @@ class ManifestFile(BaseFile):
         the manifest.
         '''
         return BytesIO(''.join('%s\n' % e.rebase(self._base)
-                                for e in self._entries))
+                               for e in self._entries))
 
     def __iter__(self):
         '''
@@ -318,7 +318,7 @@ class MinifiedProperties(BaseFile):
         the properties file.
         '''
         return BytesIO(''.join(l for l in self._file.open().readlines()
-                                if not l.startswith('#')))
+                               if not l.startswith('#')))
 
 
 class FileFinder(object):
