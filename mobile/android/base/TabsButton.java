@@ -59,7 +59,7 @@ public class TabsButton extends ShapedButton {
 
         int width = getMeasuredWidth();
         int height = getMeasuredHeight();
-        float curve = height * 1.125f;
+        int curve = (int) (height * 1.125f);
 
         // The bounds for the rectangle to carve the curves.
         float left;
@@ -160,24 +160,31 @@ public class TabsButton extends ShapedButton {
     // The drawable is constructed as per @drawable/tabs_button.
     @Override
     public void onLightweightThemeChanged() {
-        LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_bg_repeat);
-        if (drawable == null)
+        LightweightThemeDrawable lightWeight1 = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_bg_repeat);
+        LightweightThemeDrawable lightWeight2 = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_dark_bg_repeat);
+        if (lightWeight1 == null || lightWeight2 == null)
             return;
 
-        drawable.setAlpha(34, 34);
+        lightWeight1.setAlpha(34, 34);
+        lightWeight2.setAlpha(34, 34);
 
         Resources resources = this.getContext().getResources();
-        StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
-        stateList.addState(new int[] { R.attr.state_private }, resources.getDrawable(R.drawable.tabs_tray_bg_repeat));
-        stateList.addState(new int[] {}, drawable);
+        StateListDrawable stateList1 = new StateListDrawable();
+        stateList1.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
+        stateList1.addState(new int[] { R.attr.state_private }, resources.getDrawable(R.drawable.tabs_tray_bg_repeat));
+        stateList1.addState(new int[] {}, lightWeight1);
+
+        StateListDrawable stateList2 = new StateListDrawable();
+        stateList2.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
+        stateList2.addState(new int[] { R.attr.state_private }, resources.getDrawable(R.drawable.tabs_tray_bg_repeat));
+        stateList2.addState(new int[] {}, lightWeight2);
 
         LevelListDrawable levelList = new LevelListDrawable();
-        levelList.addLevel(0, 1, stateList);
+        levelList.addLevel(0, 1, stateList1);
 
         // If there is a side bar, the expanded state will have a filled button.
         if (mSideBar)
-            levelList.addLevel(2, 2, stateList);
+            levelList.addLevel(2, 2, stateList2);
         else
             levelList.addLevel(2, 2, new ColorDrawable(Color.TRANSPARENT));
 

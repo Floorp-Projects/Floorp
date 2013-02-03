@@ -1584,12 +1584,6 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
                 }
                 /* FALL THROUGH */
               case PNK_DOT:
-#if JS_HAS_XML_SUPPORT
-              case PNK_DBLDOT:
-                JS_ASSERT_IF(pn2->getKind() == PNK_DBLDOT, !bce->sc->strict);
-                /* FALL THROUGH */
-
-#endif
               case PNK_CALL:
               case PNK_ELEM:
                 /* All these delete addressing modes have effects too. */
@@ -1808,31 +1802,6 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
 
     return true;
 }
-
-#if JS_HAS_XML_SUPPORT
-static bool
-EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
-{
-    JS_ASSERT(!bce->sc->strict);
-    JS_ASSERT(pn->isKind(PNK_XMLUNARY));
-    JS_ASSERT(pn->isOp(JSOP_XMLNAME));
-    JS_ASSERT(op == JSOP_XMLNAME || op == JSOP_CALLXMLNAME);
-
-    ParseNode *pn2 = pn->pn_kid;
-    bool oldEmittingForInit = bce->emittingForInit;
-    bce->emittingForInit = false;
-    if (!EmitTree(cx, bce, pn2))
-        return false;
-    bce->emittingForInit = oldEmittingForInit;
-    if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pn2->pn_offset) < 0)
-        return false;
-
-    if (Emit1(cx, bce, op) < 0)
-        return false;
-
-    return true;
-}
-#endif
 
 static inline bool
 EmitElemOpBase(JSContext *cx, BytecodeEmitter *bce, JSOp op)
@@ -2058,7 +2027,7 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
         right = NullaryNode::create(PNK_STRING, bce->parser);
         if (!right)
             return false;
-        right->setOp(IsIdentifier(pn->pn_atom) ? JSOP_QNAMEPART : JSOP_STRING);
+        right->setOp(JSOP_STRING);
         right->pn_pos = pn->pn_pos;
         right->pn_atom = pn->pn_atom;
     } else {
@@ -2078,9 +2047,6 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
         return false;
 
-    /* The right side of the descendant operator is implicitly quoted. */
-    JS_ASSERT(op != JSOP_DESCENDANTS || !right->isKind(PNK_STRING) ||
-              right->isOp(JSOP_QNAMEPART));
     if (!EmitTree(cx, bce, right))
         return false;
     if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - top) < 0)
@@ -3475,17 +3441,6 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
         offset += 2;
         break;
-#if JS_HAS_XML_SUPPORT
-      case PNK_XMLUNARY:
-        JS_ASSERT(!bce->sc->strict);
-        JS_ASSERT(lhs->isOp(JSOP_SETXMLNAME));
-        if (!EmitTree(cx, bce, lhs->pn_kid))
-            return false;
-        if (Emit1(cx, bce, JSOP_BINDXMLNAME) < 0)
-            return false;
-        offset += 2;
-        break;
-#endif
       default:
         JS_ASSERT(0);
     }
@@ -3535,9 +3490,6 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
           }
           case PNK_ELEM:
           case PNK_CALL:
-#if JS_HAS_XML_SUPPORT
-          case PNK_XMLUNARY:
-#endif
             if (Emit1(cx, bce, JSOP_DUP2) < 0)
                 return false;
             if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
@@ -3619,13 +3571,6 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
       case PNK_ARRAY:
       case PNK_OBJECT:
         if (!EmitDestructuringOps(cx, bce, SRC_DECL_NONE, lhs))
-            return false;
-        break;
-#endif
-#if JS_HAS_XML_SUPPORT
-      case PNK_XMLUNARY:
-        JS_ASSERT(!bce->sc->strict);
-        if (Emit1(cx, bce, JSOP_SETXMLNAME) < 0)
             return false;
         break;
 #endif
@@ -4316,88 +4261,6 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
 }
 #endif
 
-#if JS_HAS_XML_SUPPORT
-/*
- * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
- * the comment on EmitSwitch.
- */
-MOZ_NEVER_INLINE static bool
-EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
-{
-    JS_ASSERT(!bce->sc->strict);
-
-    if (Emit1(cx, bce, JSOP_STARTXML) < 0)
-        return false;
-
-    {
-        jsatomid index;
-        HandlePropertyName tagAtom = (pn->isKind(PNK_XMLETAGO))
-                                     ? cx->names().etago
-                                     : cx->names().stago;
-        if (!bce->makeAtomIndex(tagAtom, &index))
-            return false;
-        if (!EmitIndex32(cx, JSOP_STRING, index, bce))
-            return false;
-    }
-
-    JS_ASSERT(pn->pn_count != 0);
-    ParseNode *pn2 = pn->pn_head;
-    if (pn2->isKind(PNK_XMLCURLYEXPR) && Emit1(cx, bce, JSOP_STARTXMLEXPR) < 0)
-        return false;
-    if (!EmitTree(cx, bce, pn2))
-        return false;
-    if (Emit1(cx, bce, JSOP_ADD) < 0)
-        return false;
-
-    uint32_t i;
-    for (pn2 = pn2->pn_next, i = 0; pn2; pn2 = pn2->pn_next, i++) {
-        if (pn2->isKind(PNK_XMLCURLYEXPR) && Emit1(cx, bce, JSOP_STARTXMLEXPR) < 0)
-            return false;
-        if (!EmitTree(cx, bce, pn2))
-            return false;
-        if ((i & 1) && pn2->isKind(PNK_XMLCURLYEXPR)) {
-            if (Emit1(cx, bce, JSOP_TOATTRVAL) < 0)
-                return false;
-        }
-        if (Emit1(cx, bce, (i & 1) ? JSOP_ADDATTRVAL : JSOP_ADDATTRNAME) < 0)
-            return false;
-    }
-
-    {
-        jsatomid index;
-        HandlePropertyName tmp = pn->isKind(PNK_XMLPTAGC)
-                                 ? cx->names().ptagc
-                                 : cx->names().tagc;
-        if (!bce->makeAtomIndex(tmp, &index))
-            return false;
-        if (!EmitIndex32(cx, JSOP_STRING, index, bce))
-            return false;
-    }
-    if (Emit1(cx, bce, JSOP_ADD) < 0)
-        return false;
-
-    if ((pn->pn_xflags & PNX_XMLROOT) && Emit1(cx, bce, pn->getOp()) < 0)
-        return false;
-
-    return true;
-}
-
-static bool
-EmitXMLProcessingInstruction(JSContext *cx, BytecodeEmitter *bce, XMLProcessingInstruction &pi)
-{
-    JS_ASSERT(!bce->sc->strict);
-
-    jsatomid index;
-    if (!bce->makeAtomIndex(pi.data(), &index))
-        return false;
-    if (!EmitIndex32(cx, JSOP_QNAMEPART, index, bce))
-        return false;
-    if (!EmitAtomOp(cx, pi.target(), JSOP_XMLPI, bce))
-        return false;
-    return true;
-}
-#endif
-
 /*
  * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
  * the comment on EmitSwitch.
@@ -4836,7 +4699,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         Rooted<JSScript*> parent(cx, bce->script);
         Rooted<JSObject*> enclosingScope(cx, EnclosingStaticScope(bce));
         CompileOptions options(cx);
-        options.setPrincipals(parent->principals)
+        options.setPrincipals(parent->principals())
                .setOriginPrincipals(parent->originPrincipals)
                .setCompileAndGo(parent->compileAndGo)
                .setNoScriptRval(false)
@@ -5254,13 +5117,6 @@ EmitDelete(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!EmitPropOp(cx, pn2, JSOP_DELPROP, bce, false))
             return false;
         break;
-#if JS_HAS_XML_SUPPORT
-      case PNK_DBLDOT:
-        JS_ASSERT(!bce->sc->strict);
-        if (!EmitElemOp(cx, pn2, JSOP_DELDESC, bce))
-            return false;
-        break;
-#endif
       case PNK_ELEM:
         if (!EmitElemOp(cx, pn2, JSOP_DELELEM, bce))
             return false;
@@ -5311,10 +5167,10 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      * First, emit code for the left operand to evaluate the callable or
      * constructable object expression.
      *
-     * For operator new applied to other expressions than E4X ones, we emit
-     * JSOP_GETPROP instead of JSOP_CALLPROP, etc. This is necessary to
-     * interpose the lambda-initialized method read barrier -- see the code
-     * in jsinterp.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
+     * For operator new, we emit JSOP_GETPROP instead of JSOP_CALLPROP, etc.
+     * This is necessary to interpose the lambda-initialized method read
+     * barrier -- see the code in jsinterp.cpp for JSOP_LAMBDA followed by
+     * JSOP_{SET,INIT}PROP.
      *
      * Then (or in a call case that has no explicit reference-base
      * object) we emit JSOP_UNDEFINED to produce the undefined |this|
@@ -5376,14 +5232,6 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         if (!EmitElemOp(cx, pn2, callop ? JSOP_CALLELEM : JSOP_GETELEM, bce))
             return false;
         break;
-#if JS_HAS_XML_SUPPORT
-      case PNK_XMLUNARY:
-        JS_ASSERT(pn2->isOp(JSOP_XMLNAME));
-        if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
-            return false;
-        callop = true;          /* suppress JSOP_UNDEFINED after */
-        break;
-#endif
       case PNK_FUNCTION:
         /*
          * Top level lambdas which are immediately invoked should be
@@ -5562,18 +5410,6 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
         break;
-#if JS_HAS_XML_SUPPORT
-      case PNK_XMLUNARY:
-        JS_ASSERT(!bce->sc->strict);
-        JS_ASSERT(pn2->isOp(JSOP_SETXMLNAME));
-        if (!EmitTree(cx, bce, pn2->pn_kid))
-            return false;
-        if (Emit1(cx, bce, JSOP_BINDXMLNAME) < 0)
-            return false;
-        if (!EmitElemIncDec(cx, NULL, op, bce))
-            return false;
-        break;
-#endif
       default:
         JS_ASSERT(pn2->isKind(PNK_NAME));
         pn2->setOp(op);
@@ -5946,7 +5782,6 @@ EmitUnary(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     JSOp op = pn->getOp();
     ParseNode *pn2 = pn->pn_kid;
 
-    JS_ASSERT(op != JSOP_XMLNAME);
     if (op == JSOP_TYPEOF && !pn2->isKind(PNK_NAME))
         op = JSOP_TYPEOFEXPR;
 
@@ -6181,16 +6016,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 #endif
 
-#if JS_HAS_XML_SUPPORT
-      case PNK_XMLCURLYEXPR:
-        JS_ASSERT(pn->isArity(PN_UNARY));
-        if (!EmitTree(cx, bce, pn->pn_kid))
-            return false;
-        if (Emit1(cx, bce, pn->getOp()) < 0)
-            return false;
-        break;
-#endif
-
       case PNK_STATEMENTLIST:
         ok = EmitStatementList(cx, bce, pn, top);
         break;
@@ -6294,69 +6119,17 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                     return false;
             }
         } else {
-#if JS_HAS_XML_SUPPORT
-      case PNK_DBLCOLON:
-            JS_ASSERT(pn->getOp() != JSOP_XMLNAME);
-            if (pn->isArity(PN_NAME)) {
-                if (!EmitTree(cx, bce, pn->expr()))
-                    return false;
-                if (!EmitAtomOp(cx, pn, pn->getOp(), bce))
-                    return false;
-                break;
-            }
-
-            /*
-             * Binary :: has a right operand that brackets arbitrary code,
-             * possibly including a let (a = b) ... expression.  We must clear
-             * emittingForInit to avoid mis-compiling such beasts.
-             */
-            bool oldEmittingForInit = bce->emittingForInit;
-            bce->emittingForInit = false;
-#endif
-
             /* Binary operators that evaluate both operands unconditionally. */
             if (!EmitTree(cx, bce, pn->pn_left))
                 return false;
             if (!EmitTree(cx, bce, pn->pn_right))
                 return false;
-#if JS_HAS_XML_SUPPORT
-            bce->emittingForInit = oldEmittingForInit;
-#endif
             if (Emit1(cx, bce, pn->getOp()) < 0)
                 return false;
         }
         break;
 
-#if JS_HAS_XML_SUPPORT
-      case PNK_FUNCTIONNS:
-        ok = (Emit1(cx, bce, JSOP_GETFUNNS) >= 0);
-        break;
-
-      case PNK_XMLUNARY:
-        if (pn->getOp() == JSOP_XMLNAME) {
-            if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
-                return false;
-        } else {
-            JSOp op = pn->getOp();
-            JS_ASSERT(op == JSOP_BINDXMLNAME || op == JSOP_SETXMLNAME);
-            bool oldEmittingForInit = bce->emittingForInit;
-            bce->emittingForInit = false;
-            if (!EmitTree(cx, bce, pn->pn_kid))
-                return false;
-            bce->emittingForInit = oldEmittingForInit;
-            if (Emit1(cx, bce, op) < 0)
-                return false;
-        }
-        break;
-#endif
-
       case PNK_THROW:
-#if JS_HAS_XML_SUPPORT
-      case PNK_AT:
-      case PNK_DEFXMLNS:
-        JS_ASSERT(pn->isArity(PN_UNARY));
-        /* FALL THROUGH */
-#endif
       case PNK_TYPEOF:
       case PNK_VOID:
       case PNK_NOT:
@@ -6377,30 +6150,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitDelete(cx, bce, pn);
         break;
 
-#if JS_HAS_XML_SUPPORT
-      case PNK_FILTER:
-      {
-          JS_ASSERT(!bce->sc->strict);
-
-        if (!EmitTree(cx, bce, pn->pn_left))
-            return false;
-        ptrdiff_t jmp = EmitJump(cx, bce, JSOP_FILTER, 0);
-        if (jmp < 0)
-            return false;
-        top = EmitLoopHead(cx, bce, pn->pn_right);
-        if (top < 0)
-            return false;
-        if (!EmitTree(cx, bce, pn->pn_right))
-            return false;
-        SetJumpOffsetAt(bce, jmp);
-        if (!EmitLoopEntry(cx, bce, NULL))
-            return false;
-        if (EmitJump(cx, bce, JSOP_ENDFILTER, top - bce->offset()) < 0)
-            return false;
-        break;
-      }
-#endif
-
       case PNK_DOT:
         /*
          * Pop a stack operand, convert it to object, get a property named by
@@ -6409,12 +6158,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          */
         ok = EmitPropOp(cx, pn, pn->getOp(), bce, false);
         break;
-
-#if JS_HAS_XML_SUPPORT
-      case PNK_DBLDOT:
-        JS_ASSERT(!bce->sc->strict);
-        /* FALL THROUGH */
-#endif
 
       case PNK_ELEM:
         /*
@@ -6480,15 +6223,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         break;
 
-#if JS_HAS_XML_SUPPORT
-      case PNK_XMLATTR:
-      case PNK_XMLSPACE:
-      case PNK_XMLTEXT:
-      case PNK_XMLCDATA:
-      case PNK_XMLCOMMENT:
-        JS_ASSERT(!bce->sc->strict);
-        /* FALL THROUGH */
-#endif
       case PNK_STRING:
         ok = EmitAtomOp(cx, pn, pn->getOp(), bce);
         break;
@@ -6502,9 +6236,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitRegExp(cx, bce->regexpList.add(pn->pn_objbox), bce);
         break;
 
-#if JS_HAS_XML_SUPPORT
-      case PNK_ANYNAME:
-#endif
       case PNK_TRUE:
       case PNK_FALSE:
       case PNK_THIS:
@@ -6517,85 +6248,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (Emit1(cx, bce, JSOP_DEBUGGER) < 0)
             return false;
         break;
-
-#if JS_HAS_XML_SUPPORT
-      case PNK_XMLELEM:
-      case PNK_XMLLIST:
-        JS_ASSERT(!bce->sc->strict);
-        JS_ASSERT(pn->isKind(PNK_XMLLIST) || pn->pn_count != 0);
-
-        switch (pn->pn_head ? pn->pn_head->getKind() : PNK_XMLLIST) {
-          case PNK_XMLETAGO:
-            JS_ASSERT(0);
-            /* FALL THROUGH */
-          case PNK_XMLPTAGC:
-          case PNK_XMLSTAGO:
-            break;
-          default:
-            if (Emit1(cx, bce, JSOP_STARTXML) < 0)
-                return false;
-        }
-
-        for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            if (pn2->isKind(PNK_XMLCURLYEXPR) && Emit1(cx, bce, JSOP_STARTXMLEXPR) < 0)
-                return false;
-            if (!EmitTree(cx, bce, pn2))
-                return false;
-            if (pn2 != pn->pn_head && Emit1(cx, bce, JSOP_ADD) < 0)
-                return false;
-        }
-
-        if (pn->pn_xflags & PNX_XMLROOT) {
-            if (pn->pn_count == 0) {
-                JS_ASSERT(pn->isKind(PNK_XMLLIST));
-                jsatomid index;
-                if (!bce->makeAtomIndex(cx->names().empty, &index))
-                    return false;
-                if (!EmitIndex32(cx, JSOP_STRING, index, bce))
-                    return false;
-            }
-            if (Emit1(cx, bce, pn->getOp()) < 0)
-                return false;
-        }
-#ifdef DEBUG
-        else
-            JS_ASSERT(pn->pn_count != 0);
-#endif
-        break;
-
-      case PNK_XMLPTAGC:
-      case PNK_XMLSTAGO:
-      case PNK_XMLETAGO:
-        if (!EmitXMLTag(cx, bce, pn))
-            return false;
-        break;
-
-      case PNK_XMLNAME:
-        JS_ASSERT(!bce->sc->strict);
-
-        if (pn->isArity(PN_LIST)) {
-            JS_ASSERT(pn->pn_count != 0);
-            for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-                if (pn2->isKind(PNK_XMLCURLYEXPR) && Emit1(cx, bce, JSOP_STARTXMLEXPR) < 0)
-                    return false;
-                if (!EmitTree(cx, bce, pn2))
-                    return false;
-                if (pn2 != pn->pn_head && Emit1(cx, bce, JSOP_ADD) < 0)
-                    return false;
-            }
-        } else {
-            JS_ASSERT(pn->isArity(PN_NULLARY));
-            ok = pn->isOp(JSOP_OBJECT)
-                 ? EmitObjectOp(cx, pn->pn_objbox, pn->getOp(), bce)
-                 : EmitAtomOp(cx, pn, pn->getOp(), bce);
-        }
-        break;
-
-      case PNK_XMLPI:
-        if (!EmitXMLProcessingInstruction(cx, bce, pn->as<XMLProcessingInstruction>()))
-            return false;
-        break;
-#endif /* JS_HAS_XML_SUPPORT */
 
       case PNK_NOP:
         JS_ASSERT(pn->getArity() == PN_NULLARY);

@@ -486,7 +486,7 @@ protected:
   /**
    * Returns if the step attribute apply for the current type.
    */
-  bool DoesStepApply() const { return DoesMinMaxApply(); }
+  bool DoesStepApply() const { return DoesMinMaxApply() && mType != NS_FORM_INPUT_TIME; }
 
   /**
    * Returns if stepDown and stepUp methods apply for the current type.
@@ -496,7 +496,7 @@ protected:
   /**
    * Returns if valueAsNumber attribute applies for the current type.
    */
-  bool DoesValueAsNumberApply() const { return DoesMinMaxApply() || mType == NS_FORM_INPUT_TIME; }
+  bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
 
   /**
    * Returns if the maxlength attribute applies for the current type.
@@ -710,6 +710,15 @@ protected:
    * @param aStep The value used to be multiplied against the step value.
    */
   nsresult ApplyStep(int32_t aStep);
+
+  /**
+   * Returns if the current type is an experimental mobile type.
+   */
+  static bool IsExperimentalMobileType(uint8_t aType)
+  {
+    return aType == NS_FORM_INPUT_NUMBER || aType == NS_FORM_INPUT_DATE ||
+           aType == NS_FORM_INPUT_TIME;
+  }
 
   nsCOMPtr<nsIControllers> mControllers;
 

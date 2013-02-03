@@ -57,7 +57,7 @@ struct nr_stun_server_client_ {
   STAILQ_ENTRY(nr_stun_server_client_) entry;
 };
 
-typedef STAILQ_HEAD(nr_stun_server_client_head_, nr_stun_server_client_) nr_stun_server_client_head; 
+typedef STAILQ_HEAD(nr_stun_server_client_head_, nr_stun_server_client_) nr_stun_server_client_head;
 
 struct nr_stun_server_ctx_ {
   char *label;

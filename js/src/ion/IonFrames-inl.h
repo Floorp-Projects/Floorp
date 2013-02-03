@@ -98,8 +98,7 @@ GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void 
         *returnAddrOut = (void *) iter.returnAddressToFp();
 
     JS_ASSERT(iter.isScripted());
-    IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
-    return ScriptFromCalleeToken(frame->calleeToken());
+    return iter.script();
 }
 
 } // namespace ion

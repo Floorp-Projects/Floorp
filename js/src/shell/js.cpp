@@ -41,7 +41,6 @@
 #include "jstypedarray.h"
 #include "jstypedarrayinlines.h"
 #include "jsworkers.h"
-#include "jsxml.h"
 #include "jsperf.h"
 
 #include "builtin/TestingFunctions.h"
@@ -717,8 +716,6 @@ static const struct JSOption {
     {"strict",          JSOPTION_STRICT},
     {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
-    {"allow_xml",       JSOPTION_ALLOW_XML},
-    {"moar_xml",        JSOPTION_MOAR_XML},
     {"strict_mode",     JSOPTION_STRICT_MODE},
 };
 
@@ -3870,7 +3867,7 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  Wrap an object into a noop wrapper."),
 
     JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
-"wrap(obj)",
+"wrapWithProto(obj)",
 "  Wrap an object into a noop wrapper with prototype semantics."),
 
     JS_FN_HELP("serialize", Serialize, 1, 0,

@@ -132,7 +132,6 @@ webidl_files = \
   SVGLengthList.webidl \
   SVGLinearGradientElement.webidl \
   SVGLineElement.webidl \
-  SVGLocatableElement.webidl \
   SVGMarkerElement.webidl \
   SVGMaskElement.webidl \
   SVGMatrix.webidl \
@@ -164,7 +163,6 @@ webidl_files = \
   SVGTextPositioningElement.webidl \
   SVGTitleElement.webidl \
   SVGTransform.webidl \
-  SVGTransformableElement.webidl \
   SVGTransformList.webidl \
   SVGTSpanElement.webidl \
   SVGUnitTypes.webidl \
@@ -185,6 +183,7 @@ webidl_files = \
   XMLHttpRequestUpload.webidl \
   XMLSerializer.webidl \
   XPathEvaluator.webidl \
+  XULElement.webidl \
   $(NULL)
 
 ifdef MOZ_WEBGL

@@ -120,11 +120,11 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
  * arguments object.
  */
 static inline bool
-IsOptimizedArguments(StackFrame *fp, Value *vp)
+IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
 {
     AutoAssertNoGC nogc;
-    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS) && fp->script()->needsArgsObj())
-        *vp = ObjectValue(fp->argsObj());
+    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj())
+        *vp = ObjectValue(frame.argsObj());
     return vp->isMagic(JS_OPTIMIZED_ARGUMENTS);
 }
 
@@ -133,21 +133,30 @@ IsOptimizedArguments(StackFrame *fp, Value *vp)
  * However, this speculation must be guarded before calling 'apply' in case it
  * is not the builtin Function.prototype.apply.
  */
+static bool
+GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, HandleValue callee,
+                                   Value *args, uint32_t argc)
+{
+    if (argc == 2 && IsOptimizedArguments(frame, &args[1])) {
+        if (!IsNativeFunction(callee, js_fun_apply)) {
+            RootedScript script(cx, frame.script());
+            if (!JSScript::argumentsOptimizationFailed(cx, script))
+                return false;
+            args[1] = ObjectValue(frame.argsObj());
+        }
+    }
+
+    return true;
+}
+
 static inline bool
 GuardFunApplyArgumentsOptimization(JSContext *cx)
 {
     AssertCanGC();
     FrameRegs &regs = cx->regs();
-    if (IsOptimizedArguments(regs.fp(), &regs.sp[-1])) {
-        CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
-            RootedScript script(cx, regs.fp()->script());
-            if (!JSScript::argumentsOptimizationFailed(cx, script))
-                return false;
-            regs.sp[-1] = ObjectValue(regs.fp()->argsObj());
-        }
-    }
-    return true;
+    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+    return GuardFunApplyArgumentsOptimization(cx, cx->fp(), args.calleev(), args.array(),
+                                              args.length());
 }
 
 /*
@@ -209,21 +218,6 @@ AssertValidPropertyCacheHit(JSContext *cx, JSObject *start, JSObject *found,
                             PropertyCacheEntry *entry)
 {}
 #endif
-
-inline bool
-GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    /*
-     * Various XML properties behave differently when accessed in a
-     * call vs. normal context, and getGeneric will not work right.
-     */
-#if JS_HAS_XML_SUPPORT
-    if (op == JSOP_CALLPROP && obj->isXML())
-        return js_GetXMLMethod(cx, obj, id, vp);
-#endif
-
-    return JSObject::getGeneric(cx, obj, obj, id, vp);
-}
 
 inline bool
 GetLengthProperty(const Value &lval, MutableHandleValue vp)
@@ -295,7 +289,7 @@ GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHan
     RootedObject nobj(cx, obj);
 
     if (obj->getOps()->getProperty) {
-        if (!GetPropertyGenericMaybeCallXML(cx, op, nobj, id, vp))
+        if (!JSObject::getGeneric(cx, nobj, nobj, id, vp))
             return false;
     } else {
         if (!GetPropertyHelper(cx, nobj, id, JSGET_CACHE_RESULT, vp))
@@ -568,15 +562,6 @@ AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
     }
 
-#if JS_HAS_XML_SUPPORT
-    if (IsXML(lhs) && IsXML(rhs)) {
-        if (!js_ConcatenateXML(cx, &lhs.toObject(), &rhs.toObject(), res))
-            return false;
-        types::TypeScript::MonitorUnknown(cx, script, pc);
-        return true;
-    }
-#endif
-
     /*
      * If either operand is an object, any non-integer result must be
      * reported to inference.
@@ -758,20 +743,6 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
                           HandleValue rref, MutableHandleValue res)
 {
     do {
-
-#if JS_HAS_XML_SUPPORT
-        if (op == JSOP_CALLELEM && JS_UNLIKELY(objArg->isXML())) {
-            RootedObject obj(cx, objArg);
-            RootedId id(cx);
-            if (!FetchElementId(cx, obj, rref, &id, res))
-                return false;
-            if (!js_GetXMLMethod(cx, obj, id, res))
-                return false;
-            objArg = obj;
-            break;
-        }
-#endif
-
         // Don't call GetPcScript (needed for analysis) from inside Ion since it's expensive.
         bool analyze = !cx->fp()->beginsIonActivation();
 
@@ -863,6 +834,32 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
 }
 
 static JS_ALWAYS_INLINE bool
+GetElemOptimizedArguments(JSContext *cx, AbstractFramePtr frame, MutableHandleValue lref,
+                          HandleValue rref, MutableHandleValue res, bool *done)
+{
+    JS_ASSERT(!*done);
+
+    if (IsOptimizedArguments(frame, lref.address())) {
+        if (rref.isInt32()) {
+            int32_t i = rref.toInt32();
+            if (i >= 0 && uint32_t(i) < frame.numActualArgs()) {
+                res.set(frame.unaliasedActual(i));
+                *done = true;
+                return true;
+            }
+        }
+
+        RootedScript script(cx, frame.script());
+        if (!JSScript::argumentsOptimizationFailed(cx, script))
+            return false;
+
+        lref.set(ObjectValue(frame.argsObj()));
+    }
+
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
 GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue rref,
                     MutableHandleValue res)
 {
@@ -881,22 +878,11 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
         }
     }
 
-    StackFrame *fp = cx->fp();
-    if (IsOptimizedArguments(fp, lref.address())) {
-        if (rref.isInt32()) {
-            int32_t i = rref.toInt32();
-            if (i >= 0 && uint32_t(i) < fp->numActualArgs()) {
-                res.set(fp->unaliasedActual(i));
-                return true;
-            }
-        }
-
-        RootedScript script(cx, fp->script());
-        if (!JSScript::argumentsOptimizationFailed(cx, script))
-            return false;
-
-        lref.set(ObjectValue(fp->argsObj()));
-    }
+    bool done = false;
+    if (!GetElemOptimizedArguments(cx, cx->fp(), lref, rref, res, &done))
+        return false;
+    if (done)
+        return true;
 
     bool isObject = lref.isObject();
     JSObject *obj = ToObjectFromStack(cx, lref);

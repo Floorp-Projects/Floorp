@@ -1,3 +1,3 @@
-Object.defineProperty(Namespace.prototype, "toString", {
+Object.defineProperty(Array.prototype, "toString", {
     enumerable: true
 })

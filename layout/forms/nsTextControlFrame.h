@@ -17,7 +17,6 @@
 #include "nsStubMutationObserver.h"
 #include "nsITextControlElement.h"
 #include "nsIStatefulFrame.h"
-#include "nsContentUtils.h" // nsAutoScriptBlocker
 #include "nsIEditor.h"
 
 class nsISelectionController;
@@ -246,28 +245,7 @@ protected:
     EditorInitializer(nsTextControlFrame* aFrame) :
       mFrame(aFrame) {}
 
-    NS_IMETHOD Run() {
-      if (mFrame) {
-        // need to block script to avoid bug 669767
-        nsAutoScriptBlocker scriptBlocker;
-
-        nsCOMPtr<nsIPresShell> shell =
-          mFrame->PresContext()->GetPresShell();
-        bool observes = shell->ObservesNativeAnonMutationsForPrint();
-        shell->ObserveNativeAnonMutationsForPrint(true);
-        // This can cause the frame to be destroyed (and call Revoke())
-        mFrame->EnsureEditorInitialized();
-        shell->ObserveNativeAnonMutationsForPrint(observes);
-
-        // The frame can *still* be destroyed even though we have a scriptblocker
-        // Bug 682684
-        if (!mFrame)
-          return NS_ERROR_FAILURE;
-
-        mFrame->FinishedInitializer();
-      }
-      return NS_OK;
-    }
+    NS_IMETHOD Run();
 
     // avoids use of nsWeakFrame
     void Revoke() {

@@ -76,7 +76,7 @@ int nr_ice_component_destroy(nr_ice_component **componentp)
 
     if(!componentp || !*componentp)
       return(0);
-    
+
     component=*componentp;
     *componentp=0;
 
@@ -93,17 +93,17 @@ int nr_ice_component_destroy(nr_ice_component **componentp)
       STAILQ_REMOVE(&component->sockets,s1,nr_ice_socket_,entry);
       nr_ice_socket_destroy(&s1);
     }
-    
-    
+
+
     TAILQ_FOREACH_SAFE(c1, &component->candidates, entry_comp, c2){
       TAILQ_REMOVE(&component->candidates,c1,entry_comp);
       nr_ice_candidate_destroy(&c1);
     }
-    
+
     if(component->keepalive_timer)
       NR_async_timer_cancel(component->keepalive_timer);
     nr_stun_client_ctx_destroy(&component->keepalive_ctx);
-    
+
     RFREE(component);
     return(0);
   }
@@ -126,12 +126,12 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 
     /* First, gather all the local addresses we have */
     if(r=nr_stun_find_local_addresses(addrs,MAXADDRS,&addr_ct)) {
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): unable to find local addresses",ctx->label);      
+      r_log(LOG_ICE,LOG_ERR,"ICE(%s): unable to find local addresses",ctx->label);
       ABORT(r);
     }
 
     if(addr_ct==0){
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): no local addresses available",ctx->label);      
+      r_log(LOG_ICE,LOG_ERR,"ICE(%s): no local addresses available",ctx->label);
       ABORT(R_NOT_FOUND);
     }
 
@@ -148,7 +148,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
           continue;
       }
 
-      
+
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): host address %s",ctx->label,addrs[i].as_string);
       if(r=nr_socket_local_create(&addrs[i],&sock)){
         r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create socket for address %s",ctx->label,addrs[i].as_string);
@@ -157,7 +157,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 
       if(r=nr_ice_socket_create(ctx,component,sock,&isock))
         ABORT(r);
-      
+
       /* Create one host candidate */
 
       snprintf(label, sizeof(label), "host(%s)", addrs[i].as_string);
@@ -233,7 +233,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     /* count the candidates that will be initialized */
     cand=TAILQ_FIRST(&component->candidates);
     if(!cand){
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create any valid candidates");
+      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create any valid candidates",ctx->label);
       ABORT(R_NOT_FOUND);
     }
 
@@ -291,31 +291,31 @@ int nr_ice_component_prune_candidates(nr_ice_ctx *ctx, nr_ice_component *comp)
         NR_ASYNC_SCHEDULE(nr_ice_candidate_destroy_cb,c1);
         goto next_c1;
       }
-        
+
       c2=TAILQ_NEXT(c1,entry_comp);
 
       while(c2){
         nr_ice_candidate *tmp;
 
         if(!nr_transport_addr_cmp(&c1->base,&c2->base,NR_TRANSPORT_ADDR_CMP_MODE_ALL) && !nr_transport_addr_cmp(&c1->addr,&c2->addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL)){
-          
+
           if((c1->type == c2->type) ||
             (c1->type==HOST && c2->type == SERVER_REFLEXIVE) ||
             (c2->type==HOST && c1->type == SERVER_REFLEXIVE)){
-            
+
             /* OK these are redundant. Remove the lower pri one */
             tmp=c2;
             c2=TAILQ_NEXT(c2,entry_comp);
             if(c1n==tmp)
               c1n=c2;
-            
+
             r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Removing redundant candidate %s",
               ctx->label,tmp->label);
-            
+
             TAILQ_REMOVE(&comp->candidates,tmp,entry_comp);
             comp->candidate_ct--;
             TAILQ_REMOVE(&tmp->isock->candidates,tmp,entry_sock);
-            
+
             nr_ice_candidate_destroy(&tmp);
           }
         }
@@ -323,10 +323,10 @@ int nr_ice_component_prune_candidates(nr_ice_ctx *ctx, nr_ice_component *comp)
           c2=TAILQ_NEXT(c2,entry_comp);
         }
       }
-    next_c1:     
+    next_c1:
       c1=c1n;
     }
-        
+
     return(0);
   }
 
@@ -348,7 +348,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
     assert(sock!=0);
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)(%d): received request from %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,req->src_addr.as_string);
-    
+
     /* Check for role conficts (7.2.1.1) */
     if(comp->stream->pctx->controlling){
       if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_ICE_CONTROLLING,&attr)){
@@ -366,7 +366,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
           r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): returning 487 role conflict",comp->stream->pctx->label);
 
           *error=487;
-          ABORT(R_REJECTED); 
+          ABORT(R_REJECTED);
         }
       }
     }
@@ -374,7 +374,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
       if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_ICE_CONTROLLED,&attr)){
         /* OK, there is a conflict. Who's right? */
         r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): role conflict, both controlled",comp->stream->pctx->label);
-        
+
         if(attr->u.ice_controlling < comp->stream->pctx->tiebreaker){
           r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): switching to controlling",comp->stream->pctx->label);
 
@@ -386,7 +386,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
           r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): returning 487 role conflict",comp->stream->pctx->label);
 
           *error=487;
-          ABORT(R_REJECTED); 
+          ABORT(R_REJECTED);
         }
       }
     }
@@ -397,7 +397,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
       ABORT(r);
     }
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): This STUN request appears to map to local addr",comp->stream->pctx->label,local_addr.as_string);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): This STUN request appears to map to local addr %s",comp->stream->pctx->label,local_addr.as_string);
 
     pair=TAILQ_FIRST(&comp->stream->check_list);
     while(pair){
@@ -408,7 +408,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
       if(pair->remote->component->component_id!=comp->component_id)
         goto next_pair;
       component_id_matched = 1;
-      
+
       if(nr_transport_addr_cmp(&pair->local->base,&local_addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL))
         goto next_pair;
       local_addr_matched=1;
@@ -418,8 +418,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
         goto next_pair;
       remote_addr_matched = 1;
 
-      if(pair->state==NR_ICE_PAIR_STATE_FAILED ||
-        pair->state==NR_ICE_PAIR_STATE_FAILED){
+      if(pair->state==NR_ICE_PAIR_STATE_FAILED){
         found_invalid=pair;
         goto next_pair;
       }
@@ -437,7 +436,7 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
       if(!found_invalid){
         /* First find our local component candidate */
         nr_ice_candidate *cand;
-      
+
         r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): no matching pair",comp->stream->pctx->label);
         cand=TAILQ_FIRST(&comp->local_component->candidates);
         while(cand){
@@ -475,18 +474,18 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
           *error=(r==R_NO_MEMORY)?500:400;
           ABORT(r);
         }
-        nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FROZEN);        
-      
+        nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FROZEN);
+
         if(r=nr_ice_candidate_pair_insert(&comp->stream->check_list,pair)) {
           *error=(r==R_NO_MEMORY)?500:400;
           ABORT(r);
         }
-      
+
         pcand=0;
       }
       else{
         /* OK, there was a pair, it's just invalid: According to Section
-           7.2.1.4, we need to resurrect it 
+           7.2.1.4, we need to resurrect it
         */
         if(found_invalid->state == NR_ICE_PAIR_STATE_FAILED){
           pair=found_invalid;
@@ -571,7 +570,7 @@ int nr_ice_component_pair_candidates(nr_ice_peer_ctx *pctx, nr_ice_component *lc
           ABORT(R_INTERNAL);
           break;
       }
-      
+
       /* PAIR with each peer*/
       if(TAILQ_EMPTY(&pcomp->candidates)) {
           /* can happen if our peer proposes no (or all bogus) candidates */
@@ -589,17 +588,17 @@ int nr_ice_component_pair_candidates(nr_ice_peer_ctx *pctx, nr_ice_component *lc
         if (pcand->state == NR_ICE_CAND_PEER_CANDIDATE_UNPAIRED) {
           nr_ice_compute_codeword(pcand->label,strlen(pcand->label),codeword);
           r_log(LOG_ICE,LOG_DEBUG,"Examining peer candidate %s:%s",codeword,pcand->label);
-          
+
           if(r=nr_ice_candidate_pair_create(pctx,lcand,pcand,&pair))
             ABORT(r);
-          
+
           if(r=nr_ice_candidate_pair_insert(&pcomp->stream->check_list,
               pair))
             ABORT(r);
         }
         else {
-	  was_paired = 1;
-	}
+          was_paired = 1;
+        }
         pcand=TAILQ_NEXT(pcand,entry_comp);
       }
 
@@ -623,13 +622,13 @@ int nr_ice_component_pair_candidates(nr_ice_peer_ctx *pctx, nr_ice_component *lc
 
     next_cand:
       lcand=TAILQ_NEXT(lcand,entry_comp);
-    } 
+    }
 
     /* Mark all peer candidates as paired */
     pcand=TAILQ_FIRST(&pcomp->candidates);
     while(pcand){
       pcand->state = NR_ICE_CAND_PEER_CANDIDATE_PAIRED;
-      
+
       pcand=TAILQ_NEXT(pcand,entry_comp);
     }
 
@@ -667,7 +666,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
     while(p2){
       if((p2 != pair) && (p2->remote->component->component_id == comp->component_id)){
         r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): cancelling pair %s (0x%p)",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->as_string,p2);
-        
+
         if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2))
           ABORT(r);
       }
@@ -678,7 +677,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
 
     if(r=nr_ice_media_stream_component_nominated(comp->stream,comp))
       ABORT(r);
-      
+
     _status=0;
   abort:
     return(_status);
@@ -737,7 +736,7 @@ int nr_ice_component_select_pair(nr_ice_peer_ctx *pctx, nr_ice_component *comp)
     int ct=0;
     nr_ice_cand_pair *pair;
     int r,_status;
-    
+
     /* Size the array */
     pair=TAILQ_FIRST(&comp->stream->check_list);
     while(pair){

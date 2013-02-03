@@ -159,8 +159,6 @@ let gInitialPages = [
 
 #ifdef MOZ_DATA_REPORTING
 #include browser-data-submission-info-bar.js
-
-let gDataNotificationInfoBar = new DataNotificationInfoBar();
 #endif
 
 #ifdef MOZ_SERVICES_SYNC
@@ -172,9 +170,7 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
   if (WINTASKBAR_CONTRACTID in Cc &&
       Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
-    let temp = {};
-    Cu.import("resource:///modules/WindowsPreviewPerTab.jsm", temp);
-    let AeroPeek = temp.AeroPeek;
+    let AeroPeek = Cu.import("resource:///modules/WindowsPreviewPerTab.jsm", {}).AeroPeek;
     return {
       onOpenWindow: function () {
         AeroPeek.onOpenWindow(window);
@@ -740,6 +736,10 @@ const gFormSubmitObserver = {
 // the capturing phase and call stopPropagation on every event.
 
 let gGestureSupport = {
+  _currentRotation: 0,
+  _lastRotateDelta: 0,
+  _rotateMomentumThreshold: .75,
+
   /**
    * Add or remove mouse gesture event listeners
    *
@@ -799,6 +799,10 @@ let gGestureSupport = {
       case "MozTapGesture":
         aEvent.preventDefault();
         this._doAction(aEvent, ["tap"]);
+        break;
+      case "MozRotateGesture":
+        aEvent.preventDefault();
+        this._doAction(aEvent, ["twist", "end"]);
         break;
       /* case "MozPressTapGesture":
         break; */
@@ -916,7 +920,7 @@ let gGestureSupport = {
           let cmdEvent = document.createEvent("xulcommandevent");
           cmdEvent.initCommandEvent("command", true, true, window, 0,
                                     aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKey,
-                                    aEvent.metaKey, null);
+                                    aEvent.metaKey, aEvent);
           node.dispatchEvent(cmdEvent);
         }
       } else {
@@ -975,6 +979,123 @@ let gGestureSupport = {
     catch (e) {
       return aDef;
     }
+  },
+
+  /**
+   * Perform rotation for ImageDocuments
+   *
+   * @param aEvent
+   *        The MozRotateGestureUpdate event triggering this call
+   */
+  rotate: function(aEvent) {
+    if (!(content.document instanceof ImageDocument))
+      return;
+
+    let contentElement = content.document.body.firstElementChild;
+    if (!contentElement)
+      return;
+
+    this.rotation = Math.round(this.rotation + aEvent.delta);
+    contentElement.style.transform = "rotate(" + this.rotation + "deg)";
+    this._lastRotateDelta = aEvent.delta;
+  },
+
+  /**
+   * Perform a rotation end for ImageDocuments
+   */
+  rotateEnd: function() {
+    if (!(content.document instanceof ImageDocument))
+      return;
+
+    let contentElement = content.document.body.firstElementChild;
+    if (!contentElement)
+      return;
+
+    let transitionRotation = 0;
+
+    // The reason that 360 is allowed here is because when rotating between
+    // 315 and 360, setting rotate(0deg) will cause it to rotate the wrong
+    // direction around--spinning wildly.
+    if (this.rotation <= 45)
+      transitionRotation = 0;
+    else if (this.rotation > 45 && this.rotation <= 135)
+      transitionRotation = 90;
+    else if (this.rotation > 135 && this.rotation <= 225)
+      transitionRotation = 180;
+    else if (this.rotation > 225 && this.rotation <= 315)
+      transitionRotation = 270;
+    else
+      transitionRotation = 360;
+
+    // If we're going fast enough, and we didn't already snap ahead of rotation,
+    // then snap ahead of rotation to simulate momentum
+    if (this._lastRotateDelta > this._rotateMomentumThreshold &&
+        this.rotation > transitionRotation)
+      transitionRotation += 90;
+    else if (this._lastRotateDelta < -1 * this._rotateMomentumThreshold &&
+             this.rotation < transitionRotation)
+      transitionRotation -= 90;
+
+    contentElement.classList.add("completeRotation");
+    contentElement.addEventListener("transitionend", this._clearCompleteRotation);
+
+    contentElement.style.transform = "rotate(" + transitionRotation + "deg)";
+    this.rotation = transitionRotation;
+  },
+
+  /**
+   * Gets the current rotation for the ImageDocument
+   */
+  get rotation() {
+    return this._currentRotation;
+  },
+
+  /**
+   * Sets the current rotation for the ImageDocument
+   *
+   * @param aVal
+   *        The new value to take.  Can be any value, but it will be bounded to
+   *        0 inclusive to 360 exclusive.
+   */
+  set rotation(aVal) {
+    this._currentRotation = aVal % 360;
+    if (this._currentRotation < 0)
+      this._currentRotation += 360;
+    return this._currentRotation;
+  },
+
+  /**
+   * When the location/tab changes, need to reload the current rotation for the
+   * image
+   */
+  restoreRotationState: function() {
+    if (!(content.document instanceof ImageDocument))
+      return;
+
+    let contentElement = content.document.body.firstElementChild;
+    let transformValue = content.window.getComputedStyle(contentElement, null)
+                                       .transform;
+
+    if (transformValue == "none") {
+      this.rotation = 0;
+      return;
+    }
+
+    // transformValue is a rotation matrix--split it and do mathemagic to
+    // obtain the real rotation value
+    transformValue = transformValue.split("(")[1]
+                                   .split(")")[0]
+                                   .split(",");
+    this.rotation = Math.round(Math.atan2(transformValue[1], transformValue[0]) *
+                               (180 / Math.PI));
+  },
+
+  /**
+   * Removes the transition rule by removing the completeRotation class
+   */
+  _clearCompleteRotation: function() {
+    this.classList.remove("completeRotation");
+    this.removeEventListener("transitionend", this._clearCompleteRotation);
   },
 };
 
@@ -1265,7 +1386,7 @@ var gBrowserInit = {
 
     gBrowser.addEventListener("pageshow", function(event) {
       // Filter out events that are not about the document load we are interested in
-      if (event.target == content.document)
+      if (content && event.target == content.document)
         setTimeout(pageShowEventHandlers, 0, event);
     }, true);
 
@@ -1350,10 +1471,9 @@ var gBrowserInit = {
 
 #ifdef XP_WIN
       if (Win7Features) {
-        let tempScope = {};
-        Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm",
-                  tempScope);
-        tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
+        let DownloadTaskbarProgress =
+          Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
+        DownloadTaskbarProgress.onBrowserWindowLoad(window);
       }
 #endif
     }, 10000);
@@ -3768,6 +3888,44 @@ function updateEditUIVisibility()
 }
 
 /**
+ * Makes the Character Encoding menu enabled or disabled as appropriate.
+ * To be called when the View menu or the app menu is opened.
+ */
+function updateCharacterEncodingMenuState()
+{
+  let charsetMenu = document.getElementById("charsetMenu");
+  let appCharsetMenu = document.getElementById("appmenu_charsetMenu");
+  let appDevCharsetMenu =
+    document.getElementById("appmenu_developer_charsetMenu");
+  // gBrowser is null on Mac when the menubar shows in the context of
+  // non-browser windows. The above elements may be null depending on 
+  // what parts of the menubar are present. E.g. no app menu on Mac.
+  if (gBrowser &&
+      gBrowser.docShell &&
+      gBrowser.docShell.mayEnableCharacterEncodingMenu) {
+    if (charsetMenu) {
+      charsetMenu.removeAttribute("disabled");
+    }
+    if (appCharsetMenu) {
+      appCharsetMenu.removeAttribute("disabled");
+    }
+    if (appDevCharsetMenu) {
+      appDevCharsetMenu.removeAttribute("disabled");
+    }
+  } else {
+    if (charsetMenu) {
+      charsetMenu.setAttribute("disabled", "true");
+    }
+    if (appCharsetMenu) {
+      appCharsetMenu.setAttribute("disabled", "true");
+    }
+    if (appDevCharsetMenu) {
+      appDevCharsetMenu.setAttribute("disabled", "true");
+    }
+  }
+}
+
+/**
  * Returns true if |aMimeType| is text-based, false otherwise.
  *
  * @param aMimeType
@@ -4188,6 +4346,8 @@ var XULBrowserWindow = {
       }
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
+
+    gGestureSupport.restoreRotationState();
 
     // See bug 358202, when tabs are switched during a drag operation,
     // timers don't fire on windows (bug 203573)
@@ -7117,15 +7277,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevToolsBrowser",
                                   "resource:///modules/devtools/gDevTools.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
-  let tempScope = {};
-  Cu.import("resource:///modules/HUDService.jsm", tempScope);
-  try {
-    return tempScope.HUDService.consoleUI;
-  }
-  catch (ex) {
-    Components.utils.reportError(ex);
-    return null;
-  }
+  return Cu.import("resource:///modules/HUDService.jsm", {}).HUDService.consoleUI;
 });
 
 // Prompt user to restart the browser in safe mode

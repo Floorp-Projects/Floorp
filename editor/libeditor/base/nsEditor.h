@@ -6,7 +6,8 @@
 #ifndef __editor_h__
 #define __editor_h__
 
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/TypedEnum.h"          // for MOZ_BEGIN_ENUM_CLASS, etc.
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMArray.h"                 // for nsCOMArray
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr

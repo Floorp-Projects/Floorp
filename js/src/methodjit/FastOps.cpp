@@ -866,12 +866,18 @@ mjit::Compiler::jsop_setelem_dense(types::StackTypeSet::DoubleConversion convers
 
     frame.forgetMismatchedObject(obj);
 
+    bool convertDouble = false;
+
     // If the array being written to might need integer elements converted to
     // doubles, make the conversion before writing.
     if (conversion == types::StackTypeSet::AlwaysConvertToDoubles ||
         conversion == types::StackTypeSet::MaybeConvertToDoubles)
     {
-        frame.ensureDouble(value);
+        // A constant value may still be live and the entry itself should not
+        // be updated.
+        convertDouble = true;
+        if (!value->isConstant())
+            frame.ensureDouble(value);
     }
 
     // We might not know whether this is an object, but if it is an object we
@@ -894,6 +900,10 @@ mjit::Compiler::jsop_setelem_dense(types::StackTypeSet::DoubleConversion convers
 
     ValueRemat vr;
     frame.pinEntry(value, vr, /* breakDouble = */ false);
+
+    // Constant values that need conversion to double have not been fixed yet.
+    if (convertDouble && value->isConstant() && value->getValue().isInt32())
+        vr = ValueRemat::FromConstant(DoubleValue(value->getValue().toInt32()));
 
     Int32Key key = id->isConstant()
                  ? Int32Key::FromConstant(id->getValue().toInt32())
@@ -1343,12 +1353,14 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         return true;
     }
 
+    types::StackTypeSet::DoubleConversion conversion = types::StackTypeSet::DontConvertToDoubles;
+
     // If the object is definitely a dense array or a typed array we can generate
     // code directly without using an inline cache.
     if (cx->typeInferenceEnabled()) {
         types::StackTypeSet *types = analysis->poppedTypes(PC, 2);
 
-        types::StackTypeSet::DoubleConversion conversion = types->convertDoubleElements(cx);
+        conversion = types->convertDoubleElements(cx);
         if (types->getKnownClass() == &ArrayClass &&
             !types->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES |
                                    types::OBJECT_FLAG_LENGTH_OVERFLOW) &&
@@ -1356,6 +1368,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
             conversion != types::StackTypeSet::AmbiguousDoubleConversion &&
             (conversion == types::StackTypeSet::DontConvertToDoubles ||
              value->isType(JSVAL_TYPE_DOUBLE) ||
+             value->isConstant() ||
              popGuaranteed))
         {
             // Inline dense array path.
@@ -1377,7 +1390,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
 
     frame.forgetMismatchedObject(obj);
 
-    if (id->isType(JSVAL_TYPE_DOUBLE) || !globalObj) {
+    if (id->isType(JSVAL_TYPE_DOUBLE) || !globalObj || conversion != types::StackTypeSet::DontConvertToDoubles) {
         jsop_setelem_slow();
         return true;
     }

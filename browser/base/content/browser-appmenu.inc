@@ -11,6 +11,7 @@
 #endif
                              return;
                            }
+                           updateCharacterEncodingMenuState();
                            if (event.target.parentNode.parentNode.parentNode.parentNode == this)
                              this._currentPopup = event.target;">
   <hbox>

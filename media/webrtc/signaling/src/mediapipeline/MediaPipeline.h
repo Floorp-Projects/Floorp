@@ -120,6 +120,8 @@ class MediaPipeline : public sigslot::has_slots<> {
   int rtp_packets_received() const { return rtp_packets_received_; }
   int rtcp_packets_received() const { return rtp_packets_received_; }
 
+  MediaSessionConduit *Conduit() { return conduit_; }
+
   // Thread counting
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPipeline)
 
@@ -222,6 +224,18 @@ class MediaPipeline : public sigslot::has_slots<> {
 };
 
 
+class ConduitDeleteEvent: public nsRunnable
+{
+public:
+  ConduitDeleteEvent(TemporaryRef<MediaSessionConduit> aConduit) :
+    mConduit(aConduit) {}
+
+  /* we exist solely to proxy release of the conduit */
+  NS_IMETHOD Run() { return NS_OK; }
+private:
+  RefPtr<MediaSessionConduit> mConduit;
+};
+
 // A specialization of pipeline for reading from an input device
 // and transmitting to the network.
 class MediaPipelineTransmit : public MediaPipeline {
@@ -262,6 +276,13 @@ class MediaPipelineTransmit : public MediaPipeline {
       : conduit_(conduit), active_(false), samples_10ms_buffer_(nullptr),
         buffer_current_(0), samplenum_10ms_(0){}
 
+    ~PipelineListener()
+    {
+      // release conduit on mainthread.  Must use forget()!
+      NS_DispatchToMainThread(new ConduitDeleteEvent(conduit_.forget()), NS_DISPATCH_NORMAL);
+    }
+
+
     // XXX. This is not thread-safe but the hazard is just
     // that active_ = true takes a while to propagate. Revisit
     // when 823600 lands.
@@ -272,8 +293,8 @@ class MediaPipelineTransmit : public MediaPipeline {
                                           TrackRate rate,
                                           TrackTicks offset,
                                           uint32_t events,
-                                          const MediaSegment& queued_media);
-    virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) {}
+                                          const MediaSegment& queued_media) MOZ_OVERRIDE;
+    virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) MOZ_OVERRIDE {}
 
    private:
     virtual void ProcessAudioChunk(AudioSessionConduit *conduit,
@@ -365,13 +386,19 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
     PipelineListener(SourceMediaStream * source, TrackID track_id,
                      const RefPtr<MediaSessionConduit>& conduit);
 
+    ~PipelineListener()
+    {
+      // release conduit on mainthread.  Must use forget()!
+      NS_DispatchToMainThread(new ConduitDeleteEvent(conduit_.forget()), NS_DISPATCH_NORMAL);
+    }
+
     // Implement MediaStreamListener
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                                           TrackRate rate,
                                           TrackTicks offset,
                                           uint32_t events,
-                                          const MediaSegment& queued_media) {}
-    virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
+                                          const MediaSegment& queued_media) MOZ_OVERRIDE {}
+    virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) MOZ_OVERRIDE;
 
    private:
     SourceMediaStream *source_;

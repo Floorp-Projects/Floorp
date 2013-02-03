@@ -121,7 +121,7 @@ nr_stun_receive_message(nr_stun_message *req, nr_stun_message *msg)
 #ifdef USE_RFC_3489_BACKWARDS_COMPATIBLE
         /* in RFC 3489 there is no magic cookie, it's part of the transaction ID */
 #else
-#ifdef NDEBUG 
+#ifdef NDEBUG
         /* in deployment builds we should always see a recognized magic cookie */
         r_log(NR_LOG_STUN, LOG_ERR, "Missing Magic Cookie");
         ABORT(R_REJECTED);
@@ -149,7 +149,7 @@ nr_stun_process_request(nr_stun_message *req, nr_stun_message *res)
     int r;
     nr_stun_attr_unknown_attributes unknown_attributes = { { 0 } };
     nr_stun_message_attribute *attr;
-    
+
     if (req->comprehension_required_unknown_attributes > 0) {
         nr_stun_form_error_response(req, res, 420, "Unknown Attributes");
 
@@ -187,11 +187,11 @@ nr_stun_process_indication(nr_stun_message *ind)
 {
     int _status;
 #ifdef USE_STUN_PEDANTIC
-    
+
     if (ind->comprehension_required_unknown_attributes > 0)
         ABORT(R_REJECTED);
 #endif /* USE_STUN_PEDANTIC */
- 
+
     _status=0;
 #ifdef USE_STUN_PEDANTIC
   abort:
@@ -204,7 +204,7 @@ int
 nr_stun_process_success_response(nr_stun_message *res)
 {
     int _status;
-    
+
 #ifdef USE_STUN_PEDANTIC
     if (res->comprehension_required_unknown_attributes > 0)
         ABORT(R_REJECTED);

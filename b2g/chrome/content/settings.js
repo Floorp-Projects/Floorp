@@ -121,9 +121,17 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
                                           Ci.nsIPrefLocalizedString).data;
   } catch(e) {}
 
+  // Bug 830782 - Homescreen is in English instead of selected locale after
+  // the first run experience.
+  // In order to ensure the current intl value is reflected on the child
+  // process let's always write a user value, even if this one match the
+  // current localized pref value.
   if (!((new RegExp('^' + value + '[^a-z-_] *[,;]?', 'i')).test(intl))) {
-    Services.prefs.setCharPref(prefName, value + ', ' + intl);
+    value = value + ', ' + intl;
+  } else {
+    value = intl;
   }
+  Services.prefs.setCharPref(prefName, value);
 
   if (shell.hasStarted() == false) {
     shell.start();
@@ -197,13 +205,37 @@ SettingsListener.observe('devtools.debugger.remote-enabled', false, function(val
   value ? RemoteDebugger.start() : RemoteDebugger.stop();
 
 #ifdef MOZ_WIDGET_GONK
+  let enableAdb = value;
+
+  if (Services.prefs.getBoolPref('marionette.defaultPrefs.enabled')) {
+    // Marionette is enabled. Force adb on, since marionette requires remote
+    // debugging to be disabled (we don't want adb to track the remote debugger
+    // setting).
+
+    enableAdb = true;
+  }
+
   // Configure adb.
   try {
-    let current = libcutils.property_get("persist.sys.usb.config");
-    let prefix = current.replace(/,adb/, "");
-    libcutils.property_set("persist.sys.usb.config",
-                           prefix + (value ? ",adb" : ""));
-    current = libcutils.property_get("persist.sys.usb.config");
+    let currentConfig = libcutils.property_get("persist.sys.usb.config");
+    let configFuncs = currentConfig.split(",");
+    let adbIndex = configFuncs.indexOf("adb");
+
+    if (enableAdb) {
+      // Add adb to the list of functions, if not already present
+      if (adbIndex < 0) {
+        configFuncs.push("adb");
+      }
+    } else {
+      // Remove adb from the list of functions, if present
+      if (adbIndex >= 0) {
+        configFuncs.splice(adbIndex,1);
+      }
+    }
+    let newConfig = configFuncs.join(",");
+    if (newConfig != currentConfig) {
+      libcutils.property_set("persist.sys.usb.config", newConfig);
+    }
   } catch(e) {
     dump("Error configuring adb: " + e);
   }

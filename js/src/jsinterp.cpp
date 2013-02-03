@@ -66,10 +66,6 @@
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
-#if JS_HAS_XML_SUPPORT
-#include "jsxml.h"
-#endif
-
 #include "jsautooplen.h"
 
 #if defined(JS_METHODJIT) && defined(JS_MONOIC)
@@ -205,15 +201,6 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
     if (value.get().isPrimitive()) {
         vp.set(value);
     } else {
-#if JS_HAS_XML_SUPPORT
-        /* Extract the function name from function::name qname. */
-        if (idval.get().isObject()) {
-            JSObject *obj = &idval.get().toObject();
-            if (js_GetLocalNameFromFunctionQName(obj, id.address(), cx))
-                idval = IdToValue(id);
-        }
-#endif
-
         JSObject *obj = NewObjectWithClassProto(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj)
             return false;
@@ -592,17 +579,6 @@ js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, JSBool *bp)
 bool
 js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *result)
 {
-#if JS_HAS_XML_SUPPORT
-    if (JS_UNLIKELY(lval.isObject() && lval.toObject().isXML()) ||
-                    (rval.isObject() && rval.toObject().isXML())) {
-        JSBool res;
-        if (!js_TestXMLEquality(cx, lval, rval, &res))
-            return false;
-        *result = !!res;
-        return true;
-    }
-#endif
-
     if (SameType(lval, rval)) {
         if (lval.isString()) {
             JSString *l = lval.toString();
@@ -966,7 +942,6 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start,
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
-JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
 
 /*
  * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
@@ -1341,30 +1316,49 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
-ADD_EMPTY_CASE(JSOP_UNUSED0)
-ADD_EMPTY_CASE(JSOP_UNUSED1)
-ADD_EMPTY_CASE(JSOP_UNUSED2)
-ADD_EMPTY_CASE(JSOP_UNUSED3)
-ADD_EMPTY_CASE(JSOP_UNUSED12)
-ADD_EMPTY_CASE(JSOP_UNUSED13)
-ADD_EMPTY_CASE(JSOP_UNUSED17)
-ADD_EMPTY_CASE(JSOP_UNUSED18)
-ADD_EMPTY_CASE(JSOP_UNUSED19)
-ADD_EMPTY_CASE(JSOP_UNUSED20)
-ADD_EMPTY_CASE(JSOP_UNUSED21)
-ADD_EMPTY_CASE(JSOP_UNUSED22)
-ADD_EMPTY_CASE(JSOP_UNUSED23)
-ADD_EMPTY_CASE(JSOP_UNUSED24)
-ADD_EMPTY_CASE(JSOP_UNUSED25)
-ADD_EMPTY_CASE(JSOP_UNUSED29)
-ADD_EMPTY_CASE(JSOP_UNUSED30)
-ADD_EMPTY_CASE(JSOP_UNUSED31)
+ADD_EMPTY_CASE(JSOP_UNUSED71)
+ADD_EMPTY_CASE(JSOP_UNUSED107)
+ADD_EMPTY_CASE(JSOP_UNUSED132)
+ADD_EMPTY_CASE(JSOP_UNUSED147)
+ADD_EMPTY_CASE(JSOP_UNUSED148)
+ADD_EMPTY_CASE(JSOP_UNUSED161)
+ADD_EMPTY_CASE(JSOP_UNUSED162)
+ADD_EMPTY_CASE(JSOP_UNUSED163)
+ADD_EMPTY_CASE(JSOP_UNUSED164)
+ADD_EMPTY_CASE(JSOP_UNUSED165)
+ADD_EMPTY_CASE(JSOP_UNUSED166)
+ADD_EMPTY_CASE(JSOP_UNUSED167)
+ADD_EMPTY_CASE(JSOP_UNUSED168)
+ADD_EMPTY_CASE(JSOP_UNUSED169)
+ADD_EMPTY_CASE(JSOP_UNUSED170)
+ADD_EMPTY_CASE(JSOP_UNUSED171)
+ADD_EMPTY_CASE(JSOP_UNUSED172)
+ADD_EMPTY_CASE(JSOP_UNUSED173)
+ADD_EMPTY_CASE(JSOP_UNUSED174)
+ADD_EMPTY_CASE(JSOP_UNUSED175)
+ADD_EMPTY_CASE(JSOP_UNUSED176)
+ADD_EMPTY_CASE(JSOP_UNUSED177)
+ADD_EMPTY_CASE(JSOP_UNUSED178)
+ADD_EMPTY_CASE(JSOP_UNUSED179)
+ADD_EMPTY_CASE(JSOP_UNUSED180)
+ADD_EMPTY_CASE(JSOP_UNUSED181)
+ADD_EMPTY_CASE(JSOP_UNUSED182)
+ADD_EMPTY_CASE(JSOP_UNUSED183)
+ADD_EMPTY_CASE(JSOP_UNUSED188)
+ADD_EMPTY_CASE(JSOP_UNUSED189)
+ADD_EMPTY_CASE(JSOP_UNUSED190)
+ADD_EMPTY_CASE(JSOP_UNUSED200)
+ADD_EMPTY_CASE(JSOP_UNUSED201)
+ADD_EMPTY_CASE(JSOP_UNUSED208)
+ADD_EMPTY_CASE(JSOP_UNUSED209)
+ADD_EMPTY_CASE(JSOP_UNUSED210)
+ADD_EMPTY_CASE(JSOP_UNUSED219)
+ADD_EMPTY_CASE(JSOP_UNUSED220)
+ADD_EMPTY_CASE(JSOP_UNUSED221)
+ADD_EMPTY_CASE(JSOP_UNUSED222)
+ADD_EMPTY_CASE(JSOP_UNUSED223)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
-#if JS_HAS_XML_SUPPORT
-ADD_EMPTY_CASE(JSOP_STARTXML)
-ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
-#endif
 END_EMPTY_CASES
 
 BEGIN_CASE(JSOP_LOOPHEAD)
@@ -1616,12 +1610,6 @@ BEGIN_CASE(JSOP_AND)
 }
 END_CASE(JSOP_AND)
 
-/*
- * If the index value at sp[n] is not an int that fits in a jsval, it could
- * be an object (an XML QName, AttributeName, or AnyName), but only if we are
- * compiling with JS_HAS_XML_SUPPORT.  Otherwise convert the index value to a
- * string atom id.
- */
 #define FETCH_ELEMENT_ID(obj, n, id)                                          \
     JS_BEGIN_MACRO                                                            \
         const Value &idval_ = regs.sp[n];                                     \
@@ -2139,10 +2127,9 @@ END_CASE(JSOP_DELELEM)
 BEGIN_CASE(JSOP_TOID)
 {
     /*
-     * Increment or decrement requires use to lookup the same property twice, but we need to avoid
-     * the oberservable stringification the second time.
-     * There must be an object value below the id, which will not be popped
-     * but is necessary in interning the id for XML.
+     * Increment or decrement requires use to lookup the same property twice,
+     * but we need to avoid the observable stringification the second time.
+     * There must be an object value below the id, which will not be popped.
      */
     RootedValue &objval = rootValue0, &idval = rootValue1;
     objval = regs.sp[-2];
@@ -3125,339 +3112,6 @@ BEGIN_CASE(JSOP_DEBUGGER)
     }
 }
 END_CASE(JSOP_DEBUGGER)
-
-#if JS_HAS_XML_SUPPORT
-BEGIN_CASE(JSOP_DEFXMLNS)
-{
-    JS_ASSERT(!script->strict);
-
-    if (!js_SetDefaultXMLNamespace(cx, regs.sp[-1]))
-        goto error;
-    regs.sp--;
-}
-END_CASE(JSOP_DEFXMLNS)
-
-BEGIN_CASE(JSOP_ANYNAME)
-{
-    JS_ASSERT(!script->strict);
-
-    cx->runtime->gcExactScanningEnabled = false;
-
-    jsid id;
-    if (!js_GetAnyName(cx, &id))
-        goto error;
-    PUSH_COPY(IdToValue(id));
-}
-END_CASE(JSOP_ANYNAME)
-#endif
-
-BEGIN_CASE(JSOP_QNAMEPART)
-    /*
-     * We do not JS_ASSERT(!script->strict) here because JSOP_QNAMEPART
-     * is used for __proto__ and (in contexts where we favor JSOP_*ELEM instead
-     * of JSOP_*PROP) obj.prop compiled as obj['prop'].
-     */
-    PUSH_STRING(script->getAtom(regs.pc));
-END_CASE(JSOP_QNAMEPART)
-
-#if JS_HAS_XML_SUPPORT
-BEGIN_CASE(JSOP_QNAMECONST)
-{
-    JS_ASSERT(!script->strict);
-    Value rval = StringValue(script->getAtom(regs.pc));
-    Value lval = regs.sp[-1];
-    JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
-    if (!obj)
-        goto error;
-    regs.sp[-1].setObject(*obj);
-}
-END_CASE(JSOP_QNAMECONST)
-
-BEGIN_CASE(JSOP_QNAME)
-{
-    JS_ASSERT(!script->strict);
-
-    Value rval = regs.sp[-1];
-    Value lval = regs.sp[-2];
-    JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
-    if (!obj)
-        goto error;
-    regs.sp--;
-    regs.sp[-1].setObject(*obj);
-}
-END_CASE(JSOP_QNAME)
-
-BEGIN_CASE(JSOP_TOATTRNAME)
-{
-    JS_ASSERT(!script->strict);
-
-    Value rval;
-    rval = regs.sp[-1];
-    if (!js_ToAttributeName(cx, &rval))
-        goto error;
-    regs.sp[-1] = rval;
-}
-END_CASE(JSOP_TOATTRNAME)
-
-BEGIN_CASE(JSOP_TOATTRVAL)
-{
-    JS_ASSERT(!script->strict);
-
-    Value rval;
-    rval = regs.sp[-1];
-    JS_ASSERT(rval.isString());
-    JSString *str = js_EscapeAttributeValue(cx, rval.toString(), JS_FALSE);
-    if (!str)
-        goto error;
-    regs.sp[-1].setString(str);
-}
-END_CASE(JSOP_TOATTRVAL)
-
-BEGIN_CASE(JSOP_ADDATTRNAME)
-BEGIN_CASE(JSOP_ADDATTRVAL)
-{
-    JS_ASSERT(!script->strict);
-
-    Value rval = regs.sp[-1];
-    Value lval = regs.sp[-2];
-    JSString *str = lval.toString();
-    JSString *str2 = rval.toString();
-    str = js_AddAttributePart(cx, op == JSOP_ADDATTRNAME, str, str2);
-    if (!str)
-        goto error;
-    regs.sp--;
-    regs.sp[-1].setString(str);
-}
-END_CASE(JSOP_ADDATTRNAME)
-
-BEGIN_CASE(JSOP_BINDXMLNAME)
-{
-    JS_ASSERT(!script->strict);
-
-    Value lval;
-    lval = regs.sp[-1];
-    RootedObject &obj = rootObject0;
-    jsid id;
-    if (!js_FindXMLProperty(cx, lval, &obj, &id))
-        goto error;
-    regs.sp[-1].setObjectOrNull(obj);
-    PUSH_COPY(IdToValue(id));
-}
-END_CASE(JSOP_BINDXMLNAME)
-
-BEGIN_CASE(JSOP_SETXMLNAME)
-{
-    JS_ASSERT(!script->strict);
-
-    RootedObject &obj = rootObject0;
-    obj = &regs.sp[-3].toObject();
-    RootedValue &rval = rootValue0;
-    rval = regs.sp[-1];
-    RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(obj, -2, id);
-    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict))
-        goto error;
-    rval = regs.sp[-1];
-    regs.sp -= 2;
-    regs.sp[-1] = rval;
-}
-END_CASE(JSOP_SETXMLNAME)
-
-BEGIN_CASE(JSOP_CALLXMLNAME)
-BEGIN_CASE(JSOP_XMLNAME)
-{
-    JS_ASSERT(!script->strict);
-
-    Value lval = regs.sp[-1];
-    RootedObject &obj = rootObject0;
-    RootedId &id = rootId0;
-    if (!js_FindXMLProperty(cx, lval, &obj, id.address()))
-        goto error;
-    RootedValue &rval = rootValue0;
-    if (!JSObject::getGeneric(cx, obj, obj, id, &rval))
-        goto error;
-    regs.sp[-1] = rval;
-    if (op == JSOP_CALLXMLNAME) {
-        Value v;
-        if (!ComputeImplicitThis(cx, obj, &v))
-            goto error;
-        PUSH_COPY(v);
-    }
-}
-END_CASE(JSOP_XMLNAME)
-
-BEGIN_CASE(JSOP_DESCENDANTS)
-BEGIN_CASE(JSOP_DELDESC)
-{
-    JS_ASSERT(!script->strict);
-
-    JSObject *obj;
-    FETCH_OBJECT(cx, -2, obj);
-    jsval rval = regs.sp[-1];
-    if (!js_GetXMLDescendants(cx, obj, rval, &rval))
-        goto error;
-
-    if (op == JSOP_DELDESC) {
-        regs.sp[-1] = rval;   /* set local root */
-        if (!js_DeleteXMLListElements(cx, JSVAL_TO_OBJECT(rval)))
-            goto error;
-        rval = JSVAL_TRUE;                  /* always succeed */
-    }
-
-    regs.sp--;
-    regs.sp[-1] = rval;
-}
-END_CASE(JSOP_DESCENDANTS)
-
-BEGIN_CASE(JSOP_FILTER)
-{
-    JS_ASSERT(!script->strict);
-
-    /*
-     * We push the hole value before jumping to [enditer] so we can detect the
-     * first iteration and direct js_StepXMLListFilter to initialize filter's
-     * state.
-     */
-    PUSH_HOLE();
-    len = GET_JUMP_OFFSET(regs.pc);
-    JS_ASSERT(len > 0);
-}
-END_VARLEN_CASE
-
-BEGIN_CASE(JSOP_ENDFILTER)
-{
-    JS_ASSERT(!script->strict);
-
-    bool cond = !regs.sp[-1].isMagic();
-    if (cond) {
-        /* Exit the "with" block left from the previous iteration. */
-        regs.fp()->popWith(cx);
-    }
-    if (!js_StepXMLListFilter(cx, cond))
-        goto error;
-    if (!regs.sp[-1].isNull()) {
-        /*
-         * Decrease sp after EnterWith returns as we use sp[-1] there to root
-         * temporaries.
-         */
-        JS_ASSERT(IsXML(regs.sp[-1]));
-        if (!EnterWith(cx, -2))
-            goto error;
-        regs.sp--;
-        len = GET_JUMP_OFFSET(regs.pc);
-        JS_ASSERT(len < 0);
-        BRANCH(len);
-    }
-    regs.sp--;
-}
-END_CASE(JSOP_ENDFILTER);
-
-BEGIN_CASE(JSOP_TOXML)
-{
-    JS_ASSERT(!script->strict);
-
-    cx->runtime->gcExactScanningEnabled = false;
-
-    Value rval = regs.sp[-1];
-    JSObject *obj = js_ValueToXMLObject(cx, rval);
-    if (!obj)
-        goto error;
-    regs.sp[-1].setObject(*obj);
-}
-END_CASE(JSOP_TOXML)
-
-BEGIN_CASE(JSOP_TOXMLLIST)
-{
-    JS_ASSERT(!script->strict);
-
-    Value rval = regs.sp[-1];
-    JSObject *obj = js_ValueToXMLListObject(cx, rval);
-    if (!obj)
-        goto error;
-    regs.sp[-1].setObject(*obj);
-}
-END_CASE(JSOP_TOXMLLIST)
-
-BEGIN_CASE(JSOP_XMLTAGEXPR)
-{
-    JS_ASSERT(!script->strict);
-
-    Value rval = regs.sp[-1];
-    JSString *str = ToString<CanGC>(cx, rval);
-    if (!str)
-        goto error;
-    regs.sp[-1].setString(str);
-}
-END_CASE(JSOP_XMLTAGEXPR)
-
-BEGIN_CASE(JSOP_XMLELTEXPR)
-{
-    JS_ASSERT(!script->strict);
-
-    Value rval = regs.sp[-1];
-    JSString *str;
-    if (IsXML(rval)) {
-        str = js_ValueToXMLString(cx, rval);
-    } else {
-        str = ToString<CanGC>(cx, rval);
-        if (str)
-            str = js_EscapeElementValue(cx, str);
-    }
-    if (!str)
-        goto error;
-    regs.sp[-1].setString(str);
-}
-END_CASE(JSOP_XMLELTEXPR)
-
-BEGIN_CASE(JSOP_XMLCDATA)
-{
-    JS_ASSERT(!script->strict);
-
-    JSAtom *atom = script->getAtom(regs.pc);
-    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, atom);
-    if (!obj)
-        goto error;
-    PUSH_OBJECT(*obj);
-}
-END_CASE(JSOP_XMLCDATA)
-
-BEGIN_CASE(JSOP_XMLCOMMENT)
-{
-    JS_ASSERT(!script->strict);
-
-    JSAtom *atom = script->getAtom(regs.pc);
-    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, atom);
-    if (!obj)
-        goto error;
-    PUSH_OBJECT(*obj);
-}
-END_CASE(JSOP_XMLCOMMENT)
-
-BEGIN_CASE(JSOP_XMLPI)
-{
-    JS_ASSERT(!script->strict);
-
-    JSAtom *atom = script->getAtom(regs.pc);
-    Value rval = regs.sp[-1];
-    JSString *str2 = rval.toString();
-    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, atom, str2);
-    if (!obj)
-        goto error;
-    regs.sp[-1].setObject(*obj);
-}
-END_CASE(JSOP_XMLPI)
-
-BEGIN_CASE(JSOP_GETFUNNS)
-{
-    JS_ASSERT(!script->strict);
-
-    Value rval;
-    if (!cx->fp()->global().getFunctionNamespace(cx, &rval))
-        goto error;
-    PUSH_COPY(rval);
-}
-END_CASE(JSOP_GETFUNNS)
-#endif /* JS_HAS_XML_SUPPORT */
 
 BEGIN_CASE(JSOP_ENTERBLOCK)
 BEGIN_CASE(JSOP_ENTERLET0)

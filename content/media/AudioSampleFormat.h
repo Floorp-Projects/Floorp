@@ -32,6 +32,10 @@ enum AudioSampleFormat
 #endif
 };
 
+enum {
+  MAX_AUDIO_SAMPLE_SIZE = sizeof(float)
+};
+
 template <AudioSampleFormat Format> class AudioSampleTraits;
 
 template <> class AudioSampleTraits<AUDIO_FORMAT_FLOAT32> {
@@ -153,15 +157,12 @@ inline const void*
 AddAudioSampleOffset(const void* aBase, AudioSampleFormat aFormat,
                      int32_t aOffset)
 {
-  switch (aFormat) {
-  case AUDIO_FORMAT_FLOAT32:
-    return static_cast<const float*>(aBase) + aOffset;
-  case AUDIO_FORMAT_S16:
-    return static_cast<const int16_t*>(aBase) + aOffset;
-  default:
-    NS_ERROR("Unknown format");
-    return nullptr;
-  }
+  MOZ_STATIC_ASSERT(AUDIO_FORMAT_S16 == 0, "Bad constant");
+  MOZ_STATIC_ASSERT(AUDIO_FORMAT_FLOAT32 == 1, "Bad constant");
+  NS_ASSERTION(aFormat == AUDIO_FORMAT_S16 || aFormat == AUDIO_FORMAT_FLOAT32,
+               "Unknown format");
+
+  return static_cast<const uint8_t*>(aBase) + (aFormat + 1)*2*aOffset;
 }
 
 } // namespace mozilla

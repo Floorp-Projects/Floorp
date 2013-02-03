@@ -1245,3 +1245,16 @@ nsImageLoadingContent::GetCORSMode()
 {
   return CORS_NONE;
 }
+
+nsImageLoadingContent::ImageObserver::ImageObserver(imgINotificationObserver* aObserver)
+  : mObserver(aObserver)
+  , mNext(nullptr)
+{
+  MOZ_COUNT_CTOR(ImageObserver);
+}
+
+nsImageLoadingContent::ImageObserver::~ImageObserver()
+{
+  MOZ_COUNT_DTOR(ImageObserver);
+  NS_CONTENT_DELETE_LIST_MEMBER(ImageObserver, this, mNext);
+}

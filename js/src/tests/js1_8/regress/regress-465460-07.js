@@ -1,4 +1,3 @@
-// |reftest| pref(javascript.options.xml.content,true)
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,7 +26,7 @@ function test()
 
   try
   {
-    e = <x/>; for (j=0;j<3;++j) { 3 | e; } "PASS";
+    e = {}; for (j=0;j<3;++j) { 3 | e; } "PASS";
   }
   catch(ex)
   {

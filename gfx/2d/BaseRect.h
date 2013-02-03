@@ -13,20 +13,6 @@
 namespace mozilla {
 namespace gfx {
 
-// XXX - <algorithm> conflicts with exceptions on 10.6. Define our own gfx_min/gfx_max
-// functions here. Avoid min/max to avoid conflicts with existing #defines on windows.
-template<typename T>
-T gfx_min(T aVal1, T aVal2)
-{
-  return (aVal1 < aVal2) ? aVal1 : aVal2;
-}
-
-template<typename T>
-T gfx_max(T aVal1, T aVal2)
-{
-  return (aVal1 > aVal2) ? aVal1 : aVal2;
-}
-
 /**
  * Rectangles have two interpretations: a set of (zero-size) points,
  * and a rectangular area of the plane. Most rectangle operations behave
@@ -98,15 +84,15 @@ struct BaseRect {
   }
   // Returns the rectangle containing the intersection of the points
   // (including edges) of *this and aRect. If there are no points in that
-  // intersection, returns an empty rectangle with x/y set to the gfx_max of the x/y
+  // intersection, returns an empty rectangle with x/y set to the std::max of the x/y
   // of *this and aRect.
   Sub Intersect(const Sub& aRect) const
   {
     Sub result;
-    result.x = gfx_max(x, aRect.x);
-    result.y = gfx_max(y, aRect.y);
-    result.width = gfx_min(XMost(), aRect.XMost()) - result.x;
-    result.height = gfx_min(YMost(), aRect.YMost()) - result.y;
+    result.x = std::max(x, aRect.x);
+    result.y = std::max(y, aRect.y);
+    result.width = std::min(XMost(), aRect.XMost()) - result.x;
+    result.height = std::min(YMost(), aRect.YMost()) - result.y;
     if (result.width < 0 || result.height < 0) {
       result.SizeTo(0, 0);
     }
@@ -114,7 +100,7 @@ struct BaseRect {
   }
   // Sets *this to be the rectangle containing the intersection of the points
   // (including edges) of *this and aRect. If there are no points in that
-  // intersection, sets *this to be an empty rectangle with x/y set to the gfx_max
+  // intersection, sets *this to be an empty rectangle with x/y set to the std::max
   // of the x/y of *this and aRect.
   //
   // 'this' can be the same object as either aRect1 or aRect2
@@ -144,10 +130,10 @@ struct BaseRect {
   Sub UnionEdges(const Sub& aRect) const
   {
     Sub result;
-    result.x = gfx_min(x, aRect.x);
-    result.y = gfx_min(y, aRect.y);
-    result.width = gfx_max(XMost(), aRect.XMost()) - result.x;
-    result.height = gfx_max(YMost(), aRect.YMost()) - result.y;
+    result.x = std::min(x, aRect.x);
+    result.y = std::min(y, aRect.y);
+    result.width = std::max(XMost(), aRect.XMost()) - result.x;
+    result.height = std::max(YMost(), aRect.YMost()) - result.y;
     return result;
   }
   // Computes the smallest rectangle that contains both the area of both
@@ -208,15 +194,15 @@ struct BaseRect {
   {
     x += aDx;
     y += aDy;
-    width = gfx_max(T(0), width - 2 * aDx);
-    height = gfx_max(T(0), height - 2 * aDy);
+    width = std::max(T(0), width - 2 * aDx);
+    height = std::max(T(0), height - 2 * aDy);
   }
   void Deflate(const Margin& aMargin)
   {
     x += aMargin.left;
     y += aMargin.top;
-    width = gfx_max(T(0), width - aMargin.LeftRight());
-    height = gfx_max(T(0), height - aMargin.TopBottom());
+    width = std::max(T(0), width - aMargin.LeftRight());
+    height = std::max(T(0), height - aMargin.TopBottom());
   }
   void Deflate(const SizeT& aSize) { Deflate(aSize.width, aSize.height); }
 
@@ -384,8 +370,8 @@ struct BaseRect {
     T bottom = static_cast<T>(floor(double(YMost()) * aYScale));
     x = static_cast<T>(ceil(double(x) * aXScale));
     y = static_cast<T>(ceil(double(y) * aYScale));
-    width = gfx_max<T>(0, right - x);
-    height = gfx_max<T>(0, bottom - y);
+    width = std::max<T>(0, right - x);
+    height = std::max<T>(0, bottom - y);
   }
   // Scale 'this' by 1/aScale, converting coordinates to integers so that the result is
   // the smallest integer-coordinate rectangle containing the unrounded result.
@@ -416,8 +402,8 @@ struct BaseRect {
     T bottom = static_cast<T>(floor(double(YMost()) / aYScale));
     x = static_cast<T>(ceil(double(x) / aXScale));
     y = static_cast<T>(ceil(double(y) / aYScale));
-    width = gfx_max<T>(0, right - x);
-    height = gfx_max<T>(0, bottom - y);
+    width = std::max<T>(0, right - x);
+    height = std::max<T>(0, bottom - y);
   }
 
   /**

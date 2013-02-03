@@ -43,7 +43,7 @@ using namespace mozilla;
 
 
 // Logging context
-MOZ_MTLOG_MODULE("mediapipeline");
+MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
 
@@ -842,7 +842,6 @@ MediaPipelineReceiveAudio::PipelineListener::PipelineListener(
       conduit_(conduit),
       played_(0) {
   mozilla::AudioSegment *segment = new mozilla::AudioSegment();
-  segment->Init(1); // 1 Channel
   source_->AddTrack(track_id_, 16000, 0, segment);
   source_->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 }
@@ -875,7 +874,6 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
     MOZ_MTLOG(PR_LOG_DEBUG, "Audio conduit returned buffer of length " << samples_length);
 
     AudioSegment segment;
-    segment.Init(1);
     nsAutoTArray<const int16_t*,1> channels;
     channels.AppendElement(samples_data);
     segment.AppendFrames(samples.forget(), channels, samples_length);
