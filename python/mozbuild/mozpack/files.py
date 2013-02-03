@@ -142,7 +142,12 @@ class ExecutableFile(File):
     '''
     def copy(self, dest, skip_if_older=True):
         assert isinstance(dest, basestring)
-        File.copy(self, dest, skip_if_older)
+        # If File.copy didn't actually copy because dest is newer, check the
+        # file sizes. If dest is smaller, it means it is already stripped and
+        # elfhacked, so we can skip.
+        if not File.copy(self, dest, skip_if_older) and \
+                os.path.getsize(self.path) > os.path.getsize(dest):
+            return False
         try:
             if may_strip(dest):
                 strip(dest)
