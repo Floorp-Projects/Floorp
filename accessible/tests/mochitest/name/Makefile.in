@@ -15,7 +15,6 @@ MOCHITEST_A11Y_FILES =\
 		general.css \
 		general.xbl \
 		markup.js \
-		test_button.html \
 		test_general.html \
 		test_general.xul \
 		test_link.html \
