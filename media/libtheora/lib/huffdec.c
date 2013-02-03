@@ -325,6 +325,9 @@ static size_t oc_huff_node_size(int _nbits){
              codebook, and the lengths of their corresponding codewords.
   _ntokens: The number of tokens corresponding to this tree node.
   Return: The number of words required to store the tree.*/
+#if defined(_MSC_VER) && _MSC_VER >= 1700
+#pragma optimize( "", off )
+#endif
 static size_t oc_huff_tree_collapse(ogg_int16_t *_tree,
  unsigned char _tokens[][2],int _ntokens){
   ogg_int16_t   node[34];
@@ -372,6 +375,9 @@ static size_t oc_huff_tree_collapse(ogg_int16_t *_tree,
   while(l>=0);
   return ntree;
 }
+#if defined(_MSC_VER) && _MSC_VER >= 1700
+#pragma optimize( "", on )
+#endif
 
 /*Unpacks a set of Huffman trees, and reduces them to a collapsed
    representation.
