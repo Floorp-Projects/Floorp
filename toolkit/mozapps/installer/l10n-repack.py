@@ -7,7 +7,6 @@ Replace localized parts of a packaged directory with data from a langpack
 directory.
 '''
 
-import sys
 import os
 import mozpack.path
 from mozpack.packager.formats import (
@@ -181,7 +180,7 @@ def repack(source, l10n, non_resources=[]):
         assert isinstance(copier[path], Jarrer)
         copier[path].preload([l.replace(locale, l10n_locale) for l in log])
 
-    copier.copy(source)
+    copier.copy(source, skip_if_older=False)
     generate_precomplete(source)
 
 
