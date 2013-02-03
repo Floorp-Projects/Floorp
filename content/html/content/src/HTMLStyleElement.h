@@ -73,6 +73,28 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
+  bool Disabled();
+  void SetDisabled(bool aDisabled, ErrorResult& aError);
+  void SetMedia(const nsAString& aMedia, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::media, aMedia, aError);
+  }
+  void SetType(const nsAString& aType, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aType, aError);
+  }
+  bool Scoped()
+  {
+    return GetBoolAttr(nsGkAtoms::scoped);
+  }
+  void SetScoped(bool aScoped, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::scoped, aScoped, aError);
+  }
+
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap);
+
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
