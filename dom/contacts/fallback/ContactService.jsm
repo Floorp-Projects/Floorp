@@ -7,7 +7,7 @@
 const DEBUG = false;
 function debug(s) { dump("-*- Fallback ContactService component: " + s + "\n"); }
 
-const Cu = Components.utils; 
+const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -37,15 +37,18 @@ XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
 let myGlobal = this;
 
 this.DOMContactManager = {
+  // maps children to their live cursors so we can cleanup on shutdown/crash
+  _liveCursors: {},
+
   init: function() {
     if (DEBUG) debug("Init");
-    this._messages = ["Contacts:Find", "Contacts:Clear", "Contact:Save",
+    this._messages = ["Contacts:Find", "Contacts:GetAll", "Contacts:GetAll:Continue", "Contacts:Clear", "Contact:Save",
                       "Contact:Remove", "Contacts:GetSimContacts",
                       "Contacts:RegisterForMessages", "child-process-shutdown"];
     this._children = [];
-    this._messages.forEach((function(msgName) {
+    this._messages.forEach(function(msgName) {
       ppmm.addMessageListener(msgName, this);
-    }).bind(this));
+    }.bind(this));
 
     var idbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"].getService(Ci.nsIIndexedDatabaseManager);
     idbManager.initWindowless(myGlobal);
@@ -57,9 +60,9 @@ this.DOMContactManager = {
 
   observe: function(aSubject, aTopic, aData) {
     myGlobal = null;
-    this._messages.forEach((function(msgName) {
+    this._messages.forEach(function(msgName) {
       ppmm.removeMessageListener(msgName, this);
-    }).bind(this));
+    }.bind(this));
     Services.obs.removeObserver(this, "profile-before-change");
     ppmm = null;
     this._messages = null;
@@ -70,7 +73,7 @@ this.DOMContactManager = {
 
   assertPermission: function(aMessage, aPerm) {
     if (!aMessage.target.assertPermission(aPerm)) {
-      Cu.reportError("Contacts message " + msg.name +
+      Cu.reportError("Contacts message " + aMessage.name +
                      " from a content process with no" + aPerm + " privileges.");
       return false;
     }
@@ -84,73 +87,55 @@ this.DOMContactManager = {
   },
 
   receiveMessage: function(aMessage) {
-    if (DEBUG) debug("Fallback DOMContactManager::receiveMessage " + aMessage.name);
+    if (DEBUG) debug("receiveMessage " + aMessage.name);
     let mm = aMessage.target;
     let msg = aMessage.data;
-
-    /*
-     * Sorting the contacts by sortBy field. sortBy can either be familyName or givenName.
-     * If 2 entries have the same sortyBy field or no sortBy field is present, we continue 
-     * sorting with the other sortyBy field.
-     */
-    function sortfunction(a, b){
-      let x, y;
-      let result = 0;
-      let findOptions = msg.options.findOptions;
-      let sortOrder = findOptions.sortOrder;
-      let sortBy = findOptions.sortBy === "familyName" ? [ "familyName", "givenName" ] : [ "givenName" , "familyName" ];
-      let xIndex = 0;
-      let yIndex = 0;
-
-      do {
-        while (xIndex < sortBy.length && !x) {
-          x = a.properties[sortBy[xIndex]] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
-          xIndex++;
-        }
-        if (!x) {
-          return sortOrder == 'ascending' ? 1 : -1;
-        }
-        while (yIndex < sortBy.length && !y) {
-          y = b.properties[sortBy[yIndex]] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
-          yIndex++;
-        }
-        if (!y) {
-          return sortOrder == 'ascending' ? 1 : -1;
-        }
-
-        result = x.localeCompare(y);
-        x = null;
-        y = null;
-      } while (result === 0);
-
-      return sortOrder == 'ascending' ? result : -result;
-    }
 
     switch (aMessage.name) {
       case "Contacts:Find":
         if (!this.assertPermission(aMessage, "contacts-read")) {
           return null;
         }
-        let result = new Array();
+        let result = [];
         this._db.find(
           function(contacts) {
-            for (let i in contacts)
+            for (let i in contacts) {
               result.push(contacts[i]);
-            if (msg.options && msg.options.findOptions) {
-              let findOptions = msg.options.findOptions;
-              if (findOptions.sortOrder !== 'undefined' && findOptions.sortBy !== 'undefined') {
-                if (DEBUG) debug('sortBy: ' + findOptions.sortBy + ', sortOrder: ' + findOptions.sortOrder );
-                result.sort(sortfunction);
-                if (findOptions.filterLimit)
-                  result = result.slice(0, findOptions.filterLimit);
-              }
             }
 
             if (DEBUG) debug("result:" + JSON.stringify(result));
             mm.sendAsyncMessage("Contacts:Find:Return:OK", {requestID: msg.requestID, contacts: result});
           }.bind(this),
-          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }) }.bind(this),
+          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this),
           msg.options.findOptions);
+        break;
+      case "Contacts:GetAll":
+        if (!this.assertPermission(aMessage, "contacts-read")) {
+          return null;
+        }
+        this._db.getAll(
+          function(aContact) {
+            mm.sendAsyncMessage("Contacts:GetAll:Next", {cursorId: msg.cursorId, contact: aContact});
+          },
+          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { errorMsg: aErrorMsg }); },
+          msg.findOptions, msg.cursorId);
+        if (Array.isArray(this._liveCursors[mm])) {
+          this._liveCursors[mm].push(msg.cursorId);
+        } else {
+          this._liveCursors[mm] = [msg.cursorId];
+        }
+        break;
+      case "Contacts:GetAll:Continue":
+        this._db.getNext(
+          function(aContact) {
+            if (aContact == null) { // last contact, release the cursor
+              let cursors = this._liveCursors[mm];
+              cursors.splice(cursors.indexOf(msg.cursorId), 1);
+            }
+            mm.sendAsyncMessage("Contacts:GetAll:Next", {cursorId: msg.cursorId, contact: aContact});
+          }.bind(this),
+          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { errorMsg: aErrorMsg }); },
+          msg.cursorId);
         break;
       case "Contact:Save":
         if (msg.options.reason === "create") {
@@ -225,6 +210,8 @@ this.DOMContactManager = {
         break;
       case "child-process-shutdown":
         if (DEBUG) debug("Unregister");
+        this._db.releaseCursors(this._liveCursors[mm]);
+        delete this._liveCursors[mm];
         let index = this._children.indexOf(mm);
         if (index != -1) {
           if (DEBUG) debug("Unregister index: " + index);
