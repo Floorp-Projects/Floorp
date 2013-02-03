@@ -61,12 +61,13 @@ class BaseFile(object):
     their own copy function, or rely on BaseFile.copy using the open() member
     function and/or the path property.
     '''
-    def copy(self, dest):
+    def copy(self, dest, skip_if_older=True):
         '''
         Copy the BaseFile content to the destination given as a string or a
         Dest instance. Avoids replacing existing files if the BaseFile content
         matches that of the destination, or in case of plain files, if the
-        destination is newer than the original file.
+        destination is newer than the original file. This latter behaviour is
+        disabled when skip_if_older is False.
         Returns whether a copy was actually performed (True) or not (False).
         '''
         if isinstance(dest, basestring):
@@ -82,7 +83,7 @@ class BaseFile(object):
             # the microsecond. But microsecond is too precise because
             # shutil.copystat only copies milliseconds, and seconds is not
             # enough precision.
-            if int(os.path.getmtime(self.path) * 1000) \
+            if skip_if_older and int(os.path.getmtime(self.path) * 1000) \
                     <= int(os.path.getmtime(dest.path) * 1000):
                 return False
             elif os.path.getsize(self.path) != os.path.getsize(dest.path):
@@ -139,9 +140,9 @@ class ExecutableFile(File):
     File class for executable and library files on OS/2, OS/X and ELF systems.
     (see mozpack.executables.is_executable documentation).
     '''
-    def copy(self, dest):
+    def copy(self, dest, skip_if_older=True):
         assert isinstance(dest, basestring)
-        File.copy(self, dest)
+        File.copy(self, dest, skip_if_older)
         try:
             if may_strip(dest):
                 strip(dest)
@@ -204,12 +205,13 @@ class XPTFile(GeneratedFile):
         assert isinstance(xpt, BaseFile)
         self._files.remove(xpt)
 
-    def copy(self, dest):
+    def copy(self, dest, skip_if_older=True):
         '''
         Link the registered XPTs and place the resulting linked XPT at the
         destination given as a string or a Dest instance. Avoids an expensive
         XPT linking if the interfaces in an existing destination match those of
         the individual XPTs to link.
+        skip_if_older is ignored.
         '''
         if isinstance(dest, basestring):
             dest = Dest(dest)

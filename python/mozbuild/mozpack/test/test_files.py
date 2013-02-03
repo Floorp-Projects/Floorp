@@ -210,6 +210,10 @@ class TestFile(TestWithTmpDir):
         os.utime(dest, (time, time))
         self.assertRaises(RuntimeError, f.copy, DestNoWrite(dest))
 
+        # skip_if_older=False is expected to force a copy in this situation.
+        f.copy(dest, skip_if_older=False)
+        self.assertEqual('fooo', open(dest, 'rb').read())
+
 
 class TestGeneratedFile(TestWithTmpDir):
     def test_generated_file(self):
