@@ -52,7 +52,12 @@ class UnifiedExecutableFile(BaseFile):
         self.path1 = path1
         self.path2 = path2
 
-    def copy(self, dest):
+    def copy(self, dest, skip_if_older=True):
+        '''
+        Create a fat executable from the two Mach-O executable given when
+        creating the instance.
+        skip_if_older is ignored.
+        '''
         assert isinstance(dest, basestring)
         tmpfiles = []
         try:
