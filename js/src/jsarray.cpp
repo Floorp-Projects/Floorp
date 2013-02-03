@@ -93,7 +93,7 @@ js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
 }
 
 /*
- * Determine if the id represents an array index or an XML property index.
+ * Determine if the id represents an array index.
  *
  * An id is an array index according to ECMA by (15.4):
  *

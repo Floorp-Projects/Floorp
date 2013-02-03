@@ -33,6 +33,14 @@ this.DOMApplicationRegistry = {
     // We need to prime the cache with the list of apps.
     // XXX shoud we do this async and block callers if it's not yet there?
     this.webapps = this.cpmm.sendSyncMessage("Webapps:GetList", { })[0];
+
+    // We need a fast mapping from localId -> app, so we add an index.
+    this.localIdIndex = { };
+    for (let id in this.webapps) {
+      let app = this.webapps[id];
+      this.localIdIndex[app.localId] = app;
+    }
+
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
@@ -51,8 +59,10 @@ this.DOMApplicationRegistry = {
     switch (aMessage.name) {
       case "Webapps:AddApp":
         this.webapps[msg.id] = msg.app;
+        this.localIdIndex[msg.app.localId] = msg.app;
         break;
       case "Webapps:RemoveApp":
+        delete this.localIdIndex[this.webapps[msg.id].localId];
         delete this.webapps[msg.id];
         break;
     }
@@ -75,7 +85,13 @@ this.DOMApplicationRegistry = {
 
   getAppByLocalId: function getAppByLocalId(aLocalId) {
     debug("getAppByLocalId " + aLocalId);
-    return AppsUtils.getAppByLocalId(this.webapps, aLocalId);
+    let app = this.localIdIndex[aLocalId];
+    if (!app) {
+      debug("Ouch, No app!");
+      return null;
+    }
+
+    return AppsUtils.cloneAsMozIApplication(app);
   },
 
   getManifestURLByLocalId: function getManifestURLByLocalId(aLocalId) {
@@ -95,7 +111,16 @@ this.DOMApplicationRegistry = {
   getWebAppsBasePath: function getWebAppsBasePath() {
     debug("getWebAppsBasePath() not yet supported on child!");
     return null;
-  }
+  },
+
+  getAppInfo: function getAppInfo(aAppId) {
+    if (!this.webapps[aAppId]) {
+      debug("No webapp for " + aAppId);
+      return null;
+    }
+    return { "basePath":  this.webapps[aAppId].basePath + "/",
+             "isCoreApp": !this.webapps[aAppId].removable };
+  },
 }
 
 DOMApplicationRegistry.init();

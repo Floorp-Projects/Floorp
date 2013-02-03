@@ -263,5 +263,5 @@ function checkUpdateApplied() {
   toBeDeletedDir = getTargetDirFile("tobedeleted", true);
   do_check_false(toBeDeletedDir.exists());
 
-  do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+  removeCallbackCopy();
 }

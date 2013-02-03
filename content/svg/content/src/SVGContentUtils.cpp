@@ -18,6 +18,7 @@
 #include "SVGAnimationElement.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -246,11 +247,6 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
 gfxMatrix
 SVGContentUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
 {
-  nsIDocument* currentDoc = aElement->GetCurrentDoc();
-  if (currentDoc) {
-    // Flush all pending notifications so that our frames are up to date
-    currentDoc->FlushPendingNotifications(Flush_Layout);
-  }
   return GetCTMInternal(aElement, aScreenCTM, false);
 }
 

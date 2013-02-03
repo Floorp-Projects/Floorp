@@ -51,6 +51,7 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		bug589028_helper.html \
 		test_bug601299.html \
 		test_bug605167.html \
+		test_bug618017.html \
 		test_bug623437.html \
 		test_bug628410.html \
 		test_bug628794.html \
@@ -64,7 +65,8 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		test_bug661980.html \
 		test_bug650273.html \
 		file_bug650273.html \
-		test_bug655297.html \
+		test_bug655297-1.html \
+		test_bug655297-2.html \
 		file_bug658560.html \
 		test_bug691059.html \
 		file_bug706301.html \
@@ -90,13 +92,6 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		test_bug803730.html \
 		test_bug809547.html \
 		$(NULL)
-
-ifneq ($(OS_TARGET),Android)
-ifndef MOZ_PLATFORM_MAEMO
-MOCHITEST_FILES +=	test_bug564330.html \
-		test_bug618017.html
-endif
-endif
 
 include $(topsrcdir)/config/rules.mk
 

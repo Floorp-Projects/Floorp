@@ -7,7 +7,7 @@
                        android:id="@+id/client"
                        android:layout_width="fill_parent"
                        android:layout_height="@dimen/remote_tab_group_row_height"
-                       style="@style/RemoteTabRowTextAppearance.Url"
+                       style="@style/TabRowTextAppearance.Url"
                        android:background="@android:color/transparent"
                        android:paddingLeft="4dp"
                        android:paddingRight="4dp"

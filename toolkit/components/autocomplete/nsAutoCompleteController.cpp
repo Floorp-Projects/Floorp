@@ -587,7 +587,11 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
     // Nothing left in the popup, clear any pending search timers and
     // close the popup.
     ClearSearchTimer();
-    ClosePopup();
+    uint32_t minResults;
+    input->GetMinResultsForPopup(&minResults);
+    if (minResults) {
+      ClosePopup();
+    }
   }
 
   return NS_OK;
@@ -1067,7 +1071,9 @@ void
 nsAutoCompleteController::AfterSearches()
 {
   mResultCache.Clear();
-  if (mSearchesFailed == mSearches.Count())
+  // nsCOMArray::Count() returns a signed value; we have to cast it to unsigned
+  // when comparing it to unsigned, or compilers will complain.
+  if (mSearchesFailed == static_cast<uint32_t>(mSearches.Count()))
     PostSearchCleanup();
 }
 
@@ -1118,7 +1124,9 @@ nsAutoCompleteController::StartSearches()
       return rv;
     StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE);
 
-    if (mSearches.Count() == immediateSearchesCount) {
+    // nsCOMArray::Count() returns a signed value; we have to cast it to
+    // unsigned when comparing it to unsigned, or compilers will complain.
+    if (static_cast<uint32_t>(mSearches.Count()) == immediateSearchesCount) {
       // Either all searches are immediate, or the timeout is 0.  In the
       // latter case we still have to execute the delayed searches, otherwise
       // this will be a no-op.
@@ -1344,10 +1352,13 @@ nsAutoCompleteController::ProcessResult(int32_t aSearchIndex, nsIAutoCompleteRes
     NS_ENSURE_TRUE(popup != nullptr, NS_ERROR_FAILURE);
     popup->Invalidate();
 
+    uint32_t minResults;
+    input->GetMinResultsForPopup(&minResults);
+
     // Make sure the popup is open, if necessary, since we now have at least one
     // search result ready to display. Don't force the popup closed if we might
     // get results in the future to avoid unnecessarily canceling searches.
-    if (mRowCount) {
+    if (mRowCount || !minResults) {
       OpenPopup();
     } else if (result != nsIAutoCompleteResult::RESULT_NOMATCH_ONGOING) {
       ClosePopup();

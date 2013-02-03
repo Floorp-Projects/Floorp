@@ -239,9 +239,9 @@ nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue, nsJSONWriter* wri
     return NS_OK;
 
   // Backward compatibility:
-  // function/xml shall not pass, just "plain" objects and arrays
+  // function shall not pass, just "plain" objects and arrays
   JSType type = JS_TypeOfValue(cx, val);
-  if (type == JSTYPE_FUNCTION || type == JSTYPE_XML)
+  if (type == JSTYPE_FUNCTION)
     return NS_ERROR_INVALID_ARG;
 
   // We're good now; try to stringify

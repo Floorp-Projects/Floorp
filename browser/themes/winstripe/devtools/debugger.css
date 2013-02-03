@@ -183,7 +183,6 @@
  */
 
 #stackframes\+breakpoints {
-  background-color: white;
   min-width: 50px;
 }
 
@@ -196,7 +195,6 @@
  */
 
 #variables\+expressions {
-  background-color: white;
   min-width: 50px;
 }
 
@@ -209,7 +207,6 @@
  */
 
 #stackframes {
-  background-color: white;
   min-height: 10px;
 }
 
@@ -231,7 +228,6 @@
  */
 
 #breakpoints {
-  background-color: white;
   min-height: 10px;
 }
 
@@ -265,8 +261,8 @@
  */
 
 #expressions {
-  background-color: white;
   min-height: 10px;
+  max-height: 125px;
 }
 
 .dbg-expression {
@@ -285,11 +281,20 @@
 }
 
 .dbg-expression-delete {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  opacity: 0;
 }
 
 .dbg-expression-delete:not(:hover) {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.dbg-expression-delete:hover {
+  opacity: 1;
+}
+
+.dbg-expression:hover > .dbg-expression-delete:not(:hover) {
   opacity: 0.5;
+  transition: opacity 0.2s ease-in-out;
 }
 
 /**
@@ -297,17 +302,36 @@
  */
 
 #variables {
-  background-color: white;
   min-height: 10px;
+}
+
+.dbg-variable-delete {
+  opacity: 0;
 }
 
 .dbg-variable-delete:not(:hover) {
   -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.dbg-variable-delete:hover {
+  opacity: 1;
+}
+
+.variable-or-property:hover > .title > .dbg-variable-delete:not(:hover),
+.variable-or-property:focus > .title > .dbg-variable-delete:not(:hover) {
   opacity: 0.5;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.dbg-variable-edit {
+  background: url("chrome://browser/skin/tabview/edit-light.png") center no-repeat;
+  width: 20px;
+  height: 16px;
+  cursor: pointer;
 }
 
 .dbg-variable-throbber {
-  background: url("chrome://global/skin/icons/loading_16.png");
+  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
   width: 16px;
   height: 16px;
 }
@@ -316,6 +340,11 @@
  * Scope element
  */
 
+.scope:focus > .title {
+  background: Highlight;
+  color: HighlightText;
+}
+
 .scope > .title {
   text-shadow: 0 1px #222;
   color: #fff;
@@ -323,7 +352,7 @@
 
 .scope > .details {
   -moz-margin-start: 2px;
-  -moz-margin-end: 2px;
+  -moz-margin-end: 1px;
 }
 
 .scope > .details.nonenum:not(:empty) {
@@ -338,7 +367,6 @@
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
   border-bottom: 1px solid #eee;
-  background: #fff;
   transition: background 1s ease-in-out;
 }
 
@@ -347,14 +375,27 @@
   transition-duration: 0.4s;
 }
 
+.variable:focus > .title {
+  background: Highlight;
+  color: HighlightText;
+  border-radius: 4px;
+}
+
 .variable > .title > .name {
-  color: #048;
   font-weight: 600;
+}
+
+.variable:not(:focus) > .title > .name {
+  color: #048;
 }
 
 .variable > .title > .value {
   -moz-padding-start: 6px;
   -moz-padding-end: 4px;
+}
+
+.variable[editable] > .title > .value {
+  cursor: text;
 }
 
 .variable:not([non-header]) > .details {
@@ -366,7 +407,6 @@
  */
 
 .property {
-  background: #fff;
   transition: background 1s ease-in-out;
 }
 
@@ -375,13 +415,24 @@
   transition-duration: 0.4s;
 }
 
-.property > .title > .name {
+.property:focus > .title {
+  background: Highlight;
+  color: HighlightText;
+  border-radius: 4px;
+}
+
+.property:not(:focus) > .title > .name {
   color: #881090;
 }
 
 .property > .title > .value {
   -moz-padding-start: 6px;
   -moz-padding-end: 4px;
+  cursor: text;
+}
+
+.property[editable] > .title > .value {
+  cursor: text;
 }
 
 .property:not([non-header]) > .details {
@@ -389,7 +440,7 @@
 }
 
 /**
- * Non enumerable, configurable and writable variables and properties.
+ * Non enumerable, configurable and writable variables and properties
  */
 
 .variable[proto] > .title > .name,
@@ -427,8 +478,8 @@
   }
 }
 
-.variable[exception] > .title > .name,
-.property[exception] > .title > .name {
+.variable[exception]:not(:focus) > .title > .name,
+.property[exception]:not(:focus) > .title > .name {
   color: #a00;
   text-shadow: 0 0 8px #fcc;
 }
@@ -451,16 +502,21 @@
  * Variables and properties editing
  */
 
-#variables .element-value-input {
-  overflow: hidden;
-  max-width: 30em;
-  -moz-margin-start: 5px !important;
+.element-value-input {
+  -moz-margin-start: 4px !important;
 }
 
-#variables .element-name-input {
-  -moz-margin-start: -1px !important;
+.element-name-input {
+  -moz-margin-start: -2px !important;
   color: #048;
   font-weight: 600;
+}
+
+.element-value-input,
+.element-name-input {
+  max-width: 30em;
+  border: 1px solid #999 !important;
+  box-shadow: 1px 2px 4px #aaa;
 }
 
 /**
@@ -481,28 +537,28 @@
  * Token value colors
  */
 
-.token-undefined {
+.variable-or-property:not(:focus) > .title > .token-undefined {
   color: #bbb;
 }
 
-.token-null {
+.variable-or-property:not(:focus) > .title > .token-null {
   color: #999;
 }
 
-.token-boolean {
+.variable-or-property:not(:focus) > .title > .token-boolean {
   color: #777;
 }
 
-.token-number {
+.variable-or-property:not(:focus) > .title > .token-number {
   color: #c40a16;
 }
 
-.token-string {
+.variable-or-property:not(:focus) > .title > .token-string {
   max-width: 30em;
   color: #1c00cf;
 }
 
-.token-other {
+.variable-or-property:not(:focus) > .title > .token-other {
   color: #333;
 }
 

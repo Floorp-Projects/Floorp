@@ -9,7 +9,7 @@ ox1 = wrap(o);
 }
 f5(o9);
 f5(o13);
-var o0 = XMLList;
+var o0 = [];
 function f3(o) {
             var prop = Object.getOwnPropertyNames(ox1)[0];
             if (prop) { Object.defineProperty(ox1, prop, {configurable: true,enumerable: true,unused: 1 }); }

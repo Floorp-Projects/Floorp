@@ -1,37 +1,37 @@
 /**
    r_assoc.c
 
-   
+
    Copyright (C) 2002-2003, Network Resonance, Inc.
    Copyright (C) 2006, Network Resonance, Inc.
    All Rights Reserved
-   
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
-   
+
    1. Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
    2. Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
    3. Neither the name of Network Resonance, Inc. nor the name of any
-      contributors to this software may be used to endorse or promote 
+      contributors to this software may be used to endorse or promote
       products derived from this software without specific prior written
       permission.
-   
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
-   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    POSSIBILITY OF SUCH DAMAGE.
-   
+
 
  */
 
@@ -48,7 +48,7 @@
 
    The major problem with this code is it's not resizable, though it
    could be made so.
-   
+
 
    Copyright (C) 1999-2000 RTFM, Inc.
    All Rights Reserved
@@ -66,7 +66,7 @@
       documentation and/or other materials provided with the distribution.
    3. All advertising materials mentioning features or use of this software
       must display the following acknowledgement:
-   
+
       This product includes software developed by Eric Rescorla for
       RTFM, Inc.
 
@@ -105,7 +105,7 @@ typedef struct r_assoc_el_ {
      int (*copy)(void **n,void *old);
      int (*destroy)(void *ptr);
 } r_assoc_el;
-     
+
 struct r_assoc_ {
      int size;
      int bits;
@@ -128,19 +128,19 @@ int r_assoc_create(assocp,hash_func,bits)
   {
     r_assoc *assoc=0;
     int _status;
-    
+
     if(!(assoc=(r_assoc *)RCALLOC(sizeof(r_assoc))))
       ABORT(R_NO_MEMORY);
     assoc->size=(1<<bits);
     assoc->bits=bits;
     assoc->hash_func=hash_func;
-    
+
     if(!(assoc->chains=(r_assoc_el **)RCALLOC(sizeof(r_assoc_el *)*
       assoc->size)))
       ABORT(R_NO_MEMORY);
 
     *assocp=assoc;
-    
+
     _status=0;
   abort:
     if(_status){
@@ -154,7 +154,7 @@ int r_assoc_destroy(assocp)
   {
     r_assoc *assoc;
     int i;
-	    
+
     if(!assocp || !*assocp)
       return(0);
 
@@ -172,7 +172,7 @@ static int destroy_assoc_chain(chain)
   r_assoc_el *chain;
   {
     r_assoc_el *nxt;
-    
+
     while(chain){
       nxt=chain->next;
 
@@ -180,7 +180,7 @@ static int destroy_assoc_chain(chain)
 	chain->destroy(chain->data);
 
       RFREE(chain->key);
-      
+
       RFREE(chain);
       chain=nxt;
     }
@@ -204,7 +204,7 @@ static int copy_assoc_chain(knewp,old)
     for(;old;old=old->next){
       if(!(tmp=(r_assoc_el *)RCALLOC(sizeof(r_assoc_el))))
 	ABORT(R_NO_MEMORY);
-      
+
       if(!knew){
 	knew=tmp;
 	ptr=knew;
@@ -217,7 +217,7 @@ static int copy_assoc_chain(knewp,old)
 
       ptr->destroy=old->destroy;
       ptr->copy=old->copy;
-	
+
       if(old->copy){
 	if(r=old->copy(&ptr->data,old->data))
 	  ABORT(r);
@@ -231,7 +231,7 @@ static int copy_assoc_chain(knewp,old)
     }
 
     *knewp=knew;
-    
+
     _status=0;
   abort:
     if(_status){
@@ -248,7 +248,7 @@ static int r_assoc_fetch_bucket(assoc,key,len,bucketp)
   {
     UINT4 hash_value;
     r_assoc_el *bucket;
-    
+
     hash_value=assoc->hash_func(key,len,assoc->bits);
 
     for(bucket=assoc->chains[hash_value];bucket;bucket=bucket->next){
@@ -291,7 +291,7 @@ int r_assoc_insert(assoc,key,len,data,copy,destroy,how)
   {
     r_assoc_el *bucket,*new_bucket=0;
     int r,_status;
-    
+
     if(r=r_assoc_fetch_bucket(assoc,key,len,&bucket)){
       /*Note that we compute the hash value twice*/
       UINT4 hash_value;
@@ -299,14 +299,14 @@ int r_assoc_insert(assoc,key,len,data,copy,destroy,how)
       if(r!=R_NOT_FOUND)
 	ABORT(r);
       hash_value=assoc->hash_func(key,len,assoc->bits);
-    
+
       if(!(new_bucket=(r_assoc_el *)RCALLOC(sizeof(r_assoc_el))))
 	ABORT(R_NO_MEMORY);
       if(!(new_bucket->key=(char *)RMALLOC(len)))
 	ABORT(R_NO_MEMORY);
       memcpy(new_bucket->key,key,len);
       new_bucket->key_len=len;
-      
+
       /*Insert at the list head. Is FIFO a good algorithm?*/
       if(assoc->chains[hash_value])
         assoc->chains[hash_value]->prev=new_bucket;
@@ -326,7 +326,7 @@ int r_assoc_insert(assoc,key,len,data,copy,destroy,how)
     bucket->copy=copy;
     bucket->destroy=destroy;
     assoc->num_elements++;
-    
+
     _status=0;
   abort:
     if(_status && new_bucket){
@@ -366,11 +366,11 @@ int r_assoc_delete(assoc,key,len)
     /* Remove the data */
     if(bucket->destroy)
       bucket->destroy(bucket->data);
-    
+
     RFREE(bucket->key);
     RFREE(bucket);
     assoc->num_elements--;
-    
+
     return(0);
   }
 
@@ -380,13 +380,13 @@ int r_assoc_copy(knewp,old)
   {
     int r,_status,i;
     r_assoc *knew;
-    
+
     if(!(knew=(r_assoc *)RCALLOC(sizeof(r_assoc))))
       ABORT(R_NO_MEMORY);
     knew->size=old->size;
     knew->bits=old->bits;
     knew->hash_func=old->hash_func;
-    
+
     if(!(knew->chains=(r_assoc_el **)RCALLOC(sizeof(r_assoc_el)*old->size)))
       ABORT(R_NO_MEMORY);
     for(i=0;i<knew->size;i++){
@@ -394,9 +394,9 @@ int r_assoc_copy(knewp,old)
 	ABORT(r);
     }
     knew->num_elements=old->num_elements;
-    
+
     *knewp=knew;
-    
+
     _status=0;
   abort:
     if(_status){
@@ -417,14 +417,14 @@ int r_assoc_init_iter(assoc,iter)
   r_assoc_iterator *iter;
   {
     int i;
-    
+
     iter->assoc=assoc;
     iter->prev_chain=-1;
     iter->prev=0;
 
     iter->next_chain=assoc->size;
     iter->next=0;
-    
+
     for(i=0;i<assoc->size;i++){
       if(assoc->chains[i]!=0){
 	iter->next_chain=i;
@@ -444,7 +444,7 @@ int r_assoc_iter(iter,key,keyl,val)
   {
     int i;
     r_assoc_el *ret;
-    
+
     if(!iter->next)
       return(R_EOD);
     ret=iter->next;
@@ -452,7 +452,7 @@ int r_assoc_iter(iter,key,keyl,val)
     *key=ret->key;
     *keyl=ret->key_len;
     *val=ret->data;
-    
+
     /* Now increment */
     iter->prev_chain=iter->next_chain;
     iter->prev=iter->next;
@@ -463,7 +463,7 @@ int r_assoc_iter(iter,key,keyl,val)
     }
     else{
       iter->next=0;
-      
+
       /* FInd the next occupied chain*/
       for(i=iter->next_chain+1;i<iter->assoc->size;i++){
 	if(iter->assoc->chains[i]){
@@ -496,14 +496,14 @@ int r_assoc_iter_delete(iter)
 
     if (iter->prev->destroy)
       iter->prev->destroy(iter->prev->data);
-    
+
     iter->assoc->num_elements--;
     RFREE(iter->prev->key);
     RFREE(iter->prev);
     return(0);
   }
-    
-    
+
+
 /*This is a hack from AMS. Supposedly, it's pretty good for strings, even
  though it doesn't take into account all the data*/
 int r_assoc_simple_hash_compute(key,len,bits)
@@ -530,7 +530,7 @@ int r_assoc_crc32_hash_compute(data,len,bits)
   {
     UINT4 res;
     UINT4 mask;
-    
+
     /* First compute the CRC value */
     if(r_crc32(data,len,&res))
       ERETURN(R_INTERNAL);

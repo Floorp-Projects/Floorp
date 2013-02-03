@@ -139,8 +139,8 @@ function testSimpleCall() {
         testVar.target.querySelector(".title"),
         gDebugger);
 
-      ok(!testVar.expanded,
-        "Clicking the testVar title div shouldn't expand it.");
+      ok(testVar.expanded,
+        "Clicking the testVar title div should expand it again.");
 
 
       testScope.show();
@@ -185,8 +185,8 @@ function testSimpleCall() {
         testVar.get("child").target.querySelector(".title"),
         gDebugger);
 
-      ok(!testVar.get("child").expanded,
-        "Clicking the testVar child property title div shouldn't expand it.");
+      ok(testVar.get("child").expanded,
+        "Clicking the testVar child property title div should expand it again.");
 
 
       gDebugger.DebuggerView.Variables.empty();

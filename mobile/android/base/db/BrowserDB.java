@@ -57,9 +57,13 @@ public class BrowserDB {
 
         public void removeHistoryEntry(ContentResolver cr, int id);
 
+        public void removeHistoryEntry(ContentResolver cr, String url);
+
         public void clearHistory(ContentResolver cr);
 
         public Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
+
+        public boolean isVisited(ContentResolver cr, String uri);
 
         public boolean isBookmark(ContentResolver cr, String uri);
 
@@ -169,6 +173,10 @@ public class BrowserDB {
         sDb.removeHistoryEntry(cr, id);
     }
 
+    public static void removeHistoryEntry(ContentResolver cr, String url) {
+        sDb.removeHistoryEntry(cr, url);
+    }
+
     public static void clearHistory(ContentResolver cr) {
         sDb.clearHistory(cr);
     }
@@ -180,7 +188,11 @@ public class BrowserDB {
     public static String getUrlForKeyword(ContentResolver cr, String keyword) {
         return sDb.getUrlForKeyword(cr, keyword);
     }
-    
+
+    public static boolean isVisited(ContentResolver cr, String uri) {
+        return sDb.isVisited(cr, uri);
+    }
+
     public static boolean isBookmark(ContentResolver cr, String uri) {
         return sDb.isBookmark(cr, uri);
     }

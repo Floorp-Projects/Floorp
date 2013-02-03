@@ -178,6 +178,15 @@ pref("media.gstreamer.enabled", true);
 pref("media.navigator.enabled", true);
 pref("media.peerconnection.enabled", false);
 pref("media.navigator.permission.disabled", false);
+// These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
+// kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each 
+// setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.
+pref("media.peerconnection.aec_enabled", true);
+pref("media.peerconnection.aec", 1);
+pref("media.peerconnection.agc_enabled", false);
+pref("media.peerconnection.agc", 1);
+pref("media.peerconnection.noise_enabled", false);
+pref("media.peerconnection.noise", 1);
 #else
 #ifdef ANDROID
 pref("media.navigator.enabled", true);
@@ -734,8 +743,6 @@ pref("javascript.options.ion.parallel_compilation", true);
 pref("javascript.options.pccounts.content", false);
 pref("javascript.options.pccounts.chrome",  false);
 pref("javascript.options.methodjit_always", false);
-pref("javascript.options.xml.content", false);
-pref("javascript.options.xml.chrome", false);
 pref("javascript.options.jit_hardening", true);
 pref("javascript.options.typeinference", true);
 // This preference limits the memory usage of javascript.
@@ -951,6 +958,7 @@ pref("network.http.spdy.chunk-size", 4096);
 pref("network.http.spdy.timeout", 180);
 pref("network.http.spdy.coalesce-hostnames", true);
 pref("network.http.spdy.use-alternate-protocol", true);
+pref("network.http.spdy.persistent-settings", false);
 pref("network.http.spdy.ping-threshold", 58);
 pref("network.http.spdy.ping-timeout", 8);
 pref("network.http.spdy.send-buffer-size", 131072);
@@ -3767,6 +3775,17 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
  * By default, this is not enabled.
  */
 pref("browser.zoom.reflowOnZoom", false);
+
+/**
+ * Controls whether or not the reflow-on-zoom behavior happens on page load.
+ * This can be enabled in conjunction with the above preference (reflowOnZoom),
+ * but has no effect if browser.zoom.reflowOnZoom is disabled.
+ *
+ * Note that this should be turned off only in cases where debugging of the
+ * reflow-on-zoom feature is necessary, and enabling the feature during
+ * a page load inhbits this debugging.
+ */
+pref("browser.zoom.reflowZoom.reflowTextOnPageLoad", true);
 
 // Image-related prefs
 // The maximum size, in bytes, of the decoded images we cache

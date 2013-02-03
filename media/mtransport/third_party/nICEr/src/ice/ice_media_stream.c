@@ -99,14 +99,14 @@ int nr_ice_media_stream_destroy(nr_ice_media_stream **streamp)
       STAILQ_REMOVE(&stream->components,c1,nr_ice_component_,entry);
       nr_ice_component_destroy(&c1);
     }
-    
+
     TAILQ_FOREACH_SAFE(p1, &stream->check_list, entry, p2){
       TAILQ_REMOVE(&stream->check_list,p1,entry);
       nr_ice_candidate_pair_destroy(&p1);
     }
-   
+
     RFREE(stream->label);
-    
+
     RFREE(stream->ufrag);
     RFREE(stream->pwd);
 
@@ -129,7 +129,7 @@ int nr_ice_media_stream_initialize(nr_ice_ctx *ctx, nr_ice_media_stream *stream)
         ABORT(r);
       comp=STAILQ_NEXT(comp,entry);
     }
-    
+
     _status=0;
   abort:
     return(_status);
@@ -154,7 +154,7 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
         ABORT(r);
 
       attrct+=comp->candidate_ct;
-      
+
       comp=STAILQ_NEXT(comp,entry);
     }
 
@@ -183,7 +183,7 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
 
         if(r=nr_ice_format_candidate_attribute(cand, attrs[index],MAX_ATTRIBUTE_SIZE))
           ABORT(r);
-        
+
         index++;
 
         cand=TAILQ_NEXT(cand,entry_comp);
@@ -220,14 +220,14 @@ int nr_ice_media_stream_get_default_candidate(nr_ice_media_stream *stream, int c
     while(comp){
       if (comp->component_id == component)
         break;
-      
+
       comp=STAILQ_NEXT(comp,entry);
     }
-    
+
     if (!comp)
       ABORT(R_NOT_FOUND);
 
-    /* We have the component. Now find the "best" candidate, making 
+    /* We have the component. Now find the "best" candidate, making
        use of the fact that more "reliable" candidate types have
        higher numbers. So, we sort by type and then priority within
        type
@@ -240,7 +240,7 @@ int nr_ice_media_stream_get_default_candidate(nr_ice_media_stream *stream, int c
       else {
         if (best_cand->type < cand->type) {
           best_cand = cand;
-        } else if (best_cand->type == cand->type) { 
+        } else if (best_cand->type == cand->type) {
           if (best_cand->priority < cand->priority)
             best_cand = cand;
         }
@@ -248,7 +248,7 @@ int nr_ice_media_stream_get_default_candidate(nr_ice_media_stream *stream, int c
 
       cand=TAILQ_NEXT(cand,entry_comp);
     }
-    
+
     /* No candidates */
     if (!best_cand)
       ABORT(R_NOT_FOUND);
@@ -303,7 +303,7 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
       r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): bogus state for stream %s",stream->pctx->label,stream->label);
     }
     assert(stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED);
-    
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): check timer expired for media stream %s",stream->pctx->label,stream->label);
     stream->timer=0;
 
@@ -351,7 +351,7 @@ int nr_ice_media_stream_start_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream 
 
     return(0);
   }
-  
+
 /* Start checks for this media stream (aka check list) S 5.7 */
 int nr_ice_media_stream_unfreeze_pairs(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream)
   {
@@ -367,18 +367,18 @@ int nr_ice_media_stream_unfreeze_pairs(nr_ice_peer_ctx *pctx, nr_ice_media_strea
     pair=TAILQ_FIRST(&stream->check_list);
     while(pair){
       void *v;
-      
+
       if(r=r_assoc_fetch(assoc,pair->foundation,strlen(pair->foundation),&v)){
         if(r!=R_NOT_FOUND)
           ABORT(r);
         if(r=nr_ice_candidate_pair_unfreeze(pctx,pair))
           ABORT(r);
-        
+
         if(r=r_assoc_insert(assoc,pair->foundation,strlen(pair->foundation),
           0,0,0,R_ASSOC_NEW))
           ABORT(r);
       }
-      
+
       /* Already exists... fall through */
       pair=TAILQ_NEXT(pair,entry);
     }
@@ -397,7 +397,7 @@ static int nr_ice_media_stream_unfreeze_pairs_match(nr_ice_media_stream *stream,
 
     pair=TAILQ_FIRST(&stream->check_list);
     while(pair){
-      if(pair->state==NR_ICE_PAIR_STATE_FROZEN && 
+      if(pair->state==NR_ICE_PAIR_STATE_FROZEN &&
         !strcmp(foundation,pair->foundation)){
         if(r=nr_ice_candidate_pair_unfreeze(stream->pctx,pair))
           ABORT(r);
@@ -421,7 +421,7 @@ int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, c
     nr_ice_media_stream *str;
        nr_ice_component *comp;
     int invalid_comps=0;
-    
+
     /* 1. Unfreeze all frozen pairs with the same foundation
        in this stream */
     if(r=nr_ice_media_stream_unfreeze_pairs_match(stream,foundation)){
@@ -437,7 +437,7 @@ int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, c
 
       comp=STAILQ_NEXT(comp,entry);
     }
-    
+
     /* If there is a pair in the valid list for every component... */
     /* Now go through the check lists for the other streams */
     str=STAILQ_FIRST(&stream->pctx->peer_streams);
@@ -457,7 +457,7 @@ int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, c
             if(r){
               if(r!=R_NOT_FOUND)
                 ABORT(r);
-              
+
               /* OK, no matching pairs: execute the algorithm from 5.7
                  for this stream */
               if(r=nr_ice_media_stream_unfreeze_pairs(str->pctx,str))
@@ -476,7 +476,7 @@ int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, c
     }
 
 //    nr_ice_media_stream_dump_state(stream->pctx,stream,stderr);
-      
+
 
     _status=0;
   abort:
@@ -492,7 +492,7 @@ int nr_ice_media_stream_dump_state(nr_ice_peer_ctx *pctx, nr_ice_media_stream *s
     pair=TAILQ_FIRST(&stream->check_list);
     while(pair){
       nr_ice_candidate_pair_dump_state(pair,out);
-      
+
       pair=TAILQ_NEXT(pair,entry);
     }
 
@@ -505,11 +505,14 @@ int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state)
     if (state == str->ice_state)
       return 0;
 
+    assert(state < sizeof(nr_ice_media_stream_states)/sizeof(char *));
+    assert(str->ice_state < sizeof(nr_ice_media_stream_states)/sizeof(char *));
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): stream %s state %s->%s",
       str->pctx->label,str->label,
       nr_ice_media_stream_states[str->ice_state],
       nr_ice_media_stream_states[state]);
-    
+
     if(state == NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE)
       str->pctx->active_streams++;
     if(str->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE)
@@ -519,11 +522,11 @@ int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state)
       str->pctx->label, str->pctx->active_streams);
 
     str->ice_state=state;
-    
+
     return(0);
   }
 
-/* S OK, this component has a nominated. If every component has a nominated, 
+/* S OK, this component has a nominated. If every component has a nominated,
    the stream is ready */
 int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_component *component)
   {
@@ -545,7 +548,7 @@ int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_c
     /* All done... */
     r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/ICE-STREAM(%s): all components have nominated candidate pairs",stream->pctx->label,stream->label);
     nr_ice_media_stream_set_state(stream,NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED);
-    
+
     /* Cancel our timer */
     if(stream->timer){
       NR_async_timer_cancel(stream->timer);
@@ -559,7 +562,7 @@ int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_c
     /* Now tell the peer_ctx that we're done */
     if(r=nr_ice_peer_ctx_stream_done(stream->pctx,stream))
       ABORT(r);
-    
+
   done:
     _status=0;
   abort:
@@ -583,7 +586,7 @@ int nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_comp
     while(p2){
       if(r=nr_ice_candidate_pair_cancel(p2->pctx,p2))
         ABORT(r);
-      
+
       p2=TAILQ_NEXT(p2,entry);
     }
 
@@ -621,16 +624,16 @@ int nr_ice_media_stream_get_best_candidate(nr_ice_media_stream *str, int compone
       if(cand->state==NR_ICE_CAND_STATE_INITIALIZED){
         if(!best_cand || (cand->priority>best_cand->priority))
           best_cand=cand;
-        
+
       }
       cand=TAILQ_NEXT(cand,entry_comp);
     }
-    
+
     if(!best_cand)
       ABORT(R_NOT_FOUND);
 
     *candp=best_cand;
-    
+
     _status=0;
   abort:
     return(_status);
@@ -649,14 +652,14 @@ int nr_ice_media_stream_find_component(nr_ice_media_stream *str, int comp_id, nr
     while(comp){
       if(comp->component_id==comp_id)
         break;
-      
+
       comp=STAILQ_NEXT(comp,entry);
     }
     if(!comp)
       ABORT(R_NOT_FOUND);
 
     *compp=comp;
-    
+
     _status=0;
   abort:
     return(_status);
@@ -734,7 +737,7 @@ int nr_ice_media_stream_finalize(nr_ice_media_stream *lstr,nr_ice_media_stream *
 
     while(lcomp){
       nr_ice_component_finalize(lcomp,rcomp);
-      
+
       lcomp=STAILQ_NEXT(lcomp,entry);
       if(rcomp){
         rcomp=STAILQ_NEXT(rcomp,entry);

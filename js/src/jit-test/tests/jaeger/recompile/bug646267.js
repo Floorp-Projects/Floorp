@@ -5,4 +5,4 @@ function t(code) {
 t("");
 t("");
 t("");
-t("this.function::a = 7;");
+t("this.function = 7;");

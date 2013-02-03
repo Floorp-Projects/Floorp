@@ -13,6 +13,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/HTMLTableElementBinding.h"
+#include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
 DOMCI_NODE_DATA(HTMLTableElement, mozilla::dom::HTMLTableElement)

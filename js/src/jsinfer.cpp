@@ -45,10 +45,6 @@
 
 #include "vm/Stack-inl.h"
 
-#ifdef JS_HAS_XML_SUPPORT
-#include "jsxml.h"
-#endif
-
 #ifdef __SUNPRO_CC
 #include <alloca.h>
 #endif
@@ -2027,6 +2023,8 @@ StackTypeSet::convertDoubleElements(JSContext *cx)
         if (!types)
             return AmbiguousDoubleConversion;
 
+        types->addFreeze(cx);
+
         // We can't convert to double elements for objects which do not have
         // double in their element types (as the conversion may render the type
         // information incorrect), nor for non-array objects (as their elements
@@ -3989,9 +3987,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       case JSOP_CONDSWITCH:
       case JSOP_DEFAULT:
       case JSOP_POPN:
-      case JSOP_STARTXML:
-      case JSOP_STARTXMLEXPR:
-      case JSOP_DEFXMLNS:
       case JSOP_POPV:
       case JSOP_DEBUGGER:
       case JSOP_SETCALL:
@@ -4033,7 +4028,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       case JSOP_STRICTNE:
       case JSOP_IN:
       case JSOP_INSTANCEOF:
-      case JSOP_DELDESC:
         pushed[0].addType(cx, Type::BooleanType());
         break;
       case JSOP_DOUBLE:
@@ -4042,12 +4036,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       case JSOP_STRING:
       case JSOP_TYPEOF:
       case JSOP_TYPEOFEXPR:
-      case JSOP_QNAMEPART:
-      case JSOP_XMLTAGEXPR:
-      case JSOP_TOATTRVAL:
-      case JSOP_ADDATTRNAME:
-      case JSOP_ADDATTRVAL:
-      case JSOP_XMLELTEXPR:
         pushed[0].addType(cx, Type::StringType());
         break;
       case JSOP_NULL:
@@ -4634,39 +4622,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
         break;
 
       case JSOP_YIELD:
-        pushed[0].addType(cx, Type::UnknownType());
-        break;
-
-      case JSOP_CALLXMLNAME:
-        pushed[1].addType(cx, Type::UnknownType());
-        /* FALLTHROUGH */
-
-      case JSOP_XMLNAME:
-        pushed[0].addType(cx, Type::UnknownType());
-        break;
-
-      case JSOP_SETXMLNAME:
-        cx->compartment->types.monitorBytecode(cx, script, offset);
-        poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
-        break;
-
-      case JSOP_BINDXMLNAME:
-        break;
-
-      case JSOP_TOXML:
-      case JSOP_TOXMLLIST:
-      case JSOP_XMLPI:
-      case JSOP_XMLCDATA:
-      case JSOP_XMLCOMMENT:
-      case JSOP_DESCENDANTS:
-      case JSOP_TOATTRNAME:
-      case JSOP_QNAMECONST:
-      case JSOP_QNAME:
-      case JSOP_ANYNAME:
-      case JSOP_GETFUNNS:
-      case JSOP_FILTER:
-        /* Note: the second value pushed by filter is a hole, and not modelled. */
-      case JSOP_ENDFILTER:
         pushed[0].addType(cx, Type::UnknownType());
         break;
 
@@ -5717,7 +5672,6 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
       case JSOP_BINDNAME:
       case JSOP_BINDGNAME:
       case JSOP_BINDINTRINSIC:
-      case JSOP_BINDXMLNAME:
         return true;
 
       /* Stack not consistent in TRY_BRANCH_AFTER_COND. */
@@ -5738,8 +5692,6 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
       /* Holes tracked separately. */
       case JSOP_HOLE:
         return (index == 0);
-      case JSOP_FILTER:
-        return (index == 1);
 
       /* Storage for 'with' and 'let' blocks not monitored. */
       case JSOP_ENTERWITH:
@@ -6064,15 +6016,6 @@ JSObject::makeLazyType(JSContext *cx)
     if (self->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON))
         type->flags |= OBJECT_FLAG_ITERATED;
 
-#if JS_HAS_XML_SUPPORT
-    /*
-     * XML objects do not have equality hooks but are treated special by EQ/NE
-     * ops. Just mark the type as totally unknown.
-     */
-    if (self->isXML() && !type->unknownProperties())
-        type->markUnknown(cx);
-#endif
-
     if (self->getClass()->ext.equality)
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
     if (self->getClass()->emulatesUndefined())
@@ -6212,12 +6155,6 @@ JSCompartment::getNewType(JSContext *cx, Class *clasp, TaggedProto proto_, JSFun
 
         if (fun)
             CheckNewScriptProperties(cx, type, fun);
-
-#if JS_HAS_XML_SUPPORT
-        /* Special case for XML object equality, see makeLazyType(). */
-        if (obj->isXML() && !type->unknownProperties())
-            type->flags |= OBJECT_FLAG_UNKNOWN_MASK;
-#endif
 
         if (obj->isRegExp()) {
             AddTypeProperty(cx, type, "source", types::Type::StringType());

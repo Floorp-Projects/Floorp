@@ -2916,6 +2916,17 @@ Tab.prototype = {
     }
   },
 
+  performReflowOnZoom: function(aViewport) {
+      let webNav = this.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+      let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+      let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+      let viewportWidth = gScreenWidth / aViewport.zoom;
+
+      // We add in a bit of fudge just so that the end characters don't accidentally
+      // get clipped. 15px is an arbitrary choice.
+      docViewer.changeMaxLineBoxWidth(viewportWidth - 15);
+  },
+
   /** 
    * Reloads the tab with the desktop mode setting.
    */
@@ -3951,6 +3962,20 @@ Tab.prototype = {
             this.setResolution(fitZoom, false);
             this.sendViewportUpdate();
           }
+        }
+
+        // If the reflow-text-on-page-load pref is enabled, and reflow-on-zoom
+        // is enabled, and our defaultZoom level is set, then we need to get
+        // the default zoom and reflow the text according to the defaultZoom
+        // level.
+        let rzEnabled = BrowserEventHandler.mReflozPref;
+        let rzPl = Services.prefs.getBoolPref("browser.zoom.reflowZoom.reflowTextOnPageLoad");
+
+        if (rzEnabled && rzPl) {
+          // Retrieve the viewport width and adjust the max line box width
+          // accordingly.
+          let vp = BrowserApp.selectedTab.getViewport();
+          BrowserApp.selectedTab.performReflowOnZoom(vp);
         }
         break;
       case "nsPref:changed":
@@ -7838,8 +7863,12 @@ let Reader = {
 
       // Append URL to the article data. specIgnoringRef will ignore any hash
       // in the URL.
-      if (article)
+      if (article) {
         article.url = uri.specIgnoringRef;
+        let flags = Ci.nsIDocumentEncoder.OutputSelectionOnly | Ci.nsIDocumentEncoder.OutputAbsoluteLinks;
+        article.title = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils)
+                                                        .convertToPlainText(article.title, flags, 0);
+      }
 
       callback(article);
     };

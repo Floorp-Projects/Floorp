@@ -122,7 +122,7 @@ CGBlendMode ToBlendMode(CompositionOp op)
 
 
 
-DrawTargetCG::DrawTargetCG() : mSnapshot(nullptr)
+DrawTargetCG::DrawTargetCG() : mSnapshot(nullptr), mCg(nullptr)
 {
 }
 

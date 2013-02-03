@@ -13,6 +13,9 @@
 
 #include <prlog.h>
 
+#if defined(PR_LOGGING)
+
+// PR_LOGGING is on --> make useful MTLOG macros
 #define MOZ_MTLOG_MODULE(n) \
   static PRLogModuleInfo* getLogModule() {      \
     static PRLogModuleInfo* log;                \
@@ -22,9 +25,17 @@
   }
 
 #define MOZ_MTLOG(level, b) \
-  do {                                                             \
+  do {                                                                  \
     std::stringstream str;                                              \
     str << b;                                                           \
     PR_LOG(getLogModule(), level, ("%s", str.str().c_str())); } while(0)
 
-#endif
+#else
+
+// PR_LOGGING is off --> make no-op MTLOG macros
+#define MOZ_MTLOG_MODULE(n)
+#define MOZ_MTLOG(level, b)
+
+#endif // defined(PR_LOGGING)
+
+#endif // logging_h__

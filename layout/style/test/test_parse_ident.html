@@ -33,13 +33,13 @@ function is_invalid_identifier(i)
      "'" + i + "' is not a valid CSS identifier");
 }
 
-for (var i = 0x7B; i < 0xA0; ++i) {
+for (var i = 0x7B; i < 0x80; ++i) {
   is_invalid_identifier(String.fromCharCode(i));
   is_invalid_identifier("a" + String.fromCharCode(i));
   is_invalid_identifier(String.fromCharCode(i) + "a");
 }
 
-for (var i = 0xA0; i < 0xFF; ++i) {
+for (var i = 0x80; i < 0xFF; ++i) {
   is_valid_identifier(String.fromCharCode(i));
 }
 

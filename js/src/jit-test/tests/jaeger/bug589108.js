@@ -1,6 +1,6 @@
 try {
     var x
-    for (x in <x>></x>)
+    for (x in [x])
     gczeal(2)
     new NaN
 } catch(e) {}

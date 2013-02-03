@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.widget.IconTabWidget;
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -17,16 +19,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
+import android.widget.RelativeLayout;
 
 public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,
                                   LightweightTheme.OnChangeListener,
-                                  AdapterView.OnItemSelectedListener {
+                                  IconTabWidget.OnTabChangedListener {
     private static final String LOGTAG = "GeckoTabsPanel";
 
     public static enum Panel {
@@ -52,21 +53,16 @@ public class TabsPanel extends LinearLayout
     private PanelView mPanelNormal;
     private PanelView mPanelPrivate;
     private PanelView mPanelRemote;
-    private LinearLayout mFooter;
+    private RelativeLayout mFooter;
     private TabsLayoutChangeListener mLayoutChangeListener;
 
+    private IconTabWidget mTabWidget;
     private static ImageButton mMenuButton;
     private static ImageButton mAddTab;
-    private Button mTabsMenuButton;
-    private Spinner mTabsSpinner;
 
     private Panel mCurrentPanel;
     private boolean mIsSideBar;
     private boolean mVisible;
-    private boolean mInflated;
-
-    private GeckoPopupMenu mTabsPopupMenu;
-    private Menu mTabsMenu;
 
     private GeckoPopupMenu mPopupMenu;
     private Menu mMenu;
@@ -92,31 +88,11 @@ public class TabsPanel extends LinearLayout
         mPopupMenu.setOnMenuItemClickListener(this);
         mMenu = mPopupMenu.getMenu();
 
-        mTabsPopupMenu = new GeckoPopupMenu(context);
-        mTabsPopupMenu.inflate(R.menu.tabs_switcher_menu);
-        mTabsPopupMenu.setOnMenuItemClickListener(this);
-        mTabsPopupMenu.showArrowToAnchor(false);
-        mTabsMenu = mTabsPopupMenu.getMenu();
-
         LayoutInflater.from(context).inflate(R.layout.tabs_panel, this);
-    }
-
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-
-        // HACK: Without this, the onFinishInflate is called twice
-        // This issue is due to a bug when Android inflates a layout with a
-        // parent. Fixed in Honeycomb
-        if (mInflated)
-            return;
-
-        mInflated = true;
-
         initialize();
     }
 
-    void initialize() {
+    private void initialize() {
         mPanelNormal = (TabsTray) findViewById(R.id.normal_tabs);
         mPanelNormal.setTabsPanel(this);
 
@@ -126,7 +102,7 @@ public class TabsPanel extends LinearLayout
         mPanelRemote = (RemoteTabs) findViewById(R.id.synced_tabs);
         mPanelRemote.setTabsPanel(this);
 
-        mFooter = (LinearLayout) findViewById(R.id.tabs_panel_footer);
+        mFooter = (RelativeLayout) findViewById(R.id.tabs_panel_footer);
 
         mAddTab = (ImageButton) findViewById(R.id.add_tab);
         mAddTab.setOnClickListener(new Button.OnClickListener() {
@@ -135,16 +111,11 @@ public class TabsPanel extends LinearLayout
             }
         });
 
-        mTabsSpinner = (Spinner) findViewById(R.id.tabs_menu);
-        mTabsSpinner.setOnItemSelectedListener(this);
-
-        mTabsMenuButton = (Button) findViewById(R.id.tabs_switcher_menu);
-        mTabsPopupMenu.setAnchor(mTabsMenuButton);
-        mTabsMenuButton.setOnClickListener(new Button.OnClickListener() {
-            public void onClick(View view) {
-                TabsPanel.this.openTabsSwitcherMenu();
-            }
-        });
+        mTabWidget = (IconTabWidget) findViewById(R.id.tab_widget);
+        mTabWidget.addTab(R.drawable.tabs_normal);
+        mTabWidget.addTab(R.drawable.tabs_private);
+        mTabWidget.addTab(R.drawable.tabs_synced);
+        mTabWidget.setTabSelectionListener(this);
 
         mMenuButton = (ImageButton) findViewById(R.id.menu);
         mMenuButton.setOnClickListener(new Button.OnClickListener() {
@@ -174,46 +145,19 @@ public class TabsPanel extends LinearLayout
         mPopupMenu.show();
     }
 
-    public void openTabsSwitcherMenu() {
-        mTabsPopupMenu.show();
-    }
-
     @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if (!mVisible)
-            return;
-
-        Panel panel = TabsPanel.Panel.NORMAL_TABS;
-        if (position == 1)
-            panel = TabsPanel.Panel.PRIVATE_TABS;
-        else if (position == 2)
-            panel = TabsPanel.Panel.REMOTE_TABS;
-
-        if (panel != mCurrentPanel)
-            show(panel);
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
+    public void onTabChanged(int index) {
+        if (index == 0)
+            show(Panel.NORMAL_TABS);
+        else if (index == 1)
+            show(Panel.PRIVATE_TABS);
+        else
+            show(Panel.REMOTE_TABS);
     }
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.tabs_normal:
-                show(Panel.NORMAL_TABS);
-                return true;
-
-            case R.id.tabs_private:
-                mTabsMenuButton.setText(R.string.tabs_private);
-                show(Panel.PRIVATE_TABS);
-                return true;
-
-            case R.id.tabs_synced:
-                mTabsMenuButton.setText(R.string.tabs_synced);
-                show(Panel.REMOTE_TABS);
-                return true;
-
             case R.id.close_all_tabs:
                 for (Tab tab : Tabs.getInstance().getTabsInOrder()) {
                     Tabs.getInstance().closeTab(tab);
@@ -329,7 +273,7 @@ public class TabsPanel extends LinearLayout
     
         @Override
         public void onLightweightThemeChanged() {
-            LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_bg_repeat);
+            LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_dark_bg_repeat);
             if (drawable == null)
                 return;
 
@@ -339,7 +283,7 @@ public class TabsPanel extends LinearLayout
 
         @Override
         public void onLightweightThemeReset() {
-            setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            setBackgroundResource(R.drawable.tabs_tray_dark_bg_repeat);
         }
 
         @Override
@@ -360,17 +304,14 @@ public class TabsPanel extends LinearLayout
         mCurrentPanel = panel;
 
         int index = panel.ordinal();
-        mTabsSpinner.setSelection(index);
+        mTabWidget.setCurrentTab(index);
 
         if (index == 0) {
             mPanel = mPanelNormal;
-            mTabsMenuButton.setText(R.string.tabs_normal);
         } else if (index == 1) {
             mPanel = mPanelPrivate;
-            mTabsMenuButton.setText(R.string.tabs_private);
         } else {
             mPanel = mPanelRemote;
-            mTabsMenuButton.setText(R.string.tabs_synced);
         }
 
         mPanel.show();

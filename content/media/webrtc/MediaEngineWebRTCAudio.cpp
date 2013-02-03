@@ -47,6 +47,60 @@ MediaEngineWebRTCAudioSource::GetUUID(nsAString& aUUID)
 }
 
 nsresult
+MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
+                                     bool aAgcOn, uint32_t aAGC,
+                                     bool aNoiseOn, uint32_t aNoise)
+{
+  LOG(("Audio config: aec: %d, agc: %d, noise: %d",
+       aEchoOn ? aEcho : -1,
+       aAgcOn ? aAGC : -1,
+       aNoiseOn ? aNoise : -1));
+
+  bool update_agc = (mAgcOn == aAgcOn);
+  bool update_noise = (mNoiseOn == aNoiseOn);
+  mAgcOn = aAgcOn;
+  mNoiseOn = aNoiseOn;
+
+  if ((webrtc::AgcModes) aAGC != webrtc::kAgcUnchanged) {
+    if (mAGC != (webrtc::AgcModes) aAGC) {
+      update_agc = true;
+      mAGC = (webrtc::AgcModes) aAGC;
+    }
+  }
+  if ((webrtc::NsModes) aNoise != webrtc::kNsUnchanged) {
+    if (mNoiseSuppress != (webrtc::NsModes) aNoise) {
+      update_noise = true;
+      mNoiseSuppress = (webrtc::NsModes) aNoise;
+    }
+  }
+
+  if (mInitDone) {
+    int error;
+#if 0
+    // Until we can support feeding our full output audio from the browser
+    // through the MediaStream, this won't work.  Or we need to move AEC to
+    // below audio input and output, perhaps invoked from here.
+    mEchoOn = aEchoOn;
+    if ((webrtc::EcModes) aEcho != webrtc::kEcUnchanged)
+      mEchoCancel = (webrtc::EcModes) aEcho;
+    mVoEProcessing->SetEcStatus(mEchoOn, aEcho);
+#else
+    (void) aEcho; (void) aEchoOn; // suppress warnings
+#endif
+
+    if (update_agc &&
+      0 != (error = mVoEProcessing->SetAgcStatus(mAgcOn, (webrtc::AgcModes) aAGC))) {
+      LOG(("%s Error setting AGC Status: %d ",__FUNCTION__, error));
+    }
+    if (update_noise &&
+      0 != (error = mVoEProcessing->SetNsStatus(mNoiseOn, (webrtc::NsModes) aNoise))) {
+      LOG(("%s Error setting NoiseSuppression Status: %d ",__FUNCTION__, error));
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
 MediaEngineWebRTCAudioSource::Allocate()
 {
   if (mState == kReleased && mInitDone) {
@@ -95,7 +149,6 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   }
 
   AudioSegment* segment = new AudioSegment();
-  segment->Init(CHANNELS);
   aStream->AddTrack(aID, SAMPLE_FREQUENCY, 0, segment);
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
   LOG(("Initial audio"));
@@ -105,6 +158,11 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
     return NS_OK;
   }
   mState = kStarted;
+
+  // Configure audio processing in webrtc code
+  Config(mEchoOn, webrtc::kEcUnchanged,
+         mAgcOn, webrtc::kAgcUnchanged,
+         mNoiseOn, webrtc::kNsUnchanged);
 
   if (mVoEBase->StartReceive(mChannel)) {
     return NS_ERROR_FAILURE;
@@ -189,6 +247,11 @@ MediaEngineWebRTCAudioSource::Init()
   }
   mVoENetwork = webrtc::VoENetwork::GetInterface(mVoiceEngine);
   if (!mVoENetwork) {
+    return;
+  }
+
+  mVoEProcessing = webrtc::VoEAudioProcessing::GetInterface(mVoiceEngine);
+  if (!mVoEProcessing) {
     return;
   }
 
@@ -299,7 +362,6 @@ MediaEngineWebRTCAudioSource::Process(const int channel,
     memcpy(dest, audio10ms, length * sizeof(sample));
 
     AudioSegment segment;
-    segment.Init(CHANNELS);
     nsAutoTArray<const sample*,1> channels;
     channels.AppendElement(dest);
     segment.AppendFrames(buffer.forget(), channels, length);

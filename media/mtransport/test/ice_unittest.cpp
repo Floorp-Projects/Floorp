@@ -314,7 +314,7 @@ class IceTest : public ::testing::Test {
   void SendReceive() {
     //    p1_->Send(2);
     p1_->SendPacket(0, 1, reinterpret_cast<const unsigned char *>("TEST"), 4);
-    ASSERT_EQ(1, p1_->sent());
+    ASSERT_EQ(1u, p1_->sent());
     ASSERT_TRUE_WAIT(p2_->received() == 1, 1000);
   }
 

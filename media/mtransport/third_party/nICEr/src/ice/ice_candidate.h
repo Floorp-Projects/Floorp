@@ -39,7 +39,7 @@ using namespace std;
 extern "C" {
 #endif /* __cplusplus */
 
-typedef enum {HOST=1, SERVER_REFLEXIVE, PEER_REFLEXIVE, RELAYED} nr_ice_candidate_type;
+typedef enum {HOST=1, SERVER_REFLEXIVE, PEER_REFLEXIVE, RELAYED, CTYPE_MAX} nr_ice_candidate_type;
 
 struct nr_ice_candidate_ {
   char *label;
@@ -65,13 +65,13 @@ struct nr_ice_candidate_ {
   char *foundation;                   /* Foundation for the candidate (S 4) */
   UINT4 priority;                     /* The priority value (S 5.4 */
   nr_ice_stun_server *stun_server;
-  
+
   void *delay_timer;
 
   /* Holding data for STUN and TURN */
   union {
     struct {
-      nr_stun_client_ctx *stun;      
+      nr_stun_client_ctx *stun;
       void *stun_handle;
     } srvrflx;
     struct {
@@ -83,14 +83,14 @@ struct nr_ice_candidate_ {
     } relayed;
   } u;
 
-  NR_async_cb done_cb;              
+  NR_async_cb done_cb;
   void *cb_arg;
 
   NR_async_cb ready_cb;
   void *ready_cb_arg;
   void *ready_cb_timer;
 
-  TAILQ_ENTRY(nr_ice_candidate_) entry_sock;  
+  TAILQ_ENTRY(nr_ice_candidate_) entry_sock;
   TAILQ_ENTRY(nr_ice_candidate_) entry_comp;
 };
 

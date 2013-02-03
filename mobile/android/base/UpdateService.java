@@ -264,6 +264,8 @@ public class UpdateService extends IntentService {
     }
 
     private URLConnection openConnectionWithProxy(URL url) throws java.net.URISyntaxException, java.io.IOException {
+        Log.i(LOGTAG, "openning connection with url: " + url);
+
         ProxySelector ps = ProxySelector.getDefault();
         Proxy proxy = Proxy.NO_PROXY;
         if (ps != null) {

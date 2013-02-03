@@ -75,7 +75,7 @@ this.DOMApplicationRegistry = {
                      "Webapps:GetSelf", "Webapps:CheckInstalled",
                      "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                      "Webapps:Launch", "Webapps:GetAll",
-                     "Webapps:InstallPackage", "Webapps:GetAppInfo",
+                     "Webapps:InstallPackage",
                      "Webapps:GetList", "Webapps:RegisterForMessages",
                      "Webapps:UnregisterForMessages",
                      "Webapps:CancelDownload", "Webapps:CheckForUpdate",
@@ -110,40 +110,48 @@ this.DOMApplicationRegistry = {
           this.webapps = aData;
           let appDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], false);
           for (let id in this.webapps) {
+            let app = this.webapps[id];
 
-            this.webapps[id].id = id;
+            app.id = id;
 
             // Make sure we have a localId
-            if (this.webapps[id].localId === undefined) {
-              this.webapps[id].localId = this._nextLocalId();
+            if (app.localId === undefined) {
+              app.localId = this._nextLocalId();
             }
 
-            if (this.webapps[id].basePath === undefined) {
-              this.webapps[id].basePath = appDir.path;
+            if (app.basePath === undefined) {
+              app.basePath = appDir.path;
             }
 
             // Default to removable apps.
-            if (this.webapps[id].removable === undefined) {
-              this.webapps[id].removable = true;
+            if (app.removable === undefined) {
+              app.removable = true;
             }
 
             // Default to a non privileged status.
-            if (this.webapps[id].appStatus === undefined) {
-              this.webapps[id].appStatus = Ci.nsIPrincipal.APP_STATUS_INSTALLED;
+            if (app.appStatus === undefined) {
+              app.appStatus = Ci.nsIPrincipal.APP_STATUS_INSTALLED;
             }
 
             // Default to NO_APP_ID and not in browser.
-            if (this.webapps[id].installerAppId === undefined) {
-              this.webapps[id].installerAppId = Ci.nsIScriptSecurityManager.NO_APP_ID;
+            if (app.installerAppId === undefined) {
+              app.installerAppId = Ci.nsIScriptSecurityManager.NO_APP_ID;
             }
-            if (this.webapps[id].installerIsBrowser === undefined) {
-              this.webapps[id].installerIsBrowser = false;
+            if (app.installerIsBrowser === undefined) {
+              app.installerIsBrowser = false;
             }
 
-            // Default installState to "installed".
-            if (this.webapps[id].installState === undefined) {
-              this.webapps[id].installState = "installed";
+            // Default installState to "installed", and reset if we shutdown
+            // during an update.
+            if (app.installState === undefined ||
+                app.installState === "updating") {
+              app.installState = "installed";
             }
+
+            // At startup we can't be downloading, and the $TMP directory
+            // will be empty so we can't just apply a staged update.
+            app.downloading = false;
+            app.readyToApplyDownload = false;
           };
         }
         aNext();
@@ -790,14 +798,6 @@ this.DOMApplicationRegistry = {
       case "Webapps:InstallPackage":
         this.doInstallPackage(msg, mm);
         break;
-      case "Webapps:GetAppInfo":
-        if (!this.webapps[msg.id]) {
-          debug("No webapp for " + msg.id);
-          return null;
-        }
-        return { "basePath":  this.webapps[msg.id].basePath + "/",
-                 "isCoreApp": !this.webapps[msg.id].removable };
-        break;
       case "Webapps:RegisterForMessages":
         this.addMessageListener(msg, mm);
         break;
@@ -826,6 +826,15 @@ this.DOMApplicationRegistry = {
         this.notifyAppsRegistryReady();
         break;
     }
+  },
+
+  getAppInfo: function getAppInfo(aAppId) {
+    if (!this.webapps[aAppId]) {
+      debug("No webapp for " + aAppId);
+      return null;
+    }
+    return { "basePath":  this.webapps[aAppId].basePath + "/",
+             "isCoreApp": !this.webapps[aAppId].removable };
   },
 
   // Some messages can be listened by several content processes:
@@ -2228,13 +2237,17 @@ this.DOMApplicationRegistry = {
                   if (!app.staged) {
                     app.staged = { };
                   }
-                  app.staged.packageEtag =
-                    requestChannel.getResponseHeader("Etag");
+                  try {
+                    app.staged.packageEtag =
+                      requestChannel.getResponseHeader("Etag");
+                  } catch(e) { }
                   app.staged.packageHash = aHash;
                   app.staged.appStatus =
                     AppsUtils.getAppManifestStatus(manifest);
                 } else {
-                  app.packageEtag = requestChannel.getResponseHeader("Etag");
+                  try {
+                    app.packageEtag = requestChannel.getResponseHeader("Etag");
+                  } catch(e) { }
                   app.packageHash = aHash;
                   app.appStatus = AppsUtils.getAppManifestStatus(manifest);
                 }

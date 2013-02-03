@@ -1,28 +1,25 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-"use strict";
-
-Cu.import("resource://services-common/log4moz.js");
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /**
  * Represents an info bar that shows a data submission notification.
  */
-function DataNotificationInfoBar() {
-  let log4moz = Cu.import("resource://services-common/log4moz.js", {}).Log4Moz;
-  this._log = log4moz.repository.getLogger("Services.DataReporting.InfoBar");
-
-  this._notificationBox = null;
-}
-
-DataNotificationInfoBar.prototype = {
+let gDataNotificationInfoBar = {
   _OBSERVERS: [
     "datareporting:notify-data-policy:request",
     "datareporting:notify-data-policy:close",
   ],
 
   _DATA_REPORTING_NOTIFICATION: "data-reporting",
+
+  _notificationBox: null,
+
+  get _log() {
+    let log4moz = Cu.import("resource://services-common/log4moz.js", {}).Log4Moz;
+    delete this._log;
+    return this._log = log4moz.repository.getLogger("Services.DataReporting.InfoBar");
+  },
 
   init: function() {
     window.addEventListener("unload", function onUnload() {

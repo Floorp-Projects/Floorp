@@ -112,14 +112,14 @@ mbslen(const char *s, size_t *ncharsp)
 #endif /* DARWIN */
     {
         if (nbytes == (size_t)-1)   /* should never happen */ {
-	    assert(0);
+            assert(0);
             ABORT(R_INTERNAL);
-	}
+        }
         if (nbytes == (size_t)-2)   /* encoding error */ {
-	    assert(0);
+            assert(0);
             ABORT(R_BAD_DATA);
-	}
- 
+        }
+
         s += nbytes;
         ++nchars;
     }

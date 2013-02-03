@@ -24,7 +24,7 @@
 #define NS_CANVASPATTERNAZURE_PRIVATE_IID \
     {0xc9bacc25, 0x28da, 0x421e, {0x9a, 0x4b, 0xbb, 0xd6, 0x93, 0x05, 0x12, 0xbc}}
 
-class nsIDOMXULElement;
+class nsXULElement;
 
 namespace mozilla {
 namespace gfx {
@@ -438,7 +438,7 @@ public:
   void DrawWindow(nsIDOMWindow* window, double x, double y, double w, double h,
                   const nsAString& bgColor, uint32_t flags,
                   mozilla::ErrorResult& error);
-  void AsyncDrawXULElement(nsIDOMXULElement* elem, double x, double y, double w,
+  void AsyncDrawXULElement(nsXULElement& elem, double x, double y, double w,
                            double h, const nsAString& bgColor, uint32_t flags,
                            mozilla::ErrorResult& error);
 

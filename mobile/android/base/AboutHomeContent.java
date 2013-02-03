@@ -19,9 +19,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.OnAccountsUpdateListener;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -79,6 +76,11 @@ public class AboutHomeContent extends ScrollView
     private static int mNumberOfTopSites;
     private static int mNumberOfCols;
 
+    public static enum UnpinFlags {
+        REMOVE_PIN,
+        REMOVE_HISTORY
+    }
+
     static enum UpdateFlags {
         TOP_SITES,
         PREVIOUS_TABS,
@@ -94,16 +96,12 @@ public class AboutHomeContent extends ScrollView
     VoidCallback mLoadCompleteCallback = null;
     private LayoutInflater mInflater;
 
-    private AccountManager mAccountManager;
-    private OnAccountsUpdateListener mAccountListener = null;
-
     private ContentObserver mTabsContentObserver = null;
 
     protected TopSitesCursorAdapter mTopSitesAdapter;
     protected TopSitesGridView mTopSitesGrid;
 
     private AboutHomePromoBox mPromoBox;
-    private AboutHomePromoBox.Type mPrelimPromoBoxType;
     protected AboutHomeSection mAddons;
     protected AboutHomeSection mLastTabs;
     protected AboutHomeSection mRemoteTabs;
@@ -141,15 +139,6 @@ public class AboutHomeContent extends ScrollView
 
         inflate();
 
-        mAccountManager = AccountManager.get(mContext);
-
-        // The listener will run on the background thread (see 2nd argument)
-        mAccountManager.addOnAccountsUpdatedListener(mAccountListener = new OnAccountsUpdateListener() {
-            public void onAccountsUpdated(Account[] accounts) {
-                updateLayoutForSync();
-            }
-        }, GeckoAppShell.getHandler(), false);
-        
         // Reload the mobile homepage on inbound tab syncs
         // Because the tabs URI is coarse grained, this updates the
         // remote tabs component on *every* tab change
@@ -171,9 +160,6 @@ public class AboutHomeContent extends ScrollView
                 Tabs.getInstance().loadUrl((String) v.getTag(), flags);
             }
         };
-
-        mPrelimPromoBoxType = (new Random()).nextFloat() < 0.5 ? AboutHomePromoBox.Type.SYNC :
-                AboutHomePromoBox.Type.APPS;
     }
 
     private void inflate() {
@@ -210,11 +196,13 @@ public class AboutHomeContent extends ScrollView
                 // force all items to be visible all the time
                 View view = mTopSitesGrid.getChildAt(info.position);
                 TopSitesViewHolder holder = (TopSitesViewHolder) view.getTag();
-                if (holder.isPinned()) {
+                if (TextUtils.isEmpty(holder.getUrl())) {
+                    menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
+                    menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
+                    menu.findItem(R.id.abouthome_topsites_remove).setVisible(false);
+                } else if (holder.isPinned()) {
                     menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                 } else {
-                    if (TextUtils.isEmpty(holder.getUrl()))
-                        menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                 }
             }
@@ -254,11 +242,6 @@ public class AboutHomeContent extends ScrollView
     }
 
     public void onDestroy() {
-        if (mAccountListener != null) {
-            mAccountManager.removeOnAccountsUpdatedListener(mAccountListener);
-            mAccountListener = null;
-        }
-
         if (mTopSitesAdapter != null) {
             Cursor cursor = mTopSitesAdapter.getCursor();
             if (cursor != null && !cursor.isClosed())
@@ -285,20 +268,14 @@ public class AboutHomeContent extends ScrollView
         findViewById(R.id.top_sites_grid).setVisibility(visibility);
     }
 
-    private void updateLayout(boolean syncIsSetup) {
+    private void updateLayout() {
         boolean hasTopSites = mTopSitesAdapter.getCount() > 0;
         setTopSitesVisibility(hasTopSites);
-
-        AboutHomePromoBox.Type type = mPrelimPromoBoxType;
-        if (syncIsSetup && type == AboutHomePromoBox.Type.SYNC)
-            type = AboutHomePromoBox.Type.APPS;
-
-        mPromoBox.show(type);
+        mPromoBox.showRandomPromo();
     }
 
     private void updateLayoutForSync() {
         final GeckoApp.StartupMode startupMode = mActivity.getStartupMode();
-        final boolean syncIsSetup = SyncAccounts.syncAccountsExist(mContext);
 
         post(new Runnable() {
             public void run() {
@@ -306,16 +283,12 @@ public class AboutHomeContent extends ScrollView
                 // In this case, we should simply wait for the initial setup
                 // to happen.
                 if (mTopSitesAdapter != null)
-                    updateLayout(syncIsSetup);
+                    updateLayout();
             }
         });
     }
 
     private void loadTopSites() {
-        // The SyncAccounts.syncAccountsExist method should not be called on
-        // UI thread as it touches disk to access a sqlite DB.
-        final boolean syncIsSetup = SyncAccounts.syncAccountsExist(mActivity);
-
         final ContentResolver resolver = mActivity.getContentResolver();
         Cursor old = null;
         if (mTopSitesAdapter != null) {
@@ -342,7 +315,7 @@ public class AboutHomeContent extends ScrollView
                 if (mTopSitesAdapter.getCount() > 0)
                     loadTopSitesThumbnails(resolver);
 
-                updateLayout(syncIsSetup);
+                updateLayout();
 
                 // Free the old Cursor in the right thread now.
                 if (oldCursor != null && !oldCursor.isClosed())
@@ -1013,18 +986,21 @@ public class AboutHomeContent extends ScrollView
         holder.setPinned(false);
     }
 
-    public void unpinSite() {
+    public void unpinSite(final UnpinFlags flags) {
         final int position = mTopSitesGrid.getSelectedPosition();
-        View v = mTopSitesGrid.getChildAt(position);
-        TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-
+        final View v = mTopSitesGrid.getChildAt(position);
+        final TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+        final String url = holder.getUrl();
         // Quickly update the view so that there isn't as much lag between the request and response
         clearThumbnail(holder);
         (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
             @Override
             public Void doInBackground(Void... params) {
-                ContentResolver resolver = mActivity.getContentResolver();
+                final ContentResolver resolver = mActivity.getContentResolver();
                 BrowserDB.unpinSite(resolver, position);
+                if (flags == UnpinFlags.REMOVE_HISTORY) {
+                    BrowserDB.removeHistoryEntry(resolver, url);
+                }
                 return null;
             }
         }).execute();

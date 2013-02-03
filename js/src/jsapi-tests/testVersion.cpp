@@ -20,10 +20,7 @@ struct VersionFixture;
 
 static VersionFixture *callbackData = NULL;
 
-JSBool CheckVersionHasMoarXML(JSContext *cx, unsigned argc, jsval *vp);
-JSBool DisableMoarXMLOption(JSContext *cx, unsigned argc, jsval *vp);
 JSBool CallSetVersion17(JSContext *cx, unsigned argc, jsval *vp);
-JSBool CheckNewScriptNoXML(JSContext *cx, unsigned argc, jsval *vp);
 JSBool OverrideVersion18(JSContext *cx, unsigned argc, jsval *vp);
 JSBool CaptureVersion(JSContext *cx, unsigned argc, jsval *vp);
 JSBool CheckOverride(JSContext *cx, unsigned argc, jsval *vp);
@@ -36,14 +33,11 @@ struct VersionFixture : public JSAPITest
     virtual bool init() {
         if (!JSAPITest::init())
             return false;
-        JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ALLOW_XML);
+        JS_SetOptions(cx, JS_GetOptions(cx));
         callbackData = this;
         captured = JSVERSION_UNKNOWN;
         js::RootedObject global(cx, JS_GetGlobalObject(cx));
-        return JS_DefineFunction(cx, global, "checkVersionHasMoarXML", CheckVersionHasMoarXML, 0, 0) &&
-               JS_DefineFunction(cx, global, "disableMoarXMLOption", DisableMoarXMLOption, 0, 0) &&
-               JS_DefineFunction(cx, global, "callSetVersion17", CallSetVersion17, 0, 0) &&
-               JS_DefineFunction(cx, global, "checkNewScriptNoXML", CheckNewScriptNoXML, 0, 0) &&
+        return JS_DefineFunction(cx, global, "callSetVersion17", CallSetVersion17, 0, 0) &&
                JS_DefineFunction(cx, global, "overrideVersion18", OverrideVersion18, 0, 0) &&
                JS_DefineFunction(cx, global, "captureVersion", CaptureVersion, 0, 0) &&
                JS_DefineFunction(cx, global, "checkOverride", CheckOverride, 1, 0) &&
@@ -56,38 +50,8 @@ struct VersionFixture : public JSAPITest
         return JS_CompileScript(cx, global, contents, length, "<test>", 1);
     }
 
-    bool hasMoarXML(unsigned version) {
-        return VersionHasMoarXML(JSVersion(version));
-    }
-
-    bool hasMoarXML(JSScript *script) {
-        return hasMoarXML(script->getVersion());
-    }
-
-    bool hasMoarXML() {
-        return OptionsHasMoarXML(JS_GetOptions(cx));
-    }
-
-    bool disableMoarXMLOption() {
-        JS_SetOptions(cx, JS_GetOptions(cx) & ~JSOPTION_MOAR_XML);
-        return true;
-    }
-
     bool checkVersionIsOverridden() {
         CHECK(cx->isVersionOverridden());
-        return true;
-    }
-
-    /* Check that script compilation results in a version without moar XML. */
-    bool checkNewScriptNoXML() {
-        JSScript *script = fakeScript("", 0);
-        CHECK(script);
-        CHECK(!hasMoarXML(script->getVersion()));
-        return true;
-    }
-
-    bool checkVersionHasMoarXML() {
-        CHECK(VersionHasMoarXML(cx->findVersion()));
         return true;
     }
 
@@ -105,21 +69,6 @@ struct VersionFixture : public JSAPITest
                 cx, global, NULL, chars, len, "<test>", 0, &rval, version));
         return true;
     }
-
-    bool toggleMoarXML(bool shouldEnable) {
-        CHECK_EQUAL(hasMoarXML(), !shouldEnable);
-        JS_ToggleOptions(cx, JSOPTION_MOAR_XML);
-        CHECK_EQUAL(hasMoarXML(), shouldEnable);
-        return true;
-    }
-    
-    bool disableMoarXML() {
-        return toggleMoarXML(false);
-    }
-
-    bool enableXML() {
-        return toggleMoarXML(true);
-    }
 };
 
 /* Callbacks to throw into JS-land. */
@@ -128,24 +77,6 @@ JSBool
 CallSetVersion17(JSContext *cx, unsigned argc, jsval *vp)
 {
     return callbackData->setVersion(JSVERSION_1_7);
-}
-
-JSBool
-CheckVersionHasMoarXML(JSContext *cx, unsigned argc, jsval *vp)
-{
-    return callbackData->checkVersionHasMoarXML();
-}
-
-JSBool
-DisableMoarXMLOption(JSContext *cx, unsigned argc, jsval *vp)
-{
-    return callbackData->disableMoarXMLOption();
-}
-
-JSBool
-CheckNewScriptNoXML(JSContext *cx, unsigned argc, jsval *vp)
-{
-    return callbackData->checkNewScriptNoXML();
 }
 
 JSBool
@@ -183,35 +114,6 @@ CheckOverride(JSContext *cx, unsigned argc, jsval *vp)
     bool shouldHaveOverride = !!JSVAL_TO_BOOLEAN(argv[0]);
     return shouldHaveOverride == cx->isVersionOverridden();
 }
-
-/*
- * See bug 611462. We are checking that the MOAR_XML option setting from a
- * JSAPI call is propagated to newly compiled scripts, instead of inheriting
- * the XML setting from a script on the stack.
- */
-BEGIN_FIXTURE_TEST(VersionFixture, testVersion_OptionsAreUsedForVersionFlags)
-{
-    callbackData = this;
-
-    /* Enable XML and compile a script to activate. */
-    enableXML();
-    static const char toActivateChars[] =
-        "checkVersionHasMoarXML();"
-        "disableMoarXMLOption();"
-        "callSetVersion17();"
-        "checkNewScriptNoXML();";
-    JSScript *toActivate = fakeScript(toActivateChars, sizeof(toActivateChars) - 1);
-    CHECK(toActivate);
-    CHECK(hasMoarXML(toActivate));
-
-    disableMoarXML();
-
-    /* Activate the script. */
-    jsval dummy;
-    CHECK(JS_ExecuteScript(cx, global, toActivate, &dummy));
-    return true;
-}
-END_FIXTURE_TEST(VersionFixture, testVersion_OptionsAreUsedForVersionFlags)
 
 /*
  * When re-entering the virtual machine through a *Version API the version
@@ -267,27 +169,3 @@ BEGIN_FIXTURE_TEST(VersionFixture, testVersion_EvalPropagatesOverride)
     return true;
 }
 END_FIXTURE_TEST(VersionFixture, testVersion_EvalPropagatesOverride)
-
-BEGIN_TEST(testVersion_AllowXML)
-{
-    JSBool ok;
-
-    // The first JS_Evaluate* call should fail with a SyntaxError.
-    // Since it's expected, don't report it to stderr.
-    uint32_t baseOptions = JS_GetOptions(cx);
-    JS_SetOptions(cx, baseOptions | JSOPTION_DONT_REPORT_UNCAUGHT);
-
-    static const char code[] = "var m = <x/>;";
-    ok = JS_EvaluateScriptForPrincipalsVersion(cx, global, NULL, code, strlen(code),
-                                               __FILE__, __LINE__, NULL, JSVERSION_ECMA_5);
-    CHECK_EQUAL(ok, JS_FALSE);
-    JS_ClearPendingException(cx);
-
-    // Permit XML, and turn error reporting back on (just in case this fails).
-    JS_SetOptions(cx, baseOptions | JSOPTION_ALLOW_XML);
-    ok = JS_EvaluateScriptForPrincipalsVersion(cx, global, NULL, code, strlen(code),
-                                               __FILE__, __LINE__, NULL, JSVERSION_ECMA_5);
-    CHECK_EQUAL(ok, JS_TRUE);
-    return true;
-}
-END_TEST(testVersion_AllowXML)

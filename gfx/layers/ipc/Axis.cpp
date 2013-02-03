@@ -7,6 +7,7 @@
 #include "Axis.h"
 #include "AsyncPanZoomController.h"
 #include "mozilla/Preferences.h"
+#include "nsThreadUtils.h"
 #include <algorithm>
 
 namespace mozilla {

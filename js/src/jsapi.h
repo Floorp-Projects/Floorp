@@ -1068,8 +1068,8 @@ class JS_PUBLIC_API(AutoGCRooter) {
         SHAPEVECTOR =  -4, /* js::AutoShapeVector */
         IDARRAY =      -6, /* js::AutoIdArray */
         DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
-        NAMESPACES =   -8, /* js::AutoNamespaceArray */
-        XML =          -9, /* js::AutoXMLRooter */
+        // UNUSED      -8
+        // UNUSED      -9
         OBJECT =      -10, /* js::AutoObjectRooter */
         ID =          -11, /* js::AutoIdRooter */
         VALVECTOR =   -12, /* js::AutoValueVector */
@@ -2384,11 +2384,9 @@ JS_NumberValue(double d)
 
 /*
  * A jsid is an identifier for a property or method of an object which is
- * either a 31-bit signed integer, interned string or object. If XML is
- * enabled, there is an additional singleton jsid value; see
- * JS_DEFAULT_XML_NAMESPACE_ID below. Finally, there is an additional jsid
- * value, JSID_VOID, which does not occur in JS scripts but may be used to
- * indicate the absence of a valid jsid.
+ * either a 31-bit signed integer, interned string or object.  Also, there is
+ * an additional jsid value, JSID_VOID, which does not occur in JS scripts but
+ * may be used to indicate the absence of a valid jsid.
  *
  * A jsid is not implicitly convertible to or from a jsval; JS_ValueToId or
  * JS_IdToValue must be used instead.
@@ -2398,7 +2396,6 @@ JS_NumberValue(double d)
 #define JSID_TYPE_INT                    0x1
 #define JSID_TYPE_VOID                   0x2
 #define JSID_TYPE_OBJECT                 0x4
-#define JSID_TYPE_DEFAULT_XML_NAMESPACE  0x6
 #define JSID_TYPE_MASK                   0x7
 
 /*
@@ -2505,25 +2502,6 @@ JSID_TO_GCTHING(jsid id)
 {
     return (void *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
 }
-
-/*
- * The magic XML namespace id is not a valid jsid. Global object classes in
- * embeddings that enable JS_HAS_XML_SUPPORT (E4X) should handle this id.
- */
-
-static JS_ALWAYS_INLINE JSBool
-JSID_IS_DEFAULT_XML_NAMESPACE(jsid id)
-{
-    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_DEFAULT_XML_NAMESPACE,
-                 JSID_BITS(id) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
-    return ((size_t)JSID_BITS(id) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
-}
-
-#ifdef JS_USE_JSID_STRUCT_TYPES
-extern JS_PUBLIC_DATA(jsid) JS_DEFAULT_XML_NAMESPACE_ID;
-#else
-# define JS_DEFAULT_XML_NAMESPACE_ID ((jsid)JSID_TYPE_DEFAULT_XML_NAMESPACE)
-#endif
 
 /*
  * A void jsid is not a valid id and only arises as an exceptional API return
@@ -3165,16 +3143,11 @@ JS_StringToVersion(const char *string);
                                                    option supported for the
                                                    XUL preprocessor and kindred
                                                    beasts. */
-#define JSOPTION_ALLOW_XML      JS_BIT(6)       /* enable E4X syntax (deprecated)
-                                                   and define the E4X-related
-                                                   globals: XML, XMLList,
-                                                   Namespace, etc. */
-#define JSOPTION_MOAR_XML       JS_BIT(7)       /* enable E4X even in versions
-                                                   that don't normally get it;
-                                                   parse <!-- --> as a token,
-                                                   not backward compatible with
-                                                   the comment-hiding hack used
-                                                   in HTML script tags. */
+
+/* JS_BIT(6) is currently unused. */
+
+/* JS_BIT(7) is currently unused. */
+
 #define JSOPTION_DONT_REPORT_UNCAUGHT                                   \
                                 JS_BIT(8)       /* When returning from the
                                                    outermost API call, prevent
@@ -3216,7 +3189,7 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_ION            JS_BIT(20)      /* IonMonkey */
 
 /* Options which reflect compile-time properties of scripts. */
-#define JSCOMPILEOPTION_MASK    (JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML)
+#define JSCOMPILEOPTION_MASK    0
 
 #define JSRUNOPTION_MASK        (JS_BITMASK(21) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)

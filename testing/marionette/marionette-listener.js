@@ -54,6 +54,12 @@ let asyncTestTimeoutId;
 let originalOnError;
 //timer for doc changes
 let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+// Send move events about this often
+let EVENT_INTERVAL = 30; // milliseconds
+// The current array of all pending touches
+let touches = [];
+// For assigning unique ids to all touches
+let nextTouchId = 1000;
 
 /**
  * Called when listener is first started up. 
@@ -93,6 +99,8 @@ function startListeners() {
   addMessageListenerId("Marionette:executeScript", executeScript);
   addMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   addMessageListenerId("Marionette:executeJSScript", executeJSScript);
+  addMessageListenerId("Marionette:singleTap", singleTap);
+  addMessageListenerId("Marionette:doubleTap", doubleTap);
   addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   addMessageListenerId("Marionette:goUrl", goUrl);
   addMessageListenerId("Marionette:getUrl", getUrl);
@@ -180,6 +188,8 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:executeScript", executeScript);
   removeMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
+  removeMessageListenerId("Marionette:singleTap", singleTap);
+  removeMessageListenerId("Marionette:doubleTap", doubleTap);
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
@@ -528,6 +538,254 @@ function executeWithCallback(msg, useFinish) {
   } catch (e) {
     // 17 = JavascriptException
     sandbox.asyncComplete(e.name + ': ' + e.message, 17);
+  }
+}
+
+/**
+ * This function creates a touch event given a touch type and a touch
+ */
+function emitTouchEvent(type, touch) {
+  var target = touch.target;
+  var doc = target.ownerDocument;
+  var win = doc.defaultView;
+  // Using domWindowUtils
+  var domWindowUtils = curWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+  domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.screenX], [touch.screenY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
+}
+
+/**
+ * This function creates a touch and emit touch events
+ * @param 'xt' and 'yt' are two-element array [from, to] and then is a callback that will be invoked after touchend event is sent
+ */
+function touch(target, duration, xt, yt, then) {
+  var doc = target.ownerDocument;
+  var win = doc.defaultView;
+  var touchId = nextTouchId++;
+  var x = xt;
+  if (typeof xt !== 'function') {
+    x = function(t) { return xt[0] + t / duration * (xt[1] - xt[0]); };
+  }
+  var y = yt;
+  if (typeof yt !== 'function') {
+    y = function(t) { return yt[0] + t / duration * (yt[1] - yt[0]); };
+  }
+  // viewport coordinates
+  var clientX = Math.round(x(0)), clientY = Math.round(y(0));
+  // document coordinates
+  var pageX = clientX + win.pageXOffset,
+      pageY = clientY + win.pageYOffset;
+  // screen coordinates
+  var screenX = clientX + win.mozInnerScreenX,
+      screenY = clientY + win.mozInnerScreenY;
+  // Remember the coordinates
+  var lastX = clientX, lastY = clientY;
+  // Create the touch object
+  var touch = doc.createTouch(win, target, touchId,
+                              pageX, pageY,
+                              screenX, screenY,
+                              clientX, clientY);
+  // Add this new touch to the list of touches
+  touches.push(touch);
+  // Send the start event
+  emitTouchEvent('touchstart', touch);
+  var startTime = Date.now();
+  checkTimer.initWithCallback(nextEvent, EVENT_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
+  function nextEvent() {
+  // Figure out if this is the last of the touchmove events
+    var time = Date.now();
+    var dt = time - startTime;
+    var last = dt + EVENT_INTERVAL / 2 > duration;
+    // Find our touch object in the touches[] array.
+    // Note that its index may have changed since we pushed it
+    var touchIndex = touches.indexOf(touch);
+    // If this is the last move event, make sure we move all the way
+    if (last)
+       dt = duration;
+    // New coordinates of the touch
+    clientX = Math.round(x(dt));
+    clientY = Math.round(y(dt));
+    // If we've moved, send a move event
+    if (clientX !== lastX || clientY !== lastY) { // If we moved
+      lastX = clientX;
+      lastY = clientY;
+      pageX = clientX + win.pageXOffset;
+      pageY = clientY + win.pageYOffset;
+      screenX = clientX + win.mozInnerScreenX;
+      screenY = clientY + win.mozInnerScreenY;
+      // Since we moved, we've got to create a new Touch object
+      // with the new coordinates
+      touch = doc.createTouch(win, target, touchId,
+                              pageX, pageY,
+                              screenX, screenY,
+                              clientX, clientY);
+      // Replace the old touch object with the new one
+      touches[touchIndex] = touch;
+      // And send the touchmove event
+      emitTouchEvent('touchmove', touch);
+    }
+    // If that was the last move, send the touchend event
+    // and call the callback 
+    if (last) {
+      touches.splice(touchIndex, 1);
+      emitTouchEvent('touchend', touch);
+      if (then)
+        checkTimer.initWithCallback(then, 0, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+    // Otherwise, schedule the next event
+    else {
+      checkTimer.initWithCallback(nextEvent, EVENT_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+  }
+}
+
+/**
+ * This function generates the coordinates of the element
+ * @param 'x0', 'y0', 'x1', and 'y1' are the relative to the viewport.
+ *        If they are not specified, then the center of the target is used.
+ */
+function coordinates(target, x0, y0, x1, y1) {
+  var coords = {};
+  var box = target.getBoundingClientRect();
+  var tx0 = typeof x0;
+  var ty0 = typeof y0;
+  var tx1 = typeof x1;
+  var ty1 = typeof y1; 
+  function percent(s, x) {
+    s = s.trim();
+    var f = parseFloat(s);
+    if (s[s.length - 1] === '%')
+      f = f * x / 100;
+      return f;
+  }
+  function relative(s, x) {
+    var factor;
+    if (s[0] === '+')
+      factor = 1;
+    else
+      factor = -1;
+      return factor * percent(s.substring(1), x);
+  }
+  if (tx0 === 'number')
+    coords.x0 = box.left + x0;
+  else if (tx0 === 'string')
+    coords.x0 = box.left + percent(x0, box.width);
+  //check tx1 point
+  if (tx1 === 'number')
+    coords.x1 = box.left + x1;
+  else if (tx1 === 'string') {
+    x1 = x1.trim();
+    if (x1[0] === '+' || x1[0] === '-')
+      coords.x1 = coords.x0 + relative(x1, box.width);
+    else
+      coords.x1 = box.left + percent(x1, box.width);
+  }
+  // check ty0
+  if (ty0 === 'number')
+    coords.y0 = box.top + y0;
+  else if (ty0 === 'string')
+    coords.y0 = box.top + percent(y0, box.height);
+  //check ty1
+  if (ty1 === 'number')
+    coords.y1 = box.top + y1;
+  else if (ty1 === 'string') {
+    y1 = y1.trim();
+    if (y1[0] === '+' || y1[0] === '-')
+      coords.y1 = coords.y0 + relative(y1, box.height);
+    else
+      coords.y1 = box.top + percent(y1, box.height);
+  }
+  return coords;
+}
+
+/**
+ * This function returns if the element is in viewport 
+ */
+function elementInViewport(el) {
+  var top = el.offsetTop;
+  var left = el.offsetLeft;
+  var width = el.offsetWidth;
+  var height = el.offsetHeight;
+  while(el.offsetParent) {
+    el = el.offsetParent;
+    top += el.offsetTop;
+    left += el.offsetLeft;
+  }
+  return (top >= curWindow.pageYOffset &&
+          left >= curWindow.pageXOffset &&
+          (top + height) <= (curWindow.pageYOffset + curWindow.innerHeight) &&
+          (left + width) <= (curWindow.pageXOffset + curWindow.innerWidth)
+         );
+}
+
+/**
+ * This function throws the visibility of the element error
+ */
+function checkVisible(el, command_id) {
+    //check if the element is visible
+    let visible = utils.isElementDisplayed(el);
+    if (!visible) {
+      return false;
+    }
+    //check if scroll function exist. If so, call it.
+    if (el.scrollIntoView) {
+      el.scrollIntoView(true);
+    }
+    var scroll = elementInViewport(el);
+    if (!scroll){
+      return false;
+    }
+    return true;
+}
+
+/**
+ * Function that perform a single tap
+ */
+function singleTap(msg) {
+  let command_id = msg.json.command_id;
+  let el;
+  try {
+    el = elementManager.getKnownElement(msg.json.value, curWindow);
+    if (!checkVisible(el, command_id)) {
+      sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
+      return;
+    }
+    let x = '50%';
+    let y = '50%';
+    let c = coordinates(el, x, y);
+    touch(el, 3000, [c.x0, c.x0], [c.y0, c.y0], null);
+    sendOk(msg.json.command_id);
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
+  }
+}
+
+/**
+ * Function that performs a double tap
+ */
+function doubleTap(msg) {
+  let command_id = msg.json.command_id;
+  let el;
+  try {
+    el = elementManager.getKnownElement(msg.json.value, curWindow);
+    if (!checkVisible(el, command_id)) {
+      sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
+      return;
+    }
+    let x = '50%';
+    let y = '50%';
+    let c = coordinates(el, x, y);
+    touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], function() {
+      // When the first tap is done, start a timer for interval ms
+      checkTimer.initWithCallback(function() {
+          //After interval ms, send the second tap
+          touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], null);
+      }, 50, Ci.nsITimer.TYPE_ONE_SHOT);
+    });
+    sendOk(msg.json.command_id);
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
   }
 }
 
@@ -906,7 +1164,7 @@ function switchToFrame(msg) {
     if (elementManager.seenItems[msg.json.element] != undefined) {
       let wantedFrame = elementManager.getKnownElement(msg.json.element, curWindow); //HTMLIFrameElement
       for (let i = 0; i < frames.length; i++) {
-        if (frames[i] == wantedFrame) {
+        if (frames[i].isEqualNode(wantedFrame)) {
           curWindow = frames[i]; 
           foundFrame = i;
         }

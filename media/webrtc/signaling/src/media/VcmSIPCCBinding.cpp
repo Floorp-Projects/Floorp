@@ -990,9 +990,14 @@ static short vcmGetDtlsIdentity_m(const char *peerconnection,
   unsigned char digest[TransportLayerDtls::kMaxDigestLength];
   size_t digest_len;
 
-  nsresult res = pc.impl()->GetIdentity()->ComputeFingerprint("sha-256", digest,
-                                                               sizeof(digest),
-                                                               &digest_len);
+  mozilla::RefPtr<DtlsIdentity> id = pc.impl()->GetIdentity();
+
+  if (!id) {
+    return VCM_ERROR;
+  }
+
+  nsresult res = id->ComputeFingerprint("sha-256", digest, sizeof(digest),
+                                        &digest_len);
   if (!NS_SUCCEEDED(res)) {
     CSFLogError( logTag, "%s: Could not compute identity fingerprint", __FUNCTION__);
     return VCM_ERROR;
@@ -1303,11 +1308,17 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
 
   if (CC_IS_AUDIO(mcap_id)) {
     std::vector<mozilla::AudioCodecConfig *> configs;
+
     // Instantiate an appropriate conduit
+    mozilla::RefPtr<mozilla::AudioSessionConduit> tx_conduit =
+      pc.impl()->media()->GetConduit(level, false);
+
     mozilla::RefPtr<mozilla::AudioSessionConduit> conduit =
-                    mozilla::AudioSessionConduit::Create();
+                    mozilla::AudioSessionConduit::Create(tx_conduit);
     if(!conduit)
       return VCM_ERROR;
+
+    pc.impl()->media()->AddConduit(level, true, conduit);
 
     mozilla::AudioCodecConfig *config_raw;
 
@@ -1346,7 +1357,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     CSFLogDebug(logTag, "Created audio pipeline %p, conduit=%p, pc_stream=%d pc_track=%d",
                 pipeline.get(), conduit.get(), pc_stream_id, pc_track_id);
 
-    stream->StorePipeline(pc_track_id, pipeline);
+    stream->StorePipeline(pc_track_id, false, pipeline);
   } else if (CC_IS_VIDEO(mcap_id)) {
 
     std::vector<mozilla::VideoCodecConfig *> configs;
@@ -1390,7 +1401,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     CSFLogDebug(logTag, "Created video pipeline %p, conduit=%p, pc_stream=%d pc_track=%d",
                 pipeline.get(), conduit.get(), pc_stream_id, pc_track_id);
 
-    stream->StorePipeline(pc_track_id, pipeline);
+    stream->StorePipeline(pc_track_id, true, pipeline);
   } else {
     CSFLogError(logTag, "%s: mcap_id unrecognized", __FUNCTION__);
     return VCM_ERROR;
@@ -1953,11 +1964,16 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     mozilla::ScopedDeletePtr<mozilla::AudioCodecConfig> config(config_raw);
 
     // Instantiate an appropriate conduit
+    mozilla::RefPtr<mozilla::AudioSessionConduit> rx_conduit =
+      pc.impl()->media()->GetConduit(level, true);
+
     mozilla::RefPtr<mozilla::AudioSessionConduit> conduit =
-      mozilla::AudioSessionConduit::Create();
+      mozilla::AudioSessionConduit::Create(rx_conduit);
 
     if (!conduit || conduit->ConfigureSendMediaCodec(config))
       return VCM_ERROR;
+
+    pc.impl()->media()->AddConduit(level, false, conduit);
 
     mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
         new mozilla::MediaPipelineTransmit(
@@ -2629,7 +2645,11 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
     // TODO(ekr@rtfm.com): implement the actpass logic above.
     dtls->SetRole(pc->GetRole() == sipcc::PeerConnectionImpl::kRoleOfferer ?
                   TransportLayerDtls::SERVER : TransportLayerDtls::CLIENT);
-    dtls->SetIdentity(pc->GetIdentity());
+    mozilla::RefPtr<DtlsIdentity> pcid = pc->GetIdentity();
+    if (!pcid) {
+      return nullptr;
+    }
+    dtls->SetIdentity(pcid);
 
     unsigned char remote_digest[TransportLayerDtls::kMaxDigestLength];
     size_t digest_len;

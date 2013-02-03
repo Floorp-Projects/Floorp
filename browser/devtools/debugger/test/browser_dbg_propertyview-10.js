@@ -64,7 +64,7 @@ function testWithFrame()
       is(globalNodes[0].querySelector(".name").getAttribute("value"), "InstallTrigger",
         "Should have the right property name for |InstallTrigger|.");
 
-      is(globalNodes[0].querySelector(".value").getAttribute("value"), "undefined",
+      is(globalNodes[0].querySelector(".value").getAttribute("value"), "",
         "Should have the right property value for |InstallTrigger|.");
 
       let len = globalNodes.length - 1;

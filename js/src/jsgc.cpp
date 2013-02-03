@@ -68,9 +68,6 @@
 #include "jsscript.h"
 #include "jswatchpoint.h"
 #include "jsweakmap.h"
-#if JS_HAS_XML_SUPPORT
-#include "jsxml.h"
-#endif
 
 #include "builtin/MapObject.h"
 #include "frontend/Parser.h"
@@ -148,9 +145,6 @@ const uint32_t Arena::ThingSizes[] = {
     sizeof(Shape),              /* FINALIZE_SHAPE               */
     sizeof(BaseShape),          /* FINALIZE_BASE_SHAPE          */
     sizeof(types::TypeObject),  /* FINALIZE_TYPE_OBJECT         */
-#if JS_HAS_XML_SUPPORT
-    sizeof(JSXML),              /* FINALIZE_XML                 */
-#endif
     sizeof(JSShortString),      /* FINALIZE_SHORT_STRING        */
     sizeof(JSString),           /* FINALIZE_STRING              */
     sizeof(JSExternalString),   /* FINALIZE_EXTERNAL_STRING     */
@@ -176,9 +170,6 @@ const uint32_t Arena::FirstThingOffsets[] = {
     OFFSET(Shape),              /* FINALIZE_SHAPE               */
     OFFSET(BaseShape),          /* FINALIZE_BASE_SHAPE          */
     OFFSET(types::TypeObject),  /* FINALIZE_TYPE_OBJECT         */
-#if JS_HAS_XML_SUPPORT
-    OFFSET(JSXML),              /* FINALIZE_XML                 */
-#endif
     OFFSET(JSShortString),      /* FINALIZE_SHORT_STRING        */
     OFFSET(JSString),           /* FINALIZE_STRING              */
     OFFSET(JSExternalString),   /* FINALIZE_EXTERNAL_STRING     */
@@ -199,6 +190,10 @@ static const AllocKind FinalizePhaseScripts[] = {
     FINALIZE_SCRIPT
 };
 
+static const AllocKind FinalizePhaseIonCode[] = {
+    FINALIZE_IONCODE
+};
+
 static const AllocKind FinalizePhaseShapes[] = {
     FINALIZE_SHAPE,
     FINALIZE_BASE_SHAPE,
@@ -208,6 +203,7 @@ static const AllocKind FinalizePhaseShapes[] = {
 static const AllocKind* FinalizePhases[] = {
     FinalizePhaseStrings,
     FinalizePhaseScripts,
+    FinalizePhaseIonCode,
     FinalizePhaseShapes
 };
 static const int FinalizePhaseCount = sizeof(FinalizePhases) / sizeof(AllocKind*);
@@ -215,12 +211,14 @@ static const int FinalizePhaseCount = sizeof(FinalizePhases) / sizeof(AllocKind*
 static const int FinalizePhaseLength[] = {
     sizeof(FinalizePhaseStrings) / sizeof(AllocKind),
     sizeof(FinalizePhaseScripts) / sizeof(AllocKind),
+    sizeof(FinalizePhaseIonCode) / sizeof(AllocKind),
     sizeof(FinalizePhaseShapes) / sizeof(AllocKind)
 };
 
 static const gcstats::Phase FinalizePhaseStatsPhase[] = {
     gcstats::PHASE_SWEEP_STRING,
     gcstats::PHASE_SWEEP_SCRIPT,
+    gcstats::PHASE_SWEEP_IONCODE,
     gcstats::PHASE_SWEEP_SHAPE
 };
 
@@ -457,10 +455,6 @@ FinalizeArenas(FreeOp *fop,
         return FinalizeTypedArenas<BaseShape>(fop, src, dest, thingKind, budget);
       case FINALIZE_TYPE_OBJECT:
         return FinalizeTypedArenas<types::TypeObject>(fop, src, dest, thingKind, budget);
-#if JS_HAS_XML_SUPPORT
-      case FINALIZE_XML:
-        return FinalizeTypedArenas<JSXML>(fop, src, dest, thingKind, budget);
-#endif
       case FINALIZE_STRING:
         return FinalizeTypedArenas<JSString>(fop, src, dest, thingKind, budget);
       case FINALIZE_SHORT_STRING:
@@ -926,8 +920,8 @@ InitGCZeal(JSRuntime *rt)
                 "  3: GC when the window paints (browser only)\n"
                 "  4: Verify pre write barriers between instructions\n"
                 "  5: Verify pre write barriers between paints\n"
-                "  6: Verify stack rooting (ignoring XML)\n"
-                "  7: Verify stack rooting (all roots)\n"
+                "  6: Verify stack rooting\n"
+                "  7: Verify stack rooting (yes, it's the same as 6)\n"
                 "  8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
                 "  9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
                 " 10: Incremental GC in multiple slices\n"
@@ -1160,8 +1154,8 @@ JSCompartment::reduceGCTriggerBytes(size_t amount)
     gcTriggerBytes -= amount;
 }
 
-Allocator::Allocator(JSCompartment *compartment)
-  : compartment(compartment)
+Allocator::Allocator(Zone *zone)
+  : zone(zone)
 {}
 
 inline void
@@ -1439,10 +1433,6 @@ ArenaLists::queueObjectsForSweep(FreeOp *fop)
     queueForBackgroundSweep(fop, FINALIZE_OBJECT8_BACKGROUND);
     queueForBackgroundSweep(fop, FINALIZE_OBJECT12_BACKGROUND);
     queueForBackgroundSweep(fop, FINALIZE_OBJECT16_BACKGROUND);
-
-#if JS_HAS_XML_SUPPORT
-    finalizeNow(fop, FINALIZE_XML);
-#endif
 }
 
 void
@@ -1464,6 +1454,13 @@ ArenaLists::queueScriptsForSweep(FreeOp *fop)
 }
 
 void
+ArenaLists::queueIonCodeForSweep(FreeOp *fop)
+{
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_IONCODE);
+    queueForForegroundSweep(fop, FINALIZE_IONCODE);
+}
+
+void
 ArenaLists::queueShapesForSweep(FreeOp *fop)
 {
     gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_SHAPE);
@@ -1471,13 +1468,6 @@ ArenaLists::queueShapesForSweep(FreeOp *fop)
     queueForForegroundSweep(fop, FINALIZE_SHAPE);
     queueForForegroundSweep(fop, FINALIZE_BASE_SHAPE);
     queueForForegroundSweep(fop, FINALIZE_TYPE_OBJECT);
-}
-
-void
-ArenaLists::queueIonCodeForSweep(FreeOp *fop)
-{
-    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_IONCODE);
-    finalizeNow(fop, FINALIZE_IONCODE);
 }
 
 static void *
@@ -3634,16 +3624,16 @@ BeginSweepingZoneGroup(JSRuntime *rt)
         gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
         zone->allocator.arenas.queueScriptsForSweep(&fop);
     }
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
-        zone->allocator.arenas.queueShapesForSweep(&fop);
-    }
 #ifdef JS_ION
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
         zone->allocator.arenas.queueIonCodeForSweep(&fop);
     }
 #endif
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+        gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
+        zone->allocator.arenas.queueShapesForSweep(&fop);
+    }
 
     rt->gcSweepPhase = 0;
     rt->gcSweepZone = rt->gcCurrentZoneGroup;
@@ -4919,16 +4909,3 @@ AutoMaybeTouchDeadCompartments::~AutoMaybeTouchDeadCompartments()
 
     runtime->gcManipulatingDeadCompartments = manipulatingDeadCompartments;
 }
-
-#if JS_HAS_XML_SUPPORT
-extern size_t sE4XObjectsCreated;
-
-JSXML *
-js_NewGCXML(JSContext *cx)
-{
-    if (!cx->runningWithTrustedPrincipals())
-        ++sE4XObjectsCreated;
-
-    return NewGCThing<JSXML, CanGC>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
-}
-#endif

@@ -11,9 +11,9 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
-                                   "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsISyncMessageSender");
+XPCOMUtils.defineLazyServiceGetter(this, "appsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
 
 function AppProtocolHandler() {
   this._appInfo = [];
@@ -36,8 +36,7 @@ AppProtocolHandler.prototype = {
   getAppInfo: function app_phGetAppInfo(aId) {
 
     if (!this._appInfo[aId]) {
-      let reply = cpmm.sendSyncMessage("Webapps:GetAppInfo", { id: aId });
-      this._appInfo[aId] = reply[0];
+      this._appInfo[aId] = appsService.getAppInfo(aId);
     }
     return this._appInfo[aId];
   },

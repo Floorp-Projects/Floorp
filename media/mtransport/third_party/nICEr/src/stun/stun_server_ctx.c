@@ -62,7 +62,7 @@ int nr_stun_server_ctx_create(char *label, nr_socket *sock, nr_stun_server_ctx *
     nr_socket_getaddr(sock,&ctx->my_addr);
 
     STAILQ_INIT(&ctx->clients);
-    
+
     *ctxp=ctx;
 
     _status=0;
@@ -77,16 +77,16 @@ int nr_stun_server_ctx_destroy(nr_stun_server_ctx **ctxp)
 
     if(!ctxp || !*ctxp)
       return(0);
-    
+
     ctx=*ctxp;
-   
+
     STAILQ_FOREACH_SAFE(clnt1, &ctx->clients, entry, clnt2) {
         nr_stun_server_destroy_client(clnt1);
     }
 
     RFREE(ctx->label);
     RFREE(ctx);
-    
+
     return(0);
   }
 
@@ -98,7 +98,7 @@ int nr_stun_server_add_client(nr_stun_server_ctx *ctx, char *client_label, char 
 
     if(!(clnt=RCALLOC(sizeof(nr_stun_server_client))))
       ABORT(R_NO_MEMORY);
-    
+
     if(!(clnt->label=r_strdup(client_label)))
       ABORT(R_NO_MEMORY);
 
@@ -112,7 +112,7 @@ int nr_stun_server_add_client(nr_stun_server_ctx *ctx, char *client_label, char 
     clnt->cb_arg=cb_arg;
 
     STAILQ_INSERT_TAIL(&ctx->clients,clnt,entry);
-    
+
     _status=0;
   abort:
     if(_status){
@@ -198,7 +198,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
     int error;
 
     r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(%s): Received(my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
-   
+
     snprintf(string, sizeof(string)-1, "STUN-SERVER(%s): Received ", ctx->label);
     r_dump(NR_LOG_STUN, LOG_DEBUG, string, (char*)msg, len);
 
@@ -312,7 +312,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
     }
 
 #if 0
-    /* EKR: suppressed these checks because if you have an error when 
+    /* EKR: suppressed these checks because if you have an error when
        you are sending an error, things go wonky */
 #ifdef SANITY_CHECKS
     if (_status == R_ALREADY) {
