@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=836519
+-->
+<head>
+  <title>Mozilla Bug 836519</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=836519">Mozilla Bug 836519</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.8">
+
+"use strict";
+
+// this shouldn't be necessary when bug 792594 is fixed
+if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
+  let comp = SpecialPowers.wrap(SpecialPowers.Components);
+  comp.utils.import("resource://gre/modules/ContactService.jsm");
+  comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
+  SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
+}
+
+SpecialPowers.addPermission("contacts-write", true, document);
+SpecialPowers.addPermission("contacts-read", true, document);
+SpecialPowers.addPermission("contacts-create", true, document);
+
+let adr1 = {
+  type: "work",
+  streetAddress: "street 1",
+  locality: "locality 1",
+  region: "region 1",
+  postalCode: "postal code 1",
+  countryName: "country 1"
+};
+
+let properties1 = {
+  name: "Testname1",
+  familyName: ["TestFamilyName","Wagner"],
+  givenName: ["Test1","Test2"],
+  nickname: "nicktest",
+  tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+9-876-5432"}],
+  adr: adr1,
+  email: [{type: ["work"], value: "x@y.com"}]
+};
+
+function onUnwantedSuccess() {
+  ok(false, "onUnwantedSuccess: shouldn't get here");
+}
+
+function onFailure() {
+  ok(false, "in on Failure!");
+}
+
+function checkStr(str1, str2, msg) {
+  if (str1)
+    ok(typeof str1 == "string" ? [str1] : str1, (typeof str2 == "string") ? [str2] : str2, msg);
+}
+
+function checkAddress(adr1, adr2) {
+  checkStr(adr1.type, adr2.type, "Same type");
+  checkStr(adr1.streetAddress, adr2.streetAddress, "Same streetAddress");
+  checkStr(adr1.locality, adr2.locality, "Same locality");
+  checkStr(adr1.region, adr2.region, "Same region");
+  checkStr(adr1.postalCode, adr2.postalCode, "Same postalCode");
+  checkStr(adr1.countryName, adr2.countryName, "Same countryName");
+}
+
+function checkTel(tel1, tel2) {
+  checkStr(tel1.type, tel2.type, "Same type");
+  checkStr(tel1.value, tel2.value, "Same value");
+  checkStr(tel1.carrier, tel2.carrier, "Same carrier");
+}
+
+function checkField(field1, field2) {
+  checkStr(field1.type, field2.type, "Same type");
+  checkStr(field1.value, field2.value, "Same value");
+}
+
+function checkContacts(contact1, contact2) {
+  checkStr(contact1.name, contact2.name, "Same name");
+  checkStr(contact1.honorificPrefix, contact2.honorificPrefix, "Same honorificPrefix");
+  checkStr(contact1.givenName, contact2.givenName, "Same givenName");
+  checkStr(contact1.additionalName, contact2.additionalName, "Same additionalName");
+  checkStr(contact1.familyName, contact2.familyName, "Same familyName");
+  checkStr(contact1.honorificSuffix, contact2.honorificSuffix, "Same honorificSuffix");
+  checkStr(contact1.nickname, contact2.nickname, "Same nickname");
+  checkStr(contact1.category, contact2.category, "Same category");
+  checkStr(contact1.org, contact2.org, "Same org");
+  checkStr(contact1.jobTitle, contact2.jobTitle, "Same jobTitle");
+  is(contact1.bday ? contact1.bday.valueOf() : null, contact2.bday ? contact2.bday.valueOf() : null, "Same birthday");
+  checkStr(contact1.note, contact2.note, "Same note");
+  is(contact1.anniversary ? contact1.anniversary.valueOf() : null , contact2.anniversary ? contact2.anniversary.valueOf() : null, "Same anniversary");
+  is(contact1.sex, contact2.sex, "Same sex");
+  is(contact1.genderIdentity, contact2.genderIdentity, "Same genderIdentity");
+
+  for (let i in contact1.email) {
+    if (contact1.email) {
+      ok(contact2.email != null, "conatct2.email exists");
+    }
+    if (contact2.email) {
+      ok(contact1.email != null, "conatct1.email exists");
+    }
+    checkField(contact1.email[i], contact2.email[i]);
+  }
+  for (let i in contact1.adr) {
+    if (contact1.adr) {
+      ok(contact2.adr != null, "conatct2.adr exists");
+    }
+    if (contact2.adr) {
+      ok(contact1.adr != null, "conatct1.adr exists");
+    }
+    checkAddress(contact1.adr[i], contact2.adr[i]);
+  }
+  for (let i in contact1.tel) {
+    if (contact1.tel) {
+      ok(contact2.tel != null, "conatct2.tel exists");
+    }
+    if (contact2.tel) {
+      ok(contact1.tel != null, "conatct1.tel exists");
+    }
+    checkTel(contact1.tel[i], contact2.tel[i]);
+  }
+  for (let i in contact1.url) {
+    if (contact1.url) {
+      ok(contact2.url != null, "conatct2.url exists");
+    }
+    if (contact2.url) {
+      ok(contact1.url != null, "conatct1.url exists");
+    }
+    checkField(contact1.url[i], contact2.url[i]);
+  }
+  for (let i in contact1.impp) {
+    if (contact1.impp) {
+      ok(contact2.impp != null, "conatct2.impp exists");
+    }
+    if (contact2.impp) {
+      ok(contact1.impp != null, "conatct1.impp exists");
+    }
+    checkField(contact1.impp[i], contact2.impp[i]);
+  }
+}
+
+function clearDatabase() {
+  ok(true, "Clearing database");
+  req = mozContacts.clear();
+  req.onsuccess = function() {
+    ok(true, "Cleared the database");
+    next();
+  };
+  req.onerror = onFailure;
+}
+
+function add20Contacts() {
+  ok(true, "Adding 20 contacts");
+  for (let i=0; i<19; i++) {
+    createResult1 = new mozContact();
+    createResult1.init(properties1);
+    req = mozContacts.save(createResult1);
+    req.onsuccess = function() {
+      ok(createResult1.id, "The contact now has an ID.");
+    };
+    req.onerror = onFailure;
+  };
+  createResult1 = new mozContact();
+  createResult1.init(properties1);
+  req = mozContacts.save(createResult1);
+  req.onsuccess = function() {
+    ok(createResult1.id, "The contact now has an ID.");
+    ok(createResult1.name == properties1.name, "Same Name");
+    next();
+  };
+  req.onerror = onFailure;
+}
+
+let createResult1;
+
+let index = 0;
+let req;
+let mozContacts = window.navigator.mozContacts;
+
+let steps = [
+  clearDatabase,
+  function() {
+    // add a contact
+    createResult1 = new mozContact();
+    createResult1.init({});
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function() {
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Retrieving one contact with getAll");
+    req = mozContacts.getAll({});
+    let count = 0;
+    req.onsuccess = function(event) {
+      ok(true, "on success");
+      if (req.result) {
+        ok(true, "result is valid");
+        count++;
+        req.continue();
+      } else {
+        is(count, 1, "last contact - only one contact returned");
+        next();
+      }
+    };
+    req.onerror = onFailure;
+  },
+
+  clearDatabase,
+  add20Contacts,
+
+  function() {
+    ok(true, "Retrieving 20 contacts with getAll");
+    req = mozContacts.getAll({});
+    let count = 0;
+    req.onsuccess = function(event) {
+      if (req.result) {
+        ok(true, "result is valid");
+        count++;
+        req.continue();
+      } else {
+        is(count, 20, "last contact - 20 contacts returned");
+        next();
+      }
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Deleting one contact");
+    req = mozContacts.remove(createResult1);
+    req.onsuccess = function() {
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Test cache invalidation");
+    req = mozContacts.getAll({});
+    let count = 0;
+    req.onsuccess = function(event) {
+      ok(true, "on success");
+      if (req.result) {
+        ok(true, "result is valid");
+        count++;
+        req.continue();
+      } else {
+        is(count, 19, "last contact - 19 contacts returned");
+        next();
+      }
+    };
+    req.onerror = onFailure;
+  },
+
+  clearDatabase,
+  add20Contacts,
+
+  function() {
+    ok(true, "Test cache invalidation between getAll and getNext");
+    req = mozContacts.find({});
+    req.onsuccess = function(e) {
+      let lastContact = e.target.result[e.target.result.length-1];
+      req = mozContacts.getAll({});
+      let count = 0;
+      let firstResult = true;
+      req.onsuccess = function(event) {
+        ok(true, "on success");
+        if (firstResult) {
+          if (req.result) {
+            count++;
+          }
+          let delReq = mozContacts.remove(lastContact);
+          delReq.onsuccess = function() {
+            firstResult = false;
+            req.continue();
+          };
+        } else {
+          if (req.result) {
+            ok(true, "result is valid");
+            count++;
+            req.continue();
+          } else {
+            is(count, 19, "19 contacts returned");
+            ok(true, "last contact");
+            next();
+          }
+        }
+      };
+    };
+  },
+
+  clearDatabase,
+  add20Contacts,
+
+  function() {
+    ok(true, "Delete the currect contact while iterating");
+    req = mozContacts.getAll({});
+    let count = 0;
+    let previousId = null;
+    req.onsuccess = function() {
+      if (req.result) {
+        ok(true, "on success");
+        if (previousId) {
+          isnot(previousId, req.result.id, "different contacts returned");
+        }
+        previousId = req.result.id;
+        count++;
+        let delReq = mozContacts.remove(req.result);
+        delReq.onsuccess = function() {
+          ok(true, "deleted current contact");
+          req.continue();
+        };
+      } else {
+        is(count, 20, "returned 20 contacts");
+        next();
+      }
+    };
+  },
+
+  clearDatabase,
+  add20Contacts,
+
+  function() {
+    ok(true, "Iterating through the contact list inside a cursor callback");
+    let count1 = 0, count2 = 0;
+    let req1 = mozContacts.getAll({});
+    let req2;
+    req1.onsuccess = function() {
+      if (count1 == 0) {
+        count1++;
+        req2 = mozContacts.getAll({});
+        req2.onsuccess = function() {
+          if (req2.result) {
+            count2++;
+            req2.continue();
+          } else {
+            is(count2, 20, "inner cursor returned 20 contacts");
+            req1.continue();
+          }
+        };
+      } else {
+        if (req1.result) {
+          count1++;
+          req1.continue();
+        } else {
+          is(count1, 20, "outer cursor returned 20 contacts");
+          next();
+        }
+      }
+    };
+  },
+
+  clearDatabase,
+  add20Contacts,
+
+  function() {
+    ok(true, "20 concurrent cursors");
+    const NUM_CURSORS = 20;
+    let completed = 0;
+    for (let i = 0; i < NUM_CURSORS; ++i) {
+      mozContacts.getAll({}).onsuccess = (function(i) {
+        let count = 0;
+        return function(event) {
+          let req = event.target;
+          if (req.result) {
+            count++;
+            req.continue();
+          } else {
+            is(count, 20, "cursor " + i + " returned 20 contacts");
+            if (++completed == NUM_CURSORS) {
+              next();
+            }
+          }
+        };
+      })(i);
+    }
+  },
+
+  clearDatabase,
+
+  function() {
+    ok(true, "all done!\n");
+    SimpleTest.finish();
+  }
+];
+
+function next() {
+  ok(true, "Begin!");
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index++]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+function permissionTest() {
+  if (gContactsEnabled) {
+    next();
+  } else {
+    is(mozContacts, null, "mozContacts is null when not enabled.");
+    SimpleTest.finish();
+  }
+}
+
+let gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(permissionTest);
+</script>
+</pre>
+</body>
+</html>
