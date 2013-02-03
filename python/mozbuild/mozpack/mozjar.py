@@ -65,7 +65,7 @@ class JarStruct(object):
         '''
         assert self.MAGIC and isinstance(self.STRUCT, OrderedDict)
         self.size_fields = set(t for t in self.STRUCT.itervalues()
-                              if not t in JarStruct.TYPE_MAPPING)
+                               if not t in JarStruct.TYPE_MAPPING)
         self._values = {}
         if data:
             self._init_data(data)
@@ -277,7 +277,7 @@ class JarFileReader(object):
         Return a list containing all the lines of data in the uncompressed
         data.
         '''
-        return self.read().splitlines()
+        return self.read().splitlines(True)
 
     def seek(self, pos, whence=os.SEEK_SET):
         '''
@@ -375,7 +375,7 @@ class JarReader(object):
             xattr = entry['external_attr']
             # Skip directories
             if (host == 0 and xattr & 0x10) or (host == 3 and
-                    xattr & (040000 << 16)):
+                                                xattr & (040000 << 16)):
                 continue
             entries[entry['filename']] = entry
             if entry['offset'] < preload:
@@ -416,7 +416,8 @@ class JarReader(object):
             if key in header and header[key] != value:
                 raise JarReaderError('Central directory and file header ' +
                                      'mismatch. Corrupted archive?')
-        return JarFileReader(header, self._data[entry['offset'] + header.size:])
+        return JarFileReader(header,
+                             self._data[entry['offset'] + header.size:])
 
     def __iter__(self):
         '''
@@ -529,7 +530,7 @@ class JarWriter(object):
         end['disk_entries'] = len(self._contents)
         end['cdir_entries'] = end['disk_entries']
         end['cdir_size'] = reduce(lambda x, y: x + y[0].size,
-                               self._contents.values(), 0)
+                                  self._contents.values(), 0)
         # On optimized archives, store the preloaded size and the central
         # directory entries, followed by the first end of central directory.
         if self._optimize:
@@ -584,7 +585,8 @@ class JarWriter(object):
                 data.seek(0)
                 deflater.write(data.read())
             else:
-                raise JarWriterError("Don't know how to handle %s" % type(data))
+                raise JarWriterError("Don't know how to handle %s" %
+                                     type(data))
         # Fill a central directory entry for this new member.
         entry = JarCdirEntry()
         # Not storing as created on unix, which avoids having to deal with

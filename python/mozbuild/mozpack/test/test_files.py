@@ -11,6 +11,7 @@ from mozpack.files import (
     XPTFile,
     MinifiedProperties,
     FileFinder,
+    JarFinder,
 )
 from mozpack.mozjar import (
     JarReader,
@@ -208,6 +209,10 @@ class TestFile(TestWithTmpDir):
         time = os.path.getmtime(src) - 1
         os.utime(dest, (time, time))
         self.assertRaises(RuntimeError, f.copy, DestNoWrite(dest))
+
+        # skip_if_older=False is expected to force a copy in this situation.
+        f.copy(dest, skip_if_older=False)
+        self.assertEqual('fooo', open(dest, 'rb').read())
 
 
 class TestGeneratedFile(TestWithTmpDir):
@@ -486,7 +491,7 @@ class TestMinifiedProperties(TestWithTmpDir):
 
 
 class MatchTestTemplate(object):
-    def do_match_test(self):
+    def prepare_match_test(self, with_dotfiles=False):
         self.add('bar')
         self.add('foo/bar')
         self.add('foo/baz')
@@ -494,7 +499,11 @@ class MatchTestTemplate(object):
         self.add('foo/qux/bar')
         self.add('foo/qux/2/test')
         self.add('foo/qux/2/test2')
+        if with_dotfiles:
+            self.add('foo/.foo')
+            self.add('foo/.bar/foo')
 
+    def do_match_test(self):
         self.do_check('', [
             'bar', 'foo/bar', 'foo/baz', 'foo/qux/1', 'foo/qux/bar',
             'foo/qux/2/test', 'foo/qux/2/test2'
@@ -533,6 +542,33 @@ class MatchTestTemplate(object):
         self.do_check('**/barbaz', [])
         self.do_check('f**/bar', ['foo/bar'])
 
+    def do_finder_test(self, finder):
+        self.assertTrue(finder.contains('foo/.foo'))
+        self.assertTrue(finder.contains('foo/.bar'))
+        self.assertTrue('foo/.foo' in [f for f, c in
+                                       finder.find('foo/.foo')])
+        self.assertTrue('foo/.bar/foo' in [f for f, c in
+                                           finder.find('foo/.bar')])
+        self.assertEqual(sorted([f for f, c in finder.find('foo/.*')]),
+                         ['foo/.bar/foo', 'foo/.foo'])
+        for pattern in ['foo', '**', '**/*', '**/foo', 'foo/*']:
+            self.assertFalse('foo/.foo' in [f for f, c in
+                                            finder.find(pattern)])
+            self.assertFalse('foo/.bar/foo' in [f for f, c in
+                                                finder.find(pattern)])
+            self.assertEqual(sorted([f for f, c in finder.find(pattern)]),
+                             sorted([f for f, c in finder
+                                     if mozpack.path.match(f, pattern)]))
+
+
+def do_check(test, finder, pattern, result):
+    if result:
+        test.assertTrue(finder.contains(pattern))
+    else:
+        test.assertFalse(finder.contains(pattern))
+    test.assertEqual(sorted(list(f for f, c in finder.find(pattern))),
+                     sorted(result))
+
 
 class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path):
@@ -540,34 +576,30 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
         open(self.tmppath(path), 'wb').write(path)
 
     def do_check(self, pattern, result):
-        if result:
-            self.assertTrue(self.finder.contains(pattern))
-        else:
-            self.assertFalse(self.finder.contains(pattern))
-        self.assertEqual(sorted(list(f for f, c in self.finder.find(pattern))),
-                         sorted(result))
+        do_check(self, self.finder, pattern, result)
 
     def test_file_finder(self):
+        self.prepare_match_test(with_dotfiles=True)
         self.finder = FileFinder(self.tmpdir)
         self.do_match_test()
-        self.add('foo/.foo')
-        self.add('foo/.bar/foo')
-        self.assertTrue(self.finder.contains('foo/.foo'))
-        self.assertTrue(self.finder.contains('foo/.bar'))
-        self.assertTrue('foo/.foo' in [f for f, c in
-                                       self.finder.find('foo/.foo')])
-        self.assertTrue('foo/.bar/foo' in [f for f, c in
-                                           self.finder.find('foo/.bar')])
-        self.assertEqual(sorted([f for f, c in self.finder.find('foo/.*')]),
-                         ['foo/.bar/foo', 'foo/.foo'])
-        for pattern in ['foo', '**', '**/*', '**/foo', 'foo/*']:
-            self.assertFalse('foo/.foo' in [f for f, c in
-                                            self.finder.find(pattern)])
-            self.assertFalse('foo/.bar/foo' in [f for f, c in
-                                                self.finder.find(pattern)])
-            self.assertEqual(sorted([f for f, c in self.finder.find(pattern)]),
-                             sorted([f for f, c in self.finder
-                                     if mozpack.path.match(f, pattern)]))
+        self.do_finder_test(self.finder)
+
+
+class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
+    def add(self, path):
+        self.jar.add(path, path, compress=True)
+
+    def do_check(self, pattern, result):
+        do_check(self, self.finder, pattern, result)
+
+    def test_jar_finder(self):
+        self.jar = JarWriter(file=self.tmppath('test.jar'))
+        self.prepare_match_test()
+        self.jar.finish()
+        reader = JarReader(file=self.tmppath('test.jar'))
+        self.finder = JarFinder(self.tmppath('test.jar'), reader)
+        self.do_match_test()
+
 
 if __name__ == '__main__':
     mozunit.main()
