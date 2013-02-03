@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/dom/HTMLStyleElement.h"
+#include "mozilla/dom/HTMLStyleElementBinding.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
@@ -27,6 +28,7 @@ HTMLStyleElement::HTMLStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   AddMutationObserver(this);
+  SetIsDOMBinding();
 }
 
 HTMLStyleElement::~HTMLStyleElement()
@@ -64,24 +66,46 @@ NS_IMPL_ELEMENT_CLONE(HTMLStyleElement)
 NS_IMETHODIMP
 HTMLStyleElement::GetDisabled(bool* aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetStyleSheet());
-  if (!ss) {
-    *aDisabled = false;
-    return NS_OK;
-  }
+  NS_ENSURE_ARG_POINTER(aDisabled);
 
-  return ss->GetDisabled(aDisabled);
+  *aDisabled = Disabled();
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
-HTMLStyleElement::SetDisabled(bool aDisabled)
+bool
+HTMLStyleElement::Disabled()
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetStyleSheet());
+  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
   if (!ss) {
-    return NS_OK;
+    return false;
   }
 
-  return ss->SetDisabled(aDisabled);
+  bool disabled = false;
+  ss->GetDisabled(&disabled);
+
+  return disabled;
+}
+
+NS_IMETHODIMP
+HTMLStyleElement::SetDisabled(bool aDisabled)
+{
+  ErrorResult error;
+  SetDisabled(aDisabled, error);
+  return error.ErrorCode();
+}
+
+void
+HTMLStyleElement::SetDisabled(bool aDisabled, ErrorResult& aError)
+{
+  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
+  if (!ss) {
+    return;
+  }
+
+  nsresult result = ss->SetDisabled(aDisabled);
+  if (NS_FAILED(result)) {
+    aError.Throw(result);
+  }
 }
 
 NS_IMPL_STRING_ATTR(HTMLStyleElement, Media, media)
@@ -258,6 +282,13 @@ HTMLStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   // If we get here we assume that we're loading a css file, so set the
   // type to 'text/css'
   aType.AssignLiteral("text/css");
+}
+
+JSObject*
+HTMLStyleElement::WrapNode(JSContext *aCx, JSObject *aScope,
+                           bool *aTriedToWrap)
+{
+  return HTMLStyleElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
