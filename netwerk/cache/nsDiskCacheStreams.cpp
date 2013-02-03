@@ -463,66 +463,47 @@ nsDiskCacheStreamIO::Flush()
     }
 
     // write data to cache blocks, or flush mBuffer to file
+    NS_ASSERTION(mStreamEnd <= kMaxBufferSize, "stream is bigger than buffer");
+
     nsDiskCacheMap *cacheMap = mDevice->CacheMap();  // get map reference
-    nsresult rv;
+    nsDiskCacheRecord * record = &mBinding->mRecord;
+    nsresult rv = NS_OK;
 
-    bool written = false;
+    // delete existing storage
+    if (record->DataLocationInitialized()) {
+        rv = cacheMap->DeleteStorage(record, nsDiskCache::kData);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mStreamEnd <= kMaxBufferSize) {
-        // store data (if any) in cache block files
-
-        // delete existing storage
-        nsDiskCacheRecord * record = &mBinding->mRecord;
-        if (record->DataLocationInitialized()) {
-            rv = cacheMap->DeleteStorage(record, nsDiskCache::kData);
+        // Only call UpdateRecord when there is no data to write,
+        // because WriteDataCacheBlocks / FlushBufferToFile calls it.
+        if ((mStreamEnd == 0) && (!mBinding->mDoomed)) {
+            rv = cacheMap->UpdateRecord(record);
             if (NS_FAILED(rv)) {
-                NS_WARNING("cacheMap->DeleteStorage() failed.");
-                return rv;
-            }
-        }
-
-        // flush buffer to block files
-        written = true;
-        if (mStreamEnd > 0) {
-            rv = cacheMap->WriteDataCacheBlocks(mBinding, mBuffer, mStreamEnd);
-            if (NS_FAILED(rv)) {
-                NS_WARNING("WriteDataCacheBlocks() failed.");
-                written = false;
+                NS_WARNING("cacheMap->UpdateRecord() failed.");
+                return rv;   // XXX doom cache entry
             }
         }
     }
+  
+    if (mStreamEnd == 0) return NS_OK;     // nothing to write
+ 
+    // try to write to the cache blocks
+    rv = cacheMap->WriteDataCacheBlocks(mBinding, mBuffer, mStreamEnd);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("WriteDataCacheBlocks() failed.");
 
-    if (!written && mStreamEnd > 0) {
         // failed to store in cacheblocks, save as separate file
         rv = FlushBufferToFile(); // initializes DataFileLocation() if necessary
-
         if (mFD) {
-          // Update the file size of the disk file in the cache
-          UpdateFileSize();
-
-          // close file descriptor
-          (void) PR_Close(mFD);
-          mFD = nullptr;
+            UpdateFileSize();
+            (void) PR_Close(mFD);
+            mFD = nullptr;
         }
         else
-          NS_WARNING("no file descriptor");
-
-        // close mFD first if possible before returning if FlushBufferToFile
-        // failed
-        NS_ENSURE_SUCCESS(rv, rv);
+            NS_WARNING("no file descriptor");
     }
-    
-    // XXX do we need this here?  WriteDataCacheBlocks() calls UpdateRecord()
-    // update cache map if entry isn't doomed
-    if (!mBinding->mDoomed) {
-        rv = cacheMap->UpdateRecord(&mBinding->mRecord);
-        if (NS_FAILED(rv)) {
-            NS_WARNING("cacheMap->UpdateRecord() failed.");
-            return rv;   // XXX doom cache entry
-        }
-    }
-    
-    return NS_OK;
+   
+    return rv;
 }
 
 
