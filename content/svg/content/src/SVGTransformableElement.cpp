@@ -221,7 +221,7 @@ SVGTransformableElement::GetTransformToElement(SVGGraphicsElement& aElement,
   nsCOMPtr<SVGMatrix> tmp = targetScreenCTM->Inverse(rv);
   if (rv.Failed()) return nullptr;
 
-  nsCOMPtr<SVGMatrix> mat = tmp->Multiply(*ourScreenCTM).get();
+  nsCOMPtr<SVGMatrix> mat = tmp->Multiply(*ourScreenCTM);
   return mat.forget();
 }
 
