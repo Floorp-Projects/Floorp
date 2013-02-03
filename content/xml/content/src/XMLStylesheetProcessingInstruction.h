@@ -33,12 +33,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLStylesheetProcessingInstruction,
                                            ProcessingInstruction)
 
-  using nsStyleLinkElement::GetSheet;
-  nsIStyleSheet* GetSheet()
-  {
-    return GetStyleSheet();
-  }
-
   // nsIDOMNode
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
                                     mozilla::ErrorResult& aError);
