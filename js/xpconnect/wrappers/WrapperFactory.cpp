@@ -472,9 +472,16 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
 JSObject *
 WrapperFactory::WrapForSameCompartment(JSContext *cx, JSObject *obj)
 {
+    MOZ_ASSERT(js::IsObjectInContextCompartment(obj, cx));
+
     // NB: The contract of WrapForSameCompartment says that |obj| may or may not
     // be a security wrapper. These checks implicitly handle the security
     // wrapper case.
+
+    // Outerize if necessary. This, in combination with the check in
+    // PrepareForUnwrapping, means that calling JS_Wrap* always outerizes.
+    obj = JS_ObjectToOuterObject(cx, obj);
+    NS_ENSURE_TRUE(obj, nullptr);
 
     if (dom::GetSameCompartmentWrapperForDOMBinding(obj)) {
         return obj;
