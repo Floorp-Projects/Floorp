@@ -29,6 +29,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
+#include "nsIEffectiveTLDService.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
@@ -124,6 +125,27 @@ GetHostForPrincipal(nsIPrincipal* aPrincipal, nsACString& aHost)
   }
 
   return NS_OK;
+}
+
+nsCString
+GetNextSubDomainForHost(const nsACString& aHost)
+{
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (!tldService) {
+    NS_ERROR("Should have a tld service!");
+    return EmptyCString();
+  }
+
+  nsCString subDomain;
+  nsresult rv = tldService->GetNextSubDomain(aHost, subDomain);
+  // We can fail if there is no more subdomain or if the host can't have a
+  // subdomain.
+  if (NS_FAILED(rv)) {
+    return EmptyCString();
+  }
+
+  return subDomain;
 }
 
 class AppClearDataObserver MOZ_FINAL : public nsIObserver {
@@ -1059,41 +1081,36 @@ nsPermissionManager::GetPermissionHashKey(const nsACString& aHost,
                                           uint32_t aType,
                                           bool aExactHostMatch)
 {
-  uint32_t offset = 0;
-  PermissionHashKey* entry;
-  int64_t now = PR_Now() / 1000;
+  PermissionHashKey* entry = nullptr;
 
-  do {
-    nsRefPtr<PermissionKey> key = new PermissionKey(Substring(aHost, offset), aAppId, aIsInBrowserElement);
-    entry = mPermissionTable.GetEntry(key);
+  nsRefPtr<PermissionKey> key = new PermissionKey(aHost, aAppId, aIsInBrowserElement);
+  entry = mPermissionTable.GetEntry(key);
 
-    if (entry) {
-      PermissionEntry permEntry = entry->GetPermission(aType);
+  if (entry) {
+    PermissionEntry permEntry = entry->GetPermission(aType);
 
-      // if the entry is expired, remove and keep looking for others.
-      if (permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME &&
-          permEntry.mExpireTime <= now) {
-        nsCOMPtr<nsIPrincipal> principal;
-        if (NS_FAILED(GetPrincipal(aHost, aAppId, aIsInBrowserElement, getter_AddRefs(principal)))) {
-          return nullptr;
-        }
-
-        RemoveFromPrincipal(principal, mTypeArray[aType].get());
-      } else if (permEntry.mPermission != nsIPermissionManager::UNKNOWN_ACTION) {
-        break;
+    // if the entry is expired, remove and keep looking for others.
+    if (permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME &&
+        permEntry.mExpireTime <= (PR_Now() / 1000)) {
+      nsCOMPtr<nsIPrincipal> principal;
+      if (NS_FAILED(GetPrincipal(aHost, aAppId, aIsInBrowserElement, getter_AddRefs(principal)))) {
+        return nullptr;
       }
 
-      // reset entry, to be able to return null on failure
+      entry = nullptr;
+      RemoveFromPrincipal(principal, mTypeArray[aType].get());
+    } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
       entry = nullptr;
     }
-    if (aExactHostMatch)
-      break; // do not try super domains
+  }
 
-    offset = aHost.FindChar('.', offset) + 1;
+  if (!entry && !aExactHostMatch) {
+    nsCString domain = GetNextSubDomainForHost(aHost);
+    if (!domain.IsEmpty()) {
+      return GetPermissionHashKey(domain, aAppId, aIsInBrowserElement, aType, aExactHostMatch);
+    }
+  }
 
-  // walk up the domaintree (we stop as soon as we find a match,
-  // which will be the most specific domain we have an entry for).
-  } while (offset > 0);
   return entry;
 }
 
