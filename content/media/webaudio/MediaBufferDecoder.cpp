@@ -108,8 +108,8 @@ public:
 
   virtual bool IsMediaSeekable() MOZ_FINAL MOZ_OVERRIDE;
 
-  virtual void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
 
   virtual void SetMediaEndTime(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
 
@@ -251,13 +251,13 @@ BufferDecoder::IsMediaSeekable()
 }
 
 void
-BufferDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
+BufferDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags)
 {
   // ignore
 }
 
 void
-BufferDecoder::QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
+BufferDecoder::QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags)
 {
   // ignore
 }
