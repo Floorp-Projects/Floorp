@@ -320,7 +320,6 @@ class ICEntry
                                 \
     _(GetProp_Fallback)         \
     _(GetProp_ArrayLength)      \
-    _(GetProp_TypedArrayLength) \
     _(GetProp_StringLength)     \
     _(GetProp_Native)           \
     _(GetProp_NativePrototype)  \
@@ -2017,35 +2016,6 @@ class ICGetProp_ArrayLength : public ICStub
         }
     };
 };
-
-// Stub for accessing a typed array's length.
-class ICGetProp_TypedArrayLength : public ICStub
-{
-    friend class ICStubSpace;
-
-    ICGetProp_TypedArrayLength(IonCode *stubCode)
-      : ICStub(GetProp_TypedArrayLength, stubCode)
-    {}
-
-  public:
-    static inline ICGetProp_TypedArrayLength *New(ICStubSpace *space, IonCode *code) {
-        return space->allocate<ICGetProp_TypedArrayLength>(code);
-    }
-
-    class Compiler : public ICStubCompiler {
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::GetProp_TypedArrayLength)
-        {}
-
-        ICStub *getStub(ICStubSpace *space) {
-            return ICGetProp_TypedArrayLength::New(space, getStubCode());
-        }
-    };
-};
-
 
 // Stub for accessing a string's length.
 class ICGetProp_StringLength : public ICStub
