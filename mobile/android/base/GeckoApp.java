@@ -2273,7 +2273,7 @@ abstract public class GeckoApp
     public Object onRetainNonConfigurationInstance() {
         // Send a non-null value so that we can restart the application, 
         // when activity restarts due to configuration change.
-        return new Boolean(true);
+        return Boolean.TRUE;
     } 
 
     abstract public String getPackageName();
