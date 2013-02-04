@@ -1136,6 +1136,13 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     case VK_RWIN:
       return NS_VK_WIN;
 
+    case VK_VOLUME_MUTE:
+      return NS_VK_VOLUME_MUTE;
+    case VK_VOLUME_DOWN:
+      return NS_VK_VOLUME_DOWN;
+    case VK_VOLUME_UP:
+      return NS_VK_VOLUME_UP;
+
     // Following keycodes are not defined in our DOM keycodes.
     case VK_BROWSER_BACK:
     case VK_BROWSER_FORWARD:
@@ -1144,9 +1151,6 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     case VK_BROWSER_SEARCH:
     case VK_BROWSER_FAVORITES:
     case VK_BROWSER_HOME:
-    case VK_VOLUME_MUTE:
-    case VK_VOLUME_DOWN:
-    case VK_VOLUME_UP:
     case VK_MEDIA_NEXT_TRACK:
     case VK_MEDIA_STOP:
     case VK_MEDIA_PLAY_PAUSE:
