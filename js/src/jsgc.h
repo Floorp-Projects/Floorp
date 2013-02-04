@@ -514,6 +514,9 @@ AddObjectRoot(JSContext *cx, JSObject **rp, const char *name);
 extern JSBool
 AddScriptRoot(JSContext *cx, JSScript **rp, const char *name);
 
+void
+RemoveRoot(JSRuntime *rt, void *rp);
+
 } /* namespace js */
 
 extern JSBool
