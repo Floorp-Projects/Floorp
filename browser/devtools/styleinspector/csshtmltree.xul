@@ -6,6 +6,7 @@
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/styleinspector.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/csshtmltree.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
@@ -40,7 +41,7 @@
 </script>
 
 <!-- The output from #templateRoot (below) is inserted here. -->
-<div id="root"></div>
+<div id="root" class="devtools-monospace"></div>
 
 <!-- When no properties are found the following block is displayed. -->
 <div id="noResults" hidden="">
@@ -48,7 +49,7 @@
 </div>
 
 <!-- The output from #templateProperty (below) is appended here. -->
-<table id="propertyContainer">
+<table id="propertyContainer" class="devtools-monospace">
 </table>
 
 <xul:hbox id="footer">

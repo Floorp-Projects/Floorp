@@ -270,6 +270,10 @@
   border-left: 2px solid transparent;
 }
 
+.ruleview-property  > * {
+  vertical-align: middle;
+}
+
 .ruleview-property[dirty] {
   border-left-color: #68E268;
 }
