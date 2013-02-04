@@ -39,7 +39,7 @@ this.AccessFu = {
     try {
       Cc['@mozilla.org/android/bridge;1'].
         getService(Ci.nsIAndroidBridge).handleGeckoMessage(
-          JSON.stringify({ gecko: { type: 'Accessibility:Ready' } }));
+          JSON.stringify({ type: 'Accessibility:Ready' }));
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
     } catch (x) {
       // Not on Android
@@ -348,7 +348,7 @@ var Output = {
       androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds)
         androidEvent.bounds = this._adjustBounds(androidEvent.bounds, aBrowser);
-      this._bridge.handleGeckoMessage(JSON.stringify({gecko: androidEvent}));
+      this._bridge.handleGeckoMessage(JSON.stringify(androidEvent));
     }
   },
 
@@ -508,7 +508,7 @@ var Input = {
           // Return focus to native Android browser chrome.
           Cc['@mozilla.org/android/bridge;1'].
             getService(Ci.nsIAndroidBridge).handleGeckoMessage(
-              JSON.stringify({ gecko: { type: 'ToggleChrome:Focus' } }));
+              JSON.stringify({ type: 'ToggleChrome:Focus' }));
         break;
       case aEvent.DOM_VK_RETURN:
       case aEvent.DOM_VK_ENTER:
