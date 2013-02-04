@@ -60,9 +60,9 @@ ChannelMediaResource::ChannelMediaResource(MediaDecoder* aDecoder,
     mSeekingForMetadata(false),
     mByteRangeDownloads(false),
     mByteRangeFirstOpen(true),
+    mIsTransportSeekable(true),
     mSeekOffsetMonitor("media.dashseekmonitor"),
-    mSeekOffset(-1),
-    mIsTransportSeekable(true)
+    mSeekOffset(-1)
 {
 #ifdef PR_LOGGING
   if (!gMediaResourceLog) {
