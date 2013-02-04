@@ -851,7 +851,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #ifdef JS_ION
     workerThreadState(NULL),
 #endif
-    sourceCompressorThread(thisFromCtor()),
+    sourceCompressorThread(),
 #endif
     defaultFreeOp_(thisFromCtor(), false),
     debuggerMutations(0),
