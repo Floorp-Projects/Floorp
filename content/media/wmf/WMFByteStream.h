@@ -14,17 +14,19 @@
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 
+class nsIThreadPool;
+
 namespace mozilla {
 
 class MediaResource;
+class AsyncReadRequestState;
 
 // Wraps a MediaResource around an IMFByteStream interface, so that it can
 // be used by the IMFSourceReader. Each WMFByteStream creates a WMF Work Queue
 // on which blocking I/O is performed. The SourceReader requests reads
 // asynchronously using {Begin,End}Read(). The synchronous I/O methods aren't
 // used by the SourceReader, so they're not implemented on this class.
-class WMFByteStream MOZ_FINAL : public IMFByteStream,
-                                public IMFAsyncCallback
+class WMFByteStream MOZ_FINAL : public IMFByteStream
 {
 public:
   WMFByteStream(MediaResource* aResource);
@@ -63,44 +65,14 @@ public:
   STDMETHODIMP SetLength(QWORD);
   STDMETHODIMP Write(const BYTE *, ULONG, ULONG *);
 
-  // IMFAsyncCallback methods.
   // We perform an async read operation in this callback implementation.
-  STDMETHODIMP GetParameters(DWORD*, DWORD*);
-  STDMETHODIMP Invoke(IMFAsyncResult* aResult);
+  void PerformRead(IMFAsyncResult* aResult, AsyncReadRequestState* aRequestState);
 
 private:
 
-  // Id of the work queue upon which we perfrom reads. This
-  // objects's Invoke() function is called on the work queue's thread,
-  // and it's there that we perform blocking IO. This has value
-  // MFASYNC_CALLBACK_QUEUE_UNDEFINED if the work queue hasn't been
-  // created yet.
-  DWORD mWorkQueueId;
-
-  // Stores data regarding an async read opreation.
-  class AsyncReadRequestState MOZ_FINAL : public IUnknown {
-  public:
-    AsyncReadRequestState(int64_t aOffset, BYTE* aBuffer, ULONG aLength)
-      : mOffset(aOffset),
-        mBuffer(aBuffer),
-        mBufferLength(aLength),
-        mBytesRead(0)
-    {}
-
-    // IUnknown Methods
-    STDMETHODIMP QueryInterface(REFIID aRIID, LPVOID *aOutObject);
-    STDMETHODIMP_(ULONG) AddRef();
-    STDMETHODIMP_(ULONG) Release();
-
-    int64_t mOffset;
-    BYTE* mBuffer;
-    ULONG mBufferLength;
-    ULONG mBytesRead;
-
-    // IUnknown ref counting.
-    nsAutoRefCnt mRefCnt;
-    NS_DECL_OWNINGTHREAD
-  };
+  // Reference to the thread pool in which we perform the reads asynchronously.
+  // Note this is pool is shared amongst all active WMFByteStreams.
+  nsCOMPtr<nsIThreadPool> mThreadPool;
 
   // Resource we're wrapping. Note this object's methods are threadsafe,
   // and we only call read/seek on the work queue's thread.
@@ -115,6 +87,10 @@ private:
   // would leave the resource's offset at a value unexpected by the caller,
   // since the read hadn't yet completed.
   int64_t mOffset;
+
+  // True if the resource has been shutdown, either because the WMFReader is
+  // shutting down, or because the underlying MediaResource has closed.
+  bool mIsShutdown;
 
   // IUnknown ref counting.
   nsAutoRefCnt mRefCnt;
