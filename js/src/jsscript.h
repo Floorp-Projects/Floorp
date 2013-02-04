@@ -1103,7 +1103,7 @@ class ScriptSourceHolder
 {
     ScriptSource *ss;
   public:
-    ScriptSourceHolder(ScriptSource *ss)
+    explicit ScriptSourceHolder(ScriptSource *ss)
       : ss(ss)
     {
         ss->incref();
