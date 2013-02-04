@@ -11,9 +11,18 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
+XPIDL_MODULE	= layout_xul_tree
 LIBRARY_NAME	= gkxultree_s
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS = 1
+
+XPIDLSRCS	= \
+		nsITreeColumns.idl \
+		nsITreeView.idl \
+		nsITreeSelection.idl \
+		nsITreeBoxObject.idl \
+		nsITreeContentView.idl \
+		$(NULL)
 
 CPPSRCS		= \
 		nsTreeBodyFrame.cpp \
@@ -34,12 +43,12 @@ EXPORTS		= \
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
-		-I$(srcdir)/../../../../../../content/events/src \
-		-I$(srcdir)/../../../../base/src \
-		-I$(srcdir)/../../../../../base \
-		-I$(srcdir)/../../../../../generic \
-		-I$(srcdir)/../../../../../style \
-		-I$(srcdir)/../../../../../forms \
+		-I$(topsrcdir)/content/events/src \
+		-I$(srcdir)/../base/src \
+		-I$(srcdir)/../../base \
+		-I$(srcdir)/../../generic \
+		-I$(srcdir)/../../style \
+		-I$(srcdir)/../../forms \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

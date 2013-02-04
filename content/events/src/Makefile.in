@@ -81,7 +81,7 @@ LOCAL_INCLUDES	+= \
              -I$(srcdir)/../../../dom/src/storage \
              -I$(srcdir)/../../../layout/generic \
              -I$(srcdir)/../../../layout/xul/base/src \
-             -I$(srcdir)/../../../layout/xul/base/src/tree/src \
+             -I$(srcdir)/../../../layout/xul/tree/ \
              $(NULL)
 
 ifdef MOZ_B2G_RIL

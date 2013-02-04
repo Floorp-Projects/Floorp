@@ -17,11 +17,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
-
-ifdef MOZ_XUL
-PARALLEL_DIRS = tree/public tree/src grid
-endif
-
 CPPSRCS		= \
 		nsScrollBoxFrame.cpp \
 		nsRootBoxFrame.cpp \
