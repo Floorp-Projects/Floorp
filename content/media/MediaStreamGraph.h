@@ -172,19 +172,16 @@ public:
  * This callback is invoked on the main thread when the main-thread-visible
  * state of a stream has changed.
  *
- * These methods are called without the media graph monitor held, so
- * reentry into media graph methods is possible, although very much discouraged!
+ * These methods are called with the media graph monitor held, so
+ * reentry into general media graph methods is not possible.
  * You should do something non-blocking and non-reentrant (e.g. dispatch an
- * event) and return.
+ * event) and return. DispatchFromMainThreadAfterNextStreamStateUpdate
+ * would be a good choice.
  * The listener is allowed to synchronously remove itself from the stream, but
  * not add or remove any other listeners.
  */
 class MainThreadMediaStreamListener {
 public:
-  virtual ~MainThreadMediaStreamListener() {}
-
-  NS_INLINE_DECL_REFCOUNTING(MainThreadMediaStreamListener)
-
   virtual void NotifyMainThreadStateChanged() = 0;
 };
 
@@ -274,7 +271,12 @@ public:
     , mMainThreadDestroyed(false)
   {
   }
-  virtual ~MediaStream() {}
+  virtual ~MediaStream()
+  {
+    NS_ASSERTION(mMainThreadDestroyed, "Should have been destroyed already");
+    NS_ASSERTION(mMainThreadListeners.IsEmpty(),
+                 "All main thread listeners should have been removed");
+  }
 
   /**
    * Returns the graph that owns this stream.
@@ -303,11 +305,15 @@ public:
   // Events will be dispatched by calling methods of aListener.
   void AddListener(MediaStreamListener* aListener);
   void RemoveListener(MediaStreamListener* aListener);
+  // Events will be dispatched by calling methods of aListener. It is the
+  // responsibility of the caller to remove aListener before it is destroyed.
   void AddMainThreadListener(MainThreadMediaStreamListener* aListener)
   {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
     mMainThreadListeners.AppendElement(aListener);
   }
+  // It's safe to call this even if aListener is not currently a listener;
+  // the call will be ignored.
   void RemoveMainThreadListener(MainThreadMediaStreamListener* aListener)
   {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
@@ -424,7 +430,7 @@ protected:
   // API, minus the number of times it has been explicitly unblocked.
   TimeVarying<GraphTime,uint32_t> mExplicitBlockerCount;
   nsTArray<nsRefPtr<MediaStreamListener> > mListeners;
-  nsTArray<nsRefPtr<MainThreadMediaStreamListener> > mMainThreadListeners;
+  nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
 
   // Precomputed blocking status (over GraphTime).
   // This is only valid between the graph's mCurrentTime and
@@ -838,9 +844,9 @@ public:
    * main-thread stream state has been next updated.
    * Should only be called during MediaStreamListener callbacks.
    */
-  void DispatchToMainThreadAfterStreamStateUpdate(nsIRunnable* aRunnable)
+  void DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable)
   {
-    mPendingUpdateRunnables.AppendElement(aRunnable);
+    *mPendingUpdateRunnables.AppendElement() = aRunnable;
   }
 
 protected:
