@@ -43,10 +43,10 @@ add_task(function test_execute()
 
   // check that all links are marked as visited
   count_visited_URIs.forEach(function (visited_uri) {
-    do_check_eq(PlacesUtils.bhistory.isVisited(uri(visited_uri)), true);
+    do_check_true(yield promiseIsURIVisited(uri(visited_uri)));
   });
   notcount_visited_URIs.forEach(function (visited_uri) {
-    do_check_eq(PlacesUtils.bhistory.isVisited(uri(visited_uri)), true);
+    do_check_true(yield promiseIsURIVisited(uri(visited_uri)));
   });
 
   // check that visit_count does not take in count embed and downloads
