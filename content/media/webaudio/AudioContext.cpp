@@ -8,6 +8,7 @@
 #include "nsContentUtils.h"
 #include "nsIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
+#include "MediaStreamGraph.h"
 #include "AudioDestinationNode.h"
 #include "AudioBufferSourceNode.h"
 #include "AudioBuffer.h"
@@ -28,11 +29,14 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(AudioContext,
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioContext, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioContext, Release)
 
+static uint8_t gWebAudioOutputKey;
+
 AudioContext::AudioContext(nsIDOMWindow* aWindow)
   : mWindow(aWindow)
-  , mDestination(new AudioDestinationNode(this))
-  , mSampleRate(44100) // hard-code for now
+  , mDestination(new AudioDestinationNode(this, MediaStreamGraph::GetInstance()))
 {
+  // Actually play audio
+  mDestination->Stream()->AddAudioOutput(&gWebAudioOutputKey);
   SetIsDOMBinding();
 }
 
@@ -75,11 +79,18 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
                            uint32_t aLength, float aSampleRate,
                            ErrorResult& aRv)
 {
-  nsRefPtr<AudioBuffer> buffer = new AudioBuffer(this, aLength, aSampleRate);
+  if (aLength > INT32_MAX) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  nsRefPtr<AudioBuffer> buffer =
+    new AudioBuffer(this, int32_t(aLength), aSampleRate);
   if (!buffer->InitializeBuffers(aNumberOfChannels, aJSContext)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
+
   return buffer.forget();
 }
 
@@ -164,6 +175,17 @@ AudioContext::RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob)
   mDecodeJobs.RemoveElement(aDecodeJob);
 }
 
-}
+MediaStreamGraph*
+AudioContext::Graph() const
+{
+  return Destination()->Stream()->Graph();
 }
 
+MediaStream*
+AudioContext::DestinationStream() const
+{
+  return Destination()->Stream();
+}
+
+}
+}
