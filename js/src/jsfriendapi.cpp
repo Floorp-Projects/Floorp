@@ -992,7 +992,7 @@ js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(JSContext *cx,
                                                            js::CTypesActivityType beginType,
                                                            js::CTypesActivityType endType
                                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx), callback(cx->runtime->ctypesActivityCallback), beginType(beginType), endType(endType)
+  : cx(cx), callback(cx->runtime->ctypesActivityCallback), endType(endType)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
