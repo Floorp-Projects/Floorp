@@ -105,6 +105,7 @@ JS_FRIEND_API(JSObject *)
 JS_ObjectToOuterObject(JSContext *cx, JSObject *obj_)
 {
     Rooted<JSObject*> obj(cx, obj_);
+    assertSameCompartment(cx, obj);
     return GetOuterObject(cx, obj);
 }
 
