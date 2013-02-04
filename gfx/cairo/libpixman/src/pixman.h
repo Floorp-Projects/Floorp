@@ -739,18 +739,18 @@ pixman_bool_t pixman_format_supported_destination (pixman_format_code_t format);
 pixman_bool_t pixman_format_supported_source      (pixman_format_code_t format);
 
 /* Constructors */
-pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t               *color);
-pixman_image_t *pixman_image_create_linear_gradient  (pixman_point_fixed_t         *p1,
-						      pixman_point_fixed_t         *p2,
+pixman_image_t *pixman_image_create_solid_fill       (const pixman_color_t         *color);
+pixman_image_t *pixman_image_create_linear_gradient  (const pixman_point_fixed_t   *p1,
+						      const pixman_point_fixed_t   *p2,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
-pixman_image_t *pixman_image_create_radial_gradient  (pixman_point_fixed_t         *inner,
-						      pixman_point_fixed_t         *outer,
+pixman_image_t *pixman_image_create_radial_gradient  (const pixman_point_fixed_t   *inner,
+						      const pixman_point_fixed_t   *outer,
 						      pixman_fixed_t                inner_radius,
 						      pixman_fixed_t                outer_radius,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
-pixman_image_t *pixman_image_create_conical_gradient (pixman_point_fixed_t         *center,
+pixman_image_t *pixman_image_create_conical_gradient (const pixman_point_fixed_t   *center,
 						      pixman_fixed_t                angle,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
@@ -759,6 +759,11 @@ pixman_image_t *pixman_image_create_bits             (pixman_format_code_t      
 						      int                           height,
 						      uint32_t                     *bits,
 						      int                           rowstride_bytes);
+pixman_image_t *pixman_image_create_bits_no_clear    (pixman_format_code_t format,
+						      int                  width,
+						      int                  height,
+						      uint32_t *           bits,
+						      int                  rowstride_bytes);
 
 /* Destructor */
 pixman_image_t *pixman_image_ref                     (pixman_image_t               *image);
@@ -806,12 +811,12 @@ int		pixman_image_get_depth               (pixman_image_t		   *image);
 pixman_format_code_t pixman_image_get_format	     (pixman_image_t		   *image);
 pixman_bool_t	pixman_image_fill_rectangles	     (pixman_op_t		    op,
 						      pixman_image_t		   *image,
-						      pixman_color_t		   *color,
+						      const pixman_color_t	   *color,
 						      int			    n_rects,
 						      const pixman_rectangle16_t   *rects);
 pixman_bool_t   pixman_image_fill_boxes              (pixman_op_t                   op,
                                                       pixman_image_t               *dest,
-                                                      pixman_color_t               *color,
+                                                      const pixman_color_t         *color,
                                                       int                           n_boxes,
                                                       const pixman_box32_t         *boxes);
 
@@ -905,7 +910,7 @@ void                  pixman_glyph_get_extents        (pixman_glyph_cache_t *cac
 						       pixman_box32_t       *extents);
 pixman_format_code_t  pixman_glyph_get_mask_format    (pixman_glyph_cache_t *cache,
 						       int		     n_glyphs,
-						       pixman_glyph_t *      glyphs);
+						       const pixman_glyph_t *glyphs);
 void                  pixman_composite_glyphs         (pixman_op_t           op,
 						       pixman_image_t       *src,
 						       pixman_image_t       *dest,
@@ -920,7 +925,7 @@ void                  pixman_composite_glyphs         (pixman_op_t           op,
 						       int32_t		     height,
 						       pixman_glyph_cache_t *cache,
 						       int		     n_glyphs,
-						       pixman_glyph_t       *glyphs);
+						       const pixman_glyph_t *glyphs);
 void                  pixman_composite_glyphs_no_mask (pixman_op_t           op,
 						       pixman_image_t       *src,
 						       pixman_image_t       *dest,
@@ -930,7 +935,7 @@ void                  pixman_composite_glyphs_no_mask (pixman_op_t           op,
 						       int32_t               dest_y,
 						       pixman_glyph_cache_t *cache,
 						       int		     n_glyphs,
-						       pixman_glyph_t       *glyphs);
+						       const pixman_glyph_t *glyphs);
 
 /*
  * Trapezoids
@@ -1016,7 +1021,7 @@ void           pixman_add_traps            (pixman_image_t            *image,
 					    int16_t                    x_off,
 					    int16_t                    y_off,
 					    int                        ntrap,
-					    pixman_trap_t             *traps);
+					    const pixman_trap_t       *traps);
 void           pixman_add_trapezoids       (pixman_image_t            *image,
 					    int16_t                    x_off,
 					    int                        y_off,
