@@ -309,7 +309,7 @@ public class Favicons {
             String storedFaviconUrl = getFaviconUrlForPageUrl(mPageUrl);
             if (storedFaviconUrl != null && storedFaviconUrl.equals(mFaviconUrl)) {
                 image = loadFaviconFromDb();
-                if (image != null)
+                if (image != null && image.getWidth() > 0 && image.getHeight() > 0)
                     return scaleImage(image);
             }
 
