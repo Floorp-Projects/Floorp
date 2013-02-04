@@ -2341,6 +2341,17 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
         stub->addNewStub(newStub);
         return true;
     }
+    if (obj->isTypedArray()) {
+        JS_ASSERT(res.isInt32());
+        ICGetProp_TypedArrayLength::Compiler compiler(cx);
+        ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!newStub)
+            return false;
+
+        *attached = true;
+        stub->addNewStub(newStub);
+        return true;
+    }
 
     return true;
 }
@@ -2524,6 +2535,33 @@ ICGetProp_ArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTest32(Assembler::Signed, scratch, scratch, &failure);
 
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICGetProp_TypedArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    Register scratch = R1.scratchReg();
+
+    // Unbox R0.
+    Register obj = masm.extractObject(R0, ExtractTemp0);
+
+    // Implement the negated version of JSObject::isTypedArray predicate.
+    masm.loadObjClass(obj, scratch);
+    masm.branchPtr(Assembler::Below, scratch, ImmWord(&TypedArray::classes[0]), &failure);
+    masm.branchPtr(Assembler::AboveOrEqual, scratch,
+                   ImmWord(&TypedArray::classes[TypedArray::TYPE_MAX]), &failure);
+
+    // Load length from fixed slot.
+    masm.loadValue(Address(obj, TypedArray::lengthOffset()), R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
