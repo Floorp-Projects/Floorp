@@ -5,6 +5,8 @@
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/styleinspector.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/csshtmltree.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
+
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
   %inspectorDTD;
