@@ -88,10 +88,8 @@ public class RemoteTabs extends ExpandableListView
     @Override
     public void onQueryTabsComplete(List<TabsAccessor.RemoteTab> remoteTabsList) {
         ArrayList<TabsAccessor.RemoteTab> remoteTabs = new ArrayList<TabsAccessor.RemoteTab> (remoteTabsList);
-        if (remoteTabs == null || remoteTabs.size() == 0) {
-            autoHidePanel();
+        if (remoteTabs == null || remoteTabs.size() == 0)
             return;
-        }
         
         ArrayList <HashMap <String, String>> clients = new ArrayList <HashMap <String, String>>();
 
