@@ -52,6 +52,10 @@ EXPORTS_mozilla/dom := \
   PannerNode.h \
   $(NULL)
 
+EXPORTS := \
+  MediaBufferDecoder.h \
+  $(NULL)
+
 PARALLEL_DIRS := test
 
 ifdef ENABLE_TESTS
