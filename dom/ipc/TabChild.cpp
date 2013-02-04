@@ -1345,8 +1345,9 @@ TabChild::RecvMouseEvent(const nsString& aType,
 {
   nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
   NS_ENSURE_TRUE(utils, true);
+  bool ignored = false;
   utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
-                        aIgnoreRootScrollFrame, 0, 0);
+                        aIgnoreRootScrollFrame, 0, 0, &ignored);
   return true;
 }
 

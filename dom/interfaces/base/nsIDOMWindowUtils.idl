@@ -41,7 +41,7 @@ interface nsIDOMClientRect;
 interface nsIURI;
 interface nsIDOMEventTarget;
 
-[scriptable, uuid(458f5b08-4966-4a91-8617-258afb87070e)]
+[scriptable, uuid(020deb5a-cba6-41dd-8551-72a880d01970)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -213,7 +213,8 @@ interface nsIDOMWindowUtils : nsISupports {
   const long MODIFIER_OS         = 0x0400;
 
   /** Synthesize a mouse event. The event types supported are:
-   *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
+   *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu,
+   *    MozMouseHitTest
    *
    * Events are sent in coordinates offset by aX and aY from the window.
    *
@@ -244,16 +245,18 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aPressure touch input pressure: 0.0 -> 1.0
    * @param aInputSourceArg input source, see nsIDOMMouseEvent for values,
    *        defaults to mouse input.
+   *
+   * returns true if the page called prevent default on this event
    */
-  void sendMouseEvent(in AString aType,
-                      in float aX,
-                      in float aY,
-                      in long aButton,
-                      in long aClickCount,
-                      in long aModifiers,
-                      [optional] in boolean aIgnoreRootScrollFrame,
-                      [optional] in float aPressure,
-                      [optional] in unsigned short aInputSourceArg);
+  boolean sendMouseEvent(in AString aType,
+                         in float aX,
+                         in float aY,
+                         in long aButton,
+                         in long aClickCount,
+                         in long aModifiers,
+                         [optional] in boolean aIgnoreRootScrollFrame,
+                         [optional] in float aPressure,
+                         [optional] in unsigned short aInputSourceArg);
 
   /** Synthesize a touch event. The event types supported are:
    *    touchstart, touchend, touchmove, and touchcancel
