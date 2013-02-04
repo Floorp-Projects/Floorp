@@ -13,6 +13,7 @@
 struct cubeb {
   pa_threaded_mainloop * mainloop;
   pa_context * context;
+  int error;
 };
 
 struct cubeb_stream {
@@ -33,31 +34,33 @@ enum cork_state {
 };
 
 static void
-context_state_callback(pa_context * c, void * m)
+context_state_callback(pa_context * c, void * u)
 {
-  if (pa_context_get_state(c) != PA_CONTEXT_TERMINATED) {
-    assert(PA_CONTEXT_IS_GOOD(pa_context_get_state(c)));
+  cubeb * ctx = u;
+  if (!PA_CONTEXT_IS_GOOD(pa_context_get_state(c))) {
+    ctx->error = 1;
   }
-  pa_threaded_mainloop_signal(m, 0);
+  pa_threaded_mainloop_signal(ctx->mainloop, 0);
 }
 
 static void
-context_notify_callback(pa_context * c, void * m)
+context_notify_callback(pa_context * c, void * u)
 {
-  pa_threaded_mainloop_signal(m, 0);
+  cubeb * ctx = u;
+  pa_threaded_mainloop_signal(ctx->mainloop, 0);
 }
 
 static void
-stream_success_callback(pa_stream * s, int success, void * m)
+stream_success_callback(pa_stream * s, int success, void * u)
 {
-  pa_threaded_mainloop_signal(m, 0);
+  cubeb_stream * stm = u;
+  pa_threaded_mainloop_signal(stm->context->mainloop, 0);
 }
 
 static void
 stream_drain_callback(pa_mainloop_api * a, pa_time_event * e, struct timeval const * tv, void * u)
 {
   cubeb_stream * stm = u;
-
   /* there's no pa_rttime_free, so use this instead. */
   a->time_free(stm->drain_timer);
   stm->drain_timer = NULL;
@@ -65,14 +68,13 @@ stream_drain_callback(pa_mainloop_api * a, pa_time_event * e, struct timeval con
 }
 
 static void
-stream_state_callback(pa_stream * s, void * m)
+stream_state_callback(pa_stream * s, void * u)
 {
-  /* XXX handle PA_STREAM_FAILED during creation */
-  if (pa_stream_get_state(s) == PA_STREAM_TERMINATED) {
-  } else {
-    assert(PA_STREAM_IS_GOOD(pa_stream_get_state(s)));
+  cubeb_stream * stm = u;
+  if (!PA_STREAM_IS_GOOD(pa_stream_get_state(s))) {
+    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
   }
-  pa_threaded_mainloop_signal(m, 0);
+  pa_threaded_mainloop_signal(stm->context->mainloop, 0);
 }
 
 static void
@@ -115,10 +117,16 @@ stream_request_callback(pa_stream * s, size_t nbytes, void * u)
     assert(r == 0);
 
     if ((size_t) got < size / frame_size) {
-      size_t buffer_fill = pa_stream_get_buffer_attr(s)->maxlength - pa_stream_writable_size(s);
-      pa_usec_t buffer_time = pa_bytes_to_usec(buffer_fill, &stm->sample_spec);
+      pa_usec_t latency = 0;
+      r = pa_stream_get_latency(s, &latency, NULL);
+      if (r == -PA_ERR_NODATA) {
+        /* this needs a better guess. */
+        latency = 100 * PA_USEC_PER_MSEC;
+      }
+      assert(r == 0 || r == -PA_ERR_NODATA);
       /* pa_stream_drain is useless, see PA bug# 866. this is a workaround. */
-      stm->drain_timer = pa_context_rttime_new(stm->context->context, pa_rtclock_now() + buffer_time, stream_drain_callback, stm);
+      /* arbitrary safety margin: double the current latency. */
+      stm->drain_timer = pa_context_rttime_new(stm->context->context, pa_rtclock_now() + 2 * latency, stream_drain_callback, stm);
       stm->shutdown = 1;
       return;
     }
@@ -129,42 +137,45 @@ stream_request_callback(pa_stream * s, size_t nbytes, void * u)
   assert(towrite == 0);
 }
 
-static void
-state_wait(cubeb * ctx, pa_context_state_t target_state)
+static int
+wait_until_context_ready(cubeb * ctx)
 {
-  pa_threaded_mainloop_lock(ctx->mainloop);
   for (;;) {
     pa_context_state_t state = pa_context_get_state(ctx->context);
-    assert(PA_CONTEXT_IS_GOOD(state));
-    if (state == target_state)
+    if (!PA_CONTEXT_IS_GOOD(state))
+      return -1;
+    if (state == PA_CONTEXT_READY)
       break;
     pa_threaded_mainloop_wait(ctx->mainloop);
   }
-  pa_threaded_mainloop_unlock(ctx->mainloop);
+  return 0;
 }
 
-static void
-stream_state_wait(cubeb_stream * stm, pa_stream_state_t target_state)
+static int
+wait_until_stream_ready(cubeb_stream * stm)
 {
-  pa_threaded_mainloop_lock(stm->context->mainloop);
   for (;;) {
     pa_stream_state_t state = pa_stream_get_state(stm->stream);
-    assert(PA_CONTEXT_IS_GOOD(state));
-    if (state == target_state)
+    if (!PA_STREAM_IS_GOOD(state))
+      return -1;
+    if (state == PA_STREAM_READY)
       break;
     pa_threaded_mainloop_wait(stm->context->mainloop);
   }
-  pa_threaded_mainloop_unlock(stm->context->mainloop);
+  return 0;
 }
 
-static void
-operation_wait(cubeb * ctx, pa_operation * o)
+static int
+operation_wait(cubeb * ctx, pa_stream * stream, pa_operation * o)
 {
-  for (;;) {
-    if (pa_operation_get_state(o) != PA_OPERATION_RUNNING)
-      break;
+  while (pa_operation_get_state(o) == PA_OPERATION_RUNNING) {
     pa_threaded_mainloop_wait(ctx->mainloop);
+    if (!PA_CONTEXT_IS_GOOD(pa_context_get_state(ctx->context)))
+      return -1;
+    if (stream && !PA_STREAM_IS_GOOD(pa_stream_get_state(stream)))
+      return -1;
   }
+  return 0;
 }
 
 static void
@@ -173,9 +184,11 @@ stream_cork(cubeb_stream * stm, enum cork_state state)
   pa_operation * o;
 
   pa_threaded_mainloop_lock(stm->context->mainloop);
-  o = pa_stream_cork(stm->stream, state & CORK, stream_success_callback, stm->context->mainloop);
-  operation_wait(stm->context, o);
-  pa_operation_unref(o);
+  o = pa_stream_cork(stm->stream, state & CORK, stream_success_callback, stm);
+  if (o) {
+    operation_wait(stm->context, stm->stream, o);
+    pa_operation_unref(o);
+  }
   pa_threaded_mainloop_unlock(stm->context->mainloop);
 
   if (state & NOTIFY) {
@@ -197,14 +210,18 @@ cubeb_init(cubeb ** context, char const * context_name)
   ctx->mainloop = pa_threaded_mainloop_new();
   ctx->context = pa_context_new(pa_threaded_mainloop_get_api(ctx->mainloop), context_name);
 
-  pa_context_set_state_callback(ctx->context, context_state_callback, ctx->mainloop);
+  pa_context_set_state_callback(ctx->context, context_state_callback, ctx);
   pa_threaded_mainloop_start(ctx->mainloop);
 
   pa_threaded_mainloop_lock(ctx->mainloop);
   pa_context_connect(ctx->context, NULL, 0, NULL);
-  pa_threaded_mainloop_unlock(ctx->mainloop);
 
-  state_wait(ctx, PA_CONTEXT_READY);
+  if (wait_until_context_ready(ctx) != 0) {
+    pa_threaded_mainloop_unlock(ctx->mainloop);
+    cubeb_destroy(ctx);
+    return CUBEB_ERROR;
+  }
+  pa_threaded_mainloop_unlock(ctx->mainloop);
 
   *context = ctx;
 
@@ -224,11 +241,12 @@ cubeb_destroy(cubeb * ctx)
 
   if (ctx->context) {
     pa_threaded_mainloop_lock(ctx->mainloop);
-    o = pa_context_drain(ctx->context, context_notify_callback, ctx->mainloop);
+    o = pa_context_drain(ctx->context, context_notify_callback, ctx);
     if (o) {
-      operation_wait(ctx, o);
+      operation_wait(ctx, NULL, o);
       pa_operation_unref(o);
     }
+    pa_context_set_state_callback(ctx->context, NULL, NULL);
     pa_context_disconnect(ctx->context);
     pa_context_unref(ctx->context);
     pa_threaded_mainloop_unlock(ctx->mainloop);
@@ -253,6 +271,7 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   pa_operation * o;
   pa_buffer_attr battr;
   pa_channel_map map;
+  int r;
 
   assert(context);
 
@@ -306,23 +325,29 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 
   pa_threaded_mainloop_lock(stm->context->mainloop);
   stm->stream = pa_stream_new(stm->context->context, stream_name, &ss, &map);
-  pa_stream_set_state_callback(stm->stream, stream_state_callback, stm->context->mainloop);
+  pa_stream_set_state_callback(stm->stream, stream_state_callback, stm);
   pa_stream_set_write_callback(stm->stream, stream_request_callback, stm);
   pa_stream_connect_playback(stm->stream, NULL, &battr,
                              PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_INTERPOLATE_TIMING |
                              PA_STREAM_START_CORKED,
                              NULL, NULL);
+
+  r = wait_until_stream_ready(stm);
+  if (r == 0) {
+    /* force a timing update now, otherwise timing info does not become valid
+       until some point after initialization has completed. */
+    o = pa_stream_update_timing_info(stm->stream, stream_success_callback, stm);
+    if (o) {
+      r = operation_wait(stm->context, stm->stream, o);
+      pa_operation_unref(o);
+    }
+  }
   pa_threaded_mainloop_unlock(stm->context->mainloop);
 
-  stream_state_wait(stm, PA_STREAM_READY);
-
-  /* force a timing update now, otherwise timing info does not become valid
-     until some point after initialization has completed. */
-  pa_threaded_mainloop_lock(stm->context->mainloop);
-  o = pa_stream_update_timing_info(stm->stream, stream_success_callback, stm->context->mainloop);
-  operation_wait(stm->context, o);
-  pa_operation_unref(o);
-  pa_threaded_mainloop_unlock(stm->context->mainloop);
+  if (r != 0) {
+    cubeb_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
 
   *stream = stm;
 
@@ -342,6 +367,7 @@ cubeb_stream_destroy(cubeb_stream * stm)
       pa_threaded_mainloop_get_api(stm->context->mainloop)->time_free(stm->drain_timer);
     }
 
+    pa_stream_set_state_callback(stm->stream, NULL, NULL);
     pa_stream_disconnect(stm->stream);
     pa_stream_unref(stm->stream);
     pa_threaded_mainloop_unlock(stm->context->mainloop);
