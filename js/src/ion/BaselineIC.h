@@ -310,6 +310,7 @@ class ICEntry
     _(GetElem_Fallback)         \
     _(GetElem_String)           \
     _(GetElem_Dense)            \
+    _(GetElem_TypedArray)       \
                                 \
     _(SetElem_Fallback)         \
     _(SetElem_Dense)            \
@@ -1687,6 +1688,62 @@ class ICGetElem_Dense : public ICMonitoredStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICGetElem_Dense::New(space, getStubCode(), firstMonitorStub_, shape_);
+        }
+    };
+};
+
+class ICGetElem_TypedArray : public ICStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrShape shape_;
+    uint32_t type_;
+
+    ICGetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type)
+      : ICStub(GetElem_TypedArray, stubCode),
+        shape_(shape),
+        type_(type)
+    {}
+
+  public:
+    static inline ICGetElem_TypedArray *New(ICStubSpace *space, IonCode *code,
+                                            HandleShape shape, uint32_t type)
+    {
+        return space->allocate<ICGetElem_TypedArray>(code, shape, type);
+    }
+
+    static size_t offsetOfShape() {
+        return offsetof(ICGetElem_TypedArray, shape_);
+    }
+
+    static size_t offsetOfType() {
+        return offsetof(ICGetElem_TypedArray, type_);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+
+    class Compiler : public ICStubCompiler {
+      RootedShape shape_;
+      uint32_t type_;
+
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16);
+        }
+
+      public:
+        Compiler(JSContext *cx, UnrootedShape shape, uint32_t type)
+          : ICStubCompiler(cx, ICStub::GetElem_TypedArray),
+            shape_(cx, shape),
+            type_(type)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetElem_TypedArray::New(space, getStubCode(), shape_, type_);
         }
     };
 };
