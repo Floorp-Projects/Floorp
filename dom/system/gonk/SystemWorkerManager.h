@@ -59,7 +59,8 @@ public:
   static nsIInterfaceRequestor*
   GetInterfaceRequestor();
 
-  static bool SendRilRawData(ipc::UnixSocketRawData* aRaw);
+  static bool SendRilRawData(unsigned long aClientId,
+                             ipc::UnixSocketRawData* aRaw);
 
 private:
   SystemWorkerManager();
@@ -75,7 +76,7 @@ private:
 #endif
   nsCOMPtr<nsIWorkerHolder> mWifiWorker;
 
-  nsRefPtr<ipc::RilConsumer> mRilConsumer;
+  nsTArray<nsRefPtr<ipc::RilConsumer> > mRilConsumers;
 
   bool mShutdown;
 };

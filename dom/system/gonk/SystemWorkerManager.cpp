@@ -60,26 +60,35 @@ SystemWorkerManager *gInstance = nullptr;
 
 class ConnectWorkerToRIL : public WorkerTask
 {
+  const unsigned long mClientId;
+
 public:
+  ConnectWorkerToRIL(unsigned long aClientId)
+    : mClientId(aClientId)
+  { }
+
   virtual bool RunTask(JSContext *aCx);
 };
 
 class SendRilSocketDataTask : public nsRunnable
 {
 public:
-  SendRilSocketDataTask(UnixSocketRawData *aRawData)
+  SendRilSocketDataTask(unsigned long aClientId,
+                        UnixSocketRawData *aRawData)
     : mRawData(aRawData)
+    , mClientId(aClientId)
   { }
 
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    SystemWorkerManager::SendRilRawData(mRawData);
+    SystemWorkerManager::SendRilRawData(mClientId, mRawData);
     return NS_OK;
   }
 
 private:
   UnixSocketRawData *mRawData;
+  unsigned long mClientId;
 };
 
 JSBool
@@ -87,12 +96,15 @@ PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
 
-  if (argc != 1) {
-    JS_ReportError(cx, "Expecting a single argument with the RIL message");
+  if (argc != 2) {
+    JS_ReportError(cx, "Expecting two arguments with the RIL message");
     return false;
   }
 
-  jsval v = JS_ARGV(cx, vp)[0];
+  jsval cv = JS_ARGV(cx, vp)[0];
+  int clientId = cv.toInt32();
+
+  jsval v = JS_ARGV(cx, vp)[1];
 
   JSAutoByteString abs;
   void *data;
@@ -131,7 +143,7 @@ PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
   UnixSocketRawData* raw = new UnixSocketRawData(size);
   memcpy(raw->mData, data, raw->mSize);
 
-  nsRefPtr<SendRilSocketDataTask> task = new SendRilSocketDataTask(raw);
+  nsRefPtr<SendRilSocketDataTask> task = new SendRilSocketDataTask(clientId, raw);
   NS_DispatchToMainThread(task);
   return true;
 }
@@ -144,6 +156,11 @@ ConnectWorkerToRIL::RunTask(JSContext *aCx)
   NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
   NS_ASSERTION(!JS_IsRunning(aCx), "Are we being called somehow?");
   JSObject *workerGlobal = JS_GetGlobalObject(aCx);
+
+  if (!JS_DefineProperty(aCx, workerGlobal, "CLIENT_ID",
+                         INT_TO_JSVAL(mClientId), nullptr, nullptr, 0)) {
+    return false;
+  }
 
   return !!JS_DefineFunction(aCx, workerGlobal, "postRILMessage", PostToRIL, 1,
                              0);
@@ -373,9 +390,11 @@ SystemWorkerManager::Shutdown()
   ShutdownAutoMounter();
 #endif
 
-  if (mRilConsumer) {
-    mRilConsumer->Shutdown();
-    mRilConsumer = nullptr;
+  for (unsigned long i = 0; i < mRilConsumers.Length(); i++) {
+    if (mRilConsumers[i]) {
+      mRilConsumers[i]->Shutdown();
+      mRilConsumers[i] = nullptr;
+    }
   }
 
 #ifdef MOZ_WIDGET_GONK
@@ -426,14 +445,16 @@ SystemWorkerManager::GetInterfaceRequestor()
 }
 
 bool
-SystemWorkerManager::SendRilRawData(UnixSocketRawData* aRaw)
+SystemWorkerManager::SendRilRawData(unsigned long aClientId,
+                                    UnixSocketRawData* aRaw)
 {
-  if (!gInstance->mRilConsumer) {
+  if ((gInstance->mRilConsumers.Length() <= aClientId) ||
+      !gInstance->mRilConsumers[aClientId]) {
     // Probably shuting down.
     delete aRaw;
     return true;
   }
-  return gInstance->mRilConsumer->SendSocketData(aRaw);
+  return gInstance->mRilConsumers[aClientId]->SendSocketData(aRaw);
 }
 
 NS_IMETHODIMP
@@ -458,10 +479,21 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
 }
 
 nsresult
-SystemWorkerManager::RegisterRilWorker(const JS::Value& aWorker,
+SystemWorkerManager::RegisterRilWorker(unsigned int aClientId,
+                                       const JS::Value& aWorker,
                                        JSContext *aCx)
 {
   NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aWorker), NS_ERROR_UNEXPECTED);
+
+  if (!mRilConsumers.EnsureLengthAtLeast(aClientId + 1)) {
+    NS_WARNING("Failed to ensure minimum length of mRilConsumers");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mRilConsumers[aClientId]) {
+    NS_WARNING("RilConsumer already registered");
+    return NS_ERROR_FAILURE;
+  }
 
   JSAutoRequest ar(aCx);
   JSAutoCompartment ac(aCx, JSVAL_TO_OBJECT(aWorker));
@@ -469,16 +501,18 @@ SystemWorkerManager::RegisterRilWorker(const JS::Value& aWorker,
   WorkerCrossThreadDispatcher *wctd =
     GetWorkerCrossThreadDispatcher(aCx, aWorker);
   if (!wctd) {
+    NS_WARNING("Failed to GetWorkerCrossThreadDispatcher for ril");
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
+  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL(aClientId);
   if (!wctd->PostTask(connection)) {
+    NS_WARNING("Failed to connect worker to ril");
     return NS_ERROR_UNEXPECTED;
   }
 
   // Now that we're set up, connect ourselves to the RIL thread.
-  mRilConsumer = new RilConsumer(wctd);
+  mRilConsumers[aClientId] = new RilConsumer(aClientId, wctd);
   return NS_OK;
 }
 
@@ -500,7 +534,7 @@ SystemWorkerManager::InitNetd(JSContext *cx)
   WorkerCrossThreadDispatcher *wctd =
     GetWorkerCrossThreadDispatcher(cx, workerval);
   if (!wctd) {
-    NS_WARNING("Failed to GetWorkerCrossThreadDispatcher");
+    NS_WARNING("Failed to GetWorkerCrossThreadDispatcher for netd");
     return NS_ERROR_FAILURE;
   }
 

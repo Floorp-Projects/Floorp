@@ -338,7 +338,7 @@ function RadioInterfaceLayer() {
   this.worker.postMessage({rilMessageType: "setDebugEnabled",
                            enabled: debugPref});
 
-  gSystemWorkerManager.registerRilWorker(this.worker);
+  gSystemWorkerManager.registerRilWorker(0, this.worker);
 }
 RadioInterfaceLayer.prototype = {
 
