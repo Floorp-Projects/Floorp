@@ -1276,25 +1276,6 @@ void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, lin
     return;
 }
 
-void cc_localdesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
-                    cc_features_t feature_id, cc_feature_data_t *data)
-{
-    send_message_helper(CC_MSG_LOCALDESC, src_id, dst_id, call_id, line,
-        feature_id, data, NULL, 0);
-
-    return;
-}
-
-void cc_remotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
-                    cc_features_t feature_id, cc_feature_data_t *data)
-{
-    send_message_helper(CC_MSG_REMOTEDESC, src_id, dst_id, call_id, line,
-        feature_id, data, NULL, 0);
-
-    return;
-}
-
-
 void
 cc_int_feature_ack (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
                     line_t line, cc_features_t feature_id,
