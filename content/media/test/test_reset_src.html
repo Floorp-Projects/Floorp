@@ -22,10 +22,10 @@ href="https://bugzilla.mozilla.org/show_bug.cgi?id=804875">Mozilla Bug 804875</a
 
 function onLoadedMetadata_Audio(e) {
   var t = e.target;
-  is(t.videoHeight, 0, "Audio should a zero for videoHeight.");
-  is(t.videoWidth, 0, "Audio should a zero for videoWidth.");
-  is(t.mozPaintedFrames, 0, "Audio should a zero for mozPaintedFrames.");
-  is(t.mozFrameDelay, 0, "Audio should a zero for mozFrameDelay.");
+  is(t.videoHeight, 0, "videoHeight should be zero when there is no video.");
+  is(t.videoWidth, 0, "videoWidth should be zero when there is no video.");
+  is(t.mozPaintedFrames, 0, "mozPaintedFrames should be zero when there is no video.");
+  is(t.mozFrameDelay, 0, "mozFrameDelay should be zero when there is no video.");
   var c = document.getElementsByTagName("canvas")[0].getContext("2d");
   try {
     c.drawImage(t, 0, 0, t.videoHeight, t.videoWidth);
@@ -44,7 +44,7 @@ function onTimeUpdate_Video(e) {
   }
   t.removeEventListener("timeupdate", onTimeUpdate_Video);
   ok(t.mozPaintedFrames > 0, "mozPaintedFrames should be positive, is " + t.mozPaintedFrames + ".");
-  ok(t.mozFrameDelay > 0, "mozFrameDelay should be positive, is " + t.mozFrameDelay + ".");
+  ok(t.mozFrameDelay >= 0, "mozFrameDelay should be positive or zero, is " + t.mozFrameDelay + ".");
 
   if (v._firstTime) {
     t.src = t.src;
