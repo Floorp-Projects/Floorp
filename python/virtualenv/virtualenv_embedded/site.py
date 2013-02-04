@@ -584,9 +584,19 @@ def virtual_install_main_packages():
                 paths.insert(0, lib64_path)
             else:
                 paths.append(lib64_path)
-        # This is hardcoded in the Python executable, but relative to sys.prefix:
-        plat_path = os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3],
-                                 'plat-%s' % sys.platform)
+        # This is hardcoded in the Python executable, but relative to
+        # sys.prefix.  Debian change: we need to add the multiarch triplet
+        # here, which is where the real stuff lives.  As per PEP 421, in
+        # Python 3.3+, this lives in sys.implementation, while in Python 2.7
+        # it lives in sys.
+        try:
+            arch = getattr(sys, 'implementation', sys)._multiarch
+        except AttributeError:
+            # This is a non-multiarch aware Python.  Fallback to the old way.
+            arch = sys.platform
+        plat_path = os.path.join(sys.real_prefix, 'lib', 
+                                 'python'+sys.version[:3],
+                                 'plat-%s' % arch)
         if os.path.exists(plat_path):
             paths.append(plat_path)
     # This is hardcoded in the Python executable, but
