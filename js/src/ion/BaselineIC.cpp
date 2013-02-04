@@ -107,11 +107,6 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &getElemStub->shape(), "baseline-getelem-dense-shape");
         break;
       }
-      case ICStub::GetElem_TypedArray: {
-        ICGetElem_TypedArray *getElemStub = toGetElem_TypedArray();
-        MarkShape(trc, &getElemStub->shape(), "baseline-getelem-typedarray-shape");
-        break;
-      }
       case ICStub::SetElem_Dense: {
         ICSetElem_Dense *setElemStub = toSetElem_Dense();
         MarkShape(trc, &setElemStub->shape(), "baseline-getelem-dense-shape");
@@ -1703,17 +1698,6 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
             return false;
 
         stub->addNewStub(denseStub);
-        return true;
-    }
-
-    if (obj->isTypedArray() && rhs.isInt32() && res.isNumber()) {
-        ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
-        ICStub *typedArrayStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
-        if (!typedArrayStub)
-            return false;
-
-        stub->addNewStub(typedArrayStub);
-        return true;
     }
 
     return true;
@@ -1828,48 +1812,6 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-//
-// GetElem_TypedArray
-//
-
-bool
-ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    Label failure;
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
-
-    GeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratchReg = regs.takeAny();
-
-    // Unbox R0 and shape guard.
-    Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(BaselineStubReg, ICGetElem_TypedArray::offsetOfShape()), scratchReg);
-    masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
-
-    // Unbox key.
-    Register key = masm.extractInt32(R1, ExtractTemp1);
-
-    // Bounds check.
-    masm.unboxInt32(Address(obj, TypedArray::lengthOffset()), scratchReg);
-    masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
-
-    // Load the elements vector.
-    masm.loadPtr(Address(obj, TypedArray::dataOffset()), scratchReg);
-
-    // Load the value.
-    BaseIndex source(scratchReg, key, ScaleFromElemWidth(TypedArray::slotWidth(type_)));
-    masm.loadFromTypedArray(type_, source, R0, false, scratchReg, &failure);
-
-    // Todo: Allow loading doubles from uint32 arrays, but this requires monitoring.
-    EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);
