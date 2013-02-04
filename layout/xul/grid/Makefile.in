@@ -41,10 +41,10 @@ EXPORTS = \
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
-		-I$(srcdir)/../../../base/src \
-		-I$(srcdir)/../../../../generic \
-		-I$(srcdir)/../../../../style \
-		-I$(srcdir)/../../../../forms \
+		-I$(srcdir)/../base/src \
+		-I$(srcdir)/../../generic \
+		-I$(srcdir)/../../style \
+		-I$(srcdir)/../../forms \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
