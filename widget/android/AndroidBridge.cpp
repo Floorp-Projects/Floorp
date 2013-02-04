@@ -1110,6 +1110,12 @@ AndroidBridge::SetLayerClient(JNIEnv* env, jobject jobj)
 
     if (resetting) {
         RegisterCompositor(env, true);
+#ifdef MOZ_ANDROID_OMTC
+        // since we are re-linking the new java objects to Gecko, we need to get
+        // the viewport from the compositor (since the Java copy was thrown away)
+        // and we do that by setting the first-paint flag.
+        nsWindow::ForceIsFirstPaint();
+#endif
     }
 }
 
