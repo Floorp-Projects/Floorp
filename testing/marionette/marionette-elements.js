@@ -97,8 +97,8 @@ ElementManager.prototype = {
     if (!el) {
       throw new ElementException("Element has not been seen before", 17, null);
     }
-    el = el;
-    if (!(el.ownerDocument.isEqualNode(win.document))) {
+    // use XPCNativeWrapper to compare elements; see bug 834266
+    if (!(XPCNativeWrapper(el).ownerDocument == XPCNativeWrapper(win).document)) {
       throw new ElementException("Stale element reference", 10, null);
     }
     return el;
