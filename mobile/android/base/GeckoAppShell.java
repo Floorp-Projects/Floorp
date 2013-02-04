@@ -132,9 +132,14 @@ public class GeckoAppShell
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
     static private int sDensityDpi = 0;
-    private static Boolean sSQLiteLibsLoaded = false;
-    private static Boolean sNSSLibsLoaded = false;
-    private static Boolean sLibsSetup = false;
+
+    private static final Object sLibLoadingLock = new Object();
+    // Must hold sLibLoadingLock while accessing the following boolean variables.
+    private static boolean sSQLiteLibsLoaded;
+    private static boolean sNSSLibsLoaded;
+    private static boolean sMozGlueLoaded;
+    private static boolean sLibsSetup;
+
     private static File sGREDir = null;
     private static final EventDispatcher sEventDispatcher = new EventDispatcher();
 
@@ -333,8 +338,12 @@ public class GeckoAppShell
 
     // java-side stuff
     public static void loadLibsSetup(Context context) {
-        if (sLibsSetup)
-            return;
+        synchronized (sLibLoadingLock) {
+            if (sLibsSetup) {
+                return;
+            }
+            sLibsSetup = true;
+        }
 
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
@@ -361,8 +370,6 @@ public class GeckoAppShell
                 cacheDir.setReadable(true, false);
             }
         }
-
-        sLibsSetup = true;
     }
 
     private static void setupPluginEnvironment(GeckoApp context) {
@@ -468,33 +475,40 @@ public class GeckoAppShell
 
     /* This method is referenced by Robocop via reflection. */
     public static void loadSQLiteLibs(Context context, String apkName) {
-        if (sSQLiteLibsLoaded)
-            return;
-        synchronized(sSQLiteLibsLoaded) {
-            if (sSQLiteLibsLoaded)
+        synchronized (sLibLoadingLock) {
+            if (sSQLiteLibsLoaded) {
                 return;
-            loadMozGlue(context);
-            // the extract libs parameter is being removed in bug 732069
-            loadLibsSetup(context);
-            loadSQLiteLibsNative(apkName, false);
+            }
             sSQLiteLibsLoaded = true;
         }
+
+        loadMozGlue(context);
+        // the extract libs parameter is being removed in bug 732069
+        loadLibsSetup(context);
+        loadSQLiteLibsNative(apkName, false);
     }
 
     public static void loadNSSLibs(Context context, String apkName) {
-        if (sNSSLibsLoaded)
-            return;
-        synchronized(sNSSLibsLoaded) {
-            if (sNSSLibsLoaded)
+        synchronized (sLibLoadingLock) {
+            if (sNSSLibsLoaded) {
                 return;
-            loadMozGlue(context);
-            loadLibsSetup(context);
-            loadNSSLibsNative(apkName, false);
+            }
             sNSSLibsLoaded = true;
         }
+
+        loadMozGlue(context);
+        loadLibsSetup(context);
+        loadNSSLibsNative(apkName, false);
     }
 
     public static void loadMozGlue(Context context) {
+        synchronized (sLibLoadingLock) {
+            if (sMozGlueLoaded) {
+                return;
+            }
+            sMozGlueLoaded = true;
+        }
+
         System.loadLibrary("mozglue");
 
         // When running TestPasswordProvider, we're being called with
