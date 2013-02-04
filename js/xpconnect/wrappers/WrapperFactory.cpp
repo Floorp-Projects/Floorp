@@ -38,22 +38,6 @@ Wrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 // off it.
 WaiveXrayWrapper WaiveXrayWrapper::singleton(0);
 
-static JSObject *
-GetCurrentOuter(JSContext *cx, JSObject *obj)
-{
-    obj = JS_ObjectToOuterObject(cx, obj);
-    if (!obj)
-        return nullptr;
-
-    if (IsWrapper(obj) && !js::GetObjectClass(obj)->ext.innerObject) {
-        obj = UnwrapObject(obj);
-        NS_ASSERTION(js::GetObjectClass(obj)->ext.innerObject,
-                     "weird object, expecting an outer window proxy");
-    }
-
-    return obj;
-}
-
 JSObject *
 WrapperFactory::GetXrayWaiver(JSObject *obj)
 {
@@ -109,10 +93,7 @@ JSObject *
 WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
 {
     obj = UnwrapObject(obj);
-
-    // We have to make sure that if we're wrapping an outer window, that
-    // the .wrappedJSObject also wraps the outer window.
-    obj = GetCurrentOuter(cx, obj);
+    MOZ_ASSERT(!js::IsInnerObject(obj));
 
     JSObject *waiver = GetXrayWaiver(obj);
     if (waiver)
@@ -137,8 +118,22 @@ WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, unsigned flags)
 JSObject *
 WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj, unsigned flags)
 {
-    // Don't unwrap an outer window, just double wrap it if needed.
-    if (js::GetObjectClass(obj)->ext.innerObject)
+    // Outerize any raw inner objects at the entry point here, so that we don't
+    // have to worry about them for the rest of the wrapping code.
+    if (js::IsInnerObject(obj)) {
+        JSAutoCompartment ac(cx, obj);
+        obj = JS_ObjectToOuterObject(cx, obj);
+        NS_ENSURE_TRUE(obj, nullptr);
+        // The outerization hook wraps, which means that we can end up with a
+        // CCW here if |obj| was a navigated-away-from inner. Strip any CCWs.
+        obj = js::UnwrapObject(obj);
+        MOZ_ASSERT(js::IsOuterObject(obj));
+    }
+
+    // If we've got an outer window, there's nothing special that needs to be
+    // done here, and we can move on to the next phase of wrapping. We handle
+    // this case first to allow us to assert against wrappers below.
+    if (js::IsOuterObject(obj))
         return DoubleWrap(cx, obj, flags);
 
     // Here are the rules for wrapping:
@@ -149,14 +144,6 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     // a fat wrapper. (see also: bug XXX).
     if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
         return nullptr;
-
-    // We only hand out outer objects to script.
-    obj = GetCurrentOuter(cx, obj);
-    if (!obj)
-        return nullptr;
-
-    if (js::GetObjectClass(obj)->ext.innerObject)
-        return DoubleWrap(cx, obj, flags);
 
     // Now, our object is ready to be wrapped, but several objects (notably
     // nsJSIIDs) have a wrapper per scope. If we are about to wrap one of
@@ -352,6 +339,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
                js::GetObjectClass(obj)->ext.innerObject,
                "wrapped object passed to rewrap");
     MOZ_ASSERT(JS_GetClass(obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
+    MOZ_ASSERT(!js::IsInnerObject(obj));
 
     // Compute the information we need to select the right wrapper.
     JSCompartment *origin = js::GetObjectCompartment(obj);
@@ -518,7 +506,7 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
         return JS_WrapValue(cx, vp);
 
     JSObject *obj = js::UnwrapObject(JSVAL_TO_OBJECT(*vp));
-    obj = GetCurrentOuter(cx, obj);
+    MOZ_ASSERT(!js::IsInnerObject(obj));
     if (js::IsObjectInContextCompartment(obj, cx)) {
         *vp = OBJECT_TO_JSVAL(obj);
         return true;
