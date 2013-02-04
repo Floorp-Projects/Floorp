@@ -224,7 +224,16 @@ MediaStreamGraphImpl::GraphTimeToStreamTime(MediaStream* aStream,
     t = end;
   }
   return std::max<StreamTime>(0, s);
-}  
+}
+
+StreamTime
+MediaStreamGraphImpl::GraphTimeToStreamTimeOptimistic(MediaStream* aStream,
+                                                      GraphTime aTime)
+{
+  GraphTime computedUpToTime = std::min(mStateComputedTime, aTime);
+  StreamTime s = GraphTimeToStreamTime(aStream, computedUpToTime);
+  return s + (aTime - computedUpToTime);
+}
 
 GraphTime
 MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
@@ -1280,6 +1289,18 @@ StreamTime
 MediaStream::GraphTimeToStreamTime(GraphTime aTime)
 {
   return GraphImpl()->GraphTimeToStreamTime(this, aTime);
+}
+
+StreamTime
+MediaStream::GraphTimeToStreamTimeOptimistic(GraphTime aTime)
+{
+  return GraphImpl()->GraphTimeToStreamTimeOptimistic(this, aTime);
+}
+
+GraphTime
+MediaStream::StreamTimeToGraphTime(StreamTime aTime)
+{
+  return GraphImpl()->StreamTimeToGraphTime(this, aTime, 0);
 }
 
 void
