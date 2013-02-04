@@ -42,6 +42,8 @@ interface IPeerConnectionObserver : nsISupports
   void onSetRemoteDescriptionSuccess(in unsigned long code);
   void onSetLocalDescriptionError(in unsigned long code);
   void onSetRemoteDescriptionError(in unsigned long code);
+  void onAddIceCandidateSuccess(in unsigned long code);
+  void onAddIceCandidateError(in unsigned long code);
 
   /* Data channel callbacks */
   void notifyDataChannel(in nsIDOMDataChannel channel);

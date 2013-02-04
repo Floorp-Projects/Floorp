@@ -4055,7 +4055,6 @@
 
       <field name="mOverCloseButton">false</field>
       <field name="mCorrespondingMenuitem">null</field>
-      <field name="_fullyOpen">false</field>
       <field name="closing">false</field>
       <field name="lastAccessed">0</field>
     </implementation>

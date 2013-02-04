@@ -37,6 +37,7 @@
 #include "gfxUtils.h"
 #include "SVGContentUtils.h"
 #include <algorithm>
+#include "nsContentUtils.h"
 
 #if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage

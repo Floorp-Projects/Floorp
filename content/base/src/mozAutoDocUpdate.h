@@ -5,7 +5,7 @@
 #ifndef mozAutoDocUpdate_h_
 #define mozAutoDocUpdate_h_
 
-#include "nsContentUtils.h"
+#include "nsContentUtils.h" // For AddScriptBlocker() and RemoveScriptBlocker().
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 

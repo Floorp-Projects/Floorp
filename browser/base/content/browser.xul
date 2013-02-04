@@ -1149,6 +1149,7 @@
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
+    <notificationbox id="global-notificationbox"/>
     <toolbar id="developer-toolbar"
              class="devtools-toolbar"
              hidden="true">

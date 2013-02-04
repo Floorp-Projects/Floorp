@@ -12,7 +12,7 @@ try { (function() {
             let(y)((function() {
                 try {
                     let(c) o
-                } finally { (f, *::*)
+                } finally { (f, [1,2,3])
                 }
             }))
         }))

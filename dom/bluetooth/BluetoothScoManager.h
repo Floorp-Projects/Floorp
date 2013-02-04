@@ -22,7 +22,7 @@ public:
   ~BluetoothScoManager();
 
   static BluetoothScoManager* Get();
-  void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage)
+  void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage)
     MOZ_OVERRIDE;
 
   bool Connect(const nsAString& aDeviceObjectPath);

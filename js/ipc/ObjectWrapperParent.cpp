@@ -244,8 +244,6 @@ ObjectWrapperParent::jsval_to_JSVariant(JSContext* cx, jsval from,
     case JSTYPE_BOOLEAN:
         *to = !!JSVAL_TO_BOOLEAN(from);
         return true;
-    case JSTYPE_XML:
-        return with_error(cx, false, "CPOWs currently cannot handle JSTYPE_XML");
     default:
         return with_error(cx, false, "Bad jsval type");
     }

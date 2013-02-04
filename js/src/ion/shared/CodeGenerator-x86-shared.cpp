@@ -22,30 +22,6 @@ using namespace js::ion;
 namespace js {
 namespace ion {
 
-class DeferredJumpTable : public DeferredData
-{
-    MTableSwitch *mswitch;
-
-  public:
-    DeferredJumpTable(MTableSwitch *mswitch)
-      : mswitch(mswitch)
-    { }
-
-    void copy(IonCode *code, uint8_t *buffer) const {
-        void **jumpData = (void **)buffer;
-
-        // For every case write the pointer to the start in the table
-        for (size_t j = 0; j < mswitch->numCases(); j++) {
-            LBlock *caseblock = mswitch->getCase(j)->lir();
-            Label *caseheader = caseblock->label();
-
-            uint32_t offset = caseheader->offset();
-            *jumpData = (void *)(code->raw() + offset);
-            jumpData++;
-        }
-    }
-};
-
 CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *graph)
   : CodeGeneratorShared(gen, graph),
     deoptLabel_(NULL)
@@ -1026,6 +1002,56 @@ CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
     return true;
 }
 
+class OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorX86Shared>
+{
+    MTableSwitch *mir_;
+    CodeLabel *jumpLabel_;
+
+    bool accept(CodeGeneratorX86Shared *codegen) {
+        return codegen->visitOutOfLineTableSwitch(this);
+    }
+
+  public:
+    OutOfLineTableSwitch(MTableSwitch *mir)
+      : mir_(mir), jumpLabel_(new CodeLabel)
+    {}
+
+    MTableSwitch *mir() const {
+        return mir_;
+    }
+
+    CodeLabel *jumpLabel() const {
+        return jumpLabel_;
+    }
+};
+
+bool
+CodeGeneratorX86Shared::visitOutOfLineTableSwitch(OutOfLineTableSwitch *ool)
+{
+    MTableSwitch *mir = ool->mir();
+
+    masm.align(sizeof(void*));
+    masm.bind(ool->jumpLabel()->src());
+    if (!masm.addCodeLabel(ool->jumpLabel()))
+        return false;
+
+    for (size_t i = 0; i < mir->numCases(); i++) {
+        LBlock *caseblock = mir->getCase(i)->lir();
+        Label *caseheader = caseblock->label();
+        uint32_t caseoffset = caseheader->offset();
+
+        // The entries of the jump table need to be absolute addresses and thus
+        // must be patched after codegen is finished.
+        CodeLabel *cl = new CodeLabel();
+        masm.writeCodePointer(cl->dest());
+        cl->src()->bind(caseoffset);
+        if (!masm.addCodeLabel(cl))
+            return false;
+    }
+
+    return true;
+}
+
 bool
 CodeGeneratorX86Shared::emitTableSwitchDispatch(MTableSwitch *mir, const Register &index,
                                                 const Register &base)
@@ -1041,13 +1067,15 @@ CodeGeneratorX86Shared::emitTableSwitchDispatch(MTableSwitch *mir, const Registe
     masm.cmpl(index, Imm32(cases));
     masm.j(AssemblerX86Shared::AboveOrEqual, defaultcase);
 
-    // Create a JumpTable that during linking will get written.
-    DeferredJumpTable *d = new DeferredJumpTable(mir);
-    if (!masm.addDeferredData(d, (1 << ScalePointer) * cases))
+    // To fill in the CodeLabels for the case entries, we need to first
+    // generate the case entries (we don't yet know their offsets in the
+    // instruction stream).
+    OutOfLineTableSwitch *ool = new OutOfLineTableSwitch(mir);
+    if (!addOutOfLineCode(ool))
         return false;
 
     // Compute the position where a pointer to the right case stands.
-    masm.mov(d->label(), base);
+    masm.mov(ool->jumpLabel()->dest(), base);
     Operand pointer = Operand(base, index, ScalePointer);
 
     // Jump to the right case

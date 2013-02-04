@@ -1045,7 +1045,7 @@ toolbar[mode="icons"] #forward-button:-moz-lwtheme {
   }
 
   #zoom-in-button {
-    -moz-image-region: rect(0, 480px, 40px, 440px);
+    -moz-image-region: rect(0, 840px, 40px, 800px);
   }
 }
 

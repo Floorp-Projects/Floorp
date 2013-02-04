@@ -7,13 +7,17 @@
 #define __NS_SVGGRADIENTELEMENT_H__
 
 #include "nsIDOMSVGURIReference.h"
-#include "nsIDOMSVGGradientElement.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
 #include "nsSVGString.h"
 #include "SVGAnimatedTransformList.h"
+
+static const unsigned short SVG_SPREADMETHOD_UNKNOWN = 0;
+static const unsigned short SVG_SPREADMETHOD_PAD     = 1;
+static const unsigned short SVG_SPREADMETHOD_REFLECT = 2;
+static const unsigned short SVG_SPREADMETHOD_REPEAT  = 3;
 
 class nsSVGGradientFrame;
 class nsSVGLinearGradientFrame;
@@ -51,9 +55,6 @@ public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Gradient Element
-  NS_DECL_NSIDOMSVGGRADIENTELEMENT
-
   // URI Reference
   NS_DECL_NSIDOMSVGURIREFERENCE
 
@@ -85,7 +86,7 @@ protected:
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 
-  // nsIDOMSVGGradientElement values
+  // SVGGradientElement values
   nsAutoPtr<SVGAnimatedTransformList> mGradientTransform;
 };
 
@@ -94,7 +95,7 @@ protected:
 typedef SVGGradientElement SVGLinearGradientElementBase;
 
 class SVGLinearGradientElement : public SVGLinearGradientElementBase
-                               , public nsIDOMSVGLinearGradientElement
+                               , public nsIDOMSVGElement
 {
   friend class ::nsSVGLinearGradientFrame;
   friend nsresult
@@ -110,12 +111,6 @@ public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Gradient Element
-  NS_FORWARD_NSIDOMSVGGRADIENTELEMENT(SVGLinearGradientElementBase::)
-
-  // Linear Gradient
-  NS_DECL_NSIDOMSVGLINEARGRADIENTELEMENT
-
   // The Gradient Element base class implements these
   NS_FORWARD_NSIDOMSVGELEMENT(SVGLinearGradientElementBase::)
 
@@ -123,8 +118,6 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
@@ -138,7 +131,6 @@ protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
 
-  // nsIDOMSVGLinearGradientElement values
   enum { ATTR_X1, ATTR_Y1, ATTR_X2, ATTR_Y2 };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
@@ -149,7 +141,7 @@ protected:
 typedef SVGGradientElement SVGRadialGradientElementBase;
 
 class SVGRadialGradientElement : public SVGRadialGradientElementBase
-                               , public nsIDOMSVGRadialGradientElement
+                               , public nsIDOMSVGElement
 {
   friend class ::nsSVGRadialGradientFrame;
   friend nsresult
@@ -166,20 +158,12 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Gradient Element
-  NS_FORWARD_NSIDOMSVGGRADIENTELEMENT(SVGRadialGradientElementBase::)
-
-  // Radial Gradient
-  NS_DECL_NSIDOMSVGRADIALGRADIENTELEMENT
-
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_FORWARD_NSIDOMSVGELEMENT(SVGRadialGradientElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
@@ -193,7 +177,6 @@ protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
 
-  // nsIDOMSVGRadialGradientElement values
   enum { ATTR_CX, ATTR_CY, ATTR_R, ATTR_FX, ATTR_FY };
   nsSVGLength2 mLengthAttributes[5];
   static LengthInfo sLengthInfo[5];

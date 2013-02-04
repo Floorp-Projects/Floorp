@@ -1,0 +1,5 @@
+{
+  "loader": "lib/main.js",
+  "icon": "explicit-icon.png",
+  "icon64": "explicit-icon64.png"
+}

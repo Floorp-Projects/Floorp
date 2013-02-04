@@ -48,9 +48,8 @@ CastAsStrictPropertyOp(JSObject *object)
  * property storage, typed array data, and so on).  All other properties are
  * stored using shapes and shape trees.  Keys for these properties are either
  * PropertyNames (that is, atomized strings whose contents are not unsigned
- * 32-bit integers) or SpecialIds (object values for E4X and a couple other
- * things, see jsid for details); the union of these types, used in individual
- * shapes, is PropertyId.
+ * 32-bit integers) or SpecialIds (see jsid for details); the union of these
+ * types, used in individual shapes, is PropertyId.
  */
 class PropertyId
 {
@@ -917,7 +916,7 @@ class ArrayBufferObject;
  */
 class ObjectElements
 {
-    friend struct ::JSObject;
+    friend class ::JSObject;
     friend class ObjectImpl;
     friend class ArrayBufferObject;
 

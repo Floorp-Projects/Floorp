@@ -19,7 +19,7 @@ let TargetFactory = (function() {
 
 let Promise = (function() {
   let tempScope = {};
-  Components.utils.import("resource://gre/modules/commonjs/promise/core.js", tempScope);
+  Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", tempScope);
   return tempScope.Promise;
 })();
 

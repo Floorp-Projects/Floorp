@@ -41,7 +41,7 @@ TemporaryRef<DtlsIdentity> DtlsIdentity::Generate() {
 
   std::string name;
   char chunk[3];
-  for (int i=0; i<sizeof(random_name); ++i) {
+  for (size_t i = 0; i < sizeof(random_name); ++i) {
     PR_snprintf(chunk, sizeof(chunk), "%.2x", random_name[i]);
     name += chunk;
   }

@@ -2442,6 +2442,11 @@ public:
         return label();
     }
 
+    void jumpTablePointer(uintptr_t ptr)
+    {
+        m_formatter.jumpTablePointer(ptr);
+    }
+
     // Linking & patching:
     //
     // 'link' and 'patch' methods are for use on unprotected code - such as the code
@@ -2449,7 +2454,7 @@ public:
     // code has been finalized it is (platform support permitting) within a non-
     // writable region of memory; to modify the code in an execute-only execuable
     // pool the 'repatch' and 'relink' methods should be used.
-    
+
     // Like Lua's emitter, we thread jump lists through the unpatched target
     // field, which will get fixed up when the label (which has a pointer to
     // the head of the jump list) is bound.
@@ -2987,6 +2992,18 @@ private:
         {
             m_buffer.putIntUnchecked(0);
             return JmpSrc(m_buffer.size());
+        }
+
+        // Data:
+
+        void jumpTablePointer(uintptr_t ptr)
+        {
+            m_buffer.ensureSpace(sizeof(uintptr_t));
+#if WTF_CPU_X86_64
+            m_buffer.putInt64Unchecked(ptr);
+#else
+            m_buffer.putIntUnchecked(ptr);
+#endif
         }
 
         // Administrative methods:

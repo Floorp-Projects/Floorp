@@ -158,10 +158,7 @@ function options(aOptionName)
     value = value.substring(0, value.length-1);
   }
 
-  if (aOptionName === 'moar_xml')
-    aOptionName = 'xml';
-
-  if (aOptionName && aOptionName !== 'allow_xml') {
+  if (aOptionName) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (!(aOptionName in Components.utils)) {
 //    if (!(aOptionName in SpecialPowers.wrap(Components).utils)) {
@@ -193,7 +190,6 @@ function optionsInit() {
     strict:     true,
     werror:     true,
     atline:     true,
-    moar_xml:   true,
     methodjit:  true,
     methodjit_always: true,
     strict_mode: true
@@ -211,8 +207,6 @@ function optionsInit() {
   for (var optionName in options.currvalues)
   {
     var propName = optionName;
-    if (optionName === "moar_xml")
-      propName = "xml";
 
 //    if (!(propName in SpecialPowers.wrap(Components).utils))
     if (!(propName in Components.utils))
@@ -361,23 +355,16 @@ function jsTestDriverBrowserInit()
   outputscripttag(suitepath + '/browser.js', properties);
   outputscripttag(suitepath + '/' + subsuite + '/shell.js', properties);
   outputscripttag(suitepath + '/' + subsuite + '/browser.js', properties);
-  outputscripttag(suitepath + '/' + subsuite + '/' + test, properties,
-  	properties.e4x || /e4x\//.test(properties.test));
+  outputscripttag(suitepath + '/' + subsuite + '/' + test, properties);
   outputscripttag('js-test-driver-end.js', properties);
   return;
 }
 
-function outputscripttag(src, properties, e4x)
+function outputscripttag(src, properties)
 {
   if (!src)
   {
     return;
-  }
-
-  if (e4x)
-  {
-    // e4x requires type=mimetype;e4x=1
-    properties.language = 'type';
   }
 
   var s = '<script src="' +  src + '" ';
@@ -396,10 +383,6 @@ function outputscripttag(src, properties, e4x)
     if (properties.version)
     {
       s += ';version=' + properties.version;
-    }
-    if (e4x)
-    {
-      s += ';e4x=1';
     }
   }
   s += '"><\/script>';

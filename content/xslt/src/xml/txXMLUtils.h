@@ -15,7 +15,6 @@
 #include "nsDependentSubstring.h"
 #include "nsIAtom.h"
 #include "txXPathNode.h"
-#include "nsContentUtils.h"
 
 #define kExpatSeparatorChar 0xFFFF
 
@@ -114,10 +113,7 @@ public:
      * Returns true if the given string is a valid XML QName
      */
     static bool isValidQName(const nsAFlatString& aQName,
-                               const PRUnichar** aColon)
-    {
-        return NS_SUCCEEDED(nsContentUtils::CheckQName(aQName, true, aColon));
-    }
+                             const PRUnichar** aColon);
 
     /**
      * Returns true if the given character represents an Alpha letter
