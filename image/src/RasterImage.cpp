@@ -877,33 +877,32 @@ RasterImage::GetCurrentDrawableImgFrame()
 }
 
 //******************************************************************************
-/* readonly attribute boolean currentFrameIsOpaque; */
-NS_IMETHODIMP
-RasterImage::GetCurrentFrameIsOpaque(bool *aIsOpaque)
+/* [notxpcom] boolean frameIsOpaque(in uint32_t aWhichFrame); */
+NS_IMETHODIMP_(bool)
+RasterImage::FrameIsOpaque(uint32_t aWhichFrame)
 {
-  NS_ENSURE_ARG_POINTER(aIsOpaque);
-
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  // See if we can get an image frame
-  imgFrame *curframe = GetCurrentImgFrame();
-
-  // If we don't get a frame, the safe answer is "not opaque"
-  if (!curframe)
-    *aIsOpaque = false;
-
-  // Otherwise, we can make a more intelligent decision
-  else {
-    *aIsOpaque = !curframe->GetNeedsBackground();
-
-    // We are also transparent if the current frame's size doesn't cover our
-    // entire area.
-    nsIntRect framerect = curframe->GetRect();
-    *aIsOpaque = *aIsOpaque && framerect.IsEqualInterior(nsIntRect(0, 0, mSize.width, mSize.height));
+  if (aWhichFrame > FRAME_MAX_VALUE) {
+    NS_WARNING("aWhichFrame outside valid range!");
+    return false;
   }
 
-  return NS_OK;
+  if (mError)
+    return false;
+
+  // See if we can get an image frame.
+  imgFrame* frame = aWhichFrame == FRAME_FIRST ? GetImgFrame(0)
+                                               : GetCurrentImgFrame();
+
+  // If we don't get a frame, the safe answer is "not opaque".
+  if (!frame)
+    return false;
+
+  // Other, the frame is transparent if either:
+  //  1. It needs a background.
+  //  2. Its size doesn't cover our entire area.
+  nsIntRect framerect = frame->GetRect();
+  return !frame->GetNeedsBackground() &&
+         framerect.IsEqualInterior(nsIntRect(0, 0, mSize.width, mSize.height));
 }
 
 void
