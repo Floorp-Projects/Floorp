@@ -26,6 +26,12 @@
   -moz-binding: url("chrome://global/content/bindings/general.xml#root-element");
 }
 
+%ifdef XP_MACOSX
+:root[drawintitlebar="true"] {
+  padding-top: 22px;
+}
+%endif
+
 :root:-moz-locale-dir(rtl) {
   direction: rtl;
 }

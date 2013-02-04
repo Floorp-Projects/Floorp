@@ -38,15 +38,6 @@
   background-color: #eeeeee;
 }
 
-#titlebar-buttonbox-container,
-#titlebar:not(:-moz-lwtheme) {
-  display: none;
-}
-
-#main-window[drawintitlebar="true"] > #titlebar {
-  height: 22px;
-}
-
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
   border-top: 1px solid rgba(0,0,0,0.65);
 }
