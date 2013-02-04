@@ -106,7 +106,6 @@ public:
     void           SourceDataGet(GtkWidget        *widget,
                                  GdkDragContext   *context,
                                  GtkSelectionData *selection_data,
-                                 guint             info,
                                  guint32           aTime);
 
     // set the drag icon during drag-begin
