@@ -2,12 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef XP_WIN
+#define USE_HITTEST
+#elifdef MOZ_WIDGET_COCOA
+#define USE_HITTEST
+#endif
+
 this.EXPORTED_SYMBOLS = [ "WindowDraggingElement" ];
 
 this.WindowDraggingElement = function WindowDraggingElement(elem) {
   this._elem = elem;
   this._window = elem.ownerDocument.defaultView;
-#ifdef XP_WIN
+#ifdef USE_HITTEST
   if (!this.isPanel())
     this._elem.addEventListener("MozMouseHittest", this, false);
   else
@@ -54,7 +60,7 @@ WindowDraggingElement.prototype = {
   },
   handleEvent: function(aEvent) {
     let isPanel = this.isPanel();
-#ifdef XP_WIN
+#ifdef USE_HITTEST
     if (!isPanel) {
       if (this.shouldDrag(aEvent))
         aEvent.preventDefault();
