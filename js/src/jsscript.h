@@ -1055,10 +1055,10 @@ struct ScriptSource
         data.source = NULL;
     }
     void incref() { refs++; }
-    void decref(JSRuntime *rt) {
+    void decref() {
         JS_ASSERT(refs != 0);
         if (--refs == 0)
-            destroy(rt);
+            destroy();
     }
     bool setSourceCopy(JSContext *cx,
                        StableCharPtr src,
@@ -1091,7 +1091,7 @@ struct ScriptSource
     bool hasSourceMap() const { return sourceMap_ != NULL; }
 
   private:
-    void destroy(JSRuntime *rt);
+    void destroy();
     bool compressed() const { return compressedLength_ != 0; }
     size_t computedSizeOfData() const {
         return compressed() ? compressedLength_ : sizeof(jschar) * length_;
@@ -1101,18 +1101,16 @@ struct ScriptSource
 
 class ScriptSourceHolder
 {
-    JSRuntime *rt;
     ScriptSource *ss;
   public:
-    ScriptSourceHolder(JSRuntime *rt, ScriptSource *ss)
-      : rt(rt),
-        ss(ss)
+    explicit ScriptSourceHolder(ScriptSource *ss)
+      : ss(ss)
     {
         ss->incref();
     }
     ~ScriptSourceHolder()
     {
-        ss->decref(rt);
+        ss->decref();
     }
 };
 
@@ -1159,7 +1157,7 @@ class SourceCompressorThread
     static void compressorThread(void *arg);
 
   public:
-    explicit SourceCompressorThread(JSRuntime *rt)
+    explicit SourceCompressorThread()
     : state(IDLE),
       tok(NULL),
       thread(NULL),
