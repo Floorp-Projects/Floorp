@@ -71,7 +71,7 @@ void VideoFrameContainer::Reset()
 {
   ClearCurrentFrame(true);
   Invalidate();
-  mIntrinsicSize = {-1, -1};
+  mIntrinsicSize = gfxIntSize(-1, -1);
   mPaintDelay = mozilla::TimeDuration();
   mPaintTarget = mozilla::TimeStamp();
   mImageContainer->ResetPaintCount();
