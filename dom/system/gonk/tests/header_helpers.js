@@ -40,6 +40,7 @@ function newWorker(custom_ns) {
     onmessage: undefined,
     onerror: undefined,
 
+    CLIENT_ID: 0,
     DEBUG: true
   };
   // The 'self' variable in a worker points to the worker's own namespace.

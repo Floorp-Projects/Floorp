@@ -693,7 +693,7 @@ let Buf = {
     // right away!
     let parcel = this.outgoingBytes.subarray(0, this.outgoingIndex);
     if (DEBUG) debug("Outgoing parcel: " + Array.slice(parcel));
-    postRILMessage(parcel);
+    postRILMessage(CLIENT_ID, parcel);
     this.outgoingIndex = PARCEL_SIZE_SIZE;
   },
 
@@ -9958,7 +9958,7 @@ let ICCContactHelper = {
 if (!this.debug) {
   // Debugging stub that goes nowhere.
   this.debug = function debug(message) {
-    dump("RIL Worker: " + message + "\n");
+    dump("RIL Worker[" + CLIENT_ID + "]: " + message + "\n");
   };
 }
 
