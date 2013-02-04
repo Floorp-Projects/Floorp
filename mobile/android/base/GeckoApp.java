@@ -1500,6 +1500,21 @@ abstract public class GeckoApp
 
         mMainHandler = new Handler();
 
+        // Fix for bug 830557 on Tegra boards running Froyo.
+        // This fix must be done before doing layout.
+        // Assume the bug is fixed in Gingerbread and up.
+        if (Build.VERSION.SDK_INT < 9) {
+            try {
+                Class<?> inputBindResultClass =
+                    Class.forName("com.android.internal.view.InputBindResult");
+                java.lang.reflect.Field creatorField =
+                    inputBindResultClass.getField("CREATOR");
+                Log.i(LOGTAG, "froyo startup fix: " + String.valueOf(creatorField.get(null)));
+            } catch (Exception e) {
+                Log.w(LOGTAG, "froyo startup fix failed", e);
+            }
+        }
+
         LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
 
         super.onCreate(savedInstanceState);
