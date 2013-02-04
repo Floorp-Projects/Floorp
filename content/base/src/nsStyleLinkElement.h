@@ -41,6 +41,8 @@ public:
   // nsIDOMLinkStyle
   NS_DECL_NSIDOMLINKSTYLE
 
+  nsIStyleSheet* GetSheet() { return mStyleSheet; }
+
   // nsIStyleSheetLinkingElement  
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
@@ -77,8 +79,6 @@ protected:
                                  nsAString& aMedia,
                                  bool* aIsScoped,
                                  bool* aIsAlternate) = 0;
-
-  nsIStyleSheet* GetStyleSheet() { return mStyleSheet; }
 
   virtual mozilla::CORSMode GetCORSMode() const
   {
