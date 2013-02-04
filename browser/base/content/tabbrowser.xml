@@ -1425,7 +1425,9 @@
 
             // If we just created a new tab that loads the default
             // newtab url, swap in a preloaded page if possible.
-            if (aURI == BROWSER_NEW_TAB_URL) {
+            // Do nothing if we're a private window.
+            if (aURI == BROWSER_NEW_TAB_URL &&
+                !PrivateBrowsingUtils.isWindowPrivate(window)) {
               gBrowserNewTabPreloader.newTab(t);
             }
 
