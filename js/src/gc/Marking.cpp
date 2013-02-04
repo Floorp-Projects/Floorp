@@ -9,7 +9,6 @@
 
 #include "jsprf.h"
 #include "jsstr.h"
-#include "jsxml.h"
 
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
@@ -58,11 +57,6 @@ void * const js::NullPtr::constNullValue = NULL;
  * scanning functions, but they don't push onto an explicit stack.
  */
 
-#if JS_HAS_XML_SUPPORT
-static inline void
-PushMarkStack(GCMarker *gcmarker, JSXML *thing);
-#endif
-
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing);
 
@@ -90,9 +84,6 @@ static void MarkChildren(JSTracer *trc, UnrootedShape shape);
 static void MarkChildren(JSTracer *trc, UnrootedBaseShape base);
 static void MarkChildren(JSTracer *trc, types::TypeObject *type);
 static void MarkChildren(JSTracer *trc, ion::IonCode *code);
-#if JS_HAS_XML_SUPPORT
-static void MarkChildren(JSTracer *trc, JSXML *xml);
-#endif
 
 } /* namespace gc */
 } /* namespace js */
@@ -348,9 +339,6 @@ DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
 DeclMarkerImpl(String, PropertyName)
 DeclMarkerImpl(TypeObject, js::types::TypeObject)
-#if JS_HAS_XML_SUPPORT
-DeclMarkerImpl(XML, JSXML)
-#endif
 
 } /* namespace gc */
 } /* namespace js */
@@ -385,11 +373,6 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
       case JSTRACE_IONCODE:
         MarkInternal(trc, reinterpret_cast<ion::IonCode **>(thingp));
         break;
-#if JS_HAS_XML_SUPPORT
-      case JSTRACE_XML:
-        MarkInternal(trc, reinterpret_cast<JSXML **>(thingp));
-        break;
-#endif
     }
 }
 
@@ -734,17 +717,6 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
 #define JS_COMPARTMENT_ASSERT_STR(rt, thing)                            \
     JS_ASSERT((thing)->zone()->isGCMarking() ||                         \
               (thing)->compartment() == (rt)->atomsCompartment);
-
-#if JS_HAS_XML_SUPPORT
-static void
-PushMarkStack(GCMarker *gcmarker, JSXML *thing)
-{
-    JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
-
-    if (thing->markIfUnmarked(gcmarker->getMarkColor()))
-        gcmarker->pushXML(thing);
-}
-#endif
 
 static void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing)
@@ -1118,14 +1090,6 @@ gc::MarkChildren(JSTracer *trc, ion::IonCode *code)
 #endif
 }
 
-#if JS_HAS_XML_SUPPORT
-static void
-gc::MarkChildren(JSTracer *trc, JSXML *xml)
-{
-    js_TraceXML(trc, xml);
-}
-#endif
-
 template<typename T>
 static void
 PushArenaTyped(GCMarker *gcmarker, ArenaHeader *aheader)
@@ -1165,12 +1129,6 @@ gc::PushArena(GCMarker *gcmarker, ArenaHeader *aheader)
       case JSTRACE_IONCODE:
         PushArenaTyped<js::ion::IonCode>(gcmarker, aheader);
         break;
-
-#if JS_HAS_XML_SUPPORT
-      case JSTRACE_XML:
-        PushArenaTyped<JSXML>(gcmarker, aheader);
-        break;
-#endif
     }
 }
 
@@ -1326,13 +1284,6 @@ GCMarker::processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t ad
             }
         }
     }
-
-#if JS_HAS_XML_SUPPORT
-    else {
-        JS_ASSERT(tag == XmlTag);
-        MarkChildren(this, reinterpret_cast<JSXML *>(addr));
-    }
-#endif
 }
 
 inline void
@@ -1526,12 +1477,6 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
       case JSTRACE_TYPE_OBJECT:
         MarkChildren(trc, (types::TypeObject *)thing);
         break;
-
-#if JS_HAS_XML_SUPPORT
-      case JSTRACE_XML:
-        MarkChildren(trc, static_cast<JSXML *>(thing));
-        break;
-#endif
     }
 }
 

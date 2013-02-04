@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGEllipseElement_h
 
 #include "nsSVGPathGeometryElement.h"
-#include "nsIDOMSVGEllipseElement.h"
 #include "nsSVGLength2.h"
 
 nsresult NS_NewSVGEllipseElement(nsIContent **aResult,
@@ -19,7 +18,7 @@ namespace dom {
 typedef nsSVGPathGeometryElement SVGEllipseElementBase;
 
 class SVGEllipseElement MOZ_FINAL : public SVGEllipseElementBase,
-                                    public nsIDOMSVGEllipseElement
+                                    public nsIDOMSVGElement
 {
 protected:
   SVGEllipseElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -30,7 +29,6 @@ protected:
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGELLIPSEELEMENT
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -44,8 +42,6 @@ public:
   virtual void ConstructPath(gfxContext *aCtx);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 

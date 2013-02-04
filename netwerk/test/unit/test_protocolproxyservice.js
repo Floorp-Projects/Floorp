@@ -142,7 +142,7 @@ resolveCallback.prototype = {
 
   QueryInterface : function (iid) {
     const interfaces = [Components.interfaces.nsIProtocolProxyCallback,
-                        Components.interfaces..nsISupports];
+                        Components.interfaces.nsISupports];
     if (!interfaces.some( function(v) { return iid.equals(v) } ))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;

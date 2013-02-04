@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<div id="b" style="width:100px; height:100px; position:relative; top:50px; -moz-appearance:button"></div>
+<script>
+var b = document.getElementById("b");
+function doTest() {
+  b.style.top = "60px";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

@@ -1296,6 +1296,14 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
 
   ourFrameFrame->EndSwapDocShells(otherFrame);
 
+  // If the content being swapped came from windows on two screens with
+  // incompatible backing resolution (e.g. dragging a tab between windows on
+  // hi-dpi and low-dpi screens), it will have style data that is based on
+  // the wrong appUnitsPerDevPixel value. So we tell the PresShells that their
+  // backing scale factor may have changed. (Bug 822266)
+  ourShell->BackingScaleFactorChanged();
+  otherShell->BackingScaleFactorChanged();
+
   ourParentDocument->FlushPendingNotifications(Flush_Layout);
   otherParentDocument->FlushPendingNotifications(Flush_Layout);
 

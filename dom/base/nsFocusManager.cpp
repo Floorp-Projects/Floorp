@@ -1739,9 +1739,14 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // if switching to a new document, first fire the focus event on the
   // document and then the window.
   if (aIsNewDocument) {
-    nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
-                                     GetFocusMoveActionCause(aFlags));
     nsIDocument* doc = aWindow->GetExtantDoc();
+    // The focus change should be notified to nsIMEStateManager from here if
+    // the focused content is a designMode editor since any content won't
+    // receive focus event.
+    if (doc && doc->HasFlag(NODE_IS_EDITABLE)) {
+      nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
+                                       GetFocusMoveActionCause(aFlags));
+    }
     if (doc)
       SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,
                            doc, aFlags & FOCUSMETHOD_MASK, aWindowRaised);

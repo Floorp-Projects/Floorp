@@ -82,23 +82,6 @@ enum TokenKind {
     TOK_THROW,                     /* throw keyword */
     TOK_INSTANCEOF,                /* instanceof keyword */
     TOK_DEBUGGER,                  /* debugger keyword */
-    TOK_XMLSTAGO,                  /* XML start tag open (<) */
-    TOK_XMLETAGO,                  /* XML end tag open (</) */
-    TOK_XMLPTAGC,                  /* XML point tag close (/>) */
-    TOK_XMLTAGC,                   /* XML start or end tag close (>) */
-    TOK_XMLNAME,                   /* XML start-tag non-final fragment */
-    TOK_XMLATTR,                   /* XML quoted attribute value */
-    TOK_XMLSPACE,                  /* XML whitespace */
-    TOK_XMLTEXT,                   /* XML text */
-    TOK_XMLCOMMENT,                /* XML comment */
-    TOK_XMLCDATA,                  /* XML CDATA section */
-    TOK_XMLPI,                     /* XML processing instruction */
-    TOK_AT,                        /* XML attribute op (@) */
-    TOK_DBLCOLON,                  /* namespace qualified name op (::) */
-    TOK_DBLDOT,                    /* XML descendant op (..) */
-    TOK_FILTER,                    /* XML filtering predicate op (.()) */
-    TOK_XMLELEM,                   /* XML element node type (no token) */
-    TOK_XMLLIST,                   /* XML list node type (no token) */
     TOK_YIELD,                     /* yield from generator function */
     TOK_LEXICALSCOPE,              /* block scope AST node label */
     TOK_LET,                       /* let keyword */
@@ -273,6 +256,8 @@ struct TokenPos {
     }
 };
 
+enum DecimalPoint { NoDecimal = false, HasDecimal = true };
+
 struct Token {
     TokenKind           type;           /* char value or above enumerator */
     TokenPos            pos;            /* token position in file */
@@ -290,11 +275,10 @@ struct Token {
 
       private:
         friend struct Token;
-        struct {                        /* pair for <?target data?> XML PI */
-            PropertyName *target;       /* non-empty */
-            JSAtom       *data;         /* maybe empty, never null */
-        } xmlpi;
-        double          number;         /* floating point number */
+        struct {
+            double       value;         /* floating point number */
+            DecimalPoint decimalPoint;  /* literal contains . or exponent */
+        } number;
         RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
     } u;
@@ -314,20 +298,10 @@ struct Token {
     }
 
     void setAtom(JSOp op, JSAtom *atom) {
-        JS_ASSERT(op == JSOP_STRING || op == JSOP_XMLCOMMENT || JSOP_XMLCDATA);
+        JS_ASSERT(op == JSOP_STRING);
         JS_ASSERT(!IsPoisonedPtr(atom));
         u.s.op = op;
         u.s.n.atom = atom;
-    }
-
-    void setProcessingInstruction(PropertyName *target, JSAtom *data) {
-        JS_ASSERT(target);
-        JS_ASSERT(data);
-        JS_ASSERT(!target->empty());
-        JS_ASSERT(!IsPoisonedPtr(target));
-        JS_ASSERT(!IsPoisonedPtr(data));
-        u.xmlpi.target = target;
-        u.xmlpi.data = data;
     }
 
     void setRegExpFlags(js::RegExpFlag flags) {
@@ -335,8 +309,9 @@ struct Token {
         u.reflags = flags;
     }
 
-    void setNumber(double n) {
-        u.number = n;
+    void setNumber(double n, DecimalPoint decimalPoint) {
+        u.number.value = n;
+        u.number.decimalPoint = decimalPoint;
     }
 
     /* Type-safe accessors */
@@ -347,23 +322,8 @@ struct Token {
     }
 
     JSAtom *atom() const {
-        JS_ASSERT(type == TOK_STRING ||
-                  type == TOK_XMLNAME ||
-                  type == TOK_XMLATTR ||
-                  type == TOK_XMLTEXT ||
-                  type == TOK_XMLCDATA ||
-                  type == TOK_XMLSPACE ||
-                  type == TOK_XMLCOMMENT);
+        JS_ASSERT(type == TOK_STRING);
         return u.s.n.atom;
-    }
-
-    PropertyName *xmlPITarget() const {
-        JS_ASSERT(type == TOK_XMLPI);
-        return u.xmlpi.target;
-    }
-    JSAtom *xmlPIData() const {
-        JS_ASSERT(type == TOK_XMLPI);
-        return u.xmlpi.data;
     }
 
     js::RegExpFlag regExpFlags() const {
@@ -374,7 +334,12 @@ struct Token {
 
     double number() const {
         JS_ASSERT(type == TOK_NUMBER);
-        return u.number;
+        return u.number.value;
+    }
+
+    DecimalPoint decimalPoint() const {
+        JS_ASSERT(type == TOK_NUMBER);
+        return u.number.decimalPoint;
     }
 };
 
@@ -389,11 +354,8 @@ enum TokenStreamFlags
     TSF_KEYWORD_IS_NAME = 0x20, /* Ignore keywords and return TOK_NAME instead to the parser. */
     TSF_DIRTYLINE = 0x40,       /* non-whitespace since start of line */
     TSF_OWNFILENAME = 0x80,     /* ts->filename is malloc'd */
-    TSF_XMLTAGMODE = 0x100,     /* scanning within an XML tag in E4X */
-    TSF_XMLTEXTMODE = 0x200,    /* scanning XMLText terminal from E4X */
-    TSF_XMLONLYMODE = 0x400,    /* don't scan {expr} within text/tag */
-    TSF_OCTAL_CHAR = 0x800,     /* observed a octal character escape */
-    TSF_HAD_ERROR = 0x1000,     /* returned TOK_ERROR from getToken */
+    TSF_OCTAL_CHAR = 0x100,     /* observed a octal character escape */
+    TSF_HAD_ERROR = 0x200,      /* returned TOK_ERROR from getToken */
 
     /*
      * To handle the hard case of contiguous HTML comments, we want to clear the
@@ -493,14 +455,8 @@ class TokenStream
     const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     unsigned getLineno() const { return lineno; }
-    /* Note that the version and hasMoarXML can get out of sync via setMoarXML. */
     JSVersion versionNumber() const { return VersionNumber(version); }
     JSVersion versionWithFlags() const { return version; }
-    bool allowsXML() const { return banXML == 0 && !strictMode(); }
-    bool hasMoarXML() const { return moarXML || VersionShouldParseXML(versionNumber()); }
-    void setMoarXML(bool enabled) { moarXML = enabled; }
-    void incBanXML() { banXML++; }
-    void decBanXML() { JS_ASSERT(banXML); banXML--; }
     bool hadError() const { return !!(flags & TSF_HAD_ERROR); }
 
     bool isCurrentTokenEquality() const {
@@ -520,12 +476,8 @@ class TokenStream
     }
 
     /* Flag methods. */
-    void setXMLTagMode(bool enabled = true) { setFlag(enabled, TSF_XMLTAGMODE); }
-    void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
     void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
 
-    bool isXMLTagMode() const { return !!(flags & TSF_XMLTAGMODE); }
-    bool isXMLOnlyMode() const { return !!(flags & TSF_XMLONLYMODE); }
     bool isUnexpectedEOF() const { return !!(flags & TSF_UNEXPECTED_EOF); }
     bool isEOF() const { return !!(flags & TSF_EOF); }
     bool sawOctalEscape() const { return !!(flags & TSF_OCTAL_CHAR); }
@@ -584,7 +536,6 @@ class TokenStream
     TokenKind getToken() {
         /* Check for a pushed-back token resulting from mismatching lookahead. */
         if (lookahead != 0) {
-            JS_ASSERT(!(flags & TSF_XMLTEXTMODE));
             lookahead--;
             cursor = (cursor + 1) & ntokensMask;
             TokenKind tt = currentToken().type;
@@ -820,10 +771,6 @@ class TokenStream
     bool getAtLine();
     bool getAtSourceMappingURL();
 
-    bool getXMLEntity();
-    bool getXMLTextOrTag(TokenKind *ttp, Token **tpp);
-    bool getXMLMarkup(TokenKind *ttp, Token **tpp);
-
     bool matchChar(int32_t expect) {
         int32_t c = getChar();
         if (c == expect)
@@ -867,8 +814,6 @@ class TokenStream
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
-    unsigned            banXML;         /* see JSOPTION_ALLOW_XML */
-    bool                moarXML;        /* see JSOPTION_MOAR_XML */
     JSContext           *const cx;
     JSPrincipals        *const originPrincipals;
     StrictModeGetter    *strictModeGetter; /* used to test for strict mode */

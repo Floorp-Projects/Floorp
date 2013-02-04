@@ -130,7 +130,7 @@ class FileCopier(FileRegistry):
     FileRegistry with the ability to copy the registered files to a separate
     directory.
     '''
-    def copy(self, destination):
+    def copy(self, destination, skip_if_older=True):
         '''
         Copy all registered files to the given destination path. The given
         destination can be an existing directory, or not exist at all. It
@@ -148,7 +148,7 @@ class FileCopier(FileRegistry):
             destfile = os.path.normpath(os.path.join(destination, path))
             dest_files.add(destfile)
             ensure_parent_dir(destfile)
-            file.copy(destfile)
+            file.copy(destfile, skip_if_older)
 
         actual_dest_files = set()
         for root, dirs, files in os.walk(destination):
@@ -176,7 +176,7 @@ class Jarrer(FileRegistry, BaseFile):
         self._preload = []
         FileRegistry.__init__(self)
 
-    def copy(self, dest):
+    def copy(self, dest, skip_if_older=True):
         '''
         Pack all registered files in the given destination jar. The given
         destination jar may be a path to jar file, or a Dest instance for
@@ -234,7 +234,7 @@ class Jarrer(FileRegistry, BaseFile):
                     deflater = DeflaterDest(old_contents[path], self.compress)
                 else:
                     deflater = DeflaterDest(compress=self.compress)
-                file.copy(deflater)
+                file.copy(deflater, skip_if_older)
                 jar.add(path, deflater.deflater)
             if self._preload:
                 jar.preload(self._preload)

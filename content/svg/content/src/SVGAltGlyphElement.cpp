@@ -7,8 +7,6 @@
 #include "mozilla/dom/SVGAltGlyphElementBinding.h"
 #include "nsContentUtils.h"
 
-DOMCI_NODE_DATA(SVGAltGlyphElement, mozilla::dom::SVGAltGlyphElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(AltGlyph)
 
 namespace mozilla {
@@ -29,16 +27,12 @@ nsSVGElement::StringInfo SVGAltGlyphElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGAltGlyphElement,SVGAltGlyphElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGAltGlyphElement,SVGAltGlyphElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGAltGlyphElement)
-  NS_NODE_INTERFACE_TABLE7(SVGAltGlyphElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGAltGlyphElement,
-                           nsIDOMSVGTextPositioningElement, nsIDOMSVGTextContentElement,
-                           nsIDOMSVGURIReference)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAltGlyphElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGAltGlyphElementBase)
+NS_IMPL_ISUPPORTS_INHERITED6(SVGAltGlyphElement, SVGAltGlyphElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement,
+                             nsIDOMSVGTextPositioningElement,
+                             nsIDOMSVGTextContentElement,
+                             nsIDOMSVGURIReference)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -48,7 +42,6 @@ SVGAltGlyphElement::SVGAltGlyphElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 {
   SetIsDOMBinding();
 }
-
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
@@ -73,33 +66,28 @@ SVGAltGlyphElement::Href()
   return href.forget();
 }
 
-//----------------------------------------------------------------------
-// nsIDOMSVGAltGlyphElement methods
-
-/* attribute DOMString glyphRef; */
-NS_IMETHODIMP SVGAltGlyphElement::GetGlyphRef(nsAString & aGlyphRef)
+void
+SVGAltGlyphElement::GetGlyphRef(nsAString & aGlyphRef)
 {
   GetAttr(kNameSpaceID_None, nsGkAtoms::glyphRef, aGlyphRef);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP SVGAltGlyphElement::SetGlyphRef(const nsAString & aGlyphRef)
+void
+SVGAltGlyphElement::SetGlyphRef(const nsAString & aGlyphRef, ErrorResult& rv)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::glyphRef, aGlyphRef, true);
+  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::glyphRef, aGlyphRef, true);
 }
 
-/* attribute DOMString format; */
-NS_IMETHODIMP SVGAltGlyphElement::GetFormat(nsAString & aFormat)
+void
+SVGAltGlyphElement::GetFormat(nsAString & aFormat)
 {
   GetAttr(kNameSpaceID_None, nsGkAtoms::format, aFormat);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP SVGAltGlyphElement::SetFormat(const nsAString & aFormat)
+void
+SVGAltGlyphElement::SetFormat(const nsAString & aFormat, ErrorResult& rv)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::format, aFormat, true);
+  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::format, aFormat, true);
 }
 
 //----------------------------------------------------------------------

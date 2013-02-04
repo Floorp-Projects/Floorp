@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGPolylineElement_h
 
 #include "nsSVGPolyElement.h"
-#include "nsIDOMSVGPolylineElement.h"
 
 nsresult NS_NewSVGPolylineElement(nsIContent **aResult,
                                   already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -18,7 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGPolylineElement MOZ_FINAL : public SVGPolylineElementBase,
-                                     public nsIDOMSVGPolylineElement
+                                     public nsIDOMSVGElement
 {
 protected:
   SVGPolylineElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -30,7 +29,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGPOLYLINEELEMENT
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -39,7 +37,6 @@ public:
 
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 

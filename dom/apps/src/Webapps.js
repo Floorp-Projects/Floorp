@@ -263,17 +263,7 @@ WebappsRegistry.prototype = {
   classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplicationRegistry,
-#ifdef MOZ_PHOENIX
-# Firefox Desktop: installPackage not implemented
-#elifdef ANDROID
-#ifndef MOZ_WIDGET_GONK
-# Firefox Android (Fennec): installPackage not implemented
-#else
-# B2G Gonk: installPackage implemented
-                                         Ci.mozIDOMApplicationRegistry2,
-#endif
-#else
-# B2G Desktop and others: installPackage implementation status varies
+#ifdef MOZ_B2G
                                          Ci.mozIDOMApplicationRegistry2,
 #endif
                                          Ci.nsIDOMGlobalPropertyInitializer]),
@@ -281,17 +271,7 @@ WebappsRegistry.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),
                                     contractID: "@mozilla.org/webapps;1",
                                     interfaces: [Ci.mozIDOMApplicationRegistry,
-#ifdef MOZ_PHOENIX
-# Firefox Desktop: installPackage not implemented
-#elifdef ANDROID
-#ifndef MOZ_WIDGET_GONK
-# Firefox Android (Fennec): installPackage not implemented
-#else
-# B2G Gonk: installPackage implemented
-                                                 Ci.mozIDOMApplicationRegistry2,
-#endif
-#else
-# B2G Desktop and others: installPackage implementation status varies
+#ifdef MOZ_B2G
                                                  Ci.mozIDOMApplicationRegistry2,
 #endif
                                                  ],
@@ -339,9 +319,7 @@ let manifestCache = {
 
   // Gets an entry from the cache, and populates the cache if needed.
   get : function mcache_get(aManifestURL, aManifest, aWindow) {
-    dump("-- manifestCache::get() " + aManifestURL + "\n");
     if (!(aManifestURL in this._cache)) {
-      dump("\twrapping\n");
       this._cache[aManifestURL] = ObjectWrapper.wrap(aManifest, aWindow);
     }
     return this._cache[aManifestURL];
@@ -349,15 +327,12 @@ let manifestCache = {
 
   // Invalidates an entry in the cache.
   evict: function mcache_evict(aManifestURL) {
-    dump("-- manifestCache::evict() " + aManifest + "\n");
     if (aManifestURL in this._cache) {
-      dump("\tfound entry!\n");
       delete this._cache[aManifestURL];
     }
   },
 
   clear: function mcache_clear() {
-    dump("-- manifestCache::clear()\n");
     this._cache = { };
   }
 }

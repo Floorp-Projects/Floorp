@@ -14,6 +14,7 @@
 #include "txStringUtils.h"
 #include "txNamespaceMap.h"
 #include "txXPathTreeWalker.h"
+#include "nsContentUtils.h"
 
 nsresult
 txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
@@ -193,6 +194,13 @@ void XMLUtils::normalizePIValue(nsAString& piValue)
         prevCh = ch;
         ++conversionLoop;
     }
+}
+
+//static
+bool XMLUtils::isValidQName(const nsAFlatString& aQName,
+                            const PRUnichar** aColon)
+{
+  return NS_SUCCEEDED(nsContentUtils::CheckQName(aQName, true, aColon));
 }
 
 //static

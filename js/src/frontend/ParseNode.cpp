@@ -4,6 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "builtin/Module.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
@@ -176,10 +177,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         stack->pushUnlessNull(pn->pn_kid);
         break;
       case PN_NULLARY:
-        /*
-         * E4X function namespace nodes are PN_NULLARY, but can appear on use
-         * lists.
-         */
         return !pn->isUsed() && !pn->isDefn();
       default:
         ;
@@ -454,7 +451,6 @@ CloneParseTree(ParseNode *opn, Parser *parser)
         break;
 
       case PN_NULLARY:
-        // Even PN_NULLARY may have data (xmlpi for E4X -- what a botch).
         pn->pn_u = opn->pn_u;
         break;
 

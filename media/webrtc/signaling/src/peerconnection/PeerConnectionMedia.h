@@ -53,7 +53,6 @@ Fake_AudioGenerator(nsDOMMediaStream* aStream) : mStream(aStream), mCount(0) {
 
     // Make a track
     mozilla::AudioSegment *segment = new mozilla::AudioSegment();
-    segment->Init(1); // 1 Channel
     mStream->GetStream()->AsSourceStream()->AddTrack(1, 16000, 0, segment);
 
     // Set the timer
@@ -71,7 +70,6 @@ Fake_AudioGenerator(nsDOMMediaStream* aStream) : mStream(aStream), mCount(0) {
     }
 
     mozilla::AudioSegment segment;
-    segment.Init(1);
     nsAutoTArray<const int16_t*,1> channelData;
     channelData.AppendElement(data);
     segment.AppendFrames(samples.forget(), channelData, 1600);
@@ -207,10 +205,12 @@ class RemoteSourceStreamInfo {
   nsDOMMediaStream* GetMediaStream() {
     return mMediaStream;
   }
-  void StorePipeline(int aTrack, mozilla::RefPtr<mozilla::MediaPipeline> aPipeline);
+  void StorePipeline(int aTrack, bool aIsVideo,
+                     mozilla::RefPtr<mozilla::MediaPipeline> aPipeline);
 
   void Detach() {
     // walk through all the MediaPipelines and disconnect them.
+    // XXX we should clear the mTypes map
     for (std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> >::iterator it =
            mPipelines.begin(); it != mPipelines.end();
          ++it) {
@@ -223,6 +223,7 @@ class RemoteSourceStreamInfo {
  private:
   nsRefPtr<nsDOMMediaStream> mMediaStream;
   std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> > mPipelines;
+  std::map<int, bool> mTypes;
 };
 
 class PeerConnectionMedia : public sigslot::has_slots<> {

@@ -68,7 +68,7 @@ function testFrameEval() {
       ok(scope, "There should be a wach expressions scope in the variables view");
       is(scope._store.size, 5, "There should be 5 evaluations availalble");
 
-      is(scope.get("this")._isShown, true,
+      is(scope.get("this")._isContentVisible, true,
         "Should have the right visibility state for 'this'.");
       is(scope.get("this").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'this'.");
@@ -79,7 +79,7 @@ function testFrameEval() {
       is(scope.get("this").value.class, "Proxy",
         "Should have the right value type for 'this'.");
 
-      is(scope.get("ermahgerd")._isShown, true,
+      is(scope.get("ermahgerd")._isContentVisible, true,
         "Should have the right visibility state for 'ermahgerd'.");
       is(scope.get("ermahgerd").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'ermahgerd'.");
@@ -90,7 +90,7 @@ function testFrameEval() {
       is(scope.get("ermahgerd").value.class, "Function",
         "Should have the right value type for 'ermahgerd'.");
 
-      is(scope.get("aArg")._isShown, true,
+      is(scope.get("aArg")._isContentVisible, true,
         "Should have the right visibility state for 'aArg'.");
       is(scope.get("aArg").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'aArg'.");
@@ -99,7 +99,7 @@ function testFrameEval() {
       is(scope.get("aArg").value, undefined,
         "Should have the right value for 'aArg'.");
 
-      is(scope.get("document.title")._isShown, true,
+      is(scope.get("document.title")._isContentVisible, true,
         "Should have the right visibility state for 'document.title'.");
       is(scope.get("document.title").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'document.title'.");
@@ -110,7 +110,7 @@ function testFrameEval() {
       is(typeof scope.get("document.title").value, "string",
         "Should have the right value type for 'document.title'.");
 
-      is(scope.get("document.title = 42")._isShown, true,
+      is(scope.get("document.title = 42")._isContentVisible, true,
         "Should have the right visibility state for 'document.title = 42'.");
       is(scope.get("document.title = 42").target.querySelectorAll(".dbg-variable-delete").length, 1,
         "Should have the one close button visible for 'document.title = 42'.");
@@ -340,23 +340,23 @@ function test1(scope) {
 
   is(gWatch._cache[0].target.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.expression, "document.title = 43",
+  is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
   is(gWatch._cache[1].target.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.expression, "document.title",
+  is(gWatch._cache[1].attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[2].target.inputNode.value, "aArg",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.expression, "aArg",
+  is(gWatch._cache[2].attachment.currentExpression, "aArg",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[3].target.inputNode.value, "ermahgerd",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.expression, "ermahgerd",
+  is(gWatch._cache[3].attachment.currentExpression, "ermahgerd",
     "The fourth textbox input value is not the correct one");
   is(gWatch._cache[4].target.inputNode.value, "this",
     "The fifth textbox input value is not the correct one");
-  is(gWatch._cache[4].attachment.expression, "this",
+  is(gWatch._cache[4].attachment.currentExpression, "this",
     "The fifth textbox input value is not the correct one");
 }
 
@@ -371,23 +371,23 @@ function test2(scope) {
 
   is(gWatch._cache[0].target.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.expression, "document.title = 43",
+  is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
   is(gWatch._cache[1].target.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.expression, "document.title",
+  is(gWatch._cache[1].attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[2].target.inputNode.value, "aArg = 44",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.expression, "aArg = 44",
+  is(gWatch._cache[2].attachment.currentExpression, "aArg = 44",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[3].target.inputNode.value, "ermahgerd",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.expression, "ermahgerd",
+  is(gWatch._cache[3].attachment.currentExpression, "ermahgerd",
     "The fourth textbox input value is not the correct one");
   is(gWatch._cache[4].target.inputNode.value, "this",
     "The fifth textbox input value is not the correct one");
-  is(gWatch._cache[4].attachment.expression, "this",
+  is(gWatch._cache[4].attachment.currentExpression, "this",
     "The fifth textbox input value is not the correct one");
 }
 
@@ -402,19 +402,19 @@ function test3(scope) {
 
   is(gWatch._cache[0].target.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.expression, "document.title = 43",
+  is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
   is(gWatch._cache[1].target.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.expression, "document.title",
+  is(gWatch._cache[1].attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[2].target.inputNode.value, "ermahgerd",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.expression, "ermahgerd",
+  is(gWatch._cache[2].attachment.currentExpression, "ermahgerd",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[3].target.inputNode.value, "this",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[3].attachment.expression, "this",
+  is(gWatch._cache[3].attachment.currentExpression, "this",
     "The fourth textbox input value is not the correct one");
 }
 
@@ -429,15 +429,15 @@ function test4(scope) {
 
   is(gWatch._cache[0].target.inputNode.value, "document.title",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.expression, "document.title",
+  is(gWatch._cache[0].attachment.currentExpression, "document.title",
     "The first textbox input value is not the correct one");
   is(gWatch._cache[1].target.inputNode.value, "ermahgerd",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.expression, "ermahgerd",
+  is(gWatch._cache[1].attachment.currentExpression, "ermahgerd",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[2].target.inputNode.value, "this",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[2].attachment.expression, "this",
+  is(gWatch._cache[2].attachment.currentExpression, "this",
     "The third textbox input value is not the correct one");
 }
 
@@ -452,11 +452,11 @@ function test5(scope) {
 
   is(gWatch._cache[0].target.inputNode.value, "ermahgerd",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.expression, "ermahgerd",
+  is(gWatch._cache[0].attachment.currentExpression, "ermahgerd",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[1].target.inputNode.value, "this",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[1].attachment.expression, "this",
+  is(gWatch._cache[1].attachment.currentExpression, "this",
     "The third textbox input value is not the correct one");
 }
 
@@ -471,7 +471,7 @@ function test6(scope) {
 
   is(gWatch._cache[0].target.inputNode.value, "ermahgerd",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[0].attachment.expression, "ermahgerd",
+  is(gWatch._cache[0].attachment.currentExpression, "ermahgerd",
     "The third textbox input value is not the correct one");
 }
 
