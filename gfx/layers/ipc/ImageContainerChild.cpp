@@ -250,11 +250,6 @@ bool ImageContainerChild::AddSharedImageToPool(SharedImage* img)
     return false;
   }
   if (img->type() == SharedImage::TYCbCrImage) {
-    const YCbCrImage& yuv = img->get_YCbCrImage();
-    ShmemYCbCrImage shmImg(yuv.data(),yuv.offset());
-    if (!shmImg.IsValid()) {
-      NS_RUNTIMEABORT("Invalid Surf");
-    }
     mSharedImagePool.AppendElement(img);
     return true;
   }
