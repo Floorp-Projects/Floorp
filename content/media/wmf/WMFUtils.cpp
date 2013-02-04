@@ -290,32 +290,6 @@ MFShutdown()
   return (MFShutdownPtr)();
 }
 
-HRESULT
-MFPutWorkItem(DWORD aQueueId,
-              IMFAsyncCallback *aCallback,
-              IUnknown *aState)
-{
-  DECL_FUNCTION_PTR(MFPutWorkItem, DWORD, IMFAsyncCallback*, IUnknown*);
-  ENSURE_FUNCTION_PTR(MFPutWorkItem, Mfplat.dll)
-  return (MFPutWorkItemPtr)(aQueueId, aCallback, aState);
-}
-
-HRESULT
-MFAllocateWorkQueue(DWORD *aOutWorkQueueId)
-{
-  DECL_FUNCTION_PTR(MFAllocateWorkQueue, DWORD*);
-  ENSURE_FUNCTION_PTR(MFAllocateWorkQueue, Mfplat.dll)
-  return (MFAllocateWorkQueuePtr)(aOutWorkQueueId);
-}
-
-HRESULT
-MFUnlockWorkQueue(DWORD aWorkQueueId)
-{
-  DECL_FUNCTION_PTR(MFUnlockWorkQueue, DWORD);
-  ENSURE_FUNCTION_PTR(MFUnlockWorkQueue, Mfplat.dll);
-  return (MFUnlockWorkQueuePtr)(aWorkQueueId);
-}
-
 HRESULT MFCreateAsyncResult(IUnknown *aUnkObject,
                             IMFAsyncCallback *aCallback,
                             IUnknown *aUnkState,
