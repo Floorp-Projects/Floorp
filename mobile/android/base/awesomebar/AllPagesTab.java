@@ -804,7 +804,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                     continue;
 
                 Bitmap favicon = BitmapFactory.decodeByteArray(b, 0, b.length);
-                if (favicon == null)
+                if (favicon == null || favicon.getWidth() <= 0 || favicon.getHeight() <= 0)
                     continue;
 
                 favicon = Favicons.getInstance().scaleImage(favicon);
