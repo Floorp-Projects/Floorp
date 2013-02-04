@@ -36,8 +36,6 @@ public:
 protected:
   nsMathMLmrowFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmrowFrame();
-
-  virtual int GetSkipSides() const { return 0; }
 };
 
 #endif /* nsMathMLmrowFrame_h___ */
