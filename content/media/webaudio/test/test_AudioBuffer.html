@@ -12,13 +12,13 @@
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-  var ac = new AudioContext();
-  var buffer = ac.createBuffer(2, 2048, 44100);
+  var context = new AudioContext();
+  var buffer = context.createBuffer(2, 2048, context.sampleRate);
   SpecialPowers.gc(); // Make sure that our channels are accessible after GC
   ok(buffer, "Buffer was allocated successfully");
-  is(buffer.sampleRate, 44100, "Correct sample rate");
+  is(buffer.sampleRate, context.sampleRate, "Correct sample rate");
   is(buffer.length, 2048, "Correct length");
-  ok(Math.abs(buffer.duration - 2048 / 44100) < 0.0001, "Correct duration");
+  ok(Math.abs(buffer.duration - 2048 / context.sampleRate) < 0.0001, "Correct duration");
   is(buffer.numberOfChannels, 2, "Correct number of channels");
   for (var i = 0; i < buffer.numberOfChannels; ++i) {
     var buf = buffer.getChannelData(i);
