@@ -336,12 +336,16 @@ function checkItem(aExpected, aNode)
         );
         break;
       case "icon":
-        let faviconURI = PlacesUtils.favicons.getFaviconForPage(
-          NetUtil.newURI(aExpected.url)
-        );
-        let dataURL = PlacesUtils.favicons.getFaviconDataAsDataURL(faviconURI);
-        // Avoid do_check_eq for console spam.
-        do_check_true(dataURL == aExpected.icon);
+        let deferred = Promise.defer();
+        PlacesUtils.favicons.getFaviconDataForPage(
+          NetUtil.newURI(aExpected.url),
+          function (aURI, aDataLen, aData, aMimeType) {
+            let base64Icon = "data:image/png;base64," +
+              base64EncodeString(String.fromCharCode.apply(String, aData));
+            do_check_true(base64Icon == aExpected.icon);
+            deferred.resolve();
+        });
+        return deferred.promise;
         break;
       case "keyword":
         break;
