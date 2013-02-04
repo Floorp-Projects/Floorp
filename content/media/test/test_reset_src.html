@@ -46,14 +46,19 @@ function onTimeUpdate_Video(e) {
   ok(t.mozPaintedFrames > 0, "mozPaintedFrames should be positive, is " + t.mozPaintedFrames + ".");
   ok(t.mozFrameDelay > 0, "mozFrameDelay should be positive, is " + t.mozFrameDelay + ".");
 
-  var source = getPlayableAudio(gPlayTests);
-  if (!source) {
-    todo("No audio file available.")
-    SimpleTest.finish();
+  if (v._firstTime) {
+    t.src = t.src;
+    v._firstTime = false;
   } else {
-    t.removeEventListener("loadedmetadata", onLoadedMetadata_Video);
-    t.addEventListener("loadedmetadata", onLoadedMetadata_Audio);
-    t.src = source.name;
+    var source = getPlayableAudio(gPlayTests);
+    if (!source) {
+      todo("No audio file available.")
+      SimpleTest.finish();
+    } else {
+      t.removeEventListener("loadedmetadata", onLoadedMetadata_Video);
+      t.addEventListener("loadedmetadata", onLoadedMetadata_Audio);
+      t.src = source.name;
+    }
   }
 }
 
@@ -66,13 +71,13 @@ function onLoadedMetadata_Video(e) {
 }
 
 var v = document.getElementsByTagName("video")[0];
+v._firstTime = true;
 var source = getPlayableVideo(gPlayTests);
 if (!source) {
   todo("No video file available.");
 } else {
   v.addEventListener("loadedmetadata", onLoadedMetadata_Video);
   v.src = source.name;
-  dump(source.name);
   SimpleTest.waitForExplicitFinish();
 }
 </script>
