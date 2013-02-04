@@ -6742,12 +6742,12 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   }
 
   JSObject *winObj = win->FastGetGlobalJSObject();
-  if (!winObj) {
-    NS_ASSERTION(origWin->IsOuterWindow(), "What window is this?");
-    *_retval = obj;
-    return NS_OK;
-  }
+  MOZ_ASSERT(winObj);
 
+  // Note that while |wrapper| is same-compartment with cx, the outer window
+  // might not be. If we're running script in an inactive scope and evalute
+  // |this|, the outer window is actually a cross-compartment wrapper. So we
+  // need to wrap here.
   if (!JS_WrapObject(cx, &winObj)) {
     *_retval = nullptr;
     return NS_ERROR_UNEXPECTED;
