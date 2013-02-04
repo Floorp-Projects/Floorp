@@ -220,7 +220,12 @@ function pageLoad()
     popup.history.forward();
   }
   else if (loads == 8) {
-    is(popup.scrollY, 300, "test 11");
+    // Bug 821821, on Android tegras we get 299 instead of 300 sometimes
+    if (popup.scrollY >= 299 && popup.scrollY <= 300) {
+      is(1, 1, "test 11");
+    } else {
+      is(1, 0, "test 11, got " + popup.scrollY + " for popup.scrollY instead of 299|300");
+    }
     popup.close();
     SimpleTest.finish();
   }
