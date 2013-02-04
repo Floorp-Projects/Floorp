@@ -27,93 +27,141 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
-static pixman_bool_t
-delegate_blt (pixman_implementation_t * imp,
-              uint32_t *                src_bits,
-              uint32_t *                dst_bits,
-              int                       src_stride,
-              int                       dst_stride,
-              int                       src_bpp,
-              int                       dst_bpp,
-              int                       src_x,
-              int                       src_y,
-              int                       dest_x,
-              int                       dest_y,
-              int                       width,
-              int                       height)
-{
-    return _pixman_implementation_blt (
-	imp->delegate, src_bits, dst_bits, src_stride, dst_stride,
-	src_bpp, dst_bpp, src_x, src_y, dest_x, dest_y,
-	width, height);
-}
-
-static pixman_bool_t
-delegate_fill (pixman_implementation_t *imp,
-               uint32_t *               bits,
-               int                      stride,
-               int                      bpp,
-               int                      x,
-               int                      y,
-               int                      width,
-               int                      height,
-               uint32_t                 xor)
-{
-    return _pixman_implementation_fill (
-	imp->delegate, bits, stride, bpp, x, y, width, height, xor);
-}
-
-static void
-delegate_src_iter_init (pixman_implementation_t *imp,
-			pixman_iter_t *	         iter)
-{
-    imp->delegate->src_iter_init (imp->delegate, iter);
-}
-
-static void
-delegate_dest_iter_init (pixman_implementation_t *imp,
-			 pixman_iter_t *	  iter)
-{
-    imp->delegate->dest_iter_init (imp->delegate, iter);
-}
-
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *delegate,
+_pixman_implementation_create (pixman_implementation_t *fallback,
 			       const pixman_fast_path_t *fast_paths)
 {
-    pixman_implementation_t *imp = malloc (sizeof (pixman_implementation_t));
-    pixman_implementation_t *d;
-    int i;
-
-    if (!imp)
-	return NULL;
+    pixman_implementation_t *imp;
 
     assert (fast_paths);
 
-    /* Make sure the whole delegate chain has the right toplevel */
-    imp->delegate = delegate;
-    for (d = imp; d != NULL; d = d->delegate)
-	d->toplevel = imp;
-
-    /* Fill out function pointers with ones that just delegate
-     */
-    imp->blt = delegate_blt;
-    imp->fill = delegate_fill;
-    imp->src_iter_init = delegate_src_iter_init;
-    imp->dest_iter_init = delegate_dest_iter_init;
-
-    imp->fast_paths = fast_paths;
-
-    for (i = 0; i < PIXMAN_N_OPERATORS; ++i)
+    if ((imp = malloc (sizeof (pixman_implementation_t))))
     {
-	imp->combine_16[i] = NULL;
-	imp->combine_32[i] = NULL;
-	imp->combine_64[i] = NULL;
-	imp->combine_32_ca[i] = NULL;
-	imp->combine_64_ca[i] = NULL;
+	pixman_implementation_t *d;
+
+	memset (imp, 0, sizeof *imp);
+
+	imp->fallback = fallback;
+	imp->fast_paths = fast_paths;
+	
+	/* Make sure the whole fallback chain has the right toplevel */
+	for (d = imp; d != NULL; d = d->fallback)
+	    d->toplevel = imp;
     }
 
     return imp;
+}
+
+#define N_CACHED_FAST_PATHS 8
+
+typedef struct
+{
+    struct
+    {
+	pixman_implementation_t *	imp;
+	pixman_fast_path_t		fast_path;
+    } cache [N_CACHED_FAST_PATHS];
+} cache_t;
+
+PIXMAN_DEFINE_THREAD_LOCAL (cache_t, fast_path_cache);
+
+pixman_bool_t
+_pixman_implementation_lookup_composite (pixman_implementation_t  *toplevel,
+					 pixman_op_t               op,
+					 pixman_format_code_t      src_format,
+					 uint32_t                  src_flags,
+					 pixman_format_code_t      mask_format,
+					 uint32_t                  mask_flags,
+					 pixman_format_code_t      dest_format,
+					 uint32_t                  dest_flags,
+					 pixman_implementation_t **out_imp,
+					 pixman_composite_func_t  *out_func)
+{
+    pixman_implementation_t *imp;
+    cache_t *cache;
+    int i;
+
+    /* Check cache for fast paths */
+    cache = PIXMAN_GET_THREAD_LOCAL (fast_path_cache);
+
+    for (i = 0; i < N_CACHED_FAST_PATHS; ++i)
+    {
+	const pixman_fast_path_t *info = &(cache->cache[i].fast_path);
+
+	/* Note that we check for equality here, not whether
+	 * the cached fast path matches. This is to prevent
+	 * us from selecting an overly general fast path
+	 * when a more specific one would work.
+	 */
+	if (info->op == op			&&
+	    info->src_format == src_format	&&
+	    info->mask_format == mask_format	&&
+	    info->dest_format == dest_format	&&
+	    info->src_flags == src_flags	&&
+	    info->mask_flags == mask_flags	&&
+	    info->dest_flags == dest_flags	&&
+	    info->func)
+	{
+	    *out_imp = cache->cache[i].imp;
+	    *out_func = cache->cache[i].fast_path.func;
+
+	    goto update_cache;
+	}
+    }
+
+    for (imp = toplevel; imp != NULL; imp = imp->fallback)
+    {
+	const pixman_fast_path_t *info = imp->fast_paths;
+
+	while (info->op != PIXMAN_OP_NONE)
+	{
+	    if ((info->op == op || info->op == PIXMAN_OP_any)		&&
+		/* Formats */
+		((info->src_format == src_format) ||
+		 (info->src_format == PIXMAN_any))			&&
+		((info->mask_format == mask_format) ||
+		 (info->mask_format == PIXMAN_any))			&&
+		((info->dest_format == dest_format) ||
+		 (info->dest_format == PIXMAN_any))			&&
+		/* Flags */
+		(info->src_flags & src_flags) == info->src_flags	&&
+		(info->mask_flags & mask_flags) == info->mask_flags	&&
+		(info->dest_flags & dest_flags) == info->dest_flags)
+	    {
+		*out_imp = imp;
+		*out_func = info->func;
+
+		/* Set i to the last spot in the cache so that the
+		 * move-to-front code below will work
+		 */
+		i = N_CACHED_FAST_PATHS - 1;
+
+		goto update_cache;
+	    }
+
+	    ++info;
+	}
+    }
+    return FALSE;
+
+update_cache:
+    if (i)
+    {
+	while (i--)
+	    cache->cache[i + 1] = cache->cache[i];
+
+	cache->cache[0].imp = *out_imp;
+	cache->cache[0].fast_path.op = op;
+	cache->cache[0].fast_path.src_format = src_format;
+	cache->cache[0].fast_path.src_flags = src_flags;
+	cache->cache[0].fast_path.mask_format = mask_format;
+	cache->cache[0].fast_path.mask_flags = mask_flags;
+	cache->cache[0].fast_path.dest_format = dest_format;
+	cache->cache[0].fast_path.dest_flags = dest_flags;
+	cache->cache[0].fast_path.func = *out_func;
+    }
+
+    return TRUE;
 }
 
 pixman_combine_32_func_t
@@ -123,29 +171,38 @@ _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 					pixman_bool_t		 narrow,
 					pixman_bool_t		 rgb16)
 {
-    pixman_combine_32_func_t f;
-
-    do
+    while (imp)
     {
-	pixman_combine_32_func_t (*combiners[]) =
-	{
-	    (pixman_combine_32_func_t *)imp->combine_64,
-	    (pixman_combine_32_func_t *)imp->combine_64_ca,
-	    imp->combine_32,
-	    imp->combine_32_ca,
-	    (pixman_combine_32_func_t *)imp->combine_16,
-	    NULL,
-	};
-        if (rgb16) {
-            f = combiners[4][op];
-        } else {
-            f = combiners[component_alpha + (narrow << 1)][op];
-        }
-	imp = imp->delegate;
-    }
-    while (!f);
+	pixman_combine_32_func_t f = NULL;
 
-    return f;
+	switch ((narrow << 1) | component_alpha)
+	{
+	case 0: /* not narrow, not component alpha */
+	    f = (pixman_combine_32_func_t)imp->combine_float[op];
+	    break;
+	    
+	case 1: /* not narrow, component_alpha */
+	    f = (pixman_combine_32_func_t)imp->combine_float_ca[op];
+	    break;
+
+	case 2: /* narrow, not component alpha */
+	    f = imp->combine_32[op];
+	    break;
+
+	case 3: /* narrow, component_alpha */
+	    f = imp->combine_32_ca[op];
+	    break;
+	}
+	if (rgb16)
+	    f = (pixman_combine_32_func_t *)imp->combine_16[op];
+
+	if (f)
+	    return f;
+
+	imp = imp->fallback;
+    }
+
+    return NULL;
 }
 
 pixman_bool_t
@@ -163,9 +220,20 @@ _pixman_implementation_blt (pixman_implementation_t * imp,
                             int                       width,
                             int                       height)
 {
-    return (*imp->blt) (imp, src_bits, dst_bits, src_stride, dst_stride,
-			src_bpp, dst_bpp, src_x, src_y, dest_x, dest_y,
-			width, height);
+    while (imp)
+    {
+	if (imp->blt &&
+	    (*imp->blt) (imp, src_bits, dst_bits, src_stride, dst_stride,
+			 src_bpp, dst_bpp, src_x, src_y, dest_x, dest_y,
+			 width, height))
+	{
+	    return TRUE;
+	}
+
+	imp = imp->fallback;
+    }
+
+    return FALSE;
 }
 
 pixman_bool_t
@@ -179,10 +247,21 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
                              int                      height,
                              uint32_t                 xor)
 {
-    return (*imp->fill) (imp, bits, stride, bpp, x, y, width, height, xor);
+    while (imp)
+    {
+	if (imp->fill &&
+	    ((*imp->fill) (imp, bits, stride, bpp, x, y, width, height, xor)))
+	{
+	    return TRUE;
+	}
+
+	imp = imp->fallback;
+    }
+
+    return FALSE;
 }
 
-void
+pixman_bool_t
 _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
 				      pixman_iter_t             *iter,
 				      pixman_image_t		*image,
@@ -203,10 +282,18 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
     iter->iter_flags = iter_flags;
     iter->image_flags = image_flags;
 
-    (*imp->src_iter_init) (imp, iter);
+    while (imp)
+    {
+	if (imp->src_iter_init && (*imp->src_iter_init) (imp, iter))
+	    return TRUE;
+
+	imp = imp->fallback;
+    }
+
+    return FALSE;
 }
 
-void
+pixman_bool_t
 _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
 				       pixman_iter_t            *iter,
 				       pixman_image_t		*image,
@@ -227,7 +314,15 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
     iter->iter_flags = iter_flags;
     iter->image_flags = image_flags;
 
-    (*imp->dest_iter_init) (imp, iter);
+    while (imp)
+    {
+	if (imp->dest_iter_init && (*imp->dest_iter_init) (imp, iter))
+	    return TRUE;
+
+	imp = imp->fallback;
+    }
+
+    return FALSE;
 }
 
 pixman_bool_t
