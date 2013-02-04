@@ -703,6 +703,8 @@ protected:
   };
   nsTArray<RequestHeader> mModifiedRequestHeaders;
 
+  nsTHashtable<nsCStringHashKey> mAlreadySetHeaders;
+
   // Helper object to manage our XPCOM scriptability bits
   nsXMLHttpRequestXPCOMifier* mXPCOMifier;
 };

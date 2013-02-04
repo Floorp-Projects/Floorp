@@ -625,6 +625,8 @@ MOCHITEST_FILES_B = \
 		test_bug804395.html \
 		test_bug809003.html \
 		test_bug810494.html \
+		test_bug819051.html \
+		bug819051.sjs \
 		test_textnode_split_in_selection.html \
 		test_textnode_normalize_in_selection.html \
 		test_xhr_send_readystate.html \
