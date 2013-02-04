@@ -191,7 +191,7 @@ var tests = {
             chats.selectedChat.close();
           }
           ok(!chats.selectedChat, "chats are all closed");
-          ensureSocialUrlNotRemembered(chatUrl);
+          gURLsNotRemembered.push(chatUrl);
           port.close();
           next();
           break;
