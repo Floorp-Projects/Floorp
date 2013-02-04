@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <netdb.h> // For gethostbyname.
 
 #undef LOG
 #if defined(MOZ_WIDGET_GONK)
