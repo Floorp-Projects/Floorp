@@ -36,8 +36,6 @@ protected:
   nsMathMLmphantomFrame(nsStyleContext* aContext)
     : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmphantomFrame();
-  
-  virtual int GetSkipSides() const { return 0; }
 };
 
 #endif /* nsMathMLmphantomFrame_h___ */
