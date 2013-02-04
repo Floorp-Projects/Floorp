@@ -388,7 +388,24 @@ public:
   }
   const StreamBuffer& GetStreamBuffer() { return mBuffer; }
   GraphTime GetStreamBufferStartTime() { return mBufferStartTime; }
+  /**
+   * Convert graph time to stream time. aTime must be <= mStateComputedTime
+   * to ensure we know exactly how much time this stream will be blocked during
+   * the interval.
+   */
   StreamTime GraphTimeToStreamTime(GraphTime aTime);
+  /**
+   * Convert graph time to stream time. aTime can be > mStateComputedTime,
+   * in which case we optimistically assume the stream will not be blocked
+   * after mStateComputedTime.
+   */
+  StreamTime GraphTimeToStreamTimeOptimistic(GraphTime aTime);
+  /**
+   * Convert stream time to graph time. The result can be > mStateComputedTime,
+   * in which case we did the conversion optimistically assuming the stream
+   * will not be blocked after mStateComputedTime.
+   */
+  GraphTime StreamTimeToGraphTime(StreamTime aTime);
   bool IsFinishedOnGraphThread() { return mFinished; }
   void FinishOnGraphThread();
 
