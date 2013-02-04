@@ -1796,7 +1796,7 @@ ProcessedMediaStream::SetAutofinish(bool aAutofinish)
       : ControlMessage(aStream), mAutofinish(aAutofinish) {}
     virtual void Run()
     {
-      mStream->AsProcessedStream()->SetAutofinishImpl(mAutofinish);
+      static_cast<ProcessedMediaStream*>(mStream)->SetAutofinishImpl(mAutofinish);
     }
     bool mAutofinish;
   };
