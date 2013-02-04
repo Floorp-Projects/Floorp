@@ -75,6 +75,14 @@ public:
   virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
+  /**
+   * This forces the is-first-paint flag to true. This is intended to
+   * be called by the widget code when it loses its viewport information
+   * (or for whatever reason wants to refresh the viewport information).
+   * The information refresh happens because the compositor will call
+   * SetFirstPaintViewport on the next frame of composition.
+   */
+  void ForceIsFirstPaint() { mIsFirstPaint = true; }
   void Destroy();
 
   LayerManager* GetLayerManager() { return mLayerManager; }
