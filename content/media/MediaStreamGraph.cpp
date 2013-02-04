@@ -772,15 +772,7 @@ MediaStreamGraphImpl::UpdateCurrentTime()
     SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds()) + mCurrentTime;
   if (mStateComputedTime < nextCurrentTime) {
     LOG(PR_LOG_WARNING, ("Media graph global underrun detected"));
-    LOG(PR_LOG_DEBUG, ("Advancing mStateComputedTime from %f to %f",
-                       MediaTimeToSeconds(mStateComputedTime),
-                       MediaTimeToSeconds(nextCurrentTime)));
-    // Advance mStateComputedTime to nextCurrentTime by
-    // adding blocked time to all streams starting at mStateComputedTime
-    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-      mStreams[i]->mBlocked.SetAtAndAfter(mStateComputedTime, true);
-    }
-    mStateComputedTime = nextCurrentTime;
+    nextCurrentTime = mStateComputedTime;
   }
   mCurrentTimeStamp = now;
 
