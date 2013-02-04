@@ -19,13 +19,19 @@ class nsIThreadPool;
 namespace mozilla {
 
 class MediaResource;
-class AsyncReadRequestState;
+class AsyncReadRequest;
 
 // Wraps a MediaResource around an IMFByteStream interface, so that it can
 // be used by the IMFSourceReader. Each WMFByteStream creates a WMF Work Queue
 // on which blocking I/O is performed. The SourceReader requests reads
 // asynchronously using {Begin,End}Read(). The synchronous I/O methods aren't
 // used by the SourceReader, so they're not implemented on this class.
+//
+// Note: This implementation attempts to be bug-compatible with Windows Media
+//       Foundation's implementation of IMFByteStream. The behaviour of WMF's
+//       IMFByteStream was determined by creating it and testing the edge cases.
+//       For details see the test code at:
+//       https://github.com/cpearce/IMFByteStreamBehaviour/
 class WMFByteStream MOZ_FINAL : public IMFByteStream
 {
 public:
@@ -66,17 +72,34 @@ public:
   STDMETHODIMP Write(const BYTE *, ULONG, ULONG *);
 
   // We perform an async read operation in this callback implementation.
-  void PerformRead(IMFAsyncResult* aResult, AsyncReadRequestState* aRequestState);
-
+  // Processes an async read request, storing the result in aResult, and
+  // notifying the caller when the read operation is complete.
+  void ProcessReadRequest(IMFAsyncResult* aResult,
+                          AsyncReadRequest* aRequestState);
 private:
+
+  // Locks the MediaResource and performs the read. This is a helper
+  // for ProcessReadRequest().
+  nsresult Read(AsyncReadRequest* aRequestState);
+
+  // Returns true if the current position of the stream is at end of stream.
+  bool IsEOS();
 
   // Reference to the thread pool in which we perform the reads asynchronously.
   // Note this is pool is shared amongst all active WMFByteStreams.
   nsCOMPtr<nsIThreadPool> mThreadPool;
 
+  // Monitor that ensures that multiple concurrent async reads are processed
+  // in serial on a resource. This prevents concurrent async reads and seeks
+  // from interleaving, to ensure that reads occur at the offset they're
+  // supposed to!
+  ReentrantMonitor mResourceMonitor;
+
   // Resource we're wrapping. Note this object's methods are threadsafe,
-  // and we only call read/seek on the work queue's thread.
-  MediaResource* mResource;
+  // but because multiple reads can be processed concurrently in the thread
+  // pool we must hold mResourceMonitor whenever we seek+read to ensure that
+  // another read request's seek+read doesn't interleave.
+  nsRefPtr<MediaResource> mResource;
 
   // Protects mOffset, which is accessed by the SourceReaders thread(s), and
   // on the work queue thread.
