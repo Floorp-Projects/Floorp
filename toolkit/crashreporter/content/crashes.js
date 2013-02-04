@@ -126,15 +126,13 @@ function populateReportList() {
   pendingDir.append("pending");
 
   if (pendingDir.exists() && pendingDir.isDirectory()) {
-    var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     var entries = pendingDir.directoryEntries;
     while (entries.hasMoreElements()) {
       var file = entries.getNext().QueryInterface(Ci.nsIFile);
       var leaf = file.leafName;
-      var id = leaf.slice(0, -4);
-      if (leaf.substr(-4) == ".dmp" && uuidRegex.test(id)) {
+      if (leaf.substr(-4) == ".dmp") {
         var entry = {
-          id: id,
+          id: leaf.slice(0, -4),
           date: file.lastModifiedTime,
           pending: true
         };
