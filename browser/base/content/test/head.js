@@ -235,3 +235,30 @@ function addVisits(aPlaceInfo, aCallback) {
     }
   );
 }
+
+/**
+ * Ensures that the specified URIs are either cleared or not.
+ *
+ * @param aURIs
+ *        Array of page URIs
+ * @param aShouldBeCleared
+ *        True if each visit to the URI should be cleared, false otherwise
+ */
+function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
+  let deferred = Promise.defer();
+  let callbackCount = 0;
+  let niceStr = aShouldBeCleared ? "no longer" : "still";
+  function callbackDone() {
+    if (++callbackCount == aURIs.length)
+      deferred.resolve();
+  }
+  aURIs.forEach(function (aURI) {
+    PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+      is(aIsVisited, !aShouldBeCleared,
+         "history visit " + aURI.spec + " should " + niceStr + " exist");
+      callbackDone();
+    });
+  });
+
+  return deferred.promise;
+}
