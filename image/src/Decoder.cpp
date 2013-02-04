@@ -102,7 +102,7 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
 
     if (consoleService && errorObject && !HasDecoderError()) {
       nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated: ") +
-                       NS_ConvertASCIItoUTF16(mImage.GetURIString()));
+                       NS_ConvertUTF8toUTF16(mImage.GetURIString()));
 
       if (NS_SUCCEEDED(errorObject->InitWithWindowID(
                          msg,

@@ -144,7 +144,7 @@ function testRotateFromVector()
     m.rotateFromVector(1, 0);
     ok(false, "Failed to throw exception with zero coord for rotateFromVector");
   } catch (e) {
-    is(e.name, "RangeError",
+    is(e.name, "InvalidAccessError",
       "Got unexpected exception " + e + ", expected TypeError");
   }
 

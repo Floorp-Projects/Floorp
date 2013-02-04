@@ -234,6 +234,10 @@ pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "chrome://branding/locale/browserconfig.properties");
 
+pref("browser.slowStartup.notificationDisabled", false);
+pref("browser.slowStartup.timeThreshold", 60000);
+pref("browser.slowStartup.maxSamples", 5);
+
 // This url, if changed, MUST continue to point to an https url. Pulling arbitrary content to inject into
 // this page over http opens us up to a man-in-the-middle attack that we'd rather not face. If you are a downstream
 // repackager of this code using an alternate snippet url, please keep your users safe
@@ -521,9 +525,10 @@ pref("browser.gesture.pinch.out.shift", "");
 pref("browser.gesture.pinch.in.shift", "");
 #endif
 pref("browser.gesture.twist.latched", false);
-pref("browser.gesture.twist.threshold", 25);
-pref("browser.gesture.twist.right", "");
-pref("browser.gesture.twist.left", "");
+pref("browser.gesture.twist.threshold", 0);
+pref("browser.gesture.twist.right", "cmd_gestureRotateRight");
+pref("browser.gesture.twist.left", "cmd_gestureRotateLeft");
+pref("browser.gesture.twist.end", "cmd_gestureRotateEnd");
 pref("browser.gesture.tap", "cmd_fullZoomReset");
 
 // 0: Nothing happens

@@ -208,6 +208,58 @@ class Warnings(MachCommandBase):
                     warning['flag'], warning['message']))
 
 @CommandProvider
+class ClangCommands(MachCommandBase):
+    @Command('clang-complete', help='Generate a .clang_complete file.')
+    def clang_complete(self):
+        import shlex
+
+        build_vars = {}
+
+        def on_line(line):
+            elements = [s.strip() for s in line.split('=', 1)]
+
+            if len(elements) != 2:
+                return
+
+            build_vars[elements[0]] = elements[1]
+
+        try:
+            old_logger = self.log_manager.replace_terminal_handler(None)
+            self._run_make(target='showbuild', log=False, line_handler=on_line)
+        finally:
+            self.log_manager.replace_terminal_handler(old_logger)
+
+        def print_from_variable(name):
+            if name not in build_vars:
+                return
+
+            value = build_vars[name]
+
+            value = value.replace('-I.', '-I%s' % self.topobjdir)
+            value = value.replace(' .', ' %s' % self.topobjdir)
+            value = value.replace('-I..', '-I%s/..' % self.topobjdir)
+            value = value.replace(' ..', ' %s/..' % self.topobjdir)
+
+            args = shlex.split(value)
+            for i in range(0, len(args) - 1):
+                arg = args[i]
+
+                if arg.startswith(('-I', '-D')):
+                    print(arg)
+                    continue
+
+                if arg.startswith('-include'):
+                    print(arg + ' ' + args[i + 1])
+                    continue
+
+        print_from_variable('COMPILE_CXXFLAGS')
+
+        print('-I%s/ipc/chromium/src' % self.topsrcdir)
+        print('-I%s/ipc/glue' % self.topsrcdir)
+        print('-I%s/ipc/ipdl/_ipdlheaders' % self.topobjdir)
+
+
+@CommandProvider
 class Package(MachCommandBase):
     """Package the built product for distribution."""
 

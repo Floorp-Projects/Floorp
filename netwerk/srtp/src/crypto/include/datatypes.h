@@ -405,6 +405,8 @@ static inline uint32_t be32_to_cpu(uint32_t v) {
 #   include <netinet/in.h>
 #  elif defined HAVE_WINSOCK2_H
 #   include <winsock2.h>
+#  else
+#    error "Platform not recognized"
 #  endif
 #  define be32_to_cpu(x)	ntohl((x))
 # endif /* HAVE_X86 */

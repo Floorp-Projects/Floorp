@@ -324,6 +324,7 @@ MANIFESTS_TYPES = dict([(c.type, c) for c in globals().values()
 
 MANIFEST_RE = re.compile(r'\s*#.*$')
 
+
 def parse_manifest_line(base, line):
     '''
     Parse a line from a manifest file with the given base directory and

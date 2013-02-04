@@ -10,8 +10,6 @@
 #include "mozilla/dom/SVGScriptElement.h"
 #include "mozilla/dom/SVGScriptElementBinding.h"
 
-DOMCI_NODE_DATA(SVGScriptElement, mozilla::dom::SVGScriptElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(Script)
 
 namespace mozilla {
@@ -31,16 +29,11 @@ nsSVGElement::StringInfo SVGScriptElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGScriptElement,SVGScriptElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGScriptElement,SVGScriptElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGScriptElement)
-  NS_NODE_INTERFACE_TABLE8(SVGScriptElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGScriptElement,
-                           nsIDOMSVGURIReference, nsIScriptLoaderObserver,
-                           nsIScriptElement, nsIMutationObserver)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGScriptElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGScriptElementBase)
+NS_IMPL_ISUPPORTS_INHERITED7(SVGScriptElement, SVGScriptElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement,
+                             nsIDOMSVGURIReference, nsIScriptLoaderObserver,
+                             nsIScriptElement, nsIMutationObserver)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -82,12 +75,29 @@ SVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 }
 
 //----------------------------------------------------------------------
-// nsIDOMSVGScriptElement methods
+void
+SVGScriptElement::GetType(nsAString & aType)
+{
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
+}
 
-/* attribute DOMString type; */
-NS_IMPL_STRING_ATTR(SVGScriptElement, Type, type)
-/* attribute DOMString crossOrigin */
-NS_IMPL_STRING_ATTR(SVGScriptElement, CrossOrigin, crossorigin)
+void
+SVGScriptElement::SetType(const nsAString & aType, ErrorResult& rv)
+{
+  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, true);
+}
+
+void
+SVGScriptElement::GetCrossOrigin(nsAString & aOrigin)
+{
+  GetAttr(kNameSpaceID_None, nsGkAtoms::crossorigin, aOrigin);
+}
+
+void
+SVGScriptElement::SetCrossOrigin(const nsAString & aOrigin, ErrorResult& rv)
+{
+  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::crossorigin, aOrigin, true);
+}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGURIReference methods

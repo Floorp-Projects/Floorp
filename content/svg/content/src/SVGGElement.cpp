@@ -6,8 +6,6 @@
 #include "mozilla/dom/SVGGElement.h"
 #include "mozilla/dom/SVGGElementBinding.h"
 
-DOMCI_NODE_DATA(SVGGElement, mozilla::dom::SVGGElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(G)
 
 namespace mozilla {
@@ -22,15 +20,9 @@ SVGGElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGGElement, SVGGraphicsElement)
-NS_IMPL_RELEASE_INHERITED(SVGGElement, SVGGraphicsElement)
-
-NS_INTERFACE_TABLE_HEAD(SVGGElement)
-  NS_NODE_INTERFACE_TABLE4(SVGGElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGGElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGGraphicsElement)
+NS_IMPL_ISUPPORTS_INHERITED3(SVGGElement, SVGGraphicsElement,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation

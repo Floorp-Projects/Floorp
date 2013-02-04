@@ -1,5 +1,5 @@
 
-try { with( <x/> ) {
+try { with( {"a":1} ) {
     (function () {
         for (;;) {
             t
@@ -7,7 +7,7 @@ try { with( <x/> ) {
     })()
 } } catch (e) {}
 
-with( <x/> ) {
+with( {"b":2} ) {
   (function () {
     for (b = 0; b < 18; ++b) {}
   })();

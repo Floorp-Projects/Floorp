@@ -66,8 +66,49 @@ class MessageIterator {
 
 //-----------------------------------------------------------------------------
 // ParamTraits specializations, etc.
+//
+// The full set of types ParamTraits is specialized upon contains *possibly*
+// repeated types: unsigned long may be uint32_t or size_t, unsigned long long
+// may be uint64_t or size_t, nsresult may be uint32_t, and so on.  You can't
+// have ParamTraits<unsigned int> *and* ParamTraits<uint32_t> if unsigned int
+// is uint32_t -- that's multiple definitions, and you can only have one.
+//
+// You could use #ifs and macro conditions to avoid duplicates, but they'd be
+// hairy: heavily dependent upon OS and compiler author choices, forced to
+// address all conflicts by hand.  Happily there's a better way.  The basic
+// idea looks like this, where T -> U represents T inheriting from U:
+//
+// class ParamTraits<P>
+// |
+// --> class ParamTraits1<P>
+//     |
+//     --> class ParamTraits2<P>
+//         |
+//         --> class ParamTraitsN<P> // or however many levels
+//
+// The default specialization of ParamTraits{M}<P> is an empty class that
+// inherits from ParamTraits{M + 1}<P> (or nothing in the base case).
+//
+// Now partition the set of parameter types into sets without duplicates.
+// Assign each set of types to a level M.  Then specialize ParamTraitsM for
+// each of those types.  A reference to ParamTraits<P> will consist of some
+// number of empty classes inheriting in sequence, ending in a non-empty
+// ParamTraits{N}<P>.  It's okay for the parameter types to be duplicative:
+// either name of a type will resolve to the same ParamTraits{N}<P>.
+//
+// The nice thing is that because templates are instantiated lazily, if we
+// indeed have uint32_t == unsigned int, say, with the former in level N and
+// the latter in M > N, ParamTraitsM<unsigned int> won't be created (as long as
+// nobody uses ParamTraitsM<unsigned int>, but why would you), and no duplicate
+// code will be compiled or extra symbols generated.  It's as efficient at
+// runtime as manually figuring out and avoiding conflicts by #ifs.
+//
+// The scheme we follow below names the various classes according to the types
+// in them, and the number of ParamTraits levels is larger, but otherwise it's
+// exactly the above idea.
+//
 
-template <class P> struct ParamTraits {};
+template <class P> struct ParamTraits;
 
 template <class P>
 static inline void WriteParam(Message* m, const P& p) {
@@ -85,8 +126,13 @@ static inline void LogParam(const P& p, std::wstring* l) {
   ParamTraits<P>::Log(p, l);
 }
 
+// Fundamental types.
+
+template <class P>
+struct ParamTraitsFundamental {};
+
 template <>
-struct ParamTraits<bool> {
+struct ParamTraitsFundamental<bool> {
   typedef bool param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteBool(p);
@@ -100,35 +146,7 @@ struct ParamTraits<bool> {
 };
 
 template <>
-struct ParamTraits<int16_t> {
-  typedef int16_t param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteInt(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadInt16(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%hd", p));
-  }
-};
-
-template <>
-struct ParamTraits<uint16_t> {
-  typedef uint16_t param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteInt(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadUInt16(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%hu", p));
-  }
-};
-
-template <>
-struct ParamTraits<int> {
+struct ParamTraitsFundamental<int> {
   typedef int param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteInt(p);
@@ -142,7 +160,7 @@ struct ParamTraits<int> {
 };
 
 template <>
-struct ParamTraits<long> {
+struct ParamTraitsFundamental<long> {
   typedef long param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteLong(p);
@@ -156,7 +174,7 @@ struct ParamTraits<long> {
 };
 
 template <>
-struct ParamTraits<unsigned long> {
+struct ParamTraitsFundamental<unsigned long> {
   typedef unsigned long param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteULong(p);
@@ -170,24 +188,30 @@ struct ParamTraits<unsigned long> {
 };
 
 template <>
-struct ParamTraits<nsresult> {
-  typedef nsresult param_type;
+struct ParamTraitsFundamental<long long> {
+  typedef long long param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteUInt32(static_cast<uint32_t>(p));
-  }
+    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(param_type));
+ }
   static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadUInt32(iter, reinterpret_cast<uint32_t*>(r));
+    const char *data;
+    int data_size = 0;
+    bool result = m->ReadData(iter, &data, &data_size);
+    if (result && data_size == sizeof(param_type)) {
+      memcpy(r, data, sizeof(param_type));
+    } else {
+      result = false;
+      NOTREACHED();
+    }
+    return result;
   }
   static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%u", static_cast<uint32_t>(p)));
+    l->append(StringPrintf(L"%ll", p));
   }
 };
 
-#if (defined(OS_OPENBSD) && defined(ARCH_CPU_64_BITS))
-// On OpenBSD, uint64_t is unsigned long long
-// see https://bugzilla.mozilla.org/show_bug.cgi?id=648735#c27
 template <>
-struct ParamTraits<unsigned long long> {
+struct ParamTraitsFundamental<unsigned long long> {
   typedef unsigned long long param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteData(reinterpret_cast<const char*>(&p), sizeof(param_type));
@@ -210,115 +234,7 @@ struct ParamTraits<unsigned long long> {
 };
 
 template <>
-struct ParamTraits<long long> {
-  typedef long long param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(param_type));
- }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(param_type)) {
-      memcpy(r, data, sizeof(param_type));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-    return result;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%ll", p));
-  }
-};
-#endif
-
-#if !(defined(OS_MACOSX) || defined(OS_OPENBSD) || defined(OS_WIN) || ((defined(OS_BSD) || defined(OS_LINUX)) && defined(ARCH_CPU_64_BITS)) || defined(ARCH_CPU_S390))
-// There size_t is a synonym for |unsigned long| ...
-template <>
-struct ParamTraits<size_t> {
-  typedef size_t param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteSize(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadSize(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%u", p));
-  }
-};
-
-#elif !defined(OS_MACOSX)
-// ... so we need to define traits for |unsigned int|.
-// XXX duplicating OS_MACOSX version below so as not to conflict
-template <>
-struct ParamTraits<uint32_t> {
-  typedef uint32_t param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteUInt32(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadUInt32(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%u", p));
-  }
-};
-
-#endif // if !(defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
-
-#if defined(OS_MACOSX)
-// On Linux size_t & uint32_t can be the same type.
-// TODO(playmobil): Fix compilation if this is not the case.
-template <>
-struct ParamTraits<uint32_t> {
-  typedef uint32_t param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteUInt32(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadUInt32(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%u", p));
-  }
-};
-#endif  // defined(OS_MACOSX)
-
-#if !((defined(OS_BSD) || defined(OS_LINUX)) && defined(ARCH_CPU_64_BITS))
-// int64_t is |long int| on 64-bit systems, uint64_t is |unsigned long|
-template <>
-struct ParamTraits<int64_t> {
-  typedef int64_t param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteInt64(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadInt64(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%" PRId64L, p));
-  }
-};
-
-template <>
-struct ParamTraits<uint64_t> {
-  typedef uint64_t param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteInt64(static_cast<int64_t>(p));
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadInt64(iter, reinterpret_cast<int64_t*>(r));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%" PRIu64L, p));
-  }
-};
-#endif // if !(defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
-
-template <>
-struct ParamTraits<double> {
+struct ParamTraitsFundamental<double> {
   typedef double param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteData(reinterpret_cast<const char*>(&p), sizeof(param_type));
@@ -341,73 +257,107 @@ struct ParamTraits<double> {
   }
 };
 
+// Fixed-size <stdint.h> types.
+
+template <class P>
+struct ParamTraitsFixed : ParamTraitsFundamental<P> {};
+
 template <>
-struct ParamTraits<base::Time> {
-  typedef base::Time param_type;
+struct ParamTraitsFixed<int16_t> {
+  typedef int16_t param_type;
   static void Write(Message* m, const param_type& p) {
-    ParamTraits<int64_t>::Write(m, p.ToInternalValue());
+    m->WriteInt(p);
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
-    int64_t value;
-    if (!ParamTraits<int64_t>::Read(m, iter, &value))
-      return false;
-    *r = base::Time::FromInternalValue(value);
-    return true;
+    return m->ReadInt16(iter, r);
   }
   static void Log(const param_type& p, std::wstring* l) {
-    ParamTraits<int64_t>::Log(p.ToInternalValue(), l);
+    l->append(StringPrintf(L"%hd", p));
   }
 };
 
-#if defined(OS_WIN)
 template <>
-struct ParamTraits<LOGFONT> {
-  typedef LOGFONT param_type;
+struct ParamTraitsFixed<uint16_t> {
+  typedef uint16_t param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(LOGFONT));
+    m->WriteInt(p);
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(LOGFONT)) {
-      memcpy(r, data, sizeof(LOGFONT));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-
-    return result;
+    return m->ReadUInt16(iter, r);
   }
   static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"<LOGFONT>"));
+    l->append(StringPrintf(L"%hu", p));
   }
 };
 
 template <>
-struct ParamTraits<MSG> {
-  typedef MSG param_type;
+struct ParamTraitsFixed<uint32_t> {
+  typedef uint32_t param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(MSG));
+    m->WriteUInt32(p);
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(MSG)) {
-      memcpy(r, data, sizeof(MSG));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-
-    return result;
+    return m->ReadUInt32(iter, r);
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%u", p));
   }
 };
-#endif  // defined(OS_WIN)
 
 template <>
-struct ParamTraits<std::string> {
+struct ParamTraitsFixed<int64_t> {
+  typedef int64_t param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteInt64(p);
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadInt64(iter, r);
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%" PRId64L, p));
+  }
+};
+
+template <>
+struct ParamTraitsFixed<uint64_t> {
+  typedef uint64_t param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteInt64(static_cast<int64_t>(p));
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadInt64(iter, reinterpret_cast<int64_t*>(r));
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%" PRIu64L, p));
+  }
+};
+
+// Other standard C types.
+
+template <class P>
+struct ParamTraitsLibC : ParamTraitsFixed<P> {};
+
+template <>
+struct ParamTraitsLibC<size_t> {
+  typedef size_t param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteSize(p);
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadSize(iter, r);
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%u", p));
+  }
+};
+
+// std::* types.
+
+template <class P>
+struct ParamTraitsStd : ParamTraitsLibC<P> {};
+
+template <>
+struct ParamTraitsStd<std::string> {
   typedef std::string param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteString(p);
@@ -421,7 +371,21 @@ struct ParamTraits<std::string> {
 };
 
 template <>
-struct ParamTraits<std::vector<unsigned char> > {
+struct ParamTraitsStd<std::wstring> {
+  typedef std::wstring param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteWString(p);
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadWString(iter, r);
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(p);
+  }
+};
+
+template <>
+struct ParamTraitsStd<std::vector<unsigned char> > {
   typedef std::vector<unsigned char> param_type;
   static void Write(Message* m, const param_type& p) {
     if (p.size() == 0) {
@@ -448,7 +412,7 @@ struct ParamTraits<std::vector<unsigned char> > {
 };
 
 template <>
-struct ParamTraits<std::vector<char> > {
+struct ParamTraitsStd<std::vector<char> > {
   typedef std::vector<char> param_type;
   static void Write(Message* m, const param_type& p) {
     if (p.size() == 0) {
@@ -474,7 +438,7 @@ struct ParamTraits<std::vector<char> > {
 };
 
 template <class P>
-struct ParamTraits<std::vector<P> > {
+struct ParamTraitsStd<std::vector<P> > {
   typedef std::vector<P> param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, static_cast<int>(p.size()));
@@ -513,7 +477,7 @@ struct ParamTraits<std::vector<P> > {
 };
 
 template <class K, class V>
-struct ParamTraits<std::map<K, V> > {
+struct ParamTraitsStd<std::map<K, V> > {
   typedef std::map<K, V> param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, static_cast<int>(p.size()));
@@ -542,43 +506,59 @@ struct ParamTraits<std::map<K, V> > {
   }
 };
 
+// Windows-specific types.
 
-template <>
-struct ParamTraits<std::wstring> {
-  typedef std::wstring param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteWString(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadWString(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(p);
-  }
-};
+template <class P>
+struct ParamTraitsWindows : ParamTraitsStd<P> {};
 
-// If WCHAR_T_IS_UTF16 is defined, then string16 is a std::wstring so we don't
-// need this trait.
-#if !defined(WCHAR_T_IS_UTF16)
-template <>
-struct ParamTraits<string16> {
-  typedef string16 param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteString16(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadString16(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(UTF16ToWide(p));
-  }
-};
-#endif
-
-// and, a few more useful types...
 #if defined(OS_WIN)
 template <>
-struct ParamTraits<HANDLE> {
+struct ParamTraitsWindows<LOGFONT> {
+  typedef LOGFONT param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(LOGFONT));
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    const char *data;
+    int data_size = 0;
+    bool result = m->ReadData(iter, &data, &data_size);
+    if (result && data_size == sizeof(LOGFONT)) {
+      memcpy(r, data, sizeof(LOGFONT));
+    } else {
+      result = false;
+      NOTREACHED();
+    }
+
+    return result;
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"<LOGFONT>"));
+  }
+};
+
+template <>
+struct ParamTraitsWindows<MSG> {
+  typedef MSG param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(MSG));
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    const char *data;
+    int data_size = 0;
+    bool result = m->ReadData(iter, &data, &data_size);
+    if (result && data_size == sizeof(MSG)) {
+      memcpy(r, data, sizeof(MSG));
+    } else {
+      result = false;
+      NOTREACHED();
+    }
+
+    return result;
+  }
+};
+
+template <>
+struct ParamTraitsWindows<HANDLE> {
   typedef HANDLE param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
@@ -593,7 +573,7 @@ struct ParamTraits<HANDLE> {
 };
 
 template <>
-struct ParamTraits<HCURSOR> {
+struct ParamTraitsWindows<HCURSOR> {
   typedef HCURSOR param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
@@ -608,7 +588,7 @@ struct ParamTraits<HCURSOR> {
 };
 
 template <>
-struct ParamTraits<HWND> {
+struct ParamTraitsWindows<HWND> {
   typedef HWND param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
@@ -623,7 +603,7 @@ struct ParamTraits<HWND> {
 };
 
 template <>
-struct ParamTraits<HACCEL> {
+struct ParamTraitsWindows<HACCEL> {
   typedef HACCEL param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
@@ -635,7 +615,7 @@ struct ParamTraits<HACCEL> {
 };
 
 template <>
-struct ParamTraits<POINT> {
+struct ParamTraitsWindows<POINT> {
   typedef POINT param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteInt(p.x);
@@ -653,24 +633,43 @@ struct ParamTraits<POINT> {
     l->append(StringPrintf(L"(%d, %d)", p.x, p.y));
   }
 };
-#endif  // defined(OS_WIN)
 
 template <>
-struct ParamTraits<FilePath> {
-  typedef FilePath param_type;
+struct ParamTraitsWindows<XFORM> {
+  typedef XFORM param_type;
   static void Write(Message* m, const param_type& p) {
-    ParamTraits<FilePath::StringType>::Write(m, p.value());
+    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(XFORM));
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
-    FilePath::StringType value;
-    if (!ParamTraits<FilePath::StringType>::Read(m, iter, &value))
-      return false;
-    *r = FilePath(value);
-    return true;
+    const char *data;
+    int data_size = 0;
+    bool result = m->ReadData(iter, &data, &data_size);
+    if (result && data_size == sizeof(XFORM)) {
+      memcpy(r, data, sizeof(XFORM));
+    } else {
+      result = false;
+      NOTREACHED();
+    }
+
+    return result;
   }
   static void Log(const param_type& p, std::wstring* l) {
-    ParamTraits<FilePath::StringType>::Log(p.value(), l);
+    l->append(L"<XFORM>");
   }
+};
+#endif  // defined(OS_WIN)
+
+// Various ipc/chromium types.
+
+template <class P>
+struct ParamTraitsIPC : ParamTraitsWindows<P> {};
+
+template <>
+struct ParamTraitsIPC<base::Time> {
+  typedef base::Time param_type;
+  static inline void Write(Message* m, const param_type& p);
+  static inline bool Read(const Message* m, void** iter, param_type* r);
+  static inline void Log(const param_type& p, std::wstring* l);
 };
 
 #if defined(OS_POSIX)
@@ -690,7 +689,7 @@ struct ParamTraits<FilePath> {
 // dup()ing any file descriptors to be transmitted and setting the |auto_close|
 // flag, which causes the file descriptor to be closed after writing.
 template<>
-struct ParamTraits<base::FileDescriptor> {
+struct ParamTraitsIPC<base::FileDescriptor> {
   typedef base::FileDescriptor param_type;
   static void Write(Message* m, const param_type& p) {
     const bool valid = p.fd >= 0;
@@ -724,62 +723,38 @@ struct ParamTraits<base::FileDescriptor> {
 };
 #endif // defined(OS_POSIX)
 
-template<>
-struct ParamTraits<ThumbnailScore> {
-  typedef ThumbnailScore param_type;
+template <>
+struct ParamTraitsIPC<string16> {
+  typedef string16 param_type;
   static void Write(Message* m, const param_type& p) {
-    IPC::ParamTraits<double>::Write(m, p.boring_score);
-    IPC::ParamTraits<bool>::Write(m, p.good_clipping);
-    IPC::ParamTraits<bool>::Write(m, p.at_top);
-    IPC::ParamTraits<base::Time>::Write(m, p.time_at_snapshot);
+    m->WriteString16(p);
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
-    double boring_score;
-    bool good_clipping, at_top;
-    base::Time time_at_snapshot;
-    if (!IPC::ParamTraits<double>::Read(m, iter, &boring_score) ||
-        !IPC::ParamTraits<bool>::Read(m, iter, &good_clipping) ||
-        !IPC::ParamTraits<bool>::Read(m, iter, &at_top) ||
-        !IPC::ParamTraits<base::Time>::Read(m, iter, &time_at_snapshot))
-      return false;
-
-    r->boring_score = boring_score;
-    r->good_clipping = good_clipping;
-    r->at_top = at_top;
-    r->time_at_snapshot = time_at_snapshot;
-    return true;
+    return m->ReadString16(iter, r);
   }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(UTF16ToWide(p));
+  }
+};
+
+template <>
+struct ParamTraitsIPC<FilePath> {
+  typedef FilePath param_type;
+  static void Write(Message* m, const param_type& p);
+  static bool Read(const Message* m, void** iter, param_type* r);
+  static void Log(const param_type& p, std::wstring* l);
+};
+
+template<>
+struct ParamTraitsIPC<ThumbnailScore> {
+  typedef ThumbnailScore param_type;
+  static void Write(Message* m, const param_type& p);
+  static bool Read(const Message* m, void** iter, param_type* r);
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"(%f, %d, %d)",
                            p.boring_score, p.good_clipping, p.at_top));
   }
 };
-
-#if defined(OS_WIN)
-template <>
-struct ParamTraits<XFORM> {
-  typedef XFORM param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(XFORM));
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(XFORM)) {
-      memcpy(r, data, sizeof(XFORM));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-
-    return result;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(L"<XFORM>");
-  }
-};
-#endif  // defined(OS_WIN)
 
 struct LogData {
   std::wstring channel;
@@ -796,7 +771,7 @@ struct LogData {
 };
 
 template <>
-struct ParamTraits<LogData> {
+struct ParamTraitsIPC<LogData> {
   typedef LogData param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, p.channel);
@@ -829,7 +804,7 @@ struct ParamTraits<LogData> {
 
 #if defined(OS_WIN)
 template<>
-struct ParamTraits<TransportDIB::Id> {
+struct ParamTraitsIPC<TransportDIB::Id> {
   typedef TransportDIB::Id param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, p.handle);
@@ -850,7 +825,7 @@ struct ParamTraits<TransportDIB::Id> {
 #endif
 
 template <>
-struct ParamTraits<Message> {
+struct ParamTraitsIPC<Message> {
   static void Write(Message* m, const Message& p) {
     m->WriteInt(p.size());
     m->WriteData(reinterpret_cast<const char*>(p.data()), p.size());
@@ -871,7 +846,7 @@ struct ParamTraits<Message> {
 };
 
 template <>
-struct ParamTraits<Tuple0> {
+struct ParamTraitsIPC<Tuple0> {
   typedef Tuple0 param_type;
   static void Write(Message* m, const param_type& p) {
   }
@@ -883,7 +858,7 @@ struct ParamTraits<Tuple0> {
 };
 
 template <class A>
-struct ParamTraits< Tuple1<A> > {
+struct ParamTraitsIPC< Tuple1<A> > {
   typedef Tuple1<A> param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, p.a);
@@ -897,7 +872,7 @@ struct ParamTraits< Tuple1<A> > {
 };
 
 template <class A, class B>
-struct ParamTraits< Tuple2<A, B> > {
+struct ParamTraitsIPC< Tuple2<A, B> > {
   typedef Tuple2<A, B> param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, p.a);
@@ -915,7 +890,7 @@ struct ParamTraits< Tuple2<A, B> > {
 };
 
 template <class A, class B, class C>
-struct ParamTraits< Tuple3<A, B, C> > {
+struct ParamTraitsIPC< Tuple3<A, B, C> > {
   typedef Tuple3<A, B, C> param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, p.a);
@@ -937,7 +912,7 @@ struct ParamTraits< Tuple3<A, B, C> > {
 };
 
 template <class A, class B, class C, class D>
-struct ParamTraits< Tuple4<A, B, C, D> > {
+struct ParamTraitsIPC< Tuple4<A, B, C, D> > {
   typedef Tuple4<A, B, C, D> param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, p.a);
@@ -963,7 +938,7 @@ struct ParamTraits< Tuple4<A, B, C, D> > {
 };
 
 template <class A, class B, class C, class D, class E>
-struct ParamTraits< Tuple5<A, B, C, D, E> > {
+struct ParamTraitsIPC< Tuple5<A, B, C, D, E> > {
   typedef Tuple5<A, B, C, D, E> param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, p.a);
@@ -993,7 +968,7 @@ struct ParamTraits< Tuple5<A, B, C, D, E> > {
 };
 
 template <class A, class B, class C, class D, class E, class F>
-struct ParamTraits< Tuple6<A, B, C, D, E, F> > {
+struct ParamTraitsIPC< Tuple6<A, B, C, D, E, F> > {
   typedef Tuple6<A, B, C, D, E, F> param_type;
   static void Write(Message* m, const param_type& p) {
     WriteParam(m, p.a);
@@ -1026,7 +1001,89 @@ struct ParamTraits< Tuple6<A, B, C, D, E, F> > {
   }
 };
 
+// Mozilla-specific types.
 
+template <class P>
+struct ParamTraitsMozilla : ParamTraitsIPC<P> {};
+
+template <>
+struct ParamTraitsMozilla<nsresult> {
+  typedef nsresult param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteUInt32(static_cast<uint32_t>(p));
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadUInt32(iter, reinterpret_cast<uint32_t*>(r));
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%u", static_cast<uint32_t>(p)));
+  }
+};
+
+// Finally, ParamTraits itself.
+
+template <class P> struct ParamTraits : ParamTraitsMozilla<P> {};
+
+// Now go back and define inlines dependent upon various ParamTraits<P>.
+inline void
+ParamTraitsIPC<base::Time>::Write(Message* m, const param_type& p) {
+  ParamTraits<int64_t>::Write(m, p.ToInternalValue());
+}
+inline bool
+ParamTraitsIPC<base::Time>::Read(const Message* m, void** iter, param_type* r) {
+  int64_t value;
+  if (!ParamTraits<int64_t>::Read(m, iter, &value))
+    return false;
+  *r = base::Time::FromInternalValue(value);
+  return true;
+}
+inline void
+ParamTraitsIPC<base::Time>::Log(const param_type& p, std::wstring* l) {
+  ParamTraits<int64_t>::Log(p.ToInternalValue(), l);
+}
+
+inline void
+ParamTraitsIPC<FilePath>::Write(Message* m, const param_type& p) {
+  ParamTraits<FilePath::StringType>::Write(m, p.value());
+}
+inline bool
+ParamTraitsIPC<FilePath>::Read(const Message* m, void** iter, param_type* r) {
+  FilePath::StringType value;
+  if (!ParamTraits<FilePath::StringType>::Read(m, iter, &value))
+    return false;
+  *r = FilePath(value);
+  return true;
+}
+inline void
+ParamTraitsIPC<FilePath>::Log(const param_type& p, std::wstring* l) {
+  ParamTraits<FilePath::StringType>::Log(p.value(), l);
+}
+
+
+inline void
+ParamTraitsIPC<ThumbnailScore>::Write(Message* m, const param_type& p) {
+  IPC::ParamTraits<double>::Write(m, p.boring_score);
+  IPC::ParamTraits<bool>::Write(m, p.good_clipping);
+  IPC::ParamTraits<bool>::Write(m, p.at_top);
+  IPC::ParamTraits<base::Time>::Write(m, p.time_at_snapshot);
+}
+inline bool
+ParamTraitsIPC<ThumbnailScore>::Read(const Message* m, void** iter, param_type* r) {
+  double boring_score;
+  bool good_clipping, at_top;
+  base::Time time_at_snapshot;
+  if (!IPC::ParamTraits<double>::Read(m, iter, &boring_score) ||
+      !IPC::ParamTraits<bool>::Read(m, iter, &good_clipping) ||
+      !IPC::ParamTraits<bool>::Read(m, iter, &at_top) ||
+      !IPC::ParamTraits<base::Time>::Read(m, iter, &time_at_snapshot))
+    return false;
+
+  r->boring_score = boring_score;
+  r->good_clipping = good_clipping;
+  r->at_top = at_top;
+  r->time_at_snapshot = time_at_snapshot;
+  return true;
+}
 
 //-----------------------------------------------------------------------------
 // Generic message subclasses

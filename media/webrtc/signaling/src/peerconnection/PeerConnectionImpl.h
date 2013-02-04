@@ -34,6 +34,7 @@
 #include "VideoUtils.h"
 #include "ImageLayers.h"
 #include "VideoSegment.h"
+#include "nsNSSShutDown.h"
 #else
 namespace mozilla {
   class DataChannel;
@@ -98,6 +99,7 @@ class PeerConnectionWrapper;
 class PeerConnectionImpl MOZ_FINAL : public IPeerConnection,
 #ifdef MOZILLA_INTERNAL_API
                                      public mozilla::DataChannelConnection::DataConnectionListener,
+                                     public nsNSSShutDownObject,
 #endif
                                      public sigslot::has_slots<>
 {
@@ -248,6 +250,10 @@ private:
 #endif
     return true;
   }
+
+#ifdef MOZILLA_INTERNAL_API
+  void virtualDestroyNSSReference() MOZ_FINAL;
+#endif
 
   // Shut down media. Called on any thread.
   void ShutdownMedia(bool isSynchronous);

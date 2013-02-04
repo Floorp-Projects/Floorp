@@ -17,6 +17,7 @@ class OutOfLineBailout;
 class OutOfLineUndoALUOperation;
 class MulNegativeZeroCheck;
 class OutOfLineTruncate;
+class OutOfLineTableSwitch;
 
 class CodeGeneratorX86Shared : public CodeGeneratorShared
 {
@@ -118,6 +119,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation *ool);
     bool visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool);
     bool visitOutOfLineTruncate(OutOfLineTruncate *ool);
+    bool visitOutOfLineTableSwitch(OutOfLineTableSwitch *ool);
     bool generateInvalidateEpilogue();
 };
 

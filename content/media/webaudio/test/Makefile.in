@@ -20,10 +20,19 @@ MOCHITEST_FILES := \
   test_badConnect.html \
   test_biquadFilterNode.html \
   test_delayNode.html \
+  test_decodeAudioData.html \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
   test_pannerNode.html \
   test_singleSourceDest.html \
+  ting.ogg \
+  ting-expected.wav \
+  small-shot.ogg \
+  small-shot-expected.wav \
+  invalid.txt \
+  noaudio.webm \
+  audio.ogv \
+  audio-expected.wav \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -27,7 +27,10 @@ const unsigned int WebrtcAudioConduit::CODEC_PLNAME_SIZE = 32;
 mozilla::RefPtr<AudioSessionConduit> AudioSessionConduit::Create(AudioSessionConduit *aOther)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
+#ifdef MOZILLA_INTERNAL_API
+  // unit tests create their own "main thread"
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+#endif
 
   WebrtcAudioConduit* obj = new WebrtcAudioConduit();
   if(obj->Init(static_cast<WebrtcAudioConduit*>(aOther)) != kMediaConduitNoError)
@@ -45,7 +48,10 @@ mozilla::RefPtr<AudioSessionConduit> AudioSessionConduit::Create(AudioSessionCon
  */
 WebrtcAudioConduit::~WebrtcAudioConduit()
 {
+#ifdef MOZILLA_INTERNAL_API
+  // unit tests create their own "main thread"
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+#endif
 
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   for(std::vector<AudioCodecConfig*>::size_type i=0;i < mRecvCodecList.size();i++)

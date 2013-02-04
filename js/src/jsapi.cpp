@@ -52,7 +52,6 @@
 #include "jsworkers.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
-#include "jsxml.h"
 
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
@@ -149,11 +148,6 @@ class AutoVersionAPI
         , oldCompileOptions(cx->getCompileOptions())
 #endif
     {
-#if JS_HAS_XML_SUPPORT
-        // For backward compatibility, AutoVersionAPI clobbers the
-        // JSOPTION_MOAR_XML bit in cx, but not the JSOPTION_ALLOW_XML bit.
-        newVersion = JSVersion(newVersion | (oldDefaultVersion & VersionFlags::ALLOW_XML));
-#endif
         this->newVersion = newVersion;
         cx->clearVersionOverride();
         cx->setDefaultVersion(newVersion);
@@ -179,7 +173,6 @@ class AutoVersionAPI
 #endif
 
 #ifdef JS_USE_JSID_STRUCT_TYPES
-jsid JS_DEFAULT_XML_NAMESPACE_ID = { size_t(JSID_TYPE_DEFAULT_XML_NAMESPACE) };
 jsid JSID_VOID  = { size_t(JSID_TYPE_VOID) };
 jsid JSID_EMPTY = { size_t(JSID_TYPE_OBJECT) };
 #endif
@@ -817,7 +810,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
-    gcExactScanningEnabled(true),
     gcManipulatingDeadCompartments(false),
     gcObjectsMarkedInDeadCompartments(0),
     gcPoke(false),
@@ -1793,11 +1785,6 @@ static JSStdName standard_class_atoms[] = {
     {js_InitStringClass,                EAGER_ATOM_AND_CLASP(String)},
     {js_InitExceptionClasses,           EAGER_ATOM_AND_CLASP(Error)},
     {js_InitRegExpClass,                EAGER_ATOM_AND_CLASP(RegExp)},
-#if JS_HAS_XML_SUPPORT
-    {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
-    {js_InitNamespaceClass,             EAGER_ATOM_AND_CLASP(Namespace)},
-    {js_InitQNameClass,                 EAGER_ATOM_AND_CLASP(QName)},
-#endif
 #if JS_HAS_GENERATORS
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
 #endif
@@ -1850,11 +1837,6 @@ static JSStdName standard_class_names[] = {
     {js_InitExceptionClasses,   EAGER_CLASS_ATOM(SyntaxError), CLASP(Error)},
     {js_InitExceptionClasses,   EAGER_CLASS_ATOM(TypeError), CLASP(Error)},
     {js_InitExceptionClasses,   EAGER_CLASS_ATOM(URIError), CLASP(Error)},
-
-#if JS_HAS_XML_SUPPORT
-    {js_InitXMLClass,           EAGER_ATOM(XMLList), CLASP(XML)},
-    {js_InitXMLClass,           EAGER_ATOM(isXMLName), CLASP(XML)},
-#endif
 
     {js_InitIteratorClasses,    EAGER_CLASS_ATOM(Iterator), &PropertyIteratorObject::class_},
 
@@ -1989,16 +1971,6 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolv
         if (IsStandardClassResolved(obj, stdnm->clasp))
             return true;
 
-#if JS_HAS_XML_SUPPORT
-        if ((stdnm->init == js_InitXMLClass ||
-             stdnm->init == js_InitNamespaceClass ||
-             stdnm->init == js_InitQNameClass) &&
-            !VersionHasAllowXML(cx->findVersion()))
-        {
-            return true;
-        }
-#endif
-
         if (!stdnm->init(cx, obj))
             return false;
         *resolved = true;
@@ -2030,15 +2002,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *objArg)
     /* Initialize any classes that have not been initialized yet. */
     for (unsigned i = 0; standard_class_atoms[i].init; i++) {
         const JSStdName &stdnm = standard_class_atoms[i];
-        if (!js::IsStandardClassResolved(obj, stdnm.clasp)
-#if JS_HAS_XML_SUPPORT
-            && ((stdnm.init != js_InitXMLClass &&
-                 stdnm.init != js_InitNamespaceClass &&
-                 stdnm.init != js_InitQNameClass) ||
-                VersionHasAllowXML(cx->findVersion()))
-#endif
-            )
-        {
+        if (!js::IsStandardClassResolved(obj, stdnm.clasp)) {
             if (!stdnm.init(cx, obj))
                 return false;
         }
@@ -2526,12 +2490,6 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
       case JSTRACE_TYPE_OBJECT:
         name = "type_object";
         break;
-
-#if JS_HAS_XML_SUPPORT
-      case JSTRACE_XML:
-        name = "xml";
-        break;
-#endif
     }
 
     n = strlen(name);
@@ -2593,17 +2551,6 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           case JSTRACE_BASE_SHAPE:
           case JSTRACE_TYPE_OBJECT:
             break;
-
-#if JS_HAS_XML_SUPPORT
-          case JSTRACE_XML:
-          {
-            extern const char *js_xml_class_str[];
-            JSXML *xml = (JSXML *)thing;
-
-            JS_snprintf(buf, bufsize, " %s", js_xml_class_str[xml->xml_class]);
-            break;
-          }
-#endif
         }
     }
     buf[bufsize - 1] = '\0';

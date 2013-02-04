@@ -68,18 +68,22 @@ var gA11yEventDumpFeature = "";
  * @param aArg1       [in, optional] argument passed into the function
  * @param aArg2       [in, optional] argument passed into the function
  */
-function waitForEvent(aEventType, aTarget, aFunc, aContext, aArg1, aArg2)
+function waitForEvent(aEventType, aTargetOrFunc, aFunc, aContext, aArg1, aArg2)
 {
   var handler = {
     handleEvent: function handleEvent(aEvent) {
 
-      if (aTarget) {
-        if (aTarget instanceof nsIAccessible &&
-            aTarget != aEvent.accessible)
+      var target = aTargetOrFunc;
+      if (typeof aTargetOrFunc == "function")
+        target = aTargetOrFunc.call();
+
+      if (target) {
+        if (target instanceof nsIAccessible &&
+            target != aEvent.accessible)
           return;
 
-        if (aTarget instanceof nsIDOMNode &&
-            aTarget != aEvent.DOMNode)
+        if (target instanceof nsIDOMNode &&
+            target != aEvent.DOMNode)
           return;
       }
 

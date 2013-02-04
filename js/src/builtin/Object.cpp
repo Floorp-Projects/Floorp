@@ -711,12 +711,6 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
     }
 
     JSObject *proto = v.toObjectOrNull();
-#if JS_HAS_XML_SUPPORT
-    if (proto && proto->isXML()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
-        return false;
-    }
-#endif
 
     /*
      * Use the callee's global as the parent of the new object to avoid dynamic

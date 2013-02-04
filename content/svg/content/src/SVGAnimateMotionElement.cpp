@@ -6,8 +6,6 @@
 #include "mozilla/dom/SVGAnimateMotionElement.h"
 #include "mozilla/dom/SVGAnimateMotionElementBinding.h"
 
-DOMCI_NODE_DATA(SVGAnimateMotionElement, mozilla::dom::SVGAnimateMotionElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(AnimateMotion)
 
 namespace mozilla {
@@ -21,17 +19,9 @@ SVGAnimateMotionElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTried
 
 //----------------------------------------------------------------------
 // nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGAnimateMotionElement, SVGAnimationElement)
-NS_IMPL_RELEASE_INHERITED(SVGAnimateMotionElement, SVGAnimationElement)
-
-NS_INTERFACE_TABLE_HEAD(SVGAnimateMotionElement)
-  NS_NODE_INTERFACE_TABLE5(SVGAnimateMotionElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGAnimationElement,
-                           nsIDOMSVGAnimateMotionElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimateMotionElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGAnimationElement)
+NS_IMPL_ISUPPORTS_INHERITED3(SVGAnimateMotionElement, SVGAnimationElement,
+                             nsIDOMNode,
+                             nsIDOMElement, nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation

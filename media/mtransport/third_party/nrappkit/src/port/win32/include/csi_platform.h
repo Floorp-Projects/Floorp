@@ -57,9 +57,6 @@
 
 #define strcasestr stristr
 
-/* Hack version of addr2ascii (in util/util.c) */
-char *addr2ascii(int af, const void *addrp, int len,char *buf);
-
 /* Hack version of strlcpy (in util/util.c) */
 size_t strlcat(char *dst, const char *src, size_t siz);
 

@@ -125,6 +125,9 @@
       // children.
       testName("btn_children", "14");
 
+      // html:button, no name from content
+      testName("btn_nonamefromcontent", null);
+
       // ARIA role option is presented allowing the name calculation from
       // visible children (bug 443081).
       testName("lb_opt1_children_hidden", "i am visible");
@@ -157,12 +160,6 @@
       elem.value = "Bar";
 
       testName("textareawithchild", "Story Bar is ended.");
-
-      //////////////////////////////////////////////////////////////////////////
-      // button name (specific cases not covered by test_name_markup.html)
-
-      testName("submit", "Submit Query");
-      testName("image_submit", "Submit Query");
 
       //////////////////////////////////////////////////////////////////////////
       // controls having a value used as a part of computed name
@@ -223,42 +220,47 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=428479"
      title="Bug 428479 - Support ARIA role=math">
-    Mozilla Bug 428479
-  </a><br>
+    Bug 428479
+  </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=429666"
      title="Expose ROLE_DOCUMENT for ARIA landmarks that inherit from document">
-    Mozilla Bug 429666
-  </a><br>
+    Bug 429666
+  </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=444279"
      title="mochitest for accessible name calculating">
-    Mozilla Bug 444279
-  </a><br>
+    Bug 444279
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=459635"
+     title="nsIAccessible::name calculation for HTML buttons">
+    Bug 459635
+  </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=530081"
-     title="Clean up our tree walker ">
-    Mozilla Bug 530081
+     title="Clean up our tree walker">
+    Bug 530081
   </a><br>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=604391"
      title="Use placeholder as name if name is otherwise empty">
-    Mozilla Bug 604391
+    Bug 604391
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=669312"
      title="Accessible name is duplicated when input has a label associated uisng for/id and is wrapped around the input">
-    Mozilla Bug 669312
+    Bug 669312
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=704416"
      title="HTML acronym and abbr names should be provided by @title">
-    Mozilla Bug 704416
+    Bug 704416
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=812041"
      title="ARIA slider and spinbutton don't provide a value for name computation">
-    Mozilla Bug 812041
+    Bug 812041
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -418,6 +420,9 @@
   <!-- name from children -->
   <span id="btn_children" role="button">14</span>
 
+  <!-- no name from content, ARIA role overrides this rule -->
+  <button id="btn_nonamefromcontent" role="img">1</button>
+
   <!-- name from children, hidden children -->
   <div role="listbox" tabindex="0">
     <div id="lb_opt1_children_hidden" role="option" tabindex="0">
@@ -454,10 +459,6 @@
       is ended.
     </label>
   </form>
-
-  <!-- submit buttons -->
-  <input type="submit" id="submit">
-  <input type="image" id="image_submit">
 
   <!-- controls having a value used as part of computed name -->
   <input type="checkbox" id="ctrlvalue_progressbar:input">

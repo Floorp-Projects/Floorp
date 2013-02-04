@@ -1,0 +1,5 @@
+.gitignore export-ignore
+.hgignore export-ignore
+.hgtags export-ignore
+.gitattributes export-ignore
+python-lib/cuddlefish/_version.py export-subst

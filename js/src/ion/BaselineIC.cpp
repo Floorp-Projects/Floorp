@@ -2448,7 +2448,7 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
         return false;
 
     if (obj->getOps()->getProperty) {
-        if (!GetPropertyGenericMaybeCallXML(cx, op, obj, id, res))
+        if (!JSObject::getGeneric(cx, obj, obj, id, res))
             return false;
     } else {
         if (!GetPropertyHelper(cx, obj, id, 0, res))

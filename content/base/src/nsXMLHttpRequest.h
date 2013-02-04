@@ -31,7 +31,6 @@
 #include "nsITimer.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsDOMEventTargetHelper.h"
-#include "nsContentUtils.h"
 #include "nsDOMFile.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsIPrincipal.h"

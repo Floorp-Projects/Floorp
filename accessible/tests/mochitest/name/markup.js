@@ -41,11 +41,15 @@ var gTestIterator =
     this.iterateNext();
   },
 
-  iterateRules: function gTestIterator_iterateRules(aElm, aContainer, aRuleElms)
+  iterateRules: function gTestIterator_iterateRules(aElm, aContainer,
+                                                    aRuleSetElm, aRuleElms,
+                                                    aTestID)
   {
+    this.ruleSetElm = aRuleSetElm;
     this.ruleElms = aRuleElms;
     this.elm = aElm;
     this.container = aContainer;
+    this.testID = aTestID;
 
     this.iterateNext();
   },
@@ -61,7 +65,10 @@ var gTestIterator =
     this.ruleIdx++;
     if (this.ruleIdx == this.ruleElms.length) {
       // When test is finished then name is empty and no explict-name.
-      testName(this.elm, null, "No name test. ");
+      var defaultName = this.ruleSetElm.hasAttribute("defaultName") ?
+        this.ruleSetElm.getAttribute("defaultName") : null;
+      testName(this.elm, defaultName,
+               "Default name test (" + gTestIterator.testID + "). ");
       testAbsentAttrs(this.elm, {"explicit-name" : "true"});
 
       this.markupIdx++;
@@ -89,10 +96,12 @@ var gTestIterator =
 
   markupElms: null,
   markupIdx: -1,
+  rulesetElm: null,
   ruleElms: null,
   ruleIdx: -1,
   elm: null,
-  container: null
+  container: null,
+  testID: ""
 };
 
 /**
@@ -126,8 +135,9 @@ function testNamesForMarkup(aMarkupElm)
 
 function testNamesForMarkupRules(aMarkupElm, aContainer)
 {
+  var testID = aMarkupElm.getAttribute("id");
   if (gDumpToConsole)
-    dump("\nProcessing markup rules '" + aMarkupElm.getAttribute("id") + "'\n");
+    dump("\nProcessing markup rules '" + testID + "'\n");
 
   var serializer = new XMLSerializer();
 
@@ -135,14 +145,17 @@ function testNamesForMarkupRules(aMarkupElm, aContainer)
   var elm = evaluateXPath(document, expr, htmlDocResolver)[0];
 
   var ruleId = aMarkupElm.getAttribute("ruleset");
+  var ruleElm = gRuleDoc.querySelector("[id='" + ruleId + "']");
   var ruleElms = getRuleElmsByRulesetId(ruleId);
 
   var processMarkupRules =
-    gTestIterator.iterateRules.bind(gTestIterator, elm, aContainer, ruleElms);
+    gTestIterator.iterateRules.bind(gTestIterator, elm, aContainer,
+                                    ruleElm, ruleElms, testID);
 
   // Images may be recreated after we append them into subtree. We need to wait
   // in this case. If we are on profiling enabled build then stack tracing
-  // works and thus let's log instead.
+  // works and thus let's log instead. Note, that works if you enabled logging
+  // (refer to testNames() function).
   if (isAccessible(elm) || isLogged("stack"))
     processMarkupRules();
   else
@@ -198,20 +211,40 @@ function testNameForAttrRule(aElm, aRule)
       if (name != "")
         name += " ";
 
-      name += labelElm.getAttribute("a11yname");
+      name += labelElm.getAttribute("textequiv");
     }
   }
 
-  var msg = "Attribute '" + attr + "' test. ";
+  var msg = "Attribute '" + attr + "' test (" + gTestIterator.testID + "). ";
   testName(aElm, name, msg);
+
   if (aRule.getAttribute("explict-name") != "false")
     testAttrs(aElm, {"explicit-name" : "true"}, true);
   else
     testAbsentAttrs(aElm, {"explicit-name" : "true"});
 
-  aElm.removeAttribute(attr);
+  // If @recreated attribute is used then this attribute change recreates an
+  // accessible. Wait for reorder event in this case or otherwise proceed next
+  // test immediately.
+  if (aRule.hasAttribute("recreated")) {
+    waitForEvent(EVENT_REORDER, aElm.parentNode,
+                 gTestIterator.iterateNext, gTestIterator);
+    aElm.removeAttribute(attr);
 
-  gTestIterator.iterateNext();
+  } else if (aRule.hasAttribute("textchanged")) {
+    waitForEvent(EVENT_TEXT_INSERTED, aElm,
+                 gTestIterator.iterateNext, gTestIterator);
+    aElm.removeAttribute(attr);
+
+  } else if (aRule.hasAttribute("contentchanged")) {
+    waitForEvent(EVENT_REORDER, aElm,
+                 gTestIterator.iterateNext, gTestIterator);
+    aElm.removeAttribute(attr);
+
+  } else {
+    aElm.removeAttribute(attr);
+    gTestIterator.iterateNext();
+  }
 }
 
 function testNameForElmRule(aElm, aRule)
@@ -254,8 +287,8 @@ function testNameForElmRule(aElm, aRule)
     return;
   }
 
-  var msg = "Element '" + tagname + "' test.";
-  testName(aElm, labelElm.getAttribute("a11yname"), msg);
+  var msg = "Element '" + tagname + "' test (" + gTestIterator.testID + ").";
+  testName(aElm, labelElm.getAttribute("textequiv"), msg);
   testAttrs(aElm, {"explicit-name" : "true"}, true);
 
   var parentNode = labelElm.parentNode;
@@ -272,8 +305,8 @@ function testNameForElmRule(aElm, aRule)
 
 function testNameForSubtreeRule(aElm, aRule)
 {
-  var msg = "From subtree test.";
-  testName(aElm, aElm.getAttribute("a11yname"), msg);
+  var msg = "From subtree test (" + gTestIterator.testID + ").";
+  testName(aElm, aElm.getAttribute("textequiv"), msg);
   testAbsentAttrs(aElm, {"explicit-name" : "true"});
 
   if (gDumpToConsole) {

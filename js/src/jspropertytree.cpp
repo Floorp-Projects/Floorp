@@ -259,8 +259,6 @@ Shape::dump(JSContext *cx, FILE *fp) const
 
     if (JSID_IS_INT(propid)) {
         fprintf(fp, "[%ld]", (long) JSID_TO_INT(propid));
-    } else if (JSID_IS_DEFAULT_XML_NAMESPACE(propid)) {
-        fprintf(fp, "<default XML namespace>");
     } else {
         JSLinearString *str;
         if (JSID_IS_ATOM(propid)) {

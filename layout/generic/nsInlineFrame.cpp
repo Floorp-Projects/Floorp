@@ -5,8 +5,9 @@
 
 /* rendering object for CSS display:inline objects */
 
-#include "nsCOMPtr.h"
 #include "nsInlineFrame.h"
+#include "nsCOMPtr.h"
+#include "nsLineLayout.h"
 #include "nsBlockFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsGkAtoms.h"

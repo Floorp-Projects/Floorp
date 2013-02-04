@@ -18,50 +18,26 @@ XPIDL_MODULE	= dom_svg
 XPIDLSRCS	= \
 		nsIDOMGetSVGDocument.idl \
 		nsIDOMSVGAElement.idl \
-		nsIDOMSVGAltGlyphElement.idl \
 		nsIDOMSVGAnimatedEnum.idl \
 		nsIDOMSVGAnimatedInteger.idl \
 		nsIDOMSVGAnimatedLength.idl \
 		nsIDOMSVGAnimatedNumber.idl \
 		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimatedString.idl \
-		nsIDOMSVGAnimateElement.idl \
-		nsIDOMSVGAnimateMotionElement.idl \
-		nsIDOMSVGAnimateTransformElement.idl \
-		nsIDOMSVGAnimationElement.idl \
-		nsIDOMSVGCircleElement.idl \
 		nsIDOMSVGClipPathElement.idl \
-		nsIDOMSVGDefsElement.idl \
-		nsIDOMSVGDescElement.idl \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
-		nsIDOMSVGEllipseElement.idl \
 		nsIDOMSVGEvent.idl \
 		nsIDOMSVGFilterElement.idl \
 		nsIDOMSVGFilters.idl \
-		nsIDOMSVGForeignObjectElem.idl \
-		nsIDOMSVGGElement.idl \
-		nsIDOMSVGGradientElement.idl \
 		nsIDOMSVGImageElement.idl \
 		nsIDOMSVGLength.idl \
-		nsIDOMSVGLineElement.idl \
 		nsIDOMSVGMarkerElement.idl \
 		nsIDOMSVGMaskElement.idl \
-		nsIDOMSVGMetadataElement.idl \
-		nsIDOMSVGMpathElement.idl \
 		nsIDOMSVGNumber.idl \
-		nsIDOMSVGPathElement.idl \
-		nsIDOMSVGPatternElement.idl \
-		nsIDOMSVGPolygonElement.idl \
-		nsIDOMSVGPolylineElement.idl \
 		nsIDOMSVGRect.idl \
-		nsIDOMSVGRectElement.idl \
-		nsIDOMSVGScriptElement.idl \
-		nsIDOMSVGSetElement.idl \
 		nsIDOMSVGSVGElement.idl \
-		nsIDOMSVGStopElement.idl \
 		nsIDOMSVGStringList.idl \
-		nsIDOMSVGStyleElement.idl \
 		nsIDOMSVGSwitchElement.idl \
 		nsIDOMSVGSymbolElement.idl \
 		nsIDOMSVGTextContentElement.idl \

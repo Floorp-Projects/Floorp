@@ -356,8 +356,8 @@ Other Measurements\n\
 Explicit Allocations\n\
 1,000.00 MB (100.0%) -- explicit\n\
 ├────499.00 MB (49.90%) ── a/b/c [3]\n\
-├────200.00 MB (20.00%) ── flip/the/backslashes\n\
 ├────200.00 MB (20.00%) ── compartment(compartment-url)\n\
+├────200.00 MB (20.00%) ── flip/the/backslashes\n\
 └────101.00 MB (10.10%) ── heap-unclassified\n\
 \n\
 Other Measurements\n\
@@ -515,8 +515,8 @@ Other Measurements\n\
 Explicit Allocations\n\
 1,048,576,000 B (100.0%) -- explicit\n\
 ├────523,239,424 B (49.90%) ── a/b/c [3]\n\
-├────209,715,200 B (20.00%) ── flip/the/backslashes\n\
 ├────209,715,200 B (20.00%) ── compartment(compartment-url)\n\
+├────209,715,200 B (20.00%) ── flip/the/backslashes\n\
 └────105,906,176 B (10.10%) ── heap-unclassified\n\
 \n\
 Virtual Size Breakdown\n\

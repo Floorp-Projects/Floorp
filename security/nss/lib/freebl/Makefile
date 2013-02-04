@@ -180,7 +180,7 @@ endif # Darwin
 ifeq ($(OS_TARGET),Linux)
 ifeq ($(CPU_ARCH),x86_64)
     ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
-    ASFLAGS += -march=opteron -m64 -fPIC -Wa,--noexecstack
+    ASFLAGS += -m64 -fPIC -Wa,--noexecstack
     DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
     DEFINES += -DNSS_USE_COMBA
     DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
@@ -188,16 +188,8 @@ ifeq ($(CPU_ARCH),x86_64)
     # comment the next two lines to turn off intel HW accelleration
     DEFINES += -DUSE_HW_AES
     ASFILES += intel-aes.s intel-gcm.s
-    # The integrated assembler in Clang 3.0 does not support % in the
-    # expression of a .set directive. intel-gcm.s uses .set to give
-    # symbolic names to registers, for example,
-    #     .set  Htbl, %rdi
-    # So we can't use Clang's integrated assembler with intel-gcm.s.
-    ifneq (,$(findstring clang,$(AS)))
-        ASFLAGS += -no-integrated-as
-    endif
-    EXTRA_SRCS +=  intel-gcm-wrap.c
-    INTEL_GCM=1
+    EXTRA_SRCS += intel-gcm-wrap.c
+    INTEL_GCM = 1
     MPI_SRCS += mpi_amd64.c mp_comba.c
 endif
 ifeq ($(CPU_ARCH),x86)
@@ -453,8 +445,8 @@ else
 	# comment the next two lines to turn off intel HW accelleration
 	DEFINES += -DUSE_HW_AES
 	ASFILES += intel-aes.s intel-gcm.s
-        EXTRA_SRCS +=  intel-gcm-wrap.c
-        INTEL_GCM=1
+        EXTRA_SRCS += intel-gcm-wrap.c
+        INTEL_GCM = 1
 	MPI_SRCS += mpi_amd64.c
     else
 	# Solaris x86
@@ -658,13 +650,16 @@ endif
 
 ifdef INTEL_GCM
 #
-# GCM binary needs -msse4
+# GCM binary needs -mssse3
 #
-$(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): intel-gcm-wrap.c
-	@$(MAKE_OBJDIR)
-ifdef NEED_ABSOLUTE_PATH
-	$(CC) -o $@ -c -mssse3 $(CFLAGS) $(call core_abspath,$<)
-else
-	$(CC) -o $@ -c -mssse3 $(CFLAGS) $<
+$(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): CFLAGS += -mssse3
+
+# The integrated assembler in Clang 3.2 does not support % in the
+# expression of a .set directive. intel-gcm.s uses .set to give
+# symbolic names to registers, for example,
+#     .set  Htbl, %rdi
+# So we can't use Clang's integrated assembler with intel-gcm.s.
+ifneq (,$(findstring clang,$(AS)))
+$(OBJDIR)/$(PROG_PREFIX)intel-gcm$(OBJ_SUFFIX): ASFLAGS += -no-integrated-as
 endif
 endif
