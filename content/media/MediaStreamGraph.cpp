@@ -1314,9 +1314,10 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
     aMessage->RunDuringShutdown();
     delete aMessage;
     if (IsEmpty()) {
-      NS_ASSERTION(gGraph == this, "Switched managers during forced shutdown?");
-      gGraph = nullptr;
-      delete this;
+      if (gGraph == this) {
+        gGraph = nullptr;
+        delete this;
+      }
     }
     return;
   }
