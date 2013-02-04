@@ -36,7 +36,7 @@ ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DCONTEXT_COPY_IMAGE_CONTENTS=1
 endif
 
-ifneq (,$(filter windows cocoa, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DCAN_DRAW_IN_TITLEBAR=1
 endif
 

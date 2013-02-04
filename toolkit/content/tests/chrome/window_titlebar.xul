@@ -52,6 +52,7 @@
   <statusbar id="statusbar">
     <statusbarpanel>
       <label id="statuslabel" value="Status"/>
+      <label id="statuslabelnodrag" value="No Drag" onmousedown="event.preventDefault()"/>
     </statusbarpanel>
   </statusbar>
 
@@ -105,18 +106,26 @@ function test_titlebar()
   var titlebar = document.getElementById("titlebar");
   var label = document.getElementById("label");
 
-  // On Mac, the window can also be moved with the statusbar, but this works
-  // via the MozMouseHittest event, not via mouse events.
+  // on Mac, the window can also be moved with the statusbar
   if (navigator.platform.indexOf("Mac") >= 0) {
-    var preventDefaulted;
-
     var statuslabel = document.getElementById("statuslabel");
-    preventDefaulted = synthesizeMouse(statuslabel, 2, 2, { type: "MozMouseHittest" });
-    SimpleTest.ok(preventDefaulted, "MozMouseHittest should have been defaultPrevented over statusbar");
+    var statuslabelnodrag = document.getElementById("statuslabelnodrag");
 
-    var button = document.getElementById("button");
-    preventDefaulted = synthesizeMouse(button, 2, 2, { type: "MozMouseHittest" });
-    SimpleTest.ok(!preventDefaulted, "MozMouseHittest should NOT have been defaultPrevented over button");
+    origoldx = window.screenX;
+    origoldy = window.screenY;
+
+    synthesizeMouse(statuslabel, 2, 2, { type: "mousedown" });
+    synthesizeMouse(statuslabel, 22, 22, { type: "mousemove" });
+    SimpleTest.is(window.screenX, origoldx + 20, "move window with statusbar horizontal");
+    SimpleTest.is(window.screenY, origoldy + 20, "move window with statusbar vertical");
+    synthesizeMouse(statuslabel, 22, 22, { type: "mouseup" });
+
+    // event was cancelled so the drag should not have occurred
+    synthesizeMouse(statuslabelnodrag, 2, 2, { type: "mousedown" });
+    synthesizeMouse(statuslabelnodrag, 22, 22, { type: "mousemove" });
+    SimpleTest.is(window.screenX, origoldx + 20, "move window with statusbar cancelled mousedown horizontal");
+    SimpleTest.is(window.screenY, origoldy + 20, "move window with statusbar cancelled mousedown vertical");
+    synthesizeMouse(statuslabelnodrag, 22, 22, { type: "mouseup" });
   }
 
   origoldx = window.screenX;
