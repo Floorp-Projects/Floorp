@@ -9,7 +9,7 @@
 #include "nsCOMPtr.h"
 
 class nsISmsService;
-class nsISmsDatabaseService;
+class nsIMobileMessageDatabaseService;
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +19,7 @@ class SmsServicesFactory
 {
 public:
   static already_AddRefed<nsISmsService> CreateSmsService();
-  static already_AddRefed<nsISmsDatabaseService> CreateSmsDatabaseService();
+  static already_AddRefed<nsIMobileMessageDatabaseService> CreateMobileMessageDatabaseService();
 };
 
 } // namespace sms
