@@ -10,4 +10,7 @@ export MOZ_PACKAGE_JSSHELL=1
 
 ac_add_options --with-macbundlename-prefix=Firefox
 
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=asan
+
 . "$topsrcdir/build/mozconfig.common.override"
