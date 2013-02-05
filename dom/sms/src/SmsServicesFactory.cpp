@@ -8,11 +8,15 @@
 #include "SmsService.h"
 #include "SmsIPCService.h"
 #ifndef MOZ_B2G_RIL
-#include "SmsDatabaseService.h"
+#include "MobileMessageDatabaseService.h"
 #endif
 #include "nsServiceManagerUtils.h"
 
 #define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"
+
+#ifndef MOZ_B2G_RIL
+using namespace mozilla::dom::mobilemessage;
+#endif
 
 namespace mozilla {
 namespace dom {

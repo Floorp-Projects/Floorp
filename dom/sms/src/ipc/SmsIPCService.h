@@ -7,7 +7,7 @@
 #define mozilla_dom_sms_SmsIPCService_h
 
 #include "nsISmsService.h"
-#include "nsISmsDatabaseService.h"
+#include "nsIMobileMessageDatabaseService.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {

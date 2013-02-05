@@ -16,7 +16,7 @@
 #include "SmsRequest.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
-#include "nsISmsDatabaseService.h"
+#include "nsIMobileMessageDatabaseService.h"
 #include "nsIXPConnect.h"
 #include "nsIPermissionManager.h"
 

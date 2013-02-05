@@ -8,7 +8,7 @@
 #include "nsError.h"
 #include "nsIDOMSmsMessage.h"
 #include "SmsRequest.h"
-#include "nsISmsDatabaseService.h"
+#include "nsIMobileMessageDatabaseService.h"
 
 DOMCI_DATA(MozSmsCursor, mozilla::dom::sms::SmsCursor)
 

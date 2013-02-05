@@ -226,7 +226,7 @@ static void Shutdown();
 #include "nsDeviceSensors.h"
 #include "nsCSPService.h"
 #include "nsISmsService.h"
-#include "nsISmsDatabaseService.h"
+#include "nsIMobileMessageDatabaseService.h"
 #include "mozilla/dom/sms/SmsServicesFactory.h"
 #include "nsIPowerManagerService.h"
 #include "nsIAlarmHalService.h"
