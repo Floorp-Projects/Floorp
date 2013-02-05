@@ -135,7 +135,7 @@ let styleEditorDefinition = {
   tooltip: l10n("ToolboxStyleEditor.tooltip", styleEditorStrings),
 
   isTargetSupported: function(target) {
-    return target.isLocalTab;
+    return !target.isRemote;
   },
 
   build: function(iframeWindow, toolbox) {
