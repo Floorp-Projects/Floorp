@@ -247,10 +247,6 @@ extern bool
 InflateUTF8StringToBuffer(JSContext *cx, const char *bytes, size_t length,
                           jschar *chars, size_t *charsLength);
 
-/* Get number of bytes in the deflated sequence of characters. */
-extern size_t
-GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t charsLength);
-
 /*
  * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for
  * 'length chars. The buffer is NOT null-terminated. The destination length
