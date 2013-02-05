@@ -5435,11 +5435,11 @@ IonBuilder::jsop_getelem_dense()
     bool loadDouble = !barrier &&
                       loopDepth_ &&
                       !readOutOfBounds &&
+                      !needsHoleCheck &&
+                      knownType == JSVAL_TYPE_DOUBLE &&
                       oracle->elementReadShouldAlwaysLoadDoubles(script(), pc);
-    if (loadDouble) {
-        JS_ASSERT(!needsHoleCheck && knownType == JSVAL_TYPE_DOUBLE);
+    if (loadDouble)
         elements = addConvertElementsToDoubles(elements);
-    }
 
     MInitializedLength *initLength = MInitializedLength::New(elements);
     current->add(initLength);
