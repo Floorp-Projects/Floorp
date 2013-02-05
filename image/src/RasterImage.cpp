@@ -905,24 +905,29 @@ RasterImage::FrameIsOpaque(uint32_t aWhichFrame)
          framerect.IsEqualInterior(nsIntRect(0, 0, mSize.width, mSize.height));
 }
 
-void
-RasterImage::GetCurrentFrameRect(nsIntRect& aRect)
+nsIntRect
+RasterImage::FrameRect(uint32_t aWhichFrame)
 {
-  // Get the current frame
-  imgFrame* curframe = GetCurrentImgFrame();
-
-  // If we have the frame, use that rectangle
-  if (curframe) {
-    aRect = curframe->GetRect();
-  } else {
-    // If the frame doesn't exist, we pass the empty rectangle. It's not clear
-    // whether this is appropriate in general, but at the moment the only
-    // consumer of this method is imgStatusTracker (when it wants to figure out
-    // dirty rectangles to send out batched observer updates). This should
-    // probably be revisited when we fix bug 503973.
-    aRect.MoveTo(0, 0);
-    aRect.SizeTo(0, 0);
+  if (aWhichFrame > FRAME_MAX_VALUE) {
+    NS_WARNING("aWhichFrame outside valid range!");
+    return nsIntRect();
   }
+
+  // Get the requested frame.
+  imgFrame* frame = aWhichFrame == FRAME_FIRST ? GetImgFrame(0)
+                                               : GetCurrentImgFrame();
+
+  // If we have the frame, use that rectangle.
+  if (frame) {
+    return frame->GetRect();
+  }
+
+  // If the frame doesn't exist, we return the empty rectangle. It's not clear
+  // whether this is appropriate in general, but at the moment the only
+  // consumer of this method is imgStatusTracker (when it wants to figure out
+  // dirty rectangles to send out batched observer updates). This should
+  // probably be revisited when we fix bug 503973.
+  return nsIntRect();
 }
 
 uint32_t

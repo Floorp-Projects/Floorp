@@ -213,10 +213,10 @@ VectorImage::Init(imgDecoderObserver* aObserver,
   return NS_OK;
 }
 
-void
-VectorImage::GetCurrentFrameRect(nsIntRect& aRect)
+nsIntRect
+VectorImage::FrameRect(uint32_t aWhichFrame)
 {
-  aRect = nsIntRect::GetMaxSizedIntRect();
+  return nsIntRect::GetMaxSizedIntRect();
 }
 
 size_t
