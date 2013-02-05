@@ -181,13 +181,22 @@ GetGCKindSlots(AllocKind thingKind, Class *clasp)
     return nslots;
 }
 
+#ifdef JSGC_GENERATIONAL
+template <typename NurseryType>
+inline bool
+ShouldNurseryAllocate(const NurseryType &nursery, AllocKind kind, InitialHeap heap)
+{
+    return nursery.isEnabled() && IsNurseryAllocable(kind) && heap != TenuredHeap;
+}
+#endif
+
 inline bool
 IsInsideNursery(JSRuntime *rt, void *thing)
 {
 #ifdef JSGC_GENERATIONAL
 #if JS_GC_ZEAL
     if (rt->gcVerifyPostData)
-        return rt->gcNursery.isInside(thing);
+        return rt->gcVerifierNursery.isInside(thing);
 #endif
 #endif
     return false;
@@ -515,11 +524,10 @@ NewGCThing(JSContext *cx, AllocKind kind, size_t thingSize, InitialHeap heap)
 
 #if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
     if (cx->runtime->gcVerifyPostData &&
-        IsNurseryAllocable(kind) &&
-        !IsAtomsCompartment(cx->compartment) &&
-        heap != TenuredHeap)
+        ShouldNurseryAllocate(cx->runtime->gcVerifierNursery, kind, heap))
     {
-        cx->runtime->gcNursery.insertPointer(t);
+        JS_ASSERT(!IsAtomsCompartment(cx->compartment));
+        cx->runtime->gcVerifierNursery.insertPointer(t);
     }
 #endif
 
