@@ -6,14 +6,14 @@
 
 #include "Voicemail.h"
 #include "nsIDOMMozVoicemailStatus.h"
+#include "nsIDOMMozVoicemailEvent.h"
 
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
-
-#include "VoicemailEvent.h"
+#include "GeneratedEvents.h"
 
 DOMCI_DATA(MozVoicemail, mozilla::dom::Voicemail)
 
@@ -93,12 +93,15 @@ NS_IMPL_EVENT_HANDLER(Voicemail, statuschanged)
 NS_IMETHODIMP
 Voicemail::VoicemailNotification(nsIDOMMozVoicemailStatus* aStatus)
 {
-  nsRefPtr<VoicemailEvent> event = new VoicemailEvent(nullptr, nullptr);
-  nsresult rv = event->InitVoicemailEvent(NS_LITERAL_STRING("statuschanged"),
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMMozVoicemailEvent(getter_AddRefs(event), nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMMozVoicemailEvent> ce = do_QueryInterface(event);
+  nsresult rv = ce->InitMozVoicemailEvent(NS_LITERAL_STRING("statuschanged"),
                                           false, false, aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DispatchTrustedEvent(static_cast<nsIDOMMozVoicemailEvent*>(event));
+  return DispatchTrustedEvent(ce);
 }
 
 } // namespace dom

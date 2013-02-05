@@ -25,7 +25,6 @@ EXPORTS_mozilla/dom = \
 
 CPPSRCS = \
   Voicemail.cpp \
-  VoicemailEvent.cpp \
   $(NULL)
 
 XPIDLSRCS = \
