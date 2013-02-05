@@ -61,13 +61,17 @@ add_task(function test_current_properties() {
 
   do_check_eq(recorder.startDate.getTime(), now.getTime());
   do_check_eq(recorder.activeTicks, 0);
-  do_check_true(recorder.totalTime > 0);
+  do_check_true(recorder.fineTotalTime > 0);
   do_check_eq(recorder.main, 500);
   do_check_eq(recorder.firstPaint, 1000);
   do_check_eq(recorder.sessionRestored, 1500);
 
   recorder.incrementActiveTicks();
   do_check_eq(recorder.activeTicks, 1);
+
+  recorder._startDate = new Date(Date.now() - 1000);
+  recorder.updateTotalTime();
+  do_check_eq(recorder.totalTime, 1);
 
   recorder.onShutdown();
 });
@@ -270,8 +274,8 @@ add_task(function test_record_activity() {
   for (let i = 0; i < 3; i++) {
     Services.obs.notifyObservers(null, "user-interaction-active", null);
     yield sleep(25);
-    do_check_true(recorder.totalTime > total);
-    total = recorder.totalTime;
+    do_check_true(recorder.fineTotalTime > total);
+    total = recorder.fineTotalTime;
   }
 
   do_check_eq(recorder.activeTicks, 3);
@@ -279,15 +283,15 @@ add_task(function test_record_activity() {
   // Now send inactive. We should increment total time but not active.
   Services.obs.notifyObservers(null, "user-interaction-inactive", null);
   do_check_eq(recorder.activeTicks, 3);
-  do_check_true(recorder.totalTime > total);
-  total = recorder.totalTime;
+  do_check_true(recorder.fineTotalTime > total);
+  total = recorder.fineTotalTime;
   yield sleep(25);
 
   // If we send active again, this should be counted as inactive.
   Services.obs.notifyObservers(null, "user-interaction-active", null);
   do_check_eq(recorder.activeTicks, 3);
-  do_check_true(recorder.totalTime > total);
-  total = recorder.totalTime;
+  do_check_true(recorder.fineTotalTime > total);
+  total = recorder.fineTotalTime;
   yield sleep(25);
 
   // If we send active again, this should be counted as active.
