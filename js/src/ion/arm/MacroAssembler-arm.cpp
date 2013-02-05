@@ -2224,6 +2224,15 @@ MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const BaseIndex &a
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Address &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    ma_cmp(ScratchRegister, ImmTag(JSVAL_TAG_INT32));
+    return cond;
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testDouble(Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
