@@ -322,7 +322,7 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         JS_ReportOutOfMemory(cx);
         return false;
     }
-    HashTableWriteBarrierPost(cx->runtime, map, key);
+    HashTableWriteBarrierPost(cx->runtime, map, key.get());
 
     args.rval().setUndefined();
     return true;

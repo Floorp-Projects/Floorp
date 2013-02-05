@@ -740,9 +740,8 @@ JSObject::setDateUTCTime(const js::Value &time)
 /* static */ inline bool
 JSObject::setSingletonType(JSContext *cx, js::HandleObject obj)
 {
-#if defined(JSGC_GENERATIONAL)
-    JS_ASSERT(!obj->runtime()->gcNursery.isInside(obj.get()));
-#endif
+    JS_ASSERT(!IsInsideNursery(cx->runtime, obj.get()));
+
     if (!cx->typeInferenceEnabled())
         return true;
 
