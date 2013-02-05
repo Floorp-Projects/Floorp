@@ -13,7 +13,10 @@ let gDataNotificationInfoBar = {
 
   _DATA_REPORTING_NOTIFICATION: "data-reporting",
 
-  _notificationBox: null,
+  get _notificationBox() {
+    delete this._notificationBox;
+    return this._notificationBox = document.getElementById("global-notificationbox");
+  },
 
   get _log() {
     let log4moz = Cu.import("resource://services-common/log4moz.js", {}).Log4Moz;
@@ -35,34 +38,11 @@ let gDataNotificationInfoBar = {
     }
   },
 
-  _ensureNotificationBox: function () {
-    if (this._notificationBox) {
-      return;
-    }
-
-    let nb = document.createElementNS(
-      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-      "notificationbox"
-    );
-    nb.id = "data-notification-notify-bar";
-    nb.setAttribute("flex", "1");
-
-    let bottombox = document.getElementById("browser-bottombox");
-    bottombox.insertBefore(nb, bottombox.firstChild);
-
-    this._notificationBox = nb;
-  },
-
   _getDataReportingNotification: function (name=this._DATA_REPORTING_NOTIFICATION) {
-    if (!this._notificationBox) {
-      return undefined;
-    }
     return this._notificationBox.getNotificationWithValue(name);
   },
 
   _displayDataPolicyInfoBar: function (request) {
-    this._ensureNotificationBox();
-
     if (this._getDataReportingNotification()) {
       return;
     }
