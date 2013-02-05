@@ -199,7 +199,8 @@ static NSScreen *FindTargetScreenForRect(const nsIntRect& aRect)
 // fits the rect to the screen that contains the largest area of it,
 // or to aScreen if a screen is passed in
 // NB: this operates with aRect in global display pixels
-static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *aScreen)
+static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *aScreen,
+                                          bool aUsesNativeFullScreen)
 {
   if (!aScreen) {
     aScreen = FindTargetScreenForRect(aRect);
@@ -229,6 +230,16 @@ static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *aScreen)
   if (aRect.y < screenBounds.y || aRect.y > (screenBounds.y + screenBounds.height)) {
     aRect.y = screenBounds.y;
   }
+
+  // If aRect is filling the screen and the window supports native (Lion-style)
+  // fullscreen mode, reduce aRect's height and shift it down by 22 pixels
+  // (nominally the height of the menu bar or of a window's title bar).  For
+  // some reason this works around bug 740923.  Yes, it's a bodacious hack.
+  // But until we know more it will have to do.
+  if (aUsesNativeFullScreen && aRect.y == 0 && aRect.height == screenBounds.height) {
+    aRect.y = 22;
+    aRect.height -= 22;
+  }
 }
 
 // Some applications like Camino use native popup windows
@@ -256,7 +267,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   nsAutoreleasePool localPool;
 
   nsIntRect newBounds = aRect;
-  FitRectToVisibleAreaForScreen(newBounds, nullptr);
+  FitRectToVisibleAreaForScreen(newBounds, nullptr, mUsesNativeFullScreen);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = eWindowType_toplevel;
@@ -1334,8 +1345,10 @@ nsresult nsCocoaWindow::DoResize(double aX, double aY,
                       NSToIntRound(height / scale));
 
   // constrain to the screen that contains the largest area of the new rect
-  FitRectToVisibleAreaForScreen(newBounds, aConstrainToCurrentScreen ?
-                                           [mWindow screen] : nullptr);
+  FitRectToVisibleAreaForScreen(newBounds,
+                                aConstrainToCurrentScreen ?
+                                  [mWindow screen] : nullptr,
+                                mUsesNativeFullScreen);
 
   // convert requested bounds into Cocoa coordinate system
   NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(newBounds);
