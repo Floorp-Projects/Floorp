@@ -40,7 +40,7 @@ public:
   nsresult Init(imgDecoderObserver* aObserver,
                 const char* aMimeType,
                 uint32_t aFlags);
-  virtual void GetCurrentFrameRect(nsIntRect& aRect) MOZ_OVERRIDE;
+  virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
   virtual size_t HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const;
   virtual size_t HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const;
