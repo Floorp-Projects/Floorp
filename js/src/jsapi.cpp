@@ -5185,7 +5185,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_ASSERT_IF(options.principals, cx->compartment->principals == options.principals);
     AutoLastFrameCheck lfc(cx);
 
-    return frontend::CompileScript(cx, obj, NullFramePtr(), options, StableCharPtr(chars, length), length);
+    return frontend::CompileScript(cx, obj, NullFramePtr(), options, chars, length);
 }
 
 JSScript *
@@ -5300,7 +5300,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, siz
     {
         CompileOptions options(cx);
         options.setCompileAndGo(false);
-        Parser parser(cx, options, StableCharPtr(chars, length), length, /* foldConstants = */ true);
+        Parser parser(cx, options, chars, length, /* foldConstants = */ true);
         if (parser.init()) {
             older = JS_SetErrorReporter(cx, NULL);
             if (!parser.parse(obj) &&
@@ -5364,7 +5364,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     if (!fun)
         return NULL;
 
-    if (!frontend::CompileFunctionBody(cx, fun, options, formals, StableCharPtr(chars, length), length))
+    if (!frontend::CompileFunctionBody(cx, fun, options, formals, chars, length))
         return NULL;
 
     if (obj && funAtom) {
@@ -5540,8 +5540,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
     options.setNoScriptRval(!rval);
     SourceCompressionToken sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, obj, NullFramePtr(), options,
-                                                    StableCharPtr(chars, length), length,
-                                                    NULL, 0, &sct));
+                                                    chars, length, NULL, 0, &sct));
     if (!script)
         return false;
 
@@ -5972,10 +5971,10 @@ JS_GetStringCharsZ(JSContext *cx, JSString *str)
     AssertHeapIsIdleOrStringIsFlat(cx, str);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, str);
-    JSStableString *stable = str->ensureStable(cx);
-    if (!stable)
+    JSFlatString *flat = str->ensureFlat(cx);
+    if (!flat)
         return NULL;
-    return stable->chars().get();
+    return flat->chars();
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -5985,11 +5984,11 @@ JS_GetStringCharsZAndLength(JSContext *cx, JSString *str, size_t *plength)
     AssertHeapIsIdleOrStringIsFlat(cx, str);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, str);
-    JSStableString *stable = str->ensureStable(cx);
-    if (!stable)
+    JSFlatString *flat = str->ensureFlat(cx);
+    if (!flat)
         return NULL;
-    *plength = stable->length();
-    return stable->chars().get();
+    *plength = flat->length();
+    return flat->chars();
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -5999,21 +5998,21 @@ JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *plength)
     AssertHeapIsIdleOrStringIsFlat(cx, str);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, str);
-    JSStableString *stable = str->ensureStable(cx);
-    if (!stable)
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
         return NULL;
-    *plength = stable->length();
-    return stable->chars().get();
+    *plength = linear->length();
+    return linear->chars();
 }
 
 JS_PUBLIC_API(const jschar *)
 JS_GetInternedStringChars(JSString *str)
 {
     JS_ASSERT(str->isAtom());
-    JSStableString *stable = str->ensureStable(NULL);
-    if (!stable)
+    JSFlatString *flat = str->ensureFlat(NULL);
+    if (!flat)
         return NULL;
-    return stable->chars().get();
+    return flat->chars();
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -6021,11 +6020,11 @@ JS_GetInternedStringCharsAndLength(JSString *str, size_t *plength)
 {
     JS_ASSERT(str->isAtom());
     JS_ASSERT(plength);
-    JSStableString *stable = str->ensureStable(NULL);
-    if (!stable)
+    JSFlatString *flat = str->ensureFlat(NULL);
+    if (!flat)
         return NULL;
-    *plength = stable->length();
-    return stable->chars().get();
+    *plength = flat->length();
+    return flat->chars();
 }
 
 extern JS_PUBLIC_API(JSFlatString *)
@@ -6043,10 +6042,7 @@ JS_FlattenString(JSContext *cx, JSString *str)
 extern JS_PUBLIC_API(const jschar *)
 JS_GetFlatStringChars(JSFlatString *str)
 {
-    JSStableString *stable = str->ensureStable(NULL);
-    if (!stable)
-        return NULL;
-    return stable->chars().get();
+    return str->chars();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6632,7 +6628,7 @@ JS_NewRegExpObject(JSContext *cx, JSObject *objArg, char *bytes, size_t length, 
         return NULL;
 
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    RegExpObject *reobj = RegExpObject::create(cx, res, StableCharPtr(chars, length), length,
+    RegExpObject *reobj = RegExpObject::create(cx, res, chars, length,
                                                RegExpFlag(flags), NULL);
     js_free(chars);
     return reobj;
@@ -6645,7 +6641,7 @@ JS_NewUCRegExpObject(JSContext *cx, JSObject *objArg, jschar *chars, size_t leng
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    return RegExpObject::create(cx, res, StableCharPtr(chars, length), length,
+    return RegExpObject::create(cx, res, chars, length,
                                 RegExpFlag(flags), NULL);
 }
 
@@ -6681,10 +6677,9 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *objArg, JSObject *reobjArg, jschar *ch
     CHECK_REQUEST(cx);
 
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    StableCharPtr charPtr(chars, length);
 
     RootedValue val(cx);
-    if (!ExecuteRegExpLegacy(cx, res, reobj->asRegExp(), NullPtr(), charPtr, length, indexp, test,
+    if (!ExecuteRegExpLegacy(cx, res, reobj->asRegExp(), NullPtr(), chars, length, indexp, test,
                              &val))
     {
         return false;
@@ -6701,7 +6696,7 @@ JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, unsigned 
     jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    RegExpObject *reobj = RegExpObject::createNoStatics(cx, StableCharPtr(chars, length), length,
+    RegExpObject *reobj = RegExpObject::createNoStatics(cx, chars, length,
                                                         RegExpFlag(flags), NULL);
     js_free(chars);
     return reobj;
@@ -6712,7 +6707,7 @@ JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, unsig
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return RegExpObject::createNoStatics(cx, StableCharPtr(chars, length), length,
+    return RegExpObject::createNoStatics(cx, chars, length,
                                          RegExpFlag(flags), NULL);
 }
 
@@ -6724,10 +6719,8 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *objArg, jschar *chars, size_t
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    StableCharPtr charPtr(chars, length);
-
     RootedValue val(cx);
-    if (!ExecuteRegExpLegacy(cx, NULL, obj->asRegExp(), NullPtr(), charPtr, length, indexp, test,
+    if (!ExecuteRegExpLegacy(cx, NULL, obj->asRegExp(), NullPtr(), chars, length, indexp, test,
                              &val))
     {
         return false;

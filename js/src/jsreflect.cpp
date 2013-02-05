@@ -3031,7 +3031,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     size_t length = stable->length();
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
-    Parser parser(cx, options, chars, length, /* foldConstants = */ false);
+    Parser parser(cx, options, chars.get(), length, /* foldConstants = */ false);
     if (!parser.init())
         return JS_FALSE;
 
