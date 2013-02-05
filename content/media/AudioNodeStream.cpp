@@ -99,26 +99,6 @@ AudioNodeStream::SetInt32Parameter(uint32_t aIndex, int32_t aValue)
 }
 
 void
-AudioNodeStream::SetTimelineParameter(uint32_t aIndex,
-                                      const AudioEventTimeline<ErrorResult>& aValue)
-{
-  class Message : public ControlMessage {
-  public:
-    Message(AudioNodeStream* aStream, uint32_t aIndex,
-            const AudioEventTimeline<ErrorResult>& aValue)
-      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex) {}
-    virtual void Run()
-    {
-      static_cast<AudioNodeStream*>(mStream)->Engine()->
-          SetTimelineParameter(mIndex, mValue);
-    }
-    AudioEventTimeline<ErrorResult> mValue;
-    uint32_t mIndex;
-  };
-  GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));
-}
-
-void
 AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
 {
   class Message : public ControlMessage {

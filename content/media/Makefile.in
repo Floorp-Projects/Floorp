@@ -19,7 +19,6 @@ endif # !_MSC_VER
 EXPORTS = \
   AbstractMediaDecoder.h \
   AudioChannelFormat.h \
-  AudioEventTimeline.h \
   AudioNodeEngine.h \
   AudioNodeStream.h \
   AudioSampleFormat.h \

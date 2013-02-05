@@ -7,7 +7,6 @@
 #define MOZILLA_AUDIONODEENGINE_H_
 
 #include "AudioSegment.h"
-#include "mozilla/dom/AudioParam.h"
 
 namespace mozilla {
 
@@ -120,11 +119,6 @@ public:
   virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam)
   {
     NS_ERROR("Invalid SetInt32Parameter index");
-  }
-  virtual void SetTimelineParameter(uint32_t aIndex,
-                                    const dom::AudioParamTimeline& aValue)
-  {
-    NS_ERROR("Invalid SetTimelineParameter index");
   }
   virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
   {
