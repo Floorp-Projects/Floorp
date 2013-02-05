@@ -438,7 +438,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "Telephony.h"
 #include "TelephonyCall.h"
 #include "nsIDOMMozVoicemail.h"
-#include "nsIDOMMozVoicemailEvent.h"
 #include "nsIDOMIccManager.h"
 #include "StkCommandEvent.h"
 #include "nsIDOMMozCellBroadcast.h"
@@ -1424,8 +1423,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozVoicemail, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MozVoicemailEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozIccManager, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozStkCommandEvent, nsDOMGenericSH,
@@ -3681,11 +3678,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(MozVoicemail, nsIDOMMozVoicemail)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozVoicemail)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MozVoicemailEvent, nsIDOMMozVoicemailEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozVoicemailEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MozIccManager, nsIDOMMozIccManager)
