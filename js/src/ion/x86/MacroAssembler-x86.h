@@ -303,6 +303,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(ToType(operand), ImmTag(JSVAL_TAG_INT32));
         return cond;
     }
+    Condition testInt32(Condition cond, const Address &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        return testInt32(cond, Operand(address));
+    }
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         return testUndefined(cond, value.typeReg());
     }

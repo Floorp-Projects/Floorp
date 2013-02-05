@@ -602,6 +602,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpl(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_INT32))));
         j(cond, label);
     }
+    void branchTestInt32(Condition cond, const Address &address, Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        branchTestInt32(cond, Operand(address), label);
+    }
     void branchTestBoolean(Condition cond, const Operand &operand, Label *label) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_BOOLEAN))));

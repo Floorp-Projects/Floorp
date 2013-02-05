@@ -578,6 +578,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testGCThing(Condition cond, const BaseIndex &address);
     Condition testMagic(Condition cond, const Address &address);
     Condition testMagic(Condition cond, const BaseIndex &address);
+    Condition testInt32(Condition cond, const Address &address);
 
     template <typename T>
     void branchTestGCThing(Condition cond, const T &t, Label *label) {
