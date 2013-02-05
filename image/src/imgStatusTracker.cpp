@@ -371,8 +371,7 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
     // OnDataAvailable
     // XXX - Should only send partial rects here, but that needs to
     // wait until we fix up the observer interface
-    nsIntRect r;
-    mImage->GetCurrentFrameRect(r);
+    nsIntRect r(mImage->FrameRect(imgIContainer::FRAME_CURRENT));
 
     // If there's any content in this frame at all (always true for
     // vector images, true for raster images that have decoded at

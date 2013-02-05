@@ -5,17 +5,17 @@
 #include "nsISupports.idl"
 
 %{C++
-#define SMS_DATABASE_SERVICE_CID \
-{ 0x2454c2a1, 0xefdd, 0x4d96,    \
-{ 0x83, 0xbd, 0x51, 0xa2, 0x9a, 0x21, 0xf5, 0xab } }
-#define SMS_DATABASE_SERVICE_CONTRACTID "@mozilla.org/sms/smsdatabaseservice;1"
+#define MOBILE_MESSAGE_DATABASE_SERVICE_CID \
+{ 0x0d84b9c2, 0x8f76, 0x4ba4,    \
+{ 0xa5, 0xcd, 0xdb, 0xfb, 0x01, 0xdf, 0xda, 0x99 } }
+#define MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessagedatabaseservice;1"
 %}
 
 interface nsIDOMMozSmsFilter;
 interface nsISmsRequest;
 
-[scriptable, uuid(b1311c6d-d863-4da1-8755-2fd59eb0f386)]
-interface nsISmsDatabaseService : nsISupports
+[scriptable, uuid(ce9232ca-6a08-11e2-b971-c795004622e7)]
+interface nsIMobileMessageDatabaseService : nsISupports
 {
   [binaryname(GetMessageMoz)]
   void getMessage(in long messageId, in nsISmsRequest request);

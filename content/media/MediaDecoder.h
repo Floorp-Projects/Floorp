@@ -946,7 +946,7 @@ public:
   nsCOMPtr<MediaDecoderStateMachine> mDecoderStateMachine;
 
   // Media data resource.
-  nsAutoPtr<MediaResource> mResource;
+  nsRefPtr<MediaResource> mResource;
 
   // |ReentrantMonitor| for detecting when the video play state changes. A call
   // to |Wait| on this monitor will block the thread until the next state

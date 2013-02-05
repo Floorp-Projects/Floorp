@@ -59,7 +59,7 @@ get_scanline_null (pixman_iter_t *iter, const uint32_t *mask)
     return NULL;
 }
 
-static void
+static pixman_bool_t
 noop_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 {
     pixman_image_t *image = iter->image;
@@ -93,9 +93,9 @@ noop_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 	}
 	else
 	{
-	    uint64_t color = bits->fetch_pixel_64 (bits, 0, 0);
-	    uint64_t *buffer = (uint64_t *)iter->buffer;
-	    uint64_t *end = buffer + iter->width;
+	    argb_t color = bits->fetch_pixel_float (bits, 0, 0);
+	    argb_t *buffer = (argb_t *)iter->buffer;
+	    argb_t *end = buffer + iter->width;
 
 	    while (buffer < end)
 		*(buffer++) = color;
@@ -117,11 +117,13 @@ noop_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
     }
     else
     {
-	(* imp->delegate->src_iter_init) (imp->delegate, iter);
+	return FALSE;
     }
+
+    return TRUE;
 }
 
-static void
+static pixman_bool_t
 noop_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 {
     pixman_image_t *image = iter->image;
@@ -138,10 +140,12 @@ noop_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 
 	iter->get_scanline = _pixman_iter_get_scanline_noop;
 	iter->write_back = dest_write_back_direct;
+
+	return TRUE;
     }
     else
     {
-	(* imp->delegate->dest_iter_init) (imp->delegate, iter);
+	return FALSE;
     }
 }
 
@@ -156,7 +160,7 @@ _pixman_implementation_create_noop (pixman_implementation_t *fallback)
 {
     pixman_implementation_t *imp =
 	_pixman_implementation_create (fallback, noop_fast_paths);
-
+ 
     imp->src_iter_init = noop_src_iter_init;
     imp->dest_iter_init = noop_dest_iter_init;
 

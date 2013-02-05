@@ -377,7 +377,8 @@ protected:
      * Note that the resulting content node is not bound to any tree
      */
     nsresult CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
-                                        mozilla::dom::Element** aResult);
+                                        mozilla::dom::Element** aResult,
+                                        bool aIsRoot);
 
     /**
      * Create a hook-up element to which content nodes can be attached for
