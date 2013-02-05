@@ -871,7 +871,7 @@ Sprinter::putString(JSString *s)
     if (!chars)
         return -1;
 
-    size_t size = GetDeflatedStringLength(context, chars, length);
+    size_t size = length;
     if (size == (size_t) -1)
         return -1;
 
