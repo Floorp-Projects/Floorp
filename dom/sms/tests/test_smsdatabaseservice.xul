@@ -4,9 +4,9 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="Test SmsDatabaseService"
+        title="Test MobileMessageDatabaseService by SMS"
         onload="run_test();">
-  <title>Test SmsDatabaseService</title>
+  <title>Test MobileMessageDatabaseService by SMS</title>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript"><![CDATA[
@@ -40,8 +40,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 let gIDBManager = Cc["@mozilla.org/dom/indexeddb/manager;1"]
                     .getService(Ci.nsIIndexedDatabaseManager);
 
-let gSmsDatabaseService = Cc["@mozilla.org/sms/rilsmsdatabaseservice;1"]
-                          .getService(Ci.nsISmsDatabaseService);
+let gMobileMessageDatabaseService = Cc["@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"]
+                                      .getService(Ci.nsIMobileMessageDatabaseService);
 
 let gRegistrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
@@ -197,13 +197,13 @@ let sms = [
 ];
 
 /**
- * nsISmsDatabaseService.saveReceivedMessage
+ * nsIMobileMessageDatabaseService.saveReceivedMessage
  */
 add_test(function test_saveReceivedMessage() {
   info("test_saveReceivedMessage");
-  let messageId = gSmsDatabaseService.saveReceivedMessage(sms[0].sender,
-                                                          sms[0].body,
-                                                          sms[0].timestamp);
+  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[0].sender,
+                                                                    sms[0].body,
+                                                                    sms[0].timestamp);
   checkDB(function (store) {
     let request = store.get(messageId);
     request.onsuccess = function onsuccess() {
@@ -220,13 +220,13 @@ add_test(function test_saveReceivedMessage() {
 });
 
 /**
- * nsISmsDatabaseService.saveSentMessage
+ * nsIMobileMessageDatabaseService.saveSentMessage
  */
 add_test(function test_saveSentMessage() {
   info("test_saveSentMessage");
-  let messageId = gSmsDatabaseService.saveSentMessage(sms[1].receiver,
-                                                      sms[1].body,
-                                                      sms[1].timestamp);
+  let messageId = gMobileMessageDatabaseService.saveSentMessage(sms[1].receiver,
+                                                                sms[1].body,
+                                                                sms[1].timestamp);
 
   checkDB(function (store) {
     let request = store.get(messageId);
@@ -244,7 +244,7 @@ add_test(function test_saveSentMessage() {
 });
 
 /**
- * nsISmsDatabaseService.getMessage
+ * nsIMobileMessageDatabaseService.getMessage
  */
 add_test(function test_getMessage_success() {
   info("test_getMessage_success");
@@ -262,11 +262,11 @@ add_test(function test_getMessage_success() {
       run_next_test();
     }
   });
-  let messageId = gSmsDatabaseService.saveReceivedMessage(sms[2].sender,
-                                                          sms[2].body,
-                                                          sms[2].timestamp);
+  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[2].sender,
+                                                                    sms[2].body,
+                                                                    sms[2].timestamp);
   SimpleTest.executeSoon(function () {
-    gSmsDatabaseService.getMessage(messageId, fakeRequestId);
+    gMobileMessageDatabaseService.getMessage(messageId, fakeRequestId);
   });
 });
 
@@ -280,11 +280,11 @@ add_test(function test_getMessage_failed() {
       run_next_test();
     }
   });
-  gSmsDatabaseService.getMessage(-1, fakeRequestId);
+  gMobileMessageDatabaseService.getMessage(-1, fakeRequestId);
 });
 
 /**
- * nsISmsDatabaseService.createMessageList
+ * nsIMobileMessageDatabaseService.createMessageList
  */
 function checkReceivedSms(message, i) {
   ok(message instanceof Ci.nsIDOMMozSmsMessage);
@@ -317,7 +317,7 @@ add_test(function test_createMessageList_empty_filter() {
       checkReceivedSms(message, i);
       auxListId = listId;
       i += 1;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId,
                                                         message) {
@@ -325,7 +325,7 @@ add_test(function test_createMessageList_empty_filter() {
       ok(message instanceof Ci.nsIDOMMozSmsMessage);
       i % 2 ? checkSentSms(message, i) : checkReceivedSms(message, i);
       i += 1;
-      gSmsDatabaseService.getNextMessageInList(auxListId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(auxListId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       is(requestId, fakeRequestId);
@@ -334,7 +334,7 @@ add_test(function test_createMessageList_empty_filter() {
     }
   });
   let filter = new MozSmsFilter();
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_empty_filter_reverse() {
@@ -350,7 +350,7 @@ add_test(function test_createMessageList_empty_filter_reverse() {
       checkReceivedSms(message, i);
       auxListId = listId;
       i -= 1;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId,
                                                         message) {
@@ -358,7 +358,7 @@ add_test(function test_createMessageList_empty_filter_reverse() {
       ok(message instanceof Ci.nsIDOMMozSmsMessage);
       i % 2 ? checkSentSms(message, i) : checkReceivedSms(message, i);
       i -= 1;
-      gSmsDatabaseService.getNextMessageInList(auxListId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(auxListId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       is(requestId, fakeRequestId);
@@ -367,7 +367,7 @@ add_test(function test_createMessageList_empty_filter_reverse() {
     }
   });
   let filter = new MozSmsFilter();
-  gSmsDatabaseService.createMessageList(filter, true, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, true, fakeRequestId);
 });
 
 add_test(function test_createMessageList_complete_filter_one_result() {
@@ -379,7 +379,7 @@ add_test(function test_createMessageList_complete_filter_one_result() {
                                                               message) {
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 0);
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId,
                                                         message) {
@@ -396,7 +396,7 @@ add_test(function test_createMessageList_complete_filter_one_result() {
   filter.endDate = new Date(sms[0].timestamp);
   filter.numbers = [sms[0].sender];
   filter.delivery = "received";
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_complete_filter_multi_result() {
@@ -411,14 +411,14 @@ add_test(function test_createMessageList_complete_filter_multi_result() {
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 0);
       auxListId = listId;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId, message) {
       ok(!secondMessage);
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 2);
       secondMessage = true;
-      gSmsDatabaseService.getNextMessageInList(auxListId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(auxListId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       ok(secondMessage);
@@ -431,7 +431,7 @@ add_test(function test_createMessageList_complete_filter_multi_result() {
   filter.endDate = new Date(sms[2].timestamp);
   filter.numbers = [sms[0].sender, sms[2].sender];
   filter.delivery = "received";
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_complete_filter_no_result() {
@@ -448,7 +448,7 @@ add_test(function test_createMessageList_complete_filter_no_result() {
   filter.endDate = new Date(sms[0].timestamp);
   filter.numbers = [sms[0].sender];
   filter.delivery = "sent";
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_delivery_sent_filter_success() {
@@ -460,7 +460,7 @@ add_test(function test_createMessageList_delivery_sent_filter_success() {
                                                               message) {
       is(requestId, fakeRequestId);
       checkSentSms(message, 1);
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       is(requestId, fakeRequestId);
@@ -469,7 +469,7 @@ add_test(function test_createMessageList_delivery_sent_filter_success() {
   });
   let filter = new MozSmsFilter();
   filter.delivery = "sent";
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_delivery_received_filter_success() {
@@ -484,14 +484,14 @@ add_test(function test_createMessageList_delivery_received_filter_success() {
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 0);
       auxListId = listId;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId, message) {
       ok(!secondMessage);
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 2);
       secondMessage = true;
-      gSmsDatabaseService.getNextMessageInList(auxListId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(auxListId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       ok(secondMessage);
@@ -501,7 +501,7 @@ add_test(function test_createMessageList_delivery_received_filter_success() {
   });
   let filter = new MozSmsFilter();
   filter.delivery = "received";
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_startDate_filter_success() {
@@ -517,14 +517,14 @@ add_test(function test_createMessageList_startDate_filter_success() {
       checkReceivedSms(message, i);
       auxListId = listId;
       i += 1;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId,
                                                         message) {
       is(requestId, fakeRequestId);
       i % 2 ? checkSentSms(message, i) : checkReceivedSms(message, i);
       i += 1;
-      gSmsDatabaseService.getNextMessageInList(auxListId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(auxListId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       is(requestId, fakeRequestId);
@@ -534,7 +534,7 @@ add_test(function test_createMessageList_startDate_filter_success() {
   });
   let filter = new MozSmsFilter();
   filter.startDate = new Date(sms[0].timestamp);
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_startDate_filter_failed() {
@@ -548,7 +548,7 @@ add_test(function test_createMessageList_startDate_filter_failed() {
   });
   let filter = new MozSmsFilter();
   filter.startDate = new Date(sms[2].timestamp + 1);
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_endDate_filter_success() {
@@ -564,14 +564,14 @@ add_test(function test_createMessageList_endDate_filter_success() {
       checkReceivedSms(message, i);
       auxListId = listId;
       i += 1;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId,
                                                         message) {
       is(requestId, fakeRequestId);
       i % 2 ? checkSentSms(message, i) : checkReceivedSms(message, i);
       i += 1;
-      gSmsDatabaseService.getNextMessageInList(auxListId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(auxListId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       is(requestId, fakeRequestId);
@@ -581,7 +581,7 @@ add_test(function test_createMessageList_endDate_filter_success() {
   });
   let filter = new MozSmsFilter();
   filter.endDate = new Date(sms[2].timestamp);
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_endDate_filter_failed() {
@@ -595,7 +595,7 @@ add_test(function test_createMessageList_endDate_filter_failed() {
   });
   let filter = new MozSmsFilter();
   filter.endDate = new Date(sms[0].timestamp - 1);
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_fullDate_filter_success() {
@@ -611,14 +611,14 @@ add_test(function test_createMessageList_fullDate_filter_success() {
       checkReceivedSms(message, i);
       auxListId = listId;
       i += 1;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId,
                                                         message) {
       is(requestId, fakeRequestId);
       i % 2 ? checkSentSms(message, i) : checkReceivedSms(message, i);
       i += 1;
-      gSmsDatabaseService.getNextMessageInList(auxListId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(auxListId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       is(requestId, fakeRequestId);
@@ -629,7 +629,7 @@ add_test(function test_createMessageList_fullDate_filter_success() {
   let filter = new MozSmsFilter();
   filter.startDate = new Date(sms[0].timestamp);
   filter.endDate = new Date(sms[MAX_SMS - 1].timestamp);
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_fullDate_filter_failed() {
@@ -644,7 +644,7 @@ add_test(function test_createMessageList_fullDate_filter_failed() {
   let filter = new MozSmsFilter();
   filter.startDate = new Date(sms[MAX_SMS - 1] + 1);
   filter.endDate = new Date(sms[MAX_SMS - 1] + 1);
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_single_number_success() {
@@ -659,7 +659,7 @@ add_test(function test_createMessageList_single_number_success() {
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 0);
       firstMessage = true;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       ok(firstMessage);
@@ -669,7 +669,7 @@ add_test(function test_createMessageList_single_number_success() {
   });
   let filter = new MozSmsFilter();
   filter.numbers = [sms[0].sender];
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_single_number_failed() {
@@ -683,7 +683,7 @@ add_test(function test_createMessageList_single_number_failed() {
   });
   let filter = new MozSmsFilter();
   filter.numbers = ["00000000000"];
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_multi_number_success() {
@@ -698,14 +698,14 @@ add_test(function test_createMessageList_multi_number_success() {
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 0);
       auxListId = listId;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId, message) {
       ok(!secondMessage);
       is(requestId, fakeRequestId);
       checkSentSms(message, 1);
       secondMessage = true;
-      gSmsDatabaseService.getNextMessageInList(auxListId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(auxListId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       ok(secondMessage);
@@ -715,7 +715,7 @@ add_test(function test_createMessageList_multi_number_success() {
   });
   let filter = new MozSmsFilter();
   filter.numbers = [sms[0].sender, sms[1].receiver];
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_multi_number_wrong_number_success() {
@@ -730,7 +730,7 @@ add_test(function test_createMessageList_multi_number_wrong_number_success() {
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 0);
       firstMessage = true;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       ok(firstMessage);
@@ -740,7 +740,7 @@ add_test(function test_createMessageList_multi_number_wrong_number_success() {
   });
   let filter = new MozSmsFilter();
   filter.numbers = ["00000000000", sms[0].sender];
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 add_test(function test_createMessageList_multi_number_failed() {
@@ -754,7 +754,7 @@ add_test(function test_createMessageList_multi_number_failed() {
   });
   let filter = new MozSmsFilter();
   filter.numbers = ["00000000000", "11111111111"];
-  gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+  gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
 });
 
 
@@ -770,14 +770,14 @@ add_test(function test_createMessageList_read_filter_success() {
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 0);
       lId = listId;
-      gSmsDatabaseService.getNextMessageInList(listId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(listId, requestId);
     },
     notifyGotNextMessage: function notifyGotNextMessage(requestId, message) {
       ok(!secondMessage);
       is(requestId, fakeRequestId);
       checkReceivedSms(message, 2);
       secondMessage = true;
-      gSmsDatabaseService.getNextMessageInList(lId, requestId);
+      gMobileMessageDatabaseService.getNextMessageInList(lId, requestId);
     },
     notifyNoMessageInList: function notifyNoMessageInList(requestId) {
       ok(secondMessage);
@@ -788,12 +788,12 @@ add_test(function test_createMessageList_read_filter_success() {
   SimpleTest.executeSoon(function () {
     let filter = new MozSmsFilter();
     filter.read = false;
-    gSmsDatabaseService.createMessageList(filter, false, fakeRequestId);
+    gMobileMessageDatabaseService.createMessageList(filter, false, fakeRequestId);
   });
 });
 
 /**
- * nsISmsDatabaseService.getNextMessageInList
+ * nsIMobileMessageDatabaseService.getNextMessageInList
  */
 add_test(function test_getNextMessageInList_unknown_list() {
   info("test_getNextMessageInList_unknown_list");
@@ -805,11 +805,11 @@ add_test(function test_getNextMessageInList_unknown_list() {
       run_next_test();
     }
   });
-  gSmsDatabaseService.getNextMessageInList(-1, fakeRequestId);
+  gMobileMessageDatabaseService.getNextMessageInList(-1, fakeRequestId);
 });
 
 /**
- * nsISmsDatabaseService.deleteMessage
+ * nsIMobileMessageDatabaseService.deleteMessage
  */
 add_test(function test_deleteMessage_success() {
   info("test_deleteMessage_success");
@@ -821,11 +821,11 @@ add_test(function test_deleteMessage_success() {
       run_next_test();
     }
   });
-  let messageId = gSmsDatabaseService.saveReceivedMessage(sms[0].sender,
-                                                          sms[0].body,
-                                                          sms[0].timestamp);
+  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[0].sender,
+                                                                    sms[0].body,
+                                                                    sms[0].timestamp);
   SimpleTest.executeSoon(function () {
-    gSmsDatabaseService.deleteMessage(messageId, fakeRequestId);
+    gMobileMessageDatabaseService.deleteMessage(messageId, fakeRequestId);
   });
 });
 
@@ -839,7 +839,7 @@ add_test(function test_deleteMessage_failed() {
       run_next_test();
     }
   });
-  gSmsDatabaseService.deleteMessage(-1, fakeRequestId);
+  gMobileMessageDatabaseService.deleteMessage(-1, fakeRequestId);
 });
 
 add_test(function test_markMessageRead_success() {
@@ -852,11 +852,11 @@ add_test(function test_markMessageRead_success() {
       run_next_test();
     }
   });
-  let messageId = gSmsDatabaseService.saveReceivedMessage(sms[2].sender,
-                                                          sms[2].body,
-                                                          sms[2].timestamp); 
+  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[2].sender,
+                                                                    sms[2].body,
+                                                                    sms[2].timestamp); 
   SimpleTest.executeSoon(function () {
-    gSmsDatabaseService.markMessageRead(messageId, true, fakeRequestId);
+    gMobileMessageDatabaseService.markMessageRead(messageId, true, fakeRequestId);
   });
 });
 
@@ -870,7 +870,7 @@ add_test(function test_markMessageRead_failed() {
     }
   });
   SimpleTest.executeSoon(function () {
-    gSmsDatabaseService.markMessageRead(-1, true, fakeRequestId);
+    gMobileMessageDatabaseService.markMessageRead(-1, true, fakeRequestId);
   });
 });
 
