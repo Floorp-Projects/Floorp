@@ -15,6 +15,7 @@
 #include "VMFunctions.h"
 #include "IonFrames-inl.h"
 
+#include "jsinterpinlines.h"
 #include "jsopcodeinlines.h"
 
 using namespace js;
@@ -1688,6 +1689,36 @@ BaselineCompiler::emit_JSOP_STOP()
     }
 
     return emitReturn();
+}
+
+typedef bool (*ToIdFn)(JSContext *, HandleScript, jsbytecode *, HandleValue, HandleValue,
+                       MutableHandleValue);
+static const VMFunction ToIdInfo = FunctionInfo<ToIdFn>(js::ToIdOperation);
+
+bool
+BaselineCompiler::emit_JSOP_TOID()
+{
+    // Keep index in R0. Load object in R1, but also keep it on the stack.
+    frame.popRegsAndSync(1);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+
+    // No-op if index is int32.
+    Label done;
+    masm.branchTestInt32(Assembler::Equal, R0, &done);
+
+    prepareVMCall();
+
+    pushArg(R0);
+    pushArg(R1);
+    pushArg(ImmWord(pc));
+    pushArg(ImmGCPtr(script));
+
+    if (!callVM(ToIdInfo))
+        return false;
+
+    masm.bind(&done);
+    frame.push(R0);
+    return true;
 }
 
 bool
