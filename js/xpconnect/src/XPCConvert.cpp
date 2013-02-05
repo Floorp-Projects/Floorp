@@ -980,10 +980,6 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     if (!JS_WrapObject(ccx, &flat))
         return false;
 
-    // Outerize if necessary.
-    flat = JS_ObjectToOuterObject(cx, flat);
-    MOZ_ASSERT(flat, "bad outer object hook!");
-
     *d = OBJECT_TO_JSVAL(flat);
 
     if (dest) {

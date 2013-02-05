@@ -3000,6 +3000,10 @@ var PrintPreviewListener = {
     if (gFindBarInitialized)
       gFindBar.close();
 
+    var globalNotificationBox = document.getElementById("global-notificationbox");
+    this._chromeState.globalNotificationsOpen = !globalNotificationBox.notificationsHidden;
+    globalNotificationBox.notificationsHidden = true;
+
     this._chromeState.syncNotificationsOpen = false;
     var syncNotifications = document.getElementById("sync-notifications");
     if (syncNotifications) {
@@ -3018,6 +3022,9 @@ var PrintPreviewListener = {
 
     if (this._chromeState.findOpen)
       gFindBar.open();
+
+    if (this._chromeState.globalNotificationsOpen)
+      document.getElementById("global-notificationbox").notificationsHidden = false;
 
     if (this._chromeState.syncNotificationsOpen)
       document.getElementById("sync-notifications").notificationsHidden = false;
@@ -6206,7 +6213,7 @@ var IndexedDBPromptHelper = {
     }
 
     const hiddenTimeoutDuration = 30000; // 30 seconds
-    const firstTimeoutDuration = 360000; // 5 minutes
+    const firstTimeoutDuration = 300000; // 5 minutes
 
     var timeoutId;
 

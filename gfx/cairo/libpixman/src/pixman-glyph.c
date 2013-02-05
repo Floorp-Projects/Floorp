@@ -354,7 +354,7 @@ pixman_glyph_get_extents (pixman_glyph_cache_t *cache,
 PIXMAN_EXPORT pixman_format_code_t
 pixman_glyph_get_mask_format (pixman_glyph_cache_t *cache,
 			      int		    n_glyphs,
-			      pixman_glyph_t *      glyphs)
+			      const pixman_glyph_t *glyphs)
 {
     pixman_format_code_t format = PIXMAN_a1;
     int i;
@@ -401,7 +401,7 @@ pixman_composite_glyphs_no_mask (pixman_op_t            op,
 				 int32_t                dest_y,
 				 pixman_glyph_cache_t  *cache,
 				 int                    n_glyphs,
-				 pixman_glyph_t        *glyphs)
+				 const pixman_glyph_t  *glyphs)
 {
     pixman_region32_t region;
     pixman_format_code_t glyph_format = PIXMAN_null;
@@ -464,7 +464,7 @@ pixman_composite_glyphs_no_mask (pixman_op_t            op,
 		    glyph_format = glyph_img->common.extended_format_code;
 		    glyph_flags = glyph_img->common.flags;
 		    
-		    _pixman_lookup_composite_function (
+		    _pixman_implementation_lookup_composite (
 			get_implementation(), op,
 			src->common.extended_format_code, src->common.flags,
 			glyph_format, glyph_flags | extra,
@@ -502,7 +502,7 @@ static void
 add_glyphs (pixman_glyph_cache_t *cache,
 	    pixman_image_t *dest,
 	    int off_x, int off_y,
-	    int n_glyphs, pixman_glyph_t *glyphs)
+	    int n_glyphs, const pixman_glyph_t *glyphs)
 {
     pixman_format_code_t glyph_format = PIXMAN_null;
     uint32_t glyph_flags = 0;
@@ -560,7 +560,7 @@ add_glyphs (pixman_glyph_cache_t *cache,
 	    {
 		if (!white_img)
 		{
-		    pixman_color_t white = { 0xffff, 0xffff, 0xffff, 0xffff };
+		    static const pixman_color_t white = { 0xffff, 0xffff, 0xffff, 0xffff };
 
 		    if (!(white_img = pixman_image_create_solid_fill (&white)))
 			goto out;
@@ -576,7 +576,7 @@ add_glyphs (pixman_glyph_cache_t *cache,
 		white_src = TRUE;
 	    }
 
-	    _pixman_lookup_composite_function (
+	    _pixman_implementation_lookup_composite (
 		get_implementation(), PIXMAN_OP_ADD,
 		src_format, info.src_flags,
 		mask_format, info.mask_flags,
@@ -651,7 +651,7 @@ pixman_composite_glyphs (pixman_op_t            op,
 			 int32_t                height,
 			 pixman_glyph_cache_t  *cache,
 			 int			n_glyphs,
-			 pixman_glyph_t        *glyphs)
+			 const pixman_glyph_t  *glyphs)
 {
     pixman_image_t *mask;
 

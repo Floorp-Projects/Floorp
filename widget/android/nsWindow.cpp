@@ -2330,6 +2330,14 @@ nsWindow::ScheduleResumeComposition(int width, int height)
     }
 }
 
+void
+nsWindow::ForceIsFirstPaint()
+{
+    if (sCompositorParent) {
+        sCompositorParent->ForceIsFirstPaint();
+    }
+}
+
 float
 nsWindow::ComputeRenderIntegrity()
 {

@@ -1543,6 +1543,52 @@ function removeCallbackCopy() {
   do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
 }
 
+// Waits until files that are in use that break tests are no longer in use and
+// then calls removeCallbackCopy.
+function waitForFilesInUse() {
+  let maintSvcInstaller = getAppDir();
+  maintSvcInstaller.append("MAINTENANCE_SERVICE_INSTALLER_BIN_FILE");
+
+  let helper = getAppDir();
+  helper.append("uninstall");
+  helper.append("helper.exe");
+
+  let files = [maintSvcInstaller, helper];
+  for (let i = 0; i < files.length; ++i) {
+    let file = files[i];
+    let fileBak = file.parent.clone();
+    if (file.exists()) {
+      fileBak.append(file.leafName + ".bak");
+      try {
+        if (fileBak.exists()) {
+          fileBak.remove(false);
+        }
+        file.copyTo(fileBak.parent, fileBak.leafName);
+        file.remove(false);
+        fileBak.moveTo(file.parent, file.leafName);
+        logTestInfo("file is not in use. path: " + file.path);
+      }
+      catch (e) {
+        logTestInfo("file in use, will try again after " + CHECK_TIMEOUT_MILLI +
+                    " ms, path: " + file.path + ", exception: " + e);
+        try {
+          if (fileBak.exists()) {
+            fileBak.remove(false);
+          }
+        }
+        catch (e) {
+          logTestInfo("unable to remove file, this should never happen! " +
+                      "path: " + fileBak.path + ", exception: " + e);
+        }
+        do_timeout(CHECK_TIMEOUT_MILLI, waitForFilesInUse);
+        return;
+      }
+    }
+  }
+
+  removeCallbackCopy();
+}
+
 /**
  * Helper function for updater binary tests for verifying there are no update
  * backup files left behind after an update.

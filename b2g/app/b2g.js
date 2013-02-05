@@ -574,7 +574,7 @@ pref("hal.processPriorityManager.gonk.backgroundNice", 10);
 // (hiding latency).
 pref("dom.ipc.processPrelaunch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
-pref("dom.ipc.processPrelaunch.delayMs", 1000);
+pref("dom.ipc.processPrelaunch.delayMs", 5000);
 #endif
 
 // Ignore the "dialog=1" feature in window.open.

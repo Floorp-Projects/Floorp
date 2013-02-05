@@ -652,11 +652,12 @@ void MediaDecoder::QueueMetadata(int64_t aPublishTime,
                                  int aChannels,
                                  int aRate,
                                  bool aHasAudio,
+                                 bool aHasVideo,
                                  MetadataTags* aTags)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   GetReentrantMonitor().AssertCurrentThreadIn();
-  mDecoderStateMachine->QueueMetadata(aPublishTime, aChannels, aRate, aHasAudio, aTags);
+  mDecoderStateMachine->QueueMetadata(aPublishTime, aChannels, aRate, aHasAudio, aHasVideo, aTags);
 }
 
 bool
@@ -669,7 +670,7 @@ MediaDecoder::IsDataCachedToEndOfResource()
           mResource->IsDataCachedToEndOfResource(mDecoderPosition));
 }
 
-void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, MetadataTags* aTags)
+void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mShuttingDown) {
@@ -691,7 +692,7 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, Meta
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aTags);
+    mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
   }
 
   if (!mCalledResourceLoaded) {

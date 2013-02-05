@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define MOBILE_MESSAGE_DATABASE_SERVICE_CID \
+{ 0x0d84b9c2, 0x8f76, 0x4ba4,    \
+{ 0xa5, 0xcd, 0xdb, 0xfb, 0x01, 0xdf, 0xda, 0x99 } }
+#define MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessagedatabaseservice;1"
+%}
+
+interface nsIDOMMozSmsFilter;
+interface nsISmsRequest;
+
+[scriptable, uuid(ce9232ca-6a08-11e2-b971-c795004622e7)]
+interface nsIMobileMessageDatabaseService : nsISupports
+{
+  [binaryname(GetMessageMoz)]
+  void getMessage(in long messageId, in nsISmsRequest request);
+  void deleteMessage(in long messageId, in nsISmsRequest request);
+  void createMessageList(in nsIDOMMozSmsFilter filter, in boolean reverse, in nsISmsRequest request);
+  void getNextMessageInList(in long listId, in nsISmsRequest request);
+  void clearMessageList(in long listId);
+  void markMessageRead(in long messageId, in boolean value, in nsISmsRequest request);
+
+  void getThreadList(in nsISmsRequest request);
+};

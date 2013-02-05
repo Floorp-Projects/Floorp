@@ -75,9 +75,19 @@ _pixman_mips_get_implementations (pixman_implementation_t *imp)
 #endif
 
 #ifdef USE_MIPS_DSPR2
-    /* Only currently available MIPS core that supports DSPr2 is 74K. */
-    if (!_pixman_disabled ("mips-dspr2") && have_feature ("MIPS 74K"))
-	imp = _pixman_implementation_create_mips_dspr2 (imp);
+    if (!_pixman_disabled ("mips-dspr2"))
+    {
+	int already_compiling_everything_for_dspr2 = 0;
+#if defined(__mips_dsp) && (__mips_dsp_rev >= 2)
+	already_compiling_everything_for_dspr2 = 1;
+#endif
+	if (already_compiling_everything_for_dspr2 ||
+	    /* Only currently available MIPS core that supports DSPr2 is 74K. */
+	    have_feature ("MIPS 74K"))
+	{
+	    imp = _pixman_implementation_create_mips_dspr2 (imp);
+	}
+    }
 #endif
 
     return imp;
