@@ -1413,16 +1413,12 @@ nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
 
   if (mDroppedDown) {
-    // Get parent view
-    nsIFrame * listFrame = do_QueryFrame(mListControlFrame);
-    if (listFrame) {
-      nsView* view = listFrame->GetView();
-      NS_ASSERTION(view, "nsComboboxControlFrame view is null");
-      if (view) {
-        nsIWidget* widget = view->GetWidget();
-        if (widget)
-          widget->CaptureRollupEvents(this, false);
-      }
+    MOZ_ASSERT(mDropdownFrame, "mDroppedDown without frame");
+    nsView* view = mDropdownFrame->GetView();
+    MOZ_ASSERT(view);
+    nsIWidget* widget = view->GetWidget();
+    if (widget) {
+      widget->CaptureRollupEvents(this, false);
     }
   }
 
@@ -1495,11 +1491,7 @@ nsComboboxControlFrame::Rollup(uint32_t aCount, nsIContent** aLastRolledUp)
 nsIWidget*
 nsComboboxControlFrame::GetRollupWidget()
 {
-  nsIFrame* listFrame = do_QueryFrame(mListControlFrame);
-  if (!listFrame)
-    return nullptr;
-
-  nsView* view = listFrame->GetView();
+  nsView* view = mDropdownFrame->GetView();
   MOZ_ASSERT(view);
   return view->GetWidget();
 }
