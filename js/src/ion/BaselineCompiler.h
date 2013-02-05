@@ -118,6 +118,7 @@ namespace ion {
     _(JSOP_EXCEPTION)          \
     _(JSOP_DEBUGGER)           \
     _(JSOP_ARGUMENTS)          \
+    _(JSOP_TOID)               \
     _(JSOP_POPV)               \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETURN)             \
