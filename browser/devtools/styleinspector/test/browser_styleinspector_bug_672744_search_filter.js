@@ -54,10 +54,10 @@ function SI_toggleDefaultStyles()
 {
   Services.obs.removeObserver(SI_toggleDefaultStyles, "StyleInspector-populated", false);
 
-  info("clearing \"only user styles\" checkbox");
+  info("checking \"Browser styles\" checkbox");
 
   let doc = computedView.styleDocument;
-  let checkbox = doc.querySelector(".onlyuserstyles");
+  let checkbox = doc.querySelector(".includebrowserstyles");
   Services.obs.addObserver(SI_AddFilterText, "StyleInspector-populated", false);
   checkbox.click();
 }
