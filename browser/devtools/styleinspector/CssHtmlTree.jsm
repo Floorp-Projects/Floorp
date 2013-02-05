@@ -227,8 +227,8 @@ CssHtmlTree.prototype = {
   // The search filter
   searchField: null,
 
-  // Reference to the "Only user Styles" checkbox.
-  onlyUserStylesCheckbox: null,
+  // Reference to the "Include browser styles" checkbox.
+  includeBrowserStylesCheckbox: null,
 
   // Holds the ID of the panelRefresh timeout.
   _panelRefreshTimeout: null,
@@ -239,9 +239,9 @@ CssHtmlTree.prototype = {
   // Number of visible properties
   numVisibleProperties: 0,
 
-  get showOnlyUserStyles()
+  get includeBrowserStyles()
   {
-    return this.onlyUserStylesCheckbox.checked;
+    return this.includeBrowserStylesCheckbox.checked;
   },
 
   /**
@@ -369,28 +369,29 @@ CssHtmlTree.prototype = {
   },
 
   /**
-   * The change event handler for the onlyUserStyles checkbox.
+   * The change event handler for the includeBrowserStyles checkbox.
    *
    * @param {Event} aEvent the DOM Event object.
    */
-  onlyUserStylesChanged: function CssHtmltree_onlyUserStylesChanged(aEvent)
+  includeBrowserStylesChanged:
+  function CssHtmltree_includeBrowserStylesChanged(aEvent)
   {
     this.refreshSourceFilter();
     this.refreshPanel();
   },
 
   /**
-   * When onlyUserStyles.checked is true we only display properties that have
-   * matched selectors and have been included by the document or one of the
+   * When includeBrowserStyles.checked is false we only display properties that
+   * have matched selectors and have been included by the document or one of the
    * document's stylesheets. If .checked is false we display all properties
    * including those that come from UA stylesheets.
    */
   refreshSourceFilter: function CssHtmlTree_setSourceFilter()
   {
     this._matchedProperties = null;
-    this.cssLogic.sourceFilter = this.showOnlyUserStyles ?
-                                 CssLogic.FILTER.ALL :
-                                 CssLogic.FILTER.UA;
+    this.cssLogic.sourceFilter = this.includeBrowserStyles ?
+                                 CssLogic.FILTER.UA :
+                                 CssLogic.FILTER.ALL;
   },
 
   /**
@@ -651,8 +652,8 @@ CssHtmlTree.prototype = {
     delete this.viewedElement;
 
     // Remove event listeners
-    this.onlyUserStylesCheckbox.removeEventListener("command",
-      this.onlyUserStylesChanged);
+    this.includeBrowserStylesCheckbox.removeEventListener("command",
+      this.includeBrowserStylesChanged);
     this.searchField.removeEventListener("command", this.filterChanged);
 
     // Cancel tree construction
@@ -784,7 +785,7 @@ PropertyView.prototype = {
    */
   get visible()
   {
-    if (this.tree.showOnlyUserStyles && !this.hasMatchedSelectors) {
+    if (!this.tree.includeBrowserStyles && !this.hasMatchedSelectors) {
       return false;
     }
 
