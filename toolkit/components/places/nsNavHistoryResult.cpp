@@ -369,6 +369,7 @@ nsNavHistoryContainerResultNode::OnRemoving()
   for (int32_t i = 0; i < mChildren.Count(); ++i)
     mChildren[i]->OnRemoving();
   mChildren.Clear();
+  mResult = nullptr;
 }
 
 
@@ -2051,6 +2052,7 @@ nsNavHistoryQueryResultNode::OnRemoving()
 {
   nsNavHistoryResultNode::OnRemoving();
   ClearChildren(true);
+  mResult = nullptr;
 }
 
 
@@ -3157,6 +3159,7 @@ nsNavHistoryFolderResultNode::OnRemoving()
 {
   nsNavHistoryResultNode::OnRemoving();
   ClearChildren(true);
+  mResult = nullptr;
 }
 
 
