@@ -5,11 +5,12 @@
 
 #include "VoicemailEvent.h"
 #include "nsDOMClassInfo.h"
-#include "nsIDOMVoicemailStatus.h"
+#include "nsIDOMMozVoicemailStatus.h"
 
-DOMCI_DATA(MozVoicemailEvent, mozilla::dom::telephony::VoicemailEvent)
+DOMCI_DATA(MozVoicemailEvent, mozilla::dom::VoicemailEvent)
 
-USING_TELEPHONY_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(VoicemailEvent, nsDOMEvent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStatus)
@@ -47,6 +48,9 @@ VoicemailEvent::GetStatus(nsIDOMMozVoicemailStatus** aStatus)
   return NS_OK;
 }
 
+} // namespace dom
+} // namespace mozilla
+
 namespace {
 
 nsresult
@@ -55,7 +59,7 @@ NS_NewDOMVoicemailEvent(nsIDOMEvent** aInstancePtrResult,
                   nsEvent* aEvent)
 {
   return CallQueryInterface(
-    new mozilla::dom::telephony::VoicemailEvent(aPresContext, aEvent),
+    new mozilla::dom::VoicemailEvent(aPresContext, aEvent),
     aInstancePtrResult);
 }
 
