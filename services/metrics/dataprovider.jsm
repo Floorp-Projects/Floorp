@@ -523,8 +523,26 @@ Provider.prototype = Object.freeze({
    *
    * Implementations should return a promise that resolves when all data has
    * been collected and storage operations have been finished.
+   *
+   * @return Promise<>
    */
   collectConstantData: function () {
+    return Promise.resolve();
+  },
+
+  /**
+   * Collects data approximately every day.
+   *
+   * For long-running applications, this is called approximately every day.
+   * It may or may not be called every time the application is run. It also may
+   * be called more than once per day.
+   *
+   * Implementations should return a promise that resolves when all data has
+   * been collected and storage operations have completed.
+   *
+   * @return Promise<>
+   */
+  collectDailyData: function () {
     return Promise.resolve();
   },
 

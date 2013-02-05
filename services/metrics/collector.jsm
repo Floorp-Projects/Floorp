@@ -167,6 +167,14 @@ Collector.prototype = Object.freeze({
                                         onCollect);
   },
 
+  /**
+   * Calls collectDailyData on all providers.
+   */
+  collectDailyData: function () {
+    return this._callCollectOnProviders(this._providers.values(),
+                                        "collectDailyData");
+  },
+
   _callCollectOnProviders: function (entries, fnProperty, onCollect=null) {
     let promises = [];
 

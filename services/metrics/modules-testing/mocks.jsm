@@ -54,6 +54,8 @@ this.DummyProvider = function DummyProvider(name="DummyProvider") {
   this.throwDuringCollectConstantData = null;
   this.throwDuringConstantPopulate = null;
 
+  this.collectDailyCount = 0;
+
   this.havePushedMeasurements = true;
 }
 
@@ -86,6 +88,11 @@ DummyProvider.prototype = {
     }.bind(this));
   },
 
+  collectDailyData: function () {
+    this.collectDailyCount++;
+
+    return Promise.resolve();
+  },
 };
 
 
