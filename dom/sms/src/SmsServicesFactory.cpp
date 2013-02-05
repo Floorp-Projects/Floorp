@@ -12,7 +12,7 @@
 #endif
 #include "nsServiceManagerUtils.h"
 
-#define RIL_SMS_DATABASE_SERVICE_CONTRACTID "@mozilla.org/sms/rilsmsdatabaseservice;1"
+#define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"
 
 namespace mozilla {
 namespace dom {
@@ -32,21 +32,21 @@ SmsServicesFactory::CreateSmsService()
   return smsService.forget();
 }
 
-/* static */ already_AddRefed<nsISmsDatabaseService>
-SmsServicesFactory::CreateSmsDatabaseService()
+/* static */ already_AddRefed<nsIMobileMessageDatabaseService>
+SmsServicesFactory::CreateMobileMessageDatabaseService()
 {
-  nsCOMPtr<nsISmsDatabaseService> smsDBService;
+  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService;
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    smsDBService = new SmsIPCService();
+    mobileMessageDBService = new SmsIPCService();
   } else {
 #ifdef MOZ_B2G_RIL
-    smsDBService = do_GetService(RIL_SMS_DATABASE_SERVICE_CONTRACTID);
+    mobileMessageDBService = do_GetService(RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
 #else
-    smsDBService = new SmsDatabaseService();
+    mobileMessageDBService = new MobileMessageDatabaseService();
 #endif
   }
 
-  return smsDBService.forget();
+  return mobileMessageDBService.forget();
 }
 
 } // namespace sms
