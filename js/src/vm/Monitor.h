@@ -52,16 +52,20 @@ class Monitor
 class AutoLockMonitor
 {
   private:
+#ifdef JS_THREADSAFE
     Monitor &monitor;
+#endif
 
   public:
     AutoLockMonitor(Monitor &monitor)
+#ifdef JS_THREADSAFE
       : monitor(monitor)
     {
-#ifdef JS_THREADSAFE
         PR_Lock(monitor.lock_);
-#endif
     }
+#else
+    {}
+#endif
 
     ~AutoLockMonitor() {
 #ifdef JS_THREADSAFE
@@ -93,16 +97,20 @@ class AutoLockMonitor
 class AutoUnlockMonitor
 {
   private:
+#ifdef JS_THREADSAFE
     Monitor &monitor;
+#endif
 
   public:
     AutoUnlockMonitor(Monitor &monitor)
+#ifdef JS_THREADSAFE
       : monitor(monitor)
     {
-#ifdef JS_THREADSAFE
         PR_Unlock(monitor.lock_);
-#endif
     }
+#else
+    {}
+#endif
 
     ~AutoUnlockMonitor() {
 #ifdef JS_THREADSAFE

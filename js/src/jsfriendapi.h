@@ -372,6 +372,16 @@ GetObjectJSClass(RawObject obj)
     return js::Jsvalify(GetObjectClass(obj));
 }
 
+inline bool
+IsInnerObject(JSObject *obj) {
+    return !!GetObjectClass(obj)->ext.outerObject;
+}
+
+inline bool
+IsOuterObject(JSObject *obj) {
+    return !!GetObjectClass(obj)->ext.innerObject;
+}
+
 JS_FRIEND_API(bool)
 IsScopeObject(RawObject obj);
 
@@ -1388,7 +1398,6 @@ class JS_FRIEND_API(AutoCTypesActivityCallback) {
   private:
     JSContext *cx;
     CTypesActivityCallback callback;
-    CTypesActivityType beginType;
     CTypesActivityType endType;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 

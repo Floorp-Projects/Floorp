@@ -8,7 +8,7 @@ const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js");
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Components.utils.import("resource://gre/modules/Deprecated.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",

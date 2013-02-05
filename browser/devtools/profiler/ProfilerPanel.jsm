@@ -8,7 +8,7 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/devtools/ProfilerController.jsm");
 Cu.import("resource:///modules/devtools/ProfilerHelpers.jsm");
-Cu.import("resource://gre/modules/commonjs/promise/core.js");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 

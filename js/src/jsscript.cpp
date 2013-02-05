@@ -551,7 +551,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             JS_ASSERT(enclosingScript);
             ss = enclosingScript->scriptSource();
         }
-        ScriptSourceHolder ssh(cx->runtime, ss);
+        ScriptSourceHolder ssh(ss);
         script = JSScript::Create(cx, enclosingScope, !!(scriptBits & (1 << SavedCallerFun)),
                                   options, /* staticLevel = */ 0, ss, 0, 0);
         if (!script)
@@ -1292,7 +1292,7 @@ SourceCompressionToken::abort()
 }
 
 void
-ScriptSource::destroy(JSRuntime *rt)
+ScriptSource::destroy()
 {
     JS_ASSERT(ready());
     adjustDataSize(0);
@@ -1940,7 +1940,7 @@ JSScript::finalize(FreeOp *fop)
 
     destroyScriptCounts(fop);
     destroyDebugScript(fop);
-    scriptSource_->decref(fop->runtime());
+    scriptSource_->decref();
 
     if (data) {
         JS_POISON(data, 0xdb, computedSizeOfData());

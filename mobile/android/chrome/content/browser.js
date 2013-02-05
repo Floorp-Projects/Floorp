@@ -203,17 +203,13 @@ var BrowserApp = {
 
     window.addEventListener("fullscreen", function() {
       sendMessageToJava({
-        gecko: {
-          type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
-        }
+        type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
       });
     }, false);
 
     window.addEventListener("mozfullscreenchange", function() {
       sendMessageToJava({
-        gecko: {
-          type: document.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
-        }
+        type: document.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
       });
 
       if (document.mozFullScreen)
@@ -305,11 +301,7 @@ var BrowserApp = {
     this.gUseLowPrecision = Services.prefs.getBoolPref("layers.low-precision-buffer");
 
     // notify java that gecko has loaded
-    sendMessageToJava({
-      gecko: {
-        type: "Gecko:Ready"
-      }
-    });
+    sendMessageToJava({ type: "Gecko:Ready" });
 
 #ifdef MOZ_SAFE_BROWSING
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
@@ -410,11 +402,9 @@ var BrowserApp = {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title || url;
         sendMessageToJava({
-          gecko: {
-            type: "Bookmark:Insert",
-            url: url,
-            title: title
-          }
+          type: "Bookmark:Insert",
+          url: url,
+          title: title
         });
       });
 
@@ -472,11 +462,9 @@ var BrowserApp = {
            type = "";
         }
         sendMessageToJava({
-          gecko: {
-            type: "Share:Image",
-            url: src,
-            mime: type,
-          }
+          type: "Share:Image",
+          url: src,
+          mime: type,
         });
       });
 
@@ -493,10 +481,8 @@ var BrowserApp = {
       function(aTarget) {
         let src = aTarget.src;
         sendMessageToJava({
-          gecko: {
-            type: "Wallpaper:Set",
-            url: src
-          }
+          type: "Wallpaper:Set",
+          url: src
         });
       });
 
@@ -686,12 +672,10 @@ var BrowserApp = {
       let tab = this.getTabForBrowser(aBrowser);
       if (tab) {
         let message = {
-          gecko: {
-            type: "Content:LoadError",
-            tabID: tab.id,
-            uri: aBrowser.currentURI.spec,
-            title: aBrowser.contentTitle
-          }
+          type: "Content:LoadError",
+          tabID: tab.id,
+          uri: aBrowser.currentURI.spec,
+          title: aBrowser.contentTitle
         };
         sendMessageToJava(message);
         dump("Handled load error: " + e)
@@ -734,10 +718,8 @@ var BrowserApp = {
     }
 
     let message = {
-      gecko: {
-        type: "Tab:Close",
-        tabID: aTab.id
-      }
+      type: "Tab:Close",
+      tabID: aTab.id
     };
     sendMessageToJava(message);
   },
@@ -770,10 +752,8 @@ var BrowserApp = {
       return;
 
     let message = {
-      gecko: {
-        type: "Tab:Select",
-        tabID: aTab.id
-      }
+      type: "Tab:Select",
+      tabID: aTab.id
     };
     sendMessageToJava(message);
   },
@@ -967,11 +947,9 @@ var BrowserApp = {
       }
 
       sendMessageToJava({
-        gecko: {
-          type: "Preferences:Data",
-          requestId: json.requestId,    // opaque request identifier, can be any string/int/whatever
-          preferences: prefs
-        }
+        type: "Preferences:Data",
+        requestId: json.requestId,    // opaque request identifier, can be any string/int/whatever
+        preferences: prefs
       });
     } catch (e) {}
   },
@@ -1050,10 +1028,8 @@ var BrowserApp = {
     }
 
     sendMessageToJava({
-      gecko: {
-        type: "Sanitize:Finished",
-        success: success
-      }
+      type: "Sanitize:Finished",
+      success: success
     });
   },
 
@@ -1224,7 +1200,7 @@ var BrowserApp = {
                       getService(Ci.nsILoginManagerStorage);
         storage.init();
 
-        sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
+        sendMessageToJava({ type: "Passwords:Init:Return" });
         Services.obs.removeObserver(this, "Passwords:Init", false);
         break;
       }
@@ -1233,13 +1209,13 @@ var BrowserApp = {
         let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
         // Force creation/upgrade of formhistory.sqlite
         let db = fh.DBConnection;
-        sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
+        sendMessageToJava({ type: "FormHistory:Init:Return" });
         Services.obs.removeObserver(this, "FormHistory:Init", false);
         break;
       }
 
       case "sessionstore-state-purge-complete":
-        sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
+        sendMessageToJava({ type: "Session:StatePurged" });
         break;
 
       case "ToggleProfiling": {
@@ -1254,7 +1230,7 @@ var BrowserApp = {
       }
 
       case "gather-telemetry":
-        sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
+        sendMessageToJava({ type: "Telemetry:Gather" });
         break;
 
       default:
@@ -1291,22 +1267,18 @@ var NativeWindow = {
 
   loadDex: function(zipFile, implClass) {
     sendMessageToJava({
-      gecko: {
-        type: "Dex:Load",
-        zipfile: zipFile,
-        impl: implClass || "Main"
-      }
+      type: "Dex:Load",
+      zipfile: zipFile,
+      impl: implClass || "Main"
     });
   },
 
   toast: {
     show: function(aMessage, aDuration) {
       sendMessageToJava({
-        gecko: {
-          type: "Toast:Show",
-          message: aMessage,
-          duration: aDuration
-        }
+        type: "Toast:Show",
+        message: aMessage,
+        duration: aDuration
       });
     }
   },
@@ -1331,14 +1303,14 @@ var NativeWindow = {
       options.type = "Menu:Add";
       options.id = this._menuId;
 
-      sendMessageToJava({ gecko: options });
+      sendMessageToJava(options);
       this._callbacks[this._menuId] = options.callback;
       this._menuId++;
       return this._menuId - 1;
     },
 
     remove: function(aId) {
-      sendMessageToJava({ gecko: {type: "Menu:Remove", id: aId }});
+      sendMessageToJava({ type: "Menu:Remove", id: aId });
     },
 
     update: function(aId, aOptions) {
@@ -1346,11 +1318,9 @@ var NativeWindow = {
         return;
 
       sendMessageToJava({
-        gecko: {
-          type: "Menu:Update", 
-          id: aId,
-          options: aOptions
-        }
+        type: "Menu:Update", 
+        id: aId,
+        options: aOptions
       });
     }
   },
@@ -1385,25 +1355,23 @@ var NativeWindow = {
 
       this._promptId++;
       let json = {
-        gecko: {
-          type: "Doorhanger:Add",
-          message: aMessage,
-          value: aValue,
-          buttons: aButtons,
-          // use the current tab if none is provided
-          tabID: aTabID || BrowserApp.selectedTab.id,
-          options: aOptions || {}
-        }
+        type: "Doorhanger:Add",
+        message: aMessage,
+        value: aValue,
+        buttons: aButtons,
+        // use the current tab if none is provided
+        tabID: aTabID || BrowserApp.selectedTab.id,
+        options: aOptions || {}
       };
       sendMessageToJava(json);
     },
 
     hide: function(aValue, aTabID) {
-      sendMessageToJava({ gecko: {
+      sendMessageToJava({
         type: "Doorhanger:Remove",
         value: aValue,
         tabID: aTabID
-      }});
+      });
     }
   },
 
@@ -1782,11 +1750,9 @@ var NativeWindow = {
         return;
 
       let msg = {
-        gecko: {
-          type: "Prompt:Show",
-          title: title,
-          listitems: itemArray
-        }
+        type: "Prompt:Show",
+        title: title,
+        listitems: itemArray
       };
       let data = JSON.parse(sendMessageToJava(msg));
       if (data.button == -1) {
@@ -2121,10 +2087,8 @@ var SelectionHandler = {
     this.positionHandles();
 
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:ShowHandles",
-        handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
-      }
+      type: "TextSelection:ShowHandles",
+      handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
     });
 
     if (aElement instanceof Ci.nsIDOMNSEditableElement)
@@ -2248,10 +2212,8 @@ var SelectionHandler = {
  
     this._activeType = this.TYPE_NONE;
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:HideHandles",
-        handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
-      }
+      type: "TextSelection:HideHandles",
+      handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
     });
 
 
@@ -2362,10 +2324,8 @@ var SelectionHandler = {
     this.positionHandles();
 
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:ShowHandles",
-        handles: [this.HANDLE_TYPE_MIDDLE]
-      }
+      type: "TextSelection:ShowHandles",
+      handles: [this.HANDLE_TYPE_MIDDLE]
     });
   },
 
@@ -2374,10 +2334,8 @@ var SelectionHandler = {
     this._cleanUp();
 
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:HideHandles",
-        handles: [this.HANDLE_TYPE_MIDDLE]
-      }
+      type: "TextSelection:HideHandles",
+      handles: [this.HANDLE_TYPE_MIDDLE]
     });
   },
 
@@ -2427,11 +2385,9 @@ var SelectionHandler = {
     }
 
     sendMessageToJava({
-      gecko: {
-        type: "TextSelection:PositionHandles",
-        positions: positions,
-        rtl: this._isRTL
-      }
+      type: "TextSelection:PositionHandles",
+      positions: positions,
+      rtl: this._isRTL
     });
   },
 
@@ -2577,6 +2533,7 @@ var LightWeightThemeWebInstaller = {
 
 var UserAgent = {
   DESKTOP_UA: null,
+  YOUTUBE_DOMAIN: /\.?youtube\.com$/,
 
   init: function ua_init() {
     Services.obs.addObserver(this, "DesktopMode:Change", false);
@@ -2633,10 +2590,11 @@ var UserAgent = {
         if (tab == null)
           break;
 
-        if (/\.?youtube\.com$/.test(channel.URI.host)) {
+        if (this.YOUTUBE_DOMAIN.test(channel.URI.host)) {
           let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
-          if (ua.indexOf("Android; Tablet;") !== -1) {
-            ua = ua.replace("Android; Tablet;", "Android; Mobile;");
+          // Send the phone UA to youtube if this is a tablet
+          if (ua.indexOf("Android; Mobile;") === -1) {
+            ua = ua.replace("Android;", "Android; Mobile;");
             channel.setRequestHeader("User-Agent", ua, false);
           }
         }
@@ -2839,18 +2797,16 @@ Tab.prototype = {
       this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
 
       let message = {
-        gecko: {
-          type: "Tab:Added",
-          tabID: this.id,
-          uri: uri,
-          parentId: ("parentId" in aParams) ? aParams.parentId : -1,
-          external: ("external" in aParams) ? aParams.external : false,
-          selected: ("selected" in aParams) ? aParams.selected : true,
-          title: title,
-          delayLoad: aParams.delayLoad || false,
-          desktopMode: this.desktopMode,
-          isPrivate: isPrivate
-        }
+        type: "Tab:Added",
+        tabID: this.id,
+        uri: uri,
+        parentId: ("parentId" in aParams) ? aParams.parentId : -1,
+        external: ("external" in aParams) ? aParams.external : false,
+        selected: ("selected" in aParams) ? aParams.selected : true,
+        title: title,
+        delayLoad: aParams.delayLoad || false,
+        desktopMode: this.desktopMode,
+        isPrivate: isPrivate
       };
       sendMessageToJava(message);
 
@@ -2903,12 +2859,10 @@ Tab.prototype = {
         this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
       } catch(e) {
         let message = {
-          gecko: {
-            type: "Content:LoadError",
-            tabID: this.id,
-            uri: this.browser.currentURI.spec,
-            title: this.browser.contentTitle
-          }
+          type: "Content:LoadError",
+          tabID: this.id,
+          uri: this.browser.currentURI.spec,
+          title: this.browser.contentTitle
         };
         sendMessageToJava(message);
         dump("Handled load error: " + e);
@@ -2935,11 +2889,9 @@ Tab.prototype = {
     if (this.desktopMode != aDesktopMode) {
       this.desktopMode = aDesktopMode;
       sendMessageToJava({
-        gecko: {
-          type: "DesktopMode:Changed",
-          desktopMode: aDesktopMode,
-          tabId: this.id
-        }
+        type: "DesktopMode:Changed",
+        desktopMode: aDesktopMode,
+        tabId: this.id
       });
     }
 
@@ -3389,11 +3341,9 @@ Tab.prototype = {
         }
 
         sendMessageToJava({
-          gecko: {
-            type: "DOMContentLoaded",
-            tabID: this.id,
-            bgColor: backgroundColor
-          }
+          type: "DOMContentLoaded",
+          tabID: this.id,
+          bgColor: backgroundColor
         });
 
         // Attach a listener to watch for "click" events bubbling up from error
@@ -3467,7 +3417,7 @@ Tab.prototype = {
           size: maxSize
         };
 
-        sendMessageToJava({ gecko: json });
+        sendMessageToJava(json);
         break;
       }
 
@@ -3480,11 +3430,9 @@ Tab.prototype = {
           return;
 
         sendMessageToJava({
-          gecko: {
-            type: "DOMTitleChanged",
-            tabID: this.id,
-            title: aEvent.target.title.substring(0, 255)
-          }
+          type: "DOMTitleChanged",
+          tabID: this.id,
+          title: aEvent.target.title.substring(0, 255)
         });
         break;
       }
@@ -3498,10 +3446,8 @@ Tab.prototype = {
           aEvent.preventDefault();
 
           sendMessageToJava({
-            gecko: {
-              type: "DOMWindowClose",
-              tabID: this.id
-            }
+            type: "DOMWindowClose",
+            tabID: this.id
           });
         }
         break;
@@ -3548,10 +3494,8 @@ Tab.prototype = {
           return;
 
         sendMessageToJava({
-          gecko: {
-            type: "Content:PageShow",
-            tabID: this.id
-          }
+          type: "Content:PageShow",
+          tabID: this.id
         });
 
         // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
@@ -3576,10 +3520,8 @@ Tab.prototype = {
           this.savedArticle = article;
 
           sendMessageToJava({
-            gecko: {
-              type: "Content:ReaderEnabled",
-              tabID: this.id
-            }
+            type: "Content:ReaderEnabled",
+            tabID: this.id
           });
         }.bind(this));
       }
@@ -3619,14 +3561,12 @@ Tab.prototype = {
       } catch (e) { }
 
       let message = {
-        gecko: {
-          type: "Content:StateChange",
-          tabID: this.id,
-          uri: uri,
-          state: aStateFlags,
-          showProgress: showProgress,
-          success: success
-        }
+        type: "Content:StateChange",
+        tabID: this.id,
+        uri: uri,
+        state: aStateFlags,
+        showProgress: showProgress,
+        success: success
       };
       sendMessageToJava(message);
 
@@ -3665,14 +3605,12 @@ Tab.prototype = {
     this.clickToPlayPluginsActivated = false;
 
     let message = {
-      gecko: {
-        type: "Content:LocationChange",
-        tabID: this.id,
-        uri: fixedURI.spec,
-        documentURI: documentURI,
-        contentType: (contentType ? contentType : ""),
-        sameDocument: sameDocument
-      }
+      type: "Content:LocationChange",
+      tabID: this.id,
+      uri: fixedURI.spec,
+      documentURI: documentURI,
+      contentType: (contentType ? contentType : ""),
+      sameDocument: sameDocument
     };
 
     sendMessageToJava(message);
@@ -3702,11 +3640,9 @@ Tab.prototype = {
     let identity = IdentityHandler.checkIdentity(aState, this.browser);
 
     let message = {
-      gecko: {
-        type: "Content:SecurityChange",
-        tabID: this.id,
-        identity: identity
-      }
+      type: "Content:SecurityChange",
+      tabID: this.id,
+      identity: identity
     };
 
     sendMessageToJava(message);
@@ -3720,19 +3656,17 @@ Tab.prototype = {
 
   _sendHistoryEvent: function(aMessage, aParams) {
     let message = {
-      gecko: {
-        type: "SessionHistory:" + aMessage,
-        tabID: this.id,
-      }
+      type: "SessionHistory:" + aMessage,
+      tabID: this.id,
     };
 
     if (aParams) {
       if ("url" in aParams)
-        message.gecko.url = aParams.url;
+        message.url = aParams.url;
       if ("index" in aParams)
-        message.gecko.index = aParams.index;
+        message.index = aParams.index;
       if ("numEntries" in aParams)
-        message.gecko.numEntries = aParams.numEntries;
+        message.numEntries = aParams.numEntries;
     }
 
     sendMessageToJava(message);
@@ -3893,14 +3827,14 @@ Tab.prototype = {
   },
 
   sendViewportMetadata: function sendViewportMetadata() {
-    sendMessageToJava({ gecko: {
+    sendMessageToJava({
       type: "Tab:ViewportMetadata",
       allowZoom: this.metadata.allowZoom,
       defaultZoom: this.metadata.defaultZoom || 0,
       minZoom: this.metadata.minZoom || 0,
       maxZoom: this.metadata.maxZoom || 0,
       tabID: this.id
-    }});
+    });
   },
 
   setBrowserSize: function(aWidth, aHeight) {
@@ -4065,7 +3999,7 @@ var BrowserEventHandler = {
         // Discard if it's the top-level scrollable, we let Java handle this
         let doc = BrowserApp.selectedBrowser.contentDocument;
         if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
-          sendMessageToJava({ gecko: { type: "Panning:Override" } });
+          sendMessageToJava({ type: "Panning:Override" });
       }
     }
 
@@ -4103,10 +4037,8 @@ var BrowserEventHandler = {
 
       tab.hasTouchListener = true;
       sendMessageToJava({
-        gecko: {
-          type: "Tab:HasTouchListener",
-          tabID: tab.id
-        }
+        type: "Tab:HasTouchListener",
+        tabID: tab.id
       });
       return;
     } else if (aTopic == "nsPref:changed") {
@@ -4155,7 +4087,7 @@ var BrowserEventHandler = {
           if (this._scrollableElement == null ||
               this._scrollableElement == doc.body ||
               this._scrollableElement == doc.documentElement) {
-            sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
+            sendMessageToJava({ type: "Panning:CancelOverride" });
             return;
           }
 
@@ -4165,10 +4097,10 @@ var BrowserEventHandler = {
         // Scroll the scrollable element
         if (this._elementCanScroll(this._scrollableElement, x, y)) {
           this._scrollElementBy(this._scrollableElement, x, y);
-          sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: true } });
+          sendMessageToJava({ type: "Gesture:ScrollAck", scrolled: true });
           SelectionHandler.subdocumentScrolled(this._scrollableElement);
         } else {
-          sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: false } });
+          sendMessageToJava({ type: "Gesture:ScrollAck", scrolled: false });
         }
 
         break;
@@ -4230,7 +4162,7 @@ var BrowserEventHandler = {
 
   _zoomOut: function() {
     BrowserEventHandler.resetMaxLineBoxWidth();
-    sendMessageToJava({ gecko: { type: "Browser:ZoomToPageWidth"} });
+    sendMessageToJava({ type: "Browser:ZoomToPageWidth" });
   },
 
   _isRectZoomedIn: function(aRect, aViewport) {
@@ -4327,7 +4259,7 @@ var BrowserEventHandler = {
       BrowserEventHandler.resetMaxLineBoxWidth();
     }
 
-    sendMessageToJava({ gecko: rect });
+    sendMessageToJava(rect);
   },
 
   _zoomInAndSnapToElement: function(aX, aY, aElement) {
@@ -4348,7 +4280,7 @@ var BrowserEventHandler = {
     rect.w = viewport.cssWidth;
     rect.h = viewport.cssHeight;
 
-    sendMessageToJava({ gecko: rect });
+    sendMessageToJava(rect);
    },
 
    onPinch: function(aData) {
@@ -5208,12 +5140,10 @@ var FormAssistant = {
 
     let positionData = this._getElementPositionData(aElement);
     sendMessageToJava({
-      gecko: {
-        type:  "FormAssist:AutoComplete",
-        suggestions: suggestions,
-        rect: positionData.rect,
-        zoom: positionData.zoom
-      }
+      type:  "FormAssist:AutoComplete",
+      suggestions: suggestions,
+      rect: positionData.rect,
+      zoom: positionData.zoom
     });
 
     // Keep track of input element so we can fill it in if the user
@@ -5245,21 +5175,17 @@ var FormAssistant = {
 
     let positionData = this._getElementPositionData(aElement);
     sendMessageToJava({
-      gecko: {
-        type: "FormAssist:ValidationMessage",
-        validationMessage: aElement.validationMessage,
-        rect: positionData.rect,
-        zoom: positionData.zoom
-      }
+      type: "FormAssist:ValidationMessage",
+      validationMessage: aElement.validationMessage,
+      rect: positionData.rect,
+      zoom: positionData.zoom
     });
 
     return true;
   },
 
   _hideFormAssistPopup: function _hideFormAssistPopup() {
-    sendMessageToJava({
-      gecko: { type:  "FormAssist:Hide" }
-    });
+    sendMessageToJava({ type: "FormAssist:Hide" });
   }
 };
 
@@ -5828,11 +5754,33 @@ var IndexedDB = {
       responseTopic = this._quotaResponse;
     }
 
+    const firstTimeoutDuration = 300000; // 5 minutes
+
+    let timeoutId;
+
     let notificationID = responseTopic + host;
     let observer = requestor.getInterface(Ci.nsIObserver);
 
+    // This will be set to the result of PopupNotifications.show() below, or to
+    // the result of PopupNotifications.getNotification() if this is a
+    // quotaCancel notification.
+    let notification;
+
+    function timeoutNotification() {
+      // Remove the notification.
+      NativeWindow.doorhanger.hide(notificationID, tab.id);
+
+      // Clear all of our timeout stuff. We may be called directly, not just
+      // when the timeout actually elapses.
+      clearTimeout(timeoutId);
+
+      // And tell the page that the popup timed out.
+      observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
+    }
+
     if (topic == this._quotaCancel) {
       NativeWindow.doorhanger.hide(notificationID, tab.id);
+      timeoutNotification();
       observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
       return;
     }
@@ -5840,23 +5788,31 @@ var IndexedDB = {
     let buttons = [{
       label: strings.GetStringFromName("offlineApps.allow"),
       callback: function() {
+        clearTimeout(timeoutId);
         observer.observe(null, responseTopic, Ci.nsIPermissionManager.ALLOW_ACTION);
       }
     },
     {
       label: strings.GetStringFromName("offlineApps.never"),
       callback: function() {
+        clearTimeout(timeoutId);
         observer.observe(null, responseTopic, Ci.nsIPermissionManager.DENY_ACTION);
       }
     },
     {
       label: strings.GetStringFromName("offlineApps.notNow"),
       callback: function() {
+        clearTimeout(timeoutId);
         observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
       }
     }];
 
     NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id);
+
+    // Set the timeoutId after the popup has been created, and use the long
+    // timeout value. If the user doesn't notice the popup after this amount of
+    // time then it is most likely not visible and we want to alert the page.
+    timeoutId = setTimeout(timeoutNotification, firstTimeoutDuration);
   }
 };
 
@@ -6016,10 +5972,8 @@ var ClipboardHelper = {
   share: function() {
     let selectedText = SelectionHandler.endSelection();
     sendMessageToJava({
-      gecko: {
-        type: "Share:Text",
-        text: selectedText
-      }
+      type: "Share:Text",
+      text: selectedText
     });
   },
 
@@ -6452,11 +6406,9 @@ var PermissionsHelper = {
           host = uri.spec;
         }
         sendMessageToJava({
-          gecko: {
-            type: "Permissions:Data",
-            host: host,
-            permissions: permissions
-          }
+          type: "Permissions:Data",
+          host: host,
+          permissions: permissions
         });
         break;
  
@@ -6605,10 +6557,8 @@ var MasterPassword = {
     prefs.push(pref);
 
     sendMessageToJava({
-      gecko: {
-        type: "Preferences:Data",
-        preferences: prefs
-      }
+      type: "Preferences:Data",
+      preferences: prefs
     });
   }
 };
@@ -6645,10 +6595,8 @@ var CharacterEncoding = {
     } catch (e) { /* Optional */ }
 
     sendMessageToJava({
-      gecko: {
-        type: "CharEncoding:State",
-        visible: showCharEncoding
-      }
+      type: "CharEncoding:State",
+      visible: showCharEncoding
     });
   },
 
@@ -6690,11 +6638,9 @@ var CharacterEncoding = {
     }
 
     sendMessageToJava({
-      gecko: {
-        type: "CharEncoding:Data",
-        charsets: this._charsets,
-        selected: selected
-      }
+      type: "CharEncoding:Data",
+      charsets: this._charsets,
+      selected: selected
     });
   },
 
@@ -6876,7 +6822,7 @@ OverscrollController.prototype = {
   },
 
   doCommand : function doCommand(aCommand){
-    sendMessageToJava({ gecko: { type: "ToggleChrome:Focus" } });
+    sendMessageToJava({ type: "ToggleChrome:Focus" });
   },
 
   onEvent : function onEvent(aEvent) { }
@@ -6926,15 +6872,13 @@ var SearchEngines = {
     }
 
     sendMessageToJava({
-      gecko: {
-        type: "SearchEngines:Data",
-        searchEngines: searchEngines,
-        suggest: {
-          engine: suggestEngine,
-          template: suggestTemplate,
-          enabled: Services.prefs.getBoolPref(this.PREF_SUGGEST_ENABLED),
-          prompted: Services.prefs.getBoolPref(this.PREF_SUGGEST_PROMPTED)
-        }
+      type: "SearchEngines:Data",
+      searchEngines: searchEngines,
+      suggest: {
+        engine: suggestEngine,
+        template: suggestTemplate,
+        enabled: Services.prefs.getBoolPref(this.PREF_SUGGEST_ENABLED),
+        prompted: Services.prefs.getBoolPref(this.PREF_SUGGEST_PROMPTED)
       }
     });
   },
@@ -7149,10 +7093,8 @@ var WebappsUI = {
         break;
       case "webapps-sync-uninstall":
         sendMessageToJava({
-          gecko: {
-            type: "WebApps:Uninstall",
-            origin: data.origin
-          }
+          type: "WebApps:Uninstall",
+          origin: data.origin
         });
         break;
     }
@@ -7202,13 +7144,11 @@ var WebappsUI = {
       this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
         (function(scaledIcon, fullsizeIcon) {
           let profilePath = sendMessageToJava({
-            gecko: {
-              type: "WebApps:Install",
-              name: manifest.name,
-              manifestURL: aData.app.manifestURL,
-              origin: aData.app.origin,
-              iconURL: scaledIcon,
-            }
+            type: "WebApps:Install",
+            name: manifest.name,
+            manifestURL: aData.app.manifestURL,
+            origin: aData.app.origin,
+            iconURL: scaledIcon,
           });
 
           // if java returned a profile path to us, try to use it to pre-populate the app cache
@@ -7268,11 +7208,9 @@ var WebappsUI = {
 
   openURL: function openURL(aManifestURL, aOrigin) {
     sendMessageToJava({
-      gecko: {
-        type: "WebApps:Open",
-        manifestURL: aManifestURL,
-        origin: aOrigin
-      }
+      type: "WebApps:Open",
+      manifestURL: aManifestURL,
+      origin: aOrigin
     });
   },
 
@@ -7619,12 +7557,10 @@ let Reader = {
           this.log("Reader:Add success=" + success + ", url=" + url + ", title=" + title);
 
           sendMessageToJava({
-            gecko: {
-              type: "Reader:Added",
-              success: success,
-              title: title,
-              url: url,
-            }
+            type: "Reader:Added",
+            success: success,
+            title: title,
+            url: url,
           });
         }.bind(this);
 
@@ -8133,56 +8069,54 @@ var Distribution = {
 
   init: function dc_init() {
     Services.obs.addObserver(this, "Distribution:Set", false);
+    Services.obs.addObserver(this, "prefservice:after-app-defaults", false);
+    Services.obs.addObserver(this, "Campaign:Set", false);
 
     // Look for file outside the APK:
     // /data/data/org.mozilla.fennec/distribution.json
     this._file = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
     this._file.append("distribution.json");
-    if (this._file.exists()) {
-      let channel = NetUtil.newChannel(this._file);
-      channel.contentType = "application/json";
-      NetUtil.asyncFetch(channel, function(aStream, aResult) {
-        if (!Components.isSuccessCode(aResult)) {
-          Cu.reportError("Distribution: Could not read from distribution.json file");
-          return;
-        }
-
-        let raw = NetUtil.readInputStreamToString(aStream, aStream.available(), { charset : "UTF-8" }) || "";
-        aStream.close();
-
-        try {
-          this.update(JSON.parse(raw));
-        } catch (ex) {
-          Cu.reportError("Distribution: Could not parse JSON: " + ex);
-        }
-      }.bind(this));
-    } 
+    this.readJSON(this._file, this.update);
   },
 
   uninit: function dc_uninit() {
     Services.obs.removeObserver(this, "Distribution:Set");
+    Services.obs.removeObserver(this, "prefservice:after-app-defaults");
+    Services.obs.removeObserver(this, "Campaign:Set");
   },
 
   observe: function dc_observe(aSubject, aTopic, aData) {
-    if (aTopic == "Distribution:Set") {
-      // Update the prefs for this session
-      try {
-        this.update(JSON.parse(aData));
-      } catch (ex) {
-        Cu.reportError("Distribution: Could not parse JSON: " + ex);
-        return;
+    switch (aTopic) {
+      case "Distribution:Set":
+        // Reload the default prefs so we can observe "prefservice:after-app-defaults"
+        Services.prefs.QueryInterface(Ci.nsIObserver).observe(null, "reload-default-prefs", null);
+        break;
+
+      case "prefservice:after-app-defaults":
+        this.getPrefs();
+        break;
+
+      case "Campaign:Set": {
+        // Update the prefs for this session
+        try {
+          this.update(JSON.parse(aData));
+        } catch (ex) {
+          Cu.reportError("Distribution: Could not parse JSON: " + ex);
+          return;
+        }
+
+        // Save the data for the later sessions
+        let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+        ostream.init(this._file, 0x02 | 0x08 | 0x20, parseInt("600", 8), ostream.DEFER_OPEN);
+
+        let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+        converter.charset = "UTF-8";
+
+        // Asynchronously copy the data to the file.
+        let istream = converter.convertToInputStream(aData);
+        NetUtil.asyncCopy(istream, ostream, function(rc) { });
+        break;
       }
-
-      // Save the data for the later sessions
-      let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-      ostream.init(this._file, 0x02 | 0x08 | 0x20, parseInt("600", 8), ostream.DEFER_OPEN);
-
-      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
-      converter.charset = "UTF-8";
-
-      // Asynchronously copy the data to the file.
-      let istream = converter.convertToInputStream(aData);
-      NetUtil.asyncCopy(istream, ostream, function(rc) { });
     }
   },
 
@@ -8191,6 +8125,103 @@ var Distribution = {
     let defaults = Services.prefs.getDefaultBranch(null);
     defaults.setCharPref("distribution.id", aData.id);
     defaults.setCharPref("distribution.version", aData.version);
+  },
+
+  getPrefs: function dc_getPrefs() {
+    // Look for preferences file outside the APK:
+    // /data/data/org.mozilla.fennec/distribution/preferences.json
+    let file = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+    file.append("distribution");
+    file.append("preferences.json");
+
+    this.readJSON(file, this.applyPrefs);
+  },
+
+  applyPrefs: function dc_applyPrefs(aData) {
+    // Check for required Global preferences
+    let global = aData["Global"];
+    if (!(global && global["id"] && global["version"] && global["about"])) {
+      Cu.reportError("Distribution: missing or incomplete Global preferences");
+      return;
+    }
+
+    // Force the distribution preferences on the default branch
+    let defaults = Services.prefs.getDefaultBranch(null);
+    defaults.setCharPref("distribution.id", global["id"]);
+    defaults.setCharPref("distribution.version", global["version"]);
+
+    let locale = Services.prefs.getCharPref("general.useragent.locale");
+    let aboutString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    aboutString.data = global["about." + locale] || global["about"];
+    defaults.setComplexValue("distribution.about", Ci.nsISupportsString, aboutString);
+
+    let prefs = aData["Preferences"];
+    for (let key in prefs) {
+      try {
+        let value = prefs[key];
+        switch (typeof value) {
+          case "boolean":
+            defaults.setBoolPref(key, value);
+            break;
+          case "number":
+            defaults.setIntPref(key, value);
+            break;
+          case "string":
+          case "undefined":
+            defaults.setCharPref(key, value);
+            break;
+        }
+      } catch (e) { /* ignore bad prefs and move on */ }
+    }
+
+    // Apply a lightweight theme if necessary
+    if (prefs["lightweightThemes.isThemeSelected"])
+      Services.obs.notifyObservers(null, "lightweight-theme-apply", "");
+
+    let localizedString = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
+    let localizeablePrefs = aData["LocalizablePreferences"];
+    for (let key in localizeablePrefs) {
+      try {
+        let value = localizeablePrefs[key];
+        value = value.replace("%LOCALE%", locale, "g");
+        localizedString.data = "data:text/plain," + key + "=" + value;
+        defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedString);
+      } catch (e) { /* ignore bad prefs and move on */ }
+    }
+
+    let localizeablePrefsOverrides = aData["LocalizablePreferences." + locale];
+    for (let key in localizeablePrefsOverrides) {
+      try {
+        let value = localizeablePrefsOverrides[key];
+        localizedString.data = "data:text/plain," + key + "=" + value;
+        defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedString);
+      } catch (e) { /* ignore bad prefs and move on */ }
+    }
+  },
+
+  // aFile is an nsIFile
+  // aCallback takes the parsed JSON object as a parameter
+  readJSON: function dc_readJSON(aFile, aCallback) {
+    if (!aFile.exists())
+      return;
+
+    let channel = NetUtil.newChannel(aFile);
+    channel.contentType = "application/json";
+    NetUtil.asyncFetch(channel, function(aStream, aResult) {
+      if (!Components.isSuccessCode(aResult)) {
+        Cu.reportError("Distribution: Could not read from " + aFile.leafName + " file");
+        return;
+      }
+
+      let raw = NetUtil.readInputStreamToString(aStream, aStream.available(), { charset : "UTF-8" }) || "";
+      aStream.close();
+
+      try {
+        aCallback(JSON.parse(raw));
+      } catch (e) {
+        Cu.reportError("Distribution: Could not parse JSON: " + e);
+      }
+    });
   }
 };
 

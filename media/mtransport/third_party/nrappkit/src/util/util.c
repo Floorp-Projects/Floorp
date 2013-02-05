@@ -509,6 +509,9 @@ strlcat(dst, src, siz)
 #include <errno.h>
 #ifdef WIN32
 #include <Ws2ipdef.h>
+#ifndef EAFNOSUPPORT
+#define EAFNOSUPPORT            WSAEAFNOSUPPORT
+#endif
 #else
 #include <sys/socket.h>
 #endif

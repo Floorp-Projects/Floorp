@@ -570,7 +570,7 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
-                 placeholder="&urlbar.placeholder;"
+                 placeholder="&urlbar.placeholder2;"
                  type="autocomplete"
                  autocompletesearch="urlinline history"
                  autocompletesearchparam="enable-actions"
@@ -1149,6 +1149,7 @@
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
+    <notificationbox id="global-notificationbox"/>
     <toolbar id="developer-toolbar"
              class="devtools-toolbar"
              hidden="true">

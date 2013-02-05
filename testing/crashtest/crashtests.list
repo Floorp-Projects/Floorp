@@ -48,8 +48,8 @@ include ../../layout/style/crashtests/crashtests.list
 include ../../layout/svg/crashtests/crashtests.list
 include ../../layout/tables/crashtests/crashtests.list
 include ../../layout/xul/base/src/crashtests/crashtests.list
-include ../../layout/xul/base/src/grid/crashtests/crashtests.list
-include ../../layout/xul/base/src/tree/src/crashtests/crashtests.list
+include ../../layout/xul/grid/crashtests/crashtests.list
+include ../../layout/xul/tree/crashtests/crashtests.list
 
 include ../../gfx/tests/crashtests/crashtests.list
 

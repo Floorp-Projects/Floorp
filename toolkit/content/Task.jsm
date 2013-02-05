@@ -95,7 +95,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-Cu.import("resource://gre/modules/commonjs/promise/core.js");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Task

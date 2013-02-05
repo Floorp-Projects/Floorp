@@ -8,7 +8,6 @@
 #define mozilla_dom_SVGScriptElement_h
 
 #include "nsSVGElement.h"
-#include "nsIDOMSVGScriptElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsCOMPtr.h"
 #include "nsSVGString.h"
@@ -25,7 +24,7 @@ namespace dom {
 typedef nsSVGElement SVGScriptElementBase;
 
 class SVGScriptElement MOZ_FINAL : public SVGScriptElementBase,
-                                   public nsIDOMSVGScriptElement,
+                                   public nsIDOMSVGElement,
                                    public nsIDOMSVGURIReference,
                                    public nsScriptElement
 {
@@ -42,7 +41,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGSCRIPTELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
@@ -57,7 +55,7 @@ public:
   virtual void GetScriptCharset(nsAString& charset);
   virtual void FreezeUriAsyncDefer();
   virtual CORSMode GetCORSMode() const;
-  
+
   // nsScriptElement
   virtual bool HasScriptContent();
 
@@ -74,11 +72,13 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
+  void GetType(nsAString & aType);
+  void SetType(const nsAString & aType, ErrorResult& rv);
+  void GetCrossOrigin(nsAString & aOrigin);
+  void SetCrossOrigin(const nsAString & aOrigin, ErrorResult& rv);
   already_AddRefed<nsIDOMSVGAnimatedString> Href();
 
 protected:

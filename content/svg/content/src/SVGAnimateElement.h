@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGAnimateElement_h
 
 #include "mozilla/dom/SVGAnimationElement.h"
-#include "nsIDOMSVGAnimateElement.h"
 #include "nsSMILAnimationFunction.h"
 
 nsresult NS_NewSVGAnimateElement(nsIContent **aResult,
@@ -17,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGAnimateElement MOZ_FINAL : public SVGAnimationElement,
-                                    public nsIDOMSVGAnimateElement
+                                    public nsIDOMSVGElement
 {
 protected:
   SVGAnimateElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -32,20 +31,16 @@ protected:
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGANIMATEELEMENT
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_FORWARD_NSIDOMSVGELEMENT(SVGAnimationElement::)
-  NS_FORWARD_NSIDOMSVGANIMATIONELEMENT(SVGAnimationElement::)
 
   // nsIDOMNode
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsISMILAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 };

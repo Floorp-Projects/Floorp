@@ -12,7 +12,7 @@ setenv VIRTUAL_ENV "__VIRTUAL_ENV__"
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/__BIN_NAME__:$PATH"
 
-set _OLD_VIRTUAL_PROMPT="$prompt"
+
 
 if ("__VIRTUAL_PROMPT__" != "") then
     set env_name = "__VIRTUAL_PROMPT__"
@@ -25,7 +25,15 @@ else
         set env_name = `basename "$VIRTUAL_ENV"`
     endif
 endif
-set prompt = "[$env_name] $prompt"
+
+# Could be in a non-interactive environment,
+# in which case, $prompt is undefined and we wouldn't
+# care about the prompt anyway.
+if ( $?prompt ) then
+    set _OLD_VIRTUAL_PROMPT="$prompt"
+    set prompt = "[$env_name] $prompt"
+endif
+
 unset env_name
 
 alias pydoc python -m pydoc

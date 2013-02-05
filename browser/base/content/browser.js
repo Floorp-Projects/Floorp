@@ -6206,7 +6206,7 @@ var IndexedDBPromptHelper = {
     }
 
     const hiddenTimeoutDuration = 30000; // 30 seconds
-    const firstTimeoutDuration = 360000; // 5 minutes
+    const firstTimeoutDuration = 300000; // 5 minutes
 
     var timeoutId;
 

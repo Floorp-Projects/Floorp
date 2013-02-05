@@ -291,11 +291,11 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
     return nullptr;
 
   uint16_t aSpread = GetSpreadMethod();
-  if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD)
+  if (aSpread == SVG_SPREADMETHOD_PAD)
     gradient->SetExtend(gfxPattern::EXTEND_PAD);
-  else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT)
+  else if (aSpread == SVG_SPREADMETHOD_REFLECT)
     gradient->SetExtend(gfxPattern::EXTEND_REFLECT);
-  else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT)
+  else if (aSpread == SVG_SPREADMETHOD_REPEAT)
     gradient->SetExtend(gfxPattern::EXTEND_REPEAT);
 
   gradient->SetMatrix(patternMatrix);

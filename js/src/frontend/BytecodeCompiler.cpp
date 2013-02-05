@@ -81,7 +81,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr
     ScriptSource *ss = cx->new_<ScriptSource>();
     if (!ss)
         return UnrootedScript(NULL);
-    ScriptSourceHolder ssh(cx->runtime, ss);
+    ScriptSourceHolder ssh(ss);
     SourceCompressionToken sct(cx);
     switch (options.sourcePolicy) {
       case CompileOptions::SAVE_SOURCE:
@@ -232,7 +232,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     ScriptSource *ss = cx->new_<ScriptSource>();
     if (!ss)
         return false;
-    ScriptSourceHolder ssh(cx->runtime, ss);
+    ScriptSourceHolder ssh(ss);
     SourceCompressionToken sct(cx);
     JS_ASSERT(options.sourcePolicy != CompileOptions::LAZY_SOURCE);
     if (options.sourcePolicy == CompileOptions::SAVE_SOURCE) {

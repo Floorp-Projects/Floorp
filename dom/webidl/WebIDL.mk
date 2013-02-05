@@ -57,6 +57,7 @@ webidl_files = \
   GainNode.webidl \
   HTMLAnchorElement.webidl \
   HTMLBodyElement.webidl \
+  HTMLBRElement.webidl \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
   HTMLDivElement.webidl \
@@ -76,6 +77,7 @@ webidl_files = \
   HTMLPropertiesCollection.webidl \
   HTMLScriptElement.webidl \
   HTMLSpanElement.webidl \
+  HTMLStyleElement.webidl \
   HTMLTableCaptionElement.webidl \
   HTMLTableCellElement.webidl \
   HTMLTableColElement.webidl \
@@ -85,6 +87,7 @@ webidl_files = \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
   ImageData.webidl \
+  LinkStyle.webidl \
   Location.webidl \
   MutationObserver.webidl \
   Node.webidl \
@@ -182,6 +185,7 @@ webidl_files = \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \
   XMLSerializer.webidl \
+  XMLStylesheetProcessingInstruction.webidl \
   XPathEvaluator.webidl \
   XULElement.webidl \
   $(NULL)

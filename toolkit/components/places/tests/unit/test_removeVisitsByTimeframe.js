@@ -22,7 +22,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - 1000 - i });
       }
-      addVisits(visits, this.continue_run.bind(this));
+      promiseAddVisits(visits).then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
@@ -66,7 +66,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - 1000 - i });
       }
-      addVisits(visits, function () {
+      promiseAddVisits(visits).then(function () {
         print("Bookmark the URI.");
         bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
                              TEST_URI,
@@ -118,7 +118,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      addVisits(visits, this.continue_run.bind(this));
+      promiseAddVisits(visits).then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove the 5 most recent visits.");
@@ -163,7 +163,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      addVisits(visits, function () {
+      promiseAddVisits(visits).then(function () {
         print("Bookmark the URI.");
         bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
                              TEST_URI,
@@ -215,7 +215,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      addVisits(visits, this.continue_run.bind(this));
+      promiseAddVisits(visits).then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -250,7 +250,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: PLACE_URI, visitDate: NOW - i });
       }
-      addVisits(visits, this.continue_run.bind(this));
+      promiseAddVisits(visits).then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -290,7 +290,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      addVisits(visits, function () {
+      promiseAddVisits(visits).then(function () {
         print("Bookmark the URI.");
         bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
                              TEST_URI,
@@ -336,11 +336,11 @@ var tests = [
     desc: "Remove some visits from a zero frecency URI retains zero frecency",
     run: function () {
       do_log_info("Add some visits for the URI.");
-      addVisits([{ uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
-                   visitDate: (NOW - 86400000000) },
-                 { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
-                  visitDate: NOW }],
-                this.continue_run.bind(this));
+      promiseAddVisits([{ uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
+                          visitDate: (NOW - 86400000000) },
+                        { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
+                          visitDate: NOW }]).then(
+                       this.continue_run.bind(this));
     },
     continue_run: function () {
       do_log_info("Remove newer visit.");
