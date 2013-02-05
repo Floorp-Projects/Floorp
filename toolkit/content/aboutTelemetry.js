@@ -294,7 +294,12 @@ function SymbolicationRequest(aPrefix, aRenderHeader, aMemoryMap, aStacks) {
   this.memoryMap = aMemoryMap;
   this.stacks = aStacks;
 }
-SymbolicationRequest.prototype.handleSymbolResponse = function() {
+/**
+ * A callback for onreadystatechange. It replaces the numeric stack with
+ * the symbolicated one returned by the symbolication server.
+ */
+SymbolicationRequest.prototype.handleSymbolResponse =
+function SymbolicationRequest_handleSymbolResponse() {
   if (this.symbolRequest.readyState != 4)
     return;
 
@@ -330,7 +335,11 @@ SymbolicationRequest.prototype.handleSymbolResponse = function() {
     div.appendChild(document.createElement("br"));
   }
 };
-SymbolicationRequest.prototype.fetchSymbols = function() {
+/**
+ * Send a request to the symbolication server to symbolicate this stack.
+ */
+SymbolicationRequest.prototype.fetchSymbols =
+function SymbolicationRequest_fetchSymbols() {
   let symbolServerURI =
     getPref(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
   let request = {"memoryMap" : this.memoryMap, "stacks" : this.stacks,
