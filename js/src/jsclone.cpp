@@ -1015,7 +1015,7 @@ JSStructuredCloneReader::startRead(Value *vp)
 
         size_t length = stable->length();
         const StableCharPtr chars = stable->chars();
-        RegExpObject *reobj = RegExpObject::createNoStatics(context(), chars, length, flags, NULL);
+        RegExpObject *reobj = RegExpObject::createNoStatics(context(), chars.get(), length, flags, NULL);
         if (!reobj)
             return false;
         vp->setObject(*reobj);
