@@ -407,7 +407,6 @@ DOMCI_CLASS(MediaQueryList)
 DOMCI_CLASS(Telephony)
 DOMCI_CLASS(TelephonyCall)
 DOMCI_CLASS(MozVoicemail)
-DOMCI_CLASS(MozVoicemailEvent)
 DOMCI_CLASS(MozIccManager)
 DOMCI_CLASS(MozStkCommandEvent)
 #endif
