@@ -22,6 +22,7 @@
 #ifdef MOZ_B2G_RIL
 #include "nsINavigatorMobileConnection.h"
 #include "nsINavigatorCellBroadcast.h"
+#include "nsINavigatorVoicemail.h"
 #endif
 #include "nsAutoPtr.h"
 #include "nsIDOMNavigatorTime.h"
@@ -42,7 +43,6 @@ class nsIDOMMozConnection;
 #ifdef MOZ_B2G_RIL
 #include "nsIDOMNavigatorTelephony.h"
 class nsIDOMTelephony;
-class nsIDOMMozVoicemail;
 #endif
 
 #ifdef MOZ_B2G_BT
@@ -109,6 +109,7 @@ class Navigator : public nsIDOMNavigator
 #ifdef MOZ_B2G_RIL
                 , public nsIMozNavigatorMobileConnection
                 , public nsIMozNavigatorCellBroadcast
+                , public nsIMozNavigatorVoicemail
 #endif
 #ifdef MOZ_B2G_BT
                 , public nsIDOMNavigatorBluetooth
@@ -146,6 +147,7 @@ public:
 #ifdef MOZ_B2G_RIL
   NS_DECL_NSIMOZNAVIGATORMOBILECONNECTION
   NS_DECL_NSIMOZNAVIGATORCELLBROADCAST
+  NS_DECL_NSIMOZNAVIGATORVOICEMAIL
 #endif
 
 #ifdef MOZ_B2G_BT

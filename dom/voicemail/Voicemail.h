@@ -4,20 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_telephony_voicemail_h__
-#define mozilla_dom_telephony_voicemail_h__
-
-#include "TelephonyCommon.h"
+#ifndef mozilla_dom_voicemail_voicemail_h__
+#define mozilla_dom_voicemail_voicemail_h__
 
 #include "nsDOMEvent.h"
 #include "nsDOMEventTargetHelper.h"
-#include "nsIDOMVoicemail.h"
+#include "nsIDOMMozVoicemail.h"
 #include "nsIRadioInterfaceLayer.h"
 
+class nsPIDOMWindow;
 class nsIRILContentHelper;
 class nsIDOMMozVoicemailStatus;
 
-BEGIN_TELEPHONY_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 class Voicemail : public nsDOMEventTargetHelper,
                   public nsIDOMMozVoicemail
@@ -54,6 +54,10 @@ private:
   };
 };
 
-END_TELEPHONY_NAMESPACE
+} // namespace dom
+} // namespace mozilla
 
-#endif // mozilla_dom_telephony_voicemail_h__
+nsresult
+NS_NewVoicemail(nsPIDOMWindow* aWindow, nsIDOMMozVoicemail** aVoicemail);
+
+#endif // mozilla_dom_voicemail_voicemail_h__

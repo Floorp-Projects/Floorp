@@ -10,24 +10,29 @@ VPATH            = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
-LIBRARY_NAME     = domtelephony_s
-XPIDL_MODULE     = dom_telephony
+LIBRARY_NAME     = domvoicemail_s
+XPIDL_MODULE     = dom_voicemail
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+EXPORTS_NAMESPACES = mozilla/dom
+EXPORTS_mozilla/dom = \
+  Voicemail.h \
+  $(NULL)
+
 CPPSRCS = \
-  Telephony.cpp \
-  TelephonyCall.cpp \
+  Voicemail.cpp \
+  VoicemailEvent.cpp \
   $(NULL)
 
 XPIDLSRCS = \
-  nsIDOMNavigatorTelephony.idl \
-  nsIDOMTelephony.idl \
-  nsIDOMTelephonyCall.idl \
-  nsIDOMCallEvent.idl \
+  nsINavigatorVoicemail.idl \
+  nsIDOMMozVoicemail.idl \
+  nsIDOMMozVoicemailEvent.idl \
+  nsIDOMMozVoicemailStatus.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

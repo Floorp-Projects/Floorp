@@ -6,10 +6,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMTelephony;
+interface nsIDOMMozVoicemail;
 
-[scriptable, builtinclass, uuid(214d3480-ef7b-45f2-9e21-c6763d7ff613)]
-interface nsIDOMNavigatorTelephony : nsISupports
+[scriptable, builtinclass, uuid(d4a37ee6-d265-480d-8757-6a7b9aafc4f3)]
+interface nsIMozNavigatorVoicemail : nsISupports
 {
-  readonly attribute nsIDOMTelephony mozTelephony;
+  readonly attribute nsIDOMMozVoicemail mozVoicemail;
 };

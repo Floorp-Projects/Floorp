@@ -1207,6 +1207,7 @@ fi
 if [ "$MOZ_B2G_RIL" ]; then
   add_makefiles "
     dom/telephony/Makefile
+    dom/voicemail/Makefile
     dom/wifi/Makefile
     ipc/ril/Makefile
   "
