@@ -1072,10 +1072,7 @@ ICTypeUpdate_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
 static bool
 DoThisFallback(JSContext *cx, ICThis_Fallback *stub, HandleValue thisv, MutableHandleValue ret)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
-    jsbytecode *pc = stub->icEntry()->pc(script);
-    IonSpew(IonSpew_BaselineICFallback, "This fallback called! (%s:%d/%d)",
-            script->filename, script->lineno, (int) (pc - script->code));
+    FallbackICSpew(cx, stub, "This");
 
     ret.set(thisv);
     bool modified;
