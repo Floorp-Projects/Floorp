@@ -3,15 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_sms_MobileMessageDatabaseService_h
-#define mozilla_dom_sms_MobileMessageDatabaseService_h
+#ifndef mozilla_dom_mobilemessage_MobileMessageDatabaseService_h
+#define mozilla_dom_mobilemessage_MobileMessageDatabaseService_h
 
-#include "nsISmsDatabaseService.h"
+#include "nsIMobileMessageDatabaseService.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace dom {
-namespace sms {
+namespace mobilemessage {
 
 class MobileMessageDatabaseService MOZ_FINAL : public nsIMobileMessageDatabaseService
 {
@@ -20,8 +20,8 @@ public:
   NS_DECL_NSIMOBILEMESSAGEDATABASESERVICE
 };
 
-} // namespace sms
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_sms_MobileMessageDatabaseService_h
+#endif // mozilla_dom_mobilemessage_MobileMessageDatabaseService_h

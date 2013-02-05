@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SmsDatabaseService.h"
+#include "MobileMessageDatabaseService.h"
 
 namespace mozilla {
 namespace dom {
-namespace sms {
+namespace mobilemessage {
 
 NS_IMPL_ISUPPORTS1(MobileMessageDatabaseService, nsIMobileMessageDatabaseService)
 
@@ -67,6 +67,6 @@ MobileMessageDatabaseService::GetThreadList(nsISmsRequest* aRequest)
   return NS_OK;
 }
 
-} // namespace sms
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

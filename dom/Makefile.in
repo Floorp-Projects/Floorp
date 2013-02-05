@@ -60,6 +60,7 @@ PARALLEL_DIRS += \
   power \
   quota \
   settings \
+  mobilemessage \
   sms \
   mms \
   src \
