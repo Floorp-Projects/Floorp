@@ -272,14 +272,16 @@ var BrowserApp = {
 
     let status = this.startupStatus();
     if (pinned) {
-      WebAppRT.init(status, url).then(function(aUrl) {
-        BrowserApp.addTab(aUrl);
-      }, function() {
-        let uri = Services.io.newURI(url, null, null);
-        if (!uri)
-          return;
-        Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService).getProtocolHandlerInfo(uri.scheme).launchWithURI(uri);
-        BrowserApp.quit();
+      WebAppRT.init(status, url, function(aUrl) {
+        if (aUrl) {
+          BrowserApp.addTab(aUrl);
+        } else {
+          let uri = Services.io.newURI(url, null, null);
+          if (!uri)
+            return;
+          Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService).getProtocolHandlerInfo(uri.scheme).launchWithURI(uri);
+          BrowserApp.quit();
+        }
       });
     } else {
       SearchEngines.init();
