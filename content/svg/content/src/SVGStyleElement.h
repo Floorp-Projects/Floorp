@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGStyleElement_h
 
 #include "nsSVGElement.h"
-#include "nsIDOMSVGStyleElement.h"
 #include "nsStyleLinkElement.h"
 #include "nsStubMutationObserver.h"
 
@@ -20,7 +19,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGStyleElement MOZ_FINAL : public SVGStyleElementBase,
-                                  public nsIDOMSVGStyleElement,
+                                  public nsIDOMSVGElement,
                                   public nsStyleLinkElement,
                                   public nsStubMutationObserver
 {
@@ -33,7 +32,6 @@ protected:
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGSTYLEELEMENT
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGStyleElement,
                                            SVGStyleElementBase)
@@ -72,17 +70,19 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
+  void GetXmlspace(nsAString & aXmlspace);
   void SetXmlspace(const nsAString & aXmlspace, ErrorResult& rv);
-  void SetType(const nsAString & aType, ErrorResult& rv);
-  void SetMedia(const nsAString & aMedia, ErrorResult& rv);
-  void SetTitle(const nsAString & aTitle, ErrorResult& rv);
+  void GetMedia(nsAString & aMedia);
+  void SetMedia(const nsAString& aMedia, ErrorResult& rv);
   bool Scoped() const;
   void SetScoped(bool aScoped, ErrorResult& rv);
+  void GetType(nsAString & aType);
+  void SetType(const nsAString& aType, ErrorResult& rv);
+  void GetTitle(nsAString & aTitle);
+  void SetTitle(const nsAString& aTitle, ErrorResult& rv);
 
 protected:
   // Dummy init method to make the NS_IMPL_NS_NEW_SVG_ELEMENT and

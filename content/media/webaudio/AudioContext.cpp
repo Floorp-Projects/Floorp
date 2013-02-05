@@ -8,7 +8,6 @@
 #include "nsContentUtils.h"
 #include "nsIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/AudioContextBinding.h"
 #include "AudioDestinationNode.h"
 #include "AudioBufferSourceNode.h"
 #include "AudioBuffer.h"
@@ -18,6 +17,7 @@
 #include "AudioListener.h"
 #include "DynamicsCompressorNode.h"
 #include "BiquadFilterNode.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace dom {
@@ -131,6 +131,37 @@ AudioContext::Listener()
     mListener = new AudioListener(this);
   }
   return mListener;
+}
+
+void
+AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
+                              DecodeSuccessCallback& aSuccessCallback,
+                              const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback)
+{
+  // Sniff the content of the media.
+  // Failed type sniffing will be handled by AsyncDecodeMedia.
+  nsAutoCString contentType;
+  NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, nullptr,
+                  aBuffer.Data(), aBuffer.Length(),
+                  contentType);
+
+  nsCOMPtr<DecodeErrorCallback> failureCallback;
+  if (aFailureCallback.WasPassed()) {
+    failureCallback = aFailureCallback.Value().get();
+  }
+  nsAutoPtr<WebAudioDecodeJob> job(
+    new WebAudioDecodeJob(contentType, aBuffer, this,
+                          &aSuccessCallback, failureCallback));
+  mDecoder.AsyncDecodeMedia(contentType.get(),
+                            job->mBuffer, job->mLength, *job);
+  // Transfer the ownership to mDecodeJobs
+  mDecodeJobs.AppendElement(job.forget());
+}
+
+void
+AudioContext::RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob)
+{
+  mDecodeJobs.RemoveElement(aDecodeJob);
 }
 
 }

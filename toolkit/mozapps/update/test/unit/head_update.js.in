@@ -471,6 +471,83 @@ if (IS_WIN) {
 }
 
 /**
+ * Copies a directory and its children. First it tries nsIFile::CopyTo on the
+ * source directory and if that fails it will fall back to recursing.
+ *
+ * @param  aSrcDir
+ *         nsIFile for the source directory to be copied from.
+ * @param  aDestDir
+ *         nsIFile for the destination directory parent.
+ * @param  aDestLeafName
+ *         the destination directory name.
+ */
+function copyDirRecursive(aSrcDir, aDestDir, aDestLeafName) {
+  try {
+    aSrcDir.copyTo(aDestDir, aDestLeafName);
+    return;
+  }
+  catch (e) {
+    logTestInfo("copyTo error - src path: " + aSrcDir.path + ", dest path: " +
+                aDestDir.path + ", dir name: " + aDestLeafName +
+                ", exception: " + e);
+  }
+
+  let destDir = aDestDir.clone();
+  destDir.append(aDestLeafName);
+  if (!destDir.exists()) {
+    try {
+      destDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+    }
+    catch (e) {
+      logTestInfo("unable to create directory, path: " + destDir.path +
+                  ", exception: " + e);
+      do_throw(e);
+    }
+  }
+  var dirEntries = aSrcDir.directoryEntries;
+  while (dirEntries.hasMoreElements()) {
+    let entry = dirEntries.getNext().QueryInterface(AUS_Ci.nsIFile);
+
+    if (entry.isDirectory()) {
+      copyDirRecursive(entry, destDir, entry.leafName);
+    }
+    else {
+      let destFile = destDir.clone();
+      destFile.append(entry.leafName);
+      if (destFile.exists()) {
+        try {
+          destFile.remove(false);
+        }
+        catch (e) {
+          logTestInfo("unable to remove file, path: " + destFile.path +
+                      ", exception: " + e);
+          let bakFile = destDir.clone();
+          bakFile.append(entry.leafName + ".bak");
+          logTestInfo("attempting moveTo of file, src path: " + destFile.path +
+                      ", dest path: " + bakFile.path + ", exception: " + e);
+          try {
+            destFile.moveTo(destDir, bakFile.leafName);
+          }
+          catch (e) {
+            logTestInfo("unable to move file, src path: " + destFile.path +
+                        ", dest path: " + bakFile.path + ", exception: " + e);
+            do_throw(e);
+          }
+        }
+      }
+      try {
+        entry.copyTo(destDir, entry.leafName);
+      }
+      catch (e) {
+        logTestInfo("unable to copy file, src path: " + entry.path +
+                    ", dest path: " + destFile.path + ", exception: " + e);
+        do_throw(e);
+      }
+    }
+  }
+}
+
+/**
  * Helper function for updater tests for launching the updater binary to apply
  * a mar file.
  *

@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <netdb.h> // For gethostbyname.
 
 #undef LOG
 #if defined(MOZ_WIDGET_GONK)
@@ -63,6 +64,9 @@ DispatchRILEvent::RunTask(JSContext *aCx)
 class RilConnector : public mozilla::ipc::UnixSocketConnector
 {
 public:
+  RilConnector(unsigned long aClientId) : mClientId(aClientId)
+  {}
+
   virtual ~RilConnector()
   {}
 
@@ -74,6 +78,9 @@ public:
   virtual bool SetUp(int aFd);
   virtual void GetSocketAddr(const sockaddr& aAddr,
                              nsAString& aAddrStr);
+
+private:
+  unsigned long mClientId;
 };
 
 int
@@ -134,7 +141,7 @@ RilConnector::CreateAddr(bool aIsServer,
 
     memset(&addr_in, 0, sizeof(addr_in));
     addr_in.sin_family = hp->h_addrtype;
-    addr_in.sin_port = htons(RIL_TEST_PORT);
+    addr_in.sin_port = htons(RIL_TEST_PORT + mClientId);
     memcpy(&addr_in.sin_addr, hp->h_addr, hp->h_length);
 
     aAddrSize = sizeof(addr_in);
@@ -162,11 +169,24 @@ RilConnector::GetSocketAddr(const sockaddr& aAddr,
 namespace mozilla {
 namespace ipc {
 
-RilConsumer::RilConsumer(WorkerCrossThreadDispatcher* aDispatcher)
+RilConsumer::RilConsumer(unsigned long aClientId,
+                         WorkerCrossThreadDispatcher* aDispatcher)
     : mDispatcher(aDispatcher)
+    , mClientId(aClientId)
     , mShutdown(false)
 {
-    ConnectSocket(new RilConnector(), RIL_SOCKET_NAME);
+    // Only append client id after RIL_SOCKET_NAME when it's not connected to
+    // the first(0) rilproxy for compatibility.
+    if (!aClientId) {
+        mAddress = RIL_SOCKET_NAME;
+    } else {
+        struct sockaddr_un addr_un;
+        snprintf(addr_un.sun_path, sizeof addr_un.sun_path, "%s%lu",
+                 RIL_SOCKET_NAME, aClientId);
+        mAddress = addr_un.sun_path;
+    }
+
+    ConnectSocket(new RilConnector(mClientId), mAddress.get());
 }
 
 void
@@ -204,7 +224,7 @@ RilConsumer::OnDisconnect()
 {
     LOG("%s\n", __FUNCTION__);
     if (!mShutdown) {
-        ConnectSocket(new RilConnector(), RIL_SOCKET_NAME, 1000);
+        ConnectSocket(new RilConnector(mClientId), mAddress.get(), 1000);
     }
 }
 

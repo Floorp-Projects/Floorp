@@ -195,7 +195,7 @@ ContentPrefService2.prototype = {
     if (context && context.usePrivateBrowsing) {
       this._pbStore.set(group, name, value);
       this._schedule(function () {
-        this._cps._notifyPrefSet(group, name, value);
+        this._cps._broadcastPrefSet(group, name, value);
         cbHandleCompletion(callback, Ci.nsIContentPrefCallback2.COMPLETE_OK);
       });
       return;
@@ -260,7 +260,7 @@ ContentPrefService2.prototype = {
       onDone: function onDone(reason, ok) {
         if (ok) {
           this._cache.setWithCast(group, name, value);
-          this._cps._notifyPrefSet(group, name, value);
+          this._cps._broadcastPrefSet(group, name, value);
         }
         cbHandleCompletion(callback, reason);
       },
@@ -343,7 +343,7 @@ ContentPrefService2.prototype = {
             }
           }
           for (let [sgroup, , ] in prefs) {
-            this._cps._notifyPrefRemoved(sgroup, name);
+            this._cps._broadcastPrefRemoved(sgroup, name);
           }
         }
         cbHandleCompletion(callback, reason);
@@ -429,7 +429,7 @@ ContentPrefService2.prototype = {
             }
           }
           for (let [sgroup, sname, ] in prefs) {
-            this._cps._notifyPrefRemoved(sgroup, sname);
+            this._cps._broadcastPrefRemoved(sgroup, sname);
           }
         }
         cbHandleCompletion(callback, reason);
@@ -481,7 +481,7 @@ ContentPrefService2.prototype = {
             this._pbStore.removeGrouped();
           }
           for (let [sgroup, sname, ] in prefs) {
-            this._cps._notifyPrefRemoved(sgroup, sname);
+            this._cps._broadcastPrefRemoved(sgroup, sname);
           }
         }
         cbHandleCompletion(callback, reason);
@@ -554,7 +554,7 @@ ContentPrefService2.prototype = {
             }
           }
           for (let [sgroup, , ] in prefs) {
-            this._cps._notifyPrefRemoved(sgroup, name);
+            this._cps._broadcastPrefRemoved(sgroup, name);
           }
         }
         cbHandleCompletion(callback, reason);

@@ -95,7 +95,19 @@ AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
   }
-  return mChannels[aChannel];
+  return GetChannelData(aChannel);
+}
+
+void
+AudioBuffer::SetChannelDataFromArrayBufferContents(JSContext* aJSContext,
+                                                   uint32_t aChannel,
+                                                   void* aContents)
+{
+  MOZ_ASSERT(aChannel < mChannels.Length());
+  JSObject* arrayBuffer = JS_NewArrayBufferWithContents(aJSContext, aContents);
+  mChannels[aChannel] = JS_NewFloat32ArrayWithBuffer(aJSContext, arrayBuffer,
+                                                     0, -1);
+  MOZ_ASSERT(mLength == JS_GetTypedArrayLength(mChannels[aChannel]));
 }
 
 }

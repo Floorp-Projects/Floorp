@@ -273,6 +273,7 @@ this.DOMApplicationRegistry = {
         file.copyTo(destDir, aFile);
       });
 
+    app.installState = "installed";
     app.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true)
                             .path;
 
@@ -460,7 +461,15 @@ this.DOMApplicationRegistry = {
       let messageName;
       if (typeof(aMessage) === "object" && Object.keys(aMessage).length === 1) {
         messageName = Object.keys(aMessage)[0];
-        href = Services.io.newURI(manifest.resolveFromOrigin(aMessage[messageName]), null, null);
+        let uri;
+        try {
+          uri = manifest.resolveFromOrigin(aMessage[messageName]);
+        } catch(e) {
+          debug("system message url (" + aMessage[messageName] + ") is invalid, skipping. " +
+                "Error is: " + e);
+          return;
+        }
+        href = Services.io.newURI(uri, null, null);
       } else {
         messageName = aMessage;
       }
@@ -505,7 +514,17 @@ this.DOMApplicationRegistry = {
       if (!description.href) {
         description.href = manifest.launch_path;
       }
-      description.href = manifest.resolveFromOrigin(description.href);
+
+      try {
+        description.href = manifest.resolveFromOrigin(description.href);
+      } catch (e) {
+        debug("Activity href (" + description.href + ") is invalid, skipping. " +
+              "Error is: " + e);
+        continue;
+      }
+
+      debug('_createActivitiesToRegister: ' + aApp.manifestURL + ', activity ' +
+          activity + ', description.href is ' + description.href);
 
       if (aRunUpdate) {
         activitiesToRegister.push({ "manifest": aApp.manifestURL,
@@ -946,6 +965,17 @@ this.DOMApplicationRegistry = {
     let app = this.webapps[id];
     if (!app) {
       debug("startDownload: No app found for " + aManifestURL);
+      return;
+    }
+
+    // If the caller is trying to start a download but we have nothing to
+    // download, send an error.
+    if (!app.downloadAvailable) {
+      this.broadcastMessage("Webapps:PackageEvent",
+                            { type: "canceled",
+                              manifestURL: app.manifestURL,
+                              app: app,
+                              error: "NO_DOWNLOAD_AVAILABLE" });
       return;
     }
 
@@ -2109,9 +2139,17 @@ this.DOMApplicationRegistry = {
             return;
           }
 
+          // If we get a 4XX or a 5XX http status, bail out like if we had a
+          // network error.
+          let responseStatus = requestChannel.responseStatus;
+          if (responseStatus >= 400 && responseStatus <= 599) {
+            cleanup("NETWORK_ERROR");
+            return;
+          }
+
           self.computeFileHash(zipFile, function onHashComputed(aHash) {
             debug("packageHash=" + aHash);
-            let newPackage = (requestChannel.responseStatus != 304) &&
+            let newPackage = (responseStatus != 304) &&
                              (aHash != app.packageHash);
 
             if (!newPackage) {

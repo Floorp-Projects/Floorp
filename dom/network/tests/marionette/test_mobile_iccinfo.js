@@ -19,14 +19,11 @@ function sendEmulatorCommand(cmd, callback) {
   });
 }
 
-function setEmulatorMccMnc(mcc, mnc, callback) {
+function setEmulatorMccMnc(mcc, mnc) {
   let cmd = "operator set 0 Android,Android," + mcc + mnc;
   sendEmulatorCommand(cmd, function (result) {
     let re = new RegExp("" + mcc + mnc + "$");
     ok(result[0].match(re), "MCC/MNC should be changed.");
-    if (callback) {
-      callback();
-    }
   });
 }
 
@@ -71,12 +68,14 @@ function testSPN(mcc, mnc, expectedIsDisplayNetworkNameRequired,
        expectedIsDisplayNetworkNameRequired);
     is(connection.iccInfo.isDisplaySpnRequired,
        expectedIsDisplaySpnRequired);
-    window.setTimeout(callback, 0);
+    // operatorchange will be ignored if we send commands too soon.
+    window.setTimeout(callback, 100);
   });
   setEmulatorMccMnc(mcc, mnc);
 }
 
 testDisplayConditionChange(testSPN, [
+  // [MCC, MNC, isDisplayNetworkNameRequired, isDisplaySpnRequired]
   [123, 456, false, true], // Not in HPLMN.
   [234, 136,  true, true], // Not in HPLMN, but in PLMN specified in SPDI.
   [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange

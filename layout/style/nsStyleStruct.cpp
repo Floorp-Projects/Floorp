@@ -2114,7 +2114,7 @@ nsStyleDisplay::nsStyleDisplay()
   mChildPerspective.SetCoordValue(0);
   mBackfaceVisibility = NS_STYLE_BACKFACE_VISIBILITY_VISIBLE;
   mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
-  mOrient = NS_STYLE_ORIENT_HORIZONTAL;
+  mOrient = NS_STYLE_ORIENT_AUTO;
 
   mTransitions.AppendElement();
   NS_ABORT_IF_FALSE(mTransitions.Length() == 1,

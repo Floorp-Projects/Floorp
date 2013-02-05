@@ -262,6 +262,22 @@ WeakMap_delete(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsWeakMap, WeakMap_delete_impl>(cx, args);
 }
 
+static bool
+TryPreserveReflector(JSContext *cx, HandleObject obj)
+{
+    if (obj->getClass()->ext.isWrappedNative ||
+        (obj->getClass()->flags & JSCLASS_IS_DOMJSCLASS) ||
+        (obj->isProxy() && GetProxyHandler(obj)->family() == GetListBaseHandlerFamily()))
+    {
+        JS_ASSERT(cx->runtime->preserveWrapperCallback);
+        if (!cx->runtime->preserveWrapperCallback(cx, obj)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_WEAKMAP_KEY);
+            return false;
+        }
+    }
+    return true;
+}
+
 JS_ALWAYS_INLINE bool
 WeakMap_set_impl(JSContext *cx, CallArgs args)
 {
@@ -291,15 +307,13 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
     }
 
     // Preserve wrapped native keys to prevent wrapper optimization.
-    if (key->getClass()->ext.isWrappedNative ||
-        (key->getClass()->flags & JSCLASS_IS_DOMJSCLASS) ||
-        (key->isProxy() && GetProxyHandler(key)->family() == GetListBaseHandlerFamily()))
-    {
-        JS_ASSERT(cx->runtime->preserveWrapperCallback);
-        if (!cx->runtime->preserveWrapperCallback(cx, key)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_WEAKMAP_KEY);
+    if (!TryPreserveReflector(cx, key))
+        return false;
+
+    if (JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp) {
+        RootedObject delegate(cx, op(key));
+        if (delegate && !TryPreserveReflector(cx, delegate))
             return false;
-        }
     }
 
     JS_ASSERT(key->compartment() == thisObj->compartment());

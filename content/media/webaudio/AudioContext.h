@@ -13,13 +13,19 @@
 #include "nsCOMPtr.h"
 #include "EnableWebAudioCheck.h"
 #include "nsAutoPtr.h"
+#include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/AudioContextBinding.h"
+#include "MediaBufferDecoder.h"
 
 struct JSContext;
+class JSObject;
 class nsIDOMWindow;
 
 namespace mozilla {
 
 class ErrorResult;
+struct WebAudioDecodeJob;
 
 namespace dom {
 
@@ -50,7 +56,10 @@ public:
     return mWindow;
   }
 
-  void Shutdown() {}
+  void Shutdown()
+  {
+    mDecoder.Shutdown();
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
                                bool* aTriedToWrap);
@@ -92,10 +101,21 @@ public:
   already_AddRefed<BiquadFilterNode>
   CreateBiquadFilter();
 
+  void DecodeAudioData(const ArrayBuffer& aBuffer,
+                       DecodeSuccessCallback& aSuccessCallback,
+                       const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
+
+private:
+  void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);
+
+  friend struct ::mozilla::WebAudioDecodeJob;
+
 private:
   nsCOMPtr<nsIDOMWindow> mWindow;
   nsRefPtr<AudioDestinationNode> mDestination;
   nsRefPtr<AudioListener> mListener;
+  MediaBufferDecoder mDecoder;
+  nsTArray<nsAutoPtr<WebAudioDecodeJob> > mDecodeJobs;
   float mSampleRate;
 };
 

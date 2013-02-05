@@ -400,13 +400,13 @@ If you use this flag to create an environment, currently, the
 The ``--extra-search-dir`` option
 ---------------------------------
 
-When it creates a new environment, virtualenv installs either
-setuptools or distribute, and pip.  In normal operation, the latest
+When it creates a new environment, virtualenv installs either setuptools
+or distribute, and pip.  In normal operation when virtualenv is
+installed, the bundled version of these packages included in the
+``virtualenv_support`` directory is used. When ``virtualenv.py`` is run
+standalone and ``virtualenv_support`` is not available, the latest
 releases of these packages are fetched from the `Python Package Index
-<http://pypi.python.org>`_ (PyPI). In some circumstances, this
-behavior may not be wanted, for example if you are using virtualenv
-during a deployment and do not want to depend on Internet access and
-PyPI availability.
+<http://pypi.python.org>`_ (PyPI).
 
 As an alternative, you can provide your own versions of setuptools,
 distribute and/or pip on the filesystem, and tell virtualenv to use
@@ -418,8 +418,9 @@ virtualenv like this::
 
 The ``/path/to/distributions`` path should point to a directory that
 contains setuptools, distribute and/or pip distributions.  Setuptools
-distributions must be ``.egg`` files; distribute and pip distributions
-should be `.tar.gz` source distributions.
+distributions must be ``.egg`` files; pip distributions should be
+`.tar.gz` source distributions, and distribute distributions may be
+either (if found an egg will be used preferentially).
 
 Virtualenv will still download these packages if no satisfactory local
 distributions are found.
@@ -433,8 +434,8 @@ provide an option ``--never-download`` like so::
 If this option is provided, virtualenv will never try to download
 setuptools/distribute or pip. Instead, it will exit with status code 1
 if it fails to find local distributions for any of these required
-packages. The local distribution lookup is done in this order and the
-following locations:
+packages. The local distribution lookup is done in the following
+locations, with the most recent version found used:
 
     #. The current directory.
     #. The directory where virtualenv.py is located.
@@ -443,6 +444,7 @@ following locations:
     #. If the file being executed is not named virtualenv.py (i.e. is a boot
        script), a ``virtualenv_support`` directory relative to wherever
        virtualenv.py is actually installed.
+
 
 Compare & Contrast with Alternatives
 ------------------------------------
@@ -492,6 +494,13 @@ repo`_ at GitHub.
 Virtualenv's release schedule is tied to pip's -- each time there's a new pip
 release, there will be a new virtualenv release that bundles the new version of
 pip.
+
+Files in the `virtualenv_embedded/` subdirectory are embedded into
+`virtualenv.py` itself as base64-encoded strings (in order to support
+single-file use of `virtualenv.py` without installing it). If your patch
+changes any file in `virtualenv_embedded/`, run `bin/rebuild-script.py` to
+update the embedded version of that file in `virtualenv.py`; commit that and
+submit it as part of your patch / pull request.
 
 .. _contributing to pip: http://www.pip-installer.org/en/latest/contributing.html
 .. _virtualenv repo: https://github.com/pypa/virtualenv/

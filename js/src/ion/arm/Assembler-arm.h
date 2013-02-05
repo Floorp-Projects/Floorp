@@ -1172,7 +1172,7 @@ class Assembler
     // TODO: this should actually be a pool-like object
     //       It is currently a big hack, and probably shouldn't exist
     class JumpPool;
-    js::Vector<CodeLabel *, 0, SystemAllocPolicy> codeLabels_;
+    js::Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     js::Vector<JumpPool *, 0, SystemAllocPolicy> jumpPools_;
     js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpJumpRelocations_;
@@ -1290,7 +1290,7 @@ class Assembler
     void copyDataRelocationTable(uint8_t *dest);
     void copyPreBarrierTable(uint8_t *dest);
 
-    bool addCodeLabel(CodeLabel *label);
+    bool addCodeLabel(CodeLabel label);
 
     // Size of the instruction stream, in bytes.
     size_t size() const;

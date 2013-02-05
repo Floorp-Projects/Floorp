@@ -365,20 +365,18 @@ class MacroAssemblerX86Shared : public Assembler
     bool buildFakeExitFrame(const Register &scratch, uint32_t *offset) {
         mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
 
-        CodeLabel *cl = new CodeLabel();
-        if (!addCodeLabel(cl))
-            return false;
-        mov(cl->dest(), scratch);
+        CodeLabel cl;
+        mov(cl.dest(), scratch);
 
         uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         Push(scratch);
 
-        bind(cl->src());
+        bind(cl.src());
         *offset = currentOffset();
 
         JS_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
-        return true;
+        return addCodeLabel(cl);
     }
 
     bool buildOOLFakeExitFrame(void *fakeReturnAddr) {

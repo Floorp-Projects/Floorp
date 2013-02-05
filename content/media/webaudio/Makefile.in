@@ -30,6 +30,7 @@ CPPSRCS := \
   DynamicsCompressorNode.cpp \
   EnableWebAudioCheck.cpp \
   GainNode.cpp \
+  MediaBufferDecoder.cpp \
   PannerNode.cpp \
   $(NULL)
 
@@ -49,6 +50,10 @@ EXPORTS_mozilla/dom := \
   EnableWebAudioCheck.h \
   GainNode.h \
   PannerNode.h \
+  $(NULL)
+
+EXPORTS := \
+  MediaBufferDecoder.h \
   $(NULL)
 
 PARALLEL_DIRS := test

@@ -1210,7 +1210,7 @@ tests.push({
   desc: "recalculate hidden for redirects.",
 
   setup: function() {
-    addVisits([
+    promiseAddVisits([
       { uri: NetUtil.newURI("http://l3.moz.org/"),
         transition: TRANSITION_TYPED },
       { uri: NetUtil.newURI("http://l3.moz.org/redirecting/"),

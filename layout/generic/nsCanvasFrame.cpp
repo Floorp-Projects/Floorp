@@ -560,12 +560,6 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
-int
-nsCanvasFrame::GetSkipSides() const
-{
-  return 0;
-}
-
 nsIAtom*
 nsCanvasFrame::GetType() const
 {

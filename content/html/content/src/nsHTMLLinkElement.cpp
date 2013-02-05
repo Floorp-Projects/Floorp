@@ -159,7 +159,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLLinkElement)
 NS_IMETHODIMP
 nsHTMLLinkElement::GetDisabled(bool* aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetStyleSheet());
+  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
   nsresult result = NS_OK;
 
   if (ss) {
@@ -174,7 +174,7 @@ nsHTMLLinkElement::GetDisabled(bool* aDisabled)
 NS_IMETHODIMP 
 nsHTMLLinkElement::SetDisabled(bool aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetStyleSheet());
+  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
   nsresult result = NS_OK;
 
   if (ss) {
@@ -332,7 +332,7 @@ nsHTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
        aName == nsGkAtoms::media ||
        aName == nsGkAtoms::type)) {
     bool dropSheet = false;
-    if (aName == nsGkAtoms::rel && GetStyleSheet()) {
+    if (aName == nsGkAtoms::rel && GetSheet()) {
       uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(aValue);
       dropSheet = !(linkTypes & STYLESHEET);          
     }

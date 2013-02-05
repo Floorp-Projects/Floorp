@@ -621,8 +621,14 @@ PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
 #ifdef MOZILLA_INTERNAL_API
+  if (mDataConnection) {
+    CSFLogError(logTag,"%s DataConnection already connected",__FUNCTION__);
+    // Ignore the request to connect when already connected.  This entire
+    // implementation is temporary.  Ignore aNumstreams as it's merely advisory
+    // and we increase the number of streams dynamically as needed.
+    return NS_OK;
+  }
   mDataConnection = new mozilla::DataChannelConnection(this);
-  NS_ENSURE_TRUE(mDataConnection,NS_ERROR_FAILURE);
   if (!mDataConnection->Init(aLocalport, aNumstreams, true)) {
     CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
     return NS_ERROR_FAILURE;

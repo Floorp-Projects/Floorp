@@ -8,8 +8,6 @@
 #include "mozilla/dom/SVGEllipseElementBinding.h"
 #include "gfxContext.h"
 
-DOMCI_NODE_DATA(SVGEllipseElement, mozilla::dom::SVGEllipseElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Ellipse)
 
 namespace mozilla {
@@ -32,15 +30,9 @@ nsSVGElement::LengthInfo SVGEllipseElement::sLengthInfo[4] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGEllipseElement,SVGEllipseElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGEllipseElement,SVGEllipseElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGEllipseElement)
-  NS_NODE_INTERFACE_TABLE4(SVGEllipseElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGEllipseElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGEllipseElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGEllipseElementBase)
+NS_IMPL_ISUPPORTS_INHERITED3(SVGEllipseElement, SVGEllipseElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -59,24 +51,10 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGEllipseElement)
 //----------------------------------------------------------------------
 // nsIDOMSVGEllipseElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedLength cx; */
-NS_IMETHODIMP SVGEllipseElement::GetCx(nsIDOMSVGAnimatedLength * *aCx)
-{
-  *aCx = Cx().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGEllipseElement::Cx()
 {
   return mLengthAttributes[CX].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength cy; */
-NS_IMETHODIMP SVGEllipseElement::GetCy(nsIDOMSVGAnimatedLength * *aCy)
-{
-  *aCy = Cy().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -85,24 +63,10 @@ SVGEllipseElement::Cy()
   return mLengthAttributes[CY].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength rx; */
-NS_IMETHODIMP SVGEllipseElement::GetRx(nsIDOMSVGAnimatedLength * *aRx)
-{
-  *aRx = Rx().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGEllipseElement::Rx()
 {
   return mLengthAttributes[RX].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength ry; */
-NS_IMETHODIMP SVGEllipseElement::GetRy(nsIDOMSVGAnimatedLength * *aRy)
-{
-  *aRy = Ry().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>

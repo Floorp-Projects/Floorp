@@ -80,7 +80,7 @@ Cu.import("resource:///modules/TelemetryTimestamps.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
-Cu.import("resource://gre/modules/commonjs/promise/core.js", this);
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
@@ -1452,7 +1452,9 @@ let SessionStoreInternal = {
     let newTab = aTab == aWindow.gBrowser.selectedTab ?
       aWindow.gBrowser.addTab(null, {relatedToCurrent: true, ownerTab: aTab}) :
       aWindow.gBrowser.addTab();
-    this.restoreHistoryPrecursor(aWindow, [newTab], [tabState], 0, 0, 0);
+
+    this.restoreHistoryPrecursor(aWindow, [newTab], [tabState], 0, 0, 0,
+                                 true /* Load this tab right away. */);
 
     return newTab;
   },
@@ -1674,13 +1676,6 @@ let SessionStoreInternal = {
     let lastWindow = this._getMostRecentBrowserWindow();
     let canUseLastWindow = lastWindow &&
                            !lastWindow.__SS_lastSessionWindowID;
-    let lastSessionFocusedWindow = null;
-    this.windowToFocus = lastWindow;
-
-    // move the last focused window to the start of the array so that we
-    // minimize window movement (see bug 669272)
-    lastSessionState.windows.unshift(
-      lastSessionState.windows.splice(lastSessionState.selectedWindow - 1, 1)[0]);
 
     // Restore into windows or open new ones as needed.
     for (let i = 0; i < lastSessionState.windows.length; i++) {
@@ -1718,18 +1713,9 @@ let SessionStoreInternal = {
         //        weirdness but we will still merge other extData.
         //        Bug 588217 should make this go away by merging the group data.
         this.restoreWindow(windowToUse, { windows: [winState] }, canOverwriteTabs, true);
-        if (i == 0)
-          lastSessionFocusedWindow = windowToUse;
-
-        // if we overwrote the tabs for our last focused window, we should
-        // give focus to the window that had it in the previous session
-        if (canOverwriteTabs && windowToUse == lastWindow)
-          this.windowToFocus = lastSessionFocusedWindow;
       }
       else {
-        let win = this._openWindowWithState({ windows: [winState] });
-        if (i == 0)
-          lastSessionFocusedWindow = win;
+        this._openWindowWithState({ windows: [winState] });
       }
     }
 
@@ -2652,17 +2638,17 @@ let SessionStoreInternal = {
     var winData;
     if (!root.selectedWindow || root.selectedWindow > root.windows.length) {
       root.selectedWindow = 0;
-    } else {
-      // put the selected window at the beginning of the array to ensure that
-      // it gets restored first
-      root.windows.unshift(root.windows.splice(root.selectedWindow - 1, 1)[0]);
     }
+
     // open new windows for all further window entries of a multi-window session
     // (unless they don't contain any tab data)
     for (var w = 1; w < root.windows.length; w++) {
       winData = root.windows[w];
       if (winData && winData.tabs && winData.tabs[0]) {
         var window = this._openWindowWithState({ windows: [winData] });
+        if (w == root.selectedWindow - 1) {
+          this.windowToFocus = window;
+        }
       }
     }
     winData = root.windows[0];
@@ -2888,9 +2874,13 @@ let SessionStoreInternal = {
    *        Index of the next tab to check readyness for
    * @param aCount
    *        Counter for number of times delaying b/c browser or history aren't ready
+   * @param aRestoreImmediately
+   *        Flag to indicate whether the given set of tabs aTabs should be
+   *        restored/loaded immediately even if restore_on_demand = true
    */
   restoreHistoryPrecursor:
-    function ssi_restoreHistoryPrecursor(aWindow, aTabs, aTabData, aSelectTab, aIx, aCount) {
+    function ssi_restoreHistoryPrecursor(aWindow, aTabs, aTabData, aSelectTab,
+                                         aIx, aCount, aRestoreImmediately = false) {
     var tabbrowser = aWindow.gBrowser;
 
     // make sure that all browsers and their histories are available
@@ -2904,7 +2894,8 @@ let SessionStoreInternal = {
       catch (ex) { // in case browser or history aren't ready yet
         if (aCount < 10) {
           var restoreHistoryFunc = function(self) {
-            self.restoreHistoryPrecursor(aWindow, aTabs, aTabData, aSelectTab, aIx, aCount + 1);
+            self.restoreHistoryPrecursor(aWindow, aTabs, aTabData, aSelectTab,
+                                         aIx, aCount + 1, aRestoreImmediately);
           }
           aWindow.setTimeout(restoreHistoryFunc, 100, this);
           return;
@@ -3003,7 +2994,8 @@ let SessionStoreInternal = {
     // identifiers.
     var idMap = { used: {} };
     var docIdentMap = {};
-    this.restoreHistory(aWindow, aTabs, aTabData, idMap, docIdentMap);
+    this.restoreHistory(aWindow, aTabs, aTabData, idMap, docIdentMap,
+                        aRestoreImmediately);
   },
 
   /**
@@ -3016,9 +3008,13 @@ let SessionStoreInternal = {
    *        Array of tab data
    * @param aIdMap
    *        Hash for ensuring unique frame IDs
+   * @param aRestoreImmediately
+   *        Flag to indicate whether the given set of tabs aTabs should be
+   *        restored/loaded immediately even if restore_on_demand = true
    */
   restoreHistory:
-    function ssi_restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap) {
+    function ssi_restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap,
+                                aRestoreImmediately) {
     var _this = this;
     // if the tab got removed before being completely restored, then skip it
     while (aTabs.length > 0 && !(this._canRestoreTabHistory(aTabs[0]))) {
@@ -3085,12 +3081,13 @@ let SessionStoreInternal = {
 
     // Restore the history in the next tab
     aWindow.setTimeout(function(){
-      _this.restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap);
+      _this.restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap,
+                           aRestoreImmediately);
     }, 0);
 
     // This could cause us to ignore MAX_CONCURRENT_TAB_RESTORES a bit, but
     // it ensures each window will have its selected tab loaded.
-    if (aWindow.gBrowser.selectedBrowser == browser) {
+    if (aRestoreImmediately || aWindow.gBrowser.selectedBrowser == browser) {
       this.restoreTab(tab);
     }
     else {

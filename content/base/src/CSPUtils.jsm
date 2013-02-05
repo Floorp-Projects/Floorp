@@ -45,7 +45,8 @@ const R_HOSTCHAR   = new RegExp ("[a-zA-Z0-9\\-]", 'i');
 
 // host            = "*" / [ "*." ] 1*host-char *( "." 1*host-char )
 const R_HOST       = new RegExp ("\\*|(((\\*\\.)?" + R_HOSTCHAR.source +
-                                      "+)(\\." + R_HOSTCHAR.source +"+)*)",'i');
+                              "+)" + "(\\." + R_HOSTCHAR.source + "+)*)", 'i');
+
 // port            = ":" ( 1*DIGIT / "*" )
 const R_PORT       = new RegExp ("(\\:([0-9]+|\\*))", 'i');
 
@@ -245,8 +246,15 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
   aCSPR._innerWindowID = innerWindowFromRequest(docRequest);
 
   var selfUri = null;
-  if (self instanceof Ci.nsIURI)
-    selfUri = self.clone();
+  if (self instanceof Ci.nsIURI) {
+    selfUri = self.cloneIgnoringRef();
+    // clean userpass out of the URI (not used for CSP origin checking, but
+    // shows up in prePath).
+    try {
+      // GetUserPass throws for some protocols without userPass
+      selfUri.userPass = '';
+    } catch (ex) {}
+  }
 
   var dirs = aStr.split(";");
 
@@ -302,7 +310,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
         CSPdebug("Skipping duplicate directive: \"" + dir + "\"");
         continue directive;
       }
-      var dv = CSPSourceList.fromString(dirvalue, aCSPR, self, true);
+      var dv = CSPSourceList.fromString(dirvalue, aCSPR, selfUri, true);
       if (dv) {
         aCSPR._directives[SD.DEFAULT_SRC] = dv;
         continue directive;
@@ -313,7 +321,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
     for each(var sdi in SD) {
       if (dirname === sdi) {
         // process dirs, and enforce that 'self' is defined.
-        var dv = CSPSourceList.fromString(dirvalue, aCSPR, self, true);
+        var dv = CSPSourceList.fromString(dirvalue, aCSPR, selfUri, true);
         if (dv) {
           aCSPR._directives[sdi] = dv;
           continue directive;
@@ -463,7 +471,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
   // includes the case where "default-src" is not present.
   if (aCSPR.makeExplicit())
     return aCSPR;
-  return CSPRep.fromString("default-src 'none'", self);
+  return CSPRep.fromString("default-src 'none'", selfUri);
 };
 
 /**
@@ -492,8 +500,15 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
   aCSPR._innerWindowID = innerWindowFromRequest(docRequest);
 
   var selfUri = null;
-  if (self instanceof Ci.nsIURI)
-    selfUri = self.clone();
+  if (self instanceof Ci.nsIURI) {
+    selfUri = self.cloneIgnoringRef();
+    // clean userpass out of the URI (not used for CSP origin checking, but
+    // shows up in prePath).
+    try {
+      // GetUserPass throws for some protocols without userPass
+      selfUri.userPass = '';
+    } catch (ex) {}
+  }
 
   var dirs = aStr.split(";");
 
@@ -1210,8 +1225,17 @@ CSPSource.create = function(aData, aCSPRep, self, enforceSelfChecks) {
   if (typeof aData === 'string')
     return CSPSource.fromString(aData, aCSPRep, self, enforceSelfChecks);
 
-  if (aData instanceof Ci.nsIURI)
-    return CSPSource.fromURI(aData, aCSPRep, self, enforceSelfChecks);
+  if (aData instanceof Ci.nsIURI) {
+    // clean userpass out of the URI (not used for CSP origin checking, but
+    // shows up in prePath).
+    let cleanedUri = aData.cloneIgnoringRef();
+    try {
+      // GetUserPass throws for some protocols without userPass
+      cleanedUri.userPass = '';
+    } catch (ex) {}
+
+    return CSPSource.fromURI(cleanedUri, aCSPRep, self, enforceSelfChecks);
+  }
 
   if (aData instanceof CSPSource) {
     var ns = aData.clone();
@@ -1350,7 +1374,8 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     self = CSPSource.create(self, aCSPRep, undefined, false);
   }
 
-  // check for scheme-source match
+  // Check for scheme-source match - this only matches if the source
+  // string is just a scheme with no host.
   if (R_SCHEMESRC.test(aStr)) {
     var schemeSrcMatch = R_GETSCHEME.exec(aStr);
     sObj._scheme = schemeSrcMatch[0];
@@ -1372,17 +1397,23 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     }
 
     // get array of matches to the R_HOST regular expression
-    var hostMatch = R_HOST.exec(aStr);
+    var hostMatch = R_HOSTSRC.exec(aStr);
     if (!hostMatch) {
       cspError(aCSPRep, CSPLocalizer.getFormatStr("couldntParseInvalidSource",
                                                   [aStr]));
       return null;
     }
-    // host regex gets scheme, so remove scheme from aStr. Add 3 for '://'
+    // Host regex gets scheme, so remove scheme from aStr. Add 3 for '://'
     if (schemeMatch)
-      hostMatch = R_HOST.exec(aStr.substring(schemeMatch[0].length + 3));
+      hostMatch = R_HOSTSRC.exec(aStr.substring(schemeMatch[0].length + 3));
+
+    var portMatch = R_PORT.exec(hostMatch);
+
+    // Host regex also gets port, so remove the port here.
+    if (portMatch)
+      hostMatch = R_HOSTSRC.exec(hostMatch[0].substring(0, hostMatch[0].length - portMatch[0].length));
+
     sObj._host = CSPHost.fromString(hostMatch[0]);
-    var portMatch = R_PORT.exec(aStr);
     if (!portMatch) {
       // gets the default port for the given scheme
       defPort = Services.io.getProtocolHandler(sObj._scheme).defaultPort;
