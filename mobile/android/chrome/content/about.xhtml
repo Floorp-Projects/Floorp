@@ -125,11 +125,7 @@
         showCheckingMessage();
 
         let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
-        bridge.handleGeckoMessage(JSON.stringify({
-          gecko: {
-            type: "Update:Check",
-          }
-        }));
+        bridge.handleGeckoMessage(JSON.stringify({ type: "Update:Check" }));
       }
 
       let updateLink = document.getElementById("updateLink");

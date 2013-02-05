@@ -5,19 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Voicemail.h"
-#include "nsIDOMVoicemailStatus.h"
+#include "nsIDOMMozVoicemailStatus.h"
+#include "nsIDOMMozVoicemailEvent.h"
 
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
+#include "GeneratedEvents.h"
 
-#include "VoicemailEvent.h"
+DOMCI_DATA(MozVoicemail, mozilla::dom::Voicemail)
 
-DOMCI_DATA(MozVoicemail, mozilla::dom::telephony::Voicemail)
-
-USING_TELEPHONY_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_0(Voicemail, nsDOMEventTargetHelper)
 
@@ -92,13 +93,19 @@ NS_IMPL_EVENT_HANDLER(Voicemail, statuschanged)
 NS_IMETHODIMP
 Voicemail::VoicemailNotification(nsIDOMMozVoicemailStatus* aStatus)
 {
-  nsRefPtr<VoicemailEvent> event = new VoicemailEvent(nullptr, nullptr);
-  nsresult rv = event->InitVoicemailEvent(NS_LITERAL_STRING("statuschanged"),
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMMozVoicemailEvent(getter_AddRefs(event), nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMMozVoicemailEvent> ce = do_QueryInterface(event);
+  nsresult rv = ce->InitMozVoicemailEvent(NS_LITERAL_STRING("statuschanged"),
                                           false, false, aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DispatchTrustedEvent(static_cast<nsIDOMMozVoicemailEvent*>(event));
+  return DispatchTrustedEvent(ce);
 }
+
+} // namespace dom
+} // namespace mozilla
 
 nsresult
 NS_NewVoicemail(nsPIDOMWindow* aWindow, nsIDOMMozVoicemail** aVoicemail)
@@ -111,7 +118,8 @@ NS_NewVoicemail(nsPIDOMWindow* aWindow, nsIDOMMozVoicemail** aVoicemail)
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_STATE(ril);
 
-  nsRefPtr<Voicemail> voicemail = new Voicemail(innerWindow, ril);
+  nsRefPtr<mozilla::dom::Voicemail> voicemail =
+    new mozilla::dom::Voicemail(innerWindow, ril);
   voicemail.forget(aVoicemail);
   return NS_OK;
 }

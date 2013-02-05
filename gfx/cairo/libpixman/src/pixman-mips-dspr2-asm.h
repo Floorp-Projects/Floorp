@@ -600,6 +600,28 @@ LEAF_MIPS32R2(symbol)                                   \
     addu_s.qb          \out_8888, \out_8888, \d_8888
 .endm
 
+.macro MIPS_2xUN8x4_MUL_2xUN8_ADD_2xUN8x4 s1_8888,   \
+                             s2_8888,   \
+                             m1_8,      \
+                             m2_8,      \
+                             d1_8888,   \
+                             d2_8888,   \
+                             out1_8888, \
+                             out2_8888, \
+                             maskLSR,   \
+                             scratch1,  scratch2, scratch3, \
+                             scratch4, scratch5, scratch6
+    MIPS_2xUN8x4_MUL_2xUN8 \s1_8888,   \s2_8888, \
+                           \m1_8,      \m2_8, \
+                           \out1_8888, \out2_8888, \
+                           \maskLSR, \
+                           \scratch1,  \scratch2, \scratch3, \
+                           \scratch4,  \scratch5, \scratch6
+
+    addu_s.qb             \out1_8888, \out1_8888, \d1_8888
+    addu_s.qb             \out2_8888, \out2_8888, \d2_8888
+.endm
+
 .macro BILINEAR_INTERPOLATE_SINGLE_PIXEL tl, tr, bl, br,         \
                                          scratch1, scratch2,     \
                                          alpha, red, green, blue \

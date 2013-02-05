@@ -3,31 +3,31 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsISmsDatabaseService.idl"
+#include "nsIMobileMessageDatabaseService.idl"
 
 interface nsIDOMMozSmsMessage;
 
-[scriptable, function, uuid(04a08668-c020-469e-a1ad-8626c951ab2b)]
-interface nsIRilSmsDatabaseCallback : nsISupports
+[scriptable, function, uuid(9cd80750-6a08-11e2-ac93-bf895e53f40e)]
+interface nsIRilMobileMessageDatabaseCallback : nsISupports
 {
   void notify(in nsresult aRv, in nsIDOMMozSmsMessage aSms);
 };
 
-[scriptable, uuid(8e2acd73-0332-4d16-82cc-ff5bac59d245)]
-interface nsIRilSmsDatabaseService : nsISmsDatabaseService
+[scriptable, uuid(89528354-6a08-11e2-8243-af4cf90404a9)]
+interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   long saveReceivedMessage(in DOMString aSender,
                            in DOMString aBody,
                            in DOMString aMessageClass,
                            in unsigned long long aDate,
-                [optional] in nsIRilSmsDatabaseCallback aCallback);
+                [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
   long saveSendingMessage(in DOMString aReceiver,
                           in DOMString aBody,
                           in DOMString aDeliveryStatus,
                           in unsigned long long aDate,
-               [optional] in nsIRilSmsDatabaseCallback aCallback);
+               [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
   void setMessageDelivery(in long aMessageId,
                           in DOMString aDelivery,
                           in DOMString aDeliveryStatus,
-               [optional] in nsIRilSmsDatabaseCallback aCallback);
+               [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
 };
