@@ -1084,8 +1084,8 @@ js::AddScriptRoot(JSContext *cx, JSScript **rp, const char *name)
     return AddRoot(cx, rp, name, JS_GC_ROOT_SCRIPT_PTR);
 }
 
-void
-js::RemoveRoot(JSRuntime *rt, void *rp)
+JS_FRIEND_API(void)
+js_RemoveRoot(JSRuntime *rt, void *rp)
 {
     rt->gcRootsHash.remove(rp);
     rt->gcPoke = true;
