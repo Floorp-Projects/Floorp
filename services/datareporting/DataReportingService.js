@@ -128,16 +128,6 @@ DataReportingService.prototype = Object.freeze({
         this._os.removeObserver(this, "sessionstore-windows-restored");
         this._os.addObserver(this, "quit-application", false);
 
-        // When the session recorder starts up above, first paint and session
-        // restore times likely aren't available. So, we wait until they are (here)
-        // and record them. In the case of session restore time, that appears
-        // to be set by an observer of this notification. So, we delay
-        // recording until the next tick of the event loop.
-        if (this.sessionRecorder) {
-          CommonUtils.nextTick(this.sessionRecorder.recordStartupFields,
-                               this.sessionRecorder);
-        }
-
         this.policy.startPolling();
 
         // Don't initialize Firefox Health Reporter collection and submission
