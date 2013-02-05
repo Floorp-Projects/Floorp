@@ -136,50 +136,16 @@ class DestroyWidgetRunnable : public nsRunnable {
 public:
   NS_DECL_NSIRUNNABLE
 
-  explicit DestroyWidgetRunnable(nsIContent* aCombobox) :
-    mCombobox(aCombobox),
-    mWidget(GetWidget())
-  {
-  }
+  explicit DestroyWidgetRunnable(nsIWidget* aWidget) : mWidget(aWidget) {}
 
 private:
-  nsIWidget* GetWidget(nsView** aOutView = nullptr) const;
-
-private:
-  nsCOMPtr<nsIContent> mCombobox;
-  nsIWidget* mWidget;
+  nsCOMPtr<nsIWidget> mWidget;
 };
 
 NS_IMETHODIMP DestroyWidgetRunnable::Run()
 {
-  nsView* view = nullptr;
-  nsIWidget* currentWidget = GetWidget(&view);
-  // Make sure that we are destroying the same widget as what was requested
-  // when the event was fired.
-  if (view && mWidget && mWidget == currentWidget) {
-    view->DestroyWidget();
-  }
+  mWidget = nullptr;
   return NS_OK;
-}
-
-nsIWidget* DestroyWidgetRunnable::GetWidget(nsView** aOutView) const
-{
-  nsIFrame* primaryFrame = mCombobox->GetPrimaryFrame();
-  nsIComboboxControlFrame* comboboxFrame = do_QueryFrame(primaryFrame);
-  if (comboboxFrame) {
-    nsIFrame* dropdown = comboboxFrame->GetDropDown();
-    if (dropdown) {
-      nsView* view = dropdown->GetView();
-      NS_ASSERTION(view, "nsComboboxControlFrame view is null");
-      if (aOutView) {
-        *aOutView = view;
-      }
-      if (view) {
-        return view->GetWidget();
-      }
-    }
-  }
-  return nullptr;
 }
 
 }
@@ -432,7 +398,10 @@ nsComboboxControlFrame::ShowList(bool aShowList)
 
         if (!aShowList) {
           nsCOMPtr<nsIRunnable> widgetDestroyer =
-            new DestroyWidgetRunnable(GetContent());
+            new DestroyWidgetRunnable(widget);
+          // 'widgetDestroyer' now has a strong ref on the widget so calling
+          // DestroyWidget here will not *delete* it.
+          view->DestroyWidget();
           NS_DispatchToMainThread(widgetDestroyer);
         }
       }
