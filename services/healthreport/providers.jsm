@@ -379,7 +379,7 @@ CurrentSessionMeasurement.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "current",
-  version: 2,
+  version: 3,
 
   configureStorage: function () {
     return Promise.resolve();
@@ -428,7 +428,7 @@ PreviousSessionsMeasurement.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "previous",
-  version: 2,
+  version: 3,
 
   DAILY_DISCRETE_NUMERIC_FIELDS: [
     // Milliseconds of sessions that were properly shut down.
@@ -488,7 +488,7 @@ SessionsProvider.prototype = Object.freeze({
   constantOnly: true,
 
   collectConstantData: function () {
-    let previous = this.getMeasurement("previous", 2);
+    let previous = this.getMeasurement("previous", 3);
 
     return this.storage.enqueueTransaction(this._recordAndPruneSessions.bind(this));
   },
@@ -499,7 +499,7 @@ SessionsProvider.prototype = Object.freeze({
     let sessions = recorder.getPreviousSessions();
     this._log.debug("Found " + Object.keys(sessions).length + " previous sessions.");
 
-    let daily = this.getMeasurement("previous", 2);
+    let daily = this.getMeasurement("previous", 3);
 
     for each (let session in sessions) {
       let type = session.clean ? "clean" : "aborted";
