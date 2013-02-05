@@ -770,10 +770,10 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 
     pd = pda->array;
     for (i = 0; i < pda->length; i++) {
-        RemoveRoot(cx->runtime, &pd[i].id);
-        RemoveRoot(cx->runtime, &pd[i].value);
+        js_RemoveRoot(cx->runtime, &pd[i].id);
+        js_RemoveRoot(cx->runtime, &pd[i].value);
         if (pd[i].flags & JSPD_ALIAS)
-            RemoveRoot(cx->runtime, &pd[i].alias);
+            js_RemoveRoot(cx->runtime, &pd[i].alias);
     }
     js_free(pd);
     pda->array = NULL;
