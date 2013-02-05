@@ -72,6 +72,86 @@ add_task(function test_current_properties() {
   recorder.onShutdown();
 });
 
+// If startup info isn't present yet, we should install a timer and get
+// it eventually.
+add_task(function test_current_availability() {
+  let recorder = new SessionRecorder("testing.current_availability.");
+  let now = new Date();
+
+  Object.defineProperty(recorder, "_getStartupInfo", {
+    value: function _getStartupInfo() {
+      return {
+        process: now,
+        main: new Date(now.getTime() + 500),
+        firstPaint: new Date(now.getTime() + 1000),
+      };
+    },
+    writable: true,
+  });
+
+  Object.defineProperty(recorder, "STARTUP_RETRY_INTERVAL_MS", {
+    value: 100,
+  });
+
+  let oldRecord = recorder.recordStartupFields;
+  let recordCount = 0;
+
+  Object.defineProperty(recorder, "recordStartupFields", {
+    value: function () {
+      recordCount++;
+      return oldRecord.call(recorder);
+    }
+  });
+
+  do_check_null(recorder._timer);
+  recorder.onStartup();
+  do_check_eq(recordCount, 1);
+  do_check_eq(recorder.sessionRestored, -1);
+  do_check_neq(recorder._timer, null);
+
+  yield sleep(125);
+  do_check_eq(recordCount, 2);
+  yield sleep(100);
+  do_check_eq(recordCount, 3);
+  do_check_eq(recorder.sessionRestored, -1);
+
+  monkeypatchStartupInfo(recorder, now);
+  yield sleep(100);
+  do_check_eq(recordCount, 4);
+  do_check_eq(recorder.sessionRestored, 1500);
+
+  // The timer should be removed and we should not fire again.
+  do_check_null(recorder._timer);
+  yield sleep(100);
+  do_check_eq(recordCount, 4);
+
+  recorder.onShutdown();
+});
+
+add_test(function test_timer_clear_on_shutdown() {
+  let recorder = new SessionRecorder("testing.timer_clear_on_shutdown.");
+  let now = new Date();
+
+  Object.defineProperty(recorder, "_getStartupInfo", {
+    value: function _getStartupInfo() {
+      return {
+        process: now,
+        main: new Date(now.getTime() + 500),
+        firstPaint: new Date(now.getTime() + 1000),
+      };
+    },
+  });
+
+  do_check_null(recorder._timer);
+  recorder.onStartup();
+  do_check_neq(recorder._timer, null);
+
+  recorder.onShutdown();
+  do_check_null(recorder._timer);
+
+  run_next_test();
+});
+
 add_task(function test_previous_clean() {
   let now = new Date();
   let recorder = getRecorder("previous_clean", now);
