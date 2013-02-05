@@ -7,7 +7,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(6852369e-baa9-4c9a-bbcd-5123fc54a297)]
+[scriptable, uuid(68067eb5-ad8d-43cb-a043-1cc85ebe06e7)]
 interface nsIEffectiveTLDService : nsISupports
 {
     /**
@@ -107,5 +107,19 @@ interface nsIEffectiveTLDService : nsISupports
      * @see     getBaseDomain()
      */
     ACString getBaseDomainFromHost(in AUTF8String aHost, [optional] in uint32_t aAdditionalParts);
+
+    /**
+     * Returns the parent sub-domain of a host string. If the host is a base
+     * domain, it will throw NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS.
+     *
+     * For example: "player.bbc.co.uk" would return "bbc.co.uk" and
+     *              "bbc.co.uk" would throw NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS.
+     *
+     * @param   aHost   The host to be analyzed. Any additional parts (e.g. scheme,
+     *                  port, or path) will cause this method to throw. ASCII/ACE and
+     *                  UTF8 encodings are acceptable as input; normalization will
+     *                  be performed as specified in getBaseDomain().
+     */
+    ACString getNextSubDomain(in AUTF8String aHost);
 };
 

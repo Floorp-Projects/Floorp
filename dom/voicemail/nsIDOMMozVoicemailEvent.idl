@@ -1,0 +1,28 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+interface nsIDOMMozVoicemailStatus;
+
+[scriptable, builtinclass, uuid(63e42e5f-0742-4c8f-bd52-938a7e03d2c9)]
+interface nsIDOMMozVoicemailEvent : nsIDOMEvent
+{
+  /**
+   * The voicemail status that caused this event to fire
+   */
+  readonly attribute nsIDOMMozVoicemailStatus status;
+
+  [noscript] void initMozVoicemailEvent(in DOMString aType,
+                                        in boolean aCanBubble,
+                                        in boolean aCancelable,
+                                        in nsIDOMMozVoicemailStatus aStatus);
+};
+
+dictionary MozVoicemailEventInit : EventInit
+{
+  nsIDOMMozVoicemailStatus status;
+};

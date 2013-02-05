@@ -213,10 +213,10 @@ VectorImage::Init(imgDecoderObserver* aObserver,
   return NS_OK;
 }
 
-void
-VectorImage::GetCurrentFrameRect(nsIntRect& aRect)
+nsIntRect
+VectorImage::FrameRect(uint32_t aWhichFrame)
 {
-  aRect = nsIntRect::GetMaxSizedIntRect();
+  return nsIntRect::GetMaxSizedIntRect();
 }
 
 size_t
@@ -383,13 +383,14 @@ VectorImage::GetAnimated(bool* aAnimated)
 }
 
 //******************************************************************************
-/* readonly attribute boolean currentFrameIsOpaque; */
-NS_IMETHODIMP
-VectorImage::GetCurrentFrameIsOpaque(bool* aIsOpaque)
+/* [notxpcom] boolean frameIsOpaque(in uint32_t aWhichFrame); */
+NS_IMETHODIMP_(bool)
+VectorImage::FrameIsOpaque(uint32_t aWhichFrame)
 {
-  NS_ENSURE_ARG_POINTER(aIsOpaque);
-  *aIsOpaque = false;   // In general, SVG content is not opaque.
-  return NS_OK;
+  if (aWhichFrame > FRAME_MAX_VALUE)
+    NS_WARNING("aWhichFrame outside valid range!");
+
+  return false; // In general, SVG content is not opaque.
 }
 
 //******************************************************************************

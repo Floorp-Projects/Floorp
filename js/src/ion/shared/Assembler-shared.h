@@ -319,7 +319,7 @@ struct AbsoluteLabel : public LabelBase
 
 // A code label contains an absolute reference to a point in the code
 // Thus, it cannot be patched until after linking
-class CodeLabel : public TempObject
+class CodeLabel
 {
     // The destination position, where the absolute reference should get patched into
     AbsoluteLabel dest_;

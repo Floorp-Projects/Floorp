@@ -221,12 +221,6 @@ nsSubDocumentFrame::ShowViewer()
   }
 }
 
-int
-nsSubDocumentFrame::GetSkipSides() const
-{
-  return 0;
-}
-
 nsIFrame*
 nsSubDocumentFrame::GetSubdocumentRootFrame()
 {

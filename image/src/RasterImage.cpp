@@ -877,53 +877,57 @@ RasterImage::GetCurrentDrawableImgFrame()
 }
 
 //******************************************************************************
-/* readonly attribute boolean currentFrameIsOpaque; */
-NS_IMETHODIMP
-RasterImage::GetCurrentFrameIsOpaque(bool *aIsOpaque)
+/* [notxpcom] boolean frameIsOpaque(in uint32_t aWhichFrame); */
+NS_IMETHODIMP_(bool)
+RasterImage::FrameIsOpaque(uint32_t aWhichFrame)
 {
-  NS_ENSURE_ARG_POINTER(aIsOpaque);
+  if (aWhichFrame > FRAME_MAX_VALUE) {
+    NS_WARNING("aWhichFrame outside valid range!");
+    return false;
+  }
 
   if (mError)
-    return NS_ERROR_FAILURE;
+    return false;
 
-  // See if we can get an image frame
-  imgFrame *curframe = GetCurrentImgFrame();
+  // See if we can get an image frame.
+  imgFrame* frame = aWhichFrame == FRAME_FIRST ? GetImgFrame(0)
+                                               : GetCurrentImgFrame();
 
-  // If we don't get a frame, the safe answer is "not opaque"
-  if (!curframe)
-    *aIsOpaque = false;
+  // If we don't get a frame, the safe answer is "not opaque".
+  if (!frame)
+    return false;
 
-  // Otherwise, we can make a more intelligent decision
-  else {
-    *aIsOpaque = !curframe->GetNeedsBackground();
-
-    // We are also transparent if the current frame's size doesn't cover our
-    // entire area.
-    nsIntRect framerect = curframe->GetRect();
-    *aIsOpaque = *aIsOpaque && framerect.IsEqualInterior(nsIntRect(0, 0, mSize.width, mSize.height));
-  }
-
-  return NS_OK;
+  // Other, the frame is transparent if either:
+  //  1. It needs a background.
+  //  2. Its size doesn't cover our entire area.
+  nsIntRect framerect = frame->GetRect();
+  return !frame->GetNeedsBackground() &&
+         framerect.IsEqualInterior(nsIntRect(0, 0, mSize.width, mSize.height));
 }
 
-void
-RasterImage::GetCurrentFrameRect(nsIntRect& aRect)
+nsIntRect
+RasterImage::FrameRect(uint32_t aWhichFrame)
 {
-  // Get the current frame
-  imgFrame* curframe = GetCurrentImgFrame();
-
-  // If we have the frame, use that rectangle
-  if (curframe) {
-    aRect = curframe->GetRect();
-  } else {
-    // If the frame doesn't exist, we pass the empty rectangle. It's not clear
-    // whether this is appropriate in general, but at the moment the only
-    // consumer of this method is imgStatusTracker (when it wants to figure out
-    // dirty rectangles to send out batched observer updates). This should
-    // probably be revisited when we fix bug 503973.
-    aRect.MoveTo(0, 0);
-    aRect.SizeTo(0, 0);
+  if (aWhichFrame > FRAME_MAX_VALUE) {
+    NS_WARNING("aWhichFrame outside valid range!");
+    return nsIntRect();
   }
+
+  // Get the requested frame.
+  imgFrame* frame = aWhichFrame == FRAME_FIRST ? GetImgFrame(0)
+                                               : GetCurrentImgFrame();
+
+  // If we have the frame, use that rectangle.
+  if (frame) {
+    return frame->GetRect();
+  }
+
+  // If the frame doesn't exist, we return the empty rectangle. It's not clear
+  // whether this is appropriate in general, but at the moment the only
+  // consumer of this method is imgStatusTracker (when it wants to figure out
+  // dirty rectangles to send out batched observer updates). This should
+  // probably be revisited when we fix bug 503973.
+  return nsIntRect();
 }
 
 uint32_t

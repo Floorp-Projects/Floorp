@@ -50,6 +50,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private String mLogFile;
     protected String mProfile;
     private static ListView bookmarkList;
+    private static ListView historyList;
 
     protected void blockForGeckoReady() {
         try {
@@ -343,17 +344,20 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void selectMenuItem(String menuItemName) {
+
         //build the item name ready to be used
         String itemName = "^" + menuItemName + "$";
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-
-        // Look for the 'More' menu if this device/OS uses it
-        if (mSolo.waitForText("^More$")) {
-            mSolo.clickOnText("^More$");
+	if (mSolo.waitForText(itemName)) {
+            mSolo.clickOnText(itemName);
+	}
+	else {
+	    if (mSolo.searchText("(^More$|^Tools$)")) {
+                mSolo.clickOnText("(^More$|^Tools$)");
+	      }
+            mSolo.waitForText(itemName);
+            mSolo.clickOnText(itemName);
         }
-
-        mSolo.waitForText(itemName);
-        mSolo.clickOnText(itemName);
     }
 
     public final void verifyPageTitle(String title) {
@@ -411,6 +415,27 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
         }, MAX_WAIT_MS);
         return bookmarkList;
+    }
+
+    public ListView getHistoryList() {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.clickOnText("History");
+
+        historyList = null;
+        mSolo.waitForText("Today|Yesterday");
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+                final ArrayList<ListView> views = mSolo.getCurrentListViews();
+                for (ListView view : views) {
+                    if (view.getTag().equals("history")) {
+                        historyList = view;
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }, MAX_WAIT_MS);
+        return historyList;
     }
 
     public long addOrUpdateBookmark(String title, String url, boolean bookmarklet) {

@@ -1979,7 +1979,7 @@ public:
    * Returns true if the language name is a version of JavaScript and
    * false otherwise
    */
-  static bool IsJavaScriptLanguage(const nsString& aName, uint32_t *aVerFlags);
+  static bool IsJavaScriptLanguage(const nsString& aName);
 
   /**
    * Returns the JSVersion for a string of the form '1.n', n = 0, ..., 8, and

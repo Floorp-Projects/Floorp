@@ -100,12 +100,6 @@ RegExpObject::setSticky(bool enabled)
     setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
 }
 
-inline void
-RegExpShared::writeBarrierPre()
-{
-    JSString::writeBarrierPre(source);
-}
-
 /* This function should be deleted once bad Android platforms phase out. See bug 604774. */
 inline bool
 RegExpShared::isJITRuntimeEnabled(JSContext *cx)
@@ -170,32 +164,18 @@ RegExpGuard::release()
     }
 }
 
-RegExpHeapGuard::RegExpHeapGuard(RegExpShared &re)
-{
-    init(re);
-}
-
-RegExpHeapGuard::~RegExpHeapGuard()
-{
-    release();
-}
-
 inline void
-RegExpHeapGuard::init(RegExpShared &re)
+MatchPairs::checkAgainst(size_t inputLength)
 {
-    JS_ASSERT(!initialized());
-    re_ = &re;
-    re_->incRef();
-}
-
-inline void
-RegExpHeapGuard::release()
-{
-    if (re_) {
-        re_->writeBarrierPre();
-        re_->decRef();
-        re_ = NULL;
+#ifdef DEBUG
+    for (size_t i = 0; i < pairCount_; i++) {
+        const MatchPair &p = pair(i);
+        JS_ASSERT(p.check());
+        if (p.isUndefined())
+            continue;
+        JS_ASSERT(size_t(p.limit) <= inputLength);
     }
+#endif
 }
 
 } /* namespace js */

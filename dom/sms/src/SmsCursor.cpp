@@ -8,7 +8,7 @@
 #include "nsError.h"
 #include "nsIDOMSmsMessage.h"
 #include "SmsRequest.h"
-#include "nsISmsDatabaseService.h"
+#include "nsIMobileMessageDatabaseService.h"
 
 DOMCI_DATA(MozSmsCursor, mozilla::dom::sms::SmsCursor)
 
@@ -43,14 +43,14 @@ SmsCursor::~SmsCursor()
   NS_ASSERTION(!mMessage, "mMessage shouldn't be set!");
 
   if (mListId != -1) {
-    nsCOMPtr<nsISmsDatabaseService> smsDBService =
-      do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+    nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
+      do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
 
-    if (!smsDBService) {
-      NS_ERROR("Can't find SmsDBService!");
+    if (!mobileMessageDBService) {
+      NS_ERROR("Can't find MobileMessageDBService!");
     }
 
-    smsDBService->ClearMessageList(mListId);
+    mobileMessageDBService->ClearMessageList(mListId);
   }
 }
 
@@ -83,12 +83,12 @@ SmsCursor::Continue()
   mMessage = nullptr;
   request->Reset();
 
-  nsCOMPtr<nsISmsDatabaseService> smsDBService =
-    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(smsDBService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
+    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(request);
-  smsDBService->GetNextMessageInList(mListId, forwarder);
+  mobileMessageDBService->GetNextMessageInList(mListId, forwarder);
 
   // We intenionally increase the refcount. The release will be called
   // in the corresponding callback.

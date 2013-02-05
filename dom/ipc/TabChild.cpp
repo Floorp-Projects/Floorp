@@ -134,6 +134,20 @@ TabChild::PreloadSlowThings()
         return;
     }
     tab->TryCacheLoadAndCompileScript(BROWSER_ELEMENT_CHILD_SCRIPT);
+    tab->RecvLoadRemoteScript(NS_LITERAL_STRING("chrome://global/content/preload.js"));
+
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(tab->mWebNav);
+    nsCOMPtr<nsIPresShell> presShell;
+    if (nsIPresShell* presShell = docShell->GetPresShell()) {
+        // Initialize and do an initial reflow of the about:blank
+        // PresShell to let it preload some things for us.
+        presShell->Initialize(0, 0);
+        nsIDocument* doc = presShell->GetDocument();
+        doc->FlushPendingNotifications(Flush_Layout);
+        // ... but after it's done, make sure it doesn't do any more
+        // work.
+        presShell->MakeZombie();
+    }
 
     sPreallocatedTab = tab;
     ClearOnShutdown(&sPreallocatedTab);

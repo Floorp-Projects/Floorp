@@ -202,10 +202,26 @@ nsXULElement::CreateSlots()
     return new nsXULSlots();
 }
 
+void
+nsXULElement::MaybeUpdatePrivateLifetime()
+{
+    if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::windowtype,
+                    NS_LITERAL_STRING("navigator:browser"),
+                    eCaseMatters)) {
+        return;
+    }
+
+    nsPIDOMWindow* win = OwnerDoc()->GetWindow();
+    nsCOMPtr<nsIDocShell> docShell = win ? win->GetDocShell() : nullptr;
+    if (docShell) {
+        docShell->SetAffectPrivateSessionLifetime(false);
+    }
+}
+
 /* static */
 already_AddRefed<nsXULElement>
 nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
-                     bool aIsScriptable)
+                     bool aIsScriptable, bool aIsRoot)
 {
     nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
     nsXULElement *element = new nsXULElement(ni.forget());
@@ -232,6 +248,14 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
                                         true);
             }
         }
+
+        if (aIsRoot && aPrototype->mNodeInfo->Equals(nsGkAtoms::window)) {
+            for (uint32_t i = 0; i < aPrototype->mNumAttributes; ++i) {
+                if (aPrototype->mAttributes[i].mName.Equals(nsGkAtoms::windowtype)) {
+                    element->MaybeUpdatePrivateLifetime();
+                }
+            }
+        }
     }
 
     return element;
@@ -241,6 +265,7 @@ nsresult
 nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                      nsIDocument* aDocument,
                      bool aIsScriptable,
+                     bool aIsRoot,
                      Element** aResult)
 {
     // Create an nsXULElement from a prototype
@@ -265,7 +290,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     }
 
     nsRefPtr<nsXULElement> element = Create(aPrototype, nodeInfo,
-                                            aIsScriptable);
+                                            aIsScriptable, aIsRoot);
     if (!element) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -943,6 +968,8 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                 }
             }
     
+            nsIDocument *document = GetCurrentDoc();
+
             // Hide chrome if needed
             if (mNodeInfo->Equals(nsGkAtoms::window)) {
                 if (aName == nsGkAtoms::hidechrome) {
@@ -952,11 +979,14 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                 else if (aName == nsGkAtoms::chromemargin) {
                     SetChromeMargins(aValue);
                 }
+
+                else if (aName == nsGkAtoms::windowtype &&
+                         document && document->GetRootElement() == this) {
+                    MaybeUpdatePrivateLifetime();
+                }
             }
-    
             // title, (in)activetitlebarcolor and drawintitlebar are settable on
             // any root node (windows, dialogs, etc)
-            nsIDocument *document = GetCurrentDoc();
             if (document && document->GetRootElement() == this) {
                 if (aName == nsGkAtoms::title) {
                     document->NotifyPossibleTitleChange(false);

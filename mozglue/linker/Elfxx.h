@@ -149,6 +149,9 @@
 #ifndef DT_VERNEEDNUM
 #define DT_VERNEEDNUM 0x6fffffff
 #endif
+#ifndef DT_FLAGS_1
+#define DT_FLAGS_1 0x6ffffffb
+#endif
 #ifndef DT_FLAGS
 #define DT_FLAGS 30
 #endif

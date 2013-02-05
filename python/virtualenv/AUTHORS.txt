@@ -9,6 +9,7 @@ Maintainers
 Brian Rosner
 Carl Meyer
 Jannis Leidel
+Paul Nasrat
 
 Contributors
 ------------
@@ -17,6 +18,7 @@ Alex Grönholm
 Anatoly Techtonik
 Antonio Cuni
 Armin Ronacher
+Benjamin Root
 Bradley Ayers
 Branden Rolston
 Cap Petschulat
@@ -26,15 +28,18 @@ Christian Stefanescu
 Christopher Nilsson
 Cliff Xuan
 Curt Micol
+Damien Nozay
 David Schoonover
 Doug Hellmann
 Doug Napoleone
 Douglas Creager
 Ethan Jucovy
+Gabriel de Perthuis
 Gunnlaugur Thor Briem
 Greg Haskins
 Jason R. Coombs
 Jeff Hammel
+Jeremy Orem
 Jonathan Griffin
 Jorge Vargas
 Josh Bronson
@@ -44,6 +49,7 @@ Lars Francke
 Marc Abramowitz
 Mike Hommey
 Miki Tebeka
+Paul Moore
 Philip Jenvey
 Raul Leal
 Ronny Pfannschmidt

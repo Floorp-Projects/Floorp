@@ -54,6 +54,16 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 
+typedef struct argb_t argb_t;
+
+struct argb_t
+{
+    float a;
+    float r;
+    float g;
+    float b;
+};
+
 typedef void (*fetch_scanline_t) (pixman_image_t *image,
 				  int             x,
 				  int             y,
@@ -65,9 +75,9 @@ typedef uint32_t (*fetch_pixel_32_t) (bits_image_t *image,
 				      int           x,
 				      int           y);
 
-typedef uint64_t (*fetch_pixel_64_t) (bits_image_t *image,
-				      int           x,
-				      int           y);
+typedef argb_t (*fetch_pixel_float_t) (bits_image_t *image,
+				       int           x,
+				       int           y);
 
 typedef void (*store_scanline_t) (bits_image_t *  image,
 				  int             x,
@@ -121,9 +131,9 @@ struct solid_fill
 {
     image_common_t common;
     pixman_color_t color;
-    
+
     uint32_t	   color_32;
-    uint64_t	   color_64;
+    argb_t	   color_float;
 };
 
 struct gradient
@@ -184,9 +194,9 @@ struct bits_image
     fetch_pixel_32_t	       fetch_pixel_32;
     store_scanline_t           store_scanline_32;
 
-    fetch_scanline_t           fetch_scanline_64;
-    fetch_pixel_64_t	       fetch_pixel_64;
-    store_scanline_t           store_scanline_64;
+    fetch_scanline_t	       fetch_scanline_float;
+    fetch_pixel_float_t	       fetch_pixel_float;
+    store_scanline_t           store_scanline_float;
 
     store_scanline_t           store_scanline_16;
 
@@ -293,7 +303,8 @@ _pixman_bits_image_init (pixman_image_t *     image,
                          int                  width,
                          int                  height,
                          uint32_t *           bits,
-                         int                  rowstride);
+                         int                  rowstride,
+			 pixman_bool_t	      clear);
 pixman_bool_t
 _pixman_image_fini (pixman_image_t *image);
 
@@ -434,12 +445,12 @@ typedef void (*pixman_combine_32_func_t) (pixman_implementation_t *imp,
 					  const uint32_t *         mask,
 					  int                      width);
 
-typedef void (*pixman_combine_64_func_t) (pixman_implementation_t *imp,
-					  pixman_op_t              op,
-					  uint64_t *               dest,
-					  const uint64_t *         src,
-					  const uint64_t *         mask,
-					  int                      width);
+typedef void (*pixman_combine_float_func_t) (pixman_implementation_t *imp,
+					     pixman_op_t	      op,
+					     float *		      dest,
+					     const float *	      src,
+					     const float *	      mask,
+					     int		      n_pixels);
 
 typedef void (*pixman_composite_func_t) (pixman_implementation_t *imp,
 					 pixman_composite_info_t *info);
@@ -465,12 +476,12 @@ typedef pixman_bool_t (*pixman_fill_func_t) (pixman_implementation_t *imp,
 					     int                      width,
 					     int                      height,
 					     uint32_t                 xor);
-typedef void (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
-                                         pixman_iter_t           *iter);
+typedef pixman_bool_t (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
+						  pixman_iter_t           *iter);
 
 void _pixman_setup_combiner_functions_16 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
-void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
+void _pixman_setup_combiner_functions_float (pixman_implementation_t *imp);
 
 typedef struct
 {
@@ -487,7 +498,7 @@ typedef struct
 struct pixman_implementation_t
 {
     pixman_implementation_t *	toplevel;
-    pixman_implementation_t *	delegate;
+    pixman_implementation_t *	fallback;
     const pixman_fast_path_t *	fast_paths;
 
     pixman_blt_func_t		blt;
@@ -497,9 +508,9 @@ struct pixman_implementation_t
 
     pixman_combine_32_func_t	combine_32[PIXMAN_N_OPERATORS];
     pixman_combine_32_func_t	combine_32_ca[PIXMAN_N_OPERATORS];
-    pixman_combine_64_func_t	combine_64[PIXMAN_N_OPERATORS];
-    pixman_combine_64_func_t	combine_64_ca[PIXMAN_N_OPERATORS];
-    pixman_combine_64_func_t	combine_16[PIXMAN_N_OPERATORS];
+    pixman_combine_float_func_t	combine_float[PIXMAN_N_OPERATORS];
+    pixman_combine_float_func_t	combine_float_ca[PIXMAN_N_OPERATORS];
+    pixman_combine_32_func_t    combine_16[PIXMAN_N_OPERATORS];
 };
 
 uint32_t
@@ -508,8 +519,20 @@ _pixman_image_get_solid (pixman_implementation_t *imp,
                          pixman_format_code_t     format);
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *delegate,
+_pixman_implementation_create (pixman_implementation_t *fallback,
 			       const pixman_fast_path_t *fast_paths);
+
+pixman_bool_t
+_pixman_implementation_lookup_composite (pixman_implementation_t  *toplevel,
+					 pixman_op_t               op,
+					 pixman_format_code_t      src_format,
+					 uint32_t                  src_flags,
+					 pixman_format_code_t      mask_format,
+					 uint32_t                  mask_flags,
+					 pixman_format_code_t      dest_format,
+					 uint32_t                  dest_flags,
+					 pixman_implementation_t **out_imp,
+					 pixman_composite_func_t  *out_func);
 
 pixman_combine_32_func_t
 _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
@@ -544,7 +567,7 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
                              int                      height,
                              uint32_t                 xor);
 
-void
+pixman_bool_t
 _pixman_implementation_src_iter_init (pixman_implementation_t       *imp,
 				      pixman_iter_t                 *iter,
 				      pixman_image_t                *image,
@@ -556,7 +579,7 @@ _pixman_implementation_src_iter_init (pixman_implementation_t       *imp,
 				      iter_flags_t                   flags,
 				      uint32_t                       image_flags);
 
-void
+pixman_bool_t
 _pixman_implementation_dest_iter_init (pixman_implementation_t       *imp,
 				       pixman_iter_t                 *iter,
 				       pixman_image_t                *image,
@@ -766,6 +789,12 @@ get_implementation (void)
     return global_implementation;
 }
 
+/* This function is exported for the sake of the test suite and not part
+ * of the ABI.
+ */
+PIXMAN_EXPORT pixman_implementation_t *
+_pixman_internal_only_get_implementation (void);
+
 /* Memory allocation helpers */
 void *
 pixman_malloc_ab (unsigned int n, unsigned int b);
@@ -784,27 +813,15 @@ _pixman_addition_overflows_int (unsigned int a, unsigned int b);
 
 /* Compositing utilities */
 void
-pixman_expand (uint64_t *           dst,
-               const uint32_t *     src,
-               pixman_format_code_t format,
-               int                  width);
+pixman_expand_to_float (argb_t               *dst,
+			const uint32_t       *src,
+			pixman_format_code_t  format,
+			int                   width);
 
 void
-pixman_contract (uint32_t *      dst,
-                 const uint64_t *src,
-                 int             width);
-
-pixman_bool_t
-_pixman_lookup_composite_function (pixman_implementation_t     *toplevel,
-				   pixman_op_t			op,
-				   pixman_format_code_t		src_format,
-				   uint32_t			src_flags,
-				   pixman_format_code_t		mask_format,
-				   uint32_t			mask_flags,
-				   pixman_format_code_t		dest_format,
-				   uint32_t			dest_flags,
-				   pixman_implementation_t    **out_imp,
-				   pixman_composite_func_t     *out_func);
+pixman_contract_from_float (uint32_t     *dst,
+			    const argb_t *src,
+			    int           width);
 
 /* Region Helpers */
 pixman_bool_t
@@ -965,6 +982,9 @@ unorm_to_unorm (uint32_t val, int from_bits, int to_bits)
     return result;
 }
 
+uint16_t pixman_float_to_unorm (float f, int n_bits);
+float pixman_unorm_to_float (uint16_t u, int n_bits);
+
 /*
  * Various debugging code
  */
@@ -1106,19 +1126,12 @@ void pixman_timer_register (pixman_timer_t *timer);
     timer ## tname.total += OIL_STAMP () - begin ## tname;		\
     }
 
-#endif /* PIXMAN_TIMERS */
+#else
 
-/* sRGB<->linear conversion tables. Linear color space is the same
- * as sRGB but the components are in linear light (gamma 1.0).
- *
- * linear_to_srgb maps linear value from 0 to 4095 ([0.0, 1.0])
- * and returns 8-bit sRGB value.
- *
- * srgb_to_linear maps 8-bit sRGB value to 16-bit linear value
- * with range 0 to 65535 ([0.0, 1.0]).
- */
-extern const uint8_t linear_to_srgb[4096];
-extern const uint16_t srgb_to_linear[256];
+#define TIMER_BEGIN(tname)
+#define TIMER_END(tname)
+
+#endif /* PIXMAN_TIMERS */
 
 #endif /* __ASSEMBLER__ */
 

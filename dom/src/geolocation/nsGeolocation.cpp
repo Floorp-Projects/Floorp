@@ -1337,7 +1337,7 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
 {
   NS_ENSURE_ARG_POINTER(callback);
 
-  if (mPendingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW) {
+  if (mWatchingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
