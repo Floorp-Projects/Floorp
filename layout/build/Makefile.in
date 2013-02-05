@@ -76,6 +76,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/permission/$(LIB_PREFIX)jsdompermissionsettings_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/network/src/$(LIB_PREFIX)dom_network_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/media/$(LIB_PREFIX)dom_media_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/mobilemessage/src/$(LIB_PREFIX)dom_mobilemessage_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/sms/src/$(LIB_PREFIX)dom_sms_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/json/$(LIB_PREFIX)json_s.$(LIB_SUFFIX) \
@@ -150,6 +151,7 @@ SHARED_LIBRARY_LIBS	+= \
   $(DEPTH)/dom/telephony/$(LIB_PREFIX)domtelephony_s.$(LIB_SUFFIX) \
   $(DEPTH)/dom/icc/src/$(LIB_PREFIX)dom_icc_s.$(LIB_SUFFIX) \
   $(DEPTH)/dom/cellbroadcast/src/$(LIB_PREFIX)dom_cellbroadcast_s.$(LIB_SUFFIX) \
+  $(DEPTH)/dom/voicemail/$(LIB_PREFIX)domvoicemail_s.$(LIB_SUFFIX) \
   $(NULL)
 endif #}
 
@@ -236,8 +238,8 @@ endif
 
 ifdef MOZ_XUL
 SHARED_LIBRARY_LIBS += \
-		../xul/base/src/tree/src/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
-		../xul/base/src/grid/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
+		../xul/tree/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
+		../xul/grid/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/xul/content/src/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/xul/templates/src/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
 		$(NULL)

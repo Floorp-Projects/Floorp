@@ -109,9 +109,6 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
-    // nsContainerFrame
-  virtual int GetSkipSides() const MOZ_OVERRIDE;
-
     // nsIListControlFrame
   virtual void SetComboboxFrame(nsIFrame* aComboboxFrame);
   virtual int32_t GetSelectedIndex() MOZ_OVERRIDE;

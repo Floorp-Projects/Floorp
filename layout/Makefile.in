@@ -29,6 +29,10 @@ ifdef NS_PRINTING
 PARALLEL_DIRS += printing
 endif
 
+ifdef MOZ_XUL
+PARALLEL_DIRS += xul/tree xul/grid
+endif
+
 PARALLEL_DIRS += inspector/public inspector/src
 ifdef ENABLE_TESTS
 PARALLEL_DIRS += inspector/tests inspector/tests/chrome

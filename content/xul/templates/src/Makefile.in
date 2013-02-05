@@ -51,7 +51,7 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= -I$(srcdir)/../../../base/src \
 		  -I$(srcdir)/../../content/src \
-		  -I$(srcdir)/../../../../layout/xul/base/src/tree/src \
+		  -I$(srcdir)/../../../../layout/xul/tree/ \
 		  $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

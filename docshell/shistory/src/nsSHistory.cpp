@@ -855,7 +855,6 @@ nsSHistory::GoForward()
 NS_IMETHODIMP
 nsSHistory::Reload(uint32_t aReloadFlags)
 {
-  nsresult rv;
   nsDocShellInfoLoadType loadType;
   if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
       aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
@@ -889,7 +888,7 @@ nsSHistory::Reload(uint32_t aReloadFlags)
   // nsIWebNavigation flags.
   bool canNavigate = true;
   nsCOMPtr<nsIURI> currentURI;
-  rv = GetCurrentURI(getter_AddRefs(currentURI));
+  GetCurrentURI(getter_AddRefs(currentURI));
   NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, canNavigate,
                               (currentURI, aReloadFlags, &canNavigate));
   if (!canNavigate)

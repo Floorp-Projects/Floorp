@@ -890,7 +890,8 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           // various version strings anyway.  So we make no attempt to support
           // languages other than JS for language=
           nsAutoString lang(aAttributes[1]);
-          if (nsContentUtils::IsJavaScriptLanguage(lang, &version)) {
+          if (nsContentUtils::IsJavaScriptLanguage(lang)) {
+              version = JSVERSION_DEFAULT;
               langID = nsIProgrammingLanguage::JAVASCRIPT;
           }
       }

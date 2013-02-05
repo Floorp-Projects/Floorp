@@ -733,8 +733,18 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
   AbortExistingLoads();
   SetPlaybackRate(mDefaultPlaybackRate);
   QueueSelectResourceTask();
+  ResetState();
   mIsRunningLoadMethod = false;
   return NS_OK;
+}
+
+void nsHTMLMediaElement::ResetState()
+{
+  mMediaSize = nsIntSize(-1, -1);
+  VideoFrameContainer* container = GetVideoFrameContainer();
+  if (container) {
+    container->Reset();
+  }
 }
 
 static bool HasSourceChildren(nsIContent *aElement)
@@ -2598,6 +2608,7 @@ void nsHTMLMediaElement::ProcessMediaFragmentURI()
 void nsHTMLMediaElement::MetadataLoaded(int aChannels,
                                         int aRate,
                                         bool aHasAudio,
+                                        bool aHasVideo,
                                         const MetadataTags* aTags)
 {
   mChannels = aChannels;
@@ -2610,6 +2621,13 @@ void nsHTMLMediaElement::MetadataLoaded(int aChannels,
   if (mDecoder && mDecoder->IsTransportSeekable() && mDecoder->IsMediaSeekable()) {
     ProcessMediaFragmentURI();
     mDecoder->SetFragmentEndTime(mFragmentEnd);
+  }
+
+  // If this element had a video track, but consists only of an audio track now,
+  // delete the VideoFrameContainer. This happens when the src is changed to an
+  // audio only file.
+  if (!aHasVideo) {
+    mVideoFrameContainer = nullptr;
   }
 }
 
@@ -2954,6 +2972,14 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
 
 VideoFrameContainer* nsHTMLMediaElement::GetVideoFrameContainer()
 {
+  // If we have loaded the metadata, and the size of the video is still
+  // (-1, -1), the media has no video. Don't go a create a video frame
+  // container.
+  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA &&
+      mMediaSize == nsIntSize(-1, -1)) {
+    return nullptr;
+  }
+
   if (mVideoFrameContainer)
     return mVideoFrameContainer;
 

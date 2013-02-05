@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIMobileMessageDatabaseService.idl"
+
+interface nsIDOMMozSmsMessage;
+
+[scriptable, function, uuid(9cd80750-6a08-11e2-ac93-bf895e53f40e)]
+interface nsIRilMobileMessageDatabaseCallback : nsISupports
+{
+  void notify(in nsresult aRv, in nsIDOMMozSmsMessage aSms);
+};
+
+[scriptable, uuid(89528354-6a08-11e2-8243-af4cf90404a9)]
+interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
+{
+  long saveReceivedMessage(in DOMString aSender,
+                           in DOMString aBody,
+                           in DOMString aMessageClass,
+                           in unsigned long long aDate,
+                [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+  long saveSendingMessage(in DOMString aReceiver,
+                          in DOMString aBody,
+                          in DOMString aDeliveryStatus,
+                          in unsigned long long aDate,
+               [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+  void setMessageDelivery(in long aMessageId,
+                          in DOMString aDelivery,
+                          in DOMString aDeliveryStatus,
+               [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+};
