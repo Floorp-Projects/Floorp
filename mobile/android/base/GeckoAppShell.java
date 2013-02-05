@@ -1305,6 +1305,11 @@ public class GeckoAppShell
             shareIntent.putExtra(Intent.EXTRA_TEXT, targetURI);
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
 
+            // Note that EXTRA_TITLE is intended to be used for share dialog
+            // titles. Common usage (e.g., Pocket) suggests that it's sometimes
+            // interpreted as an alternate to EXTRA_SUBJECT, so we include it.
+            shareIntent.putExtra(Intent.EXTRA_TITLE, title);
+
             if (mimeType != null && mimeType.length() > 0) {
                 shareIntent.setType(mimeType);
             }
