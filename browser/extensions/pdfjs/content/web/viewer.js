@@ -57,7 +57,13 @@ function getFileName(url) {
 }
 
 function scrollIntoView(element, spot) {
+  // Assuming offsetParent is available (it's not available when viewer is in
+  // hidden iframe or object). We have to scroll: if the offsetParent is not set
+  // producing the error. See also animationStartedClosure.
   var parent = element.offsetParent, offsetY = element.offsetTop;
+  if (!parent) {
+    error('offsetParent is not set -- cannot scroll');
+  }
   while (parent.clientHeight == parent.scrollHeight) {
     offsetY += parent.offsetTop;
     parent = parent.offsetParent;
@@ -1038,6 +1044,13 @@ var PDFView = {
                                         'Invalid or corrupted PDF file.');
         }
 
+        if (exception && exception.name === 'MissingPDFException') {
+          // special message for missing PDF's
+          var loadingErrorMessage = mozL10n.get('missing_file_error', null,
+                                        'Missing PDF file.');
+
+        }
+
         var loadingIndicator = document.getElementById('loading');
         loadingIndicator.textContent = mozL10n.get('loading_error_indicator',
           null, 'Error');
@@ -1285,7 +1298,8 @@ var PDFView = {
     });
 
     // outline and initial view depends on destinations and pagesRefMap
-    var promises = [pagesPromise, destinationsPromise, storePromise];
+    var promises = [pagesPromise, destinationsPromise, storePromise,
+                    PDFView.animationStartedPromise];
     PDFJS.Promise.all(promises).then(function() {
       pdfDocument.getOutline().then(function(outline) {
         self.outline = new DocumentOutlineView(outline);
@@ -1326,6 +1340,11 @@ var PDFView = {
 
       if (pdfTitle)
         self.setTitle(pdfTitle + ' - ' + document.title);
+
+      if (info.IsAcroFormPresent) {
+        // AcroForm/XFA was found
+        PDFView.fallback();
+      }
     });
   },
 
@@ -1936,10 +1955,6 @@ var PageView = function pageView(container, pdfPage, id, scale,
             if (textAnnotation)
               div.appendChild(textAnnotation);
             break;
-          case 'Widget':
-            // TODO: support forms
-            PDFView.fallback();
-            break;
         }
       }
     });
@@ -2059,6 +2074,9 @@ var PageView = function pageView(container, pdfPage, id, scale,
     }
 
     var ctx = canvas.getContext('2d');
+    // TODO(mack): use data attributes to store these
+    ctx._scaleX = outputScale.sx;
+    ctx._scaleY = outputScale.sy;
     ctx.save();
     ctx.fillStyle = 'rgb(255, 255, 255)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -2072,7 +2090,12 @@ var PageView = function pageView(container, pdfPage, id, scale,
     // Rendering area
 
     var self = this;
+    var renderingWasReset = false;
     function pageViewDrawCallback(error) {
+      if (renderingWasReset) {
+        return;
+      }
+
       self.renderingState = RenderingStates.FINISHED;
 
       if (self.loadingIconDiv) {
@@ -2105,6 +2128,12 @@ var PageView = function pageView(container, pdfPage, id, scale,
       viewport: this.viewport,
       textLayer: textLayer,
       continueCallback: function pdfViewcContinueCallback(cont) {
+        if (self.renderingState === RenderingStates.INITIAL) {
+          // The page update() was called, we just need to abort any rendering.
+          renderingWasReset = true;
+          return;
+        }
+
         if (PDFView.highestPriorityPage !== 'page' + self.id) {
           self.renderingState = RenderingStates.PAUSED;
           self.resume = function resumeCallback() {
@@ -2885,9 +2914,19 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
       PDFView.download();
     });
 
+  document.getElementById('pageNumber').addEventListener('click',
+    function() {
+      this.select();
+    });
+
   document.getElementById('pageNumber').addEventListener('change',
     function() {
-      PDFView.page = this.value;
+      // Handle the user inputting a floating point number.
+      PDFView.page = (this.value | 0);
+
+      if (this.value !== (this.value | 0).toString()) {
+        this.value = PDFView.page;
+      }
     });
 
   document.getElementById('scaleSelect').addEventListener('change',
@@ -3039,6 +3078,16 @@ function selectScaleOption(value) {
 
 window.addEventListener('localized', function localized(evt) {
   document.getElementsByTagName('html')[0].dir = mozL10n.getDirection();
+
+  // Adjust the width of the zoom box to fit the content.
+  var container = document.getElementById('scaleSelectContainer');
+  var select = document.getElementById('scaleSelect');
+
+  select.setAttribute('style', 'min-width: inherit;');
+  var width = select.clientWidth + 8;
+  container.setAttribute('style', 'min-width: ' + width + 'px; ' +
+                                  'max-width: ' + width + 'px;');
+  select.setAttribute('style', 'min-width: ' + (width + 20) + 'px;');
 }, true);
 
 window.addEventListener('scalechange', function scalechange(evt) {
@@ -3278,6 +3327,21 @@ window.addEventListener('afterprint', function afterPrint(evt) {
   window.addEventListener('fullscreenchange', fullscreenChange, false);
   window.addEventListener('mozfullscreenchange', fullscreenChange, false);
   window.addEventListener('webkitfullscreenchange', fullscreenChange, false);
+})();
+
+(function animationStartedClosure() {
+  // The offsetParent is not set until the pdf.js iframe or object is visible.
+  // Waiting for first animation.
+  var requestAnimationFrame = window.requestAnimationFrame ||
+                              window.mozRequestAnimationFrame ||
+                              window.webkitRequestAnimationFrame ||
+                              window.oRequestAnimationFrame ||
+                              window.msRequestAnimationFrame ||
+                              function startAtOnce(callback) { callback(); };
+  PDFView.animationStartedPromise = new PDFJS.Promise();
+  requestAnimationFrame(function onAnimationFrame() {
+    PDFView.animationStartedPromise.resolve();
+  });
 })();
 
 
