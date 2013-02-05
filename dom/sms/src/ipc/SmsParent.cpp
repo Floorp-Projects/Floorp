@@ -11,7 +11,7 @@
 #include "nsIDOMSmsMessage.h"
 #include "mozilla/unused.h"
 #include "SmsMessage.h"
-#include "nsISmsDatabaseService.h"
+#include "nsIMobileMessageDatabaseService.h"
 #include "SmsFilter.h"
 #include "SmsRequest.h"
 #include "SmsSegmentInfo.h"

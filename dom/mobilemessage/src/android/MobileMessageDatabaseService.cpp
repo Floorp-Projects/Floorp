@@ -4,12 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SmsFilter.h"
-#include "SmsDatabaseService.h"
+#include "MobileMessageDatabaseService.h"
 #include "AndroidBridge.h"
+
+using namespace mozilla::dom::sms;
 
 namespace mozilla {
 namespace dom {
-namespace sms {
+namespace mobilemessage {
 
 NS_IMPL_ISUPPORTS1(MobileMessageDatabaseService, nsIMobileMessageDatabaseService)
 
@@ -85,6 +87,6 @@ MobileMessageDatabaseService::GetThreadList(nsISmsRequest* aRequest)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-} // namespace sms
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla
