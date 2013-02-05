@@ -71,9 +71,6 @@
   Cc["@mozilla.org/uriloader;1"].getService(Ci["nsIURILoader"]);
 
   docShell.isActive = false;
-  docShell.QueryInterface(Ci.nsIWebNavigation)
-          .loadURI("about:blank",
-                   Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                   null, null, null);
+  docShell.createAboutBlankContentViewer(null);
 
 })();
