@@ -1124,7 +1124,7 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetBattery(nsIDOMBatteryManager** aBattery)
+Navigator::GetBattery(nsISupports** aBattery)
 {
   if (!mBatteryManager) {
     *aBattery = nullptr;

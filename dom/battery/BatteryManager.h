@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_battery_BatteryManager_h
 #define mozilla_dom_battery_BatteryManager_h
 
-#include "nsIDOMBatteryManager.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Observer.h"
@@ -26,14 +25,9 @@ namespace dom {
 namespace battery {
 
 class BatteryManager : public nsDOMEventTargetHelper
-                     , public nsIDOMBatteryManager
                      , public BatteryObserver
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMBATTERYMANAGER
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
-
   BatteryManager();
 
   void Init(nsPIDOMWindow *aWindow);
@@ -42,15 +36,42 @@ public:
   // For IObserver.
   void Notify(const hal::BatteryInformation& aBatteryInfo);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BatteryManager,
-                                           nsDOMEventTargetHelper)
-
   /**
    * Returns whether the battery api is supported (ie. not disabled by the user)
    * @return whether the battery api is supported.
    */
   static bool HasSupport();
 
+  /**
+   * WebIDL Interface
+   */
+
+  nsPIDOMWindow* GetParentObject() const
+  {
+     return GetOwner();
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
+                               bool* aTriedToWrap);
+
+  bool Charging() const
+  {
+    return mCharging;
+  }
+
+  double ChargingTime() const;
+
+  double DischargingTime() const;
+
+  double Level() const
+  {
+    return mLevel;
+  }
+
+  IMPL_EVENT_HANDLER(chargingchange)
+  IMPL_EVENT_HANDLER(chargingtimechange)
+  IMPL_EVENT_HANDLER(dischargingtimechange)
+  IMPL_EVENT_HANDLER(levelchange)
 
 private:
   /**
