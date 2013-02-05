@@ -160,7 +160,7 @@ public:
   nsresult Init(imgDecoderObserver* aObserver,
                 const char* aMimeType,
                 uint32_t aFlags);
-  virtual void  GetCurrentFrameRect(nsIntRect& aRect) MOZ_OVERRIDE;
+  virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
   // Raster-specific methods
   static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
