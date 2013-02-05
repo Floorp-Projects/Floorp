@@ -406,6 +406,64 @@ BrowserGlue.prototype = {
     }
   },
 
+  _trackSlowStartup: function () {
+    if (Services.prefs.getBoolPref("browser.slowStartup.notificationDisabled"))
+      return;
+
+    let currentTime = Date.now() - Services.startup.getStartupInfo().process;
+    let averageTime = 0;
+    let samples = 0;
+    try {
+      averageTime = Services.prefs.getIntPref("browser.slowStartup.averageTime");
+      samples = Services.prefs.getIntPref("browser.slowStartup.samples");
+    } catch (e) { }
+
+    averageTime = (averageTime * samples + currentTime) / ++samples;
+
+    if (samples >= Services.prefs.getIntPref("browser.slowStartup.maxSamples")) {
+      if (averageTime > Services.prefs.getIntPref("browser.slowStartup.timeThreshold"))
+        this._showSlowStartupNotification();
+      averageTime = 0;
+      samples = 0;
+    }
+
+    Services.prefs.setIntPref("browser.slowStartup.averageTime", averageTime);
+    Services.prefs.setIntPref("browser.slowStartup.samples", samples);
+  },
+
+  _showSlowStartupNotification: function () {
+    let win = this.getMostRecentBrowserWindow();
+    if (!win)
+      return;
+
+    let productName = Services.strings
+                              .createBundle("chrome://branding/locale/brand.properties")
+                              .GetStringFromName("brandFullName");
+    let message = win.gNavigatorBundle.getFormattedString("slowStartup.message", [productName]);
+
+    let buttons = [
+      {
+        label:     win.gNavigatorBundle.getString("slowStartup.helpButton.label"),
+        accessKey: win.gNavigatorBundle.getString("slowStartup.helpButton.accesskey"),
+        callback: function () {
+          win.openUILinkIn("https://support.mozilla.org/kb/firefox-takes-long-time-start-up", "tab");
+        }
+      },
+      {
+        label:     win.gNavigatorBundle.getString("slowStartup.disableNotificationButton.label"),
+        accessKey: win.gNavigatorBundle.getString("slowStartup.disableNotificationButton.accesskey"),
+        callback: function () {
+          Services.prefs.setBoolPref("browser.slowStartup.notificationDisabled", true);
+        }
+      }
+    ];
+
+    let nb = win.document.getElementById("global-notificationbox");
+    nb.appendNotification(message, "slow-startup",
+                          "chrome://browser/skin/slowStartup-16.png",
+                          nb.PRIORITY_INFO_LOW, buttons);
+  },
+
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded() {
 #ifdef XP_WIN
@@ -418,6 +476,8 @@ BrowserGlue.prototype = {
       temp.WinTaskbarJumpList.startup();
     }
 #endif
+
+    this._trackSlowStartup();
   },
 
   /**

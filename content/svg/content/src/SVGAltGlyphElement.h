@@ -6,10 +6,10 @@
 #ifndef mozilla_dom_SVGAltGlyphElement_h
 #define mozilla_dom_SVGAltGlyphElement_h
 
-#include "nsIDOMSVGAltGlyphElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "mozilla/dom/SVGTextPositioningElement.h"
 #include "nsSVGString.h"
+#include "nsIDOMSVGTextPositionElem.h"
 
 nsresult NS_NewSVGAltGlyphElement(nsIContent **aResult,
                                   already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -20,7 +20,7 @@ namespace dom {
 typedef SVGTextPositioningElement SVGAltGlyphElementBase;
 
 class SVGAltGlyphElement MOZ_FINAL : public SVGAltGlyphElementBase, // = nsIDOMSVGTextPositioningElement
-                                     public nsIDOMSVGAltGlyphElement,
+                                     public nsIDOMSVGTextPositioningElement,
                                      public nsIDOMSVGURIReference
 {
 protected:
@@ -33,7 +33,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGALTGLYPHELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
@@ -49,12 +48,14 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  void GetGlyphRef(nsAString & aGlyphRef);
+  void SetGlyphRef(const nsAString & aGlyphRef, ErrorResult& rv);
+  void GetFormat(nsAString & aFormat);
+  void SetFormat(const nsAString & aFormat, ErrorResult& rv);
 
 protected:
 

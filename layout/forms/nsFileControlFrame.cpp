@@ -472,12 +472,6 @@ nsFileControlFrame::GetTextControlFrame()
   return static_cast<nsTextControlFrame*>(tc);
 }
 
-int
-nsFileControlFrame::GetSkipSides() const
-{
-  return 0;
-}
-
 void
 nsFileControlFrame::SyncAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              int32_t aWhichControls)

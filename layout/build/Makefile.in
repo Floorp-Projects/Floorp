@@ -236,8 +236,8 @@ endif
 
 ifdef MOZ_XUL
 SHARED_LIBRARY_LIBS += \
-		../xul/base/src/tree/src/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
-		../xul/base/src/grid/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
+		../xul/tree/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
+		../xul/grid/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/xul/content/src/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/xul/templates/src/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
 		$(NULL)

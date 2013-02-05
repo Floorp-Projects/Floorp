@@ -7,7 +7,7 @@ Components.utils.import("resource:///modules/devtools/Target.jsm", tempScope);
 let TargetFactory = tempScope.TargetFactory;
 Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
-Components.utils.import("resource://gre/modules/commonjs/promise/core.js", tempScope);
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", tempScope);
 let Promise = tempScope.Promise;
 
 /**

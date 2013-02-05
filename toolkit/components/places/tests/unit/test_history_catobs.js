@@ -41,6 +41,6 @@ function run_test() {
   do_test_pending();
 
   // Add a visit
-  addVisits(uri("http://typed.mozilla.org"),
+  promiseAddVisits(uri("http://typed.mozilla.org")).then(
             function () do_timeout(1000, verify));
 }

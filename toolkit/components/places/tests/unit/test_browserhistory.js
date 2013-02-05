@@ -9,7 +9,7 @@ const TEST_SUBDOMAIN_URI = NetUtil.newURI("http://foobar.mozilla.com/");
 
 add_test(function test_addPage()
 {
-  addVisits(TEST_URI, function () {
+  promiseAddVisits(TEST_URI).then(function () {
     do_check_eq(1, PlacesUtils.history.hasHistoryEntries);
     run_next_test();
   });
@@ -29,7 +29,7 @@ add_test(function test_removePages()
     pages.push(NetUtil.newURI(TEST_URI.spec + i));
   }
 
-  addVisits(pages.map(function (uri) ({ uri: uri })), function () {
+  promiseAddVisits(pages.map(function (uri) ({ uri: uri }))).then(function () {
     // Bookmarked item should not be removed from moz_places.
     const ANNO_INDEX = 1;
     const ANNO_NAME = "testAnno";
@@ -77,7 +77,7 @@ add_test(function test_removePagesByTimeframe()
     });
   }
 
-  addVisits(visits, function () {
+  promiseAddVisits(visits).then(function () {
     // Delete all pages except the first and the last.
     PlacesUtils.bhistory.removePagesByTimeframe(startDate + 1, startDate + 8);
   
@@ -96,7 +96,7 @@ add_test(function test_removePagesByTimeframe()
 
 add_test(function test_removePagesFromHost()
 {
-  addVisits(TEST_URI, function () {
+  promiseAddVisits(TEST_URI).then(function () {
     PlacesUtils.bhistory.removePagesFromHost("mozilla.com", true);
     do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
     run_next_test();
@@ -105,7 +105,7 @@ add_test(function test_removePagesFromHost()
 
 add_test(function test_removePagesFromHost_keepSubdomains()
 {
-  addVisits([{ uri: TEST_URI }, { uri: TEST_SUBDOMAIN_URI }], function () {
+  promiseAddVisits([{ uri: TEST_URI }, { uri: TEST_SUBDOMAIN_URI }]).then(function () {
     PlacesUtils.bhistory.removePagesFromHost("mozilla.com", false);
     do_check_eq(1, PlacesUtils.history.hasHistoryEntries);
     run_next_test();

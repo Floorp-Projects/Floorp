@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGDescElement_h
 
 #include "nsSVGElement.h"
-#include "nsIDOMSVGDescElement.h"
 
 nsresult NS_NewSVGDescElement(nsIContent **aResult,
                               already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -18,7 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGDescElement MOZ_FINAL : public SVGDescElementBase,
-                                 public nsIDOMSVGDescElement
+                                 public nsIDOMSVGElement
 {
 protected:
   friend nsresult (::NS_NewSVGDescElement(nsIContent **aResult,
@@ -31,7 +30,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGDESCELEMENT
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -39,8 +37,6 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(SVGDescElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 };

@@ -113,7 +113,11 @@ STATIC_LIBS += mozril_s
 endif #}
 
 ifdef MOZ_B2G_BT #{
-STATIC_LIBS += mozdbus_s mozipcunixsocket_s
+STATIC_LIBS += mozdbus_s
+endif #}
+
+ifneq ($(strip $(MOZ_B2G_RIL)$(MOZ_B2G_BT)),) #{
+STATIC_LIBS += mozipcunixsocket_s
 endif #}
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))

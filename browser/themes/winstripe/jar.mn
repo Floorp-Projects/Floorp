@@ -23,6 +23,7 @@ browser.jar:
         skin/classic/browser/appmenu-icons.png
         skin/classic/browser/appmenu-dropmarker.png
 *       skin/classic/browser/browser.css
+        skin/classic/browser/click-to-play-warning-stripes.png
 *       skin/classic/browser/engineManager.css
         skin/classic/browser/Geolocation-16.png
         skin/classic/browser/Geolocation-64.png
@@ -53,7 +54,7 @@ browser.jar:
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/Secure24.png
         skin/classic/browser/setDesktopBackground.css
-        skin/classic/browser/click-to-play-warning-stripes.png
+        skin/classic/browser/slowStartup-16.png
         skin/classic/browser/Toolbar.png
         skin/classic/browser/Toolbar-inverted.png
         skin/classic/browser/toolbarbutton-dropdown-arrow.png
@@ -251,6 +252,7 @@ browser.jar:
         skin/classic/aero/browser/appmenu-dropmarker.png
         skin/classic/aero/browser/appmenu-icons.png
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
+        skin/classic/aero/browser/click-to-play-warning-stripes.png
 *       skin/classic/aero/browser/engineManager.css
         skin/classic/aero/browser/Geolocation-16.png
         skin/classic/aero/browser/Geolocation-64.png
@@ -281,7 +283,7 @@ browser.jar:
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
-        skin/classic/aero/browser/click-to-play-warning-stripes.png
+        skin/classic/aero/browser/slowStartup-16.png
         skin/classic/aero/browser/Toolbar.png
         skin/classic/aero/browser/Toolbar-inverted.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow.png

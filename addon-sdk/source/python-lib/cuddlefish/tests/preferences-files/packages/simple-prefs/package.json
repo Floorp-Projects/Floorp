@@ -1,0 +1,50 @@
+{
+    "id": "jid1-fZHqN9JfrDBa8A",
+    "fullName": "Simple Prefs Test",
+    "author": "Erik Vold",
+    "preferences": [{
+        "name": "test",
+        "type": "bool",
+        "title": "tëst",
+        "value": false
+    },
+    {
+        "name": "test2",
+        "type": "string",
+        "title": "tëst",
+        "value": "ünicødé"
+    },
+    {
+        "name": "test3",
+        "type": "menulist",
+        "title": "\"><test",
+        "value": "1",
+        "options": [
+            {
+                "value": "0",
+                "label": "label1"
+            },
+            {
+                "value": "1",
+                "label": "label2"
+            }
+        ]
+    },
+    {
+        "name": "test4",
+        "type": "radio",
+        "title": "tëst",
+        "value": "red",
+        "options": [
+            {
+                "value": "red",
+                "label": "rouge"
+            },
+            {
+                "value": "blue",
+                "label": "bleu"
+            }
+        ]
+    }],
+    "loader": "lib/main.js"
+}

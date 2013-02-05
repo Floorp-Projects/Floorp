@@ -1,0 +1,143 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#footer {
+  clear: both;
+  color: #476fbe;
+  display: block;
+  font-family: Georgia, serif;
+  min-width: 978px;
+  background: #33559b url(../media/bg-footer.png) 0 0 repeat-x;
+  padding: 123px 0 5px 0;
+}
+
+#footer a:link, #footer a:visited {
+  color: #669be1;
+  text-decoration: none;
+}
+#footer a:hover, #footer a:active {
+  color: #fff;
+  text-decoration: underline;
+}
+
+#footer #lang_form label {
+  color: #fff;
+  font-family: MetaBlack, "Trebuchet MS", sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+#footer li li a:link, #footer li li a:visited {
+  color: #669be1;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-weight: normal;
+  text-transform: none;
+}
+
+#footer li li a:hover, #footer li li a:active {
+  color: #fff;
+}
+
+#footer #lang_form {
+  margin: 0 0 15px 27px;
+}
+
+#footer #lang_form label {
+  display: block;
+  margin: 10px 0 4px;
+}
+
+#footer #lang_form select {
+  font-family: sans-serif;
+  font-size: 11px;
+  width: 140px;
+}
+
+#footer #lang_form div {
+  display: inline;
+}
+
+#footer #copyright {
+  clear: both;
+}
+
+#footer #copyright p {
+  font-size: 85%;
+  margin-bottom: .5em;
+}
+
+#footer #copyright a:hover, #footer #copyright a:active {
+  text-decoration: underline;
+}
+
+#footer #footer-links {
+  font-size: 85%;
+}
+
+.footerlogo {
+  position: absolute;
+  right: 25px;
+  top: -64px;
+}
+
+#footer .section {
+  margin: 0 auto;
+  max-width: 90em;
+  min-height: 55em;
+  min-width: 960px;
+  overflow: visible;
+  padding: 0 2%;
+  position: relative;
+  width: 90%;
+  min-height: 0;
+  padding-bottom: 20px;
+}
+
+.footer-devhub-link {
+  width: 25%;
+}
+
+#social-footer {
+  color: white;
+  display: table;
+  font-size: 18px;
+  font-style: italic;
+  height: 68px;
+  margin-bottom: 4px;
+  width: 80%;
+}
+
+#social-footer a:after {
+  content: ' \00bb';
+}
+
+#social-footer a:link, #social-footer a:visited {
+  color: white;
+}
+
+#social-footer ul {
+  display: table-row;
+}
+
+#social-footer ul li {
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#social-footer ul li:first-child {
+  font-size: 17px;
+  line-height: 1.2em;
+  width: 128px;
+}
+
+#social-footer ul li:first-child b {
+  display: block;
+  font-family: MetaBlack;
+  font-size: 22px;
+  font-style: normal;
+  text-transform: uppercase;
+}

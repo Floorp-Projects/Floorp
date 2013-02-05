@@ -130,7 +130,7 @@ already_AddRefed<SVGMatrix>
 SVGMatrix::Inverse(ErrorResult& rv)
 {
   if (Matrix().IsSingular()) {
-    rv.Throw(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE);
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
   nsRefPtr<SVGMatrix> matrix = new SVGMatrix(gfxMatrix(Matrix()).Invert());
@@ -172,7 +172,7 @@ already_AddRefed<SVGMatrix>
 SVGMatrix::RotateFromVector(float x, float y, ErrorResult& rv)
 {
   if (x == 0.0 || y == 0.0) {
-    rv.Throw(NS_ERROR_RANGE_ERR);
+    rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
 
@@ -204,7 +204,7 @@ SVGMatrix::SkewX(float angle, ErrorResult& rv)
 {
   double ta = tan( angle*radPerDegree );
   if (!NS_finite(ta)) {
-    rv.Throw(NS_ERROR_RANGE_ERR);
+    rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
 
@@ -221,7 +221,7 @@ SVGMatrix::SkewY(float angle, ErrorResult& rv)
 {
   double ta = tan( angle*radPerDegree );
   if (!NS_finite(ta)) {
-    rv.Throw(NS_ERROR_RANGE_ERR);
+    rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
 

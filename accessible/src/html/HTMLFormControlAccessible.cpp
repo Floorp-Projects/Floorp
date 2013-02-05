@@ -259,26 +259,23 @@ HTMLButtonAccessible::NativeRole()
 ENameValueFlag
 HTMLButtonAccessible::NativeName(nsString& aName)
 {
+  // No need to check @value attribute for buttons since this attribute results
+  // in native anonymous text node and the name is calculated from subtree.
+  // The same magic works for @alt and @value attributes in case of type="image"
+  // element that has no valid @src (note if input@type="image" has an image
+  // then neither @alt nor @value attributes are used to generate a visual label
+  // and thus we need to obtain the accessible name directly from attribute
+  // value). Also the same algorithm works in case of default labels for
+  // type="submit"/"reset"/"image" elements.
+
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
-  if (!aName.IsEmpty() || mContent->Tag() != nsGkAtoms::input)
+  if (!aName.IsEmpty() || mContent->Tag() != nsGkAtoms::input ||
+      !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                             nsGkAtoms::image, eCaseMatters))
     return nameFlag;
 
-  // Note: No need to check @value attribute since it results in anonymous text
-  // node. The name is calculated from subtree in this case.
-  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName)) {
-    // Use the button's (default) label if nothing else works
-    nsIFrame* frame = GetFrame();
-    if (frame) {
-      nsIFormControlFrame* fcFrame = do_QueryFrame(frame);
-      if (fcFrame)
-        fcFrame->GetFormProperty(nsGkAtoms::defaultLabel, aName);
-    }
-  }
-
-  if (aName.IsEmpty() &&
-      !mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, aName)) {
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, aName);
-  }
+  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName))
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
 
   aName.CompressWhitespace();
   return eNameOK;

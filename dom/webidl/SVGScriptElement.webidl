@@ -11,9 +11,11 @@
  */
 
 interface SVGScriptElement : SVGElement {
+  [SetterThrows]
   attribute DOMString type;
 
   // CORS attribute
+  [SetterThrows]
   attribute DOMString crossOrigin;
 };
 

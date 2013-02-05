@@ -74,10 +74,15 @@ public:
     nsXPCClassInfo *GetXPCClassInfo()
     {
         if (!mXPCClassInfo) {
-            if (mIsNode)
-                mXPCClassInfo = static_cast<nsINode*>(GetCanonical())->GetClassInfo();
-            else
+            if (mIsNode) {
+                mXPCClassInfo =
+                    static_cast<nsINode*>(GetCanonical())->GetClassInfo();
+#ifdef DEBUG
+                AssertGetClassInfoResult();
+#endif
+            } else {
                 CallQueryInterface(mObject, getter_AddRefs(mXPCClassInfo));
+            }
         }
         return mXPCClassInfo;
     }
@@ -128,6 +133,10 @@ protected:
 
 private:
     xpcObjectHelper(xpcObjectHelper& aOther) MOZ_DELETE;
+
+#ifdef DEBUG
+    void AssertGetClassInfoResult();
+#endif
 
     nsISupports*             mObject;
     nsWrapperCache*          mCache;
