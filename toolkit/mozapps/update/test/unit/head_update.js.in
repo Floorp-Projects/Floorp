@@ -1242,6 +1242,8 @@ function checkUpdateLogContents(aCompareLogFile) {
   // Skip the source/destination lines since they contain absolute paths.
   updateLogContents = updateLogContents.replace(/SOURCE DIRECTORY.*/g, "");
   updateLogContents = updateLogContents.replace(/DESTINATION DIRECTORY.*/g, "");
+  // Skip lines that log failed attempts to open the callback executable.
+  updateLogContents = updateLogContents.replace(/NS_main: callback app open attempt .*/g, "");
   if (gSwitchApp) {
     // Remove the lines which contain absolute paths
     updateLogContents = updateLogContents.replace(/^Begin moving.*$/mg, "");
