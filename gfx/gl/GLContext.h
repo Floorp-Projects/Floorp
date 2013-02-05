@@ -1379,7 +1379,7 @@ public:
                 }
 
                 for (int i = 0; extList[i]; ++i) {
-                    if (strcmp(cur, extList[i]) == 0) {
+                    if (strcasecmp(cur, extList[i]) == 0) {
                         if (verbose)
                             printf_stderr("Found extension %s\n", cur);
                         extensions[i] = 1;
