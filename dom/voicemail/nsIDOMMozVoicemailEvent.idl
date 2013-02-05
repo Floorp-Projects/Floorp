@@ -8,11 +8,21 @@
 
 interface nsIDOMMozVoicemailStatus;
 
-[scriptable, builtinclass, uuid(8fd09b8e-1572-48ff-8719-f8f179afef4b)]
+[scriptable, builtinclass, uuid(63e42e5f-0742-4c8f-bd52-938a7e03d2c9)]
 interface nsIDOMMozVoicemailEvent : nsIDOMEvent
 {
   /**
    * The voicemail status that caused this event to fire
    */
   readonly attribute nsIDOMMozVoicemailStatus status;
+
+  [noscript] void initMozVoicemailEvent(in DOMString aType,
+                                        in boolean aCanBubble,
+                                        in boolean aCancelable,
+                                        in nsIDOMMozVoicemailStatus aStatus);
+};
+
+dictionary MozVoicemailEventInit : EventInit
+{
+  nsIDOMMozVoicemailStatus status;
 };

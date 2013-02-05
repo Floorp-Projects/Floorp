@@ -10,8 +10,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
-const RIL_SMSDATABASESERVICE_CONTRACTID = "@mozilla.org/sms/rilsmsdatabaseservice;1";
-const RIL_SMSDATABASESERVICE_CID = Components.ID("{a1fa610c-eb6c-4ac2-878f-b005d5e89249}");
+const RIL_MOBILEMESSAGEDATABASESERVICE_CONTRACTID = "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1";
+const RIL_MOBILEMESSAGEDATABASESERVICE_CID = Components.ID("{29785f90-6b5b-11e2-9201-3b280170b2ec}");
 
 const DEBUG = false;
 const DB_NAME = "sms";
@@ -59,9 +59,9 @@ function numberFromMessage(message) {
 }
 
 /**
- * SmsDatabaseService
+ * MobileMessageDatabaseService
  */
-function SmsDatabaseService() {
+function MobileMessageDatabaseService() {
   // Prime the directory service's cache to ensure that the ProfD entry exists
   // by the time IndexedDB queries for it off the main thread. (See bug 743635.)
   Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -80,7 +80,7 @@ function SmsDatabaseService() {
       let cursor = event.target.result;
       if (!cursor) {
         if (DEBUG) {
-          debug("Could not get the last key from sms database. " +
+          debug("Could not get the last key from mobile message database. " +
                 "Probably empty database");
         }
         return;
@@ -90,7 +90,7 @@ function SmsDatabaseService() {
     };
     request.onerror = function onerror(event) {
       if (DEBUG) {
-        debug("Could not get the last key from sms database " +
+        debug("Could not get the last key from mobile message database " +
               event.target.errorCode);
       }
     };
@@ -98,11 +98,11 @@ function SmsDatabaseService() {
 
   this.messageLists = {};
 }
-SmsDatabaseService.prototype = {
+MobileMessageDatabaseService.prototype = {
 
-  classID:   RIL_SMSDATABASESERVICE_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRilSmsDatabaseService,
-                                         Ci.nsISmsDatabaseService,
+  classID: RIL_MOBILEMESSAGEDATABASESERVICE_CID,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRilMobileMessageDatabaseService,
+                                         Ci.nsIMobileMessageDatabaseService,
                                          Ci.nsIObserver]),
 
   /**
@@ -223,10 +223,10 @@ SmsDatabaseService.prototype = {
    *        Type of transaction (e.g. READ_WRITE)
    * @param callback
    *        Function to call when the transaction is available. It will
-   *        be invoked with the transaction and the 'sms' object store.
+   *        be invoked with the transaction and the mobile message object store.
    * @param objectStores
    *        Function to call when the transaction is available. It will
-   *        be invoked with the transaction and the 'sms' object store.
+   *        be invoked with the transaction and the mobile message object store.
    */
   newTxn: function newTxn(txn_type, callback, objectStores) {
     if (!objectStores) {
@@ -273,7 +273,7 @@ SmsDatabaseService.prototype = {
    * TODO full text search on body???
    */
   createSchema: function createSchema(db) {
-    // This objectStore holds the main SMS data.
+    // This objectStore holds the main mobile message data.
     let objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
     objectStore.createIndex("timestamp", "timestamp", { unique: false });
     if (DEBUG) debug("Created object stores and indexes");
@@ -310,7 +310,7 @@ SmsDatabaseService.prototype = {
 
     /**
      * This objectStore can be used to quickly construct a thread view of the
-     * SMS database. Each entry looks like this:
+     * mobile message database. Each entry looks like this:
      *
      * { senderOrReceiver: <String> (primary key),
      *   id: <Number>,
@@ -326,10 +326,10 @@ SmsDatabaseService.prototype = {
 
   upgradeSchema4: function upgradeSchema4(transaction) {
     let threads = {};
-    let smsStore = transaction.objectStore(STORE_NAME);
+    let mobileMessageStore = transaction.objectStore(STORE_NAME);
     let mostRecentStore = transaction.objectStore(MOST_RECENT_STORE_NAME);
 
-    smsStore.openCursor().onsuccess = function(event) {
+    mobileMessageStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
         for (let thread in threads) {
@@ -715,7 +715,7 @@ SmsDatabaseService.prototype = {
 
 
   /**
-   * nsIRilSmsDatabaseService API
+   * nsIRilMobileMessageDatabaseService API
    */
 
   saveReceivedMessage: function saveReceivedMessage(
@@ -879,7 +879,7 @@ SmsDatabaseService.prototype = {
   },
 
   /**
-   * nsISmsDatabaseService API
+   * nsIMobileMessageDatabaseService API
    */
 
   getMessage: function getMessage(messageId, aRequest) {
@@ -943,7 +943,7 @@ SmsDatabaseService.prototype = {
         aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
 
-      const smsStore = stores[0];
+      const mobileMessageStore = stores[0];
       const mruStore = stores[1];
 
       let deleted = false;
@@ -953,7 +953,7 @@ SmsDatabaseService.prototype = {
         aRequest.notifyMessageDeleted(deleted);
       };
 
-      smsStore.get(messageId).onsuccess = function(event) {
+      mobileMessageStore.get(messageId).onsuccess = function(event) {
         let message = event.target.result;
         if (message) {
           if (DEBUG) debug("Deleting message id " + messageId);
@@ -976,8 +976,8 @@ SmsDatabaseService.prototype = {
               if (mostRecentEntry.id == messageId) {
                 // Check most recent sender/receiver.
                 let numberRange = IDBKeyRange.bound([number, 0], [number, ""]);
-                let numberRequest = smsStore.index("number")
-                                            .openCursor(numberRange, PREV);
+                let numberRequest = mobileMessageStore.index("number")
+                                                      .openCursor(numberRange, PREV);
                 numberRequest.onsuccess = function(event) {
                   let cursor = event.target.result;
                   if (!cursor) {
@@ -1433,12 +1433,12 @@ SmsDatabaseService.prototype = {
   }
 };
 
-XPCOMUtils.defineLazyServiceGetter(SmsDatabaseService.prototype, "mRIL",
+XPCOMUtils.defineLazyServiceGetter(MobileMessageDatabaseService.prototype, "mRIL",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SmsDatabaseService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MobileMessageDatabaseService]);
 
 function debug() {
-  dump("SmsDatabaseService: " + Array.slice(arguments).join(" ") + "\n");
+  dump("MobileMessageDatabaseService: " + Array.slice(arguments).join(" ") + "\n");
 }

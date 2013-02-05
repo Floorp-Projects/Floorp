@@ -80,6 +80,11 @@ BrowserElementChild.prototype = {
 
   _init: function() {
     debug("Starting up.");
+
+    // NB: this must happen before we process any messages from
+    // mozbrowser API clients.
+    docShell.isActive = true;
+
     sendAsyncMsg("hello");
 
     // Set the docshell's name according to our <iframe>'s name attribute.

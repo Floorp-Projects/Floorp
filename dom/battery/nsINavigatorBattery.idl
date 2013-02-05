@@ -4,10 +4,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMBatteryManager;
-
-[scriptable, uuid(4a78a8d5-5bbb-4a92-ad97-f19e853a7008)]
+[scriptable, uuid(16ed7adc-b3e0-43c6-a121-5a2b500e90d0)]
 interface nsINavigatorBattery : nsISupports
 {
-  readonly attribute nsIDOMBatteryManager battery;
+  readonly attribute nsISupports battery;
 };

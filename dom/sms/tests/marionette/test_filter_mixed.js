@@ -96,7 +96,7 @@ function deleteAllMessages(next) {
 tasks.push(deleteAllMessages);
 
 /**
- * Populate SmsDatabase with messages to being tests. We'll have NUM_THREADS
+ * Populate MobileMessageDB with messages to being tests. We'll have NUM_THREADS
  * sent and received messages, and NUM_THREADS/2 unread received messages.
  *
  *   send    to   "0"

@@ -4,17 +4,19 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SmsFilter.h"
-#include "SmsDatabaseService.h"
+#include "MobileMessageDatabaseService.h"
 #include "AndroidBridge.h"
+
+using namespace mozilla::dom::sms;
 
 namespace mozilla {
 namespace dom {
-namespace sms {
+namespace mobilemessage {
 
-NS_IMPL_ISUPPORTS1(SmsDatabaseService, nsISmsDatabaseService)
+NS_IMPL_ISUPPORTS1(MobileMessageDatabaseService, nsIMobileMessageDatabaseService)
 
 NS_IMETHODIMP
-SmsDatabaseService::GetMessageMoz(int32_t aMessageId, nsISmsRequest* aRequest)
+MobileMessageDatabaseService::GetMessageMoz(int32_t aMessageId, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -25,7 +27,7 @@ SmsDatabaseService::GetMessageMoz(int32_t aMessageId, nsISmsRequest* aRequest)
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::DeleteMessage(int32_t aMessageId, nsISmsRequest* aRequest)
+MobileMessageDatabaseService::DeleteMessage(int32_t aMessageId, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -36,8 +38,8 @@ SmsDatabaseService::DeleteMessage(int32_t aMessageId, nsISmsRequest* aRequest)
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
-                                      bool aReverse, nsISmsRequest* aRequest)
+MobileMessageDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
+                                                bool aReverse, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -49,7 +51,7 @@ SmsDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::GetNextMessageInList(int32_t aListId, nsISmsRequest* aRequest)
+MobileMessageDatabaseService::GetNextMessageInList(int32_t aListId, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -60,7 +62,7 @@ SmsDatabaseService::GetNextMessageInList(int32_t aListId, nsISmsRequest* aReques
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::ClearMessageList(int32_t aListId)
+MobileMessageDatabaseService::ClearMessageList(int32_t aListId)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -71,20 +73,20 @@ SmsDatabaseService::ClearMessageList(int32_t aListId)
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::MarkMessageRead(int32_t aMessageId, bool aValue,
-                                    nsISmsRequest* aRequest)
+MobileMessageDatabaseService::MarkMessageRead(int32_t aMessageId, bool aValue,
+                                              nsISmsRequest* aRequest)
 {
   // TODO: This would need to be implemented as part of Bug 748391
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::GetThreadList(nsISmsRequest* aRequest)
+MobileMessageDatabaseService::GetThreadList(nsISmsRequest* aRequest)
 {
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-} // namespace sms
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

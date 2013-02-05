@@ -37,8 +37,8 @@ LightweightThemeConsumer.prototype = {
 
     let active = !!aData.headerURL;
 
-    let msg = active ? { gecko: { type: "LightweightTheme:Update", data: aData } } :
-                       { gecko: { type: "LightweightTheme:Disable" } };
+    let msg = active ? { type: "LightweightTheme:Update", data: aData } :
+                       { type: "LightweightTheme:Disable" };
     let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
     bridge.handleGeckoMessage(JSON.stringify(msg));
   }

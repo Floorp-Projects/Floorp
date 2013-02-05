@@ -48,14 +48,6 @@ HRESULT MFStartup();
 
 HRESULT MFShutdown();
 
-HRESULT MFPutWorkItem(DWORD aWorkQueueId,
-                      IMFAsyncCallback *aCallback,
-                      IUnknown *aState);
-
-HRESULT MFAllocateWorkQueue(DWORD *aOutWorkQueueId);
-
-HRESULT MFUnlockWorkQueue(DWORD aWorkQueueId);
-
 HRESULT MFCreateAsyncResult(IUnknown *aUunkObject,
                             IMFAsyncCallback *aCallback,
                             IUnknown *aUnkState,

@@ -815,7 +815,7 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
     }
   }
 
-  if (mListenerIsStrongRef) {
+  if (mListenerIsStrongRef && lastPart) {
     NS_PRECONDITION(mListener, "How did that happen?");
     // Drop our strong ref to the listener now that we're done with
     // everything.  Note that this can cancel us and other fun things
