@@ -878,6 +878,10 @@ WebConsoleFrame.prototype = {
   _filterRepeatedMessage: function WCF__filterRepeatedMessage(aNode)
   {
     let repeatNode = aNode.getElementsByClassName("webconsole-msg-repeat")[0];
+    if (!repeatNode) {
+      return false;
+    }
+
     let uid = repeatNode._uid;
     let dupeNode = null;
 
@@ -899,7 +903,7 @@ WebConsoleFrame.prototype = {
 
       let lastRepeatNode = lastMessage
                            .getElementsByClassName("webconsole-msg-repeat")[0];
-      if (lastRepeatNode._uid == uid) {
+      if (lastRepeatNode && lastRepeatNode._uid == uid) {
         dupeNode = lastMessage;
       }
     }
@@ -2018,7 +2022,9 @@ WebConsoleFrame.prototype = {
 
     if (aNode.classList.contains("webconsole-msg-cssparser")) {
       let repeatNode = aNode.getElementsByClassName("webconsole-msg-repeat")[0];
-      delete this._cssNodes[repeatNode._uid];
+      if (repeatNode && repeatNode._uid) {
+        delete this._cssNodes[repeatNode._uid];
+      }
     }
     else if (aNode._connectionId &&
              aNode.classList.contains("webconsole-msg-network")) {
