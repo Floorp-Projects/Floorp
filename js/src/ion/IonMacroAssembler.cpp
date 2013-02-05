@@ -798,3 +798,12 @@ MacroAssembler::copyMem(Register copyFrom, Register copyEnd, Register copyTo, Re
     jump(&copyLoop);
     bind(&copyDone);
 }
+
+void
+MacroAssembler::convertInt32ValueToDouble(const Address &address, Register scratch, Label *done)
+{
+    branchTestInt32(Assembler::NotEqual, address, done);
+    unboxInt32(address, scratch);
+    convertInt32ToDouble(scratch, ScratchFloatReg);
+    storeDouble(ScratchFloatReg, address);
+}

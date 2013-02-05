@@ -2082,11 +2082,25 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     BaseIndex element(scratchReg, key, TimesEight);
     masm.branchTestMagic(Assembler::Equal, element, &failure);
 
+    // Convert int32 values to double if convertDoubleElements is set. In this
+    // case the heap typeset is guaranteed to contain both int32 and double, so
+    // it's okay to store a double.
+    Label convertDoubles, convertDoublesDone;
+    Address convertDoublesAddr(scratchReg, ObjectElements::offsetOfConvertDoubleElements());
+    masm.branch32(Assembler::NotEqual, convertDoublesAddr, Imm32(0), &convertDoubles);
+    masm.bind(&convertDoublesDone);
+
     // It's safe to overwrite R0 now.
-    masm.loadValue(Address(BaselineStackReg, ICStackValueOffset), R0);
+    Address valueAddr(BaselineStackReg, ICStackValueOffset);
+    masm.loadValue(valueAddr, R0);
     masm.patchableCallPreBarrier(element, MIRType_Value);
     masm.storeValue(R0, element);
     EmitReturnFromIC(masm);
+
+    // Convert to double and jump back.
+    masm.bind(&convertDoubles);
+    masm.convertInt32ValueToDouble(valueAddr, R0.scratchReg(), &convertDoublesDone);
+    masm.jump(&convertDoublesDone);
 
     // Failure case - fail but first unstow R0 and R1
     masm.bind(&failureUnstow);
@@ -2181,12 +2195,26 @@ ICSetElem_DenseAdd::Compiler::generateStubCode(MacroAssembler &masm)
     masm.add32(Imm32(1), length);
     masm.bind(&skipIncrementLength);
 
+    // Convert int32 values to double if convertDoubleElements is set. In this
+    // case the heap typeset is guaranteed to contain both int32 and double, so
+    // it's okay to store a double.
+    Label convertDoubles, convertDoublesDone;
+    Address convertDoublesAddr(scratchReg, ObjectElements::offsetOfConvertDoubleElements());
+    masm.branch32(Assembler::NotEqual, convertDoublesAddr, Imm32(0), &convertDoubles);
+    masm.bind(&convertDoublesDone);
+
     // Write the value.  No need for write barrier since we're not overwriting an old value.
     // It's safe to overwrite R0 now.
     BaseIndex element(scratchReg, key, TimesEight);
-    masm.loadValue(Address(BaselineStackReg, ICStackValueOffset), R0);
+    Address valueAddr(BaselineStackReg, ICStackValueOffset);
+    masm.loadValue(valueAddr, R0);
     masm.storeValue(R0, element);
     EmitReturnFromIC(masm);
+
+    // Convert to double and jump back.
+    masm.bind(&convertDoubles);
+    masm.convertInt32ValueToDouble(valueAddr, R0.scratchReg(), &convertDoublesDone);
+    masm.jump(&convertDoublesDone);
 
     // Failure case - fail but first unstow R0 and R1
     masm.bind(&failureUnstow);
