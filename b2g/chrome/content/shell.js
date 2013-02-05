@@ -837,6 +837,7 @@ var WebappsHelper = {
           let manifest = new ManifestHelper(aManifest, json.origin);
           shell.sendChromeEvent({
             "type": "webapps-launch",
+            "timestamp": json.timestamp,
             "url": manifest.fullLaunchPath(json.startPoint),
             "manifestURL": json.manifestURL
           });
