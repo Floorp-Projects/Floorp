@@ -204,6 +204,35 @@ add_task(function test_constant_only_providers() {
   reporter._shutdown();
 });
 
+add_task(function test_collect_daily() {
+  let reporter = yield getReporter("collect_daily");
+
+  let now = new Date();
+  let provider = new DummyProvider();
+  yield reporter.registerProvider(provider);
+  yield reporter.collectMeasurements();
+
+  do_check_eq(provider.collectConstantCount, 1);
+  do_check_eq(provider.collectDailyCount, 1);
+
+  yield reporter.collectMeasurements();
+  do_check_eq(provider.collectConstantCount, 1);
+  do_check_eq(provider.collectDailyCount, 1);
+
+  yield reporter.collectMeasurements();
+  do_check_eq(provider.collectDailyCount, 1); // Too soon.
+
+  reporter._lastDailyDate = now.getTime() - MILLISECONDS_PER_DAY - 1;
+  yield reporter.collectMeasurements();
+  do_check_eq(provider.collectDailyCount, 2);
+
+  reporter._lastDailyDate = null;
+  yield reporter.collectMeasurements();
+  do_check_eq(provider.collectDailyCount, 3);
+
+  reporter._shutdown();
+});
+
 add_task(function test_json_payload_simple() {
   let reporter = yield getReporter("json_payload_simple");
 
