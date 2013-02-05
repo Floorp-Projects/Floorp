@@ -132,9 +132,6 @@ public:
     }
   }
 
-protected:
-  static void Callback(AudioNode* aNode) { /* not implemented */ }
-
 private:
   nsRefPtr<AudioContext> mContext;
 
