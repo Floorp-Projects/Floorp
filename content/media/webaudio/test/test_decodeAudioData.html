@@ -254,13 +254,8 @@ expectTypeError(function() {
   cx.decodeAudioData(new Uint8Array(100), callbackShouldNeverRun, callbackShouldNeverRun);
 });
 
-if (cx.sampleRate == 44100) {
-  // Now, let's get real!
-  runNextTest();
-} else {
-  todo(false, "Decoded data tests disabled; context sampleRate " + cx.sampleRate + " not supported");
-  SimpleTest.finish();
-}
+// Now, let's get real!
+runNextTest();
 
 </script>
 </pre>

@@ -22,7 +22,7 @@ class AudioDestinationNode : public AudioNode,
                              public nsWrapperCache
 {
 public:
-  AudioDestinationNode(AudioContext* aContext, MediaStreamGraph* aGraph);
+  explicit AudioDestinationNode(AudioContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(AudioDestinationNode,

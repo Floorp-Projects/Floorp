@@ -17,9 +17,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/AudioContextBinding.h"
 #include "MediaBufferDecoder.h"
-#include "StreamBuffer.h"
-#include "MediaStreamGraph.h"
-#include "nsIDOMWindow.h"
 
 struct JSContext;
 class JSObject;
@@ -47,9 +44,10 @@ class AudioContext MOZ_FINAL : public nsWrapperCache,
                                public EnableWebAudioCheck
 {
   explicit AudioContext(nsIDOMWindow* aParentWindow);
-  ~AudioContext();
 
 public:
+  virtual ~AudioContext();
+
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioContext)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioContext)
 
@@ -76,7 +74,7 @@ public:
 
   float SampleRate() const
   {
-    return float(IdealAudioRate());
+    return mSampleRate;
   }
 
   AudioListener* Listener();
@@ -107,11 +105,6 @@ public:
                        DecodeSuccessCallback& aSuccessCallback,
                        const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
 
-  uint32_t GetRate() const { return IdealAudioRate(); }
-
-  MediaStreamGraph* Graph() const;
-  MediaStream* DestinationStream() const;
-
 private:
   void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);
 
@@ -123,6 +116,7 @@ private:
   nsRefPtr<AudioListener> mListener;
   MediaBufferDecoder mDecoder;
   nsTArray<nsAutoPtr<WebAudioDecodeJob> > mDecodeJobs;
+  float mSampleRate;
 };
 
 }
