@@ -343,12 +343,6 @@ class BaselineFrame
         return sizeof(BaselineFrame);
     }
 
-    // Obtain a baseline frame pointer from the corresponding IonJSFrameLayout pointer.
-    static BaselineFrame *FromIonJSFrame(IonJSFrameLayout *frame) {
-        size_t adjust = FramePointerOffset + BaselineFrame::Size();
-        return reinterpret_cast<BaselineFrame *>(reinterpret_cast<uint8_t *>(frame) - adjust);
-    }
-
     // The reverseOffsetOf methods below compute the offset relative to the
     // frame's base pointer. Since the stack grows down, these offsets are
     // negative.

@@ -70,6 +70,11 @@ class IonRuntime
     typedef WeakCache<const VMFunction *, IonCode *> VMWrapperMap;
     VMWrapperMap *functionWrappers_;
 
+    // Buffer for OSR from baseline to Ion. To avoid holding on to this for
+    // too long, it's also freed in IonCompartment::mark and in EnterBaseline
+    // (after returning from JIT code).
+    uint8_t *osrTempData_;
+
   private:
     IonCode *generateEnterJIT(JSContext *cx, EnterJitType type);
     IonCode *generateArgumentsRectifier(JSContext *cx, void **returnAddrOut);
@@ -94,6 +99,9 @@ class IonRuntime
     IonRuntime();
     ~IonRuntime();
     bool initialize(JSContext *cx);
+
+    uint8_t *allocateOsrTempData(size_t size);
+    void freeOsrTempData();
 
     static void Mark(JSTracer *trc);
 };
