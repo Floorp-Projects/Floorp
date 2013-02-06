@@ -2479,8 +2479,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         if (descriptor.interface.isCallback() and
             descriptor.interface.identifier.name != "NodeFilter" and
-            descriptor.interface.identifier.name != "EventListener" and
-            descriptor.interface.identifier.name != "DOMTransaction"):
+            descriptor.interface.identifier.name != "EventListener"):
             if descriptor.workers:
                 if type.nullable():
                     declType = CGGeneric("JSObject*")
@@ -3322,8 +3321,7 @@ if (!returnArray) {
     if (type.isGeckoInterface() and
         (not type.isCallbackInterface() or
          type.unroll().inner.identifier.name == "EventListener" or
-         type.unroll().inner.identifier.name == "NodeFilter" or
-         type.unroll().inner.identifier.name == "DOMTransaction")):
+         type.unroll().inner.identifier.name == "NodeFilter")):
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
             wrappingCode = ("if (!%s) {\n" % (result) +
@@ -7283,8 +7281,7 @@ class CGNativeMember(ClassMethod):
         if (type.isGeckoInterface() and
             (not type.isCallbackInterface() or
              type.unroll().inner.identifier.name == "NodeFilter" or
-             type.unroll().inner.identifier.name == "EventListener" or
-             type.unroll().inner.identifier.name == "DOMTransaction")):
+             type.unroll().inner.identifier.name == "EventListener")):
             iface = type.unroll().inner
             argIsPointer = type.nullable() or iface.isExternal()
             forceOwningType = iface.isCallback() or isMember
