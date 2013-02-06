@@ -27,7 +27,9 @@ public:
   nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsMathMLElementBase(aNodeInfo), Link(this),
       mIncrementScriptLevel(false)
-  {}
+  {
+    SetIsDOMBinding();
+  }
 
   // Implementation of nsISupports is inherited from nsMathMLElementBase
   NS_DECL_ISUPPORTS_INHERITED
@@ -104,6 +106,11 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
+
 private:
   bool mIncrementScriptLevel;
 };
