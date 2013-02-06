@@ -3,19 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozilla_dom_HTMLMenuElement_h
+#define mozilla_dom_HTMLMenuElement_h
+
 #include "nsIDOMHTMLMenuElement.h"
 #include "nsIHTMLMenu.h"
 #include "nsGenericHTMLElement.h"
 
-class nsHTMLMenuElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLMenuElement,
-                          public nsIHTMLMenu
+namespace mozilla {
+namespace dom {
+
+class HTMLMenuElement : public nsGenericHTMLElement,
+                        public nsIDOMHTMLMenuElement,
+                        public nsIHTMLMenu
 {
 public:
-  nsHTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLMenuElement();
+  HTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLMenuElement();
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLMenuElement, menu)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLMenuElement, menu)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -63,3 +69,8 @@ protected:
 
   uint8_t mType;
 };
+
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_HTMLMenuElement_h

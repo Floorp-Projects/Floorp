@@ -3,17 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLMenuElement.h"
-#include "nsAttrValueInlines.h"
-#include "nsIDOMHTMLMenuItemElement.h"
+#include "HTMLMenuElement.h"
 #include "nsXULContextMenuBuilder.h"
-#include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsHTMLMenuItemElement.h"
-#include "nsContentUtils.h"
-#include "nsError.h"
+#include "nsAttrValueInlines.h"
 
-using namespace mozilla::dom;
+NS_IMPL_NS_NEW_HTML_ELEMENT(Menu)
+DOMCI_NODE_DATA(HTMLMenuElement, mozilla::dom::HTMLMenuElement)
+
+namespace mozilla {
+namespace dom {
 
 enum MenuType
 {
@@ -39,44 +39,41 @@ enum SeparatorType
   ST_TRUE = 1
 };
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Menu)
 
 
-nsHTMLMenuElement::nsHTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLMenuElement::HTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mType(MENU_TYPE_LIST)
 {
 }
 
-nsHTMLMenuElement::~nsHTMLMenuElement()
+HTMLMenuElement::~HTMLMenuElement()
 {
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLMenuElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLMenuElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLMenuElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLMenuElement, Element)
 
 
-DOMCI_NODE_DATA(HTMLMenuElement, nsHTMLMenuElement)
-
-// QueryInterface implementation for nsHTMLMenuElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLMenuElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLMenuElement,
+// QueryInterface implementation for HTMLMenuElement
+NS_INTERFACE_TABLE_HEAD(HTMLMenuElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLMenuElement,
                                    nsIDOMHTMLMenuElement,
                                    nsIHTMLMenu)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLMenuElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLMenuElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLMenuElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLMenuElement)
+NS_IMPL_ELEMENT_CLONE(HTMLMenuElement)
 
-NS_IMPL_BOOL_ATTR(nsHTMLMenuElement, Compact, compact)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMenuElement, Type, type,
+NS_IMPL_BOOL_ATTR(HTMLMenuElement, Compact, compact)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMenuElement, Type, type,
                                 kMenuDefaultType->tag)
-NS_IMPL_STRING_ATTR(nsHTMLMenuElement, Label, label)
+NS_IMPL_STRING_ATTR(HTMLMenuElement, Label, label)
 
 
 NS_IMETHODIMP
-nsHTMLMenuElement::SendShowEvent()
+HTMLMenuElement::SendShowEvent()
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_DOM_SECURITY_ERR);
 
@@ -103,7 +100,7 @@ nsHTMLMenuElement::SendShowEvent()
 }
 
 NS_IMETHODIMP
-nsHTMLMenuElement::CreateBuilder(nsIMenuBuilder** _retval)
+HTMLMenuElement::CreateBuilder(nsIMenuBuilder** _retval)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_DOM_SECURITY_ERR);
 
@@ -118,7 +115,7 @@ nsHTMLMenuElement::CreateBuilder(nsIMenuBuilder** _retval)
 
 
 NS_IMETHODIMP
-nsHTMLMenuElement::Build(nsIMenuBuilder* aBuilder)
+HTMLMenuElement::Build(nsIMenuBuilder* aBuilder)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_DOM_SECURITY_ERR);
 
@@ -133,10 +130,10 @@ nsHTMLMenuElement::Build(nsIMenuBuilder* aBuilder)
 
 
 bool
-nsHTMLMenuElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsAttrValue& aResult)
+HTMLMenuElement::ParseAttribute(int32_t aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::type) {
     bool success = aResult.ParseEnumValue(aValue, kMenuTypeTable,
@@ -155,9 +152,9 @@ nsHTMLMenuElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void
-nsHTMLMenuElement::BuildSubmenu(const nsAString& aLabel,
-                                nsIContent* aContent,
-                                nsIMenuBuilder* aBuilder)
+HTMLMenuElement::BuildSubmenu(const nsAString& aLabel,
+                              nsIContent* aContent,
+                              nsIMenuBuilder* aBuilder)
 {
   aBuilder->OpenContainer(aLabel);
 
@@ -173,7 +170,7 @@ nsHTMLMenuElement::BuildSubmenu(const nsAString& aLabel,
 
 // static
 bool
-nsHTMLMenuElement::CanLoadIcon(nsIContent* aContent, const nsAString& aIcon)
+HTMLMenuElement::CanLoadIcon(nsIContent* aContent, const nsAString& aIcon)
 {
   if (aIcon.IsEmpty()) {
     return false;
@@ -195,9 +192,9 @@ nsHTMLMenuElement::CanLoadIcon(nsIContent* aContent, const nsAString& aIcon)
 }
 
 void
-nsHTMLMenuElement::TraverseContent(nsIContent* aContent,
-                                   nsIMenuBuilder* aBuilder,
-                                   int8_t& aSeparator)
+HTMLMenuElement::TraverseContent(nsIContent* aContent,
+                                 nsIMenuBuilder* aBuilder,
+                                 int8_t& aSeparator)
 {
   nsCOMPtr<nsIContent> child;
   for (child = aContent->GetFirstChild(); child;
@@ -249,7 +246,7 @@ nsHTMLMenuElement::TraverseContent(nsIContent* aContent,
 }
 
 inline void
-nsHTMLMenuElement::AddSeparator(nsIMenuBuilder* aBuilder, int8_t& aSeparator)
+HTMLMenuElement::AddSeparator(nsIMenuBuilder* aBuilder, int8_t& aSeparator)
 {
   if (aSeparator) {
     return;
@@ -258,3 +255,6 @@ nsHTMLMenuElement::AddSeparator(nsIMenuBuilder* aBuilder, int8_t& aSeparator)
   aBuilder->AddSeparator();
   aSeparator = ST_TRUE;
 }
+
+} // namespace dom
+} // namespace mozilla
