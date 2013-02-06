@@ -13,6 +13,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIDOMApplicationRegistry.h"
 #include "nsIPermissionManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "sampler.h"
 
 using namespace mozilla;
@@ -311,38 +312,40 @@ nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetReallyIsApp(bool *aOut)
+bool
+nsGenericHTMLFrameElement::MayBeAppFrame()
 {
-  nsAutoString manifestURL;
-  GetAppManifestURL(manifestURL);
-
-  *aOut = !manifestURL.IsEmpty();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
-{
-  aOut.Truncate();
-
   // At the moment, you can't be an app without being a browser.
   if (!nsIMozBrowserFrame::GetReallyIsBrowserOrApp()) {
-    return NS_OK;
+    return false;
   }
 
   // Check permission.
   nsIPrincipal *principal = NodePrincipal();
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, NS_OK);
+  NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   nsresult rv = permMgr->TestPermissionFromPrincipal(principal,
                                                      "embed-apps",
                                                      &permission);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return (permission == nsIPermissionManager::ALLOW_ACTION);
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetOwnApp(mozIApplication** aApp)
+{
+  *aApp = nullptr;
+
+  if (!MayBeAppFrame()) {
+    return NS_OK;
+  }
+
+  if (mApp) {
+    nsCOMPtr<mozIApplication>(mApp).forget(aApp);
     return NS_OK;
   }
 
@@ -357,10 +360,45 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
 
   nsCOMPtr<mozIDOMApplication> app;
   appsService->GetAppByManifestURL(manifestURL, getter_AddRefs(app));
-  if (app) {
-    aOut.Assign(manifestURL);
+  mApp = do_QueryInterface(app);
+  nsCOMPtr<mozIApplication>(mApp).forget(aApp);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetContainingApp(mozIApplication** aApp)
+{
+  *aApp = nullptr;
+
+  if (!MayBeAppFrame()) {
+    return NS_OK;
   }
 
+  if (mContainingApp) {
+    nsCOMPtr<mozIApplication>(mContainingApp).forget(aApp);
+    return NS_OK;
+  }
+
+  uint32_t appId = NodePrincipal()->GetAppId();
+  MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+
+  if (appId == nsIScriptSecurityManager::NO_APP_ID ||
+      appId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(appsService, NS_OK);
+
+  nsCOMPtr<mozIDOMApplication> domApp;
+  appsService->GetAppByLocalId(appId, getter_AddRefs(domApp));
+  MOZ_ASSERT(domApp);
+
+  mContainingApp = do_QueryInterface(domApp);
+  MOZ_ASSERT_IF(domApp, mContainingApp);
+
+  nsCOMPtr<mozIApplication>(mContainingApp).forget(aApp);
   return NS_OK;
 }
 
