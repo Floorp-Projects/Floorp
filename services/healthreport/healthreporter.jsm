@@ -659,6 +659,28 @@ HealthReporter.prototype = Object.freeze({
   },
 
   /**
+   * Helper function to perform data collection and obtain the JSON payload.
+   *
+   * If you are looking for an up-to-date snapshot of FHR data that pulls in
+   * new data since the last upload, this is how you should obtain it.
+   *
+   * @param asObject
+   *        (bool) Whether to resolve an object or JSON-encoded string of that
+   *        object (the default).
+   *
+   * @return Promise<Object | string>
+   */
+  collectAndObtainJSONPayload: function (asObject=false) {
+    return Task.spawn(function collectAndObtain() {
+      yield this.collectMeasurements();
+
+      let payload = yield this.getJSONPayload(asObject);
+
+      throw new Task.Result(payload);
+    }.bind(this));
+  },
+
+  /**
    * Called to initiate a data upload.
    *
    * The passed argument is a `DataSubmissionRequest` from policy.jsm.
@@ -685,11 +707,23 @@ HealthReporter.prototype = Object.freeze({
     return this._policy.deleteRemoteData(reason);
   },
 
-  getJSONPayload: function () {
+  /**
+   * Obtain the JSON payload for currently-collected data.
+   *
+   * The payload only contains data that has been recorded to FHR. Some
+   * providers may have newer data available. If you want to ensure you
+   * have all available data, call `collectAndObtainJSONPayload`
+   * instead.
+   *
+   * @param asObject
+   *        (bool) Whether to return an object or JSON encoding of that
+   *        object (the default).
+   */
+  getJSONPayload: function (asObject=false) {
     TelemetryStopwatch.start(TELEMETRY_GENERATE_PAYLOAD, this);
     let deferred = Promise.defer();
 
-    Task.spawn(this._getJSONPayload.bind(this, this._now())).then(
+    Task.spawn(this._getJSONPayload.bind(this, this._now(), asObject)).then(
       function onResult(result) {
         TelemetryStopwatch.finish(TELEMETRY_GENERATE_PAYLOAD, this);
         deferred.resolve(result);
@@ -703,7 +737,7 @@ HealthReporter.prototype = Object.freeze({
     return deferred.promise;
   },
 
-  _getJSONPayload: function (now) {
+  _getJSONPayload: function (now, asObject=false) {
     let pingDateString = this._formatDate(now);
     this._log.info("Producing JSON payload for " + pingDateString);
 
@@ -802,7 +836,8 @@ HealthReporter.prototype = Object.freeze({
     }
 
     this._storage.compact();
-    throw new Task.Result(JSON.stringify(o));
+
+    throw new Task.Result(asObject ? o : JSON.stringify(o));
   },
 
   _onBagheeraResult: function (request, isDelete, result) {
@@ -882,6 +917,12 @@ HealthReporter.prototype = Object.freeze({
     }.bind(this));
   },
 
+  /**
+   * Request deletion of remote data.
+   *
+   * @param request
+   *        (DataSubmissionRequest) Tracks progress of this request.
+   */
   deleteRemoteData: function (request) {
     if (!this.lastSubmitID) {
       this._log.info("Received request to delete remote data but no data stored.");
@@ -950,6 +991,10 @@ HealthReporter.prototype = Object.freeze({
    * The promise is resolved to a JSON-decoded object on success. The promise
    * is rejected if the last uploaded payload could not be found or there was
    * an error reading or parsing it.
+   *
+   * This reads the last payload from disk. If you are looking for a
+   * current snapshot of the data, see `getJSONPayload` and
+   * `collectAndObtainJSONPayload`.
    *
    * @return Promise<object>
    */
