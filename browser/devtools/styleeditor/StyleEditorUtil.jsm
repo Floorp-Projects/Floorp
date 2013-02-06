@@ -152,7 +152,7 @@ this.wire = function wire(aRoot, aSelectorOrElement, aDescriptor)
     aDescriptor = {events: {click: aDescriptor}};
   }
 
-  for (let i = 0; i < matches.length; ++i) {
+  for (let i = 0; i < matches.length; i++) {
     let element = matches[i];
     forEach(aDescriptor.events, function (aName, aHandler) {
       element.addEventListener(aName, aHandler, false);
