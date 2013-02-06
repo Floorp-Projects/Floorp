@@ -331,12 +331,6 @@ private:
   bool OwnerIsBrowserFrame();
 
   /**
-   * Get our owning element's app manifest URL, or return the empty string if
-   * our owning element doesn't have an app manifest URL.
-   */
-  void GetOwnerAppManifestURL(nsAString& aOut);
-
-  /**
    * Get the app for our frame.  This is the app whose manifest is returned by
    * GetOwnerAppManifestURL.
    */
