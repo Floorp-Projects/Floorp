@@ -126,6 +126,7 @@
  "docshell/test/test_bug344861.html": "",
  "docshell/test/test_bug94514.html": "TIMED_OUT",
  "docshell/test/test_bug413310.html": "",
+ "docshell/test/test_bug590573.html": "bug 823022",
  "docshell/test/test_bug598895.html": "",
  "docshell/test/test_bug637644.html": "",
  "docshell/test/test_bug668513.html": "RANDOM",
