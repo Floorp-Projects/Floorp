@@ -107,11 +107,6 @@ public:
     return result;
   }
 
-  // XXX maybe we should do the same adjustment for continuations here
-  const nsMargin& Margin() const {
-    return mReflowState.mComputedMargin;
-  }
-
   // Reconstruct the previous bottom margin that goes above |aLine|.
   void ReconstructMarginAbove(nsLineList::iterator aLine);
 
