@@ -857,18 +857,24 @@ class ICUseCount_Fallback : public ICFallbackStub
 
 // TypeMonitor
 
-// The TypeMonitor fallback stub is not a regular fallback stub.
-// It doesn't hold a pointer to the IC entry, but rather back to the
-// main fallback stub for the IC (from which a pointer to the IC entry
-// can be retreived).
+// The TypeMonitor fallback stub is not always a regular fallback stub. When
+// used for monitoring the values pushed by a bytecode it doesn't hold a
+// pointer to the IC entry, but rather back to the main fallback stub for the
+// IC (from which a pointer to the IC entry can be retrieved). When monitoring
+// the types of 'this' or arguments there is no main fallback stub, and the
+// IC entry is referenced directly.
 class ICTypeMonitor_Fallback : public ICStub
 {
     friend class ICStubSpace;
 
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    // Pointer to the main fallback stub for the IC.
-    ICMonitoredFallbackStub *mainFallbackStub_;
+    // Pointer to the main fallback stub for the IC (for bytecode monitoring),
+    // or to the main IC entry (for this/argument monitoring).
+    union {
+        ICMonitoredFallbackStub *mainFallbackStub_;
+        ICEntry *icEntry_;
+    };
 
     // Pointer to the first monitor stub.
     ICStub *firstMonitorStub_;
@@ -879,27 +885,38 @@ class ICTypeMonitor_Fallback : public ICStub
     ICStub **lastMonitorStubPtrAddr_;
 
     // Count of optimized type monitor stubs in this chain.
-    uint32_t numOptimizedMonitorStubs_;
+    uint32_t numOptimizedMonitorStubs_ : 8;
 
-    ICTypeMonitor_Fallback(IonCode *stubCode, ICMonitoredFallbackStub *mainFallbackStub)
+    // Index of 'this' or argument which is being monitored, or BYTECODE_INDEX
+    // if this is monitoring the types of values pushed at some bytecode.
+    uint32_t argumentIndex_ : 24;
+
+    static const uint32_t BYTECODE_INDEX = (1 << 24) - 1;
+
+    ICTypeMonitor_Fallback(IonCode *stubCode, ICMonitoredFallbackStub *mainFallbackStub,
+                           uint32_t argumentIndex)
       : ICStub(ICStub::TypeMonitor_Fallback, stubCode),
         mainFallbackStub_(mainFallbackStub),
         firstMonitorStub_(this),
         lastMonitorStubPtrAddr_(NULL),
-        numOptimizedMonitorStubs_(0)
+        numOptimizedMonitorStubs_(0),
+        argumentIndex_(argumentIndex)
     { }
 
     void addOptimizedMonitorStub(ICStub *stub) {
         stub->setNext(this);
 
+        JS_ASSERT(lastMonitorStubPtrAddr_ != NULL ==
+                  (numOptimizedMonitorStubs_ || !monitorsBytecode()));
+
+        if (lastMonitorStubPtrAddr_)
+            *lastMonitorStubPtrAddr_ = stub;
+
         if (numOptimizedMonitorStubs_ == 0) {
-            JS_ASSERT(lastMonitorStubPtrAddr_ == NULL);
             JS_ASSERT(firstMonitorStub_ == this);
             firstMonitorStub_ = stub;
         } else {
-            JS_ASSERT(lastMonitorStubPtrAddr_ != NULL);
             JS_ASSERT(firstMonitorStub_ != NULL);
-            *lastMonitorStubPtrAddr_ = stub;
         }
 
         lastMonitorStubPtrAddr_ = stub->addressOfNext();
@@ -908,13 +925,19 @@ class ICTypeMonitor_Fallback : public ICStub
 
   public:
     static inline ICTypeMonitor_Fallback *New(
-        ICStubSpace *space, IonCode *code, ICMonitoredFallbackStub *mainFbStub)
+        ICStubSpace *space, IonCode *code, ICMonitoredFallbackStub *mainFbStub,
+        uint32_t argumentIndex)
     {
-        return space->allocate<ICTypeMonitor_Fallback>(code, mainFbStub);
+        return space->allocate<ICTypeMonitor_Fallback>(code, mainFbStub, argumentIndex);
     }
 
     inline ICFallbackStub *mainFallbackStub() const {
+        JS_ASSERT(monitorsBytecode());
         return mainFallbackStub_;
+    }
+
+    inline ICEntry *icEntry() const {
+        return monitorsBytecode() ? mainFallbackStub()->icEntry() : icEntry_;
     }
 
     inline ICStub *firstMonitorStub() const {
@@ -929,6 +952,31 @@ class ICTypeMonitor_Fallback : public ICStub
         return numOptimizedMonitorStubs_;
     }
 
+    inline bool monitorsThis() const {
+        return argumentIndex_ == 0;
+    }
+
+    inline bool monitorsArgument(uint32_t *pargument) const {
+        if (argumentIndex_ > 0 && argumentIndex_ < BYTECODE_INDEX) {
+            *pargument = argumentIndex_ - 1;
+            return true;
+        }
+        return false;
+    }
+
+    inline bool monitorsBytecode() const {
+        return argumentIndex_ == BYTECODE_INDEX;
+    }
+
+    // Fixup the IC entry as for a normal fallback stub, for this/arguments.
+    void fixupICEntry(ICEntry *icEntry) {
+        JS_ASSERT(!monitorsBytecode());
+        JS_ASSERT(icEntry_ == NULL);
+        JS_ASSERT(lastMonitorStubPtrAddr_ == NULL);
+        icEntry_ = icEntry;
+        lastMonitorStubPtrAddr_ = icEntry_->addressOfFirstStub();
+    }
+
     // Create a new monitor stub for the type of the given value, and
     // add it to this chain.
     bool addMonitorStubForValue(JSContext *cx, ICStubSpace *space, HandleValue val);
@@ -936,6 +984,7 @@ class ICTypeMonitor_Fallback : public ICStub
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
         ICMonitoredFallbackStub *mainFallbackStub_;
+        uint32_t argumentIndex_;
 
       protected:
         bool generateStubCode(MacroAssembler &masm);
@@ -943,11 +992,19 @@ class ICTypeMonitor_Fallback : public ICStub
       public:
         Compiler(JSContext *cx, ICMonitoredFallbackStub *mainFallbackStub)
           : ICStubCompiler(cx, ICStub::TypeMonitor_Fallback),
-            mainFallbackStub_(mainFallbackStub)
+            mainFallbackStub_(mainFallbackStub),
+            argumentIndex_(BYTECODE_INDEX)
+        { }
+
+        Compiler(JSContext *cx, uint32_t argumentIndex)
+          : ICStubCompiler(cx, ICStub::TypeMonitor_Fallback),
+            mainFallbackStub_(NULL),
+            argumentIndex_(argumentIndex)
         { }
 
         ICTypeMonitor_Fallback *getStub(ICStubSpace *space) {
-            return ICTypeMonitor_Fallback::New(space, getStubCode(), mainFallbackStub_);
+            return ICTypeMonitor_Fallback::New(space, getStubCode(), mainFallbackStub_,
+                                               argumentIndex_);
         }
     };
 };
