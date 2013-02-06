@@ -159,8 +159,14 @@ let gBrowserThumbnails = {
 
     if (httpChannel) {
       // Continue only if we have a 2xx status code.
-      if (Math.floor(httpChannel.responseStatus / 100) != 2)
+      try {
+        if (Math.floor(httpChannel.responseStatus / 100) != 2)
+          return false;
+      } catch (e) {
+        // Can't get response information from the httpChannel
+        // because mResponseHead is not available.
         return false;
+      }
 
       // Cache-Control: no-store.
       if (httpChannel.isNoStoreResponse())
