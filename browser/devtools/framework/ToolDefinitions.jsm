@@ -153,7 +153,7 @@ let profilerDefinition = {
   tooltip: l10n("profiler.tooltip", profilerStrings),
 
   isTargetSupported: function (target) {
-    return !target.isRemote;
+    return true;
   },
 
   build: function (frame, target) {
