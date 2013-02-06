@@ -179,7 +179,7 @@ function ProfilerPanel(frame, toolbox) {
   this.window = frame.window;
   this.document = frame.document;
   this.target = toolbox.target;
-  this.controller = new ProfilerController();
+  this.controller = new ProfilerController(this.target);
 
   this.profiles = new Map();
   this._uid = 0;
