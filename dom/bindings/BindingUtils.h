@@ -1434,6 +1434,8 @@ struct FakeDependentString {
     mFlags |= nsDependentString::F_VOIDED;
   }
 
+  // If this ever changes, change the corresponding code in the
+  // Optional<nsAString> specialization as well.
   const nsAString* ToAStringPtr() const {
     return reinterpret_cast<const nsDependentString*>(this);
   }
@@ -1525,97 +1527,6 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
   result.SetData(chars, len);
   return true;
 }
-
-// Class for representing optional arguments.
-template<typename T>
-class Optional {
-public:
-  Optional() {}
-
-  bool WasPassed() const {
-    return !mImpl.empty();
-  }
-
-  void Construct() {
-    mImpl.construct();
-  }
-
-  template <class T1>
-  void Construct(const T1 &t1) {
-    mImpl.construct(t1);
-  }
-
-  template <class T1, class T2>
-  void Construct(const T1 &t1, const T2 &t2) {
-    mImpl.construct(t1, t2);
-  }
-
-  const T& Value() const {
-    return mImpl.ref();
-  }
-
-  T& Value() {
-    return mImpl.ref();
-  }
-
-  // If we ever decide to add conversion operators for optional arrays
-  // like the ones Nullable has, we'll need to ensure that Maybe<> has
-  // the boolean before the actual data.
-
-private:
-  // Forbid copy-construction and assignment
-  Optional(const Optional& other) MOZ_DELETE;
-  const Optional &operator=(const Optional &other) MOZ_DELETE;
-  
-  Maybe<T> mImpl;
-};
-
-// Specialization for strings.
-template<>
-class Optional<nsAString> {
-public:
-  Optional() : mPassed(false) {}
-
-  bool WasPassed() const {
-    return mPassed;
-  }
-
-  void operator=(const nsAString* str) {
-    MOZ_ASSERT(str);
-    mStr = str;
-    mPassed = true;
-  }
-
-  void operator=(const FakeDependentString* str) {
-    MOZ_ASSERT(str);
-    mStr = str->ToAStringPtr();
-    mPassed = true;
-  }
-
-  const nsAString& Value() const {
-    MOZ_ASSERT(WasPassed());
-    return *mStr;
-  }
-
-private:
-  // Forbid copy-construction and assignment
-  Optional(const Optional& other) MOZ_DELETE;
-  const Optional &operator=(const Optional &other) MOZ_DELETE;
-  
-  bool mPassed;
-  const nsAString* mStr;
-};
-
-// Class for representing sequences in arguments.  We use an auto array that can
-// hold 16 elements, to avoid having to allocate in common cases.  This needs to
-// be fallible because web content controls the length of the array, and can
-// easily try to create very large lengths.
-template<typename T>
-class Sequence : public AutoFallibleTArray<T, 16>
-{
-public:
-  Sequence() : AutoFallibleTArray<T, 16>() {}
-};
 
 // Class for holding the type of members of a union. The union type has an enum
 // to keep track of which of its UnionMembers has been constructed.
