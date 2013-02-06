@@ -7412,6 +7412,11 @@ let StkCommandParamsFactory = {
       textMsg.responseNeeded = true;
     }
 
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
+    if (ctlv) {
+      textMsg.duration = ctlv.value;
+    }
+
     // High priority.
     if (cmdDetails.commandQualifier & 0x01) {
       textMsg.isHighPriority = true;
@@ -7575,6 +7580,12 @@ let StkCommandParamsFactory = {
       throw new Error("Stk Set Up Call: Required value missing : Adress");
     }
     call.address = ctlv.value.number;
+
+    // see 3GPP TS 31.111 section 6.4.13
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
+    if (ctlv) {
+      call.duration = ctlv.value;
+    }
 
     return call;
   },
