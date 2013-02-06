@@ -173,6 +173,16 @@ private:
    * then this TabContext corresponds to an app, and mIsBrowser must be false.
    */
   uint32_t mOwnAppId;
+  /**
+   * This is a cache of the app object that would be returned from the
+   * apps service by looking up mOwnAppId.  This lookup and object
+   * creation can be expensive and is on critical startup paths.
+   *
+   * The object returned from the apps service is mutable, but our use
+   * of that object must be immutable.  This object may be cached by
+   * other clients that treat the object as immutable.
+   */
+  nsCOMPtr<mozIApplication> mOwnApp;
 
   /**
    * The id of the app which contains this TabContext's frame.  If mIsBrowser,
@@ -181,6 +191,8 @@ private:
    * frame.
    */
   uint32_t mContainingAppId;
+  /** See comment above describing mOwnApp. */
+  nsCOMPtr<mozIApplication> mContainingApp;
 
   /**
    * The requested scrolling behavior for this frame.
