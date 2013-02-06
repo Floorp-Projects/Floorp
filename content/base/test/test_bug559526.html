@@ -55,8 +55,7 @@ function filter(node) {
   it = document.createNodeIterator(
     document.getElementById("nodes"),
     NodeFilter.SHOW_ELEMENT,
-    filter,
-    false
+    filter
   );
   while (it.nextNode());
 })();
