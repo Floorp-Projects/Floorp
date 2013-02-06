@@ -9466,39 +9466,46 @@ let ICCRecordHelper = {
    *     3GPP TS 51.011 Sec. 10.3.41 for SIM.
    */
   readPNN: function readPNN() {
-    let pnn = [];
     function callback(options) {
       let pnnElement = {
         fullName: "",
         shortName: ""
       };
-      let len = Buf.readUint32();
+      let strLen = Buf.readUint32();
+      let octetLen = strLen / 2;
       let readLen = 0;
-      while (len > readLen) {
+
+      while (readLen < octetLen) {
         let tlvTag = GsmPDUHelper.readHexOctet();
-        readLen = readLen + 2; // 1 Hex octet
+
         if (tlvTag == 0xFF) {
           // Unused byte
-          continue;
+          readLen++;
+          Buf.seekIncoming((octetLen - readLen) * PDU_HEX_OCTET_SIZE);
+          break;
         }
+
         let tlvLen = GsmPDUHelper.readHexOctet();
-        let name;
+
         switch (tlvTag) {
-        case PNN_IEI_FULL_NETWORK_NAME:
-          pnnElement.fullName = GsmPDUHelper.readNetworkName(tlvLen);
-          break;
-        case PNN_IEI_SHORT_NETWORK_NAME:
-          pnnElement.shortName = GsmPDUHelper.readNetworkName(tlvLen);
-          break;
-        default:
-          Buf.seekIncoming(PDU_HEX_OCTET_SIZE * tlvLen);
+          case PNN_IEI_FULL_NETWORK_NAME:
+            pnnElement.fullName = GsmPDUHelper.readNetworkName(tlvLen);
+            break;
+          case PNN_IEI_SHORT_NETWORK_NAME:
+            pnnElement.shortName = GsmPDUHelper.readNetworkName(tlvLen);
+            break;
+          default:
+            Buf.seekIncoming(tlvLen * PDU_HEX_OCTET_SIZE);
+            break;
         }
-        readLen += (tlvLen * 2 + 2);
+
+        readLen += (tlvLen + 2); // +2 for tlvTag and tlvLen
       }
+      Buf.readStringDelimiter(strLen);
+
       if (DEBUG) {
         debug("PNN: [" + (pnn.length + 1) + "]: " + JSON.stringify(pnnElement));
       }
-      Buf.readStringDelimiter(len);
       pnn.push(pnnElement);
 
       if (options.p1 < options.totalRecords) {
@@ -9508,6 +9515,7 @@ let ICCRecordHelper = {
       }
     }
 
+    let pnn = [];
     ICCIOHelper.loadLinearFixedEF({fileId: ICC_EF_PNN,
                                    callback: callback.bind(this)});
   },
