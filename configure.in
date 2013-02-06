@@ -8338,12 +8338,6 @@ if test "$MOZ_PLACES"; then
   AC_DEFINE(MOZ_PLACES)
 fi
 
-dnl Build Apps in the Cloud (AITC) if required
-AC_SUBST(MOZ_SERVICES_AITC)
-if test -n "$MOZ_SERVICES_AITC"; then
-  AC_DEFINE(MOZ_SERVICES_AITC)
-fi
-
 dnl Build Common JS modules provided by services.
 AC_SUBST(MOZ_SERVICES_COMMON)
 if test -n "$MOZ_SERVICES_COMMON"; then

@@ -462,10 +462,6 @@
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/nsPrompter.manifest
 @BINPATH@/components/nsPrompter.js
-#ifdef MOZ_SERVICES_AITC
-@BINPATH@/components/AitcComponents.manifest
-@BINPATH@/components/Aitc.js
-#endif
 #ifdef MOZ_DATA_REPORTING
 @BINPATH@/components/DataReporting.manifest
 @BINPATH@/components/DataReportingService.js
@@ -584,9 +580,6 @@
 #endif
 
 ; Services (gre) prefs
-#ifdef MOZ_SERVICES_AITC
-@BINPATH@/defaults/pref/services-aitc.js
-#endif
 #ifdef MOZ_SERVICES_NOTIFICATIONS
 @BINPATH@/defaults/pref/services-notifications.js
 #endif
