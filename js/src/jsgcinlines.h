@@ -480,7 +480,7 @@ typedef GCCompartmentGroupIter GCZoneGroupIter;
 
 template <typename T, AllowGC allowGC>
 inline T *
-NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
+NewGCThing(JSContext *cx, AllocKind kind, size_t thingSize, InitialHeap heap)
 {
     if (allowGC)
         AssertCanGC();
@@ -513,8 +513,10 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
                  t->arenaHeader()->allocatedDuringIncremental);
 
 #if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
-    if (cx->runtime->gcVerifyPostData && IsNurseryAllocable(kind)
-        && !IsAtomsCompartment(cx->compartment))
+    if (cx->runtime->gcVerifyPostData &&
+        IsNurseryAllocable(kind) &&
+        !IsAtomsCompartment(cx->compartment) &&
+        heap != TenuredHeap)
     {
         zone->gcNursery.insertPointer(t);
     }
@@ -557,50 +559,55 @@ class AutoSuppressGC
 
 template <js::AllowGC allowGC>
 inline JSObject *
-js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
+js_NewGCObject(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
-    return js::gc::NewGCThing<JSObject, allowGC>(cx, kind, js::gc::Arena::thingSize(kind));
+    return js::gc::NewGCThing<JSObject, allowGC>(cx, kind, js::gc::Arena::thingSize(kind), heap);
 }
 
 template <js::AllowGC allowGC>
 inline JSString *
 js_NewGCString(JSContext *cx)
 {
-    return js::gc::NewGCThing<JSString, allowGC>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
+    return js::gc::NewGCThing<JSString, allowGC>(cx, js::gc::FINALIZE_STRING,
+                                                 sizeof(JSString), js::gc::TenuredHeap);
 }
 
 template <js::AllowGC allowGC>
 inline JSShortString *
 js_NewGCShortString(JSContext *cx)
 {
-    return js::gc::NewGCThing<JSShortString, allowGC>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
+    return js::gc::NewGCThing<JSShortString, allowGC>(cx, js::gc::FINALIZE_SHORT_STRING,
+                                                      sizeof(JSShortString), js::gc::TenuredHeap);
 }
 
 inline JSExternalString *
 js_NewGCExternalString(JSContext *cx)
 {
     return js::gc::NewGCThing<JSExternalString, js::CanGC>(cx, js::gc::FINALIZE_EXTERNAL_STRING,
-                                                           sizeof(JSExternalString));
+                                                           sizeof(JSExternalString), js::gc::TenuredHeap);
 }
 
 inline JSScript *
 js_NewGCScript(JSContext *cx)
 {
-    return js::gc::NewGCThing<JSScript, js::CanGC>(cx, js::gc::FINALIZE_SCRIPT, sizeof(JSScript));
+    return js::gc::NewGCThing<JSScript, js::CanGC>(cx, js::gc::FINALIZE_SCRIPT,
+                                                   sizeof(JSScript), js::gc::TenuredHeap);
 }
 
 inline js::UnrootedShape
 js_NewGCShape(JSContext *cx)
 {
-    return js::gc::NewGCThing<js::Shape, js::CanGC>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
+    return js::gc::NewGCThing<js::Shape, js::CanGC>(cx, js::gc::FINALIZE_SHAPE,
+                                                    sizeof(js::Shape), js::gc::TenuredHeap);
 }
 
 template <js::AllowGC allowGC>
 inline js::UnrootedBaseShape
 js_NewGCBaseShape(JSContext *cx)
 {
-    return js::gc::NewGCThing<js::BaseShape, allowGC>(cx, js::gc::FINALIZE_BASE_SHAPE, sizeof(js::BaseShape));
+    return js::gc::NewGCThing<js::BaseShape, allowGC>(cx, js::gc::FINALIZE_BASE_SHAPE,
+                                                      sizeof(js::BaseShape), js::gc::TenuredHeap);
 }
 
 #endif /* jsgcinlines_h___ */

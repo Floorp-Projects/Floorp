@@ -48,6 +48,11 @@ XPCOMUtils.defineLazyGetter(this, "PrivateBrowsingUtils", function() {
   return PrivateBrowsingUtils;
 });
 
+XPCOMUtils.defineLazyGetter(this, "Sanitizer", function() {
+  Cu.import("resource://gre/modules/Sanitizer.jsm");
+  return Sanitizer;
+});
+
 // Lazily-loaded browser scripts:
 [
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
@@ -1002,7 +1007,6 @@ var BrowserApp = {
   },
 
   sanitize: function (aItems) {
-    let sanitizer = new Sanitizer();
     let json = JSON.parse(aItems);
     let success = true;
 
@@ -1013,15 +1017,21 @@ var BrowserApp = {
       try {
         switch (key) {
           case "history_downloads":
-            sanitizer.clearItem("history");
-            sanitizer.clearItem("downloads");
+            Sanitizer.clearItem("history");
+
+            // If we're also removing downloaded files, don't clear the
+            // download history yet since it will be handled when the files are
+            // removed.
+            if (!json["downloadFiles"]) {
+              Sanitizer.clearItem("downloads");
+            }
             break;
           case "cookies_sessions":
-            sanitizer.clearItem("cookies");
-            sanitizer.clearItem("sessions");
+            Sanitizer.clearItem("cookies");
+            Sanitizer.clearItem("sessions");
             break;
           default:
-            sanitizer.clearItem(key);
+            Sanitizer.clearItem(key);
         }
       } catch (e) {
         dump("sanitize error: " + e);

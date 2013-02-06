@@ -341,7 +341,7 @@ class NewObjectCache
      * NULL if returning the object could possibly trigger GC (does not
      * indicate failure).
      */
-    inline JSObject *newObjectFromHit(JSContext *cx, EntryIndex entry);
+    inline JSObject *newObjectFromHit(JSContext *cx, EntryIndex entry, js::gc::InitialHeap heap);
 
     /* Fill an entry after a cache miss. */
     inline void fillProto(EntryIndex entry, Class *clasp, js::TaggedProto proto, gc::AllocKind kind, JSObject *obj);

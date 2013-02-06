@@ -2775,7 +2775,7 @@ RILNetworkInterface.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: RILNETWORKINTERFACE_CID,
                                     classDescription: "RILNetworkInterface",
                                     interfaces: [Ci.nsINetworkInterface,
-                                                 Ci.nsIRIODataCallback]}),
+                                                 Ci.nsIRILDataCallback]}),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterface,
                                          Ci.nsIRILDataCallback]),
 

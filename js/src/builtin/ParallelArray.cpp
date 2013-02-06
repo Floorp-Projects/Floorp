@@ -1006,10 +1006,10 @@ ParallelArrayObject::initClass(JSContext *cx, JSObject *obj)
     RootedId shapeId(cx, AtomToId(cx->names().shape));
     unsigned flags = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_GETTER;
 
-    RootedObject scriptedLength(cx, js_NewFunction(cx, NullPtr(), NonGenericMethod<lengthGetter>,
-                                                   0, JSFunction::NATIVE_FUN, global, NullPtr()));
-    RootedObject scriptedShape(cx, js_NewFunction(cx, NullPtr(), NonGenericMethod<dimensionsGetter>,
-                                                  0, JSFunction::NATIVE_FUN, global, NullPtr()));
+    RootedObject scriptedLength(cx, NewFunction(cx, NullPtr(), NonGenericMethod<lengthGetter>,
+                                                0, JSFunction::NATIVE_FUN, global, NullPtr()));
+    RootedObject scriptedShape(cx, NewFunction(cx, NullPtr(), NonGenericMethod<dimensionsGetter>,
+                                               0, JSFunction::NATIVE_FUN, global, NullPtr()));
 
     RootedValue value(cx, UndefinedValue());
     if (!scriptedLength || !scriptedShape ||
