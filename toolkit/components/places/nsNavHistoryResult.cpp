@@ -2620,14 +2620,6 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
 }
 
 
-NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnBeforeDeleteURI(nsIURI* aURI,
-                                               const nsACString& aGUID,
-                                               uint16_t aReason)
-{
-  return NS_OK;
-}
-
 /**
  * Here, we can always live update by just deleting all occurrences of
  * the given URI.
@@ -2846,17 +2838,6 @@ nsNavHistoryQueryResultNode::OnItemAdded(int64_t aItemId,
     nsresult rv = Refresh();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnBeforeItemRemoved(int64_t aItemId,
-                                                 uint16_t aItemType,
-                                                 int64_t aParentId,
-                                                 const nsACString& aGUID,
-                                                 const nsACString& aParentGUID)
-{
   return NS_OK;
 }
 
@@ -3641,17 +3622,6 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
 
   // insert at sorted position
   return InsertSortedChild(node, false);
-}
-
-
-NS_IMETHODIMP
-nsNavHistoryFolderResultNode::OnBeforeItemRemoved(int64_t aItemId,
-                                                  uint16_t aItemType,
-                                                  int64_t aParentId,
-                                                  const nsACString& aGUID,
-                                                  const nsACString& aParentGUID)
-{
-  return NS_OK;
 }
 
 
@@ -4484,20 +4454,6 @@ nsNavHistoryResult::OnItemAdded(int64_t aItemId,
 
 
 NS_IMETHODIMP
-nsNavHistoryResult::OnBeforeItemRemoved(int64_t aItemId,
-                                        uint16_t aItemType,
-                                        int64_t aParentId,
-                                        const nsACString& aGUID,
-                                        const nsACString& aParentGUID)
-{
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
-    OnBeforeItemRemoved(aItemId, aItemType, aParentId, aGUID, aParentGUID);
-  );
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsNavHistoryResult::OnItemRemoved(int64_t aItemId,
                                   int64_t aParentId,
                                   int32_t aIndex,
@@ -4696,15 +4652,6 @@ nsNavHistoryResult::OnTitleChanged(nsIURI* aURI,
                                    const nsACString& aGUID)
 {
   ENUMERATE_HISTORY_OBSERVERS(OnTitleChanged(aURI, aPageTitle, aGUID));
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavHistoryResult::OnBeforeDeleteURI(nsIURI *aURI,
-                                      const nsACString& aGUID,
-                                      uint16_t aReason)
-{
   return NS_OK;
 }
 

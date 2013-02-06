@@ -29,7 +29,6 @@ var deletedBookmarkIds = [];
 var observer = {
   // cached ordered array of notified items
   _onItemRemovedItemIds: [],
-  onBeforeItemRemoved: function(aItemId) { },
   onItemRemoved: function(aItemId, aParentId, aIndex) {
     // We should first get notifications for children, then for their parent
     do_check_eq(this._onItemRemovedItemIds.indexOf(aParentId), -1);

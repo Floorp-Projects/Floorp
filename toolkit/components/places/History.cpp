@@ -1574,9 +1574,6 @@ public:
     if (places.Count() == 0)
       return NS_OK;
 
-    // TODO (bug 826409): should notify onBeforeDeleteURI, but that's
-    // complicated off main-thread.  OnBefore notifications should be removed.
-
     mozStorageTransaction transaction(mDBConn, false,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
 

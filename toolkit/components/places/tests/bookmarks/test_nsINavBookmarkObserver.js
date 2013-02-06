@@ -27,8 +27,6 @@ let gBookmarksObserver = {
     this.validate(arguments.callee.name, arguments),
   onItemAdded: function onItemAdded()
     this.validate(arguments.callee.name, arguments),
-  onBeforeItemRemoved: function onBeforeItemRemoved()
-    this.validate(arguments.callee.name, arguments),
   onItemRemoved: function onItemRemoved()
     this.validate(arguments.callee.name, arguments),
   onItemChanged: function onItemChanged()
@@ -187,14 +185,6 @@ add_test(function onItemChanged_tags_bookmark() {
       args: [] },
     { name: "onBeginUpdateBatch", // Tag removal uses a batch.
      args: [] },
-    { name: "onBeforeItemRemoved", // This is the tag.
-      args: [
-        { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
-        { name: "itemType", check: function (v) v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-        { name: "parentId", check: function (v) typeof(v) == "number" && v > 0 },
-        { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-        { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-      ] },
     { name: "onItemRemoved", // This is the tag.
       args: [
         { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
@@ -202,14 +192,6 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "index", check: function (v) v === 0 },
         { name: "itemType", check: function (v) v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
         { name: "uri", check: function (v) v instanceof Ci.nsIURI && v.equals(uri) },
-        { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-        { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-      ] },
-    { name: "onBeforeItemRemoved", // This is the tag folder.
-      args: [
-        { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
-        { name: "itemType", check: function (v) v === PlacesUtils.bookmarks.TYPE_FOLDER },
-        { name: "parentId", check: function (v) v === PlacesUtils.tagsFolderId },
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
       ] },
@@ -298,14 +280,6 @@ add_test(function onItemRemoved_bookmark() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
   gBookmarksObserver.expected = [
-    { name: "onBeforeItemRemoved",
-      args: [
-        { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
-        { name: "itemType", check: function (v) v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-        { name: "parentId", check: function (v) v === PlacesUtils.unfiledBookmarksFolderId },
-        { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-        { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-      ] },
     { name: "onItemChanged", // This is an unfortunate effect of bug 653910.
       args: [
         { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
@@ -335,14 +309,6 @@ add_test(function onItemRemoved_bookmark() {
 add_test(function onItemRemoved_separator() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   gBookmarksObserver.expected = [
-    { name: "onBeforeItemRemoved",
-      args: [
-        { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
-        { name: "itemType", check: function (v) v === PlacesUtils.bookmarks.TYPE_SEPARATOR },
-        { name: "parentId", check: function (v) typeof(v) == "number" && v > 0 },
-        { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-        { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-      ] },
     { name: "onItemChanged", // This is an unfortunate effect of bug 653910.
       args: [
         { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
@@ -373,14 +339,6 @@ add_test(function onItemRemoved_folder() {
   let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   const TITLE = "Folder 2";
   gBookmarksObserver.expected = [
-    { name: "onBeforeItemRemoved",
-      args: [
-        { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
-        { name: "itemType", check: function (v) v === PlacesUtils.bookmarks.TYPE_FOLDER },
-        { name: "parentId", check: function (v) typeof(v) == "number" && v > 0 },
-        { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-        { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
-      ] },
     { name: "onItemChanged", // This is an unfortunate effect of bug 653910.
       args: [
         { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },

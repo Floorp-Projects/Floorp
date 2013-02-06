@@ -20,7 +20,6 @@ var observer = {
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
   },
-  onBeforeItemRemoved: function() {},
   onItemRemoved: function() {},
   _itemChangedProperty: null,
   onItemChanged: function(id, property, isAnnotationProperty, value,
