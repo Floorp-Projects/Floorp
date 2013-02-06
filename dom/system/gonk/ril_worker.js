@@ -8951,7 +8951,7 @@ let ICCRecordHelper = {
 
       if (ICCUtilsHelper.isICCServiceAvailable("PNN")) {
         if (DEBUG) debug("PNN: PNN is available");
-        this.getPNN();
+        this.readPNN();
       } else {
         if (DEBUG) debug("PNN: PNN is not available");
       }
@@ -9465,7 +9465,7 @@ let ICCRecordHelper = {
    * See 3GPP TS 31.102 Sec. 4.2.58 for USIM
    *     3GPP TS 51.011 Sec. 10.3.41 for SIM.
    */
-  getPNN: function getPNN() {
+  readPNN: function readPNN() {
     let pnn = [];
     function callback(options) {
       let pnnElement = {
