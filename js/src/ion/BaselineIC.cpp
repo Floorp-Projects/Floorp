@@ -1155,7 +1155,8 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
 
 typedef bool (*DoCompareFallbackFn)(JSContext *, ICCompare_Fallback *, HandleValue, HandleValue,
                                     MutableHandleValue);
-static const VMFunction DoCompareFallbackInfo = FunctionInfo<DoCompareFallbackFn>(DoCompareFallback);
+static const VMFunction DoCompareFallbackInfo =
+    FunctionInfo<DoCompareFallbackFn>(DoCompareFallback, PopValues(2));
 
 bool
 ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1165,6 +1166,11 @@ ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
@@ -1267,7 +1273,8 @@ DoToNumberFallback(JSContext *cx, ICToNumber_Fallback *stub, HandleValue arg, Mu
 }
 
 typedef bool (*DoToNumberFallbackFn)(JSContext *, ICToNumber_Fallback *, HandleValue, MutableHandleValue);
-static const VMFunction DoToNumberFallbackInfo = FunctionInfo<DoToNumberFallbackFn>(DoToNumberFallback);
+static const VMFunction DoToNumberFallbackInfo =
+    FunctionInfo<DoToNumberFallbackFn>(DoToNumberFallback, PopValues(1));
 
 bool
 ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1277,6 +1284,10 @@ ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+
+    // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
@@ -1424,7 +1435,7 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
 typedef bool (*DoBinaryArithFallbackFn)(JSContext *, ICBinaryArith_Fallback *, HandleValue,
                                         HandleValue, MutableHandleValue);
 static const VMFunction DoBinaryArithFallbackInfo =
-    FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback);
+    FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback, PopValues(2));
 
 bool
 ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1434,6 +1445,11 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
@@ -1545,7 +1561,7 @@ DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val
 typedef bool (*DoUnaryArithFallbackFn)(JSContext *, ICUnaryArith_Fallback *, HandleValue,
                                        MutableHandleValue);
 static const VMFunction DoUnaryArithFallbackInfo =
-    FunctionInfo<DoUnaryArithFallbackFn>(DoUnaryArithFallback);
+    FunctionInfo<DoUnaryArithFallbackFn>(DoUnaryArithFallback, PopValues(1));
 
 bool
 ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1555,6 +1571,10 @@ ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+
+    // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
@@ -1652,7 +1672,8 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
 
 typedef bool (*DoGetElemFallbackFn)(JSContext *, ICGetElem_Fallback *, HandleValue, HandleValue,
                                     MutableHandleValue);
-static const VMFunction DoGetElemFallbackInfo = FunctionInfo<DoGetElemFallbackFn>(DoGetElemFallback);
+static const VMFunction DoGetElemFallbackInfo =
+    FunctionInfo<DoGetElemFallbackFn>(DoGetElemFallback, PopValues(2));
 
 bool
 ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1662,6 +1683,11 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
@@ -2517,7 +2543,8 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
 
 typedef bool (*DoGetPropFallbackFn)(JSContext *, ICGetProp_Fallback *, MutableHandleValue,
                                     MutableHandleValue);
-static const VMFunction DoGetPropFallbackInfo = FunctionInfo<DoGetPropFallbackFn>(DoGetPropFallback);
+static const VMFunction DoGetPropFallbackInfo =
+    FunctionInfo<DoGetPropFallbackFn>(DoGetPropFallback, PopValues(1));
 
 bool
 ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -2526,6 +2553,10 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     EmitRestoreTailCallReg(masm);
 
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+
+    // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
 
@@ -2732,7 +2763,7 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
 typedef bool (*DoSetPropFallbackFn)(JSContext *, ICSetProp_Fallback *, HandleValue, HandleValue,
                                     MutableHandleValue);
 static const VMFunction DoSetPropFallbackInfo =
-    FunctionInfo<DoSetPropFallbackFn>(DoSetPropFallback);
+    FunctionInfo<DoSetPropFallbackFn>(DoSetPropFallback, PopValues(2));
 
 bool
 ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -2741,6 +2772,11 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     EmitRestoreTailCallReg(masm);
 
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
