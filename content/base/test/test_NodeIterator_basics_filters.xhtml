@@ -54,7 +54,7 @@
 
   var iterator = document.createNodeIterator(document,
                                              NodeFilter.SHOW_ALL,
-                                             null, false);
+                                             null);
   var node;
 
   // forwards
@@ -96,7 +96,7 @@
 
   found.length = 0;
   iterator = document.createNodeIterator(document, NodeFilter.SHOW_ALL,
-                                         filter, false);
+                                         filter);
 
   // forwards
   while (node = iterator.nextNode())
@@ -116,7 +116,7 @@
                                     if (n < 0)
                                       iterator.detach();
                                     return NodeFilter.FILTER_ACCEPT;
-                                  }, false);
+                                  });
     while (--n >= 0)
       iterator.nextNode();
     try {
@@ -141,8 +141,7 @@
 
       return document.createNodeIterator(grandparent,
                                          NodeFilter.SHOW_ALL,
-                                         filter,
-                                         false);
+                                         filter);
     })(function filter(n) {
       if (n.nodeName != "img")
         return NodeFilter.FILTER_ACCEPT;

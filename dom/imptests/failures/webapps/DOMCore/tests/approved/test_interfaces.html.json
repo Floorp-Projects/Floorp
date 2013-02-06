@@ -139,7 +139,7 @@
   "NodeIterator interface: attribute pointerBeforeReferenceNode": true,
   "NodeIterator interface: attribute whatToShow": true,
   "NodeIterator interface: attribute filter": true,
-  "Stringification of document.createNodeIterator(document.body, NodeFilter.SHOW_ALL, null, false)": "debug",
+  "Stringification of document.createNodeIterator(document.body, NodeFilter.SHOW_ALL, null)": "debug",
   "TreeWalker interface: existence and properties of interface object": true,
   "TreeWalker interface: existence and properties of interface prototype object": true,
   "TreeWalker interface: existence and properties of interface prototype object's \"constructor\" property": true,
