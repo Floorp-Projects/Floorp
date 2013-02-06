@@ -27,3 +27,7 @@ EXTRA_PP_COMPONENTS := \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+$(FINAL_TARGET)/components/DataReportingService.js: policy.jsm sessions.jsm ../common/observers.js
+
+

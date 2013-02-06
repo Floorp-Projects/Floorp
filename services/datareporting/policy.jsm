@@ -306,7 +306,7 @@ DataReportingPolicy.prototype = Object.freeze({
    * THERE ARE POTENTIAL LEGAL IMPLICATIONS OF CHANGING THIS VALUE. Check with
    * Privacy and/or Legal before modifying.
    */
-  IMPLICIT_ACCEPTANCE_INTERVAL_MSEC: 5 * 60 * 1000,
+  IMPLICIT_ACCEPTANCE_INTERVAL_MSEC: 8 * 60 * 60 * 1000,
 
   /**
    *  How often to poll to see if we need to do something.
@@ -621,6 +621,8 @@ DataReportingPolicy.prototype = Object.freeze({
     return !!this._healthReportPrefs.get("uploadEnabled", true);
   },
 
+  // External callers should update this via `recordHealthReportUploadEnabled`
+  // to ensure appropriate side-effects are performed.
   set healthReportUploadEnabled(value) {
     this._healthReportPrefs.set("uploadEnabled", !!value);
   },
@@ -661,6 +663,39 @@ DataReportingPolicy.prototype = Object.freeze({
     this.dataSubmissionPolicyResponseDate = this.now();
     this.dataSubmissionPolicyResponseType = "rejected-" + reason;
     this.dataSubmissionPolicyAccepted = false;
+  },
+
+  /**
+   * Record the user's intent for whether FHR should upload data.
+   *
+   * This is the preferred way for the application to record a user's
+   * preference on whether Firefox Health Report should upload data to
+   * a server.
+   *
+   * If upload is disabled through this API, a request for remote data
+   * deletion is initiated automatically.
+   *
+   * If upload is being disabled and this operation is scheduled to
+   * occur immediately, a promise will be returned. This promise will be
+   * fulfilled when the deletion attempt finishes. If upload is being
+   * disabled and a promise is not returned, callers must poll
+   * `haveRemoteData` on the HealthReporter instance to see if remote
+   * data has been deleted.
+   *
+   * @param flag
+   *        (bool) Whether data submission is enabled or disabled.
+   * @param reason
+   *        (string) Why this value is being adjusted. For logging
+   *        purposes only.
+   */
+  recordHealthReportUploadEnabled: function (flag, reason="no-reason") {
+    this.healthReportUploadEnabled = flag;
+
+    if (flag) {
+      return null;
+    }
+
+    return this.deleteRemoteData(reason);
   },
 
   /**

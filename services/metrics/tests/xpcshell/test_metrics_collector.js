@@ -42,6 +42,9 @@ add_task(function test_register_provider() {
     failed = false;
   }
 
+  collector.unregisterProvider(dummy.name);
+  do_check_eq(collector._providers.size, 0);
+
   yield storage.close();
 });
 
@@ -121,6 +124,27 @@ add_task(function test_collect_multiple() {
   do_check_eq(collector._providers.size, 10);
 
   yield collector.collectConstantData();
+
+  yield storage.close();
+});
+
+add_task(function test_collect_daily() {
+  let storage = yield Metrics.Storage("collect_daily");
+  let collector = new Metrics.Collector(storage);
+
+  let provider1 = new DummyProvider("DP1");
+  let provider2 = new DummyProvider("DP2");
+
+  yield collector.registerProvider(provider1);
+  yield collector.registerProvider(provider2);
+
+  yield collector.collectDailyData();
+  do_check_eq(provider1.collectDailyCount, 1);
+  do_check_eq(provider2.collectDailyCount, 1);
+
+  yield collector.collectDailyData();
+  do_check_eq(provider1.collectDailyCount, 2);
+  do_check_eq(provider2.collectDailyCount, 2);
 
   yield storage.close();
 });

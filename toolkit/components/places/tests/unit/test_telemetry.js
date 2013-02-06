@@ -128,5 +128,17 @@ add_task(function test_execute()
     validate(snapshot.sum);
     do_check_true(snapshot.counts.reduce(function(a, b) a + b) > 0);
   }
-  do_test_finished();
 });
+
+add_test(function test_healthreport_callback() {
+  PlacesDBUtils.telemetry(null, function onResult(data) {
+    do_check_neq(data, null);
+
+    do_check_eq(Object.keys(data).length, 2);
+    do_check_eq(data.PLACES_PAGES_COUNT, 1);
+    do_check_eq(data.PLACES_BOOKMARKS_COUNT, 1);
+
+    run_next_test();
+  });
+});
+
