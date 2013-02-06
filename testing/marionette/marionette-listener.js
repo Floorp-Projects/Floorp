@@ -60,7 +60,7 @@ let EVENT_INTERVAL = 30; // milliseconds
 let touches = [];
 // For assigning unique ids to all touches
 let nextTouchId = 1000;
-
+let touchIds = [];
 /**
  * Called when listener is first started up. 
  * The listener sends its unique window ID and its current URI to the actor.
@@ -101,6 +101,8 @@ function startListeners() {
   addMessageListenerId("Marionette:executeJSScript", executeJSScript);
   addMessageListenerId("Marionette:singleTap", singleTap);
   addMessageListenerId("Marionette:doubleTap", doubleTap);
+  addMessageListenerId("Marionette:press", press);
+  addMessageListenerId("Marionette:release", release);
   addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   addMessageListenerId("Marionette:goUrl", goUrl);
   addMessageListenerId("Marionette:getUrl", getUrl);
@@ -190,6 +192,8 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
   removeMessageListenerId("Marionette:singleTap", singleTap);
   removeMessageListenerId("Marionette:doubleTap", doubleTap);
+  removeMessageListenerId("Marionette:press", press);
+  removeMessageListenerId("Marionette:release", release);
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
@@ -228,6 +232,8 @@ function deleteSession(msg) {
   // reset frame to the top-most frame
   curWindow = content;
   curWindow.focus();
+  touches = [];
+  touchIds = [];
 }
 
 /*
@@ -795,6 +801,86 @@ function doubleTap(msg) {
       }, 50, Ci.nsITimer.TYPE_ONE_SHOT);
     });
     sendOk(msg.json.command_id);
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
+  }
+}
+
+/**
+ * Function to create a touch based on the element
+ */
+function createATouch(el, corx, cory, id) {
+  var doc = el.ownerDocument;
+  var win = doc.defaultView;
+  if (corx == null) {
+    corx = '50%';
+  }
+  if (cory == null){
+    cory = '50%';
+  }
+  var c = coordinates(el, corx, cory);
+  var clientX = Math.round(c.x0),
+      clientY = Math.round(c.y0);
+  var pageX = clientX + win.pageXOffset,
+      pageY = clientY + win.pageYOffset;
+  var screenX = clientX + win.mozInnerScreenX,
+      screenY = clientY + win.mozInnerScreenY;
+  var atouch = doc.createTouch(win, el, id, pageX, pageY, screenX, screenY, clientX, clientY);
+  return atouch;
+}
+
+/**
+ * Function to start a touch event
+ */
+function press(msg) {
+  let command_id = msg.json.command_id;
+  let el;
+  try {
+    el = elementManager.getKnownElement(msg.json.value, curWindow);
+    let corx = msg.json.corx;
+    let cory = msg.json.cory;
+    if (!checkVisible(el, command_id)) {
+      sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
+      return;
+    }
+    var touchId = nextTouchId++;
+    var touch = createATouch(el, corx, cory, touchId);
+    emitTouchEvent('touchstart', touch);
+    touchIds.push(touchId);
+    sendResponse({value: touch.identifier}, command_id);
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
+  }
+}
+
+/**
+ * Function to end a touch event
+ */
+function release(msg) {
+  let command_id = msg.json.command_id;
+  let el;
+  try {
+    let id = msg.json.touchId;
+    let currentIndex = touchIds.indexOf(id);
+    if (currentIndex != -1) {
+      el = elementManager.getKnownElement(msg.json.value, curWindow);
+      let corx = msg.json.corx;
+      let cory = msg.json.cory;
+      if (!checkVisible(el, command_id)) {
+        sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
+        return;
+      }
+      var touch = createATouch(el, corx, cory, id);
+      emitTouchEvent('touchend', touch);
+      touchIds.splice(currentIndex, 1);
+      sendOk(msg.json.command_id);
+    }
+    else {
+      sendError("Element has not be pressed: InvalidElementCoordinates", 29, null, command_id);
+      return;
+    }
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, msg.json.command_id);
