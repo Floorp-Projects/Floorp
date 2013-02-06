@@ -81,6 +81,7 @@ class JarMaker(object):
     self.l10nbase = None
     self.l10nmerge = None
     self.relativesrcdir = None
+    self.rootManifestAppId = None
 
   def getCommandLineParser(self):
     '''Get a optparse.OptionParser for jarmaker.
@@ -117,6 +118,8 @@ class JarMaker(object):
                  help="relativesrcdir to be used for localization")
     p.add_option('-j', type="string",
                  help="jarfile directory")
+    p.add_option('--root-manifest-entry-appid', type="string",
+                 help="add an app id specific root chrome manifest entry.")
     return p
 
   def processIncludes(self, includes):
@@ -155,6 +158,17 @@ class JarMaker(object):
     if self.useChromeManifest:
       self.updateManifest(chromeManifest, chromebasepath % 'chrome/',
                           register)
+
+    # If requested, add a root chrome manifest entry (assumed to be in the parent directory
+    # of chromeManifest) with the application specific id. In cases where we're building
+    # lang packs, the root manifest must know about application sub directories.
+    if self.rootManifestAppId:
+      rootChromeManifest = os.path.join(os.path.normpath(os.path.dirname(chromeManifest)),
+                                        '..', 'chrome.manifest')
+      rootChromeManifest = os.path.normpath(rootChromeManifest)
+      chromeDir = os.path.basename(os.path.dirname(os.path.normpath(chromeManifest)))
+      logging.info("adding '%s' entry to root chrome manifest appid=%s" % (chromeDir, self.rootManifestAppId))
+      addEntriesToListFile(rootChromeManifest, ['manifest %s/chrome.manifest application=%s' % (chromeDir, self.rootManifestAppId)])
 
   def updateManifest(self, manifestPath, chromebasepath, register):
     '''updateManifest replaces the % in the chrome registration entries
@@ -447,6 +461,8 @@ def main():
   elif options.locale_mergedir:
     p.error('l10n-base required when using locale-mergedir')
   jm.localedirs = options.l10n_src
+  if options.root_manifest_entry_appid:
+    jm.rootManifestAppId = options.root_manifest_entry_appid
   noise = logging.INFO
   if options.verbose is not None:
     noise = (options.verbose and logging.DEBUG) or logging.WARN
