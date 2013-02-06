@@ -271,6 +271,7 @@ class ICEntry
     _(TypeMonitor_String)       \
     _(TypeMonitor_Null)         \
     _(TypeMonitor_Undefined)    \
+    _(TypeMonitor_SingleObject) \
     _(TypeMonitor_TypeObject)   \
                                 \
     _(TypeUpdate_Fallback)      \
@@ -280,6 +281,7 @@ class ICEntry
     _(TypeUpdate_String)        \
     _(TypeUpdate_Null)          \
     _(TypeUpdate_Undefined)     \
+    _(TypeUpdate_SingleObject)  \
     _(TypeUpdate_TypeObject)    \
                                 \
     _(This_Fallback)            \
@@ -992,6 +994,49 @@ class ICTypeMonitor_Type : public ICStub
     };
 };
 
+class ICTypeMonitor_SingleObject : public ICStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrObject obj_;
+
+    ICTypeMonitor_SingleObject(IonCode *stubCode, HandleObject obj)
+      : ICStub(TypeMonitor_SingleObject, stubCode),
+        obj_(obj)
+    { }
+
+  public:
+    static inline ICTypeMonitor_SingleObject *New(
+            ICStubSpace *space, IonCode *code, HandleObject obj)
+    {
+        return space->allocate<ICTypeMonitor_SingleObject>(code, obj);
+    }
+
+    HeapPtrObject &object() {
+        return obj_;
+    }
+
+    static size_t offsetOfObject() {
+        return offsetof(ICTypeMonitor_SingleObject, obj_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        HandleObject obj_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, HandleObject obj)
+          : ICStubCompiler(cx, TypeMonitor_SingleObject),
+            obj_(obj)
+        { }
+
+        ICTypeMonitor_SingleObject *getStub(ICStubSpace *space) {
+            return ICTypeMonitor_SingleObject::New(space, getStubCode(), obj_);
+        }
+    };
+};
+
 class ICTypeMonitor_TypeObject : public ICStub
 {
     friend class ICStubSpace;
@@ -1109,6 +1154,50 @@ class ICTypeUpdate_Type : public ICStub
 
         ICTypeUpdate_Type *getStub(ICStubSpace *space) {
             return ICTypeUpdate_Type::New(space, kind, getStubCode());
+        }
+    };
+};
+
+// Type update stub to handle a singleton object.
+class ICTypeUpdate_SingleObject : public ICStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrObject obj_;
+
+    ICTypeUpdate_SingleObject(IonCode *stubCode, HandleObject obj)
+      : ICStub(TypeUpdate_SingleObject, stubCode),
+        obj_(obj)
+    { }
+
+  public:
+    static inline ICTypeUpdate_SingleObject *New(ICStubSpace *space, IonCode *code,
+                                                 HandleObject obj)
+    {
+        return space->allocate<ICTypeUpdate_SingleObject>(code, obj);
+    }
+
+    HeapPtrObject &object() {
+        return obj_;
+    }
+
+    static size_t offsetOfObject() {
+        return offsetof(ICTypeUpdate_SingleObject, obj_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        HandleObject obj_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, HandleObject obj)
+          : ICStubCompiler(cx, TypeUpdate_SingleObject),
+            obj_(obj)
+        { }
+
+        ICTypeUpdate_SingleObject *getStub(ICStubSpace *space) {
+            return ICTypeUpdate_SingleObject::New(space, getStubCode(), obj_);
         }
     };
 };
