@@ -22,6 +22,15 @@ enum DataType {
     Type_Handle
 };
 
+struct PopValues
+{
+    uint32_t numValues;
+
+    explicit PopValues(uint32_t numValues)
+      : numValues(numValues)
+    { }
+};
+
 // Contains information about a virtual machine function that can be called
 // from JIT code. Functions described in this manner must conform to a simple
 // protocol: the return type must have a special "failure" value (for example,
@@ -87,6 +96,11 @@ struct VMFunction
     // Contains an combination of enumerated types used by the gc for marking
     // arguments of the VM wrapper.
     uint64_t argumentRootTypes;
+
+    // Number of Values the VM wrapper should pop from the stack when it returns.
+    // Used by baseline IC stubs so that they can use tail calls to call the VM
+    // wrapper.
+    uint32_t extraValuesToPop;
 
     uint32_t argc() const {
         // JSContext * + args + (OutParam? *)
@@ -160,13 +174,14 @@ struct VMFunction
     }
 
     VMFunction(void *wrapped, uint32_t explicitArgs, uint32_t argumentProperties, uint64_t argRootTypes,
-               DataType outParam, DataType returnType)
+               DataType outParam, DataType returnType, uint32_t extraValuesToPop = 0)
       : wrapped(wrapped),
         explicitArgs(explicitArgs),
         argumentProperties(argumentProperties),
         outParam(outParam),
         returnType(returnType),
-        argumentRootTypes(argRootTypes)
+        argumentRootTypes(argRootTypes),
+        extraValuesToPop(extraValuesToPop)
     {
         // Check for valid failure/return type.
         JS_ASSERT_IF(outParam != Type_Void, returnType == Type_Bool);
@@ -305,10 +320,10 @@ template <> struct OutParamToDataType<MutableHandleValue> { static const DataTyp
     static inline uint64_t argumentRootTypes() {                                          \
         return ForEachNb(COMPUTE_ARG_ROOT, SEP_OR, NOTHING);                            \
     }                                                                                   \
-    FunctionInfo(pf fun)                                                                \
+    FunctionInfo(pf fun, PopValues extraValuesToPop = PopValues(0))                     \
         : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),                  \
                      argumentProperties(),argumentRootTypes(),                          \
-                     outParam(), returnType())                                          \
+                     outParam(), returnType(), extraValuesToPop.numValues)              \
     { }
 
 template <typename Fun>
