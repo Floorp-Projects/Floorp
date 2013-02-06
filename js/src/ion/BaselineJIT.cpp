@@ -391,6 +391,11 @@ BaselineScript::copyICEntries(const ICEntry *entries, MacroAssembler &masm)
         // a pointer to the (now available) realEntry.
         if (realEntry.firstStub()->isFallback())
             realEntry.firstStub()->toFallbackStub()->fixupICEntry(&realEntry);
+
+        if (realEntry.firstStub()->isTypeMonitor_Fallback()) {
+            ICTypeMonitor_Fallback *stub = realEntry.firstStub()->toTypeMonitor_Fallback();
+            stub->fixupICEntry(&realEntry);
+        }
     }
 }
 
