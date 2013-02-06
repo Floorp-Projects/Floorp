@@ -126,9 +126,19 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &setElemStub->lastProtoShape(), "baseline-setelem-denseadd-lastprotoshape");
         break;
       }
+      case ICStub::TypeMonitor_SingleObject: {
+        ICTypeMonitor_SingleObject *monitorStub = toTypeMonitor_SingleObject();
+        MarkObject(trc, &monitorStub->object(), "baseline-monitor-singleobject");
+        break;
+      }
       case ICStub::TypeMonitor_TypeObject: {
         ICTypeMonitor_TypeObject *monitorStub = toTypeMonitor_TypeObject();
         MarkTypeObject(trc, &monitorStub->type(), "baseline-monitor-typeobject");
+        break;
+      }
+      case ICStub::TypeUpdate_SingleObject: {
+        ICTypeUpdate_SingleObject *updateStub = toTypeUpdate_SingleObject();
+        MarkObject(trc, &updateStub->object(), "baseline-update-singleobject");
         break;
       }
       case ICStub::TypeUpdate_TypeObject: {
@@ -795,10 +805,15 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, ICStubSpace *space
         if (!stub)
             return false;
         addOptimizedMonitorStub(stub);
-    } else {
-        RootedTypeObject type(cx, val.toObject().getType(cx));
-        if (!type)
+    } else if (val.toObject().hasSingletonType()) {
+        RootedObject obj(cx, &val.toObject());
+        ICTypeMonitor_SingleObject::Compiler compiler(cx, obj);
+        ICStub *stub = compiler.getStub(space);
+        if (!stub)
             return false;
+        addOptimizedMonitorStub(stub);
+    } else {
+        RootedTypeObject type(cx, val.toObject().type());
         ICTypeMonitor_TypeObject::Compiler compiler(cx, type);
         ICStub *stub = compiler.getStub(space);
         if (!stub)
@@ -910,6 +925,24 @@ ICTypeMonitor_Type::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
+ICTypeMonitor_SingleObject::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    // Guard on the object's identity.
+    Register obj = masm.extractObject(R0, ExtractTemp0);
+    Address expectedObject(BaselineStubReg, ICTypeMonitor_SingleObject::offsetOfObject());
+    masm.branchPtr(Assembler::NotEqual, expectedObject, obj, &failure);
+
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
 ICTypeMonitor_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
@@ -945,10 +978,15 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, ICStubSpace *space, HandleVa
         if (!stub)
             return false;
         addOptimizedUpdateStub(stub);
-    } else {
-        RootedTypeObject type(cx, val.toObject().getType(cx));
-        if (!type)
+    } else if (val.toObject().hasSingletonType()) {
+        RootedObject obj(cx, &val.toObject());
+        ICTypeUpdate_SingleObject::Compiler compiler(cx, obj);
+        ICStub *stub = compiler.getStub(space);
+        if (!stub)
             return false;
+        addOptimizedUpdateStub(stub);
+    } else {
+        RootedTypeObject type(cx, val.toObject().type());
         ICTypeUpdate_TypeObject::Compiler compiler(cx, type);
         ICStub *stub = compiler.getStub(space);
         if (!stub)
@@ -1035,6 +1073,26 @@ ICTypeUpdate_Type::Compiler::generateStubCode(MacroAssembler &masm)
     }
 
     // Type matches, load true into R1.scratchReg() and return.
+    masm.mov(Imm32(1), R1.scratchReg());
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICTypeUpdate_SingleObject::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    // Guard on the object's identity.
+    Register obj = masm.extractObject(R0, R1.scratchReg());
+    Address expectedObject(BaselineStubReg, ICTypeUpdate_SingleObject::offsetOfObject());
+    masm.branchPtr(Assembler::NotEqual, expectedObject, obj, &failure);
+
+    // Identity matches, load true into R1.scratchReg() and return.
     masm.mov(Imm32(1), R1.scratchReg());
     EmitReturnFromIC(masm);
 
