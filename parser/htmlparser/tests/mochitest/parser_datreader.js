@@ -100,7 +100,7 @@ function test_parser(testlist) {
  * @param the DOM document
  */
 function docToTestOutput(doc) {
-  var walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ALL, null, true);
+  var walker = doc.createTreeWalker(doc, NodeFilter.SHOW_ALL, null);
   return addLevels(walker, "", "| ").slice(0,-1); // remove the last newline
 }
 
@@ -114,7 +114,7 @@ function fragmentToTestOutput(elt) {
   var walker = elt.ownerDocument.createTreeWalker(elt, NodeFilter.SHOW_ALL, 
     function (node) { return elt == node ? 
                         NodeFilter.FILTER_SKIP : 
-                        NodeFilter.FILTER_ACCEPT; }, true);
+                        NodeFilter.FILTER_ACCEPT; });
   return addLevels(walker, "", "| ").slice(0,-1); // remove the last newline
 }
 

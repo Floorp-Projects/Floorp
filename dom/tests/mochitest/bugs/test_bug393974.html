@@ -32,8 +32,7 @@ function test()
                                        if ("foo" + window == "fooPIRATES!")
                                          return NodeFilter.FILTER_ACCEPT;
                                        return NodeFilter.FILTER_REJECT;
-                                     },
-                                     true);
+                                     });
 
   // That should have been enough to create a leak, but we should do at least
   // a couple tests while we're here so that this document doesn't show up as

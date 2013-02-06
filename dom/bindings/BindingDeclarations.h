@@ -19,6 +19,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
 #include "nsStringBuffer.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
@@ -210,6 +211,172 @@ private:
   nsStringBuffer* mStringBuffer;
   uint32_t mLength;
   bool mIsNull;
+};
+
+// Class for representing optional arguments.
+template<typename T>
+class Optional
+{
+public:
+  Optional()
+  {}
+
+  bool WasPassed() const
+  {
+    return !mImpl.empty();
+  }
+
+  void Construct()
+  {
+    mImpl.construct();
+  }
+
+  template <class T1>
+  void Construct(const T1 &t1)
+  {
+    mImpl.construct(t1);
+  }
+
+  template <class T1, class T2>
+  void Construct(const T1 &t1, const T2 &t2)
+  {
+    mImpl.construct(t1, t2);
+  }
+
+  const T& Value() const
+  {
+    return mImpl.ref();
+  }
+
+  T& Value()
+  {
+    return mImpl.ref();
+  }
+
+  // If we ever decide to add conversion operators for optional arrays
+  // like the ones Nullable has, we'll need to ensure that Maybe<> has
+  // the boolean before the actual data.
+
+private:
+  // Forbid copy-construction and assignment
+  Optional(const Optional& other) MOZ_DELETE;
+  const Optional &operator=(const Optional &other) MOZ_DELETE;
+
+  Maybe<T> mImpl;
+};
+
+// Specialization for strings.
+// XXXbz we can't pull in FakeDependentString here, because it depends on
+// internal strings.  So we just have to forward-declare it and reimplement its
+// ToAStringPtr.
+
+struct FakeDependentString;
+
+template<>
+class Optional<nsAString>
+{
+public:
+  Optional() : mPassed(false) {}
+
+  bool WasPassed() const
+  {
+    return mPassed;
+  }
+
+  void operator=(const nsAString* str)
+  {
+    MOZ_ASSERT(str);
+    mStr = str;
+    mPassed = true;
+  }
+
+  // If this code ever goes away, remove the comment pointing to it in the
+  // FakeDependentString class in BindingUtils.h.
+  void operator=(const FakeDependentString* str)
+  {
+    MOZ_ASSERT(str);
+    mStr = reinterpret_cast<const nsDependentString*>(str);
+    mPassed = true;
+  }
+
+  const nsAString& Value() const
+  {
+    MOZ_ASSERT(WasPassed());
+    return *mStr;
+  }
+
+private:
+  // Forbid copy-construction and assignment
+  Optional(const Optional& other) MOZ_DELETE;
+  const Optional &operator=(const Optional &other) MOZ_DELETE;
+
+  bool mPassed;
+  const nsAString* mStr;
+};
+
+// Class for representing sequences in arguments.  We use an auto array that can
+// hold 16 elements, to avoid having to allocate in common cases.  This needs to
+// be fallible because web content controls the length of the array, and can
+// easily try to create very large lengths.
+template<typename T>
+class Sequence : public AutoFallibleTArray<T, 16>
+{
+public:
+  Sequence() : AutoFallibleTArray<T, 16>()
+  {}
+};
+
+class RootedJSValue
+{
+public:
+  RootedJSValue()
+    : mCx(nullptr)
+  {}
+
+  ~RootedJSValue()
+  {
+    if (mCx) {
+      JS_RemoveValueRoot(mCx, &mValue);
+    }
+  }
+
+  bool SetValue(JSContext* aCx, JS::Value aValue)
+  {
+    // We don't go ahead and root if v is null, because we want to allow
+    // null-initialization even when there is no cx.
+    MOZ_ASSERT_IF(!aValue.isNull(), aCx);
+
+    // Be careful to not clobber mCx if it's already set, just in case we're
+    // being null-initialized (with a null cx for some reason) after we have
+    // already been initialized properly with a non-null value.
+    if (!aValue.isNull() && !mCx) {
+      if (!JS_AddNamedValueRoot(aCx, &mValue, "RootedJSValue::mValue")) {
+        return false;
+      }
+      mCx = aCx;
+    }
+
+    mValue = aValue;
+    return true;
+  }
+
+  operator JS::Value()
+  {
+    return mValue;
+  }
+
+  operator const JS::Value() const
+  {
+    return mValue;
+  }
+
+private:
+  // Don't allow copy-construction of these objects, because it'll do the wrong
+  // thing with our flag mCx.
+  RootedJSValue(const RootedJSValue&) MOZ_DELETE;
+
+  JS::Value mValue;
+  JSContext* mCx;
 };
 
 } // namespace dom

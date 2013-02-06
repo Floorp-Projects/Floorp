@@ -8374,6 +8374,12 @@ if test -n "$MOZ_SERVICES_SYNC"; then
   AC_DEFINE(MOZ_SERVICES_SYNC)
 fi
 
+dnl Build Captive Portal Detector if required
+AC_SUBST(MOZ_SERVICES_CAPTIVEDETECT)
+if test -n "$MOZ_SERVICES_CAPTIVEDETECT"; then
+  AC_DEFINE(MOZ_SERVICES_CAPTIVEDETECT)
+fi
+
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=

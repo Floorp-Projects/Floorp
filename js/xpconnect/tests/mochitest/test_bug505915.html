@@ -23,7 +23,7 @@ window.addEventListener("message", function () { gen.next() }, false);
 function go() {
     var ifr = $('ifr');
     try {
-        document.createTreeWalker(ifr.contentDocument, 0, null, false);
+        document.createTreeWalker(ifr.contentDocument, 0, null);
         ok(false, "should have thrown a security exception");
     } catch (e) {
         ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e) ||

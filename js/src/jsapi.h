@@ -2394,11 +2394,11 @@ JS_strdup(JSContext *cx, const char *s);
  *
  *   void some_function() {
  *     jsval v;
- *     JS_AddNamedRootedValue(cx, &v, "name");
+ *     JS_AddNamedValueRoot(cx, &v, "name");
  *
  * the caller must perform
  *
- *     JS_RemoveRootedValue(cx, &v);
+ *     JS_RemoveValueRoot(cx, &v);
  *
  * before some_function() returns.
  *
