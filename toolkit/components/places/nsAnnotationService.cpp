@@ -1288,7 +1288,7 @@ nsAnnotationService::GetAnnotationsWithName(const nsACString& aName,
         break;
       }
       default:
-        MOZ_ASSERT("Unsupported annotation type");
+        MOZ_ASSERT(false, "Unsupported annotation type");
         // Move to the next result.
         continue;
     }

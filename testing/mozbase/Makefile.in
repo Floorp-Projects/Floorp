@@ -31,7 +31,6 @@ MOZBASE_PACKAGES = \
 
 MOZBASE_EXTRAS = \
   setup_development.py \
-  README \
   $(NULL)
 
 _DEST_DIR = $(DEPTH)/_tests/mozbase

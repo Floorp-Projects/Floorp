@@ -8,11 +8,14 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
-#include "gc/Barrier-inl.h"
 #include "js/TemplateLib.h"
+#include "js/Value.h"
 #include "vm/Debugger.h"
 #include "vm/ObjectImpl.h"
 
+#include "jsatominlines.h"
+
+#include "gc/Barrier-inl.h"
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
 

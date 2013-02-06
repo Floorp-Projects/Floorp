@@ -1538,32 +1538,57 @@ class TypedArrayTemplate
     }
 
     static JSObject *
+    makeProtoInstance(JSContext *cx, HandleObject proto)
+    {
+        JS_ASSERT(proto);
+
+        JSObject *obj = NewBuiltinClassInstance(cx, fastClass());
+        if (!obj)
+            return NULL;
+
+        types::TypeObject *type = proto->getNewType(cx, obj->getClass());
+        if (!type)
+            return NULL;
+        obj->setType(type);
+
+        return obj;
+    }
+
+    static JSObject *
+    makeTypedInstance(JSContext *cx, uint32_t len)
+    {
+        if (len * sizeof(NativeType) >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH)
+            return NewBuiltinClassInstance(cx, fastClass(), SingletonObject);
+
+        jsbytecode *pc;
+        RootedScript script(cx, cx->stack.currentScript(&pc));
+        NewObjectKind newKind = script
+                                ? UseNewTypeForInitializer(cx, script, pc, fastClass())
+                                : GenericObject;
+        RootedObject obj(cx, NewBuiltinClassInstance(cx, fastClass(), newKind));
+
+        if (script) {
+            if (!types::SetInitializerObjectType(cx, script, pc, obj, newKind))
+                return NULL;
+        }
+
+        return obj;
+    }
+
+    static JSObject *
     makeInstance(JSContext *cx, HandleObject bufobj, uint32_t byteOffset, uint32_t len,
                  HandleObject proto)
     {
-        RootedObject obj(cx, NewBuiltinClassInstance(cx, fastClass()));
+        RootedObject obj(cx);
+        if (proto)
+            obj = makeProtoInstance(cx, proto);
+        else if (cx->typeInferenceEnabled())
+            obj = makeTypedInstance(cx, len);
+        else
+            obj = NewBuiltinClassInstance(cx, fastClass());
         if (!obj)
             return NULL;
         JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT8_BACKGROUND);
-
-        if (proto) {
-            types::TypeObject *type = proto->getNewType(cx, obj->getClass());
-            if (!type)
-                return NULL;
-            obj->setType(type);
-        } else if (cx->typeInferenceEnabled()) {
-            if (len * sizeof(NativeType) >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH) {
-                if (!JSObject::setSingletonType(cx, obj))
-                    return NULL;
-            } else {
-                jsbytecode *pc;
-                RootedScript script(cx, cx->stack.currentScript(&pc));
-                if (script) {
-                    if (!types::SetInitializerObjectType(cx, script, pc, obj))
-                        return NULL;
-                }
-            }
-        }
 
         obj->setSlot(TYPE_SLOT, Int32Value(ArrayTypeID()));
         obj->setSlot(BUFFER_SLOT, ObjectValue(*bufobj));
@@ -1724,8 +1749,8 @@ class TypedArrayTemplate
         unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
 
         Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
-        RawObject getter = js_NewFunction(cx, NullPtr(), Getter<ValueGetter>, 0,
-                                          JSFunction::NATIVE_FUN, global, NullPtr());
+        RawObject getter = NewFunction(cx, NullPtr(), Getter<ValueGetter>, 0,
+                                       JSFunction::NATIVE_FUN, global, NullPtr());
         if (!getter)
             return false;
 
@@ -3376,9 +3401,9 @@ InitTypedArrayClass(JSContext *cx)
 
     RootedFunction fun(cx);
     fun =
-        js_NewFunction(cx, NullPtr(),
-                       ArrayBufferObject::createTypedArrayFromBuffer<typename ArrayType::ThisType>,
-                       0, JSFunction::NATIVE_FUN, global, NullPtr());
+        NewFunction(cx, NullPtr(),
+                    ArrayBufferObject::createTypedArrayFromBuffer<typename ArrayType::ThisType>,
+                    0, JSFunction::NATIVE_FUN, global, NullPtr());
     if (!fun)
         return NULL;
 
@@ -3459,8 +3484,8 @@ InitArrayBufferClass(JSContext *cx)
 
     RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
-    RawObject getter = js_NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0,
-                                      JSFunction::NATIVE_FUN, global, NullPtr());
+    RawObject getter = NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0,
+                                   JSFunction::NATIVE_FUN, global, NullPtr());
     if (!getter)
         return NULL;
 
@@ -3561,8 +3586,8 @@ DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleObject pro
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
 
     Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
-    JSObject *getter = js_NewFunction(cx, NullPtr(), DataViewObject::getter<ValueGetter>, 0,
-                                      JSFunction::NATIVE_FUN, global, NullPtr());
+    JSObject *getter = NewFunction(cx, NullPtr(), DataViewObject::getter<ValueGetter>, 0,
+                                   JSFunction::NATIVE_FUN, global, NullPtr());
     if (!getter)
         return false;
 
@@ -3605,8 +3630,8 @@ DataViewObject::initClass(JSContext *cx)
      * |new DataView(new otherWindow.ArrayBuffer())|, and install it in the
      * global for use by the DataView constructor.
      */
-    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), ArrayBufferObject::createDataViewForThis,
-                                          0, JSFunction::NATIVE_FUN, global, NullPtr()));
+    RootedFunction fun(cx, NewFunction(cx, NullPtr(), ArrayBufferObject::createDataViewForThis,
+                                       0, JSFunction::NATIVE_FUN, global, NullPtr()));
     if (!fun)
         return NULL;
 

@@ -3,55 +3,54 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+function dump(a) {
+  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
+}
+
+function sendMessageToJava(aMessage) {
+  return Cc["@mozilla.org/android/bridge;1"]
+           .getService(Ci.nsIAndroidBridge)
+           .handleGeckoMessage(JSON.stringify(aMessage));
+}
+
+this.EXPORTED_SYMBOLS = ["Sanitizer"];
+
+let downloads = {
+  dlmgr: Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager),
+
+  iterate: function (aCallback) {
+    let dlmgr = downloads.dlmgr;
+    let dbConn = dlmgr.DBConnection;
+    let stmt = dbConn.createStatement("SELECT id FROM moz_downloads WHERE " +
+        "state = ? OR state = ? OR state = ? OR state = ? OR state = ? OR state = ?");
+    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
+    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_FAILED);
+    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_CANCELED);
+    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL);
+    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY);
+    stmt.bindInt32Parameter(5, Ci.nsIDownloadManager.DOWNLOAD_DIRTY);
+    while (stmt.executeStep()) {
+      aCallback(dlmgr.getDownload(stmt.row.id));
+    }
+    stmt.finalize();
+  },
+
+  get canClear() {
+    return this.dlmgr.canCleanUp;
+  }
+};
+
 function Sanitizer() {}
 Sanitizer.prototype = {
-  // warning to the caller: this one may raise an exception (e.g. bug #265028)
   clearItem: function (aItemName)
   {
     if (this.items[aItemName].canClear)
       this.items[aItemName].clear();
-  },
-
-  canClearItem: function (aItemName)
-  {
-    return this.items[aItemName].canClear;
-  },
-
-  _prefDomain: "privacy.item.",
-  getNameFromPreference: function (aPreferenceName)
-  {
-    return aPreferenceName.substr(this._prefDomain.length);
-  },
-
-  /**
-   * Deletes privacy sensitive data in a batch, according to user preferences
-   *
-   * @returns  null if everything's fine;  an object in the form
-   *           { itemName: error, ... } on (partial) failure
-   */
-  sanitize: function ()
-  {
-    var branch = Services.prefs.getBranch(this._prefDomain);
-    var errors = null;
-    for (var itemName in this.items) {
-      var item = this.items[itemName];
-      if ("clear" in item && item.canClear && branch.getBoolPref(itemName)) {
-        // Some of these clear() may raise exceptions (see bug #265028)
-        // to sanitize as much as possible, we catch and store them,
-        // rather than fail fast.
-        // Callers should check returned errors and give user feedback
-        // about items that could not be sanitized
-        try {
-          item.clear();
-        } catch(er) {
-          if (!errors)
-            errors = {};
-          errors[itemName] = er;
-          dump("Error sanitizing " + itemName + ": " + er + "\n");
-        }
-      }
-    }
-    return errors;
   },
 
   items: {
@@ -184,14 +183,35 @@ Sanitizer.prototype = {
     downloads: {
       clear: function ()
       {
-        var dlMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-        dlMgr.cleanUp();
+        downloads.iterate(function (dl) {
+          dl.remove();
+        });
       },
 
       get canClear()
       {
-        var dlMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-        return dlMgr.canCleanUp;
+        return downloads.canClear;
+      }
+    },
+
+    downloadFiles: {
+      clear: function ()
+      {
+        downloads.iterate(function (dl) {
+          // Delete the downloaded files themselves
+          let f = dl.targetFile;
+          if (f.exists()) {
+            f.remove(false);
+          }
+
+          // Also delete downloads from history
+          dl.remove();
+        });
+      },
+
+      get canClear()
+      {
+        return downloads.canClear;
       }
     },
 
@@ -216,9 +236,7 @@ Sanitizer.prototype = {
         sdr.logoutAndTeardown();
 
         // clear FTP and plain HTTP auth sessions
-        var os = Components.classes["@mozilla.org/observer-service;1"]
-                           .getService(Components.interfaces.nsIObserverService);
-        os.notifyObservers(null, "net:clear-active-logins", null);
+        Services.obs.notifyObservers(null, "net:clear-active-logins", null);
       },
 
       get canClear()
@@ -229,55 +247,4 @@ Sanitizer.prototype = {
   }
 };
 
-
-// "Static" members
-Sanitizer.prefDomain          = "privacy.sanitize.";
-Sanitizer.prefShutdown        = "sanitizeOnShutdown";
-Sanitizer.prefDidShutdown     = "didShutdownSanitize";
-
-Sanitizer._prefs = null;
-Sanitizer.__defineGetter__("prefs", function()
-{
-  return Sanitizer._prefs ? Sanitizer._prefs
-    : Sanitizer._prefs = Cc["@mozilla.org/preferences-service;1"]
-                         .getService(Ci.nsIPrefService)
-                         .getBranch(Sanitizer.prefDomain);
-});
-
-/**
- * Deletes privacy sensitive data in a batch, optionally showing the
- * sanitize UI, according to user preferences
- *
- * @returns  null if everything's fine
- *           an object in the form { itemName: error, ... } on (partial) failure
- */
-Sanitizer.sanitize = function()
-{
-  return new Sanitizer().sanitize();
-};
-
-Sanitizer.onStartup = function()
-{
-  // we check for unclean exit with pending sanitization
-  Sanitizer._checkAndSanitize();
-};
-
-Sanitizer.onShutdown = function()
-{
-  // we check if sanitization is needed and perform it
-  Sanitizer._checkAndSanitize();
-};
-
-// this is called on startup and shutdown, to perform pending sanitizations
-Sanitizer._checkAndSanitize = function()
-{
-  const prefs = Sanitizer.prefs;
-  if (prefs.getBoolPref(Sanitizer.prefShutdown) &&
-      !prefs.prefHasUserValue(Sanitizer.prefDidShutdown)) {
-    // this is a shutdown or a startup after an unclean exit
-    Sanitizer.sanitize() || // sanitize() returns null on full success
-      prefs.setBoolPref(Sanitizer.prefDidShutdown, true);
-  }
-};
-
-
+this.Sanitizer = new Sanitizer();

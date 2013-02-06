@@ -34,6 +34,16 @@ struct Arena;
 struct ArenaHeader;
 struct Chunk;
 
+/*
+ * This flag allows an allocation site to request a specific heap based upon the
+ * estimated lifetime or lifetime requirements of objects allocated from that
+ * site.
+ */
+enum InitialHeap {
+    DefaultHeap,
+    TenuredHeap
+};
+
 /* The GC allocation kinds. */
 enum AllocKind {
     FINALIZE_OBJECT0,
