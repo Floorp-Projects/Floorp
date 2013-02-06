@@ -22,7 +22,7 @@ SimpleTest.waitForExplicitFinish();
 const SHOW_ALL = Components.interfaces.nsIDOMNodeFilter.SHOW_ALL;
 
 addLoadEvent(function() {
-  var walker = document.createTreeWalker(document, SHOW_ALL, null, true);
+  var walker = document.createTreeWalker(document, SHOW_ALL, null);
   try {
     walker.currentNode = {};
     walker.nextNode();
