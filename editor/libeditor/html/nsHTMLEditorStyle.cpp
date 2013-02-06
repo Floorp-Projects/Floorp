@@ -312,7 +312,8 @@ nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
   // No luck so far.  Now we check for a <span> with a single style=""
   // attribute that sets only the style we're looking for, if this type of
   // style supports it
-  if (!mHTMLCSSUtils->IsCSSEditableProperty(element, aProperty, aAttribute) ||
+  if (!mHTMLCSSUtils->IsCSSEditableProperty(element, aProperty,
+                                            aAttribute, aValue) ||
       !element->IsHTML(nsGkAtoms::span) || element->GetAttrCount() != 1 ||
       !element->HasAttr(kNameSpaceID_None, nsGkAtoms::style)) {
     return false;
@@ -360,7 +361,8 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   
   // don't need to do anything if property already set on node
   bool bHasProp;
-  if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
+  if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
+                                           aAttribute, aValue)) {
     // the HTML styles defined by aProperty/aAttribute has a CSS equivalence
     // in this implementation for node; let's check if it carries those css styles
     nsAutoString value(*aValue);
@@ -469,7 +471,8 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
   }
 
   // don't need to do anything if property already set on node
-  if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
+  if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty,
+                                           aAttribute, aValue)) {
     if (mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
           aNode, aProperty, aAttribute, *aValue, nsHTMLCSSUtils::eComputed)) {
       return NS_OK;
@@ -480,7 +483,8 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
   }
 
   bool useCSS = (IsCSSEnabled() &&
-                 mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) ||
+                 mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty,
+                                                      aAttribute, aValue)) ||
                 // bgcolor is always done using CSS
                 aAttribute->EqualsLiteral("bgcolor");
 
@@ -1153,7 +1157,11 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
         return NS_OK;
       }
 
-      if (mHTMLCSSUtils->IsCSSEditableProperty(collapsedNode, aProperty, aAttribute)) {
+      // Bug 747889: we don't support CSS for fontSize values
+      if ((aProperty != nsEditProperty::font ||
+           !aAttribute->EqualsLiteral("size")) &&
+          mHTMLCSSUtils->IsCSSEditableProperty(collapsedNode, aProperty,
+                                               aAttribute)) {
         mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
           collapsedNode, aProperty, aAttribute, isSet, tOutString,
           nsHTMLCSSUtils::eComputed);
@@ -1237,7 +1245,11 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
 
       bool isSet = false;
       if (first) {
-        if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)){
+        if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
+                                                 aAttribute) &&
+            // Bug 747889: we don't support CSS for fontSize values
+            (aProperty != nsEditProperty::font ||
+             !aAttribute->EqualsLiteral("size"))) {
           // the HTML styles defined by aProperty/aAttribute has a CSS
           // equivalence in this implementation for node; let's check if it
           // carries those css styles
@@ -1256,7 +1268,11 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           *outValue = firstValue;
         }
       } else {
-        if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)){
+        if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
+                                                 aAttribute) &&
+            // Bug 747889: we don't support CSS for fontSize values
+            (aProperty != nsEditProperty::font ||
+             !aAttribute->EqualsLiteral("size"))) {
           // the HTML styles defined by aProperty/aAttribute has a CSS equivalence
           // in this implementation for node; let's check if it carries those css styles
           if (aValue) {
