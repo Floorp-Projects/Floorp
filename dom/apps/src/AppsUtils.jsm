@@ -32,6 +32,33 @@ function isAbsoluteURI(aURI) {
          Services.io.newURI(aURI, null, bar).prePath != bar.prePath;
 }
 
+function mozIApplication() {
+}
+
+mozIApplication.prototype = {
+  hasPermission: function(aPermission) {
+    let uri = Services.io.newURI(this.origin, null, null);
+    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                   .getService(Ci.nsIScriptSecurityManager);
+    // This helper checks an URI inside |aApp|'s origin and part of |aApp| has a
+    // specific permission. It is not checking if browsers inside |aApp| have such
+    // permission.
+    let principal = secMan.getAppCodebasePrincipal(uri, this.localId,
+                                                   /*mozbrowser*/false);
+    let perm = Services.perms.testExactPermissionFromPrincipal(principal,
+                                                               aPermission);
+    return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
+  },
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.mozIDOMApplication) ||
+        aIID.equals(Ci.mozIApplication) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+}
+
 this.AppsUtils = {
   // Clones a app, without the manifest.
   cloneAppObject: function cloneAppObject(aApp) {
@@ -68,27 +95,7 @@ this.AppsUtils = {
 
   cloneAsMozIApplication: function cloneAsMozIApplication(aApp) {
     let res = this.cloneAppObject(aApp);
-    res.hasPermission = function(aPermission) {
-      let uri = Services.io.newURI(this.origin, null, null);
-      let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                     .getService(Ci.nsIScriptSecurityManager);
-      // This helper checks an URI inside |aApp|'s origin and part of |aApp| has a
-      // specific permission. It is not checking if browsers inside |aApp| have such
-      // permission.
-      let principal = secMan.getAppCodebasePrincipal(uri, aApp.localId,
-                                                     /*mozbrowser*/false);
-      let perm = Services.perms.testExactPermissionFromPrincipal(principal,
-                                                                 aPermission);
-      return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
-    };
-    res.QueryInterface = function(aIID) {
-      if (aIID.equals(Ci.mozIDOMApplication) ||
-          aIID.equals(Ci.mozIApplication) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-
+    res.__proto__ = mozIApplication.prototype;
     return res;
   },
 
