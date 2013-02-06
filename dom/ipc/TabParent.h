@@ -304,6 +304,8 @@ private:
     // When true, the TabParent is invalid and we should not send IPC messages
     // anymore.
     bool mIsDestroyed;
+    // Whether we have already sent a FileDescriptor for the app package.
+    bool mAppPackageFileDescriptorSent;
 };
 
 } // namespace dom
