@@ -297,7 +297,7 @@ irregularFilenames = {
 
 customIncludes = [
     'nsDOMQS.h',
-    'HTMLMenuElement.h',
+    'nsHTMLMenuElement.h',
     'mozilla/dom/NodeBinding.h',
     'mozilla/dom/ElementBinding.h',
     'mozilla/dom/HTMLElementBinding.h',

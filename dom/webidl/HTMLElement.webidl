@@ -13,6 +13,7 @@
  */
 
 interface DOMStringMap;
+interface HTMLMenuElement;
 
 // Hack to make sure that we initialize the touch prefs properly
 [PrefControlled]
