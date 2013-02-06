@@ -238,6 +238,7 @@ add_task(function test_json_payload_simple() {
 
   let now = new Date();
   let payload = yield reporter.getJSONPayload();
+  do_check_eq(typeof payload, "string");
   let original = JSON.parse(payload);
 
   do_check_eq(original.version, 1);
@@ -253,6 +254,9 @@ add_task(function test_json_payload_simple() {
   // This could fail if we cross UTC day boundaries at the exact instance the
   // test is executed. Let's tempt fate.
   do_check_eq(original.thisPingDate, reporter._formatDate(now));
+
+  payload = yield reporter.getJSONPayload(true);
+  do_check_eq(typeof payload, "object");
 
   reporter._shutdown();
 });
@@ -270,6 +274,22 @@ add_task(function test_json_payload_dummy_provider() {
   do_check_eq(Object.keys(o.data.last).length, 1);
   do_check_true(name in o.data.last);
   do_check_eq(o.data.last[name]._v, 1);
+
+  reporter._shutdown();
+});
+
+add_task(function test_collect_and_obtain_json_payload() {
+  let reporter = yield getReporter("collect_and_obtain_json_payload");
+
+  yield reporter.registerProvider(new DummyProvider());
+  let payload = yield reporter.collectAndObtainJSONPayload();
+  do_check_eq(typeof payload, "string");
+
+  let o = JSON.parse(payload);
+  do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
+
+  payload = yield reporter.collectAndObtainJSONPayload(true);
+  do_check_eq(typeof payload, "object");
 
   reporter._shutdown();
 });
