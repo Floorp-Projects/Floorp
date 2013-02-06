@@ -22,7 +22,7 @@ public class MenuItemActionBar extends ImageButton
         int size = (int) (context.getResources().getDimension(R.dimen.browser_toolbar_height));
         setLayoutParams(new ViewGroup.LayoutParams(size, size));
 
-        int padding = size / 4;
+        int padding = (int) (context.getResources().getDimension(R.dimen.browser_toolbar_button_padding));
         setPadding(padding, padding, padding, padding);
         setBackgroundResource(R.drawable.action_bar_button);
         setScaleType(ImageView.ScaleType.FIT_CENTER);
