@@ -270,7 +270,7 @@ private:
 // internal strings.  So we just have to forward-declare it and reimplement its
 // ToAStringPtr.
 
-class FakeDependentString;
+struct FakeDependentString;
 
 template<>
 class Optional<nsAString>
