@@ -1978,7 +1978,15 @@ class StackIter
 #else
         return false;
 #endif
-}
+    }
+
+    bool isIonBaselineJS() const {
+#ifdef JS_ION
+        return isIon() && data_.ionFrames_.isBaselineJS();
+#else
+        return false;
+#endif
+    }
 
     bool isNativeCall() const {
         JS_ASSERT(!done());
