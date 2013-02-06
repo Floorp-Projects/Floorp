@@ -81,7 +81,7 @@
 #include "nsITextControlElement.h"
 #include "mozilla/dom/Element.h"
 #include "nsHTMLFieldSetElement.h"
-#include "HTMLMenuElement.h"
+#include "nsHTMLMenuElement.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsDOMMutationObserver.h"
 #include "mozilla/Preferences.h"
@@ -2056,7 +2056,7 @@ nsGenericHTMLElement::GetEnumAttr(nsIAtom* aAttr,
   }
 }
 
-HTMLMenuElement*
+nsHTMLMenuElement*
 nsGenericHTMLElement::GetContextMenu() const
 {
   nsAutoString value;
@@ -2064,7 +2064,7 @@ nsGenericHTMLElement::GetContextMenu() const
   if (!value.IsEmpty()) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      return HTMLMenuElement::FromContentOrNull(doc->GetElementById(value));
+      return nsHTMLMenuElement::FromContentOrNull(doc->GetElementById(value));
     }
   }
   return nullptr;

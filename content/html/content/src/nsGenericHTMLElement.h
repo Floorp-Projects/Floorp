@@ -23,6 +23,7 @@ class nsIFrame;
 class nsIStyleRule;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
+class nsHTMLMenuElement;
 class nsIDOMCSSStyleDeclaration;
 class nsIURI;
 class nsIFormControlFrame;
@@ -40,7 +41,6 @@ class nsDOMSettableTokenList;
 namespace mozilla {
 namespace dom{
 class HTMLPropertiesCollection;
-class HTMLMenuElement;
 }
 }
 
@@ -220,7 +220,7 @@ public:
     }
     return false;
   }
-  mozilla::dom::HTMLMenuElement* GetContextMenu() const;
+  nsHTMLMenuElement* GetContextMenu() const;
   bool Spellcheck();
   void SetSpellcheck(bool aSpellcheck, mozilla::ErrorResult& aError)
   {
