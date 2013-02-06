@@ -27,6 +27,7 @@
   -moz-box-flex: 0;
 }
 
+.fullscreenButton,
 .playButton,
 .muteButton {
   -moz-appearance: none;
@@ -35,9 +36,26 @@
   border: none !important;
 }
 
+.fullscreenButton {
+  background: url("chrome://browser/content/images/fullscreen-hdpi.png") no-repeat center;
+}
+
+.fullscreenButton[fullscreened="true"] {
+  background: url("chrome://browser/content/images/exitfullscreen-hdpi.png") no-repeat center;
+}
+
 .playButton {
-  -moz-transform: translateX(21px);
   background: url("chrome://browser/content/images/pause-hdpi.png") no-repeat center;
+}
+
+/*
+ * Normally the button bar has fullscreen spacer play spacer mute, but if
+ * this is an audio control rather than a video control, the fullscreen button
+ * is hidden by videocontrols.xml, and that alters the position of the
+ * play button.  This workaround moves it back to center.
+ */
+.controlBar.audio .playButton {
+  transform: translateX(28px);
 }
 
 .playButton[paused="true"] {
@@ -50,11 +68,6 @@
 
 .muteButton[muted="true"] {
   background: url("chrome://browser/content/images/unmute-hdpi.png") no-repeat center;
-}
-
-/* This button is hidden until bug 704229 is fixed. */
-.fullscreenButton {
-  display: none;
 }
 
 /* bars */
@@ -78,6 +91,7 @@
   padding: 0px;
   margin: 0px;
   background-color: transparent;
+  border-radius: 3px;
 }
 
 .bufferBar {
@@ -168,15 +182,12 @@
 }
 
 .volumeStack,
+.controlBar[firstshow="true"] .fullscreenButton,
 .controlBar[firstshow="true"] .muteButton,
 .controlBar[firstshow="true"] .scrubberStack,
 .controlBar[firstshow="true"] .durationBox,
 .timeLabel {
   display: none;
-}
-
-.controlBar[firstshow="true"] .playButton {
-  -moz-transform: none;
 }
 
 /* Error description formatting */

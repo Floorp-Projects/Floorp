@@ -3334,6 +3334,8 @@ END_CASE(JSOP_ARRAYPUSH)
         Probes::exitScript(cx, script, script->function(), regs.fp());
     regs.fp()->setFinishedInInterpreter();
 
+    gc::MaybeVerifyBarriers(cx, true);
+
 #ifdef JS_METHODJIT
     /*
      * This path is used when it's guaranteed the method can be finished
@@ -3342,7 +3344,6 @@ END_CASE(JSOP_ARRAYPUSH)
   leave_on_safe_point:
 #endif
 
-    gc::MaybeVerifyBarriers(cx, true);
     return interpReturnOK ? Interpret_Ok : Interpret_Error;
 }
 
