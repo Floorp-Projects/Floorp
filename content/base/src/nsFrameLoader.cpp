@@ -1427,12 +1427,7 @@ bool
 nsFrameLoader::OwnerIsAppFrame()
 {
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
-  if (!browserFrame) {
-    return false;
-  }
-  nsCOMPtr<mozIApplication> app;
-  browserFrame->GetOwnApp(getter_AddRefs(app));
-  return !!app;
+  return browserFrame ? browserFrame->GetReallyIsApp() : false;
 }
 
 bool
@@ -1441,29 +1436,57 @@ nsFrameLoader::OwnerIsBrowserFrame()
   return OwnerIsBrowserOrAppFrame() && !OwnerIsAppFrame();
 }
 
+void
+nsFrameLoader::GetOwnerAppManifestURL(nsAString& aOut)
+{
+  aOut.Truncate();
+  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
+  if (browserFrame) {
+    browserFrame->GetAppManifestURL(aOut);
+  }
+}
+
 already_AddRefed<mozIApplication>
 nsFrameLoader::GetOwnApp()
 {
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
-  if (!browserFrame) {
+  nsAutoString manifest;
+  GetOwnerAppManifestURL(manifest);
+  if (manifest.IsEmpty()) {
     return nullptr;
   }
 
-  nsCOMPtr<mozIApplication> app;
-  browserFrame->GetOwnApp(getter_AddRefs(app));
+  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(appsService, nullptr);
+
+  nsCOMPtr<mozIDOMApplication> domApp;
+  appsService->GetAppByManifestURL(manifest, getter_AddRefs(domApp));
+
+  nsCOMPtr<mozIApplication> app = do_QueryInterface(domApp);
+  MOZ_ASSERT_IF(domApp, app);
   return app.forget();
 }
 
 already_AddRefed<mozIApplication>
 nsFrameLoader::GetContainingApp()
 {
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
-  if (!browserFrame) {
+  // See if our owner content's principal has an associated app.
+  uint32_t appId = mOwnerContent->NodePrincipal()->GetAppId();
+  MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+
+  if (appId == nsIScriptSecurityManager::NO_APP_ID ||
+      appId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
     return nullptr;
   }
 
-  nsCOMPtr<mozIApplication> app;
-  browserFrame->GetContainingApp(getter_AddRefs(app));
+  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(appsService, nullptr);
+
+  nsCOMPtr<mozIDOMApplication> domApp;
+  appsService->GetAppByLocalId(appId, getter_AddRefs(domApp));
+  MOZ_ASSERT(domApp);
+
+  nsCOMPtr<mozIApplication> app = do_QueryInterface(domApp);
+  MOZ_ASSERT_IF(domApp, app);
   return app.forget();
 }
 
@@ -2047,7 +2070,7 @@ nsFrameLoader::TryRemoteBrowser()
     if (ownApp) {
       nsAutoString appType;
       mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapptype, appType);
-      unused << mRemoteBrowser->SendSetAppType(appType);
+      mRemoteBrowser->SendSetAppType(appType);
     }
 
     nsCOMPtr<nsIDocShellTreeItem> rootItem;
