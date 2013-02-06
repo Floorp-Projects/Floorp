@@ -9,6 +9,7 @@
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla += \
+  ASan.h \
   Assertions.h \
   Attributes.h \
   BloomFilter.h \
