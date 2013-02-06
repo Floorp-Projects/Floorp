@@ -1546,15 +1546,18 @@ typedef bool (*EnterBlockFn)(JSContext *, BaselineFrame *, Handle<StaticBlockObj
 static const VMFunction EnterBlockInfo = FunctionInfo<EnterBlockFn>(ion::EnterBlock);
 
 bool
-BaselineCompiler::emit_JSOP_ENTERBLOCK()
+BaselineCompiler::emitEnterBlock()
 {
     StaticBlockObject &blockObj = script->getObject(pc)->asStaticBlock();
-    for (size_t i = 0; i < blockObj.slotCount(); i++)
-        frame.push(UndefinedValue());
 
-    // Pushed values will be accessed using GETLOCAL and SETLOCAL, so ensure
-    // they are synced.
-    frame.syncStack(0);
+    if (JSOp(*pc) == JSOP_ENTERBLOCK) {
+        for (size_t i = 0; i < blockObj.slotCount(); i++)
+            frame.push(UndefinedValue());
+
+        // Pushed values will be accessed using GETLOCAL and SETLOCAL, so ensure
+        // they are synced.
+        frame.syncStack(0);
+    }
 
     // Call a stub to push the block on the block chain.
     prepareVMCall();
@@ -1564,6 +1567,24 @@ BaselineCompiler::emit_JSOP_ENTERBLOCK()
     pushArg(R0.scratchReg());
 
     return callVM(EnterBlockInfo);
+}
+
+bool
+BaselineCompiler::emit_JSOP_ENTERBLOCK()
+{
+    return emitEnterBlock();
+}
+
+bool
+BaselineCompiler::emit_JSOP_ENTERLET0()
+{
+    return emitEnterBlock();
+}
+
+bool
+BaselineCompiler::emit_JSOP_ENTERLET1()
+{
+    return emitEnterBlock();
 }
 
 typedef bool (*LeaveBlockFn)(JSContext *, BaselineFrame *);

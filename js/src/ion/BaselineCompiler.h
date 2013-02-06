@@ -114,6 +114,8 @@ namespace ion {
     _(JSOP_THROW)              \
     _(JSOP_TRY)                \
     _(JSOP_ENTERBLOCK)         \
+    _(JSOP_ENTERLET0)          \
+    _(JSOP_ENTERLET1)          \
     _(JSOP_LEAVEBLOCK)         \
     _(JSOP_EXCEPTION)          \
     _(JSOP_DEBUGGER)           \
@@ -199,6 +201,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitCall();
 
     bool emitFormalArgAccess(uint32_t arg, bool get);
+
+    bool emitEnterBlock();
 };
 
 } // namespace ion
