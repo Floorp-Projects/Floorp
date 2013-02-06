@@ -23,6 +23,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/CallbackObject.h"
 
 // nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
 // try to use it without fixing that first.
@@ -1120,18 +1121,36 @@ struct GetParentObject<T, false>
   }
 };
 
+MOZ_ALWAYS_INLINE
+JSObject* GetJSObjectFromCallback(CallbackObject* callback)
+{
+  return callback->Callback();
+}
+
+MOZ_ALWAYS_INLINE
+JSObject* GetJSObjectFromCallback(void* noncallback)
+{
+  return nullptr;
+}
+
 template<typename T>
 static inline JSObject*
 WrapCallThisObject(JSContext* cx, JSObject* scope, const T& p)
 {
-  // WrapNativeParent is a bit of a Swiss army knife that will
-  // wrap anything for us.
-  JSObject* obj = WrapNativeParent(cx, scope, p);
+  // Callbacks are nsISupports, so WrapNativeParent will just happily wrap them
+  // up as an nsISupports XPCWrappedNative... which is not at all what we want.
+  // So we need to special-case them.
+  JSObject* obj = GetJSObjectFromCallback(p);
   if (!obj) {
-    return nullptr;
+    // WrapNativeParent is a bit of a Swiss army knife that will
+    // wrap anything for us.
+    obj = WrapNativeParent(cx, scope, p);
+    if (!obj) {
+      return nullptr;
+    }
   }
 
-  // But it won't necessarily put things in the compartment of cx.
+  // But all that won't necessarily put things in the compartment of cx.
   if (!JS_WrapObject(cx, &obj)) {
     return nullptr;
   }
