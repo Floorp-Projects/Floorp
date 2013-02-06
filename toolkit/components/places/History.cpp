@@ -199,7 +199,7 @@ class PlaceHashKey : public nsCStringHashKey
     PlaceHashKey(const PlaceHashKey& aOther)
     : nsCStringHashKey(&aOther.GetKey())
     {
-      MOZ_ASSERT("Do not call me!");
+      MOZ_ASSERT(false, "Do not call me!");
     }
 
     // Visit count for this place.
