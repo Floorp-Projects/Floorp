@@ -14,10 +14,6 @@ PARALLEL_DIRS += \
   crypto \
   $(NULL)
 
-ifdef MOZ_SERVICES_AITC
-PARALLEL_DIRS += aitc
-endif
-
 ifdef MOZ_SERVICES_HEALTHREPORT
 PARALLEL_DIRS += healthreport
 endif

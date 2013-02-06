@@ -44,7 +44,7 @@ function addResourceAlias() {
   const handler = Services.io.getProtocolHandler("resource")
                   .QueryInterface(Ci.nsIResProtocolHandler);
 
-  let modules = ["aitc", "common", "crypto"];
+  let modules = ["common", "crypto"];
   for each (let module in modules) {
     let uri = Services.io.newURI("resource://gre/modules/services-" + module + "/",
                                  null, null);

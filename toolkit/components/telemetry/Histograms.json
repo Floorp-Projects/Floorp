@@ -2570,5 +2570,41 @@
     "high": "60000",
     "n_buckets": 50,
     "description": "Time spent on an initially failed cert  verification in classic mode (ms)"
+  },
+  "HEALTHREPORT_INIT_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) spent to initialize Firefox Health Report service."
+  },
+  "HEALTHREPORT_SHUTDOWN_DELAY_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) that Firefox Health Report delays application shutdown by."
+  },
+  "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "description": "Time (ms) it takes to obtain and format a Health Report JSON payload."
+  },
+  "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES": {
+    "kind": "linear",
+    "high": "2000000",
+    "n_buckets": 202,
+    "description": "Size (in bytes) of the raw Health Report payload."
+  },
+  "HEALTHREPORT_UPLOAD_MS": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 20,
+    "description": "Time (ms) it takes to upload the Health Report payload."
+  },
+  "HEALTHREPORT_SAVE_LAST_PAYLOAD_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time (ms) it takes to persist the last submitted Health Report payload to disk."
   }
 }
