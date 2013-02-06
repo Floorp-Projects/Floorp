@@ -3,9 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+function dump(a) {
+  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
+}
+
+function sendMessageToJava(aMessage) {
+  return Cc["@mozilla.org/android/bridge;1"]
+           .getService(Ci.nsIAndroidBridge)
+           .handleGeckoMessage(JSON.stringify(aMessage));
+}
+
+this.EXPORTED_SYMBOLS = ["Sanitizer"];
+
 function Sanitizer() {}
 Sanitizer.prototype = {
-  // warning to the caller: this one may raise an exception (e.g. bug #265028)
   clearItem: function (aItemName)
   {
     if (this.items[aItemName].canClear)
@@ -174,9 +190,7 @@ Sanitizer.prototype = {
         sdr.logoutAndTeardown();
 
         // clear FTP and plain HTTP auth sessions
-        var os = Components.classes["@mozilla.org/observer-service;1"]
-                           .getService(Components.interfaces.nsIObserverService);
-        os.notifyObservers(null, "net:clear-active-logins", null);
+        Services.obs.notifyObservers(null, "net:clear-active-logins", null);
       },
 
       get canClear()
@@ -187,3 +201,4 @@ Sanitizer.prototype = {
   }
 };
 
+this.Sanitizer = new Sanitizer();
