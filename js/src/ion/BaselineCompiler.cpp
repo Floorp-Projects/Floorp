@@ -397,13 +397,15 @@ BaselineCompiler::emitUseCountIncrement()
     Register scriptReg = R2.scratchReg();
     Register countReg = R0.scratchReg();
     Address useCountAddr(scriptReg, JSScript::offsetOfUseCount());
-    Label lowCount;
 
     masm.movePtr(ImmGCPtr(script), scriptReg);
     masm.load32(useCountAddr, countReg);
     masm.add32(Imm32(1), countReg);
     masm.store32(countReg, useCountAddr);
-    masm.branch32(Assembler::LessThan, countReg, Imm32(js_IonOptions.usesBeforeCompile), &lowCount);
+
+    Label lowCount;
+    masm.branch32(Assembler::LessThan, countReg, Imm32(js_IonOptions.usesBeforeCompile),
+                  &lowCount);
 
     // Call IC.
     ICUseCount_Fallback::Compiler stubCompiler(cx);

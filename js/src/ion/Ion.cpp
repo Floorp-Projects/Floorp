@@ -1552,6 +1552,33 @@ ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp,
 }
 
 MethodStatus
+ion::CompileFunctionForBaseline(JSContext *cx, JSScript *script, AbstractFramePtr fp,
+                                bool isConstructing)
+{
+    JS_ASSERT(ion::IsEnabled(cx));
+    JS_ASSERT(fp.fun()->nonLazyScript()->canIonCompile());
+    JS_ASSERT(!fp.fun()->nonLazyScript()->isIonCompilingOffThread());
+    JS_ASSERT(!fp.fun()->nonLazyScript()->hasIonScript());
+    JS_ASSERT(fp.isFunctionFrame());
+
+    // Mark as forbidden if frame can't be handled.
+    if (!CheckFrame(fp)) {
+        ForbidCompilation(cx, script);
+        return Method_CantCompile;
+    }
+
+    // Attempt compilation. Returns Method_Compiled if already compiled.
+    MethodStatus status = Compile(cx, script, fp.fun(), NULL, isConstructing);
+    if (status != Method_Compiled) {
+        if (status == Method_CantCompile)
+            ForbidCompilation(cx, script);
+        return status;
+    }
+
+    return Method_Compiled;
+}
+
+MethodStatus
 ion::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs)
 {
     JS_ASSERT(ion::IsEnabled(cx));
