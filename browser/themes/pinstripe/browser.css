@@ -4233,17 +4233,44 @@ panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .
   }
 }
 
-@media (-moz-mac-lion-theme) {
-  #main-window[privatebrowsingmode=temporary] {
-    background-position: top right 40px;
-  }
+#main-window[privatebrowsingmode=temporary] {
+  background-position: top right 40px;
+}
 
-  #main-window[privatebrowsingmode=temporary]:-moz-locale-dir(rtl) {
-    background-position: top left 70px;
-  }
+#main-window[privatebrowsingmode=temporary][inFullscreen] {
+  background-position: top right 10px;
+}
+
+#main-window[privatebrowsingmode=temporary]:-moz-locale-dir(rtl) {
+  background-position: top left 70px;
+}
+
+#main-window[privatebrowsingmode=temporary][inFullscreen]:-moz-locale-dir(rtl) {
+  background-position: top left 10px;
 }
 
 #main-window[privatebrowsingmode=temporary]:-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
 }
+
+#main-window[privatebrowsingmode=temporary][inFullscreen] #nav-bar[tabsontop=false] {
+  -moz-padding-end: 50px !important;
+}
+
+@media (-moz-mac-lion-theme) {
+  #main-window[privatebrowsingmode=temporary][inFullscreen] #TabsToolbar[tabsontop=true] {
+    -moz-padding-end: 50px;
+  }
+}
+
+@media not all and (-moz-mac-lion-theme) {
+  #main-window[privatebrowsingmode=temporary] {
+    background-position: top right 10px;
+  }
+
+  #main-window[privatebrowsingmode=temporary][inFullscreen][tabsontop=true] #window-controls {
+    -moz-padding-end: 50px;
+  }
+}
+
 
