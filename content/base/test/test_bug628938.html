@@ -87,7 +87,7 @@ function regularWalk()
     [ false, "\n" ],
   ];
   var walker = document.createTreeWalker(document.getElementById('content'),
-                                         NodeFilter.SHOW_ALL, null, true);
+                                         NodeFilter.SHOW_ALL, null);
 
   walkTree(walker);
 
@@ -125,7 +125,7 @@ function noWhiteSpaceWalk()
                                                return NodeFilter.FILTER_REJECT;
                                              return NodeFilter.FILTER_ACCEPT;
                                            }
-                                         }, true);
+                                         });
 
   walkTree(walker);
 
@@ -148,7 +148,7 @@ function onlyElementsWalk()
     [ true, "DIV" ],
   ];
   var walker = document.createTreeWalker(document.getElementById('content'),
-                                         NodeFilter.SHOW_ELEMENT, null, true);
+                                         NodeFilter.SHOW_ELEMENT, null);
 
   walkTree(walker);
 
@@ -187,7 +187,7 @@ function onlyDivSubTreeWalk()
                                              }
                                              return NodeFilter.FILTER_SKIP;
                                            }
-                                         }, true);
+                                         });
 
   walkTree(walker);
 
@@ -220,7 +220,7 @@ function onlyDivDataWalk()
                                                return NodeFilter.FILTER_ACCEPT;
                                              return NodeFilter.FILTER_SKIP;
                                            }
-                                         }, true);
+                                         });
 
   walkTree(walker);
 
