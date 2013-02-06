@@ -481,6 +481,7 @@ WebappsApplication.prototype = {
                                               manifestURL: this.manifestURL,
                                               startPoint: aStartPoint || "",
                                               oid: this._id,
+                                              timestamp: Date.now(),
                                               requestID: this.getRequestId(request) });
     return request;
   },

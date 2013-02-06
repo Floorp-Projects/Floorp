@@ -270,16 +270,18 @@ var BrowserApp = {
         pinned = window.arguments[3];
     }
 
-    let updated = this.isAppUpdated();
+    let status = this.startupStatus();
     if (pinned) {
-      WebAppRT.init(updated, url).then(function(aUrl) {
-        BrowserApp.addTab(aUrl);
-      }, function() {
-        let uri = Services.io.newURI(url, null, null);
-        if (!uri)
-          return;
-        Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService).getProtocolHandlerInfo(uri.scheme).launchWithURI(uri);
-        BrowserApp.quit();
+      WebAppRT.init(status, url, function(aUrl) {
+        if (aUrl) {
+          BrowserApp.addTab(aUrl);
+        } else {
+          let uri = Services.io.newURI(url, null, null);
+          if (!uri)
+            return;
+          Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService).getProtocolHandlerInfo(uri.scheme).launchWithURI(uri);
+          BrowserApp.quit();
+        }
       });
     } else {
       SearchEngines.init();
@@ -294,7 +296,7 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    if (updated)
+    if (status)
       this.onAppUpdated();
 
     // Store the low-precision buffer pref
@@ -309,7 +311,7 @@ var BrowserApp = {
 #endif
   },
 
-  isAppUpdated: function() {
+  startupStatus: function() {
     let savedmstone = null;
     try {
       savedmstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");

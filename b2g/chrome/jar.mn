@@ -41,5 +41,7 @@ chrome.jar:
   content/images/pause-hdpi.png        (content/images/pause-hdpi.png)
   content/images/play-hdpi.png         (content/images/play-hdpi.png)
   content/images/mute-hdpi.png         (content/images/mute-hdpi.png)
+  content/images/fullscreen-hdpi.png     (content/images/fullscreen-hdpi.png)
+  content/images/exitfullscreen-hdpi.png (content/images/exitfullscreen-hdpi.png)
   content/images/throbber.png          (content/images/throbber.png)
   content/images/error.png             (content/images/error.png)
