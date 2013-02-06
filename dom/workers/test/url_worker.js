@@ -59,5 +59,14 @@ onmessage = function() {
   postMessage({type: 'status', status: status, msg: 'Blob URL2:' + url});
   postMessage({type: 'url', url: url});
 
+  status = false;
+  try {
+    URL.createObjectURL(new Object());
+  } catch(e) {
+    status = true;
+  }
+
+  postMessage({type: 'status', status: status, msg: 'Exception wanted' });
+
   postMessage({type: 'finish' });
 }
