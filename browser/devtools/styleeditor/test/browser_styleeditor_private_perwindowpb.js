@@ -19,7 +19,13 @@ function test() {
       aWindow.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
       cache.evictEntries(Ci.nsICache.STORE_ANYWHERE);
       launchStyleEditorChromeFromWindow(aWindow, function(aChrome) {
-        onEditorAdded(aChrome, aChrome.editors[0]);
+        if (aChrome.isContentAttached) {
+          onEditorAdded(aChrome, aChrome.editors[0]);
+        } else {
+          aChrome.addChromeListener({
+            onEditorAdded: onEditorAdded
+          });
+        }
       });
     }, true);
 
