@@ -39,7 +39,7 @@
 
   function checkseq(it, root, expect) {
     var checkIt = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
-					      testNodeFilter, false);
+					      testNodeFilter);
     var printedPointer = (it.referenceNode == undefined);
     var string = '';
     var node;
@@ -62,7 +62,7 @@
   (function(){
      var root = resetContent();
      var it = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
-					  testNodeFilter, false);
+					  testNodeFilter);
 
      checkseq(it, root, 'A B C D E F G H I');
      it.nextNode();
@@ -77,7 +77,7 @@
   (function(){
      var root = resetContent();
      var it = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
-					  testNodeFilter, false);
+					  testNodeFilter);
 
      for (var i = 0; i < 4; i++)
        it.nextNode();
@@ -102,7 +102,7 @@
   (function(){
      var root = resetContent();
      var it = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
-					  testNodeFilter, false);
+					  testNodeFilter);
 
   })();
   */

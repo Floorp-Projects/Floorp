@@ -31,7 +31,7 @@ function test() {
   {
     node.normalize();
     let iter = node.ownerDocument.createNodeIterator(node, NodeFilter.SHOW_TEXT + NodeFilter.SHOW_COMMENT,
-      null, false);
+      null);
 
     while ((node = iter.nextNode())) {
       node.nodeValue = node.nodeValue.replace(/\s+/g, '');

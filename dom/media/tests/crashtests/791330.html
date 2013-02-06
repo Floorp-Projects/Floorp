@@ -16,9 +16,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=791330
       pc.close();
 
       navigator.mozGetUserMedia({audio: true, fake: true}, function (stream) {
-        pc.addStream(stream);
-        pc.createOffer(function (offer) {});
-        finish();
+        try {
+          pc.addStream(stream);
+          pc.createOffer(function (offer) {});
+        }
+        finally {
+          stream.stop();
+
+          finish();
+        }
       }, function () {});
     }
   </script>

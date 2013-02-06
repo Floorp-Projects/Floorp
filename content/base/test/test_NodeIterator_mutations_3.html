@@ -21,7 +21,7 @@
   function resetContent() {
     content.innerHTML = initInner;
     var checkIt = document.createNodeIterator(content, NodeFilter.SHOW_ELEMENT,
-					      testNodeFilter, false);
+					      testNodeFilter);
     var node;
     while ((node = checkIt.nextNode()) != null) {
       if (node.id) {
@@ -44,7 +44,7 @@
 
   function checkseq(it, root, expect) {
     var checkIt = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT,
-					      testNodeFilter, false);
+					      testNodeFilter);
     var printedPointer = (it.referenceNode == undefined);
     var string = '';
     var node;
@@ -65,7 +65,7 @@
 
   resetContent();
   var it = document.createNodeIterator(E, NodeFilter.SHOW_ELEMENT,
-                                       testNodeFilter, false);
+                                       testNodeFilter);
   checkseq(it, root, "root B C D * [E] E1 E11");
 
   removeNode(C);
@@ -94,7 +94,7 @@
 
   resetContent();
   it = document.createNodeIterator(E, NodeFilter.SHOW_ELEMENT,
-                                   testNodeFilter, false);
+                                   testNodeFilter);
   checkseq(it, root, "root B C D * [E] E1 E11");
 
   it.nextNode();
@@ -119,7 +119,7 @@
 
   resetContent();
   it = document.createNodeIterator(E, NodeFilter.SHOW_ELEMENT,
-                                   testNodeFilter, false);
+                                   testNodeFilter);
   checkseq(it, root, "root B C D * [E] E1 E11");
 
   removeNode(root);

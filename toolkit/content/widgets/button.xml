@@ -113,7 +113,7 @@
         <![CDATA[
           var iterator = aSubtree.ownerDocument.createTreeWalker(aSubtree, 
                                                                  NodeFilter.SHOW_ELEMENT, 
-                                                                 this.filterButtons, false);
+                                                                 this.filterButtons);
           while (iterator.nextNode()) {
             var test = iterator.currentNode;
             if (test.accessKey.toLowerCase() == aAccessKeyLower && 
