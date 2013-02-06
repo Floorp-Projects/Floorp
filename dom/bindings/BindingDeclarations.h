@@ -326,6 +326,59 @@ public:
   {}
 };
 
+class RootedJSValue
+{
+public:
+  RootedJSValue()
+    : mCx(nullptr)
+  {}
+
+  ~RootedJSValue()
+  {
+    if (mCx) {
+      JS_RemoveValueRoot(mCx, &mValue);
+    }
+  }
+
+  bool SetValue(JSContext* aCx, JS::Value aValue)
+  {
+    // We don't go ahead and root if v is null, because we want to allow
+    // null-initialization even when there is no cx.
+    MOZ_ASSERT_IF(!aValue.isNull(), aCx);
+
+    // Be careful to not clobber mCx if it's already set, just in case we're
+    // being null-initialized (with a null cx for some reason) after we have
+    // already been initialized properly with a non-null value.
+    if (!aValue.isNull() && !mCx) {
+      if (!JS_AddNamedValueRoot(aCx, &mValue, "RootedJSValue::mValue")) {
+        return false;
+      }
+      mCx = aCx;
+    }
+
+    mValue = aValue;
+    return true;
+  }
+
+  operator JS::Value()
+  {
+    return mValue;
+  }
+
+  operator const JS::Value() const
+  {
+    return mValue;
+  }
+
+private:
+  // Don't allow copy-construction of these objects, because it'll do the wrong
+  // thing with our flag mCx.
+  RootedJSValue(const RootedJSValue&) MOZ_DELETE;
+
+  JS::Value mValue;
+  JSContext* mCx;
+};
+
 } // namespace dom
 } // namespace mozilla
 
