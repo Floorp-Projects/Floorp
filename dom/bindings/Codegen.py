@@ -2830,13 +2830,21 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isAny():
         assert not isEnforceRange and not isClamp
 
-        if isMember:
-            raise TypeError("Can't handle member 'any'; need to sort out "
-                            "rooting issues")
-        templateBody = "${declName} = ${val};"
-        templateBody = handleDefaultNull(templateBody,
-                                         "${declName} = JS::NullValue()")
-        return (templateBody, CGGeneric("JS::Value"), None, isOptional)
+        if isMember == "Dictionary":
+            declType = "RootedJSValue"
+            templateBody = ("if (!${declName}.SetValue(cx, ${val})) {\n"
+                            "  return false;\n"
+                            "}")
+            nullHandling = "${declName}.SetValue(nullptr, JS::NullValue())"
+        elif isMember:
+            raise TypeError("Can't handle sequence member 'any'; need to sort "
+                            "out rooting issues")
+        else:
+            declType = "JS::Value"
+            templateBody = "${declName} = ${val};"
+            nullHandling = "${declName} = JS::NullValue()"
+        templateBody = handleDefaultNull(templateBody, nullHandling)
+        return (templateBody, CGGeneric(declType), None, isOptional)
 
     if type.isObject():
         assert not isEnforceRange and not isClamp
