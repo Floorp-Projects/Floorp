@@ -7,6 +7,8 @@
 /* These styles affect only the bound element, not other page content. */
 
 .mainBox {
+  font: message-box;
+  font-size: 12px;
   text-align: center;
   background-image: -moz-repeating-linear-gradient(-45deg,
                                                    rgba(65, 65, 65, 0.8),
@@ -14,13 +16,17 @@
                                                    rgba(69, 69, 69, 0.8) 20px,
                                                    rgba(69, 69, 69, 0.8) 40px);
   color: white;
+  text-shadow: rgba(0,0,0,0.8) 0 0 3.5px;
   border-radius: 12px;
   /* recessed effect with dark inner shadow and lightened bottom */
   box-shadow: inset 0 1px 3.5px rgba(0,0,0,0.8),
               0 1px 0 rgba(255,255,255,0.2);
-  padding: 5px;
   -moz-user-select: none;
   position: relative;
+}
+
+.hoverBox {
+  padding: 5px;
 }
 
 html|a {
@@ -28,10 +34,13 @@ html|a {
 }
 
 .icon {
-  min-width: 48px;
-  min-height: 48px;
+  display: inline-block;
+  width: 48px;
+  height: 48px;
   background-position: center;
   background-repeat: no-repeat;
+  border: none;
+  background-color: transparent;
 }
 :-moz-type-unsupported .icon,
 :-moz-type-unsupported-platform .icon {
@@ -40,11 +49,22 @@ html|a {
 :-moz-type-unsupported .icon[status="ready"] {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginDownload.png);
 }
-:-moz-handler-clicktoplay .icon,
 :-moz-handler-vulnerable-updatable .icon,
 :-moz-handler-vulnerable-no-update .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginClickToPlay.png);
 }
+
+:-moz-handler-clicktoplay .icon {
+  background-image: url(chrome://mozapps/skin/plugins/contentPluginClickToPlayPlain.png);
+  background-position: 0 0;
+}
+:-moz-handler-clicktoplay .hoverBox:hover .icon {
+ background-position: -48px 0;
+}
+:-moz-handler-clicktoplay .hoverBox:hover:active .icon {
+ background-position: -96px 0;
+}
+
 :-moz-handler-disabled .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginDisabled.png);
 }
@@ -62,12 +82,11 @@ html|a {
 }
 
 .msg {
-  font: message-box;
-  font-size: 12px;
   cursor: default;
-  text-shadow: rgba(0,0,0,0.8) 0 0 3.5px;
+  width: 100%;
 }
 
+:-moz-handler-clicktoplay .mainBox,
 :-moz-handler-clicktoplay .msgClickToPlay,
 :-moz-handler-vulnerable-updatable .msgClickToPlay,
 :-moz-handler-vulnerable-no-update .msgClickToPlay {
@@ -127,4 +146,41 @@ html|a {
 
 .closeIcon:hover:active {
   background-position: -32px 0;
+}
+
+:-moz-handler-clicktoplay .mainBox {
+  background-image: none;
+  background-color: hsla(0,0%,100%,.2);
+  border: 1px dashed hsla(0,0%,50%,0.5);
+  border-radius: 2.5px;
+  color: hsl(0,0%,50%);
+  text-shadow: none;
+  box-shadow: none;
+  transition: background-color 150ms ease;
+}
+
+:-moz-handler-clicktoplay .mainBox:hover {
+  background-color: hsla(0,0%,90%,.7);
+}
+:-moz-handler-clicktoplay .mainBox:hover:active {
+  background-color: hsla(0,0%,90%,.8);
+}
+
+:-moz-handler-clicktoplay .mainBox,
+:-moz-handler-clicktoplay html|a {
+  color: hsl(0,0%,35%);
+}
+
+:-moz-handler-clicktoplay .hoverBox:hover,
+:-moz-handler-clicktoplay .hoverBox:hover html|a {
+  color: hsl(0,0%,20%);
+}
+
+:-moz-handler-clicktoplay .hoverBox:hover:active,
+:-moz-handler-clicktoplay .hoverBox:hover:active html|a {
+  color: hsl(0,0%,10%);
+}
+
+:-moz-handler-clicktoplay .closeIcon {
+  background-image: url("chrome://mozapps/skin/plugins/contentPluginClose.png");
 }
