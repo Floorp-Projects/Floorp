@@ -22,7 +22,10 @@ ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 TEST_DIRS += tests
 endif
 
-EXPORTS = PCOMContentPermissionRequestChild.h
+EXPORTS = \
+  nsICachedFileDescriptorListener.h \
+  PCOMContentPermissionRequestChild.h \
+  $(NULL)
 
 EXPORTS_NAMESPACES = \
   mozilla \
