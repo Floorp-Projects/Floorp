@@ -90,21 +90,7 @@ protected:
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
   nsresult GetContentWindow(nsIDOMWindow** aContentWindow);
 
-  // Return true iff this frame may be an app frame.  This is the case
-  // if we're an app or browser frame and our containing app has the
-  // "embed-apps" permission.
-  bool MayBeAppFrame();
-
   nsRefPtr<nsFrameLoader> mFrameLoader;
-  // These elements are a cache to avoid calling out to the app
-  // service to look up app IDs.  The getters that access these
-  // attributes are on the critical startup path, and constructing
-  // these objects (which are implemented in JS) is expensive enough
-  // to show up on profiles.  The app service can't cache the objects
-  // itself because the returned objects are mutable.  However, our
-  // use of them is immutable.
-  nsCOMPtr<mozIApplication> mApp;
-  nsCOMPtr<mozIApplication> mContainingApp;
 
   // True when the element is created by the parser
   // using NS_FROM_PARSER_NETWORK flag.

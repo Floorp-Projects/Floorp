@@ -124,9 +124,6 @@ TabContext::OwnAppId() const
 already_AddRefed<mozIApplication>
 TabContext::GetOwnApp() const
 {
-  if (mOwnApp) {
-    return nsCOMPtr<mozIApplication>(mOwnApp).forget();
-  }
   return GetAppForId(OwnAppId());
 }
 
@@ -169,9 +166,6 @@ TabContext::AppOwnerAppId() const
 already_AddRefed<mozIApplication>
 TabContext::GetAppOwnerApp() const
 {
-  if (mContainingApp) {
-    return nsCOMPtr<mozIApplication>(mContainingApp).forget();
-  }
   return GetAppForId(AppOwnerAppId());
 }
 
@@ -199,12 +193,6 @@ TabContext::OwnOrContainingAppId() const
 already_AddRefed<mozIApplication>
 TabContext::GetOwnOrContainingApp() const
 {
-  if (mOwnApp) {
-    return nsCOMPtr<mozIApplication>(mOwnApp).forget();
-  }
-  if (mContainingApp) {
-    return nsCOMPtr<mozIApplication>(mContainingApp).forget();
-  }
   return GetAppForId(OwnOrContainingAppId());
 }
 
@@ -262,9 +250,7 @@ TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp, mozIApplication* 
   mInitialized = true;
   mIsBrowser = false;
   mOwnAppId = ownAppId;
-  mOwnApp = aOwnApp;
   mContainingAppId = containingAppId;
-  mContainingApp = aAppFrameOwnerApp;
   mScrollingBehavior = aRequestedBehavior;
   return true;
 }
