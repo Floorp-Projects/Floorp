@@ -583,6 +583,10 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         // We save the "xpcom-shutdown-loaders" observers to notify after
         // the observerservice is gone.
         if (observerService) {
+            // FIXME: This can cause harmless writes from sqlite committing
+            // log files. We have to ignore them before we can move
+            // the mozilla::PoisonWrite call before this point. See bug
+            // 834945 for the details.
             observerService->
                 EnumerateObservers(NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID,
                                    getter_AddRefs(moduleLoaders));
