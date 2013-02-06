@@ -20,6 +20,31 @@ function sendMessageToJava(aMessage) {
 
 this.EXPORTED_SYMBOLS = ["Sanitizer"];
 
+let downloads = {
+  dlmgr: Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager),
+
+  iterate: function (aCallback) {
+    let dlmgr = downloads.dlmgr;
+    let dbConn = dlmgr.DBConnection;
+    let stmt = dbConn.createStatement("SELECT id FROM moz_downloads WHERE " +
+        "state = ? OR state = ? OR state = ? OR state = ? OR state = ? OR state = ?");
+    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
+    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_FAILED);
+    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_CANCELED);
+    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL);
+    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY);
+    stmt.bindInt32Parameter(5, Ci.nsIDownloadManager.DOWNLOAD_DIRTY);
+    while (stmt.executeStep()) {
+      aCallback(dlmgr.getDownload(stmt.row.id));
+    }
+    stmt.finalize();
+  },
+
+  get canClear() {
+    return this.dlmgr.canCleanUp;
+  }
+};
+
 function Sanitizer() {}
 Sanitizer.prototype = {
   clearItem: function (aItemName)
@@ -158,14 +183,35 @@ Sanitizer.prototype = {
     downloads: {
       clear: function ()
       {
-        var dlMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-        dlMgr.cleanUp();
+        downloads.iterate(function (dl) {
+          dl.remove();
+        });
       },
 
       get canClear()
       {
-        var dlMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-        return dlMgr.canCleanUp;
+        return downloads.canClear;
+      }
+    },
+
+    downloadFiles: {
+      clear: function ()
+      {
+        downloads.iterate(function (dl) {
+          // Delete the downloaded files themselves
+          let f = dl.targetFile;
+          if (f.exists()) {
+            f.remove(false);
+          }
+
+          // Also delete downloads from history
+          dl.remove();
+        });
+      },
+
+      get canClear()
+      {
+        return downloads.canClear;
       }
     },
 
