@@ -21,47 +21,16 @@ function parseFontSizeTodo(input, expected) {
 }
 
 function parseFontSizeInner(input, expected, fn) {
-  // First test non-CSS
-  document.execCommand("styleWithCSS", false, false);
   div.innerHTML = "foo";
   getSelection().selectAllChildren(div);
   document.execCommand("fontSize", false, input);
   if (expected === null) {
     fn(div.innerHTML, "foo",
-       'execCommand("fontSize", false, "' + input + '") should be no-op ' +
-       '(non-CSS)');
+       'execCommand("fontSize", false, "' + input + '") should be no-op');
   } else {
     fn(div.innerHTML, '<font size="' + expected + '">foo</font>',
        'execCommand("fontSize", false, "' + input + '") should parse to ' +
-       expected + ' (non-CSS)');
-  }
-
-  // Now test CSS
-  document.execCommand("styleWithCSS", false, true);
-  div.innerHTML = "foo";
-  getSelection().selectAllChildren(div);
-  document.execCommand("fontSize", false, input);
-  if (expected === null) {
-    fn(div.innerHTML, "foo",
-       'execCommand("fontSize", false, "' + input + '") should be no-op ' +
-       '(CSS)');
-  } else if (expected === 7) {
-    // No CSS support for <font size=7>
-    fn(div.innerHTML, '<font size="' + expected + '">foo</font>',
-       'execCommand("fontSize", false, "' + input + '") should parse to ' +
-       expected + ' (CSS)');
-  } else {
-    var cssVal = {
-      1: "x-small",
-      2: "small",
-      3: "medium",
-      4: "large",
-      5: "x-large",
-      6: "xx-large",
-    }[expected];
-    fn(div.innerHTML, '<span style="font-size: ' + cssVal + ';">foo</span>',
-       'execCommand("fontSize", false, "' + input + '") should parse to ' +
-       expected + ' (CSS)');
+       expected);
   }
 }
 

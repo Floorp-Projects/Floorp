@@ -183,45 +183,6 @@ void ProcessMarginRightValue(const nsAString * aInputString, nsAString & aOutput
   }
 }
 
-static
-void ProcessFontSizeValue(const nsAString* aInputString, nsAString& aOutputString,
-                          const char* aDefaultValueString,
-                          const char* aPrependString, const char* aAppendString)
-{
-  aOutputString.Truncate();
-  if (aInputString) {
-    int32_t size = nsContentUtils::ParseLegacyFontSize(*aInputString);
-    switch (size) {
-      case 0:
-        // Didn't parse
-        return;
-      case 1:
-        aOutputString.AssignLiteral("x-small");
-        return;
-      case 2:
-        aOutputString.AssignLiteral("small");
-        return;
-      case 3:
-        aOutputString.AssignLiteral("medium");
-        return;
-      case 4:
-        aOutputString.AssignLiteral("large");
-        return;
-      case 5:
-        aOutputString.AssignLiteral("x-large");
-        return;
-      case 6:
-        aOutputString.AssignLiteral("xx-large");
-        return;
-      case 7:
-        // No corresponding CSS size
-        return;
-      default:
-        NS_NOTREACHED("Unexpected return value from ParseLegacyFontSize");
-    }
-  }
-}
-
 const nsHTMLCSSUtils::CSSEquivTable boldEquivTable[] = {
   { nsHTMLCSSUtils::eCSSEditableProperty_font_weight, ProcessBValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
@@ -254,11 +215,6 @@ const nsHTMLCSSUtils::CSSEquivTable fontColorEquivTable[] = {
 
 const nsHTMLCSSUtils::CSSEquivTable fontFaceEquivTable[] = {
   { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessSameValue, nullptr, nullptr, nullptr, true, false },
-  { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
-};
-
-const nsHTMLCSSUtils::CSSEquivTable fontSizeEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_size, ProcessFontSizeValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
@@ -347,21 +303,19 @@ nsHTMLCSSUtils::~nsHTMLCSSUtils()
 bool
 nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode* aNode,
                                       nsIAtom* aProperty,
-                                      const nsAString* aAttribute,
-                                      const nsAString* aValue)
+                                      const nsAString* aAttribute)
 {
   NS_ASSERTION(aNode, "Shouldn't you pass aNode? - Bug 214025");
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, false);
-  return IsCSSEditableProperty(content, aProperty, aAttribute, aValue);
+  return IsCSSEditableProperty(content, aProperty, aAttribute);
 }
 
 bool
 nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
                                       nsIAtom* aProperty,
-                                      const nsAString* aAttribute,
-                                      const nsAString* aValue)
+                                      const nsAString* aAttribute)
 {
   MOZ_ASSERT(aNode);
 
@@ -385,16 +339,6 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
            (aAttribute->EqualsLiteral("color") ||
             aAttribute->EqualsLiteral("face")))) {
     return true;
-  }
-
-  // FONT SIZE doesn't work if the value is 7
-  if (nsEditProperty::font == aProperty && aAttribute &&
-      aAttribute->EqualsLiteral("size")) {
-    if (!aValue || aValue->IsEmpty()) {
-      return true;
-    }
-    int32_t size = nsContentUtils::ParseLegacyFontSize(*aValue);
-    return size && size != 7;
   }
 
   // ALIGN attribute on elements supporting it
@@ -908,9 +852,6 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(dom::Element* aElement,
     } else if (nsEditProperty::font == aHTMLProperty &&
                aAttribute->EqualsLiteral("face")) {
       equivTable = fontFaceEquivTable;
-    } else if (nsEditProperty::font == aHTMLProperty &&
-               aAttribute->EqualsLiteral("size")) {
-      equivTable = fontSizeEquivTable;
     } else if (aAttribute->EqualsLiteral("bgcolor")) {
       equivTable = bgcolorEquivTable;
     } else if (aAttribute->EqualsLiteral("background")) {
@@ -989,8 +930,7 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
 {
   nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
   *aCount = 0;
-  if (!element || !IsCSSEditableProperty(element, aHTMLProperty,
-                                         aAttribute, aValue)) {
+  if (!element || !IsCSSEditableProperty(element, aHTMLProperty, aAttribute)) {
     return NS_OK;
   }
 
@@ -1066,8 +1006,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
   nsCOMPtr<dom::Element> theElement = GetElementContainerOrSelf(aNode);
   NS_ENSURE_TRUE(theElement, NS_ERROR_NULL_POINTER);
 
-  if (!theElement || !IsCSSEditableProperty(theElement, aHTMLProperty,
-                                            aAttribute, &aValueString)) {
+  if (!theElement || !IsCSSEditableProperty(theElement, aHTMLProperty, aAttribute)) {
     return NS_OK;
   }
 
@@ -1244,19 +1183,6 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
                  !valueStringLower.EqualsLiteral("serif");
       }
       return NS_OK;
-    } else if (nsEditProperty::font == aHTMLProperty && aHTMLAttribute &&
-               aHTMLAttribute->EqualsLiteral("size")) {
-      if (htmlValueString.IsEmpty()) {
-        aIsSet = true;
-      } else {
-        int32_t size = nsContentUtils::ParseLegacyFontSize(htmlValueString);
-        aIsSet = (size == 1 && valueString.EqualsLiteral("x-small")) ||
-                 (size == 2 && valueString.EqualsLiteral("small")) ||
-                 (size == 3 && valueString.EqualsLiteral("medium")) ||
-                 (size == 4 && valueString.EqualsLiteral("large")) ||
-                 (size == 5 && valueString.EqualsLiteral("x-large")) ||
-                 (size == 6 && valueString.EqualsLiteral("xx-large"));
-      }
     } else if (aHTMLAttribute && aHTMLAttribute->EqualsLiteral("align")) {
       aIsSet = true;
     } else {
