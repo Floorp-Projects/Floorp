@@ -134,8 +134,8 @@ skip-if(B2G) == svg-image-script-1.svg lime100x100.svg # bug 773482
 HTTP == svg-image-datauri-1.html       lime100x100.svg
 == svg-image-external-1.html           blue100x100.svg
 HTTP == svg-image-external-1.html      blue100x100.svg
-skip-if(B2G) == svg-stylesheet-datauri-1.html       lime100x100.svg
-skip-if(B2G) HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
+random skip-if(B2G) == svg-stylesheet-datauri-1.html       lime100x100.svg
+random skip-if(B2G) HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
 == svg-stylesheet-external-1.html      blue100x100.svg
 HTTP == svg-stylesheet-external-1.html blue100x100.svg
 
