@@ -267,6 +267,8 @@ MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
                               AbstractFramePtr fp, jsbytecode *pc, bool isConstructing);
 MethodStatus CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp,
                       bool isConstructing, bool newType);
+MethodStatus CompileFunctionForBaseline(JSContext *cx, JSScript *script, AbstractFramePtr fp,
+                                        bool isConstructing);
 MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs);
 
 enum IonExecStatus

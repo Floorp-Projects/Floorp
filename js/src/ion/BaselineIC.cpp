@@ -386,27 +386,20 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
     JS_ASSERT(jitcodePtr);
     JS_ASSERT(!*jitcodePtr);
 
-    // If this is not a JSOP_LOOPENTRY, don't OSR, but also don't reset the loop count,
-    // since we may hit a proper UseCount check within the function body.
-    if (JSOp(*pc) != JSOP_LOOPENTRY) {
-        IonSpew(IonSpew_BaselineICFallback, "  Not at LOOPENTRY.");
-        // If not a loop entry, it must be a function-entry UseCount.
-        JS_ASSERT(pc == script->code);
-        return true;
-    }
-
-    // If this script is compiling off thread, then wait for that to finish.
-    if (script->isIonCompilingOffThread()) {
-        IonSpew(IonSpew_BaselineOSR, "  IonScript exists, and is compiling off thread!");
-        // TODO: reduce useCount by a small amount here?  We don't want to reset the useCount
-        // since we expect the compiled script to be ready soon.  But we also don't want
-        // to poll the compilation by hitting this fallback stub every time.
-        script->resetUseCount();
-        return true;
-    }
+    bool isLoopEntry = (JSOp(*pc) == JSOP_LOOPENTRY);
 
     bool isConstructing = ScriptFrameIter(cx).isConstructing();
-    MethodStatus stat = CanEnterAtBranch(cx, script, frame, pc, isConstructing);
+    MethodStatus stat;
+    if (isLoopEntry) {
+        IonSpew(IonSpew_BaselineOSR, "  Compile at loop entry!");
+        stat = CanEnterAtBranch(cx, script, frame, pc, isConstructing);
+    } else if (frame->isFunctionFrame()) {
+        IonSpew(IonSpew_BaselineOSR, "  Compile function from top for later entry!");
+        stat = CompileFunctionForBaseline(cx, script, frame, isConstructing);
+    } else {
+        return true;
+    }
+
     if (stat == Method_Error) {
         IonSpew(IonSpew_BaselineOSR, "  Compile with Ion errored!");
         return false;
@@ -429,13 +422,14 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
         return true;
     }
 
-    IonSpew(IonSpew_BaselineOSR, "  IonScript exists, and OSR possible!");
-    IonScript *ion = script->ionScript();
-    void *osrcode = ion->method()->raw() + ion->osrEntryOffset();
-
-    *jitcodePtr = osrcode;
+    if (isLoopEntry) {
+        IonSpew(IonSpew_BaselineOSR, "  OSR possible!");
+        IonScript *ion = script->ionScript();
+        *jitcodePtr = ion->method()->raw() + ion->osrEntryOffset();
+    }
 
     script->resetUseCount();
+
     return true;
 }
 
@@ -549,6 +543,32 @@ DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
 
     RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
+    bool isLoopEntry = JSOp(*pc) == JSOP_LOOPENTRY;
+
+    if (!script->canIonCompile()) {
+        // TODO: ASSERT that ion-compilation-disabled checker stub doesn't exist.
+        // TODO: Clear all optimized stubs.
+        // TODO: Add a ion-compilation-disabled checker IC stub
+        script->resetUseCount();
+        return true;
+    }
+    if (script->isIonCompilingOffThread()) {
+        // TODO: ASSERT that end-of-off-thread-compilation checker stub doesn't exist.
+        // TODO: Clear all optimized stubs.
+        // TODO: Add end-of-off-thread-compilation checker stub.
+        script->resetUseCount();
+        return true;
+    }
+
+    // If Ion script exists, but PC is not at a loop entry, then Ion will be entered for
+    // this script at an appropriate LOOPENTRY or the next time this function is called.
+    if (script->hasIonScript() && !isLoopEntry) {
+        IonSpew(IonSpew_BaselineOSR, "IonScript exists, but not at loop entry!");
+        // TODO: ASSERT that a ion-script-already-exists checker stub doesn't exist.
+        // TODO: Clear all optimized stubs.
+        // TODO: Add a ion-script-already-exists checker stub.
+        return true;
+    }
 
     // Ensure that Ion-compiled code is available.
     IonSpew(IonSpew_BaselineOSR,
@@ -558,6 +578,8 @@ DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
     if (!EnsureCanEnterIon(cx, stub, frame, script, pc, &jitcode))
         return false;
 
+    // Jitcode should only be set here if not at loop entry.
+    JS_ASSERT_IF(!isLoopEntry, !jitcode);
     if (!jitcode)
         return true;
 
