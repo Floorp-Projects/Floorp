@@ -5,13 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozIApplication.idl"
 #include "nsIDOMMozBrowserFrame.idl"
 
-interface mozIMozApplication;
 interface nsITabParent;
 
-[scriptable, builtinclass, uuid(a2373fa5-a090-4192-ab28-6df793a631c1)]
+[scriptable, builtinclass, uuid(929AED00-3E15-49B7-8CA2-75003715B7E7)]
 interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
 {
   /**
@@ -24,17 +22,21 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
   [infallible] readonly attribute boolean reallyIsBrowserOrApp;
 
   /**
-   * Get this frame's app, if the frame really is an app frame.
-   * Otherwise, return null.
+   * Gets whether this frame really is an app frame.
+   *
+   * In order to really be an app frame, this frame must really be a browser
+   * frame (this requirement will go away eventually), and the frame's mozapp
+   * attribute must point to the manifest of a valid app.
    */
-  readonly attribute mozIApplication ownApp;
+  [infallible] readonly attribute boolean reallyIsApp;
 
   /**
-   * Get the app that contains this frame, if the frame really is an
-   * app or browser frame.  This is the app associated with the frame
-   * element's principal.  Otherwise, return null.
+   * Gets this frame's app manifest URL, if the frame really is an app frame.
+   * Otherwise, returns the empty string.
+   *
+   * This method is guaranteed not to fail.
    */
-  readonly attribute mozIApplication containingApp;
+  readonly attribute AString appManifestURL;
 
   /**
    * Normally, a frame tries to create its frame loader when its src is
