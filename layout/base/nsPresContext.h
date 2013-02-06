@@ -214,6 +214,12 @@ public:
   nsIWidget* GetNearestWidget(nsPoint* aOffset = nullptr);
 
   /**
+   * Returns the root widget for this.
+   * Note that the widget is a mediater with IME.
+   */
+  nsIWidget* GetRootWidget();
+
+  /**
    * Return the presentation context for the root of the view manager
    * hierarchy that contains this presentation context, or nullptr if it can't
    * be found (e.g. it's detached).
