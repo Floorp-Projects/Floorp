@@ -100,6 +100,6 @@ skip-if(B2G) == 641444-1.html 641444-1-ref.html # bug 773482
 != inline-baseline-quirks.html inline-baseline-quirks-ref.html
 == 676538-1.html 676538-1-ref.html
 == underline-button-1.html underline-button-1-ref.html
-fails-if(winWidget) == underline-button-2.html underline-button-2-ref.html # On windows, the underline spacing inside the button is different
+== underline-button-2.html underline-button-2-ref.html
 == underline-select-1.html underline-select-1-ref.html
 == underline-select-2.html underline-select-2-ref.html

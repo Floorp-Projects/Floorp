@@ -157,28 +157,34 @@ void MediaDecoder::ConnectDecodedStreamToOutputStream(OutputStreamData* aStream)
 }
 
 MediaDecoder::DecodedStreamData::DecodedStreamData(MediaDecoder* aDecoder,
-                                                       int64_t aInitialTime,
-                                                       SourceMediaStream* aStream)
+                                                   int64_t aInitialTime,
+                                                   SourceMediaStream* aStream)
   : mLastAudioPacketTime(-1),
     mLastAudioPacketEndTime(-1),
     mAudioFramesWritten(0),
     mInitialTime(aInitialTime),
     mNextVideoTime(aInitialTime),
+    mDecoder(aDecoder),
     mStreamInitialized(false),
     mHaveSentFinish(false),
     mHaveSentFinishAudio(false),
     mHaveSentFinishVideo(false),
     mStream(aStream),
-    mMainThreadListener(new DecodedStreamMainThreadListener(aDecoder)),
     mHaveBlockedForPlayState(false)
 {
-  mStream->AddMainThreadListener(mMainThreadListener);
+  mStream->AddMainThreadListener(this);
 }
 
 MediaDecoder::DecodedStreamData::~DecodedStreamData()
 {
-  mStream->RemoveMainThreadListener(mMainThreadListener);
+  mStream->RemoveMainThreadListener(this);
   mStream->Destroy();
+}
+
+void
+MediaDecoder::DecodedStreamData::NotifyMainThreadStateChanged()
+{
+  mDecoder->NotifyDecodedStreamMainThreadStateChanged();
 }
 
 void MediaDecoder::DestroyDecodedStream()
