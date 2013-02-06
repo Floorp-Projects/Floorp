@@ -12,48 +12,6 @@ Sanitizer.prototype = {
       this.items[aItemName].clear();
   },
 
-  canClearItem: function (aItemName)
-  {
-    return this.items[aItemName].canClear;
-  },
-
-  _prefDomain: "privacy.item.",
-  getNameFromPreference: function (aPreferenceName)
-  {
-    return aPreferenceName.substr(this._prefDomain.length);
-  },
-
-  /**
-   * Deletes privacy sensitive data in a batch, according to user preferences
-   *
-   * @returns  null if everything's fine;  an object in the form
-   *           { itemName: error, ... } on (partial) failure
-   */
-  sanitize: function ()
-  {
-    var branch = Services.prefs.getBranch(this._prefDomain);
-    var errors = null;
-    for (var itemName in this.items) {
-      var item = this.items[itemName];
-      if ("clear" in item && item.canClear && branch.getBoolPref(itemName)) {
-        // Some of these clear() may raise exceptions (see bug #265028)
-        // to sanitize as much as possible, we catch and store them,
-        // rather than fail fast.
-        // Callers should check returned errors and give user feedback
-        // about items that could not be sanitized
-        try {
-          item.clear();
-        } catch(er) {
-          if (!errors)
-            errors = {};
-          errors[itemName] = er;
-          dump("Error sanitizing " + itemName + ": " + er + "\n");
-        }
-      }
-    }
-    return errors;
-  },
-
   items: {
     cache: {
       clear: function ()
@@ -228,56 +186,4 @@ Sanitizer.prototype = {
     }
   }
 };
-
-
-// "Static" members
-Sanitizer.prefDomain          = "privacy.sanitize.";
-Sanitizer.prefShutdown        = "sanitizeOnShutdown";
-Sanitizer.prefDidShutdown     = "didShutdownSanitize";
-
-Sanitizer._prefs = null;
-Sanitizer.__defineGetter__("prefs", function()
-{
-  return Sanitizer._prefs ? Sanitizer._prefs
-    : Sanitizer._prefs = Cc["@mozilla.org/preferences-service;1"]
-                         .getService(Ci.nsIPrefService)
-                         .getBranch(Sanitizer.prefDomain);
-});
-
-/**
- * Deletes privacy sensitive data in a batch, optionally showing the
- * sanitize UI, according to user preferences
- *
- * @returns  null if everything's fine
- *           an object in the form { itemName: error, ... } on (partial) failure
- */
-Sanitizer.sanitize = function()
-{
-  return new Sanitizer().sanitize();
-};
-
-Sanitizer.onStartup = function()
-{
-  // we check for unclean exit with pending sanitization
-  Sanitizer._checkAndSanitize();
-};
-
-Sanitizer.onShutdown = function()
-{
-  // we check if sanitization is needed and perform it
-  Sanitizer._checkAndSanitize();
-};
-
-// this is called on startup and shutdown, to perform pending sanitizations
-Sanitizer._checkAndSanitize = function()
-{
-  const prefs = Sanitizer.prefs;
-  if (prefs.getBoolPref(Sanitizer.prefShutdown) &&
-      !prefs.prefHasUserValue(Sanitizer.prefDidShutdown)) {
-    // this is a shutdown or a startup after an unclean exit
-    Sanitizer.sanitize() || // sanitize() returns null on full success
-      prefs.setBoolPref(Sanitizer.prefDidShutdown, true);
-  }
-};
-
 
