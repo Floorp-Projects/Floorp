@@ -1166,8 +1166,8 @@ add_test(function test_update_network_name() {
     RIL.operator.mnc = operatorMnc;
     let result = RIL.updateNetworkName();
 
-    do_check_eq(result[0], expectedLongName);
-    do_check_eq(result[1], expectedShortName);
+    do_check_eq(result.fullName, expectedLongName);
+    do_check_eq(result.shortName, expectedShortName);
   }
 
   // Before EF_OPL and EF_PNN have been loaded.
