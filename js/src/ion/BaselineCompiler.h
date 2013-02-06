@@ -172,6 +172,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitStackCheck();
     bool emitInterruptCheck();
     bool emitUseCountIncrement();
+    bool emitArgumentTypeChecks();
     bool emitDebugPrologue();
     bool emitDebugTrap();
 

@@ -234,6 +234,9 @@ BaselineCompiler::emitPrologue()
     if (!emitUseCountIncrement())
         return false;
 
+    if (!emitArgumentTypeChecks())
+        return false;
+
     return true;
 }
 
@@ -408,6 +411,31 @@ BaselineCompiler::emitUseCountIncrement()
         return false;
 
     masm.bind(&lowCount);
+
+    return true;
+}
+
+bool
+BaselineCompiler::emitArgumentTypeChecks()
+{
+    if (!function())
+        return true;
+
+    frame.pushThis();
+    frame.popRegsAndSync(1);
+
+    ICTypeMonitor_Fallback::Compiler compiler(cx, (uint32_t) 0);
+    if (!emitIC(compiler.getStub(&stubSpace_)))
+        return false;
+
+    for (size_t i = 0; i < function()->nargs; i++) {
+        frame.pushArg(i);
+        frame.popRegsAndSync(1);
+
+        ICTypeMonitor_Fallback::Compiler compiler(cx, i + 1);
+        if (!emitIC(compiler.getStub(&stubSpace_)))
+            return false;
+    }
 
     return true;
 }

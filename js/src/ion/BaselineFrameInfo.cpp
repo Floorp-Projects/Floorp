@@ -16,7 +16,8 @@ using namespace js::ion;
 
 bool
 FrameInfo::init() {
-    size_t nstack = script->nslots - script->nfixed;
+    // One slot is always needed for this/arguments type checks.
+    size_t nstack = Max(script->nslots - script->nfixed, 1);
     if (!stack.init(nstack))
         return false;
 

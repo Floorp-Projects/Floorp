@@ -44,8 +44,34 @@ FallbackICSpew(JSContext *cx, ICFallbackStub *stub, const char *fmt, ...)
                 fmtbuf);
     }
 }
+
+void
+TypeFallbackICSpew(JSContext *cx, ICTypeMonitor_Fallback *stub, const char *fmt, ...)
+{
+    if (IonSpewEnabled(IonSpew_BaselineICFallback)) {
+        RootedScript script(cx, GetTopIonJSScript(cx));
+        jsbytecode *pc = stub->icEntry()->pc(script);
+
+        char fmtbuf[100];
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf(fmtbuf, 100, fmt, args);
+        va_end(args);
+
+        IonSpew(IonSpew_BaselineICFallback,
+                "Type monitor fallback hit for (%s:%d) (pc=%d,line=%d,uses=%d,stubs=%d): %s",
+                script->filename,
+                script->lineno,
+                (int) (pc - script->code),
+                PCToLineNumber(script, pc),
+                script->getUseCount(),
+                (int) stub->numOptimizedMonitorStubs(),
+                fmtbuf);
+    }
+}
 #else
 #define FallbackICSpew(...)
+#define TypeFallbackICSpew(...)
 #endif
 
 ICFallbackStub *
@@ -658,6 +684,10 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, ICStubSpace *space
         addOptimizedMonitorStub(stub);
     }
 
+    // addOptimizedMonitorStub directly links to the new stub for this/arguments monitoring.
+    if (argumentIndex_ != BYTECODE_INDEX)
+        return true;
+
     bool firstMonitorStubAdded = wasEmptyMonitorChain && (numOptimizedMonitorStubs_ > 0);
 
     if (firstMonitorStubAdded) {
@@ -694,10 +724,19 @@ DoTypeMonitorFallback(JSContext *cx, ICTypeMonitor_Fallback *stub, HandleValue v
                       MutableHandleValue res)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
-    jsbytecode *pc = stub->mainFallbackStub()->icEntry()->pc(script);
-    FallbackICSpew(cx, stub->mainFallbackStub(), "TypeMonitor");
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    TypeFallbackICSpew(cx, stub, "TypeMonitor");
 
-    types::TypeScript::Monitor(cx, script, pc, value);
+    uint32_t argument;
+    if (stub->monitorsThis()) {
+        JS_ASSERT(pc == script->code);
+        types::TypeScript::SetThis(cx, script, value);
+    } else if (stub->monitorsArgument(&argument)) {
+        JS_ASSERT(pc == script->code);
+        types::TypeScript::SetArgument(cx, script, argument, value);
+    } else {
+        types::TypeScript::Monitor(cx, script, pc, value);
+    }
 
     if (!stub->addMonitorStubForValue(cx, ICStubSpace::StubSpaceFor(script), value))
         return false;
