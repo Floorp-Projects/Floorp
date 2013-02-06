@@ -72,12 +72,12 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 #
 # In detail:
 #
-# - jsval (jsapi.h) is a typedef for JS::Value.
+# - jsval (Value.h) is a typedef for JS::Value.
 #
-# - JS::Value (jsapi.h) is a class with a lot of methods and a single data
+# - JS::Value (Value.h) is a class with a lot of methods and a single data
 #   member, of type jsval_layout.
 #
-# - jsval_layout (jsval.h) is a helper type for picking apart values. This
+# - jsval_layout (Value.h) is a helper type for picking apart values. This
 #   is always 64 bits long, with a variant for each address size (32 bits
 #   or 64 bits) and endianness (little- or big-endian).
 #
