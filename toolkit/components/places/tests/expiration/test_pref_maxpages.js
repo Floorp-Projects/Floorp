@@ -94,7 +94,6 @@ add_task(function test_pref_maxpages() {
       onClearHistory: function() {},
       onVisit: function() {},
       onTitleChanged: function() {},
-      onBeforeDeleteURI: function() {},
       onDeleteURI: function(aURI) {
         print("onDeleteURI " + aURI.spec);
         currentTest.receivedNotifications++;

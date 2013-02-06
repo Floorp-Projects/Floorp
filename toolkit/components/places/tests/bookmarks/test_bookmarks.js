@@ -37,7 +37,6 @@ let bookmarksObserver = {
     do_check_eq(stmt.row.guid, guid);
     stmt.finalize();
   },
-  onBeforeItemRemoved: function(){},
   onItemRemoved: function(id, folder, index, itemType) {
     this._itemRemovedId = id;
     this._itemRemovedFolder = folder;

@@ -304,7 +304,6 @@ function BookmarksObserver() {
 BookmarksObserver.prototype = {
   onBeginUpdateBatch: function () {},
   onEndUpdateBatch: function () {},
-  onBeforeItemRemoved: function () {},
   onItemVisited: function () {},
 
   onItemAdded: function bo_onItemAdded(aId, aFolder, aIndex, aItemType, aURI) {
@@ -485,7 +484,6 @@ Bookmark.prototype = {
   onBeginUpdateBatch: function () {},
   onEndUpdateBatch: function () {},
   onItemAdded: function () {},
-  onBeforeItemRemoved: function () {},
   onItemVisited: function () {},
   onItemRemoved: function () {},
   onItemChanged: function () {},
@@ -659,7 +657,6 @@ BookmarkFolder.prototype = {
   onBeginUpdateBatch: function () {},
   onEndUpdateBatch : function () {},
   onItemAdded : function () {},
-  onBeforeItemRemoved : function () {},
   onItemRemoved : function () {},
   onItemChanged : function () {},
 

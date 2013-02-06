@@ -58,7 +58,6 @@ var observer =
   onBeginUpdateBatch: function(){},
   onEndUpdateBatch: function(){},
   onItemAdded: function(){},
-  onBeforeItemRemoved: function(){},
   onItemRemoved: function(){},
   onItemChanged: function(bookmarkId, property, isAnnotationProperty, value,
                           lastModified, itemType){
