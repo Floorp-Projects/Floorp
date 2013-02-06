@@ -239,6 +239,9 @@ for (var test of data) {
 
       break;
     case 'time':
+      // Don't worry about that.
+      input.step = 'any';
+
       input.max = '10:10';
       input.value = '10:09';
       checkValidity(input, true, apply, apply);
