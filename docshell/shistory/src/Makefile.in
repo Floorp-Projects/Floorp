@@ -14,6 +14,7 @@ MODULE		= shistory
 LIBRARY_NAME	= shistory_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY	= 1
+FAIL_ON_WARNINGS = 1
 
 EXPORTS		= nsSHEntryShared.h \
 		  $(NULL)
