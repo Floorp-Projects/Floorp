@@ -839,7 +839,6 @@ NavHistoryResultObserver.prototype = {
   nodeLastModifiedChanged: function () {},
   nodeMoved: function () {},
   nodeRemoved: function () {},
-  nodeReplaced: function () {},
   nodeTagsChanged: function () {},
   nodeTitleChanged: function () {},
   nodeURIChanged: function () {},

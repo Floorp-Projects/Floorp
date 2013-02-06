@@ -304,7 +304,7 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
  * according to history and bookmark system events. Register this observer on a
  * result using nsINavHistoryResult::addObserver.
  */
-[scriptable, uuid(547102c4-ab84-4058-b9d4-6f99f6c80893)]
+[scriptable, uuid(f62d8b6b-3c4e-4a9f-a897-db605d0b7a0f)]
 interface nsINavHistoryResultObserver : nsISupports
 {
   /**
@@ -442,24 +442,6 @@ interface nsINavHistoryResultObserver : nsISupports
    */
   void nodeLastModifiedChanged(in nsINavHistoryResultNode aNode,
                                in PRTime aNewValue);
-
-  /**
-   * Called when an item is being replaced with another item at the exact
-   * same position.
-   *
-   * @param aParentNode
-   *        the parent node of the node which is being replaced
-   * @param aOldNode
-   *        the node which is being replaced
-   * @param aNewNode
-   *        the new node
-   * @param aParentNode
-   *        the index in aParentNode, at which a node is being replaced
-   */
-  void nodeReplaced(in nsINavHistoryContainerResultNode aParentNode,
-                    in nsINavHistoryResultNode aOldNode,
-                    in nsINavHistoryResultNode aNewNode,
-                    in unsigned long aIndex);
 
   /**
    * Called after a container changes state.
