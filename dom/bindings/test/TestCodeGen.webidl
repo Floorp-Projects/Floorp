@@ -533,6 +533,7 @@ dictionary Dict : ParentDict {
   boolean prototype;
   object? anotherObj = null;
   TestCallback? someCallback = null;
+  any someAny;
 };
 
 dictionary ParentDict : GrandparentDict {

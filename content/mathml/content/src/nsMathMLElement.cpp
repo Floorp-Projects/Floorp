@@ -21,6 +21,8 @@
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 
+#include "mozilla/dom/ElementBinding.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -940,4 +942,10 @@ nsMathMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
   }
 
   return rv;
+}
+
+JSObject*
+nsMathMLElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  return ElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }

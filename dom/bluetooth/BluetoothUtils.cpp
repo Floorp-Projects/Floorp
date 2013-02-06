@@ -16,7 +16,6 @@
 #include "nsISystemMessagesInternal.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsTArrayHelpers.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -27,51 +26,45 @@ SetJsObject(JSContext* aContext,
 {
   MOZ_ASSERT(aContext && aObj);
 
-  if (aValue.type() == BluetoothValue::TArrayOfnsString) {
-    const nsTArray<nsString>& sourceArray = aValue.get_ArrayOfnsString();
-    if (NS_FAILED(nsTArrayToJSArray(aContext, sourceArray, &aObj))) {
-      NS_WARNING("Cannot set JS UUIDs object!");
+  if (aValue.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
+    NS_WARNING("SetJsObject: Invalid parameter type");
+    return false;
+  }
+
+  const nsTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  for (uint32_t i = 0; i < arr.Length(); i++) {
+    jsval val;
+    const BluetoothValue& v = arr[i].value();
+    JSString* jsData;
+
+    switch(v.type()) {
+      case BluetoothValue::TnsString:
+        jsData =
+          JS_NewStringCopyN(aContext,
+                            NS_ConvertUTF16toUTF8(v.get_nsString()).get(),
+                            v.get_nsString().Length());
+        NS_ENSURE_TRUE(jsData, false);
+        val = STRING_TO_JSVAL(jsData);
+        break;
+      case BluetoothValue::Tuint32_t:
+        val = INT_TO_JSVAL(v.get_uint32_t());
+        break;
+      case BluetoothValue::Tbool:
+        val = BOOLEAN_TO_JSVAL(v.get_bool());
+        break;
+      default:
+        NS_WARNING("SetJsObject: Parameter is not handled");
+        break;
+    }
+
+    if (!JS_SetProperty(aContext, aObj,
+                        NS_ConvertUTF16toUTF8(arr[i].name()).get(),
+                        &val)) {
+      NS_WARNING("Failed to set property");
       return false;
     }
-  } else if (aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue) {
-    const nsTArray<BluetoothNamedValue>& arr =
-      aValue.get_ArrayOfBluetoothNamedValue();
-
-    for (uint32_t i = 0; i < arr.Length(); i++) {
-      jsval val;
-      const BluetoothValue& v = arr[i].value();
-      JSString* JsData;
-
-      switch(v.type()) {
-        case BluetoothValue::TnsString:
-          JsData =
-            JS_NewStringCopyN(aContext,
-                              NS_ConvertUTF16toUTF8(v.get_nsString()).get(),
-                              v.get_nsString().Length());
-          NS_ENSURE_TRUE(JsData, false);
-          val = STRING_TO_JSVAL(JsData);
-          break;
-        case BluetoothValue::Tuint32_t:
-          val = INT_TO_JSVAL(v.get_uint32_t());
-          break;
-        case BluetoothValue::Tbool:
-          val = BOOLEAN_TO_JSVAL(v.get_bool());
-          break;
-        default:
-          NS_WARNING("SetJsObject: Parameter is not handled");
-          break;
-      }
-
-      if (!JS_SetProperty(aContext, aObj,
-                          NS_ConvertUTF16toUTF8(arr[i].name()).get(),
-                          &val)) {
-        NS_WARNING("Failed to set property");
-        return false;
-      }
-    }
-  } else {
-    NS_WARNING("Not handle the type of BluetoothValue!");
-    return false;
   }
 
   return true;

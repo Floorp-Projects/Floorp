@@ -1619,3 +1619,53 @@ add_test(function test_stk_event_download_idle_screen_available() {
     event: event
   });
 });
+
+/**
+ * Verify ICCRecordHelper.readEmail
+ */
+add_test(function test_read_email() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let record = worker.ICCRecordHelper;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+    let email_1 = [
+      0x65, 0x6D, 0x61, 0x69, 0x6C,
+      0x00, 0x6D, 0x6F, 0x7A, 0x69,
+      0x6C, 0x6C, 0x61, 0x2E, 0x63,
+      0x6F, 0x6D, 0x02, 0x23];
+
+    // Write data size
+    buf.writeUint32(email_1.length * 2);
+
+    // Write email
+    for (let i = 0; i < email_1.length; i++) {
+      helper.writeHexOctet(email_1[i]);
+    }
+
+    // Write string delimiter
+    buf.writeStringDelimiter(email_1.length * 2);
+
+    if (options.callback) {
+      options.callback(options);
+    }
+  };
+
+  function doTestReadEmail(type, expectedResult) {
+    let fileId = 0x6a75;
+    let recordNumber = 1;
+
+    // fileId and recordNumber are dummy arguments.
+    record.readEmail(fileId, type, recordNumber, function (email) {
+      do_check_eq(email, expectedResult);
+    });
+  };
+
+  doTestReadEmail(ICC_USIM_TYPE1_TAG, "email@mozilla.com$#");
+  doTestReadEmail(ICC_USIM_TYPE2_TAG, "email@mozilla.com");
+
+  run_next_test();
+});
+

@@ -575,7 +575,7 @@ function processFrames()
   if (gFrameList.length) {
     var doc = gFrameList[0];
     onProcessFrame.forEach(function(func) { func(doc); });
-    var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll, true);
+    var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll);
     gFrameList.shift();
     setTimeout(doGrab, 10, iterator);
     onFinished.push(selectImage);

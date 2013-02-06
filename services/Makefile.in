@@ -30,4 +30,8 @@ ifdef MOZ_SERVICES_SYNC
 PARALLEL_DIRS += sync
 endif
 
+ifdef MOZ_SERVICES_CAPTIVEDETECT
+PARALLEL_DIRS += captivedetect
+endif
+
 include $(topsrcdir)/config/rules.mk
