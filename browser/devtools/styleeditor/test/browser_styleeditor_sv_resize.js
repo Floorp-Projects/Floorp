@@ -12,8 +12,15 @@ function test()
   waitForExplicitFinish();
 
   addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
-    run(aChrome);
+    if (aChrome.isContentAttached) {
+      run(aChrome);
+    } else {
+      aChrome.addChromeListener({
+        onContentAttach: run
+      });
+    }
   });
+
   content.location = TESTCASE_URI;
 }
 
@@ -24,13 +31,13 @@ function run(aChrome)
 
   aChrome.editors[0].addActionListener({
     onAttach: function onEditorAttached(aEditor) {
+      let originalSourceEditor = aEditor.sourceEditor;
+      aEditor.sourceEditor.setCaretOffset(4); // to check the caret is preserved
+
+      // queue a resize to inverse aspect ratio
+      // this will trigger a detach and reattach (to workaround bug 254144)
       executeSoon(function () {
         waitForFocus(function () {
-          // queue a resize to inverse aspect ratio
-          // this will trigger a detach and reattach (to workaround bug 254144)
-          let originalSourceEditor = aEditor.sourceEditor;
-          aEditor.sourceEditor.setCaretOffset(4); // to check the caret is preserved
-
           gOriginalWidth = gChromeWindow.outerWidth;
           gOriginalHeight = gChromeWindow.outerHeight;
           gChromeWindow.resizeTo(120, 480);
