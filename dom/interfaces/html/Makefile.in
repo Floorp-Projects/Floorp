@@ -96,7 +96,6 @@ XPIDLSRCS = 					\
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/apps \
   -I$(topsrcdir)/dom/interfaces/base \
   -I$(topsrcdir)/dom/interfaces/core \
   $(NULL)
