@@ -330,9 +330,6 @@ pref("browser.download.manager.resumeOnWakeDelay", 10000);
 // This allows disabling the Downloads Panel in favor of the old interface.
 pref("browser.download.useToolkitUI", false);
 
-// This controls retention behavior in the Downloads Panel only.
-pref("browser.download.panel.removeFinishedDownloads", false);
-
 // This records whether or not the panel has been shown at least once.
 pref("browser.download.panel.shown", false);
 

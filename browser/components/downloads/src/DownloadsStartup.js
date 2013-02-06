@@ -123,16 +123,10 @@ DownloadsStartup.prototype = {
         break;
 
       case "download-manager-change-retention":
-        // When the panel interface is enabled, we use a different preference to
-        // determine whether downloads should be removed from view as soon as
-        // they are finished.  We do this to allow proper migration to the new
-        // feature when using the same profile on multiple versions of the
-        // product (bug 697678).
+        // If we're using the Downloads Panel, we override the retention
+        // preference to always retain downloads on completion.
         if (!DownloadsCommon.useToolkitUI) {
-          let removeFinishedDownloads = Services.prefs.getBoolPref(
-                            "browser.download.panel.removeFinishedDownloads");
-          aSubject.QueryInterface(Ci.nsISupportsPRInt32)
-                  .data = removeFinishedDownloads ? 0 : 2;
+          aSubject.QueryInterface(Ci.nsISupportsPRInt32).data = 2;
         }
         break;
 
