@@ -489,6 +489,7 @@
 #ifdef CAN_DRAW_IN_TITLEBAR
 <vbox id="titlebar">
   <hbox id="titlebar-content">
+#ifdef MENUBAR_CAN_AUTOHIDE
     <hbox id="appmenu-button-container">
       <button id="appmenu-button"
               type="menu"
@@ -497,6 +498,7 @@
 #include browser-appmenu.inc
       </button>
     </hbox>
+#endif
     <spacer id="titlebar-spacer" flex="1"/>
     <hbox id="titlebar-buttonbox-container" align="start">
       <hbox id="titlebar-buttonbox">

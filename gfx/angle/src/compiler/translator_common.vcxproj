@@ -138,6 +138,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ArrayBoundsClamper.cpp" />
     <ClCompile Include="BuiltInFunctionEmulator.cpp" />
     <ClCompile Include="Compiler.cpp" />
     <ClCompile Include="debug.cpp" />
@@ -225,6 +226,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ArrayBoundsClamper.h" />
     <ClInclude Include="BaseTypes.h" />
     <ClInclude Include="BuiltInFunctionEmulator.h" />
     <ClInclude Include="Common.h" />

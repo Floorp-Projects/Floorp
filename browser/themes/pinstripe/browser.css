@@ -38,6 +38,15 @@
   background-color: #eeeeee;
 }
 
+#titlebar-buttonbox-container,
+#titlebar:not(:-moz-lwtheme) {
+  display: none;
+}
+
+#main-window[drawintitlebar="true"] > #titlebar {
+  height: 22px;
+}
+
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
   border-top: 1px solid rgba(0,0,0,0.65);
 }
@@ -3074,6 +3083,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   #blocked-plugins-notification-icon {
     list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked.png);
   }
+}
+
+#notification-popup-box[hidden] {
+  /* Override display:none to make the pluginBlockedNotification animation work
+     when showing the notification repeatedly. */
+  display: -moz-box;
+  visibility: collapse;
 }
 
 #blocked-plugins-notification-icon[showing] {

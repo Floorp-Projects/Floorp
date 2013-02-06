@@ -1092,11 +1092,17 @@ namespace {
 
 class MediaStreamGraphThreadRunnable : public nsRunnable {
 public:
+  explicit MediaStreamGraphThreadRunnable(MediaStreamGraphImpl* aGraph)
+    : mGraph(aGraph)
+  {
+  }
   NS_IMETHOD Run()
   {
-    gGraph->RunThread();
+    mGraph->RunThread();
     return NS_OK;
   }
+private:
+  MediaStreamGraphImpl* mGraph;
 };
 
 class MediaStreamGraphShutDownRunnable : public nsRunnable {
@@ -1125,13 +1131,19 @@ private:
 
 class MediaStreamGraphStableStateRunnable : public nsRunnable {
 public:
+  explicit MediaStreamGraphStableStateRunnable(MediaStreamGraphImpl* aGraph)
+    : mGraph(aGraph)
+  {
+  }
   NS_IMETHOD Run()
   {
-    if (gGraph) {
-      gGraph->RunInStableState();
+    if (mGraph) {
+      mGraph->RunInStableState();
     }
     return NS_OK;
   }
+private:
+  MediaStreamGraphImpl* mGraph;
 };
 
 /*
@@ -1200,17 +1212,19 @@ MediaStreamGraphImpl::RunInStableState()
       // Start the thread now. We couldn't start it earlier because
       // the graph might exit immediately on finding it has no streams. The
       // first message for a new graph must create a stream.
-      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable();
+      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable(this);
       NS_NewThread(getter_AddRefs(mThread), event);
     }
 
     if (mCurrentTaskMessageQueue.IsEmpty()) {
       if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP && IsEmpty()) {
-        NS_ASSERTION(gGraph == this, "Not current graph??");
         // Complete shutdown. First, ensure that this graph is no longer used.
         // A new graph graph will be created if one is needed.
-        LOG(PR_LOG_DEBUG, ("Disconnecting MediaStreamGraph %p", gGraph));
-        gGraph = nullptr;
+        LOG(PR_LOG_DEBUG, ("Disconnecting MediaStreamGraph %p", this));
+        if (this == gGraph) {
+          // null out gGraph if that's the graph being shut down
+          gGraph = nullptr;
+        }
         // Asynchronously clean up old graph. We don't want to do this
         // synchronously because it spins the event loop waiting for threads
         // to shut down, and we don't want to do that in a stable state handler.
@@ -1232,7 +1246,7 @@ MediaStreamGraphImpl::RunInStableState()
         // Revive the MediaStreamGraph since we have more messages going to it.
         // Note that we need to put messages into its queue before reviving it,
         // or it might exit immediately.
-        nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable();
+        nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable(this);
         mThread->Dispatch(event, 0);
       }
     }
@@ -1261,7 +1275,7 @@ MediaStreamGraphImpl::EnsureRunInStableState()
   if (mPostedRunInStableState)
     return;
   mPostedRunInStableState = true;
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable();
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this);
   nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
   if (appShell) {
     appShell->RunInStableState(event);
@@ -1278,7 +1292,7 @@ MediaStreamGraphImpl::EnsureStableStateEventPosted()
   if (mPostedRunInStableStateEvent)
     return;
   mPostedRunInStableStateEvent = true;
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable();
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this);
   NS_DispatchToMainThread(event);
 }
 
@@ -1300,9 +1314,10 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
     aMessage->RunDuringShutdown();
     delete aMessage;
     if (IsEmpty()) {
-      NS_ASSERTION(gGraph == this, "Switched managers during forced shutdown?");
-      gGraph = nullptr;
-      delete this;
+      if (gGraph == this) {
+        gGraph = nullptr;
+        delete this;
+      }
     }
     return;
   }
@@ -1323,13 +1338,20 @@ MediaStream::Init()
 MediaStreamGraphImpl*
 MediaStream::GraphImpl()
 {
-  return gGraph;
+  return mGraph;
 }
 
 MediaStreamGraph*
 MediaStream::Graph()
 {
-  return gGraph;
+  return mGraph;
+}
+
+void
+MediaStream::SetGraphImpl(MediaStreamGraphImpl* aGraph)
+{
+  MOZ_ASSERT(!mGraph, "Should only be called once");
+  mGraph = aGraph;
 }
 
 StreamTime
@@ -1787,13 +1809,20 @@ MediaInputPort::Destroy()
 MediaStreamGraphImpl*
 MediaInputPort::GraphImpl()
 {
-  return gGraph;
+  return mGraph;
 }
 
 MediaStreamGraph*
 MediaInputPort::Graph()
 {
-  return gGraph;
+  return mGraph;
+}
+
+void
+MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
+{
+  MOZ_ASSERT(!mGraph, "Should only be called once");
+  mGraph = aGraph;
 }
 
 already_AddRefed<MediaInputPort>
@@ -1815,6 +1844,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags)
     nsRefPtr<MediaInputPort> mPort;
   };
   nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, this, aFlags);
+  port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(new Message(port));
   return port.forget();
 }
@@ -1930,7 +1960,9 @@ MediaStreamGraph::CreateSourceStream(nsDOMMediaStream* aWrapper)
 {
   SourceMediaStream* stream = new SourceMediaStream(aWrapper);
   NS_ADDREF(stream);
-  static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
   return stream;
 }
 
@@ -1939,7 +1971,9 @@ MediaStreamGraph::CreateTrackUnionStream(nsDOMMediaStream* aWrapper)
 {
   TrackUnionStream* stream = new TrackUnionStream(aWrapper);
   NS_ADDREF(stream);
-  static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
   return stream;
 }
 
@@ -1948,7 +1982,9 @@ MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine)
 {
   AudioNodeStream* stream = new AudioNodeStream(aEngine);
   NS_ADDREF(stream);
-  static_cast<MediaStreamGraphImpl*>(this)->AppendMessage(new CreateMessage(stream));
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
   return stream;
 }
 

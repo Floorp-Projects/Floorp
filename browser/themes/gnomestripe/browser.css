@@ -1289,6 +1289,13 @@ toolbar[iconsize="small"] #webrtc-status-button {
   list-style-image: url(chrome://mozapps/skin/plugins/notifyPluginBlocked.png);
 }
 
+#notification-popup-box[hidden] {
+  /* Override display:none to make the pluginBlockedNotification animation work
+     when showing the notification repeatedly. */
+  display: -moz-box;
+  visibility: collapse;
+}
+
 #blocked-plugins-notification-icon[showing] {
   animation: pluginBlockedNotification 500ms ease 0s 5 alternate both;
 }

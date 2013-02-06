@@ -16,13 +16,17 @@
 #include "jscpucfg.h"
 #include "jspubtd.h"
 #include "jstypes.h"
-#include "jsval.h"
 
+#include "js/Anchor.h"
+#include "js/CharacterEncoding.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
 #include "js/MemoryMetrics.h"
+#include "js/PropertyKey.h"
 #include "js/TemplateLib.h"
 #include "js/Utility.h"
+#include "js/Value.h"
 #include "js/Vector.h"
 
 /*

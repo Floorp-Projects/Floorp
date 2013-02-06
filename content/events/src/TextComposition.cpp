@@ -106,7 +106,7 @@ TextComposition::CompositionEventDispatcher::CompositionEventDispatcher(
   mPresContext(aPresContext), mEventTarget(aEventTarget),
   mEventMessage(aEventMessage), mData(aData)
 {
-  mWidget = mPresContext->GetNearestWidget();
+  mWidget = mPresContext->GetRootWidget();
 }
 
 NS_IMETHODIMP

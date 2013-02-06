@@ -3895,12 +3895,6 @@ js::InflateUTF8String(JSContext *cx, const char *bytes, size_t *lengthp)
     return NULL;
 }
 
-size_t
-js::GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t nchars)
-{
-    return nchars;
-}
-
 bool
 js::DeflateStringToBuffer(JSContext *maybecx, const jschar *src, size_t srclen,
                           char *dst, size_t *dstlenp)

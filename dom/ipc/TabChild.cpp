@@ -133,8 +133,13 @@ TabChild::PreloadSlowThings()
         !tab->InitTabChildGlobal(DONT_LOAD_SCRIPTS)) {
         return;
     }
+    // Just load and compile these scripts, but don't run them.
     tab->TryCacheLoadAndCompileScript(BROWSER_ELEMENT_CHILD_SCRIPT);
-    tab->RecvLoadRemoteScript(NS_LITERAL_STRING("chrome://global/content/preload.js"));
+    tab->TryCacheLoadAndCompileScript(
+        NS_LITERAL_STRING("chrome://browser/content/forms.js"));
+    // Load, compile, and run these scripts.
+    tab->RecvLoadRemoteScript(
+        NS_LITERAL_STRING("chrome://global/content/preload.js"));
 
     nsCOMPtr<nsIDocShell> docShell = do_GetInterface(tab->mWebNav);
     nsCOMPtr<nsIPresShell> presShell;
@@ -1359,8 +1364,9 @@ TabChild::RecvMouseEvent(const nsString& aType,
 {
   nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
   NS_ENSURE_TRUE(utils, true);
+  bool ignored = false;
   utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
-                        aIgnoreRootScrollFrame, 0, 0);
+                        aIgnoreRootScrollFrame, 0, 0, &ignored);
   return true;
 }
 

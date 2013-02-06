@@ -3775,7 +3775,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, MDefinition *call
     if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(type)))
         return NULL;
 
-    RootedObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));
+    RootedObject templateObject(cx, CreateThisForFunctionWithProto(cx, target, proto));
     if (!templateObject)
         return NULL;
 
@@ -4351,15 +4351,13 @@ IonBuilder::jsop_compare(JSOp op)
 JSObject *
 IonBuilder::getNewArrayTemplateObject(uint32_t count)
 {
-    RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, count));
+    RootedScript scriptRoot(cx, script());
+    NewObjectKind newKind = types::UseNewTypeForInitializer(cx, scriptRoot, pc, JSProto_Array);
+    RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, count, NULL, newKind));
     if (!templateObject)
         return NULL;
 
-    RootedScript scriptRoot(cx, script());
-    if (types::UseNewTypeForInitializer(cx, scriptRoot, pc, JSProto_Array)) {
-        if (!JSObject::setSingletonType(cx, templateObject))
-            return NULL;
-    } else {
+    if (newKind != SingletonObject) {
         types::TypeObject *type = types::TypeScript::InitObject(cx, scriptRoot, pc, JSProto_Array);
         if (!type)
             return NULL;
@@ -4397,21 +4395,19 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
 
     RootedObject templateObject(cx);
 
+    RootedScript scriptRoot(cx, script());
+    NewObjectKind newKind = types::UseNewTypeForInitializer(cx, scriptRoot, pc, JSProto_Object);
     if (baseObj) {
-        templateObject = CopyInitializerObject(cx, baseObj);
+        templateObject = CopyInitializerObject(cx, baseObj, newKind);
     } else {
-        gc::AllocKind kind = GuessObjectGCKind(0);
-        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, kind);
+        gc::AllocKind allocKind = GuessObjectGCKind(0);
+        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
     }
 
     if (!templateObject)
         return false;
 
-    RootedScript scriptRoot(cx, script());
-    if (types::UseNewTypeForInitializer(cx, scriptRoot, pc, JSProto_Object)) {
-        if (!JSObject::setSingletonType(cx, templateObject))
-            return false;
-    } else {
+    if (newKind != SingletonObject) {
         types::TypeObject *type = types::TypeScript::InitObject(cx, scriptRoot, pc, JSProto_Object);
         if (!type)
             return false;
