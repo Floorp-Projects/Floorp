@@ -1173,42 +1173,63 @@ DownloadsPlacesView.prototype = {
 
     let suppressOnSelect = this._richlistbox.suppressOnSelect;
     this._richlistbox.suppressOnSelect = true;
-
-    // Remove the invalidated history downloads from the list and unset the
-    // places node for data downloads.
-    // Loop backwards since _removeHistoryDownloadFromView may removeChild().
-    for (let i = this._richlistbox.childNodes.length - 1; i >= 0; --i) {
-      let element = this._richlistbox.childNodes[i];
-      if (element._shell.placesNode)
-        this._removeHistoryDownloadFromView(element._shell.placesNode);
-    }
-
-    let elementsToAppendFragment = document.createDocumentFragment();
-    for (let i = 0; i < aContainer.childCount; i++) {
-      try {
-        this._addDownloadData(null, aContainer.getChild(i), false,
-                              elementsToAppendFragment);
-      }
-      catch(ex) {
-        Cu.reportError(ex);
+    try {
+      // Remove the invalidated history downloads from the list and unset the
+      // places node for data downloads.
+      // Loop backwards since _removeHistoryDownloadFromView may removeChild().
+      for (let i = this._richlistbox.childNodes.length - 1; i >= 0; --i) {
+        let element = this._richlistbox.childNodes[i];
+        if (element._shell.placesNode)
+          this._removeHistoryDownloadFromView(element._shell.placesNode);
       }
     }
+    finally {
+      this._richlistbox.suppressOnSelect = suppressOnSelect;
+    }
 
-    this._appendDownloadsFragment(elementsToAppendFragment);
-    this._ensureVisibleElementsAreActive();
+    if (aContainer.childCount > 0) {
+      let elementsToAppendFragment = document.createDocumentFragment();
+      for (let i = 0; i < aContainer.childCount; i++) {
+        try {
+          this._addDownloadData(null, aContainer.getChild(i), false,
+                                elementsToAppendFragment);
+        }
+        catch(ex) {
+          Cu.reportError(ex);
+        }
+      }
 
-    this._richlistbox.suppressOnSelect = suppressOnSelect;
+      // _addDownloadData may not add new elements if there were already
+      // data items in place.
+      if (elementsToAppendFragment.firstChild) {
+        this._appendDownloadsFragment(elementsToAppendFragment);
+        this._ensureVisibleElementsAreActive();
+      }
+    }
+
     goUpdateDownloadCommands();
   },
 
   _appendDownloadsFragment: function DPV__appendDownloadsFragment(aDOMFragment) {
     // Workaround multiple reflows hang by removing the richlistbox
     // and adding it back when we're done.
+
+    // Hack for bug 836283: reset xbl fields to their old values after the
+    // binding is reattached to avoid breaking the selection state
+    let xblFields = new Map();
+    for (let [key, value] in Iterator(this._richlistbox)) {
+      xblFields.set(key, value);
+    }
+
     let parentNode = this._richlistbox.parentNode;
     let nextSibling = this._richlistbox.nextSibling;
     parentNode.removeChild(this._richlistbox);
     this._richlistbox.appendChild(aDOMFragment);
     parentNode.insertBefore(this._richlistbox, nextSibling);
+
+    for (let [key, value] of xblFields) {
+      this._richlistbox[key] = value;
+    }
   },
 
   nodeInserted: function DPV_nodeInserted(aParent, aPlacesNode) {
