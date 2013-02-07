@@ -373,7 +373,7 @@ BaselineScript::icEntryFromReturnAddress(uint8_t *returnAddr)
 }
 
 void
-BaselineScript::copyICEntries(const ICEntry *entries, MacroAssembler &masm)
+BaselineScript::copyICEntries(HandleScript script, const ICEntry *entries, MacroAssembler &masm)
 {
     // Fix up the return offset in the IC entries and copy them in.
     // Also write out the IC entry ptrs in any fallback stubs that were added.
@@ -395,6 +395,11 @@ BaselineScript::copyICEntries(const ICEntry *entries, MacroAssembler &masm)
         if (realEntry.firstStub()->isTypeMonitor_Fallback()) {
             ICTypeMonitor_Fallback *stub = realEntry.firstStub()->toTypeMonitor_Fallback();
             stub->fixupICEntry(&realEntry);
+        }
+
+        if (realEntry.firstStub()->isTableSwitch()) {
+            ICTableSwitch *stub = realEntry.firstStub()->toTableSwitch();
+            stub->fixupJumpTable(script, this);
         }
     }
 }

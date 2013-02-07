@@ -64,6 +64,12 @@ EmitReturnFromIC(MacroAssembler &masm)
 }
 
 inline void
+EmitChangeICReturnAddress(MacroAssembler &masm, Register reg)
+{
+    masm.storePtr(reg, Address(StackPointer, 0));
+}
+
+inline void
 EmitTailCallVM(IonCode *target, MacroAssembler &masm, uint32_t argSize)
 {
     // We assume during this that R0 and R1 have been pushed.

@@ -329,7 +329,9 @@ class ICEntry
     _(GetProp_NativePrototype)  \
                                 \
     _(SetProp_Fallback)         \
-    _(SetProp_Native)
+    _(SetProp_Native)           \
+                                \
+    _(TableSwitch)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -2657,6 +2659,45 @@ class ICCall_Native : public ICMonitoredStub
         ICStub *getStub(ICStubSpace *space) {
             return ICCall_Native::New(space, getStubCode(), firstMonitorStub_, callee_);
         }
+    };
+};
+
+// Stub for performing a TableSwitch, updating the IC's return address to jump
+// to whatever point the switch is branching to.
+class ICTableSwitch : public ICStub
+{
+    friend class ICStubSpace;
+
+    void **table_;
+    int32_t min_;
+    int32_t length_;
+    void *defaultTarget_;
+
+    ICTableSwitch(IonCode *stubCode, void **table,
+                  int32_t min, int32_t length, void *defaultTarget)
+      : ICStub(TableSwitch, stubCode), table_(table),
+        min_(min), length_(length), defaultTarget_(defaultTarget)
+    {}
+
+  public:
+    static inline ICTableSwitch *New(ICStubSpace *space, IonCode *code, void **table,
+                                     int32_t min, int32_t length, void *defaultTarget) {
+        return space->allocate<ICTableSwitch>(code, table, min, length, defaultTarget);
+    }
+
+    void fixupJumpTable(HandleScript script, BaselineScript *baseline);
+
+    class Compiler : public ICStubCompiler {
+        bool generateStubCode(MacroAssembler &masm);
+
+        jsbytecode *pc_;
+
+      public:
+        Compiler(JSContext *cx, jsbytecode *pc)
+          : ICStubCompiler(cx, ICStub::TableSwitch), pc_(pc)
+        {}
+
+        ICStub *getStub(ICStubSpace *space);
     };
 };
 
