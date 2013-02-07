@@ -930,8 +930,14 @@ DownloadsPlacesView.prototype = {
     }
 
     if (shouldCreateShell) {
-      let shell = new DownloadElementShell(aDataItem, aPlacesNode,
-                                           this._getAnnotationsFor(downloadURI));
+      // Bug 836271: The annotations for a url should be cached only when the
+      // places node is available, i.e. when we know we we'd be notified for
+      // annoation changes. 
+      // Otherwise we may cache NOT_AVILABLE values first for a given session
+      // download, and later use these NOT_AVILABLE values when a history
+      // download for the same URL is added.
+      let cachedAnnotations = aPlacesNode ? this._getAnnotationsFor(downloadURI) : null;
+      let shell = new DownloadElementShell(aDataItem, aPlacesNode, cachedAnnotations);
       newOrUpdatedShell = shell;
       shellsForURI.add(shell);
       if (aDataItem)
