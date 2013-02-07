@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
 const TOPIC_INTERFACE_STATE_CHANGED  = "network-interface-state-changed";
 const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
-const TOPIC_DEFAULT_ROUTE_CHANGED    = "network-default-route-changed";
+const TOPIC_ACTIVE_CHANGED           = "network-active-changed";
 const TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 const TOPIC_PREF_CHANGED             = "nsPref:changed";
 const TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
@@ -393,6 +393,7 @@ NetworkManager.prototype = {
       if (this.active != this._overriddenActive) {
         this.active = this._overriddenActive;
         this.setDefaultRouteAndDNS(oldActive);
+        Services.obs.notifyObservers(this.active, TOPIC_ACTIVE_CHANGED, null);
       }
       return;
     }
@@ -431,6 +432,9 @@ NetworkManager.prototype = {
         this.active = defaultDataNetwork;
       }
       this.setDefaultRouteAndDNS(oldActive);
+      if (this.active != oldActive) {
+        Services.obs.notifyObservers(this.active, TOPIC_ACTIVE_CHANGED, null);
+      }
     }
 
     if (this._manageOfflineStatus) {
