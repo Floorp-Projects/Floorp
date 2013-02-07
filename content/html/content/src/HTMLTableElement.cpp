@@ -917,11 +917,9 @@ HTMLTableElement::ParseAttribute(int32_t aNamespaceID,
   /* ignore summary, just a string */
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::cellspacing ||
-        aAttribute == nsGkAtoms::cellpadding) {
+        aAttribute == nsGkAtoms::cellpadding ||
+        aAttribute == nsGkAtoms::border) {
       return aResult.ParseNonNegativeIntValue(aValue);
-    }
-    if (aAttribute == nsGkAtoms::border) {
-      return aResult.ParseIntWithBounds(aValue, 0);
     }
     if (aAttribute == nsGkAtoms::height) {
       return aResult.ParseSpecialIntValue(aValue);
