@@ -1201,6 +1201,131 @@ BaselineCompiler::emit_JSOP_INITELEM_ARRAY()
 }
 
 bool
+BaselineCompiler::emit_JSOP_NEWOBJECT()
+{
+    frame.syncStack(0);
+
+    RootedTypeObject type(cx);
+    if (!types::UseNewTypeForInitializer(cx, script, pc, JSProto_Object)) {
+        type = types::TypeScript::InitObject(cx, script, pc, JSProto_Object);
+        if (!type)
+            return false;
+    }
+
+    RootedObject baseObject(cx, script->getObject(pc));
+    RootedObject templateObject(cx, CopyInitializerObject(cx, baseObject, MaybeSingletonObject));
+    if (!templateObject)
+        return false;
+
+    if (type) {
+        templateObject->setType(type);
+    } else {
+        if (!JSObject::setSingletonType(cx, templateObject))
+            return false;
+    }
+
+    // Pass base object in R0.
+    masm.movePtr(ImmGCPtr(templateObject), R0.scratchReg());
+
+    ICNewObject_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_NEWINIT()
+{
+    frame.syncStack(0);
+    JSProtoKey key = JSProtoKey(GET_UINT8(pc));
+
+    RootedTypeObject type(cx);
+    if (!types::UseNewTypeForInitializer(cx, script, pc, key)) {
+        type = types::TypeScript::InitObject(cx, script, pc, key);
+        if (!type)
+            return false;
+    }
+
+    if (key == JSProto_Array) {
+        // Pass length in R0, type in R1.
+        masm.move32(Imm32(0), R0.scratchReg());
+        masm.movePtr(ImmGCPtr(type), R1.scratchReg());
+
+        ICNewArray_Fallback::Compiler stubCompiler(cx);
+        if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+            return false;
+    } else {
+        JS_ASSERT(key == JSProto_Object);
+
+        RootedObject templateObject(cx);
+        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, MaybeSingletonObject);
+        if (!templateObject)
+            return false;
+
+        if (type) {
+            templateObject->setType(type);
+        } else {
+            if (!JSObject::setSingletonType(cx, templateObject))
+                return false;
+        }
+
+        // Pass base object in R0.
+        masm.movePtr(ImmGCPtr(templateObject), R0.scratchReg());
+
+        ICNewObject_Fallback::Compiler stubCompiler(cx);
+        if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+            return false;
+    }
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITELEM()
+{
+    // Store RHS in the scratch slot.
+    storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
+    frame.pop();
+
+    // Keep object and index in R0 and R1.
+    frame.popRegsAndSync(2);
+
+    // Push the object to store the result of the IC.
+    frame.push(R0);
+    frame.syncStack(0);
+
+    // Keep RHS on the stack.
+    frame.pushScratchValue();
+
+    // Call IC.
+    ICSetElem_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    // Pop the rhs, so that the object is on the top of the stack.
+    frame.pop();
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITPROP()
+{
+    // Keep lhs in R0, rhs in R1.
+    frame.popRegsAndSync(2);
+
+    // Push the object to store the result of the IC.
+    frame.push(R0);
+    frame.syncStack(0);
+
+    // Call IC.
+    ICSetProp_Fallback::Compiler compiler(cx);
+    return emitIC(compiler.getStub(&stubSpace_));
+}
+
+bool
 BaselineCompiler::emit_JSOP_ENDINIT()
 {
     return true;
