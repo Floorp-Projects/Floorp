@@ -673,7 +673,7 @@ var AlertsHelper = {
      return;
 
     let topic = detail.type == "desktop-notification-click" ? "alertclickcallback"
-                                                            : "alertfinished";
+                           /* desktop-notification-close */ : "alertfinished";
     if (uid.startsWith("app-notif")) {
       try {
         listener.mm.sendAsyncMessage("app-notification-return", {
@@ -682,13 +682,17 @@ var AlertsHelper = {
           target: listener.target
         });
       } catch(e) {
+        // we get an exception if the app is not launched yet
+
         gSystemMessenger.sendMessage("notification", {
-          title: listener.title,
-          body: listener.text,
-          imageURL: listener.imageURL
-        },
-        Services.io.newURI(listener.target, null, null),
-        Services.io.newURI(listener.manifestURL, null, null));
+            clicked: (detail.type === "desktop-notification-click"),
+            title: listener.title,
+            body: listener.text,
+            imageURL: listener.imageURL
+          },
+          Services.io.newURI(listener.target, null, null),
+          Services.io.newURI(listener.manifestURL, null, null)
+        );
       }
     } else if (uid.startsWith("alert")) {
       try {
