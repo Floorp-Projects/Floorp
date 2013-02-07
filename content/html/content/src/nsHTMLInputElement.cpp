@@ -1878,17 +1878,31 @@ nsHTMLInputElement::GetDisplayFileName(nsAString& aValue) const
     return;
   }
 
-  aValue.Truncate();
-  for (int32_t i = 0; i < mFiles.Count(); ++i) {
-    nsString str;
-    mFiles[i]->GetName(str);
-    if (i == 0) {
-      aValue.Append(str);
-    }
-    else {
-      aValue.Append(NS_LITERAL_STRING(", ") + str);
-    }
+  if (mFiles.Count() == 1) {
+    mFiles[0]->GetName(aValue);
+    return;
   }
+
+  nsXPIDLString value;
+
+  if (mFiles.Count() == 0) {
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "NoFilesSelected", value);
+    } else {
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "NoFileSelected", value);
+    }
+  } else {
+    nsString count;
+    count.AppendInt(mFiles.Count());
+
+    const PRUnichar* params[] = { count.get() };
+    nsContentUtils::FormatLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                          "XFilesSelected", params, value);
+  }
+
+  aValue = value;
 }
 
 void
