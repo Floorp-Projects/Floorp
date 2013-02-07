@@ -133,6 +133,10 @@ namespace ion {
     _(JSOP_ARGUMENTS)          \
     _(JSOP_TOID)               \
     _(JSOP_TABLESWITCH)        \
+    _(JSOP_ITER)               \
+    _(JSOP_MOREITER)           \
+    _(JSOP_ITERNEXT)           \
+    _(JSOP_ENDITER)            \
     _(JSOP_POPV)               \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETURN)             \

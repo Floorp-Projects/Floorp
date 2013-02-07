@@ -335,7 +335,12 @@ class ICEntry
     _(SetProp_Fallback)         \
     _(SetProp_Native)           \
                                 \
-    _(TableSwitch)
+    _(TableSwitch)              \
+                                \
+    _(IteratorNew_Fallback)     \
+    _(IteratorMore_Fallback)    \
+    _(IteratorNext_Fallback)    \
+    _(IteratorClose_Fallback)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -2855,6 +2860,122 @@ class ICTableSwitch : public ICStub
         {}
 
         ICStub *getStub(ICStubSpace *space);
+    };
+};
+
+// IC for constructing an iterator from an input value.
+class ICIteratorNew_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICIteratorNew_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::IteratorNew_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICIteratorNew_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICIteratorNew_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::IteratorNew_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICIteratorNew_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// IC for testing if there are more values in an iterator.
+class ICIteratorMore_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICIteratorMore_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::IteratorMore_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICIteratorMore_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICIteratorMore_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::IteratorMore_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICIteratorMore_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// IC for getting the next value in an iterator.
+class ICIteratorNext_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICIteratorNext_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::IteratorNext_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICIteratorNext_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICIteratorNext_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::IteratorNext_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICIteratorNext_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// IC for closing an iterator.
+class ICIteratorClose_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICIteratorClose_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::IteratorClose_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICIteratorClose_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICIteratorClose_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::IteratorClose_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICIteratorClose_Fallback::New(space, getStubCode());
+        }
     };
 };
 
