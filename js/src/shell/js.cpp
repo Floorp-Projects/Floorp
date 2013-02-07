@@ -1425,27 +1425,6 @@ AssertEq(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
-AssertJit(JSContext *cx, unsigned argc, jsval *vp)
-{
-#ifdef JS_METHODJIT
-    if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
-        /*
-         * Ignore calls to this native when inference is enabled, with
-         * METHODJIT_ALWAYS recompilation can happen and discard the script's
-         * jitcode.
-         */
-        if (!cx->typeInferenceEnabled() && cx->hasfp() && !cx->fp()->jit()) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
-            return false;
-        }
-    }
-#endif
-
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return true;
-}
-
 static UnrootedScript
 ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
 {
@@ -3662,10 +3641,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "assertEq(actual, expected[, msg])",
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
 "  both NaN, or non-zero and ===)."),
-
-    JS_FN_HELP("assertJit", AssertJit, 0, 0,
-"assertJit()",
-"  Throw if the calling function failed to JIT."),
 
     JS_FN_HELP("setDebug", SetDebug, 1, 0,
 "setDebug(debug)",
