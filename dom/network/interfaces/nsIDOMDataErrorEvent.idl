@@ -4,8 +4,18 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(494cf68f-0ca8-4cf9-924b-84cf379c9631)]
+[scriptable, builtinclass, uuid(8b4ed443-a6b0-4445-aab0-9aa9fd5f6c1e)]
 interface nsIDOMDataErrorEvent : nsIDOMEvent
 {
   readonly attribute DOMString message;
+
+  [noscript] void initDataErrorEvent(in DOMString aType,
+                                     in boolean aCanBubble,
+                                     in boolean aCancelable,
+                                     in DOMString aMessage);
+};
+
+dictionary DataErrorEventInit : EventInit
+{
+  DOMString message;
 };

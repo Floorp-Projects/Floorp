@@ -2109,9 +2109,9 @@ cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font)
 
     _cairo_win32_font_face_init_key (font_face, logfont, font);
     _cairo_font_face_init (&font_face->base, &_cairo_win32_font_face_backend);
-    assert (font_face->base.hash_entry.hash == key.base.hash_entry.hash);
 
     if (!font) {
+        assert (font_face->base.hash_entry.hash == key.base.hash_entry.hash);
         status = _cairo_hash_table_insert (hash_table,
                                            &font_face->base.hash_entry);
         if (unlikely (status))

@@ -39,6 +39,7 @@
 #include <string>
 #include <vector>
 
+#include "common/symbol_data.h"
 #include "common/using_std_string.h"
 
 namespace google_breakpad {
@@ -50,10 +51,10 @@ class Module;
 // file format.
 // If OBJ_FILE has been stripped but contains a .gnu_debuglink section,
 // then look for the debug file in DEBUG_DIRS.
-// If CFI is set to false, then omit the CFI section.
+// SYMBOL_DATA allows limiting the type of symbol data written.
 bool WriteSymbolFile(const string &obj_file,
                      const std::vector<string>& debug_dirs,
-                     bool cfi,
+                     SymbolData symbol_data,
                      std::ostream &sym_stream);
 
 // As above, but simply return the debugging information in MODULE
@@ -61,7 +62,7 @@ bool WriteSymbolFile(const string &obj_file,
 // Module object and must delete it when finished.
 bool ReadSymbolData(const string& obj_file,
                     const std::vector<string>& debug_dirs,
-                    bool cfi,
+                    SymbolData symbol_data,
                     Module** module);
 
 }  // namespace google_breakpad

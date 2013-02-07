@@ -302,8 +302,8 @@ js::ConcatStrings(JSContext *cx,
                   typename MaybeRooted<JSString*, allowGC>::HandleType left,
                   typename MaybeRooted<JSString*, allowGC>::HandleType right)
 {
-    JS_ASSERT_IF(!left->isAtom(), left->compartment() == cx->compartment);
-    JS_ASSERT_IF(!right->isAtom(), right->compartment() == cx->compartment);
+    JS_ASSERT_IF(!left->isAtom(), left->zone() == cx->zone());
+    JS_ASSERT_IF(!right->isAtom(), right->zone() == cx->zone());
 
     size_t leftLen = left->length();
     if (leftLen == 0)

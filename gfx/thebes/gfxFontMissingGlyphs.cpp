@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxFontMissingGlyphs.h"
+#include "nsDeviceContext.h"
 
 #define CHAR_BITS(b00, b01, b02, b10, b11, b12, b20, b21, b22, b30, b31, b32, b40, b41, b42) \
   ((b00 << 0) | (b01 << 1) | (b02 << 2) | (b10 << 3) | (b11 << 4) | (b12 << 5) | \
@@ -164,8 +165,10 @@ DrawHexChar(gfxContext *aContext, const gfxPoint& aPt, uint32_t aDigit)
 #endif // MOZ_GFX_OPTIMIZE_MOBILE
 
 void
-gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRect,
-                                       uint32_t aChar)
+gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext    *aContext,
+                                       const gfxRect& aRect,
+                                       uint32_t       aChar,
+                                       uint32_t       aAppUnitsPerDevPixel)
 {
     aContext->Save();
 
@@ -179,11 +182,12 @@ gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRec
     // Stroke a rectangle so that the stroke's left edge is inset one pixel
     // from the left edge of the glyph box and the stroke's right edge
     // is inset one pixel from the right edge of the glyph box.
-    gfxFloat halfBorderWidth = BOX_BORDER_WIDTH/2.0;
+    gfxFloat halfBorderWidth = BOX_BORDER_WIDTH / 2.0;
     gfxFloat borderLeft = aRect.X() + BOX_HORIZONTAL_INSET + halfBorderWidth;
     gfxFloat borderRight = aRect.XMost() - BOX_HORIZONTAL_INSET - halfBorderWidth;
     gfxRect borderStrokeRect(borderLeft, aRect.Y() + halfBorderWidth,
-                             borderRight - borderLeft, aRect.Height() - 2*halfBorderWidth);
+                             borderRight - borderLeft,
+                             aRect.Height() - 2.0 * halfBorderWidth);
     if (!borderStrokeRect.IsEmpty()) {
         aContext->SetLineWidth(BOX_BORDER_WIDTH);
         aContext->SetDash(gfxContext::gfxLineSolid);
@@ -203,45 +207,51 @@ gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRec
     }
 
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
-    gfxPoint center(aRect.X() + aRect.Width()/2,
-                    aRect.Y() + aRect.Height()/2);
-    gfxFloat halfGap = HEX_CHAR_GAP/2.0;
+    gfxPoint center(aRect.X() + aRect.Width() / 2,
+                    aRect.Y() + aRect.Height() / 2);
+    gfxFloat halfGap = HEX_CHAR_GAP / 2.0;
     gfxFloat top = -(MINIFONT_HEIGHT + halfGap);
+    aContext->SetDeviceColor(currentColor);
+    aContext->Translate(center);
+    // We always want integer scaling, otherwise the "bitmap" glyphs will look
+    // even uglier than usual when zoomed
+    int32_t scale =
+        std::max<int32_t>(1, nsDeviceContext::AppUnitsPerCSSPixel() /
+                             aAppUnitsPerDevPixel);
+    aContext->Scale(gfxFloat(scale), gfxFloat(scale));
     if (aChar < 0x10000) {
-        if (aRect.Width() >= 2*MINIFONT_WIDTH + HEX_CHAR_GAP &&
-            aRect.Height() >= 2*MINIFONT_HEIGHT + HEX_CHAR_GAP) {
+        if (aRect.Width() >= 2 * (MINIFONT_WIDTH + HEX_CHAR_GAP) &&
+            aRect.Height() >= 2 * MINIFONT_HEIGHT + HEX_CHAR_GAP) {
             // Draw 4 digits for BMP
-            aContext->SetDeviceColor(currentColor);
             gfxFloat left = -(MINIFONT_WIDTH + halfGap);
             DrawHexChar(aContext,
-                        center + gfxPoint(left, top), (aChar >> 12) & 0xF);
+                        gfxPoint(left, top), (aChar >> 12) & 0xF);
             DrawHexChar(aContext,
-                        center + gfxPoint(halfGap, top), (aChar >> 8) & 0xF);
+                        gfxPoint(halfGap, top), (aChar >> 8) & 0xF);
             DrawHexChar(aContext,
-                        center + gfxPoint(left, halfGap), (aChar >> 4) & 0xF);
+                        gfxPoint(left, halfGap), (aChar >> 4) & 0xF);
             DrawHexChar(aContext,
-                        center + gfxPoint(halfGap, halfGap), aChar & 0xF);
+                        gfxPoint(halfGap, halfGap), aChar & 0xF);
         }
     } else {
-        if (aRect.Width() >= 3*MINIFONT_WIDTH + 2*HEX_CHAR_GAP &&
-            aRect.Height() >= 2*MINIFONT_HEIGHT + HEX_CHAR_GAP) {
+        if (aRect.Width() >= 3 * (MINIFONT_WIDTH + HEX_CHAR_GAP) &&
+            aRect.Height() >= 2 * MINIFONT_HEIGHT + HEX_CHAR_GAP) {
             // Draw 6 digits for non-BMP
-            aContext->SetDeviceColor(currentColor);
             gfxFloat first = -(MINIFONT_WIDTH * 1.5 + HEX_CHAR_GAP);
             gfxFloat second = -(MINIFONT_WIDTH / 2.0);
             gfxFloat third = (MINIFONT_WIDTH / 2.0 + HEX_CHAR_GAP);
             DrawHexChar(aContext,
-                        center + gfxPoint(first, top), (aChar >> 20) & 0xF);
+                        gfxPoint(first, top), (aChar >> 20) & 0xF);
             DrawHexChar(aContext,
-                        center + gfxPoint(second, top), (aChar >> 16) & 0xF);
+                        gfxPoint(second, top), (aChar >> 16) & 0xF);
             DrawHexChar(aContext,
-                        center + gfxPoint(third, top), (aChar >> 12) & 0xF);
+                        gfxPoint(third, top), (aChar >> 12) & 0xF);
             DrawHexChar(aContext,
-                        center + gfxPoint(first, halfGap), (aChar >> 8) & 0xF);
+                        gfxPoint(first, halfGap), (aChar >> 8) & 0xF);
             DrawHexChar(aContext,
-                        center + gfxPoint(second, halfGap), (aChar >> 4) & 0xF);
+                        gfxPoint(second, halfGap), (aChar >> 4) & 0xF);
             DrawHexChar(aContext,
-                        center + gfxPoint(third, halfGap), aChar & 0xF);
+                        gfxPoint(third, halfGap), aChar & 0xF);
         }
     }
 #endif
@@ -250,14 +260,19 @@ gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRec
 }
 
 gfxFloat
-gfxFontMissingGlyphs::GetDesiredMinWidth(uint32_t aChar)
+gfxFontMissingGlyphs::GetDesiredMinWidth(uint32_t aChar,
+                                         uint32_t aAppUnitsPerDevPixel)
 {
 /**
  * The minimum desired width for a missing-glyph glyph box. I've laid it out
  * like this so you can see what goes where.
  */
-    return BOX_HORIZONTAL_INSET + BOX_BORDER_WIDTH + HEX_CHAR_GAP +
+    gfxFloat width = BOX_HORIZONTAL_INSET + BOX_BORDER_WIDTH + HEX_CHAR_GAP +
         MINIFONT_WIDTH + HEX_CHAR_GAP + MINIFONT_WIDTH +
          ((aChar < 0x10000) ? 0 : HEX_CHAR_GAP + MINIFONT_WIDTH) +
         HEX_CHAR_GAP + BOX_BORDER_WIDTH + BOX_HORIZONTAL_INSET;
+    // Note that this will give us floating-point division, so the width will
+    // -not- be snapped to integer multiples of its basic pixel value
+    width *= gfxFloat(nsDeviceContext::AppUnitsPerCSSPixel()) / aAppUnitsPerDevPixel;
+    return width;
 }

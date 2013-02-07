@@ -939,5 +939,23 @@ AbstractFramePtr::thisValue() const
     return asStackFrame()->thisValue();
 }
 
+inline void
+AbstractFramePtr::popBlock(JSContext *cx) const
+{
+    if (isStackFrame())
+        asStackFrame()->popBlock(cx);
+    else
+        JS_NOT_REACHED("Invalid frame");
+}
+
+inline void
+AbstractFramePtr::popWith(JSContext *cx) const
+{
+    if (isStackFrame())
+        asStackFrame()->popWith(cx);
+    else
+        JS_NOT_REACHED("Invalid frame");
+}
+
 } /* namespace js */
 #endif /* Stack_inl_h__ */
