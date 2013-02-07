@@ -25,7 +25,6 @@ MOCHITEST_FILES := \
   test_Range-commonAncestorContainer.html.json \
   test_Range-comparePoint.html.json \
   test_Range-detach.html.json \
-  test_Range-intersectsNode-binding.html.json \
   test_attributes.html.json \
   test_case.html.json \
   test_historical.html.json \

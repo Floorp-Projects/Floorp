@@ -3161,7 +3161,7 @@ nsIContent* nsHTMLMediaElement::GetNextSource()
   nsresult rv = NS_OK;
   if (!mSourcePointer) {
     // First time this has been run, create a selection to cover children.
-    mSourcePointer = new nsRange();
+    mSourcePointer = new nsRange(this);
 
     rv = mSourcePointer->SelectNodeContents(thisDomNode);
     if (NS_FAILED(rv)) return nullptr;
