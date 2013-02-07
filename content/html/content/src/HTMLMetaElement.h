@@ -47,6 +47,30 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
+  // XPCOM GetName is fine.
+  void SetName(const nsAString& aName, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aName, aRv);
+  }
+  // XPCOM GetHttpEquiv is fine.
+  void SetHttpEquiv(const nsAString& aHttpEquiv, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::httpEquiv, aHttpEquiv, aRv);
+  }
+  // XPCOM GetContent is fine.
+  void SetContent(const nsAString& aContent, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::content, aContent, aRv);
+  }
+  // XPCOM GetScheme is fine.
+  void SetScheme(const nsAString& aScheme, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::scheme, aScheme, aRv);
+  }
+
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+
 protected:
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
