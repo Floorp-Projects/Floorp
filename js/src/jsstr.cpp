@@ -1829,7 +1829,7 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
 
     RootedObject obj(cx, arrayobj);
     RootedValue v(cx);
-    return res->createLastMatch(cx, v.address()) && JSObject::defineElement(cx, obj, count, v);
+    return res->createLastMatch(cx, &v) && JSObject::defineElement(cx, obj, count, v);
 }
 
 JSBool
@@ -2017,7 +2017,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         JS_ASSERT(!rdata.elembase->getOps()->getProperty);
 
         RootedValue match(cx);
-        if (!res->createLastMatch(cx, match.address()))
+        if (!res->createLastMatch(cx, &match))
             return false;
         JSString *str = match.toString();
 
@@ -2071,11 +2071,11 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
 
         /* Push $&, $1, $2, ... */
         unsigned argi = 0;
-        if (!res->createLastMatch(cx, &args[argi++]))
+        if (!res->createLastMatch(cx, args.handleAt(argi++)))
             return false;
 
         for (size_t i = 0; i < res->getMatches().parenCount(); ++i) {
-            if (!res->createParen(cx, i + 1, &args[argi++]))
+            if (!res->createParen(cx, i + 1, args.handleAt(argi++)))
                 return false;
         }
 
