@@ -1344,6 +1344,118 @@ BaselineCompiler::emit_JSOP_LENGTH()
     return emit_JSOP_GETPROP();
 }
 
+Address
+BaselineCompiler::getScopeCoordinateAddress(Register reg)
+{
+    ScopeCoordinate sc(pc);
+
+    masm.loadPtr(frame.addressOfScopeChain(), reg);
+    for (unsigned i = sc.hops; i; i--)
+        masm.extractObject(Address(reg, ScopeObject::offsetOfEnclosingScope()), reg);
+
+    UnrootedShape shape = ScopeCoordinateToStaticScopeShape(cx, script, pc);
+    Address addr;
+    if (shape->numFixedSlots() <= sc.slot) {
+        masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
+        return Address(reg, (sc.slot - shape->numFixedSlots()) * sizeof(Value));
+    }
+
+    return Address(reg, JSObject::getFixedSlotOffset(sc.slot));
+}
+
+bool
+BaselineCompiler::emit_JSOP_GETALIASEDVAR()
+{
+    frame.syncStack(0);
+
+    Address address = getScopeCoordinateAddress(R0.scratchReg());
+    masm.loadValue(address, R0);
+
+    ICTypeMonitor_Fallback::Compiler compiler(cx, (ICMonitoredFallbackStub *) NULL);
+    if (!emitIC(compiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_CALLALIASEDVAR()
+{
+    return emit_JSOP_GETALIASEDVAR();
+}
+
+bool
+BaselineCompiler::emit_JSOP_SETALIASEDVAR()
+{
+    Address address = getScopeCoordinateAddress(R1.scratchReg());
+    masm.patchableCallPreBarrier(address, MIRType_Value);
+    storeValue(frame.peek(-1), address, R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_NAME()
+{
+    frame.syncStack(0);
+
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
+    // Call IC.
+    ICGetName_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    // Mark R0 as pushed stack value.
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_CALLNAME()
+{
+    return emit_JSOP_NAME();
+}
+
+bool
+BaselineCompiler::emit_JSOP_BINDNAME()
+{
+    frame.syncStack(0);
+
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
+    // Call IC.
+    ICBindName_Fallback::Compiler stubCompiler(cx);
+    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    // Mark R0 as pushed stack value.
+    frame.push(R0);
+    return true;
+}
+
+typedef bool (*DeleteNameFn)(JSContext *, HandlePropertyName, HandleObject,
+                             MutableHandleValue);
+static const VMFunction DeleteNameInfo = FunctionInfo<DeleteNameFn>(DeleteNameOperation);
+
+bool
+BaselineCompiler::emit_JSOP_DELNAME()
+{
+    frame.syncStack(0);
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
+    prepareVMCall();
+
+    pushArg(R0.scratchReg());
+    pushArg(ImmGCPtr(script->getName(pc)));
+
+    if (!callVM(DeleteNameInfo))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
 typedef bool (*DefVarOrConstFn)(JSContext *, HandlePropertyName, unsigned, HandleObject);
 static const VMFunction DefVarOrConstInfo = FunctionInfo<DefVarOrConstFn>(DefVarOrConst);
 

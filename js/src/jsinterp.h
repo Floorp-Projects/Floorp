@@ -409,6 +409,10 @@ DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain, Han
 bool
 GetAndClearException(JSContext *cx, MutableHandleValue res);
 
+bool
+DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject scopeObj,
+                    MutableHandleValue res);
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */

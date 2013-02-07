@@ -98,6 +98,13 @@ namespace ion {
     _(JSOP_SETPROP)            \
     _(JSOP_CALLPROP)           \
     _(JSOP_LENGTH)             \
+    _(JSOP_GETALIASEDVAR)      \
+    _(JSOP_CALLALIASEDVAR)     \
+    _(JSOP_SETALIASEDVAR)      \
+    _(JSOP_NAME)               \
+    _(JSOP_CALLNAME)           \
+    _(JSOP_BINDNAME)           \
+    _(JSOP_DELNAME)            \
     _(JSOP_DEFVAR)             \
     _(JSOP_DEFCONST)           \
     _(JSOP_DEFFUN)             \
@@ -205,6 +212,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitFormalArgAccess(uint32_t arg, bool get);
 
     bool emitEnterBlock();
+
+    Address getScopeCoordinateAddress(Register reg);
 };
 
 } // namespace ion
