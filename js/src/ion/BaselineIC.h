@@ -2491,6 +2491,7 @@ class ICGetPropNativeCompiler : public ICStubCompiler
 
     bool generateStubCode(MacroAssembler &masm);
 
+  protected:
     virtual int32_t getKey() const {
         return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
     }
@@ -2601,11 +2602,11 @@ class ICSetProp_Native : public ICUpdatedStub
         bool isFixedSlot_;
         uint32_t offset_;
 
+      protected:
         virtual int32_t getKey() const {
             return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
         }
 
-      protected:
         bool generateStubCode(MacroAssembler &masm);
 
       public:
@@ -2645,32 +2646,44 @@ class ICCallStubCompiler : public ICStubCompiler
 class ICCall_Fallback : public ICMonitoredFallbackStub
 {
     friend class ICStubSpace;
+    uint32_t isConstructing_;
 
-    ICCall_Fallback(IonCode *stubCode)
-      : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode)
+    ICCall_Fallback(IonCode *stubCode, bool isConstructing)
+      : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode),
+        isConstructing_(isConstructing ? 1 : 0)
     { }
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    static inline ICCall_Fallback *New(ICStubSpace *space, IonCode *code) {
-        return space->allocate<ICCall_Fallback>(code);
+    static inline ICCall_Fallback *New(ICStubSpace *space, IonCode *code, bool isConstructing)
+    {
+        return space->allocate<ICCall_Fallback>(code, isConstructing);
+    }
+
+    bool isConstructing() const {
+        return isConstructing_;
+    }
+    static size_t offsetOfIsConstructing() {
+        return offsetof(ICCall_Fallback, isConstructing_);
     }
 
     // Compiler for this stub kind.
     class Compiler : public ICCallStubCompiler {
       protected:
+        bool isConstructing_;
         uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler &masm);
         bool postGenerateStubCode(MacroAssembler &masm, Handle<IonCode *> code);
 
       public:
-        Compiler(JSContext *cx)
-          : ICCallStubCompiler(cx, ICStub::Call_Fallback)
+        Compiler(JSContext *cx, bool isConstructing)
+          : ICCallStubCompiler(cx, ICStub::Call_Fallback),
+            isConstructing_(isConstructing)
         { }
 
         ICStub *getStub(ICStubSpace *space) {
-            ICCall_Fallback *stub = ICCall_Fallback::New(space, getStubCode());
+            ICCall_Fallback *stub = ICCall_Fallback::New(space, getStubCode(), isConstructing_);
             if (!stub || !stub->initMonitoringChain(cx, space))
                 return NULL;
             return stub;
@@ -2707,13 +2720,20 @@ class ICCall_Scripted : public ICMonitoredStub
     class Compiler : public ICCallStubCompiler {
       protected:
         ICStub *firstMonitorStub_;
+        bool isConstructing_;
         RootedFunction callee_;
         bool generateStubCode(MacroAssembler &masm);
 
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isConstructing_) << 16);
+        }
+
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee)
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee,
+                 bool isConstructing)
           : ICCallStubCompiler(cx, ICStub::Call_Scripted),
             firstMonitorStub_(firstMonitorStub),
+            isConstructing_(isConstructing),
             callee_(cx, callee)
         { }
 
