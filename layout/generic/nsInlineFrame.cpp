@@ -459,13 +459,11 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   lineLayout->BeginSpan(this, &aReflowState, leftEdge,
                         leftEdge + availableWidth, &mBaseline);
 
-  // First reflow our current children
+  // First reflow our principal children.
   nsIFrame* frame = mFrames.FirstChild();
   bool done = false;
-  while (nullptr != frame) {
-    bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
-
-    // Check if we should lazily set the child frame's parent pointer
+  while (frame) {
+    // Check if we should lazily set the child frame's parent pointer.
     if (irs.mSetParentPointer) {
       bool havePrevBlock =
         irs.mLineContainer && irs.mLineContainer->GetPrevContinuation();
@@ -541,6 +539,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     MOZ_ASSERT(frame->GetParent() == this);
 
     if (!done) {
+      bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
       rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
       done = NS_FAILED(rv) ||
              NS_INLINE_IS_BREAK(aStatus) || 
