@@ -20,6 +20,14 @@ registerCleanupFunction(function () {
   DebuggerServer.destroy();
 });
 
+function getProfileInternals(uid) {
+  let profile = (uid != null) ? gPanel.profiles.get(uid) : gPanel.activeProfile;
+  let win = profile.iframe.contentWindow;
+  let doc = win.document;
+
+  return [win, doc];
+}
+
 function loadTab(url, callback) {
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
