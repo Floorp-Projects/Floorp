@@ -2504,7 +2504,7 @@ RasterImage::Discard(bool force)
 
   // Notify that we discarded
   if (mStatusTracker)
-    mStatusTracker->GetDecoderObserver()->OnDiscard();
+    mStatusTracker->OnDiscard();
 
   if (force)
     DiscardTracker::Remove(&mDiscardTrackerNode);

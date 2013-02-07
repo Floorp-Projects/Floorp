@@ -160,6 +160,7 @@ public:
   void OnStartRequest();
   void OnDataAvailable();
   void OnStopRequest(bool aLastPart, nsresult aStatus);
+  void OnDiscard();
 
   /* non-virtual imgIOnloadBlocker methods */
   // NB: If UnblockOnload is sent, and then we are asked to replay the
