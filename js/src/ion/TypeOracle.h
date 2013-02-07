@@ -85,7 +85,7 @@ class TypeOracle
     virtual bool elementReadIsDenseNative(RawScript script, jsbytecode *pc) {
         return false;
     }
-    virtual bool elementReadIsTypedArray(HandleScript script, jsbytecode *pc, int *arrayType) {
+    virtual bool elementReadIsTypedArray(RawScript script, jsbytecode *pc, int *arrayType) {
         return false;
     }
     virtual bool elementReadIsString(UnrootedScript script, jsbytecode *pc) {
@@ -116,10 +116,10 @@ class TypeOracle
     virtual bool elementWriteNeedsDoubleConversion(UnrootedScript script, jsbytecode *pc) {
         return false;
     }
-    virtual bool elementWriteHasExtraIndexedProperty(UnrootedScript script, jsbytecode *pc) {
+    virtual bool elementWriteHasExtraIndexedProperty(RawScript script, jsbytecode *pc) {
         return false;
     }
-    virtual bool elementWriteIsPacked(UnrootedScript script, jsbytecode *pc) {
+    virtual bool elementWriteIsPacked(RawScript script, jsbytecode *pc) {
         return false;
     }
     virtual bool elementAccessIsDenseNative(types::StackTypeSet *obj, types::StackTypeSet *id) {
@@ -162,7 +162,7 @@ class TypeOracle
     virtual bool canInlineCall(HandleScript caller, jsbytecode *pc) {
         return false;
     }
-    virtual bool canEnterInlinedFunction(HandleScript  caller, jsbytecode *pc, JSFunction *callee) {
+    virtual bool canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction callee) {
         return false;
     }
 
@@ -251,7 +251,7 @@ class TypeInferenceOracle : public TypeOracle
     bool inObjectIsDenseNativeWithoutExtraIndexedProperties(HandleScript script, jsbytecode *pc);
     bool inArrayIsPacked(UnrootedScript script, jsbytecode *pc);
     bool elementReadIsDenseNative(RawScript script, jsbytecode *pc);
-    bool elementReadIsTypedArray(HandleScript script, jsbytecode *pc, int *atype);
+    bool elementReadIsTypedArray(RawScript script, jsbytecode *pc, int *atype);
     bool elementReadIsString(UnrootedScript script, jsbytecode *pc);
     bool elementReadShouldAlwaysLoadDoubles(UnrootedScript script, jsbytecode *pc);
     bool elementReadHasExtraIndexedProperty(UnrootedScript, jsbytecode *pc);
@@ -262,8 +262,8 @@ class TypeInferenceOracle : public TypeOracle
     bool elementWriteIsTypedArray(RawScript script, jsbytecode *pc, int *arrayType);
     bool elementAccessIsTypedArray(types::StackTypeSet *obj, types::StackTypeSet *id, int *arrayType);
     bool elementWriteNeedsDoubleConversion(UnrootedScript script, jsbytecode *pc);
-    bool elementWriteHasExtraIndexedProperty(UnrootedScript script, jsbytecode *pc);
-    bool elementWriteIsPacked(UnrootedScript script, jsbytecode *pc);
+    bool elementWriteHasExtraIndexedProperty(RawScript script, jsbytecode *pc);
+    bool elementWriteIsPacked(RawScript script, jsbytecode *pc);
     bool arrayResultShouldHaveDoubleConversion(UnrootedScript script, jsbytecode *pc);
     bool setElementHasWrittenHoles(UnrootedScript script, jsbytecode *pc);
     bool propertyWriteCanSpecialize(UnrootedScript script, jsbytecode *pc);
@@ -272,7 +272,7 @@ class TypeInferenceOracle : public TypeOracle
     MIRType elementWrite(UnrootedScript script, jsbytecode *pc);
     bool canInlineCalls();
     bool canInlineCall(HandleScript caller, jsbytecode *pc);
-    bool canEnterInlinedFunction(HandleScript caller, jsbytecode *pc, JSFunction *callee);
+    bool canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction callee);
     types::StackTypeSet *aliasedVarBarrier(UnrootedScript script, jsbytecode *pc, types::StackTypeSet **barrier);
 
     LazyArgumentsType isArgumentObject(types::StackTypeSet *obj);
