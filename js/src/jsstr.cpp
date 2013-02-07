@@ -4125,21 +4125,18 @@ TransferBufferToString(StringBuffer &sb, MutableHandleValue rval)
  * 'Encode' and 'Decode'.
  */
 static bool
-Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
+Encode(JSContext *cx, Handle<JSLinearString*> str, const jschar *unescapedSet,
        const jschar *unescapedSet2, MutableHandleValue rval)
 {
     static const char HexDigits[] = "0123456789ABCDEF"; /* NB: uppercase */
 
     size_t length = str->length();
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
-        return false;
-
     if (length == 0) {
         rval.setString(cx->runtime->emptyString);
         return true;
     }
 
+    const jschar *chars = str->chars();
     StringBuffer sb(cx);
     jschar hexBuf[4];
     hexBuf[0] = '%';
@@ -4189,18 +4186,15 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
 }
 
 static bool
-Decode(JSContext *cx, JSString *str, const jschar *reservedSet, MutableHandleValue rval)
+Decode(JSContext *cx, Handle<JSLinearString*> str, const jschar *reservedSet, MutableHandleValue rval)
 {
     size_t length = str->length();
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
-        return false;
-
     if (length == 0) {
         rval.setString(cx->runtime->emptyString);
         return true;
     }
 
+    const jschar *chars = str->chars();
     StringBuffer sb(cx);
     for (size_t k = 0; k < length; k++) {
         jschar c = chars[k];
@@ -4275,7 +4269,7 @@ static JSBool
 str_decodeURI(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSLinearString *str = ArgToRootedString(cx, args, 0);
+    Rooted<JSLinearString*> str(cx, ArgToRootedString(cx, args, 0));
     if (!str)
         return false;
 
@@ -4286,7 +4280,7 @@ static JSBool
 str_decodeURI_Component(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSLinearString *str = ArgToRootedString(cx, args, 0);
+    Rooted<JSLinearString*> str(cx, ArgToRootedString(cx, args, 0));
     if (!str)
         return false;
 
@@ -4297,7 +4291,7 @@ static JSBool
 str_encodeURI(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSLinearString *str = ArgToRootedString(cx, args, 0);
+    Rooted<JSLinearString*> str(cx, ArgToRootedString(cx, args, 0));
     if (!str)
         return false;
 
@@ -4308,7 +4302,7 @@ static JSBool
 str_encodeURI_Component(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSLinearString *str = ArgToRootedString(cx, args, 0);
+    Rooted<JSLinearString*> str(cx, ArgToRootedString(cx, args, 0));
     if (!str)
         return false;
 
