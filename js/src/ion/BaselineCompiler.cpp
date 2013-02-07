@@ -2020,6 +2020,56 @@ BaselineCompiler::emit_JSOP_TABLESWITCH()
 }
 
 bool
+BaselineCompiler::emit_JSOP_ITER()
+{
+    frame.popRegsAndSync(1);
+
+    ICIteratorNew_Fallback::Compiler compiler(cx);
+    if (!emitIC(compiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_MOREITER()
+{
+    frame.syncStack(0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+
+    ICIteratorMore_Fallback::Compiler compiler(cx);
+    if (!emitIC(compiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_ITERNEXT()
+{
+    frame.syncStack(0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+
+    ICIteratorNext_Fallback::Compiler compiler(cx);
+    if (!emitIC(compiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_ENDITER()
+{
+    frame.popRegsAndSync(1);
+
+    ICIteratorClose_Fallback::Compiler compiler(cx);
+    return emitIC(compiler.getStub(&stubSpace_));
+}
+
+bool
 BaselineCompiler::emit_JSOP_SETRVAL()
 {
     // Store to the frame's return value slot.

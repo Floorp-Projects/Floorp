@@ -398,6 +398,14 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
             rfe->target = script->baseline->nativeCodeForPC(script, catchPC);
             return;
           }
+
+          case JSTRY_ITER: {
+            Value iterValue(* (Value *) rfe->stackPointer);
+            RootedObject iterObject(cx, &iterValue.toObject());
+            UnwindIteratorForException(cx, iterObject);
+            break;
+          }
+
           default:
             JS_NOT_REACHED("Invalid try note");
         }
