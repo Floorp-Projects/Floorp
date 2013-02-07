@@ -9,6 +9,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsAutoPtr.h"
+#include "nsGkAtoms.h"
 
 class nsContentList;
 
@@ -44,6 +45,17 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // XPCOM GetName is fine.
+  void SetName(const nsAString& aName, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aName, aError);
+  }
+  nsIHTMLCollection* Areas();
+
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+
 protected:
   nsRefPtr<nsContentList> mAreas;
 };
