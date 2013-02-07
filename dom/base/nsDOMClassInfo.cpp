@@ -425,11 +425,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "nsIDOMSmsCursor.h"
 #include "nsIDOMSmsSegmentInfo.h"
 #include "nsIDOMConnection.h"
-#ifdef MOZ_B2G_RIL
-#include "nsIDOMMobileConnection.h"
-#endif
-#include "USSDReceivedEvent.h"
-#include "DataErrorEvent.h"
 #include "mozilla/dom/network/Utils.h"
 
 #ifdef MOZ_B2G_RIL
@@ -440,7 +435,7 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "StkCommandEvent.h"
 #include "nsIDOMMozCellBroadcast.h"
 #include "nsIDOMMozCellBroadcastEvent.h"
-#include "CFStateChangeEvent.h"
+#include "nsIDOMMobileConnection.h"
 #endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_FM
@@ -1288,16 +1283,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(MozCellBroadcast, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(CFStateChangeEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
-
-  NS_DEFINE_CLASSINFO_DATA(USSDReceivedEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DataErrorEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3409,22 +3395,7 @@ nsDOMClassInfo::Init()
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCellBroadcastEvent)
      DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CFStateChangeEvent, nsIDOMCFStateChangeEvent)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCFStateChangeEvent)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
-  DOM_CLASSINFO_MAP_END
 #endif // MOZ_B2G_RIL
-
-  DOM_CLASSINFO_MAP_BEGIN(USSDReceivedEvent, nsIDOMUSSDReceivedEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMUSSDReceivedEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
-  DOM_CLASSINFO_MAP_END
- 
-  DOM_CLASSINFO_MAP_BEGIN(DataErrorEvent, nsIDOMDataErrorEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDataErrorEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFaceRule)

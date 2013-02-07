@@ -29,11 +29,14 @@ simple_events = [
 #endif
 #ifdef MOZ_B2G_RIL
     'CallEvent',
+    'CFStateChangeEvent',
+    'DataErrorEvent',
     'ICCCardLockErrorEvent',
     'MozWifiStatusChangeEvent',
     'MozWifiConnectionInfoEvent',
     'MozCellBroadcastEvent',
     'MozVoicemailEvent',
+    'USSDReceivedEvent',
 #endif
     'MozSmsEvent',
     'DeviceStorageChangeEvent',
