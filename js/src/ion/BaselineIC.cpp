@@ -680,7 +680,8 @@ ICUseCount_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 bool
 ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, ICStubSpace *space, HandleValue val)
 {
-    bool wasEmptyMonitorChain = (numOptimizedMonitorStubs_ == 0);
+    bool wasDetachedMonitorChain = lastMonitorStubPtrAddr_ == NULL;
+    JS_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
 
     if (numOptimizedMonitorStubs_ >= MAX_OPTIMIZED_STUBS) {
         // TODO: if the TypeSet becomes unknown or has the AnyObject type,
@@ -711,11 +712,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, ICStubSpace *space
         addOptimizedMonitorStub(stub);
     }
 
-    // addOptimizedMonitorStub directly links to the new stub for this/arguments monitoring.
-    if (argumentIndex_ != BYTECODE_INDEX)
-        return true;
-
-    bool firstMonitorStubAdded = wasEmptyMonitorChain && (numOptimizedMonitorStubs_ > 0);
+    bool firstMonitorStubAdded = wasDetachedMonitorChain && (numOptimizedMonitorStubs_ > 0);
 
     if (firstMonitorStubAdded) {
         // Was an empty monitor chain before, but a new stub was added.  This is the
@@ -2305,7 +2302,7 @@ DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeCha
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetName(%s)", js_CodeName[JSOp(*pc)]);
 
-    JS_ASSERT(op == JSOP_GETGNAME || op == JSOP_CALLGNAME);
+    JS_ASSERT(op == JSOP_NAME || op == JSOP_CALLNAME || op == JSOP_GETGNAME || op == JSOP_CALLGNAME);
 
     RootedPropertyName name(cx, script->getName(pc));
 
@@ -2372,6 +2369,47 @@ ICGetName_Global::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
+}
+
+//
+// BindName_Fallback
+//
+
+static bool
+DoBindNameFallback(JSContext *cx, ICBindName_Fallback *stub, HandleObject scopeChain,
+                   MutableHandleValue res)
+{
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    mozilla::DebugOnly<JSOp> op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "BindName(%s)", js_CodeName[JSOp(*pc)]);
+
+    JS_ASSERT(op == JSOP_BINDNAME);
+
+    RootedPropertyName name(cx, script->getName(pc));
+
+    RootedObject scope(cx);
+    if (!LookupNameWithGlobalDefault(cx, name, scopeChain, &scope))
+        return false;
+
+    res.setObject(*scope);
+    return true;
+}
+
+typedef bool (*DoBindNameFallbackFn)(JSContext *, ICBindName_Fallback *, HandleObject, MutableHandleValue);
+static const VMFunction DoBindNameFallbackInfo = FunctionInfo<DoBindNameFallbackFn>(DoBindNameFallback);
+
+bool
+ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(R0 == JSReturnOperand);
+
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(R0.scratchReg());
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoBindNameFallbackInfo, masm);
 }
 
 //

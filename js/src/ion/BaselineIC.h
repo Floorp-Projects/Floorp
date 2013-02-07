@@ -321,6 +321,8 @@ class ICEntry
     _(GetName_Fallback)         \
     _(GetName_Global)           \
                                 \
+    _(BindName_Fallback)        \
+                                \
     _(GetProp_Fallback)         \
     _(GetProp_ArrayLength)      \
     _(GetProp_TypedArrayLength) \
@@ -864,16 +866,16 @@ class ICUseCount_Fallback : public ICFallbackStub
 // used for monitoring the values pushed by a bytecode it doesn't hold a
 // pointer to the IC entry, but rather back to the main fallback stub for the
 // IC (from which a pointer to the IC entry can be retrieved). When monitoring
-// the types of 'this' or arguments there is no main fallback stub, and the
-// IC entry is referenced directly.
+// the types of 'this', arguments or other values with no associated IC, there
+// is no main fallback stub, and the IC entry is referenced directly.
 class ICTypeMonitor_Fallback : public ICStub
 {
     friend class ICStubSpace;
 
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    // Pointer to the main fallback stub for the IC (for bytecode monitoring),
-    // or to the main IC entry (for this/argument monitoring).
+    // Pointer to the main fallback stub for the IC or to the main IC entry,
+    // depending on hasFallbackStub.
     union {
         ICMonitoredFallbackStub *mainFallbackStub_;
         ICEntry *icEntry_;
@@ -890,11 +892,14 @@ class ICTypeMonitor_Fallback : public ICStub
     // Count of optimized type monitor stubs in this chain.
     uint32_t numOptimizedMonitorStubs_ : 8;
 
+    // Whether this has a fallback stub referring to the IC entry.
+    bool hasFallbackStub_ : 1;
+
     // Index of 'this' or argument which is being monitored, or BYTECODE_INDEX
     // if this is monitoring the types of values pushed at some bytecode.
-    uint32_t argumentIndex_ : 24;
+    uint32_t argumentIndex_ : 23;
 
-    static const uint32_t BYTECODE_INDEX = (1 << 24) - 1;
+    static const uint32_t BYTECODE_INDEX = (1 << 23) - 1;
 
     ICTypeMonitor_Fallback(IonCode *stubCode, ICMonitoredFallbackStub *mainFallbackStub,
                            uint32_t argumentIndex)
@@ -903,6 +908,7 @@ class ICTypeMonitor_Fallback : public ICStub
         firstMonitorStub_(this),
         lastMonitorStubPtrAddr_(NULL),
         numOptimizedMonitorStubs_(0),
+        hasFallbackStub_(mainFallbackStub != NULL),
         argumentIndex_(argumentIndex)
     { }
 
@@ -910,7 +916,7 @@ class ICTypeMonitor_Fallback : public ICStub
         stub->setNext(this);
 
         JS_ASSERT(lastMonitorStubPtrAddr_ != NULL ==
-                  (numOptimizedMonitorStubs_ || !monitorsBytecode()));
+                  (numOptimizedMonitorStubs_ || !hasFallbackStub_));
 
         if (lastMonitorStubPtrAddr_)
             *lastMonitorStubPtrAddr_ = stub;
@@ -935,12 +941,12 @@ class ICTypeMonitor_Fallback : public ICStub
     }
 
     inline ICFallbackStub *mainFallbackStub() const {
-        JS_ASSERT(monitorsBytecode());
+        JS_ASSERT(hasFallbackStub_);
         return mainFallbackStub_;
     }
 
     inline ICEntry *icEntry() const {
-        return monitorsBytecode() ? mainFallbackStub()->icEntry() : icEntry_;
+        return hasFallbackStub_ ? mainFallbackStub()->icEntry() : icEntry_;
     }
 
     inline ICStub *firstMonitorStub() const {
@@ -973,7 +979,7 @@ class ICTypeMonitor_Fallback : public ICStub
 
     // Fixup the IC entry as for a normal fallback stub, for this/arguments.
     void fixupICEntry(ICEntry *icEntry) {
-        JS_ASSERT(!monitorsBytecode());
+        JS_ASSERT(!hasFallbackStub_);
         JS_ASSERT(icEntry_ == NULL);
         JS_ASSERT(lastMonitorStubPtrAddr_ == NULL);
         icEntry_ = icEntry;
@@ -2076,7 +2082,10 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
 };
 
 // GetName
+//      JSOP_NAME
+//      JSOP_CALLNAME
 //      JSOP_GETGNAME
+//      JSOP_CALLGNAME
 class ICGetName_Fallback : public ICMonitoredFallbackStub
 {
     friend class ICStubSpace;
@@ -2159,6 +2168,36 @@ class ICGetName_Global : public ICMonitoredStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICGetName_Global::New(space, getStubCode(), firstMonitorStub_, shape_, slot_);
+        }
+    };
+};
+
+// BindName
+//      JSOP_BINDNAME
+class ICBindName_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICBindName_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::BindName_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICBindName_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICBindName_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::BindName_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBindName_Fallback::New(space, getStubCode());
         }
     };
 };

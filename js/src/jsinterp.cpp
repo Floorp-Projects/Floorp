@@ -2091,28 +2091,19 @@ END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
 {
+    /* Strict mode code should never contain JSOP_DELNAME opcodes. */
+    JS_ASSERT(!script->strict);
+
     RootedPropertyName &name = rootName0;
     name = script->getName(regs.pc);
 
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    RootedObject &scope = rootObject1;
-    RootedObject &pobj = rootObject2;
-    RootedShape &prop = rootShape0;
-    if (!LookupName(cx, name, scopeObj, &scope, &pobj, &prop))
-        goto error;
-
-    /* Strict mode code should never contain JSOP_DELNAME opcodes. */
-    JS_ASSERT(!script->strict);
-
-    /* ECMA says to return true if name is undefined or inherited. */
     PUSH_BOOLEAN(true);
-    if (prop) {
-        MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
-        if (!JSObject::deleteProperty(cx, scope, name, res, false))
-            goto error;
-    }
+    MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!DeleteNameOperation(cx, name, scopeObj, res))
+        goto error;
 }
 END_CASE(JSOP_DELNAME)
 
@@ -3688,4 +3679,20 @@ js::UrshValues(JSContext *cx, HandleScript script, jsbytecode *pc,
                Value *res)
 {
     return UrshOperation(cx, script, pc, lhs, rhs, res);
+}
+
+bool
+js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject scopeObj,
+                        MutableHandleValue res)
+{
+    RootedObject scope(cx), pobj(cx);
+    RootedShape shape(cx);
+    if (!LookupName(cx, name, scopeObj, &scope, &pobj, &shape))
+        return false;
+
+    /* ECMA says to return true if name is undefined or inherited. */
+    res.setBoolean(true);
+    if (shape)
+        return JSObject::deleteProperty(cx, scope, name, res, false);
+    return true;
 }
