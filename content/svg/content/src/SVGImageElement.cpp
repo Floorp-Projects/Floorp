@@ -166,9 +166,7 @@ SVGImageElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 already_AddRefed<nsIDOMSVGAnimatedString>
 SVGImageElement::Href()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedString> href;
-  mStringAttributes[HREF].ToDOMAnimatedString(getter_AddRefs(href), this);
-  return href.forget();;
+  return mStringAttributes[HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
