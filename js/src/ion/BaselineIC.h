@@ -202,14 +202,17 @@ class ICEntry
     uint32_t returnOffset_;
 
     // The PC of this IC's bytecode op within the JSScript.
-    uint32_t pcOffset_;
+    uint32_t pcOffset_ : 31;
+
+    // Whether this IC is for a bytecode op.
+    uint32_t isForOp_ : 1;
 
     // A pointer to the baseline IC stub for this instruction.
     ICStub *firstStub_;
 
   public:
-    ICEntry(uint32_t pcOffset)
-      : returnOffset_(), pcOffset_(pcOffset), firstStub_(NULL)
+    ICEntry(uint32_t pcOffset, bool isForOp)
+      : returnOffset_(), pcOffset_(pcOffset), isForOp_(isForOp), firstStub_(NULL)
     {}
 
     CodeOffsetLabel returnOffset() const {
@@ -235,6 +238,11 @@ class ICEntry
     jsbytecode *pc(JSScript *script) const {
         return script->code + pcOffset_;
     }
+
+    bool isForOp() const {
+        return isForOp_;
+    }
+
     bool hasStub() const {
         return firstStub_ != NULL;
     }
@@ -921,7 +929,7 @@ class ICTypeMonitor_Fallback : public ICStub
     void addOptimizedMonitorStub(ICStub *stub) {
         stub->setNext(this);
 
-        JS_ASSERT(lastMonitorStubPtrAddr_ != NULL ==
+        JS_ASSERT((lastMonitorStubPtrAddr_ != NULL) ==
                   (numOptimizedMonitorStubs_ || !hasFallbackStub_));
 
         if (lastMonitorStubPtrAddr_)
