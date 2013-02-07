@@ -1139,6 +1139,10 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
 
     FallbackICSpew(cx, stub, "Compare(%s)", js_CodeName[op]);
 
+    // Case operations in a CONDSWITCH are performing strict equality.
+    if (op == JSOP_CASE)
+        op = JSOP_STRICTEQ;
+
     // Don't pass lhs/rhs directly, we need the original values when
     // generating stubs.
     RootedValue lhsCopy(cx, lhs);
@@ -1169,6 +1173,14 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
         break;
       case JSOP_NE:
         if (!LooselyEqual<false>(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_STRICTEQ:
+        if (!StrictlyEqual<true>(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_STRICTNE:
+        if (!StrictlyEqual<false>(cx, &lhsCopy, &rhsCopy, &out))
             return false;
         break;
       default:
