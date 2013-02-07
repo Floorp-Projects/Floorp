@@ -287,6 +287,7 @@ class ICEntry
     _(This_Fallback)            \
                                 \
     _(NewArray_Fallback)        \
+    _(NewObject_Fallback)       \
                                 \
     _(Compare_Fallback)         \
     _(Compare_Int32)            \
@@ -1369,6 +1370,33 @@ class ICNewArray_Fallback : public ICFallbackStub
     };
 };
 
+class ICNewObject_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICNewObject_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::NewObject_Fallback, stubCode)
+    {}
+
+  public:
+    static inline ICNewObject_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICNewObject_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::NewObject_Fallback)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICNewObject_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
 // Compare
 //      JSOP_LT
 //      JSOP_GT
@@ -1905,6 +1933,7 @@ class ICGetElem_TypedArray : public ICStub
 
 // SetElem
 //      JSOP_SETELEM
+//      JSOP_INITELEM
 
 class ICSetElem_Fallback : public ICFallbackStub
 {
@@ -2527,6 +2556,7 @@ class ICGetPropNativeCompiler : public ICStubCompiler
 //     JSOP_SETPROP
 //     JSOP_SETNAME
 //     JSOP_SETGNAME
+//     JSOP_INITPROP
 
 class ICSetProp_Fallback : public ICFallbackStub
 {
@@ -2610,7 +2640,8 @@ class ICSetProp_Native : public ICUpdatedStub
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, HandleTypeObject type, Shape *shape, bool isFixedSlot, uint32_t offset)
+        Compiler(JSContext *cx, HandleTypeObject type, Shape *shape,
+                 bool isFixedSlot, uint32_t offset)
           : ICStubCompiler(cx, ICStub::SetProp_Native),
             type_(type),
             shape_(cx, shape),

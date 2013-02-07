@@ -1093,6 +1093,39 @@ ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 //
+// NewObject_Fallback
+//
+
+static bool
+DoNewObject(JSContext *cx, ICNewObject_Fallback *stub, HandleObject templateObject,
+            MutableHandleValue res)
+{
+    FallbackICSpew(cx, stub, "NewObject");
+
+    RawObject obj = NewInitObject(cx, templateObject);
+    if (!obj)
+        return false;
+
+    res.setObject(*obj);
+    return true;
+}
+
+typedef bool(*DoNewObjectFn)(JSContext *, ICNewObject_Fallback *, HandleObject,
+                             MutableHandleValue);
+static const VMFunction DoNewObjectInfo = FunctionInfo<DoNewObjectFn>(DoNewObject);
+
+bool
+ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(R0.scratchReg()); // template
+    masm.push(BaselineStubReg); // stub.
+
+    return tailCallVM(DoNewObjectInfo, masm);
+}
+
+//
 // Compare_Fallback
 //
 
@@ -1964,7 +1997,11 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
                   HandleValue index)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
-    FallbackICSpew(cx, stub, "SetElem");
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "SetElem(%s)", js_CodeName[JSOp(*pc)]);
+
+    JS_ASSERT(op == JSOP_SETELEM || op == JSOP_INITELEM);
 
     RootedObject obj(cx, ToObject(cx, objv));
     if (!obj)
@@ -1980,8 +2017,14 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
         oldInitLength = obj->getDenseInitializedLength();
     }
 
-    if (!SetObjectElement(cx, obj, index, rhs, script->strict))
-        return false;
+    if (op == JSOP_INITELEM) {
+        RootedValue nindex(cx, index);
+        if (!InitElemOperation(cx, obj, &nindex, rhs))
+            return false;
+    } else {
+        if (!SetObjectElement(cx, obj, index, rhs, script->strict))
+            return false;
+    }
 
     if (stub->numOptimizedStubs() >= ICSetElem_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
@@ -2872,10 +2915,10 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
-    mozilla::DebugOnly<JSOp> op = JSOp(*pc);
+    JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "SetProp(%s)", js_CodeName[op]);
 
-    JS_ASSERT(op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETGNAME);
+    JS_ASSERT(op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETGNAME || op == JSOP_INITPROP);
 
     RootedPropertyName name(cx, script->getName(pc));
     RootedId id(cx, NameToId(name));
@@ -2884,7 +2927,11 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
     if (!obj)
         return false;
 
-    if (script->strict) {
+    if (op == JSOP_INITPROP && name != cx->names().proto) {
+        JS_ASSERT(obj->isObject());
+        if (!DefineNativeProperty(cx, obj, id, rhs, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0))
+            return false;
+    } else if (script->strict) {
         if (!js::SetProperty<true>(cx, obj, id, rhs))
             return false;
     } else {
