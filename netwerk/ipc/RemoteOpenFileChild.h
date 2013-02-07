@@ -7,7 +7,6 @@
 #ifndef _RemoteOpenFileChild_h
 #define _RemoteOpenFileChild_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/net/PRemoteOpenFileChild.h"
 #include "nsICachedFileDescriptorListener.h"
@@ -87,13 +86,14 @@ protected:
     AddRef();
   }
 
-  virtual bool Recv__delete__(const FileDescriptor&) MOZ_OVERRIDE;
+  virtual bool RecvFileOpened(const FileDescriptor&);
+  virtual bool RecvFileDidNotOpen();
 
   virtual void OnCachedFileDescriptor(const nsAString& aPath,
                                       const FileDescriptor& aFD) MOZ_OVERRIDE;
 
   void HandleFileDescriptorAndNotifyListener(const FileDescriptor&,
-                                             bool aFromRecvDelete);
+                                             bool aFromRecvFileOpened);
 
   void NotifyListener(nsresult aResult);
 
