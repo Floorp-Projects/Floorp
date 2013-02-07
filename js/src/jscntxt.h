@@ -1640,9 +1640,7 @@ struct JSContext : js::ContextFriendFields,
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime->onOutOfMemory(p, nbytes, this);
     }
-    void updateMallocCounter(size_t nbytes) {
-        runtime->updateMallocCounter(compartment, nbytes);
-    }
+    void updateMallocCounter(size_t nbytes);
     void reportAllocationOverflow() {
         js_ReportAllocationOverflow(this);
     }

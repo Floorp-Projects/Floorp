@@ -445,7 +445,7 @@ struct ArenaLists {
      * thread-local, but the compartment |comp| is shared between all
      * threads.
      */
-    void *parallelAllocate(JSCompartment *comp, AllocKind thingKind, size_t thingSize);
+    void *parallelAllocate(JS::Zone *zone, AllocKind thingKind, size_t thingSize);
 
   private:
     inline void finalizeNow(FreeOp *fop, AllocKind thingKind);
