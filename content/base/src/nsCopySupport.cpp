@@ -294,7 +294,7 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-  nsRefPtr<nsRange> range = new nsRange();
+  nsRefPtr<nsRange> range = new nsRange(aNode);
   rv = range->SelectNode(node);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = selection->AddRange(range);
