@@ -550,11 +550,11 @@ RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length,
 
 #if ENABLE_YARR_JIT
     if (codeBlock.isFallBack())
-        result = JSC::Yarr::interpret(bytecode, chars.get(), length, start, outputBuf);
+        result = JSC::Yarr::interpret(cx, bytecode, chars.get(), length, start, outputBuf);
     else
         result = codeBlock.execute(chars.get(), start, length, (int *)outputBuf).start;
 #else
-    result = JSC::Yarr::interpret(bytecode, chars.get(), length, start, outputBuf);
+    result = JSC::Yarr::interpret(cx, bytecode, chars.get(), length, start, outputBuf);
 #endif
 
     if (result == JSC::Yarr::offsetNoMatch)
@@ -609,7 +609,7 @@ RegExpShared::executeMatchOnly(JSContext *cx, StableCharPtr chars, size_t length
         return RegExpRunStatus_Error;
 
     unsigned result =
-        JSC::Yarr::interpret(bytecode, chars.get(), length, start, matches.rawBuf());
+        JSC::Yarr::interpret(cx, bytecode, chars.get(), length, start, matches.rawBuf());
 
     if (result == JSC::Yarr::offsetNoMatch)
         return RegExpRunStatus_Success_NotFound;
