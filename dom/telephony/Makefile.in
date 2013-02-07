@@ -21,8 +21,6 @@ include $(topsrcdir)/dom/dom-config.mk
 CPPSRCS = \
   Telephony.cpp \
   TelephonyCall.cpp \
-  Voicemail.cpp \
-  VoicemailEvent.cpp \
   $(NULL)
 
 XPIDLSRCS = \
@@ -30,9 +28,6 @@ XPIDLSRCS = \
   nsIDOMTelephony.idl \
   nsIDOMTelephonyCall.idl \
   nsIDOMCallEvent.idl \
-  nsIDOMVoicemail.idl \
-  nsIDOMVoicemailEvent.idl \
-  nsIDOMVoicemailStatus.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

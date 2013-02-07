@@ -60,6 +60,7 @@ PARALLEL_DIRS += \
   power \
   quota \
   settings \
+  mobilemessage \
   sms \
   mms \
   src \
@@ -90,6 +91,7 @@ PARALLEL_DIRS += \
   wifi \
   icc \
   cellbroadcast \
+  voicemail \
   $(NULL)
 endif
 

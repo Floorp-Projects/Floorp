@@ -98,3 +98,21 @@ richlistitem[type="download"]:not([selected]) button {
 {
   display: none;
 }
+
+/* Hacks for toolbar full and text modes, until bug 573329 removes them */
+
+toolbar[mode="text"] > #downloads-indicator {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-pack: center;
+}
+
+toolbar[mode="text"] > #downloads-indicator > .toolbarbutton-text {
+  -moz-box-ordinal-group: 1;
+}
+
+toolbar[mode="text"] > #downloads-indicator > .toolbarbutton-icon {
+  display: -moz-box;
+  -moz-box-ordinal-group: 2;
+  visibility: collapse;
+}

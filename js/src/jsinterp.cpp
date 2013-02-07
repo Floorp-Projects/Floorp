@@ -787,22 +787,22 @@ EnterWith(JSContext *cx, int stackIndex)
 
 /* Unwind block and scope chains to match the given depth. */
 void
-js::UnwindScope(JSContext *cx, uint32_t stackDepth)
+js::UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth)
 {
-    StackFrame *fp = cx->fp();
-    JS_ASSERT(stackDepth <= cx->regs().stackDepth());
+    JS_ASSERT_IF(frame.isStackFrame(), cx->fp() == frame.asStackFrame());
+    JS_ASSERT_IF(frame.isStackFrame(), stackDepth <= cx->regs().stackDepth());
 
-    for (ScopeIter si(fp, cx); !si.done(); ++si) {
+    for (ScopeIter si(frame, cx); !si.done(); ++si) {
         switch (si.type()) {
           case ScopeIter::Block:
             if (si.staticBlock().stackDepth() < stackDepth)
                 return;
-            fp->popBlock(cx);
+            frame.popBlock(cx);
             break;
           case ScopeIter::With:
             if (si.scope().asWith().stackDepth() < stackDepth)
                 return;
-            fp->popWith(cx);
+            frame.popWith(cx);
             break;
           case ScopeIter::Call:
           case ScopeIter::StrictEvalScope:
@@ -2662,8 +2662,12 @@ BEGIN_CASE(JSOP_REST)
     if (!rest)
         goto error;
     PUSH_COPY(ObjectValue(*rest));
-    if (!SetInitializerObjectType(cx, script, regs.pc, rest))
+    if (!SetInitializerObjectType(cx, script, regs.pc, rest, GenericObject))
         goto error;
+    rootType0 = GetTypeCallerInitObject(cx, JSProto_Array);
+    if (!rootType0)
+        goto error;
+    rest->setType(rootType0);
 }
 END_CASE(JSOP_REST)
 
@@ -2888,13 +2892,16 @@ BEGIN_CASE(JSOP_NEWINIT)
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
     RootedObject &obj = rootObject0;
+    NewObjectKind newKind;
     if (i == JSProto_Array) {
-        obj = NewDenseEmptyArray(cx);
+        newKind = UseNewTypeForInitializer(cx, script, regs.pc, &ArrayClass);
+        obj = NewDenseEmptyArray(cx, NULL, newKind);
     } else {
-        gc::AllocKind kind = GuessObjectGCKind(0);
-        obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
+        gc::AllocKind allocKind = GuessObjectGCKind(0);
+        newKind = UseNewTypeForInitializer(cx, script, regs.pc, &ObjectClass);
+        obj = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
     }
-    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
@@ -2906,8 +2913,9 @@ BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
     RootedObject &obj = rootObject0;
-    obj = NewDenseAllocatedArray(cx, count);
-    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
+    NewObjectKind newKind = UseNewTypeForInitializer(cx, script, regs.pc, &ArrayClass);
+    obj = NewDenseAllocatedArray(cx, count, NULL, newKind);
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
@@ -2921,8 +2929,9 @@ BEGIN_CASE(JSOP_NEWOBJECT)
     baseobj = script->getObject(regs.pc);
 
     RootedObject &obj = rootObject1;
-    obj = CopyInitializerObject(cx, baseobj);
-    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
+    NewObjectKind newKind = UseNewTypeForInitializer(cx, script, regs.pc, baseobj->getClass());
+    obj = CopyInitializerObject(cx, baseobj, newKind);
+    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
@@ -3285,7 +3294,7 @@ END_CASE(JSOP_ARRAYPUSH)
         for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
-            UnwindScope(cx, tn->stackDepth);
+            UnwindScope(cx, cx->fp(), tn->stackDepth);
 
             /*
              * Set pc to the first bytecode after the the try note to point
@@ -3356,7 +3365,7 @@ END_CASE(JSOP_ARRAYPUSH)
     }
 
   forced_return:
-    UnwindScope(cx, 0);
+    UnwindScope(cx, cx->fp(), 0);
     regs.setToEndOfScript();
 
     if (entryFrame != regs.fp())
@@ -3371,6 +3380,8 @@ END_CASE(JSOP_ARRAYPUSH)
         Probes::exitScript(cx, script, script->function(), regs.fp());
     regs.fp()->setFinishedInInterpreter();
 
+    gc::MaybeVerifyBarriers(cx, true);
+
 #ifdef JS_METHODJIT
     /*
      * This path is used when it's guaranteed the method can be finished
@@ -3379,7 +3390,6 @@ END_CASE(JSOP_ARRAYPUSH)
   leave_on_safe_point:
 #endif
 
-    gc::MaybeVerifyBarriers(cx, true);
     return interpReturnOK ? Interpret_Ok : Interpret_Error;
 }
 

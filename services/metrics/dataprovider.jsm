@@ -392,6 +392,20 @@ this.Provider = function () {
 
 Provider.prototype = Object.freeze({
   /**
+   * Whether the provider provides only constant data.
+   *
+   * If this is true, the provider likely isn't instantiated until
+   * `collectConstantData` is called and the provider may be torn down after
+   * this function has finished.
+   *
+   * This is an optimization so provider instances aren't dead weight while the
+   * application is running.
+   *
+   * This must be set on the prototype for the optimization to be realized.
+   */
+  constantOnly: false,
+
+  /**
    * Obtain a `Measurement` from its name and version.
    *
    * If the measurement is not found, an Error is thrown.
@@ -509,8 +523,26 @@ Provider.prototype = Object.freeze({
    *
    * Implementations should return a promise that resolves when all data has
    * been collected and storage operations have been finished.
+   *
+   * @return Promise<>
    */
   collectConstantData: function () {
+    return Promise.resolve();
+  },
+
+  /**
+   * Collects data approximately every day.
+   *
+   * For long-running applications, this is called approximately every day.
+   * It may or may not be called every time the application is run. It also may
+   * be called more than once per day.
+   *
+   * Implementations should return a promise that resolves when all data has
+   * been collected and storage operations have completed.
+   *
+   * @return Promise<>
+   */
+  collectDailyData: function () {
     return Promise.resolve();
   },
 

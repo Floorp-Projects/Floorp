@@ -1,0 +1,87 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+// This patch tests the Sections present in the Settings Menu and the default values for them
+public class testSettingsMenuItems extends PixelTest {
+     int midWidth;
+     int midHeight;
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testSettingsMenuItems() {
+        blockForGeckoReady();
+	midWidth = mDriver.getGeckoWidth()/2;
+	midHeight = mDriver.getGeckoHeight()/2;
+
+        // In this First Section I've declared the strings that contain the Menu sections
+
+	// The first string contains menu sections that do not have multiple option
+	String menuItems [] = { "General", "About", "Sync", "Content", "Pinch to reflow text", "Privacy & Security", "Tell sites not to track me", "Remember passwords", "Use master password", "Show search suggestions", "Show product announcements", "Import & Export"};
+	// This string contains every menu section that have multiple selection options followed by the option that is selected by default
+	String defaultSectionsValues [] = { "Automatic updates", "Only over Wi-Fi", "Character encoding", "Don't show menu","Plugins", "Tap to play", "Text size", "Tiny", "Cookies", "Enable"};
+
+	// This string contains multiple selection options and every option available for each of them
+	String multipleSectionsOptions[][] = {
+	{ "Automatic updates", "Enable", "Only over Wi-Fi", "Disable"},
+	{ "Character encoding", "Show menu", "Don't show menu"},
+	{ "Plugins", "Enable", "Tap to play", "Disable"},
+	{ "Cookies", "Enable", "Enabled, excluding 3rd party", "Disable"},
+	{ "Clear private data", "Browsing & download history", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site preferences"},
+	{ "Import from Android",  "Bookmarks", "History"}
+        };
+
+        selectMenuItem("Settings");
+
+	// Dismiss the Settings screen and verify that the view is returned to about:home page
+	mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+	verifyUrl("about:home");
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+	mSolo.waitForText("Enter Search"); // Waiting for page title to appear to be sure that is fully loaded before opening the menu
+
+	selectMenuItem("Settings");
+	checkMenuSections(menuItems);
+	mSolo.scrollUp(); // Scrolling up the page to have in view the top sections
+	mSolo.scrollUp(); // Repeat scroll up because the top sections were not reached
+
+	checkMenuSections(defaultSectionsValues);
+	mSolo.scrollUp(); // Scrolling up the page to have in view the top sections again
+
+	checkMenuSubSections(multipleSectionsOptions);
+    }
+    public void checkMenuSections(String menuItems []) {
+        for (String item:menuItems) {
+             mAsserter.ok(mSolo.waitForText(item), "Waiting for  " + item + "  option", "The " + item + "  option is present");
+        }
+    }
+    // This verifies the multiple option sections sub menus
+    public void checkMenuSubSections(String multipleSectionsOptions [][]) {
+	int i,j = 0;
+        for (i = 0; i <= multipleSectionsOptions [j].length; i++) {
+             String item = multipleSectionsOptions [i][j];
+	     mAsserter.ok(mSolo.waitForText(item), "Waiting for  " + item + "  option", "The " + item + "  option is present");
+	     mSolo.clickOnText(item);
+	     for (j = 1; j < multipleSectionsOptions [i].length; j++)	{
+		  String subMenu = multipleSectionsOptions [i][j];
+                  mAsserter.ok(mSolo.waitForText(subMenu), "Waiting for  " + subMenu + "  option", "The " + subMenu + "  option is present");
+
+                  // When reaching the specified sub menu section, for phone devices you have to scroll down the list in order to check all the options
+		  if (subMenu.equals("Offline website data")) {
+		      Device mDevice = new Device();
+		      if (mDevice.type.equals("phone")) {
+		          MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+	                  meh.dragSync(midWidth, midHeight+100, midWidth, midHeight-100);
+		      }
+	          }
+             }
+	     mSolo.waitForText("^Cancel$");
+	     mSolo.clickOnText("^Cancel$");
+	     j = 0;
+         }
+    }
+}
+

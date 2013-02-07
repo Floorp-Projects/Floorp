@@ -39,7 +39,9 @@
 #include "common/dwarf_cu_to_module.h"
 
 #include <assert.h>
-#include <cxxabi.h>
+#if !defined(ANDROID)
+# include <cxxabi.h>
+#endif
 #include <inttypes.h>
 #include <stdio.h>
 
@@ -313,7 +315,10 @@ void DwarfCUToModule::GenericDIEHandler::ProcessAttributeString(
       name_attribute_ = AddStringToPool(data);
       break;
     case dwarf2reader::DW_AT_MIPS_linkage_name: {
-      char* demangled = abi::__cxa_demangle(data.c_str(), NULL, NULL, NULL);
+      char* demangled = NULL;
+#     if !defined(ANDROID)
+      demangled = abi::__cxa_demangle(data.c_str(), NULL, NULL, NULL);
+#     endif
       if (demangled) {
         demangled_name_ = AddStringToPool(demangled);
         free(reinterpret_cast<void*>(demangled));
@@ -783,9 +788,9 @@ void DwarfCUToModule::AssignLinesToFunctions() {
   // complexity from here on out is linear.
 
   // Put both our functions and lines in order by address.
-  sort(functions->begin(), functions->end(),
-       Module::Function::CompareByAddress);
-  sort(lines_.begin(), lines_.end(), Module::Line::CompareByAddress);
+  std::sort(functions->begin(), functions->end(),
+            Module::Function::CompareByAddress);
+  std::sort(lines_.begin(), lines_.end(), Module::Line::CompareByAddress);
 
   // The last line that we used any piece of.  We use this only for
   // generating warnings.

@@ -35,3 +35,8 @@ TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
 TESTING_JS_MODULE_DIR := services/metrics
 
 include $(topsrcdir)/config/rules.mk
+
+# Add extra prerequisites until bug 837792 is addressed.
+$(FINAL_TARGET)/modules/Metrics.jsm: Metrics.jsm collector.jsm dataprovider.jsm storage.jsm
+
+

@@ -4,6 +4,7 @@
 // found in the LICENSE file.
 //
 
+#include "compiler/ArrayBoundsClamper.h"
 #include "compiler/BuiltInFunctionEmulator.h"
 #include "compiler/DetectRecursion.h"
 #include "compiler/ForLoopUnroll.h"
@@ -192,6 +193,10 @@ bool TCompiler::compile(const char* const shaderStrings[],
         if (success && (compileOptions & SH_EMULATE_BUILT_IN_FUNCTIONS))
             builtInFunctionEmulator.MarkBuiltInFunctionsForEmulation(root);
 
+        // Clamping uniform array bounds needs to happen after validateLimitations pass.
+        if (success && (compileOptions & SH_CLAMP_INDIRECT_ARRAY_BOUNDS))
+            arrayBoundsClamper.MarkIndirectArrayBoundsForClamping(root);
+
         // Call mapLongVariableNames() before collectAttribsUniforms() so in
         // collectAttribsUniforms() we already have the mapped symbol names and
         // we could composite mapped and original variable names.
@@ -237,6 +242,7 @@ bool TCompiler::InitBuiltInSymbolTable(const ShBuiltInResources& resources)
 
 void TCompiler::clearResults()
 {
+    arrayBoundsClamper.Cleanup();
     infoSink.info.erase();
     infoSink.obj.erase();
     infoSink.debug.erase();
@@ -353,3 +359,9 @@ const BuiltInFunctionEmulator& TCompiler::getBuiltInFunctionEmulator() const
 {
     return builtInFunctionEmulator;
 }
+
+const ArrayBoundsClamper& TCompiler::getArrayBoundsClamper() const
+{
+    return arrayBoundsClamper;
+}
+

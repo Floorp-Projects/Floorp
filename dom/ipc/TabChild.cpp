@@ -133,7 +133,25 @@ TabChild::PreloadSlowThings()
         !tab->InitTabChildGlobal(DONT_LOAD_SCRIPTS)) {
         return;
     }
+    // Just load and compile these scripts, but don't run them.
     tab->TryCacheLoadAndCompileScript(BROWSER_ELEMENT_CHILD_SCRIPT);
+    tab->TryCacheLoadAndCompileScript(
+        NS_LITERAL_STRING("chrome://browser/content/forms.js"));
+    // Load, compile, and run these scripts.
+    tab->RecvLoadRemoteScript(
+        NS_LITERAL_STRING("chrome://global/content/preload.js"));
+
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(tab->mWebNav);
+    if (nsIPresShell* presShell = docShell->GetPresShell()) {
+        // Initialize and do an initial reflow of the about:blank
+        // PresShell to let it preload some things for us.
+        presShell->Initialize(0, 0);
+        nsIDocument* doc = presShell->GetDocument();
+        doc->FlushPendingNotifications(Flush_Layout);
+        // ... but after it's done, make sure it doesn't do any more
+        // work.
+        presShell->MakeZombie();
+    }
 
     sPreallocatedTab = tab;
     ClearOnShutdown(&sPreallocatedTab);
@@ -1345,8 +1363,9 @@ TabChild::RecvMouseEvent(const nsString& aType,
 {
   nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
   NS_ENSURE_TRUE(utils, true);
+  bool ignored = false;
   utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
-                        aIgnoreRootScrollFrame, 0, 0);
+                        aIgnoreRootScrollFrame, 0, 0, &ignored);
   return true;
 }
 

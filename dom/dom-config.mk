@@ -35,7 +35,7 @@ DOM_SRCDIRS = \
   layout/generic \
   layout/style \
   layout/xul/base/src \
-  layout/xul/base/src/tree/src \
+  layout/xul/tree \
   dom/camera \
   $(NULL)
 

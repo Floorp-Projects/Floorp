@@ -13,11 +13,20 @@ VPATH            = \
 include $(DEPTH)/config/autoconf.mk
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-VPATH += $(srcdir)/android
+VPATH += \
+  $(srcdir)/android \
+  $(topsrcdir)/dom/mobilemessage/src/android \
+  $(NULL)
 else ifdef MOZ_B2G_RIL
-VPATH += $(srcdir)/ril
+VPATH += \
+  $(srcdir)/ril \
+  $(topsrcdir)/dom/mobilemessage/src/ril \
+  $(NULL)
 else
-VPATH += $(srcdir)/fallback
+VPATH += \
+  $(srcdir)/fallback \
+  $(topsrcdir)/dom/mobilemessage/src/fallback \
+  $(NULL)
 endif
 
 LIBRARY_NAME     = dom_sms_s
@@ -40,6 +49,7 @@ EXPORTS_mozilla/dom/sms = \
   SmsMessage.h \
   SmsRequest.h \
   SmsSegmentInfo.h \
+  SmsFilter.h \
   $(NULL)
 
 CPPSRCS = \
@@ -74,12 +84,9 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 EXTRA_COMPONENTS = \
-  ril/SmsDatabaseService.js \
-  ril/SmsDatabaseService.manifest \
   $(NULL)
 else
 CPPSRCS += \
-  SmsDatabaseService.cpp \
   $(NULL)  
 endif
 

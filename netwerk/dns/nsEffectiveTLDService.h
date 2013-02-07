@@ -113,7 +113,7 @@ public:
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
 private:
-  nsresult GetBaseDomainInternal(nsCString &aHostname, uint32_t aAdditionalParts, nsACString &aBaseDomain);
+  nsresult GetBaseDomainInternal(nsCString &aHostname, int32_t aAdditionalParts, nsACString &aBaseDomain);
   nsresult NormalizeHostname(nsCString &aHostname);
   ~nsEffectiveTLDService();
 

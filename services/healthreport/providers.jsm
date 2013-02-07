@@ -21,6 +21,7 @@ this.EXPORTED_SYMBOLS = [
   "AppInfoProvider",
   "CrashDirectoryService",
   "CrashesProvider",
+  "PlacesProvider",
   "SessionsProvider",
   "SysInfoProvider",
 ];
@@ -43,6 +44,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesDBUtils",
+                                  "resource://gre/modules/PlacesDBUtils.jsm");
+
 
 /**
  * Represents basic application state.
@@ -120,6 +124,8 @@ AppInfoProvider.prototype = Object.freeze({
   name: "org.mozilla.appInfo",
 
   measurementTypes: [AppInfoMeasurement, AppVersionMeasurement],
+
+  constantOnly: true,
 
   appInfoFields: {
     // From nsIXULAppInfo.
@@ -296,6 +302,8 @@ SysInfoProvider.prototype = Object.freeze({
 
   measurementTypes: [SysInfoMeasurement],
 
+  constantOnly: true,
+
   sysInfoFields: {
     cpucount: "cpuCount",
     memsize: "memoryMB",
@@ -371,7 +379,7 @@ CurrentSessionMeasurement.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "current",
-  version: 2,
+  version: 3,
 
   configureStorage: function () {
     return Promise.resolve();
@@ -420,7 +428,7 @@ PreviousSessionsMeasurement.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "previous",
-  version: 2,
+  version: 3,
 
   DAILY_DISCRETE_NUMERIC_FIELDS: [
     // Milliseconds of sessions that were properly shut down.
@@ -477,8 +485,10 @@ SessionsProvider.prototype = Object.freeze({
 
   measurementTypes: [CurrentSessionMeasurement, PreviousSessionsMeasurement],
 
+  constantOnly: true,
+
   collectConstantData: function () {
-    let previous = this.getMeasurement("previous", 2);
+    let previous = this.getMeasurement("previous", 3);
 
     return this.storage.enqueueTransaction(this._recordAndPruneSessions.bind(this));
   },
@@ -489,7 +499,7 @@ SessionsProvider.prototype = Object.freeze({
     let sessions = recorder.getPreviousSessions();
     this._log.debug("Found " + Object.keys(sessions).length + " previous sessions.");
 
-    let daily = this.getMeasurement("previous", 2);
+    let daily = this.getMeasurement("previous", 3);
 
     for each (let session in sessions) {
       let type = session.clean ? "clean" : "aborted";
@@ -746,6 +756,8 @@ CrashesProvider.prototype = Object.freeze({
 
   measurementTypes: [DailyCrashesMeasurement],
 
+  constantOnly: true,
+
   collectConstantData: function () {
     return Task.spawn(this._populateCrashCounts.bind(this));
   },
@@ -877,6 +889,68 @@ CrashDirectoryService.prototype = Object.freeze({
         iterator.close();
       }
     });
+  },
+});
+
+
+/**
+ * Holds basic statistics about the Places database.
+ */
+function PlacesMeasurement() {
+  Metrics.Measurement.call(this);
+}
+
+PlacesMeasurement.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "places",
+  version: 1,
+
+  configureStorage: function () {
+    return Task.spawn(function registerFields() {
+      yield this.registerStorageField("pages", this.storage.FIELD_DAILY_LAST_NUMERIC);
+      yield this.registerStorageField("bookmarks", this.storage.FIELD_DAILY_LAST_NUMERIC);
+    }.bind(this));
+  },
+});
+
+
+/**
+ * Collects information about Places.
+ */
+this.PlacesProvider = function () {
+  Metrics.Provider.call(this);
+};
+
+PlacesProvider.prototype = Object.freeze({
+  __proto__: Metrics.Provider.prototype,
+
+  name: "org.mozilla.places",
+
+  measurementTypes: [PlacesMeasurement],
+
+  collectDailyData: function () {
+    return this.storage.enqueueTransaction(this._collectData.bind(this));
+  },
+
+  _collectData: function () {
+    let now = new Date();
+    let data = yield this._getDailyValues();
+
+    let m = this.getMeasurement("places", 1);
+
+    yield m.setDailyLastNumeric("pages", data.PLACES_PAGES_COUNT);
+    yield m.setDailyLastNumeric("bookmarks", data.PLACES_BOOKMARKS_COUNT);
+  },
+
+  _getDailyValues: function () {
+    let deferred = Promise.defer();
+
+    PlacesDBUtils.telemetry(null, function onResult(data) {
+      deferred.resolve(data);
+    });
+
+    return deferred.promise;
   },
 });
 

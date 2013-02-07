@@ -20,6 +20,14 @@ ul.children:not([expanded]) {
   height: 1ex;
 }
 
+.summary {
+  cursor: pointer;
+}
+
+.summary[expanded] {
+  display: none;
+}
+
 #root {
   margin-right: 80px;
 }

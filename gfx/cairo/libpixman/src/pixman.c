@@ -605,6 +605,7 @@ pixman_image_composite32 (pixman_op_t      op,
     if ((mask_format == PIXMAN_a8r8g8b8 || mask_format == PIXMAN_a8b8g8r8) &&
 	(src->type == BITS && src->bits.bits == mask->bits.bits)	   &&
 	(src->common.repeat == mask->common.repeat)			   &&
+	(src_flags & mask_flags & FAST_PATH_ID_TRANSFORM)		   &&
 	(src_x == mask_x && src_y == mask_y))
     {
 	if (src_format == PIXMAN_x8b8g8r8)
@@ -669,7 +670,7 @@ pixman_image_composite32 (pixman_op_t      op,
      */
     op = optimize_operator (op, src_flags, mask_flags, dest_flags);
 
-    if (_pixman_lookup_composite_function (
+    if (_pixman_implementation_lookup_composite (
 	    get_implementation (), op,
 	    src_format, src_flags, mask_format, mask_flags, dest_format, dest_flags,
 	    &imp, &func))
@@ -774,9 +775,9 @@ color_to_uint32 (const pixman_color_t *color)
 }
 
 static pixman_bool_t
-color_to_pixel (pixman_color_t *     color,
-                uint32_t *           pixel,
-                pixman_format_code_t format)
+color_to_pixel (const pixman_color_t *color,
+                uint32_t *            pixel,
+                pixman_format_code_t  format)
 {
     uint32_t c = color_to_uint32 (color);
 
@@ -833,7 +834,7 @@ color_to_pixel (pixman_color_t *     color,
 PIXMAN_EXPORT pixman_bool_t
 pixman_image_fill_rectangles (pixman_op_t                 op,
                               pixman_image_t *            dest,
-                              pixman_color_t *            color,
+			      const pixman_color_t *      color,
                               int                         n_rects,
                               const pixman_rectangle16_t *rects)
 {
@@ -872,7 +873,7 @@ pixman_image_fill_rectangles (pixman_op_t                 op,
 PIXMAN_EXPORT pixman_bool_t
 pixman_image_fill_boxes (pixman_op_t           op,
                          pixman_image_t *      dest,
-                         pixman_color_t *      color,
+                         const pixman_color_t *color,
                          int                   n_boxes,
                          const pixman_box32_t *boxes)
 {

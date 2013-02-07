@@ -546,7 +546,7 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
 
   // Walk through each of the text nodes and count newlines.
   var treewalker = window.content.document
-      .createTreeWalker(pre, NodeFilter.SHOW_TEXT, null, false);
+      .createTreeWalker(pre, NodeFilter.SHOW_TEXT, null);
 
   // The column number of the first character in the current text node.
   var firstCol = 1;

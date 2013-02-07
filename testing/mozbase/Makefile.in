@@ -27,11 +27,11 @@ MOZBASE_PACKAGES = \
   mozprofile \
   mozrunner \
   mozdevice \
+  mozcrash \
   $(NULL)
 
 MOZBASE_EXTRAS = \
   setup_development.py \
-  README \
   $(NULL)
 
 _DEST_DIR = $(DEPTH)/_tests/mozbase

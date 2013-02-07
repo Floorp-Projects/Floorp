@@ -65,10 +65,9 @@ public:
   virtual imgStatusTracker& GetStatusTracker() = 0;
 
   /**
-   * The rectangle defining the location and size of the currently displayed
-   * frame.
+   * The rectangle defining the location and size of the given frame.
    */
-  virtual void GetCurrentFrameRect(nsIntRect& aRect) = 0;
+  virtual nsIntRect FrameRect(uint32_t aWhichFrame) = 0;
 
   /**
    * The size, in bytes, occupied by the significant data portions of the image.

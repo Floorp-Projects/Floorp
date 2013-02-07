@@ -304,7 +304,7 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
  * according to history and bookmark system events. Register this observer on a
  * result using nsINavHistoryResult::addObserver.
  */
-[scriptable, uuid(547102c4-ab84-4058-b9d4-6f99f6c80893)]
+[scriptable, uuid(f62d8b6b-3c4e-4a9f-a897-db605d0b7a0f)]
 interface nsINavHistoryResultObserver : nsISupports
 {
   /**
@@ -442,24 +442,6 @@ interface nsINavHistoryResultObserver : nsISupports
    */
   void nodeLastModifiedChanged(in nsINavHistoryResultNode aNode,
                                in PRTime aNewValue);
-
-  /**
-   * Called when an item is being replaced with another item at the exact
-   * same position.
-   *
-   * @param aParentNode
-   *        the parent node of the node which is being replaced
-   * @param aOldNode
-   *        the node which is being replaced
-   * @param aNewNode
-   *        the new node
-   * @param aParentNode
-   *        the index in aParentNode, at which a node is being replaced
-   */
-  void nodeReplaced(in nsINavHistoryContainerResultNode aParentNode,
-                    in nsINavHistoryResultNode aOldNode,
-                    in nsINavHistoryResultNode aNewNode,
-                    in unsigned long aIndex);
 
   /**
    * Called after a container changes state.
@@ -628,7 +610,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(e4d40863-ee3c-4094-9fc0-18c3245d97ef)]
+[scriptable, uuid(45e2970b-9b00-4473-9938-39d6beaf4248)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -701,21 +683,6 @@ interface nsINavHistoryObserver : nsISupports
    * Removed by automatic expiration.
    */
   const unsigned short REASON_EXPIRED = 1;
-
-  /**
-   * This page and all of its visits are about to be deleted.  Note: the page
-   * may not necessarily have actually existed for this function to be called.
-   *
-   * @param aURI
-   *        The URI being deleted.
-   * @param aGUID
-   *        The unique ID associated with the page.
-   * @param aReason
-   *        Indicates the reason for the removal.  See REASON_* constants.
-   */
-  void onBeforeDeleteURI(in nsIURI aURI,
-                         in ACString aGUID,
-                         in unsigned short aReason);
 
   /**
    * This page and all of its visits are being deleted. Note: the page may not

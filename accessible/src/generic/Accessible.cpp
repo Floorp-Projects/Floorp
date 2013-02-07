@@ -3080,7 +3080,7 @@ Accessible::GetFirstAvailableAccessible(nsINode *aStartNode) const
   nsCOMPtr<nsIDOMTreeWalker> walker;
   domDoc->CreateTreeWalker(rootNode,
                            nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
-                           nullptr, false, getter_AddRefs(walker));
+                           nullptr, 1, getter_AddRefs(walker));
   NS_ENSURE_TRUE(walker, nullptr);
 
   walker->SetCurrentNode(currentNode);

@@ -44,8 +44,6 @@ public:
 protected:
   nsMathMLmstyleFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmstyleFrame();
-
-  virtual int GetSkipSides() const { return 0; }
 };
 
 #endif /* nsMathMLmstyleFrame_h___ */

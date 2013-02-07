@@ -14,10 +14,10 @@
 
 #include "jsfriendapi.h"
 #include "jsinfer.h"
-#include "jsval.h"
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
+#include "js/Value.h"
 #include "vm/NumericConversions.h"
 #include "vm/String.h"
 

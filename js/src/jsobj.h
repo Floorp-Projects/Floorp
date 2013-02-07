@@ -20,7 +20,6 @@
 #include "jsatom.h"
 #include "jsclass.h"
 #include "jsfriendapi.h"
-#include "jsinfer.h"
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
@@ -300,6 +299,7 @@ class JSObject : public js::ObjectImpl
     /* Make a non-array object with the specified initial state. */
     static inline JSObject *create(JSContext *cx,
                                    js::gc::AllocKind kind,
+                                   js::gc::InitialHeap heap,
                                    js::HandleShape shape,
                                    js::HandleTypeObject type,
                                    js::HeapSlot *slots);
@@ -307,6 +307,7 @@ class JSObject : public js::ObjectImpl
     /* Make an array object with the specified initial state. */
     static inline JSObject *createArray(JSContext *cx,
                                         js::gc::AllocKind kind,
+                                        js::gc::InitialHeap heap,
                                         js::HandleShape shape,
                                         js::HandleTypeObject type,
                                         uint32_t length);
@@ -1160,19 +1161,6 @@ bool
 js_FindClassObject(JSContext *cx, JSProtoKey protoKey, js::MutableHandleValue vp,
                    js::Class *clasp = NULL);
 
-// Specialized call for constructing |this| with a known function callee,
-// and a known prototype.
-extern JSObject *
-js_CreateThisForFunctionWithProto(JSContext *cx, js::HandleObject callee, JSObject *proto);
-
-// Specialized call for constructing |this| with a known function callee.
-extern JSObject *
-js_CreateThisForFunction(JSContext *cx, js::HandleObject callee, bool newType);
-
-// Generic call for constructing |this|.
-extern JSObject *
-js_CreateThis(JSContext *cx, js::Class *clasp, js::HandleObject callee);
-
 /*
  * Find or create a property named by id in obj's scope, with the given getter
  * and setter, slot, attributes, and other members.
@@ -1188,7 +1176,50 @@ js_DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 
 namespace js {
 
-JSObject *
+/*
+ * The NewObjectKind allows an allocation site to specify the type properties
+ * and lifetime requirements that must be fixed at allocation time.
+ */
+enum NewObjectKind {
+    /* This is the default. Most objects are generic. */
+    GenericObject,
+
+    /*
+     * Singleton objects are treated specially by the type system. This flag
+     * ensures that the new object is automatically set up correctly as a
+     * singleton and is allocated in the correct heap.
+     */
+    SingletonObject,
+
+    /*
+     * Objects which may be marked as a singleton after allocation must still
+     * be allocated on the correct heap, but are not automatically setup as a
+     * singleton after allocation.
+     */
+    MaybeSingletonObject
+};
+
+inline gc::InitialHeap
+InitialHeapForNewKind(NewObjectKind newKind)
+{
+    return newKind == GenericObject ? gc::DefaultHeap : gc::TenuredHeap;
+}
+
+// Specialized call for constructing |this| with a known function callee,
+// and a known prototype.
+extern JSObject *
+CreateThisForFunctionWithProto(JSContext *cx, js::HandleObject callee, JSObject *proto,
+                               NewObjectKind newKind = GenericObject);
+
+// Specialized call for constructing |this| with a known function callee.
+extern JSObject *
+CreateThisForFunction(JSContext *cx, js::HandleObject callee, bool newType);
+
+// Generic call for constructing |this|.
+extern JSObject *
+CreateThis(JSContext *cx, js::Class *clasp, js::HandleObject callee);
+
+extern JSObject *
 CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, HandleObject parent);
 
 /*

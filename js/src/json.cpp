@@ -902,8 +902,8 @@ js_InitJSONClass(JSContext *cx, HandleObject obj)
     if (!global->getOrCreateBooleanPrototype(cx))
         return NULL;
 
-    RootedObject JSON(cx, NewObjectWithClassProto(cx, &JSONClass, NULL, global));
-    if (!JSON || !JSObject::setSingletonType(cx, JSON))
+    RootedObject JSON(cx, NewObjectWithClassProto(cx, &JSONClass, NULL, global, SingletonObject));
+    if (!JSON)
         return NULL;
 
     if (!JS_DefineProperty(cx, global, js_JSON_str, OBJECT_TO_JSVAL(JSON),

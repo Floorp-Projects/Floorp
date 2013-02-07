@@ -935,15 +935,17 @@ void JS_FASTCALL
 stubs::NewInitArray(VMFrame &f, uint32_t count)
 {
     Rooted<TypeObject*> type(f.cx, (TypeObject *) f.scratch);
-    RootedObject obj(f.cx, NewDenseAllocatedArray(f.cx, count));
+    RootedScript fscript(f.cx, f.script());
+
+    NewObjectKind newKind = UseNewTypeForInitializer(f.cx, fscript, f.pc(), &ArrayClass);
+    RootedObject obj(f.cx, NewDenseAllocatedArray(f.cx, count, NULL, newKind));
     if (!obj)
         THROW();
 
     if (type) {
         obj->setType(type);
     } else {
-        RootedScript fscript(f.cx, f.script());
-        if (!SetInitializerObjectType(f.cx, fscript, f.pc(), obj))
+        if (!SetInitializerObjectType(f.cx, fscript, f.pc(), obj, newKind))
             THROW();
     }
 
@@ -955,14 +957,16 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
 {
     JSContext *cx = f.cx;
     Rooted<TypeObject*> type(f.cx, (TypeObject *) f.scratch);
+    RootedScript fscript(f.cx, f.script());
 
+    NewObjectKind newKind = UseNewTypeForInitializer(f.cx, fscript, f.pc(), &ObjectClass);
     RootedObject obj(cx);
     if (baseobj) {
         Rooted<JSObject*> base(cx, baseobj);
-        obj = CopyInitializerObject(cx, base);
+        obj = CopyInitializerObject(cx, base, newKind);
     } else {
-        gc::AllocKind kind = GuessObjectGCKind(0);
-        obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
+        gc::AllocKind allocKind = GuessObjectGCKind(0);
+        obj = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
     }
 
     if (!obj)
@@ -971,8 +975,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     if (type) {
         obj->setType(type);
     } else {
-        RootedScript fscript(f.cx, f.script());
-        if (!SetInitializerObjectType(cx, fscript, f.pc(), obj))
+        if (!SetInitializerObjectType(cx, fscript, f.pc(), obj, newKind))
             THROW();
     }
 

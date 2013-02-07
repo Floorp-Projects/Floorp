@@ -57,7 +57,6 @@ extern Class DebuggerEnv_class;
 
 enum {
     JSSLOT_DEBUGENV_OWNER,
-    JSSLOT_DEBUGENV_GC_GRAY_LINK,
     JSSLOT_DEBUGENV_COUNT
 };
 
@@ -65,7 +64,6 @@ extern Class DebuggerObject_class;
 
 enum {
     JSSLOT_DEBUGOBJECT_OWNER,
-    JSSLOT_DEBUGOBJECT_GC_GRAY_LINK,
     JSSLOT_DEBUGOBJECT_COUNT
 };
 
@@ -73,7 +71,6 @@ extern Class DebuggerScript_class;
 
 enum {
     JSSLOT_DEBUGSCRIPT_OWNER,
-    JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK,
     JSSLOT_DEBUGSCRIPT_COUNT
 };
 
@@ -705,7 +702,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
                 js_ReportOutOfMemory(cx);
                 return false;
             }
-            HashTableWriteBarrierPost(cx->zone(), &objects, obj);
+            HashTableWriteBarrierPost(cx->runtime, &objects, obj);
 
             if (obj->compartment() != object->compartment()) {
                 CrossCompartmentKey key(CrossCompartmentKey::DebuggerObject, object, obj);
@@ -1361,17 +1358,6 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
 
 /*** Debugger JSObjects **************************************************************************/
 
-JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
-                 unsigned(JSSLOT_DEBUGOBJECT_GC_GRAY_LINK));
-JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
-                 unsigned(JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK));
-
-/* static */ unsigned
-Debugger::gcGrayLinkSlot()
-{
-    return JSSLOT_DEBUGOBJECT_GC_GRAY_LINK;
-}
-
 /* static */ bool
 Debugger::isDebugWrapper(RawObject o)
 {
@@ -1914,7 +1900,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
     for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
         if (c == dbg->object->compartment())
             continue;
-        c->scheduledForDestruction = false;
+        c->zone()->scheduledForDestruction = false;
         GlobalObject *global = c->maybeGlobal();
         if (global) {
             Rooted<GlobalObject*> rg(cx, global);
@@ -2582,7 +2568,7 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
-        c->scheduledForDestruction = false;
+        c->zone()->scheduledForDestruction = false;
 
         GlobalObject *global = c->maybeGlobal();
         if (global) {
@@ -3537,9 +3523,9 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         RootedValue undefinedValue(cx, UndefinedValue());
         for (unsigned i = 0; i < fargc; i++) {
             RootedFunction getobj(cx);
-            getobj = js_NewFunction(cx, NullPtr(), DebuggerArguments_getArg, 0,
-                                    JSFunction::NATIVE_FUN, global, NullPtr(),
-                                    JSFunction::ExtendedFinalizeKind);
+            getobj = NewFunction(cx, NullPtr(), DebuggerArguments_getArg, 0,
+                                 JSFunction::NATIVE_FUN, global, NullPtr(),
+                                 JSFunction::ExtendedFinalizeKind);
             if (!getobj)
                 return false;
             id = INT_TO_JSID(i);

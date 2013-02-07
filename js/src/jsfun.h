@@ -331,17 +331,19 @@ JSAPIToJSFunctionFlags(unsigned flags)
            : JSFunction::NATIVE_FUN;
 }
 
-extern JSFunction *
-js_NewFunction(JSContext *cx, js::HandleObject funobj, JSNative native, unsigned nargs,
-               JSFunction::Flags flags, js::HandleObject parent, js::HandleAtom atom,
-               js::gc::AllocKind kind = JSFunction::FinalizeKind);
-
-extern JSFunction *
-js_DefineFunction(JSContext *cx, js::HandleObject obj, js::HandleId id, JSNative native,
-                  unsigned nargs, unsigned flags,
-                  js::gc::AllocKind kind = JSFunction::FinalizeKind);
-
 namespace js {
+
+extern JSFunction *
+NewFunction(JSContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
+            JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
+            gc::AllocKind allocKind = JSFunction::FinalizeKind,
+            NewObjectKind newKind = GenericObject);
+
+extern JSFunction *
+DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
+               unsigned nargs, unsigned flags,
+               gc::AllocKind allocKind = JSFunction::FinalizeKind,
+               NewObjectKind newKind = GenericObject);
 
 /*
  * Function extended with reserved slots for use by various kinds of functions.

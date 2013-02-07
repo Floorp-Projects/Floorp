@@ -1421,7 +1421,9 @@
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
 
-                    if (!this.isAudioOnly) {
+                    if (this.isAudioOnly) {
+                      this.controlBar.classList.add("audio");
+                    } else {
                       addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
                       addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
                       addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);
@@ -1482,6 +1484,9 @@
                 </box>
                 <vbox class="controlBar" hidden="true">
                     <hbox class="buttonsBar">
+                        <button class="fullscreenButton"
+                            enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
+                            exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
                         <spacer flex="1"/>
                         <button class="playButton"
                                 playlabel="&playButton.playLabel;"
@@ -1505,9 +1510,6 @@
                         <label class="positionLabel" role="presentation"/>
                         <label class="durationLabel" role="presentation"/>
                     </vbox>
-                    <button class="fullscreenButton"
-                            enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
-                            exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
                 </vbox>
             </vbox>
         </stack>
@@ -1617,8 +1619,23 @@
               }, false);
               this.Utils.muteButton.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); }, false);
 
-              if (!video.autoplay && this.Utils.dynamicControls)
+              // The first time the controls appear we want to just display
+              // a play button that does not fade away. The firstShow property
+              // makes that happen. But because of bug 718107 this init() method
+              // may be called again when we switch in or out of fullscreen
+              // mode. So we only set firstShow if we're not autoplaying and
+              // if we are at the beginning of the video
+              if (!video.autoplay && this.Utils.dynamicControls &&
+                  video.currentTime === 0)
                 this.firstShow = true;
+
+              // If the video is not at the start, then we probably just
+              // transitioned into or out of fullscreen mode, and we don't want
+              // the controls to remain visible. this.controlsTimeout is a full
+              // 5s, which feels too long after the transition.
+              if (video.currentTime !== 0) {
+                this.delayHideControls(this.Utils.HIDE_CONTROLS_TIMEOUT_MS);
+              }
             }
           }) ]]>
         </field>

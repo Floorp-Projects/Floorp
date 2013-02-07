@@ -13,16 +13,15 @@
 #include "nsCOMPtr.h"
 #include "EnableWebAudioCheck.h"
 #include "nsAutoPtr.h"
-#include "AudioContext.h"
+#include "AudioNode.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/Util.h"
+#include "mozilla/ErrorResult.h"
 
 struct JSContext;
 class nsIDOMWindow;
 
 namespace mozilla {
-
-class ErrorResult;
 
 namespace dom {
 
@@ -33,7 +32,10 @@ class AudioParam MOZ_FINAL : public nsWrapperCache,
                              public AudioParamTimeline
 {
 public:
-  AudioParam(AudioContext* aContext,
+  typedef void (*CallbackType)(AudioNode*);
+
+  AudioParam(AudioNode* aNode,
+             CallbackType aCallback,
              float aDefaultValue,
              float aMinValue,
              float aMaxValue);
@@ -44,7 +46,7 @@ public:
 
   AudioContext* GetParentObject() const
   {
-    return mContext;
+    return mNode->Context();
   }
 
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
@@ -56,6 +58,40 @@ public:
   {
     AudioParamTimeline::SetValueCurveAtTime(aValues.Data(), aValues.Length(),
                                             aStartTime, aDuration, aRv);
+    mCallback(mNode);
+  }
+
+  // We override the rest of the mutating AudioParamTimeline methods in order to make
+  // sure that the callback is called every time that this object gets mutated.
+  void SetValue(float aValue)
+  {
+    AudioParamTimeline::SetValue(aValue);
+    mCallback(mNode);
+  }
+  void SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
+  {
+    AudioParamTimeline::SetValueAtTime(aValue, aStartTime, aRv);
+    mCallback(mNode);
+  }
+  void LinearRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
+  {
+    AudioParamTimeline::LinearRampToValueAtTime(aValue, aEndTime, aRv);
+    mCallback(mNode);
+  }
+  void ExponentialRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
+  {
+    AudioParamTimeline::ExponentialRampToValueAtTime(aValue, aEndTime, aRv);
+    mCallback(mNode);
+  }
+  void SetTargetAtTime(float aTarget, double aStartTime, double aTimeConstant, ErrorResult& aRv)
+  {
+    AudioParamTimeline::SetTargetAtTime(aTarget, aStartTime, aTimeConstant, aRv);
+    mCallback(mNode);
+  }
+  void CancelScheduledValues(double aStartTime)
+  {
+    AudioParamTimeline::CancelScheduledValues(aStartTime);
+    mCallback(mNode);
   }
 
   float MinValue() const
@@ -74,7 +110,8 @@ public:
   }
 
 private:
-  nsRefPtr<AudioContext> mContext;
+  nsRefPtr<AudioNode> mNode;
+  CallbackType mCallback;
   const float mDefaultValue;
   const float mMinValue;
   const float mMaxValue;

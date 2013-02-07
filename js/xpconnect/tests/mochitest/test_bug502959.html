@@ -23,7 +23,7 @@ function foo() {
   ok(true, "Able to call the function");
 }
 
-var iter = document.createNodeIterator(document, NodeFilter.SHOW_ELEMENT, foo, false);
+var iter = document.createNodeIterator(document, NodeFilter.SHOW_ELEMENT, foo);
 var doublewrapped = iter.filter;
 
 ok(doublewrapped.toString().indexOf("wrapped") > 0, "got a double-wrapped object back");

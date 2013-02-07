@@ -7,17 +7,17 @@
 
 /******
 
-  This file contains the list of all HTML tags 
-  See nsHTMLTags.h for access to the enum values for tags
+  This file contains the list of all HTML tags.
+  See nsHTMLTags.h for access to the enum values for tags.
 
   It is designed to be used as inline input to nsHTMLTags.cpp and
   nsHTMLContentSink *only* through the magic of C preprocessing.
 
   All entries must be enclosed in the macro HTML_TAG which will have cruel
-  and unusual things done to it
+  and unusual things done to it.
 
   It is recommended (but not strictly necessary) to keep all entries
-  in alphabetical order
+  in alphabetical order.
 
   The first argument to HTML_TAG is both the enum identifier of the
   property and the string value. The second argument is the "creator"

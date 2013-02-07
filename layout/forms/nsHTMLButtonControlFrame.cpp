@@ -322,12 +322,6 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   aDesiredSize.ascent += yoff;
 }
 
-int
-nsHTMLButtonControlFrame::GetSkipSides() const
-{
-  return 0;
-}
-
 nsresult nsHTMLButtonControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
 {
   if (nsGkAtoms::value == aName) {
