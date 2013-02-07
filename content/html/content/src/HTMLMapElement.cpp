@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLMapElement.h"
+#include "mozilla/dom/HTMLMapElementBinding.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsContentList.h"
@@ -19,6 +20,7 @@ namespace dom {
 HTMLMapElement::HTMLMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMapElement,
@@ -40,11 +42,9 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLMapElement)
 NS_IMPL_ELEMENT_CLONE(HTMLMapElement)
 
 
-NS_IMETHODIMP
-HTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
+nsIHTMLCollection*
+HTMLMapElement::Areas()
 {
-  NS_ENSURE_ARG_POINTER(aAreas);
-
   if (!mAreas) {
     // Not using NS_GetContentList because this should not be cached
     mAreas = new nsContentList(this,
@@ -54,12 +54,26 @@ HTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
                                false);
   }
 
-  NS_ADDREF(*aAreas = mAreas);
+  return mAreas;
+}
+
+NS_IMETHODIMP
+HTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
+{
+  NS_ENSURE_ARG_POINTER(aAreas);
+  NS_ADDREF(*aAreas = Areas());
   return NS_OK;
 }
 
 
 NS_IMPL_STRING_ATTR(HTMLMapElement, Name, name)
+
+
+JSObject*
+HTMLMapElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return HTMLMapElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 } // namespace dom
 } // namespace mozilla
