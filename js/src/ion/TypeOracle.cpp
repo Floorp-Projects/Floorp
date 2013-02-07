@@ -303,11 +303,11 @@ TypeInferenceOracle::elementReadIsDenseNative(RawScript script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::elementReadIsTypedArray(RawScript script, jsbytecode *pc, int *arrayType)
+TypeInferenceOracle::elementReadIsTypedArray(HandleScript script, jsbytecode *pc, int *arrayType)
 {
     // Check whether the object is a typed array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
-    StackTypeSet *id = script->analysis()->poppedTypes(pc, 0);
+    StackTypeSet *id = DropUnrooted(script)->analysis()->poppedTypes(pc, 0);
 
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
@@ -447,7 +447,7 @@ TypeInferenceOracle::elementWriteNeedsDoubleConversion(UnrootedScript script, js
 }
 
 bool
-TypeInferenceOracle::elementWriteHasExtraIndexedProperty(RawScript script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteHasExtraIndexedProperty(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
 
@@ -458,7 +458,7 @@ TypeInferenceOracle::elementWriteHasExtraIndexedProperty(RawScript script, jsbyt
 }
 
 bool
-TypeInferenceOracle::elementWriteIsPacked(RawScript script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteIsPacked(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *types = script->analysis()->poppedTypes(pc, 2);
     return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
@@ -585,7 +585,7 @@ TypeInferenceOracle::canInlineCall(HandleScript caller, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction target)
+TypeInferenceOracle::canEnterInlinedFunction(HandleScript caller, jsbytecode *pc, JSFunction *target)
 {
     AssertCanGC();
     RootedScript targetScript(cx, target->nonLazyScript());
