@@ -80,6 +80,7 @@
 #include "vm/ForkJoin.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
+#include "vm/ForkJoin.h"
 #include "ion/IonCode.h"
 #ifdef JS_ION
 # include "ion/IonMacroAssembler.h"
@@ -1196,10 +1197,10 @@ void *
 ArenaLists::parallelAllocate(Zone *zone, AllocKind thingKind, size_t thingSize)
 {
     /*
-     * During parallel Rivertrail sections, no GC is permitted. If no
-     * existing arena can satisfy the allocation, then a new one is
-     * allocated. If that fails, then we return NULL which will cause
-     * the parallel section to abort.
+     * During parallel Rivertrail sections, if no existing arena can
+     * satisfy the allocation, then a new one is allocated. If that
+     * fails, then we return NULL which will cause the parallel
+     * section to abort.
      */
 
     void *t = allocateFromFreeList(thingKind, thingSize);

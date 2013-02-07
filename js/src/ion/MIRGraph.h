@@ -79,6 +79,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     static MBasicBlock *NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
                                              MBasicBlock *pred, jsbytecode *entryPc);
     static MBasicBlock *NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred);
+    static MBasicBlock *NewParBailout(MIRGraph &graph, CompileInfo &info,
+                                      MBasicBlock *pred, jsbytecode *entryPc);
 
     bool dominates(MBasicBlock *other);
 
@@ -165,8 +167,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void inheritSlots(MBasicBlock *parent);
     bool initEntrySlots();
 
-    // Replaces an edge for a given block with a new block. This is used for
-    // critical edge splitting.
+    // Replaces an edge for a given block with a new block. This is
+    // used for critical edge splitting and also for inserting
+    // bailouts during ParallelArrayAnalysis.
+    //
+    // Note: If successorWithPhis is set, you must not be replacing it.
     void replacePredecessor(MBasicBlock *old, MBasicBlock *split);
     void replaceSuccessor(size_t pos, MBasicBlock *split);
 
@@ -394,6 +399,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     }
     size_t numSuccessors() const;
     MBasicBlock *getSuccessor(size_t index) const;
+    size_t getSuccessorIndex(MBasicBlock *) const;
 
     // Specifies the closest loop header dominating this block.
     void setLoopHeader(MBasicBlock *loop) {
@@ -608,6 +614,14 @@ class MIRGraph
     JSScript **scripts() {
         return scripts_.begin();
     }
+
+    // The ParSlice is an instance of ForkJoinSlice*, it carries
+    // "per-helper-thread" information.  So as not to modify the
+    // calling convention for parallel code, we obtain the current
+    // slice from thread-local storage.  This helper method will
+    // lazilly insert an MParSlice instruction in the entry block and
+    // return the definition.
+    MDefinition *parSlice();
 };
 
 class MDefinitionIterator

@@ -114,6 +114,19 @@ LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 }
 
 bool
+LIRGenerator::visitParCheckOverRecursed(MParCheckOverRecursed *ins)
+{
+    LParCheckOverRecursed *lir = new LParCheckOverRecursed(
+        useRegister(ins->parSlice()),
+        temp());
+    if (!add(lir))
+        return false;
+    if (!assignSafepoint(lir, ins))
+        return false;
+    return true;
+}
+
+bool
 LIRGenerator::visitDefVar(MDefVar *ins)
 {
     LDefVar *lir = new LDefVar(useRegisterAtStart(ins->scopeChain()));
@@ -141,6 +154,13 @@ LIRGenerator::visitNewSlots(MNewSlots *ins)
     if (!assignSnapshot(lir))
         return false;
     return defineReturn(lir, ins);
+}
+
+bool
+LIRGenerator::visitNewParallelArray(MNewParallelArray *ins)
+{
+    LNewParallelArray *lir = new LNewParallelArray();
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
@@ -184,12 +204,38 @@ LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 }
 
 bool
+LIRGenerator::visitParNewCallObject(MParNewCallObject *ins)
+{
+    const LAllocation &parThreadContext = useRegister(ins->parSlice());
+    const LDefinition &temp1 = temp();
+    const LDefinition &temp2 = temp();
+
+    LParNewCallObject *lir;
+    if (ins->slots()->type() == MIRType_Slots) {
+        const LAllocation &slots = useRegister(ins->slots());
+        lir = LParNewCallObject::NewWithSlots(parThreadContext, slots,
+                                              temp1, temp2);
+    } else {
+        lir = LParNewCallObject::NewSansSlots(parThreadContext, temp1, temp2);
+    }
+
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitNewStringObject(MNewStringObject *ins)
 {
     JS_ASSERT(ins->input()->type() == MIRType_String);
 
     LNewStringObject *lir = new LNewStringObject(useRegister(ins->input()), temp());
     return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitParBailout(MParBailout *ins)
+{
+    LParBailout *lir = new LParBailout();
+    return add(lir, ins);
 }
 
 bool
@@ -580,10 +626,24 @@ LIRGenerator::visitCompare(MCompare *comp)
     // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
     // make sense and avoids confusion.
     if (comp->compareType() == MCompare::Compare_String) {
-        LCompareS *lir = new LCompareS(useRegister(left), useRegister(right), temp());
-        if (!define(lir, comp))
-            return false;
-        return assignSafepoint(lir, comp);
+        switch (comp->block()->info().executionMode()) {
+          case SequentialExecution:
+          {
+              LCompareS *lir = new LCompareS(useRegister(left), useRegister(right), temp());
+              if (!define(lir, comp))
+                  return false;
+              return assignSafepoint(lir, comp);
+          }
+
+          case ParallelExecution:
+          {
+              LParCompareS *lir = new LParCompareS(useFixed(left, CallTempReg0),
+                                                   useFixed(right, CallTempReg1));
+              return defineReturn(lir, comp);
+          }
+        }
+
+        JS_NOT_REACHED("Unexpected execution mode");
     }
 
     // Strict compare between value and string
@@ -1383,6 +1443,17 @@ LIRGenerator::visitLambda(MLambda *ins)
 }
 
 bool
+LIRGenerator::visitParLambda(MParLambda *ins)
+{
+    JS_ASSERT(!ins->fun()->hasSingletonType());
+    JS_ASSERT(!types::UseNewTypeForClone(ins->fun()));
+    LParLambda *lir = new LParLambda(useRegister(ins->parSlice()),
+                                     useRegister(ins->scopeChain()),
+                                     temp(), temp());
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitImplicitThis(MImplicitThis *ins)
 {
     JS_ASSERT(ins->callee()->type() == MIRType_Object);
@@ -1437,6 +1508,62 @@ bool
 LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment *ins)
 {
     return define(new LFunctionEnvironment(useRegisterAtStart(ins->function())), ins);
+}
+
+bool
+LIRGenerator::visitParSlice(MParSlice *ins)
+{
+    LParSlice *lir = new LParSlice(tempFixed(CallTempReg0));
+    return defineReturn(lir, ins);
+}
+
+bool
+LIRGenerator::visitParWriteGuard(MParWriteGuard *ins)
+{
+    return add(new LParWriteGuard(useFixed(ins->parSlice(), CallTempReg0),
+                                  useFixed(ins->object(), CallTempReg1),
+                                  tempFixed(CallTempReg2)));
+}
+
+bool
+LIRGenerator::visitParCheckInterrupt(MParCheckInterrupt *ins)
+{
+    LParCheckInterrupt *lir = new LParCheckInterrupt(
+        useRegister(ins->parSlice()),
+        temp());
+    if (!add(lir))
+        return false;
+    if (!assignSafepoint(lir, ins))
+        return false;
+    return true;
+}
+
+bool
+LIRGenerator::visitParDump(MParDump *ins)
+{
+    LParDump *lir = new LParDump();
+    useBoxFixed(lir, LParDump::Value, ins->value(), CallTempReg0, CallTempReg1);
+    return add(lir);
+}
+
+bool
+LIRGenerator::visitParNew(MParNew *ins)
+{
+    LParNew *lir = new LParNew(useRegister(ins->parSlice()),
+                               temp(), temp());
+    return define(lir, ins);
+}
+
+bool
+LIRGenerator::visitParNewDenseArray(MParNewDenseArray *ins)
+{
+    LParNewDenseArray *lir = new LParNewDenseArray(
+        useFixed(ins->parSlice(), CallTempReg0),
+        useFixed(ins->length(), CallTempReg1),
+        tempFixed(CallTempReg2),
+        tempFixed(CallTempReg3),
+        tempFixed(CallTempReg4));
+    return defineReturn(lir, ins);
 }
 
 bool

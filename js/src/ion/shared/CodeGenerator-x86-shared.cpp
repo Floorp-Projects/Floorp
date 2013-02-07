@@ -15,6 +15,7 @@
 #include "ion/IonFrames.h"
 #include "ion/MoveEmitter.h"
 #include "ion/IonCompartment.h"
+#include "ion/ParallelFunctions.h"
 
 using namespace js;
 using namespace js::ion;
@@ -290,6 +291,20 @@ class BailoutLabel {
 template <typename T> bool
 CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
 {
+    CompileInfo &info = snapshot->mir()->block()->info();
+    switch (info.executionMode()) {
+      case ParallelExecution: {
+        // in parallel mode, make no attempt to recover, just signal an error.
+        Label *ool;
+        if (!ensureOutOfLineParallelAbort(&ool))
+            return false;
+        binder(masm, ool);
+        return true;
+      }
+
+      case SequentialExecution: break;
+    }
+
     if (!encode(snapshot))
         return false;
 

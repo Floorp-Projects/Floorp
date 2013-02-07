@@ -310,6 +310,10 @@ class IonBuilder : public MIRGenerator
                                types::StackTypeSet *barrier, types::StackTypeSet *types,
                                TypeOracle::Unary unary, TypeOracle::UnaryTypes unaryTypes);
 
+    // Typed array helpers.
+    MInstruction *getTypedArrayLength(MDefinition *obj);
+    MInstruction *getTypedArrayElements(MDefinition *obj);
+
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
@@ -414,6 +418,18 @@ class IonBuilder : public MIRGenerator
 
     // RegExp natives.
     InliningStatus inlineRegExpTest(CallInfo &callInfo);
+
+    // Parallel Array.
+    InliningStatus inlineUnsafeSetElement(CallInfo &callInfo);
+    bool inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base);
+    bool inlineUnsafeSetTypedArrayElement(CallInfo &callInfo, uint32_t base, int arrayType);
+    InliningStatus inlineForceSequentialOrInParallelSection(CallInfo &callInfo);
+    InliningStatus inlineNewDenseArray(CallInfo &callInfo);
+    InliningStatus inlineNewDenseArrayForSequentialExecution(CallInfo &callInfo);
+    InliningStatus inlineNewDenseArrayForParallelExecution(CallInfo &callInfo);
+
+    InliningStatus inlineThrowError(CallInfo &callInfo);
+    InliningStatus inlineDump(CallInfo &callInfo);
 
     InliningStatus inlineNativeCall(CallInfo &callInfo, JSNative native);
 
