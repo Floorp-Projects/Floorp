@@ -285,6 +285,42 @@ class MacroAssemblerX86Shared : public Assembler
         movss(src, Operand(dest));
     }
 
+    // Checks whether a double is representable as a 32-bit integer. If so, the
+    // integer is written to the output register. Otherwise, a bailout is taken to
+    // the given snapshot. This function overwrites the scratch float register.
+    void convertDoubleToInt32(FloatRegister src, Register dest, Label *fail,
+                              bool negativeZeroCheck = true)
+    {
+        // Note that we don't specify the destination width for the truncated
+        // conversion to integer. x64 will use the native width (quadword) which
+        // sign-extends the top bits, preserving a little sanity.
+        cvttsd2s(src, dest);
+        cvtsi2sd(dest, ScratchFloatReg);
+        ucomisd(src, ScratchFloatReg);
+        j(Assembler::Parity, fail);
+        j(Assembler::NotEqual, fail);
+
+        // Check for -0
+        if (negativeZeroCheck) {
+            Label notZero;
+            testl(dest, dest);
+            j(Assembler::NonZero, &notZero);
+
+            if (Assembler::HasSSE41()) {
+                ptest(src, src);
+                j(Assembler::NonZero, fail);
+            } else {
+                // bit 0 = sign of low double
+                // bit 1 = sign of high double
+                movmskpd(src, dest);
+                andl(Imm32(1), dest);
+                j(Assembler::NonZero, fail);
+            }
+
+            bind(&notZero);
+        }
+    }
+
     void clampIntToUint8(Register src, Register dest) {
         Label inRange, done;
         branchTest32(Assembler::Zero, src, Imm32(0xffffff00), &inRange);
