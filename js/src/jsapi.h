@@ -628,6 +628,10 @@ class CallArgs : public CallReceiver
     friend CallArgs CallArgsFromArgv(unsigned, Value *);
     friend CallArgs CallArgsFromSp(unsigned, Value *);
     Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
+    Value get(unsigned i) const
+    {
+        return i < length() ? argv_[i] : UndefinedValue();
+    }
     Value *array() const { return argv_; }
     unsigned length() const { return argc_; }
     Value *end() const { return argv_ + argc_; }
