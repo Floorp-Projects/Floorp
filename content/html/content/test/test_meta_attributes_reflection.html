@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLMetaElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLMetaElement attributes reflection **/
+
+// .name (String)
+reflectString({
+  element: document.createElement("meta"),
+  attribute: "name",
+})
+
+// .httpEquiv (String)
+reflectString({
+  element: document.createElement("meta"),
+  attribute: { content: "http-equiv", idl: "httpEquiv" },
+})
+
+// .content (String)
+reflectString({
+  element: document.createElement("meta"),
+  attribute: "content",
+})
+
+// .scheme (String)
+reflectString({
+  element: document.createElement("meta"),
+  attribute: "scheme",
+})
+
+</script>
+</pre>
+</body>
+</html>
