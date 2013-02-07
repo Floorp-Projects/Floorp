@@ -116,8 +116,8 @@ CheckMarkedThing(JSTracer *trc, T *thing)
 
     DebugOnly<JSRuntime *> rt = trc->runtime;
 
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gcManipulatingDeadCompartments,
-                 !thing->compartment()->scheduledForDestruction);
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gcManipulatingDeadZones,
+                 !thing->zone()->scheduledForDestruction);
 
 #ifdef DEBUG
     rt->assertValidThread();
@@ -169,7 +169,7 @@ MarkInternal(JSTracer *trc, T **thingp)
     if (!trc->callback) {
         if (thing->zone()->isGCMarking()) {
             PushMarkStack(AsGCMarker(trc), thing);
-            thing->compartment()->maybeAlive = true;
+            thing->zone()->maybeAlive = true;
         }
     } else {
         trc->callback(trc, (void **)thingp, GetGCThingTraceKind(thing));

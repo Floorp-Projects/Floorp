@@ -24,27 +24,27 @@ class Shape;
 
 /*
  * This auto class should be used around any code that might cause a mark bit to
- * be set on an object in a dead compartment. See AutoMaybeTouchDeadCompartments
+ * be set on an object in a dead zone. See AutoMaybeTouchDeadZones
  * for more details.
  */
-struct AutoMarkInDeadCompartment
+struct AutoMarkInDeadZone
 {
-    AutoMarkInDeadCompartment(JSCompartment *comp)
-      : compartment(comp),
-        scheduled(comp->scheduledForDestruction)
+    AutoMarkInDeadZone(JS::Zone *zone)
+      : zone(zone),
+        scheduled(zone->scheduledForDestruction)
     {
-        if (comp->rt->gcManipulatingDeadCompartments && comp->scheduledForDestruction) {
-            comp->rt->gcObjectsMarkedInDeadCompartments++;
-            comp->scheduledForDestruction = false;
+        if (zone->rt->gcManipulatingDeadZones && zone->scheduledForDestruction) {
+            zone->rt->gcObjectsMarkedInDeadZones++;
+            zone->scheduledForDestruction = false;
         }
     }
 
-    ~AutoMarkInDeadCompartment() {
-        compartment->scheduledForDestruction = scheduled;
+    ~AutoMarkInDeadZone() {
+        zone->scheduledForDestruction = scheduled;
     }
 
   private:
-    JSCompartment *compartment;
+    JS::Zone *zone;
     bool scheduled;
 };
 
