@@ -8,12 +8,6 @@
 interface nsIURI;
 interface nsIFaviconDataCallback;
 
-/**
- * Interface for accessing the favicon service asynchronously.
- *
- * @status EXPERIMENTAL
- */
-
 [scriptable, uuid(8849feef-0ead-4e9b-b63b-8d862c42a736)]
 interface mozIAsyncFavicons : nsISupports
 {

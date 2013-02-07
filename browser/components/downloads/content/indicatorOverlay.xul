@@ -53,6 +53,8 @@
         <vbox id="downloads-indicator-icon"/>
         <vbox id="downloads-indicator-notification"/>
       </stack>
+      <label class="toolbarbutton-text" crop="right" flex="1"
+             value="&downloads.label;"/>
     </toolbarbutton>
   </popupset>
 </overlay>

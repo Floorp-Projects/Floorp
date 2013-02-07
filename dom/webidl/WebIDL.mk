@@ -71,6 +71,9 @@ webidl_files = \
   HTMLImageElement.webidl \
   HTMLLabelElement.webidl \
   HTMLLIElement.webidl \
+  HTMLMapElement.webidl \
+  HTMLMetaElement.webidl \
+  HTMLModElement.webidl \
   HTMLOListElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLParagraphElement.webidl \

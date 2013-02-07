@@ -63,7 +63,7 @@ Module::~Module() {
        it != functions_.end(); ++it) {
     delete *it;
   }
-  for (vector<StackFrameEntry *>::iterator it = stack_frame_entries_.begin();
+  for (StackFrameEntrySet::iterator it = stack_frame_entries_.begin();
        it != stack_frame_entries_.end(); ++it) {
     delete *it;
   }
@@ -93,8 +93,14 @@ void Module::AddFunctions(vector<Function *>::iterator begin,
     AddFunction(*it);
 }
 
-void Module::AddStackFrameEntry(StackFrameEntry *stack_frame_entry) {
-  stack_frame_entries_.push_back(stack_frame_entry);
+void Module::AddStackFrameEntry(StackFrameEntry* stack_frame_entry) {
+  std::pair<StackFrameEntrySet::iterator,bool> ret =
+      stack_frame_entries_.insert(stack_frame_entry);
+  if (!ret.second) {
+    // Free the duplicate that was not inserted because this Module
+    // now owns it.
+    delete stack_frame_entry;
+  }
 }
 
 void Module::AddExtern(Extern *ext) {
@@ -111,9 +117,48 @@ void Module::GetFunctions(vector<Function *> *vec,
   vec->insert(i, functions_.begin(), functions_.end());
 }
 
+template<typename T>
+bool EntryContainsAddress(T entry, Module::Address address) {
+  return entry->address <= address && address < entry->address + entry->size;
+}
+
+Module::Function* Module::FindFunctionByAddress(Address address) {
+  Function search;
+  search.address = address;
+  // Ensure that name always sorts higher than the function name,
+  // so that upper_bound always returns the function just after
+  // the function containing this address.
+  search.name = "\xFF";
+  FunctionSet::iterator it = functions_.upper_bound(&search);
+  if (it == functions_.begin())
+    return NULL;
+
+  it--;
+
+  if (EntryContainsAddress(*it, address))
+    return *it;
+
+  return NULL;
+}
+
 void Module::GetExterns(vector<Extern *> *vec,
                         vector<Extern *>::iterator i) {
   vec->insert(i, externs_.begin(), externs_.end());
+}
+
+Module::Extern* Module::FindExternByAddress(Address address) {
+  Extern search;
+  search.address = address;
+  ExternSet::iterator it = externs_.upper_bound(&search);
+
+  if (it == externs_.begin())
+    return NULL;
+
+  it--;
+  if ((*it)->address > address)
+    return NULL;
+
+  return *it;
 }
 
 Module::File *Module::FindFile(const string &name) {
@@ -155,8 +200,25 @@ void Module::GetFiles(vector<File *> *vec) {
     vec->push_back(it->second);
 }
 
-void Module::GetStackFrameEntries(vector<StackFrameEntry *> *vec) {
-  *vec = stack_frame_entries_;
+void Module::GetStackFrameEntries(vector<StackFrameEntry *>* vec) {
+  vec->clear();
+  vec->insert(vec->begin(), stack_frame_entries_.begin(),
+              stack_frame_entries_.end());
+}
+
+Module::StackFrameEntry* Module::FindStackFrameEntryByAddress(Address address) {
+  StackFrameEntry search;
+  search.address = address;
+  StackFrameEntrySet::iterator it = stack_frame_entries_.upper_bound(&search);
+
+  if (it == stack_frame_entries_.begin())
+    return NULL;
+
+  it--;
+  if (EntryContainsAddress(*it, address))
+    return *it;
+
+  return NULL;
 }
 
 void Module::AssignSourceIds() {
@@ -194,6 +256,24 @@ bool Module::ReportError() {
   return false;
 }
 
+std::ostream& operator<<(std::ostream& stream, const Module::Expr& expr) {
+  assert(!expr.invalid());
+  switch (expr.how_) {
+    case Module::kExprSimple:
+      stream << expr.ident_ << " " << expr.offset_ << " +";
+      break;
+    case Module::kExprSimpleMem:
+      stream << expr.ident_ << " " << expr.offset_ << " + ^";
+      break;
+    case Module::kExprPostfix:
+      stream << expr.postfix_; break;
+    case Module::kExprInvalid:
+    default:
+      break;
+  }
+  return stream;
+}
+
 bool Module::WriteRuleMap(const RuleMap &rule_map, std::ostream &stream) {
   for (RuleMap::const_iterator it = rule_map.begin();
        it != rule_map.end(); ++it) {
@@ -204,64 +284,66 @@ bool Module::WriteRuleMap(const RuleMap &rule_map, std::ostream &stream) {
   return stream.good();
 }
 
-bool Module::Write(std::ostream &stream, bool cfi) {
+bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
   stream << "MODULE " << os_ << " " << architecture_ << " "
          << id_ << " " << name_ << endl;
   if (!stream.good())
     return ReportError();
 
-  AssignSourceIds();
+  if (symbol_data != ONLY_CFI) {
+    AssignSourceIds();
 
-  // Write out files.
-  for (FileByNameMap::iterator file_it = files_.begin();
-       file_it != files_.end(); ++file_it) {
-    File *file = file_it->second;
-    if (file->source_id >= 0) {
-      stream << "FILE " << file->source_id << " " <<  file->name << endl;
+    // Write out files.
+    for (FileByNameMap::iterator file_it = files_.begin();
+         file_it != files_.end(); ++file_it) {
+      File *file = file_it->second;
+      if (file->source_id >= 0) {
+        stream << "FILE " << file->source_id << " " <<  file->name << endl;
+        if (!stream.good())
+          return ReportError();
+      }
+    }
+
+    // Write out functions and their lines.
+    for (FunctionSet::const_iterator func_it = functions_.begin();
+         func_it != functions_.end(); ++func_it) {
+      Function *func = *func_it;
+      stream << "FUNC " << hex
+             << (func->address - load_address_) << " "
+             << func->size << " "
+             << func->parameter_size << " "
+             << func->name << dec << endl;
+
+      if (!stream.good())
+        return ReportError();
+      for (vector<Line>::iterator line_it = func->lines.begin();
+           line_it != func->lines.end(); ++line_it) {
+        stream << hex
+               << (line_it->address - load_address_) << " "
+               << line_it->size << " "
+               << dec
+               << line_it->number << " "
+               << line_it->file->source_id << endl;
+        if (!stream.good())
+          return ReportError();
+      }
+    }
+
+    // Write out 'PUBLIC' records.
+    for (ExternSet::const_iterator extern_it = externs_.begin();
+         extern_it != externs_.end(); ++extern_it) {
+      Extern *ext = *extern_it;
+      stream << "PUBLIC " << hex
+             << (ext->address - load_address_) << " 0 "
+             << ext->name << dec << endl;
       if (!stream.good())
         return ReportError();
     }
   }
 
-  // Write out functions and their lines.
-  for (FunctionSet::const_iterator func_it = functions_.begin();
-       func_it != functions_.end(); ++func_it) {
-    Function *func = *func_it;
-    stream << "FUNC " << hex
-           << (func->address - load_address_) << " "
-           << func->size << " "
-           << func->parameter_size << " "
-           << func->name << dec << endl;
-
-    if (!stream.good())
-      return ReportError();
-    for (vector<Line>::iterator line_it = func->lines.begin();
-         line_it != func->lines.end(); ++line_it) {
-      stream << hex
-             << (line_it->address - load_address_) << " "
-             << line_it->size << " "
-             << dec
-             << line_it->number << " "
-             << line_it->file->source_id << endl;
-      if (!stream.good())
-        return ReportError();
-    }
-  }
-
-  // Write out 'PUBLIC' records.
-  for (ExternSet::const_iterator extern_it = externs_.begin();
-       extern_it != externs_.end(); ++extern_it) {
-    Extern *ext = *extern_it;
-    stream << "PUBLIC " << hex
-           << (ext->address - load_address_) << " 0 "
-           << ext->name << dec << endl;
-    if (!stream.good())
-      return ReportError();
-  }
-
-  if (cfi) {
+  if (symbol_data != NO_CFI) {
     // Write out 'STACK CFI INIT' and 'STACK CFI' records.
-    vector<StackFrameEntry *>::const_iterator frame_it;
+    StackFrameEntrySet::const_iterator frame_it;
     for (frame_it = stack_frame_entries_.begin();
          frame_it != stack_frame_entries_.end(); ++frame_it) {
       StackFrameEntry *entry = *frame_it;
