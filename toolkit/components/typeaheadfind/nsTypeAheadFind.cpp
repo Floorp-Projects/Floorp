@@ -94,9 +94,10 @@ nsresult
 nsTypeAheadFind::Init(nsIDocShell* aDocShell)
 {
   nsCOMPtr<nsIPrefBranch> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  mSearchRange = new nsRange();
-  mStartPointRange = new nsRange();
-  mEndPointRange = new nsRange();
+
+  mSearchRange = nullptr;
+  mStartPointRange = nullptr;
+  mEndPointRange = nullptr;
   if (!prefInternal || !EnsureFind())
     return NS_ERROR_FAILURE;
 
@@ -166,12 +167,12 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
 
   nsCOMPtr<nsIPresShell> presShell;
   presShell = aDocShell->GetPresShell();
-  mPresShell = do_GetWeakReference(presShell);      
+  mPresShell = do_GetWeakReference(presShell);
 
   mStartFindRange = nullptr;
-  mStartPointRange = new nsRange();
-  mSearchRange = new nsRange();
-  mEndPointRange = new nsRange();
+  mStartPointRange = nullptr;
+  mSearchRange = nullptr;
+  mEndPointRange = nullptr;
 
   mFoundLink = nullptr;
   mFoundEditable = nullptr;
@@ -361,6 +362,10 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
   }
 
   int16_t rangeCompareResult = 0;
+  if (!mStartPointRange) {
+    mStartPointRange = new nsRange(presShell->GetDocument());
+  }
+
   mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, mSearchRange, &rangeCompareResult);
   // No need to wrap find in doc if starting at beginning
   bool hasWrapped = (rangeCompareResult < 0);
@@ -621,6 +626,10 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
         // at end of document and go to beginning
         nsCOMPtr<nsIDOMRange> tempRange;
         mStartPointRange->CloneRange(getter_AddRefs(tempRange));
+        if (!mEndPointRange) {
+          mEndPointRange = new nsRange(presShell->GetDocument());
+        }
+
         mStartPointRange = mEndPointRange;
         mEndPointRange = tempRange;
       }
@@ -719,6 +728,14 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
 
   uint32_t childCount = rootContent->GetChildCount();
 
+  if (!mSearchRange) {
+    mSearchRange = new nsRange(rootContent);
+  }
+
+  if (!mEndPointRange) {
+    mEndPointRange = new nsRange(rootContent);
+  }
+
   mSearchRange->SelectNodeContents(rootNode);
 
   mEndPointRange->SetEnd(rootNode, childCount);
@@ -734,6 +751,10 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
       nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
     if (selection)
       selection->GetRangeAt(0, getter_AddRefs(currentSelectionRange));
+  }
+
+  if (!mStartPointRange) {
+    mStartPointRange = new nsRange(doc);
   }
 
   if (!currentSelectionRange) {

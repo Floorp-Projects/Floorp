@@ -26,10 +26,12 @@ function command(aName)
 {
   var frame = document.getElementsByTagName('iframe')[0];
 
+  is(frame.contentDocument.designMode, "on", "design mode should be on!");
   var caught = false;
   try {
     frame.contentDocument.execCommand(aName, false, null);
   } catch (e) {
+    ok(false, "exception " + e + " was thrown");
     caught = true;
   }
 
