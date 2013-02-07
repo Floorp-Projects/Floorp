@@ -35,7 +35,7 @@ public:
   nsFind();
   virtual ~nsFind();
 
-  static already_AddRefed<nsIDOMRange> CreateRange();
+  static already_AddRefed<nsIDOMRange> CreateRange(nsINode* aNode);
 
 protected:
   // Parameters set from the interface:

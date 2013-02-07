@@ -18,7 +18,6 @@
 interface Attr;
 interface Comment;
 interface NodeIterator;
-interface Range;
 interface StyleSheetList;
 interface Touch;
 interface TouchList;
