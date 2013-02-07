@@ -253,9 +253,9 @@ BaselineCompiler::emitEpilogue()
 }
 
 bool
-BaselineCompiler::emitIC(ICStub *stub)
+BaselineCompiler::emitIC(ICStub *stub, bool isForOp)
 {
-    ICEntry *entry = allocateICEntry(stub);
+    ICEntry *entry = allocateICEntry(stub, isForOp);
     if (!entry)
         return false;
 
@@ -360,7 +360,7 @@ BaselineCompiler::emitStackCheck()
     masm.branchPtr(Assembler::AboveOrEqual, BaselineStackReg, R0.scratchReg(), &skipIC);
 
     ICStackCheck_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitNonOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.bind(&skipIC);
@@ -409,7 +409,7 @@ BaselineCompiler::emitUseCountIncrement()
 
     // Call IC.
     ICUseCount_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitNonOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.bind(&lowCount);
@@ -427,7 +427,7 @@ BaselineCompiler::emitArgumentTypeChecks()
     frame.popRegsAndSync(1);
 
     ICTypeMonitor_Fallback::Compiler compiler(cx, (uint32_t) 0);
-    if (!emitIC(compiler.getStub(&stubSpace_)))
+    if (!emitNonOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
     for (size_t i = 0; i < function()->nargs; i++) {
@@ -435,7 +435,7 @@ BaselineCompiler::emitArgumentTypeChecks()
         frame.popRegsAndSync(1);
 
         ICTypeMonitor_Fallback::Compiler compiler(cx, i + 1);
-        if (!emitIC(compiler.getStub(&stubSpace_)))
+        if (!emitNonOpIC(compiler.getStub(&stubSpace_)))
             return false;
     }
 
@@ -461,7 +461,7 @@ BaselineCompiler::emitDebugTrap()
 #endif
 
     // Add an IC entry for the return offset -> pc mapping.
-    ICEntry icEntry(pc - script->code);
+    ICEntry icEntry(pc - script->code, false);
     icEntry.setReturnOffset(masm.currentOffset());
     if (!icEntries_.append(icEntry))
         return false;
@@ -661,7 +661,7 @@ BaselineCompiler::emitToBoolean()
 
     // Call IC
     ICToBool_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.bind(&skipIC);
@@ -747,7 +747,7 @@ BaselineCompiler::emit_JSOP_POS()
 
     // Call IC.
     ICToNumber_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.bind(&done);
@@ -815,7 +815,7 @@ BaselineCompiler::emit_JSOP_THIS()
 
     // Call IC
     ICThis_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     masm.storeValue(R0, frame.addressOfThis());
@@ -1059,7 +1059,7 @@ BaselineCompiler::emitBinaryArith()
 
     // Call IC
     ICBinaryArith_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1075,7 +1075,7 @@ BaselineCompiler::emitUnaryArith()
 
     // Call IC
     ICUnaryArith_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1141,7 +1141,7 @@ BaselineCompiler::emitCompare()
 
     // Call IC.
     ICCompare_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1167,7 +1167,7 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     masm.movePtr(ImmGCPtr(type), R1.scratchReg());
 
     ICNewArray_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     frame.push(R0);
@@ -1228,7 +1228,7 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
     masm.movePtr(ImmGCPtr(templateObject), R0.scratchReg());
 
     ICNewObject_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     frame.push(R0);
@@ -1254,7 +1254,7 @@ BaselineCompiler::emit_JSOP_NEWINIT()
         masm.movePtr(ImmGCPtr(type), R1.scratchReg());
 
         ICNewArray_Fallback::Compiler stubCompiler(cx);
-        if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+        if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
             return false;
     } else {
         JS_ASSERT(key == JSProto_Object);
@@ -1275,7 +1275,7 @@ BaselineCompiler::emit_JSOP_NEWINIT()
         masm.movePtr(ImmGCPtr(templateObject), R0.scratchReg());
 
         ICNewObject_Fallback::Compiler stubCompiler(cx);
-        if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+        if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
             return false;
     }
 
@@ -1302,7 +1302,7 @@ BaselineCompiler::emit_JSOP_INITELEM()
 
     // Call IC.
     ICSetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Pop the rhs, so that the object is on the top of the stack.
@@ -1322,7 +1322,7 @@ BaselineCompiler::emit_JSOP_INITPROP()
 
     // Call IC.
     ICSetProp_Fallback::Compiler compiler(cx);
-    return emitIC(compiler.getStub(&stubSpace_));
+    return emitOpIC(compiler.getStub(&stubSpace_));
 }
 
 bool
@@ -1339,7 +1339,7 @@ BaselineCompiler::emit_JSOP_GETELEM()
 
     // Call IC.
     ICGetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1362,7 +1362,7 @@ BaselineCompiler::emit_JSOP_SETELEM()
 
     // Call IC.
     ICSetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     return true;
@@ -1392,7 +1392,7 @@ BaselineCompiler::emit_JSOP_GETGNAME()
 
     // Call IC.
     ICGetName_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1421,7 +1421,7 @@ BaselineCompiler::emit_JSOP_SETPROP()
 
     // Call IC.
     ICSetProp_Fallback::Compiler compiler(cx);
-    if (!emitIC(compiler.getStub(&stubSpace_)))
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
     // The IC will return the RHS value in R0, mark it as pushed value.
@@ -1449,7 +1449,7 @@ BaselineCompiler::emit_JSOP_GETPROP()
 
     // Call IC.
     ICGetProp_Fallback::Compiler compiler(cx);
-    if (!emitIC(compiler.getStub(&stubSpace_)))
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1497,7 +1497,7 @@ BaselineCompiler::emit_JSOP_GETALIASEDVAR()
     masm.loadValue(address, R0);
 
     ICTypeMonitor_Fallback::Compiler compiler(cx, (ICMonitoredFallbackStub *) NULL);
-    if (!emitIC(compiler.getStub(&stubSpace_)))
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
     frame.push(R0);
@@ -1528,7 +1528,7 @@ BaselineCompiler::emit_JSOP_NAME()
 
     // Call IC.
     ICGetName_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1551,7 +1551,7 @@ BaselineCompiler::emit_JSOP_BINDNAME()
 
     // Call IC.
     ICBindName_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Mark R0 as pushed stack value.
@@ -1755,7 +1755,7 @@ BaselineCompiler::emitCall()
 
     // Call IC
     ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ JSOp(*pc) == JSOP_NEW);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Update FrameInfo.
@@ -2016,7 +2016,7 @@ BaselineCompiler::emit_JSOP_TABLESWITCH()
 
     // Call IC.
     ICTableSwitch::Compiler compiler(cx, pc);
-    return emitIC(compiler.getStub(&stubSpace_));
+    return emitOpIC(compiler.getStub(&stubSpace_));
 }
 
 bool
@@ -2025,7 +2025,7 @@ BaselineCompiler::emit_JSOP_ITER()
     frame.popRegsAndSync(1);
 
     ICIteratorNew_Fallback::Compiler compiler(cx);
-    if (!emitIC(compiler.getStub(&stubSpace_)))
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
     frame.push(R0);
@@ -2039,7 +2039,7 @@ BaselineCompiler::emit_JSOP_MOREITER()
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
 
     ICIteratorMore_Fallback::Compiler compiler(cx);
-    if (!emitIC(compiler.getStub(&stubSpace_)))
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
     frame.push(R0);
@@ -2053,7 +2053,7 @@ BaselineCompiler::emit_JSOP_ITERNEXT()
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
 
     ICIteratorNext_Fallback::Compiler compiler(cx);
-    if (!emitIC(compiler.getStub(&stubSpace_)))
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
     frame.push(R0);
@@ -2066,7 +2066,7 @@ BaselineCompiler::emit_JSOP_ENDITER()
     frame.popRegsAndSync(1);
 
     ICIteratorClose_Fallback::Compiler compiler(cx);
-    return emitIC(compiler.getStub(&stubSpace_));
+    return emitOpIC(compiler.getStub(&stubSpace_));
 }
 
 bool

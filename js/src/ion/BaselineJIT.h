@@ -99,6 +99,9 @@ struct PCMappingEntry
 
 struct BaselineScript
 {
+  public:
+    static const uint32_t MAX_JSSCRIPT_LENGTH = 0x0fffffffu;
+
   private:
     // Code pointer containing the actual method.
     HeapPtr<IonCode> method_;
