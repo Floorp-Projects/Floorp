@@ -105,6 +105,9 @@
 // BreakpadController.
 - (void)setUploadingEnabled:(BOOL)enabled;
 
+// Check if there is currently a crash report to upload.
+- (void)hasReportToUpload:(void(^)(BOOL))callback;
+
 @end
 
 #endif  // CLIENT_IOS_HANDLER_IOS_BREAKPAD_CONTROLLER_H_

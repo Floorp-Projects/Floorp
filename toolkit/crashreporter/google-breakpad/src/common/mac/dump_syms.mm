@@ -53,9 +53,11 @@
 #include "common/mac/arch_utilities.h"
 #include "common/mac/macho_reader.h"
 #include "common/module.h"
+#include "common/scoped_ptr.h"
 #include "common/stabs_reader.h"
 #include "common/stabs_to_module.h"
 #include "common/symbol_data.h"
+#include "common/unique_string.h"
 
 #ifndef CPU_TYPE_ARM
 #define CPU_TYPE_ARM (static_cast<cpu_type_t>(12))
@@ -71,6 +73,7 @@ using google_breakpad::mach_o::Segment;
 using google_breakpad::Module;
 using google_breakpad::StabsReader;
 using google_breakpad::StabsToModule;
+using google_breakpad::scoped_ptr;
 using std::make_pair;
 using std::pair;
 using std::string;
@@ -439,7 +442,7 @@ bool DumpSymbols::LoadCommandDumper::SymtabCommand(const ByteBuffer &entries,
   return true;
 }
 
-bool DumpSymbols::WriteSymbolFile(std::ostream &stream) {
+bool DumpSymbols::ReadSymbolData(Module** out_module) {
   // Select an object file, if SetArchitecture hasn't been called to set one
   // explicitly.
   if (!selected_object_file_) {
@@ -490,8 +493,10 @@ bool DumpSymbols::WriteSymbolFile(std::ostream &stream) {
   identifier += "0";
 
   // Create a module to hold the debugging information.
-  Module module([module_name UTF8String], "mac", selected_arch_name,
-                identifier);
+  scoped_ptr<Module> module(new Module([module_name UTF8String],
+                                       "mac",
+                                       selected_arch_name,
+                                       identifier));
 
   // Parse the selected object file.
   mach_o::Reader::Reporter reporter(selected_object_name_);
@@ -504,11 +509,26 @@ bool DumpSymbols::WriteSymbolFile(std::ostream &stream) {
     return false;
 
   // Walk its load commands, and deal with whatever is there.
-  LoadCommandDumper load_command_dumper(*this, &module, reader, symbol_data_);
+  LoadCommandDumper load_command_dumper(*this, module.get(), reader,
+                                        symbol_data_);
   if (!reader.WalkLoadCommands(&load_command_dumper))
     return false;
 
-  return module.Write(stream, symbol_data_);
+  *out_module = module.release();
+
+  return true;
+}
+
+bool DumpSymbols::WriteSymbolFile(std::ostream &stream) {
+  Module* module = NULL;
+
+  if (ReadSymbolData(&module) && module) {
+    bool res = module->Write(stream, symbol_data_);
+    delete module;
+    return res;
+  }
+
+  return false;
 }
 
 }  // namespace google_breakpad

@@ -228,6 +228,13 @@ NSString* GetPlatform() {
   });
 }
 
+- (void)hasReportToUpload:(void(^)(BOOL))callback {
+  NSAssert(started_, @"The controller must be started before "
+                     "hasReportToUpload is called");
+  dispatch_async(queue_, ^{
+      callback(breakpadRef_ && BreakpadHasCrashReportToUpload(breakpadRef_));
+  });
+}
 
 #pragma mark -
 
