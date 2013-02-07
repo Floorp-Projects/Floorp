@@ -49,6 +49,8 @@ class MacroAssemblerARM : public Assembler
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
+    void convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail,
+                              bool negativeZeroCheck = true);
 
     void addDouble(FloatRegister src, FloatRegister dest);
     void subDouble(FloatRegister src, FloatRegister dest);

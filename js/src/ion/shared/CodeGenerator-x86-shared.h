@@ -60,8 +60,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
-    void emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck = true);
-
     Operand createArrayElementOperand(Register elements, const LAllocation *index);
 
     void emitCompare(MCompare::CompareType type, const LAllocation *left, const LAllocation *right);
