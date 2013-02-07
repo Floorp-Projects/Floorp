@@ -1176,7 +1176,7 @@ BaselineCompiler::emit_JSOP_CASE()
 
     // Call IC.
     ICCompare_Fallback::Compiler stubCompiler(cx);
-    if (!emitIC(stubCompiler.getStub(&stubSpace_)))
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     Register payload = masm.extractInt32(R0, R0.scratchReg());
