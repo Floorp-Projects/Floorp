@@ -1743,7 +1743,7 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
             }
 
             res->updateFromMatchPairs(cx, stableStr, matches);
-            if (!isTest && !CreateRegExpMatchResult(cx, stableStr, matches, rval.address()))
+            if (!isTest && !CreateRegExpMatchResult(cx, stableStr, matches, rval))
                 return false;
 
             if (!callback(cx, res, count, data))
@@ -1771,7 +1771,7 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
         if (isTest) {
             rval.setBoolean(true);
         } else {
-            if (!CreateRegExpMatchResult(cx, stableStr, matches, rval.address()))
+            if (!CreateRegExpMatchResult(cx, stableStr, matches, rval))
                 return false;
         }
 

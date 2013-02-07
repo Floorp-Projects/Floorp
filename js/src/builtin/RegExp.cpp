@@ -51,8 +51,8 @@ class RegExpMatchBuilder
 };
 
 bool
-js::CreateRegExpMatchResult(JSContext *cx, JSString *input_, StableCharPtr chars, size_t length,
-                            MatchPairs &matches, Value *rval)
+js::CreateRegExpMatchResult(JSContext *cx, HandleString input_, StableCharPtr chars, size_t length,
+                            MatchPairs &matches, MutableHandleValue rval)
 {
     RootedString input(cx, input_);
 
@@ -100,12 +100,13 @@ js::CreateRegExpMatchResult(JSContext *cx, JSString *input_, StableCharPtr chars
     if (!builder.setIndex(matches[0].start) || !builder.setInput(input))
         return false;
 
-    *rval = ObjectValue(*array);
+    rval.setObject(*array);
     return true;
 }
 
 bool
-js::CreateRegExpMatchResult(JSContext *cx, HandleString string, MatchPairs &matches, Value *rval)
+js::CreateRegExpMatchResult(JSContext *cx, HandleString string, MatchPairs &matches,
+                            MutableHandleValue rval)
 {
     Rooted<JSStableString*> input(cx, string->ensureStable(cx));
     if (!input)
@@ -141,7 +142,7 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re,
 bool
 js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
                         Handle<JSStableString*> input, StableCharPtr chars, size_t length,
-                        size_t *lastIndex, JSBool test, jsval *rval)
+                        size_t *lastIndex, bool test, MutableHandleValue rval)
 {
     RegExpGuard shared(cx);
     if (!reobj.getShared(cx, &shared))
@@ -158,13 +159,13 @@ js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
 
     if (status == RegExpRunStatus_Success_NotFound) {
         /* ExecuteRegExp() previously returned an array or null. */
-        rval->setNull();
+        rval.setNull();
         return true;
     }
 
     if (test) {
         /* Forbid an array, as an optimization. */
-        rval->setBoolean(true);
+        rval.setBoolean(true);
         return true;
     }
 
@@ -638,7 +639,7 @@ regexp_exec_impl(JSContext *cx, CallArgs args)
      * and CreateRegExpMatchResult().
      */
     RootedObject regexp(cx, &args.thisv().toObject());
-    RootedString string(cx, ToString<CanGC>(cx, (args.length() > 0) ? args[0] : UndefinedValue()));
+    RootedString string(cx, ToString<CanGC>(cx, args.get(0)));
     if (!string)
         return false;
 
@@ -652,7 +653,7 @@ regexp_exec_impl(JSContext *cx, CallArgs args)
         return true;
     }
 
-    return CreateRegExpMatchResult(cx, string, matches, args.rval().address());
+    return CreateRegExpMatchResult(cx, string, matches, args.rval());
 }
 
 JSBool
