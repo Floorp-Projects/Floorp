@@ -10,6 +10,11 @@ typedef %(returnType)s (*%(functionName)s_t)(%(paramTypes)s);
 static %(functionName)s_t f_%(functionName)s;
 extern "C" NS_EXPORT %(returnType)s JNICALL
 %(functionName)s(%(parameterList)s) {
+    if (!f_%(functionName)s) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return %(returnValue)s;
+    }
     %(returnKeyword)s f_%(functionName)s(%(arguments)s);
 }
 '''
@@ -60,6 +65,17 @@ class Generator:
             if match:
                 paramTypes = re.split('\s*,\s*', match.group(1))
                 paramNames = ['arg%d' % i for i in range(0, len(paramTypes))]
+                if returnType == 'void':
+                    returnValue = ''
+                elif returnType == 'jobject':
+                    returnValue = 'NULL'
+                elif returnType in ('jint', 'jfloat'):
+                    returnValue = '0'
+                else:
+                    raise Exception(('Unsupported JNI return type %s found; '
+                                     + 'please update mobile/android/base/'
+                                     + 'jni-generator.py to handle this case!')
+                                    % returnType)
 
                 self.write('JNI_STUBS', STUB_TEMPLATE % {
                     'returnType': returnType,
@@ -68,6 +84,7 @@ class Generator:
                     'parameterList': ', '.join('%s %s' % param
                                      for param in zip(paramTypes, paramNames)),
                     'arguments': ', '.join(paramNames),
+                    'returnValue': returnValue,
                     'returnKeyword': 'return' if returnType != 'void' else ''})
                 self.write('JNI_BINDINGS', BINDING_TEMPLATE % {
                     'functionName': functionName})
