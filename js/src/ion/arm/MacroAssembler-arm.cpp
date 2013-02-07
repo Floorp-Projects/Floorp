@@ -68,6 +68,30 @@ MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, const Register
     ma_b(fail, Assembler::Equal);
 }
 
+// Checks whether a double is representable as a 32-bit integer. If so, the
+// integer is written to the output register. Otherwise, a bailout is taken to
+// the given snapshot. This function overwrites the scratch float register.
+void
+MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck)
+{
+    // convert the floating point value to an integer, if it did not fit,
+    //     then when we convert it *back* to  a float, it will have a
+    //     different value, which we can test.
+    ma_vcvt_F64_I32(src, ScratchFloatReg);
+    // move the value into the dest register.
+    ma_vxfer(ScratchFloatReg, dest);
+    ma_vcvt_I32_F64(ScratchFloatReg, ScratchFloatReg);
+    ma_vcmp(src, ScratchFloatReg);
+    as_vmrs(pc);
+    ma_b(fail, Assembler::VFP_NotEqualOrUnordered);
+    // If they're equal, test for 0.  It would be nicer to test for -0.0 explicitly, but that seems hard.
+    if (negativeZeroCheck) {
+        ma_cmp(dest, Imm32(0));
+        ma_b(fail, Assembler::Equal);
+        // guard for != 0.
+    }
+}
+
 void
 MacroAssemblerARM::negateDouble(FloatRegister reg)
 {

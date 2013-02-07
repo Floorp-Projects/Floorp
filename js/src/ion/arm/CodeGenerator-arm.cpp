@@ -1030,30 +1030,6 @@ CodeGeneratorARM::visitRound(LRound *lir)
     return true;
 }
 
-// Checks whether a double is representable as a 32-bit integer. If so, the
-// integer is written to the output register. Otherwise, a bailout is taken to
-// the given snapshot. This function overwrites the scratch float register.
-void
-CodeGeneratorARM::emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck)
-{
-    // convert the floating point value to an integer, if it did not fit,
-    //     then when we convert it *back* to  a float, it will have a
-    //     different value, which we can test.
-    masm.ma_vcvt_F64_I32(src, ScratchFloatReg);
-    // move the value into the dest register.
-    masm.ma_vxfer(ScratchFloatReg, dest);
-    masm.ma_vcvt_I32_F64(ScratchFloatReg, ScratchFloatReg);
-    masm.ma_vcmp(src, ScratchFloatReg);
-    masm.as_vmrs(pc);
-    masm.ma_b(fail, Assembler::VFP_NotEqualOrUnordered);
-    // If they're equal, test for 0.  It would be nicer to test for -0.0 explicitly, but that seems hard.
-    if (negativeZeroCheck) {
-        masm.ma_cmp(dest, Imm32(0));
-        masm.ma_b(fail, Assembler::Equal);
-        // guard for != 0.
-    }
-}
-
 void
 CodeGeneratorARM::emitRoundDouble(const FloatRegister &src, const Register &dest, Label *fail)
 {
