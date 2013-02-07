@@ -1826,7 +1826,7 @@ HyperTextAccessible::SetSelectionBounds(int32_t aSelectionNum,
 
   nsRefPtr<nsRange> range;
   if (aSelectionNum == rangeCount)
-    range = new nsRange();
+    range = new nsRange(mContent);
   else
     range = domSel->GetRangeAt(aSelectionNum);
 
@@ -1888,7 +1888,7 @@ HyperTextAccessible::ScrollSubstringTo(int32_t aStartIndex, int32_t aEndIndex,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<nsRange> range = new nsRange();
+  nsRefPtr<nsRange> range = new nsRange(mContent);
   nsresult rv = HypertextOffsetsToDOMRange(aStartIndex, aEndIndex, range);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1912,7 +1912,7 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartIndex,
   nsIntPoint coords = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
                                                         this);
 
-  nsRefPtr<nsRange> range = new nsRange();
+  nsRefPtr<nsRange> range = new nsRange(mContent);
   nsresult rv = HypertextOffsetsToDOMRange(aStartIndex, aEndIndex, range);
   NS_ENSURE_SUCCESS(rv, rv);
 
