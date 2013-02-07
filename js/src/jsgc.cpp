@@ -1188,7 +1188,7 @@ PushArenaAllocatedDuringSweep(JSRuntime *runtime, ArenaHeader *arena)
 }
 
 void *
-ArenaLists::parallelAllocate(JSCompartment *comp, AllocKind thingKind, size_t thingSize)
+ArenaLists::parallelAllocate(Zone *zone, AllocKind thingKind, size_t thingSize)
 {
     /*
      * During parallel Rivertrail sections, no GC is permitted. If no
@@ -1201,7 +1201,7 @@ ArenaLists::parallelAllocate(JSCompartment *comp, AllocKind thingKind, size_t th
     if (t)
         return t;
 
-    return allocateFromArena(comp, thingKind);
+    return allocateFromArena(zone, thingKind);
 }
 
 inline void *
@@ -2547,7 +2547,7 @@ SweepCompartments(FreeOp *fop, bool lastGC)
     while (read < end) {
         JSCompartment *compartment = *read++;
 
-        if (!compartment->hold && compartment->wasGCStarted() &&
+        if (!compartment->hold && compartment->zone()->wasGCStarted() &&
             (compartment->zone()->allocator.arenas.arenaListsAreEmpty() || lastGC))
         {
             compartment->zone()->allocator.arenas.checkEmptyFreeLists();
@@ -2566,8 +2566,8 @@ SweepCompartments(FreeOp *fop, bool lastGC)
 static void
 PurgeRuntime(JSRuntime *rt)
 {
-    for (GCZonesIter zone(rt); !zone.done(); zone.next())
-        zone->purge();
+    for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
+        comp->purge();
 
     rt->freeLifoAlloc.transferUnusedFrom(&rt->tempLifoAlloc);
 
@@ -3953,11 +3953,10 @@ AutoGCSession::~AutoGCSession()
 #endif
 
     /* Clear gcMallocBytes for all compartments */
-    for (CompartmentsIter c(runtime); !c.done(); c.next())
-        c->resetGCMallocBytes();
-
-    for (ZonesIter zone(runtime); !zone.done(); zone.next())
+    for (ZonesIter zone(runtime); !zone.done(); zone.next()) {
+        zone->resetGCMallocBytes();
         zone->unscheduleGC();
+    }
 
     runtime->resetGCMallocBytes();
 }
@@ -4283,10 +4282,8 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
         {
             reset = true;
         }
-    }
 
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->isTooMuchMalloc()) {
+        if (zone->isTooMuchMalloc()) {
             *budget = SliceBudget::Unlimited;
             rt->gcStats.nonincremental("malloc bytes trigger");
         }

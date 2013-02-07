@@ -2667,7 +2667,7 @@ JSObject::growElements(JSContext *cx, unsigned newcap)
 {
     size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
 
-    if (!growElements(&cx->compartment->allocator, newcap)) {
+    if (!growElements(&cx->zone()->allocator, newcap)) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
