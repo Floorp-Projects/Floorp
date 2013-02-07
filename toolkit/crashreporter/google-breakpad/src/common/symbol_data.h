@@ -1,4 +1,6 @@
-// Copyright (c) 2012, Google Inc.
+// -*- mode: c++ -*-
+
+// Copyright (c) 2013 Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,50 +29,14 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <sys/ucontext.h>
+#ifndef COMMON_SYMBOL_DATA_H_
+#define COMMON_SYMBOL_DATA_H_
 
-#include "breakpad_googletest_includes.h"
-#include "common/android/ucontext_constants.h"
+// Control what data is used from the symbol file.
+enum SymbolData {
+  ALL_SYMBOL_DATA,
+  NO_CFI,
+  ONLY_CFI
+};
 
-TEST(AndroidUContext, GRegsOffset) {
-#ifdef __arm__
-  // There is no gregs[] array on ARM, so compare to the offset of
-  // first register fields, since they're stored in order.
-  ASSERT_EQ(MCONTEXT_GREGS_OFFSET, offsetof(ucontext_t,uc_mcontext.arm_r0));
-#elif defined(__i386__)
-  ASSERT_EQ(MCONTEXT_GREGS_OFFSET, offsetof(ucontext_t,uc_mcontext.gregs));
-#define CHECK_REG(x) \
-  ASSERT_EQ(MCONTEXT_##x##_OFFSET, \
-            offsetof(ucontext_t,uc_mcontext.gregs[REG_##x]))
-  CHECK_REG(GS);
-  CHECK_REG(FS);
-  CHECK_REG(ES);
-  CHECK_REG(DS);
-  CHECK_REG(EDI);
-  CHECK_REG(ESI);
-  CHECK_REG(EBP);
-  CHECK_REG(ESP);
-  CHECK_REG(EBX);
-  CHECK_REG(EDX);
-  CHECK_REG(ECX);
-  CHECK_REG(EAX);
-  CHECK_REG(TRAPNO);
-  CHECK_REG(ERR);
-  CHECK_REG(EIP);
-  CHECK_REG(CS);
-  CHECK_REG(EFL);
-  CHECK_REG(UESP);
-  CHECK_REG(SS);
-
-  ASSERT_EQ(UCONTEXT_FPREGS_OFFSET, offsetof(ucontext_t,uc_mcontext.fpregs));
-
-  ASSERT_EQ(UCONTEXT_FPREGS_MEM_OFFSET,
-            offsetof(ucontext_t,__fpregs_mem));
-#else
-  ASSERT_EQ(MCONTEXT_GREGS_OFFSET, offsetof(ucontext_t,uc_mcontext.gregs));
-#endif
-}
-
-TEST(AndroidUContext, SigmakOffset) {
-  ASSERT_EQ(UCONTEXT_SIGMASK_OFFSET, offsetof(ucontext_t,uc_sigmask));
-}
+#endif  // COMMON_SYMBOL_DATA_H_
