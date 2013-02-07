@@ -103,6 +103,9 @@
 		D21F97D711CBA12300239E38 /* test_assembler_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FB0D9116CEC0600407530 /* test_assembler_unittest.cc */; };
 		D21F97D811CBA13D00239E38 /* libgtestmockall.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B88FB024116BDFFF00407530 /* libgtestmockall.a */; };
 		D21F97E911CBA1FF00239E38 /* test_assembler.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FAE0911665B5700407530 /* test_assembler.cc */; };
+		D24997CC16B6C16800E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
+		D24997CD16B6C16800E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
+		D24997CE16B6C16800E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -343,6 +346,8 @@
 		B8C5B5111166531A00D34F4E /* dump_syms */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = dump_syms; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8E8CA0C1156C854009E61B2 /* byteswap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = byteswap.h; path = ../../../common/mac/byteswap.h; sourceTree = SOURCE_ROOT; };
 		D21F97D211CBA0F200239E38 /* test_assembler_unittest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_assembler_unittest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D24997CA16B6C16800E588C5 /* unique_string.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = unique_string.cc; path = ../../../common/unique_string.cc; sourceTree = "<group>"; };
+		D24997CB16B6C16800E588C5 /* unique_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = unique_string.h; path = ../../../common/unique_string.h; sourceTree = "<group>"; };
 		F95B422B0E0E22D100DBDE83 /* bytereader-inl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "bytereader-inl.h"; path = "../../../common/dwarf/bytereader-inl.h"; sourceTree = SOURCE_ROOT; };
 		F95B422C0E0E22D100DBDE83 /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
 		F95B422D0E0E22D100DBDE83 /* bytereader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bytereader.h; path = ../../../common/dwarf/bytereader.h; sourceTree = SOURCE_ROOT; };
@@ -536,6 +541,8 @@
 		B88FAE1C11665FFD00407530 /* MODULE */ = {
 			isa = PBXGroup;
 			children = (
+				D24997CA16B6C16800E588C5 /* unique_string.cc */,
+				D24997CB16B6C16800E588C5 /* unique_string.h */,
 				B88FAE1E1166603300407530 /* dwarf_cu_to_module.cc */,
 				B88FAE1F1166603300407530 /* dwarf_cu_to_module.h */,
 				B88FB0D6116CEC0600407530 /* dwarf_cu_to_module_unittest.cc */,
@@ -985,6 +992,7 @@
 			files = (
 				B88FB0BD116CEAE000407530 /* module_unittest.cc in Sources */,
 				B88FB0C4116CEB4100407530 /* module.cc in Sources */,
+				D24997CE16B6C16800E588C5 /* unique_string.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1025,6 +1033,7 @@
 				B88FB129116CF2DD00407530 /* module.cc in Sources */,
 				B88FB12A116CF2DD00407530 /* dwarf_cfi_to_module.cc in Sources */,
 				B88FB12B116CF2DD00407530 /* dwarf_cfi_to_module_unittest.cc in Sources */,
+				D24997CD16B6C16800E588C5 /* unique_string.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1088,6 +1097,7 @@
 				B88FAE3B11666C6F00407530 /* stabs_reader.cc in Sources */,
 				B88FAE3E11666C8900407530 /* stabs_to_module.cc in Sources */,
 				4D72CAF513DFBAC2006CABE3 /* md5.cc in Sources */,
+				D24997CC16B6C16800E588C5 /* unique_string.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -237,6 +237,9 @@ for (var test of data) {
          "validation message");
       break;
     case 'time':
+      // Don't worry about that.
+      input.step = 'any';
+
       input.min = '20:20';
       input.value = '20:20:01';
       checkValidity(input, true, apply, apply);

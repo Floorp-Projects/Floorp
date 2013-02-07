@@ -62,7 +62,7 @@ FindExceptionHandler(JSContext *cx)
         for (TryNoteIter tni(cx, cx->regs()); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
-            UnwindScope(cx, tn->stackDepth);
+            UnwindScope(cx, cx->fp(), tn->stackDepth);
 
             /*
              * Set pc to the first bytecode after the the try note to point
@@ -599,7 +599,7 @@ js_InternalThrow(VMFrame &f)
         // prologues and epilogues. Interpret(), and Invoke() all rely on this
         // property.
         JS_ASSERT(!f.fp()->finishedInInterpreter());
-        UnwindScope(cx, 0);
+        UnwindScope(cx, cx->fp(), 0);
         f.regs.setToEndOfScript();
 
         if (cx->compartment->debugMode()) {

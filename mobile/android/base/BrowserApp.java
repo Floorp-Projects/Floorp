@@ -29,6 +29,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -1146,6 +1147,20 @@ abstract public class BrowserApp extends GeckoApp
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    /**
+     * This will detect if the key pressed is back. If so, will show the history.
+     */
+    @Override
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                return tab.showAllHistory();
+            }
+        }
+        return super.onKeyLongPress(keyCode, event);
     }
 
     /*

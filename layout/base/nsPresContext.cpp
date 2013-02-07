@@ -811,6 +811,8 @@ nsPresContext::AppUnitsPerDevPixelChanged()
     // All cached style data must be recomputed.
     MediaFeatureValuesChanged(eAlwaysRebuildStyle, NS_STYLE_HINT_REFLOW);
   }
+
+  mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
 
 void
@@ -1403,8 +1405,6 @@ nsPresContext::SetFullZoom(float aZoom)
   AppUnitsPerDevPixelChanged();
 
   mSupressResizeReflow = false;
-
-  mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
 
 float

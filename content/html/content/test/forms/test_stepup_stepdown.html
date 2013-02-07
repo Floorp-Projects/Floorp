@@ -48,6 +48,7 @@ function checkAvailability()
     ["button", false],
     ["number", true],
     ["date", true],
+    ["time", true],
     // The next types have not been implemented but will fallback to "text"
     // which has the same value.
     ["color", false],
@@ -58,7 +59,6 @@ function checkAvailability()
     ["datetime", true],
     ["month", true],
     ["week", true],
-    ["time", true],
     ["datetime-local", true],
     ["range", true],
   ];
@@ -229,8 +229,8 @@ function checkStepDown()
     [ '2012-01-04',  '2',    '2012-01-01',  null,         null,  '2012-01-03',  false ],
     [ '2012-01-06',  '2',    '2012-01-01',  null,         2,     '2012-01-03',  false ],
     [ '2012-01-05',  '2',    '2012-01-04',  '2012-01-08', null,  '2012-01-04',  false ],
-    [ '1970-01-04',  '2',    null,          null,         null,  '1970-01-03',  false ],
-    [ '1970-01-09',  '3',    null,          null,         null,  '1970-01-07',  false ],
+    [ '1970-01-04',  '2',    null,          null,         null,  '1970-01-02',  false ],
+    [ '1970-01-09',  '3',    null,          null,         null,  '1970-01-06',  false ],
     // Clamping.
     [ '2012-05-01',  null,   null,          '2012-01-05', null,  '2012-01-05',  false ],
     [ '1970-01-05',  '2',    '1970-01-02',  '1970-01-05', null,  '1970-01-04',  false ],
@@ -245,6 +245,70 @@ function checkStepDown()
     [ '2012-01-01',  'ANY',  null,  null,  1,  null,  true ],
     [ '2012-01-01',  'AnY',  null,  null,  1,  null,  true ],
     [ '2012-01-01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
+  { type: 'time', data: [
+    // Regular case.
+    [ '16:39',  null,  null,  null,  null, '16:38',   false ],
+    // Argument testing.
+    [ '16:40',  null,  null,  null,  1,    '16:39',   false ],
+    [ '16:40',  null,  null,  null,  5,    '16:35',   false ],
+    [ '16:40',  null,  null,  null,  -1,    '16:41',   false ],
+    [ '16:40',  null,  null,  null,  0,    '16:40',   false ],
+    // hour/minutes/seconds wrapping.
+    [ '05:00',  null,  null,  null, null,   '04:59',   false ],
+    [ '05:00:00', 1,   null,  null, null,   '04:59:59',   false ],
+    [ '05:00:00', 0.1, null,  null, null,   '04:59:59.900',   false ],
+    [ '05:00:00', 0.01, null, null, null,   '04:59:59.990',   false ],
+    [ '05:00:00', 0.001, null, null, null,  '04:59:59.999',   false ],
+    // stepDown() on '00:00' gives '23:59'.
+    [ '00:00',  null,  null,  null,  1,    '23:59',   false ],
+    [ '00:00',  null,  null,  null,  3,    '23:57',   false ],
+    // Some random step values..
+    [ '16:56',  '0.5', null,  null,  null, '16:55:59.500',   false ],
+    [ '16:56',  '2',   null,  null,  null, '16:55:58',   false ],
+    [ '16:56',  '0.25',null,  null,  4,    '16:55:59',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  1,    '16:56:59.900',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  2,    '16:56:58.800',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  10,   '16:56:50',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  11,   '16:56:48.900',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  8,    '16:56:52.200',   false ],
+    // Invalid @step, means that we use the default value.
+    [ '17:01',  '0',   null,  null,  null, '17:00',   false ],
+    [ '17:01',  '-1',  null,  null,  null, '17:00',   false ],
+    [ '17:01',  'foo', null,  null,  null, '17:00',   false ],
+    // Min values testing.
+    [ '17:02',  '60',    'foo',        null,  2,     '17:00',  false ],
+    [ '17:10',  '60',    '17:09', null,  null,  '17:09',  false ],
+    [ '17:10',  '60',    '17:10', null,  null,  '17:10',  false ],
+    [ '17:10',  '60',    '17:30', null,  1,     '17:10',  false ],
+    [ '17:10',  '180',    '17:05', null,  null,  '17:08',  false ],
+    [ '17:10',  '300',    '17:10', '17:11', null,  '17:10',  false ],
+    // Max values testing.
+    [ '17:15',  '60',   null,  'foo',    null,  '17:14',  false ],
+    [ '17:15',  null,   null,  '17:20',  null,  '17:14',  false ],
+    [ '17:15',  null,   null,  '17:15',  null,  '17:14',  false ],
+    [ '17:15',  null,   null,  '17:13',  4,     '17:11',  false ],
+    [ '17:15',  '120',  null,  '17:13',  3,     '17:09',  false ],
+    // Step mismatch.
+    [ '17:19',  '120',  '17:10',  null,    null,  '17:18',  false ],
+    [ '17:19',  '120',  '17:10',  null,    2,     '17:16',  false ],
+    [ '17:19',  '120',  '17:18',  '17:25', null,  '17:18',  false ],
+    [ '17:19',  '120',  null,     null,    null,  '17:17',  false ],
+    [ '17:19',  '180',  null,     null,    null,  '17:16',  false ],
+    // Clamping.
+    [ '17:22',  null,   null,     '17:11', null,  '17:11',  false ],
+    [ '17:22',  '120',  '17:20',  '17:22', null,  '17:20',  false ],
+    [ '17:22',  '300',  '17:12',  '17:20', 10,    '17:12',  false ],
+    [ '17:22',  '300',  '17:18',  '17:20', 2,     '17:18',  false ],
+    [ '17:22',  '180',  '17:00',  '17:20', 15,    '17:00',  false ],
+    [ '17:22',  '180',  '17:10',  '17:20', 2,     '17:16',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '',    false ],
+    // With step = 'any'.
+    [ '17:26',  'any',  null,  null,  1,  null,  true ],
+    [ '17:26',  'ANY',  null,  null,  1,  null,  true ],
+    [ '17:26',  'AnY',  null,  null,  1,  null,  true ],
+    [ '17:26',  'aNy',  null,  null,  1,  null,  true ],
   ]},
   ];
 
@@ -410,9 +474,9 @@ function checkStepUp()
     [ '2012-01-02',  '2',    '2012-01-01',  null,         null,  '2012-01-03',  false ],
     [ '2012-01-02',  '2',    '2012-01-01',  null,         2,     '2012-01-05',  false ],
     [ '2012-01-05',  '2',    '2012-01-01',  '2012-01-06', null,  '2012-01-05',  false ],
-    [ '1970-01-02',  '2',    null,          null,         null,  '1970-01-03',  false ],
-    [ '1970-01-05',  '3',    null,          null,         null,  '1970-01-07',  false ],
-    [ '1970-01-03',  '3',    null,          null,         null,  '1970-01-04',  false ],
+    [ '1970-01-02',  '2',    null,          null,         null,  '1970-01-04',  false ],
+    [ '1970-01-05',  '3',    null,          null,         null,  '1970-01-08',  false ],
+    [ '1970-01-03',  '3',    null,          null,         null,  '1970-01-06',  false ],
     [ '1970-01-03',  '3',    '1970-01-02',  null,         null,  '1970-01-05',  false ],
     // Clamping.
     [ '2012-01-01',  null,   '2012-01-31',  null,         null,  '2012-01-31',  false ],
@@ -428,6 +492,70 @@ function checkStepUp()
     [ '2012-01-01',  'ANY',  null,  null,  1,  null,  true ],
     [ '2012-01-01',  'AnY',  null,  null,  1,  null,  true ],
     [ '2012-01-01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
+  { type: 'time', data: [
+    // Regular case.
+    [ '16:39',  null,  null,  null,  null, '16:40',   false ],
+    // Argument testing.
+    [ '16:40',  null,  null,  null,  1,    '16:41',   false ],
+    [ '16:40',  null,  null,  null,  5,    '16:45',   false ],
+    [ '16:40',  null,  null,  null,  -1,   '16:39',   false ],
+    [ '16:40',  null,  null,  null,  0,    '16:40',   false ],
+    // hour/minutes/seconds wrapping.
+    [ '04:59',  null,  null,  null, null,   '05:00',  false ],
+    [ '04:59:59', 1,   null,  null, null,   '05:00',  false ],
+    [ '04:59:59.900', 0.1,  null,  null, null, '05:00',  false ],
+    [ '04:59:59.990', 0.01, null,  null, null, '05:00',  false ],
+    [ '04:59:59.999', 0.001, null, null, null, '05:00',  false ],
+    // stepUp() on '23:59' gives '00:00'.
+    [ '23:59',  null,  null,  null,  1,    '00:00',   false ],
+    [ '23:59',  null,  null,  null,  3,    '00:02',   false ],
+    // Some random step values..
+    [ '16:56',  '0.5', null,  null,  null, '16:56:00.500',   false ],
+    [ '16:56',  '2',   null,  null,  null, '16:56:02',   false ],
+    [ '16:56',  '0.25',null,  null,  4,    '16:56:01',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  1,    '16:57:01',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  2,    '16:57:02.100',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  10,   '16:57:10.900',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  11,   '16:57:12',   false ],
+    [ '16:57',  '1.1',  '16:00', null,  8,    '16:57:08.700',   false ],
+    // Invalid @step, means that we use the default value.
+    [ '17:01',  '0',   null,  null,  null, '17:02',   false ],
+    [ '17:01',  '-1',  null,  null,  null, '17:02',   false ],
+    [ '17:01',  'foo', null,  null,  null, '17:02',   false ],
+    // Min values testing.
+    [ '17:02',  '60',    'foo',        null,  2, '17:04',  false ],
+    [ '17:10',  '60',    '17:09', null,  null,   '17:11',  false ],
+    [ '17:10',  '60',    '17:10', null,  null,   '17:11',  false ],
+    [ '17:10',  '60',    '17:30', null,  1,      '17:30',  false ],
+    [ '17:10',  '180',    '17:05', null,  null,  '17:11',  false ],
+    [ '17:10',  '300',    '17:10', '17:11', null,'17:10',  false ],
+    // Max values testing.
+    [ '17:15',  '60',   null,  'foo',    null,  '17:16',  false ],
+    [ '17:15',  null,   null,  '17:20',  null,  '17:16',  false ],
+    [ '17:15',  null,   null,  '17:15',  null,  '17:15',  false ],
+    [ '17:15',  null,   null,  '17:13',  4,     '17:15',  false ],
+    [ '17:15',  '120',  null,  '17:13',  3,     '17:15',  false ],
+    // Step mismatch.
+    [ '17:19',  '120',  '17:10',  null,    null,  '17:20',  false ],
+    [ '17:19',  '120',  '17:10',  null,    2,     '17:22',  false ],
+    [ '17:19',  '120',  '17:18',  '17:25', null,  '17:20',  false ],
+    [ '17:19',  '120',  null,     null,    null,  '17:21',  false ],
+    [ '17:19',  '180',  null,     null,    null,  '17:22',  false ],
+    // Clamping.
+    [ '17:22',  null,   null,     '17:11', null,  '17:22',  false ],
+    [ '17:22',  '120',  '17:20',  '17:22', null,  '17:22',  false ],
+    [ '17:22',  '300',  '17:12',  '17:20', 10,    '17:22',  false ],
+    [ '17:22',  '300',  '17:18',  '17:20', 2,     '17:22',  false ],
+    [ '17:22',  '180',  '17:00',  '17:20', 15,    '17:22',  false ],
+    [ '17:22',  '180',  '17:10',  '17:20', 2,     '17:22',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '',    false ],
+    // With step = 'any'.
+    [ '17:26',  'any',  null,  null,  1,  null,  true ],
+    [ '17:26',  'ANY',  null,  null,  1,  null,  true ],
+    [ '17:26',  'AnY',  null,  null,  1,  null,  true ],
+    [ '17:26',  'aNy',  null,  null,  1,  null,  true ],
   ]},
   ];
 

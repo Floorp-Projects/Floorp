@@ -49,8 +49,6 @@ EXPORTS_mozilla/dom/network = \
 CPPSRCS = \
   Connection.cpp \
   Utils.cpp \
-  USSDReceivedEvent.cpp \
-  DataErrorEvent.cpp \
   TCPSocketParent.cpp \
   TCPSocketChild.cpp \
   $(NULL)
@@ -58,7 +56,6 @@ CPPSRCS = \
 ifdef MOZ_B2G_RIL
 CPPSRCS += \
   MobileConnection.cpp \
-  CFStateChangeEvent.cpp \
   $(NULL)
 endif
 
