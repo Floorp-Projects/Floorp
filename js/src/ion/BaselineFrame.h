@@ -284,17 +284,13 @@ class BaselineFrame
         return evalScript_;
     }
 
-    void setEvalPrev(AbstractFramePtr prev) {
-        JS_ASSERT(isEvalFrame());
-        flags_ |= HAS_EVAL_PREV;
-        evalPrev_ = prev;
-    }
-
     AbstractFramePtr evalPrev() const {
         JS_ASSERT(isEvalFrame());
         JS_ASSERT(flags_ & HAS_EVAL_PREV);
         return evalPrev_;
     }
+
+    void initEvalPrev(JSContext *cx);
 
     void trace(JSTracer *trc);
 
