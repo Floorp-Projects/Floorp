@@ -533,20 +533,18 @@ ReferenceFinder::findReferences(HandleObject target)
 JSBool
 FindReferences(JSContext *cx, unsigned argc, jsval *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() < 1) {
+    if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "findReferences", "0", "s");
         return false;
     }
 
-    if (!args[0].isObject()) {
+    JS::Value target = JS_ARGV(cx, vp)[0];
+    if (!target.isObject()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                              "argument", "not an object");
         return false;
     }
-    RootedObject target(cx, &args[0].toObject());
 
     /* Walk the JSRuntime, producing a reversed map of the heap. */
     HeapReverser reverser(cx);
@@ -555,7 +553,8 @@ FindReferences(JSContext *cx, unsigned argc, jsval *vp)
 
     /* Given the reversed map, find the referents of target. */
     ReferenceFinder finder(cx, reverser);
-    JSObject *references = finder.findReferences(target);
+    Rooted<JSObject*> targetObj(cx, &target.toObject());
+    JSObject *references = finder.findReferences(targetObj);
     if (!references)
         return false;
 
