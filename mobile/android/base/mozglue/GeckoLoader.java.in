@@ -1,0 +1,272 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko.mozglue;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Environment;
+import android.util.Log;
+
+import java.io.File;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
+import java.util.Locale;
+
+public final class GeckoLoader {
+    private static final String LOGTAG = "GeckoLoader";
+
+    private static File sCacheFile;
+    private static File sGREDir;
+
+    private static final Object sLibLoadingLock = new Object();
+    // Must hold sLibLoadingLock while accessing the following boolean variables.
+    private static boolean sSQLiteLibsLoaded;
+    private static boolean sNSSLibsLoaded;
+    private static boolean sMozGlueLoaded;
+    private static boolean sLibsSetup;
+
+    private GeckoLoader() {
+        // prevent instantiation
+    }
+
+    public static File getCacheDir(Context context) {
+        if (sCacheFile == null) {
+            sCacheFile = context.getCacheDir();
+        }
+        return sCacheFile;
+    }
+
+    public static File getGREDir(Context context) {
+        if (sGREDir == null) {
+            sGREDir = new File(context.getApplicationInfo().dataDir);
+        }
+        return sGREDir;
+    }
+
+    private static void setupPluginEnvironment(Context context, String[] pluginDirs) {
+        // setup plugin path directories
+        try {
+            // Check to see if plugins were blocked.
+            if (pluginDirs == null) {
+                putenv("MOZ_PLUGINS_BLOCKED=1");
+                putenv("MOZ_PLUGIN_PATH=");
+                return;
+            }
+
+            StringBuffer pluginSearchPath = new StringBuffer();
+            for (int i = 0; i < pluginDirs.length; i++) {
+                pluginSearchPath.append(pluginDirs[i]);
+                pluginSearchPath.append(":");
+            }
+            putenv("MOZ_PLUGIN_PATH="+pluginSearchPath);
+
+            File pluginDataDir = context.getDir("plugins", 0);
+            putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());
+
+        } catch (Exception ex) {
+            Log.w(LOGTAG, "Caught exception getting plugin dirs.", ex);
+        }
+    }
+
+    private static void setupDownloadEnvironment(Context context) {
+        try {
+            File downloadDir = null;
+            File updatesDir  = null;
+            if (Build.VERSION.SDK_INT >= 8) {
+                downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                updatesDir  = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            }
+            if (downloadDir == null) {
+                downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
+            }
+            if (updatesDir == null) {
+                updatesDir = downloadDir;
+            }
+            putenv("DOWNLOADS_DIRECTORY=" + downloadDir.getPath());
+            putenv("UPDATES_DIRECTORY="   + updatesDir.getPath());
+        }
+        catch (Exception e) {
+            Log.w(LOGTAG, "No download directory found.", e);
+        }
+    }
+
+    @SuppressWarnings("deprecation") // Context.MODE_WORLD_* is deprecated in android-17
+    private static File getTmpDir(Context context) {
+        return context.getDir("tmp", Context.MODE_WORLD_READABLE |
+                              Context.MODE_WORLD_WRITEABLE );
+    }
+
+    public static void setupGeckoEnvironment(Context context, String[] pluginDirs, String profilePath) {
+        setupPluginEnvironment(context, pluginDirs);
+        setupDownloadEnvironment(context);
+
+        // profile home path
+        putenv("HOME=" + profilePath);
+
+        // setup the tmp path
+        File f = getTmpDir(context);
+        if (!f.exists()) {
+            f.mkdirs();
+        }
+        putenv("TMPDIR=" + f.getPath());
+
+        // setup the downloads path
+        f = Environment.getDownloadCacheDirectory();
+        putenv("EXTERNAL_STORAGE=" + f.getPath());
+
+        // setup the app-specific cache path
+        f = context.getCacheDir();
+        putenv("CACHE_DIRECTORY=" + f.getPath());
+
+        /* We really want to use this code, but it requires bumping up the SDK to 17 so for now
+           we will use reflection. See https://bugzilla.mozilla.org/show_bug.cgi?id=811763#c11
+        
+        if (Build.VERSION.SDK_INT >= 17) {
+            android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);
+            if (um != null) {
+                putenv("MOZ_ANDROID_USER_SERIAL_NUMBER=" + um.getSerialNumberForUser(android.os.Process.myUserHandle()));
+            } else {
+                Log.d(LOGTAG, "Unable to obtain user manager service on a device with SDK version " + Build.VERSION.SDK_INT);
+            }
+        }
+        */
+        try {
+            Object userManager = context.getSystemService("user");
+            if (userManager != null) {
+                // if userManager is non-null that means we're running on 4.2+ and so the rest of this
+                // should just work
+                Object userHandle = android.os.Process.class.getMethod("myUserHandle", (Class[])null).invoke(null);
+                Object userSerial = userManager.getClass().getMethod("getSerialNumberForUser", userHandle.getClass()).invoke(userManager, userHandle);
+                putenv("MOZ_ANDROID_USER_SERIAL_NUMBER=" + userSerial.toString());
+            }
+        } catch (Exception e) {
+            // Guard against any unexpected failures
+            Log.d(LOGTAG, "Unable to set the user serial number", e);
+        }
+
+        putLocaleEnv();
+    }
+
+    private static void loadLibsSetup(Context context) {
+        synchronized (sLibLoadingLock) {
+            if (sLibsSetup) {
+                return;
+            }
+            sLibsSetup = true;
+        }
+
+        // The package data lib directory isn't placed in ld.so's
+        // search path, so we have to manually load libraries that
+        // libxul will depend on.  Not ideal.
+
+        File cacheFile = getCacheDir(context);
+        putenv("GRE_HOME=" + getGREDir(context).getPath());
+
+        // setup the libs cache
+        String linkerCache = System.getenv("MOZ_LINKER_CACHE");
+        if (linkerCache == null) {
+            linkerCache = cacheFile.getPath();
+            putenv("MOZ_LINKER_CACHE=" + linkerCache);
+        }
+
+#ifdef MOZ_LINKER_EXTRACT
+        putenv("MOZ_LINKER_EXTRACT=1");
+        // Ensure that the cache dir is world-writable
+        File cacheDir = new File(linkerCache);
+        if (cacheDir.isDirectory()) {
+            cacheDir.setWritable(true, false);
+            cacheDir.setExecutable(true, false);
+            cacheDir.setReadable(true, false);
+        }
+#endif
+    }
+
+    public static void loadSQLiteLibs(Context context, String apkName) {
+        synchronized (sLibLoadingLock) {
+            if (sSQLiteLibsLoaded) {
+                return;
+            }
+            sSQLiteLibsLoaded = true;
+        }
+
+        loadMozGlue(context);
+        // the extract libs parameter is being removed in bug 732069
+        loadLibsSetup(context);
+        loadSQLiteLibsNative(apkName, false);
+    }
+
+    public static void loadNSSLibs(Context context, String apkName) {
+        synchronized (sLibLoadingLock) {
+            if (sNSSLibsLoaded) {
+                return;
+            }
+            sNSSLibsLoaded = true;
+        }
+
+        loadMozGlue(context);
+        loadLibsSetup(context);
+        loadNSSLibsNative(apkName, false);
+    }
+
+    public static void loadMozGlue(Context context) {
+        synchronized (sLibLoadingLock) {
+            if (sMozGlueLoaded) {
+                return;
+            }
+            sMozGlueLoaded = true;
+        }
+
+        System.loadLibrary("mozglue");
+
+        // When running TestPasswordProvider, we're being called with
+        // a GeckoApplication, which is not an Activity
+        if (!(context instanceof Activity))
+            return;
+
+        Intent i = null;
+        i = ((Activity)context).getIntent();
+
+        // if we have an intent (we're being launched by an activity)
+        // read in any environmental variables from it here
+        String env = i.getStringExtra("env0");
+        Log.d(LOGTAG, "Gecko environment env0: "+ env);
+        for (int c = 1; env != null; c++) {
+            putenv(env);
+            env = i.getStringExtra("env" + c);
+            Log.d(LOGTAG, "env" + c + ": " + env);
+        }
+    }
+
+    public static void loadGeckoLibs(Context context, String apkName) {
+        loadLibsSetup(context);
+        loadGeckoLibsNative(apkName);
+    }
+
+    private static void putLocaleEnv() {
+        putenv("LANG=" + Locale.getDefault().toString());
+        NumberFormat nf = NumberFormat.getInstance();
+        if (nf instanceof DecimalFormat) {
+            DecimalFormat df = (DecimalFormat)nf;
+            DecimalFormatSymbols dfs = df.getDecimalFormatSymbols();
+
+            putenv("LOCALE_DECIMAL_POINT=" + dfs.getDecimalSeparator());
+            putenv("LOCALE_THOUSANDS_SEP=" + dfs.getGroupingSeparator());
+            putenv("LOCALE_GROUPING=" + (char)df.getGroupingSize());
+        }
+    }
+
+    // These methods are implemented in mozglue/android/nsGeckoUtils.cpp
+    private static native void putenv(String map);
+
+    // These methods are implemented in mozglue/android/APKOpen.cpp
+    public static native void nativeRun(String args);
+    private static native void loadGeckoLibsNative(String apkName);
+    private static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
+    private static native void loadNSSLibsNative(String apkName, boolean shouldExtract);
+}
