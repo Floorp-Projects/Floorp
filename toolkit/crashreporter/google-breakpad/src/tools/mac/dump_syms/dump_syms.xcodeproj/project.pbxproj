@@ -106,6 +106,9 @@
 		D24997CC16B6C16800E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
 		D24997CD16B6C16800E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
 		D24997CE16B6C16800E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
+		D2499A0016B9BA6A00E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
+		D2499A0216B9BA9600E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
+		D2499A0316B9BA9D00E588C5 /* unique_string.cc in Sources */ = {isa = PBXBuildFile; fileRef = D24997CA16B6C16800E588C5 /* unique_string.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -949,6 +952,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2499A0216B9BA9600E588C5 /* unique_string.cc in Sources */,
 				B84A91FB116CF7AF006C210E /* module.cc in Sources */,
 				B84A91FC116CF7AF006C210E /* stabs_to_module.cc in Sources */,
 				B84A91FD116CF7AF006C210E /* stabs_to_module_unittest.cc in Sources */,
@@ -1009,6 +1013,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2499A0316B9BA9D00E588C5 /* unique_string.cc in Sources */,
 				B88FB0FA116CF00E00407530 /* dwarf_line_to_module.cc in Sources */,
 				B88FB0FE116CF02400407530 /* module.cc in Sources */,
 				B88FB0FB116CF00E00407530 /* dwarf_line_to_module_unittest.cc in Sources */,
@@ -1019,6 +1024,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2499A0016B9BA6A00E588C5 /* unique_string.cc in Sources */,
 				B88FB112116CF1F000407530 /* dwarf_cu_to_module.cc in Sources */,
 				B88FB113116CF1F000407530 /* dwarf_cu_to_module_unittest.cc in Sources */,
 				B88FB114116CF1F000407530 /* language.cc in Sources */,
