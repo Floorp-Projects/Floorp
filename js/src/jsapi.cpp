@@ -133,9 +133,6 @@ class AutoVersionAPI
     JSVersion   oldDefaultVersion;
     bool        oldHasVersionOverride;
     JSVersion   oldVersionOverride;
-#ifdef DEBUG
-    unsigned       oldCompileOptions;
-#endif
     JSVersion   newVersion;
 
   public:
@@ -144,9 +141,6 @@ class AutoVersionAPI
         oldDefaultVersion(cx->getDefaultVersion()),
         oldHasVersionOverride(cx->isVersionOverridden()),
         oldVersionOverride(oldHasVersionOverride ? cx->findVersion() : JSVERSION_UNKNOWN)
-#ifdef DEBUG
-        , oldCompileOptions(cx->getCompileOptions())
-#endif
     {
         this->newVersion = newVersion;
         cx->clearVersionOverride();
@@ -159,7 +153,6 @@ class AutoVersionAPI
             cx->overrideVersion(oldVersionOverride);
         else
             cx->clearVersionOverride();
-        JS_ASSERT(oldCompileOptions == cx->getCompileOptions());
     }
 
     /* The version that this scoped-entity establishes. */
@@ -1307,9 +1300,6 @@ JS_SetVersion(JSContext *cx, JSVersion newVersion)
     JS_ASSERT(!VersionHasFlags(newVersion));
     JSVersion newVersionNumber = newVersion;
 
-#ifdef DEBUG
-    unsigned coptsBefore = cx->getCompileOptions();
-#endif
     JSVersion oldVersion = cx->findVersion();
     JSVersion oldVersionNumber = VersionNumber(oldVersion);
     if (oldVersionNumber == newVersionNumber)
@@ -1317,7 +1307,6 @@ JS_SetVersion(JSContext *cx, JSVersion newVersion)
 
     VersionCopyFlags(&newVersion, oldVersion);
     cx->maybeOverrideVersion(newVersion);
-    JS_ASSERT(cx->getCompileOptions() == coptsBefore);
     return oldVersionNumber;
 }
 
@@ -1370,18 +1359,16 @@ JS_GetOptions(JSContext *cx)
      * We may have been synchronized with a script version that was formerly on
      * the stack, but has now been popped.
      */
-    return cx->allOptions();
+    return cx->options();
 }
 
 static unsigned
 SetOptionsCommon(JSContext *cx, unsigned options)
 {
-    JS_ASSERT((options & JSALLOPTION_MASK) == options);
-    unsigned oldopts = cx->allOptions();
-    unsigned newropts = options & JSRUNOPTION_MASK;
-    unsigned newcopts = options & JSCOMPILEOPTION_MASK;
-    cx->setRunOptions(newropts);
-    cx->setCompileOptions(newcopts);
+    JS_ASSERT((options & JSOPTION_MASK) == options);
+    unsigned oldopts = cx->options();
+    unsigned newopts = options & JSOPTION_MASK;
+    cx->setOptions(newopts);
     cx->updateJITEnabled();
     return oldopts;
 }
@@ -1395,7 +1382,7 @@ JS_SetOptions(JSContext *cx, uint32_t options)
 JS_PUBLIC_API(uint32_t)
 JS_ToggleOptions(JSContext *cx, uint32_t options)
 {
-    unsigned oldopts = cx->allOptions();
+    unsigned oldopts = cx->options();
     unsigned newopts = oldopts ^ options;
     return SetOptionsCommon(cx, newopts);
 }
@@ -5055,7 +5042,7 @@ struct AutoLastFrameCheck
     ~AutoLastFrameCheck() {
         if (cx->isExceptionPending() &&
             !JS_IsRunning(cx) &&
-            !cx->hasRunOption(JSOPTION_DONT_REPORT_UNCAUGHT)) {
+            !cx->hasOption(JSOPTION_DONT_REPORT_UNCAUGHT)) {
             js_ReportUncaughtException(cx);
         }
     }
@@ -5154,8 +5141,8 @@ JS::CompileOptions::CompileOptions(JSContext *cx)
       utf8(false),
       filename(NULL),
       lineno(1),
-      compileAndGo(cx->hasRunOption(JSOPTION_COMPILE_N_GO)),
-      noScriptRval(cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL)),
+      compileAndGo(cx->hasOption(JSOPTION_COMPILE_N_GO)),
+      noScriptRval(cx->hasOption(JSOPTION_NO_SCRIPT_RVAL)),
       selfHostingMode(false),
       userBit(false),
       sourcePolicy(SAVE_SOURCE)

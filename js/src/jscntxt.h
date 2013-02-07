@@ -1301,7 +1301,6 @@ struct AutoResolving;
  */
 namespace VersionFlags {
 static const unsigned MASK      = 0x0FFF; /* see JSVersion in jspubtd.h */
-static const unsigned FULL_MASK = 0x0FFF;
 } /* namespace VersionFlags */
 
 static inline JSVersion
@@ -1326,20 +1325,6 @@ static inline bool
 VersionHasFlags(JSVersion version)
 {
     return !!VersionExtractFlags(version);
-}
-
-static inline unsigned
-VersionFlagsToOptions(JSVersion version)
-{
-    unsigned copts = 0;
-    JS_ASSERT((copts & JSCOMPILEOPTION_MASK) == copts);
-    return copts;
-}
-
-static inline JSVersion
-OptionFlagsToVersion(unsigned options, JSVersion version)
-{
-    return version;
 }
 
 static inline bool
@@ -1381,8 +1366,8 @@ struct JSContext : js::ContextFriendFields,
     bool                throwing;            /* is there a pending exception? */
     js::Value           exception;           /* most-recently-thrown exception */
 
-    /* Per-context run options. */
-    unsigned            runOptions;          /* see jsapi.h for JSOPTION_* */
+    /* Per-context options. */
+    unsigned            options_;            /* see jsapi.h for JSOPTION_* */
 
     /* Default locale for Internationalization API */
     char                *defaultLocale;
@@ -1569,26 +1554,21 @@ struct JSContext : js::ContextFriendFields,
      */
     inline JSVersion findVersion() const;
 
-    void setRunOptions(unsigned ropts) {
-        JS_ASSERT((ropts & JSRUNOPTION_MASK) == ropts);
-        runOptions = ropts;
+    void setOptions(unsigned opts) {
+        JS_ASSERT((opts & JSOPTION_MASK) == opts);
+        options_ = opts;
     }
 
-    /* Note: may override the version. */
-    inline void setCompileOptions(unsigned newcopts);
+    unsigned options() const { return options_; }
 
-    unsigned getRunOptions() const { return runOptions; }
-    inline unsigned getCompileOptions() const;
-    inline unsigned allOptions() const;
-
-    bool hasRunOption(unsigned ropt) const {
-        JS_ASSERT((ropt & JSRUNOPTION_MASK) == ropt);
-        return !!(runOptions & ropt);
+    bool hasOption(unsigned opt) const {
+        JS_ASSERT((opt & JSOPTION_MASK) == opt);
+        return !!(options_ & opt);
     }
 
-    bool hasStrictOption() const { return hasRunOption(JSOPTION_STRICT); }
-    bool hasWErrorOption() const { return hasRunOption(JSOPTION_WERROR); }
-    bool hasAtLineOption() const { return hasRunOption(JSOPTION_ATLINE); }
+    bool hasStrictOption() const { return hasOption(JSOPTION_STRICT); }
+    bool hasWErrorOption() const { return hasOption(JSOPTION_WERROR); }
+    bool hasAtLineOption() const { return hasOption(JSOPTION_ATLINE); }
 
     js::LifoAlloc &tempLifoAlloc() { return runtime->tempLifoAlloc; }
     inline js::LifoAlloc &analysisLifoAlloc();

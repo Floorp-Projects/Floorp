@@ -742,7 +742,7 @@ js::ContextHasOutstandingRequests(const JSContext *cx)
 JS_FRIEND_API(bool)
 js::HasUnrootedGlobal(const JSContext *cx)
 {
-    return cx->hasRunOption(JSOPTION_UNROOTED_GLOBAL);
+    return cx->hasOption(JSOPTION_UNROOTED_GLOBAL);
 }
 
 JS_FRIEND_API(void)
