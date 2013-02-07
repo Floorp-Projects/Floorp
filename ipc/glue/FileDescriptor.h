@@ -53,9 +53,7 @@ public:
 
   FileDescriptor(const FileDescriptor& aOther)
   {
-    // Don't use operator= here because that will call
-    // CloseCurrentProcessHandle() on this (uninitialized) object.
-    Assign(aOther);
+    *this = aOther;
   }
 
   FileDescriptor(PlatformHandleType aHandle);
@@ -79,7 +77,18 @@ public:
   operator=(const FileDescriptor& aOther)
   {
     CloseCurrentProcessHandle();
-    Assign(aOther);
+
+    if (aOther.mHandleCreatedByOtherProcess) {
+      mHandleCreatedByOtherProcess = true;
+      mHandleCreatedByOtherProcessWasUsed =
+        aOther.mHandleCreatedByOtherProcessWasUsed;
+      mHandle = aOther.PlatformHandle();
+    } else {
+      DuplicateInCurrentProcess(aOther.PlatformHandle());
+      mHandleCreatedByOtherProcess = false;
+      mHandleCreatedByOtherProcessWasUsed = false;
+    }
+
     return *this;
   }
 
@@ -113,21 +122,6 @@ public:
   }
 
 private:
-  void
-  Assign(const FileDescriptor& aOther)
-  {
-    if (aOther.mHandleCreatedByOtherProcess) {
-      mHandleCreatedByOtherProcess = true;
-      mHandleCreatedByOtherProcessWasUsed =
-        aOther.mHandleCreatedByOtherProcessWasUsed;
-      mHandle = aOther.PlatformHandle();
-    } else {
-      DuplicateInCurrentProcess(aOther.PlatformHandle());
-      mHandleCreatedByOtherProcess = false;
-      mHandleCreatedByOtherProcessWasUsed = false;
-    }
-  }
-
   static bool
   IsValid(PlatformHandleType aHandle);
 
