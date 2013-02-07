@@ -40,14 +40,51 @@ public:
   NS_DECL_NSIDOMHTMLHRELEMENT
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
+                              nsIAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsAttrValue& aResult);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL API
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
+  }
+
+  // The XPCOM GetColor is OK for us
+  void SetColor(const nsAString& aColor, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::color, aColor, aError);
+  }
+
+  bool NoShade() const
+  {
+   return GetBoolAttr(nsGkAtoms::noshade);
+  }
+  void SetNoShade(bool aNoShade, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::noshade, aNoShade, aError);
+  }
+
+  // The XPCOM GetSize is OK for us
+  void SetSize(const nsAString& aSize, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::size, aSize, aError);
+  }
+
+  // The XPCOM GetWidth is OK for us
+  void SetWidth(const nsAString& aWidth, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::width, aWidth, aError);
+  }
+
+protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
+                             bool* aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
