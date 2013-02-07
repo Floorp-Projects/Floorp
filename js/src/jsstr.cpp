@@ -1716,7 +1716,7 @@ enum MatchControlFlags {
 /* Factor out looping and matching logic. */
 static bool
 DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
-        DoMatchCallback callback, void *data, MatchControlFlags flags, Value *rval)
+        DoMatchCallback callback, void *data, MatchControlFlags flags, MutableHandleValue rval)
 {
     Rooted<JSStableString*> stableStr(cx, str->ensureStable(cx));
     if (!stableStr)
@@ -1738,12 +1738,12 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
                 return false;
 
             if (status == RegExpRunStatus_Success_NotFound) {
-                rval->setNull();
+                rval.setNull();
                 break;
             }
 
             res->updateFromMatchPairs(cx, stableStr, matches);
-            if (!isTest && !CreateRegExpMatchResult(cx, stableStr, matches, rval))
+            if (!isTest && !CreateRegExpMatchResult(cx, stableStr, matches, rval.address()))
                 return false;
 
             if (!callback(cx, res, count, data))
@@ -1762,16 +1762,16 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
 
         /* Emulate ExecuteRegExpLegacy() behavior. */
         if (status == RegExpRunStatus_Success_NotFound) {
-            rval->setNull();
+            rval.setNull();
             return true;
         }
 
         res->updateFromMatchPairs(cx, stableStr, matches);
 
         if (isTest) {
-            rval->setBoolean(true);
+            rval.setBoolean(true);
         } else {
-            if (!CreateRegExpMatchResult(cx, stableStr, matches, rval))
+            if (!CreateRegExpMatchResult(cx, stableStr, matches, rval.address()))
                 return false;
         }
 
@@ -1858,7 +1858,7 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     MatchArgType arg = array.address();
     RegExpStatics *res = cx->regExpStatics();
     RootedValue rval(cx);
-    if (!DoMatch(cx, res, str, g.regExp(), MatchCallback, arg, MATCH_ARGS, rval.address()))
+    if (!DoMatch(cx, res, str, g.regExp(), MatchCallback, arg, MATCH_ARGS, &rval))
         return false;
 
     if (g.regExp().global())
@@ -2482,7 +2482,7 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
         return str_replace_regexp_remove(cx, args, rdata.str, re);
     }
 
-    Value tmp;
+    RootedValue tmp(cx);
     if (!DoMatch(cx, res, rdata.str, re, ReplaceRegExpCallback, &rdata, REPLACE_ARGS, &tmp))
         return false;
 
