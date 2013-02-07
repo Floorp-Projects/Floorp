@@ -1929,8 +1929,8 @@ size_t
 GCMarker::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
 {
     size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
-    for (CompartmentsIter c(runtime); !c.done(); c.next())
-        size += c->gcGrayRoots.sizeOfExcludingThis(mallocSizeOf);
+    for (ZonesIter zone(runtime); !zone.done(); zone.next())
+        size += zone->gcGrayRoots.sizeOfExcludingThis(mallocSizeOf);
     return size;
 }
 
@@ -3271,12 +3271,12 @@ GetNextZoneGroup(JSRuntime *rt)
             JS_ASSERT(zone->isGCMarking());
             zone->setNeedsBarrier(false, Zone::UpdateIon);
             zone->setGCState(Zone::NoGC);
+            zone->gcGrayRoots.clearAndFree();
         }
 
         for (GCCompartmentGroupIter comp(rt); !comp.done(); comp.next()) {
             ArrayBufferObject::resetArrayBufferList(comp);
             ResetGrayList(comp);
-            comp->gcGrayRoots.clearAndFree();
         }
 
         rt->gcAbortSweepAfterCurrentGroup = false;
@@ -4016,8 +4016,8 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
       case SWEEP:
         rt->gcMarker.reset();
 
-        for (CompartmentsIter c(rt); !c.done(); c.next())
-            c->scheduledForDestruction = false;
+        for (ZonesIter zone(rt); !zone.done(); zone.next())
+            zone->scheduledForDestruction = false;
 
         /* Finish sweeping the current zone group, then abort. */
         rt->gcAbortSweepAfterCurrentGroup = true;
