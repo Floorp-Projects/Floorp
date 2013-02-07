@@ -54,7 +54,7 @@ struct Options {
 
 //=============================================================================
 static bool Start(const Options &options) {
-  DumpSymbols dump_symbols;
+  DumpSymbols dump_symbols(options.cfi ? ALL_SYMBOL_DATA : NO_CFI);
 
   if (!dump_symbols.Read(options.srcPath))
     return false;
@@ -86,7 +86,7 @@ static bool Start(const Options &options) {
     }
   }
 
-  return dump_symbols.WriteSymbolFile(std::cout, options.cfi);
+  return dump_symbols.WriteSymbolFile(std::cout);
 }
 
 //=============================================================================

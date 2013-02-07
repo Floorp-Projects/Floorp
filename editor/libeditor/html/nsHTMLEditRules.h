@@ -297,7 +297,7 @@ protected:
   nsresult RemoveListStructure(nsIDOMNode *aList);
   nsresult CacheInlineStyles(nsIDOMNode *aNode);
   nsresult ReapplyCachedStyles();
-  nsresult ClearCachedStyles();
+  void ClearCachedStyles();
   nsresult AdjustSpecialBreaks(bool aSafeToAskFrames = false);
   nsresult AdjustWhitespace(nsISelection *aSelection);
   nsresult PinSelectionToNewBlock(nsISelection *aSelection);

@@ -150,7 +150,13 @@ typedef enum {
   SH_DEPENDENCY_GRAPH = 0x0400,
 
   // Enforce the GLSL 1.017 Appendix A section 7 packing restrictions.
-  SH_ENFORCE_PACKING_RESTRICTIONS = 0x0800
+  SH_ENFORCE_PACKING_RESTRICTIONS = 0x0800,
+
+  // This flag ensures all indirect (expression-based) array indexing
+  // is clamped to the bounds of the array. This ensures, for example,
+  // that you cannot read off the end of a uniform, whether an array
+  // vec234, or mat234 type.
+  SH_CLAMP_INDIRECT_ARRAY_BOUNDS = 0x1000
 } ShCompileOptions;
 
 //

@@ -4,7 +4,6 @@
 
 add_makefiles "
   services/Makefile
-  services/aitc/Makefile
   services/common/Makefile
   services/crypto/Makefile
   services/crypto/component/Makefile
@@ -13,11 +12,11 @@ add_makefiles "
   services/metrics/Makefile
   services/sync/Makefile
   services/sync/locales/Makefile
+  services/captivedetect/Makefile
 "
 
 if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
-    services/aitc/tests/Makefile
     services/common/tests/Makefile
     services/crypto/tests/Makefile
     services/healthreport/tests/Makefile

@@ -19,6 +19,7 @@
 
 #include "base/basictypes.h"
 #include "GonkCameraHwMgr.h"
+#include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "GonkNativeWindow.h"
@@ -60,6 +61,7 @@ void GonkNativeWindow::abandon()
     nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
     {
         Mutex::Autolock lock(mMutex);
+        mAbandoned = true;
         freeAllBuffersLocked(freeList);
     }
 
@@ -86,6 +88,7 @@ void GonkNativeWindow::init()
     mBufferCount = MIN_BUFFER_SLOTS;
     mFrameCounter = 0;
     mGeneration = 0;
+    mAbandoned =false;
 }
 
 
@@ -174,6 +177,23 @@ void GonkNativeWindow::releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>
     CNW_LOGD("releaseBufferFreeListUnlocked: X");
 }
 
+void GonkNativeWindow::clearRenderingStateBuffersLocked()
+{
+    ++mGeneration;
+
+    for (int i = 0; i < NUM_BUFFER_SLOTS; ++i) {
+        if (mSlots[i].mGraphicBuffer != NULL) {
+            // Don't try to destroy the gralloc buffer if it is still in the
+            // video stream awaiting rendering.
+            if (mSlots[i].mBufferState == BufferSlot::RENDERING) {
+                mSlots[i].mGraphicBuffer = NULL;
+                mSlots[i].mBufferState = BufferSlot::FREE;
+                mSlots[i].mFrameNumber = 0;
+            }
+        }
+    }
+}
+
 int GonkNativeWindow::setBufferCount(int bufferCount)
 {
     CNW_LOGD("setBufferCount: count=%d", bufferCount);
@@ -182,14 +202,14 @@ int GonkNativeWindow::setBufferCount(int bufferCount)
     {
         Mutex::Autolock lock(mMutex);
 
+        if (mAbandoned) {
+            CNW_LOGE("setBufferCount: GonkNativeWindow has been abandoned!");
+            return NO_INIT;
+        }
+
         if (bufferCount > NUM_BUFFER_SLOTS) {
             CNW_LOGE("setBufferCount: bufferCount larger than slots available");
             return BAD_VALUE;
-        }
-
-        // special-case, nothing to do
-        if (bufferCount == mBufferCount) {
-            return OK;
         }
 
         if (bufferCount < MIN_BUFFER_SLOTS) {
@@ -198,19 +218,18 @@ int GonkNativeWindow::setBufferCount(int bufferCount)
             return BAD_VALUE;
         }
 
-        // Error out if the user has dequeued buffers or sent buffers to
-        // video stream
+        // Error out if the user has dequeued buffers.
         for (int i=0 ; i<mBufferCount ; i++) {
-            if (mSlots[i].mBufferState == BufferSlot::DEQUEUED ||
-                mSlots[i].mBufferState == BufferSlot::RENDERING) {
+            if (mSlots[i].mBufferState == BufferSlot::DEQUEUED) {
                 CNW_LOGE("setBufferCount: client owns some buffers");
                 return -EINVAL;
             }
         }
 
-        if (bufferCount > mBufferCount) {
-            // easy, we just have more buffers
+        if (bufferCount >= mBufferCount) {
             mBufferCount = bufferCount;
+            //clear only buffers in RENDERING state.
+            clearRenderingStateBuffersLocked();
             mDequeueCondition.signal();
             return OK;
         }
@@ -236,6 +255,7 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
     uint32_t generation;
     bool alloc = false;
     int buf = INVALID_BUFFER_SLOT;
+    SurfaceDescriptor descOld;
 
     {
         Mutex::Autolock lock(mMutex);
@@ -247,6 +267,10 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
 
         CNW_LOGD("dequeueBuffer: E");
         while (tryAgain) {
+            if (mAbandoned) {
+                CNW_LOGE("dequeueBuffer: GonkNativeWindow has been abandoned!");
+                return NO_INIT;
+            }
             // look for a free buffer to give to the client
             found = INVALID_BUFFER_SLOT;
             dequeuedCount = 0;
@@ -291,6 +315,15 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
 
         const sp<GraphicBuffer>& gbuf(mSlots[buf].mGraphicBuffer);
         alloc = (gbuf == NULL);
+        if ((gbuf!=NULL) &&
+           ((uint32_t(gbuf->width)  != mDefaultWidth) ||
+            (uint32_t(gbuf->height) != mDefaultHeight) ||
+            (uint32_t(gbuf->format) != mPixelFormat) ||
+            ((uint32_t(gbuf->usage) & mUsage) != mUsage))) {
+            alloc = true;
+            descOld = mSlots[buf].mSurfaceDescriptor;
+        }
+
         if (alloc) {
             // get local copies for graphics buffer allocations
             defaultWidth = mDefaultWidth;
@@ -353,6 +386,10 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
         }
     }
 
+    if (alloc && IsSurfaceDescriptorValid(descOld)) {
+        ibc->DeallocSurfaceDescriptorGralloc(descOld);
+    }
+
     if (alloc && tooOld) {
         ibc->DeallocSurfaceDescriptorGralloc(desc);
     }
@@ -395,6 +432,12 @@ int GonkNativeWindow::queueBuffer(ANativeWindowBuffer* buffer)
     {
         Mutex::Autolock lock(mMutex);
         CNW_LOGD("queueBuffer: E");
+
+        if (mAbandoned) {
+            CNW_LOGE("queueBuffer: GonkNativeWindow has been abandoned!");
+            return NO_INIT;
+        }
+
         int buf = getSlotFromBufferLocked(buffer);
 
         if (buf < 0 || buf >= mBufferCount) {
@@ -438,6 +481,11 @@ GonkNativeWindow::getCurrentBuffer()
   CNW_LOGD("GonkNativeWindow::getCurrentBuffer");
   Mutex::Autolock lock(mMutex);
 
+  if (mAbandoned) {
+    CNW_LOGE("getCurrentBuffer: GonkNativeWindow has been abandoned!");
+    return NULL;
+  }
+
   int found = -1;
   for (int i = 0; i < mBufferCount; i++) {
     const int state = mSlots[i].mBufferState;
@@ -468,6 +516,11 @@ GonkNativeWindow::returnBuffer(uint32_t aIndex, uint32_t aGeneration)
   CNW_LOGD("GonkNativeWindow::returnBuffer: slot=%d (generation=%d)", aIndex, aGeneration);
   Mutex::Autolock lock(mMutex);
 
+  if (mAbandoned) {
+    CNW_LOGD("returnBuffer: GonkNativeWindow has been abandoned!");
+    return false;
+  }
+
   if (aGeneration != mGeneration) {
     CNW_LOGD("returnBuffer: buffer is from generation %d (current is %d)",
       aGeneration, mGeneration);
@@ -493,12 +546,22 @@ int GonkNativeWindow::lockBuffer(ANativeWindowBuffer* buffer)
 {
     CNW_LOGD("GonkNativeWindow::lockBuffer");
     Mutex::Autolock lock(mMutex);
+
+    if (mAbandoned) {
+        CNW_LOGE("lockBuffer: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
     return OK;
 }
 
 int GonkNativeWindow::cancelBuffer(ANativeWindowBuffer* buffer)
 {
     Mutex::Autolock lock(mMutex);
+
+    if (mAbandoned) {
+        CNW_LOGD("cancelBuffer: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
     int buf = getSlotFromBufferLocked(buffer);
 
     CNW_LOGD("cancelBuffer: slot=%d", buf);
@@ -553,6 +616,11 @@ int GonkNativeWindow::perform(int operation, va_list args)
 int GonkNativeWindow::query(int what, int* outValue) const
 {
     Mutex::Autolock lock(mMutex);
+
+    if (mAbandoned) {
+        CNW_LOGE("query: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
 
     int value;
     switch (what) {
@@ -627,6 +695,11 @@ int GonkNativeWindow::setUsage(uint32_t reqUsage)
 {
     CNW_LOGD("GonkNativeWindow::setUsage");
     Mutex::Autolock lock(mMutex);
+
+    if (mAbandoned) {
+        CNW_LOGE("setUsage: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
     mUsage = reqUsage;
     return OK;
 }
@@ -635,6 +708,11 @@ int GonkNativeWindow::setBuffersDimensions(int w, int h)
 {
     CNW_LOGD("GonkNativeWindow::setBuffersDimensions");
     Mutex::Autolock lock(mMutex);
+
+    if (mAbandoned) {
+        CNW_LOGE("setBuffersDimensions: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
 
     if (w<0 || h<0)
         return BAD_VALUE;
@@ -653,6 +731,11 @@ int GonkNativeWindow::setBuffersFormat(int format)
     CNW_LOGD("GonkNativeWindow::setBuffersFormat");
     Mutex::Autolock lock(mMutex);
 
+    if (mAbandoned) {
+        CNW_LOGE("setBuffersFormat: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
+
     if (format<0)
         return BAD_VALUE;
 
@@ -665,6 +748,12 @@ int GonkNativeWindow::setBuffersTimestamp(int64_t timestamp)
 {
     CNW_LOGD("GonkNativeWindow::setBuffersTimestamp");
     Mutex::Autolock lock(mMutex);
+
+    if (mAbandoned) {
+        CNW_LOGE("setBuffersTimestamp: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
+
     mTimestamp = timestamp;
     return OK;
 }

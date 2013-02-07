@@ -883,7 +883,7 @@ AsyncGetFaviconDataForPage::Run()
     rv = FetchIconInfo(mDB, iconData);
     if (NS_FAILED(rv)) {
       iconData.spec.Truncate();
-      MOZ_NOT_REACHED("Fetching favicon information failed unexpectedly.");
+      MOZ_ASSERT(false, "Fetching favicon information failed unexpectedly.");
     }
   }
 

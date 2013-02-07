@@ -19,9 +19,9 @@ addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 
   var context = new AudioContext();
-  var buffer = context.createBuffer(1, 2048, 44100);
+  var buffer = context.createBuffer(1, 2048, context.sampleRate);
   for (var i = 0; i < 2048; ++i) {
-    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / 44100);
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
   }
 
   var destination = context.destination;
@@ -38,7 +38,7 @@ addLoadEvent(function() {
   // Verify default values
   is(filter.type, 0, "Correct default value for type");
   near(filter.frequency.minValue, 10, "Correct min value for filter frequency");
-  near(filter.frequency.maxValue, 22050, "Correct max value for filter frequency");
+  near(filter.frequency.maxValue, context.sampleRate/2, "Correct max value for filter frequency");
   near(filter.frequency.defaultValue, 350, "Correct default value for filter frequency");
   near(filter.Q.minValue, 0.001, "Correct min value for filter Q");
   near(filter.Q.maxValue, 1000, "Correct max value for filter Q");

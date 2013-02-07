@@ -8,7 +8,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "Constants.h"
-#include "nsIDOMSmsMessage.h"
+#include "nsIDOMMozSmsMessage.h"
 #include "mozilla/unused.h"
 #include "SmsMessage.h"
 #include "nsIMobileMessageDatabaseService.h"

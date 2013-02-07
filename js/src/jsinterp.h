@@ -273,12 +273,9 @@ class InterpreterFrames {
     const InterruptEnablerBase &enabler;
 };
 
-/*
- * Unwind block and scope chains to match the given depth. The function sets
- * fp->sp on return to stackDepth.
- */
+/* Unwind block and scope chains to match the given depth. */
 extern void
-UnwindScope(JSContext *cx, uint32_t stackDepth);
+UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth);
 
 /*
  * Unwind for an uncatchable exception. This means not running finalizers, etc;

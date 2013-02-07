@@ -28,8 +28,6 @@ function waitForBookmarkNotification(aNotification, aCallback, aProperty)
                                                     url: aURI ? aURI.spec : null,
                                                     title: aTitle });
     },
-    onBeforeItemRemoved: function onBeforeItemRemoved()
-      this.validate(arguments.callee.name, arguments),
     onItemRemoved: function onItemRemoved()
       this.validate(arguments.callee.name, arguments),
     onItemChanged: function onItemChanged(aItemId, aProperty, aIsAnno,

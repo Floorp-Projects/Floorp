@@ -312,6 +312,9 @@ class AbstractFramePtr
     inline void *maybeHookData() const;
     inline void setHookData(void *data) const;
     inline void setReturnValue(const Value &rval) const;
+
+    inline void popBlock(JSContext *cx) const;
+    inline void popWith(JSContext *cx) const;
 };
 
 class NullFramePtr : public AbstractFramePtr

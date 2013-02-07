@@ -3105,7 +3105,8 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
             return NULL;
     }
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent));
+    NewObjectKind newKind = clasp == &OuterWindowProxyClass ? SingletonObject : GenericObject;
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, newKind));
     if (!obj)
         return NULL;
     obj->initSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
@@ -3118,11 +3119,8 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
     }
 
     /* Don't track types of properties of proxies. */
-    MarkTypeObjectUnknownProperties(cx, obj->type());
-
-    /* Mark the new proxy as having singleton type. */
-    if (clasp == &OuterWindowProxyClass && !JSObject::setSingletonType(cx, obj))
-        return NULL;
+    if (newKind != SingletonObject)
+        MarkTypeObjectUnknownProperties(cx, obj->type());
 
     return obj;
 }
@@ -3274,8 +3272,8 @@ static JSFunctionSpec static_methods[] = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, HandleObject obj)
 {
-    RootedObject module(cx, NewObjectWithClassProto(cx, &ProxyClass, NULL, obj));
-    if (!module || !JSObject::setSingletonType(cx, module))
+    RootedObject module(cx, NewObjectWithClassProto(cx, &ProxyClass, NULL, obj, SingletonObject));
+    if (!module)
         return NULL;
 
     if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),

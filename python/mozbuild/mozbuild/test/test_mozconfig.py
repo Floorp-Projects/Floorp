@@ -29,6 +29,8 @@ class TestMozconfigLoader(unittest.TestCase):
     def setUp(self):
         self._old_env = dict(os.environ)
         os.environ.pop('MOZCONFIG', None)
+        os.environ.pop('CC', None)
+        os.environ.pop('CXX', None)
         self._temp_dirs = set()
 
     def tearDown(self):

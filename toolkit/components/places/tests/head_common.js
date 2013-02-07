@@ -786,7 +786,6 @@ NavBookmarkObserver.prototype = {
   onBeginUpdateBatch: function () {},
   onEndUpdateBatch: function () {},
   onItemAdded: function () {},
-  onBeforeItemRemoved: function () {},
   onItemRemoved: function () {},
   onItemChanged: function () {},
   onItemVisited: function () {},
@@ -807,7 +806,6 @@ NavHistoryObserver.prototype = {
   onEndUpdateBatch: function () {},
   onVisit: function () {},
   onTitleChanged: function () {},
-  onBeforeDeleteURI: function () {},
   onDeleteURI: function () {},
   onClearHistory: function () {},
   onPageChanged: function () {},
@@ -839,7 +837,6 @@ NavHistoryResultObserver.prototype = {
   nodeLastModifiedChanged: function () {},
   nodeMoved: function () {},
   nodeRemoved: function () {},
-  nodeReplaced: function () {},
   nodeTagsChanged: function () {},
   nodeTitleChanged: function () {},
   nodeURIChanged: function () {},
@@ -915,19 +912,15 @@ function promiseAddVisits(aPlaceInfo)
 /**
  * Asynchronously check a url is visited.
  *
- * @param aURI
- *        The URI.
- *
+ * @param aURI The URI.
  * @return {Promise}
  * @resolves When the check has been added successfully.
  * @rejects JavaScript exception.
  */
-function promiseIsURIVisited(aURI)
-{
+function promiseIsURIVisited(aURI) {
   let deferred = Promise.defer();
-  let history = Cc["@mozilla.org/browser/history;1"]
-                  .getService(Ci.mozIAsyncHistory);
-  history.isURIVisited(aURI, function(aURI, aIsVisited) {
+
+  PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
     deferred.resolve(aIsVisited);
   });
 

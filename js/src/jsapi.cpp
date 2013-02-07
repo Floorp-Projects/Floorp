@@ -810,10 +810,14 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
-    gcManipulatingDeadCompartments(false),
-    gcObjectsMarkedInDeadCompartments(0),
+    gcManipulatingDeadZones(false),
+    gcObjectsMarkedInDeadZones(0),
     gcPoke(false),
     heapState(Idle),
+#ifdef JSGC_GENERATIONAL
+    gcNursery(),
+    gcStoreBuffer(&gcNursery),
+#endif
 #ifdef JS_GC_ZEAL
     gcZeal_(0),
     gcZealFrequency(0),
@@ -925,8 +929,8 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
     }
 
-    atomsCompartment->isSystem = true;
-    atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
+    atomsCompartment->zone()->isSystem = true;
+    atomsCompartment->zone()->setGCLastBytes(8192, GC_NORMAL);
 
     if (!InitAtoms(this))
         return false;
@@ -1566,7 +1570,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
     JS_ASSERT(!IsCrossCompartmentWrapper(target));
 
-    AutoMaybeTouchDeadCompartments agc(cx);
+    AutoMaybeTouchDeadZones agc(cx);
 
     JSCompartment *destination = target->compartment();
     RootedValue origv(cx, ObjectValue(*origobj));
@@ -1639,7 +1643,7 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     RootedObject targetobj(cx, targetobjArg);
     RootedObject targetwrapper(cx, targetwrapperArg);
 
-    AutoMaybeTouchDeadCompartments agc(cx);
+    AutoMaybeTouchDeadZones agc(cx);
 
     AssertHeapIsIdle(cx);
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
@@ -2265,7 +2269,7 @@ JS_GetDefaultFreeOp(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
-    return cx->runtime->updateMallocCounter(cx->compartment, nbytes);
+    return cx->runtime->updateMallocCounter(cx->zone(), nbytes);
 }
 
 JS_PUBLIC_API(char *)
@@ -3375,7 +3379,7 @@ JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp)
     assertSameCompartment(cx, *vp);
 
     RootedObject obj(cx, JSVAL_TO_OBJECT(*vp));
-    return js_CreateThis(cx, Valueify(clasp), obj);
+    return CreateThis(cx, Valueify(clasp), obj);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4760,7 +4764,7 @@ JS_NewFunction(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
     }
 
     JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-    return js_NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, atom);
+    return NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, atom);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4776,7 +4780,7 @@ JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flag
 
     RootedAtom atom(cx, JSID_TO_ATOM(id));
     JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-    return js_NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, atom);
+    return NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, atom);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4934,9 +4938,10 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
             }
 
             flags &= ~JSFUN_GENERIC_NATIVE;
-            JSFunction *fun = js_DefineFunction(cx, ctor, id, js_generic_native_method_dispatcher,
-                                                fs->nargs + 1, flags,
-                                                JSFunction::ExtendedFinalizeKind);
+            JSFunction *fun = DefineFunction(cx, ctor, id,
+                                             js_generic_native_method_dispatcher,
+                                             fs->nargs + 1, flags,
+                                             JSFunction::ExtendedFinalizeKind);
             if (!fun)
                 return JS_FALSE;
 
@@ -4959,16 +4964,15 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
 
         /*
          * Delay cloning self-hosted functions until they are called. This is
-         * achieved by passing js_DefineFunction a NULL JSNative which
+         * achieved by passing DefineFunction a NULL JSNative which
          * produces an interpreted JSFunction where !hasScript. Interpreted
          * call paths then call InitializeLazyFunctionScript if !hasScript.
          */
         if (fs->selfHostedName) {
-            RootedFunction fun(cx, js_DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
-                                                     JSFunction::ExtendedFinalizeKind));
+            RootedFunction fun(cx, DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
+                                                  JSFunction::ExtendedFinalizeKind, SingletonObject));
             if (!fun)
                 return JS_FALSE;
-            JSFunction::setSingletonType(cx, fun);
             fun->setIsSelfHostedBuiltin();
             fun->setExtendedSlot(0, PrivateValue(fs));
             RootedAtom shAtom(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
@@ -4981,7 +4985,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
                 return JS_FALSE;
             }
         } else {
-            JSFunction *fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
+            JSFunction *fun = DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
             if (!fun)
                 return JS_FALSE;
             if (fs->call.info)
@@ -5004,7 +5008,7 @@ JS_DefineFunction(JSContext *cx, JSObject *objArg, const char *name, JSNative ca
     if (!atom)
         return NULL;
     Rooted<jsid> id(cx, AtomToId(atom));
-    return js_DefineFunction(cx, obj, id, call, nargs, attrs);
+    return DefineFunction(cx, obj, id, call, nargs, attrs);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -5021,7 +5025,7 @@ JS_DefineUCFunction(JSContext *cx, JSObject *objArg,
     if (!atom)
         return NULL;
     Rooted<jsid> id(cx, AtomToId(atom));
-    return js_DefineFunction(cx, obj, id, call, nargs, attrs);
+    return DefineFunction(cx, obj, id, call, nargs, attrs);
 }
 
 extern JS_PUBLIC_API(JSFunction *)
@@ -5034,7 +5038,7 @@ JS_DefineFunctionById(JSContext *cx, JSObject *objArg, jsid id_, JSNative call,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return js_DefineFunction(cx, obj, id, call, nargs, attrs);
+    return DefineFunction(cx, obj, id, call, nargs, attrs);
 }
 
 struct AutoLastFrameCheck
@@ -5350,7 +5354,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
             return NULL;
     }
 
-    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED, obj, funAtom));
+    RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED, obj, funAtom));
     if (!fun)
         return NULL;
 
@@ -6142,7 +6146,7 @@ JS_GetStringEncodingLength(JSContext *cx, JSString *str)
     const jschar *chars = str->getChars(cx);
     if (!chars)
         return size_t(-1);
-    return GetDeflatedStringLength(cx, chars, str->length());
+    return str->length();
 }
 
 JS_PUBLIC_API(size_t)
@@ -6165,7 +6169,7 @@ JS_EncodeStringToBuffer(JSContext *cx, JSString *str, char *buffer, size_t lengt
         return writtenLength;
     }
     JS_ASSERT(writtenLength <= length);
-    size_t necessaryLength = GetDeflatedStringLength(NULL, chars, str->length());
+    size_t necessaryLength = str->length();
     if (necessaryLength == size_t(-1))
         return size_t(-1);
     JS_ASSERT(writtenLength == length); // C strings are NOT encoded.
@@ -6668,8 +6672,14 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *objArg, JSObject *reobjArg, jschar *ch
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
     StableCharPtr charPtr(chars, length);
 
-    return ExecuteRegExpLegacy(cx, res, reobj->asRegExp(), NullPtr(),
-                               charPtr, length, indexp, test, rval);
+    RootedValue val(cx);
+    if (!ExecuteRegExpLegacy(cx, res, reobj->asRegExp(), NullPtr(), charPtr, length, indexp, test,
+                             &val))
+    {
+        return false;
+    }
+    *rval = val;
+    return true;
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -6704,8 +6714,15 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *objArg, jschar *chars, size_t
     CHECK_REQUEST(cx);
 
     StableCharPtr charPtr(chars, length);
-    return ExecuteRegExpLegacy(cx, NULL, obj->asRegExp(), NullPtr(),
-                               charPtr, length, indexp, test, rval);
+
+    RootedValue val(cx);
+    if (!ExecuteRegExpLegacy(cx, NULL, obj->asRegExp(), NullPtr(), charPtr, length, indexp, test,
+                             &val))
+    {
+        return false;
+    }
+    *rval = val;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)

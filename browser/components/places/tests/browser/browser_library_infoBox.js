@@ -22,9 +22,6 @@ gTests.push({
     var infoBoxExpanderWrapper = getAndCheckElmtById("infoBoxExpanderWrapper");
 
     function addVisitsCallback() {
-      var bhist = PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
-      ok(bhist.isVisited(PlacesUtils._uri(TEST_URI)), "Visit has been added.");
-
       // open all bookmarks node
       PO.selectLeftPaneQuery("AllBookmarks");
       isnot(PO._places.selectedNode, null,

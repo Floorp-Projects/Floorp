@@ -7,6 +7,8 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 /**
  * Allows waiting for an observer notification once.
@@ -126,7 +128,6 @@ NavHistoryObserver.prototype = {
   onEndUpdateBatch: function () {},
   onVisit: function () {},
   onTitleChanged: function () {},
-  onBeforeDeleteURI: function () {},
   onDeleteURI: function () {},
   onClearHistory: function () {},
   onPageChanged: function () {},
@@ -345,4 +346,23 @@ function whenNewWindowLoaded(aOptions, aCallback) {
     win.removeEventListener("load", onLoad, false);
     aCallback(win);
   }, false);
+}
+
+/**
+ * Asynchronously check a url is visited.
+ *
+ * @param aURI The URI.
+ * @param aExpectedValue The expected value.
+ * @return {Promise}
+ * @resolves When the check has been added successfully.
+ * @rejects JavaScript exception.
+ */
+function promiseIsURIVisited(aURI, aExpectedValue) {
+  let deferred = Promise.defer();
+
+  PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+    deferred.resolve(aIsVisited);
+  });
+
+  return deferred.promise;
 }

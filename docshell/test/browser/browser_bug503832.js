@@ -33,7 +33,6 @@ function test() {
                 finish();
             }
         },
-        onBeforeDeleteURI: function(aURI) {},
         onDeleteURI: function(aURI) {},
         onClearHistory: function() {},
         onPageChanged: function(aURI, aWhat, aValue) {},

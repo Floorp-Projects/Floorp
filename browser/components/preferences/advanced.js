@@ -238,7 +238,8 @@ var gAdvancedPane = {
     }
 
     let checkbox = document.getElementById("submitHealthReportBox");
-    policy.healthReportUploadEnabled = checkbox.checked;
+    policy.recordHealthReportUploadEnabled(checkbox.checked,
+                                           "Checkbox from preferences pane");
   },
 #endif
 

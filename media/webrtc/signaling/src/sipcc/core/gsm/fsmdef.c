@@ -3527,18 +3527,18 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
+    if (!dcb) {
+        FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+            0, strlib_empty());
+        return SM_RC_CLEANUP;
+    }
+
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
     if (sdpmode == FALSE) {
         ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty());
         return (SM_RC_END);
-    }
-
-    if (dcb == NULL) {
-        FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
-            dcb->caller_id.call_instance_id, strlib_empty());
-        return SM_RC_CLEANUP;
     }
 
     if (!dcb->sdp) {

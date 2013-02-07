@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=94514
+Specifically, this is a test page that actually submits a form.
+-->
+<head>
+  <title>Test Page for Bug 94515</title>
+</head>
+<body>
+<form id="testForm" method="POST">
+  <input type="submit" id="send"/>
+</form>
+
+<script class="testbody" type="text/javascript">
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+if (!window.location.href.match("posted=1")) {
+  // Here we just submit the form
+  var form = document.getElementById("testForm");
+  form.action = window.location.href + "?posted=1";
+  form.submit();
+} else {
+  window.location.href = "http://mochi.test:8888/tests/toolkit/components/places/tests/bug94514-postpage.html";
+}
+
+</script>
+</body>
+</html>

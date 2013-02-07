@@ -59,6 +59,8 @@
         'COMPILER_IMPLEMENTATION',
       ],
       'sources': [
+        'compiler/ArrayBoundsClamper.cpp',
+        'compiler/ArrayBoundsClamper.h',
         'compiler/BaseTypes.h',
         'compiler/BuiltInFunctionEmulator.cpp',
         'compiler/BuiltInFunctionEmulator.h',
