@@ -1765,7 +1765,7 @@ PreallocateObjectDynamicSlots(JSContext *cx, UnrootedShape shape, HeapSlot **slo
 
 inline bool
 DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
-                              JSProtoKey key, JSObject *ctor, JSObject *proto)
+                              JSProtoKey key, HandleObject ctor, HandleObject proto)
 {
     JS_ASSERT(!global->nativeEmpty()); /* reserved slots already allocated */
     JS_ASSERT(ctor);
