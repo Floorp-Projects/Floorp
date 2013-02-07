@@ -314,8 +314,13 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
              if(NS_FAILED(result))
                 break;
 
-             nsRefPtr<nsRange> newRange = new nsRange();
-             result = newRange->SetStart(mElement,mOffset+selectionStart);
+             nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
+             if (!content) {
+               break;
+          }
+
+             nsRefPtr<nsRange> newRange = new nsRange(content);
+             result = newRange->SetStart(content, mOffset+selectionStart);
              NS_ASSERTION(NS_SUCCEEDED(result), "Cannot SetStart");
              if(NS_FAILED(result))
                 break;
