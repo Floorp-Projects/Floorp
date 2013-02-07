@@ -29,8 +29,6 @@ public:
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Voicemail, nsDOMEventTargetHelper)
-
   Voicemail(nsPIDOMWindow* aWindow, nsIRILContentHelper* aRIL);
   virtual ~Voicemail();
 
