@@ -500,6 +500,11 @@ class MacroAssembler : public MacroAssemblerSpecific
                        Label *fail);
     void initGCThing(const Register &obj, JSObject *templateObject);
 
+    // Compares two strings for equality based on the JSOP.
+    // This checks for identical pointers, atoms and length and fails for everything else.
+    void compareStrings(JSOp op, Register left, Register right, Register result,
+                        Register temp, Label *fail);
+
     // Checks the flags that signal that parallel code may need to interrupt or
     // abort.  Branches to fail in that case.
     void parCheckInterruptFlags(const Register &tempReg,
