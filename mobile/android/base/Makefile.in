@@ -1094,6 +1094,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/spinner.xml                            \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
+  mobile/android/base/resources/drawable/tab_row.xml                            \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
