@@ -3985,19 +3985,6 @@ nsDOMClassInfo::PreCreate(nsISupports *nativeObj, JSContext *cx,
                           JSObject *globalObj, JSObject **parentObj)
 {
   *parentObj = globalObj;
-
-  nsCOMPtr<nsPIDOMWindow> piwin = do_QueryWrapper(cx, globalObj);
-
-  if (!piwin) {
-    return NS_OK;
-  }
-
-  if (piwin->IsOuterWindow()) {
-    nsGlobalWindow *win = ((nsGlobalWindow *)piwin.get())->
-                            GetCurrentInnerWindowInternal();
-    return SetParentToWindow(win, parentObj);
-  }
-
   return NS_OK;
 }
 
