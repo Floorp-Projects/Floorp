@@ -38,7 +38,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMText.h"
-#include "nsIEnumerator.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLDocument.h"
 #include "nsINode.h"
@@ -2306,22 +2305,13 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
         
         // else blocks not same type, or not siblings.  Delete everything except
         // table elements.
-        nsCOMPtr<nsIEnumerator> enumerator;
-        res = aSelection->GetEnumerator(getter_AddRefs(enumerator));
-        NS_ENSURE_SUCCESS(res, res);
-        NS_ENSURE_TRUE(enumerator, NS_ERROR_UNEXPECTED);
-
         join = true;
 
-        for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
-        {
-          nsCOMPtr<nsISupports> currentItem;
-          res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-          NS_ENSURE_SUCCESS(res, res);
-          NS_ENSURE_TRUE(currentItem, NS_ERROR_UNEXPECTED);
+        uint32_t rangeCount = aSelection->GetRangeCount();
+        for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
+          nsRefPtr<nsRange> range = aSelection->GetRangeAt(rangeIdx);
 
           // build a list of nodes in the range
-          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
           nsCOMArray<nsIDOMNode> arrayOfNodes;
           nsTrivialFunctor functor;
           nsDOMSubtreeIterator iter;
@@ -5776,25 +5766,15 @@ nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
   nsCOMPtr<nsISelection>selection;
   res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-  NS_ENSURE_TRUE(selPriv, NS_ERROR_FAILURE);
+  Selection* sel = static_cast<Selection*>(selection.get());
+  NS_ENSURE_TRUE(sel, NS_ERROR_FAILURE);
   // added this in so that ui code can ask to change an entire list, even if selection
   // is only in part of it.  used by list item dialog.
   if (aEntireList)
   {       
-    nsCOMPtr<nsIEnumerator> enumerator;
-    res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(enumerator, NS_ERROR_UNEXPECTED);
-
-    for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
-    {
-      nsCOMPtr<nsISupports> currentItem;
-      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-      NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_TRUE(currentItem, NS_ERROR_UNEXPECTED);
-
-      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+    uint32_t rangeCount = sel->GetRangeCount();
+    for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
+      nsRefPtr<nsRange> range = sel->GetRangeAt(rangeIdx);
       nsCOMPtr<nsIDOMNode> commonParent, parent, tmp;
       range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
       if (commonParent)
@@ -7797,21 +7777,11 @@ nsHTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult)
   nsCOMPtr<nsISelection>selection;
   nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
-  nsCOMPtr<nsISelectionPrivate>selPriv(do_QueryInterface(selection));
   
-  nsCOMPtr<nsIEnumerator> enumerator;
-  res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(enumerator, NS_ERROR_UNEXPECTED);
-
-  for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
-  {
-    nsCOMPtr<nsISupports> currentItem;
-    res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(currentItem, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+  Selection* sel = static_cast<Selection*>(selection.get());
+  uint32_t rangeCount = sel->GetRangeCount();
+  for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
+    nsRefPtr<nsRange> range = sel->GetRangeAt(rangeIdx);
     nsCOMPtr<nsIDOMNode> startParent, endParent;
     range->GetStartContainer(getter_AddRefs(startParent));
     if (startParent)
