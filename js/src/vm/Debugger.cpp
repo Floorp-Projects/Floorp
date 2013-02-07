@@ -2541,8 +2541,7 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseInitializedLength(cx, 0, scripts.length());
 
     for (size_t i = 0; i < scripts.length(); i++) {
-        JSObject *scriptObject =
-            dbg->wrapScript(cx, Handle<JSScript*>::fromMarkedLocation(&scripts[i]));
+        JSObject *scriptObject = dbg->wrapScript(cx, scripts.handleAt(i));
         if (!scriptObject)
             return false;
         result->setDenseElement(i, ObjectValue(*scriptObject));
@@ -3741,9 +3740,8 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
             return false;
         }
         for (size_t i = 0; i < keys.length(); i++) {
-            HandleId keyp = HandleId::fromMarkedLocation(&keys[i]);
-            MutableHandleValue valp = MutableHandleValue::fromMarkedLocation(&values[i]);
-            if (!JSObject::getGeneric(cx, bindingsobj, bindingsobj, keyp, valp) ||
+            MutableHandleValue valp = values.handleAt(i);
+            if (!JSObject::getGeneric(cx, bindingsobj, bindingsobj, keys.handleAt(i), valp) ||
                 !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
@@ -3781,7 +3779,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
         RootedId id(cx);
         for (size_t i = 0; i < keys.length(); i++) {
             id = keys[i];
-            MutableHandleValue val = MutableHandleValue::fromMarkedLocation(&values[i]);
+            MutableHandleValue val = values.handleAt(i);
             if (!cx->compartment->wrap(cx, val.address()) ||
                 !DefineNativeProperty(cx, env, id, val, NULL, NULL, 0, 0, 0))
             {
@@ -4299,7 +4297,7 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         ErrorCopier ec(ac, dbg->toJSObject());
         for (size_t i = 0; i < n; i++) {
             bool dummy;
-            if (!DefineProperty(cx, obj, Handle<jsid>::fromMarkedLocation(&rewrappedIds[i]),
+            if (!DefineProperty(cx, obj, rewrappedIds.handleAt(i),
                                 rewrappedDescs[i], true, &dummy))
             {
                 return false;

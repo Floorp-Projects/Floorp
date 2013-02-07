@@ -24,6 +24,7 @@ using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
 
 
+// Duplicated in jsobj.cpp
 static bool
 DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
 {
@@ -34,7 +35,7 @@ DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
 
     bool dummy;
     for (size_t i = 0, len = ids.length(); i < len; i++) {
-        if (!DefineProperty(cx, obj, Handle<jsid>::fromMarkedLocation(&ids[i]), descs[i], true, &dummy))
+        if (!DefineProperty(cx, obj, ids.handleAt(i), descs[i], true, &dummy))
             return false;
     }
 
@@ -72,7 +73,7 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 1. */
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args.length() ? args[0] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.get(0), &id))
         return false;
 
     /* Step 2. */
@@ -321,12 +322,12 @@ obj_toString(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 3. */
-    JSObject *obj = ToObject(cx, args.thisv());
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
     /* Steps 4-5. */
-    JSString *str = js::obj_toStringHelper(cx, obj);
+    UnrootedString str = js::obj_toStringHelper(cx, obj);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -342,7 +343,7 @@ obj_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    JSObject *obj = ToObject(cx, args.thisv());
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -355,7 +356,7 @@ static JSBool
 obj_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, args.thisv());
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
     args.rval().setObject(*obj);
@@ -434,7 +435,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args.length() ? args[0] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.get(0), &id))
         return JS_FALSE;
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
@@ -470,7 +471,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args.length() ? args[0] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.get(0), &id))
         return JS_FALSE;
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
@@ -619,7 +620,7 @@ obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    Value idValue = args.length() ? args[0] : UndefinedValue();
+    Value idValue = args.get(0);
 
     /* Step 1, 2. */
     jsid id;
@@ -710,7 +711,7 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    JSObject *proto = v.toObjectOrNull();
+    RootedObject proto(cx, v.toObjectOrNull());
 
     /*
      * Use the callee's global as the parent of the new object to avoid dynamic
@@ -748,7 +749,7 @@ obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyDescriptor", &obj))
         return JS_FALSE;
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args.length() > 1 ? args[1] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.get(1), &id))
         return JS_FALSE;
     return GetOwnPropertyDescriptor(cx, obj, id, args.rval());
 }
@@ -831,15 +832,16 @@ obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 obj_defineProperty(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx);
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperty", &obj))
         return false;
 
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, argc >= 2 ? vp[3] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.get(1), &id))
         return JS_FALSE;
 
-    const Value descval = argc >= 3 ? vp[4] : UndefinedValue();
+    const Value descval = args.get(2);
 
     JSBool junk;
     if (!js_DefineOwnProperty(cx, obj, id, descval, &junk))
