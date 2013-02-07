@@ -60,7 +60,6 @@ function reflectString(aParameters)
     form: [ "acceptCharset", "name", "target" ],
     input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ],
     link: [ "crossOrigin" ],
-    source: [ "media" ],
     textarea: [ "name", "placeholder" ]
   };
   if (!(element.localName in todoAttrs) || todoAttrs[element.localName].indexOf(idlAttr) == -1) {

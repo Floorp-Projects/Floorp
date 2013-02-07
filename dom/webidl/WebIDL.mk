@@ -196,6 +196,12 @@ webidl_files = \
   XULElement.webidl \
   $(NULL)
 
+ifdef MOZ_MEDIA
+webidl_files += \
+  HTMLSourceElement.webidl \
+  $(NULL)
+endif
+
 ifdef MOZ_WEBGL
 webidl_files += \
   WebGLRenderingContext.webidl \
