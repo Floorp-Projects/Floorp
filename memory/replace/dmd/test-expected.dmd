@@ -57,7 +57,7 @@ Twice-reported stack trace records
 
 Twice-reported: 1 block in stack trace record 1 of 4
  80 bytes (79 requested / 1 slop)
- 0.72% of the heap (0.72% cumulative);  29.41% of twice-reported (29.41% cumulative)
+ 0.66% of the heap (0.66% cumulative);  29.41% of twice-reported (29.41% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -69,7 +69,7 @@ Twice-reported: 1 block in stack trace record 1 of 4
 
 Twice-reported: 1 block in stack trace record 2 of 4
  80 bytes (78 requested / 2 slop)
- 0.72% of the heap (1.45% cumulative);  29.41% of twice-reported (58.82% cumulative)
+ 0.66% of the heap (1.32% cumulative);  29.41% of twice-reported (58.82% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -81,7 +81,7 @@ Twice-reported: 1 block in stack trace record 2 of 4
 
 Twice-reported: 1 block in stack trace record 3 of 4
  80 bytes (77 requested / 3 slop)
- 0.72% of the heap (2.17% cumulative);  29.41% of twice-reported (88.24% cumulative)
+ 0.66% of the heap (1.99% cumulative);  29.41% of twice-reported (88.24% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -93,7 +93,7 @@ Twice-reported: 1 block in stack trace record 3 of 4
 
 Twice-reported: 1 block in stack trace record 4 of 4
  32 bytes (30 requested / 2 slop)
- 0.29% of the heap (2.46% cumulative);  11.76% of twice-reported (100.00% cumulative)
+ 0.26% of the heap (2.25% cumulative);  11.76% of twice-reported (100.00% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -109,19 +109,19 @@ Unreported stack trace records
 
 Unreported: 9 blocks in stack trace record 1 of 3
  1,008 bytes (900 requested / 108 slop)
- 9.10% of the heap (9.10% cumulative);  81.82% of unreported (81.82% cumulative)
+ 8.34% of the heap (8.34% cumulative);  81.82% of unreported (81.82% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
 Unreported: 2 blocks in stack trace record 2 of 3
  112 bytes (112 requested / 0 slop)
- 1.01% of the heap (10.12% cumulative);  9.09% of unreported (90.91% cumulative)
+ 0.93% of the heap (9.27% cumulative);  9.09% of unreported (90.91% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
 Unreported: 2 blocks in stack trace record 3 of 3
  112 bytes (112 requested / 0 slop)
- 1.01% of the heap (11.13% cumulative);  9.09% of unreported (100.00% cumulative)
+ 0.93% of the heap (10.19% cumulative);  9.09% of unreported (100.00% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -131,19 +131,19 @@ Unreported stack frame records
 
 Unreported: 9 blocks from 1 stack trace record in stack frame record M of N
  1,008 bytes (900 requested / 108 slop)
- 9.10% of the heap;  0.00% of unreported
+ 8.34% of the heap;  0.00% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 2 blocks from 1 stack trace record in stack frame record M of N
  112 bytes (112 requested / 0 slop)
- 1.01% of the heap;  0.00% of unreported
+ 0.93% of the heap;  0.00% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 2 blocks from 1 stack trace record in stack frame record M of N
  112 bytes (112 requested / 0 slop)
- 1.01% of the heap;  0.00% of unreported
+ 0.93% of the heap;  0.00% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
@@ -153,7 +153,7 @@ Once-reported stack trace records
 
 Once-reported: 1 block in stack trace record 1 of 11
  8,192 bytes (4,097 requested / 4,095 slop)
- 73.99% of the heap (73.99% cumulative);  85.62% of once-reported (85.62% cumulative)
+ 67.77% of the heap (67.77% cumulative);  77.40% of once-reported (77.40% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -161,17 +161,17 @@ Once-reported: 1 block in stack trace record 1 of 11
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block in stack trace record 2 of 11
- 512 bytes (512 requested / 0 slop)
- 4.62% of the heap (78.61% cumulative);  5.35% of once-reported (90.97% cumulative)
+ 1,024 bytes (1,023 requested / 1 slop)
+ 8.47% of the heap (76.24% cumulative);  9.67% of once-reported (87.07% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
  Reported at
    ... RunTestMode ... DMD.cpp
 
-Once-reported: 2 blocks in stack trace record 3 of 11
- 240 bytes (240 requested / 0 slop)
- 2.17% of the heap (80.78% cumulative);  2.51% of once-reported (93.48% cumulative)
+Once-reported: 1 block in stack trace record 3 of 11
+ 512 bytes (512 requested / 0 slop)
+ 4.24% of the heap (80.48% cumulative);  4.84% of once-reported (91.91% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -180,16 +180,16 @@ Once-reported: 2 blocks in stack trace record 3 of 11
 
 Once-reported: 2 blocks in stack trace record 4 of 11
  240 bytes (240 requested / 0 slop)
- 2.17% of the heap (82.95% cumulative);  2.51% of once-reported (95.99% cumulative)
+ 1.99% of the heap (82.46% cumulative);  2.27% of once-reported (94.18% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
  Reported at
    ... RunTestMode ... DMD.cpp
 
-Once-reported: 1 block in stack trace record 5 of 11
- 96 bytes (96 requested / 0 slop)
- 0.87% of the heap (83.82% cumulative);  1.00% of once-reported (96.99% cumulative)
+Once-reported: 2 blocks in stack trace record 5 of 11
+ 240 bytes (240 requested / 0 slop)
+ 1.99% of the heap (84.45% cumulative);  2.27% of once-reported (96.45% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -198,7 +198,7 @@ Once-reported: 1 block in stack trace record 5 of 11
 
 Once-reported: 1 block in stack trace record 6 of 11
  96 bytes (96 requested / 0 slop)
- 0.87% of the heap (84.68% cumulative);  1.00% of once-reported (97.99% cumulative)
+ 0.79% of the heap (85.24% cumulative);  0.91% of once-reported (97.35% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -206,8 +206,8 @@ Once-reported: 1 block in stack trace record 6 of 11
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block in stack trace record 7 of 11
- 80 bytes (80 requested / 0 slop)
- 0.72% of the heap (85.40% cumulative);  0.84% of once-reported (98.83% cumulative)
+ 96 bytes (96 requested / 0 slop)
+ 0.79% of the heap (86.04% cumulative);  0.91% of once-reported (98.26% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -216,7 +216,7 @@ Once-reported: 1 block in stack trace record 7 of 11
 
 Once-reported: 1 block in stack trace record 8 of 11
  80 bytes (80 requested / 0 slop)
- 0.72% of the heap (86.13% cumulative);  0.84% of once-reported (99.67% cumulative)
+ 0.66% of the heap (86.70% cumulative);  0.76% of once-reported (99.02% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -224,8 +224,8 @@ Once-reported: 1 block in stack trace record 8 of 11
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block in stack trace record 9 of 11
- 16 bytes (10 requested / 6 slop)
- 0.14% of the heap (86.27% cumulative);  0.17% of once-reported (99.83% cumulative)
+ 80 bytes (80 requested / 0 slop)
+ 0.66% of the heap (87.36% cumulative);  0.76% of once-reported (99.77% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -233,8 +233,8 @@ Once-reported: 1 block in stack trace record 9 of 11
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block in stack trace record 10 of 11
- 8 bytes (0 requested / 8 slop)
- 0.07% of the heap (86.34% cumulative);  0.08% of once-reported (99.92% cumulative)
+ 16 bytes (10 requested / 6 slop)
+ 0.13% of the heap (87.49% cumulative);  0.15% of once-reported (99.92% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -243,7 +243,7 @@ Once-reported: 1 block in stack trace record 10 of 11
 
 Once-reported: 1 block in stack trace record 11 of 11
  8 bytes (0 requested / 8 slop)
- 0.07% of the heap (86.42% cumulative);  0.08% of once-reported (100.00% cumulative)
+ 0.07% of the heap (87.56% cumulative);  0.08% of once-reported (100.00% cumulative)
  Allocated at
    ... RunTestMode ... DMD.cpp
 
@@ -256,37 +256,37 @@ Once-reported stack frame records
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  8,192 bytes (4,097 requested / 4,095 slop)
- 73.99% of the heap;  0.00% of once-reported
+ 67.77% of the heap;  0.00% of once-reported
+ PC is
+   ... RunTestMode ... DMD.cpp
+
+Once-reported: 1 block from 1 stack trace record in stack frame record M of N
+ 1,024 bytes (1,023 requested / 1 slop)
+ 8.47% of the heap;  0.00% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  512 bytes (512 requested / 0 slop)
- 4.62% of the heap;  0.00% of once-reported
+ 4.24% of the heap;  0.00% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 4 blocks from 3 stack trace records in stack frame record M of N
  416 bytes (416 requested / 0 slop)
- 3.76% of the heap;  0.00% of once-reported
+ 3.44% of the heap;  0.00% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 4 blocks from 3 stack trace records in stack frame record M of N
  416 bytes (416 requested / 0 slop)
- 3.76% of the heap;  0.00% of once-reported
+ 3.44% of the heap;  0.00% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  16 bytes (10 requested / 6 slop)
- 0.14% of the heap;  0.00% of once-reported
- PC is
-   ... RunTestMode ... DMD.cpp
-
-Once-reported: 1 block from 1 stack trace record in stack frame record M of N
- 8 bytes (0 requested / 8 slop)
- 0.07% of the heap;  0.00% of once-reported
+ 0.13% of the heap;  0.00% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
@@ -300,10 +300,10 @@ Once-reported: 1 block from 1 stack trace record in stack frame record M of N
 Summary
 ------------------------------------------------------------------
 
-Total:                11,072 bytes (100.00%) in      30 blocks (100.00%)
-Unreported:            1,232 bytes ( 11.13%) in      13 blocks ( 43.33%)
-Once-reported:         9,568 bytes ( 86.42%) in      13 blocks ( 43.33%)
-Twice-reported:          272 bytes (  2.46%) in       4 blocks ( 13.33%)
+Total:                12,088 bytes (100.00%) in      30 blocks (100.00%)
+Unreported:            1,232 bytes ( 10.19%) in      13 blocks ( 43.33%)
+Once-reported:        10,584 bytes ( 87.56%) in      13 blocks ( 43.33%)
+Twice-reported:          272 bytes (  2.25%) in       4 blocks ( 13.33%)
 
 ------------------------------------------------------------------
 Invocation
