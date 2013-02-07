@@ -31,15 +31,15 @@ struct ICStubSpace
     const static size_t STUB_DEFAULT_CHUNK_SIZE = 256;
     LifoAlloc allocator_;
 
-    inline void *alloc_(size_t size) {
-        return allocator_.alloc(size);
-    }
-
   public:
     inline ICStubSpace()
       : allocator_(STUB_DEFAULT_CHUNK_SIZE) {}
 
-    JS_DECLARE_NEW_METHODS(allocate, alloc_, inline)
+    inline void *alloc(size_t size) {
+        return allocator_.alloc(size);
+    }
+
+    JS_DECLARE_NEW_METHODS(allocate, alloc, inline)
 
     inline void adoptFrom(ICStubSpace *other) {
         allocator_.transferFrom(&(other->allocator_));
@@ -206,7 +206,7 @@ struct BaselineScript
         return icEntries_;
     }
 
-    void copyICEntries(const ICEntry *entries, MacroAssembler &masm);
+    void copyICEntries(HandleScript script, const ICEntry *entries, MacroAssembler &masm);
     void adoptFallbackStubs(ICStubSpace *stubSpace);
 
     size_t numPCMappingEntries() const {

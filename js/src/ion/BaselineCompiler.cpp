@@ -130,12 +130,12 @@ BaselineCompiler::compile()
 
     script->baseline->setMethod(code);
 
-    // Copy IC entries
-    if (icEntries_.length())
-        baselineScript->copyICEntries(&icEntries_[0], masm);
-
     if (pcMappingEntries_.length())
         baselineScript->copyPCMappingEntries(&pcMappingEntries_[0], masm);
+
+    // Copy IC entries
+    if (icEntries_.length())
+        baselineScript->copyICEntries(script, &icEntries_[0], masm);
 
     // Adopt fallback stubs from the compiler into the baseline script.
     baselineScript->adoptFallbackStubs(&stubSpace_);
@@ -1770,6 +1770,16 @@ BaselineCompiler::emit_JSOP_TOID()
     masm.bind(&done);
     frame.push(R0);
     return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_TABLESWITCH()
+{
+    frame.popRegsAndSync(1);
+
+    // Call IC.
+    ICTableSwitch::Compiler compiler(cx, pc);
+    return emitIC(compiler.getStub(&stubSpace_));
 }
 
 bool

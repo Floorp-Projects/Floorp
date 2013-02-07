@@ -3225,5 +3225,88 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+bool
+ICTableSwitch::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label isInt32, notInt32, outOfRange;
+    Register scratch = R1.scratchReg();
+
+    masm.branchTestInt32(Assembler::NotEqual, R0, &notInt32);
+
+    Register key = masm.extractInt32(R0, ExtractTemp0);
+
+    masm.bind(&isInt32);
+
+    masm.load32(Address(BaselineStubReg, offsetof(ICTableSwitch, min_)), scratch);
+    masm.subPtr(scratch, key);
+    masm.branch32(Assembler::BelowOrEqual,
+                  Address(BaselineStubReg, offsetof(ICTableSwitch, length_)), key, &outOfRange);
+
+    masm.loadPtr(Address(BaselineStubReg, offsetof(ICTableSwitch, table_)), scratch);
+    masm.loadPtr(BaseIndex(scratch, key, ScalePointer), scratch);
+
+    EmitChangeICReturnAddress(masm, scratch);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&notInt32);
+
+    masm.branchTestDouble(Assembler::NotEqual, R0, &outOfRange);
+    masm.unboxDouble(R0, FloatReg0);
+
+    // N.B. -0 === 0, so convert -0 to a 0 int32.
+    masm.convertDoubleToInt32(FloatReg0, key, &outOfRange, /* negativeZeroCheck = */ false);
+    masm.jump(&isInt32);
+
+    masm.bind(&outOfRange);
+
+    masm.loadPtr(Address(BaselineStubReg, offsetof(ICTableSwitch, defaultTarget_)), scratch);
+
+    EmitChangeICReturnAddress(masm, scratch);
+    EmitReturnFromIC(masm);
+    return true;
+}
+
+ICStub *
+ICTableSwitch::Compiler::getStub(ICStubSpace *space)
+{
+    IonCode *code = getStubCode();
+    if (!code)
+        return NULL;
+
+    jsbytecode *pc = pc_;
+    pc += JUMP_OFFSET_LEN;
+    int32_t low = GET_JUMP_OFFSET(pc);
+    pc += JUMP_OFFSET_LEN;
+    int32_t high = GET_JUMP_OFFSET(pc);
+    int32_t length = high - low + 1;
+    pc += JUMP_OFFSET_LEN;
+
+    void **table = (void**) space->alloc(sizeof(void*) * length);
+    if (!table)
+        return NULL;
+
+    jsbytecode *defaultpc = pc_ + GET_JUMP_OFFSET(pc_);
+
+    for (size_t i = 0; i < length; i++) {
+        int32_t off = GET_JUMP_OFFSET(pc);
+        if (off)
+            table[i] = pc_ + off;
+        else
+            table[i] = defaultpc;
+        pc += JUMP_OFFSET_LEN;
+    }
+
+    return ICTableSwitch::New(space, code, table, low, length, defaultpc);
+}
+
+void
+ICTableSwitch::fixupJumpTable(HandleScript script, BaselineScript *baseline)
+{
+    defaultTarget_ = baseline->nativeCodeForPC(script, (jsbytecode *) defaultTarget_);
+
+    for (size_t i = 0; i < length_; i++)
+        table_[i] = baseline->nativeCodeForPC(script, (jsbytecode *) table_[i]);
+}
+
 } // namespace ion
 } // namespace js
