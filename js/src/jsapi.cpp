@@ -5532,14 +5532,19 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
 
     options.setCompileAndGo(true);
     options.setNoScriptRval(!rval);
+    SourceCompressionToken sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, obj, NullFramePtr(), options,
-                                                    StableCharPtr(chars, length), length));
+                                                    StableCharPtr(chars, length), length,
+                                                    NULL, 0, &sct));
     if (!script)
         return false;
 
     JS_ASSERT(script->getVersion() == options.version);
 
-    return Execute(cx, script, *obj, rval);
+    bool result = Execute(cx, script, *obj, rval);
+    if (!sct.complete())
+        result = false;
+    return result;
 }
 
 extern JS_PUBLIC_API(bool)
