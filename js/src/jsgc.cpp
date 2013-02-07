@@ -2680,8 +2680,6 @@ BeginMarkPhase(JSRuntime *rt)
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         JS_ASSERT(!c->gcLiveArrayBuffers);
         c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
-        c->scheduledForDestruction = false;
-        c->maybeAlive = false;
     }
 
     for (ZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -2699,6 +2697,9 @@ BeginMarkPhase(JSRuntime *rt)
         } else {
             rt->gcIsFull = false;
         }
+
+        zone->scheduledForDestruction = false;
+        zone->maybeAlive = false;
     }
 
     /* Check that at least one zone is scheduled for collection. */
@@ -2779,19 +2780,19 @@ BeginMarkPhase(JSRuntime *rt)
     BufferGrayRoots(gcmarker);
 
     /*
-     * This code ensures that if a compartment is "dead", then it will be
-     * collected in this GC. A compartment is considered dead if its maybeAlive
+     * This code ensures that if a zone is "dead", then it will be
+     * collected in this GC. A zone is considered dead if its maybeAlive
      * flag is false. The maybeAlive flag is set if:
-     *   (1) the compartment has incoming cross-compartment edges, or
-     *   (2) an object in the compartment was marked during root marking, either
+     *   (1) the zone has incoming cross-compartment edges, or
+     *   (2) an object in the zone was marked during root marking, either
      *       as a black root or a gray root.
      * If the maybeAlive is false, then we set the scheduledForDestruction flag.
      * At any time later in the GC, if we try to mark an object whose
-     * compartment is scheduled for destruction, we will assert.
+     * zone is scheduled for destruction, we will assert.
      * NOTE: Due to bug 811587, we only assert if gcManipulatingDeadCompartments
      * is true (e.g., if we're doing a brain transplant).
      *
-     * The purpose of this check is to ensure that a compartment that we would
+     * The purpose of this check is to ensure that a zone that we would
      * normally destroy is not resurrected by a read barrier or an
      * allocation. This might happen during a function like JS_TransplantObject,
      * which iterates over all compartments, live or dead, and operates on their
@@ -2801,22 +2802,22 @@ BeginMarkPhase(JSRuntime *rt)
      * regress.
      *
      * Note that there are certain cases where allocations or read barriers in
-     * dead compartments are difficult to avoid. We detect such cases (via the
+     * dead zone are difficult to avoid. We detect such cases (via the
      * gcObjectsMarkedInDeadCompartment counter) and redo any ongoing GCs after
      * the JS_TransplantObject function has finished. This ensures that the dead
-     * compartments will be cleaned up. See AutoMarkInDeadCompartment and
-     * AutoMaybeTouchDeadCompartments for details.
+     * zones will be cleaned up. See AutoMarkInDeadZone and
+     * AutoMaybeTouchDeadZones for details.
      */
 
     /* Set the maybeAlive flag based on cross-compartment edges. */
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             Cell *dst = e.front().key.wrapped;
-            dst->compartment()->maybeAlive = true;
+            dst->zone()->maybeAlive = true;
         }
 
         if (c->hold)
-            c->maybeAlive = true;
+            c->zone()->maybeAlive = true;
     }
 
     /*
@@ -2824,9 +2825,9 @@ BeginMarkPhase(JSRuntime *rt)
      * during MarkRuntime.
      */
 
-    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        if (!c->maybeAlive)
-            c->scheduledForDestruction = true;
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (!zone->maybeAlive)
+            zone->scheduledForDestruction = true;
     }
     rt->gcFoundBlackGrayEdges = false;
 
@@ -4891,30 +4892,30 @@ ArenaLists::containsArena(JSRuntime *rt, ArenaHeader *needle)
 }
 
 
-AutoMaybeTouchDeadCompartments::AutoMaybeTouchDeadCompartments(JSContext *cx)
+AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSContext *cx)
   : runtime(cx->runtime),
-    markCount(runtime->gcObjectsMarkedInDeadCompartments),
+    markCount(runtime->gcObjectsMarkedInDeadZones),
     inIncremental(IsIncrementalGCInProgress(runtime)),
-    manipulatingDeadCompartments(runtime->gcManipulatingDeadCompartments)
+    manipulatingDeadZones(runtime->gcManipulatingDeadZones)
 {
-    runtime->gcManipulatingDeadCompartments = true;
+    runtime->gcManipulatingDeadZones = true;
 }
 
-AutoMaybeTouchDeadCompartments::AutoMaybeTouchDeadCompartments(JSObject *obj)
+AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSObject *obj)
   : runtime(obj->compartment()->rt),
-    markCount(runtime->gcObjectsMarkedInDeadCompartments),
+    markCount(runtime->gcObjectsMarkedInDeadZones),
     inIncremental(IsIncrementalGCInProgress(runtime)),
-    manipulatingDeadCompartments(runtime->gcManipulatingDeadCompartments)
+    manipulatingDeadZones(runtime->gcManipulatingDeadZones)
 {
-    runtime->gcManipulatingDeadCompartments = true;
+    runtime->gcManipulatingDeadZones = true;
 }
 
-AutoMaybeTouchDeadCompartments::~AutoMaybeTouchDeadCompartments()
+AutoMaybeTouchDeadZones::~AutoMaybeTouchDeadZones()
 {
-    if (inIncremental && runtime->gcObjectsMarkedInDeadCompartments != markCount) {
+    if (inIncremental && runtime->gcObjectsMarkedInDeadZones != markCount) {
         PrepareForFullGC(runtime);
         js::GC(runtime, GC_NORMAL, gcreason::TRANSPLANT);
     }
 
-    runtime->gcManipulatingDeadCompartments = manipulatingDeadCompartments;
+    runtime->gcManipulatingDeadZones = manipulatingDeadZones;
 }
