@@ -214,3 +214,34 @@ function enterFinishedProfileUI() {
 
   toggleJavascriptOnly();
 }
+
+function enterProgressUI() {
+  var pane = document.createElement("div");
+  var label = document.createElement("a");
+  var bar = document.createElement("progress");
+  var string = gStrings.getStr("profiler.loading");
+
+  pane.className = "profileProgressPane";
+  pane.appendChild(label);
+  pane.appendChild(bar);
+
+  var reporter = new ProgressReporter();
+  reporter.addListener(function (rep) {
+    var progress = rep.getProgress();
+
+    if (label.textContent !== string) {
+      label.textContent = string;
+    }
+
+    if (isNaN(progress)) {
+      bar.removeAttribute("value");
+    } else {
+      bar.value = progress;
+    }
+  });
+
+  gMainArea.appendChild(pane);
+  Parser.updateLogSetting();
+
+  return reporter;
+}
