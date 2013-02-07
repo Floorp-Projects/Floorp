@@ -7,6 +7,7 @@
 #ifndef ion_LiveRangeAllocator_h
 #define ion_LiveRangeAllocator_h
 
+#include "mozilla/Array.h"
 #include "mozilla/DebugOnly.h"
 
 #include "ion/RegisterAllocator.h"
@@ -522,7 +523,7 @@ class LiveRangeAllocator : public RegisterAllocator
     // Computed inforamtion
     BitSet **liveIn;
     VirtualRegisterMap<VREG> vregs;
-    FixedArityList<LiveInterval *, AnyRegister::Total> fixedIntervals;
+    mozilla::Array<LiveInterval *, AnyRegister::Total> fixedIntervals;
 
     // Union of all ranges in fixedIntervals, used to quickly determine
     // whether an interval intersects with a fixed register.
