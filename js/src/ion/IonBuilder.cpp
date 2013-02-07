@@ -3370,12 +3370,7 @@ bool
 IonBuilder::inlineScriptedCalls(AutoObjectVector &targets, AutoObjectVector &originals,
                                 CallInfo &callInfo)
 {
-    // Add typeInference hints if not set
-    if (!callInfo.hasTypeInfo()) {
-        types::StackTypeSet *barrier;
-        types::StackTypeSet *types = oracle->returnTypeSet(script(), pc, &barrier);
-        callInfo.setTypeInfo(types, barrier);
-    }
+    JS_ASSERT(callInfo.hasTypeInfo());
 
     // Unwrap the arguments
     JS_ASSERT(callInfo.isWrapped());
@@ -3775,7 +3770,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, MDefinition *call
     if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(type)))
         return NULL;
 
-    RootedObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));
+    RootedObject templateObject(cx, CreateThisForFunctionWithProto(cx, target, proto));
     if (!templateObject)
         return NULL;
 
@@ -4063,18 +4058,22 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
             return false;
     }
 
+    CallInfo callInfo(cx, constructing);
+    if (!callInfo.init(current, argc))
+        return false;
+
+    types::StackTypeSet *barrier;
+    types::StackTypeSet *types = oracle->returnTypeSet(script(), pc, &barrier);
+    callInfo.setTypeInfo(types, barrier);
+
     // Inline native call.
     if (inliningEnabled() && targets.length() == 1 && targets[0]->toFunction()->isNative()) {
-        RootedFunction target(cx, targets[0]->toFunction());
-        InliningStatus status = inlineNativeCall(target->native(), argc, constructing);
+        InliningStatus status = inlineNativeCall(callInfo, targets[0]->toFunction()->native());
         if (status != InliningStatus_NotInlined)
             return status != InliningStatus_Error;
     }
 
     // Inline scriped call(s).
-    CallInfo callInfo(cx, constructing);
-    if (!callInfo.init(current, argc))
-        return false;
     if (inliningEnabled() && targets.length() > 0 && makeInliningDecision(targets, argc))
         return inlineScriptedCalls(targets, originals, callInfo);
 
@@ -4083,7 +4082,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     if (targets.length() == 1)
         target = targets[0]->toFunction();
 
-    return makeCall(target, callInfo, calleeTypes, hasClones);
+    return makeCallBarrier(target, callInfo, calleeTypes, hasClones);
 }
 
 MDefinition *
@@ -4351,15 +4350,13 @@ IonBuilder::jsop_compare(JSOp op)
 JSObject *
 IonBuilder::getNewArrayTemplateObject(uint32_t count)
 {
-    RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, count));
+    RootedScript scriptRoot(cx, script());
+    NewObjectKind newKind = types::UseNewTypeForInitializer(cx, scriptRoot, pc, JSProto_Array);
+    RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, count, NULL, newKind));
     if (!templateObject)
         return NULL;
 
-    RootedScript scriptRoot(cx, script());
-    if (types::UseNewTypeForInitializer(cx, scriptRoot, pc, JSProto_Array)) {
-        if (!JSObject::setSingletonType(cx, templateObject))
-            return NULL;
-    } else {
+    if (newKind != SingletonObject) {
         types::TypeObject *type = types::TypeScript::InitObject(cx, scriptRoot, pc, JSProto_Array);
         if (!type)
             return NULL;
@@ -4397,21 +4394,19 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
 
     RootedObject templateObject(cx);
 
+    RootedScript scriptRoot(cx, script());
+    NewObjectKind newKind = types::UseNewTypeForInitializer(cx, scriptRoot, pc, JSProto_Object);
     if (baseObj) {
-        templateObject = CopyInitializerObject(cx, baseObj);
+        templateObject = CopyInitializerObject(cx, baseObj, newKind);
     } else {
-        gc::AllocKind kind = GuessObjectGCKind(0);
-        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, kind);
+        gc::AllocKind allocKind = GuessObjectGCKind(0);
+        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
     }
 
     if (!templateObject)
         return false;
 
-    RootedScript scriptRoot(cx, script());
-    if (types::UseNewTypeForInitializer(cx, scriptRoot, pc, JSProto_Object)) {
-        if (!JSObject::setSingletonType(cx, templateObject))
-            return false;
-    } else {
+    if (newKind != SingletonObject) {
         types::TypeObject *type = types::TypeScript::InitObject(cx, scriptRoot, pc, JSProto_Object);
         if (!type)
             return false;
@@ -5435,11 +5430,11 @@ IonBuilder::jsop_getelem_dense()
     bool loadDouble = !barrier &&
                       loopDepth_ &&
                       !readOutOfBounds &&
+                      !needsHoleCheck &&
+                      knownType == JSVAL_TYPE_DOUBLE &&
                       oracle->elementReadShouldAlwaysLoadDoubles(script(), pc);
-    if (loadDouble) {
-        JS_ASSERT(!needsHoleCheck && knownType == JSVAL_TYPE_DOUBLE);
+    if (loadDouble)
         elements = addConvertElementsToDoubles(elements);
-    }
 
     MInitializedLength *initLength = MInitializedLength::New(elements);
     current->add(initLength);

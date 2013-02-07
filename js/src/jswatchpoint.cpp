@@ -50,17 +50,17 @@ WatchpointMap::init()
 }
 
 static void
-WatchpointWriteBarrierPost(JSCompartment *comp, WatchpointMap::Map *map, const WatchKey &key,
+WatchpointWriteBarrierPost(JSRuntime *rt, WatchpointMap::Map *map, const WatchKey &key,
                            const Watchpoint &val)
 {
 #ifdef JSGC_GENERATIONAL
-    if ((JSID_IS_OBJECT(key.id) && comp->gcNursery.isInside(JSID_TO_OBJECT(key.id))) ||
-        (JSID_IS_STRING(key.id) && comp->gcNursery.isInside(JSID_TO_STRING(key.id))) ||
-        comp->gcNursery.isInside(key.object) ||
-        comp->gcNursery.isInside(val.closure))
+    if ((JSID_IS_OBJECT(key.id) && rt->gcNursery.isInside(JSID_TO_OBJECT(key.id))) ||
+        (JSID_IS_STRING(key.id) && rt->gcNursery.isInside(JSID_TO_STRING(key.id))) ||
+        rt->gcNursery.isInside(key.object) ||
+        rt->gcNursery.isInside(val.closure))
     {
         typedef HashKeyRef<WatchpointMap::Map, WatchKey> WatchKeyRef;
-        comp->gcStoreBuffer.putGeneric(WatchKeyRef(map, key));
+        rt->gcStoreBuffer.putGeneric(WatchKeyRef(map, key));
     }
 #endif
 }
@@ -82,7 +82,7 @@ WatchpointMap::watch(JSContext *cx, HandleObject obj, HandleId id,
         js_ReportOutOfMemory(cx);
         return false;
     }
-    WatchpointWriteBarrierPost(obj->compartment(), &map, WatchKey(obj, id), w);
+    WatchpointWriteBarrierPost(cx->runtime, &map, WatchKey(obj, id), w);
     return true;
 }
 

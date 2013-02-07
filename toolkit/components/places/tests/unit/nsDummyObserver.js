@@ -24,7 +24,6 @@ DummyObserver.prototype = {
     os.notifyObservers(null, "dummy-observer-visited", null);
   },
   onTitleChanged: function () {},
-  onBeforeDeleteURI: function () {},
   onDeleteURI: function () {},
   onClearHistory: function () {},
   onPageChanged: function () {},
@@ -39,7 +38,6 @@ DummyObserver.prototype = {
     os.notifyObservers(null, "dummy-observer-item-added", null);
   },
   onItemChanged: function () {},
-  onBeforeItemRemoved: function() {},
   onItemRemoved: function() {},
   onItemVisited: function() {},
   onItemMoved: function() {},

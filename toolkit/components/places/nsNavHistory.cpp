@@ -2724,10 +2724,6 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
       filteredPlaceIds.AppendInt(placeId);
       URIs.AppendObject(uri);
       GUIDs.AppendElement(guid);
-      // Notify we are about to remove this uri.
-      NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                       nsINavHistoryObserver,
-                       OnBeforeDeleteURI(uri, guid, nsINavHistoryObserver::REASON_DELETED));
     }
     else {
       // Notify that we will delete all visits for this page, but not the page

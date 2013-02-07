@@ -2450,13 +2450,13 @@ public:
     } else {
       event = NS_NewRunnableMethod(this, &StreamListener::DoNotifyUnblocked);
     }
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event);
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
   }
   virtual void NotifyFinished(MediaStreamGraph* aGraph)
   {
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(this, &StreamListener::DoNotifyFinished);
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event);
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
   }
   virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph,
                                     bool aHasCurrentData)
@@ -2471,7 +2471,7 @@ public:
     if (aHasCurrentData) {
       nsCOMPtr<nsIRunnable> event =
         NS_NewRunnableMethod(this, &StreamListener::DoNotifyHaveCurrentData);
-      aGraph->DispatchToMainThreadAfterStreamStateUpdate(event);
+      aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
     }
   }
   virtual void NotifyOutput(MediaStreamGraph* aGraph)
@@ -2482,7 +2482,7 @@ public:
     mPendingNotifyOutput = true;
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(this, &StreamListener::DoNotifyOutput);
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event);
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
   }
 
 private:

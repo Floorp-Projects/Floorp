@@ -28,6 +28,10 @@
   Cu.import("resource://gre/modules/SettingsDB.jsm");
   Cu.import("resource://gre/modules/SettingsQueue.jsm");
   Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  if (Services.prefs.getBoolPref("general.useragent.enable_overrides")) {
+    Cu.import('resource://gre/modules/UserAgentOverrides.jsm');
+    UserAgentOverrides.init();
+  }
 
   Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci["nsIAppShellService"]);
   Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci["nsIWindowMediator"]);
@@ -69,6 +73,8 @@
   Cc["@mozilla.org/thread-manager;1"].getService(Ci["nsIThreadManager"]);
   Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci["nsIAppStartup"]);
   Cc["@mozilla.org/uriloader;1"].getService(Ci["nsIURILoader"]);
+
+  Services.io.getProtocolHandler("app");
 
   docShell.isActive = false;
   docShell.createAboutBlankContentViewer(null);

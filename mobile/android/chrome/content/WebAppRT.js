@@ -8,7 +8,6 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 function pref(name, value) {
   return {
@@ -32,17 +31,17 @@ let WebAppRT = {
     pref("toolkit.telemetry.notifiedOptOut", 999)
   ],
 
-  init: function(isUpdate, url) {
+  init: function(aStatus, aUrl, aCallback) {
     this.deck = document.getElementById("browsers");
     this.deck.addEventListener("click", this, false, true);
 
     // on first run, update any prefs
-    if (isUpdate == "new") {
+    if (aStatus == "new") {
       this.getDefaultPrefs().forEach(this.addPref);
 
       // prevent offering to use helper apps for things that this app handles
       // i.e. don't show the "Open in market?" popup when we're showing the market app
-      let uri = Services.io.newURI(url, null, null);
+      let uri = Services.io.newURI(aUrl, null, null);
       Services.perms.add(uri, "native-intent", Ci.nsIPermissionManager.DENY_ACTION);
       Services.perms.add(uri, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
       Services.perms.add(uri, "indexedDB", Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -54,11 +53,10 @@ let WebAppRT = {
       Services.prefs.setCharPref("extensions.blocklist.url", blocklist);
     }
 
-    return this.findManifestUrlFor(url);
+    this.findManifestUrlFor(aUrl, aCallback);
   },
 
-  findManifestUrlFor: function(aUrl) {
-    let deferred = Promise.defer();
+  findManifestUrlFor: function(aUrl, aCallback) {
     let request = navigator.mozApps.mgmt.getAll();
     request.onsuccess = function() {
       let apps = request.result;
@@ -71,25 +69,23 @@ let WebAppRT = {
         //let app = DOMApplicationRegistry.getAppByManifestURL(aUrl);
         if (app.manifestURL == aUrl) {
           BrowserApp.manifestUrl = aUrl;
-          deferred.resolve(manifest.fullLaunchPath());
+          aCallback(manifest.fullLaunchPath());
           return;
         }
     
         // Otherwise, see if the apps launch path is this url
         if (manifest.fullLaunchPath() == aUrl) {
           BrowserApp.manifestUrl = app.manifestURL;
-          deferred.resolve(aUrl);
+          aCallback(aUrl);
           return;
         }
       }
-      deferred.reject("");
+      aCallback("");
     };
 
     request.onerror = function() {
-      deferred.reject("");
+      aCallback("");
     };
-
-    return deferred.promise;
   },
 
   getDefaultPrefs: function() {

@@ -10,13 +10,14 @@
 #include "AudioContext.h"
 #include "jsfriendapi.h"
 #include "mozilla/ErrorResult.h"
+#include "AudioSegment.h"
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBuffer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannels)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mJSChannels)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->ClearJSChannels();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -28,8 +29,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(AudioBuffer)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  for (uint32_t i = 0; i < tmp->mChannels.Length(); ++i) {
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mChannels[i])
+  for (uint32_t i = 0; i < tmp->mJSChannels.Length(); ++i) {
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJSChannels[i])
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -41,7 +42,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioBuffer)
 NS_INTERFACE_MAP_END
 
 AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aLength,
-                         uint32_t aSampleRate)
+                         float aSampleRate)
   : mContext(aContext),
     mLength(aLength),
     mSampleRate(aSampleRate)
@@ -59,14 +60,14 @@ AudioBuffer::~AudioBuffer()
 void
 AudioBuffer::ClearJSChannels()
 {
-  mChannels.Clear();
+  mJSChannels.Clear();
   NS_DROP_JS_OBJECTS(this, AudioBuffer);
 }
 
 bool
 AudioBuffer::InitializeBuffers(uint32_t aNumberOfChannels, JSContext* aJSContext)
 {
-  if (!mChannels.SetCapacity(aNumberOfChannels)) {
+  if (!mJSChannels.SetCapacity(aNumberOfChannels)) {
     return false;
   }
   for (uint32_t i = 0; i < aNumberOfChannels; ++i) {
@@ -74,7 +75,7 @@ AudioBuffer::InitializeBuffers(uint32_t aNumberOfChannels, JSContext* aJSContext
     if (!array) {
       return false;
     }
-    mChannels.AppendElement(array);
+    mJSChannels.AppendElement(array);
   }
 
   return true;
@@ -87,15 +88,37 @@ AudioBuffer::WrapObject(JSContext* aCx, JSObject* aScope,
   return AudioBufferBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
+void
+AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
+{
+  if (mSharedChannels) {
+    for (uint32_t i = 0; i < mJSChannels.Length(); ++i) {
+      const float* data = mSharedChannels->GetData(i);
+      // The following code first zeroes the array and then copies our data
+      // into it. We could avoid this with additional JS APIs to construct
+      // an array (or ArrayBuffer) containing initial data.
+      JSObject* array = JS_NewFloat32Array(aJSContext, mLength);
+      memcpy(JS_GetFloat32ArrayData(array), data, sizeof(float)*mLength);
+      mJSChannels[i] = array;
+    }
+
+    mSharedChannels = nullptr;
+    mResampledChannels = nullptr;
+  }
+}
+
 JSObject*
 AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,
-                            ErrorResult& aRv) const
+                            ErrorResult& aRv)
 {
-  if (aChannel >= mChannels.Length()) {
+  if (aChannel >= NumberOfChannels()) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
   }
-  return GetChannelData(aChannel);
+
+  RestoreJSChannelData(aJSContext);
+
+  return mJSChannels[aChannel];
 }
 
 void
@@ -103,13 +126,83 @@ AudioBuffer::SetChannelDataFromArrayBufferContents(JSContext* aJSContext,
                                                    uint32_t aChannel,
                                                    void* aContents)
 {
-  MOZ_ASSERT(aChannel < mChannels.Length());
+  RestoreJSChannelData(aJSContext);
+
+  MOZ_ASSERT(aChannel < NumberOfChannels());
   JSObject* arrayBuffer = JS_NewArrayBufferWithContents(aJSContext, aContents);
-  mChannels[aChannel] = JS_NewFloat32ArrayWithBuffer(aJSContext, arrayBuffer,
-                                                     0, -1);
-  MOZ_ASSERT(mLength == JS_GetTypedArrayLength(mChannels[aChannel]));
+  mJSChannels[aChannel] = JS_NewFloat32ArrayWithBuffer(aJSContext, arrayBuffer,
+                                                       0, -1);
+  MOZ_ASSERT(mLength == JS_GetTypedArrayLength(mJSChannels[aChannel]));
 }
 
-}
+static already_AddRefed<ThreadSharedFloatArrayBufferList>
+StealJSArrayDataIntoThreadSharedFloatArrayBufferList(JSContext* aJSContext,
+                                                     const nsTArray<JSObject*>& aJSArrays)
+{
+  nsRefPtr<ThreadSharedFloatArrayBufferList> result =
+    new ThreadSharedFloatArrayBufferList(aJSArrays.Length());
+  for (uint32_t i = 0; i < aJSArrays.Length(); ++i) {
+    JSObject* arrayBuffer = JS_GetArrayBufferViewBuffer(aJSArrays[i]);
+    void* dataToFree = nullptr;
+    uint8_t* stolenData = nullptr;
+    if (arrayBuffer &&
+        JS_StealArrayBufferContents(aJSContext, arrayBuffer, &dataToFree,
+                                    &stolenData)) {
+      result->SetData(i, dataToFree, reinterpret_cast<float*>(stolenData));
+    } else {
+      result->Clear();
+      return result.forget();
+    }
+  }
+  return result.forget();
 }
 
+ThreadSharedFloatArrayBufferList*
+AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext, uint32_t aRate,
+                                            uint32_t* aLength)
+{
+  if (mResampledChannels && mResampledChannelsRate == aRate) {
+    // return cached data
+    *aLength = mResampledChannelsLength;
+    return mResampledChannels;
+  }
+
+  if (!mSharedChannels) {
+    // Steal JS data
+    mSharedChannels =
+      StealJSArrayDataIntoThreadSharedFloatArrayBufferList(aJSContext, mJSChannels);
+  }
+
+  if (mSampleRate == aRate) {
+    *aLength = mLength;
+    return mSharedChannels;
+  }
+
+  mResampledChannels = new ThreadSharedFloatArrayBufferList(NumberOfChannels());
+
+  double newLengthD = ceil(Duration()*aRate);
+  uint32_t newLength = uint32_t(newLengthD);
+  *aLength = newLength;
+  double size = sizeof(float)*NumberOfChannels()*newLengthD;
+  if (size != uint32_t(size)) {
+    return mResampledChannels;
+  }
+  float* outputData = static_cast<float*>(malloc(uint32_t(size)));
+  if (!outputData) {
+    return mResampledChannels;
+  }
+
+  for (uint32_t i = 0; i < NumberOfChannels(); ++i) {
+    NS_ERROR("Resampling not supported yet");
+    // const float* inputData = mSharedChannels->GetData(i);
+    // Resample(inputData, mLength, mSampleRate, outputData, newLength, aRate);
+    mResampledChannels->SetData(i, i == 0 ? outputData : nullptr, outputData);
+    outputData += newLength;
+  }
+  mResampledChannelsRate = aRate;
+  mResampledChannelsLength = newLength;
+  return mResampledChannels;
+}
+ 
+}
+}

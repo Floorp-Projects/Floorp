@@ -13,7 +13,7 @@ interface nsINavHistoryBatchCallback;
 /**
  * Observer for bookmarks changes.
  */
-[scriptable, uuid(2fb820a9-9331-4c02-ae41-32a82a4b7aa1)]
+[scriptable, uuid(8ab925f8-af9b-4837-afa0-ffed507212ce)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -66,27 +66,6 @@ interface nsINavBookmarkObserver : nsISupports
                    in PRTime aDateAdded,
                    in ACString aGUID,
                    in ACString aParentGUID);
-
-  /**
-   * Notifies that an item is about to be removed.  Called before the actual
-   * removal will take place.
-   *
-   * @param aItemId
-   *        The id of the bookmark to be removed.
-   * @param aItemType
-   *        The type of the item to be removed (see TYPE_* constants below).
-   * @param aParentId
-   *        The id of the folder containing the item.
-   * @param aGUID
-   *        The unique ID associated with the item.
-   * @param aParentGUID
-   *        The unique ID associated with the item's parent.
-   */
-  void onBeforeItemRemoved(in long long aItemId,
-                           in unsigned short aItemType,
-                           in long long aParentId,
-                           in ACString aGUID,
-                           in ACString aParentGUID);
 
   /**
    * Notifies that an item was removed.  Called after the actual remove took

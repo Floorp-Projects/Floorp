@@ -19,6 +19,9 @@ endif # !_MSC_VER
 EXPORTS = \
   AbstractMediaDecoder.h \
   AudioChannelFormat.h \
+  AudioEventTimeline.h \
+  AudioNodeEngine.h \
+  AudioNodeStream.h \
   AudioSampleFormat.h \
   AudioSegment.h \
   BufferMediaResource.h \
@@ -46,6 +49,8 @@ EXPORTS = \
 
 CPPSRCS = \
   AudioChannelFormat.cpp \
+  AudioNodeEngine.cpp \
+  AudioNodeStream.cpp \
   AudioSegment.cpp \
   DecoderTraits.cpp \
   FileBlockCache.cpp \

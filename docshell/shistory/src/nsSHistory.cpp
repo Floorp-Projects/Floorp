@@ -62,6 +62,8 @@ int32_t nsSHistory::sHistoryMaxTotalViewers = -1;
 // entries were touched, so that we can evict older entries first.
 static uint32_t gTouchCounter = 0;
 
+#ifdef PR_LOGGING
+
 static PRLogModuleInfo*
 GetSHistoryLog()
 {
@@ -104,6 +106,14 @@ GetSHistoryLog()
       LOG_SPEC(format, uri);                               \
     }                                                      \
   PR_END_MACRO
+
+#else // !PR_LOGGING
+
+#define LOG(format)
+#define LOG_SPEC(format, uri)
+#define LOG_SHENTRY_SPEC(format, shentry)
+
+#endif // PR_LOGGING
 
 // Iterates over all registered session history listeners.
 #define ITERATE_LISTENERS(body)                            \

@@ -30,8 +30,13 @@
       var link2 = document.getElementById("scroll");
       link2.innerHTML = "Clicked";
     }
+    function clicked3() {
+      var link3 = document.getElementById("mozLinkPos");
+      link3.innerHTML = "Clicked";
+    }
   </script>
-  <button id="mozLink" type="button" onclick="clicked()" allowevents=true>Click Me!</button>
+  <button id="mozLink" style="position:absolute;left:0px;top:55px;" type="button" onclick="clicked()" allowevents=true>Click Me!</button>
+  <button id="mozLinkPos" style="position:absolute;left:0px;top:355px;" type="button" onclick="clicked3()" allowevents=true>Position!</button>
   <div id="testDiv">
     <a href="#" id="divLink" class="linkClass" onclick="clicked()">Div click me!</a>
     <a href="#" id="divLink2" class="linkClass" onclick="clicked()">Div click me!</a>

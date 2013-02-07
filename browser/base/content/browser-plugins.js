@@ -209,7 +209,7 @@ var gPluginHandler = {
         this._handleClickToPlayEvent(plugin);
         let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
         let pluginName = this._getPluginInfo(plugin).pluginName;
-        let messageString = gNavigatorBundle.getFormattedString("PluginClickToPlay", [pluginName]);
+        let messageString = gNavigatorBundle.getFormattedString("PluginClickToActivate", [pluginName]);
         let overlayText = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgClickToPlay");
         overlayText.textContent = messageString;
         if (eventType == "PluginVulnerableUpdatable" ||
@@ -452,7 +452,7 @@ var gPluginHandler = {
       overlay.addEventListener("click", function(aEvent) {
         // Have to check that the target is not the link to update the plugin
         if (!(aEvent.originalTarget instanceof HTMLAnchorElement) &&
-            !(aEvent.originalTarget instanceof HTMLButtonElement) &&
+            (aEvent.originalTarget.getAttribute('anonid') != 'closeIcon') &&
             aEvent.button == 0 && aEvent.isTrusted) {
           gPluginHandler.activateSinglePlugin(aEvent.target.ownerDocument.defaultView.top, aPlugin);
           aEvent.stopPropagation();

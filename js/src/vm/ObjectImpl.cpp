@@ -8,11 +8,14 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
-#include "gc/Barrier-inl.h"
 #include "js/TemplateLib.h"
+#include "js/Value.h"
 #include "vm/Debugger.h"
 #include "vm/ObjectImpl.h"
 
+#include "jsatominlines.h"
+
+#include "gc/Barrier-inl.h"
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
 
@@ -243,13 +246,13 @@ js::ObjectImpl::checkShapeConsistency()
 void
 js::ObjectImpl::initSlotRange(uint32_t start, const Value *vector, uint32_t length)
 {
-    JS::Zone *zone = this->zone();
+    JSRuntime *rt = runtime();
     HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
     getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
     for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
-        sp->init(zone, this->asObjectPtr(), HeapSlot::Slot, start++, *vector++);
+        sp->init(rt, this->asObjectPtr(), HeapSlot::Slot, start++, *vector++);
     for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
-        sp->init(zone, this->asObjectPtr(), HeapSlot::Slot, start++, *vector++);
+        sp->init(rt, this->asObjectPtr(), HeapSlot::Slot, start++, *vector++);
 }
 
 void

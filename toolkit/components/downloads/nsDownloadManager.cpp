@@ -2268,14 +2268,6 @@ nsDownloadManager::OnTitleChanged(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OnBeforeDeleteURI(nsIURI *aURI,
-                                     const nsACString& aGUID,
-                                     uint16_t aReason)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDownloadManager::OnDeleteURI(nsIURI *aURI,
                                const nsACString& aGUID,
                                uint16_t aReason)

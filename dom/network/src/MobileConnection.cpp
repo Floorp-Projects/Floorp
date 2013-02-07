@@ -7,13 +7,13 @@
 #include "nsIDOMClassInfo.h"
 #include "nsDOMEvent.h"
 #include "nsIObserverService.h"
-#include "USSDReceivedEvent.h"
-#include "DataErrorEvent.h"
+#include "nsIDOMUSSDReceivedEvent.h"
+#include "nsIDOMDataErrorEvent.h"
+#include "nsIDOMCFStateChangeEvent.h"
 #include "mozilla/Services.h"
 #include "IccManager.h"
 #include "GeneratedEvents.h"
 #include "nsIDOMICCCardLockErrorEvent.h"
-#include "CFStateChangeEvent.h"
 
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
@@ -170,25 +170,29 @@ MobileConnection::Observe(nsISupports* aSubject,
     bool ok = dict.Init(nsDependentString(aData));
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-    nsRefPtr<USSDReceivedEvent> event =
-      USSDReceivedEvent::Create(dict.mMessage, dict.mSessionEnded);
-    NS_ASSERTION(event, "This should never fail!");
-
-    nsresult rv = event->Dispatch(ToIDOMEventTarget(), USSDRECEIVED_EVENTNAME);
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMUSSDReceivedEvent(getter_AddRefs(event), nullptr, nullptr);
+    nsCOMPtr<nsIDOMUSSDReceivedEvent> ce = do_QueryInterface(event);
+    nsresult rv = ce->InitUSSDReceivedEvent(USSDRECEIVED_EVENTNAME,
+                                            false, false,
+                                            dict.mMessage, dict.mSessionEnded);
     NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
+
+    return DispatchTrustedEvent(ce);
   }
 
   if (!strcmp(aTopic, kDataErrorTopic)) {
     nsString dataerror;
     dataerror.Assign(aData);
-    nsRefPtr<DataErrorEvent> event = DataErrorEvent::Create(dataerror);
-    NS_ASSERTION(event, "This should never fail!");
 
-    nsresult rv =
-      event->Dispatch(ToIDOMEventTarget(), DATAERROR_EVENTNAME);
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMDataErrorEvent(getter_AddRefs(event), nullptr, nullptr);
+    nsCOMPtr<nsIDOMDataErrorEvent> ce = do_QueryInterface(event);
+    nsresult rv = ce->InitDataErrorEvent(DATAERROR_EVENTNAME,
+                                         false, false, dataerror);
     NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
+
+    return DispatchTrustedEvent(ce);
   }
 
   if (!strcmp(aTopic, kIccCardLockErrorTopic)) {
@@ -250,18 +254,18 @@ MobileConnection::Observe(nsISupports* aSubject,
     bool ok = dict.Init(nsDependentString(aData));
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-    nsRefPtr<CFStateChangeEvent> event =
-      CFStateChangeEvent::Create(dict.mSuccess,
-                                 dict.mAction,
-                                 dict.mReason,
-                                 dict.mNumber,
-                                 dict.mTimeSeconds,
-                                 dict.mServiceClass);
-    NS_ASSERTION(event, "This should never fail!");
-
-    nsresult rv = event->Dispatch(ToIDOMEventTarget(), CFSTATECHANGE_EVENTNAME);
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMCFStateChangeEvent(getter_AddRefs(event), nullptr, nullptr);
+    nsCOMPtr<nsIDOMCFStateChangeEvent> ce = do_QueryInterface(event);
+    nsresult rv = ce->InitCFStateChangeEvent(CFSTATECHANGE_EVENTNAME,
+                                             false, false,
+                                             dict.mSuccess, dict.mAction,
+                                             dict.mReason, dict.mNumber,
+                                             dict.mTimeSeconds,
+                                             dict.mServiceClass);
     NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
+
+    return DispatchTrustedEvent(ce);
   }
 
   MOZ_NOT_REACHED("Unknown observer topic!");

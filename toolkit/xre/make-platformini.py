@@ -6,16 +6,22 @@
 
 from optparse import OptionParser
 from datetime import datetime
+import time
 import sys
 import os
 
 o = OptionParser()
 o.add_option("--buildid", dest="buildid")
 o.add_option("--print-buildid", action="store_true", dest="print_buildid")
+o.add_option("--print-timestamp", action="store_true", dest="print_timestamp")
 o.add_option("--sourcestamp", dest="sourcestamp")
 o.add_option("--sourcerepo", dest="sourcerepo")
 
 (options, args) = o.parse_args()
+
+if options.print_timestamp:
+    print int(time.time())
+    sys.exit(0)
 
 if options.print_buildid:
     print datetime.now().strftime('%Y%m%d%H%M%S')

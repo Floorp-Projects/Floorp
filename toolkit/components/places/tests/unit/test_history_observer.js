@@ -12,7 +12,6 @@ NavHistoryObserver.prototype = {
   onEndUpdateBatch: function() { },
   onVisit: function() { },
   onTitleChanged: function() { },
-  onBeforeDeleteURI: function() { },
   onDeleteURI: function() { },
   onClearHistory: function() { },
   onPageChanged: function() { },
@@ -92,18 +91,6 @@ add_task(function test_onVisit() {
   let testuri = NetUtil.newURI("http://hidden.firefox.com/");
   let testtime = Date.now() * 1000;
   yield task_add_visit(testuri, testtime, TRANSITION_FRAMED_LINK);
-  yield promiseNotify;
-});
-
-add_task(function test_onBeforeDeleteURI() {
-  let promiseNotify = onNotify(function onBeforeDeleteURI(aURI, aGUID,
-                                                          aReason) {
-    do_check_true(aURI.equals(testuri));
-    do_check_guid_for_uri(aURI, aGUID);
-    do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_DELETED);
-  });
-  let [testuri] = yield task_add_visit();
-  PlacesUtils.bhistory.removePage(testuri);
   yield promiseNotify;
 });
 

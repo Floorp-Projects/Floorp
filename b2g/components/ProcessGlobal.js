@@ -57,17 +57,6 @@ ProcessGlobal.prototype = {
                                                             ' '));
       break;
     }
-    case 'remote-browser-frame-shown': {
-      let frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
-      let mm = frameLoader.messageManager;
-
-      const kFrameScript = "chrome://browser/content/UAO_child.js";
-      try {
-        mm.loadFrameScript(kFrameScript, true);
-      } catch (e) {
-        dump('Error loading ' + kFrameScript + ' as frame script: ' + e + '\n');
-      }
-    }
     }
   },
 };

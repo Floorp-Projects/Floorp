@@ -635,11 +635,6 @@ def parse_options():
     parser.add_option('--tree', dest='tree', action='store',
                       default='b2g',
                       help='the tree that the revsion parameter refers to')
-    parser.add_option('--load-early', dest='load_early', action='store_true',
-                      default=False,
-                      help='on an emulator, causes Marionette to load earlier '
-                      'in the startup process than it otherwise would; needed '
-                      'for testing WebAPIs')
 
     options, tests = parser.parse_args()
 

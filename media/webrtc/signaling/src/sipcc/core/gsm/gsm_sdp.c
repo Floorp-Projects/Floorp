@@ -120,7 +120,7 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
     if ( dcb_p->media_cap_tbl == NULL ) {
-         dcb_p->media_cap_tbl = (cc_media_cap_table_t*) cpr_malloc(sizeof(cc_media_cap_table_t));
+         dcb_p->media_cap_tbl = (cc_media_cap_table_t*) cpr_calloc(1, sizeof(cc_media_cap_table_t));
          if ( dcb_p->media_cap_tbl == NULL ) {
              GSM_ERR_MSG(GSM_L_C_F_PREFIX"media table malloc failed.\n",
                     dcb_p->line, dcb_p->call_id, fname);
@@ -128,14 +128,39 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
          }
     }
 
-    *(dcb_p->media_cap_tbl) = g_media_table;
-
     if (sdpmode) {
+        /* Here we are copying only what we need from the g_media_table
+           in order to avoid a data race with its values being set in
+           media_cap_tbl.c */
+        dcb_p->media_cap_tbl->id = g_media_table.id;
+
         /* This needs to change when we handle more than one stream
            of each media type at a time. */
 
+        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].name = CC_AUDIO_1;
+        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].name = CC_VIDEO_1;
+        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].name = CC_DATACHANNEL_1;
+
+        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].type = SDP_MEDIA_AUDIO;
+        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].type = SDP_MEDIA_VIDEO;
+        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].type = SDP_MEDIA_APPLICATION;
+
         dcb_p->media_cap_tbl->cap[CC_AUDIO_1].enabled = FALSE;
         dcb_p->media_cap_tbl->cap[CC_VIDEO_1].enabled = FALSE;
+        /*
+         * This really should be set to FALSE unless we have added
+         * a data channel using createDataChannel(). Right now,
+         * though, those operations are not queued (and, in fact,
+         * the W3C hasn't specified the proper behavior here anyway, so
+         * we would only be implementing speculatively) -- so we'll
+         * always offer data channels until the standard is
+         * a bit more set.
+         */
+        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = TRUE;
+
+        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].support_security = TRUE;
+        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].support_security = TRUE;
+        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].support_security = TRUE;
 
         /* We initialize as RECVONLY to allow the application to
            display incoming media streams, even if it doesn't
@@ -148,17 +173,11 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
         dcb_p->media_cap_tbl->cap[CC_VIDEO_1].support_direction =
           SDP_DIRECTION_RECVONLY;
 
-        /*
-         * This really should be set to FALSE unless we have added
-         * a data channel using createDataChannel(). Right now,
-         * though, those operations are not queued (and, in fact,
-         * the W3C hasn't specified the proper behavior here anyway, so
-         * we would only be implementing speculatively) -- so we'll
-         * always offer data channels until the standard is
-         * a bit more set.
-         */
-        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = TRUE;
+        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].support_direction =
+          SDP_DIRECTION_SENDRECV;
     } else {
+        *(dcb_p->media_cap_tbl) = g_media_table;
+
         dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = FALSE;
 
         if ( dcb_p->video_pref == SDP_DIRECTION_INACTIVE) {

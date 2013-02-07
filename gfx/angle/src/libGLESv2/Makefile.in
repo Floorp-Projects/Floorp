@@ -69,6 +69,7 @@ DEFINES += -DCOMPILER_IMPLEMENTATION
 VPATH += $(srcdir)/../compiler
 # src/compiler:
 CPPSRCS += \
+  ArrayBoundsClamper.cpp \
   BuiltInFunctionEmulator.cpp \
   Compiler.cpp \
   compiler_debug.cpp \

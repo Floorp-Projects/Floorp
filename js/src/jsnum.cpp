@@ -1028,7 +1028,7 @@ js::InitRuntimeNumberState(JSRuntime *rt)
 
     /*
      * Our NaN must be one particular canonical value, because we rely on NaN
-     * encoding for our value representation.  See jsval.h.
+     * encoding for our value representation.  See Value.h.
      */
     d = MOZ_DOUBLE_SPECIFIC_NaN(0, 0x8000000000000ULL);
     number_constants[NC_NaN].dval = js_NaN = d;

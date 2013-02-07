@@ -58,23 +58,23 @@ StackwalkerX86::cfi_register_map_[] = {
   // restored upon return. But the callee_saves flags here really means
   // that the walker should assume they're unchanged if the CFI doesn't
   // mention them, which is clearly wrong for $eip and $esp.
-  { "$eip", ".ra",  false,
+  { toUniqueString("$eip"), toUniqueString(".ra"),  false,
     StackFrameX86::CONTEXT_VALID_EIP, &MDRawContextX86::eip },
-  { "$esp", ".cfa", false,
+  { toUniqueString("$esp"), toUniqueString(".cfa"), false,
     StackFrameX86::CONTEXT_VALID_ESP, &MDRawContextX86::esp },
-  { "$ebp", NULL,   true,
+  { toUniqueString("$ebp"), NULL,   true,
     StackFrameX86::CONTEXT_VALID_EBP, &MDRawContextX86::ebp },
-  { "$eax", NULL,   false,
+  { toUniqueString("$eax"), NULL,   false,
     StackFrameX86::CONTEXT_VALID_EAX, &MDRawContextX86::eax },
-  { "$ebx", NULL,   true,
+  { toUniqueString("$ebx"), NULL,   true,
     StackFrameX86::CONTEXT_VALID_EBX, &MDRawContextX86::ebx },
-  { "$ecx", NULL,   false,
+  { toUniqueString("$ecx"), NULL,   false,
     StackFrameX86::CONTEXT_VALID_ECX, &MDRawContextX86::ecx },
-  { "$edx", NULL,   false,
+  { toUniqueString("$edx"), NULL,   false,
     StackFrameX86::CONTEXT_VALID_EDX, &MDRawContextX86::edx },
-  { "$esi", NULL,   true,
+  { toUniqueString("$esi"), NULL,   true,
     StackFrameX86::CONTEXT_VALID_ESI, &MDRawContextX86::esi },
-  { "$edi", NULL,   true,
+  { toUniqueString("$edi"), NULL,   true,
     StackFrameX86::CONTEXT_VALID_EDI, &MDRawContextX86::edi },
 };
 
@@ -199,16 +199,16 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
   // here.
   PostfixEvaluator<u_int32_t>::DictionaryType dictionary;
   // Provide the current register values.
-  dictionary["$ebp"] = last_frame->context.ebp;
-  dictionary["$esp"] = last_frame->context.esp;
+  dictionary.set(ustr__ZSebp(), last_frame->context.ebp);
+  dictionary.set(ustr__ZSesp(), last_frame->context.esp);
   // Provide constants from the debug info for last_frame and its callee.
   // .cbCalleeParams is a Breakpad extension that allows us to use the
   // PostfixEvaluator engine when certain types of debugging information
   // are present without having to write the constants into the program
   // string as literals.
-  dictionary[".cbCalleeParams"] = last_frame_callee_parameter_size;
-  dictionary[".cbSavedRegs"] = last_frame_info->saved_register_size;
-  dictionary[".cbLocals"] = last_frame_info->local_size;
+  dictionary.set(ustr__ZDcbCalleeParams(), last_frame_callee_parameter_size);
+  dictionary.set(ustr__ZDcbSavedRegs(), last_frame_info->saved_register_size);
+  dictionary.set(ustr__ZDcbLocals(), last_frame_info->local_size);
 
   u_int32_t raSearchStart = last_frame->context.esp +
                             last_frame_callee_parameter_size +
@@ -237,10 +237,10 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
 
   // The difference between raSearch and raSearchStart is unknown,
   // but making them the same seems to work well in practice.
-  dictionary[".raSearchStart"] = raSearchStart;
-  dictionary[".raSearch"] = raSearchStart;
+  dictionary.set(ustr__ZDraSearchStart(), raSearchStart);
+  dictionary.set(ustr__ZDraSearch(), raSearchStart);
 
-  dictionary[".cbParams"] = last_frame_info->parameter_size;
+  dictionary.set(ustr__ZDcbParams(), last_frame_info->parameter_size);
 
   // Decide what type of program string to use. The program string is in
   // postfix notation and will be passed to PostfixEvaluator::Evaluate.
@@ -330,8 +330,8 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
       PostfixEvaluator<u_int32_t>(&dictionary, memory_);
   PostfixEvaluator<u_int32_t>::DictionaryValidityType dictionary_validity;
   if (!evaluator.Evaluate(program_string, &dictionary_validity) ||
-      dictionary_validity.find("$eip") == dictionary_validity.end() ||
-      dictionary_validity.find("$esp") == dictionary_validity.end()) {
+      !dictionary_validity.have(ustr__ZSeip()) ||
+      !dictionary_validity.have(ustr__ZSesp())) {
     // Program string evaluation failed. It may be that %eip is not somewhere
     // with stack frame info, and %ebp is pointing to non-stack memory, so
     // our evaluation couldn't succeed. We'll scan the stack for a return
@@ -349,8 +349,8 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
     // This seems like a reasonable return address. Since program string
     // evaluation failed, use it and set %esp to the location above the
     // one where the return address was found.
-    dictionary["$eip"] = eip;
-    dictionary["$esp"] = location + 4;
+    dictionary.set(ustr__ZSeip(), eip);
+    dictionary.set(ustr__ZSesp(), location + 4);
     trust = StackFrame::FRAME_TRUST_SCAN;
   }
 
@@ -361,7 +361,8 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
   // However, if program string evaluation resulted in both %eip and
   // %ebp values of 0, trust that the end of the stack has been
   // reached and don't scan for anything else.
-  if (dictionary["$eip"] != 0 || dictionary["$ebp"] != 0) {
+  if (dictionary.get(ustr__ZSeip()) != 0 ||
+      dictionary.get(ustr__ZSebp()) != 0) {
     int offset = 0;
 
     // This scan can only be done if a CodeModules object is available, to
@@ -376,18 +377,18 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
     // ability, older OSes (pre-XP SP2) and CPUs (pre-P4) don't enforce
     // an independent execute privilege on memory pages.
 
-    u_int32_t eip = dictionary["$eip"];
+    u_int32_t eip = dictionary.get(ustr__ZSeip());
     if (modules_ && !modules_->GetModuleForAddress(eip)) {
       // The instruction pointer at .raSearchStart was invalid, so start
       // looking one 32-bit word above that location.
-      u_int32_t location_start = dictionary[".raSearchStart"] + 4;
+      u_int32_t location_start = dictionary.get(ustr__ZDraSearchStart()) + 4;
       u_int32_t location;
       if (ScanForReturnAddress(location_start, &location, &eip)) {
         // This is a better return address that what program string
         // evaluation found.  Use it, and set %esp to the location above the
         // one where the return address was found.
-        dictionary["$eip"] = eip;
-        dictionary["$esp"] = location + 4;
+        dictionary.set(ustr__ZSeip(), eip);
+        dictionary.set(ustr__ZSesp(), location + 4);
         offset = location - location_start;
         trust = StackFrame::FRAME_TRUST_CFI_SCAN;
       }
@@ -401,7 +402,7 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
       // stack.  The scan is performed from the highest possible address to
       // the lowest, because the expectation is that the function's prolog
       // would have saved %ebp early.
-      u_int32_t ebp = dictionary["$ebp"];
+      u_int32_t ebp = dictionary.get(ustr__ZSebp());
 
       // When a scan for return address is used, it is possible to skip one or
       // more frames (when return address is not in a known module).  One
@@ -425,7 +426,7 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
           if (memory_->GetMemoryAtAddress(ebp, &value)) {
             // The candidate value is a pointer to the same memory region
             // (the stack).  Prefer it as a recovered %ebp result.
-            dictionary["$ebp"] = ebp;
+            dictionary.set(ustr__ZSebp(), ebp);
             break;
           }
         }
@@ -439,25 +440,25 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
 
   frame->trust = trust;
   frame->context = last_frame->context;
-  frame->context.eip = dictionary["$eip"];
-  frame->context.esp = dictionary["$esp"];
-  frame->context.ebp = dictionary["$ebp"];
+  frame->context.eip = dictionary.get(ustr__ZSeip());
+  frame->context.esp = dictionary.get(ustr__ZSesp());
+  frame->context.ebp = dictionary.get(ustr__ZSebp());
   frame->context_validity = StackFrameX86::CONTEXT_VALID_EIP |
                                 StackFrameX86::CONTEXT_VALID_ESP |
                                 StackFrameX86::CONTEXT_VALID_EBP;
 
   // These are nonvolatile (callee-save) registers, and the program string
   // may have filled them in.
-  if (dictionary_validity.find("$ebx") != dictionary_validity.end()) {
-    frame->context.ebx = dictionary["$ebx"];
+  if (dictionary_validity.have(ustr__ZSebx())) {
+    frame->context.ebx = dictionary.get(ustr__ZSebx());
     frame->context_validity |= StackFrameX86::CONTEXT_VALID_EBX;
   }
-  if (dictionary_validity.find("$esi") != dictionary_validity.end()) {
-    frame->context.esi = dictionary["$esi"];
+  if (dictionary_validity.have(ustr__ZSesi())) {
+    frame->context.esi = dictionary.get(ustr__ZSesi());
     frame->context_validity |= StackFrameX86::CONTEXT_VALID_ESI;
   }
-  if (dictionary_validity.find("$edi") != dictionary_validity.end()) {
-    frame->context.edi = dictionary["$edi"];
+  if (dictionary_validity.have(ustr__ZSedi())) {
+    frame->context.edi = dictionary.get(ustr__ZSedi());
     frame->context_validity |= StackFrameX86::CONTEXT_VALID_EDI;
   }
 

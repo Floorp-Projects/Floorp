@@ -2,6 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+  "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+  "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+
 function waitForCondition(condition, nextTest, errorMsg) {
   var tries = 0;
   var interval = setInterval(function() {
@@ -19,12 +28,17 @@ function waitForCondition(condition, nextTest, errorMsg) {
 
 // Check that a specified (string) URL hasn't been "remembered" (ie, is not
 // in history, will not appear in about:newtab or auto-complete, etc.)
-function ensureSocialUrlNotRemembered(url) {
-  let gh = Cc["@mozilla.org/browser/global-history;2"]
-           .getService(Ci.nsIGlobalHistory2);
+function promiseSocialUrlNotRemembered(url) {
+  let deferred = Promise.defer();
   let uri = Services.io.newURI(url, null, null);
-  ok(!gh.isVisited(uri), "social URL " + url + " should not be in global history");
+  PlacesUtils.asyncHistory.isURIVisited(uri, function(aURI, aIsVisited) {
+    ok(!aIsVisited, "social URL " + url + " should not be in global history");
+    deferred.resolve();
+  });
+  return deferred.promise;
 }
+
+let gURLsNotRemembered = [];
 
 function runSocialTestWithProvider(manifest, callback) {
   let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
@@ -32,15 +46,20 @@ function runSocialTestWithProvider(manifest, callback) {
   let manifests = Array.isArray(manifest) ? manifest : [manifest];
 
   // Check that none of the provider's content ends up in history.
-  registerCleanupFunction(function () {
-    manifests.forEach(function (m) {
+  function finishCleanUp() {
+    for (let i = 0; i < manifests.length; i++) {
+      let m = manifests[i];
       for (let what of ['sidebarURL', 'workerURL', 'iconURL']) {
         if (m[what]) {
-          ensureSocialUrlNotRemembered(m[what]);
+          yield promiseSocialUrlNotRemembered(m[what]);
         }
-      }
-    });
-  });
+      };
+    }
+    for (let i = 0; i < gURLsNotRemembered.length; i++) {
+      yield promiseSocialUrlNotRemembered(gURLsNotRemembered[i]);
+    }
+    gURLsNotRemembered = [];
+  }
 
   info("runSocialTestWithProvider: " + manifests.toSource());
 
@@ -48,7 +67,7 @@ function runSocialTestWithProvider(manifest, callback) {
   function finishIfDone(callFinish) {
     finishCount++;
     if (finishCount == manifests.length)
-      finish();
+      Task.spawn(finishCleanUp).then(finish);
   }
   function removeAddedProviders(cleanup) {
     manifests.forEach(function (m) {
