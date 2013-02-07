@@ -1818,11 +1818,9 @@ NS_IMPL_CYCLE_COLLECTION_5(DeviceStorageRequest,
                            mListener)
 
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_0(nsDOMDeviceStorage, nsDOMEventTargetHelper)
-
 DOMCI_DATA(DeviceStorage, nsDOMDeviceStorage)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceStorage)
+NS_INTERFACE_MAP_BEGIN(nsDOMDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceStorage)
