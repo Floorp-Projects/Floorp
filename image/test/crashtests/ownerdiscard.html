@@ -3,7 +3,7 @@
 <body>
   <div id=tCF0>
     <img id=victim src=ie.png>
-    <iframe src=discardframe.htm></iframe>
+    <iframe id="i" src=discardframe.htm></iframe>
   </div>
   <script>
     const Ci = Components.interfaces;
@@ -37,7 +37,7 @@
     function initCF() {
       setTimeout(function() { document.adoptNode(tCF0); }, 0);
     }
-    document.addEventListener("DOMContentLoaded", initCF, false);
+    document.getElementById("i").contentWindow.addEventListener("DOMContentLoaded", initCF, false);
   </script>
 </body>
 </html>
