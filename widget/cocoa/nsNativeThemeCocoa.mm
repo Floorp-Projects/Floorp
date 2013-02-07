@@ -1406,7 +1406,7 @@ nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
   double high;
   double optimum;
 
-  // NOTE: if we were allowed to static_cast to nsHTMLMeterElement we would be
+  // NOTE: if we were allowed to static_cast to HTMLMeterElement we would be
   // able to use nicer getters...
   meterElement->GetValue(&value);
   meterElement->GetMin(&min);
