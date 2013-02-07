@@ -55,7 +55,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(01e12ac9-7d9f-40d9-9ec1-70b64c53ce7a)]
+[scriptable, builtinclass, uuid(c7e8eed7-2be9-40b0-be7c-b682097f5b28)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -93,12 +93,6 @@ interface imgIContainer : nsISupports
    * @throws NS_ERROR_NOT_AVAILABLE if the animated state cannot be determined.
    */
   readonly attribute boolean animated;
-
-  /**
-   * Whether the current frame is opaque; that is, needs the background painted
-   * behind it.
-   */
-  readonly attribute boolean currentFrameIsOpaque;
 
   /**
    * Flags for imgIContainer operations.
@@ -151,6 +145,14 @@ interface imgIContainer : nsISupports
    */
   [noscript] gfxASurface getFrame(in uint32_t aWhichFrame,
                                   in uint32_t aFlags);
+
+  /**
+   * Whether the given frame is opaque; that is, needs the background painted
+   * behind it.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   */
+  [notxpcom] boolean frameIsOpaque(in uint32_t aWhichFrame);
 
   /**
    * Attempts to create an ImageContainer (and Image) containing the current

@@ -165,7 +165,8 @@ conical_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 {
     uint32_t *buffer = conical_get_scanline_narrow (iter, NULL);
 
-    pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, iter->width);
+    pixman_expand_to_float (
+	(argb_t *)buffer, buffer, PIXMAN_a8r8g8b8, iter->width);
 
     return buffer;
 }
@@ -180,7 +181,7 @@ _pixman_conical_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter)
 }
 
 PIXMAN_EXPORT pixman_image_t *
-pixman_image_create_conical_gradient (pixman_point_fixed_t *        center,
+pixman_image_create_conical_gradient (const pixman_point_fixed_t *  center,
                                       pixman_fixed_t                angle,
                                       const pixman_gradient_stop_t *stops,
                                       int                           n_stops)

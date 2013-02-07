@@ -30,6 +30,10 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 
+#if defined(MOZ_WIDGET_GONK)
+#include "cutils/properties.h"
+#endif
+
 #if defined(MOZ_B2G_BT)
 # if defined(MOZ_BLUETOOTH_GONK)
 #  include "BluetoothGonkService.h"
@@ -43,6 +47,8 @@
 #define MOZSETTINGS_CHANGED_ID      "mozsettings-changed"
 #define BLUETOOTH_ENABLED_SETTING   "bluetooth.enabled"
 #define BLUETOOTH_DEBUGGING_SETTING "bluetooth.debugging.enabled"
+
+#define PROP_BLUETOOTH_ENABLED      "bluetooth.isEnabled"
 
 #define DEFAULT_SHUTDOWN_TIMER_MS 5000
 
@@ -183,6 +189,19 @@ public:
         }
       }
     }
+
+    // This is requested in Bug 836516. With settings this property, WLAN
+    // firmware could be aware of Bluetooth has been turned on/off, so that the
+    // mecahnism of handling coexistence of WIFI and Bluetooth could be started.
+    //
+    // In the future, we may have our own way instead of setting a system
+    // property to let firmware developers be able to sense that Bluetooth has
+    // been toggled.
+#if defined(MOZ_WIDGET_GONK)
+    if (property_set(PROP_BLUETOOTH_ENABLED, mEnabled ? "true" : "false") != 0) {
+      NS_WARNING("Failed to set bluetooth enabled property");
+    }
+#endif
 
     nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(mEnabled);
     if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
@@ -358,13 +377,22 @@ BluetoothService::UnregisterBluetoothSignalHandler(
   }
 }
 
+PLDHashOperator
+RemoveAllSignalHandlers(const nsAString& aKey,
+                        nsAutoPtr<BluetoothSignalObserverList>& aData,
+                        void* aUserArg)
+{
+  aData->RemoveObserver(static_cast<BluetoothSignalObserver*>(aUserArg));
+  return aData->Length() ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
+}
+
 void
 BluetoothService::UnregisterAllSignalHandlers(BluetoothSignalObserver* aHandler)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aHandler);
 
-  mBluetoothSignalObserverTable.Clear();
+  mBluetoothSignalObserverTable.Enumerate(RemoveAllSignalHandlers, aHandler);
 }
 
 void

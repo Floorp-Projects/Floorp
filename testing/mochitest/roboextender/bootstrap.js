@@ -22,12 +22,10 @@ var windowListener = {
       if (domWindow) {
         domWindow.addEventListener("scroll", function(e) {
           let message = {
-            gecko: {
-              type: 'robocop:scroll',
-              y: XPCNativeWrapper.unwrap(e.target).documentElement.scrollTop,
-              height: XPCNativeWrapper.unwrap(e.target).documentElement.scrollHeight,
-              cheight: XPCNativeWrapper.unwrap(e.target).documentElement.clientHeight,
-            }
+            type: 'robocop:scroll',
+            y: XPCNativeWrapper.unwrap(e.target).documentElement.scrollTop,
+            height: XPCNativeWrapper.unwrap(e.target).documentElement.scrollHeight,
+            cheight: XPCNativeWrapper.unwrap(e.target).documentElement.clientHeight,
           };
           let retVal = _sendMessageToJava(message);
         });

@@ -11,7 +11,7 @@ add_autocomplete_test([
   "mozilla.org/",
   function () {
     Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
-    addVisits(NetUtil.newURI("http://mozilla.org/link/"));
+    promiseAddVisits(NetUtil.newURI("http://mozilla.org/link/"));
   }
 ]);
 
@@ -21,7 +21,7 @@ add_autocomplete_test([
   "mozilla.org/link/",
   function () {
     Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
-    addVisits(NetUtil.newURI("http://mozilla.org/link/"));
+    promiseAddVisits(NetUtil.newURI("http://mozilla.org/link/"));
   }
 ]);
 
@@ -33,7 +33,7 @@ add_autocomplete_test([
   "moz",
   function () {
     Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", true);
-    addVisits(NetUtil.newURI("http://mozilla.org/link/"));
+    promiseAddVisits(NetUtil.newURI("http://mozilla.org/link/"));
   }
 ]);
 
@@ -43,8 +43,8 @@ add_autocomplete_test([
   "mozilla.org/",
   function () {
     Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", true);
-    addVisits({ uri: NetUtil.newURI("http://mozilla.org/typed/"),
-                transition: TRANSITION_TYPED });
+    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/typed/"),
+                       transition: TRANSITION_TYPED });
   }
 ]);
 
@@ -54,7 +54,7 @@ add_autocomplete_test([
   "mozilla.org/li",
   function () {
     Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", true);
-    addVisits(NetUtil.newURI("http://mozilla.org/link/"));
+    promiseAddVisits(NetUtil.newURI("http://mozilla.org/link/"));
   }
 ]);
 
@@ -64,7 +64,7 @@ add_autocomplete_test([
   "mozilla.org/link/",
   function () {
     Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", true);
-    addVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
-                transition: TRANSITION_TYPED });
+    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
+                       transition: TRANSITION_TYPED });
   }
 ]);

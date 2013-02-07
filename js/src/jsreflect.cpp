@@ -19,7 +19,6 @@
 #include "jsprf.h"
 #include "jsiter.h"
 #include "jsbool.h"
-#include "jsval.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsarray.h"
@@ -3061,8 +3060,8 @@ JS_PUBLIC_API(JSObject *)
 JS_InitReflect(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
-    RootedObject Reflect(cx, NewObjectWithClassProto(cx, &ObjectClass, NULL, obj));
-    if (!Reflect || !JSObject::setSingletonType(cx, Reflect))
+    RootedObject Reflect(cx, NewObjectWithClassProto(cx, &ObjectClass, NULL, obj, SingletonObject));
+    if (!Reflect)
         return NULL;
 
     if (!JS_DefineProperty(cx, obj, "Reflect", OBJECT_TO_JSVAL(Reflect),

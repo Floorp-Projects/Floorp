@@ -17,7 +17,6 @@ const FINISHED_MAINTENANCE_NOTIFICATION_TOPIC = "places-maintenance-finished";
 
 // Get services and database connection
 let hs = PlacesUtils.history;
-let bh = PlacesUtils.bhistory;
 let bs = PlacesUtils.bookmarks;
 let ts = PlacesUtils.tagging;
 let as = PlacesUtils.annotations;
@@ -1210,7 +1209,7 @@ tests.push({
   desc: "recalculate hidden for redirects.",
 
   setup: function() {
-    addVisits([
+    promiseAddVisits([
       { uri: NetUtil.newURI("http://l3.moz.org/"),
         transition: TRANSITION_TYPED },
       { uri: NetUtil.newURI("http://l3.moz.org/redirecting/"),
@@ -1289,24 +1288,28 @@ tests.push({
 
   asyncCheck: function (aCallback) {
     // Check that all items are correct
-    do_check_true(bh.isVisited(this._uri1));
-    do_check_true(bh.isVisited(this._uri2));
+    PlacesUtils.asyncHistory.isURIVisited(this._uri1, function(aURI, aIsVisited) {
+      do_check_true(aIsVisited);
+      PlacesUtils.asyncHistory.isURIVisited(this._uri2, function(aURI, aIsVisited) {
+        do_check_true(aIsVisited);
 
-    do_check_eq(bs.getBookmarkURI(this._bookmarkId).spec, this._uri1.spec);
-    do_check_eq(bs.getItemIndex(this._folderId), 0);
+        do_check_eq(bs.getBookmarkURI(this._bookmarkId).spec, this._uri1.spec);
+        do_check_eq(bs.getItemIndex(this._folderId), 0);
 
-    do_check_eq(bs.getItemType(this._folderId), bs.TYPE_FOLDER);
-    do_check_eq(bs.getItemType(this._separatorId), bs.TYPE_SEPARATOR);
+        do_check_eq(bs.getItemType(this._folderId), bs.TYPE_FOLDER);
+        do_check_eq(bs.getItemType(this._separatorId), bs.TYPE_SEPARATOR);
 
-    do_check_eq(ts.getTagsForURI(this._uri1).length, 1);
-    do_check_eq(bs.getKeywordForBookmark(this._bookmarkId), "testkeyword");
-    do_check_eq(as.getPageAnnotation(this._uri2, "anno"), "anno");
-    do_check_eq(as.getItemAnnotation(this._bookmarkId, "anno"), "anno");
+        do_check_eq(ts.getTagsForURI(this._uri1).length, 1);
+        do_check_eq(bs.getKeywordForBookmark(this._bookmarkId), "testkeyword");
+        do_check_eq(as.getPageAnnotation(this._uri2, "anno"), "anno");
+        do_check_eq(as.getItemAnnotation(this._bookmarkId, "anno"), "anno");
 
-    fs.getFaviconURLForPage(this._uri2, function (aFaviconURI) {
-        do_check_true(aFaviconURI.equals(SMALLPNG_DATA_URI));
-        aCallback();
-      });
+        fs.getFaviconURLForPage(this._uri2, function (aFaviconURI) {
+          do_check_true(aFaviconURI.equals(SMALLPNG_DATA_URI));
+          aCallback();
+        });
+      }.bind(this));
+    }.bind(this));
   }
 });
 

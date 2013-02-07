@@ -271,7 +271,7 @@ function testNameForElmRule(aElm, aRule)
 
     var treeWalker = document.createTreeWalker(document.body,
                                                NodeFilter.SHOW_ELEMENT,
-                                               filter, false);
+                                               filter);
     labelElm = treeWalker.nextNode();
 
   } else {

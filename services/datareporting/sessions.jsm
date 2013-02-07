@@ -22,7 +22,10 @@ Cu.import("resource://services-common/utils.js");
 
 // We automatically prune sessions older than this.
 const MAX_SESSION_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days.
+const STARTUP_RETRY_INTERVAL_MS = 5000;
 
+// Wait up to 5 minutes for startup measurements before giving up.
+const MAX_STARTUP_TRIES = 300000 / STARTUP_RETRY_INTERVAL_MS;
 
 /**
  * Records information about browser sessions.
@@ -71,7 +74,10 @@ this.SessionRecorder = function (branch) {
   this._prefs = new Preferences(branch);
   this._lastActivityWasInactive = false;
   this._activeTicks = 0;
+  this.fineTotalTime = 0;
   this._started = false;
+  this._timer = null;
+  this._startupFieldTries = 0;
 
   this._os = Cc["@mozilla.org/observer-service;1"]
                .getService(Ci.nsIObserverService);
@@ -80,6 +86,8 @@ this.SessionRecorder = function (branch) {
 
 SessionRecorder.prototype = Object.freeze({
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  STARTUP_RETRY_INTERVAL_MS: STARTUP_RETRY_INTERVAL_MS,
 
   get _currentIndex() {
     return this._prefs.get("currentIndex", 0);
@@ -113,12 +121,20 @@ SessionRecorder.prototype = Object.freeze({
     this._prefs.set("current.activeTicks", ++this._activeTicks);
   },
 
+  /**
+   * Total time of this session in integer seconds.
+   *
+   * See also fineTotalTime for the time in milliseconds.
+   */
   get totalTime() {
     return this._prefs.get("current.totalTime", 0);
   },
 
   updateTotalTime: function () {
-    this._prefs.set("current.totalTime", Date.now() - this.startDate);
+    // We store millisecond precision internally to prevent drift from
+    // repeated rounding.
+    this.fineTotalTime = Date.now() - this.startDate;
+    this._prefs.set("current.totalTime", Math.floor(this.fineTotalTime / 1000));
   },
 
   get main() {
@@ -204,12 +220,39 @@ SessionRecorder.prototype = Object.freeze({
       throw new Error("Startup info not available.");
     }
 
+    let missing = false;
+
     for (let field of ["main", "firstPaint", "sessionRestored"]) {
       if (!(field in si)) {
+        this._log.debug("Missing startup field: " + field);
+        missing = true;
         continue;
       }
 
       this["_" + field] = si[field].getTime() - si.process.getTime();
+    }
+
+    if (!missing || this._startupFieldTries > MAX_STARTUP_TRIES) {
+      this._clearStartupTimer();
+      return;
+    }
+
+    // If we have missing fields, install a timer and keep waiting for
+    // data.
+    this._startupFieldTries++;
+
+    if (!this._timer) {
+      this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this._timer.initWithCallback({
+        notify: this.recordStartupFields.bind(this),
+      }, this.STARTUP_RETRY_INTERVAL_MS, this._timer.TYPE_REPEATING_SLACK);
+    }
+  },
+
+  _clearStartupTimer: function () {
+    if (this._timer) {
+      this._timer.cancel();
+      delete this._timer;
     }
   },
 
@@ -263,6 +306,7 @@ SessionRecorder.prototype = Object.freeze({
     this._log.info("Recording clean session shutdown.");
     this._prefs.set("current.clean", true);
     this.updateTotalTime();
+    this._clearStartupTimer();
 
     this._os.removeObserver(this, "profile-before-change");
     this._os.removeObserver(this, "user-interaction-active");

@@ -588,6 +588,8 @@ CustomElf::InitDyn(const Phdr *pt_dyn)
                           * libraries. They are not supported anyways. */
       case UNSUPPORTED_RELOC(COUNT): /* This should error out, but it doesn't
                                       * really matter. */
+      case DT_FLAGS_1: /* Additional linker-internal flags that we don't care about. See
+                        * DF_1_* values in src/include/elf/common.h in binutils. */
       case DT_VERSYM: /* DT_VER* entries are used for symbol versioning, which */
       case DT_VERDEF: /* this linker doesn't support yet. */
       case DT_VERDEFNUM:

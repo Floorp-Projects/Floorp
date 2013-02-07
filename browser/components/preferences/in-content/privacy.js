@@ -124,20 +124,6 @@ var gPrivacyPane = {
   },
 
   /**
-   * Open up the DNT "learn more" link.
-   */
-  openTrackingInfoSite: function PPP_openTrackingInfoSite()
-  {
-    let thisDocEl = document.documentElement,
-        openerDocEl = window.opener && window.opener.document.documentElement,
-        url = "https://www.mozilla.org/dnt";
-    if (thisDocEl.id == "BrowserPreferences" && !thisDocEl.instantApply)
-      openUILinkIn(url, "window");
-    else
-      openUILinkIn(url, "tab");
-  },
-
-  /**
    * Update the Tracking preferences based on controls.
    */
   setTrackingPrefs: function PPP_setTrackingPrefs()

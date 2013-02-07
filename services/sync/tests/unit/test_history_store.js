@@ -44,7 +44,6 @@ function onNextTitleChanged(callback) {
     onVisit: function onVisit() {},
     onDeleteVisits: function onDeleteVisits() {},
     onPageExpired: function onPageExpired() {},
-    onBeforeDeleteURI: function onBeforeDeleteURI() {},
     onDeleteURI: function onDeleteURI() {},
     onClearHistory: function onClearHistory() {},
     QueryInterface: XPCOMUtils.generateQI([

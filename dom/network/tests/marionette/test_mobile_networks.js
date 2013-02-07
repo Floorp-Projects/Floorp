@@ -36,6 +36,7 @@ function testConnectionInfo() {
   is(voice.emergencyCallsOnly, false);
   is(voice.roaming, false);
   isAndroidNetwork(voice.network);
+  is(voice.lastKnownMcc, 310);
 
   let data = connection.data;
   // data.connected = true means there's an active data call which we
@@ -44,6 +45,7 @@ function testConnectionInfo() {
   is(data.emergencyCallsOnly, false);
   is(data.roaming, false);
   isAndroidNetwork(data.network);
+  is(data.lastKnownMcc, 0);
 
   testGetNetworks();
 }

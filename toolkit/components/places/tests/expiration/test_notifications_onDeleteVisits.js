@@ -101,7 +101,6 @@ add_task(function test_notifications_onDeleteVisits() {
       onClearHistory: function() {},
       onVisit: function() {},
       onTitleChanged: function() {},
-      onBeforeDeleteURI: function() {},
       onDeleteURI: function(aURI, aGUID, aReason) {
         // Check this uri was not bookmarked.
         do_check_eq(currentTest.bookmarks.indexOf(aURI.spec), -1);

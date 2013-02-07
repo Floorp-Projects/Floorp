@@ -47,13 +47,15 @@
 #include "common/byte_cursor.h"
 #include "common/mac/macho_reader.h"
 #include "common/module.h"
+#include "common/symbol_data.h"
 
 namespace google_breakpad {
 
 class DumpSymbols {
  public:
-  DumpSymbols()
-      : input_pathname_(),
+  explicit DumpSymbols(SymbolData symbol_data)
+      : symbol_data_(symbol_data),
+        input_pathname_(),
         object_filename_(),
         contents_(),
         selected_object_file_(),
@@ -110,9 +112,9 @@ class DumpSymbols {
   }
 
   // Read the selected object file's debugging information, and write it out to
-  // |stream|. Write the CFI section if |cfi| is true. Return true on success;
-  // if an error occurs, report it and return false.
-  bool WriteSymbolFile(std::ostream &stream, bool cfi);
+  // |stream|. Return true on success; if an error occurs, report it and
+  // return false.
+  bool WriteSymbolFile(std::ostream &stream);
 
  private:
   // Used internally.
@@ -138,6 +140,9 @@ class DumpSymbols {
                const mach_o::Reader &macho_reader,
                const mach_o::Section &section,
                bool eh_frame) const;
+
+  // The selection of what type of symbol data to read/write.
+  const SymbolData symbol_data_;
 
   // The name of the file or bundle whose symbols this will dump.
   // This is the path given to Read, for use in error messages.

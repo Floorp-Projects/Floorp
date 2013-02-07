@@ -29,18 +29,18 @@ let gTestData = [
   },
 ];
 
+function searchNodeHavingUrl(aRoot, aUrl) {
+  for (let i = 0; i < aRoot.childCount; i++) {
+    if (aRoot.getChild(i).uri == aUrl) {
+      return aRoot.getChild(i);
+    }
+  }
+}
+
 function newQueryWithOptions()
 {
   return [ PlacesUtils.history.getNewQuery(),
            PlacesUtils.history.getNewQueryOptions() ];
-}
-
-function testQueryContents(aQuery, aOptions, aCallback)
-{
-  let root = PlacesUtils.history.executeQuery(aQuery, aOptions).root;
-  root.containerOpen = true;
-  aCallback(root);
-  root.containerOpen = false;
 }
 
 function run_test()
@@ -48,118 +48,152 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_initialize()
-{
-  yield task_populateDB(gTestData);
-});
-
 add_task(function pages_query()
 {
+  yield task_populateDB(gTestData);
+
   let [query, options] = newQueryWithOptions();
-  testQueryContents(query, options, function (root) {
-    compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
-    for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.title, gTestData[i].title);
-      PlacesUtils.history.setPageTitle(uri, "changedTitle");
-      do_check_eq(node.title, "changedTitle");
-      PlacesUtils.history.setPageTitle(uri, gTestData[i].title);
-      do_check_eq(node.title, gTestData[i].title);
-    }
-  });
+  let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+
+  compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
+  for (let i = 0; i < root.childCount; i++) {
+    let node = root.getChild(i);
+    do_check_eq(node.title, gTestData[i].title);
+    let uri = NetUtil.newURI(node.uri);
+    yield promiseAddVisits({uri: uri, title: "changedTitle"});
+    do_check_eq(node.title, "changedTitle");
+    yield promiseAddVisits({uri: uri, title: gTestData[i].title});
+    do_check_eq(node.title, gTestData[i].title);
+  }
+
+  root.containerOpen = false;
+  yield promiseClearHistory();
 });
 
 add_task(function visits_query()
 {
+  yield task_populateDB(gTestData);
+
   let [query, options] = newQueryWithOptions();
   options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_VISIT;
-  testQueryContents(query, options, function (root) {
-    compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
-    for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.title, gTestData[i].title);
-      PlacesUtils.history.setPageTitle(uri, "changedTitle");
-      do_check_eq(node.title, "changedTitle");
-      PlacesUtils.history.setPageTitle(uri, gTestData[i].title);
-      do_check_eq(node.title, gTestData[i].title);
-    }
-  });
+  let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+
+  compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
+
+  for (let testData of gTestData) {
+    let uri = NetUtil.newURI(testData.uri);
+    let node = searchNodeHavingUrl(root, testData.uri);
+    do_check_eq(node.title, testData.title);
+    yield promiseAddVisits({uri: uri, title: "changedTitle"});
+    node = searchNodeHavingUrl(root, testData.uri);
+    do_check_eq(node.title, "changedTitle");
+    yield promiseAddVisits({uri: uri, title: testData.title});
+    node = searchNodeHavingUrl(root, testData.uri);
+    do_check_eq(node.title, testData.title);
+  }
+
+  root.containerOpen = false;
+  yield promiseClearHistory();
 });
 
 add_task(function pages_searchterm_query()
 {
+  yield task_populateDB(gTestData);
+
   let [query, options] = newQueryWithOptions();
   query.searchTerms = "example";
-  testQueryContents(query, options, function (root) {
-    compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
-    for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.title, gTestData[i].title);
-      PlacesUtils.history.setPageTitle(uri, "changedTitle");
-      do_check_eq(node.title, "changedTitle");
-      PlacesUtils.history.setPageTitle(uri, gTestData[i].title);
-      do_check_eq(node.title, gTestData[i].title);
-    }
-  });
+  let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+
+  compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
+  for (let i = 0; i < root.childCount; i++) {
+    let node = root.getChild(i);
+    let uri = NetUtil.newURI(node.uri);
+    do_check_eq(node.title, gTestData[i].title);
+    yield promiseAddVisits({uri: uri, title: "changedTitle"});
+    do_check_eq(node.title, "changedTitle");
+    yield promiseAddVisits({uri: uri, title: gTestData[i].title});
+    do_check_eq(node.title, gTestData[i].title);
+  }
+
+  root.containerOpen = false;
+  yield promiseClearHistory();
 });
 
 add_task(function visits_searchterm_query()
 {
+  yield task_populateDB(gTestData);
+
   let [query, options] = newQueryWithOptions();
   query.searchTerms = "example";
   options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_VISIT;
-  testQueryContents(query, options, function (root) {
-    compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
-    for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.title, gTestData[i].title);
-      PlacesUtils.history.setPageTitle(uri, "changedTitle");
-      do_check_eq(node.title, "changedTitle");
-      PlacesUtils.history.setPageTitle(uri, gTestData[i].title);
-      do_check_eq(node.title, gTestData[i].title);
-    }
-  });
+  let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+
+  compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
+  for (let testData of gTestData) {
+    let uri = NetUtil.newURI(testData.uri);
+    let node = searchNodeHavingUrl(root, testData.uri);
+    do_check_eq(node.title, testData.title);
+    yield promiseAddVisits({uri: uri, title: "changedTitle"});
+    node = searchNodeHavingUrl(root, testData.uri);
+    do_check_eq(node.title, "changedTitle");
+    yield promiseAddVisits({uri: uri, title: testData.title});
+    node = searchNodeHavingUrl(root, testData.uri);
+    do_check_eq(node.title, testData.title);
+  }
+
+  root.containerOpen = false;
+  yield promiseClearHistory();
 });
 
 add_task(function pages_searchterm_is_title_query()
 {
+  yield task_populateDB(gTestData);
+
   let [query, options] = newQueryWithOptions();
   query.searchTerms = "match";
-  testQueryContents(query, options, function (root) {
+  let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+  compareArrayToResult([], root);
+  gTestData.forEach(function (data) {
+    let uri = NetUtil.newURI(data.uri);
+    let origTitle = data.title;
+    data.title = "match";
+    yield promiseAddVisits({uri: uri, title: data.title});
+    compareArrayToResult([data], root);
+    data.title = origTitle;
+    yield promiseAddVisits({uri: uri, title: data.title});
     compareArrayToResult([], root);
-    gTestData.forEach(function (data) {
-      let uri = NetUtil.newURI(data.uri);
-      let origTitle = data.title;
-      data.title = "match";
-      PlacesUtils.history.setPageTitle(uri, data.title);
-      compareArrayToResult([data], root);
-      data.title = origTitle;
-      PlacesUtils.history.setPageTitle(uri, data.title);
-      compareArrayToResult([], root);
-    });
   });
+
+  root.containerOpen = false;
+  yield promiseClearHistory();
 });
 
 add_task(function visits_searchterm_is_title_query()
 {
+  yield task_populateDB(gTestData);
+
   let [query, options] = newQueryWithOptions();
   query.searchTerms = "match";
   options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_VISIT;
-  testQueryContents(query, options, function (root) {
+  let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+  compareArrayToResult([], root);
+  gTestData.forEach(function (data) {
+    let uri = NetUtil.newURI(data.uri);
+    let origTitle = data.title;
+    data.title = "match";
+    yield promiseAddVisits({uri: uri, title: data.title});
+    compareArrayToResult([data], root);
+    data.title = origTitle;
+    yield promiseAddVisits({uri: uri, title: data.title});
     compareArrayToResult([], root);
-    gTestData.forEach(function (data) {
-      let uri = NetUtil.newURI(data.uri);
-      let origTitle = data.title;
-      data.title = "match";
-      PlacesUtils.history.setPageTitle(uri, data.title);
-      compareArrayToResult([data], root);
-      data.title = origTitle;
-      PlacesUtils.history.setPageTitle(uri, data.title);
-      compareArrayToResult([], root);
-    });
   });
+
+  root.containerOpen = false;
+  yield promiseClearHistory();
 });

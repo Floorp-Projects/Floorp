@@ -21,6 +21,19 @@ testing_modules := \
 
 TEST_DIRS += tests
 
+healthreport_depends = \
+  HealthReport.jsm \
+  ../common/async.js \
+  ../common/bagheeraclient.js \
+  ../metrics/Metrics.jsm \
+  ../metrics/collector.jsm \
+  ../metrics/dataprovider.jsm \
+  ../metrics/storage.jsm \
+  healthreporter.jsm \
+  profile.jsm \
+  providers.jsm \
+  $(NULL)
+
 MAIN_JS_MODULE := HealthReport.jsm
 MAIN_JS_MODULE_PATH = $(FINAL_TARGET)/modules
 PP_TARGETS += MAIN_JS_MODULE
@@ -37,3 +50,7 @@ EXTRA_COMPONENTS := \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+# Add extra prerequisites until bug 837792 is addressed.
+$(FINAL_TARGET)/modules/HealthReport.jsm: $(healthreport_depends)
+

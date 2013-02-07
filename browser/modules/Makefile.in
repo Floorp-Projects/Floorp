@@ -25,12 +25,12 @@ EXTRA_JS_MODULES = \
 	webappsUI.jsm \
 	webrtcUI.jsm \
 	KeywordURLResetPrompter.jsm \
+	Social.jsm \
 	SharedFrame.jsm \
 	$(NULL)
 
 EXTRA_PP_JS_MODULES = \
 	RecentWindow.jsm \
-	Social.jsm \
 	$(NULL)
 
 

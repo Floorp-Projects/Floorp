@@ -58,7 +58,6 @@ var observer = {
       do_test_finished();
   },
   onTitleChanged: function () {},
-  onBeforeDeleteURI: function () {},
   onDeleteURI: function () {},
   onClearHistory: function () {},
   onPageChanged: function () {},

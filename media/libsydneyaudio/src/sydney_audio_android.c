@@ -269,6 +269,14 @@ sa_stream_destroy(sa_stream_t *s) {
   }
   if (s->output_unit) {
     (*jenv)->CallVoidMethod(jenv, s->output_unit, at.stop);
+
+    jthrowable exception = (*jenv)->ExceptionOccurred(jenv);
+    if (exception) {
+      (*jenv)->ExceptionDescribe(jenv);
+      (*jenv)->ExceptionClear(jenv);
+      return SA_ERROR_INVALID;
+    }
+
     (*jenv)->CallVoidMethod(jenv, s->output_unit, at.flush);
     (*jenv)->CallVoidMethod(jenv, s->output_unit, at.release);
     (*jenv)->DeleteGlobalRef(jenv, s->output_unit);

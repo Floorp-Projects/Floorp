@@ -98,7 +98,9 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
      * check any calls that were inlined.
      */
     if (fun->isInterpreted()) {
-        fun->getOrCreateScript(cx)->uninlineable = true;
+        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
+            return false;
+        fun->nonLazyScript()->uninlineable = true;
         MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
     }
 
@@ -264,8 +266,8 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     RawObject objProto = obj->global().getOrCreateObjectPrototype(cx);
     if (!objProto)
         return NULL;
-    RootedObject proto(cx, NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL));
-    if (!proto || !JSObject::setSingletonType(cx, proto))
+    RootedObject proto(cx, NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL, SingletonObject));
+    if (!proto)
         return NULL;
 
     /*
@@ -324,9 +326,10 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
         RootedValue v(cx);
         if (JSID_IS_ATOM(id, cx->names().length)) {
-            //FIXME: bug 810715 - deal with lazy interpreted functions with default args
-            uint16_t defaults = fun->hasScript() ? fun->nonLazyScript()->ndefaults : 0;
-            v.setInt32(fun->nargs - defaults - fun->hasRest());
+            if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
+                return false;
+            uint16_t ndefaults = fun->hasScript() ? fun->nonLazyScript()->ndefaults : 0;
+            v.setInt32(fun->nargs - ndefaults - fun->hasRest());
         } else {
             v.setString(fun->atom() == NULL ?  cx->runtime->emptyString : fun->atom());
         }
@@ -404,7 +407,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
         atom = fun->atom();
         script = fun->nonLazyScript();
     } else {
-        fun = js_NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED, NullPtr(), NullPtr());
+        fun = NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED, NullPtr(), NullPtr());
         if (!fun)
             return false;
         atom = NULL;
@@ -451,8 +454,8 @@ js::CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleF
 
     /* NB: Keep this in sync with XDRInterpretedFunction. */
 
-    RootedFunction clone(cx, js_NewFunction(cx, NullPtr(), NULL, 0,
-                                            JSFunction::INTERPRETED, NullPtr(), NullPtr()));
+    RootedFunction clone(cx, NewFunction(cx, NullPtr(), NULL, 0,
+                                         JSFunction::INTERPRETED, NullPtr(), NullPtr()));
     if (!clone)
         return NULL;
 
@@ -1217,8 +1220,8 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
     /* Step 4-6, 10-11. */
     RootedAtom name(cx, target->isFunction() ? target->toFunction()->atom() : NULL);
 
-    RootedObject funobj(cx, js_NewFunction(cx, NullPtr(), CallOrConstructBoundFunction, length,
-                                           JSFunction::NATIVE_CTOR, target, name));
+    RootedObject funobj(cx, NewFunction(cx, NullPtr(), CallOrConstructBoundFunction, length,
+                                        JSFunction::NATIVE_CTOR, target, name));
     if (!funobj)
         return NULL;
 
@@ -1443,8 +1446,8 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
      * and so would a call to f from another top-level's script or function.
      */
     RootedAtom anonymousAtom(cx, cx->names().anonymous);
-    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED_LAMBDA,
-                                          global, anonymousAtom));
+    RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED_LAMBDA,
+                                       global, anonymousAtom));
     if (!fun)
         return false;
 
@@ -1463,11 +1466,12 @@ js::IsBuiltinFunctionConstructor(JSFunction *fun)
 }
 
 JSFunction *
-js_NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned nargs,
-               JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
-               js::gc::AllocKind kind)
+js::NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned nargs,
+                JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
+                gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
+                NewObjectKind newKind /* = GenericObject */)
 {
-    JS_ASSERT(kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
+    JS_ASSERT(allocKind == JSFunction::FinalizeKind || allocKind == JSFunction::ExtendedFinalizeKind);
     JS_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
     JS_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
 
@@ -1475,8 +1479,11 @@ js_NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned na
     if (funobj) {
         JS_ASSERT(funobj->isFunction());
         JS_ASSERT(funobj->getParent() == parent);
+        JS_ASSERT_IF(native && cx->typeInferenceEnabled(), funobj->hasSingletonType());
     } else {
-        funobj = NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent), kind);
+        if (native)
+            newKind = SingletonObject;
+        funobj = NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent), allocKind, newKind);
         if (!funobj)
             return NULL;
     }
@@ -1494,28 +1501,28 @@ js_NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned na
         JS_ASSERT(native);
         fun->initNative(native, NULL);
     }
-    if (kind == JSFunction::ExtendedFinalizeKind) {
+    if (allocKind == JSFunction::ExtendedFinalizeKind) {
         fun->flags |= JSFunction::EXTENDED;
         fun->initializeExtended();
     }
     fun->initAtom(atom);
 
-    if (native && !JSObject::setSingletonType(cx, fun))
-        return NULL;
-
     return fun;
 }
 
 JSFunction *
-js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
-                        gc::AllocKind kind)
+js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, gc::AllocKind allocKind)
 {
     AssertCanGC();
     JS_ASSERT(parent);
     JS_ASSERT(!fun->isBoundFunction());
 
-    JSObject *cloneobj =
-        NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent), kind);
+    bool useSameScript = cx->compartment == fun->compartment() &&
+                         !fun->hasSingletonType() &&
+                         !types::UseNewTypeForClone(fun);
+    NewObjectKind newKind = useSameScript ? GenericObject : SingletonObject;
+    JSObject *cloneobj = NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent),
+                                                 allocKind, newKind);
     if (!cloneobj)
         return NULL;
     JSFunction *clone = cloneobj->toFunction();
@@ -1537,15 +1544,12 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
     }
     clone->initAtom(fun->displayAtom());
 
-    if (kind == JSFunction::ExtendedFinalizeKind) {
+    if (allocKind == JSFunction::ExtendedFinalizeKind) {
         clone->flags |= JSFunction::EXTENDED;
         clone->initializeExtended();
     }
 
-    if (cx->compartment == fun->compartment() &&
-        !fun->hasSingletonType() &&
-        !types::UseNewTypeForClone(fun))
-    {
+    if (useSameScript) {
         /*
          * Clone the function, reusing its script. We can use the same type as
          * the original function provided that its prototype is correct.
@@ -1556,9 +1560,6 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
     }
 
     RootedFunction cloneRoot(cx, clone);
-
-    if (!JSObject::setSingletonType(cx, cloneRoot))
-        return NULL;
 
     /*
      * Across compartments we have to clone the script for interpreted
@@ -1573,8 +1574,9 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 }
 
 JSFunction *
-js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
-                  unsigned nargs, unsigned flags, AllocKind kind)
+js::DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
+                   unsigned nargs, unsigned flags, AllocKind allocKind /* = FinalizeKind */,
+                   NewObjectKind newKind /* = GenericObject */)
 {
     PropertyOp gop;
     StrictPropertyOp sop;
@@ -1602,7 +1604,7 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
     else
         funFlags = JSAPIToJSFunctionFlags(flags);
     RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
-    fun = js_NewFunction(cx, NullPtr(), native, nargs, funFlags, obj, atom, kind);
+    fun = NewFunction(cx, NullPtr(), native, nargs, funFlags, obj, atom, allocKind, newKind);
     if (!fun)
         return NULL;
 

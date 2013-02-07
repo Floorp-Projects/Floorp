@@ -47,7 +47,8 @@ protected:
                                   bool aIgnoreRootScrollFrame,
                                   float aPressure,
                                   unsigned short aInputSourceArg,
-                                  bool aToWindow);
+                                  bool aToWindow,
+                                  bool *aPreventDefault);
 
   static mozilla::widget::Modifiers GetWidgetModifiers(int32_t aModifiers);
 };

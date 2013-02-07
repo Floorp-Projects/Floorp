@@ -38,17 +38,17 @@ enum ActorFlavorEnum
 };
 
 template <ActorFlavorEnum>
-struct BlobTraits
-{ };
+struct BlobTraits;
 
 template <>
 struct BlobTraits<Parent>
 {
   typedef mozilla::dom::PBlobParent ProtocolType;
   typedef mozilla::dom::PBlobStreamParent StreamType;
-  typedef mozilla::dom::PContentParent ContentManagerType;
+  typedef mozilla::dom::ParentBlobConstructorParams ConstructorParamsType;
+  typedef mozilla::dom::ChildBlobConstructorParams
+          OtherSideConstructorParamsType;
   typedef mozilla::dom::ContentParent ConcreteContentManagerType;
-  typedef ProtocolType BlobManagerType;
 
   // BaseType on the parent side is a bit more complicated than for the child
   // side. In the case of nsIInputStreams backed by files we need to ensure that
@@ -61,6 +61,28 @@ struct BlobTraits<Parent>
   // are currently in flight.
   class BaseType : public ProtocolType
   {
+  public:
+    static const ChildBlobConstructorParams&
+    GetBlobConstructorParams(const ConstructorParamsType& aParams)
+    {
+      return aParams.blobParams();
+    }
+
+    static void
+    SetBlobConstructorParams(ConstructorParamsType& aParams,
+                             const ChildBlobConstructorParams& aBlobParams)
+    {
+      aParams.blobParams() = aBlobParams;
+      aParams.optionalInputStreamParams() = mozilla::void_t();
+    }
+
+    static void
+    SetBlobConstructorParams(OtherSideConstructorParamsType& aParams,
+                             const ChildBlobConstructorParams& aBlobParams)
+    {
+      aParams = aBlobParams;
+    }
+
   protected:
     BaseType();
     virtual ~BaseType();
@@ -73,13 +95,6 @@ struct BlobTraits<Parent>
 
     nsTArray<nsRevocableEventPtr<OpenStreamRunnable> > mOpenStreamRunnables;
   };
-
-  static void*
-  Allocate(size_t aSize)
-  {
-    // We want fallible allocation in the parent.
-    return moz_malloc(aSize);
-  }
 };
 
 template <>
@@ -87,12 +102,36 @@ struct BlobTraits<Child>
 {
   typedef mozilla::dom::PBlobChild ProtocolType;
   typedef mozilla::dom::PBlobStreamChild StreamType;
-  typedef mozilla::dom::PContentChild ContentManagerType;
+  typedef mozilla::dom::ChildBlobConstructorParams ConstructorParamsType;
+  typedef mozilla::dom::ParentBlobConstructorParams
+          OtherSideConstructorParamsType;
   typedef mozilla::dom::ContentChild ConcreteContentManagerType;
-  typedef ProtocolType BlobManagerType;
+
 
   class BaseType : public ProtocolType
   {
+  public:
+    static const ChildBlobConstructorParams&
+    GetBlobConstructorParams(const ConstructorParamsType& aParams)
+    {
+      return aParams;
+    }
+
+    static void
+    SetBlobConstructorParams(ConstructorParamsType& aParams,
+                             const ChildBlobConstructorParams& aBlobParams)
+    {
+      aParams = aBlobParams;
+    }
+
+    static void
+    SetBlobConstructorParams(OtherSideConstructorParamsType& aParams,
+                             const ChildBlobConstructorParams& aBlobParams)
+    {
+      aParams.blobParams() = aBlobParams;
+      aParams.optionalInputStreamParams() = mozilla::void_t();
+    }
+
   protected:
     BaseType()
     { }
@@ -100,52 +139,32 @@ struct BlobTraits<Child>
     virtual ~BaseType()
     { }
   };
-
-  static void*
-  Allocate(size_t aSize)
-  {
-    // We want infallible allocation in the child.
-    return moz_xmalloc(aSize);
-  }
 };
 
 template <ActorFlavorEnum>
-class RemoteBlobBase;
-template <ActorFlavorEnum>
 class RemoteBlob;
-template <ActorFlavorEnum>
-class RemoteMemoryBlob;
-template <ActorFlavorEnum>
-class RemoteMultipartBlob;
 
 template <ActorFlavorEnum ActorFlavor>
 class Blob : public BlobTraits<ActorFlavor>::BaseType
 {
-  friend class RemoteBlobBase<ActorFlavor>;
+  friend class RemoteBlob<ActorFlavor>;
 
 public:
   typedef typename BlobTraits<ActorFlavor>::ProtocolType ProtocolType;
   typedef typename BlobTraits<ActorFlavor>::StreamType StreamType;
+  typedef typename BlobTraits<ActorFlavor>::ConstructorParamsType
+          ConstructorParamsType;
+  typedef typename BlobTraits<ActorFlavor>::OtherSideConstructorParamsType
+          OtherSideConstructorParamsType;
   typedef typename BlobTraits<ActorFlavor>::BaseType BaseType;
-  typedef typename BlobTraits<ActorFlavor>::ContentManagerType ContentManagerType;
-  typedef typename BlobTraits<ActorFlavor>::BlobManagerType BlobManagerType;
   typedef RemoteBlob<ActorFlavor> RemoteBlobType;
-  typedef RemoteMemoryBlob<ActorFlavor> RemoteMemoryBlobType;
-  typedef RemoteMultipartBlob<ActorFlavor> RemoteMultipartBlobType;
   typedef mozilla::ipc::IProtocolManager<
                       mozilla::ipc::RPCChannel::RPCListener>::ActorDestroyReason
           ActorDestroyReason;
-  typedef mozilla::dom::BlobConstructorParams BlobConstructorParams;
 
 protected:
   nsIDOMBlob* mBlob;
   RemoteBlobType* mRemoteBlob;
-  RemoteMemoryBlobType* mRemoteMemoryBlob;
-  RemoteMultipartBlobType* mRemoteMultipartBlob;
-
-  ContentManagerType* mContentManager;
-  BlobManagerType* mBlobManager;
-
   bool mOwnsBlob;
   bool mBlobIsFile;
 
@@ -159,7 +178,7 @@ public:
 
   // This create function is called on the receiving side.
   static Blob*
-  Create(const BlobConstructorParams& aParams);
+  Create(const ConstructorParamsType& aParams);
 
   // Get the blob associated with this actor. This may always be called on the
   // sending side. It may also be called on the receiving side unless this is a
@@ -176,49 +195,15 @@ public:
   bool
   SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength);
 
-  ProtocolType*
-  ConstructPBlobOnManager(ProtocolType* aActor,
-                          const BlobConstructorParams& aParams);
-
-  bool
-  ManagerIs(const ContentManagerType* aManager) const
-  {
-    return aManager == mContentManager;
-  }
-
-  bool
-  ManagerIs(const BlobManagerType* aManager) const
-  {
-    return aManager == mBlobManager;
-  }
-
-#ifdef DEBUG
-  bool
-  HasManager() const
-  {
-    return !!mContentManager || !!mBlobManager;
-  }
-#endif
-
-  void
-  SetManager(ContentManagerType* aManager);
-  void
-  SetManager(BlobManagerType* aManager);
-
-  void
-  PropagateManager(Blob<ActorFlavor>* aActor) const;
-
 private:
   // This constructor is called on the sending side.
   Blob(nsIDOMBlob* aBlob);
 
-  // These constructors are called on the receiving side.
-  Blob(nsRefPtr<RemoteBlobType>& aBlob,
-       bool aIsFile);
-  Blob(nsRefPtr<RemoteMemoryBlobType>& aBlob,
-       bool aIsFile);
-  Blob(nsRefPtr<RemoteMultipartBlobType>& aBlob,
-       bool aIsFile);
+  // This constructor is called on the receiving side.
+  Blob(const ConstructorParamsType& aParams);
+
+  static already_AddRefed<RemoteBlobType>
+  CreateRemoteBlob(const ConstructorParamsType& aParams);
 
   void
   NoteDyingRemoteBlob();
@@ -233,21 +218,11 @@ private:
   virtual bool
   RecvPBlobStreamConstructor(StreamType* aActor) MOZ_OVERRIDE;
 
-  virtual bool
-  RecvPBlobConstructor(ProtocolType* aActor,
-                       const BlobConstructorParams& aParams) MOZ_OVERRIDE;
-
   virtual StreamType*
   AllocPBlobStream() MOZ_OVERRIDE;
 
   virtual bool
   DeallocPBlobStream(StreamType* aActor) MOZ_OVERRIDE;
-
-  virtual ProtocolType*
-  AllocPBlob(const BlobConstructorParams& params) MOZ_OVERRIDE;
-
-  virtual bool
-  DeallocPBlob(ProtocolType* actor) MOZ_OVERRIDE;
 };
 
 } // namespace ipc

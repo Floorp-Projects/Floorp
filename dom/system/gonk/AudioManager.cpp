@@ -308,20 +308,24 @@ AudioManager::SetPhoneState(int32_t aState)
 
   mPhoneState = aState;
 
-  if (aState == PHONE_STATE_IN_CALL) {
-    if (!mPhoneAudioAgent) {
-      mPhoneAudioAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
-      MOZ_ASSERT(mPhoneAudioAgent);
-      // Telephony doesn't be paused by any other channels.
-      mPhoneAudioAgent->Init(AUDIO_CHANNEL_TELEPHONY, nullptr);
-
-      // Telephony can always play.
-      bool canPlay;
-      mPhoneAudioAgent->StartPlaying(&canPlay);
-    }
-  } else if (mPhoneAudioAgent) {
+  if (mPhoneAudioAgent) {
     mPhoneAudioAgent->StopPlaying();
     mPhoneAudioAgent = nullptr;
+  }
+
+  if (aState == PHONE_STATE_IN_CALL || aState == PHONE_STATE_RINGTONE) {
+    mPhoneAudioAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
+    MOZ_ASSERT(mPhoneAudioAgent);
+    if (aState == PHONE_STATE_IN_CALL) {
+      // Telephony doesn't be paused by any other channels.
+      mPhoneAudioAgent->Init(AUDIO_CHANNEL_TELEPHONY, nullptr);
+    } else {
+      mPhoneAudioAgent->Init(AUDIO_CHANNEL_RINGER, nullptr);
+    }
+
+    // Telephony can always play.
+    bool canPlay;
+    mPhoneAudioAgent->StartPlaying(&canPlay);
   }
 
   return NS_OK;

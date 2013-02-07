@@ -11,8 +11,8 @@ add_autocomplete_test([
   function ()
   {
     Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", false);
-    addVisits({ uri: NetUtil.newURI("http://visit.mozilla.org"),
-                transition: TRANSITION_TYPED });
+    promiseAddVisits({ uri: NetUtil.newURI("http://visit.mozilla.org"),
+                       transition: TRANSITION_TYPED });
   }
 ]);
 
@@ -23,8 +23,8 @@ add_autocomplete_test([
   function ()
   {
     Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
-    addVisits({ uri: NetUtil.newURI("http://visit.mozilla.org"),
-                transition: TRANSITION_TYPED });
+    promiseAddVisits({ uri: NetUtil.newURI("http://visit.mozilla.org"),
+                       transition: TRANSITION_TYPED });
   }
 ]);
 
@@ -37,7 +37,7 @@ add_autocomplete_test([
     let places = [{ uri: NetUtil.newURI("http://visit1.mozilla.org") },
                   { uri: NetUtil.newURI("http://visit2.mozilla.org"),
                     transition: TRANSITION_TYPED }];
-    addVisits(places);
+    promiseAddVisits(places);
   }
 ]);
 
@@ -47,7 +47,7 @@ add_autocomplete_test([
   "visit1.mozilla.org/",
   function ()
   {
-    addVisits(NetUtil.newURI("http://www.visit1.mozilla.org"));
+    promiseAddVisits(NetUtil.newURI("http://www.visit1.mozilla.org"));
   }
 ]);
 
@@ -57,7 +57,7 @@ add_autocomplete_test([
   "visit3.mozilla.org/",
   function ()
   {
-    addVisits(NetUtil.newURI("http://www.visit3.mozilla.org"));
+    promiseAddVisits(NetUtil.newURI("http://www.visit3.mozilla.org"));
   }
 ]);
 
@@ -67,7 +67,7 @@ add_autocomplete_test([
   "www.me.mozilla.org/",
   function ()
   {
-    addVisits(NetUtil.newURI("http://www.me.mozilla.org"));
+    promiseAddVisits(NetUtil.newURI("http://www.me.mozilla.org"));
   }
 ]);
 
@@ -78,7 +78,7 @@ add_autocomplete_test([
   function ()
   {
     addBookmark({ url: "http://bookmark1.mozilla.org/", });
-    addVisits(NetUtil.newURI("http://bookmark1.mozilla.org/foo"));
+    promiseAddVisits(NetUtil.newURI("http://bookmark1.mozilla.org/foo"));
   }
 ]);
 
@@ -91,7 +91,7 @@ add_autocomplete_test([
 
     let places = [{ uri: NetUtil.newURI("http://smokey.mozilla.org/foo/bar/baz?bacon=delicious") },
                   { uri: NetUtil.newURI("http://smokey.mozilla.org/foo/bar/baz?bacon=smokey") }];
-    addVisits(places);
+    promiseAddVisits(places);
   }
 ]);
 
@@ -104,7 +104,7 @@ add_autocomplete_test([
 
     let places = [{ uri: NetUtil.newURI("http://smokey.mozilla.org/foo/bar/baz?bacon=delicious") },
                   { uri: NetUtil.newURI("http://smokey.mozilla.org/foo/bar/baz?bacon=smokey") }];
-    addVisits(places);
+    promiseAddVisits(places);
   }
 ]);
 
@@ -114,7 +114,7 @@ add_autocomplete_test([
   "smokey.mozilla.org/foo?bacon=delicious",
   function ()
   {
-    addVisits(NetUtil.newURI("http://smokey.mozilla.org/foo?bacon=delicious"));
+    promiseAddVisits(NetUtil.newURI("http://smokey.mozilla.org/foo?bacon=delicious"));
   }
 ]);
 
@@ -124,6 +124,6 @@ add_autocomplete_test([
   "smokey.mozilla.org/foo?bacon=delicious#bar",
   function ()
   {
-    addVisits(NetUtil.newURI("http://smokey.mozilla.org/foo?bacon=delicious#bar"));
+    promiseAddVisits(NetUtil.newURI("http://smokey.mozilla.org/foo?bacon=delicious#bar"));
   }
 ]);

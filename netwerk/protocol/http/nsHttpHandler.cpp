@@ -642,7 +642,9 @@ nsHttpHandler::InitUserAgentComponents()
 
     bool isTablet;
     nsresult rv = infoService->GetPropertyAsBool(NS_LITERAL_STRING("tablet"), &isTablet);
-    if (NS_FAILED(rv) || !isTablet)
+    if (NS_SUCCEEDED(rv) && isTablet)
+        mCompatDevice.AssignLiteral("Tablet");
+    else
         mCompatDevice.AssignLiteral("Mobile");
 #endif
 

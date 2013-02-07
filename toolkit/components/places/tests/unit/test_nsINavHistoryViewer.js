@@ -39,10 +39,6 @@ var resultObserver = {
     this.newAccessCount = updatedVisitCount;
   },
 
-  replacedNode: null,
-  nodeReplaced: function(parent, oldNode, newNode, index) {
-    this.replacedNode = node;
-  },
   movedNode: null,
   nodeMoved: function(node, oldParent, oldIndex, newParent, newIndex) {
     this.movedNode = node;
@@ -106,7 +102,7 @@ add_test(function check_history_query() {
 
   // nsINavHistoryResultObserver.nodeInserted
   // add a visit
-  addVisits(testURI, function() {
+  promiseAddVisits(testURI).then(function() {
     do_check_eq(testURI.spec, resultObserver.insertedNode.uri);
 
     // nsINavHistoryResultObserver.nodeHistoryDetailsChanged
@@ -114,17 +110,14 @@ add_test(function check_history_query() {
     do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
 
     // nsINavHistoryResultObserver.itemTitleChanged for a leaf node
-    addVisits({ uri: testURI, title: "baz" }, function () {
+    promiseAddVisits({ uri: testURI, title: "baz" }).then(function () {
       do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
 
       // nsINavHistoryResultObserver.nodeRemoved
       var removedURI = uri("http://google.com");
-      addVisits(removedURI, function() {
+      promiseAddVisits(removedURI).then(function() {
         bhist.removePage(removedURI);
         do_check_eq(removedURI.spec, resultObserver.removedNode.uri);
-
-        // XXX nsINavHistoryResultObserver.nodeReplaced
-        // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
 
         // nsINavHistoryResultObserver.invalidateContainer
         bhist.removePagesFromHost("mozilla.com", false);
@@ -200,9 +193,6 @@ add_test(function check_bookmarks_query() {
   // nsINavHistoryResultObserver.nodeRemoved
   bmsvc.removeItem(testBookmark2);
   do_check_eq(testBookmark2, resultObserver.removedNode.itemId);
-
-  // XXX nsINavHistoryResultObserver.nodeReplaced
-  // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
 
   // XXX nsINavHistoryResultObserver.invalidateContainer
 
