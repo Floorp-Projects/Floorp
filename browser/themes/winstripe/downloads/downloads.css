@@ -123,16 +123,22 @@ richlistitem[type="download"]:first-child {
    font-size of .downloadContainer's parent, we use calc to go from the
    smaller font-size back to the original font-size.
  */
+#downloadsSummaryDetails,
 .downloadContainer {
   font-size: 90%;
 }
 
+#downloadsSummaryDescription,
 .downloadTarget {
-  font-size: calc(100%/0.9);
   margin-bottom: 6px;
   cursor: inherit;
 }
 
+.downloadTarget {
+  font-size: calc(100%/0.9);
+}
+
+#downloadsSummaryDetails,
 .downloadDetails {
   opacity: 0.6;
   cursor: inherit;

@@ -261,7 +261,6 @@ add_test(function test_dh_details()
         checkFinished();
       }
     },
-    onBeforeDeleteURI: function() {},
     onDeleteURI: function() {},
     onClearHistory: function() {},
     onPageChanged: function() {},

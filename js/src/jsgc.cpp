@@ -604,7 +604,7 @@ Chunk::allocate(JSRuntime *rt)
 
     if (!chunk)
         return NULL;
-    chunk->init();
+    chunk->init(rt);
     rt->gcStats.count(gcstats::STAT_NEW_CHUNK);
     return chunk;
 }
@@ -635,7 +635,7 @@ Chunk::prepareToBeFreed(JSRuntime *rt)
 }
 
 void
-Chunk::init()
+Chunk::init(JSRuntime *rt)
 {
     JS_POISON(this, JS_FREE_PATTERN, ChunkSize);
 
@@ -654,6 +654,7 @@ Chunk::init()
     info.numArenasFree = ArenasPerChunk;
     info.numArenasFreeCommitted = ArenasPerChunk;
     info.age = 0;
+    info.runtime = rt;
 
     /* Initialize the arena header state. */
     for (unsigned i = 0; i < ArenasPerChunk; i++) {
@@ -969,6 +970,14 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes)
 
 #ifndef JS_MORE_DETERMINISTIC
     rt->gcJitReleaseTime = PRMJ_Now() + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
+#endif
+
+#ifdef JSGC_GENERATIONAL
+    if (!rt->gcNursery.enable())
+        return false;
+
+    if (!rt->gcStoreBuffer.enable())
+        return false;
 #endif
 
 #ifdef JS_GC_ZEAL

@@ -13,6 +13,9 @@
 #include "js/Value.h"
 #include "vm/String.h"
 
+#include "jsinferinlines.h"
+#include "jsatominlines.h"
+
 using namespace js;
 
 bool

@@ -262,7 +262,7 @@ class RelocatablePtr : public EncapsulatedPtr<T>
 
     ~RelocatablePtr() {
         if (this->value)
-            relocate(this->value->zone());
+            relocate(this->value->runtime());
     }
 
     RelocatablePtr<T> &operator=(T *v) {
@@ -272,9 +272,9 @@ class RelocatablePtr : public EncapsulatedPtr<T>
             this->value = v;
             post();
         } else if (this->value) {
-            Zone *zone = this->value->zone();
+            JSRuntime *rt = this->value->runtime();
             this->value = v;
-            relocate(zone);
+            relocate(rt);
         }
         return *this;
     }
@@ -286,16 +286,16 @@ class RelocatablePtr : public EncapsulatedPtr<T>
             this->value = v.value;
             post();
         } else if (this->value) {
-            Zone *zone = this->value->zone();
+            JSRuntime *rt = this->value->runtime();
             this->value = v;
-            relocate(zone);
+            relocate(rt);
         }
         return *this;
     }
 
   protected:
     inline void post();
-    inline void relocate(Zone *zone);
+    inline void relocate(JSRuntime *rt);
 };
 
 /*
@@ -400,6 +400,11 @@ class EncapsulatedValue : public ValueOperations<EncapsulatedValue>
     inline void pre();
     inline void pre(Zone *zone);
 
+    static inline JSRuntime *runtime(const Value &v) {
+        JS_ASSERT(v.isMarkable());
+        return static_cast<js::gc::Cell *>(v.toGCThing())->runtime();
+    }
+
   private:
     friend class ValueOperations<EncapsulatedValue>;
     const Value * extract() const { return &value; }
@@ -414,7 +419,7 @@ class HeapValue : public EncapsulatedValue
     inline ~HeapValue();
 
     inline void init(const Value &v);
-    inline void init(Zone *zone, const Value &v);
+    inline void init(JSRuntime *rt, const Value &v);
 
     inline HeapValue &operator=(const Value &v);
     inline HeapValue &operator=(const HeapValue &v);
@@ -428,11 +433,11 @@ class HeapValue : public EncapsulatedValue
     inline void set(Zone *zone, const Value &v);
 
     static inline void writeBarrierPost(const Value &v, Value *addr);
-    static inline void writeBarrierPost(Zone *zone, const Value &v, Value *addr);
+    static inline void writeBarrierPost(JSRuntime *rt, const Value &v, Value *addr);
 
   private:
     inline void post();
-    inline void post(Zone *zone);
+    inline void post(JSRuntime *rt);
 };
 
 class RelocatableValue : public EncapsulatedValue
@@ -448,7 +453,7 @@ class RelocatableValue : public EncapsulatedValue
 
   private:
     inline void post();
-    inline void post(Zone *zone);
+    inline void post(JSRuntime *rt);
     inline void relocate();
 };
 
@@ -474,19 +479,17 @@ class HeapSlot : public EncapsulatedValue
     inline ~HeapSlot();
 
     inline void init(JSObject *owner, Kind kind, uint32_t slot, const Value &v);
-    inline void init(Zone *zone, JSObject *owner, Kind kind, uint32_t slot, const Value &v);
+    inline void init(JSRuntime *rt, JSObject *owner, Kind kind, uint32_t slot, const Value &v);
 
     inline void set(JSObject *owner, Kind kind, uint32_t slot, const Value &v);
     inline void set(Zone *zone, JSObject *owner, Kind kind, uint32_t slot, const Value &v);
-    inline void setCrossCompartment(JSObject *owner, Kind kind, uint32_t slot, const Value &v,
-                                    Zone *vzone);
 
     static inline void writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot);
-    static inline void writeBarrierPost(Zone *zone, JSObject *obj, Kind kind, uint32_t slot);
+    static inline void writeBarrierPost(JSRuntime *rt, JSObject *obj, Kind kind, uint32_t slot);
 
   private:
     inline void post(JSObject *owner, Kind kind, uint32_t slot);
-    inline void post(Zone *zone, JSObject *owner, Kind kind, uint32_t slot);
+    inline void post(JSRuntime *rt, JSObject *owner, Kind kind, uint32_t slot);
 };
 
 /*
@@ -496,14 +499,14 @@ class HeapSlot : public EncapsulatedValue
  * single step.
  */
 inline void
-DenseRangeWriteBarrierPost(Zone *zone, JSObject *obj, uint32_t start, uint32_t count);
+DenseRangeWriteBarrierPost(JSRuntime *rt, JSObject *obj, uint32_t start, uint32_t count);
 
 /*
  * This is a post barrier for HashTables whose key can be moved during a GC.
  */
 template <class Map, class Key>
 inline void
-HashTableWriteBarrierPost(Zone *zone, const Map *map, const Key &key)
+HashTableWriteBarrierPost(JSRuntime *rt, const Map *map, const Key &key)
 {
 #ifdef JS_GCGENERATIONAL
     if (key && comp->gcNursery.isInside(key))

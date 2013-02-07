@@ -121,8 +121,7 @@ MarkupView.prototype = {
           return Ci.nsIDOMNodeFilter.FILTER_ACCEPT;
         }
         return Ci.nsIDOMNodeFilter.FILTER_SKIP;
-      },
-      false
+      }
     );
     walker.currentNode = this._selectedContainer.elt;
     return walker;
@@ -1316,7 +1315,7 @@ RootContainer.prototype = {
 };
 
 function documentWalker(node) {
-  return new DocumentWalker(node, Ci.nsIDOMNodeFilter.SHOW_ALL, whitespaceTextFilter, false);
+  return new DocumentWalker(node, Ci.nsIDOMNodeFilter.SHOW_ALL, whitespaceTextFilter);
 }
 
 function nodeDocument(node) {
@@ -1329,11 +1328,10 @@ function nodeDocument(node) {
  *
  * See TreeWalker documentation for explanations of the methods.
  */
-function DocumentWalker(aNode, aShow, aFilter, aExpandEntityReferences)
+function DocumentWalker(aNode, aShow, aFilter)
 {
   let doc = nodeDocument(aNode);
-  this.walker = doc.createTreeWalker(nodeDocument(aNode),
-    aShow, aFilter, aExpandEntityReferences);
+  this.walker = doc.createTreeWalker(nodeDocument(aNode), aShow, aFilter);
   this.walker.currentNode = aNode;
   this.filter = aFilter;
 }

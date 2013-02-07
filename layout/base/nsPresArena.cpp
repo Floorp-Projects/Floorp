@@ -24,21 +24,9 @@
 #endif
 
 #include "mozilla/StandardInteger.h"
+#include "mozilla/ASan.h"
 
-#if defined(MOZ_ASAN)
-// XXX These come from sanitizer/asan_interface.h but that header doesn't seem
-// to be installed by default?
-extern "C" {
-  void __asan_poison_memory_region(void const volatile *addr, size_t size)
-    __attribute__((visibility("default")));
-  void __asan_unpoison_memory_region(void const volatile *addr, size_t size)
-    __attribute__((visibility("default")));
-#define ASAN_POISON_MEMORY_REGION(addr, size)   \
-  __asan_poison_memory_region((addr), (size))
-#define ASAN_UNPOISON_MEMORY_REGION(addr, size) \
-  __asan_unpoison_memory_region((addr), (size))
-}
-#elif defined(MOZ_VALGRIND)
+#if defined(MOZ_VALGRIND)
 #include "valgrind/memcheck.h"
 #endif
 
