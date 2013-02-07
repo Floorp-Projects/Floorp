@@ -248,3 +248,143 @@ function IsStructurallyValidLanguageTag(locale) {
     return !callFunction(std_RegExp_test, duplicateVariantRE, locale) &&
            !callFunction(std_RegExp_test, duplicateSingletonRE, locale);
 }
+
+
+/**
+ * Canonicalizes the given structurally valid BCP 47 language tag, including
+ * regularized case of subtags. For example, the language tag
+ * Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE, where
+ *
+ *     Zh             ; 2*3ALPHA
+ *     -NAN           ; ["-" extlang]
+ *     -haNS          ; ["-" script]
+ *     -bu            ; ["-" region]
+ *     -variant2      ; *("-" variant)
+ *     -Variant1
+ *     -u-ca-chinese  ; *("-" extension)
+ *     -t-Zh-laTN
+ *     -x-PRIVATE     ; ["-" privateuse]
+ *
+ * becomes nan-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
+ *
+ * Spec: ECMAScript Internationalization API Specification, 6.2.3.
+ * Spec: RFC 5646, section 4.5.
+ */
+function CanonicalizeLanguageTag(locale) {
+    assert(IsStructurallyValidLanguageTag(locale), "CanonicalizeLanguageTag");
+
+    // The input
+    // "Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE"
+    // will be used throughout this method to illustrate how it works.
+
+    // Language tags are compared and processed case-insensitively, so
+    // technically it's not necessary to adjust case. But for easier processing,
+    // and because the canonical form for most subtags is lower case, we start
+    // with lower case for all.
+    // "Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE" ->
+    // "zh-nan-hans-bu-variant2-variant1-u-ca-chinese-t-zh-latn-x-private"
+    locale = callFunction(std_String_toLowerCase, locale);
+
+    // Handle mappings for complete tags.
+    if (callFunction(std_Object_hasOwnProperty, langTagMappings, locale))
+        return langTagMappings[locale];
+
+    var subtags = callFunction(std_String_split, locale, "-");
+    var i = 0;
+
+    // Handle the standard part: All subtags before the first singleton or "x".
+    // "zh-nan-hans-bu-variant2-variant1"
+    while (i < subtags.length) {
+        var subtag = subtags[i];
+
+        // If we reach the start of an extension sequence or private use part,
+        // we're done with this loop. We have to check for i > 0 because for
+        // irregular language tags, such as i-klingon, the single-character
+        // subtag "i" is not the start of an extension sequence.
+        // In the example, we break at "u".
+        if (subtag.length === 1 && (i > 0 || subtag === "x"))
+            break;
+
+        if (subtag.length === 4) {
+            // 4-character subtags are script codes; their first character
+            // needs to be capitalized. "hans" -> "Hans"
+            subtag = callFunction(std_String_toUpperCase, subtag[0]) +
+                     callFunction(std_String_substring, subtag, 1);
+        } else if (i !== 0 && subtag.length === 2) {
+            // 2-character subtags that are not in initial position are region
+            // codes; they need to be upper case. "bu" -> "BU"
+            subtag = callFunction(std_String_toUpperCase, subtag);
+        }
+        if (callFunction(std_Object_hasOwnProperty, langSubtagMappings, subtag)) {
+            // Replace deprecated subtags with their preferred values.
+            // "BU" -> "MM"
+            // This has to come after we capitalize region codes because
+            // otherwise some language and region codes could be confused.
+            // For example, "in" is an obsolete language code for Indonesian,
+            // but "IN" is the country code for India.
+            // Note that the script generating langSubtagMappings makes sure
+            // that no regular subtag mapping will replace an extlang code.
+            subtag = langSubtagMappings[subtag];
+        } else if (callFunction(std_Object_hasOwnProperty, extlangMappings, subtag)) {
+            // Replace deprecated extlang subtags with their preferred values,
+            // and remove the preceding subtag if it's a redundant prefix.
+            // "zh-nan" -> "nan"
+            // Note that the script generating extlangMappings makes sure that
+            // no extlang mapping will replace a normal language code.
+            subtag = extlangMappings[subtag].preferred;
+            if (i === 1 && extlangMappings[subtag].prefix === subtags[0]) {
+                callFunction(std_Array_shift, subtags);
+                i--;
+            }
+        }
+        subtags[i] = subtag;
+        i++;
+    }
+    var normal = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, 0, i), "-");
+
+    // Extension sequences are sorted by their singleton characters.
+    // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
+    var extensions = new List();
+    while (i < subtags.length && subtags[i] !== "x") {
+        var extensionStart = i;
+        i++;
+        while (i < subtags.length && subtags[i].length > 1)
+            i++;
+        var extension = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, extensionStart, i), "-");
+        extensions.push(extension);
+    }
+    extensions.sort();
+
+    // Private use sequences are left as is. "x-private"
+    var privateUse = "";
+    if (i < subtags.length)
+        privateUse = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, i), "-");
+
+    // Put everything back together.
+    var canonical = normal;
+    if (extensions.length > 0)
+        canonical += "-" + extensions.join("-");
+    if (privateUse.length > 0) {
+        // Be careful of a Language-Tag that is entirely privateuse.
+        if (canonical.length > 0)
+            canonical += "-" + privateUse;
+        else
+            canonical = privateUse;
+    }
+
+    return canonical;
+}
+
+
+/**
+ * Verifies that the given string is a well-formed ISO 4217 currency code.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 6.3.1.
+ */
+function IsWellFormedCurrencyCode(currency) {
+    var c = ToString(currency);
+    var normalized = toASCIIUpperCase(c);
+    if (normalized.length !== 3)
+        return false;
+    return !callFunction(std_RegExp_test, /[^A-Z]/, normalized);
+}
