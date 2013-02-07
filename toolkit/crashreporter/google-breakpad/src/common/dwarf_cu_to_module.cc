@@ -39,8 +39,8 @@
 #include "common/dwarf_cu_to_module.h"
 
 #include <assert.h>
-#if !defined(ANDROID)
-# include <cxxabi.h>
+#if !defined(__ANDROID__)
+#include <cxxabi.h>
 #endif
 #include <inttypes.h>
 #include <stdio.h>
@@ -316,9 +316,9 @@ void DwarfCUToModule::GenericDIEHandler::ProcessAttributeString(
       break;
     case dwarf2reader::DW_AT_MIPS_linkage_name: {
       char* demangled = NULL;
-#     if !defined(ANDROID)
+#if !defined(__ANDROID__)
       demangled = abi::__cxa_demangle(data.c_str(), NULL, NULL, NULL);
-#     endif
+#endif
       if (demangled) {
         demangled_name_ = AddStringToPool(demangled);
         free(reinterpret_cast<void*>(demangled));
