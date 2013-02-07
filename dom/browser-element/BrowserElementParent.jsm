@@ -321,7 +321,7 @@ BrowserElementParent.prototype = {
 
     // For events that send a "_payload_" property, we just want to transmit
     // this in the event.
-    if (detail._payload_) {
+    if ("_payload_" in detail) {
       detail = detail._payload_;
     }
 
