@@ -2677,10 +2677,6 @@ BeginMarkPhase(JSRuntime *rt)
 
     rt->gcIsFull = true;
     bool any = false;
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        JS_ASSERT(!c->gcLiveArrayBuffers);
-        c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
-    }
 
     for (ZonesIter zone(rt); !zone.done(); zone.next()) {
         /* Assert that zone state is as we expect */
@@ -2700,6 +2696,13 @@ BeginMarkPhase(JSRuntime *rt)
 
         zone->scheduledForDestruction = false;
         zone->maybeAlive = false;
+        zone->setPreservingCode(false);
+    }
+
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        JS_ASSERT(!c->gcLiveArrayBuffers);
+        if (ShouldPreserveJITCode(c, currentTime))
+            c->zone()->setPreservingCode(true);
     }
 
     /* Check that at least one zone is scheduled for collection. */
