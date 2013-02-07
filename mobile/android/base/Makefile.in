@@ -944,9 +944,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/site_security_identified.png \
   res/drawable-large-mdpi-v11/site_security_verified.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
-  res/drawable-large-mdpi-v11/tabs_normal.png \
-  res/drawable-large-mdpi-v11/tabs_private.png \
-  res/drawable-large-mdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
@@ -967,9 +964,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/site_security_identified.png \
   res/drawable-large-hdpi-v11/site_security_verified.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
-  res/drawable-large-hdpi-v11/tabs_normal.png \
-  res/drawable-large-hdpi-v11/tabs_private.png \
-  res/drawable-large-hdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
@@ -990,9 +984,6 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/site_security_identified.png \
   res/drawable-large-xhdpi-v11/site_security_verified.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
-  res/drawable-large-xhdpi-v11/tabs_normal.png \
-  res/drawable-large-xhdpi-v11/tabs_private.png \
-  res/drawable-large-xhdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
