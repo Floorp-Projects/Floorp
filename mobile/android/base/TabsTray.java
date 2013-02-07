@@ -241,11 +241,6 @@ public class TabsTray extends ListView
             else
                 row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
 
-            if (Tabs.getInstance().isSelectedTab(tab))
-                row.thumbnail.setAlpha(255);
-            else
-                row.thumbnail.setAlpha(179);
-
             row.title.setText(tab.getDisplayTitle());
         }
 
