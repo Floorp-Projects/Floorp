@@ -432,7 +432,6 @@ TaggingService.prototype = {
   },
 
   onItemVisited: function () {},
-  onBeforeItemRemoved: function () {},
   onBeginUpdateBatch: function () {},
   onEndUpdateBatch: function () {},
 

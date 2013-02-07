@@ -262,8 +262,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
 
     // This content policy works as a whitelist.
     default:
-      MOZ_NOT_REACHED("Mixed content of unknown type");
-      NS_WARNING("Mixed content of unknown type");
+      MOZ_ASSERT(false, "Mixed content of unknown type");
       break;
   }
 

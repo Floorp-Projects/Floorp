@@ -39,10 +39,6 @@ var resultObserver = {
     this.newAccessCount = updatedVisitCount;
   },
 
-  replacedNode: null,
-  nodeReplaced: function(parent, oldNode, newNode, index) {
-    this.replacedNode = node;
-  },
   movedNode: null,
   nodeMoved: function(node, oldParent, oldIndex, newParent, newIndex) {
     this.movedNode = node;
@@ -123,9 +119,6 @@ add_test(function check_history_query() {
         bhist.removePage(removedURI);
         do_check_eq(removedURI.spec, resultObserver.removedNode.uri);
 
-        // XXX nsINavHistoryResultObserver.nodeReplaced
-        // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
-
         // nsINavHistoryResultObserver.invalidateContainer
         bhist.removePagesFromHost("mozilla.com", false);
         do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
@@ -200,9 +193,6 @@ add_test(function check_bookmarks_query() {
   // nsINavHistoryResultObserver.nodeRemoved
   bmsvc.removeItem(testBookmark2);
   do_check_eq(testBookmark2, resultObserver.removedNode.itemId);
-
-  // XXX nsINavHistoryResultObserver.nodeReplaced
-  // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
 
   // XXX nsINavHistoryResultObserver.invalidateContainer
 

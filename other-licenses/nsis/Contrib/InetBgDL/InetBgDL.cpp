@@ -394,7 +394,9 @@ diegle:
                                 path, NULL, NULL, NULL,
                                 INTERNET_FLAG_NO_AUTO_REDIRECT |
                                 INTERNET_FLAG_PRAGMA_NOCACHE |
-                                INTERNET_FLAG_RELOAD, 0);
+                                INTERNET_FLAG_RELOAD |
+                                (port == INTERNET_DEFAULT_HTTPS_PORT ?
+                                         INTERNET_FLAG_SECURE : 0), 0);
     if (!hInetFile)
     {
       goto diegle;
@@ -495,7 +497,10 @@ diegle:
     InternetCloseHandle(hInetFile);
     InternetCloseHandle(hInetCon);
     hInetFile = InternetOpenUrl(hInetSes, pURL->text,
-                                NULL, 0, IOUFlags, NULL);
+                                NULL, 0, IOUFlags |
+                                (!wcsicmp(protocol, L"https") ?
+                                 INTERNET_FLAG_SECURE : 0),
+                                NULL);
     if (!hInetFile)
     {
       goto diegle;
@@ -521,7 +526,9 @@ diegle:
       hInetFile = HttpOpenRequest(hInetCon, L"GET", path,
                                   NULL, NULL, NULL,
                                   INTERNET_FLAG_PRAGMA_NOCACHE |
-                                  INTERNET_FLAG_RELOAD, 0);
+                                  INTERNET_FLAG_RELOAD |
+                                  (port == INTERNET_DEFAULT_HTTPS_PORT ?
+                                           INTERNET_FLAG_SECURE : 0), 0);
       if (!hInetFile)
       {
         // TODO: we could add retry here to be more tolerant

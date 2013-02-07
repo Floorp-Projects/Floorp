@@ -1000,7 +1000,7 @@ DataChannelConnection::SendDeferredMessages()
                                     nullptr, 0,
                                     (void *)spa, (socklen_t)sizeof(struct sctp_sendv_spa),
                                     SCTP_SENDV_SPA,
-                                    spa->sendv_sndinfo.snd_flags) < 0)) {
+                                    0) < 0)) {
           if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // leave queued for resend
             failed_send = true;
@@ -1866,7 +1866,7 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
 
   if (streamOut == INVALID_STREAM) {
     if (!RequestMoreStreamsOut()) {
-      if (channel->mFlags &= DATA_CHANNEL_FLAGS_FINISH_OPEN) {
+      if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
         // We already returned the channel to the app.  Mark it closed
         channel->mState = CLOSED;
         NS_ERROR("Failed to request more streams");
@@ -1930,11 +1930,13 @@ DataChannelConnection::SendMsgInternal(DataChannel *channel, const char *data,
   spa.sendv_sndinfo.snd_flags = flags;
   spa.sendv_sndinfo.snd_context = 0;
   spa.sendv_sndinfo.snd_assoc_id = 0;
+  spa.sendv_flags = SCTP_SEND_SNDINFO_VALID;
 
-  spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
-  spa.sendv_prinfo.pr_value = channel->mPrValue;
-
-  spa.sendv_flags = SCTP_SEND_SNDINFO_VALID | SCTP_SEND_PRINFO_VALID;
+  if (channel->mPrPolicy != SCTP_PR_SCTP_NONE) {
+    spa.sendv_prinfo.pr_policy = channel->mPrPolicy;
+    spa.sendv_prinfo.pr_value = channel->mPrValue;
+    spa.sendv_flags |= SCTP_SEND_PRINFO_VALID;
+  }
 
   // Note: Main-thread IO, but doesn't block!
   // XXX FIX!  to deal with heavy overruns of JS trying to pass data in
@@ -1947,7 +1949,7 @@ DataChannelConnection::SendMsgInternal(DataChannel *channel, const char *data,
     result = usrsctp_sendv(mSocket, data, length,
                            nullptr, 0,
                            (void *)&spa, (socklen_t)sizeof(struct sctp_sendv_spa),
-                           SCTP_SENDV_SPA, flags);
+                           SCTP_SENDV_SPA, 0);
     LOG(("Sent buffer (len=%u), result=%d", length, result));
   } else {
     // Fake EAGAIN if we're already buffering data
