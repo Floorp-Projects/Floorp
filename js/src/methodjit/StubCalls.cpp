@@ -812,9 +812,14 @@ stubs::TriggerIonCompile(VMFrame &f)
         if (*osrPC != JSOP_LOOPENTRY)
             osrPC = NULL;
 
-        RootedFunction scriptFunction(f.cx, script->function());
-        ion::MethodStatus compileStatus =
-            ion::TestIonCompile(f.cx, script, scriptFunction, osrPC, f.fp()->isConstructing());
+        ion::MethodStatus compileStatus;
+        if (osrPC) {
+            compileStatus = ion::CanEnterAtBranch(f.cx, script, f.cx->fp(), osrPC,
+                                                  f.fp()->isConstructing());
+        } else {
+            compileStatus = ion::CanEnter(f.cx, script, f.cx->fp(), f.fp()->isConstructing(),
+                                          /* newType = */ false);
+        }
 
         if (compileStatus != ion::Method_Compiled) {
             if (f.cx->isExceptionPending())

@@ -1258,29 +1258,6 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
     return success ? AbortReason_NoAbort : AbortReason_Disable;
 }
 
-MethodStatus
-TestIonCompile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing)
-{
-    SequentialCompileContext compileContext;
-
-    AbortReason reason = IonCompile(cx, script, fun, osrPc, constructing, compileContext);
-
-    if (reason == AbortReason_Alloc)
-        return Method_Skipped;
-
-    if (reason == AbortReason_Inlining)
-        return Method_Skipped;
-
-    if (reason == AbortReason_Disable) {
-        if (!cx->isExceptionPending())
-            ForbidCompilation(cx, script);
-        return Method_CantCompile;
-    }
-
-    JS_ASSERT(reason == AbortReason_NoAbort);
-    return Method_Compiled;
-}
-
 static bool
 CheckFrame(AbstractFramePtr fp)
 {
