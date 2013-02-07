@@ -36,17 +36,49 @@ public:
   // nsIDOMHTMLSourceElement
   NS_DECL_NSIDOMHTMLSOURCEELEMENT
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   // Override BindToTree() so that we can trigger a load when we add a
   // child source element.
-  virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
-                              nsIContent *aBindingParent,
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
                               bool aCompileEventHandlers);
 
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  void GetSrc(nsString& aSrc)
+  {
+    GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
+  }
+  void SetSrc(const nsAString& aSrc, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aSrc, rv);
+  }
+
+  void GetType(nsString& aType)
+  {
+    GetHTMLAttr(nsGkAtoms::type, aType);
+  }
+  void SetType(const nsAString& aType, ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aType, rv);
+  }
+
+  void GetMedia(nsString& aMedia)
+  {
+    GetHTMLAttr(nsGkAtoms::media, aMedia);
+  }
+  void SetMedia(const nsAString& aMedia, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::media, aMedia, rv);
+  }
+
+protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
+                             bool* aTriedToWrap) MOZ_OVERRIDE;
 
 protected:
   virtual void GetItemValueText(nsAString& text);
