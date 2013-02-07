@@ -168,6 +168,7 @@
 #include "nsSVGFeatures.h"
 #include "MediaDecoder.h"
 #include "DecoderTraits.h"
+#include "mozilla/dom/DocumentFragment.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsViewportInfo.h"
@@ -1582,6 +1583,15 @@ nsContentUtils::CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
 bool
 nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, false);
+  return CanCallerAccess(node);
+}
+
+// static
+bool
+nsContentUtils::CanCallerAccess(nsINode* aNode)
+{
   // XXXbz why not check the IsCapabilityEnabled thing up front, and not bother
   // with the system principal games?  But really, there should be a simpler
   // API here, dammit.
@@ -1595,10 +1605,7 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
     return true;
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, false);
-
-  return CanCallerAccess(subjectPrincipal, node->NodePrincipal());
+  return CanCallerAccess(subjectPrincipal, aNode->NodePrincipal());
 }
 
 // static
@@ -4055,8 +4062,22 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                                          bool aPreventScriptExecution,
                                          nsIDOMDocumentFragment** aReturn)
 {
-  *aReturn = nullptr;
-  NS_ENSURE_ARG(aContextNode);
+  ErrorResult rv;
+  *aReturn = CreateContextualFragment(aContextNode, aFragment,
+                                      aPreventScriptExecution, rv).get();
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DocumentFragment>
+nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
+                                         const nsAString& aFragment,
+                                         bool aPreventScriptExecution,
+                                         ErrorResult& aRv)
+{
+  if (!aContextNode) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
+  }
 
   // If we don't have a document here, we can't get the right security context
   // for compiling event handlers... so just bail out.
@@ -4068,8 +4089,8 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
 #endif
 
   if (isHTML) {
-    nsCOMPtr<nsIDOMDocumentFragment> frag;
-    NS_NewDocumentFragment(getter_AddRefs(frag), document->NodeInfoManager());
+    nsRefPtr<DocumentFragment> frag =
+      NS_NewDocumentFragment(document->NodeInfoManager(), aRv);
     
     nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
     if (contextAsContent && !contextAsContent->IsElement()) {
@@ -4080,28 +4101,23 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
       }
     }
     
-    nsresult rv;
-    nsCOMPtr<nsIContent> fragment = do_QueryInterface(frag);
     if (contextAsContent && !contextAsContent->IsHTML(nsGkAtoms::html)) {
-      rv = ParseFragmentHTML(aFragment,
-                             fragment,
-                             contextAsContent->Tag(),
-                             contextAsContent->GetNameSpaceID(),
-                             (document->GetCompatibilityMode() ==
+      aRv = ParseFragmentHTML(aFragment, frag,
+                              contextAsContent->Tag(),
+                              contextAsContent->GetNameSpaceID(),
+                              (document->GetCompatibilityMode() ==
                                eCompatibility_NavQuirks),
-                             aPreventScriptExecution);
+                              aPreventScriptExecution);
     } else {
-      rv = ParseFragmentHTML(aFragment,
-                             fragment,
-                             nsGkAtoms::body,
-                             kNameSpaceID_XHTML,
-                             (document->GetCompatibilityMode() ==
+      aRv = ParseFragmentHTML(aFragment, frag,
+                              nsGkAtoms::body,
+                              kNameSpaceID_XHTML,
+                              (document->GetCompatibilityMode() ==
                                eCompatibility_NavQuirks),
-                             aPreventScriptExecution);
+                              aPreventScriptExecution);
     }
 
-    frag.forget(aReturn);
-    return rv;
+    return frag.forget();
   }
 
   nsAutoTArray<nsString, 32> tagStack;
@@ -4113,7 +4129,10 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
 
   while (content && content->IsElement()) {
     nsString& tagName = *tagStack.AppendElement();
-    NS_ENSURE_TRUE(&tagName, NS_ERROR_OUT_OF_MEMORY);
+    if (!&tagName) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
 
     tagName = content->NodeInfo()->QualifiedName();
 
@@ -4159,11 +4178,10 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     content = content->GetParent();
   }
 
-  return ParseFragmentXML(aFragment,
-                          document,
-                          tagStack,
-                          aPreventScriptExecution,
-                          aReturn);
+  nsCOMPtr<nsIDOMDocumentFragment> frag;
+  aRv = ParseFragmentXML(aFragment, document, tagStack,
+                         aPreventScriptExecution, getter_AddRefs(frag));
+  return static_cast<DocumentFragment*>(frag.forget().get());
 }
 
 /* static */
