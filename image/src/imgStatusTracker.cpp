@@ -850,6 +850,18 @@ imgStatusTracker::OnStopRequest(bool aLastPart,
 }
 
 void
+imgStatusTracker::OnDiscard()
+{
+  RecordDiscard();
+
+  /* notify the kids */
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  while (iter.HasMore()) {
+    SendDiscard(iter.GetNext());
+  }
+}
+
+void
 imgStatusTracker::OnDataAvailable()
 {
   // Notify any imgRequestProxys that are observing us that we have an Image.
