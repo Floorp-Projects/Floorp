@@ -3,93 +3,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
-
-#include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLHRElement.h"
-
-#include "nsIDOMEventTarget.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsPresContext.h"
-#include "nsMappedAttributes.h"
-#include "nsAttrValueInlines.h"
-#include "nsRuleData.h"
-#include "nsCSSProps.h"
-
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLHRElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLHRElement
-{
-public:
-  nsHTMLHRElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLHRElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLHRElement
-  NS_DECL_NSIDOMHTMLHRELEMENT
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
-
+#include "mozilla/dom/HTMLHRElement.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(HR)
+DOMCI_NODE_DATA(HTMLHRElement, mozilla::dom::HTMLHRElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLHRElement::nsHTMLHRElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLHRElement::HTMLHRElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
-nsHTMLHRElement::~nsHTMLHRElement()
+HTMLHRElement::~HTMLHRElement()
 {
 }
 
+NS_IMPL_ADDREF_INHERITED(HTMLHRElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLHRElement, Element)
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLHRElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLHRElement, Element)
-
-
-DOMCI_NODE_DATA(HTMLHRElement, nsHTMLHRElement)
-
-// QueryInterface implementation for nsHTMLHRElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLHRElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLHRElement,
+// QueryInterface implementation for HTMLHRElement
+NS_INTERFACE_TABLE_HEAD(HTMLHRElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLHRElement,
                                    nsIDOMHTMLHRElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLHRElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLHRElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLHRElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLHRElement)
+NS_IMPL_ELEMENT_CLONE(HTMLHRElement)
 
 
-NS_IMPL_STRING_ATTR(nsHTMLHRElement, Align, align)
-NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade)
-NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size)
-NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width)
-NS_IMPL_STRING_ATTR(nsHTMLHRElement, Color, color)
+NS_IMPL_STRING_ATTR(HTMLHRElement, Align, align)
+NS_IMPL_BOOL_ATTR(HTMLHRElement, NoShade, noshade)
+NS_IMPL_STRING_ATTR(HTMLHRElement, Size, size)
+NS_IMPL_STRING_ATTR(HTMLHRElement, Width, width)
+NS_IMPL_STRING_ATTR(HTMLHRElement, Color, color)
 
 static const nsAttrValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
@@ -99,10 +49,10 @@ static const nsAttrValue::EnumTable kAlignTable[] = {
 };
 
 bool
-nsHTMLHRElement::ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult)
+HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
+                              nsIAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width) {
@@ -289,7 +239,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-nsHTMLHRElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLHRElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },
@@ -310,7 +260,10 @@ nsHTMLHRElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 
 
 nsMapRuleToAttributesFunc
-nsHTMLHRElement::GetAttributeMappingFunction() const
+HTMLHRElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
 }
+
+} // namespace mozilla
+} // namespace dom
