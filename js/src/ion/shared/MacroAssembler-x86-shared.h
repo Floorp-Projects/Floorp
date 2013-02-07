@@ -111,6 +111,9 @@ class MacroAssemblerX86Shared : public Assembler
     void sub32(Imm32 imm, Register dest) {
         subl(imm, dest);
     }
+    void xor32(Imm32 imm, Register dest) {
+        xorl(imm, dest);
+    }
 
     void branch32(Condition cond, const Address &lhs, const Register &rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
@@ -138,6 +141,10 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         testl(Operand(address), imm);
+        j(cond, label);
+    }
+    void branchTestBool(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
+        testb(lhs, rhs);
         j(cond, label);
     }
 

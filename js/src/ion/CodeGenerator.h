@@ -21,15 +21,19 @@
 namespace js {
 namespace ion {
 
+class OutOfLineNewParallelArray;
 class OutOfLineTestObject;
 class OutOfLineNewArray;
 class OutOfLineNewObject;
 class CheckOverRecursedFailure;
+class ParCheckOverRecursedFailure;
+class OutOfLineParCheckInterrupt;
 class OutOfLineUnboxDouble;
 class OutOfLineCache;
 class OutOfLineStoreElementHole;
 class OutOfLineTypeOfV;
 class OutOfLineLoadTypedArray;
+class OutOfLineParNewGCThing;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -72,6 +76,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitRegExpTest(LRegExpTest *lir);
     bool visitLambda(LLambda *lir);
     bool visitLambdaForSingleton(LLambdaForSingleton *lir);
+    bool visitParLambda(LParLambda *lir);
     bool visitPointer(LPointer *lir);
     bool visitSlots(LSlots *lir);
     bool visitStoreSlotV(LStoreSlotV *store);
@@ -90,6 +95,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitApplyArgsGeneric(LApplyArgsGeneric *apply);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitNewSlots(LNewSlots *lir);
+    bool visitOutOfLineNewParallelArray(OutOfLineNewParallelArray *ool);
     bool visitNewArrayCallVM(LNewArray *lir);
     bool visitNewArray(LNewArray *lir);
     bool visitOutOfLineNewArray(OutOfLineNewArray *ool);
@@ -98,7 +104,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitOutOfLineNewObject(OutOfLineNewObject *ool);
     bool visitNewDeclEnvObject(LNewDeclEnvObject *lir);
     bool visitNewCallObject(LNewCallObject *lir);
+    bool visitParNewCallObject(LParNewCallObject *lir);
     bool visitNewStringObject(LNewStringObject *lir);
+    bool visitParNew(LParNew *lir);
+    bool visitParNewDenseArray(LParNewDenseArray *lir);
+    bool visitParBailout(LParBailout *lir);
     bool visitInitProp(LInitProp *lir);
     bool visitCreateThis(LCreateThis *lir);
     bool visitCreateThisWithProto(LCreateThisWithProto *lir);
@@ -132,6 +142,7 @@ class CodeGenerator : public CodeGeneratorSpecific
                       Register output, Register temp);
     bool visitCompareS(LCompareS *lir);
     bool visitCompareStrictS(LCompareStrictS *lir);
+    bool visitParCompareS(LParCompareS *lir);
     bool visitCompareVM(LCompareVM *lir);
     bool visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir);
     bool visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir);
@@ -141,6 +152,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCharCodeAt(LCharCodeAt *lir);
     bool visitFromCharCode(LFromCharCode *lir);
     bool visitFunctionEnvironment(LFunctionEnvironment *lir);
+    bool visitParSlice(LParSlice *lir);
+    bool visitParWriteGuard(LParWriteGuard *lir);
+    bool visitParDump(LParDump *lir);
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetElement(LCallGetElement *lir);
     bool visitCallSetElement(LCallSetElement *lir);
@@ -196,6 +210,12 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
 
+    bool visitParCheckOverRecursed(LParCheckOverRecursed *lir);
+    bool visitParCheckOverRecursedFailure(ParCheckOverRecursedFailure *ool);
+
+    bool visitParCheckInterrupt(LParCheckInterrupt *lir);
+    bool visitOutOfLineParCheckInterrupt(OutOfLineParCheckInterrupt *ool);
+
     bool visitUnboxDouble(LUnboxDouble *lir);
     bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
     bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
@@ -206,6 +226,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitOutOfLineBindNameCache(OutOfLineCache *ool);
     bool visitOutOfLineGetNameCache(OutOfLineCache *ool);
     bool visitOutOfLineCallsiteCloneCache(OutOfLineCache *ool);
+
+    bool visitOutOfLineParNewGCThing(OutOfLineParNewGCThing *ool);
+
+    bool visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool);
 
     bool visitGetPropertyCacheV(LGetPropertyCacheV *ins) {
         return visitCache(ins);
@@ -236,8 +260,22 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCache(LInstruction *load);
     bool visitCallSetProperty(LInstruction *ins);
 
+    bool checkForParallelBailout();
+
     ConstantOrRegister getSetPropertyValue(LInstruction *ins);
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
+
+    bool emitParAllocateGCThing(const Register &objReg,
+                                const Register &threadContextReg,
+                                const Register &tempReg1,
+                                const Register &tempReg2,
+                                JSObject *templateObj);
+
+    bool emitParCallToUncompiledScript(Register calleeReg);
+
+    void emitLambdaInit(const Register &resultReg,
+                        const Register &scopeChainReg,
+                        JSFunction *fun);
 
     IonScriptCounts *maybeCreateScriptCounts();
 

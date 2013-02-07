@@ -17,6 +17,8 @@
 #include "EdgeCaseAnalysis.h"
 #include "RangeAnalysis.h"
 #include "LinearScan.h"
+#include "vm/ParallelDo.h"
+#include "ParallelArrayAnalysis.h"
 #include "jscompartment.h"
 #include "vm/ThreadPool.h"
 #include "vm/ForkJoin.h"
@@ -470,6 +472,7 @@ IonScript::IonScript()
     safepointsSize_(0),
     scriptList_(0),
     scriptEntries_(0),
+    parallelInvalidatedScriptList_(0),
     refcount_(0),
     recompileInfo_(),
     slowCallCount(0)
@@ -482,7 +485,7 @@ IonScript *
 IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t cacheEntries, size_t safepointsSize,
-               size_t scriptEntries)
+               size_t scriptEntries, size_t parallelInvalidatedScriptEntries)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t)))
@@ -502,6 +505,8 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     size_t paddedCacheEntriesSize = AlignBytes(cacheEntries * sizeof(IonCache), DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
     size_t paddedScriptSize = AlignBytes(scriptEntries * sizeof(RawScript), DataAlignment);
+    size_t paddedParallelInvalidatedScriptSize =
+        AlignBytes(parallelInvalidatedScriptEntries * sizeof(RawScript), DataAlignment);
     size_t bytes = paddedSnapshotsSize +
                    paddedBailoutSize +
                    paddedConstantsSize +
@@ -509,7 +514,8 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
                    paddedOsiIndicesSize +
                    paddedCacheEntriesSize +
                    paddedSafepointSize +
-                   paddedScriptSize;
+                   paddedScriptSize +
+                   paddedParallelInvalidatedScriptSize;
     uint8_t *buffer = (uint8_t *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
@@ -550,6 +556,10 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     script->scriptList_ = offsetCursor;
     script->scriptEntries_ = scriptEntries;
     offsetCursor += paddedScriptSize;
+
+    script->parallelInvalidatedScriptList_ = offsetCursor;
+    script->parallelInvalidatedScriptEntries_ = parallelInvalidatedScriptEntries;
+    offsetCursor += parallelInvalidatedScriptEntries;
 
     script->frameSlots_ = frameSlots;
     script->frameSize_ = frameSize;
@@ -604,6 +614,13 @@ IonScript::copyScriptEntries(JSScript **scripts)
 {
     for (size_t i = 0; i < scriptEntries_; i++)
         scriptList()[i] = scripts[i];
+}
+
+void
+IonScript::zeroParallelInvalidatedScripts()
+{
+    memset(parallelInvalidatedScriptList(), 0,
+           parallelInvalidatedScriptEntries_ * sizeof(JSScript *));
 }
 
 void
@@ -772,8 +789,8 @@ ion::ToggleBarriers(JSCompartment *comp, bool needs)
 namespace js {
 namespace ion {
 
-CodeGenerator *
-CompileBackEnd(MIRGenerator *mir)
+bool
+OptimizeMIR(MIRGenerator *mir)
 {
     IonSpewPass("BuildSSA");
     // Note: don't call AssertGraphCoherency before SplitCriticalEdges,
@@ -782,146 +799,146 @@ CompileBackEnd(MIRGenerator *mir)
     MIRGraph &graph = mir->graph();
 
     if (mir->shouldCancel("Start"))
-        return NULL;
+        return false;
 
     if (!SplitCriticalEdges(graph))
-        return NULL;
+        return false;
     IonSpewPass("Split Critical Edges");
     AssertGraphCoherency(graph);
 
     if (mir->shouldCancel("Split Critical Edges"))
-        return NULL;
+        return false;
 
     if (!RenumberBlocks(graph))
-        return NULL;
+        return false;
     IonSpewPass("Renumber Blocks");
     AssertGraphCoherency(graph);
 
     if (mir->shouldCancel("Renumber Blocks"))
-        return NULL;
+        return false;
 
     if (!BuildDominatorTree(graph))
-        return NULL;
+        return false;
     // No spew: graph not changed.
 
     if (mir->shouldCancel("Dominator Tree"))
-        return NULL;
+        return false;
 
     // This must occur before any code elimination.
     if (!EliminatePhis(mir, graph, AggressiveObservability))
-        return NULL;
+        return false;
     IonSpewPass("Eliminate phis");
     AssertGraphCoherency(graph);
 
     if (mir->shouldCancel("Eliminate phis"))
-        return NULL;
+        return false;
 
     if (!BuildPhiReverseMapping(graph))
-        return NULL;
+        return false;
     AssertExtendedGraphCoherency(graph);
     // No spew: graph not changed.
 
     if (mir->shouldCancel("Phi reverse mapping"))
-        return NULL;
+        return false;
 
     // This pass also removes copies.
     if (!ApplyTypeInformation(mir, graph))
-        return NULL;
+        return false;
     IonSpewPass("Apply types");
     AssertExtendedGraphCoherency(graph);
 
     if (mir->shouldCancel("Apply types"))
-        return NULL;
+        return false;
 
     // Alias analysis is required for LICM and GVN so that we don't move
     // loads across stores.
     if (js_IonOptions.licm || js_IonOptions.gvn) {
         AliasAnalysis analysis(mir, graph);
         if (!analysis.analyze())
-            return NULL;
+            return false;
         IonSpewPass("Alias analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Alias analysis"))
-            return NULL;
+            return false;
 
         // Eliminating dead resume point operands requires basic block
         // instructions to be numbered. Reuse the numbering computed during
         // alias analysis.
         if (!EliminateDeadResumePointOperands(mir, graph))
-            return NULL;
+            return false;
 
         if (mir->shouldCancel("Eliminate dead resume point operands"))
-            return NULL;
+            return false;
     }
 
     if (js_IonOptions.gvn) {
         ValueNumberer gvn(mir, graph, js_IonOptions.gvnIsOptimistic);
         if (!gvn.analyze())
-            return NULL;
+            return false;
         IonSpewPass("GVN");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("GVN"))
-            return NULL;
+            return false;
     }
 
     if (js_IonOptions.uce) {
         UnreachableCodeElimination uce(mir, graph);
         if (!uce.analyze())
-            return NULL;
+            return false;
         IonSpewPass("UCE");
         AssertExtendedGraphCoherency(graph);
     }
 
     if (mir->shouldCancel("UCE"))
-        return NULL;
+        return false;
 
     if (js_IonOptions.licm) {
         LICM licm(mir, graph);
         if (!licm.analyze())
-            return NULL;
+            return false;
         IonSpewPass("LICM");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("LICM"))
-            return NULL;
+            return false;
     }
 
     if (js_IonOptions.rangeAnalysis) {
         RangeAnalysis r(graph);
         if (!r.addBetaNobes())
-            return NULL;
+            return false;
         IonSpewPass("Beta");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("RA Beta"))
-            return NULL;
+            return false;
 
         if (!r.analyze())
-            return NULL;
+            return false;
         IonSpewPass("Range Analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Range Analysis"))
-            return NULL;
+            return false;
 
         if (!r.removeBetaNobes())
-            return NULL;
+            return false;
         IonSpewPass("De-Beta");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("RA De-Beta"))
-            return NULL;
+            return false;
     }
 
     if (!EliminateDeadCode(mir, graph))
-        return NULL;
+        return false;
     IonSpewPass("DCE");
     AssertExtendedGraphCoherency(graph);
 
     if (mir->shouldCancel("DCE"))
-        return NULL;
+        return false;
 
     // Passes after this point must not move instructions; these analyses
     // depend on knowing the final order in which instructions will execute.
@@ -929,12 +946,12 @@ CompileBackEnd(MIRGenerator *mir)
     if (js_IonOptions.edgeCaseAnalysis) {
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
         if (!edgeCaseAnalysis.analyzeLate())
-            return NULL;
+            return false;
         IonSpewPass("Edge Case Analysis (Late)");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Edge Case Analysis (Late)"))
-            return NULL;
+            return false;
     }
 
     // Note: check elimination has to run after all other passes that move
@@ -942,12 +959,17 @@ CompileBackEnd(MIRGenerator *mir)
     // motion after this pass could incorrectly move a load or store before its
     // bounds check.
     if (!EliminateRedundantChecks(graph))
-        return NULL;
+        return false;
     IonSpewPass("Bounds Check Elimination");
     AssertGraphCoherency(graph);
 
-    if (mir->shouldCancel("Bounds Check Elimination"))
-        return NULL;
+    return true;
+}
+
+CodeGenerator *
+GenerateLIR(MIRGenerator *mir)
+{
+    MIRGraph &graph = mir->graph();
 
     LIRGraph *lir = mir->temp().lifoAlloc()->new_<LIRGraph>(&graph);
     if (!lir)
@@ -1028,12 +1050,21 @@ CompileBackEnd(MIRGenerator *mir)
     return codegen;
 }
 
+CodeGenerator *
+CompileBackEnd(MIRGenerator *mir)
+{
+    if (!OptimizeMIR(mir))
+        return NULL;
+    return GenerateLIR(mir);
+}
+
 class SequentialCompileContext {
 public:
     ExecutionMode executionMode() {
         return SequentialExecution;
     }
 
+    MethodStatus checkScriptSize(JSContext *cx, UnrootedScript script);
     AbortReason compile(IonBuilder *builder, MIRGraph *graph,
                         ScopedJSDeletePtr<LifoAlloc> &autoDelete);
 };
@@ -1302,8 +1333,8 @@ CheckScript(UnrootedScript script)
     return true;
 }
 
-static MethodStatus
-CheckScriptSize(JSContext *cx, UnrootedScript script)
+MethodStatus
+SequentialCompileContext::checkScriptSize(JSContext *cx, UnrootedScript script)
 {
     if (!js_IonOptions.limitScriptSize)
         return Method_Compiled;
@@ -1345,8 +1376,10 @@ CheckScriptSize(JSContext *cx, UnrootedScript script)
     return Method_Compiled;
 }
 
+template <typename CompileContext>
 static MethodStatus
-Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
+Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing,
+        CompileContext &compileContext)
 {
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
@@ -1361,36 +1394,39 @@ Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, boo
         return Method_CantCompile;
     }
 
-    MethodStatus status = CheckScriptSize(cx, script);
+    MethodStatus status = compileContext.checkScriptSize(cx, script);
     if (status != Method_Compiled) {
         IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename, script->lineno);
         return status;
     }
 
-    if (script->ion) {
-        if (!script->ion->method())
+    ExecutionMode executionMode = compileContext.executionMode();
+    IonScript *scriptIon = GetIonScript(script, executionMode);
+    if (scriptIon) {
+        if (!scriptIon->method())
             return Method_CantCompile;
         return Method_Compiled;
     }
 
-    if (cx->methodJitEnabled) {
-        // If JM is enabled we use getUseCount instead of incUseCount to avoid
-        // bumping the use count twice.
-        if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
-            return Method_Skipped;
-    } else {
-        if (script->incUseCount() < js_IonOptions.usesBeforeCompileNoJaeger)
-            return Method_Skipped;
-    }
+    if (executionMode == SequentialExecution) {
+        if (cx->methodJitEnabled) {
+            // If JM is enabled we use getUseCount instead of incUseCount to avoid
+            // bumping the use count twice.
 
-    SequentialCompileContext compileContext;
+            if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
+                return Method_Skipped;
+        } else {
+            if (script->incUseCount() < js_IonOptions.usesBeforeCompileNoJaeger)
+                return Method_Skipped;
+        }
+    }
 
     AbortReason reason = IonCompile(cx, script, fun, osrPc, constructing, compileContext);
     if (reason == AbortReason_Disable)
         return Method_CantCompile;
 
     // Compilation succeeded or we invalidated right away or an inlining/alloc abort
-    return script->hasIonScript() ? Method_Compiled : Method_Skipped;
+    return HasIonScript(script, executionMode) ? Method_Compiled : Method_Skipped;
 }
 
 } // namespace ion
@@ -1428,15 +1464,17 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, AbstractFramePtr fp,
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    JSFunction *fun = fp.isFunctionFrame() ? fp.fun() : NULL;
-    MethodStatus status = Compile(cx, script, fun, pc, isConstructing);
+    RootedFunction fun(cx, fp.isFunctionFrame() ? fp.fun() : NULL);
+    SequentialCompileContext compileContext;
+    RootedScript rscript(cx, script);
+    MethodStatus status = Compile(cx, rscript, fun, pc, isConstructing, compileContext);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
         return status;
     }
 
-    if (script->ion->osrPc() != pc)
+    if (script->ion && script->ion->osrPc() != pc)
         return Method_Skipped;
 
     return Method_Compiled;
@@ -1480,8 +1518,10 @@ ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp,
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    JSFunction *fun = fp.isFunctionFrame() ? fp.fun() : NULL;
-    MethodStatus status = Compile(cx, script, fun, NULL, isConstructing);
+    RootedFunction fun(cx, fp.isFunctionFrame() ? fp.fun() : NULL);
+    SequentialCompileContext compileContext;
+    RootedScript rscript(cx, script);
+    MethodStatus status = Compile(cx, rscript, fun, NULL, isConstructing, compileContext);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1489,6 +1529,135 @@ ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp,
     }
 
     return Method_Compiled;
+}
+
+MethodStatus
+ParallelCompileContext::checkScriptSize(JSContext *cx, UnrootedScript script)
+{
+    if (!js_IonOptions.limitScriptSize)
+        return Method_Compiled;
+
+    // When compiling for parallel execution we don't have off-thread
+    // compilation. We also up the max script size of the kernels.
+    static const uint32_t MAX_SCRIPT_SIZE = 5000;
+    static const uint32_t MAX_LOCALS_AND_ARGS = 256;
+
+    if (script->length > MAX_SCRIPT_SIZE) {
+        IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length);
+        return Method_CantCompile;
+    }
+
+    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
+    if (numLocalsAndArgs > MAX_LOCALS_AND_ARGS) {
+        IonSpew(IonSpew_Abort, "Too many locals and arguments (%u)", numLocalsAndArgs);
+        return Method_CantCompile;
+    }
+
+    return Method_Compiled;
+}
+
+MethodStatus
+ParallelCompileContext::compileTransitively()
+{
+    using parallel::SpewBeginCompile;
+    using parallel::SpewEndCompile;
+
+    if (worklist_.empty())
+        return Method_Skipped;
+
+    RootedFunction fun(cx_);
+    RootedScript script(cx_);
+    while (!worklist_.empty()) {
+        fun = worklist_.back()->toFunction();
+        script = fun->nonLazyScript();
+        worklist_.popBack();
+
+        SpewBeginCompile(fun);
+
+        // If we had invalidations last time the parallel script run, add the
+        // invalidated scripts to the worklist.
+        if (script->hasParallelIonScript()) {
+            IonScript *ion = script->parallelIonScript();
+            JS_ASSERT(ion->parallelInvalidatedScriptEntries() > 0);
+
+            RootedFunction invalidFun(cx_);
+            for (uint32_t i = 0; i < ion->parallelInvalidatedScriptEntries(); i++) {
+                if (JSScript *invalid = ion->getAndZeroParallelInvalidatedScript(i)) {
+                    invalidFun = invalid->function();
+                    parallel::Spew(parallel::SpewCompile,
+                                   "Adding previously invalidated function %p:%s:%u",
+                                   fun.get(), invalid->filename, invalid->lineno);
+                    appendToWorklist(invalidFun);
+                }
+            }
+        }
+
+        // Attempt compilation. Returns Method_Compiled if already compiled.
+        MethodStatus status = Compile(cx_, script, fun, NULL, false, *this);
+        if (status != Method_Compiled) {
+            if (status == Method_CantCompile)
+                ForbidCompilation(cx_, script, ParallelExecution);
+            return SpewEndCompile(status);
+        }
+
+        // This can GC, so afterward, script->parallelIon is not guaranteed to be valid.
+        if (!cx_->compartment->ionCompartment()->enterJIT())
+            return SpewEndCompile(Method_Error);
+
+        // Subtle: it is possible for GC to occur during compilation of
+        // one of the invoked functions, which would cause the earlier
+        // functions (such as the kernel itself) to be collected.  In this
+        // event, we give up and fallback to sequential for now.
+        if (!script->hasParallelIonScript()) {
+            parallel::Spew(parallel::SpewCompile,
+                           "Function %p:%s:%u was garbage-collected or invalidated",
+                           fun.get(), script->filename, script->lineno);
+            return SpewEndCompile(Method_Skipped);
+        }
+
+        SpewEndCompile(Method_Compiled);
+    }
+
+    return Method_Compiled;
+}
+
+AbortReason
+ParallelCompileContext::compile(IonBuilder *builder,
+                                MIRGraph *graph,
+                                ScopedJSDeletePtr<LifoAlloc> &autoDelete)
+{
+    JS_ASSERT(!builder->script()->parallelIon);
+
+    RootedScript builderScript(cx_, builder->script());
+    IonSpewNewFunction(graph, builderScript);
+
+    if (!builder->build())
+        return builder->abortReason();
+    builder->clearForBackEnd();
+
+    // For the time being, we do not enable parallel compilation.
+
+    if (!OptimizeMIR(builder)) {
+        IonSpew(IonSpew_Abort, "Failed during back-end compilation.");
+        return AbortReason_Disable;
+    }
+
+    if (!analyzeAndGrowWorklist(builder, *graph)) {
+        return AbortReason_Disable;
+    }
+
+    CodeGenerator *codegen = GenerateLIR(builder);
+    if (!codegen)  {
+        IonSpew(IonSpew_Abort, "Failed during back-end compilation.");
+        return AbortReason_Disable;
+    }
+
+    bool success = codegen->link();
+    js_delete(codegen);
+
+    IonSpewEndFunction();
+
+    return success ? AbortReason_NoAbort : AbortReason_Disable;
 }
 
 MethodStatus
@@ -1953,38 +2122,60 @@ ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool
 }
 
 bool
-ion::Invalidate(JSContext *cx, UnrootedScript script, bool resetUses)
+ion::Invalidate(JSContext *cx, UnrootedScript script, ExecutionMode mode, bool resetUses)
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(script->hasIonScript());
 
     Vector<types::RecompileInfo> scripts(cx);
-    if (!scripts.append(script->ionScript()->recompileInfo()))
-        return false;
+
+    switch (mode) {
+      case SequentialExecution:
+        JS_ASSERT(script->hasIonScript());
+        if (!scripts.append(script->ionScript()->recompileInfo()))
+            return false;
+        break;
+      case ParallelExecution:
+        JS_ASSERT(script->hasParallelIonScript());
+        if (!scripts.append(script->parallelIonScript()->recompileInfo()))
+            return false;
+        break;
+    }
 
     Invalidate(cx, scripts, resetUses);
     return true;
 }
 
+bool
+ion::Invalidate(JSContext *cx, UnrootedScript script, bool resetUses)
+{
+    return Invalidate(cx, script, SequentialExecution, resetUses);
+}
+
+static void
+FinishInvalidationOf(FreeOp *fop, UnrootedScript script, IonScript **ionField)
+{
+    // If this script has Ion code on the stack, invalidation() will return
+    // true. In this case we have to wait until destroying it.
+    if (!(*ionField)->invalidated()) {
+        types::TypeCompartment &types = script->compartment()->types;
+        (*ionField)->recompileInfo().compilerOutput(types)->invalidate();
+
+        ion::IonScript::Destroy(fop, *ionField);
+    }
+
+    // In all cases, NULL out script->ion to avoid re-entry.
+    *ionField = NULL;
+}
+
 void
 ion::FinishInvalidation(FreeOp *fop, UnrootedScript script)
 {
-    if (!script->hasIonScript())
-        return;
+    if (script->hasIonScript())
+        FinishInvalidationOf(fop, script, &script->ion);
 
-    /*
-     * If this script has Ion code on the stack, invalidation() will return
-     * true. In this case we have to wait until destroying it.
-     */
-    if (!script->ion->invalidated()) {
-        types::TypeCompartment &types = script->compartment()->types;
-        script->ion->recompileInfo().compilerOutput(types)->invalidate();
-
-        ion::IonScript::Destroy(fop, script->ion);
-    }
-
-    /* In all cases, NULL out script->ion to avoid re-entry. */
-    script->ion = NULL;
+    if (script->hasParallelIonScript())
+        FinishInvalidationOf(fop, script, &script->parallelIon);
 }
 
 void
@@ -2002,22 +2193,43 @@ ion::MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
 void
 ion::ForbidCompilation(JSContext *cx, UnrootedScript script)
 {
-    IonSpew(IonSpew_Abort, "Disabling Ion compilation of script %s:%d",
-            script->filename, script->lineno);
+    ForbidCompilation(cx, script, SequentialExecution);
+}
+
+void
+ion::ForbidCompilation(JSContext *cx, UnrootedScript script, ExecutionMode mode)
+{
+    IonSpew(IonSpew_Abort, "Disabling Ion mode %d compilation of script %s:%d",
+            mode, script->filename, script->lineno);
 
     CancelOffThreadIonCompile(cx->compartment, script);
 
-    if (script->hasIonScript()) {
-        // It is only safe to modify script->ion if the script is not currently
-        // running, because IonFrameIterator needs to tell what ionScript to
-        // use (either the one on the JSScript, or the one hidden in the
-        // breadcrumbs Invalidation() leaves). Therefore, if invalidation
-        // fails, we cannot disable the script.
-        if (!Invalidate(cx, script, false))
-            return;
+    switch (mode) {
+      case SequentialExecution:
+        if (script->hasIonScript()) {
+            // It is only safe to modify script->ion if the script is not currently
+            // running, because IonFrameIterator needs to tell what ionScript to
+            // use (either the one on the JSScript, or the one hidden in the
+            // breadcrumbs Invalidation() leaves). Therefore, if invalidation
+            // fails, we cannot disable the script.
+            if (!Invalidate(cx, script, mode, false))
+                return;
+        }
+
+        script->ion = ION_DISABLED_SCRIPT;
+        return;
+
+      case ParallelExecution:
+        if (script->hasParallelIonScript()) {
+            if (!Invalidate(cx, script, mode, false))
+                return;
+        }
+
+        script->parallelIon = ION_DISABLED_SCRIPT;
+        return;
     }
 
-    script->ion = ION_DISABLED_SCRIPT;
+    JS_NOT_REACHED("No such execution mode");
 }
 
 uint32_t
@@ -2101,7 +2313,7 @@ ion::PurgeCaches(UnrootedScript script, JSCompartment *c) {
         script->ion->purgeCaches(c);
 
     if (script->hasParallelIonScript())
-        script->ion->purgeCaches(c);
+        script->parallelIon->purgeCaches(c);
 }
 
 size_t
