@@ -879,7 +879,7 @@ this.CssRuleView = function CssRuleView(aDoc, aStore)
   this.store = aStore;
   this.element = this.doc.createElementNS(XUL_NS, "vbox");
   this.element.setAttribute("tabindex", "0");
-  this.element.classList.add("ruleview");
+  this.element.className = "ruleview devtools-monospace";
   this.element.flex = 1;
 
   this._boundCopy = this._onCopy.bind(this);

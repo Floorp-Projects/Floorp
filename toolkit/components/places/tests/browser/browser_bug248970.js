@@ -38,27 +38,27 @@ function test() {
   }
 
   function checkPlaces(aWindow, aIsPrivate, aCallback) {
-    // Updates the place items count
-    placeItemsCount = getPlacesItemsCount(aWindow);
     // History items should be retrievable by query
-    checkHistoryItems(aWindow);
+    Task.spawn(checkHistoryItems).then(function() {
+      // Updates the place items count
+      placeItemsCount = getPlacesItemsCount(aWindow);
+      // Create Bookmark
+      let bookmarkTitle = "title " + windowCount;
+      let bookmarkKeyword = "keyword " + windowCount;
+      let bookmarkUri = NetUtil.newURI("http://test-a-" + windowCount + ".com/");
+      createBookmark(aWindow, bookmarkUri, bookmarkTitle, bookmarkKeyword);
+      placeItemsCount++;
+      windowCount++;
+      ok(PlacesUtils.bookmarks.isBookmarked(bookmarkUri),
+         "Bookmark should be bookmarked, data should be retrievable");
+      is(bookmarkKeyword, PlacesUtils.bookmarks.getKeywordForURI(bookmarkUri),
+         "Check bookmark uri keyword");
+      is(getPlacesItemsCount(aWindow), placeItemsCount,
+         "Check the new bookmark items count");
+      is(isBookmarkAltered(aWindow), false, "Check if bookmark has been visited");
 
-    // Create Bookmark
-    let bookmarkTitle = "title " + windowCount;
-    let bookmarkKeyword = "keyword " + windowCount;
-    let bookmarkUri = NetUtil.newURI("http://test-a-" + windowCount + ".com/");
-    createBookmark(aWindow, bookmarkUri, bookmarkTitle, bookmarkKeyword);
-    placeItemsCount++;
-    windowCount++;
-    ok(aWindow.PlacesUtils.bookmarks.isBookmarked(bookmarkUri),
-       "Bookmark should be bookmarked, data should be retrievable");
-    is(bookmarkKeyword, aWindow.PlacesUtils.bookmarks.getKeywordForURI(bookmarkUri),
-       "Check bookmark uri keyword");
-    is(getPlacesItemsCount(aWindow), placeItemsCount,
-       "Check the new bookmark items count");
-    is(isBookmarkAltered(aWindow), false, "Check if bookmark has been visited");
-
-    aCallback();
+      aCallback();
+    });
   }
 
   clearHistory(function() {
@@ -141,15 +141,16 @@ function fillHistoryVisitedURI(aWin, aCallback) {
     aWin, aCallback);
 }
 
-function checkHistoryItems(aWin) {
-  visitedURIs.forEach(function (visitedUri) {
-    ok(aWin.PlacesUtils.bhistory.isVisited(NetUtil.newURI(visitedUri)), "");
+function checkHistoryItems() {
+  for (let i = 0; i < visitedURIs.length; i++) {
+    let visitedUri = visitedURIs[i];
+    ok((yield promiseIsURIVisited(NetUtil.newURI(visitedUri))), "");
     if (/embed/.test(visitedUri)) {
       is(!!pageInDatabase(visitedUri), false, "Check if URI is in database");
     } else {
       ok(!!pageInDatabase(visitedUri), "Check if URI is in database");
     }
-  });
+  }
 }
 
 /**

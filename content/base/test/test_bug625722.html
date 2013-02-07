@@ -27,7 +27,7 @@ function testNodeFilter(n) {
 
 tw = document.createTreeWalker(document.getElementById("root"),
                                NodeFilter.SHOW_ELEMENT,
-                               testNodeFilter, false);
+                               testNodeFilter);
 
 node = tw.firstChild();
 is(node.id, 'B', "First accepted child of root not B");

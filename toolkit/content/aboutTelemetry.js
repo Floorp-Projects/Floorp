@@ -286,41 +286,25 @@ let StackRenderer = {
       this.renderStack(div, stack)
     }
   },
-  renderSymbolicatedStacks:
-    function StackRenderer_renderSymbolicatedStacks(aPrefix, aRequest,
-                                                    aRenderHeader) {
-    if (aRequest.readyState != 4)
-      return;
 
-    document.getElementById(aPrefix + "-fetch-symbols").classList.add("hidden");
-    document.getElementById(aPrefix + "-hide-symbols").classList.remove("hidden");
+  /**
+   * Renders the title of the stack: e.g. "Late Write #1" or
+   * "Hang Report #1 (6 seconds)".
+   *
+   * @param aFormatArgs formating args to be passed to formatStringFromName.
+   */
+  renderHeader: function StackRenderer_renderHeader(aPrefix, aFormatArgs) {
     let div = document.getElementById(aPrefix + "-data");
-    clearDivData(div);
-    let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
 
-    if (aRequest.status != 200) {
-      div.appendChild(document.createTextNode(errorMessage));
-      return;
-    }
+    let titleElement = document.createElement("span");
+    titleElement.className = "stack-title";
 
-    let jsonResponse = {};
-    try {
-      jsonResponse = JSON.parse(aRequest.responseText);
-    } catch (e) {
-      div.appendChild(document.createTextNode(errorMessage));
-      return;
-    }
+    let titleText = bundle.formatStringFromName(
+      aPrefix + "-title", aFormatArgs, aFormatArgs.length);
+    titleElement.appendChild(document.createTextNode(titleText));
 
-    for (let i = 0; i < jsonResponse.length; ++i) {
-      let stack = jsonResponse[i];
-      aRenderHeader(i);
-
-      for (let symbol of stack) {
-        div.appendChild(document.createTextNode(symbol));
-        div.appendChild(document.createElement("br"));
-      }
-      div.appendChild(document.createElement("br"));
-    }
+    div.appendChild(titleElement);
+    div.appendChild(document.createElement("br"));
   }
 };
 
@@ -330,11 +314,52 @@ function SymbolicationRequest(aPrefix, aRenderHeader, aMemoryMap, aStacks) {
   this.memoryMap = aMemoryMap;
   this.stacks = aStacks;
 }
-SymbolicationRequest.prototype.handleSymbolResponse = function() {
-  StackRenderer.renderSymbolicatedStacks(this.prefix, this.symbolRequest,
-                                         this.renderHeader);
+/**
+ * A callback for onreadystatechange. It replaces the numeric stack with
+ * the symbolicated one returned by the symbolication server.
+ */
+SymbolicationRequest.prototype.handleSymbolResponse =
+function SymbolicationRequest_handleSymbolResponse() {
+  if (this.symbolRequest.readyState != 4)
+    return;
+
+  let fetchElement = document.getElementById(this.prefix + "-fetch-symbols");
+  fetchElement.classList.add("hidden");
+  let hideElement = document.getElementById(this.prefix + "-hide-symbols");
+  hideElement.classList.remove("hidden");
+  let div = document.getElementById(this.prefix + "-data");
+  clearDivData(div);
+  let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
+
+  if (this.symbolRequest.status != 200) {
+    div.appendChild(document.createTextNode(errorMessage));
+    return;
+  }
+
+  let jsonResponse = {};
+  try {
+    jsonResponse = JSON.parse(this.symbolRequest.responseText);
+  } catch (e) {
+    div.appendChild(document.createTextNode(errorMessage));
+    return;
+  }
+
+  for (let i = 0; i < jsonResponse.length; ++i) {
+    let stack = jsonResponse[i];
+    this.renderHeader(i);
+
+    for (let symbol of stack) {
+      div.appendChild(document.createTextNode(symbol));
+      div.appendChild(document.createElement("br"));
+    }
+    div.appendChild(document.createElement("br"));
+  }
 };
-SymbolicationRequest.prototype.fetchSymbols = function() {
+/**
+ * Send a request to the symbolication server to symbolicate this stack.
+ */
+SymbolicationRequest.prototype.fetchSymbols =
+function SymbolicationRequest_fetchSymbols() {
   let symbolServerURI =
     getPref(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
   let request = {"memoryMap" : this.memoryMap, "stacks" : this.stacks,
@@ -367,26 +392,9 @@ let ChromeHangs = {
 			       this.renderHangHeader);
   },
 
-  /**
-   * Renders the title of the hang: e.g. "Hang Report #1 (6 seconds)"
-   *
-   * @param aDiv Output div
-   * @param aIndex The number of the hang
-   * @param aDuration The duration of the hang
-   */
   renderHangHeader: function ChromeHangs_renderHangHeader(aIndex) {
-    let div = document.getElementById("chrome-hangs-data");
-
-    let titleElement = document.createElement("span");
-    titleElement.className = "hang-title";
-
     let durations = Telemetry.chromeHangs.durations;
-    let titleText = bundle.formatStringFromName(
-      "hangTitle", [aIndex + 1, durations[aIndex]], 2);
-    titleElement.appendChild(document.createTextNode(titleText));
-
-    div.appendChild(titleElement);
-    div.appendChild(document.createElement("br"));
+    StackRenderer.renderHeader("chrome-hangs", [aIndex + 1, durations[aIndex]]);
   }
 };
 
@@ -671,7 +679,8 @@ function setupListeners() {
   document.getElementById("late-writes-fetch-symbols").addEventListener("click",
     function () {
       let lateWrites = TelemetryPing.getPayload().lateWrites;
-      let req = new SymbolicationRequest("late-writes", function() {},
+      let req = new SymbolicationRequest("late-writes",
+                                         LateWritesSingleton.renderHeader,
                                          lateWrites.memoryMap,
                                          lateWrites.stacks);
       req.fetchSymbols();
@@ -743,11 +752,15 @@ function onLoad() {
 };
 
 let LateWritesSingleton = {
+  renderHeader: function LateWritesSingleton_renderHeader(aIndex) {
+    StackRenderer.renderHeader("late-writes", [aIndex + 1]);
+  },
+
   renderLateWrites: function LateWritesSingleton_renderLateWrites(lateWrites) {
     let stacks = lateWrites.stacks;
     let memoryMap = lateWrites.memoryMap;
-    function f() {}
-    StackRenderer.renderStacks('late-writes', stacks, memoryMap, f);
+    StackRenderer.renderStacks('late-writes', stacks, memoryMap,
+                               LateWritesSingleton.renderHeader);
   }
 };
 

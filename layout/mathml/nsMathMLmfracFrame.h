@@ -96,8 +96,6 @@ protected:
   nsMathMLmfracFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmfracFrame();
   
-  virtual int GetSkipSides() const { return 0; }
-
   nsresult PlaceInternal(nsRenderingContext& aRenderingContext,
                          bool                 aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize,

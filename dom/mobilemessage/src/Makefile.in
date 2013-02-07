@@ -1,0 +1,72 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH            = @DEPTH@
+topsrcdir        = @top_srcdir@
+srcdir           = @srcdir@
+VPATH            = \
+  $(srcdir) \
+  $(srcdir)/ipc \
+  $(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+VPATH += $(srcdir)/android
+else ifdef MOZ_B2G_RIL
+VPATH += $(srcdir)/ril
+else
+VPATH += $(srcdir)/fallback
+endif
+
+LIBRARY_NAME     = dom_mobilemessage_s
+LIBXUL_LIBRARY   = 1
+FORCE_STATIC_LIB = 1
+ifndef _MSC_VER
+FAIL_ON_WARNINGS := 1
+endif # !_MSC_VER
+
+include $(topsrcdir)/dom/dom-config.mk
+
+EXPORTS_NAMESPACES = mozilla/dom/mobilemessage
+
+EXPORTS_mozilla/dom/mobilemessage = \
+  $(NULL)
+
+CPPSRCS = \
+  $(NULL)
+
+LOCAL_INCLUDES = \
+  -I$(topsrcdir)/content/events/src \
+  -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/sms/src \
+  $(NULL)
+
+# Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
+# subdirectory (and the ipc one).
+LOCAL_INCLUDES += $(VPATH:%=-I%)
+
+ifdef MOZ_B2G_RIL
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/telephony \
+  -I$(topsrcdir)/dom/system/gonk \
+  $(NULL)
+
+EXTRA_COMPONENTS = \
+  ril/MobileMessageDatabaseService.js \
+  ril/MobileMessageDatabaseService.manifest \
+  $(NULL)
+else
+EXPORTS_mozilla/dom/mobilemessage += \
+  MobileMessageDatabaseService.h \
+  $(NULL)
+
+CPPSRCS += \
+  MobileMessageDatabaseService.cpp \
+  $(NULL)
+endif
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk

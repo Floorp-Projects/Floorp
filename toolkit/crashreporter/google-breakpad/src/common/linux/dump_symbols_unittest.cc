@@ -48,7 +48,7 @@ namespace google_breakpad {
 bool ReadSymbolDataInternal(const uint8_t* obj_file,
                             const string& obj_filename,
                             const std::vector<string>& debug_dir,
-                            bool cfi,
+                            SymbolData symbol_data,
                             Module** module);
 }
 
@@ -86,7 +86,7 @@ TEST_F(DumpSymbols, Invalid) {
   EXPECT_FALSE(ReadSymbolDataInternal(reinterpret_cast<uint8_t*>(&header),
                                       "foo",
                                       vector<string>(),
-                                      true,
+                                      ALL_SYMBOL_DATA,
                                       &module));
 }
 
@@ -118,11 +118,11 @@ TEST_F(DumpSymbols, SimplePublic32) {
   EXPECT_TRUE(ReadSymbolDataInternal(elfdata,
                                      "foo",
                                      vector<string>(),
-                                     true,
+                                     ALL_SYMBOL_DATA,
                                      &module));
 
   stringstream s;
-  module->Write(s, true);
+  module->Write(s, ALL_SYMBOL_DATA);
   EXPECT_EQ("MODULE Linux x86 000000000000000000000000000000000 foo\n"
             "PUBLIC 1000 0 superfunc\n",
             s.str());
@@ -157,11 +157,11 @@ TEST_F(DumpSymbols, SimplePublic64) {
   EXPECT_TRUE(ReadSymbolDataInternal(elfdata,
                                      "foo",
                                      vector<string>(),
-                                     true,
+                                     ALL_SYMBOL_DATA,
                                      &module));
 
   stringstream s;
-  module->Write(s, true);
+  module->Write(s, ALL_SYMBOL_DATA);
   EXPECT_EQ("MODULE Linux x86_64 000000000000000000000000000000000 foo\n"
             "PUBLIC 1000 0 superfunc\n",
             s.str());

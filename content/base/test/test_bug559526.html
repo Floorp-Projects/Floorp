@@ -55,8 +55,7 @@ function filter(node) {
   it = document.createNodeIterator(
     document.getElementById("nodes"),
     NodeFilter.SHOW_ELEMENT,
-    filter,
-    false
+    filter
   );
   while (it.nextNode());
 })();
@@ -65,16 +64,14 @@ function filter(node) {
   it = document.createTreeWalker(
     document.getElementById("nodes"),
     NodeFilter.SHOW_ELEMENT,
-    filter,
-    false
+    filter
   );
   while(it.nextNode());
 
   it = document.createTreeWalker(
     document.getElementById("nodes"),
     NodeFilter.SHOW_ELEMENT,
-    filter,
-    false
+    filter
   );
   it.firstChild();
   while(it.nextSibling());
@@ -82,8 +79,7 @@ function filter(node) {
   it = document.createTreeWalker(
     document.getElementById("nodes"),
     NodeFilter.SHOW_ELEMENT,
-    filter,
-    false
+    filter
   );
   it.lastChild();
   while(it.previousSibling());

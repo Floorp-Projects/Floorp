@@ -109,7 +109,6 @@ protected:
                             nsMargin aFocusPadding,
                             nsReflowStatus& aStatus);
 
-  int GetSkipSides() const;
   nsButtonFrameRenderer mRenderer;
 };
 

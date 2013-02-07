@@ -260,8 +260,7 @@
             const nsIDOMNodeFilter = Components.interfaces.nsIDOMNodeFilter;
             var iterator = doc.createTreeWalker(this,
                                                 nsIDOMNodeFilter.SHOW_ELEMENT,
-                                                this._filterRadioGroup,
-                                                true);
+                                                this._filterRadioGroup);
             while (iterator.nextNode())
               radioChildren.push(iterator.currentNode);
             return this._radioChildren = radioChildren;

@@ -287,7 +287,8 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
     *aState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
 
   nsCOMPtr<nsPIDOMWindow> piwin = do_QueryReferent(mWindow);
-  MOZ_ASSERT(piwin);
+  if (!piwin)
+    return NS_OK;
 
   nsIDocShell* docShell = piwin->GetDocShell();
   MOZ_ASSERT(docShell);

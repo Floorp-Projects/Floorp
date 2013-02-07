@@ -52,6 +52,10 @@ EXPORTS_mozilla/dom := \
   PannerNode.h \
   $(NULL)
 
+EXPORTS := \
+  MediaBufferDecoder.h \
+  $(NULL)
+
 PARALLEL_DIRS := test
 
 ifdef ENABLE_TESTS
@@ -61,3 +65,6 @@ endif
 FORCE_STATIC_LIB := 1
 
 include $(topsrcdir)/config/rules.mk
+
+CFLAGS   += $(GSTREAMER_CFLAGS)
+CXXFLAGS += $(GSTREAMER_CFLAGS)

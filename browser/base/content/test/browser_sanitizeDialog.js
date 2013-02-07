@@ -77,10 +77,11 @@ var gAllTests = [
         this.toggleDetails();
         this.checkDetails(false);
         this.cancelDialog();
-
-        ensureHistoryClearedState(uris, false);
+      };
+      wh.onunload = function () {
+        yield promiseHistoryClearedState(uris, false);
         blankSlate();
-        ensureHistoryClearedState(uris, true);
+        yield promiseHistoryClearedState(uris, true);
       };
       wh.open();
     });
@@ -136,18 +137,19 @@ var gAllTests = [
         boolPrefIs("cpd.downloads", true,
                    "downloads pref should be true after accepting dialog with " +
                    "history checkbox checked");
-
+      };
+      wh.onunload = function () {
         // History visits and downloads within one hour should be cleared.
-        ensureHistoryClearedState(uris, true);
+        yield promiseHistoryClearedState(uris, true);
         ensureDownloadsClearedState(downloadIDs, true);
 
         // Visits and downloads > 1 hour should still exist.
-        ensureHistoryClearedState(olderURIs, false);
+        yield promiseHistoryClearedState(olderURIs, false);
         ensureDownloadsClearedState(olderDownloadIDs, false);
 
         // OK, done, cleanup after ourselves.
         blankSlate();
-        ensureHistoryClearedState(olderURIs, true);
+        yield promiseHistoryClearedState(olderURIs, true);
         ensureDownloadsClearedState(olderDownloadIDs, true);
       };
       wh.open();
@@ -200,15 +202,16 @@ var gAllTests = [
         boolPrefIs("cpd.downloads", false,
                    "downloads pref should be false after accepting dialog with " +
                    "history checkbox unchecked");
-
+      };
+      wh.onunload = function () {
         // Of the three only form entries should be cleared.
-        ensureHistoryClearedState(uris, false);
+        yield promiseHistoryClearedState(uris, false);
         ensureDownloadsClearedState(downloadIDs, false);
         ensureFormEntriesClearedState(formEntries, true);
 
         // OK, done, cleanup after ourselves.
         blankSlate();
-        ensureHistoryClearedState(uris, true);
+        yield promiseHistoryClearedState(uris, true);
         ensureDownloadsClearedState(downloadIDs, true);
       };
       wh.open();
@@ -253,7 +256,9 @@ var gAllTests = [
         intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
                   "timeSpan pref should be everything after accepting dialog " +
                   "with everything selected");
-        ensureHistoryClearedState(uris, true);
+      };
+      wh.onunload = function () {
+        yield promiseHistoryClearedState(uris, true);
       };
       wh.open();
     });
@@ -288,7 +293,9 @@ var gAllTests = [
         intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
                   "timeSpan pref should be everything after accepting dialog " +
                   "with everything selected");
-        ensureHistoryClearedState(uris, true);
+      };
+      wh.onunload = function () {
+        yield promiseHistoryClearedState(uris, true);
       };
       wh.open();
     });
@@ -321,8 +328,9 @@ var gAllTests = [
 
         this.checkAllCheckboxes();
         this.acceptDialog();
-
-        ensureHistoryClearedState(uris, true);
+      };
+      wh.onunload = function () {
+        yield promiseHistoryClearedState(uris, true);
         ensureFormEntriesClearedState(formEntries, true);
       };
       wh.open();
@@ -373,6 +381,8 @@ var gAllTests = [
          "the pref.");
 
       this.acceptDialog();
+    };
+    wh.onunload = function () {
       ensureFormEntriesClearedState(formEntries, true);
     };
     wh.open();
@@ -783,9 +793,13 @@ WindowHelper.prototype = {
           // Some exceptions that reach here don't reach the test harness, but
           // ok()/is() do...
           try {
-            if (wh.onunload)
-              wh.onunload();
-            waitForAsyncUpdates(doNextTest);
+            if (wh.onunload) {
+              Task.spawn(wh.onunload).then(function() {
+                waitForAsyncUpdates(doNextTest);
+              });
+            } else {
+              waitForAsyncUpdates(doNextTest);
+            }
           }
           catch (exc) {
             win.close();
@@ -902,45 +916,6 @@ function blankSlate() {
 }
 
 /**
- * Waits for all pending async statements on the default connection, before
- * proceeding with aCallback.
- *
- * @param aCallback
- *        Function to be called when done.
- * @param aScope
- *        Scope for the callback.
- * @param aArguments
- *        Arguments array for the callback.
- *
- * @note The result is achieved by asynchronously executing a query requiring
- *       a write lock.  Since all statements on the same connection are
- *       serialized, the end of this write operation means that all writes are
- *       complete.  Note that WAL makes so that writers don't block readers, but
- *       this is a problem only across different connections.
- */
-function waitForAsyncUpdates(aCallback, aScope, aArguments)
-{
-  let scope = aScope || this;
-  let args = aArguments || [];
-  let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                              .DBConnection;
-  let begin = db.createAsyncStatement("BEGIN EXCLUSIVE");
-  begin.executeAsync();
-  begin.finalize();
-
-  let commit = db.createAsyncStatement("COMMIT");
-  commit.executeAsync({
-    handleResult: function() {},
-    handleError: function() {},
-    handleCompletion: function(aReason)
-    {
-      aCallback.apply(scope, args);
-    }
-  });
-  commit.finalize();
-}
-
-/**
  * Ensures that the given pref is the expected value.
  *
  * @param aPrefName
@@ -1020,22 +995,6 @@ function ensureFormEntriesClearedState(aFormEntries, aShouldBeCleared) {
   aFormEntries.forEach(function (entry) {
     is(formhist.nameExists(entry), !aShouldBeCleared,
        "form entry " + entry + " should " + niceStr + " exist");
-  });
-}
-
-/**
- * Ensures that the specified URIs are either cleared or not.
- *
- * @param aURIs
- *        Array of page URIs
- * @param aShouldBeCleared
- *        True if each visit to the URI should be cleared, false otherwise
- */
-function ensureHistoryClearedState(aURIs, aShouldBeCleared) {
-  let niceStr = aShouldBeCleared ? "no longer" : "still";
-  aURIs.forEach(function (aURI) {
-    is(PlacesUtils.bhistory.isVisited(aURI), !aShouldBeCleared,
-       "history visit " + aURI.spec + " should " + niceStr + " exist");
   });
 }
 

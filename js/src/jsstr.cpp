@@ -1900,19 +1900,17 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
 
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    MatchPair match;
 
-    RegExpRunStatus status = g.regExp().execute(cx, chars, length, &i, matches);
+    RegExpRunStatus status = g.regExp().executeMatchOnly(cx, chars, length, &i, match);
     if (status == RegExpRunStatus_Error)
         return false;
 
-    if (status == RegExpRunStatus_Success) {
-        res->updateFromMatchPairs(cx, stableStr, matches);
-        args.rval().setInt32(matches[0].start);
-    } else {
-        args.rval().setInt32(-1);
-    }
+    if (status == RegExpRunStatus_Success)
+        res->updateLazily(cx, stableStr, &g.regExp(), 0);
 
+    JS_ASSERT_IF(status == RegExpRunStatus_Success_NotFound, match.start == -1);
+    args.rval().setInt32(match.start);
     return true;
 }
 
@@ -3074,8 +3072,10 @@ str_concat(JSContext *cx, unsigned argc, Value *vp)
             str = strRoot;
         }
 
-        str = ConcatStrings<NoGC>(cx, str, argStr);
-        if (!str) {
+        JSString *next = ConcatStrings<NoGC>(cx, str, argStr);
+        if (next) {
+            str = next;
+        } else {
             RootedString strRoot(cx, str), argStrRoot(cx, argStr);
             str = ConcatStrings<CanGC>(cx, strRoot, argStrRoot);
             if (!str)
@@ -3893,12 +3893,6 @@ js::InflateUTF8String(JSContext *cx, const char *bytes, size_t *lengthp)
      */
     *lengthp = 0;
     return NULL;
-}
-
-size_t
-js::GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t nchars)
-{
-    return nchars;
 }
 
 bool

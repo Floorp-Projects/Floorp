@@ -1510,6 +1510,5 @@ BookmarksTracker.prototype = {
 
   onBeginUpdateBatch: function () {},
   onEndUpdateBatch: function () {},
-  onItemVisited: function () {},
-  onBeforeItemRemoved: function () {},
+  onItemVisited: function () {}
 };

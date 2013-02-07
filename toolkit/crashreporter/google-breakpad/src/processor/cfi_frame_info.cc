@@ -49,7 +49,7 @@ bool CFIFrameInfo::FindCallerRegs(const RegisterValueMap<V> &registers,
                                   RegisterValueMap<V> *caller_registers) const {
   // If there are not rules for both .ra and .cfa in effect at this address,
   // don't use this CFI data for stack walking.
-  if (cfa_rule_.empty() || ra_rule_.empty())
+  if (cfa_rule_.invalid() || ra_rule_.invalid())
     return false;
 
   RegisterValueMap<V> working;
@@ -66,7 +66,7 @@ bool CFIFrameInfo::FindCallerRegs(const RegisterValueMap<V> &registers,
   // Then, compute the return address.
   V ra;
   working = registers;
-  working[".cfa"] = cfa;
+  working.set(ustr__ZDcfa(), cfa);
   if (!evaluator.EvaluateForValue(ra_rule_, &ra))
     return false;
 
@@ -75,14 +75,14 @@ bool CFIFrameInfo::FindCallerRegs(const RegisterValueMap<V> &registers,
        it != register_rules_.end(); it++) {
     V value;
     working = registers;
-    working[".cfa"] = cfa;
+    working.set(ustr__ZDcfa(), cfa);
     if (!evaluator.EvaluateForValue(it->second, &value))
       return false;
-    (*caller_registers)[it->first] = value;
+    caller_registers->set(it->first, value);
   }
 
-  (*caller_registers)[".ra"] = ra;
-  (*caller_registers)[".cfa"] = cfa;
+  caller_registers->set(ustr__ZDra(), ra);
+  caller_registers->set(ustr__ZDcfa(), cfa);
 
   return true;
 }
@@ -100,10 +100,10 @@ template bool CFIFrameInfo::FindCallerRegs<u_int64_t>(
 string CFIFrameInfo::Serialize() const {
   std::ostringstream stream;
 
-  if (!cfa_rule_.empty()) {
+  if (!cfa_rule_.invalid()) {
     stream << ".cfa: " << cfa_rule_;
   }
-  if (!ra_rule_.empty()) {
+  if (!ra_rule_.invalid()) {
     if (static_cast<std::streamoff>(stream.tellp()) != 0)
       stream << " ";
     stream << ".ra: " << ra_rule_;
@@ -113,7 +113,7 @@ string CFIFrameInfo::Serialize() const {
        ++iter) {
     if (static_cast<std::streamoff>(stream.tellp()) != 0)
       stream << " ";
-    stream << iter->first << ": " << iter->second;
+    stream << fromUniqueString(iter->first) << ": " << iter->second;
   }
 
   return stream.str();
@@ -125,7 +125,7 @@ bool CFIRuleParser::Parse(const string &rule_set) {
   memcpy(working_copy.get(), rule_set.data(), rule_set_len);
   working_copy[rule_set_len] = '\0';
 
-  name_.clear();
+  name_ = ustr__empty();
   expression_.clear();
 
   char *cursor;
@@ -142,10 +142,10 @@ bool CFIRuleParser::Parse(const string &rule_set) {
       // Names can't be empty.
       if (token_len < 2) return false;
       // If there is any pending content, report it.
-      if (!name_.empty() || !expression_.empty()) {
+      if (name_ != ustr__empty() || !expression_.empty()) {
         if (!Report()) return false;
       }
-      name_.assign(token, token_len - 1);
+      name_ = toUniqueString_n(token, token_len - 1);
       expression_.clear();
     } else {
       // Another expression component.
@@ -159,24 +159,25 @@ bool CFIRuleParser::Parse(const string &rule_set) {
 }
 
 bool CFIRuleParser::Report() {
-  if (name_.empty() || expression_.empty()) return false;
-  if (name_ == ".cfa") handler_->CFARule(expression_);
-  else if (name_ == ".ra") handler_->RARule(expression_);
+  if (name_ == ustr__empty() || expression_.empty()) return false;
+  if (name_ == ustr__ZDcfa()) handler_->CFARule(expression_);
+  else if (name_ == ustr__ZDra()) handler_->RARule(expression_);
   else handler_->RegisterRule(name_, expression_);
   return true;
 }
 
 void CFIFrameInfoParseHandler::CFARule(const string &expression) {
-  frame_info_->SetCFARule(expression);
+  // 'expression' is a postfix expression string.
+  frame_info_->SetCFARule(Module::Expr(expression));
 }
 
 void CFIFrameInfoParseHandler::RARule(const string &expression) {
-  frame_info_->SetRARule(expression);
+  frame_info_->SetRARule(Module::Expr(expression));
 }
 
-void CFIFrameInfoParseHandler::RegisterRule(const string &name,
+void CFIFrameInfoParseHandler::RegisterRule(const UniqueString* name,
                                             const string &expression) {
-  frame_info_->SetRegisterRule(name, expression);
+  frame_info_->SetRegisterRule(name, Module::Expr(expression));
 }
 
 } // namespace google_breakpad

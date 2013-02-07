@@ -12,7 +12,6 @@
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/javascript" src="chrome://browser/content/downloads.js"/>
   <script type="application/javascript" src="chrome://browser/content/exceptions.js"/>
-  <script type="application/javascript" src="chrome://browser/content/sanitize.js"/>
 
   <deck id="browsers" flex="1"/>
 

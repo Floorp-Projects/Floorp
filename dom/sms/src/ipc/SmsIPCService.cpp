@@ -19,7 +19,7 @@ namespace sms {
 
 PSmsChild* gSmsChild;
 
-NS_IMPL_ISUPPORTS2(SmsIPCService, nsISmsService, nsISmsDatabaseService)
+NS_IMPL_ISUPPORTS2(SmsIPCService, nsISmsService, nsIMobileMessageDatabaseService)
 
 void
 SendRequest(const IPCSmsRequest& aRequest, nsISmsRequest* aRequestReply)
@@ -111,7 +111,7 @@ SmsIPCService::CreateSmsSegmentInfo(int32_t aSegments,
 }
 
 /*
- * Implementation of nsISmsDatabaseService.
+ * Implementation of nsIMobileMessageDatabaseService.
  */
 NS_IMETHODIMP
 SmsIPCService::GetMessageMoz(int32_t aMessageId,

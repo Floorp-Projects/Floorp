@@ -10,40 +10,46 @@ function test() {
     "dom/tests/browser/browser_geolocation_privatebrowsing_page.html";
   waitForExplicitFinish();
 
+  var windowsToClose = [];
   function testOnWindow(aIsPrivate, aCallback) {
     var win = OpenBrowserWindow({private: aIsPrivate});
-    waitForFocus(aCallback, win);
+    win.addEventListener("load", function onLoad() {
+      win.removeEventListener("load", onLoad, false);
+      windowsToClose.push(win);
+      executeSoon(function() { aCallback(win); });
+    }, false);
   }
 
+  registerCleanupFunction(function () {
+    windowsToClose.forEach(function(win) {
+      win.close();
+    });
+  });
+
   testOnWindow(false, function(aNormalWindow) {
-    aNormalWindow.gBrowser.selectedTab = aNormalWindow.gBrowser.addTab();
     aNormalWindow.gBrowser.selectedBrowser.addEventListener("georesult", function load(ev) {
       aNormalWindow.gBrowser.selectedBrowser.removeEventListener("georesult", load, false);
       is(ev.detail, 200, "unexpected access token");
 
       prefs.setCharPref("geo.wifi.uri", baseProvider + "?desired_access_token=ggg");
-      aNormalWindow.close();
 
       testOnWindow(true, function(aPrivateWindow) {
-        aPrivateWindow.gBrowser.selectedTab = aPrivateWindow.gBrowser.addTab();
         aPrivateWindow.gBrowser.selectedBrowser.addEventListener("georesult", function load2(ev) {
           aPrivateWindow.gBrowser.selectedBrowser.removeEventListener("georesult", load2, false);
           is(ev.detail, 200, "unexpected access token");
 
           prefs.setCharPref("geo.wifi.uri", baseProvider + "?expected_access_token=fff");
-          aPrivateWindow.close();
 
-          testOnWindow(false, function(aNormalWindow) {
-            aNormalWindow.gBrowser.selectedTab = aNormalWindow.gBrowser.addTab();
-            aNormalWindow.gBrowser.selectedBrowser.addEventListener("georesult", function load3(ev) {
-              aNormalWindow.gBrowser.selectedBrowser.removeEventListener("georesult", load3, false);
+          testOnWindow(false, function(aAnotherNormalWindow) {
+            aAnotherNormalWindow.gBrowser.selectedBrowser.addEventListener("georesult", function load3(ev) {
+              aAnotherNormalWindow.gBrowser.selectedBrowser.removeEventListener("georesult", load3, false);
               is(ev.detail, 200, "unexpected access token");
               prefs.setBoolPref("geo.prompt.testing", false);
               prefs.setBoolPref("geo.prompt.testing.allow", false);
-              aNormalWindow.close();
+
               finish();
             }, false, true);
-            aNormalWindow.content.location = testPageURL;
+            aAnotherNormalWindow.content.location = testPageURL;
           });
         }, false, true);
         aPrivateWindow.content.location = testPageURL;

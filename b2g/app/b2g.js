@@ -574,7 +574,7 @@ pref("hal.processPriorityManager.gonk.backgroundNice", 10);
 // (hiding latency).
 pref("dom.ipc.processPrelaunch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
-pref("dom.ipc.processPrelaunch.delayMs", 1000);
+pref("dom.ipc.processPrelaunch.delayMs", 5000);
 #endif
 
 // Ignore the "dialog=1" feature in window.open.
@@ -645,3 +645,5 @@ pref("memory_info_dumper.watch_fifo.directory", "/data/local");
 // <input type='file'> implementation is not complete. We have to disable the
 // type to web content to help them do feature detection.
 pref("dom.disable_input_file", true);
+
+pref("general.useragent.enable_overrides", true);

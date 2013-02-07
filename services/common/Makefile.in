@@ -26,7 +26,6 @@ pp_modules := \
   $(NULL)
 
 testing_modules := \
-  aitcserver.js \
   bagheeraserver.js \
   logging.js \
   storageserver.js \
@@ -64,10 +63,6 @@ server_port := 8080
 storage-server:
 	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
 	  $(MOZ_BUILD_ROOT) run_storage_server.js --port $(server_port)
-
-aitc-server:
-	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
-		$(MOZ_BUILD_ROOT) run_aitc_server.js --port $(server_port)
 
 bagheera-server:
 	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \

@@ -167,6 +167,7 @@
 @BINPATH@/components/dom_system.xpt
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_telephony.xpt
+@BINPATH@/components/dom_voicemail.xpt
 @BINPATH@/components/dom_wifi.xpt
 @BINPATH@/components/dom_system_gonk.xpt
 @BINPATH@/components/dom_icc.xpt
@@ -201,6 +202,7 @@
 @BINPATH@/components/dom_settings.xpt
 @BINPATH@/components/dom_permissionsettings.xpt
 @BINPATH@/components/dom_sidebar.xpt
+@BINPATH@/components/dom_mobilemessage.xpt
 @BINPATH@/components/dom_sms.xpt
 @BINPATH@/components/dom_storage.xpt
 @BINPATH@/components/dom_stylesheets.xpt
@@ -282,6 +284,9 @@
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/components/sessionstore.xpt
 @BINPATH@/components/services-crypto-component.xpt
+#ifdef MOZ_SERVICES_CAPTIVEDETECT
+@BINPATH@/components/services-captivedetect.xpt
+#endif
 @BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
@@ -434,8 +439,8 @@
 @BINPATH@/components/MmsService.manifest
 @BINPATH@/components/MmsService.js
 @BINPATH@/components/RILContentHelper.js
-@BINPATH@/components/SmsDatabaseService.manifest
-@BINPATH@/components/SmsDatabaseService.js
+@BINPATH@/components/MobileMessageDatabaseService.manifest
+@BINPATH@/components/MobileMessageDatabaseService.js
 @BINPATH@/components/WifiWorker.js
 @BINPATH@/components/WifiWorker.manifest
 @BINPATH@/components/DOMWifiManager.js
@@ -460,10 +465,6 @@
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/nsPrompter.manifest
 @BINPATH@/components/nsPrompter.js
-#ifdef MOZ_SERVICES_AITC
-@BINPATH@/components/AitcComponents.manifest
-@BINPATH@/components/Aitc.js
-#endif
 #ifdef MOZ_DATA_REPORTING
 @BINPATH@/components/DataReporting.manifest
 @BINPATH@/components/DataReportingService.js
@@ -474,6 +475,10 @@
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
 @BINPATH@/components/Weave.js
+#endif
+#ifdef MOZ_SERVICES_CAPTIVEDETECT
+@BINPATH@/components/CaptivePortalDetectComponents.manifest
+@BINPATH@/components/captivedetect.js
 #endif
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/cryptoComponents.manifest
@@ -582,9 +587,6 @@
 #endif
 
 ; Services (gre) prefs
-#ifdef MOZ_SERVICES_AITC
-@BINPATH@/defaults/pref/services-aitc.js
-#endif
 #ifdef MOZ_SERVICES_NOTIFICATIONS
 @BINPATH@/defaults/pref/services-notifications.js
 #endif

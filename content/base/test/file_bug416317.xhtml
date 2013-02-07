@@ -457,7 +457,7 @@
     }
 
     function check( type, root, expect, fragment ){
-      var walker = document.createTreeWalker( root, NodeFilter.SHOW_ELEMENT, { acceptNode: function(){ return 1; } }, false );
+      var walker = document.createTreeWalker( root, NodeFilter.SHOW_ELEMENT, { acceptNode: function(){ return 1; } } );
 
       while ( walker.nextNode() ) {
         var div = walker.currentNode;

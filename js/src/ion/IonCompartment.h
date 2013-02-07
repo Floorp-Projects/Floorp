@@ -9,8 +9,8 @@
 #define jsion_ion_compartment_h__
 
 #include "IonCode.h"
-#include "jsval.h"
 #include "jsweakcache.h"
+#include "js/Value.h"
 #include "vm/Stack.h"
 #include "IonFrames.h"
 

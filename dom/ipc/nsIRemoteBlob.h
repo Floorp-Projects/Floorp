@@ -12,7 +12,7 @@
 #endif
 
 #define NS_IREMOTEBLOB_IID \
-  {0x1f569fbc, 0xf588, 0x41c5, {0xa0, 0x73, 0x92, 0x0d, 0xf5, 0x9f, 0x1b, 0xdb}}
+  {0x74ce3cdd, 0xbfc9, 0x4edb, {0x98, 0x26, 0x50, 0xcf, 0x00, 0x26, 0x58, 0x70}}
 
 class NS_NO_VTABLE nsIRemoteBlob : public nsISupports
 {
@@ -21,8 +21,6 @@ public:
 
   // This will either return a PBlobChild or PBlobParent.
   virtual void* GetPBlob() = 0;
-
-  virtual void SetPBlob(void* aActor) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRemoteBlob, NS_IREMOTEBLOB_IID)

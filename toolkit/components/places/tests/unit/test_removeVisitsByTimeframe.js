@@ -22,7 +22,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - 1000 - i });
       }
-      addVisits(visits, this.continue_run.bind(this));
+      promiseAddVisits(visits).then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
@@ -46,14 +46,15 @@ var tests = [
       }
       resultRoot.containerOpen = false;
 
-      print("nsIGlobalHistory2.isVisited should return true.");
-      do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
-                    isVisited(TEST_URI));
+      print("asyncHistory.isURIVisited should return true.");
+      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
+        do_check_true(aIsVisited);
 
-      promiseAsyncUpdates().then(function () {
-        print("Frecency should be positive.")
-        do_check_true(frecencyForUrl(TEST_URI) > 0);
-        run_next_test();
+        promiseAsyncUpdates().then(function () {
+          print("Frecency should be positive.")
+          do_check_true(frecencyForUrl(TEST_URI) > 0);
+          run_next_test();
+        });
       });
     }
   },
@@ -66,7 +67,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - 1000 - i });
       }
-      addVisits(visits, function () {
+      promiseAddVisits(visits).then(function () {
         print("Bookmark the URI.");
         bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
                              TEST_URI,
@@ -98,14 +99,15 @@ var tests = [
       }
       resultRoot.containerOpen = false;
 
-      print("nsIGlobalHistory2.isVisited should return true.");
-      do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
-                    isVisited(TEST_URI));
+      print("asyncHistory.isURIVisited should return true.");
+      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
+        do_check_true(aIsVisited);
 
-      promiseAsyncUpdates().then(function () {
-        print("Frecency should be positive.")
-        do_check_true(frecencyForUrl(TEST_URI) > 0);
-        run_next_test();
+        promiseAsyncUpdates().then(function () {
+          print("Frecency should be positive.")
+          do_check_true(frecencyForUrl(TEST_URI) > 0);
+          run_next_test();
+        });
       });
     }
   },
@@ -118,7 +120,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      addVisits(visits, this.continue_run.bind(this));
+      promiseAddVisits(visits).then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove the 5 most recent visits.");
@@ -143,14 +145,15 @@ var tests = [
       }
       resultRoot.containerOpen = false;
 
-      print("nsIGlobalHistory2.isVisited should return true.");
-      do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
-                    isVisited(TEST_URI));
+      print("asyncHistory.isURIVisited should return true.");
+      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
+        do_check_true(aIsVisited);
 
-      promiseAsyncUpdates().then(function () {
-        print("Frecency should be positive.")
-        do_check_true(frecencyForUrl(TEST_URI) > 0);
-        run_next_test();
+        promiseAsyncUpdates().then(function () {
+          print("Frecency should be positive.")
+          do_check_true(frecencyForUrl(TEST_URI) > 0);
+          run_next_test();
+        });
       });
     }
   },
@@ -163,7 +166,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      addVisits(visits, function () {
+      promiseAddVisits(visits).then(function () {
         print("Bookmark the URI.");
         bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
                              TEST_URI,
@@ -195,14 +198,15 @@ var tests = [
       }
       resultRoot.containerOpen = false;
 
-      print("nsIGlobalHistory2.isVisited should return true.");
-      do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
-                    isVisited(TEST_URI));
+      print("asyncHistory.isURIVisited should return true.");
+      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
+        do_check_true(aIsVisited);
 
-      promiseAsyncUpdates().then(function () {
-        print("Frecency should be positive.")
-        do_check_true(frecencyForUrl(TEST_URI) > 0);
-        run_next_test();
+        promiseAsyncUpdates().then(function () {
+          print("Frecency should be positive.")
+          do_check_true(frecencyForUrl(TEST_URI) > 0);
+          run_next_test();
+        });
       });
     }
   },
@@ -215,7 +219,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      addVisits(visits, this.continue_run.bind(this));
+      promiseAddVisits(visits).then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -235,10 +239,11 @@ var tests = [
       do_check_eq(resultRoot.childCount, 0);
       resultRoot.containerOpen = false;
 
-      print("nsIGlobalHistory2.isVisited should return false.");
-      do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
-                       isVisited(TEST_URI));
-      run_next_test();
+      print("asyncHistory.isURIVisited should return false.");
+      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
+        do_check_false(aIsVisited);
+        run_next_test();
+      });
     }
   },
 
@@ -250,7 +255,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: PLACE_URI, visitDate: NOW - i });
       }
-      addVisits(visits, this.continue_run.bind(this));
+      promiseAddVisits(visits).then(this.continue_run.bind(this));
     },
     continue_run: function () {
       print("Remove all visits.");
@@ -270,14 +275,15 @@ var tests = [
       do_check_eq(resultRoot.childCount, 0);
       resultRoot.containerOpen = false;
 
-      print("nsIGlobalHistory2.isVisited should return false.");
-      do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
-                       isVisited(PLACE_URI));
+      print("asyncHistory.isURIVisited should return false.");
+      PlacesUtils.asyncHistory.isURIVisited(PLACE_URI, function(aURI, aIsVisited) {
+        do_check_false(aIsVisited);
 
-      promiseAsyncUpdates().then(function () {
-        print("Frecency should be zero.")
-        do_check_eq(frecencyForUrl(PLACE_URL), 0);
-        run_next_test();
+        promiseAsyncUpdates().then(function () {
+          print("Frecency should be zero.")
+          do_check_eq(frecencyForUrl(PLACE_URL), 0);
+          run_next_test();
+        });
       });
     }
   },
@@ -290,7 +296,7 @@ var tests = [
       for (let i = 0; i < 10; i++) {
         visits.push({ uri: TEST_URI, visitDate: NOW - i });
       }
-      addVisits(visits, function () {
+      promiseAddVisits(visits).then(function () {
         print("Bookmark the URI.");
         bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
                              TEST_URI,
@@ -317,17 +323,18 @@ var tests = [
       do_check_eq(resultRoot.childCount, 0);
       resultRoot.containerOpen = false;
 
-      print("nsIGlobalHistory2.isVisited should return false.");
-      do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
-                       isVisited(TEST_URI));
+      print("asyncHistory.isURIVisited should return false.");
+      PlacesUtils.asyncHistory.isURIVisited(TEST_URI, function(aURI, aIsVisited) {
+        do_check_false(aIsVisited);
 
-      print("nsINavBookmarksService.isBookmarked should return true.");
-      do_check_true(bmsvc.isBookmarked(TEST_URI));
+        print("nsINavBookmarksService.isBookmarked should return true.");
+        do_check_true(bmsvc.isBookmarked(TEST_URI));
 
-      promiseAsyncUpdates().then(function () {
-        print("Frecency should be negative.")
-        do_check_true(frecencyForUrl(TEST_URI) < 0);
-        run_next_test();
+        promiseAsyncUpdates().then(function () {
+          print("Frecency should be negative.")
+          do_check_true(frecencyForUrl(TEST_URI) < 0);
+          run_next_test();
+        });
       });
     }
   },
@@ -336,11 +343,11 @@ var tests = [
     desc: "Remove some visits from a zero frecency URI retains zero frecency",
     run: function () {
       do_log_info("Add some visits for the URI.");
-      addVisits([{ uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
-                   visitDate: (NOW - 86400000000) },
-                 { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
-                  visitDate: NOW }],
-                this.continue_run.bind(this));
+      promiseAddVisits([{ uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
+                          visitDate: (NOW - 86400000000) },
+                        { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK,
+                          visitDate: NOW }]).then(
+                       this.continue_run.bind(this));
     },
     continue_run: function () {
       do_log_info("Remove newer visit.");

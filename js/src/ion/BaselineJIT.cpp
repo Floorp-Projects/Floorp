@@ -240,7 +240,7 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
     // If constructing, allocate a new |this| object.
     if (fp->isConstructing() && fp->functionThis().isPrimitive()) {
         RootedObject callee(cx, &fp->callee());
-        RootedObject obj(cx, js_CreateThisForFunction(cx, callee, newType));
+        RootedObject obj(cx, CreateThisForFunction(cx, callee, newType));
         if (!obj)
             return Method_Skipped;
         fp->functionThis().setObject(*obj);

@@ -582,9 +582,9 @@ bool
 GlobalObject::initIntlObject(JSContext *cx, Handle<GlobalObject*> global)
 {
     RootedObject Intl(cx);
-    Intl = NewObjectWithGivenProto(cx, &IntlClass,
-                                   global->getOrCreateObjectPrototype(cx), global);
-    if (!Intl || !JSObject::setSingletonType(cx, Intl))
+    Intl = NewObjectWithGivenProto(cx, &IntlClass, global->getOrCreateObjectPrototype(cx),
+                                   global, SingletonObject);
+    if (!Intl)
         return false;
 
     global->setReservedSlot(JSProto_Intl, ObjectValue(*Intl));

@@ -48,7 +48,7 @@ function PlacesCategoriesStarter()
     }
   }).bind(this);
   [ "onItemAdded", "onItemRemoved", "onItemChanged", "onBeginUpdateBatch",
-    "onEndUpdateBatch", "onBeforeItemRemoved", "onItemVisited",
+    "onEndUpdateBatch", "onItemVisited",
     "onItemMoved" ].forEach(function(aMethod) {
       this[aMethod] = notify;
     }, this);

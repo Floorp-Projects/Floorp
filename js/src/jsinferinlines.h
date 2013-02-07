@@ -868,6 +868,13 @@ struct AllocationSiteKey {
     }
 };
 
+/* Whether to use a new type object for an initializer opcode at script/pc. */
+js::NewObjectKind
+UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey key);
+
+js::NewObjectKind
+UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, Class *clasp);
+
 /* static */ inline TypeObject *
 TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey kind)
 {
@@ -896,17 +903,17 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
 
 /* Set the type to use for obj according to the site it was allocated at. */
 static inline bool
-SetInitializerObjectType(JSContext *cx, HandleScript script, jsbytecode *pc, HandleObject obj)
+SetInitializerObjectType(JSContext *cx, HandleScript script, jsbytecode *pc, HandleObject obj, NewObjectKind kind)
 {
     if (!cx->typeInferenceEnabled())
         return true;
 
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
     JS_ASSERT(key != JSProto_Null);
+    JS_ASSERT(kind == UseNewTypeForInitializer(cx, script, pc, key));
 
-    if (UseNewTypeForInitializer(cx, script, pc, key)) {
-        if (!JSObject::setSingletonType(cx, obj))
-            return false;
+    if (kind == SingletonObject) {
+        JS_ASSERT(obj->hasSingletonType());
 
         /*
          * Inference does not account for types of run-once initializer

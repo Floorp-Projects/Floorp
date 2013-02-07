@@ -1037,8 +1037,8 @@ DownloadsPlacesView.prototype = {
     else {
       shell.dataItem = null;
       // Move it below the session-download items;
-      if (this._lastSessionDownloadElement == shell.dataItem) {
-        this._lastSessionDownloadElement = shell.dataItem.previousSibling;
+      if (this._lastSessionDownloadElement == shell.element) {
+        this._lastSessionDownloadElement = shell.element.previousSibling;
       }
       else {
         let before = this._lastSessionDownloadElement ?
@@ -1240,7 +1240,6 @@ DownloadsPlacesView.prototype = {
   nodeKeywordChanged: function() {},
   nodeDateAddedChanged: function() {},
   nodeLastModifiedChanged: function() {},
-  nodeReplaced: function() {},
   nodeHistoryDetailsChanged: function() {},
   nodeTagsChanged: function() {},
   sortingChanged: function() {},

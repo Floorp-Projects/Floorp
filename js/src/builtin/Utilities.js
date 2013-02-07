@@ -45,6 +45,7 @@ var std_String_lastIndexOf = String.prototype.lastIndexOf;
 var std_String_match = String.prototype.match;
 var std_String_replace = String.prototype.replace;
 var std_String_split = String.prototype.split;
+var std_String_startsWith = String.prototype.startsWith;
 var std_String_substring = String.prototype.substring;
 var std_String_toLowerCase = String.prototype.toLowerCase;
 var std_String_toUpperCase = String.prototype.toUpperCase;
