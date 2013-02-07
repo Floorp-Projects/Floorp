@@ -314,19 +314,7 @@ nsFileControlFrame::GetFrameName(nsAString& aResult) const
 void
 nsFileControlFrame::UpdateDisplayedValue(const nsAString& aValue, bool aNotify)
 {
-  nsXPIDLString value;
-  if (aValue.IsEmpty()) {
-    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
-      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "NoFilesSelected", value);
-    } else {
-      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "NoFileSelected", value);
-    }
-  } else {
-    value = aValue;
-  }
-  mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::value, value, aNotify);
+  mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue, aNotify);
 }
 
 nsresult
