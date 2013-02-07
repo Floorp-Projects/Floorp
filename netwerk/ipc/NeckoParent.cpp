@@ -21,6 +21,7 @@
 #include "nsHTMLDNSPrefetch.h"
 #include "nsIAppsService.h"
 #include "nsEscape.h"
+#include "RemoteOpenFileParent.h"
 
 using mozilla::dom::TabParent;
 using mozilla::net::PTCPSocketParent;
@@ -404,6 +405,14 @@ NeckoParent::AllocPRemoteOpenFile(const URIParams& aURI,
 }
 
 bool
+NeckoParent::RecvPRemoteOpenFileConstructor(PRemoteOpenFileParent* aActor,
+                                            const URIParams& aFileURI,
+                                            PBrowserParent* aBrowser)
+{
+  return static_cast<RemoteOpenFileParent*>(aActor)->OpenSendCloseDelete();
+}
+
+bool
 NeckoParent::DeallocPRemoteOpenFile(PRemoteOpenFileParent* actor)
 {
   delete actor;
@@ -428,4 +437,3 @@ NeckoParent::RecvCancelHTMLDNSPrefetch(const nsString& hostname,
 }
 
 }} // mozilla::net
-
