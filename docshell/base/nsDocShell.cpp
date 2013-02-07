@@ -5373,7 +5373,7 @@ nsDocShell::GetMixedContentChannel(nsIChannel **aMixedContentChannel)
 NS_IMETHODIMP
 nsDocShell::GetAllowMixedContentAndConnectionData(bool* aRootHasSecureConnection, bool* aAllowMixedContent, bool* aIsRootDocShell)
 {
-  *aRootHasSecureConnection = false;
+  *aRootHasSecureConnection = true;
   *aAllowMixedContent = false;
   *aIsRootDocShell = false;
 
@@ -5384,28 +5384,26 @@ nsDocShell::GetAllowMixedContentAndConnectionData(bool* aRootHasSecureConnection
 
   // now get the document from sameTypeRoot
   nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(sameTypeRoot);
-  NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
+  if (rootDoc) {
+    nsCOMPtr<nsIPrincipal> rootPrincipal = rootDoc->NodePrincipal();
 
-  nsCOMPtr<nsIPrincipal> rootPrincipal = rootDoc->NodePrincipal();
-  NS_ASSERTION(rootPrincipal, "No root principal from root document");
+    // For things with system principal (e.g. scratchpad) there is no uri
+    // aRootHasSecureConnection should be false.
+    nsCOMPtr<nsIURI> rootUri;
+    if (nsContentUtils::IsSystemPrincipal(rootPrincipal) ||
+        NS_FAILED(rootPrincipal->GetURI(getter_AddRefs(rootUri))) || !rootUri ||
+        NS_FAILED(rootUri->SchemeIs("https", aRootHasSecureConnection))) {
+      *aRootHasSecureConnection = false;
+    }
 
-  // For things with system principal (e.g. scratchpad) there is no uri
-  // aRootHasSecureConnection should remain false.
-  if (!nsContentUtils::IsSystemPrincipal(rootPrincipal)) {
-     nsCOMPtr<nsIURI> rootUri;
-     rootPrincipal->GetURI(getter_AddRefs(rootUri));
-     NS_ASSERTION(rootUri, "No root uri from root principal");
-     nsresult rv = rootUri->SchemeIs("https", aRootHasSecureConnection);
-     NS_ENSURE_SUCCESS(rv, rv);
+    // Check the root doc's channel against the root docShell's mMixedContentChannel to see
+    // if they are the same.  If they are the same, the user has overriden
+    // the block.
+    nsCOMPtr<nsIDocShell> rootDocShell = do_QueryInterface(sameTypeRoot);
+    nsCOMPtr<nsIChannel> mixedChannel;
+    rootDocShell->GetMixedContentChannel(getter_AddRefs(mixedChannel));
+    *aAllowMixedContent = mixedChannel && (mixedChannel == rootDoc->GetChannel());
   }
-
-  // Check the root doc's channel against the root docShell's mMixedContentChannel to see
-  // if they are the same.  If they are the same, the user has overriden
-  // the block.
-  nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(sameTypeRoot);
-  nsCOMPtr<nsIChannel> mixedChannel;
-  rootDocShell->GetMixedContentChannel(getter_AddRefs(mixedChannel));
-  *aAllowMixedContent = mixedChannel && (mixedChannel == rootDoc->GetChannel());
 
   return NS_OK;
 }
