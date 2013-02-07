@@ -9,7 +9,7 @@
 // notice, this list of conditions and the following disclaimer.
 //     * Redistributions in binary form must reproduce the above
 // copyright notice, this list of conditions and the following disclaimer
-// in the documentation and/or other materials provided with the
+// in the documentation and/or other materials provided with tohe
 // distribution.
 //     * Neither the name of Google Inc. nor the names of its
 // contributors may be used to endorse or promote products derived from
@@ -81,11 +81,20 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
     CFIFrameInfo* cfi_frame_info) {
   StackFrameARM* last_frame = static_cast<StackFrameARM*>(frames.back());
 
-  static const char* register_names[] = {
-    "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
-    "r8",  "r9",  "r10", "r11", "r12", "sp",  "lr",  "pc",
-    "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
-    "fps", "cpsr",
+  static const UniqueString *register_names[] = {
+    toUniqueString("r0"),  toUniqueString("r1"),
+    toUniqueString("r2"),  toUniqueString("r3"),
+    toUniqueString("r4"),  toUniqueString("r5"),
+    toUniqueString("r6"),  toUniqueString("r7"),
+    toUniqueString("r8"),  toUniqueString("r9"),
+    toUniqueString("r10"), toUniqueString("r11"),
+    toUniqueString("r12"), toUniqueString("sp"),
+    toUniqueString("lr"),  toUniqueString("pc"),
+    toUniqueString("f0"),  toUniqueString("f1"),
+    toUniqueString("f2"),  toUniqueString("f3"),
+    toUniqueString("f4"),  toUniqueString("f5"),
+    toUniqueString("f6"),  toUniqueString("f7"),
+    toUniqueString("fps"), toUniqueString("cpsr"),
     NULL
   };
 
@@ -93,7 +102,7 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   CFIFrameInfo::RegisterValueMap<u_int32_t> callee_registers;
   for (int i = 0; register_names[i]; i++)
     if (last_frame->context_validity & StackFrameARM::RegisterValidFlag(i))
-      callee_registers[register_names[i]] = last_frame->context.iregs[i];
+      callee_registers.set(register_names[i], last_frame->context.iregs[i]);
 
   // Use the STACK CFI data to recover the caller's register values.
   CFIFrameInfo::RegisterValueMap<u_int32_t> caller_registers;
@@ -104,13 +113,13 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   // Construct a new stack frame given the values the CFI recovered.
   scoped_ptr<StackFrameARM> frame(new StackFrameARM());
   for (int i = 0; register_names[i]; i++) {
-    CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
-      caller_registers.find(register_names[i]);
-    if (entry != caller_registers.end()) {
+    bool found = false;
+    u_int32_t v = caller_registers.get(&found, register_names[i]);
+    if (found) {
       // We recovered the value of this register; fill the context with the
       // value from caller_registers.
       frame->context_validity |= StackFrameARM::RegisterValidFlag(i);
-      frame->context.iregs[i] = entry->second;
+      frame->context.iregs[i] = v;
     } else if (4 <= i && i <= 11 && (last_frame->context_validity &
                                      StackFrameARM::RegisterValidFlag(i))) {
       // If the STACK CFI data doesn't mention some callee-saves register, and
@@ -123,18 +132,18 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   }
   // If the CFI doesn't recover the PC explicitly, then use .ra.
   if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_PC)) {
-    CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
-      caller_registers.find(".ra");
-    if (entry != caller_registers.end()) {
+    bool found = false;
+    u_int32_t v = caller_registers.get(&found, ustr__ZDra());
+    if (found) {
       if (fp_register_ == -1) {
         frame->context_validity |= StackFrameARM::CONTEXT_VALID_PC;
-        frame->context.iregs[MD_CONTEXT_ARM_REG_PC] = entry->second;
+        frame->context.iregs[MD_CONTEXT_ARM_REG_PC] = v;
       } else {
         // The CFI updated the link register and not the program counter.
         // Handle getting the program counter from the link register.
         frame->context_validity |= StackFrameARM::CONTEXT_VALID_PC;
         frame->context_validity |= StackFrameARM::CONTEXT_VALID_LR;
-        frame->context.iregs[MD_CONTEXT_ARM_REG_LR] = entry->second;
+        frame->context.iregs[MD_CONTEXT_ARM_REG_LR] = v;
         frame->context.iregs[MD_CONTEXT_ARM_REG_PC] =
             last_frame->context.iregs[MD_CONTEXT_ARM_REG_LR];
       }
@@ -142,11 +151,11 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   }
   // If the CFI doesn't recover the SP explicitly, then use .cfa.
   if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_SP)) {
-    CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
-      caller_registers.find(".cfa");
-    if (entry != caller_registers.end()) {
+    bool found = false;
+    u_int32_t v = caller_registers.get(&found, ustr__ZDcfa());
+    if (found) {
       frame->context_validity |= StackFrameARM::CONTEXT_VALID_SP;
-      frame->context.iregs[MD_CONTEXT_ARM_REG_SP] = entry->second;
+      frame->context.iregs[MD_CONTEXT_ARM_REG_SP] = v;
     }
   }
 

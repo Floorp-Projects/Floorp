@@ -40,30 +40,29 @@
 
 namespace google_breakpad {
 
-template <typename RegisterType, class RawContextType>
-bool SimpleCFIWalker<RegisterType, RawContextType>::FindCallerRegisters(
+template <typename RegisterValueType, class RawContextType>
+bool SimpleCFIWalker<RegisterValueType, RawContextType>::FindCallerRegisters(
     const MemoryRegion &memory,
     const CFIFrameInfo &cfi_frame_info,
     const RawContextType &callee_context,
     int callee_validity,
     RawContextType *caller_context,
     int *caller_validity) const {
-  typedef CFIFrameInfo::RegisterValueMap<RegisterType> ValueMap;
+  typedef CFIFrameInfo::RegisterValueMap<RegisterValueType> ValueMap;
   ValueMap callee_registers;
   ValueMap caller_registers;
-  // Just for brevity.
-  typename ValueMap::const_iterator caller_none = caller_registers.end();
 
   // Populate callee_registers with register values from callee_context.
   for (size_t i = 0; i < map_size_; i++) {
     const RegisterSet &r = register_map_[i];
     if (callee_validity & r.validity_flag)
-      callee_registers[r.name] = callee_context.*r.context_member;
+      callee_registers.set(r.name, callee_context.*r.context_member);
   }
 
   // Apply the rules, and see what register values they yield.
-  if (!cfi_frame_info.FindCallerRegs<RegisterType>(callee_registers, memory,
-                                                   &caller_registers))
+  if (!cfi_frame_info
+       .FindCallerRegs<RegisterValueType>(callee_registers, memory,
+                                          &caller_registers))
     return false;
 
   // Populate *caller_context with the values the rules placed in
@@ -72,12 +71,12 @@ bool SimpleCFIWalker<RegisterType, RawContextType>::FindCallerRegisters(
   *caller_validity = 0;
   for (size_t i = 0; i < map_size_; i++) {
     const RegisterSet &r = register_map_[i];
-    typename ValueMap::const_iterator caller_entry;
 
     // Did the rules provide a value for this register by its name?
-    caller_entry = caller_registers.find(r.name);
-    if (caller_entry != caller_none) {
-      caller_context->*r.context_member = caller_entry->second;
+    bool found = false;
+    RegisterValueType v = caller_registers.get(&found, r.name);
+    if (found) {
+      caller_context->*r.context_member = v;
       *caller_validity |= r.validity_flag;
       continue;
     }
@@ -85,9 +84,10 @@ bool SimpleCFIWalker<RegisterType, RawContextType>::FindCallerRegisters(
     // Did the rules provide a value for this register under its
     // alternate name?
     if (r.alternate_name) {
-      caller_entry = caller_registers.find(r.alternate_name);
-      if (caller_entry != caller_none) {
-        caller_context->*r.context_member = caller_entry->second;
+      found = false;
+      v = caller_registers.get(&found, r.alternate_name);
+      if (found) {
+        caller_context->*r.context_member = v;
         *caller_validity |= r.validity_flag;
         continue;
       }
