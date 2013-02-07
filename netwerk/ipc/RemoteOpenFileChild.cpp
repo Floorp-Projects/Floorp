@@ -186,11 +186,7 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 
   gNeckoChild->SendPRemoteOpenFileConstructor(this, uri, mTabChild);
 
-  // Can't seem to reply from within IPDL Parent constructor, so send open as
-  // separate message
-  SendAsyncOpenFile();
-
-  // The chrome process now has a logical ref to us until we call Send__delete
+  // The chrome process now has a logical ref to us until it calls Send__delete.
   AddIPDLReference();
 
   mListener = aListener;
@@ -216,13 +212,13 @@ RemoteOpenFileChild::OnCachedFileDescriptor(const nsAString& aPath,
   }
 #endif
 
-  HandleFileDescriptorAndNotifyListener(aFD, /* aFromRecvFileOpened */ false);
+  HandleFileDescriptorAndNotifyListener(aFD, /* aFromRecvDelete */ false);
 }
 
 void
 RemoteOpenFileChild::HandleFileDescriptorAndNotifyListener(
                                                       const FileDescriptor& aFD,
-                                                      bool aFromRecvFileOpened)
+                                                      bool aFromRecvDelete)
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   MOZ_NOT_REACHED("OS X and Windows shouldn't be doing IPDL here");
@@ -243,9 +239,11 @@ RemoteOpenFileChild::HandleFileDescriptorAndNotifyListener(
   nsRefPtr<TabChild> tabChild;
   mTabChild.swap(tabChild);
 
-  // If there is a pending callback and we're being called from IPDL then we
-  // need to cancel it.
-  if (tabChild && aFromRecvFileOpened) {
+  // If RemoteOpenFile reply (Recv__delete__) for app's application.zip comes
+  // back sooner than the parent-pushed fd (TabChild::RecvCacheFileDescriptor())
+  // have TabChild cancel running callbacks, since we'll call them in
+  // NotifyListener.
+  if (tabChild && aFromRecvDelete) {
     nsString path;
     if (NS_FAILED(mFile->GetPath(path))) {
       MOZ_NOT_REACHED("Couldn't get path from file!");
@@ -285,33 +283,12 @@ RemoteOpenFileChild::NotifyListener(nsresult aResult)
 //-----------------------------------------------------------------------------
 
 bool
-RemoteOpenFileChild::RecvFileOpened(const FileDescriptor& aFD)
+RemoteOpenFileChild::Recv__delete__(const FileDescriptor& aFD)
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   NS_NOTREACHED("OS X and Windows shouldn't be doing IPDL here");
 #else
-  HandleFileDescriptorAndNotifyListener(aFD, /* aFromRecvFileOpened */ true);
-
-  // This calls NeckoChild::DeallocPRemoteOpenFile(), which deletes |this| if
-  // IPDL holds the last reference.  Don't rely on |this| existing after here!
-  Send__delete__(this);
-#endif
-
-  return true;
-}
-
-bool
-RemoteOpenFileChild::RecvFileDidNotOpen()
-{
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
-  NS_NOTREACHED("OS X and Windows shouldn't be doing IPDL here");
-#else
-  HandleFileDescriptorAndNotifyListener(FileDescriptor(),
-                                        /* aFromRecvFileOpened */ true);
-
-  // This calls NeckoChild::DeallocPRemoteOpenFile(), which deletes |this| if
-  // IPDL holds the last reference.  Don't rely on |this| existing after here!
-  Send__delete__(this);
+  HandleFileDescriptorAndNotifyListener(aFD, /* aFromRecvDelete */ true);
 #endif
 
   return true;
