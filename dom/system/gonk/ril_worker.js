@@ -1350,10 +1350,17 @@ let RIL = {
       }
     }
 
+    // Return a new object to avoid global variable, PNN, be modified by accident.
+    let ret = null;
+
     if (pnnEntry) {
-      return [pnnEntry.fullName, pnnEntry.shortName];
+      ret = {
+        fullName: pnnEntry.fullName || "",
+        shortName: pnnEntry.shortName || "",
+      };
     }
-    return null;
+
+    return ret;
   },
 
   /**
@@ -3070,8 +3077,8 @@ let RIL = {
 
       let networkName = this.updateNetworkName();
       if (networkName) {
-        this.operator.longName = networkName[0];
-        this.operator.shortName = networkName[1];
+        this.operator.longName = networkName.fullName;
+        this.operator.shortName = networkName.shortName;
       } else {
         this.operator.longName = longName;
         this.operator.shortName = shortName;
@@ -8951,7 +8958,7 @@ let ICCRecordHelper = {
 
       if (ICCUtilsHelper.isICCServiceAvailable("PNN")) {
         if (DEBUG) debug("PNN: PNN is available");
-        this.getPNN();
+        this.readPNN();
       } else {
         if (DEBUG) debug("PNN: PNN is not available");
       }
@@ -9465,49 +9472,62 @@ let ICCRecordHelper = {
    * See 3GPP TS 31.102 Sec. 4.2.58 for USIM
    *     3GPP TS 51.011 Sec. 10.3.41 for SIM.
    */
-  getPNN: function getPNN() {
-    let pnn = [];
+  readPNN: function readPNN() {
     function callback(options) {
-      let pnnElement = {
-        fullName: "",
-        shortName: ""
-      };
-      let len = Buf.readUint32();
+      let pnnElement;
+      let strLen = Buf.readUint32();
+      let octetLen = strLen / 2;
       let readLen = 0;
-      while (len > readLen) {
+
+      while (readLen < octetLen) {
         let tlvTag = GsmPDUHelper.readHexOctet();
-        readLen = readLen + 2; // 1 Hex octet
+
         if (tlvTag == 0xFF) {
           // Unused byte
-          continue;
-        }
-        let tlvLen = GsmPDUHelper.readHexOctet();
-        let name;
-        switch (tlvTag) {
-        case PNN_IEI_FULL_NETWORK_NAME:
-          pnnElement.fullName = GsmPDUHelper.readNetworkName(tlvLen);
+          readLen++;
+          Buf.seekIncoming((octetLen - readLen) * PDU_HEX_OCTET_SIZE);
           break;
-        case PNN_IEI_SHORT_NETWORK_NAME:
-          pnnElement.shortName = GsmPDUHelper.readNetworkName(tlvLen);
-          break;
-        default:
-          Buf.seekIncoming(PDU_HEX_OCTET_SIZE * tlvLen);
         }
-        readLen += (tlvLen * 2 + 2);
-      }
-      if (DEBUG) {
-        debug("PNN: [" + (pnn.length + 1) + "]: " + JSON.stringify(pnnElement));
-      }
-      Buf.readStringDelimiter(len);
-      pnn.push(pnnElement);
 
-      if (options.p1 < options.totalRecords) {
+        // Needs this check to avoid initializing twice.
+        pnnElement = pnnElement || {};
+
+        let tlvLen = GsmPDUHelper.readHexOctet();
+
+        switch (tlvTag) {
+          case PNN_IEI_FULL_NETWORK_NAME:
+            pnnElement.fullName = GsmPDUHelper.readNetworkName(tlvLen);
+            break;
+          case PNN_IEI_SHORT_NETWORK_NAME:
+            pnnElement.shortName = GsmPDUHelper.readNetworkName(tlvLen);
+            break;
+          default:
+            Buf.seekIncoming(tlvLen * PDU_HEX_OCTET_SIZE);
+            break;
+        }
+
+        readLen += (tlvLen + 2); // +2 for tlvTag and tlvLen
+      }
+      Buf.readStringDelimiter(strLen);
+
+      if (pnnElement) {
+        pnn.push(pnnElement);
+      }
+
+      // Will ignore remaining records when got the contents of a record are all 0xff.
+      if (pnnElement && options.p1 < options.totalRecords) {
         ICCIOHelper.loadNextRecord(options);
       } else {
+        if (DEBUG) {
+          for (let i = 0; i < pnn.length; i++) {
+            debug("PNN: [" + i + "]: " + JSON.stringify(pnn[i]));
+          }
+        }
         RIL.iccInfoPrivate.PNN = pnn;
       }
     }
 
+    let pnn = [];
     ICCIOHelper.loadLinearFixedEF({fileId: ICC_EF_PNN,
                                    callback: callback.bind(this)});
   },

@@ -882,19 +882,19 @@ struct JSRuntime : js::RuntimeFriendFields,
     /*
      * This is true if we are in the middle of a brain transplant (e.g.,
      * JS_TransplantObject) or some other operation that can manipulate
-     * dead compartments.
+     * dead zones.
      */
-    bool                gcManipulatingDeadCompartments;
+    bool                gcManipulatingDeadZones;
 
     /*
      * This field is incremented each time we mark an object inside a
-     * compartment with no incoming cross-compartment pointers. Typically if
+     * zone with no incoming cross-compartment pointers. Typically if
      * this happens it signals that an incremental GC is marking too much
      * stuff. At various times we check this counter and, if it has changed, we
      * run an immediate, non-incremental GC to clean up the dead
-     * compartments. This should happen very rarely.
+     * zones. This should happen very rarely.
      */
-    unsigned            gcObjectsMarkedInDeadCompartments;
+    unsigned            gcObjectsMarkedInDeadZones;
 
     bool                gcPoke;
 
@@ -1640,9 +1640,7 @@ struct JSContext : js::ContextFriendFields,
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime->onOutOfMemory(p, nbytes, this);
     }
-    void updateMallocCounter(size_t nbytes) {
-        runtime->updateMallocCounter(compartment, nbytes);
-    }
+    void updateMallocCounter(size_t nbytes);
     void reportAllocationOverflow() {
         js_ReportAllocationOverflow(this);
     }

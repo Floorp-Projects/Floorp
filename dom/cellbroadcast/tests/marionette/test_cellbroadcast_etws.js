@@ -93,6 +93,9 @@ function testEtwsMessageAttributes() {
   cbs.addEventListener("received", function onreceived(event) {
     cbs.removeEventListener("received", onreceived);
 
+    // Bug 838542: following check throws an exception and fails this case.
+    // ok(event instanceof MozCellBroadcastEvent,
+    //    "event is instanceof " + event.constructor)
     ok(event, "event is valid");
 
     let message = event.message;

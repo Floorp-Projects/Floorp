@@ -1013,6 +1013,7 @@ js::ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccesso
     return true;
 }
 
+// Duplicated in Object.cpp
 static bool
 DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
 {
@@ -1023,7 +1024,7 @@ DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
 
     bool dummy;
     for (size_t i = 0, len = ids.length(); i < len; i++) {
-        if (!DefineProperty(cx, obj, Handle<jsid>::fromMarkedLocation(&ids[i]), descs[i], true, &dummy))
+        if (!DefineProperty(cx, obj, ids.handleAt(i), descs[i], true, &dummy))
             return false;
     }
 
@@ -2015,8 +2016,8 @@ JSObject::swap(JSContext *cx, JSObject *other_)
     RootedObject self(cx, this);
     RootedObject other(cx, other_);
 
-    AutoMarkInDeadCompartment adc1(self->compartment());
-    AutoMarkInDeadCompartment adc2(other->compartment());
+    AutoMarkInDeadZone adc1(self->zone());
+    AutoMarkInDeadZone adc2(other->zone());
 
     // Ensure swap doesn't cause a finalizer to not be run.
     JS_ASSERT(IsBackgroundFinalized(getAllocKind()) ==
@@ -2667,7 +2668,7 @@ JSObject::growElements(JSContext *cx, unsigned newcap)
 {
     size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
 
-    if (!growElements(&cx->compartment->allocator, newcap)) {
+    if (!growElements(&cx->zone()->allocator, newcap)) {
         JS_ReportOutOfMemory(cx);
         return false;
     }

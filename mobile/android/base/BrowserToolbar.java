@@ -216,12 +216,22 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 Tabs.getInstance().getSelectedTab().doBack();
             }
         });
+        mBack.setOnLongClickListener(new Button.OnLongClickListener() {
+            public boolean onLongClick(View view) {
+                return Tabs.getInstance().getSelectedTab().showBackHistory();
+            }
+        });
 
         mForward = (ImageButton) mLayout.findViewById(R.id.forward);
         mForward.setEnabled(false); // initialize the forward button to not be enabled
         mForward.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View view) {
                 Tabs.getInstance().getSelectedTab().doForward();
+            }
+        });
+        mForward.setOnLongClickListener(new Button.OnLongClickListener() {
+            public boolean onLongClick(View view) {
+                return Tabs.getInstance().getSelectedTab().showForwardHistory();
             }
         });
 

@@ -337,6 +337,9 @@ MOCHITEST_FILES = \
 		test_htmlcollection.html \
 		test_formelements.html \
 		test_rowscollection.html \
+		test_map_attributes_reflection.html \
+		test_meta_attributes_reflection.html \
+		test_mod_attributes_reflection.html \
 		test_mozaudiochannel.html \
 		test_style_attributes_reflection.html \
 		$(NULL)

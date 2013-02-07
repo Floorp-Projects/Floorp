@@ -379,3 +379,8 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
   background-image: linear-gradient(#4b5000, #515700);
 }
+
+toolbar[mode="full"] > #downloads-indicator > .toolbarbutton-text {
+  margin: 0;
+  text-align: center;
+}

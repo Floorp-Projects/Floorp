@@ -115,9 +115,7 @@ SVGGradientElement::SpreadMethod()
 already_AddRefed<nsIDOMSVGAnimatedString>
 SVGGradientElement::Href()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedString> href;
-  mStringAttributes[HREF].ToDOMAnimatedString(getter_AddRefs(href), this);
-  return href.forget();
+  return mStringAttributes[HREF].ToDOMAnimatedString(this);
 }
 
 NS_IMETHODIMP
