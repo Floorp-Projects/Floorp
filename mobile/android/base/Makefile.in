@@ -1227,6 +1227,10 @@ jars:
 	@echo "MKDIR jars"
 	$(NSINSTALL) -D jars
 
+jni-stubs.inc: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar
+	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) org.mozilla.gecko.GeckoAppShell
+	$(PYTHON) $(topsrcdir)/mobile/android/base/jni-generator.py javah.out $@
+
 PP_RES_XML= \
   $(SYNC_PP_RES_XML) \
   $(FENNEC_PP_XML_FILES) \
@@ -1336,6 +1340,8 @@ R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDP
 gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(RES_BRANDING_DRAWABLE_HDPI) $(RES_BRANDING_DRAWABLE_XHDPI) $(PP_RES_XML) res/values/defaults.xml res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
-libs:: classes.dex package-name.txt
+libs:: classes.dex package-name.txt jni-stubs.inc
 	$(INSTALL) classes.dex $(FINAL_TARGET)
 	$(INSTALL) package-name.txt $(FINAL_TARGET)
+	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null) || \
+	 (echo "*** Error: The jni-stubs have changed. Copy $(CURDIR)/jni-stubs.inc to $(topsrcdir)/mozglue/android" && exit 1)
