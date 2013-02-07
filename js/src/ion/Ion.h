@@ -327,7 +327,7 @@ void FinishOffThreadBuilder(IonBuilder *builder);
 
 static inline bool IsEnabled(JSContext *cx)
 {
-    return cx->hasRunOption(JSOPTION_ION) && cx->typeInferenceEnabled();
+    return cx->hasOption(JSOPTION_ION) && cx->typeInferenceEnabled();
 }
 
 void ForbidCompilation(JSContext *cx, UnrootedScript script);

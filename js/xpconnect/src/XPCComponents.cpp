@@ -4471,7 +4471,7 @@ SetBoolOption(JSContext* cx, uint32_t aOption, bool aValue)
     } else {
         options &= ~aOption;
     }
-    JS_SetOptions(cx, options & JSALLOPTION_MASK);
+    JS_SetOptions(cx, options & JSOPTION_MASK);
     return NS_OK;
 }
 
