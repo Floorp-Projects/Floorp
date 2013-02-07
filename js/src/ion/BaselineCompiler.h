@@ -184,7 +184,13 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     bool emitPrologue();
     bool emitEpilogue();
-    bool emitIC(ICStub *stub);
+    bool emitIC(ICStub *stub, bool isForOp);
+    bool emitOpIC(ICStub *stub) {
+        return emitIC(stub, true);
+    }
+    bool emitNonOpIC(ICStub *stub) {
+        return emitIC(stub, false);
+    }
     bool emitStackCheck();
     bool emitInterruptCheck();
     bool emitUseCountIncrement();

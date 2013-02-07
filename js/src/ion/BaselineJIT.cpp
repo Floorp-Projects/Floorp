@@ -235,6 +235,9 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
     if (scriptArg->baseline == BASELINE_DISABLED_SCRIPT)
         return Method_Skipped;
 
+    if (scriptArg->length > BaselineScript::MAX_JSSCRIPT_LENGTH)
+        return Method_CantCompile;
+
     RootedScript script(cx, scriptArg);
 
     // If constructing, allocate a new |this| object.
@@ -356,6 +359,10 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
     // FIXME: Change this to something better than linear search (binary probe)?
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry &entry = icEntry(i);
+
+        if (!entry.isForOp())
+            continue;
+
         if (entry.pcOffset() == pcOffset)
             return entry;
     }
