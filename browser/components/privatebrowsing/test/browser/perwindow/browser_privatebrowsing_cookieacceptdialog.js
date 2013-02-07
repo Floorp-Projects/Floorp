@@ -117,7 +117,7 @@ function test() {
           return;
         }
         selectedBrowser.removeEventListener("load", onLoad, true);
-        aCallback(aWin);
+        executeSoon(function() aCallback(aWin));
       }, true);
       selectedBrowser.loadURI(BLANK_URL);
     });
@@ -125,22 +125,22 @@ function test() {
 
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
-    windowsToClose.forEach(function(win) {
-      win.close();
+    windowsToClose.forEach(function(aWin) {
+      aWin.close();
     });
   });
 
   // Ask all cookies
   Services.prefs.setIntPref("network.cookie.lifetimePolicy", 1);
 
-  testOnWindow(true, function(aPrivWin) {
-    info("Test on private window");
-    checkRememberOption(true, aPrivWin, function() {
-      checkSettingDialog(true, aPrivWin, function() {
-        testOnWindow(false, function(aWin) {
-          info("Test on public window");
-          checkRememberOption(false, aWin, function() {
-            checkSettingDialog(false, aWin, finish);
+  testOnWindow(false, function(aWin) {
+    info("Test on public window");
+    checkRememberOption(false, aWin, function() {
+      checkSettingDialog(false, aWin, function() {
+        testOnWindow(true, function(aPrivWin) {
+          info("Test on private window");
+          checkRememberOption(true, aPrivWin, function() {
+            checkSettingDialog(true, aPrivWin, finish);
           });
         });
       });
