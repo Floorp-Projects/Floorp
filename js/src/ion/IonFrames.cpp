@@ -382,6 +382,9 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
         if (pcOffset >= tn->start + tn->length)
             continue;
 
+        // Unwind scope chain (pop block objects).
+        UnwindScope(cx, frame.baselineFrame(), tn->stackDepth);
+
         // Compute base pointer and stack pointer.
         rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
         rfe->stackPointer = rfe->framePointer - BaselineFrame::Size() -

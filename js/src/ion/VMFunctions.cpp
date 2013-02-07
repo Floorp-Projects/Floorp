@@ -507,15 +507,11 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
 {
     *mustReturn = false;
 
-    if (frame->isEvalFrame()) {
-        // For eval frames, ScopeIter needs access to the previous frame.
-        // To avoid quadratic behavior, initialize the evalPrev_ field
-        // here.
-        ScriptFrameIter iter(cx);
-        JS_ASSERT(iter.abstractFramePtr() == AbstractFramePtr(frame));
-        ++iter;
-        frame->setEvalPrev(iter.abstractFramePtr());
-    }
+    // For eval frames, ScopeIter needs access to the previous frame.
+    // To avoid quadratic behavior, initialize the evalPrev_ field
+    // here.
+    if (frame->isEvalFrame())
+        frame->initEvalPrev(cx);
 
     JSTrapStatus status = ScriptDebugPrologue(cx, frame);
     switch (status) {
@@ -541,6 +537,9 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
 bool
 DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
 {
+    // Unwind scope chain to stack depth 0.
+    UnwindScope(cx, frame, 0);
+
     // If ScriptDebugEpilogue returns |true| we have to return the frame's
     // return value. If it returns |false|, the debugger threw an exception.
     // In both cases we have to pop debug scopes.
