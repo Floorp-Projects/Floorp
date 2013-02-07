@@ -35,6 +35,7 @@ simple_events = [
     'MozCellBroadcastEvent',
     'MozVoicemailEvent',
 #endif
+    'MozSmsEvent',
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent'
   ]

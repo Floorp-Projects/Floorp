@@ -16,8 +16,8 @@ include $(topsrcdir)/dom/dom-config.mk
 XPIDLSRCS = \
   nsIDOMNavigatorSms.idl \
   nsIDOMSmsManager.idl \
-  nsIDOMSmsMessage.idl \
-  nsIDOMSmsEvent.idl \
+  nsIDOMMozSmsMessage.idl \
+  nsIDOMMozSmsEvent.idl \
   nsIDOMSmsRequest.idl \
   nsIDOMSmsFilter.idl \
   nsIDOMSmsCursor.idl \
