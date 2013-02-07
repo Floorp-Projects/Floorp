@@ -14,3 +14,9 @@ XPCSHELL_TESTS = xpcshell
 
 include $(topsrcdir)/config/rules.mk
 
+_BROWSER_FILES = \
+                 browser_TelemetryTimestamps.js \
+                 $(NULL)
+
+libs::	$(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
