@@ -1443,10 +1443,12 @@ ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL
 
 ifdef XPI_NAME
-# For langpack packaging we may specify that an application
+ifdef XPI_ROOT_APPID
+# For add-on packaging we may specify that an application
 # sub-dir should be added to the root chrome manifest with
 # a specific application id.
-MAKE_JARS_FLAGS += $(addprefix --root-manifest-entry-appid=,$(XPI_ROOT_APPID))
+MAKE_JARS_FLAGS += --root-manifest-entry-appid="$(XPI_ROOT_APPID)"
+endif
 
 # if DIST_SUBDIR is defined but XPI_ROOT_APPID is not there's
 # no way langpacks will get packaged right, so error out.
