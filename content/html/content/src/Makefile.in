@@ -42,6 +42,7 @@ EXPORTS_mozilla/dom = \
 		HTMLLabelElement.h \
 		HTMLLIElement.h \
 		HTMLMapElement.h \
+		HTMLMetaElement.h \
 		HTMLModElement.h \
 		HTMLParagraphElement.h \
 		HTMLPreElement.h \
@@ -95,7 +96,7 @@ CPPSRCS		= \
 		HTMLMapElement.cpp \
 		nsHTMLMenuElement.cpp \
 		nsHTMLMenuItemElement.cpp \
-		nsHTMLMetaElement.cpp \
+		HTMLMetaElement.cpp \
 		nsHTMLMeterElement.cpp \
 		HTMLModElement.cpp \
 		HTMLObjectElement.cpp \
