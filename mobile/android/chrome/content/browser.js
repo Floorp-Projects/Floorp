@@ -183,6 +183,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
     Services.obs.addObserver(this, "Session:Back", false);
+    Services.obs.addObserver(this, "Session:ShowHistory", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
@@ -1117,6 +1118,11 @@ var BrowserApp = {
         browser.stop();
         break;
 
+      case "Session:ShowHistory":
+        let data = JSON.parse(aData);
+        this.showHistory(data.fromIndex, data.toIndex, data.selIndex);
+        break;
+
       case "Tab:Load": {
         let data = JSON.parse(aData);
 
@@ -1261,6 +1267,36 @@ var BrowserApp = {
   // nsIAndroidBrowserApp
   getBrowserTab: function(tabId) {
     return this.getTabForId(tabId);
+  },
+
+  // This method will print a list from fromIndex to toIndex, optionally
+  // selecting selIndex(if fromIndex<=selIndex<=toIndex)
+  showHistory: function(fromIndex, toIndex, selIndex) {
+    let browser = this.selectedBrowser;
+    let result = {
+      type: "Prompt:Show",
+      multiple: false,
+      selected: [],
+      listitems: []
+    };
+    let hist = browser.sessionHistory;
+    for (let i = toIndex; i >= fromIndex; i--) {
+      let entry = hist.getEntryAtIndex(i, false);
+      let item = {
+        label: entry.title || entry.URI.spec,
+        isGroup: false,
+        inGroup: false,
+        disabled: false,
+        id: i
+      };
+      result.listitems.push(item);
+      result.selected.push(i == selIndex);
+    }
+    let data = JSON.parse(sendMessageToJava(result));
+    let selected = data.button;
+    if (selected == -1)
+      return;
+    browser.gotoIndex(toIndex-selected);
   },
 };
 
