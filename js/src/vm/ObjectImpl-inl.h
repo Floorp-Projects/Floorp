@@ -191,21 +191,13 @@ js::ObjectImpl::nativeGetSlot(uint32_t slot) const
     return getSlot(slot);
 }
 
-static JS_ALWAYS_INLINE JSCompartment *
-ValueCompartment(const js::Value &value)
-{
-    JS_ASSERT(value.isMarkable());
-    return static_cast<js::gc::Cell *>(value.toGCThing())->compartment();
-}
-
 #ifdef DEBUG
 inline bool
-IsValueInCompartment(js::Value v, JSCompartment *comp)
+IsObjectValueInCompartment(js::Value v, JSCompartment *comp)
 {
-    if (!v.isMarkable())
+    if (!v.isObject())
         return true;
-    JSCompartment *vcomp = ValueCompartment(v);
-    return vcomp == comp->rt->atomsCompartment || vcomp == comp;
+    return v.toObject().compartment() == comp;
 }
 #endif
 
@@ -213,7 +205,7 @@ inline void
 js::ObjectImpl::setSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(slotInRange(slot));
-    MOZ_ASSERT(IsValueInCompartment(value, compartment()));
+    MOZ_ASSERT(IsObjectValueInCompartment(value, compartment()));
     getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
 }
 
@@ -229,7 +221,7 @@ js::ObjectImpl::initSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(getSlot(slot).isUndefined());
     MOZ_ASSERT(slotInRange(slot));
-    MOZ_ASSERT(IsValueInCompartment(value, compartment()));
+    MOZ_ASSERT(IsObjectValueInCompartment(value, asObjectPtr()->compartment()));
     initSlotUnchecked(slot, value);
 }
 
