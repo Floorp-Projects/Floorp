@@ -3,117 +3,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMHTMLMeterElement.h"
-#include "nsGenericHTMLElement.h"
-#include "nsAttrValue.h"
-#include "nsAttrValueInlines.h"
-#include "nsEventStateManager.h"
-#include "nsAlgorithm.h"
-#include <algorithm>
-
-using namespace mozilla::dom;
-
-class nsHTMLMeterElement : public nsGenericHTMLElement,
-                           public nsIDOMHTMLMeterElement
-{
-public:
-  nsHTMLMeterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLMeterElement();
-
-  /* nsISupports */
-  NS_DECL_ISUPPORTS_INHERITED
-
-  /* nsIDOMNode */
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  /* nsIDOMElement */
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  /* nsIDOMHTMLElement */
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  /* nsIDOMHTMLMeterElement */
-  NS_DECL_NSIDOMHTMLMETERELEMENT
-
-  virtual nsEventStates IntrinsicState() const;
-
-  nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
-
-  bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
-                      const nsAString& aValue, nsAttrValue& aResult);
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-
-private:
-
-  static const double kDefaultValue;
-  static const double kDefaultMin;
-  static const double kDefaultMax;
-
-  /**
-   * Returns the optimum state of the element.
-   * NS_EVENT_STATE_OPTIMUM if the actual value is in the optimum region.
-   * NS_EVENT_STATE_SUB_OPTIMUM if the actual value is in the sub-optimal region.
-   * NS_EVENT_STATE_SUB_SUB_OPTIMUM if the actual value is in the sub-sub-optimal region.
-   *
-   * @return the optimum state of the element.
-   */
-  nsEventStates GetOptimumState() const;
-
-  /* @return the minimum value */
-  double GetMin() const;
-
-  /* @return the maximum value */
-  double GetMax() const;
-
-  /* @return the actual value */
-  double GetValue() const;
-
-  /* @return the low value */
-  double GetLow() const;
-
-  /* @return the high value */
-  double GetHigh() const;
-
-  /* @return the optimum value */
-  double GetOptimum() const;
-};
-
-const double nsHTMLMeterElement::kDefaultValue =  0.0;
-const double nsHTMLMeterElement::kDefaultMin   =  0.0;
-const double nsHTMLMeterElement::kDefaultMax   =  1.0;
+#include "HTMLMeterElement.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Meter)
+DOMCI_NODE_DATA(HTMLMeterElement, mozilla::dom::HTMLMeterElement)
 
 
-nsHTMLMeterElement::nsHTMLMeterElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+namespace mozilla {
+namespace dom {
+
+const double HTMLMeterElement::kDefaultValue =  0.0;
+const double HTMLMeterElement::kDefaultMin   =  0.0;
+const double HTMLMeterElement::kDefaultMax   =  1.0;
+
+
+HTMLMeterElement::HTMLMeterElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
-nsHTMLMeterElement::~nsHTMLMeterElement()
+HTMLMeterElement::~HTMLMeterElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLMeterElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLMeterElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLMeterElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLMeterElement, Element)
 
-DOMCI_NODE_DATA(HTMLMeterElement, nsHTMLMeterElement)
 
-NS_INTERFACE_TABLE_HEAD(nsHTMLMeterElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLMeterElement,
+NS_INTERFACE_TABLE_HEAD(HTMLMeterElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLMeterElement,
                                    nsIDOMHTMLMeterElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLMeterElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLMeterElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLMeterElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLMeterElement)
+NS_IMPL_ELEMENT_CLONE(HTMLMeterElement)
 
 
 nsEventStates
-nsHTMLMeterElement::IntrinsicState() const
+HTMLMeterElement::IntrinsicState() const
 {
   nsEventStates state = nsGenericHTMLElement::IntrinsicState();
 
@@ -123,7 +51,7 @@ nsHTMLMeterElement::IntrinsicState() const
 }
 
 bool
-nsHTMLMeterElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
+HTMLMeterElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
                                  const nsAString& aValue, nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
@@ -144,7 +72,7 @@ nsHTMLMeterElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
  */
 
 double
-nsHTMLMeterElement::GetMin() const
+HTMLMeterElement::GetMin() const
 {
   /**
    * If the attribute min is defined, the minimum is this value.
@@ -158,7 +86,7 @@ nsHTMLMeterElement::GetMin() const
 }
 
 double
-nsHTMLMeterElement::GetMax() const
+HTMLMeterElement::GetMax() const
 {
   /**
    * If the attribute max is defined, the maximum is this value.
@@ -179,7 +107,7 @@ nsHTMLMeterElement::GetMax() const
 }
 
 double
-nsHTMLMeterElement::GetValue() const
+HTMLMeterElement::GetValue() const
 {
   /**
    * If the attribute value is defined, the actual value is this value.
@@ -208,7 +136,7 @@ nsHTMLMeterElement::GetValue() const
 }
 
 double
-nsHTMLMeterElement::GetLow() const
+HTMLMeterElement::GetLow() const
 {
   /**
    * If the low value is defined, the low value is this value.
@@ -236,7 +164,7 @@ nsHTMLMeterElement::GetLow() const
 }
 
 double
-nsHTMLMeterElement::GetHigh() const
+HTMLMeterElement::GetHigh() const
 {
   /**
    * If the high value is defined, the high value is this value.
@@ -264,7 +192,7 @@ nsHTMLMeterElement::GetHigh() const
 }
 
 double
-nsHTMLMeterElement::GetOptimum() const
+HTMLMeterElement::GetOptimum() const
 {
   /**
    * If the optimum value is defined, the optimum value is this value.
@@ -301,85 +229,85 @@ nsHTMLMeterElement::GetOptimum() const
  */
 
 NS_IMETHODIMP
-nsHTMLMeterElement::GetMin(double* aValue)
+HTMLMeterElement::GetMin(double* aValue)
 {
   *aValue = GetMin();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::SetMin(double aValue)
+HTMLMeterElement::SetMin(double aValue)
 {
   return SetDoubleAttr(nsGkAtoms::min, aValue);
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::GetMax(double* aValue)
+HTMLMeterElement::GetMax(double* aValue)
 {
   *aValue = GetMax();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::SetMax(double aValue)
+HTMLMeterElement::SetMax(double aValue)
 {
   return SetDoubleAttr(nsGkAtoms::max, aValue);
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::GetValue(double* aValue)
+HTMLMeterElement::GetValue(double* aValue)
 {
   *aValue = GetValue();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::SetValue(double aValue)
+HTMLMeterElement::SetValue(double aValue)
 {
   return SetDoubleAttr(nsGkAtoms::value, aValue);
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::GetLow(double* aValue)
+HTMLMeterElement::GetLow(double* aValue)
 {
   *aValue = GetLow();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::SetLow(double aValue)
+HTMLMeterElement::SetLow(double aValue)
 {
   return SetDoubleAttr(nsGkAtoms::low, aValue);
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::GetHigh(double* aValue)
+HTMLMeterElement::GetHigh(double* aValue)
 {
   *aValue = GetHigh();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::SetHigh(double aValue)
+HTMLMeterElement::SetHigh(double aValue)
 {
   return SetDoubleAttr(nsGkAtoms::high, aValue);
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::GetOptimum(double* aValue)
+HTMLMeterElement::GetOptimum(double* aValue)
 {
   *aValue = GetOptimum();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLMeterElement::SetOptimum(double aValue)
+HTMLMeterElement::SetOptimum(double aValue)
 {
   return SetDoubleAttr(nsGkAtoms::optimum, aValue);
 }
 
 nsEventStates
-nsHTMLMeterElement::GetOptimumState() const
+HTMLMeterElement::GetOptimumState() const
 {
   /*
    * If the optimum value is in [minimum, low[,
@@ -421,3 +349,5 @@ nsHTMLMeterElement::GetOptimumState() const
   return NS_EVENT_STATE_SUB_OPTIMUM;
 }
 
+} // namespace dom
+} // namespace mozilla
