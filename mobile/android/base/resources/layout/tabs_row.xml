@@ -11,7 +11,8 @@
               android:paddingLeft="12dip"
               android:paddingRight="12dip"
               android:paddingTop="6dip"
-              android:paddingBottom="6dip">
+              android:paddingBottom="6dip"
+              android:background="@drawable/tab_row">
 
     <LinearLayout android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
