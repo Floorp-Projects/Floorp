@@ -282,6 +282,11 @@ struct ArenaLists {
         }
     }
 
+    static uintptr_t getFreeListOffset(AllocKind thingKind) {
+        uintptr_t offset = offsetof(ArenaLists, freeLists);
+        return offset + thingKind * sizeof(FreeSpan);
+    }
+
     const FreeSpan *getFreeList(AllocKind thingKind) const {
         return &freeLists[thingKind];
     }
