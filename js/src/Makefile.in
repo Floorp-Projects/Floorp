@@ -233,6 +233,7 @@ EXPORTS_js = \
 		LegacyIntTypes.h \
 		MemoryMetrics.h \
 		PropertyKey.h \
+		RequiredDefines.h \
 		TemplateLib.h \
 		Utility.h \
 		Value.h \
