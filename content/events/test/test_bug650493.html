@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650493
 <script class="testbody" type="text/javascript">
 
 function getNodes() {
-  var walker = document.createTreeWalker($('content'), NodeFilter.SHOW_ALL, null, false);
+  var walker = document.createTreeWalker($('content'), NodeFilter.SHOW_ALL, null);
   var nodes = [];
   do {
     nodes.push(walker.currentNode);
@@ -46,7 +46,7 @@ root = $('content');
 root.addEventListener("DOMNodeInserted", function(e) {
   mutateCount++;
   is(e.isTrusted, true, "untrusted mutation event");
-  var w = document.createTreeWalker(e.target, NodeFilter.SHOW_ALL, null, false);
+  var w = document.createTreeWalker(e.target, NodeFilter.SHOW_ALL, null);
   do {
     is(nodes.indexOf(w.currentNode), -1, "already have inserted node (" + w.currentNode + ") when " + testName);
     nodes.push(w.currentNode);
@@ -55,7 +55,7 @@ root.addEventListener("DOMNodeInserted", function(e) {
 root.addEventListener("DOMNodeRemoved", function(e) {
   mutateCount++;
   is(e.isTrusted, true, "untrusted mutation event");
-  var w = document.createTreeWalker(e.target, NodeFilter.SHOW_ALL, null, false);
+  var w = document.createTreeWalker(e.target, NodeFilter.SHOW_ALL, null);
   do {
     var index = nodes.indexOf(w.currentNode);
     ok(index != -1, "missing removed node (" + w.currentNode + ") when " + testName);

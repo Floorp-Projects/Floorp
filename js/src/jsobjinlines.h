@@ -523,9 +523,9 @@ inline void
 JSObject::initDenseElements(unsigned dstStart, const js::Value *src, unsigned count)
 {
     JS_ASSERT(dstStart + count <= getDenseCapacity());
-    JS::Zone *zone = this->zone();
+    JSRuntime *rt = runtime();
     for (unsigned i = 0; i < count; ++i)
-        elements[dstStart + i].init(zone, this, js::HeapSlot::Element, dstStart + i, src[i]);
+        elements[dstStart + i].init(rt, this, js::HeapSlot::Element, dstStart + i, src[i]);
 }
 
 inline void
@@ -561,7 +561,7 @@ JSObject::moveDenseElements(unsigned dstStart, unsigned srcStart, unsigned count
         }
     } else {
         memmove(elements + dstStart, elements + srcStart, count * sizeof(js::HeapSlot));
-        DenseRangeWriteBarrierPost(zone, this, dstStart, count);
+        DenseRangeWriteBarrierPost(runtime(), this, dstStart, count);
     }
 }
 
@@ -597,12 +597,12 @@ JSObject::ensureDenseInitializedLength(JSContext *cx, uint32_t index, uint32_t e
         markDenseElementsNotPacked(cx);
 
     if (initlen < index + extra) {
-        JS::Zone *zone = this->zone();
+        JSRuntime *rt = runtime();
         size_t offset = initlen;
         for (js::HeapSlot *sp = elements + initlen;
              sp != elements + (index + extra);
              sp++, offset++)
-            sp->init(zone, this, js::HeapSlot::Element, offset, js::MagicValue(JS_ELEMENTS_HOLE));
+            sp->init(rt, this, js::HeapSlot::Element, offset, js::MagicValue(JS_ELEMENTS_HOLE));
         initlen = index + extra;
     }
 }
@@ -668,10 +668,10 @@ JSObject::parExtendDenseElements(js::Allocator *alloc, js::Value *v, uint32_t ex
     js::HeapSlot *sp = elements + initializedLength;
     if (v) {
         for (uint32_t i = 0; i < extra; i++)
-            sp[i].init(zone(), this, js::HeapSlot::Element, initializedLength+i, v[i]);
+            sp[i].init(runtime(), this, js::HeapSlot::Element, initializedLength+i, v[i]);
     } else {
         for (uint32_t i = 0; i < extra; i++) {
-            sp[i].init(zone(), this, js::HeapSlot::Element,
+            sp[i].init(runtime(), this, js::HeapSlot::Element,
                        initializedLength + i, js::MagicValue(JS_ELEMENTS_HOLE));
         }
     }

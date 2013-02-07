@@ -350,7 +350,6 @@ BookmarkObserver.prototype = {
     if (!this._batch)
       AutoCompleteUtils.update();
   },
-  onBeforeItemRemoved: function() {},
   onItemRemoved: function() {
     if (!this._batch)
       AutoCompleteUtils.update();

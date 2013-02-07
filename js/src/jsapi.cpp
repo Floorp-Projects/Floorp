@@ -814,6 +814,10 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcObjectsMarkedInDeadCompartments(0),
     gcPoke(false),
     heapState(Idle),
+#ifdef JSGC_GENERATIONAL
+    gcNursery(),
+    gcStoreBuffer(&gcNursery),
+#endif
 #ifdef JS_GC_ZEAL
     gcZeal_(0),
     gcZealFrequency(0),

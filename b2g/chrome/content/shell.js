@@ -69,6 +69,12 @@ XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
 });
 #endif
 
+#ifdef MOZ_SERVICES_CAPTIVEDETECT
+XPCOMUtils.defineLazyServiceGetter(Services, 'captivePortalDetector',
+                                  '@mozilla.org/services/captive-detector;1',
+                                  'nsICaptivePortalDetector');
+#endif
+
 function getContentWindow() {
   return shell.contentBrowser.contentWindow;
 }
@@ -284,6 +290,7 @@ var shell = {
     AccessFu.attach(window);
     UserAgentOverrides.init();
     IndexedDBPromptHelper.init();
+    CaptivePortalLoginHelper.init();
 
     // XXX could factor out into a settings->pref map.  Not worth it yet.
     SettingsListener.observe("debug.fps.enabled", false, function(value) {
@@ -645,6 +652,9 @@ var CustomEventManager = {
       case 'remote-debugger-prompt':
         RemoteDebugger.handleEvent(detail);
         break;
+      case 'captive-portal-login-cancel':
+        CaptivePortalLoginHelper.handleEvent(detail);
+        break;
     }
   }
 }
@@ -994,6 +1004,19 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
     },
     "ipc:content-shutdown", false);
 })();
+
+var CaptivePortalLoginHelper = {
+  init: function init() {
+    Services.obs.addObserver(this, 'captive-portal-login', false);
+    Services.obs.addObserver(this, 'captive-portal-login-abort', false);
+  },
+  handleEvent: function handleEvent(detail) {
+    Services.captivePortalDetector.cancelLogin(detail.id);
+  },
+  observe: function observe(subject, topic, data) {
+    shell.sendChromeEvent(JSON.parse(data));
+  }
+}
 
 // Listen for crashes submitted through the crash reporter UI.
 window.addEventListener('ContentStart', function cr_onContentStart() {

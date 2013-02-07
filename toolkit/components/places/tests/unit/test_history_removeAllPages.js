@@ -14,7 +14,6 @@ function promiseOnClearHistoryObserved() {
     onEndUpdateBatch: function() {},
     onVisit: function() {},
     onTitleChanged: function() {},
-    onBeforeDeleteURI: function() {},
     onDeleteURI: function(aURI) {},
     onPageChanged: function() {},
     onDeleteVisits: function() {},

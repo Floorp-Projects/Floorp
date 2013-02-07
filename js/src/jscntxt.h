@@ -30,6 +30,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "gc/Statistics.h"
+#include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 #include "vm/DateTime.h"
@@ -902,6 +903,11 @@ struct JSRuntime : js::RuntimeFriendFields,
     bool isHeapBusy() { return heapState != js::Idle; }
 
     bool isHeapCollecting() { return heapState == js::Collecting; }
+
+#ifdef JSGC_GENERATIONAL
+    js::gc::Nursery              gcNursery;
+    js::gc::StoreBuffer          gcStoreBuffer;
+#endif
 
     /*
      * These options control the zealousness of the GC. The fundamental values

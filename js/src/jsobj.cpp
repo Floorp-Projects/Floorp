@@ -1935,10 +1935,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
          * Trigger post barriers for fixed slots. JSObject bits are barriered
          * below, in common with the other case.
          */
-        JSCompartment *comp = cx->compartment;
         for (size_t i = 0; i < a->numFixedSlots(); ++i) {
-            HeapSlot::writeBarrierPost(comp, a, HeapSlot::Slot, i);
-            HeapSlot::writeBarrierPost(comp, b, HeapSlot::Slot, i);
+            HeapSlot::writeBarrierPost(cx->runtime, a, HeapSlot::Slot, i);
+            HeapSlot::writeBarrierPost(cx->runtime, b, HeapSlot::Slot, i);
         }
 #endif
     } else {
