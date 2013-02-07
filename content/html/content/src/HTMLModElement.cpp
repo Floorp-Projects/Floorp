@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLModElement.h"
-#include "nsGkAtoms.h"
+#include "mozilla/dom/HTMLModElementBinding.h"
 #include "nsStyleConsts.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Mod)
@@ -17,6 +17,7 @@ namespace dom {
 HTMLModElement::HTMLModElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 HTMLModElement::~HTMLModElement()
@@ -41,6 +42,12 @@ NS_IMPL_ELEMENT_CLONE(HTMLModElement)
 
 NS_IMPL_URI_ATTR(HTMLModElement, Cite, cite)
 NS_IMPL_STRING_ATTR(HTMLModElement, DateTime, datetime)
+
+JSObject*
+HTMLModElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return HTMLModElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 } // namespace dom
 } // namespace mozilla
