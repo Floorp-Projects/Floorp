@@ -49,8 +49,6 @@
 
 static cc_rcs_t lsm_stop_tone (lsm_lcb_t *lcb, cc_action_data_tone_t *data);
 
-extern cc_media_cap_table_t g_media_table;
-
 static lsm_lcb_t *lsm_lcbs;
 static uint32_t lsm_call_perline[MAX_REG_LINES];
 boolean lsm_mnc_reached[MAX_REG_LINES]; // maxnumcalls reached

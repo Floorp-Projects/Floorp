@@ -44,7 +44,9 @@
 #include <string>
 #include <vector>
 
+#include "common/symbol_data.h"
 #include "common/using_std_string.h"
+#include "common/unique_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
@@ -123,11 +125,71 @@ class Module {
     string name;
   };
 
-  // A map from register names to postfix expressions that recover
-  // their their values. This can represent a complete set of rules to
+  // Representation of an expression.  This can either be a postfix
+  // expression, in which case it is stored as a string, or a simple
+  // expression of the form (identifier + imm) or *(identifier + imm).
+  // It can also be invalid (denoting "no value").
+  enum ExprHow {
+    kExprInvalid = 1,
+    kExprPostfix,
+    kExprSimple,
+    kExprSimpleMem
+  };
+  struct Expr {
+    // Construct a simple-form expression
+    Expr(const UniqueString* ident, long offset, bool deref) {
+      if (ident == ustr__empty()) {
+        Expr();
+      } else {
+        postfix_ = "";
+        ident_ = ident;
+        offset_ = offset;
+        how_ = deref ? kExprSimpleMem : kExprSimple;
+      }
+    }
+    // Construct an expression from a postfix string
+    Expr(string postfix) {
+      if (postfix.empty()) {
+        Expr();
+      } else {
+        postfix_ = postfix;
+        ident_ = NULL;
+        offset_ = 0;
+        how_ = kExprPostfix;
+      }
+    }
+    // Construct an invalid expression
+    Expr() {
+      postfix_ = "";
+      ident_ = NULL;
+      offset_ = 0;
+      how_ = kExprInvalid;
+    }
+    bool invalid() const { return how_ == kExprInvalid; }
+    bool operator==(const Expr& other) const {
+      return how_ == other.how_ &&
+          ident_ == other.ident_ &&
+          offset_ == other.offset_ &&
+          postfix_ == other.postfix_;
+    }
+
+    // The identifier that gives the starting value for simple expressions.
+    const UniqueString* ident_;
+    // The offset to add for simple expressions.
+    long    offset_;
+    // The Postfix expression string to evaluate for non-simple expressions.
+    string  postfix_;
+    // The operation expressed by this expression.
+    ExprHow how_;
+
+    friend std::ostream& operator<<(std::ostream& stream, const Expr& expr);
+  };
+
+  // A map from register names to expressions that recover
+  // their values. This can represent a complete set of rules to
   // follow at some address, or a set of changes to be applied to an
   // extant set of rules.
-  typedef map<string, string> RuleMap;
+  typedef map<const UniqueString*, Expr> RuleMap;
 
   // A map from addresses to RuleMaps, representing changes that take
   // effect at given addresses.
@@ -164,6 +226,13 @@ class Module {
   struct ExternCompare {
     bool operator() (const Extern *lhs,
                      const Extern *rhs) const {
+      return lhs->address < rhs->address;
+    }
+  };
+
+  struct StackFrameEntryCompare {
+    bool operator() (const StackFrameEntry* lhs,
+                     const StackFrameEntry* rhs) const {
       return lhs->address < rhs->address;
     }
   };
@@ -227,12 +296,20 @@ class Module {
   // appropriate interface.)
   void GetFunctions(vector<Function *> *vec, vector<Function *>::iterator i);
 
+  // If this module has a function at ADDRESS, return a pointer to it.
+  // Otherwise, return NULL.
+  Function* FindFunctionByAddress(Address address);
+
   // Insert pointers to the externs added to this module at I in
   // VEC. The pointed-to Externs are still owned by this module.
   // (Since this is effectively a copy of the extern list, this is
   // mostly useful for testing; other uses should probably get a more
   // appropriate interface.)
   void GetExterns(vector<Extern *> *vec, vector<Extern *>::iterator i);
+
+  // If this module has an extern whose base address is less than ADDRESS,
+  // return a pointer to it. Otherwise, return NULL.
+  Extern* FindExternByAddress(Address address);
 
   // Clear VEC and fill it with pointers to the Files added to this
   // module, sorted by name. The pointed-to Files are still owned by
@@ -248,6 +325,10 @@ class Module {
   // a more appropriate interface.)
   void GetStackFrameEntries(vector<StackFrameEntry *> *vec);
 
+  // If this module has a StackFrameEntry whose address range covers
+  // ADDRESS, return it. Otherwise return NULL.
+  StackFrameEntry* FindStackFrameEntryByAddress(Address address);
+
   // Find those files in this module that are actually referred to by
   // functions' line number data, and assign them source id numbers.
   // Set the source id numbers for all other files --- unused by the
@@ -259,13 +340,15 @@ class Module {
   // breakpad symbol format. Return true if all goes well, or false if
   // an error occurs. This method writes out:
   // - a header based on the values given to the constructor,
+  // If symbol_data is not ONLY_CFI then:
   // - the source files added via FindFile,
   // - the functions added via AddFunctions, each with its lines,
   // - all public records,
-  // - and if CFI is true, all CFI records.
+  // If symbol_data is not NO_CFI then:
+  // - all CFI records.
   // Addresses in the output are all relative to the load address
   // established by SetLoadAddress.
-  bool Write(std::ostream &stream, bool cfi);
+  bool Write(std::ostream &stream, SymbolData symbol_data);
 
  private:
   // Report an error that has occurred writing the symbol file, using
@@ -301,6 +384,9 @@ class Module {
   // A set containing Extern structures, sorted by address.
   typedef set<Extern *, ExternCompare> ExternSet;
 
+  // A set containing StackFrameEntry structures, sorted by address.
+  typedef set<StackFrameEntry*, StackFrameEntryCompare> StackFrameEntrySet;
+
   // The module owns all the files and functions that have been added
   // to it; destroying the module frees the Files and Functions these
   // point to.
@@ -309,7 +395,7 @@ class Module {
 
   // The module owns all the call frame info entries that have been
   // added to it.
-  vector<StackFrameEntry *> stack_frame_entries_;
+  StackFrameEntrySet stack_frame_entries_;
 
   // The module owns all the externs that have been added to it;
   // destroying the module frees the Externs these point to.
