@@ -21,16 +21,6 @@ function run_test() {
   manifests.forEach(function (manifest) {
     MANIFEST_PREFS.setCharPref(manifest.origin, JSON.stringify(manifest));
   });
-  // Set both providers active and flag the first one as "current"
-  let activeVal = Cc["@mozilla.org/supports-string;1"].
-             createInstance(Ci.nsISupportsString);
-  let active = {};
-  for (let m of manifests)
-    active[m.origin] = 1;
-  activeVal.data = JSON.stringify(active);
-  Services.prefs.setComplexValue("social.activeProviders",
-                                 Ci.nsISupportsString, activeVal);
-  Services.prefs.setCharPref("social.provider.current", manifests[0].origin);
 
   // Enable the service for this test
   Services.prefs.setBoolPref("social.enabled", true);
@@ -93,12 +83,22 @@ function testEnabled(manifests, next) {
   // now disable the service and check that it disabled that provider (and all others for good measure)
   SocialService.enabled = false;
   do_check_true(notificationDisabledCorrect);
+  do_check_true(!Services.prefs.getBoolPref("social.enabled"));
   do_check_true(!SocialService.enabled);
   providers.forEach(function (provider) {
     do_check_false(provider.enabled);
   });
 
-  SocialService.enabled = true;
+  // Check that setting the pref directly updates things accordingly
+  let notificationEnabledCorrect = false;
+  Services.obs.addObserver(function obs2(subj, topic, data) {
+    Services.obs.removeObserver(obs2, "social:pref-changed");
+    notificationEnabledCorrect = data == "enabled";
+  }, "social:pref-changed", false);
+
+  Services.prefs.setBoolPref("social.enabled", true);
+
+  do_check_true(notificationEnabledCorrect);
   do_check_true(SocialService.enabled);
   // Enabling the service should not enable providers
   providers.forEach(function (provider) {
