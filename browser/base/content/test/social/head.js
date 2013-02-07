@@ -96,6 +96,7 @@ function runSocialTestWithProvider(manifest, callback) {
 
   manifests.forEach(function (m) {
     SocialService.addProvider(m, function(provider) {
+      provider.active = true;
 
       providersAdded++;
       info("runSocialTestWithProvider: provider added");
@@ -108,8 +109,9 @@ function runSocialTestWithProvider(manifest, callback) {
       // If we've added all the providers we need, call the callback to start
       // the tests (and give it a callback it can call to finish them)
       if (providersAdded == manifests.length) {
-        // Set the UI's provider (which enables the feature)
+        // Set the UI's provider and enable the feature
         Social.provider = firstProvider;
+        Social.enabled = true;
 
         function finishSocialTest(cleanup) {
           // disable social before removing the providers to avoid providers
