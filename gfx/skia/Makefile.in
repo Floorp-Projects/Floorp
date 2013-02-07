@@ -377,9 +377,6 @@ CPPSRCS += \
 	SkFontHost_sandbox_none.cpp \
 	SkTime_win.cpp \
 	$(NULL)
-ifdef _MSC_VER
-HAVE_COMPILER_FLAG_MSSSE3=1
-endif
 endif
 
 ifneq (,$(INTEL_ARCHITECTURE))

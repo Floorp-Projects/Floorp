@@ -68,7 +68,8 @@ int main(int argc, char **argv) {
     debug_dirs.push_back(argv[debug_dir_index]);
   }
 
-  if (!WriteSymbolFile(binary, debug_dirs, cfi, std::cout)) {
+  SymbolData symbol_data = cfi ? ALL_SYMBOL_DATA : NO_CFI;
+  if (!WriteSymbolFile(binary, debug_dirs, symbol_data, std::cout)) {
     fprintf(stderr, "Failed to write symbol file.\n");
     return 1;
   }

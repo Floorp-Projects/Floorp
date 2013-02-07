@@ -1035,6 +1035,70 @@ add_test(function test_stk_proactive_command_set_up_call() {
   run_next_test();
 });
 
+add_test(function test_read_pnn() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let record = worker.ICCRecordHelper;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+  let ril    = worker.RIL;
+
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+    let records = [
+      // Record 1 - fullName: 'Long1', shortName: 'Short1'
+      [0x43, 0x06, 0x85, 0xCC, 0xB7, 0xFB, 0x1C, 0x03,
+       0x45, 0x07, 0x86, 0x53, 0xF4, 0x5B, 0x4E, 0x8F, 0x01,
+       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+      // Record 2 - fullName: 'Long2'
+      [0x43, 0x06, 0x85, 0xCC, 0xB7, 0xFB, 0x2C, 0x03,
+       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+      // Record 3 - Unused bytes
+      [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+    ];
+
+    // Fake get response
+    options.totalRecords = records.length;
+    options.recordSize = records[0].length;
+
+    options.p1 = options.p1 || 1;
+
+    let record = records[options.p1 - 1];
+
+    // Write data size
+    buf.writeUint32(record.length * 2);
+
+    // Write record
+    for (let i = 0; i < record.length; i++) {
+      helper.writeHexOctet(record[i]);
+    }
+
+    // Write string delimiter
+    buf.writeStringDelimiter(record.length * 2);
+
+    if (options.callback) {
+      options.callback(options);
+    }
+  };
+
+  io.loadNextRecord = function fakeLoadNextRecord(options) {
+    options.p1++;
+    io.loadLinearFixedEF(options);
+  };
+
+  record.readPNN();
+
+  do_check_eq(ril.iccInfoPrivate.PNN.length, 2);
+  do_check_eq(ril.iccInfoPrivate.PNN[0].fullName, "Long1");
+  do_check_eq(ril.iccInfoPrivate.PNN[0].shortName, "Short1");
+  do_check_eq(ril.iccInfoPrivate.PNN[1].fullName, "Long2");
+  do_check_eq(ril.iccInfoPrivate.PNN[1].shortName, undefined);
+
+  run_next_test();
+});
+
 add_test(function read_network_name() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
@@ -1102,8 +1166,8 @@ add_test(function test_update_network_name() {
     RIL.operator.mnc = operatorMnc;
     let result = RIL.updateNetworkName();
 
-    do_check_eq(result[0], expectedLongName);
-    do_check_eq(result[1], expectedShortName);
+    do_check_eq(result.fullName, expectedLongName);
+    do_check_eq(result.shortName, expectedShortName);
   }
 
   // Before EF_OPL and EF_PNN have been loaded.

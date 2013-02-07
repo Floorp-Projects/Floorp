@@ -861,9 +861,9 @@ JS::IncrementalObjectBarrier(JSObject *obj)
     if (!obj)
         return;
 
-    JS_ASSERT(!obj->compartment()->rt->isHeapBusy());
+    JS_ASSERT(!obj->zone()->rt->isHeapBusy());
 
-    AutoMarkInDeadCompartment amn(obj->compartment());
+    AutoMarkInDeadZone amn(obj->zone());
 
     JSObject::writeBarrierPre(obj);
 }
@@ -875,11 +875,11 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
         return;
 
     gc::Cell *cell = static_cast<gc::Cell *>(ptr);
-    JSCompartment *comp = cell->compartment();
+    Zone *zone = cell->zone();
 
-    JS_ASSERT(!comp->rt->isHeapBusy());
+    JS_ASSERT(!zone->rt->isHeapBusy());
 
-    AutoMarkInDeadCompartment amn(comp);
+    AutoMarkInDeadZone amn(zone);
 
     if (kind == JSTRACE_OBJECT)
         JSObject::writeBarrierPre(static_cast<JSObject*>(cell));

@@ -116,8 +116,8 @@ CheckMarkedThing(JSTracer *trc, T *thing)
 
     DebugOnly<JSRuntime *> rt = trc->runtime;
 
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gcManipulatingDeadCompartments,
-                 !thing->compartment()->scheduledForDestruction);
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gcManipulatingDeadZones,
+                 !thing->zone()->scheduledForDestruction);
 
 #ifdef DEBUG
     rt->assertValidThread();
@@ -129,11 +129,11 @@ CheckMarkedThing(JSTracer *trc, T *thing)
 
     JS_ASSERT_IF(rt->gcStrictCompartmentChecking,
                  thing->zone()->isCollecting() ||
-                 thing->compartment() == rt->atomsCompartment);
+                 thing->zone() == rt->atomsCompartment->zone());
 
     JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && ((GCMarker *)trc)->getMarkColor() == GRAY,
                  thing->zone()->isGCMarkingGray() ||
-                 thing->compartment() == rt->atomsCompartment);
+                 thing->zone() == rt->atomsCompartment->zone());
 
     /*
      * Try to assert that the thing is allocated.  This is complicated by the
@@ -169,7 +169,7 @@ MarkInternal(JSTracer *trc, T **thingp)
     if (!trc->callback) {
         if (thing->zone()->isGCMarking()) {
             PushMarkStack(AsGCMarker(trc), thing);
-            thing->compartment()->maybeAlive = true;
+            thing->zone()->maybeAlive = true;
         }
     } else {
         trc->callback(trc, (void **)thingp, GetGCThingTraceKind(thing));
@@ -716,7 +716,7 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
 
 #define JS_COMPARTMENT_ASSERT_STR(rt, thing)                            \
     JS_ASSERT((thing)->zone()->isGCMarking() ||                         \
-              (thing)->compartment() == (rt)->atomsCompartment);
+              (thing)->zone() == (rt)->atomsCompartment->zone());
 
 static void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing)
@@ -1330,8 +1330,8 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         if (v.isString()) {
             JSString *str = v.toString();
             JS_COMPARTMENT_ASSERT_STR(runtime, str);
-            JS_ASSERT(str->compartment() == runtime->atomsCompartment ||
-                      str->compartment() == obj->compartment());
+            JS_ASSERT(str->zone() == runtime->atomsCompartment->zone() ||
+                      str->zone() == obj->zone());
             if (str->markIfUnmarked())
                 ScanString(this, str);
         } else if (v.isObject()) {
@@ -1614,7 +1614,7 @@ JS::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
 
     UnmarkGrayGCThing(thing);
 
-    JSRuntime *rt = static_cast<Cell *>(thing)->compartment()->rt;
+    JSRuntime *rt = static_cast<Cell *>(thing)->zone()->rt;
     UnmarkGrayTracer trc(rt);
     JS_TraceChildren(&trc, thing, kind);
 }

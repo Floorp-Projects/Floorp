@@ -6863,47 +6863,37 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
 // This is used to scan frames for any float placeholders, add their
 // floats to the list represented by aList, and remove the
 // floats from whatever list they might be in. We don't search descendants
-// that are float containing blocks. The floats must be children of 'this'.
-void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
-                                 bool aFromOverflow, bool aCollectSiblings) {
+// that are float containing blocks.  Floats that or not children of 'this'
+// are ignored (they are not added to aList).
+void
+nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
+                            bool aFromOverflow, bool aCollectSiblings)
+{
   while (aFrame) {
     // Don't descend into float containing blocks.
     if (!aFrame->IsFloatContainingBlock()) {
       nsIFrame *outOfFlowFrame =
         aFrame->GetType() == nsGkAtoms::placeholderFrame ?
           nsLayoutUtils::GetFloatFromPlaceholder(aFrame) : nullptr;
-      if (outOfFlowFrame) {
+      if (outOfFlowFrame && outOfFlowFrame->GetParent() == this) {
+        bool removed = false;
         if (outOfFlowFrame->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
-          if (outOfFlowFrame->GetParent() == this) {
-            nsFrameList* list = GetPushedFloats();
-            if (!list || !list->RemoveFrameIfPresent(outOfFlowFrame)) {
-              if (aFromOverflow) {
-                nsAutoOOFFrameList oofs(this);
-                oofs.mList.RemoveFrame(outOfFlowFrame);
-              } else {
-                mFloats.RemoveFrame(outOfFlowFrame);
-              }
-            }
-            aList.AppendFrame(nullptr, outOfFlowFrame);
-          }
-          // FIXME: By not pulling floats whose parent is one of our
-          // later siblings, are we risking the pushed floats getting
-          // out-of-order?
-        } else {
-          // Make sure that its parent is us. Otherwise we don't want
-          // to mess around with it because it belongs to someone
-          // else. I think this could happen if the overflow lines
-          // contain a block descendant which owns its own floats.
-          NS_ASSERTION(outOfFlowFrame->GetParent() == this,
-                       "Out of flow frame doesn't have the expected parent");
+          nsFrameList* list = GetPushedFloats();
+          removed = list && list->RemoveFrameIfPresent(outOfFlowFrame);
+        }
+        if (!removed) {
           if (aFromOverflow) {
             nsAutoOOFFrameList oofs(this);
             oofs.mList.RemoveFrame(outOfFlowFrame);
           } else {
             mFloats.RemoveFrame(outOfFlowFrame);
           }
-          aList.AppendFrame(nullptr, outOfFlowFrame);
         }
+        aList.AppendFrame(nullptr, outOfFlowFrame);
+        // FIXME: By not pulling floats whose parent is one of our
+        // later siblings, are we risking the pushed floats getting
+        // out-of-order?
+        // XXXmats nsInlineFrame's lazy reparenting depends on NOT doing that.
       }
 
       CollectFloats(aFrame->GetFirstPrincipalChild(), 

@@ -49,6 +49,7 @@
 #include "common/module.h"
 #include "common/dwarf/dwarf2reader.h"
 #include "common/using_std_string.h"
+#include "common/unique_string.h"
 
 namespace google_breakpad {
 
@@ -83,13 +84,15 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
 
     // The DWARF CFI entry at OFFSET says that REG is undefined, but the
     // Breakpad symbol file format cannot express this.
-    virtual void UndefinedNotSupported(size_t offset, const string &reg);
+    virtual void UndefinedNotSupported(size_t offset,
+                                       const UniqueString* reg);
 
     // The DWARF CFI entry at OFFSET says that REG uses a DWARF
     // expression to find its value, but DwarfCFIToModule is not
     // capable of translating DWARF expressions to Breakpad postfix
     // expressions.
-    virtual void ExpressionsNotSupported(size_t offset, const string &reg);
+    virtual void ExpressionsNotSupported(size_t offset,
+                                         const UniqueString* reg);
 
   protected:
     string file_, section_;
@@ -101,18 +104,19 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   class RegisterNames {
    public:
     // Intel's "x86" or IA-32.
-    static vector<string> I386();
+    static vector<const UniqueString*> I386();
 
     // AMD x86_64, AMD64, Intel EM64T, or Intel 64
-    static vector<string> X86_64();
+    static vector<const UniqueString*> X86_64();
 
     // ARM.
-    static vector<string> ARM();
+    static vector<const UniqueString*> ARM();
 
    private:
     // Given STRINGS, an array of C strings with SIZE elements, return an
     // equivalent vector<string>.
-    static vector<string> MakeVector(const char * const *strings, size_t size);
+    static vector<const UniqueString*> MakeVector(const char * const *strings,
+                                                  size_t size);
   };
 
   // Create a handler for the dwarf2reader::CallFrameInfo parser that
@@ -124,10 +128,11 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   //
   // Use REPORTER for reporting problems encountered in the conversion
   // process.
-  DwarfCFIToModule(Module *module, const vector<string> &register_names,
+  DwarfCFIToModule(Module *module,
+                   const vector<const UniqueString*> &register_names,
                    Reporter *reporter)
       : module_(module), register_names_(register_names), reporter_(reporter),
-        entry_(NULL), return_address_(-1), cfa_name_(".cfa"), ra_name_(".ra") {
+        entry_(NULL), return_address_(-1) {
   }
   virtual ~DwarfCFIToModule() { delete entry_; }
 
@@ -149,16 +154,16 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
 
  private:
   // Return the name to use for register REG.
-  string RegisterName(int i);
+  const UniqueString* RegisterName(int i);
 
   // Record RULE for register REG at ADDRESS.
-  void Record(Module::Address address, int reg, const string &rule);
+  void Record(Module::Address address, int reg, const Module::Expr &rule);
 
   // The module to which we should add entries.
   Module *module_;
 
   // Map from register numbers to register names.
-  const vector<string> &register_names_;
+  const vector<const UniqueString*> &register_names_;
 
   // The reporter to use to report problems.
   Reporter *reporter_;
@@ -172,23 +177,6 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
 
   // The return address column for that entry.
   unsigned return_address_;
-
-  // The names of the return address and canonical frame address. Putting
-  // these here instead of using string literals allows us to share their
-  // texts in reference-counted std::string implementations (all the
-  // popular ones). Many, many rules cite these strings.
-  string cfa_name_, ra_name_;
-
-  // A set of strings used by this CFI. Before storing a string in one of
-  // our data structures, insert it into this set, and then use the string
-  // from the set.
-  // 
-  // Because std::string uses reference counting internally, simply using
-  // strings from this set, even if passed by value, assigned, or held
-  // directly in structures and containers (map<string, ...>, for example),
-  // causes those strings to share a single instance of each distinct piece
-  // of text.
-  set<string> common_strings_;
 };
 
 } // namespace google_breakpad
