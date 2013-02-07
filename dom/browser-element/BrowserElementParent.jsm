@@ -571,7 +571,7 @@ BrowserElementParent.prototype = {
   },
 
   _remoteFullscreenOriginChange: function(data) {
-    let origin = data.json;
+    let origin = data.json._payload_;
     this._windowUtils.remoteFrameFullscreenChanged(this._frameElement, origin);
   },
 
