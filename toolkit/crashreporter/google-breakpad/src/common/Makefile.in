@@ -43,6 +43,7 @@ HOST_CPPSRCS += \
   module.cc \
   stabs_reader.cc \
   stabs_to_module.cc \
+  unique_string.cc \
   $(NULL)
 
 ifdef MOZ_PLATFORM_MAEMO
