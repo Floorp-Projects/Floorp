@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.GfxInfoThread;
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONObject;
@@ -48,10 +49,16 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
         GeckoApp app = GeckoApp.mAppContext;
         String resourcePath = app.getApplication().getPackageResourcePath();
-        GeckoAppShell.setupGeckoEnvironment(app);
-        GeckoAppShell.loadSQLiteLibs(app, resourcePath);
-        GeckoAppShell.loadNSSLibs(app, resourcePath);
-        GeckoAppShell.loadGeckoLibs(resourcePath);
+        String[] pluginDirs = null;
+        try {
+            pluginDirs = app.getPluginDirectories();
+        } catch (Exception e) {
+            Log.w(LOGTAG, "Caught exception getting plugin dirs.", e);
+        }
+        GeckoLoader.setupGeckoEnvironment(app, pluginDirs, GeckoProfile.get(app).getFilesDir().getPath());
+        GeckoLoader.loadSQLiteLibs(app, resourcePath);
+        GeckoLoader.loadNSSLibs(app, resourcePath);
+        GeckoLoader.loadGeckoLibs(app, resourcePath);
 
         Locale.setDefault(locale);
 
