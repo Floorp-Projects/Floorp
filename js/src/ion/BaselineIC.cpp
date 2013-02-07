@@ -177,27 +177,22 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &globalStub->shape(), "baseline-global-stub-shape");
         break;
       }
-      case ICStub::GetProp_String: {
-        ICGetProp_String *propStub = toGetProp_String();
-        MarkShape(trc, &propStub->stringProtoShape(), "baseline-getpropstring-stub-shape");
-        break;
-      }
       case ICStub::GetProp_Native: {
         ICGetProp_Native *propStub = toGetProp_Native();
-        MarkShape(trc, &propStub->shape(), "baseline-getpropnative-stub-shape");
+        MarkShape(trc, &propStub->shape(), "baseline-getprop-stub-shape");
         break;
       }
       case ICStub::GetProp_NativePrototype: {
         ICGetProp_NativePrototype *propStub = toGetProp_NativePrototype();
-        MarkShape(trc, &propStub->shape(), "baseline-getpropnativeproto-stub-shape");
-        MarkObject(trc, &propStub->holder(), "baseline-getpropnativeproto-stub-holder");
-        MarkShape(trc, &propStub->holderShape(), "baseline-getpropnativeproto-stub-holdershape");
+        MarkShape(trc, &propStub->shape(), "baseline-getprop-stub-shape");
+        MarkObject(trc, &propStub->holder(), "baseline-getprop-stub-holder");
+        MarkShape(trc, &propStub->holderShape(), "baseline-getprop-stub-holdershape");
         break;
       }
       case ICStub::SetProp_Native: {
         ICSetProp_Native *propStub = toSetProp_Native();
-        MarkShape(trc, &propStub->shape(), "baseline-setpropnative-stub-shape");
-        MarkTypeObject(trc, &propStub->type(), "baseline-setpropnative-stub-type");
+        MarkShape(trc, &propStub->shape(), "baseline-setprop-stub-shape");
+        MarkTypeObject(trc, &propStub->type(), "baseline-setprop-stub-type");
         break;
       }
       default:
@@ -2459,16 +2454,6 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, UnrootedShape shape)
     return true;
 }
 
-static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
-                                        bool *isFixed, uint32_t *offset)
-{
-    JS_ASSERT(isFixed);
-    JS_ASSERT(offset);
-    *isFixed = obj->isFixedSlot(slot);
-    *offset = *isFixed ? JSObject::getFixedSlotOffset(slot)
-                       : obj->dynamicSlotIndex(slot) * sizeof(Value);
-}
-
 static bool
 TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub,
                            HandlePropertyName name, HandleValue val, HandleValue res,
@@ -2491,48 +2476,15 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallbac
     if (!IsCacheableGetPropReadSlot(obj, holder, shape))
         return true;
 
-    bool isFixedSlot;
-    uint32_t offset;
-    GetFixedOrDynamicSlotOffset(holder, shape->slot(), &isFixedSlot, &offset);
+    bool isFixedSlot = holder->isFixedSlot(shape->slot());
+    uint32_t offset = isFixedSlot
+                      ? JSObject::getFixedSlotOffset(shape->slot())
+                      : holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
 
     ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
     ICStub::Kind kind = (obj == holder) ? ICStub::GetProp_Native : ICStub::GetProp_NativePrototype;
 
     ICGetPropNativeCompiler compiler(cx, kind, monitorStub, obj, holder, isFixedSlot, offset);
-    ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
-    if (!newStub)
-        return false;
-
-    stub->addNewStub(newStub);
-    *attached = true;
-    return true;
-}
-
-static bool
-TryAttachStringGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub,
-                           HandlePropertyName name, HandleValue val, HandleValue res,
-                           bool *attached)
-{
-    JS_ASSERT(!*attached);
-    JS_ASSERT(val.isString());
-
-    RootedObject stringProto(cx, script->global().getOrCreateStringPrototype(cx));
-    if (!stringProto)
-        return false;
-
-    // For now, only look for properties directly set on String.prototype
-    RootedId propId(cx, NameToId(name));
-    RootedShape shape(cx, stringProto->nativeLookup(cx, propId));
-    if (!shape)
-        return true;
-
-    bool isFixedSlot;
-    uint32_t offset;
-    GetFixedOrDynamicSlotOffset(stringProto, shape->slot(), &isFixedSlot, &offset);
-
-    ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-
-    ICGetProp_String::Compiler compiler(cx, monitorStub, stringProto, isFixedSlot, offset);
     ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
     if (!newStub)
         return false;
@@ -2607,13 +2559,6 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
         return false;
     if (attached)
         return true;
-
-    if (val.isString()) {
-        if (!TryAttachStringGetPropStub(cx, script, stub, name, val, res, &attached))
-            return false;
-        if (attached)
-            return true;
-    }
 
     return true;
 }
@@ -2707,38 +2652,6 @@ ICGetProp_StringLength::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.tagValue(JSVAL_TYPE_INT32, string, R0);
     EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICGetProp_String::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    Label failure;
-    masm.branchTestString(Assembler::NotEqual, R0, &failure);
-
-    GeneralRegisterSet regs(availableGeneralRegs(1));
-    Register holderReg = regs.takeAny();
-    Register scratchReg = regs.takeAny();
-
-    // Verify the shape of |String.prototype|
-    masm.movePtr(ImmGCPtr(stringPrototype_.get()), holderReg);
-
-    Address shapeAddr(BaselineStubReg, ICGetProp_String::offsetOfStringProtoShape());
-    masm.loadPtr(Address(holderReg, JSObject::offsetOfShape()), scratchReg);
-    masm.branchPtr(Assembler::NotEqual, shapeAddr, scratchReg, &failure);
-
-    if (!isFixedSlot_)
-        masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), holderReg);
-
-    masm.load32(Address(BaselineStubReg, ICGetPropNativeStub::offsetOfOffset()), scratchReg);
-    masm.loadValue(BaseIndex(holderReg, scratchReg, TimesOne), R0);
-
-    // Enter type monitor IC to type-check result.
-    EmitEnterTypeMonitorIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);

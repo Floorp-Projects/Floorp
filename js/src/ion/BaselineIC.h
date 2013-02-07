@@ -324,7 +324,6 @@ class ICEntry
     _(GetProp_Fallback)         \
     _(GetProp_ArrayLength)      \
     _(GetProp_TypedArrayLength) \
-    _(GetProp_String)           \
     _(GetProp_StringLength)     \
     _(GetProp_Native)           \
     _(GetProp_NativePrototype)  \
@@ -2252,72 +2251,6 @@ class ICGetProp_TypedArrayLength : public ICStub
     };
 };
 
-// Stub for accessing a string's length.
-class ICGetProp_String : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-    // Shape of String.prototype to check for.
-    HeapPtrShape stringProtoShape_;
-
-    // Fixed or dynamic slot offset.
-    uint32_t offset_;
-
-    ICGetProp_String(IonCode *stubCode, ICStub *firstMonitorStub,
-                     HandleShape stringProtoShape, uint32_t offset)
-      : ICMonitoredStub(GetProp_String, stubCode, firstMonitorStub),
-        stringProtoShape_(stringProtoShape),
-        offset_(offset)
-    {}
-
-  public:
-    static inline ICGetProp_String *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
-                                        HandleShape stringProtoShape, uint32_t offset)
-    {
-        return space->allocate<ICGetProp_String>(code, firstMonitorStub, stringProtoShape, offset);
-    }
-
-    HeapPtrShape &stringProtoShape() {
-        return stringProtoShape_;
-    }
-    static size_t offsetOfStringProtoShape() {
-        return offsetof(ICGetProp_String, stringProtoShape_);
-    }
-
-    static size_t offsetOfOffset() {
-        return offsetof(ICGetProp_String, offset_);
-    }
-
-    class Compiler : public ICStubCompiler {
-        ICStub *firstMonitorStub_;
-        RootedObject stringPrototype_;
-        bool isFixedSlot_;
-        uint32_t offset_;
-
-        bool generateStubCode(MacroAssembler &masm);
-
-      protected:
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
-        }
-
-      public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject stringPrototype,
-                 bool isFixedSlot, uint32_t offset)
-          : ICStubCompiler(cx, ICStub::GetProp_String),
-            firstMonitorStub_(firstMonitorStub),
-            stringPrototype_(cx, stringPrototype),
-            isFixedSlot_(isFixedSlot),
-            offset_(offset)
-        {}
-
-        ICStub *getStub(ICStubSpace *space) {
-            RootedShape stringProtoShape(cx, stringPrototype_->lastProperty());
-            return ICGetProp_String::New(space, getStubCode(), firstMonitorStub_,
-                                         stringProtoShape, offset_);
-        }
-    };
-};
 
 // Stub for accessing a string's length.
 class ICGetProp_StringLength : public ICStub
