@@ -56,7 +56,6 @@ extern Class DebuggerEnv_class;
 
 enum {
     JSSLOT_DEBUGENV_OWNER,
-    JSSLOT_DEBUGENV_GC_GRAY_LINK,
     JSSLOT_DEBUGENV_COUNT
 };
 
@@ -64,7 +63,6 @@ extern Class DebuggerObject_class;
 
 enum {
     JSSLOT_DEBUGOBJECT_OWNER,
-    JSSLOT_DEBUGOBJECT_GC_GRAY_LINK,
     JSSLOT_DEBUGOBJECT_COUNT
 };
 
@@ -72,7 +70,6 @@ extern Class DebuggerScript_class;
 
 enum {
     JSSLOT_DEBUGSCRIPT_OWNER,
-    JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK,
     JSSLOT_DEBUGSCRIPT_COUNT
 };
 
@@ -1354,17 +1351,6 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
 
 
 /*** Debugger JSObjects **************************************************************************/
-
-JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
-                 unsigned(JSSLOT_DEBUGOBJECT_GC_GRAY_LINK));
-JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
-                 unsigned(JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK));
-
-/* static */ unsigned
-Debugger::gcGrayLinkSlot()
-{
-    return JSSLOT_DEBUGOBJECT_GC_GRAY_LINK;
-}
 
 /* static */ bool
 Debugger::isDebugWrapper(RawObject o)

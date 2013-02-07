@@ -3292,16 +3292,14 @@ GetNextZoneGroup(JSRuntime *rt)
  *
  * This means that when marking things gray we must not allow marking to leave
  * the current compartment group, as that could result in things being marked
- * grey when they might subsequently be marked black.  To acheive this, when we
+ * grey when they might subsequently be marked black.  To achieve this, when we
  * find a cross compartment pointer we don't mark the referent but add it to a
  * singly-linked list of incoming gray pointers that is stored with each
  * compartment.
  *
- * The list head is stored in JSCompartment::gcIncomingGrayPointers and can
- * contain both cross compartment wrapper objects and debugger env, object or
- * script wrappers. The next pointer is stored in a slot on the on the object,
- * either the second extra slot for cross compartment wrappers, or a dedicated
- * slot for debugger objects.
+ * The list head is stored in JSCompartment::gcIncomingGrayPointers and contains
+ * cross compartment wrapper objects. The next pointer is stored in the second
+ * extra slot of the cross compartment wrapper.
  *
  * The list is created during gray marking when one of the
  * MarkCrossCompartmentXXX functions is called for a pointer that leaves the
@@ -3313,38 +3311,34 @@ GetNextZoneGroup(JSRuntime *rt)
  */
 
 static bool
-IsGrayListObject(RawObject o)
+IsGrayListObject(RawObject obj)
 {
-    JS_ASSERT(o);
-    return (IsCrossCompartmentWrapper(o) && !IsDeadProxyObject(o)) ||
-           Debugger::isDebugWrapper(o);
+    JS_ASSERT(obj);
+    return IsCrossCompartmentWrapper(obj) && !IsDeadProxyObject(obj);
 }
 
 const unsigned JSSLOT_GC_GRAY_LINK = JSSLOT_PROXY_EXTRA + 1;
 
 static unsigned
-GrayLinkSlot(RawObject o)
+GrayLinkSlot(RawObject obj)
 {
-    JS_ASSERT(IsGrayListObject(o));
-    return IsCrossCompartmentWrapper(o) ? JSSLOT_GC_GRAY_LINK : Debugger::gcGrayLinkSlot();
+    JS_ASSERT(IsGrayListObject(obj));
+    return JSSLOT_GC_GRAY_LINK;
 }
 
 #ifdef DEBUG
 static void
-AssertNotOnGrayList(RawObject o)
+AssertNotOnGrayList(RawObject obj)
 {
-    JS_ASSERT_IF(IsGrayListObject(o), o->getReservedSlot(GrayLinkSlot(o)).isUndefined());
+    JS_ASSERT_IF(IsGrayListObject(obj), obj->getReservedSlot(GrayLinkSlot(obj)).isUndefined());
 }
 #endif
 
 static Cell *
-CrossCompartmentPointerReferent(RawObject o)
+CrossCompartmentPointerReferent(RawObject obj)
 {
-    JS_ASSERT(IsGrayListObject(o));
-    if (IsCrossCompartmentWrapper(o))
-        return (Cell *)GetProxyPrivate(o).toGCThing();
-    else
-        return (Cell *)o->getPrivate();
+    JS_ASSERT(IsGrayListObject(obj));
+    return (Cell *)GetProxyPrivate(obj).toGCThing();
 }
 
 static RawObject
@@ -3368,11 +3362,11 @@ js::DelayCrossCompartmentGrayMarking(RawObject src)
     /* Called from MarkCrossCompartmentXXX functions. */
     unsigned slot = GrayLinkSlot(src);
     Cell *dest = CrossCompartmentPointerReferent(src);
-    JSCompartment *c = dest->compartment();
+    JSCompartment *comp = dest->compartment();
 
     if (src->getReservedSlot(slot).isUndefined()) {
-        src->setCrossCompartmentSlot(slot, ObjectOrNullValue(c->gcIncomingGrayPointers));
-        c->gcIncomingGrayPointers = src;
+        src->setCrossCompartmentSlot(slot, ObjectOrNullValue(comp->gcIncomingGrayPointers));
+        comp->gcIncomingGrayPointers = src;
     } else {
         JS_ASSERT(src->getReservedSlot(slot).isObjectOrNull());
     }
@@ -3382,12 +3376,12 @@ js::DelayCrossCompartmentGrayMarking(RawObject src)
      * Assert that the object is in our list, also walking the list to check its
      * integrity.
      */
-    RawObject o = c->gcIncomingGrayPointers;
+    RawObject obj = comp->gcIncomingGrayPointers;
     bool found = false;
-    while (o) {
-        if (o == src)
+    while (obj) {
+        if (obj == src)
             found = true;
-        o = NextIncomingCrossCompartmentPointer(o, false);
+        obj = NextIncomingCrossCompartmentPointer(obj, false);
     }
     JS_ASSERT(found);
 #endif
@@ -3414,8 +3408,8 @@ MarkIncomingCrossCompartmentPointers(JSRuntime *rt, const uint32_t color)
 
         for (RawObject src = c->gcIncomingGrayPointers;
              src;
-             src = NextIncomingCrossCompartmentPointer(src, unlinkList)) {
-
+             src = NextIncomingCrossCompartmentPointer(src, unlinkList))
+        {
             Cell *dst = CrossCompartmentPointerReferent(src);
             JS_ASSERT(dst->compartment() == c);
 
@@ -3451,10 +3445,10 @@ RemoveFromGrayList(RawObject wrapper)
     RawObject tail = wrapper->getReservedSlot(slot).toObjectOrNull();
     wrapper->setReservedSlot(slot, UndefinedValue());
 
-    JSCompartment *c = CrossCompartmentPointerReferent(wrapper)->compartment();
-    RawObject obj = c->gcIncomingGrayPointers;
+    JSCompartment *comp = CrossCompartmentPointerReferent(wrapper)->compartment();
+    RawObject obj = comp->gcIncomingGrayPointers;
     if (obj == wrapper) {
-        c->gcIncomingGrayPointers = tail;
+        comp->gcIncomingGrayPointers = tail;
         return true;
     }
 
@@ -3473,7 +3467,7 @@ RemoveFromGrayList(RawObject wrapper)
 }
 
 static void
-ResetGrayList(JSCompartment* comp)
+ResetGrayList(JSCompartment *comp)
 {
     RawObject src = comp->gcIncomingGrayPointers;
     while (src)
@@ -3482,13 +3476,13 @@ ResetGrayList(JSCompartment* comp)
 }
 
 void
-js::NotifyGCNukeWrapper(RawObject o)
+js::NotifyGCNukeWrapper(RawObject obj)
 {
     /*
      * References to target of wrapper are being removed, we no longer have to
      * remember to mark it.
      */
-    RemoveFromGrayList(o);
+    RemoveFromGrayList(obj);
 }
 
 enum {
