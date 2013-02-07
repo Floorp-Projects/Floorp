@@ -39,6 +39,10 @@
         label="&inspectorHTMLCopyOuter.label;"
         accesskey="&inspectorHTMLCopyOuter.accesskey;"
         oncommand="inspector.copyOuterHTML()"/>
+      <menuitem id="node-menu-copyuniqueselector"
+        label="&inspectorCopyUniqueSelector.label;"
+        accesskey="&inspectorCopyUniqueSelector.accesskey;"
+        oncommand="inspector.copyUniqueSelector()"/>
       <menuseparator/>
       <menuitem id="node-menu-delete"
         label="&inspectorHTMLDelete.label;"
