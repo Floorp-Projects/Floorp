@@ -1850,8 +1850,8 @@ void
 GCMarker::startBufferingGrayRoots()
 {
     JS_ASSERT(!grayFailed);
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
-        JS_ASSERT(c->gcGrayRoots.empty());
+    for (GCZonesIter zone(runtime); !zone.done(); zone.next())
+        JS_ASSERT(zone->gcGrayRoots.empty());
 
     JS_ASSERT(!callback);
     callback = GrayCallback;
@@ -1869,18 +1869,18 @@ GCMarker::endBufferingGrayRoots()
 void
 GCMarker::resetBufferedGrayRoots()
 {
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
-        c->gcGrayRoots.clearAndFree();
+    for (GCZonesIter zone(runtime); !zone.done(); zone.next())
+        zone->gcGrayRoots.clearAndFree();
     grayFailed = false;
 }
 
 void
-GCMarker::markBufferedGrayRoots(JSCompartment *comp)
+GCMarker::markBufferedGrayRoots(JS::Zone *zone)
 {
     JS_ASSERT(!grayFailed);
-    JS_ASSERT(comp->isGCMarkingGray());
+    JS_ASSERT(zone->isGCMarkingGray());
 
-    for (GrayRoot *elem = comp->gcGrayRoots.begin(); elem != comp->gcGrayRoots.end(); elem++) {
+    for (GrayRoot *elem = zone->gcGrayRoots.begin(); elem != zone->gcGrayRoots.end(); elem++) {
 #ifdef DEBUG
         debugPrinter = elem->debugPrinter;
         debugPrintArg = elem->debugPrintArg;
@@ -1908,10 +1908,10 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
     root.debugPrintIndex = debugPrintIndex;
 #endif
 
-    JSCompartment *comp = static_cast<Cell *>(thing)->compartment();
-    if (comp->isCollecting()) {
-        comp->maybeAlive = true;
-        if (!comp->gcGrayRoots.append(root)) {
+    Zone *zone = static_cast<Cell *>(thing)->zone();
+    if (zone->isCollecting()) {
+        zone->maybeAlive = true;
+        if (!zone->gcGrayRoots.append(root)) {
             grayFailed = true;
             resetBufferedGrayRoots();
         }
@@ -2867,7 +2867,7 @@ MarkWeakReferencesInCurrentGroup(JSRuntime *rt, gcstats::Phase phase)
     MarkWeakReferences<GCCompartmentGroupIter>(rt, phase);
 }
 
-template <class CompartmentIterT>
+template <class ZoneIterT, class CompartmentIterT>
 static void
 MarkGrayReferences(JSRuntime *rt)
 {
@@ -2878,8 +2878,8 @@ MarkGrayReferences(JSRuntime *rt)
         gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_MARK_GRAY);
         gcmarker->setMarkColorGray();
         if (gcmarker->hasBufferedGrayRoots()) {
-            for (CompartmentIterT c(rt); !c.done(); c.next())
-                gcmarker->markBufferedGrayRoots(c);
+            for (ZoneIterT zone(rt); !zone.done(); zone.next())
+                gcmarker->markBufferedGrayRoots(zone);
         } else {
             JS_ASSERT(!rt->gcIsIncremental);
             if (JSTraceDataOp op = rt->gcGrayRootsTraceOp)
@@ -2899,7 +2899,7 @@ MarkGrayReferences(JSRuntime *rt)
 static void
 MarkGrayReferencesInCurrentGroup(JSRuntime *rt)
 {
-    MarkGrayReferences<GCCompartmentGroupIter>(rt);
+    MarkGrayReferences<GCZoneGroupIter, GCCompartmentGroupIter>(rt);
 }
 
 #ifdef DEBUG
@@ -2913,7 +2913,7 @@ MarkAllWeakReferences(JSRuntime *rt, gcstats::Phase phase)
 static void
 MarkAllGrayReferences(JSRuntime *rt)
 {
-    MarkGrayReferences<GCCompartmentsIter>(rt);
+    MarkGrayReferences<GCZonesIter, GCCompartmentsIter>(rt);
 }
 
 class js::gc::MarkingValidator
