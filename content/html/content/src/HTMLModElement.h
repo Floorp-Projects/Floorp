@@ -8,6 +8,7 @@
 
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLModElement.h"
+#include "nsGkAtoms.h"
 
 namespace mozilla {
 namespace dom {
@@ -39,6 +40,23 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  void GetCite(nsString& aCite)
+  {
+    GetHTMLURIAttr(nsGkAtoms::cite, aCite);
+  }
+  void SetCite(const nsAString& aCite, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::cite, aCite, aRv);
+  }
+  // XPCOM GetDateTime is fine.
+  void SetDateTime(const nsAString& aDateTime, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::datetime, aDateTime, aRv);
+  }
+
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom

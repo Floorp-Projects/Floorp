@@ -72,6 +72,7 @@ webidl_files = \
   HTMLLabelElement.webidl \
   HTMLLIElement.webidl \
   HTMLMapElement.webidl \
+  HTMLModElement.webidl \
   HTMLOListElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLParagraphElement.webidl \
