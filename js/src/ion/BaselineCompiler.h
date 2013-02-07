@@ -82,6 +82,12 @@ namespace ion {
     _(JSOP_GE)                 \
     _(JSOP_EQ)                 \
     _(JSOP_NE)                 \
+    _(JSOP_STRICTEQ)           \
+    _(JSOP_STRICTNE)           \
+    _(JSOP_CONDSWITCH)         \
+    _(JSOP_CASE)               \
+    _(JSOP_DEFAULT)            \
+    _(JSOP_LINENO)             \
     _(JSOP_BITNOT)             \
     _(JSOP_NEG)                \
     _(JSOP_NEWARRAY)           \
