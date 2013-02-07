@@ -1065,6 +1065,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_lsl(imm, dest, dest);
     }
 
+    void
+    emitSet(Assembler::Condition cond, const Register &dest)
+    {
+        ma_mov(Imm32(0), dest);
+        ma_mov(Imm32(1), dest, NoSetCond, cond);
+    }
+
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.
     //

@@ -433,6 +433,43 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 }
 
 void
+MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register result,
+                               Register temp, Label *fail)
+{
+    JS_ASSERT(IsEqualityOp(op));
+
+    Label done;
+    Label notPointerEqual;
+    // Fast path for identical strings.
+    branchPtr(Assembler::NotEqual, left, right, &notPointerEqual);
+    move32(Imm32(op == JSOP_EQ || op == JSOP_STRICTEQ), result);
+    jump(&done);
+
+    bind(&notPointerEqual);
+    loadPtr(Address(left, JSString::offsetOfLengthAndFlags()), result);
+    loadPtr(Address(right, JSString::offsetOfLengthAndFlags()), temp);
+
+    Label notAtom;
+    // Optimize the equality operation to a pointer compare for two atoms.
+    Imm32 atomBit(JSString::ATOM_BIT);
+    branchTest32(Assembler::Zero, result, atomBit, &notAtom);
+    branchTest32(Assembler::Zero, temp, atomBit, &notAtom);
+
+    cmpPtr(left, right);
+    emitSet(JSOpToCondition(op), result);
+    jump(&done);
+
+    bind(&notAtom);
+    // Strings of different length can never be equal.
+    rshiftPtr(Imm32(JSString::LENGTH_SHIFT), result);
+    rshiftPtr(Imm32(JSString::LENGTH_SHIFT), temp);
+    branchPtr(Assembler::Equal, result, temp, fail);
+    move32(Imm32(op == JSOP_NE || op == JSOP_STRICTNE), result);
+
+    bind(&done);
+}
+
+void
 MacroAssembler::parCheckInterruptFlags(const Register &tempReg,
                                        Label *fail)
 {
