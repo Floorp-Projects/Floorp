@@ -4108,12 +4108,12 @@ const bool js_isspace[] = {
 #define URI_CHUNK 64U
 
 static inline bool
-TransferBufferToString(StringBuffer &sb, Value *rval)
+TransferBufferToString(StringBuffer &sb, MutableHandleValue rval)
 {
-    JSString *str = sb.finishString();
+    UnrootedString str = sb.finishString();
     if (!str)
         return false;
-    rval->setString(str);
+    rval.setString(str);
     return true;
 }
 
@@ -4124,20 +4124,20 @@ TransferBufferToString(StringBuffer &sb, Value *rval)
  * given in the ECMA specification for the hidden functions
  * 'Encode' and 'Decode'.
  */
-static JSBool
+static bool
 Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
-       const jschar *unescapedSet2, Value *rval)
+       const jschar *unescapedSet2, MutableHandleValue rval)
 {
     static const char HexDigits[] = "0123456789ABCDEF"; /* NB: uppercase */
 
     size_t length = str->length();
     const jschar *chars = str->getChars(cx);
     if (!chars)
-        return JS_FALSE;
+        return false;
 
     if (length == 0) {
-        rval->setString(cx->runtime->emptyString);
-        return JS_TRUE;
+        rval.setString(cx->runtime->emptyString);
+        return true;
     }
 
     StringBuffer sb(cx);
@@ -4149,12 +4149,12 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
         if (js_strchr(unescapedSet, c) ||
             (unescapedSet2 && js_strchr(unescapedSet2, c))) {
             if (!sb.append(c))
-                return JS_FALSE;
+                return false;
         } else {
             if ((c >= 0xDC00) && (c <= 0xDFFF)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_URI, NULL);
-                return JS_FALSE;
+                return false;
             }
             uint32_t v;
             if (c < 0xD800 || c > 0xDBFF) {
@@ -4164,13 +4164,13 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
                 if (k == length) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_URI, NULL);
-                    return JS_FALSE;
+                    return false;
                 }
                 jschar c2 = chars[k];
                 if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_URI, NULL);
-                    return JS_FALSE;
+                    return false;
                 }
                 v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
             }
@@ -4180,7 +4180,7 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
                 hexBuf[1] = HexDigits[utf8buf[j] >> 4];
                 hexBuf[2] = HexDigits[utf8buf[j] & 0xf];
                 if (!sb.append(hexBuf, 3))
-                    return JS_FALSE;
+                    return false;
             }
         }
     }
@@ -4188,17 +4188,17 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
     return TransferBufferToString(sb, rval);
 }
 
-static JSBool
-Decode(JSContext *cx, JSString *str, const jschar *reservedSet, Value *rval)
+static bool
+Decode(JSContext *cx, JSString *str, const jschar *reservedSet, MutableHandleValue rval)
 {
     size_t length = str->length();
     const jschar *chars = str->getChars(cx);
     if (!chars)
-        return JS_FALSE;
+        return false;
 
     if (length == 0) {
-        rval->setString(cx->runtime->emptyString);
-        return JS_TRUE;
+        rval.setString(cx->runtime->emptyString);
+        return true;
     }
 
     StringBuffer sb(cx);
@@ -4268,7 +4268,7 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, Value *rval)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_URI);
     /* FALL THROUGH */
 
-    return JS_FALSE;
+    return false;
 }
 
 static JSBool
@@ -4279,12 +4279,7 @@ str_decodeURI(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    RootedValue result(cx);
-    if (!Decode(cx, str, js_uriReservedPlusPound_ucstr, result.address()))
-        return false;
-
-    args.rval().set(result);
-    return true;
+    return Decode(cx, str, js_uriReservedPlusPound_ucstr, args.rval());
 }
 
 static JSBool
@@ -4295,12 +4290,7 @@ str_decodeURI_Component(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    Value result;
-    if (!Decode(cx, str, js_empty_ucstr, &result))
-        return false;
-
-    args.rval().set(result);
-    return true;
+    return Decode(cx, str, js_empty_ucstr, args.rval());
 }
 
 static JSBool
@@ -4311,12 +4301,7 @@ str_encodeURI(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    Value result;
-    if (!Encode(cx, str, js_uriReservedPlusPound_ucstr, js_uriUnescaped_ucstr, &result))
-        return false;
-
-    args.rval().set(result);
-    return true;
+    return Encode(cx, str, js_uriReservedPlusPound_ucstr, js_uriUnescaped_ucstr, args.rval());
 }
 
 static JSBool
@@ -4327,12 +4312,7 @@ str_encodeURI_Component(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    Value result;
-    if (!Encode(cx, str, js_uriUnescaped_ucstr, NULL, &result))
-        return false;
-
-    args.rval().set(result);
-    return true;
+    return Encode(cx, str, js_uriUnescaped_ucstr, NULL, args.rval());
 }
 
 /*
