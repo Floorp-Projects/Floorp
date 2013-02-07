@@ -122,6 +122,7 @@ EmitCallVM(IonCode *target, MacroAssembler &masm)
 
 // Size of vales pushed by EmitEnterStubFrame.
 static const uint32_t STUB_FRAME_SIZE = 4 * sizeof(void *);
+static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET = sizeof(void *);
 
 inline void
 EmitEnterStubFrame(MacroAssembler &masm, Register scratch)
