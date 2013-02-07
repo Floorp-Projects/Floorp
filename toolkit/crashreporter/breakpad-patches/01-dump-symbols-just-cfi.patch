@@ -1,0 +1,1159 @@
+# HG changeset patch
+# User Ted Mielczarek <ted@mielczarek.org>
+# Date 1352220493 18000
+# Node ID 0f7f04d2a249b9a9bbc61eb350f177054ab11601
+# Parent 96b3a2bb799eb401c8a80ed6c134289f91eb7436
+Allow reading just CFI data when reading symbols
+R=thestig at https://breakpad.appspot.com/517002/
+
+diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
+--- a/src/common/linux/dump_symbols.cc
++++ b/src/common/linux/dump_symbols.cc
+@@ -505,16 +505,17 @@
+ };
+ 
+ template<typename ElfClass>
+ bool LoadSymbols(const string& obj_file,
+                  const bool big_endian,
+                  const typename ElfClass::Ehdr* elf_header,
+                  const bool read_gnu_debug_link,
+                  LoadSymbolsInfo<ElfClass>* info,
++                 SymbolData symbol_data,
+                  Module* module) {
+   typedef typename ElfClass::Addr Addr;
+   typedef typename ElfClass::Phdr Phdr;
+   typedef typename ElfClass::Shdr Shdr;
+ 
+   Addr loading_addr = GetLoadingAddress<ElfClass>(
+       GetOffset<ElfClass, Phdr>(elf_header, elf_header->e_phoff),
+       elf_header->e_phnum);
+@@ -525,91 +526,95 @@
+       GetOffset<ElfClass, Shdr>(elf_header, elf_header->e_shoff);
+   const Shdr* section_names = sections + elf_header->e_shstrndx;
+   const char* names =
+       GetOffset<ElfClass, char>(elf_header, section_names->sh_offset);
+   const char *names_end = names + section_names->sh_size;
+   bool found_debug_info_section = false;
+   bool found_usable_info = false;
+ 
+-  // Look for STABS debugging information, and load it if present.
+-  const Shdr* stab_section =
++  if (symbol_data != ONLY_CFI) {
++    // Look for STABS debugging information, and load it if present.
++    const Shdr* stab_section =
+       FindElfSectionByName<ElfClass>(".stab", SHT_PROGBITS,
+                                      sections, names, names_end,
+                                      elf_header->e_shnum);
+-  if (stab_section) {
+-    const Shdr* stabstr_section = stab_section->sh_link + sections;
+-    if (stabstr_section) {
++    if (stab_section) {
++      const Shdr* stabstr_section = stab_section->sh_link + sections;
++      if (stabstr_section) {
++        found_debug_info_section = true;
++        found_usable_info = true;
++        info->LoadedSection(".stab");
++        if (!LoadStabs<ElfClass>(elf_header, stab_section, stabstr_section,
++                                 big_endian, module)) {
++          fprintf(stderr, "%s: \".stab\" section found, but failed to load"
++                  " STABS debugging information\n", obj_file.c_str());
++        }
++      }
++    }
++
++    // Look for DWARF debugging information, and load it if present.
++    const Shdr* dwarf_section =
++      FindElfSectionByName<ElfClass>(".debug_info", SHT_PROGBITS,
++                                     sections, names, names_end,
++                                     elf_header->e_shnum);
++    if (dwarf_section) {
+       found_debug_info_section = true;
+       found_usable_info = true;
+-      info->LoadedSection(".stab");
+-      if (!LoadStabs<ElfClass>(elf_header, stab_section, stabstr_section,
+-                               big_endian, module)) {
+-        fprintf(stderr, "%s: \".stab\" section found, but failed to load STABS"
+-                " debugging information\n", obj_file.c_str());
+-      }
++      info->LoadedSection(".debug_info");
++      if (!LoadDwarf<ElfClass>(obj_file, elf_header, big_endian, module))
++        fprintf(stderr, "%s: \".debug_info\" section found, but failed to load "
++                "DWARF debugging information\n", obj_file.c_str());
+     }
+   }
+ 
+-  // Look for DWARF debugging information, and load it if present.
+-  const Shdr* dwarf_section =
+-      FindElfSectionByName<ElfClass>(".debug_info", SHT_PROGBITS,
+-                                     sections, names, names_end,
+-                                     elf_header->e_shnum);
+-  if (dwarf_section) {
+-    found_debug_info_section = true;
+-    found_usable_info = true;
+-    info->LoadedSection(".debug_info");
+-    if (!LoadDwarf<ElfClass>(obj_file, elf_header, big_endian, module))
+-      fprintf(stderr, "%s: \".debug_info\" section found, but failed to load "
+-              "DWARF debugging information\n", obj_file.c_str());
+-  }
+-
+-  // Dwarf Call Frame Information (CFI) is actually independent from
+-  // the other DWARF debugging information, and can be used alone.
+-  const Shdr* dwarf_cfi_section =
+-      FindElfSectionByName<ElfClass>(".debug_frame", SHT_PROGBITS,
+-                                     sections, names, names_end,
+-                                     elf_header->e_shnum);
+-  if (dwarf_cfi_section) {
+-    // Ignore the return value of this function; even without call frame
+-    // information, the other debugging information could be perfectly
+-    // useful.
+-    info->LoadedSection(".debug_frame");
+-    bool result =
+-        LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".debug_frame",
+-                               dwarf_cfi_section, false, 0, 0, big_endian,
+-                               module);
+-    found_usable_info = found_usable_info || result;
+-  }
+-
+-  // Linux C++ exception handling information can also provide
+-  // unwinding data.
+-  const Shdr* eh_frame_section =
+-      FindElfSectionByName<ElfClass>(".eh_frame", SHT_PROGBITS,
+-                                     sections, names, names_end,
+-                                     elf_header->e_shnum);
+-  if (eh_frame_section) {
+-    // Pointers in .eh_frame data may be relative to the base addresses of
+-    // certain sections. Provide those sections if present.
+-    const Shdr* got_section =
+-        FindElfSectionByName<ElfClass>(".got", SHT_PROGBITS,
++  if (symbol_data != NO_CFI) {
++    // Dwarf Call Frame Information (CFI) is actually independent from
++    // the other DWARF debugging information, and can be used alone.
++    const Shdr* dwarf_cfi_section =
++        FindElfSectionByName<ElfClass>(".debug_frame", SHT_PROGBITS,
+                                        sections, names, names_end,
+                                        elf_header->e_shnum);
+-    const Shdr* text_section =
+-        FindElfSectionByName<ElfClass>(".text", SHT_PROGBITS,
++    if (dwarf_cfi_section) {
++      // Ignore the return value of this function; even without call frame
++      // information, the other debugging information could be perfectly
++      // useful.
++      info->LoadedSection(".debug_frame");
++      bool result =
++          LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".debug_frame",
++                                 dwarf_cfi_section, false, 0, 0, big_endian,
++                                 module);
++      found_usable_info = found_usable_info || result;
++    }
++
++    // Linux C++ exception handling information can also provide
++    // unwinding data.
++    const Shdr* eh_frame_section =
++        FindElfSectionByName<ElfClass>(".eh_frame", SHT_PROGBITS,
+                                        sections, names, names_end,
+                                        elf_header->e_shnum);
+-    info->LoadedSection(".eh_frame");
+-    // As above, ignore the return value of this function.
+-    bool result =
+-        LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".eh_frame",
+-                               eh_frame_section, true,
+-                               got_section, text_section, big_endian, module);
+-    found_usable_info = found_usable_info || result;
++    if (eh_frame_section) {
++      // Pointers in .eh_frame data may be relative to the base addresses of
++      // certain sections. Provide those sections if present.
++      const Shdr* got_section =
++          FindElfSectionByName<ElfClass>(".got", SHT_PROGBITS,
++                                         sections, names, names_end,
++                                         elf_header->e_shnum);
++      const Shdr* text_section =
++          FindElfSectionByName<ElfClass>(".text", SHT_PROGBITS,
++                                         sections, names, names_end,
++                                         elf_header->e_shnum);
++      info->LoadedSection(".eh_frame");
++      // As above, ignore the return value of this function.
++      bool result =
++          LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".eh_frame",
++                                 eh_frame_section, true,
++                                 got_section, text_section, big_endian, module);
++      found_usable_info = found_usable_info || result;
++    }
+   }
+ 
+   if (!found_debug_info_section) {
+     fprintf(stderr, "%s: file contains no debugging information"
+             " (no \".stab\" or \".debug_info\" sections)\n",
+             obj_file.c_str());
+ 
+     // Failed, but maybe there's a .gnu_debuglink section?
+@@ -631,17 +636,17 @@
+         } else {
+           fprintf(stderr, ".gnu_debuglink section found in '%s', "
+                   "but no debug path specified.\n", obj_file.c_str());
+         }
+       } else {
+         fprintf(stderr, "%s does not contain a .gnu_debuglink section.\n",
+                 obj_file.c_str());
+       }
+-    } else {
++    } else if (symbol_data != ONLY_CFI) {
+       // The caller doesn't want to consult .gnu_debuglink.
+       // See if there are export symbols available.
+       const Shdr* dynsym_section =
+           FindElfSectionByName<ElfClass>(".dynsym", SHT_DYNSYM,
+                                          sections, names, names_end,
+                                          elf_header->e_shnum);
+       const Shdr* dynstr_section =
+           FindElfSectionByName<ElfClass>(".dynstr", SHT_STRTAB,
+@@ -726,17 +731,17 @@
+   free(c_filename);
+   return base;
+ }
+ 
+ template<typename ElfClass>
+ bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
+                              const string& obj_filename,
+                              const std::vector<string>& debug_dirs,
+-                             bool cfi,
++                             SymbolData symbol_data,
+                              Module** out_module) {
+   typedef typename ElfClass::Ehdr Ehdr;
+   typedef typename ElfClass::Shdr Shdr;
+ 
+   *out_module = NULL;
+ 
+   unsigned char identifier[16];
+   if (!google_breakpad::FileID::ElfFileIdentifierFromMappedFile(elf_header,
+@@ -760,17 +765,18 @@
+ 
+   string name = BaseFileName(obj_filename);
+   string os = "Linux";
+   string id = FormatIdentifier(identifier);
+ 
+   LoadSymbolsInfo<ElfClass> info(debug_dirs);
+   scoped_ptr<Module> module(new Module(name, os, architecture, id));
+   if (!LoadSymbols<ElfClass>(obj_filename, big_endian, elf_header,
+-                             !debug_dirs.empty(), &info, module.get())) {
++                             !debug_dirs.empty(), &info,
++                             symbol_data, module.get())) {
+     const string debuglink_file = info.debuglink_file();
+     if (debuglink_file.empty())
+       return false;
+ 
+     // Load debuglink ELF file.
+     fprintf(stderr, "Found debugging info in %s\n", debuglink_file.c_str());
+     MmapWrapper debug_map_wrapper;
+     Ehdr* debug_elf_header = NULL;
+@@ -798,75 +804,76 @@
+       return false;
+     if (debug_big_endian != big_endian) {
+       fprintf(stderr, "%s and %s does not match in endianness\n",
+               obj_filename.c_str(), debuglink_file.c_str());
+       return false;
+     }
+ 
+     if (!LoadSymbols<ElfClass>(debuglink_file, debug_big_endian,
+-                               debug_elf_header, false, &info, module.get())) {
++                               debug_elf_header, false, &info,
++                               symbol_data, module.get())) {
+       return false;
+     }
+   }
+ 
+   *out_module = module.release();
+   return true;
+ }
+ 
+ }  // namespace
+ 
+ namespace google_breakpad {
+ 
+ // Not explicitly exported, but not static so it can be used in unit tests.
+ bool ReadSymbolDataInternal(const uint8_t* obj_file,
+                             const string& obj_filename,
+                             const std::vector<string>& debug_dirs,
+-                            bool cfi,
++                            SymbolData symbol_data,
+                             Module** module) {
+ 
+   if (!IsValidElf(obj_file)) {
+     fprintf(stderr, "Not a valid ELF file: %s\n", obj_filename.c_str());
+     return false;
+   }
+ 
+   int elfclass = ElfClass(obj_file);
+   if (elfclass == ELFCLASS32) {
+     return ReadSymbolDataElfClass<ElfClass32>(
+         reinterpret_cast<const Elf32_Ehdr*>(obj_file), obj_filename, debug_dirs,
+-        cfi, module);
++        symbol_data, module);
+   }
+   if (elfclass == ELFCLASS64) {
+     return ReadSymbolDataElfClass<ElfClass64>(
+         reinterpret_cast<const Elf64_Ehdr*>(obj_file), obj_filename, debug_dirs,
+-        cfi, module);
++        symbol_data, module);
+   }
+ 
+   return false;
+ }
+ 
+ bool WriteSymbolFile(const string &obj_file,
+                      const std::vector<string>& debug_dirs,
+-                     bool cfi,
++                     SymbolData symbol_data,
+                      std::ostream &sym_stream) {
+   Module* module;
+-  if (!ReadSymbolData(obj_file, debug_dirs, cfi, &module))
++  if (!ReadSymbolData(obj_file, debug_dirs, symbol_data, &module))
+     return false;
+ 
+-  bool result = module->Write(sym_stream, cfi);
++  bool result = module->Write(sym_stream, symbol_data);
+   delete module;
+   return result;
+ }
+ 
+ bool ReadSymbolData(const string& obj_file,
+                     const std::vector<string>& debug_dirs,
+-                    bool cfi,
++                    SymbolData symbol_data,
+                     Module** module) {
+   MmapWrapper map_wrapper;
+   void* elf_header = NULL;
+   if (!LoadELF(obj_file, &map_wrapper, &elf_header))
+     return false;
+ 
+   return ReadSymbolDataInternal(reinterpret_cast<uint8_t*>(elf_header),
+-                                obj_file, debug_dirs, cfi, module);
++                                obj_file, debug_dirs, symbol_data, module);
+ }
+ 
+ }  // namespace google_breakpad
+diff --git a/src/common/linux/dump_symbols.h b/src/common/linux/dump_symbols.h
+--- a/src/common/linux/dump_symbols.h
++++ b/src/common/linux/dump_symbols.h
+@@ -34,36 +34,37 @@
+ 
+ #ifndef COMMON_LINUX_DUMP_SYMBOLS_H__
+ #define COMMON_LINUX_DUMP_SYMBOLS_H__
+ 
+ #include <iostream>
+ #include <string>
+ #include <vector>
+ 
++#include "common/symbol_data.h"
+ #include "common/using_std_string.h"
+ 
+ namespace google_breakpad {
+ 
+ class Module;
+ 
+ // Find all the debugging information in OBJ_FILE, an ELF executable
+ // or shared library, and write it to SYM_STREAM in the Breakpad symbol
+ // file format.
+ // If OBJ_FILE has been stripped but contains a .gnu_debuglink section,
+ // then look for the debug file in DEBUG_DIRS.
+-// If CFI is set to false, then omit the CFI section.
++// SYMBOL_DATA allows limiting the type of symbol data written.
+ bool WriteSymbolFile(const string &obj_file,
+                      const std::vector<string>& debug_dirs,
+-                     bool cfi,
++                     SymbolData symbol_data,
+                      std::ostream &sym_stream);
+ 
+ // As above, but simply return the debugging information in MODULE
+ // instead of writing it to a stream. The caller owns the resulting
+ // Module object and must delete it when finished.
+ bool ReadSymbolData(const string& obj_file,
+                     const std::vector<string>& debug_dirs,
+-                    bool cfi,
++                    SymbolData symbol_data,
+                     Module** module);
+ 
+ }  // namespace google_breakpad
+ 
+ #endif  // COMMON_LINUX_DUMP_SYMBOLS_H__
+diff --git a/src/common/linux/dump_symbols_unittest.cc b/src/common/linux/dump_symbols_unittest.cc
+--- a/src/common/linux/dump_symbols_unittest.cc
++++ b/src/common/linux/dump_symbols_unittest.cc
+@@ -43,17 +43,17 @@
+ #include "common/linux/synth_elf.h"
+ #include "common/module.h"
+ #include "common/using_std_string.h"
+ 
+ namespace google_breakpad {
+ bool ReadSymbolDataInternal(const uint8_t* obj_file,
+                             const string& obj_filename,
+                             const std::vector<string>& debug_dir,
+-                            bool cfi,
++                            SymbolData symbol_data,
+                             Module** module);
+ }
+ 
+ using google_breakpad::synth_elf::ELF;
+ using google_breakpad::synth_elf::StringTable;
+ using google_breakpad::synth_elf::SymbolTable;
+ using google_breakpad::test_assembler::kLittleEndian;
+ using google_breakpad::test_assembler::Section;
+@@ -81,17 +81,17 @@
+ 
+ TEST_F(DumpSymbols, Invalid) {
+   Elf32_Ehdr header;
+   memset(&header, 0, sizeof(header));
+   Module* module;
+   EXPECT_FALSE(ReadSymbolDataInternal(reinterpret_cast<uint8_t*>(&header),
+                                       "foo",
+                                       vector<string>(),
+-                                      true,
++                                      ALL_SYMBOL_DATA,
+                                       &module));
+ }
+ 
+ TEST_F(DumpSymbols, SimplePublic32) {
+   ELF elf(EM_386, ELFCLASS32, kLittleEndian);
+   // Zero out text section for simplicity.
+   Section text(kLittleEndian);
+   text.Append(4096, 0);
+@@ -113,21 +113,21 @@
+ 
+   elf.Finish();
+   GetElfContents(elf);
+ 
+   Module* module;
+   EXPECT_TRUE(ReadSymbolDataInternal(elfdata,
+                                      "foo",
+                                      vector<string>(),
+-                                     true,
++                                     ALL_SYMBOL_DATA,
+                                      &module));
+ 
+   stringstream s;
+-  module->Write(s, true);
++  module->Write(s, ALL_SYMBOL_DATA);
+   EXPECT_EQ("MODULE Linux x86 000000000000000000000000000000000 foo\n"
+             "PUBLIC 1000 0 superfunc\n",
+             s.str());
+   delete module;
+ }
+ 
+ TEST_F(DumpSymbols, SimplePublic64) {
+   ELF elf(EM_X86_64, ELFCLASS64, kLittleEndian);
+@@ -152,17 +152,17 @@
+ 
+   elf.Finish();
+   GetElfContents(elf);
+ 
+   Module* module;
+   EXPECT_TRUE(ReadSymbolDataInternal(elfdata,
+                                      "foo",
+                                      vector<string>(),
+-                                     true,
++                                     ALL_SYMBOL_DATA,
+                                      &module));
+ 
+   stringstream s;
+-  module->Write(s, true);
++  module->Write(s, ALL_SYMBOL_DATA);
+   EXPECT_EQ("MODULE Linux x86_64 000000000000000000000000000000000 foo\n"
+             "PUBLIC 1000 0 superfunc\n",
+             s.str());
+ }
+diff --git a/src/common/mac/dump_syms.h b/src/common/mac/dump_syms.h
+--- a/src/common/mac/dump_syms.h
++++ b/src/common/mac/dump_syms.h
+@@ -42,23 +42,25 @@
+ 
+ #include <ostream>
+ #include <string>
+ #include <vector>
+ 
+ #include "common/byte_cursor.h"
+ #include "common/mac/macho_reader.h"
+ #include "common/module.h"
++#include "common/symbol_data.h"
+ 
+ namespace google_breakpad {
+ 
+ class DumpSymbols {
+  public:
+-  DumpSymbols()
+-      : input_pathname_(),
++  explicit DumpSymbols(SymbolData symbol_data)
++      : symbol_data_(symbol_data),
++        input_pathname_(),
+         object_filename_(),
+         contents_(),
+         selected_object_file_(),
+         selected_object_name_() { }
+   ~DumpSymbols() {
+     [input_pathname_ release];
+     [object_filename_ release];
+     [contents_ release];
+@@ -105,19 +107,19 @@
+   const struct fat_arch *AvailableArchitectures(size_t *count) {
+     *count = object_files_.size();
+     if (object_files_.size() > 0)
+       return &object_files_[0];
+     return NULL;
+   }
+ 
+   // Read the selected object file's debugging information, and write it out to
+-  // |stream|. Write the CFI section if |cfi| is true. Return true on success;
+-  // if an error occurs, report it and return false.
+-  bool WriteSymbolFile(std::ostream &stream, bool cfi);
++  // |stream|. Return true on success; if an error occurs, report it and
++  // return false.
++  bool WriteSymbolFile(std::ostream &stream);
+ 
+  private:
+   // Used internally.
+   class DumperLineToModule;
+   class LoadCommandDumper;
+ 
+   // Return an identifier string for the file this DumpSymbols is dumping.
+   std::string Identifier();
+@@ -134,16 +136,19 @@
+   // then the data is .eh_frame-format data; otherwise, it is standard DWARF
+   // .debug_frame data. On success, return true; on failure, report
+   // the problem and return false.
+   bool ReadCFI(google_breakpad::Module *module,
+                const mach_o::Reader &macho_reader,
+                const mach_o::Section &section,
+                bool eh_frame) const;
+ 
++  // The selection of what type of symbol data to read/write.
++  const SymbolData symbol_data_;
++
+   // The name of the file or bundle whose symbols this will dump.
+   // This is the path given to Read, for use in error messages.
+   NSString *input_pathname_;
+ 
+   // The name of the file this DumpSymbols will actually read debugging
+   // information from. Normally, this is the same as input_pathname_, but if
+   // filename refers to a dSYM bundle, then this is the resource file
+   // within that bundle.
+diff --git a/src/common/mac/dump_syms.mm b/src/common/mac/dump_syms.mm
+--- a/src/common/mac/dump_syms.mm
++++ b/src/common/mac/dump_syms.mm
+@@ -50,16 +50,17 @@
+ #include "common/dwarf_cu_to_module.h"
+ #include "common/dwarf_line_to_module.h"
+ #include "common/mac/file_id.h"
+ #include "common/mac/arch_utilities.h"
+ #include "common/mac/macho_reader.h"
+ #include "common/module.h"
+ #include "common/stabs_reader.h"
+ #include "common/stabs_to_module.h"
++#include "common/symbol_data.h"
+ 
+ #ifndef CPU_TYPE_ARM
+ #define CPU_TYPE_ARM (static_cast<cpu_type_t>(12))
+ #endif //  CPU_TYPE_ARM
+ 
+ using dwarf2reader::ByteReader;
+ using google_breakpad::DwarfCUToModule;
+ using google_breakpad::DwarfLineToModule;
+@@ -365,52 +366,61 @@
+ // Module.
+ class DumpSymbols::LoadCommandDumper:
+       public mach_o::Reader::LoadCommandHandler {
+  public:
+   // Create a load command dumper handling load commands from READER's
+   // file, and adding data to MODULE.
+   LoadCommandDumper(const DumpSymbols &dumper,
+                     google_breakpad::Module *module,
+-                    const mach_o::Reader &reader)
+-      : dumper_(dumper), module_(module), reader_(reader) { }
++                    const mach_o::Reader &reader,
++                    SymbolData symbol_data)
++      : dumper_(dumper),
++        module_(module),
++        reader_(reader),
++        symbol_data_(symbol_data) { }
+ 
+   bool SegmentCommand(const mach_o::Segment &segment);
+   bool SymtabCommand(const ByteBuffer &entries, const ByteBuffer &strings);
+ 
+  private:
+   const DumpSymbols &dumper_;
+   google_breakpad::Module *module_;  // WEAK
+   const mach_o::Reader &reader_;
++  const SymbolData symbol_data_;
+ };
+ 
+ bool DumpSymbols::LoadCommandDumper::SegmentCommand(const Segment &segment) {
+   mach_o::SectionMap section_map;
+   if (!reader_.MapSegmentSections(segment, &section_map))
+     return false;
+ 
+-  if (segment.name == "__TEXT") {
++  if (segment.name == "__TEXT" && symbol_data_ != NO_CFI) {
+     module_->SetLoadAddress(segment.vmaddr);
+     mach_o::SectionMap::const_iterator eh_frame =
+         section_map.find("__eh_frame");
+     if (eh_frame != section_map.end()) {
+       // If there is a problem reading this, don't treat it as a fatal error.
+       dumper_.ReadCFI(module_, reader_, eh_frame->second, true);
+     }
+     return true;
+   }
+ 
+   if (segment.name == "__DWARF") {
+-    if (!dumper_.ReadDwarf(module_, reader_, section_map))
+-      return false;
+-    mach_o::SectionMap::const_iterator debug_frame
+-        = section_map.find("__debug_frame");
+-    if (debug_frame != section_map.end()) {
+-      // If there is a problem reading this, don't treat it as a fatal error.
+-      dumper_.ReadCFI(module_, reader_, debug_frame->second, false);
++    if (symbol_data_ != ONLY_CFI) {
++      if (!dumper_.ReadDwarf(module_, reader_, section_map))
++        return false;
++    }
++    if (symbol_data_ != NO_CFI) {
++      mach_o::SectionMap::const_iterator debug_frame
++          = section_map.find("__debug_frame");
++      if (debug_frame != section_map.end()) {
++        // If there is a problem reading this, don't treat it as a fatal error.
++        dumper_.ReadCFI(module_, reader_, debug_frame->second, false);
++      }
+     }
+   }
+ 
+   return true;
+ }
+ 
+ bool DumpSymbols::LoadCommandDumper::SymtabCommand(const ByteBuffer &entries,
+                                                    const ByteBuffer &strings) {
+@@ -424,17 +434,17 @@
+                            true,
+                            &stabs_to_module);
+   if (!stabs_reader.Process())
+     return false;
+   stabs_to_module.Finalize();
+   return true;
+ }
+ 
+-bool DumpSymbols::WriteSymbolFile(std::ostream &stream, bool cfi) {
++bool DumpSymbols::WriteSymbolFile(std::ostream &stream) {
+   // Select an object file, if SetArchitecture hasn't been called to set one
+   // explicitly.
+   if (!selected_object_file_) {
+     // If there's only one architecture, that's the one.
+     if (object_files_.size() == 1)
+       selected_object_file_ = &object_files_[0];
+     else {
+       // Look for an object file whose architecture matches our own.
+@@ -489,16 +499,16 @@
+   if (!reader.Read(reinterpret_cast<const uint8_t *>([contents_ bytes])
+                    + selected_object_file_->offset,
+                    selected_object_file_->size,
+                    selected_object_file_->cputype,
+                    selected_object_file_->cpusubtype))
+     return false;
+ 
+   // Walk its load commands, and deal with whatever is there.
+-  LoadCommandDumper load_command_dumper(*this, &module, reader);
++  LoadCommandDumper load_command_dumper(*this, &module, reader, symbol_data_);
+   if (!reader.WalkLoadCommands(&load_command_dumper))
+     return false;
+ 
+-  return module.Write(stream, cfi);
++  return module.Write(stream, symbol_data_);
+ }
+ 
+ }  // namespace google_breakpad
+diff --git a/src/common/module.cc b/src/common/module.cc
+--- a/src/common/module.cc
++++ b/src/common/module.cc
+@@ -256,72 +256,74 @@
+        it != rule_map.end(); ++it) {
+     if (it != rule_map.begin())
+       stream << ' ';
+     stream << it->first << ": " << it->second;
+   }
+   return stream.good();
+ }
+ 
+-bool Module::Write(std::ostream &stream, bool cfi) {
++bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
+   stream << "MODULE " << os_ << " " << architecture_ << " "
+          << id_ << " " << name_ << endl;
+   if (!stream.good())
+     return ReportError();
+ 
+-  AssignSourceIds();
++  if (symbol_data != ONLY_CFI) {
++    AssignSourceIds();
+ 
+-  // Write out files.
+-  for (FileByNameMap::iterator file_it = files_.begin();
+-       file_it != files_.end(); ++file_it) {
+-    File *file = file_it->second;
+-    if (file->source_id >= 0) {
+-      stream << "FILE " << file->source_id << " " <<  file->name << endl;
++    // Write out files.
++    for (FileByNameMap::iterator file_it = files_.begin();
++         file_it != files_.end(); ++file_it) {
++      File *file = file_it->second;
++      if (file->source_id >= 0) {
++        stream << "FILE " << file->source_id << " " <<  file->name << endl;
++        if (!stream.good())
++          return ReportError();
++      }
++    }
++
++    // Write out functions and their lines.
++    for (FunctionSet::const_iterator func_it = functions_.begin();
++         func_it != functions_.end(); ++func_it) {
++      Function *func = *func_it;
++      stream << "FUNC " << hex
++             << (func->address - load_address_) << " "
++             << func->size << " "
++             << func->parameter_size << " "
++             << func->name << dec << endl;
++
++      if (!stream.good())
++        return ReportError();
++      for (vector<Line>::iterator line_it = func->lines.begin();
++           line_it != func->lines.end(); ++line_it) {
++        stream << hex
++               << (line_it->address - load_address_) << " "
++               << line_it->size << " "
++               << dec
++               << line_it->number << " "
++               << line_it->file->source_id << endl;
++        if (!stream.good())
++          return ReportError();
++      }
++    }
++
++    // Write out 'PUBLIC' records.
++    for (ExternSet::const_iterator extern_it = externs_.begin();
++         extern_it != externs_.end(); ++extern_it) {
++      Extern *ext = *extern_it;
++      stream << "PUBLIC " << hex
++             << (ext->address - load_address_) << " 0 "
++             << ext->name << dec << endl;
+       if (!stream.good())
+         return ReportError();
+     }
+   }
+ 
+-  // Write out functions and their lines.
+-  for (FunctionSet::const_iterator func_it = functions_.begin();
+-       func_it != functions_.end(); ++func_it) {
+-    Function *func = *func_it;
+-    stream << "FUNC " << hex
+-           << (func->address - load_address_) << " "
+-           << func->size << " "
+-           << func->parameter_size << " "
+-           << func->name << dec << endl;
+-
+-    if (!stream.good())
+-      return ReportError();
+-    for (vector<Line>::iterator line_it = func->lines.begin();
+-         line_it != func->lines.end(); ++line_it) {
+-      stream << hex
+-             << (line_it->address - load_address_) << " "
+-             << line_it->size << " "
+-             << dec
+-             << line_it->number << " "
+-             << line_it->file->source_id << endl;
+-      if (!stream.good())
+-        return ReportError();
+-    }
+-  }
+-
+-  // Write out 'PUBLIC' records.
+-  for (ExternSet::const_iterator extern_it = externs_.begin();
+-       extern_it != externs_.end(); ++extern_it) {
+-    Extern *ext = *extern_it;
+-    stream << "PUBLIC " << hex
+-           << (ext->address - load_address_) << " 0 "
+-           << ext->name << dec << endl;
+-    if (!stream.good())
+-      return ReportError();
+-  }
+-
+-  if (cfi) {
++  if (symbol_data != NO_CFI) {
+     // Write out 'STACK CFI INIT' and 'STACK CFI' records.
+     StackFrameEntrySet::const_iterator frame_it;
+     for (frame_it = stack_frame_entries_.begin();
+          frame_it != stack_frame_entries_.end(); ++frame_it) {
+       StackFrameEntry *entry = *frame_it;
+       stream << "STACK CFI INIT " << hex
+              << (entry->address - load_address_) << " "
+              << entry->size << " " << dec;
+diff --git a/src/common/module.h b/src/common/module.h
+--- a/src/common/module.h
++++ b/src/common/module.h
+@@ -39,16 +39,17 @@
+ #define COMMON_LINUX_MODULE_H__
+ 
+ #include <iostream>
+ #include <map>
+ #include <set>
+ #include <string>
+ #include <vector>
+ 
++#include "common/symbol_data.h"
+ #include "common/using_std_string.h"
+ #include "google_breakpad/common/breakpad_types.h"
+ 
+ namespace google_breakpad {
+ 
+ using std::set;
+ using std::vector;
+ using std::map;
+@@ -273,23 +274,25 @@
+   // source line data --- to -1.  We do this before writing out the
+   // symbol file, at which point we omit any unused files.
+   void AssignSourceIds();
+ 
+   // Call AssignSourceIds, and write this module to STREAM in the
+   // breakpad symbol format. Return true if all goes well, or false if
+   // an error occurs. This method writes out:
+   // - a header based on the values given to the constructor,
++  // If symbol_data is not ONLY_CFI then:
+   // - the source files added via FindFile,
+   // - the functions added via AddFunctions, each with its lines,
+   // - all public records,
+-  // - and if CFI is true, all CFI records.
++  // If symbol_data is not NO_CFI then:
++  // - all CFI records.
+   // Addresses in the output are all relative to the load address
+   // established by SetLoadAddress.
+-  bool Write(std::ostream &stream, bool cfi);
++  bool Write(std::ostream &stream, SymbolData symbol_data);
+ 
+  private:
+   // Report an error that has occurred writing the symbol file, using
+   // errno to find the appropriate cause.  Return false.
+   static bool ReportError();
+ 
+   // Write RULE_MAP to STREAM, in the form appropriate for 'STACK CFI'
+   // records, without a final newline. Return true if all goes well;
+diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
+--- a/src/common/module_unittest.cc
++++ b/src/common/module_unittest.cc
+@@ -65,17 +65,17 @@
+ #define MODULE_NAME "name with spaces"
+ #define MODULE_OS "os-name"
+ #define MODULE_ARCH "architecture"
+ #define MODULE_ID "id-string"
+ 
+ TEST(Write, Header) {
+   stringstream s;
+   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n",
+                contents.c_str());
+ }
+ 
+ TEST(Write, OneLineFunc) {
+   stringstream s;
+   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
+@@ -86,17 +86,17 @@
+   function->address = 0xe165bf8023b9d9abLL;
+   function->size = 0x1e4bb0eb1cbf5b09LL;
+   function->parameter_size = 0x772beee89114358aLL;
+   Module::Line line = { 0xe165bf8023b9d9abLL, 0x1e4bb0eb1cbf5b09LL,
+                         file, 67519080 };
+   function->lines.push_back(line);
+   m.AddFunction(function);
+ 
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "FILE 0 file_name.cc\n"
+                "FUNC e165bf8023b9d9ab 1e4bb0eb1cbf5b09 772beee89114358a"
+                " function_name\n"
+                "e165bf8023b9d9ab 1e4bb0eb1cbf5b09 67519080 0\n",
+                contents.c_str());
+ }
+@@ -136,17 +136,17 @@
+     "do you like your blueeyed boy";
+   entry->rule_changes[0x30f9e5c83323973eULL]["Mister"] = "Death";
+   m.AddStackFrameEntry(entry);
+ 
+   // Set the load address.  Doing this after adding all the data to
+   // the module must work fine.
+   m.SetLoadAddress(0x2ab698b0b6407073LL);
+ 
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "FILE 0 filename-a.cc\n"
+                "FILE 1 filename-b.cc\n"
+                "FUNC 9410dc39a798c580 2922088f98d3f6fc e5e9aa008bd5f0d0"
+                " A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)\n"
+                "b03cc3106d47eb91 cf621b8d324d0eb 67519080 0\n"
+                "9410dc39a798c580 1c2be6d6c5af2611 41676901 1\n"
+@@ -192,17 +192,17 @@
+   EXPECT_NE(-1, vec[0]->source_id);
+   // Expect filename2 not to be used.
+   EXPECT_STREQ("filename2", vec[1]->name.c_str());
+   EXPECT_EQ(-1, vec[1]->source_id);
+   EXPECT_STREQ("filename3", vec[2]->name.c_str());
+   EXPECT_NE(-1, vec[2]->source_id);
+ 
+   stringstream s;
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "FILE 0 filename1\n"
+                "FILE 1 filename3\n"
+                "FUNC 9b926d464f0b9384 4f524a4ba795e6a6 bbe8133a6641c9b7"
+                " function_name\n"
+                "595fa44ebacc1086 1e1e0191b066c5b3 137850127 0\n"
+                "401ce8c8a12d25e3 895751c41b8d2ce2 28113549 1\n",
+@@ -240,17 +240,17 @@
+     "do you like your blueeyed boy";
+   entry->rule_changes[0x30f9e5c83323973eULL]["Mister"] = "Death";
+   m.AddStackFrameEntry(entry);
+ 
+   // Set the load address.  Doing this after adding all the data to
+   // the module must work fine.
+   m.SetLoadAddress(0x2ab698b0b6407073LL);
+ 
+-  m.Write(s, false);
++  m.Write(s, NO_CFI);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "FILE 0 filename.cc\n"
+                "FUNC 9410dc39a798c580 2922088f98d3f6fc e5e9aa008bd5f0d0"
+                " A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)\n"
+                "9410dc39a798c580 1c2be6d6c5af2611 41676901 0\n",
+                contents.c_str());
+ }
+@@ -274,17 +274,17 @@
+ 
+   // Put them in a vector.
+   vector<Module::Function *> vec;
+   vec.push_back(function1);
+   vec.push_back(function2);
+ 
+   m.AddFunctions(vec.begin(), vec.end());
+ 
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "FUNC 2987743d0b35b13f b369db048deb3010 938e556cb5a79988"
+                " _and_void\n"
+                "FUNC d35024aa7ca7da5c 200b26e605f99071 f14ac4fed48c4a99"
+                " _without_form\n",
+                contents.c_str());
+ 
+@@ -326,17 +326,17 @@
+     "he will not see me stopping here";
+   entry3->rule_changes[0x36682fad3763ffffULL]["stromboli"] =
+     "his house is in";
+   entry3->rule_changes[0x36682fad3763ffffULL][".cfa"] =
+     "I think I know";
+   m.AddStackFrameEntry(entry3);
+ 
+   // Check that Write writes STACK CFI records properly.
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "STACK CFI INIT 5e8d0db0a7075c6c 1c7edb12a7aea229"
+                " .cfa: Whose woods are these\n"
+                "STACK CFI 36682fad3763ffff"
+                " .cfa: I think I know"
+                " stromboli: his house is in\n"
+                "STACK CFI 47ceb0f63c269d7f"
+@@ -402,17 +402,17 @@
+ 
+   // Two functions.
+   Module::Function *function1 = generate_duplicate_function("_without_form");
+   Module::Function *function2 = generate_duplicate_function("_without_form");
+ 
+   m.AddFunction(function1);
+   m.AddFunction(function2);
+ 
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "FUNC d35402aac7a7ad5c 200b26e605f99071 f14ac4fed48c4a99"
+                " _without_form\n",
+                contents.c_str());
+ }
+ 
+ TEST(Construct, FunctionsWithSameAddress) {
+@@ -421,17 +421,17 @@
+ 
+   // Two functions.
+   Module::Function *function1 = generate_duplicate_function("_without_form");
+   Module::Function *function2 = generate_duplicate_function("_and_void");
+ 
+   m.AddFunction(function1);
+   m.AddFunction(function2);
+ 
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "FUNC d35402aac7a7ad5c 200b26e605f99071 f14ac4fed48c4a99"
+                " _and_void\n"
+                "FUNC d35402aac7a7ad5c 200b26e605f99071 f14ac4fed48c4a99"
+                " _without_form\n",
+                contents.c_str());
+ }
+@@ -448,17 +448,17 @@
+   extern1->name = "_abc";
+   Module::Extern *extern2 = new(Module::Extern);
+   extern2->address = 0xaaaa;
+   extern2->name = "_xyz";
+ 
+   m.AddExtern(extern1);
+   m.AddExtern(extern2);
+ 
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+ 
+   EXPECT_STREQ("MODULE " MODULE_OS " " MODULE_ARCH " "
+                MODULE_ID " " MODULE_NAME "\n"
+                "PUBLIC aaaa 0 _xyz\n"
+                "PUBLIC ffff 0 _abc\n",
+                contents.c_str());
+ }
+@@ -475,17 +475,17 @@
+   extern1->name = "_xyz";
+   Module::Extern *extern2 = new(Module::Extern);
+   extern2->address = 0xffff;
+   extern2->name = "_abc";
+ 
+   m.AddExtern(extern1);
+   m.AddExtern(extern2);
+ 
+-  m.Write(s, true);
++  m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+ 
+   EXPECT_STREQ("MODULE " MODULE_OS " " MODULE_ARCH " "
+                MODULE_ID " " MODULE_NAME "\n"
+                "PUBLIC ffff 0 _xyz\n",
+                contents.c_str());
+ }
+ 
+diff --git a/src/common/symbol_data.h b/src/common/symbol_data.h
+new file mode 100644
+--- /dev/null
++++ b/src/common/symbol_data.h
+@@ -0,0 +1,42 @@
++// -*- mode: c++ -*-
++
++// Copyright (c) 2013 Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++#ifndef COMMON_SYMBOL_DATA_H_
++#define COMMON_SYMBOL_DATA_H_
++
++// Control what data is used from the symbol file.
++enum SymbolData {
++  ALL_SYMBOL_DATA,
++  NO_CFI,
++  ONLY_CFI
++};
++
++#endif  // COMMON_SYMBOL_DATA_H_
+diff --git a/src/tools/linux/dump_syms/dump_syms.cc b/src/tools/linux/dump_syms/dump_syms.cc
+--- a/src/tools/linux/dump_syms/dump_syms.cc
++++ b/src/tools/linux/dump_syms/dump_syms.cc
+@@ -63,15 +63,16 @@
+   std::vector<string> debug_dirs;
+   binary = argv[binary_index];
+   for (int debug_dir_index = binary_index + 1;
+        debug_dir_index < argc;
+        ++debug_dir_index) {
+     debug_dirs.push_back(argv[debug_dir_index]);
+   }
+ 
+-  if (!WriteSymbolFile(binary, debug_dirs, cfi, std::cout)) {
++  SymbolData symbol_data = cfi ? ALL_SYMBOL_DATA : NO_CFI;
++  if (!WriteSymbolFile(binary, debug_dirs, symbol_data, std::cout)) {
+     fprintf(stderr, "Failed to write symbol file.\n");
+     return 1;
+   }
+ 
+   return 0;
+ }
+diff --git a/src/tools/mac/dump_syms/dump_syms_tool.mm b/src/tools/mac/dump_syms/dump_syms_tool.mm
+--- a/src/tools/mac/dump_syms/dump_syms_tool.mm
++++ b/src/tools/mac/dump_syms/dump_syms_tool.mm
+@@ -49,17 +49,17 @@
+   Options() : srcPath(), arch(), cfi(true) { }
+   NSString *srcPath;
+   const NXArchInfo *arch;
+   bool cfi;
+ };
+ 
+ //=============================================================================
+ static bool Start(const Options &options) {
+-  DumpSymbols dump_symbols;
++  DumpSymbols dump_symbols(options.cfi ? ALL_SYMBOL_DATA : NO_CFI);
+ 
+   if (!dump_symbols.Read(options.srcPath))
+     return false;
+ 
+   if (options.arch) {
+     if (!dump_symbols.SetArchitecture(options.arch->cputype,
+                                       options.arch->cpusubtype)) {
+       fprintf(stderr, "%s: no architecture '%s' is present in file.\n",
+@@ -81,17 +81,17 @@
+         else
+           fprintf(stderr, "unrecognized cpu type 0x%x, subtype 0x%x\n",
+                   arch->cputype, arch->cpusubtype);
+       }
+       return false;
+     }
+   }
+ 
+-  return dump_symbols.WriteSymbolFile(std::cout, options.cfi);
++  return dump_symbols.WriteSymbolFile(std::cout);
+ }
+ 
+ //=============================================================================
+ static void Usage(int argc, const char *argv[]) {
+   fprintf(stderr, "Output a Breakpad symbol file from a Mach-o file.\n");
+   fprintf(stderr, "Usage: %s [-a ARCHITECTURE] [-c] <Mach-o file>\n",
+           argv[0]);
+   fprintf(stderr, "\t-a: Architecture type [default: native, or whatever is\n");
