@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLMetaElement.h"
-#include "nsGkAtoms.h"
+#include "mozilla/dom/HTMLMetaElementBinding.h"
 #include "nsStyleConsts.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsContentUtils.h"
@@ -19,6 +19,7 @@ namespace dom {
 HTMLMetaElement::HTMLMetaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 HTMLMetaElement::~HTMLMetaElement()
@@ -97,6 +98,12 @@ HTMLMetaElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   nsRefPtr<nsAsyncDOMEvent> event = new nsAsyncDOMEvent(this, aEventName, true,
                                                         true);
   event->PostDOMEvent();
+}
+
+JSObject*
+HTMLMetaElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return HTMLMetaElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
