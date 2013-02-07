@@ -309,6 +309,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
             return BAILOUT_RETURN_OVERRECURSED;
     }
 
+    fp->clearRunningInIon();
+
     jsbytecode *bailoutPc = fp->script()->code + iter.pcOffset();
     br->setBailoutPc(bailoutPc);
 
@@ -619,7 +621,6 @@ ion::ThunkToInterpreter(Value *vp)
     // prologue), so we must create one now for each inlined frame which needs
     // one.
     {
-        br->entryfp()->clearRunningInIon();
         ScriptFrameIter iter(cx);
         StackFrame *fp = NULL;
         Rooted<JSScript*> script(cx);
