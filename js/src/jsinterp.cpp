@@ -792,6 +792,11 @@ js::UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth)
     JS_ASSERT_IF(frame.isStackFrame(), cx->fp() == frame.asStackFrame());
     JS_ASSERT_IF(frame.isStackFrame(), stackDepth <= cx->regs().stackDepth());
 
+    // For eval frames, ScopeIter needs access to the previous frame.
+    // Ensure this field is initialized.
+    if (frame.isBaselineFrame() && frame.isEvalFrame())
+        frame.asBaselineFrame()->initEvalPrev(cx);
+
     for (ScopeIter si(frame, cx); !si.done(); ++si) {
         switch (si.type()) {
           case ScopeIter::Block:

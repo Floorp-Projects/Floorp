@@ -1038,10 +1038,15 @@ AbstractFramePtr::thisValue() const
 inline void
 AbstractFramePtr::popBlock(JSContext *cx) const
 {
-    if (isStackFrame())
+    if (isStackFrame()) {
         asStackFrame()->popBlock(cx);
-    else
-        JS_NOT_REACHED("Invalid frame");
+        return;
+    }
+#ifdef JS_ION
+    asBaselineFrame()->popBlock(cx);
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline void
