@@ -2430,8 +2430,11 @@ CloneRangeToSelection(nsRange* aRange, nsIDocument* aDoc,
   nsCOMPtr<nsIDOMNode> newEnd = GetEqualNodeInCloneTree(endContainer, aDoc);
   NS_ENSURE_TRUE_VOID(newStart && newEnd);
 
-  nsRefPtr<nsRange> range = new nsRange();
-  nsresult rv = range->SetStart(newStart, startOffset);
+  nsCOMPtr<nsINode> newStartNode = do_QueryInterface(newStart);
+  NS_ENSURE_TRUE_VOID(newStartNode);
+
+  nsRefPtr<nsRange> range = new nsRange(newStartNode);
+  nsresult rv = range->SetStart(newStartNode, startOffset);
   NS_ENSURE_SUCCESS_VOID(rv);
   rv = range->SetEnd(newEnd, endOffset);
   NS_ENSURE_SUCCESS_VOID(rv);
