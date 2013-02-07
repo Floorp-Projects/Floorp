@@ -1037,7 +1037,6 @@ RES_COLOR = \
   res/color/menu_item_title.xml \
   res/color/select_item_multichoice.xml \
   res/color/tab_title.xml \
-  res/color/tabs_counter_color.xml \
   $(NULL)
 
 RES_MENU = \
