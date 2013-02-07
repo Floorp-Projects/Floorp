@@ -889,7 +889,7 @@ TEST(ExceptionHandlerTest, ExternalDumper) {
   const ssize_t n = HANDLE_EINTR(recvmsg(fds[0], &msg, 0));
   ASSERT_EQ(static_cast<ssize_t>(kCrashContextSize), n);
   ASSERT_EQ(kControlMsgSize, msg.msg_controllen);
-  ASSERT_EQ(0, msg.msg_flags);
+  ASSERT_EQ(static_cast<typeof(msg.msg_flags)>(0), msg.msg_flags);
   ASSERT_EQ(0, close(fds[0]));
 
   pid_t crashing_pid = -1;

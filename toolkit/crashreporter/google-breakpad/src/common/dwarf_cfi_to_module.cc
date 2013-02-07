@@ -43,11 +43,11 @@ namespace google_breakpad {
 using std::ostringstream;
 
 vector<const UniqueString*> DwarfCFIToModule::RegisterNames::MakeVector(
-    const char * const *strings,
+    const char* const* strings,
     size_t size) {
   vector<const UniqueString*> names(size, NULL);
-  for (size_t i = 0; i < size; i++) {
-    names[i] = toUniqueString(strings[i]);
+  for (size_t i = 0; i < size; ++i) {
+    names[i] = ToUniqueString(strings[i]);
   }
 
   return names;
@@ -154,7 +154,7 @@ const UniqueString* DwarfCFIToModule::RegisterName(int i) {
   reporter_->UnnamedRegister(entry_offset_, reg);
   char buf[30];
   sprintf(buf, "unnamed_register%u", reg);
-  return toUniqueString(buf);
+  return ToUniqueString(buf);
 }
 
 void DwarfCFIToModule::Record(Module::Address address, int reg,
@@ -244,7 +244,7 @@ void DwarfCFIToModule::Reporter::UndefinedNotSupported(
           "the call frame entry at offset 0x%zx sets the rule for "
           "register '%s' to 'undefined', but the Breakpad symbol file format"
           " cannot express this\n",
-          file_.c_str(), section_.c_str(), offset, fromUniqueString(reg));
+          file_.c_str(), section_.c_str(), offset, FromUniqueString(reg));
 }
 
 void DwarfCFIToModule::Reporter::ExpressionsNotSupported(
@@ -255,7 +255,7 @@ void DwarfCFIToModule::Reporter::ExpressionsNotSupported(
           " describe how to recover register '%s', "
           " but this translator cannot yet translate DWARF expressions to"
           " Breakpad postfix expressions\n",
-          file_.c_str(), section_.c_str(), offset, fromUniqueString(reg));
+          file_.c_str(), section_.c_str(), offset, FromUniqueString(reg));
 }
 
 } // namespace google_breakpad
