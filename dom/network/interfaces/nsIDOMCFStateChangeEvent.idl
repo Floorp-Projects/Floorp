@@ -4,7 +4,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(9342c4eb-b6b3-414c-892f-c3630ce35c40)]
+[scriptable, builtinclass, uuid(905348f1-3d06-443c-8762-567e7e4b6696)]
 interface nsIDOMCFStateChangeEvent : nsIDOMEvent
 {
   /**
@@ -51,4 +51,24 @@ interface nsIDOMCFStateChangeEvent : nsIDOMEvent
    * nsIDOMMozMobileConnectionInfo.ICC_SERVICE_CLASS_* values.
    */
   readonly attribute unsigned short serviceClass;
+
+  [noscript] void initCFStateChangeEvent(in DOMString aType,
+                                         in boolean aCanBubble,
+                                         in boolean aCancelable,
+                                         in boolean aSuccess,
+                                         in unsigned short aAction,
+                                         in unsigned short aReason,
+                                         in DOMString aNumber,
+                                         in unsigned short aTimeSeconds,
+                                         in unsigned short aServiceClass);
+};
+
+dictionary CFStateChangeEventInit : EventInit
+{
+  boolean success;
+  unsigned short action;
+  unsigned short reason;
+  DOMString number;
+  unsigned short timeSeconds;
+  unsigned short serviceClass;
 };
