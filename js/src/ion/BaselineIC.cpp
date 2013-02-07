@@ -3578,5 +3578,132 @@ ICTableSwitch::fixupJumpTable(HandleScript script, BaselineScript *baseline)
         table_[i] = baseline->nativeCodeForPC(script, (jsbytecode *) table_[i]);
 }
 
+//
+// IteratorNew_Fallback
+//
+
+static bool
+DoIteratorNewFallback(JSContext *cx, ICIteratorNew_Fallback *stub, HandleValue value,
+                      MutableHandleValue res)
+{
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    FallbackICSpew(cx, stub, "IteratorNew");
+
+    uint8_t flags = GET_UINT8(pc);
+    res.set(value);
+    return ValueToIterator(cx, flags, res);
+}
+
+typedef bool (*DoIteratorNewFallbackFn)(JSContext *, ICIteratorNew_Fallback *,
+                                        HandleValue, MutableHandleValue);
+static const VMFunction DoIteratorNewFallbackInfo =
+    FunctionInfo<DoIteratorNewFallbackFn>(DoIteratorNewFallback, PopValues(1));
+
+bool
+ICIteratorNew_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    // Sync stack for the decompiler.
+    masm.pushValue(R0);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoIteratorNewFallbackInfo, masm);
+}
+
+//
+// IteratorMore_Fallback
+//
+
+static bool
+DoIteratorMoreFallback(JSContext *cx, ICIteratorMore_Fallback *stub, HandleValue iterValue,
+                       MutableHandleValue res)
+{
+    FallbackICSpew(cx, stub, "IteratorMore");
+
+    bool cond;
+    if (!IteratorMore(cx, &iterValue.toObject(), &cond, res))
+        return false;
+    res.setBoolean(cond);
+    return true;
+}
+
+typedef bool (*DoIteratorMoreFallbackFn)(JSContext *, ICIteratorMore_Fallback *,
+                                         HandleValue, MutableHandleValue);
+static const VMFunction DoIteratorMoreFallbackInfo =
+    FunctionInfo<DoIteratorMoreFallbackFn>(DoIteratorMoreFallback);
+
+bool
+ICIteratorMore_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoIteratorMoreFallbackInfo, masm);
+}
+
+//
+// IteratorNext_Fallback
+//
+
+static bool
+DoIteratorNextFallback(JSContext *cx, ICIteratorNext_Fallback *stub, HandleValue iterValue,
+                       MutableHandleValue res)
+{
+    FallbackICSpew(cx, stub, "IteratorNext");
+
+    RootedObject iteratorObject(cx, &iterValue.toObject());
+    return IteratorNext(cx, iteratorObject, res);
+}
+
+typedef bool (*DoIteratorNextFallbackFn)(JSContext *, ICIteratorNext_Fallback *,
+                                         HandleValue, MutableHandleValue);
+static const VMFunction DoIteratorNextFallbackInfo =
+    FunctionInfo<DoIteratorNextFallbackFn>(DoIteratorNextFallback);
+
+bool
+ICIteratorNext_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoIteratorNextFallbackInfo, masm);
+}
+
+//
+// IteratorClose_Fallback
+//
+
+static bool
+DoIteratorCloseFallback(JSContext *cx, ICIteratorClose_Fallback *stub, HandleValue iterValue)
+{
+    FallbackICSpew(cx, stub, "IteratorClose");
+
+    RootedObject iteratorObject(cx, &iterValue.toObject());
+    return CloseIterator(cx, iteratorObject);
+}
+
+typedef bool (*DoIteratorCloseFallbackFn)(JSContext *, ICIteratorClose_Fallback *, HandleValue);
+static const VMFunction DoIteratorCloseFallbackInfo =
+    FunctionInfo<DoIteratorCloseFallbackFn>(DoIteratorCloseFallback);
+
+bool
+ICIteratorClose_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoIteratorCloseFallbackInfo, masm);
+}
+
 } // namespace ion
 } // namespace js

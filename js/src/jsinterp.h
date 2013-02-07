@@ -413,6 +413,12 @@ bool
 DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject scopeObj,
                     MutableHandleValue res);
 
+bool
+IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rval);
+
+bool
+IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */
