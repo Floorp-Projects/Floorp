@@ -112,6 +112,7 @@ namespace layers {
 } // namespace layers
 
 namespace dom {
+class DocumentFragment;
 class Element;
 } // namespace dom
 
@@ -366,6 +367,7 @@ public:
 
   // Check if the (JS) caller can access aNode.
   static bool CanCallerAccess(nsIDOMNode *aNode);
+  static bool CanCallerAccess(nsINode* aNode);
 
   // Check if the (JS) caller can access aWindow.
   // aWindow can be either outer or inner window.
@@ -1084,6 +1086,10 @@ public:
                                            const nsAString& aFragment,
                                            bool aPreventScriptExecution,
                                            nsIDOMDocumentFragment** aReturn);
+  static already_AddRefed<mozilla::dom::DocumentFragment>
+  CreateContextualFragment(nsINode* aContextNode, const nsAString& aFragment,
+                           bool aPreventScriptExecution,
+                           mozilla::ErrorResult& aRv);
 
   /**
    * Invoke the fragment parsing algorithm (innerHTML) using the HTML parser.

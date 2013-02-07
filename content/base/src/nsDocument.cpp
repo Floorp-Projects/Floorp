@@ -5573,7 +5573,7 @@ nsDocument::CreateRange(nsIDOMRange** aReturn)
 already_AddRefed<nsRange>
 nsIDocument::CreateRange(ErrorResult& rv)
 {
-  nsRefPtr<nsRange> range = new nsRange();
+  nsRefPtr<nsRange> range = new nsRange(this);
   nsresult res = range->Set(this, 0, this, 0);
   if (NS_FAILED(res)) {
     rv.Throw(res);

@@ -133,6 +133,7 @@ webidl_files = \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
   ProcessingInstruction.webidl \
+  Range.webidl \
   Rect.webidl \
   RGBColor.webidl \
   RTCConfiguration.webidl \

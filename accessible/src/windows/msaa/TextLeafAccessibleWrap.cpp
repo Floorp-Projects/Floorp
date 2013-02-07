@@ -158,7 +158,7 @@ TextLeafAccessibleWrap::scrollToSubstring(
   if (IsDefunct())
     return E_FAIL;
 
-  nsRefPtr<nsRange> range = new nsRange();
+  nsRefPtr<nsRange> range = new nsRange(mContent);
   if (NS_FAILED(range->SetStart(mContent, aStartIndex)))
       return E_FAIL;
 
