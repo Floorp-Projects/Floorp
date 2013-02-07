@@ -137,6 +137,7 @@ function HealthReporter(branch, policy, sessionRecorder) {
   this._shutdownCompleteCallback = null;
 
   this._constantOnlyProviders = {};
+  this._constantOnlyProvidersRegistered = false;
   this._lastDailyDate = null;
 
   TelemetryStopwatch.start(TELEMETRY_INIT, this);
@@ -521,6 +522,30 @@ HealthReporter.prototype = Object.freeze({
   },
 
   /**
+   * Registers a provider from its constructor function.
+   *
+   * If the provider is constant-only, it will be stashed away and
+   * initialized later. Null will be returned.
+   *
+   * If it is not constant-only, it will be initialized immediately and a
+   * promise will be returned. The promise will be resolved when the
+   * provider has finished initializing.
+   */
+  registerProviderFromType: function (type) {
+    let proto = type.prototype;
+    if (proto.constantOnly) {
+      this._log.info("Provider is constant-only. Deferring initialization: " +
+                     proto.name);
+      this._constantOnlyProviders[proto.name] = type;
+
+      return null;
+    }
+
+    let provider = this.initProviderFromType(type);
+    return this.registerProvider(provider);
+  },
+
+  /**
    * Registers providers from a category manager category.
    *
    * This examines the specified category entries and registers found
@@ -568,14 +593,9 @@ HealthReporter.prototype = Object.freeze({
         let ns = {};
         Cu.import(uri, ns);
 
-        let proto = ns[entry].prototype;
-        if (proto.constantOnly) {
-          this._log.info("Provider is constant-only. Deferring initialization: " +
-                         proto.name);
-          this._constantOnlyProviders[proto.name] = ns[entry];
-        } else {
-          let provider = this.initProviderFromType(ns[entry]);
-          promises.push(this.registerProvider(provider));
+        let promise = this.registerProviderFromType(ns[entry]);
+        if (promise) {
+          promises.push(promise);
         }
       } catch (ex) {
         this._log.warn("Error registering provider from category manager: " +
@@ -600,10 +620,20 @@ HealthReporter.prototype = Object.freeze({
   },
 
   /**
-   * Collect all measurements for all registered providers.
+   * Ensure that constant-only providers are registered.
    */
-  collectMeasurements: function () {
-    return Task.spawn(function doCollection() {
+  ensureConstantOnlyProvidersRegistered: function () {
+    if (this._constantOnlyProvidersRegistered) {
+      return Promise.resolve();
+    }
+
+    let onFinished = function () {
+      this._constantOnlyProvidersRegistered = true;
+
+      return Promise.resolve();
+    }.bind(this);
+
+    return Task.spawn(function registerConstantProviders() {
       for each (let providerType in this._constantOnlyProviders) {
         try {
           let provider = this.initProviderFromType(providerType);
@@ -613,27 +643,51 @@ HealthReporter.prototype = Object.freeze({
                          CommonUtils.exceptionStr(ex));
         }
       }
+    }.bind(this)).then(onFinished, onFinished);
+  },
 
+  ensureConstantOnlyProvidersUnregistered: function () {
+    if (!this._constantOnlyProvidersRegistered) {
+      return Promise.resolve();
+    }
+
+    let onFinished = function () {
+      this._constantOnlyProvidersRegistered = false;
+
+      return Promise.resolve();
+    }.bind(this);
+
+    return Task.spawn(function unregisterConstantProviders() {
+      for (let provider of this._collector.providers) {
+        if (!provider.constantOnly) {
+          continue;
+        }
+
+        this._log.info("Shutting down constant-only provider: " +
+                       provider.name);
+
+        try {
+          yield provider.shutdown();
+        } catch (ex) {
+          this._log.warn("Error when shutting down provider: " +
+                         CommonUtils.exceptionStr(ex));
+        } finally {
+          this._collector.unregisterProvider(provider.name);
+        }
+      }
+    }.bind(this)).then(onFinished, onFinished);
+  },
+
+  /**
+   * Collect all measurements for all registered providers.
+   */
+  collectMeasurements: function () {
+    return Task.spawn(function doCollection() {
       try {
         yield this._collector.collectConstantData();
-      } finally {
-        for (let provider of this._collector.providers) {
-          if (!provider.constantOnly) {
-            continue;
-          }
-
-          this._log.info("Shutting down constant-only provider: " +
-                         provider.name);
-
-          try {
-            yield provider.shutdown();
-          } catch (ex) {
-            this._log.warn("Error when shutting down provider: " +
-                           CommonUtils.exceptionStr(ex));
-          } finally {
-            this._collector.unregisterProvider(provider.name);
-          }
-        }
+      } catch (ex) {
+        this._log.warn("Error collecting constant data: " +
+                       CommonUtils.exceptionStr(ex));
       }
 
       // Daily data is collected if it hasn't yet been collected this
@@ -672,10 +726,28 @@ HealthReporter.prototype = Object.freeze({
    */
   collectAndObtainJSONPayload: function (asObject=false) {
     return Task.spawn(function collectAndObtain() {
-      yield this.collectMeasurements();
+      yield this.ensureConstantOnlyProvidersRegistered();
 
-      let payload = yield this.getJSONPayload(asObject);
+      let payload;
+      let error;
 
+      try {
+        yield this.collectMeasurements();
+        payload = yield this.getJSONPayload(asObject);
+      } catch (ex) {
+        error = ex;
+        this._log.warn("Error collecting and/or retrieving JSON payload: " +
+                       CommonUtils.exceptionStr(ex));
+      } finally {
+        yield this.ensureConstantOnlyProvidersUnregistered();
+
+        if (error) {
+          throw error;
+        }
+      }
+
+      // We hold off throwing to ensure that behavior between finally
+      // and generators and throwing is sane.
       throw new Task.Result(payload);
     }.bind(this));
   },
@@ -686,9 +758,19 @@ HealthReporter.prototype = Object.freeze({
    * The passed argument is a `DataSubmissionRequest` from policy.jsm.
    */
   requestDataUpload: function (request) {
-    this.collectMeasurements()
-        .then(this._uploadData.bind(this, request),
-              this._onSubmitDataRequestFailure.bind(this));
+    return Task.spawn(function doUpload() {
+      yield this.ensureConstantOnlyProvidersRegistered();
+      try {
+        yield this.collectMeasurements();
+        try {
+          yield this._uploadData(request);
+        } catch (ex) {
+          this._onSubmitDataRequestFailure(ex);
+        }
+      } finally {
+        yield this.ensureConstantOnlyProvidersUnregistered();
+      }
+    }.bind(this));
   },
 
   /**
@@ -718,6 +800,8 @@ HealthReporter.prototype = Object.freeze({
    * @param asObject
    *        (bool) Whether to return an object or JSON encoding of that
    *        object (the default).
+   *
+   * @return Promise<string|object>
    */
   getJSONPayload: function (asObject=false) {
     TelemetryStopwatch.start(TELEMETRY_GENERATE_PAYLOAD, this);

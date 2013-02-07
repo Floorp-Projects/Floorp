@@ -192,7 +192,9 @@ add_task(function test_constant_only_providers() {
   do_check_true(reporter._storage.hasProvider("DummyProvider"));
   do_check_false(reporter._storage.hasProvider("DummyConstantProvider"));
 
+  yield reporter.ensureConstantOnlyProvidersRegistered();
   yield reporter.collectMeasurements();
+  yield reporter.ensureConstantOnlyProvidersUnregistered();
 
   do_check_eq(reporter._collector._providers.size, 1);
   do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
@@ -294,6 +296,59 @@ add_task(function test_collect_and_obtain_json_payload() {
   reporter._shutdown();
 });
 
+// Ensure constant-only providers make their way into the JSON payload.
+add_task(function test_constant_only_providers_in_json_payload() {
+  const category = "healthreporter-constant-only-in-payload";
+
+  let cm = Cc["@mozilla.org/categorymanager;1"]
+             .getService(Ci.nsICategoryManager);
+  cm.addCategoryEntry(category, "DummyProvider",
+                      "resource://testing-common/services/metrics/mocks.jsm",
+                      false, true);
+  cm.addCategoryEntry(category, "DummyConstantProvider",
+                      "resource://testing-common/services/metrics/mocks.jsm",
+                      false, true);
+
+  let reporter = yield getReporter("constant_only_providers_in_json_payload");
+  yield reporter.registerProvidersFromCategoryManager(category);
+
+  let payload = yield reporter.collectAndObtainJSONPayload();
+  let o = JSON.parse(payload);
+  do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
+  do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
+
+  let providers = reporter._collector.providers;
+  do_check_eq(providers.length, 1);
+
+  // Do it again for good measure.
+  payload = yield reporter.collectAndObtainJSONPayload();
+  o = JSON.parse(payload);
+  do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
+  do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
+
+  providers = reporter._collector.providers;
+  do_check_eq(providers.length, 1);
+
+  // Ensure throwing getJSONPayload is handled properly.
+  Object.defineProperty(reporter, "_getJSONPayload", {
+    value: function () {
+      throw new Error("Silly error.");
+    },
+  });
+
+  let deferred = Promise.defer();
+
+  reporter.collectAndObtainJSONPayload().then(do_throw, function onError() {
+    providers = reporter._collector.providers;
+    do_check_eq(providers.length, 1);
+    deferred.resolve();
+  });
+
+  yield deferred.promise;
+
+  reporter._shutdown();
+});
+
 add_task(function test_json_payload_multiple_days() {
   let reporter = yield getReporter("json_payload_multiple_days");
   let provider = new DummyProvider();
@@ -363,6 +418,9 @@ add_task(function test_data_submission_transport_failure() {
 add_task(function test_data_submission_success() {
   let [reporter, server] = yield getReporterAndServer("data_submission_success");
 
+  yield reporter.registerProviderFromType(DummyProvider);
+  yield reporter.registerProviderFromType(DummyConstantProvider);
+
   do_check_eq(reporter.lastPingDate.getTime(), 0);
   do_check_false(reporter.haveRemoteData());
 
@@ -374,6 +432,11 @@ add_task(function test_data_submission_success() {
   do_check_eq(request.state, request.SUBMISSION_SUCCESS);
   do_check_true(reporter.lastPingDate.getTime() > 0);
   do_check_true(reporter.haveRemoteData());
+
+  // Ensure data from providers made it to payload.
+  let o = yield reporter.getLastPayload();
+  do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
+  do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
   reporter._shutdown();
   yield shutdownServer(server);
