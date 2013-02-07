@@ -342,7 +342,7 @@ static JSBool
 str_uneval(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSString *str = ValueToSource(cx, args.length() != 0 ? args[0] : UndefinedValue());
+    JSString *str = ValueToSource(cx, args.get(0));
     if (!str)
         return false;
 
@@ -396,24 +396,24 @@ str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp)
 {
     if (!JSID_IS_INT(id))
-        return JS_TRUE;
+        return true;
 
-    JSString *str = obj->asString().unbox();
+    RootedString str(cx, obj->asString().unbox());
 
     int32_t slot = JSID_TO_INT(id);
     if ((size_t)slot < str->length()) {
         JSString *str1 = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(slot));
         if (!str1)
-            return JS_FALSE;
+            return false;
         RootedValue value(cx, StringValue(str1));
         if (!JSObject::defineElement(cx, obj, uint32_t(slot), value, NULL, NULL,
                                      STRING_ELEMENT_ATTRS))
         {
-            return JS_FALSE;
+            return false;
         }
         objp.set(obj);
     }
-    return JS_TRUE;
+    return true;
 }
 
 Class js::StringClass = {
@@ -483,7 +483,7 @@ static JSBool
 str_quote(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSString *str = ThisToStringForStringProto(cx, args);
+    RootedString str(cx, ThisToStringForStringProto(cx, args));
     if (!str)
         return false;
     str = js_QuoteString(cx, str, '"');
@@ -652,7 +652,7 @@ js_toLowerCase(JSContext *cx, JSString *str)
 static inline bool
 ToLowerCaseHelper(JSContext *cx, CallReceiver call)
 {
-    JSString *str = ThisToStringForStringProto(cx, call);
+    RootedString str(cx, ThisToStringForStringProto(cx, call));
     if (!str)
         return false;
 
@@ -719,7 +719,7 @@ js_toUpperCase(JSContext *cx, JSString *str)
 static JSBool
 ToUpperCaseHelper(JSContext *cx, CallReceiver call)
 {
-    JSString *str = ThisToStringForStringProto(cx, call);
+    RootedString str(cx, ThisToStringForStringProto(cx, call));
     if (!str)
         return false;
 
@@ -1455,7 +1455,7 @@ static JSBool
 js_TrimString(JSContext *cx, Value *vp, JSBool trimLeft, JSBool trimRight)
 {
     CallReceiver call = CallReceiverFromVp(vp);
-    JSString *str = ThisToStringForStringProto(cx, call);
+    RootedString str(cx, ThisToStringForStringProto(cx, call));
     if (!str)
         return false;
     size_t length = str->length();
@@ -2510,7 +2510,7 @@ str_replace_flat_lambda(JSContext *cx, CallArgs outerArgs, ReplaceData &rdata, c
 {
     JS_ASSERT(fm.match() >= 0);
 
-    JSString *matchStr = js_NewDependentString(cx, rdata.str, fm.match(), fm.patternLength());
+    RootedString matchStr(cx, js_NewDependentString(cx, rdata.str, fm.match(), fm.patternLength()));
     if (!matchStr)
         return false;
 
@@ -2897,7 +2897,7 @@ class SplitStringMatcher
     Rooted<JSLinearString*> sep;
 
   public:
-    SplitStringMatcher(JSContext *cx, JSLinearString *sep)
+    SplitStringMatcher(JSContext *cx, HandleLinearString sep)
       : sep(cx, sep)
     {}
 
@@ -2947,7 +2947,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 8. */
     RegExpGuard re(cx);
-    JSLinearString *sepstr = NULL;
+    RootedLinearString sepstr(cx);
     bool sepDefined = args.hasDefined(0);
     if (sepDefined) {
         if (IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
@@ -2985,7 +2985,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Steps 11-15. */
-    JSObject *aobj;
+    RootedObject aobj(cx);
     if (!re.initialized()) {
         SplitStringMatcher matcher(cx, sepstr);
         aobj = SplitHelper(cx, stableStr, limit, matcher, type);
@@ -3017,8 +3017,8 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         if (begin >= length) {
-            str = cx->runtime->emptyString;
-            goto out;
+            args.rval().setString(cx->runtime->emptyString);
+            return true;
         }
         if (begin < 0) {
             begin += length; /* length + INT_MIN will always be less than 0 */
@@ -3031,8 +3031,8 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
                 return false;
 
             if (len <= 0) {
-                str = cx->runtime->emptyString;
-                goto out;
+                args.rval().setString(cx->runtime->emptyString);
+                return true;
             }
 
             if (uint32_t(length) < uint32_t(begin + len))
@@ -3046,7 +3046,6 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-out:
     args.rval().setString(str);
     return true;
 }
@@ -3093,13 +3092,11 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() == 1 && args.thisv().isString() && args[0].isInt32()) {
-        size_t begin, end, length;
-
         JSString *str = args.thisv().toString();
-        begin = args[0].toInt32();
-        end = str->length();
+        size_t begin = args[0].toInt32();
+        size_t end = str->length();
         if (begin <= end) {
-            length = end - begin;
+            size_t length = end - begin;
             if (length == 0) {
                 str = cx->runtime->emptyString;
             } else {
