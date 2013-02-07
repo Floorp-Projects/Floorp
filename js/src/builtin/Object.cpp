@@ -321,12 +321,12 @@ obj_toString(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 3. */
-    JSObject *obj = ToObject(cx, args.thisv());
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
     /* Steps 4-5. */
-    JSString *str = js::obj_toStringHelper(cx, obj);
+    UnrootedString str = js::obj_toStringHelper(cx, obj);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -342,7 +342,7 @@ obj_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    JSObject *obj = ToObject(cx, args.thisv());
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
@@ -355,7 +355,7 @@ static JSBool
 obj_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, args.thisv());
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
     args.rval().setObject(*obj);
@@ -710,7 +710,7 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    JSObject *proto = v.toObjectOrNull();
+    RootedObject proto(cx, v.toObjectOrNull());
 
     /*
      * Use the callee's global as the parent of the new object to avoid dynamic
