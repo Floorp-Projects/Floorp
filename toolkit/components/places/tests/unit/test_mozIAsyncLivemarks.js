@@ -180,7 +180,6 @@ add_test(function test_addLivemark_noCallback_succeeds()
     },
     onBeginUpdateBatch: function onBeginUpdateBatch() {},
     onEndUpdateBatch: function onEndUpdateBatch() {},
-    onBeforeItemRemoved: function onBeforeItemRemoved() {},
     onItemRemoved: function onItemRemoved() {},
     onItemChanged: function onItemChanged() {},
     onItemVisited: function onItemVisited() {},

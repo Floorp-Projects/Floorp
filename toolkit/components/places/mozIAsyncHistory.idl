@@ -11,9 +11,6 @@ interface nsIVariant;
 #include "jsapi.h"
 %}
 
-/**
- * @status EXPERIMENTAL
- */
 [scriptable, uuid(1a3b1260-4bdb-45d0-a306-dc377dd9baa4)]
 interface mozIVisitInfo : nsISupports
 {
@@ -48,9 +45,6 @@ interface mozIVisitInfo : nsISupports
   readonly attribute long long sessionId;
 };
 
-/**
- * @status EXPERIMENTAL
- */
 [scriptable, uuid(ad83e137-c92a-4b7b-b67e-0a318811f91e)]
 interface mozIPlaceInfo : nsISupports
 {
@@ -86,9 +80,6 @@ interface mozIPlaceInfo : nsISupports
   readonly attribute jsval visits;
 };
 
-/**
- * @status EXPERIMENTAL
- */
 [scriptable, uuid(1f266877-2859-418b-a11b-ec3ae4f4f93d)]
 interface mozIVisitInfoCallback : nsISupports
 {
@@ -122,9 +113,6 @@ interface mozIVisitInfoCallback : nsISupports
 
 };
 
-/**
- * @status EXPERIMENTAL
- */
 [scriptable, function, uuid(994092bf-936f-449b-8dd6-0941e024360d)]
 interface mozIVisitedStatusCallback : nsISupports
 {
@@ -140,9 +128,6 @@ interface mozIVisitedStatusCallback : nsISupports
                  in boolean aVisitedStatus);
 };
 
-/**
- * @status EXPERIMENTAL
- */
 [scriptable, uuid(b7edc16e-9f3c-4bf5-981b-4e8000b02d89)]
 interface mozIAsyncHistory : nsISupports
 {

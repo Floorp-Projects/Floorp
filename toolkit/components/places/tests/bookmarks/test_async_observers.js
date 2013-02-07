@@ -28,7 +28,6 @@ let observer = {
   onBeginUpdateBatch: function () {},
   onEndUpdateBatch: function () {},
   onItemAdded: function () {},
-  onBeforeItemRemoved: function () {},
   onItemRemoved: function () {},
   onItemMoved: function () {},
   onItemChanged: function(aItemId, aProperty, aIsAnnotation, aNewValue,

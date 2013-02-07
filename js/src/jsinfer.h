@@ -1122,10 +1122,6 @@ typedef HashSet<ReadBarriered<TypeObject>, TypeObjectEntry, SystemAllocPolicy> T
 bool
 UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
 
-/* Whether to use a new type object for an initializer opcode at script/pc. */
-bool
-UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey key);
-
 /*
  * Whether Array.prototype, or an object on its proto chain, has an
  * indexed property.

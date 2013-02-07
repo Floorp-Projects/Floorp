@@ -27,7 +27,6 @@ let bookmarksObserver = {
       continue_test();
   },
   onItemAdded: function() {},
-  onBeforeItemRemoved: function(id) {},
   onItemRemoved: function(id, folder, index, itemType) {},
   onItemChanged: function() {},
   onItemVisited: function(id, visitID, time) {},

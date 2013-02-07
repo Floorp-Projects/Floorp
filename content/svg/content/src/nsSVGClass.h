@@ -34,8 +34,19 @@ public:
   bool IsAnimated() const
     { return !!mAnimVal; }
 
+  already_AddRefed<nsIDOMSVGAnimatedString>
+  ToDOMAnimatedString(nsSVGElement* aSVGElement)
+  {
+    nsRefPtr<DOMAnimatedString> result = new DOMAnimatedString(this, aSVGElement);
+    return result.forget();
+  }
   nsresult ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
-                               nsSVGElement *aSVGElement);
+                               nsSVGElement *aSVGElement)
+  {
+    *aResult = ToDOMAnimatedString(aSVGElement).get();
+    return NS_OK;
+  }
+
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement *aSVGElement);
 

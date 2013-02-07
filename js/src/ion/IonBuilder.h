@@ -382,41 +382,40 @@ class IonBuilder : public MIRGenerator
     };
 
     // Inlining helpers.
-    bool discardCallArgs(uint32_t argc, MDefinitionVector &argv, MBasicBlock *bb);
-    bool discardCall(uint32_t argc, MDefinitionVector &argv, MBasicBlock *bb);
     types::StackTypeSet *getInlineReturnTypeSet();
     MIRType getInlineReturnType();
-    types::StackTypeSet *getInlineArgTypeSet(uint32_t argc, uint32_t arg);
-    MIRType getInlineArgType(uint32_t argc, uint32_t arg);
+    types::StackTypeSet *getInlineThisTypeSet(CallInfo &callInfo);
+    MIRType getInlineThisType(CallInfo &callInfo);
+    types::StackTypeSet *getInlineArgTypeSet(CallInfo &callInfo, uint32_t arg);
+    MIRType getInlineArgType(CallInfo &callInfo, uint32_t arg);
 
     // Array natives.
-    InliningStatus inlineArray(uint32_t argc, bool constructing);
-    InliningStatus inlineArrayPopShift(MArrayPopShift::Mode mode, uint32_t argc, bool constructing);
-    InliningStatus inlineArrayPush(uint32_t argc, bool constructing);
-    InliningStatus inlineArrayConcat(uint32_t argc, bool constructing);
+    InliningStatus inlineArray(CallInfo &callInfo);
+    InliningStatus inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode);
+    InliningStatus inlineArrayPush(CallInfo &callInfo);
+    InliningStatus inlineArrayConcat(CallInfo &callInfo);
 
     // Math natives.
-    InliningStatus inlineMathAbs(uint32_t argc, bool constructing);
-    InliningStatus inlineMathFloor(uint32_t argc, bool constructing);
-    InliningStatus inlineMathRound(uint32_t argc, bool constructing);
-    InliningStatus inlineMathSqrt(uint32_t argc, bool constructing);
-    InliningStatus inlineMathMinMax(bool max, uint32_t argc, bool constructing);
-    InliningStatus inlineMathPow(uint32_t argc, bool constructing);
-    InliningStatus inlineMathRandom(uint32_t argc, bool constructing);
-    InliningStatus inlineMathImul(uint32_t argc, bool constructing);
-    InliningStatus inlineMathFunction(MMathFunction::Function function, uint32_t argc,
-                                      bool constructing);
+    InliningStatus inlineMathAbs(CallInfo &callInfo);
+    InliningStatus inlineMathFloor(CallInfo &callInfo);
+    InliningStatus inlineMathRound(CallInfo &callInfo);
+    InliningStatus inlineMathSqrt(CallInfo &callInfo);
+    InliningStatus inlineMathMinMax(CallInfo &callInfo, bool max);
+    InliningStatus inlineMathPow(CallInfo &callInfo);
+    InliningStatus inlineMathRandom(CallInfo &callInfo);
+    InliningStatus inlineMathImul(CallInfo &callInfo);
+    InliningStatus inlineMathFunction(CallInfo &callInfo, MMathFunction::Function function);
 
     // String natives.
-    InliningStatus inlineStringObject(uint32_t argc, bool constructing);
-    InliningStatus inlineStrCharCodeAt(uint32_t argc, bool constructing);
-    InliningStatus inlineStrFromCharCode(uint32_t argc, bool constructing);
-    InliningStatus inlineStrCharAt(uint32_t argc, bool constructing);
+    InliningStatus inlineStringObject(CallInfo &callInfo);
+    InliningStatus inlineStrCharCodeAt(CallInfo &callInfo);
+    InliningStatus inlineStrFromCharCode(CallInfo &callInfo);
+    InliningStatus inlineStrCharAt(CallInfo &callInfo);
 
     // RegExp natives.
-    InliningStatus inlineRegExpTest(uint32_t argc, bool constructing);
+    InliningStatus inlineRegExpTest(CallInfo &callInfo);
 
-    InliningStatus inlineNativeCall(JSNative native, uint32_t argc, bool constructing);
+    InliningStatus inlineNativeCall(CallInfo &callInfo, JSNative native);
 
     // Call functions
     bool jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBlock *bottom,

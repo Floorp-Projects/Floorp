@@ -648,14 +648,6 @@ nsNavBookmarks::RemoveItem(int64_t aItemId)
   nsresult rv = FetchItemInfo(aItemId, bookmark);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavBookmarkObserver,
-                   OnBeforeItemRemoved(bookmark.id,
-                                       bookmark.type,
-                                       bookmark.parentId,
-                                       bookmark.guid,
-                                       bookmark.parentGuid));
-
   mozStorageTransaction transaction(mDB->MainConn(), false);
 
   // First, if not a tag, remove item annotations.
@@ -1155,15 +1147,6 @@ nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId)
   nsCString foldersToRemove;
   for (uint32_t i = 0; i < folderChildrenArray.Length(); ++i) {
     BookmarkData& child = folderChildrenArray[i];
-
-    // Notify observers that we are about to remove this child.
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavBookmarkObserver,
-                     OnBeforeItemRemoved(child.id,
-                                         child.type,
-                                         child.parentId,
-                                         child.guid,
-                                         child.parentGuid));
 
     if (child.type == TYPE_FOLDER) {
       foldersToRemove.AppendLiteral(",");
@@ -2789,15 +2772,6 @@ nsNavBookmarks::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
   nsRefPtr< AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData> > notifier =
     new AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData>(this, &nsNavBookmarks::NotifyItemVisited, visitData);
   notifier->Init();
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavBookmarks::OnBeforeDeleteURI(nsIURI* aURI,
-                                  const nsACString& aGUID,
-                                  uint16_t aReason)
-{
   return NS_OK;
 }
 

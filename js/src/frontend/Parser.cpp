@@ -1086,7 +1086,8 @@ Parser::newFunction(ParseContext *pc, HandleAtom atom, FunctionSyntaxKind kind)
     JSFunction::Flags flags = (kind == Expression)
                               ? JSFunction::INTERPRETED_LAMBDA
                               : JSFunction::INTERPRETED;
-    fun = js_NewFunction(context, NullPtr(), NULL, 0, flags, parent, atom);
+    fun = NewFunction(context, NullPtr(), NULL, 0, flags, parent, atom,
+                      JSFunction::FinalizeKind, MaybeSingletonObject);
     if (selfHostingMode)
         fun->setIsSelfHostedBuiltin();
     if (fun && !compileAndGo) {

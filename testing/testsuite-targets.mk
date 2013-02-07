@@ -27,6 +27,14 @@ ifndef TEST_PACKAGE_NAME
 TEST_PACKAGE_NAME := $(ANDROID_PACKAGE_NAME)
 endif
 
+RUN_MOCHITEST_B2G_DESKTOP = \
+  rm -f ./$@.log && \
+  $(PYTHON) _tests/testing/mochitest/runtestsb2g.py --autorun --close-when-done \
+    --console-level=INFO --log-file=./$@.log --file-level=INFO \
+    --desktop --profile ${GAIA_PROFILE_DIR} \
+    --failure-file=$(call core_abspath,_tests/testing/mochitest/makefailures.json) \
+    $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+
 RUN_MOCHITEST = \
   rm -f ./$@.log && \
   $(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
@@ -96,9 +104,19 @@ mochitest-robotium:
         $(RUN_MOCHITEST_ROBOTIUM); \
     fi
 
+ifdef MOZ_B2G
+mochitest-plain:
+	@if [ "${GAIA_PROFILE_DIR}"  = "" ]; then \
+        echo "please specify the GAIA_PROFILE_DIR env variable"; \
+    else \
+        $(RUN_MOCHITEST_B2G_DESKTOP); \
+        $(CHECK_TEST_ERROR_RERUN); \
+    fi
+else
 mochitest-plain:
 	$(RUN_MOCHITEST)
 	$(CHECK_TEST_ERROR_RERUN)
+endif
 
 mochitest-plain-rerun-failures:
 	$(RERUN_MOCHITEST)

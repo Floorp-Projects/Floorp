@@ -72,15 +72,6 @@ nsSVGClass::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateClass();
 }
 
-nsresult
-nsSVGClass::ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
-                                nsSVGElement *aSVGElement)
-{
-  *aResult = new DOMAnimatedString(this, aSVGElement);
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsSVGClass::DOMAnimatedString::GetAnimVal(nsAString& aResult)
 { 

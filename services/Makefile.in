@@ -14,10 +14,6 @@ PARALLEL_DIRS += \
   crypto \
   $(NULL)
 
-ifdef MOZ_SERVICES_AITC
-PARALLEL_DIRS += aitc
-endif
-
 ifdef MOZ_SERVICES_HEALTHREPORT
 PARALLEL_DIRS += healthreport
 endif
@@ -32,6 +28,10 @@ endif
 
 ifdef MOZ_SERVICES_SYNC
 PARALLEL_DIRS += sync
+endif
+
+ifdef MOZ_SERVICES_CAPTIVEDETECT
+PARALLEL_DIRS += captivedetect
 endif
 
 include $(topsrcdir)/config/rules.mk

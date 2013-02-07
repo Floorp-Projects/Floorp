@@ -763,24 +763,6 @@ PlacesTreeView.prototype = {
     }
   },
 
-  /**
-   * Be careful, the parameter 'aIndex' here specifies the node's index in the
-   * parent node, not the visible index.
-   */
-  nodeReplaced:
-  function PTV_nodeReplaced(aParentNode, aOldNode, aNewNode, aIndexDoNotUse) {
-    NS_ASSERT(this._result, "Got a notification but have no result!");
-    if (!this._tree || !this._result)
-      return;
-
-    // Nothing to do if the replaced node was not set.
-    let row = this._getRowForNode(aOldNode);
-    if (row != -1) {
-      this._rows[row] = aNewNode;
-      this._tree.invalidateRow(row);
-    }
-  },
-
   _invalidateCellValue: function PTV__invalidateCellValue(aNode,
                                                           aColumnType) {
     NS_ASSERT(this._result, "Got a notification but have no result!");

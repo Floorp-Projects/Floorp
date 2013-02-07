@@ -17,7 +17,6 @@ function run_test() {
       PlacesUtils.removeLazyBookmarkObserver(this);
       do_test_finished();
     },
-    onBeforeItemRemoved: function () {},
     onItemRemoved: function () {},
     onItemChanged: function () {},
     onItemVisited: function () {},

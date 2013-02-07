@@ -28,7 +28,7 @@ function do_test()
 
   var body = doc.getElementsByTagName("body")[0];
   var filter = NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT;
-  var walker = doc.createTreeWalker(body, filter, null, false);
+  var walker = doc.createTreeWalker(body, filter, null);
   walker.currentNode = body.firstChild;
   walker.nextNode();
 

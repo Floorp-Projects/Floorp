@@ -52,10 +52,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     global_(NULL),
     enterCompartmentDepth(0),
     allocator(this),
-#ifdef JSGC_GENERATIONAL
-    gcNursery(),
-    gcStoreBuffer(&gcNursery),
-#endif
     ionUsingBarriers_(false),
     gcScheduled(false),
     gcState(NoGC),
@@ -134,23 +130,6 @@ JSCompartment::init(JSContext *cx)
 
     if (cx)
         InitRandom(cx->runtime, &rngState);
-
-#ifdef JSGC_GENERATIONAL
-    /*
-     * If we are in the middle of post-barrier verification, we need to
-     * immediately begin collecting verification data on new compartments.
-     */
-    if (rt->gcVerifyPostData) {
-        if (!gcNursery.enable())
-            return false;
-
-        if (!gcStoreBuffer.enable())
-            return false;
-    } else {
-        gcNursery.disable();
-        gcStoreBuffer.disable();
-    }
-#endif
 
     enumerators = NativeIterator::allocateSentinel(cx);
     if (!enumerators)
@@ -291,12 +270,12 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
         JSString *str = vp->toString();
 
         /* If the string is already in this compartment, we are done. */
-        if (str->compartment() == this)
+        if (str->zone() == zone())
             return true;
 
         /* If the string is an atom, we don't have to copy. */
         if (str->isAtom()) {
-            JS_ASSERT(str->compartment() == cx->runtime->atomsCompartment);
+            JS_ASSERT(str->zone() == cx->runtime->atomsCompartment->zone());
             return true;
         }
     }
@@ -635,15 +614,6 @@ JSCompartment::discardJitCode(FreeOp *fop, bool discardConstraints)
 #endif /* JS_METHODJIT */
 }
 
-bool
-JSCompartment::isDiscardingJitCode(JSTracer *trc)
-{
-    if (!IS_GC_MARKING_TRACER(trc))
-        return false;
-
-    return !gcPreserveCode;
-}
-
 void
 JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 {
@@ -651,7 +621,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_DISCARD_CODE);
-        discardJitCode(fop, !gcPreserveCode);
+        discardJitCode(fop, !zone()->isPreservingCode());
     }
 
     /* This function includes itself in PHASE_SWEEP_TABLES. */
@@ -691,7 +661,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         WeakMapBase::sweepCompartment(this);
     }
 
-    if (!gcPreserveCode) {
+    if (!zone()->isPreservingCode()) {
         JS_ASSERT(!types.constrainedOutputs);
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
 
@@ -796,13 +766,13 @@ JSCompartment::purge()
 }
 
 void
-JSCompartment::resetGCMallocBytes()
+Zone::resetGCMallocBytes()
 {
     gcMallocBytes = ptrdiff_t(gcMaxMallocBytes);
 }
 
 void
-JSCompartment::setGCMaxMallocBytes(size_t value)
+Zone::setGCMaxMallocBytes(size_t value)
 {
     /*
      * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
@@ -813,9 +783,9 @@ JSCompartment::setGCMaxMallocBytes(size_t value)
 }
 
 void
-JSCompartment::onTooMuchMalloc()
+Zone::onTooMuchMalloc()
 {
-    TriggerZoneGC(zone(), gcreason::TOO_MUCH_MALLOC);
+    TriggerZoneGC(this, gcreason::TOO_MUCH_MALLOC);
 }
 
 bool
@@ -1036,5 +1006,5 @@ JSCompartment::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compa
 void
 JSCompartment::adoptWorkerAllocator(Allocator *workerAllocator)
 {
-    allocator.arenas.adoptArenas(rt, &workerAllocator->arenas);
+    zone()->allocator.arenas.adoptArenas(rt, &workerAllocator->arenas);
 }
