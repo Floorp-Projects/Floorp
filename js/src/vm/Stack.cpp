@@ -2059,7 +2059,12 @@ StackIter::argsObj() const
       case DONE:
         break;
       case ION:
+#ifdef JS_ION
+        JS_ASSERT(data_.ionFrames_.isBaselineJS());
+        return data_.ionFrames_.baselineFrame()->argsObj();
+#else
         break;
+#endif
       case SCRIPTED:
         return interpFrame()->argsObj();
       case NATIVE:
@@ -2072,9 +2077,9 @@ StackIter::argsObj() const
 bool
 StackIter::computeThis() const
 {
-    if (isScript() && !isIon()) {
+    if (isScript() && !isIonOptimizedJS()) {
         JS_ASSERT(data_.cx_);
-        return ComputeThis(data_.cx_, interpFrame());
+        return ComputeThis(data_.cx_, abstractFramePtr());
     }
     return true;
 }
