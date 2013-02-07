@@ -50,6 +50,54 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
+  // WebIDL
+
+  /* @return the value */
+  double Value() const;
+  void SetValue(double aValue, ErrorResult& aRv)
+  {
+    aRv = SetValue(aValue);
+  }
+
+  /* @return the minimum value */
+  double Min() const;
+  void SetMin(double aValue, ErrorResult& aRv)
+  {
+    aRv = SetMin(aValue);
+  }
+
+  /* @return the maximum value */
+  double Max() const;
+  void SetMax(double aValue, ErrorResult& aRv)
+  {
+    aRv = SetMax(aValue);
+  }
+
+  /* @return the low value */
+  double Low() const;
+  void SetLow(double aValue, ErrorResult& aRv)
+  {
+    aRv = SetLow(aValue);
+  }
+
+  /* @return the high value */
+  double High() const;
+  void SetHigh(double aValue, ErrorResult& aRv)
+  {
+    aRv = SetHigh(aValue);
+  }
+
+  /* @return the optimum value */
+  double Optimum() const;
+  void SetOptimum(double aValue, ErrorResult& aRv)
+  {
+    aRv = SetOptimum(aValue);
+  }
+
+protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
+                             bool* aTriedToWrap) MOZ_OVERRIDE;
+
 private:
 
   static const double kDefaultValue;
@@ -65,24 +113,6 @@ private:
    * @return the optimum state of the element.
    */
   nsEventStates GetOptimumState() const;
-
-  /* @return the minimum value */
-  double GetMin() const;
-
-  /* @return the maximum value */
-  double GetMax() const;
-
-  /* @return the actual value */
-  double GetValue() const;
-
-  /* @return the low value */
-  double GetLow() const;
-
-  /* @return the high value */
-  double GetHigh() const;
-
-  /* @return the optimum value */
-  double GetOptimum() const;
 };
 
 } // namespace dom
