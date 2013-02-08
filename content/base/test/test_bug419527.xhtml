@@ -14,20 +14,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=419527
       </content>
       <implementation>
         <constructor>
+          var win = XPCNativeWrapper.unwrap(window);
           var span = document.getAnonymousNodes(this)[0];
-          ok(span.localName == "span", "Wrong anon node!");
+          win.ok(span.localName == "span", "Wrong anon node!");
           var range = document.createRange();
           range.selectNode(span.firstChild);
-          ok(range.startContainer == span, "Wrong start container!");
-          ok(range.endContainer == span, "Wrong end container!");
-          window.newSubTree.appendChild(this);
-          range.setStart(window.newSubTree.firstChild, 0);
-          ok(range.startContainer == window.newSubTree.firstChild,
-             "Range should have been collapsed to newSubTree.firstChild!");
-          ok(range.endContainer == window.newSubTree.firstChild,
-             "Range should have been collapsed to newSubTree.firstChild!");
+          win.ok(range.startContainer == span, "Wrong start container!");
+          win.ok(range.endContainer == span, "Wrong end container!");
+          var newSubTree = XPCNativeWrapper(win.newSubTree);
+          newSubTree.appendChild(this);
+          range.setStart(newSubTree.firstChild, 0);
+          win.ok(range.startContainer == newSubTree.firstChild,
+                 "Range should have been collapsed to newSubTree.firstChild!");
+          win.ok(range.endContainer == newSubTree.firstChild,
+                 "Range should have been collapsed to newSubTree.firstChild!");
           //XXX This should just call SimpleTest.finish(), bugs 478528, 499735.
-          setTimeout(finish, 0);
+          setTimeout(win.finish, 0);
         </constructor>
       </implementation>
     </binding>

@@ -21,9 +21,10 @@
     </content>
     <implementation>
       <constructor>
-        window.setTimeout(function() {
-          document.documentElement.clientHeight;
-          window.setTimeout(finish, 0);
+        var win = XPCNativeWrapper.unwrap(window);
+        win.setTimeout(function() {
+          win.document.documentElement.clientHeight;
+          win.setTimeout(win.finish, 0);
         }, 0);
       </constructor>
     </implementation>
