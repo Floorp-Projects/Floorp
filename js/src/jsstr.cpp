@@ -2043,7 +2043,8 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         rdata.elembase = NULL;
     }
 
-    if (JSObject *lambda = rdata.lambda) {
+    if (rdata.lambda) {
+        RootedObject lambda(cx, rdata.lambda);
         PreserveRegExpStatics staticsGuard(cx, res);
         if (!staticsGuard.init(cx))
             return false;
