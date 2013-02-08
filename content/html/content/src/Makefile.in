@@ -33,6 +33,7 @@ EXPORTS_mozilla/dom = \
 		HTMLAnchorElement.h \
 		HTMLBodyElement.h \
 		HTMLBRElement.h \
+		HTMLButtonElement.h \
 		HTMLDataListElement.h \
 		HTMLDivElement.h \
 		HTMLFontElement.h \
@@ -79,7 +80,7 @@ CPPSRCS		= \
 		nsHTMLAreaElement.cpp \
 		HTMLBRElement.cpp \
 		HTMLBodyElement.cpp \
-		nsHTMLButtonElement.cpp \
+		HTMLButtonElement.cpp \
 		HTMLCanvasElement.cpp \
 		HTMLDataListElement.cpp \
 		HTMLDivElement.cpp \

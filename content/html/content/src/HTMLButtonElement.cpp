@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMHTMLButtonElement.h"
+#include "mozilla/dom/HTMLButtonElement.h"
+
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
@@ -30,13 +30,16 @@
 #include "nsError.h"
 #include "nsFocusManager.h"
 #include "nsHTMLFormElement.h"
-#include "nsIConstraintValidation.h"
 #include "mozAutoDocUpdate.h"
-
-using namespace mozilla::dom;
 
 #define NS_IN_SUBMIT_CLICK      (1 << 0)
 #define NS_OUTER_ACTIVATE_EVENT (1 << 1)
+
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Button)
+DOMCI_NODE_DATA(HTMLButtonElement, mozilla::dom::HTMLButtonElement)
+
+namespace mozilla {
+namespace dom {
 
 static const nsAttrValue::EnumTable kButtonTypeTable[] = {
   { "button", NS_FORM_BUTTON_BUTTON },
@@ -48,94 +51,10 @@ static const nsAttrValue::EnumTable kButtonTypeTable[] = {
 // Default type is 'submit'.
 static const nsAttrValue::EnumTable* kButtonDefaultType = &kButtonTypeTable[2];
 
-class nsHTMLButtonElement : public nsGenericHTMLFormElement,
-                            public nsIDOMHTMLButtonElement,
-                            public nsIConstraintValidation
-{
-public:
-  using nsIConstraintValidation::GetValidationMessage;
-
-  nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                      FromParser aFromParser = NOT_FROM_PARSER);
-  virtual ~nsHTMLButtonElement();
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLButtonElement,
-                                           nsGenericHTMLFormElement)
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
-
-  // nsIDOMHTMLButtonElement
-  NS_DECL_NSIDOMHTMLBUTTONELEMENT
-
-  // overriden nsIFormControl methods
-  NS_IMETHOD_(uint32_t) GetType() const { return mType; }
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
-  NS_IMETHOD SaveState();
-  bool RestoreState(nsPresState* aState);
-  virtual bool IsDisabledForEvents(uint32_t aMessage);
-
-  nsEventStates IntrinsicState() const;
-
-  /**
-   * Called when an attribute is about to be changed
-   */
-  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify);
-  /**
-   * Called when an attribute has just been changed
-   */
-  nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                        const nsAttrValue* aValue, bool aNotify);
-
-  // nsIContent overrides...
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual void DoneCreatingElement();
-  virtual nsXPCClassInfo* GetClassInfo();
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
-  uint8_t mType;
-  bool mDisabledChanged;
-  bool mInInternalActivate;
-  bool mInhibitStateRestoration;
-};
-
 
 // Construction, destruction
-
-
-NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Button)
-
-
-nsHTMLButtonElement::nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                         FromParser aFromParser)
+HTMLButtonElement::HTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                     FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kButtonDefaultType->value),
     mDisabledChanged(false),
@@ -149,75 +68,73 @@ nsHTMLButtonElement::nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
 
-nsHTMLButtonElement::~nsHTMLButtonElement()
+HTMLButtonElement::~HTMLButtonElement()
 {
 }
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLButtonElement,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLButtonElement,
                                                   nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLButtonElement,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLButtonElement,
                                                 nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLButtonElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLButtonElement, Element)
 
 
-DOMCI_NODE_DATA(HTMLButtonElement, nsHTMLButtonElement)
-
-// QueryInterface implementation for nsHTMLButtonElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLButtonElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLButtonElement,
+// QueryInterface implementation for HTMLButtonElement
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLButtonElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLButtonElement,
                                    nsIDOMHTMLButtonElement,
                                    nsIConstraintValidation)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLButtonElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLButtonElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLButtonElement)
 
 // nsIConstraintValidation
-NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLButtonElement)
+NS_IMPL_NSICONSTRAINTVALIDATION(HTMLButtonElement)
 
 // nsIDOMHTMLButtonElement
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLButtonElement)
+NS_IMPL_ELEMENT_CLONE(HTMLButtonElement)
 
 
 // nsIDOMHTMLButtonElement
 
 NS_IMETHODIMP
-nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
+HTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Autofocus, autofocus)
-NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
-NS_IMPL_ACTION_ATTR(nsHTMLButtonElement, FormAction, formaction)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormEnctype, formenctype,
+NS_IMPL_BOOL_ATTR(HTMLButtonElement, Autofocus, autofocus)
+NS_IMPL_BOOL_ATTR(HTMLButtonElement, Disabled, disabled)
+NS_IMPL_ACTION_ATTR(HTMLButtonElement, FormAction, formaction)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLButtonElement, FormEnctype, formenctype,
                                 kFormDefaultEnctype->tag)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormMethod, formmethod,
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLButtonElement, FormMethod, formmethod,
                                 kFormDefaultMethod->tag)
-NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, FormNoValidate, formnovalidate)
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormTarget, formtarget)
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, Type, type,
+NS_IMPL_BOOL_ATTR(HTMLButtonElement, FormNoValidate, formnovalidate)
+NS_IMPL_STRING_ATTR(HTMLButtonElement, FormTarget, formtarget)
+NS_IMPL_STRING_ATTR(HTMLButtonElement, Name, name)
+NS_IMPL_STRING_ATTR(HTMLButtonElement, Value, value)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLButtonElement, Type, type,
                                 kButtonDefaultType->tag)
 
 int32_t
-nsHTMLButtonElement::TabIndexDefault()
+HTMLButtonElement::TabIndexDefault()
 {
   return 0;
 }
 
 bool
-nsHTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex)
+HTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex)
 {
   if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return true;
@@ -233,10 +150,10 @@ nsHTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_
 }
 
 bool
-nsHTMLButtonElement::ParseAttribute(int32_t aNamespaceID,
-                                    nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsAttrValue& aResult)
+HTMLButtonElement::ParseAttribute(int32_t aNamespaceID,
+                                  nsIAtom* aAttribute,
+                                  const nsAString& aValue,
+                                  nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::type) {
@@ -265,7 +182,7 @@ nsHTMLButtonElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 bool
-nsHTMLButtonElement::IsDisabledForEvents(uint32_t aMessage)
+HTMLButtonElement::IsDisabledForEvents(uint32_t aMessage)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
   nsIFrame* formFrame = NULL;
@@ -276,7 +193,7 @@ nsHTMLButtonElement::IsDisabledForEvents(uint32_t aMessage)
 }
 
 nsresult
-nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   if (IsDisabledForEvents(aVisitor.mEvent->message)) {
@@ -307,7 +224,7 @@ nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   nsresult rv = NS_OK;
   if (!aVisitor.mPresContext) {
@@ -478,9 +395,9 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-nsHTMLButtonElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+HTMLButtonElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
                                                      aBindingParent,
@@ -494,7 +411,7 @@ nsHTMLButtonElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLButtonElement::UnbindFromTree(bool aDeep, bool aNullParent)
+HTMLButtonElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 
@@ -503,13 +420,13 @@ nsHTMLButtonElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::Reset()
+HTMLButtonElement::Reset()
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
+HTMLButtonElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   //
   // We only submit if we were the button pressed
@@ -548,7 +465,7 @@ nsHTMLButtonElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 }
 
 void
-nsHTMLButtonElement::DoneCreatingElement()
+HTMLButtonElement::DoneCreatingElement()
 {
   if (!mInhibitStateRestoration) {
     // Restore state as needed.
@@ -557,9 +474,9 @@ nsHTMLButtonElement::DoneCreatingElement()
 }
 
 nsresult
-nsHTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                   const nsAttrValueOrString* aValue,
-                                   bool aNotify)
+HTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                 const nsAttrValueOrString* aValue,
+                                 bool aNotify)
 {
   if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {
@@ -571,8 +488,8 @@ nsHTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsHTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                  const nsAttrValue* aValue, bool aNotify)
+HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::type) {
@@ -589,7 +506,7 @@ nsHTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::SaveState()
+HTMLButtonElement::SaveState()
 {
   if (!mDisabledChanged) {
     return NS_OK;
@@ -607,7 +524,7 @@ nsHTMLButtonElement::SaveState()
 }
 
 bool
-nsHTMLButtonElement::RestoreState(nsPresState* aState)
+HTMLButtonElement::RestoreState(nsPresState* aState)
 {
   if (aState && aState->IsDisabledSet()) {
     SetDisabled(aState->GetDisabled());
@@ -617,7 +534,7 @@ nsHTMLButtonElement::RestoreState(nsPresState* aState)
 }
 
 nsEventStates
-nsHTMLButtonElement::IntrinsicState() const
+HTMLButtonElement::IntrinsicState() const
 {
   nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
 
@@ -627,3 +544,6 @@ nsHTMLButtonElement::IntrinsicState() const
 
   return state;
 }
+
+} // namespace dom
+} // namespace mozilla
