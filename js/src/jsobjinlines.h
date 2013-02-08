@@ -1440,18 +1440,18 @@ ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid, J
 
 /* ES5 9.1 ToPrimitive(input). */
 static JS_ALWAYS_INLINE bool
-ToPrimitive(JSContext *cx, Value *vp)
+ToPrimitive(JSContext *cx, MutableHandleValue vp)
 {
-    if (vp->isPrimitive())
+    if (vp.isPrimitive())
         return true;
 
-    JSObject *obj = &vp->toObject();
+    JSObject *obj = &vp.toObject();
 
     /* Optimize new String(...).valueOf(). */
     if (obj->isString()) {
         jsid id = NameToId(cx->names().valueOf);
         if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
-            vp->setString(obj->asString().unbox());
+            vp.setString(obj->asString().unbox());
             return true;
         }
     }
@@ -1460,32 +1460,24 @@ ToPrimitive(JSContext *cx, Value *vp)
     if (obj->isNumber()) {
         jsid id = NameToId(cx->names().valueOf);
         if (ClassMethodIsNative(cx, obj, &NumberClass, id, js_num_valueOf)) {
-            vp->setNumber(obj->asNumber().unbox());
+            vp.setNumber(obj->asNumber().unbox());
             return true;
         }
     }
 
     RootedObject objRoot(cx, obj);
-    RootedValue value(cx, *vp);
-    if (!JSObject::defaultValue(cx, objRoot, JSTYPE_VOID, &value))
-        return false;
-    *vp = value;
-    return true;
+    return JSObject::defaultValue(cx, objRoot, JSTYPE_VOID, vp);
 }
 
 /* ES5 9.1 ToPrimitive(input, PreferredType). */
 static JS_ALWAYS_INLINE bool
-ToPrimitive(JSContext *cx, JSType preferredType, Value *vp)
+ToPrimitive(JSContext *cx, JSType preferredType, MutableHandleValue vp)
 {
     JS_ASSERT(preferredType != JSTYPE_VOID); /* Use the other ToPrimitive! */
-    if (vp->isPrimitive())
+    if (vp.isPrimitive())
         return true;
-    RootedObject obj(cx, &vp->toObject());
-    RootedValue value(cx, *vp);
-    if (!JSObject::defaultValue(cx, obj, preferredType, &value))
-        return false;
-    *vp = value;
-    return true;
+    RootedObject obj(cx, &vp.toObject());
+    return JSObject::defaultValue(cx, obj, preferredType, vp);
 }
 
 /*

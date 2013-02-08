@@ -5,10 +5,12 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- selected state -->
-    <item android:state_selected="true" android:color="#FFFF9500"/>
+    <item android:state_focused="true"
+          android:drawable="@color/tab_row_pressed"/>
 
-    <!-- normal mode -->
-    <item android:color="#FF9BA3AB"/>
+    <item android:state_pressed="true"
+          android:drawable="@color/tab_row_pressed"/>
+
+    <item android:drawable="@android:color/transparent"/>
 
 </selector>

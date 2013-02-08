@@ -2153,11 +2153,7 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_ION            JS_BIT(20)      /* IonMonkey */
 
-/* Options which reflect compile-time properties of scripts. */
-#define JSCOMPILEOPTION_MASK    0
-
-#define JSRUNOPTION_MASK        (JS_BITMASK(21) & ~JSCOMPILEOPTION_MASK)
-#define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
+#define JSOPTION_MASK           JS_BITMASK(21)
 
 extern JS_PUBLIC_API(uint32_t)
 JS_GetOptions(JSContext *cx);

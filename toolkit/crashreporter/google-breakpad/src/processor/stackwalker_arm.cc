@@ -9,7 +9,7 @@
 // notice, this list of conditions and the following disclaimer.
 //     * Redistributions in binary form must reproduce the above
 // copyright notice, this list of conditions and the following disclaimer
-// in the documentation and/or other materials provided with tohe
+// in the documentation and/or other materials provided with the
 // distribution.
 //     * Neither the name of Google Inc. nor the names of its
 // contributors may be used to endorse or promote products derived from
@@ -82,19 +82,19 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   StackFrameARM* last_frame = static_cast<StackFrameARM*>(frames.back());
 
   static const UniqueString *register_names[] = {
-    toUniqueString("r0"),  toUniqueString("r1"),
-    toUniqueString("r2"),  toUniqueString("r3"),
-    toUniqueString("r4"),  toUniqueString("r5"),
-    toUniqueString("r6"),  toUniqueString("r7"),
-    toUniqueString("r8"),  toUniqueString("r9"),
-    toUniqueString("r10"), toUniqueString("r11"),
-    toUniqueString("r12"), toUniqueString("sp"),
-    toUniqueString("lr"),  toUniqueString("pc"),
-    toUniqueString("f0"),  toUniqueString("f1"),
-    toUniqueString("f2"),  toUniqueString("f3"),
-    toUniqueString("f4"),  toUniqueString("f5"),
-    toUniqueString("f6"),  toUniqueString("f7"),
-    toUniqueString("fps"), toUniqueString("cpsr"),
+    ToUniqueString("r0"),  ToUniqueString("r1"),
+    ToUniqueString("r2"),  ToUniqueString("r3"),
+    ToUniqueString("r4"),  ToUniqueString("r5"),
+    ToUniqueString("r6"),  ToUniqueString("r7"),
+    ToUniqueString("r8"),  ToUniqueString("r9"),
+    ToUniqueString("r10"), ToUniqueString("r11"),
+    ToUniqueString("r12"), ToUniqueString("sp"),
+    ToUniqueString("lr"),  ToUniqueString("pc"),
+    ToUniqueString("f0"),  ToUniqueString("f1"),
+    ToUniqueString("f2"),  ToUniqueString("f3"),
+    ToUniqueString("f4"),  ToUniqueString("f5"),
+    ToUniqueString("f6"),  ToUniqueString("f7"),
+    ToUniqueString("fps"), ToUniqueString("cpsr"),
     NULL
   };
 

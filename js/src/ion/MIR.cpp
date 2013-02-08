@@ -1880,6 +1880,29 @@ MBeta::computeRange()
 }
 
 bool
+MNewObject::shouldUseVM() const
+{
+    return templateObject()->hasSingletonType() ||
+           templateObject()->hasDynamicSlots();
+}
+
+bool
+MNewArray::shouldUseVM() const
+{
+    JS_ASSERT(count() < JSObject::NELEMENTS_LIMIT);
+
+    size_t maxArraySlots =
+        gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST) - ObjectElements::VALUES_PER_HEADER;
+
+    // Allocate space using the VMCall
+    // when mir hints it needs to get allocated immediatly,
+    // but only when data doesn't fit the available array slots.
+    bool allocating = isAllocating() && count() > maxArraySlots;
+
+    return templateObject()->hasSingletonType() || allocating;
+}
+
+bool
 MLoadFixedSlot::mightAlias(MDefinition *store)
 {
     if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())

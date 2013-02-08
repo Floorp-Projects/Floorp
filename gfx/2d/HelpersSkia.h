@@ -155,10 +155,39 @@ GfxOpToSkiaOp(CompositionOp op)
       return SkXfermode::kDstATop_Mode;
     case OP_XOR:
       return SkXfermode::kXor_Mode;
-    case OP_COUNT:
+    case OP_MULTIPLY:
+      return SkXfermode::kMultiply_Mode;
+    case OP_SCREEN:
+      return SkXfermode::kScreen_Mode;
+    case OP_OVERLAY:
+      return SkXfermode::kOverlay_Mode;
+    case OP_DARKEN:
+      return SkXfermode::kDarken_Mode;
+    case OP_LIGHTEN:
+      return SkXfermode::kLighten_Mode;
+    case OP_COLOR_DODGE:
+      return SkXfermode::kColorDodge_Mode;
+    case OP_COLOR_BURN:
+      return SkXfermode::kColorBurn_Mode;
+    case OP_HARD_LIGHT:
+      return SkXfermode::kHardLight_Mode;
+    case OP_SOFT_LIGHT:
+      return SkXfermode::kSoftLight_Mode;
+    case OP_DIFFERENCE:
+      return SkXfermode::kDifference_Mode;
+    case OP_EXCLUSION:
+      return SkXfermode::kExclusion_Mode;
+    case OP_HUE:
+      return SkXfermode::kHue_Mode;
+    case OP_SATURATION:
+      return SkXfermode::kSaturation_Mode;
+    case OP_COLOR:
+      return SkXfermode::kColor_Mode;
+    case OP_LUMINOSITY:
+      return SkXfermode::kLuminosity_Mode;
+    default:
       return SkXfermode::kSrcOver_Mode;
   }
-  return SkXfermode::kSrcOver_Mode;
 }
 
 static inline SkColor ColorToSkColor(const Color &color, Float aAlpha)

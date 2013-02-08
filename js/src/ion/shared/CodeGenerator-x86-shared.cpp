@@ -15,6 +15,7 @@
 #include "ion/IonFrames.h"
 #include "ion/MoveEmitter.h"
 #include "ion/IonCompartment.h"
+#include "ion/ParallelFunctions.h"
 
 using namespace js;
 using namespace js::ion;
@@ -120,42 +121,6 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
 }
 
 void
-CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest,
-                                Assembler::NaNCond ifNaN)
-{
-    if (GeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {
-        // If the register we're defining is a single byte register,
-        // take advantage of the setCC instruction
-        masm.setCC(cond, dest);
-        masm.movzxbl(dest, dest);
-
-        if (ifNaN != Assembler::NaN_Unexpected) {
-            Label noNaN;
-            masm.j(Assembler::NoParity, &noNaN);
-            if (ifNaN == Assembler::NaN_IsTrue)
-                masm.movl(Imm32(1), dest);
-            else
-                masm.xorl(dest, dest);
-            masm.bind(&noNaN);
-        }
-    } else {
-        Label end;
-        Label ifFalse;
-
-        if (ifNaN == Assembler::NaN_IsFalse)
-            masm.j(Assembler::Parity, &ifFalse);
-        masm.movl(Imm32(1), dest);
-        masm.j(cond, &end);
-        if (ifNaN == Assembler::NaN_IsTrue)
-            masm.j(Assembler::Parity, &end);
-        masm.bind(&ifFalse);
-        masm.xorl(dest, dest);
-
-        masm.bind(&end);
-    }
-}
-
-void
 CodeGeneratorX86Shared::emitCompare(MCompare::CompareType type, const LAllocation *left, const LAllocation *right)
 {
 #ifdef JS_CPU_X64
@@ -175,7 +140,7 @@ bool
 CodeGeneratorX86Shared::visitCompare(LCompare *comp)
 {
     emitCompare(comp->mir()->compareType(), comp->left(), comp->right());
-    emitSet(JSOpToCondition(comp->jsop()), ToRegister(comp->output()));
+    masm.emitSet(JSOpToCondition(comp->jsop()), ToRegister(comp->output()));
     return true;
 }
 
@@ -196,7 +161,7 @@ CodeGeneratorX86Shared::visitCompareD(LCompareD *comp)
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(cond, lhs, rhs);
-    emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()),
+    masm.emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()),
             Assembler::NaNCondFromDoubleCondition(cond));
     return true;
 }
@@ -205,7 +170,7 @@ bool
 CodeGeneratorX86Shared::visitNotI(LNotI *ins)
 {
     masm.cmpl(ToRegister(ins->input()), Imm32(0));
-    emitSet(Assembler::Equal, ToRegister(ins->output()));
+    masm.emitSet(Assembler::Equal, ToRegister(ins->output()));
     return true;
 }
 
@@ -216,7 +181,7 @@ CodeGeneratorX86Shared::visitNotD(LNotD *ins)
 
     masm.xorpd(ScratchFloatReg, ScratchFloatReg);
     masm.compareDouble(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
-    emitSet(Assembler::Equal, ToRegister(ins->output()), Assembler::NaN_IsTrue);
+    masm.emitSet(Assembler::Equal, ToRegister(ins->output()), Assembler::NaN_IsTrue);
     return true;
 }
 
@@ -290,6 +255,20 @@ class BailoutLabel {
 template <typename T> bool
 CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
 {
+    CompileInfo &info = snapshot->mir()->block()->info();
+    switch (info.executionMode()) {
+      case ParallelExecution: {
+        // in parallel mode, make no attempt to recover, just signal an error.
+        Label *ool;
+        if (!ensureOutOfLineParallelAbort(&ool))
+            return false;
+        binder(masm, ool);
+        return true;
+      }
+
+      case SequentialExecution: break;
+    }
+
     if (!encode(snapshot))
         return false;
 

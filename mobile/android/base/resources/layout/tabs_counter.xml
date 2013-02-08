@@ -7,10 +7,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/tabs_counter_size"
-                android:textColor="@color/tabs_counter_color"
+                android:textColor="#FFB5B7B9"
                 android:duplicateParentState="true"
-                android:gravity="center"
-                android:shadowColor="#7F000000"
-                android:shadowRadius="1"
-                android:shadowDx="0"
-                android:shadowDy="1"/>
+                android:gravity="center"/>

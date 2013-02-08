@@ -79,13 +79,19 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitGoto(MGoto *ins);
     bool visitTableSwitch(MTableSwitch *tableswitch);
     bool visitNewSlots(MNewSlots *ins);
+    bool visitNewParallelArray(MNewParallelArray *ins);
     bool visitNewArray(MNewArray *ins);
     bool visitNewObject(MNewObject *ins);
     bool visitNewDeclEnvObject(MNewDeclEnvObject *ins);
     bool visitNewCallObject(MNewCallObject *ins);
     bool visitNewStringObject(MNewStringObject *ins);
+    bool visitParNew(MParNew *ins);
+    bool visitParNewCallObject(MParNewCallObject *ins);
+    bool visitParNewDenseArray(MParNewDenseArray *ins);
+    bool visitParBailout(MParBailout *ins);
     bool visitInitProp(MInitProp *ins);
     bool visitCheckOverRecursed(MCheckOverRecursed *ins);
+    bool visitParCheckOverRecursed(MParCheckOverRecursed *ins);
     bool visitDefVar(MDefVar *ins);
     bool visitDefFun(MDefFun *ins);
     bool visitPrepareCall(MPrepareCall *ins);
@@ -136,6 +142,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitRegExp(MRegExp *ins);
     bool visitRegExpTest(MRegExpTest *ins);
     bool visitLambda(MLambda *ins);
+    bool visitParLambda(MParLambda *ins);
     bool visitImplicitThis(MImplicitThis *ins);
     bool visitSlots(MSlots *ins);
     bool visitElements(MElements *ins);
@@ -143,6 +150,10 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitConvertElementsToDoubles(MConvertElementsToDoubles *ins);
     bool visitLoadSlot(MLoadSlot *ins);
     bool visitFunctionEnvironment(MFunctionEnvironment *ins);
+    bool visitParSlice(MParSlice *ins);
+    bool visitParWriteGuard(MParWriteGuard *ins);
+    bool visitParCheckInterrupt(MParCheckInterrupt *ins);
+    bool visitParDump(MParDump *ins);
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
     bool visitMonitorTypes(MMonitorTypes *ins);

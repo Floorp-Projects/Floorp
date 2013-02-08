@@ -460,6 +460,12 @@ IsGlobalOp(JSOp op)
 }
 
 inline bool
+IsEqualityOp(JSOp op)
+{
+    return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
+}
+
+inline bool
 IsGetterPC(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);
