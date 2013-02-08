@@ -353,10 +353,16 @@ StackFrame::epilogue(JSContext *cx)
             if (cx->compartment->debugMode())
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
-            if (isDebuggerFrame())
+            if (isDebuggerFrame()) {
                 JS_ASSERT(!scopeChain()->isScope());
-            else
-                JS_ASSERT(scopeChain() == prev()->scopeChain());
+            } else {
+#ifdef DEBUG
+                ScriptFrameIter iter(cx);
+                JS_ASSERT(iter.abstractFramePtr() == AbstractFramePtr(this));
+                ++iter;
+                JS_ASSERT(scopeChain() == iter.scopeChain());
+#endif
+            }
         } else {
             /*
              * Debugger.Object.prototype.evalInGlobal creates indirect eval

@@ -403,6 +403,10 @@ template <bool strict>
 bool
 DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, JSBool *bv);
 
+template <bool strict>
+bool
+DeleteElement(JSContext *cx, HandleValue val, HandleValue index, JSBool *bv);
+
 bool
 DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain, HandleFunction funArg);
 
@@ -412,6 +416,10 @@ GetAndClearException(JSContext *cx, MutableHandleValue res);
 bool
 DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject scopeObj,
                     MutableHandleValue res);
+
+bool
+ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyName name,
+                      MutableHandleValue res);
 
 bool
 IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rval);

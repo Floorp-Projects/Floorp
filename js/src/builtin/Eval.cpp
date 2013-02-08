@@ -324,17 +324,19 @@ js::IndirectEval(JSContext *cx, unsigned argc, Value *vp)
 bool
 js::DirectEval(JSContext *cx, const CallArgs &args)
 {
-    // Direct eval can assume it was called from an interpreted frame.
-    StackFrame *caller = cx->fp();
-    JS_ASSERT(IsBuiltinEvalForScope(caller->scopeChain(), args.calleev()));
-    JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
-    JS_ASSERT_IF(caller->isFunctionFrame(),
-                 caller->compartment() == caller->callee().compartment());
+    // Direct eval can assume it was called from an interpreted or baseline frame.
+    ScriptFrameIter iter(cx);
+    AbstractFramePtr caller = iter.abstractFramePtr();
+
+    JS_ASSERT(IsBuiltinEvalForScope(caller.scopeChain(), args.calleev()));
+    JS_ASSERT_IF(caller.isFunctionFrame(),
+                 caller.compartment() == caller.callee()->compartment());
 
     if (!WarnOnTooManyArgs(cx, args))
         return false;
 
-    return EvalKernel(cx, args, DIRECT_EVAL, caller, caller->scopeChain());
+    RootedObject scopeChain(cx, caller.scopeChain());
+    return EvalKernel(cx, args, DIRECT_EVAL, caller, scopeChain);
 }
 
 bool

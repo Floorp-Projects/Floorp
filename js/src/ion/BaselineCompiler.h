@@ -99,6 +99,9 @@ namespace ion {
     _(JSOP_ENDINIT)            \
     _(JSOP_GETELEM)            \
     _(JSOP_SETELEM)            \
+    _(JSOP_CALLELEM)           \
+    _(JSOP_ENUMELEM)           \
+    _(JSOP_DELELEM)            \
     _(JSOP_GETGNAME)           \
     _(JSOP_CALLGNAME)          \
     _(JSOP_BINDGNAME)          \
@@ -107,6 +110,7 @@ namespace ion {
     _(JSOP_GETPROP)            \
     _(JSOP_SETPROP)            \
     _(JSOP_CALLPROP)           \
+    _(JSOP_DELPROP)            \
     _(JSOP_LENGTH)             \
     _(JSOP_GETALIASEDVAR)      \
     _(JSOP_CALLALIASEDVAR)     \
@@ -117,6 +121,7 @@ namespace ion {
     _(JSOP_DELNAME)            \
     _(JSOP_DEFVAR)             \
     _(JSOP_DEFCONST)           \
+    _(JSOP_SETCONST)           \
     _(JSOP_DEFFUN)             \
     _(JSOP_GETLOCAL)           \
     _(JSOP_CALLLOCAL)          \
@@ -128,6 +133,8 @@ namespace ion {
     _(JSOP_FUNCALL)            \
     _(JSOP_FUNAPPLY)           \
     _(JSOP_NEW)                \
+    _(JSOP_EVAL)               \
+    _(JSOP_IMPLICITTHIS)       \
     _(JSOP_THROW)              \
     _(JSOP_TRY)                \
     _(JSOP_ENTERBLOCK)         \
@@ -146,7 +153,8 @@ namespace ion {
     _(JSOP_POPV)               \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETURN)             \
-    _(JSOP_STOP)
+    _(JSOP_STOP)               \
+    _(JSOP_RETRVAL)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {

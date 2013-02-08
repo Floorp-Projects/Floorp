@@ -159,6 +159,17 @@ DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject
 }
 
 bool
+SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval)
+{
+    // Given the ScopeChain, extract the VarObj.
+    RootedObject obj(cx, scopeChain);
+    while (!obj->isVarObj())
+        obj = obj->enclosingScope();
+
+    return SetConstOperation(cx, obj, name, rval);
+}
+
+bool
 InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value)
 {
     // Copy the incoming value. This may be overwritten; the return value is discarded.

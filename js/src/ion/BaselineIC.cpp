@@ -14,6 +14,8 @@
 #include "VMFunctions.h"
 #include "IonFrames-inl.h"
 
+#include "builtin/Eval.h"
+
 #include "jsinterpinlines.h"
 
 namespace js {
@@ -1678,7 +1680,11 @@ static bool
 DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
-    FallbackICSpew(cx, stub, "GetElem");
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "GetElem(%s)", js_CodeName[op]);
+
+    JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
     // Don't pass lhs directly, we need it when generating stubs.
     RootedValue lhsCopy(cx, lhs);
@@ -1690,11 +1696,14 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
         if (!GetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res, &isOptimizedArgs))
             return false;
         if (isOptimizedArgs)
-            types::TypeScript::Monitor(cx, res);
+            types::TypeScript::Monitor(cx, script, pc, res);
     }
 
-    if (!isOptimizedArgs && !GetElementMonitored(cx, &lhsCopy, rhs, res))
-        return false;
+    if (!isOptimizedArgs) {
+        if (!GetElementOperation(cx, op, &lhsCopy, rhs, res))
+            return false;
+        types::TypeScript::Monitor(cx, script, pc, res);
+    }
 
     if (stub->numOptimizedStubs() >= ICGetElem_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
@@ -2013,7 +2022,7 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "SetElem(%s)", js_CodeName[JSOp(*pc)]);
 
-    JS_ASSERT(op == JSOP_SETELEM || op == JSOP_INITELEM);
+    JS_ASSERT(op == JSOP_SETELEM || op == JSOP_ENUMELEM || op == JSOP_INITELEM);
 
     RootedObject obj(cx, ToObject(cx, objv));
     if (!obj)
@@ -3059,6 +3068,9 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
 
     bool constructing = (op == JSOP_NEW);
 
+    if (op == JSOP_EVAL)
+        return true;
+
     RootedValue callee(cx, vp[0]);
     RootedValue thisv(cx, vp[1]);
 
@@ -3139,8 +3151,12 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
     if (op == JSOP_NEW) {
         if (!InvokeConstructor(cx, callee, argc, args, res.address()))
             return false;
+    } else if (op == JSOP_EVAL && IsBuiltinEvalForScope(GetTopBaselineFrame(cx)->scopeChain(), callee)) {
+        if (!DirectEval(cx, CallArgsFromVp(argc, vp)))
+            return false;
+        res.set(vp[0]);
     } else {
-        JS_ASSERT(op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
+        JS_ASSERT(op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY || op == JSOP_EVAL);
         if (!Invoke(cx, thisv, callee, argc, args, res.address()))
             return false;
     }
