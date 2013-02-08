@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/HTMLButtonElement.h"
 
+#include "mozilla/dom/HTMLButtonElementBinding.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsAttrValueInlines.h"
@@ -66,6 +67,8 @@ HTMLButtonElement::HTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 
   // Set up our default state: enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
+
+  SetIsDOMBinding();
 }
 
 HTMLButtonElement::~HTMLButtonElement()
@@ -543,6 +546,13 @@ HTMLButtonElement::IntrinsicState() const
   }
 
   return state;
+}
+
+JSObject*
+HTMLButtonElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  return HTMLButtonElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
