@@ -29,7 +29,17 @@ reflectInt({
   defaultValue: 1,
 });
 
-// TODO: .type (String)
+// .type
+reflectString({
+  element: document.createElement("ol"),
+  attribute: "type"
+});
+
+// .compact
+reflectBoolean({
+  element: document.createElement("ol"),
+  attribute: "compact",
+})
 
 // Additional tests for ol.start behavior when li elements are added
 var ol = document.createElement("ol");
