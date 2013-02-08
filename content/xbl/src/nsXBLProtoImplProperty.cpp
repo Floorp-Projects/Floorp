@@ -162,7 +162,7 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
                                name.Length(), JSVAL_VOID,
                                JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter),
                                JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter),
-                               mJSAttributes))
+                               mJSAttributes | JSPROP_PERMANENT | JSPROP_READONLY))
       return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
