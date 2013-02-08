@@ -4196,6 +4196,7 @@ var XULBrowserWindow = {
   },
 
   onLocationChange: function (aWebProgress, aRequest, aLocationURI, aFlags) {
+    const nsIWebProgressListener = Ci.nsIWebProgressListener;
     var location = aLocationURI ? aLocationURI.spec : "";
     this._hostChanged = true;
 
@@ -4221,6 +4222,38 @@ var XULBrowserWindow = {
             break;
           }
         }
+      }
+    }
+
+    // This code here does not compare uris exactly when determining
+    // whether or not the message should be hidden since the message
+    // may be prematurely hidden when an install is invoked by a click
+    // on a link that looks like this:
+    //
+    // <a href="#" onclick="return install();">Install Foo</a>
+    //
+    // - which fires a onLocationChange message to uri + '#'...
+    var selectedBrowser = gBrowser.selectedBrowser;
+    if (selectedBrowser.lastURI) {
+      let oldSpec = selectedBrowser.lastURI.spec;
+      let oldIndexOfHash = oldSpec.indexOf("#");
+      if (oldIndexOfHash != -1)
+        oldSpec = oldSpec.substr(0, oldIndexOfHash);
+      let newSpec = location;
+      let newIndexOfHash = newSpec.indexOf("#");
+      if (newIndexOfHash != -1)
+        newSpec = newSpec.substr(0, newIndexOfHash);
+      if (newSpec != oldSpec) {
+        // Remove all the notifications, except for those which want to
+        // persist across the first location change.
+        let nBox = gBrowser.getNotificationBox(selectedBrowser);
+        nBox.removeTransientNotifications();
+
+        // Only need to call locationChange if the PopupNotifications object
+        // for this window has already been initialized (i.e. its getter no
+        // longer exists)
+        if (!__lookupGetter__("PopupNotifications"))
+          PopupNotifications.locationChange();
       }
     }
 
@@ -4255,18 +4288,6 @@ var XULBrowserWindow = {
         // Update starring UI
         PlacesStarButton.updateState();
         SocialShareButton.updateShareState();
-      }
-
-      // Filter out anchor navigation, history.push/pop/replaceState and
-      // tab switches.
-      if (aRequest) {
-        // Only need to call locationChange if the PopupNotifications object
-        // for this window has already been initialized (i.e. its getter no
-        // longer exists)
-        // XXX bug 839445: We never tell PopupNotifications about location
-        // changes in background tabs.
-        if (!__lookupGetter__("PopupNotifications"))
-          PopupNotifications.locationChange();
       }
 
       // Show or hide browser chrome based on the whitelist
@@ -4311,7 +4332,7 @@ var XULBrowserWindow = {
           (aLocationURI.schemeIs("about") || aLocationURI.schemeIs("chrome"))) {
         // Don't need to re-enable/disable find commands for same-document location changes
         // (e.g. the replaceStates in about:addons)
-        if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
+        if (!(aFlags & nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
           if (content.document.readyState == "interactive" || content.document.readyState == "complete")
             disableFindCommands(shouldDisableFind(content.document));
           else {
@@ -4687,17 +4708,12 @@ var TabsProgressListener = {
     if (aBrowser.contentWindow == aWebProgress.DOMWindow) {
       // Filter out any onLocationChanges triggered by anchor navigation
       // or history.push/pop/replaceState.
-      if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
+      if (aRequest) {
         // Initialize the click-to-play state.
         aBrowser._clickToPlayPluginsActivated = new Map();
         aBrowser._clickToPlayAllPluginsActivated = false;
         aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
-
-        // Remove all the notifications, except for those which want to
-        // persist across the first location change.
-        gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
       }
-
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }
   },
