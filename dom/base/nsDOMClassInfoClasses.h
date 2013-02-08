@@ -193,7 +193,6 @@ DOMCI_CLASS(SVGDocument)
 // SVG element classes
 DOMCI_CLASS(SVGAElement)
 DOMCI_CLASS(TimeEvent)
-DOMCI_CLASS(SVGClipPathElement)
 DOMCI_CLASS(SVGFEBlendElement)
 DOMCI_CLASS(SVGFEColorMatrixElement)
 DOMCI_CLASS(SVGFEComponentTransferElement)

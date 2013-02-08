@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGClipPathElement_h
 #define mozilla_dom_SVGClipPathElement_h
 
-#include "nsIDOMSVGClipPathElement.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGEnum.h"
 #include "mozilla/dom/SVGTransformableElement.h"
@@ -22,7 +21,7 @@ namespace dom {
 typedef SVGTransformableElement SVGClipPathElementBase;
 
 class SVGClipPathElement MOZ_FINAL : public SVGClipPathElementBase,
-                                     public nsIDOMSVGClipPathElement,
+                                     public nsIDOMSVGElement,
                                      public nsIDOMSVGUnitTypes
 {
   friend class ::nsSVGClipPathFrame;
@@ -37,7 +36,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGCLIPPATHELEMENT
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -46,8 +44,6 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
@@ -55,7 +51,6 @@ public:
 
 protected:
 
-  // nsIDOMSVGClipPathElement values
   enum { CLIPPATHUNITS };
   nsSVGEnum mEnumAttributes[1];
   static EnumInfo sEnumInfo[1];
