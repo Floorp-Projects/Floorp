@@ -97,6 +97,12 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
        curr = curr->GetNext())
     curr->InstallMember(cx, targetClassObject);
 
+  // Install all of our field accessors.
+  for (nsXBLProtoImplField* curr = mFields;
+       curr;
+       curr = curr->GetNext())
+    curr->InstallAccessors(cx, targetClassObject);
+
   return NS_OK;
 }
 

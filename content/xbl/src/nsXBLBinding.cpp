@@ -91,7 +91,6 @@ XBLEnumerate(JSContext *cx, JS::Handle<JSObject*> obj)
 }
 
 uint64_t nsXBLJSClass::sIdCount = 0;
-extern JSResolveOp XBLResolve;
 
 nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName,
                            const nsCString& aKey)
@@ -107,7 +106,7 @@ nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName,
   addProperty = delProperty = getProperty = ::JS_PropertyStub;
   setProperty = ::JS_StrictPropertyStub;
   enumerate = XBLEnumerate;
-  resolve = (JSResolveOp)XBLResolve;
+  resolve = JS_ResolveStub;
   convert = ::JS_ConvertStub;
   finalize = XBLFinalize;
   mKey = aKey;
@@ -972,7 +971,6 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
                     (~clazz->flags &
                      (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
                     JSCLASS_RESERVED_SLOTS(clazz) != 1 ||
-                    clazz->resolve != (JSResolveOp)XBLResolve ||
                     clazz->finalize != XBLFinalize) {
                   // Clearly not the right class
                   continue;
