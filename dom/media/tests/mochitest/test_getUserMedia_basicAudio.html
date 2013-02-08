@@ -27,13 +27,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=781534
   runTest(function () {
     var testAudio = document.getElementById('testAudio');
 
-    navigator.mozGetUserMedia({audio: true, fake: true}, function (aStream) {
-      var playback = new MediaStreamPlayback(testAudio, aStream);
-      playback.playMedia(10000, function () {
+    getUserMedia({audio: true}, function (aStream) {
+      var playback = new LocalMediaStreamPlayback(testAudio, aStream);
+
+      playback.playMedia(false, function () {
         aStream.stop();
         SimpleTest.finish();
       }, unexpectedCallbackAndFinish);
+
     }, unexpectedCallbackAndFinish);
+
   }, true);
 
 </script>

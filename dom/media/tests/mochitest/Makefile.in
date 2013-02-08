@@ -15,6 +15,16 @@ MOCHITEST_FILES = \
   test_getUserMedia_basicAudio.html \
   test_getUserMedia_basicVideo.html \
   test_getUserMedia_basicVideoAudio.html \
+  test_getUserMedia_gumWithinGum.html \
+  test_getUserMedia_playAudioTwice.html \
+  test_getUserMedia_playVideoTwice.html \
+  test_getUserMedia_playVideoAudioTwice.html \
+  test_getUserMedia_stopAudioStream.html \
+  test_getUserMedia_stopAudioStreamWithFollowupAudio.html \
+  test_getUserMedia_stopVideoStreamWithFollowupVideo.html \
+  test_getUserMedia_stopVideoAudioStreamWithFollowupVideoAudio.html \
+  test_getUserMedia_stopVideoStream.html \
+  test_getUserMedia_stopVideoAudioStream.html \
   test_peerConnection_basicAudio.html \
   test_peerConnection_basicAudioVideo.html \
   test_peerConnection_basicAudioVideoCombined.html \
