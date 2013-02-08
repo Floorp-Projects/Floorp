@@ -1751,7 +1751,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
           case SRC_COND:
           case SRC_WHILE:
-          case SRC_PCBASE:
           case SRC_PCDELTA:
             Sprint(sp, " offset %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
