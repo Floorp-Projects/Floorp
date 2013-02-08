@@ -249,7 +249,7 @@ EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
  * Note on adding new source notes: every pair of bytecodes (A, B) where A and
  * B have disjoint sets of source notes that could apply to each bytecode may
  * reuse the same note type value for two notes (snA, snB) that have the same
- * arity in JSSrcNoteSpec. This is why SRC_IF and SRC_INITPROP have the same
+ * arity in JSSrcNoteSpec. This is why SRC_IF and SRC_BREAK have the same
  * value below.
  *
  * Don't forget to update XDR_BYTECODE_VERSION in vm/Xdr.h for all such
@@ -259,8 +259,6 @@ enum SrcNoteType {
     SRC_NULL        = 0,        /* terminates a note vector */
     SRC_IF          = 1,        /* JSOP_IFEQ bytecode is from an if-then */
     SRC_BREAK       = 1,        /* JSOP_GOTO is a break */
-    SRC_INITPROP    = 1,        /* an index label in a regular (structuring)
-                                   or a destructuring object initialiser */
     SRC_GENEXP      = 1,        /* JSOP_LAMBDA from generator expression */
     SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
     SRC_FOR_IN      = 2,        /* JSOP_GOTO to for-in loop condition from
