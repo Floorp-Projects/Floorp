@@ -10,11 +10,11 @@
 
 BEGIN_TEST(testDeepFreeze_bug535703)
 {
-    js::RootedValue v(cx);
-    EVAL("var x = {}; x;", v.address());
+    jsval v;
+    EVAL("var x = {}; x;", &v);
     js::RootedObject obj(cx, JSVAL_TO_OBJECT(v));
     CHECK(JS_DeepFreezeObject(cx, obj));  // don't crash
-    EVAL("Object.isFrozen(x)", v.address());
+    EVAL("Object.isFrozen(x)", &v);
     CHECK_SAME(v, JSVAL_TRUE);
     return true;
 }
