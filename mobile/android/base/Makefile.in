@@ -165,6 +165,7 @@ FENNEC_JAVA_FILES = \
   gfx/ImmutableViewportMetrics.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
+  gfx/JavaPanZoomController.java \
   gfx/Layer.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
