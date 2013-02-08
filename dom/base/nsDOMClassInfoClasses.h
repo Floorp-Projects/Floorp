@@ -224,7 +224,6 @@ DOMCI_CLASS(SVGMarkerElement)
 DOMCI_CLASS(SVGMaskElement)
 DOMCI_CLASS(SVGTitleElement)
 DOMCI_CLASS(SVGUnknownElement)
-DOMCI_CLASS(SVGUseElement)
 DOMCI_CLASS(SVGViewElement)
 
 // other SVG classes
