@@ -146,23 +146,23 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
   if len(dumps) == 0:
     return False
 
-  removeSymbolsPath = False
-
-  # If our symbols are at a remote URL, download them now
-  if symbolsPath and isURL(symbolsPath):
-    print "Downloading symbols from: " + symbolsPath
-    removeSymbolsPath = True
-    # Get the symbols and write them to a temporary zipfile
-    data = urllib2.urlopen(symbolsPath)
-    symbolsFile = tempfile.TemporaryFile()
-    symbolsFile.write(data.read())
-    # extract symbols to a temporary directory (which we'll delete after
-    # processing all crashes)
-    symbolsPath = tempfile.mkdtemp()
-    zfile = ZipFileReader(symbolsFile)
-    zfile.extractall(symbolsPath)
-
   try:
+    removeSymbolsPath = False
+
+    # If our symbols are at a remote URL, download them now
+    if symbolsPath and isURL(symbolsPath):
+      print "Downloading symbols from: " + symbolsPath
+      removeSymbolsPath = True
+      # Get the symbols and write them to a temporary zipfile
+      data = urllib2.urlopen(symbolsPath)
+      symbolsFile = tempfile.TemporaryFile()
+      symbolsFile.write(data.read())
+      # extract symbols to a temporary directory (which we'll delete after
+      # processing all crashes)
+      symbolsPath = tempfile.mkdtemp()
+      zfile = ZipFileReader(symbolsFile)
+      zfile.extractall(symbolsPath)
+
     for d in dumps:
       stackwalkOutput = []
       stackwalkOutput.append("Crash dump filename: " + d)
