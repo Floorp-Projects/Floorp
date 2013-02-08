@@ -103,7 +103,10 @@ public:
   }
 
   // The XPCOM GetHref is OK for us
-  // The XPCOM SetHref is OK for us
+  void SetHref(const nsAString& aHref, ErrorResult& aError)
+  {
+    aError = SetHref(aHref);
+  }
 
   // The XPCOM GetTarget is OK for us
   void SetTarget(const nsAString& aTarget, ErrorResult& aError)
