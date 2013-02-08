@@ -1753,7 +1753,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           case SRC_WHILE:
           case SRC_PCBASE:
           case SRC_PCDELTA:
-          case SRC_BRACE:
             Sprint(sp, " offset %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
           case SRC_LABEL:
