@@ -149,6 +149,7 @@ FENNEC_JAVA_FILES = \
   ThumbnailHelper.java \
   WebAppAllocator.java \
   ZoomConstraints.java \
+  gfx/Axis.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
@@ -170,11 +171,15 @@ FENNEC_JAVA_FILES = \
   gfx/PluginLayer.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
+  gfx/PanZoomController.java \
+  gfx/PanZoomTarget.java \
   gfx/PointUtils.java \
   gfx/ProgressiveUpdateData.java \
   gfx/RectUtils.java \
   gfx/ScrollbarLayer.java \
+  gfx/SimpleScaleGestureDetector.java \
   gfx/SingleTileLayer.java \
+  gfx/SubdocumentScrollHelper.java \
   gfx/TextLayer.java \
   gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
@@ -182,11 +187,6 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
-  ui/Axis.java \
-  ui/PanZoomController.java \
-  ui/PanZoomTarget.java \
-  ui/SimpleScaleGestureDetector.java \
-  ui/SubdocumentScrollHelper.java \
   widget/DateTimePicker.java \
   widget/IconTabWidget.java \
   widget/TabRow.java \

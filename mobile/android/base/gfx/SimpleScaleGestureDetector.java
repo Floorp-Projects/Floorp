@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.ui;
-
-import org.mozilla.gecko.gfx.PointUtils;
+package org.mozilla.gecko.gfx;
 
 import org.json.JSONException;
 
