@@ -329,10 +329,7 @@
 #include "nsIDOMSVGMaskElement.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGTextElement.h"
-#include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGTitleElement.h"
-#include "nsIDOMSVGTSpanElement.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGUseElement.h"
@@ -1090,13 +1087,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGMaskElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGTextElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGTextPathElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGTitleElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGTSpanElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(SVGUnknownElement, SVGElement, nsElementSH,
                                      ELEMENT_SCRIPTABLE_FLAGS)
@@ -2866,10 +2857,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,          \
                                         nsDOMTouchEvent::PrefEnabled())
 
-#define DOM_CLASSINFO_SVG_TEXT_CONTENT_ELEMENT_MAP_ENTRIES \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextContentElement)   \
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-
 #define DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES \
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
 
@@ -3069,25 +3056,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGTextElement, nsIDOMSVGTextElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextContentElement)
-    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGTextPathElement, nsIDOMSVGTextPathElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
-    DOM_CLASSINFO_SVG_TEXT_CONTENT_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGTitleElement, nsIDOMSVGTitleElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTitleElement)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGTSpanElement, nsIDOMSVGTSpanElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
-    DOM_CLASSINFO_SVG_TEXT_CONTENT_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGUnknownElement, nsIDOMSVGElement)

@@ -37,12 +37,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGStringList.idl \
-		nsIDOMSVGTextContentElement.idl \
-		nsIDOMSVGTextElement.idl \
-		nsIDOMSVGTextPathElement.idl \
-		nsIDOMSVGTextPositionElem.idl \
 		nsIDOMSVGTitleElement.idl \
-		nsIDOMSVGTSpanElement.idl \
 		nsIDOMSVGURIReference.idl \
 		nsIDOMSVGUnitTypes.idl \
 		nsIDOMSVGUseElement.idl \
