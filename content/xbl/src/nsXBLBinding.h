@@ -75,6 +75,11 @@ public:
    */
   bool LookupMember(JSContext* aCx, JS::HandleId aId, JSPropertyDescriptor* aDesc);
 
+  /*
+   * Determines whether the binding has a field with the given name.
+   */
+  bool HasField(nsString& aName);
+
 protected:
 
   /*
