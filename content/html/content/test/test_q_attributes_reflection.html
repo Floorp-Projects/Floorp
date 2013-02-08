@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for HTMLModElement attributes reflection</title>
+  <title>Test for HTMLQuoteElement attributes reflection</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="reflect.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -13,27 +13,18 @@
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for HTMLModElement attributes reflection **/
+/** Test for HTMLQuoteElement attributes reflection **/
 
-// .cite (URL)
+// .cite
 reflectURL({
-  element: document.createElement("ins"),
+  element: document.createElement("q"),
   attribute: "cite",
-})
-reflectURL({
-  element: document.createElement("del"),
-  attribute: "cite",
-})
+});
 
-// .dateTime (String)
-reflectString({
-  element: document.createElement("ins"),
-  attribute: "dateTime",
-})
-reflectString({
-  element: document.createElement("del"),
-  attribute: "dateTime",
-})
+reflectURL({
+  element: document.createElement("blockquote"),
+  attribute: "cite",
+});
 
 </script>
 </pre>
