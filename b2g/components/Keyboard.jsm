@@ -46,12 +46,6 @@ let Keyboard = {
     let frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
     let mm = frameLoader.messageManager;
     mm.addMessageListener('Forms:Input', this);
-
-    try {
-      mm.loadFrameScript(kFormsFrameScript, true);
-    } catch (e) {
-      dump('Error loading ' + kFormsFrameScript + ' as frame script: ' + e + '\n');
-    }
   },
 
   receiveMessage: function keyboardReceiveMessage(msg) {

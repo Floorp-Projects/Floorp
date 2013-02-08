@@ -8,6 +8,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService", "resource://gre/modules/SocialService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["MozSocialAPI", "openChatWindow"];
 
@@ -40,7 +41,7 @@ this.MozSocialAPI = {
 function injectController(doc, topic, data) {
   try {
     let window = doc.defaultView;
-    if (!window)
+    if (!window || PrivateBrowsingUtils.isWindowPrivate(window))
       return;
 
     // Do not attempt to load the API into about: error pages
@@ -229,7 +230,8 @@ function getChromeWindow(contentWin) {
 
 function isWindowGoodForChats(win) {
   return win.SocialChatBar
-         && win.SocialChatBar.isAvailable;
+         && win.SocialChatBar.isAvailable
+         && !PrivateBrowsingUtils.isWindowPrivate(win);
 }
 
 function findChromeWindowForChats(preferredWindow) {

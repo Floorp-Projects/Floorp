@@ -233,6 +233,17 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
       const StackFrameARM *frame_arm =
         reinterpret_cast<const StackFrameARM*>(frame);
 
+      // Argument registers (caller-saves), which will likely only be valid
+      // for the youngest frame.
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R0)
+        sequence = PrintRegister("r0", frame_arm->context.iregs[0], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R1)
+        sequence = PrintRegister("r1", frame_arm->context.iregs[1], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R2)
+        sequence = PrintRegister("r2", frame_arm->context.iregs[2], sequence);
+      if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R3)
+        sequence = PrintRegister("r3", frame_arm->context.iregs[3], sequence);
+
       // General-purpose callee-saves registers.
       if (frame_arm->context_validity & StackFrameARM::CONTEXT_VALID_R4)
         sequence = PrintRegister("r4", frame_arm->context.iregs[4], sequence);

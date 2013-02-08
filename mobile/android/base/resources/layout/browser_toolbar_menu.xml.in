@@ -151,8 +151,8 @@
                                       android:background="@drawable/tabs_button"
                                       android:gravity="center_vertical"
                                       android:src="@drawable/tabs_level"
-                                      android:paddingLeft="38dip"
-                                      android:paddingRight="36dip"/>
+                                      android:paddingLeft="37dip"
+                                      android:paddingRight="37dip"/>
 
         <Gecko.TextSwitcher android:id="@+id/tabs_count"
                             style="@style/AddressBar.ImageButton"

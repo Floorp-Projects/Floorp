@@ -138,6 +138,7 @@ CPPSRCS		= \
 		FoldConstants.cpp \
 		Intl.cpp \
 		NameFunctions.cpp \
+		ParallelDo.cpp \
 		ParallelArray.cpp \
 		ParseMaps.cpp \
 		ParseNode.cpp \
@@ -323,7 +324,9 @@ CPPSRCS +=	MIR.cpp \
 		ValueNumbering.cpp \
 		RangeAnalysis.cpp \
 		VMFunctions.cpp \
+		ParallelFunctions.cpp \
 		AliasAnalysis.cpp \
+		ParallelArrayAnalysis.cpp \
 		UnreachableCodeElimination.cpp \
 		BaselineCompiler-shared.cpp \
 		$(NULL)

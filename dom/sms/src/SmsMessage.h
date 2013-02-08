@@ -7,7 +7,7 @@
 #define mozilla_dom_sms_SmsMessage_h
 
 #include "mozilla/dom/sms/PSms.h"
-#include "nsIDOMSmsMessage.h"
+#include "nsIDOMMozSmsMessage.h"
 #include "nsString.h"
 #include "jspubtd.h"
 #include "Types.h"

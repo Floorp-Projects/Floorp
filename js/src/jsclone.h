@@ -141,7 +141,7 @@ struct JSStructuredCloneWriter {
         : out(out), objs(out.context()),
           counts(out.context()), ids(out.context()),
           memory(out.context()), callbacks(cb), closure(cbClosure),
-          transferable(tVal), transferableObjects(out.context()) { }
+          transferable(out.context(), tVal), transferableObjects(out.context()) { }
 
     bool init() { return transferableObjects.init() && parseTransferable() &&
                          memory.init() && writeTransferMap(); }
@@ -186,7 +186,7 @@ struct JSStructuredCloneWriter {
     // The "memory" list described in the HTML5 internal structured cloning algorithm.
     // memory is a superset of objs; items are never removed from Memory
     // until a serialization operation is finished
-    typedef js::HashMap<JSObject *, uint32_t> CloneMemory;
+    typedef js::AutoObjectUnsigned32HashMap CloneMemory;
     CloneMemory memory;
 
     // The user defined callbacks that will be used for cloning.
@@ -196,8 +196,8 @@ struct JSStructuredCloneWriter {
     void *closure;
 
     // List of transferable objects
-    jsval transferable;
-    js::HashSet<JSObject*> transferableObjects;
+    js::RootedValue transferable;
+    js::AutoObjectHashSet transferableObjects;
 
     friend JSBool JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
 };

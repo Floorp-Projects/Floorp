@@ -36,6 +36,7 @@
 
 #include <string.h>
 
+#include <algorithm>
 #include <sstream>
 
 #include "common/scoped_ptr.h"
@@ -108,12 +109,29 @@ string CFIFrameInfo::Serialize() const {
       stream << " ";
     stream << ".ra: " << ra_rule_;
   }
+
+  // Visit the register rules in alphabetical order.  Because
+  // register_rules_ has the elements in some arbitrary order,
+  // get the names out into a vector, sort them, and visit in
+  // sorted order.
+  std::vector<const UniqueString*> rr_names;
   for (RuleMap::const_iterator iter = register_rules_.begin();
        iter != register_rules_.end();
        ++iter) {
+    rr_names.push_back(iter->first);
+  }
+
+  std::sort(rr_names.begin(), rr_names.end(), LessThan_UniqueString);
+
+  // Now visit the register rules in alphabetical order.
+  for (std::vector<const UniqueString*>::const_iterator name = rr_names.begin();
+       name != rr_names.end();
+       ++name) {
+    const UniqueString* nm = *name;
+    Module::Expr rule = register_rules_.at(nm);
     if (static_cast<std::streamoff>(stream.tellp()) != 0)
       stream << " ";
-    stream << fromUniqueString(iter->first) << ": " << iter->second;
+    stream << FromUniqueString(nm) << ": " << rule;
   }
 
   return stream.str();
@@ -145,7 +163,7 @@ bool CFIRuleParser::Parse(const string &rule_set) {
       if (name_ != ustr__empty() || !expression_.empty()) {
         if (!Report()) return false;
       }
-      name_ = toUniqueString_n(token, token_len - 1);
+      name_ = ToUniqueString_n(token, token_len - 1);
       expression_.clear();
     } else {
       // Another expression component.

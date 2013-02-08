@@ -16,6 +16,7 @@
 
 #include "builtin/TestingFunctions.h"
 #include "methodjit/MethodJIT.h"
+#include "vm/ForkJoin.h"
 
 #include "vm/Stack-inl.h"
 
@@ -878,6 +879,16 @@ DisplayName(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+JSBool
+js::testingFunc_inParallelSection(JSContext *cx, unsigned argc, jsval *vp)
+{
+    // If we were actually *in* a parallel section, then this function
+    // would be inlined to TRUE in ion-generated code.
+    JS_ASSERT(!InParallelSection());
+    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+    return true;
+}
+
 static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1008,6 +1019,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Gets the display name for a function, which can possibly be a guessed or\n"
 "  inferred name based on where the function was defined. This can be\n"
 "  different from the 'name' property on the function."),
+
+    JS_FN_HELP("inParallelSection", testingFunc_inParallelSection, 0, 0,
+"inParallelSection()",
+"  True if this code is executing within a parallel section."),
 
     JS_FS_HELP_END
 };

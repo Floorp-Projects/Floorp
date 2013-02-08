@@ -8,8 +8,7 @@ let proxyPrefValue;
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  window.addEventListener("DOMContentLoaded", checkPage, false);
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
 
   // Go offline and disable the proxy and cache, then try to load the test URL.
   Services.io.offline = true;
@@ -22,16 +21,29 @@ function test() {
   Services.prefs.setBoolPref("browser.cache.disk.enable", false);
   Services.prefs.setBoolPref("browser.cache.memory.enable", false);
   content.location = "http://example.com/";
+
+  window.addEventListener("DOMContentLoaded", function load() {
+    if (content.location == "about:blank") {
+      info("got about:blank, which is expected once, so return");
+      return;
+    }
+    window.removeEventListener("DOMContentLoaded", load, false);
+
+    let observer = new MutationObserver(function (mutations) {
+      for (let mutation of mutations) {
+        if (mutation.attributeName == "hasBrowserHandlers") {
+          observer.disconnect();
+          checkPage();
+          return;
+        }
+      }
+    });
+    let docElt = tab.linkedBrowser.contentDocument.documentElement;
+    observer.observe(docElt, { attributes: true });
+  }, false);
 }
 
 function checkPage() {
-  if(content.location == "about:blank") {
-    info("got about:blank, which is expected once, so return");
-    return;
-  }
-
-  window.removeEventListener("DOMContentLoaded", checkPage, false);
-
   ok(Services.io.offline, "Setting Services.io.offline to true.");
   is(gBrowser.contentDocument.documentURI.substring(0,27),
     "about:neterror?e=netOffline", "Loading the Offline mode neterror page.");

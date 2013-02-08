@@ -166,6 +166,10 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
 
   const unsigned long DOM_VK_TILDE          = 0xB0;
 
+  const unsigned long DOM_VK_VOLUME_MUTE    = 0xB5;
+  const unsigned long DOM_VK_VOLUME_DOWN    = 0xB6;
+  const unsigned long DOM_VK_VOLUME_UP      = 0xB7;
+
   const unsigned long DOM_VK_COMMA          = 0xBC;
   const unsigned long DOM_VK_PERIOD         = 0xBE;
   const unsigned long DOM_VK_SLASH          = 0xBF;

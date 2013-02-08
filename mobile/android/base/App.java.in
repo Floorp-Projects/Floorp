@@ -56,12 +56,5 @@ public class App extends BrowserApp {
 #endif
         return super.onOptionsItemSelected(item);
     }
-
-#ifdef MOZ_LINKER_EXTRACT
-    @Override
-    public boolean linkerExtract() {
-        return true;
-    }
-#endif
-};
+}
 

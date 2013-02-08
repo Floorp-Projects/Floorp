@@ -116,6 +116,11 @@ class DumpSymbols {
   // return false.
   bool WriteSymbolFile(std::ostream &stream);
 
+  // As above, but simply return the debugging information in module
+  // instead of writing it to a stream. The caller owns the resulting
+  // module object and must delete it when finished.
+  bool ReadSymbolData(Module** module);
+
  private:
   // Used internally.
   class DumperLineToModule;
