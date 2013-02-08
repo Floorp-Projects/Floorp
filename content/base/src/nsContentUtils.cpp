@@ -1784,6 +1784,23 @@ nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
 }
 
 // static
+bool
+nsContentUtils::IsBindingField(JSContext* aCx, nsIContent* aContent,
+                               JS::HandleId aId)
+{
+  nsXBLBinding* binding = aContent->OwnerDoc()->BindingManager()
+                                  ->GetBinding(aContent);
+  if (!binding)
+    return false;
+
+  if (!JSID_IS_STRING(aId))
+    return false;
+  nsDependentJSString name(aId);
+
+  return binding->HasField(name);
+}
+
+// static
 nsINode*
 nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
 {
