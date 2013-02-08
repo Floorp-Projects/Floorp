@@ -31,6 +31,7 @@ EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
 		HTMLAnchorElement.h \
+		HTMLAreaElement.h \
 		HTMLBodyElement.h \
 		HTMLBRElement.h \
 		HTMLButtonElement.h \
@@ -79,7 +80,7 @@ CPPSRCS		= \
 		nsTextEditorState.cpp \
 		HTMLElement.cpp \
 		HTMLAnchorElement.cpp \
-		nsHTMLAreaElement.cpp \
+		HTMLAreaElement.cpp \
 		HTMLBRElement.cpp \
 		HTMLBodyElement.cpp \
 		HTMLButtonElement.cpp \
