@@ -74,7 +74,7 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   virtual nsEventStates IntrinsicState() const;
 
@@ -82,7 +82,82 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
+  // WebIDL
+
+  // The XPCOM GetAlt is OK for us
+  void SetAlt(const nsAString& aAlt, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::alt, aAlt, aError);
+  }
+
+  // The XPCOM GetCoords is OK for us
+  void SetCoords(const nsAString& aCoords, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::coords, aCoords, aError);
+  }
+
+  // The XPCOM GetShape is OK for us
+  void SetShape(const nsAString& aShape, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::shape, aShape, aError);
+  }
+
+  // The XPCOM GetHref is OK for us
+  // The XPCOM SetHref is OK for us
+
+  // The XPCOM GetTarget is OK for us
+  void SetTarget(const nsAString& aTarget, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::target, aTarget, aError);
+  }
+
+  // The XPCOM GetDownload is OK for us
+  void SetDownload(const nsAString& aDownload, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::download, aDownload, aError);
+  }
+
+  // The XPCOM GetPing is OK for us
+  void SetPing(const nsAString& aPing, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::ping, aPing, aError);
+  }
+
+  // The XPCOM GetProtocol is OK for us
+  // The XPCOM SetProtocol is OK for us
+
+  // The XPCOM GetHost is OK for us
+  // The XPCOM SetHost is OK for us
+
+  // The XPCOM GetHostname is OK for us
+  // The XPCOM SetHostname is OK for us
+
+  // The XPCOM GetPort is OK for us
+  // The XPCOM SetPort is OK for us
+
+  // The XPCOM GetPathname is OK for us
+  // The XPCOM SetPathname is OK for us
+
+  // The XPCOM GetSearch is OK for us
+  // The XPCOM SetSearch is OK for us
+
+  // The XPCOM GetHash is OK for us
+  // The XPCOM SetHash is OK for us
+
+  bool NoHref() const
+  {
+    return GetBoolAttr(nsGkAtoms::nohref);
+  }
+
+  void SetNoHref(bool aValue, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::nohref, aValue, aError);
+  }
+
 protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
+                             bool* aTriedToWrap) MOZ_OVERRIDE;
+
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
 };
