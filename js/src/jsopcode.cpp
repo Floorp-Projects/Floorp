@@ -56,8 +56,6 @@ using namespace js;
 using namespace js::gc;
 
 using js::frontend::IsIdentifier;
-using js::frontend::LetDataToGroupAssign;
-using js::frontend::LetDataToOffset;
 using mozilla::ArrayLength;
 
 /*

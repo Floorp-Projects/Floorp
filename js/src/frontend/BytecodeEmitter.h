@@ -271,7 +271,6 @@ enum SrcNoteType {
                                    array literal: [1,2,,];
                                    JSOP_DUP continuing destructuring pattern;
                                    JSOP_POP at end of for-in */
-    SRC_DECL        = 6,        /* type of a declaration (var, const, let*) */
     SRC_DESTRUCT    = 6,        /* JSOP_DUP starting a destructuring assignment
                                    operation, with SRC_DECL_* offset operand */
     SRC_PCDELTA     = 7,        /* distance forward from comma-operator to
@@ -305,7 +304,7 @@ enum SrcNoteType {
 };
 
 /*
- * Constants for the SRC_DECL source note.
+ * Constants for the SRC_DESTRUCTLET source note.
  *
  * NB: the var_prefix array in jsopcode.c depends on these dense indexes from
  * SRC_DECL_VAR through SRC_DECL_LET.
@@ -434,28 +433,6 @@ BytecodeEmitter::countFinalSourceNotes()
             cnt += JS_HOWMANY(diff, SN_XDELTA_MASK);
     }
     return cnt;
-}
-
-/*
- * To avoid offending js_SrcNoteSpec[SRC_DECL].arity, pack the two data needed
- * to decompile let into one ptrdiff_t:
- *   offset: offset to the LEAVEBLOCK(EXPR) op (not including ENTER/LEAVE)
- *   groupAssign: whether this was an optimized group assign ([x,y] = [a,b])
- */
-inline ptrdiff_t PackLetData(size_t offset, bool groupAssign)
-{
-    JS_ASSERT(offset <= (size_t(-1) >> 1));
-    return ptrdiff_t(offset << 1) | ptrdiff_t(groupAssign);
-}
-
-inline size_t LetDataToOffset(ptrdiff_t w)
-{
-    return size_t(w) >> 1;
-}
-
-inline bool LetDataToGroupAssign(ptrdiff_t w)
-{
-    return size_t(w) & 1;
 }
 
 } /* namespace frontend */
