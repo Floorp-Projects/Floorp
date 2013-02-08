@@ -44,11 +44,11 @@ FENNEC_JAVA_FILES = \
   AboutHomePromoBox.java \
   AboutHomeSection.java \
   ActivityHandlerHelper.java \
+  AlertNotification.java \
+  AllCapsTextView.java \
   AndroidImport.java \
   AndroidImportPreference.java \
   AnimatorProxy.java \
-  AlertNotification.java \
-  AllCapsTextView.java \
   AnimatedHeightLayout.java \
   AwesomeBar.java \
   AwesomebarResultHandler.java \
@@ -201,6 +201,10 @@ FENNEC_JAVA_FILES = \
 
 ifdef MOZ_WEBSMS_BACKEND
 FENNEC_JAVA_FILES += GeckoSmsManager.java
+endif
+
+ifdef MOZ_ANDROID_ANR_REPORTER
+FENNEC_JAVA_FILES += ANRReporter.java
 endif
 
 FENNEC_PP_JAVA_VIEW_FILES = \
