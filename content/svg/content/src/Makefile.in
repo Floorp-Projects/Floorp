@@ -41,7 +41,6 @@ CPPSRCS		= \
 		nsSVGClass.cpp \
 		nsSVGDataParser.cpp \
 		nsSVGElement.cpp \
-		nsSVGElementFactory.cpp \
 		nsSVGEnum.cpp \
 		nsSVGFeatures.cpp \
 		nsSVGFilterElement.cpp \
@@ -80,6 +79,7 @@ CPPSRCS		= \
 		SVGContentUtils.cpp \
 		SVGDefsElement.cpp \
 		SVGDescElement.cpp \
+		SVGElementFactory.cpp \
 		SVGEllipseElement.cpp \
 		SVGForeignObjectElement.cpp \
 		SVGFragmentIdentifier.cpp \
