@@ -3781,7 +3781,8 @@ GetPropertyHelperInline(JSContext *cx,
         if (vp.isUndefined()) {
             RootedScript script(cx);
             jsbytecode *pc = NULL;
-            types::TypeScript::GetPcScript(cx, script.address(), &pc);
+            if (cx->hasfp())
+                types::TypeScript::GetPcScript(cx, script.address(), &pc);
             if (!pc)
                 return true;
             JSOp op = (JSOp) *pc;
