@@ -388,3 +388,161 @@ function IsWellFormedCurrencyCode(currency) {
         return false;
     return !callFunction(std_RegExp_test, /[^A-Z]/, normalized);
 }
+
+
+/********** Locale and Parameter Negotiation **********/
+
+
+/**
+ * Add old-style language tags without script code for locales that in current
+ * usage would include a script subtag. Returns the availableLocales argument
+ * provided.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.1.
+ */
+function addOldStyleLanguageTags(availableLocales) {
+    // checking for commonly used old-style language tags only
+    if (availableLocales["pa-Arab-PK"])
+        availableLocales["pa-PK"] = true;
+    if (availableLocales["zh-Hans-CN"])
+        availableLocales["zh-CN"] = true;
+    if (availableLocales["zh-Hans-SG"])
+        availableLocales["zh-SG"] = true;
+    if (availableLocales["zh-Hant-HK"])
+        availableLocales["zh-HK"] = true;
+    if (availableLocales["zh-Hant-TW"])
+        availableLocales["zh-TW"] = true;
+    return availableLocales;
+}
+
+
+/**
+ * Canonicalizes a locale list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.1.
+ */
+function CanonicalizeLocaleList(locales) {
+    if (locales === undefined)
+        return new List();
+    var seen = new List();
+    if (typeof locales === "string")
+        locales = [locales];
+    var O = ToObject(locales);
+    var len = TO_UINT32(O.length);
+    var k = 0;
+    while (k < len) {
+        // Don't call ToString(k) - SpiderMonkey is faster with integers.
+        var kPresent = HasProperty(O, k);
+        if (kPresent) {
+            var kValue = O[k];
+            if (!(typeof kValue === "string" ||
+                  (typeof kValue === "object" && kValue !== null) ||
+                  // The following is here only because Waldo thinks we really
+                  // have to have it in order to be spec-conformant:
+                  // document.all is an object first implemented in Explorer
+                  // and then in Firefox and other fine browsers, whose
+                  // presence is also used by applications to identify Explorer
+                  // and which therefore has to be falsy in non-Explorer
+                  // browsers. It cloaks itself by pretending its type is
+                  // undefined. Just in case somebody thinks of decorating it
+                  // with a toString method that returns a language tag and
+                  // then passes it in as a locale, we check for its cloak
+                  // here.
+                  (typeof kValue === "undefined" && kValue !== undefined)))
+            {
+                ThrowError(JSMSG_INVALID_LOCALES_ELEMENT);
+            }
+            var tag = ToString(kValue);
+            if (!IsStructurallyValidLanguageTag(tag))
+                ThrowError(JSMSG_INVALID_LANGUAGE_TAG, tag);
+            tag = CanonicalizeLanguageTag(tag);
+            if (seen.indexOf(tag) === -1)
+                seen.push(tag);
+        }
+        k++;
+    }
+    return seen;
+}
+
+
+/**
+ * Compares a BCP 47 language tag against the locales in availableLocales
+ * and returns the best available match. Uses the fallback
+ * mechanism of RFC 4647, section 3.4.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.2.
+ * Spec: RFC 4647, section 3.4.
+ */
+function BestAvailableLocale(availableLocales, locale) {
+    assert(IsStructurallyValidLanguageTag(locale), "BestAvailableLocale");
+    assert(locale === CanonicalizeLanguageTag(locale), "BestAvailableLocale");
+    assert(callFunction(std_String_indexOf, locale, "-u-") === -1, "BestAvailableLocale");
+
+    var candidate = locale;
+    while (true) {
+        if (availableLocales[candidate])
+            return candidate;
+        var pos = callFunction(std_String_lastIndexOf, candidate, "-");
+        if (pos === -1)
+            return undefined;
+        if (pos >= 2 && candidate[pos - 2] === "-")
+            pos -= 2;
+        candidate = callFunction(std_String_substring, candidate, 0, pos);
+    }
+}
+
+
+/**
+ * Compares a BCP 47 language priority list against the set of locales in
+ * availableLocales and determines the best available language to meet the
+ * request. Options specified through Unicode extension subsequences are
+ * ignored in the lookup, but information about such subsequences is returned
+ * separately.
+ *
+ * This variant is based on the Lookup algorithm of RFC 4647 section 3.4.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.3.
+ * Spec: RFC 4647, section 3.4.
+ */
+function LookupMatcher(availableLocales, requestedLocales) {
+    var i = 0;
+    var len = requestedLocales.length;
+    var availableLocale;
+    var locale, noExtensionsLocale;
+    while (i < len && availableLocale === undefined) {
+        locale = requestedLocales[i];
+        noExtensionsLocale = callFunction(std_String_replace, locale, unicodeLocaleExtensionSequenceGlobalRE, "");
+        availableLocale = BestAvailableLocale(availableLocales, noExtensionsLocale);
+        i++;
+    }
+
+    var result = new Record();
+    if (availableLocale !== undefined) {
+        result.__locale = availableLocale;
+        if (locale !== noExtensionsLocale) {
+            var extensionMatch = callFunction(std_String_match, locale, unicodeLocaleExtensionSequenceRE);
+            var extension = extensionMatch[0];
+            var extensionIndex = extensionMatch.index;
+            result.__extension = extension;
+            result.__extensionIndex = extensionIndex;
+        }
+    } else {
+        result.__locale = DefaultLocale();
+    }
+    return result;
+}
+
+
+/**
+ * Compares a BCP 47 language priority list against the set of locales in
+ * availableLocales and determines the best available language to meet the
+ * request. Options specified through Unicode extension subsequences are
+ * ignored in the lookup, but information about such subsequences is returned
+ * separately.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.4.
+ */
+function BestFitMatcher(availableLocales, requestedLocales) {
+    // this implementation doesn't have anything better
+    return LookupMatcher(availableLocales, requestedLocales);
+}
