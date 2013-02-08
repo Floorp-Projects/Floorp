@@ -207,12 +207,17 @@ SettingsListener.observe('devtools.debugger.remote-enabled', false, function(val
 #ifdef MOZ_WIDGET_GONK
   let enableAdb = value;
 
-  if (Services.prefs.getBoolPref('marionette.defaultPrefs.enabled')) {
-    // Marionette is enabled. Force adb on, since marionette requires remote
-    // debugging to be disabled (we don't want adb to track the remote debugger
-    // setting).
+  try {
+    if (Services.prefs.getBoolPref('marionette.defaultPrefs.enabled')) {
+      // Marionette is enabled. Force adb on, since marionette requires remote
+      // debugging to be disabled (we don't want adb to track the remote debugger
+      // setting).
 
-    enableAdb = true;
+      enableAdb = true;
+    }
+  } catch (e) {
+    // This means that the pref doesn't exist. Which is fine. We just leave
+    // enableAdb alone.
   }
 
   // Configure adb.

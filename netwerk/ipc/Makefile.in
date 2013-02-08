@@ -46,6 +46,7 @@ CPPSRCS =               \
 LOCAL_INCLUDES +=                  \
   -I$(srcdir)/../protocol/http \
   -I$(srcdir)/../base/src          \
+  -I$(topsrcdir)/modules/libjar    \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

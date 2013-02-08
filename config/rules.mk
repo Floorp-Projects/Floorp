@@ -1441,11 +1441,30 @@ $(FINAL_TARGET)/chrome: $(call mkdir_deps,$(FINAL_TARGET)/chrome)
 
 ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL
+
+ifdef XPI_NAME
+ifdef XPI_ROOT_APPID
+# For add-on packaging we may specify that an application
+# sub-dir should be added to the root chrome manifest with
+# a specific application id.
+MAKE_JARS_FLAGS += --root-manifest-entry-appid="$(XPI_ROOT_APPID)"
+endif
+
+# if DIST_SUBDIR is defined but XPI_ROOT_APPID is not there's
+# no way langpacks will get packaged right, so error out.
+ifneq (,$(DIST_SUBDIR))
+ifndef XPI_ROOT_APPID
+$(error XPI_ROOT_APPID is not defined - langpacks will break.)
+endif
+endif
+endif
+
 libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
 	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
 	  $(QUIET) -j $(FINAL_TARGET)/chrome \
 	  $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	  $(JAR_MANIFEST)
+
 endif
 endif
 

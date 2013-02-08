@@ -124,7 +124,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
         /* Once a script starts getting really hot we will inline calls in it. */
         if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
             (outerScript->getUseCount() >= USES_BEFORE_INLINING ||
-             cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
+             cx->hasOption(JSOPTION_METHODJIT_ALWAYS))) {
             inlining_ = true;
         }
     }
@@ -1020,7 +1020,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
             return Compile_Abort;
     }
 
-    if (!cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
+    if (!cx->hasOption(JSOPTION_METHODJIT_ALWAYS) &&
         (cx->typeInferenceEnabled()
          ? script->incUseCount() <= INFER_USES_BEFORE_COMPILE
          : script->incUseCount() <= USES_BEFORE_COMPILE))
@@ -1082,7 +1082,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (compiledOnce)
         return Compile_Skipped;
 
-    if (!cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
+    if (!cx->hasOption(JSOPTION_METHODJIT_ALWAYS) &&
         ++desc.counter <= INFER_USES_BEFORE_COMPILE)
     {
         return Compile_Skipped;

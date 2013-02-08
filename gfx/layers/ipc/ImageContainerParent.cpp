@@ -39,7 +39,6 @@ bool ImageContainerParent::RecvFlush()
 {
   SharedImage *img = RemoveSharedImage(mID);
   if (img) {
-    DeallocSharedImageData(this, *img);
     delete img;
   }
   return true;

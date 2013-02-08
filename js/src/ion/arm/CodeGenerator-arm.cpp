@@ -103,13 +103,6 @@ CodeGeneratorARM::visitTestIAndBranch(LTestIAndBranch *test)
     return true;
 }
 
-void
-CodeGeneratorARM::emitSet(Assembler::Condition cond, const Register &dest)
-{
-    masm.ma_mov(Imm32(0), dest);
-    masm.ma_mov(Imm32(1), dest, NoSetCond, cond);
-}
-
 bool
 CodeGeneratorARM::visitCompare(LCompare *comp)
 {
@@ -1236,7 +1229,7 @@ CodeGeneratorARM::visitCompareD(LCompareD *comp)
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(lhs, rhs);
-    emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()));
+    masm.emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()));
     return true;
 }
 
@@ -1270,7 +1263,7 @@ CodeGeneratorARM::visitCompareB(LCompareB *lir)
             masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
         else
             masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
-        emitSet(JSOpToCondition(mir->jsop()), output);
+        masm.emitSet(JSOpToCondition(mir->jsop()), output);
         masm.jump(&done);
     }
 
@@ -1322,7 +1315,7 @@ CodeGeneratorARM::visitCompareV(LCompareV *lir)
     masm.j(Assembler::NotEqual, &notEqual);
     {
         masm.cmp32(lhs.payloadReg(), rhs.payloadReg());
-        emitSet(cond, output);
+        masm.emitSet(cond, output);
         masm.jump(&done);
     }
     masm.bind(&notEqual);
@@ -1363,7 +1356,7 @@ CodeGeneratorARM::visitNotI(LNotI *ins)
 {
     // It is hard to optimize !x, so just do it the basic way for now.
     masm.ma_cmp(ToRegister(ins->input()), Imm32(0));
-    emitSet(Assembler::Equal, ToRegister(ins->output()));
+    masm.emitSet(Assembler::Equal, ToRegister(ins->output()));
     return true;
 }
 

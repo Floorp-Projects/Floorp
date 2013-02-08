@@ -233,7 +233,7 @@ struct BaselineScript
 
 inline bool IsBaselineEnabled(JSContext *cx)
 {
-    return cx->hasRunOption(JSOPTION_BASELINE);
+    return cx->hasOption(JSOPTION_BASELINE);
 }
 
 MethodStatus

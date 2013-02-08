@@ -21,6 +21,7 @@
   <color name="abouthome_topsite_shadow">#1000</color>
   <color name="tab_indicator_unselected">@android:color/transparent</color>
   <color name="tab_indicator_unselected_focused">#34FF9500</color>
+  <color name="tab_row_pressed">#4D000000</color>
   <color name="abouthome_topsite_pin">#55000000</color>
   <color name="dialogtitle_textcolor">#ffffff</color>
 </resources>

@@ -460,7 +460,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                         // first suggestion item) and the search matches a URL
                         // pattern, go to that URL. Otherwise, do a search for
                         // the term.
-                        if (v != viewHolder.userEnteredView && !StringUtils.isSearchQuery(suggestion)) {
+                        if (v != viewHolder.userEnteredView && !StringUtils.isSearchQuery(suggestion, false)) {
                             listener.onUrlOpen(suggestion, null);
                         } else {
                             listener.onSearch(engine.name, suggestion);

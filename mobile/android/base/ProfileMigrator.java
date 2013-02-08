@@ -9,6 +9,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
 import org.mozilla.gecko.db.LocalBrowserDB;
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
@@ -666,7 +667,7 @@ public class ProfileMigrator {
 
     private class MiscTask implements Runnable {
         protected void cleanupXULLibCache() {
-            File cacheFile = GeckoAppShell.getCacheDir(mContext);
+            File cacheFile = GeckoLoader.getCacheDir(mContext);
             File[] files = cacheFile.listFiles();
             if (files != null) {
                 Iterator<File> cacheFiles = Arrays.asList(files).iterator();
@@ -1273,7 +1274,7 @@ public class ProfileMigrator {
             File dbFileShm = new File(dbPathShm);
 
             SQLiteBridge db = null;
-            GeckoAppShell.loadSQLiteLibs(mContext, mContext.getPackageResourcePath());
+            GeckoLoader.loadSQLiteLibs(mContext, mContext.getPackageResourcePath());
             try {
                 db = new SQLiteBridge(dbPath);
                 if (!checkPlacesSchema(db)) {

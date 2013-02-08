@@ -184,7 +184,7 @@ bool PostfixEvaluator<ValueType>::EvaluateToken(
                       HexString(value) << ": " << expression;
       return false;
     }
-    if (identifier == ustr__empty() || index(identifier,0) != '$') {
+    if (identifier == ustr__empty() || Index(identifier,0) != '$') {
       BPLOG(ERROR) << "Can't assign " << HexString(value) << " to " <<
                       identifier << ": " << expression;
       return false;
@@ -194,7 +194,7 @@ bool PostfixEvaluator<ValueType>::EvaluateToken(
     if (assigned)
       assigned->set(identifier, true);
   } else {
-    // Push it onto the stack as-is, but first convert it either to a 
+    // Push it onto the stack as-is, but first convert it either to a
     // ValueType (if a literal) or to a UniqueString* (if an identifier).
     //
     // First, try to treat the value as a literal. Literals may have leading
@@ -216,7 +216,7 @@ bool PostfixEvaluator<ValueType>::EvaluateToken(
     if (token_stream >> literal && token_stream.peek() == EOF) {
       PushValue(negative ? (-literal) : literal);
     } else {
-      PushIdentifier(toUniqueString(token));
+      PushIdentifier(ToUniqueString(token));
     }
   }
   return true;
@@ -310,7 +310,7 @@ bool PostfixEvaluator<ValueType>::EvaluateForValue(const Module::Expr& expr,
       if (!found) {
         // The identifier wasn't found in the dictionary.  Don't imply any
         // default value, just fail.
-        BPLOG(INFO) << "Identifier " << fromUniqueString(expr.ident_)
+        BPLOG(INFO) << "Identifier " << FromUniqueString(expr.ident_)
                     << " not in dictionary (kExprSimple{Mem})";
         return false;
       }
@@ -378,7 +378,7 @@ bool PostfixEvaluator<ValueType>::PopValue(ValueType *value) {
     if (!found) {
       // The identifier wasn't found in the dictionary.  Don't imply any
       // default value, just fail.
-      BPLOG(INFO) << "Identifier " << fromUniqueString(token)
+      BPLOG(INFO) << "Identifier " << FromUniqueString(token)
                   << " not in dictionary";
       return false;
     }
