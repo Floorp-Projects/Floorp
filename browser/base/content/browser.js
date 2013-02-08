@@ -5039,9 +5039,11 @@ var TabsInTitlebar = {
 
       let tabsToolbar       = $("TabsToolbar");
 
+#ifdef MENUBAR_CAN_AUTOHIDE
       let appmenuButtonBox  = $("appmenu-button-container");
-      let captionButtonsBox = $("titlebar-buttonbox");
       this._sizePlaceholder("appmenu-button", rect(appmenuButtonBox).width);
+#endif
+      let captionButtonsBox = $("titlebar-buttonbox");
       this._sizePlaceholder("caption-buttons", rect(captionButtonsBox).width);
 
       let tabsToolbarRect = rect(tabsToolbar);
