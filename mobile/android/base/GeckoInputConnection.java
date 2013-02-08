@@ -632,7 +632,6 @@ final class DebugGeckoInputConnection
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
 
-        GeckoApp.assertOnUiThread();
         Object ret = method.invoke(this, args);
         if (ret == this) {
             ret = mProxy;
