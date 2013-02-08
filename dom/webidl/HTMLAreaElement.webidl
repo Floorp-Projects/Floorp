@@ -20,6 +20,7 @@ interface HTMLAreaElement : HTMLElement {
            attribute DOMString coords;
            [SetterThrows]
            attribute DOMString shape;
+           [SetterThrows]
   stringifier attribute DOMString href;
            [SetterThrows]
            attribute DOMString target;
