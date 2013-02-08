@@ -45,6 +45,9 @@ public:
                              bool* aTargetIsNew);
   nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
+  bool LookupMember(JSContext* aCx, nsString& aName, JS::HandleId aNameAsId,
+                    JSPropertyDescriptor* aDesc, JSObject* aClassObject);
+
   void SetMemberList(nsXBLProtoImplMember* aMemberList)
   {
     delete mMembers;
