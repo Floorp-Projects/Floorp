@@ -15,6 +15,7 @@
 #include "nsPIDOMWindow.h"
 
 #include "jsapi.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
@@ -148,6 +149,58 @@ protected:
   DispatchInternal();
 };
 
+// SharedMutex is a small wrapper around an (internal) reference-counted Mutex
+// object. It exists to avoid changing a lot of code to use Mutex* instead of
+// Mutex&.
+class SharedMutex
+{
+  typedef mozilla::Mutex Mutex;
+
+  class RefCountedMutex : public Mutex
+  {
+  public:
+    RefCountedMutex(const char* aName)
+    : Mutex(aName)
+    { }
+
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedMutex)
+
+  private:
+    ~RefCountedMutex()
+    { }
+  };
+
+  nsRefPtr<RefCountedMutex> mMutex;
+
+public:
+  SharedMutex(const char* aName)
+  : mMutex(new RefCountedMutex(aName))
+  { }
+
+  SharedMutex(SharedMutex& aOther)
+  : mMutex(aOther.mMutex)
+  { }
+
+  operator Mutex&()
+  {
+    MOZ_ASSERT(mMutex);
+    return *mMutex;
+  }
+
+  operator const Mutex&() const
+  {
+    MOZ_ASSERT(mMutex);
+    return *mMutex;
+  }
+
+  void
+  AssertCurrentThreadOwns() const
+  {
+    MOZ_ASSERT(mMutex);
+    mMutex->AssertCurrentThreadOwns();
+  }
+};
+
 template <class Derived>
 class WorkerPrivateParent : public EventTarget
 {
@@ -165,7 +218,7 @@ public:
   };
 
 protected:
-  mozilla::Mutex mMutex;
+  SharedMutex mMutex;
   mozilla::CondVar mCondVar;
   mozilla::CondVar mMemoryReportCondVar;
 
@@ -340,9 +393,10 @@ public:
   {
     AssertIsOnParentThread();
     bool acceptingEvents;
-    mMutex.Lock();
-    acceptingEvents = mParentStatus < Terminating;
-    mMutex.Unlock();
+    {
+      mozilla::MutexAutoLock lock(mMutex);
+      acceptingEvents = mParentStatus < Terminating;
+    }
     return acceptingEvents;
   }
 
@@ -553,6 +607,9 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
     }
   };
 
+  class MemoryReporter;
+  friend class MemoryReporter;
+
   nsTArray<nsAutoPtr<SyncQueue> > mSyncQueues;
 
   // Touched on multiple threads, protected with mMutex.
@@ -565,7 +622,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsTArray<nsAutoPtr<TimeoutInfo> > mTimeouts;
 
   nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<nsIMemoryMultiReporter> mMemoryReporter;
+  nsRefPtr<MemoryReporter> mMemoryReporter;
 
   mozilla::TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;
@@ -576,7 +633,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mRunningExpiredTimeouts;
   bool mCloseHandlerStarted;
   bool mCloseHandlerFinished;
-  bool mMemoryReporterAlive;
   bool mMemoryReporterRunning;
   bool mBlockedForMemoryReporter;
   bool mXHRParamsAllowed;
@@ -720,9 +776,6 @@ public:
 
   bool
   BlockAndCollectRuntimeStats(bool aIsQuick, void* aData);
-
-  void
-  NoteDeadMemoryReporter();
 
   bool
   XHRParamsAllowed() const
