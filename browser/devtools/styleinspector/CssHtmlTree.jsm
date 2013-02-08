@@ -216,9 +216,8 @@ XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
 });
 
 CssHtmlTree.prototype = {
-  // Cache the list of properties that have matched and unmatched properties.
+  // Cache the list of properties that match the selected element.
   _matchedProperties: null,
-  _unmatchedProperties: null,
 
   htmlComplete: false,
 
@@ -228,8 +227,8 @@ CssHtmlTree.prototype = {
   // The search filter
   searchField: null,
 
-  // Reference to the "Only user Styles" checkbox.
-  onlyUserStylesCheckbox: null,
+  // Reference to the "Include browser styles" checkbox.
+  includeBrowserStylesCheckbox: null,
 
   // Holds the ID of the panelRefresh timeout.
   _panelRefreshTimeout: null,
@@ -240,9 +239,9 @@ CssHtmlTree.prototype = {
   // Number of visible properties
   numVisibleProperties: 0,
 
-  get showOnlyUserStyles()
+  get includeBrowserStyles()
   {
-    return this.onlyUserStylesCheckbox.checked;
+    return this.includeBrowserStylesCheckbox.checked;
   },
 
   /**
@@ -253,7 +252,6 @@ CssHtmlTree.prototype = {
   highlight: function CssHtmlTree_highlight(aElement)
   {
     this.viewedElement = aElement;
-    this._unmatchedProperties = null;
     this._matchedProperties = null;
 
     if (!aElement) {
@@ -288,7 +286,7 @@ CssHtmlTree.prototype = {
           if (propView.visible) {
             this.numVisibleProperties++;
           }
-          propView.refreshAllSelectors();
+          propView.refreshMatchedSelectors();
           this.propertyViews.push(propView);
         }.bind(this),
         onDone: function() {
@@ -371,28 +369,29 @@ CssHtmlTree.prototype = {
   },
 
   /**
-   * The change event handler for the onlyUserStyles checkbox.
+   * The change event handler for the includeBrowserStyles checkbox.
    *
    * @param {Event} aEvent the DOM Event object.
    */
-  onlyUserStylesChanged: function CssHtmltree_onlyUserStylesChanged(aEvent)
+  includeBrowserStylesChanged:
+  function CssHtmltree_includeBrowserStylesChanged(aEvent)
   {
     this.refreshSourceFilter();
     this.refreshPanel();
   },
 
   /**
-   * When onlyUserStyles.checked is true we only display properties that have
-   * matched selectors and have been included by the document or one of the
+   * When includeBrowserStyles.checked is false we only display properties that
+   * have matched selectors and have been included by the document or one of the
    * document's stylesheets. If .checked is false we display all properties
    * including those that come from UA stylesheets.
    */
   refreshSourceFilter: function CssHtmlTree_setSourceFilter()
   {
     this._matchedProperties = null;
-    this.cssLogic.sourceFilter = this.showOnlyUserStyles ?
-                                 CssLogic.FILTER.ALL :
-                                 CssLogic.FILTER.UA;
+    this.cssLogic.sourceFilter = this.includeBrowserStyles ?
+                                 CssLogic.FILTER.UA :
+                                 CssLogic.FILTER.ALL;
   },
 
   /**
@@ -437,41 +436,6 @@ CssHtmlTree.prototype = {
         this.cssLogic.hasMatchedSelectors(CssHtmlTree.propertyNames);
     }
     return this._matchedProperties;
-  },
-
-  /**
-   * Check if a property has unmatched selectors. Result is cached.
-   *
-   * @param {string} aProperty the name of the property you want to check.
-   * @return {boolean} true if the property has unmatched selectors, false
-   * otherwise.
-   */
-  hasUnmatchedSelectors: function CssHtmlTree_hasUnmatchedSelectors(aProperty)
-  {
-    // Initially check all of the properties that return false for
-    // hasMatchedSelectors(). This speeds-up the UI.
-    if (!this._unmatchedProperties) {
-      let properties = [];
-      CssHtmlTree.propertyNames.forEach(function(aName) {
-        if (!this.matchedProperties[aName]) {
-          properties.push(aName);
-        }
-      }, this);
-
-      if (properties.indexOf(aProperty) == -1) {
-        properties.push(aProperty);
-      }
-
-      this._unmatchedProperties = this.cssLogic.hasUnmatchedSelectors(properties);
-    }
-
-    // Lazy-get the result for properties we do not have cached.
-    if (!(aProperty in this._unmatchedProperties)) {
-      let result = this.cssLogic.hasUnmatchedSelectors([aProperty]);
-      this._unmatchedProperties[aProperty] = result[aProperty];
-    }
-
-    return this._unmatchedProperties[aProperty];
   },
 
   /**
@@ -688,8 +652,8 @@ CssHtmlTree.prototype = {
     delete this.viewedElement;
 
     // Remove event listeners
-    this.onlyUserStylesCheckbox.removeEventListener("command",
-      this.onlyUserStylesChanged);
+    this.includeBrowserStylesCheckbox.removeEventListener("command",
+      this.includeBrowserStylesChanged);
     this.searchField.removeEventListener("command", this.filterChanged);
 
     // Cancel tree construction
@@ -777,32 +741,14 @@ PropertyView.prototype = {
   // Are matched rules expanded?
   matchedExpanded: false,
 
-  // Are unmatched rules expanded?
-  unmatchedExpanded: false,
-
-  // Unmatched selector table
-  unmatchedSelectorTable: null,
-
   // Matched selector container
   matchedSelectorsContainer: null,
 
   // Matched selector expando
   matchedExpander: null,
 
-  // Unmatched selector expando
-  unmatchedExpander: null,
-
-  // Unmatched selector container
-  unmatchedSelectorsContainer: null,
-
-  // Unmatched title block
-  unmatchedTitleBlock: null,
-
   // Cache for matched selector views
   _matchedSelectorViews: null,
-
-  // Cache for unmatched selector views
-  _unmatchedSelectorViews: null,
 
   // The previously selected element used for the selector view caches
   prevViewedElement: null,
@@ -835,19 +781,11 @@ PropertyView.prototype = {
   },
 
   /**
-   * Does the property have any unmatched selectors?
-   */
-  get hasUnmatchedSelectors()
-  {
-    return this.name in this.tree.hasUnmatchedSelectors;
-  },
-
-  /**
    * Should this property be visible?
    */
   get visible()
   {
-    if (this.tree.showOnlyUserStyles && !this.hasMatchedSelectors) {
+    if (!this.tree.includeBrowserStyles && !this.hasMatchedSelectors) {
       return false;
     }
 
@@ -969,7 +907,6 @@ PropertyView.prototype = {
 
     if (this.prevViewedElement != this.tree.viewedElement) {
       this._matchedSelectorViews = null;
-      this._unmatchedSelectorViews = null;
       this.prevViewedElement = this.tree.viewedElement;
     }
 
@@ -983,7 +920,7 @@ PropertyView.prototype = {
 
     this.tree.numVisibleProperties++;
     this.valueNode.textContent = this.propertyInfo.value;
-    this.refreshAllSelectors();
+    this.refreshMatchedSelectors();
   },
 
   /**
@@ -1011,51 +948,6 @@ PropertyView.prototype = {
   },
 
   /**
-   * Refresh the panel unmatched rules.
-   */
-  refreshUnmatchedSelectors: function PropertyView_refreshUnmatchedSelectors()
-  {
-    let hasMatchedSelectors = this.hasMatchedSelectors;
-
-    this.unmatchedSelectorTable.hidden = !this.unmatchedExpanded;
-
-    if (hasMatchedSelectors) {
-      this.unmatchedSelectorsContainer.hidden = !this.matchedExpanded ||
-        !this.hasUnmatchedSelectors;
-      this.unmatchedTitleBlock.hidden = false;
-    } else {
-      this.unmatchedSelectorsContainer.hidden = !this.unmatchedExpanded;
-      this.unmatchedTitleBlock.hidden = true;
-    }
-
-    if (this.unmatchedExpanded && this.hasUnmatchedSelectors) {
-      CssHtmlTree.processTemplate(this.templateUnmatchedSelectors,
-        this.unmatchedSelectorTable, this);
-      if (!hasMatchedSelectors) {
-        this.matchedExpander.setAttribute("open", "");
-        this.unmatchedSelectorTable.classList.add("only-unmatched");
-      } else {
-        this.unmatchedExpander.setAttribute("open", "");
-        this.unmatchedSelectorTable.classList.remove("only-unmatched");
-      }
-    } else {
-      if (!hasMatchedSelectors) {
-        this.matchedExpander.removeAttribute("open");
-      }
-      this.unmatchedExpander.removeAttribute("open");
-      this.unmatchedSelectorTable.innerHTML = "";
-    }
-  },
-
-  /**
-   * Refresh the panel matched and unmatched rules
-   */
-  refreshAllSelectors: function PropertyView_refreshAllSelectors()
-  {
-    this.refreshMatchedSelectors();
-  },
-
-  /**
    * Provide access to the matched SelectorViews that we are currently
    * displaying.
    */
@@ -1072,23 +964,6 @@ PropertyView.prototype = {
     return this._matchedSelectorViews;
   },
 
-    /**
-   * Provide access to the unmatched SelectorViews that we are currently
-   * displaying.
-   */
-  get unmatchedSelectorViews()
-  {
-    if (!this._unmatchedSelectorViews) {
-      this._unmatchedSelectorViews = [];
-      this.propertyInfo.unmatchedSelectors.forEach(
-        function unmatchedSelectorViews_convert(aSelectorInfo) {
-          this._unmatchedSelectorViews.push(new SelectorView(this.tree, aSelectorInfo));
-        }, this);
-    }
-
-    return this._unmatchedSelectorViews;
-  },
-
   /**
    * The action when a user expands matched selectors.
    *
@@ -1098,17 +973,7 @@ PropertyView.prototype = {
   matchedExpanderClick: function PropertyView_matchedExpanderClick(aEvent)
   {
     this.matchedExpanded = !this.matchedExpanded;
-    this.refreshAllSelectors();
-    aEvent.preventDefault();
-  },
-
-  /**
-   * The action when a user expands unmatched selectors.
-   */
-  unmatchedSelectorsClick: function PropertyView_unmatchedSelectorsClick(aEvent)
-  {
-    this.unmatchedExpanded = !this.unmatchedExpanded;
-    this.refreshUnmatchedSelectors();
+    this.refreshMatchedSelectors();
     aEvent.preventDefault();
   },
 
@@ -1145,11 +1010,11 @@ function SelectorView(aTree, aSelectorInfo)
  * @see CssLogic.STATUS
  */
 SelectorView.STATUS_NAMES = [
-  // "Unmatched", "Parent Match", "Matched", "Best Match"
+  // "Parent Match", "Matched", "Best Match"
 ];
 
 SelectorView.CLASS_NAMES = [
-  "unmatched", "parentmatch", "matched", "bestmatch"
+  "parentmatch", "matched", "bestmatch"
 ];
 
 SelectorView.prototype = {
@@ -1170,7 +1035,7 @@ SelectorView.prototype = {
 
     for (let status in CssLogic.STATUS) {
       let i = CssLogic.STATUS[status];
-      if (i > -1) {
+      if (i > CssLogic.STATUS.UNMATCHED) {
         let value = CssHtmlTree.l10n("rule.status." + status);
         // Replace normal spaces with non-breaking spaces
         SelectorView.STATUS_NAMES[i] = value.replace(/ /g, '\u00A0');
