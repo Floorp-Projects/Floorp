@@ -71,11 +71,8 @@ public:
   nsXBLProtoImplMember* GetNext() { return mNext; }
   void SetNext(nsXBLProtoImplMember* aNext) { mNext = aNext; }
 
-  virtual nsresult InstallMember(nsIScriptContext* aContext,
-                                 nsIContent* aBoundElement, 
-                                 JSObject* aScriptObject, // Unused
-                                 JSObject* aTargetClassObject,
-                                 const nsCString& aClassStr) = 0;
+  virtual nsresult InstallMember(JSContext* aCx,
+                                 JSObject* aTargetClassObject) = 0;
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
                                  JSObject* aClassObject) = 0;

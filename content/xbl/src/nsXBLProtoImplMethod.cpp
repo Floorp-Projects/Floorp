@@ -92,40 +92,25 @@ nsXBLProtoImplMethod::SetLineNumber(uint32_t aLineNumber)
 }
 
 nsresult
-nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
-                                    nsIContent* aBoundElement, 
-                                    JSObject* aScriptObject,
-                                    JSObject* aTargetClassObject,
-                                    const nsCString& aClassStr)
+nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
+                                    JSObject* aTargetClassObject)
 {
   NS_PRECONDITION(IsCompiled(),
                   "Should not be installing an uncompiled method");
-  JSContext* cx = aContext->GetNativeContext();
+  MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
 
-  nsIScriptGlobalObject* sgo = aBoundElement->OwnerDoc()->GetScopeObject();
-
-  if (!sgo) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  NS_ASSERTION(aScriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
-  if (!aScriptObject)
-    return NS_ERROR_FAILURE;
-
-  JSObject* globalObject = sgo->GetGlobalJSObject();
+  JSObject* globalObject = JS_GetGlobalForObject(aCx, aTargetClassObject);
 
   // now we want to reevaluate our property using aContext and the script object for this window...
   if (mJSMethodObject) {
     nsDependentString name(mName);
-    JSAutoRequest ar(cx);
-    JSAutoCompartment ac(cx, globalObject);
 
-    JSObject * method = ::JS_CloneFunctionObject(cx, mJSMethodObject, globalObject);
+    JSObject * method = ::JS_CloneFunctionObject(aCx, mJSMethodObject, globalObject);
     if (!method) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (!::JS_DefineUCProperty(cx, aTargetClassObject,
+    if (!::JS_DefineUCProperty(aCx, aTargetClassObject,
                                static_cast<const jschar*>(mName),
                                name.Length(), OBJECT_TO_JSVAL(method),
                                NULL, NULL, JSPROP_ENUMERATE)) {
