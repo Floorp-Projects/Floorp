@@ -259,7 +259,6 @@ enum SrcNoteType {
     SRC_NULL        = 0,        /* terminates a note vector */
     SRC_IF          = 1,        /* JSOP_IFEQ bytecode is from an if-then */
     SRC_BREAK       = 1,        /* JSOP_GOTO is a break */
-    SRC_GENEXP      = 1,        /* JSOP_LAMBDA from generator expression */
     SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
     SRC_FOR_IN      = 2,        /* JSOP_GOTO to for-in loop condition from
                                    before loop (same arity as SRC_IF_ELSE) */

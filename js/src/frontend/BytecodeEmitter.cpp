@@ -4721,12 +4721,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     unsigned index = bce->objectList.add(pn->pn_funbox);
 
     /* Non-hoisted functions simply emit their respective op. */
-    if (!pn->functionIsHoisted()) {
-        if (pn->pn_funbox->inGenexpLambda && NewSrcNote(cx, bce, SRC_GENEXP) < 0)
-            return false;
-
+    if (!pn->functionIsHoisted())
         return EmitIndex32(cx, pn->getOp(), index, bce);
-    }
 
     /*
      * For a script we emit the code as we parse. Thus the bytecode for
