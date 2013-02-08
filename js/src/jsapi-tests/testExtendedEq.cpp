@@ -53,8 +53,8 @@ BEGIN_TEST(testExtendedEq_bug530489)
     CHECK(JS_DefineObject(cx, global, "obj1", clasp, NULL, 0));
     CHECK(JS_DefineObject(cx, global, "obj2", clasp, NULL, 0));
 
-    jsval v;
-    EVAL("(function() { var r; for (var i = 0; i < 10; ++i) r = obj1 == obj2; return r; })()", &v);
+    js::RootedValue v(cx);
+    EVAL("(function() { var r; for (var i = 0; i < 10; ++i) r = obj1 == obj2; return r; })()", v.address());
     CHECK_SAME(v, JSVAL_TRUE);
     return true;
 }
