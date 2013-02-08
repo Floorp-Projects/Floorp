@@ -1119,6 +1119,9 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
         return NULL;
 #endif
 
+    if (!ForkJoinSlice::Initialize())
+        return NULL;
+
     if (!rt->init(maxbytes)) {
         JS_DestroyRuntime(rt);
         return NULL;
