@@ -784,6 +784,10 @@ protected:
   {
     GetAttr(kNameSpaceID_None, aName, aResult);
   }
+  void GetHTMLAttr(nsIAtom* aName, mozilla::dom::DOMString& aResult) const
+  {
+    GetAttr(kNameSpaceID_None, aName, aResult);
+  }
   void GetHTMLEnumAttr(nsIAtom* aName, nsAString& aResult) const
   {
     GetEnumAttr(aName, nullptr, aResult);

@@ -4,6 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/HTMLBaseElementBinding.h"
+#include "mozilla/dom/HTMLDirectoryElementBinding.h"
+#include "mozilla/dom/HTMLHeadElementBinding.h"
+#include "mozilla/dom/HTMLHtmlElementBinding.h"
+#include "mozilla/dom/HTMLParamElementBinding.h"
+#include "mozilla/dom/HTMLQuoteElementBinding.h"
 
 #include "nsAttrValueInlines.h"
 #include "nsStyleConsts.h"
@@ -353,6 +359,29 @@ HTMLSharedElement::GetAttributeMappingFunction() const
   }
 
   return nsGenericHTMLElement::GetAttributeMappingFunction();
+}
+
+JSObject*
+HTMLSharedElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+{
+  if (mNodeInfo->Equals(nsGkAtoms::param)) {
+    return HTMLParamElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::base)) {
+    return HTMLBaseElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::dir)) {
+    return HTMLDirectoryElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::q) ||
+      mNodeInfo->Equals(nsGkAtoms::blockquote)) {
+    return HTMLQuoteElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::head)) {
+    return HTMLHeadElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  }
+  MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::html));
+  return HTMLHtmlElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace mozilla
