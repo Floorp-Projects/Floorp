@@ -284,9 +284,11 @@ intrinsic_RuntimeDefaultLocale(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    const char *locale = cx->getDefaultLocale();
-    if (!locale)
+    const char *locale = cx->runtime->getDefaultLocale();
+    if (!locale) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEFAULT_LOCALE_ERROR);
         return false;
+    }
 
     RootedString jslocale(cx, JS_NewStringCopyZ(cx, locale));
     if (!jslocale)
