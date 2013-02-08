@@ -114,6 +114,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_bug_638949_copy_link_location.js \
 	browser_output_longstring_expand.js \
 	browser_netpanel_longstring_expand.js \
+	browser_repeated_messages_accuracy.js \
 	head.js \
 	$(NULL)
 
@@ -202,6 +203,7 @@ MOCHITEST_BROWSER_FILES += \
 	test_bug_770099_bad_policy_uri.html^headers^ \
 	test-result-format-as-string.html \
 	test-bug-737873-mixedcontent.html \
+	test-repeated-messages.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

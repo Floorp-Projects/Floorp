@@ -44,7 +44,7 @@ function test() {
 
   function getTooltipValues() {
     let matches = webconsole.getAttribute("tooltiptext")
-                  .match(/(\d+) errors, (\d+) warnings/);
+                  .match(/(\d+) errors?, (\d+) warnings?/);
     return matches ? [matches[1], matches[2]] : [0, 0];
   }
 

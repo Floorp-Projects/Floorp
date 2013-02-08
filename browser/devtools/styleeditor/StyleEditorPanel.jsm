@@ -39,10 +39,14 @@ StyleEditorPanel.prototype = {
    */
   open: function StyleEditor_open() {
     let contentWin = this._toolbox.target.window;
-    this.setPage(contentWin);
-    this.isReady = true;
+    let deferred = Promise.defer();
 
-    return Promise.resolve(this);
+    this.setPage(contentWin).then(function() {
+      this.isReady = true;
+      deferred.resolve(this);
+    }.bind(this));
+
+    return deferred.promise;
   },
 
   /**
@@ -66,12 +70,16 @@ StyleEditorPanel.prototype = {
   setPage: function StyleEditor_setPage(contentWindow) {
     if (this._panelWin.styleEditorChrome) {
       this._panelWin.styleEditorChrome.contentWindow = contentWindow;
+      this.selectStyleSheet(null, null, null);
     } else {
       let chromeRoot = this._panelDoc.getElementById("style-editor-chrome");
       let chrome = new StyleEditorChrome(chromeRoot, contentWindow);
+      let promise = chrome.open();
+
       this._panelWin.styleEditorChrome = chrome;
+      this.selectStyleSheet(null, null, null);
+      return promise;
     }
-    this.selectStyleSheet(null, null, null);
   },
 
   /**
