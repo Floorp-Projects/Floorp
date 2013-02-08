@@ -76,6 +76,9 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
   MOZ_ASSERT(targetClassObject);
 
+  // Stash a strong reference to the JSClass in the binding.
+  aBinding->SetJSClass(static_cast<nsXBLJSClass*>(JS_GetClass(targetClassObject)));
+
   // If the prototype already existed, we don't need to install anything. return early.
   if (!targetObjectIsNew)
     return NS_OK;
