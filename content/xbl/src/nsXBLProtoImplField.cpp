@@ -77,21 +77,19 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 }
 
 // XBL fields are represented on elements inheriting that field a bit trickily.
-// Initially the element itself won't have a property for the field.  When an
-// attempt is made to access the field, the element's resolve hook won't find
-// it.  But the XBL prototype object, in the prototype chain of the element,
-// will resolve an accessor property for the field on the XBL prototype object.
-// That accessor, when used, will then (via InstallXBLField below) reify a
-// property for the field onto the actual XBL-backed element.
+// When setting up the XBL prototype object, we install accessors for the fields
+// on the prototype object. Those accessors, when used, will then (via
+// InstallXBLField below) reify a property for the field onto the actual XBL-backed
+// element.
 //
 // The accessor property is a plain old property backed by a getter function and
 // a setter function.  These properties are backed by the FieldGetter and
-// FieldSetter natives; they're created by XBLResolve.  The precise field to be
+// FieldSetter natives; they're created by InstallAccessors.  The precise field to be
 // reified is identified using two extra slots on the getter/setter functions.
 // XBLPROTO_SLOT stores the XBL prototype object that provides the field.
 // FIELD_SLOT stores the name of the field, i.e. its JavaScript property name.
 //
-// This two-step field installation process -- reify an accessor on the
+// This two-step field installation process -- creating an accessor on the
 // prototype, then have that reify an own property on the actual element -- is
 // admittedly convoluted.  Better would be for XBL-backed elements to be proxies
 // that could resolve fields onto themselves.  But given that XBL bindings are
@@ -157,10 +155,7 @@ InstallXBLField(JSContext* cx,
     return false;
   }
 
-  // Now that |this| is okay, actually install the field.  Some of this
-  // installation work could have been done in XBLResolve, but this splitting
-  // of work seems simplest to implement and friendliest regarding lifetimes
-  // and potential cycles.
+  // Now that |this| is okay, actually install the field.
 
   // Because of the possibility (due to XBL binding inheritance, because each
   // XBL binding lives in its own global object) that |this| might be in a
@@ -284,64 +279,65 @@ FieldSetter(JSContext *cx, unsigned argc, JS::Value *vp)
                                  (cx, args);
 }
 
-JSBool
-XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-           JSMutableHandleObject objp)
+nsresult
+nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
+                                      JSObject* aTargetClassObject)
 {
-  objp.set(NULL);
+  MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
+  JSObject* global = JS_GetGlobalForObject(aCx, aTargetClassObject);
 
-  if (!JSID_IS_STRING(id)) {
-    return true;
-  }
-
-  nsXBLPrototypeBinding* protoBinding =
-    static_cast<nsXBLPrototypeBinding*>(::JS_GetReservedSlot(obj, 0).toPrivate());
-  MOZ_ASSERT(protoBinding);
-
-  // If the field's not present, don't resolve it.  Also don't resolve it if the
-  // field is empty; see also nsXBLProtoImplField::InstallField which also must
+  // Don't install it if the field is empty; see also InstallField which also must
   // implement the not-empty requirement.
-  nsDependentJSString fieldName(id);
-  nsXBLProtoImplField* field = protoBinding->FindField(fieldName);
-  if (!field || field->IsEmpty()) {
-    return true;
+  if (IsEmpty()) {
+    return NS_OK;
   }
 
-  // We have a field: now install a getter/setter pair which will resolve the
-  // field onto the actual object, when invoked.
-  js::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, obj));
+  // Install a getter/setter pair which will resolve the field onto the actual
+  // object, when invoked.
 
-  js::Rooted<JSObject*> get(cx);
-  get = ::JS_GetFunctionObject(js::NewFunctionByIdWithReserved(cx, FieldGetter,
-                                                               0, 0, global,
-                                                               id));
+  // Get the field name as an id.
+  jsid id;
+  JS::TwoByteChars chars(mName, NS_strlen(mName));
+  if (!JS_CharsToId(aCx, chars, &id))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // Properties/Methods have historically taken precendence over fields. We
+  // install members first, so just bounce here if the property is already
+  // defined.
+  JSBool found = false;
+  if (!JS_AlreadyHasOwnPropertyById(aCx, aTargetClassObject, id, &found))
+    return NS_ERROR_FAILURE;
+  if (found)
+    return NS_OK;
+
+  JSObject *get =
+    JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldGetter,
+                                                         0, 0, global, id));
   if (!get) {
-    return false;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  js::SetFunctionNativeReserved(get, XBLPROTO_SLOT, JS::ObjectValue(*obj));
+  js::SetFunctionNativeReserved(get, XBLPROTO_SLOT, JS::ObjectValue(*aTargetClassObject));
   js::SetFunctionNativeReserved(get, FIELD_SLOT,
                                 JS::StringValue(JSID_TO_STRING(id)));
 
-  js::Rooted<JSObject*> set(cx);
-  set = ::JS_GetFunctionObject(js::NewFunctionByIdWithReserved(cx, FieldSetter,
-                                                               1, 0, global,
-                                                               id));
+  JSObject *set =
+    JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldSetter,
+                                                          1, 0, global, id));
   if (!set) {
-    return false;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  js::SetFunctionNativeReserved(set, XBLPROTO_SLOT, JS::ObjectValue(*obj));
+  js::SetFunctionNativeReserved(set, XBLPROTO_SLOT, JS::ObjectValue(*aTargetClassObject));
   js::SetFunctionNativeReserved(set, FIELD_SLOT,
                                 JS::StringValue(JSID_TO_STRING(id)));
 
-  if (!::JS_DefinePropertyById(cx, obj, id, JS::UndefinedValue(),
-                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, get.get()),
-                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, set.get()),
-                               field->AccessorAttributes())) {
-    return false;
+  if (!::JS_DefinePropertyById(aCx, aTargetClassObject, id, JS::UndefinedValue(),
+                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, get),
+                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, set),
+                               AccessorAttributes())) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  objp.set(obj);
-  return true;
+  return NS_OK;;
 }
 
 nsresult
