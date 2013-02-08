@@ -251,10 +251,26 @@ ContentParent::ScheduleDelayedPreallocateAppProcess()
 }
 
 /*static*/ already_AddRefed<ContentParent>
-ContentParent::MaybeTakePreallocatedAppProcess()
+ContentParent::MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
+                                               ChildPrivileges aPrivs)
 {
     nsRefPtr<ContentParent> process = sPreallocatedAppProcess.get();
     sPreallocatedAppProcess = nullptr;
+
+    if (!process) {
+        return nullptr;
+    }
+
+    if (!process->TransformPreallocatedIntoApp(aAppManifestURL, aPrivs)) {
+        NS_WARNING("Can't TransformPrealocatedIntoApp.  Maybe "
+                   "the preallocated process died?");
+
+        // Kill the process just in case it's not actually dead; we don't want
+        // to "leak" this process!
+        process->KillHard();
+        return nullptr;
+    }
+
     return process.forget();
 }
 
@@ -443,10 +459,8 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext)
     nsRefPtr<ContentParent> p = gAppContentParents->Get(manifestURL);
     if (!p) {
         ChildPrivileges privs = PrivilegesForApp(ownApp);
-        p = MaybeTakePreallocatedAppProcess();
-        if (p) {
-            p->TransformPreallocatedIntoApp(manifestURL, privs);            
-        } else {
+        p = MaybeTakePreallocatedAppProcess(manifestURL, privs);
+        if (!p) {
             NS_WARNING("Unable to use pre-allocated app process");
             p = new ContentParent(manifestURL, /* isBrowserElement = */ false,
                                   privs);
@@ -532,7 +546,7 @@ ContentParent::Init()
     NS_ASSERTION(observer, "FileUpdateDispatcher is null");
 }
 
-void
+bool
 ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
                                             ChildPrivileges aPrivs)
 {
@@ -551,7 +565,7 @@ ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
     }
 
     // If this fails, the child process died.
-    unused << SendSetProcessPrivileges(aPrivs);
+    return SendSetProcessPrivileges(aPrivs);
 }
 
 void
