@@ -342,6 +342,9 @@ Service::getSingleton()
     ::PR_Abort();
   }
 
+  // The first reference to the storage service must be obtained on the
+  // main thread.
+  NS_ENSURE_TRUE(NS_IsMainThread(), nullptr);
   gService = new Service();
   if (gService) {
     NS_ADDREF(gService);
