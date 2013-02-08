@@ -2943,6 +2943,9 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
         JS_ASSERT(obj->isObject());
         if (!DefineNativeProperty(cx, obj, id, rhs, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0))
             return false;
+    } else if (op == JSOP_SETNAME || op == JSOP_SETGNAME) {
+        if (!SetNameOperation(cx, script, pc, obj, rhs))
+            return false;
     } else if (script->strict) {
         if (!js::SetProperty<true>(cx, obj, id, rhs))
             return false;
