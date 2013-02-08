@@ -333,6 +333,8 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 
 nsIPrincipal *GetCompartmentPrincipal(JSCompartment *compartment);
 
+bool IsXBLScope(JSCompartment *compartment);
+
 void DumpJSHeap(FILE* file);
 
 void SetLocationForGlobal(JSObject *global, const nsACString& location);
