@@ -1039,21 +1039,20 @@ window.addEventListener('ContentStart', function update_onContentStart() {
 });
 
 (function geolocationStatusTracker() {
-  let gGeolocationActiveCount = 0;
+  let gGeolocationActive = false;
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    let oldCount = gGeolocationActiveCount;
+    let oldState = gGeolocationActive;
     if (aData == "starting") {
-      gGeolocationActiveCount += 1;
+      gGeolocationActive = true;
     } else if (aData == "shutdown") {
-      gGeolocationActiveCount -= 1;
+      gGeolocationActive = false;
     }
 
-    // We need to track changes from 1 <-> 0
-    if (gGeolocationActiveCount + oldCount == 1) {
+    if (gGeolocationActive != oldState) {
       shell.sendChromeEvent({
         type: 'geolocation-status',
-        active: (gGeolocationActiveCount == 1)
+        active: gGeolocationActive
       });
     }
 }, "geolocation-device-events", false);
