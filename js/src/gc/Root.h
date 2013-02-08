@@ -207,7 +207,7 @@ class Handle : public js::HandleBase<T>
 
     /* Create a handle for a NULL pointer. */
     Handle(NullPtr) {
-        typedef typename js::tl::StaticAssert<js::tl::IsPointerType<T>::result>::result _;
+        typedef typename js::tl::StaticAssert<mozilla::IsPointer<T>::result>::result _;
         ptr = reinterpret_cast<const T *>(&NullPtr::constNullValue);
     }
 
