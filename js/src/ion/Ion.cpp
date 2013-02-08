@@ -124,9 +124,6 @@ ion::InitializeIon()
         if (status != PR_SUCCESS)
             return false;
 
-        if (!ForkJoinSlice::Initialize())
-            return false;
-
         IonTLSInitialized = true;
     }
 #endif
