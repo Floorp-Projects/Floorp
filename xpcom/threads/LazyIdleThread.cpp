@@ -322,7 +322,7 @@ LazyIdleThread::ShutdownThread()
 void
 LazyIdleThread::SelfDestruct()
 {
-  NS_ASSERTION(mRefCnt == 1, "Bad refcount!");
+  MOZ_ASSERT(mRefCnt == 1, "Bad refcount!");
   delete this;
 }
 

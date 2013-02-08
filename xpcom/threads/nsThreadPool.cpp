@@ -70,7 +70,7 @@ nsThreadPool::PutEvent(nsIRunnable *event)
 
     LOG(("THRD-P(%p) put [%d %d %d]\n", this, mIdleCount, mThreads.Count(),
          mThreadLimit));
-    NS_ASSERTION(mIdleCount <= (uint32_t) mThreads.Count(), "oops");
+    MOZ_ASSERT(mIdleCount <= (uint32_t) mThreads.Count(), "oops");
 
     // Make sure we have a thread to service this event.
     if (mIdleCount == 0 && mThreads.Count() < (int32_t) mThreadLimit)

@@ -115,7 +115,7 @@ NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
-    NS_PRECONDITION(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");          \
+    MOZ_ASSERT(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");               \
     NS_ASSERT_OWNINGTHREAD(_class);                                         \
     ++agg->mRefCnt;                                                         \
     NS_LOG_ADDREF(this, agg->mRefCnt, #_class, sizeof(*this));              \
@@ -126,7 +126,7 @@ NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::Release(void)                                             \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
-    NS_PRECONDITION(0 != agg->mRefCnt, "dup release");                      \
+    MOZ_ASSERT(int32_t(agg->mRefCnt) > 0, "dup release");                   \
     NS_ASSERT_OWNINGTHREAD(_class);                                         \
     --agg->mRefCnt;                                                         \
     NS_LOG_RELEASE(this, agg->mRefCnt, #_class);                            \
@@ -146,7 +146,7 @@ NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Downcast(this);    \
-    NS_PRECONDITION(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");          \
+    MOZ_ASSERT(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");               \
     NS_CheckThreadSafe(agg->_mOwningThread.GetThread(),                     \
                        #_class " not thread-safe");                         \
     nsrefcnt count = agg->mRefCnt.incr(this);                               \
@@ -158,7 +158,7 @@ NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::Release(void)                                             \
 {                                                                           \
     _class* agg = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Downcast(this);    \
-    NS_PRECONDITION(0 != agg->mRefCnt, "dup release");                      \
+    MOZ_ASSERT(int32_t(agg->mRefCnt) > 0, "dup release");                   \
     NS_CheckThreadSafe(agg->_mOwningThread.GetThread(),                     \
                        #_class " not thread-safe");                         \
     nsrefcnt count = agg->mRefCnt.decr(this);                               \
@@ -282,8 +282,8 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
                           void *p, nsCycleCollectionTraversalCallback &cb)  \
   {                                                                         \
     nsISupports *s = static_cast<nsISupports*>(p);                          \
-    NS_ASSERTION(CheckForRightISupports(s),                                 \
-                 "not the nsISupports pointer we expect");                  \
+    MOZ_ASSERT(CheckForRightISupports(s),                                   \
+               "not the nsISupports pointer we expect");                    \
     _class *tmp = static_cast<_class*>(Downcast(s));                        \
     if (!tmp->IsPartOfAggregated())                                         \
         NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
