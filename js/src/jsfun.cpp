@@ -176,7 +176,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         }
 
         vp.set(iter.calleev());
-        if (!cx->compartment->wrap(cx, vp.address()))
+        if (!cx->compartment->wrap(cx, vp))
             return false;
 
         /*

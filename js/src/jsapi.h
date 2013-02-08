@@ -693,6 +693,10 @@ class CallReceiver
         return JS::HandleValue::fromMarkedLocation(&argv_[-1]);
     }
 
+    JS::MutableHandleValue mutableThisv() const {
+        return JS::MutableHandleValue::fromMarkedLocation(&argv_[-1]);
+    }
+
     JS::MutableHandleValue rval() const {
         setUsedRval();
         return JS::MutableHandleValue::fromMarkedLocation(&argv_[-2]);
