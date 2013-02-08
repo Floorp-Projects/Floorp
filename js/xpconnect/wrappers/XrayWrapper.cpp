@@ -1292,8 +1292,19 @@ XrayWrapper<Base, Traits>::~XrayWrapper()
 namespace XrayUtils {
 
 bool
-IsTransparent(JSContext *cx, JSObject *wrapper)
+IsTransparent(JSContext *cx, JSObject *wrapper, jsid id)
 {
+    // We dynamically waive Xray vision for XBL bindings accessing fields
+    // on bound elements, since there's no way to access such things sanely
+    // over Xray.
+    nsCOMPtr<nsIContent> content;
+    if (EnsureCompartmentPrivate(wrapper)->scope->IsXBLScope() &&
+        (content = do_QueryInterfaceNative(cx, wrapper)))
+    {
+        js::RootedId id_(cx, id);
+        if (nsContentUtils::IsBindingField(cx, content, id_))
+            return true;
+    }
     return false;
 }
 
@@ -1407,7 +1418,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     typename Traits::ResolvingIdImpl resolving(wrapper, id);
 
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (XrayUtils::IsTransparent(cx, wrapper, id)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
         {
             JSAutoCompartment ac(cx, obj);
@@ -1539,7 +1550,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
     // NB: Nothing we do here acts on the wrapped native itself, so we don't
     // enter our policy.
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (XrayUtils::IsTransparent(cx, wrapper, id)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
         {
             JSAutoCompartment ac(cx, obj);
@@ -1575,7 +1586,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
                                           js::PropertyDescriptor *desc)
 {
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (XrayUtils::IsTransparent(cx, wrapper, id)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
         JSAutoCompartment ac(cx, obj);
         if (!JS_WrapPropertyDescriptor(cx, desc))
@@ -1632,7 +1643,7 @@ bool
 XrayWrapper<Base, Traits>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (XrayUtils::IsTransparent(cx, wrapper, id)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
 
         JSAutoCompartment ac(cx, obj);
@@ -1668,7 +1679,7 @@ XrayWrapper<Base, Traits>::enumerate(JSContext *cx, JSObject *wrapper, unsigned 
                                      JS::AutoIdVector &props)
 {
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (XrayUtils::IsTransparent(cx, wrapper, JSID_VOID)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
         JSAutoCompartment ac(cx, obj);
         return js::GetPropertyNames(cx, obj, flags, &props);
