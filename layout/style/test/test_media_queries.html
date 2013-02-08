@@ -561,6 +561,7 @@ function run() {
   expression_should_be_parseable("-moz-windows-glass");
   expression_should_be_parseable("-moz-touch-enabled");
   expression_should_be_parseable("-moz-maemo-classic");
+  expression_should_be_parseable("-moz-swipe-animation-enabled");
 
   expression_should_be_parseable("-moz-scrollbar-start-backward: 0");
   expression_should_be_parseable("-moz-scrollbar-start-forward: 0");
@@ -577,6 +578,7 @@ function run() {
   expression_should_be_parseable("-moz-windows-glass: 0");
   expression_should_be_parseable("-moz-touch-enabled: 0");
   expression_should_be_parseable("-moz-maemo-classic: 0");
+  expression_should_be_parseable("-moz-swipe-animation-enabled: 0");
 
   expression_should_be_parseable("-moz-scrollbar-start-backward: 1");
   expression_should_be_parseable("-moz-scrollbar-start-forward: 1");
@@ -593,6 +595,7 @@ function run() {
   expression_should_be_parseable("-moz-windows-glass: 1");
   expression_should_be_parseable("-moz-touch-enabled: 1");
   expression_should_be_parseable("-moz-maemo-classic: 1");
+  expression_should_be_parseable("-moz-swipe-animation-enabled: 1");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: -1");
   expression_should_not_be_parseable("-moz-scrollbar-start-forward: -1");
@@ -609,6 +612,7 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-glass: -1");
   expression_should_not_be_parseable("-moz-touch-enabled: -1");
   expression_should_not_be_parseable("-moz-maemo-classic: -1");
+  expression_should_not_be_parseable("-moz-swipe-animation-enabled: -1");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: true");
   expression_should_not_be_parseable("-moz-scrollbar-start-forward: true");
@@ -625,6 +629,7 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-glass: true");
   expression_should_not_be_parseable("-moz-touch-enabled: true");
   expression_should_not_be_parseable("-moz-maemo-classic: true");
+  expression_should_not_be_parseable("-moz-swipe-animation-enabled: true");
 
   // windows theme media queries
   expression_should_be_parseable("-moz-windows-theme: aero");
