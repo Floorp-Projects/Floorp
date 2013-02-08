@@ -638,8 +638,7 @@ struct ParseNode {
                                            which is left kid of PNK_FOR */
 #define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
 #define PNX_GROUPINIT   0x20            /* var [a, b] = [c, d]; unit list */
-#define PNX_NEEDBRACES  0x40            /* braces necessary due to closure */
-#define PNX_FUNCDEFS    0x80            /* contains top-level function statements */
+#define PNX_FUNCDEFS    0x40            /* contains top-level function statements */
 #define PNX_SETCALL     0x80            /* call expression in lvalue context */
 #define PNX_DESTRUCT   0x100            /* destructuring special cases:
                                            1. shorthand syntax used, at present

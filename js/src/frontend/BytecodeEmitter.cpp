@@ -3558,25 +3558,6 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
     return true;
 }
 
-#ifdef DEBUG
-static bool
-GettableNoteForNextOp(BytecodeEmitter *bce)
-{
-    ptrdiff_t offset, target;
-    jssrcnote *sn, *end;
-
-    offset = 0;
-    target = bce->offset();
-    for (sn = bce->notes(), end = sn + bce->noteCount(); sn < end;
-         sn = SN_NEXT(sn)) {
-        if (offset == target && SN_IS_GETTABLE(sn))
-            return true;
-        offset += SN_DELTA(sn);
-    }
-    return false;
-}
-#endif
-
 /* Top-level named functions need a nop for decompilation. */
 static bool
 EmitFunctionDefNop(JSContext *cx, BytecodeEmitter *bce, unsigned index)
@@ -4243,41 +4224,11 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     size_t slots = blockObj.slotCount();
     PushBlockScopeBCE(bce, &stmtInfo, blockObj, bce->offset());
 
-    /*
-     * For compound statements (i.e. { stmt-list }), the decompiler does not
-     * emit curlies by default. However, if this stmt-list contains a let
-     * declaration, this is semantically invalid so we need to add a srcnote to
-     * enterblock to tell the decompiler to add curlies. This condition
-     * shouldn't be so complicated; try to find a simpler condition.
-     */
-    ptrdiff_t noteIndex = -1;
-    if (pn->expr()->getKind() != PNK_FOR &&
-        pn->expr()->getKind() != PNK_CATCH &&
-        (stmtInfo.down
-         ? stmtInfo.down->type == STMT_BLOCK &&
-           (!stmtInfo.down->down || stmtInfo.down->down->type != STMT_FOR_IN_LOOP)
-         : !bce->sc->isFunctionBox()))
-    {
-        /* There must be no source note already output for the next op. */
-        JS_ASSERT(bce->noteCount() == 0 ||
-                  bce->lastNoteOffset() != bce->offset() ||
-                  !GettableNoteForNextOp(bce));
-        noteIndex = NewSrcNote2(cx, bce, SRC_BRACE, 0);
-        if (noteIndex < 0)
-            return false;
-    }
-
-    ptrdiff_t bodyBegin = bce->offset();
     if (!EmitEnterBlock(cx, bce, pn, JSOP_ENTERBLOCK))
         return false;
 
     if (!EmitTree(cx, bce, pn->pn_expr))
         return false;
-
-    if (noteIndex >= 0) {
-        if (!SetSrcNoteOffset(cx, bce, (unsigned)noteIndex, 0, bce->offset() - bodyBegin))
-            return false;
-    }
 
     EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, slots);
 
@@ -4943,14 +4894,6 @@ EmitStatementList(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t 
 {
     JS_ASSERT(pn->isArity(PN_LIST));
 
-    ptrdiff_t noteIndex = -1;
-    ptrdiff_t tmp = bce->offset();
-    if (pn->pn_xflags & PNX_NEEDBRACES) {
-        noteIndex = NewSrcNote2(cx, bce, SRC_BRACE, 0);
-        if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
-            return false;
-    }
-
     StmtInfoBCE stmtInfo(cx);
     PushStatementBCE(bce, &stmtInfo, STMT_BLOCK, top);
 
@@ -4963,9 +4906,6 @@ EmitStatementList(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t 
         if (!EmitTree(cx, bce, pn2))
             return false;
     }
-
-    if (noteIndex >= 0 && !SetSrcNoteOffset(cx, bce, (unsigned)noteIndex, 0, bce->offset() - tmp))
-        return false;
 
     return PopStatementBCE(cx, bce);
 }
