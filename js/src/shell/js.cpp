@@ -1762,17 +1762,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             Sprint(sp, ")");
             break;
           }
-          case SRC_FUNCDEF: {
-            uint32_t index = js_GetSrcNoteOffset(sn, 0);
-            JSObject *obj = script->getObject(index);
-            JSFunction *fun = obj->toFunction();
-            JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
-            JSAutoByteString bytes;
-            if (!str || !bytes.encode(cx, str))
-                ReportException(cx);
-            Sprint(sp, " function %u (%s)", index, !!bytes ? bytes.ptr() : "N/A");
-            break;
-          }
           case SRC_SWITCH: {
             JSOp op = JSOp(script->code[offset]);
             if (op == JSOP_GOTO)
