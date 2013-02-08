@@ -55,6 +55,7 @@
 #include "nsFrameList.h"
 #include "nsListControlFrame.h"
 #include "nsHTMLInputElement.h"
+#include "SVGElementFactory.h"
 #include "nsSVGUtils.h"
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
@@ -261,6 +262,7 @@ nsLayoutStatics::Initialize()
 
   nsWindowMemoryReporter::Init();
 
+  SVGElementFactory::Init();
   nsSVGUtils::Init();
 
   InitProcessPriorityManager();
@@ -318,6 +320,7 @@ nsLayoutStatics::Shutdown()
   nsSprocketLayout::Shutdown();
 #endif
 
+  SVGElementFactory::Shutdown();
   nsMathMLOperators::ReleaseTable();
 
   nsFloatManager::Shutdown();
