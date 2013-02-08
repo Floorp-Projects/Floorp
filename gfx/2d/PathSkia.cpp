@@ -136,8 +136,15 @@ PathSkia::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
     return false;
   }
 
-  return mPath.contains(SkFloatToScalar(transformed.x),
-                        SkFloatToScalar(transformed.y));
+  SkRegion pointRect;
+  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1)),
+                    int32_t(SkFloatToScalar(transformed.y - 1)),
+                    int32_t(SkFloatToScalar(transformed.x + 1)),
+                    int32_t(SkFloatToScalar(transformed.y + 1)));
+
+  SkRegion pathRegion;
+  
+  return pathRegion.setPath(mPath, pointRect);
 }
 
 static Rect SkRectToRect(const SkRect& aBounds)
@@ -170,8 +177,15 @@ PathSkia::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
     return false;
   }
 
-  return strokePath.contains(SkFloatToScalar(transformed.x),
-                             SkFloatToScalar(transformed.y));
+  SkRegion pointRect;
+  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1)),
+                    int32_t(SkFloatToScalar(transformed.y - 1)),
+                    int32_t(SkFloatToScalar(transformed.x + 1)),
+                    int32_t(SkFloatToScalar(transformed.y + 1)));
+
+  SkRegion pathRegion;
+  
+  return pathRegion.setPath(strokePath, pointRect);
 }
 
 Rect

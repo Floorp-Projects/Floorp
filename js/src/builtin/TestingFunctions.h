@@ -11,6 +11,9 @@ namespace js {
 bool
 DefineTestingFunctions(JSContext *cx, JSHandleObject obj);
 
+JSBool
+testingFunc_inParallelSection(JSContext *cx, unsigned argc, jsval *vp);
+
 } /* namespace js */
 
 #endif /* TestingFunctions_h__ */

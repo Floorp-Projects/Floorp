@@ -239,6 +239,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 #ifdef DEBUG
     // Use count is reset after invalidation. Log use count on bailouts to
     // determine if we have a critical sequence of bailout.
+    //
+    // Note: frame conversion only occurs in sequential mode
     if (it.script()->ion == it.ionScript()) {
         IonSpew(IonSpew_Bailouts, " Current script use count is %u",
                 it.script()->getUseCount());
@@ -306,6 +308,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         if (!fp)
             return BAILOUT_RETURN_OVERRECURSED;
     }
+
+    fp->clearRunningInIon();
 
     jsbytecode *bailoutPc = fp->script()->code + iter.pcOffset();
     br->setBailoutPc(bailoutPc);
@@ -617,7 +621,6 @@ ion::ThunkToInterpreter(Value *vp)
     // prologue), so we must create one now for each inlined frame which needs
     // one.
     {
-        br->entryfp()->clearRunningInIon();
         ScriptFrameIter iter(cx);
         StackFrame *fp = NULL;
         Rooted<JSScript*> script(cx);

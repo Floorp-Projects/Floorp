@@ -944,9 +944,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/site_security_identified.png \
   res/drawable-large-mdpi-v11/site_security_verified.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
-  res/drawable-large-mdpi-v11/tabs_normal.png \
-  res/drawable-large-mdpi-v11/tabs_private.png \
-  res/drawable-large-mdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
@@ -967,9 +964,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/site_security_identified.png \
   res/drawable-large-hdpi-v11/site_security_verified.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
-  res/drawable-large-hdpi-v11/tabs_normal.png \
-  res/drawable-large-hdpi-v11/tabs_private.png \
-  res/drawable-large-hdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
@@ -990,9 +984,6 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/site_security_identified.png \
   res/drawable-large-xhdpi-v11/site_security_verified.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
-  res/drawable-large-xhdpi-v11/tabs_normal.png \
-  res/drawable-large-xhdpi-v11/tabs_private.png \
-  res/drawable-large-xhdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
@@ -1036,8 +1027,6 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
 RES_COLOR = \
   res/color/menu_item_title.xml \
   res/color/select_item_multichoice.xml \
-  res/color/tab_title.xml \
-  res/color/tabs_counter_color.xml \
   $(NULL)
 
 RES_MENU = \
@@ -1096,6 +1085,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/spinner.xml                            \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
+  mobile/android/base/resources/drawable/tab_row.xml                            \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \

@@ -2346,10 +2346,11 @@ RunTestMode(FILE* fp)
   Report(e2);
 
   // First realloc is like malloc;  second realloc creates a min-sized block.
+  // XXX: on Windows, second realloc frees the block.
   // 1st Dump: reported.
   // 2nd Dump: freed, irrelevant.
-  char* e3 = (char*) realloc(nullptr, 1024);
-  e3 = (char*) realloc(e3, 0);
+  char* e3 = (char*) realloc(nullptr, 1023);
+//e3 = (char*) realloc(e3, 0);
   MOZ_ASSERT(e3);
   Report(e3);
 

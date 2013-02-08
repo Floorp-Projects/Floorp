@@ -36,11 +36,13 @@ TEST(AndroidUContext, GRegsOffset) {
 #ifdef __arm__
   // There is no gregs[] array on ARM, so compare to the offset of
   // first register fields, since they're stored in order.
-  ASSERT_EQ(MCONTEXT_GREGS_OFFSET, offsetof(ucontext_t,uc_mcontext.arm_r0));
+  ASSERT_EQ(static_cast<size_t>(MCONTEXT_GREGS_OFFSET),
+            offsetof(ucontext_t,uc_mcontext.arm_r0));
 #elif defined(__i386__)
-  ASSERT_EQ(MCONTEXT_GREGS_OFFSET, offsetof(ucontext_t,uc_mcontext.gregs));
+  ASSERT_EQ(static_cast<size_t>(MCONTEXT_GREGS_OFFSET),
+            offsetof(ucontext_t,uc_mcontext.gregs));
 #define CHECK_REG(x) \
-  ASSERT_EQ(MCONTEXT_##x##_OFFSET, \
+  ASSERT_EQ(static_cast<size_t>(MCONTEXT_##x##_OFFSET),         \
             offsetof(ucontext_t,uc_mcontext.gregs[REG_##x]))
   CHECK_REG(GS);
   CHECK_REG(FS);
@@ -62,15 +64,18 @@ TEST(AndroidUContext, GRegsOffset) {
   CHECK_REG(UESP);
   CHECK_REG(SS);
 
-  ASSERT_EQ(UCONTEXT_FPREGS_OFFSET, offsetof(ucontext_t,uc_mcontext.fpregs));
+  ASSERT_EQ(static_cast<size_t>(UCONTEXT_FPREGS_OFFSET),
+            offsetof(ucontext_t,uc_mcontext.fpregs));
 
-  ASSERT_EQ(UCONTEXT_FPREGS_MEM_OFFSET,
+  ASSERT_EQ(static_cast<size_t>(UCONTEXT_FPREGS_MEM_OFFSET),
             offsetof(ucontext_t,__fpregs_mem));
 #else
-  ASSERT_EQ(MCONTEXT_GREGS_OFFSET, offsetof(ucontext_t,uc_mcontext.gregs));
+  ASSERT_EQ(static_cast<size_t>(MCONTEXT_GREGS_OFFSET),
+            offsetof(ucontext_t,uc_mcontext.gregs));
 #endif
 }
 
 TEST(AndroidUContext, SigmakOffset) {
-  ASSERT_EQ(UCONTEXT_SIGMASK_OFFSET, offsetof(ucontext_t,uc_sigmask));
+  ASSERT_EQ(static_cast<size_t>(UCONTEXT_SIGMASK_OFFSET),
+            offsetof(ucontext_t,uc_sigmask));
 }

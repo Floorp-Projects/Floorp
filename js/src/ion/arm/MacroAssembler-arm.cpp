@@ -1487,6 +1487,12 @@ MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::xor32(Imm32 imm, Register dest)
+{
+    ma_eor(imm, dest, SetCond);
+}
+
+void
 MacroAssemblerARMCompat::add32(Imm32 imm, const Address &dest)
 {
     load32(dest, ScratchRegister);
