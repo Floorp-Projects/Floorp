@@ -10,7 +10,6 @@
 #include "mozilla/dom/SVGUseElementBinding.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGSVGElement.h"
-#include "nsIDOMSVGSymbolElement.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "mozilla/dom/Element.h"
