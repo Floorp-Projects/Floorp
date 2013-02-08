@@ -2600,7 +2600,9 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     /* Debug-mode currently disables Ion compilation. */
     ScriptFrameIter fi(cx);
     for (uint32_t i = 0; i < upCount; ++i, ++fi) {
-        if (fi.done())
+        ScriptFrameIter next(fi);
+        ++next;
+        if (next.done())
             break;
     }
 
