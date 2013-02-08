@@ -458,10 +458,17 @@ final class GeckoEditable
     // GeckoEditableClient interface
 
     @Override
-    public void sendEvent(GeckoEvent event) {
-        if (DEBUG) {
-            // GeckoEditableClient methods should all be called from the IC thread
-            assertOnIcThread();
+    public void sendEvent(final GeckoEvent event) {
+        if (!onIcThread()) {
+            // Events may get dispatched to the main thread;
+            // reroute to our IC thread instead
+            mIcRunHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    sendEvent(event);
+                }
+            });
+            return;
         }
         /*
            We are actually sending two events to Gecko here,
@@ -477,18 +484,24 @@ final class GeckoEditable
 
     @Override
     public Editable getEditable() {
-        if (DEBUG) {
-            // GeckoEditableClient methods should all be called from the IC thread
-            assertOnIcThread();
+        if (!onIcThread()) {
+            // Android may be holding an old InputConnection; ignore
+            if (DEBUG) {
+                Log.i(LOGTAG, "getEditable() called on non-IC thread");
+            }
+            return null;
         }
         return mProxy;
     }
 
     @Override
     public void setUpdateGecko(boolean update) {
-        if (DEBUG) {
-            // GeckoEditableClient methods should all be called from the IC thread
-            assertOnIcThread();
+        if (!onIcThread()) {
+            // Android may be holding an old InputConnection; ignore
+            if (DEBUG) {
+                Log.i(LOGTAG, "setUpdateGecko() called on non-IC thread");
+            }
+            return;
         }
         if (update) {
             icUpdateGecko(false);

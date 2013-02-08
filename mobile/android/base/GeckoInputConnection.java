@@ -481,6 +481,40 @@ class GeckoInputConnection
         return this;
     }
 
+    @Override
+    public boolean sendKeyEvent(KeyEvent event) {
+        // BaseInputConnection.sendKeyEvent() dispatches the key event to the main thread.
+        // In order to ensure events are processed in the proper order, we must block the
+        // IC thread until the main thread finishes processing the key event
+        super.sendKeyEvent(event);
+        final View v = getView();
+        if (v == null) {
+            return false;
+        }
+        final Handler icHandler = mEditableClient.getInputConnectionHandler();
+        final Handler mainHandler = v.getRootView().getHandler();
+        if (icHandler.getLooper() != mainHandler.getLooper()) {
+            // We are on separate IC thread but the event is queued on the main thread;
+            // wait on IC thread until the main thread processes our posted Runnable. At
+            // that point the key event has already been processed.
+            synchronized (icHandler) {
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        synchronized (icHandler) {
+                            icHandler.notify();
+                        }
+                    }
+                });
+                try {
+                    icHandler.wait();
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+        return false; // seems to always return false
+    }
+
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
         return false;
     }
