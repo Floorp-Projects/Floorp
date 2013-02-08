@@ -136,7 +136,7 @@ NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
 {
   nsrefcnt count;
 
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
   count = NS_AtomicDecrementRefcnt(mRefCnt);
   NS_LOG_RELEASE(this, count, "nsTimerImpl");
   if (count == 0) {
