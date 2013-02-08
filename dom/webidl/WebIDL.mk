@@ -57,18 +57,22 @@ webidl_files = \
   Function.webidl \
   GainNode.webidl \
   HTMLAnchorElement.webidl \
+  HTMLBaseElement.webidl \
   HTMLBodyElement.webidl \
   HTMLBRElement.webidl \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
+  HTMLDirectoryElement.webidl \
   HTMLDivElement.webidl \
   HTMLDListElement.webidl \
   HTMLDocument.webidl \
   HTMLElement.webidl \
   HTMLFontElement.webidl \
   HTMLFrameSetElement.webidl \
+  HTMLHeadElement.webidl \
   HTMLHeadingElement.webidl \
   HTMLHRElement.webidl \
+  HTMLHtmlElement.webidl \
   HTMLImageElement.webidl \
   HTMLLabelElement.webidl \
   HTMLLIElement.webidl \
@@ -79,8 +83,10 @@ webidl_files = \
   HTMLOListElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLParagraphElement.webidl \
+  HTMLParamElement.webidl \
   HTMLPreElement.webidl \
   HTMLPropertiesCollection.webidl \
+  HTMLQuoteElement.webidl \
   HTMLScriptElement.webidl \
   HTMLSpanElement.webidl \
   HTMLStyleElement.webidl \

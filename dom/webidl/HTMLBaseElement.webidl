@@ -4,22 +4,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.whatwg.org/specs/web-apps/current-work/#the-li-element
- * http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
+ * http://www.whatwg.org/specs/web-apps/current-work/#the-base-element
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
  * and create derivative works of this document.
  */
 
-// http://www.whatwg.org/specs/web-apps/current-work/#the-li-element
-interface HTMLLIElement : HTMLElement {
+// http://www.whatwg.org/specs/web-apps/current-work/#the-base-element
+interface HTMLBaseElement : HTMLElement {
            [SetterThrows, Pure]
-           attribute long value;
+           attribute DOMString href;
+           [SetterThrows, Pure]
+           attribute DOMString target;
 };
 
-// http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
-partial interface HTMLLIElement {
-           [SetterThrows, Pure]
-           attribute DOMString type;
-};

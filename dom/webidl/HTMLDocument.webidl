@@ -4,7 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface HTMLHeadElement;
 interface Selection;
 
 interface HTMLDocument : Document {
