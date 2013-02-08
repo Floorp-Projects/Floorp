@@ -33,13 +33,6 @@ function attemptTearDown() {
   });
 }
 
-function getProfileInternals() {
-  let win = gPanel.activeProfile.iframe.contentWindow;
-  let doc = win.document;
-
-  return [win, doc];
-}
-
 function testUI() {
   ok(gPanel, "Profiler panel exists");
   ok(gPanel.activeProfile, "Active profile exists");
