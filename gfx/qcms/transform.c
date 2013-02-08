@@ -1209,7 +1209,11 @@ qcms_transform* qcms_transform_create(
 		precache = true;
 	}
 
-	if (qcms_supports_iccv4 && (in->A2B0 || out->B2A0 || in->mAB || out->mAB)) {
+	// This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
+	if (qcms_supports_iccv4 &&
+			(in_type == QCMS_DATA_RGB_8 || in_type == QCMS_DATA_RGBA_8) &&
+			(in->A2B0 || out->B2A0 || in->mAB || out->mAB))
+		{
 		// Precache the transformation to a CLUT 33x33x33 in size.
 		// 33 is used by many profiles and works well in pratice. 
 		// This evenly divides 256 into blocks of 8x8x8.
