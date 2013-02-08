@@ -6,6 +6,7 @@
 #ifndef nsXBLBinding_h_
 #define nsXBLBinding_h_
 
+#include "nsXBLService.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsINodeList.h"
@@ -57,6 +58,11 @@ public:
 
   nsIContent* GetBoundElement() { return mBoundElement; }
   void SetBoundElement(nsIContent *aElement);
+
+  void SetJSClass(nsXBLJSClass *aClass) {
+    MOZ_ASSERT(!mJSClass && aClass);
+    mJSClass = aClass;
+  }
 
   bool IsStyleBinding() const { return mIsStyleBinding; }
   void SetIsStyleBinding(bool aIsStyle) { mIsStyleBinding = aIsStyle; }
@@ -130,6 +136,9 @@ protected:
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsRefPtr<nsXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
+  nsRefPtr<nsXBLJSClass> mJSClass; // Strong. The class object also holds a strong reference,
+                                   // which might be somewhat redundant, but be safe to avoid
+                                   // worrying about edge cases.
   
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
