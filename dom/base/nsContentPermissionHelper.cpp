@@ -92,7 +92,7 @@ nsContentPermissionRequestProxy::GetElement(nsIDOMElement * *aRequestingElement)
     return NS_ERROR_FAILURE;
   }
 
-  NS_ADDREF(*aRequestingElement = mParent->mElement);
+  NS_IF_ADDREF(*aRequestingElement = mParent->mElement);
   return NS_OK;
 }
 
