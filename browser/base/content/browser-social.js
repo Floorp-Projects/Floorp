@@ -895,7 +895,7 @@ var SocialToolbar = {
         toolbarButton.setAttribute("id", toolbarButtonId);
         toolbarButton.setAttribute("notificationFrameId", notificationFrameId);
         toolbarButton.addEventListener("mousedown", function (event) {
-          if (event.button == 0)
+          if (event.button == 0 && panel.state == "closed")
             SocialToolbar.showAmbientPopup(toolbarButton);
         });
 
