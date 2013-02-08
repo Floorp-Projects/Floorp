@@ -338,6 +338,8 @@ GARBAGE += \
   $(SYNC_PP_RES_XML) \
   package-name.txt \
   Manifest.java \
+  javah.out \
+  jni-stubs.inc \
   $(NULL)
 
 GARBAGE_DIRS += classes db jars res sync services
