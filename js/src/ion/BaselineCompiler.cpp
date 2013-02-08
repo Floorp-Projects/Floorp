@@ -485,10 +485,18 @@ BaselineCompiler::emitBody()
         IonSpew(IonSpew_BaselineOp, "Compiling op @ %d: %s",
                 (int) (pc - script->code), js_CodeName[op]);
 
-        // Fully sync the stack if there are incoming jumps.
         analyze::Bytecode *code = script->analysis()->maybeCode(pc);
-        bool isJumpTarget = code && code->jumpTarget;
-        if (isJumpTarget) {
+
+        // Skip unreachable ops.
+        if (!code) {
+            if (op == JSOP_STOP)
+                break;
+            pc += GetBytecodeLength(pc);
+            continue;
+        }
+
+        // Fully sync the stack if there are incoming jumps.
+        if (code->jumpTarget) {
             frame.syncStack(0);
             frame.setStackDepth(code->stackDepth);
         }
@@ -514,7 +522,7 @@ BaselineCompiler::emitBody()
         //  4. Op is a JSOP_CALLPROP, Ion may create a new block at this pc,
         //     see makePolyInlineDispatch.
         //  5. We're in debug mode.
-        if (isJumpTarget || canResumeAfterPrevious ||
+        if (code->jumpTarget || canResumeAfterPrevious ||
             op == JSOP_ENTERBLOCK || op == JSOP_CALLPROP ||
             debugMode_)
         {
@@ -551,7 +559,6 @@ OPCODE_LIST(EMIT_OP)
     }
 
     JS_ASSERT(JSOp(*pc) == JSOP_STOP);
-    JS_ASSERT(frame.stackDepth() == 0);
     return Method_Compiled;
 }
 
