@@ -8,10 +8,10 @@
   - A good criteria is the language in which you'd find the best
   - documentation on web development on the web. -->
 
-<!-- LOCALIZATION NOTE (userStylesLabel): This is the label for the checkbox
+<!-- LOCALIZATION NOTE (browserStylesLabel): This is the label for the checkbox
   -  that specifies whether the styles that are not from the user's stylesheet
   -  should be displayed or not. -->
-<!ENTITY userStylesLabel    "Only user styles">
+<!ENTITY browserStylesLabel    "Browser styles">
 
 <!-- LOCALIZATION NOTE (userStylesSearch): This is the placeholder that goes in
   -  the search box when no search term has been entered. -->
@@ -27,20 +27,13 @@
   -  displayed. -->
 <!ENTITY noPropertiesFound     "No CSS properties found.">
 
-<!-- LOCALIZATION NOTE (unmatchedSelectors): For each style property
-  -  the panel shows whether there are any selectors that do not match the
-  -  currently selected element. -->
-<!ENTITY unmatchedSelectors    "Unmatched selectors">
-
-<!-- LOCALIZATION NOTE (bestMatch, matched, parentMatch & unmatched): For each
-  -  style property the panel shows the rules which hold that specific property.
-  -  For every rule, the rule status is also displayed: a rule can be the best
-  -  match, a match, a parent match, or a rule did not match the element the
-  -  user has highlighted. -->
+<!-- LOCALIZATION NOTE (bestMatch, matched, parentMatch): For each style
+  -  property the panel shows the rules containing that property. For every
+  -  rule, the rule status is also displayed: a rule can be the best match, a
+  -  match or a parent match. -->
 <!ENTITY bestMatch             "Best Match">
 <!ENTITY matched               "Matched">
 <!ENTITY parentMatch           "Parent Match">
-<!ENTITY unmatched             "Unmatched">
 
 <!-- FIXME: notes -->
 <!ENTITY computedViewTitle     "Computed">

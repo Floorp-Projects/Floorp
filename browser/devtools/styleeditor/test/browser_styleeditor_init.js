@@ -9,23 +9,17 @@ function test()
 {
   waitForExplicitFinish();
 
-  addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
+  launchStyleEditorChrome(function(aChrome) {
     aChrome.addChromeListener({
-      onContentAttach: run,
       onEditorAdded: testEditorAdded
     });
-    if (aChrome.isContentAttached) {
-      run(aChrome);
-    }
+    run(aChrome);
   });
-
   content.location = TESTCASE_URI;
 }
 
-let gContentAttachHandled = false;
 function run(aChrome)
 {
-  gContentAttachHandled = true;
   is(aChrome.contentWindow.document.readyState, "complete",
      "content document is complete");
 
@@ -42,11 +36,6 @@ function run(aChrome)
 let gEditorAddedCount = 0;
 function testEditorAdded(aChrome, aEditor)
 {
-  if (!gEditorAddedCount) {
-    is(gContentAttachHandled, true,
-       "ContentAttach event triggered before EditorAdded");
-  }
-
   if (aEditor.styleSheetIndex == 0) {
     gEditorAddedCount++;
     testFirstStyleSheetEditor(aChrome, aEditor);

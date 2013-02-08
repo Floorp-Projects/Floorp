@@ -10,12 +10,7 @@ function test()
   waitForExplicitFinish();
 
   addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
-    aChrome.addChromeListener({
-      onContentAttach: run
-    });
-    if (aChrome.isContentAttached) {
-      run(aChrome);
-    }
+    run(aChrome);
   });
 
   content.location = TESTCASE_URI;

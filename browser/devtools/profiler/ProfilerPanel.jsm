@@ -27,10 +27,13 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", function () {
  * Its main function is to talk to the Cleopatra instance
  * inside of the iframe.
  *
- * ProfileUI is also an event emitter. Currently, it emits
- * only one event, 'ready', when Cleopatra is done loading.
- * You can also check 'isReady' property to see if a
- * particular instance has been loaded yet.
+ * ProfileUI is also an event emitter. It emits the following events:
+ *  - ready, when Cleopatra is done loading (you can also check the isReady
+ *    property to see if a particular instance has been loaded yet.
+ *  - disabled, when Cleopatra gets disabled. Happens when another ProfileUI
+ *    instance starts the profiler.
+ *  - enabled, when Cleopatra gets enabled. Happens when another ProfileUI
+ *    instance stops the profiler.
  *
  * @param number uid
  *   Unique ID for this profile.
@@ -63,27 +66,45 @@ function ProfileUI(uid, panel) {
       return;
     }
 
+    let label = doc.querySelector("li#profile-" + this.uid + " > h1");
     switch (event.data.status) {
       case "loaded":
+        if (this.panel._runningUid !== null) {
+          this.iframe.contentWindow.postMessage(JSON.stringify({
+            uid: this._runningUid,
+            isCurrent: this._runningUid === uid,
+            task: "onStarted"
+          }), "*");
+        }
+
         this.isReady = true;
         this.emit("ready");
         break;
       case "start":
-        // Start profiling and, once started, notify the
-        // underlying page so that it could update the UI.
+        // Start profiling and, once started, notify the underlying page
+        // so that it could update the UI. Also, once started, we add a
+        // star to the profile name to indicate which profile is currently
+        // running.
         this.panel.startProfiling(function onStart() {
-          var data = JSON.stringify({task: "onStarted"});
-          this.iframe.contentWindow.postMessage(data, "*");
+          this.panel.broadcast(this.uid, {task: "onStarted"});
+          label.textContent = label.textContent + " *";
         }.bind(this));
 
         break;
       case "stop":
-        // Stop profiling and, once stopped, notify the
-        // underlying page so that it could update the UI.
+        // Stop profiling and, once stopped, notify the underlying page so
+        // that it could update the UI and remove a star from the profile
+        // name.
         this.panel.stopProfiling(function onStop() {
-          var data = JSON.stringify({task: "onStopped"});
-          this.iframe.contentWindow.postMessage(data, "*");
+          this.panel.broadcast(this.uid, {task: "onStopped"});
+          label.textContent = label.textContent.replace(/\s\*$/, "");
         }.bind(this));
+        break;
+      case "disabled":
+        this.emit("disabled");
+        break;
+      case "enabled":
+        this.emit("enabled");
     }
   }.bind(this));
 }
@@ -179,7 +200,7 @@ function ProfilerPanel(frame, toolbox) {
   this.window = frame.window;
   this.document = frame.document;
   this.target = toolbox.target;
-  this.controller = new ProfilerController();
+  this.controller = new ProfilerController(this.target);
 
   this.profiles = new Map();
   this._uid = 0;
@@ -188,15 +209,16 @@ function ProfilerPanel(frame, toolbox) {
 }
 
 ProfilerPanel.prototype = {
-  isReady:    null,
-  window:     null,
-  document:   null,
-  target:     null,
-  controller: null,
-  profiles:   null,
+  isReady:     null,
+  window:      null,
+  document:    null,
+  target:      null,
+  controller:  null,
+  profiles:    null,
 
-  _uid:       null,
-  _activeUid: null,
+  _uid:        null,
+  _activeUid:  null,
+  _runningUid: null,
 
   get activeProfile() {
     return this.profiles.get(this._activeUid);
@@ -207,8 +229,8 @@ ProfilerPanel.prototype = {
   },
 
   /**
-   * Open a debug connection and, on success, switch to
-   * the newly created profile.
+   * Open a debug connection and, on success, switch to the newly created
+   * profile.
    *
    * @return Promise
    */
@@ -357,6 +379,41 @@ ProfilerPanel.prototype = {
         this.emit("stopped");
       }.bind(this));
     }.bind(this));
+  },
+
+  /**
+   * Broadcast messages to all Cleopatra instances.
+   *
+   * @param number target
+   *   UID of the recepient profile. All profiles will receive the message
+   *   but the profile specified by 'target' will have a special property,
+   *   isCurrent, set to true.
+   * @param object data
+   *   An object with a property 'task' that will be sent over to Cleopatra.
+   */
+  broadcast: function PP_broadcast(target, data) {
+    if (!this.profiles) {
+      return;
+    }
+
+    if (data.task === "onStarted") {
+      this._runningUid = target;
+    } else {
+      this._runningUid = null;
+    }
+
+    let uid = this._uid;
+    while (uid >= 0) {
+      if (this.profiles.has(uid)) {
+        let iframe = this.profiles.get(uid).iframe;
+        iframe.contentWindow.postMessage(JSON.stringify({
+          uid: target,
+          isCurrent: target === uid,
+          task: data.task
+        }), "*");
+      }
+      uid -= 1;
+    }
   },
 
   /**
