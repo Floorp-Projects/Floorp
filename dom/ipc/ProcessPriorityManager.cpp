@@ -401,8 +401,8 @@ ProcessPriorityManager::SetIsForeground()
     runnable->Cancel();
   }
 
-  LOG("Setting priority to FOREGROUND.");
   mProcessPriority = PROCESS_PRIORITY_FOREGROUND;
+  LOG("Setting priority to %s.", ProcessPriorityToString(mProcessPriority));
   hal::SetProcessPriority(getpid(), PROCESS_PRIORITY_FOREGROUND);
 }
 
@@ -415,7 +415,7 @@ ProcessPriorityManager::SetIsBackgroundNow()
   }
 
   mProcessPriority = backgroundPriority;
-  LOG("Setting priority to BACKGROUND (type %d)", mProcessPriority);
+  LOG("Setting priority to %s", ProcessPriorityToString(mProcessPriority));
   hal::SetProcessPriority(getpid(), mProcessPriority);
 
   // We're in the background; dump as much memory as we can.

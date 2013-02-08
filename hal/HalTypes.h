@@ -79,6 +79,14 @@ enum ProcessPriority {
   NUM_PROCESS_PRIORITY
 };
 
+// Convert a ProcessPriority enum value to a string.  The strings returned by
+// this function are statically allocated; do not attempt to free one!
+//
+// If you pass an unknown process priority (or NUM_PROCESS_PRIORITY), we
+// fatally assert in debug builds and otherwise return "???".
+const char*
+ProcessPriorityToString(ProcessPriority aPriority);
+
 /**
  * Used by ModifyWakeLock
  */
