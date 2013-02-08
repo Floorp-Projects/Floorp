@@ -541,10 +541,10 @@ nsXBLPrototypeBinding::SetDestructor(nsXBLProtoImplAnonymousMethod* aMethod)
 }
 
 nsresult
-nsXBLPrototypeBinding::InstallImplementation(nsIContent* aBoundElement)
+nsXBLPrototypeBinding::InstallImplementation(nsXBLBinding* aBinding)
 {
   if (mImplementation)
-    return mImplementation->InstallImplementation(this, aBoundElement);
+    return mImplementation->InstallImplementation(this, aBinding);
   return NS_OK;
 }
 

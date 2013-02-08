@@ -10,6 +10,7 @@
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLProtoImplMember.h"
 #include "nsXBLProtoImplField.h"
+#include "nsXBLBinding.h"
 
 class nsIXPConnectJSObjectHolder;
 class nsXBLPrototypeBinding;
@@ -36,7 +37,7 @@ public:
     delete mFields;
   }
   
-  nsresult InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement);
+  nsresult InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding, nsXBLBinding* aBinding);
   nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding, nsIScriptContext* aContext, 
                              nsIContent* aBoundElement, 
                              nsIXPConnectJSObjectHolder** aScriptObjectHolder,
