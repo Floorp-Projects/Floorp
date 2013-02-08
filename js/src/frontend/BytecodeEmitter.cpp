@@ -2861,13 +2861,6 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
             JS_ASSERT(pn2->isKind(PNK_COLON));
             pn3 = pn2->pn_left;
             if (pn3->isKind(PNK_NUMBER)) {
-                /*
-                 * If we are emitting an object destructuring initialiser,
-                 * annotate the index op with SRC_INITPROP so we know we are
-                 * not decompiling an array initialiser.
-                 */
-                if (NewSrcNote(cx, bce, SRC_INITPROP) < 0)
-                    return false;
                 if (!EmitNumberOp(cx, pn3->pn_dval, bce))
                     return false;
             } else {
