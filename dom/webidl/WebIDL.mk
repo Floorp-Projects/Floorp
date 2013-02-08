@@ -84,6 +84,7 @@ webidl_files = \
   HTMLMeterElement.webidl \
   HTMLModElement.webidl \
   HTMLOListElement.webidl \
+  HTMLOptGroupElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLParagraphElement.webidl \
   HTMLParamElement.webidl \
