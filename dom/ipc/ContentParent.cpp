@@ -540,6 +540,16 @@ ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
     // Clients should think of mAppManifestURL as const ... we're
     // bending the rules here just for the preallocation hack.
     const_cast<nsString&>(mAppManifestURL) = aAppManifestURL;
+
+    // Boost this process's priority.  The subprocess will call
+    // TemporarilySetProcessPriorityToForeground() from within
+    // ContentChild::AllocPBrowser, but this happens earlier, thus reducing the
+    // window in which the child might be killed due to low memory.
+    if (Preferences::GetBool("dom.ipc.processPriorityManager.enabled")) {
+        SetProcessPriority(base::GetProcId(mSubprocess->GetChildProcessHandle()),
+                           PROCESS_PRIORITY_FOREGROUND);
+    }
+
     // If this fails, the child process died.
     unused << SendSetProcessPrivileges(aPrivs);
 }
