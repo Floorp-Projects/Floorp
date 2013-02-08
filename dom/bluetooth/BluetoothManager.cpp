@@ -94,28 +94,24 @@ private:
   nsRefPtr<BluetoothManager> mManagerPtr;
 };
 
-nsresult
-BluetoothManager::FireEnabledDisabledEvent(bool aEnabled)
-{
-  return DispatchTrustedEvent(aEnabled ? NS_LITERAL_STRING("enabled")
-                              : NS_LITERAL_STRING("disabled"));
-}
-
 BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
-: BluetoothPropertyContainer(BluetoothObjectType::TYPE_MANAGER)
+  : BluetoothPropertyContainer(BluetoothObjectType::TYPE_MANAGER)
 {
   MOZ_ASSERT(aWindow);
 
   BindToOwner(aWindow);
   mPath.AssignLiteral("/");
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->RegisterBluetoothSignalHandler(mPath, this);
 }
 
 BluetoothManager::~BluetoothManager()
 {
   BluetoothService* bs = BluetoothService::Get();
-  if (bs) {
-    bs->UnregisterManager(this);
-  }
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->UnregisterBluetoothSignalHandler(mPath, this);
 }
 
 void
@@ -171,11 +167,6 @@ BluetoothManager::Create(nsPIDOMWindow* aWindow)
   MOZ_ASSERT(aWindow);
 
   nsRefPtr<BluetoothManager> manager = new BluetoothManager(aWindow);
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE(bs, nullptr);
-  bs->RegisterManager(manager);
-
   return manager.forget();
 }
 
@@ -212,6 +203,10 @@ BluetoothManager::Notify(const BluetoothSignal& aData)
 
   if (aData.name().EqualsLiteral("AdapterAdded")) {
     DispatchTrustedEvent(NS_LITERAL_STRING("adapteradded"));
+  } else if (aData.name().EqualsLiteral("Enabled")) {
+    DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
+  } else if (aData.name().EqualsLiteral("Disabled")) {
+    DispatchTrustedEvent(NS_LITERAL_STRING("disabled"));
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
