@@ -295,7 +295,7 @@ TypeInferenceOracle::elementReadIsDenseNative(RawScript script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::elementReadIsTypedArray(RawScript script, jsbytecode *pc, int *arrayType)
+TypeInferenceOracle::elementReadIsTypedArray(HandleScript script, jsbytecode *pc, int *arrayType)
 {
     if (!elementAccessIsTypedArray(script->analysis()->poppedTypes(pc, 1),
                                    script->analysis()->poppedTypes(pc, 0),
@@ -443,7 +443,7 @@ TypeInferenceOracle::elementWriteNeedsDoubleConversion(UnrootedScript script, js
 }
 
 bool
-TypeInferenceOracle::elementWriteHasExtraIndexedProperty(RawScript script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteHasExtraIndexedProperty(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 2);
 
@@ -454,7 +454,7 @@ TypeInferenceOracle::elementWriteHasExtraIndexedProperty(RawScript script, jsbyt
 }
 
 bool
-TypeInferenceOracle::elementWriteIsPacked(RawScript script, jsbytecode *pc)
+TypeInferenceOracle::elementWriteIsPacked(UnrootedScript script, jsbytecode *pc)
 {
     StackTypeSet *types = script->analysis()->poppedTypes(pc, 2);
     return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
@@ -581,7 +581,7 @@ TypeInferenceOracle::canInlineCall(HandleScript caller, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction target)
+TypeInferenceOracle::canEnterInlinedFunction(HandleScript caller, jsbytecode *pc, JSFunction *target)
 {
     AssertCanGC();
     RootedScript targetScript(cx, target->nonLazyScript());
