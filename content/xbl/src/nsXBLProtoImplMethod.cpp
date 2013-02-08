@@ -113,7 +113,8 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
     if (!::JS_DefineUCProperty(aCx, aTargetClassObject,
                                static_cast<const jschar*>(mName),
                                name.Length(), OBJECT_TO_JSVAL(method),
-                               NULL, NULL, JSPROP_ENUMERATE)) {
+                               NULL, NULL,
+                               JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
