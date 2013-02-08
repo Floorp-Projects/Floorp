@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLFieldSetElement.h"
+#include "mozilla/dom/HTMLFieldSetElementBinding.h"
 #include "nsEventDispatcher.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
@@ -18,6 +19,8 @@ HTMLFieldSetElement::HTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo
   , mElements(nullptr)
   , mFirstLegend(nullptr)
 {
+  SetIsDOMBinding();
+
   // <fieldset> is always barred from constraint validation.
   SetBarredFromConstraintValidation(true);
 
@@ -136,13 +139,19 @@ HTMLFieldSetElement::MatchListedElements(nsIContent* aContent, int32_t aNamespac
 NS_IMETHODIMP
 HTMLFieldSetElement::GetElements(nsIDOMHTMLCollection** aElements)
 {
+  NS_ADDREF(*aElements = Elements());
+  return NS_OK;
+}
+
+nsIHTMLCollection*
+HTMLFieldSetElement::Elements()
+{
   if (!mElements) {
     mElements = new nsContentList(this, MatchListedElements, nullptr, nullptr,
                                   true);
   }
 
-  NS_ADDREF(*aElements = mElements);
-  return NS_OK;
+  return mElements;
 }
 
 // nsIFormControl
@@ -234,6 +243,13 @@ HTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
     static_cast<nsGenericHTMLFormElement*>(mElements->Item(i))
       ->FieldSetFirstLegendChanged(aNotify);
   }
+}
+
+JSObject*
+HTMLFieldSetElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                              bool* aTriedToWrap)
+{
+  return HTMLFieldSetElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
