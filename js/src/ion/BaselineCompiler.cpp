@@ -511,8 +511,13 @@ BaselineCompiler::emitBody()
         //  1. The pc is a jumptarget.
         //  2. Baseline can be resumed after the previously handled op.
         //  3. Op is a JSOP_ENTERBLOCK, for catch blocks.
-        //  4. We're in debug mode.
-        if (isJumpTarget || canResumeAfterPrevious || op == JSOP_ENTERBLOCK || debugMode_) {
+        //  4. Op is a JSOP_CALLPROP, Ion may create a new block at this pc,
+        //     see makePolyInlineDispatch.
+        //  5. We're in debug mode.
+        if (isJumpTarget || canResumeAfterPrevious ||
+            op == JSOP_ENTERBLOCK || op == JSOP_CALLPROP ||
+            debugMode_)
+        {
             if (!addPCMappingEntry())
                 return Method_Error;
         }

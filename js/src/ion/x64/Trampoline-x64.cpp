@@ -319,7 +319,12 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
     masm.ret();
 
     Linker linker(masm);
-    return linker.newCode(cx);
+    IonCode *code = linker.newCode(cx);
+
+    CodeOffsetLabel returnLabel(returnOffset);
+    returnLabel.fixup(&masm);
+    *returnAddrOut = (void *) (code->raw() + returnLabel.offset());
+    return code;
 }
 
 static void
