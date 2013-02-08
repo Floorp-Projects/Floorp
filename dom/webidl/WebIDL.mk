@@ -76,6 +76,7 @@ webidl_files = \
   HTMLImageElement.webidl \
   HTMLLabelElement.webidl \
   HTMLLIElement.webidl \
+  HTMLLinkElement.webidl \
   HTMLMapElement.webidl \
   HTMLMetaElement.webidl \
   HTMLMeterElement.webidl \
