@@ -274,8 +274,6 @@ enum SrcNoteType {
     SRC_PCDELTA     = 7,        /* distance forward from comma-operator to
                                    next POP, or from CONDSWITCH to first CASE
                                    opcode, etc. -- always a forward delta */
-    SRC_DESTRUCTLET = 7,        /* JSOP_DUP starting a destructuring let
-                                   operation, with offset to JSOP_ENTERLET0 */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
     SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
@@ -290,17 +288,6 @@ enum SrcNoteType {
     SRC_SETLINE     = 23,       /* a file-absolute source line number note */
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
 };
-
-/*
- * Constants for the SRC_DESTRUCTLET source note.
- *
- * NB: the var_prefix array in jsopcode.c depends on these dense indexes from
- * SRC_DECL_VAR through SRC_DECL_LET.
- */
-#define SRC_DECL_VAR            0
-#define SRC_DECL_CONST          1
-#define SRC_DECL_LET            2
-#define SRC_DECL_NONE           3
 
 #define SN_TYPE_BITS            5
 #define SN_DELTA_BITS           3
