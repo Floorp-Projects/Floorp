@@ -9,13 +9,11 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGTextContentElement.h"
-#include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "SVGTextContentElement.h"
+#include "mozilla/dom/SVGTextContentElement.h"
 
 class nsIAtom;
 class nsIContent;
@@ -27,15 +25,22 @@ class nsSVGTextPathFrame;
 nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
                                   already_AddRefed<nsINodeInfo> aNodeInfo);
 
-typedef mozilla::dom::SVGTextContentElement nsSVGTextPathElementBase;
-
 namespace mozilla {
 namespace dom {
+
+// textPath Method Types
+static const unsigned short TEXTPATH_METHODTYPE_UNKNOWN  = 0;
+static const unsigned short TEXTPATH_METHODTYPE_ALIGN    = 1;
+static const unsigned short TEXTPATH_METHODTYPE_STRETCH  = 2;
+// textPath Spacing Types
+static const unsigned short TEXTPATH_SPACINGTYPE_UNKNOWN = 0;
+static const unsigned short TEXTPATH_SPACINGTYPE_AUTO    = 1;
+static const unsigned short TEXTPATH_SPACINGTYPE_EXACT   = 2;
 
 typedef SVGTextContentElement SVGTextPathElementBase;
 
 class SVGTextPathElement MOZ_FINAL : public SVGTextPathElementBase,
-                                     public nsIDOMSVGTextPathElement,
+                                     public nsIDOMSVGElement,
                                      public nsIDOMSVGURIReference
 {
 friend class ::nsSVGTextPathFrame;
@@ -50,7 +55,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGTEXTPATHELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
@@ -58,14 +62,11 @@ public:
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_FORWARD_NSIDOMSVGELEMENT(SVGTextPathElementBase::)
-  NS_FORWARD_NSIDOMSVGTEXTCONTENTELEMENT(SVGTextPathElementBase::)
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
@@ -82,7 +83,6 @@ public:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual EnumAttributesInfo GetEnumInfo();
   virtual StringAttributesInfo GetStringInfo();
-
 
   enum { STARTOFFSET };
   nsSVGLength2 mLengthAttributes[1];

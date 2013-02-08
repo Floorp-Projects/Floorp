@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGTextContentElement_h
 #define mozilla_dom_SVGTextContentElement_h
 
-#include "nsIDOMSVGTextContentElement.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
 
 class nsSVGTextContainerFrame;
@@ -21,9 +20,6 @@ typedef SVGGraphicsElement SVGTextContentElementBase;
 class SVGTextContentElement : public SVGTextContentElementBase
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGTEXTCONTENTELEMENT
-
   using FragmentOrElement::TextLength;
 
   // WebIDL
