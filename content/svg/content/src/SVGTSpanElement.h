@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGTSpanElement_h
 
 #include "mozilla/dom/SVGTextPositioningElement.h"
-#include "nsIDOMSVGTSpanElement.h"
 
 nsresult NS_NewSVGTSpanElement(nsIContent **aResult,
                                already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -17,8 +16,8 @@ namespace dom {
 
 typedef SVGTextPositioningElement SVGTSpanElementBase;
 
-class SVGTSpanElement MOZ_FINAL : public SVGTSpanElementBase, // = nsIDOMSVGTextPositioningElement
-                                  public nsIDOMSVGTSpanElement
+class SVGTSpanElement MOZ_FINAL : public SVGTSpanElementBase,
+                                  public nsIDOMSVGElement
 {
 protected:
   friend nsresult (::NS_NewSVGTSpanElement(nsIContent **aResult,
@@ -30,22 +29,17 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGTSPANELEMENT
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_FORWARD_NSIDOMSVGELEMENT(SVGTSpanElementBase::)
-  NS_FORWARD_NSIDOMSVGTEXTCONTENTELEMENT(SVGTSpanElementBase::)
-  NS_FORWARD_NSIDOMSVGTEXTPOSITIONINGELEMENT(SVGTSpanElementBase::)
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
