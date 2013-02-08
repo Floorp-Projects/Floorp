@@ -102,6 +102,7 @@ namespace ion {
     _(JSOP_CALLELEM)           \
     _(JSOP_ENUMELEM)           \
     _(JSOP_DELELEM)            \
+    _(JSOP_IN)                 \
     _(JSOP_GETGNAME)           \
     _(JSOP_CALLGNAME)          \
     _(JSOP_BINDGNAME)          \
@@ -112,6 +113,7 @@ namespace ion {
     _(JSOP_CALLPROP)           \
     _(JSOP_DELPROP)            \
     _(JSOP_LENGTH)             \
+    _(JSOP_GETXPROP)           \
     _(JSOP_GETALIASEDVAR)      \
     _(JSOP_CALLALIASEDVAR)     \
     _(JSOP_SETALIASEDVAR)      \
@@ -119,6 +121,8 @@ namespace ion {
     _(JSOP_CALLNAME)           \
     _(JSOP_BINDNAME)           \
     _(JSOP_DELNAME)            \
+    _(JSOP_GETINTRINSIC)       \
+    _(JSOP_CALLINTRINSIC)      \
     _(JSOP_DEFVAR)             \
     _(JSOP_DEFCONST)           \
     _(JSOP_SETCONST)           \
@@ -135,6 +139,9 @@ namespace ion {
     _(JSOP_NEW)                \
     _(JSOP_EVAL)               \
     _(JSOP_IMPLICITTHIS)       \
+    _(JSOP_INSTANCEOF)         \
+    _(JSOP_TYPEOF)             \
+    _(JSOP_TYPEOFEXPR)         \
     _(JSOP_THROW)              \
     _(JSOP_TRY)                \
     _(JSOP_ENTERBLOCK)         \

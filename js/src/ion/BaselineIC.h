@@ -327,10 +327,15 @@ class ICEntry
     _(SetElem_Dense)            \
     _(SetElem_DenseAdd)         \
                                 \
+    _(In_Fallback)              \
+                                \
     _(GetName_Fallback)         \
     _(GetName_Global)           \
                                 \
     _(BindName_Fallback)        \
+                                \
+    _(GetIntrinsic_Fallback)    \
+    _(GetIntrinsic_Constant)    \
                                 \
     _(GetProp_Fallback)         \
     _(GetProp_ArrayLength)      \
@@ -348,7 +353,11 @@ class ICEntry
     _(IteratorNew_Fallback)     \
     _(IteratorMore_Fallback)    \
     _(IteratorNext_Fallback)    \
-    _(IteratorClose_Fallback)
+    _(IteratorClose_Fallback)   \
+                                \
+    _(InstanceOf_Fallback)      \
+                                \
+    _(TypeOf_Fallback)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -2123,6 +2132,36 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
     };
 };
 
+// In
+//      JSOP_IN
+class ICIn_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICIn_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::In_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICIn_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICIn_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::In_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICIn_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
 // GetName
 //      JSOP_NAME
 //      JSOP_CALLNAME
@@ -2240,6 +2279,78 @@ class ICBindName_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICBindName_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// GetIntrinsic
+//      JSOP_GETINTRINSIC
+//      JSOP_CALLINTRINSIC
+class ICGetIntrinsic_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICGetIntrinsic_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::GetIntrinsic_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICGetIntrinsic_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICGetIntrinsic_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::GetIntrinsic_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetIntrinsic_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// Stub that loads the constant result of a GETINTRINSIC operation.
+class ICGetIntrinsic_Constant : public ICStub
+{
+    friend class ICStubSpace;
+
+    HeapValue value_;
+
+    ICGetIntrinsic_Constant(IonCode *stubCode, HandleValue value)
+      : ICStub(GetIntrinsic_Constant, stubCode),
+        value_(value)
+    {}
+
+  public:
+    static inline ICGetIntrinsic_Constant *New(ICStubSpace *space, IonCode *code, HandleValue value) {
+        return space->allocate<ICGetIntrinsic_Constant>(code, value);
+    }
+
+    HeapValue &value() {
+        return value_;
+    }
+    static size_t offsetOfValue() {
+        return offsetof(ICGetIntrinsic_Constant, value_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        bool generateStubCode(MacroAssembler &masm);
+
+        HandleValue value_;
+
+      public:
+        Compiler(JSContext *cx, HandleValue value)
+          : ICStubCompiler(cx, ICStub::GetIntrinsic_Constant),
+            value_(value)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetIntrinsic_Constant::New(space, getStubCode(), value_);
         }
     };
 };
@@ -2983,6 +3094,67 @@ class ICIteratorClose_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICIteratorClose_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// InstanceOf
+//      JSOP_INSTANCEOF
+class ICInstanceOf_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICInstanceOf_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::InstanceOf_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICInstanceOf_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICInstanceOf_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::InstanceOf_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICInstanceOf_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// TypeOf
+//      JSOP_TYPEOF
+//      JSOP_TYPEOFEXPR
+class ICTypeOf_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICTypeOf_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::TypeOf_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICTypeOf_Fallback *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICTypeOf_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::TypeOf_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICTypeOf_Fallback::New(space, getStubCode());
         }
     };
 };

@@ -1156,12 +1156,6 @@ js_HandleExecutionInterrupt(JSContext *cx)
     return result;
 }
 
-jsbytecode*
-js_GetCurrentBytecodePC(JSContext* cx)
-{
-    return cx->hasfp() ? cx->regs().pc : NULL;
-}
-
 JSContext::JSContext(JSRuntime *rt)
   : ContextFriendFields(rt),
     defaultVersion(JSVERSION_DEFAULT),

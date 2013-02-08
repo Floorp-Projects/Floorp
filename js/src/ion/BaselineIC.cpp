@@ -179,6 +179,11 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &globalStub->shape(), "baseline-global-stub-shape");
         break;
       }
+      case ICStub::GetIntrinsic_Constant: {
+        ICGetIntrinsic_Constant *constantStub = toGetIntrinsic_Constant();
+        gc::MarkValue(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
+        break;
+      }
       case ICStub::GetProp_String: {
         ICGetProp_String *propStub = toGetProp_String();
         MarkShape(trc, &propStub->stringProtoShape(), "baseline-getpropstring-stub-shape");
@@ -2331,6 +2336,47 @@ ICSetElem_DenseAdd::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+//
+// In_Fallback
+//
+
+static bool
+DoInFallback(JSContext *cx, ICIn_Fallback *stub, HandleValue key, HandleValue objValue,
+             MutableHandleValue res)
+{
+    FallbackICSpew(cx, stub, "In");
+
+    if (!objValue.isObject()) {
+        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, objValue, NullPtr());
+        return false;
+    }
+
+    RootedObject obj(cx, &objValue.toObject());
+
+    JSBool cond = false;
+    if (!OperatorIn(cx, key, obj, &cond))
+        return false;
+
+    res.setBoolean(cond);
+    return true;
+}
+
+typedef bool (*DoInFallbackFn)(JSContext *, ICIn_Fallback *, HandleValue, HandleValue,
+                               MutableHandleValue);
+static const VMFunction DoInFallbackInfo = FunctionInfo<DoInFallbackFn>(DoInFallback);
+
+bool
+ICIn_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoInFallbackInfo, masm);
+}
+
 // Attach an optimized stub for a GETGNAME/CALLGNAME op.
 static bool
 TryAttachGlobalNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *stub,
@@ -2476,6 +2522,62 @@ ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoBindNameFallbackInfo, masm);
+}
+
+//
+// GetIntrinsic_Fallback
+//
+
+static bool
+DoGetIntrinsicFallback(JSContext *cx, ICGetIntrinsic_Fallback *stub, MutableHandleValue res)
+{
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = stub->icEntry()->pc(script);
+    mozilla::DebugOnly<JSOp> op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "GetIntrinsic(%s)", js_CodeName[JSOp(*pc)]);
+
+    JS_ASSERT(op == JSOP_GETINTRINSIC || op == JSOP_CALLINTRINSIC);
+
+    if (!GetIntrinsicOperation(cx, script, pc, res))
+        return false;
+
+    // An intrinsic operation will always produce the same result, so only
+    // needs to be monitored once. Attach a stub to load the resulting constant
+    // directly.
+
+    types::TypeScript::Monitor(cx, script, pc, res);
+
+    ICGetIntrinsic_Constant::Compiler compiler(cx, res);
+    ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+    if (!newStub)
+        return false;
+
+    stub->addNewStub(newStub);
+    return true;
+}
+
+typedef bool (*DoGetIntrinsicFallbackFn)(JSContext *, ICGetIntrinsic_Fallback *,
+                                         MutableHandleValue);
+static const VMFunction DoGetIntrinsicFallbackInfo =
+    FunctionInfo<DoGetIntrinsicFallbackFn>(DoGetIntrinsicFallback);
+
+bool
+ICGetIntrinsic_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoGetIntrinsicFallbackInfo, masm);
+}
+
+bool
+ICGetIntrinsic_Constant::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    masm.loadValue(Address(BaselineStubReg, ICGetIntrinsic_Constant::offsetOfValue()), R0);
+
+    EmitReturnFromIC(masm);
+    return true;
 }
 
 //
@@ -2655,7 +2757,7 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetProp(%s)", js_CodeName[op]);
 
-    JS_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH);
+    JS_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH || op == JSOP_GETXPROP);
 
     RootedPropertyName name(cx, script->getName(pc));
     RootedId id(cx, NameToId(name));
@@ -3734,6 +3836,82 @@ ICIteratorClose_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoIteratorCloseFallbackInfo, masm);
+}
+
+//
+// InstanceOf_Fallback
+//
+
+static bool
+DoInstanceOfFallback(JSContext *cx, ICInstanceOf_Fallback *stub,
+                     HandleValue lhs, HandleValue rhs,
+                     MutableHandleValue res)
+{
+    FallbackICSpew(cx, stub, "InstanceOf");
+
+    if (!rhs.isObject()) {
+        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rhs, NullPtr());
+        return false;
+    }
+
+    RootedObject obj(cx, &rhs.toObject());
+
+    JSBool cond = false;
+    if (!HasInstance(cx, obj, lhs, &cond))
+        return false;
+
+    res.setBoolean(cond);
+    return true;
+}
+
+typedef bool (*DoInstanceOfFallbackFn)(JSContext *, ICInstanceOf_Fallback *, HandleValue, HandleValue,
+                                       MutableHandleValue);
+static const VMFunction DoInstanceOfFallbackInfo =
+    FunctionInfo<DoInstanceOfFallbackFn>(DoInstanceOfFallback, PopValues(2));
+
+bool
+ICInstanceOf_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    // Sync stack for the decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoInstanceOfFallbackInfo, masm);
+}
+
+//
+// TypeOf_Fallback
+//
+
+static bool
+DoTypeOfFallback(JSContext *cx, ICTypeOf_Fallback *stub, HandleValue val, MutableHandleValue res)
+{
+    FallbackICSpew(cx, stub, "TypeOf");
+
+    res.setString(TypeOfOperation(cx, val));
+    return true;
+}
+
+typedef bool (*DoTypeOfFallbackFn)(JSContext *, ICTypeOf_Fallback *, HandleValue,
+                                   MutableHandleValue);
+static const VMFunction DoTypeOfFallbackInfo =
+    FunctionInfo<DoTypeOfFallbackFn>(DoTypeOfFallback);
+
+bool
+ICTypeOf_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoTypeOfFallbackInfo, masm);
 }
 
 } // namespace ion

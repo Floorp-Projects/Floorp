@@ -1479,6 +1479,19 @@ BaselineCompiler::emit_JSOP_DELELEM()
 }
 
 bool
+BaselineCompiler::emit_JSOP_IN()
+{
+    frame.popRegsAndSync(2);
+
+    ICIn_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETGNAME()
 {
     RootedPropertyName name(cx, script->getName(pc));
@@ -1575,6 +1588,12 @@ BaselineCompiler::emit_JSOP_CALLPROP()
 
 bool
 BaselineCompiler::emit_JSOP_LENGTH()
+{
+    return emit_JSOP_GETPROP();
+}
+
+bool
+BaselineCompiler::emit_JSOP_GETXPROP()
 {
     return emit_JSOP_GETPROP();
 }
@@ -1711,6 +1730,25 @@ BaselineCompiler::emit_JSOP_DELNAME()
 
     frame.push(R0);
     return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_GETINTRINSIC()
+{
+    frame.syncStack(0);
+
+    ICGetIntrinsic_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_CALLINTRINSIC()
+{
+    return emit_JSOP_GETINTRINSIC();
 }
 
 typedef bool (*DefVarOrConstFn)(JSContext *, HandlePropertyName, unsigned, HandleObject);
@@ -1967,6 +2005,38 @@ BaselineCompiler::emit_JSOP_IMPLICITTHIS()
 
     frame.push(R0);
     return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_INSTANCEOF()
+{
+    frame.popRegsAndSync(2);
+
+    ICInstanceOf_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_TYPEOF()
+{
+    frame.popRegsAndSync(1);
+
+    ICTypeOf_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_TYPEOFEXPR()
+{
+    return emit_JSOP_TYPEOF();
 }
 
 typedef bool (*ThrowFn)(JSContext *, HandleValue);
