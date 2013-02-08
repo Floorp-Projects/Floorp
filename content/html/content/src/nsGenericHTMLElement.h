@@ -1016,7 +1016,11 @@ private:
   void ChangeEditableState(int32_t aChange);
 };
 
-class nsHTMLFieldSetElement;
+namespace mozilla {
+namespace dom {
+class HTMLFieldSetElement;
+}
+}
 
 #define FORM_ELEMENT_FLAG_BIT(n_) NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
@@ -1197,7 +1201,7 @@ protected:
   nsHTMLFormElement* mForm;
 
   /* This is a pointer to our closest fieldset parent if any */
-  nsHTMLFieldSetElement* mFieldSet;
+  mozilla::dom::HTMLFieldSetElement* mFieldSet;
 };
 
 //----------------------------------------------------------------------

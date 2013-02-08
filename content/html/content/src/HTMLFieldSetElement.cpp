@@ -3,22 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLFieldSetElement.h"
-#include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsStyleConsts.h"
-#include "nsIForm.h"
-#include "nsIFormControl.h"
-#include "nsGUIEvent.h"
+#include "mozilla/dom/HTMLFieldSetElement.h"
 #include "nsEventDispatcher.h"
-#include "nsContentList.h"
-
-using namespace mozilla::dom;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
+DOMCI_NODE_DATA(HTMLFieldSetElement, mozilla::dom::HTMLFieldSetElement)
 
 
-nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+namespace mozilla {
+namespace dom {
+
+HTMLFieldSetElement::HTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
   , mElements(nullptr)
   , mFirstLegend(nullptr)
@@ -30,7 +25,7 @@ nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNode
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
 
-nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
+HTMLFieldSetElement::~HTMLFieldSetElement()
 {
   uint32_t length = mDependentElements.Length();
   for (uint32_t i = 0; i < length; ++i) {
@@ -40,50 +35,48 @@ nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLFieldSetElement,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLFieldSetElement,
                                                 nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mElements)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFieldSetElement,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLFieldSetElement,
                                                   nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElements)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLFieldSetElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLFieldSetElement, Element)
 
-DOMCI_NODE_DATA(HTMLFieldSetElement, nsHTMLFieldSetElement)
-
-// QueryInterface implementation for nsHTMLFieldSetElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFieldSetElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLFieldSetElement,
+// QueryInterface implementation for HTMLFieldSetElement
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLFieldSetElement,
                                    nsIDOMHTMLFieldSetElement,
                                    nsIConstraintValidation)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFieldSetElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLFieldSetElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFieldSetElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLFieldSetElement)
+NS_IMPL_ELEMENT_CLONE(HTMLFieldSetElement)
 
 
-NS_IMPL_BOOL_ATTR(nsHTMLFieldSetElement, Disabled, disabled)
-NS_IMPL_STRING_ATTR(nsHTMLFieldSetElement, Name, name)
+NS_IMPL_BOOL_ATTR(HTMLFieldSetElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(HTMLFieldSetElement, Name, name)
 
 // nsIConstraintValidation
-NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLFieldSetElement)
+NS_IMPL_NSICONSTRAINTVALIDATION(HTMLFieldSetElement)
 
 bool
-nsHTMLFieldSetElement::IsDisabledForEvents(uint32_t aMessage)
+HTMLFieldSetElement::IsDisabledForEvents(uint32_t aMessage)
 {
   return IsElementDisabledForEvents(aMessage, nullptr);
 }
 
 // nsIContent
 nsresult
-nsHTMLFieldSetElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLFieldSetElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled.
   aVisitor.mCanHandle = false;
@@ -95,8 +88,8 @@ nsHTMLFieldSetElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsHTMLFieldSetElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                    const nsAttrValue* aValue, bool aNotify)
+HTMLFieldSetElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                  const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled &&
       nsINode::GetFirstChild()) {
@@ -119,13 +112,13 @@ nsHTMLFieldSetElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 // nsIDOMHTMLFieldSetElement
 
 NS_IMETHODIMP
-nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
+HTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 NS_IMETHODIMP
-nsHTMLFieldSetElement::GetType(nsAString& aType)
+HTMLFieldSetElement::GetType(nsAString& aType)
 {
   aType.AssignLiteral("fieldset");
   return NS_OK;
@@ -133,15 +126,15 @@ nsHTMLFieldSetElement::GetType(nsAString& aType)
 
 /* static */
 bool
-nsHTMLFieldSetElement::MatchListedElements(nsIContent* aContent, int32_t aNamespaceID,
-                                           nsIAtom* aAtom, void* aData)
+HTMLFieldSetElement::MatchListedElements(nsIContent* aContent, int32_t aNamespaceID,
+                                         nsIAtom* aAtom, void* aData)
 {
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aContent);
   return formControl && formControl->GetType() != NS_FORM_LABEL;
 }
 
 NS_IMETHODIMP
-nsHTMLFieldSetElement::GetElements(nsIDOMHTMLCollection** aElements)
+HTMLFieldSetElement::GetElements(nsIDOMHTMLCollection** aElements)
 {
   if (!mElements) {
     mElements = new nsContentList(this, MatchListedElements, nullptr, nullptr,
@@ -155,20 +148,20 @@ nsHTMLFieldSetElement::GetElements(nsIDOMHTMLCollection** aElements)
 // nsIFormControl
 
 nsresult
-nsHTMLFieldSetElement::Reset()
+HTMLFieldSetElement::Reset()
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLFieldSetElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
+HTMLFieldSetElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   return NS_OK;
 }
 
 nsresult
-nsHTMLFieldSetElement::InsertChildAt(nsIContent* aChild, uint32_t aIndex,
-                                     bool aNotify)
+HTMLFieldSetElement::InsertChildAt(nsIContent* aChild, uint32_t aIndex,
+                                   bool aNotify)
 {
   bool firstLegendHasChanged = false;
 
@@ -197,7 +190,7 @@ nsHTMLFieldSetElement::InsertChildAt(nsIContent* aChild, uint32_t aIndex,
 }
 
 void
-nsHTMLFieldSetElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
+HTMLFieldSetElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
   bool firstLegendHasChanged = false;
 
@@ -223,7 +216,7 @@ nsHTMLFieldSetElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 }
 
 void
-nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
+HTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
 {
   /**
    * NOTE: this could be optimized if only call when the fieldset is currently
@@ -243,3 +236,5 @@ nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
   }
 }
 
+} // namespace dom
+} // namespace mozilla
