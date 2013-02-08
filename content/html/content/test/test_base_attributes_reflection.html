@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for HTMLModElement attributes reflection</title>
+  <title>Test for HTMLBaseElement attributes reflection</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="reflect.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -13,27 +13,20 @@
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for HTMLModElement attributes reflection **/
+/** Test for HTMLBaseElement attributes reflection **/
 
-// .cite (URL)
+// .href is sort of like a URL reflection, but with some special rules.  Watch
+// out for that!
 reflectURL({
-  element: document.createElement("ins"),
-  attribute: "cite",
-})
-reflectURL({
-  element: document.createElement("del"),
-  attribute: "cite",
-})
+  element: document.createElement("base"),
+  attribute: "href"
+});
 
-// .dateTime (String)
+// .target
 reflectString({
-  element: document.createElement("ins"),
-  attribute: "dateTime",
-})
-reflectString({
-  element: document.createElement("del"),
-  attribute: "dateTime",
-})
+  element: document.createElement("base"),
+  attribute: "target"
+});
 
 </script>
 </pre>

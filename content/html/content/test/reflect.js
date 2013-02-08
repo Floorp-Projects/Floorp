@@ -588,3 +588,24 @@ function reflectInt(aParameters)
   is(element[attr], defaultValue,
      "When not set, the IDL attribute should return default value.");
 }
+
+/**
+ * Checks that a given attribute is correctly reflected as a url.
+ *
+ * @param aParameters   Object    object containing the parameters, which are:
+ *  - element           Element   node to test
+ *  - attribute         String    name of the attribute
+ *     OR
+ *    attribute         Object    object containing two attributes, 'content' and 'idl'
+ */
+function reflectURL(aParameters)
+{
+  var element = aParameters.element;
+  var contentAttr = typeof aParameters.attribute === "string"
+	              ? aParameters.attribute : aParameters.attribute.content;
+  var idlAttr = typeof aParameters.attribute === "string"
+                  ? aParameters.attribute : aParameters.attribute.idl;
+
+  element[idlAttr] = "";
+  is(element[idlAttr], document.URL, "Empty string should resolve to document URL");
+}
