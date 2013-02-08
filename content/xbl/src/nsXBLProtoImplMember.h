@@ -70,6 +70,7 @@ public:
 
   nsXBLProtoImplMember* GetNext() { return mNext; }
   void SetNext(nsXBLProtoImplMember* aNext) { mNext = aNext; }
+  const PRUnichar* GetName() { return mName; }
 
   virtual nsresult InstallMember(JSContext* aCx,
                                  JSObject* aTargetClassObject) = 0;

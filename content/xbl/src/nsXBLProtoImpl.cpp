@@ -207,6 +207,20 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   return NS_OK;
 }
 
+bool
+nsXBLProtoImpl::LookupMember(JSContext* aCx, nsString& aName,
+                             JS::HandleId aNameAsId,
+                             JSPropertyDescriptor* aDesc,
+                             JSObject* aClassObject)
+{
+  for (nsXBLProtoImplMember* m = mMembers; m; m = m->GetNext()) {
+    if (aName.Equals(m->GetName())) {
+      return JS_GetPropertyDescriptorById(aCx, aClassObject, aNameAsId, 0, aDesc);
+    }
+  }
+  return true;
+}
+
 void
 nsXBLProtoImpl::Trace(TraceCallback aCallback, void *aClosure) const
 {
