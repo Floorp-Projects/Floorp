@@ -23,7 +23,7 @@
 #include "nsIComponentManager.h"
 #include "nsCheapSets.h"
 #include "nsError.h"
-#include "nsHTMLOptGroupElement.h"
+#include "HTMLOptGroupElement.h"
 #include "nsHTMLOptionElement.h"
 #include "nsHTMLFormElement.h"
 #include "mozilla/ErrorResult.h"
