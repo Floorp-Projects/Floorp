@@ -2340,6 +2340,7 @@ CompartmentNameCallback(JSRuntime *rt, JSCompartment *comp,
 }
 
 bool XPCJSRuntime::gExperimentalBindingsEnabled;
+bool XPCJSRuntime::gXBLScopesEnabled;
 
 static bool
 PreserveWrapper(JSContext *cx, JSObject *obj)
@@ -2518,6 +2519,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     DOM_InitInterfaces();
     Preferences::AddBoolVarCache(&gExperimentalBindingsEnabled,
                                  "dom.experimental_bindings",
+                                 false);
+    Preferences::AddBoolVarCache(&gXBLScopesEnabled,
+                                 "dom.xbl_scopes",
                                  false);
 
 
