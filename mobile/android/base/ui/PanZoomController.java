@@ -99,7 +99,7 @@ public class PanZoomController
 
     public PanZoomController(PanZoomTarget target, EventDispatcher eventDispatcher) {
         mTarget = target;
-        mSubscroller = new SubdocumentScrollHelper(this, eventDispatcher);
+        mSubscroller = new SubdocumentScrollHelper(eventDispatcher);
         mX = new AxisX(mSubscroller);
         mY = new AxisY(mSubscroller);
 
