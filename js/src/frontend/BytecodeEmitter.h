@@ -276,7 +276,6 @@ enum SrcNoteType {
     SRC_PCDELTA     = 7,        /* distance forward from comma-operator to
                                    next POP, or from CONDSWITCH to first CASE
                                    opcode, etc. -- always a forward delta */
-    SRC_GROUPASSIGN = 7,        /* SRC_DESTRUCT variant for [a, b] = [c, d] */
     SRC_DESTRUCTLET = 7,        /* JSOP_DUP starting a destructuring let
                                    operation, with offset to JSOP_ENTERLET0 */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
