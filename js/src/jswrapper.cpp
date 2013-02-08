@@ -660,6 +660,20 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, IsAcceptableThis test, Native
             *dst = *src;
             if (!cx->compartment->wrap(cx, dst))
                 return false;
+
+            // Handle |this| specially. When we rewrap on the other side of the
+            // membrane, we might apply a same-compartment security wrapper that
+            // will stymie this whole process. If that happens, unwrap the wrapper.
+            // This logic can go away when same-compartment security wrappers go away.
+            if ((src == srcArgs.base() + 1) && dst->isObject()) {
+                JSObject *thisObj = &dst->toObject();
+                if (thisObj->isWrapper() &&
+                    !Wrapper::wrapperHandler(thisObj)->isSafeToUnwrap())
+                {
+                    JS_ASSERT(!IsCrossCompartmentWrapper(thisObj));
+                    *src = ObjectValue(*Wrapper::wrappedObject(thisObj));
+                }
+            }
         }
 
         if (!CallNonGenericMethod(cx, test, impl, dstArgs))
