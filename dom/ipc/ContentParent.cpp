@@ -848,7 +848,7 @@ ContentParent::GetTestShellSingleton()
 
 ContentParent::ContentParent(const nsAString& aAppManifestURL,
                              bool aIsForBrowser,
-                             ChildOSPrivileges aOSPrivileges)
+                             ChildPrivileges aOSPrivileges)
     : mSubprocess(nullptr)
     , mOSPrivileges(aOSPrivileges)
     , mChildID(CONTENT_PARENT_UNKNOWN_CHILD_ID)

@@ -148,8 +148,6 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
-    typedef base::ChildPrivileges ChildOSPrivileges;
-
     static nsDataHashtable<nsStringHashKey, ContentParent*> *gAppContentParents;
     static nsTArray<ContentParent*>* gNonAppContentParents;
     static nsTArray<ContentParent*>* gPrivateContent;
@@ -169,7 +167,7 @@ private:
     using PContentParent::SendPTestShellConstructor;
 
     ContentParent(const nsAString& aAppManifestURL, bool aIsForBrowser,
-                  ChildOSPrivileges aOSPrivileges = base::PRIVILEGES_DEFAULT);
+                  base::ChildPrivileges aOSPrivileges = base::PRIVILEGES_DEFAULT);
     virtual ~ContentParent();
 
     void Init();
@@ -346,7 +344,7 @@ private:
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     GeckoChildProcessHost* mSubprocess;
-    ChildOSPrivileges mOSPrivileges;
+    base::ChildPrivileges mOSPrivileges;
 
     uint64_t mChildID;
     int32_t mGeolocationWatchID;
