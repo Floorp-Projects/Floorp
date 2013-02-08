@@ -1203,6 +1203,14 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // Make the class object a permanent and read-only property on the global.
+    // Xrays rely on this to find the correct binding functions.
+    JSBool found = false;
+    if (!JS_SetPropertyAttributes(cx, global, c->name,
+                                  JSPROP_READONLY | JSPROP_PERMANENT, &found))
+      return NS_ERROR_FAILURE;
+    MOZ_ASSERT(found);
+
     // Keep this proto binding alive while we're alive.  Do this first so that
     // we can guarantee that in XBLFinalize this will be non-null.
     // Note that we can't just store aProtoBinding in the private and
