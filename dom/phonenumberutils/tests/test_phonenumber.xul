@@ -77,6 +77,27 @@ function Format(dial, currentRegion, nationalNumber, region, nationalFormat, int
 Parse("033316005", "NZ");
 Parse("03-331 6005", "NZ");
 Parse("03 331 6005", "NZ");
+
+// Always test CA before US because CA has to load all meta-info for US.
+ParseWithIntl("4031234567", "CA");
+Parse("(416) 585-4319", "CA");
+Parse("647-967-4357", "CA");
+Parse("416-716-8768", "CA");
+Parse("18002684646", "CA");
+Parse("416-445-9119", "CA");
+Parse("1-800-668-6866", "CA");
+Parse("(416) 453-6486", "CA");
+Parse("(647) 268-4778", "CA");
+Parse("647-218-1313", "CA");
+Parse("+1 647-209-4642", "CA");
+Parse("416-559-0133", "CA");
+Parse("+1 647-639-4118", "CA");
+Parse("+12898803664", "CA");
+Parse("780-901-4687", "CA");
+Parse("+14167070550", "CA");
+Parse("+1-647-522-6487", "CA");
+Parse("(416) 877-0880", "CA");
+
 // Testing international prefixes.
 // Should strip country code.
 Parse("0064 3 331 6005", "NZ");
@@ -134,26 +155,6 @@ Parse("(449)978-0001", "MX");
 Parse("+52 1 33 1234-5678", "MX");
 Parse("044 (33) 1234-5678", "MX");
 Parse("045 33 1234-5678", "MX");
-
-
-ParseWithIntl("4031234567", "CA");
-Parse("(416) 585-4319", "CA");
-Parse("647-967-4357", "CA");
-Parse("416-716-8768", "CA");
-Parse("18002684646", "CA");
-Parse("416-445-9119", "CA");
-Parse("1-800-668-6866", "CA");
-Parse("(416) 453-6486", "CA");
-Parse("(647) 268-4778", "CA");
-Parse("647-218-1313", "CA");
-Parse("+1 647-209-4642", "CA");
-Parse("416-559-0133", "CA");
-Parse("+1 647-639-4118", "CA");
-Parse("+12898803664", "CA");
-Parse("780-901-4687", "CA");
-Parse("+14167070550", "CA");
-Parse("+1-647-522-6487", "CA");
-Parse("(416) 877-0880", "CA");
 
 // Test that lots of spaces are ok.
 Parse("0 3   3 3 1   6 0 0 5", "NZ");
