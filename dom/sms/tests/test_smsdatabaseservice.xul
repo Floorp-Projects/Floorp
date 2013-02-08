@@ -177,21 +177,27 @@ function newRandomId() {
 
 let sms = [
   {
+    type: "sms",
     sender: "+34666000000",
     receiver: "+34666111000",
     body: "message 0",
+    messageClass: "normal",
     timestamp: 1329999861762
   },
   {
+    type: "sms",
     sender: "+34666000111",
     receiver: "+34666111111",
     body: "message 1",
+    messageClass: "normal",
     timestamp: 1329999861763
   },
   {
+    type: "sms",
     sender: "+34666000222",
     receiver: "+34666111222",
     body: "message 2",
+    messageClass: "normal",
     timestamp: 1329999861764
   },
 ];
@@ -201,9 +207,7 @@ let sms = [
  */
 add_test(function test_saveReceivedMessage() {
   info("test_saveReceivedMessage");
-  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[0].sender,
-                                                                    sms[0].body,
-                                                                    sms[0].timestamp);
+  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[0]);
   checkDB(function (store) {
     let request = store.get(messageId);
     request.onsuccess = function onsuccess() {
@@ -262,9 +266,7 @@ add_test(function test_getMessage_success() {
       run_next_test();
     }
   });
-  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[2].sender,
-                                                                    sms[2].body,
-                                                                    sms[2].timestamp);
+  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[2]);
   SimpleTest.executeSoon(function () {
     gMobileMessageDatabaseService.getMessage(messageId, fakeRequestId);
   });
@@ -821,9 +823,7 @@ add_test(function test_deleteMessage_success() {
       run_next_test();
     }
   });
-  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[0].sender,
-                                                                    sms[0].body,
-                                                                    sms[0].timestamp);
+  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[0]);
   SimpleTest.executeSoon(function () {
     gMobileMessageDatabaseService.deleteMessage(messageId, fakeRequestId);
   });
@@ -852,9 +852,7 @@ add_test(function test_markMessageRead_success() {
       run_next_test();
     }
   });
-  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[2].sender,
-                                                                    sms[2].body,
-                                                                    sms[2].timestamp); 
+  let messageId = gMobileMessageDatabaseService.saveReceivedMessage(sms[2]); 
   SimpleTest.executeSoon(function () {
     gMobileMessageDatabaseService.markMessageRead(messageId, true, fakeRequestId);
   });
