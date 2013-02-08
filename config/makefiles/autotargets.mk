@@ -62,6 +62,13 @@ mkdir_deps =$(foreach dir,$(getargv),$(call slash_strip,$(dir)/.mkdir.done))
 # 198001010000 would translate to something older than FAT epoch.
 	@$(TOUCH) -t 198001030000 "$@"
 
+# A handful of makefiles are attempting "mkdir dot".
+# tbpl/valgrind builds are using this target
+# https://bugzilla.mozilla.org/show_bug.cgi?id=837754
+.mkdir.done:
+	@echo "WARNING: $(MKDIR) -dot- requested by $(MAKE) -C $(CURDIR) $(MAKECMDGOALS)"
+	@$(TOUCH) -t 198001030000 "$@"
+
 INCLUDED_AUTOTARGETS_MK = 1
 endif #}
 
