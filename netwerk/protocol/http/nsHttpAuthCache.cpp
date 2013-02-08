@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdlib.h>
-#include "nsHttp.h"
 #include "nsHttpAuthCache.h"
+#include <stdlib.h>
+#include "base/compiler_specific.h"
+#include "nsHttp.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include "prprf.h"
@@ -50,7 +51,7 @@ StrEquivalent(const PRUnichar *a, const PRUnichar *b)
 
 nsHttpAuthCache::nsHttpAuthCache()
     : mDB(nullptr)
-    , mObserver(new AppDataClearObserver(this))
+    , ALLOW_THIS_IN_INITIALIZER_LIST(mObserver(new AppDataClearObserver(this)))
 {
     nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
     if (obsSvc) {
