@@ -60,6 +60,7 @@ webidl_files = \
   HTMLBaseElement.webidl \
   HTMLBodyElement.webidl \
   HTMLBRElement.webidl \
+  HTMLButtonElement.webidl \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
   HTMLDirectoryElement.webidl \
