@@ -628,9 +628,9 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
     RootedValue lvalue(cx, lval);
     RootedValue rvalue(cx, rval);
 
-    if (!ToPrimitive(cx, lvalue.address()))
+    if (!ToPrimitive(cx, &lvalue))
         return false;
-    if (!ToPrimitive(cx, rvalue.address()))
+    if (!ToPrimitive(cx, &rvalue))
         return false;
 
     if (lvalue.get().isString() && rvalue.get().isString()) {

@@ -407,9 +407,9 @@ template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
         Value &rval = regs.sp[-1];                                            \
         Value &lval = regs.sp[-2];                                            \
         bool cond;                                                            \
-        if (!ToPrimitive(cx, JSTYPE_NUMBER, &lval))                           \
+        if (!ToPrimitive(cx, JSTYPE_NUMBER, MutableHandleValue::fromMarkedLocation(&lval))) \
             THROWV(JS_FALSE);                                                 \
-        if (!ToPrimitive(cx, JSTYPE_NUMBER, &rval))                           \
+        if (!ToPrimitive(cx, JSTYPE_NUMBER, MutableHandleValue::fromMarkedLocation(&rval))) \
             THROWV(JS_FALSE);                                                 \
         if (lval.isString() && rval.isString()) {                             \
             JSString *l = lval.toString(), *r = rval.toString();              \
@@ -518,9 +518,9 @@ StubEqualityOp(VMFrame &f)
         } else if (rval.isNullOrUndefined()) {
             cond = (lval.isObject() && EmulatesUndefined(&lval.toObject())) == EQ;
         } else {
-            if (!ToPrimitive(cx, &lval))
+            if (!ToPrimitive(cx, MutableHandleValue::fromMarkedLocation(&lval)))
                 return false;
-            if (!ToPrimitive(cx, &rval))
+            if (!ToPrimitive(cx, MutableHandleValue::fromMarkedLocation(&rval)))
                 return false;
 
             /*
@@ -586,9 +586,9 @@ stubs::Add(VMFrame &f)
 
     } else {
         bool lIsObject = lval.isObject(), rIsObject = rval.isObject();
-        if (!ToPrimitive(f.cx, &lval))
+        if (!ToPrimitive(f.cx, MutableHandleValue::fromMarkedLocation(&lval)))
             THROW();
-        if (!ToPrimitive(f.cx, &rval))
+        if (!ToPrimitive(f.cx, MutableHandleValue::fromMarkedLocation(&rval)))
             THROW();
         if ((lIsString = lval.isString()) || (rIsString = rval.isString())) {
             if (lIsString) {
