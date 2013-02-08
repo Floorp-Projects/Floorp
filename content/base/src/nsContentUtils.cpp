@@ -1772,6 +1772,18 @@ nsContentUtils::IsImageSrcSetDisabled()
 }
 
 // static
+bool
+nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
+                                    JS::HandleId aId, JSPropertyDescriptor* aDesc)
+{
+  nsXBLBinding* binding = aContent->OwnerDoc()->BindingManager()
+                                  ->GetBinding(aContent);
+  if (!binding)
+    return true;
+  return binding->LookupMember(aCx, aId, aDesc);
+}
+
+// static
 nsINode*
 nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
 {
