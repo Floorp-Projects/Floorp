@@ -1623,10 +1623,10 @@ JSObject::deleteByValue(JSContext *cx, HandleObject obj,
         return false;
 
     if (name->isIndex(&index))
-        return deleteElement(cx, obj, index, rval, false);
+        return deleteElement(cx, obj, index, rval, strict);
 
     Rooted<PropertyName*> propname(cx, name->asPropertyName());
-    return deleteProperty(cx, obj, propname, rval, false);
+    return deleteProperty(cx, obj, propname, rval, strict);
 }
 
 JS_FRIEND_API(bool)
