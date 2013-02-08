@@ -2,7 +2,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsHTMLOptGroupElement.h"
+
+#include "mozilla/dom/HTMLOptGroupElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -13,51 +14,53 @@
 #include "nsEventDispatcher.h"
 #include "nsHTMLSelectElement.h"
 
-using namespace mozilla::dom;
+NS_IMPL_NS_NEW_HTML_ELEMENT(OptGroup)
+DOMCI_NODE_DATA(HTMLOptGroupElement, mozilla::dom::HTMLOptGroupElement)
+
+namespace mozilla {
+namespace dom {
 
 /**
  * The implementation of &lt;optgroup&gt;
  */
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(OptGroup)
 
 
-nsHTMLOptGroupElement::nsHTMLOptGroupElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLOptGroupElement::HTMLOptGroupElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   // We start off enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
 
-nsHTMLOptGroupElement::~nsHTMLOptGroupElement()
+HTMLOptGroupElement::~HTMLOptGroupElement()
 {
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLOptGroupElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLOptGroupElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLOptGroupElement, Element)
 
 
-DOMCI_NODE_DATA(HTMLOptGroupElement, nsHTMLOptGroupElement)
 
-// QueryInterface implementation for nsHTMLOptGroupElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLOptGroupElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLOptGroupElement,
+// QueryInterface implementation for HTMLOptGroupElement
+NS_INTERFACE_TABLE_HEAD(HTMLOptGroupElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLOptGroupElement,
                                    nsIDOMHTMLOptGroupElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLOptGroupElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLOptGroupElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLOptGroupElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLOptGroupElement)
+NS_IMPL_ELEMENT_CLONE(HTMLOptGroupElement)
 
 
-NS_IMPL_BOOL_ATTR(nsHTMLOptGroupElement, Disabled, disabled)
-NS_IMPL_STRING_ATTR(nsHTMLOptGroupElement, Label, label)
+NS_IMPL_BOOL_ATTR(HTMLOptGroupElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(HTMLOptGroupElement, Label, label)
 
 
 nsresult
-nsHTMLOptGroupElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLOptGroupElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   // Do not process any DOM events if the element is disabled
@@ -79,7 +82,7 @@ nsHTMLOptGroupElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 nsIContent*
-nsHTMLOptGroupElement::GetSelect()
+HTMLOptGroupElement::GetSelect()
 {
   nsIContent* parent = this;
   while ((parent = parent->GetParent()) && parent->IsHTML()) {
@@ -95,9 +98,9 @@ nsHTMLOptGroupElement::GetSelect()
 }
 
 nsresult
-nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
-                                     uint32_t aIndex,
-                                     bool aNotify)
+HTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
+                                   uint32_t aIndex,
+                                   bool aNotify)
 {
   nsSafeOptionListMutation safeMutation(GetSelect(), this, aKid, aIndex, aNotify);
   nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
@@ -108,7 +111,7 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
 }
 
 void
-nsHTMLOptGroupElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
+HTMLOptGroupElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
   nsSafeOptionListMutation safeMutation(GetSelect(), this, nullptr, aIndex,
                                         aNotify);
@@ -116,8 +119,8 @@ nsHTMLOptGroupElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 }
 
 nsresult
-nsHTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                    const nsAttrValue* aValue, bool aNotify)
+HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                  const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled) {
     // All our children <option> have their :disabled state depending on our
@@ -136,7 +139,7 @@ nsHTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsEventStates
-nsHTMLOptGroupElement::IntrinsicState() const
+HTMLOptGroupElement::IntrinsicState() const
 {
   nsEventStates state = nsGenericHTMLElement::IntrinsicState();
 
@@ -150,3 +153,6 @@ nsHTMLOptGroupElement::IntrinsicState() const
 
   return state;
 }
+
+} // namespace dom
+} // namespace mozilla

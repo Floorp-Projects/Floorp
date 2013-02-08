@@ -3,18 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsGenericHTMLElement_h
-#define nsGenericHTMLElement_h
+#ifndef mozilla_dom_HTMLOptGroupElement_h
+#define mozilla_dom_HTMLOptGroupElement_h
 
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsGenericHTMLElement.h"
 
-class nsHTMLOptGroupElement : public nsGenericHTMLElement,
-                              public nsIDOMHTMLOptGroupElement
+namespace mozilla {
+namespace dom {
+
+class HTMLOptGroupElement : public nsGenericHTMLElement,
+                            public nsIDOMHTMLOptGroupElement
 {
 public:
-  nsHTMLOptGroupElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLOptGroupElement();
+  HTMLOptGroupElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLOptGroupElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -41,7 +44,7 @@ public:
 
   virtual nsEventStates IntrinsicState() const;
  
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 
@@ -62,4 +65,7 @@ protected:
   nsIContent* GetSelect();
 };
 
-#endif /* nsGenericHTMLElement_h */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_HTMLOptGroupElement_h */
