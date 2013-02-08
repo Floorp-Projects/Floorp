@@ -1825,8 +1825,6 @@ main(int argc, char **argv, char **envp)
         argv++;
         ProcessArgsForCompartment(cx, argv, argc);
 
-        xpc_LocalizeContext(cx);
-
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         if (!xpc) {
             printf("failed to get nsXPConnect service!\n");

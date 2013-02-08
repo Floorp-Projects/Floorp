@@ -723,6 +723,8 @@ js::PerThreadData::PerThreadData(JSRuntime *runtime)
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : mainThread(this),
     atomsCompartment(NULL),
+    localeCallbacks(NULL),
+    defaultLocale(NULL),
 #ifdef JS_THREADSAFE
     ownerThread_(NULL),
 #endif
@@ -1135,6 +1137,7 @@ JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
     Probes::destroyRuntime(rt);
+    js_free(rt->defaultLocale);
     js_delete(rt);
 }
 
@@ -2275,6 +2278,17 @@ JS_strdup(JSContext *cx, const char *s)
     if (!p)
         return NULL;
     return (char *)js_memcpy(p, s, n);
+}
+
+JS_PUBLIC_API(char *)
+JS_strdup(JSRuntime *rt, const char *s)
+{
+    AssertHeapIsIdle(rt);
+    size_t n = strlen(s) + 1;
+    void *p = rt->malloc_(n);
+    if (!p)
+        return NULL;
+    return static_cast<char*>(js_memcpy(p, s, n));
 }
 
 #undef JS_AddRoot
@@ -6754,31 +6768,31 @@ JS_GetRegExpSource(JSContext *cx, JSObject *objArg)
 /************************************************************************/
 
 JS_PUBLIC_API(JSBool)
-JS_SetDefaultLocale(JSContext *cx, const char *locale)
+JS_SetDefaultLocale(JSRuntime *rt, const char *locale)
 {
-    AssertHeapIsIdle(cx);
-    return cx->setDefaultLocale(locale);
+    AssertHeapIsIdle(rt);
+    return rt->setDefaultLocale(locale);
 }
 
 JS_PUBLIC_API(void)
-JS_ResetDefaultLocale(JSContext *cx)
+JS_ResetDefaultLocale(JSRuntime *rt)
 {
-    AssertHeapIsIdle(cx);
-    cx->resetDefaultLocale();
+    AssertHeapIsIdle(rt);
+    rt->resetDefaultLocale();
 }
 
 JS_PUBLIC_API(void)
-JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks)
+JS_SetLocaleCallbacks(JSRuntime *rt, JSLocaleCallbacks *callbacks)
 {
-    AssertHeapIsIdle(cx);
-    cx->localeCallbacks = callbacks;
+    AssertHeapIsIdle(rt);
+    rt->localeCallbacks = callbacks;
 }
 
 JS_PUBLIC_API(JSLocaleCallbacks *)
-JS_GetLocaleCallbacks(JSContext *cx)
+JS_GetLocaleCallbacks(JSRuntime *rt)
 {
     /* This function can be called by a finalizer. */
-    return cx->localeCallbacks;
+    return rt->localeCallbacks;
 }
 
 /************************************************************************/

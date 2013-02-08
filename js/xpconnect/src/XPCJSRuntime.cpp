@@ -1224,6 +1224,8 @@ XPCJSRuntime::~XPCJSRuntime()
 
     js::SetGCSliceCallback(mJSRuntime, mPrevGCSliceCallback);
 
+    xpc_DelocalizeRuntime(mJSRuntime);
+
     if (mWatchdogWakeup) {
         // If the watchdog thread is running, tell it to terminate waking it
         // up if necessary and wait until it signals that it finished. As we
@@ -2597,6 +2599,12 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // JS_CompileFunction*). In practice, this means content scripts and event
     // handlers.
     JS_SetSourceHook(mJSRuntime, SourceHook);
+
+    // Set up locale information and callbacks for the newly-created runtime so
+    // that the various toLocaleString() methods, localeCompare(), and other
+    // internationalization APIs work as desired.
+    if (!xpc_LocalizeRuntime(mJSRuntime))
+        NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
