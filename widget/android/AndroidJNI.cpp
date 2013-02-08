@@ -72,12 +72,6 @@ Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *jenv, jclass
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobject obj)
-{
-    AndroidBridge::Bridge()->SetSurfaceView(jenv->NewGlobalRef(obj));
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_setLayerClient(JNIEnv *jenv, jclass, jobject obj)
 {
     AndroidBridge::Bridge()->SetLayerClient(jenv, obj);
@@ -669,12 +663,6 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv*, jclass)
 {
     nsWindow::ScheduleComposite();
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv*, jclass)
-{
-    nsWindow::SchedulePauseComposition();
 }
 
 NS_EXPORT void JNICALL

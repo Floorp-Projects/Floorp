@@ -476,25 +476,6 @@ Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv * arg0, jclass arg
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition_t)(JNIEnv *, jclass);
-static Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition_t f_Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition;
-extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv * arg0, jclass arg1) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(arg0, arg1);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition", &f_Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition_t)(JNIEnv *, jclass, jint, jint);
 static Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition_t f_Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition;
 extern "C" NS_EXPORT void JNICALL
