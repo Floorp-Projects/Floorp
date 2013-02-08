@@ -1866,9 +1866,6 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, bool cal
 
         do {
             /* Walk back up the list, emitting annotated name ops. */
-            if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pndown->pn_offset) < 0)
-                return false;
-
             if (!EmitAtomOp(cx, pndot, pndot->getOp(), bce))
                 return false;
 
@@ -1883,9 +1880,6 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, bool cal
     }
 
     if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_DUP) < 0)
-        return false;
-
-    if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pn2->pn_offset) < 0)
         return false;
 
     if (!EmitAtomOp(cx, pn, op, bce))
@@ -2005,8 +1999,6 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     ParseNode *left, *right;
 
-    ptrdiff_t top = bce->offset();
-
     if (pn->isArity(PN_NAME)) {
         /*
          * Set left and right so pn appears to be a PNK_ELEM node, instead of
@@ -2048,8 +2040,6 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
         return false;
 
     if (!EmitTree(cx, bce, right))
-        return false;
-    if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - top) < 0)
         return false;
     return EmitElemOpBase(cx, bce, op);
 }
@@ -2778,12 +2768,7 @@ EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
 
           default:
           {
-            ptrdiff_t top;
-
-            top = bce->offset();
             if (!EmitTree(cx, bce, pn))
-                return false;
-            if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - top) < 0)
                 return false;
             if (!EmitElemOpBase(cx, bce, JSOP_ENUMELEM))
                 return false;
@@ -3362,8 +3347,6 @@ EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption 
 static bool
 EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, ParseNode *rhs)
 {
-    ptrdiff_t top = bce->offset();
-
     /*
      * Check left operand type and generate specialized code for it.
      * Specialize to avoid ECMA "reference type" values on the operand
@@ -3505,17 +3488,6 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         }
         if (Emit1(cx, bce, op) < 0)
             return false;
-    }
-
-    /* Left parts such as a.b.c and a[b].c need a decompiler note. */
-    if (!lhs->isKind(PNK_NAME) &&
-#if JS_HAS_DESTRUCTURING
-        !lhs->isKind(PNK_ARRAY) &&
-        !lhs->isKind(PNK_OBJECT) &&
-#endif
-        NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - top) < 0)
-    {
-        return false;
     }
 
     /* Finally, emit the specialized assignment bytecode. */
@@ -4132,7 +4104,7 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
  *  pop               -1
  *  enterlet0
  *  evaluate e        +1
- *  leaveblockexpr    -3          SRC_PCBASE + offset to evaluate a
+ *  leaveblockexpr    -3
  *
  * Note that, since enterlet0 simply changes fp->blockChain and does not
  * otherwise touch the stack, evaluation of the let-var initializers must leave
@@ -4142,10 +4114,6 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
  * let initialization and the offset allows the decompiler to find the block
  * object from which to find let var names. These forward offsets require
  * backpatching, which is handled by LetNotes.
- *
- * The SRC_PCBASE allows js_DecompileValueGenerator to walk backwards from
- * JSOP_LEAVEBLOCKEXPR to the beginning of the let and is only needed for
- * let-expressions.
  */
 /*
  * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
@@ -4161,7 +4129,6 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     JS_ASSERT(letBody->isLet() && letBody->isKind(PNK_LEXICALSCOPE));
     Rooted<StaticBlockObject*> blockObj(cx, &letBody->pn_objbox->object->asStaticBlock());
 
-    ptrdiff_t letHeadOffset = bce->offset();
     int letHeadDepth = bce->stackDepth;
 
     LetNotes letNotes(cx);
@@ -4193,11 +4160,6 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
         return false;
 
     JSOp leaveOp = letBody->getOp();
-    if (leaveOp == JSOP_LEAVEBLOCKEXPR) {
-        if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - letHeadOffset) < 0)
-            return false;
-    }
-
     JS_ASSERT(leaveOp == JSOP_LEAVEBLOCK || leaveOp == JSOP_LEAVEBLOCKEXPR);
     EMIT_UINT16_IMM_OP(leaveOp, blockObj->slotCount());
 
@@ -5054,7 +5016,7 @@ EmitDelete(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
-EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
+EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     bool callop = pn->isKind(PNK_CALL);
 
@@ -5181,8 +5143,6 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         }
         bce->emittingForInit = oldEmittingForInit;
     }
-    if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - top) < 0)
-        return false;
 
     if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
         return false;
@@ -5289,8 +5249,6 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
       case PNK_CALL:
         if (!EmitTree(cx, bce, pn2))
-            return false;
-        if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pn2->pn_offset) < 0)
             return false;
         if (Emit1(cx, bce, op) < 0)
             return false;
@@ -6068,7 +6026,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_NEW:
       case PNK_CALL:
       case PNK_GENEXP:
-        ok = EmitCallOrNew(cx, bce, pn, top);
+        ok = EmitCallOrNew(cx, bce, pn);
         break;
 
       case PNK_LEXICALSCOPE:
