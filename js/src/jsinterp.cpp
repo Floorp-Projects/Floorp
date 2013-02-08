@@ -1773,11 +1773,9 @@ BEGIN_CASE(JSOP_SETCONST)
 
     RootedObject &obj = rootObject0;
     obj = &regs.fp()->varObj();
-    if (!JSObject::defineProperty(cx, obj, name, rval,
-                                  JS_PropertyStub, JS_StrictPropertyStub,
-                                  JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
+
+    if (!SetConstOperation(cx, obj, name, rval))
         goto error;
-    }
 }
 END_CASE(JSOP_SETCONST);
 
@@ -3599,6 +3597,25 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, JSBool
 template bool js::DeleteProperty<true> (JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
 template bool js::DeleteProperty<false>(JSContext *cx, HandleValue val, HandlePropertyName name, JSBool *bp);
 
+template <bool strict>
+bool
+js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, JSBool *bp)
+{
+    RootedObject obj(cx, ToObjectFromStack(cx, val));
+    if (!obj)
+        return false;
+
+    RootedValue result(cx);
+    if (!JSObject::deleteByValue(cx, obj, index, &result, strict))
+        return false;
+
+    *bp = result.toBoolean();
+    return true;
+}
+
+template bool js::DeleteElement<true> (JSContext *, HandleValue, HandleValue, JSBool *);
+template bool js::DeleteElement<false>(JSContext *, HandleValue, HandleValue, JSBool *);
+
 bool
 js::GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue vp)
 {
@@ -3695,4 +3712,15 @@ js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject sco
     if (shape)
         return JSObject::deleteProperty(cx, scope, name, res, false);
     return true;
+}
+
+bool
+js::ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyName name,
+                          MutableHandleValue res)
+{
+    RootedObject obj(cx);
+    if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &obj))
+        return false;
+
+    return ComputeImplicitThis(cx, obj, res.address());
 }

@@ -435,6 +435,7 @@ JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 bool CheckOverRecursed(JSContext *cx);
 
 bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
+bool SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval);
 bool InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value);
 
 template<bool Equal>
