@@ -709,7 +709,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 
             vp.setObject(*dobj);
         }
-    } else if (!cx->compartment->wrap(cx, vp.address())) {
+    } else if (!cx->compartment->wrap(cx, vp)) {
         vp.setUndefined();
         return false;
     }
@@ -884,13 +884,14 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     RootedValue v(cx, *vp);
     if (!js_NativeGet(cx, obj, obj, shape, 0, &v) || !unwrapDebuggeeValue(cx, &v))
         return handleUncaughtException(ac, v.address(), callHook);
-    *vp = v;
 
     ac.destroy();
-    if (!cx->compartment->wrap(cx, vp)) {
+    if (!cx->compartment->wrap(cx, &v)) {
         vp->setUndefined();
         return JSTRAP_ERROR;
     }
+    *vp = v;
+
     return shape->propid() == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
 }
 
@@ -3780,7 +3781,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
         for (size_t i = 0; i < keys.length(); i++) {
             id = keys[i];
             MutableHandleValue val = values.handleAt(i);
-            if (!cx->compartment->wrap(cx, val.address()) ||
+            if (!cx->compartment->wrap(cx, val) ||
                 !DefineNativeProperty(cx, env, id, val, NULL, NULL, 0, 0, 0))
             {
                 return false;
@@ -4192,7 +4193,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
              vals[i].setString(str);
          } else if (JSID_IS_ATOM(id)) {
              vals[i].setString(JSID_TO_STRING(id));
-             if (!cx->compartment->wrap(cx, &vals[i]))
+             if (!cx->compartment->wrap(cx, vals.handleAt(i)))
                  return false;
          } else {
              vals[i].setObject(*JSID_TO_OBJECT(id));
@@ -4317,11 +4318,11 @@ static JSBool
 DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "deleteProperty", args, dbg, obj);
-    RootedValue nameArg(cx, argc > 0 ? args[0] : UndefinedValue());
+    RootedValue nameArg(cx, args.get(0));
 
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment->wrap(cx, nameArg.address()))
+    if (!cx->compartment->wrap(cx, &nameArg))
         return false;
 
     ErrorCopier ec(ac, dbg->toJSObject());
@@ -4476,11 +4477,15 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
      */
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment->wrap(cx, calleev.address()) || !cx->compartment->wrap(cx, thisv.address()))
+    if (!cx->compartment->wrap(cx, &calleev) || !cx->compartment->wrap(cx, &thisv))
         return false;
+
+    RootedValue arg(cx);
     for (unsigned i = 0; i < callArgc; i++) {
-        if (!cx->compartment->wrap(cx, &callArgv[i]))
-            return false;
+        arg = callArgv[i];
+        if (!cx->compartment->wrap(cx, &arg))
+             return false;
+        callArgv[i] = arg;
     }
 
     /*
@@ -4518,7 +4523,7 @@ DebuggerObject_makeDebuggeeValue(JSContext *cx, unsigned argc, Value *vp)
         // argument as appropriate for references from there.
         {
             AutoCompartment ac(cx, referent);
-            if (!cx->compartment->wrap(cx, arg0.address()))
+            if (!cx->compartment->wrap(cx, &arg0))
                 return false;
         }
 
@@ -4908,7 +4913,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
     {
         Maybe<AutoCompartment> ac;
         ac.construct(cx, env);
-        if (!cx->compartment->wrapId(cx, id.address()) || !cx->compartment->wrap(cx, v.address()))
+        if (!cx->compartment->wrapId(cx, id.address()) || !cx->compartment->wrap(cx, &v))
             return false;
 
         /* This can trigger setters. */
