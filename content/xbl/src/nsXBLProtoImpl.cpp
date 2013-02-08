@@ -107,8 +107,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
     if (NS_FAILED(rv))
       return rv;
 
-    if (!mClassObject)
-      return NS_OK; // This can be ok, if all we've got are fields (and no methods/properties).
+    MOZ_ASSERT(mClassObject);
   }
 
   nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
