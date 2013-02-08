@@ -279,8 +279,6 @@ enum SrcNoteType {
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
     SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
-    SRC_LABEL       = 13,       /* JSOP_LABEL for label: with atomid immediate */
-    SRC_LABELBRACE  = 14,       /* JSOP_LABEL for label: {...} begin brace */
     SRC_ENDBRACE    = 15,       /* JSOP_NOP for label: {...} end brace */
     SRC_BREAK2LABEL = 16,       /* JSOP_GOTO for 'break label' with atomid */
     SRC_CONT2LABEL  = 17,       /* JSOP_GOTO for 'continue label' with atomid */
