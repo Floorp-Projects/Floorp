@@ -68,6 +68,7 @@ webidl_files = \
   HTMLDListElement.webidl \
   HTMLDocument.webidl \
   HTMLElement.webidl \
+  HTMLFieldSetElement.webidl \
   HTMLFontElement.webidl \
   HTMLFrameSetElement.webidl \
   HTMLHeadElement.webidl \
