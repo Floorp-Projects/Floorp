@@ -204,6 +204,12 @@ webidl_files = \
   XULElement.webidl \
   $(NULL)
 
+ifdef MOZ_AUDIO_CHANNEL_MANAGER
+webidl_files += \
+  AudioChannelManager.webidl \
+  $(NULL)
+endif
+
 ifdef MOZ_MEDIA
 webidl_files += \
   HTMLSourceElement.webidl \
