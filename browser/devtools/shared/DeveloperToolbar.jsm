@@ -27,6 +27,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
 XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
   let prefService = Components.classes["@mozilla.org/preferences-service;1"]
           .getService(Components.interfaces.nsIPrefService);
@@ -622,7 +625,19 @@ function DT__updateErrorsCount(aChangedTabId)
   let warnings = this._warningsCount[tabId];
   let btn = this._errorCounterButton;
   if (errors) {
-    let tooltiptext = toolboxStrings.formatStringFromName("toolboxDockButtons.errorsCount.tooltip", [errors, warnings], 2);
+    let errorsText = toolboxStrings
+                     .GetStringFromName("toolboxToggleButton.errorsCount");
+    errorsText = PluralForm.get(errors, errorsText);
+
+    let warningsText = toolboxStrings
+                       .GetStringFromName("toolboxToggleButton.warningsCount");
+    warningsText = PluralForm.get(warnings, warningsText);
+
+    let tooltiptext = toolboxStrings
+                      .formatStringFromName("toolboxToggleButton.tooltiptext",
+                                            [errors, errorsText, warnings,
+                                             warningsText], 4);
+
     btn.setAttribute("error-count", errors);
     btn.setAttribute("tooltiptext", tooltiptext);
   } else {
