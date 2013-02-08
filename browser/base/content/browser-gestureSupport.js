@@ -758,9 +758,7 @@ let gHistorySwipeAnimation = {
    * return true if supported, false otherwise.
    */
   _isSupported: function HSA__isSupported() {
-    // Only activate on Lion.
-    // TODO: Only if [NSEvent isSwipeTrackingFromScrollEventsEnabled]
-    return window.matchMedia("(-moz-mac-lion-theme)").matches;
+    return window.matchMedia("(-moz-swipe-animation-enabled)").matches;
   },
 
   /**
