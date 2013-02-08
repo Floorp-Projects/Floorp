@@ -13,6 +13,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
   browser_nsIDownloadManagerUI.js \
+  browser_download_history.js \
+  $(NULL)
+# These are files that need to be loaded via the HTTP proxy server
+MOCHITEST_FILES = \
+  download.html \
+  download.test \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
