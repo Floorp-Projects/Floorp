@@ -405,7 +405,11 @@ pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.tabClipWidth", 140);
 pref("browser.tabs.animate", true);
 pref("browser.tabs.onTop", true);
+#ifdef XP_WIN
 pref("browser.tabs.drawInTitlebar", true);
+#else
+pref("browser.tabs.drawInTitlebar", false);
+#endif
 
 // Where to show tab close buttons:
 // 0  on active tab only
