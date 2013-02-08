@@ -258,6 +258,8 @@ MOCHITEST_FILES = \
 		file_fullscreen-svg-element.html \
 		test_li_attributes_reflection.html \
 		test_ol_attributes_reflection.html \
+		test_dl_attributes_reflection.html \
+		test_ul_attributes_reflection.html \
 		test_bug651956.html \
 		test_bug694503.html \
 		test_object_plugin_nav.html \
