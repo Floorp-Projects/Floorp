@@ -3643,8 +3643,10 @@ js::ToStringSlow(JSContext *cx, const Value &arg)
     if (!v.isPrimitive()) {
         if (!allowGC)
             return NULL;
-        if (!ToPrimitive(cx, JSTYPE_STRING, &v))
+        RootedValue v2(cx, v);
+        if (!ToPrimitive(cx, JSTYPE_STRING, &v2))
             return NULL;
+        v = v2;
     }
 
     JSString *str;
