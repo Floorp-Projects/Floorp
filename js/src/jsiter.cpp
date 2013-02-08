@@ -52,7 +52,7 @@ using mozilla::ArrayLength;
 
 typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
 
-static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::FINALIZE_OBJECT2;
+static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
 
 void
 NativeIterator::mark(JSTracer *trc)
@@ -839,7 +839,8 @@ Class PropertyIteratorObject::class_ = {
     "Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
-    JSCLASS_HAS_PRIVATE,
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_BACKGROUND_FINALIZE,
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
