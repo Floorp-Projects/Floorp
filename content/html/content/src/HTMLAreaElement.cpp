@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLAreaElement.h"
+#include "mozilla/dom/HTMLAreaElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Area)
 DOMCI_NODE_DATA(HTMLAreaElement, mozilla::dom::HTMLAreaElement)
@@ -16,6 +17,7 @@ HTMLAreaElement::HTMLAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     Link(this)
 {
+  SetIsDOMBinding();
 }
 
 HTMLAreaElement::~HTMLAreaElement()
@@ -240,6 +242,12 @@ HTMLAreaElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   return nsGenericHTMLElement::SizeOfExcludingThis(aMallocSizeOf) +
          Link::SizeOfExcludingThis(aMallocSizeOf);
+}
+
+JSObject*
+HTMLAreaElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return HTMLAreaElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
