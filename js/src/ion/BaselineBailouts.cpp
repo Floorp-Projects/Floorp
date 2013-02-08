@@ -100,7 +100,7 @@ struct BaselineStackBuilder
         uint8_t *newBuffer = reinterpret_cast<uint8_t *>(js_calloc(newSize));
         if (!newBuffer)
             return false;
-        memcpy((newBuffer + newSize) - bufferUsed_, header_->copyStackTop, bufferUsed_);
+        memcpy((newBuffer + newSize) - bufferUsed_, header_->copyStackBottom, bufferUsed_);
         memcpy(newBuffer, header_, sizeof(BaselineBailoutInfo));
         js_free(buffer_);
         buffer_ = newBuffer;
@@ -757,6 +757,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
 
     // Push return address into ICCall_Scripted stub, immediately after the call.
     void *baselineCallReturnAddr = cx->compartment->ionCompartment()->baselineCallReturnAddr();
+    JS_ASSERT(baselineCallReturnAddr);
     if (!builder.writePtr(baselineCallReturnAddr, "ReturnAddr"))
         return false;
 
@@ -833,6 +834,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     // Push return address into the ArgumentsRectifier code, immediately after the ioncode
     // call.
     void *rectReturnAddr = cx->compartment->ionCompartment()->getArgumentsRectifierReturnAddr();
+    JS_ASSERT(rectReturnAddr);
     if (!builder.writePtr(rectReturnAddr, "ReturnAddr"))
         return false;
 
