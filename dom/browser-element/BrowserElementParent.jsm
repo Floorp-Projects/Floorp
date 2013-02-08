@@ -95,8 +95,6 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   // We use a single message and dispatch to various function based
   // on data.msg_name
   let mmCalls = {
-    "get-name": this._recvGetName,
-    "get-fullscreen-allowed": this._recvGetFullscreenAllowed,
     "hello": this._recvHello,
     "contextmenu": this._fireCtxMenuEvent,
     "locationchange": this._fireEventFromMsg,
@@ -281,15 +279,13 @@ BrowserElementParent.prototype = {
     if (this._window.document.hidden) {
       this._ownerVisibilityChange();
     }
-  },
 
-  _recvGetName: function(data) {
-    return this._frameElement.getAttribute('name');
-  },
-
-  _recvGetFullscreenAllowed: function(data) {
-    return this._frameElement.hasAttribute('allowfullscreen') ||
-           this._frameElement.hasAttribute('mozallowfullscreen');
+    return {
+      name: this._frameElement.getAttribute('name'),
+      fullscreenAllowed:
+        this._frameElement.hasAttribute('allowfullscreen') ||
+        this._frameElement.hasAttribute('mozallowfullscreen')
+    }
   },
 
   _fireCtxMenuEvent: function(data) {
