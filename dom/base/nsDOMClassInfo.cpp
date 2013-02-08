@@ -508,13 +508,11 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_ENUMERATE |                                          \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
-  nsIXPCScriptable::USE_STUB_EQUALITY_HOOK |                                  \
   nsIXPCScriptable::IS_GLOBAL_OBJECT |                                        \
   nsIXPCScriptable::WANT_OUTER_OBJECT)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
  ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
-   nsIXPCScriptable::USE_STUB_EQUALITY_HOOK |                                 \
    nsIXPCScriptable::WANT_ADDPROPERTY) &                                      \
   ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY)
 
@@ -4173,15 +4171,6 @@ nsDOMClassInfo::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::HasInstance Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                         JSObject * obj, const jsval &val, bool *bp)
-{
-  NS_WARNING("nsDOMClassInfo::Equality Don't call me!");
 
   return NS_ERROR_UNEXPECTED;
 }
