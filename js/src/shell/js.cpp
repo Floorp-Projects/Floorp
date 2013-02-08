@@ -1718,11 +1718,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
         offset += delta;
         SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
         const char *name = js_SrcNoteSpec[type].name;
-        if (type == SRC_LABEL) {
-            /* Check if the source note is for a switch case. */
-            if (switchTableStart <= offset && offset < switchTableEnd)
-                name = "case";
-        }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", unsigned(sn - notes), lineno, offset, delta, name);
         switch (type) {
           case SRC_COLSPAN:
@@ -1754,8 +1749,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           case SRC_PCDELTA:
             Sprint(sp, " offset %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
-          case SRC_LABEL:
-          case SRC_LABELBRACE:
           case SRC_BREAK2LABEL:
           case SRC_CONT2LABEL: {
             uint32_t index = js_GetSrcNoteOffset(sn, 0);
