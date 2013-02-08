@@ -36,6 +36,7 @@ EXPORTS_mozilla/dom = \
 		HTMLButtonElement.h \
 		HTMLDataListElement.h \
 		HTMLDivElement.h \
+		HTMLFieldSetElement.h \
 		HTMLFontElement.h \
 		HTMLFrameSetElement.h \
 		HTMLHeadingElement.h \
@@ -84,7 +85,7 @@ CPPSRCS		= \
 		HTMLCanvasElement.cpp \
 		HTMLDataListElement.cpp \
 		HTMLDivElement.cpp \
-		nsHTMLFieldSetElement.cpp \
+		HTMLFieldSetElement.cpp \
 		HTMLFontElement.cpp \
 		nsHTMLFormElement.cpp \
 		nsHTMLFrameElement.cpp \
