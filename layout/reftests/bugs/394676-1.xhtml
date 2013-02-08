@@ -5,8 +5,9 @@
       <implementation>
         <constructor>
           <![CDATA[
-            str += "constructor "
-            testFinished();
+            var win = XPCNativeWrapper.unwrap(window);
+            win.str += "constructor "
+            win.testFinished();
           ]]>
         </constructor>
       </implementation>

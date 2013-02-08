@@ -18,7 +18,6 @@ _CHROME_FILES = \
 
 MOCHITEST_FILES =	\
 		test_contextmenu_nested.xul \
-		test_tree_column_reorder.xul \
 		tree_shared.js \
 		test_mousecapture_area.html \
 		popup_shared.js \
@@ -46,6 +45,8 @@ MOCHITEST_FILES =	\
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
+		tree_shared.js \
+		test_tree_column_reorder.xul \
 		test_editor_currentURI.xul \
 		$(NULL)
 
