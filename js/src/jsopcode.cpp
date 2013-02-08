@@ -1994,8 +1994,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbyteco
              * instruction will reset the saved depth.
              */
             if (cpcdepth != unsigned(-1))
-                LOCAL_ASSERT((op == JSOP_NOP && sn && SN_TYPE(sn) == SRC_ENDBRACE) ||
-                             op == JSOP_FINALLY);
+                LOCAL_ASSERT(op == JSOP_NOP || op == JSOP_FINALLY);
             cpcdepth = unsigned(-1);
         }
 
