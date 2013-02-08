@@ -307,12 +307,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     rv = GetUserAppDataDirectory(getter_AddRefs(file));
   }
   else if (!strcmp(aProperty, XRE_UPDATE_ROOT_DIR)) {
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GONK)
     rv = GetUpdateRootDir(getter_AddRefs(file));
-#else
-    // Only supported on Windows, so just immediately fail.
-    return NS_ERROR_FAILURE;
-#endif
   }
   else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_FILE)) {
     rv = GetUserAppDataDirectory(getter_AddRefs(file));
@@ -946,14 +941,30 @@ GetRegWindowsAppDataFolder(bool aLocal, nsAString& _retval)
 
   return NS_OK;
 }
+#endif
 
 nsresult
 nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
 {
-  nsCOMPtr<nsIFile> appDir = GetAppDir();
+  nsCOMPtr<nsIFile> updRoot;
+#if defined(MOZ_WIDGET_GONK)
 
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString("/data/local"),
+                                      true,
+                                      getter_AddRefs(updRoot));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#else
+  nsCOMPtr<nsIFile> appFile;
+  bool per = false;
+  nsresult rv = GetFile(XRE_EXECUTABLE_FILE, &per, getter_AddRefs(appFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = appFile->GetParent(getter_AddRefs(updRoot));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef XP_WIN
   nsAutoString appPath;
-  nsresult rv = appDir->GetPath(appPath);
+  rv = updRoot->GetPath(appPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // AppDir may be a short path. Convert to long path to make sure
@@ -996,33 +1007,17 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
     programName.AssignASCII(MOZ_APP_NAME);
   }
 
-  nsCOMPtr<nsIFile> updRoot;
   rv = GetUserLocalDataDirectory(getter_AddRefs(updRoot));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = updRoot->AppendRelativePath(programName);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#endif
+#endif
   NS_ADDREF(*aResult = updRoot);
   return NS_OK;
 }
-#endif
-
-#if defined(MOZ_WIDGET_GONK)
-nsresult
-nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
-{
-  nsCOMPtr<nsIFile> updRoot;
-
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString("/data/local"),
-                                      true,
-                                      getter_AddRefs(updRoot));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_IF_ADDREF(*aResult = updRoot);
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsXREDirProvider::GetProfileStartupDir(nsIFile* *aResult)
