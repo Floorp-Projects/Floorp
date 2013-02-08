@@ -217,8 +217,13 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
 
   js::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
 
+  // We should be in the compartment of |this|. If we got here via nativeCall,
+  // |this| is not same-compartment with |callee|, and it's possible via
+  // asymmetric security semantics that |args.calleev()| is actually a security
+  // wrapper. In this case, we know we want to do an unsafe unwrap, and
+  // InstallXBLField knows how to handle cross-compartment pointers.
   bool installed = false;
-  js::Rooted<JSObject*> callee(cx, &args.calleev().toObject());
+  js::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
   js::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, id.address(), &installed)) {
     return false;
@@ -253,8 +258,13 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
 
   js::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
 
+  // We should be in the compartment of |this|. If we got here via nativeCall,
+  // |this| is not same-compartment with |callee|, and it's possible via
+  // asymmetric security semantics that |args.calleev()| is actually a security
+  // wrapper. In this case, we know we want to do an unsafe unwrap, and
+  // InstallXBLField knows how to handle cross-compartment pointers.
   bool installed = false;
-  js::Rooted<JSObject*> callee(cx, &args.calleev().toObject());
+  js::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
   js::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, id.address(), &installed)) {
     return false;
