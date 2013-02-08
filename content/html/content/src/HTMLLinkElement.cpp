@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/HTMLLinkElement.h"
 
+#include "mozilla/dom/HTMLLinkElementBinding.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsGkAtoms.h"
@@ -33,6 +34,7 @@ HTMLLinkElement::HTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     Link(this)
 {
+  SetIsDOMBinding();
 }
 
 HTMLLinkElement::~HTMLLinkElement()
@@ -67,33 +69,44 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLinkElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLLinkElement)
 
+bool
+HTMLLinkElement::GetDisabled(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
+  if (!ss) {
+    return false;
+  }
+
+  bool disabled = false;
+  aRv = ss->GetDisabled(&disabled);
+  return disabled;
+}
 
 NS_IMETHODIMP
 HTMLLinkElement::GetDisabled(bool* aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
-  nsresult result = NS_OK;
-
-  if (ss) {
-    result = ss->GetDisabled(aDisabled);
-  } else {
-    *aDisabled = false;
-  }
-
-  return result;
+  ErrorResult rv;
+  *aDisabled = GetDisabled(rv);
+  return rv.ErrorCode();
 }
 
-NS_IMETHODIMP 
-HTMLLinkElement::SetDisabled(bool aDisabled)
+void
+HTMLLinkElement::SetDisabled(bool aDisabled, ErrorResult& aRv)
 {
   nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
-  nsresult result = NS_OK;
-
-  if (ss) {
-    result = ss->SetDisabled(aDisabled);
+  if (!ss) {
+    return;
   }
 
-  return result;
+  aRv = ss->SetDisabled(aDisabled);
+}
+
+NS_IMETHODIMP
+HTMLLinkElement::SetDisabled(bool aDisabled)
+{
+  ErrorResult rv;
+  SetDisabled(aDisabled, rv);
+  return rv.ErrorCode();
 }
 
 
@@ -411,6 +424,12 @@ HTMLLinkElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   return nsGenericHTMLElement::SizeOfExcludingThis(aMallocSizeOf) +
          Link::SizeOfExcludingThis(aMallocSizeOf);
+}
+
+JSObject*
+HTMLLinkElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return HTMLLinkElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
