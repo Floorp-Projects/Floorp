@@ -41,7 +41,8 @@ public:
   nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding, nsIScriptContext* aContext, 
                              nsIContent* aBoundElement, 
                              nsIXPConnectJSObjectHolder** aScriptObjectHolder,
-                             JSObject** aTargetClassObject);
+                             JSObject** aTargetClassObject,
+                             bool* aTargetIsNew);
   nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
   void SetMemberList(nsXBLProtoImplMember* aMemberList)
