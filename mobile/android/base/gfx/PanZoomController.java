@@ -9,6 +9,8 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.EventDispatcher;
 
 import android.graphics.PointF;
+import android.view.MotionEvent;
+import android.view.View;
 
 public interface PanZoomController {
     // The distance the user has to pan before we recognize it as such (e.g. to avoid 1-pixel pans
@@ -16,12 +18,16 @@ public interface PanZoomController {
     public static final float PAN_THRESHOLD = 1/16f * GeckoAppShell.getDpi();
 
     static class Factory {
-        static PanZoomController create(PanZoomTarget target, EventDispatcher dispatcher) {
-            return new JavaPanZoomController(target, dispatcher);
+        static PanZoomController create(PanZoomTarget target, View view, EventDispatcher dispatcher) {
+            return new JavaPanZoomController(target, view, dispatcher);
         }
     }
 
     public void destroy();
+
+    public boolean onTouchEvent(MotionEvent event);
+    public boolean onMotionEvent(MotionEvent event);
+    public void notifyDefaultActionPrevented(boolean prevented);
 
     public boolean getRedrawHint();
     public PointF getVelocityVector();
