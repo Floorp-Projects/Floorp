@@ -337,10 +337,7 @@ SVGUseElement::CreateAnonymousContent()
   if (!newcontent)
     return nullptr;
 
-  nsCOMPtr<nsIDOMSVGSymbolElement> symbol     = do_QueryInterface(newcontent);
-  nsCOMPtr<nsIDOMSVGSVGElement>    svg        = do_QueryInterface(newcontent);
-
-  if (symbol) {
+  if (newcontent->IsSVG(nsGkAtoms::symbol)) {
     nsIDocument *document = GetCurrentDoc();
     if (!document)
       return nullptr;
@@ -386,7 +383,8 @@ SVGUseElement::CreateAnonymousContent()
     newcontent = svgNode;
   }
 
-  if (symbol || svg) {
+  if (newcontent->IsSVG() && (newcontent->Tag() == nsGkAtoms::svg ||
+                              newcontent->Tag() == nsGkAtoms::symbol)) {
     nsSVGElement *newElement = static_cast<nsSVGElement*>(newcontent.get());
 
     if (mLengthAttributes[ATTR_WIDTH].IsExplicitlySet())
@@ -415,12 +413,8 @@ SVGUseElement::DestroyAnonymousContent()
 bool
 SVGUseElement::OurWidthAndHeightAreUsed() const
 {
-  if (mClone) {
-    nsCOMPtr<nsIDOMSVGSVGElement>    svg    = do_QueryInterface(mClone);
-    nsCOMPtr<nsIDOMSVGSymbolElement> symbol = do_QueryInterface(mClone);
-    return svg || symbol;
-  }
-  return false;
+  return mClone && mClone->IsSVG() && (mClone->Tag() == nsGkAtoms::svg ||
+                                       mClone->Tag() == nsGkAtoms::symbol);
 }
 
 //----------------------------------------------------------------------
@@ -433,14 +427,7 @@ SVGUseElement::SyncWidthOrHeight(nsIAtom* aName)
                "The clue is in the function name");
   NS_ASSERTION(OurWidthAndHeightAreUsed(), "Don't call this");
 
-  if (!mClone) {
-    return;
-  }
-
-  nsCOMPtr<nsIDOMSVGSymbolElement> symbol = do_QueryInterface(mClone);
-  nsCOMPtr<nsIDOMSVGSVGElement>    svg    = do_QueryInterface(mClone);
-
-  if (symbol || svg) {
+  if (OurWidthAndHeightAreUsed()) {
     nsSVGElement *target = static_cast<nsSVGElement*>(mClone.get());
     uint32_t index = *sLengthInfo[ATTR_WIDTH].mName == aName ? ATTR_WIDTH : ATTR_HEIGHT;
 
@@ -448,7 +435,7 @@ SVGUseElement::SyncWidthOrHeight(nsIAtom* aName)
       target->SetLength(aName, mLengthAttributes[index]);
       return;
     }
-    if (svg) {
+    if (mClone->Tag() == nsGkAtoms::svg) {
       // Our width/height attribute is now no longer explicitly set, so we
       // need to revert the clone's width/height to the width/height of the
       // content that's being cloned.
