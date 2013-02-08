@@ -1,11 +1,10 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-#include "nsIDOMEventTarget.idl"
-
-[scriptable, builtinclass, uuid(06a6893d-1c0d-4ad7-93fd-bc479b44d55b)]
-interface nsIAudioChannelManager : nsIDOMEventTarget {
+interface AudioChannelManager : EventTarget {
   /**
    * Indicates whether the headphones are plugged in or not.
    */
@@ -23,5 +22,6 @@ interface nsIAudioChannelManager : nsIDOMEventTarget {
    * speakers (or vice versa).  This allows you to, for example, pause your
    * window's audio when the headphones are unplugged.
    */
-  [implicit_jscontext] attribute jsval onheadphoneschange;
+  [SetterThrows]
+  attribute EventHandler onheadphoneschange;
 };

@@ -4,10 +4,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIAudioChannelManager;
-
-[scriptable, uuid(4f94f833-6ab4-4c45-aecc-ebe0e100194c)]
+[scriptable, uuid(5d5e6687-2eb0-4992-98c7-ec79eab9e0b1)]
 interface nsIMozNavigatorAudioChannelManager : nsISupports
 {
-  readonly attribute nsIAudioChannelManager mozAudioChannelManager;
+  readonly attribute nsISupports mozAudioChannelManager;
 };
