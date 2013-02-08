@@ -2,8 +2,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMLinkStyle.h"
+
+#include "mozilla/dom/HTMLLinkElement.h"
+
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsGkAtoms.h"
@@ -11,7 +12,6 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsStyleLinkElement.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIURL.h"
@@ -23,141 +23,53 @@
 #include "nsPIDOMWindow.h"
 #include "nsAsyncDOMEvent.h"
 
-#include "Link.h"
-
-using namespace mozilla;
-using namespace mozilla::dom;
-
-class nsHTMLLinkElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLLinkElement,
-                          public nsILink,
-                          public nsStyleLinkElement,
-                          public Link
-{
-public:
-  nsHTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLLinkElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // CC
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLLinkElement,
-                                           nsGenericHTMLElement)
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLLinkElement
-  NS_DECL_NSIDOMHTMLLINKELEMENT
-
-  // DOM memory reporter participant
-  NS_DECL_SIZEOF_EXCLUDING_THIS
-
-  // nsILink
-  NS_IMETHOD    LinkAdded();
-  NS_IMETHOD    LinkRemoved();
-
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsIAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsAttrValue& aResult);
-  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
-  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
-
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual bool IsLink(nsIURI** aURI) const;
-  virtual void GetLinkTarget(nsAString& aTarget);
-  virtual nsLinkState GetLinkState() const;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsEventStates IntrinsicState() const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline);
-  virtual void GetStyleSheetInfo(nsAString& aTitle,
-                                 nsAString& aType,
-                                 nsAString& aMedia,
-                                 bool* aIsScoped,
-                                 bool* aIsAlternate);
-  virtual CORSMode GetCORSMode() const;
-protected:
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
-};
-
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(Link)
+DOMCI_NODE_DATA(HTMLLinkElement, mozilla::dom::HTMLLinkElement)
 
+namespace mozilla {
+namespace dom {
 
-nsHTMLLinkElement::nsHTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLLinkElement::HTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     Link(this)
 {
 }
 
-nsHTMLLinkElement::~nsHTMLLinkElement()
+HTMLLinkElement::~HTMLLinkElement()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLLinkElement,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLLinkElement,
                                                   nsGenericHTMLElement)
   tmp->nsStyleLinkElement::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLLinkElement,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLLinkElement,
                                                 nsGenericHTMLElement)
   tmp->nsStyleLinkElement::Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLLinkElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLLinkElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLLinkElement, Element)
 
 
-DOMCI_NODE_DATA(HTMLLinkElement, nsHTMLLinkElement)
-
-// QueryInterface implementation for nsHTMLLinkElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLLinkElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLLinkElement,
+// QueryInterface implementation for HTMLLinkElement
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLLinkElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE5(HTMLLinkElement,
                                    nsIDOMHTMLLinkElement,
                                    nsIDOMLinkStyle,
                                    nsILink,
                                    nsIStyleSheetLinkingElement,
                                    Link)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLLinkElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLLinkElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLinkElement)
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLLinkElement)
+NS_IMPL_ELEMENT_CLONE(HTMLLinkElement)
 
 
 NS_IMETHODIMP
-nsHTMLLinkElement::GetDisabled(bool* aDisabled)
+HTMLLinkElement::GetDisabled(bool* aDisabled)
 {
   nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
   nsresult result = NS_OK;
@@ -172,7 +84,7 @@ nsHTMLLinkElement::GetDisabled(bool* aDisabled)
 }
 
 NS_IMETHODIMP 
-nsHTMLLinkElement::SetDisabled(bool aDisabled)
+HTMLLinkElement::SetDisabled(bool aDisabled)
 {
   nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
   nsresult result = NS_OK;
@@ -185,32 +97,32 @@ nsHTMLLinkElement::SetDisabled(bool aDisabled)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Charset, charset)
-NS_IMPL_URI_ATTR(nsHTMLLinkElement, Href, href)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Hreflang, hreflang)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Media, media)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, CrossOrigin, crossorigin)
+NS_IMPL_STRING_ATTR(HTMLLinkElement, Charset, charset)
+NS_IMPL_URI_ATTR(HTMLLinkElement, Href, href)
+NS_IMPL_STRING_ATTR(HTMLLinkElement, Hreflang, hreflang)
+NS_IMPL_STRING_ATTR(HTMLLinkElement, Media, media)
+NS_IMPL_STRING_ATTR(HTMLLinkElement, Rel, rel)
+NS_IMPL_STRING_ATTR(HTMLLinkElement, Rev, rev)
+NS_IMPL_STRING_ATTR(HTMLLinkElement, Target, target)
+NS_IMPL_STRING_ATTR(HTMLLinkElement, Type, type)
+NS_IMPL_STRING_ATTR(HTMLLinkElement, CrossOrigin, crossorigin)
 
 void
-nsHTMLLinkElement::GetItemValueText(nsAString& aValue)
+HTMLLinkElement::GetItemValueText(nsAString& aValue)
 {
   GetHref(aValue);
 }
 
 void
-nsHTMLLinkElement::SetItemValueText(const nsAString& aValue)
+HTMLLinkElement::SetItemValueText(const nsAString& aValue)
 {
   SetHref(aValue);
 }
 
 nsresult
-nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers)
+HTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                            nsIContent* aBindingParent,
+                            bool aCompileEventHandlers)
 {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
@@ -223,7 +135,7 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     aDocument->RegisterPendingLinkUpdate(this);
   }
 
-  void (nsHTMLLinkElement::*update)() = &nsHTMLLinkElement::UpdateStyleSheetInternal;
+  void (HTMLLinkElement::*update)() = &HTMLLinkElement::UpdateStyleSheetInternal;
   nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
 
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
@@ -232,21 +144,21 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 NS_IMETHODIMP
-nsHTMLLinkElement::LinkAdded()
+HTMLLinkElement::LinkAdded()
 {
   CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkAdded"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLLinkElement::LinkRemoved()
+HTMLLinkElement::LinkRemoved()
 {
   CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkRemoved"));
   return NS_OK;
 }
 
 void
-nsHTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
+HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
@@ -264,10 +176,10 @@ nsHTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 bool
-nsHTMLLinkElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsAttrValue& aResult)
+HTMLLinkElement::ParseAttribute(int32_t aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::crossorigin) {
@@ -280,8 +192,8 @@ nsHTMLLinkElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void
-nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
-                                          const nsAString& aEventName)
+HTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
+                                        const nsAString& aEventName)
 {
   if (!aDoc)
     return;
@@ -309,9 +221,9 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 }
 
 nsresult
-nsHTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify)
+HTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                         nsIAtom* aPrefix, const nsAString& aValue,
+                         bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                               aValue, aNotify);
@@ -348,8 +260,8 @@ nsHTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsHTMLLinkElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify)
+HTMLLinkElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                           bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
@@ -377,25 +289,25 @@ nsHTMLLinkElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 }
 
 nsresult
-nsHTMLLinkElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLLinkElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   return PreHandleEventForAnchors(aVisitor);
 }
 
 nsresult
-nsHTMLLinkElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLLinkElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForAnchors(aVisitor);
 }
 
 bool
-nsHTMLLinkElement::IsLink(nsIURI** aURI) const
+HTMLLinkElement::IsLink(nsIURI** aURI) const
 {
   return IsHTMLLink(aURI);
 }
 
 void
-nsHTMLLinkElement::GetLinkTarget(nsAString& aTarget)
+HTMLLinkElement::GetLinkTarget(nsAString& aTarget)
 {
   GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
@@ -404,19 +316,19 @@ nsHTMLLinkElement::GetLinkTarget(nsAString& aTarget)
 }
 
 nsLinkState
-nsHTMLLinkElement::GetLinkState() const
+HTMLLinkElement::GetLinkState() const
 {
   return Link::GetLinkState();
 }
 
 already_AddRefed<nsIURI>
-nsHTMLLinkElement::GetHrefURI() const
+HTMLLinkElement::GetHrefURI() const
 {
   return GetHrefURIForAnchors();
 }
 
 already_AddRefed<nsIURI>
-nsHTMLLinkElement::GetStyleSheetURL(bool* aIsInline)
+HTMLLinkElement::GetStyleSheetURL(bool* aIsInline)
 {
   *aIsInline = false;
   nsAutoString href;
@@ -428,11 +340,11 @@ nsHTMLLinkElement::GetStyleSheetURL(bool* aIsInline)
 }
 
 void
-nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
-                                     nsAString& aType,
-                                     nsAString& aMedia,
-                                     bool* aIsScoped,
-                                     bool* aIsAlternate)
+HTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
+                                   nsAString& aType,
+                                   nsAString& aMedia,
+                                   bool* aIsScoped,
+                                   bool* aIsAlternate)
 {
   aTitle.Truncate();
   aType.Truncate();
@@ -483,21 +395,23 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
 }
 
 CORSMode
-nsHTMLLinkElement::GetCORSMode() const
+HTMLLinkElement::GetCORSMode() const
 {
   return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)); 
 }
 
 nsEventStates
-nsHTMLLinkElement::IntrinsicState() const
+HTMLLinkElement::IntrinsicState() const
 {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 
 size_t
-nsHTMLLinkElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+HTMLLinkElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   return nsGenericHTMLElement::SizeOfExcludingThis(aMallocSizeOf) +
          Link::SizeOfExcludingThis(aMallocSizeOf);
 }
 
+} // namespace dom
+} // namespace mozilla
