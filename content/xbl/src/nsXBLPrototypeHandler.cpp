@@ -290,18 +290,44 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   rv = EnsureEventHandler(boundGlobal, boundContext, onEventAtom, handler);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Bind it to the bound element
-  JSObject* scope = boundGlobal->GetGlobalJSObject();
-  nsScriptObjectHolder<JSObject> boundHandler(boundContext);
-  rv = boundContext->BindCompiledEventHandler(scriptTarget, scope,
-                                              handler.get(), boundHandler);
+  JSContext* cx = boundContext->GetNativeContext();
+  JSAutoRequest ar(cx);
+  JSObject* globalObject = boundGlobal->GetGlobalJSObject();
+  JSObject* scopeObject = xpc::GetXBLScope(cx, globalObject);
+
+  // Bind it to the bound element. Note that if we're using a separate XBL scope,
+  // we'll actually be binding the event handler to a cross-compartment wrapper
+  // to the bound element's reflector.
+
+  // First, enter our XBL scope. This is where the generic handler should have
+  // been compiled, above.
+  JSAutoCompartment ac(cx, scopeObject);
+  JSObject* genericHandler = handler.get();
+  bool ok = JS_WrapObject(cx, &genericHandler);
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+  MOZ_ASSERT(!js::IsCrossCompartmentWrapper(genericHandler));
+
+  // Wrap the native into the XBL scope. This creates a reflector in the document
+  // scope if one doesn't already exist, and potentially wraps it cross-
+  // compartment into our scope (via aAllowWrapping=true).
+  JS::Value targetV = JS::UndefinedValue();
+  rv = nsContentUtils::WrapNative(cx, scopeObject, scriptTarget, &targetV, nullptr,
+                                  /* aAllowWrapping = */ true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool ok;
-  JSAutoRequest ar(boundContext->GetNativeContext());
+  // Next, clone the generic handler to be parented to the target.
+  JSObject* bound = JS_CloneFunctionObject(cx, genericHandler, &targetV.toObject());
+  NS_ENSURE_TRUE(bound, NS_ERROR_FAILURE);
+
+  // Now, wrap the bound handler into the content compartment and use it.
+  JSAutoCompartment ac2(cx, globalObject);
+  if (!JS_WrapObject(cx, &bound)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsScriptObjectHolder<JSObject> boundHandler(boundContext, bound);
+
   nsRefPtr<EventHandlerNonNull> handlerCallback =
-    new EventHandlerNonNull(boundContext->GetNativeContext(),
-                            scope, boundHandler.get(), &ok);
+    new EventHandlerNonNull(cx, globalObject, boundHandler.get(), &ok);
   if (!ok) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -310,7 +336,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
 
   // Execute it.
   nsCOMPtr<nsIJSEventListener> eventListener;
-  rv = NS_NewJSEventListener(nullptr, scope,
+  rv = NS_NewJSEventListener(nullptr, globalObject,
                              scriptTarget, onEventAtom,
                              eventHandler,
                              getter_AddRefs(eventListener));
@@ -333,15 +359,20 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
   if (pWindow) {
     JSObject* cachedHandler = pWindow->GetCachedXBLPrototypeHandler(this);
     if (cachedHandler) {
+      xpc_UnmarkGrayObject(cachedHandler);
       aHandler.set(cachedHandler);
-      return aHandler ? NS_OK : NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(aHandler, NS_ERROR_FAILURE);
+      return NS_OK;
     }
   }
 
   // Ensure that we have something to compile
   nsDependentString handlerText(mHandlerText);
-  if (handlerText.IsEmpty())
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(!handlerText.IsEmpty(), NS_ERROR_FAILURE);
+
+  JSContext* cx = aBoundContext->GetNativeContext();
+  JSObject* globalObject = aGlobal->GetGlobalJSObject();
+  JSObject* scopeObject = xpc::GetXBLScope(cx, globalObject);
 
   nsAutoCString bindingURI;
   mPrototypeBinding->DocURI()->GetSpec(bindingURI);
@@ -351,9 +382,9 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
   nsContentUtils::GetEventArgNames(kNameSpaceID_XBL, aName, &argCount,
                                    &argNames);
 
-  JSContext* cx = aBoundContext->GetNativeContext();
+  // Compile the event handler in the xbl scope.
   JSAutoRequest ar(cx);
-  JSAutoCompartment ac(cx, aGlobal->GetGlobalJSObject());
+  JSAutoCompartment ac(cx, scopeObject);
   JS::CompileOptions options(cx);
   options.setFileAndLine(bindingURI.get(), mLineNumber)
          .setVersion(JSVERSION_LATEST)
@@ -365,6 +396,13 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
                                            nsAtomCString(aName), argCount,
                                            argNames, handlerText, &handlerFun);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(handlerFun, NS_ERROR_FAILURE);
+
+  // Wrap the handler into the content scope, since we're about to stash it
+  // on the DOM window and such.
+  JSAutoCompartment ac2(cx, globalObject);
+  bool ok = JS_WrapObject(cx, &handlerFun);
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   aHandler.set(handlerFun);
   NS_ENSURE_TRUE(aHandler, NS_ERROR_FAILURE);
 
