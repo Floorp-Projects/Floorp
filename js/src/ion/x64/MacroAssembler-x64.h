@@ -652,6 +652,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpq(value.valueReg(), ScratchReg);
         j(cond, label);
     }
+    void branchTestValue(Condition cond, const Address &valaddr, const ValueOperand &value,
+                         Label *label)
+    {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        branchPtr(cond, valaddr, value.valueReg(), label);
+    }
 
     void boxDouble(const FloatRegister &src, const ValueOperand &dest) {
         movqsd(src, dest.valueReg());
