@@ -40,7 +40,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGTitleElement.idl \
 		nsIDOMSVGURIReference.idl \
 		nsIDOMSVGUnitTypes.idl \
-		nsIDOMSVGUseElement.idl \
 		nsIDOMSVGViewElement.idl \
 		nsIDOMSVGZoomEvent.idl \
 		$(NULL)

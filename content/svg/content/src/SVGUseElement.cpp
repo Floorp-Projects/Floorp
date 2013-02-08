@@ -15,8 +15,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 
-DOMCI_NODE_DATA(SVGUseElement, mozilla::dom::SVGUseElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Use)
 
 namespace mozilla {
@@ -65,14 +63,10 @@ NS_IMPL_ADDREF_INHERITED(SVGUseElement,SVGUseElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGUseElement,SVGUseElementBase)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGUseElement)
-  NS_NODE_INTERFACE_TABLE6(SVGUseElement, nsIDOMNode, nsIDOMElement,
+  NS_NODE_INTERFACE_TABLE5(SVGUseElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGURIReference,
-                           nsIDOMSVGUseElement, nsIMutationObserver)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGUseElement)
-  if (aIID.Equals(NS_GET_IID(mozilla::dom::SVGUseElement)))
-    foundInterface = reinterpret_cast<nsISupports*>(this);
-  else
+                           nsIMutationObserver)
 NS_INTERFACE_MAP_END_INHERITING(SVGUseElementBase)
 
 //----------------------------------------------------------------------
@@ -145,26 +139,11 @@ SVGUseElement::Href()
 }
 
 //----------------------------------------------------------------------
-// nsIDOMSVGUseElement methods
-
-/* readonly attribute nsIDOMSVGAnimatedLength x; */
-NS_IMETHODIMP SVGUseElement::GetX(nsIDOMSVGAnimatedLength * *aX)
-{
-  *aX = X().get();
-  return NS_OK;
-}
 
 already_AddRefed<SVGAnimatedLength>
 SVGUseElement::X()
 {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength y; */
-NS_IMETHODIMP SVGUseElement::GetY(nsIDOMSVGAnimatedLength * *aY)
-{
-  *aY = Y().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -173,24 +152,10 @@ SVGUseElement::Y()
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength width; */
-NS_IMETHODIMP SVGUseElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
-{
-  *aWidth = Width().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGUseElement::Width()
 {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength height; */
-NS_IMETHODIMP SVGUseElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
-{
-  *aHeight = Height().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -310,15 +275,9 @@ SVGUseElement::CreateAnonymousContent()
     for (nsCOMPtr<nsIContent> content = GetParent();
          content;
          content = content->GetParent()) {
-      nsCOMPtr<nsIDOMSVGUseElement> useElement = do_QueryInterface(content);
-
-      if (useElement) {
-        nsRefPtr<SVGUseElement> useImpl;
-        useElement->QueryInterface(NS_GET_IID(mozilla::dom::SVGUseElement),
-                                   getter_AddRefs(useImpl));
-
-        if (useImpl && useImpl->mOriginal == mOriginal)
-          return nullptr;
+      if (content->IsSVG(nsGkAtoms::use) &&
+          static_cast<SVGUseElement*>(content.get())->mOriginal == mOriginal) {
+        return nullptr;
       }
     }
   }
