@@ -2744,7 +2744,7 @@ abstract public class GeckoApp
         assertOnThread(sGeckoThread);
     }
 
-    private static void assertOnThread(Thread expectedThread) {
+    public static void assertOnThread(Thread expectedThread) {
         Thread currentThread = Thread.currentThread();
         long currentThreadId = currentThread.getId();
         long expectedThreadId = expectedThread.getId();
