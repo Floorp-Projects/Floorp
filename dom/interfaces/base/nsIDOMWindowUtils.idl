@@ -539,7 +539,8 @@ interface nsIDOMWindowUtils : nsISupports {
                     [optional] in long aExtraForgetSkippableCalls);
 
   /** Synthesize a simple gesture event for a window. The event types
-   *  supported are: MozSwipeGesture, MozMagnifyGestureStart,
+   *  supported are: MozSwipeGestureStart, MozSwipeGestureUpdate,
+   *  MozSwipeGestureEnd, MozSwipeGesture, MozMagnifyGestureStart,
    *  MozMagnifyGestureUpdate, MozMagnifyGesture, MozRotateGestureStart,
    *  MozRotateGestureUpdate, MozRotateGesture, MozPressTapGesture,
    *  MozTapGesture, and MozEdgeUIGesture.

@@ -156,6 +156,7 @@ let gInitialPages = [
 #include browser-tabview.js
 #include browser-thumbnails.js
 #include browser-webrtcUI.js
+#include browser-gestureSupport.js
 
 #ifdef MOZ_DATA_REPORTING
 #include browser-data-submission-info-bar.js
@@ -747,7 +748,8 @@ let gGestureSupport = {
    *        True to add/init listeners and false to remove/uninit
    */
   init: function GS_init(aAddListener) {
-    const gestureEvents = ["SwipeGesture",
+    const gestureEvents = ["SwipeGestureStart",
+      "SwipeGestureUpdate", "SwipeGestureEnd", "SwipeGesture",
       "MagnifyGestureStart", "MagnifyGestureUpdate", "MagnifyGesture",
       "RotateGestureStart", "RotateGestureUpdate", "RotateGesture",
       "TapGesture", "PressTapGesture"];
@@ -775,6 +777,18 @@ let gGestureSupport = {
       ({ threshold: aThreshold, latched: !!aLatched });
 
     switch (aEvent.type) {
+      case "MozSwipeGestureStart":
+        aEvent.preventDefault();
+        this._setupSwipeGesture(aEvent);
+        break;
+      case "MozSwipeGestureUpdate":
+        aEvent.preventDefault();
+        this._doUpdate(aEvent);
+        break;
+      case "MozSwipeGestureEnd":
+        aEvent.preventDefault();
+        this._doEnd(aEvent);
+        break;
       case "MozSwipeGesture":
         aEvent.preventDefault();
         this.onSwipe(aEvent);
@@ -862,6 +876,56 @@ let gGestureSupport = {
   },
 
   /**
+   * Checks whether a swipe gesture event can navigate the browser history or
+   * not.
+   *
+   * @param aEvent
+   *        The swipe gesture event.
+   * @return true if the swipe event may navigate the history, false othwerwise.
+   */
+  _swipeNavigatesHistory: function GS__swipeNavigatesHistory(aEvent) {
+    return this._getCommand(aEvent, ["swipe", "left"])
+              == "Browser:BackOrBackDuplicate" &&
+           this._getCommand(aEvent, ["swipe", "right"])
+              == "Browser:ForwardOrForwardDuplicate";
+  },
+
+  /**
+   * Sets up the history swipe animations for a swipe gesture event, if enabled.
+   *
+   * @param aEvent
+   *        The swipe gesture start event.
+   */
+  _setupSwipeGesture: function GS__setupSwipeGesture(aEvent) {
+    if (!this._swipeNavigatesHistory(aEvent) || !gHistorySwipeAnimation.active)
+      return;
+
+    let canGoBack = gHistorySwipeAnimation.canGoBack();
+    let canGoForward = gHistorySwipeAnimation.canGoForward();
+    let isLTR = gHistorySwipeAnimation.isLTR;
+
+    if (canGoBack)
+      aEvent.allowedDirections |= isLTR ? aEvent.DIRECTION_LEFT :
+                                          aEvent.DIRECTION_RIGHT;
+    if (canGoForward)
+      aEvent.allowedDirections |= isLTR ? aEvent.DIRECTION_RIGHT :
+                                          aEvent.DIRECTION_LEFT;
+
+    gHistorySwipeAnimation.startAnimation();
+
+    this._doUpdate = function GS__doUpdate(aEvent) {
+      gHistorySwipeAnimation.updateAnimation(aEvent.delta);
+    };
+
+    this._doEnd = function GS__doEnd(aEvent) {
+      gHistorySwipeAnimation.swipeEndEventReceived();
+
+      this._doUpdate = function (aEvent) {};
+      this._doEnd = function (aEvent) {};
+    }
+  },
+
+  /**
    * Generator producing the powerset of the input array where the first result
    * is the complete set and the last result (before StopIteration) is empty.
    *
@@ -884,6 +948,22 @@ let gGestureSupport = {
 
   /**
    * Determine what action to do for the gesture based on which keys are
+   * pressed and which commands are set, and execute the command.
+   *
+   * @param aEvent
+   *        The original gesture event to convert into a fake click event
+   * @param aGesture
+   *        Array of gesture name parts (to be joined by periods)
+   * @return Name of the executed command. Returns null if no command is
+   *         found.
+   */
+  _doAction: function GS__doAction(aEvent, aGesture) {
+    let command = this._getCommand(aEvent, aGesture);
+    return command && this._doCommand(aEvent, command);
+  },
+
+  /**
+   * Determine what action to do for the gesture based on which keys are
    * pressed and which commands are set
    *
    * @param aEvent
@@ -891,7 +971,7 @@ let gGestureSupport = {
    * @param aGesture
    *        Array of gesture name parts (to be joined by periods)
    */
-  _doAction: function GS__doAction(aEvent, aGesture) {
+  _getCommand: function GS__getCommand(aEvent, aGesture) {
     // Create an array of pressed keys in a fixed order so that a command for
     // "meta" is preferred over "ctrl" when both buttons are pressed (and a
     // command for both don't exist)
@@ -911,30 +991,40 @@ let gGestureSupport = {
         command = this._getPref(aGesture.concat(subCombo).join("."));
       } catch (e) {}
 
-      if (!command)
-        continue;
+      if (command)
+        return command;
+    }
+    return null;
+  },
 
-      let node = document.getElementById(command);
-      if (node) {
-        if (node.getAttribute("disabled") != "true") {
-          let cmdEvent = document.createEvent("xulcommandevent");
-          cmdEvent.initCommandEvent("command", true, true, window, 0,
-                                    aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKey,
-                                    aEvent.metaKey, aEvent);
-          node.dispatchEvent(cmdEvent);
-        }
-      } else {
-        goDoCommand(command);
+  /**
+   * Execute the specified command.
+   *
+   * @param aEvent
+   *        The original gesture event to convert into a fake click event
+   * @param aCommand
+   *        Name of the command found for the event's keys and gesture.
+   */
+  _doCommand: function GS__doCommand(aEvent, aCommand) {
+    let node = document.getElementById(aCommand);
+    if (node) {
+      if (node.getAttribute("disabled") != "true") {
+        let cmdEvent = document.createEvent("xulcommandevent");
+        cmdEvent.initCommandEvent("command", true, true, window, 0,
+                                  aEvent.ctrlKey, aEvent.altKey,
+                                  aEvent.shiftKey, aEvent.metaKey, null);
+        node.dispatchEvent(cmdEvent);
       }
 
-      break;
+    }
+    else {
+      goDoCommand(aCommand);
     }
   },
 
   /**
-   * Convert continual motion events into an action if it exceeds a threshold
-   * in a given direction. This function will be set by _setupGesture to
-   * capture state that needs to be shared across multiple gesture updates.
+   * Handle continual motion events.  This function will be set by
+   * _setupGesture or _setupSwipe.
    *
    * @param aEvent
    *        The continual motion update event to handle
@@ -942,7 +1032,15 @@ let gGestureSupport = {
   _doUpdate: function(aEvent) {},
 
   /**
-   * Convert the swipe gesture into a browser action based on the direction
+   * Handle gesture end events.  This function will be set by _setupSwipe.
+   *
+   * @param aEvent
+   *        The gesture end event to handle
+   */
+  _doEnd: function(aEvent) {},
+
+  /**
+   * Convert the swipe gesture into a browser action based on the direction.
    *
    * @param aEvent
    *        The swipe event to handle
@@ -951,9 +1049,43 @@ let gGestureSupport = {
     // Figure out which one (and only one) direction was triggered
     for (let dir of ["UP", "RIGHT", "DOWN", "LEFT"]) {
       if (aEvent.direction == aEvent["DIRECTION_" + dir]) {
-        this._doAction(aEvent, ["swipe", dir.toLowerCase()]);
+        this._coordinateSwipeEventWithAnimation(aEvent, dir);
         break;
       }
+    }
+  },
+
+  /**
+   * Process a swipe event based on the given direction.
+   *
+   * @param aEvent
+   *        The swipe event to handle
+   * @param aDir
+   *        The direction for the swipe event
+   */
+  processSwipeEvent: function GS_processSwipeEvent(aEvent, aDir) {
+    this._doAction(aEvent, ["swipe", aDir.toLowerCase()]);
+  },
+
+  /**
+   * Coordinates the swipe event with the swipe animation, if any.
+   * If an animation is currently running, the swipe event will be
+   * processed once the animation stops. This will guarantee a fluid
+   * motion of the animation.
+   *
+   * @param aEvent
+   *        The swipe event to handle
+   * @param aDir
+   *        The direction for the swipe event
+   */
+  _coordinateSwipeEventWithAnimation:
+  function GS__coordinateSwipeEventWithAnimation(aEvent, aDir) {
+    if ((gHistorySwipeAnimation.isAnimationRunning()) &&
+        (aDir == "RIGHT" || aDir == "LEFT")) {
+      gHistorySwipeAnimation.processSwipeEvent(aEvent, aDir);
+    }
+    else {
+      this.processSwipeEvent(aEvent, aDir);
     }
   },
 
@@ -1195,6 +1327,9 @@ var gBrowserInit = {
 
     // setup simple gestures support
     gGestureSupport.init(true);
+
+    // setup history swipe animation
+    gHistorySwipeAnimation.init();
 
     if (window.opener && !window.opener.closed) {
       let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
@@ -1656,6 +1791,8 @@ var gBrowserInit = {
 
     gGestureSupport.init(false);
 
+    gHistorySwipeAnimation.uninit();
+
     FullScreen.cleanup();
 
     Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
@@ -1871,7 +2008,6 @@ var nonBrowserWindowStartup        = gBrowserInit.nonBrowserWindowStartup.bind(g
 var nonBrowserWindowDelayedStartup = gBrowserInit.nonBrowserWindowDelayedStartup.bind(gBrowserInit);
 var nonBrowserWindowShutdown       = gBrowserInit.nonBrowserWindowShutdown.bind(gBrowserInit);
 #endif
-
 
 function HandleAppCommandEvent(evt) {
   switch (evt.command) {
