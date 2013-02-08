@@ -2498,6 +2498,10 @@ JS_updateMallocCounter(JSContext *cx, size_t nbytes);
 extern JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s);
 
+/* Duplicate a string.  Does not report an error on failure. */
+extern JS_PUBLIC_API(char *)
+JS_strdup(JSRuntime *rt, const char *s);
+
 
 /*
  * A GC root is a pointer to a jsval, JSObject * or JSString * that itself
@@ -4675,13 +4679,13 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
  * The locale string remains owned by the caller.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_SetDefaultLocale(JSContext *cx, const char *locale);
+JS_SetDefaultLocale(JSRuntime *rt, const char *locale);
 
 /*
  * Reset the default locale to OS defaults.
  */
 extern JS_PUBLIC_API(void)
-JS_ResetDefaultLocale(JSContext *cx);
+JS_ResetDefaultLocale(JSRuntime *rt);
 
 /*
  * Locale specific string conversion and error message callbacks.
@@ -4696,17 +4700,17 @@ struct JSLocaleCallbacks {
 
 /*
  * Establish locale callbacks. The pointer must persist as long as the
- * JSContext.  Passing NULL restores the default behaviour.
+ * JSRuntime.  Passing NULL restores the default behaviour.
  */
 extern JS_PUBLIC_API(void)
-JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks);
+JS_SetLocaleCallbacks(JSRuntime *rt, JSLocaleCallbacks *callbacks);
 
 /*
  * Return the address of the current locale callbacks struct, which may
  * be NULL.
  */
 extern JS_PUBLIC_API(JSLocaleCallbacks *)
-JS_GetLocaleCallbacks(JSContext *cx);
+JS_GetLocaleCallbacks(JSRuntime *rt);
 
 /************************************************************************/
 

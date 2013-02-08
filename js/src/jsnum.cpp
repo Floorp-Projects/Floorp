@@ -720,9 +720,9 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
         strcpy(tmpDest, nint);
     }
 
-    if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode) {
+    if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToUnicode) {
         Rooted<Value> v(cx, StringValue(str));
-        bool ok = !!cx->localeCallbacks->localeToUnicode(cx, buf, v.address());
+        bool ok = !!cx->runtime->localeCallbacks->localeToUnicode(cx, buf, v.address());
         if (ok)
             args.rval().set(v);
         js_free(buf);

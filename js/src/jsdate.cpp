@@ -2761,8 +2761,8 @@ ToLocaleHelper(JSContext *cx, HandleObject obj, const char *format, MutableHandl
 
     }
 
-    if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
-        return cx->localeCallbacks->localeToUnicode(cx, buf, rval.address());
+    if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToUnicode)
+        return cx->runtime->localeCallbacks->localeToUnicode(cx, buf, rval.address());
 
     UnrootedString str = JS_NewStringCopyZ(cx, buf);
     if (!str)
