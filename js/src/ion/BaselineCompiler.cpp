@@ -1411,6 +1411,12 @@ BaselineCompiler::emit_JSOP_GETELEM()
 }
 
 bool
+BaselineCompiler::emit_JSOP_CALLELEM()
+{
+    return emit_JSOP_GETELEM();
+}
+
+bool
 BaselineCompiler::emit_JSOP_SETELEM()
 {
     // Store RHS in the scratch slot.
@@ -1428,6 +1434,47 @@ BaselineCompiler::emit_JSOP_SETELEM()
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_ENUMELEM()
+{
+    // ENUMELEM is a SETELEM with a different stack arrangement.
+    // Instead of:   OBJ ID RHS
+    // The stack is: RHS OBJ ID
+
+    // Keep object and index in R0 and R1, and keep RHS on the stack.
+    frame.popRegsAndSync(2);
+
+    // Call IC.
+    ICSetElem_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.pop();
+    return true;
+}
+
+typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, JSBool *);
+static const VMFunction DeleteElementStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<true>);
+static const VMFunction DeleteElementNonStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<false>);
+
+bool
+BaselineCompiler::emit_JSOP_DELELEM()
+{
+    frame.popRegsAndSync(2);
+
+    prepareVMCall();
+
+    pushArg(R1);
+    pushArg(R0);
+
+    if (!callVM(script->strict ? DeleteElementStrictInfo : DeleteElementNonStrictInfo))
+        return false;
+
+    masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R1);
+    frame.push(R1);
     return true;
 }
 
@@ -1530,6 +1577,28 @@ bool
 BaselineCompiler::emit_JSOP_LENGTH()
 {
     return emit_JSOP_GETPROP();
+}
+
+typedef bool (*DeletePropertyFn)(JSContext *, HandleValue, HandlePropertyName, JSBool *);
+static const VMFunction DeletePropertyStrictInfo = FunctionInfo<DeletePropertyFn>(DeleteProperty<true>);
+static const VMFunction DeletePropertyNonStrictInfo = FunctionInfo<DeletePropertyFn>(DeleteProperty<false>);
+
+bool
+BaselineCompiler::emit_JSOP_DELPROP()
+{
+    frame.popRegsAndSync(1);
+
+    prepareVMCall();
+
+    pushArg(ImmGCPtr(script->getName(pc)));
+    pushArg(R0);
+
+    if (!callVM(script->strict ? DeletePropertyStrictInfo : DeletePropertyNonStrictInfo))
+        return false;
+
+    masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R1);
+    frame.push(R1);
+    return true;
 }
 
 Address
@@ -1674,6 +1743,27 @@ bool
 BaselineCompiler::emit_JSOP_DEFCONST()
 {
     return emit_JSOP_DEFVAR();
+}
+
+typedef bool (*SetConstFn)(JSContext *, HandlePropertyName, HandleObject, HandleValue);
+static const VMFunction SetConstInfo = FunctionInfo<SetConstFn>(SetConst);
+
+bool
+BaselineCompiler::emit_JSOP_SETCONST()
+{
+    frame.popRegsAndSync(1);
+    frame.push(R0);
+    frame.syncStack(0);
+
+    masm.loadPtr(frame.addressOfScopeChain(), R1.scratchReg());
+
+    prepareVMCall();
+
+    pushArg(R0);
+    pushArg(R1.scratchReg());
+    pushArg(ImmGCPtr(script->getName(pc)));
+
+    return callVM(SetConstInfo);
 }
 
 typedef bool (*DefFunOperationFn)(JSContext *, HandleScript, HandleObject, HandleFunction);
@@ -1849,6 +1939,34 @@ bool
 BaselineCompiler::emit_JSOP_FUNAPPLY()
 {
     return emitCall();
+}
+
+bool
+BaselineCompiler::emit_JSOP_EVAL()
+{
+    return emitCall();
+}
+
+typedef bool (*ImplicitThisFn)(JSContext *, HandleObject, HandlePropertyName,
+                               MutableHandleValue);
+static const VMFunction ImplicitThisInfo = FunctionInfo<ImplicitThisFn>(ImplicitThisOperation);
+
+bool
+BaselineCompiler::emit_JSOP_IMPLICITTHIS()
+{
+    frame.syncStack(0);
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
+    prepareVMCall();
+
+    pushArg(ImmGCPtr(script->getName(pc)));
+    pushArg(R0.scratchReg());
+
+    if (!callVM(ImplicitThisInfo))
+        return false;
+
+    frame.push(R0);
+    return true;
 }
 
 typedef bool (*ThrowFn)(JSContext *, HandleValue);
@@ -2040,6 +2158,12 @@ BaselineCompiler::emit_JSOP_STOP()
     }
 
     return emitReturn();
+}
+
+bool
+BaselineCompiler::emit_JSOP_RETRVAL()
+{
+    return emit_JSOP_STOP();
 }
 
 typedef bool (*ToIdFn)(JSContext *, HandleScript, jsbytecode *, HandleValue, HandleValue,
