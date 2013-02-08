@@ -271,8 +271,6 @@ enum SrcNoteType {
                                    array literal: [1,2,,];
                                    JSOP_DUP continuing destructuring pattern;
                                    JSOP_POP at end of for-in */
-    SRC_DESTRUCT    = 6,        /* JSOP_DUP starting a destructuring assignment
-                                   operation, with SRC_DECL_* offset operand */
     SRC_PCDELTA     = 7,        /* distance forward from comma-operator to
                                    next POP, or from CONDSWITCH to first CASE
                                    opcode, etc. -- always a forward delta */
