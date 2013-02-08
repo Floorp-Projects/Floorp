@@ -1508,7 +1508,9 @@ class ValueOperations
 
     JSValueType extractNonDoubleType() const { return value()->extractNonDoubleType(); }
 
+#ifdef DEBUG
     JSWhyMagic whyMagic() const { return value()->whyMagic(); }
+#endif
 };
 
 /*
