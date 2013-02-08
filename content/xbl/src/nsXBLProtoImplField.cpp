@@ -15,6 +15,7 @@
 #include "nsXBLSerialize.h"
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "xpcpublic.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -178,6 +179,10 @@ InstallXBLField(JSContext* cx,
 
     MOZ_ALWAYS_TRUE(JS_ValueToId(cx, name, idp));
 
+    // If a separate XBL scope is being used, the callee is not same-compartment
+    // with the xbl prototype, and the object is a cross-compartment wrapper.
+    xblProto = js::UnwrapObject(xblProto);
+    JSAutoCompartment ac2(cx, xblProto);
     JS::Value slotVal = ::JS_GetReservedSlot(xblProto, 0);
     protoBinding = static_cast<nsXBLPrototypeBinding*>(slotVal.toPrivate());
     MOZ_ASSERT(protoBinding);
@@ -294,7 +299,8 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
                                       JSObject* aTargetClassObject)
 {
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
-  JSObject* global = JS_GetGlobalForObject(aCx, aTargetClassObject);
+  JSObject* globalObject = JS_GetGlobalForObject(aCx, aTargetClassObject);
+  JSObject* scopeObject = xpc::GetXBLScope(aCx, globalObject);
 
   // Don't install it if the field is empty; see also InstallField which also must
   // implement the not-empty requirement.
@@ -320,25 +326,43 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   if (found)
     return NS_OK;
 
+  // FieldGetter and FieldSetter need to run in the XBL scope so that they can
+  // see through any SOWs on their targets.
+
+  // First, enter the XBL scope, and compile the functions there.
+  JSAutoCompartment ac(aCx, scopeObject);
+  JS::Value wrappedClassObj = JS::ObjectValue(*aTargetClassObject);
+  if (!JS_WrapValue(aCx, &wrappedClassObj) || !JS_WrapId(aCx, &id))
+    return NS_ERROR_OUT_OF_MEMORY;
+
   JSObject *get =
     JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldGetter,
-                                                         0, 0, global, id));
+                                                         0, 0, scopeObject, id));
   if (!get) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  js::SetFunctionNativeReserved(get, XBLPROTO_SLOT, JS::ObjectValue(*aTargetClassObject));
+  js::SetFunctionNativeReserved(get, XBLPROTO_SLOT, wrappedClassObj);
   js::SetFunctionNativeReserved(get, FIELD_SLOT,
                                 JS::StringValue(JSID_TO_STRING(id)));
 
   JSObject *set =
     JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldSetter,
-                                                          1, 0, global, id));
+                                                          1, 0, scopeObject, id));
   if (!set) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  js::SetFunctionNativeReserved(set, XBLPROTO_SLOT, JS::ObjectValue(*aTargetClassObject));
+  js::SetFunctionNativeReserved(set, XBLPROTO_SLOT, wrappedClassObj);
   js::SetFunctionNativeReserved(set, FIELD_SLOT,
                                 JS::StringValue(JSID_TO_STRING(id)));
+
+  // Now, re-enter the class object's scope, wrap the getters/setters, and define
+  // them there.
+  JSAutoCompartment ac2(aCx, aTargetClassObject);
+  if (!JS_WrapObject(aCx, &get) || !JS_WrapObject(aCx, &set) ||
+      !JS_WrapId(aCx, &id))
+  {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (!::JS_DefinePropertyById(aCx, aTargetClassObject, id, JS::UndefinedValue(),
                                JS_DATA_TO_FUNC_PTR(JSPropertyOp, get),
@@ -347,7 +371,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return NS_OK;;
+  return NS_OK;
 }
 
 nsresult
@@ -384,7 +408,16 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   nsCOMPtr<nsIScriptContext> context = aContext;
 
   JSAutoRequest ar(cx);
+
+  // First, enter the xbl scope, wrap the node, and use that as the scope for
+  // the evaluation.
+  JSObject* scopeObject = xpc::GetXBLScope(cx, aBoundNode);
+  JSAutoCompartment ac(cx, scopeObject);
   jsval result = JSVAL_NULL;
+
+  JSObject* wrappedNode = aBoundNode;
+  if (!JS_WrapObject(cx, &wrappedNode))
+      return NS_ERROR_OUT_OF_MEMORY;
 
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber)
@@ -392,7 +425,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
          .setUserBit(true); // Flag us as XBL
   rv = context->EvaluateString(nsDependentString(mFieldText,
                                                  mFieldTextLength),
-                               *aBoundNode, options,
+                               *wrappedNode, options,
                                /* aCoerceToString = */ false,
                                &result);
   if (NS_FAILED(rv)) {
@@ -400,9 +433,12 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   }
 
 
-  // Define the evaluated result as a JS property
+  // Now, enter the node's compartment, wrap the eval result, and define it on
+  // the bound node.
+  JSAutoCompartment ac2(cx, aBoundNode);
   nsDependentString name(mName);
-  if (!::JS_DefineUCProperty(cx, aBoundNode,
+  if (!JS_WrapValue(cx, &result) ||
+      !::JS_DefineUCProperty(cx, aBoundNode,
                              reinterpret_cast<const jschar*>(mName), 
                              name.Length(), result, nullptr, nullptr,
                              mJSAttributes)) {
