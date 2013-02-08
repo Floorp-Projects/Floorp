@@ -3530,14 +3530,6 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
     return true;
 }
 
-/* Top-level named functions need a nop for decompilation. */
-static bool
-EmitFunctionDefNop(JSContext *cx, BytecodeEmitter *bce, unsigned index)
-{
-    return NewSrcNote2(cx, bce, SRC_FUNCDEF, (ptrdiff_t)index) >= 0 &&
-           Emit1(cx, bce, JSOP_NOP) >= 0;
-}
-
 static bool
 EmitNewInit(JSContext *cx, BytecodeEmitter *bce, JSProtoKey key, ParseNode *pn)
 {
@@ -4551,14 +4543,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     RootedFunction fun(cx, pn->pn_funbox->function());
     JS_ASSERT(fun->isInterpreted());
     if (fun->hasScript()) {
-        /*
-         * This second pass is needed to emit JSOP_NOP with a source note
-         * for the already-emitted function definition prolog opcode. See
-         * comments in EmitStatementList.
-         */
         JS_ASSERT(pn->functionIsHoisted());
         JS_ASSERT(bce->sc->isFunctionBox());
-        return EmitFunctionDefNop(cx, bce, pn->pn_index);
+        return true;
     }
 
     {
@@ -4624,10 +4611,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))
             return false;
         bce->switchToMain();
-
-        /* Emit NOP for the decompiler. */
-        if (!EmitFunctionDefNop(cx, bce, index))
-            return false;
     } else {
 #ifdef DEBUG
         BindingIter bi(bce->script);

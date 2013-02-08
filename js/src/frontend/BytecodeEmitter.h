@@ -284,7 +284,6 @@ enum SrcNoteType {
     SRC_SWITCH      = 18,       /* JSOP_*SWITCH with offset to end of switch,
                                    2nd off to first JSOP_CASE if condswitch */
     SRC_SWITCHBREAK = 18,       /* JSOP_GOTO is a break in a switch */
-    SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
     SRC_CATCH       = 20,       /* catch block has guard */
     SRC_COLSPAN     = 21,       /* number of columns this opcode spans */
     SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
