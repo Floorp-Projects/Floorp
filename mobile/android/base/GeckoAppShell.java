@@ -9,7 +9,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.GfxInfoThread;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.TouchEventHandler;
+import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
@@ -1370,9 +1370,9 @@ public class GeckoAppShell
         getMainHandler().post(new Runnable() {
             public void run() {
                 LayerView view = GeckoApp.mAppContext.getLayerView();
-                TouchEventHandler handler = (view == null ? null : view.getTouchEventHandler());
-                if (handler != null) {
-                    handler.handleEventListenerAction(!defaultPrevented);
+                PanZoomController controller = (view == null ? null : view.getPanZoomController());
+                if (controller != null) {
+                    controller.notifyDefaultActionPrevented(defaultPrevented);
                 }
             }
         });

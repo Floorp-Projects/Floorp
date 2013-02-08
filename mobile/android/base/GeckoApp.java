@@ -863,16 +863,6 @@ abstract public class GeckoApp
                 if (layerView != null && Tabs.getInstance().isSelectedTab(tab)) {
                     layerView.setZoomConstraints(tab.getZoomConstraints());
                 }
-            } else if (event.equals("Tab:HasTouchListener")) {
-                int tabId = message.getInt("tabID");
-                final Tab tab = Tabs.getInstance().getTab(tabId);
-                tab.setHasTouchListeners(true);
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (Tabs.getInstance().isSelectedTab(tab))
-                            mLayerView.getTouchEventHandler().setWaitForTouchListeners(true);
-                    }
-                });
             } else if (event.equals("Session:StatePurged")) {
                 onStatePurged();
             } else if (event.equals("Bookmark:Insert")) {
@@ -1779,7 +1769,6 @@ abstract public class GeckoApp
         registerEventListener("ToggleChrome:Show");
         registerEventListener("ToggleChrome:Focus");
         registerEventListener("Permissions:Data");
-        registerEventListener("Tab:HasTouchListener");
         registerEventListener("Tab:ViewportMetadata");
         registerEventListener("Session:StatePurged");
         registerEventListener("Bookmark:Insert");
@@ -2179,7 +2168,6 @@ abstract public class GeckoApp
         unregisterEventListener("ToggleChrome:Show");
         unregisterEventListener("ToggleChrome:Focus");
         unregisterEventListener("Permissions:Data");
-        unregisterEventListener("Tab:HasTouchListener");
         unregisterEventListener("Tab:ViewportMetadata");
         unregisterEventListener("Session:StatePurged");
         unregisterEventListener("Bookmark:Insert");
@@ -2559,7 +2547,7 @@ abstract public class GeckoApp
     protected void connectGeckoLayerClient() {
         mLayerView.getLayerClient().notifyGeckoReady();
 
-        mLayerView.getTouchEventHandler().setOnTouchListener(new OnInterceptTouchListener() {
+        mLayerView.setTouchIntercepter(new OnInterceptTouchListener() {
             private PointF initialPoint = null;
 
             @Override

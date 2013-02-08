@@ -8,6 +8,8 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
@@ -17,10 +19,13 @@ import org.json.JSONObject;
 
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.os.Build;
 import android.util.FloatMath;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.InputDevice;
 import android.view.MotionEvent;
+import android.view.View;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -31,7 +36,7 @@ import java.util.TimerTask;
  * Many ideas are from Joe Hewitt's Scrollability:
  *   https://github.com/joehewitt/scrollability/
  */
-public class JavaPanZoomController
+class JavaPanZoomController
     extends GestureDetector.SimpleOnGestureListener
     implements PanZoomController, SimpleScaleGestureDetector.SimpleScaleGestureListener, GeckoEventListener
 {
@@ -39,6 +44,7 @@ public class JavaPanZoomController
 
     private static String MESSAGE_ZOOM_RECT = "Browser:ZoomToRect";
     private static String MESSAGE_ZOOM_PAGE = "Browser:ZoomToPageWidth";
+    private static String MESSAGE_TOUCH_LISTENER = "Tab:HasTouchListener";
 
     // Animation stops if the velocity is below this value when overscrolled or panning.
     private static final float STOPPED_THRESHOLD = 4.0f;
@@ -81,6 +87,7 @@ public class JavaPanZoomController
     private final SubdocumentScrollHelper mSubscroller;
     private final Axis mX;
     private final Axis mY;
+    private final TouchEventHandler mTouchEventHandler;
     private final EventDispatcher mEventDispatcher;
     private Thread mMainThread;
 
@@ -95,11 +102,12 @@ public class JavaPanZoomController
     /* Current state the pan/zoom UI is in. */
     private PanZoomState mState;
 
-    public JavaPanZoomController(PanZoomTarget target, EventDispatcher eventDispatcher) {
+    public JavaPanZoomController(PanZoomTarget target, View view, EventDispatcher eventDispatcher) {
         mTarget = target;
         mSubscroller = new SubdocumentScrollHelper(eventDispatcher);
         mX = new AxisX(mSubscroller);
         mY = new AxisY(mSubscroller);
+        mTouchEventHandler = new TouchEventHandler(view.getContext(), view, this);
 
         mMainThread = GeckoApp.mAppContext.getMainLooper().getThread();
         checkMainThread();
@@ -109,6 +117,7 @@ public class JavaPanZoomController
         mEventDispatcher = eventDispatcher;
         registerEventListener(MESSAGE_ZOOM_RECT);
         registerEventListener(MESSAGE_ZOOM_PAGE);
+        registerEventListener(MESSAGE_TOUCH_LISTENER);
 
         Axis.initPrefs();
     }
@@ -116,7 +125,9 @@ public class JavaPanZoomController
     public void destroy() {
         unregisterEventListener(MESSAGE_ZOOM_RECT);
         unregisterEventListener(MESSAGE_ZOOM_PAGE);
+        unregisterEventListener(MESSAGE_TOUCH_LISTENER);
         mSubscroller.destroy();
+        mTouchEventHandler.destroy();
     }
 
     private final static float easeOut(float t) {
@@ -184,21 +195,56 @@ public class JavaPanZoomController
                         animatedZoomTo(r);
                     }
                 });
+            } else if (MESSAGE_TOUCH_LISTENER.equals(event)) {
+                int tabId = message.getInt("tabID");
+                final Tab tab = Tabs.getInstance().getTab(tabId);
+                tab.setHasTouchListeners(true);
+                mTarget.post(new Runnable() {
+                    public void run() {
+                        if (Tabs.getInstance().isSelectedTab(tab))
+                            mTouchEventHandler.setWaitForTouchListeners(true);
+                    }
+                });
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
     }
 
-    public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction() & MotionEvent.ACTION_MASK) {
-        case MotionEvent.ACTION_DOWN:   return onTouchStart(event);
-        case MotionEvent.ACTION_MOVE:   return onTouchMove(event);
-        case MotionEvent.ACTION_UP:     return onTouchEnd(event);
-        case MotionEvent.ACTION_CANCEL: return onTouchCancel(event);
-        case MotionEvent.ACTION_SCROLL: return onScroll(event);
-        default:                        return false;
+    /** This function MUST be called on the UI thread */
+    public boolean onMotionEvent(MotionEvent event) {
+        if (Build.VERSION.SDK_INT <= 11) {
+            return false;
         }
+
+        switch (event.getSource() & InputDevice.SOURCE_CLASS_MASK) {
+        case InputDevice.SOURCE_CLASS_POINTER:
+            switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_SCROLL: return handlePointerScroll(event);
+            }
+            break;
+        }
+        return false;
+    }
+
+    /** This function MUST be called on the UI thread */
+    public boolean onTouchEvent(MotionEvent event) {
+        return mTouchEventHandler.handleEvent(event);
+    }
+
+    boolean handleEvent(MotionEvent event) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+        case MotionEvent.ACTION_DOWN:   return handleTouchStart(event);
+        case MotionEvent.ACTION_MOVE:   return handleTouchMove(event);
+        case MotionEvent.ACTION_UP:     return handleTouchEnd(event);
+        case MotionEvent.ACTION_CANCEL: return handleTouchCancel(event);
+        }
+        return false;
+    }
+
+    /** This function MUST be called on the UI thread */
+    public void notifyDefaultActionPrevented(boolean prevented) {
+        mTouchEventHandler.handleEventListenerAction(!prevented);
     }
 
     /** This function must be called from the UI thread. */
@@ -271,7 +317,7 @@ public class JavaPanZoomController
      * Panning/scrolling
      */
 
-    private boolean onTouchStart(MotionEvent event) {
+    private boolean handleTouchStart(MotionEvent event) {
         // user is taking control of movement, so stop
         // any auto-movement we have going
         stopAnimationTimer();
@@ -298,11 +344,11 @@ public class JavaPanZoomController
             Log.e(LOGTAG, "Received impossible touch down while in " + mState);
             return false;
         }
-        Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchStart");
+        Log.e(LOGTAG, "Unhandled case " + mState + " in handleTouchStart");
         return false;
     }
 
-    private boolean onTouchMove(MotionEvent event) {
+    private boolean handleTouchMove(MotionEvent event) {
 
         switch (mState) {
         case FLING:
@@ -345,11 +391,11 @@ public class JavaPanZoomController
             // scale gesture listener will handle this
             return false;
         }
-        Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchMove");
+        Log.e(LOGTAG, "Unhandled case " + mState + " in handleTouchMove");
         return false;
     }
 
-    private boolean onTouchEnd(MotionEvent event) {
+    private boolean handleTouchEnd(MotionEvent event) {
 
         switch (mState) {
         case FLING:
@@ -383,11 +429,11 @@ public class JavaPanZoomController
             setState(PanZoomState.NOTHING);
             return true;
         }
-        Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchEnd");
+        Log.e(LOGTAG, "Unhandled case " + mState + " in handleTouchEnd");
         return false;
     }
 
-    private boolean onTouchCancel(MotionEvent event) {
+    private boolean handleTouchCancel(MotionEvent event) {
         cancelTouch();
 
         if (mState == PanZoomState.WAITING_LISTENERS) {
@@ -405,7 +451,7 @@ public class JavaPanZoomController
         return false;
     }
 
-    private boolean onScroll(MotionEvent event) {
+    private boolean handlePointerScroll(MotionEvent event) {
         if (mState == PanZoomState.NOTHING || mState == PanZoomState.FLING) {
             float scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
             float scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
