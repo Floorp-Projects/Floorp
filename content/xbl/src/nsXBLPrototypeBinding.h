@@ -126,6 +126,7 @@ public:
   nsresult ConstructInterfaceTable(const nsAString& aImpls);
   
   void SetImplementation(nsXBLProtoImpl* aImpl) { mImplementation = aImpl; }
+  nsXBLProtoImpl* GetImplementation() { return mImplementation; }
   nsresult InstallImplementation(nsXBLBinding* aBinding);
   bool HasImplementation() const { return mImplementation != nullptr; }
 
