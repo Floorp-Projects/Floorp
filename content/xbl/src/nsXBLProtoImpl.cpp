@@ -87,15 +87,15 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   holder->GetJSObject(&targetScriptObject);
 
   JSContext *cx = context->GetNativeContext();
-
+  JSAutoRequest ar(cx);
+  JSAutoCompartment ac(cx, targetClassObject);
   AutoVersionChecker avc(cx);
-  
+
   // Walk our member list and install each one in turn.
   for (nsXBLProtoImplMember* curr = mMembers;
        curr;
        curr = curr->GetNext())
-    curr->InstallMember(context, aBinding->GetBoundElement(), targetScriptObject,
-                        targetClassObject, mClassName);
+    curr->InstallMember(cx, targetClassObject);
 
   return NS_OK;
 }

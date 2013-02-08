@@ -135,45 +135,29 @@ nsXBLProtoImplProperty::SetSetterLineNumber(uint32_t aLineNumber)
 const char* gPropertyArgs[] = { "val" };
 
 nsresult
-nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
-                                      nsIContent* aBoundElement, 
-                                      JSObject* aScriptObject,
-                                      JSObject* aTargetClassObject,
-                                      const nsCString& aClassStr)
+nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
+                                      JSObject* aTargetClassObject)
 {
   NS_PRECONDITION(mIsCompiled,
                   "Should not be installing an uncompiled property");
-  JSContext* cx = aContext->GetNativeContext();
-
-  nsIScriptGlobalObject* sgo = aBoundElement->OwnerDoc()->GetScopeObject();
-
-  if (!sgo) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  NS_ASSERTION(aScriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
-  if (!aScriptObject)
-    return NS_ERROR_FAILURE;
-
-  JSObject * globalObject = sgo->GetGlobalJSObject();
+  MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
+  JSObject * globalObject = JS_GetGlobalForObject(aCx, aTargetClassObject);
 
   // now we want to reevaluate our property using aContext and the script object for this window...
   if (mJSGetterObject || mJSSetterObject) {
     JSObject * getter = nullptr;
-    JSAutoRequest ar(cx);
-    JSAutoCompartment ac(cx, globalObject);
 
     if (mJSGetterObject)
-      if (!(getter = ::JS_CloneFunctionObject(cx, mJSGetterObject, globalObject)))
+      if (!(getter = ::JS_CloneFunctionObject(aCx, mJSGetterObject, globalObject)))
         return NS_ERROR_OUT_OF_MEMORY;
 
     JSObject * setter = nullptr;
     if (mJSSetterObject)
-      if (!(setter = ::JS_CloneFunctionObject(cx, mJSSetterObject, globalObject)))
+      if (!(setter = ::JS_CloneFunctionObject(aCx, mJSSetterObject, globalObject)))
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsDependentString name(mName);
-    if (!::JS_DefineUCProperty(cx, aTargetClassObject,
+    if (!::JS_DefineUCProperty(aCx, aTargetClassObject,
                                static_cast<const jschar*>(mName),
                                name.Length(), JSVAL_VOID,
                                JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter),
