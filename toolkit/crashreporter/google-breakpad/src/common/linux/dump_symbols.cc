@@ -81,6 +81,7 @@ using google_breakpad::GetOffset;
 using google_breakpad::IsValidElf;
 using google_breakpad::Module;
 using google_breakpad::StabsToModule;
+using google_breakpad::UniqueString;
 using google_breakpad::scoped_ptr;
 
 //
@@ -117,7 +118,8 @@ class MmapWrapper {
  public:
   MmapWrapper() : is_set_(false) {}
   ~MmapWrapper() {
-    if (is_set_ && base_ != NULL && size_ > 0) {
+    if (base_ != NULL) {
+      assert(size_ > 0);
       munmap(base_, size_);
     }
   }

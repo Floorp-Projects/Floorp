@@ -212,10 +212,12 @@ class CGPrototypeJSClass(CGThing):
     JSCLASS_NO_INTERNAL_MEMBERS
   },
   eInterfacePrototype,
-  %s
+  %s,
+  "[object %sPrototype]"
 };
 """ % (self.descriptor.interface.identifier.name,
-       NativePropertyHooks(self.descriptor))
+       NativePropertyHooks(self.descriptor),
+       self.descriptor.interface.identifier.name)
 
 class CGInterfaceObjectJSClass(CGThing):
     def __init__(self, descriptor, properties):
@@ -254,9 +256,11 @@ static DOMIfaceAndProtoJSClass InterfaceObjectClass = {
     JSCLASS_NO_INTERNAL_MEMBERS
   },
   eInterface,
-  %s
+  %s,
+  "function %s() {\\n    [native code]\\n}"
 };
-""" % (ctorname, hasinstance, ctorname, NativePropertyHooks(self.descriptor))
+""" % (ctorname, hasinstance, ctorname, NativePropertyHooks(self.descriptor),
+       self.descriptor.interface.identifier.name)
 
 class CGList(CGThing):
     """

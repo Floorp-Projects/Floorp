@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
@@ -24,6 +23,7 @@ import org.mozilla.gecko.db.BrowserContract.Passwords;
 import org.mozilla.gecko.db.BrowserContract.DeletedPasswords;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 import org.mozilla.gecko.sync.Utils;
@@ -115,8 +115,8 @@ public abstract class GeckoProvider extends ContentProvider {
         boolean dbNeedsSetup = true;
         try {
             String resourcePath = context.getPackageResourcePath();
-            GeckoAppShell.loadSQLiteLibs(context, resourcePath);
-            GeckoAppShell.loadNSSLibs(context, resourcePath);
+            GeckoLoader.loadSQLiteLibs(context, resourcePath);
+            GeckoLoader.loadNSSLibs(context, resourcePath);
             bridge = SQLiteBridge.openDatabase(databasePath, null, 0);
             int version = bridge.getVersion();
             dbNeedsSetup = version != mDBVersion;

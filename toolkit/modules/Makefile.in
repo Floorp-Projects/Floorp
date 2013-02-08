@@ -13,6 +13,7 @@ TEST_DIRS += tests
 
 EXTRA_JS_MODULES := \
   Sqlite.jsm \
+  TelemetryTimestamps.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

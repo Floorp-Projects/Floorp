@@ -78,6 +78,7 @@
                                           android:layout_height="50dip"
                                           android:layout_marginLeft="1dp"
                                           android:layout_gravity="center_vertical"
+                                          android:padding="13dp"
                                           android:src="@drawable/ic_menu_back"
                                           android:contentDescription="@string/back"
                                           android:background="@drawable/address_bar_nav_button"/>

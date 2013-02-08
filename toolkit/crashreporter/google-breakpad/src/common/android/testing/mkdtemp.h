@@ -57,7 +57,7 @@ char* mkdtemp(char* path) {
   const size_t kSuffixLen = strlen(kSuffix);
   char* path_end = path + strlen(path);
 
-  if (path_end - path < kSuffixLen ||
+  if (static_cast<size_t>(path_end - path) < kSuffixLen ||
       memcmp(path_end - kSuffixLen, kSuffix, kSuffixLen) != 0) {
     errno = EINVAL;
     return NULL;

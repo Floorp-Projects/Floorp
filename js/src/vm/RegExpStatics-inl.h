@@ -73,8 +73,8 @@ class RegExpStatics
      * If so, construct a string for it and place it in |*out|.
      * If not, place undefined in |*out|.
      */
-    bool makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, Value *out);
-    bool createDependent(JSContext *cx, size_t start, size_t end, Value *out);
+    bool makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, MutableHandleValue out);
+    bool createDependent(JSContext *cx, size_t start, size_t end, MutableHandleValue out);
 
     void markFlagsSet(JSContext *cx);
 
@@ -133,12 +133,12 @@ class RegExpStatics
 
     /* Value creators. */
 
-    bool createPendingInput(JSContext *cx, Value *out);
-    bool createLastMatch(JSContext *cx, Value *out);
-    bool createLastParen(JSContext *cx, Value *out);
-    bool createParen(JSContext *cx, size_t pairNum, Value *out);
-    bool createLeftContext(JSContext *cx, Value *out);
-    bool createRightContext(JSContext *cx, Value *out);
+    bool createPendingInput(JSContext *cx, MutableHandleValue out);
+    bool createLastMatch(JSContext *cx, MutableHandleValue out);
+    bool createLastParen(JSContext *cx, MutableHandleValue out);
+    bool createParen(JSContext *cx, size_t pairNum, MutableHandleValue out);
+    bool createLeftContext(JSContext *cx, MutableHandleValue out);
+    bool createRightContext(JSContext *cx, MutableHandleValue out);
 
     /* Infallible substring creators. */
 
@@ -204,30 +204,31 @@ SizeOfRegExpStaticsData(const JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
 }
 
 inline bool
-RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, Value *out)
+RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, MutableHandleValue out)
 {
     /* Private function: caller must perform lazy evaluation. */
     JS_ASSERT(!pendingLazyEvaluation);
 
     JS_ASSERT(start <= end);
     JS_ASSERT(end <= matchesInput->length());
-    JSString *str = js_NewDependentString(cx, matchesInput, start, end - start);
+    UnrootedString str = js_NewDependentString(cx, matchesInput, start, end - start);
     if (!str)
         return false;
-    *out = StringValue(str);
+    out.setString(str);
     return true;
 }
 
 inline bool
-RegExpStatics::createPendingInput(JSContext *cx, Value *out)
+RegExpStatics::createPendingInput(JSContext *cx, MutableHandleValue out)
 {
     /* Lazy evaluation need not be resolved to return the input. */
-    out->setString(pendingInput ? pendingInput.get() : cx->runtime->emptyString);
+    out.setString(pendingInput ? pendingInput.get() : cx->runtime->emptyString);
     return true;
 }
 
 inline bool
-RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, Value *out)
+RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum,
+                         MutableHandleValue out)
 {
     /* Private function: caller must perform lazy evaluation. */
     JS_ASSERT(!pendingLazyEvaluation);
@@ -238,7 +239,7 @@ RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, 
     if (matches.empty() || checkPair >= matches.pairCount() ||
         (checkWhich ? matches[checkPair].limit : matches[checkPair].start) < 0)
     {
-        out->setString(cx->runtime->emptyString);
+        out.setString(cx->runtime->emptyString);
         return true;
     }
     const MatchPair &pair = matches[pairNum];
@@ -246,7 +247,7 @@ RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, 
 }
 
 inline bool
-RegExpStatics::createLastMatch(JSContext *cx, Value *out)
+RegExpStatics::createLastMatch(JSContext *cx, MutableHandleValue out)
 {
     if (!executeLazy(cx))
         return false;
@@ -254,18 +255,18 @@ RegExpStatics::createLastMatch(JSContext *cx, Value *out)
 }
 
 inline bool
-RegExpStatics::createLastParen(JSContext *cx, Value *out)
+RegExpStatics::createLastParen(JSContext *cx, MutableHandleValue out)
 {
     if (!executeLazy(cx))
         return false;
 
     if (matches.empty() || matches.pairCount() == 1) {
-        out->setString(cx->runtime->emptyString);
+        out.setString(cx->runtime->emptyString);
         return true;
     }
     const MatchPair &pair = matches[matches.pairCount() - 1];
     if (pair.start == -1) {
-        out->setString(cx->runtime->emptyString);
+        out.setString(cx->runtime->emptyString);
         return true;
     }
     JS_ASSERT(pair.start >= 0 && pair.limit >= 0);
@@ -274,48 +275,48 @@ RegExpStatics::createLastParen(JSContext *cx, Value *out)
 }
 
 inline bool
-RegExpStatics::createParen(JSContext *cx, size_t pairNum, Value *out)
+RegExpStatics::createParen(JSContext *cx, size_t pairNum, MutableHandleValue out)
 {
     JS_ASSERT(pairNum >= 1);
     if (!executeLazy(cx))
         return false;
 
     if (matches.empty() || pairNum >= matches.pairCount()) {
-        out->setString(cx->runtime->emptyString);
+        out.setString(cx->runtime->emptyString);
         return true;
     }
     return makeMatch(cx, pairNum * 2, pairNum, out);
 }
 
 inline bool
-RegExpStatics::createLeftContext(JSContext *cx, Value *out)
+RegExpStatics::createLeftContext(JSContext *cx, MutableHandleValue out)
 {
     if (!executeLazy(cx))
         return false;
 
     if (matches.empty()) {
-        out->setString(cx->runtime->emptyString);
+        out.setString(cx->runtime->emptyString);
         return true;
     }
     if (matches[0].start < 0) {
-        *out = UndefinedValue();
+        out.setUndefined();
         return true;
     }
     return createDependent(cx, 0, matches[0].start, out);
 }
 
 inline bool
-RegExpStatics::createRightContext(JSContext *cx, Value *out)
+RegExpStatics::createRightContext(JSContext *cx, MutableHandleValue out)
 {
     if (!executeLazy(cx))
         return false;
 
     if (matches.empty()) {
-        out->setString(cx->runtime->emptyString);
+        out.setString(cx->runtime->emptyString);
         return true;
     }
     if (matches[0].limit < 0) {
-        *out = UndefinedValue();
+        out.setUndefined();
         return true;
     }
     return createDependent(cx, matches[0].limit, matchesInput->length(), out);

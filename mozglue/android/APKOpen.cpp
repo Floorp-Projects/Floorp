@@ -99,222 +99,9 @@ JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg)
     jenv->DeleteLocalRef(cls);
 }
 
-#define SHELL_WRAPPER0(name) \
-typedef void (*name ## _t)(JNIEnv *, jclass); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc) \
-{ \
-  f_ ## name(jenv, jc); \
-}
-
-#define SHELL_WRAPPER0_WITH_RETURN(name, return_type) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc) \
-{ \
-  return f_ ## name(jenv, jc); \
-}
-
-#define SHELL_WRAPPER1(name,type1) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one) \
-{ \
-  f_ ## name(jenv, jc, one); \
-}
-
-#define SHELL_WRAPPER1_WITH_RETURN(name, return_type, type1) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one) \
-{ \
-  return f_ ## name(jenv, jc, one); \
-}
-
-#define SHELL_WRAPPER2(name,type1,type2) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two) \
-{ \
-  f_ ## name(jenv, jc, one, two); \
-}
-
-#define SHELL_WRAPPER2_WITH_RETURN(name, return_type, type1, type2) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two) \
-{ \
-  return f_ ## name(jenv, jc, one, two); \
-}
-
-#define SHELL_WRAPPER3(name,type1,type2,type3) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three) \
-{ \
-  f_ ## name(jenv, jc, one, two, three); \
-}
-
-#define SHELL_WRAPPER3_WITH_RETURN(name, return_type, type1, type2, type3) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three) \
-{ \
-  return f_ ## name(jenv, jc, one, two, three); \
-}
-
-#define SHELL_WRAPPER4(name,type1,type2,type3,type4) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four) \
-{ \
-  f_ ## name(jenv, jc, one, two, three, four); \
-}
-
-#define SHELL_WRAPPER4_WITH_RETURN(name, return_type, type1, type2, type3, type4) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four) \
-{ \
-  return f_ ## name(jenv, jc, one, two, three, four); \
-}
-
-#define SHELL_WRAPPER5(name,type1,type2,type3,type4,type5) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five) \
-{ \
-  f_ ## name(jenv, jc, one, two, three, four, five); \
-}
-
-#define SHELL_WRAPPER5_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five) \
-{ \
-  return f_ ## name(jenv, jc, one, two, three, four, five); \
-}
-
-#define SHELL_WRAPPER6(name,type1,type2,type3,type4,type5,type6) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six) \
-{ \
-  f_ ## name(jenv, jc, one, two, three, four, five, six); \
-}
-
-#define SHELL_WRAPPER6_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5, type6) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six) \
-{ \
-  return f_ ## name(jenv, jc, one, two, three, four, five, six); \
-}
-
-#define SHELL_WRAPPER7(name,type1,type2,type3,type4,type5,type6,type7) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven) \
-{ \
-  f_ ## name(jenv, jc, one, two, three, four, five, six, seven); \
-}
-
-#define SHELL_WRAPPER7_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5, type6, type7) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven) \
-{ \
-  return f_ ## name(jenv, jc, one, two, three, four, five, six, seven); \
-}
-
-#define SHELL_WRAPPER8(name,type1,type2,type3,type4,type5,type6,type7,type8) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight) \
-{ \
-  f_ ## name(jenv, jc, one, two, three, four, five, six, seven, eight); \
-}
-
-#define SHELL_WRAPPER8_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5, type6, type7, type8) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight) \
-{ \
-  return f_ ## name(jenv, jc, one, two, three, four, five, six, seven, eight); \
-}
-
-#define SHELL_WRAPPER9_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5, type6, type7, type8, type9) \
-typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight, type9 nine); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT return_type JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight, type9 nine) \
-{ \
-  return f_ ## name(jenv, jc, one, two, three, four, five, six, seven, eight, nine); \
-}
-
-#define SHELL_WRAPPER9(name,type1,type2,type3,type4,type5,type6,type7,type8, type9) \
-typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight, type9 nine); \
-static name ## _t f_ ## name; \
-extern "C" NS_EXPORT void JNICALL \
-Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight, type9 nine) \
-{ \
-  f_ ## name(jenv, jc, one, two, three, four, five, six, seven, eight, nine); \
-}
-
-SHELL_WRAPPER0(nativeInit)
-SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
-SHELL_WRAPPER0(processNextNativeEvent)
-SHELL_WRAPPER1(setSurfaceView, jobject)
-SHELL_WRAPPER2(setLayerClient, jobject, jint)
-SHELL_WRAPPER0(onResume)
-SHELL_WRAPPER0(onLowMemory)
-SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
-SHELL_WRAPPER1(removeObserver, jstring)
-SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
-SHELL_WRAPPER1(reportJavaCrash, jstring)
-SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
-SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble)
-SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong)
-SHELL_WRAPPER0(bindWidgetTexture)
-SHELL_WRAPPER0(scheduleComposite)
-SHELL_WRAPPER0(schedulePauseComposition)
-SHELL_WRAPPER2(scheduleResumeComposition, jint, jint)
-SHELL_WRAPPER0_WITH_RETURN(computeRenderIntegrity, jfloat)
-SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong)
-SHELL_WRAPPER5(notifySmsSent, jint, jstring, jstring, jlong, jint)
-SHELL_WRAPPER5(notifySmsDelivery, jint, jint, jstring, jstring, jlong)
-SHELL_WRAPPER2(notifySmsSendFailed, jint, jint)
-SHELL_WRAPPER7(notifyGetSms, jint, jint, jstring, jstring, jstring, jlong, jint)
-SHELL_WRAPPER2(notifyGetSmsFailed, jint, jint)
-SHELL_WRAPPER2(notifySmsDeleted, jboolean, jint)
-SHELL_WRAPPER2(notifySmsDeleteFailed, jint, jint)
-SHELL_WRAPPER1(notifyNoMessageInList, jint)
-SHELL_WRAPPER8(notifyListCreated, jint, jint, jint, jstring, jstring, jstring, jlong, jint)
-SHELL_WRAPPER7(notifyGotNextMessage, jint, jint, jstring, jstring, jstring, jlong, jint)
-SHELL_WRAPPER2(notifyReadingMessageListFailed, jint, jint)
-SHELL_WRAPPER2(notifyFilePickerResult, jstring, jlong)
-SHELL_WRAPPER1_WITH_RETURN(getSurfaceBits, jobject, jobject)
-SHELL_WRAPPER1(onFullScreenPluginHidden, jobject)
-SHELL_WRAPPER1_WITH_RETURN(getNextMessageFromQueue, jobject, jobject)
-SHELL_WRAPPER2(onSurfaceTextureFrameAvailable, jobject, jint)
+#define JNI_STUBS
+#include "jni-stubs.inc"
+#undef JNI_STUBS
 
 static void * xul_handle = NULL;
 static void * sqlite_handle = NULL;
@@ -448,44 +235,9 @@ loadGeckoLibs(const char *apkName)
     return FAILURE;
   }
 
-#define GETFUNC(name) xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_" #name, &f_ ## name)
-  GETFUNC(nativeInit);
-  GETFUNC(notifyGeckoOfEvent);
-  GETFUNC(processNextNativeEvent);
-  GETFUNC(setSurfaceView);
-  GETFUNC(setLayerClient);
-  GETFUNC(onResume);
-  GETFUNC(onLowMemory);
-  GETFUNC(callObserver);
-  GETFUNC(removeObserver);
-  GETFUNC(onChangeNetworkLinkStatus);
-  GETFUNC(reportJavaCrash);
-  GETFUNC(cameraCallbackBridge);
-  GETFUNC(notifyBatteryChange);
-  GETFUNC(notifySmsReceived);
-  GETFUNC(bindWidgetTexture);
-  GETFUNC(scheduleComposite);
-  GETFUNC(schedulePauseComposition);
-  GETFUNC(scheduleResumeComposition);
-  GETFUNC(computeRenderIntegrity);
-  GETFUNC(saveMessageInSentbox);
-  GETFUNC(notifySmsSent);
-  GETFUNC(notifySmsDelivery);
-  GETFUNC(notifySmsSendFailed);
-  GETFUNC(notifyGetSms);
-  GETFUNC(notifyGetSmsFailed);
-  GETFUNC(notifySmsDeleted);
-  GETFUNC(notifySmsDeleteFailed);
-  GETFUNC(notifyNoMessageInList);
-  GETFUNC(notifyListCreated);
-  GETFUNC(notifyGotNextMessage);
-  GETFUNC(notifyReadingMessageListFailed);
-  GETFUNC(notifyFilePickerResult);
-  GETFUNC(getSurfaceBits);
-  GETFUNC(onFullScreenPluginHidden);
-  GETFUNC(getNextMessageFromQueue);
-  GETFUNC(onSurfaceTextureFrameAvailable);
-#undef GETFUNC
+#define JNI_BINDINGS
+#include "jni-stubs.inc"
+#undef JNI_BINDINGS
 
   void (*XRE_StartupTimelineRecord)(int, MOZTime);
   xul_dlsym("XRE_StartupTimelineRecord", &XRE_StartupTimelineRecord);
@@ -590,7 +342,7 @@ loadNSSLibs(const char *apkName)
 }
 
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_loadGeckoLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName)
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName)
 {
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
@@ -607,7 +359,7 @@ Java_org_mozilla_gecko_GeckoAppShell_loadGeckoLibsNative(JNIEnv *jenv, jclass jG
 }
 
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
   if (jShouldExtract) {
     putenv("MOZ_LINKER_EXTRACT=1");
   }
@@ -629,7 +381,7 @@ Java_org_mozilla_gecko_GeckoAppShell_loadSQLiteLibsNative(JNIEnv *jenv, jclass j
 }
 
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
   if (jShouldExtract) {
     putenv("MOZ_LINKER_EXTRACT=1");
   }
@@ -653,7 +405,7 @@ Java_org_mozilla_gecko_GeckoAppShell_loadNSSLibsNative(JNIEnv *jenv, jclass jGec
 typedef void (*GeckoStart_t)(void *, const nsXREAppData *);
 
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_nativeRun(JNIEnv *jenv, jclass jc, jstring jargs)
+Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jstring jargs)
 {
   GeckoStart_t GeckoStart;
   xul_dlsym("GeckoStart", &GeckoStart);

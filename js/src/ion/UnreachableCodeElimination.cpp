@@ -35,16 +35,35 @@ UnreachableCodeElimination::analyze()
     // Pass 1: Identify unreachable blocks (if any).
     if (!prunePointlessBranchesAndMarkReachableBlocks())
         return false;
+
+    return removeUnmarkedBlocksAndCleanup();
+}
+
+bool
+UnreachableCodeElimination::removeUnmarkedBlocks(size_t marked)
+{
+    marked_ = marked;
+    return removeUnmarkedBlocksAndCleanup();
+}
+
+bool
+UnreachableCodeElimination::removeUnmarkedBlocksAndCleanup()
+{
+    // Everything is reachable, no work required.
+    JS_ASSERT(marked_ <= graph_.numBlocks());
     if (marked_ == graph_.numBlocks()) {
-        // Everything is reachable.
         graph_.unmarkBlocks();
         return true;
     }
 
-    // Pass 2: Remove unmarked blocks.
+    // Pass 2: Remove unmarked blocks (see analyze() above).
     if (!removeUnmarkedBlocksAndClearDominators())
         return false;
     graph_.unmarkBlocks();
+
+    AssertGraphCoherency(graph_);
+
+    IonSpewPass("UCEMidPoint");
 
     // Pass 3: Recompute dominators and tweak phis.
     BuildDominatorTree(graph_);

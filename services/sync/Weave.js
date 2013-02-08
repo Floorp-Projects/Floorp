@@ -89,10 +89,11 @@ WeaveService.prototype = {
           // accordingly. We could potentially copy code performed by
           // this check into this file if our above code is yielding too
           // many false positives.
+          Components.utils.import("resource://services-sync/main.js");
           if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
             this.ensureLoaded();
           }
-        }
+        }.bind(this)
       }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
     }

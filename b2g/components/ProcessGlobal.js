@@ -43,7 +43,6 @@ ProcessGlobal.prototype = {
     switch (topic) {
     case 'app-startup': {
       Services.obs.addObserver(this, 'console-api-log-event', false);
-      Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
       break;
     }
     case 'console-api-log-event': {

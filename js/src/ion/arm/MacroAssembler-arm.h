@@ -736,6 +736,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
         branchTest32(cond, ScratchRegister, imm, label);
     }
+    void branchTestBool(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
+        branchTest32(cond, lhs, rhs, label);
+    }
     void branchTestPtr(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);
     }
@@ -967,6 +970,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void add32(Imm32 imm, Register dest);
     void add32(Imm32 imm, const Address &dest);
     void sub32(Imm32 imm, Register dest);
+    void xor32(Imm32 imm, Register dest);
 
     void and32(Imm32 imm, Register dest);
     void and32(Imm32 imm, const Address &dest);
@@ -1102,6 +1106,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // If source is a double, load it into dest. If source is int32,
     // convert it to double. Else, branch to failure.
     void ensureDouble(const ValueOperand &source, FloatRegister dest, Label *failure);
+
+    void
+    emitSet(Assembler::Condition cond, const Register &dest)
+    {
+        ma_mov(Imm32(0), dest);
+        ma_mov(Imm32(1), dest, NoSetCond, cond);
+    }
 
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.

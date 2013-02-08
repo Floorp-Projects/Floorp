@@ -68,9 +68,14 @@ webidl_files = \
   HTMLFontElement.webidl \
   HTMLFrameSetElement.webidl \
   HTMLHeadingElement.webidl \
+  HTMLHRElement.webidl \
   HTMLImageElement.webidl \
   HTMLLabelElement.webidl \
   HTMLLIElement.webidl \
+  HTMLMapElement.webidl \
+  HTMLMetaElement.webidl \
+  HTMLMeterElement.webidl \
+  HTMLModElement.webidl \
   HTMLOListElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLParagraphElement.webidl \
@@ -190,6 +195,12 @@ webidl_files = \
   XPathEvaluator.webidl \
   XULElement.webidl \
   $(NULL)
+
+ifdef MOZ_MEDIA
+webidl_files += \
+  HTMLSourceElement.webidl \
+  $(NULL)
+endif
 
 ifdef MOZ_WEBGL
 webidl_files += \

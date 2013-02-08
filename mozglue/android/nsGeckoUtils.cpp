@@ -17,7 +17,7 @@
 extern "C"
 __attribute__ ((visibility("default")))
 void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map)
+Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv *jenv, jclass, jstring map)
 {
     const char* str;
     // XXX: java doesn't give us true UTF8, we should figure out something

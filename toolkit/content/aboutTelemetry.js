@@ -777,7 +777,9 @@ function sortStartupMilestones(aSimpleMeasurements) {
     ["start", "main", "startupCrashDetectionBegin", "createTopLevelWindow",
      "firstPaint", "delayedStartupStarted", "firstLoadURI",
      "sessionRestoreInitialized", "sessionRestoreRestoring", "sessionRestored",
-     "delayedStartupFinished", "startupCrashDetectionEnd"];
+     "delayedStartupFinished", "startupCrashDetectionEnd",
+     "AMI_startup_begin", "AMI_startup_end", "XPI_startup_begin", "XPI_startup_end",
+     "XPI_bootstrap_addons_begin", "XPI_bootstrap_addons_end"];
 
   let sortedKeys = Object.keys(aSimpleMeasurements);
 

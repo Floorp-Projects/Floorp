@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.ActivityResultHandler;
 
 import android.app.Activity;
@@ -62,7 +63,7 @@ abstract class FilePickerResultHandler implements ActivityResultHandler {
                 fileExt = name.substring(period);
                 fileName = name.substring(0, period);
             }
-            File file = File.createTempFile(fileName, fileExt, GeckoAppShell.getGREDir(GeckoApp.mAppContext));
+            File file = File.createTempFile(fileName, fileExt, GeckoLoader.getGREDir(GeckoApp.mAppContext));
             FileOutputStream fos = new FileOutputStream(file);
             InputStream is = cr.openInputStream(uri);
             byte[] buf = new byte[4096];

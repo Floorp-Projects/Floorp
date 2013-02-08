@@ -908,8 +908,13 @@ var SocialToolbar = {
       toolbarButton.setAttribute("tooltiptext", icon.label);
 
       let badge = icon.counter || "";
-      if (toolbarButton.getAttribute("badge") != badge)
-        toolbarButton.setAttribute("badge", badge);
+      toolbarButton.setAttribute("badge", badge);
+      let ariaLabel = icon.label;
+      // if there is a badge value, we must use a localizable string to insert it.
+      if (badge)
+        ariaLabel = gNavigatorBundle.getFormattedString("social.aria.toolbarButtonBadgeText",
+                                                        [ariaLabel, badge]);
+      toolbarButton.setAttribute("aria-label", ariaLabel);
     }
     let socialToolbarItem = document.getElementById("social-toolbar-item");
     socialToolbarItem.appendChild(toolbarButtons);
