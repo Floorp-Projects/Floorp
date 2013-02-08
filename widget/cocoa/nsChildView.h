@@ -260,9 +260,9 @@ typedef NSInteger NSEventGestureAxis;
 
   BOOL mDidForceRefreshOpenGL;
 
-  // Support for fluid swipe tracking.
 #ifdef __LP64__
-  BOOL *mSwipeAnimationCancelled;
+  // Support for fluid swipe tracking.
+  void (^mCancelSwipeAnimation)();
 #endif
 
   // Whether this uses off-main-thread compositing.

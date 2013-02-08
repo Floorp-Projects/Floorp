@@ -532,6 +532,8 @@ pref("browser.gesture.twist.left", "cmd_gestureRotateLeft");
 pref("browser.gesture.twist.end", "cmd_gestureRotateEnd");
 pref("browser.gesture.tap", "cmd_fullZoomReset");
 
+pref("browser.snapshots.limit", 20);
+
 // 0: Nothing happens
 // 1: Scrolling contents
 // 2: Go back or go forward, in your history
