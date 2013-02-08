@@ -20,6 +20,7 @@ import android.graphics.PixelFormat;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -232,6 +233,13 @@ public class LayerView extends FrameLayout {
     public void setInputConnectionHandler(InputConnectionHandler inputConnectionHandler) {
         mInputConnectionHandler = inputConnectionHandler;
         mLayerClient.forceRedraw();
+    }
+
+    @Override
+    public Handler getHandler() {
+        if (mInputConnectionHandler != null)
+            return mInputConnectionHandler.getHandler(super.getHandler());
+        return super.getHandler();
     }
 
     @Override
