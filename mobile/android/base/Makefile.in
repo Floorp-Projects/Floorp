@@ -1187,8 +1187,21 @@ jars:
 	@echo "MKDIR jars"
 	$(NSINSTALL) -D jars
 
+CLASSES_WITH_JNI= \
+    org.mozilla.gecko.GeckoAppShell \
+    $(NULL)
+
+ifdef MOZ_WEBSMS_BACKEND
+# Note: if you are building with MOZ_WEBSMS_BACKEND turned on, then
+# you will get a build error because the generated jni-stubs.inc will
+# be different than the one checked in (i.e. it will have the sms-related
+# JNI stubs as well). Just copy the generated file to mozglue/android/
+# like the error message says and rebuild. All should be well after that.
+CLASSES_WITH_JNI += org.mozilla.gecko.GeckoSmsManager
+endif
+
 jni-stubs.inc: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar
-	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) org.mozilla.gecko.GeckoAppShell
+	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) $(CLASSES_WITH_JNI)
 	$(PYTHON) $(topsrcdir)/mobile/android/base/jni-generator.py javah.out $@
 
 PP_RES_XML= \

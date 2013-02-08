@@ -380,10 +380,10 @@ public class GeckoSmsManager
       for (int i=0; i<pdus.length; ++i) {
         SmsMessage msg = SmsMessage.createFromPdu((byte[])pdus[i]);
 
-        GeckoAppShell.notifySmsReceived(msg.getDisplayOriginatingAddress(),
-                                        msg.getDisplayMessageBody(),
-                                        getGeckoMessageClass(msg.getMessageClass()),
-                                        System.currentTimeMillis());
+        notifySmsReceived(msg.getDisplayOriginatingAddress(),
+                          msg.getDisplayMessageBody(),
+                          getGeckoMessageClass(msg.getMessageClass()),
+                          System.currentTimeMillis());
       }
 
       return;
@@ -439,15 +439,14 @@ public class GeckoSmsManager
 
       if (envelope.isFailing(part)) {
         if (part == Envelope.SubParts.SENT_PART) {
-          GeckoAppShell.notifySmsSendFailed(envelope.getError(),
-                                            bundle.getInt("requestId"));
+          notifySmsSendFailed(envelope.getError(), bundle.getInt("requestId"));
           Log.i("GeckoSmsManager", "SMS sending failed!");
         } else {
-          GeckoAppShell.notifySmsDelivery(envelope.getMessageId(),
-                                          kDeliveryStatusError,
-                                          bundle.getString("number"),
-                                          bundle.getString("message"),
-                                          envelope.getMessageTimestamp());
+          notifySmsDelivery(envelope.getMessageId(),
+                            kDeliveryStatusError,
+                            bundle.getString("number"),
+                            bundle.getString("message"),
+                            envelope.getMessageTimestamp());
           Log.i("GeckoSmsManager", "SMS delivery failed!");
         }
       } else {
@@ -458,19 +457,19 @@ public class GeckoSmsManager
 
           int id = saveSentMessage(number, message, timestamp);
 
-          GeckoAppShell.notifySmsSent(id, number, message, timestamp,
-                                      bundle.getInt("requestId"));
+          notifySmsSent(id, number, message, timestamp,
+                        bundle.getInt("requestId"));
 
           envelope.setMessageId(id);
           envelope.setMessageTimestamp(timestamp);
 
           Log.i("GeckoSmsManager", "SMS sending was successfull!");
         } else {
-          GeckoAppShell.notifySmsDelivery(envelope.getMessageId(),
-                                          kDeliveryStatusSuccess,
-                                          bundle.getString("number"),
-                                          bundle.getString("message"),
-                                          envelope.getMessageTimestamp());
+          notifySmsDelivery(envelope.getMessageId(),
+                            kDeliveryStatusSuccess,
+                            bundle.getString("number"),
+                            bundle.getString("message"),
+                            envelope.getMessageTimestamp());
           Log.i("GeckoSmsManager", "SMS successfully delivered!");
         }
       }
@@ -566,7 +565,7 @@ public class GeckoSmsManager
         Postman.getInstance().destroyEnvelope(envelopeId);
       }
 
-      GeckoAppShell.notifySmsSendFailed(kUnknownError, aRequestId);
+      notifySmsSendFailed(kUnknownError, aRequestId);
     }
   }
 
@@ -648,28 +647,28 @@ public class GeckoSmsManager
             throw new InvalidTypeException();
           }
 
-          GeckoAppShell.notifyGetSms(cursor.getInt(cursor.getColumnIndex("_id")),
-                                     deliveryStatus,
-                                     receiver, sender,
-                                     cursor.getString(cursor.getColumnIndex("body")),
-                                     cursor.getLong(cursor.getColumnIndex("date")),
-                                     mRequestId);
+          notifyGetSms(cursor.getInt(cursor.getColumnIndex("_id")),
+                       deliveryStatus,
+                       receiver, sender,
+                       cursor.getString(cursor.getColumnIndex("body")),
+                       cursor.getLong(cursor.getColumnIndex("date")),
+                       mRequestId);
         } catch (NotFoundException e) {
           Log.i("GeckoSmsManager", "Message id " + mMessageId + " not found");
-          GeckoAppShell.notifyGetSmsFailed(kNotFoundError, mRequestId);
+          notifyGetSmsFailed(kNotFoundError, mRequestId);
         } catch (UnmatchingIdException e) {
           Log.e("GeckoSmsManager", "Requested message id (" + mMessageId +
                                    ") is different from the one we got.");
-          GeckoAppShell.notifyGetSmsFailed(kUnknownError, mRequestId);
+          notifyGetSmsFailed(kUnknownError, mRequestId);
         } catch (TooManyResultsException e) {
           Log.e("GeckoSmsManager", "Get too many results for id " + mMessageId);
-          GeckoAppShell.notifyGetSmsFailed(kUnknownError, mRequestId);
+          notifyGetSmsFailed(kUnknownError, mRequestId);
         } catch (InvalidTypeException e) {
           Log.i("GeckoSmsManager", "Message has an invalid type, we ignore it.");
-          GeckoAppShell.notifyGetSmsFailed(kNotFoundError, mRequestId);
+          notifyGetSmsFailed(kNotFoundError, mRequestId);
         } catch (Exception e) {
           Log.e("GeckoSmsManager", "Error while trying to get message", e);
-          GeckoAppShell.notifyGetSmsFailed(kUnknownError, mRequestId);
+          notifyGetSmsFailed(kUnknownError, mRequestId);
         } finally {
           if (cursor != null) {
             cursor.close();
@@ -680,7 +679,7 @@ public class GeckoSmsManager
 
     if (!SmsIOThread.getInstance().execute(new GetMessageRunnable(aMessageId, aRequestId))) {
       Log.e("GeckoSmsManager", "Failed to add GetMessageRunnable to the SmsIOThread");
-      GeckoAppShell.notifyGetSmsFailed(kUnknownError, aRequestId);
+      notifyGetSmsFailed(kUnknownError, aRequestId);
     }
   }
 
@@ -706,20 +705,20 @@ public class GeckoSmsManager
             throw new TooManyResultsException();
           }
 
-          GeckoAppShell.notifySmsDeleted(count == 1, mRequestId);
+          notifySmsDeleted(count == 1, mRequestId);
         } catch (TooManyResultsException e) {
           Log.e("GeckoSmsManager", "Delete more than one message?", e);
-          GeckoAppShell.notifySmsDeleteFailed(kUnknownError, mRequestId);
+          notifySmsDeleteFailed(kUnknownError, mRequestId);
         } catch (Exception e) {
           Log.e("GeckoSmsManager", "Error while trying to delete a message", e);
-          GeckoAppShell.notifySmsDeleteFailed(kUnknownError, mRequestId);
+          notifySmsDeleteFailed(kUnknownError, mRequestId);
         }
       }
     }
 
     if (!SmsIOThread.getInstance().execute(new DeleteMessageRunnable(aMessageId, aRequestId))) {
       Log.e("GeckoSmsManager", "Failed to add GetMessageRunnable to the SmsIOThread");
-      GeckoAppShell.notifySmsDeleteFailed(kUnknownError, aRequestId);
+      notifySmsDeleteFailed(kUnknownError, aRequestId);
     }
   }
 
@@ -792,7 +791,7 @@ public class GeckoSmsManager
                             mReverse ? "date DESC" : "date ASC");
 
           if (cursor.getCount() == 0) {
-            GeckoAppShell.notifyNoMessageInList(mRequestId);
+            notifyNoMessageInList(mRequestId);
             return;
           }
 
@@ -815,19 +814,19 @@ public class GeckoSmsManager
 
           int listId = MessagesListManager.getInstance().add(cursor);
           closeCursor = false;
-          GeckoAppShell.notifyListCreated(listId,
-                                          cursor.getInt(cursor.getColumnIndex("_id")),
-                                          deliveryStatus,
-                                          receiver, sender,
-                                          cursor.getString(cursor.getColumnIndex("body")),
-                                          cursor.getLong(cursor.getColumnIndex("date")),
-                                          mRequestId);
+          notifyListCreated(listId,
+                            cursor.getInt(cursor.getColumnIndex("_id")),
+                            deliveryStatus,
+                            receiver, sender,
+                            cursor.getString(cursor.getColumnIndex("body")),
+                            cursor.getLong(cursor.getColumnIndex("date")),
+                            mRequestId);
         } catch (UnexpectedDeliveryStateException e) {
           Log.e("GeckoSmsManager", "Unexcepted delivery state type", e);
-          GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, mRequestId);
+          notifyReadingMessageListFailed(kUnknownError, mRequestId);
         } catch (Exception e) {
           Log.e("GeckoSmsManager", "Error while trying to create a message list cursor", e);
-          GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, mRequestId);
+          notifyReadingMessageListFailed(kUnknownError, mRequestId);
         } finally {
           // Close the cursor if MessagesListManager isn't taking care of it.
           // We could also just check if it is in the MessagesListManager list but
@@ -841,7 +840,7 @@ public class GeckoSmsManager
 
     if (!SmsIOThread.getInstance().execute(new CreateMessageListRunnable(aStartDate, aEndDate, aNumbers, aNumbersCount, aDeliveryState, aReverse, aRequestId))) {
       Log.e("GeckoSmsManager", "Failed to add CreateMessageListRunnable to the SmsIOThread");
-      GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, aRequestId);
+      notifyReadingMessageListFailed(kUnknownError, aRequestId);
     }
   }
 
@@ -862,7 +861,7 @@ public class GeckoSmsManager
 
           if (!cursor.moveToNext()) {
             MessagesListManager.getInstance().remove(mListId);
-            GeckoAppShell.notifyNoMessageInList(mRequestId);
+            notifyNoMessageInList(mRequestId);
             return;
           }
 
@@ -882,25 +881,25 @@ public class GeckoSmsManager
           }
 
           int listId = MessagesListManager.getInstance().add(cursor);
-          GeckoAppShell.notifyGotNextMessage(cursor.getInt(cursor.getColumnIndex("_id")),
-                                             deliveryStatus,
-                                             receiver, sender,
-                                             cursor.getString(cursor.getColumnIndex("body")),
-                                             cursor.getLong(cursor.getColumnIndex("date")),
-                                             mRequestId);
+          notifyGotNextMessage(cursor.getInt(cursor.getColumnIndex("_id")),
+                               deliveryStatus,
+                               receiver, sender,
+                               cursor.getString(cursor.getColumnIndex("body")),
+                               cursor.getLong(cursor.getColumnIndex("date")),
+                               mRequestId);
         } catch (UnexpectedDeliveryStateException e) {
           Log.e("GeckoSmsManager", "Unexcepted delivery state type", e);
-          GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, mRequestId);
+          notifyReadingMessageListFailed(kUnknownError, mRequestId);
         } catch (Exception e) {
           Log.e("GeckoSmsManager", "Error while trying to get the next message of a list", e);
-          GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, mRequestId);
+          notifyReadingMessageListFailed(kUnknownError, mRequestId);
         }
       }
     }
 
     if (!SmsIOThread.getInstance().execute(new GetNextMessageInListRunnable(aListId, aRequestId))) {
       Log.e("GeckoSmsManager", "Failed to add GetNextMessageInListRunnable to the SmsIOThread");
-      GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, aRequestId);
+      notifyReadingMessageListFailed(kUnknownError, aRequestId);
     }
   }
 
@@ -968,4 +967,17 @@ public class GeckoSmsManager
   class UnmatchingIdException extends Exception {
     private static final long serialVersionUID = 158467542575633280L;
   }
+
+  private static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
+  private static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId);
+  private static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
+  private static native void notifySmsSendFailed(int aError, int aRequestId);
+  private static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
+  private static native void notifyGetSmsFailed(int aError, int aRequestId);
+  private static native void notifySmsDeleted(boolean aDeleted, int aRequestId);
+  private static native void notifySmsDeleteFailed(int aError, int aRequestId);
+  private static native void notifyNoMessageInList(int aRequestId);
+  private static native void notifyListCreated(int aListId, int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
+  private static native void notifyGotNextMessage(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
+  private static native void notifyReadingMessageListFailed(int aError, int aRequestId);
 }

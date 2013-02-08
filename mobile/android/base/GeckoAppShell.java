@@ -217,19 +217,6 @@ public class GeckoAppShell
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
-    public static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
-    public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId);
-    public static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
-    public static native void notifySmsSendFailed(int aError, int aRequestId);
-    public static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
-    public static native void notifyGetSmsFailed(int aError, int aRequestId);
-    public static native void notifySmsDeleted(boolean aDeleted, int aRequestId);
-    public static native void notifySmsDeleteFailed(int aError, int aRequestId);
-    public static native void notifyNoMessageInList(int aRequestId);
-    public static native void notifyListCreated(int aListId, int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
-    public static native void notifyGotNextMessage(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
-    public static native void notifyReadingMessageListFailed(int aError, int aRequestId);
-
     public static native void scheduleComposite();
 
     // Resuming the compositor is a synchronous request, so be
