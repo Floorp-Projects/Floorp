@@ -114,7 +114,7 @@ public:
   static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                                 const nsAFlatCString& aClassName,
                                 nsXBLPrototypeBinding* aProtoBinding,
-                                JSObject** aClassObject);
+                                JSObject** aClassObject, bool* aNew);
 
   bool AllowScripts();  // XXX make const
 

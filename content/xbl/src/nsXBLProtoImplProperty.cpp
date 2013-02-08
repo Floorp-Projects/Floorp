@@ -158,7 +158,7 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
   JSObject * globalObject = sgo->GetGlobalJSObject();
 
   // now we want to reevaluate our property using aContext and the script object for this window...
-  if ((mJSGetterObject || mJSSetterObject) && aTargetClassObject) {
+  if (mJSGetterObject || mJSSetterObject) {
     JSObject * getter = nullptr;
     JSAutoRequest ar(cx);
     JSAutoCompartment ac(cx, globalObject);

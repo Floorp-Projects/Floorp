@@ -1352,7 +1352,7 @@ nsresult
 nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                             const nsAFlatCString& aClassName,
                             nsXBLPrototypeBinding* aProtoBinding,
-                            JSObject** aClassObject)
+                            JSObject** aClassObject, bool* aNew)
 {
   // First ensure our JS class is initialized.
   nsAutoCString className(aClassName);
@@ -1408,6 +1408,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
   if ((!::JS_LookupPropertyWithFlags(cx, global, className.get(), 0, &val)) ||
       JSVAL_IS_PRIMITIVE(val)) {
     // We need to initialize the class.
+    *aNew = true;
 
     nsCStringKey key(xblKey);
     if (!c) {
@@ -1485,11 +1486,13 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
 
     ::JS_SetReservedSlot(proto, 0, PRIVATE_TO_JSVAL(aProtoBinding));
 
-    *aClassObject = proto;
   }
   else {
+    *aNew = false;
     proto = JSVAL_TO_OBJECT(val);
   }
+
+  *aClassObject = proto;
 
   if (obj) {
     // Set the prototype of our object to be the new class.

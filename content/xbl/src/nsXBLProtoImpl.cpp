@@ -68,10 +68,17 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // not been built already.
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
   JSObject* targetClassObject = nullptr;
+  bool targetObjectIsNew = false;
   nsresult rv = InitTargetObjects(aPrototypeBinding, context,
                                   aBinding->GetBoundElement(),
-                                  getter_AddRefs(holder), &targetClassObject);
+                                  getter_AddRefs(holder), &targetClassObject,
+                                  &targetObjectIsNew);
   NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
+  MOZ_ASSERT(targetClassObject);
+
+  // If the prototype already existed, we don't need to install anything. return early.
+  if (!targetObjectIsNew)
+    return NS_OK;
 
   JSObject * targetScriptObject;
   holder->GetJSObject(&targetScriptObject);
@@ -95,7 +102,8 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                                   nsIScriptContext* aContext, 
                                   nsIContent* aBoundElement, 
                                   nsIXPConnectJSObjectHolder** aScriptObjectHolder, 
-                                  JSObject** aTargetClassObject)
+                                  JSObject** aTargetClassObject,
+                                  bool* aTargetIsNew)
 {
   nsresult rv = NS_OK;
   *aScriptObjectHolder = nullptr;
@@ -132,7 +140,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   // between the object and its base class.  We become the new base class of the object, and the
   // object's old base class becomes the new class' base class.
   rv = aBinding->InitClass(mClassName, jscontext, global, JSVAL_TO_OBJECT(v),
-                           aTargetClassObject);
+                           aTargetClassObject, aTargetIsNew);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -163,14 +171,15 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   
 
   JSObject* classObject;
+  bool classObjectIsNew = false;
   nsresult rv = aBinding->InitClass(mClassName, cx, global, global,
-                                    &classObject);
+                                    &classObject, &classObjectIsNew);
   if (NS_FAILED(rv))
     return rv;
 
+  MOZ_ASSERT(classObjectIsNew);
+  MOZ_ASSERT(classObject);
   mClassObject = classObject;
-  if (!mClassObject)
-    return NS_ERROR_FAILURE;
 
   AutoVersionChecker avc(cx);
 
@@ -284,9 +293,12 @@ nsXBLProtoImpl::Read(nsIScriptContext* aContext,
   JSObject *global = aGlobal->GetGlobalJSObject();
 
   JSObject* classObject;
-  nsresult rv = aBinding->InitClass(mClassName, cx, global, global, &classObject);
+  bool classObjectIsNew = false;
+  nsresult rv = aBinding->InitClass(mClassName, cx, global, global, &classObject,
+                                    &classObjectIsNew);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(classObject, NS_ERROR_FAILURE);
+  MOZ_ASSERT(classObject);
+  MOZ_ASSERT(classObjectIsNew);
 
   mClassObject = classObject;
 
