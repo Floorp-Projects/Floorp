@@ -26,6 +26,7 @@
 #ifndef YarrInterpreter_h
 #define YarrInterpreter_h
 
+#include "jscntxt.h"
 #include "YarrPattern.h"
 
 namespace WTF {
@@ -379,9 +380,9 @@ private:
 };
 
 JS_EXPORT_PRIVATE PassOwnPtr<BytecodePattern> byteCompile(YarrPattern&, BumpPointerAllocator*);
-JS_EXPORT_PRIVATE unsigned interpret(BytecodePattern*, const String& input, unsigned start, unsigned* output);
-unsigned interpret(BytecodePattern*, const LChar* input, unsigned length, unsigned start, unsigned* output);
-unsigned interpret(BytecodePattern*, const UChar* input, unsigned length, unsigned start, unsigned* output);
+JS_EXPORT_PRIVATE unsigned interpret(JSContext *cx, BytecodePattern*, const String& input, unsigned start, unsigned* output);
+unsigned interpret(JSContext *cx, BytecodePattern*, const LChar* input, unsigned length, unsigned start, unsigned* output);
+unsigned interpret(JSContext *cx, BytecodePattern*, const UChar* input, unsigned length, unsigned start, unsigned* output);
 
 } } // namespace JSC::Yarr
 

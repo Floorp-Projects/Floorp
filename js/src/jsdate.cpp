@@ -2549,7 +2549,7 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 2. */
     RootedValue tv(cx, ObjectValue(*obj));
-    if (!ToPrimitive(cx, JSTYPE_NUMBER, tv.address()))
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, &tv))
         return false;
 
     /* Step 3. */
@@ -3052,7 +3052,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
         /* ES5 15.9.3.2. */
 
         /* Step 1. */
-        if (!ToPrimitive(cx, &args[0]))
+        if (!ToPrimitive(cx, args.handleAt(0)))
             return false;
 
         if (args[0].isString()) {

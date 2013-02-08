@@ -568,9 +568,9 @@ AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
      */
     bool lIsObject = lhs.isObject(), rIsObject = rhs.isObject();
 
-    if (!ToPrimitive(cx, lhs.address()))
+    if (!ToPrimitive(cx, lhs))
         return false;
-    if (!ToPrimitive(cx, rhs.address()))
+    if (!ToPrimitive(cx, rhs))
         return false;
     bool lIsString, rIsString;
     if ((lIsString = lhs.isString()) | (rIsString = rhs.isString())) {
@@ -973,9 +973,9 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
         if (lhs.isInt32() && rhs.isInt32()) {                                 \
             *res = lhs.toInt32() OP rhs.toInt32();                            \
         } else {                                                              \
-            if (!ToPrimitive(cx, JSTYPE_NUMBER, lhs.address()))               \
+            if (!ToPrimitive(cx, JSTYPE_NUMBER, lhs))                         \
                 return false;                                                 \
-            if (!ToPrimitive(cx, JSTYPE_NUMBER, rhs.address()))               \
+            if (!ToPrimitive(cx, JSTYPE_NUMBER, rhs))                         \
                 return false;                                                 \
             if (lhs.isString() && rhs.isString()) {                           \
                 JSString *l = lhs.toString(), *r = rhs.toString();            \
@@ -1124,7 +1124,7 @@ class FastInvokeGuard
       , useIon_(ion::IsEnabled(cx))
 #endif
     {
-        JS_ASSERT(!ForkJoinSlice::InParallelSection());
+        JS_ASSERT(!InParallelSection());
         initFunction(fval);
     }
 

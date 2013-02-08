@@ -58,23 +58,23 @@ StackwalkerX86::cfi_register_map_[] = {
   // restored upon return. But the callee_saves flags here really means
   // that the walker should assume they're unchanged if the CFI doesn't
   // mention them, which is clearly wrong for $eip and $esp.
-  { toUniqueString("$eip"), toUniqueString(".ra"),  false,
+  { ToUniqueString("$eip"), ToUniqueString(".ra"),  false,
     StackFrameX86::CONTEXT_VALID_EIP, &MDRawContextX86::eip },
-  { toUniqueString("$esp"), toUniqueString(".cfa"), false,
+  { ToUniqueString("$esp"), ToUniqueString(".cfa"), false,
     StackFrameX86::CONTEXT_VALID_ESP, &MDRawContextX86::esp },
-  { toUniqueString("$ebp"), NULL,   true,
+  { ToUniqueString("$ebp"), NULL,   true,
     StackFrameX86::CONTEXT_VALID_EBP, &MDRawContextX86::ebp },
-  { toUniqueString("$eax"), NULL,   false,
+  { ToUniqueString("$eax"), NULL,   false,
     StackFrameX86::CONTEXT_VALID_EAX, &MDRawContextX86::eax },
-  { toUniqueString("$ebx"), NULL,   true,
+  { ToUniqueString("$ebx"), NULL,   true,
     StackFrameX86::CONTEXT_VALID_EBX, &MDRawContextX86::ebx },
-  { toUniqueString("$ecx"), NULL,   false,
+  { ToUniqueString("$ecx"), NULL,   false,
     StackFrameX86::CONTEXT_VALID_ECX, &MDRawContextX86::ecx },
-  { toUniqueString("$edx"), NULL,   false,
+  { ToUniqueString("$edx"), NULL,   false,
     StackFrameX86::CONTEXT_VALID_EDX, &MDRawContextX86::edx },
-  { toUniqueString("$esi"), NULL,   true,
+  { ToUniqueString("$esi"), NULL,   true,
     StackFrameX86::CONTEXT_VALID_ESI, &MDRawContextX86::esi },
-  { toUniqueString("$edi"), NULL,   true,
+  { ToUniqueString("$edi"), NULL,   true,
     StackFrameX86::CONTEXT_VALID_EDI, &MDRawContextX86::edi },
 };
 

@@ -512,13 +512,13 @@ DirectProxyHandler::regexp_toShared(JSContext *cx, JSObject *proxy,
 }
 
 bool
-DirectProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint,
-                                 Value *vp)
+DirectProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint, Value *vp)
 {
     *vp = ObjectValue(*GetProxyTargetObject(proxy));
-    if (hint == JSTYPE_VOID)
-        return ToPrimitive(cx, vp);
-    return ToPrimitive(cx, hint, vp);
+    RootedValue tmp(cx, *vp);
+    bool ok = hint == JSTYPE_VOID ? ToPrimitive(cx, &tmp) : ToPrimitive(cx, hint, &tmp);
+    *vp = tmp;
+    return ok;
 }
 
 JSObject *

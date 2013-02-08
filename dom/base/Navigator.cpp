@@ -1487,7 +1487,9 @@ Navigator::OnNavigation()
 #ifdef MOZ_MEDIA_NAVIGATOR
   // Inform MediaManager in case there are live streams or pending callbacks.
   MediaManager *manager = MediaManager::Get();
-  manager->OnNavigation(win->WindowID());
+  if (manager) {
+    manager->OnNavigation(win->WindowID());
+  }
 #endif
   if (mCameraManager) {
     mCameraManager->OnNavigation(win->WindowID());

@@ -110,14 +110,14 @@ this.PhoneNumber = (function (dataBase) {
               // Only the first entry has the formats field set.
               // Parse the main country if we haven't already and use
               // the formats field from the main country.
-              if (typeof entry[0] == "string" && entry[0].substr(2,2) == region)
+              if (typeof entry[0] == "string")
                 entry[0] = ParseMetaData(countryCode, entry[0]);
               let formats = entry[0].formats;
               let current = ParseMetaData(countryCode, entry[n]);
               current.formats = formats;
               return entry[n] = current;
             }
-            
+
             entry[n] = ParseMetaData(countryCode, entry[n]);
             return entry[n];
           }

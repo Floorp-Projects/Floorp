@@ -930,8 +930,14 @@ DownloadsPlacesView.prototype = {
     }
 
     if (shouldCreateShell) {
-      let shell = new DownloadElementShell(aDataItem, aPlacesNode,
-                                           this._getAnnotationsFor(downloadURI));
+      // Bug 836271: The annotations for a url should be cached only when the
+      // places node is available, i.e. when we know we we'd be notified for
+      // annoation changes. 
+      // Otherwise we may cache NOT_AVILABLE values first for a given session
+      // download, and later use these NOT_AVILABLE values when a history
+      // download for the same URL is added.
+      let cachedAnnotations = aPlacesNode ? this._getAnnotationsFor(downloadURI) : null;
+      let shell = new DownloadElementShell(aDataItem, aPlacesNode, cachedAnnotations);
       newOrUpdatedShell = shell;
       shellsForURI.add(shell);
       if (aDataItem)
@@ -1173,42 +1179,63 @@ DownloadsPlacesView.prototype = {
 
     let suppressOnSelect = this._richlistbox.suppressOnSelect;
     this._richlistbox.suppressOnSelect = true;
-
-    // Remove the invalidated history downloads from the list and unset the
-    // places node for data downloads.
-    // Loop backwards since _removeHistoryDownloadFromView may removeChild().
-    for (let i = this._richlistbox.childNodes.length - 1; i >= 0; --i) {
-      let element = this._richlistbox.childNodes[i];
-      if (element._shell.placesNode)
-        this._removeHistoryDownloadFromView(element._shell.placesNode);
-    }
-
-    let elementsToAppendFragment = document.createDocumentFragment();
-    for (let i = 0; i < aContainer.childCount; i++) {
-      try {
-        this._addDownloadData(null, aContainer.getChild(i), false,
-                              elementsToAppendFragment);
-      }
-      catch(ex) {
-        Cu.reportError(ex);
+    try {
+      // Remove the invalidated history downloads from the list and unset the
+      // places node for data downloads.
+      // Loop backwards since _removeHistoryDownloadFromView may removeChild().
+      for (let i = this._richlistbox.childNodes.length - 1; i >= 0; --i) {
+        let element = this._richlistbox.childNodes[i];
+        if (element._shell.placesNode)
+          this._removeHistoryDownloadFromView(element._shell.placesNode);
       }
     }
+    finally {
+      this._richlistbox.suppressOnSelect = suppressOnSelect;
+    }
 
-    this._appendDownloadsFragment(elementsToAppendFragment);
-    this._ensureVisibleElementsAreActive();
+    if (aContainer.childCount > 0) {
+      let elementsToAppendFragment = document.createDocumentFragment();
+      for (let i = 0; i < aContainer.childCount; i++) {
+        try {
+          this._addDownloadData(null, aContainer.getChild(i), false,
+                                elementsToAppendFragment);
+        }
+        catch(ex) {
+          Cu.reportError(ex);
+        }
+      }
 
-    this._richlistbox.suppressOnSelect = suppressOnSelect;
+      // _addDownloadData may not add new elements if there were already
+      // data items in place.
+      if (elementsToAppendFragment.firstChild) {
+        this._appendDownloadsFragment(elementsToAppendFragment);
+        this._ensureVisibleElementsAreActive();
+      }
+    }
+
     goUpdateDownloadCommands();
   },
 
   _appendDownloadsFragment: function DPV__appendDownloadsFragment(aDOMFragment) {
     // Workaround multiple reflows hang by removing the richlistbox
     // and adding it back when we're done.
+
+    // Hack for bug 836283: reset xbl fields to their old values after the
+    // binding is reattached to avoid breaking the selection state
+    let xblFields = new Map();
+    for (let [key, value] in Iterator(this._richlistbox)) {
+      xblFields.set(key, value);
+    }
+
     let parentNode = this._richlistbox.parentNode;
     let nextSibling = this._richlistbox.nextSibling;
     parentNode.removeChild(this._richlistbox);
     this._richlistbox.appendChild(aDOMFragment);
     parentNode.insertBefore(this._richlistbox, nextSibling);
+
+    for (let [key, value] of xblFields) {
+      this._richlistbox[key] = value;
+    }
   },
 
   nodeInserted: function DPV_nodeInserted(aParent, aPlacesNode) {

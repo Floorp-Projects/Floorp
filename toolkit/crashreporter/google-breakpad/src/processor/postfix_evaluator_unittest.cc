@@ -48,8 +48,22 @@ namespace {
 
 
 using std::map;
+using google_breakpad::FromUniqueString;
 using google_breakpad::MemoryRegion;
 using google_breakpad::PostfixEvaluator;
+using google_breakpad::ToUniqueString;
+using google_breakpad::UniqueString;
+using google_breakpad::ustr__ZDcbParams;
+using google_breakpad::ustr__ZDcbSavedRegs;
+using google_breakpad::ustr__ZDcfa;
+using google_breakpad::ustr__ZDra;
+using google_breakpad::ustr__ZDraSearchStart;
+using google_breakpad::ustr__ZSebx;
+using google_breakpad::ustr__ZSebp;
+using google_breakpad::ustr__ZSedi;
+using google_breakpad::ustr__ZSeip;
+using google_breakpad::ustr__ZSesi;
+using google_breakpad::ustr__ZSesp;
 
 
 // FakeMemoryRegion is used to test PostfixEvaluator's dereference (^)
@@ -153,16 +167,16 @@ static bool RunTests() {
     { "$rAdd3 2 2 + =$rMul2 9 6 * =", true } // smashed-equals tokenization
   };
   map<const UniqueString*, unsigned int> validate_data_0;
-  validate_data_0[toUniqueString("$rAdd")]   = 8;
-  validate_data_0[toUniqueString("$rAdd2")]  = 4;
-  validate_data_0[toUniqueString("$rSub")]   = 3;
-  validate_data_0[toUniqueString("$rMul")]   = 54;
-  validate_data_0[toUniqueString("$rDivQ")]  = 1;
-  validate_data_0[toUniqueString("$rDivM")]  = 3;
-  validate_data_0[toUniqueString("$rDeref")] = 10;
-  validate_data_0[toUniqueString("$rAlign")] = 32;
-  validate_data_0[toUniqueString("$rAdd3")]  = 4;
-  validate_data_0[toUniqueString("$rMul2")]  = 54;
+  validate_data_0[ToUniqueString("$rAdd")]   = 8;
+  validate_data_0[ToUniqueString("$rAdd2")]  = 4;
+  validate_data_0[ToUniqueString("$rSub")]   = 3;
+  validate_data_0[ToUniqueString("$rMul")]   = 54;
+  validate_data_0[ToUniqueString("$rDivQ")]  = 1;
+  validate_data_0[ToUniqueString("$rDivM")]  = 3;
+  validate_data_0[ToUniqueString("$rDeref")] = 10;
+  validate_data_0[ToUniqueString("$rAlign")] = 32;
+  validate_data_0[ToUniqueString("$rAdd3")]  = 4;
+  validate_data_0[ToUniqueString("$rMul2")]  = 54;
 
   // The second test set simulates a couple of MSVC program strings.
   // The data is fudged a little bit because the tests use FakeMemoryRegion
@@ -194,14 +208,14 @@ static bool RunTests() {
       true }
   };
   map<const UniqueString*, unsigned int> validate_data_1;
-  validate_data_1[toUniqueString("$T0")]  = 0xbfff0012;
-  validate_data_1[toUniqueString("$T1")]  = 0xbfff0020;
-  validate_data_1[toUniqueString("$T2")]  = 0xbfff0019;
+  validate_data_1[ToUniqueString("$T0")]  = 0xbfff0012;
+  validate_data_1[ToUniqueString("$T1")]  = 0xbfff0020;
+  validate_data_1[ToUniqueString("$T2")]  = 0xbfff0019;
   validate_data_1[ustr__ZSeip()] = 0xbfff0021;
   validate_data_1[ustr__ZSebp()] = 0xbfff0012;
   validate_data_1[ustr__ZSesp()] = 0xbfff0024;
-  validate_data_1[toUniqueString("$L")]   = 0xbfff000e;
-  validate_data_1[toUniqueString("$P")]   = 0xbfff0028;
+  validate_data_1[ToUniqueString("$L")]   = 0xbfff000e;
+  validate_data_1[ToUniqueString("$P")]   = 0xbfff0028;
   validate_data_1[ustr__ZSebx()] = 0xbffefff7;
   validate_data_1[ustr__ZDcbSavedRegs()] = 4;
   validate_data_1[ustr__ZDcbParams()] = 4;
@@ -270,7 +284,7 @@ static bool RunTests() {
                         "validate identifier \"%s\", "
                         "expected %d, observed not found\n",
                 evaluate_test_set_index, evaluate_test_set_count,
-                fromUniqueString(identifier), expected_value);
+                FromUniqueString(identifier), expected_value);
         return false;
       }
 
@@ -282,13 +296,13 @@ static bool RunTests() {
                         "validate identifier \"%s\", "
                         "expected %d, observed %d\n",
                 evaluate_test_set_index, evaluate_test_set_count,
-                fromUniqueString(identifier), expected_value, observed_value);
+                FromUniqueString(identifier), expected_value, observed_value);
         return false;
       }
 
       // The value must be set in the "assigned" dictionary if it was a
       // variable.  It must not have been assigned if it was a constant.
-      bool expected_assigned = fromUniqueString(identifier)[0] == '$';
+      bool expected_assigned = FromUniqueString(identifier)[0] == '$';
       bool observed_assigned = false;
       if (assigned.have(identifier)) {
         observed_assigned = assigned.get(identifier);
@@ -298,7 +312,7 @@ static bool RunTests() {
                         "validate assignment of \"%s\", "
                         "expected %d, observed %d\n",
                 evaluate_test_set_index, evaluate_test_set_count,
-                fromUniqueString(identifier), expected_assigned,
+                FromUniqueString(identifier), expected_assigned,
                 observed_assigned);
         return false;
       }
@@ -331,7 +345,7 @@ static bool RunTests() {
   validate_data_2[ustr__ZSeip()] = 0x10000000;
   validate_data_2[ustr__ZSebp()] = 0xbfff000c;
   validate_data_2[ustr__ZSesp()] = 0xbfff0000;
-  validate_data_2[toUniqueString("$new")] = 0x10000000;
+  validate_data_2[ToUniqueString("$new")] = 0x10000000;
   validate_data_2[ustr__ZDcbSavedRegs()] = 4;
   validate_data_2[ustr__ZDcbParams()] = 4;
   validate_data_2[ustr__ZDraSearchStart()] = 0xbfff0020;
@@ -356,37 +370,37 @@ static bool RunTests() {
     }
   }
 
-
+  map<const UniqueString*, unsigned int> dictionary_2_map;
+  dictionary_2.copy_to_map(&dictionary_2_map);
   for (map<const UniqueString*, unsigned int>::iterator v =
          validate_data_2.begin();
        v != validate_data_2.end(); v++) {
-    if (!dictionary_2.have(v->first)) {
+    map<const UniqueString*, unsigned int>::iterator a =
+        dictionary_2_map.find(v->first);
+    if (a == dictionary_2_map.end()) {
       fprintf(stderr, "FAIL: evaluate for value dictionary check: "
               "expected dict[\"%s\"] to be 0x%x, but it was unset\n",
-              fromUniqueString(v->first), v->second);
+              FromUniqueString(v->first), v->second);
       return false;
-    } else if (dictionary_2.get(v->first) != v->second) {
+    } else if (a->second != v->second) {
       fprintf(stderr, "FAIL: evaluate for value dictionary check: "
               "expected dict[\"%s\"] to be 0x%x, but it was 0x%x\n",
-              fromUniqueString(v->first), v->second,
-              dictionary_2.get(v->first));
+              FromUniqueString(v->first), v->second, a->second);
       return false;
     }
-    //TODO: fixme
-    //dictionary_2.erase(a);
+    dictionary_2_map.erase(a);
   }
-  /*TODO: fixme
+
   map<const UniqueString*, unsigned int>::iterator remaining =
-      dictionary_2.begin();
-  if (remaining != dictionary_2.end()) {
+      dictionary_2_map.begin();
+  if (remaining != dictionary_2_map.end()) {
     fprintf(stderr, "FAIL: evaluation of test expressions put unexpected "
             "values in dictionary:\n");
-    for (; remaining != dictionary_2.end(); remaining++)
+    for (; remaining != dictionary_2_map.end(); remaining++)
       fprintf(stderr, "    dict[\"%s\"] == 0x%x\n",
-              fromUniqueString(remaining->first), remaining->second);
+              FromUniqueString(remaining->first), remaining->second);
     return false;
   }
-  */
 
   return true;
 }

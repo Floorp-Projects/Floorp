@@ -57,9 +57,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     void emitRoundDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
-    // Emits a conditional set.
-    void emitSet(Assembler::Condition cond, const Register &dest);
-
     // Emits a branch that directs control flow to the true block if |cond| is
     // true, and the false block if |cond| is false.
     void emitBranch(Assembler::Condition cond, MBasicBlock *ifTrue, MBasicBlock *ifFalse);
