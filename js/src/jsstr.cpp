@@ -770,30 +770,27 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    if (args.length() == 0) {
-        args.rval().setInt32(0);
-    } else {
-        RootedString thatStr(cx, ToString<CanGC>(cx, args[0]));
-        if (!thatStr)
+    Value thatValue = args.length() > 0 ? args[0] : UndefinedValue();
+    RootedString thatStr(cx, ToString<CanGC>(cx, thatValue));
+    if (!thatStr)
+        return false;
+
+    if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
+        args[0].setString(thatStr);
+
+        Value result;
+        if (!cx->localeCallbacks->localeCompare(cx, str, thatStr, &result))
             return false;
 
-        if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
-            args[0].setString(thatStr);
-
-            Value result;
-            if (!cx->localeCallbacks->localeCompare(cx, str, thatStr, &result))
-                return true;
-
-            args.rval().set(result);
-            return true;
-        }
-
-        int32_t result;
-        if (!CompareStrings(cx, str, thatStr, &result))
-            return false;
-
-        args.rval().setInt32(result);
+        args.rval().set(result);
+        return true;
     }
+
+    int32_t result;
+    if (!CompareStrings(cx, str, thatStr, &result))
+        return false;
+
+    args.rval().setInt32(result);
     return true;
 }
 
@@ -3210,7 +3207,7 @@ tagify(JSContext *cx, const char *begin, HandleLinearString param, const char *e
         }
         sb.infallibleAppend('"');
     }
-    
+
     sb.infallibleAppend('>');
 
     MOZ_ALWAYS_TRUE(sb.append(str));
