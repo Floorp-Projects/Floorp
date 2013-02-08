@@ -2088,6 +2088,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     // .: Offset of case high
 
     JS_ASSERT(op == JSOP_TABLESWITCH);
+    JS_ASSERT(SN_TYPE(sn) == SRC_SWITCH);
 
     // Pop input.
     MDefinition *ins = current->pop();
