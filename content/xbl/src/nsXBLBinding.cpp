@@ -1069,7 +1069,7 @@ nsXBLBinding::InstallImplementation()
   
   // iterate through each property in the prototype's list and install the property.
   if (AllowScripts())
-    return mPrototypeBinding->InstallImplementation(mBoundElement);
+    return mPrototypeBinding->InstallImplementation(this);
 
   return NS_OK;
 }
