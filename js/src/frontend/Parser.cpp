@@ -3970,14 +3970,6 @@ Parser::statement()
 
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_IN_COMPOUND);
         PopStatementPC(context, pc);
-
-        /*
-         * If we contain a function statement and our container is top-level
-         * or another block, flag pn to preserve braces when decompiling.
-         */
-        if (hasFunctionStmt && (!pc->topStmt || pc->topStmt->type == STMT_BLOCK))
-            pn->pn_xflags |= PNX_NEEDBRACES;
-
         return pn;
       }
 

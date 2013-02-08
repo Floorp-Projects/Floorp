@@ -278,8 +278,6 @@ enum SrcNoteType {
                                    operation, with offset to JSOP_ENTERLET0 */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
-    SRC_BRACE       = 10,       /* mandatory brace, for scope or to avoid
-                                   dangling else */
     SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
     SRC_PCBASE      = 12,       /* distance back from annotated getprop or
                                    setprop op to left-most obj.prop.subprop
