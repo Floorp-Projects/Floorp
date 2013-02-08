@@ -59,6 +59,8 @@ public:
   virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -89,6 +91,55 @@ public:
   virtual nsEventStates IntrinsicState() const;
 
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
+
+  // WebIDL
+  bool GetDisabled(ErrorResult& aRv);
+  void SetDisabled(bool aDisabled, ErrorResult& aRv);
+  // XPCOM GetHref is fine.
+  void SetHref(const nsAString& aHref, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::href, aHref, aRv);
+  }
+  // XPCOM GetCrossOrigin is fine.
+  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::crossorigin, aCrossOrigin, aRv);
+  }
+  // XPCOM GetRel is fine.
+  void SetRel(const nsAString& aRel, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::rel, aRel, aRv);
+  }
+  // XPCOM GetMedia is fine.
+  void SetMedia(const nsAString& aMedia, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::media, aMedia, aRv);
+  }
+  // XPCOM GetHreflang is fine.
+  void SetHreflang(const nsAString& aHreflang, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::hreflang, aHreflang, aRv);
+  }
+  // XPCOM GetType is fine.
+  void SetType(const nsAString& aType, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aType, aRv);
+  }
+  // XPCOM GetCharset is fine.
+  void SetCharset(const nsAString& aCharset, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::charset, aCharset, aRv);
+  }
+  // XPCOM GetRev is fine.
+  void SetRev(const nsAString& aRev, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::rev, aRev, aRv);
+  }
+  // XPCOM GetTarget is fine.
+  void SetTarget(const nsAString& aTarget, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::target, aTarget, aRv);
+  }
 
 protected:
   // nsStyleLinkElement
