@@ -486,7 +486,7 @@ nsThread::Shutdown()
 #ifdef DEBUG
   {
     MutexAutoLock lock(mLock);
-    NS_ASSERTION(!mObserver, "Should have been cleared at shutdown!");
+    MOZ_ASSERT(!mObserver, "Should have been cleared at shutdown!");
   }
 #endif
 
@@ -626,8 +626,8 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
         HangMonitor::NotifyActivity();
       event->Run();
     } else if (mayWait) {
-      NS_ASSERTION(ShuttingDown(),
-                   "This should only happen when shutting down");
+      MOZ_ASSERT(ShuttingDown(),
+                 "This should only happen when shutting down");
       rv = NS_ERROR_UNEXPECTED;
     }
   }

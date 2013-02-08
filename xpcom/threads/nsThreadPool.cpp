@@ -116,7 +116,7 @@ nsThreadPool::ShutdownThread(nsIThread *thread)
   // This method is responsible for calling Shutdown on |thread|.  This must be
   // done from some other thread, so we use the main thread of the application.
 
-  NS_ASSERTION(!NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
 
   nsRefPtr<nsIRunnable> r = NS_NewRunnableMethod(thread, &nsIThread::Shutdown);
   NS_DispatchToMainThread(r);

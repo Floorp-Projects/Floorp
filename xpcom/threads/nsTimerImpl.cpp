@@ -180,7 +180,7 @@ NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
   if (count == 1 && mArmed) {
     mCanceled = true;
 
-    NS_ASSERTION(gThread, "An armed timer exists after the thread timer stopped.");
+    MOZ_ASSERT(gThread, "Armed timer exists after the thread timer stopped.");
     if (NS_SUCCEEDED(gThread->RemoveTimer(this)))
       return 0;
   }
