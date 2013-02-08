@@ -190,6 +190,7 @@ MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, co
     }
 }
 
+
 Assembler::Condition
 MacroAssemblerX86::testNegativeZero(const FloatRegister &reg, const Register &scratch)
 {
