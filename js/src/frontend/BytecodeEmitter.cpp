@@ -3027,9 +3027,6 @@ EmitDestructuringOps(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t declType, Pa
         ptrdiff_t index = NewSrcNote2(cx, bce, SRC_DESTRUCTLET, 0);
         if (index < 0 || !letNotes->append(cx, bce, bce->offset(), (unsigned)index))
             return false;
-    } else {
-        if (NewSrcNote2(cx, bce, SRC_DESTRUCT, declType) < 0)
-            return false;
     }
 
     /*
