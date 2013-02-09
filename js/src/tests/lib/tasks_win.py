@@ -1,6 +1,5 @@
 # Multiprocess activities with a push-driven divide-process-collect model.
 
-import os, sys, time
 from threading import Thread, Lock
 from Queue import Queue, Empty
 from datetime import datetime
@@ -26,10 +25,6 @@ class Source:
             w.start()
         ans = self.join_workers()
         if self.verbose: print '[P] Finished.'
-
-        t1 = datetime.now()
-        dt = t1-t0
-
         return ans
 
     def join_workers(self):
