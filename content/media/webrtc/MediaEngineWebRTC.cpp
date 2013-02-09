@@ -32,6 +32,9 @@ GetUserMediaLog()
 
 #include "MediaEngineWebRTC.h"
 #include "ImageContainer.h"
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
 
 namespace mozilla {
 
@@ -42,6 +45,20 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
   webrtc::ViECapture* ptrViECapture;
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
+
+#ifdef MOZ_WIDGET_ANDROID
+  jobject context = mozilla::AndroidBridge::Bridge()->GetGlobalContextRef();
+
+  // get the JVM
+  JavaVM *jvm = mozilla::AndroidBridge::Bridge()->GetVM();
+
+  JNIEnv *env;
+  jint res = jvm->AttachCurrentThread(&env, NULL);
+
+  webrtc::VideoEngine::SetAndroidObjects(jvm, (void*)context);
+
+  env->DeleteGlobalRef(context);
+#endif
 
   if (!mVideoEngine) {
     if (!(mVideoEngine = webrtc::VideoEngine::Create())) {
