@@ -421,7 +421,9 @@ input[type="file"] {
   border-style: none !important;
 }
 
-input[type="file"] > input[type="text"] {
+input[type="file"] > xul|label {
+  width: 12em;
+
   border-color: inherit;
   background-color: inherit;
   color: inherit;
@@ -625,7 +627,7 @@ optgroup:before {
   * directionality. Otherwise filenames containing right-to-left characters
   * will be reordered with chaotic results.
   */
-input[type="file"] > input[type="text"] {
+input[type="file"] > xul|label {
   direction: ltr !important;
   text-align: inherit;
 }
