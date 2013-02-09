@@ -554,13 +554,13 @@ namespace mozilla {
 template <class T>
 struct IsPod<js::detail::HashTableEntry<T> >
 {
-    static const bool result = IsPod<T>::result;
+    static const bool value = IsPod<T>::value;
 };
 
 template <class K, class V>
 struct IsPod<js::HashMapEntry<K, V> >
 {
-    static const bool result = IsPod<K>::result && IsPod<V>::result;
+    static const bool value = IsPod<K>::value && IsPod<V>::value;
 };
 
 } // namespace mozilla
@@ -1250,7 +1250,7 @@ class HashTable : private AllocPolicy
   public:
     void clear()
     {
-        if (mozilla::IsPod<Entry>::result) {
+        if (mozilla::IsPod<Entry>::value) {
             memset(table, 0, sizeof(*table) * capacity());
         } else {
             uint32_t tableCapacity = capacity();

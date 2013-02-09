@@ -1326,8 +1326,8 @@ protected:
   template<class Item>
   void AssignRange(index_type start, size_type count,
                    const Item *values) {
-    AssignRangeAlgorithm<mozilla::IsPod<Item>::result,
-                         mozilla::IsSame<Item, elem_type>::result>
+    AssignRangeAlgorithm<mozilla::IsPod<Item>::value,
+                         mozilla::IsSame<Item, elem_type>::value>
       ::implementation(Elements(), start, count, values);
   }
 
