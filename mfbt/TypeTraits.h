@@ -164,7 +164,7 @@ struct Conditional<false, A, B>
  *   template<typename T>
  *   class PodVector // vector optimized to store POD (memcpy-able) types
  *   {
- *      EnableIf<IsPodType<T>, T>::Type* vector;
+ *      EnableIf<IsPod<T>, T>::Type* vector;
  *      size_t length;
  *      ...
  *   };
@@ -192,13 +192,13 @@ struct EnableIf<true, T>
 template<typename T, typename U>
 struct IsSame
 {
-    static const bool result = false;
+    static const bool value = false;
 };
 
 template<typename T>
-struct IsSame<T,T>
+struct IsSame<T, T>
 {
-    static const bool result = true;
+    static const bool value = true;
 };
 
 /*
@@ -208,24 +208,24 @@ struct IsSame<T,T>
 template<typename T>
 struct IsPod
 {
-    static const bool result = false;
+    static const bool value = false;
 };
-template<> struct IsPod<char>               { static const bool result = true; };
-template<> struct IsPod<signed char>        { static const bool result = true; };
-template<> struct IsPod<unsigned char>      { static const bool result = true; };
-template<> struct IsPod<short>              { static const bool result = true; };
-template<> struct IsPod<unsigned short>     { static const bool result = true; };
-template<> struct IsPod<int>                { static const bool result = true; };
-template<> struct IsPod<unsigned int>       { static const bool result = true; };
-template<> struct IsPod<long>               { static const bool result = true; };
-template<> struct IsPod<unsigned long>      { static const bool result = true; };
-template<> struct IsPod<long long>          { static const bool result = true; };
-template<> struct IsPod<unsigned long long> { static const bool result = true; };
-template<> struct IsPod<bool>               { static const bool result = true; };
-template<> struct IsPod<float>              { static const bool result = true; };
-template<> struct IsPod<double>             { static const bool result = true; };
-template<> struct IsPod<wchar_t>            { static const bool result = true; };
-template<typename T> struct IsPod<T*>       { static const bool result = true; };
+template<> struct IsPod<char>               { static const bool value = true; };
+template<> struct IsPod<signed char>        { static const bool value = true; };
+template<> struct IsPod<unsigned char>      { static const bool value = true; };
+template<> struct IsPod<short>              { static const bool value = true; };
+template<> struct IsPod<unsigned short>     { static const bool value = true; };
+template<> struct IsPod<int>                { static const bool value = true; };
+template<> struct IsPod<unsigned int>       { static const bool value = true; };
+template<> struct IsPod<long>               { static const bool value = true; };
+template<> struct IsPod<unsigned long>      { static const bool value = true; };
+template<> struct IsPod<long long>          { static const bool value = true; };
+template<> struct IsPod<unsigned long long> { static const bool value = true; };
+template<> struct IsPod<bool>               { static const bool value = true; };
+template<> struct IsPod<float>              { static const bool value = true; };
+template<> struct IsPod<double>             { static const bool value = true; };
+template<> struct IsPod<wchar_t>            { static const bool value = true; };
+template<typename T> struct IsPod<T*>       { static const bool value = true; };
 
 /**
  * IsPointer determines whether a type is a pointer type (but not a pointer-to-
@@ -240,12 +240,12 @@ template<typename T> struct IsPod<T*>       { static const bool result = true; }
 template<typename T>
 struct IsPointer
 {
-    static const bool result = false;
+    static const bool value = false;
 };
 template<typename T>
 struct IsPointer<T*>
 {
-    static const bool result = true;
+    static const bool value = true;
 };
 
 } /* namespace mozilla */

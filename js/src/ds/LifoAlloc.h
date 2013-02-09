@@ -278,7 +278,7 @@ class LifoAlloc
         void *mem = alloc(sizeof(T) * count);
         if (!mem)
             return NULL;
-        JS_STATIC_ASSERT(mozilla::IsPod<T>::result);
+        JS_STATIC_ASSERT(mozilla::IsPod<T>::value);
         return (T *) mem;
     }
 

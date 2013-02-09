@@ -423,7 +423,7 @@ namespace mozilla {
 template <>
 struct IsPod<js::frontend::DefinitionList>
 {
-    static const bool result = true;
+    static const bool value = true;
 };
 
 } /* namespace mozilla */
