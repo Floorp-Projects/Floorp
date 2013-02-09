@@ -51,6 +51,8 @@ public:
 private:
     nsresult CreateJarInput(nsIZipReaderCache *, nsJARInputThunk **);
     nsresult LookupFile();
+    nsresult OpenLocalFile();
+    void NotifyError(nsresult aError);
 
 #if defined(PR_LOGGING)
     nsCString                       mSpec;
