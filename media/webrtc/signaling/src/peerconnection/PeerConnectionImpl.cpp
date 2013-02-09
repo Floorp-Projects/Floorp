@@ -1035,7 +1035,7 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint)
 NS_IMETHODIMP
 PeerConnectionImpl::GetLocalDescription(char** aSDP)
 {
-  PC_AUTO_ENTER_API_CALL(true);
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aSDP);
 
   char* tmp = new char[mLocalSDP.size() + 1];
@@ -1049,7 +1049,7 @@ PeerConnectionImpl::GetLocalDescription(char** aSDP)
 NS_IMETHODIMP
 PeerConnectionImpl::GetRemoteDescription(char** aSDP)
 {
-  PC_AUTO_ENTER_API_CALL(true);
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aSDP);
 
   char* tmp = new char[mRemoteSDP.size() + 1];
