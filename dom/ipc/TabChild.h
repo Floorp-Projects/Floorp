@@ -54,7 +54,6 @@
 #include "mozilla/dom/TabContext.h"
 
 struct gfxMatrix;
-class nsICachedFileDescriptorListener;
 
 namespace mozilla {
 namespace layout {
@@ -197,9 +196,6 @@ public:
                                     const mozilla::dom::StructuredCloneData& aData);
 
     virtual bool RecvLoadURL(const nsCString& uri);
-    virtual bool RecvCacheFileDescriptor(const nsString& aPath,
-                                         const FileDescriptor& aFileDescriptor)
-                                         MOZ_OVERRIDE;
     virtual bool RecvShow(const nsIntSize& size);
     virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation);
     virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
@@ -321,15 +317,6 @@ public:
      */
     void GetAppType(nsAString& aAppType) const { aAppType = mAppType; }
 
-    // Returns true if the file descriptor was found in the cache, false
-    // otherwise.
-    bool GetCachedFileDescriptor(const nsAString& aPath,
-                                 nsICachedFileDescriptorListener* aCallback);
-
-    void CancelCachedFileDescriptorCallback(
-                                    const nsAString& aPath,
-                                    nsICachedFileDescriptorListener* aCallback);
-
 protected:
     virtual PRenderFrameChild* AllocPRenderFrame(ScrollingBehavior* aScrolling,
                                                  LayersBackend* aBackend,
@@ -425,9 +412,6 @@ private:
         return utils;
     }
 
-    class CachedFileDescriptorInfo;
-    class CachedFileDescriptorCallbackRunnable;
-
     nsCOMPtr<nsIWebNavigation> mWebNav;
     nsCOMPtr<nsIWidget> mWidget;
     nsCOMPtr<nsIURI> mLastURI;
@@ -446,9 +430,6 @@ private:
     // the touch we're tracking.  That is, if touchend or a touchmove
     // that exceeds the gesture threshold doesn't happen.
     CancelableTask* mTapHoldTimer;
-    // At present only 1 of these is really expected.
-    nsAutoTArray<nsAutoPtr<CachedFileDescriptorInfo>, 1>
-        mCachedFileDescriptorInfos;
     float mOldViewportWidth;
     nscolor mLastBackgroundColor;
     ScrollingBehavior mScrolling;
