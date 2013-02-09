@@ -83,6 +83,9 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
   // "language" text attribute
   LangTextAttr langTextAttr(mHyperTextAcc, hyperTextElm, offsetNode);
 
+  // "aria-invalid" text attribute
+  InvalidTextAttr invalidTextAttr(hyperTextElm, offsetNode);
+
   // "background-color" text attribute
   BGColorTextAttr bgColorTextAttr(rootFrame, frame);
 
@@ -113,6 +116,7 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
   TextAttr* attrArray[] =
   {
     &langTextAttr,
+    &invalidTextAttr,
     &bgColorTextAttr,
     &colorTextAttr,
     &fontFamilyTextAttr,
@@ -224,6 +228,88 @@ TextAttrsMgr::LangTextAttr::
   ExposeValue(nsIPersistentProperties* aAttributes, const nsString& aValue)
 {
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::language, aValue);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// InvalidTextAttr
+////////////////////////////////////////////////////////////////////////////////
+
+TextAttrsMgr::InvalidTextAttr::
+  InvalidTextAttr(nsIContent* aRootElm, nsIContent* aElm) :
+  TTextAttr<uint32_t>(!aElm), mRootElm(aRootElm)
+{
+  mIsRootDefined = GetValue(mRootElm, &mRootNativeValue);
+  if (aElm)
+    mIsDefined = GetValue(aElm, &mNativeValue);
+}
+
+bool
+TextAttrsMgr::InvalidTextAttr::
+  GetValueFor(Accessible* aAccessible, uint32_t* aValue)
+{
+  nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
+  return elm ? GetValue(elm, aValue) : false;
+}
+
+void
+TextAttrsMgr::InvalidTextAttr::
+  ExposeValue(nsIPersistentProperties* aAttributes, const uint32_t& aValue)
+{
+  switch (aValue) {
+    case eFalse:
+      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid,
+                             NS_LITERAL_STRING("false"));
+      break;
+
+    case eGrammar:
+      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid,
+                             NS_LITERAL_STRING("grammar"));
+      break;
+
+    case eSpelling:
+      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid,
+                             NS_LITERAL_STRING("spelling"));
+      break;
+
+    case eTrue:
+      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid,
+                             NS_LITERAL_STRING("true"));
+      break;
+  }
+}
+
+bool
+TextAttrsMgr::InvalidTextAttr::
+  GetValue(nsIContent* aElm, uint32_t* aValue)
+{
+  nsIContent* elm = aElm;
+  do {
+    if (nsAccUtils::HasDefinedARIAToken(elm, nsGkAtoms::aria_invalid)) {
+      static nsIContent::AttrValuesArray tokens[] =
+        { &nsGkAtoms::_false, &nsGkAtoms::grammar, &nsGkAtoms::spelling,
+          nullptr };
+
+      int32_t idx = elm->FindAttrValueIn(kNameSpaceID_None,
+                                         nsGkAtoms::aria_invalid, tokens,
+                                         eCaseMatters);
+      switch (idx) {
+        case 0:
+          *aValue = eFalse;
+          return true;
+        case 1:
+          *aValue = eGrammar;
+          return true;
+        case 2:
+          *aValue = eSpelling;
+          return true;
+        default:
+          *aValue = eTrue;
+          return true;
+      }
+    }
+  } while ((elm = elm->GetParent()) && elm != mRootElm);
+
+  return false;
 }
 
 
