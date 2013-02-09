@@ -50,36 +50,17 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
-  double Value()
-  {
-    double ret;
-    GetValue(&ret);
-    return ret;
-  }
-
+  double Value() const;
   void SetValue(double aValue, ErrorResult& aRv)
   {
     aRv = SetDoubleAttr(nsGkAtoms::value, aValue);
   }
-
-  double Max()
-  {
-    double ret;
-    GetMax(&ret);
-    return ret;
-  }
-
+  double Max() const;
   void SetMax(double aValue, ErrorResult& aRv)
   {
     aRv = SetDoubleAttr(nsGkAtoms::max, aValue);
   }
-
-  double Position()
-  {
-    double ret;
-    GetPosition(&ret);
-    return ret;
-  }
+  double Position() const;
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
