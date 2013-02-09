@@ -11,8 +11,6 @@
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(ClipPath)
 
-DOMCI_NODE_DATA(SVGClipPathElement, mozilla::dom::SVGClipPathElement)
-
 namespace mozilla {
 namespace dom {
 
@@ -33,16 +31,10 @@ nsSVGElement::EnumInfo SVGClipPathElement::sEnumInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGClipPathElement,SVGClipPathElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGClipPathElement,SVGClipPathElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGClipPathElement)
-  NS_NODE_INTERFACE_TABLE5(SVGClipPathElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGClipPathElement,
-                           nsIDOMSVGUnitTypes)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGClipPathElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGClipPathElementBase)
+NS_IMPL_ISUPPORTS_INHERITED4(SVGClipPathElement, SVGClipPathElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement,
+                             nsIDOMSVGUnitTypes)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -51,13 +43,6 @@ SVGClipPathElement::SVGClipPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGClipPathElementBase(aNodeInfo)
 {
   SetIsDOMBinding();
-}
-
-/* readonly attribute nsIDOMSVGAnimatedEnumeration clipPathUnits; */
-NS_IMETHODIMP SVGClipPathElement::GetClipPathUnits(nsIDOMSVGAnimatedEnumeration * *aClipPathUnits)
-{
-  *aClipPathUnits = ClipPathUnits().get();
-  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGAnimatedEnumeration>

@@ -25,6 +25,21 @@ let SocialServiceInternal = {
   enabled: Services.prefs.getBoolPref("social.enabled"),
   get providerArray() {
     return [p for ([, p] of Iterator(this.providers))];
+  },
+  get manifests() {
+    // Retrieve the builtin manifests from prefs
+    let MANIFEST_PREFS = Services.prefs.getBranch("social.manifest.");
+    let prefs = MANIFEST_PREFS.getChildList("", []);
+    for (let pref of prefs) {
+      try {
+        var manifest = JSON.parse(MANIFEST_PREFS.getCharPref(pref));
+        if (manifest && typeof(manifest) == "object" && manifest.origin)
+          yield manifest;
+      } catch (err) {
+        Cu.reportError("SocialService: failed to load manifest: " + pref +
+                       ", exception: " + err);
+      }
+    }
   }
 };
 
@@ -72,19 +87,34 @@ let ActiveProviders = {
   }
 };
 
-function initService() {
-  // Add a pref observer for the enabled state
-  function prefObserver(subject, topic, data) {
-    SocialService._setEnabled(Services.prefs.getBoolPref("social.enabled"));
+function migrateSettings() {
+  try {
+    // we don't care what the value is, if it is set, we've already migrated
+    Services.prefs.getCharPref("social.activeProviders");
+    return;
+  } catch(e) {
+    try {
+      let active = Services.prefs.getBoolPref("social.active");
+      if (active) {
+        for (let manifest of SocialServiceInternal.manifests) {
+          ActiveProviders.add(manifest.origin);
+          return;
+        }
+      }
+    } catch(e) {
+      // not activated, nothing to see here.
+    }
   }
-  Services.prefs.addObserver("social.enabled", prefObserver, false);
+}
+
+function initService() {
   Services.obs.addObserver(function xpcomShutdown() {
     ActiveProviders.flush();
     SocialService._providerListeners = null;
     Services.obs.removeObserver(xpcomShutdown, "xpcom-shutdown");
-    Services.prefs.removeObserver("social.enabled", prefObserver);
   }, "xpcom-shutdown", false);
 
+  migrateSettings();
   // Initialize the MozSocialAPI
   if (SocialServiceInternal.enabled)
     MozSocialAPI.enabled = true;
@@ -92,35 +122,18 @@ function initService() {
 
 XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
   initService();
-
-  // Don't load any providers from prefs if the test pref is set
-  let skipLoading = false;
-  try {
-    skipLoading = Services.prefs.getBoolPref("social.skipLoadingProviders");
-  } catch (ex) {}
-
-  if (skipLoading)
-    return {};
-
-  // Now retrieve the providers from prefs
   let providers = {};
-  let MANIFEST_PREFS = Services.prefs.getBranch("social.manifest.");
-  let prefs = MANIFEST_PREFS.getChildList("", {});
-  let appinfo = Cc["@mozilla.org/xre/app-info;1"]
-                  .getService(Ci.nsIXULRuntime);
-  prefs.forEach(function (pref) {
+  for (let manifest of this.manifests) {
     try {
-      var manifest = JSON.parse(MANIFEST_PREFS.getCharPref(pref));
-      if (manifest && typeof(manifest) == "object") {
+      if (ActiveProviders.has(manifest.origin)) {
         let provider = new SocialProvider(manifest);
         providers[provider.origin] = provider;
       }
     } catch (err) {
-      Cu.reportError("SocialService: failed to load provider: " + pref +
+      Cu.reportError("SocialService: failed to load provider: " + manifest.origin +
                      ", exception: " + err);
     }
-  });
-
+  }
   return providers;
 });
 
@@ -142,20 +155,35 @@ this.SocialService = {
         !Services.appinfo.inSafeMode)
       return;
 
-    Services.prefs.setBoolPref("social.enabled", enable);
-    this._setEnabled(enable);
-  },
-  _setEnabled: function _setEnabled(enable) {
+    // if disabling, ensure all providers are actually disabled
     if (!enable)
       SocialServiceInternal.providerArray.forEach(function (p) p.enabled = false);
-
-    if (enable == SocialServiceInternal.enabled)
-      return;
 
     SocialServiceInternal.enabled = enable;
     MozSocialAPI.enabled = enable;
     Services.obs.notifyObservers(null, "social:pref-changed", enable ? "enabled" : "disabled");
     Services.telemetry.getHistogramById("SOCIAL_TOGGLED").add(enable);
+  },
+
+  // Adds and activates a builtin provider. The provider may or may not have
+  // previously been added.  onDone is always called - with null if no such
+  // provider exists, or the activated provider on success.
+  addBuiltinProvider: function addBuiltinProvider(origin, onDone) {
+    if (SocialServiceInternal.providers[origin]) {
+      schedule(function() {
+        onDone(SocialServiceInternal.providers[origin]);
+      });
+      return;
+    }
+    for (let manifest of SocialServiceInternal.manifests) {
+      if (manifest.origin == origin) {
+        this.addProvider(manifest, onDone);
+        return;
+      }
+    }
+    schedule(function() {
+      onDone(null);
+    });
   },
 
   // Adds a provider given a manifest, and returns the added provider.
@@ -165,6 +193,7 @@ this.SocialService = {
 
     let provider = new SocialProvider(manifest);
     SocialServiceInternal.providers[provider.origin] = provider;
+    ActiveProviders.add(provider.origin);
 
     schedule(function () {
       this._notifyProviderListeners("provider-added",
@@ -195,18 +224,27 @@ this.SocialService = {
     }.bind(this));
   },
 
-  // Returns a single provider object with the specified origin.
+  // Returns a single provider object with the specified origin.  The provider
+  // must be "installed" (ie, in ActiveProviders)
   getProvider: function getProvider(origin, onDone) {
     schedule((function () {
       onDone(SocialServiceInternal.providers[origin] || null);
     }).bind(this));
   },
 
-  // Returns an array of installed provider origins.
+  // Returns an array of installed providers.
   getProviderList: function getProviderList(onDone) {
     schedule(function () {
       onDone(SocialServiceInternal.providerArray);
     });
+  },
+
+  canActivateOrigin: function canActivateOrigin(origin) {
+    for (let manifest in SocialServiceInternal.manifests) {
+      if (manifest.origin == origin)
+        return true;
+    }
+    return false;
   },
 
   _providerListeners: new Map(),
@@ -250,7 +288,6 @@ function SocialProvider(input) {
   this.principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(originUri);
   this.ambientNotificationIcons = {};
   this.errorState = null;
-  this._active = ActiveProviders.has(this.origin);
 }
 
 SocialProvider.prototype = {
@@ -272,18 +309,6 @@ SocialProvider.prototype = {
     } else {
       this._terminate();
     }
-  },
-
-  _active: false,
-  get active() {
-    return this._active;
-  },
-  set active(val) {
-    this._active = val;
-    if (val)
-      ActiveProviders.add(this.origin);
-    else
-      ActiveProviders.delete(this.origin);
   },
 
   // Reference to a workerAPI object for this provider. Null if the provider has

@@ -523,7 +523,7 @@ abstract public class GeckoApp
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         // exit full-screen mode whenever the menu is opened
-        if (mLayerView.isFullScreen()) {
+        if (mLayerView != null && mLayerView.isFullScreen()) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FullScreen:Exit", null));
         }
 
@@ -2744,7 +2744,7 @@ abstract public class GeckoApp
         assertOnThread(sGeckoThread);
     }
 
-    private static void assertOnThread(Thread expectedThread) {
+    public static void assertOnThread(Thread expectedThread) {
         Thread currentThread = Thread.currentThread();
         long currentThreadId = currentThread.getId();
         long expectedThreadId = expectedThread.getId();

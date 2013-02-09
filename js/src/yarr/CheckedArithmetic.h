@@ -31,6 +31,7 @@
 
 #include <limits>
 #include "mozilla/StandardInteger.h"
+#include "mozilla/TypeTraits.h"
 
 #ifdef _MSC_VER
 # undef min
@@ -159,7 +160,7 @@ template <typename Target, typename Source> struct BoundsChecker<Target, Source,
     }
 };
 
-template <typename Target, typename Source, bool SameType = js::tl::IsSameType<Target, Source>::result> struct BoundsCheckElider;
+template <typename Target, typename Source, bool SameType = mozilla::IsSame<Target, Source>::value> struct BoundsCheckElider;
 template <typename Target, typename Source> struct BoundsCheckElider<Target, Source, true> {
     static bool inBounds(Source) { return true; }
 };

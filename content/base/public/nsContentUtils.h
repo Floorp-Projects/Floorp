@@ -2328,11 +2328,6 @@ public:
     return (rv);                                                              \
   }
 
-#define NS_ENSURE_FINITE3(f1, f2, f3, rv)                                     \
-  if (!NS_finite((f1)+(f2)+(f3))) {                                           \
-    return (rv);                                                              \
-  }
-
 #define NS_ENSURE_FINITE4(f1, f2, f3, f4, rv)                                 \
   if (!NS_finite((f1)+(f2)+(f3)+(f4))) {                                      \
     return (rv);                                                              \

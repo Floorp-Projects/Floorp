@@ -413,7 +413,7 @@ Debugger::fromChildJSObject(JSObject *obj)
 }
 
 bool
-Debugger::getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, Value *vp)
+Debugger::getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, MutableHandleValue vp)
 {
     FrameMap::AddPtr p = frames.lookupForAdd(iter.abstractFramePtr());
     if (!p) {
@@ -434,7 +434,7 @@ Debugger::getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, Value *vp)
             return false;
         }
     }
-    vp->setObject(*p->value);
+    vp.setObject(*p->value);
     return true;
 }
 
@@ -477,7 +477,7 @@ Debugger::hasAnyLiveHooks() const
 }
 
 JSTrapStatus
-Debugger::slowPathOnEnterFrame(JSContext *cx, Value *vp)
+Debugger::slowPathOnEnterFrame(JSContext *cx, MutableHandleValue vp)
 {
     /* Build the list of recipients. */
     AutoValueVector triggered(cx);
@@ -557,11 +557,11 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
             }
 
             /* Call the onPop handler. */
-            Value rval;
+            RootedValue rval(cx);
             bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, completion.address(),
-                                 &rval);
+                                 rval.address());
             RootedValue nextValue(cx);
-            JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, nextValue.address());
+            JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, &nextValue);
 
             /*
              * At this point, we are back in the debuggee compartment, and any error has
@@ -709,7 +709,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 
             vp.setObject(*dobj);
         }
-    } else if (!cx->compartment->wrap(cx, vp.address())) {
+    } else if (!cx->compartment->wrap(cx, vp)) {
         vp.setUndefined();
         return false;
     }
@@ -744,7 +744,8 @@ Debugger::unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 }
 
 JSTrapStatus
-Debugger::handleUncaughtException(Maybe<AutoCompartment> &ac, Value *vp, bool callHook)
+Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment> &ac,
+                                        MutableHandleValue *vp, bool callHook)
 {
     JSContext *cx = ac.ref().context();
     if (cx->isExceptionPending()) {
@@ -754,7 +755,7 @@ Debugger::handleUncaughtException(Maybe<AutoCompartment> &ac, Value *vp, bool ca
             Value rv;
             cx->clearPendingException();
             if (Invoke(cx, ObjectValue(*object), fval, 1, &exc, &rv))
-                return vp ? parseResumptionValue(ac, true, rv, vp, false) : JSTRAP_CONTINUE;
+                return vp ? parseResumptionValue(ac, true, rv, *vp, false) : JSTRAP_CONTINUE;
         }
 
         if (cx->isExceptionPending()) {
@@ -764,6 +765,18 @@ Debugger::handleUncaughtException(Maybe<AutoCompartment> &ac, Value *vp, bool ca
     }
     ac.destroy();
     return JSTRAP_ERROR;
+}
+
+JSTrapStatus
+Debugger::handleUncaughtException(Maybe<AutoCompartment> &ac, MutableHandleValue vp, bool callHook)
+{
+    return handleUncaughtExceptionHelper(ac, &vp, callHook);
+}
+
+JSTrapStatus
+Debugger::handleUncaughtException(Maybe<AutoCompartment> &ac, bool callHook)
+{
+    return handleUncaughtExceptionHelper(ac, NULL, callHook);
 }
 
 void
@@ -843,10 +856,10 @@ Debugger::receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok, Value val,
 }
 
 JSTrapStatus
-Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value &rv, Value *vp,
+Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value &rv, MutableHandleValue vp,
                                bool callHook)
 {
-    vp->setUndefined();
+    vp.setUndefined();
     if (!ok)
         return handleUncaughtException(ac, vp, callHook);
     if (rv.isUndefined()) {
@@ -881,16 +894,17 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
         return handleUncaughtException(ac, vp, callHook);
     }
 
-    RootedValue v(cx, *vp);
+    RootedValue v(cx, vp.get());
     if (!js_NativeGet(cx, obj, obj, shape, 0, &v) || !unwrapDebuggeeValue(cx, &v))
-        return handleUncaughtException(ac, v.address(), callHook);
-    *vp = v;
+        return handleUncaughtException(ac, &v, callHook);
 
     ac.destroy();
-    if (!cx->compartment->wrap(cx, vp)) {
-        vp->setUndefined();
+    if (!cx->compartment->wrap(cx, &v)) {
+        vp.setUndefined();
         return JSTRAP_ERROR;
     }
+    vp.set(v);
+
     return shape->propid() == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
 }
 
@@ -910,7 +924,7 @@ CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc,
 }
 
 JSTrapStatus
-Debugger::fireDebuggerStatement(JSContext *cx, Value *vp)
+Debugger::fireDebuggerStatement(JSContext *cx, MutableHandleValue vp)
 {
     RootedObject hook(cx, getHook(OnDebuggerStatement));
     JS_ASSERT(hook);
@@ -921,17 +935,17 @@ Debugger::fireDebuggerStatement(JSContext *cx, Value *vp)
 
     ScriptFrameIter iter(cx);
 
-    Value argv[1];
-    if (!getScriptFrame(cx, iter, argv))
+    RootedValue argv(cx);
+    if (!getScriptFrame(cx, iter, &argv))
         return handleUncaughtException(ac, vp, false);
 
     Value rv;
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv.address(), &rv);
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
 JSTrapStatus
-Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
+Debugger::fireExceptionUnwind(JSContext *cx, MutableHandleValue vp)
 {
     RootedObject hook(cx, getHook(OnExceptionUnwind));
     JS_ASSERT(hook);
@@ -949,7 +963,7 @@ Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
     ScriptFrameIter iter(cx);
 
     argv[1] = exc;
-    if (!getScriptFrame(cx, iter, &argv[0]) || !wrapDebuggeeValue(cx, avr.handleAt(1)))
+    if (!getScriptFrame(cx, iter, avr.handleAt(0)) || !wrapDebuggeeValue(cx, avr.handleAt(1)))
         return handleUncaughtException(ac, vp, false);
 
     Value rv;
@@ -961,7 +975,7 @@ Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
 }
 
 JSTrapStatus
-Debugger::fireEnterFrame(JSContext *cx, Value *vp)
+Debugger::fireEnterFrame(JSContext *cx, MutableHandleValue vp)
 {
     RootedObject hook(cx, getHook(OnEnterFrame));
     JS_ASSERT(hook);
@@ -971,12 +985,12 @@ Debugger::fireEnterFrame(JSContext *cx, Value *vp)
     Maybe<AutoCompartment> ac;
     ac.construct(cx, object);
 
-    Value argv[1];
-    if (!getScriptFrame(cx, iter, &argv[0]))
+    RootedValue argv(cx);
+    if (!getScriptFrame(cx, iter, &argv))
         return handleUncaughtException(ac, vp, false);
 
     Value rv;
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv.address(), &rv);
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
@@ -1004,7 +1018,7 @@ Debugger::fireNewScript(JSContext *cx, HandleScript script)
 }
 
 JSTrapStatus
-Debugger::dispatchHook(JSContext *cx, Value *vp, Hook which)
+Debugger::dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which)
 {
     JS_ASSERT(which == OnDebuggerStatement || which == OnExceptionUnwind);
 
@@ -1103,7 +1117,7 @@ Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script, GlobalObject *
 }
 
 JSTrapStatus
-Debugger::onTrap(JSContext *cx, Value *vp)
+Debugger::onTrap(JSContext *cx, MutableHandleValue vp)
 {
     ScriptFrameIter iter(cx);
     RootedScript script(cx, iter.script());
@@ -1145,7 +1159,7 @@ Debugger::onTrap(JSContext *cx, Value *vp)
 
             Value argv[1];
             AutoValueArray ava(cx, argv, 1);
-            if (!dbg->getScriptFrame(cx, iter, &argv[0]))
+            if (!dbg->getScriptFrame(cx, iter, ava.handleAt(0)))
                 return dbg->handleUncaughtException(ac, vp, false);
             Value rv;
             Rooted<JSObject*> handler(cx, bp->handler);
@@ -1160,18 +1174,18 @@ Debugger::onTrap(JSContext *cx, Value *vp)
     }
 
     if (site && site->trapHandler) {
-        JSTrapStatus st = site->trapHandler(cx, script, pc, vp, site->trapClosure);
+        JSTrapStatus st = site->trapHandler(cx, script, pc, vp.address(), site->trapClosure);
         if (st != JSTRAP_CONTINUE)
             return st;
     }
 
     /* By convention, return the true op to the interpreter in vp. */
-    vp->setInt32(op);
+    vp.setInt32(op);
     return JSTRAP_CONTINUE;
 }
 
 JSTrapStatus
-Debugger::onSingleStep(JSContext *cx, Value *vp)
+Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
 {
     ScriptFrameIter iter(cx);
 
@@ -1269,14 +1283,14 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
             return st;
     }
 
-    vp->setUndefined();
+    vp.setUndefined();
     if (exceptionPending)
         cx->setPendingException(exception);
     return JSTRAP_CONTINUE;
 }
 
 JSTrapStatus
-Debugger::fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, Value *vp)
+Debugger::fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, MutableHandleValue vp)
 {
     RootedObject hook(cx, getHook(OnNewGlobalObject));
     JS_ASSERT(hook);
@@ -1325,7 +1339,7 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
         // One Debugger's onNewGlobalObject handler can disable another's, so we
         // must test this in the loop.
         if (dbg->observesNewGlobalObject()) {
-            status = dbg->fireNewGlobalObject(cx, global, &value.get());
+            status = dbg->fireNewGlobalObject(cx, global, &value);
             if (status != JSTRAP_CONTINUE && status != JSTRAP_RETURN)
                 break;
         }
@@ -1982,7 +1996,7 @@ Debugger::getNewestFrame(JSContext *cx, unsigned argc, Value *vp)
             ScriptFrameIter iter(i.seg()->cx(), StackIter::GO_THROUGH_SAVED);
             while (iter.isIon() || iter.abstractFramePtr() != i.abstractFramePtr())
                 ++iter;
-            return dbg->getScriptFrame(cx, iter, vp);
+            return dbg->getScriptFrame(cx, iter, args.rval());
         }
     }
     args.rval().setNull();
@@ -3408,7 +3422,7 @@ DebuggerFrame_getOlder(JSContext *cx, unsigned argc, Value *vp)
         if (iter.isIon())
             continue;
         if (dbg->observesFrame(iter.abstractFramePtr()))
-            return dbg->getScriptFrame(cx, iter, vp);
+            return dbg->getScriptFrame(cx, iter, args.rval());
     }
     args.rval().setNull();
     return true;
@@ -3780,7 +3794,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
         for (size_t i = 0; i < keys.length(); i++) {
             id = keys[i];
             MutableHandleValue val = values.handleAt(i);
-            if (!cx->compartment->wrap(cx, val.address()) ||
+            if (!cx->compartment->wrap(cx, val) ||
                 !DefineNativeProperty(cx, env, id, val, NULL, NULL, 0, 0, 0))
             {
                 return false;
@@ -4192,7 +4206,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
              vals[i].setString(str);
          } else if (JSID_IS_ATOM(id)) {
              vals[i].setString(JSID_TO_STRING(id));
-             if (!cx->compartment->wrap(cx, &vals[i]))
+             if (!cx->compartment->wrap(cx, vals.handleAt(i)))
                  return false;
          } else {
              vals[i].setObject(*JSID_TO_OBJECT(id));
@@ -4317,11 +4331,11 @@ static JSBool
 DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "deleteProperty", args, dbg, obj);
-    RootedValue nameArg(cx, argc > 0 ? args[0] : UndefinedValue());
+    RootedValue nameArg(cx, args.get(0));
 
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment->wrap(cx, nameArg.address()))
+    if (!cx->compartment->wrap(cx, &nameArg))
         return false;
 
     ErrorCopier ec(ac, dbg->toJSObject());
@@ -4476,11 +4490,15 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
      */
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment->wrap(cx, calleev.address()) || !cx->compartment->wrap(cx, thisv.address()))
+    if (!cx->compartment->wrap(cx, &calleev) || !cx->compartment->wrap(cx, &thisv))
         return false;
+
+    RootedValue arg(cx);
     for (unsigned i = 0; i < callArgc; i++) {
-        if (!cx->compartment->wrap(cx, &callArgv[i]))
-            return false;
+        arg = callArgv[i];
+        if (!cx->compartment->wrap(cx, &arg))
+             return false;
+        callArgv[i] = arg;
     }
 
     /*
@@ -4518,7 +4536,7 @@ DebuggerObject_makeDebuggeeValue(JSContext *cx, unsigned argc, Value *vp)
         // argument as appropriate for references from there.
         {
             AutoCompartment ac(cx, referent);
-            if (!cx->compartment->wrap(cx, arg0.address()))
+            if (!cx->compartment->wrap(cx, &arg0))
                 return false;
         }
 
@@ -4908,7 +4926,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
     {
         Maybe<AutoCompartment> ac;
         ac.construct(cx, env);
-        if (!cx->compartment->wrapId(cx, id.address()) || !cx->compartment->wrap(cx, v.address()))
+        if (!cx->compartment->wrapId(cx, id.address()) || !cx->compartment->wrap(cx, &v))
             return false;
 
         /* This can trigger setters. */
