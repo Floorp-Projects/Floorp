@@ -222,6 +222,18 @@ ifdef MOZ_WEBSMS_BACKEND
 FENNEC_JAVA_FILES += GeckoSmsManager.java
 endif
 
+ifdef MOZ_WEBRTC
+WEBRTC_VIDEO_CAPTURE_JAVA_FILES = \
+  CaptureCapabilityAndroid.java \
+  VideoCaptureAndroid.java \
+  VideoCaptureDeviceInfoAndroid.java \
+  $(NULL)
+
+WEBRTC_JAVA_FILES = \
+  $(addprefix ../../../media/webrtc/trunk/src/modules/video_capture/main/source/android/java/org/webrtc/videoengine/, $(WEBRTC_VIDEO_CAPTURE_JAVA_FILES)) \
+  $(NULL)
+endif
+
 ifdef MOZ_ANDROID_ANR_REPORTER
 DEFINES += -DMOZ_ANDROID_ANR_REPORTER=1
 FENNEC_JAVA_FILES += ANRReporter.java
@@ -1085,7 +1097,7 @@ include $(topsrcdir)/config/android-common.mk
 # Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
-classes.dex: jars/gecko-browser.jar
+classes.dex: jars/gecko-browser.jar jars/webrtc.jar
 	@echo "DX classes.dex"
 	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
 
@@ -1112,6 +1124,14 @@ jars/sync-thirdparty.jar: $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) 
 	$(NSINSTALL) -D classes/sync-thirdparty
 	$(JAVAC) $(JAVAC_FLAGS) -d classes/sync-thirdparty $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
 	$(JAR) cMf jars/sync-thirdparty.jar -C classes/sync-thirdparty .
+
+ifdef MOZ_WEBRTC
+jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars
+	@echo "JAR webrtc.jar"
+	$(NSINSTALL) -D classes/webrtc
+	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
+	$(JAR) cMf jars/webrtc.jar -C classes/webrtc .
+endif
 
 jars:
 	@echo "MKDIR jars"
