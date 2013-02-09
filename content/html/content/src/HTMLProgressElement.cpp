@@ -73,65 +73,71 @@ HTMLProgressElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
 NS_IMETHODIMP
 HTMLProgressElement::GetValue(double* aValue)
 {
+  *aValue = Value();
+  return NS_OK;
+}
+
+double
+HTMLProgressElement::Value() const
+{
   const nsAttrValue* attrValue = mAttrsAndChildren.GetAttr(nsGkAtoms::value);
   if (!attrValue || attrValue->Type() != nsAttrValue::eDoubleValue ||
       attrValue->GetDoubleValue() < 0.0) {
-    *aValue = kDefaultValue;
-    return NS_OK;
+    return kDefaultValue;
   }
 
-  *aValue = attrValue->GetDoubleValue();
-
-  double max;
-  GetMax(&max);
-
-  *aValue = std::min(*aValue, max);
-
-  return NS_OK;
+  return std::min(attrValue->GetDoubleValue(), Max());
 }
 
 NS_IMETHODIMP
 HTMLProgressElement::SetValue(double aValue)
 {
-  return SetDoubleAttr(nsGkAtoms::value, aValue);
+  ErrorResult rv;
+  SetValue(aValue, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 HTMLProgressElement::GetMax(double* aValue)
 {
+  *aValue = Max();
+  return NS_OK;
+}
+
+double
+HTMLProgressElement::Max() const
+{
   const nsAttrValue* attrMax = mAttrsAndChildren.GetAttr(nsGkAtoms::max);
-  if (attrMax && attrMax->Type() == nsAttrValue::eDoubleValue &&
-      attrMax->GetDoubleValue() > 0.0) {
-    *aValue = attrMax->GetDoubleValue();
-  } else {
-    *aValue = kDefaultMax;
+  if (!attrMax || attrMax->Type() != nsAttrValue::eDoubleValue ||
+      attrMax->GetDoubleValue() <= 0.0) {
+    return kDefaultMax;
   }
 
-  return NS_OK;
+  return attrMax->GetDoubleValue();
 }
 
 NS_IMETHODIMP
 HTMLProgressElement::SetMax(double aValue)
 {
-  return SetDoubleAttr(nsGkAtoms::max, aValue);
+  ErrorResult rv;
+  SetMax(aValue, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 HTMLProgressElement::GetPosition(double* aPosition)
 {
+  *aPosition = Position();
+}
+
+double
+HTMLProgressElement::Position() const
+{
   if (IsIndeterminate()) {
-    *aPosition = kIndeterminatePosition;
-    return NS_OK;
+    return kIndeterminatePosition;
   }
 
-  double value;
-  double max;
-  GetValue(&value);
-  GetMax(&max);
-
-  *aPosition = value / max;
-
-  return NS_OK;
+  return Value() / Max();
 }
 
 bool
