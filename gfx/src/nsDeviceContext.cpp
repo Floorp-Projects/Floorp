@@ -370,11 +370,21 @@ nsDeviceContext::Init(nsIWidget *aWidget)
 nsresult
 nsDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
 {
-    NS_ABORT_IF_FALSE(mPrintingSurface, "only call for printing dcs");
-
+    nsRefPtr<gfxASurface> printingSurface = mPrintingSurface;
+#ifdef XP_MACOSX
+    // CreateRenderingContext() can be called (on reflow) after EndPage()
+    // but before BeginPage().  On OS X (and only there) mPrintingSurface
+    // will in this case be null, because OS X printing surfaces are
+    // per-page, and therefore only truly valid between calls to BeginPage()
+    // and EndPage().  But we can get away with fudging things here, if need
+    // be, by using a cached copy.
+    if (!printingSurface) {
+      printingSurface = mCachedPrintingSurface;
+    }
+#endif
     nsRefPtr<nsRenderingContext> pContext = new nsRenderingContext();
 
-    pContext->Init(this, mPrintingSurface);
+    pContext->Init(this, printingSurface);
     pContext->Scale(mPrintingScale, mPrintingScale);
     aContext = pContext;
     NS_ADDREF(aContext);
@@ -523,8 +533,6 @@ nsDeviceContext::BeginPage(void)
 #ifdef XP_MACOSX
     // We need to get a new surface for each page on the Mac, as the
     // CGContextRefs are only good for one page.
-    // And we don't null it out in EndPage because mPrintingSurface needs
-    // to be available also in-between EndPage/BeginPage (bug 665218).
     mDeviceContextSpec->GetSurfaceForPrinter(getter_AddRefs(mPrintingSurface));
 #endif
 
@@ -537,6 +545,18 @@ nsresult
 nsDeviceContext::EndPage(void)
 {
     nsresult rv = mPrintingSurface->EndPage();
+
+#ifdef XP_MACOSX
+    // We need to release the CGContextRef in the surface here, plus it's
+    // not something you would want anyway, as these CGContextRefs are only
+    // good for one page.  But we need to keep a cached reference to it, since
+    // CreateRenderingContext() may try to access it when mPrintingSurface
+    // would normally be null.  See bug 665218.  If we just stop nulling out
+    // mPrintingSurface here (and thereby make that our cached copy), we'll
+    // break all our null checks on mPrintingSurface.  See bug 684622.
+    mCachedPrintingSurface = mPrintingSurface;
+    mPrintingSurface = nullptr;
+#endif
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndPage();
