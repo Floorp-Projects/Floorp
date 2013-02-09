@@ -69,16 +69,10 @@ protected:
                                             const bool& useSSL,
                                             const nsString& aBinaryType,
                                             PBrowserParent* aBrowser);
-
-  virtual PRemoteOpenFileParent* AllocPRemoteOpenFile(const URIParams& aFileURI,
-                                                      PBrowserParent* aBrowser)
-                                                      MOZ_OVERRIDE;
-  virtual bool RecvPRemoteOpenFileConstructor(PRemoteOpenFileParent* aActor,
-                                              const URIParams& aFileURI,
-                                              PBrowserParent* aBrowser)
-                                              MOZ_OVERRIDE;
-  virtual bool DeallocPRemoteOpenFile(PRemoteOpenFileParent* aActor)
-                                      MOZ_OVERRIDE;
+  virtual PRemoteOpenFileParent* AllocPRemoteOpenFile(
+                                            const URIParams& fileuri,
+                                            PBrowserParent* browser);
+  virtual bool DeallocPRemoteOpenFile(PRemoteOpenFileParent* actor);
 
   virtual bool RecvPTCPSocketConstructor(PTCPSocketParent*,
                                          const nsString& aHost,
