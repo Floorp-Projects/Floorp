@@ -48,6 +48,7 @@
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDragEvent.h"
 #include "nsContentList.h"
+#include "nsIDOMMutationEvent.h"
 
 using namespace mozilla;
 
@@ -117,21 +118,20 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nullptr,
-                                                 kNameSpaceID_XHTML,
+  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::label, nullptr,
+                                                 kNameSpaceID_XUL,
                                                  nsIDOMNode::ELEMENT_NODE);
 
   // Create the text content
-  NS_NewHTMLElement(getter_AddRefs(mTextContent), nodeInfo.forget(),
-                    dom::NOT_FROM_PARSER);
+  NS_TrustedNewXULElement(getter_AddRefs(mTextContent), nodeInfo.forget());
   if (!mTextContent)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Mark the element to be native anonymous before setting any attributes.
   mTextContent->SetNativeAnonymous();
 
-  mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                        NS_LITERAL_STRING("text"), false);
+  mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::crop,
+                        NS_LITERAL_STRING("center"), false);
 
   nsHTMLInputElement* inputElement =
     nsHTMLInputElement::FromContent(mContent);
@@ -141,13 +141,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // before we got here
   nsAutoString value;
   inputElement->GetDisplayFileName(value);
-
-  nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
-  NS_ASSERTION(textControl, "Why is the <input> we created not a <input>?");
-  textControl->SetValue(value);
-
-  textControl->SetTabIndex(-1);
-  textControl->SetReadOnly(true);
+  UpdateDisplayedValue(value, false);
 
   if (!aElements.AppendElement(mTextContent))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -198,7 +192,6 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mBrowse->AddSystemEventListener(NS_LITERAL_STRING("click"),
                                   mMouseListener, false);
 
-  SyncAttr(kNameSpaceID_None, nsGkAtoms::size,     SYNC_TEXT);
   SyncDisabledState();
 
   return NS_OK;
@@ -336,60 +329,30 @@ nsFileControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-nsTextControlFrame*
-nsFileControlFrame::GetTextControlFrame()
-{
-  nsITextControlFrame* tc = do_QueryFrame(mTextContent->GetPrimaryFrame());
-  return static_cast<nsTextControlFrame*>(tc);
-}
-
-void
-nsFileControlFrame::SyncAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             int32_t aWhichControls)
-{
-  nsAutoString value;
-  if (mContent->GetAttr(aNameSpaceID, aAttribute, value)) {
-    if (aWhichControls & SYNC_TEXT && mTextContent) {
-      mTextContent->SetAttr(aNameSpaceID, aAttribute, value, true);
-    }
-    if (aWhichControls & SYNC_BUTTON && mBrowse) {
-      mBrowse->SetAttr(aNameSpaceID, aAttribute, value, true);
-    }
-  } else {
-    if (aWhichControls & SYNC_TEXT && mTextContent) {
-      mTextContent->UnsetAttr(aNameSpaceID, aAttribute, true);
-    }
-    if (aWhichControls & SYNC_BUTTON && mBrowse) {
-      mBrowse->UnsetAttr(aNameSpaceID, aAttribute, true);
-    }
-  }
-}
-
 void
 nsFileControlFrame::SyncDisabledState()
 {
   nsEventStates eventStates = mContent->AsElement()->State();
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
-    mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
-                          true);
     mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
                      true);
   } else {
-    mTextContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
     mBrowse->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
   }
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
-                                     int32_t         aModType)
+nsFileControlFrame::AttributeChanged(int32_t  aNameSpaceID,
+                                     nsIAtom* aAttribute,
+                                     int32_t  aModType)
 {
-  if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::size) {
-      SyncAttr(aNameSpaceID, aAttribute, SYNC_TEXT);
-    } else if (aAttribute == nsGkAtoms::tabindex) {
-      SyncAttr(aNameSpaceID, aAttribute, SYNC_BUTTON);
+  if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::tabindex) {
+    if (aModType == nsIDOMMutationEvent::REMOVAL) {
+      mBrowse->UnsetAttr(aNameSpaceID, aAttribute, true);
+    } else {
+      nsAutoString value;
+      mContent->GetAttr(aNameSpaceID, aAttribute, value);
+      mBrowse->SetAttr(aNameSpaceID, aAttribute, value, true);
     }
   }
 
@@ -418,19 +381,33 @@ nsFileControlFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
+void
+nsFileControlFrame::UpdateDisplayedValue(const nsAString& aValue, bool aNotify)
+{
+  nsXPIDLString value;
+  if (aValue.IsEmpty()) {
+    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "NoFilesSelected", value);
+    } else {
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "NoFileSelected", value);
+    }
+  } else {
+    value = aValue;
+  }
+  mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::value, value, aNotify);
+}
+
 nsresult
 nsFileControlFrame::SetFormProperty(nsIAtom* aName,
                                     const nsAString& aValue)
 {
   if (nsGkAtoms::value == aName) {
-    nsCOMPtr<nsIDOMHTMLInputElement> textControl =
-      do_QueryInterface(mTextContent);
-    NS_ASSERTION(textControl,
-                 "The text control should exist and be an input element");
-    textControl->SetValue(aValue);
+    UpdateDisplayedValue(aValue, true);
   }
   return NS_OK;
-}      
+}
 
 nsresult
 nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
