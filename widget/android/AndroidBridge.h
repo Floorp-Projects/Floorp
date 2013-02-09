@@ -268,6 +268,11 @@ public:
 
     void *LockBitmap(jobject bitmap);
 
+    // Returns a global reference to the Context for Fennec's Activity. The
+    // caller is responsible for ensuring this doesn't leak by calling
+    // DeleteGlobalRef() when the context is no longer needed.
+    jobject GetGlobalContextRef(void);
+
     void UnlockBitmap(jobject bitmap);
 
     bool UnlockProfile();
@@ -485,6 +490,8 @@ protected:
 
     jclass jThumbnailHelperClass;
     jmethodID jNotifyThumbnail;
+
+    jmethodID jGetContext;
 
     // for GfxInfo (gfx feature detection and blacklisting)
     jmethodID jGetGfxInfoData;
