@@ -59,7 +59,6 @@ jclass VideoCaptureAndroid::g_javaCmClass = NULL;
 jclass VideoCaptureAndroid::g_javaCmDevInfoClass = NULL;
 //static instance of VideoCaptureDeviceInfoAndroid.java
 jobject VideoCaptureAndroid::g_javaCmDevInfoObject = NULL;
-jobject VideoCaptureAndroid::g_javaContext = NULL;
 
 /*
  * Register references to Java Capture class.
@@ -68,7 +67,6 @@ WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
                                                      void* javaContext) {
 
   g_jvm = static_cast<JavaVM*> (javaVM);
-  g_javaContext = static_cast<jobject> (javaContext);
 
   if (javaVM) {
     JNIEnv* env = NULL;
@@ -161,7 +159,7 @@ WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
     jobject javaCameraDeviceInfoObjLocal =
         env->CallStaticObjectMethod(g_javaCmDevInfoClass,
                                     cid, (int) -1,
-                                    g_javaContext);
+                                    javaContext);
     if (!javaCameraDeviceInfoObjLocal) {
       WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
                    "%s: could not create Java Capture Device info object",
