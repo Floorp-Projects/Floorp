@@ -1274,10 +1274,10 @@ JSContext::getDefaultLocale()
 void
 JSContext::wrapPendingException()
 {
-    Value v = getPendingException();
+    RootedValue value(this, getPendingException());
     clearPendingException();
-    if (compartment->wrap(this, &v))
-        setPendingException(v);
+    if (compartment->wrap(this, &value))
+        setPendingException(value);
 }
 
 

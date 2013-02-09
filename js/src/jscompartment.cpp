@@ -210,18 +210,18 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 #endif
 
 static bool
-WrapForSameCompartment(JSContext *cx, HandleObject obj, Value *vp)
+WrapForSameCompartment(JSContext *cx, HandleObject obj, MutableHandleValue vp)
 {
     JS_ASSERT(cx->compartment == obj->compartment());
     if (!cx->runtime->sameCompartmentWrapObjectCallback) {
-        vp->setObject(*obj);
+        vp.setObject(*obj);
         return true;
     }
 
     JSObject *wrapped = cx->runtime->sameCompartmentWrapObjectCallback(cx, obj);
     if (!wrapped)
         return false;
-    vp->setObject(*wrapped);
+    vp.setObject(*wrapped);
     return true;
 }
 
@@ -240,13 +240,12 @@ JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &w
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
+JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingArg)
 {
-    RootedObject existing(cx, existingArg);
     JS_ASSERT(cx->compartment == this);
-    JS_ASSERT_IF(existing, existing->compartment() == cx->compartment);
-    JS_ASSERT_IF(existing, vp->isObject());
-    JS_ASSERT_IF(existing, IsDeadProxyObject(existing));
+    JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment);
+    JS_ASSERT_IF(existingArg, vp.isObject());
+    JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
 
     unsigned flags = 0;
 
@@ -263,11 +262,11 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
 #endif
 
     /* Only GC things have to be wrapped or copied. */
-    if (!vp->isMarkable())
+    if (!vp.isMarkable())
         return true;
 
-    if (vp->isString()) {
-        JSString *str = vp->toString();
+    if (vp.isString()) {
+        RootedString str(cx, vp.toString());
 
         /* If the string is already in this compartment, we are done. */
         if (str->zone() == zone())
@@ -290,22 +289,18 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
     HandleObject global = cx->global();
 
     /* Unwrap incoming objects. */
-    if (vp->isObject()) {
-        RootedObject obj(cx, &vp->toObject());
+    if (vp.isObject()) {
+        RootedObject obj(cx, &vp.toObject());
 
         if (obj->compartment() == this)
             return WrapForSameCompartment(cx, obj, vp);
 
         /* Translate StopIteration singleton. */
-        if (obj->isStopIteration()) {
-            RootedValue vvp(cx, *vp);
-            bool result = js_FindClassObject(cx, JSProto_StopIteration, &vvp);
-            *vp = vvp;
-            return result;
-        }
+        if (obj->isStopIteration())
+            return js_FindClassObject(cx, JSProto_StopIteration, vp);
 
         /* Unwrap the object, but don't unwrap outer windows. */
-        obj = UnwrapObject(&vp->toObject(), /* stopAtOuter = */ true, &flags);
+        obj = UnwrapObject(obj, /* stopAtOuter = */ true, &flags);
 
         if (obj->compartment() == this)
             return WrapForSameCompartment(cx, obj, vp);
@@ -318,7 +313,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
 
         if (obj->compartment() == this)
             return WrapForSameCompartment(cx, obj, vp);
-        vp->setObject(*obj);
+        vp.setObject(*obj);
 
 #ifdef DEBUG
         {
@@ -328,29 +323,30 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
 #endif
     }
 
-    RootedValue key(cx, *vp);
+    RootedValue key(cx, vp);
 
     /* If we already have a wrapper for this value, use it. */
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
-        *vp = p->value;
-        if (vp->isObject()) {
-            RootedObject obj(cx, &vp->toObject());
+        vp.set(p->value);
+        if (vp.isObject()) {
+            RootedObject obj(cx, &vp.toObject());
             JS_ASSERT(obj->isCrossCompartmentWrapper());
             JS_ASSERT(obj->getParent() == global);
         }
         return true;
     }
 
-    if (vp->isString()) {
-        RootedValue orig(cx, *vp);
-        Rooted<JSStableString *> str(cx, vp->toString()->ensureStable(cx));
+    if (vp.isString()) {
+        Rooted<JSStableString *> str(cx, vp.toString()->ensureStable(cx));
         if (!str)
             return false;
+
         RootedString wrapped(cx, js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length()));
         if (!wrapped)
             return false;
-        vp->setString(wrapped);
-        if (!putWrapper(orig, *vp))
+
+        vp.setString(wrapped);
+        if (!putWrapper(key, vp))
             return false;
 
         if (str->zone()->isGCMarking()) {
@@ -368,9 +364,9 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
         return true;
     }
 
-    RootedObject obj(cx, &vp->toObject());
-
-    JSObject *proto = Proxy::LazyProto;
+    RootedObject proto(cx, Proxy::LazyProto);
+    RootedObject obj(cx, &vp.toObject());
+    RootedObject existing(cx, existingArg);
     if (existing) {
         /* Is it possible to reuse |existing|? */
         if (!existing->getTaggedProto().isLazy() ||
@@ -396,19 +392,15 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existingArg)
     // map is always directly wrapped by the value.
     JS_ASSERT(Wrapper::wrappedObject(wrapper) == &key.get().toObject());
 
-    vp->setObject(*wrapper);
-
-    if (!putWrapper(key, *vp))
-        return false;
-
-    return true;
+    vp.setObject(*wrapper);
+    return putWrapper(key, vp);
 }
 
 bool
 JSCompartment::wrap(JSContext *cx, JSString **strp)
 {
     RootedValue value(cx, StringValue(*strp));
-    if (!wrap(cx, value.address()))
+    if (!wrap(cx, &value))
         return false;
     *strp = value.get().toString();
     return true;
@@ -418,19 +410,20 @@ bool
 JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
 {
     RootedValue value(cx, StringValue(*strp));
-    if (!wrap(cx, value.address()))
+    if (!wrap(cx, &value))
         return false;
     *strp = value.get().toString();
     return true;
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, JSObject **objp, JSObject *existing)
+JSCompartment::wrap(JSContext *cx, JSObject **objp, JSObject *existingArg)
 {
     if (!*objp)
         return true;
     RootedValue value(cx, ObjectValue(**objp));
-    if (!wrap(cx, value.address(), existing))
+    RootedObject existing(cx, existingArg);
+    if (!wrap(cx, &value, existing))
         return false;
     *objp = &value.get().toObject();
     return true;
@@ -442,7 +435,7 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp)
     if (JSID_IS_INT(*idp))
         return true;
     RootedValue value(cx, IdToValue(*idp));
-    if (!wrap(cx, value.address()))
+    if (!wrap(cx, &value))
         return false;
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, value.get(), &id))
@@ -455,30 +448,43 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp)
 bool
 JSCompartment::wrap(JSContext *cx, PropertyOp *propp)
 {
-    Value v = CastAsObjectJsval(*propp);
-    if (!wrap(cx, &v))
+    RootedValue value(cx, CastAsObjectJsval(*propp));
+    if (!wrap(cx, &value))
         return false;
-    *propp = CastAsPropertyOp(v.toObjectOrNull());
+    *propp = CastAsPropertyOp(value.toObjectOrNull());
     return true;
 }
 
 bool
 JSCompartment::wrap(JSContext *cx, StrictPropertyOp *propp)
 {
-    Value v = CastAsObjectJsval(*propp);
-    if (!wrap(cx, &v))
+    RootedValue value(cx, CastAsObjectJsval(*propp));
+    if (!wrap(cx, &value))
         return false;
-    *propp = CastAsStrictPropertyOp(v.toObjectOrNull());
+    *propp = CastAsStrictPropertyOp(value.toObjectOrNull());
     return true;
 }
 
 bool
 JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc)
 {
-    return wrap(cx, &desc->obj) &&
-           (!(desc->attrs & JSPROP_GETTER) || wrap(cx, &desc->getter)) &&
-           (!(desc->attrs & JSPROP_SETTER) || wrap(cx, &desc->setter)) &&
-           wrap(cx, &desc->value);
+    if (!wrap(cx, &desc->obj))
+        return false;
+
+    if (desc->attrs & JSPROP_GETTER) {
+        if (!wrap(cx, &desc->getter))
+            return false;
+    }
+    if (desc->attrs & JSPROP_SETTER) {
+        if (!wrap(cx, &desc->setter))
+            return false;
+    }
+
+    RootedValue value(cx, desc->value);
+    if (!wrap(cx, &value))
+        return false;
+    desc->value = value.get();
+    return true;
 }
 
 bool

@@ -558,11 +558,11 @@ js_InternalThrow(VMFrame &f)
             // Call the throw hook if necessary
             JSThrowHook handler = cx->runtime->debugHooks.throwHook;
             if (handler || !cx->compartment->getDebuggees().empty()) {
-                Value rval;
+                RootedValue rval(cx);
                 JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
                 if (st == JSTRAP_CONTINUE && handler) {
                     RootedScript fscript(cx, cx->fp()->script());
-                    st = handler(cx, fscript, cx->regs().pc, &rval,
+                    st = handler(cx, fscript, cx->regs().pc, rval.address(),
                                  cx->runtime->debugHooks.throwHookData);
                 }
 

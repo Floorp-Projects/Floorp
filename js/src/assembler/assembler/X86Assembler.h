@@ -1596,6 +1596,11 @@ public:
         m_formatter.immediate32(imm);
     }
 
+    // Intentionally left undefined. If you need this operation, consider
+    // naming it movq_i32r_signExtended to highlight the fact the operand size
+    // is not 32; the 32-bit immediate is sign-extended.
+    void movq_i32r(int imm, RegisterID dst);
+
     void movq_i64r(int64_t imm, RegisterID dst)
     {
         spew("movabsq    $0x%llx, %s",

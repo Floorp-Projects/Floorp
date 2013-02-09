@@ -1718,11 +1718,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
         offset += delta;
         SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
         const char *name = js_SrcNoteSpec[type].name;
-        if (type == SRC_LABEL) {
-            /* Check if the source note is for a switch case. */
-            if (switchTableStart <= offset && offset < switchTableEnd)
-                name = "case";
-        }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", unsigned(sn - notes), lineno, offset, delta, name);
         switch (type) {
           case SRC_COLSPAN:
@@ -1751,14 +1746,9 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
           case SRC_COND:
           case SRC_WHILE:
-          case SRC_PCBASE:
           case SRC_PCDELTA:
-          case SRC_DECL:
-          case SRC_BRACE:
             Sprint(sp, " offset %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
-          case SRC_LABEL:
-          case SRC_LABELBRACE:
           case SRC_BREAK2LABEL:
           case SRC_CONT2LABEL: {
             uint32_t index = js_GetSrcNoteOffset(sn, 0);
@@ -1770,17 +1760,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
                 buf[len] = 0;
             }
             Sprint(sp, ")");
-            break;
-          }
-          case SRC_FUNCDEF: {
-            uint32_t index = js_GetSrcNoteOffset(sn, 0);
-            JSObject *obj = script->getObject(index);
-            JSFunction *fun = obj->toFunction();
-            JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
-            JSAutoByteString bytes;
-            if (!str || !bytes.encode(cx, str))
-                ReportException(cx);
-            Sprint(sp, " function %u (%s)", index, !!bytes ? bytes.ptr() : "N/A");
             break;
           }
           case SRC_SWITCH: {
@@ -2537,7 +2516,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     unsigned lineno;
 
     JS_DescribeScriptedCaller(cx, script.address(), &lineno);
-    jsval rval;
+    RootedValue rval(cx);
     {
         Maybe<JSAutoCompartment> ac;
         unsigned flags;
@@ -2557,7 +2536,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
                                  script->filename,
                                  lineno,
-                                 &rval)) {
+                                 rval.address())) {
             return false;
         }
     }
