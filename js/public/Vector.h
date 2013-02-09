@@ -185,7 +185,7 @@ class Vector : private AllocPolicy
 
     /* utilities */
 
-    static const bool sElemIsPod = mozilla::IsPod<T>::result;
+    static const bool sElemIsPod = mozilla::IsPod<T>::value;
     typedef VectorImpl<T, N, AllocPolicy, sElemIsPod> Impl;
     friend struct VectorImpl<T, N, AllocPolicy, sElemIsPod>;
 
