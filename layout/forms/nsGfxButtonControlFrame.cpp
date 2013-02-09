@@ -50,24 +50,6 @@ nsGfxButtonControlFrame::GetType() const
   return nsGkAtoms::gfxButtonControlFrame;
 }
 
-// Special check for the browse button of a file input.
-//
-// We'll return true if type is NS_FORM_INPUT_BUTTON and our parent
-// is a file input.
-bool
-nsGfxButtonControlFrame::IsFileBrowseButton(int32_t type) const
-{
-  bool rv = false;
-  if (NS_FORM_INPUT_BUTTON == type) {
-    // Check to see if parent is a file input
-    nsCOMPtr<nsIFormControl> formCtrl =
-      do_QueryInterface(mContent->GetParent());
-
-    rv = formCtrl && formCtrl->GetType() == NS_FORM_INPUT_FILE;
-  }
-  return rv;
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsGfxButtonControlFrame::GetFrameName(nsAString& aResult) const
@@ -171,9 +153,6 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString) const
   }
   else if (type == NS_FORM_INPUT_SUBMIT) {
     prop = "Submit";
-  }
-  else if (IsFileBrowseButton(type)) {
-    prop = "Browse";
   }
   else {
     aString.Truncate();
