@@ -62,8 +62,6 @@ protected:
 
   nsresult GetLabel(nsXPIDLString& aLabel);
 
-  bool IsFileBrowseButton(int32_t type) const; // Browse button of file input
-
   virtual bool IsInput() MOZ_OVERRIDE { return true; }
 private:
   nsCOMPtr<nsIContent> mTextContent;
