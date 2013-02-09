@@ -344,28 +344,6 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     return BAILOUT_RETURN_FATAL_ERROR;
 }
 
-static inline void
-EnsureExitFrame(IonCommonFrameLayout *frame)
-{
-    if (frame->prevType() == IonFrame_Entry) {
-        // The previous frame type is the entry frame, so there's no actual
-        // need for an exit frame.
-        return;
-    }
-
-    if (frame->prevType() == IonFrame_Rectifier) {
-        // The rectifier code uses the frame descriptor to discard its stack,
-        // so modifying its descriptor size here would be dangerous. Instead,
-        // we change the frame type, and teach the stack walking code how to
-        // deal with this edge case. bug 717297 would obviate the need
-        frame->changePrevType(IonFrame_Bailed_Rectifier);
-        return;
-    }
-
-    JS_ASSERT(frame->prevType() == IonFrame_OptimizedJS);
-    frame->changePrevType(IonFrame_Bailed_JS);
-}
-
 uint32_t
 ion::Bailout(BailoutStack *sp)
 {
