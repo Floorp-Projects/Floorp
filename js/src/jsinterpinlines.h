@@ -1095,7 +1095,7 @@ ReportIfNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO
     if (v.isObject() && v.toObject().isFunction())
         return v.toObject().toFunction();
 
-    ReportIsNotFunction(cx, v, construct);
+    ReportIsNotFunction(cx, v, -1, construct);
     return NULL;
 }
 
