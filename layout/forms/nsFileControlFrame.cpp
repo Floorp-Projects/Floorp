@@ -117,6 +117,12 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                    NS_LITERAL_STRING("button"), false);
 
+  // Set the file picking button text depending on the current locale.
+  nsXPIDLString buttonValue;
+  nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                     "Browse", buttonValue);
+  mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::value, buttonValue, false);
+
   // Make sure access key and tab order for the element actually redirect to the
   // file picking button.
   nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
