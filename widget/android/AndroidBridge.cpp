@@ -225,6 +225,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
         jEGLSurfacePointerField = 0;
     }
 
+    jGetContext = (jmethodID)jEnv->GetStaticMethodID(jGeckoAppShellClass, "getContext", "()Landroid/content/Context;");
+
     InitAndroidJavaWrappers(jEnv);
 
     // jEnv should NOT be cached here by anything -- the jEnv here
@@ -2031,6 +2033,25 @@ AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *h
     } else return false;
 
     return true;
+}
+
+jobject
+AndroidBridge::GetGlobalContextRef() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return 0;
+
+    AutoLocalJNIFrame jniFrame(env, 0);
+
+    jobject context = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetContext);
+    if (jniFrame.CheckForException()) {
+        return 0;
+    }
+
+    jobject globalRef = env->NewGlobalRef(context);
+    MOZ_ASSERT(globalRef);
+
+    return globalRef;
 }
 
 bool
