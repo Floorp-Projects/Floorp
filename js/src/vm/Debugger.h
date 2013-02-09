@@ -239,7 +239,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Cope with an error or exception in a debugger hook.
      *
      * If callHook is true, then call the uncaughtExceptionHook, if any. If, in
-     * addition, vp is non-null, then parse the value returned by
+     * addition, vp is given, then parse the value returned by
      * uncaughtExceptionHook as a resumption value.
      *
      * If there is no uncaughtExceptionHook, or if it fails, report and clear
@@ -249,7 +249,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * do some things in the debugger compartment and some things in the
      * debuggee compartment.
      */
-    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment> &ac, Value *vp, bool callHook);
+    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment> &ac, bool callHook);
+    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment> &ac, MutableHandleValue vp, bool callHook);
+
+    JSTrapStatus handleUncaughtExceptionHelper(mozilla::Maybe<AutoCompartment> &ac,
+                                               MutableHandleValue *vp, bool callHook);
 
     /*
      * Handle the result of a hook that is expected to return a resumption
@@ -277,7 +281,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *         return handleUncaughtException(ac, vp, callHook).
      */
     JSTrapStatus parseResumptionValue(mozilla::Maybe<AutoCompartment> &ac, bool ok, const Value &rv,
-                                      Value *vp, bool callHook = true);
+                                      MutableHandleValue vp, bool callHook = true);
 
     GlobalObject *unwrapDebuggeeArgument(JSContext *cx, const Value &v);
 
@@ -323,17 +327,17 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     JSObject *getHook(Hook hook) const;
     bool hasAnyLiveHooks() const;
 
-    static JSTrapStatus slowPathOnEnterFrame(JSContext *cx, Value *vp);
+    static JSTrapStatus slowPathOnEnterFrame(JSContext *cx, MutableHandleValue vp);
     static bool slowPathOnLeaveFrame(JSContext *cx, bool ok);
     static void slowPathOnNewScript(JSContext *cx, HandleScript script,
                                     GlobalObject *compileAndGoGlobal);
     static bool slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
-    static JSTrapStatus dispatchHook(JSContext *cx, Value *vp, Hook which);
+    static JSTrapStatus dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which);
 
-    JSTrapStatus fireDebuggerStatement(JSContext *cx, Value *vp);
-    JSTrapStatus fireExceptionUnwind(JSContext *cx, Value *vp);
-    JSTrapStatus fireEnterFrame(JSContext *cx, Value *vp);
-    JSTrapStatus fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, Value *vp);
+    JSTrapStatus fireDebuggerStatement(JSContext *cx, MutableHandleValue vp);
+    JSTrapStatus fireExceptionUnwind(JSContext *cx, MutableHandleValue vp);
+    JSTrapStatus fireEnterFrame(JSContext *cx, MutableHandleValue vp);
+    JSTrapStatus fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, MutableHandleValue vp);
 
     /*
      * Allocate and initialize a Debugger.Script instance whose referent is
@@ -386,15 +390,15 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool isDebugWrapper(RawObject o);
     static void findCompartmentEdges(JS::Zone *v, gc::ComponentFinder<JS::Zone> &finder);
 
-    static inline JSTrapStatus onEnterFrame(JSContext *cx, Value *vp);
+    static inline JSTrapStatus onEnterFrame(JSContext *cx, MutableHandleValue vp);
     static inline bool onLeaveFrame(JSContext *cx, bool ok);
-    static inline JSTrapStatus onDebuggerStatement(JSContext *cx, Value *vp);
-    static inline JSTrapStatus onExceptionUnwind(JSContext *cx, Value *vp);
+    static inline JSTrapStatus onDebuggerStatement(JSContext *cx, MutableHandleValue vp);
+    static inline JSTrapStatus onExceptionUnwind(JSContext *cx, MutableHandleValue vp);
     static inline void onNewScript(JSContext *cx, HandleScript script,
                                    GlobalObject *compileAndGoGlobal);
     static inline bool onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
-    static JSTrapStatus onTrap(JSContext *cx, Value *vp);
-    static JSTrapStatus onSingleStep(JSContext *cx, Value *vp);
+    static JSTrapStatus onTrap(JSContext *cx, MutableHandleValue vp);
+    static JSTrapStatus onSingleStep(JSContext *cx, MutableHandleValue vp);
 
     /************************************* Functions for use by Debugger.cpp. */
 
@@ -453,7 +457,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 
     /* Store the Debugger.Frame object for iter in *vp. */
-    bool getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, Value *vp);
+    bool getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, MutableHandleValue vp);
 
     /*
      * Set |*status| and |*value| to a (JSTrapStatus, Value) pair reflecting a
@@ -638,7 +642,7 @@ Debugger::observesFrame(AbstractFramePtr frame) const
 }
 
 JSTrapStatus
-Debugger::onEnterFrame(JSContext *cx, Value *vp)
+Debugger::onEnterFrame(JSContext *cx, MutableHandleValue vp)
 {
     if (cx->compartment->getDebuggees().empty())
         return JSTRAP_CONTINUE;
@@ -657,7 +661,7 @@ Debugger::onLeaveFrame(JSContext *cx, bool ok)
 }
 
 JSTrapStatus
-Debugger::onDebuggerStatement(JSContext *cx, Value *vp)
+Debugger::onDebuggerStatement(JSContext *cx, MutableHandleValue vp)
 {
     return cx->compartment->getDebuggees().empty()
            ? JSTRAP_CONTINUE
@@ -665,7 +669,7 @@ Debugger::onDebuggerStatement(JSContext *cx, Value *vp)
 }
 
 JSTrapStatus
-Debugger::onExceptionUnwind(JSContext *cx, Value *vp)
+Debugger::onExceptionUnwind(JSContext *cx, MutableHandleValue vp)
 {
     return cx->compartment->getDebuggees().empty()
            ? JSTRAP_CONTINUE
