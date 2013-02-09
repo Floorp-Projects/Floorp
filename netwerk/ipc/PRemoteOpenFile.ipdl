@@ -18,9 +18,18 @@ protocol PRemoteOpenFile
 {
   manager PNecko;
 
+parent:
+  // Tell parent to open file. URI to open was passed and vetted for security in
+  // IPDL constructor: see NeckoParent::AllocPRemoteOpenFile()
+  AsyncOpenFile();
+
+  __delete__();
+
 child:
   // Your file handle is ready, Sir...
-  __delete__(FileDescriptor fd);
+  FileOpened(FileDescriptor fd);
+  // Trying to send invalid fd crashes, so we need separate method for failure
+  FileDidNotOpen();
 };
 
 
