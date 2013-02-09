@@ -323,16 +323,11 @@ class DataSourceSurface : public SourceSurface
 {
 public:
   virtual SurfaceType GetType() const { return SURFACE_DATA; }
-  /*
-   * Get the raw bitmap data of the surface.
-   * Can return null if there was OOM allocating surface data.
-   */
+  /* Get the raw bitmap data of the surface */
   virtual uint8_t *GetData() = 0;
-
   /*
    * Stride of the surface, distance in bytes between the start of the image
    * data belonging to row y and row y+1. This may be negative.
-   * Can return 0 if there was OOM allocating surface data.
    */
   virtual int32_t Stride() = 0;
 
