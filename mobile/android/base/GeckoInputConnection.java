@@ -10,6 +10,8 @@ import org.mozilla.gecko.gfx.InputConnectionHandler;
 import android.R;
 import android.content.Context;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputType;
@@ -39,6 +41,8 @@ class GeckoInputConnection
     protected static final String LOGTAG = "GeckoInputConnection";
 
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
+
+    private static Handler sBackgroundHandler;
 
     // Managed only by notifyIMEEnabled; see comments in notifyIMEEnabled
     private int mIMEState;
@@ -310,7 +314,80 @@ class GeckoInputConnection
                             getComposingSpanEnd(editable));
     }
 
+    private static synchronized Handler getBackgroundHandler() {
+        if (sBackgroundHandler != null) {
+            return sBackgroundHandler;
+        }
+        // Don't use GeckoBackgroundThread because Gecko thread may block waiting on
+        // GeckoBackgroundThread. If we were to use GeckoBackgroundThread, due to IME,
+        // GeckoBackgroundThread may end up also block waiting on Gecko thread and a
+        // deadlock occurs
+        Thread backgroundThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                synchronized (GeckoInputConnection.class) {
+                    sBackgroundHandler = new Handler();
+                    GeckoInputConnection.class.notify();
+                }
+                Looper.loop();
+                sBackgroundHandler = null;
+            }
+        });
+        backgroundThread.setDaemon(true);
+        backgroundThread.start();
+        while (sBackgroundHandler == null) {
+            try {
+                // wait for new thread to set sBackgroundHandler
+                GeckoInputConnection.class.wait();
+            } catch (InterruptedException e) {
+            }
+        }
+        return sBackgroundHandler;
+    }
+
+    private boolean canReturnCustomHandler() {
+        if (mIMEState == IME_STATE_DISABLED) {
+            return false;
+        }
+        for (StackTraceElement frame : Thread.currentThread().getStackTrace()) {
+            // We only return our custom Handler to InputMethodManager's InputConnection
+            // proxy. For all other purposes, we return the regular Handler.
+            // InputMethodManager retrieves the Handler for its InputConnection proxy
+            // inside its method startInputInner(), so we check for that here. This is
+            // valid from Android 2.2 to at least Android 4.2. If this situation ever
+            // changes, we gracefully fall back to using the regular Handler.
+            if ("startInputInner".equals(frame.getMethodName()) &&
+                "android.view.inputmethod.InputMethodManager".equals(frame.getClassName())) {
+                // only return our own Handler to InputMethodManager
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Handler getHandler(Handler defHandler) {
+        if (!canReturnCustomHandler()) {
+            return defHandler;
+        }
+        // getBackgroundHandler() is synchronized and requires locking,
+        // but if we already have our handler, we don't have to lock
+        final Handler newHandler = sBackgroundHandler != null
+                                 ? sBackgroundHandler
+                                 : getBackgroundHandler();
+        if (mEditableClient.setInputConnectionHandler(newHandler)) {
+            return newHandler;
+        }
+        // Setting new IC handler failed; return old IC handler
+        return mEditableClient.getInputConnectionHandler();
+    }
+
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        if (mIMEState == IME_STATE_DISABLED) {
+            return null;
+        }
+
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
         outAttrs.actionLabel = null;
@@ -402,6 +479,40 @@ class GeckoInputConnection
         outAttrs.initialSelStart = Selection.getSelectionStart(editable);
         outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
         return this;
+    }
+
+    @Override
+    public boolean sendKeyEvent(KeyEvent event) {
+        // BaseInputConnection.sendKeyEvent() dispatches the key event to the main thread.
+        // In order to ensure events are processed in the proper order, we must block the
+        // IC thread until the main thread finishes processing the key event
+        super.sendKeyEvent(event);
+        final View v = getView();
+        if (v == null) {
+            return false;
+        }
+        final Handler icHandler = mEditableClient.getInputConnectionHandler();
+        final Handler mainHandler = v.getRootView().getHandler();
+        if (icHandler.getLooper() != mainHandler.getLooper()) {
+            // We are on separate IC thread but the event is queued on the main thread;
+            // wait on IC thread until the main thread processes our posted Runnable. At
+            // that point the key event has already been processed.
+            synchronized (icHandler) {
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        synchronized (icHandler) {
+                            icHandler.notify();
+                        }
+                    }
+                });
+                try {
+                    icHandler.wait();
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+        return false; // seems to always return false
     }
 
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
@@ -632,7 +743,6 @@ final class DebugGeckoInputConnection
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
 
-        GeckoApp.assertOnUiThread();
         Object ret = method.invoke(this, args);
         if (ret == this) {
             ret = mProxy;

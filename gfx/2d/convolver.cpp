@@ -155,6 +155,12 @@ class CircularRowBuffer {
 // Convolves horizontally along a single row. The row data is given in
 // |src_data| and continues for the num_values() of the filter.
 template<bool has_alpha>
+// This function is miscompiled with gcc 4.5 with pgo. See bug 827946.
+#if defined(__GNUC__) && defined(MOZ_GCC_VERSION_AT_LEAST)
+#if MOZ_GCC_VERSION_AT_LEAST(4, 5, 0) && !MOZ_GCC_VERSION_AT_LEAST(4, 6, 0)
+__attribute__((optimize("-O1")))
+#endif
+#endif
 void ConvolveHorizontally(const unsigned char* src_data,
                           const ConvolutionFilter1D& filter,
                           unsigned char* out_row) {

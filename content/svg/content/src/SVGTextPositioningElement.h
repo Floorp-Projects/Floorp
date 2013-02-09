@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGTextPositioningElement_h
 #define mozilla_dom_SVGTextPositioningElement_h
 
-#include "nsIDOMSVGTextPositionElem.h"
 #include "mozilla/dom/SVGTextContentElement.h"
 #include "SVGAnimatedLengthList.h"
 #include "SVGAnimatedNumberList.h"
@@ -24,8 +23,6 @@ typedef SVGTextContentElement SVGTextPositioningElementBase;
 class SVGTextPositioningElement : public SVGTextPositioningElementBase
 {
 public:
-  NS_DECL_NSIDOMSVGTEXTPOSITIONINGELEMENT
-
   // WebIDL
   already_AddRefed<DOMSVGAnimatedLengthList> X();
   already_AddRefed<DOMSVGAnimatedLengthList> Y();
@@ -41,8 +38,6 @@ protected:
 
   virtual LengthListAttributesInfo GetLengthListInfo();
   virtual NumberListAttributesInfo GetNumberListInfo();
-
-  // nsIDOMSVGTextPositioning properties:
 
   enum { ATTR_X, ATTR_Y, ATTR_DX, ATTR_DY };
   SVGAnimatedLengthList mLengthListAttributes[4];

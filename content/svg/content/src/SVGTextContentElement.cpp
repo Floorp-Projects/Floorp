@@ -20,20 +20,6 @@ SVGTextContentElement::GetTextContainerFrame()
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGTextContentElement, SVGTextContentElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGTextContentElement, SVGTextContentElementBase)
-
-NS_INTERFACE_MAP_BEGIN(SVGTextContentElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGTextContentElementBase)
-
-/* long getNumberOfChars (); */
-NS_IMETHODIMP SVGTextContentElement::GetNumberOfChars(int32_t *_retval)
-{
-  *_retval = GetNumberOfChars();
-  return NS_OK;
-}
 
 int32_t
 SVGTextContentElement::GetNumberOfChars()
@@ -42,26 +28,11 @@ SVGTextContentElement::GetNumberOfChars()
   return metrics ? metrics->GetNumberOfChars() : 0;
 }
 
-/* float getComputedTextLength (); */
-NS_IMETHODIMP SVGTextContentElement::GetComputedTextLength(float *_retval)
-{
-  *_retval = GetComputedTextLength();
-  return NS_OK;
-}
-
 float
 SVGTextContentElement::GetComputedTextLength()
 {
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
   return metrics ? metrics->GetComputedTextLength() : 0.0f;
-}
-
-/* float getSubStringLength (in unsigned long charnum, in unsigned long nchars); */
-NS_IMETHODIMP SVGTextContentElement::GetSubStringLength(uint32_t charnum, uint32_t nchars, float *_retval)
-{
-  ErrorResult rv;
-  *_retval = GetSubStringLength(charnum, nchars, rv);
-  return rv.ErrorCode();
 }
 
 float
@@ -83,14 +54,6 @@ SVGTextContentElement::GetSubStringLength(uint32_t charnum, uint32_t nchars, Err
   return metrics->GetSubStringLength(charnum, nchars);
 }
 
-/* DOMSVGPoint getStartPositionOfChar (in unsigned long charnum); */
-NS_IMETHODIMP SVGTextContentElement::GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval)
-{
-  ErrorResult rv;
-  *_retval = GetStartPositionOfChar(charnum, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<nsISVGPoint>
 SVGTextContentElement::GetStartPositionOfChar(uint32_t charnum, ErrorResult& rv)
 {
@@ -104,14 +67,6 @@ SVGTextContentElement::GetStartPositionOfChar(uint32_t charnum, ErrorResult& rv)
   nsCOMPtr<nsISVGPoint> point;
   rv = metrics->GetStartPositionOfChar(charnum, getter_AddRefs(point));
   return point.forget();
-}
-
-/* DOMSVGPoint getEndPositionOfChar (in unsigned long charnum); */
-NS_IMETHODIMP SVGTextContentElement::GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval)
-{
-  ErrorResult rv;
-  *_retval = GetEndPositionOfChar(charnum, rv).get();
-  return rv.ErrorCode();
 }
 
 already_AddRefed<nsISVGPoint>
@@ -129,14 +84,6 @@ SVGTextContentElement::GetEndPositionOfChar(uint32_t charnum, ErrorResult& rv)
   return point.forget();
 }
 
-/* nsIDOMSVGRect getExtentOfChar (in unsigned long charnum); */
-NS_IMETHODIMP SVGTextContentElement::GetExtentOfChar(uint32_t charnum, nsIDOMSVGRect **_retval)
-{
-  ErrorResult rv;
-  *_retval = GetExtentOfChar(charnum, rv).get();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<nsIDOMSVGRect>
 SVGTextContentElement::GetExtentOfChar(uint32_t charnum, ErrorResult& rv)
 {
@@ -152,14 +99,6 @@ SVGTextContentElement::GetExtentOfChar(uint32_t charnum, ErrorResult& rv)
   return rect.forget();
 }
 
-/* float getRotationOfChar (in unsigned long charnum); */
-NS_IMETHODIMP SVGTextContentElement::GetRotationOfChar(uint32_t charnum, float *_retval)
-{
-  ErrorResult rv;
-  *_retval = GetRotationOfChar(charnum, rv);
-  return rv.ErrorCode();
-}
-
 float
 SVGTextContentElement::GetRotationOfChar(uint32_t charnum, ErrorResult& rv)
 {
@@ -173,19 +112,6 @@ SVGTextContentElement::GetRotationOfChar(uint32_t charnum, ErrorResult& rv)
   float _retval;
   rv = metrics->GetRotationOfChar(charnum, &_retval);
   return _retval;
-}
-
-/* long getCharNumAtPosition (in DOMSVGPoint point); */
-NS_IMETHODIMP SVGTextContentElement::GetCharNumAtPosition(nsISupports *point, int32_t *_retval)
-{
-  nsCOMPtr<nsISVGPoint> domPoint = do_QueryInterface(point);
-  if (!domPoint) {
-    *_retval = -1;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
-
-  *_retval = GetCharNumAtPosition(*domPoint);
-  return NS_OK;
 }
 
 int32_t

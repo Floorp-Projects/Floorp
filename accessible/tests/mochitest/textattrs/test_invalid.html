@@ -1,0 +1,62 @@
+<html>
+
+<head>
+  <title>Invalid text attribute</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+
+  <script type="application/javascript">
+    function doTests()
+    {
+      testDefaultTextAttrs("aria_invalid_empty", {}, true);
+      testDefaultTextAttrs("aria_invalid_true", { "invalid": "true" }, true);
+      testDefaultTextAttrs("aria_invalid_false", { "invalid": "false" }, true);
+      testDefaultTextAttrs("aria_invalid_grammar", { "invalid": "grammar" }, true);
+      testDefaultTextAttrs("aria_invalid_spelling", { "invalid": "spelling" }, true);
+      testDefaultTextAttrs("aria_invalid_erroneous", { "invalid": "true" }, true);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=445510"
+     title="Support ARIA-based text attributes">
+    Mozilla Bug 445510
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="aria_invalid_empty" aria-invalid="">no invalid</div>
+  <div id="aria_invalid_true" aria-invalid="true">invalid:true</div>
+  <div id="aria_invalid_false" aria-invalid="false">invalid:false</div>
+  <div id="aria_invalid_grammar" aria-invalid="grammar">invalid:grammar</div>
+  <div id="aria_invalid_spelling" aria-invalid="spelling">invalid:spelling</div>
+  <div id="aria_invalid_erroneous" aria-invalid="erroneous">invalid:true</div>
+</body>
+</html>
