@@ -514,6 +514,9 @@ class Assembler : public AssemblerX86Shared
     }
     void cmpq(const Operand &lhs, Imm32 rhs) {
         switch (lhs.kind()) {
+          case Operand::REG:
+            masm.cmpq_ir(rhs.value, lhs.reg());
+            break;
           case Operand::REG_DISP:
             masm.cmpq_im(rhs.value, lhs.disp(), lhs.base());
             break;
@@ -536,10 +539,10 @@ class Assembler : public AssemblerX86Shared
     void cmpq(const Register &lhs, const Register &rhs) {
         masm.cmpq_rr(rhs.code(), lhs.code());
     }
-    void cmpq(Imm32 lhs, const Register &rhs) {
-        masm.cmpq_ir(lhs.value, rhs.code());
+    void cmpq(const Register &lhs, Imm32 rhs) {
+        masm.cmpq_ir(rhs.value, lhs.code());
     }
-    
+
     void testq(const Register &lhs, Imm32 rhs) {
         masm.testq_i32r(rhs.value, lhs.code());
     }
@@ -580,11 +583,8 @@ class Assembler : public AssemblerX86Shared
     // Do not mask shared implementations.
     using AssemblerX86Shared::call;
 
-    void cvttsd2sq(const FloatRegister &src, const Register &dest) {
-        masm.cvttsd2sq_rr(src.code(), dest.code());
-    }
-    void cvttsd2s(const FloatRegister &src, const Register &dest) {
-        cvttsd2sq(src, dest);
+    void cvttsd2si(const FloatRegister &src, const Register &dest) {
+        masm.cvttsd2si_rr(src.code(), dest.code());
     }
     void cvtsq2sd(const Register &src, const FloatRegister &dest) {
         masm.cvtsq2sd_rr(src.code(), dest.code());

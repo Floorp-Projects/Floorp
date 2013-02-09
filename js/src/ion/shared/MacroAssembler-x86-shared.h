@@ -298,10 +298,7 @@ class MacroAssemblerX86Shared : public Assembler
     void convertDoubleToInt32(FloatRegister src, Register dest, Label *fail,
                               bool negativeZeroCheck = true)
     {
-        // Note that we don't specify the destination width for the truncated
-        // conversion to integer. x64 will use the native width (quadword) which
-        // sign-extends the top bits, preserving a little sanity.
-        cvttsd2s(src, dest);
+        cvttsd2si(src, dest);
         cvtsi2sd(dest, ScratchFloatReg);
         ucomisd(src, ScratchFloatReg);
         j(Assembler::Parity, fail);
