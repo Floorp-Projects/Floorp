@@ -213,6 +213,38 @@ protected:
 
 
   /**
+   * Class is used for the 'invalid' text attribute. Note, it calculated
+   * the attribute from aria-invalid attribute only; invalid:spelling attribute
+   * calculated from misspelled text in the editor is managed by
+   * HyperTextAccessible and applied on top of the value from aria-invalid.
+   */
+  class InvalidTextAttr : public TTextAttr<uint32_t>
+  {
+  public:
+    InvalidTextAttr(nsIContent* aRootElm, nsIContent* aElm);
+    virtual ~InvalidTextAttr() { };
+
+  protected:
+
+    enum {
+      eFalse,
+      eGrammar,
+      eSpelling,
+      eTrue
+    };
+
+    // TextAttr
+    virtual bool GetValueFor(Accessible* aAccessible, uint32_t* aValue);
+    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+                             const uint32_t& aValue);
+
+  private:
+    bool GetValue(nsIContent* aElm, uint32_t* aValue);
+    nsIContent* mRootElm;
+  };
+
+
+  /**
    * Class is used for the work with 'background-color' text attribute.
    */
   class BGColorTextAttr : public TTextAttr<nscolor>
