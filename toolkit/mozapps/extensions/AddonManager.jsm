@@ -2448,7 +2448,7 @@ this.AddonManager = {
 };
 
 // load the timestamps module into AddonManagerInternal
-Cu.import("resource:///modules/TelemetryTimestamps.jsm", AddonManagerInternal);
+Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", AddonManagerInternal);
 Object.freeze(AddonManagerInternal);
 Object.freeze(AddonManagerPrivate);
 Object.freeze(AddonManager);
