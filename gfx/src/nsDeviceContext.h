@@ -254,6 +254,9 @@ protected:
     nsCOMPtr<nsIScreenManager>     mScreenManager;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
     nsRefPtr<gfxASurface>          mPrintingSurface;
+#ifdef XP_MACOSX
+    nsRefPtr<gfxASurface>          mCachedPrintingSurface;
+#endif
 };
 
 #endif /* _NS_DEVICECONTEXT_H_ */
