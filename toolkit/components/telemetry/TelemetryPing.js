@@ -118,7 +118,7 @@ function getSimpleMeasurements() {
   var appTimestamps = {};
   try {
     let o = {};
-    Cu.import("resource:///modules/TelemetryTimestamps.jsm", o);
+    Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", o);
     appTimestamps = o.TelemetryTimestamps.get();
   } catch (ex) {}
   try {
