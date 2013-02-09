@@ -143,23 +143,14 @@ protected:
 
 protected:
   /**
-   * @return the text control frame, or null if not found
-   */
-  nsTextControlFrame* GetTextControlFrame();
-
-  /**
-   * Copy an attribute from file content to text and button content.
-   * @param aNameSpaceID namespace of attr
-   * @param aAttribute attribute atom
-   * @param aWhichControls which controls to apply to (SYNC_TEXT or SYNC_FILE)
-   */
-  void SyncAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                int32_t aWhichControls);
-
-  /**
    * Sync the disabled state of the content with anonymous children.
    */
   void SyncDisabledState();
+
+  /**
+   * Updates the displayed value by using aValue.
+   */
+  void UpdateDisplayedValue(const nsAString& aValue, bool aNotify);
 };
 
 #endif
