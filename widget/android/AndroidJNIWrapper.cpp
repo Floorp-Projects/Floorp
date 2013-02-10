@@ -9,6 +9,7 @@
 #include <dlfcn.h>
 #include <prthread.h>
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Assertions.h"
 #include "nsThreadUtils.h"
 #include "AndroidBridge.h"
@@ -20,6 +21,23 @@
 #endif
 
 extern "C" {
+  jclass __jsjni_GetGlobalClassRef(const char *className);
+}
+
+class GetGlobalClassRefRunnable : public nsRunnable {
+  public:
+    GetGlobalClassRefRunnable(const char *className, jclass *foundClass) :
+        mClassName(className), mResult(foundClass) {}
+    NS_IMETHOD Run() {
+        *mResult = __jsjni_GetGlobalClassRef(mClassName);
+        return NS_OK;
+    }
+  private:
+    const char *mClassName;
+    jclass *mResult;
+};
+
+extern "C" {
   __attribute__ ((visibility("default")))
   jclass
   jsjni_FindClass(const char *className) {
@@ -29,6 +47,35 @@ extern "C" {
     JNIEnv *env = mozilla::AndroidBridge::GetJNIEnv();
     if (!env) return NULL;
     return env->FindClass(className);
+  }
+
+  jclass
+  __jsjni_GetGlobalClassRef(const char *className) {
+    // root class globally
+    JNIEnv *env = mozilla::AndroidBridge::GetJNIEnv();
+    jclass globalRef = static_cast<jclass>(env->NewGlobalRef(env->FindClass(className)));
+    if (!globalRef)
+      return NULL;
+
+    // return the newly create global reference
+    return globalRef;
+  }
+
+  __attribute__ ((visibility("default")))
+  jclass
+  jsjni_GetGlobalClassRef(const char *className) {
+    nsCOMPtr<nsIThread> mainThread;
+    mozilla::DebugOnly<nsresult> rv = NS_GetMainThread(getter_AddRefs(mainThread));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    jclass foundClass;
+    nsRefPtr<nsIRunnable> runnable_ref(new GetGlobalClassRefRunnable(className,
+                                                                     &foundClass));
+    mainThread->Dispatch(runnable_ref, NS_DISPATCH_SYNC);
+    if (!foundClass)
+      return NULL;
+
+    return foundClass;
   }
 
   __attribute__ ((visibility("default")))
