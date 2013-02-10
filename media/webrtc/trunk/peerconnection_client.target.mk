@@ -3,7 +3,7 @@
 TOOLSET := target
 TARGET := peerconnection_client
 DEFS_Debug := \
-	'-DWEBRTC_SVNREVISION="Unavailable(issue687)"' \
+	'-DWEBRTC_SVNREVISION="Unavailable_issue687"' \
 	'-D_FILE_OFFSET_BITS=64' \
 	'-DCHROMIUM_BUILD' \
 	'-DUSE_LIBJPEG_TURBO=1' \
@@ -93,7 +93,7 @@ INCS_Debug := \
 	-Itesting/gtest/include
 
 DEFS_Release := \
-	'-DWEBRTC_SVNREVISION="Unavailable(issue687)"' \
+	'-DWEBRTC_SVNREVISION="Unavailable_issue687"' \
 	'-D_FILE_OFFSET_BITS=64' \
 	'-DCHROMIUM_BUILD' \
 	'-DUSE_LIBJPEG_TURBO=1' \
