@@ -6,8 +6,6 @@
 #include "mozilla/dom/SVGTextElement.h"
 #include "mozilla/dom/SVGTextElementBinding.h"
 
-DOMCI_NODE_DATA(SVGTextElement, mozilla::dom::SVGTextElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Text)
 
 namespace mozilla {
@@ -22,16 +20,9 @@ SVGTextElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGTextElement,SVGTextElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGTextElement,SVGTextElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGTextElement)
-  NS_NODE_INTERFACE_TABLE6(SVGTextElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGTextElement,
-                           nsIDOMSVGTextPositioningElement,
-                           nsIDOMSVGTextContentElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGTextElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGTextElementBase)
+NS_IMPL_ISUPPORTS_INHERITED3(SVGTextElement, SVGTextElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation

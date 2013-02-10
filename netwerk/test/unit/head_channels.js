@@ -219,9 +219,9 @@ LoadContextCallback.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   QueryInterface: function(iid) {
-    if (iid == Ci.nsILoadContext ||
-               Ci.nsIInterfaceRequestor ||
-               Ci.nsISupports) {
+    if (iid.equals(Ci.nsILoadContext) ||
+        iid.equals(Ci.nsIInterfaceRequestor) ||
+        iid.equals(Ci.nsISupports)) {
         return this;
     }
     throw Cr.NS_ERROR_NO_INTERFACE;

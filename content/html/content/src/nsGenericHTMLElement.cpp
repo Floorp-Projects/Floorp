@@ -80,7 +80,7 @@
 #include "nsHtml5Module.h"
 #include "nsITextControlElement.h"
 #include "mozilla/dom/Element.h"
-#include "nsHTMLFieldSetElement.h"
+#include "HTMLFieldSetElement.h"
 #include "nsHTMLMenuElement.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsDOMMutationObserver.h"
@@ -2783,8 +2783,8 @@ nsGenericHTMLFormElement::UpdateFieldSet(bool aNotify)
 
   for (parent = GetParent(); parent;
        prev = parent, parent = parent->GetParent()) {
-    nsHTMLFieldSetElement* fieldset =
-      nsHTMLFieldSetElement::FromContent(parent);
+    HTMLFieldSetElement* fieldset =
+      HTMLFieldSetElement::FromContent(parent);
     if (fieldset &&
         (!prev || fieldset->GetFirstLegend() != prev)) {
       if (mFieldSet == fieldset) {

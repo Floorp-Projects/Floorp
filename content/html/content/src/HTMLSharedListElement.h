@@ -55,6 +55,7 @@ public:
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   virtual nsXPCClassInfo* GetClassInfo()
   {
     return static_cast<nsXPCClassInfo*>(GetClassInfoInternal());
@@ -99,45 +100,6 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::compact, aCompact, rv);
   }
 
-protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap) MOZ_OVERRIDE = 0;
-};
-
-class HTMLDListElement MOZ_FINAL : public HTMLSharedListElement
-{
-public:
-  HTMLDListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : HTMLSharedListElement(aNodeInfo)
-  {
-  }
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap) MOZ_OVERRIDE;
-};
-
-class HTMLOListElement MOZ_FINAL : public HTMLSharedListElement
-{
-public:
-  HTMLOListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : HTMLSharedListElement(aNodeInfo)
-  {
-  }
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap) MOZ_OVERRIDE;
-};
-
-class HTMLUListElement MOZ_FINAL : public HTMLSharedListElement
-{
-public:
-  HTMLUListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : HTMLSharedListElement(aNodeInfo)
-  {
-  }
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 protected:
   virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
                              bool *aTriedToWrap) MOZ_OVERRIDE;

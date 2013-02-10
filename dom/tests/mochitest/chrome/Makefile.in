@@ -32,7 +32,6 @@ MOCHITEST_CHROME_FILES = \
 		DOMWindowCreated_content.html \
 		test_sandbox_image.xul \
 		test_cyclecollector.xul \
-		test_resize_move_windows.xul \
 		test_popup_blocker_chrome.xul \
 		test_moving_xhr.xul \
 		test_nodesFromRect.html \
@@ -67,6 +66,14 @@ MOCHITEST_CHROME_FILES += \
 		test_sizemode_attribute.xul \
 		sizemode_attribute.xul \
 		$(NULL)
+endif
+
+ifneq (Linux,$(OS_ARCH))
+MOCHITEST_CHROME_FILES += \
+		test_resize_move_windows.xul \
+		$(NULL)
+else
+$(filter disabled-on-linux-for-timeouts--bug-834716, test_resize_move_windows.xul)
 endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

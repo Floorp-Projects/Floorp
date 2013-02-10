@@ -846,6 +846,27 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
   PROXY_IF_SANDBOXED(SetProcessPriority(aPid, aPriority));
 }
 
+// From HalTypes.h.
+const char*
+ProcessPriorityToString(ProcessPriority aPriority)
+{
+  switch (aPriority) {
+  case PROCESS_PRIORITY_MASTER:
+    return "MASTER";
+  case PROCESS_PRIORITY_FOREGROUND:
+    return "FOREGROUND";
+  case PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE:
+    return "BACKGROUND_PERCEIVABLE";
+  case PROCESS_PRIORITY_BACKGROUND_HOMESCREEN:
+    return "BACKGROUND_HOMESCREEN";
+  case PROCESS_PRIORITY_BACKGROUND:
+    return "BACKGROUND";
+  default:
+    MOZ_ASSERT(false);
+    return "???";
+  }
+}
+
 static StaticAutoPtr<ObserverList<FMRadioOperationInformation> > sFMRadioObservers;
 
 static void

@@ -571,7 +571,7 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RootedObject callable(cx, ValueToCallable(cx, &args[1]));
+    RootedObject callable(cx, ValueToCallable(cx, args[1], args.length() - 2));
     if (!callable)
         return false;
 

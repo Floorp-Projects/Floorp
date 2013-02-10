@@ -859,20 +859,6 @@ ContextStack::~ContextStack()
     JS_ASSERT(!seg_);
 }
 
-ptrdiff_t
-ContextStack::spIndexOf(const Value *vp)
-{
-    if (!hasfp())
-        return JSDVG_SEARCH_STACK;
-
-    Value *base = fp()->base();
-    Value *sp = regs().sp;
-    if (vp < base || vp >= sp)
-        return JSDVG_SEARCH_STACK;
-
-    return vp - sp;
-}
-
 bool
 ContextStack::onTop() const
 {

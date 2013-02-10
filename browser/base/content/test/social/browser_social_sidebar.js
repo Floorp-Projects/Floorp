@@ -88,14 +88,18 @@ function doTest(finishcb) {
     Social.toggleSidebar();
   });
 
-  // Wait until the side bar loads
-  waitForCondition(function () {
-    return document.getElementById("social-sidebar-browser").docShellIsActive;
-  }, function () {
-    // Now toggle it off
-    info("Toggling sidebar off");
-    Social.toggleSidebar();
-  });
+  // use port messaging to ensure that the sidebar is both loaded and
+  // ready before we run other tests
+  let port = Social.provider.getWorkerPort();
+  port.postMessage({topic: "test-init"});
+  port.onmessage = function (e) {
+    let topic = e.data.topic;
+    switch (topic) {
+      case "got-sidebar-message":
+        ok(true, "sidebar is loaded and ready");
+        Social.toggleSidebar();
+    }
+  };
 }
 
 // XXX test sidebar in popup

@@ -709,49 +709,6 @@ XPC_WN_NoHelper_Resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
                                  JSPROP_PERMANENT, nullptr);
 }
 
-nsISupports *
-XPC_GetIdentityObject(JSContext *cx, JSObject *obj)
-{
-    XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-
-    return wrapper ? wrapper->GetIdentityObject() : nullptr;
-}
-
-JSBool
-XPC_WN_Equality(JSContext *cx, JSHandleObject obj, JSHandleValue v, JSBool *bp)
-{
-    *bp = false;
-
-    JSObject *obj2;
-    XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nullptr, &obj2);
-    if (obj2) {
-        *bp = !JSVAL_IS_PRIMITIVE(v) && (JSVAL_TO_OBJECT(v) == obj2);
-
-        return true;
-    }
-
-    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
-
-    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-    if (si && si->GetFlags().WantEquality()) {
-        bool res;
-        nsresult rv = si->GetCallback()->Equality(wrapper, cx, obj, v, &res);
-        if (NS_FAILED(rv))
-            return Throw(rv, cx);
-        *bp = res;
-    } else if (!JSVAL_IS_PRIMITIVE(v)) {
-        JSObject *other = JSVAL_TO_OBJECT(v);
-
-        *bp = (obj == other ||
-               XPC_GetIdentityObject(cx, obj) ==
-               XPC_GetIdentityObject(cx, other));
-    }
-
-    return true;
-}
-
 static JSObject *
 XPC_WN_OuterObject(JSContext *cx, JSHandleObject obj_)
 {
@@ -815,7 +772,7 @@ XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
 
     // ClassExtension
     {
-        XPC_WN_Equality,
+        nullptr, // equality
         nullptr, // outerObject
         nullptr, // innerObject
         nullptr, // iteratorObject
@@ -1427,14 +1384,7 @@ XPCNativeScriptableShared::PopulateJSClass()
         ops->typeOf = XPC_WN_JSOp_TypeOf_Object;
     }
 
-    if (mFlags.UseStubEqualityHook()) {
-        NS_ASSERTION(!mFlags.WantEquality(),
-                     "If you want an Equality callback, you can't use a stub "
-                     "equality hook");
-        mJSClass.base.ext.equality = nullptr;
-    } else {
-        mJSClass.base.ext.equality = XPC_WN_Equality;
-    }
+    mJSClass.base.ext.equality = nullptr;
 
     if (mFlags.WantHasInstance())
         mJSClass.base.hasInstance = XPC_WN_Helper_HasInstance;

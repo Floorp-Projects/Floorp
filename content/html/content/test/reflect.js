@@ -59,7 +59,6 @@ function reflectString(aParameters)
   var todoAttrs = {
     form: [ "acceptCharset", "name", "target" ],
     input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ],
-    link: [ "crossOrigin" ],
     textarea: [ "name", "placeholder" ]
   };
   if (!(element.localName in todoAttrs) || todoAttrs[element.localName].indexOf(idlAttr) == -1) {
@@ -587,4 +586,25 @@ function reflectInt(aParameters)
      "When not set, the content attribute should be null.");
   is(element[attr], defaultValue,
      "When not set, the IDL attribute should return default value.");
+}
+
+/**
+ * Checks that a given attribute is correctly reflected as a url.
+ *
+ * @param aParameters   Object    object containing the parameters, which are:
+ *  - element           Element   node to test
+ *  - attribute         String    name of the attribute
+ *     OR
+ *    attribute         Object    object containing two attributes, 'content' and 'idl'
+ */
+function reflectURL(aParameters)
+{
+  var element = aParameters.element;
+  var contentAttr = typeof aParameters.attribute === "string"
+	              ? aParameters.attribute : aParameters.attribute.content;
+  var idlAttr = typeof aParameters.attribute === "string"
+                  ? aParameters.attribute : aParameters.attribute.idl;
+
+  element[idlAttr] = "";
+  is(element[idlAttr], document.URL, "Empty string should resolve to document URL");
 }

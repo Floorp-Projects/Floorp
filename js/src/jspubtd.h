@@ -329,6 +329,14 @@ struct PerThreadDataFriendFields
 
     PerThreadDataFriendFields();
 
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+    /*
+     * Stack allocated GC roots for stack GC heap pointers, which may be
+     * overwritten if moved during a GC.
+     */
+    Rooted<void*> *thingGCRooters[THING_ROOT_LIMIT];
+#endif
+
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     /*
      * Stack allocated list of stack locations which hold non-relocatable

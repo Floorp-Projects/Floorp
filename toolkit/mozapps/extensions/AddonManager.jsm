@@ -7,6 +7,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
@@ -436,6 +437,10 @@ var AddonManagerInternal = {
     }
   }),
 
+  recordTimestamp: function AMI_recordTimestamp(name, value) {
+    this.TelemetryTimestamps.add(name, value);
+  },
+
   /**
    * Initializes the AddonManager, loading any known providers and initializing
    * them.
@@ -443,6 +448,8 @@ var AddonManagerInternal = {
   startup: function AMI_startup() {
     if (gStarted)
       return;
+
+    this.recordTimestamp("AMI_startup_begin");
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
 
@@ -551,6 +558,7 @@ var AddonManagerInternal = {
     }
 
     gStartupComplete = true;
+    this.recordTimestamp("AMI_startup_end");
   },
 
   /**
@@ -2079,7 +2087,20 @@ this.AddonManagerPrivate = {
 
   AddonCompatibilityOverride: AddonCompatibilityOverride,
 
-  AddonType: AddonType
+  AddonType: AddonType,
+
+  recordTimestamp: function AMP_recordTimestamp(name, value) {
+    AddonManagerInternal.recordTimestamp(name, value);
+  },
+
+  _simpleMeasures: {},
+  recordSimpleMeasure: function AMP_recordSimpleMeasure(name, value) {
+    this._simpleMeasures[name] = value;
+  },
+
+  getSimpleMeasures: function AMP_getSimpleMeasures() {
+    return this._simpleMeasures;
+  }
 };
 
 /**
@@ -2426,6 +2447,8 @@ this.AddonManager = {
   }
 };
 
+// load the timestamps module into AddonManagerInternal
+Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", AddonManagerInternal);
 Object.freeze(AddonManagerInternal);
 Object.freeze(AddonManagerPrivate);
 Object.freeze(AddonManager);

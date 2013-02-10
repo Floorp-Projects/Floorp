@@ -1530,7 +1530,7 @@ nsStandardURL::SetPort(int32_t port)
 
         // need to remove the port number from the URL spec
         uint32_t start = mHost.mPos + mHost.mLen;
-        uint32_t lengthToCut = mPath.mPos - start;
+        int32_t lengthToCut = mPath.mPos - start;
         mSpec.Cut(start, lengthToCut);
         mAuthority.mLen -= lengthToCut;
         ShiftFromPath(-lengthToCut);

@@ -24,7 +24,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedNumber.idl \
 		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimatedString.idl \
-		nsIDOMSVGClipPathElement.idl \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
 		nsIDOMSVGEvent.idl \
@@ -36,20 +35,10 @@ XPIDLSRCS	= \
 		nsIDOMSVGMaskElement.idl \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGRect.idl \
-		nsIDOMSVGSVGElement.idl \
 		nsIDOMSVGStringList.idl \
-		nsIDOMSVGSwitchElement.idl \
-		nsIDOMSVGSymbolElement.idl \
-		nsIDOMSVGTextContentElement.idl \
-		nsIDOMSVGTextElement.idl \
-		nsIDOMSVGTextPathElement.idl \
-		nsIDOMSVGTextPositionElem.idl \
 		nsIDOMSVGTitleElement.idl \
-		nsIDOMSVGTSpanElement.idl \
 		nsIDOMSVGURIReference.idl \
 		nsIDOMSVGUnitTypes.idl \
-		nsIDOMSVGUseElement.idl \
-		nsIDOMSVGViewElement.idl \
 		nsIDOMSVGZoomEvent.idl \
 		$(NULL)
 

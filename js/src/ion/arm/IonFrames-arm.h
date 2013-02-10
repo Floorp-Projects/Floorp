@@ -110,14 +110,14 @@ class IonRectifierFrameLayout : public IonJSFrameLayout
     }
 };
 
-class IonBailedRectifierFrameLayout : public IonJSFrameLayout
+class IonUnwoundRectifierFrameLayout : public IonJSFrameLayout
 {
   public:
     static inline size_t Size() {
         // On X86, there is a +sizeof(uintptr_t) to account for an extra callee token.
-        // This is not needee here because sizeof(IonExitFrame) == sizeof(IonRectifierFrame)
+        // This is not needed here because sizeof(IonExitFrame) == sizeof(IonRectifierFrame)
         // due to extra padding.
-        return sizeof(IonBailedRectifierFrameLayout);
+        return sizeof(IonUnwoundRectifierFrameLayout);
     }
 };
 

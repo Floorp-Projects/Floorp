@@ -12,8 +12,6 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
-import org.mozilla.gecko.ui.PanZoomController;
-import org.mozilla.gecko.ui.PanZoomTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 
@@ -116,7 +114,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mViewportMetrics = new ImmutableViewportMetrics(displayMetrics);
         mZoomConstraints = new ZoomConstraints(false);
 
-        mPanZoomController = new PanZoomController(this, eventDispatcher);
+        mPanZoomController = PanZoomController.Factory.create(this, view, eventDispatcher);
         mView = view;
         mView.setListener(this);
     }

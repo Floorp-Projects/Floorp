@@ -14,7 +14,7 @@
                                     .getInterface(Ci.nsIDOMWindowUtils);
 
                 return utils.getClassName(obj) != "Proxy" &&
-                       typeof obj.QueryInterface == 'function';
+                       typeof obj.querySelector == 'function';
             }
         </script>
     </head>

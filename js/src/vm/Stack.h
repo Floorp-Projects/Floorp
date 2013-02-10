@@ -1641,14 +1641,6 @@ class ContextStack
     inline bool hasfp() const { return seg_ && seg_->maybeRegs(); }
 
     /*
-     * Return the spindex value for 'vp' which can be used to call
-     * DecompileValueGenerator. (The spindex is either the negative offset of
-     * 'vp' from 'sp', if 'vp' points to a value in the innermost scripted
-     * stack frame, otherwise it is JSDVG_SEARCH_STACK.)
-     */
-    ptrdiff_t spIndexOf(const Value *vp);
-
-    /*
      * Return the most recent script activation's registers with the same
      * caveat as hasfp regarding JS_SaveFrameChain.
      */

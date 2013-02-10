@@ -95,8 +95,6 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   // We use a single message and dispatch to various function based
   // on data.msg_name
   let mmCalls = {
-    "get-name": this._recvGetName,
-    "get-fullscreen-allowed": this._recvGetFullscreenAllowed,
     "hello": this._recvHello,
     "contextmenu": this._fireCtxMenuEvent,
     "locationchange": this._fireEventFromMsg,
@@ -281,15 +279,13 @@ BrowserElementParent.prototype = {
     if (this._window.document.hidden) {
       this._ownerVisibilityChange();
     }
-  },
 
-  _recvGetName: function(data) {
-    return this._frameElement.getAttribute('name');
-  },
-
-  _recvGetFullscreenAllowed: function(data) {
-    return this._frameElement.hasAttribute('allowfullscreen') ||
-           this._frameElement.hasAttribute('mozallowfullscreen');
+    return {
+      name: this._frameElement.getAttribute('name'),
+      fullscreenAllowed:
+        this._frameElement.hasAttribute('allowfullscreen') ||
+        this._frameElement.hasAttribute('mozallowfullscreen')
+    }
   },
 
   _fireCtxMenuEvent: function(data) {
@@ -321,7 +317,7 @@ BrowserElementParent.prototype = {
 
     // For events that send a "_payload_" property, we just want to transmit
     // this in the event.
-    if (detail._payload_) {
+    if ("_payload_" in detail) {
       detail = detail._payload_;
     }
 
@@ -571,7 +567,7 @@ BrowserElementParent.prototype = {
   },
 
   _remoteFullscreenOriginChange: function(data) {
-    let origin = data.json;
+    let origin = data.json._payload_;
     this._windowUtils.remoteFrameFullscreenChanged(this._frameElement, origin);
   },
 

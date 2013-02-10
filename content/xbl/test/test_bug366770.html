@@ -20,15 +20,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366770
       <content>PASS</content>
       <implementation>
         <constructor>
-          document.bindingConstructorRan = true;
-          ok(true, "binding URI with no fragment applied");
-          SimpleTest.finish();
+          var win = XPCNativeWrapper.unwrap(window);
+          win.document.bindingConstructorRan = true;
+          win.ok(true, "binding URI with no fragment applied");
+          win.SimpleTest.finish();
         </constructor>
       </implementation>
     </binding>
   </bindings>
   -->
-  <span id="span" style="-moz-binding: url(data:text/xml,%3C%3Fxml%20version%3D%221.0%22%3F%3E%0A%3Cbindings%20id%3D%22xbltestBindings%22%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22%3E%0A%20%20%3Cbinding%20id%3D%22xbltest%22%3E%0A%20%20%20%20%3Ccontent%3EPASS%3C/content%3E%0A%20%20%20%20%3Cimplementation%3E%0A%20%20%20%20%20%20%3Cconstructor%3E%0A%20%20%20%20%20%20%20%20document.bindingConstructorRan%20%3D%20true%3B%0A%20%20%20%20%20%20%20%20ok%28true%2C%20%22binding%20URI%20with%20no%20fragment%20applied%22%29%3B%0A%20%20%20%20%20%20%20%20SimpleTest.finish%28%29%3B%0A%20%20%20%20%20%20%3C/constructor%3E%0A%20%20%20%20%3C/implementation%3E%0A%20%20%3C/binding%3E%0A%3C/bindings%3E);"></span>
+  <span id="span" style="-moz-binding: url(data:text/xml;base64,ICA8YmluZGluZ3MgaWQ9InhibHRlc3RCaW5kaW5ncyIgeG1sbnM9Imh0dHA6Ly93d3cubW96aWxsYS5vcmcveGJsIj4KICAgIDxiaW5kaW5nIGlkPSJ4Ymx0ZXN0Ij4KICAgICAgPGNvbnRlbnQ+UEFTUzwvY29udGVudD4KICAgICAgPGltcGxlbWVudGF0aW9uPgogICAgICAgIDxjb25zdHJ1Y3Rvcj4KICAgICAgICAgIHZhciB3aW4gPSBYUENOYXRpdmVXcmFwcGVyLnVud3JhcCh3aW5kb3cpOwogICAgICAgICAgd2luLmRvY3VtZW50LmJpbmRpbmdDb25zdHJ1Y3RvclJhbiA9IHRydWU7CiAgICAgICAgICB3aW4ub2sodHJ1ZSwgImJpbmRpbmcgVVJJIHdpdGggbm8gZnJhZ21lbnQgYXBwbGllZCIpOwogICAgICAgICAgd2luLlNpbXBsZVRlc3QuZmluaXNoKCk7CiAgICAgICAgPC9jb25zdHJ1Y3Rvcj4KICAgICAgPC9pbXBsZW1lbnRhdGlvbj4KICAgIDwvYmluZGluZz4KICA8L2JpbmRpbmdzPg==);"></span>
 
   <pre id="test">
     <script class="testbody" type="text/javascript">

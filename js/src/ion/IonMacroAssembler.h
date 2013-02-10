@@ -18,6 +18,9 @@
 #include "ion/IonCompartment.h"
 #include "ion/IonInstrumentation.h"
 #include "ion/TypeOracle.h"
+#include "ion/ParallelFunctions.h"
+
+#include "vm/ForkJoin.h"
 
 #include "jstypedarray.h"
 #include "jscompartment.h"
@@ -489,7 +492,23 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Inline allocation.
     void newGCThing(const Register &result, JSObject *templateObject, Label *fail);
+    void parNewGCThing(const Register &result,
+                       const Register &threadContextReg,
+                       const Register &tempReg1,
+                       const Register &tempReg2,
+                       JSObject *templateObject,
+                       Label *fail);
     void initGCThing(const Register &obj, JSObject *templateObject);
+
+    // Compares two strings for equality based on the JSOP.
+    // This checks for identical pointers, atoms and length and fails for everything else.
+    void compareStrings(JSOp op, Register left, Register right, Register result,
+                        Register temp, Label *fail);
+
+    // Checks the flags that signal that parallel code may need to interrupt or
+    // abort.  Branches to fail in that case.
+    void parCheckInterruptFlags(const Register &tempReg,
+                                Label *fail);
 
     // If the IonCode that created this assembler needs to transition into the VM,
     // we want to store the IonCode on the stack in order to mark it during a GC.

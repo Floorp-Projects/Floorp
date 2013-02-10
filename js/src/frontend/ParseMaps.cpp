@@ -27,9 +27,9 @@ ParseMapPool::checkInvariants()
     JS_STATIC_ASSERT(sizeof(AtomDefnMap::Entry) == sizeof(AtomDefnListMap::Entry));
     JS_STATIC_ASSERT(sizeof(AtomMapT::Entry) == sizeof(AtomDefnListMap::Entry));
     /* Ensure that the HasTable::clear goes quickly via memset. */
-    JS_STATIC_ASSERT(tl::IsPodType<AtomIndexMap::WordMap::Entry>::result);
-    JS_STATIC_ASSERT(tl::IsPodType<AtomDefnListMap::WordMap::Entry>::result);
-    JS_STATIC_ASSERT(tl::IsPodType<AtomDefnMap::WordMap::Entry>::result);
+    JS_STATIC_ASSERT(mozilla::IsPod<AtomIndexMap::WordMap::Entry>::value);
+    JS_STATIC_ASSERT(mozilla::IsPod<AtomDefnListMap::WordMap::Entry>::value);
+    JS_STATIC_ASSERT(mozilla::IsPod<AtomDefnMap::WordMap::Entry>::value);
 }
 
 void

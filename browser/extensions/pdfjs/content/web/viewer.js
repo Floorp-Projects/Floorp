@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* globals PDFJS, PDFBug, FirefoxCom, Stats */
 
 'use strict';
 
@@ -62,7 +63,8 @@ function scrollIntoView(element, spot) {
   // producing the error. See also animationStartedClosure.
   var parent = element.offsetParent, offsetY = element.offsetTop;
   if (!parent) {
-    error('offsetParent is not set -- cannot scroll');
+    console.error('offsetParent is not set -- cannot scroll');
+    return;
   }
   while (parent.clientHeight == parent.scrollHeight) {
     offsetY += parent.offsetTop;
@@ -156,6 +158,8 @@ var ProgressBar = (function ProgressBarClosure() {
  */
 
 var FirefoxCom = (function FirefoxComClosure() {
+  'use strict';
+
   return {
     /**
      * Creates an event that the extension is listening for and will
@@ -168,15 +172,13 @@ var FirefoxCom = (function FirefoxComClosure() {
      */
     requestSync: function(action, data) {
       var request = document.createTextNode('');
-      request.setUserData('action', action, null);
-      request.setUserData('data', data, null);
-      request.setUserData('sync', true, null);
       document.documentElement.appendChild(request);
 
-      var sender = document.createEvent('Events');
-      sender.initEvent('pdf.js.message', true, false);
+      var sender = document.createEvent('CustomEvent');
+      sender.initCustomEvent('pdf.js.message', true, false,
+                             {action: action, data: data, sync: true});
       request.dispatchEvent(sender);
-      var response = request.getUserData('response');
+      var response = sender.detail.response;
       document.documentElement.removeChild(request);
       return response;
     },
@@ -190,16 +192,10 @@ var FirefoxCom = (function FirefoxComClosure() {
      */
     request: function(action, data, callback) {
       var request = document.createTextNode('');
-      request.setUserData('action', action, null);
-      request.setUserData('data', data, null);
-      request.setUserData('sync', false, null);
       if (callback) {
-        request.setUserData('callback', callback, null);
-
         document.addEventListener('pdf.js.response', function listener(event) {
           var node = event.target,
-              callback = node.getUserData('callback'),
-              response = node.getUserData('response');
+              response = event.detail.response;
 
           document.documentElement.removeChild(node);
 
@@ -209,8 +205,10 @@ var FirefoxCom = (function FirefoxComClosure() {
       }
       document.documentElement.appendChild(request);
 
-      var sender = document.createEvent('HTMLEvents');
-      sender.initEvent('pdf.js.message', true, false);
+      var sender = document.createEvent('CustomEvent');
+      sender.initCustomEvent('pdf.js.message', true, false,
+                             {action: action, data: data, sync: false,
+                              callback: callback});
       return request.dispatchEvent(sender);
     }
   };
@@ -2037,8 +2035,9 @@ var PageView = function pageView(container, pdfPage, id, scale,
   };
 
   this.draw = function pageviewDraw(callback) {
-    if (this.renderingState !== RenderingStates.INITIAL)
-      error('Must be in new state before drawing');
+    if (this.renderingState !== RenderingStates.INITIAL) {
+      console.error('Must be in new state before drawing');
+    }
 
     this.renderingState = RenderingStates.RUNNING;
 
@@ -2208,7 +2207,7 @@ var PageView = function pageView(container, pdfPage, id, scale,
         console.error(error);
         // Tell the printEngine that rendering this canvas/page has failed.
         // This will make the print proces stop.
-        if ('abort' in object)
+        if ('abort' in obj)
           obj.abort();
         else
           obj.done();
@@ -2290,7 +2289,7 @@ var ThumbnailView = function thumbnailView(container, pdfPage, id) {
     this.hasImage = false;
     this.renderingState = RenderingStates.INITIAL;
     this.resume = null;
-  }
+  };
 
   function getPageDrawContext() {
     var canvas = document.createElement('canvas');
@@ -2320,8 +2319,9 @@ var ThumbnailView = function thumbnailView(container, pdfPage, id) {
   };
 
   this.draw = function thumbnailViewDraw(callback) {
-    if (this.renderingState !== RenderingStates.INITIAL)
-      error('Must be in new state before drawing');
+    if (this.renderingState !== RenderingStates.INITIAL) {
+      console.error('Must be in new state before drawing');
+    }
 
     this.renderingState = RenderingStates.RUNNING;
     if (this.hasImage) {
@@ -3041,7 +3041,7 @@ window.addEventListener('hashchange', function webViewerHashchange(evt) {
 
 window.addEventListener('change', function webViewerChange(evt) {
   var files = evt.target.files;
-  if (!files || files.length == 0)
+  if (!files || files.length === 0)
     return;
 
   // Read the local file into a Uint8Array.
@@ -3236,7 +3236,7 @@ window.addEventListener('keydown', function keydown(evt) {
     curElement = curElement.parentNode;
   }
 
-  if (cmd == 0) { // no control key pressed at all.
+  if (cmd === 0) { // no control key pressed at all.
     switch (evt.keyCode) {
       case 38: // up arrow
       case 33: // pg up
@@ -3244,12 +3244,14 @@ window.addEventListener('keydown', function keydown(evt) {
         if (!PDFView.isFullscreen && PDFView.currentScaleValue !== 'page-fit') {
           break;
         }
-        //  in fullscreen mode falls throw here
+        /* in fullscreen mode */
+        /* falls through */
       case 37: // left arrow
         // horizontal scrolling using arrow keys
         if (PDFView.isHorizontalScrollbarEnabled) {
           break;
         }
+        /* falls through */
       case 75: // 'k'
       case 80: // 'p'
         PDFView.page--;
@@ -3261,12 +3263,13 @@ window.addEventListener('keydown', function keydown(evt) {
         if (!PDFView.isFullscreen && PDFView.currentScaleValue !== 'page-fit') {
           break;
         }
-        //  in fullscreen mode falls throw here
+        /* falls through */
       case 39: // right arrow
         // horizontal scrolling using arrow keys
         if (PDFView.isHorizontalScrollbarEnabled) {
           break;
         }
+        /* falls through */
       case 74: // 'j'
       case 78: // 'n'
         PDFView.page++;

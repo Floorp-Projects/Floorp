@@ -51,7 +51,11 @@ fails-if(B2G) != text-font-lang.html text-font-lang-notref.html
 
 # check that emoji character renders as something non-blank (for Apple Color Emoji font, bug 715798)
 # apparently fails on some 10.7 systems for unknown reasons, bug 804522.
-random-if(OSX==10.7) != text-emoji.html text-emoji-notref.html
+## Currently fails most places due to partial backout of bug 808288, see bug 837461.
+## (Marking "random" rather than "fails" because it would pass for people
+## if they have an Emoji font installed when running the tests.)
+## WAS: random-if(OSX==10.7) != text-emoji.html text-emoji-notref.html
+random-if(!cocoaWidget||OSX==10.6||OSX==10.7) != text-emoji.html text-emoji-notref.html
 
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this

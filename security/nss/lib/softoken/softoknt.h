@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: softoknt.h,v 1.7 2012/04/25 14:50:10 gerv%gerv.net Exp $ */
+/* $Id: softoknt.h,v 1.8 2013/02/05 02:19:52 ryan.sleevi%gmail.com Exp $ */
 
 #ifndef _SOFTOKNT_H_
 #define _SOFTOKNT_H_
@@ -20,9 +20,6 @@ typedef enum {
     RSA_BlockPrivate0 = 0,	/* unused, really */
     RSA_BlockPrivate = 1,	/* pad for a private-key operation */
     RSA_BlockPublic = 2,	/* pad for a public-key operation */
-    RSA_BlockOAEP = 3,		/* use OAEP padding */
-				/* XXX is this only for a public-key
-				   operation? If so, add "Public" */
     RSA_BlockRaw = 4,		/* simply justify the block appropriately */
     RSA_BlockTotal
 } RSA_BlockType;

@@ -257,7 +257,15 @@ MOCHITEST_FILES = \
 		file_fullscreen-rollback.html \
 		file_fullscreen-svg-element.html \
 		test_li_attributes_reflection.html \
+		test_link_attributes_reflection.html \
 		test_ol_attributes_reflection.html \
+		test_dl_attributes_reflection.html \
+		test_ul_attributes_reflection.html \
+		test_param_attributes_reflection.html \
+		test_base_attributes_reflection.html \
+		test_dir_attributes_reflection.html \
+		test_q_attributes_reflection.html \
+		test_html_attributes_reflection.html \
 		test_bug651956.html \
 		test_bug694503.html \
 		test_object_plugin_nav.html \
@@ -267,7 +275,6 @@ MOCHITEST_FILES = \
 		test_input_file_picker.html \
 		test_bug763626.html \
 		test_bug780993.html \
-		test_bug786564.html \
 		test_bug797113.html \
 		test_bug787134.html \
 		test_bug803677.html \

@@ -4407,24 +4407,23 @@ nsBlockFrame::DrainOverflowLines()
 bool
 nsBlockFrame::DrainSelfOverflowList()
 {
+  nsAutoPtr<FrameLines> ourOverflowLines(RemoveOverflowLines());
+  if (!ourOverflowLines) {
+    return false;
+  }
+
   // No need to reparent frames in our own overflow lines/oofs, because they're
   // already ours. But we should put overflow floats back in mFloats.
-  FrameLines* ourOverflowLines = RemoveOverflowLines();
-  if (ourOverflowLines) {
-    nsAutoOOFFrameList oofs(this);
-    if (oofs.mList.NotEmpty()) {
-      // The overflow floats go after our regular floats.
-      mFloats.AppendFrames(nullptr, oofs.mList);
-    }
-  } else {
-    return false;
+  nsAutoOOFFrameList oofs(this);
+  if (oofs.mList.NotEmpty()) {
+    // The overflow floats go after our regular floats.
+    mFloats.AppendFrames(nullptr, oofs.mList);
   }
 
   if (!ourOverflowLines->mLines.empty()) {
     mFrames.AppendFrames(nullptr, ourOverflowLines->mFrames);
     mLines.splice(mLines.end(), ourOverflowLines->mLines);
   }
-  delete ourOverflowLines;
   return true;
 }
 
