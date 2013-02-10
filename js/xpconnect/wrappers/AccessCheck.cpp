@@ -142,7 +142,7 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
         return false;
     switch (name[0]) {
         NAME('L', "Location",
-             PROP('h', W("hash") W("href"))
+             PROP('h', W("href"))
              PROP('r', R("replace")))
         NAME('W', "Window",
              PROP('b', R("blur"))
