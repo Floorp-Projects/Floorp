@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: sha512.c,v 1.21 2012/07/27 20:00:39 wtc%google.com Exp $ */
+/* $Id: sha512.c,v 1.23 2013/02/06 00:41:13 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -462,6 +462,35 @@ SHA256_End(SHA256Context *ctx, unsigned char *digest,
 	*digestLen = padLen;
 }
 
+void
+SHA256_EndRaw(SHA256Context *ctx, unsigned char *digest,
+	      unsigned int *digestLen, unsigned int maxDigestLen)
+{
+    PRUint32 h[8];
+    unsigned int len;
+#ifdef SWAP4MASK
+    PRUint32 t1;
+#endif
+
+    memcpy(h, ctx->h, sizeof(h));
+
+#if defined(IS_LITTLE_ENDIAN)
+    BYTESWAP4(h[0]);
+    BYTESWAP4(h[1]);
+    BYTESWAP4(h[2]);
+    BYTESWAP4(h[3]);
+    BYTESWAP4(h[4]);
+    BYTESWAP4(h[5]);
+    BYTESWAP4(h[6]);
+    BYTESWAP4(h[7]);
+#endif
+
+    len = PR_MIN(SHA256_LENGTH, maxDigestLen);
+    memcpy(digest, h, len);
+    if (digestLen)
+	*digestLen = len;
+}
+
 SECStatus 
 SHA256_HashBuf(unsigned char *dest, const unsigned char *src, 
                uint32 src_length)
@@ -554,6 +583,14 @@ SHA224_End(SHA256Context *ctx, unsigned char *digest,
 {
     unsigned int maxLen = SHA_MIN(maxDigestLen, SHA224_LENGTH);
     SHA256_End(ctx, digest, digestLen, maxLen);
+}
+
+void
+SHA224_EndRaw(SHA256Context *ctx, unsigned char *digest,
+	      unsigned int *digestLen, unsigned int maxDigestLen)
+{
+    unsigned int maxLen = SHA_MIN(maxDigestLen, SHA224_LENGTH);
+    SHA256_EndRaw(ctx, digest, digestLen, maxLen);
 }
 
 SECStatus 
@@ -1228,6 +1265,36 @@ SHA512_End(SHA512Context *ctx, unsigned char *digest,
 	*digestLen = padLen;
 }
 
+void
+SHA512_EndRaw(SHA512Context *ctx, unsigned char *digest,
+              unsigned int *digestLen, unsigned int maxDigestLen)
+{
+#if defined(HAVE_LONG_LONG)
+    PRUint64 t1;
+#else
+    PRUint32 t1;
+#endif
+    PRUint64 h[8];
+    unsigned int len;
+
+    memcpy(h, ctx->h, sizeof(h));
+
+#if defined(IS_LITTLE_ENDIAN)
+    BYTESWAP8(h[0]);
+    BYTESWAP8(h[1]);
+    BYTESWAP8(h[2]);
+    BYTESWAP8(h[3]);
+    BYTESWAP8(h[4]);
+    BYTESWAP8(h[5]);
+    BYTESWAP8(h[6]);
+    BYTESWAP8(h[7]);
+#endif
+    len = PR_MIN(SHA512_LENGTH, maxDigestLen);
+    memcpy(digest, h, len);
+    if (digestLen)
+	*digestLen = len;
+}
+
 SECStatus 
 SHA512_HashBuf(unsigned char *dest, const unsigned char *src, 
                uint32 src_length)
@@ -1334,6 +1401,14 @@ SHA384_End(SHA384Context *ctx, unsigned char *digest,
 {
     unsigned int maxLen = SHA_MIN(maxDigestLen, SHA384_LENGTH);
     SHA512_End(ctx, digest, digestLen, maxLen);
+}
+
+void
+SHA384_EndRaw(SHA384Context *ctx, unsigned char *digest,
+	      unsigned int *digestLen, unsigned int maxDigestLen)
+{
+    unsigned int maxLen = SHA_MIN(maxDigestLen, SHA384_LENGTH);
+    SHA512_EndRaw(ctx, digest, digestLen, maxLen);
 }
 
 SECStatus 

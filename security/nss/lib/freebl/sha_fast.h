@@ -147,12 +147,12 @@ static __inline__ PRUint32 swap4b(PRUint32 value)
     SHA_STORE(3); \
     SHA_STORE(4); \
   } else { \
-    ctx->u.w[0] = SHA_HTONL(ctx->H[0]); \
-    ctx->u.w[1] = SHA_HTONL(ctx->H[1]); \
-    ctx->u.w[2] = SHA_HTONL(ctx->H[2]); \
-    ctx->u.w[3] = SHA_HTONL(ctx->H[3]); \
-    ctx->u.w[4] = SHA_HTONL(ctx->H[4]); \
-    memcpy(hashout, ctx->u.w, SHA1_LENGTH); \
+    tmpbuf[0] = SHA_HTONL(ctx->H[0]); \
+    tmpbuf[1] = SHA_HTONL(ctx->H[1]); \
+    tmpbuf[2] = SHA_HTONL(ctx->H[2]); \
+    tmpbuf[3] = SHA_HTONL(ctx->H[3]); \
+    tmpbuf[4] = SHA_HTONL(ctx->H[4]); \
+    memcpy(hashout, tmpbuf, SHA1_LENGTH); \
   }
 
 #else
