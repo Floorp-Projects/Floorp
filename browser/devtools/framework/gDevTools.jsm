@@ -388,7 +388,7 @@ let gDevToolsBrowser = {
       doc.getElementById("mainCommandSet").appendChild(elements.cmd);
 
       if (elements.key) {
-        this.attachKeybindingsToBrowser(doc, elements.keys);
+        this.attachKeybindingsToBrowser(doc, elements.key);
       }
 
       doc.getElementById("mainBroadcasterSet").appendChild(elements.bc);
