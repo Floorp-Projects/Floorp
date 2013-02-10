@@ -26,8 +26,7 @@ import time
 import android_commands
 import apk_info
 from run_java_tests import TestRunner
-import test_options_parser
-from test_result import SingleTestResult, TestResults, PYTHON
+from test_result import SingleTestResult, TestResults
 
 
 # aka the parent of com.google.android
@@ -45,12 +44,13 @@ class PythonTestBase(object):
     self.test_name = test_name
     class_name = self.__class__.__name__
     self.qualified_name = class_name + '.' + self.test_name
-    self.ports_to_forward = []
 
-  def SetUp(self, device_id, shard_index):
-    self.shard_index = shard_index
-    self.device_id = device_id
+  def SetUp(self, options):
+    self.options = options
+    self.shard_index = self.options.shard_index
+    self.device_id = self.options.device_id
     self.adb = android_commands.AndroidCommands(self.device_id)
+    self.ports_to_forward = []
 
   def TearDown(self):
     pass
@@ -71,10 +71,9 @@ class PythonTestBase(object):
       TestResults object with a single test result.
     """
     test = self._ComposeFullTestName(fname, suite, test)
-    # Get a set of default options
-    options = test_options_parser.ParseInstrumentationArgs([''])
-    apks = [apk_info.ApkInfo(options.test_apk_path, options.test_apk_jar_path)]
-    java_test_runner = TestRunner(options, self.device_id, [test], False,
+    apks = [apk_info.ApkInfo(self.options.test_apk_path,
+            self.options.test_apk_jar_path)]
+    java_test_runner = TestRunner(self.options, self.device_id, [test], False,
                                   self.shard_index,
                                   apks,
                                   self.ports_to_forward)
@@ -138,16 +137,9 @@ class PythonTestBase(object):
       if not log:
         log = 'No logging information.'
 
-      short_error_msg = single_result.log.split('\n')[0]
-      # err_info is ostensibly for Sponge to consume; it's a short error
-      # message and a longer one.
-      err_info = (short_error_msg, log)
-
       python_result = SingleTestResult(self.qualified_name, start_ms,
                                        duration_ms,
-                                       PYTHON,
-                                       log,
-                                       err_info)
+                                       log)
 
       # Figure out where the test belonged. There's probably a cleaner way of
       # doing this.
@@ -160,8 +152,7 @@ class PythonTestBase(object):
 
     else:
       python_result = SingleTestResult(self.qualified_name, start_ms,
-                                       duration_ms,
-                                       PYTHON)
+                                       duration_ms)
       test_results.ok = [python_result]
 
     return test_results

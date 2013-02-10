@@ -68,6 +68,7 @@
       ],
      }, ],
   'conditions': [
+    # TODO(wu): Merge the target for different platforms.
     ['OS=="win"', {
       'targets': [
         {
@@ -92,6 +93,7 @@
             },
           },
           'dependencies': [
+            'third_party/jsoncpp/jsoncpp.gyp:jsoncpp',
             'third_party/libjingle/libjingle.gyp:libjingle_peerconnection',
           ],
           'include_dirs': [
@@ -138,12 +140,25 @@
             'libraries': [
               '<!@(pkg-config --libs-only-l gtk+-2.0 gthread-2.0)',
               '-lX11',
+              '-lXcomposite',
               '-lXext',
+              '-lXrender',
             ],
           },
         },
       ],  # targets
     }, ],  # OS="linux"
+    # There's no peerconnection_client implementation for Mac.
+    # But add this dummy peerconnection_client target so that the runhooks
+    # won't complain.
+    ['OS=="mac"', {
+      'targets': [
+        {
+          'target_name': 'peerconnection_client',
+          'type': 'none',
+        },
+      ],
+    }, ],
   ],
     }, ],
   ],

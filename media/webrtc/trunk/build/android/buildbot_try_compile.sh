@@ -1,16 +1,9 @@
-#!/bin/bash -ex
+#!/bin/bash
 # Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-#
-# Buildbot annotator script for trybots.  Compile only.
 
-ROOT=$(cd "$(dirname $0)"; pwd)
-. "${ROOT}"/buildbot_functions.sh
+# Temporary placeholders to call new buildbot script locations until
+# buildbot master config can be pointed to new location.
 
-# SHERIFF: if you need to quickly turn "android" trybots green,
-# uncomment the next line (and send appropriate email out):
-## bb_force_bot_green_and_exit
-
-bb_baseline_setup "${ROOT}"/../..
-bb_compile
+exec $(dirname $0)/buildbot/bb_try_compile.sh "$@"

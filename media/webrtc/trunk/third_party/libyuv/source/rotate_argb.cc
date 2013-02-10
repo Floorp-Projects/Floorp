@@ -13,7 +13,7 @@
 #include "libyuv/cpu_id.h"
 #include "libyuv/convert.h"
 #include "libyuv/planar_functions.h"
-#include "source/row.h"
+#include "libyuv/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -126,6 +126,7 @@ void ARGBRotate180(const uint8* src, int src_stride,
   }
 }
 
+LIBYUV_API
 int ARGBRotate(const uint8* src_argb, int src_stride_argb,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height,

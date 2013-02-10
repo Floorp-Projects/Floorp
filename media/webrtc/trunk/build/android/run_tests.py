@@ -8,17 +8,18 @@
 
 1. Copy over test binary to /data/local on device.
 2. Resources: chrome/unit_tests requires resources (chrome.pak and en-US.pak)
-   to be deployed to the device (in /data/local/tmp).
+   to be deployed to the device. We use the device's $EXTERNAL_STORAGE as the
+   base dir (which maps to Context.getExternalFilesDir()).
 3. Environment:
 3.1. chrome/unit_tests requires (via chrome_paths.cc) a directory named:
-     /data/local/tmp/chrome/test/data
+     $EXTERNAL_STORAGE + /chrome/test/data
 3.2. page_cycler_tests have following requirements,
 3.2.1  the following data on host:
        <chrome_src_dir>/tools/page_cycler
        <chrome_src_dir>/data/page_cycler
 3.2.2. two data directories to store above test data on device named:
-       /data/local/tmp/tools/ (for database perf test)
-       /data/local/tmp/data/ (for other perf tests)
+       $EXTERNAL_STORAGE + /tools/ (for database perf test)
+       $EXTERNAL_STORAGE + /data/ (for other perf tests)
 3.2.3. a http server to serve http perf tests.
        The http root is host's <chrome_src_dir>/data/page_cycler/, port 8000.
 3.2.4  a tool named forwarder is also required to run on device to
@@ -50,6 +51,7 @@ failed on device.
 
 import fnmatch
 import logging
+import optparse
 import os
 import signal
 import subprocess
@@ -184,15 +186,6 @@ class Xvfb(object):
       self._pid = 0
 
 
-def PrintAnnotationForTestResults(test_results):
-  if test_results.timed_out:
-    buildbot_report.PrintWarning()
-  elif test_results.failed or test_results.crashed or test_results.overall_fail:
-    buildbot_report.PrintError()
-  else:
-    print 'Step success!'  # No annotation needed
-
-
 class TestSharder(BaseTestSharder):
   """Responsible for sharding the tests on the connected devices."""
 
@@ -258,7 +251,7 @@ class TestSharder(BaseTestSharder):
     """Notifies that we completed the tests."""
     test_results.LogFull('Unit test', os.path.basename(self.test_suite),
                          self.build_type)
-    PrintAnnotationForTestResults(test_results)
+    test_results.PrintAnnotation()
     if test_results.failed and self.rebaseline:
       test_runners[0].UpdateFilter(test_results.failed)
     if self.log_dump_name:
@@ -282,7 +275,7 @@ def _RunATestSuite(options):
     0 if successful, number of failing tests otherwise.
   """
   step_name = os.path.basename(options.test_suite).replace('-debug.apk', '')
-  buildbot_report.PrintNamedStep('Test suite %s' % step_name)
+  buildbot_report.PrintNamedStep(step_name)
   attached_devices = []
   buildbot_emulators = []
 
@@ -383,8 +376,8 @@ def ListTestSuites():
 
 
 def main(argv):
-  option_parser = test_options_parser.CreateTestRunnerOptionParser(
-      None, default_timeout=0)
+  option_parser = optparse.OptionParser()
+  test_options_parser.AddTestRunnerOptions(option_parser, default_timeout=0)
   option_parser.add_option('-s', '--suite', dest='test_suite',
                            help='Executable name of the test suite to run '
                            '(use -s help to list them)')

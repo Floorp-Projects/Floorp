@@ -28,15 +28,17 @@ namespace libyuv {
 extern "C" {
 #endif
 
-// Alias
+// Alias.
 #define ARGBToARGB ARGBCopy
 
 // Copy ARGB to ARGB.
+LIBYUV_API
 int ARGBCopy(const uint8* src_argb, int src_stride_argb,
              uint8* dst_argb, int dst_stride_argb,
              int width, int height);
 
 // Convert I420 to ARGB.
+LIBYUV_API
 int I420ToARGB(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,
                const uint8* src_v, int src_stride_v,
@@ -44,6 +46,7 @@ int I420ToARGB(const uint8* src_y, int src_stride_y,
                int width, int height);
 
 // Convert I422 to ARGB.
+LIBYUV_API
 int I422ToARGB(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,
                const uint8* src_v, int src_stride_v,
@@ -51,6 +54,7 @@ int I422ToARGB(const uint8* src_y, int src_stride_y,
                int width, int height);
 
 // Convert I444 to ARGB.
+LIBYUV_API
 int I444ToARGB(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,
                const uint8* src_v, int src_stride_v,
@@ -58,6 +62,7 @@ int I444ToARGB(const uint8* src_y, int src_stride_y,
                int width, int height);
 
 // Convert I411 to ARGB.
+LIBYUV_API
 int I411ToARGB(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,
                const uint8* src_v, int src_stride_v,
@@ -65,87 +70,109 @@ int I411ToARGB(const uint8* src_y, int src_stride_y,
                int width, int height);
 
 // Convert I400 (grey) to ARGB.
+LIBYUV_API
 int I400ToARGB(const uint8* src_y, int src_stride_y,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
 // Convert I400 to ARGB.  Reverse of ARGBToI400.
+LIBYUV_API
 int I400ToARGB_Reference(const uint8* src_y, int src_stride_y,
                          uint8* dst_argb, int dst_stride_argb,
                          int width, int height);
 
 // Convert NV12 to ARGB.
+LIBYUV_API
 int NV12ToARGB(const uint8* src_y, int src_stride_y,
                const uint8* src_uv, int src_stride_uv,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
 // Convert NV21 to ARGB.
+LIBYUV_API
 int NV21ToARGB(const uint8* src_y, int src_stride_y,
                const uint8* src_vu, int src_stride_vu,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
 // Convert M420 to ARGB.
+LIBYUV_API
 int M420ToARGB(const uint8* src_m420, int src_stride_m420,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
 // TODO(fbarchard): Convert Q420 to ARGB.
+// LIBYUV_API
 // int Q420ToARGB(const uint8* src_y, int src_stride_y,
 //                const uint8* src_yuy2, int src_stride_yuy2,
 //                uint8* dst_argb, int dst_stride_argb,
 //                int width, int height);
 
 // Convert YUY2 to ARGB.
+LIBYUV_API
 int YUY2ToARGB(const uint8* src_yuy2, int src_stride_yuy2,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
 // Convert UYVY to ARGB.
+LIBYUV_API
 int UYVYToARGB(const uint8* src_uyvy, int src_stride_uyvy,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
 // TODO(fbarchard): Convert V210 to ARGB.
+// LIBYUV_API
 // int V210ToARGB(const uint8* src_uyvy, int src_stride_uyvy,
 //                uint8* dst_argb, int dst_stride_argb,
 //                int width, int height);
 
-// BGRA little endian (argb in memory) to ARGB
+// BGRA little endian (argb in memory) to ARGB.
+LIBYUV_API
 int BGRAToARGB(const uint8* src_frame, int src_stride_frame,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
-// ABGR little endian (rgba in memory) to ARGB
+// ABGR little endian (rgba in memory) to ARGB.
+LIBYUV_API
 int ABGRToARGB(const uint8* src_frame, int src_stride_frame,
+               uint8* dst_argb, int dst_stride_argb,
+               int width, int height);
+
+// RGBA little endian (abgr in memory) to ARGB.
+LIBYUV_API
+int RGBAToARGB(const uint8* src_frame, int src_stride_frame,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
 // Deprecated function name.
 #define BG24ToARGB RGB24ToARGB
 
-// RGB little endian (bgr in memory) to ARGB
+// RGB little endian (bgr in memory) to ARGB.
+LIBYUV_API
 int RGB24ToARGB(const uint8* src_frame, int src_stride_frame,
                 uint8* dst_argb, int dst_stride_argb,
                 int width, int height);
 
-// RGB big endian (rgb in memory) to ARGB
+// RGB big endian (rgb in memory) to ARGB.
+LIBYUV_API
 int RAWToARGB(const uint8* src_frame, int src_stride_frame,
               uint8* dst_argb, int dst_stride_argb,
               int width, int height);
 
-// RGB16 (RGBP fourcc) little endian to ARGB
+// RGB16 (RGBP fourcc) little endian to ARGB.
+LIBYUV_API
 int RGB565ToARGB(const uint8* src_frame, int src_stride_frame,
                  uint8* dst_argb, int dst_stride_argb,
                  int width, int height);
 
-// RGB15 (RGBO fourcc) little endian to ARGB
+// RGB15 (RGBO fourcc) little endian to ARGB.
+LIBYUV_API
 int ARGB1555ToARGB(const uint8* src_frame, int src_stride_frame,
                    uint8* dst_argb, int dst_stride_argb,
                    int width, int height);
 
-// RGB12 (R444 fourcc) little endian to ARGB
+// RGB12 (R444 fourcc) little endian to ARGB.
+LIBYUV_API
 int ARGB4444ToARGB(const uint8* src_frame, int src_stride_frame,
                    uint8* dst_argb, int dst_stride_argb,
                    int width, int height);
@@ -153,13 +180,14 @@ int ARGB4444ToARGB(const uint8* src_frame, int src_stride_frame,
 #ifdef HAVE_JPEG
 // src_width/height provided by capture
 // dst_width/height for clipping determine final size.
+LIBYUV_API
 int MJPGToARGB(const uint8* sample, size_t sample_size,
                uint8* dst_argb, int dst_stride_argb,
                int src_width, int src_height,
                int dst_width, int dst_height);
 #endif
 
-// Note Bayer formats (BGGR) to ARGB are in format_conversion.h
+// Note Bayer formats (BGGR) to ARGB are in format_conversion.h.
 
 // Convert camera sample to ARGB with cropping, rotation and vertical flip.
 // "src_size" is needed to parse MJPG.
@@ -183,6 +211,7 @@ int MJPGToARGB(const uint8* sample, size_t sample_size,
 // "rotation" can be 0, 90, 180 or 270.
 // "format" is a fourcc.  ie 'I420', 'YUY2'
 // Returns 0 for successful; -1 for invalid parameter. Non-zero for failure.
+LIBYUV_API
 int ConvertToARGB(const uint8* src_frame, size_t src_size,
                   uint8* dst_argb, int dst_stride_argb,
                   int crop_x, int crop_y,

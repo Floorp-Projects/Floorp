@@ -23,8 +23,8 @@ from forwarder import Forwarder
 from json_perf_parser import GetAverageRunInfoFromJSONString
 from perf_tests_helper import PrintPerfResult
 import sharded_tests_queue
-from test_result import JAVA, SingleTestResult, TestResults
-
+from test_result import SingleTestResult, TestResults
+import valgrind_tools
 
 _PERF_TEST_ANNOTATION = 'PerfTest'
 
@@ -65,7 +65,7 @@ def FilterTests(test_names, pattern_list, inclusive):
 class TestRunner(BaseTestRunner):
   """Responsible for running a series of tests connected to a single device."""
 
-  _DEVICE_DATA_DIR = '/data/local/tmp/chrome/test/data'
+  _DEVICE_DATA_DIR = 'chrome/test/data'
   _EMMA_JAR = os.path.join(os.environ.get('ANDROID_BUILD_TOP', ''),
                            'external/emma/lib/emma.jar')
   _COVERAGE_MERGED_FILENAME = 'unittest_coverage.es'
@@ -78,9 +78,8 @@ class TestRunner(BaseTestRunner):
                                           'out/target/common/obj/APPS',
                                           'Chrome_intermediates/coverage.em')
   _HOSTMACHINE_PERF_OUTPUT_FILE = '/tmp/chrome-profile'
-  _DEVICE_PERF_OUTPUT_DIR = '/sdcard/Download/'
-  _DEVICE_PERF_OUTPUT_SEARCH_PREFIX = (_DEVICE_PERF_OUTPUT_DIR +
-                                       'chrome-profile*')
+  _DEVICE_PERF_OUTPUT_SEARCH_PREFIX = (constants.DEVICE_PERF_OUTPUT_DIR +
+                                       '/chrome-profile*')
   _DEVICE_HAS_TEST_FILES = {}
 
   def __init__(self, options, device, tests_iter, coverage, shard_index, apks,
@@ -130,8 +129,7 @@ class TestRunner(BaseTestRunner):
     self.ports_to_forward = ports_to_forward
 
     self.test_results = TestResults()
-    # List of forwarders created by this instance of TestRunner.
-    self.forwarders = []
+    self.forwarder = None
 
     if self.coverage:
       if os.path.exists(TestRunner._COVERAGE_MERGED_FILENAME):
@@ -162,16 +160,21 @@ class TestRunner(BaseTestRunner):
       logging.warning('Already copied test files to device %s, skipping.',
                       self.device)
       return
-    host_test_files_path = (constants.CHROME_DIR +
-                            '/chrome/test/data/android/device_files')
-    if os.path.exists(host_test_files_path):
-      self.adb.PushIfNeeded(host_test_files_path,
-                            TestRunner._DEVICE_DATA_DIR)
+    host_test_files = [
+        ('android_webview/test/data/device_files', 'webview'),
+        ('content/test/data/android/device_files', 'content'),
+        ('chrome/test/data/android/device_files', 'chrome')
+    ]
+    for (host_src, dst_layer) in host_test_files:
+      host_test_files_path = constants.CHROME_DIR + '/' + host_src
+      if os.path.exists(host_test_files_path):
+        self.adb.PushIfNeeded(host_test_files_path,
+                              self.adb.GetExternalStorage() + '/' +
+                              TestRunner._DEVICE_DATA_DIR + '/' + dst_layer)
     if self.install_apk:
-      # Install -r is not reliable, so uninstall it first.
       for apk in self.apks:
-        self.adb.Adb().SendCommand('uninstall ' + apk.GetPackageName())
-        self.adb.Adb().SendCommand('install ' + apk.GetApkPath())
+        self.adb.ManagedInstall(apk.GetApkPath(),
+                                package_name=apk.GetPackageName())
     self.tool.CopyFiles()
     TestRunner._DEVICE_HAS_TEST_FILES[self.device] = True
 
@@ -238,15 +241,19 @@ class TestRunner(BaseTestRunner):
 
   def _TakeScreenshot(self, test):
     """Takes a screenshot from the device."""
-    screenshot_tool = os.path.join(os.getenv('ANDROID_HOST_OUT'), 'bin',
-                                   'screenshot2')
+    screenshot_tool = os.path.join(constants.CHROME_DIR,
+        'third_party/android_tools/sdk/tools/monkeyrunner')
+    screenshot_script = os.path.join(constants.CHROME_DIR,
+        'build/android/monkeyrunner_screenshot.py')
     screenshot_path = os.path.join(constants.CHROME_DIR,
                                    'out_screenshots')
     if not os.path.exists(screenshot_path):
       os.mkdir(screenshot_path)
     screenshot_name = os.path.join(screenshot_path, test + '.png')
     logging.info('Taking screenshot named %s', screenshot_name)
-    cmd_helper.RunCmd([screenshot_tool, '-s', self.device, screenshot_name])
+    cmd_helper.RunCmd([screenshot_tool, screenshot_script,
+                       '--serial', self.device,
+                       '--file', screenshot_name])
 
   def SetUp(self):
     """Sets up the test harness and device before all tests are run."""
@@ -261,26 +268,23 @@ class TestRunner(BaseTestRunner):
     # We give different default value to launch HTTP server based on shard index
     # because it may have race condition when multiple processes are trying to
     # launch lighttpd with same port at same time.
-    # This line *must* come before the forwarding below, as it nukes all
-    # the other forwarders. A more comprehensive fix might be to pull the
-    # forwarder-killing line up to here, but that might violate assumptions
-    # implicit in other places.
-    self.LaunchTestHttpServer(os.path.join(constants.CHROME_DIR),
-                              (constants.LIGHTTPD_RANDOM_PORT_FIRST +
-                               self.shard_index))
-
+    http_server_ports = self.LaunchTestHttpServer(
+        os.path.join(constants.CHROME_DIR),
+        (constants.LIGHTTPD_RANDOM_PORT_FIRST + self.shard_index))
     if self.ports_to_forward:
-      for port in self.ports_to_forward:
-        self.forwarders.append(Forwarder(
-            self.adb, [(port, port)], self.tool, '127.0.0.1', self.build_type))
+      port_pairs = [(port, port) for port in self.ports_to_forward]
+      # We need to remember which ports the HTTP server is using, since the
+      # forwarder will stomp on them otherwise.
+      port_pairs.append(http_server_ports)
+      self.forwarder = Forwarder(
+         self.adb, port_pairs, self.tool, '127.0.0.1', self.build_type)
     self.CopyTestFilesOnce()
     self.flags.AddFlags(['--enable-test-intents'])
 
   def TearDown(self):
     """Cleans up the test harness and saves outstanding data from test run."""
-    if self.forwarders:
-      for forwarder in self.forwarders:
-        forwarder.Close()
+    if self.forwarder:
+      self.forwarder.Close()
     self.GenerateCoverageReportIfNeeded()
     super(TestRunner, self).TearDown()
 
@@ -400,11 +404,7 @@ class TestRunner(BaseTestRunner):
 
   def _SetupIndividualTestTimeoutScale(self, test):
     timeout_scale = self._GetIndividualTestTimeoutScale(test)
-    if timeout_scale == 1:
-      value = '""'
-    else:
-      value = '%f' % timeout_scale
-    self.adb.RunShellCommand('setprop chrome.timeout_scale %s' % value)
+    valgrind_tools.SetChromeTimeoutScale(self.adb, timeout_scale)
 
   def _GetIndividualTestTimeoutScale(self, test):
     """Returns the timeout scale for the given |test|."""
@@ -468,12 +468,10 @@ class TestRunner(BaseTestRunner):
             log = 'No information.'
           if self.screenshot_failures or log.find('INJECT_EVENTS perm') >= 0:
             self._TakeScreenshot(test)
-          result = (log.split('\n')[0], log)
           self.test_results.failed += [SingleTestResult(test, start_date_ms,
-                                                        duration_ms, JAVA, log,
-                                                        result)]
+                                                        duration_ms, log)]
         else:
-          result = [SingleTestResult(test, start_date_ms, duration_ms, JAVA)]
+          result = [SingleTestResult(test, start_date_ms, duration_ms)]
           self.test_results.ok += result
       # Catch exceptions thrown by StartInstrumentation().
       # See ../../third_party/android/testrunner/adb_interface.py
@@ -490,8 +488,7 @@ class TestRunner(BaseTestRunner):
           message = 'No information.'
         self.test_results.crashed += [SingleTestResult(test, start_date_ms,
                                                        duration_ms,
-                                                       JAVA, message,
-                                                       (message, message))]
+                                                       message)]
         test_result = None
       self.TestTeardown(test, test_result)
     return self.test_results
@@ -585,13 +582,10 @@ def DispatchJavaTests(options, apks):
 
   logging.info('Will run: %s', str(tests))
 
-  if (len(attached_devices) > 1 and
-      not coverage and
-      not options.wait_for_debugger):
-    sharder = TestSharder(attached_devices, options, tests, apks)
-    test_results = sharder.RunShardedTests()
-  else:
-    runner = TestRunner(options, attached_devices[0], tests, coverage, 0, apks,
-                        [])
-    test_results = runner.Run()
+  if len(attached_devices) > 1 and (coverage or options.wait_for_debugger):
+    logging.warning('Coverage / debugger can not be sharded, '
+                    'using first available device')
+    attached_devices = attached_devices[:1]
+  sharder = TestSharder(attached_devices, options, tests, apks)
+  test_results = sharder.RunShardedTests()
   return test_results

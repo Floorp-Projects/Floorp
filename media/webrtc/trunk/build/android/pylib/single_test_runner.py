@@ -10,6 +10,7 @@ import sys
 from base_test_runner import BaseTestRunner
 import debug_info
 import constants
+import perf_tests_helper
 import run_tests_helper
 from test_package_apk import TestPackageApk
 from test_package_executable import TestPackageExecutable
@@ -59,6 +60,9 @@ class SingleTestRunner(BaseTestRunner):
           self.adb, device,
           test_suite, timeout, rebaseline, performance_test, cleanup_test_files,
           self.tool, self.dump_debug_info)
+    self._performance_test_setup = None
+    if performance_test:
+      self._performance_test_setup = perf_tests_helper.PerfTestSetup(self.adb)
 
   def _TestSuiteRequiresMockTestServer(self):
     """Returns True if the test suite requires mock test server."""
@@ -145,10 +149,6 @@ class SingleTestRunner(BaseTestRunner):
       test_files = [
           'base/data/file_util_unittest',
           'base/data/json/bom_feff.json',
-          'net/data/cache_tests/insert_load1',
-          'net/data/cache_tests/dirty_entry5',
-          'net/data/ssl/certificates/',
-          'ui/base/test/data/data_pack_unittest',
           'chrome/test/data/download-test1.lib',
           'chrome/test/data/extensions/bad_magic.crx',
           'chrome/test/data/extensions/good.crx',
@@ -181,6 +181,11 @@ class SingleTestRunner(BaseTestRunner):
           'chrome/test/data/webui/',
           'chrome/test/data/zip',
           'chrome/third_party/mock4js/',
+          'content/browser/gpu/software_rendering_list.json',
+          'net/data/cache_tests/insert_load1',
+          'net/data/cache_tests/dirty_entry5',
+          'net/data/ssl/certificates/',
+          'ui/base/test/data/data_pack_unittest',
         ]
       if self.test_package.test_suite_basename == 'unit_tests':
         test_files += ['chrome/test/data/simple_open_search.xml']
@@ -225,7 +230,7 @@ class SingleTestRunner(BaseTestRunner):
           ]
     elif self.test_package.test_suite_basename == 'content_unittests':
       return [
-          'chrome/test/gpu/webgl_conformance_test_expectations.txt',
+          'content/test/data/gpu/webgl_conformance_test_expectations.txt',
           'net/data/ssl/certificates/',
           'webkit/data/dom_storage/webcore_test_database.localstorage',
           'third_party/hyphen/hyph_en_US.dic',
@@ -252,13 +257,10 @@ class SingleTestRunner(BaseTestRunner):
     self.tool.CopyFiles()
     test_data = self.GetDataFilesForTestSuite()
     if test_data and not self.fast_and_loose:
-      # Due to the large size of certain test data, we use sdcard to store the
-      # test data and create symbolic links to map them to data/local/tmp/.
-      # Before that, make sure SD card is ready.
+      # Make sure SD card is ready.
       self.adb.WaitForSdCardReady(20)
       for data in test_data:
-        self.CopyTestData([data], '/sdcard/')
-      self.LinkSdCardPathsToTempDir(test_data)
+        self.CopyTestData([data], self.adb.GetExternalStorage())
 
   def RunTestsWithFilter(self):
     """Runs a tests via a small, temporary shell script."""
@@ -319,8 +321,8 @@ class SingleTestRunner(BaseTestRunner):
     """Sets up necessary test enviroment for the test suite."""
     super(SingleTestRunner, self).SetUp()
     self.adb.ClearApplicationState(constants.CHROME_PACKAGE)
-    if self.test_package.performance_test:
-      self.adb.SetupPerformanceTest()
+    if self._performance_test_setup:
+      self._performance_test_setup.SetUp()
     if self.dump_debug_info:
       self.dump_debug_info.StartRecordingLog(True)
     self.StripAndCopyFiles()
@@ -334,8 +336,8 @@ class SingleTestRunner(BaseTestRunner):
       self.adb.RemovePushedFiles()
     if self.dump_debug_info:
       self.dump_debug_info.StopRecordingLog()
-    if self.test_package.performance_test:
-      self.adb.TearDownPerformanceTest()
+    if self._performance_test_setup:
+      self._performance_test_setup.TearDown()
     if self.dump_debug_info:
       self.dump_debug_info.ArchiveNewCrashFiles()
     super(SingleTestRunner, self).TearDown()

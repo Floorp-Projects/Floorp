@@ -6,9 +6,10 @@
 import logging
 import re
 import os
-import pexpect
 
+import constants
 from perf_tests_helper import PrintPerfResult
+from pylib import pexpect
 from test_result import BaseTestResult, TestResults
 
 
@@ -38,7 +39,7 @@ class TestPackage(object):
     self.test_suite = os.path.splitext(test_suite)[0]
     self.test_suite_basename = self._GetTestSuiteBaseName()
     self.test_suite_dirname = os.path.dirname(
-        self.test_suite.split(self.test_suite_basename)[0]);
+        self.test_suite.split(self.test_suite_basename)[0])
     self.rebaseline = rebaseline
     self.performance_test = performance_test
     self.cleanup_test_files = cleanup_test_files
@@ -95,6 +96,9 @@ class TestPackage(object):
     for test in all_tests:
       if not test:
         continue
+      if test[0] != ' ' and not test.endswith('.'):
+        # Ignore any lines with unexpected format.
+        continue
       if test[0] != ' ' and test.endswith('.'):
         current = test
         continue
@@ -106,27 +110,28 @@ class TestPackage(object):
     return ret
 
   def PushDataAndPakFiles(self):
+    external_storage = self.adb.GetExternalStorage()
     if (self.test_suite_basename == 'ui_unittests' or
         self.test_suite_basename == 'unit_tests'):
       self.adb.PushIfNeeded(
           self.test_suite_dirname + '/chrome.pak',
-          '/data/local/tmp/paks/chrome.pak')
+          external_storage + '/paks/chrome.pak')
       self.adb.PushIfNeeded(
           self.test_suite_dirname + '/locales/en-US.pak',
-          '/data/local/tmp/paks/en-US.pak')
+          external_storage + '/paks/en-US.pak')
     if self.test_suite_basename == 'unit_tests':
       self.adb.PushIfNeeded(
           self.test_suite_dirname + '/resources.pak',
-          '/data/local/tmp/paks/resources.pak')
+          external_storage + '/paks/resources.pak')
       self.adb.PushIfNeeded(
           self.test_suite_dirname + '/chrome_100_percent.pak',
-          '/data/local/tmp/paks/chrome_100_percent.pak')
+          external_storage + '/paks/chrome_100_percent.pak')
       self.adb.PushIfNeeded(self.test_suite_dirname + '/test_data',
-                            '/data/local/tmp/test_data')
+                            external_storage + '/test_data')
     if self.test_suite_basename == 'content_unittests':
       self.adb.PushIfNeeded(
           self.test_suite_dirname + '/content_resources.pak',
-          '/data/local/tmp/paks/content_resources.pak')
+          external_storage + '/paks/content_resources.pak')
 
   def _WatchTestOutput(self, p):
     """Watches the test output.
@@ -139,51 +144,47 @@ class TestPackage(object):
     timed_out = False
     overall_fail = False
     re_run = re.compile('\[ RUN      \] ?(.*)\r\n')
-    # APK tests rely on the END tag.
-    re_end = re.compile('\[ END      \] ?(.*)\r\n')
+    # APK tests rely on the PASSED tag.
+    re_passed = re.compile('\[  PASSED  \] ?(.*)\r\n')
     # Signal handlers are installed before starting tests
     # to output the CRASHED marker when a crash happens.
     re_crash = re.compile('\[ CRASHED      \](.*)\r\n')
     re_fail = re.compile('\[  FAILED  \] ?(.*)\r\n')
     re_runner_fail = re.compile('\[ RUNNER_FAILED \] ?(.*)\r\n')
-    re_ok = re.compile('\[       OK \] ?(.*)\r\n')
+    re_ok = re.compile('\[       OK \] ?(.*?) .*\r\n')
     io_stats_before = self._BeginGetIOStats()
-    while True:
-      found = p.expect([re_run, pexpect.EOF, re_end, re_runner_fail],
-                       timeout=self.timeout)
-      if found == 1:  # matched pexpect.EOF
-        break
-      if found == 2:  # matched END.
-        break
-      if found == 3:  # RUNNER_FAILED
-        logging.error('RUNNER_FAILED')
-        overall_fail = True
-        break
-      if self.dump_debug_info:
-        self.dump_debug_info.TakeScreenshot('_Test_Start_Run_')
-      full_test_name = p.match.group(1)
-      found = p.expect([re_ok, re_fail, re_crash, pexpect.EOF, pexpect.TIMEOUT],
-                       timeout=self.timeout)
-      if found == 0:  # re_ok
-        ok_tests += [BaseTestResult(full_test_name.replace('\r', ''),
-                                    p.before)]
-        continue
-      if found == 2: # re_crash
-        crashed_tests += [BaseTestResult(full_test_name.replace('\r', ''),
-                                         p.before)]
-        overall_fail = True
-        break
-      # The test failed.
-      failed_tests += [BaseTestResult(full_test_name.replace('\r', ''),
-                                      p.before)]
-      if found >= 3:
-        # The test bailed out (i.e., didn't print OK or FAIL).
-        if found == 4:  # pexpect.TIMEOUT
-          logging.error('Test terminated after %d second timeout.',
-                        self.timeout)
-          timed_out = True
-        break
-    p.close()
+    try:
+      while True:
+        found = p.expect([re_run, re_passed, re_runner_fail],
+                         timeout=self.timeout)
+        if found == 1:  # matched PASSED.
+          break
+        if found == 2:  # RUNNER_FAILED
+          logging.error('RUNNER_FAILED')
+          overall_fail = True
+          break
+        if self.dump_debug_info:
+          self.dump_debug_info.TakeScreenshot('_Test_Start_Run_')
+        full_test_name = p.match.group(1).replace('\r', '')
+        found = p.expect([re_ok, re_fail, re_crash], timeout=self.timeout)
+        if found == 0:  # re_ok
+          if full_test_name == p.match.group(1).replace('\r', ''):
+            ok_tests += [BaseTestResult(full_test_name, p.before)]
+            continue
+        if found == 2: # re_crash
+          crashed_tests += [BaseTestResult(full_test_name, p.before)]
+          overall_fail = True
+          break
+        # The test failed.
+        failed_tests += [BaseTestResult(full_test_name, p.before)]
+    except pexpect.EOF:
+      logging.error('Test terminated - EOF')
+    except pexpect.TIMEOUT:
+      logging.error('Test terminated after %d second timeout.',
+                    self.timeout)
+      timed_out = True
+    finally:
+      p.close()
     if not self.rebaseline:
       ok_tests += self._EndGetIOStats(io_stats_before)
       ret_code = self._GetGTestReturnCode()

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "source/row.h"
+#include "libyuv/row.h"
 
 #include <string.h>  // For memcpy
 
@@ -18,6 +18,22 @@
 namespace libyuv {
 extern "C" {
 #endif
+
+void BGRAToARGBRow_C(const uint8* src_bgra, uint8* dst_argb, int width) {
+  for (int x = 0; x < width; ++x) {
+    // To support in-place conversion.
+    uint8 a = src_bgra[0];
+    uint8 r = src_bgra[1];
+    uint8 g = src_bgra[2];
+    uint8 b = src_bgra[3];
+    dst_argb[0] = b;
+    dst_argb[1] = g;
+    dst_argb[2] = r;
+    dst_argb[3] = a;
+    dst_argb += 4;
+    src_bgra += 4;
+  }
+}
 
 void ABGRToARGBRow_C(const uint8* src_abgr, uint8* dst_argb, int width) {
   for (int x = 0; x < width; ++x) {
@@ -35,19 +51,19 @@ void ABGRToARGBRow_C(const uint8* src_abgr, uint8* dst_argb, int width) {
   }
 }
 
-void BGRAToARGBRow_C(const uint8* src_bgra, uint8* dst_argb, int width) {
+void RGBAToARGBRow_C(const uint8* src_abgr, uint8* dst_argb, int width) {
   for (int x = 0; x < width; ++x) {
     // To support in-place conversion.
-    uint8 a = src_bgra[0];
-    uint8 r = src_bgra[1];
-    uint8 g = src_bgra[2];
-    uint8 b = src_bgra[3];
+    uint8 a = src_abgr[0];
+    uint8 b = src_abgr[1];
+    uint8 g = src_abgr[2];
+    uint8 r = src_abgr[3];
     dst_argb[0] = b;
     dst_argb[1] = g;
     dst_argb[2] = r;
     dst_argb[3] = a;
     dst_argb += 4;
-    src_bgra += 4;
+    src_abgr += 4;
   }
 }
 
@@ -120,6 +136,21 @@ void ARGB4444ToARGBRow_C(const uint8* src_rgb, uint8* dst_argb, int width) {
     dst_argb[3] = (a << 4) | a;
     dst_argb += 4;
     src_rgb += 2;
+  }
+}
+
+void ARGBToRGBARow_C(const uint8* src_argb, uint8* dst_rgb, int width) {
+  for (int x = 0; x < width; ++x) {
+    uint8 b = src_argb[0];
+    uint8 g = src_argb[1];
+    uint8 r = src_argb[2];
+    uint8 a = src_argb[3];
+    dst_rgb[0] = a;
+    dst_rgb[1] = b;
+    dst_rgb[2] = g;
+    dst_rgb[3] = r;
+    dst_rgb += 4;
+    src_argb += 4;
   }
 }
 
@@ -271,6 +302,7 @@ void NAME ## ToUVRow_C(const uint8* src_rgb0, int src_stride_rgb,              \
 MAKEROWY(ARGB, 2, 1, 0)
 MAKEROWY(BGRA, 1, 2, 3)
 MAKEROWY(ABGR, 0, 1, 2)
+MAKEROWY(RGBA, 3, 2, 1)
 
 // http://en.wikipedia.org/wiki/Grayscale.
 // 0.11 * B + 0.59 * G + 0.30 * R
@@ -554,6 +586,24 @@ void I422ToABGRRow_C(const uint8* y_buf,
   }
 }
 
+void I422ToRGBARow_C(const uint8* y_buf,
+                     const uint8* u_buf,
+                     const uint8* v_buf,
+                     uint8* rgb_buf,
+                     int width) {
+  for (int x = 0; x < width - 1; x += 2) {
+    YuvPixel(y_buf[0], u_buf[0], v_buf[0], rgb_buf + 0, 0, 24, 16, 8);
+    YuvPixel(y_buf[1], u_buf[0], v_buf[0], rgb_buf + 4, 0, 24, 16, 8);
+    y_buf += 2;
+    u_buf += 1;
+    v_buf += 1;
+    rgb_buf += 8;  // Advance 2 pixels.
+  }
+  if (width & 1) {
+    YuvPixel(y_buf[0], u_buf[0], v_buf[0], rgb_buf + 0, 0, 24, 16, 8);
+  }
+}
+
 void YToARGBRow_C(const uint8* y_buf, uint8* rgb_buf, int width) {
   for (int x = 0; x < width; ++x) {
     YuvPixel(y_buf[0], 128, 128, rgb_buf, 24, 16, 8, 0);
@@ -621,10 +671,10 @@ void CopyRow_C(const uint8* src, uint8* dst, int count) {
   memcpy(dst, src, count);
 }
 
-// Filter 2 rows of YUY2 UV's (422) into U and V (420)
+// Filter 2 rows of YUY2 UV's (422) into U and V (420).
 void YUY2ToUVRow_C(const uint8* src_yuy2, int src_stride_yuy2,
                    uint8* dst_u, uint8* dst_v, int width) {
-  // Output a row of UV values, filtering 2 rows of YUY2
+  // Output a row of UV values, filtering 2 rows of YUY2.
   for (int x = 0; x < width; x += 2) {
     dst_u[0] = (src_yuy2[1] + src_yuy2[src_stride_yuy2 + 1] + 1) >> 1;
     dst_v[0] = (src_yuy2[3] + src_yuy2[src_stride_yuy2 + 3] + 1) >> 1;
@@ -634,8 +684,22 @@ void YUY2ToUVRow_C(const uint8* src_yuy2, int src_stride_yuy2,
   }
 }
 
+// Copy row of YUY2 UV's (422) into U and V (422).
+void YUY2ToUV422Row_C(const uint8* src_yuy2,
+                      uint8* dst_u, uint8* dst_v, int width) {
+  // Output a row of UV values.
+  for (int x = 0; x < width; x += 2) {
+    dst_u[0] = src_yuy2[1];
+    dst_v[0] = src_yuy2[3];
+    src_yuy2 += 4;
+    dst_u += 1;
+    dst_v += 1;
+  }
+}
+
+// Copy row of YUY2 Y's (422) into Y (420/422).
 void YUY2ToYRow_C(const uint8* src_yuy2, uint8* dst_y, int width) {
-  // Copy a row of yuy2 Y values
+  // Output a row of Y values.
   for (int x = 0; x < width - 1; x += 2) {
     dst_y[x] = src_yuy2[0];
     dst_y[x + 1] = src_yuy2[2];
@@ -646,9 +710,10 @@ void YUY2ToYRow_C(const uint8* src_yuy2, uint8* dst_y, int width) {
   }
 }
 
+// Filter 2 rows of UYVY UV's (422) into U and V (420).
 void UYVYToUVRow_C(const uint8* src_uyvy, int src_stride_uyvy,
                    uint8* dst_u, uint8* dst_v, int width) {
-  // Copy a row of uyvy UV values
+  // Output a row of UV values.
   for (int x = 0; x < width; x += 2) {
     dst_u[0] = (src_uyvy[0] + src_uyvy[src_stride_uyvy + 0] + 1) >> 1;
     dst_v[0] = (src_uyvy[2] + src_uyvy[src_stride_uyvy + 2] + 1) >> 1;
@@ -658,15 +723,29 @@ void UYVYToUVRow_C(const uint8* src_uyvy, int src_stride_uyvy,
   }
 }
 
-void UYVYToYRow_C(const uint8* src_yuy2, uint8* dst_y, int width) {
-  // Copy a row of uyvy Y values
+// Copy row of UYVY UV's (422) into U and V (422).
+void UYVYToUV422Row_C(const uint8* src_uyvy,
+                      uint8* dst_u, uint8* dst_v, int width) {
+  // Output a row of UV values.
+  for (int x = 0; x < width; x += 2) {
+    dst_u[0] = src_uyvy[0];
+    dst_v[0] = src_uyvy[2];
+    src_uyvy += 4;
+    dst_u += 1;
+    dst_v += 1;
+  }
+}
+
+// Copy row of UYVY Y's (422) into Y (420/422).
+void UYVYToYRow_C(const uint8* src_uyvy, uint8* dst_y, int width) {
+  // Output a row of Y values.
   for (int x = 0; x < width - 1; x += 2) {
-    dst_y[x] = src_yuy2[1];
-    dst_y[x + 1] = src_yuy2[3];
-    src_yuy2 += 4;
+    dst_y[x] = src_uyvy[1];
+    dst_y[x + 1] = src_uyvy[3];
+    src_uyvy += 4;
   }
   if (width & 1) {
-    dst_y[width - 1] = src_yuy2[1];
+    dst_y[width - 1] = src_uyvy[1];
   }
 }
 
@@ -862,7 +941,7 @@ void ARGBUnattenuateRow_C(const uint8* src_argb, uint8* dst_argb, int width) {
     }
 
 
-#if defined(HAS_I422TOARGBROW_SSSE3)
+#ifdef HAS_I422TOARGBROW_SSSE3
 YANY(I444ToARGBRow_Any_SSSE3, I444ToARGBRow_Unaligned_SSSE3, I444ToARGBRow_C, 0)
 YANY(I422ToARGBRow_Any_SSSE3, I422ToARGBRow_Unaligned_SSSE3, I422ToARGBRow_C, 1)
 YANY(I411ToARGBRow_Any_SSSE3, I411ToARGBRow_Unaligned_SSSE3, I411ToARGBRow_C, 2)
@@ -871,10 +950,14 @@ Y2NY(NV21ToARGBRow_Any_SSSE3, NV21ToARGBRow_Unaligned_SSSE3, NV21ToARGBRow_C, 0)
 YANY(I422ToBGRARow_Any_SSSE3, I422ToBGRARow_Unaligned_SSSE3, I422ToBGRARow_C, 1)
 YANY(I422ToABGRRow_Any_SSSE3, I422ToABGRRow_Unaligned_SSSE3, I422ToABGRRow_C, 1)
 #endif
-#if defined(HAS_I422TOARGBROW_NEON)
+#ifdef HAS_I422TORGBAROW_SSSE3
+YANY(I422ToRGBARow_Any_SSSE3, I422ToRGBARow_Unaligned_SSSE3, I422ToRGBARow_C, 1)
+#endif
+#ifdef HAS_I422TOARGBROW_NEON
 YANY(I422ToARGBRow_Any_NEON, I422ToARGBRow_NEON, I422ToARGBRow_C, 1)
 YANY(I422ToBGRARow_Any_NEON, I422ToBGRARow_NEON, I422ToBGRARow_C, 1)
 YANY(I422ToABGRRow_Any_NEON, I422ToABGRRow_NEON, I422ToABGRRow_C, 1)
+YANY(I422ToRGBARow_Any_NEON, I422ToRGBARow_NEON, I422ToRGBARow_C, 1)
 #endif
 #undef YANY
 
@@ -894,40 +977,89 @@ RGBANY(ARGBToRGB565Row_Any_SSE2, ARGBToRGB565Row_SSE2, 2)
 RGBANY(ARGBToARGB1555Row_Any_SSE2, ARGBToARGB1555Row_SSE2, 2)
 RGBANY(ARGBToARGB4444Row_Any_SSE2, ARGBToARGB4444Row_SSE2, 2)
 #endif
+#if defined(HAS_ARGBTORGB24ROW_NEON)
+RGBANY(ARGBToRGB24Row_Any_NEON, ARGBToRGB24Row_NEON, 3)
+RGBANY(ARGBToRAWRow_Any_NEON, ARGBToRAWRow_NEON, 3)
+#endif
 #undef RGBANY
 
-#ifdef HAS_ARGBTOYROW_SSSE3
 #define YANY(NAMEANY, ARGBTOY_SSE, BPP)                                        \
     void NAMEANY(const uint8* src_argb, uint8* dst_y, int width) {             \
       ARGBTOY_SSE(src_argb, dst_y, width - 16);                                \
       ARGBTOY_SSE(src_argb + (width - 16) * BPP, dst_y + (width - 16), 16);    \
     }
 
+#ifdef HAS_ARGBTOYROW_SSSE3
 YANY(ARGBToYRow_Any_SSSE3, ARGBToYRow_Unaligned_SSSE3, 4)
 YANY(BGRAToYRow_Any_SSSE3, BGRAToYRow_Unaligned_SSSE3, 4)
 YANY(ABGRToYRow_Any_SSSE3, ABGRToYRow_Unaligned_SSSE3, 4)
+#endif
+#ifdef HAS_RGBATOYROW_SSSE3
+YANY(RGBAToYRow_Any_SSSE3, RGBAToYRow_Unaligned_SSSE3, 4)
+#endif
+#ifdef HAS_YUY2TOYROW_SSE2
 YANY(YUY2ToYRow_Any_SSE2, YUY2ToYRow_Unaligned_SSE2, 2)
 YANY(UYVYToYRow_Any_SSE2, UYVYToYRow_Unaligned_SSE2, 2)
+#endif
+#ifdef HAS_YUY2TOYROW_NEON
+YANY(YUY2ToYRow_Any_NEON, YUY2ToYRow_NEON, 2)
+YANY(UYVYToYRow_Any_NEON, UYVYToYRow_NEON, 2)
+#endif
 #undef YANY
 
-#define UVANY(NAMEANY, ARGBTOUV_SSE, ARGBTOUV_C, BPP)                          \
+#define UVANY(NAMEANY, ANYTOUV_SSE, ANYTOUV_C, BPP)                            \
     void NAMEANY(const uint8* src_argb, int src_stride_argb,                   \
                  uint8* dst_u, uint8* dst_v, int width) {                      \
       int n = width & ~15;                                                     \
-      ARGBTOUV_SSE(src_argb, src_stride_argb, dst_u, dst_v, n);                \
-      ARGBTOUV_C(src_argb  + n * BPP, src_stride_argb,                         \
+      ANYTOUV_SSE(src_argb, src_stride_argb, dst_u, dst_v, n);                 \
+      ANYTOUV_C(src_argb  + n * BPP, src_stride_argb,                          \
                  dst_u + (n >> 1),                                             \
                  dst_v + (n >> 1),                                             \
                  width & 15);                                                  \
     }
 
+#ifdef HAS_ARGBTOUVROW_SSSE3
 UVANY(ARGBToUVRow_Any_SSSE3, ARGBToUVRow_Unaligned_SSSE3, ARGBToUVRow_C, 4)
 UVANY(BGRAToUVRow_Any_SSSE3, BGRAToUVRow_Unaligned_SSSE3, BGRAToUVRow_C, 4)
 UVANY(ABGRToUVRow_Any_SSSE3, ABGRToUVRow_Unaligned_SSSE3, ABGRToUVRow_C, 4)
+#endif
+#ifdef HAS_RGBATOYROW_SSSE3
+UVANY(RGBAToUVRow_Any_SSSE3, RGBAToUVRow_Unaligned_SSSE3, RGBAToUVRow_C, 4)
+#endif
+#ifdef HAS_YUY2TOUVROW_SSE2
 UVANY(YUY2ToUVRow_Any_SSE2, YUY2ToUVRow_Unaligned_SSE2, YUY2ToUVRow_C, 2)
 UVANY(UYVYToUVRow_Any_SSE2, UYVYToUVRow_Unaligned_SSE2, UYVYToUVRow_C, 2)
-#undef UVANY
 #endif
+#ifdef HAS_YUY2TOUVROW_NEON
+UVANY(YUY2ToUVRow_Any_NEON, YUY2ToUVRow_NEON, YUY2ToUVRow_C, 2)
+UVANY(UYVYToUVRow_Any_NEON, UYVYToUVRow_NEON, UYVYToUVRow_C, 2)
+#endif
+#undef UVANY
+
+#define UV422ANY(NAMEANY, ANYTOUV_SSE, ANYTOUV_C, BPP)                         \
+    void NAMEANY(const uint8* src_argb,                                        \
+                 uint8* dst_u, uint8* dst_v, int width) {                      \
+      int n = width & ~15;                                                     \
+      ANYTOUV_SSE(src_argb, dst_u, dst_v, n);                                  \
+      ANYTOUV_C(src_argb  + n * BPP,                                           \
+                 dst_u + (n >> 1),                                             \
+                 dst_v + (n >> 1),                                             \
+                 width & 15);                                                  \
+    }
+
+#ifdef HAS_YUY2TOUV422ROW_SSE2
+UV422ANY(YUY2ToUV422Row_Any_SSE2, YUY2ToUV422Row_Unaligned_SSE2,               \
+         YUY2ToUV422Row_C, 2)
+UV422ANY(UYVYToUV422Row_Any_SSE2, UYVYToUV422Row_Unaligned_SSE2,               \
+         UYVYToUV422Row_C, 2)
+#endif
+#ifdef HAS_YUY2TOUV422ROW_NEON
+UV422ANY(YUY2ToUV422Row_Any_NEON, YUY2ToUV422Row_NEON,                         \
+         YUY2ToUV422Row_C, 2)
+UV422ANY(UYVYToUV422Row_Any_NEON, UYVYToUV422Row_NEON,                         \
+         UYVYToUV422Row_C, 2)
+#endif
+#undef UV422ANY
 
 void ComputeCumulativeSumRow_C(const uint8* row, int32* cumsum,
                                const int32* previous_cumsum, int width) {
@@ -985,6 +1117,7 @@ void ARGBShadeRow_C(const uint8* src_argb, uint8* dst_argb, int width,
 #undef SHADE
 
 // Copy pixels from rotated source to destination row with a slope.
+LIBYUV_API
 void ARGBAffineRow_C(const uint8* src_argb, int src_argb_stride,
                      uint8* dst_argb, const float* uv_dudv, int width) {
   // Render a row of pixels from source into a buffer.
@@ -1001,6 +1134,29 @@ void ARGBAffineRow_C(const uint8* src_argb, int src_argb_stride,
     uv[0] += uv_dudv[2];
     uv[1] += uv_dudv[3];
   }
+}
+
+// C version 2x2 -> 2x1.
+void ARGBInterpolateRow_C(uint8* dst_ptr, const uint8* src_ptr,
+                          ptrdiff_t src_stride,
+                          int dst_width, int source_y_fraction) {
+  int y1_fraction = source_y_fraction;
+  int y0_fraction = 256 - y1_fraction;
+  const uint8* src_ptr1 = src_ptr + src_stride;
+  uint8* end = dst_ptr + (dst_width << 2);
+  do {
+    dst_ptr[0] = (src_ptr[0] * y0_fraction + src_ptr1[0] * y1_fraction) >> 8;
+    dst_ptr[1] = (src_ptr[1] * y0_fraction + src_ptr1[1] * y1_fraction) >> 8;
+    dst_ptr[2] = (src_ptr[2] * y0_fraction + src_ptr1[2] * y1_fraction) >> 8;
+    dst_ptr[3] = (src_ptr[3] * y0_fraction + src_ptr1[3] * y1_fraction) >> 8;
+    dst_ptr[4] = (src_ptr[4] * y0_fraction + src_ptr1[4] * y1_fraction) >> 8;
+    dst_ptr[5] = (src_ptr[5] * y0_fraction + src_ptr1[5] * y1_fraction) >> 8;
+    dst_ptr[6] = (src_ptr[6] * y0_fraction + src_ptr1[6] * y1_fraction) >> 8;
+    dst_ptr[7] = (src_ptr[7] * y0_fraction + src_ptr1[7] * y1_fraction) >> 8;
+    src_ptr += 8;
+    src_ptr1 += 8;
+    dst_ptr += 8;
+  } while (dst_ptr < end);
 }
 
 #ifdef __cplusplus

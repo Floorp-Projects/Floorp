@@ -32,7 +32,7 @@
 {
   'direct_dependent_settings': {
     'variables': {
-      'additional_src_dirs': ['<(SHARED_INTERMEDIATE_DIR)/<(package_name)/aidl/'],
+      'generated_src_dirs': ['<(SHARED_INTERMEDIATE_DIR)/<(package_name)/aidl/'],
     },
   },
   'rules': [

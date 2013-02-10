@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "source/row.h"
+#include "libyuv/row.h"
 
 #include "libyuv/basic_types.h"
 
@@ -98,6 +98,16 @@ CONST uvec8 kShuffleMaskBGRAToARGB = {
   3u, 2u, 1u, 0u, 7u, 6u, 5u, 4u, 11u, 10u, 9u, 8u, 15u, 14u, 13u, 12u
 };
 
+// Shuffle table for converting RGBA to ARGB.
+CONST uvec8 kShuffleMaskRGBAToARGB = {
+  1u, 2u, 3u, 0u, 5u, 6u, 7u, 4u, 9u, 10u, 11u, 8u, 13u, 14u, 15u, 12u
+};
+
+// Shuffle table for converting ARGB to RGBA.
+CONST uvec8 kShuffleMaskARGBToRGBA = {
+  3u, 0u, 1u, 2u, 7u, 4u, 5u, 6u, 11u, 8u, 9u, 10u, 15u, 12u, 13u, 14u
+};
+
 // Shuffle table for converting ARGB to RGB24.
 CONST uvec8 kShuffleMaskARGBToRGB24 = {
   0u, 1u, 2u, 4u, 5u, 6u, 8u, 9u, 10u, 12u, 13u, 14u, 128u, 128u, 128u, 128u
@@ -178,6 +188,54 @@ void BGRAToARGBRow_SSSE3(const uint8* src_bgra, uint8* dst_argb, int pix) {
     "+r"(dst_argb),  // %1
     "+r"(pix)        // %2
   : "m"(kShuffleMaskBGRAToARGB)  // %3
+  : "memory", "cc"
+#if defined(__SSE2__)
+    , "xmm0", "xmm5"
+#endif
+  );
+}
+
+void RGBAToARGBRow_SSSE3(const uint8* src_rgba, uint8* dst_argb, int pix) {
+  asm volatile (
+    "movdqa    %3,%%xmm5                       \n"
+    "sub       %0,%1                           \n"
+    ".p2align  4                               \n"
+  "1:                                          \n"
+    "movdqa    (%0),%%xmm0                     \n"
+    "pshufb    %%xmm5,%%xmm0                   \n"
+    "sub       $0x4,%2                         \n"
+    "movdqa    %%xmm0,(%0,%1,1)                \n"
+    "lea       0x10(%0),%0                     \n"
+    "jg        1b                              \n"
+
+  : "+r"(src_rgba),  // %0
+    "+r"(dst_argb),  // %1
+    "+r"(pix)        // %2
+  : "m"(kShuffleMaskRGBAToARGB)  // %3
+  : "memory", "cc"
+#if defined(__SSE2__)
+    , "xmm0", "xmm5"
+#endif
+  );
+}
+
+void ARGBToRGBARow_SSSE3(const uint8* src_argb, uint8* dst_rgba, int pix) {
+  asm volatile (
+    "movdqa    %3,%%xmm5                       \n"
+    "sub       %0,%1                           \n"
+    ".p2align  4                               \n"
+  "1:                                          \n"
+    "movdqa    (%0),%%xmm0                     \n"
+    "pshufb    %%xmm5,%%xmm0                   \n"
+    "sub       $0x4,%2                         \n"
+    "movdqa    %%xmm0,(%0,%1,1)                \n"
+    "lea       0x10(%0),%0                     \n"
+    "jg        1b                              \n"
+
+  : "+r"(src_argb),  // %0
+    "+r"(dst_rgba),  // %1
+    "+r"(pix)        // %2
+  : "m"(kShuffleMaskARGBToRGBA)  // %3
   : "memory", "cc"
 #if defined(__SSE2__)
     , "xmm0", "xmm5"
@@ -1285,7 +1343,7 @@ struct {
 #define READNV12                                                               \
     "movq       (%[uv_buf]),%%xmm0             \n"                             \
     "lea        0x8(%[uv_buf]),%[uv_buf]       \n"                             \
-    "punpcklbw  %%xmm1,%%xmm0                  \n"                             \
+    "punpcklwd  %%xmm0,%%xmm0                  \n"                             \
 
 // Convert 8 pixels: 8 UV and 8 Y
 #define YUVTORGB                                                               \
@@ -2114,7 +2172,7 @@ void YUY2ToYRow_SSE2(const uint8* src_yuy2, uint8* dst_y, int pix) {
 }
 
 void YUY2ToUVRow_SSE2(const uint8* src_yuy2, int stride_yuy2,
-                      uint8* dst_u, uint8* dst_y, int pix) {
+                      uint8* dst_u, uint8* dst_v, int pix) {
   asm volatile (
     "pcmpeqb   %%xmm5,%%xmm5                   \n"
     "psrlw     $0x8,%%xmm5                     \n"
@@ -2143,7 +2201,7 @@ void YUY2ToUVRow_SSE2(const uint8* src_yuy2, int stride_yuy2,
     "jg        1b                              \n"
   : "+r"(src_yuy2),    // %0
     "+r"(dst_u),       // %1
-    "+r"(dst_y),       // %2
+    "+r"(dst_v),       // %2
     "+r"(pix)          // %3
   : "r"(static_cast<intptr_t>(stride_yuy2))  // %4
   : "memory", "cc"
@@ -2153,6 +2211,41 @@ void YUY2ToUVRow_SSE2(const uint8* src_yuy2, int stride_yuy2,
   );
 }
 
+void YUY2ToUV422Row_SSE2(const uint8* src_yuy2,
+                         uint8* dst_u, uint8* dst_v, int pix) {
+  asm volatile (
+    "pcmpeqb   %%xmm5,%%xmm5                   \n"
+    "psrlw     $0x8,%%xmm5                     \n"
+    "sub       %1,%2                           \n"
+    ".p2align  4                               \n"
+  "1:                                          \n"
+    "movdqa    (%0),%%xmm0                     \n"
+    "movdqa    0x10(%0),%%xmm1                 \n"
+    "lea       0x20(%0),%0                     \n"
+    "psrlw     $0x8,%%xmm0                     \n"
+    "psrlw     $0x8,%%xmm1                     \n"
+    "packuswb  %%xmm1,%%xmm0                   \n"
+    "movdqa    %%xmm0,%%xmm1                   \n"
+    "pand      %%xmm5,%%xmm0                   \n"
+    "packuswb  %%xmm0,%%xmm0                   \n"
+    "psrlw     $0x8,%%xmm1                     \n"
+    "packuswb  %%xmm1,%%xmm1                   \n"
+    "movq      %%xmm0,(%1)                     \n"
+    "movq      %%xmm1,(%1,%2)                  \n"
+    "lea       0x8(%1),%1                      \n"
+    "sub       $0x10,%3                        \n"
+    "jg        1b                              \n"
+  : "+r"(src_yuy2),    // %0
+    "+r"(dst_u),       // %1
+    "+r"(dst_v),       // %2
+    "+r"(pix)          // %3
+  :
+  : "memory", "cc"
+#if defined(__SSE2__)
+    , "xmm0", "xmm1", "xmm5"
+#endif
+  );
+}
 
 void YUY2ToYRow_Unaligned_SSE2(const uint8* src_yuy2,
                                uint8* dst_y, int pix) {
@@ -2184,8 +2277,7 @@ void YUY2ToYRow_Unaligned_SSE2(const uint8* src_yuy2,
 
 void YUY2ToUVRow_Unaligned_SSE2(const uint8* src_yuy2,
                                 int stride_yuy2,
-                                uint8* dst_u, uint8* dst_y,
-                                int pix) {
+                                uint8* dst_u, uint8* dst_v, int pix) {
   asm volatile (
     "pcmpeqb   %%xmm5,%%xmm5                   \n"
     "psrlw     $0x8,%%xmm5                     \n"
@@ -2214,12 +2306,48 @@ void YUY2ToUVRow_Unaligned_SSE2(const uint8* src_yuy2,
     "jg        1b                              \n"
   : "+r"(src_yuy2),    // %0
     "+r"(dst_u),       // %1
-    "+r"(dst_y),       // %2
+    "+r"(dst_v),       // %2
     "+r"(pix)          // %3
   : "r"(static_cast<intptr_t>(stride_yuy2))  // %4
   : "memory", "cc"
 #if defined(__SSE2__)
     , "xmm0", "xmm1", "xmm2", "xmm3", "xmm5"
+#endif
+  );
+}
+
+void YUY2ToUV422Row_Unaligned_SSE2(const uint8* src_yuy2,
+                                   uint8* dst_u, uint8* dst_v, int pix) {
+  asm volatile (
+    "pcmpeqb   %%xmm5,%%xmm5                   \n"
+    "psrlw     $0x8,%%xmm5                     \n"
+    "sub       %1,%2                           \n"
+    ".p2align  4                               \n"
+  "1:                                          \n"
+    "movdqu    (%0),%%xmm0                     \n"
+    "movdqu    0x10(%0),%%xmm1                 \n"
+    "lea       0x20(%0),%0                     \n"
+    "psrlw     $0x8,%%xmm0                     \n"
+    "psrlw     $0x8,%%xmm1                     \n"
+    "packuswb  %%xmm1,%%xmm0                   \n"
+    "movdqa    %%xmm0,%%xmm1                   \n"
+    "pand      %%xmm5,%%xmm0                   \n"
+    "packuswb  %%xmm0,%%xmm0                   \n"
+    "psrlw     $0x8,%%xmm1                     \n"
+    "packuswb  %%xmm1,%%xmm1                   \n"
+    "movq      %%xmm0,(%1)                     \n"
+    "movq      %%xmm1,(%1,%2)                  \n"
+    "lea       0x8(%1),%1                      \n"
+    "sub       $0x10,%3                        \n"
+    "jg        1b                              \n"
+  : "+r"(src_yuy2),    // %0
+    "+r"(dst_u),       // %1
+    "+r"(dst_v),       // %2
+    "+r"(pix)          // %3
+  :
+  : "memory", "cc"
+#if defined(__SSE2__)
+    , "xmm0", "xmm1", "xmm5"
 #endif
   );
 }
@@ -2250,7 +2378,7 @@ void UYVYToYRow_SSE2(const uint8* src_uyvy, uint8* dst_y, int pix) {
 }
 
 void UYVYToUVRow_SSE2(const uint8* src_uyvy, int stride_uyvy,
-                      uint8* dst_u, uint8* dst_y, int pix) {
+                      uint8* dst_u, uint8* dst_v, int pix) {
   asm volatile (
     "pcmpeqb   %%xmm5,%%xmm5                   \n"
     "psrlw     $0x8,%%xmm5                     \n"
@@ -2279,12 +2407,48 @@ void UYVYToUVRow_SSE2(const uint8* src_uyvy, int stride_uyvy,
     "jg        1b                              \n"
   : "+r"(src_uyvy),    // %0
     "+r"(dst_u),       // %1
-    "+r"(dst_y),       // %2
+    "+r"(dst_v),       // %2
     "+r"(pix)          // %3
   : "r"(static_cast<intptr_t>(stride_uyvy))  // %4
   : "memory", "cc"
 #if defined(__SSE2__)
     , "xmm0", "xmm1", "xmm2", "xmm3", "xmm5"
+#endif
+  );
+}
+
+void UYVYToUV422Row_SSE2(const uint8* src_uyvy,
+                         uint8* dst_u, uint8* dst_v, int pix) {
+  asm volatile (
+    "pcmpeqb   %%xmm5,%%xmm5                   \n"
+    "psrlw     $0x8,%%xmm5                     \n"
+    "sub       %1,%2                           \n"
+    ".p2align  4                               \n"
+  "1:                                          \n"
+    "movdqa    (%0),%%xmm0                     \n"
+    "movdqa    0x10(%0),%%xmm1                 \n"
+    "lea       0x20(%0),%0                     \n"
+    "pand      %%xmm5,%%xmm0                   \n"
+    "pand      %%xmm5,%%xmm1                   \n"
+    "packuswb  %%xmm1,%%xmm0                   \n"
+    "movdqa    %%xmm0,%%xmm1                   \n"
+    "pand      %%xmm5,%%xmm0                   \n"
+    "packuswb  %%xmm0,%%xmm0                   \n"
+    "psrlw     $0x8,%%xmm1                     \n"
+    "packuswb  %%xmm1,%%xmm1                   \n"
+    "movq      %%xmm0,(%1)                     \n"
+    "movq      %%xmm1,(%1,%2)                  \n"
+    "lea       0x8(%1),%1                      \n"
+    "sub       $0x10,%3                        \n"
+    "jg        1b                              \n"
+  : "+r"(src_uyvy),    // %0
+    "+r"(dst_u),       // %1
+    "+r"(dst_v),       // %2
+    "+r"(pix)          // %3
+  :
+  : "memory", "cc"
+#if defined(__SSE2__)
+    , "xmm0", "xmm1", "xmm5"
 #endif
   );
 }
@@ -2316,7 +2480,7 @@ void UYVYToYRow_Unaligned_SSE2(const uint8* src_uyvy,
 }
 
 void UYVYToUVRow_Unaligned_SSE2(const uint8* src_uyvy, int stride_uyvy,
-                                uint8* dst_u, uint8* dst_y, int pix) {
+                                uint8* dst_u, uint8* dst_v, int pix) {
   asm volatile (
     "pcmpeqb   %%xmm5,%%xmm5                   \n"
     "psrlw     $0x8,%%xmm5                     \n"
@@ -2345,12 +2509,48 @@ void UYVYToUVRow_Unaligned_SSE2(const uint8* src_uyvy, int stride_uyvy,
     "jg        1b                              \n"
   : "+r"(src_uyvy),    // %0
     "+r"(dst_u),       // %1
-    "+r"(dst_y),       // %2
+    "+r"(dst_v),       // %2
     "+r"(pix)          // %3
   : "r"(static_cast<intptr_t>(stride_uyvy))  // %4
   : "memory", "cc"
 #if defined(__SSE2__)
     , "xmm0", "xmm1", "xmm2", "xmm3", "xmm5"
+#endif
+  );
+}
+
+void UYVYToUV422Row_Unaligned_SSE2(const uint8* src_uyvy,
+                                   uint8* dst_u, uint8* dst_v, int pix) {
+  asm volatile (
+    "pcmpeqb   %%xmm5,%%xmm5                   \n"
+    "psrlw     $0x8,%%xmm5                     \n"
+    "sub       %1,%2                           \n"
+    ".p2align  4                               \n"
+  "1:                                          \n"
+    "movdqu    (%0),%%xmm0                     \n"
+    "movdqu    0x10(%0),%%xmm1                 \n"
+    "lea       0x20(%0),%0                     \n"
+    "pand      %%xmm5,%%xmm0                   \n"
+    "pand      %%xmm5,%%xmm1                   \n"
+    "packuswb  %%xmm1,%%xmm0                   \n"
+    "movdqa    %%xmm0,%%xmm1                   \n"
+    "pand      %%xmm5,%%xmm0                   \n"
+    "packuswb  %%xmm0,%%xmm0                   \n"
+    "psrlw     $0x8,%%xmm1                     \n"
+    "packuswb  %%xmm1,%%xmm1                   \n"
+    "movq      %%xmm0,(%1)                     \n"
+    "movq      %%xmm1,(%1,%2)                  \n"
+    "lea       0x8(%1),%1                      \n"
+    "sub       $0x10,%3                        \n"
+    "jg        1b                              \n"
+  : "+r"(src_uyvy),    // %0
+    "+r"(dst_u),       // %1
+    "+r"(dst_v),       // %2
+    "+r"(pix)          // %3
+  :
+  : "memory", "cc"
+#if defined(__SSE2__)
+    , "xmm0", "xmm1", "xmm5"
 #endif
   );
 }
@@ -2540,8 +2740,39 @@ void ARGBBlendRow_SSSE3(const uint8* src_argb0, const uint8* src_argb1,
   "19:                                         \n"
     "add       $1-4,%3                         \n"
     "jl        49f                             \n"
+    "test      $0xf,%0                         \n"
+    "jne       41f                             \n"
+    "test      $0xf,%1                         \n"
+    "jne       41f                             \n"
 
     // 4 pixel loop.
+    ".p2align  2                               \n"
+  "40:                                         \n"
+    "movdqa    (%0),%%xmm3                     \n"
+    "lea       0x10(%0),%0                     \n"
+    "movdqa    %%xmm3,%%xmm0                   \n"
+    "pxor      %%xmm4,%%xmm3                   \n"
+    "movdqa    (%1),%%xmm2                     \n"
+    "pshufb    %4,%%xmm3                       \n"
+    "pand      %%xmm6,%%xmm2                   \n"
+    "paddw     %%xmm7,%%xmm3                   \n"
+    "pmullw    %%xmm3,%%xmm2                   \n"
+    "movdqa    (%1),%%xmm1                     \n"
+    "lea       0x10(%1),%1                     \n"
+    "psrlw     $0x8,%%xmm1                     \n"
+    "por       %%xmm4,%%xmm0                   \n"
+    "pmullw    %%xmm3,%%xmm1                   \n"
+    "psrlw     $0x8,%%xmm2                     \n"
+    "paddusb   %%xmm2,%%xmm0                   \n"
+    "pand      %%xmm5,%%xmm1                   \n"
+    "paddusb   %%xmm1,%%xmm0                   \n"
+    "sub       $0x4,%3                         \n"
+    "movdqa    %%xmm0,(%2)                     \n"
+    "lea       0x10(%2),%2                     \n"
+    "jge       40b                             \n"
+    "jmp       49f                             \n"
+
+    // 4 pixel unaligned loop.
     ".p2align  2                               \n"
   "41:                                         \n"
     "movdqu    (%0),%%xmm3                     \n"
@@ -3220,61 +3451,95 @@ void ARGBShadeRow_SSE2(const uint8* src_argb, uint8* dst_argb, int width,
 #endif  // HAS_ARGBSHADE_SSE2
 
 #ifdef HAS_ARGBAFFINEROW_SSE2
+// TODO(fbarchard): Find 64 bit way to avoid masking.
+// TODO(fbarchard): Investigate why 4 pixels is slower than 2 on Core2.
 // Copy ARGB pixels from source image with slope to a row of destination.
+// Caveat - in 64 bit, movd is used with 64 bit gpr due to Mac gcc producing
+// an error if movq is used.  movd  %%xmm0,%1
+
+LIBYUV_API
 void ARGBAffineRow_SSE2(const uint8* src_argb, int src_argb_stride,
                         uint8* dst_argb, const float* uv_dudv, int width) {
   intptr_t src_argb_stride_temp = src_argb_stride;
+  intptr_t temp = 0;
   asm volatile (
     "movq      (%3),%%xmm2                     \n"
-    "movq      0x8(%3),%%xmm3                  \n"
+    "movq      0x8(%3),%%xmm7                  \n"
     "shl       $0x10,%1                        \n"
     "add       $0x4,%1                         \n"
-    "movd      %1,%%xmm4                       \n"
-    "xor       %1,%1                           \n"  // cleanse upper bits.
-    "sub       $0x2,%4                         \n"
-    "jl        29f                             \n"
+    "movd      %1,%%xmm5                       \n"
+    "sub       $0x4,%4                         \n"
+    "jl        49f                             \n"
+
+    "pshufd    $0x44,%%xmm7,%%xmm7             \n"
+    "pshufd    $0x0,%%xmm5,%%xmm5              \n"
     "movdqa    %%xmm2,%%xmm0                   \n"
-    "addps     %%xmm3,%%xmm0                   \n"
+    "addps     %%xmm7,%%xmm0                   \n"
     "movlhps   %%xmm0,%%xmm2                   \n"
-    "pshufd    $0x0,%%xmm4,%%xmm4              \n"
-    "movlhps   %%xmm3,%%xmm3                   \n"
-    "addps     %%xmm3,%%xmm3                   \n"
-    "pshufd    $0x0,%%xmm4,%%xmm4              \n"
+    "movdqa    %%xmm7,%%xmm4                   \n"
+    "addps     %%xmm4,%%xmm4                   \n"
+    "movdqa    %%xmm2,%%xmm3                   \n"
+    "addps     %%xmm4,%%xmm3                   \n"
+    "addps     %%xmm4,%%xmm4                   \n"
 
-  // 2 pixel loop                              \n"
-    ".p2align  2                               \n"
-  "20:                                         \n"
-    "cvttps2dq %%xmm2,%%xmm1                   \n"
-    "packssdw  %%xmm1,%%xmm1                   \n"
-    "pmaddwd   %%xmm4,%%xmm1                   \n"
-    "addps     %%xmm3,%%xmm2                   \n"
-    "movd      %%xmm1,%1                       \n"
+  // 4 pixel loop                              \n"
+    ".p2align  4                               \n"
+  "40:                                         \n"
+    "cvttps2dq %%xmm2,%%xmm0                   \n"
+    "cvttps2dq %%xmm3,%%xmm1                   \n"
+    "packssdw  %%xmm1,%%xmm0                   \n"
+    "pmaddwd   %%xmm5,%%xmm0                   \n"
+#if defined(__x86_64__)
+    "movd      %%xmm0,%1                       \n"
+    "mov       %1,%5                           \n"
     "and       $0x0fffffff,%1                  \n"
-    "movdqa    %%xmm1,%%xmm5                   \n"
-    "pshufd    $0x55,%%xmm5,%%xmm5             \n"
+    "shr       $32,%5                          \n"
+    "pshufd    $0xEE,%%xmm0,%%xmm0             \n"
+#else
+    "movd      %%xmm0,%1                       \n"
+    "pshufd    $0x39,%%xmm0,%%xmm0             \n"
+    "movd      %%xmm0,%5                       \n"
+    "pshufd    $0x39,%%xmm0,%%xmm0             \n"
+#endif
+    "movd      (%0,%1,1),%%xmm1                \n"
+    "movd      (%0,%5,1),%%xmm6                \n"
+    "punpckldq %%xmm6,%%xmm1                   \n"
+    "addps     %%xmm4,%%xmm2                   \n"
+    "movq      %%xmm1,(%2)                     \n"
+#if defined(__x86_64__)
+    "movd      %%xmm0,%1                       \n"
+    "mov       %1,%5                           \n"
+    "and       $0x0fffffff,%1                  \n"
+    "shr       $32,%5                          \n"
+#else
+    "movd      %%xmm0,%1                       \n"
+    "pshufd    $0x39,%%xmm0,%%xmm0             \n"
+    "movd      %%xmm0,%5                       \n"
+#endif
     "movd      (%0,%1,1),%%xmm0                \n"
-    "movd      %%xmm5,%1                       \n"
-    "and       $0x0fffffff,%1                  \n"
-    "movd      (%0,%1,1),%%xmm5                \n"
-    "punpckldq %%xmm5,%%xmm0                   \n"
-    "sub       $0x2,%4                         \n"
-    "movq      %%xmm0,(%2)                     \n"
-    "lea       0x8(%2),%2                      \n"
-    "jge       20b                             \n"
+    "movd      (%0,%5,1),%%xmm6                \n"
+    "punpckldq %%xmm6,%%xmm0                   \n"
+    "addps     %%xmm4,%%xmm3                   \n"
+    "sub       $0x4,%4                         \n"
+    "movq      %%xmm0,0x08(%2)                 \n"
+    "lea       0x10(%2),%2                     \n"
+    "jge       40b                             \n"
 
-  "29:                                         \n"
-    "add       $0x1,%4                         \n"
+  "49:                                         \n"
+    "add       $0x3,%4                         \n"
     "jl        19f                             \n"
 
   // 1 pixel loop                              \n"
-    ".p2align  2                               \n"
+    ".p2align  4                               \n"
   "10:                                         \n"
-    "cvttps2dq %%xmm2,%%xmm1                   \n"
-    "packssdw  %%xmm1,%%xmm1                   \n"
-    "pmaddwd   %%xmm4,%%xmm1                   \n"
-    "addps     %%xmm3,%%xmm2                   \n"
-    "movd      %%xmm1,%1                       \n"
+    "cvttps2dq %%xmm2,%%xmm0                   \n"
+    "packssdw  %%xmm0,%%xmm0                   \n"
+    "pmaddwd   %%xmm5,%%xmm0                   \n"
+    "addps     %%xmm7,%%xmm2                   \n"
+    "movd      %%xmm0,%1                       \n"
+#if defined(__x86_64__)
     "and       $0x0fffffff,%1                  \n"
+#endif
     "movd      (%0,%1,1),%%xmm0                \n"
     "sub       $0x1,%4                         \n"
     "movd      %%xmm0,(%2)                     \n"
@@ -3285,15 +3550,81 @@ void ARGBAffineRow_SSE2(const uint8* src_argb, int src_argb_stride,
     "+r"(src_argb_stride_temp),  // %1
     "+r"(dst_argb),  // %2
     "+r"(uv_dudv),   // %3
-    "+rm"(width)     // %4
+    "+rm"(width),    // %4
+    "+r"(temp)   // %5
   :
   : "memory", "cc"
 #if defined(__SSE2__)
-    , "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5"
+    , "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"
 #endif
   );
 }
 #endif  // HAS_ARGBAFFINEROW_SSE2
+
+// Bilinear row filtering combines 4x2 -> 4x1. SSSE3 version
+void ARGBInterpolateRow_SSSE3(uint8* dst_ptr, const uint8* src_ptr,
+                              ptrdiff_t src_stride, int dst_width,
+                              int source_y_fraction) {
+  asm volatile (
+    "sub       %1,%0                           \n"
+    "shr       %3                              \n"
+    "cmp       $0x0,%3                         \n"
+    "je        2f                              \n"
+    "cmp       $0x40,%3                        \n"
+    "je        3f                              \n"
+    "movd      %3,%%xmm0                       \n"
+    "neg       %3                              \n"
+    "add       $0x80,%3                        \n"
+    "movd      %3,%%xmm5                       \n"
+    "punpcklbw %%xmm0,%%xmm5                   \n"
+    "punpcklwd %%xmm5,%%xmm5                   \n"
+    "pshufd    $0x0,%%xmm5,%%xmm5              \n"
+    ".p2align  4                               \n"
+  "1:                                          \n"
+    "movdqa    (%1),%%xmm0                     \n"
+    "movdqa    (%1,%4,1),%%xmm2                \n"
+    "movdqa    %%xmm0,%%xmm1                   \n"
+    "punpcklbw %%xmm2,%%xmm0                   \n"
+    "punpckhbw %%xmm2,%%xmm1                   \n"
+    "pmaddubsw %%xmm5,%%xmm0                   \n"
+    "pmaddubsw %%xmm5,%%xmm1                   \n"
+    "psrlw     $0x7,%%xmm0                     \n"
+    "psrlw     $0x7,%%xmm1                     \n"
+    "packuswb  %%xmm1,%%xmm0                   \n"
+    "sub       $0x4,%2                         \n"
+    "movdqa    %%xmm0,(%1,%0,1)                \n"
+    "lea       0x10(%1),%1                     \n"
+    "jg        1b                              \n"
+    "jmp       4f                              \n"
+    ".p2align  4                               \n"
+  "2:                                          \n"
+    "movdqa    (%1),%%xmm0                     \n"
+    "sub       $0x4,%2                         \n"
+    "movdqa    %%xmm0,(%1,%0,1)                \n"
+    "lea       0x10(%1),%1                     \n"
+    "jg        2b                              \n"
+    "jmp       4f                              \n"
+    ".p2align  4                               \n"
+  "3:                                          \n"
+    "movdqa    (%1),%%xmm0                     \n"
+    "pavgb     (%1,%4,1),%%xmm0                \n"
+    "sub       $0x4,%2                         \n"
+    "movdqa    %%xmm0,(%1,%0,1)                \n"
+    "lea       0x10(%1),%1                     \n"
+    "jg        3b                              \n"
+  "4:                                          \n"
+    ".p2align  4                               \n"
+  : "+r"(dst_ptr),     // %0
+    "+r"(src_ptr),     // %1
+    "+r"(dst_width),   // %2
+    "+r"(source_y_fraction)  // %3
+  : "r"(static_cast<intptr_t>(src_stride))  // %4
+  : "memory", "cc"
+#if defined(__SSE2__)
+    , "xmm0", "xmm1", "xmm2", "xmm5"
+#endif
+  );
+}
 
 #endif  // defined(__x86_64__) || defined(__i386__)
 

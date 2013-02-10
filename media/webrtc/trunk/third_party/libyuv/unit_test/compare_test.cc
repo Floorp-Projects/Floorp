@@ -12,7 +12,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "unit_test/unit_test.h"
+#include "../unit_test/unit_test.h"
 #include "libyuv/basic_types.h"
 #include "libyuv/compare.h"
 #include "libyuv/cpu_id.h"
