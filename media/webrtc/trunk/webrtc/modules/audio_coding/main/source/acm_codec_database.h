@@ -173,9 +173,6 @@ class ACMCodecDB {
 #ifndef WEBRTC_CODEC_GSMFR
   enum {kGSMFR = -1};
 #endif
-#ifndef WEBRTC_CODEC_OPUS
-  enum {kOpus = -1};
-#endif
 #ifndef WEBRTC_CODEC_SPEEX
   enum {kSPEEX8 = -1};
   enum {kSPEEX16 = -1};

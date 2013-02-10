@@ -32,12 +32,23 @@
       'webrtc_root%': '<(webrtc_root)',
 
       'webrtc_vp8_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp8',
+      'include_g711%': 1,
+      'include_g722%': 1,
+      'include_ilbc%': 1,
       'include_opus%': 1,
+      'include_isac%': 1,
+      'include_pcm16b%': 1,
     },
     'build_with_chromium%': '<(build_with_chromium)',
     'webrtc_root%': '<(webrtc_root)',
     'webrtc_vp8_dir%': '<(webrtc_vp8_dir)',
+
+    'include_g711%': '<(include_g711)',
+    'include_g722%': '<(include_g722)',
+    'include_ilbc%': '<(include_ilbc)',
     'include_opus%': '<(include_opus)',
+    'include_isac%': '<(include_isac)',
+    'include_pcm16b%': '<(include_pcm16b)',
 
     # The Chromium common.gypi we use treats all gyp files without
     # chromium_code==1 as third party code. This disables many of the
@@ -135,7 +146,7 @@
     'defines': [
       # TODO(leozwang): Run this as a gclient hook rather than at build-time:
       # http://code.google.com/p/webrtc/issues/detail?id=687
-      'WEBRTC_SVNREVISION="Unavailable(issue687)"',
+      'WEBRTC_SVNREVISION="\\\"Unavailable(issue687)\\\""',
       #'WEBRTC_SVNREVISION="<!(python <(webrtc_root)/build/version.py)"',
     ],
     'conditions': [
@@ -168,6 +179,12 @@
               '-Woverloaded-virtual',
             ],
           }],
+        ],
+      }],
+      ['build_with_mozilla==1', {
+        'defines': [
+          # Changes settings for Mozilla build.
+          'WEBRTC_MOZILLA_BUILD',
         ],
       }],
       ['build_with_mozilla==1', {
@@ -220,6 +237,7 @@
       ['OS=="win"', {
         'defines': [
           'WEBRTC_WIN',
+	  'WEBRTC_EXPORT',
         ],
         # TODO(andrew): enable all warnings when possible.
         # 4389: Signed/unsigned mismatch.

@@ -48,7 +48,7 @@ VP8EncoderImpl::VP8EncoderImpl()
       rc_max_intra_target_(0),
       token_partitions_(VP8_ONE_TOKENPARTITION),
       rps_(new ReferencePictureSelection),
-#if WEBRTC_LIBVPX_VERSION >= 971
+#if WEBRTC_LIBVPX_VERSION >= 971 && WEBRTC_LIBVPX_TEMPORAL_LAYERS != 0
       temporal_layers_(NULL),
 #endif
       encoder_(NULL),
@@ -84,7 +84,7 @@ int VP8EncoderImpl::Release() {
     vpx_img_free(raw_);
     raw_ = NULL;
   }
-#if WEBRTC_LIBVPX_VERSION >= 971
+#if WEBRTC_LIBVPX_VERSION >= 971 && WEBRTC_LIBVPX_TEMPORAL_LAYERS != 0
   if (temporal_layers_ != NULL) {
     delete temporal_layers_;
     temporal_layers_ = NULL;
@@ -111,7 +111,7 @@ int VP8EncoderImpl::SetRates(uint32_t new_bitrate_kbit,
   }
   config_->rc_target_bitrate = new_bitrate_kbit;  // in kbit/s
 
-#if WEBRTC_LIBVPX_VERSION >= 971
+#if WEBRTC_LIBVPX_VERSION >= 971 && WEBRTC_LIBVPX_TEMPORAL_LAYERS != 0
   temporal_layers_->ConfigureBitrates(new_bitrate_kbit, config_);
 #endif
   codec_.maxFramerate = new_framerate;
@@ -158,7 +158,7 @@ int VP8EncoderImpl::InitEncode(const VideoCodec* inst,
 
   codec_ = *inst;
 
-#if WEBRTC_LIBVPX_VERSION >= 971
+#if WEBRTC_LIBVPX_VERSION >= 971 && WEBRTC_LIBVPX_TEMPORAL_LAYERS != 0
   int num_temporal_layers = inst->codecSpecific.VP8.numberOfTemporalLayers > 1 ?
       inst->codecSpecific.VP8.numberOfTemporalLayers : 1;
   assert(temporal_layers_ == NULL);
@@ -188,7 +188,7 @@ int VP8EncoderImpl::InitEncode(const VideoCodec* inst,
   config_->g_h = codec_.height;
   config_->rc_target_bitrate = inst->startBitrate;  // in kbit/s
 
-#if WEBRTC_LIBVPX_VERSION >= 971
+#if WEBRTC_LIBVPX_VERSION >= 971 && WEBRTC_LIBVPX_TEMPORAL_LAYERS != 0
   temporal_layers_->ConfigureBitrates(inst->startBitrate, config_);
 #endif
   // setting the time base of the codec
@@ -199,7 +199,7 @@ int VP8EncoderImpl::InitEncode(const VideoCodec* inst,
   switch (inst->codecSpecific.VP8.resilience) {
     case kResilienceOff:
       config_->g_error_resilient = 0;
-#if WEBRTC_LIBVPX_VERSION >= 971
+#if WEBRTC_LIBVPX_VERSION >= 971 && WEBRTC_LIBVPX_TEMPORAL_LAYERS != 0
       if (num_temporal_layers > 1) {
         // Must be on for temporal layers (i.e., |num_temporal_layers| > 1).
         config_->g_error_resilient = 1;
@@ -361,7 +361,7 @@ int VP8EncoderImpl::Encode(const I420VideoFrame& input_image,
   raw_->stride[VPX_PLANE_V] = input_image.stride(kVPlane);
 
   int flags = 0;
-#if WEBRTC_LIBVPX_VERSION >= 971
+#if WEBRTC_LIBVPX_VERSION >= 971 && WEBRTC_LIBVPX_TEMPORAL_LAYERS != 0
   flags |= temporal_layers_->EncodeFlags();
 #endif
   bool send_keyframe = (frame_type == kKeyFrame);
@@ -441,7 +441,7 @@ void VP8EncoderImpl::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
   vp8Info->simulcastIdx = 0;
   vp8Info->keyIdx = kNoKeyIdx;  // TODO(hlundin) populate this
   vp8Info->nonReference = (pkt.data.frame.flags & VPX_FRAME_IS_DROPPABLE) != 0;
-#if WEBRTC_LIBVPX_VERSION >= 971
+#if WEBRTC_LIBVPX_VERSION >= 971 && WEBRTC_LIBVPX_TEMPORAL_LAYERS != 0
   temporal_layers_->PopulateCodecSpecific(
       (pkt.data.frame.flags & VPX_FRAME_IS_KEY) ? true : false, vp8Info,
           timestamp);
@@ -687,7 +687,7 @@ int VP8DecoderImpl::Decode(const EncodedImage& input_image,
   }
 #endif
 
-#if (WEBRTC_LIBVPX_VERSION >= 971) && !defined(WEBRTC_ARCH_ARM)
+#if (WEBRTC_LIBVPX_VERSION >= 1000) && !defined(WEBRTC_ARCH_ARM)
   if (!mfqe_enabled_ && codec_specific_info &&
       codec_specific_info->codecSpecific.VP8.temporalIdx > 0) {
     // Enable MFQE if we are receiving layers.
