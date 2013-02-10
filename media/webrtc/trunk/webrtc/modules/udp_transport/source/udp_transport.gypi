@@ -71,6 +71,9 @@
           'cflags': [
             '-fno-strict-aliasing',
           ],
+          'cflags_mozilla': [
+            '-fno-strict-aliasing',
+          ],
         }],
         ['OS=="mac"', {
           'xcode_settings': {
