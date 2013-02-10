@@ -147,7 +147,7 @@ namespace {
 
 // Rule processing function
 typedef void (* RuleAppendFunc) (css::Rule* aRule, void* aData);
-static void AppendRuleToArray(css::Rule* aRule, void* aArray);
+static void AssignRuleToPointer(css::Rule* aRule, void* aPointer);
 static void AppendRuleToSheet(css::Rule* aRule, void* aParser);
 
 // Your basic top-down recursive descent style parser
@@ -191,7 +191,7 @@ public:
                      nsIURI*                 aSheetURL,
                      nsIURI*                 aBaseURL,
                      nsIPrincipal*           aSheetPrincipal,
-                     nsCOMArray<css::Rule>&  aResult);
+                     css::Rule**             aResult);
 
   nsresult ParseProperty(const nsCSSProperty aPropID,
                          const nsAString& aPropValue,
@@ -792,9 +792,10 @@ public:
   CSSParserImpl* mNextFree;
 };
 
-static void AppendRuleToArray(css::Rule* aRule, void* aArray)
+static void AssignRuleToPointer(css::Rule* aRule, void* aPointer)
 {
-  static_cast<nsCOMArray<css::Rule>*>(aArray)->AppendObject(aRule);
+  css::Rule **pointer = static_cast<css::Rule**>(aPointer);
+  NS_ADDREF(*pointer = aRule);
 }
 
 static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
@@ -1113,10 +1114,12 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
                          nsIURI*                 aSheetURI,
                          nsIURI*                 aBaseURI,
                          nsIPrincipal*           aSheetPrincipal,
-                         nsCOMArray<css::Rule>&  aResult)
+                         css::Rule**             aResult)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   NS_PRECONDITION(aBaseURI, "need base URI");
+
+  *aResult = nullptr;
 
   nsCSSScanner scanner(aRule, 0);
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aSheetURI);
@@ -1126,20 +1129,34 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
 
   nsCSSToken* tk = &mToken;
   // Get first non-whitespace token
+  nsresult rv = NS_OK;
   if (!GetToken(true)) {
     REPORT_UNEXPECTED(PEParseRuleWSOnly);
     OUTPUT_ERROR();
-  } else if (eCSSToken_AtKeyword == tk->mType) {
-    ParseAtRule(AppendRuleToArray, &aResult, false);
+    rv = NS_ERROR_DOM_SYNTAX_ERR;
+  } else {
+    if (eCSSToken_AtKeyword == tk->mType) {
+      // FIXME: perhaps aInsideBlock should be true when we are?
+      ParseAtRule(AssignRuleToPointer, aResult, false);
+    } else {
+      UngetToken();
+      ParseRuleSet(AssignRuleToPointer, aResult);
+    }
+
+    if (*aResult && GetToken(true)) {
+      // garbage after rule
+      REPORT_UNEXPECTED_TOKEN(PERuleTrailing);
+      NS_RELEASE(*aResult);
+    }
+
+    if (!*aResult) {
+      rv = NS_ERROR_DOM_SYNTAX_ERR;
+      OUTPUT_ERROR();
+    }
   }
-  else {
-    UngetToken();
-    ParseRuleSet(AppendRuleToArray, &aResult);
-  }
-  OUTPUT_ERROR();
+
   ReleaseScanner();
-  // XXX check for low-level errors
-  return NS_OK;
+  return rv;
 }
 
 // See Bug 723197
@@ -10348,7 +10365,7 @@ nsCSSParser::ParseRule(const nsAString&        aRule,
                        nsIURI*                 aSheetURI,
                        nsIURI*                 aBaseURI,
                        nsIPrincipal*           aSheetPrincipal,
-                       nsCOMArray<css::Rule>&  aResult)
+                       css::Rule**             aResult)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseRule(aRule, aSheetURI, aBaseURI, aSheetPrincipal, aResult);

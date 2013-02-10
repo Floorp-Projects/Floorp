@@ -107,6 +107,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_font_face_parser.html \
 		test_font_family_parsing.html \
 		test_garbage_at_end_of_declarations.html \
+		test_group_insertRule.html \
 		test_html_attribute_computed_values.html \
 		test_ident_escaping.html \
 		test_inherit_computation.html \
