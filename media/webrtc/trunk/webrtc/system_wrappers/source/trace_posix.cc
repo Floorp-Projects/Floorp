@@ -18,8 +18,6 @@
 #include <time.h>
 #ifdef WEBRTC_ANDROID
 #include <pthread.h>
-#else
-#include <iostream>
 #endif
 
 #if defined(_DEBUG)

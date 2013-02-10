@@ -90,10 +90,6 @@
 #include "webrtc/modules/audio_coding/codecs/opus/interface/opus_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_opus.h"
 #endif
-#ifdef WEBRTC_CODEC_OPUS
-    #include "acm_opus.h"
-    #include "opus_interface.h"
-#endif
 #ifdef WEBRTC_CODEC_SPEEX
 #include "speex_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_speex.h"
@@ -292,11 +288,6 @@ const ACMCodecDB::CodecSettings ACMCodecDB::codec_settings_[] = {
     // Mono and stereo.
     {1, {960}, 0, 2},
 #endif
-#ifdef WEBRTC_CODEC_OPUS
-  // Opus supports frames shorter than 10ms,
-  // but it doesn't help us to use them.
-  {1, {640}, 0, 2},
-#endif
 #ifdef WEBRTC_CODEC_SPEEX
     {3, {160, 320, 480}, 0, 1},
     {3, {320, 640, 960}, 0, 1},
@@ -385,9 +376,6 @@ const WebRtcNetEQDecoder ACMCodecDB::neteq_decoders_[] = {
 #ifdef WEBRTC_CODEC_OPUS
     // Mono and stereo.
     kDecoderOpus,
-#endif
-#ifdef WEBRTC_CODEC_OPUS
-  kDecoderOpus,
 #endif
 #ifdef WEBRTC_CODEC_SPEEX
     kDecoderSPEEX_8,

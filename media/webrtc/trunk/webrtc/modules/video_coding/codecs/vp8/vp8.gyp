@@ -39,24 +39,50 @@
           'dependencies': [
             '<(DEPTH)/third_party/libvpx/libvpx.gyp:libvpx',
           ],
-        }],
-        # TODO(mikhal): Investigate this mechanism for handling differences
-        # between the Chromium and standalone builds.
-        # http://code.google.com/p/webrtc/issues/detail?id=201
-        ['build_with_chromium==1', {
+          'conditions': [
+            # TODO(mikhal): Investigate this mechanism for handling differences
+            # between the Chromium and standalone builds.
+            # http://code.google.com/p/webrtc/issues/detail?id=201
+            ['build_with_chromium==1', {
+              'defines': [
+                'WEBRTC_LIBVPX_VERSION=960' # Bali
+              ],
+            }, {
+              'defines': [
+                'WEBRTC_LIBVPX_VERSION=971' # Cayuga
+              ],
+            }],
+            ['use_temporal_layers==1', {
+              'sources': [
+                'temporal_layers.h',
+                'temporal_layers.cc',
+              ],
+            }],
+          ],
+        },{
+	  'include_dirs': [
+            '$(DIST)/include',
+          ],
           'defines': [
-            'WEBRTC_LIBVPX_VERSION=960' # Bali
+            # This must be updated to match mozilla's version of libvpx
+            'WEBRTC_LIBVPX_VERSION=1000',
           ],
-        }, {
-          'defines': [
-            'WEBRTC_LIBVPX_VERSION=971' # Cayuga
+          'conditions': [
+            ['use_temporal_layers==1', {
+              'defines': [
+                'WEBRTC_LIBVPX_TEMPORAL_LAYERS=1'
+              ],
+            },{
+              'defines': [
+                'WEBRTC_LIBVPX_TEMPORAL_LAYERS=0'
+              ],
+            }],
           ],
-        }],
-        ['use_temporal_layers==1', {
-          'sources': [
-            'temporal_layers.h',
-            'temporal_layers.cc',
-          ],
+          'link_settings': {
+            'libraries': [
+              '$(LIBVPX_OBJ)/libvpx.a',
+            ],
+          },
         }],
       ],
       'direct_dependent_settings': {

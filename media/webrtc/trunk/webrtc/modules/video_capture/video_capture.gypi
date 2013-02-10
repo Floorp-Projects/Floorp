@@ -16,10 +16,17 @@
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
+
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
+      ],
+
       'include_dirs': [
         'include',
         '../interface',
         '<(webrtc_root)/common_video/libyuv/include',
+# added for mozilla for use_system_libjpeg
+        '$(DIST)/include',
       ],
       'sources': [
         'device_info_impl.cc',
@@ -79,8 +86,12 @@
               },
             }],  # mac
             ['OS=="win"', {
-              'dependencies': [
-                '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
+              'conditions': [
+                ['build_with_mozilla==0', {
+                  'dependencies': [
+                    '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
+                  ],
+                }],
               ],
               'include_dirs': [
                 'windows',
@@ -99,6 +110,10 @@
                 'windows/video_capture_factory_windows.cc',
                 'windows/video_capture_mf.cc',
                 'windows/video_capture_mf.h',
+                'windows/BasePin.cpp',
+                'windows/BaseFilter.cpp',
+                'windows/BaseInputPin.cpp',
+                'windows/MediaType.cpp',
               ],
               'link_settings': {
                 'libraries': [
