@@ -139,6 +139,8 @@ ThreadPosix::ThreadPosix(ThreadRunFunction func, ThreadObj obj,
 uint32_t ThreadWrapper::GetThreadId() {
 #if defined(WEBRTC_ANDROID) || defined(WEBRTC_LINUX)
   return static_cast<uint32_t>(syscall(__NR_gettid));
+#elif defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
+  return pthread_mach_thread_np(pthread_self());
 #else
   return reinterpret_cast<uint32_t>(pthread_self());
 #endif
