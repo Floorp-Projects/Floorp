@@ -20,7 +20,6 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
                  browser_NetworkPrioritizer.js \
-                 browser_TelemetryTimestamps.js \
                  # bug 793906 - temporarily disabling desktop UI while working on b2g
                  # browser_SignInToWebsite.js \
                  $(NULL)

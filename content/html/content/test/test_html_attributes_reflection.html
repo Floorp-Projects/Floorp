@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLHtmlElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLHtmlElement attributes reflection **/
+
+// .version
+reflectString({
+  element: document.createElement("html"),
+  attribute: "version",
+});
+
+</script>
+</pre>
+</body>
+</html>

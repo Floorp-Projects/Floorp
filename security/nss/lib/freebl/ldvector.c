@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: ldvector.c,v 1.32 2012/06/28 17:55:05 rrelyea%redhat.com Exp $ */
+/* $Id: ldvector.c,v 1.33 2013/02/05 18:10:42 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 extern int FREEBL_InitStubs(void);
@@ -12,6 +12,7 @@ extern int FREEBL_InitStubs(void);
 
 #include "loader.h"
 #include "alghmac.h"
+#include "hmacct.h"
 
 
 static const struct FREEBLVectorStr vector = 
@@ -258,9 +259,14 @@ static const struct FREEBLVectorStr vector =
     /* End of Version 3.013 */
 
     PQG_ParamGenV2,
-    PRNGTEST_RunHealthTests
+    PRNGTEST_RunHealthTests,
 
     /* End of Version 3.014 */
+
+    HMAC_ConstantTime,
+    SSLv3_MAC_ConstantTime
+
+    /* End of Version 3.015 */
 };
 
 const FREEBLVector * 

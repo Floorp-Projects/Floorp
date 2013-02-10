@@ -161,15 +161,18 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
   for (uint32_t i = 0; i < values.Length(); ++i) {
     SetPropertyByValue(values[i]);
   }
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->RegisterBluetoothSignalHandler(mPath, this);
 }
 
 BluetoothAdapter::~BluetoothAdapter()
 {
   BluetoothService* bs = BluetoothService::Get();
   // We can be null on shutdown, where this might happen
-  if (bs) {
-    bs->UnregisterBluetoothSignalHandler(mPath, this);
-  }
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->UnregisterBluetoothSignalHandler(mPath, this);
   Unroot();
 }
 
@@ -263,12 +266,7 @@ BluetoothAdapter::Create(nsPIDOMWindow* aWindow, const BluetoothValue& aValue)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE(bs, nullptr);
-
   nsRefPtr<BluetoothAdapter> adapter = new BluetoothAdapter(aWindow, aValue);
-  bs->RegisterBluetoothSignalHandler(adapter->GetPath(), adapter);
-
   return adapter.forget();
 }
 

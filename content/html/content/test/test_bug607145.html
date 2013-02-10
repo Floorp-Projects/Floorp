@@ -19,6 +19,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607145
 /**
  * This is not really reflecting an URL as the HTML5 specs want to.
  * It's how .action is reflected in Gecko (might change later).
+ *
+ * If this changes, add reflectURL for "formAction" in
+ * content/html/content/test/forms/test_input_attributes_reflection.html and
+ * "action" in
+ * content/html/content/test/forms/test_form_attributes_reflection.html
  */
 function reflectURL(aElement, aAttr)
 {

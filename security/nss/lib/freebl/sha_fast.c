@@ -148,6 +148,7 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
 {
   register PRUint64 size;
   register PRUint32 lenB;
+  PRUint32 tmpbuf[5];
 
   static const unsigned char bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -174,12 +175,28 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
    *  Output hash
    */
   SHA_STORE_RESULT;
-  *pDigestLen = SHA1_LENGTH;
+  if (pDigestLen) {
+    *pDigestLen = SHA1_LENGTH;
+  }
+#undef tmp
+}
 
+void
+SHA1_EndRaw(SHA1Context *ctx, unsigned char *hashout,
+            unsigned int *pDigestLen, unsigned int maxDigestLen)
+{
+#if defined(SHA_NEED_TMP_VARIABLE)
+  register PRUint32 tmp;
+#endif
+  PRUint32 tmpbuf[5];
+  PORT_Assert (maxDigestLen >= SHA1_LENGTH);
+
+  SHA_STORE_RESULT;
+  if (pDigestLen)
+    *pDigestLen = SHA1_LENGTH;
 }
 
 #undef B
-#undef tmp
 /*
  *  SHA: Compression function, unrolled.
  *

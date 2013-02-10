@@ -18,11 +18,12 @@ let SocialUI = {
     Services.obs.addObserver(this, "social:recommend-info-changed", false);
     Services.obs.addObserver(this, "social:frameworker-error", false);
     Services.obs.addObserver(this, "social:provider-set", false);
+    Services.obs.addObserver(this, "social:providers-changed", false);
 
     Services.prefs.addObserver("social.sidebar.open", this, false);
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
-    gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler, true, true);
+    gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
 
     // Called when we enter DOM full-screen mode.
     window.addEventListener("mozfullscreenchange", function () {
@@ -41,6 +42,7 @@ let SocialUI = {
     Services.obs.removeObserver(this, "social:recommend-info-changed");
     Services.obs.removeObserver(this, "social:frameworker-error");
     Services.obs.removeObserver(this, "social:provider-set");
+    Services.obs.removeObserver(this, "social:providers-changed");
 
     Services.prefs.removeObserver("social.sidebar.open", this);
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
@@ -95,6 +97,12 @@ let SocialUI = {
       switch (topic) {
         case "social:provider-set":
           this._updateProvider();
+          break;
+        case "social:providers-changed":
+          // the list of providers changed - this may impact the "active" UI.
+          this._updateActiveUI();
+          // and the multi-provider menu
+          SocialToolbar.populateProviderMenus();
           break;
         case "social:pref-changed":
           this._updateEnabledState();
@@ -157,7 +165,7 @@ let SocialUI = {
   _updateActiveUI: function SocialUI_updateActiveUI() {
     // The "active" UI isn't dependent on there being a provider, just on
     // social being "active" (but also chromeless/PB)
-    let enabled = Social.active && !this._chromeless &&
+    let enabled = Social.providers.length > 0 && !this._chromeless &&
                   !PrivateBrowsingUtils.isWindowPrivate(window);
     let broadcaster = document.getElementById("socialActiveBroadcaster");
     broadcaster.hidden = !enabled;
@@ -166,12 +174,14 @@ let SocialUI = {
     toggleCommand.setAttribute("hidden", enabled ? "false" : "true");
 
     if (enabled) {
+      // enabled == true means we at least have a defaultProvider
+      let provider = Social.provider || Social.defaultProvider;
       // We only need to update the command itself - all our menu items use it.
-      let label = gNavigatorBundle.getFormattedString(Social.provider.enabled ?
+      let label = gNavigatorBundle.getFormattedString(Social.provider ?
                                                         "social.turnOff.label" :
                                                         "social.turnOn.label",
-                                                      [Social.provider.name]);
-      let accesskey = gNavigatorBundle.getString(Social.provider.enabled ?
+                                                      [provider.name]);
+      let accesskey = gNavigatorBundle.getString(Social.provider ?
                                                    "social.turnOff.accesskey" :
                                                    "social.turnOn.accesskey");
       toggleCommand.setAttribute("label", label);
@@ -203,8 +213,7 @@ let SocialUI = {
 
     // Check that the associated document's origin is in our whitelist
     let providerOrigin = targetDoc.nodePrincipal.origin;
-    let whitelist = Services.prefs.getCharPref("social.activation.whitelist");
-    if (whitelist.split(",").indexOf(providerOrigin) == -1)
+    if (!Social.canActivateOrigin(providerOrigin))
       return;
 
     // If we are in PB mode, we silently do nothing (bug 829404 exists to
@@ -222,29 +231,29 @@ let SocialUI = {
     let oldOrigin = Social.provider ? Social.provider.origin : "";
 
     // Enable the social functionality, and indicate that it was activated
-    let provider = Social.activateFromOrigin(providerOrigin);
+    Social.activateFromOrigin(providerOrigin, function(provider) {
+      // Provider to activate may not have been found
+      if (!provider)
+        return;
 
-    // Provider to activate may not have been found
-    if (!provider)
-      return;
+      // Show a warning, allow undoing the activation
+      let description = document.getElementById("social-activation-message");
+      let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+      let message = gNavigatorBundle.getFormattedString("social.activated.description",
+                                                        [provider.name, brandShortName]);
+      description.value = message;
 
-    // Show a warning, allow undoing the activation
-    let description = document.getElementById("social-activation-message");
-    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
-    let message = gNavigatorBundle.getFormattedString("social.activated.description",
-                                                      [provider.name, brandShortName]);
-    description.value = message;
+      let notificationPanel = SocialUI.notificationPanel;
+      // Set the origin being activated and the previously active one, to allow undo
+      notificationPanel.setAttribute("origin", provider.origin);
+      notificationPanel.setAttribute("oldorigin", oldOrigin);
 
-    let notificationPanel = SocialUI.notificationPanel;
-    // Set the origin being activated and the previously active one, to allow undo
-    notificationPanel.setAttribute("origin", provider.origin);
-    notificationPanel.setAttribute("oldorigin", oldOrigin);
-
-    // Show the panel
-    notificationPanel.hidden = false;
-    setTimeout(function () {
-      notificationPanel.openPopup(SocialToolbar.button, "bottomcenter topright");
-    }, 0);
+      // Show the panel
+      notificationPanel.hidden = false;
+      setTimeout(function () {
+        notificationPanel.openPopup(SocialToolbar.button, "bottomcenter topright");
+      }, 0);
+    });
   },
 
   undoActivation: function SocialUI_undoActivation() {
@@ -311,7 +320,7 @@ let SocialUI = {
     // Returns whether social is enabled *for this window*.
     if (this._chromeless || PrivateBrowsingUtils.isWindowPrivate(window))
       return false;
-    return !!(Social.active && Social.provider && Social.provider.enabled);
+    return !!Social.provider;
   },
 
 }
@@ -729,14 +738,15 @@ var SocialToolbar = {
 
   // Called when the Social.provider changes
   updateProvider: function () {
-    if (Social.provider) {
+    let provider = Social.provider || Social.defaultProvider;
+    if (provider) {
       let label = gNavigatorBundle.getFormattedString("social.removeProvider.label",
-                                                      [Social.provider.name]);
+                                                      [provider.name]);
       let removeCommand = document.getElementById("Social:Remove");
       removeCommand.setAttribute("label", label);
-      this.button.setAttribute("label", Social.provider.name);
-      this.button.setAttribute("tooltiptext", Social.provider.name);
-      this.button.style.listStyleImage = "url(" + Social.provider.iconURL + ")";
+      this.button.setAttribute("label", provider.name);
+      this.button.setAttribute("tooltiptext", provider.name);
+      this.button.style.listStyleImage = "url(" + provider.iconURL + ")";
 
       this.updateProfile();
     }
@@ -777,6 +787,8 @@ var SocialToolbar = {
     // Profile may not have been initialized yet, since it depends on a worker
     // response. In that case we'll be called again when it's available, via
     // social:profile-changed
+    if (!Social.provider)
+      return;
     let profile = Social.provider.profile || {};
     let userPortrait = profile.portrait || "chrome://global/skin/icons/information-32.png";
 
@@ -796,7 +808,6 @@ var SocialToolbar = {
   // XXX doesn't this need to be called for profile changes, given its use of provider.profile?
   updateButton: function SocialToolbar_updateButton() {
     this.updateButtonHiddenState();
-    let provider = Social.provider;
     let panel = document.getElementById("social-notification-panel");
     panel.hidden = !SocialUI.enabled;
 
@@ -807,7 +818,7 @@ var SocialToolbar = {
     // provider.profile == undefined means no response yet from the provider
     // to tell us whether the user is logged in or not.
     if (!SocialUI.enabled ||
-        (!Social.haveLoggedInUser() && provider.profile !== undefined)) {
+        (!Social.haveLoggedInUser() && Social.provider.profile !== undefined)) {
       // Either no enabled provider, or there is a provider and it has
       // responded with a profile and the user isn't loggedin.  The icons
       // etc have already been removed by updateButtonHiddenState, so we want
@@ -815,8 +826,9 @@ var SocialToolbar = {
       Services.prefs.clearUserPref(CACHE_PREF_NAME);
       return;
     }
-    let icons = provider.ambientNotificationIcons;
+    let icons = Social.provider.ambientNotificationIcons;
     let iconNames = Object.keys(icons);
+
     if (Social.provider.profile === undefined) {
       // provider has not told us about the login state yet - see if we have
       // a cached version for this provider.
@@ -867,14 +879,14 @@ var SocialToolbar = {
             // we are more likely to have the anchor in the correct position.
             "style": "width: " + PANEL_MIN_WIDTH + "px;",
 
-            "origin": provider.origin,
+            "origin": Social.provider.origin,
             "src": icon.contentPanel
           }
         );
 
         createdFrames.push(notificationFrame);
       } else {
-        notificationFrame.setAttribute("origin", provider.origin);
+        notificationFrame.setAttribute("origin", Social.provider.origin);
         SharedFrame.updateURL(notificationFrameId, icon.contentPanel);
       }
 
@@ -895,7 +907,7 @@ var SocialToolbar = {
         toolbarButton.setAttribute("id", toolbarButtonId);
         toolbarButton.setAttribute("notificationFrameId", notificationFrameId);
         toolbarButton.addEventListener("mousedown", function (event) {
-          if (event.button == 0)
+          if (event.button == 0 && panel.state == "closed")
             SocialToolbar.showAmbientPopup(toolbarButton);
         });
 
@@ -908,8 +920,13 @@ var SocialToolbar = {
       toolbarButton.setAttribute("tooltiptext", icon.label);
 
       let badge = icon.counter || "";
-      if (toolbarButton.getAttribute("badge") != badge)
-        toolbarButton.setAttribute("badge", badge);
+      toolbarButton.setAttribute("badge", badge);
+      let ariaLabel = icon.label;
+      // if there is a badge value, we must use a localizable string to insert it.
+      if (badge)
+        ariaLabel = gNavigatorBundle.getFormattedString("social.aria.toolbarButtonBadgeText",
+                                                        [ariaLabel, badge]);
+      toolbarButton.setAttribute("aria-label", ariaLabel);
     }
     let socialToolbarItem = document.getElementById("social-toolbar-item");
     socialToolbarItem.appendChild(toolbarButtons);
@@ -1007,12 +1024,11 @@ var SocialToolbar = {
 
   populateProviderMenus: function SocialToolbar_renderProviderMenus() {
     let providerMenuSeps = document.getElementsByClassName("social-provider-menu");
-    let activeProviders = [p for (p of Social.providers) if (p.active)];
     for (let providerMenuSep of providerMenuSeps)
-      this._populateProviderMenu(providerMenuSep, activeProviders);
+      this._populateProviderMenu(providerMenuSep);
   },
 
-  _populateProviderMenu: function SocialToolbar_renderProviderMenu(providerMenuSep, providers) {
+  _populateProviderMenu: function SocialToolbar_renderProviderMenu(providerMenuSep) {
     let menu = providerMenuSep.parentNode;
     // selectable providers are inserted before the provider-menu seperator,
     // remove any menuitems in that area
@@ -1020,11 +1036,11 @@ var SocialToolbar = {
       menu.removeChild(providerMenuSep.previousSibling);
     }
     // only show a selection if enabled and there is more than one
-    if (!SocialUI.enabled || providers.length < 2) {
+    if (!SocialUI.enabled || Social.providers.length < 2) {
       providerMenuSep.hidden = true;
       return;
     }
-    for (let provider of providers) {
+    for (let provider of Social.providers) {
       let menuitem = document.createElement("menuitem");
       menuitem.className = "menuitem-iconic social-provider-menuitem";
       menuitem.setAttribute("image", provider.iconURL);

@@ -5,8 +5,8 @@
 #ifndef mozilla_dom_system_AudioChannelManager_h
 #define mozilla_dom_system_AudioChannelManager_h
 
+#include "mozilla/Hal.h"
 #include "mozilla/HalTypes.h"
-#include "nsIAudioChannelManager.h"
 #include "nsDOMEventTargetHelper.h"
 
 namespace mozilla {
@@ -19,22 +19,35 @@ namespace dom {
 namespace system {
 
 class AudioChannelManager : public nsDOMEventTargetHelper
-                          , public nsIAudioChannelManager
                           , public hal::SwitchObserver
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIAUDIOCHANNELMANAGER
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
-
   AudioChannelManager();
   virtual ~AudioChannelManager();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioChannelManager,
-                                           nsDOMEventTargetHelper)
   void Notify(const hal::SwitchEvent& aEvent);
 
   void Init(nsPIDOMWindow* aWindow);
+
+  /**
+   * WebIDL Interface
+   */
+
+  nsPIDOMWindow* GetParentObject() const
+  {
+     return GetOwner();
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
+                               bool* aTriedToWrap);
+
+  bool Headphones() const
+  {
+    return mState == hal::SWITCH_STATE_ON;
+  }
+
+  IMPL_EVENT_HANDLER(headphoneschange)
+
 private:
   hal::SwitchState mState;
 };

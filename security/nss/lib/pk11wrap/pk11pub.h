@@ -660,6 +660,8 @@ int PK11_SignatureLen(SECKEYPrivateKey *key);
 PK11SlotInfo * PK11_GetSlotFromPrivateKey(SECKEYPrivateKey *key);
 SECStatus PK11_Sign(SECKEYPrivateKey *key, SECItem *sig,
 		    const SECItem *hash);
+SECStatus PK11_SignWithSymKey(PK11SymKey *symKey, CK_MECHANISM_TYPE mechanism,
+		    SECItem *param, SECItem *sig, const SECItem *data);
 SECStatus PK11_VerifyRecover(SECKEYPublicKey *key, const SECItem *sig,
 			     SECItem *dsig, void * wincx);
 SECStatus PK11_Verify(SECKEYPublicKey *key, const SECItem *sig,

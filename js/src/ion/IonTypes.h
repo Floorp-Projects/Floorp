@@ -64,11 +64,12 @@ enum MIRType
     MIRType_Object,
     MIRType_Magic,
     MIRType_Value,
-    MIRType_None,       // Invalid, used as a placeholder.
-    MIRType_Slots,      // A slots vector
-    MIRType_Elements,   // An elements vector
-    MIRType_StackFrame, // StackFrame pointer for OSR.
-    MIRType_Shape       // A Shape pointer.
+    MIRType_None,         // Invalid, used as a placeholder.
+    MIRType_Slots,        // A slots vector
+    MIRType_Elements,     // An elements vector
+    MIRType_StackFrame,   // StackFrame pointer for OSR.
+    MIRType_Shape,        // A Shape pointer.
+    MIRType_ForkJoinSlice // js::ForkJoinSlice*
 };
 
 #ifdef DEBUG

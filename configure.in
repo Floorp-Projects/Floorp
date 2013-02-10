@@ -4232,6 +4232,7 @@ MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_ANDROID_OMTC=
+MOZ_ANDROID_ANR_REPORTER=
 MOZ_ONLY_TOUCH_EVENTS=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -5084,6 +5085,13 @@ dnl ========================================================
 if test -n "$MOZ_ANDROID_OMTC"; then
      dnl Do this if defined in confvars.sh
      AC_DEFINE(MOZ_ANDROID_OMTC)
+fi
+
+dnl ========================================================
+dnl = Android App Not Responding (ANR) reporter
+dnl ========================================================
+if test -n "$MOZ_ANDROID_ANR_REPORTER"; then
+    AC_DEFINE(MOZ_ANDROID_ANR_REPORTER)
 fi
 
 dnl ========================================================
@@ -8468,6 +8476,7 @@ AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_ANDROID_OMTC)
+AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
 AC_SUBST(MOZ_ONLY_TOUCH_EVENTS)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
@@ -9270,6 +9279,7 @@ export MOZILLA_CENTRAL_PATH=$_topsrcdir
 export STLPORT_CPPFLAGS
 export STLPORT_LDFLAGS
 export STLPORT_LIBS
+export JS_STANDALONE=no
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 

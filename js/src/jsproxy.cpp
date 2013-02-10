@@ -512,13 +512,13 @@ DirectProxyHandler::regexp_toShared(JSContext *cx, JSObject *proxy,
 }
 
 bool
-DirectProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint,
-                                 Value *vp)
+DirectProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint, Value *vp)
 {
     *vp = ObjectValue(*GetProxyTargetObject(proxy));
-    if (hint == JSTYPE_VOID)
-        return ToPrimitive(cx, vp);
-    return ToPrimitive(cx, hint, vp);
+    RootedValue tmp(cx, *vp);
+    bool ok = hint == JSTYPE_VOID ? ToPrimitive(cx, &tmp) : ToPrimitive(cx, hint, &tmp);
+    *vp = tmp;
+    return ok;
 }
 
 JSObject *
@@ -3244,12 +3244,12 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
         return false;
     parent = proto->getParent();
 
-    RootedObject call(cx, ValueToCallable(cx, &vp[3]));
+    RootedObject call(cx, ValueToCallable(cx, vp[3], argc - 2));
     if (!call)
         return false;
     JSObject *construct = NULL;
     if (argc > 2) {
-        construct = ValueToCallable(cx, &vp[4]);
+        construct = ValueToCallable(cx, vp[4], argc - 3);
         if (!construct)
             return false;
     }

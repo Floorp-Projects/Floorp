@@ -9,6 +9,8 @@ import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerView;
 
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spanned;
@@ -28,15 +30,17 @@ import java.lang.reflect.Proxy;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 
-// interface for the UI thread
+// interface for the IC thread
 interface GeckoEditableClient {
     void sendEvent(GeckoEvent event);
     Editable getEditable();
     void setUpdateGecko(boolean update);
+    Handler getInputConnectionHandler();
+    boolean setInputConnectionHandler(Handler handler);
 }
 
 /* interface for the Editable to listen to the Gecko thread
-   and also for the UI thread to listen to the Editable */
+   and also for the IC thread to listen to the Editable */
 interface GeckoEditableListener {
     // IME notification type for notifyIME()
     final int NOTIFY_IME_RESETINPUTSTATE = 0;
@@ -79,11 +83,17 @@ final class GeckoEditable
     private final Editable mProxy;
     private final ActionQueue mActionQueue;
 
+    // mIcRunHandler is the Handler that currently runs Gecko-to-IC Runnables
+    // mIcPostHandler is the Handler to post Gecko-to-IC Runnables to
+    // The two can be different when switching from one handler to another
+    private Handler mIcRunHandler;
+    private Handler mIcPostHandler;
+
     private GeckoEditableListener mListener;
     private int mSavedSelectionStart;
     private volatile int mGeckoUpdateSeqno;
-    private int mUIUpdateSeqno;
-    private int mLastUIUpdateSeqno;
+    private int mIcUpdateSeqno;
+    private int mLastIcUpdateSeqno;
     private boolean mUpdateGecko;
     private boolean mFocused;
 
@@ -101,7 +111,7 @@ final class GeckoEditable
         /* For Editable.setSpan(Selection...) call; use with IME_SYNCHRONIZE
            Note that we don't use this with IME_SET_SELECTION because we don't want to update the
            Gecko selection at the point of this action. The Gecko selection is updated only after
-           UI has updated its selection (during IME_SYNCHRONIZE reply) */
+           IC has updated its selection (during IME_SYNCHRONIZE reply) */
         static final int TYPE_SET_SELECTION = 2;
         // For Editable.setSpan() call; use with IME_SYNCHRONIZE
         static final int TYPE_SET_SPAN = 3;
@@ -109,6 +119,8 @@ final class GeckoEditable
         static final int TYPE_REMOVE_SPAN = 4;
         // For focus events (in notifyIME); use with IME_ACKNOWLEDGE_FOCUS
         static final int TYPE_ACKNOWLEDGE_FOCUS = 5;
+        // For switching handler; use with IME_SYNCHRONIZE
+        static final int TYPE_SET_HANDLER = 6;
 
         final int mType;
         int mStart;
@@ -117,6 +129,7 @@ final class GeckoEditable
         Object mSpanObject;
         int mSpanFlags;
         boolean mShouldUpdate;
+        Handler mHandler;
 
         Action(int type) {
             mType = type;
@@ -156,6 +169,12 @@ final class GeckoEditable
             action.mSpanFlags = flags;
             return action;
         }
+
+        static Action newSetHandler(Handler handler) {
+            final Action action = new Action(TYPE_SET_HANDLER);
+            action.mHandler = handler;
+            return action;
+        }
     }
 
     /* Queue of editing actions sent to Gecko thread that
@@ -171,12 +190,13 @@ final class GeckoEditable
 
         void offer(Action action) {
             if (DEBUG) {
-                GeckoApp.assertOnUiThread();
+                assertOnIcThread();
             }
             /* Events don't need update because they generate text/selection
                notifications which will do the updating for us */
             if (action.mType != Action.TYPE_EVENT &&
-                action.mType != Action.TYPE_ACKNOWLEDGE_FOCUS) {
+                action.mType != Action.TYPE_ACKNOWLEDGE_FOCUS &&
+                action.mType != Action.TYPE_SET_HANDLER) {
                 action.mShouldUpdate = mUpdateGecko;
             }
             if (mActions.isEmpty()) {
@@ -192,6 +212,7 @@ final class GeckoEditable
             case Action.TYPE_SET_SELECTION:
             case Action.TYPE_SET_SPAN:
             case Action.TYPE_REMOVE_SPAN:
+            case Action.TYPE_SET_HANDLER:
                 GeckoAppShell.sendEventToGecko(
                         GeckoEvent.createIMEEvent(GeckoEvent.IME_SYNCHRONIZE));
                 break;
@@ -204,7 +225,7 @@ final class GeckoEditable
                         GeckoEvent.IME_ACKNOWLEDGE_FOCUS));
                 break;
             }
-            ++mUIUpdateSeqno;
+            ++mIcUpdateSeqno;
         }
 
         void poll() {
@@ -237,7 +258,7 @@ final class GeckoEditable
 
         void syncWithGecko() {
             if (DEBUG) {
-                GeckoApp.assertOnUiThread();
+                assertOnIcThread();
             }
             if (mFocused && !mActions.isEmpty()) {
                 mActionsActive.acquireUninterruptibly();
@@ -265,10 +286,20 @@ final class GeckoEditable
 
         LayerView v = GeckoApp.mAppContext.getLayerView();
         mListener = GeckoInputConnection.create(v, this);
+
+        mIcRunHandler = mIcPostHandler = GeckoApp.mAppContext.mMainHandler;
     }
 
-    private static void geckoPostToUI(Runnable runnable) {
-        GeckoApp.mAppContext.mMainHandler.post(runnable);
+    private boolean onIcThread() {
+        return mIcRunHandler.getLooper() == Looper.myLooper();
+    }
+
+    private void assertOnIcThread() {
+        GeckoApp.assertOnThread(mIcRunHandler.getLooper().getThread());
+    }
+
+    private void geckoPostToIc(Runnable runnable) {
+        mIcPostHandler.post(runnable);
     }
 
     private void geckoUpdateGecko(final boolean force) {
@@ -277,11 +308,11 @@ final class GeckoEditable
            prevented other updates from occurring */
         final int seqnoWhenPosted = mGeckoUpdateSeqno;
 
-        geckoPostToUI(new Runnable() {
+        geckoPostToIc(new Runnable() {
             public void run() {
                 mActionQueue.syncWithGecko();
                 if (seqnoWhenPosted == mGeckoUpdateSeqno) {
-                    uiUpdateGecko(force);
+                    icUpdateGecko(force);
                 }
             }
         });
@@ -295,19 +326,19 @@ final class GeckoEditable
         }
     }
 
-    private void uiUpdateGecko(boolean force) {
+    private void icUpdateGecko(boolean force) {
 
-        if (!force && mUIUpdateSeqno == mLastUIUpdateSeqno) {
+        if (!force && mIcUpdateSeqno == mLastIcUpdateSeqno) {
             if (DEBUG) {
-                Log.d(LOGTAG, "uiUpdateGecko() skipped");
+                Log.d(LOGTAG, "icUpdateGecko() skipped");
             }
             return;
         }
-        mLastUIUpdateSeqno = mUIUpdateSeqno;
+        mLastIcUpdateSeqno = mIcUpdateSeqno;
         mActionQueue.syncWithGecko();
 
         if (DEBUG) {
-            Log.d(LOGTAG, "uiUpdateGecko()");
+            Log.d(LOGTAG, "icUpdateGecko()");
         }
 
         final int selStart = mText.getSpanStart(Selection.SELECTION_START);
@@ -427,10 +458,17 @@ final class GeckoEditable
     // GeckoEditableClient interface
 
     @Override
-    public void sendEvent(GeckoEvent event) {
-        if (DEBUG) {
-            // GeckoEditableClient methods should all be called from the UI thread
-            GeckoApp.assertOnUiThread();
+    public void sendEvent(final GeckoEvent event) {
+        if (!onIcThread()) {
+            // Events may get dispatched to the main thread;
+            // reroute to our IC thread instead
+            mIcRunHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    sendEvent(event);
+                }
+            });
+            return;
         }
         /*
            We are actually sending two events to Gecko here,
@@ -446,23 +484,96 @@ final class GeckoEditable
 
     @Override
     public Editable getEditable() {
-        if (DEBUG) {
-            // GeckoEditableClient methods should all be called from the UI thread
-            GeckoApp.assertOnUiThread();
+        if (!onIcThread()) {
+            // Android may be holding an old InputConnection; ignore
+            if (DEBUG) {
+                Log.i(LOGTAG, "getEditable() called on non-IC thread");
+            }
+            return null;
         }
         return mProxy;
     }
 
     @Override
     public void setUpdateGecko(boolean update) {
-        if (DEBUG) {
-            // GeckoEditableClient methods should all be called from the UI thread
-            GeckoApp.assertOnUiThread();
+        if (!onIcThread()) {
+            // Android may be holding an old InputConnection; ignore
+            if (DEBUG) {
+                Log.i(LOGTAG, "setUpdateGecko() called on non-IC thread");
+            }
+            return;
         }
         if (update) {
-            uiUpdateGecko(false);
+            icUpdateGecko(false);
         }
         mUpdateGecko = update;
+    }
+
+    @Override
+    public Handler getInputConnectionHandler() {
+        if (DEBUG) {
+            assertOnIcThread();
+        }
+        return mIcRunHandler;
+    }
+
+    @Override
+    public boolean setInputConnectionHandler(Handler handler) {
+        if (handler == mIcPostHandler) {
+            return true;
+        }
+        if (!mFocused) {
+            return false;
+        }
+        if (DEBUG) {
+            assertOnIcThread();
+        }
+        // There are three threads at this point: Gecko thread, old IC thread, and new IC
+        // thread, and we want to safely switch from old IC thread to new IC thread.
+        // We first send a TYPE_SET_HANDLER action to the Gecko thread; this ensures that
+        // the Gecko thread is stopped at a known point. At the same time, the old IC
+        // thread blocks on the action; this ensures that the old IC thread is stopped at
+        // a known point. Finally, inside the Gecko thread, we post a Runnable to the old
+        // IC thread; this Runnable switches from old IC thread to new IC thread. We
+        // switch IC thread on the old IC thread to ensure any pending Runnables on the
+        // old IC thread are processed before we switch over. Inside the Gecko thread, we
+        // also post a Runnable to the new IC thread; this Runnable blocks until the
+        // switch is complete; this ensures that the new IC thread won't accept
+        // InputConnection calls until after the switch.
+        mActionQueue.offer(Action.newSetHandler(handler));
+        mActionQueue.syncWithGecko();
+        return true;
+    }
+
+    private void geckoSetIcHandler(final Handler newHandler) {
+        geckoPostToIc(new Runnable() { // posting to old IC thread
+            @Override
+            public void run() {
+                synchronized (newHandler) {
+                    mIcRunHandler = newHandler;
+                    newHandler.notify();
+                }
+            }
+        });
+
+        // At this point, all future Runnables should be posted to the new IC thread, but
+        // we don't switch mIcRunHandler yet because there may be pending Runnables on the
+        // old IC thread still waiting to run.
+        mIcPostHandler = newHandler;
+
+        geckoPostToIc(new Runnable() { // posting to new IC thread
+            @Override
+            public void run() {
+                synchronized (newHandler) {
+                    while (mIcRunHandler != newHandler) {
+                        try {
+                            newHandler.wait();
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                }
+            }
+        });
     }
 
     // GeckoEditableListener interface
@@ -488,7 +599,7 @@ final class GeckoEditable
                 Log.w(LOGTAG, "IME sync error: selection out of bounds");
             }
             Selection.setSelection(mText, selStart, selEnd);
-            geckoPostToUI(new Runnable() {
+            geckoPostToIc(new Runnable() {
                 public void run() {
                     mActionQueue.syncWithGecko();
                     final int start = Selection.getSelectionStart(mText);
@@ -503,6 +614,9 @@ final class GeckoEditable
             break;
         case Action.TYPE_SET_SPAN:
             mText.setSpan(action.mSpanObject, action.mStart, action.mEnd, action.mSpanFlags);
+            break;
+        case Action.TYPE_SET_HANDLER:
+            geckoSetIcHandler(action.mHandler);
             break;
         }
         if (action.mShouldUpdate) {
@@ -530,7 +644,7 @@ final class GeckoEditable
             }
             return;
         }
-        geckoPostToUI(new Runnable() {
+        geckoPostToIc(new Runnable() {
             public void run() {
                 if (type == NOTIFY_IME_FOCUSCHANGE) {
                     if (state == IME_FOCUS_STATE_BLUR) {
@@ -554,8 +668,8 @@ final class GeckoEditable
     public void notifyIMEEnabled(final int state, final String typeHint,
                           final String modeHint, final String actionHint) {
         // Because we want to be able to bind GeckoEditable to the newest LayerView instance,
-        // this can be called from the Java UI thread in addition to the Gecko thread.
-        geckoPostToUI(new Runnable() {
+        // this can be called from the Java IC thread in addition to the Gecko thread.
+        geckoPostToIc(new Runnable() {
             public void run() {
                 // Make sure there are no other things going on
                 mActionQueue.syncWithGecko();
@@ -584,15 +698,15 @@ final class GeckoEditable
         final int seqnoWhenPosted = ++mGeckoUpdateSeqno;
 
         /* An event (keypress, etc.) has potentially changed the selection,
-           synchronize the selection here. There is not a race with the UI thread
-           because the UI thread should be blocked on the event action */
+           synchronize the selection here. There is not a race with the IC thread
+           because the IC thread should be blocked on the event action */
         if (!mActionQueue.isEmpty() &&
             mActionQueue.peek().mType == Action.TYPE_EVENT) {
             Selection.setSelection(mText, start, end);
             return;
         }
 
-        geckoPostToUI(new Runnable() {
+        geckoPostToIc(new Runnable() {
             public void run() {
                 mActionQueue.syncWithGecko();
                 /* check to see there has not been another action that potentially changed the
@@ -689,7 +803,7 @@ final class GeckoEditable
         } else {
             geckoReplaceText(start, oldEnd, mChangedText);
         }
-        geckoPostToUI(new Runnable() {
+        geckoPostToIc(new Runnable() {
             public void run() {
                 mListener.onTextChange(text, start, oldEnd, newEnd);
             }
@@ -722,8 +836,8 @@ final class GeckoEditable
         Object target;
         final Class<?> methodInterface = method.getDeclaringClass();
         if (DEBUG) {
-            // Editable methods should all be called from the UI thread
-            GeckoApp.assertOnUiThread();
+            // Editable methods should all be called from the IC thread
+            assertOnIcThread();
         }
         if (methodInterface == Editable.class ||
                 methodInterface == Appendable.class ||

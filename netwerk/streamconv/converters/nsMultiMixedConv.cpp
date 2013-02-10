@@ -883,7 +883,7 @@ nsMultiMixedConv::SendData(char *aBuffer, uint32_t aLen) {
         // make sure that we don't send more than the mContentLength
         // XXX why? perhaps the Content-Length header was actually wrong!!
         if ((uint64_t(aLen) + mTotalSent) > mContentLength)
-            aLen = mContentLength - mTotalSent;
+            aLen = static_cast<uint32_t>(mContentLength - mTotalSent);
 
         if (aLen == 0)
             return NS_OK;

@@ -80,6 +80,8 @@ MarkExactStackRoots(JSTracer *trc)
     for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
         for (ContextIter cx(trc->runtime); !cx.done(); cx.next())
             MarkExactStackRootList(trc, cx->thingGCRooters[i], ThingRootKind(i));
+
+        MarkExactStackRootList(trc, trc->runtime->mainThread->thingGCRooters[i], ThingRootKind(i));
     }
 }
 #endif /* JSGC_USE_EXACT_ROOTING */

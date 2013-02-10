@@ -61,3 +61,7 @@ contract @mozilla.org/network/protocol;1?name=vnd.youtube {c3f1b945-7e71-49c8-95
 # RecoveryService.js
 component {b3caca5d-0bb0-48c6-912b-6be6cbf08832} RecoveryService.js
 contract @mozilla.org/recovery-service;1 {b3caca5d-0bb0-48c6-912b-6be6cbf08832}
+
+# B2GAboutRedirector
+component {920400b1-cf8f-4760-a9c4-441417b15134} B2GAboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=certerror {920400b1-cf8f-4760-a9c4-441417b15134}

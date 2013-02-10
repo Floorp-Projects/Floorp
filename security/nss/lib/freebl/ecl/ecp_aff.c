@@ -285,11 +285,10 @@ ec_GFp_validate_point(const mp_int *px, const mp_int *py, const ECGroup *group)
 	}
 	/* left-hand side: y^2  */
 	MP_CHECKOK( group->meth->field_sqr(&pyt, &accl, group->meth) );
-	/* right-hand side: x^3 + a*x + b */
+	/* right-hand side: x^3 + a*x + b = (x^2 + a)*x + b by Horner's rule */
 	MP_CHECKOK( group->meth->field_sqr(&pxt, &tmp, group->meth) );
-	MP_CHECKOK( group->meth->field_mul(&pxt, &tmp, &accr, group->meth) );
-	MP_CHECKOK( group->meth->field_mul(&group->curvea, &pxt, &tmp, group->meth) );
-	MP_CHECKOK( group->meth->field_add(&tmp, &accr, &accr, group->meth) );
+	MP_CHECKOK( group->meth->field_add(&tmp, &group->curvea, &tmp, group->meth) );
+	MP_CHECKOK( group->meth->field_mul(&tmp, &pxt, &accr, group->meth) );
 	MP_CHECKOK( group->meth->field_add(&accr, &group->curveb, &accr, group->meth) );
 	/* check LHS - RHS == 0 */
 	MP_CHECKOK( group->meth->field_sub(&accl, &accr, &accr, group->meth) );

@@ -2,7 +2,7 @@
 # waitpid to dispatch tasks.  This avoids several deadlocks that are possible
 # with fork/exec + threads + Python.
 
-import errno, os, sys, select
+import errno, os, select
 from datetime import datetime, timedelta
 from results import TestOutput
 

@@ -265,7 +265,7 @@ pref("gfx.font_rendering.opentype_svg.enabled", false);
 #ifdef XP_WIN
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
-pref("gfx.canvas.azure.backends", "direct2d,cairo");
+pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.content.azure.backends", "direct2d");
 pref("gfx.content.azure.enabled", true);
 #else
@@ -706,8 +706,14 @@ pref("dom.min_background_timeout_value", 1000);
 // changed)
 pref("dom.experimental_bindings", true);
 
+// Run content XBL in a separate scope.
+pref("dom.xbl_scopes", false);
+
 // Don't use new input types
 pref("dom.experimental_forms", false);
+
+// Don't enable <input type=range> yet:
+pref("dom.experimental_forms_range", false);
 
 // Allocation Threshold for Workers
 pref("dom.workers.mem.gc_allocation_threshold_mb", 30);
@@ -1778,7 +1784,7 @@ pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
 #ifdef XP_WIN
 // How long a plugin is allowed to process a synchronous IPC message 
 // before we display the plugin hang UI
-pref("dom.ipc.plugins.hangUITimeoutSecs", 5);
+pref("dom.ipc.plugins.hangUITimeoutSecs", 11);
 // Minimum time that the plugin hang UI will be displayed
 pref("dom.ipc.plugins.hangUIMinDisplaySecs", 10);
 #endif

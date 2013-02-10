@@ -25,16 +25,27 @@ Components.utils.import("resource://gre/modules/PhoneNumberUtils.jsm");
 function CantParseWithMcc(dial, mcc) {
   var result = PhoneNumberUtils.parseWithMCC(dial, mcc);
   if (result) {
-  	ok(false, "Shouldn't parse!\n");
-    print("expected: does not parse");
-    print("got: " + dial + " " + mcc);
+    ok(false, "Shouldn't parse!\n");
+    dump("expected: does not parse");
+    dump("got: " + dial + " " + mcc);
   } else {
     ok(true, "Parses");
   }
 }
 
+function ParseWithMcc(dial, mcc) {
+  var result = PhoneNumberUtils.parseWithMCC(dial, mcc);
+  if (result) {
+    ok(true, "Parses!\n");
+  } else {
+    ok(false, "Should Parse");
+    dump("expected: parses");
+  }
+}
+
 // Unknown mcc
 CantParseWithMcc("1234", 123);
+ParseWithMcc("4165555555", 302);
 
 </script>
 </window>

@@ -103,14 +103,18 @@ enum MaybeConstruct {
     CONSTRUCT = INITIAL_CONSTRUCT
 };
 
+/*
+ * numToSkip is the number of stack values the expression decompiler should skip
+ * before it reaches |v|. If it's -1, the decompiler will search the stack.
+ */
 extern bool
-ReportIsNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO_CONSTRUCT);
+ReportIsNotFunction(JSContext *cx, const Value &v, int numToSkip = -1,
+                    MaybeConstruct construct = NO_CONSTRUCT);
 
-extern bool
-ReportIsNotFunction(JSContext *cx, const Value *vp, MaybeConstruct construct = NO_CONSTRUCT);
-
+/* See ReportIsNotFunction comment for the meaning of numToSkip. */
 extern JSObject *
-ValueToCallable(JSContext *cx, const Value *vp, MaybeConstruct construct = NO_CONSTRUCT);
+ValueToCallable(JSContext *cx, const Value &vp, int numToSkip = -1,
+                MaybeConstruct construct = NO_CONSTRUCT);
 
 /*
  * InvokeKernel assumes that the given args have been pushed on the top of the

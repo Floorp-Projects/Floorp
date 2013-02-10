@@ -1752,7 +1752,13 @@ nsContentUtils::IsCallerXBL()
 {
     JSScript *script;
     JSContext *cx = GetCurrentJSContext();
-    if (!cx || !JS_DescribeScriptedCaller(cx, &script, nullptr) || !script)
+    if (!cx)
+        return false;
+    // New Hotness.
+    if (xpc::IsXBLScope(js::GetContextCompartment(cx)))
+        return true;
+    // XBL scopes are behind a pref, so check the XBL bit as well.
+    if (!JS_DescribeScriptedCaller(cx, &script, nullptr) || !script)
         return false;
     return JS_GetScriptUserBit(script);
 }
@@ -1763,6 +1769,35 @@ nsContentUtils::IsImageSrcSetDisabled()
 {
   return Preferences::GetBool("dom.disable_image_src_set") &&
          !IsCallerChrome();
+}
+
+// static
+bool
+nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
+                                    JS::HandleId aId, JSPropertyDescriptor* aDesc)
+{
+  nsXBLBinding* binding = aContent->OwnerDoc()->BindingManager()
+                                  ->GetBinding(aContent);
+  if (!binding)
+    return true;
+  return binding->LookupMember(aCx, aId, aDesc);
+}
+
+// static
+bool
+nsContentUtils::IsBindingField(JSContext* aCx, nsIContent* aContent,
+                               JS::HandleId aId)
+{
+  nsXBLBinding* binding = aContent->OwnerDoc()->BindingManager()
+                                  ->GetBinding(aContent);
+  if (!binding)
+    return false;
+
+  if (!JSID_IS_STRING(aId))
+    return false;
+  nsDependentJSString name(aId);
+
+  return binding->HasField(name);
 }
 
 // static

@@ -44,11 +44,11 @@ FENNEC_JAVA_FILES = \
   AboutHomePromoBox.java \
   AboutHomeSection.java \
   ActivityHandlerHelper.java \
+  AlertNotification.java \
+  AllCapsTextView.java \
   AndroidImport.java \
   AndroidImportPreference.java \
   AnimatorProxy.java \
-  AlertNotification.java \
-  AllCapsTextView.java \
   AnimatedHeightLayout.java \
   AwesomeBar.java \
   AwesomebarResultHandler.java \
@@ -149,6 +149,7 @@ FENNEC_JAVA_FILES = \
   ThumbnailHelper.java \
   WebAppAllocator.java \
   ZoomConstraints.java \
+  gfx/Axis.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
@@ -164,17 +165,22 @@ FENNEC_JAVA_FILES = \
   gfx/ImmutableViewportMetrics.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
+  gfx/JavaPanZoomController.java \
   gfx/Layer.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
   gfx/PluginLayer.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
+  gfx/PanZoomController.java \
+  gfx/PanZoomTarget.java \
   gfx/PointUtils.java \
   gfx/ProgressiveUpdateData.java \
   gfx/RectUtils.java \
   gfx/ScrollbarLayer.java \
+  gfx/SimpleScaleGestureDetector.java \
   gfx/SingleTileLayer.java \
+  gfx/SubdocumentScrollHelper.java \
   gfx/TextLayer.java \
   gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
@@ -182,11 +188,6 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
-  ui/Axis.java \
-  ui/PanZoomController.java \
-  ui/PanZoomTarget.java \
-  ui/SimpleScaleGestureDetector.java \
-  ui/SubdocumentScrollHelper.java \
   widget/DateTimePicker.java \
   widget/IconTabWidget.java \
   widget/TabRow.java \
@@ -200,6 +201,10 @@ FENNEC_JAVA_FILES = \
 
 ifdef MOZ_WEBSMS_BACKEND
 FENNEC_JAVA_FILES += GeckoSmsManager.java
+endif
+
+ifdef MOZ_ANDROID_ANR_REPORTER
+FENNEC_JAVA_FILES += ANRReporter.java
 endif
 
 FENNEC_PP_JAVA_VIEW_FILES = \
@@ -220,6 +225,7 @@ FENNEC_PP_JAVA_FILES = \
   WebApp.java \
   WebApps.java \
   GeckoActivity.java \
+  GeckoAppInfo.java \
   GeckoAppWidgetProvider.java \
   LauncherShortcuts.java \
   NotificationHandler.java \
@@ -301,6 +307,7 @@ DEFINES += \
   -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
   -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
   -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
+  -DMOZ_APP_ID=$(MOZ_APP_ID) \
   -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME) \
   -DMOZ_MIN_CPU_VERSION=$(MIN_CPU_VERSION) \
   -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
@@ -313,6 +320,7 @@ DEFINES += \
   -DMOZ_APP_ABI=$(TARGET_XPCOM_ABI) \
   -DMOZ_BUILD_TIMESTAMP=$(MOZ_BUILD_TIMESTAMP) \
   -DMOZ_UPDATER=$(MOZ_UPDATER) \
+  -DOS_TARGET=$(OS_TARGET) \
   $(NULL)
 
 ifdef MOZ_PKG_SPECIAL
@@ -337,6 +345,8 @@ GARBAGE += \
   $(SYNC_PP_RES_XML) \
   package-name.txt \
   Manifest.java \
+  javah.out \
+  jni-stubs.inc \
   $(NULL)
 
 GARBAGE_DIRS += classes db jars res sync services
@@ -944,9 +954,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/site_security_identified.png \
   res/drawable-large-mdpi-v11/site_security_verified.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
-  res/drawable-large-mdpi-v11/tabs_normal.png \
-  res/drawable-large-mdpi-v11/tabs_private.png \
-  res/drawable-large-mdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
@@ -967,9 +974,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/site_security_identified.png \
   res/drawable-large-hdpi-v11/site_security_verified.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
-  res/drawable-large-hdpi-v11/tabs_normal.png \
-  res/drawable-large-hdpi-v11/tabs_private.png \
-  res/drawable-large-hdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
@@ -990,9 +994,6 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/site_security_identified.png \
   res/drawable-large-xhdpi-v11/site_security_verified.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
-  res/drawable-large-xhdpi-v11/tabs_normal.png \
-  res/drawable-large-xhdpi-v11/tabs_private.png \
-  res/drawable-large-xhdpi-v11/tabs_synced.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
@@ -1036,8 +1037,6 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
 RES_COLOR = \
   res/color/menu_item_title.xml \
   res/color/select_item_multichoice.xml \
-  res/color/tab_title.xml \
-  res/color/tabs_counter_color.xml \
   $(NULL)
 
 RES_MENU = \
@@ -1096,6 +1095,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/spinner.xml                            \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
+  mobile/android/base/resources/drawable/tab_row.xml                            \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
@@ -1194,8 +1194,21 @@ jars:
 	@echo "MKDIR jars"
 	$(NSINSTALL) -D jars
 
+CLASSES_WITH_JNI= \
+    org.mozilla.gecko.GeckoAppShell \
+    $(NULL)
+
+ifdef MOZ_WEBSMS_BACKEND
+# Note: if you are building with MOZ_WEBSMS_BACKEND turned on, then
+# you will get a build error because the generated jni-stubs.inc will
+# be different than the one checked in (i.e. it will have the sms-related
+# JNI stubs as well). Just copy the generated file to mozglue/android/
+# like the error message says and rebuild. All should be well after that.
+CLASSES_WITH_JNI += org.mozilla.gecko.GeckoSmsManager
+endif
+
 jni-stubs.inc: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar
-	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) org.mozilla.gecko.GeckoAppShell
+	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) $(CLASSES_WITH_JNI)
 	$(PYTHON) $(topsrcdir)/mobile/android/base/jni-generator.py javah.out $@
 
 PP_RES_XML= \

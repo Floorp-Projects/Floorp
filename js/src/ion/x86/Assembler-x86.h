@@ -321,9 +321,6 @@ class Assembler : public AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
-    void cvttsd2s(const FloatRegister &src, const Register &dest) {
-        cvttsd2si(src, dest);
-    }
 
     void cmpl(const Register src, ImmWord ptr) {
         masm.cmpl_ir(ptr.value, src.code());

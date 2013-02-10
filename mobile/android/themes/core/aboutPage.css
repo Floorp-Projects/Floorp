@@ -63,7 +63,7 @@ body {
   display: none;
 }
 
-#aboutTelemetry {
+#messages {
   position: relative;
   width: 70%;
   margin: 40px auto 0 auto;
@@ -72,7 +72,7 @@ body {
   text-align: center;
 }
 
-#aboutTelemetry  a {
+#telemetry a {
   text-decoration: underline;
 }
 

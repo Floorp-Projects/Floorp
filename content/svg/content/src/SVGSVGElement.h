@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/FromParser.h"
 #include "nsISVGPoint.h"
-#include "nsIDOMSVGSVGElement.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "SVGGraphicsElement.h"
@@ -21,6 +20,7 @@ nsresult NS_NewSVGSVGElement(nsIContent **aResult,
                              already_AddRefed<nsINodeInfo> aNodeInfo,
                              mozilla::dom::FromParser aFromParser);
 
+class nsIDOMSVGNumber;
 class nsSMILTimeContainer;
 class nsSVGOuterSVGFrame;
 class nsSVGInnerSVGFrame;
@@ -79,7 +79,7 @@ public:
 typedef SVGGraphicsElement SVGSVGElementBase;
 
 class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase,
-                                public nsIDOMSVGSVGElement
+                                public nsIDOMSVGElement
 {
   friend class ::nsSVGOuterSVGFrame;
   friend class ::nsSVGInnerSVGFrame;
@@ -98,7 +98,6 @@ public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGSVGElement, SVGSVGElementBase)
-  NS_DECL_NSIDOMSVGSVGELEMENT
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -110,14 +109,7 @@ public:
    * currentTranslate.y to be set by a single operation that dispatches a
    * single SVGZoom event (instead of one SVGZoom and two SVGScroll events).
    */
-  NS_IMETHOD SetCurrentScaleTranslate(float s, float x, float y);
-
-  /**
-   * For use by pan controls to allow currentTranslate.x and currentTranslate.y
-   * to be set by a single operation that dispatches a single SVGScroll event
-   * (instead of two).
-   */
-  NS_IMETHOD SetCurrentTranslate(float x, float y);
+  void SetCurrentScaleTranslate(float s, float x, float y);
 
   /**
    * Retrieve the value of currentScale and currentTranslate.
@@ -223,8 +215,6 @@ public:
     mViewportHeight = aSize.height;
   }
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
@@ -237,18 +227,19 @@ public:
   float ScreenPixelToMillimeterX();
   float ScreenPixelToMillimeterY();
   bool UseCurrentView();
-  // XPIDL SetCurrentScale and SetCurrentTranslate are alright to use because
-  // they only throw on non-finite floats and we don't allow those.
   float CurrentScale();
+  void SetCurrentScale(float aCurrentScale);
   already_AddRefed<nsISVGPoint> CurrentTranslate();
+  void SetCurrentTranslate(float x, float y);
   uint32_t SuspendRedraw(uint32_t max_wait_milliseconds);
-  // XPIDL UnSuspendRedraw(All) can be used because it's a no-op.
+  void UnsuspendRedraw(uint32_t suspend_handle_id);
+  void UnsuspendRedrawAll();
   void ForceRedraw(ErrorResult& rv);
-  void PauseAnimations(ErrorResult& rv);
-  void UnpauseAnimations(ErrorResult& rv);
-  bool AnimationsPaused(ErrorResult& rv);
-  float GetCurrentTime(ErrorResult& rv);
-  void SetCurrentTime(float seconds, ErrorResult& rv);
+  void PauseAnimations();
+  void UnpauseAnimations();
+  bool AnimationsPaused();
+  float GetCurrentTime();
+  void SetCurrentTime(float seconds);
   already_AddRefed<nsIDOMSVGNumber> CreateSVGNumber();
   already_AddRefed<nsIDOMSVGLength> CreateSVGLength();
   already_AddRefed<SVGAngle> CreateSVGAngle();
