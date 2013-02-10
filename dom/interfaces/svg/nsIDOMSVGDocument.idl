@@ -5,11 +5,11 @@
 
 #include "nsIDOMDocument.idl"
 
-interface nsIDOMSVGSVGElement;
+interface nsIDOMSVGElement;
 
 [scriptable, uuid(8fe506e4-5563-4b16-9228-182071e3f8f8)]
 interface nsIDOMSVGDocument : nsIDOMDocument
 {
   readonly attribute DOMString domain;
-  readonly attribute nsIDOMSVGSVGElement rootElement;
+  readonly attribute nsIDOMSVGElement rootElement;
 };

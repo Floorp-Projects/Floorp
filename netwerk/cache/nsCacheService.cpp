@@ -575,17 +575,17 @@ SmartCacheSize(const uint32_t availKB, bool shouldUseOldMaxSmartSize)
 
     // .5% of space above 25 GB
     if (avail10MBs > 2500) {
-        sz10MBs += (avail10MBs - 2500)*.005;
+        sz10MBs += static_cast<uint32_t>((avail10MBs - 2500)*.005);
         avail10MBs = 2500;
     }
     // 1% of space between 7GB -> 25 GB
     if (avail10MBs > 700) {
-        sz10MBs += (avail10MBs - 700)*.01;
+        sz10MBs += static_cast<uint32_t>((avail10MBs - 700)*.01);
         avail10MBs = 700;
     }
     // 5% of space between 500 MB -> 7 GB
     if (avail10MBs > 50) {
-        sz10MBs += (avail10MBs - 50)*.05;
+        sz10MBs += static_cast<uint32_t>((avail10MBs - 50)*.05);
         avail10MBs = 50;
     }
 
@@ -595,10 +595,10 @@ SmartCacheSize(const uint32_t availKB, bool shouldUseOldMaxSmartSize)
     // percentage of available space and a smaller minimum.
 
     // 20% of space up to 500 MB (10 MB min)
-    sz10MBs += std::max<uint32_t>(1, avail10MBs * .2);
+    sz10MBs += std::max<uint32_t>(1, static_cast<uint32_t>(avail10MBs * .2));
 #else
     // 40% of space up to 500 MB (50 MB min)
-    sz10MBs += std::max<uint32_t>(5, avail10MBs * .4);
+    sz10MBs += std::max<uint32_t>(5, static_cast<uint32_t>(avail10MBs * .4));
 #endif
 
     return std::min<uint32_t>(maxSize, sz10MBs * 10 * 1024);
@@ -634,7 +634,8 @@ nsCacheProfilePrefObserver::GetSmartCacheSize(const nsAString& cachePath,
     if (NS_FAILED(rv))
         return DEFAULT_CACHE_SIZE;
 
-    return SmartCacheSize((bytesAvailable / 1024) + currentSize,
+    return SmartCacheSize(static_cast<uint32_t>((bytesAvailable / 1024) +
+                                                currentSize),
                           shouldUseOldMaxSmartSize);
 }
 

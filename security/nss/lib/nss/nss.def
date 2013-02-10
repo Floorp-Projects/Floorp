@@ -1021,3 +1021,9 @@ CERT_CreateOCSPSingleResponseRevoked;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.14.3 { 	# NSS 3.14.3 release
+;+    global:
+PK11_SignWithSymKey;
+;+    local:
+;+       *;
+;+};

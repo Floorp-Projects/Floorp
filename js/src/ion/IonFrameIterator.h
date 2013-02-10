@@ -32,13 +32,14 @@ enum FrameType
     // mismatches in calls.
     IonFrame_Rectifier,
 
-    // A bailed JS frame is a JS frame signalling that its callee has been
-    // bailed out.
-    IonFrame_Bailed_JS,
+    // An unwound JS frame is a JS frame signalling that its callee frame has been
+    // turned into an exit frame (see EnsureExitFrame). Used by Ion bailouts and
+    // Baseline exception unwinding.
+    IonFrame_Unwound_OptimizedJS,
 
-    // A bailed rectifier frame is a rectifier frame signalling that its callee
-    // has been bailed out.
-    IonFrame_Bailed_Rectifier,
+    // An unwound rectifier frame is a rectifier frame signalling that its callee
+    // frame has been turned into an exit frame (see EnsureExitFrame).
+    IonFrame_Unwound_Rectifier,
 
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any

@@ -784,6 +784,10 @@ protected:
   {
     GetAttr(kNameSpaceID_None, aName, aResult);
   }
+  void GetHTMLAttr(nsIAtom* aName, mozilla::dom::DOMString& aResult) const
+  {
+    GetAttr(kNameSpaceID_None, aName, aResult);
+  }
   void GetHTMLEnumAttr(nsIAtom* aName, nsAString& aResult) const
   {
     GetEnumAttr(aName, nullptr, aResult);
@@ -1012,7 +1016,11 @@ private:
   void ChangeEditableState(int32_t aChange);
 };
 
-class nsHTMLFieldSetElement;
+namespace mozilla {
+namespace dom {
+class HTMLFieldSetElement;
+}
+}
 
 #define FORM_ELEMENT_FLAG_BIT(n_) NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
@@ -1193,7 +1201,7 @@ protected:
   nsHTMLFormElement* mForm;
 
   /* This is a pointer to our closest fieldset parent if any */
-  nsHTMLFieldSetElement* mFieldSet;
+  mozilla::dom::HTMLFieldSetElement* mFieldSet;
 };
 
 //----------------------------------------------------------------------
@@ -1892,6 +1900,7 @@ NS_NewHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedObject)
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Anchor)
@@ -1906,7 +1915,6 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Canvas)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Mod)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(DataList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Div)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(DList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(FieldSet)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Font)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Form)
@@ -1929,7 +1937,6 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(MenuItem)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meta)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meter)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Object)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(OList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(OptGroup)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Option)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Output)
@@ -1954,7 +1961,6 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(TextArea)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Tfoot)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Thead)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Title)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(UList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Unknown)
 #if defined(MOZ_MEDIA)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Video)

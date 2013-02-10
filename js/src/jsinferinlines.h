@@ -1036,7 +1036,7 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
     JS_ASSERT(script->types);
 
     /* Analyze the script regardless if -a was used. */
-    bool analyze = cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS);
+    bool analyze = cx->hasOption(JSOPTION_METHODJIT_ALWAYS);
 
     if (!ThisTypes(script)->hasType(type) || analyze) {
         AutoEnterAnalysis enter(cx);

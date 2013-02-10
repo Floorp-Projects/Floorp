@@ -6961,10 +6961,10 @@ class CGBindingRoot(CGThing):
                                           descriptors)
         traitsClasses = [CGPrototypeTraitsClass(d) for d in descriptorsWithPrototype]
 
-        # We must have a 1:1 mapping here, skip for prototypes that have more
-        # than one concrete class implementation.
+        # We must have a 1:1 mapping here, skip for prototypes which
+        # share an implementation with other prototypes.
         traitsClasses.extend([CGPrototypeIDMapClass(d) for d in descriptorsWithPrototype
-                              if d.uniqueImplementation])
+                              if d.unsharedImplementation])
 
         # Wrap all of that in our namespaces.
         if len(traitsClasses) > 0:

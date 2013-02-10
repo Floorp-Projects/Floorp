@@ -1168,7 +1168,7 @@ JSContext::JSContext(JSRuntime *rt)
     hasVersionOverride(false),
     throwing(false),
     exception(UndefinedValue()),
-    runOptions(0),
+    options_(0),
     defaultLocale(NULL),
     reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
     localeCallbacks(NULL),
@@ -1274,10 +1274,10 @@ JSContext::getDefaultLocale()
 void
 JSContext::wrapPendingException()
 {
-    Value v = getPendingException();
+    RootedValue value(this, getPendingException());
     clearPendingException();
-    if (compartment->wrap(this, &v))
-        setPendingException(v);
+    if (compartment->wrap(this, &value))
+        setPendingException(value);
 }
 
 
@@ -1493,7 +1493,7 @@ void
 JSContext::updateJITEnabled()
 {
 #ifdef JS_METHODJIT
-    methodJitEnabled = (runOptions & JSOPTION_METHODJIT) && !IsJITBrokenHere();
+    methodJitEnabled = (options_ & JSOPTION_METHODJIT) && !IsJITBrokenHere();
 #endif
 }
 
@@ -1514,7 +1514,7 @@ JSContext::mark(JSTracer *trc)
     /* Stack frames and slots are traced by StackSpace::mark. */
 
     /* Mark other roots-by-definition in the JSContext. */
-    if (defaultCompartmentObject_ && !hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+    if (defaultCompartmentObject_ && !hasOption(JSOPTION_UNROOTED_GLOBAL))
         MarkObjectRoot(trc, &defaultCompartmentObject_, "default compartment object");
     if (isExceptionPending())
         MarkValueRoot(trc, &exception, "exception");

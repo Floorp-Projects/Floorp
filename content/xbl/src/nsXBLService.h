@@ -149,6 +149,8 @@ public:
 
   nsrefcnt Hold() { return ++mRefCnt; }
   nsrefcnt Drop() { return --mRefCnt ? mRefCnt : Destroy(); }
+  nsrefcnt AddRef() { return Hold(); }
+  nsrefcnt Release() { return Drop(); }
 };
 
 #endif

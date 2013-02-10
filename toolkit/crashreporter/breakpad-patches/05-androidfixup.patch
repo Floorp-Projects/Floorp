@@ -1,59 +1,37 @@
 # HG changeset patch
-# Parent 4851b0fa0c4c0983670d137ea960977f627db88c
+# User Ted Mielczarek <ted.mielczarek@gmail.com>
+# Date 1360255134 18000
+# Node ID 74d4bb64dc84b4bc73939af06d804b71425e51d4
+# Parent  97572beba4ad7fa4f76c3d1871d2001839a65b32
 Minor Android fixup for symbol dumping code
+R=ted
 
 diff --git a/src/common/dwarf_cu_to_module.cc b/src/common/dwarf_cu_to_module.cc
 --- a/src/common/dwarf_cu_to_module.cc
 +++ b/src/common/dwarf_cu_to_module.cc
-@@ -34,17 +34,19 @@
- // For <inttypes.h> PRI* macros, before anything else might #include it.
- #ifndef __STDC_FORMAT_MACROS
- #define __STDC_FORMAT_MACROS
- #endif  /* __STDC_FORMAT_MACROS */
- 
+@@ -39,7 +39,9 @@
  #include "common/dwarf_cu_to_module.h"
  
  #include <assert.h>
--#include <cxxabi.h>
-+#if !defined(ANDROID)
-+# include <cxxabi.h>
++#if !defined(__ANDROID__)
+ #include <cxxabi.h>
 +#endif
  #include <inttypes.h>
  #include <stdio.h>
  
- #include <algorithm>
- #include <set>
- #include <utility>
- 
- #include "common/dwarf_line_to_module.h"
-@@ -308,17 +310,20 @@
-     enum DwarfAttribute attr,
-     enum DwarfForm form,
-     const string &data) {
-   switch (attr) {
-     case dwarf2reader::DW_AT_name:
+@@ -313,7 +315,10 @@
        name_attribute_ = AddStringToPool(data);
        break;
      case dwarf2reader::DW_AT_MIPS_linkage_name: {
 -      char* demangled = abi::__cxa_demangle(data.c_str(), NULL, NULL, NULL);
 +      char* demangled = NULL;
-+#     if !defined(ANDROID)
++#if !defined(__ANDROID__)
 +      demangled = abi::__cxa_demangle(data.c_str(), NULL, NULL, NULL);
-+#     endif
++#endif
        if (demangled) {
          demangled_name_ = AddStringToPool(demangled);
          free(reinterpret_cast<void*>(demangled));
-       }
-       break;
-     }
-     default: break;
-   }
-@@ -778,19 +783,19 @@
-   // DWARF spec certainly makes no such promises.
-   //
-   // So treat the functions and lines as peers, and take the trouble
-   // to compute their ranges' intersections precisely.  In any case,
-   // the hair here is a constant factor for performance; the
+@@ -783,9 +788,9 @@
    // complexity from here on out is linear.
  
    // Put both our functions and lines in order by address.
@@ -66,31 +44,3 @@ diff --git a/src/common/dwarf_cu_to_module.cc b/src/common/dwarf_cu_to_module.cc
  
    // The last line that we used any piece of.  We use this only for
    // generating warnings.
-   const Module::Line *last_line_used = NULL;
- 
-   // The last function and line we warned about --- so we can avoid
-   // doing so more than once.
-   const Module::Function *last_function_cited = NULL;
-diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
---- a/src/common/linux/dump_symbols.cc
-+++ b/src/common/linux/dump_symbols.cc
-@@ -112,18 +112,17 @@
- // MmapWrapper
- //
- // Wrapper class to make sure mapped regions are unmapped.
- //
- class MmapWrapper {
-  public:
-   MmapWrapper() : is_set_(false) {}
-   ~MmapWrapper() {
--    if (base_ != NULL) {
--      assert(size_ > 0);
-+    if (is_set_ && base_ != NULL && size_ > 0) {
-       munmap(base_, size_);
-     }
-   }
-   void set(void *mapped_address, size_t mapped_size) {
-     is_set_ = true;
-     base_ = mapped_address;
-     size_ = mapped_size;
-   }

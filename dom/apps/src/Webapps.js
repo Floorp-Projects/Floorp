@@ -559,6 +559,7 @@ WebappsApplication.prototype = {
             this._fireEvent("downloadsuccess", this._ondownloadsuccess);
             this._fireEvent("downloadapplied", this._ondownloadapplied);
           } else {
+            this.downloading = true;
             this._fireEvent("downloadprogress", this._onprogress);
           }
         } else if (msg.error) {

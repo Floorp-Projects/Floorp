@@ -546,6 +546,8 @@ class LDefinition
             return LDefinition::GENERAL;
           case MIRType_StackFrame:
             return LDefinition::GENERAL;
+          case MIRType_ForkJoinSlice:
+            return LDefinition::GENERAL;
           default:
             JS_NOT_REACHED("unexpected type");
             return LDefinition::GENERAL;

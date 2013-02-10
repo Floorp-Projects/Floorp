@@ -155,12 +155,11 @@ let SessionFileInternal = {
     TelemetryStopwatch.start("FX_SESSION_RESTORE_SYNC_READ_FILE_MS");
     try {
       let file = new FileUtils.File(this.path);
-      if (!file.exists()) {
-        return null;
-      }
       let chan = NetUtil.newChannel(file);
       let stream = chan.open();
       text = NetUtil.readInputStreamToString(stream, stream.available(), {charset: "utf-8"});
+    } catch (e if e.result == Components.results.NS_ERROR_FILE_NOT_FOUND) {
+      return "";
     } catch(ex) {
       exn = ex;
     } finally {

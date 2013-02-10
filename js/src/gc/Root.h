@@ -207,7 +207,7 @@ class Handle : public js::HandleBase<T>
 
     /* Create a handle for a NULL pointer. */
     Handle(NullPtr) {
-        typedef typename js::tl::StaticAssert<js::tl::IsPointerType<T>::result>::result _;
+        typedef typename js::tl::StaticAssert<mozilla::IsPointer<T>::value>::result _;
         ptr = reinterpret_cast<const T *>(&NullPtr::constNullValue);
     }
 
@@ -610,6 +610,13 @@ class Rooted : public RootedBase<T>
 #endif
     }
 
+    void init(PerThreadData *ptArg) {
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+        PerThreadDataFriendFields *pt = PerThreadDataFriendFields::get(ptArg);
+        commonInit(pt->thingGCRooters);
+#endif
+    }
+
   public:
     Rooted(JSContext *cx
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
@@ -634,6 +641,31 @@ class Rooted : public RootedBase<T>
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         init(cx);
+    }
+
+    Rooted(PerThreadData *pt
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(RootMethods<T>::initial())
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(pt);
+    }
+
+    Rooted(PerThreadData *pt, T initial
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(initial)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(pt);
+    }
+
+    template <typename S>
+    Rooted(PerThreadData *pt, const Unrooted<S> &initial
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(static_cast<S>(initial))
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(pt);
     }
 
     ~Rooted() {

@@ -10,12 +10,12 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsISelectControlFrame.h"
 #include "nsIHTMLCollection.h"
 #include "nsIConstraintValidation.h"
+#include "mozilla/dom/HTMLOptGroupElement.h"
 
 // PresState
 #include "nsXPCOM.h"
@@ -23,7 +23,7 @@
 #include "nsIComponentManager.h"
 #include "nsCheapSets.h"
 #include "nsError.h"
-#include "nsHTMLOptGroupElement.h"
+#include "HTMLOptGroupElement.h"
 #include "nsHTMLOptionElement.h"
 #include "nsHTMLFormElement.h"
 #include "mozilla/ErrorResult.h"
@@ -666,7 +666,7 @@ nsHTMLOptionCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
   nsGenericHTMLElement& element =
     aElement.IsHTMLOptionElement() ?
     static_cast<nsGenericHTMLElement&>(*aElement.GetAsHTMLOptionElement()) :
-    static_cast<nsGenericHTMLElement&>(*aElement.GetAsHTMLOptGroupElement());
+    static_cast<nsGenericHTMLElement&>(aElement.GetAsHTMLOptGroupElement());
 
   if (aBefore.IsNull()) {
     mSelect->Add(element, (nsGenericHTMLElement*)nullptr, aError);

@@ -117,7 +117,7 @@ class B2GOptions(MochitestOptions):
         self.add_option("--sdcard", action="store",
                         type="string", dest="sdcard",
                         help="Define size of sdcard: 1MB, 50MB...etc")
-        defaults["sdcard"] = None
+        defaults["sdcard"] = "10MB"
 
         self.add_option("--no-window", action="store_true",
                         dest="noWindow",

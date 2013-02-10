@@ -7,9 +7,11 @@
 // This script is run when the preallocated process starts.  It is injected as
 // a frame script.
 
-"use strict";
+const BrowserElementIsPreloaded = true;
 
-(function () {
+(function (global) {
+  "use strict";
+
   let Cu = Components.utils;
   let Cc = Components.classes;
   let Ci = Components.interfaces;
@@ -73,10 +75,23 @@
   Cc["@mozilla.org/thread-manager;1"].getService(Ci["nsIThreadManager"]);
   Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci["nsIAppStartup"]);
   Cc["@mozilla.org/uriloader;1"].getService(Ci["nsIURILoader"]);
+  Cc["@mozilla.org/contentsecuritypolicy;1"].createInstance(Ci["nsIContentSecurityPolicy"]);
+
+  /* Applications Specific Helper */
+  Cc["@mozilla.org/settingsManager;1"].getService(Ci["nsIDOMSettingsManager"]);
+
+  // This is a produc-specific file that's sometimes unavailable.
+  try {
+    Services.scriptloader.loadSubScript("chrome://browser/content/forms.js", global);
+  } catch (e) {
+  }
+  Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js", global);
+  Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js", global);
 
   Services.io.getProtocolHandler("app");
+  Services.io.getProtocolHandler("default");
 
   docShell.isActive = false;
   docShell.createAboutBlankContentViewer(null);
 
-})();
+})(this);

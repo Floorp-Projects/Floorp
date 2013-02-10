@@ -9,6 +9,7 @@
 #define ForkJoin_h__
 
 #include "vm/ThreadPool.h"
+#include "jsgc.h"
 
 // ForkJoin
 //
@@ -125,8 +126,7 @@ class AutoRendezvous;
 class AutoSetForkJoinSlice;
 
 #ifdef DEBUG
-struct IonTraceData
-{
+struct IonLIRTraceData {
     uint32_t bblock;
     uint32_t lir;
     uint32_t execModeInt;
@@ -157,9 +157,9 @@ struct ForkJoinSlice
     // If we took a parallel bailout, the script that bailed out is stored here.
     JSScript *abortedScript;
 
-    // Records the last instruction to execute on this thread.
 #ifdef DEBUG
-    IonTraceData traceData;
+    // Records the last instr. to execute on this thread.
+    IonLIRTraceData traceData;
 #endif
 
     ForkJoinSlice(PerThreadData *perThreadData, uint32_t sliceId, uint32_t numSlices,
@@ -167,15 +167,6 @@ struct ForkJoinSlice
 
     // True if this is the main thread, false if it is one of the parallel workers.
     bool isMainThread();
-
-    // Generally speaking, if a thread returns false, that is interpreted as a
-    // "bailout"---meaning, a recoverable error.  If however you call this
-    // function before returning false, then the error will be interpreted as
-    // *fatal*.  This doesn't strike me as the most elegant solution here but
-    // I don't know what'd be better.
-    //
-    // For convenience, *always* returns false.
-    bool setFatal();
 
     // When the code would normally trigger a GC, we don't trigger it
     // immediately but instead record that request here.  This will
@@ -188,11 +179,19 @@ struct ForkJoinSlice
     void requestGC(gcreason::Reason reason);
     void requestZoneGC(JS::Zone *zone, gcreason::Reason reason);
 
-    // During the parallel phase, this method should be invoked periodically,
-    // for example on every backedge, similar to the interrupt check.  If it
-    // returns false, then the parallel phase has been aborted and so you
-    // should bailout.  The function may also rendesvous to perform GC or do
-    // other similar things.
+    // During the parallel phase, this method should be invoked
+    // periodically, for example on every backedge, similar to the
+    // interrupt check.  If it returns false, then the parallel phase
+    // has been aborted and so you should bailout.  The function may
+    // also rendesvous to perform GC or do other similar things.
+    //
+    // This function is guaranteed to have no effect if both
+    // runtime()->interrupt is zero.  Ion-generated code takes
+    // advantage of this by inlining the checks on those flags before
+    // actually calling this function.  If this function ends up
+    // getting called a lot from outside ion code, we can refactor
+    // it into an inlined version with this check that calls a slower
+    // version.
     bool check();
 
     // Be wary, the runtime is shared between all threads!
@@ -200,17 +199,18 @@ struct ForkJoinSlice
 
     // Check the current state of parallel execution.
     static inline ForkJoinSlice *Current();
-    static inline bool InParallelSection();
 
-    static bool Initialize();
+    // Initializes the thread-local state.
+    static bool InitializeTLS();
 
   private:
     friend class AutoRendezvous;
     friend class AutoSetForkJoinSlice;
 
 #ifdef JS_THREADSAFE
-    // Initialized by Initialize()
+    // Initialized by InitializeTLS()
     static unsigned ThreadPrivateIndex;
+    static bool TLSInitialized;
 #endif
 
 #ifdef JS_THREADSAFE
@@ -235,6 +235,12 @@ struct ForkJoinOp
     virtual bool parallel(ForkJoinSlice &slice) = 0;
 };
 
+static inline bool
+InParallelSection()
+{
+    return ForkJoinSlice::Current() != NULL;
+}
+
 } // namespace js
 
 /* static */ inline js::ForkJoinSlice *
@@ -245,12 +251,6 @@ js::ForkJoinSlice::Current()
 #else
     return NULL;
 #endif
-}
-
-/* static */ inline bool
-js::ForkJoinSlice::InParallelSection()
-{
-    return Current() != NULL;
 }
 
 #endif // ForkJoin_h__

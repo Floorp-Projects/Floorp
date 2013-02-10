@@ -254,6 +254,11 @@ sdb_getFallbackTempDir(void)
 #error "sdb_getFallbackTempDir not implemented"
 #endif
 
+#ifndef SQLITE_FCNTL_TEMPFILENAME
+/* SQLITE_FCNTL_TEMPFILENAME was added in SQLite 3.7.15 */
+#define SQLITE_FCNTL_TEMPFILENAME 16
+#endif
+
 static char *
 sdb_getTempDir(sqlite3 *sqlDB)
 {

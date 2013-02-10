@@ -8,6 +8,8 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 #include "jsproxy.h"
+#include "nsContentUtils.h"
+#include "nsPrincipal.h"
 
 #include "mozilla/dom/BindingUtils.h"
 
@@ -106,7 +108,8 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
         mNext(nullptr),
         mGlobalJSObject(nullptr),
         mPrototypeNoHelper(nullptr),
-        mExperimentalBindingsEnabled(XPCJSRuntime::Get()->ExperimentalBindingsEnabled())
+        mExperimentalBindingsEnabled(XPCJSRuntime::Get()->ExperimentalBindingsEnabled()),
+        mIsXBLScope(false)
 {
     // add ourselves to the scopes list
     {   // scoped lock
@@ -172,6 +175,82 @@ XPCWrappedNativeScope::GetComponentsJSObject(XPCCallContext& ccx)
         return nullptr;
     return obj;
 }
+
+JSObject*
+XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
+{
+    JSObject *global = GetGlobalJSObject();
+    MOZ_ASSERT(js::IsObjectInContextCompartment(global, cx));
+    MOZ_ASSERT(!mIsXBLScope);
+    MOZ_ASSERT(strcmp(js::GetObjectClass(global)->name,
+                      "nsXBLPrototypeScript compilation scope"));
+
+    // If we already have a special XBL scope object, we know what to use.
+    if (mXBLScope)
+        return mXBLScope;
+
+    // We should only be applying XBL bindings in DOM scopes.
+    MOZ_ASSERT(!strcmp(js::GetObjectClass(mGlobalJSObject)->name, "Window") ||
+               !strcmp(js::GetObjectClass(mGlobalJSObject)->name, "ChromeWindow") ||
+               !strcmp(js::GetObjectClass(mGlobalJSObject)->name, "ModalContentWindow"));
+
+    // Get the scope principal. If it's system, there's no reason to make
+    // a separate XBL scope.
+    nsIPrincipal *principal = GetPrincipal();
+    if (!principal)
+        return nullptr;
+    if (nsContentUtils::IsSystemPrincipal(principal))
+        return global;
+
+    // Check the pref. If XBL scopes are disabled, just return the global.
+    if (!XPCJSRuntime::Get()->XBLScopesEnabled())
+        return global;
+
+    // Set up the sandbox options. Note that we use the DOM global as the
+    // sandboxPrototype so that the XBL scope can access all the DOM objects
+    // it's accustomed to accessing.
+    //
+    // NB: One would think that wantXrays wouldn't make a difference here.
+    // However, wantXrays lives a secret double life, and one of its other
+    // hobbies is to waive Xray on the returned sandbox when set to false.
+    // So make sure to keep this set to true, here.
+    SandboxOptions options;
+    options.wantXrays = true;
+    options.wantComponents = true;
+    options.wantXHRConstructor = false;
+    options.proto = global;
+
+    // Use an nsExpandedPrincipal to create asymmetric security.
+    nsCOMPtr<nsIExpandedPrincipal> ep;
+    MOZ_ASSERT(!(ep = do_QueryInterface(principal)));
+    nsTArray< nsCOMPtr<nsIPrincipal> > principalAsArray(1);
+    principalAsArray.AppendElement(principal);
+    ep = new nsExpandedPrincipal(principalAsArray);
+
+    // Create the sandbox.
+    JSAutoRequest ar(cx);
+    JS::Value v = JS::UndefinedValue();
+    nsresult rv = xpc_CreateSandboxObject(cx, &v, ep, options);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    mXBLScope = &v.toObject();
+
+    // Tag it.
+    EnsureCompartmentPrivate(js::UnwrapObject(mXBLScope))->scope->mIsXBLScope = true;
+
+    // Good to go!
+    return mXBLScope;
+}
+
+namespace xpc {
+JSObject *GetXBLScope(JSContext *cx, JSObject *contentScope)
+{
+    JSAutoCompartment ac(cx, contentScope);
+    JSObject *scope = EnsureCompartmentPrivate(contentScope)->scope->EnsureXBLScope(cx);
+    scope = js::UnwrapObject(scope);
+    xpc_UnmarkGrayObject(scope);
+    return scope;
+}
+} /* namespace xpc */
 
 // Dummy JS class to let wrappers w/o an xpc prototype share
 // scopes. By doing this we avoid allocating a new scope for every
@@ -255,6 +334,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     mComponents = nullptr;
 
     JSRuntime *rt = XPCJSRuntime::Get()->GetJSRuntime();
+    mXBLScope.finalize(rt);
     mGlobalJSObject.finalize(rt);
 }
 

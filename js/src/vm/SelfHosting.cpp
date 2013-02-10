@@ -13,6 +13,11 @@
 
 #include "gc/Marking.h"
 
+#include "vm/ForkJoin.h"
+#include "vm/ThreadPool.h"
+
+#include "builtin/ParallelArray.h"
+
 #include "jsfuninlines.h"
 #include "jstypedarrayinlines.h"
 
@@ -72,8 +77,8 @@ intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
-intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
+JSBool
+js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() >= 1);
@@ -129,6 +134,17 @@ intrinsic_AssertionFailed(JSContext *cx, unsigned argc, Value *vp)
     return false;
 }
 
+static JSBool
+intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() >= 1);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[0].toObject().isFunction());
+    args[0].toObject().toFunction()->setIsSelfHostedConstructor();
+    return true;
+}
+
 /*
  * Used to decompile values in the nearest non-builtin stack frame, falling
  * back to decompiling in the current frame. Helpful for printing higher-order
@@ -154,14 +170,108 @@ intrinsic_DecompileArg(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
-intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
+#ifdef DEBUG
+JSBool
+js::intrinsic_Dump(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(args.length() >= 1);
-    JS_ASSERT(args[0].isObject());
-    JS_ASSERT(args[0].toObject().isFunction());
-    args[0].toObject().toFunction()->setIsSelfHostedConstructor();
+    RootedValue val(cx, args[0]);
+    js_DumpValue(val);
+    fprintf(stderr, "\n");
+    args.rval().setUndefined();
+    return true;
+}
+#endif
+
+JSBool
+js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
+{
+    // Usage: %NewDenseArray(length)
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Check that index is an int32
+    if (!args[0].isInt32()) {
+        JS_ReportError(cx, "Expected int32 as second argument");
+        return false;
+    }
+    uint32_t length = args[0].toInt32();
+
+    // Make a new buffer and initialize it up to length.
+    RootedObject buffer(cx, NewDenseAllocatedArray(cx, length));
+    if (!buffer)
+        return false;
+
+    types::TypeObject *newtype = types::GetTypeCallerInitObject(cx, JSProto_Array);
+    if (!newtype)
+        return false;
+    buffer->setType(newtype);
+
+    JSObject::EnsureDenseResult edr = buffer->ensureDenseElements(cx, length, 0);
+    switch (edr) {
+      case JSObject::ED_OK:
+        args.rval().setObject(*buffer);
+        return true;
+
+      case JSObject::ED_SPARSE: // shouldn't happen!
+        JS_ASSERT(!"%EnsureDenseArrayElements() would yield sparse array");
+        JS_ReportError(cx, "%EnsureDenseArrayElements() would yield sparse array");
+        break;
+
+      case JSObject::ED_FAILED:
+        break;
+    }
+    return false;
+}
+
+JSBool
+js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
+{
+    // Usage: %UnsafeSetElement(arr0, idx0, elem0,
+    //                          ...,
+    //                          arrN, idxN, elemN)
+    //
+    // For each set of |(arr, idx, elem)| arguments that are passed,
+    // performs the assignment |arr[idx] = elem|. |arr| must be either
+    // a dense array or a typed array.
+    //
+    // If |arr| is a dense array, the index must be an int32 less than the
+    // initialized length of |arr|. Use |%EnsureDenseResultArrayElements| to
+    // ensure that the initialized length is long enough.
+    //
+    // If |arr| is a typed array, the index must be an int32 less than the
+    // length of |arr|.
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if ((args.length() % 3) != 0) {
+        JS_ReportError(cx, "Incorrect number of arguments, not divisible by 3");
+        return false;
+    }
+
+    for (uint32_t base = 0; base < args.length(); base += 3) {
+        uint32_t arri = base;
+        uint32_t idxi = base+1;
+        uint32_t elemi = base+2;
+
+        JS_ASSERT(args[arri].isObject());
+        JS_ASSERT(args[arri].toObject().isNative() ||
+                  args[arri].toObject().isTypedArray());
+        JS_ASSERT(args[idxi].isInt32());
+
+        RootedObject arrobj(cx, &args[arri].toObject());
+        uint32_t idx = args[idxi].toInt32();
+
+        if (arrobj->isNative()) {
+            JS_ASSERT(idx < arrobj->getDenseInitializedLength());
+            JSObject::setDenseElementWithType(cx, arrobj, idx, args[elemi]);
+        } else {
+            JS_ASSERT(idx < TypedArray::length(arrobj));
+            RootedValue tmp(cx, args[elemi]);
+            // XXX: Always non-strict.
+            JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false);
+        }
+    }
+
+    args.rval().setUndefined();
     return true;
 }
 
@@ -187,14 +297,22 @@ intrinsic_RuntimeDefaultLocale(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSFunctionSpec intrinsic_functions[] = {
-    JS_FN("ToObject",           intrinsic_ToObject,             1,0),
-    JS_FN("ToInteger",          intrinsic_ToInteger,            1,0),
-    JS_FN("IsCallable",         intrinsic_IsCallable,           1,0),
-    JS_FN("ThrowError",         intrinsic_ThrowError,           4,0),
-    JS_FN("AssertionFailed",    intrinsic_AssertionFailed,      1,0),
-    JS_FN("MakeConstructible",  intrinsic_MakeConstructible,    1,0),
-    JS_FN("DecompileArg",       intrinsic_DecompileArg,         2,0),
+    JS_FN("ToObject",             intrinsic_ToObject,             1,0),
+    JS_FN("ToInteger",            intrinsic_ToInteger,            1,0),
+    JS_FN("IsCallable",           intrinsic_IsCallable,           1,0),
+    JS_FN("ThrowError",           intrinsic_ThrowError,           4,0),
+    JS_FN("AssertionFailed",      intrinsic_AssertionFailed,      1,0),
+    JS_FN("MakeConstructible",    intrinsic_MakeConstructible,    1,0),
+    JS_FN("DecompileArg",         intrinsic_DecompileArg,         2,0),
     JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0,0),
+
+    JS_FN("NewDenseArray",        intrinsic_NewDenseArray,           1,0),
+    JS_FN("UnsafeSetElement",     intrinsic_UnsafeSetElement,     3,0),
+
+#ifdef DEBUG
+    JS_FN("Dump",                 intrinsic_Dump,                 1,0),
+#endif
+
     JS_FS_END
 };
 

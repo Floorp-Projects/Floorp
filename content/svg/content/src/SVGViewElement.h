@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGViewElement_h
 #define mozilla_dom_SVGViewElement_h
 
-#include "nsIDOMSVGViewElement.h"
 #include "nsSVGElement.h"
 #include "nsSVGEnum.h"
 #include "nsSVGViewBox.h"
@@ -20,6 +19,7 @@ static const unsigned short SVG_ZOOMANDPAN_MAGNIFY = 2;
 typedef nsSVGElement SVGViewElementBase;
 
 class nsSVGOuterSVGFrame;
+class nsIDOMSVGStringList;
 
 nsresult NS_NewSVGViewElement(nsIContent **aResult,
                               already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -31,7 +31,7 @@ namespace dom {
 class SVGSVGElement;
 
 class SVGViewElement : public SVGViewElementBase,
-                       public nsIDOMSVGViewElement
+                       public nsIDOMSVGElement
 {
 protected:
   friend class mozilla::SVGFragmentIdentifier;
@@ -46,7 +46,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGVIEWELEMENT
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
@@ -55,8 +54,6 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(SVGViewElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 

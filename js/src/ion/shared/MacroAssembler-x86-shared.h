@@ -111,6 +111,9 @@ class MacroAssemblerX86Shared : public Assembler
     void sub32(Imm32 imm, Register dest) {
         subl(imm, dest);
     }
+    void xor32(Imm32 imm, Register dest) {
+        xorl(imm, dest);
+    }
 
     void branch32(Condition cond, const Address &lhs, const Register &rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
@@ -138,6 +141,10 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         testl(Operand(address), imm);
+        j(cond, label);
+    }
+    void branchTestBool(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
+        testb(lhs, rhs);
         j(cond, label);
     }
 
@@ -291,10 +298,7 @@ class MacroAssemblerX86Shared : public Assembler
     void convertDoubleToInt32(FloatRegister src, Register dest, Label *fail,
                               bool negativeZeroCheck = true)
     {
-        // Note that we don't specify the destination width for the truncated
-        // conversion to integer. x64 will use the native width (quadword) which
-        // sign-extends the top bits, preserving a little sanity.
-        cvttsd2s(src, dest);
+        cvttsd2si(src, dest);
         cvtsi2sd(dest, ScratchFloatReg);
         ucomisd(src, ScratchFloatReg);
         j(Assembler::Parity, fail);
@@ -344,7 +348,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     bool maybeInlineDouble(uint64_t u, const FloatRegister &dest) {
-        // This implements parts of "13.4 Generating constants" of 
+        // This implements parts of "13.4 Generating constants" of
         // "2. Optimizing subroutines in assembly language" by Agner Fog.
         switch (u) {
           case 0x0000000000000000ULL: // 0.0
@@ -382,6 +386,40 @@ class MacroAssemblerX86Shared : public Assembler
             return false;
         }
         return true;
+    }
+
+    void emitSet(Assembler::Condition cond, const Register &dest,
+                 Assembler::NaNCond ifNaN = Assembler::NaN_Unexpected) {
+        if (GeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {
+            // If the register we're defining is a single byte register,
+            // take advantage of the setCC instruction
+            setCC(cond, dest);
+            movzxbl(dest, dest);
+
+            if (ifNaN != Assembler::NaN_Unexpected) {
+                Label noNaN;
+                j(Assembler::NoParity, &noNaN);
+                if (ifNaN == Assembler::NaN_IsTrue)
+                    movl(Imm32(1), dest);
+                else
+                    xorl(dest, dest);
+                bind(&noNaN);
+            }
+        } else {
+            Label end;
+            Label ifFalse;
+
+            if (ifNaN == Assembler::NaN_IsFalse)
+                j(Assembler::Parity, &ifFalse);
+            movl(Imm32(1), dest);
+            j(cond, &end);
+            if (ifNaN == Assembler::NaN_IsTrue)
+                j(Assembler::Parity, &end);
+            bind(&ifFalse);
+            xorl(dest, dest);
+
+            bind(&end);
+        }
     }
 
     // Emit a JMP that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().

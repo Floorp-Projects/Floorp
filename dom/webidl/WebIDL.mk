@@ -57,30 +57,41 @@ webidl_files = \
   Function.webidl \
   GainNode.webidl \
   HTMLAnchorElement.webidl \
+  HTMLAreaElement.webidl \
+  HTMLBaseElement.webidl \
   HTMLBodyElement.webidl \
   HTMLBRElement.webidl \
+  HTMLButtonElement.webidl \
   HTMLCollection.webidl \
   HTMLDataListElement.webidl \
+  HTMLDirectoryElement.webidl \
   HTMLDivElement.webidl \
   HTMLDListElement.webidl \
   HTMLDocument.webidl \
   HTMLElement.webidl \
+  HTMLFieldSetElement.webidl \
   HTMLFontElement.webidl \
   HTMLFrameSetElement.webidl \
+  HTMLHeadElement.webidl \
   HTMLHeadingElement.webidl \
   HTMLHRElement.webidl \
+  HTMLHtmlElement.webidl \
   HTMLImageElement.webidl \
   HTMLLabelElement.webidl \
   HTMLLIElement.webidl \
+  HTMLLinkElement.webidl \
   HTMLMapElement.webidl \
   HTMLMetaElement.webidl \
   HTMLMeterElement.webidl \
   HTMLModElement.webidl \
   HTMLOListElement.webidl \
+  HTMLOptGroupElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLParagraphElement.webidl \
+  HTMLParamElement.webidl \
   HTMLPreElement.webidl \
   HTMLPropertiesCollection.webidl \
+  HTMLQuoteElement.webidl \
   HTMLScriptElement.webidl \
   HTMLSpanElement.webidl \
   HTMLStyleElement.webidl \
@@ -195,6 +206,12 @@ webidl_files = \
   XPathEvaluator.webidl \
   XULElement.webidl \
   $(NULL)
+
+ifdef MOZ_AUDIO_CHANNEL_MANAGER
+webidl_files += \
+  AudioChannelManager.webidl \
+  $(NULL)
+endif
 
 ifdef MOZ_MEDIA
 webidl_files += \

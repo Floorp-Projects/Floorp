@@ -1144,11 +1144,10 @@ class MinidumpWriter {
     debug.get()->ldbase = (void*)debug_entry.r_ldbase;
     debug.get()->dynamic = dynamic;
 
-    char* dso_debug_data = new char[dynamic_length];
-    dumper_->CopyFromProcess(dso_debug_data, GetCrashThread(), dynamic,
+    wasteful_vector<char> dso_debug_data(dumper_->allocator(), dynamic_length);
+    dumper_->CopyFromProcess(&dso_debug_data[0], GetCrashThread(), dynamic,
                              dynamic_length);
-    debug.CopyIndexAfterObject(0, dso_debug_data, dynamic_length);
-    delete[] dso_debug_data;
+    debug.CopyIndexAfterObject(0, &dso_debug_data[0], dynamic_length);
 
     return true;
   }

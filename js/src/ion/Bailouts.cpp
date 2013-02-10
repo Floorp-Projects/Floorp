@@ -239,6 +239,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 #ifdef DEBUG
     // Use count is reset after invalidation. Log use count on bailouts to
     // determine if we have a critical sequence of bailout.
+    //
+    // Note: frame conversion only occurs in sequential mode
     if (it.script()->ion == it.ionScript()) {
         IonSpew(IonSpew_Bailouts, " Current script use count is %u",
                 it.script()->getUseCount());
@@ -307,6 +309,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
             return BAILOUT_RETURN_OVERRECURSED;
     }
 
+    fp->clearRunningInIon();
+
     jsbytecode *bailoutPc = fp->script()->code + iter.pcOffset();
     br->setBailoutPc(bailoutPc);
 
@@ -338,28 +342,6 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 
     JS_NOT_REACHED("bad bailout kind");
     return BAILOUT_RETURN_FATAL_ERROR;
-}
-
-static inline void
-EnsureExitFrame(IonCommonFrameLayout *frame)
-{
-    if (frame->prevType() == IonFrame_Entry) {
-        // The previous frame type is the entry frame, so there's no actual
-        // need for an exit frame.
-        return;
-    }
-
-    if (frame->prevType() == IonFrame_Rectifier) {
-        // The rectifier code uses the frame descriptor to discard its stack,
-        // so modifying its descriptor size here would be dangerous. Instead,
-        // we change the frame type, and teach the stack walking code how to
-        // deal with this edge case. bug 717297 would obviate the need
-        frame->changePrevType(IonFrame_Bailed_Rectifier);
-        return;
-    }
-
-    JS_ASSERT(frame->prevType() == IonFrame_OptimizedJS);
-    frame->changePrevType(IonFrame_Bailed_JS);
 }
 
 uint32_t
@@ -617,7 +599,6 @@ ion::ThunkToInterpreter(Value *vp)
     // prologue), so we must create one now for each inlined frame which needs
     // one.
     {
-        br->entryfp()->clearRunningInIon();
         ScriptFrameIter iter(cx);
         StackFrame *fp = NULL;
         Rooted<JSScript*> script(cx);

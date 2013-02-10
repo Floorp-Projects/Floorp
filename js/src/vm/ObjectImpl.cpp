@@ -138,12 +138,16 @@ PropDesc::wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappe
         return false;
 
     *desc = *this;
-    if (!comp->wrap(cx, &desc->value_))
+    RootedValue value(cx, desc->value_);
+    RootedValue get(cx, desc->get_);
+    RootedValue set(cx, desc->set_);
+
+    if (!comp->wrap(cx, &value) || !comp->wrap(cx, &get) || !comp->wrap(cx, &set))
         return false;
-    if (!comp->wrap(cx, &desc->get_))
-        return false;
-    if (!comp->wrap(cx, &desc->set_))
-        return false;
+
+    desc->value_ = value;
+    desc->get_ = get;
+    desc->set_ = set;
     return !obj->isProxy() || desc->makeObject(cx);
 }
 

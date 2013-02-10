@@ -198,14 +198,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void boxValue(JSValueType type, Register src, Register dest) {
         JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
         movq(ImmShiftedTag(tag), dest);
-
-        // Integers must be treated specially, since the top 32 bits of the
-        // register may be filled, we can't clobber the tag bits. This can
-        // happen when instructions automatically sign-extend their result.
-        // To account for this, we clear the top bits of the register, which
-        // is safe since those bits aren't required.
-        if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN)
-            movl(src, src);
+#ifdef DEBUG
+        if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+            Label upper32BitsZeroed;
+            branchPtr(Assembler::BelowOrEqual, src, Imm32(UINT32_MAX), &upper32BitsZeroed);
+            breakpoint();
+            bind(&upper32BitsZeroed);
+        }
+#endif
         orq(src, dest);
     }
 
@@ -353,6 +353,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpPtr(Operand(lhs), rhs);
     }
     void cmpPtr(const Operand &lhs, const Register &rhs) {
+        cmpq(lhs, rhs);
+    }
+    void cmpPtr(const Operand &lhs, const Imm32 rhs) {
         cmpq(lhs, rhs);
     }
     void cmpPtr(const Address &lhs, const Register &rhs) {
@@ -651,6 +654,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         moveValue(v, ScratchReg);
         cmpq(value.valueReg(), ScratchReg);
         j(cond, label);
+    }
+    void branchTestValue(Condition cond, const Address &valaddr, const ValueOperand &value,
+                         Label *label)
+    {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        branchPtr(cond, valaddr, value.valueReg(), label);
     }
 
     void boxDouble(const FloatRegister &src, const ValueOperand &dest) {

@@ -56,8 +56,6 @@ using namespace js;
 using namespace js::gc;
 
 using js::frontend::IsIdentifier;
-using js::frontend::LetDataToGroupAssign;
-using js::frontend::LetDataToOffset;
 using mozilla::ArrayLength;
 
 /*
@@ -1505,6 +1503,9 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
     if (!pcstack.init(cx, iter.script(), current))
         return false;
 
+    if (spindex < 0 && spindex + pcstack.depth() < 0)
+        spindex = JSDVG_SEARCH_STACK;
+
     if (spindex == JSDVG_SEARCH_STACK) {
         size_t index = iter.numFrameSlots();
         JS_ASSERT(index >= size_t(pcstack.depth()));
@@ -1996,8 +1997,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbyteco
              * instruction will reset the saved depth.
              */
             if (cpcdepth != unsigned(-1))
-                LOCAL_ASSERT((op == JSOP_NOP && sn && SN_TYPE(sn) == SRC_ENDBRACE) ||
-                             op == JSOP_FINALLY);
+                LOCAL_ASSERT(op == JSOP_NOP || op == JSOP_FINALLY);
             cpcdepth = unsigned(-1);
         }
 
