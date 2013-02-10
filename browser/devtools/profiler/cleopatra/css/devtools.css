@@ -16,3 +16,8 @@
   color: #999;
   display: none;
 }
+
+/* De-emphasize chrome functions */
+.resourceIcon[data-resource^=otherhost_] + .functionName {
+  color: #999;
+}
