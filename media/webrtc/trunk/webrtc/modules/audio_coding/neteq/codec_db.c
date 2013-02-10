@@ -492,9 +492,6 @@ int WebRtcNetEQ_DbGetSplitInfo(SplitInfo_t *inst, enum WebRtcNetEQDecoder codecI
         case kDecoderSPEEX_8:
         case kDecoderSPEEX_16:
 #endif
-#ifdef NETEQ_OPUS_CODEC
-        case kDecoderOpus :
-#endif
 #ifdef NETEQ_CELT_CODEC
         case kDecoderCELT_32 :
         case kDecoderCELT_32_2ch :

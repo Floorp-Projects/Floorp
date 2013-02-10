@@ -5,7 +5,6 @@
 
 # First, get a new copy of the tree to play with
 # They both want to be named 'trunk'...
-#cd media/webrtc
 mkdir webrtc_update
 cd webrtc_update
 
@@ -13,8 +12,19 @@ cd webrtc_update
 gclient config --name trunk http://webrtc.googlecode.com/svn/trunk/peerconnection
 gclient sync --force
 if [ $2 ] ; then
+if [ $3 ] ; then
+    echo
+else
     sed -i -e "s/\"webrtc_revision\":.*,/\"webrtc_revision\": \"$1\",/" -e "s/\"libjingle_revision\":.*,/\"libjingle_revision\": \"$2\",/" trunk/DEPS
     gclient sync --force
+fi
+fi
+
+if [ $3 ] ; then
+echo "Updating from $3..."
+rm -rf trunk/third_party/webrtc
+mkdir trunk/src
+cp -a $3/webrtc/* trunk/src
 fi
 
 cd trunk
@@ -60,16 +70,16 @@ echo "You probably want to do these from another shell so you can look at these"
 hg commit -m "Webrtc import $revision"
 # webrtc-import-last is auto-updated (bookmark)
 
-echo ""
-hg update --clean webrtc-pending
-hg merge -r webrtc-import-last
-hg commit -m 'merge latest import to pending, $revision'
+#echo ""
+#hg update --clean webrtc-pending
+#hg merge -r webrtc-import-last
+#hg commit -m "merge latest import to pending, $revision"
 # webrtc-pending is auto-updated (bookmark)
 
 echo ""
-hg update --clean webrtc-trim
-hg merge -r webrtc-pending
-hg commit -m "merge latest import to trim, $revision"
+echo "hg update --clean webrtc-trim"
+echo "hg merge -r webrtc-import-last"
+echo "hg commit -m 'merge latest import to trim, $revision'"
 # webrtc-trim is auto-updated (bookmark)
 
 # commands to pull - never do more than echo them for the user

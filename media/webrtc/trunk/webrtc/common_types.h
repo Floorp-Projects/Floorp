@@ -357,7 +357,7 @@ enum NsModes    // type of Noise Suppression
     kNsLowSuppression,  // lowest suppression
     kNsModerateSuppression,
     kNsHighSuppression,
-    kNsVeryHighSuppression,     // highest suppression
+    kNsVeryHighSuppression     // highest suppression
 };
 
 enum AgcModes                  // type of Automatic Gain Control
@@ -382,7 +382,7 @@ enum EcModes                   // type of Echo Control
     kEcDefault,                // platform default
     kEcConference,             // conferencing default (aggressive AEC)
     kEcAec,                    // Acoustic Echo Cancellation
-    kEcAecm,                   // AEC mobile
+    kEcAecm                    // AEC mobile
 };
 
 // AECM modes
@@ -434,7 +434,7 @@ enum NetEqModes             // NetEQ playout configurations
     kNetEqFax = 2,
     // Minimal buffer management. Inserts zeros for lost packets and during
     // buffer increases.
-    kNetEqOff = 3,
+    kNetEqOff = 3
 };
 
 enum NetEqBgnModes          // NetEQ Background Noise (BGN) configurations
@@ -446,7 +446,7 @@ enum NetEqBgnModes          // NetEQ Background Noise (BGN) configurations
     kBgnFade = 1,
     // BGN is not used at all. Silence is produced after speech extrapolation
     // has faded.
-    kBgnOff = 2,
+    kBgnOff = 2
 };
 
 enum OnHoldModes            // On Hold direction
@@ -460,7 +460,7 @@ enum AmrMode
 {
     kRfc3267BwEfficient = 0,
     kRfc3267OctetAligned = 1,
-    kRfc3267FileStorage = 2,
+    kRfc3267FileStorage = 2
 };
 
 // ==================================================================
