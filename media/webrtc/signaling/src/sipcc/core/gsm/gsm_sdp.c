@@ -3156,7 +3156,7 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
 
                             /* Copied from media/webrtc/trunk/src/modules/
                                audio_coding/main/source/acm_codec_database.cc */
-                            payload_info->audio.frequency = 32000;
+                            payload_info->audio.frequency = 48000;
                             payload_info->audio.packet_size = 960;
                             payload_info->audio.bitrate = 32000;
                             break;
