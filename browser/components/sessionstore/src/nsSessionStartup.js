@@ -71,7 +71,6 @@ SessionStartup.prototype = {
    * Initialize the component
    */
   init: function sss_init() {
-    debug("init starting");
     // do not need to initialize anything in auto-started private browsing sessions
     if (PrivateBrowsingUtils.permanentPrivateBrowsing)
       return;
@@ -79,7 +78,6 @@ SessionStartup.prototype = {
     _SessionFile.read().then(
       this._onSessionFileRead.bind(this)
     );
-    debug("init launched");
   },
 
   // Wrap a string as a nsISupports
@@ -91,9 +89,7 @@ SessionStartup.prototype = {
   },
 
   _onSessionFileRead: function sss_onSessionFileRead(aStateString) {
-    debug("onSessionFileRead ");
     if (this._initialized) {
-      debug("onSessionFileRead: Initialization is already complete");
       // Initialization is complete, nothing else to do
       return;
     }
@@ -300,7 +296,6 @@ SessionStartup.prototype = {
   // initialization and kill ongoing asynchronous initialization
   _ensureInitialized: function sss__ensureInitialized() {
     try {
-      debug("_ensureInitialized: " + this._initialState);
       if (this._initialized) {
         // Initialization is complete, nothing else to do
         return;
@@ -317,7 +312,7 @@ SessionStartup.prototype = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsISupportsWeakReference,
                                           Ci.nsISessionStartup]),
-  classID:          Components.ID("{ec7a6c20-e081-11da-8ad9-0800200c9a66}"),
+  classID:          Components.ID("{ec7a6c20-e081-11da-8ad9-0800200c9a66}")
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStartup]);
