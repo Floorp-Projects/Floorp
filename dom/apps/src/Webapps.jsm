@@ -511,20 +511,21 @@ this.DOMApplicationRegistry = {
     let manifest = new ManifestHelper(aManifest, aApp.origin);
     for (let activity in root.activities) {
       let description = root.activities[activity];
-      if (!description.href) {
-        description.href = manifest.launch_path;
+      let href = description.href;
+      if (!href) {
+        href = manifest.launch_path;
       }
 
       try {
-        description.href = manifest.resolveFromOrigin(description.href);
+        href = manifest.resolveFromOrigin(href);
       } catch (e) {
-        debug("Activity href (" + description.href + ") is invalid, skipping. " +
+        debug("Activity href (" + href + ") is invalid, skipping. " +
               "Error is: " + e);
         continue;
       }
 
       debug('_createActivitiesToRegister: ' + aApp.manifestURL + ', activity ' +
-          activity + ', description.href is ' + description.href);
+          activity + ', description.href is ' + href);
 
       if (aRunUpdate) {
         activitiesToRegister.push({ "manifest": aApp.manifestURL,
@@ -533,7 +534,7 @@ this.DOMApplicationRegistry = {
                                     "description": description });
       }
 
-      let launchPath = Services.io.newURI(description.href, null, null);
+      let launchPath = Services.io.newURI(href, null, null);
       let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
 
       if (SystemMessagePermissionsChecker
