@@ -13,8 +13,7 @@
 #include "libyuv/cpu_id.h"
 #include "libyuv/convert.h"
 #include "libyuv/planar_functions.h"
-#include "source/rotate_priv.h"
-#include "source/row.h"
+#include "libyuv/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -42,7 +41,7 @@ extern "C" {
 #endif
 #endif
 
-#ifdef __ARM_NEON__
+#if !defined(YUV_DISABLE_ASM) && defined(__ARM_NEON__)
 #define HAS_MIRRORROW_NEON
 void MirrorRow_NEON(const uint8* src, uint8* dst, int width);
 #define HAS_MIRRORROW_UV_NEON
@@ -57,7 +56,7 @@ void TransposeUVWx8_NEON(const uint8* src, int src_stride,
                          uint8* dst_a, int dst_stride_a,
                          uint8* dst_b, int dst_stride_b,
                          int width);
-#endif
+#endif  // defined(__ARM_NEON__)
 
 #if !defined(YUV_DISABLE_ASM) && defined(_M_IX86)
 #define HAS_TRANSPOSE_WX8_SSSE3
@@ -773,6 +772,7 @@ static void TransposeWxH_C(const uint8* src, int src_stride,
   }
 }
 
+LIBYUV_API
 void TransposePlane(const uint8* src, int src_stride,
                     uint8* dst, int dst_stride,
                     int width, int height) {
@@ -809,6 +809,7 @@ void TransposePlane(const uint8* src, int src_stride,
   TransposeWxH_C(src, src_stride, dst, dst_stride, width, i);
 }
 
+LIBYUV_API
 void RotatePlane90(const uint8* src, int src_stride,
                    uint8* dst, int dst_stride,
                    int width, int height) {
@@ -820,6 +821,7 @@ void RotatePlane90(const uint8* src, int src_stride,
   TransposePlane(src, src_stride, dst, dst_stride, width, height);
 }
 
+LIBYUV_API
 void RotatePlane270(const uint8* src, int src_stride,
                     uint8* dst, int dst_stride,
                     int width, int height) {
@@ -831,6 +833,7 @@ void RotatePlane270(const uint8* src, int src_stride,
   TransposePlane(src, src_stride, dst, dst_stride, width, height);
 }
 
+LIBYUV_API
 void RotatePlane180(const uint8* src, int src_stride,
                     uint8* dst, int dst_stride,
                     int width, int height) {
@@ -932,6 +935,7 @@ static void TransposeUVWxH_C(const uint8* src, int src_stride,
     }
 }
 
+LIBYUV_API
 void TransposeUV(const uint8* src, int src_stride,
                  uint8* dst_a, int dst_stride_a,
                  uint8* dst_b, int dst_stride_b,
@@ -971,6 +975,7 @@ void TransposeUV(const uint8* src, int src_stride,
                    width, i);
 }
 
+LIBYUV_API
 void RotateUV90(const uint8* src, int src_stride,
                 uint8* dst_a, int dst_stride_a,
                 uint8* dst_b, int dst_stride_b,
@@ -984,6 +989,7 @@ void RotateUV90(const uint8* src, int src_stride,
               width, height);
 }
 
+LIBYUV_API
 void RotateUV270(const uint8* src, int src_stride,
                  uint8* dst_a, int dst_stride_a,
                  uint8* dst_b, int dst_stride_b,
@@ -1000,6 +1006,7 @@ void RotateUV270(const uint8* src, int src_stride,
 }
 
 // Rotate 180 is a horizontal and vertical flip.
+LIBYUV_API
 void RotateUV180(const uint8* src, int src_stride,
                  uint8* dst_a, int dst_stride_a,
                  uint8* dst_b, int dst_stride_b,
@@ -1029,6 +1036,7 @@ void RotateUV180(const uint8* src, int src_stride,
   }
 }
 
+LIBYUV_API
 int I420Rotate(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,
                const uint8* src_v, int src_stride_v,
@@ -1105,6 +1113,7 @@ int I420Rotate(const uint8* src_y, int src_stride_y,
   return -1;
 }
 
+LIBYUV_API
 int NV12ToI420Rotate(const uint8* src_y, int src_stride_y,
                      const uint8* src_uv, int src_stride_uv,
                      uint8* dst_y, int dst_stride_y,

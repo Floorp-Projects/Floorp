@@ -7,13 +7,21 @@
 # into all.gyp.
 
 {
+  'variables': {
+    # A hook that can be overridden in other repositories to add additional
+    # compilation targets to 'All'
+    'android_app_targets%': [],
+  },
   'targets': [
     {
       'target_name': 'All',
       'type': 'none',
       'dependencies': [
         '../content/content.gyp:content_shell_apk',
+        '<@(android_app_targets)',
         'android_builder_tests',
+        '../android_webview/android_webview.gyp:android_webview_apk',
+        '../chrome/chrome.gyp:chromium_testshell',
       ],
     }, # target_name: All
     {
@@ -28,23 +36,26 @@
       'target_name': 'android_builder_tests',
       'type': 'none',
       'dependencies': [
+        '../base/android/jni_generator/jni_generator.gyp:jni_generator_tests',
         '../base/base.gyp:base_unittests',
+        '../cc/cc_tests.gyp:cc_unittests',
+        '../chrome/chrome.gyp:unit_tests',
         '../content/content.gyp:content_shell_test_apk',
         '../content/content.gyp:content_unittests',
-        '../chrome/chrome.gyp:unit_tests',
         '../gpu/gpu.gyp:gpu_unittests',
+        '../ipc/ipc.gyp:ipc_tests',
+        '../media/media.gyp:media_unittests',
+        '../net/net.gyp:net_unittests',
         '../sql/sql.gyp:sql_unittests',
         '../sync/sync.gyp:sync_unit_tests',
-        '../ipc/ipc.gyp:ipc_tests',
-        '../net/net.gyp:net_unittests',
-        '../ui/ui.gyp:ui_unittests',
         '../third_party/WebKit/Source/WebKit/chromium/All.gyp:*',
-        # From here down: not added to run_tests.py yet.
-        '../jingle/jingle.gyp:jingle_unittests',
         '../tools/android/device_stats_monitor/device_stats_monitor.gyp:device_stats_monitor',
         '../tools/android/fake_dns/fake_dns.gyp:fake_dns',
-        '../tools/android/forwarder/forwarder.gyp:forwarder',
-        '../media/media.gyp:media_unittests',
+        '../tools/android/forwarder2/forwarder.gyp:forwarder2',
+        '../tools/android/md5sum/md5sum.gyp:md5sum',
+        '../ui/ui.gyp:ui_unittests',
+        # From here down: not added to run_tests.py yet.
+        '../jingle/jingle.gyp:jingle_unittests',
         # Required by ui_unittests.
         # TODO(wangxianzhu): It'd better let ui_unittests depend on it, but
         # this would cause circular gyp dependency which needs refactoring the
@@ -52,6 +63,11 @@
         '../chrome/chrome_resources.gyp:packed_resources',
       ],
       'conditions': [
+        ['linux_breakpad==1', {
+          'dependencies': [
+            '../breakpad/breakpad.gyp:breakpad_unittests',
+          ],
+        }],
         ['"<(gtest_target_type)"=="shared_library"', {
           'dependencies': [
             # The first item is simply the template.  We add as a dep
@@ -61,8 +77,9 @@
             '../testing/android/native_test.gyp:native_test_apk',
             # Unit test bundles packaged as an apk.
             '../base/base.gyp:base_unittests_apk',
-            '../content/content.gyp:content_unittests_apk',
+            '../cc/cc_tests.gyp:cc_unittests_apk',
             '../chrome/chrome.gyp:unit_tests_apk',
+            '../content/content.gyp:content_unittests_apk',
             '../gpu/gpu.gyp:gpu_unittests_apk',
             '../ipc/ipc.gyp:ipc_tests_apk',
             '../media/media.gyp:media_unittests_apk',
@@ -70,8 +87,10 @@
             '../sql/sql.gyp:sql_unittests_apk',
             '../sync/sync.gyp:sync_unit_tests_apk',
             '../ui/ui.gyp:ui_unittests_apk',
+            '../android_webview/android_webview.gyp:android_webview_test_apk',
+            '../chrome/chrome.gyp:chromium_testshell_test_apk',
           ],
-        }]
+        }],
       ],
     },
     {
@@ -81,7 +100,6 @@
       'target_name': 'android_experimental',
       'type': 'none',
       'dependencies': [
-        '../android_webview/lib/android_webview.gyp:libwebview',
       ],
     },
     {

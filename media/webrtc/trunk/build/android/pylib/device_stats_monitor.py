@@ -23,8 +23,9 @@ class DeviceStatsMonitor(object):
       hz: Frequency at which to sample device stats.
   """
 
-  DEVICE_PATH = '/data/local/tmp/device_stats_monitor'
-  PROFILE_PATH = '/sdcard/Download/device_stats_monitor.profile'
+  DEVICE_PATH = constants.TEST_EXECUTABLE_DIR + '/device_stats_monitor'
+  PROFILE_PATH = (constants.DEVICE_PERF_OUTPUT_DIR +
+      '/device_stats_monitor.profile')
   RESULT_VIEWER_PATH = os.path.abspath(os.path.join(
       os.path.dirname(os.path.realpath(__file__)), 'device_stats_monitor.html'))
 

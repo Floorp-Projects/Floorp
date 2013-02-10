@@ -32,6 +32,14 @@
 # like:
 #   #include "dir/for/my_proto_lib/foo.pb.h"
 #
+# If you need to add an EXPORT macro to a protobuf's c++ header, set the
+# 'cc_generator_options' variable with the value: 'dllexport_decl=FOO_EXPORT:'
+# e.g. 'dllexport_decl=BASE_EXPORT:'
+#
+# It is likely you also need to #include a file for the above EXPORT macro to
+# work. You can do so with the 'cc_include' variable.
+# e.g. 'base/base_export.h'
+#
 # Implementation notes:
 # A proto_out_dir of foo/bar produces
 #   <(SHARED_INTERMEDIATE_DIR)/protoc_out/foo/bar/{file1,file2}.pb.{cc,h}
@@ -39,9 +47,12 @@
 
 {
   'variables': {
+    'protoc_wrapper': '<(DEPTH)/tools/protoc_wrapper/protoc_wrapper.py',
     'protoc': '<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)protoc<(EXECUTABLE_SUFFIX)',
     'cc_dir': '<(SHARED_INTERMEDIATE_DIR)/protoc_out/<(proto_out_dir)',
     'py_dir': '<(PRODUCT_DIR)/pyproto/<(proto_out_dir)',
+    'cc_generator_options%': '',
+    'cc_include%': '',
     'proto_in_dir%': '.',
   },
   'rules': [
@@ -49,6 +60,7 @@
       'rule_name': 'genproto',
       'extension': 'proto',
       'inputs': [
+        '<(protoc_wrapper)',
         '<(protoc)',
       ],
       'outputs': [
@@ -57,6 +69,13 @@
         '<(cc_dir)/<(RULE_INPUT_ROOT).pb.h',
       ],
       'action': [
+        'python',
+        '<(protoc_wrapper)',
+        '--include',
+        '<(cc_include)',
+        '--protobuf',
+        '<(cc_dir)/<(RULE_INPUT_ROOT).pb.h',
+        '--',
         '<(protoc)',
         # Using the --arg val form (instead of --arg=val) allows gyp's msvs rule
         # generation to correct 'val' which is a path.
@@ -64,9 +83,9 @@
         # Naively you'd use <(RULE_INPUT_PATH) here, but protoc requires
         # --proto_path is a strict prefix of the path given as an argument.
         '<(proto_in_dir)/<(RULE_INPUT_ROOT)<(RULE_INPUT_EXT)',
-        '--cpp_out','<(cc_dir)',
-        '--python_out','<(py_dir)',
-        ],
+        '--cpp_out', '<(cc_generator_options)<(cc_dir)',
+        '--python_out', '<(py_dir)',
+      ],
       'msvs_cygwin_shell': 0,
       'message': 'Generating C++ and Python code from <(RULE_INPUT_PATH)',
       'process_outputs_as_sources': 1,
@@ -78,10 +97,12 @@
   ],
   'include_dirs': [
     '<(SHARED_INTERMEDIATE_DIR)/protoc_out',
+    '<(DEPTH)',
   ],
   'direct_dependent_settings': {
     'include_dirs': [
       '<(SHARED_INTERMEDIATE_DIR)/protoc_out',
+      '<(DEPTH)',
     ]
   },
   'export_dependent_settings': [

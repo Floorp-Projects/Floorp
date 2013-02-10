@@ -50,9 +50,8 @@ class FindBadConstructsConsumer : public ChromeClassTester {
  public:
   FindBadConstructsConsumer(CompilerInstance& instance,
                             bool check_refcounted_dtors,
-                            bool check_virtuals_in_implementations,
-                            bool check_cc_directory)
-      : ChromeClassTester(instance, check_cc_directory),
+                            bool check_virtuals_in_implementations)
+      : ChromeClassTester(instance),
         check_refcounted_dtors_(check_refcounted_dtors),
         check_virtuals_in_implementations_(check_virtuals_in_implementations) {
   }
@@ -396,8 +395,7 @@ class FindBadConstructsAction : public PluginASTAction {
  public:
   FindBadConstructsAction()
       : check_refcounted_dtors_(true),
-        check_virtuals_in_implementations_(true),
-        check_cc_directory_(false) {
+        check_virtuals_in_implementations_(true) {
   }
 
  protected:
@@ -405,8 +403,7 @@ class FindBadConstructsAction : public PluginASTAction {
   virtual ASTConsumer* CreateASTConsumer(CompilerInstance& instance,
                                          llvm::StringRef ref) {
     return new FindBadConstructsConsumer(
-        instance, check_refcounted_dtors_, check_virtuals_in_implementations_,
-        check_cc_directory_);
+        instance, check_refcounted_dtors_, check_virtuals_in_implementations_);
   }
 
   virtual bool ParseArgs(const CompilerInstance& instance,
@@ -418,10 +415,6 @@ class FindBadConstructsAction : public PluginASTAction {
         check_refcounted_dtors_ = false;
       } else if (args[i] == "skip-virtuals-in-implementations") {
         check_virtuals_in_implementations_ = false;
-      } else if (args[i] == "check-inner-classes") {
-        // TODO(hans): Remove this once it's removed from plugin_flags.sh.
-      } else if (args[i] == "check-cc-directory") {
-        check_cc_directory_ = true;
       } else {
         parsed = false;
         llvm::errs() << "Unknown argument: " << args[i] << "\n";
@@ -434,7 +427,6 @@ class FindBadConstructsAction : public PluginASTAction {
  private:
   bool check_refcounted_dtors_;
   bool check_virtuals_in_implementations_;
-  bool check_cc_directory_;
 };
 
 }  // namespace

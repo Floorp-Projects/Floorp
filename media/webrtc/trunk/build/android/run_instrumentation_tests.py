@@ -6,14 +6,17 @@
 
 """Runs both the Python and Java tests."""
 
+import optparse
 import sys
 import time
 
 from pylib import apk_info
-from pylib import test_options_parser
+from pylib import buildbot_report
+from pylib import ports
 from pylib import run_java_tests
 from pylib import run_python_tests
 from pylib import run_tests_helper
+from pylib import test_options_parser
 from pylib.test_result import TestResults
 
 
@@ -51,6 +54,10 @@ def DispatchInstrumentationTests(options):
   Returns:
     An integer representing the number of failing tests.
   """
+  # Reset the test port allocation. It's important to do it before starting
+  # to dispatch any tests.
+  if not ports.ResetTestServerPortAllocation():
+    raise Exception('Failed to reset test server port.')
   start_date = int(time.time() * 1000)
   java_results = TestResults()
   python_results = TestResults()
@@ -68,8 +75,16 @@ def DispatchInstrumentationTests(options):
 
 
 def main(argv):
-  options = test_options_parser.ParseInstrumentationArgs(argv)
+  option_parser = optparse.OptionParser()
+  test_options_parser.AddInstrumentationOptions(option_parser)
+  options, args = option_parser.parse_args(argv)
+  test_options_parser.ValidateInstrumentationOptions(option_parser, options,
+                                                     args)
+
   run_tests_helper.SetLogLevel(options.verbose_count)
+  buildbot_report.PrintNamedStep(
+      'Instrumentation tests: %s - %s' % (', '.join(options.annotation),
+                                          options.test_apk))
   return DispatchInstrumentationTests(options)
 
 
