@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: hasht.h,v 1.10 2012/06/26 22:27:33 rrelyea%redhat.com Exp $ */
+/* $Id: hasht.h,v 1.11 2013/02/05 18:10:46 wtc%google.com Exp $ */
 
 #ifndef _HASHT_H_
 #define _HASHT_H_
@@ -51,6 +51,7 @@ struct SECHashObjectStr {
     void (*end)(void *, unsigned char *, unsigned int *, unsigned int);
     unsigned int blocklength;  /* hash input block size (in bytes) */
     HASH_HashType type;
+    void (*end_raw)(void *, unsigned char *, unsigned int *, unsigned int);
 };
 
 struct HASHContextStr {
