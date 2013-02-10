@@ -299,7 +299,7 @@ ssl_cov()
       elif [ "`echo $ectype | cut -b 1`" != "#" ] ; then
           echo "$SCRIPTNAME: running $testname ----------------------------"
           VMAX="ssl3"
-          if [ "$testmax" = "TLS" ]; then
+          if [ "$testmax" = "TLS10" ]; then
               VMAX="tls1.0"
           fi
           if [ "$testmax" = "TLS11" ]; then
