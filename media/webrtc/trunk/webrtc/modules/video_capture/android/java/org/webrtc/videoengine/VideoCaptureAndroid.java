@@ -84,9 +84,9 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
         Log.d(TAG, "tryStartCapture " + width +
                 " height " + height +" frame rate " + frameRate +
-                "isCaptureRunning " + isCaptureRunning +
-                "isSurfaceReady " + isSurfaceReady +
-                "isCaptureStarted " + isCaptureStarted);
+                " isCaptureRunning " + isCaptureRunning +
+                " isSurfaceReady " + isSurfaceReady +
+                " isCaptureStarted " + isCaptureStarted);
 
         if (isCaptureRunning || !isSurfaceReady || !isCaptureStarted) {
             return 0;
@@ -179,8 +179,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         previewBufferLock.lock();
 
         // The following line is for debug only
-        // Log.v(TAG, "preview frame length " + data.length +
-        //            " context" + context);
+        Log.v(TAG, "preview frame length " + data.length +
+              " context" + context);
         if (isCaptureRunning) {
             // If StartCapture has been called but not StopCapture
             // Call the C++ layer with the captured frame
