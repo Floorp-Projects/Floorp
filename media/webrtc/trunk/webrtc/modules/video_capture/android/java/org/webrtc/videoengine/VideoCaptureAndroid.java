@@ -27,6 +27,9 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+
 public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
     private final static String TAG = "WEBRTC-JC";
@@ -66,6 +69,21 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         captureAndroid.camera.release();
         captureAndroid.camera = null;
         captureAndroid.context = 0;
+
+        GeckoApp.mAppContext.cameraView.getHolder().
+            removeCallback(captureAndroid);
+        GeckoAppShell.getMainHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    GeckoApp.mAppContext.disableCameraView();
+                } catch (Exception e) {
+                    Log.e(TAG,
+                          "VideoCaptureAndroid disableCameraView exception: " +
+                          e.getLocalizedMessage());
+                }
+           }
+        });
     }
 
     public VideoCaptureAndroid(int in_id, long in_context, Camera in_camera,
@@ -74,6 +92,25 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         context = in_context;
         camera = in_camera;
         currentDevice = in_device;
+
+        try {
+            GeckoApp.mAppContext.cameraView.getHolder().addCallback(this);
+            GeckoAppShell.getMainHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        GeckoApp.mAppContext.enableCameraView();
+                    } catch (Exception e) {
+                        Log.e(TAG, 
+                              "VideoCaptureAndroid enableCameraView exception: "
+                               + e.getLocalizedMessage());
+                    }
+                }
+            });
+	} catch (Exception ex) {
+	  Log.e(TAG, "VideoCaptureAndroid constructor exception: " +
+                ex.getLocalizedMessage());
+	}
     }
 
     private int tryStartCapture(int width, int height, int frameRate) {

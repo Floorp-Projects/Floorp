@@ -230,7 +230,7 @@ WEBRTC_VIDEO_CAPTURE_JAVA_FILES = \
   $(NULL)
 
 WEBRTC_JAVA_FILES = \
-  $(addprefix ../../../media/webrtc/trunk/src/modules/video_capture/main/source/android/java/org/webrtc/videoengine/, $(WEBRTC_VIDEO_CAPTURE_JAVA_FILES)) \
+  $(addprefix $(DEPTH)/media/webrtc/trunk/webrtc/modules/video_capture/android/java/org/webrtc/videoengine/, $(WEBRTC_VIDEO_CAPTURE_JAVA_FILES)) \
   $(NULL)
 endif
 
@@ -1126,10 +1126,10 @@ jars/sync-thirdparty.jar: $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) 
 	$(JAR) cMf jars/sync-thirdparty.jar -C classes/sync-thirdparty .
 
 ifdef MOZ_WEBRTC
-jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars
+jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar
 	@echo "JAR webrtc.jar"
 	$(NSINSTALL) -D classes/webrtc
-	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
+	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc -classpath classes/gecko-browser:classes/gecko-util $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
 	$(JAR) cMf jars/webrtc.jar -C classes/webrtc .
 endif
 
