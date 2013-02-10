@@ -20,12 +20,13 @@ extern "C" {
 
 // Supported filtering
 enum FilterMode {
-  kFilterNone = 0,  // Point sample; Fastest
+  kFilterNone = 0,  // Point sample; Fastest.
   kFilterBilinear = 1,  // Faster than box, but lower quality scaling down.
-  kFilterBox = 2  // Highest quality
+  kFilterBox = 2  // Highest quality.
 };
 
 // Scale a YUV plane.
+LIBYUV_API
 void ScalePlane(const uint8* src, int src_stride,
                 int src_width, int src_height,
                 uint8* dst, int dst_stride,
@@ -42,6 +43,7 @@ void ScalePlane(const uint8* src, int src_stride,
 // quality image, at further expense of speed.
 // Returns 0 if successful.
 
+LIBYUV_API
 int I420Scale(const uint8* src_y, int src_stride_y,
               const uint8* src_u, int src_stride_u,
               const uint8* src_v, int src_stride_v,
@@ -52,7 +54,8 @@ int I420Scale(const uint8* src_y, int src_stride_y,
               int dst_width, int dst_height,
               FilterMode filtering);
 
-// Legacy API.  Deprecated
+// Legacy API.  Deprecated.
+LIBYUV_API
 int Scale(const uint8* src_y, const uint8* src_u, const uint8* src_v,
           int src_stride_y, int src_stride_u, int src_stride_v,
           int src_width, int src_height,
@@ -61,12 +64,14 @@ int Scale(const uint8* src_y, const uint8* src_u, const uint8* src_v,
           int dst_width, int dst_height,
           bool interpolate);
 
-// Legacy API.  Deprecated
+// Legacy API.  Deprecated.
+LIBYUV_API
 int ScaleOffset(const uint8* src, int src_width, int src_height,
                 uint8* dst, int dst_width, int dst_height, int dst_yoffset,
                 bool interpolate);
 
-// For testing, allow disabling of optimizations.
+// For testing, allow disabling of specialized scalers.
+LIBYUV_API
 void SetUseReferenceImpl(bool use);
 
 #ifdef __cplusplus

@@ -13,21 +13,29 @@
 
 #include "libyuv/basic_types.h"
 #include "libyuv/version.h"
-#include "unit_test/unit_test.h"
+#include "../unit_test/unit_test.h"
 
 namespace libyuv {
 
+// Tests SVN version against include/libyuv/version.h
+// SVN version is bumped by documentation changes as well as code.
+// Although the versions should match, once checked in, a tolerance is allowed.
 TEST_F(libyuvTest, TestVersion) {
   EXPECT_GE(LIBYUV_VERSION, 169);  // 169 is first version to support version.
   printf("LIBYUV_VERSION %d\n", LIBYUV_VERSION);
 #ifdef LIBYUV_SVNREVISION
   const char *ver = strchr(LIBYUV_SVNREVISION, ':');
-  if (!ver) {
+  if (ver) {
+    ++ver;
+  } else {
     ver = LIBYUV_SVNREVISION;
   }
-  int svn_revision = atoi(ver);
+  int svn_revision = atoi(ver);  // NOLINT
   printf("LIBYUV_SVNREVISION %d\n", svn_revision);
-  EXPECT_GE(LIBYUV_VERSION, svn_revision);
+  EXPECT_NEAR(LIBYUV_VERSION, svn_revision, 3);  // Allow version to be close.
+  if (LIBYUV_VERSION != svn_revision) {
+    printf("WARNING - Versions do not match.\n");
+  }
 #endif
 }
 

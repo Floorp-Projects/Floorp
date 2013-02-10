@@ -8,7 +8,7 @@
 # Do NOT CHANGE this if you don't know what you're doing -- see
 # https://code.google.com/p/chromium/wiki/UpdatingClang
 # Reverting problematic clang rolls is safe, though.
-CLANG_REVISION=161757
+CLANG_REVISION=163674
 
 THIS_DIR="$(dirname "${0}")"
 LLVM_DIR="${THIS_DIR}/../../../third_party/llvm"
@@ -62,7 +62,7 @@ done
 # --mac-only is passed in and the system isn't a mac. People who don't like this
 # can just delete their third_party/llvm-build directory.
 if [[ -n "$mac_only" ]] && [[ "${OS}" != "Darwin" ]] &&
-    ! [[ -d "${LLVM_BUILD_DIR}" ]]; then
+    [[ "$GYP_DEFINES" != *clang=1* ]] && ! [[ -d "${LLVM_BUILD_DIR}" ]]; then
   exit 0
 fi
 
@@ -145,6 +145,7 @@ for CONFIG in Debug Release; do
     echo "Clobbering ${CONFIG} PCH and .o files for ninja build"
     find "${MAKE_DIR}/${CONFIG}/obj" -name '*.gch' -exec rm {} +
     find "${MAKE_DIR}/${CONFIG}/obj" -name '*.o' -exec rm {} +
+    find "${MAKE_DIR}/${CONFIG}/obj" -name '*.o.d' -exec rm {} +
   fi
 
   if [[ "${OS}" = "Darwin" ]]; then

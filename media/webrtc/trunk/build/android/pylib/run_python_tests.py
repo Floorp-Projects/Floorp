@@ -90,33 +90,15 @@ def DispatchPythonTests(options):
     test_files_copier.CopyTestFilesOnce()
 
   # Actually run the tests.
-  if (len(attached_devices) > 1 and
-      not options.wait_for_debugger):
-    logging.debug('Sharding Python tests.')
-    sharder = PythonTestSharder(attached_devices, options.shard_retries,
-                                available_tests)
-    test_results = sharder.RunShardedTests()
-  else:
-    logging.debug('Running Python tests serially.')
-    test_results = _RunPythonTests(available_tests, attached_devices[0])
+  if len(attached_devices) > 1 and options.wait_for_debugger:
+    logging.warning('Debugger can not be sharded, '
+                    'using first available device')
+    attached_devices = attached_devices[:1]
+  logging.debug('Running Python tests')
+  sharder = PythonTestSharder(attached_devices, available_tests, options)
+  test_results = sharder.RunShardedTests()
 
   return test_results
-
-
-def _RunPythonTests(tests_to_run, device_id):
-  """Runs a list of Python tests serially on one device and returns results.
-
-  Args:
-    tests_to_run: a list of objects inheriting from PythonTestBase.
-    device_id: ID of the device to run tests on.
-
-  Returns:
-    A list of test results, aggregated across all the tests run.
-  """
-  # This is a list of TestResults objects.
-  results = [CallPythonTest(t, device_id, 0) for t in tests_to_run]
-  # Merge the list of TestResults into one TestResults.
-  return TestResults.FromTestResults(results)
 
 
 def _GetTestModules(python_test_root, is_official_build):

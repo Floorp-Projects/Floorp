@@ -19,10 +19,6 @@ HistoryProfileTest.TypicalProfileVersion
 SQLitePersistentCookieStoreTest.TestDontLoadOldSessionCookies
 SQLitePersistentCookieStoreTest.PersistIsPersistent
 
-# We don't use the GPU blacklist and we don't fetch the deps project for the
-# blacklist data so this test is not relevant for us.
-GpuBlacklistTest.CurrentBlacklistValidation
-
 # http://crbug.com/117940
 TemplateURLTest.*
 TemplateURLPrepopulateDataTest.*
@@ -64,9 +60,6 @@ ValueStoreFrontendTest.GetExistingData
 # crbug.com/139421
 ChromeSelectFilePolicyTest.ExpectAsynchronousListenerCall
 
-# crbug.com/139412
-UserStyleSheetWatcherTest.StyleLoad
-
 # http://crbug.com/139033
 ChromeDownloadManagerDelegateTest.StartDownload_PromptAlways
 
@@ -102,10 +95,10 @@ ExtensionSettingsSyncTest.*
 ExtensionUpdaterTest.*
 UserScriptListenerTest.*
 WebApplicationTest.GetShortcutInfoForTab
+ExtensionActionIconFactoryTest.*
 
 # crbug.com/139411
 AutocompleteProviderTest.*
-HistoryQuickProviderTest.*
 HistoryContentsProviderBodyOnlyTest.*
 HistoryContentsProviderTest.*
 HQPOrderingTest.*
@@ -130,10 +123,13 @@ ImageOperations.ResizeShouldAverageColors
 PrerenderTest.*
 RenderWidgetTest.OnMsgPaintAtSize
 
+# crbug.com/146857
+TopSitesTest.Blacklisting
+
 # crbug.com/139643
-VariationsHelperTest.DisableAfterInitialization
-VariationsHelperTest.AssociateGoogleVariationID
-VariationsHelperTest.NoAssociation
+VariationsUtilTest.DisableAfterInitialization
+VariationsUtilTest.AssociateGoogleVariationID
+VariationsUtilTest.NoAssociation
 
 # crbug.com/141473
 AutofillManagerTest.UpdatePasswordSyncState
@@ -142,6 +138,12 @@ AutofillManagerTest.UpdatePasswordGenerationState
 # crbug.com/144227
 ExtensionIconImageTest.*
 
-# crbug.com/144161
-PasswordStoreDefaultTest.NonASCIIData
-PasswordStoreTest.IgnoreOldWwwGoogleLogins
+# crbug.com/145843
+EntropyProviderTest.UseOneTimeRandomizationSHA1
+EntropyProviderTest.UseOneTimeRandomizationPermuted
+
+# crbug.com/147500
+ManifestTest.RestrictedKeys
+
+# crbug.com/152599
+SyncSearchEngineDataTypeControllerTest.*

@@ -12,7 +12,7 @@ import time
 
 class FakeDns(object):
   """Wrapper class for the fake_dns tool."""
-  _FAKE_DNS_PATH = '/data/local/tmp/fake_dns'
+  _FAKE_DNS_PATH = constants.TEST_EXECUTABLE_DIR + '/fake_dns'
 
   def __init__(self, adb, build_type):
     """
