@@ -265,8 +265,6 @@ var invalidTypes = Array('checkbox', 'radio', 'file', 'number', 'date', 'time');
 // TODO: 'datetime', 'month', 'week', 'datetime-local', 'range' and 'color'
 //       do not accept the @pattern too but are not implemented yet.
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 for (type of validTypes) {
   input.type = type;
   completeValidityCheck(input, false);
@@ -282,9 +280,6 @@ for (type of invalidTypes) {
   input.type = type;
   completeValidityCheck(input, true);
 }
-
-SimpleTest.finish();
-});
 
 </script>
 </pre>
