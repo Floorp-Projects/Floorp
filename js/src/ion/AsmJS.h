@@ -89,6 +89,9 @@ class AsmJSActivation
     void setResumePC(void *pc) { resumePC_ = pc; }
 };
 
+// The assumed page size; dynamically checked in CompileAsmJS.
+const size_t AsmJSPageSize = 4096;
+
 // The asm.js spec requires that the ArrayBuffer's byteLength be a multiple of 4096.
 static const size_t AsmJSAllocationGranularity = 4096;
 
