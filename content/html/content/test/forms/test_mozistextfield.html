@@ -102,8 +102,6 @@ function checkMozIsTextFieldValueTodo(aInput, aResult)
           "mozIsTextField(true) should return " + aResult);
 }
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 // Check if the method is defined for the correct elements.
 for (data of gElementTestData) {
   checkMozIsTextFieldDefined(data[0], data[1]);
@@ -121,9 +119,6 @@ for (data of gInputTodoData) {
   input.type = data[0];
   checkMozIsTextFieldValueTodo(input, data[1]);
 }
-
-SimpleTest.finish();
-});
 
 </script>
 </pre>

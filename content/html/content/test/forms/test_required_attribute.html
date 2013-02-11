@@ -356,9 +356,6 @@ function checkInputRequiredValidityForFile()
   checkNotSufferingFromBeingMissing(element);
 }
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
-
 checkTextareaRequiredValidity();
 
 // The require attribute behavior depend of the input type.
@@ -389,9 +386,6 @@ for (type of typeRequireApply) {
 checkInputRequiredValidityForCheckbox();
 checkInputRequiredValidityForRadio();
 checkInputRequiredValidityForFile();
-
-SimpleTest.finish();
-});
 
 </script>
 </pre>
