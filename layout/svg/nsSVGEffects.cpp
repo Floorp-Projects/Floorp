@@ -295,15 +295,14 @@ nsSVGTextPathProperty::DoUpdate()
   if (!mFrame)
     return;
 
-  NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
+  NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG) || mFrame->IsSVGText(),
+               "SVG frame expected");
 
-  if (mFrame->GetType() == nsGkAtoms::svgTextPathFrame) {
-    // Repaint asynchronously in case the path frame is being torn down
-    nsChangeHint changeHint =
-      nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateTextPath);
-    mFramePresShell->FrameConstructor()->PostRestyleEvent(
-      mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
-  }
+  // Repaint asynchronously in case the path frame is being torn down
+  nsChangeHint changeHint =
+    nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateTextPath);
+  mFramePresShell->FrameConstructor()->PostRestyleEvent(
+    mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
 void
