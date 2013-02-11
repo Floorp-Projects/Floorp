@@ -226,11 +226,9 @@ struct ClassSizeMeasurement
 
 struct ClassExtension
 {
-    JSEqualityOp        equality;
     JSObjectOp          outerObject;
     JSObjectOp          innerObject;
     JSIteratorOp        iteratorObject;
-    void               *unused;
 
     /*
      * isWrappedNative is true only if the class is an XPCWrappedNative.
@@ -252,7 +250,7 @@ struct ClassExtension
     JSWeakmapKeyDelegateOp weakmapKeyDelegateOp;
 };
 
-#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL,false,NULL}
+#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,false,NULL}
 
 struct ObjectOps
 {
