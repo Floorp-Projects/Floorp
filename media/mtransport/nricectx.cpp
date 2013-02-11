@@ -384,14 +384,12 @@ nsresult NrIceCtx::SetStunServers(const std::vector<NrIceStunServer>&
 }
 
 nsresult NrIceCtx::StartGathering() {
-  this->AddRef();
   int r = nr_ice_initialize(ctx_, &NrIceCtx::initialized_cb,
                             this);
 
   if (r && r != R_WOULDBLOCK) {
       MOZ_MTLOG(PR_LOG_ERROR, "Couldn't gather ICE candidates for '"
            << name_ << "'");
-      this->Release();
       return NS_ERROR_FAILURE;
   }
 
@@ -499,8 +497,6 @@ void NrIceCtx::initialized_cb(NR_SOCKET s, int h, void *arg) {
 
   // Report that we are done gathering
   ctx->EmitAllCandidates();
-
-  ctx->Release();
 }
 
 nsresult NrIceCtx::Finalize() {
