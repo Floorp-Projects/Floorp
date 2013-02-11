@@ -206,14 +206,15 @@ nsSVGInnerSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
         nsSVGEffects::InvalidateRenderingObservers(this);
         nsSVGUtils::ScheduleReflowSVG(this);
       } else if (aAttribute == nsGkAtoms::transform) {
-        nsSVGUtils::InvalidateBounds(this, false);
-        nsSVGUtils::ScheduleReflowSVG(this);
+        // Don't invalidate (the layers code does that).
+        SchedulePaint();
       } else if (aAttribute == nsGkAtoms::viewBox ||
                  (aAttribute == nsGkAtoms::preserveAspectRatio &&
                   content->HasViewBoxOrSyntheticViewBox())) {
-        nsSVGUtils::InvalidateBounds(this, false);
-        nsSVGUtils::ScheduleReflowSVG(this);
         content->ChildrenOnlyTransformChanged();
+        // SchedulePaint sets a global state flag so we only need to call it once
+        // (on ourself is fine), not once on each child (despite bug 828240).
+        SchedulePaint();
       }
     }
   }

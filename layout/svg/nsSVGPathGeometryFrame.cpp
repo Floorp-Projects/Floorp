@@ -112,8 +112,8 @@ nsSVGPathGeometryFrame::AttributeChanged(int32_t         aNameSpaceID,
     nsSVGEffects::InvalidateRenderingObservers(this);
     nsSVGUtils::ScheduleReflowSVG(this);
   } else if (aAttribute == nsGkAtoms::transform) {
-    nsSVGUtils::InvalidateBounds(this, false);
-    nsSVGUtils::ScheduleReflowSVG(this);
+    // Don't invalidate (the layers code does that).
+    SchedulePaint();
   }
   return NS_OK;
 }

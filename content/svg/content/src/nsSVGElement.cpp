@@ -23,6 +23,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
 #include "nsEventListenerManager.h"
+#include "nsLayoutUtils.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
@@ -2367,9 +2368,23 @@ nsSVGElement::DidAnimateTransformList()
   nsIFrame* frame = GetPrimaryFrame();
 
   if (frame) {
+    nsIAtom *transformAttr = GetTransformListAttrName();
+    int32_t modType = nsIDOMMutationEvent::MODIFICATION;
     frame->AttributeChanged(kNameSpaceID_None,
-                            GetTransformListAttrName(),
-                            nsIDOMMutationEvent::MODIFICATION);
+                            transformAttr,
+                            modType);
+    // When script changes the 'transform' attribute, Element::SetAttrAndNotify
+    // will call nsNodeUtills::AttributeChanged, under which
+    // SVGTransformableElement::GetAttributeChangeHint will be called and an
+    // appropriate change event posted to update our frame's overflow rects.
+    // The SetAttrAndNotify doesn't happen for transform changes caused by
+    // 'animateTransform' though (and sending out the mutation events that
+    // nsNodeUtills::AttributeChanged dispatches would be inappropriate
+    // anyway), so we need to post the change event ourself.
+    nsChangeHint changeHint = GetAttributeChangeHint(transformAttr, modType);
+    if (changeHint) {
+      nsLayoutUtils::PostRestyleEvent(this, nsRestyleHint(0), changeHint);
+    }
   }
 }
 
