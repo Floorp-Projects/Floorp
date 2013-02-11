@@ -4939,41 +4939,42 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   // Special cases for text/tspan/textPath, because the kind of frame
   // they get depends on the parent frame.  We ignore 'a' elements when
   // determining the parent, however.
-  if (NS_SVGTextCSSFramesEnabled()) {
-    if (aIsWithinSVGText) {
-      // We don't use ConstructInline because we want different behavior
-      // for generated content.
-      static const FrameConstructionData sTSpanData =
-        FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |
-                    FCDATA_SKIP_ABSPOS_PUSH |
-                    FCDATA_DISALLOW_GENERATED_CONTENT |
-                    FCDATA_IS_LINE_PARTICIPANT |
-                    FCDATA_IS_INLINE |
-                    FCDATA_USE_CHILD_ITEMS,
-                    NS_NewInlineFrame);
-      if (aTag == nsGkAtoms::textPath) {
-        if (aAllowsTextPathChild) {
-          return &sTSpanData;
-        }
-      } else if (aTag == nsGkAtoms::tspan ||
-                 aTag == nsGkAtoms::altGlyph ||
-                 aTag == nsGkAtoms::a) {
+  if (aIsWithinSVGText) {
+    // If aIsWithinSVGText is true, then we know that the "SVG text uses
+    // CSS frames" pref was true when this SVG fragment was first constructed.
+
+    // We don't use ConstructInline because we want different behavior
+    // for generated content.
+    static const FrameConstructionData sTSpanData =
+      FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |
+                  FCDATA_SKIP_ABSPOS_PUSH |
+                  FCDATA_DISALLOW_GENERATED_CONTENT |
+                  FCDATA_IS_LINE_PARTICIPANT |
+                  FCDATA_IS_INLINE |
+                  FCDATA_USE_CHILD_ITEMS,
+                  NS_NewInlineFrame);
+    if (aTag == nsGkAtoms::textPath) {
+      if (aAllowsTextPathChild) {
         return &sTSpanData;
       }
+    } else if (aTag == nsGkAtoms::tspan ||
+               aTag == nsGkAtoms::altGlyph ||
+               aTag == nsGkAtoms::a) {
+      return &sTSpanData;
+    }
+    return &sSuppressData;
+  } else if (NS_SVGTextCSSFramesEnabled()) {
+    if (aTag == nsGkAtoms::text) {
+      static const FrameConstructionData sTextData =
+        FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW |
+                                   FCDATA_ALLOW_BLOCK_STYLES,
+                                   NS_NewSVGTextFrame2,
+                                   nsCSSAnonBoxes::mozSVGText);
+      return &sTextData;
+    } else if (aTag == nsGkAtoms::tspan ||
+               aTag == nsGkAtoms::altGlyph ||
+               aTag == nsGkAtoms::textPath) {
       return &sSuppressData;
-    } else {
-      if (aTag == nsGkAtoms::text) {
-        static const FrameConstructionData sTextData =
-          FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW |
-                                     FCDATA_ALLOW_BLOCK_STYLES,
-                                     NS_NewSVGTextFrame2,
-                                     nsCSSAnonBoxes::mozSVGText);
-        return &sTextData;
-      } else if (aTag == nsGkAtoms::tspan ||
-                 aTag == nsGkAtoms::altGlyph ||
-                 aTag == nsGkAtoms::textPath) {
-        return &sSuppressData;
-      }
     }
   } else {
     nsIFrame *ancestorFrame =

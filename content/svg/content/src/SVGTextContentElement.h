@@ -41,6 +41,7 @@ protected:
 
   nsSVGTextContainerFrame* GetTextContainerFrame();
   nsSVGTextFrame2* GetSVGTextFrame();
+  bool FrameIsSVGText();
 };
 
 } // namespace dom
