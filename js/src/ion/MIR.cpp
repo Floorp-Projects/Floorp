@@ -1909,3 +1909,33 @@ MLoadSlot::mightAlias(MDefinition *store)
         return false;
     return true;
 }
+
+void
+InlinePropertyTable::trimToAndMaybePatchTargets(AutoObjectVector &targets,
+                                                AutoObjectVector &originals)
+{
+    IonSpew(IonSpew_Inlining, "Got inlineable property cache with %d cases",
+            (int)numEntries());
+
+    size_t i = 0;
+    while (i < numEntries()) {
+        bool foundFunc = false;
+        // Compare using originals, but if we find a matching function,
+        // patch it to the target, which might be a clone.
+        for (size_t j = 0; j < originals.length(); j++) {
+            if (entries_[i]->func == originals[j]) {
+                if (entries_[i]->func != targets[j])
+                    entries_[i] = new Entry(entries_[i]->typeObj, targets[j]->toFunction());
+                foundFunc = true;
+                break;
+            }
+        }
+        if (!foundFunc)
+            entries_.erase(&(entries_[i]));
+        else
+            i++;
+    }
+
+    IonSpew(IonSpew_Inlining, "%d inlineable cases left after trimming to %d targets",
+            (int)numEntries(), (int)targets.length());
+}
