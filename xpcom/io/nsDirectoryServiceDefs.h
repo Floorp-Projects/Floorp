@@ -122,6 +122,11 @@
     #define NS_WIN_PRINTHOOD                    "PrntHd"
     #define NS_WIN_COOKIES_DIR                  "CookD"
     #define NS_WIN_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
+    // On Win7 and up these ids will return the default save-to location for
+    // Windows Libraries associated with the specific content type. For other
+    // os they return the local user folder. Note these can return network file
+    // paths which can jank the ui thread so be careful how you access them.
+    #define NS_WIN_DOCUMENTS_DIR                "Docs"
     #define NS_WIN_PICTURES_DIR                 "Pict"
     #define NS_WIN_MUSIC_DIR                    "Music"
     #define NS_WIN_VIDEOS_DIR                   "Vids"
