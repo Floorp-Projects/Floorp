@@ -33,7 +33,6 @@
   locale/@AB_CD@/global/dateFormat.properties           (%chrome/global/dateFormat.properties)
   locale/@AB_CD@/global/devtools/debugger.properties    (%chrome/global/devtools/debugger.properties)
   locale/@AB_CD@/global/dialogOverlay.dtd               (%chrome/global/dialogOverlay.dtd)
-  locale/@AB_CD@/global/downloadProgress.properties     (%chrome/global/downloadProgress.properties)
   locale/@AB_CD@/global/editMenuOverlay.dtd             (%chrome/global/editMenuOverlay.dtd)
   locale/@AB_CD@/global/filefield.properties            (%chrome/global/filefield.properties)
   locale/@AB_CD@/global/filepicker.dtd                  (%chrome/global/filepicker.dtd)
