@@ -795,7 +795,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
     // We don't do this optimization for nondisplay SVG since nondisplay
     // SVG doesn't maintain bounds/overflow rects.
     nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
-    if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+    if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
+        aFrame->IsSVGText()) {
       // Unlike containers, leaf frames do not include GetPosition() in
       // GetCanvasTM().
       overflowRect = overflowRect + aFrame->GetPosition();
@@ -865,7 +866,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
       gfx->Multiply(GetCanvasTM(aFrame, nsISVGChildFrame::FOR_PAINTING));
       nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
-      if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+      if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
+          aFrame->IsSVGText()) {
         // Unlike containers, leaf frames do not include GetPosition() in
         // GetCanvasTM().
         overflowRect = overflowRect + aFrame->GetPosition();
