@@ -420,7 +420,7 @@ class GlobalObject : public JSObject
         return getSlot(PROTO_GETTER);
     }
 
-    bool isRuntimeCodeGenEnabled(JSContext *cx);
+    static bool isRuntimeCodeGenEnabled(JSContext *cx, Handle<GlobalObject*> global);
 
     const Value &getOriginalEval() const {
         JS_ASSERT(getSlot(EVAL).isObject());
