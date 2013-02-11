@@ -3324,7 +3324,7 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
         return;
 
     ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj.get());
-    Shape *baseShape = obj->lastProperty();
+    RootedShape baseShape(cx, obj->lastProperty());
 
     if (p) {
         /* The lookup ensures the shape matches, now check that the types match. */
@@ -3488,7 +3488,7 @@ TypeObject::addProperty(JSContext *cx, RawId id, Property **pprop)
         RootedObject rSingleton(cx, singleton);
         if (JSID_IS_VOID(id)) {
             /* Go through all shapes on the object to get integer-valued properties. */
-            UnrootedShape shape = singleton->lastProperty();
+            RootedShape shape(cx, singleton->lastProperty());
             while (!shape->isEmptyShape()) {
                 if (JSID_IS_VOID(IdToTypeId(shape->propid())))
                     UpdatePropertyType(cx, &base->types, rSingleton, shape, true);
@@ -4867,7 +4867,7 @@ AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
                   TypeObject *type, JSFunction *fun, NewScriptPropertiesState &state);
 
 static bool
-AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun,
+AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun,
                            NewScriptPropertiesState &state)
 {
     /*
@@ -5154,7 +5154,7 @@ AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
             StackTypeSet *scriptTypes = analysis->poppedTypes(pc, GET_ARGC(pc));
 
             /* Need to definitely be calling Function.call/apply on a specific script. */
-            JSFunction *function;
+            RootedFunction function(cx);
             {
                 RawObject funcallObj = funcallTypes->getSingleton();
                 RawObject scriptObj = scriptTypes->getSingleton();
@@ -6218,7 +6218,7 @@ JSCompartment::getLazyType(JSContext *cx, Class *clasp, TaggedProto proto)
     if (!type)
         return NULL;
 
-    if (!table.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type))
+    if (!table.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, protoRoot), type))
         return NULL;
 
     type->singleton = (JSObject *) TypeObject::LAZY_SINGLETON;
