@@ -12,7 +12,7 @@ const Ci = Components.interfaces;
 
 const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
-const LATEST_STORAGE_VERSION = 2;
+const LATEST_STORAGE_VERSION = 3;
 
 const EXPIRATION_MIN_CHUNK_SIZE = 50;
 const EXPIRATION_INTERVAL_SECS = 3600;
@@ -364,37 +364,41 @@ let PageThumbsStorageMigrator = {
   migrate: function Migrator_migrate() {
     let version = this.currentVersion;
 
-    if (version < 1) {
-      this.removeThumbnailsFromRoamingProfile();
-    }
-    if (version < 2) {
-      this.renameThumbnailsFolder();
+    // Storage version 1 never made it to beta.
+    // At the time of writing only Windows had (ProfD != ProfLD) and we
+    // needed to move thumbnails from the roaming profile to the locale
+    // one so that they're not needlessly included in backups and/or
+    // written via SMB.
+
+    // Storage version 2 also never made it to beta.
+    // The thumbnail folder structure has been changed and old thumbnails
+    // were not migrated. Instead, we just renamed the current folder to
+    // "<name>-old" and will remove it later.
+
+    if (version < 3) {
+      this.migrateToVersion3();
     }
 
     this.currentVersion = LATEST_STORAGE_VERSION;
   },
 
-  removeThumbnailsFromRoamingProfile:
-  function Migrator_removeThumbnailsFromRoamingProfile() {
-    let local = FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY]);
+  /**
+   * Bug 239254 added support for having the disk cache and thumbnail
+   * directories on a local path (i.e. ~/.cache/) under Linux. We'll first
+   * try to move the old thumbnails to their new location. If that's not
+   * possible (because ProfD might be on a different file system than
+   * ProfLD) we'll just discard them.
+   */
+  migrateToVersion3: function Migrator_migrateToVersion3() {
+    let local = FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY], true);
     let roaming = FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY]);
 
-    if (!roaming.equals(local) && roaming.exists()) {
-      roaming.followLinks = false;
-      try {
-        roaming.remove(true);
-      } catch (e) {
-        // The directory might not exist or we're not permitted to remove it.
-      }
-    }
-  },
-
-  renameThumbnailsFolder: function Migrator_renameThumbnailsFolder() {
-    let dir = FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY]);
-    try {
-      dir.moveTo(null, dir.leafName + "-old");
-    } catch (e) {
-      // The directory might not exist or we're not permitted to rename it.
+    if (!roaming.equals(local)) {
+      PageThumbsWorker.postMessage({
+        type: "moveOrDeleteAllThumbnails",
+        from: roaming.path,
+        to: local.path
+      });
     }
   }
 };
