@@ -1881,3 +1881,13 @@ nsSVGUtils::GetSVGGlyphExtents(Element* aElement,
   }
   return false;
 }
+
+nsRect
+nsSVGUtils::ToCanvasBounds(const gfxRect &aUserspaceRect,
+                           const gfxMatrix &aToCanvas,
+                           const nsPresContext *presContext)
+{
+  return nsLayoutUtils::RoundGfxRectToAppRect(
+                          aToCanvas.TransformBounds(aUserspaceRect),
+                          presContext->AppUnitsPerDevPixel());
+}
