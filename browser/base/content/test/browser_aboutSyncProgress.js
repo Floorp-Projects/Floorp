@@ -14,7 +14,8 @@ let gTests = [ {
     let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
     let progressBar = doc.getElementById("uploadProgressBar");
 
-    isnot(progressBar.style.display, "none", "progress bar should be visible");
+    let win = doc.defaultView;
+    isnot(win.getComputedStyle(progressBar).display, "none", "progress bar should be visible");
     executeSoon(runNextTest);
   }
 },
@@ -30,7 +31,8 @@ let gTests = [ {
     let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
     let progressBar = doc.getElementById("uploadProgressBar");
 
-    is(progressBar.style.display, "none",
+    let win = doc.defaultView;
+    is(win.getComputedStyle(progressBar).display, "none",
        "progress bar should not be visible");
     executeSoon(runNextTest);
   }
