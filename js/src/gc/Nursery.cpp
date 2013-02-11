@@ -36,7 +36,7 @@ js::Nursery::init()
 
     fallbackBitmap.clear(false);
 
-    void *heap = MapAlignedPages(NurserySize, Alignment);
+    void *heap = MapAlignedPages(runtime(), NurserySize, Alignment);
 #ifdef JSGC_ROOT_ANALYSIS
     // Our poison pointers are not guaranteed to be invalid on 64-bit
     // architectures, and often are valid. We can't just reserve the full
@@ -69,7 +69,7 @@ js::Nursery::init()
 js::Nursery::~Nursery()
 {
     if (start())
-        UnmapPages((void *)start(), NurserySize);
+        UnmapPages(runtime(), (void *)start(), NurserySize);
 }
 
 void
