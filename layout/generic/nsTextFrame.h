@@ -674,7 +674,7 @@ protected:
   bool CombineSelectionUnderlineRect(nsPresContext* aPresContext,
                                        nsRect& aRect);
 
-  ContentOffsets GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
+  ContentOffsets GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
                    bool aForInsertionPoint);
 
   void ClearFrameOffsetCache();
