@@ -3318,11 +3318,9 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     NULL,                    /* hasInstance */                                 \
     _typedArray::obj_trace,  /* trace       */                                 \
     {                                                                          \
-        NULL,       /* equality    */                                          \
         NULL,       /* outerObject */                                          \
         NULL,       /* innerObject */                                          \
         NULL,       /* iteratorObject  */                                      \
-        NULL,       /* unused      */                                          \
         false,      /* isWrappedNative */                                      \
     },                                                                         \
     {                                                                          \

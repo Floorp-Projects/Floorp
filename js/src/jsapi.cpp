@@ -3329,8 +3329,6 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, JSObject *pare
     AutoAssertNoGC nogc;
     if (obj) {
         TypeObjectFlags flags = 0;
-        if (clasp->ext.equality)
-            flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
         if (clasp->emulatesUndefined())
             flags |= OBJECT_FLAG_EMULATES_UNDEFINED;
         if (flags)

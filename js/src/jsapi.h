@@ -1091,9 +1091,6 @@ typedef void
 typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
 
-typedef JSBool
-(* JSEqualityOp)(JSContext *cx, JSHandleObject obj, JSHandleValue v, JSBool *bp);
-
 typedef JSRawObject
 (* JSWeakmapKeyDelegateOp)(JSRawObject obj);
 

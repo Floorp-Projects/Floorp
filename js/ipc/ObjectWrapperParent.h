@@ -93,12 +93,9 @@ private:
 
     static JSBool
     CPOW_Construct(JSContext *cx, unsigned argc, jsval *vp);
-    
-    static JSBool
-    CPOW_HasInstance(JSContext *cx, JSHandleObject obj, JSMutableHandleValue vp, JSBool *bp);
 
     static JSBool
-    CPOW_Equality(JSContext *cx, JSHandleObject obj, JSHandleValue v, JSBool *bp);
+    CPOW_HasInstance(JSContext *cx, JSHandleObject obj, JSMutableHandleValue vp, JSBool *bp);
 
     static bool jsval_to_JSVariant(JSContext* cx, jsval from, JSVariant* to);
     static bool jsval_from_JSVariant(JSContext* cx, const JSVariant& from,
