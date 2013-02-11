@@ -6,9 +6,12 @@
 #ifndef NS_SVGTEXTFRAME2_H
 #define NS_SVGTEXTFRAME2_H
 
+#include "gfxFont.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
+#include "gfxSVGGlyphs.h"
 #include "nsStubMutationObserver.h"
+#include "nsSVGGlyphFrame.h" // for SVGTextObjectPaint
 #include "nsSVGTextContainerFrame.h"
 
 class nsDisplaySVGText;
@@ -450,14 +453,70 @@ private:
    * Returns whether we need to render the text using
    * nsTextFrame::DrawPathCallbacks rather than directly painting
    * the text frames.
+   *
+   * @param aShouldPaintSVGGlyphs (out) Whether SVG glyphs in the text
+   *   should be painted.
    */
-  bool ShouldRenderAsPath(nsRenderingContext* aContext, nsTextFrame* aFrame);
+  bool ShouldRenderAsPath(nsRenderingContext* aContext, nsTextFrame* aFrame,
+                          bool& aShouldPaintSVGGlyphs);
 
   // Methods to get information for a <textPath> frame.
   nsIFrame* GetTextPathPathFrame(nsIFrame* aTextPathFrame);
   already_AddRefed<gfxFlattenedPath> GetFlattenedTextPath(nsIFrame* aTextPathFrame);
   gfxFloat GetOffsetScale(nsIFrame* aTextPathFrame);
   gfxFloat GetStartOffset(nsIFrame* aTextPathFrame);
+
+  gfxFont::DrawMode SetupCairoState(gfxContext* aContext,
+                                    nsIFrame* aFrame,
+                                    gfxTextObjectPaint* aOuterObjectPaint,
+                                    gfxTextObjectPaint** aThisObjectPaint);
+
+  /**
+   * Sets up the stroke style for |aFrame| in |aContext| and stores stroke
+   * pattern information in |aThisObjectPaint|.
+   */
+  bool SetupCairoStroke(gfxContext* aContext,
+                        nsIFrame* aFrame,
+                        gfxTextObjectPaint* aOuterObjectPaint,
+                        SVGTextObjectPaint* aThisObjectPaint);
+
+  /**
+   * Sets up the fill style for |aFrame| in |aContext| and stores fill pattern
+   * information in |aThisObjectPaint|.
+   */
+  bool SetupCairoFill(gfxContext* aContext,
+                      nsIFrame* aFrame,
+                      gfxTextObjectPaint* aOuterObjectPaint,
+                      SVGTextObjectPaint* aThisObjectPaint);
+
+  /**
+   * Sets the current pattern for |aFrame| to the fill or stroke style of the
+   * outer text object. Will also set the paint opacity to transparent if the
+   * paint is set to "none".
+   */
+  bool SetupObjectPaint(gfxContext* aContext,
+                        nsIFrame* aFrame,
+                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                        float& aOpacity,
+                        gfxTextObjectPaint* aObjectPaint);
+
+  /**
+   * Stores in |aTargetPaint| information on how to reconstruct the current
+   * fill or stroke pattern. Will also set the paint opacity to transparent if
+   * the paint is set to "none".
+   * @param aOuterObjectPaint pattern information from the outer text object
+   * @param aTargetPaint where to store the current pattern information
+   * @param aFillOrStroke member pointer to the paint we are setting up
+   * @param aProperty the frame property descriptor of the fill or stroke paint
+   *   server frame
+   */
+  void SetupInheritablePaint(gfxContext* aContext,
+                             nsIFrame* aFrame,
+                             float& aOpacity,
+                             gfxTextObjectPaint* aOuterObjectPaint,
+                             SVGTextObjectPaint::Paint& aTargetPaint,
+                             nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                             const FramePropertyDescriptor* aProperty);
 
   /**
    * The MutationObserver we have registered for the <text> element subtree.

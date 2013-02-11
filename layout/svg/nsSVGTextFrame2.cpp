@@ -27,6 +27,7 @@
 #include "nsSVGEffects.h"
 #include "nsSVGGlyphFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsSVGPaintServerFrame.h"
 #include "nsSVGRect.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGTextFrame2.h"
@@ -2471,11 +2472,14 @@ public:
    * @param aCanvasTM The transformation matrix to set when painting; this
    *   should be the FOR_OUTERSVG_TM canvas TM of the text, so that
    *   paint servers are painted correctly.
+   * @param aShouldPaintSVGGlyphs Whether SVG glyphs should be painted.
    */
   SVGTextDrawPathCallbacks(nsRenderingContext* aContext,
                            nsTextFrame* aFrame,
-                           const gfxMatrix& aCanvasTM)
-    : gfx(aContext->ThebesContext()),
+                           const gfxMatrix& aCanvasTM,
+                           bool aShouldPaintSVGGlyphs)
+    : DrawPathCallbacks(aShouldPaintSVGGlyphs),
+      gfx(aContext->ThebesContext()),
       mRenderMode(SVGAutoRenderState::GetRenderMode(aContext)),
       mFrame(aFrame),
       mCanvasTM(aCanvasTM)
@@ -2484,6 +2488,8 @@ public:
 
   void NotifyBeforeText(nscolor aColor);
   void NotifyGlyphPathEmitted();
+  void NotifyBeforeSVGGlyphPainted();
+  void NotifyAfterSVGGlyphPainted();
   void NotifyAfterText();
   void NotifyBeforeSelectionBackground(nscolor aColor);
   void NotifySelectionBackgroundPathEmitted();
@@ -2540,6 +2546,19 @@ void
 SVGTextDrawPathCallbacks::NotifyGlyphPathEmitted()
 {
   HandleTextGeometry();
+  gfx->NewPath();
+}
+
+void
+SVGTextDrawPathCallbacks::NotifyBeforeSVGGlyphPainted()
+{
+  gfx->Save();
+}
+
+void
+SVGTextDrawPathCallbacks::NotifyAfterSVGGlyphPainted()
+{
+  gfx->Restore();
   gfx->NewPath();
 }
 
@@ -3143,6 +3162,15 @@ nsSVGTextFrame2::PaintSVG(nsRenderingContext* aContext,
     // need to ignore.
     SVGCharClipDisplayItem item(run);
 
+    // Set up the fill and stroke so that SVG glyphs can get painted correctly
+    // when they use -moz-objectFill values etc.
+    gfx->SetMatrix(initialMatrix);
+    gfxTextObjectPaint *outerObjectPaint =
+      (gfxTextObjectPaint*)aContext->GetUserData(&gfxTextObjectPaint::sUserDataKey);
+
+    nsAutoPtr<gfxTextObjectPaint> objectPaint;
+    SetupCairoState(gfx, frame, outerObjectPaint, getter_Transfers(objectPaint));
+
     // Set up the transform for painting the text frame for the substring
     // indicated by the run.
     gfxMatrix runTransform =
@@ -3151,11 +3179,15 @@ nsSVGTextFrame2::PaintSVG(nsRenderingContext* aContext,
     gfx->SetMatrix(runTransform);
 
     nsRect frameRect = frame->GetVisualOverflowRect();
-    if (ShouldRenderAsPath(aContext, frame)) {
-      SVGTextDrawPathCallbacks callbacks(aContext, frame, matrixForPaintServers);
-      frame->PaintText(aContext, nsPoint(), frameRect, item, &callbacks);
+    bool paintSVGGlyphs;
+    if (ShouldRenderAsPath(aContext, frame, paintSVGGlyphs)) {
+      SVGTextDrawPathCallbacks callbacks(aContext, frame, matrixForPaintServers,
+                                         paintSVGGlyphs);
+      frame->PaintText(aContext, nsPoint(), frameRect, item,
+                       objectPaint, &callbacks);
     } else {
-      frame->PaintText(aContext, nsPoint(), frameRect, item, nullptr);
+      frame->PaintText(aContext, nsPoint(), frameRect, item,
+                       objectPaint, nullptr);
     }
 
     if (frame == caretFrame && ShouldPaintCaret(run, caret)) {
@@ -3255,7 +3287,7 @@ nsSVGTextFrame2::ReflowSVG()
     uint16_t hitTestFlags = nsSVGUtils::GetGeometryHitTestFlags(run.mFrame);
 
     if ((hitTestFlags & SVG_HIT_TEST_FILL) ||
-        run.mFrame->GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+        run.mFrame->GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
       runFlags |= TextRenderedRun::eIncludeFill;
     }
     if ((hitTestFlags & SVG_HIT_TEST_STROKE) ||
@@ -4464,12 +4496,16 @@ nsSVGTextFrame2::DoGlyphPositioning()
 
 bool
 nsSVGTextFrame2::ShouldRenderAsPath(nsRenderingContext* aContext,
-                                    nsTextFrame* aFrame)
+                                    nsTextFrame* aFrame,
+                                    bool& aShouldPaintSVGGlyphs)
 {
   // Rendering to a clip path.
   if (SVGAutoRenderState::GetRenderMode(aContext) != SVGAutoRenderState::NORMAL) {
+    aShouldPaintSVGGlyphs = false;
     return true;
   }
+
+  aShouldPaintSVGGlyphs = true;
 
   const nsStyleSVG* style = aFrame->GetStyleSVG();
 
@@ -4877,4 +4913,142 @@ nsSVGTextFrame2::TransformFrameRectFromTextChild(const nsRect& aRect,
                          NSAppUnitsToFloatPixels(mRect.y, factor));
 
   return result - framePosition;
+}
+
+gfxFont::DrawMode
+nsSVGTextFrame2::SetupCairoState(gfxContext* aContext,
+                                 nsIFrame* aFrame,
+                                 gfxTextObjectPaint* aOuterObjectPaint,
+                                 gfxTextObjectPaint** aThisObjectPaint)
+{
+  gfxFont::DrawMode toDraw = gfxFont::DrawMode(0);
+  SVGTextObjectPaint *thisObjectPaint = new SVGTextObjectPaint();
+
+  if (SetupCairoStroke(aContext, aFrame, aOuterObjectPaint, thisObjectPaint)) {
+    toDraw = gfxFont::DrawMode(toDraw | gfxFont::GLYPH_STROKE);
+  }
+
+  if (SetupCairoFill(aContext, aFrame, aOuterObjectPaint, thisObjectPaint)) {
+    toDraw = gfxFont::DrawMode(toDraw | gfxFont::GLYPH_FILL);
+  }
+
+  *aThisObjectPaint = thisObjectPaint;
+
+  return toDraw;
+}
+
+bool
+nsSVGTextFrame2::SetupCairoStroke(gfxContext* aContext,
+                                  nsIFrame* aFrame,
+                                  gfxTextObjectPaint* aOuterObjectPaint,
+                                  SVGTextObjectPaint* aThisObjectPaint)
+{
+  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  if (style->mStroke.mType == eStyleSVGPaintType_None) {
+    aThisObjectPaint->SetStrokeOpacity(0.0f);
+    return false;
+  }
+
+  gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
+  aContext->IdentityMatrix();
+
+  nsSVGUtils::SetupCairoStrokeHitGeometry(aFrame, aContext, aOuterObjectPaint);
+  float opacity = nsSVGUtils::GetOpacity(style->mStrokeOpacitySource,
+                                         style->mStrokeOpacity,
+                                         aOuterObjectPaint);
+
+  SetupInheritablePaint(aContext, aFrame, opacity, aOuterObjectPaint,
+                        aThisObjectPaint->mStrokePaint, &nsStyleSVG::mStroke,
+                        nsSVGEffects::StrokeProperty());
+
+  aThisObjectPaint->SetStrokeOpacity(opacity);
+
+  return opacity != 0.0f;
+}
+
+bool
+nsSVGTextFrame2::SetupCairoFill(gfxContext* aContext,
+                                nsIFrame* aFrame,
+                                gfxTextObjectPaint* aOuterObjectPaint,
+                                SVGTextObjectPaint* aThisObjectPaint)
+{
+  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  if (style->mFill.mType == eStyleSVGPaintType_None) {
+    aThisObjectPaint->SetFillOpacity(0.0f);
+    return false;
+  }
+
+  float opacity = nsSVGUtils::GetOpacity(style->mFillOpacitySource,
+                                         style->mFillOpacity,
+                                         aOuterObjectPaint);
+
+  SetupInheritablePaint(aContext, aFrame, opacity, aOuterObjectPaint,
+                        aThisObjectPaint->mFillPaint, &nsStyleSVG::mFill,
+                        nsSVGEffects::FillProperty());
+
+  aThisObjectPaint->SetFillOpacity(opacity);
+
+  return true;
+}
+
+void
+nsSVGTextFrame2::SetupInheritablePaint(gfxContext* aContext,
+                                       nsIFrame* aFrame,
+                                       float& aOpacity,
+                                       gfxTextObjectPaint* aOuterObjectPaint,
+                                       SVGTextObjectPaint::Paint& aTargetPaint,
+                                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                       const FramePropertyDescriptor* aProperty)
+{
+  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  nsSVGPaintServerFrame *ps =
+    nsSVGEffects::GetPaintServer(aFrame, &(style->*aFillOrStroke), aProperty);
+
+  if (ps && ps->SetupPaintServer(aContext, aFrame, aFillOrStroke, aOpacity)) {
+    aTargetPaint.SetPaintServer(aFrame, aContext->CurrentMatrix(), ps);
+  } else if (SetupObjectPaint(aContext, aFrame, aFillOrStroke, aOpacity, aOuterObjectPaint)) {
+    aTargetPaint.SetObjectPaint(aOuterObjectPaint, (style->*aFillOrStroke).mType);
+  } else {
+    nscolor color = nsSVGUtils::GetFallbackOrPaintColor(aContext,
+                                                        aFrame->GetStyleContext(),
+                                                        aFillOrStroke);
+    aTargetPaint.SetColor(color);
+
+    aContext->SetPattern(new gfxPattern(gfxRGBA(NS_GET_R(color) / 255.0,
+                                                NS_GET_G(color) / 255.0,
+                                                NS_GET_B(color) / 255.0,
+                                                NS_GET_A(color) / 255.0 * aOpacity)));
+  }
+}
+
+bool
+nsSVGTextFrame2::SetupObjectPaint(gfxContext* aContext,
+                                  nsIFrame* aFrame,
+                                  nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                  float& aOpacity,
+                                  gfxTextObjectPaint* aOuterObjectPaint)
+{
+  if (!aOuterObjectPaint) {
+    return false;
+  }
+
+  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  const nsStyleSVGPaint &paint = style->*aFillOrStroke;
+
+  if (paint.mType != eStyleSVGPaintType_ObjectFill &&
+      paint.mType != eStyleSVGPaintType_ObjectStroke) {
+    return false;
+  }
+
+  gfxMatrix current = aContext->CurrentMatrix();
+  nsRefPtr<gfxPattern> pattern =
+    paint.mType == eStyleSVGPaintType_ObjectFill ?
+      aOuterObjectPaint->GetFillPattern(aOpacity, current) :
+      aOuterObjectPaint->GetStrokePattern(aOpacity, current);
+  if (!pattern) {
+    return false;
+  }
+
+  aContext->SetPattern(pattern);
+  return true;
 }
