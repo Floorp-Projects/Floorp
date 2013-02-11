@@ -1542,7 +1542,7 @@ class TypedArrayTemplate
     {
         JS_ASSERT(proto);
 
-        JSObject *obj = NewBuiltinClassInstance(cx, fastClass());
+        RootedObject obj(cx, NewBuiltinClassInstance(cx, fastClass()));
         if (!obj)
             return NULL;
 
