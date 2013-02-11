@@ -645,6 +645,16 @@ public:
   static bool GetSVGGlyphExtents(Element* aElement,
                                  const gfxMatrix& aSVGToAppSpace,
                                  gfxRect* aResult);
+
+  /**
+   * Returns the app unit canvas bounds of a userspace rect.
+   *
+   * @param aToCanvas Transform from userspace to canvas device space.
+   */
+  static nsRect
+  ToCanvasBounds(const gfxRect &aUserspaceRect,
+                 const gfxMatrix &aToCanvas,
+                 const nsPresContext *presContext);
 };
 
 #endif
