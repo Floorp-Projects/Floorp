@@ -1681,6 +1681,98 @@ ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
 // GetElem_Fallback
 //
 
+static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
+                                        bool *isFixed, uint32_t *offset)
+{
+    JS_ASSERT(isFixed);
+    JS_ASSERT(offset);
+    *isFixed = obj->isFixedSlot(slot);
+    *offset = *isFixed ? JSObject::getFixedSlotOffset(slot)
+                       : obj->dynamicSlotIndex(slot) * sizeof(Value);
+}
+
+static bool
+TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stub,
+                     HandleValue lhs, HandleValue rhs, HandleValue res)
+{
+    // Check for String[i] => Char accesses.
+    if (lhs.isString() && rhs.isInt32() && res.isString() &&
+        !stub->hasStub(ICStub::GetElem_String))
+    {
+        ICGetElem_String::Compiler compiler(cx);
+        ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!stringStub)
+            return false;
+
+        stub->addNewStub(stringStub);
+        return true;
+    }
+
+    // Otherwise, GetElem is only optimized on objects.
+    if (!lhs.isObject())
+        return true;
+    RootedObject obj(cx, &lhs.toObject());
+
+    if (obj->isNative()) {
+        // Check for NativeObject[int] dense accesses.
+        if (rhs.isInt32()) {
+            ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+                                               obj->lastProperty());
+            ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+            if (!denseStub)
+                return false;
+
+            stub->addNewStub(denseStub);
+            return true;
+        }
+
+        // Check for NativeObject[id] shape-optimizable accesses.
+        if (rhs.isString()) {
+            RootedId id(cx);
+            RootedValue idval(cx);
+            if (!FetchElementId(cx, obj, rhs, &id, &idval))
+                return false;
+
+            // Currently, use |nativeLookup|.  Only checking for direct presence of
+            // property on object.
+            RootedShape shape(cx);
+            uint32_t dummy;
+            if (JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy) &&
+                (shape = obj->nativeLookup(cx, id)) && shape->hasDefaultGetter() &&
+                shape->hasSlot())
+            {
+                bool isFixedSlot;
+                uint32_t offset;
+                GetFixedOrDynamicSlotOffset(obj, shape->slot(), &isFixedSlot, &offset);
+
+                RootedShape objShape(cx, obj->lastProperty());
+                ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+                ICGetElem_Native::Compiler compiler(cx, monitorStub, objShape, idval,
+                                                    isFixedSlot, offset);
+                ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+                if (!newStub)
+                    return false;
+
+                stub->addNewStub(newStub);
+                return true;
+            }
+        }
+    }
+
+    // Check for TypedArray[int] => Number accesses.
+    if (obj->isTypedArray() && rhs.isInt32() && res.isNumber()) {
+        ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
+        ICStub *typedArrayStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!typedArrayStub)
+            return false;
+
+        stub->addNewStub(typedArrayStub);
+        return true;
+    }
+
+    return true;
+}
+
 static bool
 DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
@@ -1716,42 +1808,8 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
         return true;
     }
 
-    if (lhs.isString() && rhs.isInt32() && res.isString() && !stub->hasStub(ICStub::GetElem_String)) {
-        ICGetElem_String::Compiler compiler(cx);
-        ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
-        if (!stringStub)
-            return false;
-
-        stub->addNewStub(stringStub);
-        return true;
-    }
-
-    // Try to generate new stubs.
-    if (!lhs.isObject())
-        return true;
-
-    RootedObject obj(cx, &lhs.toObject());
-    if (obj->isNative() && rhs.isInt32()) {
-        ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                           obj->lastProperty());
-        ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
-        if (!denseStub)
-            return false;
-
-        stub->addNewStub(denseStub);
-        return true;
-    }
-
-    if (obj->isTypedArray() && rhs.isInt32() && res.isNumber()) {
-        ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
-        ICStub *typedArrayStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
-        if (!typedArrayStub)
-            return false;
-
-        stub->addNewStub(typedArrayStub);
-        return true;
-    }
-
+    if (!TryAttachGetElemStub(cx, script, stub, lhs, rhs, res))
+        return false;
     return true;
 }
 
@@ -1778,6 +1836,48 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoGetElemFallbackInfo, masm);
+}
+
+//
+// GetElem_Native
+//
+
+bool
+ICGetElem_Native::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    Label failurePopTarget;
+
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    Address idValAddr(BaselineStubReg, ICGetElem_Native::offsetOfIdval());
+    masm.branchTestValue(Assembler::NotEqual, idValAddr, R1, &failure);
+
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratchReg = regs.takeAny();
+
+    // Unbox object.
+    Register objReg = masm.extractObject(R0, ExtractTemp0);
+
+    // Check object shape.
+    masm.loadPtr(Address(objReg, JSObject::offsetOfShape()), scratchReg);
+    Address shapeAddr(BaselineStubReg, ICGetElem_Native::offsetOfShape());
+    masm.branchPtr(Assembler::NotEqual, shapeAddr, scratchReg, &failure);
+
+    // Load from object.
+    if (!isFixedSlot_)
+        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
+
+    masm.load32(Address(BaselineStubReg, ICGetElem_Native::offsetOfOffset()), scratchReg);
+    masm.loadValue(BaseIndex(objReg, scratchReg, TimesOne), R0);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //
@@ -2663,16 +2763,6 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, UnrootedShape shape)
         return false;
 
     return true;
-}
-
-static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
-                                        bool *isFixed, uint32_t *offset)
-{
-    JS_ASSERT(isFixed);
-    JS_ASSERT(offset);
-    *isFixed = obj->isFixedSlot(slot);
-    *offset = *isFixed ? JSObject::getFixedSlotOffset(slot)
-                       : obj->dynamicSlotIndex(slot) * sizeof(Value);
 }
 
 static bool

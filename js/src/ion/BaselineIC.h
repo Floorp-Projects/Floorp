@@ -319,6 +319,7 @@ class ICEntry
     _(Call_Native)              \
                                 \
     _(GetElem_Fallback)         \
+    _(GetElem_Native)           \
     _(GetElem_String)           \
     _(GetElem_Dense)            \
     _(GetElem_TypedArray)       \
@@ -1797,7 +1798,7 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     { }
 
   public:
-    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+    static const uint32_t MAX_OPTIMIZED_STUBS = 16;
 
     static inline ICGetElem_Fallback *New(ICStubSpace *space, IonCode *code) {
         return space->allocate<ICGetElem_Fallback>(code);
@@ -1823,6 +1824,84 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
         }
     };
 };
+
+class ICGetElem_Native : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+    HeapPtrShape shape_;
+    HeapValue idval_;
+    uint32_t offset_;
+
+    ICGetElem_Native(IonCode *stubCode, ICStub *firstMonitorStub,
+                     HandleShape shape, HandleValue idval, uint32_t offset)
+      : ICMonitoredStub(ICStub::GetElem_Native, stubCode, firstMonitorStub),
+        shape_(shape),
+        idval_(idval),
+        offset_(offset)
+    {}
+
+  public:
+    static inline ICGetElem_Native *New(ICStubSpace *space, IonCode *code,
+                                        ICStub *firstMonitorStub,
+                                        HandleShape shape, HandleValue idval, uint32_t offset)
+    {
+        return space->allocate<ICGetElem_Native>(code, firstMonitorStub, shape, idval, offset);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    static size_t offsetOfShape() {
+        return offsetof(ICGetElem_Native, shape_);
+    }
+
+    HeapValue &idval() {
+        return idval_;
+    }
+    static size_t offsetOfIdval() {
+        return offsetof(ICGetElem_Native, idval_);
+    }
+
+    uint32_t offset() const {
+        return offset_;
+    }
+    static size_t offsetOfOffset() {
+        return offsetof(ICGetElem_Native, offset_);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        ICStub *firstMonitorStub_;
+        RootedShape shape_;
+        RootedValue idval_;
+        bool isFixedSlot_;
+        uint32_t offset_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
+        }
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleShape shape, HandleValue idval,
+                 bool isFixedSlot, uint32_t offset)
+          : ICStubCompiler(cx, ICStub::GetElem_Native),
+            firstMonitorStub_(firstMonitorStub),
+            shape_(cx, shape),
+            idval_(cx, idval),
+            isFixedSlot_(isFixedSlot),
+            offset_(offset)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetElem_Native::New(space, getStubCode(), firstMonitorStub_,
+                                             shape_, idval_, offset_);
+        }
+    };
+};
+
 
 class ICGetElem_String : public ICStub
 {
