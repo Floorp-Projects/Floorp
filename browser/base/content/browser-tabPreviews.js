@@ -256,6 +256,7 @@ var ctrlTab = {
     var showAllLabel = gNavigatorBundle.getString("ctrlTab.showAll.label");
     this.showAllButton.label =
       PluralForm.get(this.tabCount, showAllLabel).replace("#1", this.tabCount);
+    this.showAllButton.hidden = !allTabs.canOpen;
   },
 
   updatePreview: function ctrlTab_updatePreview(aPreview, aTab) {
@@ -361,8 +362,6 @@ var ctrlTab = {
   open: function ctrlTab_open() {
     if (this.isOpen)
       return;
-
-    allTabs.close();
 
     document.addEventListener("keyup", this, true);
 
@@ -525,6 +524,10 @@ var ctrlTab = {
         if (event.keyCode == event.DOM_VK_CONTROL)
           this.pick();
         break;
+      case "popupshowing":
+        if (event.target.id == "menu_viewPopup")
+          document.getElementById("menu_showAllTabs").hidden = !allTabs.canOpen;
+        break;
     }
   },
 
@@ -543,6 +546,7 @@ var ctrlTab = {
     // If we're not running, hide the "Show All Tabs" menu item,
     // as Shift+Ctrl+Tab will be handled by the tab bar.
     document.getElementById("menu_showAllTabs").hidden = !enable;
+    document.getElementById("menu_viewPopup")[toggleEventListener]("popupshowing", this);
 
     // Also disable the <key> to ensure Shift+Ctrl+Tab never triggers
     // Show All Tabs.
@@ -556,497 +560,19 @@ var ctrlTab = {
 
 
 /**
- * All Tabs panel
+ * All Tabs menu
  */
 var allTabs = {
-  get panel () {
-    delete this.panel;
-    return this.panel = document.getElementById("allTabs-panel");
-  },
-  get filterField () {
-    delete this.filterField;
-    return this.filterField = document.getElementById("allTabs-filter");
-  },
-  get container () {
-    delete this.container;
-    return this.container = document.getElementById("allTabs-container");
-  },
-  get tabCloseButton () {
-    delete this.tabCloseButton;
-    return this.tabCloseButton = document.getElementById("allTabs-tab-close-button");
-  },
   get toolbarButton() document.getElementById("alltabs-button"),
-  get previews () this.container.getElementsByClassName("allTabs-preview"),
-  get isOpen () this.panel.state == "open" || this.panel.state == "showing",
-
-  init: function allTabs_init() {
-    if (this._initiated)
-      return;
-    this._initiated = true;
-
-    tabPreviews.init();
-
-    Array.forEach(gBrowser.tabs, function (tab) {
-      this._addPreview(tab);
-    }, this);
-
-    gBrowser.tabContainer.addEventListener("TabOpen", this, false);
-    gBrowser.tabContainer.addEventListener("TabAttrModified", this, false);
-    gBrowser.tabContainer.addEventListener("TabMove", this, false);
-    gBrowser.tabContainer.addEventListener("TabClose", this, false);
-  },
-
-  uninit: function allTabs_uninit() {
-    if (!this._initiated)
-      return;
-
-    gBrowser.tabContainer.removeEventListener("TabOpen", this, false);
-    gBrowser.tabContainer.removeEventListener("TabAttrModified", this, false);
-    gBrowser.tabContainer.removeEventListener("TabMove", this, false);
-    gBrowser.tabContainer.removeEventListener("TabClose", this, false);
-
-    while (this.container.hasChildNodes())
-      this.container.removeChild(this.container.firstChild);
-
-    this._initiated = false;
-  },
-
-  prefName: "browser.allTabs.previews",
-  readPref: function allTabs_readPref() {
-    var allTabsButton = this.toolbarButton;
-    if (!allTabsButton)
-      return;
-
-    if (gPrefService.getBoolPref(this.prefName)) {
-      allTabsButton.removeAttribute("type");
-      allTabsButton.setAttribute("command", "Browser:ShowAllTabs");
-    } else {
-      allTabsButton.setAttribute("type", "menu");
-      allTabsButton.removeAttribute("command");
-      allTabsButton.removeAttribute("oncommand");
-    }
-  },
-  observe: function (aSubject, aTopic, aPrefName) {
-    this.readPref();
-  },
-
-  pick: function allTabs_pick(aPreview) {
-    if (!aPreview)
-      aPreview = this._firstVisiblePreview;
-    if (aPreview)
-      this.tabToSelect = aPreview._tab;
-
-    this.close();
-  },
-
-  closeTab: function allTabs_closeTab(event) {
-    this.filterField.focus();
-    gBrowser.removeTab(event.currentTarget._targetPreview._tab);
-  },
-
-  filter: function allTabs_filter() {
-    if (this._currentFilter == this.filterField.value)
-      return;
-
-    this._currentFilter = this.filterField.value;
-
-    var filter = this._currentFilter.split(/\s+/g);
-    this._visible = 0;
-    Array.forEach(this.previews, function (preview) {
-      var tab = preview._tab;
-      var matches = 0;
-      if (filter.length && !tab.hidden) {
-        let tabstring = tab.linkedBrowser.currentURI.spec;
-        try {
-          tabstring = decodeURI(tabstring);
-        } catch (e) {}
-        tabstring = tab.label + " " + tab.label.toLocaleLowerCase() + " " + tabstring;
-        for (let i = 0; i < filter.length; i++)
-          matches += tabstring.contains(filter[i]);
-      }
-      if (matches < filter.length || tab.hidden) {
-        preview.hidden = true;
-      }
-      else {
-        this._visible++;
-        this._updatePreview(preview);
-        preview.hidden = false;
-      }
-    }, this);
-
-    this._reflow();
-  },
+  get canOpen() isElementVisible(this.toolbarButton),
 
   open: function allTabs_open() {
-    var allTabsButton = this.toolbarButton;
-    if (allTabsButton &&
-        allTabsButton.getAttribute("type") == "menu") {
+    if (this.canOpen) {
       // Without setTimeout, the menupopup won't stay open when invoking
       // "View > Show All Tabs" and the menu bar auto-hides.
       setTimeout(function () {
-        allTabsButton.open = true;
+        allTabs.toolbarButton.open = true;
       }, 0);
-      return;
     }
-
-    this.init();
-
-    if (this.isOpen)
-      return;
-
-    this._maxPanelHeight = Math.max(gBrowser.clientHeight, screen.availHeight / 2);
-    this._maxPanelWidth = Math.max(gBrowser.clientWidth, screen.availWidth / 2);
-
-    this.filter();
-
-    tabPreviewPanelHelper.opening(this);
-
-    this.panel.popupBoxObject.setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_NO_CONSUME);
-    this.panel.openPopup(gBrowser, "overlap", 0, 0, false, true);
-  },
-
-  close: function allTabs_close() {
-    this.panel.hidePopup();
-  },
-
-  setupGUI: function allTabs_setupGUI() {
-    this.filterField.focus();
-    this.filterField.placeholder = this.filterField.tooltipText;
-
-    this.panel.addEventListener("keypress", this, false);
-    this.panel.addEventListener("keypress", this, true);
-    this._browserCommandSet.addEventListener("command", this, false);
-
-    // When the panel is open, a second click on the all tabs button should
-    // close the panel but not re-open it.
-    document.getElementById("Browser:ShowAllTabs").setAttribute("disabled", "true");
-  },
-
-  suspendGUI: function allTabs_suspendGUI() {
-    this.filterField.placeholder = "";
-    this.filterField.value = "";
-    this._currentFilter = null;
-
-    this._updateTabCloseButton();
-
-    this.panel.removeEventListener("keypress", this, false);
-    this.panel.removeEventListener("keypress", this, true);
-    this._browserCommandSet.removeEventListener("command", this, false);
-
-    setTimeout(function () {
-      document.getElementById("Browser:ShowAllTabs").removeAttribute("disabled");
-    }, 300);
-  },
-
-  handleEvent: function allTabs_handleEvent(event) {
-    if (event.type.startsWith("Tab")) {
-      var tab = event.target;
-      if (event.type != "TabOpen")
-        var preview = this._getPreview(tab);
-    }
-    switch (event.type) {
-      case "TabAttrModified":
-        // tab attribute modified (e.g. label, crop, busy, image)
-        if (!preview.hidden)
-          this._updatePreview(preview);
-        break;
-      case "TabOpen":
-        if (this.isOpen)
-          this.close();
-        this._addPreview(tab);
-        break;
-      case "TabMove":
-        let siblingPreview = tab.nextSibling &&
-                             this._getPreview(tab.nextSibling);
-        if (siblingPreview)
-          siblingPreview.parentNode.insertBefore(preview, siblingPreview);
-        else
-          this.container.lastChild.appendChild(preview);
-        if (this.isOpen && !preview.hidden) {
-          this._reflow();
-          preview.focus();
-        }
-        break;
-      case "TabClose":
-        this._removePreview(preview);
-        break;
-      case "keypress":
-        this._onKeyPress(event);
-        break;
-      case "command":
-        if (event.target.id != "Browser:ShowAllTabs") {
-          // Close the panel when there's a browser command executing in the background.
-          this.close();
-        }
-        break;
-    }
-  },
-
-  _visible: 0,
-  _currentFilter: null,
-  get _stack () {
-    delete this._stack;
-    return this._stack = document.getElementById("allTabs-stack");
-  },
-  get _browserCommandSet () {
-    delete this._browserCommandSet;
-    return this._browserCommandSet = document.getElementById("mainCommandSet");
-  },
-  get _previewLabelHeight () {
-    delete this._previewLabelHeight;
-    return this._previewLabelHeight = parseInt(getComputedStyle(this.previews[0], "").lineHeight);
-  },
-
-  get _visiblePreviews ()
-    Array.filter(this.previews, function (preview) !preview.hidden),
-
-  get _firstVisiblePreview () {
-    if (this._visible == 0)
-      return null;
-    var previews = this.previews;
-    for (let i = 0; i < previews.length; i++) {
-      if (!previews[i].hidden)
-        return previews[i];
-    }
-    return null;
-  },
-
-  _reflow: function allTabs_reflow() {
-    this._updateTabCloseButton();
-
-    const CONTAINER_MAX_WIDTH = this._maxPanelWidth * .95;
-    const CONTAINER_MAX_HEIGHT = this._maxPanelHeight - 35;
-    // the size of the whole preview relative to the thumbnail
-    const REL_PREVIEW_THUMBNAIL = 1.2;
-    const REL_PREVIEW_HEIGHT_WIDTH = tabPreviews.height / tabPreviews.width;
-    const PREVIEW_MAX_WIDTH = tabPreviews.width * REL_PREVIEW_THUMBNAIL;
-
-    var rows, previewHeight, previewWidth, outerHeight;
-    this._columns = Math.floor(CONTAINER_MAX_WIDTH / PREVIEW_MAX_WIDTH);
-    do {
-      rows = Math.ceil(this._visible / this._columns);
-      previewWidth = Math.min(PREVIEW_MAX_WIDTH,
-                              Math.round(CONTAINER_MAX_WIDTH / this._columns));
-      previewHeight = Math.round(previewWidth * REL_PREVIEW_HEIGHT_WIDTH);
-      outerHeight = previewHeight + this._previewLabelHeight;
-    } while (rows * outerHeight > CONTAINER_MAX_HEIGHT && ++this._columns);
-
-    var outerWidth = previewWidth;
-    {
-      let innerWidth = Math.ceil(previewWidth / REL_PREVIEW_THUMBNAIL);
-      let innerHeight = Math.ceil(previewHeight / REL_PREVIEW_THUMBNAIL);
-      var canvasStyle = "max-width:" + innerWidth + "px;" +
-                        "min-width:" + innerWidth + "px;" +
-                        "max-height:" + innerHeight + "px;" +
-                        "min-height:" + innerHeight + "px;";
-    }
-
-    var previews = Array.slice(this.previews);
-
-    while (this.container.hasChildNodes())
-      this.container.removeChild(this.container.firstChild);
-    for (let i = rows || 1; i > 0; i--)
-      this.container.appendChild(document.createElement("hbox"));
-
-    var row = this.container.firstChild;
-    var colCount = 0;
-    previews.forEach(function (preview) {
-      if (!preview.hidden &&
-          ++colCount > this._columns) {
-        row = row.nextSibling;
-        colCount = 1;
-      }
-      preview.setAttribute("minwidth", outerWidth);
-      preview.setAttribute("height", outerHeight);
-      preview.setAttribute("canvasstyle", canvasStyle);
-      preview.removeAttribute("closebuttonhover");
-      row.appendChild(preview);
-    }, this);
-
-    this._stack.width = this._maxPanelWidth;
-    this.container.width = Math.ceil(outerWidth * Math.min(this._columns, this._visible));
-    this.container.left = Math.round((this._maxPanelWidth - this.container.width) / 2);
-    this.container.maxWidth = this._maxPanelWidth - this.container.left;
-    this.container.maxHeight = rows * outerHeight;
-  },
-
-  _addPreview: function allTabs_addPreview(aTab) {
-    var preview = document.createElement("button");
-    preview.className = "allTabs-preview";
-    preview._tab = aTab;
-    this.container.lastChild.appendChild(preview);
-  },
-
-  _removePreview: function allTabs_removePreview(aPreview) {
-    var updateUI = (this.isOpen && !aPreview.hidden);
-    aPreview._tab = null;
-    aPreview.parentNode.removeChild(aPreview);
-    if (updateUI) {
-      this._visible--;
-      this._reflow();
-      this.filterField.focus();
-    }
-  },
-
-  _getPreview: function allTabs_getPreview(aTab) {
-    var previews = this.previews;
-    for (let i = 0; i < previews.length; i++)
-      if (previews[i]._tab == aTab)
-        return previews[i];
-    return null;
-  },
-
-  _updateTabCloseButton: function allTabs_updateTabCloseButton(event) {
-    if (event && event.target == this.tabCloseButton)
-      return;
-
-    if (this.tabCloseButton._targetPreview) {
-      if (event && event.target == this.tabCloseButton._targetPreview)
-        return;
-
-      this.tabCloseButton._targetPreview.removeAttribute("closebuttonhover");
-    }
-
-    if (event &&
-        event.target.parentNode.parentNode == this.container &&
-        (event.target._tab.previousSibling || event.target._tab.nextSibling)) {
-      let canvas = event.target.firstChild.getBoundingClientRect();
-      let container = this.container.getBoundingClientRect();
-      let tabCloseButton = this.tabCloseButton.getBoundingClientRect();
-      let alignLeft = getComputedStyle(this.panel, "").direction == "rtl";
-#ifdef XP_MACOSX
-      alignLeft = !alignLeft;
-#endif
-      this.tabCloseButton.left = canvas.left -
-                                 container.left +
-                                 parseInt(this.container.left) +
-                                 (alignLeft ? 0 :
-                                  canvas.width - tabCloseButton.width);
-      this.tabCloseButton.top = canvas.top - container.top;
-      this.tabCloseButton._targetPreview = event.target;
-      this.tabCloseButton.style.visibility = "visible";
-      event.target.setAttribute("closebuttonhover", "true");
-    } else {
-      this.tabCloseButton.style.visibility = "hidden";
-      this.tabCloseButton.left = this.tabCloseButton.top = 0;
-      this.tabCloseButton._targetPreview = null;
-    }
-  },
-
-  _updatePreview: function allTabs_updatePreview(aPreview) {
-    aPreview.setAttribute("label", aPreview._tab.label);
-    aPreview.setAttribute("tooltiptext", aPreview._tab.label);
-    aPreview.setAttribute("crop", aPreview._tab.crop);
-    if (aPreview._tab.image)
-      aPreview.setAttribute("image", aPreview._tab.image);
-    else
-      aPreview.removeAttribute("image");
-
-    var thumbnail = tabPreviews.get(aPreview._tab);
-    if (aPreview.firstChild) {
-      if (aPreview.firstChild == thumbnail)
-        return;
-      aPreview.removeChild(aPreview.firstChild);
-    }
-    aPreview.appendChild(thumbnail);
-  },
-
-  _onKeyPress: function allTabs_onKeyPress(event) {
-    if (event.eventPhase == event.CAPTURING_PHASE) {
-      this._onCapturingKeyPress(event);
-      return;
-    }
-
-    if (event.keyCode == event.DOM_VK_ESCAPE) {
-      this.close();
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
-
-    if (event.target == this.filterField) {
-      switch (event.keyCode) {
-        case event.DOM_VK_UP:
-          if (this._visible) {
-            let previews = this._visiblePreviews;
-            let columns = Math.min(previews.length, this._columns);
-            previews[Math.floor(previews.length / columns) * columns - 1].focus();
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          break;
-        case event.DOM_VK_DOWN:
-          if (this._visible) {
-            this._firstVisiblePreview.focus();
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          break;
-      }
-    }
-  },
-
-  _onCapturingKeyPress: function allTabs_onCapturingKeyPress(event) {
-    switch (event.keyCode) {
-      case event.DOM_VK_UP:
-      case event.DOM_VK_DOWN:
-        if (event.target != this.filterField)
-          this._advanceFocusVertically(event);
-        break;
-      case event.DOM_VK_RETURN:
-        if (event.target == this.filterField) {
-          this.filter();
-          this.pick();
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        break;
-    }
-  },
-
-  _advanceFocusVertically: function allTabs_advanceFocusVertically(event) {
-    var preview = document.activeElement;
-    if (!preview || preview.parentNode.parentNode != this.container)
-      return;
-
-    event.stopPropagation();
-
-    var up = (event.keyCode == event.DOM_VK_UP);
-    var previews = this._visiblePreviews;
-
-    if (up && preview == previews[0]) {
-      this.filterField.focus();
-      return;
-    }
-
-    var i       = previews.indexOf(preview);
-    var columns = Math.min(previews.length, this._columns);
-    var column  = i % columns;
-    var row     = Math.floor(i / columns);
-
-    function newIndex()    row * columns + column;
-    function outOfBounds() newIndex() >= previews.length;
-
-    if (up) {
-      row--;
-      if (row < 0) {
-        let rows = Math.ceil(previews.length / columns);
-        row = rows - 1;
-        column--;
-        if (outOfBounds())
-          row--;
-      }
-    } else {
-      row++;
-      if (outOfBounds()) {
-        if (column == columns - 1) {
-          this.filterField.focus();
-          return;
-        }
-        row = 0;
-        column++;
-      }
-    }
-    previews[newIndex()].focus();
   }
 };
