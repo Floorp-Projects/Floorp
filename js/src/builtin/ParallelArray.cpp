@@ -974,7 +974,6 @@ Class ParallelArrayObject::class_ = {
         deleteElement,
         deleteSpecial,
         NULL,                // enumerate
-        NULL,                // typeof
         NULL,                // thisObject
     }
 };
