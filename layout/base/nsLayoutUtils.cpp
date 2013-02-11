@@ -77,6 +77,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsSVGTextFrame2.h"
 #include "nsStyleStructInlines.h"
 
 #include "mozilla/dom/PBrowserChild.h"
@@ -5290,8 +5291,18 @@ nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame)
 float
 nsLayoutUtils::FontSizeInflationFor(const nsIFrame *aFrame)
 {
+  if (aFrame->IsSVGText()) {
+    const nsIFrame* container = aFrame;
+    while (container->GetType() != nsGkAtoms::svgTextFrame2) {
+      container = container->GetParent();
+    }
+    NS_ASSERTION(container, "expected to find an ancestor nsSVGTextFrame2");
+    return
+      static_cast<const nsSVGTextFrame2*>(container)->GetFontSizeScaleFactor();
+  }
+
   if (!FontSizeInflationEnabled(aFrame->PresContext())) {
-    return 1.0;
+    return 1.0f;
   }
 
   return FontSizeInflationInner(aFrame, InflationMinFontSizeFor(aFrame));
