@@ -1217,7 +1217,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire text element in all
     // cases.
-    if (NS_SVGTextCSSFramesEnabled()) {
+    if (aFrame->IsSVGText()) {
       nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
       if (ancestor && ancestor->IsSVGText()) {
         while (ancestor->GetType() != nsGkAtoms::svgTextFrame2) {

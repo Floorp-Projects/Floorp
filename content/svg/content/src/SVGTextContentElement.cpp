@@ -34,12 +34,19 @@ SVGTextContentElement::GetSVGTextFrame()
   return nullptr;
 }
 
+bool
+SVGTextContentElement::FrameIsSVGText()
+{
+  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
+  return frame && frame->IsSVGText();
+}
+
 //----------------------------------------------------------------------
 
 int32_t
 SVGTextContentElement::GetNumberOfChars()
 {
-  if (NS_SVGTextCSSFramesEnabled()) {
+  if (FrameIsSVGText()) {
     nsSVGTextFrame2* textFrame = GetSVGTextFrame();
     return textFrame ? textFrame->GetNumberOfChars(this) : 0;
   } else {
@@ -51,7 +58,7 @@ SVGTextContentElement::GetNumberOfChars()
 float
 SVGTextContentElement::GetComputedTextLength()
 {
-  if (NS_SVGTextCSSFramesEnabled()) {
+  if (FrameIsSVGText()) {
     nsSVGTextFrame2* textFrame = GetSVGTextFrame();
     return textFrame ? textFrame->GetComputedTextLength(this) : 0.0f;
   } else {
@@ -63,7 +70,7 @@ SVGTextContentElement::GetComputedTextLength()
 float
 SVGTextContentElement::GetSubStringLength(uint32_t charnum, uint32_t nchars, ErrorResult& rv)
 {
-  if (NS_SVGTextCSSFramesEnabled()) {
+  if (FrameIsSVGText()) {
     nsSVGTextFrame2* textFrame = GetSVGTextFrame();
     if (!textFrame)
       return 0.0f;
@@ -100,7 +107,7 @@ already_AddRefed<nsISVGPoint>
 SVGTextContentElement::GetStartPositionOfChar(uint32_t charnum, ErrorResult& rv)
 {
   nsCOMPtr<nsISVGPoint> point;
-  if (NS_SVGTextCSSFramesEnabled()) {
+  if (FrameIsSVGText()) {
     nsSVGTextFrame2* textFrame = GetSVGTextFrame();
     if (!textFrame) {
       rv.Throw(NS_ERROR_FAILURE);
@@ -125,7 +132,7 @@ already_AddRefed<nsISVGPoint>
 SVGTextContentElement::GetEndPositionOfChar(uint32_t charnum, ErrorResult& rv)
 {
   nsCOMPtr<nsISVGPoint> point;
-  if (NS_SVGTextCSSFramesEnabled()) {
+  if (FrameIsSVGText()) {
     nsSVGTextFrame2* textFrame = GetSVGTextFrame();
     if (!textFrame) {
       rv.Throw(NS_ERROR_FAILURE);
@@ -150,7 +157,7 @@ already_AddRefed<nsIDOMSVGRect>
 SVGTextContentElement::GetExtentOfChar(uint32_t charnum, ErrorResult& rv)
 {
   nsCOMPtr<nsIDOMSVGRect> rect;
-  if (NS_SVGTextCSSFramesEnabled()) {
+  if (FrameIsSVGText()) {
     nsSVGTextFrame2* textFrame = GetSVGTextFrame();
 
     if (!textFrame) {
@@ -176,7 +183,7 @@ float
 SVGTextContentElement::GetRotationOfChar(uint32_t charnum, ErrorResult& rv)
 {
   float rotation;
-  if (NS_SVGTextCSSFramesEnabled()) {
+  if (FrameIsSVGText()) {
     nsSVGTextFrame2* textFrame = GetSVGTextFrame();
 
     if (!textFrame) {
@@ -201,7 +208,7 @@ SVGTextContentElement::GetRotationOfChar(uint32_t charnum, ErrorResult& rv)
 int32_t
 SVGTextContentElement::GetCharNumAtPosition(nsISVGPoint& aPoint)
 {
-  if (NS_SVGTextCSSFramesEnabled()) {
+  if (FrameIsSVGText()) {
     nsSVGTextFrame2* textFrame = GetSVGTextFrame();
     return textFrame ? textFrame->GetCharNumAtPosition(this, &aPoint) : -1;
   } else {
