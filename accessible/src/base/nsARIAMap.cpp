@@ -679,7 +679,7 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsGkAtoms::aria_flowto,            ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {&nsGkAtoms::aria_grabbed,                            ATTR_VALTOKEN | ATTR_GLOBAL },
   {&nsGkAtoms::aria_haspopup,          ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_hidden,                             ATTR_VALTOKEN | ATTR_GLOBAL },/* always expose obj attr */
+  {&nsGkAtoms::aria_hidden,   ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {&nsGkAtoms::aria_invalid,           ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
   {&nsGkAtoms::aria_label,             ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {&nsGkAtoms::aria_labelledby,        ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
@@ -775,6 +775,12 @@ AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue)
       if ((attrFlags & ATTR_VALTOKEN) &&
            !nsAccUtils::HasDefinedARIAToken(mContent, attrAtom))
         continue; // only expose token based attributes if they are defined
+
+      if ((attrFlags & ATTR_BYPASSOBJ_IF_FALSE) &&
+          mContent->AttrValueIs(kNameSpaceID_None, attrAtom,
+                                nsGkAtoms::_false, eCaseMatters)) {
+        continue; // only expose token based attribute if value is not 'false'.
+      }
 
       nsAutoString value;
       if (mContent->GetAttr(kNameSpaceID_None, attrAtom, value)) {
