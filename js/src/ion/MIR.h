@@ -1051,6 +1051,9 @@ class MReturn
         return new MReturn(ins);
     }
 
+    MDefinition *input() const {
+        return getOperand(0);
+    }
     TypePolicy *typePolicy() {
         return this;
     }
@@ -4610,7 +4613,7 @@ class MStoreFixedSlot
       : MBinaryInstruction(obj, rval),
         needsBarrier_(barrier),
         slot_(slot)
-    {}
+    { }
 
   public:
     INSTRUCTION_HEADER(StoreFixedSlot)
@@ -4654,22 +4657,18 @@ class InlinePropertyTable : public TempObject
         CompilerRootFunction func;
 
         Entry(types::TypeObject *typeObj, JSFunction *func)
-          : typeObj(typeObj),
-            func(func)
-        {
-        }
+          : typeObj(typeObj), func(func)
+        { }
     };
+
     jsbytecode *pc_;
     MResumePoint *priorResumePoint_;
     Vector<Entry *, 4, IonAllocPolicy> entries_;
 
   public:
     InlinePropertyTable(jsbytecode *pc)
-      : pc_(pc),
-        priorResumePoint_(NULL),
-        entries_()
-    {
-    }
+      : pc_(pc), priorResumePoint_(NULL), entries_()
+    { }
 
     void setPriorResumePoint(MResumePoint *resumePoint) {
         JS_ASSERT(priorResumePoint_ == NULL);
@@ -4702,26 +4701,7 @@ class InlinePropertyTable : public TempObject
         return entries_[i]->func;
     }
 
-    void trimToAndMaybePatchTargets(AutoObjectVector &targets, AutoObjectVector &originals) {
-        size_t i = 0;
-        while (i < numEntries()) {
-            bool foundFunc = false;
-            // Compare using originals, but if we find a matching function,
-            // patch it to the target, which might be a clone.
-            for (size_t j = 0; j < originals.length(); j++) {
-                if (entries_[i]->func == originals[j]) {
-                    if (entries_[i]->func != targets[j])
-                        entries_[i] = new Entry(entries_[i]->typeObj, targets[j]->toFunction());
-                    foundFunc = true;
-                    break;
-                }
-            }
-            if (!foundFunc)
-                entries_.erase(&(entries_[i]));
-            else
-                i++;
-        }
-    }
+    void trimToAndMaybePatchTargets(AutoObjectVector &targets, AutoObjectVector &originals);
 };
 
 class MGetPropertyCache
