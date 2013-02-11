@@ -215,10 +215,18 @@ public:
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
                                   uint32_t aFlags);
 
+  /**
+   * Finds the nsTextFrame for the closest rendered run to the specified point.
+   */
+  virtual void FindCloserFrameForSelection(nsPoint aPoint,
+                                          FrameWithDistance* aCurrentBestFrame);
+
+
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags);
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
                       const nsIntRect* aDirtyRect);
+  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint& aPoint);
   virtual void ReflowSVG();
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   virtual SVGBBox GetBBoxContribution(const gfxMatrix& aToBBoxUserspace,
@@ -257,6 +265,32 @@ public:
   void UpdateFontSizeScaleFactor(bool aForceGlobalTransform);
 
   double GetFontSizeScaleFactor() const;
+
+  /**
+   * Takes a point from the <text> element's user space and
+   * converts it to the appropriate frame user space of aChildFrame,
+   * according to which rendered run the point hits.
+   */
+  gfxPoint TransformFramePointToTextChild(const gfxPoint& aPoint,
+                                          nsIFrame* aChildFrame);
+
+  /**
+   * Takes a rectangle, aRect, in the <text> element's user space, and
+   * returns a rectangle in aChildFrame's frame user space that
+   * covers intersections of aRect with each rendered run for text frames
+   * within aChildFrame.
+   */
+  gfxRect TransformFrameRectToTextChild(const gfxRect& aRect,
+                                        nsIFrame* aChildFrame);
+
+  /**
+   * Takes an app unit rectangle in the coordinate space of a given descendant
+   * frame of this frame, and returns a rectangle in the <text> element's user
+   * space that covers all parts of rendered runs that intersect with the
+   * rectangle.
+   */
+  gfxRect TransformFrameRectFromTextChild(const nsRect& aRect,
+                                          nsIFrame* aChildFrame);
 
 private:
   /**

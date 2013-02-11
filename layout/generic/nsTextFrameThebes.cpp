@@ -6207,7 +6207,7 @@ nsTextFrame::GetCharacterOffsetAtFramePoint(const nsPoint &aPoint)
 }
 
 nsIFrame::ContentOffsets
-nsTextFrame::GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
+nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
                                                     bool aForInsertionPoint)
 {
   ContentOffsets offsets;
