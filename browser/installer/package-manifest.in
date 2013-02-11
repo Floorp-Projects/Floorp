@@ -566,8 +566,10 @@
 #ifndef XP_MACOSX
 ; shell icons
 @BINPATH@/browser/icons/*.png
+#ifdef MOZ_UPDATER
 ; updater icon
 @BINPATH@/icons/updater.png
+#endif
 #endif
 #endif
 
