@@ -2943,17 +2943,6 @@ nsSVGTextFrame2::Reflow(nsPresContext*           aPresContext,
 }
 
 void
-nsSVGTextFrame2::InvalidateInternal(const nsRect& aDamageRect,
-                                    nscoord aX, nscoord aY,
-                                    nsIFrame* aForChild, uint32_t aFlags)
-{
-  // This is called by our descendants when they change.
-  // We just invalidate our entire area for now.
-  nsSVGUtils::InvalidateBounds
-    (this, nsSVGUtils::OuterSVGIsCallingReflowSVG(this), nullptr, aFlags);
-}
-
-void
 nsSVGTextFrame2::FindCloserFrameForSelection(
                                  nsPoint aPoint,
                                  nsIFrame::FrameWithDistance* aCurrentBestFrame)
