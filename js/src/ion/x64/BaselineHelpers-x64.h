@@ -16,7 +16,7 @@
 namespace js {
 namespace ion {
 
-// Distance from rsp to the top Value inside an IC stub (this is the return address).
+// Distance from Stack top to the top Value inside an IC stub (this is the return address).
 static const size_t ICStackValueOffset = sizeof(void *);
 
 inline void
@@ -214,7 +214,7 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code, uint32_t objectOffset)
 {
     // R0 contains the value that needs to be typechecked.
     // The object we're updating is a boxed Value on the stack, at offset
-    // objectOffset from rsp, excluding the return address.
+    // objectOffset from stack top, excluding the return address.
 
     // Save the current BaselineStubReg to stack
     masm.push(BaselineStubReg);
@@ -239,7 +239,7 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code, uint32_t objectOffset)
     // If the IC failed, then call the update fallback function.
     EmitEnterStubFrame(masm, R1.scratchReg());
 
-    masm.loadValue(Address(rsp, STUB_FRAME_SIZE + objectOffset), R1);
+    masm.loadValue(Address(BaselineStackReg, STUB_FRAME_SIZE + objectOffset), R1);
 
     masm.pushValue(R0);
     masm.pushValue(R1);
