@@ -772,11 +772,9 @@ XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
 
     // ClassExtension
     {
-        nullptr, // equality
         nullptr, // outerObject
         nullptr, // innerObject
         nullptr, // iteratorObject
-        nullptr, // unused
         true,   // isWrappedNative
     },
 
@@ -1361,17 +1359,11 @@ XPCNativeScriptableShared::PopulateJSClass()
     ops->enumerate = XPC_WN_JSOp_Enumerate;
     ops->thisObject = XPC_WN_JSOp_ThisObject;
 
-    if (mFlags.WantCall() || mFlags.WantConstruct()) {
-        ops->typeOf = XPC_WN_JSOp_TypeOf_Function;
-        if (mFlags.WantCall())
-            mJSClass.base.call = XPC_WN_Helper_Call;
-        if (mFlags.WantConstruct())
-            mJSClass.base.construct = XPC_WN_Helper_Construct;
-    } else {
-        ops->typeOf = XPC_WN_JSOp_TypeOf_Object;
-    }
 
-    mJSClass.base.ext.equality = nullptr;
+    if (mFlags.WantCall())
+        mJSClass.base.call = XPC_WN_Helper_Call;
+    if (mFlags.WantConstruct())
+        mJSClass.base.construct = XPC_WN_Helper_Construct;
 
     if (mFlags.WantHasInstance())
         mJSClass.base.hasInstance = XPC_WN_Helper_HasInstance;
