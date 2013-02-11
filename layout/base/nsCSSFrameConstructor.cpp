@@ -144,6 +144,7 @@ NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 #endif
 
 #include "nsSVGTextContainerFrame.h"
+#include "nsSVGTextFrame2.h"
 
 nsIFrame*
 NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -167,6 +168,8 @@ nsIFrame*
 NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
+NS_NewSVGTextFrame2(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
@@ -3211,15 +3214,24 @@ FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame)
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
 {
-  if (aParentFrame && aParentFrame->IsFrameOfType(nsIFrame::eSVG)) {
+  if (aParentFrame && IsFrameForSVG(aParentFrame)) {
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
-      nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-      if (metrics) {
+      if (NS_SVGTextCSSFramesEnabled()) {
+        static const FrameConstructionData sSVGTextData =
+          FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_SVG_TEXT,
+                      NS_NewTextFrame);
+        if (ancestorFrame->IsSVGText()) {
+          return &sSVGTextData;
+        }
+      } else {
         static const FrameConstructionData sSVGGlyphData =
           SIMPLE_FCDATA(NS_NewSVGGlyphFrame);
-        return &sSVGGlyphData;
+        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
+        if (metrics) {
+          return &sSVGGlyphData;
+        }
       }
     }
     return nullptr;
@@ -4828,6 +4840,8 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
                                    nsIAtom* aTag,
                                    int32_t aNameSpaceID,
                                    nsIFrame* aParentFrame,
+                                   bool aIsWithinSVGText,
+                                   bool aAllowsTextPathChild,
                                    nsStyleContext* aStyleContext)
 {
   if (aNameSpaceID != kNameSpaceID_SVG) {
@@ -4838,7 +4852,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   static const FrameConstructionData sContainerData =
     SIMPLE_SVG_FCDATA(NS_NewSVGContainerFrame);
 
-  bool parentIsSVG = false;
+  bool parentIsSVG = aIsWithinSVGText;
   nsIContent* parentContent =
     aParentFrame ? aParentFrame->GetContent() : nullptr;
   // XXXbz should this really be based on the XBL-resolved tag of the parent
@@ -4900,8 +4914,10 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   }
 
   // Prevent bad frame types being children of filters or parents of filter
-  // primitives:
-  bool parentIsFilter = aParentFrame->GetType() == nsGkAtoms::svgFilterFrame;
+  // primitives.  If aParentFrame is null, we know that the frame that will
+  // be created will be an nsInlineFrame, so it can never be a filter.
+  bool parentIsFilter = aParentFrame &&
+    aParentFrame->GetType() == nsGkAtoms::svgFilterFrame;
   nsCOMPtr<nsIDOMSVGFilterPrimitiveStandardAttributes> filterPrimitive =
     do_QueryInterface(aElement);
   if ((parentIsFilter && !filterPrimitive) ||
@@ -4910,8 +4926,10 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   }
 
   // Prevent bad frame types being children of filter primitives or parents of
-  // filter primitive children:
-  bool parentIsFEContainerFrame =
+  // filter primitive children.  If aParentFrame is null, we know that the frame
+  // that will be created will be an nsInlineFrame, so it can never be a filter
+  // primitive.
+  bool parentIsFEContainerFrame = aParentFrame &&
     aParentFrame->GetType() == nsGkAtoms::svgFEContainerFrame;
   if ((parentIsFEContainerFrame && !IsFilterPrimitiveChildTag(aTag)) ||
       (!parentIsFEContainerFrame && IsFilterPrimitiveChildTag(aTag))) {
@@ -4921,27 +4939,65 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   // Special cases for text/tspan/textPath, because the kind of frame
   // they get depends on the parent frame.  We ignore 'a' elements when
   // determining the parent, however.
-  nsIFrame *ancestorFrame =
-    nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
-  if (ancestorFrame) {
-    if (aTag == nsGkAtoms::tspan || aTag == nsGkAtoms::altGlyph) {
-      // tspan and altGlyph must be children of another text content element.
-      nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-      if (!metrics) {
+  if (NS_SVGTextCSSFramesEnabled()) {
+    if (aIsWithinSVGText) {
+      // We don't use ConstructInline because we want different behavior
+      // for generated content.
+      static const FrameConstructionData sTSpanData =
+        FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |
+                    FCDATA_SKIP_ABSPOS_PUSH |
+                    FCDATA_DISALLOW_GENERATED_CONTENT |
+                    FCDATA_IS_LINE_PARTICIPANT |
+                    FCDATA_IS_INLINE |
+                    FCDATA_USE_CHILD_ITEMS,
+                    NS_NewInlineFrame);
+      if (aTag == nsGkAtoms::textPath) {
+        if (aAllowsTextPathChild) {
+          return &sTSpanData;
+        }
+      } else if (aTag == nsGkAtoms::tspan ||
+                 aTag == nsGkAtoms::altGlyph ||
+                 aTag == nsGkAtoms::a) {
+        return &sTSpanData;
+      }
+      return &sSuppressData;
+    } else {
+      if (aTag == nsGkAtoms::text) {
+        static const FrameConstructionData sTextData =
+          FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW |
+                                     FCDATA_ALLOW_BLOCK_STYLES,
+                                     NS_NewSVGTextFrame2,
+                                     nsCSSAnonBoxes::mozSVGText);
+        return &sTextData;
+      } else if (aTag == nsGkAtoms::tspan ||
+                 aTag == nsGkAtoms::altGlyph ||
+                 aTag == nsGkAtoms::textPath) {
         return &sSuppressData;
       }
-    } else if (aTag == nsGkAtoms::textPath) {
-      // textPath must be a child of text.
-      nsIAtom* ancestorFrameType = ancestorFrame->GetType();
-      if (ancestorFrameType != nsGkAtoms::svgTextFrame) {
-        return &sSuppressData;
-      }
-    } else if (aTag != nsGkAtoms::a) {
-      // Every other element except 'a' must not be a child of a text content
-      // element.
-      nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-      if (metrics) {
-        return &sSuppressData;
+    }
+  } else {
+    nsIFrame *ancestorFrame =
+      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
+    if (ancestorFrame) {
+      if (aTag == nsGkAtoms::tspan || aTag == nsGkAtoms::altGlyph) {
+        // tspan and altGlyph must be children of another text content element.
+        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
+        if (!metrics) {
+          return &sSuppressData;
+        }
+      } else if (aTag == nsGkAtoms::textPath) {
+        // textPath must be a child of text.
+        nsIAtom* ancestorFrameType = ancestorFrame->GetType();
+        if (ancestorFrameType != nsGkAtoms::svgTextFrame) {
+          return &sSuppressData;
+        }
+      } else if (aTag != nsGkAtoms::a) {
+        // Every other element except 'a' must not be a child of a text content
+        // element.
+        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
+        if (metrics) {
+          return &sSuppressData;
+        }
       }
     }
   }
@@ -5108,11 +5164,20 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
   nsRefPtr<nsStyleContext> styleContext;
   styleContext = ResolveStyleContext(aParentFrame, aContent, &aState);
 
+  uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK;
+  if (aParentFrame->IsSVGText()) {
+    flags |= ITEM_IS_WITHIN_SVG_TEXT;
+  }
+  if (aParentFrame->GetType() == nsGkAtoms::blockFrame &&
+      aParentFrame->GetParent() &&
+      aParentFrame->GetParent()->GetType() == nsGkAtoms::svgTextFrame2) {
+    flags |= ITEM_ALLOWS_TEXT_PATH_CHILD;
+  }
   AddFrameConstructionItemsInternal(aState, aContent, aParentFrame,
                                     aContent->Tag(), aContent->GetNameSpaceID(),
                                     aSuppressWhiteSpaceOptimizations,
                                     styleContext,
-                                    ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK,
+                                    flags,
                                     aItems);
 }
 
@@ -5258,6 +5323,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     }
     if (!data) {
       data = FindSVGData(element, aTag, aNameSpaceID, aParentFrame,
+                         aFlags & ITEM_IS_WITHIN_SVG_TEXT,
+                         aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD,
                          styleContext);
     }
 
@@ -5339,6 +5406,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     aState.mHavePendingPopupgroup = true;
   }
   item->mIsPopup = isPopup;
+  item->mIsForSVGAElement = aNameSpaceID == kNameSpaceID_SVG &&
+                            aTag == nsGkAtoms::a;
 
   if (canHavePageBreak && display->mBreakAfter) {
     AddPageBreakItem(aContent, aStyleContext, aItems);
@@ -5347,7 +5416,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   if (bits & FCDATA_IS_INLINE) {
     // To correctly set item->mIsAllInline we need to build up our child items
     // right now.
-    BuildInlineChildItems(aState, *item);
+    BuildInlineChildItems(aState, *item,
+                          aFlags & ITEM_IS_WITHIN_SVG_TEXT,
+                          aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD);
     item->mHasInlineEnds = true;
     item->mIsBlock = false;
   } else {
@@ -11333,14 +11404,15 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
 
 void
 nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
-                                             FrameConstructionItem& aParentItem)
+                                             FrameConstructionItem& aParentItem,
+                                             bool aItemIsWithinSVGText,
+                                             bool aItemAllowsTextPathChild)
 {
   // XXXbz should we preallocate aParentItem.mChildItems to some sane
   // length?  Maybe even to parentContent->GetChildCount()?
   nsFrameConstructorState::PendingBindingAutoPusher
     pusher(aState, aParentItem.mPendingBinding);
 
-  // Probe for generated content before
   nsStyleContext* const parentStyleContext = aParentItem.mStyleContext;
   nsIContent* const parentContent = aParentItem.mContent;
 
@@ -11349,9 +11421,12 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
                    aState.mTreeMatchContext,
                    parentContent->AsElement());
   
-  CreateGeneratedContentItem(aState, nullptr, parentContent, parentStyleContext,
-                             nsCSSPseudoElements::ePseudo_before,
-                             aParentItem.mChildItems);
+  if (!aItemIsWithinSVGText) {
+    // Probe for generated content before
+    CreateGeneratedContentItem(aState, nullptr, parentContent, parentStyleContext,
+                               nsCSSPseudoElements::ePseudo_before,
+                               aParentItem.mChildItems);
+  }
 
   ChildIterator iter, last;
   for (ChildIterator::Init(parentContent, &iter, &last);
@@ -11377,17 +11452,26 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
     nsRefPtr<nsStyleContext> childContext =
       ResolveStyleContext(parentStyleContext, content, &aState);
 
+    uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK;
+    if (aItemIsWithinSVGText) {
+      flags |= ITEM_IS_WITHIN_SVG_TEXT;
+    }
+    if (aItemAllowsTextPathChild && aParentItem.mIsForSVGAElement) {
+      flags |= ITEM_ALLOWS_TEXT_PATH_CHILD;
+    }
     AddFrameConstructionItemsInternal(aState, content, nullptr, content->Tag(),
                                       content->GetNameSpaceID(),
                                       iter.XBLInvolved(), childContext,
-                                      ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK,
+                                      flags,
                                       aParentItem.mChildItems);
   }
 
-  // Probe for generated content after
-  CreateGeneratedContentItem(aState, nullptr, parentContent, parentStyleContext,
-                             nsCSSPseudoElements::ePseudo_after,
-                             aParentItem.mChildItems);
+  if (!aItemIsWithinSVGText) {
+    // Probe for generated content after
+    CreateGeneratedContentItem(aState, nullptr, parentContent, parentStyleContext,
+                               nsCSSPseudoElements::ePseudo_after,
+                               aParentItem.mChildItems);
+  }
 
   aParentItem.mIsAllInline = aParentItem.mChildItems.AreAllItemsInline();
 }
