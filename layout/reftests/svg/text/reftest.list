@@ -1,0 +1,170 @@
+default-preferences pref(svg.text.css-frames.enabled,true)
+
+== simple.svg simple-ref.html
+== simple-2.svg simple.svg
+== simple-underline.svg simple-underline-ref.html
+== simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
+== simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
+== simple-anchor-end.svg simple-anchor-end-ref.html
+== simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
+== simple-anchor-middle-rtl.svg simple-anchor-middle-rtl-ref.html
+== simple-anchor-middle.svg simple-anchor-middle-ref.html
+== simple-bidi.svg simple-bidi-ref.html
+== simple-bidi-2.svg simple-bidi.svg
+
+== simple-dx.svg simple.svg
+== simple-dx-2.svg simple-dx-2-ref.svg
+== simple-dx-anchor-end-bidi.svg simple-dx-anchor-end-bidi-ref.svg
+== simple-dx-anchor-end-rtl.svg simple-dx-anchor-end-rtl-ref.svg
+== simple-dx-anchor-end.svg simple-dx-anchor-end-ref.svg
+== simple-dx-anchor-middle-bidi.svg simple-dx-anchor-middle-bidi-ref.svg
+== simple-dx-anchor-middle-rtl.svg simple-dx-anchor-middle-rtl-ref.svg
+== simple-dx-anchor-middle.svg simple-dx-anchor-middle-ref.svg
+== simple-dx-bidi.svg simple-dx-bidi-ref.svg
+== simple-dx-bidi-2.svg simple-dx-bidi-2-ref.svg
+== simple-dx-rtl.svg simple-dx-rtl-ref.svg
+== simple-dx-rtl-2.svg simple-dx-rtl-2-ref.svg
+
+== simple-fill-color-dynamic.svg simple-fill-color-dynamic-ref.svg
+== simple-fill-color.svg simple-fill-color-ref.html
+HTTP(../..) == simple-fill-gradient.svg simple-fill-gradient-ref.svg
+== simple-fill-none.svg simple.svg
+
+== simple-multiple-dx.svg simple-multiple-dx-ref.html
+== simple-multiple-dx-2.svg simple-multiple-dx.svg
+== simple-multiple-dx-anchor-end-bidi.svg simple-multiple-dx-anchor-end-bidi-ref.svg
+HTTP(../..) == simple-multiple-dx-anchor-middle-bidi.svg simple-multiple-dx-anchor-middle-bidi-ref.svg
+== simple-multiple-dx-anchor-end-rtl.svg simple-multiple-dx-anchor-end-rtl-ref.svg
+== simple-multiple-dx-anchor-end.svg simple-multiple-dx-anchor-end-ref.svg
+HTTP(../..) == simple-multiple-dx-anchor-middle-rtl.svg simple-multiple-dx-anchor-middle-rtl-ref.svg
+HTTP(../..) == simple-multiple-dx-anchor-middle.svg simple-multiple-dx-anchor-middle-ref.svg
+== simple-multiple-dx-bidi.svg simple-multiple-dx-bidi-ref.svg
+== simple-multiple-dx-bidi-2.svg simple-multiple-dx-bidi.svg
+== simple-multiple-dx-rtl.svg simple-multiple-dx-rtl-ref.svg
+== simple-multiple-dx-rtl-2.svg simple-multiple-dx-rtl.svg
+
+== simple-rtl.svg simple-rtl-ref.html
+== simple-rtl-2.svg simple-rtl.svg
+HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
+
+== multiple-x.svg multiple-x-ref.svg
+== multiple-x-bidi.svg multiple-x-bidi-ref.svg
+== multiple-x-rtl.svg multiple-x-rtl-ref.svg
+== multiple-x-anchor-end-bidi.svg multiple-x-anchor-end-bidi-ref.svg
+== multiple-x-anchor-end-rtl.svg multiple-x-anchor-end-rtl-ref.svg
+== multiple-x-anchor-end.svg multiple-x-anchor-end-ref.svg
+== multiple-x-dx-bidi.svg multiple-x-dx-bidi-ref.svg
+== multiple-x-dx-rtl.svg multiple-x-dx-rtl-ref.svg
+== multiple-x-dx.svg multiple-x-dx-ref.svg
+== multiple-x-holes-bidi.svg multiple-x-holes-bidi-ref.svg
+== multiple-x-holes-dx-bidi.svg multiple-x-holes-dx-bidi-ref.svg
+== multiple-x-holes.svg multiple-x-holes-ref.svg
+== multiple-x-holes-dx.svg multiple-x-holes-dx-ref.svg
+== multiple-x-holes-multiple-dx-bidi.svg multiple-x-holes-multiple-dx-bidi-ref.svg
+== multiple-x-holes-multiple-dx-rtl.svg multiple-x-holes-multiple-dx-rtl-ref.svg
+== multiple-x-holes-multiple-dx.svg multiple-x-holes-multiple-dx-ref.svg
+== multiple-x-holes-rtl.svg multiple-x-holes-rtl-ref.svg
+== multiple-x-multiple-dx-bidi.svg multiple-x-multiple-dx-bidi-ref.svg
+== multiple-x-multiple-dx-rtl.svg multiple-x-multiple-dx-rtl-ref.svg
+== multiple-x-multiple-dx.svg multiple-x-multiple-dx-ref.svg
+== multiple-x-multiple-dx-anchor-end-bidi.svg multiple-x-multiple-dx-anchor-end-bidi-ref.svg
+== multiple-x-multiple-dx-anchor-end-rtl.svg multiple-x-multiple-dx-anchor-end-rtl-ref.svg
+== multiple-x-multiple-dx-anchor-end.svg multiple-x-multiple-dx-anchor-end-ref.svg
+
+== multiple-x-white-space.svg multiple-x-white-space-ref.svg
+
+== multiple-chunks-bidi.svg multiple-chunks-bidi-ref.svg
+== multiple-chunks-different-anchor-bidi.svg multiple-chunks-different-anchor-bidi-ref.svg
+== multiple-chunks-different-anchor-rtl.svg multiple-chunks-different-anchor-rtl-ref.svg
+== multiple-chunks-different-anchor.svg multiple-chunks-different-anchor-ref.svg
+== multiple-chunks-directions-and-anchor.svg multiple-chunks-directions-and-anchor-ref.svg
+== multiple-chunks-directions-and-anchor-dx.svg multiple-chunks-directions-and-anchor-dx-ref.svg
+== multiple-chunks-directions-and-anchor-multiple-dx.svg multiple-chunks-directions-and-anchor-multiple-dx-ref.svg
+== multiple-chunks-dx-bidi.svg multiple-chunks-dx-bidi-ref.svg
+== multiple-chunks-dx-different-anchor-bidi.svg multiple-chunks-dx-different-anchor-bidi-ref.svg
+== multiple-chunks-dx-different-anchor-rtl.svg multiple-chunks-dx-different-anchor-rtl-ref.svg
+== multiple-chunks-dx-different-anchor.svg multiple-chunks-dx-different-anchor-ref.svg
+== multiple-chunks-dx-rtl.svg multiple-chunks-dx-rtl-ref.svg
+== multiple-chunks-dx.svg multiple-chunks-dx-ref.svg
+== multiple-chunks-fill-color.svg multiple-chunks-fill-color-ref.svg
+== multiple-chunks-multiple-dx-bidi.svg multiple-chunks-multiple-dx-bidi-ref.svg
+== multiple-chunks-multiple-dx-different-anchor-bidi.svg multiple-chunks-multiple-dx-different-anchor-bidi-ref.svg
+== multiple-chunks-multiple-dx-different-anchor-rtl.svg multiple-chunks-multiple-dx-different-anchor-rtl-ref.svg
+== multiple-chunks-multiple-dx-different-anchor.svg multiple-chunks-multiple-dx-different-anchor-ref.svg
+== multiple-chunks-multiple-dx-rtl.svg multiple-chunks-multiple-dx-rtl-ref.svg
+== multiple-chunks-multiple-dx.svg multiple-chunks-multiple-dx-ref.svg
+== multiple-chunks-rtl.svg multiple-chunks-rtl-ref.svg
+== multiple-chunks.svg multiple-chunks-ref.svg
+
+== display-none-1.svg simple.svg
+== display-none-2.svg simple.svg
+== display-none-3.svg simple.svg
+
+== simple-multiline.svg simple-multiline-ref.svg
+== simple-multiline-number.svg simple-multiline-number-ref.svg
+== simple-multiline-pc.svg simple-multiline-pc-ref.svg
+== simple-multiline-anchor-end.svg simple-multiline-anchor-end-ref.svg
+
+== textpath.svg textpath-ref.svg
+== textpath-a.svg textpath-a-ref.svg
+== textpath-anchor-middle.svg textpath-anchor-middle-ref.svg
+== textpath-anchor-end.svg textpath-anchor-end-ref.svg
+== textpath-invalid-parent.svg textpath-invalid-parent-ref.svg
+== textpath-multiline.svg textpath-multiline-ref.svg
+== textpath-multiline-2.svg textpath-multiline-2-ref.svg
+== textpath-after.svg textpath-after-ref.svg
+== textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg
+
+# tests for ignoring various properties
+== ignore-border.svg ignore-prop-ref.svg
+== ignore-display.svg ignore-display-ref.svg
+== ignore-float.svg ignore-prop-ref.svg
+== ignore-float-first-letter.svg ignore-prop-ref.svg
+== ignore-position.svg ignore-position-ref.svg
+== ignore-margin.svg ignore-prop-ref.svg
+== ignore-padding.svg ignore-prop-ref.svg
+== ignore-text-shadow.svg ignore-prop-ref.svg
+== ignore-vertical-align.svg ignore-vertical-align-ref.svg
+== ignore-overflow-scroll.svg ignore-prop-ref.svg
+== ignore-text-align.svg ignore-prop-ref.svg
+== ignore-text-align-2.svg ignore-text-align-2-ref.svg
+
+# pseudo-elements
+== pseudo-first-line.svg pseudo-first-line-ref.svg
+== pseudo-first-line-2.svg pseudo-first-line-2-ref.svg
+== pseudo-first-letter.svg pseudo-first-letter-ref.svg
+== ignore-before-after.svg ignore-prop-ref.svg
+
+# invalid child nodes
+== ignore-invalid-child.svg ignore-invalid-child-ref.svg
+
+# text inside a link
+== link-surrounding.svg simple.svg
+
+# dynamic document changes
+== dynamic-font-size.svg dynamic-font-size-ref.svg
+== dynamic-dominant-baseline.svg dynamic-dominant-baseline-ref.svg
+== dynamic-multiple-x.svg dynamic-multiple-x-ref.svg
+
+# text and masks
+HTTP(../..) == mask-applied.svg mask-applied-ref.svg
+# HTTP(../..) == mask-content.svg mask-content-ref.svg  # disabled due to infinite invalidation loop bug
+
+# text and clipPaths
+HTTP(../..) == clipPath-applied.svg clipPath-applied-ref.svg
+# HTTP(../..) == clipPath-content.svg clipPath-content-ref.svg  # disabled due to infinite invalidation loop bug
+
+# text and patterns
+# == pattern-content.svg pattern-content-ref.svg  # disabled due to infinite invalidation loop bug
+
+# text and filters
+HTTP(../..) == filter-applied.svg filter-applied-ref.svg
+
+# selection
+needs-focus == simple-selection.svg simple-selection-ref.html
+needs-focus == simple-bidi-selection.svg simple-bidi-selection-ref.html
+needs-focus == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
+needs-focus == simple-underline-selection.svg simple-underline-selection-ref.html
+needs-focus == multiple-text-selection.svg multiple-text-selection-ref.html
+needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
+needs-focus == textpath-selection.svg textpath-selection-ref.svg

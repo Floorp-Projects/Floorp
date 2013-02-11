@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=655877
+-->
+<head>
+  <title>Test for Bug 655877</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=655877">Mozilla Bug 655877</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="text-helper-selection.svg" width="400" height="300"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var svg, doc, win, text, dragstart, dragend;
+
+function drag(fromX, fromY, toX, toY, show)
+{
+  synthesizeMouse(doc.documentElement, fromX, fromY, { type: "mousemove" }, win);
+  synthesizeMouse(doc.documentElement, fromX, fromY, { type: "mousedown" }, win);
+  synthesizeMouse(doc.documentElement, toX, toY, { type: "mousemove" }, win);
+  synthesizeMouse(doc.documentElement, toX, toY, { type: "mouseup" }, win);
+
+  if (show) {
+    dragstart.setAttribute("cx", fromX);
+    dragstart.setAttribute("cy", fromY);
+    dragstart.setAttribute("r", "4");
+    dragend.setAttribute("cx", toX);
+    dragend.setAttribute("cy", toY);
+    dragend.setAttribute("r", "4");
+  }
+}
+
+function click(x, y)
+{
+  synthesizeMouse(doc.documentElement, x, y, { type: "mousemove" }, win);
+  synthesizeMouse(doc.documentElement, x, y, { type: "mousedown" }, win);
+  synthesizeMouse(doc.documentElement, x, y, { type: "mouseup" }, win);
+}
+
+function selection_is(s, text)
+{
+  is(win.getSelection().toString(), s, text);
+}
+
+function deselect()
+{
+  // Click outside text to deselect.
+  click(1, 1);
+  selection_is("", "deselecting by clicking outside text");
+}
+
+function testSelection()
+{
+  svg = document.getElementsByTagName("iframe")[0];
+  doc = svg.contentDocument;
+  win = svg.contentWindow;
+  dragstart = doc.getElementById("dragstart");
+  dragend = doc.getElementById("dragend");
+
+  var text = doc.getElementsByTagName("text");
+
+  // Display all the <text> elements.
+  var style = doc.getElementsByTagName("style")[0];
+  style.parentNode.removeChild(style);
+
+  // Drag to select the entire text element.
+  drag(101, 50, 99 + text[0].getComputedTextLength(), 50);
+  selection_is("hello there", "selecting entire simple text");
+
+  // Click within the text to deselect.
+  click(101, 50);
+  selection_is("", "deselecting by clicking on text");
+
+  // Drag to select part of a text element.
+  drag(101, 50, 99 + text[0].getSubStringLength(0, 5), 50);
+  selection_is("hello", "selecting part of simple text");
+  deselect();
+
+  // Drag from left of the text to the right of the text to select it.
+  drag(90, 50, 110 + text[0].getComputedTextLength(), 50);
+  selection_is("hello there", "selecting entire simple text by dragging around it");
+  deselect();
+
+  // Drag above the text to select part of it.
+  var bbox1 = text[0].getBBox();
+  drag(101 + text[0].getSubStringLength(0, 6), bbox1.y - 10, 101 + text[0].getSubStringLength(0, 9), bbox1.y - 10);
+  selection_is("the", "selecting part of simple text by dragging above it");
+  deselect();
+
+  // Drag between the first and second texts, but closer to the first.
+  var bbox2 = text[1].getBBox();
+  var mid = (bbox1.y + bbox1.height + bbox2.y) / 2;
+  drag(101, mid - 10, 99 + text[0].getSubStringLength(0, 2), mid - 10);
+  selection_is("he", "selecting closer text above");
+  deselect();
+
+  // Drag between the first and second texts, but closer to the second.
+  drag(101, mid + 10, 99 + text[1].getSubStringLength(0, 2), mid + 10);
+  selection_is("to", "selecting closer text below");
+  deselect();
+
+  // Drag starting in the first text and ending in the second.
+  drag(101 + text[0].getSubStringLength(0, 6), 50, 99 + text[1].getSubStringLength(0, 2), 100);
+  selection_is("there to", "selecting from first to second text");
+  deselect();
+
+  // Select across positioned glyphs.
+  drag(99 + text[2].getSubStringLength(3, 1), 150, 201, 150);
+  selection_is("abcd", "selecting across positioned glyphs");
+  deselect();
+
+  // Select bidi text, from the left of the "א" to the left of the "b".
+  drag(text[3].getExtentOfChar(0).x + 1, 200, text[3].getExtentOfChar(4).x + 1, 200);
+  selection_is("בגa", "selecting bidi text");
+  deselect();
+
+  // Select transformed text.
+  drag(101, 250, 99 + text[4].getSubStringLength(0, 6) / 2, 250);
+  selection_is("squash");
+  deselect();
+
+  SimpleTest.finish();
+}
+
+function runTest()
+{
+  SpecialPowers.pushPrefEnv({ set: [['svg.text.css-frames.enabled', true]] },
+                            testSelection);
+}
+
+if (/Android/.test(navigator.userAgent)) {
+  ok(true, "No need to test text selection with the mouse on Android.");
+  SimpleTest.finish();
+} else {
+  window.addEventListener("load", runTest, false);
+}
+</script>
+</pre>
+</body>
+</html>
