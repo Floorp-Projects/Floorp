@@ -425,7 +425,3 @@ DOMCI_CLASS(MozTimeManager)
 #ifdef MOZ_WEBRTC
 DOMCI_CLASS(DataChannel)
 #endif
-
-#ifdef MOZ_AUDIO_CHANNEL_MANAGER
-DOMCI_CLASS(AudioChannelManager)
-#endif
