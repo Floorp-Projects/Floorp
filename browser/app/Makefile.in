@@ -102,6 +102,8 @@ RCFLAGS += -DMOZ_PHOENIX
 RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox-os2.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document-os2.ico\"
 endif
 
+PROGRAMS_DEST = $(DIST)/bin
+
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT) #{
