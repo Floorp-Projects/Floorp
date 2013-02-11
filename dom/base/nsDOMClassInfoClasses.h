@@ -245,9 +245,6 @@ DOMCI_CLASS(CanvasPattern)
 DOMCI_CLASS(TextMetrics)
 DOMCI_CLASS(MozCanvasPrintState)
 
-// SmartCard Events
-DOMCI_CLASS(SmartCardEvent)
-
 // WindowUtils
 DOMCI_CLASS(WindowUtils)
 
