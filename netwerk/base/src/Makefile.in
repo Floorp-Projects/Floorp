@@ -14,9 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= necko
 LIBRARY_NAME	= neckobase_s
 LIBXUL_LIBRARY  = 1
-ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
-endif # !_MSC_VER
 
 EXPORTS = \
 		nsMIMEInputStream.h \

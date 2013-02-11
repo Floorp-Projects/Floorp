@@ -15,7 +15,15 @@
 
 /** Test for HTMLModElement attributes reflection **/
 
-// TODO: cite (URL)
+// .cite (URL)
+reflectURL({
+  element: document.createElement("ins"),
+  attribute: "cite",
+})
+reflectURL({
+  element: document.createElement("del"),
+  attribute: "cite",
+})
 
 // .dateTime (String)
 reflectString({

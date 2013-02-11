@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=397934
         <field name="emptyTest2">"empty2"</field>        
         <field name="emptyTest2"></field>
         <field name="testAncestor"></field>
-        <field name="testEvalOnce">window.counter++; undefined</field>
+        <field name="testEvalOnce">XPCNativeWrapper.unwrap(window).counter++; undefined</field>
       </implementation>
     </binding>
     <binding id="test2" extends="#ancestor">
@@ -78,10 +78,11 @@ addLoadEvent(function() {
   is(d.testAncestor, "ancestor",
      "test1" + ": Empty field should not override ancestor binding");
 
-  window.counter = 0;
+  var win = XPCNativeWrapper.unwrap(window);
+  win.counter = 0;
   d.testEvalOnce;
   d.testEvalOnce;
-  is(window.counter, 1, "Field should have evaluated once and only once");
+  is(win.counter, 1, "Field should have evaluated once and only once");
 
   d = $("display2");
   is(d.storage, undefined,

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<window id="main-window"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  windowtype="Browser:bug839193"
+  onload="onLoad()"
+  onunload="onUnload()"
+  align="stretch"
+  screenX="10" screenY="10"
+  width="600" height="600"
+  persist="screenX screenY width height sizemode">
+
+  <script type="application/javascript" src="chrome://mochitests/content/browser/dom/indexedDB/test/bug839193.js"/>
+</window>

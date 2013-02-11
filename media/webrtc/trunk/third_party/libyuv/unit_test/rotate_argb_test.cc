@@ -13,13 +13,13 @@
 
 #include "libyuv/cpu_id.h"
 #include "libyuv/rotate_argb.h"
-#include "unit_test/unit_test.h"
+#include "../unit_test/unit_test.h"
 
 namespace libyuv {
 
 static int ARGBTestRotate(int src_width, int src_height,
                           int dst_width, int dst_height,
-                          libyuv::RotationMode mode) {
+                          libyuv::RotationMode mode, int runs) {
   const int b = 128;
   int src_argb_plane_size = (src_width + b * 2) * (src_height + b * 2) * 4;
   int src_stride_argb = (b * 2 + src_width) * 4;
@@ -39,7 +39,6 @@ static int ARGBTestRotate(int src_width, int src_height,
     }
   }
 
-  const int runs = 1000;
   align_buffer_16(dst_argb_c, dst_argb_plane_size)
   align_buffer_16(dst_argb_opt, dst_argb_plane_size)
   memset(dst_argb_c, 2, dst_argb_plane_size);
@@ -104,7 +103,8 @@ TEST_F(libyuvTest, ARGBRotate0) {
   const int dst_height = 720;
 
   int err = ARGBTestRotate(src_width, src_height,
-                           dst_width, dst_height, kRotate0);
+                           dst_width, dst_height, kRotate0,
+                           benchmark_iterations_);
   EXPECT_GE(1, err);
 }
 
@@ -115,7 +115,8 @@ TEST_F(libyuvTest, ARGBRotate90) {
   const int dst_height = 1280;
 
   int err = ARGBTestRotate(src_width, src_height,
-                           dst_width, dst_height, kRotate90);
+                           dst_width, dst_height, kRotate90,
+                           benchmark_iterations_);
   EXPECT_GE(1, err);
 }
 
@@ -126,7 +127,8 @@ TEST_F(libyuvTest, ARGBRotate180) {
   const int dst_height = 720;
 
   int err = ARGBTestRotate(src_width, src_height,
-                           dst_width, dst_height, kRotate180);
+                           dst_width, dst_height, kRotate180,
+                           benchmark_iterations_);
   EXPECT_GE(1, err);
 }
 
@@ -137,7 +139,8 @@ TEST_F(libyuvTest, ARGBRotate270) {
   const int dst_height = 1280;
 
   int err = ARGBTestRotate(src_width, src_height,
-                           dst_width, dst_height, kRotate270);
+                           dst_width, dst_height, kRotate270,
+                           benchmark_iterations_);
   EXPECT_GE(1, err);
 }
 
@@ -148,7 +151,8 @@ TEST_F(libyuvTest, ARGBRotate0_Odd) {
   const int dst_height = 719;
 
   int err = ARGBTestRotate(src_width, src_height,
-                           dst_width, dst_height, kRotate0);
+                           dst_width, dst_height, kRotate0,
+                           benchmark_iterations_);
   EXPECT_GE(1, err);
 }
 
@@ -159,7 +163,8 @@ TEST_F(libyuvTest, ARGBRotate90_Odd) {
   const int dst_height = 1277;
 
   int err = ARGBTestRotate(src_width, src_height,
-                           dst_width, dst_height, kRotate90);
+                           dst_width, dst_height, kRotate90,
+                           benchmark_iterations_);
   EXPECT_GE(1, err);
 }
 
@@ -170,7 +175,8 @@ TEST_F(libyuvTest, ARGBRotate180_Odd) {
   const int dst_height = 719;
 
   int err = ARGBTestRotate(src_width, src_height,
-                           dst_width, dst_height, kRotate180);
+                           dst_width, dst_height, kRotate180,
+                           benchmark_iterations_);
   EXPECT_GE(1, err);
 }
 
@@ -181,7 +187,8 @@ TEST_F(libyuvTest, ARGBRotate270_Odd) {
   const int dst_height = 1277;
 
   int err = ARGBTestRotate(src_width, src_height,
-                           dst_width, dst_height, kRotate270);
+                           dst_width, dst_height, kRotate270,
+                           benchmark_iterations_);
   EXPECT_GE(1, err);
 }
 

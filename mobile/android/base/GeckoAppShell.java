@@ -9,7 +9,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.GfxInfoThread;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.TouchEventHandler;
+import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
@@ -86,6 +86,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.concurrent.SynchronousQueue;
@@ -217,26 +218,12 @@ public class GeckoAppShell
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
-    public static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
-    public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId);
-    public static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
-    public static native void notifySmsSendFailed(int aError, int aRequestId);
-    public static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
-    public static native void notifyGetSmsFailed(int aError, int aRequestId);
-    public static native void notifySmsDeleted(boolean aDeleted, int aRequestId);
-    public static native void notifySmsDeleteFailed(int aError, int aRequestId);
-    public static native void notifyNoMessageInList(int aRequestId);
-    public static native void notifyListCreated(int aListId, int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
-    public static native void notifyGotNextMessage(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
-    public static native void notifyReadingMessageListFailed(int aError, int aRequestId);
-
     public static native void scheduleComposite();
 
-    // Pausing and resuming the compositor is a synchronous request, so be
+    // Resuming the compositor is a synchronous request, so be
     // careful of possible deadlock. Resuming the compositor will also cause
     // a composition, so there is no need to schedule a composition after
     // resuming.
-    public static native void schedulePauseComposition();
     public static native void scheduleResumeComposition(int width, int height);
 
     public static native float computeRenderIntegrity();
@@ -1019,6 +1006,25 @@ public class GeckoAppShell
     }
 
     /**
+     * Return a <code>Uri</code> instance which is equivalent to <code>u</code>,
+     * but with a guaranteed-lowercase scheme as if the API level 16 method
+     * <code>u.normalizeScheme</code> had been called.
+     *
+     * @param u the <code>Uri</code> to normalize.
+     * @return a <code>Uri</code>, which might be <code>u</code>.
+     */
+    static Uri normalizeUriScheme(final Uri u) {
+        final String scheme = u.getScheme();
+        final String lower  = scheme.toLowerCase(Locale.US);
+        if (lower.equals(scheme)) {
+            return u;
+        }
+
+        // Otherwise, return a new URI with a normalized scheme.
+        return u.buildUpon().scheme(lower).build();
+    }
+
+    /**
      * Given a URI, a MIME type, an Android intent "action", and a title,
      * produce an intent which can be used to start an activity to open
      * the specified URI.
@@ -1056,23 +1062,23 @@ public class GeckoAppShell
                                         context.getResources().getString(R.string.share_title)); 
         }
 
+        final Uri uri = normalizeUriScheme(Uri.parse(targetURI));
         if (mimeType.length() > 0) {
             Intent intent = getIntentForActionString(action);
-            intent.setDataAndType(Uri.parse(targetURI), mimeType);
+            intent.setDataAndType(uri, mimeType);
             return intent;
         }
 
-        final Uri uri = Uri.parse(targetURI);
         if (!isUriSafeForScheme(uri)) {
             return null;
         }
-        
+
         final String scheme = uri.getScheme();
         final Intent intent = getIntentForActionString(action);
 
         // Start with the original URI. If we end up modifying it,
         // we'll overwrite it.
-        intent.setDataAndNormalize(uri);
+        intent.setData(uri);
 
         // Have a special handling for the SMS, as the message body
         // is not extracted from the URI automatically.
@@ -1107,10 +1113,9 @@ public class GeckoAppShell
 
         // Form a new URI without the body field in the query part, and
         // push that into the new Intent.
-        final String prefix = targetURI.substring(0, targetURI.indexOf('?'));
         final String newQuery = resultQuery.length() > 0 ? "?" + resultQuery : "";
-        final Uri pruned = Uri.parse(prefix + newQuery);
-        intent.setDataAndNormalize(pruned);
+        final Uri pruned = uri.buildUpon().encodedQuery(newQuery).build();
+        intent.setData(pruned);
 
         return intent;
     }
@@ -1370,9 +1375,9 @@ public class GeckoAppShell
         getMainHandler().post(new Runnable() {
             public void run() {
                 LayerView view = GeckoApp.mAppContext.getLayerView();
-                TouchEventHandler handler = (view == null ? null : view.getTouchEventHandler());
-                if (handler != null) {
-                    handler.handleEventListenerAction(!defaultPrevented);
+                PanZoomController controller = (view == null ? null : view.getPanZoomController());
+                if (controller != null) {
+                    controller.notifyDefaultActionPrevented(defaultPrevented);
                 }
             }
         });

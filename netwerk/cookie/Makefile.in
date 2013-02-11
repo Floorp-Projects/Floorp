@@ -15,9 +15,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE       = necko
 XPIDL_MODULE = necko_cookie
 GRE_MODULE   = 1
-ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
-endif # !_MSC_VER
 
 SDK_XPIDLSRCS = \
   nsICookie.idl \

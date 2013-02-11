@@ -4,14 +4,14 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: loader.h,v 1.38 2012/06/28 17:55:05 rrelyea%redhat.com Exp $ */
+/* $Id: loader.h,v 1.39 2013/02/05 18:10:42 wtc%google.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x030E
+#define FREEBL_VERSION 0x030F
 
 struct FREEBLVectorStr {
 
@@ -569,7 +569,35 @@ struct FREEBLVectorStr {
  SECStatus (*p_PRNGTEST_RunHealthTests)(void);
 
   /* Version 3.014 came to here */
-};
+
+ SECStatus (* p_HMAC_ConstantTime)(
+     unsigned char *result,
+     unsigned int *resultLen,
+     unsigned int maxResultLen,
+     const SECHashObject *hashObj,
+     const unsigned char *secret,
+     unsigned int secretLen,
+     const unsigned char *header,
+     unsigned int headerLen,
+     const unsigned char *body,
+     unsigned int bodyLen,
+     unsigned int bodyTotalLen);
+
+ SECStatus (* p_SSLv3_MAC_ConstantTime)(
+     unsigned char *result,
+     unsigned int *resultLen,
+     unsigned int maxResultLen,
+     const SECHashObject *hashObj,
+     const unsigned char *secret,
+     unsigned int secretLen,
+     const unsigned char *header,
+     unsigned int headerLen,
+     const unsigned char *body,
+     unsigned int bodyLen,
+     unsigned int bodyTotalLen);
+
+  /* Version 3.015 came to here */
+ };
 
 typedef struct FREEBLVectorStr FREEBLVector;
 

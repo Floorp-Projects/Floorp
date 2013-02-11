@@ -16,7 +16,7 @@
 #ifdef HAVE_JPEG
 #include "libyuv/mjpeg_decoder.h"
 #endif
-#include "source/row.h"
+#include "libyuv/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -24,6 +24,7 @@ extern "C" {
 #endif
 
 // Copy a plane of data
+LIBYUV_API
 void CopyPlane(const uint8* src_y, int src_stride_y,
                uint8* dst_y, int dst_stride_y,
                int width, int height) {
@@ -54,11 +55,12 @@ void CopyPlane(const uint8* src_y, int src_stride_y,
   }
 }
 
-// Convert I420 to I400.  (calls CopyPlane ignoring u/v)
+// Convert I420 to I400.
+LIBYUV_API
 int I420ToI400(const uint8* src_y, int src_stride_y,
+               uint8*, int,  // src_u
+               uint8*, int,  // src_v
                uint8* dst_y, int dst_stride_y,
-               uint8*, int,
-               uint8*, int,
                int width, int height) {
   if (!src_y || !dst_y || width <= 0 || height == 0) {
     return -1;
@@ -104,6 +106,7 @@ void MirrorPlane(const uint8* src_y, int src_stride_y,
 }
 
 // Mirror I420 with optional flipping
+LIBYUV_API
 int I420Mirror(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,
                const uint8* src_v, int src_stride_v,
@@ -138,6 +141,7 @@ int I420Mirror(const uint8* src_y, int src_stride_y,
 }
 
 // ARGB mirror.
+LIBYUV_API
 int ARGBMirror(const uint8* src_argb, int src_stride_argb,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height) {
@@ -173,6 +177,7 @@ int ARGBMirror(const uint8* src_argb, int src_stride_argb,
 // Get a blender that optimized for the CPU, alignment and pixel count.
 // As there are 6 blenders to choose from, the caller should try to use
 // the same blend function for all pixels if possible.
+LIBYUV_API
 ARGBBlendRow GetARGBBlend() {
   void (*ARGBBlendRow)(const uint8* src_argb, const uint8* src_argb1,
                        uint8* dst_argb, int width) = ARGBBlendRow_C;
@@ -191,6 +196,7 @@ ARGBBlendRow GetARGBBlend() {
 }
 
 // Alpha Blend 2 ARGB images and store to destination.
+LIBYUV_API
 int ARGBBlend(const uint8* src_argb0, int src_stride_argb0,
               const uint8* src_argb1, int src_stride_argb1,
               uint8* dst_argb, int dst_stride_argb,
@@ -217,6 +223,7 @@ int ARGBBlend(const uint8* src_argb0, int src_stride_argb0,
 }
 
 // Convert ARGB to I400.
+LIBYUV_API
 int ARGBToI400(const uint8* src_argb, int src_stride_argb,
                uint8* dst_y, int dst_stride_y,
                int width, int height) {
@@ -249,6 +256,7 @@ int ARGBToI400(const uint8* src_argb, int src_stride_argb,
 
 // ARGB little endian (bgra in memory) to I422
 // same as I420 except UV plane is full height
+LIBYUV_API
 int ARGBToI422(const uint8* src_argb, int src_stride_argb,
                uint8* dst_y, int dst_stride_y,
                uint8* dst_u, int dst_stride_u,
@@ -296,7 +304,203 @@ int ARGBToI422(const uint8* src_argb, int src_stride_argb,
   return 0;
 }
 
+// Convert I422 to BGRA.
+LIBYUV_API
+int I422ToBGRA(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_bgra, int dst_stride_bgra,
+               int width, int height) {
+  if (!src_y || !src_u || !src_v ||
+      !dst_bgra ||
+      width <= 0 || height == 0) {
+    return -1;
+  }
+  // Negative height means invert the image.
+  if (height < 0) {
+    height = -height;
+    dst_bgra = dst_bgra + (height - 1) * dst_stride_bgra;
+    dst_stride_bgra = -dst_stride_bgra;
+  }
+  void (*I422ToBGRARow)(const uint8* y_buf,
+                        const uint8* u_buf,
+                        const uint8* v_buf,
+                        uint8* rgb_buf,
+                        int width) = I422ToBGRARow_C;
+#if defined(HAS_I422TOBGRAROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON)) {
+    I422ToBGRARow = I422ToBGRARow_Any_NEON;
+    if (IS_ALIGNED(width, 16)) {
+      I422ToBGRARow = I422ToBGRARow_NEON;
+    }
+  }
+#elif defined(HAS_I422TOBGRAROW_SSSE3)
+  if (TestCpuFlag(kCpuHasSSSE3) && width >= 8) {
+    I422ToBGRARow = I422ToBGRARow_Any_SSSE3;
+    if (IS_ALIGNED(width, 8)) {
+      I422ToBGRARow = I422ToBGRARow_Unaligned_SSSE3;
+      if (IS_ALIGNED(dst_bgra, 16) && IS_ALIGNED(dst_stride_bgra, 16)) {
+        I422ToBGRARow = I422ToBGRARow_SSSE3;
+      }
+    }
+  }
+#endif
+
+  for (int y = 0; y < height; ++y) {
+    I422ToBGRARow(src_y, src_u, src_v, dst_bgra, width);
+    dst_bgra += dst_stride_bgra;
+    src_y += src_stride_y;
+    src_u += src_stride_u;
+    src_v += src_stride_v;
+  }
+  return 0;
+}
+
+// Convert I422 to ABGR.
+LIBYUV_API
+int I422ToABGR(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_abgr, int dst_stride_abgr,
+               int width, int height) {
+  if (!src_y || !src_u || !src_v ||
+      !dst_abgr ||
+      width <= 0 || height == 0) {
+    return -1;
+  }
+  // Negative height means invert the image.
+  if (height < 0) {
+    height = -height;
+    dst_abgr = dst_abgr + (height - 1) * dst_stride_abgr;
+    dst_stride_abgr = -dst_stride_abgr;
+  }
+  void (*I422ToABGRRow)(const uint8* y_buf,
+                        const uint8* u_buf,
+                        const uint8* v_buf,
+                        uint8* rgb_buf,
+                        int width) = I422ToABGRRow_C;
+#if defined(HAS_I422TOABGRROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON)) {
+    I422ToABGRRow = I422ToABGRRow_Any_NEON;
+    if (IS_ALIGNED(width, 16)) {
+      I422ToABGRRow = I422ToABGRRow_NEON;
+    }
+  }
+#elif defined(HAS_I422TOABGRROW_SSSE3)
+  if (TestCpuFlag(kCpuHasSSSE3) && width >= 8) {
+    I422ToABGRRow = I422ToABGRRow_Any_SSSE3;
+    if (IS_ALIGNED(width, 8)) {
+      I422ToABGRRow = I422ToABGRRow_Unaligned_SSSE3;
+      if (IS_ALIGNED(dst_abgr, 16) && IS_ALIGNED(dst_stride_abgr, 16)) {
+        I422ToABGRRow = I422ToABGRRow_SSSE3;
+      }
+    }
+  }
+#endif
+
+  for (int y = 0; y < height; ++y) {
+    I422ToABGRRow(src_y, src_u, src_v, dst_abgr, width);
+    dst_abgr += dst_stride_abgr;
+    src_y += src_stride_y;
+    src_u += src_stride_u;
+    src_v += src_stride_v;
+  }
+  return 0;
+}
+
+// Convert I422 to RGBA.
+LIBYUV_API
+int I422ToRGBA(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_rgba, int dst_stride_rgba,
+               int width, int height) {
+  if (!src_y || !src_u || !src_v ||
+      !dst_rgba ||
+      width <= 0 || height == 0) {
+    return -1;
+  }
+  // Negative height means invert the image.
+  if (height < 0) {
+    height = -height;
+    dst_rgba = dst_rgba + (height - 1) * dst_stride_rgba;
+    dst_stride_rgba = -dst_stride_rgba;
+  }
+  void (*I422ToRGBARow)(const uint8* y_buf,
+                        const uint8* u_buf,
+                        const uint8* v_buf,
+                        uint8* rgb_buf,
+                        int width) = I422ToRGBARow_C;
+#if defined(HAS_I422TORGBAROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON)) {
+    I422ToRGBARow = I422ToRGBARow_Any_NEON;
+    if (IS_ALIGNED(width, 16)) {
+      I422ToRGBARow = I422ToRGBARow_NEON;
+    }
+  }
+#elif defined(HAS_I422TORGBAROW_SSSE3)
+  if (TestCpuFlag(kCpuHasSSSE3) && width >= 8) {
+    I422ToRGBARow = I422ToRGBARow_Any_SSSE3;
+    if (IS_ALIGNED(width, 8)) {
+      I422ToRGBARow = I422ToRGBARow_Unaligned_SSSE3;
+      if (IS_ALIGNED(dst_rgba, 16) && IS_ALIGNED(dst_stride_rgba, 16)) {
+        I422ToRGBARow = I422ToRGBARow_SSSE3;
+      }
+    }
+  }
+#endif
+
+  for (int y = 0; y < height; ++y) {
+    I422ToRGBARow(src_y, src_u, src_v, dst_rgba, width);
+    dst_rgba += dst_stride_rgba;
+    src_y += src_stride_y;
+    src_u += src_stride_u;
+    src_v += src_stride_v;
+  }
+  return 0;
+}
+
+// Convert ARGB to RGBA.
+LIBYUV_API
+int ARGBToRGBA(const uint8* src_argb, int src_stride_argb,
+               uint8* dst_rgba, int dst_stride_rgba,
+               int width, int height) {
+  if (!src_argb || !dst_rgba ||
+      width <= 0 || height == 0) {
+    return -1;
+  }
+  // Negative height means invert the image.
+  if (height < 0) {
+    height = -height;
+    src_argb = src_argb + (height - 1) * src_stride_argb;
+    src_stride_argb = -src_stride_argb;
+  }
+  void (*ARGBToRGBARow)(const uint8* src_argb, uint8* dst_rgba, int pix) =
+      ARGBToRGBARow_C;
+#if defined(HAS_ARGBTORGBAROW_SSSE3)
+  if (TestCpuFlag(kCpuHasSSSE3) &&
+      IS_ALIGNED(width, 4) &&
+      IS_ALIGNED(src_argb, 16) && IS_ALIGNED(src_stride_argb, 16) &&
+      IS_ALIGNED(dst_rgba, 16) && IS_ALIGNED(dst_stride_rgba, 16)) {
+    ARGBToRGBARow = ARGBToRGBARow_SSSE3;
+  }
+#endif
+#if defined(HAS_ARGBTORGBAROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON) && IS_ALIGNED(width, 8)) {
+    ARGBToRGBARow = ARGBToRGBARow_NEON;
+  }
+#endif
+
+  for (int y = 0; y < height; ++y) {
+    ARGBToRGBARow(src_argb, dst_rgba, width);
+    src_argb += src_stride_argb;
+    dst_rgba += dst_stride_rgba;
+  }
+  return 0;
+}
+
 // Convert ARGB To RGB24.
+LIBYUV_API
 int ARGBToRGB24(const uint8* src_argb, int src_stride_argb,
                 uint8* dst_rgb24, int dst_stride_rgb24,
                 int width, int height) {
@@ -322,6 +526,16 @@ int ARGBToRGB24(const uint8* src_argb, int src_stride_argb,
     }
   }
 #endif
+#if defined(HAS_ARGBTORGB24ROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON)) {
+    if (width * 3 <= kMaxStride) {
+      ARGBToRGB24Row = ARGBToRGB24Row_Any_NEON;
+    }
+    if (IS_ALIGNED(width, 8)) {
+      ARGBToRGB24Row = ARGBToRGB24Row_NEON;
+    }
+  }
+#endif
 
   for (int y = 0; y < height; ++y) {
     ARGBToRGB24Row(src_argb, dst_rgb24, width);
@@ -332,6 +546,7 @@ int ARGBToRGB24(const uint8* src_argb, int src_stride_argb,
 }
 
 // Convert ARGB To RAW.
+LIBYUV_API
 int ARGBToRAW(const uint8* src_argb, int src_stride_argb,
               uint8* dst_raw, int dst_stride_raw,
               int width, int height) {
@@ -357,6 +572,16 @@ int ARGBToRAW(const uint8* src_argb, int src_stride_argb,
     }
   }
 #endif
+#if defined(HAS_ARGBTORAWROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON)) {
+    if (width * 3 <= kMaxStride) {
+      ARGBToRAWRow = ARGBToRAWRow_Any_NEON;
+    }
+    if (IS_ALIGNED(width, 8)) {
+      ARGBToRAWRow = ARGBToRAWRow_NEON;
+    }
+  }
+#endif
 
   for (int y = 0; y < height; ++y) {
     ARGBToRAWRow(src_argb, dst_raw, width);
@@ -367,6 +592,7 @@ int ARGBToRAW(const uint8* src_argb, int src_stride_argb,
 }
 
 // Convert ARGB To RGB565.
+LIBYUV_API
 int ARGBToRGB565(const uint8* src_argb, int src_stride_argb,
                  uint8* dst_rgb565, int dst_stride_rgb565,
                  int width, int height) {
@@ -401,6 +627,7 @@ int ARGBToRGB565(const uint8* src_argb, int src_stride_argb,
 }
 
 // Convert ARGB To ARGB1555.
+LIBYUV_API
 int ARGBToARGB1555(const uint8* src_argb, int src_stride_argb,
                    uint8* dst_argb1555, int dst_stride_argb1555,
                    int width, int height) {
@@ -435,6 +662,7 @@ int ARGBToARGB1555(const uint8* src_argb, int src_stride_argb,
 }
 
 // Convert ARGB To ARGB4444.
+LIBYUV_API
 int ARGBToARGB4444(const uint8* src_argb, int src_stride_argb,
                    uint8* dst_argb4444, int dst_stride_argb4444,
                    int width, int height) {
@@ -470,6 +698,7 @@ int ARGBToARGB4444(const uint8* src_argb, int src_stride_argb,
 
 // Convert NV12 to RGB565.
 // TODO(fbarchard): (Re) Optimize for Neon.
+LIBYUV_API
 int NV12ToRGB565(const uint8* src_y, int src_stride_y,
                  const uint8* src_uv, int src_stride_uv,
                  uint8* dst_rgb565, int dst_stride_rgb565,
@@ -515,6 +744,7 @@ int NV12ToRGB565(const uint8* src_y, int src_stride_y,
 }
 
 // Convert NV21 to RGB565.
+LIBYUV_API
 int NV21ToRGB565(const uint8* src_y, int src_stride_y,
                  const uint8* src_vu, int src_stride_vu,
                  uint8* dst_rgb565, int dst_stride_rgb565,
@@ -565,7 +795,7 @@ int NV21ToRGB565(const uint8* src_y, int src_stride_y,
 #if !defined(YUV_DISABLE_ASM) && defined(__ARM_NEON__)
 #define HAS_SETROW_NEON
 static void SetRow8_NEON(uint8* dst, uint32 v32, int count) {
-  asm volatile (
+  asm volatile (  // NOLINT
     "vdup.u32  q0, %2                          \n"  // duplicate 4 ints
     "1:                                        \n"
     "subs      %1, %1, #16                     \n"  // 16 bytes per loop
@@ -636,7 +866,7 @@ static void SetRows32_X86(uint8* dst, uint32 v32, int width,
 #define HAS_SETROW_X86
 static void SetRow8_X86(uint8* dst, uint32 v32, int width) {
   size_t width_tmp = static_cast<size_t>(width);
-  asm volatile (
+  asm volatile (  // NOLINT
     "shr       $0x2,%1                         \n"
     "rep stosl                                 \n"
     : "+D"(dst),       // %0
@@ -650,7 +880,7 @@ static void SetRows32_X86(uint8* dst, uint32 v32, int width,
   for (int y = 0; y < height; ++y) {
     size_t width_tmp = static_cast<size_t>(width);
     uint32* d = reinterpret_cast<uint32*>(dst);
-    asm volatile (
+    asm volatile (  // NOLINT
       "rep stosl                               \n"
       : "+D"(d),         // %0
         "+c"(width_tmp)  // %1
@@ -682,6 +912,7 @@ static void SetRows32_C(uint8* dst, uint32 v32, int width,
   }
 }
 
+LIBYUV_API
 void SetPlane(uint8* dst_y, int dst_stride_y,
               int width, int height,
               uint32 value) {
@@ -715,6 +946,7 @@ void SetPlane(uint8* dst_y, int dst_stride_y,
 }
 
 // Draw a rectangle into I420
+LIBYUV_API
 int I420Rect(uint8* dst_y, int dst_stride_y,
              uint8* dst_u, int dst_stride_u,
              uint8* dst_v, int dst_stride_v,
@@ -742,6 +974,7 @@ int I420Rect(uint8* dst_y, int dst_stride_y,
 }
 
 // Draw a rectangle into ARGB
+LIBYUV_API
 int ARGBRect(uint8* dst_argb, int dst_stride_argb,
              int dst_x, int dst_y,
              int width, int height,
@@ -782,6 +1015,7 @@ int ARGBRect(uint8* dst_argb, int dst_stride_argb,
 // where
 //   f is foreground pixel premultiplied by alpha
 
+LIBYUV_API
 int ARGBAttenuate(const uint8* src_argb, int src_stride_argb,
                   uint8* dst_argb, int dst_stride_argb,
                   int width, int height) {
@@ -819,6 +1053,7 @@ int ARGBAttenuate(const uint8* src_argb, int src_stride_argb,
 }
 
 // Convert preattentuated ARGB to unattenuated ARGB.
+LIBYUV_API
 int ARGBUnattenuate(const uint8* src_argb, int src_stride_argb,
                     uint8* dst_argb, int dst_stride_argb,
                     int width, int height) {
@@ -849,6 +1084,7 @@ int ARGBUnattenuate(const uint8* src_argb, int src_stride_argb,
 }
 
 // Convert ARGB to Grayed ARGB.
+LIBYUV_API
 int ARGBGrayTo(const uint8* src_argb, int src_stride_argb,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height) {
@@ -879,6 +1115,7 @@ int ARGBGrayTo(const uint8* src_argb, int src_stride_argb,
 }
 
 // Make a rectangle of ARGB gray scale.
+LIBYUV_API
 int ARGBGray(uint8* dst_argb, int dst_stride_argb,
              int dst_x, int dst_y,
              int width, int height) {
@@ -902,6 +1139,7 @@ int ARGBGray(uint8* dst_argb, int dst_stride_argb,
 }
 
 // Make a rectangle of ARGB Sepia tone.
+LIBYUV_API
 int ARGBSepia(uint8* dst_argb, int dst_stride_argb,
               int dst_x, int dst_y, int width, int height) {
   if (!dst_argb || width <= 0 || height <= 0 || dst_x < 0 || dst_y < 0) {
@@ -923,6 +1161,7 @@ int ARGBSepia(uint8* dst_argb, int dst_stride_argb,
 }
 
 // Apply a 4x3 matrix rotation to each ARGB pixel.
+LIBYUV_API
 int ARGBColorMatrix(uint8* dst_argb, int dst_stride_argb,
                     const int8* matrix_argb,
                     int dst_x, int dst_y, int width, int height) {
@@ -948,6 +1187,7 @@ int ARGBColorMatrix(uint8* dst_argb, int dst_stride_argb,
 
 // Apply a color table each ARGB pixel.
 // Table contains 256 ARGB values.
+LIBYUV_API
 int ARGBColorTable(uint8* dst_argb, int dst_stride_argb,
                    const uint8* table_argb,
                    int dst_x, int dst_y, int width, int height) {
@@ -977,6 +1217,7 @@ int ARGBColorTable(uint8* dst_argb, int dst_stride_argb,
 // The divide is replaces with a multiply by reciprocal fixed point multiply.
 // Caveat - although SSE2 saturates, the C function does not and should be used
 // with care if doing anything but quantization.
+LIBYUV_API
 int ARGBQuantize(uint8* dst_argb, int dst_stride_argb,
                  int scale, int interval_size, int interval_offset,
                  int dst_x, int dst_y, int width, int height) {
@@ -1002,6 +1243,7 @@ int ARGBQuantize(uint8* dst_argb, int dst_stride_argb,
 
 // Computes table of cumulative sum for image where the value is the sum
 // of all values above and to the left of the entry.  Used by ARGBBlur.
+LIBYUV_API
 int ARGBComputeCumulativeSum(const uint8* src_argb, int src_stride_argb,
                              int32* dst_cumsum, int dst_stride32_cumsum,
                              int width, int height) {
@@ -1030,6 +1272,7 @@ int ARGBComputeCumulativeSum(const uint8* src_argb, int src_stride_argb,
 // Caller should allocate CumulativeSum table of width * height * 16 bytes
 // aligned to 16 byte boundary.  height can be radius * 2 + 2 to save memory
 // as the buffer is treated as circular.
+LIBYUV_API
 int ARGBBlur(const uint8* src_argb, int src_stride_argb,
              uint8* dst_argb, int dst_stride_argb,
              int32* dst_cumsum, int dst_stride32_cumsum,
@@ -1114,6 +1357,7 @@ int ARGBBlur(const uint8* src_argb, int src_stride_argb,
 }
 
 // Multiply ARGB image by a specified ARGB value.
+LIBYUV_API
 int ARGBShade(const uint8* src_argb, int src_stride_argb,
               uint8* dst_argb, int dst_stride_argb,
               int width, int height, uint32 value) {
@@ -1143,18 +1387,8 @@ int ARGBShade(const uint8* src_argb, int src_stride_argb,
   return 0;
 }
 
-#if !defined(YUV_DISABLE_ASM) && (defined(_M_IX86) || \
-    (defined(__x86_64__) || defined(__i386__)))
-#define HAS_SCALEARGBFILTERROWS_SSSE3
-#endif
-void ScaleARGBFilterRows_C(uint8* dst_ptr,
-                           const uint8* src_ptr, ptrdiff_t src_stride,
-                           int dst_width, int source_y_fraction);
-void ScaleARGBFilterRows_SSSE3(uint8* dst_ptr,
-                               const uint8* src_ptr, ptrdiff_t src_stride,
-                               int dst_width, int source_y_fraction);
-
 // Interpolate 2 ARGB images by specified amount (0 to 255).
+LIBYUV_API
 int ARGBInterpolate(const uint8* src_argb0, int src_stride_argb0,
                     const uint8* src_argb1, int src_stride_argb1,
                     uint8* dst_argb, int dst_stride_argb,
@@ -1168,24 +1402,20 @@ int ARGBInterpolate(const uint8* src_argb0, int src_stride_argb0,
     dst_argb = dst_argb + (height - 1) * dst_stride_argb;
     dst_stride_argb = -dst_stride_argb;
   }
-  void (*ScaleARGBFilterRows)(uint8* dst_ptr, const uint8* src_ptr,
+  void (*ARGBInterpolateRow)(uint8* dst_ptr, const uint8* src_ptr,
                               ptrdiff_t src_stride, int dst_width,
-                              int source_y_fraction) = ScaleARGBFilterRows_C;
-#if defined(HAS_SCALEARGBFILTERROWS_SSSE3)
+                              int source_y_fraction) = ARGBInterpolateRow_C;
+#if defined(HAS_ARGBINTERPOLATEROW_SSSE3)
   if (TestCpuFlag(kCpuHasSSSE3) &&
       IS_ALIGNED(src_argb0, 16) && IS_ALIGNED(src_stride_argb0, 16) &&
       IS_ALIGNED(src_argb1, 16) && IS_ALIGNED(src_stride_argb1, 16) &&
       IS_ALIGNED(dst_argb, 16) && IS_ALIGNED(dst_stride_argb, 16)) {
-    ScaleARGBFilterRows = ScaleARGBFilterRows_SSSE3;
+    ARGBInterpolateRow = ARGBInterpolateRow_SSSE3;
   }
 #endif
-  uint8 last16[16];
   for (int y = 0; y < height; ++y) {
-    // Filter extrudes edge for its scaling purpose.
-    memcpy(last16, dst_argb + width * 4, 16);  // Save last 16 beyond end.
-    ScaleARGBFilterRows(dst_argb, src_argb0, src_argb1 - src_argb0,
-                        width, interpolation);
-    memcpy(dst_argb + width * 4, last16, 16);  // Restore last 16 beyond end.
+    ARGBInterpolateRow(dst_argb, src_argb0, src_argb1 - src_argb0,
+                       width, interpolation);
     src_argb0 += src_stride_argb0;
     src_argb1 += src_stride_argb1;
     dst_argb += dst_stride_argb;

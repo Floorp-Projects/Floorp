@@ -14,12 +14,12 @@
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-li-element
 interface HTMLLIElement : HTMLElement {
-           [SetterThrows]
+           [SetterThrows, Pure]
            attribute long value;
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLLIElement {
-           [SetterThrows]
+           [SetterThrows, Pure]
            attribute DOMString type;
 };

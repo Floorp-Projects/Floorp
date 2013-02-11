@@ -523,7 +523,8 @@ MD5_End(MD5Context *cx, unsigned char *digest,
 	md5_compress(cx, cx->u.w);
 
 	/* Copy the resulting values out of the chain variables into return buf. */
-	*digestLen = MD5_HASH_LEN;
+	if (digestLen)
+		*digestLen = MD5_HASH_LEN;
 #ifndef IS_LITTLE_ENDIAN
 	cx->cv[0] = lendian(cx->cv[0]);
 	cx->cv[1] = lendian(cx->cv[1]);
@@ -531,6 +532,32 @@ MD5_End(MD5Context *cx, unsigned char *digest,
 	cx->cv[3] = lendian(cx->cv[3]);
 #endif
 	memcpy(digest, cx->cv, MD5_HASH_LEN);
+}
+
+void
+MD5_EndRaw(MD5Context *cx, unsigned char *digest,
+           unsigned int *digestLen, unsigned int maxDigestLen)
+{
+#ifndef IS_LITTLE_ENDIAN
+	PRUint32 tmp;
+#endif
+	PRUint32 cv[4];
+
+	if (maxDigestLen < MD5_HASH_LEN) {
+		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		return;
+	}
+
+	memcpy(cv, cx->cv, sizeof(cv));
+#ifndef IS_LITTLE_ENDIAN
+	cv[0] = lendian(cv[0]);
+	cv[1] = lendian(cv[1]);
+	cv[2] = lendian(cv[2]);
+	cv[3] = lendian(cv[3]);
+#endif
+	memcpy(digest, cv, MD5_HASH_LEN);
+	if (digestLen)
+		*digestLen = MD5_HASH_LEN;
 }
 
 unsigned int 

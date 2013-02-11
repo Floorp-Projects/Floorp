@@ -19,6 +19,7 @@
       ],
       'defines': [
         'LIBYUV_SVNREVISION="<!(svnversion -n)"',
+        # 'LIBYUV_USING_SHARED_LIBRARY',
       ],
       'sources': [
         # headers

@@ -168,6 +168,11 @@ public:
 
   static bool     IsImageSrcSetDisabled();
 
+  static bool LookupBindingMember(JSContext* aCx, nsIContent *aContent,
+                                  JS::HandleId aId, JSPropertyDescriptor* aDesc);
+  static bool IsBindingField(JSContext* aCx, nsIContent* aContent,
+                             JS::HandleId aId);
+
   /**
    * Returns the parent node of aChild crossing document boundaries.
    */
@@ -2320,11 +2325,6 @@ public:
 
 #define NS_ENSURE_FINITE2(f1, f2, rv)                                         \
   if (!NS_finite((f1)+(f2))) {                                                \
-    return (rv);                                                              \
-  }
-
-#define NS_ENSURE_FINITE3(f1, f2, f3, rv)                                     \
-  if (!NS_finite((f1)+(f2)+(f3))) {                                           \
     return (rv);                                                              \
   }
 

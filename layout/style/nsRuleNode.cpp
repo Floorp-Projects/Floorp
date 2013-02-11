@@ -4387,24 +4387,28 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       NS_ABORT_IF_FALSE(!canStoreInRuleTree,
                         "should have made canStoreInRuleTree false above");
       transition->CopyPropertyFrom(parentDisplay->mTransitions[i]);
-    } else if (property.unit == eCSSUnit_Initial ||
-               property.unit == eCSSUnit_All) {
+    } else if (property.unit == eCSSUnit_Initial) {
       transition->SetProperty(eCSSPropertyExtra_all_properties);
     } else if (property.unit == eCSSUnit_None) {
       transition->SetProperty(eCSSPropertyExtra_no_properties);
     } else if (property.list) {
-      NS_ABORT_IF_FALSE(property.list->mValue.GetUnit() == eCSSUnit_Ident,
-                        nsPrintfCString("Invalid transition property unit %d",
-                                        property.list->mValue.GetUnit()).get());
+      const nsCSSValue &val = property.list->mValue;
 
-      nsDependentString
-        propertyStr(property.list->mValue.GetStringBufferValue());
-      nsCSSProperty prop = nsCSSProps::LookupProperty(propertyStr,
-                                                      nsCSSProps::eEnabled);
-      if (prop == eCSSProperty_UNKNOWN) {
-        transition->SetUnknownProperty(propertyStr);
+      if (val.GetUnit() == eCSSUnit_Ident) {
+        nsDependentString
+          propertyStr(property.list->mValue.GetStringBufferValue());
+        nsCSSProperty prop = nsCSSProps::LookupProperty(propertyStr,
+                                                        nsCSSProps::eEnabled);
+        if (prop == eCSSProperty_UNKNOWN) {
+          transition->SetUnknownProperty(propertyStr);
+        } else {
+          transition->SetProperty(prop);
+        }
       } else {
-        transition->SetProperty(prop);
+        NS_ABORT_IF_FALSE(val.GetUnit() == eCSSUnit_All,
+                          nsPrintfCString("Invalid transition property unit %d",
+                                          val.GetUnit()).get());
+        transition->SetProperty(eCSSPropertyExtra_all_properties);
       }
     }
 

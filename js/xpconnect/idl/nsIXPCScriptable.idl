@@ -19,7 +19,7 @@
  * boolean to PR_TRUE before making the call.  Implementations may skip writing
  * to *_retval unless they want to return PR_FALSE.
  */
-[uuid(c4788e02-3239-490a-8aeb-60fad08303fd)]
+[uuid(1236e34a-21e0-423c-a8c8-9b3f1e6d7060)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -52,9 +52,8 @@ interface nsIXPCScriptable : nsISupports
     const uint32_t ALLOW_PROP_MODS_TO_PROTOTYPE     = 1 << 25;
     const uint32_t IS_GLOBAL_OBJECT                 = 1 << 26;
     const uint32_t DONT_REFLECT_INTERFACE_NAMES     = 1 << 27;
-    const uint32_t WANT_EQUALITY                    = 1 << 28;
+    // Unused bit here!
     const uint32_t WANT_OUTER_OBJECT                = 1 << 29;
-    const uint32_t USE_STUB_EQUALITY_HOOK           = 1 << 30;
 
     // The high order bit is RESERVED for consumers of these flags. 
     // No implementor of this interface should ever return flags 
@@ -133,9 +132,6 @@ interface nsIXPCScriptable : nsISupports
     boolean hasInstance(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj,
                        in jsval val, out boolean bp);
-
-    boolean equality(in nsIXPConnectWrappedNative wrapper,
-                    in JSContextPtr cx, in JSObjectPtr obj, in jsval val);
 
     JSObjectPtr outerObject(in nsIXPConnectWrappedNative wrapper,
                             in JSContextPtr cx, in JSObjectPtr obj);

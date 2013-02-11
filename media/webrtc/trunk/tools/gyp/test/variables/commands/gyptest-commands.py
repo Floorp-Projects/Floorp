@@ -18,7 +18,7 @@ expect = test.read('commands.gyp.stdout').replace('\r', '')
 
 test.run_gyp('commands.gyp',
              '--debug', 'variables',
-             stdout=expect, ignore_line_numbers=False)
+             stdout=expect, ignore_line_numbers=True)
 
 # Verify the commands.gypd against the checked-in expected contents.
 #

@@ -3,9 +3,9 @@
 # This contains classes that represent an individual test, including
 # metadata, and know how to run the tests and determine failures.
 
-import datetime, os, re, sys, time
-from subprocess import *
-from threading import *
+import datetime, os, sys, time
+from subprocess import Popen, PIPE
+from threading import Thread
 
 from results import TestOutput
 
@@ -59,7 +59,7 @@ def run_cmd(cmd, timeout=60.0):
                     os.kill(l[0].pid, signal.SIGKILL)
                 time.sleep(.1)
                 timed_out = True
-            except OSError, e:
+            except OSError:
                 # Expecting a "No such process" error
                 pass
     th.join()

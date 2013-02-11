@@ -72,6 +72,12 @@ function waitForClearHistory(aCallback) {
 
 function waitForSearchComplete(aCallback) {
   info("Waiting for onSearchComplete");
+  // onSearchComplete is implemented as an XBL method, which is readonly on
+  // the prototype. This means that setting it on the derived/bound object
+  // is an error in strict mode if there's no |own| property. Use defineProperty
+  // to explicitly make it so.
+  Object.defineProperty(gURLBar, 'onSearchComplete', { value: gURLBar.onSearchComplete,
+                                                       writable: true, configurable: true });
   let onSearchComplete = gURLBar.onSearchComplete;
   registerCleanupFunction(function () {
     gURLBar.onSearchComplete = onSearchComplete;

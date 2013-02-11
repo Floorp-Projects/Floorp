@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: blapi.h,v 1.49 2012/10/11 00:10:26 rrelyea%redhat.com Exp $ */
+/* $Id: blapi.h,v 1.50 2013/02/05 18:10:42 wtc%google.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -875,6 +875,18 @@ extern void MD5_End(MD5Context *cx, unsigned char *digest,
 		    unsigned int *digestLen, unsigned int maxDigestLen);
 
 /*
+** Export the raw state of the MD5 hash without appending the standard padding
+** and length bytes. Produce the digested results in "digest"
+**	"cx" the context
+**	"digest" where the 16 bytes of digest data are stored
+**	"digestLen" where the digest length (16) is stored (optional)
+**	"maxDigestLen" the maximum amount of data that can ever be
+**	   stored in "digest"
+*/
+extern void MD5_EndRaw(MD5Context *cx, unsigned char *digest,
+		       unsigned int *digestLen, unsigned int maxDigestLen);
+
+/*
  * Return the the size of a buffer needed to flatten the MD5 Context into
  *    "cx" the context
  *  returns size;
@@ -1031,6 +1043,18 @@ extern void SHA1_End(SHA1Context *cx, unsigned char *digest,
 		     unsigned int *digestLen, unsigned int maxDigestLen);
 
 /*
+** Export the current state of the SHA-1 hash without appending the standard
+** padding and length. Produce the digested results in "digest"
+**	"cx" the context
+**	"digest" where the 16 bytes of digest data are stored
+**	"digestLen" where the digest length (20) is stored (optional)
+**	"maxDigestLen" the maximum amount of data that can ever be
+**	   stored in "digest"
+*/
+extern void SHA1_EndRaw(SHA1Context *cx, unsigned char *digest,
+			unsigned int *digestLen, unsigned int maxDigestLen);
+
+/*
 ** trace the intermediate state info of the SHA1 hash.
 */
 extern void SHA1_TraceState(SHA1Context *cx);
@@ -1068,6 +1092,8 @@ extern void SHA224_Update(SHA224Context *cx, const unsigned char *input,
 			unsigned int inputLen);
 extern void SHA224_End(SHA224Context *cx, unsigned char *digest,
 		     unsigned int *digestLen, unsigned int maxDigestLen);
+extern void SHA224_EndRaw(SHA224Context *cx, unsigned char *digest,
+			  unsigned int *digestLen, unsigned int maxDigestLen);
 extern SECStatus SHA224_HashBuf(unsigned char *dest, const unsigned char *src,
 			      uint32 src_length);
 extern SECStatus SHA224_Hash(unsigned char *dest, const char *src);
@@ -1086,6 +1112,8 @@ extern void SHA256_Update(SHA256Context *cx, const unsigned char *input,
 			unsigned int inputLen);
 extern void SHA256_End(SHA256Context *cx, unsigned char *digest,
 		     unsigned int *digestLen, unsigned int maxDigestLen);
+extern void SHA256_EndRaw(SHA256Context *cx, unsigned char *digest,
+			  unsigned int *digestLen, unsigned int maxDigestLen);
 extern SECStatus SHA256_HashBuf(unsigned char *dest, const unsigned char *src,
 			      uint32 src_length);
 extern SECStatus SHA256_Hash(unsigned char *dest, const char *src);
@@ -1102,6 +1130,8 @@ extern void SHA512_DestroyContext(SHA512Context *cx, PRBool freeit);
 extern void SHA512_Begin(SHA512Context *cx);
 extern void SHA512_Update(SHA512Context *cx, const unsigned char *input,
 			unsigned int inputLen);
+extern void SHA512_EndRaw(SHA512Context *cx, unsigned char *digest,
+			  unsigned int *digestLen, unsigned int maxDigestLen);
 extern void SHA512_End(SHA512Context *cx, unsigned char *digest,
 		     unsigned int *digestLen, unsigned int maxDigestLen);
 extern SECStatus SHA512_HashBuf(unsigned char *dest, const unsigned char *src,
@@ -1122,6 +1152,8 @@ extern void SHA384_Update(SHA384Context *cx, const unsigned char *input,
 			unsigned int inputLen);
 extern void SHA384_End(SHA384Context *cx, unsigned char *digest,
 		     unsigned int *digestLen, unsigned int maxDigestLen);
+extern void SHA384_EndRaw(SHA384Context *cx, unsigned char *digest,
+			  unsigned int *digestLen, unsigned int maxDigestLen);
 extern SECStatus SHA384_HashBuf(unsigned char *dest, const unsigned char *src,
 			      uint32 src_length);
 extern SECStatus SHA384_Hash(unsigned char *dest, const char *src);

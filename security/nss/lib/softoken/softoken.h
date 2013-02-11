@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: softoken.h,v 1.28 2012/04/25 14:50:10 gerv%gerv.net Exp $ */
+/* $Id: softoken.h,v 1.29 2013/02/05 02:19:52 ryan.sleevi%gmail.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -14,7 +14,7 @@
 #include "softoknt.h"
 #include "secoidt.h"
 
-#include "pkcs11t.h"     /* CK_RV Required for sftk_fipsPowerUpSelfTest(). */
+#include "pkcs11t.h"
 
 SEC_BEGIN_PROTOS
 
@@ -93,6 +93,20 @@ extern
 SECStatus RSA_DecryptBlock(NSSLOWKEYPrivateKey *key, unsigned char *output,
 			   unsigned int *outputLen, unsigned int maxOutputLen,
 			   unsigned char *input, unsigned int inputLen);
+
+extern
+SECStatus RSA_EncryptOAEP(CK_RSA_PKCS_OAEP_PARAMS *oaepParams,
+                          NSSLOWKEYPublicKey *key,
+                          unsigned char *output, unsigned int *outputLen,
+                          unsigned int maxOutputLen,
+                          const unsigned char *input, unsigned int inputLen);
+
+extern
+SECStatus RSA_DecryptOAEP(CK_RSA_PKCS_OAEP_PARAMS *oaepParams,
+                          NSSLOWKEYPrivateKey *key,
+                          unsigned char *output, unsigned int *outputLen,
+                          unsigned int maxOutputLen,
+                          const unsigned char *input, unsigned int inputLen);
 
 /*
  * added to make pkcs #11 happy

@@ -53,13 +53,12 @@ class Configuration:
                 entry.append({})
             self.descriptors.extend([Descriptor(self, iface, x) for x in entry])
 
-        # Mark the descriptors for which only a single nativeType implements
-        # an interface.
+        # Mark the descriptors for which the nativeType corresponds to exactly
+        # one interface.
         for descriptor in self.descriptors:
-            intefaceName = descriptor.interface.identifier.name
-            otherDescriptors = [d for d in self.descriptors
-                                if d.interface.identifier.name == intefaceName]
-            descriptor.uniqueImplementation = len(otherDescriptors) == 1
+            descriptor.unsharedImplementation = all(
+                d.nativeType != descriptor.nativeType or d == descriptor
+                for d in self.descriptors)
 
         self.enums = [e for e in parseData if e.isEnum()]
 

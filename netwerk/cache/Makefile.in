@@ -15,9 +15,7 @@ LIBRARY_NAME   = nkcache_s
 LIBXUL_LIBRARY = 1
 XPIDL_MODULE   = necko_cache
 GRE_MODULE     = 1
-ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
-endif # !_MSC_VER
 
 FORCE_STATIC_LIB = 1
 

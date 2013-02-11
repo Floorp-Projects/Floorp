@@ -778,6 +778,51 @@ PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, const SECItem *hash)
 }
 
 /*
+ * sign data with a MAC key.
+ */
+SECStatus
+PK11_SignWithSymKey(PK11SymKey *symKey, CK_MECHANISM_TYPE mechanism,
+		    SECItem *param, SECItem *sig, const SECItem *data)
+{
+    PK11SlotInfo *slot = symKey->slot;
+    CK_MECHANISM mech = {0, NULL, 0 };
+    PRBool owner = PR_TRUE;
+    CK_SESSION_HANDLE session;
+    PRBool haslock = PR_FALSE;
+    CK_ULONG len;
+    CK_RV crv;
+
+    mech.mechanism = mechanism;
+    if (param) {
+	mech.pParameter = param->data;
+	mech.ulParameterLen = param->len;
+    }
+
+    session = pk11_GetNewSession(slot,&owner);
+    haslock = (!owner || !(slot->isThreadSafe));
+    if (haslock) PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_SignInit(session,&mech,symKey->objectID);
+    if (crv != CKR_OK) {
+	if (haslock) PK11_ExitSlotMonitor(slot);
+	pk11_CloseSession(slot,session,owner);
+	PORT_SetError( PK11_MapError(crv) );
+	return SECFailure;
+    }
+
+    len = sig->len;
+    crv = PK11_GETTAB(slot)->C_Sign(session,data->data,
+					data->len, sig->data, &len);
+    if (haslock) PK11_ExitSlotMonitor(slot);
+    pk11_CloseSession(slot,session,owner);
+    sig->len = len;
+    if (crv != CKR_OK) {
+	PORT_SetError( PK11_MapError(crv) );
+	return SECFailure;
+    }
+    return SECSuccess;
+}
+
+/*
  * Now SSL 2.0 uses raw RSA stuff. These next to functions *must* use
  * RSA keys, or they'll fail. We do the checks up front. If anyone comes
  * up with a meaning for rawdecrypt for any other public key operation,

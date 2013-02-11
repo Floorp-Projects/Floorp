@@ -16,7 +16,7 @@
 
 #include "libyuv/cpu_id.h"
 #include "libyuv/planar_functions.h"  // For CopyPlane
-#include "source/row.h"
+#include "libyuv/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -36,6 +36,7 @@ extern "C" {
 // as produced by the optimized and non-optimized versions.
 static bool use_reference_impl_ = false;
 
+LIBYUV_API
 void SetUseReferenceImpl(bool use) {
   use_reference_impl_ = use;
 }
@@ -357,7 +358,7 @@ static void OMITFP ScaleRowDown38_3_Int_NEON(const uint8* src_ptr,
     // dst_ptr[3] = (s[6 + st * 0] + s[7 + st * 0]
     //             + s[6 + st * 1] + s[7 + st * 1]
     //             + s[6 + st * 2] + s[7 + st * 2]) / 6
-    "vqrdmulh.s16 q2, q13                      \n"
+    "vqrdmulh.s16 q2, q2, q13                  \n"
     "vmovn.u16    d4, q2                       \n"
 
     // Shuffle 2,3 reg around so that 2 can be added to the
@@ -388,7 +389,7 @@ static void OMITFP ScaleRowDown38_3_Int_NEON(const uint8* src_ptr,
     // Need to divide, but can't downshift as the the value
     //  isn't a power of 2.  So multiply by 65536 / n
     //  and take the upper 16 bits.
-    "vqrdmulh.s16 q0, q15                      \n"
+    "vqrdmulh.s16 q0, q0, q15                  \n"
 
     // Align for table lookup, vtbl requires registers to
     //  be adjacent
@@ -484,7 +485,7 @@ static void ScaleRowDown38_2_Int_NEON(const uint8* src_ptr,
     // Need to divide, but can't downshift as the the value
     //  isn't a power of 2.  So multiply by 65536 / n
     //  and take the upper 16 bits.
-    "vqrdmulh.s16 q0, q13                      \n"
+    "vqrdmulh.s16 q0, q0, q13                  \n"
 
     // Align for table lookup, vtbl requires registers to
     //  be adjacent
@@ -2755,13 +2756,11 @@ void ScaleAddRows_C(const uint8* src_ptr, ptrdiff_t src_stride,
  * its original size.
  *
  */
-static void ScalePlaneDown2(int src_width, int src_height,
+static void ScalePlaneDown2(int /* src_width */, int /* src_height */,
                             int dst_width, int dst_height,
                             int src_stride, int dst_stride,
                             const uint8* src_ptr, uint8* dst_ptr,
                             FilterMode filtering) {
-  assert(IS_ALIGNED(src_width, 2));
-  assert(IS_ALIGNED(src_height, 2));
   void (*ScaleRowDown2)(const uint8* src_ptr, ptrdiff_t src_stride,
                         uint8* dst_ptr, int dst_width) =
       filtering ? ScaleRowDown2Int_C : ScaleRowDown2_C;
@@ -2795,13 +2794,11 @@ static void ScalePlaneDown2(int src_width, int src_height,
  * This is an optimized version for scaling down a plane to 1/4 of
  * its original size.
  */
-static void ScalePlaneDown4(int src_width, int src_height,
+static void ScalePlaneDown4(int /* src_width */, int /* src_height */,
                             int dst_width, int dst_height,
                             int src_stride, int dst_stride,
                             const uint8* src_ptr, uint8* dst_ptr,
                             FilterMode filtering) {
-  assert(IS_ALIGNED(src_width, 4));
-  assert(IS_ALIGNED(src_height, 4));
   void (*ScaleRowDown4)(const uint8* src_ptr, ptrdiff_t src_stride,
                         uint8* dst_ptr, int dst_width) =
       filtering ? ScaleRowDown4Int_C : ScaleRowDown4_C;
@@ -2832,13 +2829,11 @@ static void ScalePlaneDown4(int src_width, int src_height,
  * of its original size.
  *
  */
-static void ScalePlaneDown8(int src_width, int src_height,
+static void ScalePlaneDown8(int /* src_width */, int /* src_height */,
                             int dst_width, int dst_height,
                             int src_stride, int dst_stride,
                             const uint8* src_ptr, uint8* dst_ptr,
                             FilterMode filtering) {
-  assert(IS_ALIGNED(src_width, 8));
-  assert(IS_ALIGNED(src_height, 8));
   void (*ScaleRowDown8)(const uint8* src_ptr, ptrdiff_t src_stride,
                         uint8* dst_ptr, int dst_width) =
       filtering && (dst_width <= kMaxOutputWidth) ?
@@ -2864,7 +2859,7 @@ static void ScalePlaneDown8(int src_width, int src_height,
  * Provided by Frank Barchard (fbarchard@google.com)
  *
  */
-static void ScalePlaneDown34(int src_width, int src_height,
+static void ScalePlaneDown34(int /* src_width */, int /* src_height */,
                              int dst_width, int dst_height,
                              int src_stride, int dst_stride,
                              const uint8* src_ptr, uint8* dst_ptr,
@@ -2953,7 +2948,7 @@ static void ScalePlaneDown34(int src_width, int src_height,
  * ggghhhii
  * Boxes are 3x3, 2x3, 3x2 and 2x2
  */
-static void ScalePlaneDown38(int src_width, int src_height,
+static void ScalePlaneDown38(int /* src_width */, int /* src_height */,
                              int dst_width, int dst_height,
                              int src_stride, int dst_stride,
                              const uint8* src_ptr, uint8* dst_ptr,
@@ -3320,6 +3315,7 @@ static void ScalePlaneDown(int src_width, int src_height,
 // This function in turn calls a scaling function suitable for handling
 // the desired resolutions.
 
+LIBYUV_API
 void ScalePlane(const uint8* src, int src_stride,
                 int src_width, int src_height,
                 uint8* dst, int dst_stride,
@@ -3385,6 +3381,7 @@ void ScalePlane(const uint8* src, int src_stride,
 
 #define UNDER_ALLOCATED_HACK 1
 
+LIBYUV_API
 int I420Scale(const uint8* src_y, int src_stride_y,
               const uint8* src_u, int src_stride_u,
               const uint8* src_v, int src_stride_v,
@@ -3449,6 +3446,7 @@ int I420Scale(const uint8* src_y, int src_stride_y,
 }
 
 // Deprecated api
+LIBYUV_API
 int Scale(const uint8* src_y, const uint8* src_u, const uint8* src_v,
           int src_stride_y, int src_stride_u, int src_stride_v,
           int src_width, int src_height,
@@ -3512,6 +3510,7 @@ int Scale(const uint8* src_y, const uint8* src_u, const uint8* src_v,
 }
 
 // Deprecated api
+LIBYUV_API
 int ScaleOffset(const uint8* src, int src_width, int src_height,
                 uint8* dst, int dst_width, int dst_height, int dst_yoffset,
                 bool interpolate) {

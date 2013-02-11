@@ -158,7 +158,7 @@ file ${app_process}
 target remote :4321
 EOF
 
-gdb=$(echo $ANDROID_TOOLCHAIN/*gdb)
+gdb=$(echo $ANDROID_TOOLCHAIN/../../linux-x86/bin/*gdb)
 if [[ ! -f ${gdb} ]] ; then
   echo "Wow no gdb in env var ANDROID_TOOLCHAIN which is $ANDROID_TOOLCHAIN"
   exit 4

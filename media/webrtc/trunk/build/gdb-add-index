@@ -28,7 +28,7 @@ trap "{ echo -n Removing temp directory $DIRECTORY...;
 
 # Grab all the chromium shared library files.
 so_files=$(ldd "$FILENAME" 2>/dev/null \
-  | grep $(pwd) \
+  | grep $(dirname "$FILENAME") \
   | sed "s/.*[ \t]\(.*\) (.*/\1/")
 
 # Add index to binary and the shared library dependencies.

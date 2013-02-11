@@ -9,8 +9,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=400705
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="test">
       <implementation>
-        <field name="a">window.countera++</field>
-        <field name="b">window.counterb++</field>
+        <field name="a">XPCNativeWrapper.unwrap(window).countera++</field>
+        <field name="b">XPCNativeWrapper.unwrap(window).counterb++</field>
       </implementation>
     </binding>
   </bindings>

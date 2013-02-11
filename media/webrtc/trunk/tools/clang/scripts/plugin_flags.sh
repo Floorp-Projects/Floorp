@@ -21,4 +21,4 @@ echo -Xclang -load -Xclang $CLANG_LIB_PATH/libFindBadConstructs.$LIBSUFFIX \
   -Xclang -plugin-arg-find-bad-constructs \
   -Xclang skip-virtuals-in-implementations \
   -Xclang -plugin-arg-find-bad-constructs \
-  -Xclang check-inner-classes
+  -Xclang check-cc-directory

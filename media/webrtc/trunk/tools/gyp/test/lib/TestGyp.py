@@ -604,6 +604,14 @@ class TestGypMake(TestGypBase):
     return self.workpath(*result)
 
 
+def ConvertToCygpath(path):
+  """Convert to cygwin path if we are using cygwin."""
+  if sys.platform == 'cygwin':
+    p = subprocess.Popen(['cygpath', path], stdout=subprocess.PIPE)
+    path = p.communicate()[0].strip()
+  return path
+
+
 def FindVisualStudioInstallation():
   """Returns appropriate values for .build_tool and .uses_msbuild fields
   of TestGypBase for Visual Studio.
@@ -618,6 +626,8 @@ def FindVisualStudioInstallation():
       '2010': r'Microsoft Visual Studio 10.0\Common7\IDE\devenv.com',
       '2008': r'Microsoft Visual Studio 9.0\Common7\IDE\devenv.com',
       '2005': r'Microsoft Visual Studio 8\Common7\IDE\devenv.com'}
+
+  possible_roots = [ConvertToCygpath(r) for r in possible_roots]
 
   msvs_version = 'auto'
   for flag in (f for f in sys.argv if f.startswith('msvs_version=')):

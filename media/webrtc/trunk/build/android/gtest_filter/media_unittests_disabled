@@ -1,10 +1,5 @@
 # List of suppressions
 
-# crbug.com/138848
-AudioOutputControllerTest.CreateAndClose
-AudioOutputControllerTest.PlayPauseClose
-AudioOutputControllerTest.PlayPausePlayClose
-
 # crbug.com/136720
 CrossProcessNotificationMultiProcessTest.Basic
 

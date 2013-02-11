@@ -28,6 +28,9 @@ def main():
   parser.add_option("--verify",
                     action="store_true", dest="verify", default=False,
                     help="return the sdk argument and warn if it doesn't exist")
+  parser.add_option("--sdk_path",
+                    action="store", type="string", dest="sdk_path", default="",
+                    help="user-specified SDK path; bypasses verification")
   (options, args) = parser.parse_args()
   min_sdk_version = args[0]
 
@@ -56,7 +59,7 @@ def main():
     raise Exception('No %s+ SDK found' % min_sdk_version)
   best_sdk = sorted(sdks, key=parse_version)[0]
 
-  if options.verify and best_sdk != min_sdk_version:
+  if options.verify and best_sdk != min_sdk_version and not options.sdk_path:
     print >>sys.stderr, ''
     print >>sys.stderr, '                                           vvvvvvv'
     print >>sys.stderr, ''

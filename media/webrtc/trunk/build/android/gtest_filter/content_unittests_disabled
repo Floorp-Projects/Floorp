@@ -12,9 +12,10 @@ AudioRendererHostTest.SimulateErrorAndClose
 # crbug.com/104950
 DeviceOrientationProviderTest.ObserverNotRemoved
 DeviceOrientationProviderTest.StartFailing
-# crbug.com/138138
-GpuMemoryManagerTest.StubMemoryStatsForLastManageTests
 # crbug.com/138930
 SkCanvasVideoRendererTest.*
 # crbug.com/139095
 RenderWidgetTest.OnMsgPaintAtSize
+# crbug.com/147549
+GamepadProviderTest.PollingAccess
+PepperGamepadHostTest.WaitForReply

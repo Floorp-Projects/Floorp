@@ -18,14 +18,18 @@ namespace net {
 class RemoteOpenFileParent : public PRemoteOpenFileParent
 {
 public:
-  RemoteOpenFileParent(nsIFileURL* aURI)
-  : mURI(aURI)
-  {}
+  RemoteOpenFileParent(nsIFileURL* aURI);
 
-  bool OpenSendCloseDelete();
+ ~RemoteOpenFileParent();
+
+  virtual bool RecvAsyncOpenFile();
 
 private:
   nsCOMPtr<nsIFileURL> mURI;
+
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_COCOA)
+  int mFd;
+#endif
 };
 
 } // namespace net

@@ -7,8 +7,6 @@
 #include "mozilla/dom/SVGViewElementBinding.h"
 #include "DOMSVGStringList.h"
 
-DOMCI_NODE_DATA(SVGViewElement, mozilla::dom::SVGViewElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(View)
 
 namespace mozilla {
@@ -42,14 +40,9 @@ nsSVGElement::EnumInfo SVGViewElement::sEnumInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGViewElement,SVGViewElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGViewElement,SVGViewElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGViewElement)
-  NS_NODE_INTERFACE_TABLE4(SVGViewElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGViewElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGViewElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGViewElementBase)
+NS_IMPL_ISUPPORTS_INHERITED3(SVGViewElement, SVGViewElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -57,6 +50,7 @@ NS_INTERFACE_MAP_END_INHERITING(SVGViewElementBase)
 SVGViewElement::SVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGViewElementBase(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
@@ -95,14 +89,6 @@ SVGViewElement::PreserveAspectRatio()
 }
 
 //----------------------------------------------------------------------
-// nsIDOMSVGViewElement methods
-
-/* readonly attribute nsIDOMSVGStringList viewTarget; */
-NS_IMETHODIMP SVGViewElement::GetViewTarget(nsIDOMSVGStringList * *aViewTarget)
-{
-  *aViewTarget = ViewTarget().get();
-  return NS_OK;
-}
 
 already_AddRefed<nsIDOMSVGStringList>
 SVGViewElement::ViewTarget()

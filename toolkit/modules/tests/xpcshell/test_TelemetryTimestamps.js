@@ -36,7 +36,7 @@ function run_test() {
 function actualTest() {
   // Test the module logic
   let tmp = {};
-  Cu.import("resource:///modules/TelemetryTimestamps.jsm", tmp);
+  Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", tmp);
   let TelemetryTimestamps = tmp.TelemetryTimestamps;
   let now = Date.now();
   TelemetryTimestamps.add("foo");

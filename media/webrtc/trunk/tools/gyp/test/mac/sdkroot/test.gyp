@@ -10,6 +10,12 @@
       'xcode_settings': {
         'SDKROOT': 'macosx10.6',
       },
+      'postbuilds': [
+        {
+          'postbuild_name': 'envtest',
+          'action': [ './test_shorthand.sh', ],
+        },
+      ],
     },
   ],
 }

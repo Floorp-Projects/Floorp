@@ -10,6 +10,11 @@ prettyprinters.clear_module_printers(__name__)
 
 class JSObjectTypeCache(object):
     def __init__(self, value, cache):
+        # In GDB 7.4.50, with some programs, this first dummy gdb.lookup_type
+        # call is required to make the second lookup_type call succeed. A GDB
+        # built from the public sources as of 2012-12-12 did not require the
+        # dummy lookup.
+        gdb.lookup_type('js::BaseShape')
         baseshape_flags = gdb.lookup_type('js::BaseShape::Flag')
         self.flag_DELEGATE = prettyprinters.enum_value(baseshape_flags, 'js::BaseShape::DELEGATE')
         self.func_ptr_type = gdb.lookup_type('JSFunction').pointer()

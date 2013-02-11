@@ -30,6 +30,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEffects.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
 
 using namespace mozilla::dom;
 
@@ -73,22 +74,20 @@ SVGDocumentWrapper::GetWidthOrHeight(Dimension aDimension,
 {
   SVGSVGElement* rootElem = GetRootSVGElem();
   NS_ABORT_IF_FALSE(rootElem, "root elem missing or of wrong type");
-  nsresult rv;
 
   // Get the width or height SVG object
-  nsRefPtr<nsIDOMSVGAnimatedLength> domAnimLength;
+  nsRefPtr<SVGAnimatedLength> domAnimLength;
   if (aDimension == eWidth) {
-    rv = rootElem->GetWidth(getter_AddRefs(domAnimLength));
+    domAnimLength = rootElem->Width();
   } else {
     NS_ABORT_IF_FALSE(aDimension == eHeight, "invalid dimension");
-    rv = rootElem->GetHeight(getter_AddRefs(domAnimLength));
+    domAnimLength = rootElem->Height();
   }
-  NS_ENSURE_SUCCESS(rv, false);
   NS_ENSURE_TRUE(domAnimLength, false);
 
   // Get the animated value from the object
   nsRefPtr<nsIDOMSVGLength> domLength;
-  rv = domAnimLength->GetAnimVal(getter_AddRefs(domLength));
+  nsresult rv = domAnimLength->GetAnimVal(getter_AddRefs(domLength));
   NS_ENSURE_SUCCESS(rv, false);
   NS_ENSURE_TRUE(domLength, false);
 
@@ -201,11 +200,7 @@ SVGDocumentWrapper::ResetAnimation()
   if (!svgElem)
     return;
 
-#ifdef DEBUG
-  nsresult rv =
-#endif
-    svgElem->SetCurrentTime(0.0f);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetCurrentTime failed");
+  svgElem->SetCurrentTime(0.0f);
 }
 
 

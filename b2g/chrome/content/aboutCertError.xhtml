@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % globalDTD
+    SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % certerrorDTD
+    SYSTEM "chrome://b2g-l10n/locale/aboutCertError.dtd">
+  %certerrorDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&certerror.pagetitle;</title>
+    <meta name="viewport" content="width=device-width; user-scalable=false" />
+    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
+    <!-- This page currently uses the same favicon as neterror.xhtml.
+         If the location of the favicon is changed for both pages, the
+         FAVICON_ERRORPAGE_URL symbol in toolkit/components/places/src/nsFaviconService.h
+         should be updated. If this page starts using a different favicon
+         than neterrorm nsFaviconService->SetAndLoadFaviconForPage
+         should be updated to ignore this one as well. -->
+    <link rel="icon" type="image/png" id="favicon" sizes="64x64" href="chrome://global/skin/icons/warning-64.png"/>
+
+    <script type="application/javascript"><![CDATA[
+      // Error url MUST be formatted like this:
+      //   about:certerror?e=error&u=url&d=desc
+
+      // Note that this file uses document.documentURI to get
+      // the URL (with the format from above). This is because
+      // document.location.href gets the current URI off the docshell,
+      // which is the URL displayed in the location bar, i.e.
+      // the URI that the user attempted to load.
+
+      function getCSSClass()
+      {
+        var url = document.documentURI;
+        var matches = url.match(/s\=([^&]+)\&/);
+        // s is optional, if no match just return nothing
+        if (!matches || matches.length < 2)
+          return "";
+
+        // parenthetical match is the second entry
+        return decodeURIComponent(matches[1]);
+      }
+
+      function getDescription()
+      {
+        var url = document.documentURI;
+        var desc = url.search(/d\=/);
+
+        // desc == -1 if not found; if so, return an empty string
+        // instead of what would turn out to be portions of the URI
+        if (desc == -1)
+          return "";
+
+        return decodeURIComponent(url.slice(desc + 2));
+      }
+
+      function initPage()
+      {
+        // Replace the "#1" string in the intro with the hostname.  Trickier
+        // than it might seem since we want to preserve the <b> tags, but
+        // not allow for any injection by just using innerHTML.  Instead,
+        // just find the right target text node.
+        var intro = document.getElementById('introContentP1');
+        function replaceWithHost(node) {
+          if (node.textContent == "#1")
+            node.textContent = location.host;
+          else
+            for(var i = 0; i < node.childNodes.length; i++)
+              replaceWithHost(node.childNodes[i]);
+        };
+        replaceWithHost(intro);
+
+        if (getCSSClass() == "expertBadCert") {
+          toggle('technicalContent');
+          toggle('expertContent');
+        }
+
+        var tech = document.getElementById("technicalContentText");
+        if (tech)
+          tech.textContent = getDescription();
+
+        addDomainErrorLink();
+      }
+
+      /* In the case of SSL error pages about domain mismatch, see if
+         we can hyperlink the user to the correct site.  We don't want
+         to do this generically since it allows MitM attacks to redirect
+         users to a site under attacker control, but in certain cases
+         it is safe (and helpful!) to do so.  Bug 402210
+      */
+      function addDomainErrorLink() {
+        // Rather than textContent, we need to treat description as HTML
+        var sd = document.getElementById("technicalContentText");
+        if (sd) {
+          var desc = getDescription();
+
+          // sanitize description text - see bug 441169
+
+          // First, find the index of the <a> tag we care about, being careful not to
+          // use an over-greedy regex
+          var re = /<a id="cert_domain_link" title="([^"]+)">/;
+          var result = re.exec(desc);
+          if(!result)
+            return;
+
+          // Remove sd's existing children
+          sd.textContent = "";
+
+          // Everything up to the link should be text content
+          sd.appendChild(document.createTextNode(desc.slice(0, result.index)));
+
+          // Now create the link itself
+          var anchorEl = document.createElement("a");
+          anchorEl.setAttribute("id", "cert_domain_link");
+          anchorEl.setAttribute("title", result[1]);
+          anchorEl.appendChild(document.createTextNode(result[1]));
+          sd.appendChild(anchorEl);
+
+          // Finally, append text for anything after the closing </a>
+          sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length)));
+        }
+
+        var link = document.getElementById('cert_domain_link');
+        if (!link)
+          return;
+
+        var okHost = link.getAttribute("title");
+        var thisHost = document.location.hostname;
+        var proto = document.location.protocol;
+
+        // If okHost is a wildcard domain ("*.example.com") let's
+        // use "www" instead.  "*.example.com" isn't going to
+        // get anyone anywhere useful. bug 432491
+        okHost = okHost.replace(/^\*\./, "www.");
+
+        /* case #1:
+         * example.com uses an invalid security certificate.
+         *
+         * The certificate is only valid for www.example.com
+         *
+         * Make sure to include the "." ahead of thisHost so that
+         * a MitM attack on paypal.com doesn't hyperlink to "notpaypal.com"
+         *
+         * We'd normally just use a RegExp here except that we lack a
+         * library function to escape them properly (bug 248062), and
+         * domain names are famous for having '.' characters in them,
+         * which would allow spurious and possibly hostile matches.
+         */
+        if (endsWith(okHost, "." + thisHost))
+          link.href = proto + okHost;
+
+        /* case #2:
+         * browser.garage.maemo.org uses an invalid security certificate.
+         *
+         * The certificate is only valid for garage.maemo.org
+         */
+        if (endsWith(thisHost, "." + okHost))
+          link.href = proto + okHost;
+
+        // If we set a link, meaning there's something helpful for
+        // the user here, expand the section by default
+        if (link.href && getCSSClass() != "expertBadCert")
+          toggle("technicalContent");
+      }
+
+      function endsWith(haystack, needle) {
+        return haystack.slice(-needle.length) == needle;
+      }
+
+      function toggle(id) {
+        var el = document.getElementById(id);
+        if (el.getAttribute("collapsed"))
+          el.setAttribute("collapsed", false);
+        else
+          el.setAttribute("collapsed", true);
+      }
+    ]]></script>
+  </head>
+
+  <body id="errorPage" class="certerror" dir="&locale.dir;">
+
+   <!-- Error Title -->
+   <div id="errorTitle">
+     <h1 class="errorTitleText">&certerror.longpagetitle;</h1>
+   </div>
+
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+    <div id="errorPageContainer">
+
+      <!-- LONG CONTENT (the section most likely to require scrolling) -->
+      <div id="errorLongContent">
+        <div id="introContent">
+          <p id="introContentP1">&certerror.introPara1;</p>
+        </div>
+
+        <!-- The following sections can be unhidden by default by setting the
+             "browser.xul.error_pages.expert_bad_cert" pref to true -->
+        <div id="technicalContent" collapsed="true">
+          <h2 onclick="toggle('technicalContent');" id="technicalContentHeading">&certerror.technical.heading;</h2>
+          <p id="technicalContentText"/>
+        </div>
+
+        <div id="expertContent" collapsed="true">
+          <h2 onclick="toggle('expertContent');" id="expertContentHeading">&certerror.expert.heading;</h2>
+          <div>
+            <p>&certerror.expert.content;</p>
+            <p>&certerror.expert.contentPara2;</p>
+            <button id="temporaryExceptionButton">&certerror.addTemporaryException.label;</button>
+            <button id="permanentExceptionButton">&certerror.addPermanentException.label;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+    - Note: It is important to run the script this way, instead of using
+    - an onload handler. This is because error pages are loaded as
+    - LOAD_BACKGROUND, which means that onload handlers will not be executed.
+    -->
+    <script type="application/javascript">initPage();</script>
+
+  </body>
+</html>

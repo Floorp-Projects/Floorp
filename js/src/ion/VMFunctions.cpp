@@ -599,13 +599,13 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *m
     JS_ASSERT(cx->compartment->debugMode());
     JS_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
 
-    Value rval;
+    RootedValue rval(cx);
     JSTrapStatus status = JSTRAP_CONTINUE;
     JSInterruptHook hook = cx->runtime->debugHooks.interruptHook;
 
     if (hook || script->stepModeEnabled()) {
         if (hook)
-            status = hook(cx, script, pc, &rval, cx->runtime->debugHooks.interruptHookData);
+            status = hook(cx, script, pc, rval.address(), cx->runtime->debugHooks.interruptHookData);
         if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
             status = Debugger::onSingleStep(cx, &rval);
     }
@@ -643,10 +643,10 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool 
 
     RootedScript script(cx, frame->script());
     JSTrapStatus status = JSTRAP_CONTINUE;
-    Value rval;
+    RootedValue rval(cx);
 
     if (JSDebuggerHandler handler = cx->runtime->debugHooks.debuggerHandler)
-        status = handler(cx, script, pc, &rval, cx->runtime->debugHooks.debuggerHandlerData);
+        status = handler(cx, script, pc, rval.address(), cx->runtime->debugHooks.debuggerHandlerData);
 
     if (status == JSTRAP_CONTINUE)
         status = Debugger::onDebuggerStatement(cx, &rval);

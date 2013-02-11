@@ -9,21 +9,21 @@
     '../native_client/build/untrusted.gypi',
   ],
   'target_defaults': {
-    'variables': {
-      'conditions': [
-        ['target_arch=="arm"', {
+    'conditions': [
+      ['target_arch=="arm"', {
+        'variables': {
           'clang': 1,
-          'defines': [
-            # Needed by build/build_config.h processor architecture detection.
-            '__ARMEL__',
-            # Needed by base/third_party/nspr/prtime.cc.
-            '__arm__',
-            # Disable ValGrind. The assembly code it generates causes the build
-            # to fail.
-            'NVALGRIND',
-          ],
-        }],
-      ],
-    },
+        },
+        'defines': [
+          # Needed by build/build_config.h processor architecture detection.
+          '__ARMEL__',
+          # Needed by base/third_party/nspr/prtime.cc.
+          '__arm__',
+          # Disable ValGrind. The assembly code it generates causes the build
+          # to fail.
+          'NVALGRIND',
+        ],
+      }],
+    ],
   },
 }

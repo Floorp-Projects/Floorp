@@ -841,7 +841,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
                                const uint32_t aLineNumber)
 {
   uint32_t langID = nsIProgrammingLanguage::JAVASCRIPT;
-  uint32_t version = 0;
+  uint32_t version = JSVERSION_LATEST;
   nsresult rv;
 
   // Look for SRC attribute and look for a LANGUAGE attribute
