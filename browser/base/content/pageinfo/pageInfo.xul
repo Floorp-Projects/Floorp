@@ -61,7 +61,7 @@
     <command id="cmd_fullscreenToggle" oncommand="onRadioClick('fullscreen');"/>
     <command id="cmd_geoToggle"     oncommand="onRadioClick('geo');"/>
     <command id="cmd_indexedDBToggle" oncommand="onRadioClick('indexedDB');"/>
-    <command id="cmd_pluginsToggle" oncommand="onRadioClick('plugins');"/>
+    <command id="cmd_pluginsToggle" oncommand="onPluginRadioClick(event);"/>
   </commandset>
 
   <keyset id="pageInfoKeySet">
@@ -376,12 +376,13 @@
         <vbox class="permission" id="permPluginsRow">
           <label class="permissionLabel" id="permPluginsLabel"
                  value="&permPlugins;" control="pluginsRadioGroup"/>
-          <hbox id="permPluginsBox" role="group" aria-labelledby="permPluginsLabel">
-            <checkbox id="pluginsDef" command="cmd_pluginsDef" label="&permAskAlways;"/>
+          <hbox id="permPluginTemplate" role="group" aria-labelledby="permPluginsLabel" align="baseline">
+            <label class="permPluginTemplateLabel"/>
             <spacer flex="1"/>
-            <radiogroup id="pluginsRadioGroup" orient="horizontal">
-              <radio id="plugins#1" command="cmd_pluginsToggle" label="&permAllow;"/>
-              <radio id="plugins#2" command="cmd_pluginsToggle" label="&permBlock;"/>
+            <radiogroup class="permPluginTemplateRadioGroup" orient="horizontal" command="cmd_pluginsToggle">
+              <radio class="permPluginTemplateRadioAsk" label="&permAskAlways;"/>
+              <radio class="permPluginTemplateRadioAllow" label="&permAllow;"/>
+              <radio class="permPluginTemplateRadioBlock" label="&permBlock;"/>
             </radiogroup>
           </hbox>
         </vbox>
