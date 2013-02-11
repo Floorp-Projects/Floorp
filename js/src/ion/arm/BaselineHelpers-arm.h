@@ -252,7 +252,7 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code, uint32_t objectOffset)
     // If the IC failed, then call the update fallback function.
     EmitEnterStubFrame(masm, R1.scratchReg());
 
-    masm.loadValue(Address(esp, STUB_FRAME_SIZE + objectOffset), R1);
+    masm.loadValue(Address(BaselineStackReg, STUB_FRAME_SIZE + objectOffset), R1);
 
     masm.pushValue(R0);
     masm.pushValue(R1);
