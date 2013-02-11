@@ -44,6 +44,7 @@ class SVGTextPathElement MOZ_FINAL : public SVGTextPathElementBase,
                                      public nsIDOMSVGURIReference
 {
 friend class ::nsSVGTextPathFrame;
+friend class ::nsSVGTextFrame2;
 
 protected:
   friend nsresult (::NS_NewSVGTextPathElement(nsIContent **aResult,
