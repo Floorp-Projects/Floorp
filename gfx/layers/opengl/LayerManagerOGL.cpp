@@ -521,6 +521,9 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
 
   // initialise a common shader to check that we can actually compile a shader
   if (!mPrograms[gl::RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
+#ifdef MOZ_WIDGET_ANDROID
+    NS_RUNTIMEABORT("Shader initialization failed");
+#endif
     return false;
   }
 
@@ -591,6 +594,9 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
 
     if (mFBOTextureTarget == LOCAL_GL_NONE) {
       /* Unable to find a texture target that works with FBOs and NPOT textures */
+#ifdef MOZ_WIDGET_ANDROID
+      NS_RUNTIMEABORT("No texture target");
+#endif
       return false;
     }
   } else {
@@ -608,6 +614,9 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
      * texture2DRect).
      */
     if (!mGLContext->IsExtensionSupported(gl::GLContext::ARB_texture_rectangle))
+#ifdef MOZ_WIDGET_ANDROID
+      NS_RUNTIMEABORT("No texture rectangle");
+#endif
       return false;
   }
 
