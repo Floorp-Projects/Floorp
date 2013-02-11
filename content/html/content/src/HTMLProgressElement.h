@@ -49,6 +49,42 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
+  // WebIDL
+  double Value()
+  {
+    double ret;
+    GetValue(&ret);
+    return ret;
+  }
+
+  void SetValue(double aValue, ErrorResult& aRv)
+  {
+    aRv = SetDoubleAttr(nsGkAtoms::value, aValue);
+  }
+
+  double Max()
+  {
+    double ret;
+    GetMax(&ret);
+    return ret;
+  }
+
+  void SetMax(double aValue, ErrorResult& aRv)
+  {
+    aRv = SetDoubleAttr(nsGkAtoms::max, aValue);
+  }
+
+  double Position()
+  {
+    double ret;
+    GetPosition(&ret);
+    return ret;
+  }
+
+protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
+                             bool* aTriedToWrap) MOZ_OVERRIDE;
+
 protected:
   /**
    * Returns whethem the progress element is in the indeterminate state.
