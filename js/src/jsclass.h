@@ -187,8 +187,7 @@ typedef JSBool
 (* DeleteElementOp)(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp, JSBool strict);
 typedef JSBool
 (* DeleteSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, MutableHandleValue vp, JSBool strict);
-typedef JSType
-(* TypeOfOp)(JSContext *cx, HandleObject obj);
+
 
 typedef JSObject *
 (* ObjectOp)(JSContext *cx, HandleObject obj);
@@ -287,14 +286,13 @@ struct ObjectOps
     DeleteSpecialOp     deleteSpecial;
 
     JSNewEnumerateOp    enumerate;
-    TypeOfOp            typeOf;
     ObjectOp            thisObject;
 };
 
 #define JS_NULL_OBJECT_OPS                                                    \
     {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,   \
      NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,        \
-     NULL,NULL,NULL,NULL}
+     NULL,NULL,NULL}
 
 struct Class
 {

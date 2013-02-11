@@ -1013,12 +1013,6 @@ typedef JSBool
 typedef JSBool
 (* JSConvertOp)(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp);
 
-/*
- * Delegate typeof to an object so it can cloak a primitive or another object.
- */
-typedef JSType
-(* JSTypeOfOp)(JSContext *cx, JSHandleObject obj);
-
 typedef struct JSFreeOp JSFreeOp;
 
 struct JSFreeOp {
