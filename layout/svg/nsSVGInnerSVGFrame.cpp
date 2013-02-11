@@ -197,17 +197,23 @@ nsSVGInnerSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nullptr;
 
-      nsSVGUtils::InvalidateBounds(this, false);
-      nsSVGUtils::ScheduleReflowSVG(this);
-
       nsSVGUtils::NotifyChildrenOfSVGChange(
           this, aAttribute == nsGkAtoms::viewBox ?
                   TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED : TRANSFORM_CHANGED);
 
-      if (aAttribute == nsGkAtoms::viewBox ||
-          (aAttribute == nsGkAtoms::preserveAspectRatio &&
-           content->HasViewBoxOrSyntheticViewBox())) {
+      if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
+        nsSVGUtils::InvalidateBounds(this, false);
+        nsSVGUtils::ScheduleReflowSVG(this);
+      } else if (aAttribute == nsGkAtoms::transform) {
+        // Don't invalidate or update bounds (the layers code does that).
+        SchedulePaint();
+      } else if (aAttribute == nsGkAtoms::viewBox ||
+                 (aAttribute == nsGkAtoms::preserveAspectRatio &&
+                  content->HasViewBoxOrSyntheticViewBox())) {
         content->ChildrenOnlyTransformChanged();
+        // SchedulePaint sets a global state flag so we only need to call it once
+        // (on ourself is fine), not once on each child (despite bug 828240).
+        SchedulePaint();
       }
     }
   }
