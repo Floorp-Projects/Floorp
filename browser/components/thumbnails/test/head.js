@@ -214,3 +214,36 @@ function addVisits(aPlaceInfo, aCallback) {
   );
 }
 
+/**
+ * Calls a given callback when the thumbnail for a given URL has been found
+ * on disk. Keeps trying until the thumbnail has been created.
+ *
+ * @param aURL The URL of the thumbnail's page.
+ * @param [optional] aCallback
+ *        Function to be invoked on completion.
+ */
+function whenFileExists(aURL, aCallback) {
+  let callback = aCallback;
+  if (!thumbnailExists(aURL)) {
+    callback = function () whenFileExists(aURL, aCallback);
+  }
+
+  executeSoon(callback || next);
+}
+
+/**
+ * Calls a given callback when the given file has been removed.
+ * Keeps trying until the file is removed.
+ *
+ * @param aFile The file that is being removed
+ * @param [optional] aCallback
+ *        Function to be invoked on completion.
+ */
+function whenFileRemoved(aFile, aCallback) {
+  let callback = aCallback;
+  if (aFile.exists()) {
+    callback = function () whenFileRemoved(aFile, aCallback);
+  }
+
+  executeSoon(callback || next);
+}
