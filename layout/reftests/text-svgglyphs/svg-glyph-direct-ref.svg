@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title>Reference for SVG glyphs being painted when painting properties are simple</title>
+
+  <style>
+    <![CDATA[
+      @font-face {
+        font-family: "Liberation";
+        src: url(resources/svg.woff);
+      }
+      text {
+        font-family: Liberation;
+        font-size: 200px;
+        fill: url(#transparent);
+      }
+    ]]>
+  </style>
+
+  <linearGradient id="transparent">
+    <stop/>
+  </linearGradient>
+
+  <!-- The gradient paint server fill is not used by the "L" glyph,
+       but setting it forces the code path that fills and strokes text
+       in the SVG text frame to be chosen. -->
+  <text x="0" y="200">L</text>
+</svg>
