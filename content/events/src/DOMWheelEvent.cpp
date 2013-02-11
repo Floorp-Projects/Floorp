@@ -124,7 +124,7 @@ nsresult
 DOMWheelEvent::InitFromCtor(const nsAString& aType,
                             JSContext* aCx, jsval* aVal)
 {
-  WheelEventInit d;
+  mozilla::idl::WheelEventInit d;
   nsresult rv = d.Init(aCx, aVal);
   NS_ENSURE_SUCCESS(rv, rv);
 

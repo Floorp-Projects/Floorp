@@ -24,12 +24,12 @@ public:
   const char* GetParameter(const char* aKey);
   const char* GetParameterConstChar(uint32_t aKey);
   double GetParameterDouble(uint32_t aKey);
-  void GetParameter(uint32_t aKey, nsTArray<dom::CameraRegion>& aRegions);
+  void GetParameter(uint32_t aKey, nsTArray<idl::CameraRegion>& aRegions);
   void SetParameter(const char* aKey, const char* aValue);
   void SetParameter(uint32_t aKey, const char* aValue);
   void SetParameter(uint32_t aKey, double aValue);
-  void SetParameter(uint32_t aKey, const nsTArray<dom::CameraRegion>& aRegions);
-  nsresult GetVideoSizes(nsTArray<CameraSize>& aVideoSizes);
+  void SetParameter(uint32_t aKey, const nsTArray<idl::CameraRegion>& aRegions);
+  nsresult GetVideoSizes(nsTArray<idl::CameraSize>& aVideoSizes);
   nsresult PushParameters();
 
 protected:
@@ -97,7 +97,7 @@ nsFallbackCameraControl::GetParameterDouble(uint32_t aKey)
 }
 
 void
-nsFallbackCameraControl::GetParameter(uint32_t aKey, nsTArray<dom::CameraRegion>& aRegions)
+nsFallbackCameraControl::GetParameter(uint32_t aKey, nsTArray<idl::CameraRegion>& aRegions)
 {
 }
 
@@ -117,7 +117,7 @@ nsFallbackCameraControl::SetParameter(uint32_t aKey, double aValue)
 }
 
 void
-nsFallbackCameraControl::SetParameter(uint32_t aKey, const nsTArray<dom::CameraRegion>& aRegions)
+nsFallbackCameraControl::SetParameter(uint32_t aKey, const nsTArray<idl::CameraRegion>& aRegions)
 {
 }
 
@@ -182,7 +182,7 @@ nsFallbackCameraControl::PullParametersImpl()
 }
 
 nsresult
-nsFallbackCameraControl::GetVideoSizes(nsTArray<CameraSize>& aVideoSizes)
+nsFallbackCameraControl::GetVideoSizes(nsTArray<idl::CameraSize>& aVideoSizes)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
