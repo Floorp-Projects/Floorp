@@ -211,10 +211,6 @@ public:
   }
 #endif
 
-  virtual void InvalidateInternal(const nsRect& aDamageRect,
-                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  uint32_t aFlags);
-
   /**
    * Finds the nsTextFrame for the closest rendered run to the specified point.
    */

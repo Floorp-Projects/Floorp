@@ -59,6 +59,32 @@ nsInlineFrame::GetType() const
   return nsGkAtoms::inlineFrame;
 }
 
+void
+nsInlineFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+{
+  if (IsSVGText()) {
+    nsIFrame* svgTextFrame =
+      nsLayoutUtils::GetClosestFrameOfType(GetParent(),
+                                           nsGkAtoms::svgTextFrame2);
+    svgTextFrame->InvalidateFrame();
+    return;
+  }
+  nsInlineFrameBase::InvalidateFrame(aDisplayItemKey);
+}
+
+void
+nsInlineFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
+{
+  if (IsSVGText()) {
+    nsIFrame* svgTextFrame =
+      nsLayoutUtils::GetClosestFrameOfType(GetParent(),
+                                           nsGkAtoms::svgTextFrame2);
+    svgTextFrame->InvalidateFrame();
+    return;
+  }
+  nsInlineFrameBase::InvalidateFrameWithRect(aRect, aDisplayItemKey);
+}
+
 static inline bool
 IsMarginZero(const nsStyleCoord &aCoord)
 {
