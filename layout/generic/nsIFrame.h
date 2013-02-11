@@ -618,6 +618,7 @@ protected:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) = 0;
   friend class nsFrameList; // needed to pass aDestructRoot through to children
   friend class nsLineBox;   // needed to pass aDestructRoot through to children
+  friend class nsContainerFrame; // needed to pass aDestructRoot through to children
 public:
 
   /**
