@@ -1383,7 +1383,9 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "BinaryArith(%s)", js_CodeName[op]);
+    FallbackICSpew(cx, stub, "BinaryArith(%s,%d,%d)", js_CodeName[op],
+            int(lhs.isDouble() ? JSVAL_TYPE_DOUBLE : lhs.extractNonDoubleType()),
+            int(rhs.isDouble() ? JSVAL_TYPE_DOUBLE : rhs.extractNonDoubleType()));
 
     // Don't pass lhs/rhs directly, we need the original values when
     // generating stubs.
@@ -1465,6 +1467,21 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         return true;
     }
 
+    // Handle string concat.
+    if ((op == JSOP_ADD) && lhs.isString() && rhs.isString()) {
+        IonSpew(IonSpew_BaselineIC, "  Adding STRCAT stub for %s:%d", script->filename, script->lineno);
+        JS_ASSERT(ret.isString());
+        ICBinaryArith_StringConcat::Compiler compiler(cx);
+        ICStub *strcatStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!strcatStub)
+            return false;
+        stub->addNewStub(strcatStub);
+
+        // TODO: Add String type to type monitor IC chain.
+
+        return true;
+    }
+
     // Handle only int32 or double.
     if (!lhs.isNumber() || !rhs.isNumber())
         return true;
@@ -1533,6 +1550,54 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoBinaryArithFallbackInfo, masm);
+}
+
+static bool
+DoConcatStrings(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+{
+    JS_ASSERT(lhs.isString());
+    JS_ASSERT(rhs.isString());
+    UnrootedString lstr = lhs.toString();
+    UnrootedString rstr = rhs.toString();
+    UnrootedString result = ConcatStrings<NoGC>(cx, lstr, rstr);
+    if (result) {
+        res.set(StringValue(result));
+        return true;
+    }
+
+    RootedString rootedl(cx, lstr), rootedr(cx, rstr);
+    result = ConcatStrings<CanGC>(cx, rootedl, rootedr);
+    if (!result)
+        return false;
+
+    res.set(StringValue(result));
+    return true;
+}
+
+typedef bool (*DoConcatStringsFn)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
+static const VMFunction DoConcatStringsInfo = FunctionInfo<DoConcatStringsFn>(DoConcatStrings);
+
+bool
+ICBinaryArith_StringConcat::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestString(Assembler::NotEqual, R0, &failure);
+    masm.branchTestString(Assembler::NotEqual, R1, &failure);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    // Can do tail call because result of this operation will always be a string, which has already
+    // been monitored.
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    if (!tailCallVM(DoConcatStringsInfo, masm))
+        return false;
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 bool
