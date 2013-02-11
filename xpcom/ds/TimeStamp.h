@@ -16,7 +16,17 @@ namespace IPC {
 template <typename T> struct ParamTraits;
 }
 
+#ifdef XP_WIN
+// defines TimeStampValue as a complex value keeping both
+// GetTickCount and QueryPerformanceCounter values
+#include "TimeStamp_windows.h"
+#endif
+
 namespace mozilla {
+
+#ifndef XP_WIN
+typedef uint64_t TimeStampValue;
+#endif
 
 class TimeStamp;
 
@@ -150,7 +160,7 @@ private:
     return TimeDuration::FromTicks(int64_t(aTicks));
   }
 
-  // Duration in PRIntervalTime units
+  // Duration, result is implementation-specific difference of two TimeStamps
   int64_t mValue;
 };
 
@@ -286,7 +296,7 @@ public:
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
 
-  TimeStamp(uint64_t aValue) : mValue(aValue) {}
+  TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
   /**
    * When built with PRIntervalTime, a value of 0 means this instance
@@ -301,7 +311,7 @@ private:
    *
    * When using a system clock, a value is system dependent.
    */
-  uint64_t mValue;
+  TimeStampValue mValue;
 };
 
 }
