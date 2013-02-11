@@ -121,6 +121,7 @@
 #include "nsIDOMSVGFilters.h"
 #include "DOMSVGTests.h"
 #include "nsSVGEffects.h"
+#include "nsSVGTextFrame2.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 
@@ -7806,10 +7807,22 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       }
     }
     if (aChange & nsChangeHint_UpdateTextPath) {
-      NS_ABORT_IF_FALSE(aFrame->GetType() == nsGkAtoms::svgTextPathFrame,
-                        "textPath frame expected");
-      // Invalidate and reflow the entire nsSVGTextFrame:
-      static_cast<nsSVGTextPathFrame*>(aFrame)->NotifyGlyphMetricsChange();
+      if (aFrame->GetType() == nsGkAtoms::svgTextPathFrame) {
+        // Invalidate and reflow the entire nsSVGTextFrame:
+        static_cast<nsSVGTextPathFrame*>(aFrame)->NotifyGlyphMetricsChange();
+      } else if (aFrame->IsSVGText()) {
+        // Invalidate and reflow the entire nsSVGTextFrame2:
+        NS_ASSERTION(aFrame->GetContent()->IsSVG(nsGkAtoms::textPath),
+                     "expected frame for a <textPath> element");
+        nsIFrame* text = nsLayoutUtils::GetClosestFrameOfType(
+                                                      aFrame,
+                                                      nsGkAtoms::svgTextFrame2);
+        NS_ASSERTION(text, "expected to find an ancestor nsSVGTextFrame2");
+        static_cast<nsSVGTextFrame2*>(text)->NotifyGlyphMetricsChange();
+      } else {
+        NS_ABORT_IF_FALSE(false, "unexpected frame got "
+                                 "nsChangeHint_UpdateTextPath");
+      }
     }
     if (aChange & nsChangeHint_UpdateOpacityLayer) {
       // FIXME/bug 796697: we can get away with empty transactions for
