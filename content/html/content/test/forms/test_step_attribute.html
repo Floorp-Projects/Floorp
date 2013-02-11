@@ -83,8 +83,6 @@ function checkValidity(aElement, aValidity, aApply, aData)
      (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
 }
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 for (var test of data) {
   var input = getFreshElement(test.type);
   var apply = test.apply;
@@ -522,9 +520,6 @@ for (var test of data) {
       break;
   }
 }
-
-SimpleTest.finish();
-});
 
 </script>
 </pre>

@@ -17,8 +17,6 @@
 
 // TODO: maybe make those reflections be tested against all input types.
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 // .accept
 reflectString({
   element: document.createElement("input"),
@@ -245,9 +243,6 @@ reflectUnsignedInt({
 // .validity doesn't reflect a content attribute.
 // .validationMessage doesn't reflect a content attribute.
 // .labels doesn't reflect a content attribute.
-
-SimpleTest.finish();
-});
 
 </script>
 </pre>
