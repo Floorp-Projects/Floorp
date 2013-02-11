@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=655877
+-->
+<head>
+  <title>Test for Bug 655877</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=655877">Mozilla Bug 655877</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="text-helper-scaled.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var doc = $("svg").contentWindow.document;
+  var text1 = doc.getElementById("text1");
+  var text2 = doc.getElementById("text2");
+
+  var charWidth = text1.getSubStringLength(0, 1);
+
+  var epsilon = 0.001;
+
+  function isClose(a, b, str)
+  {
+    ok(Math.abs(a - b) < epsilon, str + " - " + b + " should be close to " + a);
+  }
+
+  function isPoint(pt1, x, y, str)
+  {
+    is(pt1.x, x, str + " x");
+    is(pt1.y, y, str + " y");
+  }
+  
+  function isPointCloseX(pt1, x, y, str)
+  {
+    isClose(pt1.x, x, str + " x");
+    is(pt1.y, y, str + " y");
+  }
+
+  function ymost(r)
+  {
+    return r.y + r.height;
+  }
+
+  function xmost(r)
+  {
+    return r.x + r.width;
+  }
+
+  var p = text1.getStartPositionOfChar(0);
+
+  // Simple horizontal string
+
+  is(text1.getNumberOfChars(), 3, "text1 length");
+  ok(text1.getComputedTextLength() > 0, "text1 measured length");
+  is(text1.getComputedTextLength(), text1.getSubStringLength(0, 3), "text1 substring length");
+  isPointCloseX(text1.getStartPositionOfChar(0), 10, 400, "text1 char 0 start offset");
+  isPointCloseX(text1.getStartPositionOfChar(1), 10 + charWidth, 400, "text1 char 1 start offset");
+  isPointCloseX(text1.getStartPositionOfChar(2), 10 + 2*charWidth, 400, "text1 char 2 start offset");
+  isPointCloseX(text1.getEndPositionOfChar(0), 10 + charWidth, 400, "text1 char 0 end offset");
+  isPointCloseX(text1.getEndPositionOfChar(1), 10 + 2*charWidth, 400, "text1 char 1 end offset");
+  isPointCloseX(text1.getEndPositionOfChar(2), 10 + 3*charWidth, 400, "text1 char 2 end offset");
+  is(text1.getExtentOfChar(0).x, 10, "text1 char 0 extent x");
+  is(text1.getExtentOfChar(0).width, text1.getSubStringLength(0, 1), "text1 char 0 extent width");
+  ok(text1.getExtentOfChar(0).y < 400, "text1 char 0 extent y");
+  ok(ymost(text1.getExtentOfChar(0)) > 400, "text1 char 0 extent height");
+  isClose(text1.getExtentOfChar(1).x, 10 + charWidth, "text1 char 1 extent x");
+  is(text1.getExtentOfChar(1).width, text1.getSubStringLength(0, 1), "text1 char 1 extent width");
+  is(text1.getExtentOfChar(1).y, text1.getExtentOfChar(0).y, "text1 char 0/1 extent y");
+  is(text1.getExtentOfChar(1).height, text1.getExtentOfChar(0).height, "text1 char 0/1 extent height");
+  is(text1.getExtentOfChar(2).x, 10 + 2*charWidth, "text1 char 2 extent x");
+  is(text1.getExtentOfChar(2).width, text1.getSubStringLength(0, 1), "text1 char 2 extent width");
+  is(text1.getExtentOfChar(2).y, text1.getExtentOfChar(0).y, "text1 char 0/2 extent y");
+  is(text1.getExtentOfChar(2).height, text1.getExtentOfChar(0).height, "text1 char 0/2 extent height");
+  is(text1.getRotationOfChar(0), 0, "text1 char 0 rotation");
+  is(text1.getRotationOfChar(1), 0, "text1 char 0 rotation");
+  is(text1.getRotationOfChar(2), 0, "text1 char 0 rotation");
+  p.x = 10 + 0.1;
+  p.y = 400;
+  is(text1.getCharNumAtPosition(p), 0, "text1 finding char 0 left edge");
+  p.x = 10 + charWidth - 0.1;
+  is(text1.getCharNumAtPosition(p), 0, "text1 finding char 0 on right");
+  p.x = 10 - 0.1;
+  is(text1.getCharNumAtPosition(p), -1, "text1 finding no char on left");
+  p.x = 10 + 0.1;
+  p.y = text1.getExtentOfChar(0).y - 0.1;
+  is(text1.getCharNumAtPosition(p), -1, "text1 finding no char on top");
+  p.y = text1.getExtentOfChar(0).y + 0.1;
+  is(text1.getCharNumAtPosition(p), 0, "text1 finding char 0 top edge");
+  p.x = 10 + 3*charWidth - 0.1;
+  is(text1.getCharNumAtPosition(p), 2, "text1 finding char 2 top edge");
+  p.x = 10 + 3*charWidth + 0.1;
+  is(text1.getCharNumAtPosition(p), -1, "text1 finding no char on right");
+
+  // Text along a thin rectangle path
+  
+  charWidth = text2.getSubStringLength(0, 1);
+
+  is(text2.getNumberOfChars(), 26, "text2 length");
+  ok(text2.getComputedTextLength() > 0, "text2 measured length");
+  is(text2.getComputedTextLength(), text2.getSubStringLength(0, 26), "text2 substring length");
+  
+  // character 12 should be on the bottom side
+  is(text2.getStartPositionOfChar(12).y, 860, "text2 char 12 start offset");
+  is(text2.getEndPositionOfChar(12).y, 860, "text2 char 12 end offset");
+  ok(text2.getExtentOfChar(12).y < 860, "text2 char 12 extent y");
+  ok(ymost(text2.getExtentOfChar(12)) > 860, "text2 char 12 extent height");
+  is(text2.getRotationOfChar(12), 180, "text2 char 12 rotation");
+  p.x = text2.getExtentOfChar(12).x + 0.1;
+  p.y = ymost(text2.getExtentOfChar(12)) - 0.1;
+  is(text2.getCharNumAtPosition(p), 12, "text2 finding char 12");
+  // This next test is tricky. The glyph for character 3 may overlap from the above
+  // but character 12 wins because it's the last to render
+  p.y = text2.getExtentOfChar(12).y + 0.1;
+  is(text2.getCharNumAtPosition(p), 12, "text2 finding last rendered char");
+}
+
+function runTests() {
+  runTest();
+
+  var doc = $("svg").contentWindow.document;
+  doc.getElementById("g").setAttribute("transform", "rotate(90 200 200)");
+  
+  runTest();
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTests, false);
+</script>
+</pre>
+</body>
+</html>
