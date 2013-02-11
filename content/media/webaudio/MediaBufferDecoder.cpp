@@ -52,6 +52,8 @@
 
 namespace mozilla {
 
+using namespace dom;
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #endif
