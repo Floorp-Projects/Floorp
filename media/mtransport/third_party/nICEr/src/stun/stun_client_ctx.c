@@ -670,6 +670,7 @@ int nr_stun_client_ctx_destroy(nr_stun_client_ctx **ctxp)
       return(0);
 
     ctx=*ctxp;
+    *ctxp=0;
 
     nr_stun_client_reset(ctx);
 
