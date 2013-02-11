@@ -30,16 +30,18 @@
 #endif
 
 [@AB_CD@]
+@BINPATH@/browser/chrome/@AB_CD@@JAREXT@
+@BINPATH@/browser/chrome/@AB_CD@.manifest
 @BINPATH@/chrome/@AB_CD@@JAREXT@
 @BINPATH@/chrome/@AB_CD@.manifest
-@BINPATH@/defaults/profile/bookmarks.html
-@BINPATH@/defaults/profile/chrome/*
-@BINPATH@/defaults/profile/localstore.rdf
-@BINPATH@/defaults/profile/mimeTypes.rdf
+@BINPATH@/browser/defaults/profile/bookmarks.html
+@BINPATH@/browser/defaults/profile/chrome/*
+@BINPATH@/browser/defaults/profile/localstore.rdf
+@BINPATH@/browser/defaults/profile/mimeTypes.rdf
 @BINPATH@/dictionaries/*
 @BINPATH@/hyphenation/*
-@BINPATH@/@PREF_DIR@/firefox-l10n.js
-@BINPATH@/searchplugins/*
+@BINPATH@/browser/@PREF_DIR@/firefox-l10n.js
+@BINPATH@/browser/searchplugins/*
 #ifdef XP_WIN32
 @BINPATH@/uninstall/helper.exe
 #endif
@@ -123,7 +125,7 @@
 #else
 @BINPATH@/mozsqlt3@DLL_SUFFIX@
 #endif
-@BINPATH@/blocklist.xml
+@BINPATH@/browser/blocklist.xml
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
 @BINPATH@/run-mozilla.sh
@@ -132,7 +134,7 @@
 #endif
 
 ; [Components]
-@BINPATH@/components/components.manifest
+@BINPATH@/browser/components/components.manifest
 @BINPATH@/components/alerts.xpt
 #ifdef ACCESSIBILITY
 #ifdef XP_WIN32
@@ -145,8 +147,8 @@
 @BINPATH@/components/appstartup.xpt
 @BINPATH@/components/autocomplete.xpt
 @BINPATH@/components/autoconfig.xpt
-@BINPATH@/components/browsercompsbase.xpt
-@BINPATH@/components/browser-feeds.xpt
+@BINPATH@/browser/components/browsercompsbase.xpt
+@BINPATH@/browser/components/browser-feeds.xpt
 @BINPATH@/components/caps.xpt
 @BINPATH@/components/chrome.xpt
 @BINPATH@/components/commandhandler.xpt
@@ -223,7 +225,7 @@
 @BINPATH@/components/filepicker.xpt
 #endif
 @BINPATH@/components/find.xpt
-@BINPATH@/components/fuel.xpt
+@BINPATH@/browser/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
 @BINPATH@/components/html5.xpt
 @BINPATH@/components/htmlparser.xpt
@@ -247,7 +249,7 @@
 @BINPATH@/components/layout_xul.xpt
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/lwbrk.xpt
-@BINPATH@/components/migration.xpt
+@BINPATH@/browser/components/migration.xpt
 @BINPATH@/components/mimetype.xpt
 @BINPATH@/components/mozfind.xpt
 @BINPATH@/components/necko_about.xpt
@@ -282,12 +284,12 @@
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
-@BINPATH@/components/sessionstore.xpt
+@BINPATH@/browser/components/sessionstore.xpt
 @BINPATH@/components/services-crypto-component.xpt
 #ifdef MOZ_SERVICES_CAPTIVEDETECT
 @BINPATH@/components/services-captivedetect.xpt
 #endif
-@BINPATH@/components/shellservice.xpt
+@BINPATH@/browser/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
 @BINPATH@/components/storage.xpt
@@ -332,24 +334,24 @@
 @BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/FeedProcessor.manifest
 @BINPATH@/components/FeedProcessor.js
-@BINPATH@/components/BrowserFeeds.manifest
-@BINPATH@/components/FeedConverter.js
-@BINPATH@/components/FeedWriter.js
-@BINPATH@/components/fuelApplication.manifest
-@BINPATH@/components/fuelApplication.js
-@BINPATH@/components/WebContentConverter.js
-@BINPATH@/components/BrowserComponents.manifest
-@BINPATH@/components/nsBrowserContentHandler.js
-@BINPATH@/components/nsBrowserGlue.js
-@BINPATH@/components/nsSetDefaultBrowser.manifest
-@BINPATH@/components/nsSetDefaultBrowser.js
-@BINPATH@/components/BrowserDownloads.manifest
-@BINPATH@/components/DownloadsStartup.js
-@BINPATH@/components/DownloadsUI.js
-@BINPATH@/components/BrowserPlaces.manifest
-@BINPATH@/components/BrowserPageThumbs.manifest
-@BINPATH@/components/nsPrivateBrowsingServiceObsolete.manifest
-@BINPATH@/components/nsPrivateBrowsingServiceObsolete.js
+@BINPATH@/browser/components/BrowserFeeds.manifest
+@BINPATH@/browser/components/FeedConverter.js
+@BINPATH@/browser/components/FeedWriter.js
+@BINPATH@/browser/components/fuelApplication.manifest
+@BINPATH@/browser/components/fuelApplication.js
+@BINPATH@/browser/components/WebContentConverter.js
+@BINPATH@/browser/components/BrowserComponents.manifest
+@BINPATH@/browser/components/nsBrowserContentHandler.js
+@BINPATH@/browser/components/nsBrowserGlue.js
+@BINPATH@/browser/components/nsSetDefaultBrowser.manifest
+@BINPATH@/browser/components/nsSetDefaultBrowser.js
+@BINPATH@/browser/components/BrowserDownloads.manifest
+@BINPATH@/browser/components/DownloadsStartup.js
+@BINPATH@/browser/components/DownloadsUI.js
+@BINPATH@/browser/components/BrowserPlaces.manifest
+@BINPATH@/browser/components/BrowserPageThumbs.manifest
+@BINPATH@/browser/components/nsPrivateBrowsingServiceObsolete.manifest
+@BINPATH@/browser/components/nsPrivateBrowsingServiceObsolete.js
 @BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/SiteSpecificUserAgent.manifest
 @BINPATH@/components/toolkitsearch.manifest
@@ -376,8 +378,8 @@
 @BINPATH@/components/NetworkGeolocationProvider.js
 @BINPATH@/components/GPSDGeolocationProvider.manifest
 @BINPATH@/components/GPSDGeolocationProvider.js
-@BINPATH@/components/nsSidebar.manifest
-@BINPATH@/components/nsSidebar.js
+@BINPATH@/browser/components/nsSidebar.manifest
+@BINPATH@/browser/components/nsSidebar.js
 @BINPATH@/components/extensions.manifest
 @BINPATH@/components/addonManager.js
 @BINPATH@/components/amContentHandler.js
@@ -391,15 +393,15 @@
 @BINPATH@/components/nsUpdateTimerManager.manifest
 @BINPATH@/components/nsUpdateTimerManager.js
 @BINPATH@/components/pluginGlue.manifest
-@BINPATH@/components/nsSessionStore.manifest
-@BINPATH@/components/nsSessionStartup.js
-@BINPATH@/components/nsSessionStore.js
+@BINPATH@/browser/components/nsSessionStore.manifest
+@BINPATH@/browser/components/nsSessionStartup.js
+@BINPATH@/browser/components/nsSessionStore.js
 @BINPATH@/components/nsURLFormatter.manifest
 @BINPATH@/components/nsURLFormatter.js
 #ifndef XP_OS2
-@BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
+@BINPATH@/browser/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
 #else
-@BINPATH@/components/brwsrcmp@DLL_SUFFIX@
+@BINPATH@/browser/components/brwsrcmp@DLL_SUFFIX@
 #endif
 @BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
@@ -409,10 +411,10 @@
 @BINPATH@/components/nsPlacesAutoComplete.manifest
 @BINPATH@/components/nsPlacesAutoComplete.js
 @BINPATH@/components/nsPlacesExpiration.js
-@BINPATH@/components/PlacesProtocolHandler.js
+@BINPATH@/browser/components/PlacesProtocolHandler.js
 @BINPATH@/components/PlacesCategoriesStarter.js
 @BINPATH@/components/ColorAnalyzer.js
-@BINPATH@/components/PageThumbsProtocol.js
+@BINPATH@/browser/components/PageThumbsProtocol.js
 @BINPATH@/components/nsDefaultCLH.manifest
 @BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.manifest
@@ -446,20 +448,29 @@
 @BINPATH@/components/DOMWifiManager.js
 @BINPATH@/components/DOMWifiManager.manifest
 #endif
-@BINPATH@/components/BrowserProfileMigrators.manifest
-@BINPATH@/components/ProfileMigrator.js
-@BINPATH@/components/ChromeProfileMigrator.js
-@BINPATH@/components/FirefoxProfileMigrator.js
+@BINPATH@/browser/components/BrowserProfileMigrators.manifest
+@BINPATH@/browser/components/ProfileMigrator.js
+@BINPATH@/browser/components/ChromeProfileMigrator.js
+@BINPATH@/browser/components/FirefoxProfileMigrator.js
 #ifdef XP_WIN
-@BINPATH@/components/IEProfileMigrator.js
-@BINPATH@/components/SafariProfileMigrator.js
+@BINPATH@/browser/components/IEProfileMigrator.js
+@BINPATH@/browser/components/SafariProfileMigrator.js
 #endif
 #ifdef XP_MACOSX
-@BINPATH@/components/SafariProfileMigrator.js
+@BINPATH@/browser/components/SafariProfileMigrator.js
 @BINPATH@/components/libalerts.dylib
 #endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
+#endif
+#ifdef MOZ_ENABLE_GNOME_COMPONENT
+@BINPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
+#endif
+#ifdef MOZ_ENABLE_GNOMEVFS
+@BINPATH@/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
+#endif
+#if defined(XP_MACOSX) || defined(MOZ_ENABLE_DBUS) || defined(MOZ_ENABLE_GNOME_COMPONENT) || defined(MOZ_ENABLE_GNOMEVFS)
+@BINPATH@/components/components.manifest
 #endif
 @BINPATH@/components/nsINIProcessor.manifest
 @BINPATH@/components/nsINIProcessor.js
@@ -519,6 +530,7 @@
 #endif
 
 ; Modules
+@BINPATH@/browser/modules/*
 @BINPATH@/modules/*
 
 ; Safe Browsing
@@ -530,11 +542,6 @@
 @BINPATH@/components/url-classifier.xpt
 #endif
 
-; GNOME hooks
-#ifdef MOZ_ENABLE_GNOME_COMPONENT
-@BINPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
-#endif
-
 ; ANGLE GLES-on-D3D rendering library
 #ifdef MOZ_ANGLE_RENDERER
 @BINPATH@/libEGL.dll
@@ -543,38 +550,42 @@
 #endif
 
 ; [Browser Chrome Files]
-@BINPATH@/chrome/browser@JAREXT@
-@BINPATH@/chrome/browser.manifest
-@BINPATH@/chrome/pdfjs.manifest
-@BINPATH@/chrome/pdfjs/*
-@BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
-@BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
+@BINPATH@/browser/chrome.manifest
+@BINPATH@/browser/chrome/browser@JAREXT@
+@BINPATH@/browser/chrome/browser.manifest
+@BINPATH@/browser/chrome/pdfjs.manifest
+@BINPATH@/browser/chrome/pdfjs/*
+@BINPATH@/browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
+@BINPATH@/browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
 #ifdef SHIP_FEEDBACK
-@BINPATH@/distribution/extensions/testpilot@labs.mozilla.com.xpi
+@BINPATH@/browser/distribution/extensions/testpilot@labs.mozilla.com.xpi
 #endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 #ifdef MOZ_GTK2
-@BINPATH@/chrome/icons/default/default16.png
-@BINPATH@/chrome/icons/default/default32.png
-@BINPATH@/chrome/icons/default/default48.png
+@BINPATH@/browser/chrome/icons/default/default16.png
+@BINPATH@/browser/chrome/icons/default/default32.png
+@BINPATH@/browser/chrome/icons/default/default48.png
 #endif
 
 ; shell icons
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-@BINPATH@/icons/*.png
+; shell icons
+@BINPATH@/browser/icons/*.png
+; updater icon
+@BINPATH@/icons/updater.png
 #endif
 #endif
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
-@BINPATH@/@PREF_DIR@/firefox.js
-@BINPATH@/@PREF_DIR@/firefox-branding.js
+@BINPATH@/browser/@PREF_DIR@/firefox.js
+@BINPATH@/browser/@PREF_DIR@/firefox-branding.js
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
-@BINPATH@/defaults/profile/prefs.js
+@BINPATH@/browser/defaults/profile/prefs.js
 
 #ifndef LIBXUL_SDK
 ; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
@@ -697,16 +708,10 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/Throbber-small.gif
 #endif
 #endif
-@BINPATH@/crashreporter-override.ini
+@BINPATH@/browser/crashreporter-override.ini
 #ifdef MOZ_CRASHREPORTER_INJECTOR
 @BINPATH@/breakpadinjector.dll
 #endif
-#endif
-
-; [Extensions]
-;
-#ifdef MOZ_ENABLE_GNOMEVFS
-bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
 
 ; [OS/2]
