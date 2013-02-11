@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"
+     style="font: 24px monospace">
+
+  <!-- Start with all text elements not displayed, so that we can flip
+       the CSS text frames pref and have the frames reconstructed. -->
+  <style>
+    text { display: none }
+  </style>
+
+  <!-- We need these two rects so that getBoundingClientRect of the <svg> does
+       not just return the region covered by the <text>, which would result in
+       the synthesizeMouse calls using the wrong positions.  We don't use one
+       big rect because that could interfere with text selection when dragging
+       outside the bounds of text elements. -->
+  <rect width="10" height="10" fill="white"/>
+  <rect x="350" y="250" width="10" height="10" fill="white"/>
+
+  <text x="100" y="50">hello there</text>
+  <text x="100" y="100">to you all!</text>
+  <text x="200" y="150">abc<tspan x="100" dy="10 -10">def</tspan></text>
+  <text x="100" y="200">אבגabc</text>
+  <text x="100" y="250" transform="scale(0.5,1)translate(100)">squashed</text>
+
+  <!-- These two circles are just used for debugging the test; passing true
+       as the last argument to drag() will place these circles at the drag
+       start and end points. -->
+  <circle id="dragstart" fill="blue"/>
+  <circle id="dragend" fill="red"/>
+</svg>

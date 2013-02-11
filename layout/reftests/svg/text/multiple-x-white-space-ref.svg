@@ -1,0 +1,11 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" style="font-family: sans-serif; font-size: 16px; line-height: 20px">
+  <text x="50 150" y="100">ab</text>
+  <text x="50 350" y="200 220">ab</text>
+  <text x="50 150" y="300 320">ab</text>
+  <text x="50 150" y="400 420">ab</text>
+  <text x="50 100" y="500">a b</text>
+</svg>
