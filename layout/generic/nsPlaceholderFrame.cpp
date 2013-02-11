@@ -8,15 +8,13 @@
  * objects such as floats and absolutely positioned elements
  */
 
-#include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
-#include "nsLineLayout.h"
-#include "nsIContent.h"
+
+#include "nsDisplayList.h"
+#include "nsFrameManager.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
-#include "nsGkAtoms.h"
-#include "nsFrameManager.h"
-#include "nsDisplayList.h"
 
 nsIFrame*
 NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
@@ -26,26 +24,6 @@ NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
-
-nsPlaceholderFrame::~nsPlaceholderFrame()
-{
-}
-
-/* virtual */ nscoord
-nsPlaceholderFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
-{
-  nscoord result = 0;
-  DISPLAY_MIN_WIDTH(this, result);
-  return result;
-}
-
-/* virtual */ nscoord
-nsPlaceholderFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
-{
-  nscoord result = 0;
-  DISPLAY_PREF_WIDTH(this, result);
-  return result;
-}
 
 /* virtual */ nsSize
 nsPlaceholderFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
@@ -72,8 +50,8 @@ nsPlaceholderFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 /* virtual */ void
-nsPlaceholderFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
-                                      nsIFrame::InlineMinWidthData *aData)
+nsPlaceholderFrame::AddInlineMinWidth(nsRenderingContext* aRenderingContext,
+                                      nsIFrame::InlineMinWidthData* aData)
 {
   // Override AddInlineMinWith so that *nothing* happens.  In
   // particular, we don't want to zero out |aData->trailingWhitespace|,
@@ -93,8 +71,8 @@ nsPlaceholderFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
 }
 
 /* virtual */ void
-nsPlaceholderFrame::AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
-                                       nsIFrame::InlinePrefWidthData *aData)
+nsPlaceholderFrame::AddInlinePrefWidth(nsRenderingContext* aRenderingContext,
+                                       nsIFrame::InlinePrefWidthData* aData)
 {
   // Override AddInlinePrefWith so that *nothing* happens.  In
   // particular, we don't want to zero out |aData->trailingWhitespace|,
@@ -114,7 +92,7 @@ nsPlaceholderFrame::AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
+nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -132,20 +110,19 @@ nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
 void
 nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  nsIPresShell* shell = PresContext()->GetPresShell();
   nsIFrame* oof = mOutOfFlowFrame;
   if (oof) {
     // Unregister out-of-flow frame
-    shell->FrameManager()->UnregisterPlaceholderFrame(this);
+    nsFrameManager* fm = PresContext()->GetPresShell()->FrameManager();
+    fm->UnregisterPlaceholderFrame(this);
     mOutOfFlowFrame = nullptr;
     // If aDestructRoot is not an ancestor of the out-of-flow frame,
     // then call RemoveFrame on it here.
     // Also destroy it here if it's a popup frame. (Bug 96291)
-    if (shell->FrameManager() &&
-        ((GetStateBits() & PLACEHOLDER_FOR_POPUP) ||
-         !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof))) {
+    if ((GetStateBits() & PLACEHOLDER_FOR_POPUP) ||
+        !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof)) {
       ChildListID listId = nsLayoutUtils::GetChildListNameFor(oof);
-      shell->FrameManager()->RemoveFrame(listId, oof);
+      fm->RemoveFrame(listId, oof);
     }
     // else oof will be destroyed by its parent
   }
@@ -156,7 +133,7 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
 nsIAtom*
 nsPlaceholderFrame::GetType() const
 {
-  return nsGkAtoms::placeholderFrame; 
+  return nsGkAtoms::placeholderFrame;
 }
 
 /* virtual */ bool
@@ -190,10 +167,12 @@ PaintDebugPlaceholder(nsIFrame* aFrame, nsRenderingContext* aCtx,
   aCtx->SetColor(NS_RGB(0, 255, 255));
   nscoord x = nsPresContext::CSSPixelsToAppUnits(-5);
   aCtx->FillRect(aPt.x + x, aPt.y,
-                 nsPresContext::CSSPixelsToAppUnits(13), nsPresContext::CSSPixelsToAppUnits(3));
+                 nsPresContext::CSSPixelsToAppUnits(13),
+                 nsPresContext::CSSPixelsToAppUnits(3));
   nscoord y = nsPresContext::CSSPixelsToAppUnits(-10);
   aCtx->FillRect(aPt.x, aPt.y + y,
-                 nsPresContext::CSSPixelsToAppUnits(3), nsPresContext::CSSPixelsToAppUnits(10));
+                 nsPresContext::CSSPixelsToAppUnits(3),
+                 nsPresContext::CSSPixelsToAppUnits(10));
 }
 #endif // DEBUG
 
@@ -207,15 +186,14 @@ nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DO_GLOBAL_REFLOW_COUNT_DSP("nsPlaceholderFrame");
   
 #ifdef DEBUG
-  if (!GetShowFrameBorders())
-    return NS_OK;
-  
-  return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(aBuilder, this, PaintDebugPlaceholder, "DebugPlaceholder",
-                       nsDisplayItem::TYPE_DEBUG_PLACEHOLDER));
-#else // DEBUG
+  if (GetShowFrameBorders()) {
+    return aLists.Outlines()->AppendNewToTop(
+      new (aBuilder) nsDisplayGeneric(aBuilder, this, PaintDebugPlaceholder,
+                                      "DebugPlaceholder",
+                                      nsDisplayItem::TYPE_DEBUG_PLACEHOLDER));
+  }
+#endif
   return NS_OK;
-#endif // DEBUG
 }
 #endif // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
 
@@ -231,9 +209,6 @@ nsPlaceholderFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
-#ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", static_cast<void*>(mParent));
-#endif
   if (HasView()) {
     fprintf(out, " [view=%p]", (void*)GetView());
   }
@@ -243,16 +218,16 @@ nsPlaceholderFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
   }
   nsIFrame* prevInFlow = GetPrevInFlow();
   nsIFrame* nextInFlow = GetNextInFlow();
-  if (nullptr != prevInFlow) {
+  if (prevInFlow) {
     fprintf(out, " prev-in-flow=%p", static_cast<void*>(prevInFlow));
   }
-  if (nullptr != nextInFlow) {
+  if (nextInFlow) {
     fprintf(out, " next-in-flow=%p", static_cast<void*>(nextInFlow));
   }
-  if (nullptr != mContent) {
+  if (mContent) {
     fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   }
-  if (nullptr != mStyleContext) {
+  if (mStyleContext) {
     fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
   }
   if (mOutOfFlowFrame) {
@@ -262,4 +237,4 @@ nsPlaceholderFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
   fputs("\n", out);
   return NS_OK;
 }
-#endif
+#endif // DEBUG
