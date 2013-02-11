@@ -7479,6 +7479,7 @@ nsIFrame::HasTerminalNewline() const
 static uint8_t
 ConvertSVGDominantBaselineToVerticalAlign(uint8_t aDominantBaseline)
 {
+  // Most of these are approximate mappings.
   switch (aDominantBaseline) {
   case NS_STYLE_DOMINANT_BASELINE_HANGING:
   case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
@@ -7488,9 +7489,17 @@ ConvertSVGDominantBaselineToVerticalAlign(uint8_t aDominantBaseline)
     return NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM;
   case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
   case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
+  case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
     return NS_STYLE_VERTICAL_ALIGN_MIDDLE;
   case NS_STYLE_DOMINANT_BASELINE_AUTO:
   case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
+    return NS_STYLE_VERTICAL_ALIGN_BASELINE;
+  case NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT:
+  case NS_STYLE_DOMINANT_BASELINE_NO_CHANGE:
+  case NS_STYLE_DOMINANT_BASELINE_RESET_SIZE:
+    // These three should not simply map to 'baseline', but we don't
+    // support the complex baseline model that SVG 1.1 has and which
+    // css3-linebox now defines.
     return NS_STYLE_VERTICAL_ALIGN_BASELINE;
   default:
     NS_NOTREACHED("unexpected aDominantBaseline value");
