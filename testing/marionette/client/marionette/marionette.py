@@ -115,7 +115,7 @@ class Marionette(object):
 
     def __init__(self, host='localhost', port=2828, bin=None, profile=None,
                  emulator=None, sdcard=None, emulatorBinary=None,
-                 emulatorImg=None, emulator_res='480x800', gecko_path=None,
+                 emulatorImg=None, emulator_res=None, gecko_path=None,
                  connectToRunningEmulator=False, homedir=None, baseurl=None,
                  noWindow=False, logcat_dir=None, busybox=None):
         self.host = host
