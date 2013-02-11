@@ -211,8 +211,17 @@ public:
    * Return a timestamp reflecting the current elapsed system time. This
    * is monotonically increasing (i.e., does not decrease) over the
    * lifetime of this process' XPCOM session.
+   *
+   * Now() is trying to ensure the best possible precision on each platform,
+   * at least one millisecond.
+   *
+   * NowLoRes() has been introduced to workaround performance problems of
+   * QueryPerformanceCounter on the Windows platform.  NowLoRes() is giving
+   * lower precision, usually 15.6 ms, but with very good performance benefit.
+   * Use it for measurements of longer times, like >200ms timeouts.
    */
-  static TimeStamp Now();
+  static TimeStamp Now() { return Now(true); }
+  static TimeStamp NowLoRes() { return Now(false); }
   /**
    * Compute the difference between two timestamps. Both must be non-null.
    */
@@ -297,6 +306,8 @@ private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
 
   TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
+
+  static TimeStamp Now(bool aHighResolution);
 
   /**
    * When built with PRIntervalTime, a value of 0 means this instance
