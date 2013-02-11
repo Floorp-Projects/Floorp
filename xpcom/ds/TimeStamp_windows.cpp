@@ -537,10 +537,10 @@ TimeStamp::Shutdown()
 }
 
 TimeStamp
-TimeStamp::Now()
+TimeStamp::Now(bool aHighResolution)
 {
   // sUseQPC is volatile
-  bool useQPC = sUseQPC;
+  bool useQPC = (aHighResolution && sUseQPC);
 
   // Both values are in [mt] units.
   ULONGLONG QPC = useQPC ? PerformanceCounter() : uint64_t(0);

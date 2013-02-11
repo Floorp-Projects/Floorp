@@ -156,7 +156,7 @@ TimeStamp::Shutdown()
 }
 
 TimeStamp
-TimeStamp::Now()
+TimeStamp::Now(bool aHighResolution)
 {
   return TimeStamp(ClockTime());
 }
