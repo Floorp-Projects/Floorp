@@ -1297,7 +1297,7 @@ TabChild::GetCachedFileDescriptor(const nsAString& aPath,
     info->mCallback = aCallback;
 
     nsRefPtr<CachedFileDescriptorCallbackRunnable> runnable =
-        new CachedFileDescriptorCallbackRunnable(info);
+        new CachedFileDescriptorCallbackRunnable(info.forget());
     runnable->Dispatch();
 
     mCachedFileDescriptorInfos.RemoveElementAt(index);

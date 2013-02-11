@@ -35,7 +35,6 @@ public:
   Create(nsPIDOMWindow* aWindow);
   void Notify(const BluetoothSignal& aData);
   virtual void SetPropertyByValue(const BluetoothNamedValue& aValue);
-  nsresult FireEnabledDisabledEvent(bool aEnabled);
 private:
   BluetoothManager(nsPIDOMWindow* aWindow);
   ~BluetoothManager();

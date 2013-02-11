@@ -42,7 +42,10 @@ adb_device_loop() {
         'adb shell cat /data/local.prop)"'
     return 1
   fi
-  local DEVICES=$(adb_get_devices -b)
+  local DEVICES=$(adb_get_devices)
+  if [[ -z $DEVICES ]]; then
+    return
+  fi
   # Do not change DEVICE variable name - part of api
   for DEVICE in $DEVICES; do
     DEV_TYPE=$(adb -s $DEVICE shell getprop ro.product.device | sed 's/\r//')

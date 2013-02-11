@@ -12,7 +12,7 @@ import time
 from test_result import TestResults
 
 
-def CallPythonTest(test, device_id, shard_index):
+def CallPythonTest(test, options):
   """Invokes a test function and translates Python exceptions into test results.
 
   This method invokes SetUp()/TearDown() on the test. It is intended to be
@@ -32,8 +32,7 @@ def CallPythonTest(test, device_id, shard_index):
 
   Args:
     test: an object which is ostensibly a subclass of PythonTestBase.
-    device_id: device ID against which the test will run.
-    shard_index: index # of the shard on which this test is running
+    options: Options to use for setting up tests.
 
   Returns:
     A TestResults object which contains any results produced by the test or, in
@@ -44,7 +43,7 @@ def CallPythonTest(test, device_id, shard_index):
   failed = False
 
   try:
-    test.SetUp(device_id, shard_index)
+    test.SetUp(options)
   except Exception:
     failed = True
     logging.exception(

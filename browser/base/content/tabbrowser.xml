@@ -1271,12 +1271,8 @@
                 if (t.pinned)
                   tabContainer._handleNewTab(t);
                 else {
-                  if (tabContainer._tabAnimationLoggingEnabled) {
-                    t._recordingHandle = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                               .getInterface(Ci.nsIDOMWindowUtils)
-                                               .startFrameTimeRecording();
-                  }
-                  t._animStartTime = Date.now();
+                  tabContainer._handleTabTelemetryStart(tabContainer, t, aURI);
+
                   t.setAttribute("fadein", "true");
 
                   // This call to adjustTabstrip is redundant but needed so that
@@ -1578,12 +1574,7 @@
               return;
             }
 
-            if (this.tabContainer._tabAnimationLoggingEnabled) {
-              aTab._recordingHandle = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                            .getInterface(Ci.nsIDOMWindowUtils)
-                                            .startFrameTimeRecording();
-            }
-            aTab._animStartTime = Date.now();
+            this.tabContainer._handleTabTelemetryStart(this.tabContainer, aTab);
 
             this._blurTab(aTab);
             aTab.removeAttribute("fadein");
@@ -2905,6 +2896,7 @@
           } catch (ex) {
             this._tabAnimationLoggingEnabled = false;
           }
+          this._browserNewtabpageEnabled = Services.prefs.getBoolPref("browser.newtabpage.enabled");
         ]]>
       </constructor>
 
@@ -3504,6 +3496,98 @@
         </body>
       </method>
 
+      <method name="_handleTabTelemetryStart">
+        <parameter name="aTabContainer"/>
+        <parameter name="aTab"/>
+        <parameter name="aURI"/>
+        <body>
+        <![CDATA[
+          // Animation-smoothness telemetry/logging
+          if (Services.telemetry.canRecord || aTabContainer._tabAnimationLoggingEnabled) {
+            if (aURI == "about:newtab" && (aTab._tPos == 1 || aTab._tPos == 2)) {
+              // Indicate newtab page animation where other tabs are unaffected
+              // (for which case, the 2nd or 3rd tabs are good representatives, even if not absolute)
+              aTab._recordingTabOpenPlain = true;
+            }
+            aTab._recordingHandle = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                          .getInterface(Ci.nsIDOMWindowUtils)
+                                          .startFrameTimeRecording();
+          }
+
+          // Overall animation duration
+          aTab._animStartTime = Date.now();
+        ]]>
+        </body>
+      </method>
+
+      <method name="_handleTabTelemetryEnd">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          if (!aTab._animStartTime) {
+            return;
+          }
+
+          Services.telemetry.getHistogramById(aTab.closing ?
+                                              "FX_TAB_ANIM_CLOSE_MS" :
+                                              "FX_TAB_ANIM_OPEN_MS")
+                            .add(Date.now() - aTab._animStartTime);
+          aTab._animStartTime = 0;
+
+          // Handle tab animation smoothness telemetry/logging of frame intervals and paint times
+          if (!("_recordingHandle" in aTab)) {
+            return;
+          }
+
+          let paints = {};
+          let intervals = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindowUtils)
+                                .stopFrameTimeRecording(aTab._recordingHandle, paints);
+          delete aTab._recordingHandle;
+          paints = paints.value; // The result array itself.
+          let frameCount = intervals.length;
+
+          if (this._tabAnimationLoggingEnabled) {
+            let msg = "Tab " + (aTab.closing ? "close" : "open") + " (Frame-interval / paint-processing):\n";
+            for (let i = 0; i < frameCount; i++) {
+              msg += Math.round(intervals[i]) + " / " + Math.round(paints[i]) + "\n";
+            }
+            Services.console.logStringMessage(msg);
+          }
+
+          // For telemetry, the first frame interval is not useful since it may represent an interval
+          // to a relatively old frame (prior to recording start). So we'll ignore it for the average.
+          // But if we recorded only 1 frame (very rare), then the first paint duration is a good
+          // representative of the first frame interval for our cause (indicates very bad animation).
+          // First paint duration is always useful for us.
+          if (frameCount > 0) {
+            let averageInterval = 0;
+            let averagePaint = paints[0];
+            for (let i = 1; i < frameCount; i++) {
+              averageInterval += intervals[i];
+              averagePaint    += paints[i];
+            };
+            averagePaint /= frameCount;
+            averageInterval = (frameCount == 1)
+                              ? averagePaint
+                              : averageInterval / (frameCount - 1);
+
+            Services.telemetry.getHistogramById("FX_TAB_ANIM_ANY_FRAME_INTERVAL_MS").add(averageInterval);
+            Services.telemetry.getHistogramById("FX_TAB_ANIM_ANY_FRAME_PAINT_MS").add(averagePaint);
+
+            if (aTab._recordingTabOpenPlain) {
+              delete aTab._recordingTabOpenPlain;
+              // While we do have a telemetry probe NEWTAB_PAGE_ENABLED to monitor newtab preview, it'll be
+              // easier to overview the data without slicing by it. Hence the additional histograms with _PREVIEW.
+              let preview = this._browserNewtabpageEnabled ? "_PREVIEW" : "";
+              Services.telemetry.getHistogramById("FX_TAB_ANIM_OPEN" + preview + "_FRAME_INTERVAL_MS").add(averageInterval);
+              Services.telemetry.getHistogramById("FX_TAB_ANIM_OPEN" + preview + "_FRAME_PAINT_MS").add(averagePaint);
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
       <!-- Deprecated stuff, implemented for backwards compatibility. -->
       <property name="mTabstripClosebutton" readonly="true"
                 onget="return document.getElementById('tabs-closebutton');"/>
@@ -3520,25 +3604,7 @@
 
         var tab = event.target;
 
-        if (tab._animStartTime) {
-          Services.telemetry.getHistogramById(tab.closing ?
-                                              "FX_TAB_ANIM_CLOSE_MS" :
-                                              "FX_TAB_ANIM_OPEN_MS")
-                            .add(Date.now() - tab._animStartTime);
-          tab._animStartTime = 0;
-
-          if (this._tabAnimationLoggingEnabled && tab.hasOwnProperty("_recordingHandle")) {
-            let paints = {};
-            let intervals = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIDOMWindowUtils)
-                                  .stopFrameTimeRecording(tab._recordingHandle, paints);
-            let msg = "Tab " + (tab.closing ? "close" : "open") + " (Frame-interval / paint-processing):\n";
-            for (let i = 0; i < intervals.length; i++) {
-              msg += Math.round(intervals[i]) + " / " + Math.round(paints.value[i]) + "\n";
-            }
-            Services.console.logStringMessage(msg);
-          }
-        }
+        this._handleTabTelemetryEnd(tab);
 
         if (tab.getAttribute("fadein") == "true") {
           if (tab._fullyOpen)

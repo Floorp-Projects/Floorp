@@ -14,7 +14,7 @@
 #include "libyuv/basic_types.h"
 #include "libyuv/cpu_id.h"
 #include "libyuv/version.h"
-#include "unit_test/unit_test.h"
+#include "../unit_test/unit_test.h"
 
 namespace libyuv {
 
@@ -37,6 +37,8 @@ TEST_F(libyuvTest, TestCpuHas) {
   printf("Has SSE4.2 %x\n", has_sse42);
   int has_avx = TestCpuFlag(kCpuHasAVX);
   printf("Has AVX %x\n", has_avx);
+  int has_avx2 = TestCpuFlag(kCpuHasAVX2);
+  printf("Has AVX2 %x\n", has_avx2);
 }
 
 #if defined(__i386__) || defined(__x86_64__) || \
@@ -59,7 +61,6 @@ TEST_F(libyuvTest, TestCpuId) {
     CpuId(cpu_info, 0);
     cpu_info[0] = cpu_info[1];  // Reorder output
     cpu_info[1] = cpu_info[3];
-    cpu_info[2] = cpu_info[2];
     cpu_info[3] = 0;
     printf("Cpu Vendor: %s %x %x %x\n", reinterpret_cast<char*>(&cpu_info[0]),
            cpu_info[0], cpu_info[1], cpu_info[2]);
@@ -80,9 +81,6 @@ TEST_F(libyuvTest, TestCpuId) {
   }
 }
 #endif
-
-// For testing purposes call the proc/cpuinfo parser directly
-extern "C" int ArmCpuCaps(const char* cpuinfoname);
 
 TEST_F(libyuvTest, TestLinuxNeon) {
   int testdata = ArmCpuCaps("unit_test/testdata/arm_v7.txt");

@@ -2140,8 +2140,20 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
 
-      this.delete = VariablesView.getterOrSetterDeleteCallback;
-      this.evaluationMacro = VariablesView.overrideValueEvalMacro;
+      // Changing getter/setter names is never allowed.
+      this.switch = null;
+
+      // Getter/setter properties require special handling when it comes to
+      // evaluation and deletion.
+      if (this.ownerView.eval) {
+        this.delete = VariablesView.getterOrSetterDeleteCallback;
+        this.evaluationMacro = VariablesView.overrideValueEvalMacro;
+      }
+      // Deleting getters and setters individually is not allowed if no
+      // evaluation method is provided.
+      else {
+        this.delete = null;
+      }
 
       let getter = this.addProperty("get", { value: descriptor.get });
       let setter = this.addProperty("set", { value: descriptor.set });

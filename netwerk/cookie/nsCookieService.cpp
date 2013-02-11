@@ -85,7 +85,7 @@ static const char kOldCookieFileName[] = "cookies.txt";
 #define LIMIT(x, low, high, default) ((x) >= (low) && (x) <= (high) ? (x) : (default))
 
 #undef  ADD_TEN_PERCENT
-#define ADD_TEN_PERCENT(i) ((i) + (i)/10)
+#define ADD_TEN_PERCENT(i) static_cast<uint32_t>((i) + (i)/10)
 
 // default limits for the cookie list. these can be tuned by the
 // network.cookie.maxNumber and network.cookie.maxPerHost prefs respectively.
@@ -1669,8 +1669,10 @@ void
 nsCookieService::NotifyChanged(nsISupports     *aSubject,
                                const PRUnichar *aData)
 {
+  const char* topic = mDBState == mPrivateDBState ?
+      "private-cookie-changed" : "cookie-changed";
   if (mObserverService)
-    mObserverService->NotifyObservers(aSubject, "cookie-changed", aData);
+    mObserverService->NotifyObservers(aSubject, topic, aData);
 }
 
 already_AddRefed<nsIArray>

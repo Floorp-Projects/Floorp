@@ -1,7 +1,0 @@
-//
-// Prefix header for all source files of the 'SimpleCocoaGUI' target in the 'SimpleCocoaGUI' project
-//
-
-#ifdef __OBJC__
-    #import <Cocoa/Cocoa.h>
-#endif

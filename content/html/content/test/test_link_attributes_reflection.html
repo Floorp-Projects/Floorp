@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLLinkElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLLinkElement attributes reflection **/
+
+// .href (URL)
+reflectURL({
+  element: document.createElement("link"),
+  attribute: "href",
+});
+
+// .crossOrigin (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "crossOrigin",
+  otherValues: ["anonymous", "use-credentials"],
+});
+
+// .rel (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "rel",
+});
+
+// .media (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "media",
+});
+
+// .hreflang (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "hreflang",
+});
+
+// .type (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "type",
+});
+
+
+// .charset (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "charset",
+});
+
+// .rev (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "rev",
+});
+
+// .target (String)
+reflectString({
+  element: document.createElement("link"),
+  attribute: "target",
+});
+
+</script>
+</pre>
+</body>
+</html>

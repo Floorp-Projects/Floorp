@@ -23,7 +23,6 @@ class ShardedTestsQueue(object):
   _STOP_SENTINEL = 'STOP'  # sentinel value for iter()
 
   def __init__(self, num_devices, tests):
-    assert num_devices > 1, 'At least two devices must be attached.'
     self.num_devices = num_devices
     self.tests_queue = multiprocessing.Queue()
     for test in tests:

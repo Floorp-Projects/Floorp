@@ -19,6 +19,7 @@ XPIDLSRCS = \
 EXTRA_PP_COMPONENTS = \
         ActivitiesGlue.js \
         AlertsService.js \
+        B2GAboutRedirector.js \
         B2GComponents.manifest \
         ContentHandler.js \
         ContentPermissionPrompt.js \

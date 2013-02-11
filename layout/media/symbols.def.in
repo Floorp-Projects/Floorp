@@ -43,6 +43,7 @@ vpx_codec_enc_init_ver
 vpx_codec_vp8_cx
 #endif
 vpx_img_set_rect
+vpx_img_wrap
 vpx_codec_get_cx_data
 vpx_codec_enc_config_default
 vpx_img_alloc

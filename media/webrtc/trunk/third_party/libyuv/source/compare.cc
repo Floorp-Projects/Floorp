@@ -18,7 +18,7 @@
 
 #include "libyuv/basic_types.h"
 #include "libyuv/cpu_id.h"
-#include "source/row.h"
+#include "libyuv/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -216,6 +216,7 @@ static uint32 HashDjb2_SSE41(const uint8* src, int count, uint32 seed) {
 #endif  // HAS_HASHDJB2_SSE41
 
 // hash seed of 5381 recommended.
+LIBYUV_API
 uint32 HashDjb2(const uint8* src, uint64 count, uint32 seed) {
   uint32 (*HashDjb2_SSE)(const uint8* src, int count, uint32 seed) = HashDjb2_C;
 #if defined(HAS_HASHDJB2_SSE41)
@@ -381,6 +382,7 @@ static uint32 SumSquareError_C(const uint8* src_a, const uint8* src_b,
   return sse;
 }
 
+LIBYUV_API
 uint64 ComputeSumSquareError(const uint8* src_a, const uint8* src_b,
                              int count) {
   uint32 (*SumSquareError)(const uint8* src_a, const uint8* src_b, int count) =
@@ -421,6 +423,7 @@ uint64 ComputeSumSquareError(const uint8* src_a, const uint8* src_b,
   return sse;
 }
 
+LIBYUV_API
 uint64 ComputeSumSquareErrorPlane(const uint8* src_a, int stride_a,
                                   const uint8* src_b, int stride_b,
                                   int width, int height) {
@@ -448,6 +451,7 @@ uint64 ComputeSumSquareErrorPlane(const uint8* src_a, int stride_a,
   return sse;
 }
 
+LIBYUV_API
 double SumSquareErrorToPsnr(uint64 sse, uint64 count) {
   double psnr;
   if (sse > 0) {
@@ -463,6 +467,7 @@ double SumSquareErrorToPsnr(uint64 sse, uint64 count) {
   return psnr;
 }
 
+LIBYUV_API
 double CalcFramePsnr(const uint8* src_a, int stride_a,
                      const uint8* src_b, int stride_b,
                      int width, int height) {
@@ -473,6 +478,7 @@ double CalcFramePsnr(const uint8* src_a, int stride_a,
   return SumSquareErrorToPsnr(sse, samples);
 }
 
+LIBYUV_API
 double I420Psnr(const uint8* src_y_a, int stride_y_a,
                 const uint8* src_u_a, int stride_u_a,
                 const uint8* src_v_a, int stride_v_a,
@@ -545,6 +551,7 @@ static double Ssim8x8_C(const uint8* src_a, int stride_a,
 // We are using a 8x8 moving window with starting location of each 8x8 window
 // on the 4x4 pixel grid. Such arrangement allows the windows to overlap
 // block boundaries to penalize blocking artifacts.
+LIBYUV_API
 double CalcFrameSsim(const uint8* src_a, int stride_a,
                      const uint8* src_b, int stride_b,
                      int width, int height) {
@@ -571,6 +578,7 @@ double CalcFrameSsim(const uint8* src_a, int stride_a,
   return ssim_total;
 }
 
+LIBYUV_API
 double I420Ssim(const uint8* src_y_a, int stride_y_a,
                 const uint8* src_u_a, int stride_u_a,
                 const uint8* src_v_a, int stride_v_a,

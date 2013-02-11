@@ -939,6 +939,11 @@ def _GetXcodeEnv(xcode_settings, built_products_dir, srcroot, configuration,
     'TARGET_BUILD_DIR' : built_products_dir,
     'TEMP_DIR' : '${TMPDIR}',
   }
+  if xcode_settings.GetPerTargetSetting('SDKROOT'):
+    env['SDKROOT'] = xcode_settings._SdkPath()
+  else:
+    env['SDKROOT'] = ''
+
   if spec['type'] in (
       'executable', 'static_library', 'shared_library', 'loadable_module'):
     env['EXECUTABLE_NAME'] = xcode_settings.GetExecutableName()

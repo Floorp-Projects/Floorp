@@ -12,6 +12,8 @@
 #define mozilla_ASan_h_
 
 #ifdef MOZ_ASAN
+#include <stddef.h>
+
 extern "C" {
   void __asan_poison_memory_region(void const volatile *addr, size_t size)
     __attribute__((visibility("default")));

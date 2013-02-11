@@ -149,7 +149,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
     // Caller must construct |this| before invoking the Ion function.
     JS_ASSERT_IF(fp->isConstructing(), fp->functionThis().isObject());
 
-    Value result = Int32Value(numActualArgs);
+    RootedValue result(cx, Int32Value(numActualArgs));
     {
         AssertCompartmentUnchanged pcc(cx);
         IonContext ictx(cx, cx->compartment, NULL);
@@ -161,7 +161,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
             evalScopeChain = fp->scopeChain();
 
         // Single transition point from Interpreter to Baseline.
-        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, evalScopeChain, &result);
+        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, evalScopeChain, result.address());
     }
 
     JS_ASSERT(fp == cx->fp());

@@ -7,11 +7,13 @@
 import constants
 import optparse
 import os
+import sys
 
 _SDK_OUT_DIR = os.path.join(constants.CHROME_DIR, 'out')
 
 
 def AddBuildTypeOption(option_parser):
+  """Decorates OptionParser with build type option."""
   default_build_type = 'Debug'
   if 'BUILDTYPE' in os.environ:
     default_build_type = os.environ['BUILDTYPE']
@@ -24,10 +26,18 @@ def AddBuildTypeOption(option_parser):
                            help='If set, run test suites under out/Release. '
                                 'Default is env var BUILDTYPE or Debug.')
 
+def AddInstallAPKOption(option_parser):
+  """Decorates OptionParser with apk option used to install the APK."""
+  option_parser.add_option('--apk',
+                           help=('The name of the apk containing the '
+                                 ' application (with the .apk extension).'))
+  option_parser.add_option('--apk_package',
+                           help=('The package name used by the apk containing '
+                                 'the application.'))
 
-def CreateTestRunnerOptionParser(usage=None, default_timeout=60):
-  """Returns a new OptionParser with arguments applicable to all tests."""
-  option_parser = optparse.OptionParser(usage=usage)
+def AddTestRunnerOptions(option_parser, default_timeout=60):
+  """Decorates OptionParser with options applicable to all tests."""
+
   option_parser.add_option('-t', dest='timeout',
                            help='Timeout to wait for each test',
                            type='int',
@@ -53,13 +63,12 @@ def CreateTestRunnerOptionParser(usage=None, default_timeout=60):
                            help='Run the test under a tool '
                            '(use --tool help to list them)')
   AddBuildTypeOption(option_parser)
-  return option_parser
 
 
-def ParseInstrumentationArgs(args):
-  """Parse arguments and return options with defaults."""
+def AddInstrumentationOptions(option_parser):
+  """Decorates OptionParser with instrumentation tests options."""
 
-  option_parser = CreateTestRunnerOptionParser()
+  AddTestRunnerOptions(option_parser)
   option_parser.add_option('-w', '--wait_debugger', dest='wait_for_debugger',
                            action='store_true', help='Wait for debugger.')
   option_parser.add_option('-I', dest='install_apk', help='Install APK.',
@@ -84,10 +93,9 @@ def ParseInstrumentationArgs(args):
                                  'of the result. (Default is 1)'))
   option_parser.add_option('--test-apk', dest='test_apk',
                            help=('The name of the apk containing the tests '
-                                 '(without the .apk extension) or for SDK '
-                                 'builds, the path to the APK from '
-                                 'out/(Debug|Release) (for example, '
-                                 'content_shell_test/ContentShellTest-debug).'))
+                                 '(without the .apk extension). For SDK '
+                                 'builds, the apk name without the debug '
+                                 'suffix(for example, ContentShellTest).'))
   option_parser.add_option('--screenshot', dest='screenshot_failures',
                            action='store_true',
                            help='Capture screenshots of test failures')
@@ -102,12 +110,14 @@ def ParseInstrumentationArgs(args):
   option_parser.add_option('--python_test_root',
                            help='Root of the python-driven tests.')
 
-  options, args = option_parser.parse_args(args)
+def ValidateInstrumentationOptions(option_parser, options, args):
+  """Validate options/arguments and populate options with defaults."""
   if len(args) > 1:
-    option_parser.error('Unknown argument:', args[1:])
+    option_parser.print_help(sys.stderr)
+    option_parser.error('Unknown arguments: %s' % args[1:])
   if options.java_only and options.python_only:
     option_parser.error('Options java_only (-j) and python_only (-p) '
-                        'are mutually exclusive')
+                        'are mutually exclusive.')
 
   options.run_java_tests = True
   options.run_python_tests = True
@@ -116,18 +126,18 @@ def ParseInstrumentationArgs(args):
   elif options.python_only:
     options.run_java_tests = False
 
+  # In case of SDK Build, the jars and apks have a -debug suffix.
   options.test_apk_path = os.path.join(_SDK_OUT_DIR,
                                        options.build_type,
-                                       '%s.apk' % options.test_apk)
+                                       constants.SDK_BUILD_APKS_DIR,
+                                       '%s-debug.apk' % options.test_apk)
   options.test_apk_jar_path = os.path.join(_SDK_OUT_DIR,
                                            options.build_type,
-                                           '%s.jar'
-                                           % options.test_apk)
+                                           constants.SDK_BUILD_TEST_JAVALIB_DIR,
+                                           '%s-debug.jar' % options.test_apk)
   if options.annotation_str:
     options.annotation = options.annotation_str.split()
   elif options.test_filter:
     options.annotation = []
   else:
     options.annotation = ['Smoke', 'SmallTest', 'MediumTest', 'LargeTest']
-
-  return options

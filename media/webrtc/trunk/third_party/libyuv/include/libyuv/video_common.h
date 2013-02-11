@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-// Common definitions for video, including fourcc and VideoFormat
+// Common definitions for video, including fourcc and VideoFormat.
 
 #ifndef INCLUDE_LIBYUV_VIDEO_COMMON_H_  // NOLINT
 #define INCLUDE_LIBYUV_VIDEO_COMMON_H_
@@ -36,6 +36,7 @@ extern "C" {
 //   http://v4l2spec.bytesex.org/spec/book1.htm
 //   http://developer.apple.com/quicktime/icefloe/dispatch020.html
 //   http://msdn.microsoft.com/library/windows/desktop/dd206750.aspx#nv12
+//   http://people.xiph.org/~xiphmont/containers/nut/nut4cc.txt
 
 enum FourCC {
   // Canonical fourcc codes used in our code.
@@ -53,9 +54,10 @@ enum FourCC {
   FOURCC_Q420 = FOURCC('Q', '4', '2', '0'),
   FOURCC_V210 = FOURCC('V', '2', '1', '0'),
   FOURCC_24BG = FOURCC('2', '4', 'B', 'G'),
-  FOURCC_ABGR = FOURCC('A', 'B', 'G', 'R'),
-  FOURCC_BGRA = FOURCC('B', 'G', 'R', 'A'),
   FOURCC_ARGB = FOURCC('A', 'R', 'G', 'B'),
+  FOURCC_BGRA = FOURCC('B', 'G', 'R', 'A'),
+  FOURCC_ABGR = FOURCC('A', 'B', 'G', 'R'),
+  FOURCC_RGBA = FOURCC('R', 'G', 'B', 'A'),
   FOURCC_RGBP = FOURCC('R', 'G', 'B', 'P'),  // bgr565.
   FOURCC_RGBO = FOURCC('R', 'G', 'B', 'O'),  // abgr1555.
   FOURCC_R444 = FOURCC('R', '4', '4', '4'),  // argb4444.
@@ -105,11 +107,12 @@ enum FourCCBpp {
   FOURCC_BPP_UYVY = 16,
   FOURCC_BPP_M420 = 12,
   FOURCC_BPP_Q420 = 12,
-  FOURCC_BPP_V210 = 22,  // 22.5 actually
+  FOURCC_BPP_V210 = 22,  // 128 / 6 actually.
   FOURCC_BPP_24BG = 24,
-  FOURCC_BPP_ABGR = 32,
-  FOURCC_BPP_BGRA = 32,
   FOURCC_BPP_ARGB = 32,
+  FOURCC_BPP_BGRA = 32,
+  FOURCC_BPP_ABGR = 32,
+  FOURCC_BPP_RGBA = 32,
   FOURCC_BPP_RGBP = 16,
   FOURCC_BPP_RGBO = 16,
   FOURCC_BPP_R444 = 16,
@@ -146,7 +149,7 @@ enum FourCCBpp {
 };
 
 // Converts fourcc aliases into canonical ones.
-uint32 CanonicalFourCC(uint32 fourcc);
+LIBYUV_API uint32 CanonicalFourCC(uint32 fourcc);
 
 #ifdef __cplusplus
 }  // extern "C"

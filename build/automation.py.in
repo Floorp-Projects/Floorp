@@ -434,7 +434,6 @@ class Automation(object):
       {'allowXULXBL':[(l.host, 'noxul' not in l.options) for l in locations]});
 
     part = """\
-user_pref("social.skipLoadingProviders", true);
 user_pref("browser.console.showInPanel", true);
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("browser.firstrun.show.localepicker", false);
@@ -456,6 +455,7 @@ user_pref("browser.warnOnQuit", false);
 user_pref("accessibility.typeaheadfind.autostart", false);
 user_pref("javascript.options.showInConsole", true);
 user_pref("devtools.errorconsole.enabled", true);
+user_pref("devtools.debugger.remote-port", 6023);
 user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
 user_pref("javascript.options.jit_hardening", true);

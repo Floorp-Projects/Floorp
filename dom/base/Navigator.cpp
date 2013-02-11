@@ -1516,7 +1516,7 @@ Navigator::CheckPermission(const char* type)
 //*****************************************************************************
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
 NS_IMETHODIMP
-Navigator::GetMozAudioChannelManager(nsIAudioChannelManager** aAudioChannelManager)
+Navigator::GetMozAudioChannelManager(nsISupports** aAudioChannelManager)
 {
   *aAudioChannelManager = nullptr;
 

@@ -12,8 +12,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/SVGSwitchElementBinding.h"
 
-DOMCI_NODE_DATA(SVGSwitchElement, mozilla::dom::SVGSwitchElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Switch)
 
 namespace mozilla {
@@ -41,9 +39,8 @@ NS_IMPL_ADDREF_INHERITED(SVGSwitchElement,SVGSwitchElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGSwitchElement,SVGSwitchElementBase)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGSwitchElement)
-  NS_NODE_INTERFACE_TABLE4(SVGSwitchElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGSwitchElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSwitchElement)
+  NS_NODE_INTERFACE_TABLE3(SVGSwitchElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGSwitchElementBase)
 
 //----------------------------------------------------------------------

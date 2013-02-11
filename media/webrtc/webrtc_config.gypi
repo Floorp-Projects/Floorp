@@ -8,24 +8,32 @@
 # "find . -name '*.gyp' | xargs touch"
 {
   'variables': {
+    'build_with_mozilla': 1,
+    'build_with_chromium': 0,
     # basic stuff for everything
     'include_internal_video_render': 0,
     'clang_use_chrome_plugins': 0,
     'enable_protobuf': 0,
     'include_pulse_audio': 0,
     'include_tests': 0,
-    'use_system_libjpeg': 1,
-    'use_system_libvpx': 1,
+# use_system_lib* still seems to be in use in trunk/build
+    'use_system_libjpeg': 0,
+    'use_system_libvpx': 0,
+    'build_libjpeg': 0,
+    'build_libvpx': 0,
+
+# (for vp8) chromium sets to 0 also
+    'use_temporal_layers': 0,
 # Creates AEC internal sample dump files in current directory
 #    'aec_debug_dump': 1,
 
     # codec enable/disables:
     # Note: if you change one here, you must modify shared_libs.mk!
-    'codec_g711_enable': 1,
-    'codec_opus_enable': 1,
-    'codec_g722_enable': 0,
-    'codec_ilbc_enable': 0,
-    'codec_isac_enable': 0,
-    'codec_pcm16b_enable': 1,
+    'include_g711': 1,
+    'include_opus': 1,
+    'include_g722': 0,
+    'include_ilbc': 0,
+    'include_isac': 0,
+    'include_pcm16b': 1,
   }
 }

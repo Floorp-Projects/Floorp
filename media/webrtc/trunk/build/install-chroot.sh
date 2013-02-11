@@ -658,17 +658,19 @@ if [ -x "${script}" ]; then
         # possible, if it lives on a network filesystem that denies
         # access to root.
         tmp_script=
-        if ! sudo "${target%bit}" sh -c "[ -x '${script}' ]" >&/dev/null; then
+        if ! sudo /usr/local/bin/"${target%bit}" \
+            sh -c "[ -x '${script}' ]" >&/dev/null; then
           tmp_script="/tmp/${script##*/}"
           cp "${script}" "${tmp_script}"
         fi
         # Some distributions automatically start an instance of the system-
-        # wide dbus daemon or of the logging daemon, when installing the Chrome
-        # build depencies. This prevents the chroot session from being closed.
-        # So, we always try to shut down any running instance of dbus and
-        # rsyslog.
-        sudo "${target%bit}" sh -c "${script} --no-lib32;
+        # wide dbus daemon, cron daemon or of the logging daemon, when
+        # installing the Chrome build depencies. This prevents the chroot
+        # session from being closed.  So, we always try to shut down any running
+        # instance of dbus and rsyslog.
+        sudo /usr/local/bin/"${target%bit}" sh -c "${script} --no-lib32;
               rc=$?;
+              /etc/init.d/cron stop >/dev/null 2>&1 || :;
               /etc/init.d/rsyslog stop >/dev/null 2>&1 || :;
               /etc/init.d/dbus stop >/dev/null 2>&1 || :;
               exit $rc"
@@ -767,7 +769,7 @@ if [ ! -h "${HOME}/chroot" ] &&
 fi
 
 # Clean up package files
-sudo schroot -c "${target%bit}" -p -- apt-get clean
+sudo schroot -c /usr/local/bin/"${target%bit}" -p -- apt-get clean
 sudo apt-get clean
 
 trap '' INT TERM QUIT HUP
@@ -779,8 +781,8 @@ cat <<EOF
 
 Successfully installed ${distname} ${arch}
 
-You can run programs inside of the chroot by invoking the "${target%bit}"
-command.
+You can run programs inside of the chroot by invoking the
+"/usr/local/bin/${target%bit}" command.
 
 This command can be used with arguments, in order to just run a single
 program inside of the chroot environment (e.g. "${target%bit} make chrome")

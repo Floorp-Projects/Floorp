@@ -3451,8 +3451,14 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   if (CheckArg("process-updates")) {
     SaveToEnv("MOZ_PROCESS_UPDATES=1");
   }
+  nsCOMPtr<nsIFile> exeFile, exeDir;
+  rv = mDirProvider.GetFile(XRE_EXECUTABLE_FILE, &persistent,
+                            getter_AddRefs(exeFile));
+  NS_ENSURE_SUCCESS(rv, 1);
+  rv = exeFile->GetParent(getter_AddRefs(exeDir));
+  NS_ENSURE_SUCCESS(rv, 1);
   ProcessUpdates(mDirProvider.GetGREDir(),
-                 mDirProvider.GetAppDir(),
+                 exeDir,
                  updRoot,
                  gRestartArgc,
                  gRestartArgv,

@@ -43,6 +43,15 @@ JSObject *
 TransplantObjectWithWrapper(JSContext *cx,
                             JSObject *origobj, JSObject *origwrapper,
                             JSObject *targetobj, JSObject *targetwrapper);
+
+// Return a raw XBL scope object corresponding to contentScope, which must
+// be an object whose global is a DOM window.
+//
+// The return value is not wrapped into cx->compartment, so be sure to enter
+// its compartment before doing anything meaningful.
+JSObject *
+GetXBLScope(JSContext *cx, JSObject *contentScope);
+
 } /* namespace xpc */
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \
@@ -323,6 +332,8 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 }
 
 nsIPrincipal *GetCompartmentPrincipal(JSCompartment *compartment);
+
+bool IsXBLScope(JSCompartment *compartment);
 
 void DumpJSHeap(FILE* file);
 

@@ -18,6 +18,7 @@ import gyp.MSVSSettings as MSVSSettings
 import gyp.MSVSToolFile as MSVSToolFile
 import gyp.MSVSUserFile as MSVSUserFile
 import gyp.MSVSVersion as MSVSVersion
+from gyp.common import GypError
 
 
 # Regular expression for validating Visual Studio GUIDs.  If the GUID
@@ -1123,6 +1124,8 @@ def _GetLibraries(spec):
   unique_libraries_list = []
   for entry in reversed(libraries):
     library = re.sub('^\-l', '', entry)
+    if not os.path.splitext(library)[1]:
+      library += '.lib'
     if library not in found:
       found.add(library)
       unique_libraries_list.append(library)
@@ -1154,6 +1157,8 @@ def _GetOutputFilePathAndTool(spec, msbuild):
   output_file_props = output_file_map.get(spec['type'])
   if output_file_props and int(spec.get('msvs_auto_output_file', 1)):
     vc_tool, msbuild_tool, out_dir, suffix = output_file_props
+    if spec.get('standalone_static_library', 0):
+      out_dir = '$(OutDir)'
     out_dir = spec.get('product_dir', out_dir)
     product_extension = spec.get('product_extension')
     if product_extension:
@@ -1668,7 +1673,7 @@ def _CreateProjectObjects(target_list, target_dicts, options, msvs_version):
     build_file = gyp.common.BuildFile(qualified_target)
     # Create object for this project.
     obj = MSVSNew.MSVSProject(
-        _FixPath(proj_path),
+        proj_path,
         name=spec['target_name'],
         guid=guid,
         spec=spec,
@@ -1779,6 +1784,25 @@ def _ShardTargets(target_list, target_dicts):
     new_target_dicts[t]['dependencies'] = new_dependencies
 
   return (new_target_list, new_target_dicts)
+
+
+def PerformBuild(data, configurations, params):
+  options = params['options']
+  msvs_version = params['msvs_version']
+  devenv = os.path.join(msvs_version.path, 'Common7', 'IDE', 'devenv.com')
+
+  for build_file, build_file_dict in data.iteritems():
+    (build_file_root, build_file_ext) = os.path.splitext(build_file)
+    if build_file_ext != '.gyp':
+      continue
+    sln_path = build_file_root + options.suffix + '.sln'
+    if options.generator_output:
+      sln_path = os.path.join(options.generator_output, sln_path)
+
+  for config in configurations:
+    arguments = [devenv, sln_path, '/Build', config]
+    print 'Building [%s]: %s' % (config, arguments)
+    rtn = subprocess.check_call(arguments)
 
 
 def GenerateOutput(target_list, target_dicts, data, params):

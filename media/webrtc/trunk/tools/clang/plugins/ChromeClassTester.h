@@ -16,8 +16,7 @@
 // headers to subclasses which implement CheckChromeClass().
 class ChromeClassTester : public clang::ASTConsumer {
  public:
-  explicit ChromeClassTester(clang::CompilerInstance& instance,
-                             bool check_cc_directory);
+  explicit ChromeClassTester(clang::CompilerInstance& instance);
   virtual ~ChromeClassTester();
 
   // clang::ASTConsumer:
@@ -80,9 +79,6 @@ class ChromeClassTester : public clang::ASTConsumer {
 
   // List of decls to check once the current top-level decl is parsed.
   std::vector<clang::TagDecl*> pending_class_decls_;
-
-  // TODO(jamesr): Remove once cc/ directory compiles without warnings.
-  bool check_cc_directory_;
 };
 
 #endif  // TOOLS_CLANG_PLUGINS_CHROMECLASSTESTER_H_
