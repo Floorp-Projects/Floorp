@@ -2763,7 +2763,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-image-region: rect(0, 34px, 20px, 17px);
 }
 
-#TabsToolbar > #alltabs-button[type="menu"][open="true"]:not([disabled="true"]),
+#TabsToolbar > #alltabs-button[open="true"]:not([disabled="true"]),
 #TabsToolbar > #alltabs-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(0, 51px, 20px, 34px);
 }
@@ -2778,7 +2778,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
     -moz-image-region: rect(0, 68px, 40px, 34px);
   }
 
-  #TabsToolbar > #alltabs-button[type="menu"][open="true"]:not([disabled="true"]),
+  #TabsToolbar > #alltabs-button[open="true"]:not([disabled="true"]),
   #TabsToolbar > #alltabs-button:not([disabled="true"]):hover:active {
     -moz-image-region: rect(0, 102px, 40px, 68px);
   }
@@ -2788,7 +2788,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-#alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
+#alltabs-button > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
@@ -3267,25 +3267,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-window-shadow: none;
 }
 
-.KUI-panel-closebutton {
-  list-style-image: url(KUI-close.png);
-  -moz-appearance: none;
-  border: none;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-}
-
-.KUI-panel-closebutton:not(:hover) {
-  opacity: .6;
-}
-
-.KUI-panel-closebutton > .toolbarbutton-icon {
-  margin: 0;
-}
-
-/* ::::: Ctrl-Tab and All Tabs Panels ::::: */
-
 /* Ctrl-Tab */
 
 #ctrlTab-panel {
@@ -3333,65 +3314,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #ctrlTab-showAll {
   margin-top: .5em;
-}
-
-/* All Tabs */
-
-#allTabs-panel {
-  padding-bottom: 10px;
-  -moz-appearance: none;
-  border: none;
-  background: -moz-dialog;
-  color: -moz-dialogText;
-}
-
-#allTabs-meta {
-  margin: 10px;
-}
-
-#allTabs-filter {
-  -moz-margin-start: 24px;
-  -moz-margin-end: 0;
-}
-
-#allTabs-tab-close-button > .toolbarbutton-icon {
-  margin: 0;
-}
-
-.allTabs-favicon[src] {
-  background-color: -moz-dialog;
-  width: 20px;
-  height: 20px;
-  padding-bottom: 4px;
-  -moz-padding-start: 4px;
-  border-bottom-left-radius: 4px;
-}
-
-.allTabs-favicon[src]:-moz-locale-dir(rtl) {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 4px;
-}
-
-.allTabs-preview:not(:focus) > * > .allTabs-favicon-container > .allTabs-favicon[src] {
-  width: 22px;
-  height: 22px;
-  padding-top: 2px;
-  -moz-padding-end: 2px;
-  margin-top: -2px;
-  -moz-margin-end: -2px;
-}
-
-.allTabs-preview-inner > .tabPreview-canvas {
-  background-color: rgb(60%,60%,60%);
-  box-shadow: 0 0 1.5px ThreeDShadow;
-}
-
-.allTabs-preview:not(:hover):not([closebuttonhover]) > html|canvas {
-  opacity: .8;
-}
-
-.allTabs-preview:focus > * > .allTabs-preview-inner {
-  box-shadow: @focusRingShadow@;
 }
 
 /* Add-on bar */

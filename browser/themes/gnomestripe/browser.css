@@ -1773,16 +1773,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   margin-bottom: -2px;
 }
 
-#alltabs-button > .toolbarbutton-icon {
-  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
-  margin: 2px 0 1px;
-}
-
-#alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
+#alltabs-button > .toolbarbutton-menu-dropmarker {
   margin-bottom: -2px;
 }
 
-#alltabs-button[type="menu"] > .toolbarbutton-icon {
+#alltabs-button > .toolbarbutton-icon {
   display: none;
 }
 
@@ -1836,20 +1831,9 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   display: -moz-box; /* display chevron icon in text mode */
 }
 
-/* ::::: Keyboard UI Panel ::::: */
+/* Ctrl-Tab */
 
-.KUI-panel-closebutton {
-  list-style-image: url(KUI-close.png);
-}
-
-.KUI-panel-closebutton > .toolbarbutton-icon {
-  margin: 0;
-}
-
-/* ::::: Ctrl-Tab and All Tabs Panels ::::: */
-
-.ctrlTab-preview,
-.allTabs-preview {
+.ctrlTab-preview {
   -moz-appearance: toolbarbutton;
 }
 
@@ -1858,21 +1842,16 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 .ctrlTab-preview:focus .tabPreview-canvas,
-.ctrlTab-preview:hover .tabPreview-canvas,
-.allTabs-preview:focus .tabPreview-canvas,
-.allTabs-preview:hover .tabPreview-canvas {
+.ctrlTab-preview:hover .tabPreview-canvas {
   box-shadow: none;
 }
 
-.ctrlTab-favicon[src],
-.allTabs-favicon[src] {
+.ctrlTab-favicon[src] {
   background-color: white;
   width: 20px;
   height: 20px;
   padding: 2px;
 }
-
-/* Ctrl-Tab */
 
 #ctrlTab-panel {
   padding: 10px;
@@ -1887,25 +1866,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   color: ButtonText;
   padding: 0 3px;
   margin-top: 10px;
-}
-
-/* All Tabs */
-
-#allTabs-panel {
-  padding-bottom: 10px;
-}
-
-#allTabs-meta {
-  padding: 5px;
-}
-
-#allTabs-filter {
-  -moz-margin-start: 36px;
-  -moz-margin-end: 0;
-}
-
-.allTabs-preview-label {
-  transform: translate(0, 2px);
 }
 
 /* Application button menu */
