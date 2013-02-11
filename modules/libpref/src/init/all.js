@@ -1825,6 +1825,9 @@ pref("svg.paint-order.enabled", false);
 pref("svg.paint-order.enabled", true);
 #endif
 
+// Is support for the new SVG text implementation enabled?
+pref("svg.text.css-frames.enabled", false);
+
 pref("font.minimum-size.ar", 0);
 pref("font.minimum-size.x-armn", 0);
 pref("font.minimum-size.x-beng", 0);
