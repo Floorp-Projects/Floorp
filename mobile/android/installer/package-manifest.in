@@ -210,9 +210,6 @@
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/components/sessionstore.xpt
 @BINPATH@/components/services-crypto-component.xpt
-#ifdef MOZ_SERVICES_CAPTIVEDETECT
-@BINPATH@/components/services-captivedetect.xpt
-#endif
 @BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
@@ -380,11 +377,6 @@
 @BINPATH@/components/HealthReportService.js
 #endif
 
-#ifdef MOZ_SERVICES_CAPTIVEDETECT
-@BINPATH@/components/CaptivePortalDetectComponents.manifest
-@BINPATH@/components/captivedetect.js
-#endif
-
 ; Modules
 @BINPATH@/modules/*
 
@@ -435,10 +427,6 @@
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
 @BINPATH@/defaults/profile/prefs.js
-
-#ifdef MOZ_SERVICES_CAPTIVEDETECT
-@BINPATH@/defaults/pref/services-captivedetect.js
-#endif
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine. 
