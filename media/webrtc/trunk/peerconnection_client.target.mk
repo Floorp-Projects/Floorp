@@ -3,10 +3,10 @@
 TOOLSET := target
 TARGET := peerconnection_client
 DEFS_Debug := \
-	'-DWEBRTC_SVNREVISION="Unavailable(issue687)"' \
+	'-DWEBRTC_SVNREVISION="Unavailable_issue687"' \
 	'-D_FILE_OFFSET_BITS=64' \
 	'-DCHROMIUM_BUILD' \
-	'-DUSE_NSS=1' \
+	'-DUSE_LIBJPEG_TURBO=1' \
 	'-DENABLE_ONE_CLICK_SIGNIN' \
 	'-DGTK_DISABLE_SINGLE_INCLUDES=1' \
 	'-DENABLE_REMOTING=1' \
@@ -15,6 +15,7 @@ DEFS_Debug := \
 	'-DENABLE_INPUT_SPEECH' \
 	'-DENABLE_NOTIFICATIONS' \
 	'-DENABLE_GPU=1' \
+	'-DUSE_OPENSSL=1' \
 	'-DENABLE_EGLIMAGE=1' \
 	'-DUSE_SKIA=1' \
 	'-DENABLE_TASK_MANAGER=1' \
@@ -68,7 +69,7 @@ CFLAGS_Debug := \
 	-I/usr/lib64/glib-2.0/include \
 	-I/usr/include/pixman-1 \
 	-I/usr/include/freetype2 \
-	-I/usr/include/libpng12 \
+	-I/usr/include/libpng15 \
 	-O0 \
 	-g
 
@@ -92,10 +93,10 @@ INCS_Debug := \
 	-Itesting/gtest/include
 
 DEFS_Release := \
-	'-DWEBRTC_SVNREVISION="Unavailable(issue687)"' \
+	'-DWEBRTC_SVNREVISION="Unavailable_issue687"' \
 	'-D_FILE_OFFSET_BITS=64' \
 	'-DCHROMIUM_BUILD' \
-	'-DUSE_NSS=1' \
+	'-DUSE_LIBJPEG_TURBO=1' \
 	'-DENABLE_ONE_CLICK_SIGNIN' \
 	'-DGTK_DISABLE_SINGLE_INCLUDES=1' \
 	'-DENABLE_REMOTING=1' \
@@ -104,6 +105,7 @@ DEFS_Release := \
 	'-DENABLE_INPUT_SPEECH' \
 	'-DENABLE_NOTIFICATIONS' \
 	'-DENABLE_GPU=1' \
+	'-DUSE_OPENSSL=1' \
 	'-DENABLE_EGLIMAGE=1' \
 	'-DUSE_SKIA=1' \
 	'-DENABLE_TASK_MANAGER=1' \
@@ -157,7 +159,7 @@ CFLAGS_Release := \
 	-I/usr/lib64/glib-2.0/include \
 	-I/usr/include/pixman-1 \
 	-I/usr/include/freetype2 \
-	-I/usr/include/libpng12 \
+	-I/usr/include/libpng15 \
 	-O2 \
 	-fno-ident \
 	-fdata-sections \
@@ -193,7 +195,7 @@ OBJS := \
 all_deps += $(OBJS)
 
 # Make sure our dependencies are built before any of us.
-$(OBJS): | $(obj).target/third_party/jsoncpp/libjsoncpp.a $(obj).target/third_party/libjingle/libjingle_peerconnection.a $(obj).target/base/base.stamp $(obj).target/net/net.stamp $(obj).target/third_party/expat/expat.stamp $(obj).target/third_party/libsrtp/libsrtp.a $(obj).target/third_party/webrtc/modules/libvideo_capture_module.a $(obj).target/third_party/webrtc/modules/libwebrtc_utility.a $(obj).target/third_party/webrtc/modules/libaudio_coding_module.a $(obj).target/third_party/webrtc/modules/libCNG.a $(obj).target/third_party/webrtc/common_audio/libsignal_processing.a $(obj).target/third_party/webrtc/modules/libG711.a $(obj).target/third_party/webrtc/modules/libG722.a $(obj).target/third_party/webrtc/modules/libiLBC.a $(obj).target/third_party/webrtc/modules/libiSAC.a $(obj).target/third_party/webrtc/modules/libiSACFix.a $(obj).target/third_party/webrtc/system_wrappers/source/libsystem_wrappers.a $(obj).target/third_party/webrtc/modules/libPCM16B.a $(obj).target/third_party/webrtc/modules/libNetEq.a $(obj).target/third_party/webrtc/common_audio/libresampler.a $(obj).target/third_party/webrtc/common_audio/libvad.a $(obj).target/third_party/webrtc/modules/libwebrtc_video_coding.a $(obj).target/third_party/webrtc/modules/libwebrtc_i420.a $(obj).target/third_party/webrtc/common_video/libwebrtc_libyuv.a $(obj).target/third_party/libyuv/libyuv.a $(obj).target/third_party/libjpeg_turbo/libjpeg_turbo.a $(obj).target/third_party/webrtc/modules/video_coding/codecs/vp8/libwebrtc_vp8.a $(obj).target/third_party/libvpx/libvpx.a $(obj).target/third_party/libvpx/gen_asm_offsets.stamp $(obj).target/third_party/libvpx/libvpx_asm_offsets.a $(obj).target/third_party/webrtc/modules/libvideo_render_module.a $(obj).target/third_party/webrtc/video_engine/libvideo_engine_core.a $(obj).target/third_party/webrtc/common_video/libwebrtc_jpeg.a $(obj).target/third_party/webrtc/modules/libmedia_file.a $(obj).target/third_party/webrtc/modules/librtp_rtcp.a $(obj).target/third_party/webrtc/modules/libremote_bitrate_estimator.a $(obj).target/third_party/webrtc/modules/libudp_transport.a $(obj).target/third_party/webrtc/modules/libbitrate_controller.a $(obj).target/third_party/webrtc/modules/libvideo_processing.a $(obj).target/third_party/webrtc/modules/libvideo_processing_sse2.a $(obj).target/third_party/webrtc/voice_engine/libvoice_engine_core.a $(obj).target/third_party/webrtc/modules/libaudio_conference_mixer.a $(obj).target/third_party/webrtc/modules/libaudio_processing.a $(obj).target/third_party/webrtc/modules/libaec.a $(obj).target/third_party/webrtc/modules/libapm_util.a $(obj).target/third_party/webrtc/modules/libaec_sse2.a $(obj).target/third_party/webrtc/modules/libaecm.a $(obj).target/third_party/webrtc/modules/libagc.a $(obj).target/third_party/webrtc/modules/libns.a $(obj).target/third_party/webrtc/modules/libaudioproc_debug_proto.a $(obj).target/third_party/protobuf/libprotobuf_lite.a $(obj).target/third_party/webrtc/modules/libaudio_device.a $(obj).target/third_party/libjingle/libjingle.a $(obj).target/third_party/libjingle/libjingle_p2p.a
+$(OBJS): | $(obj).target/third_party/jsoncpp/libjsoncpp.a $(obj).target/third_party/libjingle/libjingle_peerconnection.a $(obj).target/base/base.stamp $(obj).target/net/net.stamp $(obj).target/third_party/expat/expat.stamp $(obj).target/third_party/libsrtp/libsrtp.a $(obj).target/third_party/webrtc/modules/libvideo_capture_module.a $(obj).target/third_party/webrtc/modules/libwebrtc_utility.a $(obj).target/third_party/webrtc/modules/libaudio_coding_module.a $(obj).target/third_party/webrtc/modules/libCNG.a $(obj).target/third_party/webrtc/common_audio/libsignal_processing.a $(obj).target/third_party/webrtc/system_wrappers/source/libsystem_wrappers.a $(obj).target/third_party/webrtc/modules/libG711.a $(obj).target/third_party/webrtc/modules/libG722.a $(obj).target/third_party/webrtc/modules/libiLBC.a $(obj).target/third_party/webrtc/modules/libiSAC.a $(obj).target/third_party/webrtc/modules/libiSACFix.a $(obj).target/third_party/webrtc/modules/libPCM16B.a $(obj).target/third_party/webrtc/modules/libNetEq.a $(obj).target/third_party/webrtc/common_audio/libresampler.a $(obj).target/third_party/webrtc/common_audio/libvad.a $(obj).target/third_party/webrtc/modules/libwebrtc_video_coding.a $(obj).target/third_party/webrtc/modules/libwebrtc_i420.a $(obj).target/third_party/webrtc/common_video/libcommon_video.a $(obj).target/third_party/libjpeg_turbo/libjpeg_turbo.a $(obj).target/third_party/libyuv/libyuv.a $(obj).target/third_party/webrtc/modules/video_coding/codecs/vp8/libwebrtc_vp8.a $(obj).target/third_party/libvpx/libvpx.a $(obj).target/third_party/libvpx/gen_asm_offsets.stamp $(obj).target/third_party/libvpx/libvpx_asm_offsets.a $(obj).target/third_party/webrtc/modules/libvideo_render_module.a $(obj).target/third_party/webrtc/video_engine/libvideo_engine_core.a $(obj).target/third_party/webrtc/modules/libmedia_file.a $(obj).target/third_party/webrtc/modules/librtp_rtcp.a $(obj).target/third_party/webrtc/modules/libremote_bitrate_estimator.a $(obj).target/third_party/webrtc/modules/libudp_transport.a $(obj).target/third_party/webrtc/modules/libbitrate_controller.a $(obj).target/third_party/webrtc/modules/libvideo_processing.a $(obj).target/third_party/webrtc/modules/libvideo_processing_sse2.a $(obj).target/third_party/webrtc/voice_engine/libvoice_engine_core.a $(obj).target/third_party/webrtc/modules/libaudio_conference_mixer.a $(obj).target/third_party/webrtc/modules/libaudio_processing.a $(obj).target/third_party/webrtc/modules/libaudioproc_debug_proto.a $(obj).target/third_party/protobuf/libprotobuf_lite.a $(obj).target/third_party/webrtc/modules/libaudio_processing_sse2.a $(obj).target/third_party/webrtc/modules/libaudio_device.a $(obj).target/third_party/libjingle/libjingle.a $(obj).target/third_party/libjingle/libjingle_p2p.a
 
 # CFLAGS et al overrides must be target-local.
 # See "Target-specific Variable Values" in the GNU Make manual.
@@ -246,27 +248,26 @@ LIBS := \
 	-lpangoft2-1.0 \
 	-lpangocairo-1.0 \
 	-lgdk_pixbuf-2.0 \
-	-lpng12 \
-	-lm \
 	-lcairo \
 	-lpango-1.0 \
 	-lfreetype \
 	-lfontconfig \
 	-lgobject-2.0 \
-	-lgmodule-2.0 \
 	-lgthread-2.0 \
 	-lrt \
 	-lglib-2.0 \
 	-lX11 \
+	-lXcomposite \
 	-lXext \
+	-lXrender \
 	-lexpat \
 	-ldl
 
 $(builddir)/peerconnection_client: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
 $(builddir)/peerconnection_client: LIBS := $(LIBS)
-$(builddir)/peerconnection_client: LD_INPUTS := $(OBJS) $(obj).target/third_party/jsoncpp/libjsoncpp.a $(obj).target/third_party/libjingle/libjingle_peerconnection.a $(obj).target/third_party/libsrtp/libsrtp.a $(obj).target/third_party/webrtc/modules/libvideo_capture_module.a $(obj).target/third_party/webrtc/modules/libwebrtc_utility.a $(obj).target/third_party/webrtc/modules/libaudio_coding_module.a $(obj).target/third_party/webrtc/modules/libCNG.a $(obj).target/third_party/webrtc/common_audio/libsignal_processing.a $(obj).target/third_party/webrtc/modules/libG711.a $(obj).target/third_party/webrtc/modules/libG722.a $(obj).target/third_party/webrtc/modules/libiLBC.a $(obj).target/third_party/webrtc/modules/libiSAC.a $(obj).target/third_party/webrtc/modules/libiSACFix.a $(obj).target/third_party/webrtc/system_wrappers/source/libsystem_wrappers.a $(obj).target/third_party/webrtc/modules/libPCM16B.a $(obj).target/third_party/webrtc/modules/libNetEq.a $(obj).target/third_party/webrtc/common_audio/libresampler.a $(obj).target/third_party/webrtc/common_audio/libvad.a $(obj).target/third_party/webrtc/modules/libwebrtc_video_coding.a $(obj).target/third_party/webrtc/modules/libwebrtc_i420.a $(obj).target/third_party/webrtc/common_video/libwebrtc_libyuv.a $(obj).target/third_party/libyuv/libyuv.a $(obj).target/third_party/libjpeg_turbo/libjpeg_turbo.a $(obj).target/third_party/webrtc/modules/video_coding/codecs/vp8/libwebrtc_vp8.a $(obj).target/third_party/libvpx/libvpx.a $(obj).target/third_party/libvpx/libvpx_asm_offsets.a $(obj).target/third_party/webrtc/modules/libvideo_render_module.a $(obj).target/third_party/webrtc/video_engine/libvideo_engine_core.a $(obj).target/third_party/webrtc/common_video/libwebrtc_jpeg.a $(obj).target/third_party/webrtc/modules/libmedia_file.a $(obj).target/third_party/webrtc/modules/librtp_rtcp.a $(obj).target/third_party/webrtc/modules/libremote_bitrate_estimator.a $(obj).target/third_party/webrtc/modules/libudp_transport.a $(obj).target/third_party/webrtc/modules/libbitrate_controller.a $(obj).target/third_party/webrtc/modules/libvideo_processing.a $(obj).target/third_party/webrtc/modules/libvideo_processing_sse2.a $(obj).target/third_party/webrtc/voice_engine/libvoice_engine_core.a $(obj).target/third_party/webrtc/modules/libaudio_conference_mixer.a $(obj).target/third_party/webrtc/modules/libaudio_processing.a $(obj).target/third_party/webrtc/modules/libaec.a $(obj).target/third_party/webrtc/modules/libapm_util.a $(obj).target/third_party/webrtc/modules/libaec_sse2.a $(obj).target/third_party/webrtc/modules/libaecm.a $(obj).target/third_party/webrtc/modules/libagc.a $(obj).target/third_party/webrtc/modules/libns.a $(obj).target/third_party/webrtc/modules/libaudioproc_debug_proto.a $(obj).target/third_party/protobuf/libprotobuf_lite.a $(obj).target/third_party/webrtc/modules/libaudio_device.a $(obj).target/third_party/libjingle/libjingle.a $(obj).target/third_party/libjingle/libjingle_p2p.a
+$(builddir)/peerconnection_client: LD_INPUTS := $(OBJS) $(obj).target/third_party/jsoncpp/libjsoncpp.a $(obj).target/third_party/libjingle/libjingle_peerconnection.a $(obj).target/third_party/libsrtp/libsrtp.a $(obj).target/third_party/webrtc/modules/libvideo_capture_module.a $(obj).target/third_party/webrtc/modules/libwebrtc_utility.a $(obj).target/third_party/webrtc/modules/libaudio_coding_module.a $(obj).target/third_party/webrtc/modules/libCNG.a $(obj).target/third_party/webrtc/common_audio/libsignal_processing.a $(obj).target/third_party/webrtc/system_wrappers/source/libsystem_wrappers.a $(obj).target/third_party/webrtc/modules/libG711.a $(obj).target/third_party/webrtc/modules/libG722.a $(obj).target/third_party/webrtc/modules/libiLBC.a $(obj).target/third_party/webrtc/modules/libiSAC.a $(obj).target/third_party/webrtc/modules/libiSACFix.a $(obj).target/third_party/webrtc/modules/libPCM16B.a $(obj).target/third_party/webrtc/modules/libNetEq.a $(obj).target/third_party/webrtc/common_audio/libresampler.a $(obj).target/third_party/webrtc/common_audio/libvad.a $(obj).target/third_party/webrtc/modules/libwebrtc_video_coding.a $(obj).target/third_party/webrtc/modules/libwebrtc_i420.a $(obj).target/third_party/webrtc/common_video/libcommon_video.a $(obj).target/third_party/libjpeg_turbo/libjpeg_turbo.a $(obj).target/third_party/libyuv/libyuv.a $(obj).target/third_party/webrtc/modules/video_coding/codecs/vp8/libwebrtc_vp8.a $(obj).target/third_party/libvpx/libvpx.a $(obj).target/third_party/libvpx/libvpx_asm_offsets.a $(obj).target/third_party/webrtc/modules/libvideo_render_module.a $(obj).target/third_party/webrtc/video_engine/libvideo_engine_core.a $(obj).target/third_party/webrtc/modules/libmedia_file.a $(obj).target/third_party/webrtc/modules/librtp_rtcp.a $(obj).target/third_party/webrtc/modules/libremote_bitrate_estimator.a $(obj).target/third_party/webrtc/modules/libudp_transport.a $(obj).target/third_party/webrtc/modules/libbitrate_controller.a $(obj).target/third_party/webrtc/modules/libvideo_processing.a $(obj).target/third_party/webrtc/modules/libvideo_processing_sse2.a $(obj).target/third_party/webrtc/voice_engine/libvoice_engine_core.a $(obj).target/third_party/webrtc/modules/libaudio_conference_mixer.a $(obj).target/third_party/webrtc/modules/libaudio_processing.a $(obj).target/third_party/webrtc/modules/libaudioproc_debug_proto.a $(obj).target/third_party/protobuf/libprotobuf_lite.a $(obj).target/third_party/webrtc/modules/libaudio_processing_sse2.a $(obj).target/third_party/webrtc/modules/libaudio_device.a $(obj).target/third_party/libjingle/libjingle.a $(obj).target/third_party/libjingle/libjingle_p2p.a
 $(builddir)/peerconnection_client: TOOLSET := $(TOOLSET)
-$(builddir)/peerconnection_client: $(OBJS) $(obj).target/third_party/jsoncpp/libjsoncpp.a $(obj).target/third_party/libjingle/libjingle_peerconnection.a $(obj).target/third_party/libsrtp/libsrtp.a $(obj).target/third_party/webrtc/modules/libvideo_capture_module.a $(obj).target/third_party/webrtc/modules/libwebrtc_utility.a $(obj).target/third_party/webrtc/modules/libaudio_coding_module.a $(obj).target/third_party/webrtc/modules/libCNG.a $(obj).target/third_party/webrtc/common_audio/libsignal_processing.a $(obj).target/third_party/webrtc/modules/libG711.a $(obj).target/third_party/webrtc/modules/libG722.a $(obj).target/third_party/webrtc/modules/libiLBC.a $(obj).target/third_party/webrtc/modules/libiSAC.a $(obj).target/third_party/webrtc/modules/libiSACFix.a $(obj).target/third_party/webrtc/system_wrappers/source/libsystem_wrappers.a $(obj).target/third_party/webrtc/modules/libPCM16B.a $(obj).target/third_party/webrtc/modules/libNetEq.a $(obj).target/third_party/webrtc/common_audio/libresampler.a $(obj).target/third_party/webrtc/common_audio/libvad.a $(obj).target/third_party/webrtc/modules/libwebrtc_video_coding.a $(obj).target/third_party/webrtc/modules/libwebrtc_i420.a $(obj).target/third_party/webrtc/common_video/libwebrtc_libyuv.a $(obj).target/third_party/libyuv/libyuv.a $(obj).target/third_party/libjpeg_turbo/libjpeg_turbo.a $(obj).target/third_party/webrtc/modules/video_coding/codecs/vp8/libwebrtc_vp8.a $(obj).target/third_party/libvpx/libvpx.a $(obj).target/third_party/libvpx/libvpx_asm_offsets.a $(obj).target/third_party/webrtc/modules/libvideo_render_module.a $(obj).target/third_party/webrtc/video_engine/libvideo_engine_core.a $(obj).target/third_party/webrtc/common_video/libwebrtc_jpeg.a $(obj).target/third_party/webrtc/modules/libmedia_file.a $(obj).target/third_party/webrtc/modules/librtp_rtcp.a $(obj).target/third_party/webrtc/modules/libremote_bitrate_estimator.a $(obj).target/third_party/webrtc/modules/libudp_transport.a $(obj).target/third_party/webrtc/modules/libbitrate_controller.a $(obj).target/third_party/webrtc/modules/libvideo_processing.a $(obj).target/third_party/webrtc/modules/libvideo_processing_sse2.a $(obj).target/third_party/webrtc/voice_engine/libvoice_engine_core.a $(obj).target/third_party/webrtc/modules/libaudio_conference_mixer.a $(obj).target/third_party/webrtc/modules/libaudio_processing.a $(obj).target/third_party/webrtc/modules/libaec.a $(obj).target/third_party/webrtc/modules/libapm_util.a $(obj).target/third_party/webrtc/modules/libaec_sse2.a $(obj).target/third_party/webrtc/modules/libaecm.a $(obj).target/third_party/webrtc/modules/libagc.a $(obj).target/third_party/webrtc/modules/libns.a $(obj).target/third_party/webrtc/modules/libaudioproc_debug_proto.a $(obj).target/third_party/protobuf/libprotobuf_lite.a $(obj).target/third_party/webrtc/modules/libaudio_device.a $(obj).target/third_party/libjingle/libjingle.a $(obj).target/third_party/libjingle/libjingle_p2p.a FORCE_DO_CMD
+$(builddir)/peerconnection_client: $(OBJS) $(obj).target/third_party/jsoncpp/libjsoncpp.a $(obj).target/third_party/libjingle/libjingle_peerconnection.a $(obj).target/third_party/libsrtp/libsrtp.a $(obj).target/third_party/webrtc/modules/libvideo_capture_module.a $(obj).target/third_party/webrtc/modules/libwebrtc_utility.a $(obj).target/third_party/webrtc/modules/libaudio_coding_module.a $(obj).target/third_party/webrtc/modules/libCNG.a $(obj).target/third_party/webrtc/common_audio/libsignal_processing.a $(obj).target/third_party/webrtc/system_wrappers/source/libsystem_wrappers.a $(obj).target/third_party/webrtc/modules/libG711.a $(obj).target/third_party/webrtc/modules/libG722.a $(obj).target/third_party/webrtc/modules/libiLBC.a $(obj).target/third_party/webrtc/modules/libiSAC.a $(obj).target/third_party/webrtc/modules/libiSACFix.a $(obj).target/third_party/webrtc/modules/libPCM16B.a $(obj).target/third_party/webrtc/modules/libNetEq.a $(obj).target/third_party/webrtc/common_audio/libresampler.a $(obj).target/third_party/webrtc/common_audio/libvad.a $(obj).target/third_party/webrtc/modules/libwebrtc_video_coding.a $(obj).target/third_party/webrtc/modules/libwebrtc_i420.a $(obj).target/third_party/webrtc/common_video/libcommon_video.a $(obj).target/third_party/libjpeg_turbo/libjpeg_turbo.a $(obj).target/third_party/libyuv/libyuv.a $(obj).target/third_party/webrtc/modules/video_coding/codecs/vp8/libwebrtc_vp8.a $(obj).target/third_party/libvpx/libvpx.a $(obj).target/third_party/libvpx/libvpx_asm_offsets.a $(obj).target/third_party/webrtc/modules/libvideo_render_module.a $(obj).target/third_party/webrtc/video_engine/libvideo_engine_core.a $(obj).target/third_party/webrtc/modules/libmedia_file.a $(obj).target/third_party/webrtc/modules/librtp_rtcp.a $(obj).target/third_party/webrtc/modules/libremote_bitrate_estimator.a $(obj).target/third_party/webrtc/modules/libudp_transport.a $(obj).target/third_party/webrtc/modules/libbitrate_controller.a $(obj).target/third_party/webrtc/modules/libvideo_processing.a $(obj).target/third_party/webrtc/modules/libvideo_processing_sse2.a $(obj).target/third_party/webrtc/voice_engine/libvoice_engine_core.a $(obj).target/third_party/webrtc/modules/libaudio_conference_mixer.a $(obj).target/third_party/webrtc/modules/libaudio_processing.a $(obj).target/third_party/webrtc/modules/libaudioproc_debug_proto.a $(obj).target/third_party/protobuf/libprotobuf_lite.a $(obj).target/third_party/webrtc/modules/libaudio_processing_sse2.a $(obj).target/third_party/webrtc/modules/libaudio_device.a $(obj).target/third_party/libjingle/libjingle.a $(obj).target/third_party/libjingle/libjingle_p2p.a FORCE_DO_CMD
 	$(call do_cmd,link)
 
 all_deps += $(builddir)/peerconnection_client

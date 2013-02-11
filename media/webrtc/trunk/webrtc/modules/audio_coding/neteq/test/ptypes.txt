@@ -1,0 +1,15 @@
+pcmu 0
+pcma 8
+cn 13
+ilbc 102
+isac 103
+isacswb 104
+isacfb 124
+avt 106
+red 117
+cn_wb 98
+cn_swb32 99
+pcm16b 93
+pcm16b_wb 94
+pcm16b_swb32khz 95
+g722 9

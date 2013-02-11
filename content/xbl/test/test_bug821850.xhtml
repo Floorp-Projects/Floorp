@@ -1,0 +1,217 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=821850
+-->
+<head>
+  <title>Test for Bug 821850</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="testBinding">
+      <implementation>
+        <constructor>
+          // Store a property as an expando on the bound element.
+          this._prop = "propVal";
+
+          // Wait for both constructors to fire.
+          window.constructorCount = (window.constructorCount + 1) || 1;
+          if (window.constructorCount != 2)
+            return;
+
+          // Grab some basic infrastructure off the content window.
+          var win = XPCNativeWrapper.unwrap(window);
+          SpecialPowers = win.SpecialPowers;
+          Cu = SpecialPowers.Cu;
+          is = win.is;
+          ok = win.ok;
+          SimpleTest = win.SimpleTest;
+
+          // Stick some expandos on the content window.
+          window.xrayExpando = 3;
+          win.primitiveExpando = 11;
+          win.stringExpando = "stringExpando";
+          win.objectExpando = { foo: 12 };
+          win.globalExpando = SpecialPowers.unwrap(Cu.getGlobalForObject({}));
+          win.functionExpando = function() { return "called" };
+          win.functionExpando.prop = 2;
+
+          // Make sure we're Xraying.
+          ok(Cu.isXrayWrapper(window), "Window is Xrayed");
+          ok(Cu.isXrayWrapper(document), "Document is Xrayed");
+
+          var bound = document.getElementById('bound');
+          ok(bound, "bound is non-null");
+          is(bound.method('baz'), "method:baz", "Xray methods work");
+          is(bound.prop, "propVal", "Property Xrays work");
+          is(bound.primitiveField, 2, "Field Xrays work");
+          is(bound.objectField.bar.a, 1, "Field Xrays work on objects");
+          is(bound.contentField.foo, 10, "Field Xrays work on content objects");
+          var hole = bound.contentField.rabbit.hole;
+          is(hole.win, window, "We gain back Xray vision when hitting a native object");
+          ok(Cu.isXrayWrapper(hole.win), "Really is Xray");
+
+          // This gets invoked by an event handler.
+          window.finish = function() {
+            // Content messed with stuff. Make sure we still see the right thing.
+            is(bound.method('bay'), "method:bay", "Xray methods work");
+            is(bound.wrappedJSObject.method('bay'), "hah", "Xray waived methods work");
+            is(bound.prop, "set:someOtherVal", "Xray props work");
+            is(bound.wrappedJSObject.prop, "redefined", "Xray waived props work");
+            is(bound.primitiveField, 321, "Can't do anything about redefined fields");
+
+            SimpleTest.finish();
+          }
+
+          // Hand things off to content. Content will call us back.
+          win.go();
+        </constructor>
+        <field name="primitiveField">2</field>
+        <field name="objectField">({ foo: 2, bar: {a: 1} })</field>
+        <field name="contentField">XPCNativeWrapper.unwrap(window).contentVal</field>
+        <method name="method">
+          <parameter name="arg" />
+          <body>
+            return "method:" + arg;
+          </body>
+        </method>
+        <property name="prop">
+          <getter>return this._prop;</getter>
+          <setter>this._prop = "set:" + val;</setter>
+        </property>
+      </implementation>
+      <handlers>
+        <handler event="testevent" action="ok(true, 'called event handler'); finish();"/>
+      </handlers>
+    </binding>
+  </bindings>
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for XBL scope behavior. **/
+  SimpleTest.waitForExplicitFinish();
+
+  // Test the Xray waiving behavior when accessing fields. We should be able to
+  // see sequential JS-implemented properties, but should regain Xrays when we
+  // hit a native property.
+  window.contentVal = { foo: 10, rabbit: { hole: { bar: 100, win: window} } };
+  ok(true, "Set contentVal");
+
+  function go() {
+    "use strict";
+
+    // Test what we can and cannot access in the XBL scope.
+    is(typeof window.xrayExpando, "undefined", "Xray expandos are private to the caller");
+    is(window.primitiveExpando, 11, "Can see waived expandos");
+    is(window.stringExpando, "stringExpando", "Can see waived expandos");
+    is(typeof window.objectExpando, "object", "object expando exists");
+    checkThrows(function() window.objectExpando.foo);
+    is(SpecialPowers.wrap(window.objectExpando).foo, 12, "SpecialPowers sees the right thing");
+    is(typeof window.globalExpando, "object", "Can see global object");
+    checkThrows(function() window.globalExpando.win);
+    is(window.functionExpando(), "called", "XBL functions are callable");
+    checkThrows(function() window.functionExpando.prop);
+
+    // Inspect the bound element.
+    var bound = $('bound');
+    is(bound.primitiveField, 2, "Can see primitive fields");
+    is(typeof bound.objectField, "object", "objectField exists");
+    checkThrows(function() bound.objectField.foo);
+    is(bound.method("foo"), "method:foo", "Can invoke XBL method from content");
+    is(bound.prop, "propVal", "Can access properties from content");
+    bound.prop = "someOtherVal";
+    is(bound.prop, "set:someOtherVal", "Can set properties from content");
+
+    //
+    // Try sticking a bunch of stuff on the prototype object.
+    //
+
+    var proto = bound.__proto__;
+    proto.someExpando = 201;
+    is(bound.someExpando, 201, "Can stick non-XBL properties on the proto");
+
+    function checkTamperProof(obj, propName, desc) {
+      var accessor = !('value' in Object.getOwnPropertyDescriptor(obj, propName));
+      if (!accessor)
+        checkRejected(function() { obj[propName] = function() {} }, desc + ": assign");
+      checkRejected(function() { Object.defineProperty(obj, propName, {value: 3}) }, desc + ": define with value");
+      checkRejected(function() { Object.defineProperty(obj, propName, {writable: true}) }, desc + ": make writable");
+      checkRejected(function() { Object.defineProperty(obj, propName, {configurable: true}) }, desc + ": make configurable");
+      checkRejected(function() { Object.defineProperty(obj, propName, {get: function() {}}) }, desc + ": define with getter");
+      checkRejected(function() { Object.defineProperty(obj, propName, {set: function() {}}) }, desc + ": define with setter");
+
+      // Windows are implemented as proxies, and Proxy::delete_ doesn't currently
+      // pass strict around. Work around it in the window.binding case by just
+      // checking if delete returns false.
+      // manually.
+      if (/testBinding/.exec(propName))
+        is(delete obj[propName], false, "deleting prototype from window fails");
+      else
+        checkRejected(function() { delete obj[propName]; }, desc + ": delete");
+
+      if (!accessor)
+        checkRejected(function() { obj[propName] = function() {} }, desc + ": assign (again)");
+    }
+
+    // Make sure we can't modify XBL props on the prototype object, since Xrays
+    // use it to perform lookups.
+    checkTamperProof(proto, 'method', "XBL Proto Method");
+    checkTamperProof(proto, 'prop', "XBL Proto Prop");
+    checkTamperProof(proto, 'primitiveField', "XBL Field Accessor");
+
+    // Make sure that callers can't tamper with the prototype's definition on
+    // the window.
+    var protoName, count = 0;
+    for (var k of Object.getOwnPropertyNames(window)) {
+      if (!/testBinding/.exec(k))
+        continue;
+      count++;
+      protoName = k;
+    }
+    is(count, 1, "Should be exactly one prototype object");
+    checkTamperProof(window, protoName, "XBL prototype prop on window");
+
+    // Tamper with the derived object. This doesn't affect the XBL scope thanks
+    // to Xrays.
+    Object.defineProperty(bound, 'method', {value: function() { return "hah" }});
+    Object.defineProperty(bound, 'prop', {value: "redefined"});
+    bound.primitiveField = 321;
+
+    // Hand control back to the XBL scope by dispatching an event on the bound element.
+    bound.dispatchEvent(new CustomEvent('testevent'));
+  }
+
+  function checkThrows(fn) {
+    try { fn(); ok(false, "Should have thrown"); }
+    catch (e) { ok(!!/denied|insecure/.exec(e), "Should have thrown security exception: " + e); }
+  }
+
+  function checkRejected(fn, desc) {
+    try { fn(); ok(false, desc + ": Should have thrown"); }
+    catch (e) { ok(!!/configurable|read-only/.exec(e), desc + ": Threw correctly: " + e); }
+  }
+
+  function setup() {
+    SpecialPowers.pushPrefEnv({set: [['dom.xbl_scopes', true]] }, continueSetup);
+  }
+
+  function continueSetup() {
+    // When the bindings are applied, the constructor will be invoked and the
+    // test will continue.
+    $('bound').style.MozBinding = 'url(#testBinding)';
+    $('bound2').style.MozBinding = 'url(#testBinding)';
+  }
+
+  ]]>
+</script>
+</head>
+<body onload="setup()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=821850">Mozilla Bug 821850</a>
+<p id="display"></p>
+<div id="content">
+  <div id="bound">Bound element</div>
+  <div id="bound2">Bound element</div>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

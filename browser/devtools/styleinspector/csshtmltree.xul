@@ -67,9 +67,10 @@ To visually debug the templates without running firefox, alter the display:none
   -->
   <div id="templateRoot">
     <xul:hbox class="headerControls" flex="1" align="center">
-      <xul:checkbox class="onlyuserstyles" save="${onlyUserStylesCheckbox}"
-                    oncommand="${onlyUserStylesChanged}" checked="true"
-                    label="&userStylesLabel;"/>
+      <xul:checkbox class="includebrowserstyles"
+                    save="${includeBrowserStylesCheckbox}"
+                    oncommand="${includeBrowserStylesChanged}" checked="false"
+                    label="&browserStylesLabel;"/>
       <xul:textbox class="searchfield" type="search" save="${searchField}"
                    placeholder="&userStylesSearch;" flex="1"
                    oncommand="${filterChanged}"/>

@@ -65,21 +65,12 @@ const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
 
 const CATEGORY_UPDATE_TIMER               = "update-timer";
 
-const KEY_APPDIR          = "XCurProcD";
 const KEY_GRED            = "GreD";
-
-#ifdef XP_WIN
-#define USE_UPDROOT
-#elifdef ANDROID
-#define USE_UPDROOT
-#endif
+const KEY_UPDROOT         = "UpdRootD";
+const KEY_EXECUTABLE      = "XREExeF";
 
 #ifdef MOZ_WIDGET_GONK
 #define USE_UPDATE_ARCHIVE_DIR
-#endif
-
-#ifdef USE_UPDROOT
-const KEY_UPDROOT         = "UpdRootD";
 #endif
 
 #ifdef USE_UPDATE_ARCHIVE_DIR
@@ -470,7 +461,8 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
      */
     if (!userCanElevate) {
       // if we're unable to create the test file this will throw an exception.
-      var appDirTestFile = FileUtils.getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
+      var appDirTestFile = getAppBaseDir();
+      appDirTestFile.append(FILE_PERMS_TEST);
       LOG("gCanApplyUpdates - testing write access " + appDirTestFile.path);
       if (appDirTestFile.exists())
         appDirTestFile.remove(false)
@@ -618,14 +610,27 @@ function binaryToHex(input) {
 #  @return  nsIFile object for the location specified.
  */
 function getUpdateDirCreate(pathArray) {
-#ifdef USE_UPDROOT
-  try {
-    let dir = FileUtils.getDir(KEY_UPDROOT, pathArray, true);
-    return dir;
-  } catch (e) {
-  }
-#endif
-  return FileUtils.getDir(KEY_APPDIR, pathArray, true);
+  return FileUtils.getDir(KEY_UPDROOT, pathArray, true);
+}
+
+ /**
+ #  Gets the specified directory at the specified hierarchy under the
+ #  update root directory and without creating it if it doesn't exist.
+ #  @param   pathArray
+ #           An array of path components to locate beneath the directory
+ #           specified by |key|
+ #  @return  nsIFile object for the location specified.
+  */
+function getUpdateDirNoCreate(pathArray) {
+  return FileUtils.getDir(KEY_UPDROOT, pathArray, false);
+}
+
+/**
+#  Gets the application base directory.
+#  @return  nsIFile object for the application base directory.
+ */
+function getAppBaseDir() {
+  return Services.dirsvc.get(KEY_EXECUTABLE, Ci.nsIFile).parent;
 }
 
 /**
@@ -636,7 +641,7 @@ function getUpdateDirCreate(pathArray) {
  * @return nsIFile object for the directory
  */
 function getInstallDirRoot() {
-  var dir = FileUtils.getDir(KEY_APPDIR, [], false);
+  var dir = getAppBaseDir();
 #ifdef XP_MACOSX
   // On Mac, we store the Updated.app directory inside the bundle directory.
   dir = dir.parent.parent;
@@ -696,7 +701,6 @@ function getUpdatesDir() {
   return getUpdateDirCreate([DIR_UPDATES, "0"]);
 }
 
-#ifndef USE_UPDROOT
 /**
  * Get the Active Updates directory inside the directory where we apply the
  * background updates.
@@ -704,7 +708,7 @@ function getUpdatesDir() {
  *         nsIFile object.
  */
 function getUpdatesDirInApplyToDir() {
-  var dir = FileUtils.getDir(KEY_APPDIR, []);
+  var dir = getAppBaseDir();
 #ifdef XP_MACOSX
   dir = dir.parent.parent; // the bundle directory
 #endif
@@ -719,7 +723,6 @@ function getUpdatesDirInApplyToDir() {
   }
   return dir;
 }
-#endif
 
 /**
  * Reads the update state from the update.status file in the specified
@@ -951,26 +954,16 @@ function cleanUpUpdatesDir(aBackgroundUpdate) {
     if (f.leafName == FILE_UPDATE_LOG) {
       var dir;
       try {
-#ifdef USE_UPDROOT
-        // If we're on a platform which uses the update root directory, the log
-        // files are written outside of the application directory, so they will
-        // not get overwritten when we replace the directories after a
-        // background update.  Therefore, we don't need any special logic for
-        // that case here.
-        // Note that this currently only applies to Windows.
-        dir = f.parent.parent;
-#else
         // If we don't use the update root directory, the log files are written
         // inside the application directory.  In that case, we want to write
         // the log files to the updated directory in the case of background
         // updates, so that they would be available when we replace that
         // directory with the application directory later on.
-        if (aBackgroundUpdate) {
+        if (aBackgroundUpdate && getUpdateDirNoCreate([]).equals(getAppBaseDir())) {
           dir = getUpdatesDirInApplyToDir();
         } else {
           dir = f.parent.parent;
         }
-#endif
         var logFile = dir.clone();
         logFile.append(FILE_LAST_LOG);
         if (logFile.exists()) {
@@ -1059,8 +1052,8 @@ function getLocale() {
 
   if (!gLocale)
     throw Components.Exception(FILE_UPDATE_LOCALE + " file doesn't exist in " +
-                               "either the " + KEY_APPDIR + " or " + KEY_GRED +
-                               " directories", Cr.NS_ERROR_FILE_NOT_FOUND);
+                               "either the application or GRE directories",
+                               Cr.NS_ERROR_FILE_NOT_FOUND);
 
   LOG("getLocale - getting locale from file: " + channel.originalURI.spec +
       ", locale: " + gLocale);
@@ -1690,6 +1683,12 @@ const UpdateServiceFactory = {
 function UpdateService() {
   LOG("Creating UpdateService");
   Services.obs.addObserver(this, "xpcom-shutdown", false);
+#ifdef MOZ_WIDGET_GONK
+  // PowerManagerService::SyncProfile (which is called for Reboot, PowerOff
+  // and Restart) sends the profile-change-net-teardown event. We can then
+  // pause the download in a similar manner to xpcom-shutdown.
+  Services.obs.addObserver(this, "profile-change-net-teardown", false);
+#endif
 }
 
 UpdateService.prototype = {
@@ -1737,8 +1736,11 @@ UpdateService.prototype = {
     case "network:offline-status-changed":
       this._offlineStatusChanged(data);
       break;
+#ifdef MOZ_WIDGET_GONK
+    case "profile-change-net-teardown": // fall thru
+#endif
     case "xpcom-shutdown":
-      Services.obs.removeObserver(this, "xpcom-shutdown");
+      Services.obs.removeObserver(this, topic);
 
       if (this._retryTimer) {
         this._retryTimer.cancel();

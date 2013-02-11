@@ -47,5 +47,5 @@ WEBRTC_CONFIG_INCLUDED = 1
 EXTRA_DEPS += $(topsrcdir)/media/webrtc/webrtc-config.mk
 
 LOCAL_INCLUDES += \
-  -I$(topsrcdir)/media/webrtc/trunk/src \
+  -I$(topsrcdir)/media/webrtc/trunk/webrtc \
   $(NULL)

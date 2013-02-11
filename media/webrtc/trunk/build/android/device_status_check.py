@@ -5,11 +5,13 @@
 # found in the LICENSE file.
 
 """A class to keep track of devices across builds and report state."""
-
+import logging
 import optparse
 import os
+import smtplib
 import sys
 
+from pylib import buildbot_report
 from pylib.android_commands import GetAttachedDevices
 from pylib.cmd_helper import GetCmdOutput
 
@@ -57,38 +59,87 @@ def CheckForMissingDevices(options, adb_online_devs):
     adb_online_devs: A list of serial numbers of the currently visible
                      and online attached devices.
   """
+  # TODO(navabi): remove this once the bug that causes different number
+  # of devices to be detected between calls is fixed.
+  logger = logging.getLogger()
+  logger.setLevel(logging.INFO)
 
-  last_devices_path = os.path.abspath(os.path.join(options.out_dir,
-                                                   '.last_devices'))
-  last_devices = []
-  try:
-    with open(last_devices_path) as f:
-      last_devices = f.read().splitlines()
-  except IOError:
-    # Ignore error, file might not exist
-    pass
+  out_dir = os.path.abspath(options.out_dir)
+
+  def ReadDeviceList(file_name):
+    devices_path = os.path.join(out_dir, file_name)
+    devices = []
+    try:
+      with open(devices_path) as f:
+        devices = f.read().splitlines()
+    except IOError:
+      # Ignore error, file might not exist
+      pass
+    return devices
+
+  def WriteDeviceList(file_name, device_list):
+    path = os.path.join(out_dir, file_name)
+    if not os.path.exists(out_dir):
+      os.makedirs(out_dir)
+    with open(path, 'w') as f:
+      # Write devices currently visible plus devices previously seen.
+      f.write('\n'.join(set(device_list)))
+
+  last_devices_path = os.path.join(out_dir, '.last_devices')
+  last_devices = ReadDeviceList('.last_devices')
 
   missing_devs = list(set(last_devices) - set(adb_online_devs))
   if missing_devs:
-    print '@@@STEP_WARNINGS@@@'
-    print '@@@STEP_SUMMARY_TEXT@%s not detected.@@@' % missing_devs
-    print 'Current online devices: %s' % adb_online_devs
-    print '%s are no longer visible. Were they removed?\n' % missing_devs
-    print 'SHERIFF: See go/chrome_device_monitor'
-    print 'Cache file: %s\n\n' % last_devices_path
-    print 'adb devices'
-    print GetCmdOutput(['adb', 'devices'])
+    from_address = 'buildbot@chromium.org'
+    to_address = 'chromium-android-device-alerts@google.com'
+    bot_name = os.environ['BUILDBOT_BUILDERNAME']
+    slave_name = os.environ['BUILDBOT_SLAVENAME']
+    num_online_devs = len(adb_online_devs)
+    subject = 'Devices offline on %s, %s (%d remaining).' % (slave_name,
+                                                             bot_name,
+                                                             num_online_devs)
+    buildbot_report.PrintWarning()
+    devices_missing_msg = '%d devices not detected.' % len(missing_devs)
+    buildbot_report.PrintSummaryText(devices_missing_msg)
+
+    # TODO(navabi): Debug by printing both output from GetCmdOutput and
+    # GetAttachedDevices to compare results.
+    body = '\n'.join(
+        ['Current online devices: %s' % adb_online_devs,
+         '%s are no longer visible. Were they removed?\n' % missing_devs,
+         'SHERIFF: See go/chrome_device_monitor',
+         'Cache file: %s\n\n' % last_devices_path,
+         'adb devices: %s' % GetCmdOutput(['adb', 'devices']),
+         'adb devices(GetAttachedDevices): %s' % GetAttachedDevices()])
+
+    print body
+
+    # Only send email if the first time a particular device goes offline
+    last_missing = ReadDeviceList('.last_missing')
+    new_missing_devs = set(missing_devs) - set(last_missing)
+
+    if new_missing_devs:
+      msg_body = '\r\n'.join(
+          ['From: %s' % from_address,
+           'To: %s' % to_address,
+           'Subject: %s' % subject,
+           '', body])
+      try:
+        server = smtplib.SMTP('localhost')
+        server.sendmail(from_address, [to_address], msg_body)
+        server.quit()
+      except Exception as e:
+        print 'Failed to send alert email. Error: %s' % e
   else:
     new_devs = set(adb_online_devs) - set(last_devices)
-    if new_devs:
-      print '@@@STEP_WARNINGS@@@'
-      print '@@@STEP_SUMMARY_TEXT@New devices detected :-)@@@'
+    if new_devs and os.path.exists(last_devices_path):
+      buildbot_report.PrintWarning()
+      buildbot_report.PrintSummaryText(
+          '%d new devices detected' % len(new_devs))
       print ('New devices detected %s. And now back to your '
              'regularly scheduled program.' % list(new_devs))
-
-  # Write devices currently visible plus devices previously seen.
-  with open(last_devices_path, 'w') as f:
-    f.write('\n'.join(set(adb_online_devs + last_devices)))
+  WriteDeviceList('.last_devices', (adb_online_devs + last_devices))
+  WriteDeviceList('.last_missing', missing_devs)
 
 
 def main():
@@ -101,8 +152,8 @@ def main():
   options, args = parser.parse_args()
   if args:
     parser.error('Unknown options %s' % args)
+  buildbot_report.PrintNamedStep('Device Status Check')
   devices = GetAttachedDevices()
-
   types, builds, reports = [], [], []
   if devices:
     types, builds, reports = zip(*[DeviceInfo(dev) for dev in devices])
@@ -110,9 +161,8 @@ def main():
   unique_types = list(set(types))
   unique_builds = list(set(builds))
 
-  print ('@@@BUILD_STEP Device Status Check - '
-         '%d online devices, types %s, builds %s@@@'
-         % (len(devices), unique_types, unique_builds))
+  buildbot_report.PrintMsg('Online devices: %d. Device types %s, builds %s'
+                           % (len(devices), unique_types, unique_builds))
   print '\n'.join(reports)
   CheckForMissingDevices(options, devices)
 

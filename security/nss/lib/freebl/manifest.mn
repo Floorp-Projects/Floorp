@@ -56,6 +56,7 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	alghmac.h \
 	blapi.h \
+	hmacct.h \
 	secmpi.h \
 	secrng.h \
 	ec.h \
@@ -102,6 +103,7 @@ CSRCS = \
 	cts.c \
 	ctr.c \
 	gcm.c \
+	hmacct.c \
 	rijndael.c \
 	aeskeywrap.c \
 	camellia.c \

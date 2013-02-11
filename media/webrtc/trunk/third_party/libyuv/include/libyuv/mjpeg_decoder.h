@@ -13,6 +13,8 @@
 
 #include "libyuv/basic_types.h"
 
+// NOTE: For a simplified public API use convert.h MJPGToI420().
+
 struct jpeg_common_struct;
 struct jpeg_decompress_struct;
 struct jpeg_source_mgr;
@@ -85,10 +87,10 @@ class MJpegDecoder {
 
   int GetVertSubSampFactor(int component);
 
-  // Public for testability
+  // Public for testability.
   int GetImageScanlinesPerImcuRow();
 
-  // Public for testability
+  // Public for testability.
   int GetComponentScanlinesPerImcuRow(int component);
 
   // Width of a component in bytes.

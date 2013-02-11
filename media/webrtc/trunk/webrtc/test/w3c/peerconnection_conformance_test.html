@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<!--
+To quickly iterate when developing this test, make sure you select
+'Always allow this site to use this webcam' option in the dropdown menu of
+Chrome when it's requesting access to your webcam.
+Notice that this requires the site you're browsing to use HTTPS.
+
+Without that, the test might timeout before you have had the chance to accept
+access to the webcam.
+-->
+
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>PeerConnection Connection Test</title>
+
+  <script src="https://w3c-test.org/resources/testharness.js"></script>
+
+  <script type="text/javascript">
+  var test = async_test('Can set up a basic WebRTC call.', {timeout: 5000});
+  var gFirstConnection = null;
+  var gSecondConnection = null;
+
+  function getUserMediaOkCallback(localStream) {
+    gFirstConnection = new webkitRTCPeerConnection(null, null);
+    gFirstConnection.onicecandidate = onIceCandidateToFirst;
+    gFirstConnection.addStream(localStream);
+    gFirstConnection.createOffer(onOfferCreated);
+
+    var videoTag = document.getElementById('local-view');
+    videoTag.src = webkitURL.createObjectURL(localStream);
+  };
+
+  var onOfferCreated = test.step_func(function(offer) {
+    gFirstConnection.setLocalDescription(offer);
+
+    // This would normally go across the application's signaling solution.
+    // In our case, the "signaling" is to call this function.
+    receiveCall(offer.sdp);
+  });
+
+  function receiveCall(offerSdp) {
+    gSecondConnection = new webkitRTCPeerConnection(null, null);
+    gSecondConnection.onicecandidate = onIceCandidateToSecond;
+    gSecondConnection.onaddstream = onRemoteStream;
+
+    var parsedOffer = new RTCSessionDescription({ type: 'offer',
+                                                  sdp: offerSdp });
+    gSecondConnection.setRemoteDescription(parsedOffer);
+
+    gSecondConnection.createAnswer(onAnswerCreated,
+                                   failed('createAnswer'));
+  };
+
+  var onAnswerCreated = test.step_func(function(answer) {
+    gSecondConnection.setLocalDescription(answer);
+
+    // Similarly, this would go over the application's signaling solution.
+    handleAnswer(answer.sdp);
+  });
+
+  function handleAnswer(answerSdp) {
+    var parsedAnswer = new RTCSessionDescription({ type: 'answer',
+                                                   sdp: answerSdp });
+    gFirstConnection.setRemoteDescription(parsedAnswer);
+
+    // Call negotiated: done.
+    test.done();
+  };
+
+  // Note: the ice candidate handlers are special. We can not wrap them in test
+  // steps since that seems to cause some kind of starvation that prevents the
+  // call of being set up. Unfortunately we cannot report errors in here.
+  var onIceCandidateToFirst = function(event) {
+    // If event.candidate is null = no more candidates.
+    if (event.candidate) {
+      var candidate = new RTCIceCandidate(event.candidate);
+      gSecondConnection.addIceCandidate(candidate);
+    }
+  };
+
+  var onIceCandidateToSecond = function(event) {
+    if (event.candidate) {
+      var candidate = new RTCIceCandidate(event.candidate);
+      gFirstConnection.addIceCandidate(candidate);
+    }
+  };
+
+  var onRemoteStream = test.step_func(function(event) {
+    var videoTag = document.getElementById('remote-view');
+    videoTag.src = webkitURL.createObjectURL(event.stream);
+  });
+
+  // Returns a suitable error callback.
+  function failed(function_name) {
+    return test.step_func(function() {
+      assert_unreached('WebRTC called error callback for ' + function_name);
+    });
+  }
+
+  // This function starts the test.
+  test.step(function() {
+    navigator.webkitGetUserMedia({ video: true, audio: true },
+        getUserMediaOkCallback,
+        failed('getUserMedia'));
+  });
+</script>
+</head>
+
+<body>
+
+<div>
+  <video width="320" height="240" id="remote-view" autoplay="autoplay"></video>
+  <video width="320" height="240" id="local-view" autoplay="autoplay"></video>
+</div>
+<div id="log"></div>
+</body>
+</html>

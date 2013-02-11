@@ -251,10 +251,26 @@ ContentParent::ScheduleDelayedPreallocateAppProcess()
 }
 
 /*static*/ already_AddRefed<ContentParent>
-ContentParent::MaybeTakePreallocatedAppProcess()
+ContentParent::MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
+                                               ChildPrivileges aPrivs)
 {
     nsRefPtr<ContentParent> process = sPreallocatedAppProcess.get();
     sPreallocatedAppProcess = nullptr;
+
+    if (!process) {
+        return nullptr;
+    }
+
+    if (!process->TransformPreallocatedIntoApp(aAppManifestURL, aPrivs)) {
+        NS_WARNING("Can't TransformPrealocatedIntoApp.  Maybe "
+                   "the preallocated process died?");
+
+        // Kill the process just in case it's not actually dead; we don't want
+        // to "leak" this process!
+        process->KillHard();
+        return nullptr;
+    }
+
     return process.forget();
 }
 
@@ -443,10 +459,8 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext)
     nsRefPtr<ContentParent> p = gAppContentParents->Get(manifestURL);
     if (!p) {
         ChildPrivileges privs = PrivilegesForApp(ownApp);
-        p = MaybeTakePreallocatedAppProcess();
-        if (p) {
-            p->TransformPreallocatedIntoApp(manifestURL, privs);            
-        } else {
+        p = MaybeTakePreallocatedAppProcess(manifestURL, privs);
+        if (!p) {
             NS_WARNING("Unable to use pre-allocated app process");
             p = new ContentParent(manifestURL, /* isBrowserElement = */ false,
                                   privs);
@@ -532,7 +546,7 @@ ContentParent::Init()
     NS_ASSERTION(observer, "FileUpdateDispatcher is null");
 }
 
-void
+bool
 ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
                                             ChildPrivileges aPrivs)
 {
@@ -540,8 +554,18 @@ ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
     // Clients should think of mAppManifestURL as const ... we're
     // bending the rules here just for the preallocation hack.
     const_cast<nsString&>(mAppManifestURL) = aAppManifestURL;
+
+    // Boost this process's priority.  The subprocess will call
+    // TemporarilySetProcessPriorityToForeground() from within
+    // ContentChild::AllocPBrowser, but this happens earlier, thus reducing the
+    // window in which the child might be killed due to low memory.
+    if (Preferences::GetBool("dom.ipc.processPriorityManager.enabled")) {
+        SetProcessPriority(base::GetProcId(mSubprocess->GetChildProcessHandle()),
+                           PROCESS_PRIORITY_FOREGROUND);
+    }
+
     // If this fails, the child process died.
-    unused << SendSetProcessPrivileges(aPrivs);
+    return SendSetProcessPrivileges(aPrivs);
 }
 
 void
@@ -848,7 +872,7 @@ ContentParent::GetTestShellSingleton()
 
 ContentParent::ContentParent(const nsAString& aAppManifestURL,
                              bool aIsForBrowser,
-                             ChildOSPrivileges aOSPrivileges)
+                             ChildPrivileges aOSPrivileges)
     : mSubprocess(nullptr)
     , mOSPrivileges(aOSPrivileges)
     , mChildID(CONTENT_PARENT_UNKNOWN_CHILD_ID)

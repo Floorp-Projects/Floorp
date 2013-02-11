@@ -143,10 +143,10 @@ IonFrameIterator::isFunctionFrame() const
 bool
 IonFrameIterator::isEntryJSFrame() const
 {
-    if (prevType() == IonFrame_OptimizedJS || prevType() == IonFrame_Bailed_JS)
+    if (prevType() == IonFrame_OptimizedJS || prevType() == IonFrame_Unwound_OptimizedJS)
         return false;
 
-    if (prevType() == IonFrame_BaselineStub || prevType() == IonFrame_Bailed_BaselineStub)
+    if (prevType() == IonFrame_BaselineStub || prevType() == IonFrame_Unwound_BaselineStub)
         return false;
 
     if (prevType() == IonFrame_Entry)
@@ -206,9 +206,9 @@ IonFrameIterator::prevFp() const
     // This quick fix must be removed as soon as bug 717297 land.  This is
     // needed because the descriptor size of JS-to-JS frame which is just after
     // a Rectifier frame should not change. (cf EnsureExitFrame function)
-    if (prevType() == IonFrame_Bailed_Rectifier ||
-        prevType() == IonFrame_Bailed_JS ||
-        prevType() == IonFrame_Bailed_BaselineStub)
+    if (prevType() == IonFrame_Unwound_Rectifier ||
+        prevType() == IonFrame_Unwound_OptimizedJS ||
+        prevType() == IonFrame_Unwound_BaselineStub)
     {
         JS_ASSERT(type_ == IonFrame_Exit);
         currentSize = SizeOfFramePrefix(IonFrame_OptimizedJS);
@@ -236,9 +236,9 @@ IonFrameIterator::operator++()
     // next frame.
     uint8_t *prev = prevFp();
     type_ = current()->prevType();
-    if (type_ == IonFrame_Bailed_JS)
+    if (type_ == IonFrame_Unwound_OptimizedJS)
         type_ = IonFrame_OptimizedJS;
-    else if (type_ == IonFrame_Bailed_BaselineStub)
+    else if (type_ == IonFrame_Unwound_BaselineStub)
         type_ = IonFrame_BaselineStub;
     returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
@@ -483,6 +483,33 @@ ion::HandleException(ResumeFromException *rfe)
     }
 
     rfe->stackPointer = iter.fp();
+}
+
+void
+ion::EnsureExitFrame(IonCommonFrameLayout *frame)
+{
+    if (frame->prevType() == IonFrame_Entry) {
+        // The previous frame type is the entry frame, so there's no actual
+        // need for an exit frame.
+        return;
+    }
+
+    if (frame->prevType() == IonFrame_Rectifier) {
+        // The rectifier code uses the frame descriptor to discard its stack,
+        // so modifying its descriptor size here would be dangerous. Instead,
+        // we change the frame type, and teach the stack walking code how to
+        // deal with this edge case. bug 717297 would obviate the need
+        frame->changePrevType(IonFrame_Unwound_Rectifier);
+        return;
+    }
+
+    if (frame->prevType() == IonFrame_BaselineStub) {
+        frame->changePrevType(IonFrame_Unwound_BaselineStub);
+        return;
+    }
+
+    JS_ASSERT(frame->prevType() == IonFrame_OptimizedJS);
+    frame->changePrevType(IonFrame_Unwound_OptimizedJS);
 }
 
 void
@@ -796,11 +823,11 @@ MarkIonActivation(JSTracer *trc, const IonActivationIterator &activations)
           case IonFrame_OptimizedJS:
             MarkIonJSFrame(trc, frames);
             break;
-          case IonFrame_Bailed_JS:
+          case IonFrame_Unwound_OptimizedJS:
             JS_NOT_REACHED("invalid");
             break;
           case IonFrame_Rectifier:
-          case IonFrame_Bailed_Rectifier:
+          case IonFrame_Unwound_Rectifier:
             break;
           case IonFrame_Osr:
             // The callee token will be marked by the callee JS frame;
@@ -1312,7 +1339,7 @@ IonFrameIterator::dump() const
         dumpBaseline();
         break;
       case IonFrame_BaselineStub:
-      case IonFrame_Bailed_BaselineStub:
+      case IonFrame_Unwound_BaselineStub:
         fprintf(stderr, " Baseline stub frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
@@ -1328,12 +1355,12 @@ IonFrameIterator::dump() const
         break;
       }
       case IonFrame_Rectifier:
-      case IonFrame_Bailed_Rectifier:
+      case IonFrame_Unwound_Rectifier:
         fprintf(stderr, " Rectifier frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
-      case IonFrame_Bailed_JS:
-        fprintf(stderr, "Warning! Bailed JS frames are not observable.\n");
+      case IonFrame_Unwound_OptimizedJS:
+        fprintf(stderr, "Warning! Unwound JS frames are not observable.\n");
         break;
       case IonFrame_Exit:
         break;

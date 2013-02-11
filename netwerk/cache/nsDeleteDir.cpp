@@ -224,7 +224,7 @@ nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, uint32_t delay)
       return rv;
 
     // Append random number to the trash directory and check if it exists.
-    srand(PR_Now());
+    srand(static_cast<unsigned>(PR_Now()));
     nsAutoCString leaf;
     for (int32_t i = 0; i < 10; i++) {
       leaf = origLeaf;

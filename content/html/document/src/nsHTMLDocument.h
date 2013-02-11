@@ -25,6 +25,7 @@
 #include "nsNetUtil.h"
 
 #include "nsICommandManager.h"
+#include "mozilla/dom/HTMLSharedElement.h"
 
 class nsIEditor;
 class nsIEditorDocShell;
@@ -182,7 +183,9 @@ public:
   void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
   nsGenericHTMLElement *GetBody();
   void SetBody(nsGenericHTMLElement* aBody, mozilla::ErrorResult& rv);
-  Element *GetHead() { return GetHeadElement(); }
+  mozilla::dom::HTMLSharedElement *GetHead() {
+    return static_cast<mozilla::dom::HTMLSharedElement*>(GetHeadElement());
+  }
   nsIHTMLCollection* Images();
   nsIHTMLCollection* Embeds();
   nsIHTMLCollection* Plugins();

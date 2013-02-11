@@ -59,7 +59,6 @@
 #include "gfxFont.h"
 #include "gfxBlur.h"
 #include "gfxUtils.h"
-#include "gfxFontMissingGlyphs.h"
 
 #include "nsFrameManager.h"
 #include "nsFrameLoader.h"
@@ -2358,52 +2357,7 @@ struct NS_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcesso
           mTextRun->GetDetailedGlyphs(i);
 
         if (glyphs[i].IsMissing()) {
-          float xpos;
-          float advance = detailedGlyphs[0].mAdvance * devUnitsPerAppUnit;
-          if (mTextRun->IsRightToLeft()) {
-            xpos = baselineOrigin.x - advanceSum - advance;
-          } else {
-            xpos = baselineOrigin.x + advanceSum;
-          }
-          advanceSum += advance;
-
-          // default-ignorable characters will have zero advance width.
-          // we don't draw a hexbox for them, just leave them invisible
-          if (advance > 0) {
-            // for now, we use gfxFontMissingGlyphs to draw the hexbox;
-            // some day we should replace this with a direct Azure version
-
-            // get the DrawTarget's transform, so we can apply it to the
-            // thebes context for gfxFontMissingGlyphs
-            Matrix matrix = mCtx->mTarget->GetTransform();
-            nsRefPtr<gfxContext> thebes;
-            if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-              // XXX See bug 808288 comment 5 - Bas says:
-              // This is a little tricky, potentially this could go wrong if
-              // we fell back to a Cairo context because of for example
-              // extremely large Canvas size. Cairo content is technically
-              // -not- supported, but SupportsAzureContent would return true
-              // as the browser uses D2D content.
-              // I'm thinking Cairo content will be good enough to do
-              // DrawMissingGlyph though.
-              thebes = new gfxContext(mCtx->mTarget);
-            } else {
-              nsRefPtr<gfxASurface> drawSurf;
-              mCtx->GetThebesSurface(getter_AddRefs(drawSurf));
-              thebes = new gfxContext(drawSurf);
-            }
-            thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
-                                        matrix._22, matrix._31, matrix._32));
-
-            gfxFloat height = font->GetMetrics().maxAscent;
-            gfxRect glyphRect(xpos, baselineOrigin.y - height,
-                              advance, height);
-            gfxFontMissingGlyphs::DrawMissingGlyph(thebes, glyphRect,
-                                                   detailedGlyphs[0].mGlyphID,
-                                                   nsDeviceContext::AppUnitsPerCSSPixel());
-
-            mCtx->mTarget->SetTransform(matrix);
-          }
+          advanceSum += detailedGlyphs[0].mAdvance * devUnitsPerAppUnit;
           continue;
         }
 

@@ -176,7 +176,7 @@ class Emulator(object):
         '--name', avd_name,
         '--abi', self.abi,
         '--target', 'android-16',
-        '-c', '64M',
+        '-c', '128M',
         '--force',
     ]
     avd_process = subprocess.Popen(args=avd_command,
@@ -221,6 +221,8 @@ class Emulator(object):
         # The default /data size is 64M.
         # That's not enough for 8 unit test bundles and their data.
         '-partition-size', '512',
+        # Enable GPU by default.
+        '-gpu', 'on',
         # Use a familiar name and port.
         '-avd', self.avd,
         '-port', str(port)]

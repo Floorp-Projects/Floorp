@@ -144,6 +144,13 @@ else
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
 
+if test "$JS_STANDALONE" = no; then
+  JS_STANDALONE=
+else
+  JS_STANDALONE=1
+fi
+AC_SUBST(JS_STANDALONE)
+
 MOZ_ARG_WITH_STRING(gonk,
 [  --with-gonk=DIR
                location of gonk dir],

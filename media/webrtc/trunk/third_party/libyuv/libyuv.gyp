@@ -14,6 +14,7 @@
     {
       'target_name': 'libyuv',
       'type': 'static_library',
+      # 'type': 'shared_library',
       'conditions': [
          ['use_system_libjpeg==0', {
           'dependencies': [
@@ -36,6 +37,7 @@
       ],
       'defines': [
         'HAVE_JPEG',
+        # 'LIBYUV_BUILDING_SHARED_LIBRARY',
       ],
       'include_dirs': [
         'include',
@@ -73,14 +75,11 @@
         'include/libyuv/planar_functions.h',
         'include/libyuv/rotate.h',
         'include/libyuv/rotate_argb.h',
+        'include/libyuv/row.h',
         'include/libyuv/scale.h',
         'include/libyuv/scale_argb.h',
         'include/libyuv/version.h',
         'include/libyuv/video_common.h',
-
-        # private includes.
-        'source/rotate_priv.h',
-        'source/row.h',
 
         # sources.
         'source/compare.cc',

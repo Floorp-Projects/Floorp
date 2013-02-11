@@ -488,7 +488,10 @@ static const struct mechanismList mechanisms[] = {
      {CKM_NSS_JPAKE_FINAL_SHA1,         {0, 0, CKF_DERIVE}, PR_TRUE},
      {CKM_NSS_JPAKE_FINAL_SHA256,       {0, 0, CKF_DERIVE}, PR_TRUE},
      {CKM_NSS_JPAKE_FINAL_SHA384,       {0, 0, CKF_DERIVE}, PR_TRUE},
-     {CKM_NSS_JPAKE_FINAL_SHA512,       {0, 0, CKF_DERIVE}, PR_TRUE}
+     {CKM_NSS_JPAKE_FINAL_SHA512,       {0, 0, CKF_DERIVE}, PR_TRUE},
+     /* -------------------- Constant Time TLS MACs ----------------------- */
+     {CKM_NSS_HMAC_CONSTANT_TIME,       {0, 0, CKF_DIGEST}, PR_TRUE},
+     {CKM_NSS_SSL3_MAC_CONSTANT_TIME,   {0, 0, CKF_DIGEST}, PR_TRUE}
 };
 static const CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
 

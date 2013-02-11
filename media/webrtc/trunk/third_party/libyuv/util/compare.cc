@@ -19,7 +19,7 @@
 
 int main(int argc, char** argv) {
   if (argc < 1) {
-    printf("libyuv compare v\n", LIBYUV_VERSION);
+    printf("libyuv compare v%d\n", LIBYUV_VERSION);
     printf("compare file1.yuv file2.yuv\n");
     return -1;
   }
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
 
   printf("hash1 %x", hash1);
   if (fin2) {
-    printf(", hash2 %x", hash1, hash2);
+    printf(", hash2 %x", hash2);
     double mse = static_cast<double>(sum_square_err) /
                  static_cast<double>(size_min);
     printf(", mse %.2f", mse);

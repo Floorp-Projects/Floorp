@@ -19,6 +19,7 @@ namespace libyuv {
 extern "C" {
 #endif
 
+LIBYUV_API
 int ARGBScale(const uint8* src_argb, int src_stride_argb,
               int src_width, int src_height,
               uint8* dst_argb, int dst_stride_argb,

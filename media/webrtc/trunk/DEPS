@@ -3,10 +3,10 @@ vars = {
   # If you do not know, use the full path while defining your new deps entry.
   "googlecode_url": "http://%s.googlecode.com/svn",
   "chromium_trunk" : "http://src.chromium.org/svn/trunk",
-  "chromium_revision": "153489",
+  "chromium_revision": "162524",
   # Still needs the libjingle_revision here because some of
   # the deps have to be pulled from libjingle repository.
-  "libjingle_revision": "175",
+  "libjingle_revision": "204",
 }
 
 # NOTE: Prefer revision numbers to tags for svn deps. Use http rather than
@@ -27,6 +27,10 @@ deps = {
 
   "trunk/build":
     Var("chromium_trunk") + "/src/build@" + Var("chromium_revision"),
+
+  # Needed by common.gypi.
+  "trunk/google_apis/build":
+    Var("chromium_trunk") + "/src/google_apis/build@" + Var("chromium_revision"),
 
   "trunk/testing/gtest":
     From("trunk/chromium_deps", "src/testing/gtest"),
@@ -105,9 +109,18 @@ hooks = [
     "action": ["python", "trunk/tools/clang/scripts/update.py", "--mac-only"],
   },
   {
+    # Update the cygwin mount on Windows.
+    # This is necessary to get the correct mapping between e.g. /bin and the
+    # cygwin path on Windows. Without it we can't run bash scripts in actions.
+    # Ideally this should be solved in "pylib/gyp/msvs_emulation.py".
+    "pattern": ".",
+    "action": ["python", "trunk/build/win/setup_cygwin_mount.py",
+               "--win-only"],
+  },
+  {
     # A change to a .gyp, .gypi, or to GYP itself should run the generator.
     "pattern": ".",
-    "action": ["python", "trunk/build/gyp_chromium", "--depth=trunk", "trunk/peerconnection.gyp"],
+    "action": ["python", "trunk/build/gyp_chromium", "--depth=trunk", "trunk/peerconnection_all.gyp"],
   },
 ]
 

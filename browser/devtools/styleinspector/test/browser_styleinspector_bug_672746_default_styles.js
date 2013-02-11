@@ -2,7 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests that the checkbox to show only user styles works properly.
+// Tests that the checkbox to include browser styles works properly.
 
 let doc;
 let inspector;
@@ -65,7 +65,7 @@ function SI_toggleDefaultStyles()
 {
   // Click on the checkbox.
   let doc = computedView.styleDocument;
-  let checkbox = doc.querySelector(".onlyuserstyles");
+  let checkbox = doc.querySelector(".includebrowserstyles");
   Services.obs.addObserver(SI_checkDefaultStyles, "StyleInspector-populated", false);
 
   checkbox.click();

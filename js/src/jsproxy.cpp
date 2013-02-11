@@ -3244,12 +3244,12 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
         return false;
     parent = proto->getParent();
 
-    RootedObject call(cx, ValueToCallable(cx, &vp[3]));
+    RootedObject call(cx, ValueToCallable(cx, vp[3], argc - 2));
     if (!call)
         return false;
     JSObject *construct = NULL;
     if (argc > 2) {
-        construct = ValueToCallable(cx, &vp[4]);
+        construct = ValueToCallable(cx, vp[4], argc - 3);
         if (!construct)
             return false;
     }

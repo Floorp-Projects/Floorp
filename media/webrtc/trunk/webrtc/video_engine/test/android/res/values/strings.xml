@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">WebRTC</string>
+  <string name="error">Error</string>
+  <string name="errorCamera">Camera Error</string>
+<string name="codectype_prompt">Choose a codec type</string>
+<string name="demoTitle">Video Engine Android Demo</string>
+<string name="codecType">Codec Type</string>
+<string name="codecSize">Codec Size</string>
+<string name="remoteIp">Remote IP address</string>
+<string name="loopback">Loopback</string>
+<string name="stats">Stats</string>
+<string name="startListen">Start Listen</string>
+<string name="startSend">Start Send</string>
+<string name="startBoth">Start Both</string>
+<string name="enableVoice">Voice</string>
+<string name="enableVideoReceive">Video Receive</string>
+<string name="enableVideoSend">Video Send</string>
+<string name="gSettings">Global Settings</string>
+<string name="vSettings">Video Settings</string>
+<string name="vTxPort">Video Tx Port</string>
+<string name="vRxPort">Video Rx Port</string>
+<string name="aTxPort">Audio Tx Port</string>
+<string name="aRxPort">Audio Rx Port</string>
+<string name="AutoGainControl">AGC</string>
+<string name="VoiceActivityDetection">VAD</string>
+<string name="AECM">AECM</string>
+<string name="NoiseSuppression">NS</string>
+<string name="nack">NACK</string>
+<string name="frontCamera">SwitchToFront</string>
+<string name="backCamera">SwitchToBack</string>
+<string name="startCall">StartCall</string>
+<string name="stopCall">StopCall</string>
+<string name="exit">Exit</string>
+<string name="speaker">Speaker</string>
+<string name="debugrecording">APMRecord</string>
+<string name="rtpdump">rtpdump</string>
+<string name="surfaceview">SurfaceView</string>
+<string name="mediacodec">MediaCodec Decoder/Renderer</string>
+<string name="opengl">OpenGL</string>
+</resources>

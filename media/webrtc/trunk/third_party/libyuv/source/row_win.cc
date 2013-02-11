@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "source/row.h"
+#include "libyuv/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -59,6 +59,19 @@ static const vec8 kABGRToV = {
   112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0
 };
 
+// Constants for RGBA.
+static const vec8 kRGBAToY = {
+  0, 13, 65, 33, 0, 13, 65, 33, 0, 13, 65, 33, 0, 13, 65, 33
+};
+
+static const vec8 kRGBAToU = {
+  0, 112, -74, -38, 0, 112, -74, -38, 0, 112, -74, -38, 0, 112, -74, -38
+};
+
+static const vec8 kRGBAToV = {
+  0, -18, -94, 112, 0, -18, -94, 112, 0, -18, -94, 112, 0, -18, -94, 112
+};
+
 static const uvec8 kAddY16 = {
   16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u, 16u
 };
@@ -78,14 +91,24 @@ static const uvec8 kShuffleMaskRAWToARGB = {
   2u, 1u, 0u, 12u, 5u, 4u, 3u, 13u, 8u, 7u, 6u, 14u, 11u, 10u, 9u, 15u
 };
 
+// Shuffle table for converting BGRA to ARGB.
+static const uvec8 kShuffleMaskBGRAToARGB = {
+  3u, 2u, 1u, 0u, 7u, 6u, 5u, 4u, 11u, 10u, 9u, 8u, 15u, 14u, 13u, 12u
+};
+
 // Shuffle table for converting ABGR to ARGB.
 static const uvec8 kShuffleMaskABGRToARGB = {
   2u, 1u, 0u, 3u, 6u, 5u, 4u, 7u, 10u, 9u, 8u, 11u, 14u, 13u, 12u, 15u
 };
 
-// Shuffle table for converting BGRA to ARGB.
-static const uvec8 kShuffleMaskBGRAToARGB = {
-  3u, 2u, 1u, 0u, 7u, 6u, 5u, 4u, 11u, 10u, 9u, 8u, 15u, 14u, 13u, 12u
+// Shuffle table for converting RGBA to ARGB.
+static const uvec8 kShuffleMaskRGBAToARGB = {
+  1u, 2u, 3u, 0u, 5u, 6u, 7u, 4u, 9u, 10u, 11u, 8u, 13u, 14u, 15u, 12u
+};
+
+// Shuffle table for converting ARGB to RGBA.
+static const uvec8 kShuffleMaskARGBToRGBA = {
+  3u, 0u, 1u, 2u, 7u, 4u, 5u, 6u, 11u, 8u, 9u, 10u, 15u, 12u, 13u, 14u
 };
 
 // Shuffle table for converting ARGB to RGB24.
@@ -127,6 +150,27 @@ void I400ToARGBRow_SSE2(const uint8* src_y, uint8* dst_argb, int pix) {
 }
 
 __declspec(naked) __declspec(align(16))
+void BGRAToARGBRow_SSSE3(const uint8* src_bgra, uint8* dst_argb, int pix) {
+__asm {
+    mov       eax, [esp + 4]   // src_bgra
+    mov       edx, [esp + 8]   // dst_argb
+    mov       ecx, [esp + 12]  // pix
+    movdqa    xmm5, kShuffleMaskBGRAToARGB
+    sub       edx, eax
+
+    align      16
+ convertloop:
+    movdqa    xmm0, [eax]
+    pshufb    xmm0, xmm5
+    sub       ecx, 4
+    movdqa    [eax + edx], xmm0
+    lea       eax, [eax + 16]
+    jg        convertloop
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
 void ABGRToARGBRow_SSSE3(const uint8* src_abgr, uint8* dst_argb, int pix) {
 __asm {
     mov       eax, [esp + 4]   // src_abgr
@@ -148,12 +192,33 @@ __asm {
 }
 
 __declspec(naked) __declspec(align(16))
-void BGRAToARGBRow_SSSE3(const uint8* src_bgra, uint8* dst_argb, int pix) {
+void RGBAToARGBRow_SSSE3(const uint8* src_rgba, uint8* dst_argb, int pix) {
 __asm {
-    mov       eax, [esp + 4]   // src_bgra
+    mov       eax, [esp + 4]   // src_rgba
     mov       edx, [esp + 8]   // dst_argb
     mov       ecx, [esp + 12]  // pix
-    movdqa    xmm5, kShuffleMaskBGRAToARGB
+    movdqa    xmm5, kShuffleMaskRGBAToARGB
+    sub       edx, eax
+
+    align      16
+ convertloop:
+    movdqa    xmm0, [eax]
+    pshufb    xmm0, xmm5
+    sub       ecx, 4
+    movdqa    [eax + edx], xmm0
+    lea       eax, [eax + 16]
+    jg        convertloop
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void ARGBToRGBARow_SSSE3(const uint8* src_argb, uint8* dst_rgba, int pix) {
+__asm {
+    mov       eax, [esp + 4]   // src_argb
+    mov       edx, [esp + 8]   // dst_rgba
+    mov       ecx, [esp + 12]  // pix
+    movdqa    xmm5, kShuffleMaskARGBToRGBA
     sub       edx, eax
 
     align      16
@@ -614,9 +679,9 @@ __asm {
     psrlw      xmm2, 7
     packuswb   xmm0, xmm2
     paddb      xmm0, xmm5
+    sub        ecx, 16
     movdqa     [edx], xmm0
     lea        edx, [edx + 16]
-    sub        ecx, 16
     jg         convertloop
     ret
   }
@@ -648,9 +713,9 @@ __asm {
     psrlw      xmm2, 7
     packuswb   xmm0, xmm2
     paddb      xmm0, xmm5
+    sub        ecx, 16
     movdqu     [edx], xmm0
     lea        edx, [edx + 16]
-    sub        ecx, 16
     jg         convertloop
     ret
   }
@@ -682,9 +747,9 @@ __asm {
     psrlw      xmm2, 7
     packuswb   xmm0, xmm2
     paddb      xmm0, xmm5
+    sub        ecx, 16
     movdqa     [edx], xmm0
     lea        edx, [edx + 16]
-    sub        ecx, 16
     jg         convertloop
     ret
   }
@@ -716,9 +781,9 @@ __asm {
     psrlw      xmm2, 7
     packuswb   xmm0, xmm2
     paddb      xmm0, xmm5
+    sub        ecx, 16
     movdqu     [edx], xmm0
     lea        edx, [edx + 16]
-    sub        ecx, 16
     jg         convertloop
     ret
   }
@@ -750,9 +815,9 @@ __asm {
     psrlw      xmm2, 7
     packuswb   xmm0, xmm2
     paddb      xmm0, xmm5
+    sub        ecx, 16
     movdqa     [edx], xmm0
     lea        edx, [edx + 16]
-    sub        ecx, 16
     jg         convertloop
     ret
   }
@@ -766,6 +831,74 @@ __asm {
     mov        ecx, [esp + 12]  /* pix */
     movdqa     xmm5, kAddY16
     movdqa     xmm4, kABGRToY
+
+    align      16
+ convertloop:
+    movdqu     xmm0, [eax]
+    movdqu     xmm1, [eax + 16]
+    movdqu     xmm2, [eax + 32]
+    movdqu     xmm3, [eax + 48]
+    pmaddubsw  xmm0, xmm4
+    pmaddubsw  xmm1, xmm4
+    pmaddubsw  xmm2, xmm4
+    pmaddubsw  xmm3, xmm4
+    lea        eax, [eax + 64]
+    phaddw     xmm0, xmm1
+    phaddw     xmm2, xmm3
+    psrlw      xmm0, 7
+    psrlw      xmm2, 7
+    packuswb   xmm0, xmm2
+    paddb      xmm0, xmm5
+    sub        ecx, 16
+    movdqu     [edx], xmm0
+    lea        edx, [edx + 16]
+    jg         convertloop
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void RGBAToYRow_SSSE3(const uint8* src_argb, uint8* dst_y, int pix) {
+__asm {
+    mov        eax, [esp + 4]   /* src_argb */
+    mov        edx, [esp + 8]   /* dst_y */
+    mov        ecx, [esp + 12]  /* pix */
+    movdqa     xmm5, kAddY16
+    movdqa     xmm4, kRGBAToY
+
+    align      16
+ convertloop:
+    movdqa     xmm0, [eax]
+    movdqa     xmm1, [eax + 16]
+    movdqa     xmm2, [eax + 32]
+    movdqa     xmm3, [eax + 48]
+    pmaddubsw  xmm0, xmm4
+    pmaddubsw  xmm1, xmm4
+    pmaddubsw  xmm2, xmm4
+    pmaddubsw  xmm3, xmm4
+    lea        eax, [eax + 64]
+    phaddw     xmm0, xmm1
+    phaddw     xmm2, xmm3
+    psrlw      xmm0, 7
+    psrlw      xmm2, 7
+    packuswb   xmm0, xmm2
+    paddb      xmm0, xmm5
+    sub        ecx, 16
+    movdqa     [edx], xmm0
+    lea        edx, [edx + 16]
+    jg         convertloop
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void RGBAToYRow_Unaligned_SSSE3(const uint8* src_argb, uint8* dst_y, int pix) {
+__asm {
+    mov        eax, [esp + 4]   /* src_argb */
+    mov        edx, [esp + 8]   /* dst_y */
+    mov        ecx, [esp + 12]  /* pix */
+    movdqa     xmm5, kAddY16
+    movdqa     xmm4, kRGBAToY
 
     align      16
  convertloop:
@@ -1143,6 +1276,142 @@ __asm {
     mov        ecx, [esp + 8 + 20]  // pix
     movdqa     xmm7, kABGRToU
     movdqa     xmm6, kABGRToV
+    movdqa     xmm5, kAddUV128
+    sub        edi, edx             // stride from u to v
+
+    align      16
+ convertloop:
+    /* step 1 - subsample 16x2 argb pixels to 8x1 */
+    movdqu     xmm0, [eax]
+    movdqu     xmm1, [eax + 16]
+    movdqu     xmm2, [eax + 32]
+    movdqu     xmm3, [eax + 48]
+    movdqu     xmm4, [eax + esi]
+    pavgb      xmm0, xmm4
+    movdqu     xmm4, [eax + esi + 16]
+    pavgb      xmm1, xmm4
+    movdqu     xmm4, [eax + esi + 32]
+    pavgb      xmm2, xmm4
+    movdqu     xmm4, [eax + esi + 48]
+    pavgb      xmm3, xmm4
+    lea        eax,  [eax + 64]
+    movdqa     xmm4, xmm0
+    shufps     xmm0, xmm1, 0x88
+    shufps     xmm4, xmm1, 0xdd
+    pavgb      xmm0, xmm4
+    movdqa     xmm4, xmm2
+    shufps     xmm2, xmm3, 0x88
+    shufps     xmm4, xmm3, 0xdd
+    pavgb      xmm2, xmm4
+
+    // step 2 - convert to U and V
+    // from here down is very similar to Y code except
+    // instead of 16 different pixels, its 8 pixels of U and 8 of V
+    movdqa     xmm1, xmm0
+    movdqa     xmm3, xmm2
+    pmaddubsw  xmm0, xmm7  // U
+    pmaddubsw  xmm2, xmm7
+    pmaddubsw  xmm1, xmm6  // V
+    pmaddubsw  xmm3, xmm6
+    phaddw     xmm0, xmm2
+    phaddw     xmm1, xmm3
+    psraw      xmm0, 8
+    psraw      xmm1, 8
+    packsswb   xmm0, xmm1
+    paddb      xmm0, xmm5            // -> unsigned
+
+    // step 3 - store 8 U and 8 V values
+    sub        ecx, 16
+    movlps     qword ptr [edx], xmm0 // U
+    movhps     qword ptr [edx + edi], xmm0 // V
+    lea        edx, [edx + 8]
+    jg         convertloop
+
+    pop        edi
+    pop        esi
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void RGBAToUVRow_SSSE3(const uint8* src_argb0, int src_stride_argb,
+                       uint8* dst_u, uint8* dst_v, int width) {
+__asm {
+    push       esi
+    push       edi
+    mov        eax, [esp + 8 + 4]   // src_argb
+    mov        esi, [esp + 8 + 8]   // src_stride_argb
+    mov        edx, [esp + 8 + 12]  // dst_u
+    mov        edi, [esp + 8 + 16]  // dst_v
+    mov        ecx, [esp + 8 + 20]  // pix
+    movdqa     xmm7, kRGBAToU
+    movdqa     xmm6, kRGBAToV
+    movdqa     xmm5, kAddUV128
+    sub        edi, edx             // stride from u to v
+
+    align      16
+ convertloop:
+    /* step 1 - subsample 16x2 argb pixels to 8x1 */
+    movdqa     xmm0, [eax]
+    movdqa     xmm1, [eax + 16]
+    movdqa     xmm2, [eax + 32]
+    movdqa     xmm3, [eax + 48]
+    pavgb      xmm0, [eax + esi]
+    pavgb      xmm1, [eax + esi + 16]
+    pavgb      xmm2, [eax + esi + 32]
+    pavgb      xmm3, [eax + esi + 48]
+    lea        eax,  [eax + 64]
+    movdqa     xmm4, xmm0
+    shufps     xmm0, xmm1, 0x88
+    shufps     xmm4, xmm1, 0xdd
+    pavgb      xmm0, xmm4
+    movdqa     xmm4, xmm2
+    shufps     xmm2, xmm3, 0x88
+    shufps     xmm4, xmm3, 0xdd
+    pavgb      xmm2, xmm4
+
+    // step 2 - convert to U and V
+    // from here down is very similar to Y code except
+    // instead of 16 different pixels, its 8 pixels of U and 8 of V
+    movdqa     xmm1, xmm0
+    movdqa     xmm3, xmm2
+    pmaddubsw  xmm0, xmm7  // U
+    pmaddubsw  xmm2, xmm7
+    pmaddubsw  xmm1, xmm6  // V
+    pmaddubsw  xmm3, xmm6
+    phaddw     xmm0, xmm2
+    phaddw     xmm1, xmm3
+    psraw      xmm0, 8
+    psraw      xmm1, 8
+    packsswb   xmm0, xmm1
+    paddb      xmm0, xmm5            // -> unsigned
+
+    // step 3 - store 8 U and 8 V values
+    sub        ecx, 16
+    movlps     qword ptr [edx], xmm0 // U
+    movhps     qword ptr [edx + edi], xmm0 // V
+    lea        edx, [edx + 8]
+    jg         convertloop
+
+    pop        edi
+    pop        esi
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void RGBAToUVRow_Unaligned_SSSE3(const uint8* src_argb0, int src_stride_argb,
+                                 uint8* dst_u, uint8* dst_v, int width) {
+__asm {
+    push       esi
+    push       edi
+    mov        eax, [esp + 8 + 4]   // src_argb
+    mov        esi, [esp + 8 + 8]   // src_stride_argb
+    mov        edx, [esp + 8 + 12]  // dst_u
+    mov        edi, [esp + 8 + 16]  // dst_v
+    mov        ecx, [esp + 8 + 20]  // pix
+    movdqa     xmm7, kRGBAToU
+    movdqa     xmm6, kRGBAToV
     movdqa     xmm5, kAddUV128
     sub        edi, edx             // stride from u to v
 
@@ -1796,47 +2065,6 @@ void I422ToBGRARow_SSSE3(const uint8* y_buf,
 }
 
 __declspec(naked) __declspec(align(16))
-void I422ToABGRRow_SSSE3(const uint8* y_buf,
-                         const uint8* u_buf,
-                         const uint8* v_buf,
-                         uint8* abgr_buf,
-                         int width) {
-  __asm {
-    push       esi
-    push       edi
-    mov        eax, [esp + 8 + 4]   // Y
-    mov        esi, [esp + 8 + 8]   // U
-    mov        edi, [esp + 8 + 12]  // V
-    mov        edx, [esp + 8 + 16]  // abgr
-    mov        ecx, [esp + 8 + 20]  // width
-    sub        edi, esi
-    pcmpeqb    xmm5, xmm5           // generate 0xffffffff for alpha
-    pxor       xmm4, xmm4
-
-    align      16
- convertloop:
-    READYUV422
-    YUVTORGB
-
-    // Step 3: Weave into ARGB
-    punpcklbw  xmm2, xmm1           // RG
-    punpcklbw  xmm0, xmm5           // BA
-    movdqa     xmm1, xmm2
-    punpcklwd  xmm2, xmm0           // RGBA first 4 pixels
-    punpckhwd  xmm1, xmm0           // RGBA next 4 pixels
-    movdqa     [edx], xmm2
-    movdqa     [edx + 16], xmm1
-    lea        edx,  [edx + 32]
-    sub        ecx, 8
-    jg         convertloop
-
-    pop        edi
-    pop        esi
-    ret
-  }
-}
-
-__declspec(naked) __declspec(align(16))
 void I422ToBGRARow_Unaligned_SSSE3(const uint8* y_buf,
                                    const uint8* u_buf,
                                    const uint8* v_buf,
@@ -1867,6 +2095,47 @@ void I422ToBGRARow_Unaligned_SSSE3(const uint8* y_buf,
     punpckhwd  xmm0, xmm1           // BGRA next 4 pixels
     movdqu     [edx], xmm5
     movdqu     [edx + 16], xmm0
+    lea        edx,  [edx + 32]
+    sub        ecx, 8
+    jg         convertloop
+
+    pop        edi
+    pop        esi
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void I422ToABGRRow_SSSE3(const uint8* y_buf,
+                         const uint8* u_buf,
+                         const uint8* v_buf,
+                         uint8* abgr_buf,
+                         int width) {
+  __asm {
+    push       esi
+    push       edi
+    mov        eax, [esp + 8 + 4]   // Y
+    mov        esi, [esp + 8 + 8]   // U
+    mov        edi, [esp + 8 + 12]  // V
+    mov        edx, [esp + 8 + 16]  // abgr
+    mov        ecx, [esp + 8 + 20]  // width
+    sub        edi, esi
+    pcmpeqb    xmm5, xmm5           // generate 0xffffffff for alpha
+    pxor       xmm4, xmm4
+
+    align      16
+ convertloop:
+    READYUV422
+    YUVTORGB
+
+    // Step 3: Weave into ARGB
+    punpcklbw  xmm2, xmm1           // RG
+    punpcklbw  xmm0, xmm5           // BA
+    movdqa     xmm1, xmm2
+    punpcklwd  xmm2, xmm0           // RGBA first 4 pixels
+    punpckhwd  xmm1, xmm0           // RGBA next 4 pixels
+    movdqa     [edx], xmm2
+    movdqa     [edx + 16], xmm1
     lea        edx,  [edx + 32]
     sub        ecx, 8
     jg         convertloop
@@ -1917,6 +2186,89 @@ void I422ToABGRRow_Unaligned_SSSE3(const uint8* y_buf,
     ret
   }
 }
+
+__declspec(naked) __declspec(align(16))
+void I422ToRGBARow_SSSE3(const uint8* y_buf,
+                         const uint8* u_buf,
+                         const uint8* v_buf,
+                         uint8* rgba_buf,
+                         int width) {
+  __asm {
+    push       esi
+    push       edi
+    mov        eax, [esp + 8 + 4]   // Y
+    mov        esi, [esp + 8 + 8]   // U
+    mov        edi, [esp + 8 + 12]  // V
+    mov        edx, [esp + 8 + 16]  // rgba
+    mov        ecx, [esp + 8 + 20]  // width
+    sub        edi, esi
+    pxor       xmm4, xmm4
+
+    align      16
+ convertloop:
+    READYUV422
+    YUVTORGB
+
+    // Step 3: Weave into RGBA
+    pcmpeqb    xmm5, xmm5           // generate 0xffffffff for alpha
+    punpcklbw  xmm1, xmm2           // GR
+    punpcklbw  xmm5, xmm0           // AB
+    movdqa     xmm0, xmm5
+    punpcklwd  xmm5, xmm1           // RGBA first 4 pixels
+    punpckhwd  xmm0, xmm1           // RGBA next 4 pixels
+    movdqa     [edx], xmm5
+    movdqa     [edx + 16], xmm0
+    lea        edx,  [edx + 32]
+    sub        ecx, 8
+    jg         convertloop
+
+    pop        edi
+    pop        esi
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void I422ToRGBARow_Unaligned_SSSE3(const uint8* y_buf,
+                                   const uint8* u_buf,
+                                   const uint8* v_buf,
+                                   uint8* rgba_buf,
+                                   int width) {
+  __asm {
+    push       esi
+    push       edi
+    mov        eax, [esp + 8 + 4]   // Y
+    mov        esi, [esp + 8 + 8]   // U
+    mov        edi, [esp + 8 + 12]  // V
+    mov        edx, [esp + 8 + 16]  // rgba
+    mov        ecx, [esp + 8 + 20]  // width
+    sub        edi, esi
+    pxor       xmm4, xmm4
+
+    align      16
+ convertloop:
+    READYUV422
+    YUVTORGB
+
+    // Step 3: Weave into RGBA
+    pcmpeqb    xmm5, xmm5           // generate 0xffffffff for alpha
+    punpcklbw  xmm1, xmm2           // GR
+    punpcklbw  xmm5, xmm0           // AB
+    movdqa     xmm0, xmm5
+    punpcklwd  xmm5, xmm1           // RGBA first 4 pixels
+    punpckhwd  xmm0, xmm1           // RGBA next 4 pixels
+    movdqu     [edx], xmm5
+    movdqu     [edx + 16], xmm0
+    lea        edx,  [edx + 32]
+    sub        ecx, 8
+    jg         convertloop
+
+    pop        edi
+    pop        esi
+    ret
+  }
+}
+
 #endif  // HAS_I422TOARGBROW_SSSE3
 
 #ifdef HAS_YTOARGBROW_SSE2
@@ -2198,7 +2550,7 @@ void YUY2ToYRow_SSE2(const uint8* src_yuy2,
 
 __declspec(naked) __declspec(align(16))
 void YUY2ToUVRow_SSE2(const uint8* src_yuy2, int stride_yuy2,
-                      uint8* dst_u, uint8* dst_y, int pix) {
+                      uint8* dst_u, uint8* dst_v, int pix) {
   __asm {
     push       esi
     push       edi
@@ -2236,6 +2588,43 @@ void YUY2ToUVRow_SSE2(const uint8* src_yuy2, int stride_yuy2,
 
     pop        edi
     pop        esi
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void YUY2ToUV422Row_SSE2(const uint8* src_yuy2,
+                         uint8* dst_u, uint8* dst_v, int pix) {
+  __asm {
+    push       edi
+    mov        eax, [esp + 4 + 4]    // src_yuy2
+    mov        edx, [esp + 4 + 8]    // dst_u
+    mov        edi, [esp + 4 + 12]   // dst_v
+    mov        ecx, [esp + 4 + 16]   // pix
+    pcmpeqb    xmm5, xmm5            // generate mask 0x00ff00ff
+    psrlw      xmm5, 8
+    sub        edi, edx
+
+    align      16
+  convertloop:
+    movdqa     xmm0, [eax]
+    movdqa     xmm1, [eax + 16]
+    lea        eax,  [eax + 32]
+    psrlw      xmm0, 8      // YUYV -> UVUV
+    psrlw      xmm1, 8
+    packuswb   xmm0, xmm1
+    movdqa     xmm1, xmm0
+    pand       xmm0, xmm5  // U
+    packuswb   xmm0, xmm0
+    psrlw      xmm1, 8     // V
+    packuswb   xmm1, xmm1
+    movq       qword ptr [edx], xmm0
+    movq       qword ptr [edx + edi], xmm1
+    lea        edx, [edx + 8]
+    sub        ecx, 16
+    jg         convertloop
+
+    pop        edi
     ret
   }
 }
@@ -2268,7 +2657,7 @@ void YUY2ToYRow_Unaligned_SSE2(const uint8* src_yuy2,
 
 __declspec(naked) __declspec(align(16))
 void YUY2ToUVRow_Unaligned_SSE2(const uint8* src_yuy2, int stride_yuy2,
-                                uint8* dst_u, uint8* dst_y, int pix) {
+                                uint8* dst_u, uint8* dst_v, int pix) {
   __asm {
     push       esi
     push       edi
@@ -2311,6 +2700,43 @@ void YUY2ToUVRow_Unaligned_SSE2(const uint8* src_yuy2, int stride_yuy2,
 }
 
 __declspec(naked) __declspec(align(16))
+void YUY2ToUV422Row_Unaligned_SSE2(const uint8* src_yuy2,
+                                   uint8* dst_u, uint8* dst_v, int pix) {
+  __asm {
+    push       edi
+    mov        eax, [esp + 4 + 4]    // src_yuy2
+    mov        edx, [esp + 4 + 8]    // dst_u
+    mov        edi, [esp + 4 + 12]   // dst_v
+    mov        ecx, [esp + 4 + 16]   // pix
+    pcmpeqb    xmm5, xmm5            // generate mask 0x00ff00ff
+    psrlw      xmm5, 8
+    sub        edi, edx
+
+    align      16
+  convertloop:
+    movdqu     xmm0, [eax]
+    movdqu     xmm1, [eax + 16]
+    lea        eax,  [eax + 32]
+    psrlw      xmm0, 8      // YUYV -> UVUV
+    psrlw      xmm1, 8
+    packuswb   xmm0, xmm1
+    movdqa     xmm1, xmm0
+    pand       xmm0, xmm5  // U
+    packuswb   xmm0, xmm0
+    psrlw      xmm1, 8     // V
+    packuswb   xmm1, xmm1
+    movq       qword ptr [edx], xmm0
+    movq       qword ptr [edx + edi], xmm1
+    lea        edx, [edx + 8]
+    sub        ecx, 16
+    jg         convertloop
+
+    pop        edi
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
 void UYVYToYRow_SSE2(const uint8* src_uyvy,
                      uint8* dst_y, int pix) {
   __asm {
@@ -2336,7 +2762,7 @@ void UYVYToYRow_SSE2(const uint8* src_uyvy,
 
 __declspec(naked) __declspec(align(16))
 void UYVYToUVRow_SSE2(const uint8* src_uyvy, int stride_uyvy,
-                      uint8* dst_u, uint8* dst_y, int pix) {
+                      uint8* dst_u, uint8* dst_v, int pix) {
   __asm {
     push       esi
     push       edi
@@ -2379,6 +2805,43 @@ void UYVYToUVRow_SSE2(const uint8* src_uyvy, int stride_uyvy,
 }
 
 __declspec(naked) __declspec(align(16))
+void UYVYToUV422Row_SSE2(const uint8* src_uyvy,
+                         uint8* dst_u, uint8* dst_v, int pix) {
+  __asm {
+    push       edi
+    mov        eax, [esp + 4 + 4]    // src_yuy2
+    mov        edx, [esp + 4 + 8]    // dst_u
+    mov        edi, [esp + 4 + 12]   // dst_v
+    mov        ecx, [esp + 4 + 16]   // pix
+    pcmpeqb    xmm5, xmm5            // generate mask 0x00ff00ff
+    psrlw      xmm5, 8
+    sub        edi, edx
+
+    align      16
+  convertloop:
+    movdqa     xmm0, [eax]
+    movdqa     xmm1, [eax + 16]
+    lea        eax,  [eax + 32]
+    pand       xmm0, xmm5   // UYVY -> UVUV
+    pand       xmm1, xmm5
+    packuswb   xmm0, xmm1
+    movdqa     xmm1, xmm0
+    pand       xmm0, xmm5  // U
+    packuswb   xmm0, xmm0
+    psrlw      xmm1, 8     // V
+    packuswb   xmm1, xmm1
+    movq       qword ptr [edx], xmm0
+    movq       qword ptr [edx + edi], xmm1
+    lea        edx, [edx + 8]
+    sub        ecx, 16
+    jg         convertloop
+
+    pop        edi
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
 void UYVYToYRow_Unaligned_SSE2(const uint8* src_uyvy,
                                uint8* dst_y, int pix) {
   __asm {
@@ -2404,7 +2867,7 @@ void UYVYToYRow_Unaligned_SSE2(const uint8* src_uyvy,
 
 __declspec(naked) __declspec(align(16))
 void UYVYToUVRow_Unaligned_SSE2(const uint8* src_uyvy, int stride_uyvy,
-                                uint8* dst_u, uint8* dst_y, int pix) {
+                                uint8* dst_u, uint8* dst_v, int pix) {
   __asm {
     push       esi
     push       edi
@@ -2442,6 +2905,43 @@ void UYVYToUVRow_Unaligned_SSE2(const uint8* src_uyvy, int stride_uyvy,
 
     pop        edi
     pop        esi
+    ret
+  }
+}
+
+__declspec(naked) __declspec(align(16))
+void UYVYToUV422Row_Unaligned_SSE2(const uint8* src_uyvy,
+                                   uint8* dst_u, uint8* dst_v, int pix) {
+  __asm {
+    push       edi
+    mov        eax, [esp + 4 + 4]    // src_yuy2
+    mov        edx, [esp + 4 + 8]    // dst_u
+    mov        edi, [esp + 4 + 12]   // dst_v
+    mov        ecx, [esp + 4 + 16]   // pix
+    pcmpeqb    xmm5, xmm5            // generate mask 0x00ff00ff
+    psrlw      xmm5, 8
+    sub        edi, edx
+
+    align      16
+  convertloop:
+    movdqu     xmm0, [eax]
+    movdqu     xmm1, [eax + 16]
+    lea        eax,  [eax + 32]
+    pand       xmm0, xmm5   // UYVY -> UVUV
+    pand       xmm1, xmm5
+    packuswb   xmm0, xmm1
+    movdqa     xmm1, xmm0
+    pand       xmm0, xmm5  // U
+    packuswb   xmm0, xmm0
+    psrlw      xmm1, 8     // V
+    packuswb   xmm1, xmm1
+    movq       qword ptr [edx], xmm0
+    movq       qword ptr [edx + edi], xmm1
+    lea        edx, [edx + 8]
+    sub        ecx, 16
+    jg         convertloop
+
+    pop        edi
     ret
   }
 }
@@ -2636,8 +3136,39 @@ void ARGBBlendRow_SSSE3(const uint8* src_argb0, const uint8* src_argb1,
     add        ecx, 1 - 4
     jl         convertloop4b
 
+    test       eax, 15          // unaligned?
+    jne        convertuloop4
+    test       esi, 15          // unaligned?
+    jne        convertuloop4
+
     // 4 pixel loop.
   convertloop4:
+    movdqa     xmm3, [eax]      // src argb
+    lea        eax, [eax + 16]
+    movdqa     xmm0, xmm3       // src argb
+    pxor       xmm3, xmm4       // ~alpha
+    movdqa     xmm2, [esi]      // _r_b
+    pshufb     xmm3, kShuffleAlpha // alpha
+    pand       xmm2, xmm6       // _r_b
+    paddw      xmm3, xmm7       // 256 - alpha
+    pmullw     xmm2, xmm3       // _r_b * alpha
+    movdqa     xmm1, [esi]      // _a_g
+    lea        esi, [esi + 16]
+    psrlw      xmm1, 8          // _a_g
+    por        xmm0, xmm4       // set alpha to 255
+    pmullw     xmm1, xmm3       // _a_g * alpha
+    psrlw      xmm2, 8          // _r_b convert to 8 bits again
+    paddusb    xmm0, xmm2       // + src argb
+    pand       xmm1, xmm5       // a_g_ convert to 8 bits again
+    paddusb    xmm0, xmm1       // + src argb
+    sub        ecx, 4
+    movdqa     [edx], xmm0
+    lea        edx, [edx + 16]
+    jge        convertloop4
+    jmp        convertloop4b
+
+    // 4 pixel unaligned loop.
+  convertuloop4:
     movdqu     xmm3, [eax]      // src argb
     lea        eax, [eax + 16]
     movdqa     xmm0, xmm3       // src argb
@@ -2659,7 +3190,7 @@ void ARGBBlendRow_SSSE3(const uint8* src_argb0, const uint8* src_argb1,
     sub        ecx, 4
     movdqa     [edx], xmm0
     lea        edx, [edx + 16]
-    jge        convertloop4
+    jge        convertuloop4
 
   convertloop4b:
     add        ecx, 4 - 1
@@ -3350,17 +3881,19 @@ void ARGBShadeRow_SSE2(const uint8* src_argb, uint8* dst_argb, int width,
 #ifdef HAS_ARGBAFFINEROW_SSE2
 // Copy ARGB pixels from source image with slope to a row of destination.
 __declspec(naked) __declspec(align(16))
+LIBYUV_API
 void ARGBAffineRow_SSE2(const uint8* src_argb, int src_argb_stride,
                         uint8* dst_argb, const float* uv_dudv, int width) {
   __asm {
     push       esi
-    mov        eax, [esp + 8]   // src_argb
-    mov        esi, [esp + 12]  // stride
-    mov        edx, [esp + 16]  // dst_argb
-    mov        ecx, [esp + 20]  // pointer to uv_dudv
+    push       edi
+    mov        eax, [esp + 12]   // src_argb
+    mov        esi, [esp + 16]  // stride
+    mov        edx, [esp + 20]  // dst_argb
+    mov        ecx, [esp + 24]  // pointer to uv_dudv
     movq       xmm2, qword ptr [ecx]  // uv
     movq       xmm7, qword ptr [ecx + 8]  // dudv
-    mov        ecx, [esp + 24]  // width
+    mov        ecx, [esp + 28]  // width
     shl        esi, 16          // 4, stride
     add        esi, 4
     movd       xmm5, esi
@@ -3386,24 +3919,24 @@ void ARGBAffineRow_SSE2(const uint8* src_argb, int src_argb_stride,
     cvttps2dq  xmm1, xmm3    // x, y float to int next 2
     packssdw   xmm0, xmm1    // x, y as 8 shorts
     pmaddwd    xmm0, xmm5    // offsets = x * 4 + y * stride.
-    addps      xmm2, xmm4    // x, y += dx, dy first 2
-    addps      xmm3, xmm4    // x, y += dx, dy next 2
     movd       esi, xmm0
+    pshufd     xmm0, xmm0, 0x39  // shift right
+    movd       edi, xmm0
     pshufd     xmm0, xmm0, 0x39  // shift right
     movd       xmm1, [eax + esi]  // read pixel 0
-    movd       esi, xmm0
-    pshufd     xmm0, xmm0, 0x39  // shift right
-    movd       xmm6, [eax + esi]  // read pixel 1
+    movd       xmm6, [eax + edi]  // read pixel 1
     punpckldq  xmm1, xmm6     // combine pixel 0 and 1
+    addps      xmm2, xmm4    // x, y += dx, dy first 2
+    movq       qword ptr [edx], xmm1
     movd       esi, xmm0
     pshufd     xmm0, xmm0, 0x39  // shift right
+    movd       edi, xmm0
     movd       xmm6, [eax + esi]  // read pixel 2
-    movd       esi, xmm0
-    movd       xmm0, [eax + esi]  // read pixel 3
+    movd       xmm0, [eax + edi]  // read pixel 3
     punpckldq  xmm6, xmm0     // combine pixel 2 and 3
-    punpcklqdq xmm1, xmm6     // combine pixel 0, 1, 2 and 3
+    addps      xmm3, xmm4    // x, y += dx, dy next 2
     sub        ecx, 4
-    movdqu     [edx], xmm1
+    movq       qword ptr 8[edx], xmm6
     lea        edx, [edx + 16]
     jge        l4
 
@@ -3425,11 +3958,87 @@ void ARGBAffineRow_SSE2(const uint8* src_argb, int src_argb_stride,
     lea        edx, [edx + 4]
     jge        l1
   l1b:
+    pop        edi
     pop        esi
     ret
   }
 }
 #endif  // HAS_ARGBAFFINEROW_SSE2
+
+// Bilinear row filtering combines 4x2 -> 4x1. SSSE3 version.
+__declspec(naked) __declspec(align(16))
+void ARGBInterpolateRow_SSSE3(uint8* dst_ptr, const uint8* src_ptr,
+                              ptrdiff_t src_stride, int dst_width,
+                              int source_y_fraction) {
+  __asm {
+    push       esi
+    push       edi
+    mov        edi, [esp + 8 + 4]   // dst_ptr
+    mov        esi, [esp + 8 + 8]   // src_ptr
+    mov        edx, [esp + 8 + 12]  // src_stride
+    mov        ecx, [esp + 8 + 16]  // dst_width
+    mov        eax, [esp + 8 + 20]  // source_y_fraction (0..255)
+    sub        edi, esi
+    shr        eax, 1
+    cmp        eax, 0
+    je         xloop1
+    cmp        eax, 64
+    je         xloop2
+    movd       xmm0, eax  // high fraction 0..127
+    neg        eax
+    add        eax, 128
+    movd       xmm5, eax  // low fraction 128..1
+    punpcklbw  xmm5, xmm0
+    punpcklwd  xmm5, xmm5
+    pshufd     xmm5, xmm5, 0
+
+    align      16
+  xloop:
+    movdqa     xmm0, [esi]
+    movdqa     xmm2, [esi + edx]
+    movdqa     xmm1, xmm0
+    punpcklbw  xmm0, xmm2
+    punpckhbw  xmm1, xmm2
+    pmaddubsw  xmm0, xmm5
+    pmaddubsw  xmm1, xmm5
+    psrlw      xmm0, 7
+    psrlw      xmm1, 7
+    packuswb   xmm0, xmm1
+    sub        ecx, 4
+    movdqa     [esi + edi], xmm0
+    lea        esi, [esi + 16]
+    jg         xloop
+
+    pop        edi
+    pop        esi
+    ret
+
+    align      16
+  xloop1:
+    movdqa     xmm0, [esi]
+    sub        ecx, 4
+    movdqa     [esi + edi], xmm0
+    lea        esi, [esi + 16]
+    jg         xloop1
+
+    pop        edi
+    pop        esi
+    ret
+
+    align      16
+  xloop2:
+    movdqa     xmm0, [esi]
+    pavgb      xmm0, [esi + edx]
+    sub        ecx, 4
+    movdqa     [esi + edi], xmm0
+    lea        esi, [esi + 16]
+    jg         xloop2
+
+    pop        edi
+    pop        esi
+    ret
+  }
+}
 
 #endif  // _M_IX86
 

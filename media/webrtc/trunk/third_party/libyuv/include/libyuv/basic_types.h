@@ -82,9 +82,33 @@ typedef signed char int8;
     defined(__i386__) || defined(_M_IX86)
 #define CPU_X86 1
 #endif
+// Detect compiler is for ARM.
+#if defined(__arm__) || defined(_M_ARM)
+#define CPU_ARM 1
+#endif
 
+#ifndef ALIGNP
 #define ALIGNP(p, t) \
-  (reinterpret_cast<uint8*>(((reinterpret_cast<uintptr_t>(p) + \
-  ((t)-1)) & ~((t)-1))))
+    (reinterpret_cast<uint8*>(((reinterpret_cast<uintptr_t>(p) + \
+    ((t) - 1)) & ~((t) - 1))))
+#endif
+
+#if !defined(LIBYUV_API)
+#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(LIBYUV_BUILDING_SHARED_LIBRARY)
+#define LIBYUV_API __declspec(dllexport)
+#elif defined(LIBYUV_USING_SHARED_LIBRARY)
+#define LIBYUV_API __declspec(dllimport)
+#else
+#define LIBYUV_API
+#endif  // LIBYUV_BUILDING_SHARED_LIBRARY
+#elif defined(__GNUC__) && (__GNUC__ >= 4) && !defined(__APPLE__) && \
+    (defined(LIBYUV_BUILDING_SHARED_LIBRARY) || \
+    defined(LIBYUV_USING_SHARED_LIBRARY))
+#define LIBYUV_API __attribute__ ((visibility ("default")))
+#else
+#define LIBYUV_API
+#endif  // __GNUC__
+#endif  // LIBYUV_API
 
 #endif  // INCLUDE_LIBYUV_BASIC_TYPES_H_  NOLINT

@@ -1806,7 +1806,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
     // Caller must construct |this| before invoking the Ion function.
     JS_ASSERT_IF(fp->isConstructing(), fp->functionThis().isObject());
-    Value result = Int32Value(numActualArgs);
+    RootedValue result(cx, Int32Value(numActualArgs));
     {
         AssertCompartmentUnchanged pcc(cx);
         IonContext ictx(cx, cx->compartment, NULL);
@@ -1814,7 +1814,8 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         AutoFlushInhibitor afi(cx->compartment->ionCompartment());
         // Single transition point from Interpreter to Ion.
-        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, /* evalScopeChain = */ NULL, &result);
+        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, /* evalScopeChain = */ NULL,
+              result.address());
     }
 
     if (result.isMagic() && result.whyMagic() == JS_ION_BAILOUT) {
@@ -1942,13 +1943,13 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args)
     EnterIonCode enter = cx->compartment->ionCompartment()->enterJIT();
     void *calleeToken = CalleeToToken(fun);
 
-    Value result = Int32Value(args.length());
+    RootedValue result(cx, Int32Value(args.length()));
     JS_ASSERT(args.length() >= fun->nargs);
 
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
     args.setActive();
     enter(jitcode, args.length() + 1, args.array() - 1, fp, calleeToken,
-          /* evalScopeChain = */ NULL, &result);
+          /* evalScopeChain = */ NULL, result.address());
     args.setInactive();
 
     if (clearCallingIntoIon)
@@ -1995,12 +1996,12 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
           case IonFrame_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d rectifier frame @ %p", frameno, it.fp());
             break;
-          case IonFrame_Bailed_JS:
-          case IonFrame_Bailed_BaselineStub:
+          case IonFrame_Unwound_OptimizedJS:
+          case IonFrame_Unwound_BaselineStub:
             JS_NOT_REACHED("invalid");
             break;
-          case IonFrame_Bailed_Rectifier:
-            IonSpew(IonSpew_Invalidate, "#%d bailed rectifier frame @ %p", frameno, it.fp());
+          case IonFrame_Unwound_Rectifier:
+            IonSpew(IonSpew_Invalidate, "#%d unwound rectifier frame @ %p", frameno, it.fp());
             break;
           case IonFrame_Osr:
             IonSpew(IonSpew_Invalidate, "#%d osr frame @ %p", frameno, it.fp());

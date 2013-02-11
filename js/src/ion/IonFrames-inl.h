@@ -31,14 +31,14 @@ SizeOfFramePrefix(FrameType type)
         return IonEntryFrameLayout::Size();
       case IonFrame_BaselineJS:
       case IonFrame_OptimizedJS:
-      case IonFrame_Bailed_JS:
+      case IonFrame_Unwound_OptimizedJS:
         return IonJSFrameLayout::Size();
       case IonFrame_BaselineStub:
         return IonBaselineStubFrameLayout::Size();
       case IonFrame_Rectifier:
         return IonRectifierFrameLayout::Size();
-      case IonFrame_Bailed_Rectifier:
-        return IonBailedRectifierFrameLayout::Size();
+      case IonFrame_Unwound_Rectifier:
+        return IonUnwoundRectifierFrameLayout::Size();
       case IonFrame_Exit:
         return IonExitFrameLayout::Size();
       case IonFrame_Osr:

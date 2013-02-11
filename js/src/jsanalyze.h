@@ -9,6 +9,8 @@
 #ifndef jsanalyze_h___
 #define jsanalyze_h___
 
+#include "mozilla/TypeTraits.h"
+
 #include "jsautooplen.h"
 #include "jscompartment.h"
 #include "jscntxt.h"
@@ -1289,16 +1291,14 @@ void PrintBytecode(JSContext *cx, HandleScript script, jsbytecode *pc);
 } /* namespace analyze */
 } /* namespace js */
 
-namespace js {
-namespace tl {
+namespace mozilla {
 
-template <> struct IsPodType<js::analyze::LifetimeVariable> { static const bool result = true; };
-template <> struct IsPodType<js::analyze::LoopAnalysis>     { static const bool result = true; };
-template <> struct IsPodType<js::analyze::SlotValue>        { static const bool result = true; };
-template <> struct IsPodType<js::analyze::SSAValue>         { static const bool result = true; };
-template <> struct IsPodType<js::analyze::SSAUseChain>      { static const bool result = true; };
+template <> struct IsPod<js::analyze::LifetimeVariable> { static const bool value = true; };
+template <> struct IsPod<js::analyze::LoopAnalysis>     { static const bool value = true; };
+template <> struct IsPod<js::analyze::SlotValue>        { static const bool value = true; };
+template <> struct IsPod<js::analyze::SSAValue>         { static const bool value = true; };
+template <> struct IsPod<js::analyze::SSAUseChain>      { static const bool value = true; };
 
-} /* namespace tl */
-} /* namespace js */
+} /* namespace mozilla */
 
 #endif // jsanalyze_h___

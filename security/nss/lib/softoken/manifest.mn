@@ -47,6 +47,7 @@ CSRCS = \
 	rsawrapr.c  \
 	sdb.c  \
 	sftkdb.c  \
+	sftkhmac.c  \
 	sftkpars.c  \
 	sftkpwd.c  \
 	softkver.c  \

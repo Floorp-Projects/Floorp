@@ -8,6 +8,7 @@
 #endif
 
 #include "nsSocketTransport2.h"
+#include "base/compiler_specific.h"
 #include "nsAtomicRefcnt.h"
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
@@ -696,8 +697,8 @@ nsSocketTransport::nsSocketTransport()
     , mFD(nullptr)
     , mFDref(0)
     , mFDconnected(false)
-    , mInput(this)
-    , mOutput(this)
+    , ALLOW_THIS_IN_INITIALIZER_LIST(mInput(this))
+    , ALLOW_THIS_IN_INITIALIZER_LIST(mOutput(this))
     , mQoSBits(0x00)
 {
     SOCKET_LOG(("creating nsSocketTransport @%x\n", this));

@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
         var expando = unwrapped.expando;
         is(utils.getClassName(expando), 'Proxy', 'properly wrapped');
-        is(typeof expando.QueryInterface, 'function', 'double wrapped');
+        is(typeof expando.querySelector, 'function', 'double wrapped');
 
         ok(unwrapped.testme(expando),
            "content didn't get a proxy, but another double wrapped object");

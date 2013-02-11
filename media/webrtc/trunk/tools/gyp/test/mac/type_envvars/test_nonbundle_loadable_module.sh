@@ -16,3 +16,6 @@ test $EXECUTABLE_PATH = nonbundle_loadable_module.so
 
 test $DYLIB_INSTALL_NAME_BASE = "/usr/local/lib"
 test $LD_DYLIB_INSTALL_NAME = "/usr/local/lib/nonbundle_loadable_module.so"
+
+# Should be set, but empty.
+[[ ! $SDKROOT && ! ${SDKROOT-_} ]]

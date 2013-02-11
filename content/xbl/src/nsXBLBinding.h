@@ -6,6 +6,7 @@
 #ifndef nsXBLBinding_h_
 #define nsXBLBinding_h_
 
+#include "nsXBLService.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsINodeList.h"
@@ -14,6 +15,7 @@
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
+#include "jsapi.h"
 
 class nsXBLPrototypeBinding;
 class nsIContent;
@@ -58,8 +60,35 @@ public:
   nsIContent* GetBoundElement() { return mBoundElement; }
   void SetBoundElement(nsIContent *aElement);
 
+  void SetJSClass(nsXBLJSClass *aClass) {
+    MOZ_ASSERT(!mJSClass && aClass);
+    mJSClass = aClass;
+  }
+
   bool IsStyleBinding() const { return mIsStyleBinding; }
   void SetIsStyleBinding(bool aIsStyle) { mIsStyleBinding = aIsStyle; }
+
+  /*
+   * Does a lookup for a method or attribute provided by one of the bindings'
+   * prototype implementation. If found, |desc| will be set up appropriately,
+   * and wrapped into cx->compartment.
+   */
+  bool LookupMember(JSContext* aCx, JS::HandleId aId, JSPropertyDescriptor* aDesc);
+
+  /*
+   * Determines whether the binding has a field with the given name.
+   */
+  bool HasField(nsString& aName);
+
+protected:
+
+  /*
+   * Internal version. Requires that aCx is in the compartment of aBoundScope.
+   */
+  bool LookupMemberInternal(JSContext* aCx, nsString& aName, JS::HandleId aNameAsId,
+                            JSPropertyDescriptor* aDesc, JSObject* aBoundScope);
+
+public:
 
   void MarkForDeath();
   bool MarkedForDeath() const { return mMarkedForDeath; }
@@ -114,7 +143,7 @@ public:
   static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                                 const nsAFlatCString& aClassName,
                                 nsXBLPrototypeBinding* aProtoBinding,
-                                JSObject** aClassObject);
+                                JSObject** aClassObject, bool* aNew);
 
   bool AllowScripts();  // XXX make const
 
@@ -130,6 +159,9 @@ protected:
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsRefPtr<nsXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
+  nsRefPtr<nsXBLJSClass> mJSClass; // Strong. The class object also holds a strong reference,
+                                   // which might be somewhat redundant, but be safe to avoid
+                                   // worrying about edge cases.
   
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
