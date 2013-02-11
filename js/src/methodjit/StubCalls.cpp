@@ -495,16 +495,7 @@ StubEqualityOp(VMFrame &f)
                 cond = (l != r);
         } else if (lval.isObject()) {
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
-            if (JSEqualityOp eq = l->getClass()->ext.equality) {
-                JSBool equal;
-                RootedObject lobj(cx, l);
-                RootedValue r(cx, rval);
-                if (!eq(cx, lobj, r, &equal))
-                    return false;
-                cond = !!equal == EQ;
-            } else {
-                cond = (l == r) == EQ;
-            }
+            cond = (l == r) == EQ;
         } else if (lval.isNullOrUndefined()) {
             cond = EQ;
         } else {

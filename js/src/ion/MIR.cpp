@@ -1227,16 +1227,14 @@ CanDoValueBitwiseCmp(JSContext *cx, types::StackTypeSet *lhs, types::StackTypeSe
         return false;
     }
 
-    // Objects with special equality or that emulates undefined are not supported.
+    // Objects that emulate undefined are not supported.
     if (lhs->maybeObject() &&
-        (lhs->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
-         lhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED)))
+        lhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED))
     {
         return false;
     }
     if (rhs->maybeObject() &&
-        (rhs->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
-         rhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED)))
+        rhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED))
     {
         return false;
     }
@@ -1359,12 +1357,6 @@ MCompare::infer(const TypeOracle::BinaryTypes &b, JSContext *cx)
 
     // Handle object comparison.
     if (!relationalEq && lhs == MIRType_Object && rhs == MIRType_Object) {
-        if (b.lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
-            b.rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY))
-        {
-            return;
-        }
-
         compareType_ = Compare_Object;
         return;
     }

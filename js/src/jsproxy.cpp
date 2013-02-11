@@ -2846,11 +2846,9 @@ proxy_HasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, JSBoo
 
 #define PROXY_CLASS_EXT                             \
     {                                               \
-        NULL,                /* equality */         \
         NULL,                /* outerObject */      \
         NULL,                /* innerObject */      \
         NULL,                /* iteratorObject */   \
-        NULL,                /* unused */           \
         false,               /* isWrappedNative */  \
         proxy_WeakmapKeyDelegate                    \
     }
@@ -2923,11 +2921,9 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
     NULL,                    /* construct   */
     proxy_TraceObject,       /* trace       */
     {
-        NULL,                /* equality    */
         NULL,                /* outerObject */
         proxy_innerObject,
         NULL,                /* iteratorObject */
-        NULL,                /* unused */
         false,               /* isWrappedNative */
         proxy_WeakmapKeyDelegate
     },

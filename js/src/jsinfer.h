@@ -390,20 +390,17 @@ enum {
     /* Whether any represented script is considered uninlineable in JM. */
     OBJECT_FLAG_UNINLINEABLE          = 0x00080000,
 
-    /* Whether any objects have an equality hook. */
-    OBJECT_FLAG_SPECIAL_EQUALITY      = 0x00100000,
-
     /* Whether any objects have been iterated over. */
-    OBJECT_FLAG_ITERATED              = 0x00200000,
+    OBJECT_FLAG_ITERATED              = 0x00100000,
 
     /* For a global object, whether flags were set on the RegExpStatics. */
-    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00400000,
+    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00200000,
 
     /* Whether any objects emulate undefined; see EmulatesUndefined. */
-    OBJECT_FLAG_EMULATES_UNDEFINED    = 0x00800000,
+    OBJECT_FLAG_EMULATES_UNDEFINED    = 0x00400000,
 
     /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x00ff0000,
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x007f0000,
 
     /*
      * Whether all properties of this object are considered unknown.
