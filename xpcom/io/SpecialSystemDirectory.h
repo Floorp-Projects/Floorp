@@ -74,10 +74,11 @@ enum SystemDirectories {
   Win_ProgramFiles          =   229,
   Win_Downloads             =   230,
   Win_Common_AppData        =   231,
-  Win_Pictures              =   232,
-  Win_Music                 =   233,
-  Win_Videos                =   234,
-  
+  Win_Documents             =   232,
+  Win_Pictures              =   233,
+  Win_Music                 =   234,
+  Win_Videos                =   235,
+
   Unix_LocalDirectory       =   301,   
   Unix_LibDirectory         =   302,   
   Unix_HomeDirectory        =   303,

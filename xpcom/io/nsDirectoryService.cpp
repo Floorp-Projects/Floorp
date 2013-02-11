@@ -823,6 +823,10 @@ nsDirectoryService::GetFile(const char *prop, bool *persistent, nsIFile **_retva
     {
         rv = GetSpecialSystemDirectory(Win_Downloads, getter_AddRefs(localFile));
     }
+    else if (inAtom == nsDirectoryService::sDocs)
+    {
+        rv = GetSpecialSystemDirectory(Win_Documents, getter_AddRefs(localFile));
+    }
     else if (inAtom == nsDirectoryService::sPictures)
     {
         rv = GetSpecialSystemDirectory(Win_Pictures, getter_AddRefs(localFile));
