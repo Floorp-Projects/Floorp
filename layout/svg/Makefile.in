@@ -48,6 +48,7 @@ CPPSRCS		= \
 		nsSVGSwitchFrame.cpp \
 		nsSVGTextContainerFrame.cpp \
 		nsSVGTextFrame.cpp \
+		nsSVGTextFrame2.cpp \
 		nsSVGTextPathFrame.cpp \
 		nsSVGTSpanFrame.cpp \
 		nsSVGUseFrame.cpp \
@@ -77,6 +78,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../xul/base/src \
 		-I$(srcdir)/../../content/svg/content/src \
 		-I$(srcdir)/../../content/base/src \
+		-I$(srcdir)/../../widget \
 		$(NULL)
 
 libs::
