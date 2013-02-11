@@ -4308,6 +4308,7 @@ nsTextFrame::GetLastInFlow() const
   NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
   return lastInFlow;
 }
+
 nsIFrame*
 nsTextFrame::GetLastContinuation() const
 {
@@ -4317,6 +4318,32 @@ nsTextFrame::GetLastContinuation() const
   }
   NS_POSTCONDITION(lastInFlow, "illegal state in continuation chain.");
   return lastInFlow;
+}
+
+void
+nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+{
+  if (IsSVGText()) {
+    nsIFrame* svgTextFrame =
+      nsLayoutUtils::GetClosestFrameOfType(GetParent(),
+                                           nsGkAtoms::svgTextFrame2);
+    svgTextFrame->InvalidateFrame();
+    return;
+  }
+  nsTextFrameBase::InvalidateFrame(aDisplayItemKey);
+}
+
+void
+nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
+{
+  if (IsSVGText()) {
+    nsIFrame* svgTextFrame =
+      nsLayoutUtils::GetClosestFrameOfType(GetParent(),
+                                           nsGkAtoms::svgTextFrame2);
+    svgTextFrame->InvalidateFrame();
+    return;
+  }
+  nsTextFrameBase::InvalidateFrameWithRect(aRect, aDisplayItemKey);
 }
 
 gfxTextRun*

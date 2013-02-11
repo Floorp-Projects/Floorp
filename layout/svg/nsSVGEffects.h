@@ -141,7 +141,7 @@ protected:
   
   SourceReference mElement;
   // The frame that this property is attached to
-   nsIFrame *mFrame;
+  nsIFrame *mFrame;
   // When a presshell is torn down, we don't delete the properties for
   // each frame until after the frames are destroyed. So here we remember
   // the presshell for the frames we care about and, before we use the frame,
@@ -185,12 +185,21 @@ protected:
 class nsSVGTextPathProperty : public nsSVGIDRenderingObserver {
 public:
   nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
-    : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
+    : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage)
+    , mValid(true) {}
 
   virtual bool ObservesReflow() MOZ_OVERRIDE { return false; }
 
 protected:
   virtual void DoUpdate() MOZ_OVERRIDE;
+
+private:
+  /**
+   * Returns true if the target of the textPath is the frame of a 'path' element.
+   */
+  bool TargetIsValid();
+
+  bool mValid;
 };
  
 class nsSVGPaintingProperty : public nsSVGIDRenderingObserver {

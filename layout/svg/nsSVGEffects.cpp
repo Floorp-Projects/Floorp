@@ -288,6 +288,13 @@ nsSVGMarkerProperty::DoUpdate()
     mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
+bool
+nsSVGTextPathProperty::TargetIsValid()
+{
+  Element* target = GetTarget();
+  return target && target->IsSVG(nsGkAtoms::path);
+}
+
 void
 nsSVGTextPathProperty::DoUpdate()
 {
@@ -297,6 +304,23 @@ nsSVGTextPathProperty::DoUpdate()
 
   NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG) || mFrame->IsSVGText(),
                "SVG frame expected");
+
+  // Avoid getting into an infinite loop of reflows if the <textPath> is
+  // pointing to one of its ancestors.  TargetIsValid returns true iff
+  // the target element is a <path> element, and we would not have this
+  // nsSVGTextPathProperty if this <textPath> were a descendant of the
+  // target <path>.
+  //
+  // Note that we still have to post the restyle event when we
+  // change from being valid to invalid, so that mPositions on the
+  // nsSVGTextFrame2 gets updated, skipping the <textPath>, ensuring
+  // that nothing gets painted for that element.
+  bool nowValid = TargetIsValid();
+  if (!mValid && !nowValid) {
+    // Just return if we were previously invalid, and are still invalid.
+    return;
+  }
+  mValid = nowValid;
 
   // Repaint asynchronously in case the path frame is being torn down
   nsChangeHint changeHint =

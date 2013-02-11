@@ -487,6 +487,30 @@ nsBlockFrame::GetType() const
   return nsGkAtoms::blockFrame;
 }
 
+void
+nsBlockFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+{
+  if (IsSVGText()) {
+    NS_ASSERTION(GetParent()->GetType() == nsGkAtoms::svgTextFrame2,
+                 "unexpected block frame in SVG text");
+    GetParent()->InvalidateFrame();
+    return;
+  }
+  nsBlockFrameSuper::InvalidateFrame(aDisplayItemKey);
+}
+
+void
+nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
+{
+  if (IsSVGText()) {
+    NS_ASSERTION(GetParent()->GetType() == nsGkAtoms::svgTextFrame2,
+                 "unexpected block frame in SVG text");
+    GetParent()->InvalidateFrame();
+    return;
+  }
+  nsBlockFrameSuper::InvalidateFrameWithRect(aRect, aDisplayItemKey);
+}
+
 nscoord
 nsBlockFrame::GetBaseline() const
 {
