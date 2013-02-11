@@ -3878,7 +3878,7 @@ Tab.prototype = {
     sendMessageToJava({
       type: "Tab:ViewportMetadata",
       allowZoom: this.metadata.allowZoom,
-      defaultZoom: this.metadata.defaultZoom || 0,
+      defaultZoom: this.metadata.defaultZoom || this.metadata.scaleRatio,
       minZoom: this.metadata.minZoom || 0,
       maxZoom: this.metadata.maxZoom || 0,
       tabID: this.id
