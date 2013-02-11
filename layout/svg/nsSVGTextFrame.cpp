@@ -55,9 +55,9 @@ nsSVGTextFrame::AttributeChanged(int32_t         aNameSpaceID,
     return NS_OK;
 
   if (aAttribute == nsGkAtoms::transform) {
-    nsSVGUtils::InvalidateBounds(this, false);
-    nsSVGUtils::ScheduleReflowSVG(this);
+    // Don't invalidate (the layers code does that).
     NotifySVGChanged(TRANSFORM_CHANGED);
+    SchedulePaint();
   } else if (aAttribute == nsGkAtoms::x ||
              aAttribute == nsGkAtoms::y ||
              aAttribute == nsGkAtoms::dx ||
