@@ -309,6 +309,7 @@ class ICEntry
     _(BinaryArith_Fallback)     \
     _(BinaryArith_Int32)        \
     _(BinaryArith_Double)       \
+    _(BinaryArith_StringConcat) \
                                 \
     _(UnaryArith_Fallback)      \
     _(UnaryArith_Int32)         \
@@ -1664,6 +1665,34 @@ class ICBinaryArith_Int32 : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICBinaryArith_Int32::New(space, getStubCode());
+        }
+    };
+};
+
+class ICBinaryArith_StringConcat : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICBinaryArith_StringConcat(IonCode *stubCode)
+      : ICStub(BinaryArith_StringConcat, stubCode)
+    {}
+
+  public:
+    static inline ICBinaryArith_StringConcat *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICBinaryArith_StringConcat>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::BinaryArith_StringConcat)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBinaryArith_StringConcat::New(space, getStubCode());
         }
     };
 };
