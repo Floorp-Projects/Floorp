@@ -22,7 +22,7 @@ USING_FILE_NAMESPACE
 
 ArchiveZipItem::ArchiveZipItem(const char* aFilename,
                                const ZipCentral& aCentralStruct,
-                               const ArchiveReaderOptions& aOptions)
+                               const mozilla::idl::ArchiveReaderOptions& aOptions)
 : mFilename(aFilename),
   mCentralStruct(aCentralStruct),
   mOptions(aOptions)
@@ -111,7 +111,7 @@ ArchiveZipItem::StrToInt16(const uint8_t* aStr)
 // ArchiveReaderZipEvent
 
 ArchiveReaderZipEvent::ArchiveReaderZipEvent(ArchiveReader* aArchiveReader,
-                                             const ArchiveReaderOptions& aOptions)
+                                             const mozilla::idl::ArchiveReaderOptions& aOptions)
 : ArchiveReaderEvent(aArchiveReader),
   mOptions(aOptions)
 {
