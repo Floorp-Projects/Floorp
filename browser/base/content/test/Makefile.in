@@ -301,6 +301,7 @@ _BROWSER_FILES = \
                  download_page.html \
                  browser_URLBarSetURI.js \
                  browser_bookmark_titles.js \
+                 browser_pageInfo_plugins.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
