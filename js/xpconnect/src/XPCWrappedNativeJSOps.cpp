@@ -811,7 +811,6 @@ XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, // deleteElement
         nullptr, // deleteSpecial
         XPC_WN_JSOp_Enumerate,
-        XPC_WN_JSOp_TypeOf_Object,
         XPC_WN_JSOp_ThisObject,
     }
   },
@@ -1196,18 +1195,6 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
     // else call js_ObjectOps.enumerate...
 
     return JS_EnumerateState(cx, obj, enum_op, statep, idp);
-}
-
-JSType
-XPC_WN_JSOp_TypeOf_Object(JSContext *cx, JSHandleObject obj)
-{
-    return JSTYPE_OBJECT;
-}
-
-JSType
-XPC_WN_JSOp_TypeOf_Function(JSContext *cx, JSHandleObject obj)
-{
-    return JSTYPE_FUNCTION;
 }
 
 namespace {

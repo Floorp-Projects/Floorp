@@ -545,12 +545,6 @@ with_Enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
     return JSObject::enumerate(cx, actual, enum_op, statep, idp);
 }
 
-static JSType
-with_TypeOf(JSContext *cx, HandleObject obj)
-{
-    return JSTYPE_OBJECT;
-}
-
 static JSObject *
 with_ThisObject(JSContext *cx, HandleObject obj)
 {
@@ -605,7 +599,6 @@ Class js::WithClass = {
         with_DeleteElement,
         with_DeleteSpecial,
         with_Enumerate,
-        with_TypeOf,
         with_ThisObject,
     }
 };
