@@ -396,29 +396,6 @@
       </hbox>
     </panel>
 
-    <panel id="allTabs-panel" hidden="true" norestorefocus="true" ignorekeys="true"
-           onmouseover="allTabs._updateTabCloseButton(event);">
-      <hbox id="allTabs-meta" align="center">
-        <spacer flex="1"/>
-        <textbox id="allTabs-filter"
-                 tooltiptext="&allTabs.filter.emptyText;"
-                 type="search"
-                 oncommand="allTabs.filter();"/>
-        <spacer flex="1"/>
-        <toolbarbutton class="KUI-panel-closebutton"
-                       oncommand="allTabs.close()"
-                       tooltiptext="&closeCmd.label;"/>
-      </hbox>
-      <stack id="allTabs-stack">
-        <vbox id="allTabs-container"><hbox/></vbox>
-        <toolbarbutton id="allTabs-tab-close-button"
-                       class="tabs-closebutton"
-                       oncommand="allTabs.closeTab(event);"
-                       tooltiptext="&closeCmd.label;"
-                       style="visibility:hidden"/>
-      </stack>
-    </panel>
-
     <!-- Bookmarks and history tooltip -->
     <tooltip id="bhTooltip"/>
 
