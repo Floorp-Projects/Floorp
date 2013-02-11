@@ -12,7 +12,6 @@ add_makefiles "
   services/metrics/Makefile
   services/sync/Makefile
   services/sync/locales/Makefile
-  services/captivedetect/Makefile
 "
 
 if [ "$ENABLE_TESTS" ]; then
