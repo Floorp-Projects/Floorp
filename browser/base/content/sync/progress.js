@@ -18,10 +18,10 @@ function onLoad(event) {
   gProgressBar = document.getElementById('uploadProgressBar');
 
   if (Services.prefs.getPrefType("services.sync.firstSync") != Ci.nsIPrefBranch.PREF_INVALID) {
-    gProgressBar.style.display = "inline";
+    gProgressBar.hidden = false;
   }
   else {
-    gProgressBar.style.display = "none";
+    gProgressBar.hidden = true;
   }
 }
 
