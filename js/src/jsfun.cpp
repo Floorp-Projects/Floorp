@@ -1230,7 +1230,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
 
     /* Block this call if security callbacks forbid it. */
     Rooted<GlobalObject*> global(cx, &args.callee().global());
-    if (!global->isRuntimeCodeGenEnabled(cx)) {
+    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, global)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
         return false;
     }
