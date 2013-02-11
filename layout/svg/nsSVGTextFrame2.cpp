@@ -2824,31 +2824,71 @@ nsSVGTextFrame2::GetType() const
 NS_IMPL_ISUPPORTS1(nsSVGTextFrame2::MutationObserver, nsIMutationObserver)
 
 void
-nsSVGTextFrame2::MutationObserver::ContentAppended(nsIDocument *aDocument,
-                                                   nsIContent *aContainer,
-                                                   nsIContent *aFirstNewContent,
+nsSVGTextFrame2::MutationObserver::ContentAppended(nsIDocument* aDocument,
+                                                   nsIContent* aContainer,
+                                                   nsIContent* aFirstNewContent,
                                                    int32_t aNewIndexInContainer)
 {
   mFrame->NotifyGlyphMetricsChange();
 }
 
 void
-nsSVGTextFrame2::MutationObserver::ContentInserted(nsIDocument *aDocument,
-                                        nsIContent *aContainer,
-                                        nsIContent *aChild,
+nsSVGTextFrame2::MutationObserver::ContentInserted(
+                                        nsIDocument* aDocument,
+                                        nsIContent* aContainer,
+                                        nsIContent* aChild,
                                         int32_t aIndexInContainer)
 {
   mFrame->NotifyGlyphMetricsChange();
 }
 
 void
-nsSVGTextFrame2::MutationObserver::ContentRemoved(nsIDocument *aDocument,
-                                       nsIContent *aContainer,
-                                       nsIContent *aChild,
+nsSVGTextFrame2::MutationObserver::ContentRemoved(
+                                       nsIDocument *aDocument,
+                                       nsIContent* aContainer,
+                                       nsIContent* aChild,
                                        int32_t aIndexInContainer,
-                                       nsIContent *aPreviousSibling)
+                                       nsIContent* aPreviousSibling)
 {
   mFrame->NotifyGlyphMetricsChange();
+}
+
+void
+nsSVGTextFrame2::MutationObserver::AttributeChanged(
+                                                nsIDocument* aDocument,
+                                                mozilla::dom::Element* aElement,
+                                                int32_t aNameSpaceID,
+                                                nsIAtom* aAttribute,
+                                                int32_t aModType)
+{
+  if (!aElement->IsSVG()) {
+    return;
+  }
+
+  // Attribute changes on this element are handled in
+  // nsSVGTextFrame2::AttributeChanged.
+  if (aElement == mFrame->GetContent()) {
+    return;
+  }
+
+  // Attributes changes on descendent elements.
+  if (aElement->Tag() == nsGkAtoms::textPath) {
+    if (aNameSpaceID == kNameSpaceID_None &&
+        aAttribute == nsGkAtoms::startOffset) {
+      mFrame->NotifyGlyphMetricsChange();
+    } else if (aNameSpaceID == kNameSpaceID_XLink &&
+               aAttribute == nsGkAtoms::href) {
+      // Blow away our reference, if any
+      nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
+      childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
+      mFrame->NotifyGlyphMetricsChange();
+    }
+  } else {
+    if (aNameSpaceID == kNameSpaceID_None &&
+        IsGlyphPositioningAttribute(aAttribute)) {
+      mFrame->NotifyGlyphMetricsChange();
+    }
+  }
 }
 
 NS_IMETHODIMP
