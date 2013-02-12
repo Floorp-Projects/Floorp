@@ -956,6 +956,18 @@ imgStatusTracker::FrameChanged(const nsIntRect* aDirtyRect)
 }
 
 void
+imgStatusTracker::OnStopFrame()
+{
+  RecordStopFrame();
+
+  /* notify the kids */
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  while (iter.HasMore()) {
+    SendStopFrame(iter.GetNext());
+  }
+}
+
+void
 imgStatusTracker::OnDataAvailable()
 {
   // Notify any imgRequestProxys that are observing us that we have an Image.

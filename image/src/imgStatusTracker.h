@@ -168,6 +168,9 @@ public:
   void OnDiscard();
   void FrameChanged(const nsIntRect* aDirtyRect);
   void OnUnlockedDraw();
+  // This is called only by VectorImage, and only to ensure tests work
+  // properly. Do not use it.
+  void OnStopFrame();
 
   /* non-virtual imgIOnloadBlocker methods */
   // NB: If UnblockOnload is sent, and then we are asked to replay the
