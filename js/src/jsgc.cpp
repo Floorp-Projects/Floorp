@@ -195,30 +195,23 @@ static const AllocKind FinalizePhaseIonCode[] = {
     FINALIZE_IONCODE
 };
 
-static const AllocKind FinalizePhaseShapes[] = {
-    FINALIZE_TYPE_OBJECT
-};
-
 static const AllocKind* FinalizePhases[] = {
     FinalizePhaseStrings,
     FinalizePhaseScripts,
-    FinalizePhaseIonCode,
-    FinalizePhaseShapes
+    FinalizePhaseIonCode
 };
 static const int FinalizePhaseCount = sizeof(FinalizePhases) / sizeof(AllocKind*);
 
 static const int FinalizePhaseLength[] = {
     sizeof(FinalizePhaseStrings) / sizeof(AllocKind),
     sizeof(FinalizePhaseScripts) / sizeof(AllocKind),
-    sizeof(FinalizePhaseIonCode) / sizeof(AllocKind),
-    sizeof(FinalizePhaseShapes) / sizeof(AllocKind)
+    sizeof(FinalizePhaseIonCode) / sizeof(AllocKind)
 };
 
 static const gcstats::Phase FinalizePhaseStatsPhase[] = {
     gcstats::PHASE_SWEEP_STRING,
     gcstats::PHASE_SWEEP_SCRIPT,
-    gcstats::PHASE_SWEEP_IONCODE,
-    gcstats::PHASE_SWEEP_SHAPE
+    gcstats::PHASE_SWEEP_IONCODE
 };
 
 /*
@@ -241,7 +234,8 @@ static const AllocKind BackgroundPhaseStrings[] = {
 
 static const AllocKind BackgroundPhaseShapes[] = {
     FINALIZE_SHAPE,
-    FINALIZE_BASE_SHAPE
+    FINALIZE_BASE_SHAPE,
+    FINALIZE_TYPE_OBJECT
 };
 
 static const AllocKind* BackgroundPhases[] = {
@@ -1480,10 +1474,9 @@ ArenaLists::queueShapesForSweep(FreeOp *fop)
 {
     gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_SHAPE);
 
-    queueForForegroundSweep(fop, FINALIZE_TYPE_OBJECT);
-
     queueForBackgroundSweep(fop, FINALIZE_SHAPE);
     queueForBackgroundSweep(fop, FINALIZE_BASE_SHAPE);
+    queueForBackgroundSweep(fop, FINALIZE_TYPE_OBJECT);
 }
 
 static void *
@@ -4588,6 +4581,12 @@ JS::ShrinkGCBuffers(JSRuntime *rt)
         rt->gcHelperThread.startBackgroundShrink();
 }
 
+void
+js::gc::FinishBackgroundFinalize(JSRuntime *rt)
+{
+    rt->gcHelperThread.waitBackgroundSweepEnd();
+}
+
 AutoFinishGC::AutoFinishGC(JSRuntime *rt)
 {
     if (IsIncrementalGCInProgress(rt)) {
@@ -4595,7 +4594,7 @@ AutoFinishGC::AutoFinishGC(JSRuntime *rt)
         FinishIncrementalGC(rt, gcreason::API);
     }
 
-    rt->gcHelperThread.waitBackgroundSweepEnd();
+    gc::FinishBackgroundFinalize(rt);
 }
 
 AutoPrepareForTracing::AutoPrepareForTracing(JSRuntime *rt)
