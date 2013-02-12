@@ -862,8 +862,11 @@ AbstractFramePtr::maybeFun() const
 {
     if (isStackFrame())
         return asStackFrame()->maybeFun();
+#ifdef JS_ION
+    return asBaselineFrame()->maybeFun();
+#else
     JS_NOT_REACHED("Invalid frame");
-    return NULL;
+#endif
 }
 inline JSFunction *
 AbstractFramePtr::callee() const

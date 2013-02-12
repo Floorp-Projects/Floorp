@@ -125,8 +125,11 @@ class BaselineFrame
             return evalScript();
         return ScriptFromCalleeToken(calleeToken());
     }
-    UnrootedFunction fun() const {
+    JSFunction *fun() const {
         return CalleeTokenToFunction(calleeToken());
+    }
+    JSFunction *maybeFun() const {
+        return isFunctionFrame() ? fun() : NULL;
     }
     UnrootedFunction callee() const {
         return CalleeTokenToFunction(calleeToken());
