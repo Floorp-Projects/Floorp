@@ -38,6 +38,11 @@
 #include "SVGContentUtils.h"
 #include <algorithm>
 #include "nsContentUtils.h"
+#include "mozilla/dom/SVGComponentTransferFunctionElement.h"
+#include "mozilla/dom/SVGFEFuncAElementBinding.h"
+#include "mozilla/dom/SVGFEFuncBElementBinding.h"
+#include "mozilla/dom/SVGFEFuncGElementBinding.h"
+#include "mozilla/dom/SVGFEFuncRElementBinding.h"
 
 #if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage
@@ -1754,53 +1759,6 @@ nsSVGFEComponentTransferElement::GetStringInfo()
 
 //--------------------------------------------
 
-#define NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID \
-    { 0xafab106d, 0xbc18, 0x4f7f, \
-  { 0x9e, 0x29, 0xfe, 0xb4, 0xb0, 0x16, 0x5f, 0xf4 } }
-
-typedef SVGFEUnstyledElement nsSVGComponentTransferFunctionElementBase;
-
-class nsSVGComponentTransferFunctionElement : public nsSVGComponentTransferFunctionElementBase
-{
-  friend nsresult NS_NewSVGComponentTransferFunctionElement(nsIContent **aResult,
-                                                            already_AddRefed<nsINodeInfo> aNodeInfo);
-protected:
-  nsSVGComponentTransferFunctionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGComponentTransferFunctionElementBase(aNodeInfo) {}
-
-public:
-  // interfaces:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT
-
-  virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
-
-  virtual int32_t GetChannel() = 0;
-  void GenerateLookupTable(uint8_t* aTable);
-
-protected:
-  virtual NumberAttributesInfo GetNumberInfo();
-  virtual EnumAttributesInfo GetEnumInfo();
-  virtual NumberListAttributesInfo GetNumberListInfo();
-
-  // nsIDOMSVGComponentTransferFunctionElement properties:
-  enum { TABLEVALUES };
-  SVGAnimatedNumberList mNumberListAttributes[1];
-  static NumberListInfo sNumberListInfo[1];
-
-  enum { SLOPE, INTERCEPT, AMPLITUDE, EXPONENT, OFFSET };
-  nsSVGNumber2 mNumberAttributes[5];
-  static NumberInfo sNumberInfo[5];
-
-  enum { TYPE };
-  nsSVGEnum mEnumAttributes[1];
-  static nsSVGEnumMapping sTypeMap[];
-  static EnumInfo sEnumInfo[1];
-};
-
 nsresult
 nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
                                         const nsTArray<const Image*>& aSources,
@@ -1819,9 +1777,9 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
        childContent;
        childContent = childContent->GetNextSibling()) {
 
-    nsRefPtr<nsSVGComponentTransferFunctionElement> child;
+    nsRefPtr<SVGComponentTransferFunctionElement> child;
     CallQueryInterface(childContent,
-            (nsSVGComponentTransferFunctionElement**)getter_AddRefs(child));
+            (SVGComponentTransferFunctionElement**)getter_AddRefs(child));
     if (child) {
       child->GenerateLookupTable(tables[child->GetChannel()]);
     }
@@ -1858,12 +1816,15 @@ nsSVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& 
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
-nsSVGElement::NumberListInfo nsSVGComponentTransferFunctionElement::sNumberListInfo[1] =
+namespace mozilla {
+namespace dom {
+
+nsSVGElement::NumberListInfo SVGComponentTransferFunctionElement::sNumberListInfo[1] =
 {
   { &nsGkAtoms::tableValues }
 };
 
-nsSVGElement::NumberInfo nsSVGComponentTransferFunctionElement::sNumberInfo[5] =
+nsSVGElement::NumberInfo SVGComponentTransferFunctionElement::sNumberInfo[5] =
 {
   { &nsGkAtoms::slope,     1, false },
   { &nsGkAtoms::intercept, 0, false },
@@ -1872,7 +1833,7 @@ nsSVGElement::NumberInfo nsSVGComponentTransferFunctionElement::sNumberInfo[5] =
   { &nsGkAtoms::offset,    0, false }
 };
 
-nsSVGEnumMapping nsSVGComponentTransferFunctionElement::sTypeMap[] = {
+nsSVGEnumMapping SVGComponentTransferFunctionElement::sTypeMap[] = {
   {&nsGkAtoms::identity,
    nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY},
   {&nsGkAtoms::table,
@@ -1886,7 +1847,7 @@ nsSVGEnumMapping nsSVGComponentTransferFunctionElement::sTypeMap[] = {
   {nullptr, 0}
 };
 
-nsSVGElement::EnumInfo nsSVGComponentTransferFunctionElement::sEnumInfo[1] =
+nsSVGElement::EnumInfo SVGComponentTransferFunctionElement::sEnumInfo[1] =
 {
   { &nsGkAtoms::type,
     sTypeMap,
@@ -1897,25 +1858,25 @@ nsSVGElement::EnumInfo nsSVGComponentTransferFunctionElement::sEnumInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGComponentTransferFunctionElement,nsSVGComponentTransferFunctionElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGComponentTransferFunctionElement,nsSVGComponentTransferFunctionElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGComponentTransferFunctionElement,SVGComponentTransferFunctionElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGComponentTransferFunctionElement,SVGComponentTransferFunctionElementBase)
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGComponentTransferFunctionElement, NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGComponentTransferFunctionElement, NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGComponentTransferFunctionElement)
+NS_INTERFACE_MAP_BEGIN(SVGComponentTransferFunctionElement)
    // nsISupports is an ambiguous base of nsSVGFE so we have to work
    // around that
-   if ( aIID.Equals(NS_GET_IID(nsSVGComponentTransferFunctionElement)) )
+   if ( aIID.Equals(NS_GET_IID(SVGComponentTransferFunctionElement)) )
      foundInterface = static_cast<nsISupports*>(static_cast<void*>(this));
    else
-NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElementBase)
+NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElementBase)
 
 
 //----------------------------------------------------------------------
 // nsFEUnstyledElement methods
 
 bool
-nsSVGComponentTransferFunctionElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+SVGComponentTransferFunctionElement::AttributeAffectsRendering(int32_t aNameSpaceID,
                                                                  nsIAtom* aAttribute) const
 {
   return aNameSpaceID == kNameSpaceID_None &&
@@ -1932,51 +1893,92 @@ nsSVGComponentTransferFunctionElement::AttributeAffectsRendering(int32_t aNameSp
 // nsIDOMSVGComponentTransferFunctionElement methods
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration type; */
-NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetType(nsIDOMSVGAnimatedEnumeration * *aType)
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGComponentTransferFunctionElement::Type()
 {
-  return mEnumAttributes[TYPE].ToDOMAnimatedEnum(aType, this);
+  return mEnumAttributes[TYPE].ToDOMAnimatedEnum(this);
+}
+NS_IMETHODIMP SVGComponentTransferFunctionElement::GetType(nsIDOMSVGAnimatedEnumeration * *aType)
+{
+  *aType = Type().get();
+  return NS_OK;
 }
 
 /* readonly attribute DOMSVGAnimatedNumberList tableValues; */
-NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetTableValues(nsISupports * *aTableValues)
+already_AddRefed<DOMSVGAnimatedNumberList>
+SVGComponentTransferFunctionElement::TableValues()
 {
-  *aTableValues = DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[TABLEVALUES],
-                                                          this, TABLEVALUES).get();
+  return DOMSVGAnimatedNumberList::GetDOMWrapper(
+    &mNumberListAttributes[TABLEVALUES], this, TABLEVALUES);
+}
+NS_IMETHODIMP SVGComponentTransferFunctionElement::GetTableValues(nsISupports * *aTableValues)
+{
+  *aTableValues = TableValues().get();
   return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber slope; */
-NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetSlope(nsIDOMSVGAnimatedNumber * *aSlope)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Slope()
 {
-  return mNumberAttributes[SLOPE].ToDOMAnimatedNumber(aSlope, this);
+  return mNumberAttributes[SLOPE].ToDOMAnimatedNumber(this);
+}
+NS_IMETHODIMP SVGComponentTransferFunctionElement::GetSlope(nsIDOMSVGAnimatedNumber * *aSlope)
+{
+  *aSlope = Slope().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber intercept; */
-NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetIntercept(nsIDOMSVGAnimatedNumber * *aIntercept)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Intercept()
 {
-  return mNumberAttributes[INTERCEPT].ToDOMAnimatedNumber(aIntercept, this);
+  return mNumberAttributes[INTERCEPT].ToDOMAnimatedNumber(this);
+}
+NS_IMETHODIMP SVGComponentTransferFunctionElement::GetIntercept(nsIDOMSVGAnimatedNumber * *aIntercept)
+{
+  *aIntercept = Intercept().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber amplitude; */
-NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetAmplitude(nsIDOMSVGAnimatedNumber * *aAmplitude)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Amplitude()
 {
-  return mNumberAttributes[AMPLITUDE].ToDOMAnimatedNumber(aAmplitude, this);
+  return mNumberAttributes[AMPLITUDE].ToDOMAnimatedNumber(this);
+}
+NS_IMETHODIMP SVGComponentTransferFunctionElement::GetAmplitude(nsIDOMSVGAnimatedNumber * *aAmplitude)
+{
+  *aAmplitude = Amplitude().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber exponent; */
-NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetExponent(nsIDOMSVGAnimatedNumber * *aExponent)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Exponent()
 {
-  return mNumberAttributes[EXPONENT].ToDOMAnimatedNumber(aExponent, this);
+  return mNumberAttributes[EXPONENT].ToDOMAnimatedNumber(this);
+}
+NS_IMETHODIMP SVGComponentTransferFunctionElement::GetExponent(nsIDOMSVGAnimatedNumber * *aExponent)
+{
+  *aExponent = Exponent().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber offset; */
-NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetOffset(nsIDOMSVGAnimatedNumber * *aOffset)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Offset()
 {
-  return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(aOffset, this);
+  return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(this);
+}
+NS_IMETHODIMP SVGComponentTransferFunctionElement::GetOffset(nsIDOMSVGAnimatedNumber * *aOffset)
+{
+  *aOffset = Offset().get();
+  return NS_OK;
 }
 
 void
-nsSVGComponentTransferFunctionElement::GenerateLookupTable(uint8_t *aTable)
+SVGComponentTransferFunctionElement::GenerateLookupTable(uint8_t *aTable)
 {
   uint16_t type = mEnumAttributes[TYPE].GetAnimValue();
 
@@ -2058,212 +2060,176 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(uint8_t *aTable)
 // nsSVGElement methods
 
 nsSVGElement::NumberListAttributesInfo
-nsSVGComponentTransferFunctionElement::GetNumberListInfo()
+SVGComponentTransferFunctionElement::GetNumberListInfo()
 {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
                                   ArrayLength(sNumberListInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
-nsSVGComponentTransferFunctionElement::GetEnumInfo()
+SVGComponentTransferFunctionElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::NumberAttributesInfo
-nsSVGComponentTransferFunctionElement::GetNumberInfo()
+SVGComponentTransferFunctionElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
-class nsSVGFEFuncRElement : public nsSVGComponentTransferFunctionElement,
-                            public nsIDOMSVGFEFuncRElement
-{
-  friend nsresult NS_NewSVGFEFuncRElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-protected:
-  nsSVGFEFuncRElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
-    : nsSVGComponentTransferFunctionElement(aNodeInfo) {}
 
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
+NS_IMPL_ADDREF_INHERITED(SVGFEFuncRElement,SVGComponentTransferFunctionElement)
+NS_IMPL_RELEASE_INHERITED(SVGFEFuncRElement,SVGComponentTransferFunctionElement)
 
-  NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(nsSVGComponentTransferFunctionElement::)
+} // namespace dom
+} // namespace mozilla
 
-  NS_DECL_NSIDOMSVGFEFUNCRELEMENT
+DOMCI_NODE_DATA(SVGFEFuncRElement, SVGFEFuncRElement)
 
-  virtual int32_t GetChannel() { return 0; }
-  
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
+namespace mozilla {
+namespace dom {
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
-
-NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncRElement,nsSVGComponentTransferFunctionElement)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEFuncRElement,nsSVGComponentTransferFunctionElement)
-
-DOMCI_NODE_DATA(SVGFEFuncRElement, nsSVGFEFuncRElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncRElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEFuncRElement, nsIDOMNode, nsIDOMElement,
+NS_INTERFACE_TABLE_HEAD(SVGFEFuncRElement)
+  NS_NODE_INTERFACE_TABLE5(SVGFEFuncRElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGComponentTransferFunctionElement,
                            nsIDOMSVGFEFuncRElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncRElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncR)
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFuncRElement)
-
-
-class nsSVGFEFuncGElement : public nsSVGComponentTransferFunctionElement,
-                            public nsIDOMSVGFEFuncGElement
+/* virtual */ JSObject*
+SVGFEFuncRElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
 {
-  friend nsresult NS_NewSVGFEFuncGElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-protected:
-  nsSVGFEFuncGElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
-    : nsSVGComponentTransferFunctionElement(aNodeInfo) {}
+  return SVGFEFuncRElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
+} // namespace dom
+} // namespace mozilla
 
-  NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(nsSVGComponentTransferFunctionElement::)
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncR)
 
-  NS_DECL_NSIDOMSVGFEFUNCGELEMENT
+namespace mozilla {
+namespace dom {
 
-  virtual int32_t GetChannel() { return 1; }
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncRElement)
 
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+NS_IMPL_ADDREF_INHERITED(SVGFEFuncGElement,SVGComponentTransferFunctionElement)
+NS_IMPL_RELEASE_INHERITED(SVGFEFuncGElement,SVGComponentTransferFunctionElement)
 
-  virtual nsXPCClassInfo* GetClassInfo();
+} // namespace dom
+} // namespace mozilla
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
+DOMCI_NODE_DATA(SVGFEFuncGElement, SVGFEFuncGElement)
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncGElement,nsSVGComponentTransferFunctionElement)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEFuncGElement,nsSVGComponentTransferFunctionElement)
+namespace mozilla {
+namespace dom {
 
-DOMCI_NODE_DATA(SVGFEFuncGElement, nsSVGFEFuncGElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncGElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEFuncGElement, nsIDOMNode, nsIDOMElement,
+NS_INTERFACE_TABLE_HEAD(SVGFEFuncGElement)
+  NS_NODE_INTERFACE_TABLE5(SVGFEFuncGElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGComponentTransferFunctionElement,
                            nsIDOMSVGFEFuncGElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncGElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncG)
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFuncGElement)
-
-
-class nsSVGFEFuncBElement : public nsSVGComponentTransferFunctionElement,
-                            public nsIDOMSVGFEFuncBElement
+/* virtual */ JSObject*
+SVGFEFuncGElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
 {
-  friend nsresult NS_NewSVGFEFuncBElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-protected:
-  nsSVGFEFuncBElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
-    : nsSVGComponentTransferFunctionElement(aNodeInfo) {}
+  return SVGFEFuncGElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
+} // namespace dom
+} // namespace mozilla
 
-  NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(nsSVGComponentTransferFunctionElement::)
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncG)
 
-  NS_DECL_NSIDOMSVGFEFUNCBELEMENT
+namespace mozilla {
+namespace dom {
 
-  virtual int32_t GetChannel() { return 2; }
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncGElement)
 
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+NS_IMPL_ADDREF_INHERITED(SVGFEFuncBElement,SVGComponentTransferFunctionElement)
+NS_IMPL_RELEASE_INHERITED(SVGFEFuncBElement,SVGComponentTransferFunctionElement)
 
-  virtual nsXPCClassInfo* GetClassInfo();
+} // namespace dom
+} // namespace mozilla
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
+DOMCI_NODE_DATA(SVGFEFuncBElement, SVGFEFuncBElement)
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncBElement,nsSVGComponentTransferFunctionElement)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEFuncBElement,nsSVGComponentTransferFunctionElement)
+namespace mozilla {
+namespace dom {
 
-DOMCI_NODE_DATA(SVGFEFuncBElement, nsSVGFEFuncBElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncBElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEFuncBElement, nsIDOMNode, nsIDOMElement,
+NS_INTERFACE_TABLE_HEAD(SVGFEFuncBElement)
+  NS_NODE_INTERFACE_TABLE5(SVGFEFuncBElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGComponentTransferFunctionElement,
                            nsIDOMSVGFEFuncBElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncBElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncB)
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFuncBElement)
-
-
-class nsSVGFEFuncAElement : public nsSVGComponentTransferFunctionElement,
-                            public nsIDOMSVGFEFuncAElement
+/* virtual */ JSObject*
+SVGFEFuncBElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
 {
-  friend nsresult NS_NewSVGFEFuncAElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-protected:
-  nsSVGFEFuncAElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
-    : nsSVGComponentTransferFunctionElement(aNodeInfo) {}
+  return SVGFEFuncBElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
+} // namespace dom
+} // namespace mozilla
 
-  NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(nsSVGComponentTransferFunctionElement::)
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncB)
 
-  NS_DECL_NSIDOMSVGFEFUNCAELEMENT
+namespace mozilla {
+namespace dom {
 
-  virtual int32_t GetChannel() { return 3; }
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncBElement)
 
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+NS_IMPL_ADDREF_INHERITED(SVGFEFuncAElement,SVGComponentTransferFunctionElement)
+NS_IMPL_RELEASE_INHERITED(SVGFEFuncAElement,SVGComponentTransferFunctionElement)
 
-  virtual nsXPCClassInfo* GetClassInfo();
+} // namespace dom
+} // namespace mozilla
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-};
+DOMCI_NODE_DATA(SVGFEFuncAElement, SVGFEFuncAElement)
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEFuncAElement,nsSVGComponentTransferFunctionElement)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEFuncAElement,nsSVGComponentTransferFunctionElement)
+namespace mozilla {
+namespace dom {
 
-DOMCI_NODE_DATA(SVGFEFuncAElement, nsSVGFEFuncAElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEFuncAElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEFuncAElement, nsIDOMNode, nsIDOMElement,
+NS_INTERFACE_TABLE_HEAD(SVGFEFuncAElement)
+  NS_NODE_INTERFACE_TABLE5(SVGFEFuncAElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
                            nsIDOMSVGComponentTransferFunctionElement,
                            nsIDOMSVGFEFuncAElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncAElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncA)
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEFuncAElement)
+/* virtual */ JSObject*
+SVGFEFuncAElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  return SVGFEFuncAElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+} // namespace dom
+} // namespace mozilla
+
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncA)
+
+namespace mozilla {
+namespace dom {
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncAElement)
+
+} // namespace dom
+} // namespace mozilla
 
 //---------------------Merge------------------------
 
