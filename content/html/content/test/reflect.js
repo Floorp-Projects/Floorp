@@ -261,8 +261,6 @@ function reflectLimitedEnumerated(aParameters)
                   ? aParameters.attribute : aParameters.attribute.idl;
   var validValues = aParameters.validValues;
   var invalidValues = aParameters.invalidValues;
-  var defaultValue = aParameters.defaultValue !== undefined
-                       ? aParameters.defaultValue : "";
   var defaultValueInvalid = aParameters.defaultValue === undefined
                                ? "" : typeof aParameters.defaultValue === "string"
                                    ? aParameters.defaultValue : aParameters.defaultValue.invalid
