@@ -131,7 +131,6 @@ protected:
    nsCOMPtr<nsIDocShell>      mDocShell;
    nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
    nsCOMPtr<nsIBaseWindow>    mDocShellAsWin;
-   nsCOMPtr<nsIDocShellTreeItem> mDocShellAsItem;
    nsCOMPtr<nsIWebNavigation> mDocShellAsNav;
    nsCOMPtr<nsIScrollable>    mDocShellAsScrollable;
    nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;

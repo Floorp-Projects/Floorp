@@ -38,7 +38,6 @@
 #include "mozilla/dom/Element.h"
 
 #include "nsITreeBoxObject.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsITreeColumns.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -380,7 +379,7 @@ nsIntPoint
 nsCoreUtils::GetScreenCoordsForWindow(nsINode *aNode)
 {
   nsIntPoint coords(0, 0);
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShellTreeItemFor(aNode));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShellFor(aNode));
   if (!treeItem)
     return coords;
 
@@ -396,18 +395,15 @@ nsCoreUtils::GetScreenCoordsForWindow(nsINode *aNode)
   return coords;
 }
 
-already_AddRefed<nsIDocShellTreeItem>
-nsCoreUtils::GetDocShellTreeItemFor(nsINode *aNode)
+already_AddRefed<nsIDocShell>
+nsCoreUtils::GetDocShellFor(nsINode *aNode)
 {
   if (!aNode)
     return nullptr;
 
   nsCOMPtr<nsISupports> container = aNode->OwnerDoc()->GetContainer();
-  nsIDocShellTreeItem *docShellTreeItem = nullptr;
-  if (container)
-    CallQueryInterface(container, &docShellTreeItem);
-
-  return docShellTreeItem;
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  return docShell.forget();
 }
 
 bool

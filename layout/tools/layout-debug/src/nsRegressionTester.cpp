@@ -10,8 +10,6 @@
 #include "nsReadableUtils.h"
 #include "nsIWindowWatcher.h"
 #include "nsVoidArray.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeNode.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsIURI.h"

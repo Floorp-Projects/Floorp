@@ -41,7 +41,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIJSContextStack.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsIFragmentContentSink.h"

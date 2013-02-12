@@ -33,8 +33,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIEnumerator.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include <algorithm>
