@@ -10,6 +10,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::idl;
 
 CameraControlImpl::CameraControlImpl(uint32_t aCameraId, nsIThread* aCameraThread, uint64_t aWindowId)
   : mCameraId(aCameraId)

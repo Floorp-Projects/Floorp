@@ -533,7 +533,8 @@ PluginModuleParent::EvaluateHangUIState(const bool aReset)
 bool
 PluginModuleParent::GetPluginName(nsAString& aPluginName)
 {
-    nsPluginHost* host = nsPluginHost::GetInst();
+    nsRefPtr<nsPluginHost> host = 
+        dont_AddRef<nsPluginHost>(nsPluginHost::GetInst());
     if (!host) {
         return false;
     }

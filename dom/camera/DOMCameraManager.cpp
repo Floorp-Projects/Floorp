@@ -108,7 +108,7 @@ nsDOMCameraManager::GetCamera(const JS::Value& aOptions, nsICameraGetCameraCallb
   NS_ENSURE_TRUE(onSuccess, NS_ERROR_INVALID_ARG);
 
   uint32_t cameraId = 0;  // back (or forward-facing) camera by default
-  CameraSelector selector;
+  mozilla::idl::CameraSelector selector;
 
   nsresult rv = selector.Init(cx, &aOptions);
   NS_ENSURE_SUCCESS(rv, rv);

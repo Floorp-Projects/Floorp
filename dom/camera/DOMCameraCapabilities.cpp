@@ -350,7 +350,7 @@ DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::Value* aVideoSizes)
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
-  nsTArray<CameraSize> sizes;
+  nsTArray<mozilla::idl::CameraSize> sizes;
   nsresult rv = mCamera->GetVideoSizes(sizes);
   NS_ENSURE_SUCCESS(rv, rv);
   if (sizes.Length() == 0) {
