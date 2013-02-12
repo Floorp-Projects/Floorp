@@ -108,6 +108,10 @@ public:
                               bool aNullParent = true);
   virtual void DoneCreatingElement();
 
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable,
+                               int32_t *aTabIndex);
+  virtual int32_t TabIndexDefault();
+
   /**
    * Call this to reevaluate whether we should start/stop due to our owner
    * document being active, inactive, visible or hidden.
