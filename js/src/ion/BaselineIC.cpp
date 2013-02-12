@@ -1348,7 +1348,7 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
     }
 
     if (arg.isString()) {
-        IonSpew(IonSpew_BaselineIC, "  Generating ToBool(String) stub", js_CodeName[op]);
+        IonSpew(IonSpew_BaselineIC, "  Generating ToBool(String) stub");
         ICToBool_String::Compiler compiler(cx);
         ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!stringStub)
