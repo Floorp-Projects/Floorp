@@ -3501,6 +3501,8 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "Call(%s)", js_CodeName[op]);
 
+    JS_ASSERT(argc == GET_ARGC(pc));
+
     RootedValue callee(cx, vp[0]);
     RootedValue thisv(cx, vp[1]);
 
@@ -3704,6 +3706,8 @@ ICCall_Scripted::Compiler::generateStubCode(MacroAssembler &masm)
     if (canUseTailCallReg)
         regs.add(BaselineTailCallReg);
 
+    Label failureLeaveStubFrame;
+
     if (isConstructing_) {
         // Save argc before call.
         masm.push(argcReg);
@@ -3726,19 +3730,22 @@ ICCall_Scripted::Compiler::generateStubCode(MacroAssembler &masm)
         // Restore the stub register from the baseline stub frame.
         masm.loadPtr(Address(BaselineStackReg, STUB_FRAME_SAVED_STUB_OFFSET), BaselineStubReg);
 
+        // Reload callee script. Note that a GC triggered by CreateThis may
+        // have destroyed the callee BaselineScript and IonScript. CreateThis is
+        // safely repeatable though, so in this case we just leave the stub frame
+        // and jump to the next stub.
+        callee = regs.takeAny();
+        masm.loadPtr(expectedCallee, callee);
+        masm.loadPtr(Address(callee, offsetof(JSFunction, u.i.script_)), callee);
+        Register loadScratch = ArgumentsRectifierReg;
+        masm.loadBaselineOrIonCode(callee, loadScratch, &failureLeaveStubFrame);
+        regs.add(callee);
+
         // Save "this" value back into pushed arguments on stack.
         BaseIndex thisSlot(BaselineStackReg, argcReg, TimesEight, STUB_FRAME_SIZE);
         masm.storeValue(JSReturnOperand, thisSlot);
         regs.add(JSReturnOperand);
 
-        // Reload callee script.
-        callee = regs.takeAny();
-        masm.loadPtr(expectedCallee, callee);
-        masm.loadPtr(Address(callee, offsetof(JSFunction, u.i.script_)), callee);
-        Register loadScratch = regs.takeAny();
-        masm.loadBaselineOrIonCode(callee, loadScratch, &failure);
-        regs.add(loadScratch);
-        regs.add(callee);
         // Load the start of the target IonCode.
         code = regs.takeAny();
         masm.loadPtr(Address(callee, IonCode::offsetOfCode()), code);
@@ -3803,6 +3810,12 @@ ICCall_Scripted::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
+
+    // Leave stub frame and restore argc for the next stub.
+    masm.bind(&failureLeaveStubFrame);
+    EmitLeaveStubFrame(masm, false);
+    if (argcReg != R0.scratchReg())
+        masm.mov(argcReg, R0.scratchReg());
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
