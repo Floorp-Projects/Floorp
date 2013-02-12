@@ -1289,6 +1289,16 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
         return true;
     }
 
+    if (arg.isString()) {
+        ICToBool_String::Compiler compiler(cx);
+        ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!stringStub)
+            return false;
+
+        stub->addNewStub(stringStub);
+        return true;
+    }
+
     return true;
 }
 
@@ -1323,6 +1333,33 @@ ICToBool_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
     Label ifFalse;
     Assembler::Condition cond = masm.testInt32Truthy(false, R0);
+    masm.j(cond, &ifFalse);
+
+    masm.moveValue(BooleanValue(true), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&ifFalse);
+    masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// ToBool_String
+//
+
+bool
+ICToBool_String::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestString(Assembler::NotEqual, R0, &failure);
+
+    Label ifFalse;
+    Assembler::Condition cond = masm.testStringTruthy(false, R0);
     masm.j(cond, &ifFalse);
 
     masm.moveValue(BooleanValue(true), R0);
