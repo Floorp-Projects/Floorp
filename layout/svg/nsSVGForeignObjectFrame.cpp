@@ -100,15 +100,12 @@ nsSVGForeignObjectFrame::AttributeChanged(int32_t  aNameSpaceID,
       // XXXjwatt: why mark intrinsic widths dirty? can't we just use eResize?
       RequestReflow(nsIPresShell::eStyleChange);
     } else if (aAttribute == nsGkAtoms::x ||
-               aAttribute == nsGkAtoms::y) {
+               aAttribute == nsGkAtoms::y ||
+               aAttribute == nsGkAtoms::transform) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nullptr;
       nsSVGUtils::InvalidateBounds(this, false);
       nsSVGUtils::ScheduleReflowSVG(this);
-    } else if (aAttribute == nsGkAtoms::transform) {
-      // Don't invalidate or update bounds (the layers code does that).
-      SchedulePaint();
-      mCanvasTM = nullptr;
     } else if (aAttribute == nsGkAtoms::viewBox ||
                aAttribute == nsGkAtoms::preserveAspectRatio) {
       nsSVGUtils::InvalidateBounds(this);
