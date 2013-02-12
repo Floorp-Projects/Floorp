@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import os
+import platform
 
 from mozbuild.base import (
     MachCommandBase,
@@ -47,10 +48,20 @@ class MochitestRunner(MozbuildObject):
         # TODO hook up Python harness runner.
         self._run_make(directory='.', target='mochitest-browser-chrome')
 
+    def run_metro_chrome_suite(self):
+        """Runs Windows 8 Metro browser chrome mochitests."""
+        # TODO hook up Python harness runner.
+        self._run_make(directory='.', target='mochitest-metro-chrome')
+
     def run_all(self):
         self.run_plain_suite()
         self.run_chrome_suite()
         self.run_browser_chrome_suite()
+        # Run Metro tests only on Windows 8 and higher
+        if platform.system() is 'Windows':
+            version = tuple(map(int, platform.version().split('.')))
+            if version >= (6, 2):
+                self.run_metro_chrome_suite()
 
     def run_mochitest_test(self, suite=None, test_file=None, debugger=None):
         """Runs a mochitest.
@@ -60,7 +71,7 @@ class MochitestRunner(MozbuildObject):
         test files.
 
         suite is the type of mochitest to run. It can be one of ('plain',
-        'chrome', 'browser').
+        'chrome', 'browser', 'metro', 'a11y').
 
         debugger is a program name or path to a binary (presumably a debugger)
         to run the test in. e.g. 'gdb'
@@ -74,6 +85,8 @@ class MochitestRunner(MozbuildObject):
             target = 'mochitest-chrome'
         elif suite == 'browser':
             target = 'mochitest-browser-chrome'
+        elif suite == 'metro':
+            target = 'mochitest-metro-chrome'
         elif suite == 'a11y':
             target = 'mochitest-a11y'
         else:
@@ -122,6 +135,14 @@ class MachCommands(MachCommandBase):
         help=generic_help)
     def run_mochitest_browser(self, test_file, debugger=None):
         return self.run_mochitest(test_file, 'browser', debugger=debugger)
+
+    @Command('mochitest-metro', help='Run a mochitest with metro browser chrome.')
+    @CommandArgument('--debugger', '-d', metavar='DEBUGGER',
+        help=debugger_help)
+    @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
+        help=generic_help)
+    def run_mochitest_metro(self, test_file, debugger=None):
+        return self.run_mochitest(test_file, 'metro', debugger=debugger)
 
     @Command('mochitest-a11y', help='Run an a11y mochitest.')
     @CommandArgument('--debugger', '-d', metavar='DEBUGGER',
