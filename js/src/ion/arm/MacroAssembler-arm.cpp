@@ -1532,6 +1532,12 @@ MacroAssemblerARMCompat::sub32(Imm32 imm, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::sub32(Register src, Register dest)
+{
+    ma_sub(src, dest, SetCond);
+}
+
+void
 MacroAssemblerARMCompat::and32(Imm32 imm, Register dest)
 {
     ma_and(imm, dest, SetCond);
