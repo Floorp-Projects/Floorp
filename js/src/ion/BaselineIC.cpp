@@ -1265,7 +1265,8 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
             return true;
         }
 
-        if (lhs.isObject() && rhs.isObject() && !stub->hasStub(ICStub::Compare_Object)) {
+        if (lhs.isObject() && rhs.isObject()) {
+            JS_ASSERT(!stub->hasStub(ICStub::Compare_Object));
             ICCompare_Object::Compiler compiler(cx, op);
             ICStub *objectStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
             if (!objectStub)
