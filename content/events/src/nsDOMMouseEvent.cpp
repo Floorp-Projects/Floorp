@@ -154,7 +154,7 @@ nsresult
 nsDOMMouseEvent::InitFromCtor(const nsAString& aType,
                               JSContext* aCx, jsval* aVal)
 {
-  mozilla::dom::MouseEventInit d;
+  mozilla::idl::MouseEventInit d;
   nsresult rv = d.Init(aCx, aVal);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = InitMouseEvent(aType, d.bubbles, d.cancelable,

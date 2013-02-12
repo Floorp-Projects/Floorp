@@ -190,7 +190,6 @@
 #include "nsIDOMCommandEvent.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsIDOMSmartCardEvent.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsPaintRequest.h"
@@ -560,7 +559,6 @@ const uint32_t kDOMClassInfo_##_dom_class##_interfaces =                      \
 
 DOMCI_DATA_NO_CLASS(Crypto)
 DOMCI_DATA_NO_CLASS(CRMFObject)
-DOMCI_DATA_NO_CLASS(SmartCardEvent)
 DOMCI_DATA_NO_CLASS(ContentFrameMessageManager)
 DOMCI_DATA_NO_CLASS(ChromeMessageBroadcaster)
 DOMCI_DATA_NO_CLASS(ChromeMessageSender)
@@ -1124,8 +1122,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MozCanvasPrintState, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(SmartCardEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WindowUtils, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -2292,10 +2288,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(DeviceRotationRate, nsIDOMDeviceRotationRate)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceRotationRate)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SmartCardEvent, nsIDOMSmartCardEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSmartCardEvent)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MutationEvent, nsIDOMMutationEvent)
