@@ -300,7 +300,9 @@ class ICEntry
     _(Compare_Fallback)         \
     _(Compare_Int32)            \
     _(Compare_Double)           \
+    _(Compare_NumberWithUndefined) \
     _(Compare_String)           \
+    _(Compare_Boolean)          \
                                 \
     _(ToBool_Fallback)          \
     _(ToBool_Int32)             \
@@ -1511,6 +1513,43 @@ class ICCompare_Double : public ICStub
     };
 };
 
+class ICCompare_NumberWithUndefined : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICCompare_NumberWithUndefined(IonCode *stubCode)
+      : ICStub(ICStub::Compare_NumberWithUndefined, stubCode)
+    {}
+
+  public:
+    static inline ICCompare_NumberWithUndefined *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICCompare_NumberWithUndefined>(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+        bool lhsIsUndefined;
+
+      public:
+        Compiler(JSContext *cx, JSOp op, bool lhsIsUndefined)
+          : ICMultiStubCompiler(cx, ICStub::Compare_NumberWithUndefined, op),
+            lhsIsUndefined(lhsIsUndefined)
+        {}
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind)
+                 | (static_cast<int32_t>(op) << 16)
+                 | (static_cast<int32_t>(lhsIsUndefined) << 24);
+        }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCompare_NumberWithUndefined::New(space, getStubCode());
+        }
+    };
+};
+
 class ICCompare_String : public ICStub
 {
     friend class ICStubSpace;
@@ -1535,6 +1574,34 @@ class ICCompare_String : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICCompare_String::New(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_Boolean : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICCompare_Boolean(IonCode *stubCode)
+      : ICStub(ICStub::Compare_Boolean, stubCode)
+    {}
+
+  public:
+    static inline ICCompare_Boolean *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICCompare_Boolean>(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSOp op)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Boolean, op)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCompare_Boolean::New(space, getStubCode());
         }
     };
 };
