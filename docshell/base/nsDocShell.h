@@ -131,7 +131,6 @@ typedef enum {
 
 class nsDocShell : public nsDocLoader,
                    public nsIDocShell,
-                   public nsIDocShellTreeItem, 
                    public nsIDocShellHistory,
                    public nsIWebNavigation,
                    public nsIBaseWindow, 
