@@ -128,7 +128,7 @@ nsStyleSet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
     n += mSheets[i].SizeOfExcludingThis(nullptr, aMallocSizeOf);
   }
 
-  for (int i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
+  for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
     n += mScopedDocSheetRuleProcessors[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
   n += mScopedDocSheetRuleProcessors.SizeOfExcludingThis(aMallocSizeOf);
