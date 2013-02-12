@@ -7045,11 +7045,13 @@ var ActivityObserver = {
   },
 
   observe: function ao_observe(aSubject, aTopic, aData) {
-    let isForeground = false
+    let isForeground = false;
+    let tab = BrowserApp.selectedTab;
+
     switch (aTopic) {
       case "application-background" :
-        let doc = BrowserApp.selectedTab.browser.contentDocument;
-        if (doc.mozFullScreen) {
+        let doc = (tab ? tab.browser.contentDocument : null);
+        if (doc && doc.mozFullScreen) {
           doc.mozCancelFullScreen();
         }
         isForeground = false;
@@ -7059,7 +7061,6 @@ var ActivityObserver = {
         break;
     }
 
-    let tab = BrowserApp.selectedTab;
     if (tab && tab.getActive() != isForeground) {
       tab.setActive(isForeground);
     }
