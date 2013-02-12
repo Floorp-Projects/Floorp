@@ -2897,7 +2897,7 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
     using BytecodeRange::frontOffset;
 
     BytecodeRangeWithLineNumbers(JSContext *cx, JSScript *script)
-      : BytecodeRange(script), lineno(script->lineno), sn(script->notes()), snpc(script->code), skip(cx, thisForCtor())
+      : BytecodeRange(cx, script), lineno(script->lineno), sn(script->notes()), snpc(script->code)
     {
         if (!SN_IS_TERMINATOR(sn))
             snpc += SN_DELTA(sn);
@@ -2915,8 +2915,6 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
     size_t frontLineNumber() const { return lineno; }
 
   private:
-    BytecodeRangeWithLineNumbers *thisForCtor() { return this; }
-
     void updateLine() {
         /*
          * Determine the current line number by reading all source notes up to
@@ -2937,8 +2935,6 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
     size_t lineno;
     jssrcnote *sn;
     jsbytecode *snpc;
-
-    SkipRoot skip;
 };
 
 static const size_t NoEdges = -1;
@@ -3699,7 +3695,7 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
                   StableCharPtr chars, unsigned length, const char *filename, unsigned lineno,
-                  Value *rval)
+                  MutableHandleValue rval)
 {
     assertSameCompartment(cx, env, frame);
     JS_ASSERT_IF(frame, thisv.get() == frame.thisValue());
@@ -3724,7 +3720,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
 
     script->isActiveEval = true;
     ExecuteType type = !frame && env->isGlobal() ? EXECUTE_DEBUG_GLOBAL : EXECUTE_DEBUG;
-    return ExecuteKernel(cx, script, *env, thisv, type, frame, rval);
+    return ExecuteKernel(cx, script, *env, thisv, type, frame, rval.address());
 }
 
 static JSBool

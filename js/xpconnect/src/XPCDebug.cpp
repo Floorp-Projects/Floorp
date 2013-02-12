@@ -102,7 +102,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
     JSExceptionState* exceptionState = JS_SaveExceptionState(cx);
     JSErrorReporter older = JS_SetErrorReporter(cx, xpcDumpEvalErrorReporter);
 
-    jsval rval;
+    js::RootedValue rval(cx);
     JSString* str;
     JSAutoByteString bytes;
     if (frame.evaluateInStackFrame(cx, text, strlen(text), "eval", 1, &rval) &&

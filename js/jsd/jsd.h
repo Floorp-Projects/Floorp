@@ -698,7 +698,7 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  JSDStackFrameInfo* jsdframe,
                                  const jschar *bytes, unsigned length,
                                  const char *filename, unsigned lineno,
-                                 JSBool eatExceptions, jsval *rval);
+                                 JSBool eatExceptions, JS::MutableHandleValue rval);
 
 extern JSBool
 jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
@@ -706,7 +706,7 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDStackFrameInfo* jsdframe,
                                const char *bytes, unsigned length,
                                const char *filename, unsigned lineno,
-                               JSBool eatExceptions, jsval *rval);
+                               JSBool eatExceptions, JS::MutableHandleValue rval);
 
 extern JSString*
 jsd_ValToStringInStackFrame(JSDContext* jsdc,
