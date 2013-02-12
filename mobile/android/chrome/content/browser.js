@@ -3875,12 +3875,13 @@ Tab.prototype = {
   },
 
   sendViewportMetadata: function sendViewportMetadata() {
+    let metadata = this.metadata;
     sendMessageToJava({
       type: "Tab:ViewportMetadata",
-      allowZoom: this.metadata.allowZoom,
-      defaultZoom: this.metadata.defaultZoom || this.metadata.scaleRatio,
-      minZoom: this.metadata.minZoom || 0,
-      maxZoom: this.metadata.maxZoom || 0,
+      allowZoom: metadata.allowZoom,
+      defaultZoom: metadata.defaultZoom || metadata.scaleRatio,
+      minZoom: metadata.minZoom || 0,
+      maxZoom: metadata.maxZoom || 0,
       tabID: this.id
     });
   },
