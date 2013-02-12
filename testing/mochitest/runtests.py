@@ -251,6 +251,11 @@ class MochitestOptions(optparse.OptionParser):
                     help = "Delay execution between test files.")
     defaults["runSlower"] = False
 
+    self.add_option("--metro-immersive",
+                    action = "store_true", dest = "immersiveMode",
+                    help = "launches tests in immersive browser")
+    defaults["immersiveMode"] = False
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -362,6 +367,15 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
       options.testingModulesDir = options.testingModulesDir.replace('\\', '/')
       if options.testingModulesDir[-1] != '/':
         options.testingModulesDir += '/'
+
+    if options.immersiveMode:
+      if not self._automation.IS_WIN32:
+        self.error("immersive is only supported on Windows 8 and up.")
+      mochitest.immersiveHelperPath = os.path.join(
+        options.utilityPath, "metrotestharness.exe")
+      if not os.path.exists(mochitest.immersiveHelperPath):
+        self.error("%s not found, cannot launch immersive tests." %
+                   mochitest.immersiveHelperPath)
 
     return options
 
@@ -718,6 +732,9 @@ class Mochitest(object):
       options.browserArgs.extend(('-test-mode', testURL))
       testURL = None
 
+    if options.immersiveMode:
+      options.app = self.immersiveHelperPath
+
     # Remove the leak detection file so it can't "leak" to the tests run.
     # The file is not there if leak logging was not enabled in the application build.
     if os.path.exists(self.leak_report_file):
@@ -798,7 +815,10 @@ class Mochitest(object):
     options.testPath = options.testPath.replace("\\", "\\\\")
     testRoot = 'chrome'
     if (options.browserChrome):
-      testRoot = 'browser'
+      if (options.immersiveMode):
+        testRoot = 'metro'
+      else:
+        testRoot = 'browser'
     elif (options.a11y):
       testRoot = 'a11y'
     elif (options.webapprtChrome):
