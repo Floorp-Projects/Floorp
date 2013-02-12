@@ -2048,6 +2048,23 @@ void nsHTMLMediaElement::DoneCreatingElement()
      mMuted = true;
 }
 
+bool nsHTMLMediaElement::IsHTMLFocusable(bool aWithMouse,
+                                         bool *aIsFocusable,
+                                         int32_t *aTabIndex)
+{
+  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
+    return true;
+  }
+
+  *aIsFocusable = true;
+  return false;
+}
+
+int32_t nsHTMLMediaElement::TabIndexDefault()
+{
+  return 0;
+}
+
 nsresult nsHTMLMediaElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                      nsIAtom* aPrefix, const nsAString& aValue,
                                      bool aNotify)
