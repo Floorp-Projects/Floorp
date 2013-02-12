@@ -1506,10 +1506,11 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
 }
 
 static JSTrapStatus
-TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rval,
+TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rvalArg,
             jsval closure)
 {
     JSString *str = JSVAL_TO_STRING(closure);
+    RootedValue rval(cx, *rvalArg);
 
     ScriptFrameIter iter(cx);
     JS_ASSERT(!iter.done());
@@ -1526,11 +1527,13 @@ TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rval,
     if (!frame.evaluateUCInStackFrame(cx, chars, length,
                                       script->filename,
                                       script->lineno,
-                                      rval))
+                                      &rval))
     {
+        *rvalArg = rval;
         return JSTRAP_ERROR;
     }
-    if (!JSVAL_IS_VOID(*rval))
+    *rvalArg = rval;
+    if (!rval.isUndefined())
         return JSTRAP_RETURN;
     return JSTRAP_CONTINUE;
 }
@@ -2596,7 +2599,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
                                              fpscript->filename,
                                              JS_PCToLineNumber(cx, fpscript,
                                                                fi.pc()),
-                                             vp);
+                                             MutableHandleValue::fromMarkedLocation(vp));
 
     if (saved)
         JS_RestoreFrameChain(cx);
