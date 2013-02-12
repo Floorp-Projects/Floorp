@@ -5707,12 +5707,7 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, bool *aEventDispatched)
     return FALSE;
   }
 
-  if (!nsIMM32Handler::IsComposingOn(this) &&
-      (aMsg.message != WM_KEYUP || aMsg.wParam != VK_MENU)) {
-    // Ignore VK_MENU if it's not a system key release, so that the menu bar does not trigger
-    // This helps avoid triggering the menu bar for ALT key accelerators used in
-    // assistive technologies such as Window-Eyes and ZoomText, and when using Alt+Tab
-    // to switch back to Mozilla in Windows 95 and Windows 98
+  if (!nsIMM32Handler::IsComposingOn(this)) {
     return OnKeyUp(aMsg, modKeyState, aEventDispatched);
   }
 
@@ -5751,9 +5746,7 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
     return FALSE;
 
   LRESULT result = 0;
-  if (modKeyState.IsAlt() && nsIMM32Handler::IsStatusChanged()) {
-    nsIMM32Handler::NotifyEndStatusChange();
-  } else if (!nsIMM32Handler::IsComposingOn(this)) {
+  if (!nsIMM32Handler::IsComposingOn(this)) {
     result = OnKeyDown(aMsg, modKeyState, aEventDispatched, nullptr);
     // OnKeyDown cleaned up the redirected message information itself, so,
     // we should do nothing.
@@ -6863,6 +6856,13 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
   NativeKey nativeKey(gKbdLayout, this, aMsg);
   keyupEvent.keyCode = nativeKey.GetDOMKeyCode();
   InitKeyEvent(keyupEvent, nativeKey, aModKeyState);
+  // Set defaultPrevented of the key event if the VK_MENU is not a system key
+  // release, so that the menu bar does not trigger.  This helps avoid
+  // triggering the menu bar for ALT key accelerators used in assistive
+  // technologies such as Window-Eyes and ZoomText or for switching open state
+  // of IME.
+  keyupEvent.mFlags.mDefaultPrevented =
+    (aMsg.wParam == VK_MENU && aMsg.message != WM_SYSKEYUP);
   return DispatchKeyEvent(keyupEvent, &aMsg);
 }
 
