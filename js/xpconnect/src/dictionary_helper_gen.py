@@ -132,7 +132,7 @@ def print_header_file(fd, conf):
 
     fd.write("\n"
              "namespace mozilla {\n"
-             "namespace dom {\n\n")
+             "namespace idl {\n\n")
 
     dicts = []
     for d in conf.dictionaries:
@@ -215,7 +215,7 @@ def print_cpp_file(fd, conf):
       if not c in conf.exclude_automatic_type_include:
             fd.write("#include \"%s.h\"\n" % c)
 
-    fd.write("\nusing namespace mozilla::dom;\n\n")
+    fd.write("\nusing namespace mozilla::idl;\n\n")
 
     for a in attrnames:
         fd.write("static jsid %s = JSID_VOID;\n"% get_jsid(a))

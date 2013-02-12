@@ -57,7 +57,8 @@
 #include "nsITokenPasswordDialogs.h"
 #include "nsICRLManager.h"
 #include "nsNSSShutDown.h"
-#include "nsSmartCardEvent.h"
+#include "GeneratedEvents.h"
+#include "nsIDOMSmartCardEvent.h"
 #include "nsIKeyModule.h"
 #include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
@@ -521,23 +522,11 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
 
   // create the event
   nsCOMPtr<nsIDOMEvent> event;
-  rv = doc->CreateEvent(NS_LITERAL_STRING("Events"), 
-                        getter_AddRefs(event));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  event->InitEvent(eventType, false, true);
-
-  // create the Smart Card Event;
-  nsCOMPtr<nsIDOMSmartCardEvent> smartCardEvent = 
-                                          new nsSmartCardEvent(tokenName);
-  // init the smart card event, fail here if we can't complete the 
-  // initialization.
-  rv = smartCardEvent->Init(event);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  NS_NewDOMSmartCardEvent(getter_AddRefs(event), nullptr, nullptr);
+  nsCOMPtr<nsIDOMSmartCardEvent> smartCardEvent = do_QueryInterface(event);
+  rv = smartCardEvent->InitSmartCardEvent(eventType, false, true, tokenName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  smartCardEvent->SetTrusted(true);
 
   // Send it 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(doc, &rv);
