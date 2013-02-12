@@ -5,6 +5,8 @@
 		<title>Microdata tests</title>
 		<script type="text/javascript" src="/resources/testharness.js"></script>
 		<script type="text/javascript" src="/resources/testharnessreport.js"></script>
+		<link rel="help" href="http://dev.w3.org/html5/md/#microdata-dom-api">
+		<link rel="help" href="http://dev.w3.org/html5/md/#encoding-microdata">
 	</head>
 	<body>
 		<noscript><p>Enable JavaScript and reload</p></noscript>
@@ -265,28 +267,28 @@ test(function () {
 }, 'empty itemType should stringify to contain the attribute\'s whitespace');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemtype:' '}).itemType.contains(''); } );
-}, '.contains(empty_string) must throw a SYNTAX_ERR');
+}, 'itemType.contains(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemtype:' '}).itemType.add(''); } );
-}, '.add(empty_string) must throw a SYNTAX_ERR');
+}, 'itemType.add(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemtype:' '}).itemType.remove(''); } );
-}, '.remove(empty_string) must throw a SYNTAX_ERR');
+}, 'itemType.remove(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemtype:' '}).itemType.toggle(''); } );
-}, '.toggle(empty_string) must throw a SYNTAX_ERR');
+}, 'itemType.toggle(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemtype:' '}).itemType.contains('a b'); } );
-}, '.contains(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemType.contains(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemtype:' '}).itemType.add('a b'); } );
-}, '.add(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemType.add(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemtype:' '}).itemType.remove('a b'); } );
-}, '.remove(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemType.remove(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemtype:' '}).itemType.toggle('a b'); } );
-}, '.toggle(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemType.toggle(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	var testEl = makeEl('div',{itemtype:'foo'});
 	assert_true( testEl.itemType.contains('foo'), 'before change' );
@@ -555,28 +557,28 @@ test(function () {
 }, 'empty itemProp should stringify to contain the attribute\'s whitespace');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemprop:' '}).itemProp.contains(''); } );
-}, '.contains(empty_string) must throw a SYNTAX_ERR');
+}, 'itemProp.contains(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemprop:' '}).itemProp.add(''); } );
-}, '.add(empty_string) must throw a SYNTAX_ERR');
+}, 'itemProp.add(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemprop:' '}).itemProp.remove(''); } );
-}, '.remove(empty_string) must throw a SYNTAX_ERR');
+}, 'itemProp.remove(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemprop:' '}).itemProp.toggle(''); } );
-}, '.toggle(empty_string) must throw a SYNTAX_ERR');
+}, 'itemProp.toggle(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemprop:' '}).itemProp.contains('a b'); } );
 }, '.contains(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemprop:' '}).itemProp.add('a b'); } );
-}, '.add(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemProp.add(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemprop:' '}).itemProp.remove('a b'); } );
-}, '.remove(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemProp.remove(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemprop:' '}).itemProp.toggle('a b'); } );
-}, '.toggle(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemProp.toggle(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	var testEl = makeEl('div',{itemprop:'foo'});
 	assert_true( testEl.itemProp.contains('foo'), 'before change' );
@@ -887,28 +889,28 @@ test(function () {
 }, 'empty itemRef should stringify to contain the attribute\'s whitespace');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemref:' '}).itemRef.contains(''); } );
-}, '.contains(empty_string) must throw a SYNTAX_ERR');
+}, 'itemRef.contains(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemref:' '}).itemRef.add(''); } );
-}, '.add(empty_string) must throw a SYNTAX_ERR');
+}, 'itemRef.add(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemref:' '}).itemRef.remove(''); } );
-}, '.remove(empty_string) must throw a SYNTAX_ERR');
+}, 'itemRef.remove(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'SYNTAX_ERR', function () { makeEl('div',{itemref:' '}).itemRef.toggle(''); } );
-}, '.toggle(empty_string) must throw a SYNTAX_ERR');
+}, 'itemRef.toggle(empty_string) must throw a SYNTAX_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemref:' '}).itemRef.contains('a b'); } );
-}, '.contains(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemRef.contains(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemref:' '}).itemRef.add('a b'); } );
-}, '.add(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemRef.add(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemref:' '}).itemRef.remove('a b'); } );
-}, '.remove(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemRef.remove(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	assert_throws( 'INVALID_CHARACTER_ERR', function () { makeEl('div',{itemref:' '}).itemRef.toggle('a b'); } );
-}, '.toggle(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+}, 'itemRef.toggle(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
 test(function () {
 	var testEl = makeEl('div',{itemref:'foo'});
 	assert_true( testEl.itemRef.contains('foo'), 'before change' );
@@ -1341,9 +1343,10 @@ test(function () {
 	testEl.innerHTML = 'retest';
 	assert_equals( testEl.itemValue, 'retest', 'reading after change' );
 	testEl.itemValue = '2001-02-03T04:05:06Z';
-	assert_equals( testEl.dateTime, '', 'writing (checking dateTime)' );
-	assert_equals( testEl.textContent, '2001-02-03T04:05:06Z', 'writing (checking textContent)' );
-}, 'itemValue must reflect the textContent of time elements with no datetime attribute');
+	assert_equals( testEl.dateTime, '2001-02-03T04:05:06Z', 'writing (checking dateTime)' );
+	assert_equals( testEl.textContent, 'retest', 'writing (checking textContent)' );
+	assert_equals( testEl.itemValue, '2001-02-03T04:05:06Z', 'writing (checking itemValue)' );
+}, 'itemValue must reflect the dateTime attribute of time elements with no datetime attribute');
 test(function () {
 	var testEl = makeEl('time',{itemprop:'foo',datetime:'test'},'te <span itemprop="bar" itemscope>st</span> ing');
 	assert_equals( testEl.itemValue, 'test', 'reading' );
