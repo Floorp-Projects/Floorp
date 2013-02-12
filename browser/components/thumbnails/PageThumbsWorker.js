@@ -25,6 +25,9 @@ let PageThumbsWorker = {
       case "expireFilesInDirectory":
         data.result = this.expireFilesInDirectory(msg);
         break;
+      case "moveOrDeleteAllThumbnails":
+        data.result = this.moveOrDeleteAllThumbnails(msg);
+        break;
       default:
         data.result = false;
         data.detail = "message not understood";
@@ -67,6 +70,38 @@ let PageThumbsWorker = {
     return [entry
             for (entry in iter)
             if (!entry.isDir && !entry.isSymLink && !skip.has(entry.name))];
+  },
+
+  moveOrDeleteAllThumbnails:
+  function Worker_moveOrDeleteAllThumbnails(msg) {
+    if (!OS.File.exists(msg.from))
+      return true;
+
+    let iter = new OS.File.DirectoryIterator(msg.from);
+    for (let entry in iter) {
+      if (entry.isDir || entry.isSymLink) {
+        continue;
+      }
+
+      let from = OS.Path.join(msg.from, entry.name);
+      let to = OS.Path.join(msg.to, entry.name);
+
+      try {
+        OS.File.move(from, to, {noOverwrite: true, noCopy: true});
+      } catch (e) {
+        OS.File.remove(from);
+      }
+    }
+    iter.close();
+
+    try {
+      OS.File.removeEmptyDir(msg.from);
+    } catch (e) {
+      // This could fail if there's something in
+      // the folder we're not permitted to remove.
+    }
+
+    return true;
   }
 };
 

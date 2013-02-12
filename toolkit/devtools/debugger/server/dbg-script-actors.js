@@ -53,6 +53,17 @@ function ThreadActor(aHooks, aGlobal)
    */
   this._scripts = {};
 
+  // A cache of prototype chains for objects that have received a
+  // prototypeAndProperties request. Due to the way the debugger frontend works,
+  // this corresponds to a cache of prototype chains that the user has been
+  // inspecting in the variables tree view. This allows the debugger to evaluate
+  // native getter methods for WebIDL attributes that are meant to be called on
+  // the instace and not on the prototype.
+  //
+  // The map keys are Debugger.Object instances requested by the client and the
+  // values are arrays of Debugger.Objects that make up their prototype chain.
+  this._protoChains = new Map();
+
   this.findGlobals = this.globalManager.findGlobals.bind(this);
   this.onNewGlobal = this.globalManager.onNewGlobal.bind(this);
 }
@@ -182,6 +193,7 @@ ThreadActor.prototype = {
 
     this._state = "exited";
 
+    this._protoChains.clear();
     this.clearDebuggees();
 
     if (!this.dbg) {
@@ -1223,6 +1235,51 @@ ThreadActor.prototype = {
       }
     }
     return true;
+  },
+
+  /**
+   * Finds the prototype chain cache for the provided object and returns the
+   * full cache entry, or null if the object is not found in the cache.
+   *
+   * @param aObject Debugger.Object
+   *        The object to look up.
+   * @returns the array of objects that correspond to the found cache entry.
+   */
+  _findProtoChain: function TA__findProtoChain(aObject) {
+    if (this._protoChains.has(aObject)) {
+      return this._protoChains.get(aObject);
+    }
+    for (let [obj, chain] of this._protoChains) {
+      if (chain.indexOf(aObject) != -1) {
+        return chain;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Removes the specified object and its prototype chain from the prototype
+   * chain cache. Returns true if the removal was successful and false if the
+   * object was not found in the cache.
+   *
+   * @param aObject Debugger.Object
+   *        The object to remove from the cache.
+   * @returns true if the object was removed, false if it was not found.
+   */
+  _removeFromProtoChain:function TA__removeFromProtoChain(aObject) {
+    let retval = false;
+    if (this._protoChains.has(aObject)) {
+      this._protoChains.delete(aObject);
+      retval = true;
+    }
+    for (let [obj, chain] of this._protoChains) {
+      let index = chain.indexOf(aObject);
+      if (index != -1) {
+        chain.splice(index);
+        retval = true;
+      }
+    }
+    return retval;
   }
 
 };
@@ -1532,6 +1589,11 @@ update(ObjectActor.prototype, {
   release: function OA_release() {
     this.registeredPool.objectActors.delete(this.obj);
     this.registeredPool.removeActor(this);
+    this.disconnect();
+  },
+
+  disconnect: function OA_disconnect() {
+    this.threadActor._removeFromProtoChain(this.obj);
   },
 
   /**
@@ -1556,17 +1618,27 @@ update(ObjectActor.prototype, {
    */
   onPrototypeAndProperties:
   PauseScopedActor.withPaused(function OA_onPrototypeAndProperties(aRequest) {
-    let ownProperties = {};
-    for each (let name in this.obj.getOwnPropertyNames()) {
-      try {
-        let desc = this.obj.getOwnPropertyDescriptor(name);
-        ownProperties[name] = this._propertyDescriptor(desc);
-      } catch (e if e.name == "NS_ERROR_XPC_BAD_OP_ON_WN_PROTO") {
-        // Calling getOwnPropertyDescriptor on wrapped native prototypes is not
-        // allowed.
-        dumpn("Error while getting the property descriptor for " + name +
-              ": " + e.name);
+    if (this.obj.proto) {
+      // Store the object and its prototype to the prototype chain cache, so that
+      // we can evaluate native getter methods for WebIDL attributes that are
+      // meant to be called on the instace and not on the prototype.
+      //
+      // TODO: after bug 801084, we could restrict the cache to objects where
+      // this.obj.hostAnnotations.isWebIDLObject == true
+      let chain = this.threadActor._findProtoChain(this.obj);
+      if (!chain) {
+        chain = [];
+        this.threadActor._protoChains.set(this.obj, chain);
+        chain.push(this.obj);
       }
+      if (chain.indexOf(this.obj.proto) == -1) {
+        chain.push(this.obj.proto);
+      }
+    }
+
+    let ownProperties = {};
+    for (let name of this.obj.getOwnPropertyNames()) {
+      ownProperties[name] = this._propertyDescriptor(name);
     }
     return { from: this.actorID,
              prototype: this.threadActor.createValueGrip(this.obj.proto),
@@ -1597,30 +1669,88 @@ update(ObjectActor.prototype, {
                message: "no property name was specified" };
     }
 
-    let desc = this.obj.getOwnPropertyDescriptor(aRequest.name);
     return { from: this.actorID,
-             descriptor: this._propertyDescriptor(desc) };
+             descriptor: this._propertyDescriptor(aRequest.name) };
   }),
 
   /**
    * A helper method that creates a property descriptor for the provided object,
    * properly formatted for sending in a protocol response.
    *
-   * @param aObject object
-   *        The object that the descriptor is generated for.
+   * @param string aName
+   *        The property that the descriptor is generated for.
    */
-  _propertyDescriptor: function OA_propertyDescriptor(aObject) {
-    let descriptor = {};
-    descriptor.configurable = aObject.configurable;
-    descriptor.enumerable = aObject.enumerable;
-    if (aObject.value !== undefined) {
-      descriptor.writable = aObject.writable;
-      descriptor.value = this.threadActor.createValueGrip(aObject.value);
-    } else {
-      descriptor.get = this.threadActor.createValueGrip(aObject.get);
-      descriptor.set = this.threadActor.createValueGrip(aObject.set);
+  _propertyDescriptor: function OA_propertyDescriptor(aName) {
+    let desc;
+    try {
+      desc = this.obj.getOwnPropertyDescriptor(aName);
+    } catch (e) {
+      // Calling getOwnPropertyDescriptor on wrapped native prototypes is not
+      // allowed (bug 560072). Inform the user with a bogus, but hopefully
+      // explanatory, descriptor.
+      return {
+        configurable: false,
+        writable: false,
+        enumerable: false,
+        value: e.name
+      };
     }
-    return descriptor;
+
+    let retval = {
+      configurable: desc.configurable,
+      enumerable: desc.enumerable
+    };
+
+    if (desc.value !== undefined) {
+      retval.writable = desc.writable;
+      retval.value = this.threadActor.createValueGrip(desc.value);
+    } else {
+
+      if ("get" in desc) {
+        let fn = desc.get;
+        if (fn && fn.callable && fn.class == "Function" &&
+            fn.script === undefined) {
+          // Maybe this is a DOM getter. Try calling it on every object in the
+          // prototype chain, until it doesn't throw.
+          let rv, chain = this.threadActor._findProtoChain(this.obj);
+          let index = chain.indexOf(this.obj);
+          for (let i = index; i >= 0; i--) {
+            // If we had hostAnnotations (bug 801084) we would have been able to
+            // filter on chain[i].hostAnnotations.isWebIDLObject or similar.
+            rv = fn.call(chain[i]);
+            // If the error D.O. wasn't completely opaque (bug 812764?), we
+            // could perhaps treat other errors differently.
+            if (rv && !("throw" in rv)) {
+              // If calling the getter produced a return value, create a data
+              // property descriptor.
+              if ("return" in rv) {
+                retval.value = this.threadActor.createValueGrip(rv.return);
+              } else if ("yield" in rv) {
+                retval.value = this.threadActor.createValueGrip(rv.yield);
+              }
+              break;
+            }
+          }
+
+          // If calling the getter didn't produce a data property descriptor,
+          // use the original accessor property descriptor.
+          if (!("value" in retval)) {
+            retval.get = this.threadActor.createValueGrip(fn);
+          }
+        } else {
+          // It doesn't look like a WebIDL attribute getter, just use the getter
+          // from the original accessor property descriptor.
+          retval.get = this.threadActor.createValueGrip(fn);
+        }
+      }
+
+      // If we couldn't convert it to a data property and there is a setter in
+      // the original property descriptor, use it.
+      if ("set" in desc && !("value" in retval)) {
+        retval.set = this.threadActor.createValueGrip(desc.set);
+      }
+    }
+    return retval;
   },
 
   /**
