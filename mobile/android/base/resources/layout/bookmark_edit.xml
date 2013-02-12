@@ -19,7 +19,8 @@
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
               android:singleLine="true"
-              android:hint="@string/bookmark_edit_location"/>
+              android:hint="@string/bookmark_edit_location"
+              android:inputType="textNoSuggestions"/>
 
     <EditText android:id="@+id/edit_bookmark_keyword"
               android:layout_width="fill_parent"

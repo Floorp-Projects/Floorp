@@ -304,6 +304,59 @@ void _PR_MD_NOTIFYALL_CV(_MDCVar *cv, _MDLock *lock)
     return;
 }
 
+typedef BOOL (WINAPI *INITIALIZECRITICALSECTIONEX)(
+    CRITICAL_SECTION *lpCriticalSection,
+    DWORD dwSpinCount,
+    DWORD Flags);
+
+static INITIALIZECRITICALSECTIONEX sInitializeCriticalSectionEx;
+
+void _PR_MD_INIT_LOCKS(void)
+{
+    /*
+     * Starting with Windows Vista, every CRITICAL_SECTION allocates an extra
+     * RTL_CRITICAL_SECTION_DEBUG object. Unfortunately, this debug object is
+     * not reclaimed by DeleteCriticalSection(), causing an apparent memory
+     * leak. This is a debugging "feature", not a bug. If we are running on
+     * Vista or later, use InitializeCriticalSectionEx() to allocate
+     * CRITICAL_SECTIONs without debug objects.
+     */
+    HMODULE hKernel32 = GetModuleHandle("kernel32.dll");
+    PR_ASSERT(hKernel32);
+    PR_ASSERT(!sInitializeCriticalSectionEx);
+    sInitializeCriticalSectionEx = (INITIALIZECRITICALSECTIONEX)
+            GetProcAddress(hKernel32, "InitializeCriticalSectionEx");
+}
+
+/*
+ * By default, CRITICAL_SECTIONs are initialized with a spin count of 0.
+ * Joe Duffy's "Concurrent Programming on Windows" book suggests 1500 is
+ * a "reasonable starting point". On single-processor systems, the spin
+ * count is ignored and the critical section spin count is set to 0.
+ */
+#define LOCK_SPIN_COUNT 1500
+
+PRStatus _PR_MD_NEW_LOCK(_MDLock *lock)
+{
+    CRITICAL_SECTION *cs = &lock->mutex;
+    BOOL ok;
+
+    if (sInitializeCriticalSectionEx) {
+        ok = sInitializeCriticalSectionEx(cs, LOCK_SPIN_COUNT,
+                                          CRITICAL_SECTION_NO_DEBUG_INFO);
+    } else {
+        ok = InitializeCriticalSectionAndSpinCount(cs, LOCK_SPIN_COUNT);
+    }
+    if (!ok) {
+        _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
+        return PR_FAILURE;
+    }
+
+    lock->notified.length = 0;
+    lock->notified.link = NULL;
+    return PR_SUCCESS;
+}
+
 void _PR_MD_UNLOCK(_MDLock *lock)
 {
     if (0 != lock->notified.length) {
@@ -311,5 +364,4 @@ void _PR_MD_UNLOCK(_MDLock *lock)
     } else {
         LeaveCriticalSection(&lock->mutex);
     }
-    return;
 }

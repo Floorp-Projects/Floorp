@@ -72,7 +72,12 @@ MOCHITEST_FILES = \
 		test_SVGxxxListIndexing.xhtml \
 		test_switch.xhtml \
 		switch-helper.svg \
+		test_text.html \
+		test_text_scaled.html \
+		test_text_selection.html \
 		text-helper.svg \
+		text-helper-scaled.svg \
+		text-helper-selection.svg \
 		test_transform.xhtml \
 		test_valueAsString.xhtml \
 		test_valueLeaks.xhtml \

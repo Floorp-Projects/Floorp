@@ -405,7 +405,8 @@ nsGonkCameraControl::GetParameterDouble(uint32_t aKey)
 }
 
 void
-nsGonkCameraControl::GetParameter(uint32_t aKey, nsTArray<CameraRegion>& aRegions)
+nsGonkCameraControl::GetParameter(uint32_t aKey,
+                                  nsTArray<idl::CameraRegion>& aRegions)
 {
   aRegions.Clear();
 
@@ -432,7 +433,7 @@ nsGonkCameraControl::GetParameter(uint32_t aKey, nsTArray<CameraRegion>& aRegion
   }
 
   aRegions.SetCapacity(count);
-  CameraRegion* r;
+  idl::CameraRegion* r;
 
   // parse all of the region sets
   uint32_t i;
@@ -449,7 +450,8 @@ nsGonkCameraControl::GetParameter(uint32_t aKey, nsTArray<CameraRegion>& aRegion
 }
 
 void
-nsGonkCameraControl::GetParameter(uint32_t aKey, nsTArray<CameraSize>& aSizes)
+nsGonkCameraControl::GetParameter(uint32_t aKey,
+                                  nsTArray<idl::CameraSize>& aSizes)
 {
   const char* key = getKeyText(aKey);
   if (!key) {
@@ -465,7 +467,7 @@ nsGonkCameraControl::GetParameter(uint32_t aKey, nsTArray<CameraSize>& aSizes)
   }
 
   const char* p = value;
-  CameraSize* s;
+  idl::CameraSize* s;
 
   // The 'value' string is in the format "w1xh1,w2xh2,w3xh3,..."
   while (p) {
@@ -563,7 +565,8 @@ nsGonkCameraControl::SetParameter(uint32_t aKey, double aValue)
 }
 
 void
-nsGonkCameraControl::SetParameter(uint32_t aKey, const nsTArray<CameraRegion>& aRegions)
+nsGonkCameraControl::SetParameter(uint32_t aKey,
+                                  const nsTArray<idl::CameraRegion>& aRegions)
 {
   const char* key = getKeyText(aKey);
   if (!key) {
@@ -582,7 +585,7 @@ nsGonkCameraControl::SetParameter(uint32_t aKey, const nsTArray<CameraRegion>& a
   nsCString s;
 
   for (uint32_t i = 0; i < length; ++i) {
-    const CameraRegion* r = &aRegions[i];
+    const idl::CameraRegion* r = &aRegions[i];
     s.AppendPrintf("(%d,%d,%d,%d,%d),", r->top, r->left, r->bottom, r->right, r->weight);
   }
 
@@ -703,7 +706,7 @@ nsGonkCameraControl::SetupThumbnail(uint32_t aPictureWidth, uint32_t aPictureHei
    */
   uint32_t smallestArea = UINT_MAX;
   uint32_t smallestIndex = UINT_MAX;
-  nsAutoTArray<CameraSize, 8> thumbnailSizes;
+  nsAutoTArray<idl::CameraSize, 8> thumbnailSizes;
   GetParameter(CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES, thumbnailSizes);
 
   for (uint32_t i = 0; i < thumbnailSizes.Length(); ++i) {
@@ -1344,7 +1347,7 @@ already_AddRefed<GonkRecorderProfileManager>
 nsGonkCameraControl::GetGonkRecorderProfileManager()
 {
   if (!mProfileManager) {
-    nsTArray<CameraSize> sizes;
+    nsTArray<idl::CameraSize> sizes;
     nsresult rv = GetVideoSizes(sizes);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
@@ -1364,7 +1367,7 @@ nsGonkCameraControl::GetRecorderProfileManagerImpl()
 }
 
 nsresult
-nsGonkCameraControl::GetVideoSizes(nsTArray<CameraSize>& aVideoSizes)
+nsGonkCameraControl::GetVideoSizes(nsTArray<idl::CameraSize>& aVideoSizes)
 {
   aVideoSizes.Clear();
 
@@ -1381,7 +1384,7 @@ nsGonkCameraControl::GetVideoSizes(nsTArray<CameraSize>& aVideoSizes)
   }
 
   for (size_t i = 0; i < sizes.size(); ++i) {
-    CameraSize size;
+    idl::CameraSize size;
     size.width = sizes[i].width;
     size.height = sizes[i].height;
     aVideoSizes.AppendElement(size);

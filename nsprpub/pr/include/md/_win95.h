@@ -379,9 +379,9 @@ extern PROsfd _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 
 /* --- Lock stuff --- */
 #define _PR_LOCK                      _MD_LOCK
-#define _PR_UNLOCK					  _MD_UNLOCK
+#define _PR_UNLOCK                    _MD_UNLOCK
 
-#define _MD_NEW_LOCK(lock)            (InitializeCriticalSection(&((lock)->mutex)),(lock)->notified.length=0,(lock)->notified.link=NULL,PR_SUCCESS)
+#define _MD_NEW_LOCK                  _PR_MD_NEW_LOCK
 #define _MD_FREE_LOCK(lock)           DeleteCriticalSection(&((lock)->mutex))
 #define _MD_LOCK(lock)                EnterCriticalSection(&((lock)->mutex))
 #define _MD_TEST_AND_LOCK(lock)       (EnterCriticalSection(&((lock)->mutex)),0)
@@ -499,7 +499,7 @@ extern DWORD _pr_currentCPUIndex;
 #define _PR_UnlockSched()                0
 
 /* --- Initialization stuff --- */
-#define _MD_INIT_LOCKS()
+#define _MD_INIT_LOCKS                   _PR_MD_INIT_LOCKS
 
 /* --- Stack stuff --- */
 #define _MD_INIT_STACK(stack, redzone)

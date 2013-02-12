@@ -36,7 +36,7 @@ function runTest2() {
     if (xhr.readyState == 4) {
       check(xhr.responseXML.documentElement.getAttribute("root"));
       if (secondDoc) {
-        parent.location.hash = "#done";
+        SpecialPowers.wrap(parent).location.hash = "#done";
       }
       else {
         secondDoc = true;
@@ -48,7 +48,7 @@ function runTest2() {
 
 function check(attr) {
   if (attr != "yes") {
-    parent.location.hash = "#fail";
+    SpeciaPowers.wrap(parent).location.hash = "#fail";
     throw 1;
   }
 }

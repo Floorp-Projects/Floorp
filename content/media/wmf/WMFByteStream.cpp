@@ -423,9 +423,10 @@ WMFByteStream::GetCapabilities(DWORD *aCapabilities)
   NS_ENSURE_TRUE(aCapabilities, E_POINTER);
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   bool seekable = mResource->IsTransportSeekable();
+  bool cached = mResource->IsDataCachedToEndOfResource(0);
   *aCapabilities = MFBYTESTREAM_IS_READABLE |
                    MFBYTESTREAM_IS_SEEKABLE |
-                   MFBYTESTREAM_IS_PARTIALLY_DOWNLOADED |
+                   (!cached ? MFBYTESTREAM_IS_PARTIALLY_DOWNLOADED : 0) |
                    (!seekable ? MFBYTESTREAM_HAS_SLOW_SEEK : 0);
   return S_OK;
 }

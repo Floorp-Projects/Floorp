@@ -30,7 +30,6 @@ browser.jar:
   skin/classic/browser/identity-icons-https-ev.png
   skin/classic/browser/identity-icons-https-mixed-active.png
   skin/classic/browser/Info.png
-  skin/classic/browser/KUI-close.png
   skin/classic/browser/mixed-content-blocked-16.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
@@ -100,7 +99,6 @@ browser.jar:
   skin/classic/browser/preferences/aboutPermissions.css (preferences/aboutPermissions.css)
   skin/classic/browser/social/social.png              (social/social.png)
   skin/classic/browser/social/chat-close.png          (social/chat-close.png)
-  skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
   skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/loading.png         (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
