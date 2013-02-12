@@ -91,7 +91,7 @@ public:
   virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
 
   virtual void PullOverflowsFromPrevInFlow();
-  virtual nscoord GetBaseline() const;
+  virtual nscoord GetBaseline() const MOZ_OVERRIDE;
 
   /**
    * Return true if the frame is leftmost frame or continuation.

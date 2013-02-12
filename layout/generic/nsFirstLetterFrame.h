@@ -59,7 +59,7 @@ public:
                     nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
-  virtual nscoord GetBaseline() const;
+  virtual nscoord GetBaseline() const MOZ_OVERRIDE;
 
 //override of nsFrame method
   NS_IMETHOD GetChildFrameContainingOffset(int32_t inContentOffset,
