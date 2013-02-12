@@ -31,7 +31,7 @@ class Module : public JSObject {
 } // namespace js
 
 js::Module *
-js_NewModule(JSContext *cx, JSAtom *atom);
+js_NewModule(JSContext *cx, js::HandleAtom atom);
 
 inline js::Module &
 JSObject::asModule()
