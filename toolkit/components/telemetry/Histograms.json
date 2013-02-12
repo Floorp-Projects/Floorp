@@ -1472,6 +1472,18 @@
     "kind": "boolean",
     "description": "Whether the user has requested not to see the Plugin Hang UI again"
   },
+  "PLUGIN_HANG_UI_RESPONSE_TIME": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 20,
+    "description": "Time spent in Plugin Hang UI (ms)"
+  },
+  "PLUGIN_HANG_TIME": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 20,
+    "description": "Value of dom.ipc.plugins.hangUITimeoutSecs plus time spent in Plugin Hang UI (ms)"
+  },
   "PLUGIN_SHUTDOWN_MS": {
     "kind": "exponential",
     "high": "5000",
