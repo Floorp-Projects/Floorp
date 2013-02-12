@@ -6181,6 +6181,7 @@ private:
  */
 static nsresult
 GetContextAndScope(nsIDocument* aOldDocument, nsIDocument* aNewDocument,
+                   nsCxPusher& aPusher,
                    JSContext** aCx, JSObject** aNewScope)
 {
   MOZ_ASSERT(aOldDocument);
@@ -6223,6 +6224,9 @@ GetContextAndScope(nsIDocument* aOldDocument, nsIDocument* aNewDocument,
     }
   }
 
+  if (cx) {
+    aPusher.Push(cx);
+  }
   if (!newScope && cx) {
     JS::Value v;
     nsresult rv = nsContentUtils::WrapNative(cx, global, aNewDocument,
@@ -6356,8 +6360,9 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 
   JSContext *cx = nullptr;
   JSObject *newScope = nullptr;
+  nsCxPusher pusher;
   if (!sameDocument) {
-    rv = GetContextAndScope(oldDocument, this, &cx, &newScope);
+    rv = GetContextAndScope(oldDocument, this, pusher, &cx, &newScope);
     if (rv.Failed()) {
       return nullptr;
     }
