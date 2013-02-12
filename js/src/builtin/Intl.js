@@ -435,23 +435,8 @@ function CanonicalizeLocaleList(locales) {
         var kPresent = HasProperty(O, k);
         if (kPresent) {
             var kValue = O[k];
-            if (!(typeof kValue === "string" ||
-                  (typeof kValue === "object" && kValue !== null) ||
-                  // The following is here only because Waldo thinks we really
-                  // have to have it in order to be spec-conformant:
-                  // document.all is an object first implemented in Explorer
-                  // and then in Firefox and other fine browsers, whose
-                  // presence is also used by applications to identify Explorer
-                  // and which therefore has to be falsy in non-Explorer
-                  // browsers. It cloaks itself by pretending its type is
-                  // undefined. Just in case somebody thinks of decorating it
-                  // with a toString method that returns a language tag and
-                  // then passes it in as a locale, we check for its cloak
-                  // here.
-                  (typeof kValue === "undefined" && kValue !== undefined)))
-            {
+            if (!(typeof kValue === "string" || IsObject(kValue)))
                 ThrowError(JSMSG_INVALID_LOCALES_ELEMENT);
-            }
             var tag = ToString(kValue);
             if (!IsStructurallyValidLanguageTag(tag))
                 ThrowError(JSMSG_INVALID_LANGUAGE_TAG, tag);
