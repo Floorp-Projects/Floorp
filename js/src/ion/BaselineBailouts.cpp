@@ -580,6 +580,16 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
         bool enterMonitorChain = resumeAfter ? !!(js_CodeSpec[op].format & JOF_TYPESET) : false;
         uint32_t numCallArgs = isCall ? GET_ARGC(pc) : 0;
 
+        // NEWARRAY and NEWOBJECT are JOF_TYPESET ops, but don't have an IC
+        // monitor chain, since the TypeObject is statically known.
+        if (op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT) {
+#ifdef DEBUG
+            ICEntry &icEntry = baselineScript->icEntryFromPCOffset(pcOff);
+            JS_ASSERT(!icEntry.firstStub()->getChainFallback()->isMonitoredFallback());
+#endif
+            enterMonitorChain = false;
+        }
+
         if (resumeAfter && !enterMonitorChain)
             pc = GetNextPc(pc);
 
