@@ -300,6 +300,7 @@ class ICEntry
     _(Compare_Fallback)         \
     _(Compare_Int32)            \
     _(Compare_Double)           \
+    _(Compare_String)           \
                                 \
     _(ToBool_Fallback)          \
     _(ToBool_Int32)             \
@@ -1506,6 +1507,34 @@ class ICCompare_Double : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICCompare_Double::New(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_String : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICCompare_String(IonCode *stubCode)
+      : ICStub(ICStub::Compare_String, stubCode)
+    {}
+
+  public:
+    static inline ICCompare_String *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICCompare_String>(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSOp op)
+          : ICMultiStubCompiler(cx, ICStub::Compare_String, op)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCompare_String::New(space, getStubCode());
         }
     };
 };
