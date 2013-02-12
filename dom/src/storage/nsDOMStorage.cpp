@@ -1587,6 +1587,12 @@ nsDOMStorage2::StorageType()
   return nsPIDOMStorage::Unknown;
 }
 
+bool
+nsDOMStorage2::IsPrivate()
+{
+  return mStorage && mStorage->IsPrivate();
+}
+
 namespace {
 
 class StorageNotifierRunnable : public nsRunnable

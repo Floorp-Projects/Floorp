@@ -327,6 +327,9 @@ public:
   virtual nsIPrincipal* Principal();
   virtual bool CanAccess(nsIPrincipal *aPrincipal);
   virtual nsDOMStorageType StorageType();
+  virtual bool IsPrivate() {
+    return mStorageImpl && mStorageImpl->IsPrivate();
+  }
 
   // Check whether storage may be used by the caller, and whether it
   // is session only.  Returns true if storage may be used.
@@ -396,6 +399,7 @@ public:
   virtual nsIPrincipal* Principal();
   virtual bool CanAccess(nsIPrincipal *aPrincipal);
   virtual nsDOMStorageType StorageType();
+  virtual bool IsPrivate();
 
   void BroadcastChangeNotification(const nsSubstring &aKey,
                                    const nsSubstring &aOldValue,
