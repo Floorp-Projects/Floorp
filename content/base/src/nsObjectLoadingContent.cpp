@@ -2576,6 +2576,8 @@ nsObjectLoadingContent::NotifyContentObjectWrapper()
     return;
 
   JSContext *cx = scx->GetNativeContext();
+  nsCxPusher pusher;
+  pusher.Push(cx, nsCxPusher::ASSERT_SCRIPT_CONTEXT);
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   nsContentUtils::XPConnect()->
