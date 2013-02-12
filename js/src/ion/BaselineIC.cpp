@@ -1228,6 +1228,18 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
         return true;
     }
 
+    if (IsEqualityOp(op)) {
+        if (lhs.isString() && rhs.isString() && !stub->hasStub(ICStub::Compare_String)) {
+            ICCompare_String::Compiler compiler(cx, op);
+            ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+            if (!stringStub)
+                return false;
+
+            stub->addNewStub(stringStub);
+            return true;
+        }
+    }
+
     return true;
 }
 
@@ -1254,6 +1266,47 @@ ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStubReg);
 
     return tailCallVM(DoCompareFallbackInfo, masm);
+}
+
+//
+// Compare_String
+//
+
+bool
+ICCompare_String::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestString(Assembler::NotEqual, R0, &failure);
+    masm.branchTestString(Assembler::NotEqual, R1, &failure);
+
+    Register left = masm.extractString(R0, ExtractTemp0);
+    Register right = masm.extractString(R1, ExtractTemp1);
+
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratchReg = regs.takeAny();
+    // x86 doesn't have the luxury of a second scratch.
+    Register scratchReg2;
+    if (regs.empty()) {
+        scratchReg2 = BaselineStubReg;
+        masm.push(BaselineStubReg);
+    } else {
+        scratchReg2 = regs.takeAny();
+    }
+    JS_ASSERT(scratchReg2 != scratchReg);
+
+    Label inlineCompareFailed;
+    masm.compareStrings(op, left, right, scratchReg2, scratchReg, &inlineCompareFailed);
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratchReg2, R0);
+    if (scratchReg2 == BaselineStubReg)
+        masm.pop(BaselineStubReg);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&inlineCompareFailed);
+    if (scratchReg2 == BaselineStubReg)
+        masm.pop(BaselineStubReg);
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //
@@ -1286,6 +1339,16 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
             return false;
 
         stub->addNewStub(int32Stub);
+        return true;
+    }
+
+    if (arg.isString()) {
+        ICToBool_String::Compiler compiler(cx);
+        ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!stringStub)
+            return false;
+
+        stub->addNewStub(stringStub);
         return true;
     }
 
@@ -1323,6 +1386,33 @@ ICToBool_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
     Label ifFalse;
     Assembler::Condition cond = masm.testInt32Truthy(false, R0);
+    masm.j(cond, &ifFalse);
+
+    masm.moveValue(BooleanValue(true), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&ifFalse);
+    masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// ToBool_String
+//
+
+bool
+ICToBool_String::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestString(Assembler::NotEqual, R0, &failure);
+
+    Label ifFalse;
+    Assembler::Condition cond = masm.testStringTruthy(false, R0);
     masm.j(cond, &ifFalse);
 
     masm.moveValue(BooleanValue(true), R0);
