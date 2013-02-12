@@ -283,6 +283,7 @@ Section "-Application" APP_IDX
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
+  ${ResetWin8PromptKeys}
   ${UpdateProtocolHandlers}
 
   ClearErrors
@@ -306,6 +307,9 @@ Section "-Application" APP_IDX
   ; setup the application model id registration value
   ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
 
+!ifdef MOZ_METRO
+  ${ResetWin8MetroSplash}
+!endif
   ${RemoveDeprecatedKeys}
 
   ; The previous installer adds several regsitry values to both HKLM and HKCU.
