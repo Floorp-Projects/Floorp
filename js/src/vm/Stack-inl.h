@@ -619,7 +619,11 @@ AbstractFramePtr::setHookData(void *data) const
         asStackFrame()->setHookData(data);
         return;
     }
+#ifdef JS_ION
+    asBaselineFrame()->setHookData(data);
+#else
     JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline void

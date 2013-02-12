@@ -56,7 +56,10 @@ class BaselineFrame
         PREV_UP_TO_DATE  = 1 << 5,
 
         // Eval frame, see the "eval frames" comment.
-        EVAL             = 1 << 6
+        EVAL             = 1 << 6,
+
+        // Frame has hookData_ set.
+        HAS_HOOK_DATA    = 1 << 7
     };
 
   protected: // Silence Clang warning about unused private fields.
@@ -71,11 +74,16 @@ class BaselineFrame
     StaticBlockObject *blockChain_; // If HAS_BLOCKCHAIN, the static block chain.
     JSScript *evalScript_;          // If isEvalFrame(), the current eval script.
     ArgumentsObject *argsObj_;      // If HAS_ARGS_OBJ, the arguments object.
+    void *hookData_;                // If HAS_HOOK_DATA, debugger call hook data.
     uint32_t flags_;
 
     // In debug mode, evalPrev_ is a pointer to the previous frame
     // for eval frames. Only valid if HAS_EVAL_PREV is set.
     AbstractFramePtr evalPrev_;
+
+#if JS_BITS_PER_WORD == 32
+    uint32_t padding_;
+#endif
 
   public:
     // Distance between the frame pointer and the frame header (return address).
@@ -275,10 +283,6 @@ class BaselineFrame
         flags_ |= PREV_UP_TO_DATE;
     }
 
-    void *maybeHookData() const {
-        return NULL;
-    }
-
     JSScript *evalScript() const {
         JS_ASSERT(isEvalFrame());
         return evalScript_;
@@ -291,6 +295,19 @@ class BaselineFrame
     }
 
     void initEvalPrev(JSContext *cx);
+
+    bool hasHookData() const {
+        return flags_ & HAS_HOOK_DATA;
+    }
+
+    void *maybeHookData() const {
+        return hasHookData() ? hookData_ : NULL;
+    }
+
+    void setHookData(void *v) {
+        hookData_ = v;
+        flags_ |= HAS_HOOK_DATA;
+    }
 
     void trace(JSTracer *trc);
 
