@@ -1,0 +1,38 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY % brandDTD
+    SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
+
+<!-- These strings are used by Firefox's custom about:certerror page,
+a replacement for the standard security certificate errors produced
+by NSS/PSM via netError.xhtml. -->
+
+<!ENTITY certerror.pagetitle  "Untrusted Connection">
+<!ENTITY certerror.longpagetitle "This Connection is Untrusted">
+
+<!-- Localization note (certerror.introPara1) - The string "#1" will
+be replaced at runtime with the name of the server to which the user
+was trying to connect. -->
+<!ENTITY certerror.introPara1 "You have asked &brandShortName; to connect
+securely to <b>#1</b>, but we can't confirm that your connection is secure.">
+
+<!ENTITY certerror.whatShouldIDo.heading "What Should I Do?">
+<!ENTITY certerror.whatShouldIDo.content "If you usually connect to
+this site without problems, this error could mean that someone is
+trying to impersonate the site, and you shouldn't continue.">
+<!ENTITY certerror.getMeOutOfHere.label "Get me out of here!">
+
+<!ENTITY certerror.expert.heading "I Understand the Risks">
+<!ENTITY certerror.expert.content "If you understand what's going on, you
+can tell &brandShortName; to start trusting this site's identification.
+<b>Even if you trust the site, this error could mean that someone is
+tampering with your connection.</b>">
+<!ENTITY certerror.expert.contentPara2 "Don't add an exception unless
+you know there's a good reason why this site doesn't use trusted identification.">
+<!ENTITY certerror.addTemporaryException.label "Visit site">
+<!ENTITY certerror.addPermanentException.label "Add permanent exception">
+
+<!ENTITY certerror.technical.heading "Technical Details">
