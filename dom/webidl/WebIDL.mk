@@ -87,6 +87,7 @@ webidl_files = \
   HTMLOListElement.webidl \
   HTMLOptGroupElement.webidl \
   HTMLOptionsCollection.webidl \
+  HTMLOutputElement.webidl \
   HTMLParagraphElement.webidl \
   HTMLParamElement.webidl \
   HTMLPreElement.webidl \
