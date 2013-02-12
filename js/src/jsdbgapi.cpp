@@ -1362,7 +1362,7 @@ JSAbstractFramePtr::script()
 }
 
 bool
-JSAbstractFramePtr::getThisValue(JSContext *cx, jsval *thisv)
+JSAbstractFramePtr::getThisValue(JSContext *cx, MutableHandleValue thisv)
 {
     AbstractFramePtr frame = Valueify(*this);
 
@@ -1371,7 +1371,7 @@ JSAbstractFramePtr::getThisValue(JSContext *cx, jsval *thisv)
     if (!ComputeThis(cx, frame))
         return false;
 
-    *thisv = frame.thisValue();
+    thisv.set(frame.thisValue());
     return true;
 }
 
@@ -1386,7 +1386,7 @@ bool
 JSAbstractFramePtr::evaluateInStackFrame(JSContext *cx,
                                          const char *bytes, unsigned length,
                                          const char *filename, unsigned lineno,
-                                         jsval *rval)
+                                         MutableHandleValue rval)
 {
     if (!CheckDebugMode(cx))
         return false;
@@ -1407,7 +1407,7 @@ bool
 JSAbstractFramePtr::evaluateUCInStackFrame(JSContext *cx,
                                            const jschar *chars, unsigned length,
                                            const char *filename, unsigned lineno,
-                                           jsval *rval)
+                                           MutableHandleValue rval)
 {
     if (!CheckDebugMode(cx))
         return false;
