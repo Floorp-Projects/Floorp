@@ -1231,6 +1231,28 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
         return true;
     }
 
+    if ((lhs.isNumber() && rhs.isUndefined()) ||
+        (lhs.isUndefined() && rhs.isNumber()))
+    {
+        ICCompare_NumberWithUndefined::Compiler compiler(cx, op, lhs.isUndefined());
+        ICStub *doubleStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!stub)
+            return false;
+
+        stub->addNewStub(doubleStub);
+        return true;
+    }
+
+    if (lhs.isBoolean() && rhs.isBoolean()) {
+        ICCompare_Boolean::Compiler compiler(cx, op);
+        ICStub *booleanStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        if (!booleanStub)
+            return false;
+
+        stub->addNewStub(booleanStub);
+        return true;
+    }
+
     if (IsEqualityOp(op)) {
         if (lhs.isString() && rhs.isString() && !stub->hasStub(ICStub::Compare_String)) {
             IonSpew(IonSpew_BaselineIC, "  Generating %s(String, String) stub", js_CodeName[op]);
@@ -1308,6 +1330,67 @@ ICCompare_String::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&inlineCompareFailed);
     if (scratchReg2 == BaselineStubReg)
         masm.pop(BaselineStubReg);
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// Compare_Boolean
+//
+
+bool
+ICCompare_Boolean::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
+    masm.branchTestBoolean(Assembler::NotEqual, R1, &failure);
+
+    Register left = masm.extractInt32(R0, ExtractTemp0);
+    Register right = masm.extractInt32(R1, ExtractTemp1);
+
+    // Compare payload regs of R0 and R1.
+    Assembler::Condition cond = JSOpToCondition(op);
+    masm.cmp32(left, right);
+    masm.emitSet(cond, left);
+
+    // Box the result and return
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, left, R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// Compare_NumberWithUndefined
+//
+
+bool
+ICCompare_NumberWithUndefined::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    ValueOperand numberOperand, undefinedOperand;
+    if (lhsIsUndefined) {
+        numberOperand = R1;
+        undefinedOperand = R0;
+    } else {
+        numberOperand = R0;
+        undefinedOperand = R1;
+    }
+
+    Label failure;
+    masm.branchTestNumber(Assembler::NotEqual, numberOperand, &failure);
+    masm.branchTestUndefined(Assembler::NotEqual, undefinedOperand, &failure);
+
+    // Comparing a number with undefined will always be true for NE/STRICTNE,
+    // and always be false for other compare ops.
+    masm.moveValue(BooleanValue(op == JSOP_NE || op == JSOP_STRICTNE), R0);
+
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
