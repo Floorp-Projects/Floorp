@@ -39,6 +39,10 @@
 #include <algorithm>
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGComponentTransferFunctionElement.h"
+#include "mozilla/dom/SVGFEFuncAElementBinding.h"
+#include "mozilla/dom/SVGFEFuncBElementBinding.h"
+#include "mozilla/dom/SVGFEFuncGElementBinding.h"
+#include "mozilla/dom/SVGFEFuncRElementBinding.h"
 
 #if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage
@@ -1889,47 +1893,88 @@ SVGComponentTransferFunctionElement::AttributeAffectsRendering(int32_t aNameSpac
 // nsIDOMSVGComponentTransferFunctionElement methods
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration type; */
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGComponentTransferFunctionElement::Type()
+{
+  return mEnumAttributes[TYPE].ToDOMAnimatedEnum(this);
+}
 NS_IMETHODIMP SVGComponentTransferFunctionElement::GetType(nsIDOMSVGAnimatedEnumeration * *aType)
 {
-  return mEnumAttributes[TYPE].ToDOMAnimatedEnum(aType, this);
+  *aType = Type().get();
+  return NS_OK;
 }
 
 /* readonly attribute DOMSVGAnimatedNumberList tableValues; */
+already_AddRefed<DOMSVGAnimatedNumberList>
+SVGComponentTransferFunctionElement::TableValues()
+{
+  return DOMSVGAnimatedNumberList::GetDOMWrapper(
+    &mNumberListAttributes[TABLEVALUES], this, TABLEVALUES);
+}
 NS_IMETHODIMP SVGComponentTransferFunctionElement::GetTableValues(nsISupports * *aTableValues)
 {
-  *aTableValues = DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[TABLEVALUES],
-                                                          this, TABLEVALUES).get();
+  *aTableValues = TableValues().get();
   return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber slope; */
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Slope()
+{
+  return mNumberAttributes[SLOPE].ToDOMAnimatedNumber(this);
+}
 NS_IMETHODIMP SVGComponentTransferFunctionElement::GetSlope(nsIDOMSVGAnimatedNumber * *aSlope)
 {
-  return mNumberAttributes[SLOPE].ToDOMAnimatedNumber(aSlope, this);
+  *aSlope = Slope().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber intercept; */
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Intercept()
+{
+  return mNumberAttributes[INTERCEPT].ToDOMAnimatedNumber(this);
+}
 NS_IMETHODIMP SVGComponentTransferFunctionElement::GetIntercept(nsIDOMSVGAnimatedNumber * *aIntercept)
 {
-  return mNumberAttributes[INTERCEPT].ToDOMAnimatedNumber(aIntercept, this);
+  *aIntercept = Intercept().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber amplitude; */
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Amplitude()
+{
+  return mNumberAttributes[AMPLITUDE].ToDOMAnimatedNumber(this);
+}
 NS_IMETHODIMP SVGComponentTransferFunctionElement::GetAmplitude(nsIDOMSVGAnimatedNumber * *aAmplitude)
 {
-  return mNumberAttributes[AMPLITUDE].ToDOMAnimatedNumber(aAmplitude, this);
+  *aAmplitude = Amplitude().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber exponent; */
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Exponent()
+{
+  return mNumberAttributes[EXPONENT].ToDOMAnimatedNumber(this);
+}
 NS_IMETHODIMP SVGComponentTransferFunctionElement::GetExponent(nsIDOMSVGAnimatedNumber * *aExponent)
 {
-  return mNumberAttributes[EXPONENT].ToDOMAnimatedNumber(aExponent, this);
+  *aExponent = Exponent().get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber offset; */
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGComponentTransferFunctionElement::Offset()
+{
+  return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(this);
+}
 NS_IMETHODIMP SVGComponentTransferFunctionElement::GetOffset(nsIDOMSVGAnimatedNumber * *aOffset)
 {
-  return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(aOffset, this);
+  *aOffset = Offset().get();
+  return NS_OK;
 }
 
 void
@@ -2055,6 +2100,13 @@ NS_INTERFACE_TABLE_HEAD(SVGFEFuncRElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncRElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
 
+/* virtual */ JSObject*
+SVGFEFuncRElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  return SVGFEFuncRElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
 } // namespace dom
 } // namespace mozilla
 
@@ -2084,6 +2136,13 @@ NS_INTERFACE_TABLE_HEAD(SVGFEFuncGElement)
                            nsIDOMSVGFEFuncGElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncGElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
+
+/* virtual */ JSObject*
+SVGFEFuncGElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  return SVGFEFuncGElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 } // namespace dom
 } // namespace mozilla
@@ -2115,6 +2174,13 @@ NS_INTERFACE_TABLE_HEAD(SVGFEFuncBElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncBElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
 
+/* virtual */ JSObject*
+SVGFEFuncBElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  return SVGFEFuncBElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
 } // namespace dom
 } // namespace mozilla
 
@@ -2144,6 +2210,13 @@ NS_INTERFACE_TABLE_HEAD(SVGFEFuncAElement)
                            nsIDOMSVGFEFuncAElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEFuncAElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElement)
+
+/* virtual */ JSObject*
+SVGFEFuncAElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  return SVGFEFuncAElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
 
 } // namespace dom
 } // namespace mozilla

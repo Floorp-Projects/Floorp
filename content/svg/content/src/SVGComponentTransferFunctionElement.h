@@ -6,41 +6,11 @@
 #ifndef mozilla_dom_SVGComponentTransferFunctionElement_h
 #define mozilla_dom_SVGComponentTransferFunctionElement_h
 
-#include "mozilla/Util.h"
-
-#include "nsSVGElement.h"
-#include "nsGkAtoms.h"
-#include "nsSVGNumber2.h"
-#include "nsSVGNumberPair.h"
-#include "nsSVGInteger.h"
-#include "nsSVGIntegerPair.h"
-#include "nsSVGBoolean.h"
-#include "nsIDOMSVGFilters.h"
-#include "nsCOMPtr.h"
-#include "nsSVGFilterInstance.h"
-#include "nsIDOMSVGFilterElement.h"
 #include "nsSVGEnum.h"
-#include "SVGNumberList.h"
-#include "SVGAnimatedNumberList.h"
-#include "DOMSVGAnimatedNumberList.h"
 #include "nsSVGFilters.h"
-#include "nsLayoutUtils.h"
-#include "nsSVGUtils.h"
-#include "nsStyleContext.h"
-#include "nsIDocument.h"
-#include "nsIFrame.h"
-#include "gfxContext.h"
-#include "gfxMatrix.h"
-#include "imgIContainer.h"
-#include "nsNetUtil.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsSVGFilterElement.h"
-#include "nsSVGString.h"
-#include "nsSVGEffects.h"
-#include "gfxUtils.h"
-#include "SVGContentUtils.h"
-#include <algorithm>
-#include "nsContentUtils.h"
+#include "nsSVGNumber2.h"
+#include "SVGAnimatedNumberList.h"
+
 
 #define NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID \
 { 0xafab106d, 0xbc18, 0x4f7f, \
@@ -50,6 +20,9 @@ nsresult NS_NewSVGComponentTransferFunctionElement(
   nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
+
+class DOMSVGAnimatedNumberList;
+
 namespace dom {
 
 typedef SVGFEUnstyledElement SVGComponentTransferFunctionElementBase;
@@ -60,7 +33,10 @@ class SVGComponentTransferFunctionElement : public SVGComponentTransferFunctionE
     nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
   SVGComponentTransferFunctionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : SVGComponentTransferFunctionElementBase(aNodeInfo) {}
+    : SVGComponentTransferFunctionElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
 
 public:
   // interfaces:
@@ -74,6 +50,17 @@ public:
 
   virtual int32_t GetChannel() = 0;
   void GenerateLookupTable(uint8_t* aTable);
+
+  // WebIDL
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE = 0;
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Type();
+  already_AddRefed<DOMSVGAnimatedNumberList> TableValues();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Slope();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Intercept();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Amplitude();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Exponent();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Offset();
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
@@ -132,6 +119,9 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
@@ -171,6 +161,9 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
@@ -210,6 +203,9 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
@@ -249,6 +245,9 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom
