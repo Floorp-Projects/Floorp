@@ -19,6 +19,35 @@
 using namespace js;
 using namespace js::ion;
 
+// BaselineStackBuilder may reallocate its buffer if the current one is too
+// small. To avoid dangling pointers, BufferPointer represents a pointer into
+// this buffer as a pointer to the header and a fixed offset.
+template <typename T>
+class BufferPointer
+{
+    BaselineBailoutInfo **header_;
+    size_t offset_;
+    bool heap_;
+
+  public:
+    BufferPointer(BaselineBailoutInfo **header, size_t offset, bool heap)
+      : header_(header), offset_(offset), heap_(heap)
+    { }
+
+    T *get() const {
+        BaselineBailoutInfo *header = *header_;
+        if (!heap_)
+            return (T*)(header->incomingStack + offset_);
+
+        uint8_t *p = header->copyStackTop - offset_;
+        JS_ASSERT(p >= header->copyStackBottom && p < header->copyStackTop);
+        return (T*)p;
+    }
+
+    T &operator*() const { return *get(); }
+    T *operator->() const { return get(); }
+};
+
 /**
  * BaselineStackBuilder helps abstract the process of rebuilding the C stack on the heap.
  * It takes a bailout iterator and keeps track of the point on the C stack from which
@@ -81,7 +110,7 @@ struct BaselineStackBuilder
         bufferUsed_ = 0;
 
         header_ = reinterpret_cast<BaselineBailoutInfo *>(buffer_);
-        header_->incomingStack = frame_;
+        header_->incomingStack = reinterpret_cast<uint8_t *>(frame_);
         header_->copyStackTop = buffer_ + bufferTotal_;
         header_->copyStackBottom = header_->copyStackTop;
         header_->setR0 = 0;
@@ -242,14 +271,19 @@ struct BaselineStackBuilder
         header_->monitorStub = stub;
     }
 
-    inline uint8_t *pointerAtStackOffset(size_t offset) {
-        if (offset < bufferUsed_)
-            return header_->copyStackBottom + offset;
-        return reinterpret_cast<uint8_t *>(frame_) + (offset - bufferUsed_);
+    template <typename T>
+    BufferPointer<T> pointerAtStackOffset(size_t offset) {
+        if (offset < bufferUsed_) {
+            // Calculate offset from copyStackTop.
+            offset = header_->copyStackTop - (header_->copyStackBottom + offset);
+            return BufferPointer<T>(&header_, offset, /* heap = */ true);
+        }
+
+        return BufferPointer<T>(&header_, offset - bufferUsed_, /* heap = */ false);
     }
 
-    inline Value *valuePointerAtStackOffset(size_t offset) {
-        return reinterpret_cast<Value *>(pointerAtStackOffset(offset));
+    BufferPointer<Value> valuePointerAtStackOffset(size_t offset) {
+        return pointerAtStackOffset<Value>(offset);
     }
 
     inline uint8_t *virtualPointerAtStackOffset(size_t offset) {
@@ -262,8 +296,8 @@ struct BaselineStackBuilder
         return frame_;
     }
 
-    inline IonJSFrameLayout *topFrameAddress() {
-        return reinterpret_cast<IonJSFrameLayout *>(pointerAtStackOffset(0));
+    BufferPointer<IonJSFrameLayout> topFrameAddress() {
+        return pointerAtStackOffset<IonJSFrameLayout>(0);
     }
 
     //
@@ -279,7 +313,7 @@ struct BaselineStackBuilder
     //
     void *calculatePrevFramePtr() {
         // Get the incoming frame.
-        IonJSFrameLayout *topFrame = topFrameAddress();
+        BufferPointer<IonJSFrameLayout> topFrame = topFrameAddress();
         FrameType type = topFrame->prevType();
 
         // For OptimizedJS and Entry frames, the "saved" frame pointer in the baseline
@@ -312,8 +346,8 @@ struct BaselineStackBuilder
 #elif defined(JS_CPU_X64) || defined(JS_CPU_ARM)
         // On X64 and ARM, the frame pointer save location depends on the caller of the
         // the rectifier frame.
-        IonRectifierFrameLayout *priorFrame = (IonRectifierFrameLayout *)
-                                                    pointerAtStackOffset(priorOffset);
+        BufferPointer<IonRectifierFrameLayout> priorFrame =
+            pointerAtStackOffset<IonRectifierFrameLayout>(priorOffset);
         FrameType priorType = priorFrame->prevType();
         JS_ASSERT(priorType == IonFrame_OptimizedJS || priorType == IonFrame_BaselineStub);
 
@@ -456,7 +490,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     // Write struct BaselineFrame.
     if (!builder.subtract(BaselineFrame::Size(), "BaselineFrame"))
         return false;
-    BaselineFrame *blFrame = reinterpret_cast<BaselineFrame *>(builder.pointerAtStackOffset(0));
+    BufferPointer<BaselineFrame> blFrame = builder.pointerAtStackOffset<BaselineFrame>(0);
 
     // Initialize BaselineFrame::frameSize
     uint32_t frameSize = BaselineFrame::Size() + BaselineFrame::FramePointerOffset +
@@ -837,9 +871,11 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     // Copy arguments + thisv from BaselineStub frame.
     if (!builder.subtract((actualArgc + 1) * sizeof(Value), "CopiedArgs"))
         return false;
-    uint8_t *stubArgsEnd = builder.pointerAtStackOffset(builder.framePushed() - endOfBaselineStubArgs);
-    IonSpew(IonSpew_BaselineBailouts, "      MemCpy from %p", stubArgsEnd);
-    memcpy(builder.pointerAtStackOffset(0), stubArgsEnd, (actualArgc + 1) * sizeof(Value));
+    BufferPointer<uint8_t> stubArgsEnd =
+        builder.pointerAtStackOffset<uint8_t>(builder.framePushed() - endOfBaselineStubArgs);
+    IonSpew(IonSpew_BaselineBailouts, "      MemCpy from %p", stubArgsEnd.get());
+    memcpy(builder.pointerAtStackOffset<uint8_t>(0).get(), stubArgsEnd.get(),
+           (actualArgc + 1) * sizeof(Value));
 
     // Calculate frame size for descriptor.
     size_t rectifierFrameSize = builder.framePushed() - startOfRectifierFrame;
