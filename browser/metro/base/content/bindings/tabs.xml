@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="documenttab">
+    <content observes="bcast_urlbarState">
+      <xul:stack class="documenttab-container">
+        <xul:box anonid="thumbnail" class="documenttab-thumbnail" />
+        <xul:image anonid="favicon" class="documenttab-favicon"
+                   observes="bcast_urlbarState" width="26" height="26"/>
+
+        <xul:label anonid="title" class="documenttab-title" bottom="0" start="0" end="0" crop="end"/>
+        <xul:box anonid="selection" class="documenttab-crop"/>
+        <xul:box anonid="selection" class="documenttab-selection"/>
+        <xul:button anonid="close" class="documenttab-close" observes="bcast_urlbarState" end="0" top="0"
+                    onclick="event.stopPropagation(); document.getBindingParent(this)._onClose()"/>
+      </xul:stack>
+    </content>
+
+    <handlers>
+      <handler event="click" clickcount="1" action="this._onClick()"/>
+      <handler event="dblclick" action="this._onDoubleClick(); event.stopPropagation();"/>
+    </handlers>
+
+    <implementation>
+      <field name="_thumbnail" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail");</field>
+      <field name="_close" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "close");</field>
+      <field name="_title" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "title");</field>
+      <field name="_favicon" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "favicon");</field>
+      <field name="_container" readonly="true">this.parentNode;</field>
+
+      <method name="_onClick">
+        <body>
+          <![CDATA[
+            this._container.selectedTab = this;
+            let selectFn = new Function("event", this._container.parentNode.getAttribute("onselect"));
+            selectFn.call(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onDoubleClick">
+        <body>
+          <![CDATA[
+            this._container.selectedTab = this;
+            let selectFn = new Function("event", this._container.parentNode.getAttribute("ondbltap"));
+            selectFn.call(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onClose">
+        <body>
+          <![CDATA[
+            let callbackFunc = this._container.parentNode.getAttribute("onclosetab");
+            let closeFn = new Function("event", callbackFunc);
+            closeFn.call(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateTitle">
+        <parameter name="title"/>
+        <body>
+          <![CDATA[
+            this._title.value = title;
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateFavicon">
+        <parameter name="src"/>
+        <body>
+          <![CDATA[
+            this._favicon.src = src;
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateThumbnailSource">
+        <parameter name="browser"/>
+        <body>
+          <![CDATA[
+            this._thumbnail.style.backgroundImage = "-moz-element(#" + browser.id + ")";
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="tablist">
+    <content>
+      <xul:arrowscrollbox anonid="tabs-scrollbox" class="tabs-scrollbox" flex="1" orient="horizontal"
+        clicktoscroll="true" />
+    </content>
+
+    <handlers>
+      <handler event="dblclick" action="this._onDoubleClick();"/>
+    </handlers>
+
+    <implementation>
+      <field name="strip">document.getAnonymousElementByAttribute(this, "anonid", "tabs-scrollbox");</field>
+      <field name="_selectedTab">null</field>
+
+      <!-- Used by the chrome input handler -->
+      <property name="anonScrollBox"
+                readonly="true"
+                onget="return this.strip;"/>
+
+      <property name="selectedTab" onget="return this._selectedTab;">
+        <setter>
+          <![CDATA[
+            if (this._selectedTab)
+              this._selectedTab.removeAttribute("selected");
+
+            if (val)
+              val.setAttribute("selected", "true");
+
+            this._selectedTab = val;
+            this.strip.ensureElementIsVisible(val);
+          ]]>
+        </setter>
+      </property>
+
+      <method name="addTab">
+        <body>
+          <![CDATA[
+            let tab = document.createElement("documenttab");
+            this.strip.appendChild(tab);
+            return tab;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeTab">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            this.strip.removeChild(aTab);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onDoubleTap">
+        <body>
+          <![CDATA[
+            new Function("event", this.getAttribute("ondoubletap")).call();
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onDoubleClick">
+        <body>
+          <![CDATA[
+            // ignore mouse events if we're interacting with touch input
+            if (!InputSourceHelper.isPrecise)
+              return;
+            new Function("event", this.getAttribute("ondoubletap")).call();
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+</bindings>

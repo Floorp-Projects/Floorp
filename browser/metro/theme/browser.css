@@ -1,0 +1,1131 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%include defines.inc
+
+%define forward_transition_length 150ms
+%define forward_width 51px
+%define back_width 62px
+%define clipped_url_back_width 71px
+
+/* Sliding Toolbar/Tab Tray ------------------------------------------------- */
+
+#tray {
+  transition: transform 0.2s ease-out;
+  transform: translateY(-@tray_slide_height@);
+  width: 100%;
+}
+
+#progress-control {
+  display: block;
+  height: @progress_height@;
+  max-height: @progress_height@;
+  margin-bottom: -@progress_height@;
+  opacity: 1;
+  background: linear-gradient(to right,  @progress_start_color@,  @progress_end_color@);
+  transition-property: width;
+  transition-duration: .3s;
+  -moz-user-focus: ignore;
+}
+
+#progress-control:-moz-dir(rtl) {
+  background: linear-gradient(to left,  @progress_start_color@,  @progress_end_color@);
+}
+
+#progress-control[fade] {
+  opacity: 0;
+  transition-property: width, opacity;
+  transition-duration: .3s, .5s;
+  transition-timing-function: ease-in, ease-in;
+}
+
+/* in non-tabsonly mode the navigation bar and tab tray float over content. In
+   tabsonly mode they are always visible and offset content. */
+#tray:not([tabsonly=true]) {
+  position: fixed;
+}
+
+#tray[visible][expanded] {
+  transform: none;
+}
+
+#tray[startpage],
+#tray[visible]:not([expanded])  {
+  transform: translateY(-@tabs_height@);
+}
+
+/* Tabs --------------------------------------------------------------------- */
+
+#tabs-container {
+  background: @panel_dark_color@ @panel_dark_background@;
+  padding: 0;
+  -moz-padding-start: @metro_spacing_xnormal@;
+  width: 100%;
+}
+
+#tabs {
+  -moz-padding-start: @metro_spacing_large@;
+}
+
+#tabs .tabs-list {
+  display: block;
+  -moz-user-focus: ignore;
+  padding: 0;
+  background-color: transparent;
+  margin: 0;
+  overflow: auto;
+}
+
+#tabs > .tabs-scrollbox > .arrowscrollbox-scrollbox {
+  overflow: hidden;
+}
+
+#tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-up,
+#tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-down {
+  visibility: collapse !important;
+}
+#tabs > .tabs-scrollbox > .scrollbutton-up {
+  list-style-image: url("images/tab-arrows.png") !important;
+  -moz-image-region: rect(15px 58px 63px 14px) !important;
+}
+#tabs > .tabs-scrollbox > .scrollbutton-up:hover {
+  -moz-image-region: rect(14px 102px 62px 58px) !important;
+}
+#tabs > .tabs-scrollbox > .scrollbutton-up:active {
+  -moz-image-region: rect(14px 152px 62px 108px) !important;
+}
+#tabs > .tabs-scrollbox > .scrollbutton-up[disabled="true"] {
+  -moz-image-region: rect(15px 196px 63px 152px) !important;
+}
+
+#tabs > .tabs-scrollbox > .scrollbutton-down {
+  list-style-image: url("images/tab-arrows.png") !important;
+  -moz-image-region: rect(73px 58px 121px 14px) !important;
+}
+#tabs > .tabs-scrollbox > .scrollbutton-down:hover {
+  -moz-image-region: rect(72px 102px 120px 58px) !important;
+}
+#tabs > .tabs-scrollbox > .scrollbutton-down:active {
+  -moz-image-region: rect(72px 152px 120px 108px) !important;
+}
+#tabs > .tabs-scrollbox > .scrollbutton-down[disabled="true"] {
+  -moz-image-region: rect(73px 196px 121px 152px) !important;
+}
+
+
+@-moz-keyframes open-documenttab {
+  0% {
+    opacity: 0;
+    transform: scale(0, 0);
+  }
+  
+  100% {
+    opacity: 1;
+    transform: scale(1, 1);
+  }
+}
+
+#tray:not([tabsonly=true]) documenttab > .documenttab-container {
+  animation: open-documenttab;
+  animation-duration: 0.4s;
+  animation-timing-function: ease-out;
+}
+
+#tray:not([tabsonly=true]) .documenttab-favicon {
+  visibility: collapse;
+}
+
+.documenttab-thumbnail {
+  margin: @metro_spacing_normal@ @metro_spacing_snormal@;
+  background: white none center top no-repeat;
+  background-size: cover;
+  width: @thumbnail_width@;
+  height: @thumbnail_height@;
+}
+
+.documenttab-title {
+  margin: @metro_spacing_normal@ @metro_spacing_snormal@;
+  margin-top: 0;
+  font-size: @metro_font_normal@;
+  width: @thumbnail_width@;
+  padding: 4px @metro_spacing_snormal@ 8px;
+  
+  background: #000;
+  opacity: 0.95;
+  color: #fff;
+  box-shadow: 0 0 @metro_spacing_snormal@ rgba(0, 0, 0, 0.25);
+}
+
+.documenttab-crop {
+  background: transparent url("chrome://browser/skin/images/tab-crop.png") 50% 50% no-repeat;
+}
+
+.documenttab-selection {
+  background: transparent -moz-image-rect(url("chrome://browser/skin/images/tab-overlay.png"), 0%, 100%, 50%, 0%) 50% 50% no-repeat;
+}
+
+documenttab[selected=true] .documenttab-selection {
+  background: transparent -moz-image-rect(url("chrome://browser/skin/images/tab-overlay.png"), 50%, 100%, 100%, 0%) 50% 50% no-repeat;
+}
+
+.documenttab-close {
+  background: none !important;
+  padding: @metro_spacing_small@ !important;
+  margin-top: @metro_spacing_snormal@;
+  -moz-margin-end: @metro_spacing_xsmall@;
+  border-color: transparent !important;
+  list-style-image: url("chrome://browser/skin/images/closetab-default.png");
+}
+
+#tray[tabsonly=true] {
+  transform: none !important;
+}
+
+#tray[tabsonly=true] #tabs {
+  -moz-padding-start: @metro_spacing_small@;
+}
+
+#tray[tabsonly=true] #tabs-controls {
+  -moz-box-align: center;
+  -moz-box-orient: horizontal;
+  -moz-box-pack: end;
+  margin: 0;
+}
+
+#tray[tabsonly=true] #tabs-controls toolbarbutton {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#tray[tabsonly=true] documenttab {
+  height: @toolbar_height@;
+  margin: 0 -@tab_compression@;
+}
+
+#tray[tabsonly=true] documenttab:first-child {
+  -moz-margin-start: 0;
+}
+
+#tray[tabsonly=true] documenttab:last-child {
+  -moz-margin-end: 0;
+}
+
+#tray[tabsonly=true] .documenttab-thumbnail,
+#tray[tabsonly=true] .documenttab-selection,
+#tray[tabsonly=true] .documenttab-crop {
+  visibility: collapse;
+}
+
+#tray[tabsonly=true] .documenttab-container {
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  -moz-box-align: center;
+  padding: 0 @tab_spacing@;
+}
+
+#tray[tabsonly=true] .documenttab-favicon {
+  -moz-margin-start: @metro_spacing_normal@;
+  -moz-margin-end: @metro_spacing_snormal@;
+}
+
+#tray[tabsonly=true] .documenttab-title {
+  padding: 0;
+  margin: 0;
+  height: auto;
+  background: 0 none;
+  opacity: 1;
+  box-shadow: none;
+  width: @tab_inner_width@;
+}
+
+#tray[tabsonly=true] .documenttab-close {
+  list-style-image: url("chrome://browser/skin/images/closetab-tab.png");
+  position: relative;
+  padding: 0 !important;
+  z-index: 1;
+}
+
+#tray[tabsonly=true] documenttab[selected=true] {
+  background-color: @panel_light_color@;
+  background-image: url("chrome://browser/skin/images/tab-selection-left.png"),
+                    url("chrome://browser/skin/images/tab-selection-right.png"),
+                    @panel_light_background@;
+  background-position: left top, right top, center center;
+  background-repeat: no-repeat, no-repeat, repeat;
+}
+
+#tray[tabsonly=true] documenttab[selected=true] .documenttab-close {
+  list-style-image: url("chrome://browser/skin/images/closetab-tabselected.png");
+}
+
+#page,
+.selection-overlay {
+  -moz-stack-sizing: ignore;
+}
+
+.selection-overlay:-moz-focusring {
+  outline: 0 !important;
+}
+
+.selection-overlay-hidden {
+  display: none;
+}
+
+#tray[tabsonly=true] documenttab[selected=true] .documenttab-title {
+  color: #000;
+}
+
+#tabs-controls {
+  margin-top: @metro_spacing_small@;
+  -moz-box-align: start;
+  -moz-box-orient: vertical;
+  padding: 0 @metro_spacing_small@;
+}
+
+#tabs-controls toolbarbutton {
+  margin: @toolbar_vertical_spacing@ @toolbar_horizontal_spacing@;
+}
+
+#newtab-button {
+  list-style-image: url("images/newtab-default.png");
+}
+
+/* Toolbar ------------------------------------------------------------------ */
+
+#toolbar-container {
+  background: @panel_dark_color@ @panel_dark_background@;
+  border-bottom: @border_width_small@ solid @border_color@;
+  -moz-padding-end: @padding_large@;
+  width: 100%;
+}
+
+#toolbar-container[filtering],
+#toolbar-container[startpage] {
+  border-bottom-width: 0;
+}
+
+#toolbar {
+  -moz-appearance: none;
+  -moz-box-align: center;
+  padding: 0;
+  -moz-padding-end: @metro_spacing_xxxlarge@;
+  -moz-padding-start: @metro_spacing_xxnormal@;
+  border: none;
+  border-top: @metro_border_thin@ solid #293642;
+  background-color: @panel_light_color@;
+  background-image: url("chrome://browser/skin/images/tab-selection-right.png"),
+                    linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.5)),
+                    @panel_light_background@;
+  background-repeat: no-repeat, repeat-x;
+  background-position: right bottom;
+  min-height: @toolbar_height@;
+}
+
+#toolbar[dir=ltr] {
+  background-position: left bottom;
+}
+
+#toolbar toolbarbutton {
+  margin: 0 @toolbar_horizontal_spacing@;
+}
+
+/* Unified back-forward buttons */
+/* TODO: Pull code from mainline firefox to support RTL. */
+#unified-back-forward-button {
+  -moz-box-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+#back-button {
+  -moz-appearance: none;
+  margin: 0 !important;
+  margin-right: -@metro_spacing_normal@ !important;
+  list-style-image: url(chrome://browser/skin/images/back.png);
+  -moz-image-region: rect(0 48px 48px 0);
+  position: relative;
+  z-index: 1;
+  padding: 0 !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+}
+
+#back-button[disabled="true"] {
+  -moz-image-region: rect(0 96px 48px 48px);
+}
+
+#forward-button {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.5)), @panel_light_background@;
+  border: @metro_border_thick@ solid rgb(192, 198, 204);
+  margin: 0 !important;
+  padding: 0 !important;
+  -moz-padding-start: 17px !important;
+  -moz-padding-end: 7px !important;
+  transition: opacity @forward_transition_length@ ease-out;
+  list-style-image: url(chrome://browser/skin/images/forward.png);
+}
+
+/* XXX: Hack to move the image up one pixel because
+        it's not vertically centered for some reason. */
+#forward-button image {
+  margin: -1px 0 1px 0 !important;
+}
+
+#unified-back-forward-button > #forward-button[disabled="true"] {
+  opacity: 0;
+}
+
+/* URL bar */
+#unified-back-forward-button + #urlbar-container {
+  margin: 0;
+  padding: 0;
+  padding-left: @back_width@;
+  -moz-margin-start: -@forward_width@;
+  -moz-margin-end: @metro_spacing_normal@;
+  position: relative;
+  pointer-events: none;
+  
+  border: @metro_border_thick@ solid @urlbar_border_color@;
+  -moz-border-start: 0 none;
+  background: @field_background_color@;
+}
+
+#unified-back-forward-button + #urlbar-container > #urlbar {
+  -moz-border-start: none;
+  pointer-events: all;
+  transition: margin-left @forward_transition_length@ ease-out;
+}
+
+#unified-back-forward-button[forwarddisabled="true"] + #urlbar-container {
+  clip-path: url("chrome://browser/content/browser.xul#back-button-clip-path");
+  padding-left: @clipped_url_back_width@;
+}
+
+#unified-back-forward-button[forwarddisabled="true"] + #urlbar-container > #urlbar {
+  margin-left: -@forward_width@;
+}
+
+/* Identity widget */
+#identity-icon {
+  width: @metro_spacing_xxnormal@;
+  height: @metro_spacing_xxnormal@;
+  margin: 0;
+  -moz-margin-end: @metro_spacing_small@;
+  padding: 0;
+  list-style-image: url(chrome://browser/skin/images/identity-icons-generic.png);
+}
+
+#identity-box[mode="verifiedDomain"] > #identity-icon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/images/identity-icons-https.png);
+}
+ 
+#identity-box[mode="verifiedIdentity"] > #identity-icon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
+}
+
+/* Main URL textbox */
+#urlbar-edit {
+  margin: 0 !important;
+  min-height: @urlbar_edit_height@;
+  -moz-appearance: none !important;
+  border-radius: 0;
+  border: 0 none !important;
+  padding: 0 !important;
+}
+
+#urlbar-edit :invalid {
+  box-shadow: none;
+}
+
+/* Combined stop-reload button */
+#tool-reload {
+  list-style-image: url("chrome://browser/skin/images/reload.png");
+}
+
+#tool-stop {
+  list-style-image: url("chrome://browser/skin/images/stop-hdpi.png");
+}
+
+#urlbar-icons[mode="loading"] > #tool-reload {
+  visibility: collapse;
+}
+
+#urlbar-icons[mode="edit"] > #tool-stop,
+#urlbar-icons[mode="view"] > #tool-stop {
+  visibility: collapse;
+}
+
+/* Toggle that displays the tab bar */
+#toolbar-transition {
+  -moz-padding-end: @metro_spacing_snormal@;
+  background: @panel_dark_color@ @panel_dark_background@;
+}
+
+#tool-new-tab {
+  margin: 0;
+  -moz-margin-start: -@metro_spacing_normal@;
+  list-style-image: url("images/newtab-default.png");
+  transition: opacity ease-out 0.2s;
+}
+
+/* Hide the tab toggle if the tabs are visible */
+#tray[visible][expanded] #tool-new-tab {
+  opacity: 0;
+}
+
+/* Hide the tab toggle if we're showing classic tabs or we're snap-viewed. */
+#toolbar[viewstate="snapped"],
+#tray[tabsonly=true] #toolbar {
+  background: @panel_light_color@ @panel_light_background@;
+  -moz-padding-end: 0;
+}
+
+#toolbar-container[viewstate="snapped"],
+#tray[tabsonly=true] #toolbar-container {
+  -moz-padding-end: 0;
+}
+
+#toolbar-transition[viewstate="snapped"],
+#tray[tabsonly=true] #toolbar-transition {
+  visibility: collapse;
+}
+
+/* If we're in the small snap view, compress and simplify the UI. */
+#tray[visible][expanded][viewstate="snapped"] {
+  margin-top: -@tabs_height@ !important;
+}
+
+#toolbar[viewstate="snapped"] {
+  -moz-padding-end: 0;
+}
+
+#unified-back-forward-button[viewstate="snapped"] + #urlbar-container {
+  -moz-margin-end: 0;
+}
+
+/* App Bar ----------------------------------------------------------------- */
+
+appbar {
+  display: block;
+  position: fixed;
+  height: @toolbar_height@;
+  bottom: 0;
+  transform: translateY(@toolbar_height@);
+  transition: transform 0.2s ease-out;
+  width: 100%;
+}
+
+appbar toolbar {
+  border-top: 1px solid @appbar_top_border@;
+  border-bottom: 0px;
+  height: @toolbar_height@;
+  -moz-appearance: none;
+  background-color: @appbar_color@;
+  -moz-box-align: center;
+  width: 100%;
+}
+
+appbar toolbarbutton {
+  float: left;
+  border-width: 0px;
+  margin: 0 @toolbar_horizontal_spacing@;
+  padding: 0;
+  /* Don't inherit background-color from toolbarbutton[checked="true"] */
+  background-color: transparent;
+}
+
+appbar toolbarbutton[disabled="true"] {
+  visibility: collapse;
+}
+
+#appbar:not([viewstate="snapped"])[visible] {
+  transform: none;
+}
+
+#appbar toolbarbutton {
+  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
+  -moz-image-region: rect(0px, 200px, 40px, 160px); /* Gear icon is default. */
+}
+#appbar toolbarbutton:hover {
+  -moz-image-region: rect(40px, 200px, 80px, 160px);
+}
+#appbar toolbarbutton:active {
+  -moz-image-region: rect(80px, 200px, 120px, 160px);
+}
+
+/* About flyout pane */
+
+#about-flyoutpanel {
+  width: 350px;
+  background-image:url('chrome://browser/skin/images/about-footer.png');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: right bottom;
+}
+
+#about-flyoutpanel label.text-link {
+  text-decoration: none;
+  color: #1167bd;
+}
+
+#about-product-label {
+ font-weight: bold;
+}
+
+#about-version-label {
+ margin-top: 11pt;
+}
+
+#about-policy-label {
+ margin-top: 24pt;
+}
+
+/* Application-Specific */
+#download-button {
+  -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
+}
+#download-button:hover {
+  -moz-image-region: rect(40px, 40px, 80px, 0px) !important;
+}
+#download-button:active {
+  -moz-image-region: rect(80px, 40px, 120px, 0px) !important;
+}
+
+#plugin-button {
+  -moz-image-region: rect(0px, 80px, 40px, 40px) !important;
+}
+#plugin-button:hover {
+  -moz-image-region: rect(40px, 80px, 80px, 40px) !important;
+}
+#plugin-button:active {
+  -moz-image-region: rect(80px, 80px, 120px, 40px) !important;
+}
+
+/* Page-Specific */
+#zoomout-button {
+  -moz-image-region: rect(0px, 120px, 40px, 80px) !important;
+}
+#zoomout-button:hover {
+  -moz-image-region: rect(40px, 120px, 80px, 80px) !important;
+}
+#zoomout-button:active {
+  -moz-image-region: rect(80px, 120px, 120px, 80px) !important;
+}
+
+#zoomin-button {
+  -moz-image-region: rect(0px, 160px, 40px, 120px) !important;
+}
+#zoomin-button:hover {
+  -moz-image-region: rect(40px, 160px, 80px, 120px) !important;
+}
+#zoomin-button:active {
+  -moz-image-region: rect(80px, 160px, 120px, 120px) !important;
+}
+
+#pin-button {
+  -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
+}
+#pin-button:hover {
+  -moz-image-region: rect(40px, 240px, 80px, 200px) !important;
+}
+#pin-button:active {
+  -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
+}
+#pin-button[checked="true"] {
+  -moz-image-region: rect(0px, 280px, 40px, 240px) !important;
+}
+
+#star-button {
+  -moz-image-region: rect(0px, 360px, 40px, 320px) !important;
+}
+#star-button:hover {
+  -moz-image-region: rect(40px, 360px, 80px, 320px) !important;
+}
+#star-button:active,
+#star-button[checked="true"] {
+  -moz-image-region: rect(80px, 360px, 120px, 320px) !important;
+}
+
+/* Start UI (Autocomplete + New Tab Page) ----------------------------------- */
+
+#start-container {
+  display: none;
+}
+
+#start-container[startpage],
+#start-container[filtering] {
+  display: -moz-box;
+}
+
+#start-scrollbox {
+  overflow: hidden;
+}
+
+/* if autocomplete is set, hide both start pages,
+ *  else hide the autocomplete screen */
+#start-container[filtering] > .start-page,
+#start-container:not([filtering]) > #start-autocomplete {
+  visibility: collapse;
+}
+
+/* if snapped, hide the fullscreen awesome screen, if viewstate is anything
+ *  other than snapped, hide the snapped awesome screen */
+#start[viewstate="snapped"],
+#snapped-start:not([viewstate="snapped"]) {
+  visibility: collapse;
+}
+
+/* Browser Content Ares ----------------------------------------------------- */
+
+/* Hide the browser while the start UI is visible */
+#content-viewport[startpage],
+#content-viewport[filtering] {
+  visibility: collapse;
+}
+
+#browsers {
+  background: white;
+}
+
+/* Panel UI ---------------------------------------------------------------- */
+
+#panel-container {
+  padding: 60px 40px;
+}
+
+#panel-close-button {
+  background: transparent;
+  border: 0 none;
+  -moz-appearance: none;
+  margin: 0;
+  -moz-margin-end: 40px;
+  list-style-image: url(chrome://browser/skin/images/back.png);
+  -moz-image-region: rect(0 48px 48px 0);
+  padding: 0;
+  min-height: 48px;
+  max-height: 48px;
+  -moz-box-pack: center;
+}
+
+#panel-close-button[disabled="true"] {
+  -moz-image-region: rect(0 96px 48px 48px);
+}
+
+#panel-view-switcher {
+  border: 0 none !important;
+  color: #000 !important;
+  background: transparent;
+  padding: 0;
+  font-size: @metro_font_xlarge@;
+  font-weight: 100;
+  margin: 0;
+}
+
+#panel-items {
+  padding-top: 20px;
+  -moz-padding-start: 88px;
+}
+
+/* Preferences Section - Panel UI ------------------------------------------ */
+
+#prefs-flyoutpanel {
+  width: 400px;
+}
+
+/* Lay out each <setting> in a single row */
+setting {
+  min-height: @touch_row@; /* row size */
+  -moz-box-align: center;
+  -moz-box-orient: horizontal;
+}
+
+/* ...except for some exceptions */
+.setting-expanded {
+  -moz-box-align: start;
+  -moz-box-orient: vertical;
+}
+
+setting > vbox {
+  -moz-box-flex: 1;
+}
+
+settings {
+  margin-top: 32px;
+}
+
+.settings-title {
+  font-weight: bold;
+}
+
+/* <setting> elements that are not in a <settings> group get special treatment */
+#prefs-flyoutpanel > setting {
+  margin-top: 16px;
+}
+#prefs-flyoutpanel > setting .preferences-title {
+  font-weight: bold
+}
+
+setting[type="integer"] > .preferences-alignment,
+setting[type="string"] > .preferences-alignment {
+  -moz-box-flex: 3;
+}
+
+setting[type="file"] > .preferences-alignment,
+setting[type="directory"] > .preferences-alignment {
+  -moz-box-align: center;
+}
+
+.options-box {
+  -moz-margin-start: 28px;  /* sized based on the 32px addon image */
+}
+
+.options-box > setting:last-child {
+  border-bottom: 0;
+}
+
+.preferences-description {
+  font-size: @font_small@ !important;
+  color: grey;
+}
+
+.preferences-description:empty {
+  display: none;
+}
+
+/* Console Section - Panel UI ---------------------------------------------- */
+
+#console-filter-warnings,
+#console-filter-messages {
+  visibility: visible;
+}
+
+@media (max-width: 499px) {
+  #console-filter-warnings,
+  #console-filter-messages {
+    visibility: collapse;
+  }
+}
+
+.console-error-msg,
+.console-msg-text {
+  white-space: pre-wrap;
+}
+
+/* Identity popup   -------------------------------------------------------- */
+
+#identity-popup-container {
+  padding: @padding_normal@; /* core spacing */
+  padding-bottom: @padding_xxxnormal@;
+}
+
+/* Popup Icons */
+#identity-popup-icon {
+  padding: 0;
+  list-style-image: url("chrome://browser/skin/images/identity-default-hdpi.png");
+}
+
+#identity-container[mode="verifiedIdentity"] > box > #identity-popup-icon {
+  list-style-image: url("chrome://browser/skin/images/identity-ev-hdpi.png");
+}
+
+#identity-container[mode="verifiedDomain"] > box > #identity-popup-icon {
+  list-style-image: url("chrome://browser/skin/images/identity-ssl-hdpi.png");
+}
+
+/* Popup Body Text */
+#identity-popup-content-box {
+  -moz-padding-start: @padding_normal@; /* core spacing */
+  font-size: @font_small@ !important;
+  white-space: pre-wrap;
+}
+
+/* let the text flow into a second row, if needed */
+#identity-popup-runBy-box {
+  display: block;
+}
+
+#identity-popup-content-box.unknownIdentity > box > #identity-popup-connectedToLabel,
+#identity-popup-content-box.unknownIdentity > #identity-popup-runBy-box,
+#identity-popup-content-box.unknownIdentity > box > #identity-popup-content-host,
+#identity-popup-content-box.verifiedIdentity > box > #identity-popup-connectedToLabel2,
+#identity-popup-content-box.verifiedDomain > box > #identity-popup-connectedToLabel2 {
+  display: none;
+}
+
+#identity-popup-encryption-label,
+#identity-popup-content-verifier {
+  font-size: @font_tiny@ !important;
+}
+
+#identity-popup-content-host,
+#identity-popup-content-owner {
+  font-weight: bold;
+}
+
+#identity-popup-encryption-icon {
+  list-style-image: url("chrome://browser/skin/images/unlocked-hdpi.png");
+}
+
+#identity-container[mode="verifiedIdentity"] > hbox > vbox > #identity-popup-encryption-icon ,
+#identity-container[mode="verifiedDomain"] > hbox > vbox > #identity-popup-encryption-icon {
+  list-style-image: url("chrome://browser/skin/images/locked-hdpi.png");
+}
+
+#identity-popup-encryption-box {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  -moz-box-pack: start;
+}
+
+#identity-popup-connected-box {
+  -moz-box-orient: horizontal;
+}
+
+#identity-popup-content-supplemental {
+  white-space: normal;
+}
+
+/* Context Menu ------------------------------------------------------------ */
+
+#context-commands richlistitem[disabled="true"] {
+  display: none;
+}
+
+/* Page Actions and Prompt ------------------------------------------------- */
+
+.action-buttons,
+#pageactions-container {
+  background: transparent;
+  border-top: @border_width_tiny@ solid rgb(205,205,205);
+  padding: 0;
+  -moz-user-focus: ignore;
+}
+
+.action-buttons,
+#pageactions-container {
+  display: inline-block;
+}
+
+.action-button,
+pageaction {
+  -moz-border-top-colors: white;
+  -moz-border-right-colors: rgb(175,175,175);
+  -moz-border-bottom-colors: rgb(175,175,175);
+  -moz-border-left-colors: white;
+  border-style: solid;
+  border-width: @border_width_tiny@ !important;
+  height: @touch_button_xlarge@;
+  min-height: @touch_button_xlarge@;
+  width: 100%;
+  min-width: @touch_action_minwidth@; /* keep the button from being too narrow */
+}
+
+.action-button {
+  -moz-box-align: center;
+}
+
+.action-button[disabled="true"] {
+  pointer-events: none;
+  color: #aaa !important;
+}
+
+.action-button[selected="true"] {
+  background: transparent;
+}
+
+/* Override button styles */
+.action-button {
+  margin: 0;
+  -moz-border-image: none !important;
+  border-radius: 0;
+  margin: 0;
+  background: transparent;
+}
+
+.action-button > .button-box {
+  padding: 0 @padding_small@ @padding_tiny@ @padding_xsmall@ !important;
+}
+
+.action-button > .button-box > .button-icon {
+  -moz-margin-end: @margin_normal@;
+}
+
+@media (min-width: 500px) {
+  .action-button,
+  pageaction {
+    width: 50%;
+  }
+
+  .action-button:last-child:nth-child(odd),
+  pageaction.odd.last-child {
+    width: 100%;
+  }
+}
+
+.action-button:not([disabled]):hover:active,
+pageaction:not([disabled]):hover:active {
+  background: url("chrome://browser/skin/images/popup-selected-item-hdpi.png") repeat-x !important;
+  background-origin: border-box !important;
+  background-clip: border-box !important;
+  -moz-border-top-colors: transparent;
+  -moz-border-left-colors: transparent;
+}
+
+pageaction > hbox > .pageaction-image {
+  width: 32px;
+  height: 32px;
+  -moz-margin-end: @margin_normal@;
+}
+
+pageaction:not([image]) > hbox >.pageaction-image {
+  width: 0;
+}
+
+.action-button,
+.pageaction-title {
+  font-size: @font_normal@ !important;
+  color: #414141 !important;
+}
+
+.pageaction-desc {
+  font-size: @font_tiny@ !important;
+  color: #414141;
+}
+
+.pageaction-desc[value=""] {
+  display: none;
+}
+
+#share-title {
+  font-size: @font_small@;
+  padding: @padding_small@;
+}
+
+/* Alert Popup -------------------------------------------------------------- */
+#alerts-container {
+  color: white;
+  background-color: #5e6166;
+  border: @border_width_small@ solid #767973;
+  border-radius: @border_radius_normal@;
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
+  padding: @padding_normal@; /* core spacing on top/bottom */
+  margin-bottom: @margin_large@;
+  transition-property: opacity;
+  transition-duration: 0.5s;
+  opacity: 0;
+}
+
+#alerts-container.showing {
+  opacity: 1;
+}
+
+#alerts-title {
+  font-size: @font_small@ !important;
+}
+
+#alerts-text {
+  font-size: @font_xsmall@ !important;
+  white-space: pre;
+}
+
+#alerts-container {
+  -moz-margin-end: @margin_large@;
+}
+
+/* helperapp (save-as) popup ----------------------------------------------- */
+#helperapp-target {
+  font-size: @font_small@ !important;
+}
+
+/* Sync Setup ------------------------------------------------------------- */
+.syncsetup-code {
+  display: block !important;
+  margin: @metro_spacing_small@;
+  padding: @metro_spacing_xsmall@ @metro_spacing_snormal@;
+  background: @field_background_color@;
+  border: @metro_border_thick@ solid @field_foreground_color@ !important;
+  color: @field_foreground_color@;
+  font-size: @metro_font_large@ !important;
+  letter-spacing: 0.2em;
+  text-align: left;
+  width: 250px;
+  -moz-box-flex: 1;
+}
+
+.syncsetup-label {
+  color: #fff;
+}
+
+#syncsetup-customserver {
+  -moz-margin-start: @margin_xnormal@;
+}
+
+#syncsetup-waiting {
+  padding: 2em 0 0 0;
+}
+
+#syncsetup-waiting-top {
+  padding: 1em;
+}
+
+/* content scrollbars */
+.scroller {
+  opacity: 0;
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  -moz-border-top-colors: none !important;
+  -moz-border-bottom-colors: none !important;
+  -moz-border-right-colors: none !important;
+  -moz-border-left-colors: none !important;
+  border-radius: @border_radius_tiny@;
+  border: @border_width_tiny@ solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.scroller[panning="true"] {
+  opacity: 1;
+}
+
+.scroller[orient="vertical"] {
+  min-width: @scroller_thickness@;
+  width: @scroller_thickness@;
+  min-height: @scroller_minimum@;
+}
+
+.scroller[orient="horizontal"] {
+  min-height: @scroller_thickness@;
+  height: @scroller_thickness@;
+  min-width: @scroller_minimum@;
+}
+
+/* Text selection handles */
+
+#selectionhandle-start,
+#selectionhandle-end {
+  border: 0px solid gray;
+  padding: 0px;
+  margin-top: -30px;
+  margin-left: -18px;
+}
+
+#selectionhandle-start {
+  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
+}
+
+#selectionhandle-end {
+  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
+}
+
+/* Capture picker ------------------------------------------------------------- */
+
+#capturepicker-video {
+  border: @border_width_tiny@ solid white;
+}
+
+#capturepicker-container {
+  margin: @margin_normal@;
+}
+
+#capturepicker-container.vertical {
+  height: 330px;
+}

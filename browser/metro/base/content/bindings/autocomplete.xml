@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<!DOCTYPE bindings [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+]>
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="autocomplete" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
+    <implementation>
+      <constructor>
+          <![CDATA[
+            this.minResultsForPopup = 0;
+            this.popup._input = this;
+          ]]>
+      </constructor>
+      <method name="openPopup">
+        <body>
+          <![CDATA[
+            this.popup.openAutocompletePopup(this, null);
+          ]]>
+        </body>
+      </method>
+
+      <method name="closePopup">
+        <body>
+          <![CDATA[
+            this.popup.closePopup(this, null);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="dblclick" phase="capturing">
+        <![CDATA[
+          let selectAll = Services.prefs.getBoolPref("browser.urlbar.doubleClickSelectsAll");
+          if (selectAll)
+            this.select();
+        ]]>
+      </handler>
+
+      <handler event="contextmenu" phase="capturing">
+        <![CDATA[
+          let box = this.inputField.parentNode;
+          box.showContextMenu(this, event, true);
+        ]]>
+      </handler>
+      
+      <handler event="keypress" phase="capturing" keycode="VK_RETURN">
+        <![CDATA[
+          event.preventDefault();
+          event.stopPropagation();
+
+          this.popup.handleCompletion();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="autocomplete-popup">
+    <content orient="horizontal">
+      <xul:vbox id="results-vbox" class="meta-section viewable-height">
+        <xul:label class="meta-section-title" value="&autocompleteResultsHeader.label;"/>
+        <richgrid id="results-richgrid" anonid="results" seltype="single" flex="1"/>
+      </xul:vbox>
+
+      <xul:vbox id="searches-vbox" class="meta-section viewable-height">
+        <xul:label class="meta-section-title" value="&autocompleteSearchesHeader.label;"/>
+        <richgrid id="searches-richgrid" anonid="searches" seltype="single" flex="1"/>
+      </xul:vbox>
+    </content>
+
+    <implementation implements="nsIAutoCompletePopup, nsIObserver">
+      <constructor>
+        <![CDATA[
+          Services.obs.addObserver(this, "browser-search-engine-modified", false);
+          this.updateSearchEngines();
+          this._results.controller = this;
+          this._searches.controller = this;
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          Services.obs.removeObserver(this, "browser-search-engine-modified");
+        ]]>
+      </destructor>
+
+      <method name="handleItemClick">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            if (aItem.control == this._searches) {
+              let engineName = aItem.getAttribute("value");
+              BrowserUI.doOpenSearch(engineName);
+            } else {
+              let url = aItem.getAttribute("value");
+              Browser.loadURI(url);
+            }
+          ]]>
+        </body>
+      </method>
+
+    <!-- nsIAutocompleteInput -->
+
+      <field name="_input">null</field>
+      <field name="_popupOpen">false</field>
+
+      <property name="overrideValue" readonly="true" onget="return null;"/>
+
+      <property name="selectedItem">
+        <getter>
+          <![CDATA[
+            return this._isGridBound(this._results) ? this._results.selectedItem : null;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            return this._isGridBound(this._results) ? this._results.selectedItem : null;
+          ]]>
+        </setter>
+      </property>
+      <property name="selectedIndex">
+        <getter>
+          <![CDATA[
+            return this._isGridBound(this._results) ? this._results.selectedIndex : -1;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            return this._isGridBound(this._results) ? this._results.selectedIndex : -1;
+          ]]>
+        </setter>
+      </property>
+
+      <property name="input" readonly="true" onget="return this._input;"/>
+      <property name="popupOpen" readonly="true" onget="return this._popupOpen;"/>
+      <property name="_matchCount" readonly="true" onget="return this.input.controller.matchCount;"/>
+
+      <method name="openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body>
+          <![CDATA[
+            if (this._popupOpen)
+              return;
+
+            ContextUI.dismissAppbar();
+
+            this._input = aInput;
+            this._popupOpen = true;
+            this._grid = this._results;
+
+            this.clearSelection();
+            this.invalidate();
+            this._fire("autocompletestart");
+          ]]>
+        </body>
+      </method>
+
+      <method name="gridBoundCallback">
+        <body>
+          <![CDATA[
+            this.updateResults();
+          ]]>
+        </body>
+      </method>
+
+      <method name="closePopup">
+        <body>
+          <![CDATA[
+            if (!this._popupOpen)
+              return;
+
+            this.input.controller.stopSearch();
+            this._popupOpen = false;
+            this._fire("autocompleteend");
+          ]]>
+        </body>
+      </method>
+
+      <method name="invalidate">
+        <body>
+          <![CDATA[
+            if (!this._popupOpen)
+              return;
+
+            this.updateResults();
+            this.updateSearchEngineSubtitles();
+          ]]>
+        </body>
+      </method>
+
+      <method name="selectBy">
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
+        <body>
+          <![CDATA[
+            let handleOnSelect = this._handleOnSelect;
+            this._handleOnSelect = false;
+
+            // TODO <jwilde>: Pressing page up/down should jump between rows,
+            //                not just items in the grid
+
+            // Move between grids if we're at the edge of one
+            if ((this._grid.isSelectionAtEnd && !aReverse) ||
+                (this._grid.isSelectionAtStart && aReverse)) {
+              let index = aReverse ? this._otherGrid.itemCount - 1 : 0;
+              this._otherGrid.selectedIndex = index;
+            } else {
+              this._grid.offsetSelection(aReverse ? -1 : 1);
+            }
+
+            this._handleOnSelect = handleOnSelect;
+          ]]>
+        </body>
+      </method>
+
+    <!-- nsIObserver -->
+
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body>
+          <![CDATA[
+            if (aTopic != "browser-search-engine-modified")
+              return;
+
+            switch (aData) {
+              case "engine-added":
+              case "engine-removed":
+              case "engine-changed":
+                this.updateSearchEngines();
+                break;
+              case "engine-current":
+                // Not relevant
+                break;
+            }
+          ]]>
+        </body>
+      </method>
+
+    <!-- Interface for updating various components of the popup. -->
+
+      <method name="updateResults">
+        <body>
+          <![CDATA[
+            if (!this._isGridBound(this._results))
+              return;
+            if (!this.input)
+              return;
+
+            let controller = this.input.controller;
+            let lastMatch = this._matchCount - 1;
+            let iterCount = Math.max(this._results.itemCount, this._matchCount);
+
+            // Swap out existing items for new search hit results
+            for (let i = 0; i < iterCount; i++) {
+              if (i > lastMatch) {
+                let lastItem = this._results.itemCount - 1;
+                this._results.removeItemAt(lastItem);
+                continue;
+              }
+
+              let value = controller.getValueAt(i);
+              let label = controller.getCommentAt(i) || value;
+              let iconURI = controller.getImageAt(i);
+
+              let item = this._results.getItemAtIndex(i);
+              if (item == null) {
+                item = this._results.appendItem(label, value);
+                item.setAttribute("autocomplete", "true");
+              } else {
+                item.setAttribute("label", label);
+                item.setAttribute("value", value);
+              }
+
+              item.setAttribute("iconURI", iconURI);
+            }
+
+            this._results.arrangeItems();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateSearchEngines">
+        <body><![CDATA[
+          Services.search.init(this._onSearchServiceInit.bind(this));
+        ]]></body>
+      </method>
+
+      <method name="_onSearchServiceInit">
+        <body>
+          <![CDATA[
+            if (!this._isGridBound(this._searches))
+              return;
+
+            this._engines = Services.search.getVisibleEngines();
+
+            while (this._searches.itemCount > 0)
+              this._searches.removeItemAt(0);
+
+            this._engines.forEach(function (anEngine) {
+              let item = this._searches.appendItem(anEngine.name, anEngine.name);
+              item.setAttribute("autocomplete", "true");
+              item.setAttribute("search", "true");
+
+              let iconURI = anEngine.iconURI ? anEngine.iconURI.spec : "";
+              item.setAttribute("iconURI", iconURI);
+            }.bind(this));
+
+            this._searches.arrangeItems();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateSearchEngineSubtitles">
+        <body>
+          <![CDATA[
+            if (!this._isGridBound(this._searches))
+              return;
+
+            let searchString = this.input.controller.searchString;
+            let label = Strings.browser.formatStringFromName("opensearch.search", [searchString], 1);
+
+            for (let i = 0, len = this._searches.itemCount; i < len; i++) {
+              let item = this._searches.getItemAtIndex(i);
+              item.setAttribute("label", label);
+            }
+
+            this._searches.arrangeItems();
+          ]]>
+        </body>
+      </method>
+
+    <!-- Interface for handling actions across grids -->
+
+      <method name="handleCompletion">
+        <body>
+          <![CDATA[
+            if (this._grid == this._results) {
+              this.input.controller.handleEnter(false);
+              return;
+            }
+
+            if (this._grid == this._searches) {
+              let engine = this._engines[this._grid.selectedIndex];
+              BrowserUI.doOpenSearch(engine.name);
+              this.closePopup();
+              return;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="clearSelection">
+        <body>
+          <![CDATA[
+            if (this._isGridBound(this._results))
+              this._results.clearSelection();
+
+            if (this._isGridBound(this._searches))
+              this._searches.clearSelection();
+          ]]>
+        </body>
+      </method>
+
+    <!-- Helpers -->
+
+      <field name="_engines">[]</field>
+      <field name="_handleOnSelect">true</field>
+      <field name="_grid">null</field>
+
+      <property name="_results" readonly="true" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'results');"/>
+      <property name="_searches" readonly="true" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'searches');"/>
+
+      <property name="_otherGrid" readonly="true">
+        <getter>
+          <![CDATA[
+            return (this._grid == this._results) ? this._searches : this._results;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_isGridBound">
+        <parameter name="aGrid"/>
+        <body>
+          <![CDATA[
+            return aGrid.itemCount != undefined;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_fire">
+        <parameter name="aName"/>
+        <body>
+          <![CDATA[
+            let event = document.createEvent("Events");
+            event.initEvent(aName, true, false);
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="select">
+        <![CDATA[
+          let grid = event.originalTarget;
+          if (grid != this._grid) {
+            if (this._grid.clearSelection)
+              this._grid.clearSelection();
+            this._grid = grid;
+          }
+
+          if (this._handleOnSelect && this._results.selectedItem) {
+            BrowserUI.goToURI(
+              this._results.selectedItem.getAttribute("value"));
+            this.closePopup();
+          } else if (this._handleOnSelect) {
+            this.handleCompletion();
+          }
+        ]]>
+      </handler>
+
+      <handler event="contentgenerated">
+        <![CDATA[
+          let grid = event.originalTarget;
+          if (grid == this._searches)
+            this.updateSearchEngines();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>
