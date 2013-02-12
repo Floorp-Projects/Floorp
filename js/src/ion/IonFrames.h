@@ -311,6 +311,9 @@ ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32_t slot)
     return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
 }
 
+void
+MarkCalleeToken(JSTracer *trc, CalleeToken token);
+
 } /* namespace ion */
 } /* namespace js */
 
