@@ -1,0 +1,22 @@
+#filter substitution
+[App]
+Vendor=Mozilla
+Name=MetroFirefox
+UAName=Firefox
+Version=@GRE_MILESTONE@
+BuildID=@GRE_BUILDID@
+ID={99bceaaa-e3c6-48c1-b981-ef9b46b67d60}
+
+[Gecko]
+MinVersion=@GRE_MILESTONE@
+MaxVersion=@GRE_MILESTONE@
+
+[XRE]
+EnableExtensionManager=0
+EnableProfileMigrator=0
+
+[Crash Reporter]
+#if MOZILLA_OFFICIAL
+Enabled=1
+#endif
+ServerURL=https://crash-reports.mozilla.com/submit?id={99bceaaa-e3c6-48c1-b981-ef9b46b67d60}&version=@GRE_MILESTONE@&buildid=@GRE_BUILDID@
