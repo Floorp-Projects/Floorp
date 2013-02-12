@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<iframe src="scoped-mq-update-helper.html" width="300" height="100" style="border: none"></iframe>
+<script>
+function test() {
+  document.querySelector("iframe").width = "100";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", test, false);
+</script>
