@@ -4765,7 +4765,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       }
 
       nsCxPusher pusher;
-      NS_ENSURE_STATE(pusher.Push(cx));
+      pusher.Push(cx);
 
       JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, object);
