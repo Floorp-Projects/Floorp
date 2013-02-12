@@ -1264,6 +1264,16 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
             stub->addNewStub(stringStub);
             return true;
         }
+
+        if (lhs.isObject() && rhs.isObject() && !stub->hasStub(ICStub::Compare_Object)) {
+            ICCompare_Object::Compiler compiler(cx, op);
+            ICStub *objectStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+            if (!objectStub)
+                return false;
+
+            stub->addNewStub(objectStub);
+            return true;
+        }
     }
 
     return true;
@@ -1304,6 +1314,8 @@ ICCompare_String::Compiler::generateStubCode(MacroAssembler &masm)
     Label failure;
     masm.branchTestString(Assembler::NotEqual, R0, &failure);
     masm.branchTestString(Assembler::NotEqual, R1, &failure);
+
+    JS_ASSERT(IsEqualityOp(op));
 
     Register left = masm.extractString(R0, ExtractTemp0);
     Register right = masm.extractString(R1, ExtractTemp1);
@@ -1388,6 +1400,38 @@ ICCompare_NumberWithUndefined::Compiler::generateStubCode(MacroAssembler &masm)
     // and always be false for other compare ops.
     masm.moveValue(BooleanValue(op == JSOP_NE || op == JSOP_STRICTNE), R0);
 
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// Compare_Object
+//
+
+bool
+ICCompare_Object::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+    masm.branchTestObject(Assembler::NotEqual, R1, &failure);
+
+    JS_ASSERT(IsEqualityOp(op));
+
+    Register left = masm.extractObject(R0, ExtractTemp0);
+    Register right = masm.extractObject(R1, ExtractTemp1);
+
+    Label ifTrue;
+    masm.branchPtr(JSOpToCondition(op), left, right, &ifTrue);
+
+    masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&ifTrue);
+    masm.moveValue(BooleanValue(true), R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
@@ -1814,7 +1858,6 @@ ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
     }
 
     masm.boxDouble(FloatReg0, R0);
-
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
