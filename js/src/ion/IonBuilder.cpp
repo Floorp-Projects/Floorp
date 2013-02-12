@@ -2867,6 +2867,14 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
             return false;
     }
 
+    // Create new |this| on the caller-side for inlined constructors.
+    if (callInfo.constructing()) {
+        MDefinition *thisDefn = createThis(target, callInfo.fun());
+        if (!thisDefn)
+            return false;
+        callInfo.setThis(thisDefn);
+    }
+
     // Push formals to capture in the resumepoint
     callInfo.pushFormals(current);
 
@@ -2897,14 +2905,6 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
 
     IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
                              info, inliningDepth + 1, loopDepth_);
-
-    // Create new |this| on the caller-side for inlined constructors.
-    if (callInfo.constructing()) {
-        MDefinition *thisDefn = createThis(target, callInfo.fun());
-        if (!thisDefn)
-            return false;
-        callInfo.setThis(thisDefn);
-    }
 
     // Build the graph.
     if (!inlineBuilder.buildInline(this, resumePoint, callInfo)) {
