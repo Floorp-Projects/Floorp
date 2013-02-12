@@ -432,7 +432,8 @@ class StackFrame
     FrameRejoinState    rejoin_;        /* for a jit frame rejoining the interpreter
                                          * from JIT code, state at rejoin. */
 #ifdef JS_ION
-    ion::BaselineFrame  *prevBaselineFrame_; /* for a debugger frame, the baseline frame to use as prev. */
+    ion::BaselineFrame  *prevBaselineFrame_; /* for an eval/debugger frame, the baseline frame
+                                              * to use as prev. */
 #endif
 
     static void staticAsserts() {
@@ -609,10 +610,16 @@ class StackFrame
      * frame (these frames should not appear in stack traces).
      */
     ion::BaselineFrame *prevBaselineFrame() const {
-        JS_ASSERT(isDebuggerFrame());
+        JS_ASSERT(isEvalFrame());
         return prevBaselineFrame_;
     }
 #endif
+
+    AbstractFramePtr evalPrev() const {
+        if (isEvalFrame() && prevBaselineFrame())
+            return prevBaselineFrame();
+        return prev();
+    }
 
     inline void resetGeneratorPrev(JSContext *cx);
 
