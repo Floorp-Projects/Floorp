@@ -87,7 +87,7 @@ EmitTailCallVM(IonCode *target, MacroAssembler &masm, uint32_t argSize)
 
     // Store frame size without VMFunction arguments for GC marking.
     masm.ma_sub(r0, Imm32(argSize), r1);
-    masm.storePtr(r1, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+    masm.store32(r1, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     // Push frame descriptor and perform the tail call.
     // BaselineTailCallReg (lr) already contains the return address (as we keep it there through
@@ -134,7 +134,7 @@ EmitEnterStubFrame(MacroAssembler &masm, Register scratch)
     masm.ma_add(Imm32(BaselineFrame::FramePointerOffset), scratch);
     masm.ma_sub(BaselineStackReg, scratch);
 
-    masm.storePtr(scratch, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+    masm.store32(scratch, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     // Note: when making changes here,  don't forget to update STUB_FRAME_SIZE
     // if needed.

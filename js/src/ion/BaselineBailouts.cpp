@@ -91,6 +91,7 @@ struct BaselineStackBuilder
         header_->resumeFramePtr = NULL;
         header_->resumeAddr = NULL;
         header_->monitorStub = NULL;
+        header_->numFrames = 0;
         return true;
     }
 
@@ -458,8 +459,8 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     BaselineFrame *blFrame = reinterpret_cast<BaselineFrame *>(builder.pointerAtStackOffset(0));
 
     // Initialize BaselineFrame::frameSize
-    size_t frameSize = BaselineFrame::Size() + BaselineFrame::FramePointerOffset +
-                       (sizeof(Value) * (script->nfixed + exprStackSlots));
+    uint32_t frameSize = BaselineFrame::Size() + BaselineFrame::FramePointerOffset +
+                         (sizeof(Value) * (script->nfixed + exprStackSlots));
     IonSpew(IonSpew_BaselineBailouts, "      FrameSize=%d", (int) frameSize);
     blFrame->setFrameSize(frameSize);
 
@@ -937,6 +938,7 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
 
     // Take the reconstructed baseline stack so it doesn't get freed when builder destructs.
     BaselineBailoutInfo *info = builder.takeBuffer();
+    info->numFrames = frameNo + 1;
 
     // Do stack check.
     bool overRecursed = false;
@@ -947,4 +949,56 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
 
     *bailoutInfo = info;
     return BAILOUT_RETURN_BASELINE;
+}
+
+uint32_t
+ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
+{
+    // The caller pushes R0 and R1 on the stack without rooting them.
+    // Since GC here is very unlikely just suppress it.
+    JSContext *cx = GetIonContext()->cx;
+    js::gc::AutoSuppressGC suppressGC(cx);
+
+    uint32_t numFrames = bailoutInfo->numFrames;
+    JS_ASSERT(numFrames > 0);
+
+    // Free the bailout buffer.
+    js_free(bailoutInfo);
+    bailoutInfo = NULL;
+
+    // Create arguments objects for bailed out frames, to maintain the invariant
+    // that script->needsArgsObj() implies frame->hasArgsObj().
+    IonFrameIterator iter(cx);
+    uint32_t frameno = 0;
+    while (frameno < numFrames) {
+        JS_ASSERT(!iter.isOptimizedJS());
+
+        if (iter.isBaselineJS()) {
+            BaselineFrame *frame = iter.baselineFrame();
+            JS_ASSERT(!frame->hasArgsObj());
+
+            if (frame->script()->needsArgsObj()) {
+                ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, frame);
+                if (!argsobj)
+                    return false;
+
+                RootedScript script(cx, frame->script());
+                InternalBindingsHandle bindings(script, &script->bindings);
+                const unsigned var = Bindings::argumentsVarIndex(cx, bindings);
+
+                // The arguments is a local binding and needsArgsObj does not
+                // check if it is clobbered. Ensure that the local binding
+                // restored during bailout before storing the arguments object
+                // to the slot.
+                if (frame->unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
+                    frame->unaliasedLocal(var) = ObjectValue(*argsobj);
+            }
+
+            frameno++;
+        }
+
+        ++iter;
+    }
+
+    return true;
 }
