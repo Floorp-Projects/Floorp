@@ -382,47 +382,35 @@ mjit::Compiler::jsop_equality_obj_obj(JSOp op, jsbytecode *target, JSOp fused)
     JS_ASSERT(cx->typeInferenceEnabled() &&
               lhs->isType(JSVAL_TYPE_OBJECT) && rhs->isType(JSVAL_TYPE_OBJECT));
 
-    /*
-     * Handle equality between two objects. We have to ensure there is no
-     * special equality operator on either object, if that passes then
-     * this is a pointer comparison.
-     */
-    types::StackTypeSet *lhsTypes = analysis->poppedTypes(PC, 1);
-    types::StackTypeSet *rhsTypes = analysis->poppedTypes(PC, 0);
-    if (!lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) &&
-        !rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY)) {
-        /* :TODO: Merge with jsop_relational_int? */
-        JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
-        frame.forgetMismatchedObject(lhs);
-        frame.forgetMismatchedObject(rhs);
-        Assembler::Condition cond = GetCompareCondition(op, fused);
-        if (target) {
-            Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
-                                               Registers::ReturnReg, Registers::ReturnReg);
-            if (!frame.syncForBranch(target, Uses(2)))
-                return Compile_Error;
-            RegisterID lreg = frame.tempRegForData(lhs);
-            frame.pinReg(lreg);
-            RegisterID rreg = frame.tempRegForData(rhs);
-            frame.unpinReg(lreg);
-            Jump fast = masm.branchPtr(cond, lreg, rreg);
-            frame.popn(2);
-            return jumpAndRun(fast, target, &sj) ? Compile_Okay : Compile_Error;
-        } else {
-            RegisterID result = frame.allocReg();
-            RegisterID lreg = frame.tempRegForData(lhs);
-            frame.pinReg(lreg);
-            RegisterID rreg = frame.tempRegForData(rhs);
-            frame.unpinReg(lreg);
-            masm.branchValue(cond, lreg, rreg, result);
-
-            frame.popn(2);
-            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
-            return Compile_Okay;
-        }
+    /* :TODO: Merge with jsop_relational_int? */
+    JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
+    frame.forgetMismatchedObject(lhs);
+    frame.forgetMismatchedObject(rhs);
+    Assembler::Condition cond = GetCompareCondition(op, fused);
+    if (target) {
+        Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
+                                           Registers::ReturnReg, Registers::ReturnReg);
+        if (!frame.syncForBranch(target, Uses(2)))
+            return Compile_Error;
+        RegisterID lreg = frame.tempRegForData(lhs);
+        frame.pinReg(lreg);
+        RegisterID rreg = frame.tempRegForData(rhs);
+        frame.unpinReg(lreg);
+        Jump fast = masm.branchPtr(cond, lreg, rreg);
+        frame.popn(2);
+        return jumpAndRun(fast, target, &sj) ? Compile_Okay : Compile_Error;
     }
 
-    return Compile_Skipped;
+    RegisterID result = frame.allocReg();
+    RegisterID lreg = frame.tempRegForData(lhs);
+    frame.pinReg(lreg);
+    RegisterID rreg = frame.tempRegForData(rhs);
+    frame.unpinReg(lreg);
+    masm.branchValue(cond, lreg, rreg, result);
+
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
+    return Compile_Okay;
 }
 
 bool

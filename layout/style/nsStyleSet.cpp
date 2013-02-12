@@ -125,7 +125,16 @@ nsStyleSet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
     if (mRuleProcessors[i]) {
       n += mRuleProcessors[i]->SizeOfIncludingThis(aMallocSizeOf);
     }
+    n += mSheets[i].SizeOfExcludingThis(nullptr, aMallocSizeOf);
   }
+
+  for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
+    n += mScopedDocSheetRuleProcessors[i]->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  n += mScopedDocSheetRuleProcessors.SizeOfExcludingThis(aMallocSizeOf);
+
+  n += mRoots.SizeOfExcludingThis(aMallocSizeOf);
+  n += mOldRuleTrees.SizeOfExcludingThis(aMallocSizeOf);
 
   return n;
 }
@@ -1821,6 +1830,11 @@ nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
     if (!processor) {
       continue;
     }
+    bool thisChanged = processor->MediumFeaturesChanged(aPresContext);
+    stylesChanged = stylesChanged || thisChanged;
+  }
+  for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); ++i) {
+    nsIStyleRuleProcessor *processor = mScopedDocSheetRuleProcessors[i];
     bool thisChanged = processor->MediumFeaturesChanged(aPresContext);
     stylesChanged = stylesChanged || thisChanged;
   }

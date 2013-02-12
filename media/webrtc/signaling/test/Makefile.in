@@ -26,10 +26,15 @@ LIBS = \
   $(DEPTH)/netwerk/srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
   $(NULL)
 
-ifdef MOZ_SYDNEYAUDIO
-ifeq ($(OS_TARGET),Linux)
+ifneq (,$(MOZ_CUBEB)$(MOZ_SYDNEYAUDIO))
+ifdef MOZ_ALSA
 LIBS += \
   $(MOZ_ALSA_LIBS) \
+  $(NULL)
+endif
+ifdef MOZ_PULSEAUDIO
+LIBS += \
+  $(MOZ_PULSEAUDIO_LIBS) \
   $(NULL)
 endif
 endif

@@ -1125,8 +1125,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
                                   js_options_dot_str, this);
 
     ::JS_SetOperationCallback(mContext, DOMOperationCallback);
-
-    xpc_LocalizeContext(mContext);
   }
   mIsInitialized = false;
   mTerminations = nullptr;

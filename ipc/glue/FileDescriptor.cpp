@@ -42,8 +42,7 @@ FileDescriptor::FileDescriptor(PlatformHandleType aHandle)
 void
 FileDescriptor::DuplicateInCurrentProcess(PlatformHandleType aHandle)
 {
-  MOZ_ASSERT_IF(mHandleCreatedByOtherProcess,
-                mHandleCreatedByOtherProcessWasUsed);
+  MOZ_ASSERT(!mHandleCreatedByOtherProcess);
 
   if (IsValid(aHandle)) {
     PlatformHandleType newHandle;

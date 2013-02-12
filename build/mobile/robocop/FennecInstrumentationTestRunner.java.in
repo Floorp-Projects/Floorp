@@ -7,19 +7,26 @@ package @ANDROID_PACKAGE_NAME@;
 
 import android.os.Bundle;
 import android.test.InstrumentationTestRunner;
+import android.util.Log;
 
 public class FennecInstrumentationTestRunner extends InstrumentationTestRunner {
     private static Bundle sArguments;
 
     @Override
     public void onCreate(Bundle arguments) {
-        super.onCreate(arguments);
         sArguments = arguments;
+        if (sArguments == null) {
+            Log.e("Robocop", "FennecInstrumentationTestRunner.onCreate got null bundle");
+        }
+        super.onCreate(arguments);
     }
 
     // unfortunately we have to make this static because test classes that don't extend
     // from ActivityInstrumentationTestCase2 can't get a reference to this class.
     public static Bundle getArguments() {
+        if (sArguments == null) {
+            Log.e("Robocop", "FennecInstrumentationTestCase.getArguments returns null bundle");
+        }
         return sArguments;
     }
 }

@@ -495,16 +495,7 @@ StubEqualityOp(VMFrame &f)
                 cond = (l != r);
         } else if (lval.isObject()) {
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
-            if (JSEqualityOp eq = l->getClass()->ext.equality) {
-                JSBool equal;
-                RootedObject lobj(cx, l);
-                RootedValue r(cx, rval);
-                if (!eq(cx, lobj, r, &equal))
-                    return false;
-                cond = !!equal == EQ;
-            } else {
-                cond = (l == r) == EQ;
-            }
+            cond = (l == r) == EQ;
         } else if (lval.isNullOrUndefined()) {
             cond = EQ;
         } else {
@@ -1015,7 +1006,7 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc.
      */
-    JSObject *proto = f.fp()->global().getOrCreateRegExpPrototype(f.cx);
+    RootedObject proto(f.cx, f.fp()->global().getOrCreateRegExpPrototype(f.cx));
     if (!proto)
         THROW();
     JS_ASSERT(proto);

@@ -300,7 +300,7 @@ NS_IMETHODIMP TimerThread::Run()
               // is from the timer thread) and when it hits this will remove the
               // timer from the timer thread and thus destroy the last reference,
               // preventing this situation from occurring.
-              NS_ASSERTION(rc != 0, "destroyed timer off its target thread!");
+              MOZ_ASSERT(rc != 0, "destroyed timer off its target thread!");
             }
             timer = nullptr;
           }

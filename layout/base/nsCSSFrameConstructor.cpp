@@ -1252,10 +1252,10 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
   NS_ASSERTION(containingBlock,
                "Child list without containing block?");
 
-  if (aChildListID == nsIFrame::kFixedList &&
-      containingBlock->GetStyleDisplay()->HasTransform(containingBlock)) {
-    // Put this frame on the transformed-frame's abs-pos list instead.
-    aChildListID = nsIFrame::kAbsoluteList;
+  if (aChildListID == nsIFrame::kFixedList) {
+    // Put this frame on the transformed-frame's abs-pos list instead, if
+    // it has abs-pos children instead of fixed-pos children.
+    aChildListID = containingBlock->GetAbsoluteListID();
   }
 
   // Insert the frames hanging out in aItems.  We can use SetInitialChildList()
@@ -8430,6 +8430,7 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
       if (oldContext->GetStyleFont()->mFont.size !=
           newContext->GetStyleFont()->mFont.size) {
         // The basis for 'rem' units has changed.
+        newContext = nullptr;
         DoRebuildAllStyleData(aRestyleTracker, nsChangeHint(0));
         if (aMinHint == 0) {
           return;
