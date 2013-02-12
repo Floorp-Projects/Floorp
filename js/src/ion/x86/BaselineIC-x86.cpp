@@ -40,7 +40,6 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
-
     return true;
 }
 
