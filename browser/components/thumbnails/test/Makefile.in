@@ -17,6 +17,7 @@ _BROWSER_FILES = \
 	browser_thumbnails_privacy.js \
 	browser_thumbnails_redirect.js \
 	browser_thumbnails_storage.js \
+	browser_thumbnails_storage_migrate3.js \
 	browser_thumbnails_bug726727.js \
 	head.js \
 	background_red.html \

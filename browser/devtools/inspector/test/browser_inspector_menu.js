@@ -56,6 +56,15 @@ function test() {
 
     waitForClipboard("<p>This is some example text</p>",
                      function() { copyOuter.doCommand(); },
+                     testCopyUniqueSelectorMenu, testCopyUniqueSelectorMenu);
+  }
+
+  function testCopyUniqueSelectorMenu() {
+    let copyUniqueSelector = inspector.panelDoc.getElementById("node-menu-copyuniqueselector");
+    ok(copyUniqueSelector, "the popup menu has a copy unique selector menu item");
+
+    waitForClipboard("body > div:nth-child(1) > p:nth-child(2)",
+                     function() { copyUniqueSelector.doCommand(); },
                      testDeleteNode, testDeleteNode);
   }
 

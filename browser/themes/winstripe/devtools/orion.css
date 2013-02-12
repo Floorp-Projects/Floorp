@@ -55,14 +55,29 @@
   background-position: center;
   background-repeat: no-repeat;
 }
-.annotationHTML.task {
+.annotation.task .annotationHTML {
   background-image: url("chrome://browser/skin/devtools/orion-task.png");
 }
-.annotationHTML.breakpoint {
+.annotation.breakpoint .annotationHTML {
   background-image: url("chrome://browser/skin/devtools/orion-breakpoint.png");
 }
-.annotationHTML.debugLocation {
+.annotation.debugLocation .annotationHTML {
   background-image: url("chrome://browser/skin/devtools/orion-debug-location.png");
+}
+.annotation.breakpoint.debugLocation .annotationHTML,
+.annotation.task.debugLocation .annotationHTML {
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 75%, 100%;
+}
+.annotation.breakpoint.debugLocation .annotationHTML {
+  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png"),
+                    url("chrome://browser/skin/devtools/orion-breakpoint.png");
+}
+
+.annotation.task.debugLocation .annotationHTML {
+  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png"),
+                    url("chrome://browser/skin/devtools/orion-task.png");
 }
 
 /* Styles for the overview ruler  */

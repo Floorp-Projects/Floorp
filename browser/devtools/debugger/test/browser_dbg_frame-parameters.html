@@ -25,6 +25,7 @@
         }
         var button = document.querySelector("button");
         button.addEventListener("click", load, false);
+        var buttonAsProto = Object.create(button);
       });
     </script>
 

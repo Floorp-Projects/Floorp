@@ -72,6 +72,10 @@
   font-size: 80%;
 }
 
+.gcli-row-out td {
+  white-space: nowrap;
+}
+
 .gcli-out-shortcut,
 .gcli-help-synopsis {
   padding: 0 3px;
