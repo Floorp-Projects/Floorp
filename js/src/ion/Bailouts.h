@@ -230,6 +230,8 @@ uint32_t ShapeGuardFailure();
 
 uint32_t CachedShapeGuardFailure();
 
+uint32_t FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo);
+
 } // namespace ion
 } // namespace js
 

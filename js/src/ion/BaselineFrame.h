@@ -66,7 +66,7 @@ class BaselineFrame
     uint32_t hiScratchValue_;
     uint32_t loReturnValue_;        // If HAS_RVAL, the frame's return value.
     uint32_t hiReturnValue_;
-    size_t frameSize_;
+    uint32_t frameSize_;
     JSObject *scopeChain_;          // Scope chain (always initialized).
     StaticBlockObject *blockChain_; // If HAS_BLOCKCHAIN, the static block chain.
     JSScript *evalScript_;          // If isEvalFrame(), the current eval script.
@@ -82,13 +82,13 @@ class BaselineFrame
     // This is the old frame pointer saved in the prologue.
     static const uint32_t FramePointerOffset = sizeof(void *);
 
-    size_t frameSize() const {
+    uint32_t frameSize() const {
         return frameSize_;
     }
-    void setFrameSize(size_t frameSize) {
+    void setFrameSize(uint32_t frameSize) {
         frameSize_ = frameSize;
     }
-    inline size_t *addressOfFrameSize() {
+    inline uint32_t *addressOfFrameSize() {
         return &frameSize_;
     }
     UnrootedObject scopeChain() const {
@@ -160,7 +160,7 @@ class BaselineFrame
         return actuals()[i];
     }
 
-    Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing) const {
+    Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
 #ifdef DEBUG
         CheckLocalUnaliased(checkAliasing, script(), maybeBlockChain(), i);
 #endif

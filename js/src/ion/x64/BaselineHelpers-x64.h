@@ -79,7 +79,7 @@ EmitTailCallVM(IonCode *target, MacroAssembler &masm, uint32_t argSize)
     // Store frame size without VMFunction arguments for GC marking.
     masm.movq(ScratchReg, rdx);
     masm.subq(Imm32(argSize), rdx);
-    masm.storePtr(rdx, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+    masm.store32(rdx, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     // Push frame descriptor and perform the tail call.
     masm.makeFrameDescriptor(ScratchReg, IonFrame_BaselineJS);
@@ -122,7 +122,7 @@ EmitEnterStubFrame(MacroAssembler &masm, Register)
     masm.addq(Imm32(BaselineFrame::FramePointerOffset), ScratchReg);
     masm.subq(BaselineStackReg, ScratchReg);
 
-    masm.storePtr(ScratchReg, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+    masm.store32(ScratchReg, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     // Note: when making changes here,  don't forget to update STUB_FRAME_SIZE
     // if needed.

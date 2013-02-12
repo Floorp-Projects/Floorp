@@ -276,6 +276,9 @@ struct BaselineBailoutInfo
     // above, in this case, is pushed onto the stack so that the
     // TypeMonitor chain can tail-return into the main jitcode when done.
     ICStub *monitorStub;
+
+    // Number of baseline frames to push on the stack.
+    uint32_t numFrames;
 };
 
 uint32_t
