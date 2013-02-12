@@ -725,6 +725,14 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             bind(&endOfCopy);
         }
 
+        // Enter exit frame for the FinishBailoutToBaseline call.
+        loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)), temp);
+        load32(Address(temp, BaselineFrame::reverseOffsetOfFrameSize()), temp);
+        makeFrameDescriptor(temp, IonFrame_BaselineJS);
+        push(temp);
+        push(Imm32(0)); // Fake return address.
+        enterFakeExitFrame();
+
         // If monitorStub is non-null, handle resumeAddr appropriately.
         Label noMonitor;
         Label done;
@@ -746,10 +754,11 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, monitorStub)), temp);
             push(temp);
 
-            // Free allocated memory.
+            // Call a stub to free allocated memory and create arguments objects.
             setupUnalignedABICall(1, temp);
             passABIArg(bailoutInfo);
-            callWithABI(JS_FUNC_TO_DATA_PTR(void *, js_free));
+            callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBailoutToBaseline));
+            branchTest32(Zero, ReturnReg, ReturnReg, &exception);
 
             // Restore values where they need to be and resume execution.
             GeneralRegisterSet enterMonRegs(GeneralRegisterSet::All());
@@ -763,6 +772,10 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             pop(BaselineTailCallReg);
             pop(BaselineFrameReg);
             popValue(R0);
+
+            // Discard exit frame.
+            addPtr(Imm32(IonExitFrameLayout::SizeWithFooter()), StackPointer);
+
             loadPtr(Address(BaselineStubReg, ICStub::offsetOfStubCode()), jitcodeReg);
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
             push(BaselineTailCallReg);
@@ -783,10 +796,11 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)), temp);
             push(temp);
 
-            // Free allocated memory.
+            // Call a stub to free allocated memory and create arguments objects.
             setupUnalignedABICall(1, temp);
             passABIArg(bailoutInfo);
-            callWithABI(JS_FUNC_TO_DATA_PTR(void *, js_free));
+            callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBailoutToBaseline));
+            branchTest32(Zero, ReturnReg, ReturnReg, &exception);
 
             // Restore values where they need to be and resume execution.
             GeneralRegisterSet enterRegs(GeneralRegisterSet::All());
@@ -799,6 +813,10 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             pop(BaselineFrameReg);
             popValue(R1);
             popValue(R0);
+
+            // Discard exit frame.
+            addPtr(Imm32(IonExitFrameLayout::SizeWithFooter()), StackPointer);
+
             jump(jitcodeReg);
         }
     }
