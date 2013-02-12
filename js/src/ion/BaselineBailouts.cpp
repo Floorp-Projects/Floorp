@@ -1004,8 +1004,8 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
 
     // Do stack check.
     bool overRecursed = false;
-    JS_CHECK_RECURSION_WITH_EXTRA(cx, info->copyStackTop - info->copyStackBottom,
-                                  overRecursed = true);
+    JS_CHECK_RECURSION_WITH_EXTRA_DONT_REPORT(cx, info->copyStackTop - info->copyStackBottom,
+                                              overRecursed = true);
     if (overRecursed)
         return BAILOUT_RETURN_OVERRECURSED;
 

@@ -367,12 +367,17 @@ ion::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     if (IsBaselineEnabled(cx)) {
         *bailoutInfo = NULL;
         retval = BailoutIonToBaseline(cx, activation, iter, false, bailoutInfo);
-        JS_ASSERT(retval == BAILOUT_RETURN_BASELINE || retval == BAILOUT_RETURN_FATAL_ERROR);
+        JS_ASSERT(retval == BAILOUT_RETURN_BASELINE ||
+                  retval == BAILOUT_RETURN_FATAL_ERROR ||
+                  retval == BAILOUT_RETURN_OVERRECURSED);
         JS_ASSERT_IF(retval == BAILOUT_RETURN_BASELINE, *bailoutInfo != NULL);
     } else {
         retval = ConvertFrames(cx, activation, iter);
-        EnsureExitFrame(iter.jsFrame());
     }
+
+    if (retval != BAILOUT_RETURN_BASELINE)
+        EnsureExitFrame(iter.jsFrame());
+
     return retval;
 }
 
@@ -400,8 +405,25 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     if (IsBaselineEnabled(cx)) {
         *bailoutInfo = NULL;
         retval = BailoutIonToBaseline(cx, activation, iter, true, bailoutInfo);
-        JS_ASSERT(retval == BAILOUT_RETURN_BASELINE || retval == BAILOUT_RETURN_FATAL_ERROR);
+        JS_ASSERT(retval == BAILOUT_RETURN_BASELINE ||
+                  retval == BAILOUT_RETURN_FATAL_ERROR ||
+                  retval == BAILOUT_RETURN_OVERRECURSED);
         JS_ASSERT_IF(retval == BAILOUT_RETURN_BASELINE, *bailoutInfo != NULL);
+
+        if (retval != BAILOUT_RETURN_BASELINE) {
+            IonJSFrameLayout *frame = iter.jsFrame();
+            IonSpew(IonSpew_Invalidate, "converting to exit frame");
+            IonSpew(IonSpew_Invalidate, "   orig calleeToken %p", (void *) frame->calleeToken());
+            IonSpew(IonSpew_Invalidate, "   orig frameSize %u", unsigned(frame->prevFrameLocalSize()));
+            IonSpew(IonSpew_Invalidate, "   orig ra %p", (void *) frame->returnAddress());
+
+            frame->replaceCalleeToken(NULL);
+            EnsureExitFrame(frame);
+
+            IonSpew(IonSpew_Invalidate, "   new  calleeToken %p", (void *) frame->calleeToken());
+            IonSpew(IonSpew_Invalidate, "   new  frameSize %u", unsigned(frame->prevFrameLocalSize()));
+            IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
+        }
 
         iter.ionScript()->decref(cx->runtime->defaultFreeOp());
 
