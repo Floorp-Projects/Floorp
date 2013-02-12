@@ -3780,10 +3780,8 @@ GetPropertyHelperInline(JSContext *cx,
          * object foo with no property named 'bar'.
          */
         if (vp.isUndefined()) {
-            RootedScript script(cx);
             jsbytecode *pc = NULL;
-            if (cx->hasfp())
-                types::TypeScript::GetPcScript(cx, script.address(), &pc);
+            RootedScript script(cx, cx->stack.currentScript(&pc));
             if (!pc)
                 return true;
             JSOp op = (JSOp) *pc;
@@ -3819,7 +3817,7 @@ GetPropertyHelperInline(JSContext *cx,
             }
 
             unsigned flags = JSREPORT_WARNING | JSREPORT_STRICT;
-            cx->stack.currentScript()->warnedAboutUndefinedProp = true;
+            script->warnedAboutUndefinedProp = true;
 
             /* Ok, bad undefined property reference: whine about it. */
             RootedValue val(cx, IdToValue(id));
