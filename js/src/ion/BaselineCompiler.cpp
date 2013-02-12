@@ -1192,10 +1192,16 @@ BaselineCompiler::emit_JSOP_CASE()
         return false;
 
     Register payload = masm.extractInt32(R0, R0.scratchReg());
-
     jsbytecode *target = pc + GET_JUMP_OFFSET(pc);
-    masm.branch32(Assembler::NotEqual, payload, Imm32(0), labelOf(target));
 
+    Label done;
+    masm.branch32(Assembler::Equal, payload, Imm32(0), &done);
+    {
+        // Pop the switch value if the case matches.
+        masm.addPtr(Imm32(sizeof(Value)), StackPointer);
+        masm.jump(labelOf(target));
+    }
+    masm.bind(&done);
     return true;
 }
 
