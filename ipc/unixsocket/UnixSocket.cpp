@@ -52,6 +52,7 @@ public:
     , mCurrentTaskIsCanceled(false)
     , mTask(nullptr)
     , mAddress(aAddress)
+    , mLock("UnixSocketImpl.mLock")
   {
   }
 
@@ -80,9 +81,16 @@ public:
     }
     mTask->Cancel();
     mTask = nullptr;
+    MutexAutoLock lock(mLock);
     mCurrentTaskIsCanceled = true;
   }
   
+  bool IsCanceled()
+  {
+    MutexAutoLock lock(mLock);
+    return mCurrentTaskIsCanceled;
+  }
+
   void UnsetTask()
   {
     mTask = nullptr;
@@ -98,7 +106,7 @@ public:
     if (mTask) {
       return;
     }
-    if (mCurrentTaskIsCanceled) {
+    if (IsCanceled()) {
       return;
     }
     mTask = aTask;
@@ -144,6 +152,7 @@ public:
       mTask->Cancel();
       mTask = nullptr;
     }
+    MutexAutoLock lock(mLock);
     mCurrentTaskIsCanceled = true;
   }
 
@@ -252,6 +261,10 @@ private:
    */
   sockaddr mAddr;
 
+  /**
+   * Protects mCurrentTaskIsCanceled
+   */
+  mozilla::Mutex mLock;
 };
 
 template<class T>
