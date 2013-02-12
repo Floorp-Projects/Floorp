@@ -41,7 +41,6 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 #define IMEMOUSE_WUP        0x10    // wheel up
 #define IMEMOUSE_WDOWN      0x20    // wheel down
 
-bool nsIMM32Handler::sIsStatusChanged = false;
 bool nsIMM32Handler::sIsIME = true;
 bool nsIMM32Handler::sIsIMEOpening = false;
 
@@ -703,29 +702,6 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
       break;
   }
 #endif // PR_LOGGING
-
-  if (::GetKeyState(NS_VK_ALT) >= 0) {
-    return false;
-  }
-
-  // XXXmnakano Following code was added by bug 28852 (Key combo to trun ON/OFF
-  // Japanese IME incorrectly activates "File" menu).  If one or more keypress
-  // events come between Alt keydown event and Alt keyup event, XUL menubar
-  // isn't activated by the Alt keyup event.  Therefore, this code sends dummy
-  // keypress event to Gecko.  But this is ugly, and this fires incorrect DOM
-  // keypress event.  So, we should find another way for the bug.
-
-  // add hacky code here
-  mozilla::widget::ModifierKeyState modKeyState(false, false, true);
-  mozilla::widget::NativeKey nativeKey; // Dummy is okay for this usage.
-  nsKeyEvent keyEvent(true, NS_KEY_PRESS, aWindow);
-  keyEvent.keyCode = 192;
-  aWindow->InitKeyEvent(keyEvent, nativeKey, modKeyState);
-  aWindow->DispatchKeyEvent(keyEvent, nullptr);
-  sIsStatusChanged = sIsStatusChanged || (wParam == IMN_SETOPENSTATUS);
-  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: OnIMENotify, sIsStatusChanged=%s\n",
-     sIsStatusChanged ? "TRUE" : "FALSE"));
 
   // not implement yet
   return false;
