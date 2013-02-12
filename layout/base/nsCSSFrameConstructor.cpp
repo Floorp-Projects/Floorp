@@ -8430,6 +8430,7 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
       if (oldContext->GetStyleFont()->mFont.size !=
           newContext->GetStyleFont()->mFont.size) {
         // The basis for 'rem' units has changed.
+        newContext = nullptr;
         DoRebuildAllStyleData(aRestyleTracker, nsChangeHint(0));
         if (aMinHint == 0) {
           return;
