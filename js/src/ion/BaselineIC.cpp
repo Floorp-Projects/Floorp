@@ -3796,7 +3796,7 @@ ICTableSwitch::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&isInt32);
 
     masm.load32(Address(BaselineStubReg, offsetof(ICTableSwitch, min_)), scratch);
-    masm.subPtr(scratch, key);
+    masm.sub32(scratch, key);
     masm.branch32(Assembler::BelowOrEqual,
                   Address(BaselineStubReg, offsetof(ICTableSwitch, length_)), key, &outOfRange);
 
