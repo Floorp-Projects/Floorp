@@ -412,6 +412,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                     updateBackButton(tab.canDoBack());
                     updateForwardButton(tab.canDoForward());
                     setProgressVisibility(false);
+                    // Reset the title in case we haven't navigated to a new page yet.
+                    setTitle(tab.getDisplayTitle());
                 }
                 break;
             case RESTORED:
@@ -536,7 +538,13 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return translation;
     }
 
-    public void fromAwesomeBarSearch() {
+    public void fromAwesomeBarSearch(String url) {
+        // Update the title with the url that was just entered. Don't update the title if
+        // the AwesomeBar activity was cancelled, or if the user entered an empty string.
+        if (url != null && url.length() > 0) {
+            setTitle(url);
+        }
+
         if (mActivity.isTablet() || Build.VERSION.SDK_INT < 11) {
             return;
         }
@@ -995,17 +1003,18 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         }
     }
 
-    public void setTitle(CharSequence title) {
+    private void setTitle(CharSequence title) {
         Tab tab = Tabs.getInstance().getSelectedTab();
 
         // Keep the title unchanged if the tab is entering reader mode
         if (tab != null && tab.isEnteringReaderMode())
             return;
 
-        // Setting a null title will ensure we just see
-        // the "Enter Search or Address" placeholder text
-        if (tab != null && ("about:home".equals(tab.getURL()) ||
-                            "about:privatebrowsing".equals(tab.getURL())))
+        // Setting a null title will ensure we just see the "Enter Search or Address"
+        // placeholder text. Because "about:home" and "about:privatebrowsing" don't
+        // have titles, their display titles will always match their URLs.
+        if (tab != null && ("about:home".equals(title) ||
+                            "about:privatebrowsing".equals(title)))
             title = null;
 
         mTitle.setText(title);
