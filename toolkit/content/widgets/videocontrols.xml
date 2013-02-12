@@ -1432,10 +1432,6 @@
 
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
                     addListener(this.video.ownerDocument, "mozfullscreenchange", this.setFullscreenButtonState);
-
-                    // Make the <video> element keyboard accessible.
-                    this.video.setAttribute("tabindex", 0);
-
                     addListener(this.video, "keypress", this.keyHandler);
 
                     this.log("--- videocontrols initialized ---");
