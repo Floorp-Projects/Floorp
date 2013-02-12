@@ -53,7 +53,6 @@
 #include "nsVideoFrame.h"
 #include "BasicLayers.h"
 #include <limits>
-#include "nsIDocShellTreeItem.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"

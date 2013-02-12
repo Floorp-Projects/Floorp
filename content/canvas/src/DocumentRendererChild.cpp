@@ -11,8 +11,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeNode.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCSSParser.h"

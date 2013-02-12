@@ -14,7 +14,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsIHistoryEntry.h"
 #include "nsIURI.h"
@@ -377,12 +376,11 @@ nsHistory::GetSessionHistoryFromDocShell(nsIDocShell * aDocShell,
    */
   
   // QI mDocShell to nsIDocShellTreeItem
-  nsCOMPtr<nsIDocShellTreeItem> dsTreeItem(do_QueryInterface(aDocShell));
-  NS_ENSURE_TRUE(dsTreeItem, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aDocShell, NS_ERROR_FAILURE);
 
   // Get the root DocShell from it
   nsCOMPtr<nsIDocShellTreeItem> root;
-  dsTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+  aDocShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
   NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
   
   //QI root to nsIWebNavigation
