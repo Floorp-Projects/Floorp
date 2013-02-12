@@ -972,6 +972,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void add32(Imm32 imm, Register dest);
     void add32(Imm32 imm, const Address &dest);
     void sub32(Imm32 imm, Register dest);
+    void sub32(Register src, Register dest);
     void xor32(Imm32 imm, Register dest);
 
     void and32(Imm32 imm, Register dest);

@@ -111,6 +111,9 @@ class MacroAssemblerX86Shared : public Assembler
     void sub32(Imm32 imm, Register dest) {
         subl(imm, dest);
     }
+    void sub32(Register src, Register dest) {
+        subl(src, dest);
+    }
     void xor32(Imm32 imm, Register dest) {
         xorl(imm, dest);
     }
