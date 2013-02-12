@@ -14,16 +14,18 @@
 <script class="testbody" type="application/javascript"><![CDATA[
   SimpleTest.waitForExplicitFinish();
   let win;
+  var left = 60 + screen.availLeft;
+  var upper = 60 + screen.availTop;
 
   function runTest() {
     win = window.openDialog("window_screenPosSize.xul",
                             null,
-                            "chrome,dialog=no,all,screenX=60,screenY=60,outerHeight=200,outerWidth=200");
+                            "chrome,dialog=no,all,screenX=" + left + ",screenY=" + upper + ",outerHeight=200,outerWidth=200");
     SimpleTest.waitForFocus(checkTest, win);
   }
   function checkTest() {
-    is(win.screenX, 60, "The window should be placed now at x=60px");
-    is(win.screenY, 60, "The window should be placed now at y=60px");
+    is(win.screenX, left, "The window should be placed now at x=" + left + "px");
+    is(win.screenY, upper, "The window should be placed now at y=" + upper + "px");
     is(win.outerHeight, 200, "The window size should be height=200px");
     is(win.outerWidth, 200, "The window size should be width=200px");
     runTest2();
