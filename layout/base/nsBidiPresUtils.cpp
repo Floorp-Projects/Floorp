@@ -803,12 +803,26 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
           } else if (runLength == fragmentLength) {
             /*
              * If the directional run ends at the end of the frame, make sure
-             * that any continuation is non-fluid
+             * that any continuation is non-fluid, and do the same up the
+             * parent chain
              */
             nsIFrame* next = frame->GetNextInFlow();
             if (next) {
-              frame->SetNextContinuation(next);
-              next->SetPrevContinuation(frame);
+              nsIFrame* parent = frame;
+              nsIFrame* nextParent = next;
+              while (parent && nextParent) {
+                if (parent == nextParent ||
+                    nextParent != parent->GetNextInFlow() ||
+                    !parent->IsFrameOfType(nsIFrame::eLineParticipant) ||
+                    !nextParent->IsFrameOfType(nsIFrame::eLineParticipant)) {
+                  break;
+                }
+                parent->SetNextContinuation(nextParent);
+                nextParent->SetPrevContinuation(parent);
+
+                parent = parent->GetParent();
+                nextParent = nextParent->GetParent();
+              }
             }
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
