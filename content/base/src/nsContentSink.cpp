@@ -17,7 +17,6 @@
 #include "nsStyleLinkElement.h"
 #include "nsIDocShell.h"
 #include "nsILoadContext.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsCPrefetchService.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -807,22 +806,18 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
 
   nsCOMPtr<nsIDocShell> docshell = mDocShell;
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem, parentItem;
+  nsCOMPtr<nsIDocShellTreeItem> parentItem;
   do {
     uint32_t appType = 0;
     nsresult rv = docshell->GetAppType(&appType);
     if (NS_FAILED(rv) || appType == nsIDocShell::APP_TYPE_MAIL)
       return; // do not prefetch from mailnews
-    treeItem = do_QueryInterface(docshell);
-    if (treeItem) {
-      treeItem->GetParent(getter_AddRefs(parentItem));
-      if (parentItem) {
-        treeItem = parentItem;
-        docshell = do_QueryInterface(treeItem);
-        if (!docshell) {
-          NS_ERROR("cannot get a docshell from a treeItem!");
-          return;
-        }
+    docshell->GetParent(getter_AddRefs(parentItem));
+    if (parentItem) {
+      docshell = do_QueryInterface(parentItem);
+      if (!docshell) {
+        NS_ERROR("cannot get a docshell from a treeItem!");
+        return;
       }
     }
   } while (parentItem);

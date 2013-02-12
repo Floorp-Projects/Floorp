@@ -81,7 +81,6 @@
 #include "nsEventDispatcher.h"
 #include "nsIObserverService.h"
 #include "nsNodeUtils.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIXULWindow.h"
 #include "nsXULPopupManager.h"

@@ -214,17 +214,16 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
   // see bug 217886 for details
   // XXXbz what if our browser isn't targetable?  We need to handle that somehow.
   if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main")) {
-    *aFoundItem = mWebBrowser->mDocShellAsItem;
+    *aFoundItem = mWebBrowser->mDocShell;
     NS_IF_ADDREF(*aFoundItem);
     return NS_OK;
   }
 
-  if (!SameCOMIdentity(aRequestor, mWebBrowser->mDocShellAsItem)) {
+  if (!SameCOMIdentity(aRequestor, mWebBrowser->mDocShell)) {
     // This isn't a request coming up from our kid, so check with said kid
     nsISupports* thisSupports = static_cast<nsIDocShellTreeOwner*>(this);
-    rv =
-      mWebBrowser->mDocShellAsItem->FindItemWithName(aName, thisSupports,
-                                                     aOriginalRequestor, aFoundItem);
+    rv = mWebBrowser->mDocShell->FindItemWithName(aName, thisSupports,
+                                                  aOriginalRequestor, aFoundItem);
     if (NS_FAILED(rv) || *aFoundItem) {
       return rv;
     }
@@ -234,7 +233,7 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
   if(mTreeOwner) {
     nsCOMPtr<nsIDocShellTreeOwner> reqAsTreeOwner(do_QueryInterface(aRequestor));
     if (mTreeOwner != reqAsTreeOwner)
-      return mTreeOwner->FindItemWithName(aName, mWebBrowser->mDocShellAsItem,
+      return mTreeOwner->FindItemWithName(aName, mWebBrowser->mDocShell,
                                           aOriginalRequestor, aFoundItem);
     return NS_OK;
   }
@@ -355,7 +354,7 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
    if(mTreeOwner)
        return mTreeOwner->GetPrimaryContentShell(aShell);
 
-   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem.get());
+   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShell);
    NS_IF_ADDREF(*aShell);
 
    return NS_OK;
@@ -372,7 +371,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    if(mTreeOwner)
       return mTreeOwner->SizeShellTo(aShellItem, aCX, aCY);
 
-   if(aShellItem == mWebBrowser->mDocShellAsItem)
+   if(aShellItem == mWebBrowser->mDocShell)
       return webBrowserChrome->SizeBrowserTo(aCX, aCY);
 
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aShellItem));
