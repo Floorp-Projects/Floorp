@@ -248,7 +248,7 @@ FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script);
 struct BaselineBailoutInfo
 {
     // Pointer into the current C stack, where overwriting will start.
-    void *incomingStack;
+    uint8_t *incomingStack;
 
     // The top and bottom heapspace addresses of the reconstructed stack
     // which will be copied to the bottom.
