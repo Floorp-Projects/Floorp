@@ -329,14 +329,18 @@ bool
 nsTextEquivUtils::AppendString(nsAString *aString,
                                const nsAString& aTextEquivalent)
 {
-  // Insert spaces to insure that words from controls aren't jammed together.
   if (aTextEquivalent.IsEmpty())
     return false;
 
-  if (!aString->IsEmpty())
+  // Insert spaces to insure that words from controls aren't jammed together.
+  if (!aString->IsEmpty() && !IsWhitespace(aString->Last()))
     aString->Append(PRUnichar(' '));
 
   aString->Append(aTextEquivalent);
+
+  if (!IsWhitespace(aString->Last()))
+    aString->Append(PRUnichar(' '));
+
   return true;
 }
 
