@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
+Cu.import("resource:///modules/devtools/CssLogic.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "MarkupView",
   "resource:///modules/devtools/MarkupView.jsm");
@@ -640,6 +641,21 @@ InspectorPanel.prototype = {
       return;
     }
     let toCopy = this.selection.node.outerHTML;
+    if (toCopy) {
+      clipboardHelper.copyString(toCopy);
+    }
+  },
+
+  /**
+   * Copy a unique selector of the selected Node to the clipboard.
+   */
+  copyUniqueSelector: function InspectorPanel_copyUniqueSelector()
+  {
+    if (!this.selection.isNode()) {
+      return;
+    }
+
+    let toCopy = CssLogic.findCssSelector(this.selection.node);
     if (toCopy) {
       clipboardHelper.copyString(toCopy);
     }
