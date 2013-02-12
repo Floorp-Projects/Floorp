@@ -244,7 +244,7 @@ nsDOMCameraControl::StartRecording(const JS::Value& aOptions, nsIDOMDeviceStorag
   NS_ENSURE_TRUE(onSuccess, NS_ERROR_INVALID_ARG);
   NS_ENSURE_TRUE(storageArea, NS_ERROR_INVALID_ARG);
 
-  CameraStartRecordingOptions options;
+  mozilla::idl::CameraStartRecordingOptions options;
 
   // Default values, until the dictionary parser can handle them.
   options.rotation = 0;
@@ -321,7 +321,7 @@ nsDOMCameraControl::GetPreviewStream(const JS::Value& aOptions, nsICameraPreview
 {
   NS_ENSURE_TRUE(onSuccess, NS_ERROR_INVALID_ARG);
 
-  CameraSize size;
+  mozilla::idl::CameraSize size;
   nsresult rv = size.Init(cx, &aOptions);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -349,9 +349,9 @@ nsDOMCameraControl::TakePicture(const JS::Value& aOptions, nsICameraTakePictureC
 {
   NS_ENSURE_TRUE(onSuccess, NS_ERROR_INVALID_ARG);
 
-  CameraPictureOptions  options;
-  CameraSize            size;
-  CameraPosition        pos;
+  mozilla::idl::CameraPictureOptions options;
+  mozilla::idl::CameraSize           size;
+  mozilla::idl::CameraPosition       pos;
 
   nsresult rv = options.Init(cx, &aOptions);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -379,7 +379,7 @@ nsDOMCameraControl::GetPreviewStreamVideoMode(const JS::Value& aOptions, nsICame
 {
   NS_ENSURE_TRUE(onSuccess, NS_ERROR_INVALID_ARG);
 
-  CameraRecorderOptions options;
+  mozilla::idl::CameraRecorderOptions options;
   nsresult rv = options.Init(cx, &aOptions);
   NS_ENSURE_SUCCESS(rv, rv);
 

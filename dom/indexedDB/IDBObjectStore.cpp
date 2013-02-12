@@ -2551,7 +2551,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 #endif
 
   nsresult rv;
-  mozilla::dom::IDBIndexParameters params;
+  mozilla::idl::IDBIndexParameters params;
 
   // Get optional arguments.
   if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
