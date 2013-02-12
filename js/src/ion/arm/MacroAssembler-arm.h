@@ -1081,6 +1081,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void subPtr(Imm32 imm, const Register dest);
     void subPtr(const Address &addr, const Register dest);
+    void subPtr(const Register &src, const Register &dest);
     void addPtr(Imm32 imm, const Register dest);
     void addPtr(Imm32 imm, const Address &dest);
     void addPtr(ImmWord imm, const Register dest) {

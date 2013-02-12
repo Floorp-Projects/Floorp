@@ -2033,6 +2033,12 @@ MacroAssemblerARMCompat::subPtr(const Address &addr, const Register dest)
 }
 
 void
+MacroAssemblerARMCompat::subPtr(const Register &src, const Register &dest)
+{
+    ma_sub(src, dest);
+}
+
+void
 MacroAssemblerARMCompat::addPtr(Imm32 imm, const Register dest)
 {
     ma_add(imm, dest);
