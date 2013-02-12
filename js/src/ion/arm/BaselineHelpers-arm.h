@@ -154,16 +154,16 @@ EmitEnterStubFrame(MacroAssembler &masm, Register scratch)
 }
 
 inline void
-EmitLeaveStubFrame(MacroAssembler &masm, bool calledIntoIon = false, Register scratch = ScratchRegister)
+EmitLeaveStubFrame(MacroAssembler &masm, bool calledIntoIon = false)
 {
     // Ion frames do not save and restore the frame pointer. If we called
     // into Ion, we have to restore the stack pointer from the frame descriptor.
     // If we performed a VM call, the descriptor has been popped already so
     // in that case we use the frame pointer.
     if (calledIntoIon) {
-        masm.pop(scratch);
-        masm.ma_lsr(Imm32(FRAMESIZE_SHIFT), scratch, scratch);
-        masm.ma_add(scratch, BaselineStackReg);
+        masm.pop(ScratchRegister);
+        masm.ma_lsr(Imm32(FRAMESIZE_SHIFT), ScratchRegister, ScratchRegister);
+        masm.ma_add(ScratchRegister, BaselineStackReg);
     } else {
         masm.mov(BaselineFrameReg, BaselineStackReg);
     }
@@ -175,7 +175,7 @@ EmitLeaveStubFrame(MacroAssembler &masm, bool calledIntoIon = false, Register sc
     masm.pop(BaselineTailCallReg);
 
     // Discard the frame descriptor.
-    masm.pop(scratch);
+    masm.pop(ScratchRegister);
 }
 
 inline void
