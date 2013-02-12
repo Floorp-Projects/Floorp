@@ -1015,7 +1015,7 @@ AbstractFramePtr::evalPrev() const
 {
     JS_ASSERT(isEvalFrame());
     if (isStackFrame())
-        return AbstractFramePtr(asStackFrame()->prev());
+        return asStackFrame()->evalPrev();
 #ifdef JS_ION
     return asBaselineFrame()->evalPrev();
 #else
