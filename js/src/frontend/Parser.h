@@ -116,7 +116,7 @@ struct ParseContext                 /* tree context for semantic checks */
      *    'pn' if they are in the scope of 'pn'.
      *  + Pre-existing placeholders in the scope of 'pn' have been removed.
      */
-    bool define(JSContext *cx, PropertyName *name, ParseNode *pn, Definition::Kind);
+    bool define(JSContext *cx, HandlePropertyName name, ParseNode *pn, Definition::Kind);
 
     /*
      * Let definitions may shadow same-named definitions in enclosing scopes.
