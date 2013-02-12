@@ -45,14 +45,14 @@ public:
   const char* GetParameter(const char* aKey);
   const char* GetParameterConstChar(uint32_t aKey);
   double GetParameterDouble(uint32_t aKey);
-  void GetParameter(uint32_t aKey, nsTArray<dom::CameraRegion>& aRegions);
-  void GetParameter(uint32_t aKey, nsTArray<dom::CameraSize>& aSizes);
+  void GetParameter(uint32_t aKey, nsTArray<idl::CameraRegion>& aRegions);
+  void GetParameter(uint32_t aKey, nsTArray<idl::CameraSize>& aSizes);
   void SetParameter(const char* aKey, const char* aValue);
   void SetParameter(uint32_t aKey, const char* aValue);
   void SetParameter(uint32_t aKey, double aValue);
-  void SetParameter(uint32_t aKey, const nsTArray<dom::CameraRegion>& aRegions);
+  void SetParameter(uint32_t aKey, const nsTArray<idl::CameraRegion>& aRegions);
   void SetParameter(uint32_t aKey, int aValue);
-  nsresult GetVideoSizes(nsTArray<dom::CameraSize>& aVideoSizes);
+  nsresult GetVideoSizes(nsTArray<idl::CameraSize>& aVideoSizes);
   nsresult PushParameters();
 
   void AutoFocusComplete(bool aSuccess);

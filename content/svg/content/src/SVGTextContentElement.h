@@ -9,6 +9,7 @@
 #include "mozilla/dom/SVGGraphicsElement.h"
 
 class nsSVGTextContainerFrame;
+class nsSVGTextFrame2;
 
 namespace mozilla {
 class nsISVGPoint;
@@ -39,6 +40,8 @@ protected:
   {}
 
   nsSVGTextContainerFrame* GetTextContainerFrame();
+  nsSVGTextFrame2* GetSVGTextFrame();
+  bool FrameIsSVGText();
 };
 
 } // namespace dom

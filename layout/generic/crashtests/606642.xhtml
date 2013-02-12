@@ -1,0 +1,16 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  var r = document.getElementById("r");
+  r.parentNode.removeChild(r);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div style="-moz-column-count: 3; height: 2in;"><div style="position: relative;"><div id="r" style="position: absolute;"><div style="height: 0in;"><div style="height: 5in;"></div><div style="position: absolute; height: 5in;"></div></div></div></div></div></body>
+</html>

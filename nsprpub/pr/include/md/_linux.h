@@ -41,6 +41,8 @@
 #define _PR_SI_ARCHITECTURE "mips"
 #elif defined(__arm__)
 #define _PR_SI_ARCHITECTURE "arm"
+#elif defined(__aarch64__)
+#define _PR_SI_ARCHITECTURE "aarch64"
 #elif defined(__hppa__)
 #define _PR_SI_ARCHITECTURE "hppa"
 #elif defined(__s390x__)
@@ -62,6 +64,10 @@
 #define _PR_STACK_VMBASE	0x50000000
 #define _MD_DEFAULT_STACK_SIZE	65536L
 #define _MD_MMAP_FLAGS          MAP_PRIVATE
+
+#if defined(__aarch64__)
+#define _MD_MINIMUM_STACK_SIZE  0x20000
+#endif
 
 #undef	HAVE_STACK_GROWING_UP
 
@@ -186,7 +192,7 @@ extern PRInt32 _PR_ppc_AtomicSet(PRInt32 *val, PRInt32 newval);
 })
 #endif
 
-#if defined(__arm__)
+#if defined(__arm__) || defined(__aarch64__)
 #if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
 /* Use GCC built-in functions */
 #define _PR_HAVE_ATOMIC_OPS

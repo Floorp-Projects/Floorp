@@ -204,22 +204,6 @@ nsSVGForeignObjectFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   return foundTransform;
 }
 
-
-/**
- * Returns the app unit canvas bounds of a userspace rect.
- *
- * @param aToCanvas Transform from userspace to canvas device space.
- */
-static nsRect
-ToCanvasBounds(const gfxRect &aUserspaceRect,
-               const gfxMatrix &aToCanvas,
-               const nsPresContext *presContext)
-{
-  return nsLayoutUtils::RoundGfxRectToAppRect(
-                          aToCanvas.TransformBounds(aUserspaceRect),
-                          presContext->AppUnitsPerDevPixel());
-}
-
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
                                   const nsIntRect *aDirtyRect)
@@ -360,8 +344,9 @@ nsSVGForeignObjectFrame::GetCoveredRegion()
   if (w < 0.0f) w = 0.0f;
   if (h < 0.0f) h = 0.0f;
   // GetCanvasTM includes the x,y translation
-  return ToCanvasBounds(gfxRect(0.0, 0.0, w, h), GetCanvasTM(FOR_OUTERSVG_TM),
-                        PresContext());
+  return nsSVGUtils::ToCanvasBounds(gfxRect(0.0, 0.0, w, h),
+                                    GetCanvasTM(FOR_OUTERSVG_TM),
+                                    PresContext());
 }
 
 void
@@ -607,7 +592,7 @@ nsSVGForeignObjectFrame::GetInvalidRegion()
   if (kid->HasInvalidFrameInSubtree()) {
     gfxRect r(mRect.x, mRect.y, mRect.width, mRect.height);
     r.Scale(1.0 / nsPresContext::AppUnitsPerCSSPixel());
-    nsRect rect = ToCanvasBounds(r, GetCanvasTM(FOR_PAINTING), PresContext());
+    nsRect rect = nsSVGUtils::ToCanvasBounds(r, GetCanvasTM(FOR_PAINTING), PresContext());
     rect = nsSVGUtils::GetPostFilterVisualOverflowRect(this, rect);
     return rect;
   }

@@ -335,6 +335,18 @@ nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const
   return true;
 }
 
+void
+nsIFrame::FindCloserFrameForSelection(
+                                 nsPoint aPoint,
+                                 nsIFrame::FrameWithDistance* aCurrentBestFrame)
+{
+  if (nsLayoutUtils::PointIsCloserToRect(aPoint, mRect,
+                                         aCurrentBestFrame->mXDistance,
+                                         aCurrentBestFrame->mYDistance)) {
+    aCurrentBestFrame->mFrame = this;
+  }
+}
+
 static bool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
                                     const nsIFrame* aFrame,
                                     const nsStyleDisplay* aDisp, 
@@ -3522,24 +3534,18 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint,
 
   if (kid) {
     // Go through all the child frames to find the closest one
-
-    // Large number to force the comparison to succeed
-    const nscoord HUGE_DISTANCE = nscoord_MAX;
-    nscoord closestXDistance = HUGE_DISTANCE;
-    nscoord closestYDistance = HUGE_DISTANCE;
-    nsIFrame *closestFrame = nullptr;
-
+    nsIFrame::FrameWithDistance closest = { nullptr, nscoord_MAX, nscoord_MAX };
     for (; kid; kid = kid->GetNextSibling()) {
       if (!SelfIsSelectable(kid, aFlags) || kid->IsEmpty())
         continue;
 
-      if (nsLayoutUtils::PointIsCloserToRect(aPoint, kid->GetRect(),
-                                             closestXDistance,
-                                             closestYDistance))
-        closestFrame = kid;
+      kid->FindCloserFrameForSelection(aPoint, &closest);
     }
-    if (closestFrame)
-      return GetSelectionClosestFrameForChild(closestFrame, aPoint, aFlags);
+    if (closest.mFrame) {
+      if (closest.mFrame->IsSVGText())
+        return FrameTarget(closest.mFrame, false, false);
+      return GetSelectionClosestFrameForChild(closest.mFrame, aPoint, aFlags);
+    }
   }
   return FrameTarget(aFrame, false, false);
 }
@@ -3616,8 +3622,8 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint,
     // should lead to the whole frame being selected
     if (adjustedFrame && adjustedFrame->GetStyleUIReset()->mUserSelect ==
         NS_STYLE_USER_SELECT_ALL) {
-      return OffsetsForSingleFrame(adjustedFrame, aPoint +
-                                   this->GetOffsetTo(adjustedFrame));
+      nsPoint adjustedPoint = aPoint + this->GetOffsetTo(adjustedFrame);
+      return OffsetsForSingleFrame(adjustedFrame, adjustedPoint);
     }
 
     // For other cases, try to find a closest frame starting from the parent of
@@ -3656,7 +3662,18 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint,
     offsets.associateWithNext = (offsets.offset == range.start);
     return offsets;
   }
-  nsPoint pt = aPoint - closest.frame->GetOffsetTo(this);
+
+  nsPoint pt;
+  if (closest.frame != this) {
+    if (closest.frame->IsSVGText()) {
+      pt = nsLayoutUtils::TransformAncestorPointToFrame(closest.frame,
+                                                        aPoint, this);
+    } else {
+      pt = aPoint - closest.frame->GetOffsetTo(this);
+    }
+  } else {
+    pt = aPoint;
+  }
   return static_cast<nsFrame*>(closest.frame)->CalcContentOffsetsFromFramePoint(pt);
 
   // XXX should I add some kind of offset standardization?
