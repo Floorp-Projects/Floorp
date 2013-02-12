@@ -464,6 +464,8 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     IonSpew(IonSpew_BaselineBailouts, "      FrameSize=%d", (int) frameSize);
     blFrame->setFrameSize(frameSize);
 
+    uint32_t flags = 0;
+
     // Initialize BaselineFrame::scopeChain
     JSObject *scopeChain = NULL;
     if (iter.bailoutKind() == Bailout_ArgumentCheck) {
@@ -474,18 +476,22 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
         iter.skip();
     } else {
         Value v = iter.read();
-        if (v.isObject())
+        if (v.isObject()) {
             scopeChain = &v.toObject();
-        else
+            if (fun && fun->isHeavyweight())
+                flags |= BaselineFrame::HAS_CALL_OBJ;
+        } else {
             JS_ASSERT(v.isUndefined());
-        // TODO: check for heavyweight function? (fun->isHeavyweight())
 
-        // Get scope chain from function or script if not already set.
-        if (!scopeChain) {
-            if (fun)
-                scopeChain = fun->environment();
-            else
-                scopeChain = &(script->global());
+            // Get scope chain from function or script if not already set. If
+            // pcOffset == 0, we may have to push a new call object, so we leave
+            // scopeChain NULL and enter baseline code before the prologue.
+            if (iter.pcOffset() != 0) {
+                if (fun)
+                    scopeChain = fun->environment();
+                else
+                    scopeChain = &(script->global());
+            }
         }
     }
     IonSpew(IonSpew_BaselineBailouts, "      ScopeChain=%p", scopeChain);
@@ -493,7 +499,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     // Do not need to initialize scratchValue or returnValue fields in BaselineFrame.
 
     // No flags are set.
-    blFrame->setFlags(0);
+    blFrame->setFlags(flags);
 
     // Ion doesn't compile code with try/catch, so the block object will always be
     // null.
