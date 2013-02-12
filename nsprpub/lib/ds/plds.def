@@ -54,3 +54,7 @@ PL_HashTableRawLookupConst;
 ;+    global:
 PL_ClearArenaPool;
 ;+} NSPR_4.1;
+;+NSPR_4.9.6 {
+;+    global:
+PL_SizeOfArenaPoolExcludingPool;
+;+} NSPR_4.8.5;

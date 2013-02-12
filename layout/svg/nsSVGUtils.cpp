@@ -795,7 +795,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
     // We don't do this optimization for nondisplay SVG since nondisplay
     // SVG doesn't maintain bounds/overflow rects.
     nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
-    if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+    if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
+        aFrame->IsSVGText()) {
       // Unlike containers, leaf frames do not include GetPosition() in
       // GetCanvasTM().
       overflowRect = overflowRect + aFrame->GetPosition();
@@ -865,7 +866,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
       gfx->Multiply(GetCanvasTM(aFrame, nsISVGChildFrame::FOR_PAINTING));
       nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
-      if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+      if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
+          aFrame->IsSVGText()) {
         // Unlike containers, leaf frames do not include GetPosition() in
         // GetCanvasTM().
         overflowRect = overflowRect + aFrame->GetPosition();
@@ -1215,7 +1217,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire text element in all
     // cases.
-    if (NS_SVGTextCSSFramesEnabled()) {
+    if (aFrame->IsSVGText()) {
       nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
       if (ancestor && ancestor->IsSVGText()) {
         while (ancestor->GetType() != nsGkAtoms::svgTextFrame2) {
@@ -1878,4 +1880,14 @@ nsSVGUtils::GetSVGGlyphExtents(Element* aElement,
     return true;
   }
   return false;
+}
+
+nsRect
+nsSVGUtils::ToCanvasBounds(const gfxRect &aUserspaceRect,
+                           const gfxMatrix &aToCanvas,
+                           const nsPresContext *presContext)
+{
+  return nsLayoutUtils::RoundGfxRectToAppRect(
+                          aToCanvas.TransformBounds(aUserspaceRect),
+                          presContext->AppUnitsPerDevPixel());
 }

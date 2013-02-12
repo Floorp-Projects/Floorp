@@ -4308,6 +4308,7 @@ nsTextFrame::GetLastInFlow() const
   NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
   return lastInFlow;
 }
+
 nsIFrame*
 nsTextFrame::GetLastContinuation() const
 {
@@ -4317,6 +4318,32 @@ nsTextFrame::GetLastContinuation() const
   }
   NS_POSTCONDITION(lastInFlow, "illegal state in continuation chain.");
   return lastInFlow;
+}
+
+void
+nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+{
+  if (IsSVGText()) {
+    nsIFrame* svgTextFrame =
+      nsLayoutUtils::GetClosestFrameOfType(GetParent(),
+                                           nsGkAtoms::svgTextFrame2);
+    svgTextFrame->InvalidateFrame();
+    return;
+  }
+  nsTextFrameBase::InvalidateFrame(aDisplayItemKey);
+}
+
+void
+nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
+{
+  if (IsSVGText()) {
+    nsIFrame* svgTextFrame =
+      nsLayoutUtils::GetClosestFrameOfType(GetParent(),
+                                           nsGkAtoms::svgTextFrame2);
+    svgTextFrame->InvalidateFrame();
+    return;
+  }
+  nsTextFrameBase::InvalidateFrameWithRect(aRect, aDisplayItemKey);
 }
 
 gfxTextRun*
@@ -5558,7 +5585,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
 
     DrawText(aCtx, aDirtyRect, aFramePt, textBaselinePt,
              offset, length, aProvider, aTextPaintStyle, foreground, aClipEdges,
-             advance, hyphenWidth > 0, nullptr, aCallbacks);
+             advance, hyphenWidth > 0, nullptr, nullptr, aCallbacks);
     if (hyphenWidth) {
       advance += hyphenWidth;
     }
@@ -5650,6 +5677,7 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
     uint32_t aContentOffset, uint32_t aContentLength,
     nsTextPaintStyle& aTextPaintStyle,
     const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+    gfxTextObjectPaint* aObjectPaint,
     nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
   NS_ASSERTION(GetContent()->IsSelectionDescendant(), "wrong paint path");
@@ -5863,6 +5891,7 @@ void
 nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
                        const nsRect& aDirtyRect,
                        const nsCharClipDisplayItem& aItem,
+                       gfxTextObjectPaint* aObjectPaint,
                        nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
   // Don't pass in aRenderingContext here, because we need a *reference*
@@ -5905,7 +5934,8 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
       tmp.ConvertSkippedToOriginal(startOffset + maxLength) - contentOffset;
     if (PaintTextWithSelection(ctx, framePt, textBaselinePt, dirtyRect,
                                provider, contentOffset, contentLength,
-                               textPaintStyle, clipEdges, aCallbacks)) {
+                               textPaintStyle, clipEdges, aObjectPaint,
+                               aCallbacks)) {
       return;
     }
   }
@@ -5933,7 +5963,7 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   DrawText(ctx, dirtyRect, framePt, textBaselinePt, startOffset, maxLength, provider,
            textPaintStyle, foregroundColor, clipEdges, advanceWidth,
            (GetStateBits() & TEXT_HYPHEN_BREAK) != 0,
-           nullptr, aCallbacks);
+           nullptr, aObjectPaint, aCallbacks);
 }
 
 static void
@@ -5944,6 +5974,7 @@ DrawTextRun(gfxTextRun* aTextRun,
             PropertyProvider* aProvider,
             nscolor aTextColor,
             gfxFloat* aAdvanceWidth,
+            gfxTextObjectPaint* aObjectPaint,
             nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
   gfxFont::DrawMode drawMode = aCallbacks ? gfxFont::GLYPH_PATH :
@@ -5951,12 +5982,12 @@ DrawTextRun(gfxTextRun* aTextRun,
   if (aCallbacks) {
     aCallbacks->NotifyBeforeText(aTextColor);
     aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aOffset, aLength,
-                   aProvider, aAdvanceWidth, nullptr, aCallbacks);
+                   aProvider, aAdvanceWidth, aObjectPaint, aCallbacks);
     aCallbacks->NotifyAfterText();
   } else {
     aCtx->SetColor(gfxRGBA(aTextColor));
     aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aOffset, aLength,
-                   aProvider, aAdvanceWidth, nullptr);
+                   aProvider, aAdvanceWidth, aObjectPaint);
   }
 }
 
@@ -5968,10 +5999,11 @@ nsTextFrame::DrawTextRun(gfxContext* const aCtx,
                          nscolor aTextColor,
                          gfxFloat& aAdvanceWidth,
                          bool aDrawSoftHyphen,
+                         gfxTextObjectPaint* aObjectPaint,
                          nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
   ::DrawTextRun(mTextRun, aCtx, aTextBaselinePt, aOffset, aLength, &aProvider,
-                aTextColor, &aAdvanceWidth, aCallbacks);
+                aTextColor, &aAdvanceWidth, aObjectPaint, aCallbacks);
 
   if (aDrawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
@@ -5985,7 +6017,7 @@ nsTextFrame::DrawTextRun(gfxContext* const aCtx,
       ::DrawTextRun(hyphenTextRun.get(), aCtx,
                     gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
                     0, hyphenTextRun->GetLength(),
-                    nullptr, aTextColor, nullptr, aCallbacks);
+                    nullptr, aTextColor, nullptr, aObjectPaint, aCallbacks);
     }
   }
 }
@@ -6003,6 +6035,7 @@ nsTextFrame::DrawTextRunAndDecorations(
     bool aDrawSoftHyphen,
     const TextDecorations& aDecorations,
     const nscolor* const aDecorationOverrideColor,
+    gfxTextObjectPaint* aObjectPaint,
     nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
     const gfxFloat app = aTextStyle.PresContext()->AppUnitsPerDevPixel();
@@ -6067,7 +6100,7 @@ nsTextFrame::DrawTextRunAndDecorations(
     // CSS 2.1 mandates that text be painted after over/underlines, and *then*
     // line-throughs
     DrawTextRun(aCtx, aTextBaselinePt, aOffset, aLength, aProvider, aTextColor,
-                aAdvanceWidth, aDrawSoftHyphen, aCallbacks);
+                aAdvanceWidth, aDrawSoftHyphen, aObjectPaint, aCallbacks);
 
     // Line-throughs
     for (uint32_t i = aDecorations.mStrikes.Length(); i-- > 0; ) {
@@ -6103,6 +6136,7 @@ nsTextFrame::DrawText(
     gfxFloat& aAdvanceWidth,
     bool aDrawSoftHyphen,
     const nscolor* const aDecorationOverrideColor,
+    gfxTextObjectPaint* aObjectPaint,
     nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
   TextDecorations decorations;
@@ -6117,10 +6151,10 @@ nsTextFrame::DrawText(
     DrawTextRunAndDecorations(aCtx, aDirtyRect, aFramePt, aTextBaselinePt, aOffset, aLength,
                               aProvider, aTextStyle, aTextColor, aClipEdges, aAdvanceWidth,
                               aDrawSoftHyphen, decorations,
-                              aDecorationOverrideColor, aCallbacks);
+                              aDecorationOverrideColor, aObjectPaint, aCallbacks);
   } else {
     DrawTextRun(aCtx, aTextBaselinePt, aOffset, aLength, aProvider,
-                aTextColor, aAdvanceWidth, aDrawSoftHyphen, aCallbacks);
+                aTextColor, aAdvanceWidth, aDrawSoftHyphen, aObjectPaint, aCallbacks);
   }
 }
 
@@ -6207,7 +6241,7 @@ nsTextFrame::GetCharacterOffsetAtFramePoint(const nsPoint &aPoint)
 }
 
 nsIFrame::ContentOffsets
-nsTextFrame::GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
+nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
                                                     bool aForInsertionPoint)
 {
   ContentOffsets offsets;

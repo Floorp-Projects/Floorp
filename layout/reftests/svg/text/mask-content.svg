@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <style>
+    @font-face {
+      font-family: Ahem;
+      src: url(../../fonts/Ahem.ttf);
+    }
+  </style>
+  <defs>
+    <mask id="m" x="0" y="0" width="600" height="400">
+      <g style="font: 32px Ahem; white-space: pre; fill: white">
+        <text x="20" y="100">one</text>
+        <text x="20" y="150" style="text-decoration: line-through">   </text>
+      </g>
+    </mask>
+  </defs>
+  <rect x="0" y="0" width="600" height="400" fill="blue" mask="url(#m)"/>
+  <g fill="none" stroke="black" stroke-width="4" shape-rendering="crispEdges">
+    <rect x="20" y="73" width="96" height="32"/>
+  </g>
+  <script>
+    window.addEventListener("MozReftestInvalidate", function() {
+      window.addEventListener("MozAfterPaint", function() {
+        document.documentElement.removeAttribute("class");
+      }, false);
+    }, false);
+  </script>
+</svg>

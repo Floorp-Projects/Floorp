@@ -499,7 +499,7 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
 nsresult
 nsXMLHttpRequest::InitParameters(JSContext* aCx, const jsval* aParams)
 {
-  XMLHttpRequestParameters params;
+  mozilla::idl::XMLHttpRequestParameters params;
   nsresult rv = params.Init(aCx, aParams);
   NS_ENSURE_SUCCESS(rv, rv);
 

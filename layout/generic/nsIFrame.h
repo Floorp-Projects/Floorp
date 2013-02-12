@@ -618,6 +618,7 @@ protected:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) = 0;
   friend class nsFrameList; // needed to pass aDestructRoot through to children
   friend class nsLineBox;   // needed to pass aDestructRoot through to children
+  friend class nsContainerFrame; // needed to pass aDestructRoot through to children
 public:
 
   /**
@@ -2898,6 +2899,36 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
     VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY = 0x01
   };
   bool IsVisibleConsideringAncestors(uint32_t aFlags = 0) const;
+
+  struct FrameWithDistance
+  {
+    nsIFrame* mFrame;
+    nscoord mXDistance;
+    nscoord mYDistance;
+  };
+
+  /**
+   * Finds a frame that is closer to a specified point than a current
+   * distance.  Distance is measured as for text selection -- a closer x
+   * distance beats a closer y distance.
+   *
+   * Normally, this function will only check the distance between this
+   * frame's rectangle and the specified point.  nsSVGTextFrame2 overrides
+   * this so that it can manage all of its descendant frames and take
+   * into account any SVG text layout.
+   *
+   * If aPoint is closer to this frame's rectangle than aCurrentBestFrame
+   * indicates, then aCurrentBestFrame is updated with the distance between
+   * aPoint and this frame's rectangle, and with a pointer to this frame.
+   * If aPoint is not closer, then aCurrentBestFrame is left unchanged.
+   *
+   * @param aPoint The point to check for its distance to this frame.
+   * @param aCurrentBestFrame Pointer to a struct that will be updated with
+   *   a pointer to this frame and its distance to aPoint, if this frame
+   *   is indeed closer than the current distance in aCurrentBestFrame.
+   */
+  virtual void FindCloserFrameForSelection(nsPoint aPoint,
+                                           FrameWithDistance* aCurrentBestFrame);
 
   inline bool IsBlockInside() const;
   inline bool IsBlockOutside() const;

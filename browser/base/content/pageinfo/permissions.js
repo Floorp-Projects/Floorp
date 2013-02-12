@@ -55,9 +55,7 @@ var gPermObj = {
   },
   plugins: function getPluginsDefaultPermissions()
   {
-    if (gPrefs.getBoolPref("plugins.click_to_play"))
-      return BLOCK;
-    return ALLOW;
+    return UNKNOWN;
   },
   fullscreen: function getFullscreenDefaultPermissions()
   {
@@ -70,8 +68,12 @@ var permissionObserver = {
   {
     if (aTopic == "perm-changed") {
       var permission = aSubject.QueryInterface(Components.interfaces.nsIPermission);
-      if (permission.host == gPermURI.host && permission.type in gPermObj)
-        initRow(permission.type);
+      if (permission.host == gPermURI.host) {
+        if (permission.type in gPermObj)
+          initRow(permission.type);
+        else if (permission.type.startsWith("plugin"))
+          setPluginsRadioState();
+      }
     }
   }
 };
@@ -113,8 +115,10 @@ function onUnloadPermission()
 
 function initRow(aPartId)
 {
-  if (aPartId == "plugins" && !gPrefs.getBoolPref("plugins.click_to_play"))
-    document.getElementById("permPluginsRow").hidden = true;
+  if (aPartId == "plugins") {
+    initPluginsRow();
+    return;
+  }
 
   var permissionManager = Components.classes[PERMISSION_CONTRACTID]
                                     .getService(nsIPermissionManager);
@@ -157,6 +161,10 @@ function onCheckboxClick(aPartId)
     onRadioClick(aPartId);
     command.removeAttribute("disabled");
   }
+}
+
+function onPluginRadioClick(aEvent) {
+  onRadioClick(aEvent.originalTarget.getAttribute("id").split('#')[0]);
 }
 
 function onRadioClick(aPartId)
@@ -228,5 +236,100 @@ function onIndexedDBUsageCallback(uri, usage, fileUsage)
                                  DownloadUtils.convertByteUnits(usage));
     status.removeAttribute("hidden");
     button.removeAttribute("hidden");
+  }
+}
+
+// XXX copied this from browser-plugins.js - is there a way to share?
+function makeNicePluginName(aName) {
+  if (aName == "Shockwave Flash")
+    return "Adobe Flash";
+
+  // Clean up the plugin name by stripping off any trailing version numbers
+  // or "plugin". EG, "Foo Bar Plugin 1.23_02" --> "Foo Bar"
+  // Do this by first stripping the numbers, etc. off the end, and then
+  // removing "Plugin" (and then trimming to get rid of any whitespace).
+  // (Otherwise, something like "Java(TM) Plug-in 1.7.0_07" gets mangled)
+  let newName = aName.replace(/[\s\d\.\-\_\(\)]+$/, "").replace(/\bplug-?in\b/i, "").trim();
+  return newName;
+}
+
+function fillInPluginPermissionTemplate(aPluginName, aPermissionString) {
+  let permPluginTemplate = document.getElementById("permPluginTemplate");
+  permPluginTemplate.setAttribute("permString", aPermissionString);
+  let attrs = [
+    [ ".permPluginTemplateLabel", "value", aPluginName ],
+    [ ".permPluginTemplateRadioGroup", "id", aPermissionString + "RadioGroup" ],
+    [ ".permPluginTemplateRadioAsk", "id", aPermissionString + "#0" ],
+    [ ".permPluginTemplateRadioAllow", "id", aPermissionString + "#1" ],
+    [ ".permPluginTemplateRadioBlock", "id", aPermissionString + "#2" ]
+  ];
+
+  for (let attr of attrs) {
+    document.querySelector(attr[0]).setAttribute(attr[1], attr[2]);
+  }
+
+  return permPluginTemplate.cloneNode(true);
+}
+
+function clearPluginPermissionTemplate() {
+  let permPluginTemplate = document.getElementById("permPluginTemplate");
+  permPluginTemplate.hidden = true;
+  permPluginTemplate.removeAttribute("permString");
+  document.querySelector(".permPluginTemplateLabel").removeAttribute("value");
+  document.querySelector(".permPluginTemplateRadioGroup").removeAttribute("id");
+  document.querySelector(".permPluginTemplateRadioAsk").removeAttribute("id");
+  document.querySelector(".permPluginTemplateRadioAllow").removeAttribute("id");
+  document.querySelector(".permPluginTemplateRadioBlock").removeAttribute("id");
+}
+
+function initPluginsRow() {
+  let pluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+  let tags = pluginHost.getPluginTags().filter(function(aTag) {
+    let mimeTypes = aTag.getMimeTypes();
+    if (mimeTypes.length < 1)
+      return false;
+    let mimeType = mimeTypes[0].type;
+    return (!aTag.disabled && pluginHost.isPluginClickToPlayForType(mimeType));
+  });
+
+  tags.sort(function(tagA, tagB) {
+    let nameA = makeNicePluginName(tagA.name);
+    let nameB = makeNicePluginName(tagB.name);
+    return nameA < nameB ? -1 : (nameA == nameB ? 0 : 1);
+  });
+
+  let permissionEntries = [];
+  for (let plugin of tags) {
+    let mimeType = plugin.getMimeTypes()[0].type;
+    let permString = pluginHost.getPermissionStringForType(mimeType);
+    let pluginName = makeNicePluginName(plugin.name)
+    let permEntry = fillInPluginPermissionTemplate(pluginName, permString);
+    permissionEntries.push(permEntry);
+  }
+
+  let permPluginsRow = document.getElementById("permPluginsRow");
+  clearPluginPermissionTemplate();
+  if (permissionEntries.length < 1) {
+    permPluginsRow.hidden = true;
+    return;
+  }
+
+  for (let permissionEntry of permissionEntries) {
+    permPluginsRow.appendChild(permissionEntry);
+  }
+
+  setPluginsRadioState();
+}
+
+function setPluginsRadioState() {
+  var permissionManager = Components.classes[PERMISSION_CONTRACTID]
+                                    .getService(nsIPermissionManager);
+  let box = document.getElementById("permPluginsRow");
+  for (let permissionEntry of box.childNodes) {
+    if (permissionEntry.hasAttribute("permString")) {
+      let permString = permissionEntry.getAttribute("permString");
+      let permission = permissionManager.testPermission(gPermURI, permString);
+      setRadioState(permString, permission);
+    }
   }
 }

@@ -1092,23 +1092,23 @@ nsSVGGlyphFrame::SetupObjectPaint(gfxContext *aContext,
 // SVGTextObjectPaint methods:
 
 already_AddRefed<gfxPattern>
-nsSVGGlyphFrame::SVGTextObjectPaint::GetFillPattern(float aOpacity,
-                                                    const gfxMatrix& aCTM)
+mozilla::SVGTextObjectPaint::GetFillPattern(float aOpacity,
+                                            const gfxMatrix& aCTM)
 {
   return mFillPaint.GetPattern(aOpacity, &nsStyleSVG::mFill, aCTM);
 }
 
 already_AddRefed<gfxPattern>
-nsSVGGlyphFrame::SVGTextObjectPaint::GetStrokePattern(float aOpacity,
-                                                      const gfxMatrix& aCTM)
+mozilla::SVGTextObjectPaint::GetStrokePattern(float aOpacity,
+                                              const gfxMatrix& aCTM)
 {
   return mStrokePaint.GetPattern(aOpacity, &nsStyleSVG::mStroke, aCTM);
 }
 
 already_AddRefed<gfxPattern>
-nsSVGGlyphFrame::SVGTextObjectPaint::Paint::GetPattern(float aOpacity,
-                                                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                                                       const gfxMatrix& aCTM)
+mozilla::SVGTextObjectPaint::Paint::GetPattern(float aOpacity,
+                                               nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                               const gfxMatrix& aCTM)
 {
   nsRefPtr<gfxPattern> pattern;
   if (mPatternCache.Get(aOpacity, getter_AddRefs(pattern))) {

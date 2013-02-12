@@ -47,6 +47,11 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         // so just save it to locale here and reset it as default after the join
         Locale locale = Locale.getDefault();
 
+        if (locale.toString().equalsIgnoreCase("zh_hk")) {
+            locale = Locale.TRADITIONAL_CHINESE;
+            Locale.setDefault(locale);
+        }
+
         GeckoApp app = GeckoApp.mAppContext;
         String resourcePath = app.getApplication().getPackageResourcePath();
         String[] pluginDirs = null;

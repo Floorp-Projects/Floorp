@@ -2161,7 +2161,7 @@ static PRTime
 ExtractDateFromOptions(JSContext* aCx, const JS::Value& aOptions)
 {
   PRTime result = 0;
-  DeviceStorageEnumerationParameters params;
+  mozilla::idl::DeviceStorageEnumerationParameters params;
   if (!JSVAL_IS_VOID(aOptions) && !aOptions.isNull()) {
     nsresult rv = params.Init(aCx, &aOptions);
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_VOID(params.since) && !params.since.isNull() && params.since.isObject()) {

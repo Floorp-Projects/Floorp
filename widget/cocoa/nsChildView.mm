@@ -796,6 +796,13 @@ NS_IMETHODIMP nsChildView::GetClientBounds(nsIntRect &aRect)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsChildView::GetScreenBounds(nsIntRect &aRect)
+{
+  GetBounds(aRect);
+  aRect.MoveTo(WidgetToScreenOffset());
+  return NS_OK;
+}
+
 double
 nsChildView::GetDefaultScaleInternal()
 {

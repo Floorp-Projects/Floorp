@@ -53,7 +53,7 @@ class nsGeolocationRequest
   nsGeolocationRequest(nsGeolocation* locator,
                        nsIDOMGeoPositionCallback* callback,
                        nsIDOMGeoPositionErrorCallback* errorCallback,
-                       mozilla::dom::GeoPositionOptions* aOptions,
+                       mozilla::idl::GeoPositionOptions* aOptions,
                        bool watchPositionRequest = false,
                        int32_t watchId = 0);
   void Shutdown();
@@ -86,7 +86,7 @@ class nsGeolocationRequest
   nsCOMPtr<nsITimer> mTimeoutTimer;
   nsCOMPtr<nsIDOMGeoPositionCallback> mCallback;
   nsCOMPtr<nsIDOMGeoPositionErrorCallback> mErrorCallback;
-  nsAutoPtr<mozilla::dom::GeoPositionOptions> mOptions;
+  nsAutoPtr<mozilla::idl::GeoPositionOptions> mOptions;
 
   nsRefPtr<nsGeolocation> mLocator;
 
@@ -204,11 +204,11 @@ public:
   // Versions of the DOM APIs that don't require JS option values
   nsresult WatchPosition(nsIDOMGeoPositionCallback *callback,
                          nsIDOMGeoPositionErrorCallback *errorCallback,
-                         mozilla::dom::GeoPositionOptions *options,
+                         mozilla::idl::GeoPositionOptions *options,
                          int32_t *_retval);
   nsresult GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
                               nsIDOMGeoPositionErrorCallback *errorCallback,
-                              mozilla::dom::GeoPositionOptions *options);
+                              mozilla::idl::GeoPositionOptions *options);
 private:
 
   ~nsGeolocation();

@@ -118,6 +118,9 @@ public:
                                              nsIFrame::eLineParticipant));
   }
 
+  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0);
+  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0);
+
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -294,7 +297,8 @@ public:
    *   (NotifyBeforeSelectionBackground NotifySelectionBackgroundPathEmitted)?
    *   (NotifyBeforeDecorationLine NotifyDecorationLinePathEmitted)*
    *   NotifyBeforeText
-   *   NotifyGlyphPathEmitted*
+   *   (NotifyGlyphPathEmitted |
+   *    (NotifyBeforeSVGGlyphPainted NotifyAfterSVGGlyphPainted))*
    *   NotifyAfterText
    *   (NotifyBeforeDecorationLine NotifyDecorationLinePathEmitted)*
    *   (NotifyBeforeSelectionDecorationLine NotifySelectionDecorationLinePathEmitted)*
@@ -305,8 +309,16 @@ public:
    * NS_TRANSPARENT, NS_SAME_AS_FOREGROUND_COLOR and
    * NS_40PERCENT_FOREGROUND_COLOR.
    */
-  struct DrawPathCallbacks : gfxTextRun::DrawCallbacks
+  struct DrawPathCallbacks : gfxTextRunDrawCallbacks
   {
+    /**
+     * @param aShouldPaintSVGGlyphs Whether SVG glyphs should be painted.
+     */
+    DrawPathCallbacks(bool aShouldPaintSVGGlyphs = false)
+      : gfxTextRunDrawCallbacks(aShouldPaintSVGGlyphs)
+    {
+    }
+
     /**
      * Called just before any paths have been emitted to the gfxContext
      * for the glyphs of the frame's text.
@@ -362,6 +374,7 @@ public:
   // context.
   void PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
                  const nsRect& aDirtyRect, const nsCharClipDisplayItem& aItem,
+                 gfxTextObjectPaint* aObjectPaint = nullptr,
                  DrawPathCallbacks* aCallbacks = nullptr);
   // helper: paint text frame when we're impacted by at least one selection.
   // Return false if the text was not painted and we should continue with
@@ -375,6 +388,7 @@ public:
                               uint32_t aContentLength,
                               nsTextPaintStyle& aTextPaintStyle,
                               const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                              gfxTextObjectPaint* aObjectPaint,
                               DrawPathCallbacks* aCallbacks);
   // helper: paint text with foreground and background colors determined
   // by selection(s). Also computes a mask of all selection types applying to
@@ -636,6 +650,7 @@ protected:
                    nscolor aTextColor,
                    gfxFloat& aAdvanceWidth,
                    bool aDrawSoftHyphen,
+                   gfxTextObjectPaint* aObjectPaint,
                    DrawPathCallbacks* aCallbacks);
 
   void DrawTextRunAndDecorations(gfxContext* const aCtx,
@@ -652,6 +667,7 @@ protected:
                                  bool aDrawSoftHyphen,
                                  const TextDecorations& aDecorations,
                                  const nscolor* const aDecorationOverrideColor,
+                                 gfxTextObjectPaint* aObjectPaint,
                                  DrawPathCallbacks* aCallbacks);
 
   void DrawText(gfxContext* const aCtx,
@@ -667,6 +683,7 @@ protected:
                 gfxFloat& aAdvanceWidth,
                 bool aDrawSoftHyphen,
                 const nscolor* const aDecorationOverrideColor = nullptr,
+                gfxTextObjectPaint* aObjectPaint = nullptr,
                 DrawPathCallbacks* aCallbacks = nullptr);
 
   // Set non empty rect to aRect, it should be overflow rect or frame rect.
@@ -674,7 +691,7 @@ protected:
   bool CombineSelectionUnderlineRect(nsPresContext* aPresContext,
                                        nsRect& aRect);
 
-  ContentOffsets GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
+  ContentOffsets GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
                    bool aForInsertionPoint);
 
   void ClearFrameOffsetCache();

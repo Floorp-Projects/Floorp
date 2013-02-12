@@ -34,42 +34,4 @@
 #endif
     </handlers>
   </binding>
-
-  <binding id="allTabs-preview" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content pack="center" align="center">
-      <xul:stack>
-        <xul:vbox class="allTabs-preview-inner" align="center" pack="center">
-          <xul:hbox class="tabPreview-canvas" xbl:inherits="style=canvasstyle">
-            <children/>
-          </xul:hbox>
-          <xul:label flex="1" xbl:inherits="value=label,crop" class="allTabs-preview-label plain"/>
-        </xul:vbox>
-        <xul:hbox class="allTabs-favicon-container">
-          <xul:image class="allTabs-favicon" xbl:inherits="src=image"/>
-        </xul:hbox>
-      </xul:stack>
-    </content>
-    <handlers>
-      <handler event="command" action="allTabs.pick(this);"/>
-      <handler event="click" button="1" action="gBrowser.removeTab(this._tab);"/>
-
-      <handler event="dragstart"><![CDATA[
-        event.dataTransfer.mozSetDataAt("application/x-moz-node", this._tab, 0);
-      ]]></handler>
-
-      <handler event="dragover"><![CDATA[
-        let tab = event.dataTransfer.mozGetDataAt("application/x-moz-node", 0);
-        if (tab && tab.parentNode == gBrowser.tabContainer)
-          event.preventDefault();
-      ]]></handler>
-
-      <handler event="drop"><![CDATA[
-        let tab = event.dataTransfer.mozGetDataAt("application/x-moz-node", 0);
-        if (tab && tab.parentNode == gBrowser.tabContainer) {
-          let newIndex = Array.indexOf(gBrowser.tabs, this._tab);
-          gBrowser.moveTabTo(tab, newIndex);
-        }
-      ]]></handler>
-    </handlers>
-  </binding>
 </bindings>
