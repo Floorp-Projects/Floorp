@@ -149,8 +149,8 @@ public:
                           nsIFrame*       aOldFrame);
   virtual const nsFrameList& GetChildList(ChildListID aListID) const;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
-  virtual nscoord GetBaseline() const;
-  virtual nscoord GetCaretBaseline() const;
+  virtual nscoord GetBaseline() const MOZ_OVERRIDE;
+  virtual nscoord GetCaretBaseline() const MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
   virtual nsSplittableType GetSplittableType() const;
   virtual bool IsFloatContainingBlock() const;

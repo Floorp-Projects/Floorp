@@ -77,8 +77,6 @@ function checkValidity(aElement, aValidity, aApply, aRangeApply)
   }
 }
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 for (var test of data) {
   input.type = test.type;
   var apply = test.apply;
@@ -293,9 +291,6 @@ for (var test of data) {
   input.removeAttribute('min');
   input.value = '';
 }
-
-SimpleTest.finish();
-});
 
 </script>
 </pre>

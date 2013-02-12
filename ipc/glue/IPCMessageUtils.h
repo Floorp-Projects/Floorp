@@ -11,6 +11,9 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/TimeStamp.h"
+#ifdef XP_WIN
+#include "mozilla/TimeStamp_windows.h"
+#endif
 #include "mozilla/Util.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/StandardInteger.h"
@@ -924,6 +927,30 @@ struct ParamTraits<mozilla::TimeStamp>
     return ReadParam(aMsg, aIter, &aResult->mValue);
   };
 };
+
+#ifdef XP_WIN
+
+template<>
+struct ParamTraits<mozilla::TimeStampValue>
+{
+  typedef mozilla::TimeStampValue paramType;
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mGTC);
+    WriteParam(aMsg, aParam.mQPC);
+    WriteParam(aMsg, aParam.mHasQPC);
+    WriteParam(aMsg, aParam.mIsNull);
+  }
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mGTC) &&
+            ReadParam(aMsg, aIter, &aResult->mQPC) &&
+            ReadParam(aMsg, aIter, &aResult->mHasQPC) &&
+            ReadParam(aMsg, aIter, &aResult->mIsNull));
+  }
+};
+
+#endif
 
 template <>
 struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>

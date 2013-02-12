@@ -30,7 +30,6 @@
 #include "nsIOutputStream.h"
 #include "nsIURL.h"
 #include "nsTArray.h"
-#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIProtocolProxyService2.h"
 #include "nsIStreamConverterService.h"
@@ -68,9 +67,8 @@
 #include "nsIXULRuntime.h"
 
 // for the dialog
-#include "nsIStringBundle.h"
 #include "nsIWindowWatcher.h"
-#include "nsPIDOMWindow.h"
+#include "nsIDOMWindow.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -200,19 +198,11 @@ PRLogModuleInfo* nsPluginLogging::gNPPLog = nullptr;
 PRLogModuleInfo* nsPluginLogging::gPluginLog = nullptr;
 #endif
 
-#define BRAND_PROPERTIES_URL "chrome://branding/locale/brand.properties"
-#define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
-
 // #defines for plugin cache and prefs
 #define NS_PREF_MAX_NUM_CACHED_INSTANCES "browser.plugins.max_num_cached_plugins"
 // Raise this from '10' to '50' to work around a bug in Apple's current Java
 // plugins on OS X Lion and SnowLeopard.  See bug 705931.
 #define DEFAULT_NUMBER_OF_STOPPED_INSTANCES 50
-
-#ifdef CALL_SAFETY_ON
-// By default we run OOPP, so we don't want to cover up crashes.
-bool gSkipPluginSafeCalls = true;
-#endif
 
 nsIFile *nsPluginHost::sPluginTempDir;
 nsPluginHost *nsPluginHost::sInst;
@@ -2180,11 +2170,6 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
 {
   Telemetry::AutoTimer<Telemetry::FIND_PLUGINS> telemetry;
 
-#ifdef CALL_SAFETY_ON
-  // check preferences on whether or not we want to try safe calls to plugins
-  NS_INIT_PLUGIN_SAFE_CALLS;
-#endif
-
   NS_ENSURE_ARG_POINTER(aPluginsChanged);
 
   *aPluginsChanged = false;
@@ -3254,98 +3239,6 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
   }
 #endif
   return NS_OK;
-}
-
-nsresult
-nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsNPAPIPluginInstance *aInstance)
-{
-  // the |aLibrary| parameter is not needed anymore, after we added |aInstance| which
-  // can also be used to look up the plugin name, but we cannot get rid of it because
-  // the |nsIPluginHost| interface is deprecated which in fact means 'frozen'
-
-  NS_ERROR("Plugin performed illegal operation");
-  NS_ENSURE_ARG_POINTER(aInstance);
-
-  if (mDontShowBadPluginMessage)
-    return NS_OK;
-
-  nsRefPtr<nsPluginInstanceOwner> owner = aInstance->GetOwner();
-
-  nsCOMPtr<nsIPrompt> prompt;
-  GetPrompt(owner, getter_AddRefs(prompt));
-  if (!prompt)
-    return NS_OK;
-
-  nsCOMPtr<nsIStringBundleService> strings =
-    mozilla::services::GetStringBundleService();
-  if (!strings)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIStringBundle> bundle;
-  nsresult rv = strings->CreateBundle(BRAND_PROPERTIES_URL, getter_AddRefs(bundle));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsXPIDLString brandName;
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                 getter_Copies(brandName));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = strings->CreateBundle(PLUGIN_PROPERTIES_URL, getter_AddRefs(bundle));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsXPIDLString title, message, checkboxMessage;
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginTitle").get(),
-                                 getter_Copies(title));
-  if (NS_FAILED(rv))
-    return rv;
-
-  const PRUnichar *formatStrings[] = { brandName.get() };
-  if (NS_FAILED(rv = bundle->FormatStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(),
-                               formatStrings, 1, getter_Copies(message))))
-    return rv;
-
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage").get(),
-                                 getter_Copies(checkboxMessage));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsNPAPIPlugin *plugin = aInstance->GetPlugin();
-  if (!plugin)
-    return NS_ERROR_FAILURE;
-
-  nsPluginTag *pluginTag = TagForPlugin(plugin);
-
-  // add plugin name to the message
-  nsCString pluginname;
-  if (pluginTag) {
-    if (!pluginTag->mName.IsEmpty()) {
-      pluginname = pluginTag->mName;
-    } else {
-      pluginname = pluginTag->mFileName;
-    }
-  } else {
-    pluginname.AppendLiteral("???");
-  }
-
-  NS_ConvertUTF8toUTF16 msg(pluginname);
-  msg.AppendLiteral("\n\n");
-  msg.Append(message);
-
-  int32_t buttonPressed;
-  bool checkboxState = false;
-  rv = prompt->ConfirmEx(title, msg.get(),
-                       nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
-                       nullptr, nullptr, nullptr,
-                       checkboxMessage, &checkboxState, &buttonPressed);
-
-
-  if (NS_SUCCEEDED(rv) && checkboxState)
-    mDontShowBadPluginMessage = true;
-
-  return rv;
 }
 
 nsresult

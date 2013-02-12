@@ -601,17 +601,11 @@ function checkStepUp()
   }
 }
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
-
 checkPresence();
 checkAvailability();
 
 checkStepDown();
 checkStepUp();
-
-SimpleTest.finish();
-});
 
 </script>
 </pre>

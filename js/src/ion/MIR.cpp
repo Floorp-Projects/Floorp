@@ -1227,16 +1227,14 @@ CanDoValueBitwiseCmp(JSContext *cx, types::StackTypeSet *lhs, types::StackTypeSe
         return false;
     }
 
-    // Objects with special equality or that emulates undefined are not supported.
+    // Objects that emulate undefined are not supported.
     if (lhs->maybeObject() &&
-        (lhs->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
-         lhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED)))
+        lhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED))
     {
         return false;
     }
     if (rhs->maybeObject() &&
-        (rhs->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
-         rhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED)))
+        rhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED))
     {
         return false;
     }
@@ -1359,12 +1357,6 @@ MCompare::infer(const TypeOracle::BinaryTypes &b, JSContext *cx)
 
     // Handle object comparison.
     if (!relationalEq && lhs == MIRType_Object && rhs == MIRType_Object) {
-        if (b.lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
-            b.rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY))
-        {
-            return;
-        }
-
         compareType_ = Compare_Object;
         return;
     }
@@ -1916,4 +1908,34 @@ MLoadSlot::mightAlias(MDefinition *store)
     if (store->isStoreSlot() && store->toStoreSlot()->slot() != slot())
         return false;
     return true;
+}
+
+void
+InlinePropertyTable::trimToAndMaybePatchTargets(AutoObjectVector &targets,
+                                                AutoObjectVector &originals)
+{
+    IonSpew(IonSpew_Inlining, "Got inlineable property cache with %d cases",
+            (int)numEntries());
+
+    size_t i = 0;
+    while (i < numEntries()) {
+        bool foundFunc = false;
+        // Compare using originals, but if we find a matching function,
+        // patch it to the target, which might be a clone.
+        for (size_t j = 0; j < originals.length(); j++) {
+            if (entries_[i]->func == originals[j]) {
+                if (entries_[i]->func != targets[j])
+                    entries_[i] = new Entry(entries_[i]->typeObj, targets[j]->toFunction());
+                foundFunc = true;
+                break;
+            }
+        }
+        if (!foundFunc)
+            entries_.erase(&(entries_[i]));
+        else
+            i++;
+    }
+
+    IonSpew(IonSpew_Inlining, "%d inlineable cases left after trimming to %d targets",
+            (int)numEntries(), (int)targets.length());
 }

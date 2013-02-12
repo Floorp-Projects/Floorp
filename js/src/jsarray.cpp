@@ -580,11 +580,9 @@ Class js::ArrayClass = {
     NULL,           /* hasInstance */
     NULL,           /* trace       */
     {
-        NULL,       /* equality    */
         NULL,       /* outerObject */
         NULL,       /* innerObject */
         NULL,       /* iteratorObject  */
-        NULL,       /* unused      */
         false,      /* isWrappedNative */
     }
 };

@@ -346,14 +346,14 @@ PR_IMPLEMENT(void) PL_ArenaFinish(void)
 }
 
 PR_IMPLEMENT(size_t) PL_SizeOfArenaPoolExcludingPool(
-    PLArenaPool *pool, PLMallocSizeFn mallocSizeOf)
+    const PLArenaPool *pool, PLMallocSizeFn mallocSizeOf)
 {
     /*
      * The first PLArena is within |pool|, so don't measure it.  Subsequent
-     * PLArenas are separate and must measured.
+     * PLArenas are separate and must be measured.
      */
     size_t size = 0;
-    PLArena *arena = pool->first.next;
+    const PLArena *arena = pool->first.next;
     while (arena) {
         size += mallocSizeOf(arena);
         arena = arena->next;

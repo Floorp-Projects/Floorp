@@ -974,7 +974,6 @@ Class ParallelArrayObject::class_ = {
         deleteElement,
         deleteSpecial,
         NULL,                // enumerate
-        NULL,                // typeof
         NULL,                // thisObject
     }
 };
@@ -1419,7 +1418,7 @@ ParallelArrayObject::scatter(JSContext *cx, CallArgs args)
         return false;
 
     // The default value is optional and defaults to undefined.
-    Value defaultValue;
+    RootedValue defaultValue(cx);
     if (args.length() >= 2)
         defaultValue = args[1];
     else

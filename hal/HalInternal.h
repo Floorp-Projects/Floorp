@@ -94,7 +94,11 @@ void EnableSystemTimezoneChangeNotifications();
  */
 void DisableSystemTimezoneChangeNotifications();
 
-bool IsHalChildLive();
+/**
+ * Has the child-side HAL IPC object been destroyed?  If so, you shouldn't send
+ * messages to hal_sandbox.
+ */
+bool HalChildDestroyed();
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 

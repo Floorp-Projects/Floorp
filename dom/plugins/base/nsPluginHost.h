@@ -118,7 +118,6 @@ public:
 
   nsresult GetPluginName(nsNPAPIPluginInstance *aPluginInstance, const char** aPluginName);
   nsresult StopPluginInstance(nsNPAPIPluginInstance* aInstance);
-  nsresult HandleBadPlugin(PRLibrary* aLibrary, nsNPAPIPluginInstance *aInstance);
   nsresult GetPluginTagForInstance(nsNPAPIPluginInstance *aPluginInstance, nsIPluginTag **aPluginTag);
 
   nsresult
@@ -265,7 +264,6 @@ private:
   nsRefPtr<nsInvalidPluginTag> mInvalidPlugins;
   nsTArray<nsCString> mPlayPreviewMimeTypes;
   bool mPluginsLoaded;
-  bool mDontShowBadPluginMessage;
 
   // set by pref plugin.override_internal_types
   bool mOverrideInternalTypes;

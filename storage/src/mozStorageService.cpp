@@ -22,6 +22,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/mozPoisonWrite.h"
 
 #include "sqlite3.h"
 
@@ -821,13 +822,15 @@ Service::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
       }
     } while (anyOpen);
 
-#ifdef DEBUG
-    nsTArray<nsRefPtr<Connection> > connections;
-    getConnections(connections);
-    for (uint32_t i = 0, n = connections.Length(); i < n; i++) {
-      MOZ_ASSERT(!connections[i]->ConnectionReady());
+    if (ShutdownChecks == SCM_CRASH) {
+      nsTArray<nsRefPtr<Connection> > connections;
+      getConnections(connections);
+      for (uint32_t i = 0, n = connections.Length(); i < n; i++) {
+        if (connections[i]->ConnectionReady()) {
+          MOZ_CRASH();
+        }
+      }
     }
-#endif
   }
 
   return NS_OK;

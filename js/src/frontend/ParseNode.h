@@ -803,7 +803,7 @@ struct ParseNode {
 #endif
     ;
 
-    bool getConstantValue(JSContext *cx, bool strictChecks, Value *vp);
+    bool getConstantValue(JSContext *cx, bool strictChecks, MutableHandleValue vp);
     inline bool isConstant();
 
     /* Casting operations. */
