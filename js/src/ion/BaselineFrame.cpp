@@ -15,6 +15,17 @@ using namespace js::ion;
 void
 BaselineFrame::trace(JSTracer *trc)
 {
+    MarkCalleeToken(trc, calleeToken());
+
+    gc::MarkValueRoot(trc, &thisValue(), "baseline-this");
+
+    // Mark actual and formal args.
+    if (isNonEvalFunctionFrame()) {
+        unsigned numArgs = js::Max(numActualArgs(), numFormalArgs());
+        JS_ASSERT(actuals() == formals());
+        gc::MarkValueRootRange(trc, numArgs, actuals(), "baseline-args");
+    }
+
     // Mark scope chain.
     gc::MarkObjectRoot(trc, &scopeChain_, "baseline-scopechain");
 

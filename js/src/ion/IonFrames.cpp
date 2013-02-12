@@ -561,8 +561,8 @@ IonActivationIterator::more() const
     return !!activation_;
 }
 
-static void
-MarkCalleeToken(JSTracer *trc, CalleeToken token)
+void
+js::ion::MarkCalleeToken(JSTracer *trc, CalleeToken token)
 {
     switch (GetCalleeTokenTag(token)) {
       case CalleeToken_Function:
@@ -612,20 +612,6 @@ MarkActualArguments(JSTracer *trc, const IonFrameIterator &frame)
     Value *argv = layout->argv();
     for (size_t i = 0; i < nargs + 1; i++)
         gc::MarkValueRoot(trc, &argv[i], "ion-argv");
-}
-
-static void
-MarkBaselineJSFrame(JSTracer *trc, const IonFrameIterator &frame)
-{
-    IonJSFrameLayout *layout = frame.jsFrame();
-    MarkCalleeToken(trc, layout->calleeToken());
-
-    if (CalleeTokenIsFunction(layout->calleeToken()))
-        MarkActualArguments(trc, frame);
-
-    // Mark the scope chain.
-    BaselineFrame *baselineFrame = frame.baselineFrame();
-    baselineFrame->trace(trc);
 }
 
 static void
@@ -825,7 +811,7 @@ MarkIonActivation(JSTracer *trc, const IonActivationIterator &activations)
             MarkIonExitFrame(trc, frames);
             break;
           case IonFrame_BaselineJS:
-            MarkBaselineJSFrame(trc, frames);
+            frames.baselineFrame()->trace(trc);
             break;
           case IonFrame_BaselineStub:
             // Stub frames are not marked.
