@@ -14,13 +14,8 @@ DIRS := \
 
 MOCHITEST_FILES := \
   test_body-onload.html \
-  test_pageload-image.html \
-  test_pageload-video.html \
-  test_script-for-onload.html \
-  test_window-onerror-parse-error.html \
-  test_window-onerror-runtime-error.html \
-  test_window-onerror-runtime-error-throw.html \
-  nested-document-write-external.js \
+  test_event-handler-javascript.html \
+  test_event-handler-spec-example.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
