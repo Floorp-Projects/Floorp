@@ -76,8 +76,7 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(nsNativeModuleLoader,
 nsresult
 nsNativeModuleLoader::Init()
 {
-    NS_ASSERTION(NS_IsMainThread(), "Startup not on main thread?");
-
+    MOZ_ASSERT(NS_IsMainThread(), "Startup not on main thread?");
     LOG(PR_LOG_DEBUG, ("nsNativeModuleLoader::Init()"));
     mLibraries.Init();
     return NS_OK;
@@ -241,8 +240,7 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
 void
 nsNativeModuleLoader::UnloadLibraries()
 {
-    NS_ASSERTION(NS_IsMainThread(), "Shutdown not on main thread?");
-
+    MOZ_ASSERT(NS_IsMainThread(), "Shutdown not on main thread?");
     mLibraries.Enumerate(ReleaserFunc, nullptr);
     mLibraries.Enumerate(UnloaderFunc, nullptr);
 }

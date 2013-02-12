@@ -19,6 +19,13 @@ MOZ_END_EXTERN_C
 
 #ifdef __cplusplus
 namespace mozilla {
+enum ShutdownChecksMode {
+  SCM_CRASH,
+  SCM_RECORD,
+  SCM_NOTHING
+};
+extern ShutdownChecksMode ShutdownChecks;
+
 void PoisonWrite();
 void DisableWritePoisoning();
 void EnableWritePoisoning();

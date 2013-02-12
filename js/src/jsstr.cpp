@@ -679,13 +679,13 @@ str_toLocaleLowerCase(JSContext *cx, unsigned argc, Value *vp)
      * Forcefully ignore the first (or any) argument and return toLowerCase(),
      * ECMA has reserved that argument, presumably for defining the locale.
      */
-    if (cx->localeCallbacks && cx->localeCallbacks->localeToLowerCase) {
+    if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToLowerCase) {
         RootedString str(cx, ThisToStringForStringProto(cx, args));
         if (!str)
             return false;
 
         Value result;
-        if (!cx->localeCallbacks->localeToLowerCase(cx, str, &result))
+        if (!cx->runtime->localeCallbacks->localeToLowerCase(cx, str, &result))
             return false;
 
         args.rval().set(result);
@@ -746,13 +746,13 @@ str_toLocaleUpperCase(JSContext *cx, unsigned argc, Value *vp)
      * Forcefully ignore the first (or any) argument and return toUpperCase(),
      * ECMA has reserved that argument, presumably for defining the locale.
      */
-    if (cx->localeCallbacks && cx->localeCallbacks->localeToUpperCase) {
+    if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToUpperCase) {
         RootedString str(cx, ThisToStringForStringProto(cx, args));
         if (!str)
             return false;
 
         Value result;
-        if (!cx->localeCallbacks->localeToUpperCase(cx, str, &result))
+        if (!cx->runtime->localeCallbacks->localeToUpperCase(cx, str, &result))
             return false;
 
         args.rval().set(result);
@@ -775,11 +775,9 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
     if (!thatStr)
         return false;
 
-    if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
-        args[0].setString(thatStr);
-
+    if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeCompare) {
         Value result;
-        if (!cx->localeCallbacks->localeCompare(cx, str, thatStr, &result))
+        if (!cx->runtime->localeCallbacks->localeCompare(cx, str, thatStr, &result))
             return false;
 
         args.rval().set(result);

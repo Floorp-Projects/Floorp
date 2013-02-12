@@ -112,7 +112,7 @@ NS_IMETHODIMP_(nsrefcnt)
 Bar::Release(void)
 {
   ++Bar::sReleaseCalled;
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
   NS_ASSERT_OWNINGTHREAD(_class);
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "Bar");

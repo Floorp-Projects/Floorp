@@ -92,7 +92,7 @@ nsThreadManager::Init()
 void
 nsThreadManager::Shutdown()
 {
-  NS_ASSERTION(NS_IsMainThread(), "shutdown not called from main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "shutdown not called from main thread");
 
   // Prevent further access to the thread manager (no more new threads!)
   //
@@ -156,7 +156,7 @@ nsThreadManager::Shutdown()
 void
 nsThreadManager::RegisterCurrentThread(nsThread *thread)
 {
-  NS_ASSERTION(thread->GetPRThread() == PR_GetCurrentThread(), "bad thread");
+  MOZ_ASSERT(thread->GetPRThread() == PR_GetCurrentThread(), "bad thread");
 
   MutexAutoLock lock(*mLock);
 
@@ -169,7 +169,7 @@ nsThreadManager::RegisterCurrentThread(nsThread *thread)
 void
 nsThreadManager::UnregisterCurrentThread(nsThread *thread)
 {
-  NS_ASSERTION(thread->GetPRThread() == PR_GetCurrentThread(), "bad thread");
+  MOZ_ASSERT(thread->GetPRThread() == PR_GetCurrentThread(), "bad thread");
 
   MutexAutoLock lock(*mLock);
 

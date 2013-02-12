@@ -73,13 +73,6 @@ JSObject::defaultValue(JSContext *cx, js::HandleObject obj, JSType hint, js::Mut
     return ok;
 }
 
-/* static */ inline JSType
-JSObject::typeOf(JSContext *cx, js::HandleObject obj)
-{
-    js::TypeOfOp op = obj->getOps()->typeOf;
-    return (op ? op : js::baseops::TypeOf)(cx, obj);
-}
-
 /* static */ inline JSObject *
 JSObject::thisObject(JSContext *cx, js::HandleObject obj)
 {
@@ -796,8 +789,6 @@ inline void
 JSObject::setType(js::types::TypeObject *newType)
 {
     JS_ASSERT(newType);
-    JS_ASSERT_IF(hasSpecialEquality(),
-                 newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     JS_ASSERT_IF(getClass()->emulatesUndefined(),
                  newType->hasAnyFlags(js::types::OBJECT_FLAG_EMULATES_UNDEFINED));
     JS_ASSERT(!hasSingletonType());
@@ -880,11 +871,6 @@ inline bool JSObject::isIndexed() const
 inline bool JSObject::watched() const
 {
     return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
-}
-
-inline bool JSObject::hasSpecialEquality() const
-{
-    return !!getClass()->ext.equality;
 }
 
 inline bool JSObject::isArray() const { return hasClass(&js::ArrayClass); }

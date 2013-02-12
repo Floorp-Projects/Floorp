@@ -107,6 +107,7 @@ public:
     {
         NS_PRECONDITION(wrapper,"bad param");
         nsISupports* obj = wrapper->GetIdentityObject();
+        MOZ_ASSERT(!Find(obj), "wrapper already in new scope!");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, obj, JS_DHASH_ADD);
         if (!entry)

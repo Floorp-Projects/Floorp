@@ -25,12 +25,12 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_sandbox {
 
-static bool sHalChildIsLive = false;
+static bool sHalChildDestroyed = false;
 
 bool
-IsHalChildLive()
+HalChildDestroyed()
 {
-  return sHalChildIsLive;
+  return sHalChildDestroyed;
 }
 
 static PHalChild* sHal;
@@ -810,7 +810,7 @@ public:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE
   {
-    sHalChildIsLive = true;
+    sHalChildDestroyed = true;
   }
 
   virtual bool

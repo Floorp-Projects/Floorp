@@ -59,6 +59,12 @@ EXPORTS_mozilla = \
   StringBuilder.h \
   $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+EXPORTS_mozilla += \
+  TimeStamp_windows.h \
+  $(NULL)
+endif
+
 EXPORTS		= \
 		nsArray.h \
 		nsAtomService.h \

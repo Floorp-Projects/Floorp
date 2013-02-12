@@ -33,7 +33,7 @@ using namespace mozilla::services;
 #define PROXY_IF_SANDBOXED(_call)                 \
   do {                                            \
     if (InSandbox()) {                            \
-      if (!hal_sandbox::IsHalChildLive()) {  \
+      if (!hal_sandbox::HalChildDestroyed()) {    \
         hal_sandbox::_call;                       \
       }                                           \
     } else {                                      \
@@ -44,7 +44,7 @@ using namespace mozilla::services;
 #define RETURN_PROXY_IF_SANDBOXED(_call, defValue)\
   do {                                            \
     if (InSandbox()) {                            \
-      if (hal_sandbox::IsHalChildLive()) {   \
+      if (hal_sandbox::HalChildDestroyed()) {     \
         return defValue;                          \
       }                                           \
       return hal_sandbox::_call;                  \

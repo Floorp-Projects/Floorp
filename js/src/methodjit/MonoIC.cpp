@@ -297,12 +297,6 @@ class EqualityCompiler : public BaseCompiler
             linkToStub(rhsFail);
         }
 
-        masm.loadObjClass(lvr.dataReg(), ic.tempReg);
-        Jump lhsHasEq = masm.branchPtr(Assembler::NotEqual,
-                                       Address(ic.tempReg, offsetof(Class, ext.equality)),
-                                       ImmPtr(NULL));
-        linkToStub(lhsHasEq);
-
         if (rvr.isConstant()) {
             JSObject *obj = &rvr.value().toObject();
             Jump test = masm.branchPtr(ic.cond, lvr.dataReg(), ImmPtr(obj));

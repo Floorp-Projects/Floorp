@@ -145,14 +145,7 @@ const js::Class ObjectWrapperParent::sCPOW_JSClass = {
       ObjectWrapperParent::CPOW_Call,
       ObjectWrapperParent::CPOW_HasInstance,
       ObjectWrapperParent::CPOW_Construct,
-      nullptr, // trace
-      {
-          ObjectWrapperParent::CPOW_Equality,
-          nullptr, // outerObject
-          nullptr, // innerObject
-          nullptr, // iteratorObject
-          nullptr, // wrappedObject
-    }
+      nullptr // trace
 };
 
 void
@@ -698,28 +691,4 @@ ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSHandleObject obj, JSMutab
             self->CallHasInstance(in_v,
                                   aco.StatusPtr(), bp) &&
             aco.Ok());
-}
-
-/*static*/ JSBool
-ObjectWrapperParent::CPOW_Equality(JSContext *cx, JSHandleObject obj, JSHandleValue v,
-                                   JSBool *bp)
-{
-    CPOW_LOG(("Calling CPOW_Equality..."));
-
-    *bp = JS_FALSE;
-    
-    ObjectWrapperParent* self = Unwrap(cx, obj);
-    if (!self)
-        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_Equality");
-
-    if (JSVAL_IS_PRIMITIVE(v))
-        return JS_TRUE;
-
-    ObjectWrapperParent* other = Unwrap(cx, JSVAL_TO_OBJECT(v));
-    if (!other)
-        return JS_TRUE;
-
-    *bp = (self == other);
-    
-    return JS_TRUE;
 }

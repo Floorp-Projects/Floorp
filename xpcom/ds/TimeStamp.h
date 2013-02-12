@@ -16,7 +16,17 @@ namespace IPC {
 template <typename T> struct ParamTraits;
 }
 
+#ifdef XP_WIN
+// defines TimeStampValue as a complex value keeping both
+// GetTickCount and QueryPerformanceCounter values
+#include "TimeStamp_windows.h"
+#endif
+
 namespace mozilla {
+
+#ifndef XP_WIN
+typedef uint64_t TimeStampValue;
+#endif
 
 class TimeStamp;
 
@@ -150,7 +160,7 @@ private:
     return TimeDuration::FromTicks(int64_t(aTicks));
   }
 
-  // Duration in PRIntervalTime units
+  // Duration, result is implementation-specific difference of two TimeStamps
   int64_t mValue;
 };
 
@@ -201,8 +211,17 @@ public:
    * Return a timestamp reflecting the current elapsed system time. This
    * is monotonically increasing (i.e., does not decrease) over the
    * lifetime of this process' XPCOM session.
+   *
+   * Now() is trying to ensure the best possible precision on each platform,
+   * at least one millisecond.
+   *
+   * NowLoRes() has been introduced to workaround performance problems of
+   * QueryPerformanceCounter on the Windows platform.  NowLoRes() is giving
+   * lower precision, usually 15.6 ms, but with very good performance benefit.
+   * Use it for measurements of longer times, like >200ms timeouts.
    */
-  static TimeStamp Now();
+  static TimeStamp Now() { return Now(true); }
+  static TimeStamp NowLoRes() { return Now(false); }
   /**
    * Compute the difference between two timestamps. Both must be non-null.
    */
@@ -286,7 +305,9 @@ public:
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
 
-  TimeStamp(uint64_t aValue) : mValue(aValue) {}
+  TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
+
+  static TimeStamp Now(bool aHighResolution);
 
   /**
    * When built with PRIntervalTime, a value of 0 means this instance
@@ -301,7 +322,7 @@ private:
    *
    * When using a system clock, a value is system dependent.
    */
-  uint64_t mValue;
+  TimeStampValue mValue;
 };
 
 }

@@ -213,11 +213,7 @@ function runTest()
 var testRunner = runTest();
 
 addLoadEvent(function () {
-  SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]},
-    function() {
-      testRunner.next();
-    }
-  );
+  testRunner.next();
 });
 
 </script>

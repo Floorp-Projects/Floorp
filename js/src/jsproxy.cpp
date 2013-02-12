@@ -347,12 +347,6 @@ BaseProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleVa
     return false;
 }
 
-JSType
-BaseProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
-{
-    return IsFunctionProxy(proxy) ? JSTYPE_FUNCTION : JSTYPE_OBJECT;
-}
-
 bool
 BaseProxyHandler::objectClassIs(JSObject *proxy, ESClassValue classValue, JSContext *cx)
 {
@@ -477,11 +471,6 @@ DirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandle
     return true;
 }
 
-JSType
-DirectProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
-{
-    return TypeOfValue(cx, ObjectValue(*GetProxyTargetObject(proxy)));
-}
 
 bool
 DirectProxyHandler::objectClassIs(JSObject *proxy, ESClassValue classValue,
@@ -748,7 +737,6 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler {
     /* Spidermonkey extensions. */
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
-    virtual JSType typeOf(JSContext *cx, JSObject *proxy);
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp) MOZ_OVERRIDE;
 
     static ScriptedIndirectProxyHandler singleton;
@@ -965,18 +953,6 @@ ScriptedIndirectProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, N
                                          CallArgs args)
 {
     return BaseProxyHandler::nativeCall(cx, test, impl, args);
-}
-
-
-JSType
-ScriptedIndirectProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
-{
-    /*
-     * This function is only here to prevent a regression in
-     * js1_8_5/extensions/scripted-proxies.js. It will be removed when the
-     * direct proxy refactor is complete.
-     */
-    return BaseProxyHandler::typeOf(cx, proxy);
 }
 
 bool
@@ -2480,15 +2456,6 @@ Proxy::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool
     return GetProxyHandler(proxy)->hasInstance(cx, proxy, v, bp);
 }
 
-JSType
-Proxy::typeOf(JSContext *cx, JSObject *proxy_)
-{
-    // FIXME: API doesn't allow us to report error (bug 618906).
-    JS_CHECK_RECURSION(cx, return JSTYPE_OBJECT);
-    RootedObject proxy(cx, proxy_);
-    return GetProxyHandler(proxy)->typeOf(cx, proxy);
-}
-
 bool
 Proxy::objectClassIs(JSObject *proxy_, ESClassValue classValue, JSContext *cx)
 {
@@ -2877,20 +2844,11 @@ proxy_HasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, JSBoo
     return true;
 }
 
-static JSType
-proxy_TypeOf(JSContext *cx, HandleObject proxy)
-{
-    JS_ASSERT(proxy->isProxy());
-    return Proxy::typeOf(cx, proxy);
-}
-
 #define PROXY_CLASS_EXT                             \
     {                                               \
-        NULL,                /* equality */         \
         NULL,                /* outerObject */      \
         NULL,                /* innerObject */      \
         NULL,                /* iteratorObject */   \
-        NULL,                /* unused */           \
         false,               /* isWrappedNative */  \
         proxy_WeakmapKeyDelegate                    \
     }
@@ -2942,7 +2900,6 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
         proxy_DeleteElement,
         proxy_DeleteSpecial,
         NULL,                /* enumerate       */
-        proxy_TypeOf,
         NULL,                /* thisObject      */
     }
 };
@@ -2964,11 +2921,9 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
     NULL,                    /* construct   */
     proxy_TraceObject,       /* trace       */
     {
-        NULL,                /* equality    */
         NULL,                /* outerObject */
         proxy_innerObject,
         NULL,                /* iteratorObject */
-        NULL,                /* unused */
         false,               /* isWrappedNative */
         proxy_WeakmapKeyDelegate
     },
@@ -3002,7 +2957,6 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         proxy_DeleteElement,
         proxy_DeleteSpecial,
         NULL,                /* enumerate       */
-        NULL,                /* typeof          */
         NULL,                /* thisObject      */
     }
 };
@@ -3070,7 +3024,6 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
         proxy_DeleteElement,
         proxy_DeleteSpecial,
         NULL,                /* enumerate       */
-        proxy_TypeOf,
         NULL,                /* thisObject      */
     }
 };

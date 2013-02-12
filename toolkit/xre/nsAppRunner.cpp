@@ -3214,6 +3214,43 @@ XREMain::XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag)
   return 0;
 }
 
+namespace mozilla {
+  ShutdownChecksMode ShutdownChecks = SCM_NOTHING;
+}
+
+static void SetShutdownChecks() {
+  // Set default first. On debug builds we crash. On nightly and local
+  // builds we record. Nightlies will then send the info via telemetry,
+  // but it is usefull to have the data in about:telemetry in local builds
+  // too.
+
+#ifdef DEBUG
+  ShutdownChecks = SCM_CRASH;
+#else
+  const char* releaseChannel = NS_STRINGIFY(MOZ_UPDATE_CHANNEL);
+  if (strcmp(releaseChannel, "nightly") == 0 ||
+      strcmp(releaseChannel, "default") == 0) {
+    ShutdownChecks = SCM_RECORD;
+  } else {
+    ShutdownChecks = SCM_NOTHING;
+  }
+#endif
+
+  // We let an environment variable override the default so that addons
+  // authors can use it for debugging shutdown with released firefox versions.
+  const char* mozShutdownChecksEnv = PR_GetEnv("MOZ_SHUTDOWN_CHECKS");
+  if (mozShutdownChecksEnv) {
+    if (strcmp(mozShutdownChecksEnv, "crash") == 0) {
+      ShutdownChecks = SCM_CRASH;
+    } else if (strcmp(mozShutdownChecksEnv, "record") == 0) {
+      ShutdownChecks = SCM_RECORD;
+    } else if (strcmp(mozShutdownChecksEnv, "nothing") == 0) {
+      ShutdownChecks = SCM_NOTHING;
+    }
+  }
+
+}
+
 /*
  * XRE_mainStartup - Initializes the profile and various other services.
  * Main() will exit early if either return value != 0 or if aExitFlag is
@@ -3227,6 +3264,8 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   if (!aExitFlag)
     return 1;
   *aExitFlag = false;
+
+  SetShutdownChecks();
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_ENABLE_XREMOTE)
   // Stash DESKTOP_STARTUP_ID in malloc'ed memory because gtk_init will clear it.
