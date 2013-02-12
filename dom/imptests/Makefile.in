@@ -11,7 +11,8 @@ relativesrcdir = dom/imported-tests
 DIRS = \
   failures/editing/conformancetest \
   failures/editing/selecttest \
-  failures/html/tests/submission/Opera/microdata \
+  failures/html/html/semantics/scripting-1/the-script-element \
+  failures/html/old-tests/submission/Opera/microdata \
   failures/webapps/DOMCore/tests/approved \
   failures/webapps/DOMCore/tests/submissions/Ms2ger \
   failures/webapps/DOMCore/tests/submissions/Opera \
