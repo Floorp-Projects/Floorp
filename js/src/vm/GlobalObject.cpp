@@ -491,7 +491,8 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx, Handle<GlobalObject*> globa
          * and that it permits runtime code generation, then cache the result.
          */
         JSCSPEvalChecker allows = cx->runtime->securityCallbacks->contentSecurityPolicyAllows;
-        v.set(global, HeapSlot::Slot, RUNTIME_CODEGEN_ENABLED, BooleanValue(!allows || allows(cx)));
+        Value boolValue = BooleanValue(!allows || allows(cx));
+        v.set(global, HeapSlot::Slot, RUNTIME_CODEGEN_ENABLED, boolValue);
     }
     return !v.isFalse();
 }

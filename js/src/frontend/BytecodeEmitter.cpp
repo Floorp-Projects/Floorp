@@ -3451,23 +3451,23 @@ EmitNewInit(JSContext *cx, BytecodeEmitter *bce, JSProtoKey key, ParseNode *pn)
 }
 
 bool
-ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
+ParseNode::getConstantValue(JSContext *cx, bool strictChecks, MutableHandleValue vp)
 {
     switch (getKind()) {
       case PNK_NUMBER:
-        vp->setNumber(pn_dval);
+        vp.setNumber(pn_dval);
         return true;
       case PNK_STRING:
-        vp->setString(pn_atom);
+        vp.setString(pn_atom);
         return true;
       case PNK_TRUE:
-        vp->setBoolean(true);
+        vp.setBoolean(true);
         return true;
       case PNK_FALSE:
-        vp->setBoolean(false);
+        vp.setBoolean(false);
         return true;
       case PNK_NULL:
-        vp->setNull();
+        vp.setNull();
         return true;
       case PNK_SPREAD:
         return false;
@@ -3482,7 +3482,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         RootedId id(cx);
         RootedValue value(cx);
         for (ParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
-            if (!pn->getConstantValue(cx, strictChecks, value.address()))
+            if (!pn->getConstantValue(cx, strictChecks, &value))
                 return false;
             id = INT_TO_JSID(idx);
             if (!JSObject::defineGeneric(cx, obj, id, value, NULL, NULL, JSPROP_ENUMERATE))
@@ -3491,7 +3491,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         JS_ASSERT(idx == pn_count);
 
         types::FixArrayType(cx, obj);
-        vp->setObject(*obj);
+        vp.setObject(*obj);
         return true;
       }
       case PNK_OBJECT: {
@@ -3504,7 +3504,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
 
         for (ParseNode *pn = pn_head; pn; pn = pn->pn_next) {
             RootedValue value(cx);
-            if (!pn->pn_right->getConstantValue(cx, strictChecks, value.address()))
+            if (!pn->pn_right->getConstantValue(cx, strictChecks, &value))
                 return false;
 
             ParseNode *pnid = pn->pn_left;
@@ -3529,7 +3529,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         }
 
         types::FixObjectType(cx, obj);
-        vp->setObject(*obj);
+        vp.setObject(*obj);
         return true;
       }
       default:
@@ -3541,7 +3541,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
 static bool
 EmitSingletonInitialiser(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    Value value;
+    RootedValue value(cx);
     if (!pn->getConstantValue(cx, bce->sc->needStrictChecks(), &value))
         return false;
 
