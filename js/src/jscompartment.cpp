@@ -266,7 +266,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
         return true;
 
     if (vp.isString()) {
-        RootedString str(cx, vp.toString());
+        RawString str = vp.toString();
 
         /* If the string is already in this compartment, we are done. */
         if (str->zone() == zone())
@@ -329,7 +329,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
         vp.set(p->value);
         if (vp.isObject()) {
-            RootedObject obj(cx, &vp.toObject());
+            RawObject obj = &vp.toObject();
             JS_ASSERT(obj->isCrossCompartmentWrapper());
             JS_ASSERT(obj->getParent() == global);
         }
@@ -341,7 +341,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
         if (!str)
             return false;
 
-        RootedString wrapped(cx, js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length()));
+        UnrootedString wrapped = js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length());
         if (!wrapped)
             return false;
 
