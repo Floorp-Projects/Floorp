@@ -513,7 +513,7 @@ js::XDRAtom(XDRState<mode> *xdr, MutableHandleAtom atomp)
     }
 
     JS_ALWAYS_TRUE(xdr->codeChars(chars, nchars));
-    atom = AtomizeChars(cx, chars, nchars);
+    atom = AtomizeChars<CanGC>(cx, chars, nchars);
     if (chars != stackChars)
         js_free(chars);
 #endif /* !IS_LITTLE_ENDIAN */
