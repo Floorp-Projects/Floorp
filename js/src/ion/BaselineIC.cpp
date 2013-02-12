@@ -1206,6 +1206,7 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
 
     // Try to generate new stubs.
     if (lhs.isInt32() && rhs.isInt32()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(Int32, Int32) stub", js_CodeName[op]);
         ICCompare_Int32::Compiler compiler(cx, op);
         ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!int32Stub)
@@ -1216,6 +1217,8 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
     }
 
     if (lhs.isNumber() && rhs.isNumber()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(Number, Number) stub", js_CodeName[op]);
+
         // Unlink int32 stubs, it's faster to always use the double stub.
         stub->unlinkStubsWithKind(ICStub::Compare_Int32);
 
@@ -1230,6 +1233,7 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
 
     if (IsEqualityOp(op)) {
         if (lhs.isString() && rhs.isString() && !stub->hasStub(ICStub::Compare_String)) {
+            IonSpew(IonSpew_BaselineIC, "  Generating %s(String, String) stub", js_CodeName[op]);
             ICCompare_String::Compiler compiler(cx, op);
             ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
             if (!stringStub)
@@ -1333,6 +1337,7 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
 
     // Try to generate new stubs.
     if (arg.isInt32()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating ToBool(Int32) stub.");
         ICToBool_Int32::Compiler compiler(cx);
         ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!int32Stub)
@@ -1343,6 +1348,7 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
     }
 
     if (arg.isString()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating ToBool(String) stub", js_CodeName[op]);
         ICToBool_String::Compiler compiler(cx);
         ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!stringStub)
@@ -1559,7 +1565,7 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
 
     // Handle string concat.
     if ((op == JSOP_ADD) && lhs.isString() && rhs.isString()) {
-        IonSpew(IonSpew_BaselineIC, "  Adding STRCAT stub for %s:%d", script->filename, script->lineno);
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(String, String) stub", js_CodeName[op]);
         JS_ASSERT(ret.isString());
         ICBinaryArith_StringConcat::Compiler compiler(cx);
         ICStub *strcatStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
@@ -1587,6 +1593,7 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
           case JSOP_MOD: {
             // Unlink int32 stubs, it's faster to always use the double stub.
             stub->unlinkStubsWithKind(ICStub::BinaryArith_Int32);
+            IonSpew(IonSpew_BaselineIC, "  Generating %s(Double, Double) stub", js_CodeName[op]);
 
             ICBinaryArith_Double::Compiler compiler(cx, op);
             ICStub *doubleStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
@@ -1607,6 +1614,7 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     // TODO: unlink previous !allowDouble stub.
     if (lhs.isInt32() && rhs.isInt32()) {
         bool allowDouble = ret.isDouble();
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(Int32, Int32) stub", js_CodeName[op]);
         ICBinaryArith_Int32::Compiler compilerInt32(cx, op, allowDouble);
         ICStub *int32Stub = compilerInt32.getStub(ICStubSpace::StubSpaceFor(script));
         if (!int32Stub)
@@ -1768,6 +1776,7 @@ DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val
     }
 
     if (val.isInt32() && res.isInt32()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(Int32 => Int32) stub", js_CodeName[op]);
         ICUnaryArith_Int32::Compiler compiler(cx, op);
         ICStub *int32Stub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!int32Stub)
@@ -1777,6 +1786,7 @@ DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val
     }
 
     if (val.isNumber() && res.isNumber() && op == JSOP_NEG) {
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(Number => Number) stub", js_CodeName[op]);
         // Unlink int32 stubs, the double stub handles both cases and TI specializes for both.
         stub->unlinkStubsWithKind(ICStub::UnaryArith_Int32);
 
@@ -1854,6 +1864,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     if (lhs.isString() && rhs.isInt32() && res.isString() &&
         !stub->hasStub(ICStub::GetElem_String))
     {
+        IonSpew(IonSpew_BaselineIC, "  Generating GetElem(String[Int32]) stub");
         ICGetElem_String::Compiler compiler(cx);
         ICStub *stringStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!stringStub)
@@ -1871,6 +1882,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     if (obj->isNative()) {
         // Check for NativeObject[int] dense accesses.
         if (rhs.isInt32()) {
+            IonSpew(IonSpew_BaselineIC, "  Generating GetElem(Native[Int32] dense) stub");
             ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
                                                obj->lastProperty());
             ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
@@ -1902,6 +1914,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
 
                 RootedShape objShape(cx, obj->lastProperty());
                 ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+                IonSpew(IonSpew_BaselineIC, "  Generating GetElem(NativeObject[PROPNAME]) stub");
                 ICGetElem_Native::Compiler compiler(cx, monitorStub, objShape, idval,
                                                     isFixedSlot, offset);
                 ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
@@ -1916,6 +1929,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
 
     // Check for TypedArray[int] => Number accesses.
     if (obj->isTypedArray() && rhs.isInt32() && res.isNumber()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
         ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
         ICStub *typedArrayStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!typedArrayStub)
@@ -2326,11 +2340,11 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
 
             if (addingCase && !DenseSetElemStubExists(cx, ICStub::SetElem_DenseAdd, stub, obj)) {
                 RootedShape lastProtoShape(cx, lastProto->lastProperty());
-                ICSetElem_DenseAdd::Compiler compiler(cx, shape, type, lastProto, lastProtoShape);
                 IonSpew(IonSpew_BaselineIC,
                         "  Generating SetElem_DenseAdd stub "
                         "(shape=%p, type=%p, lastProto=%p, lastProtoShape=%p)",
                         obj->lastProperty(), type.get(), lastProto.get(), lastProtoShape.get());
+                ICSetElem_DenseAdd::Compiler compiler(cx, shape, type, lastProto, lastProtoShape);
                 ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
                 if (!denseStub)
                     return false;
@@ -2339,10 +2353,10 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
             } else if (!addingCase &&
                        !DenseSetElemStubExists(cx, ICStub::SetElem_Dense, stub, obj))
             {
-                ICSetElem_Dense::Compiler compiler(cx, shape, type);
                 IonSpew(IonSpew_BaselineIC,
                         "  Generating SetElem_Dense stub (shape=%p, type=%p)",
                         obj->lastProperty(), type.get());
+                ICSetElem_Dense::Compiler compiler(cx, shape, type);
                 ICStub *denseStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
                 if (!denseStub)
                     return false;
@@ -2652,6 +2666,7 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *
     // TODO: if there's a previous stub discard it, or just update its Shape + slot?
 
     ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+    IonSpew(IonSpew_BaselineIC, "  Generating GetName(GlobalName) stub");
     ICGetName_Global::Compiler compiler(cx, monitorStub, global->lastProperty(), slot);
     ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
     if (!newStub)
@@ -2802,6 +2817,7 @@ DoGetIntrinsicFallback(JSContext *cx, ICGetIntrinsic_Fallback *stub, MutableHand
 
     types::TypeScript::Monitor(cx, script, pc, res);
 
+    IonSpew(IonSpew_BaselineIC, "  Generating GetIntrinsic optimized stub");
     ICGetIntrinsic_Constant::Compiler compiler(cx, res);
     ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
     if (!newStub)
@@ -2847,6 +2863,7 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
 
     if (val.isString()) {
         JS_ASSERT(res.isInt32());
+        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(String.length) stub");
         ICGetProp_StringLength::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!newStub)
@@ -2863,6 +2880,7 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
     RootedObject obj(cx, &val.toObject());
 
     if (obj->isArray() && res.isInt32()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(Array.length) stub");
         ICGetProp_ArrayLength::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!newStub)
@@ -2874,6 +2892,7 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
     }
     if (obj->isTypedArray()) {
         JS_ASSERT(res.isInt32());
+        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(TypedArray.length) stub");
         ICGetProp_TypedArrayLength::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
         if (!newStub)
@@ -2983,6 +3002,7 @@ TryAttachStringGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallbac
 
     ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
 
+    IonSpew(IonSpew_BaselineIC, "  Generating GetProp(String.ID from prototype) stub");
     ICGetProp_String::Compiler compiler(cx, monitorStub, stringProto, isFixedSlot, offset);
     ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
     if (!newStub)
@@ -3262,6 +3282,7 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stu
                       : obj->dynamicSlotIndex(shape->slot()) * sizeof(Value);
 
 
+    IonSpew(IonSpew_BaselineIC, "  Generating SetProp(NativeObject.PROP) stub");
     RootedTypeObject type(cx, obj->getType(cx));
     ICSetProp_Native::Compiler compiler(cx, type, obj->lastProperty(), isFixedSlot, offset);
     ICStub *newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
