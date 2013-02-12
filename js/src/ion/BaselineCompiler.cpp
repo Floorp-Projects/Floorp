@@ -151,6 +151,10 @@ BaselineCompiler::compile()
                                            ImmWord(uintptr_t(-1)));
     }
 
+    // All barriers are emitted off-by-default, toggle them on if needed.
+    if (cx->zone()->needsBarrier())
+        baselineScript->toggleBarriers(true);
+
     return Method_Compiled;
 }
 
