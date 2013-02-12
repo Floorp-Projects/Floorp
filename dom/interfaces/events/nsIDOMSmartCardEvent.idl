@@ -5,9 +5,23 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(3747df70-e31a-4399-a394-0f5f969874b5)]
+%{C++
+#define SMARTCARDEVENT_INSERT "smartcard-insert"
+#define SMARTCARDEVENT_REMOVE "smartcard-remove"
+%}
+
+[scriptable, builtinclass, uuid(cd251f11-7020-4f85-a7bd-94c98d884fa7)]
 interface nsIDOMSmartCardEvent : nsIDOMEvent
 {
   readonly attribute DOMString   tokenName;
-  [noscript] void Init(in nsIDOMEvent event);
+  [noscript] void initSmartCardEvent(in DOMString aTypeArg,
+                                     in boolean aCanBubbleArg,
+                                     in boolean aCancelableArg,
+                                     in DOMString aTokenNAme);
 };
+
+dictionary SmartCardEventInit : EventInit
+{
+  DOMString tokenName;
+};
+

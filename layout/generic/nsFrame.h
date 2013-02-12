@@ -159,7 +159,7 @@ public:
   virtual void SetAdditionalStyleContext(int32_t aIndex,
                                          nsStyleContext* aStyleContext);
   virtual void SetParent(nsIFrame* aParent);
-  virtual nscoord GetBaseline() const;
+  virtual nscoord GetBaseline() const MOZ_OVERRIDE;
   virtual const nsFrameList& GetChildList(ChildListID aListID) const;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
 
