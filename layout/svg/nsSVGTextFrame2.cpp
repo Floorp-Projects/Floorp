@@ -2827,7 +2827,12 @@ nsSVGTextFrame2::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "reflow should have happened");
+  if (NS_SUBTREE_DIRTY(this)) {
+    // We can sometimes be asked to paint before reflow happens and we
+    // have updated mPositions, etc.  In this case, we just avoid
+    // painting.
+    return NS_OK;
+  }
   return aLists.Content()->AppendNewToTop(
            new (aBuilder) nsDisplaySVGText(aBuilder, this));
 }
@@ -3100,8 +3105,11 @@ nsSVGTextFrame2::PaintSVG(nsRenderingContext* aContext,
     // Text frames inside <clipPath>, <mask>, etc. will never have had
     // ReflowSVG called on them, so call UpdateGlyphPositioning to do this now.
     UpdateGlyphPositioning(true);
-  } else {
-    NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "reflow should have happened");
+  } else if (NS_SUBTREE_DIRTY(this)) {
+    // If we are asked to paint before reflow has recomputed mPositions etc.
+    // directly via PaintSVG, rather than via a display list, then we need
+    // to bail out here too.
+    return NS_OK;
   }
 
   gfxMatrix canvasTM = GetCanvasTM(FOR_PAINTING);
