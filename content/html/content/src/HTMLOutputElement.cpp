@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/HTMLOutputElement.h"
 
+#include "mozilla/dom/HTMLOutputElementBinding.h"
 #include "nsFormSubmission.h"
 #include "nsDOMSettableTokenList.h"
 #include "nsEventStates.h"
@@ -21,6 +22,8 @@ HTMLOutputElement::HTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
   , mValueModeFlag(eModeDefault)
 {
+  SetIsDOMBinding();
+
   AddMutationObserver(this);
 
   // We start out valid and ui-valid (since we have no form).
@@ -194,15 +197,19 @@ HTMLOutputElement::SetDefaultValue(const nsAString& aDefaultValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLOutputElement::GetHtmlFor(nsISupports** aResult)
+nsDOMSettableTokenList*
+HTMLOutputElement::HtmlFor()
 {
   if (!mTokenList) {
     mTokenList = new nsDOMSettableTokenList(this, nsGkAtoms::_for);
   }
+  return mTokenList;
+}
 
-  NS_ADDREF(*aResult = mTokenList);
-
+NS_IMETHODIMP
+HTMLOutputElement::GetHtmlFor(nsISupports** aResult)
+{
+  NS_ADDREF(*aResult = HtmlFor());
   return NS_OK;
 }
 
@@ -245,6 +252,13 @@ void HTMLOutputElement::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aPreviousSibling)
 {
   DescendantsChanged();
+}
+
+JSObject*
+HTMLOutputElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  return HTMLOutputElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom

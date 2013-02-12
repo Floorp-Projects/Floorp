@@ -74,6 +74,38 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+
+  // WebIDL
+  nsDOMSettableTokenList* HtmlFor();
+  // nsGenericHTMLFormElement::GetForm is fine.
+  using nsGenericHTMLFormElement::GetForm;
+  // XPCOM GetName is fine.
+  void SetName(const nsAString& aName, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aName, aRv);
+  }
+
+  // XPCOM GetType is fine.
+  // XPCOM GetDefaultValue is fine.
+  void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aRv)
+  {
+    aRv = SetDefaultValue(aDefaultValue);
+  }
+  // XPCOM GetValue is fine.
+  void SetValue(const nsAString& aValue, ErrorResult& aRv)
+  {
+    aRv = SetValue(aValue);
+  }
+
+  // nsIConstraintValidation::WillValidate is fine.
+  // nsIConstraintValidation::Validity() is fine.
+  // nsIConstraintValidation::GetValidationMessage() is fine.
+  // nsIConstraintValidation::CheckValidity() is fine.
+  using nsIConstraintValidation::CheckValidity;
+  // nsIConstraintValidation::SetCustomValidity() is fine.
+
 protected:
   enum ValueModeFlag {
     eModeDefault,
