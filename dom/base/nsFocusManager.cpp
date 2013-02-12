@@ -26,7 +26,6 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDocShell.h"
 #include "nsIEditorDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsLayoutUtils.h"
 #include "nsIPresShell.h"
@@ -1115,9 +1114,8 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
     if (beingDestroyed)
       return;
 
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(docShell);
     nsCOMPtr<nsIDocShellTreeItem> parentDsti;
-    dsti->GetParent(getter_AddRefs(parentDsti));
+    docShell->GetParent(getter_AddRefs(parentDsti));
     docShell = do_QueryInterface(parentDsti);
   }
 
@@ -2449,8 +2447,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
     else {
       // Otherwise, for content shells, start from the location of the caret.
       int32_t itemType;
-      nsCOMPtr<nsIDocShellTreeItem> shellItem = do_QueryInterface(docShell);
-      shellItem->GetItemType(&itemType);
+      docShell->GetItemType(&itemType);
       if (itemType != nsIDocShellTreeItem::typeChrome) {
         nsCOMPtr<nsIContent> endSelectionContent;
         GetSelectionLocation(doc, presShell,
@@ -2553,10 +2550,8 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
 
     // reached the beginning or end of the document. Traverse up to the parent
     // document and try again.
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(docShell);
-
     nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-    dsti->GetParent(getter_AddRefs(docShellParent));
+    docShell->GetParent(getter_AddRefs(docShellParent));
     if (docShellParent) {
       // move up to the parent shell and try again from there.
 
@@ -2969,8 +2964,8 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
   }
   else  {
     int32_t itemType;
-    nsCOMPtr<nsIDocShellTreeItem> shellItem = do_QueryInterface(aWindow->GetDocShell());
-    shellItem->GetItemType(&itemType);
+    nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+    docShell->GetItemType(&itemType);
 
     if (itemType == nsIDocShellTreeItem::typeChrome)
       return nullptr;
@@ -3145,12 +3140,12 @@ nsFocusManager::GetNextTabbableDocument(nsIContent* aStartContent, bool aForward
   // If currentPopup is set, then the starting content is in a panel.
   nsIFrame* currentPopup = nullptr;
   nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIDocShellTreeItem> startItem;
+  nsCOMPtr<nsIDocShell> startDocShell;
 
   if (aStartContent) {
     doc = aStartContent->GetCurrentDoc();
     if (doc) {
-      startItem = do_QueryInterface(doc->GetWindow()->GetDocShell());
+      startDocShell = doc->GetWindow()->GetDocShell();
     }
 
     // Check if the starting content is inside a panel. Document navigation
@@ -3165,25 +3160,25 @@ nsFocusManager::GetNextTabbableDocument(nsIContent* aStartContent, bool aForward
     }
   }
   else if (mFocusedWindow) {
-    startItem = do_QueryInterface(mFocusedWindow->GetDocShell());
+    startDocShell = mFocusedWindow->GetDocShell();
     doc = mFocusedWindow->GetExtantDoc();
   }
   else {
     nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(mActiveWindow);
-    startItem = do_QueryInterface(webnav);
+    startDocShell = do_QueryInterface(webnav);
 
     if (mActiveWindow) {
       doc = mActiveWindow->GetExtantDoc();
     }
   }
 
-  if (!startItem)
+  if (!startDocShell)
     return nullptr;
 
   // perform a depth first search (preorder) of the docshell tree
   // looking for an HTML Frame or a chrome document
   nsIContent* content = aStartContent;
-  nsCOMPtr<nsIDocShellTreeItem> curItem = startItem;
+  nsCOMPtr<nsIDocShellTreeItem> curItem = startDocShell.get();
   nsCOMPtr<nsIDocShellTreeItem> nextItem;
   do {
     // If moving forward, check for a panel in the starting document. If one
@@ -3216,7 +3211,7 @@ nsFocusManager::GetNextTabbableDocument(nsIContent* aStartContent, bool aForward
         GetNextDocShell(curItem, getter_AddRefs(nextItem));
         if (!nextItem) {
           // wrap around to the beginning, which is the top of the tree
-          startItem->GetRootTreeItem(getter_AddRefs(nextItem));
+          startDocShell->GetRootTreeItem(getter_AddRefs(nextItem));
         }
       }
       else {
@@ -3224,7 +3219,7 @@ nsFocusManager::GetNextTabbableDocument(nsIContent* aStartContent, bool aForward
         if (!nextItem) {
           // wrap around to the end, which is the last item in the tree
           nsCOMPtr<nsIDocShellTreeItem> rootItem;
-          startItem->GetRootTreeItem(getter_AddRefs(rootItem));
+          startDocShell->GetRootTreeItem(getter_AddRefs(rootItem));
           GetLastDocShell(rootItem, getter_AddRefs(nextItem));
         }
 

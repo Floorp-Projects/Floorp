@@ -77,15 +77,14 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
     if (iid != IID_IAccessible)
       return E_NOINTERFACE;
 
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = 
-      nsCoreUtils::GetDocShellTreeItemFor(mContent);
-    if (!docShellTreeItem)
+    nsCOMPtr<nsIDocShell> docShell = nsCoreUtils::GetDocShellFor(mContent);
+    if (!docShell)
       return E_UNEXPECTED;
 
     // Walk up the parent chain without crossing the boundary at which item
     // types change, preventing us from walking up out of tab content.
     nsCOMPtr<nsIDocShellTreeItem> root;
-    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
     if (!root)
       return E_UNEXPECTED;
 
