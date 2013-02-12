@@ -327,7 +327,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
 
     /* Step 4. */
     if (vp.get().isObject()) {
-        JSObject &obj = vp.get().toObject();
+        RootedObject obj(cx, &vp.get().toObject());
         if (ObjectClassIs(obj, ESClass_Number, cx)) {
             double d;
             if (!ToNumber(cx, vp, &d))
@@ -339,8 +339,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
                 return false;
             vp.set(StringValue(str));
         } else if (ObjectClassIs(obj, ESClass_Boolean, cx)) {
-            RootedObject nobj(cx, &obj);
-            if (!BooleanGetPrimitiveValue(cx, nobj, vp.address()))
+            if (!BooleanGetPrimitiveValue(cx, obj, vp.address()))
                 return false;
             JS_ASSERT(vp.get().isBoolean());
         }
@@ -572,7 +571,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
     scx->depth++;
     JSBool ok;
-    if (ObjectClassIs(v.toObject(), ESClass_Array, cx))
+    if (ObjectClassIs(obj, ESClass_Array, cx))
         ok = JA(cx, obj, scx);
     else
         ok = JO(cx, obj, scx);
@@ -595,7 +594,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
     if (replacer) {
         if (replacer->isCallable()) {
             /* Step 4a(i): use replacer to transform values.  */
-        } else if (ObjectClassIs(*replacer, ESClass_Array, cx)) {
+        } else if (ObjectClassIs(replacer, ESClass_Array, cx)) {
             /*
              * Step 4b: The spec algorithm is unhelpfully vague about the exact
              * steps taken when the replacer is an array, regarding the exact
@@ -655,9 +654,8 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                             return false;
                     }
                 } else if (v.isString() ||
-                           (v.isObject() &&
-                            (ObjectClassIs(v.toObject(), ESClass_String, cx) ||
-                             ObjectClassIs(v.toObject(), ESClass_Number, cx))))
+                           IsObjectWithClass(v, ESClass_String, cx) ||
+                           IsObjectWithClass(v, ESClass_Number, cx))
                 {
                     /* Step 4b(iv)(3), 4b(iv)(5). */
                     if (!ValueToId<CanGC>(cx, v, &id))
@@ -682,12 +680,12 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
     /* Step 5. */
     if (space.isObject()) {
         RootedObject spaceObj(cx, &space.toObject());
-        if (ObjectClassIs(*spaceObj, ESClass_Number, cx)) {
+        if (ObjectClassIs(spaceObj, ESClass_Number, cx)) {
             double d;
             if (!ToNumber(cx, space, &d))
                 return false;
             space = NumberValue(d);
-        } else if (ObjectClassIs(*spaceObj, ESClass_String, cx)) {
+        } else if (ObjectClassIs(spaceObj, ESClass_String, cx)) {
             JSString *str = ToStringSlow<CanGC>(cx, space);
             if (!str)
                 return false;
