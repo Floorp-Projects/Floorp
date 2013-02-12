@@ -91,6 +91,9 @@
       // Gets the name from html:input value, ignore @title attribute on input
       testName("from_input_ignoretitle", "Custom country");
 
+      // Insert spaces around the control's value to not jamm sibling text nodes
+      testName("insert_spaces_around_control", "start value end");
+
       // Gets the name from @title, ignore whitespace content
       testName("from_label_ignore_ws_subtree", "about");
 
@@ -262,6 +265,11 @@
      title="ARIA slider and spinbutton don't provide a value for name computation">
     Bug 812041
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=823927"
+     title="Text is jammed with control's text in name computation">
+    Bug 823927
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -388,6 +396,11 @@
   <input id="input_ignoretitle"
          value="Custom country"
          title="Input your country of origin"/ >
+
+  <!-- name from subtree, surround control by spaces to not jamm the text -->
+  <label id="insert_spaces_around_control">
+    start<input value="value">end
+  </label>
 
   <!-- no name from subtree because it holds whitespaces only -->
   <a id="from_label_ignore_ws_subtree" href="about:" title="about">&nbsp;&nbsp;  </a>
