@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=585508
+-->
+<head>
+  <title>Test for Bug 585508</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=585508">Mozilla Bug 585508</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 585508 **/
+
+var enctypeTestData = [
+  // Default value.
+  [ "application/x-www-form-urlencoded" ],
+  // Valid values.
+  [ "application/x-www-form-urlencoded", "multipart/form-data", "text/plain" ],
+  // Invalid values.
+  [ "", " ", "foo", "multipart/foo" ]
+];
+
+var methodTestData = [
+  // Default value.
+  [ "get" ],
+  // Valid values.
+  [ "get", "post" ],
+  // Invalid values.
+  [ "", " ", "foo" ],
+];
+
+function checkAttribute(form, attrName, idlName, data)
+{
+  is(form.getAttribute(attrName), null,
+     "By default " + attrName + " content attribute should be null");
+  is(form[idlName], data[0][0],
+     "By default " + idlName + " IDL attribute should be equal to " +
+     data[0][0]);
+
+  // Valid values.
+  for (i in data[1]) {
+    form.setAttribute(attrName, data[1][i]);
+    is(form.getAttribute(attrName), data[1][i],
+       "getAttribute should return the content attribute");
+    is(form[idlName], data[1][i], "When getting, " + idlName + " IDL attribute " +
+       "should be equal to the content attribute if the value is known");
+  }
+
+  // Invalid values.
+  for (i in data[2]) {
+    form.setAttribute(attrName, data[2][i]);
+    is(form.getAttribute(attrName), data[2][i],
+       "getAttribute should return the content attribute");
+    is(form[idlName], data[0][0], "When getting, " + idlName + " IDL attribute " +
+       "should return the default value if the content attribute value isn't known");
+  }
+}
+
+var button = document.createElement('button');
+
+checkAttribute(button, 'formenctype', 'formEnctype', enctypeTestData);
+checkAttribute(button, 'formmethod', 'formMethod', methodTestData);
+
+</script>
+</pre>
+</body>
+</html>
