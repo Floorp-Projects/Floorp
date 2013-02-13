@@ -71,10 +71,6 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
         return Base::init(len) && zoneCounts.init();
     }
 
-    void clearWithoutCallingDestructors() {
-        Base::clearWithoutCallingDestructors();
-    }
-
     AddPtr lookupForAdd(const Lookup &l) const {
         return Base::lookupForAdd(l);
     }
@@ -125,6 +121,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     void sweep() {
         for (Enum e(*static_cast<Base *>(this)); !e.empty(); e.popFront()) {
             Key k(e.front().key);
+            Value v(e.front().value);
             if (gc::IsAboutToBeFinalized(&k)) {
                 e.removeFront();
                 decZoneCount(k->zone());
