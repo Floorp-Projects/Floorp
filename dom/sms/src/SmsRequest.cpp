@@ -523,7 +523,7 @@ SmsRequest::NotifyThreadList(const InfallibleTArray<ThreadListItem>& aItems)
   NS_ENSURE_TRUE_VOID(ownerObj);
 
   nsCxPusher pusher;
-  pusher.Push(cx);
+  NS_ENSURE_TRUE_VOID(pusher.Push(cx, false));
 
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, ownerObj);

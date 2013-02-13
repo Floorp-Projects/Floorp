@@ -87,7 +87,9 @@ CallbackObject::CallSetup::CallSetup(JSObject* const aCallback)
   mAr.construct(cx);
 
   // Make sure our JSContext is pushed on the stack.
-  mCxPusher.Push(cx);
+  if (!mCxPusher.Push(cx, false)) {
+    return;
+  }
 
   // After this point we guarantee calling ScriptEvaluated() if we
   // have an nsIScriptContext.

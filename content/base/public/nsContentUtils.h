@@ -2205,9 +2205,9 @@ public:
   bool RePush(nsIDOMEventTarget *aCurrentTarget);
   // If a null JSContext is passed to Push(), that will cause no
   // push to happen and false to be returned.
-  void Push(JSContext *cx);
+  bool Push(JSContext *cx, bool aRequiresScriptContext = true);
   // Explicitly push a null JSContext on the the stack
-  void PushNull();
+  bool PushNull();
 
   // Pop() will be a no-op if Push() or PushNull() fail
   void Pop();
@@ -2215,7 +2215,7 @@ public:
   nsIScriptContext* GetCurrentScriptContext() { return mScx; }
 private:
   // Combined code for PushNull() and Push(JSContext*)
-  void DoPush(JSContext* cx);
+  bool DoPush(JSContext* cx);
 
   nsCOMPtr<nsIScriptContext> mScx;
   bool mScriptIsRunning;

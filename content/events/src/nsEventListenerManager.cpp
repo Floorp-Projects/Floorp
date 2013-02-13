@@ -818,8 +818,8 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     }
 
     nsCxPusher pusher;
-    if (aNeedsCxPush) {
-      pusher.Push(cx);
+    if (aNeedsCxPush && !pusher.Push(cx)) {
+      return NS_ERROR_FAILURE;
     }
 
     uint32_t argCount;
