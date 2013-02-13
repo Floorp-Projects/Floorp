@@ -8,6 +8,7 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
 DIRS = \
 	content \
@@ -16,9 +17,9 @@ DIRS = \
 
 PREF_JS_EXPORTS = $(srcdir)/pref/firefox-branding.js
 
-include $(topsrcdir)/config/rules.mk
-
-WINDOWS_BRANDING_FILES = \
+# On Windows only do this step for browser, skip for metro.
+ifeq ($(MOZ_WIDGET_TOOLKIT) $(DIST_SUBDIR),windows browser)
+BRANDING_FILES := \
 	firefox.ico \
 	document.ico \
 	branding.nsi \
@@ -36,39 +37,35 @@ WINDOWS_BRANDING_FILES = \
 	newtab.ico \
 	pbmode.ico \
 	$(NULL)
+endif
 
-OSX_BRANDING_FILES = \
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+BRANDING_FILES := \
 	background.png \
 	firefox.icns \
 	disk.icns \
 	document.icns \
 	dsstore \
 	$(NULL)
+endif
 
-LINUX_BRANDING_FILES = \
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+BRANDING_FILES := \
 	default16.png \
 	default32.png \
 	default48.png \
 	mozicon128.png \
 	$(NULL)
+endif
 
-OS2_BRANDING_FILES = \
+ifeq ($(OS_ARCH),OS2)
+BRANDING_FILES := \
 	firefox-os2.ico \
 	document-os2.ico \
 	$(NULL)
+endif
 
-export::
-	$(NSINSTALL) -D $(DIST)/branding
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-	cp $(addprefix $(srcdir)/, $(WINDOWS_BRANDING_FILES)) $(DIST)/branding/
-endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-	cp $(addprefix $(srcdir)/, $(OSX_BRANDING_FILES)) $(DIST)/branding/
-endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-	cp $(addprefix $(srcdir)/, $(LINUX_BRANDING_FILES)) $(DIST)/branding/
-	$(NSINSTALL) -D $(DIST)/install
-endif
-ifeq ($(OS_ARCH),OS2)
-	cp $(addprefix $(srcdir)/, $(OS2_BRANDING_FILES)) $(DIST)/branding/
-endif
+BRANDING_DEST := $(DIST)/branding
+INSTALL_TARGETS += BRANDING
+
+include $(topsrcdir)/config/rules.mk

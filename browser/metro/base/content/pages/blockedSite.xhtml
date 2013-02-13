@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+  %brandDTD;
+  <!ENTITY % blockedSiteDTD SYSTEM "chrome://browser/locale/phishing.dtd">
+  %blockedSiteDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml" class="blacklist">
+  <head>
+    <meta name="viewport" content="width=device-width; user-scalable=false" />
+    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
+    <link rel="icon" type="image/png" id="favicon" href="chrome://global/skin/icons/blacklist_favicon.png"/>
+
+    <script type="application/javascript"><![CDATA[
+      // Error url MUST be formatted like this:
+      //   about:blocked?e=error_code&u=url
+      
+      // Note that this file uses document.documentURI to get
+      // the URL (with the format from above). This is because
+      // document.location.href gets the current URI off the docshell,
+      // which is the URL displayed in the location bar, i.e.
+      // the URI that the user attempted to load.
+
+      function getErrorCode()
+      {
+        var url = document.documentURI;
+        var error = url.search(/e\=/);
+        var duffUrl = url.search(/\&u\=/);
+        return decodeURIComponent(url.slice(error + 2, duffUrl));
+      }
+
+      function getURL()
+      {
+        var url = document.documentURI;
+        var match = url.match(/&u=([^&]+)&/);
+
+        // match == null if not found; if so, return an empty string
+        // instead of what would turn out to be portions of the URI
+        if (!match)
+          return "";
+
+        url = decodeURIComponent(match[1]);
+
+        // If this is a view-source page, then get then real URI of the page
+        if (/^view-source\:/.test(url))
+          url = url.slice(12);
+        return url;
+      }
+      
+      /**
+       * Attempt to get the hostname via document.location.  Fail back
+       * to getURL so that we always return something meaningful.
+       */
+      function getHostString()
+      {
+        try {
+          return document.location.hostname;
+        } catch (e) {
+          return getURL();
+        }
+      }
+      
+      function initPage()
+      {
+        // Handoff to the appropriate initializer, based on error code
+        switch (getErrorCode()) {
+          case "malwareBlocked" :
+            initPage_malware();
+            break;
+          case "phishingBlocked" :
+            initPage_phishing();
+            break;
+        }
+      }        
+      
+      /**
+       * Initialize custom strings and functionality for blocked malware case
+       */
+      function initPage_malware()
+      {
+        // Remove phishing strings
+        var el = document.getElementById("errorTitleText_phishing");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorShortDescText_phishing");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorLongDescText_phishing");
+        el.parentNode.removeChild(el);
+
+        // Set sitename
+        document.getElementById("malware_sitename").textContent = getHostString();
+        document.title = document.getElementById("errorTitleText_malware")
+                                 .innerHTML;
+      }
+      
+      /**
+       * Initialize custom strings and functionality for blocked phishing case
+       */
+      function initPage_phishing()
+      {
+        // Remove malware strings
+        var el = document.getElementById("errorTitleText_malware");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorShortDescText_malware");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorLongDescText_malware");
+        el.parentNode.removeChild(el);
+
+        // Set sitename
+        document.getElementById("phishing_sitename").textContent = getHostString();
+        document.title = document.getElementById("errorTitleText_phishing")
+                                 .innerHTML;
+      }
+    ]]></script>
+    <style type="text/css">
+      /* Style warning button to look like a small text link in the
+         bottom right. This is preferable to just using a text link
+         since there is already a mechanism in browser.js for trapping
+         oncommand events from unprivileged chrome pages (BrowserOnCommand).*/
+      #ignoreWarningButton {
+        -moz-appearance: none;
+        background: transparent;
+        border: none;
+        color: white;  /* Hard coded because netError.css forces this page's background to dark red */
+        text-decoration: underline;
+        margin: 0;
+        padding: 0;
+        position: relative;
+        top: 23px;
+        left: 20px;
+        font-size: smaller;
+      }
+      
+      #ignoreWarning {
+        text-align: right;
+      }
+    </style>
+  </head>
+
+  <body id="errorPage" class="blockedsite" dir="&locale.dir;">
+
+    <!-- Error Title -->
+    <div id="errorTitle">
+      <h1 id="errorTitleText_phishing" class="errorTitleText">&safeb.blocked.phishingPage.title2;</h1>
+      <h1 id="errorTitleText_malware" class="errorTitleText">&safeb.blocked.malwarePage.title;</h1>
+    </div>
+
+    <div id="errorPageContainer">
+
+      <div id="errorLongContent">
+      
+        <!-- Short Description -->
+        <div id="errorShortDesc">
+          <p id="errorShortDescText_phishing">&safeb.blocked.phishingPage.shortDesc2;</p>
+          <p id="errorShortDescText_malware">&safeb.blocked.malwarePage.shortDesc;</p>
+        </div>
+
+        <!-- Long Description -->
+        <div id="errorLongDesc">
+          <p id="errorLongDescText_phishing">&safeb.blocked.phishingPage.longDesc2;</p>
+          <p id="errorLongDescText_malware">&safeb.blocked.malwarePage.longDesc;</p>
+        </div>
+        
+        <!-- Action buttons -->
+        <div id="buttons">
+          <!-- Commands handled in browser.js -->
+          <button id="getMeOutButton">&safeb.palm.accept.label;</button>
+          <button id="reportButton">&safeb.palm.reportPage.label;</button>
+        </div>
+      </div>
+    </div>
+    <!--
+    - Note: It is important to run the script this way, instead of using
+    - an onload handler. This is because error pages are loaded as
+    - LOAD_BACKGROUND, which means that onload handlers will not be executed.
+    -->
+    <script type="application/javascript">initPage();</script>
+  </body>
+</html>
