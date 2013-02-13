@@ -6123,15 +6123,15 @@ nsContentUtils::CheckCCWrapperTraversal(void* aScriptObjectHolder,
   DebugWrapperTraversalCallback callback(wrapper);
 
   aTracer->Traverse(aScriptObjectHolder, callback);
-  NS_ASSERTION(callback.mFound,
-               "Cycle collection participant didn't traverse to preserved "
-               "wrapper! This will probably crash.");
+  MOZ_ASSERT(callback.mFound,
+             "Cycle collection participant didn't traverse to preserved "
+             "wrapper! This will probably crash.");
 
   callback.mFound = false;
   aTracer->Trace(aScriptObjectHolder, DebugWrapperTraceCallback, &callback);
-  NS_ASSERTION(callback.mFound,
-               "Cycle collection participant didn't trace preserved wrapper! "
-               "This will probably crash.");
+  MOZ_ASSERT(callback.mFound,
+             "Cycle collection participant didn't trace preserved wrapper! "
+             "This will probably crash.");
 }
 #endif
 
