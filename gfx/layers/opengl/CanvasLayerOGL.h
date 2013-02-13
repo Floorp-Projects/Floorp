@@ -6,15 +6,16 @@
 #ifndef GFX_CANVASLAYEROGL_H
 #define GFX_CANVASLAYEROGL_H
 
-
 #include "LayerManagerOGL.h"
 #include "gfxASurface.h"
+#include "GLDefs.h"
+#include "mozilla/Preferences.h"
+
 #if defined(GL_PROVIDER_GLX)
 #include "GLXLibrary.h"
 #include "mozilla/X11Util.h"
 #endif
 
-#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace layers {
@@ -25,20 +26,25 @@ class THEBES_API CanvasLayerOGL :
 {
 public:
   CanvasLayerOGL(LayerManagerOGL *aManager)
-    : CanvasLayer(aManager, NULL),
-      LayerOGL(aManager),
-      mLayerProgram(gl::RGBALayerProgramType),
-      mTexture(0),
-      mTextureTarget(LOCAL_GL_TEXTURE_2D),
-      mDelayedUpdates(false)
+    : CanvasLayer(aManager, NULL)
+    , LayerOGL(aManager)
+    , mLayerProgram(gl::RGBALayerProgramType)
+    , mTexture(0)
+    , mTextureTarget(LOCAL_GL_TEXTURE_2D)
+    , mDelayedUpdates(false)
+    , mIsGLAlphaPremult(false)
+    , mUploadTexture(0)
 #if defined(GL_PROVIDER_GLX)
-      ,mPixmap(0)
+    , mPixmap(0)
 #endif
   { 
-      mImplData = static_cast<LayerOGL*>(this);
-      mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
+    mImplData = static_cast<LayerOGL*>(this);
+    mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
   }
-  ~CanvasLayerOGL() { Destroy(); }
+
+  ~CanvasLayerOGL() {
+    Destroy();
+  }
 
   // CanvasLayer implementation
   virtual void Initialize(const Data& aData);
@@ -54,7 +60,7 @@ protected:
   void UpdateSurface();
 
   nsRefPtr<gfxASurface> mCanvasSurface;
-  nsRefPtr<GLContext> mCanvasGLContext;
+  nsRefPtr<GLContext> mGLContext;
   gl::ShaderProgramType mLayerProgram;
   RefPtr<gfx::DrawTarget> mDrawTarget;
 
@@ -62,9 +68,10 @@ protected:
   GLenum mTextureTarget;
 
   bool mDelayedUpdates;
-  bool mGLBufferIsPremultiplied;
+  bool mIsGLAlphaPremult;
   bool mNeedsYFlip;
   bool mForceReadback;
+  GLuint mUploadTexture;
 #if defined(GL_PROVIDER_GLX)
   GLXPixmap mPixmap;
 #endif
@@ -89,8 +96,7 @@ protected:
     return mCachedTempSurface;
   }
 
-  void DiscardTempSurface()
-  {
+  void DiscardTempSurface() {
     mCachedTempSurface = nullptr;
   }
 };
@@ -136,7 +142,10 @@ private:
 
   bool mNeedsYFlip;
   SurfaceDescriptor mFrontBufferDescriptor;
-  GLuint mTexture;
+  GLuint mUploadTexture;
+  GLuint mCurTexture;
+  EGLImage mGrallocImage;
+  gl::ShaderProgramType mShaderType;
 };
 
 } /* layers */

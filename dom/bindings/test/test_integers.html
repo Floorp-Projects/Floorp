@@ -23,7 +23,13 @@
       todo(false, "WebGL not supported");
       return;
     }
-    is(gl.getError(), 0, "Should not start in an error state");
+    var error = gl.getError()
+
+    // on the b2g emulator we get GL_INVALID_FRAMEBUFFER_OPERATION
+    if (error == 0x0506) // GL_INVALID_FRAMEBUFFER_OPERATION
+        return;
+
+    is(error, 0, "Should not start in an error state");
 
     var b = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, b);

@@ -86,10 +86,6 @@ struct VertexAttrib0Status {
     enum { Default, EmulatedUninitializedArray, EmulatedInitializedArray };
 };
 
-struct BackbufferClearingStatus {
-    enum { NotClearedSinceLastPresented, ClearedToDefaultValues, HasBeenDrawnTo };
-};
-
 namespace WebGLTexelConversions {
 
 /*
@@ -261,7 +257,20 @@ public:
     already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                  CanvasLayer *aOldLayer,
                                                  LayerManager *aManager);
+
+    // Note that 'clean' here refers to its invalidation state, not the
+    // contents of the buffer.
     void MarkContextClean() { mInvalidated = false; }
+
+    gl::GLContext* GL() const {
+        return gl;
+    }
+
+    bool IsPremultAlpha() const {
+        return mOptions.premultipliedAlpha;
+    }
+
+    bool PresentScreenBuffer();
 
     // a number that increments every time we have an event that causes
     // all context resources to be lost.
@@ -269,15 +278,14 @@ public:
 
     const WebGLRectangleObject *FramebufferRectangleObject() const;
 
-    // this is similar to GLContext::ClearSafely, but is more comprehensive
-    // (takes care of scissor, stencil write mask, dithering, viewport...)
-    // WebGL has more complex needs than GLContext as content controls GL state.
-    void ForceClearFramebufferWithDefaultValues(uint32_t mask, const nsIntRect& viewportRect);
+    // This is similar to GLContext::ClearSafely, but tries to minimize the
+    // amount of work it does.
+    // It only clears the buffers we specify, and can reset its state without
+    // first having to query anything, as WebGL knows its state at all times.
+    void ForceClearFramebufferWithDefaultValues(GLbitfield mask);
 
-    // if the preserveDrawingBuffer context option is false, we need to clear the back buffer
-    // after it's been presented to the compositor. This function does that if needed.
-    // See section 2.2 in the WebGL spec.
-    void EnsureBackbufferClearedAsNeeded();
+    // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.
+    void ClearScreen();
 
     // checks for GL errors, clears any pending GL error, stores the current GL error in currentGLError,
     // and copies it into mWebGLError if it doesn't already have an error set
@@ -844,6 +852,8 @@ protected:
     bool mIsMesa;
     bool mLoseContextOnHeapMinimize;
     bool mCanLoseContextInForeground;
+    bool mShouldPresent;
+    bool mIsScreenCleared;
 
     template<typename WebGLObjectType>
     void DeleteWebGLObjectsArray(nsTArray<WebGLObjectType>& array);
@@ -1105,8 +1115,6 @@ protected:
     WebGLfloat mColorClearValue[4];
     WebGLint mStencilClearValue;
     WebGLfloat mDepthClearValue;
-
-    int mBackbufferClearingStatus;
 
     nsCOMPtr<nsITimer> mContextRestorer;
     bool mAllowRestore;
