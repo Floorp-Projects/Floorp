@@ -44,7 +44,6 @@ public:
 };
 
 bool PoisonWriteEnabled();
-void PoisonWriteBase();
 bool ValidWriteAssert(bool ok);
 void BaseCleanup();
 // This method should always be called with the debugFDs lock.
