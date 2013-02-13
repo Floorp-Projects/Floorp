@@ -585,8 +585,6 @@ drawAsyncBitmapColor(InstanceData* instanceData)
 
 static bool bug813906(NPP npp, const char* const function, const char* const url, const char* const frame)
 {
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-
   NPObject *windowObj = nullptr;
   NPError err = NPN_GetValue(npp, NPNVWindowNPObject, &windowObj);
   if (err != NPERR_NO_ERROR) {
