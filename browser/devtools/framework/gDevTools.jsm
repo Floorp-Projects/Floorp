@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Toolbox",
 XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   "resource:///modules/devtools/Target.jsm");
 
-const FORBIDDEN_IDS = new Set("toolbox", "");
+const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 
 /**
  * DevTools is a class that represents a set of developer tools, it holds a
