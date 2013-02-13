@@ -1191,7 +1191,13 @@ nsPluginHost::GetPermissionStringForType(const nsACString &aMimeType, nsACString
     aPermissionString.AssignLiteral("plugin:");
   }
 
-  aPermissionString.Append(tag->mFileName);
+  if (tag->mIsJavaPlugin) {
+    aPermissionString.Append("java");
+  } else if (tag->mIsFlashPlugin) {
+    aPermissionString.Append("flash");
+  } else {
+    aPermissionString.Append(tag->GetNiceFileName());
+  }
 
   return NS_OK;
 }
