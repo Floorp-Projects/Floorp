@@ -337,10 +337,12 @@ protected:
   uint32_t mPendingRequestFlags;
 
   enum {
-    // Set if the request needs 
+    // Set if the request needs ResetAnimation called on it.
     REQUEST_NEEDS_ANIMATION_RESET = 0x00000001U,
     // Set if the request is blocking onload.
-    REQUEST_BLOCKS_ONLOAD = 0x00000002U
+    REQUEST_BLOCKS_ONLOAD = 0x00000002U,
+    // Set if the request is currently tracked with the document.
+    REQUEST_IS_TRACKED = 0x00000004U
   };
 
   // If the image was blocked or if there was an error loading, it's nice to
