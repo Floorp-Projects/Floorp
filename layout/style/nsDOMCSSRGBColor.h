@@ -10,13 +10,11 @@
 
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
-#include "nsISupports.h"
 #include "nsWrapperCache.h"
 
 class nsROCSSPrimitiveValue;
 
-class nsDOMCSSRGBColor : public nsISupports,
-                         public nsWrapperCache
+class nsDOMCSSRGBColor : public nsWrapperCache
 {
 public:
   nsDOMCSSRGBColor(nsROCSSPrimitiveValue* aRed,
@@ -27,9 +25,9 @@ public:
 
   virtual ~nsDOMCSSRGBColor(void);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsDOMCSSRGBColor)
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCSSRGBColor)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsDOMCSSRGBColor)
 
   bool HasAlpha() const { return mHasAlpha; }
 
