@@ -124,7 +124,7 @@ webidl_files = \
   ProcessingInstruction.webidl \
   Rect.webidl \
   RGBColor.webidl \
-  RTCIceServer.webidl \
+  RTCConfiguration.webidl \
   Screen.webidl \
   SVGAElement.webidl \
   SVGAltGlyphElement.webidl \
