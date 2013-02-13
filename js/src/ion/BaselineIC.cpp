@@ -179,6 +179,21 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &globalStub->shape(), "baseline-global-stub-shape");
         break;
       }
+      case ICStub::GetName_Scope0:
+        static_cast<ICGetName_Scope<0>*>(this)->traceScopes(trc);
+        break;
+      case ICStub::GetName_Scope1:
+        static_cast<ICGetName_Scope<1>*>(this)->traceScopes(trc);
+        break;
+      case ICStub::GetName_Scope2:
+        static_cast<ICGetName_Scope<2>*>(this)->traceScopes(trc);
+        break;
+      case ICStub::GetName_Scope3:
+        static_cast<ICGetName_Scope<3>*>(this)->traceScopes(trc);
+        break;
+      case ICStub::GetName_Scope4:
+        static_cast<ICGetName_Scope<4>*>(this)->traceScopes(trc);
+        break;
       case ICStub::GetIntrinsic_Constant: {
         ICGetIntrinsic_Constant *constantStub = toGetIntrinsic_Constant();
         gc::MarkValue(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
@@ -2885,6 +2900,119 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *
 }
 
 static bool
+IsCacheableProtoChain(JSObject *obj, JSObject *holder)
+{
+    while (obj != holder) {
+        // We cannot assume that we find the holder object on the prototype
+        // chain and must check for null proto. The prototype chain can be
+        // altered during the lookupProperty call.
+        JSObject *proto = obj->getProto();
+        if (!proto || !proto->isNative())
+            return false;
+
+        // Don't handle objects which require a prototype guard. This should
+        // be uncommon so handling it is likely not worth the complexity.
+        if (proto->hasUncacheableProto())
+            return false;
+
+        obj = proto;
+    }
+    return true;
+}
+
+static bool
+IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, UnrootedShape shape)
+{
+    if (!shape || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    if (!shape->hasSlot() || !shape->hasDefaultGetter())
+        return false;
+
+    return true;
+}
+
+static bool
+TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *stub,
+                       HandleObject initialScopeChain, HandlePropertyName name)
+{
+    AutoShapeVector shapes(cx);
+    RootedId id(cx, NameToId(name));
+    RootedObject scopeChain(cx, initialScopeChain);
+
+    Shape *shape;
+    while (scopeChain) {
+        if (!shapes.append(scopeChain->lastProperty()))
+            return false;
+
+        if (scopeChain->isGlobal()) {
+            shape = scopeChain->nativeLookup(cx, id);
+            if (shape)
+                break;
+            return true;
+        }
+
+        if (!scopeChain->isScope() || scopeChain->isWith())
+            return true;
+
+        // Check for an 'own' property on the scope. There is no need to
+        // check the prototype as non-with scopes do not inherit properties
+        // from any prototype.
+        shape = scopeChain->nativeLookup(cx, id);
+        if (shape)
+            break;
+
+        scopeChain = scopeChain->enclosingScope();
+    }
+
+    if (!IsCacheableGetPropReadSlot(scopeChain, scopeChain, shape))
+        return true;
+
+    bool isFixedSlot;
+    uint32_t offset;
+    GetFixedOrDynamicSlotOffset(scopeChain, shape->slot(), &isFixedSlot, &offset);
+
+    ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+    ICStub *newStub;
+
+    switch (shapes.length()) {
+      case 1: {
+        ICGetName_Scope<0>::Compiler compiler(cx, monitorStub, &shapes, isFixedSlot, offset);
+        newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        break;
+      }
+      case 2: {
+        ICGetName_Scope<1>::Compiler compiler(cx, monitorStub, &shapes, isFixedSlot, offset);
+        newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        break;
+      }
+      case 3: {
+        ICGetName_Scope<2>::Compiler compiler(cx, monitorStub, &shapes, isFixedSlot, offset);
+        newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        break;
+      }
+      case 4: {
+        ICGetName_Scope<3>::Compiler compiler(cx, monitorStub, &shapes, isFixedSlot, offset);
+        newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        break;
+      }
+      case 5: {
+        ICGetName_Scope<4>::Compiler compiler(cx, monitorStub, &shapes, isFixedSlot, offset);
+        newStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+        break;
+      }
+      default:
+        return true;
+    }
+
+    if (!newStub)
+        return false;
+
+    stub->addNewStub(newStub);
+    return true;
+}
+
+static bool
 DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeChain, MutableHandleValue res)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
@@ -2914,6 +3042,9 @@ DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeCha
 
     if (js_CodeSpec[*pc].format & JOF_GNAME) {
         if (!TryAttachGlobalNameStub(cx, script, stub, scopeChain, name))
+            return false;
+    } else {
+        if (!TryAttachScopeNameStub(cx, script, stub, scopeChain, name))
             return false;
     }
 
@@ -2951,6 +3082,46 @@ ICGetName_Global::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadPtr(Address(obj, JSObject::offsetOfSlots()), obj);
     masm.load32(Address(BaselineStubReg, ICGetName_Global::offsetOfSlot()), scratch);
     masm.loadValue(BaseIndex(obj, scratch, TimesEight), R0);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+template <size_t NumHops>
+bool
+ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    GeneralRegisterSet regs(availableGeneralRegs(1));
+    Register obj = R0.scratchReg();
+    Register walker = regs.takeAny();
+    Register scratch = regs.takeAny();
+
+    for (int index = 0; index < NumHops + 1; index++) {
+        Register scope = index ? walker : obj;
+
+        // Shape guard.
+        masm.loadPtr(Address(BaselineStubReg, ICGetName_Scope::offsetOfShape(index)), scratch);
+        masm.branchTestObjShape(Assembler::NotEqual, scope, scratch, &failure);
+
+        if (index < NumHops)
+            masm.extractObject(Address(scope, ScopeObject::offsetOfEnclosingScope()), walker);
+    }
+
+    Register scope = NumHops ? walker : obj;
+
+    if (!isFixedSlot_) {
+        masm.loadPtr(Address(scope, JSObject::offsetOfSlots()), walker);
+        scope = walker;
+    }
+
+    masm.load32(Address(BaselineStubReg, ICGetName_Scope::offsetOfOffset()), scratch);
+    masm.loadValue(BaseIndex(scope, scratch, TimesOne), R0);
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
@@ -3110,39 +3281,6 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
         stub->addNewStub(newStub);
         return true;
     }
-
-    return true;
-}
-
-static bool
-IsCacheableProtoChain(JSObject *obj, JSObject *holder)
-{
-    while (obj != holder) {
-        // We cannot assume that we find the holder object on the prototype
-        // chain and must check for null proto. The prototype chain can be
-        // altered during the lookupProperty call.
-        JSObject *proto = obj->getProto();
-        if (!proto || !proto->isNative())
-            return false;
-
-        // Don't handle objects which require a prototype guard. This should
-        // be uncommon so handling it is likely not worth the complexity.
-        if (proto->hasUncacheableProto())
-            return false;
-
-        obj = proto;
-    }
-    return true;
-}
-
-static bool
-IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, UnrootedShape shape)
-{
-    if (!shape || !IsCacheableProtoChain(obj, holder))
-        return false;
-
-    if (!shape->hasSlot() || !shape->hasDefaultGetter())
-        return false;
 
     return true;
 }
