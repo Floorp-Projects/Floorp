@@ -89,6 +89,23 @@ let gTests = [
     executeSoon(runNextTest);
   }
 },
+{
+  desc: "Check that performing a search fires a search event.",
+  setup: function () { },
+  run: function () {
+    let doc = gBrowser.contentDocument;
+
+    doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
+      is(e.detail, doc.documentElement.getAttribute("searchEngineName"), "Detail is search engine name");
+
+      gBrowser.stop();
+      executeSoon(runNextTest);
+    }, true, true);
+
+    doc.getElementById("searchText").value = "it works";
+    doc.getElementById("searchSubmit").click();
+  },
+},
 ];
 
 function test()

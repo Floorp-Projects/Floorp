@@ -104,6 +104,7 @@ function onSearchSubmit(aEvent)
 {
   let searchTerms = document.getElementById("searchText").value;
   let searchURL = document.documentElement.getAttribute("searchEngineURL");
+
   if (searchURL && searchTerms.length > 0) {
     const SEARCH_TOKENS = {
       "_searchTerms_": encodeURIComponent(searchTerms)
@@ -111,6 +112,14 @@ function onSearchSubmit(aEvent)
     for (let key in SEARCH_TOKENS) {
       searchURL = searchURL.replace(key, SEARCH_TOKENS[key]);
     }
+
+    // Send an event that a search was performed. This was originally
+    // added so Firefox Health Report could record that a search from
+    // about:home had occurred.
+    let engineName = document.documentElement.getAttribute("searchEngineName");
+    let event = new CustomEvent("AboutHomeSearchEvent", {detail: engineName});
+    document.dispatchEvent(event);
+
     window.location.href = searchURL;
   }
 
