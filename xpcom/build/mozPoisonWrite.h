@@ -26,6 +26,7 @@ enum ShutdownChecksMode {
 };
 extern ShutdownChecksMode gShutdownChecks;
 
+void InitWritePoisoning();
 void PoisonWrite();
 void DisableWritePoisoning();
 void EnableWritePoisoning();
