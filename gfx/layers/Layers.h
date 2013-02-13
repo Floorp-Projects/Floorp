@@ -47,6 +47,7 @@ extern uint8_t gLayerManagerLayerBuilder;
 namespace mozilla {
 
 class FrameLayerBuilder;
+class WebGLContext;
 
 namespace gl {
 class GLContext;
@@ -1540,22 +1541,25 @@ class THEBES_API CanvasLayer : public Layer {
 public:
   struct Data {
     Data()
-      : mSurface(nullptr), mGLContext(nullptr)
-      , mDrawTarget(nullptr), mGLBufferIsPremultiplied(false)
+      : mSurface(nullptr)
+      , mDrawTarget(nullptr)
+      , mGLContext(nullptr)
+      , mSize(0,0)
+      , mIsGLAlphaPremult(false)
     { }
 
-    /* One of these two must be specified, but never both */
+    // One of these two must be specified for Canvas2D, but never both
     gfxASurface* mSurface;  // a gfx Surface for the canvas contents
-    mozilla::gl::GLContext* mGLContext; // a GL PBuffer Context
     mozilla::gfx::DrawTarget *mDrawTarget; // a DrawTarget for the canvas contents
 
-    /* The size of the canvas content */
+    // Or this, for GL.
+    mozilla::gl::GLContext* mGLContext;
+
+    // The size of the canvas content
     nsIntSize mSize;
 
-    /* Whether the GLContext contains premultiplied alpha
-     * values in the framebuffer or not.  Defaults to FALSE.
-     */
-    bool mGLBufferIsPremultiplied;
+    // Whether mGLContext contains data that is alpha-premultiplied.
+    bool mIsGLAlphaPremult;
   };
 
   /**
@@ -1595,13 +1599,32 @@ public:
   }
 
   /**
+   * Register a callback to be called at the start of each transaction.
+   */
+  typedef void PreTransactionCallback(void* closureData);
+  void SetPreTransactionCallback(PreTransactionCallback* callback, void* closureData)
+  {
+    mPreTransCallback = callback;
+    mPreTransCallbackData = closureData;
+  }
+
+protected:
+  void FirePreTransactionCallback()
+  {
+    if (mPreTransCallback) {
+      mPreTransCallback(mPreTransCallbackData);
+    }
+  }
+
+public:
+  /**
    * Register a callback to be called at the end of each transaction.
    */
   typedef void (* DidTransactionCallback)(void* aClosureData);
   void SetDidTransactionCallback(DidTransactionCallback aCallback, void* aClosureData)
   {
-    mCallback = aCallback;
-    mCallbackData = aClosureData;
+    mPostTransCallback = aCallback;
+    mPostTransCallbackData = aClosureData;
   }
 
   /**
@@ -1628,16 +1651,21 @@ public:
 
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData),
-      mCallback(nullptr), mCallbackData(nullptr), mFilter(gfxPattern::FILTER_GOOD),
-      mDirty(false) {}
+    : Layer(aManager, aImplData)
+    , mPreTransCallback(nullptr)
+    , mPreTransCallbackData(nullptr)
+    , mPostTransCallback(nullptr)
+    , mPostTransCallbackData(nullptr)
+    , mFilter(gfxPattern::FILTER_GOOD)
+    , mDirty(false)
+  {}
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
   void FireDidTransactionCallback()
   {
-    if (mCallback) {
-      mCallback(mCallbackData);
+    if (mPostTransCallback) {
+      mPostTransCallback(mPostTransCallbackData);
     }
   }
 
@@ -1645,8 +1673,10 @@ protected:
    * 0, 0, canvaswidth, canvasheight
    */
   nsIntRect mBounds;
-  DidTransactionCallback mCallback;
-  void* mCallbackData;
+  PreTransactionCallback* mPreTransCallback;
+  void* mPreTransCallbackData;
+  DidTransactionCallback mPostTransCallback;
+  void* mPostTransCallbackData;
   gfxPattern::GraphicsFilter mFilter;
 
 private:
