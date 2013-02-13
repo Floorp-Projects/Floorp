@@ -116,7 +116,6 @@ var ContextMenuUI = {
   showContextMenu: function ch_showContextMenu(aMessage) {
     this._popupState = aMessage.json;
     this._popupState.target = aMessage.target;
-
     let contentTypes = this._popupState.types;
 
     let optionsAvailable = false;
