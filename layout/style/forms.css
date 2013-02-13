@@ -430,6 +430,12 @@ input[type="file"] > xul|label {
   color: inherit;
   font-size: inherit;
   letter-spacing: inherit;
+
+  /*
+   * Force the text to have LTR directionality. Otherwise filenames containing
+   * RTL characters will be reordered with chaotic results.
+   */
+  direction: ltr !important;
 }
 
 /* button part of file selector */
@@ -438,6 +444,14 @@ input[type="file"] > input[type="button"] {
   font-size: inherit;
   letter-spacing: inherit;
   cursor: inherit;
+}
+
+/* Try to make RTL <input type='file'> look nicer. */
+/* TODO: use text-align: match-parent when bug 645642 is fixed. */
+input[type="file"]:-moz-dir(rtl) > xul|label {
+  -moz-padding-start: 0px;
+  padding-right: 5px;
+  text-align: right;
 }
 
 /* radio buttons */
@@ -621,16 +635,6 @@ textarea::-moz-placeholder,
 optgroup:before {
   unicode-bidi: inherit;
   text-overflow: inherit;
-}
-
- /*
-  * Force the text control child of file input controls to have left-to-right
-  * directionality. Otherwise filenames containing right-to-left characters
-  * will be reordered with chaotic results.
-  */
-input[type="file"] > xul|label {
-  direction: ltr !important;
-  text-align: inherit;
 }
 
 /**
