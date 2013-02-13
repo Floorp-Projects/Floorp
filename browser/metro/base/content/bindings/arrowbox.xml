@@ -1,0 +1,274 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="arrowbox" extends="xul:box">
+    <content orient="vertical">
+      <xul:box anonid="container" class="panel-arrowcontainer" flex="1">
+        <xul:box anonid="arrowbox" class="panel-arrowbox" dir="ltr">
+          <xul:image anonid="arrow" class="panel-arrow" xbl:inherits="type"/>
+        </xul:box>
+        <xul:scrollbox anonid="arrowcontent" class="panel-arrowcontent" flex="1">
+          <xul:box class="panel-inner-arrowcontent" xbl:inherits="align,dir,orient,pack,flex">
+            <children/>
+          </xul:box>
+        </xul:scrollbox>
+      </xul:box>
+    </content>
+    <implementation implements="nsIDOMEventListener">
+      <constructor>
+        <![CDATA[
+          window.addEventListener("resize", this._eventHandler, false);
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          window.removeEventListener("resize", this._eventHandler, false);
+        ]]>
+      </destructor>
+
+      <field name="anonScrollBox" readonly="true"><![CDATA[
+        // Expose the anyonymous scrollbox so ScrollUtils.getScrollboxFromElement can find it.
+        document.getAnonymousElementByAttribute(this, "anonid", "arrowcontent");
+      ]]></field>
+
+      <property name="offset" onget="return parseInt(this.getAttribute('offset')) || 0;"
+                              onset="this.setAttribute('offset', val); return val;"/>
+
+      <method name="_updateArrow">
+         <parameter name="popupRect"/>
+         <parameter name="targetRect"/>
+         <parameter name="horizPos"/>
+         <parameter name="vertPos"/>
+         <body>
+            <![CDATA[
+              let arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
+              if (!popupRect || !targetRect) {
+                arrow.hidden = true;
+                return;
+              }
+
+              let container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+              let content = document.getAnonymousElementByAttribute(this, "anonid", "arrowcontent");
+              let arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
+
+              // If the content of the arrowbox if taller than the available
+              // screen space, force a maximum height
+              this.style.minHeight = "";
+              content.style.overflow = "visible";
+              const kBottomMargin = 64;
+              let contentRect = content.firstChild.getBoundingClientRect();
+              if ((contentRect.height + contentRect.top + kBottomMargin) > window.innerHeight) {
+                content.style.overflow = "hidden";
+                this.style.minHeight = (window.innerHeight - parseInt(this.top) - kBottomMargin) + "px";
+              }
+
+              let HALF_ARROW_WIDTH = 16;
+
+              let anchorClass = "";
+              let hideArrow = false;
+              if (horizPos == 0) {
+                container.orient = "vertical";
+                arrowbox.orient = "";
+                if (vertPos == 0) {
+                  hideArrow = true;
+                } else {
+                  let anchorPosX = 0.5;
+                  // check for hasAttribute because, in some cases, anchorNode is actually a rect
+                  if (this.anchorNode && this.anchorNode.hasAttribute && this.anchorNode.hasAttribute("anchorPosX"))
+                     anchorPosX = parseFloat(this.anchorNode.getAttribute("anchorPosX")) || 0.5;
+                  arrowbox.style.marginLeft = ((targetRect.left - popupRect.left) + (targetRect.width * anchorPosX) - HALF_ARROW_WIDTH) + "px";
+                  if (vertPos == 1) {
+                    container.dir = "normal"; 
+                    anchorClass = "top";
+                  } else if (vertPos == -1) {
+                    container.dir = "reverse"; 
+                    anchorClass = "bottom";
+                  }
+                }
+              } else if (vertPos == 0) {
+                container.orient = "";
+                arrowbox.orient = "vertical";
+                  let anchorPosY = 0.5;
+                  // check for hasAttribute because, in some cases, anchorNode is actually a rect
+                  if (this.anchorNode && this.anchorNode.hasAttribute && this.anchorNode.hasAttribute("anchorPosY"))
+                     anchorPosY = parseFloat(this.anchorNode.getAttribute("anchorPosY")) || 0.5;
+                arrowbox.style.marginTop = ((targetRect.top - popupRect.top) + (targetRect.height * anchorPosY) - HALF_ARROW_WIDTH) + "px";
+                if (horizPos == 1) {
+                  container.dir = "ltr"; 
+                  anchorClass = "left";
+                } else if (horizPos == -1) {
+                  container.dir = "rtl";
+                  anchorClass = "right";
+                }
+              } else {
+                hideArrow = true;
+              }
+              arrow.hidden = hideArrow;
+              arrow.setAttribute("side", anchorClass);
+            ]]>
+         </body>
+      </method>
+      <field name="anchorNode">null</field>
+      <method name="anchorTo">
+         <parameter name="aAnchorNode"/>
+         <parameter name="aPosition"/>
+         <body>
+            <![CDATA[
+              if (!aAnchorNode) {
+                this._updateArrow(null, null, 0, 0);
+                return;
+              }
+
+              this.anchorNode = aAnchorNode;
+              this.position = aPosition;
+
+              let anchorRect = aAnchorNode.getBoundingClientRect();
+              let popupRect = new Rect(0,0,0,0);
+              for (let i = 0; i < this.childNodes.length; i++) {
+                popupRect.expandToContain(Rect.fromRect(this.childNodes[i].getBoundingClientRect()));
+              }
+              let offset = this.offset;
+              let horizPos = 0;
+              let vertPos = 0;
+
+              if (aPosition) {
+                let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+                let isRtl = chromeReg.isLocaleRTL("global");
+                let left = 0;
+                let top = 0;
+
+                switch (aPosition) {
+                  case "before_start":
+                    left = isRtl ? anchorRect.right - popupRect.width : anchorRect.left;
+                    top = anchorRect.top + offset - popupRect.height;
+                    vertPos = -1;
+                    break;
+                  case "before_end":
+                    left = isRtl ? anchorRect.left : anchorRect.right - popupRect.width;
+                    top = anchorRect.top + offset - popupRect.height;
+                    vertPos = -1;
+                    break;
+                  case "after_start":
+                    left = isRtl ? anchorRect.right - popupRect.width : anchorRect.left;
+                    top = anchorRect.bottom - offset;
+                    vertPos = 1;
+                    break;
+                  case "after_end":
+                    left = isRtl ? anchorRect.left : anchorRect.right - popupRect.width;
+                    top = anchorRect.bottom - offset;
+                    vertPos = 1;
+                    break;
+                  case "start_before":
+                    left = isRtl ? anchorRect.right : anchorRect.left - popupRect.width - offset;
+                    top = anchorRect.top;
+                    horizPos = -1;
+                    break;
+                  case "start_after":
+                    left = isRtl ? anchorRect.right : anchorRect.left - popupRect.width - offset;
+                    top = anchorRect.bottom - popupRect.height;
+                    horizPos = -1;
+                    break;
+                  case "end_before":
+                    left = isRtl ? anchorRect.left - popupRect.width - offset : anchorRect.right;
+                    top = anchorRect.top;
+                    horizPos = 1;
+                    break;
+                  case "end_after":
+                    left = isRtl ? anchorRect.left - popupRect.width - offset : anchorRect.right;
+                    top = anchorRect.bottom - popupRect.height;
+                    horizPos = 1;
+                    break;
+                  case "overlap":
+                    left = isRtl ? anchorRect.right - popupRect.width + offset : anchorRect.left + offset ;
+                    top = anchorRect.top + offset ;
+                    break;
+                }
+                if (top == 0) top = 1;
+                if (left == 0) left = 1;
+
+                if (left + popupRect.width > window.innerWidth)
+                  left = window.innerWidth - popupRect.width;
+                else if (left < 0)
+                  left = 1;
+
+                popupRect.left = left;
+                this.setAttribute("left", left);
+                popupRect.top = top;
+                this.setAttribute("top", top);
+              } else {
+                horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left + offset)) ? -1 :
+                               (Math.round(popupRect.left) >= Math.round(anchorRect.right - offset)) ? 1 : 0;
+                vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top + offset)) ? -1 :
+                              (Math.round(popupRect.top) >= Math.round(anchorRect.bottom - offset)) ? 1 : 0;
+              }
+              this._updateArrow(popupRect, anchorRect, horizPos, vertPos);
+            ]]>
+         </body>
+      </method>
+
+      <method name="pointLeftAt">
+         <parameter name="targetNode"/>
+         <body>
+            <![CDATA[
+              if (!targetNode) {
+                this._updateArrow(null, null, 0, 0);
+                return;
+              }
+
+              let popupRect = this.getBoundingClientRect();
+              let targetRect = targetNode.getBoundingClientRect();
+              this._updateArrow(popupRect, targetRect, 1, 0);
+            ]]>
+         </body>
+      </method>
+
+      <method name="pointRightAt">
+         <parameter name="targetNode"/>
+         <body>
+            <![CDATA[
+              if (!targetNode) {
+                this._updateArrow(null, null, 0, 0);
+                return;
+              }
+
+              let popupRect = this.getBoundingClientRect();
+              let targetRect = targetNode.getBoundingClientRect();
+
+              this._updateArrow(popupRect, targetRect, -1, 0);
+            ]]>
+         </body>
+      </method>
+
+      <field name="_eventHandler"><![CDATA[
+        ({
+          self: this,
+          handleEvent: function handleEvent(aEvent) {
+            // We need to reset the margins because the previous values could
+            // cause the arrowbox to size incorrectly.
+            let self = this.self;
+            switch (aEvent.type) {
+              case "resize":
+                // Do nothing if there's no anchorNode
+                if (!self.anchorNode)
+                  break;
+                let arrowbox = document.getAnonymousElementByAttribute(self, "anonid", "arrowbox");
+                arrowbox.style.marginLeft = "0px";
+                arrowbox.style.marginTop = "0px";
+                self.anchorTo(self.anchorNode, self.position);
+                break;
+            }
+          }
+        })
+      ]]></field>
+    </implementation>
+  </binding>
+</bindings>

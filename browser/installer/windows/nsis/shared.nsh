@@ -682,6 +682,34 @@
 !macroend
 !define RemoveDeprecatedKeys "!insertmacro RemoveDeprecatedKeys"
 
+!ifdef MOZ_METRO
+; Resets Win8+ specific toast keys Windows sets. We call this on a
+; fresh install and on uninstall.
+!macro ResetWin8PromptKeys
+  ${If} ${AtLeastWin8}
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.htm"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.html"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.xht"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.xhtml"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.shtml"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_ftp"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_http"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_https"
+  ${EndIf}
+!macroend
+!define ResetWin8PromptKeys "!insertmacro ResetWin8PromptKeys"
+
+; Resets Win8+ Metro specific splash screen info. Relies
+; on AppUserModelID.
+!macro ResetWin8MetroSplash
+  ${If} ${AtLeastWin8}
+  ${AndIf} "$AppUserModelID" != ""
+    DeleteRegKey HKCR "Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\DefaultBrowser_NOPUBLISHERID\SplashScreen\DefaultBrowser_NOPUBLISHERID!$AppUserModelID"
+  ${EndIf}
+!macroend
+!define ResetWin8MetroSplash "!insertmacro ResetWin8MetroSplash"
+!endif
+
 ; Removes various directories and files for reasons noted below.
 !macro RemoveDeprecatedFiles
   ; Remove talkback if it is present (remove after bug 386760 is fixed)
