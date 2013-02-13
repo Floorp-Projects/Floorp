@@ -1,0 +1,56 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+# desktop specific resources - this defines LOCALE_SRCDIR
+relativesrcdir = browser/locales
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+
+#########################################
+# l10s prefs file
+
+DEFINES += -DAB_CD=$(AB_CD)
+
+# copying firefox-l10n.js over from LOCALE_SRCDIR or browser
+PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/firefox-l10n.js) \
+                    $(topsrcdir)/$(relativesrcdir)/en-US/firefox-l10n.js )
+
+include $(topsrcdir)/config/rules.mk
+
+#########################################
+# Search plugins
+
+# Metro reuses desktop search plugins
+libs::
+	$(MAKE) -C $(DEPTH)/browser/locales searchplugins \
+	  DIST_SUBDIR=$(DIST_SUBDIR) XPI_ROOT_APPID="$(XPI_ROOT_APPID)"
+
+#########################################
+# Bookmarks
+
+# Pick up desktop's bookmarks.inc file
+vpath book%.inc $(LOCALE_SRCDIR)/profile
+ifdef LOCALE_MERGEDIR
+vpath book%.inc $(LOCALE_SRCDIR)/profile
+vpath book%.inc @top_srcdir@/$(relativesrcdir)/en-US/profile
+endif
+
+bookmarks-src = $(srcdir)/../generic/profile/bookmarks.json.in
+
+# The resulting bookmarks.json will get picked up and packaged by the
+# processing of the jar file in the parent directory.
+bookmarks: bookmarks.inc
+	@echo "Generating: $@"
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	  -I $^ \
+	  -DAB_CD=$(AB_CD) \
+	  $(bookmarks-src) > ../bookmarks.json
+
+libs:: bookmarks

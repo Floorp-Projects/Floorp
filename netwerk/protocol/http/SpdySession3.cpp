@@ -676,7 +676,7 @@ SpdySession3::GenerateSettings()
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
   LOG3(("SpdySession3::GenerateSettings %p\n", this));
 
-  static const uint32_t maxDataLen = 4 + 2 * 8; // sized for 2 settings
+  static const uint32_t maxDataLen = 4 + 3 * 8; // sized for 3 settings
   EnsureBuffer(mOutputQueueBuffer, mOutputQueueUsed + 8 + maxDataLen,
                mOutputQueueUsed, mOutputQueueSize);
   char *packet = mOutputQueueBuffer.get() + mOutputQueueUsed;
@@ -691,6 +691,13 @@ SpdySession3::GenerateSettings()
   // entries need to be listed in order by ID
   // 1st entry is bytes 12 to 19
   // 2nd entry is bytes 20 to 27
+  // 3rd entry is bytes 28 to 35
+
+  // announcing that we accept 0 incoming streams is done to
+  // disable server push until that is implemented.
+  packet[15 + 8 * numberOfEntries] = SETTINGS_TYPE_MAX_CONCURRENT;
+  // The value portion of the setting pair is already initialized to 0
+  numberOfEntries++;
 
   nsRefPtr<nsHttpConnectionInfo> ci;
   uint32_t cwnd = 0;

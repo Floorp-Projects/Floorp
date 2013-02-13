@@ -286,9 +286,14 @@ public class Tabs implements GeckoEventListener {
                 int id = message.getInt("tabID");
                 Tab tab = null;
 
-                if (mTabs.containsKey(id)) {
-                    tab = mTabs.get(id);
-                    tab.updateURL(url);
+                if (message.getBoolean("stub")) {
+                    if (mTabs.containsKey(id)) {
+                        tab = mTabs.get(id);
+                        tab.updateURL(url);
+                    } else {
+                        // Tab was already closed; abort
+                        return;
+                    }
                 } else {
                     tab = addTab(id, url, message.getBoolean("external"),
                                           message.getInt("parentId"),

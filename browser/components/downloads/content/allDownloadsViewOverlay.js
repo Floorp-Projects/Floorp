@@ -996,6 +996,10 @@ DownloadsPlacesView.prototype = {
         this._richlistbox.selectedItems[0] == aElement) {
       this._richlistbox.selectItem(aElement.nextSibling);
     }
+
+    if (this._lastSessionDownloadElement == aElement)
+      this._lastSessionDownloadElement = aElement.previousSibling;
+
     this._richlistbox.removeChild(aElement);
     this._ensureVisibleElementsAreActive();
     goUpdateCommand("downloadsCmd_clearDownloads");

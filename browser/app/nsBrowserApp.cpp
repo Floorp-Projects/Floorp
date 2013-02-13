@@ -42,6 +42,11 @@
 
 using namespace mozilla;
 
+#define kDesktopFolder "browser"
+#define kMetroFolder "metro"
+#define kMetroAppIniFilename "metroapp.ini"
+#define kMetroTestFile "tests.ini"
+
 static void Output(const char *fmt, ... )
 {
   va_list ap;
@@ -121,6 +126,7 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
 {
   nsCOMPtr<nsIFile> appini;
   nsresult rv;
+  uint32_t mainFlags = 0;
 
   // Allow firefox.exe to launch XULRunner apps via -app <application.ini>
   // Note that -app must be the *first* argument.
@@ -164,26 +170,163 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
     }
     // xreDirectory already has a refcount from NS_NewLocalFile
     appData->xreDirectory = xreDirectory;
-    int result = XRE_main(argc, argv, appData, 0);
+    int result = XRE_main(argc, argv, appData, mainFlags);
     XRE_FreeAppData(appData);
     return result;
   }
 
-  ScopedAppData appData(&sAppData);
-  nsCOMPtr<nsIFile> exeFile;
-  rv = mozilla::BinaryPath::GetFile(argv[0], getter_AddRefs(exeFile));
-  if (NS_FAILED(rv)) {
-    Output("Couldn't find the application directory.\n");
+  bool metroOnDesktop = false;
+
+#ifdef MOZ_METRO
+  if (argc > 1) {
+    // This command-line flag is passed to our executable when it is to be
+    // launched in metro mode (i.e. our EXE is registered as the default
+    // browser and the user has tapped our EXE's tile)
+    if (IsArg(argv[1], "ServerName:DefaultBrowserServer")) {
+      mainFlags = XRE_MAIN_FLAG_USE_METRO;
+      argv[1] = argv[0];
+      argv++;
+      argc--;
+    } else {
+      // This command-line flag is used to test the metro browser in a desktop
+      // environment.
+      for (int idx = 1; idx < argc; idx++) {
+        if (IsArg(argv[idx], "metrodesktop")) {
+          metroOnDesktop = true;
+          break;
+        } 
+      }
+    }
+  }
+#endif
+
+  // Desktop browser launch
+  if (mainFlags != XRE_MAIN_FLAG_USE_METRO && !metroOnDesktop) {
+    ScopedAppData appData(&sAppData);
+    nsCOMPtr<nsIFile> exeFile;
+    rv = mozilla::BinaryPath::GetFile(argv[0], getter_AddRefs(exeFile));
+    if (NS_FAILED(rv)) {
+      Output("Couldn't find the application directory.\n");
+      return 255;
+    }
+
+    nsCOMPtr<nsIFile> greDir;
+    exeFile->GetParent(getter_AddRefs(greDir));
+
+    nsCOMPtr<nsIFile> appSubdir;
+    greDir->Clone(getter_AddRefs(appSubdir));
+    appSubdir->Append(NS_LITERAL_STRING(kDesktopFolder));
+
+    SetStrongPtr(appData.directory, static_cast<nsIFile*>(appSubdir.get()));
+    // xreDirectory already has a refcount from NS_NewLocalFile
+    appData.xreDirectory = xreDirectory;
+
+    return XRE_main(argc, argv, &appData, mainFlags);
+  }
+
+  // Metro browser launch
+#ifdef MOZ_METRO
+  nsCOMPtr<nsIFile> iniFile, appSubdir;
+
+  xreDirectory->Clone(getter_AddRefs(iniFile));
+  xreDirectory->Clone(getter_AddRefs(appSubdir));
+
+  iniFile->Append(NS_LITERAL_STRING(kMetroFolder));
+  iniFile->Append(NS_LITERAL_STRING(kMetroAppIniFilename));
+
+  appSubdir->Append(NS_LITERAL_STRING(kMetroFolder));
+
+  nsAutoCString path;
+  if (NS_FAILED(iniFile->GetNativePath(path))) {
+    Output("Couldn't get ini file path.\n");
     return 255;
   }
-  nsCOMPtr<nsIFile> appDir;
-  exeFile->GetParent(getter_AddRefs(appDir));
-  appDir->Append(NS_LITERAL_STRING("browser"));
 
-  SetStrongPtr(appData.directory, static_cast<nsIFile*>(appDir.get()));
+  char appEnv[MAXPATHLEN];
+  snprintf(appEnv, MAXPATHLEN, "XUL_APP_FILE=%s", path.get());
+  if (putenv(appEnv)) {
+    Output("Couldn't set %s.\n", appEnv);
+    return 255;
+  }
+
+  nsXREAppData *appData;
+  rv = XRE_CreateAppData(iniFile, &appData);
+  if (NS_FAILED(rv) || !appData) {
+    Output("Couldn't read application.ini");
+    return 255;
+  }
+
+  SetStrongPtr(appData->directory, static_cast<nsIFile*>(appSubdir.get()));
   // xreDirectory already has a refcount from NS_NewLocalFile
-  appData.xreDirectory = xreDirectory;
-  return XRE_main(argc, argv, &appData, 0);
+  appData->xreDirectory = xreDirectory;
+
+#ifdef XP_WIN
+  if (!metroOnDesktop) {
+    nsCOMPtr<nsIFile> testFile;
+
+    xreDirectory->Clone(getter_AddRefs(testFile));
+    testFile->Append(NS_LITERAL_STRING(kMetroTestFile));
+
+    nsAutoCString path;
+    if (NS_FAILED(testFile->GetNativePath(path))) {
+      Output("Couldn't get test file path.\n");
+      return 255;
+    }
+
+    // Check for a metro test harness command line args file
+    HANDLE hTestFile = CreateFileA(path.get(),
+                                   GENERIC_READ,
+                                   0, NULL, OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL,
+                                   NULL);
+    if (hTestFile != INVALID_HANDLE_VALUE) {
+      // Typical test harness command line args string is around 100 bytes.
+      char buffer[1024];
+      memset(buffer, 0, sizeof(buffer));
+      DWORD bytesRead = 0;
+      if (!ReadFile(hTestFile, (VOID*)buffer, sizeof(buffer)-1,
+                    &bytesRead, NULL) || !bytesRead) {
+        CloseHandle(hTestFile);
+        printf("failed to read test file '%s'", testFile);
+        return -1;
+      }
+      CloseHandle(hTestFile);
+
+      // Build new args array
+      char* newArgv[20];
+      int newArgc = 1;
+
+      memset(newArgv, 0, sizeof(newArgv));
+
+      char* ptr = buffer;
+      newArgv[0] = ptr;
+      while (*ptr != NULL &&
+             (ptr - buffer) < sizeof(buffer) &&
+             newArgc < ARRAYSIZE(newArgv)) {
+        if (isspace(*ptr)) {
+          *ptr = '\0';
+          ptr++;
+          newArgv[newArgc] = ptr;
+          newArgc++;
+          continue;
+        }
+        ptr++;
+      }
+      newArgc--;
+      int result = XRE_main(newArgc, newArgv, appData, mainFlags);
+      XRE_FreeAppData(appData);
+      return result;
+    }
+  }
+#endif
+
+  int result = XRE_main(argc, argv, appData, mainFlags);
+  XRE_FreeAppData(appData);
+  return result;
+#endif
+
+  NS_NOTREACHED("browser do_main failed to pickup proper initialization");
+  return 255;
 }
 
 /* Local implementation of PR_Now, since the executable can't depend on NSPR */

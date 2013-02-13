@@ -21,6 +21,12 @@ IMPL_IUNKNOWN_INHERITED1(ARIAGridAccessibleWrap,
                          AccessibleWrap,
                          ia2AccessibleTable)
 
+void
+ARIAGridAccessibleWrap::Shutdown()
+{
+  ia2AccessibleTable::mTable = nullptr;
+  ARIAGridAccessible::Shutdown();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // ARIAGridCellAccessibleWrap
@@ -33,3 +39,9 @@ IMPL_IUNKNOWN_INHERITED1(ARIAGridCellAccessibleWrap,
                          HyperTextAccessibleWrap,
                          ia2AccessibleTableCell)
 
+void
+ARIAGridCellAccessibleWrap::Shutdown()
+{
+  ia2AccessibleTableCell::mTableCell = nullptr;
+  ARIAGridCellAccessible::Shutdown();
+}

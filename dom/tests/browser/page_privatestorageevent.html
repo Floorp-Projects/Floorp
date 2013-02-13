@@ -1,0 +1,22 @@
+<html>
+<body>
+la la la la
+<script>
+  var gotStorageEvent = false;
+  window.addEventListener('storage', function(ev) {
+    gotStorageEvent = true;
+  }, false);
+
+  window.addEventListener('message', function(ev) {
+    if (['data:true', 'data:false', 'reply'].indexOf(ev.data) != -1)
+      return;
+    if (ev.data == 'query?') {
+      postMessage('data:' + gotStorageEvent, 'http://mochi.test:8888');
+      return;
+    }
+    localStorage['key'] = 'ablooabloo';
+    postMessage('reply', 'http://mochi.test:8888');
+  }, false);
+</script>
+</body>
+</html>

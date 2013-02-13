@@ -362,7 +362,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     hwcLayer.flags = 0;
     hwcLayer.hints = 0;
-    hwcLayer.blending = HWC_BLENDING_NONE;
+    hwcLayer.blending = HWC_BLENDING_PREMULT;
     hwcLayer.compositionType = HWC_USE_COPYBIT;
 
     if (!fillColor) {

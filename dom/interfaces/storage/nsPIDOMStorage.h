@@ -15,8 +15,8 @@ class nsIURI;
 class nsIPrincipal;
 
 #define NS_PIDOMSTORAGE_IID \
-{ 0x86dfe3c4, 0x4286, 0x4648, \
-  { 0xb2, 0x09, 0x55, 0x27, 0x50, 0x59, 0x26, 0xac } }
+{ 0x9c292365, 0x6ae4, 0x461b,                           \
+  { 0x86, 0x98, 0xf5, 0x23, 0x6f, 0xfa, 0xd2, 0x30 } }
 
 class nsPIDOMStorage : public nsISupports
 {
@@ -44,6 +44,8 @@ public:
   virtual bool CanAccess(nsIPrincipal *aPrincipal) = 0;
 
   virtual nsDOMStorageType StorageType() = 0;
+
+  virtual bool IsPrivate() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMStorage, NS_PIDOMSTORAGE_IID)
