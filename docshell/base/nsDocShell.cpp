@@ -907,7 +907,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerContainer)
-    NS_INTERFACE_MAP_ENTRY(nsIEditorDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
@@ -11103,10 +11102,6 @@ nsDocShell::ShouldDiscardLayoutState(nsIHttpChannel * aChannel)
 
     return (noStore || (noCache && securityInfo));
 }
-
-//*****************************************************************************
-// nsDocShell: nsIEditorDocShell
-//*****************************************************************************   
 
 NS_IMETHODIMP nsDocShell::GetEditor(nsIEditor * *aEditor)
 {

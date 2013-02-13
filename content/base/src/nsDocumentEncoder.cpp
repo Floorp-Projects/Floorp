@@ -48,7 +48,6 @@
 #include "nsIFrame.h"
 #include "nsStringBuffer.h"
 #include "mozilla/dom/Element.h"
-#include "nsIEditorDocShell.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIDocShell.h"
@@ -343,17 +342,14 @@ IsInvisibleBreak(nsINode *aNode) {
     if (window) {
       nsIDocShell *docShell = window->GetDocShell();
       if (docShell) {
-        nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
-        if (editorDocShell) {
-          nsCOMPtr<nsIEditor> editor;
-          editorDocShell->GetEditor(getter_AddRefs(editor));
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-          if (htmlEditor) {
-            bool isVisible = false;
-            nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
-            htmlEditor->BreakIsVisible(domNode, &isVisible);
-            return !isVisible;
-          }
+        nsCOMPtr<nsIEditor> editor;
+        docShell->GetEditor(getter_AddRefs(editor));
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+        if (htmlEditor) {
+          bool isVisible = false;
+          nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
+          htmlEditor->BreakIsVisible(domNode, &isVisible);
+          return !isVisible;
         }
       }
     }
