@@ -377,6 +377,8 @@ struct GLContextSymbols
     // OES_egl_image
     typedef void (GLAPIENTRY * PFNGLEGLIMAGETARGETTEXTURE2D)(GLenum target, GLeglImage image);
     PFNGLEGLIMAGETARGETTEXTURE2D fEGLImageTargetTexture2D;
+    typedef void (GLAPIENTRY * PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGE)(GLenum target, GLeglImage image);
+    PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGE fEGLImageTargetRenderbufferStorage;
 };
 
 }

@@ -47,6 +47,27 @@ typedef uint64_t GLuint64;
 // OES_EGL_image (GLES)
 typedef void* GLeglImage;
 
+// EGL types
+typedef int EGLint;
+typedef unsigned int EGLBoolean;
+typedef unsigned int EGLenum;
+typedef void *EGLConfig;
+typedef void *EGLContext;
+typedef void *EGLDisplay;
+typedef void *EGLSurface;
+typedef void *EGLClientBuffer;
+typedef void *EGLCastToRelevantPtr;
+typedef void *EGLImage;
+typedef void *EGLSync;
+typedef uint64_t EGLTime;
+
+#define EGL_NO_CONTEXT       ((EGLContext)0)
+#define EGL_NO_DISPLAY       ((EGLDisplay)0)
+#define EGL_NO_SURFACE       ((EGLSurface)0)
+#define EGL_NO_CONFIG        ((EGLConfig)nullptr)
+#define EGL_NO_SYNC          ((EGLSync)0)
+#define EGL_NO_IMAGE         ((EGLImage)0)
+
 #ifndef GLAPIENTRY
 # ifdef WIN32
 #  define GLAPIENTRY APIENTRY
@@ -3275,6 +3296,9 @@ typedef void* GLeglImage;
 // EGL_KHR_gl_texture_2D_image
 #define LOCAL_EGL_GL_TEXTURE_2D               0x30B1
 
+// EGL_KHR_gl_renderbuffer_image
+#define LOCAL_EGL_GL_RENDERBUFFER             0x30B9
+
 // OES_EGL_image_external
 #define LOCAL_GL_TEXTURE_EXTERNAL             0x8D65
 
@@ -3291,5 +3315,11 @@ typedef void* GLeglImage;
 #define LOCAL_EGL_TIMEOUT_EXPIRED             0x30F5
 #define LOCAL_EGL_CONDITION_SATISFIED         0x30F6
 #define LOCAL_EGL_SUCCESS                     0x3000
+
+// EGL_ANGLE_surface_d3d_texture_2d_share_handle
+#define LOCAL_EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE 0x3200
+
+// FAKE_EGL_image_android
+#define LOCAL_EGL_NATIVE_BUFFER_ANDROID       0x3140
 
 #endif
