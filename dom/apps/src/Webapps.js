@@ -45,6 +45,8 @@ WebappsRegistry.prototype = {
     switch (aMessage.name) {
       case "Webapps:Install:Return:OK":
         Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app));
+        cpmm.sendAsyncMessage("Webapps:Install:Return:Ack",
+                              { manifestURL : app.manifestURL });
         break;
       case "Webapps:Install:Return:KO":
         Services.DOMRequest.fireError(req, msg.error || "DENIED");
