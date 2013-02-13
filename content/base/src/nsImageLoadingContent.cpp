@@ -498,6 +498,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     TrackImage(req);
     ResetAnimationIfNeeded();
   } else {
+    MOZ_ASSERT(!req, "Shouldn't have non-null request here");
     // If we don't have a current URI, we might as well store this URI so people
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
@@ -735,6 +736,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
       }
     }
   } else {
+    MOZ_ASSERT(!req, "Shouldn't have non-null request here");
     // If we don't have a current URI, we might as well store this URI so people
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
@@ -847,10 +849,12 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgRequestProxy* aRequest,
   // Clone the request we were given.
   nsRefPtr<imgRequestProxy>& req = PrepareNextRequest();
   nsresult rv = aRequest->Clone(this, getter_AddRefs(req));
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
-  else
+  } else {
+    MOZ_ASSERT(!req, "Shouldn't have non-null request here");
     return rv;
+  }
 
   return NS_OK;
 }
@@ -1149,9 +1153,9 @@ nsImageLoadingContent::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsCxPusher pusher;
   pusher.PushNull();
 
-  if (mCurrentRequestFlags & REQUEST_SHOULD_BE_TRACKED)
+  if (mCurrentRequest)
     aDocument->AddImage(mCurrentRequest);
-  if (mPendingRequestFlags & REQUEST_SHOULD_BE_TRACKED)
+  if (mPendingRequest)
     aDocument->AddImage(mPendingRequest);
 
   if (mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD)
@@ -1171,9 +1175,9 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
   nsCxPusher pusher;
   pusher.PushNull();
 
-  if (mCurrentRequestFlags & REQUEST_SHOULD_BE_TRACKED)
+  if (mCurrentRequest)
     doc->RemoveImage(mCurrentRequest);
-  if (mPendingRequestFlags & REQUEST_SHOULD_BE_TRACKED)
+  if (mPendingRequest)
     doc->RemoveImage(mPendingRequest);
 
   if (mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD)
@@ -1188,11 +1192,6 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage)
 
   MOZ_ASSERT(aImage == mCurrentRequest || aImage == mPendingRequest,
              "Why haven't we heard of this request?");
-  if (aImage == mCurrentRequest) {
-    mCurrentRequestFlags |= REQUEST_SHOULD_BE_TRACKED;
-  } else {
-    mPendingRequestFlags |= REQUEST_SHOULD_BE_TRACKED;
-  }
 
   nsIDocument* doc = GetOurCurrentDoc();
   if (doc)
@@ -1208,11 +1207,6 @@ nsImageLoadingContent::UntrackImage(imgIRequest* aImage)
 
   MOZ_ASSERT(aImage == mCurrentRequest || aImage == mPendingRequest,
              "Why haven't we heard of this request?");
-  if (aImage == mCurrentRequest) {
-    mCurrentRequestFlags &= ~REQUEST_SHOULD_BE_TRACKED;
-  } else {
-    mPendingRequestFlags &= ~REQUEST_SHOULD_BE_TRACKED;
-  }
 
   // If GetOurDocument() returns null here, we've outlived our document.
   // That's fine, because the document empties out the tracker and unlocks
