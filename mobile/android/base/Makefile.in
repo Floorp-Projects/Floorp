@@ -250,7 +250,6 @@ FENNEC_PP_XML_FILES = \
   res/drawable/address_bar_bg.xml \
   res/drawable/address_bar_nav_button.xml \
   res/drawable/address_bar_url.xml \
-  res/drawable/awesomebar_tabs_bg.xml \
   res/drawable/menu_level.xml \
   res/layout/abouthome_content.xml \
   res/layout/awesomebar_search.xml \
@@ -510,9 +509,6 @@ RES_ANIM = \
 
 RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/abouthome_bg.png \
-  res/drawable-nodpi/abouthome_bg_pb.png \
-  res/drawable-nodpi/tabs_tray_bg.png \
-  res/drawable-nodpi/tabs_tray_dark_bg.png \
   $(NULL)
 
 RES_DRAWABLE_BASE = \
@@ -569,8 +565,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/tab_thumbnail_default.png \
   res/drawable/tab_thumbnail_shadow.png \
   res/drawable/tabs_carat.png \
-  res/drawable/address_bar_texture_port.png \
-  res/drawable/address_bar_texture_port_pb.png \
   res/drawable/address_bar_url_default.9.png \
   res/drawable/address_bar_url_default_pb.9.png \
   res/drawable/address_bar_url_pressed.9.png \
@@ -669,8 +663,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_thumbnail_default.png \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
   res/drawable-hdpi/tabs_carat.png \
-  res/drawable-hdpi/address_bar_texture_port.png \
-  res/drawable-hdpi/address_bar_texture_port_pb.png \
   res/drawable-hdpi/address_bar_url_default.9.png \
   res/drawable-hdpi/address_bar_url_default_pb.9.png \
   res/drawable-hdpi/address_bar_url_pressed.9.png \
@@ -724,8 +716,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_thumbnail_bg.png \
   res/drawable-xhdpi/abouthome_thumbnail_add.png \
   res/drawable-xhdpi/address_bar_bg_shadow.png \
-  res/drawable-xhdpi/address_bar_texture_port.png \
-  res/drawable-xhdpi/address_bar_texture_port_pb.png \
   res/drawable-xhdpi/address_bar_url_default.9.png \
   res/drawable-xhdpi/address_bar_url_default_pb.9.png \
   res/drawable-xhdpi/address_bar_url_pressed.9.png \
@@ -875,56 +865,25 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_status_logo.png \
   $(NULL)
 
-RES_DRAWABLE_LAND_V14 = \
-  res/drawable-land-v14/address_bar_bg_normal.xml \
-  res/drawable-land-v14/address_bar_bg_private.xml \
-  $(NULL)
-
 RES_DRAWABLE_LAND_MDPI_V14 = \
-  res/drawable-land-mdpi-v14/address_bar_texture_land.png \
-  res/drawable-land-mdpi-v14/address_bar_texture_land_pb.png \
-  res/drawable-land-mdpi-v14/address_bar_url_default.9.png \
-  res/drawable-land-mdpi-v14/address_bar_url_default_pb.9.png \
-  res/drawable-land-mdpi-v14/address_bar_url_pressed.9.png \
-  res/drawable-land-mdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-mdpi-v14/remote_tabs_off.png \
   res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tabs_carat.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_HDPI_V14 = \
-  res/drawable-land-hdpi-v14/address_bar_texture_land.png \
-  res/drawable-land-hdpi-v14/address_bar_texture_land_pb.png \
-  res/drawable-land-hdpi-v14/address_bar_url_default.9.png \
-  res/drawable-land-hdpi-v14/address_bar_url_default_pb.9.png \
-  res/drawable-land-hdpi-v14/address_bar_url_pressed.9.png \
-  res/drawable-land-hdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-hdpi-v14/remote_tabs_off.png \
   res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tabs_carat.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_XHDPI_V14 = \
-  res/drawable-land-xhdpi-v14/address_bar_texture_land.png \
-  res/drawable-land-xhdpi-v14/address_bar_texture_land_pb.png \
-  res/drawable-land-xhdpi-v14/address_bar_url_default.9.png \
-  res/drawable-land-xhdpi-v14/address_bar_url_default_pb.9.png \
-  res/drawable-land-xhdpi-v14/address_bar_url_pressed.9.png \
-  res/drawable-land-xhdpi-v14/address_bar_url_pressed_pb.9.png \
   res/drawable-land-xhdpi-v14/remote_tabs_off.png \
   res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
-  res/drawable-large-mdpi-v11/address_bar_bg_normal.xml \
-  res/drawable-large-mdpi-v11/address_bar_bg_private.xml \
-  res/drawable-large-mdpi-v11/address_bar_texture_tablet.png \
-  res/drawable-large-mdpi-v11/address_bar_texture_tablet_pb.png \
-  res/drawable-large-mdpi-v11/address_bar_url_default.9.png \
-  res/drawable-large-mdpi-v11/address_bar_url_default_pb.9.png \
-  res/drawable-large-mdpi-v11/address_bar_url_pressed.9.png \
-  res/drawable-large-mdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
   res/drawable-large-mdpi-v11/remote_tabs_off.png \
@@ -933,12 +892,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
-  res/drawable-large-hdpi-v11/address_bar_texture_tablet.png \
-  res/drawable-large-hdpi-v11/address_bar_texture_tablet_pb.png \
-  res/drawable-large-hdpi-v11/address_bar_url_default.9.png \
-  res/drawable-large-hdpi-v11/address_bar_url_default_pb.9.png \
-  res/drawable-large-hdpi-v11/address_bar_url_pressed.9.png \
-  res/drawable-large-hdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-hdpi-v11/ic_menu_reload.png \
   res/drawable-large-hdpi-v11/ic_menu_forward.png \
   res/drawable-large-hdpi-v11/remote_tabs_off.png \
@@ -947,12 +900,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
-  res/drawable-large-xhdpi-v11/address_bar_texture_tablet.png \
-  res/drawable-large-xhdpi-v11/address_bar_texture_tablet_pb.png \
-  res/drawable-large-xhdpi-v11/address_bar_url_default.9.png \
-  res/drawable-large-xhdpi-v11/address_bar_url_default_pb.9.png \
-  res/drawable-large-xhdpi-v11/address_bar_url_pressed.9.png \
-  res/drawable-large-xhdpi-v11/address_bar_url_pressed_pb.9.png \
   res/drawable-large-xhdpi-v11/ic_menu_reload.png \
   res/drawable-large-xhdpi-v11/ic_menu_forward.png \
   res/drawable-large-xhdpi-v11/remote_tabs_on.png \
@@ -1022,12 +969,8 @@ endif
 
 MOZ_ANDROID_DRAWABLES += \
   $(SYNC_RES_DRAWABLE)                                                          \
-  mobile/android/base/resources/drawable/abouthome_bg_repeat.xml                \
-  mobile/android/base/resources/drawable/abouthome_bg_pb_repeat.xml             \
   mobile/android/base/resources/drawable/abouthome_promo_box.xml                \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
-  mobile/android/base/resources/drawable/address_bar_bg_normal.xml              \
-  mobile/android/base/resources/drawable/address_bar_bg_private.xml             \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
@@ -1064,8 +1007,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
-  mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
-  mobile/android/base/resources/drawable/tabs_tray_dark_bg_repeat.xml           \
   mobile/android/base/resources/drawable/shadow.png                             \
   mobile/android/base/resources/drawable/marketplace.png                        \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
@@ -1075,7 +1016,7 @@ MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRE
 MOZ_BRANDING_DRAWABLE_HDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn | tr '\n' ' ';  fi)
 MOZ_BRANDING_DRAWABLE_XHDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout                    \

@@ -205,7 +205,7 @@ public class TabsPanel extends LinearLayout
     
     @Override
     public void onLightweightThemeChanged() {
-        LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_bg_repeat, true);
+        LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.color.background_tabs_light, true);
         if (drawable == null)
             return;
 
@@ -215,7 +215,7 @@ public class TabsPanel extends LinearLayout
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundResource(R.drawable.tabs_tray_bg_repeat);
+        setBackgroundColor(getContext().getResources().getColor(R.color.background_tabs_light));
     }
 
     @Override
@@ -273,7 +273,7 @@ public class TabsPanel extends LinearLayout
     
         @Override
         public void onLightweightThemeChanged() {
-            LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.drawable.tabs_tray_dark_bg_repeat);
+            LightweightThemeDrawable drawable = mActivity.getLightweightTheme().getTextureDrawable(this, R.color.background_tabs_dark);
             if (drawable == null)
                 return;
 
@@ -283,7 +283,7 @@ public class TabsPanel extends LinearLayout
 
         @Override
         public void onLightweightThemeReset() {
-            setBackgroundResource(R.drawable.tabs_tray_dark_bg_repeat);
+            setBackgroundColor(getContext().getResources().getColor(R.color.background_tabs_dark));
         }
 
         @Override

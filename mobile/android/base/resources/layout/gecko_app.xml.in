@@ -12,7 +12,7 @@
     <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
                                  android:layout_width="fill_parent"
                                  android:layout_height="fill_parent"
-                                 android:background="@drawable/tabs_tray_bg_repeat"
+                                 android:background="@color/background_tabs_light"
                                  gecko:sidebar="false"/>
 
    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
@@ -31,7 +31,7 @@
             <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
                                                 android:layout_width="fill_parent"
                                                 android:layout_height="fill_parent"
-                                                android:background="@drawable/abouthome_bg_repeat"/>
+                                                android:background="@color/background_normal"/>
 
         </RelativeLayout>
 

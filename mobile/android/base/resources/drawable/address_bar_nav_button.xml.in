@@ -11,9 +11,9 @@
     <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
 
     <!-- private browsing mode -->
-    <item gecko:state_private="true" android:drawable="@drawable/address_bar_bg_private"/>
+    <item gecko:state_private="true" android:drawable="@color/background_private"/>
 
     <!-- normal mode -->
-    <item android:drawable="@drawable/address_bar_bg_normal"/>
+    <item android:drawable="@color/background_normal"/>
 
 </selector>
