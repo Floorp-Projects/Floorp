@@ -87,7 +87,7 @@ public:
                                      Bool direct,
                                      const int* attrib_list);
 
-    bool EnsureInitialized(bool aUseMesaLLVMPipe);
+    bool EnsureInitialized(LibraryType libType);
 
     GLXPixmap CreatePixmap(gfxASurface* aSurface);
     void DestroyPixmap(GLXPixmap aPixmap);
