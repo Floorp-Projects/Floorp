@@ -600,6 +600,10 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     // observers themselves might call ClearOnShutdown().
     mozilla::KillClearOnShutdown();
 
+    // Write poisoning needs to find the profile directory, so it has to
+    // be initialized before mozilla::services::Shutdown.
+    InitWritePoisoning();
+
     // XPCOM is officially in shutdown mode NOW
     // Set this only after the observers have been notified as this
     // will cause servicemanager to become inaccessible.
