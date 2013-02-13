@@ -183,11 +183,6 @@ var ContextCommands = {
     target.remove();
   },
 
-  shortcutBookmark: function cc_shortcutBookmark() {
-    let target = ContextMenuUI.popupState.target;
-    Util.createShortcut(target.getAttribute("title"), target.getAttribute("uri"), target.getAttribute("src"), "bookmark");
-  },
-
   findInPage: function cc_findInPage() {
     FindHelperUI.show();
   },
