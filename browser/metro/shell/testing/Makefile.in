@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH      = ../../../..
+topsrcdir  = @top_srcdir@
+srcdir     = @srcdir@
+VPATH      = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+
+# We want this exe in dist/bin
+DIST_SUBDIR =
+
+PROGRAM = metrotestharness$(BIN_SUFFIX)
+
+CPPSRCS	= \
+	metrotestharness.cpp \
+	$(NULL)
+
+OS_LIBS = \
+	kernel32.lib \
+	user32.lib \
+	ole32.lib \
+	shlwapi.lib \
+	propsys.lib \
+	advapi32.lib \
+	$(NULL)
+
+DEFINES += -DUNICODE -D_UNICODE
+
+include $(topsrcdir)/config/rules.mk

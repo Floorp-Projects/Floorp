@@ -31,9 +31,12 @@ namespace {
 class nsPluginHangUITelemetry : public nsRunnable
 {
 public:
-  nsPluginHangUITelemetry(int aResponseCode, int aDontAskCode)
+  nsPluginHangUITelemetry(int aResponseCode, int aDontAskCode,
+                          uint32_t aResponseTimeMs, uint32_t aTimeoutMs)
     : mResponseCode(aResponseCode),
-      mDontAskCode(aDontAskCode)
+      mDontAskCode(aDontAskCode),
+      mResponseTimeMs(aResponseTimeMs),
+      mTimeoutMs(aTimeoutMs)
   {
   }
 
@@ -42,14 +45,20 @@ public:
   {
     mozilla::Telemetry::Accumulate(
               mozilla::Telemetry::PLUGIN_HANG_UI_USER_RESPONSE, mResponseCode);
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLUGIN_HANG_UI_DONT_ASK,
-                                   mDontAskCode);
+    mozilla::Telemetry::Accumulate(
+              mozilla::Telemetry::PLUGIN_HANG_UI_DONT_ASK, mDontAskCode);
+    mozilla::Telemetry::Accumulate(
+              mozilla::Telemetry::PLUGIN_HANG_UI_RESPONSE_TIME, mResponseTimeMs);
+    mozilla::Telemetry::Accumulate(
+              mozilla::Telemetry::PLUGIN_HANG_TIME, mTimeoutMs + mResponseTimeMs);
     return NS_OK;
   }
 
 private:
   int mResponseCode;
   int mDontAskCode;
+  uint32_t mResponseTimeMs;
+  uint32_t mTimeoutMs;
 };
 } // anonymous namespace
 
@@ -58,8 +67,10 @@ namespace plugins {
 
 const DWORD PluginHangUIParent::kTimeout = 5000U;
 
-PluginHangUIParent::PluginHangUIParent(PluginModuleParent* aModule)
+PluginHangUIParent::PluginHangUIParent(PluginModuleParent* aModule,
+                                       const int32_t aHangUITimeoutPref)
   : mModule(aModule),
+    mTimeoutPrefMs(static_cast<uint32_t>(aHangUITimeoutPref) * 1000U),
     mMainThreadMessageLoop(MessageLoop::current()),
     mIsShowing(false),
     mLastUserResponse(0),
@@ -278,7 +289,9 @@ PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
   }
   int dontAskCode = (aResponse & HANGUI_USER_RESPONSE_DONT_SHOW_AGAIN) ? 1 : 0;
   nsCOMPtr<nsIRunnable> workItem = new nsPluginHangUITelemetry(responseCode,
-                                                               dontAskCode);
+                                                               dontAskCode,
+                                                               LastShowDurationMs(),
+                                                               mTimeoutPrefMs);
   NS_DispatchToMainThread(workItem, NS_DISPATCH_NORMAL);
   return true;
 }

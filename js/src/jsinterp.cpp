@@ -266,7 +266,7 @@ bool
 js::RunScript(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(fp == cx->fp());
-    JSScript *script = fp->script();
+    RootedScript script(cx, fp->script());
 
     JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
     JS_ASSERT_IF(fp->isEvalFrame(), script->isActiveEval);
@@ -430,7 +430,7 @@ js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
 
     JSObject &callee = args.callee();
     if (callee.isFunction()) {
-        JSFunction *fun = callee.toFunction();
+        RootedFunction fun(cx, callee.toFunction());
 
         if (fun->isNativeConstructor()) {
             Probes::calloutBegin(cx, fun);

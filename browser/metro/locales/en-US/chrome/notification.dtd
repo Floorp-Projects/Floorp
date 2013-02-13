@@ -1,0 +1,12 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<!-- 
+     LOCALIZATION NOTE (geolocation.learnMore): Use the
+     unicode ellipsis char, \u2026,
+     or use "..." unless \u2026 doesn't suit traditions in your
+     locale.
+-->
+<!ENTITY geolocation.learnMore         "Learn More…">

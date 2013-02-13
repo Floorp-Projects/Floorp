@@ -521,6 +521,9 @@ user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy
 // Make sure that opening the plugins check page won't hit the network
 user_pref("plugins.update.url", "http://%(server)s/plugins-dummy/updateCheckURL");
 
+// Existing tests don't wait for the notification button security delay
+user_pref("security.notification_enable_delay", 0);
+
 // Make enablePrivilege continue to work for test code. :-(
 user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true);
 

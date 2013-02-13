@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(45656788-B111-4317-B054-FFE881A0737E)]
+[scriptable, uuid(b2452440-71c6-41a7-8eda-48004d725001)]
 interface nsIWinMetroUtils : nsISupports
 {
   /* Fullscreen landscape orientation */
@@ -48,6 +48,12 @@ interface nsIWinMetroUtils : nsISupports
    * Attempts to unsnap the application from snapped state to filled state
    */
    void unsnap();
+
+
+   /**
+    * Show the settings flyout
+    */
+   void showSettingsFlyout();
 
   /**
    * Launches the specified application with the specified arguments and
@@ -115,8 +121,18 @@ interface nsIWinMetroUtils : nsISupports
    *
    * @param aChromePanelId panel id invoked via nsIBrowserDOMWindow's
    * ShowPanel api. Example: 'prefs-container'
-   * @param aLabel Localized string label displayed in the settings
-   * flyout panel for this option.
+   * @return a unique identifier that will be passed as "data" in the
+   * "metro-settings-entry-selected" notification when the entry is clicked
    */
-  void addSettingsPanelEntry(in AString aChromePanelId, in AString aLabel);
+  unsigned long addSettingsPanelEntry(in AString aLabel);
+
+  /**
+   * Change the value of the "switch primary and secondary buttons" preference.
+   * See the Windows SwapMouseButton API docs for details.
+   * Included here for use in automated tests (see bug 839460).
+   *
+   * @param aSwap true to enable the preference, false to disable it.
+   * @return original value of the preference.
+   */
+  bool swapMouseButton(in bool aSwap);
 };

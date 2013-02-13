@@ -8,18 +8,8 @@
     <Param name="test" value="{searchTerms}"/>
     <Param name="ie" value="utf-8"/>
     <MozParam name="client" condition="defaultEngine" trueValue="app-default" falseValue="app"/>
-  </Url>
-  <Url type="application/x-moz-keywordsearch" method="GET" template="http://mochi.test:8888/browser/browser/components/search/test/">
-    <Param name="test" value="{searchTerms}"/>
-    <Param name="ie" value="utf-8"/>
-    <MozParam name="client" condition="defaultEngine" trueValue="app-default" falseValue="app"/>
-    <Param name="channel" value="keywordsearch"/>
-  </Url>
-  <Url type="application/x-moz-contextsearch" method="GET" template="http://mochi.test:8888/browser/browser/components/search/test/">
-    <Param name="test" value="{searchTerms}"/>
-    <Param name="ie" value="utf-8"/>
-    <MozParam name="client" condition="defaultEngine" trueValue="app-default" falseValue="app"/>
-    <Param name="channel" value="contextsearch"/>
+    <MozParam name="channel" condition="purpose" purpose="keyword" value="keywordsearch"/>
+    <MozParam name="channel" condition="purpose" purpose="contextmenu" value="contextsearch"/>
   </Url>
   <SearchForm>http://mochi.test:8888/browser/browser/components/search/test/</SearchForm>
 </SearchPlugin>

@@ -46,6 +46,19 @@ Collector.prototype = Object.freeze({
   },
 
   /**
+   * Obtain a provider from its name.
+   */
+  getProvider: function (name) {
+    let provider = this._providers.get(name);
+
+    if (!provider) {
+      return null;
+    }
+
+    return provider.provider;
+  },
+
+  /**
    * Registers a `MetricsProvider` with this collector.
    *
    * Once a `MetricsProvider` is registered, data will be collected from it

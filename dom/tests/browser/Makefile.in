@@ -23,7 +23,9 @@ MOCHITEST_BROWSER_FILES := \
   browser_xhr_sandbox.js \
   browser_geolocation_privatebrowsing_page.html \
   browser_geolocation_privatebrowsing_perwindowpb.js \
+  browser_localStorage_privatestorageevent.js \
   network_geolocation.sjs \
+  page_privatestorageevent.html
   $(NULL)
 
 ifeq (Linux,$(OS_ARCH))
