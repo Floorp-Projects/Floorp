@@ -204,6 +204,7 @@ FENNEC_JAVA_FILES += GeckoSmsManager.java
 endif
 
 ifdef MOZ_ANDROID_ANR_REPORTER
+DEFINES += -DMOZ_ANDROID_ANR_REPORTER=1
 FENNEC_JAVA_FILES += ANRReporter.java
 endif
 
