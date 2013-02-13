@@ -122,7 +122,7 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
 
   nsRefPtr<RasterImage> newImage = new RasterImage();
 
-  rv = newImage->Init(nullptr, aMimeType.get(), Image::INIT_FLAG_NONE);
+  rv = newImage->Init(aMimeType.get(), Image::INIT_FLAG_NONE);
   NS_ENSURE_SUCCESS(rv, BadImage(newImage));
 
   return newImage.forget();
@@ -140,8 +140,7 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
 
   nsRefPtr<RasterImage> newImage = new RasterImage(aStatusTracker, aURI);
 
-  rv = newImage->Init(aStatusTracker->GetDecoderObserver(),
-                      aMimeType.get(), aImageFlags);
+  rv = newImage->Init(aMimeType.get(), aImageFlags);
   NS_ENSURE_SUCCESS(rv, BadImage(newImage));
 
   newImage->SetInnerWindowID(aInnerWindowId);
@@ -189,8 +188,7 @@ ImageFactory::CreateVectorImage(nsIRequest* aRequest,
 
   nsRefPtr<VectorImage> newImage = new VectorImage(aStatusTracker, aURI);
 
-  rv = newImage->Init(aStatusTracker->GetDecoderObserver(),
-                      aMimeType.get(), aImageFlags);
+  rv = newImage->Init(aMimeType.get(), aImageFlags);
   NS_ENSURE_SUCCESS(rv, BadImage(newImage));
 
   newImage->SetInnerWindowID(aInnerWindowId);
