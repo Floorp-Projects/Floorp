@@ -304,6 +304,7 @@ class ICEntry
     _(Compare_String)           \
     _(Compare_Boolean)          \
     _(Compare_Object)           \
+    _(Compare_ObjectWithUndefined) \
                                 \
     _(ToBool_Fallback)          \
     _(ToBool_Int32)             \
@@ -1633,6 +1634,46 @@ class ICCompare_Object : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICCompare_Object::New(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_ObjectWithUndefined : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICCompare_ObjectWithUndefined(IonCode *stubCode)
+      : ICStub(ICStub::Compare_ObjectWithUndefined, stubCode)
+    {}
+
+  public:
+    static inline ICCompare_ObjectWithUndefined *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICCompare_ObjectWithUndefined>(code);
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+        bool lhsIsUndefined;
+        bool compareWithNull;
+
+      public:
+        Compiler(JSContext *cx, JSOp op, bool lhsIsUndefined, bool compareWithNull)
+          : ICMultiStubCompiler(cx, ICStub::Compare_ObjectWithUndefined, op),
+            lhsIsUndefined(lhsIsUndefined),
+            compareWithNull(compareWithNull)
+        {}
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind)
+                 | (static_cast<int32_t>(op) << 16)
+                 | (static_cast<int32_t>(lhsIsUndefined) << 24)
+                 | (static_cast<int32_t>(compareWithNull) << 25);
+        }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCompare_NumberWithUndefined::New(space, getStubCode());
         }
     };
 };
