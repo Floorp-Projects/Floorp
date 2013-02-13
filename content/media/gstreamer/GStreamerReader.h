@@ -57,7 +57,7 @@ private:
    * configure appsrc .
    */
   static void PlayBinSourceSetupCb(GstElement *aPlayBin,
-                                   GstElement *aSource,
+                                   GParamSpec *pspec,
                                    gpointer aUserData);
   void PlayBinSourceSetup(GstAppSrc *aSource);
 
