@@ -1275,6 +1275,22 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
             stub->addNewStub(objectStub);
             return true;
         }
+
+        if ((lhs.isObject() || lhs.isNull() || lhs.isUndefined()) &&
+            (rhs.isObject() || rhs.isNull() || rhs.isUndefined()) &&
+            !stub->hasStub(ICStub::Compare_ObjectWithUndefined))
+        {
+            bool lhsIsUndefined = lhs.isNull() || lhs.isUndefined();
+            bool compareWithNull = lhs.isNull() || rhs.isNull();
+            ICCompare_ObjectWithUndefined::Compiler compiler(cx, op,
+                                                             lhsIsUndefined, compareWithNull);
+            ICStub *objectStub = compiler.getStub(ICStubSpace::StubSpaceFor(script));
+            if (!objectStub)
+                return false;
+
+            stub->addNewStub(objectStub);
+            return true;
+        }
     }
 
     return true;
@@ -1433,6 +1449,71 @@ ICCompare_Object::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.bind(&ifTrue);
     masm.moveValue(BooleanValue(true), R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// Compare_ObjectWithUndefined
+//
+
+bool
+ICCompare_ObjectWithUndefined::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(IsEqualityOp(op));
+
+    ValueOperand objectOperand, undefinedOperand;
+    if (lhsIsUndefined) {
+        objectOperand = R1;
+        undefinedOperand = R0;
+    } else {
+        objectOperand = R0;
+        undefinedOperand = R1;
+    }
+
+    Label failure;
+    if (compareWithNull)
+        masm.branchTestNull(Assembler::NotEqual, undefinedOperand, &failure);
+    else
+        masm.branchTestUndefined(Assembler::NotEqual, undefinedOperand, &failure);
+
+    Label notObject;
+    masm.branchTestObject(Assembler::NotEqual, objectOperand, &notObject);
+
+    if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
+        // obj !== undefined for all objects.
+        masm.moveValue(BooleanValue(op == JSOP_STRICTNE), R0);
+        EmitReturnFromIC(masm);
+    } else {
+        // obj != undefined only where !obj->getClass()->emulatesUndefined()
+        Label emulatesUndefined;
+        Register obj = masm.extractObject(objectOperand, ExtractTemp0);
+        masm.loadPtr(Address(obj, JSObject::offsetOfType()), obj);
+        masm.loadPtr(Address(obj, offsetof(types::TypeObject, clasp)), obj);
+        masm.branchTest32(Assembler::NonZero,
+                          Address(obj, Class::offsetOfFlags()),
+                          Imm32(JSCLASS_EMULATES_UNDEFINED),
+                          &emulatesUndefined);
+        masm.moveValue(BooleanValue(op == JSOP_NE), R0);
+        EmitReturnFromIC(masm);
+        masm.bind(&emulatesUndefined);
+        masm.moveValue(BooleanValue(op == JSOP_EQ), R0);
+        EmitReturnFromIC(masm);
+    }
+
+    masm.bind(&notObject);
+
+    // Also support null == null or undefined == undefined comparisons.
+    if (compareWithNull)
+        masm.branchTestNull(Assembler::NotEqual, objectOperand, &failure);
+    else
+        masm.branchTestUndefined(Assembler::NotEqual, objectOperand, &failure);
+
+    masm.moveValue(BooleanValue(op == JSOP_STRICTEQ || op == JSOP_EQ), R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
