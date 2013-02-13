@@ -38,6 +38,10 @@
       setTimeout(function() { document.adoptNode(tCF0); }, 0);
     }
     document.addEventListener("DOMContentLoaded", initCF, false);
+    function finish() {
+      setTimeout("document.documentElement.className = '';", 30000);
+    }
+    window.addEventListener("load", finish, false);
   </script>
 </body>
 </html>
