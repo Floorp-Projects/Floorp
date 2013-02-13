@@ -119,10 +119,10 @@ HTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMPL_BOOL_ATTR(HTMLButtonElement, Autofocus, autofocus)
 NS_IMPL_BOOL_ATTR(HTMLButtonElement, Disabled, disabled)
 NS_IMPL_ACTION_ATTR(HTMLButtonElement, FormAction, formaction)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLButtonElement, FormEnctype, formenctype,
-                                kFormDefaultEnctype->tag)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLButtonElement, FormMethod, formmethod,
-                                kFormDefaultMethod->tag)
+NS_IMPL_ENUM_ATTR_DEFAULT_MISSING_INVALID_VALUES(HTMLButtonElement, FormEnctype, formenctype,
+                                                 "", kFormDefaultEnctype->tag)
+NS_IMPL_ENUM_ATTR_DEFAULT_MISSING_INVALID_VALUES(HTMLButtonElement, FormMethod, formmethod,
+                                                 "", kFormDefaultMethod->tag)
 NS_IMPL_BOOL_ATTR(HTMLButtonElement, FormNoValidate, formnovalidate)
 NS_IMPL_STRING_ATTR(HTMLButtonElement, FormTarget, formtarget)
 NS_IMPL_STRING_ATTR(HTMLButtonElement, Name, name)
