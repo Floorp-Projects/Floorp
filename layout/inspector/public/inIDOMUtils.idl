@@ -16,12 +16,30 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(f7a37305-a963-4a2a-b951-2c97a6b27fb4)]
+[scriptable, uuid(dd8a9dfd-336f-4cce-8ec1-0365ede9a3a8)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
   nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
   unsigned long getRuleLine(in nsIDOMCSSStyleRule aRule);
+
+  // Utilities for working with selectors.  We don't have a JS OM representation
+  // of a single selector or a selector list yet, but given a rule we can index
+  // into the selector list.
+  //
+  // This is a somewhat backwards API; once we move StyleRule to WebIDL we
+  // should consider using [ChromeOnly] APIs on that.
+  unsigned long getSelectorCount(in nsIDOMCSSStyleRule aRule);
+  // For all three functions below, aSelectorIndex is 0-based
+  AString getSelectorText(in nsIDOMCSSStyleRule aRule,
+                          in unsigned long aSelectorIndex);
+  unsigned long long getSpecificity(in nsIDOMCSSStyleRule aRule,
+                                    in unsigned long aSelectorIndex);
+  // Note: This does not handle scoped selectors correctly, because it has no
+  // idea what the right scope is.
+  bool selectorMatchesElement(in nsIDOMElement aElement,
+                              in nsIDOMCSSStyleRule aRule,
+                              in unsigned long aSelectorIndex);
 
   // Returns true if the string names a property that is inherited by default.
   bool isInheritedProperty(in AString aPropertyName);

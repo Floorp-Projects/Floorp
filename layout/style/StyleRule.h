@@ -220,6 +220,8 @@ private:
  * items (where each |nsCSSSelectorList| object's |mSelectors| has
  * an |mNext| for the P or H1).  We represent them as linked lists.
  */
+class inDOMUtils;
+
 struct nsCSSSelectorList {
   nsCSSSelectorList(void);
   ~nsCSSSelectorList(void);
@@ -250,9 +252,11 @@ struct nsCSSSelectorList {
   nsCSSSelector*     mSelectors;
   int32_t            mWeight;
   nsCSSSelectorList* mNext;
-private: 
+protected:
+  friend class inDOMUtils;
   nsCSSSelectorList* Clone(bool aDeep) const;
 
+private:
   nsCSSSelectorList(const nsCSSSelectorList& aCopy) MOZ_DELETE;
   nsCSSSelectorList& operator=(const nsCSSSelectorList& aCopy) MOZ_DELETE;
 };
