@@ -160,8 +160,10 @@ public class TabsButton extends ShapedButton {
     // The drawable is constructed as per @drawable/tabs_button.
     @Override
     public void onLightweightThemeChanged() {
-        LightweightThemeDrawable lightWeight1 = mActivity.getLightweightTheme().getTextureDrawable(this, R.color.background_tabs_light);
-        LightweightThemeDrawable lightWeight2 = mActivity.getLightweightTheme().getTextureDrawable(this, R.color.background_tabs_dark);
+        int background1 = mActivity.getResources().getColor(R.color.background_tabs_light);
+        LightweightThemeDrawable lightWeight1 = mActivity.getLightweightTheme().getColorDrawable(this, background1);
+        int background2 = mActivity.getResources().getColor(R.color.background_tabs_dark);
+        LightweightThemeDrawable lightWeight2 = mActivity.getLightweightTheme().getColorDrawable(this, background2);
         if (lightWeight1 == null || lightWeight2 == null)
             return;
 
