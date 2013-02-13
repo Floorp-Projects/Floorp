@@ -88,6 +88,8 @@ GStreamerReader::~GStreamerReader()
 
   if (mPlayBin) {
     gst_app_src_end_of_stream(mSource);
+    if (mSource)
+      gst_object_unref(mSource);
     gst_element_set_state(mPlayBin, GST_STATE_NULL);
     gst_object_unref(mPlayBin);
     mPlayBin = NULL;
@@ -160,18 +162,21 @@ nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
       "audio-sink", mAudioSink,
       NULL);
 
-  g_object_connect(mPlayBin, "signal::source-setup",
-      GStreamerReader::PlayBinSourceSetupCb, this, NULL);
+  g_signal_connect(G_OBJECT(mPlayBin), "notify::source",
+    G_CALLBACK(GStreamerReader::PlayBinSourceSetupCb), this);
 
   return NS_OK;
 }
 
 void GStreamerReader::PlayBinSourceSetupCb(GstElement *aPlayBin,
-                                             GstElement *aSource,
+                                             GParamSpec *pspec,
                                              gpointer aUserData)
 {
+  GstElement *source;
   GStreamerReader *reader = reinterpret_cast<GStreamerReader*>(aUserData);
-  reader->PlayBinSourceSetup(GST_APP_SRC(aSource));
+
+  g_object_get(aPlayBin, "source", &source, NULL);
+  reader->PlayBinSourceSetup(GST_APP_SRC(source));
 }
 
 void GStreamerReader::PlayBinSourceSetup(GstAppSrc *aSource)
