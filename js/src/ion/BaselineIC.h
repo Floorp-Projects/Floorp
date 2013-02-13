@@ -2605,7 +2605,7 @@ class ICGetName_Scope : public ICMonitoredStub
 
     static size_t offsetOfShape(size_t index) {
         JS_ASSERT(index <= NumHops);
-        return offsetof(ICGetName_Scope, shapes_[index]);
+        return offsetof(ICGetName_Scope, shapes_) + (index * sizeof(HeapPtrShape));
     }
     static size_t offsetOfOffset() {
         return offsetof(ICGetName_Scope, offset_);
