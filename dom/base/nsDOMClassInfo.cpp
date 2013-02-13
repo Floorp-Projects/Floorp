@@ -4765,7 +4765,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       }
 
       nsCxPusher pusher;
-      pusher.Push(cx);
+      NS_ENSURE_STATE(pusher.Push(cx, false));
 
       JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, object);
@@ -6128,7 +6128,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     JS::Value exn = JSVAL_VOID;
 
     {
-      nsCxPusher pusher;
       Maybe<JSAutoCompartment> ac;
 
       JSContext* my_cx;
@@ -6138,7 +6137,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         my_cx = my_context->GetNativeContext();
 
         if (my_cx != cx) {
-          pusher.Push(my_cx);
           ac.construct(my_cx, obj);
         }
       }
@@ -8512,10 +8510,17 @@ public:
 
   NS_IMETHOD Run()
   {
-    nsCxPusher pusher;
-    JSContext* cx = mContext ? mContext->GetNativeContext()
-                             : nsContentUtils::GetSafeJSContext();
-    pusher.Push(cx);
+    JSContext* cx = nullptr;
+    if (mContext) {
+      cx = mContext->GetNativeContext();
+    } else {
+      nsCOMPtr<nsIThreadJSContextStack> stack =
+        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+      NS_ENSURE_TRUE(stack, NS_OK);
+
+      cx = stack->GetSafeJSContext();
+      NS_ENSURE_TRUE(cx, NS_OK);
+    }
 
     JSObject* obj = nullptr;
     mWrapper->GetJSObject(&obj);
@@ -8539,7 +8544,11 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
 {
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Shouldn't have gotten in here");
-  MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
+
+  nsCxPusher cxPusher;
+  if (!cxPusher.Push(cx)) {
+    return NS_OK;
+  }
 
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, obj);

@@ -428,7 +428,7 @@ def write_cpp(iface, fd):
              "  }\n\n"
              "  JSObject* obj = &aVal->toObject();\n"
              "  nsCxPusher pusher;\n"
-             "  pusher.Push(aCx);\n"
+             "  NS_ENSURE_STATE(pusher.Push(aCx, false));\n"
              "  JSAutoRequest ar(aCx);\n"
              "  JSAutoCompartment ac(aCx, obj);\n")
 
