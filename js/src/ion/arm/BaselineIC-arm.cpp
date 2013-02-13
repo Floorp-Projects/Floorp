@@ -94,7 +94,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     Label maybeNegZero, revertRegister;
     switch(op_) {
       case JSOP_ADD:
-        masm.ma_add(R0.payloadReg(), R1.payloadReg(), scratchReg);
+        masm.ma_add(R0.payloadReg(), R1.payloadReg(), scratchReg, SetCond);
 
         // Just jump to failure on overflow.  R0 and R1 are preserved, so we can just jump to
         // the next stub.
@@ -105,7 +105,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.mov(scratchReg, R0.payloadReg());
         break;
       case JSOP_SUB:
-        masm.ma_sub(R0.payloadReg(), R1.payloadReg(), scratchReg);
+        masm.ma_sub(R0.payloadReg(), R1.payloadReg(), scratchReg, SetCond);
         masm.j(Assembler::Overflow, &failure);
         masm.mov(scratchReg, R0.payloadReg());
         break;
