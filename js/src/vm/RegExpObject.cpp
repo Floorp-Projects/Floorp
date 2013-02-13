@@ -224,7 +224,7 @@ Class js::RegExpClass = {
 };
 
 RegExpObject *
-RegExpObject::create(JSContext *cx, RegExpStatics *res, StableCharPtr chars, size_t length,
+RegExpObject::create(JSContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
                      RegExpFlag flags, TokenStream *tokenStream)
 {
     RegExpFlag staticsFlags = res->getFlags();
@@ -232,10 +232,10 @@ RegExpObject::create(JSContext *cx, RegExpStatics *res, StableCharPtr chars, siz
 }
 
 RegExpObject *
-RegExpObject::createNoStatics(JSContext *cx, StableCharPtr chars, size_t length, RegExpFlag flags,
+RegExpObject::createNoStatics(JSContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
                               TokenStream *tokenStream)
 {
-    RootedAtom source(cx, AtomizeChars<CanGC>(cx, chars.get(), length));
+    RootedAtom source(cx, AtomizeChars<CanGC>(cx, chars, length));
     if (!source)
         return NULL;
 
@@ -519,7 +519,7 @@ RegExpShared::compileMatchOnlyIfNecessary(JSContext *cx)
 }
 
 RegExpRunStatus
-RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length,
+RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
                       size_t *lastIndex, MatchPairs &matches)
 {
     /* Compile the code at point-of-use. */
@@ -550,11 +550,11 @@ RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length,
 
 #if ENABLE_YARR_JIT
     if (codeBlock.isFallBack())
-        result = JSC::Yarr::interpret(cx, bytecode, chars.get(), length, start, outputBuf);
+        result = JSC::Yarr::interpret(cx, bytecode, chars, length, start, outputBuf);
     else
-        result = codeBlock.execute(chars.get(), start, length, (int *)outputBuf).start;
+        result = codeBlock.execute(chars, start, length, (int *)outputBuf).start;
 #else
-    result = JSC::Yarr::interpret(cx, bytecode, chars.get(), length, start, outputBuf);
+    result = JSC::Yarr::interpret(cx, bytecode, chars, length, start, outputBuf);
 #endif
 
     if (result == JSC::Yarr::offsetNoMatch)
@@ -567,7 +567,7 @@ RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length,
 }
 
 RegExpRunStatus
-RegExpShared::executeMatchOnly(JSContext *cx, StableCharPtr chars, size_t length,
+RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length,
                                size_t *lastIndex, MatchPair &match)
 {
     /* Compile the code at point-of-use. */
@@ -587,7 +587,7 @@ RegExpShared::executeMatchOnly(JSContext *cx, StableCharPtr chars, size_t length
 
 #if ENABLE_YARR_JIT
     if (!codeBlock.isFallBack()) {
-        MatchResult result = codeBlock.execute(chars.get(), start, length);
+        MatchResult result = codeBlock.execute(chars, start, length);
         if (!result)
             return RegExpRunStatus_Success_NotFound;
 
@@ -609,7 +609,7 @@ RegExpShared::executeMatchOnly(JSContext *cx, StableCharPtr chars, size_t length
         return RegExpRunStatus_Error;
 
     unsigned result =
-        JSC::Yarr::interpret(cx, bytecode, chars.get(), length, start, matches.rawBuf());
+        JSC::Yarr::interpret(cx, bytecode, chars, length, start, matches.rawBuf());
 
     if (result == JSC::Yarr::offsetNoMatch)
         return RegExpRunStatus_Success_NotFound;

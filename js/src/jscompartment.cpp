@@ -337,11 +337,11 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     }
 
     if (vp.isString()) {
-        Rooted<JSStableString *> str(cx, vp.toString()->ensureStable(cx));
+        Rooted<JSLinearString *> str(cx, vp.toString()->ensureLinear(cx));
         if (!str)
             return false;
 
-        UnrootedString wrapped = js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length());
+        UnrootedString wrapped = js_NewStringCopyN<CanGC>(cx, str->chars(), str->length());
         if (!wrapped)
             return false;
 
