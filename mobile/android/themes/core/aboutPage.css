@@ -7,7 +7,7 @@ body {
   font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
   font-size: 23px;
   color: #222222;
-  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+  background-color: #ced7de;
 }
 
 #header {
@@ -29,7 +29,7 @@ body {
 #banner {
   margin: 0 -10px;
   min-height: 150px;
-  background-image: url("chrome://browser/skin/images/about-bg-darkblue.png");
+  background-color: #bdc7ce;
 }
 
 #logo {
