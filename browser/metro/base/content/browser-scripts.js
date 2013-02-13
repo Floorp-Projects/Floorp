@@ -101,7 +101,6 @@ Cu.import("resource://gre/modules/Geometry.jsm");
   ["OfflineApps", "chrome://browser/content/helperui/OfflineApps.js"],
   ["SelectHelperUI", "chrome://browser/content/helperui/SelectHelperUI.js"],
   ["SelectionHelperUI", "chrome://browser/content/helperui/SelectionHelperUI.js"],
-  ["SharingUI", "chrome://browser/content/helperui/SharingUI.js"],
   ["FullScreenVideo", "chrome://browser/content/video.js"],
   ["AnimatedZoom", "chrome://browser/content/AnimatedZoom.js"],
   ["CommandUpdater", "chrome://browser/content/commandUtil.js"],

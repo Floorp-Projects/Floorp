@@ -358,17 +358,10 @@
       </box>
 
       <hbox id="pageactions-container" hidden="true">
-        <pageaction id="pageaction-findinpage" title="&pageactions.findInPage;"
-          onclick="FindHelperUI.show();"/>
-        <pageaction id="pageaction-share" title="&pageactions.share.page;"
-          onclick="SharingUI.show(getBrowser().currentURI.spec, getBrowser().contentTitle);"/>
-        <pageaction id="pageaction-pinsite" title="&pageactions.pin.site;"
-          onclick="PageActions.pinSite();"/>
         <pageaction id="pageaction-password" title="&pageactions.password.forget;"
           onclick="PageActions.forgetPassword(event);"/>
         <pageaction id="pageaction-reset" title="&pageactions.reset;"
           onclick="PageActions.clearPagePermissions(event);"/>
-        <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
         <pageaction id="pageaction-charset" title="&pageactions.charEncoding;" onclick="CharsetMenu.show();"/>
       </hbox>
     </arrowbox>
