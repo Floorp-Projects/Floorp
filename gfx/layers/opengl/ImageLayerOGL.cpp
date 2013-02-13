@@ -752,7 +752,6 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront,
                           SharedImage* aNewBack)
 {
   if (!mDestroyed) {
-
     if (aNewFront.type() == SharedImage::TSharedImageID) {
       // We are using ImageBridge protocol. The image data will be queried at render
       // time in the parent side.

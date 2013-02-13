@@ -3,13 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GLCONTEXTSTUFF_H_
-#define GLCONTEXTSTUFF_H_
+#ifndef GLCONTEXT_TYPES_H_
+#define GLCONTEXT_TYPES_H_
 
-/**
- * We don't include GLDefs.h here since we don't want to drag in all defines
- * in for all our users.
- */
 typedef unsigned int GLenum;
 typedef unsigned int GLbitfield;
 typedef unsigned int GLuint;
@@ -36,7 +32,39 @@ enum ShaderProgramType {
     NumProgramTypes
 };
 
-} // namespace gl
-} // namespace mozilla
+struct GLFormats
+{
+    // Constructs a zeroed object:
+    GLFormats();
 
-#endif /* GLCONTEXTSTUFF_H_ */
+    GLenum color_texInternalFormat;
+    GLenum color_texFormat;
+    GLenum color_texType;
+    GLenum color_rbFormat;
+
+    GLenum depthStencil;
+    GLenum depth;
+    GLenum stencil;
+
+    GLsizei samples;
+};
+
+
+struct PixelBufferFormat
+{
+    // Constructs a zeroed object:
+    PixelBufferFormat();
+
+    int red, green, blue;
+    int alpha;
+    int depth, stencil;
+    int samples;
+
+    int ColorBits() const { return red + green + blue; }
+};
+
+
+} /* namespace gl */
+} /* namespace mozilla */
+
+#endif /* GLCONTEXT_TYPES_H_ */

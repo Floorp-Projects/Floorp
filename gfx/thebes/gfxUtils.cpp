@@ -37,14 +37,14 @@ gfxUtils::PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     if (!aDestSurface)
         aDestSurface = aSourceSurface;
 
-    NS_ASSERTION(aSourceSurface->Format() == aDestSurface->Format() &&
-                 aSourceSurface->Width() == aDestSurface->Width() &&
-                 aSourceSurface->Height() == aDestSurface->Height() &&
-                 aSourceSurface->Stride() == aDestSurface->Stride(),
-                 "Source and destination surfaces don't have identical characteristics");
+    MOZ_ASSERT(aSourceSurface->Format() == aDestSurface->Format() &&
+               aSourceSurface->Width()  == aDestSurface->Width() &&
+               aSourceSurface->Height() == aDestSurface->Height() &&
+               aSourceSurface->Stride() == aDestSurface->Stride(),
+               "Source and destination surfaces don't have identical characteristics");
 
-    NS_ASSERTION(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
-                 "Source surface stride isn't tightly packed");
+    MOZ_ASSERT(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
+               "Source surface stride isn't tightly packed");
 
     // Only premultiply ARGB32
     if (aSourceSurface->Format() != gfxASurface::ImageFormatARGB32) {
@@ -91,14 +91,14 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     if (!aDestSurface)
         aDestSurface = aSourceSurface;
 
-    NS_ASSERTION(aSourceSurface->Format() == aDestSurface->Format() &&
-                 aSourceSurface->Width() == aDestSurface->Width() &&
-                 aSourceSurface->Height() == aDestSurface->Height() &&
-                 aSourceSurface->Stride() == aDestSurface->Stride(),
-                 "Source and destination surfaces don't have identical characteristics");
+    MOZ_ASSERT(aSourceSurface->Format() == aDestSurface->Format() &&
+               aSourceSurface->Width()  == aDestSurface->Width() &&
+               aSourceSurface->Height() == aDestSurface->Height() &&
+               aSourceSurface->Stride() == aDestSurface->Stride(),
+               "Source and destination surfaces don't have identical characteristics");
 
-    NS_ASSERTION(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
-                 "Source surface stride isn't tightly packed");
+    MOZ_ASSERT(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
+               "Source surface stride isn't tightly packed");
 
     // Only premultiply ARGB32
     if (aSourceSurface->Format() != gfxASurface::ImageFormatARGB32) {
@@ -144,17 +144,17 @@ gfxUtils::ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
     if (!aDestSurface)
         aDestSurface = aSourceSurface;
 
-    NS_ABORT_IF_FALSE(aSourceSurface->Format() == aDestSurface->Format() &&
-                      aSourceSurface->Width() == aDestSurface->Width() &&
-                      aSourceSurface->Height() == aDestSurface->Height() &&
-                      aSourceSurface->Stride() == aDestSurface->Stride(),
-                      "Source and destination surfaces don't have identical characteristics");
+    MOZ_ASSERT(aSourceSurface->Format() == aDestSurface->Format() &&
+               aSourceSurface->Width()  == aDestSurface->Width() &&
+               aSourceSurface->Height() == aDestSurface->Height() &&
+               aSourceSurface->Stride() == aDestSurface->Stride(),
+               "Source and destination surfaces don't have identical characteristics");
 
-    NS_ABORT_IF_FALSE(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
-                      "Source surface stride isn't tightly packed");
+    MOZ_ASSERT(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
+               "Source surface stride isn't tightly packed");
 
-    NS_ABORT_IF_FALSE(aSourceSurface->Format() == gfxASurface::ImageFormatARGB32,
-                      "Surfaces must be ARGB32");
+    MOZ_ASSERT(aSourceSurface->Format() == gfxASurface::ImageFormatARGB32,
+               "Surfaces must be ARGB32");
 
     uint8_t *src = aSourceSurface->Data();
     uint8_t *dst = aDestSurface->Data();
