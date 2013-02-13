@@ -53,7 +53,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXULWindow.h"
 #include "nsIEditor.h"
-#include "nsIEditorDocShell.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIPermissionManager.h"
 
@@ -852,26 +851,22 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
       if (designMode.EqualsLiteral("on")) {
         // Hold on to the editor object to let the document reattach to the
         // same editor object, instead of creating a new one.
-        nsCOMPtr<nsIEditorDocShell> editorDocshell = do_QueryInterface(mDocShell);
         nsCOMPtr<nsIEditor> editor;
-        nsresult rv = editorDocshell->GetEditor(getter_AddRefs(editor));
+        nsresult rv = mDocShell->GetEditor(getter_AddRefs(editor));
         NS_ENSURE_SUCCESS(rv, false);
 
         doc->SetDesignMode(NS_LITERAL_STRING("off"));
         doc->SetDesignMode(NS_LITERAL_STRING("on"));
       } else {
         // Re-initialize the presentation for contenteditable documents
-        nsCOMPtr<nsIEditorDocShell> editorDocshell = do_QueryInterface(mDocShell);
-        if (editorDocshell) {
-          bool editable = false,
-                 hasEditingSession = false;
-          editorDocshell->GetEditable(&editable);
-          editorDocshell->GetHasEditingSession(&hasEditingSession);
-          nsCOMPtr<nsIEditor> editor;
-          editorDocshell->GetEditor(getter_AddRefs(editor));
-          if (editable && hasEditingSession && editor) {
-            editor->PostCreate();
-          }
+        bool editable = false,
+             hasEditingSession = false;
+        mDocShell->GetEditable(&editable);
+        mDocShell->GetHasEditingSession(&hasEditingSession);
+        nsCOMPtr<nsIEditor> editor;
+        mDocShell->GetEditor(getter_AddRefs(editor));
+        if (editable && hasEditingSession && editor) {
+          editor->PostCreate();
         }
       }
     }

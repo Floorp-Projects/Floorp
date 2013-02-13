@@ -33,7 +33,6 @@
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
 #include "nsIDocShell.h"
-#include "nsIEditorDocShell.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "mozilla/dom/Element.h"

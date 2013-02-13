@@ -58,7 +58,6 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMUserDataHandler.h"
-#include "nsIEditorDocShell.h"
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIFrame.h"

@@ -25,7 +25,6 @@
 #include "nsIDOMRange.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDocShell.h"
-#include "nsIEditorDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsLayoutUtils.h"
 #include "nsIPresShell.h"
@@ -606,17 +605,14 @@ nsFocusManager::MoveCaretToFocus(nsIDOMWindow* aWindow)
   if (dsti) {
     dsti->GetItemType(&itemType);
     if (itemType != nsIDocShellTreeItem::typeChrome) {
-      // don't move the caret for editable documents
-      nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(dsti));
-      if (editorDocShell) {
-        bool isEditable;
-        editorDocShell->GetEditable(&isEditable);
-        if (isEditable)
-          return NS_OK;
-      }
-
       nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(dsti);
       NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+      // don't move the caret for editable documents
+      bool isEditable;
+      docShell->GetEditable(&isEditable);
+      if (isEditable)
+        return NS_OK;
 
       nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
       NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
@@ -2030,22 +2026,19 @@ nsFocusManager::UpdateCaret(bool aMoveCaretToFocus,
   // contentEditable document and the node to focus is contentEditable,
   // return, so that we don't mess with caret visibility.
   bool isEditable = false;
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(dsti));
-  if (editorDocShell) {
-    editorDocShell->GetEditable(&isEditable);
+  focusedDocShell->GetEditable(&isEditable);
 
-    if (isEditable) {
-      nsCOMPtr<nsIHTMLDocument> doc =
-        do_QueryInterface(presShell->GetDocument());
+  if (isEditable) {
+    nsCOMPtr<nsIHTMLDocument> doc =
+      do_QueryInterface(presShell->GetDocument());
 
-      bool isContentEditableDoc =
-        doc && doc->GetEditingState() == nsIHTMLDocument::eContentEditable;
+    bool isContentEditableDoc =
+      doc && doc->GetEditingState() == nsIHTMLDocument::eContentEditable;
 
-      bool isFocusEditable =
-        aContent && aContent->HasFlag(NODE_IS_EDITABLE);
-      if (!isContentEditableDoc || isFocusEditable)
-        return;
-    }
+    bool isFocusEditable =
+      aContent && aContent->HasFlag(NODE_IS_EDITABLE);
+    if (!isContentEditableDoc || isFocusEditable)
+      return;
   }
 
   if (!isEditable && aMoveCaretToFocus)

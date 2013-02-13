@@ -20,7 +20,6 @@
 #include "nsIPresShell.h"
 #include "nsDOMEvent.h"
 #include "nsGkAtoms.h"
-#include "nsIEditorDocShell.h"
 #include "nsIFormControl.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIScrollableFrame.h"

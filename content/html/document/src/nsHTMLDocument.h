@@ -28,7 +28,6 @@
 #include "mozilla/dom/HTMLSharedElement.h"
 
 class nsIEditor;
-class nsIEditorDocShell;
 class nsIParser;
 class nsIURI;
 class nsIMarkupDocumentViewer;
