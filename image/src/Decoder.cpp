@@ -118,7 +118,7 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
     }
 
     bool usable = true;
-    if (aShutdownIntent != RasterImage::eShutdownIntent_Interrupted && !HasDecoderError()) {
+    if (aShutdownIntent != RasterImage::eShutdownIntent_NotNeeded && !HasDecoderError()) {
       // If we only have a data error, we're usable if we have at least one frame.
       if (mImage.GetNumFrames() == 0) {
         usable = false;
