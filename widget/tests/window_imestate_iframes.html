@@ -189,7 +189,7 @@ function runTests()
       iframe.contentWindow.
         QueryInterface(Components.interfaces.nsIInterfaceRequestor).
         getInterface(Components.interfaces.nsIWebNavigation).
-        QueryInterface(Components.interfaces.nsIEditorDocShell).editor;
+        QueryInterface(Components.interfaces.nsIDocShell).editor;
     var e = aIsInDesignMode ? root : editor;
     e.focus();
     is(fm.focusedElement, e,

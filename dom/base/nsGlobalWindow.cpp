@@ -80,7 +80,6 @@
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
-#include "nsIEditorDocShell.h"
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
@@ -8457,13 +8456,10 @@ nsGlobalWindow::UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent)
   if (!docShell)
     return;
 
-  nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
-  if (editorDocShell) {
-    bool editable;
-    editorDocShell->GetEditable(&editable);
-    if (editable)
-      return;
-  }
+  bool editable;
+  docShell->GetEditable(&editable);
+  if (editable)
+    return;
 
   nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   if (!presShell || !mDocument)

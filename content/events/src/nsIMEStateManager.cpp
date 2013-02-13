@@ -11,7 +11,6 @@
 #include "nsISupports.h"
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIEditorDocShell.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"

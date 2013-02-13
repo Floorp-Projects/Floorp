@@ -15,7 +15,6 @@
 #include "nsIURI.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIEditorDocShell.h"
 #include "nsISimpleEnumerator.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPrefBranch.h"

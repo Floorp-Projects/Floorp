@@ -19,7 +19,6 @@
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
 #include "nsIDocShell.h"
-#include "nsIEditorDocShell.h"
 #include "nsRuleWalker.h"
 #include "nsGlobalWindow.h"
 
@@ -476,12 +475,12 @@ HTMLBodyElement::GetAssociatedEditor()
   }
 
   nsCOMPtr<nsISupports> container = presContext->GetContainer();
-  nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(container);
-  if (!editorDocShell) {
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  if (!docShell) {
     return nullptr;
   }
 
-  editorDocShell->GetEditor(getter_AddRefs(editor));
+  docShell->GetEditor(getter_AddRefs(editor));
   return editor.forget();
 }
 

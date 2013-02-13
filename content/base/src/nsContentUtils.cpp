@@ -159,7 +159,6 @@
 #include "nsICharsetDetectionObserver.h"
 #include "nsIPlatformCharset.h"
 #include "nsIEditor.h"
-#include "nsIEditorDocShell.h"
 #include "mozilla/Attributes.h"
 #include "nsIParserService.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -6801,14 +6800,14 @@ nsIEditor*
 nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
 {
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
   bool isEditable;
-  if (!editorDocShell ||
-      NS_FAILED(editorDocShell->GetEditable(&isEditable)) || !isEditable)
+  if (!docShell ||
+      NS_FAILED(docShell->GetEditable(&isEditable)) || !isEditable)
     return nullptr;
 
   nsCOMPtr<nsIEditor> editor;
-  editorDocShell->GetEditor(getter_AddRefs(editor));
+  docShell->GetEditor(getter_AddRefs(editor));
   return editor;
 }
 
