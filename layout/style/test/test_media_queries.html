@@ -233,6 +233,14 @@ function run() {
                  (Math.ceil(value/em_size) + 1) + "em)");
     should_not_apply("all and (max-" + feature + ": " +
                      (Math.floor(value/em_size) - 1) + "em)");
+    should_not_apply("all and (min-" + feature + ": " +
+                     (Math.ceil(value/em_size) + 1) + "rem)");
+    should_apply("all and (min-" + feature + ": " +
+                 (Math.floor(value/em_size) - 1) + "rem)");
+    should_apply("all and (max-" + feature + ": " +
+                 (Math.ceil(value/em_size) + 1) + "rem)");
+    should_not_apply("all and (max-" + feature + ": " +
+                     (Math.floor(value/em_size) - 1) + "rem)");
   }
 
   change_state(function() {
