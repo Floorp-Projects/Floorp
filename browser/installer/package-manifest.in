@@ -738,3 +738,27 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/webapprt/modules/WebappRT.jsm
 @BINPATH@/webapprt/modules/WebappsHandler.jsm
 #endif
+
+#ifdef MOZ_METRO
+@BINPATH@/components/MetroUIUtils.js
+[metro]
+; gre resources
+@BINPATH@/CommandExecuteHandler@BIN_SUFFIX@
+@BINPATH@/dummyvccorlib.dll
+@BINPATH@/resources.pri
+@BINPATH@/VisualElementsManifest.xml
+@BINPATH@/tileresources
+; app dir resources
+@BINPATH@/metro/chrome.manifest
+@BINPATH@/metro/searchplugins
+@BINPATH@/metro/metroapp.ini
+@BINPATH@/metro/chrome/chrome@JAREXT@
+@BINPATH@/metro/chrome/chrome.manifest
+@BINPATH@/metro/chrome/@AB_CD@@JAREXT@
+@BINPATH@/metro/chrome/@AB_CD@.manifest
+@BINPATH@/metro/chrome/pdfjs.manifest
+@BINPATH@/metro/chrome/pdfjs/*
+@BINPATH@/metro/components
+@BINPATH@/metro/defaults
+@BINPATH@/metro/modules
+#endif

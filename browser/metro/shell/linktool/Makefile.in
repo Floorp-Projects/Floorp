@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ../../../..
+topsrcdir  = @top_srcdir@
+srcdir     = @srcdir@
+VPATH      = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+
+include $(topsrcdir)/config/config.mk
+
+DIST_SUBDIR = metro/install
+
+PROGRAM = linktool$(BIN_SUFFIX)
+
+CPPSRCS    = linktool.cpp
+
+OS_LIBS = \
+	kernel32.lib \
+	user32.lib \
+	ole32.lib \
+	shlwapi.lib \
+	shell32.lib \
+	propsys.lib \
+	$(NULL)
+
+DEFINES += -DUNICODE -D_UNICODE
+
+include $(topsrcdir)/config/rules.mk

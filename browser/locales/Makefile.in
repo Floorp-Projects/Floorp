@@ -76,6 +76,20 @@ STUB_HOOK = $(NSINSTALL) -D "$(_ABS_DIST)/$(PKG_INST_PATH)"; \
     $(NULL)
 endif
 
+SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt))
+SEARCHPLUGINS_PATH := $(FINAL_TARGET)/searchplugins
+SEARCHPLUGINS := $(addsuffix .xml,$(SEARCHPLUGINS_NAMES))
+PP_TARGETS += SEARCHPLUGINS
+
+# Required for l10n.mk - defines a list of app sub dirs that should
+# be included in langpack xpis.
+ifdef MOZ_METRO
+# metro build, include both app folders
+DIST_SUBDIRS = browser metro
+else
+DIST_SUBDIRS = $(DIST_SUBDIR)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
@@ -129,24 +143,9 @@ install:: $(addprefix generic/profile/,$(PROFILE_FILES))
 install:: $(call MERGE_FILES,$(addprefix profile/chrome/,$(PROFILE_CHROME)))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/chrome
 
-SEARCH_PLUGINS = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt))
-
-libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
-	$(NSINSTALL) -D $(FINAL_TARGET)/searchplugins
-	for SEARCH_PLUGIN in $^; do\
-	  SEARCH_PLUGIN_BASE=`basename $$SEARCH_PLUGIN`;\
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	    $$SEARCH_PLUGIN > $(FINAL_TARGET)/searchplugins/$$SEARCH_PLUGIN_BASE; \
-	done
-
-install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
-	$(NSINSTALL) -D $(DESTDIR)$(mozappdir)/searchplugins
-	for i in $^; do \
-	  SEARCH_PLUGIN_BASE=`basename $$SEARCH_PLUGIN`;\
-	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	    $$SEARCH_PLUGIN > $(DESTDIR)$(mozappdir)/searchplugins/$$SEARCH_PLUGIN_BASE; \
-	done
-
+# metro build calls back here for search engine plugins
+searchplugins: $(addprefix $(FINAL_TARGET)/searchplugins/,$(SEARCHPLUGINS))
+.PHONY: searchplugins
 
 libs-%:
 	$(NSINSTALL) -D $(DIST)/install
@@ -155,6 +154,9 @@ libs-%:
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
+ifdef MOZ_METRO
+	@$(MAKE) -C ../metro/locales AB_CD=$* XPI_NAME=locale-$*
+endif
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe

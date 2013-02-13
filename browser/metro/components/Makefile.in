@@ -1,0 +1,53 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH      = @DEPTH@
+topsrcdir  = @top_srcdir@
+srcdir     = @srcdir@
+VPATH      = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+
+# metro/components.manifest
+MODULE = components
+XPIDL_MODULE = components
+
+XPIDLSRCS = \
+        SessionStore.idl \
+        LoginManagerPrompter.idl \
+        $(NULL)
+
+EXTRA_PP_COMPONENTS = \
+        components.manifest \
+        AboutRedirector.js \
+        BrowserCLH.js \
+        BrowserStartup.js \
+        DirectoryProvider.js\
+        HelperAppDialog.js \
+        Sidebar.js \
+        SessionStore.js \
+        $(NULL)
+
+EXTRA_COMPONENTS = \
+        AlertsService.js \
+        ContentPermissionPrompt.js \
+        DownloadManagerUI.js \
+        PromptService.js \
+        ContentDispatchChooser.js \
+        FormAutoComplete.js \
+        LoginManager.js \
+        LoginManagerPrompter.js \
+        CapturePicker.js \
+        $(NULL)
+
+ifdef MOZ_SAFE_BROWSING
+EXTRA_COMPONENTS += SafeBrowsing.js
+endif
+
+ifdef MOZ_UPDATER
+EXTRA_COMPONENTS += UpdatePrompt.js
+endif
+
+include $(topsrcdir)/config/rules.mk

@@ -1,0 +1,1089 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE bindings [
+  <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
+  %findBarDTD;
+]>
+
+<bindings id="remoteBrowserBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="local-browser" extends="chrome://global/content/bindings/browser.xml#browser">
+    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIMessageListener">
+      <field name="_securityUI">null</field>
+      <property name="securityUI">
+        <getter><![CDATA[
+          return this._securityUI || {};
+        ]]></getter>
+        <setter><![CDATA[
+          this._securityUI = val;
+        ]]></setter>
+      </property>
+
+      <field name="_searchEngines">[]</field>
+      <property name="searchEngines"
+                onget="return this._searchEngines"
+                readonly="true"/>
+
+      <field name="_documentURI">null</field>
+      <property name="documentURI"
+                onget="return this._documentURI ? this._ios.newURI(this._documentURI, null, null) : null"
+                readonly="true"/>
+
+      <field name="contentWindowId">null</field>
+
+      <property name="messageManager"
+                onget="return this._frameLoader.messageManager;"
+                readonly="true"/>
+
+      <field name="_contentTitle">null</field>
+
+      <field name="_ios">
+         Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+      </field>
+
+      <field name="_messageListenerLocal"><![CDATA[
+        ({
+          self: this,
+          receiveMessage: function receiveMessage(aMessage) {
+            let self = this.self;
+            let json = aMessage.json;
+
+            switch (aMessage.name) {
+              case "DOMPopupBlocked":
+                self.onPopupBlocked(aMessage);
+                break;
+
+              case "pageshow":
+                self.onPageShow(aMessage);
+
+                if (!self.mIconURL && self._documentURI) {
+                  let iconURL = null;
+                  if (self.shouldLoadFavicon()) {
+                    // Use documentURI in the favicon construction so that we
+                    // do the right thing with about:-style error pages.  Bug 515188
+                    iconURL = self.documentURI.prePath + "/favicon.ico";
+                  }
+                  self.loadFavicon(iconURL, null);
+                }
+                break;
+
+              case "pagehide":
+                self.onPageHide(aMessage);
+                break;
+
+              case "DOMTitleChanged":
+                self._contentTitle = json.title;
+                break;
+
+              case "DOMLinkAdded":
+                // ignore results from subdocuments
+                if (json.windowId != self.contentWindowId)
+                  return;
+
+                let linkType = self._getLinkType(json);
+                switch(linkType) {
+                  case "icon":
+                    self.loadFavicon(json.href, json.charset);
+                    break;
+                  case "search":
+                    self._searchEngines.push({ title: json.title, href: json.href });
+                    break;
+                }
+                break;
+
+              case "MozScrolledAreaChanged": {
+                self._contentDocumentWidth = json.width;
+                self._contentDocumentHeight = json.height;
+                self._contentDocumentLeft = (json.left < 0) ? json.left : 0;
+
+                // Recalculate whether the visible area is actually in bounds
+                let view = self.getRootView();
+                view.scrollBy(0, 0);
+                break;
+              }
+
+              case "Content:UpdateDisplayPort": {
+                // Recalculate whether the visible area is actually in bounds
+                let view = self.getRootView();
+                view.scrollBy(0, 0);
+                view._updateCacheViewport();
+                break;
+              }
+            }
+          }
+        })
+      ]]></field>
+
+      <method name="loadFavicon">
+        <parameter name="aURL"/>
+        <parameter name="aCharset"/>
+        <body><![CDATA[
+            try { // newURI call is throwing for chrome URI
+              let iconURI = this._ios.newURI(aURL, aCharset, null);
+              if (gFaviconService.isFailedFavicon(iconURI))
+                return;
+
+              gFaviconService.setAndFetchFaviconForPage(this.currentURI, iconURI, true,
+                                                        gFaviconService.FAVICON_LOAD_NON_PRIVATE);
+              this.mIconURL = iconURI.spec;
+            } catch (e) {
+              this.mIconURL = null;
+            }
+        ]]></body>
+      </method>
+
+      <method name="shouldLoadFavicon">
+        <body><![CDATA[
+          let docURI = this.documentURI;
+          return (docURI && ("schemeIs" in docURI) &&
+                  (docURI.schemeIs("http") || docURI.schemeIs("https")));
+        ]]></body>
+      </method>
+
+      <method name="_getLinkType">
+        <parameter name="aLink" />
+        <body><![CDATA[
+          let type = "";
+          if (/\bicon\b/i.test(aLink.rel)) {
+            type = "icon";
+          }
+          else if (/\bsearch\b/i.test(aLink.rel) && aLink.type && aLink.title) {
+            let linkType = aLink.type.replace(/^\s+|\s*(?:;.*)?$/g, "").toLowerCase();
+            if (linkType == "application/opensearchdescription+xml" && /^(?:https?|ftp):/i.test(aLink.href)) {
+              type = "search";
+            }
+          }
+
+          return type;
+        ]]></body>
+      </method>
+
+      <field name="_webProgress"><![CDATA[
+        ({
+          _browser: this,
+
+          _init: function() {
+            this._browser.messageManager.addMessageListener("Content:StateChange", this);
+            this._browser.messageManager.addMessageListener("Content:LocationChange", this);
+            this._browser.messageManager.addMessageListener("Content:SecurityChange", this);
+          },
+
+          receiveMessage: function(aMessage) {
+            let json = aMessage.json;
+            switch (aMessage.name) {
+              case "Content:StateChange":
+                this._browser.updateWindowId(json.contentWindowId);
+                break;
+
+              case "Content:LocationChange":
+                try {
+                  let locationURI = this._browser._ios.newURI(json.location, null, null);
+                  this._browser.webNavigation._currentURI = locationURI;
+                  this._browser.webNavigation.canGoBack = json.canGoBack;
+                  this._browser.webNavigation.canGoForward = json.canGoForward;
+                  this._browser._charset = json.charset;
+                } catch(e) {}
+
+                if (this._browser.updateWindowId(json.contentWindowId)) {
+                  this._browser._documentURI = json.documentURI;
+                  this._browser._searchEngines = [];
+                }
+                break;
+
+              case "Content:SecurityChange":
+                let serhelper = Components.classes["@mozilla.org/network/serialization-helper;1"]
+                                .getService(Components.interfaces.nsISerializationHelper);
+                let SSLStatus = json.SSLStatusAsString ? serhelper.deserializeObject(json.SSLStatusAsString) : null;
+                if (SSLStatus) {
+                  SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+                  // We must check the Extended Validation (EV) state here, on the chrome
+                  // process, because NSS is needed for that determination.
+                  if (SSLStatus && SSLStatus.isExtendedValidation) {
+                      json.state |= Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
+                  }
+                }
+
+                let data = this._getIdentityData(SSLStatus);
+                this._browser._securityUI = {
+                  SSLStatus: SSLStatus ? {serverCert: data} : null,
+                  state: json.state
+                }
+                this._browser.updateWindowId(json.contentWindowId);
+                break;
+            }
+          },
+
+          /**
+           * Helper to parse out the important parts of the SSL cert for use in constructing
+           * identity UI strings
+           */
+          _getIdentityData: function(status) {
+            let result = {};
+
+            if (status) {
+              let cert = status.serverCert;
+
+              // Human readable name of Subject
+              result.subjectOrg = cert.organization;
+
+              // SubjectName fields, broken up for individual access
+              if (cert.subjectName) {
+                result.subjectNameFields = {};
+                cert.subjectName.split(",").forEach(function(v) {
+                  var field = v.split("=");
+                  if (field[1])
+                    this[field[0]] = field[1];
+                }, result.subjectNameFields);
+
+                // Call out city, state, and country specifically
+                result.city = result.subjectNameFields.L;
+                result.state = result.subjectNameFields.ST;
+                result.country = result.subjectNameFields.C;
+              }
+
+              // Human readable name of Certificate Authority
+              result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
+
+              if (!this._overrideService)
+                this._overrideService = Components.classes["@mozilla.org/security/certoverride;1"]
+                                        .getService(Components.interfaces.nsICertOverrideService);
+
+              // Check whether this site is a security exception.
+              let currentURI = this._browser.webNavigation._currentURI;
+              result.isException = !!this._overrideService.hasMatchingOverride(currentURI.asciiHost, currentURI.port, cert, {}, {});
+            }
+
+            return result;
+          }
+        })
+      ]]></field>
+
+      <property name="webProgress"
+                readonly="true"
+                onget="return null"/>
+
+      <method name="onPageShow">
+        <parameter name="aMessage"/>
+        <body>
+          <![CDATA[
+            this.attachFormFill();
+            if (this.pageReport) {
+              var json = aMessage.json;
+              var i = 0;
+              while (i < this.pageReport.length) {
+                // Filter out irrelevant reports.
+                if (this.pageReport[i].requestingWindowId == json.windowId)
+                  i++;
+                else
+                  this.pageReport.splice(i, 1);
+              }
+              if (this.pageReport.length == 0) {
+                this.pageReport = null;
+                this.updatePageReport();
+              }
+            }
+         ]]>
+        </body>
+      </method>
+
+      <method name="onPageHide">
+        <parameter name="aMessage"/>
+        <body>
+          <![CDATA[
+            if (this.pageReport) {
+              this.pageReport = null;
+              this.updatePageReport();
+            }
+            // Delete the feeds cache if we're hiding the topmost page
+            // (as opposed to one of its iframes).
+            if (this.feeds && aMessage.target == this)
+              this.feeds = null;
+
+            this._contentWindowWidth = aMessage.json.contentWindowWidth;
+            this._contentWindowHeight = aMessage.json.contentWindowHeight;
+         ]]>
+        </body>
+      </method>
+
+      <method name="onPopupBlocked">
+        <parameter name="aMessage"/>
+        <body>
+          <![CDATA[
+            if (!this.pageReport) {
+              this.pageReport = [];
+            }
+
+            let json = aMessage.json;
+            // XXX Replacing requestingWindow && requestingDocument affects
+            // http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#500
+            var obj = {
+              requestingWindowId: json.windowId,
+              popupWindowURI: this._ios.newURI(json.popupWindowURI.spec, json.popupWindowURI.charset, null),
+              popupWindowFeatures: json.popupWindowFeatures,
+              popupWindowName: json.popupWindowName
+            };
+
+            this.pageReport.push(obj);
+            this.pageReport.reported = false;
+            this.updatePageReport();
+          ]]>
+        </body>
+      </method>
+
+      <field name="_frameLoader">null</field>
+      <field name="_contentViewManager">null</field>
+
+      <!-- Dimensions of content window -->
+      <field name="_contentWindowWidth">0</field>
+      <field name="_contentWindowHeight">0</field>
+      <property name="contentWindowWidth"
+                onget="return this._contentWindowWidth;"
+                readonly="true"/>
+      <property name="contentWindowHeight"
+                onget="return this._contentWindowHeight;"
+                readonly="true"/>
+
+      <!-- Dimensions of content document -->
+      <field name="_contentDocumentWidth">0</field>
+      <field name="_contentDocumentHeight">0</field>
+      <property name="contentDocumentWidth"
+                onget="return this._contentDocumentWidth;"
+                readonly="true"/>
+      <property name="contentDocumentHeight"
+                onget="return this._contentDocumentHeight;"
+                readonly="true"/>
+
+      <!-- If this attribute is negative this indicate the document is rtl and
+           some operations like panning or calculating the cache area should
+           take it into account. This is useless for non-remote browser -->
+      <field name="_contentDocumentLeft">0</field>
+
+      <!-- The ratio of device pixels to CSS pixels -->
+      <property name="scale"
+                onget="return 1;"
+                onset="return 1;"/>
+
+      <!-- These counters are used to update the cached viewport after they reach a certain
+           threshold when scrolling -->
+      <field name="_cacheRatioWidth">1</field>
+      <field name="_cacheRatioHeight">1</field>
+
+      <!-- Used in remote tabs only. -->
+      <method name="_updateCSSViewport">
+        <body/>
+      </method>
+
+      <!-- Sets size of CSS viewport, which affects how page is layout. -->
+      <method name="setWindowSize">
+        <parameter name="width"/>
+        <parameter name="height"/>
+        <body>
+          <![CDATA[
+            this._contentWindowWidth = width;
+            this._contentWindowHeight = height;
+            this.messageManager.sendAsyncMessage("Content:SetWindowSize", {
+              width: width,
+              height: height
+            });
+
+            // If the window size is changing, make sure the displayport is in sync
+            this.getRootView()._updateCacheViewport();
+          ]]>
+        </body>
+      </method>
+
+      <method name="getRootView">
+        <body>
+          <![CDATA[
+            return this._contentView;
+          ]]>
+        </body>
+      </method>
+
+      <field name="_contentViewPrototype"><![CDATA[
+        ({
+          _scrollbox: null,
+
+          init: function(aElement) {
+            this._scrollbox = aElement.scrollBoxObject;
+          },
+
+          isRoot: function() {
+            return false;
+          },
+
+          scrollBy: function(x, y) {
+            this._scrollbox.scrollBy(x,y);
+          },
+
+          scrollTo: function(x, y) {
+            this._scrollbox.scrollTo(x,y);
+          },
+
+          getPosition: function() {
+            let x = {}, y = {};
+            this._scrollbox.getPosition(x, y);
+            return { x: x.value, y: y.value };
+          }
+        })
+        ]]>
+      </field>
+
+      <method name="getViewAt">
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body>
+          <![CDATA[
+            let cwu = this.contentDocument.defaultView.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+            let elt = cwu.elementFromPoint(x, y, false, false);
+
+            while (elt && !elt.scrollBoxObject)
+              elt = elt.parentNode;
+ 
+            if (!elt)
+              return this._contentView;
+
+            let cv = Object.create(this._contentViewPrototype);
+            cv.init(elt);
+            return cv;
+          ]]>
+        </body>
+      </method>
+
+      <field name="_contentView"><![CDATA[
+        ({
+          self: this,
+
+          _updateCacheViewport: function() {
+          },
+
+          isRoot: function() {
+            return true;
+          },
+
+          scrollBy: function(x, y) {
+            let self = this.self;
+            self.contentWindow.scrollBy(x, y);
+          },
+
+          scrollTo: function(x, y) {
+            let self = this.self;
+            x = Math.floor(Math.max(0, Math.min(self.contentDocumentWidth,  x)));
+            y = Math.floor(Math.max(0, Math.min(self.contentDocumentHeight, y)));
+            self.contentWindow.scrollTo(x, y);
+          },
+
+          getPosition: function() {
+            let self = this.self;
+            let scrollX = {}, scrollY = {};
+            let cwu = self.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                      getInterface(Components.interfaces.nsIDOMWindowUtils);
+            cwu.getScrollXY(false, scrollX, scrollY);
+            return { x: scrollX.value, y: scrollY.value };
+          },
+
+          toString: function() {
+            return "[View Local]";
+          }
+        })
+        ]]>
+      </field>
+
+      <!-- Change client coordinates in device pixels to page-relative ones in CSS px. -->
+      <method name="transformClientToBrowser">
+        <parameter name="clientX"/>
+        <parameter name="clientY"/>
+        <body>
+          <![CDATA[
+            let bcr = this.getBoundingClientRect();
+            let scroll = this.getRootView().getPosition();
+            return { x: (clientX + scroll.x - bcr.left) / this.scale,
+                     y: (clientY + scroll.y - bcr.top) / this.scale };
+          ]]>
+        </body>
+      </method>
+
+      <method name="transformBrowserToClient">
+        <parameter name="browserX"/>
+        <parameter name="browserY"/>
+        <body>
+          <![CDATA[
+            let bcr = this.getBoundingClientRect();
+            let scroll = this.getRootView().getPosition();
+            return { x: (browserX * this.scale - scroll.x + bcr.left) ,
+                     y: (browserY * this.scale - scroll.y + bcr.top)};
+          ]]>
+        </body>
+      </method>
+
+      <constructor>
+        <![CDATA[
+          this._frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          this._contentViewManager = this._frameLoader.QueryInterface(Components.interfaces.nsIContentViewManager);
+
+          let prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                              .getService(Components.interfaces.nsIPrefBranch);
+
+          this._cacheRatioWidth = Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioWidth") / 1000);
+          this._cacheRatioHeight = Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioHeight") / 1000);
+
+          if (this._contentViewPrototype)
+            this._contentViewPrototype.kDieTime = prefService.getIntPref("toolkit.browser.contentViewExpire");
+
+          this.messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
+          this.messageManager.addMessageListener("DOMTitleChanged", this._messageListenerLocal);
+          this.messageManager.addMessageListener("DOMLinkAdded", this._messageListenerLocal);
+          this.messageManager.addMessageListener("pageshow", this._messageListenerLocal);
+          this.messageManager.addMessageListener("pagehide", this._messageListenerLocal);
+          this.messageManager.addMessageListener("DOMPopupBlocked", this._messageListenerLocal);
+          this.messageManager.addMessageListener("MozScrolledAreaChanged", this._messageListenerLocal);
+          this.messageManager.addMessageListener("Content:UpdateDisplayPort", this._messageListenerLocal);
+
+          this._webProgress._init();
+
+          // Remove event listeners added by toolkit <browser> binding.
+          this.removeEventListener("pageshow", this.onPageShow, true);
+          this.removeEventListener("pagehide", this.onPageHide, true);
+          this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
+        ]]>
+      </constructor>
+
+      <method name="updateWindowId">
+         <parameter name="aNewId"/>
+         <body><![CDATA[
+            if (this.contentWindowId != aNewId) {
+               this.contentWindowId = aNewId;
+               return true;
+            }
+            return false;
+         ]]></body>
+      </method>
+
+      <field name="_active">false</field>
+      <property name="active" onget="return this._active;">
+        <setter><![CDATA[
+          // Do not change displayport on local tabs!
+          this._active = val;
+        ]]></setter>
+      </property>
+
+      <!-- Transform the viewport without updating the displayport. -->
+      <method name="fuzzyZoom">
+        <parameter name="scale"/>
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body><![CDATA[
+          this.getRootView().scrollTo(x, y);
+        ]]></body>
+      </method>
+
+      <!-- After fuzzy zoom, sync the displayport with the new viewport. -->
+      <method name="finishFuzzyZoom">
+        <body><![CDATA[
+          return;
+        ]]></body>
+      </method>
+
+    </implementation>
+  </binding>
+
+  <binding id="remote-browser" extends="#local-browser">
+    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIMessageListener">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            throw "accessibleType: Supports Remote?";
+          ]]>
+        </getter>
+      </property>
+
+      <property name="autoscrollEnabled">
+        <getter>
+          <![CDATA[
+            throw "autoscrollEnabled: Supports Remote?";
+          ]]>
+        </getter>
+      </property>
+
+      <property name="docShell"
+                readonly="true">
+         <getter><![CDATA[
+            return {
+               forcedCharset : this._charset,
+               parentCharset : "",
+               parentCharsetSource : 0
+            }
+         ]]></getter>
+      </property>
+
+      <field name="_contentTitle">null</field>
+
+      <property name="contentTitle"
+                onget="return this._contentTitle;"
+                readonly="true"/>
+
+      <property name="webNavigation"
+                onget="return this._remoteWebNavigation;"
+                readonly="true"/>
+
+      <property name="contentWindow"
+                readonly="true"
+                onget="return null"/>
+
+      <property name="sessionHistory"
+                onget="return null"
+                readonly="true"/>
+
+      <property name="markupDocumentViewer"
+                onget="return null"
+                readonly="true"/>
+
+      <property name="contentViewerEdit"
+                onget="return null"
+                readonly="true"/>
+
+      <property name="contentViewerFile"
+                onget="return null"
+                readonly="true"/>
+
+      <field name="_charset"></field>
+
+      <constructor>
+        <![CDATA[
+          this.messageManager.addMessageListener("scroll", this._messageListenerRemote);
+        ]]>
+      </constructor>
+
+      <field name="scrollSync">true</field>
+
+      <field name="_messageListenerRemote"><![CDATA[
+        ({
+          self: this,
+          receiveMessage: function receiveMessage(aMessage) {
+            let self = this.self;
+            let json = aMessage.json;
+
+            switch (aMessage.name) {
+              case "scroll":
+                if (!self.scrollSync)
+                  return;
+                this.doScroll(json.x, json.y, 0);
+                break;
+           }
+         },
+
+         doScroll: function doScroll(aX, aY, aCount) {
+            let self = this.self;
+
+            // Use floor so that we always guarantee top-left corner of content is visible.
+            let view = self.getRootView();
+            view.scrollTo(Math.floor(aX * self.scale), Math.floor(aY * self.scale));
+
+            let position = view.getPosition();
+            if ((position.x != aX * self.scale || position.y != aY * self.scale) && aCount < 3) {
+              setTimeout((function() {
+                 this.doScroll(aX, aY, ++aCount);
+              }).bind(this), 0);
+            }
+         }
+       })
+      ]]></field>
+
+      <!-- Keep a store of temporary content views. -->
+      <field name="_contentViews">({})</field>
+
+      <!-- There is a point before a page has loaded where a root content view
+           may not exist. We use this so that we don't have to worry about doing
+           an if check every time we want to scroll. -->
+      <field name="_contentNoop"><![CDATA[
+        ({
+          _updateCacheViewport: function() {},
+          _getViewportSize: function() {},
+
+          isRoot: function() {
+            return true;
+          },
+
+          _scale: 1,
+          _setScale: function(scale) {},
+          scrollBy: function(x, y) {},
+          scrollTo: function(x, y) {},
+          getPosition: function() {
+            return { x: 0, y: 0 };
+          }
+        })
+      ]]></field>
+
+      <field name="_contentViewPrototype"><![CDATA[
+        ({
+          self: this,
+          _id: null,
+          _contentView: null,
+          _timeout: null,
+          _pixelsPannedSinceRefresh: { x: 0, y: 0 },
+          _lastPanTime: 0,
+
+          kDieTime: 3000,
+
+          /** 
+           * Die if we haven't panned in a while.
+           *
+           * Since we keep a map of active content views, we need to regularly
+           * check if they are necessary so that every single thing the user
+           * pans is not kept in memory forever.
+           */
+          _dieIfOld: function() {
+            if (Date.now() - this._lastPanTime >= this.kDieTime)
+              this._die();
+            else
+              // This doesn't need to be exact, just be sure to clean up at some point.
+              this._timeout = setTimeout(this._dieIfOld.bind(this), this.kDieTime);
+          },
+
+          /** Cleanup after ourselves. */
+          _die: function() {
+            let timeout = this._timeout;
+            if (timeout) {
+              clearTimeout(timeout);
+              this._timeout = null;
+            }
+
+            if (this._contentView && Math.abs(this._pixelsPannedSinceRefresh) > 0)
+              this._updateCacheViewport();
+
+            // We expect contentViews to contain our ID. If not, something bad
+            // happened.
+            delete this.self._contentViews[this._id];
+          },
+
+          /**
+           * Given the cache size and the viewport size, this determines where the cache
+           * should start relative to the scroll position. This adjusts the position based
+           * on which direction the user is panning, so that we use our cache as
+           * effectively as possible.
+           *
+           * @param aDirection Negative means user is panning to the left or above
+           *                   Zero means user did not pan
+           *                   Positive means user is panning to the right or below
+           * @param aViewportSize The width or height of the viewport
+           * @param aCacheSize The width or height of the displayport
+           */
+          _getRelativeCacheStart: function(aDirection, aViewportSize, aCacheSize) {
+            // Remember that this is relative to the viewport scroll position.
+            // Let's assume we are thinking about the y-axis.
+            // The extreme cases:
+            // |0| would mean that there is no content available above
+            // |aViewportSize - aCacheSize| would mean no content available below
+            //
+            // Taking the average of the extremes puts equal amounts of cache on the
+            // top and bottom of the viewport. If we think of this like a weighted
+            // average, .5 is the sweet spot where equals amounts of content are
+            // above and below the visible area.
+            //
+            // This weight is therefore how much of the cache is above (or to the
+            // left) the visible area.
+            let cachedAbove = .5;
+
+            // If panning down, leave only 25% of the non-visible cache above.
+            if (aDirection > 0)
+              cachedAbove = .25;
+
+            // If panning up, Leave 75% of the non-visible cache above.
+            if (aDirection < 0)
+              cachedAbove = .75;
+
+            return (aViewportSize - aCacheSize) * cachedAbove;
+          },
+
+          /** Determine size of the pixel cache. */
+          _getCacheSize: function(viewportSize) {
+            let self = this.self;
+            let contentView = this._contentView;
+
+            let cacheWidth = self._cacheRatioWidth * viewportSize.width;
+            let cacheHeight = self._cacheRatioHeight * viewportSize.height;
+            let contentSize = this._getContentSize();
+            let contentWidth = contentSize.width;
+            let contentHeight = contentSize.height;
+
+            // There are common cases, such as long skinny pages, where our cache size is
+            // bigger than our content size. In those cases, we take that sliver of leftover
+            // space and apply it to the other dimension.
+            if (contentWidth < cacheWidth) {
+              cacheHeight += (cacheWidth - contentWidth) * cacheHeight / cacheWidth;
+              cacheWidth = contentWidth;
+            } else if (contentHeight < cacheHeight) {
+              cacheWidth += (cacheHeight - contentHeight) * cacheWidth / cacheHeight;
+              cacheHeight = contentHeight;
+            }
+
+            return { width: cacheWidth, height: cacheHeight };
+          },
+
+          _sendDisplayportUpdate: function(scrollX, scrollY) {
+            let self = this.self;
+            if (!self.active)
+               return;
+
+            let contentView = this._contentView;
+            let viewportSize = this._getViewportSize();
+            let cacheSize = this._getCacheSize(viewportSize);
+            let cacheX = this._getRelativeCacheStart(this._pixelsPannedSinceRefresh.x, viewportSize.width, cacheSize.width) + contentView.scrollX;
+            let cacheY = this._getRelativeCacheStart(this._pixelsPannedSinceRefresh.y, viewportSize.height, cacheSize.height) + contentView.scrollY;
+            let contentSize = this._getContentSize();
+
+            // Use our pixels efficiently and don't try to cache things outside of content
+            // boundaries (The left bound can be negative because of RTL).
+
+            let rootScale = self.scale;
+            let leftBound = self._contentDocumentLeft * rootScale;
+            let bounds = new Rect(leftBound, 0, contentSize.width, contentSize.height);
+            let displayport = new Rect(cacheX, cacheY, cacheSize.width, cacheSize.height);
+            displayport.translateInside(bounds);
+
+            self.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
+              scrollX: Math.round(scrollX) / rootScale,
+              scrollY: Math.round(scrollY) / rootScale,
+              x: Math.round(displayport.x) / rootScale,
+              y: Math.round(displayport.y) / rootScale,
+              w: Math.round(displayport.width) / rootScale,
+              h: Math.round(displayport.height) / rootScale,
+              scale: rootScale,
+              id: contentView.id
+            });
+
+            this._pixelsPannedSinceRefresh.x = 0;
+            this._pixelsPannedSinceRefresh.y = 0;
+          },
+
+          _updateCSSViewport: function() {
+            let contentView = this._contentView;
+            this._sendDisplayportUpdate(contentView.scrollX,
+                                        contentView.scrollY);
+          },
+
+          /**
+           * The cache viewport is what parts of content is cached in the parent process for
+           * fast scrolling. This syncs that up with the current projection viewport.
+           */
+          _updateCacheViewport: function() {
+            // Do not update scroll values for content.
+            if (this.isRoot())
+              this._sendDisplayportUpdate(-1, -1);
+            else {
+              let contentView = this._contentView;
+              this._sendDisplayportUpdate(contentView.scrollX,
+                                          contentView.scrollY);
+            }
+          },
+
+          _getContentSize: function() {
+            let self = this.self;
+            return { width: this._contentView.contentWidth,
+                     height: this._contentView.contentHeight };
+          },
+
+          _getViewportSize: function() {
+            let self = this.self;
+            if (this.isRoot()) {
+              let bcr = self.getBoundingClientRect();
+              return { width: bcr.width, height: bcr.height };
+            } else {
+              return { width: this._contentView.viewportWidth,
+                       height: this._contentView.viewportHeight };
+            }
+          },
+
+          init: function(contentView) {
+            let self = this.self;
+
+            this._contentView = contentView;
+            this._id = contentView.id;
+            this._scale = 1;
+            self._contentViews[this._id] = this;
+
+            if (!this.isRoot()) {
+              // Non-root content views are short lived.
+              this._timeout = setTimeout(this._dieIfOld.bind(this), this.kDieTime);
+              // This iframe may not have a display port yet, so build up a cache
+              // immediately.
+              this._updateCacheViewport();
+            }
+          },
+
+          isRoot: function() {
+            return this.self._contentViewManager.rootContentView == this._contentView;
+          },
+
+          scrollBy: function(x, y) {
+            let self = this.self;
+
+            // Bounding content rectangle is in device pixels
+            let contentView = this._contentView;
+            let viewportSize = this._getViewportSize();
+            let contentSize = this._getContentSize();
+            // Calculate document dimensions in device pixels
+            let scrollRangeX = contentSize.width - viewportSize.width;
+            let scrollRangeY = contentSize.height - viewportSize.height;
+
+            let leftOffset = self._contentDocumentLeft * this._scale;
+            x = Math.floor(Math.max(leftOffset, Math.min(scrollRangeX + leftOffset, contentView.scrollX + x))) - contentView.scrollX;
+            y = Math.floor(Math.max(0, Math.min(scrollRangeY, contentView.scrollY + y))) - contentView.scrollY;
+
+            if (x == 0 && y == 0)
+              return;
+
+            contentView.scrollBy(x, y);
+
+            this._lastPanTime = Date.now();
+
+            this._pixelsPannedSinceRefresh.x += x;
+            this._pixelsPannedSinceRefresh.y += y;
+            if (Math.abs(this._pixelsPannedSinceRefresh.x) > 20 ||
+                Math.abs(this._pixelsPannedSinceRefresh.y) > 20)
+              this._updateCacheViewport();
+          },
+
+          scrollTo: function(x, y) {
+            let contentView = this._contentView;
+            this.scrollBy(x - contentView.scrollX, y - contentView.scrollY);
+          },
+
+          _setScale: function _setScale(scale) {
+            this._scale = scale;
+            this._contentView.setScale(scale, scale);
+          },
+
+          getPosition: function() {
+            let contentView = this._contentView;
+            return { x: contentView.scrollX, y: contentView.scrollY };
+          }
+        })
+        ]]>
+      </field>
+
+      <!-- Transform the viewport without updating the displayport. -->
+      <method name="fuzzyZoom">
+        <parameter name="scale"/>
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body><![CDATA[
+          let rootView = this.getRootView();
+          rootView._setScale(scale);
+          if ("_contentView" in rootView)
+            rootView._contentView.scrollTo(x, y);
+        ]]></body>
+      </method>
+
+      <!-- After fuzzy zoom, sync the displayport with the new viewport. -->
+      <method name="finishFuzzyZoom">
+        <body><![CDATA[
+          let view = this.getRootView();
+
+          // ensure that we are scrolled within the page's viewable area
+          view.scrollBy(0,0);
+          view._updateCacheViewport();
+
+          let event = document.createEvent("Events");
+          event.initEvent("ZoomChanged", true, false);
+          this.dispatchEvent(event);
+        ]]></body>
+      </method>
+
+      <!-- The ratio of CSS pixels to device pixels. -->
+      <property name="scale">
+        <getter><![CDATA[
+          return this.getRootView()._scale;
+        ]]></getter>
+        <setter><![CDATA[
+          if (val <= 0 || val == this.scale)
+            return;
+
+          let rootView = this.getRootView();
+          rootView._setScale(val);
+          this.finishFuzzyZoom();
+
+          return val;
+        ]]></setter>
+      </property>
+
+      <method name="_getView">
+        <parameter name="contentView"/>
+        <body>
+          <![CDATA[
+            if (!contentView) return null;
+
+            // See if we have cached it.
+            let id = contentView.id;
+            let jsContentView = this._contentViews[id];
+            if (jsContentView) {
+              // Content view may have changed if it became inactive for a
+              // little while.
+              jsContentView._contentView = contentView;
+              return jsContentView;
+            }
+
+            // Not cached. Create it.
+            jsContentView = Object.create(this._contentViewPrototype);
+            jsContentView.init(contentView);
+            return jsContentView;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Get root content view. -->
+      <method name="getRootView">
+        <body>
+          <![CDATA[
+            let contentView = this._contentViewManager.rootContentView;
+            return this._getView(contentView) || this._contentNoop;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Get contentView for position (x, y) relative to the browser element -->
+      <method name="getViewAt">
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body>
+          <![CDATA[
+            let manager = this._contentViewManager;
+            let contentView = manager.getContentViewsIn(x, y, 0, 0, 0, 0)[0] ||
+                              manager.rootContentView;
+            return this._getView(contentView);
+          ]]>
+        </body>
+      </method>
+
+      <!-- Synchronize the CSS viewport with the projection viewport. -->
+      <method name="_updateCSSViewport">
+        <body>
+          <![CDATA[
+            let rootView = this.getRootView();
+            rootView._updateCSSViewport();
+          ]]>
+        </body>
+      </method>
+
+      <property name="active" onget="return this._active;">
+        <setter><![CDATA[
+            this._active = val;
+            let keepVisible = false;
+            this.messageManager.sendAsyncMessage((val ? "Content:Activate" : "Content:Deactivate"), { keepviewport: keepVisible });
+            if (val)
+              this.getRootView()._updateCacheViewport();
+         ]]></setter>
+      </property>
+
+    </implementation>
+
+  </binding>
+
+</bindings>
