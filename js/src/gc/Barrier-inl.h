@@ -71,10 +71,8 @@ inline void
 EncapsulatedValue::writeBarrierPre(const Value &value)
 {
 #ifdef JSGC_INCREMENTAL
-    if (value.isMarkable()) {
-        js::gc::Cell *cell = (js::gc::Cell *)value.toGCThing();
-        writeBarrierPre(cell->zone(), value);
-    }
+    if (value.isMarkable())
+        writeBarrierPre(ZoneOfValue(value), value);
 #endif
 }
 
@@ -172,9 +170,8 @@ HeapValue::set(Zone *zone, const Value &v)
 {
 #ifdef DEBUG
     if (value.isMarkable()) {
-        js::gc::Cell *cell = (js::gc::Cell *)value.toGCThing();
-        JS_ASSERT(cell->zone() == zone ||
-                  cell->zone() == zone->rt->atomsCompartment->zone());
+        JS_ASSERT(ZoneOfValue(value) == zone ||
+                  ZoneOfValue(value) == zone->rt->atomsCompartment->zone());
     }
 #endif
 
