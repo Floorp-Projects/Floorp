@@ -872,8 +872,8 @@ void
 nsDocShell::DestroyChildren()
 {
     nsCOMPtr<nsIDocShellTreeItem> shell;
-    int32_t n = mChildList.Count();
-    for (int32_t i = 0; i < n; i++) {
+    uint32_t n = mChildList.Length();
+    for (uint32_t i = 0; i < n; i++) {
         shell = do_QueryInterface(ChildAt(i));
         NS_ASSERTION(shell, "docshell has null child");
 
@@ -1629,14 +1629,14 @@ nsDocShell::FirePageHideNotification(bool aIsUnload)
         }
 
         nsAutoTArray<nsCOMPtr<nsIDocShell>, 8> kids;
-        int32_t i, n = mChildList.Count();
+        uint32_t n = mChildList.Length();
         kids.SetCapacity(n);
-        for (i = 0; i < n; i++) {
+        for (uint32_t i = 0; i < n; i++) {
             kids.AppendElement(do_QueryInterface(ChildAt(i)));
         }
 
         n = kids.Length();
-        for (i = 0; i < n; ++i) {
+        for (uint32_t i = 0; i < n; ++i) {
             if (kids[i]) {
                 kids[i]->FirePageHideNotification(aIsUnload);
             }
@@ -2081,8 +2081,8 @@ nsDocShell::SetPrivateBrowsing(bool aUsePrivateBrowsing)
         }
     }
 
-    int32_t count = mChildList.Count();
-    for (int32_t i = 0; i < count; ++i) {
+    uint32_t count = mChildList.Length();
+    for (uint32_t i = 0; i < count; ++i) {
         nsCOMPtr<nsILoadContext> shell = do_QueryInterface(ChildAt(i));
         if (shell) {
             shell->SetPrivateBrowsing(aUsePrivateBrowsing);
@@ -2117,8 +2117,8 @@ nsDocShell::SetAffectPrivateSessionLifetime(bool aAffectLifetime)
     }
     mAffectPrivateSessionLifetime = aAffectLifetime;
 
-    int32_t count = mChildList.Count();
-    for (int32_t i = 0; i < count; ++i) {
+    uint32_t count = mChildList.Length();
+    for (uint32_t i = 0; i < count; ++i) {
         nsCOMPtr<nsIDocShell> shell = do_QueryInterface(ChildAt(i));
         if (shell) {
             shell->SetAffectPrivateSessionLifetime(aAffectLifetime);
@@ -2489,8 +2489,8 @@ nsDocShell::HistoryPurged(int32_t aNumEntries)
     mPreviousTransIndex = std::max(-1, mPreviousTransIndex - aNumEntries);
     mLoadedTransIndex = std::max(0, mLoadedTransIndex - aNumEntries);
 
-    int32_t count = mChildList.Count();
-    for (int32_t i = 0; i < count; ++i) {
+    uint32_t count = mChildList.Length();
+    for (uint32_t i = 0; i < count; ++i) {
         nsCOMPtr<nsIDocShell> shell = do_QueryInterface(ChildAt(i));
         if (shell) {
             shell->HistoryPurged(aNumEntries);
@@ -2519,8 +2519,8 @@ nsDocShell::HistoryTransactionRemoved(int32_t aIndex)
         --mLoadedTransIndex;
     }
                             
-    int32_t count = mChildList.Count();
-    for (int32_t i = 0; i < count; ++i) {
+    uint32_t count = mChildList.Length();
+    for (uint32_t i = 0; i < count; ++i) {
         nsCOMPtr<nsIDocShell> shell = do_QueryInterface(ChildAt(i));
         if (shell) {
             static_cast<nsDocShell*>(shell.get())->
@@ -3404,8 +3404,8 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
 
     mTreeOwner = aTreeOwner;    // Weak reference per API
 
-    int32_t i, n = mChildList.Count();
-    for (i = 0; i < n; i++) {
+    uint32_t n = mChildList.Length();
+    for (uint32_t i = 0; i < n; i++) {
         nsCOMPtr<nsIDocShellTreeItem> child = do_QueryInterface(ChildAt(i));
         NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
         int32_t childType = ~mItemType; // Set it to not us in case the get fails
@@ -3446,7 +3446,7 @@ NS_IMETHODIMP
 nsDocShell::GetChildCount(int32_t * aChildCount)
 {
     NS_ENSURE_ARG_POINTER(aChildCount);
-    *aChildCount = mChildList.Count();
+    *aChildCount = mChildList.Length();
     return NS_OK;
 }
 
@@ -3481,7 +3481,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     
     nsresult res = AddChildLoader(childAsDocLoader);
     NS_ENSURE_SUCCESS(res, res);
-    NS_ASSERTION(mChildList.Count() > 0,
+    NS_ASSERTION(!mChildList.IsEmpty(),
                  "child list must not be empty after a successful add");
 
     nsCOMPtr<nsIDocShellHistory> docshellhistory = do_QueryInterface(aChild);
@@ -3496,7 +3496,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
         }
     }
     nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
-    childDocShell->SetChildOffset(dynamic ? -1 : mChildList.Count() - 1);
+    childDocShell->SetChildOffset(dynamic ? -1 : mChildList.Length() - 1);
 
     /* Set the child's global history if the parent has one */
     if (mUseGlobalHistory) {
@@ -3599,7 +3599,7 @@ nsDocShell::GetChildAt(int32_t aIndex, nsIDocShellTreeItem ** aChild)
     if (aIndex < 0) {
       NS_WARNING("Negative index passed to GetChildAt");
     }
-    else if (aIndex >= mChildList.Count()) {
+    else if (aIndex >= mChildList.Length()) {
       NS_WARNING("Too large an index passed to GetChildAt");
     }
 #endif
@@ -3626,8 +3626,8 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
         return NS_OK;
 
     nsXPIDLString childName;
-    int32_t i, n = mChildList.Count();
-    for (i = 0; i < n; i++) {
+    uint32_t n = mChildList.Length();
+    for (uint32_t i = 0; i < n; i++) {
         nsCOMPtr<nsIDocShellTreeItem> child = do_QueryInterface(ChildAt(i));
         NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
         int32_t childType;
@@ -4678,9 +4678,8 @@ nsDocShell::Stop(uint32_t aStopFlags)
         Stop();
     }
 
-    int32_t n;
-    int32_t count = mChildList.Count();
-    for (n = 0; n < count; n++) {
+    uint32_t count = mChildList.Length();
+    for (uint32_t n = 0; n < count; n++) {
         nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(ChildAt(n)));
         if (shellAsNav)
             shellAsNav->Stop(aStopFlags);
@@ -5293,8 +5292,8 @@ nsDocShell::SetIsActive(bool aIsActive)
 
   // Recursively tell all of our children, but don't tell <iframe mozbrowser>
   // children; they handle their state separately.
-  int32_t n = mChildList.Count();
-  for (int32_t i = 0; i < n; ++i) {
+  uint32_t n = mChildList.Length();
+  for (uint32_t i = 0; i < n; ++i) {
       nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(ChildAt(i));
       if (!docshell) {
           continue;
@@ -6216,9 +6215,8 @@ nsDocShell::SuspendRefreshURIs()
     }
 
     // Suspend refresh URIs for our child shells as well.
-    int32_t n = mChildList.Count();
-
-    for (int32_t i = 0; i < n; ++i) {
+    uint32_t n = mChildList.Length();
+    for (uint32_t i = 0; i < n; ++i) {
         nsCOMPtr<nsIDocShell> shell = do_QueryInterface(ChildAt(i));
         if (shell)
             shell->SuspendRefreshURIs();
@@ -6233,9 +6231,8 @@ nsDocShell::ResumeRefreshURIs()
     RefreshURIFromQueue();
 
     // Resume refresh URIs for our child shells as well.
-    int32_t n = mChildList.Count();
-
-    for (int32_t i = 0; i < n; ++i) {
+    uint32_t n = mChildList.Length();
+    for (uint32_t i = 0; i < n; ++i) {
         nsCOMPtr<nsIDocShell> shell = do_QueryInterface(ChildAt(i));
         if (shell)
             shell->ResumeRefreshURIs();
@@ -7212,8 +7209,8 @@ nsDocShell::CaptureState()
     // Capture the docshell hierarchy.
     mOSHE->ClearChildShells();
 
-    int32_t childCount = mChildList.Count();
-    for (int32_t i = 0; i < childCount; ++i) {
+    uint32_t childCount = mChildList.Length();
+    for (uint32_t i = 0; i < childCount; ++i) {
         nsCOMPtr<nsIDocShellTreeItem> childShell = do_QueryInterface(ChildAt(i));
         NS_ASSERTION(childShell, "null child shell");
 
@@ -7281,8 +7278,8 @@ nsDocShell::BeginRestore(nsIContentViewer *aContentViewer, bool aTop)
 nsresult
 nsDocShell::BeginRestoreChildren()
 {
-    int32_t n = mChildList.Count();
-    for (int32_t i = 0; i < n; ++i) {
+    uint32_t n = mChildList.Length();
+    for (uint32_t i = 0; i < n; ++i) {
         nsCOMPtr<nsIDocShell> child = do_QueryInterface(ChildAt(i));
         if (child) {
             nsresult rv = child->BeginRestore(nullptr, false);
@@ -7298,8 +7295,8 @@ nsDocShell::FinishRestore()
     // First we call finishRestore() on our children.  In the simulated load,
     // all of the child frames finish loading before the main document.
 
-    int32_t n = mChildList.Count();
-    for (int32_t i = 0; i < n; ++i) {
+    uint32_t n = mChildList.Length();
+    for (uint32_t i = 0; i < n; ++i) {
         nsCOMPtr<nsIDocShell> child = do_QueryInterface(ChildAt(i));
         if (child) {
             child->FinishRestore();
@@ -7803,8 +7800,8 @@ nsDocShell::RestoreFromHistory()
 
     // Meta-refresh timers have been restarted for this shell, but not
     // for our children.  Walk the child shells and restart their timers.
-    int32_t n = mChildList.Count();
-    for (i = 0; i < n; ++i) {
+    uint32_t n = mChildList.Length();
+    for (uint32_t i = 0; i < n; ++i) {
         nsCOMPtr<nsIDocShell> child = do_QueryInterface(ChildAt(i));
         if (child)
             child->ResumeRefreshURIs();
@@ -10814,8 +10811,8 @@ nsDocShell::WalkHistoryEntries(nsISHEntry *aRootEntry,
             // Walk the children of aRootShell and see if one of them
             // has srcChild as a SHEntry.
 
-            int32_t childCount = aRootShell->mChildList.Count();
-            for (int32_t j = 0; j < childCount; ++j) {
+            uint32_t childCount = aRootShell->mChildList.Length();
+            for (uint32_t j = 0; j < childCount; ++j) {
                 nsDocShell *child =
                     static_cast<nsDocShell*>(aRootShell->ChildAt(j));
 
