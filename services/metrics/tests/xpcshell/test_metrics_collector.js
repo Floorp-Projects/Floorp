@@ -30,6 +30,7 @@ add_task(function test_register_provider() {
   yield collector.registerProvider(dummy);
   do_check_eq(collector._providers.size, 1);
   do_check_eq(collector.providerErrors.size, 1);
+  do_check_eq(collector.getProvider(dummy.name), dummy);
 
   let failed = false;
   try {
@@ -44,6 +45,7 @@ add_task(function test_register_provider() {
 
   collector.unregisterProvider(dummy.name);
   do_check_eq(collector._providers.size, 0);
+  do_check_null(collector.getProvider(dummy.name));
 
   yield storage.close();
 });
