@@ -1,0 +1,83 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsIDOMNode;
+
+/**
+ * nsISessionStore keeps track of the current browsing state.
+ *
+ * The nsISessionStore API operates mostly on browser windows and the browser
+ * tabs contained in them.
+ */
+
+[scriptable, uuid(766a09c1-d21b-4bf8-9fe3-8b34b716251a)]
+interface nsISessionStore : nsISupports
+{
+  /**
+   * Get the current browsing state.
+   * @returns a JSON string representing the session state.
+   */
+  AString getBrowserState();
+
+  /**
+   * Get the number of restore-able tabs for a browser window
+   */
+  unsigned long getClosedTabCount(in nsIDOMWindow aWindow);
+
+  /**
+   * Get closed tab data
+   *
+   * @param aWindow is the browser window for which to get closed tab data
+   * @returns a JSON string representing the list of closed tabs.
+   */
+  AString getClosedTabData(in nsIDOMWindow aWindow);
+
+  /**
+   * @param aWindow is the browser window to reopen a closed tab in.
+   * @param aIndex  is the index of the tab to be restored (FIFO ordered).
+   * @returns a reference to the reopened tab.
+   */
+  nsIDOMNode undoCloseTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
+
+  /**
+   * @param aWindow is the browser window associated with the closed tab.
+   * @param aIndex  is the index of the closed tab to be removed (FIFO ordered).
+   */
+  nsIDOMNode forgetClosedTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
+
+  /**
+   * @param aTab is the browser tab to get the value for.
+   * @param aKey is the value's name.
+   * 
+   * @returns A string value or an empty string if none is set.
+   */
+  AString getTabValue(in nsIDOMNode aTab, in AString aKey);
+
+  /**
+   * @param aTab         is the browser tab to set the value for.
+   * @param aKey         is the value's name.
+   * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
+   */
+  void setTabValue(in nsIDOMNode aTab, in AString aKey, in AString aStringValue);
+
+  /**
+   * @param aTab is the browser tab to get the value for.
+   * @param aKey is the value's name.
+   */
+  void deleteTabValue(in nsIDOMNode aTab, in AString aKey);
+
+  /**
+   * @returns A boolean indicating we should restore previous browser session
+   */
+  boolean shouldRestore();
+
+  /**
+   * Restores the previous browser session using a fast, lightweight strategy
+   * @param aBringToFront should a restored tab be brought to the foreground?
+   */
+  void restoreLastSession(in boolean aBringToFront);
+};

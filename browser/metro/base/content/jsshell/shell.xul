@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="jsshell"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        contenttitlesetting="true"
+        title="Debug JSShell"
+        width="600"
+        height="400"
+        persist="width height screenX screenY">
+  <browser id="content" flex="1" type="content-primary" src="chrome://browser/content/shell.html"/>
+</window>

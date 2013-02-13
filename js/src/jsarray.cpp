@@ -2052,7 +2052,7 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
         HandleValue v = HandleValue::fromMarkedLocation(&p[i]);
         if (v.isObject()) {
             RootedObject obj(cx, &v.toObject());
-            if (ObjectClassIs(*obj, ESClass_Array, cx)) {
+            if (ObjectClassIs(obj, ESClass_Array, cx)) {
                 uint32_t alength;
                 if (!GetLengthProperty(cx, obj, &alength))
                     return false;

@@ -8,9 +8,11 @@
 #ifndef _ACCESSIBLE_TABLECELL_H
 #define _ACCESSIBLE_TABLECELL_H
 
-#include "nsISupports.h"
-
 #include "AccessibleTableCell.h"
+
+namespace mozilla {
+namespace a11y {
+class TableCellAccessible;
 
 class ia2AccessibleTableCell : public IAccessibleTableCell
 {
@@ -54,8 +56,14 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_isSelected(
       /* [out, retval] */ boolean *isSelected);
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
+protected:
+  ia2AccessibleTableCell(TableCellAccessible* aTableCell) :
+    mTableCell(aTableCell) {}
+
+  TableCellAccessible* mTableCell;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

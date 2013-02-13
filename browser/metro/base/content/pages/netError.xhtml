@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % netErrorDTD
+    SYSTEM "chrome://global/locale/netError.dtd">
+  %netErrorDTD;
+  <!ENTITY % globalDTD
+    SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta name="viewport" content="width=device-width; user-scalable=false;" /> 
+    <title>&loadError.label;</title>
+    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
+    <!-- If the location of the favicon is changed here, the FAVICON_ERRORPAGE_URL symbol in
+         toolkit/components/places/src/nsFaviconService.h should be updated. -->
+    <link rel="icon" type="image/png" id="favicon" href="chrome://global/skin/icons/warning-16.png"/>
+
+    <script type="application/javascript"><![CDATA[
+      // Error url MUST be formatted like this:
+      //   moz-neterror:page?e=error&u=url&d=desc
+      //
+      // or optionally, to specify an alternate CSS class to allow for
+      // custom styling and favicon:
+      //
+      //   moz-neterror:page?e=error&u=url&s=classname&d=desc
+
+      // Note that this file uses document.documentURI to get
+      // the URL (with the format from above). This is because
+      // document.location.href gets the current URI off the docshell,
+      // which is the URL displayed in the location bar, i.e.
+      // the URI that the user attempted to load.
+
+      function getErrorCode()
+      {
+        var url = document.documentURI;
+        var error = url.search(/e\=/);
+        var duffUrl = url.search(/\&u\=/);
+        return decodeURIComponent(url.slice(error + 2, duffUrl));
+      }
+
+      function getCSSClass()
+      {
+        var url = document.documentURI;
+        var matches = url.match(/s\=([^&]+)\&/);
+        // s is optional, if no match just return nothing
+        if (!matches || matches.length < 2)
+          return "";
+
+        // parenthetical match is the second entry
+        return decodeURIComponent(matches[1]);
+      }
+
+      function getDescription()
+      {
+        var url = document.documentURI;
+        var desc = url.search(/d\=/);
+
+        // desc == -1 if not found; if so, return an empty string
+        // instead of what would turn out to be portions of the URI
+        if (desc == -1)
+          return "";
+
+        return decodeURIComponent(url.slice(desc + 2));
+      }
+
+      function retryThis(buttonEl)
+      {
+        // Note: The application may wish to handle switching off "offline mode"
+        // before this event handler runs, but using a capturing event handler.
+
+        // Session history has the URL of the page that failed
+        // to load, not the one of the error page. So, just call
+        // reload(), which will also repost POST data correctly.
+        try {
+          location.reload();
+        } catch (e) {
+          // We probably tried to reload a URI that caused an exception to
+          // occur;  e.g. a nonexistent file.
+        }
+
+        buttonEl.disabled = true;
+      }
+
+      function initPage()
+      {
+        var err = getErrorCode();
+        
+        // if it's an unknown error or there's no title or description
+        // defined, get the generic message
+        var errTitle = document.getElementById("et_" + err);
+        var errDesc  = document.getElementById("ed_" + err);
+        if (!errTitle || !errDesc)
+        {
+          errTitle = document.getElementById("et_generic");
+          errDesc  = document.getElementById("ed_generic");
+        }
+
+        var title = document.getElementsByClassName("errorTitleText")[0];
+        if (title)
+        {
+          title.parentNode.replaceChild(errTitle, title);
+          // change id to the replaced child's id so styling works
+          errTitle.classList.add("errorTitleText");
+        }
+
+        var sd = document.getElementById("errorShortDescText");
+        if (sd)
+          sd.textContent = getDescription();
+
+        var ld = document.getElementById("errorLongDesc");
+        if (ld)
+        {
+          ld.parentNode.replaceChild(errDesc, ld);
+          // change id to the replaced child's id so styling works
+          errDesc.id = "errorLongDesc";
+        }
+
+        // remove undisplayed errors to avoid bug 39098
+        var errContainer = document.getElementById("errorContainer");
+        errContainer.parentNode.removeChild(errContainer);
+
+        var className = getCSSClass();
+        if (className && className != "expertBadCert") {
+          // Associate a CSS class with the root of the page, if one was passed in,
+          // to allow custom styling.
+          // Not "expertBadCert" though, don't want to deal with the favicon
+          document.documentElement.className = className;
+
+          // Also, if they specified a CSS class, they must supply their own
+          // favicon.  In order to trigger the browser to repaint though, we
+          // need to remove/add the link element. 
+          var favicon = document.getElementById("favicon");
+          var faviconParent = favicon.parentNode;
+          faviconParent.removeChild(favicon);
+          favicon.setAttribute("href", "chrome://global/skin/icons/" + className + "_favicon.png");
+          faviconParent.appendChild(favicon);
+        }
+        if (className == "expertBadCert") {
+          showSecuritySection();
+        }
+
+        if (err == "remoteXUL") {
+          // Remove the "Try again" button for remote XUL errors given that
+          // it is useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+        }
+
+        if (err == "cspFrameAncestorBlocked") {
+          // Remove the "Try again" button for CSP frame ancestors violation, since it's
+          // almost certainly useless. (Bug 553180)
+          document.getElementById("errorTryAgain").style.display = "none";
+        }
+
+        if (err == "nssBadCert") {
+          // Remove the "Try again" button for security exceptions, since it's
+          // almost certainly useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+          document.getElementById("errorPage").setAttribute("class", "certerror");
+          addDomainErrorLink();
+        }
+        else {
+          // Remove the override block for non-certificate errors.  CSS-hiding
+          // isn't good enough here, because of bug 39098
+          var secOverride = document.getElementById("securityOverrideDiv");
+          secOverride.parentNode.removeChild(secOverride);
+        }
+      }
+      
+      function showSecuritySection() {
+        // Swap link out, content in
+        document.getElementById('securityOverrideContent').style.display = '';
+        document.getElementById('securityOverrideLink').style.display = 'none';
+      }
+      
+      /* In the case of SSL error pages about domain mismatch, see if
+         we can hyperlink the user to the correct site.  We don't want
+         to do this generically since it allows MitM attacks to redirect
+         users to a site under attacker control, but in certain cases
+         it is safe (and helpful!) to do so.  Bug 402210
+      */
+      function addDomainErrorLink() {
+        // Rather than textContent, we need to treat description as HTML
+        var sd = document.getElementById("errorShortDescText");
+        if (sd) {
+          var desc = getDescription();
+          
+          // sanitize description text - see bug 441169
+          
+          // First, find the index of the <a> tag we care about, being careful not to
+          // use an over-greedy regex
+          var re = /<a id="cert_domain_link" title="([^"]+)">/;
+          var result = re.exec(desc);
+          if(!result)
+            return;
+          
+          // Remove sd's existing children
+          sd.textContent = "";
+
+          // Everything up to the link should be text content
+          sd.appendChild(document.createTextNode(desc.slice(0, result.index)));
+          
+          // Now create the link itself
+          var anchorEl = document.createElement("a");
+          anchorEl.setAttribute("id", "cert_domain_link");
+          anchorEl.setAttribute("title", result[1]);
+          anchorEl.appendChild(document.createTextNode(result[1]));
+          sd.appendChild(anchorEl);
+          
+          // Finally, append text for anything after the closing </a>
+          sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length)));
+        }
+
+        var link = document.getElementById('cert_domain_link');
+        if (!link)
+          return;
+        
+        var okHost = link.getAttribute("title");
+        var thisHost = document.location.hostname;
+        var proto = document.location.protocol;
+
+        // If okHost is a wildcard domain ("*.example.com") let's
+        // use "www" instead.  "*.example.com" isn't going to
+        // get anyone anywhere useful. bug 432491
+        okHost = okHost.replace(/^\*\./, "www.");
+
+        /* case #1: 
+         * example.com uses an invalid security certificate.
+         *
+         * The certificate is only valid for www.example.com
+         *
+         * Make sure to include the "." ahead of thisHost so that
+         * a MitM attack on paypal.com doesn't hyperlink to "notpaypal.com"
+         *
+         * We'd normally just use a RegExp here except that we lack a
+         * library function to escape them properly (bug 248062), and
+         * domain names are famous for having '.' characters in them,
+         * which would allow spurious and possibly hostile matches.
+         */
+        if (endsWith(okHost, "." + thisHost))
+          link.href = proto + okHost;
+
+        /* case #2:
+         * browser.garage.maemo.org uses an invalid security certificate.
+         *
+         * The certificate is only valid for garage.maemo.org
+         */
+        if (endsWith(thisHost, "." + okHost))
+          link.href = proto + okHost;
+      }
+      
+      function endsWith(haystack, needle) {
+        return haystack.slice(-needle.length) == needle;
+      }
+
+    ]]></script>
+  </head>
+
+  <body id="errorPage" dir="&locale.dir;">
+
+    <!-- ERROR ITEM CONTAINER (removed during loading to avoid bug 39098) -->
+    <div id="errorContainer">
+      <div id="errorTitlesContainer">
+        <h1 id="et_generic">&generic.title;</h1>
+        <h1 id="et_dnsNotFound">&dnsNotFound.title;</h1>
+        <h1 id="et_fileNotFound">&fileNotFound.title;</h1>
+        <h1 id="et_malformedURI">&malformedURI.title;</h1>
+        <h1 id="et_protocolNotFound">&protocolNotFound.title;</h1>
+        <h1 id="et_connectionFailure">&connectionFailure.title;</h1>
+        <h1 id="et_netTimeout">&netTimeout.title;</h1>
+        <h1 id="et_redirectLoop">&redirectLoop.title;</h1>
+        <h1 id="et_unknownSocketType">&unknownSocketType.title;</h1>
+        <h1 id="et_netReset">&netReset.title;</h1>
+        <h1 id="et_notCached">&notCached.title;</h1>
+        <h1 id="et_netOffline">&netOffline.title;</h1>
+        <h1 id="et_netInterrupt">&netInterrupt.title;</h1>
+        <h1 id="et_deniedPortAccess">&deniedPortAccess.title;</h1>
+        <h1 id="et_proxyResolveFailure">&proxyResolveFailure.title;</h1>
+        <h1 id="et_proxyConnectFailure">&proxyConnectFailure.title;</h1>
+        <h1 id="et_contentEncodingError">&contentEncodingError.title;</h1>
+        <h1 id="et_unsafeContentType">&unsafeContentType.title;</h1>
+        <h1 id="et_nssFailure2">&nssFailure2.title;</h1>
+        <h1 id="et_nssBadCert">&nssBadCert.title;</h1>
+        <h1 id="et_cspFrameAncestorBlocked">&cspFrameAncestorBlocked.title;</h1>
+        <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
+        <h1 id="et_corruptedContentError">&corruptedContentError.title;</h1>
+      </div>
+      <div id="errorDescriptionsContainer">
+        <div id="ed_generic">&generic.longDesc;</div>
+        <div id="ed_dnsNotFound">&dnsNotFound.longDesc;</div>
+        <div id="ed_fileNotFound">&fileNotFound.longDesc;</div>
+        <div id="ed_malformedURI">&malformedURI.longDesc;</div>
+        <div id="ed_protocolNotFound">&protocolNotFound.longDesc;</div>
+        <div id="ed_connectionFailure">&connectionFailure.longDesc;</div>
+        <div id="ed_netTimeout">&netTimeout.longDesc;</div>
+        <div id="ed_redirectLoop">&redirectLoop.longDesc;</div>
+        <div id="ed_unknownSocketType">&unknownSocketType.longDesc;</div>
+        <div id="ed_netReset">&netReset.longDesc;</div>
+        <div id="ed_notCached">&notCached.longDesc;</div>
+        <div id="ed_netOffline">&netOffline.longDesc2;</div>
+        <div id="ed_netInterrupt">&netInterrupt.longDesc;</div>
+        <div id="ed_deniedPortAccess">&deniedPortAccess.longDesc;</div>
+        <div id="ed_proxyResolveFailure">&proxyResolveFailure.longDesc;</div>
+        <div id="ed_proxyConnectFailure">&proxyConnectFailure.longDesc;</div>
+        <div id="ed_contentEncodingError">&contentEncodingError.longDesc;</div>
+        <div id="ed_unsafeContentType">&unsafeContentType.longDesc;</div>
+        <div id="ed_nssFailure2">&nssFailure2.longDesc;</div>
+        <div id="ed_nssBadCert">&nssBadCert.longDesc2;</div>
+        <div id="ed_cspFrameAncestorBlocked">&cspFrameAncestorBlocked.longDesc;</div>
+        <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
+        <div id="ed_corruptedContentError">&corruptedContentError.longDesc;</div>
+      </div>
+    </div>
+
+    <!-- Error Title -->
+    <div id="errorTitle">
+      <h1 class="errorTitleText" />
+    </div>
+
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+    <div id="errorPageContainer">
+
+      <!-- LONG CONTENT (the section most likely to require scrolling) -->
+      <div id="errorLongContent">
+      
+        <!-- Short Description -->
+        <div id="errorShortDesc">
+          <p id="errorShortDescText" />
+        </div>
+
+        <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
+        <div id="errorLongDesc" />
+
+        <!-- Override section - For ssl errors only.  Removed on init for other
+             error types.  -->
+        <div id="securityOverrideDiv">
+          <a id="securityOverrideLink" href="javascript:showSecuritySection();" >&securityOverride.linkText;</a>
+          <div id="securityOverrideContent" style="display: none;">&securityOverride.warningContent;</div>
+        </div>
+      </div>
+
+      <!-- Retry Button -->
+      <button id="errorTryAgain" onclick="retryThis(this);">&retry.label;</button>
+
+    </div>
+
+    <!--
+    - Note: It is important to run the script this way, instead of using
+    - an onload handler. This is because error pages are loaded as
+    - LOAD_BACKGROUND, which means that onload handlers will not be executed.
+    -->
+    <script type="application/javascript">initPage();</script>
+
+  </body>
+</html>

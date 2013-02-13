@@ -24,7 +24,7 @@ enum ShutdownChecksMode {
   SCM_RECORD,
   SCM_NOTHING
 };
-extern ShutdownChecksMode ShutdownChecks;
+extern ShutdownChecksMode gShutdownChecks;
 
 void PoisonWrite();
 void DisableWritePoisoning();

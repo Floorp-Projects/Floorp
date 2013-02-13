@@ -1,0 +1,556 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="richgrid"
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
+
+    <content>
+      <html:div id="grid-div" anonid="grid" class="richgrid-grid">
+        <children/>
+      </html:div>
+    </content>
+
+    <implementation implements="nsIDOMXULSelectControlElement">
+      <property name="_grid" readonly="true" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'grid');"/>
+      <field name="controller">null</field>
+
+      <!-- nsIDOMXULMultiSelectControlElement (not fully implemented) -->
+
+      <method name="clearSelection">
+        <body>
+          <![CDATA[
+            // 'selection' and 'selected' are confusingly overloaded here
+            // as richgrid is adopting multi-select behavior, but select/selected are already being
+            // used to describe triggering the default action of a tile
+            if (this._selectedItem){
+              this._selectedItem.selected = false;
+              this._selectedItem = null;
+            }
+
+            for (let childItem of this.selectedItems) {
+              childItem.selected = false;
+            }
+            // reset context actions
+            this._contextActions = null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="toggleItemSelection">
+        <parameter name="anItem"/>
+        <body>
+          <![CDATA[
+            anItem.selected = !anItem.selected;
+            this._fireOnSelectionChange();
+          ]]>
+        </body>
+      </method>
+
+      <method name="selectItem">
+        <parameter name="anItem"/>
+        <body>
+          <![CDATA[
+            this.clearSelection();
+            this._selectedItem = anItem;
+            this._selectedItem.selected = true;
+
+            this._fireOnSelect();
+          ]]>
+        </body>
+      </method>
+
+      <method name="handleItemClick">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            if (this.controller)
+              this.controller.handleItemClick(aItem);
+          ]]>
+        </body>
+      </method>
+
+      <method name="handleItemContextMenu">
+        <parameter name="aItem"/>
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            // we'll republish this as a selectionchange event on the grid
+            aEvent.stopPropagation();
+            this.toggleItemSelection(aItem);
+          ]]>
+        </body>
+      </method>
+
+      <field name="_contextActions">null</field>
+      <property name="contextActions">
+        <getter>
+          <![CDATA[
+            // return the subset of verbs that apply to all selected tiles
+            // use cached list, it'll get cleared out when selection changes
+            if (this._contextActions) {
+              return this._contextActions;
+            }
+            let tileNodes = this.selectedItems;
+            if (!tileNodes.length) {
+              return new Set();
+            }
+
+            function cloneSet(aSet) {
+              let clone = new Set();
+              if (aSet) {
+                for (let item of aSet) {
+                  clone.add(item);
+                }
+              }
+              return clone;
+            }
+
+            // given one or more sets of values,
+            // return a set with only those values present in each
+            let initialItem = tileNodes[0];
+
+            let verbSet = cloneSet(initialItem.contextActions);
+            for (let i=1; i<tileNodes.length; i++){
+              let set = tileNodes[i].contextActions;
+              for (let item of verbSet) {
+                if (!set.has(item)){
+                  verbSet.delete(item);
+                }
+              }
+            }
+
+            this._contextActions = verbSet;
+            // returns Set
+            return this._contextActions;
+          ]]>
+        </getter>
+      </property>
+
+    <!-- nsIDOMXULSelectControlElement -->
+
+      <property name="itemCount" readonly="true" onget="return this.children.length;"/>
+
+      <field name="_selectedItem">null</field>
+      <property name="selectedItem" onget="return this._selectedItem;">
+        <setter>
+          <![CDATA[
+            this.selectItem(val);
+          ]]>
+        </setter>
+      </property>
+
+      <!-- partial implementation of multiple selection interface -->
+      <property name="selectedItems">
+        <getter>
+          <![CDATA[
+            return this.querySelectorAll("richgriditem[selected='true']");
+          ]]>
+        </getter>
+      </property>
+
+      <property name="selectedIndex">
+        <getter>
+          <![CDATA[
+            return this.getIndexOfItem(this._selectedItem);
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (val >= 0) {
+              let selected = this.getItemAtIndex(val);
+              this.selectItem(selected);
+            } else {
+              this.clearSelection();
+            }
+          ]]>
+        </setter>
+      </property>
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            let addition = this._createItemElement(aLabel, aValue);
+            this.appendChild(addition);
+            this.arrangeItems();
+            return addition;
+          ]]>
+        </body>
+      </method>
+
+      <method name="insertItemAt">
+        <parameter name="anIndex"/>
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            let existing = this.getItemAtIndex(anIndex);
+            let addition = this._createItemElement(aLabel, aValue);
+            if (existing) {
+              this.insertBefore(addition, existing);
+            } else {
+              this.appendChild(addition);
+            }
+            this.arrangeItems();
+            return addition;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeItemAt">
+        <parameter name="anIndex"/>
+        <body>
+          <![CDATA[
+            let removal = this.getItemAtIndex(anIndex);
+            this.removeChild(removal);
+            this.arrangeItems();
+            return removal;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getIndexOfItem">
+        <parameter name="anItem"/>
+        <body>
+          <![CDATA[
+            if (!anItem)
+              return -1;
+
+            return Array.prototype.indexOf.call(this.children, anItem);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getItemAtIndex">
+        <parameter name="anIndex"/>
+        <body>
+          <![CDATA[
+            if (!this._isIndexInBounds(anIndex))
+              return null;
+            return this.children.item(anIndex);
+          ]]>
+        </body>
+      </method>
+
+    <!-- Interface for offsetting selection and checking bounds -->
+
+      <property name="isSelectionAtStart" readonly="true"
+                onget="return this.selectedIndex == 0;"/>
+
+      <property name="isSelectionAtEnd" readonly="true"
+                onget="return this.selectedIndex == (this.itemCount - 1);"/>
+
+      <property name="isSelectionInStartRow" readonly="true">
+        <getter>
+          <![CDATA[
+            return this.selectedIndex < this.columnCount;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="isSelectionInEndRow" readonly="true">
+        <getter>
+          <![CDATA[
+            let lowerBound = (this.rowCount - 1) * this.columnCount;
+            let higherBound = this.rowCount * this.columnCount;
+
+            return this.selectedIndex >= lowerBound &&
+                   this.selectedIndex < higherBound;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="offsetSelection">
+        <parameter name="aOffset"/>
+        <body>
+          <![CDATA[
+            let newIndex = this.selectedIndex + aOffset;
+            if (this._isIndexInBounds(newIndex))
+              this.selectedIndex = newIndex;
+          ]]>
+        </body>
+      </method>
+
+      <method name="offsetSelectionByRow">
+        <parameter name="aRowOffset"/>
+        <body>
+          <![CDATA[
+            let newIndex = this.selectedIndex + (this.columnCount * aRowOffset);
+            if (this._isIndexInBounds(newIndex))
+              this.selectedIndex -= this.columnCount;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Interface for grid layout management -->
+
+      <field name="_rowCount">0</field>
+      <property name="rowCount" readonly="true" onget="return this._rowCount;"/>
+
+      <field name="_columnCount">0</field>
+      <property name="columnCount" readonly="true" onget="return this._columnCount;"/>
+
+      <field name="_scheduledArrangeItemsTries">0</field>
+
+      <!--  define a height where we consider an item not yet rendered
+            10 is the height of the empty item (padding/border etc. only) -->
+      <field name="_itemHeightRenderThreshold">10</field>
+
+      <method name="arrangeItems">
+        <parameter name="aNumRows"/>
+        <parameter name="aNumColumns"/>
+        <body>
+          <![CDATA[
+            if (this.itemCount <= 0)
+              return;
+            let item = this.getItemAtIndex(0);
+            if (item == null)
+              return;
+            let gridItemRect = item.getBoundingClientRect();
+
+            // cap the number of times we reschedule calling arrangeItems
+            let maxRetries = 5;
+
+            // delay as necessary until the item has a proper height
+            if (gridItemRect.height <= this._itemHeightRenderThreshold) {
+              if (this._scheduledArrangeItemsTimerId) {
+                // retry of arrangeItems already scheduled
+                return;
+              }
+
+              // track how many times we've attempted arrangeItems
+              this._scheduledArrangeItemsTries++;
+
+              if (maxRetries > this._scheduledArrangeItemsTries) {
+                // schedule re-try of arrangeItems at the next tick
+                this._scheduledArrangeItemsTimerId = setTimeout(this.arrangeItems.bind(this), 0);
+                return;
+              }
+            }
+
+            // items ready to arrange (or retries max exceeded)
+            // reset the flags
+            if (this._scheduledArrangeItemsTimerId) {
+              clearTimeout(this._scheduledArrangeItemsTimerId);
+              delete this._scheduledArrangeItemsTimerId;
+            }
+            if (this._scheduledArrangeItemsTries) {
+              this._scheduledArrangeItemsTries = 0;
+            }
+
+            // Autocomplete is a binding within a binding, so we have to step
+            // up an additional parentNode.
+            let container = null;
+            if (this.parentNode.id == "results-vbox" ||
+                this.parentNode.id == "searches-vbox")
+              container = this.parentNode.parentNode.getBoundingClientRect();
+            else
+              container = this.parentNode.getBoundingClientRect();
+
+            // If we don't have valid dimensions we can't arrange yet
+            if (!container.height || !gridItemRect.height)
+              return;
+
+            // We favor overflowing horizontally, not vertically
+            let maxRowCount = Math.floor(container.height / gridItemRect.height) - 1;
+
+            if (aNumRows) {
+              this._rowCount = aNumRows;
+            } else {
+              this._rowCount = Math.min(this.itemCount, maxRowCount);
+            }
+            if (aNumColumns) {
+              this._columnCount = aNumColumns;
+            } else {
+              this._columnCount = Math.ceil(this.itemCount / this._rowCount);
+            }
+
+            this._grid.style.width = (this._columnCount * gridItemRect.width) + "px";
+          ]]>
+        </body>
+      </method>
+
+      <!-- Inteface to suppress selection events -->
+
+      <field name="_suppressOnSelect"/>
+      <property name="suppressOnSelect"
+                  onget="return this.getAttribute('suppressonselect') == 'true';"
+                  onset="this.setAttribute('suppressonselect', val);"/>
+
+    <!-- Internal methods -->
+
+      <constructor>
+        <![CDATA[
+          if (this.controller && this.controller.gridBoundCallback != undefined)
+            this.controller.gridBoundCallback();
+
+          // XXX This event was never actually implemented (bug 223411).
+          var event = document.createEvent("Events");
+          event.initEvent("contentgenerated", true, true);
+          this.dispatchEvent(event);
+        ]]>
+      </constructor>
+
+        <method name="_isIndexInBounds">
+        <parameter name="anIndex"/>
+        <body>
+          <![CDATA[
+            return anIndex >= 0 && anIndex < this.itemCount;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_createItemElement">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            let item = this.ownerDocument.createElement("richgriditem");
+            item.control = this;
+            item.setAttribute("label", aLabel);
+            if (aValue)
+              item.setAttribute("value", aValue);
+
+            // copy over the richgrid's data-contextactions as each child is created
+            if (this.hasAttribute("data-contextactions")) {
+              item.setAttribute("data-contextactions", this.getAttribute("data-contextactions"));
+            }
+            return item;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_fireOnSelect">
+        <body>
+          <![CDATA[
+            if (this.suppressOnSelect || this._suppressOnSelect)
+              return;
+
+            var event = document.createEvent("Events");
+            event.initEvent("select", true, true);
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+      <method name="_fireOnSelectionChange">
+        <body>
+          <![CDATA[
+            // flush out selection-related cached properties so they get recalc'd next time
+            this._contextActions = null;
+
+            // fire an event?
+            if (this.suppressOnSelect || this._suppressOnSelect)
+              return;
+
+            var event = document.createEvent("Events");
+            event.initEvent("selectionchange", true, true);
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
+  <binding id="richgrid-item">
+    <content>
+      <xul:vbox anonid="anon-richgrid-item" class="richgrid-item-content">
+        <xul:hbox class="richgrid-icon-container">
+          <xul:box class="richgrid-icon-box"><xul:image xbl:inherits="src=iconURI"/></xul:box>
+          <xul:box flex="1" />
+        </xul:hbox>
+        <xul:description xbl:inherits="value=label" crop="end"/>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <property name="_box" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item');"/>
+      <property name="color" onset="this._color = val; this.setColor();" onget="return this._color;"/>
+      <property name="selected"
+                onget="return this.getAttribute('selected') == 'true';"
+                onset="this.setAttribute('selected', val);"/>
+
+      <constructor>
+        <![CDATA[
+          // Bindings don't get bound until the item is displayed,
+          // so we have to reset the background color when we get
+          // created.
+          this.setColor();
+        ]]>
+      </constructor>
+
+      <property name="control">
+        <getter><![CDATA[
+          var parent = this.parentNode;
+          while (parent) {
+            if (parent instanceof Components.interfaces.nsIDOMXULSelectControlElement)
+              return parent;
+            parent = parent.parentNode;
+          }
+          return null;
+        ]]></getter>
+      </property>
+
+      <method name="setColor">
+        <body>
+          <![CDATA[
+            if (this.color != undefined) {
+              this._box.parentNode.setAttribute("customColorPresent", "true");
+              this._box.style.backgroundColor = this.color;
+            } else {
+              this._box.parentNode.removeAttribute("customColorPresent");
+            }
+          ]]>
+        </body>
+      </method>
+
+      <field name="_contextActions">null</field>
+      <property name="contextActions">
+        <getter>
+          <![CDATA[
+            if(!this._contextActions) {
+              this._contextActions = new Set();
+              let actionSet = this._contextActions;
+              let actions = this.getAttribute("data-contextactions");
+              if (actions) {
+                actions.split(/[,\s]+/).forEach(function(verb){
+                  actionSet.add(verb);
+                });
+              }
+            }
+            return this._contextActions;
+          ]]>
+        </getter>
+      </property>
+
+    </implementation>
+
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+          // left-click/touch handler
+          this.control.handleItemClick(this, event);
+        ]]>
+      </handler>
+      <handler event="contextmenu">
+        <![CDATA[
+          // fires for right-click, long-click and (keyboard) contextmenu input
+          // TODO: handle cross-slide event when it becomes available,
+          // .. using contextmenu is a stop-gap measure to allow us to
+          // toggle the selected state of tiles in a grid
+          this.control.handleItemContextMenu(this, event);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>

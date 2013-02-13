@@ -1713,12 +1713,12 @@ static bool
 DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
         DoMatchCallback callback, void *data, MatchControlFlags flags, MutableHandleValue rval)
 {
-    Rooted<JSStableString*> stableStr(cx, str->ensureStable(cx));
-    if (!stableStr)
+    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    if (!linearStr)
         return false;
 
-    StableCharPtr chars = stableStr->chars();
-    size_t charsLen = stableStr->length();
+    const jschar *chars = linearStr->chars();
+    size_t charsLen = linearStr->length();
 
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
 
@@ -1737,8 +1737,8 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
                 break;
             }
 
-            res->updateFromMatchPairs(cx, stableStr, matches);
-            if (!isTest && !CreateRegExpMatchResult(cx, stableStr, matches, rval))
+            res->updateFromMatchPairs(cx, linearStr, matches);
+            if (!isTest && !CreateRegExpMatchResult(cx, linearStr, matches, rval))
                 return false;
 
             if (!callback(cx, res, count, data))
@@ -1761,12 +1761,12 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
             return true;
         }
 
-        res->updateFromMatchPairs(cx, stableStr, matches);
+        res->updateFromMatchPairs(cx, linearStr, matches);
 
         if (isTest) {
             rval.setBoolean(true);
         } else {
-            if (!CreateRegExpMatchResult(cx, stableStr, matches, rval))
+            if (!CreateRegExpMatchResult(cx, linearStr, matches, rval))
                 return false;
         }
 
@@ -1885,12 +1885,12 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
     if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
-    Rooted<JSStableString*> stableStr(cx, str->ensureStable(cx));
-    if (!stableStr)
+    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    if (!linearStr)
         return false;
 
-    StableCharPtr chars = stableStr->chars();
-    size_t length = stableStr->length();
+    const jschar *chars = linearStr->chars();
+    size_t length = linearStr->length();
     RegExpStatics *res = cx->regExpStatics();
 
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
@@ -1902,7 +1902,7 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     if (status == RegExpRunStatus_Success)
-        res->updateLazily(cx, stableStr, &g.regExp(), 0);
+        res->updateLazily(cx, linearStr, &g.regExp(), 0);
 
     JS_ASSERT_IF(status == RegExpRunStatus_Success_NotFound, match.start == -1);
     args.rval().setInt32(match.start);
@@ -2408,7 +2408,7 @@ str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExp
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
 
-        RegExpRunStatus status = re.executeMatchOnly(cx, chars, charsLen, &startIndex, match);
+        RegExpRunStatus status = re.executeMatchOnly(cx, chars.get(), charsLen, &startIndex, match);
         if (status == RegExpRunStatus_Error)
             return false;
         if (status == RegExpRunStatus_Success_NotFound)
@@ -2646,11 +2646,9 @@ js::str_replace(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         /* We're about to store pointers into the middle of our string. */
-        JSStableString *stable = rdata.repstr->ensureStable(cx);
-        if (!stable)
-            return false;
-        rdata.dollarEnd = stable->chars().get() + stable->length();
-        rdata.dollar = js_strchr_limit(stable->chars().get(), '$', rdata.dollarEnd);
+        JSLinearString *linear = rdata.repstr;
+        rdata.dollarEnd = linear->chars() + linear->length();
+        rdata.dollar = js_strchr_limit(linear->chars(), '$', rdata.dollarEnd);
     }
 
     rdata.fig.initFunction(ObjectOrNullValue(rdata.lambda));
@@ -2718,7 +2716,7 @@ class SplitMatchResult {
 
 template<class Matcher>
 static JSObject *
-SplitHelper(JSContext *cx, Handle<JSStableString*> str, uint32_t limit, const Matcher &splitMatch,
+SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Matcher &splitMatch,
             Handle<TypeObject*> type)
 {
     size_t strLength = str->length();
@@ -2861,11 +2859,11 @@ class SplitRegExpMatcher
 
     static const bool returnsCaptures = true;
 
-    bool operator()(JSContext *cx, Handle<JSStableString*> str, size_t index,
+    bool operator()(JSContext *cx, Handle<JSLinearString*> str, size_t index,
                     SplitMatchResult *result) const
     {
         AssertCanGC();
-        StableCharPtr chars = str->chars();
+        const jschar *chars = str->chars();
         size_t length = str->length();
 
         ScopedMatchPairs matches(&cx->tempLifoAlloc());
@@ -2976,18 +2974,18 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setObject(*aobj);
         return true;
     }
-    Rooted<JSStableString*> stableStr(cx, str->ensureStable(cx));
-    if (!stableStr)
+    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    if (!linearStr)
         return false;
 
     /* Steps 11-15. */
     RootedObject aobj(cx);
     if (!re.initialized()) {
         SplitStringMatcher matcher(cx, sepstr);
-        aobj = SplitHelper(cx, stableStr, limit, matcher, type);
+        aobj = SplitHelper(cx, linearStr, limit, matcher, type);
     } else {
         SplitRegExpMatcher matcher(*re, cx->regExpStatics());
-        aobj = SplitHelper(cx, stableStr, limit, matcher, type);
+        aobj = SplitHelper(cx, linearStr, limit, matcher, type);
     }
     if (!aobj)
         return false;
@@ -3691,14 +3689,14 @@ js::ValueToSource(JSContext *cx, const Value &v)
         return ToString<CanGC>(cx, v);
     }
 
-    Value rval = NullValue();
+    RootedValue rval(cx, NullValue());
     RootedValue fval(cx);
     RootedId id(cx, NameToId(cx->names().toSource));
     Rooted<JSObject*> obj(cx, &v.toObject());
     if (!GetMethod(cx, obj, id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
-        if (!Invoke(cx, ObjectValue(*obj), fval, 0, NULL, &rval))
+        if (!Invoke(cx, ObjectValue(*obj), fval, 0, NULL, rval.address()))
             return NULL;
     }
 

@@ -169,17 +169,17 @@ debug_printf(const char *format, ...)
 #endif
 
 DataChannelConnection::DataChannelConnection(DataConnectionListener *listener) :
-   mLock("netwerk::sctp::DataChannel")
+   mLock("netwerk::sctp::DataChannelConnection")
 {
   mState = CLOSED;
   mSocket = nullptr;
   mMasterSocket = nullptr;
-  mListener = listener;
+  mListener = listener->asWeakPtr();
   mLocalPort = 0;
   mRemotePort = 0;
   mDeferTimeout = 10;
   mTimerRunning = false;
-  LOG(("Constructor DataChannelConnection=%p, listener=%p", this, mListener));
+  LOG(("Constructor DataChannelConnection=%p, listener=%p", this, mListener.get()));
 }
 
 DataChannelConnection::~DataChannelConnection()
@@ -207,6 +207,7 @@ DataChannelConnection::Destroy()
   // create a dependant Internal object that would remain around
   // until the network shut down the association or timed out.
   LOG(("Destroying DataChannelConnection %p", (void *) this));
+  MOZ_ASSERT(NS_IsMainThread());
   CloseAll();
 
   if (mSocket && mSocket != mMasterSocket)
@@ -2005,7 +2006,7 @@ DataChannelConnection::SendBinary(DataChannel *channel, const char *data,
       sent += SendMsgInternal(channel, data, sendlen, ppid);
       data += sendlen;
     }
-    LOG(("Sent %d buffers for %u bytes, %d sent immediately, % buffers queued",
+    LOG(("Sent %d buffers for %u bytes, %d sent immediately, %d buffers queued",
          (origlen+DATA_CHANNEL_MAX_BINARY_FRAGMENT-1)/DATA_CHANNEL_MAX_BINARY_FRAGMENT,
          origlen, sent,
          channel->mBufferedData.Length()));
@@ -2163,7 +2164,7 @@ DataChannel::Destroy()
 void
 DataChannel::SetListener(DataChannelListener *aListener, nsISupports *aContext)
 {
-  MOZ_ASSERT(!mListener); // only should be set once, avoids races w/o locking
+  MutexAutoLock mLock(mListenerLock);
   mContext = aContext;
   mListener = aListener;
 }

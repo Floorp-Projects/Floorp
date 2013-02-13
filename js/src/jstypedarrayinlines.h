@@ -216,8 +216,8 @@ DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)
     jsbytecode *pc;
     JSScript *script = cx->stack.currentScript(&pc);
     if (!proto && byteLength >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH)
-        return types::UseNewTypeForInitializer(cx, script, pc, &DataViewClass);
-    return GenericObject;
+        return SingletonObject;
+    return types::UseNewTypeForInitializer(cx, script, pc, &DataViewClass);
 }
 
 inline DataViewObject *

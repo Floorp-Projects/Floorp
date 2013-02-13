@@ -371,6 +371,8 @@ int nr_ice_ctx_destroy(nr_ice_ctx **ctxp)
     if(!ctxp || !*ctxp)
       return(0);
 
+    (*ctxp)->done_cb=0;
+
     NR_ASYNC_SCHEDULE(nr_ice_ctx_destroy_cb,*ctxp);
 
     *ctxp=0;
@@ -390,7 +392,12 @@ void nr_ice_initialize_finished_cb(NR_SOCKET s, int h, void *cb_arg)
     if(ctx->uninitialized_candidates==0){
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): All candidates initialized",ctx->label);
       ctx->state=NR_ICE_STATE_INITIALIZED;
-      ctx->done_cb(0,0,ctx->cb_arg);
+      if (ctx->done_cb) {
+        ctx->done_cb(0,0,ctx->cb_arg);
+      }
+      else {
+        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): No done_cb. We were probably destroyed.",ctx->label);
+      }
     }
     else {
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Waiting for %d candidates to be initialized",ctx->label, ctx->uninitialized_candidates);

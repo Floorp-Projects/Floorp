@@ -25,10 +25,10 @@
   /* The following rules are for the downloads indicator when in its normal,
      non-downloading, non-paused state (ie, it's just showing the downloads
      button icon). */
-  #toolbar-menubar #downloads-indicator-icon:not(:-moz-lwtheme),
-  #TabsToolbar[tabsontop=true] #downloads-indicator-icon:not(:-moz-lwtheme),
-  #navigator-toolbox[tabsontop=false] > #nav-bar #downloads-indicator-icon:not(:-moz-lwtheme),
-  #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child #downloads-indicator-icon:not(:-moz-lwtheme),
+  #toolbar-menubar #downloads-indicator:not([attention]) > #downloads-indicator-anchor > #downloads-indicator-icon:not(:-moz-lwtheme),
+  #TabsToolbar[tabsontop=true] #downloads-indicator:not([attention]) > #downloads-indicator-anchor > #downloads-indicator-icon:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] > #nav-bar #downloads-indicator:not([attention]) > #downloads-indicator-anchor > #downloads-indicator-icon:not(:-moz-lwtheme),
+  #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child #downloads-indicator:not([attention]) > #downloads-indicator-anchor > #downloads-indicator-icon:not(:-moz-lwtheme),
 
   /* The following rules are for the downloads indicator when in its paused
      or undetermined progress state. We use :not([counter]) as a shortcut for

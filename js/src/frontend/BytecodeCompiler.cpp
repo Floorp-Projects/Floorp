@@ -49,7 +49,7 @@ SetSourceMap(JSContext *cx, TokenStream &tokenStream, ScriptSource *ss, Unrooted
 UnrootedScript
 frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr callerFrame,
                         const CompileOptions &options,
-                        StableCharPtr chars, size_t length,
+                        const jschar *chars, size_t length,
                         JSString *source_ /* = NULL */,
                         unsigned staticLevel /* = 0 */,
                         SourceCompressionToken *extraSct /* = NULL */)
@@ -227,7 +227,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr
 // handler attribute in an HTML <INPUT> tag, or in a Function() constructor.
 bool
 frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions options,
-                              const AutoNameVector &formals, StableCharPtr chars, size_t length)
+                              const AutoNameVector &formals, const jschar *chars, size_t length)
 {
     if (!CheckLength(cx, length))
         return false;

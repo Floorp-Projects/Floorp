@@ -2831,9 +2831,16 @@ Tab.prototype = {
       uri = Services.io.newURI(aURL, null, null).spec;
     } catch (e) {}
 
+    // When the tab is stubbed from Java, there's a window between the stub
+    // creation and the tab creation in Gecko where the stub could be removed
+    // (which is easiest to hit during startup).  We need to differentiate
+    // between tab stubs from Java and new tabs from Gecko to prevent breakage.
+    let stub = false;
+
     if (!aParams.zombifying) {
       if ("tabID" in aParams) {
         this.id = aParams.tabID;
+        stub = true;
       } else {
         let jni = new JNI();
         let cls = jni.findClass("org/mozilla/gecko/Tabs");
@@ -2854,7 +2861,8 @@ Tab.prototype = {
         title: title,
         delayLoad: aParams.delayLoad || false,
         desktopMode: this.desktopMode,
-        isPrivate: isPrivate
+        isPrivate: isPrivate,
+        stub: stub
       };
       sendMessageToJava(message);
 
@@ -3003,6 +3011,7 @@ Tab.prototype = {
     BrowserApp.deck.selectedPanel = selectedPanel;
 
     this.browser = null;
+    this.savedArticle = null;
   },
 
   // This should be called to update the browser when the tab gets selected/unselected
