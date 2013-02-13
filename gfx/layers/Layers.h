@@ -861,6 +861,8 @@ public:
   gfxPoint GetFixedPositionAnchor() { return mAnchor; }
   Layer* GetMaskLayer() { return mMaskLayer; }
 
+  // Note that all lengths in animation data are either in CSS pixels or app
+  // units and must be converted to device pixels by the compositor.
   AnimationArray& GetAnimations() { return mAnimations; }
   InfallibleTArray<AnimData>& GetAnimationData() { return mAnimationData; }
 

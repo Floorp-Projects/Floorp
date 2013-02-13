@@ -1410,23 +1410,22 @@ class DebugScopeProxy : public BaseProxyHandler
 
     bool getScopePropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props, unsigned flags)
     {
-        ScopeObject &scope = proxy->asDebugScope().scope();
+        Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
 
-        if (isMissingArgumentsBinding(scope)) {
+        if (isMissingArgumentsBinding(*scope)) {
             if (!props.append(NameToId(cx->names().arguments)))
                 return false;
         }
 
-        RootedObject rootedScope(cx, &scope);
-        if (!GetPropertyNames(cx, rootedScope, flags, &props))
+        if (!GetPropertyNames(cx, scope, flags, &props))
             return false;
 
         /*
          * Function scopes are optimized to not contain unaliased variables so
          * they must be manually appended here.
          */
-        if (scope.isCall() && !scope.asCall().isForEval()) {
-            RootedScript script(cx, scope.asCall().callee().nonLazyScript());
+        if (scope->isCall() && !scope->asCall().isForEval()) {
+            RootedScript script(cx, scope->asCall().callee().nonLazyScript());
             for (BindingIter bi(script); bi; bi++) {
                 if (!bi->aliased() && !props.append(NameToId(bi->name())))
                     return false;

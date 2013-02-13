@@ -476,7 +476,8 @@ bool
 DirectProxyHandler::objectClassIs(JSObject *proxy, ESClassValue classValue,
                                   JSContext *cx)
 {
-    return ObjectClassIs(*GetProxyTargetObject(proxy), classValue, cx);
+    RootedObject obj(cx, GetProxyTargetObject(proxy));
+    return ObjectClassIs(obj, classValue, cx);
 }
 
 JSString *

@@ -881,8 +881,6 @@ RES_DRAWABLE_LAND_V14 = \
   $(NULL)
 
 RES_DRAWABLE_LAND_MDPI_V14 = \
-  res/drawable-land-mdpi-v14/ic_awesomebar_go.png \
-  res/drawable-land-mdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-mdpi-v14/address_bar_texture_land.png \
   res/drawable-land-mdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-mdpi-v14/address_bar_url_default.9.png \
@@ -892,15 +890,9 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/remote_tabs_off.png \
   res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tabs_carat.png \
-  res/drawable-land-mdpi-v14/urlbar_stop.png \
-  res/drawable-land-mdpi-v14/reader.png \
-  res/drawable-land-mdpi-v14/site_security_identified.png \
-  res/drawable-land-mdpi-v14/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_HDPI_V14 = \
-  res/drawable-land-hdpi-v14/ic_awesomebar_go.png \
-  res/drawable-land-hdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-hdpi-v14/address_bar_texture_land.png \
   res/drawable-land-hdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-hdpi-v14/address_bar_url_default.9.png \
@@ -910,15 +902,9 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/remote_tabs_off.png \
   res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tabs_carat.png \
-  res/drawable-land-hdpi-v14/urlbar_stop.png \
-  res/drawable-land-hdpi-v14/reader.png \
-  res/drawable-land-hdpi-v14/site_security_identified.png \
-  res/drawable-land-hdpi-v14/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_XHDPI_V14 = \
-  res/drawable-land-xhdpi-v14/ic_awesomebar_go.png \
-  res/drawable-land-xhdpi-v14/ic_awesomebar_search.png \
   res/drawable-land-xhdpi-v14/address_bar_texture_land.png \
   res/drawable-land-xhdpi-v14/address_bar_texture_land_pb.png \
   res/drawable-land-xhdpi-v14/address_bar_url_default.9.png \
@@ -928,10 +914,6 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/remote_tabs_off.png \
   res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
-  res/drawable-land-xhdpi-v14/urlbar_stop.png \
-  res/drawable-land-xhdpi-v14/reader.png \
-  res/drawable-land-xhdpi-v14/site_security_identified.png \
-  res/drawable-land-xhdpi-v14/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
@@ -943,16 +925,10 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-mdpi-v11/address_bar_url_pressed.9.png \
   res/drawable-large-mdpi-v11/address_bar_url_pressed_pb.9.png \
-  res/drawable-large-mdpi-v11/ic_awesomebar_go.png \
-  res/drawable-large-mdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
   res/drawable-large-mdpi-v11/remote_tabs_off.png \
   res/drawable-large-mdpi-v11/remote_tabs_on.png \
-  res/drawable-large-mdpi-v11/urlbar_stop.png \
-  res/drawable-large-mdpi-v11/reader.png \
-  res/drawable-large-mdpi-v11/site_security_identified.png \
-  res/drawable-large-mdpi-v11/site_security_verified.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
   $(NULL)
 
@@ -963,16 +939,10 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-hdpi-v11/address_bar_url_pressed.9.png \
   res/drawable-large-hdpi-v11/address_bar_url_pressed_pb.9.png \
-  res/drawable-large-hdpi-v11/ic_awesomebar_go.png \
-  res/drawable-large-hdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-hdpi-v11/ic_menu_reload.png \
   res/drawable-large-hdpi-v11/ic_menu_forward.png \
   res/drawable-large-hdpi-v11/remote_tabs_off.png \
   res/drawable-large-hdpi-v11/remote_tabs_on.png \
-  res/drawable-large-hdpi-v11/urlbar_stop.png \
-  res/drawable-large-hdpi-v11/reader.png \
-  res/drawable-large-hdpi-v11/site_security_identified.png \
-  res/drawable-large-hdpi-v11/site_security_verified.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
   $(NULL)
 
@@ -983,16 +953,10 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/address_bar_url_default_pb.9.png \
   res/drawable-large-xhdpi-v11/address_bar_url_pressed.9.png \
   res/drawable-large-xhdpi-v11/address_bar_url_pressed_pb.9.png \
-  res/drawable-large-xhdpi-v11/ic_awesomebar_go.png \
-  res/drawable-large-xhdpi-v11/ic_awesomebar_search.png \
   res/drawable-large-xhdpi-v11/ic_menu_reload.png \
   res/drawable-large-xhdpi-v11/ic_menu_forward.png \
   res/drawable-large-xhdpi-v11/remote_tabs_on.png \
   res/drawable-large-xhdpi-v11/remote_tabs_off.png \
-  res/drawable-large-xhdpi-v11/urlbar_stop.png \
-  res/drawable-large-xhdpi-v11/reader.png \
-  res/drawable-large-xhdpi-v11/site_security_identified.png \
-  res/drawable-large-xhdpi-v11/site_security_verified.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
   $(NULL)
 

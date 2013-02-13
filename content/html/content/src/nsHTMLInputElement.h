@@ -740,7 +740,7 @@ protected:
     /**
      * The current value of the input if it has been changed from the default
      */
-    char*                    mValue;
+    PRUnichar*               mValue;
     /**
      * The state of the text editor associated with the text/password input
      */

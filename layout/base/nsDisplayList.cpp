@@ -300,7 +300,8 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   nsStyleContext* styleContext = aFrame->GetStyleContext();
   nsPresContext* presContext = aFrame->PresContext();
   nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
-  float scale = presContext->AppUnitsPerDevPixel();
+  // all data passed directly to the compositor should be in css pixels
+  float scale = nsDeviceContext::AppUnitsPerCSSPixel();
 
   TimeStamp startTime = ea->mStartTime + ea->mDelay;
   TimeDuration duration = ea->mIterationDuration;
@@ -379,6 +380,7 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
   AnimationData data;
   if (aProperty == eCSSProperty_transform) {
     nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(frame);
+    // all data passed directly to the compositor should be in css pixels
     float scale = nsDeviceContext::AppUnitsPerCSSPixel();
     gfxPoint3D offsetToTransformOrigin =
       nsDisplayTransform::GetDeltaToMozTransformOrigin(frame, scale, &bounds);
@@ -395,7 +397,8 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
     nsPoint origin = aItem->ToReferenceFrame();
 
     data = TransformData(origin, offsetToTransformOrigin,
-                         offsetToPerspectiveOrigin, bounds, perspective);
+                         offsetToPerspectiveOrigin, bounds, perspective,
+                         frame->PresContext()->AppUnitsPerDevPixel());
   } else if (aProperty == eCSSProperty_opacity) {
     data = null_t();
   }

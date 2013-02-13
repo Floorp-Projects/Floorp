@@ -294,21 +294,20 @@ var ctrlTab = {
   },
 
   advanceFocus: function ctrlTab_advanceFocus(aForward) {
+    let selectedIndex = Array.indexOf(this.previews, this.selected);
+    do {
+      selectedIndex += aForward ? 1 : -1;
+      if (selectedIndex < 0)
+        selectedIndex = this.previews.length - 1;
+      else if (selectedIndex >= this.previews.length)
+        selectedIndex = 0;
+    } while (this.previews[selectedIndex].hidden);
+
     if (this._selectedIndex == -1) {
-      // No virtual selectedIndex, focus must be in the panel already.
-      if (aForward)
-        document.commandDispatcher.advanceFocus();
-      else
-        document.commandDispatcher.rewindFocus();
+      // Focus is already in the panel.
+      this.previews[selectedIndex].focus();
     } else {
-      // Focus isn't in the panel yet, so we maintain a virtual selectedIndex.
-      do {
-        this._selectedIndex += aForward ? 1 : -1;
-        if (this._selectedIndex < 0)
-          this._selectedIndex = this.previews.length - 1;
-        else if (this._selectedIndex >= this.previews.length)
-          this._selectedIndex = 0;
-      } while (this.selected.hidden);
+      this._selectedIndex = selectedIndex;
     }
 
     if (this._timer) {
