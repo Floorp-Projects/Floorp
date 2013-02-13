@@ -1370,6 +1370,7 @@ class ObjectImpl : public gc::Cell
     }
 
     /* GC support. */
+    JS_ALWAYS_INLINE Zone *zone() const;
     static inline ThingRootKind rootKind() { return THING_ROOT_OBJECT; }
     static inline void readBarrier(ObjectImpl *obj);
     static inline void writeBarrierPre(ObjectImpl *obj);

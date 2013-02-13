@@ -903,7 +903,9 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
         return;
 
     gc::Cell *cell = static_cast<gc::Cell *>(ptr);
-    Zone *zone = cell->zone();
+    Zone *zone = kind == JSTRACE_OBJECT
+                 ? static_cast<JSObject *>(cell)->zone()
+                 : cell->tenuredZone();
 
     JS_ASSERT(!zone->rt->isHeapBusy());
 
