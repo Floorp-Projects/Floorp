@@ -282,6 +282,12 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      */
     JS_ASSERT(firstSpan.isSameNonEmptySpan(list));
 }
+
+bool
+js::gc::Cell::isTenured() const
+{
+    return true;
+}
 #endif
 
 /* static */ void
