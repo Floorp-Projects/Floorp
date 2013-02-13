@@ -317,6 +317,21 @@ js::ObjectImpl::sizeOfThis() const
     return js::gc::Arena::thingSize(getAllocKind());
 }
 
+JS_ALWAYS_INLINE JS::Zone *
+js::ObjectImpl::zone() const
+{
+    return shape_->zone();
+}
+
+JS_ALWAYS_INLINE JS::Zone *
+ZoneOfValue(const JS::Value &value)
+{
+    JS_ASSERT(value.isMarkable());
+    if (value.isObject())
+        return value.toObject().zone();
+    return static_cast<js::gc::Cell *>(value.toGCThing())->tenuredZone();
+}
+
 /* static */ inline void
 js::ObjectImpl::readBarrier(ObjectImpl *obj)
 {

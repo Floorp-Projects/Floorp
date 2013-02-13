@@ -847,8 +847,8 @@ NukeSlot(JSObject *wrapper, uint32_t slot, Value v)
 {
     Value old = wrapper->getSlot(slot);
     if (old.isMarkable()) {
-        Cell *cell = static_cast<Cell *>(old.toGCThing());
-        AutoMarkInDeadZone amd(cell->zone());
+        Zone *zone = ZoneOfValue(old);
+        AutoMarkInDeadZone amd(zone);
         wrapper->setReservedSlot(slot, v);
     } else {
         wrapper->setReservedSlot(slot, v);
