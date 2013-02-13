@@ -1582,10 +1582,15 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
             allInts = allInts && v.isInt32();
         }
 
+
+        /*
+         * If the array only contains holes, we're done.  But if it contains
+         * undefs, those must be sorted to the front of the array.
+         */
         n = vec.length();
-        if (n == 0) {
+        if (n == 0 && undefs == 0) {
             args.rval().setObject(*obj);
-            return true; /* The array has only holes and undefs. */
+            return true;
         }
 
         /* Here len == n + undefs + number_of_holes. */
