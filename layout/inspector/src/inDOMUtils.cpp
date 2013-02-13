@@ -199,7 +199,7 @@ GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
 {
   nsCOMPtr<nsICSSStyleRuleDOMWrapper> rule = do_QueryInterface(aRule);
   if (!rule) {
-    rv.Throw(NS_ERROR_INVALID_ARG);
+    rv.Throw(NS_ERROR_INVALID_POINTER);
     return nullptr;
   }
 
