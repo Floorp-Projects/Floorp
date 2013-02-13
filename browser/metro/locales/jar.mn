@@ -24,7 +24,7 @@
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
   locale/browser/bookmarks.json           (bookmarks.json)
-* locale/browser/passwordmgr.properties   (%overrides/passwordmgr.properties)
+  locale/browser/passwordmgr.properties   (%overrides/passwordmgr.properties)
 % override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/passwordmgr.properties
 
 #
@@ -34,7 +34,7 @@
 @AB_CD@.jar:
 relativesrcdir browser/locales:
   locale/browser/region.properties        (%chrome/browser-region/region.properties)
-* locale/browser/netError.dtd             (%chrome/overrides/netError.dtd)
+  locale/browser/netError.dtd             (%chrome/overrides/netError.dtd)
 % override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
-* locale/browser/appstrings.properties    (%chrome/overrides/appstrings.properties)
+  locale/browser/appstrings.properties    (%chrome/overrides/appstrings.properties)
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
