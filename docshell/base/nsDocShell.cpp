@@ -10203,10 +10203,8 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
 
         scContainer = new nsStructuredCloneContainer();
         JSContext *cx = aCx;
-        nsCxPusher pusher;
         if (!cx) {
             cx = nsContentUtils::GetContextFromDocument(document);
-            pusher.Push(cx);
         }
         rv = scContainer->InitFromVariant(aData, cx);
 
