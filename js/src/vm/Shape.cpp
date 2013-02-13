@@ -514,14 +514,14 @@ JSObject::addPropertyInternal(JSContext *cx, HandleObject obj, HandleId id,
     JS_ASSERT(!!table == !!spp);
 
     /* Find or create a property tree node labeled by our arguments. */
-    UnrootedShape shape;
+    RootedShape shape(cx);
     {
         RootedShape last(cx, obj->lastProperty());
 
         uint32_t index;
         bool indexed = js_IdIsIndex(id, &index);
 
-        UnrootedUnownedBaseShape nbase;
+        Rooted<UnownedBaseShape*> nbase(cx);
         if (last->base()->matchesGetterSetter(getter, setter) && !indexed) {
             nbase = last->base()->unowned();
         } else {
@@ -534,7 +534,7 @@ JSObject::addPropertyInternal(JSContext *cx, HandleObject obj, HandleId id,
                 return UnrootedShape(NULL);
         }
 
-        StackShape child(DropUnrooted(nbase), id, slot, obj->numFixedSlots(), attrs, flags, shortid);
+        StackShape child(nbase, id, slot, obj->numFixedSlots(), attrs, flags, shortid);
         shape = getChildProperty(cx, obj, last, child);
     }
 

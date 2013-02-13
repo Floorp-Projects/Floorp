@@ -13,13 +13,9 @@
     </Url>
     <Url type="text/html" method="GET" template="http://www.bing.com/search">
         <Param name="q" value="{searchTerms}"/>
-        <Param name="form" value="MOZSBR"/>
         <MozParam name="pc" condition="pref" pref="ms-pc"/>
-    </Url>
-    <Url type="application/x-moz-keywordsearch" method="GET" template="http://www.bing.com/search">
-        <Param name="q" value="{searchTerms}"/>
-        <Param name="form" value="MOZLBR"/>
-        <MozParam name="pc" condition="pref" pref="ms-pc"/>
+        <MozParam name="form" condition="purpose" purpose="" value="MOZSBR"/>
+        <MozParam name="form" condition="purpose" purpose="keyword" value="MOZLBR"/>
     </Url>
     <SearchForm>http://www.bing.com/search</SearchForm>
 </SearchPlugin>

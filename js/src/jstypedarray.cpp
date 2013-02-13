@@ -1949,7 +1949,7 @@ class TypedArrayTemplate
     fromBuffer(JSContext *cx, HandleObject bufobj, int32_t byteOffsetInt, int32_t lengthInt,
                HandleObject proto)
     {
-        if (!ObjectClassIs(*bufobj, ESClass_ArrayBuffer, cx)) {
+        if (!ObjectClassIs(bufobj, ESClass_ArrayBuffer, cx)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return NULL; // must be arrayBuffer
         }

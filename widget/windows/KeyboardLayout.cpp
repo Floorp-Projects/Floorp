@@ -1125,6 +1125,13 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     case VK_SLEEP:
     case VK_NUMLOCK:
     case VK_SCROLL: // SCROLL LOCK
+    case VK_ATTN: // Attension key of IBM midrange computers, e.g., AS/400
+    case VK_CRSEL: // Cursor Selection
+    case VK_EXSEL: // Extend Selection
+    case VK_EREOF: // Erase EOF key of IBM 3270 keyboard layout
+    case VK_PLAY:
+    case VK_ZOOM:
+    case VK_PA1: // PA1 key of IBM 3270 keyboard layout
       return uint32_t(aNativeKeyCode);
 
     case VK_HELP:
@@ -1158,17 +1165,22 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     case VK_LAUNCH_MEDIA_SELECT:
     case VK_LAUNCH_APP1:
     case VK_LAUNCH_APP2:
-    case VK_ATTN: // Attension key of IBM midrange computers, e.g., AS/400
-    case VK_CRSEL: // Cursor Selection
-    case VK_EXSEL: // Extend Selection
-    case VK_EREOF: // Erase EOF key of IBM 3270 keyboard layout
-    case VK_PLAY:
-    case VK_ZOOM:
-    case VK_PA1: // PA1 key of IBM 3270 keyboard layout
-    case VK_OEM_CLEAR:
       return 0;
 
-    // Following keycodes are only used by Nokia/Ericsson, we don't define them
+    // Following OEM specific virtual keycodes should pass through DOM keyCode
+    // for compatibility with the other browsers on Windows.
+
+    // Following OEM specific virtual keycodes are defined for Fujitsu/OASYS.
+    case VK_OEM_FJ_JISHO:
+    case VK_OEM_FJ_MASSHOU:
+    case VK_OEM_FJ_TOUROKU:
+    case VK_OEM_FJ_LOYA:
+    case VK_OEM_FJ_ROYA:
+    // Not sure what means "ICO".
+    case VK_ICO_HELP:
+    case VK_ICO_00:
+    case VK_ICO_CLEAR:
+    // Following OEM specific virtual keycodes are defined for Nokia/Ericsson.
     case VK_OEM_RESET:
     case VK_OEM_JUMP:
     case VK_OEM_PA1:
@@ -1182,6 +1194,15 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     case VK_OEM_AUTO:
     case VK_OEM_ENLW:
     case VK_OEM_BACKTAB:
+    // VK_OEM_CLEAR is defined as not OEM specific, but let's pass though
+    // DOM keyCode like other OEM specific virtual keycodes.
+    case VK_OEM_CLEAR:
+      return uint32_t(aNativeKeyCode);
+
+    // 0xE1 is an OEM specific virtual keycode. However, the value is already
+    // used in our DOM keyCode for AltGr on Linux. So, this virtual keycode
+    // cannot pass through DOM keyCode.
+    case 0xE1:
       return 0;
 
     // Following keycodes are OEM keys which are keycodes for non-alphabet and
@@ -1201,10 +1222,7 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     case VK_OEM_6:
     case VK_OEM_7:
     case VK_OEM_8:
-    case 0xE1: // OEM specific
     case VK_OEM_102:
-    case 0xE3: // OEM specific
-    case 0xE4: // OEM specific
     {
       NS_ASSERTION(IsPrintableCharKey(aNativeKeyCode),
                    "The key must be printable");
