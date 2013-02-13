@@ -276,7 +276,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
         UnrootedScript compiled = frontend::CompileScript(cx, scopeobj, caller, options,
-                                                          chars, length, stableStr, staticLevel);
+                                                          chars.get(), length, stableStr, staticLevel);
         if (!compiled)
             return false;
 
