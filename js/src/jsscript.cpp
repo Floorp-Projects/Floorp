@@ -1232,7 +1232,7 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 }
 
 bool
-ScriptSource::setSourceCopy(JSContext *cx, StableCharPtr src, uint32_t length,
+ScriptSource::setSourceCopy(JSContext *cx, const jschar *src, uint32_t length,
                             bool argumentsNotIncluded, SourceCompressionToken *tok)
 {
     JS_ASSERT(!hasSourceData());
@@ -1242,14 +1242,14 @@ ScriptSource::setSourceCopy(JSContext *cx, StableCharPtr src, uint32_t length,
 #ifdef JS_THREADSAFE
     if (tok && cx->runtime->useHelperThreads()) {
         tok->ss = this;
-        tok->chars = src.get();
+        tok->chars = src;
         cx->runtime->sourceCompressorThread.compress(tok);
     } else
 #endif
     {
         if (!adjustDataSize(sizeof(jschar) * length))
             return false;
-        PodCopy(data.source, src.get(), length_);
+        PodCopy(data.source, src, length_);
     }
 
     return true;

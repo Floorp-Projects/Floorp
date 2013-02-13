@@ -168,8 +168,8 @@ IsBackgroundFinalized(AllocKind kind)
         true,      /* FINALIZE_OBJECT16_BACKGROUND */
         false,     /* FINALIZE_SCRIPT */
         true,      /* FINALIZE_SHAPE */
-        true,     /* FINALIZE_BASE_SHAPE */
-        false,     /* FINALIZE_TYPE_OBJECT */
+        true,      /* FINALIZE_BASE_SHAPE */
+        true,      /* FINALIZE_TYPE_OBJECT */
         true,      /* FINALIZE_SHORT_STRING */
         true,      /* FINALIZE_STRING */
         false,     /* FINALIZE_EXTERNAL_STRING */
@@ -332,6 +332,10 @@ struct ArenaLists {
     bool doneBackgroundFinalize(AllocKind kind) const {
         return backgroundFinalizeState[kind] == BFS_DONE ||
                backgroundFinalizeState[kind] == BFS_JUST_FINISHED;
+    }
+
+    bool needBackgroundFinalizeWait(AllocKind kind) const {
+        return backgroundFinalizeState[kind] != BFS_DONE;
     }
 
     /*
@@ -1184,6 +1188,10 @@ SetDeterministicGC(JSContext *cx, bool enabled);
 
 void
 SetValidateGC(JSContext *cx, bool enabled);
+
+/* Wait for the background thread to finish sweeping if it is running. */
+void
+FinishBackgroundFinalize(JSRuntime *rt);
 
 const int ZealPokeValue = 1;
 const int ZealAllocValue = 2;

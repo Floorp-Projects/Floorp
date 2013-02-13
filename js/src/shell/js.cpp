@@ -3164,8 +3164,7 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     options.setFileAndLine("<string>", 1)
            .setCompileAndGo(false);
     Parser parser(cx, options,
-                  JS::StableCharPtr(JS_GetStringCharsZ(cx, scriptContents),
-                                    JS_GetStringLength(scriptContents)),
+                  JS_GetStringCharsZ(cx, scriptContents),
                   JS_GetStringLength(scriptContents),
                   /* foldConstants = */ true);
     if (!parser.init())
