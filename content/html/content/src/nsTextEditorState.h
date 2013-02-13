@@ -137,8 +137,6 @@ public:
   void SetValue(const nsAString& aValue, bool aUserInput,
                 bool aSetValueAsChanged);
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
-  void EmptyValue() { if (mValue) mValue->Truncate(); }
-  bool IsEmpty() const { return mValue ? mValue->IsEmpty() : true; }
 
   nsresult CreatePlaceholderNode();
 
