@@ -453,8 +453,7 @@ RasterImage::Initialize()
 }
 
 nsresult
-RasterImage::Init(imgDecoderObserver *aObserver,
-                  const char* aMimeType,
+RasterImage::Init(const char* aMimeType,
                   uint32_t aFlags)
 {
   // We don't support re-initialization
@@ -475,9 +474,6 @@ RasterImage::Init(imgDecoderObserver *aObserver,
                     "Can't be discardable or decode-on-draw for multipart");
 
   // Store initialization data
-  if (aObserver) {
-    mObserver = aObserver->asWeakPtr();
-  }
   mSourceDataMimeType.Assign(aMimeType);
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
   mDecodeOnDraw = !!(aFlags & INIT_FLAG_DECODE_ON_DRAW);
@@ -652,12 +648,6 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
   }
 
   if (frameAdvanced) {
-    if (!mObserver) {
-      NS_ERROR("Refreshing image after its imgRequest is gone");
-      StopAnimation();
-      return;
-    }
-
     // Notify listeners that our frame has actually changed, but do this only
     // once for all frames that we've now passed (if AdvanceFrame() was called
     // more than once).
@@ -666,7 +656,8 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
     #endif
 
     UpdateImageContainer();
-    mObserver->FrameChanged(&dirtyRect);
+    if (mStatusTracker)
+      mStatusTracker->GetDecoderObserver()->FrameChanged(&dirtyRect);
   }
 }
 
@@ -700,7 +691,7 @@ RasterImage::ExtractFrame(uint32_t aWhichFrame,
   // We don't actually have a mimetype in this case. The empty string tells the
   // init routine not to try to instantiate a decoder. This should be fixed in
   // bug 505959.
-  img->Init(nullptr, "", INIT_FLAG_NONE);
+  img->Init("", INIT_FLAG_NONE);
   img->SetSize(aRegion.width, aRegion.height);
   img->mDecoded = true; // Also, we need to mark the image as decoded
   img->mHasBeenDecoded = true;
@@ -1678,8 +1669,8 @@ RasterImage::ResetAnimation()
   // we fix bug 500402.
 
   // Update display if we were animating before
-  if (mAnimating && mObserver)
-    mObserver->FrameChanged(&(mAnim->firstFrameRefreshArea));
+  if (mAnimating && mStatusTracker)
+    mStatusTracker->GetDecoderObserver()->FrameChanged(&(mAnim->firstFrameRefreshArea));
 
   if (ShouldAnimate()) {
     StartAnimation();
@@ -2485,8 +2476,8 @@ RasterImage::Discard(bool force)
   mDecoded = false;
 
   // Notify that we discarded
-  if (mObserver)
-    mObserver->OnDiscard();
+  if (mStatusTracker)
+    mStatusTracker->GetDecoderObserver()->OnDiscard();
 
   if (force)
     DiscardTracker::Remove(&mDiscardTrackerNode);
@@ -2557,28 +2548,30 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   CONTAINER_ENSURE_TRUE(type != eDecoderType_unknown, NS_IMAGELIB_ERROR_NO_DECODER);
 
   // Instantiate the appropriate decoder
+  imgDecoderObserver* observer = mStatusTracker ? mStatusTracker->GetDecoderObserver()
+                                                : nullptr;
   switch (type) {
     case eDecoderType_png:
-      mDecoder = new nsPNGDecoder(*this, mObserver);
+      mDecoder = new nsPNGDecoder(*this, observer);
       break;
     case eDecoderType_gif:
-      mDecoder = new nsGIFDecoder2(*this, mObserver);
+      mDecoder = new nsGIFDecoder2(*this, observer);
       break;
     case eDecoderType_jpeg:
       // If we have all the data we don't want to waste cpu time doing
       // a progressive decode
-      mDecoder = new nsJPEGDecoder(*this, mObserver,
+      mDecoder = new nsJPEGDecoder(*this, observer,
                                    mHasBeenDecoded ? Decoder::SEQUENTIAL :
                                                      Decoder::PROGRESSIVE);
       break;
     case eDecoderType_bmp:
-      mDecoder = new nsBMPDecoder(*this, mObserver);
+      mDecoder = new nsBMPDecoder(*this, observer);
       break;
     case eDecoderType_ico:
-      mDecoder = new nsICODecoder(*this, mObserver);
+      mDecoder = new nsICODecoder(*this, observer);
       break;
     case eDecoderType_icon:
-      mDecoder = new nsIconDecoder(*this, mObserver);
+      mDecoder = new nsIconDecoder(*this, observer);
       break;
     default:
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
@@ -2939,11 +2932,10 @@ RasterImage::ScalingDone(ScaleRequest* request, ScaleStatus status)
   if (status == SCALE_DONE) {
     MOZ_ASSERT(request->done);
 
-    RefPtr<imgDecoderObserver> observer(mObserver);
-    if (observer) {
+    if (mStatusTracker) {
       imgFrame *scaledFrame = request->dstFrame.get();
       scaledFrame->ImageUpdated(scaledFrame->GetRect());
-      observer->FrameChanged(&request->srcRect);
+      mStatusTracker->GetDecoderObserver()->FrameChanged(&request->srcRect);
     }
 
     mScaleResult.status = SCALE_DONE;
