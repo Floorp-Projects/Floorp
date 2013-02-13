@@ -1,12 +1,11 @@
 . "$topsrcdir/browser/config/mozconfigs/common"
 
-ac_add_options --with-l10n-base=../../l10n-central
-
-if [ "${MOZ_UPDATE_CHANNEL}" = "release" -o "${MOZ_UPDATE_CHANNEL}" = "beta" ]; then
-fi
-
+ac_add_options --with-l10n-base=../../../l10n-central
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
+ac_add_options --with-macbundlename-prefix=Firefox
 ac_add_options --with-ccache
+
+export MOZILLA_OFFICIAL=1
 
 . "$topsrcdir/build/mozconfig.common.override"
