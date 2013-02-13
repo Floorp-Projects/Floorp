@@ -151,14 +151,13 @@ def main(args=sys.argv[1:]):
                       help="list dependencies for the packages")
     parser.add_option('--list', action='store_true', default=False,
                       help="list what will be installed")
+    parser.add_option('--extra', '--install-extra-packages', action='store_true', default=False,
+                      help="installs extra supporting packages as well as core mozbase ones")
     options, packages = parser.parse_args(args)
-
-    install_extra_packages = False
 
     if not packages:
         # install all packages
         packages = sorted(mozbase_packages)
-        install_extra_packages = True
 
     # ensure specified packages are in the list
     assert set(packages).issubset(mozbase_packages), "Packages should be in %s (You gave: %s)" % (mozbase_packages, packages)
@@ -240,7 +239,7 @@ def main(args=sys.argv[1:]):
         call(['easy_install', version])
 
     # install extra non-mozbase packages if desired
-    if install_extra_packages:
+    if options.extra:
         for package in extra_packages:
             call(['easy_install', package])
 
