@@ -1540,9 +1540,9 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
 };
 
 inline void
-NewObjectCache::copyCachedToObject(JSObject *dst, JSObject *src)
+NewObjectCache::copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind)
 {
-    js_memcpy(dst, src, dst->sizeOfThis());
+    js_memcpy(dst, src, gc::Arena::thingSize(kind));
 #ifdef JSGC_GENERATIONAL
     Shape::writeBarrierPost(dst->shape_, &dst->shape_);
     types::TypeObject::writeBarrierPost(dst->type_, &dst->type_);
