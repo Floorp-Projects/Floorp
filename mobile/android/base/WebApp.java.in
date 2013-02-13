@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.RelativeLayout;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -39,10 +40,11 @@ import org.mozilla.gecko.R;
 import org.json.JSONObject;
 
 public class WebApp extends GeckoApp {
+    private static final String LOGTAG = "WebApp";
+
     private URL mOrigin;
     private TextView mTitlebarText = null;
     private View mTitlebar = null;
-    private static final String LOGTAG = "WebApp";
     private View mSplashscreen = null;
 
     protected int getIndex() { return 0; }
@@ -85,6 +87,22 @@ public class WebApp extends GeckoApp {
                 Log.e(LOGTAG, "Unable to parse intent url: ", ex);
             }
         }
+    }
+
+    @Override
+    protected void initializeChrome(String uri, boolean isExternalURL) {
+        String action = getIntent().getAction();
+        if (GeckoApp.ACTION_WEBAPP_PREFIX.equals(action)) {
+            // This action assumes the uri is not an installed WebApp. We will
+            // use the WebAppAllocator to register the uri with an Android
+            // process so it can run chromeless.
+            int index = WebAppAllocator.getInstance(this).findAndAllocateIndex(uri, "App", (Bitmap) null);
+            Intent appIntent = GeckoAppShell.getWebAppIntent(index, uri);
+            startActivity(appIntent);
+            finish();
+        }
+
+        super.initializeChrome(uri, isExternalURL);
     }
 
     private void showSplash() {
@@ -238,4 +256,3 @@ public class WebApp extends GeckoApp {
         getLayerView().setOverScrollMode(View.OVER_SCROLL_NEVER);
     }
 };
-
