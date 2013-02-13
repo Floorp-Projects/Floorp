@@ -4671,7 +4671,7 @@ JS_IsArrayObject(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
     assertSameCompartment(cx, obj);
-    return ObjectClassIs(*obj, ESClass_Array, cx);
+    return ObjectClassIs(obj, ESClass_Array, cx);
 }
 
 JS_PUBLIC_API(JSBool)

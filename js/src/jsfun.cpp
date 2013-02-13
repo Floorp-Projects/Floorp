@@ -1482,7 +1482,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
                                                  allocKind, newKind);
     if (!cloneobj)
         return NULL;
-    JSFunction *clone = cloneobj->toFunction();
+    RootedFunction clone(cx, cloneobj->toFunction());
 
     clone->nargs = fun->nargs;
     clone->flags = fun->flags & ~JSFunction::EXTENDED;

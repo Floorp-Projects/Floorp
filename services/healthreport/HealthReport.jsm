@@ -12,6 +12,7 @@ this.EXPORTED_SYMBOLS = [
   "Metrics",
   "PlacesProvider",
   "ProfileMetadataProvider",
+  "SearchesProvider",
   "SessionsProvider",
   "SysInfoProvider",
 ];
