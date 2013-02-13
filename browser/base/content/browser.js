@@ -3471,6 +3471,9 @@ const BrowserSearch = {
    *        A string meant to indicate the context of the search request. This
    *        allows the search service to provide a different nsISearchSubmission
    *        depending on e.g. where the search is triggered in the UI.
+   *
+   * @return string Name of the search engine used to perform a search or null
+   *         if a search was not performed.
    */
   loadSearch: function BrowserSearch_search(searchText, useNewTab, purpose) {
     var engine;
@@ -3488,8 +3491,9 @@ const BrowserSearch = {
     // with a text/html response type.  This is unlikely (since
     // SearchService._addEngineToStore() should fail for such an engine),
     // but let's be on the safe side.
-    if (!submission)
-      return;
+    if (!submission) {
+      return null;
+    }
 
     let inBackground = Services.prefs.getBoolPref("browser.search.context.loadInBackground");
     openLinkIn(submission.uri.spec,
@@ -3497,6 +3501,21 @@ const BrowserSearch = {
                { postData: submission.postData,
                  inBackground: inBackground,
                  relatedToCurrent: true });
+
+    return engine.name;
+  },
+
+  /**
+   * Perform a search initiated from the context menu.
+   *
+   * This should only be called from the context menu. See
+   * BrowserSearch.loadSearch for the preferred API.
+   */
+  loadSearchFromContext: function (terms) {
+    let engine = BrowserSearch.loadSearch(terms, true, "contextmenu");
+    if (engine) {
+      BrowserSearch.recordSearchInHealthReport(engine, "contextmenu");
+    }
   },
 
   /**
