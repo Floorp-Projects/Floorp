@@ -191,6 +191,8 @@ add_task(function test_constant_only_providers() {
   do_check_eq(reporter._collector._providers.size, 1);
   do_check_true(reporter._storage.hasProvider("DummyProvider"));
   do_check_false(reporter._storage.hasProvider("DummyConstantProvider"));
+  do_check_neq(reporter.getProvider("DummyProvider"), null);
+  do_check_null(reporter.getProvider("DummyConstantProvider"));
 
   yield reporter.ensureConstantOnlyProvidersRegistered();
   yield reporter.collectMeasurements();
