@@ -1435,16 +1435,19 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::HandleId aId,
     return false;
   }
 
-  // Get the scope of mBoundElement.
+  // Get the scope of mBoundElement and the associated XBL scope. We should only
+  // be calling into this machinery if we're running in a separate XBL scope.
   JSObject* boundScope =
     js::GetGlobalForObjectCrossCompartment(mBoundElement->GetWrapper());
+  JSObject* xblScope = xpc::GetXBLScope(aCx, boundScope);
+  MOZ_ASSERT(boundScope != xblScope);
 
-  // Enter the compartment of mBoundElement and invoke the internal version.
+  // Enter the xbl scope and invoke the internal version.
   {
-    JSAutoCompartment ac(aCx, boundScope);
+    JSAutoCompartment ac(aCx, xblScope);
     js::RootedId id(aCx, aId);
     if (!JS_WrapId(aCx, id.address()) ||
-        !LookupMemberInternal(aCx, name, id, aDesc, boundScope))
+        !LookupMemberInternal(aCx, name, id, aDesc, xblScope))
     {
       return false;
     }
@@ -1458,7 +1461,7 @@ bool
 nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
                                    JS::HandleId aNameAsId,
                                    JSPropertyDescriptor* aDesc,
-                                   JSObject* aBoundScope)
+                                   JSObject* aXBLScope)
 {
   // First, see if we have a JSClass. If we don't, it means that this binding
   // doesn't have a class object, and thus doesn't have any members. Skip it.
@@ -1467,13 +1470,13 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
       return true;
     }
     return mNextBinding->LookupMemberInternal(aCx, aName, aNameAsId,
-                                              aDesc, aBoundScope);
+                                              aDesc, aXBLScope);
   }
 
-  // Find our class object. It's permanent, so it should be there no matter
-  // what.
+  // Find our class object. It's in a protected scope and permanent just in case,
+  // so should be there no matter what.
   js::RootedValue classObject(aCx);
-  if (!JS_GetProperty(aCx, aBoundScope, mJSClass->name, classObject.address())) {
+  if (!JS_GetProperty(aCx, aXBLScope, mJSClass->name, classObject.address())) {
     return false;
   }
   MOZ_ASSERT(classObject.isObject());
@@ -1491,7 +1494,7 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
   }
 
   return mNextBinding->LookupMemberInternal(aCx, aName, aNameAsId, aDesc,
-                                            aBoundScope);
+                                            aXBLScope);
 }
 
 bool
