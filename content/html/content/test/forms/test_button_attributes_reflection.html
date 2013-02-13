@@ -40,12 +40,10 @@ reflectLimitedEnumerated({
     "text/plain",
   ],
   invalidValues: [ "text/html", "", "tulip" ],
-// TODO (Bug 839171):
-//  defaultValue: {
-//    invalid: "application/x-www-form-urlencoded",
-//    missing: "",
-//  }
-  defaultValue: "application/x-www-form-urlencoded",
+  defaultValue: {
+    invalid: "application/x-www-form-urlencoded",
+    missing: "",
+  }
 });
 
 // .formMethod
@@ -55,12 +53,10 @@ reflectLimitedEnumerated({
   validValues: [ "get", "post" ],
   invalidValues: [ "put", "", "tulip" ],
   unsupportedValues: [ "dialog" ],
-// TODO (Bug 839171):
-//  defaultValue: {
-//    invalid: "get",
-//    missing: "",
-//  }
-  defaultValue: "get",
+  defaultValue: {
+    invalid: "get",
+    missing: "",
+  }
 });
 
 // .formNoValidate
