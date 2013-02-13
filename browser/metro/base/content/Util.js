@@ -339,6 +339,28 @@ let Util = {
     image.src = aIconURL ? "chrome://browser/skin/images/homescreen-blank-hdpi.png"
                          : "chrome://browser/skin/images/homescreen-default-hdpi.png";
   },
+
+  copyImageToClipboard: function Util_copyImageToClipboard(aImageLoadingContent) {
+    let image = aImageLoadingContent.QueryInterface(Ci.nsIImageLoadingContent);
+    if (!image) {
+      Util.dumpLn("copyImageToClipboard error: image is not an nsIImageLoadingContent");
+      return;
+    }
+    try {
+      let xferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+      xferable.init(null);
+      let imgRequest = aImageLoadingContent.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+      let mimeType = imgRequest.mimeType;
+      let imgContainer = imgRequest.image;
+      let imgPtr = Cc["@mozilla.org/supports-interface-pointer;1"].createInstance(Ci.nsISupportsInterfacePointer);
+      imgPtr.data = imgContainer;
+      xferable.setTransferData(mimeType, imgPtr, null);
+      let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+      clip.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
+    } catch (e) {
+      Util.dumpLn(e.message);
+    }
+  },
 };
 
 
