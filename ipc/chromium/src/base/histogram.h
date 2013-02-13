@@ -290,6 +290,7 @@ class Histogram {
   enum Flags {
     kNoFlags = 0,
     kUmaTargetedHistogramFlag = 0x1,  // Histogram should be UMA uploaded.
+    kExtendedStatisticsFlag = 0x2, // OK to gather extended statistics on histograms.
 
     // Indicate that the histogram was pickled to be sent across an IPC Channel.
     // If we observe this flag on a histogram being aggregated into after IPC,
@@ -336,7 +337,9 @@ class Histogram {
     // Accessor for histogram to make routine additions.
     void AccumulateWithLinearStats(Sample value, Count count, size_t index);
     // Alternate routine for exponential histograms.
-    void AccumulateWithExponentialStats(Sample value, Count count, size_t index);
+    // computeExpensiveStatistics should be true if we want to compute log sums.
+    void AccumulateWithExponentialStats(Sample value, Count count, size_t index,
+					bool computeExtendedStatistics);
 
     // Accessor methods.
     Count counts(size_t i) const { return counts_[i]; }
