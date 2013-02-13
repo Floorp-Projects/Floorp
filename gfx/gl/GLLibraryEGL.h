@@ -14,18 +14,6 @@
 
 #include "nsIFile.h"
 
-typedef int EGLint;
-typedef unsigned int EGLBoolean;
-typedef unsigned int EGLenum;
-typedef void *EGLConfig;
-typedef void *EGLContext;
-typedef void *EGLDisplay;
-typedef void *EGLSurface;
-typedef void *EGLClientBuffer;
-typedef void *EGLCastToRelevantPtr;
-typedef void *EGLImage;
-typedef void *EGLSync;
-typedef uint64_t EGLTime;
 
 #if defined(XP_WIN)
 
@@ -56,6 +44,10 @@ typedef void *EGLNativeWindowType;
 // APITRACE_LIB in GLContextProviderEGL.cpp. Further refactoring
 // will come in subsequent patches on Bug 732865
 #define APITRACE_LIB "/data/local/egltrace.so"
+
+#ifdef MOZ_WIDGET_ANDROID
+
+#endif // MOZ_WIDGET_ANDROID
 #endif // ANDROID
 #endif
 
@@ -64,12 +56,6 @@ typedef void *EGLNativeWindowType;
 #else
 #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)0)
 #endif
-#define EGL_NO_CONTEXT       ((EGLContext)0)
-#define EGL_NO_DISPLAY       ((EGLDisplay)0)
-#define EGL_NO_SURFACE       ((EGLSurface)0)
-#define EGL_NO_SYNC          ((EGLSync)0)
-
-#define EGL_DISPLAY()        sEGLLibrary.Display()
 
 namespace mozilla {
 namespace gl {
@@ -455,7 +441,6 @@ public:
     }
 
     bool EnsureInitialized();
-    void LoadConfigSensitiveSymbols();
 
     void DumpEGLConfig(EGLConfig cfg);
     void DumpEGLConfigs();
