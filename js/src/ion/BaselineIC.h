@@ -339,6 +339,11 @@ class ICEntry
                                 \
     _(GetName_Fallback)         \
     _(GetName_Global)           \
+    _(GetName_Scope0)           \
+    _(GetName_Scope1)           \
+    _(GetName_Scope2)           \
+    _(GetName_Scope3)           \
+    _(GetName_Scope4)           \
                                 \
     _(BindName_Fallback)        \
                                 \
@@ -2553,6 +2558,86 @@ class ICGetName_Global : public ICMonitoredStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICGetName_Global::New(space, getStubCode(), firstMonitorStub_, shape_, slot_);
+        }
+    };
+};
+
+// Optimized GETNAME/CALLNAME stub, making a variable number of hops to get an
+// 'own' property off some scope object. Unlike GETPROP on an object's
+// prototype, there is no teleporting optimization to take advantage of and
+// shape checks are required all along the scope chain.
+template <size_t NumHops>
+class ICGetName_Scope : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+    static const size_t MAX_HOPS = 4;
+
+    HeapPtrShape shapes_[NumHops + 1];
+    uint32_t offset_;
+
+    ICGetName_Scope(IonCode *stubCode, ICStub *firstMonitorStub,
+                    AutoShapeVector *shapes, uint32_t offset)
+      : ICMonitoredStub(GetStubKind(), stubCode, firstMonitorStub),
+        offset_(offset)
+    {
+        JS_STATIC_ASSERT(NumHops <= MAX_HOPS);
+        JS_ASSERT(shapes->length() == NumHops + 1);
+        for (size_t i = 0; i < NumHops + 1; i++)
+            shapes_[i].init((*shapes)[i]);
+    }
+
+    static Kind GetStubKind() {
+        return (Kind) (GetName_Scope0 + NumHops);
+    }
+
+  public:
+    static inline ICGetName_Scope *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
+                                       AutoShapeVector *shapes, uint32_t offset)
+    {
+        return space->allocate<ICGetName_Scope<NumHops> >(code, firstMonitorStub, shapes, offset);
+    }
+
+    void traceScopes(JSTracer *trc) {
+        for (size_t i = 0; i <= NumHops; i++)
+            MarkShape(trc, &shapes_[i], "baseline-scope-stub-shape");
+    }
+
+    static size_t offsetOfShape(size_t index) {
+        JS_ASSERT(index <= NumHops);
+        return offsetof(ICGetName_Scope, shapes_[index]);
+    }
+    static size_t offsetOfOffset() {
+        return offsetof(ICGetName_Scope, offset_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        ICStub *firstMonitorStub_;
+        AutoShapeVector *shapes_;
+        bool isFixedSlot_;
+        uint32_t offset_;
+
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      protected:
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
+        }
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub,
+                 AutoShapeVector *shapes, bool isFixedSlot, uint32_t offset)
+          : ICStubCompiler(cx, GetStubKind()),
+            firstMonitorStub_(firstMonitorStub),
+            shapes_(shapes),
+            isFixedSlot_(isFixedSlot),
+            offset_(offset)
+        {
+        }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetName_Scope::New(space, getStubCode(), firstMonitorStub_, shapes_, offset_);
         }
     };
 };
