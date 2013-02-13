@@ -442,7 +442,7 @@ RasterImage::~RasterImage()
   }
 }
 
-void
+/* static */ void
 RasterImage::Initialize()
 {
   InitPrefCaches();
