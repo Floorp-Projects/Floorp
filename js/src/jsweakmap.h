@@ -216,11 +216,9 @@ protected:
 #if DEBUG
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
             Key k(r.front().key);
-            Value v(r.front().value);
             JS_ASSERT(!gc::IsAboutToBeFinalized(&k));
-            JS_ASSERT(!gc::IsAboutToBeFinalized(&v));
+            JS_ASSERT(!gc::IsAboutToBeFinalized(&r.front().value));
             JS_ASSERT(k == r.front().key);
-            JS_ASSERT(v == r.front().value);
         }
 #endif
     }
