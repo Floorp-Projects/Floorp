@@ -4,18 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
+
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
 
 #include "nsIHttpChannel.h"
 #include "nsSimpleURI.h"
 #include "nsMimeTypes.h"
+#include "nsIURI.h"
+#include "nsIRequest.h"
 
+#include "imgIContainer.h"
+#include "imgStatusTracker.h"
 #include "RasterImage.h"
 #include "VectorImage.h"
+#include "Image.h"
 
 #include "ImageFactory.h"
-#include <algorithm>
 
 namespace mozilla {
 namespace image {
@@ -38,12 +44,12 @@ ComputeImageFlags(nsIURI* uri, bool isMultiPart)
 {
   nsresult rv;
 
-  // We default to the static globals
+  // We default to the static globals.
   bool isDiscardable = gDiscardable;
   bool doDecodeOnDraw = gDecodeOnDraw;
 
   // We want UI to be as snappy as possible and not to flicker. Disable discarding
-  // and decode-on-draw for chrome URLS
+  // and decode-on-draw for chrome URLS.
   bool isChrome = false;
   rv = uri->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && isChrome)
@@ -61,7 +67,7 @@ ComputeImageFlags(nsIURI* uri, bool isMultiPart)
   if (isMultiPart)
     isDiscardable = doDecodeOnDraw = false;
 
-  // We have all the information we need
+  // We have all the information we need.
   uint32_t imageFlags = Image::INIT_FLAG_NONE;
   if (isDiscardable)
     imageFlags |= Image::INIT_FLAG_DISCARDABLE;
@@ -123,7 +129,6 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
 }
 
 /* static */ already_AddRefed<Image>
-
 ImageFactory::CreateRasterImage(nsIRequest* aRequest,
                                 imgStatusTracker* aStatusTracker,
                                 const nsCString& aMimeType,
@@ -151,16 +156,16 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
       int32_t len = contentLength.ToInteger(&rv);
 
       // Pass anything usable on so that the RasterImage can preallocate
-      // its source buffer
+      // its source buffer.
       if (len > 0) {
         uint32_t sizeHint = (uint32_t) len;
         sizeHint = std::min<uint32_t>(sizeHint, 20000000); // Bound by something reasonable
         rv = newImage->SetSourceSizeHint(sizeHint);
         if (NS_FAILED(rv)) {
-          // Flush memory, try to get some back, and try again
+          // Flush memory, try to get some back, and try again.
           rv = nsMemory::HeapMinimize(true);
           nsresult rv2 = newImage->SetSourceSizeHint(sizeHint);
-          // If we've still failed at this point, things are going downhill
+          // If we've still failed at this point, things are going downhill.
           if (NS_FAILED(rv) || NS_FAILED(rv2)) {
             NS_WARNING("About to hit OOM in imagelib!");
           }
