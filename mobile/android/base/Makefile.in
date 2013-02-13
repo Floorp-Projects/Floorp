@@ -551,8 +551,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_reload.png \
   res/drawable/ic_menu_quit.xml \
   res/drawable/ic_status_logo.png \
-  res/drawable/remote_tabs_off.png \
-  res/drawable/remote_tabs_on.png \
   res/drawable/tab_indicator_divider.9.png \
   res/drawable/tab_indicator_selected.9.png \
   res/drawable/tab_indicator_selected_focused.9.png \
@@ -649,8 +647,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_new_tab_small.png \
   res/drawable-hdpi/ic_menu_reload.png \
   res/drawable-hdpi/ic_status_logo.png \
-  res/drawable-hdpi/remote_tabs_off.png \
-  res/drawable-hdpi/remote_tabs_on.png \
   res/drawable-hdpi/tab_indicator_divider.9.png \
   res/drawable-hdpi/tab_indicator_selected.9.png \
   res/drawable-hdpi/tab_indicator_selected_focused.9.png \
@@ -772,8 +768,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/menu_item_check.png \
   res/drawable-xhdpi/menu_item_more.png \
   res/drawable-xhdpi/menu_item_uncheck.png \
-  res/drawable-xhdpi/remote_tabs_off.png \
-  res/drawable-xhdpi/remote_tabs_on.png \
   res/drawable-xhdpi/tab_indicator_divider.9.png \
   res/drawable-xhdpi/tab_indicator_selected.9.png \
   res/drawable-xhdpi/tab_indicator_selected_focused.9.png \
@@ -866,44 +860,32 @@ RES_DRAWABLE_XHDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LAND_MDPI_V14 = \
-  res/drawable-land-mdpi-v14/remote_tabs_off.png \
-  res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tabs_carat.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_HDPI_V14 = \
-  res/drawable-land-hdpi-v14/remote_tabs_off.png \
-  res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tabs_carat.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_XHDPI_V14 = \
-  res/drawable-land-xhdpi-v14/remote_tabs_off.png \
-  res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
-  res/drawable-large-mdpi-v11/remote_tabs_off.png \
-  res/drawable-large-mdpi-v11/remote_tabs_on.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/ic_menu_reload.png \
   res/drawable-large-hdpi-v11/ic_menu_forward.png \
-  res/drawable-large-hdpi-v11/remote_tabs_off.png \
-  res/drawable-large-hdpi-v11/remote_tabs_on.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/ic_menu_reload.png \
   res/drawable-large-xhdpi-v11/ic_menu_forward.png \
-  res/drawable-large-xhdpi-v11/remote_tabs_on.png \
-  res/drawable-large-xhdpi-v11/remote_tabs_off.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
   $(NULL)
 
@@ -996,7 +978,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/progress_spinner_11.png                \
   mobile/android/base/resources/drawable/progress_spinner_12.png                \
   mobile/android/base/resources/drawable/remote_tabs_child_divider.xml          \
-  mobile/android/base/resources/drawable/remote_tabs_level.xml                  \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/spinner.xml                            \
