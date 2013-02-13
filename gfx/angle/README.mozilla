@@ -30,6 +30,9 @@ In this order:
     Adds uniform array index clamping on non-Windows platforms.
     Windows would require r1719, r1733, r1734.
 
+  angle-cross-compilation.patch
+    Fixes cross compilation on case sensitive OSes.
+
 In addition to these patches, the Makefile.in files are ours, they're not present in
 upsteam ANGLE. Therefore, changes made to the Makefile.in files should not be stored
 in the local .patch files.
