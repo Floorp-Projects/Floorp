@@ -14,10 +14,6 @@ var PageActions = {
 
     this.register("pageaction-reset", this.updatePagePermissions, this);
     this.register("pageaction-password", this.updateForgetPassword, this);
-#ifdef NS_PRINTING
-    this.register("pageaction-saveas", this.updatePageSaveAs, this);
-#endif
-    this.register("pageaction-share", this.updateShare, this);
 
     CharsetMenu.init();
   },
@@ -132,30 +128,6 @@ var PageActions = {
 
     this.hideItem(aEvent.target);
     aEvent.stopPropagation(); // Don't hide the site menu.
-  },
-
-  pinSite : function pinCurrentSite() {
-    if (Browser.selectedBrowser.currentURI.spec.length == 0) {
-      return;
-    }
-    Browser.pinSite();
-  },
-
-  unpinSite : function unpinCurrentSite() {
-    if (Browser.selectedBrowser.currentURI.spec.length == 0) {
-      return;
-    }
-    Browser.unpinSite();
-  },
-
-  updatePageSaveAs: function updatePageSaveAs(aNode) {
-    // Check for local XUL content
-    let contentWindow = Browser.selectedBrowser.contentWindow;
-    return !(contentWindow && contentWindow.document instanceof XULDocument);
-  },
-
-  updateShare: function updateShare(aNode) {
-    return Util.isShareableScheme(Browser.selectedBrowser.currentURI.scheme);
   },
 
   hideItem: function hideItem(aNode) {
