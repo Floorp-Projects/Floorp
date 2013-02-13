@@ -53,7 +53,7 @@ public abstract class SessionParser {
     public void parse(String sessionString) {
         final JSONArray tabs;
         final JSONObject window;
-        final int selected;
+        int selected = -1;
         try {
             window = new JSONObject(sessionString).getJSONArray("windows").getJSONObject(0);
             tabs = window.getJSONArray("tabs");
@@ -63,7 +63,12 @@ public abstract class SessionParser {
             return;
         }
 
-        for (int i = 0; i < tabs.length(); i++) {
+        int numTabs = tabs.length();
+        if (selected < 1 || selected > numTabs) {
+            selected = 1;
+        }
+
+        for (int i = 0; i < numTabs; i++) {
             try {
                 JSONObject tab = tabs.getJSONObject(i);
                 int index = tab.getInt("index");
