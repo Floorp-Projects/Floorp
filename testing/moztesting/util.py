@@ -14,13 +14,11 @@ def parse_test_path(test_path, topsrcdir):
     """
     is_dir = os.path.isdir(test_path)
 
-    if is_dir and not test_path.endswith(os.path.sep):
-        test_path += os.path.sep
+    normalized = os.path.normpath(test_path)
+    topsrcdir = os.path.normpath(topsrcdir)
 
-    normalized = test_path
-
-    if test_path.startswith(topsrcdir):
-        normalized = test_path[len(topsrcdir):]
+    if normalized.startswith(topsrcdir):
+        normalized = normalized[len(topsrcdir):]
 
     return {
         'normalized': normalized,
