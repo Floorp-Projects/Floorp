@@ -37,7 +37,7 @@
     </style>
 
     <style name="Gecko.App">
-        <item name="android:windowBackground">@drawable/abouthome_bg_repeat</item>
+        <item name="android:windowBackground">@color/background_normal</item>
     </style>
 
     <style name="Gecko.Light.AwesomeBar"/>
