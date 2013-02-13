@@ -993,9 +993,6 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   programFiles.AppendLiteral("\\");
   uint32_t programFilesLen = programFiles.Length();
 
-  if (longPath.Length() < programFilesLen)
-    return NS_ERROR_FAILURE;
-
   nsAutoString programName;
   if (_wcsnicmp(programFiles.get(), longPath.get(), programFilesLen) == 0) {
     programName = Substring(longPath, programFilesLen);
