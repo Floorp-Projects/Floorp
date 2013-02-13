@@ -283,7 +283,9 @@ Section "-Application" APP_IDX
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
+!ifdef MOZ_METRO
   ${ResetWin8PromptKeys}
+!endif
   ${UpdateProtocolHandlers}
 
   ClearErrors
