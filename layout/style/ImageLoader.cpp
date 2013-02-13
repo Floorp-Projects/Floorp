@@ -100,11 +100,12 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
   }
 
   // Add these to the sets, but only if they're not already there.
-  uint32_t i;
-  if (!frameSet->GreatestIndexLtEq(aFrame, i)) {
+  uint32_t i = frameSet->IndexOfFirstElementGt(aFrame);
+  if (i == 0 || aFrame != frameSet->ElementAt(i-1)) {
     frameSet->InsertElementAt(i, aFrame);
   }
-  if (!requestSet->GreatestIndexLtEq(aRequest, i)) {
+  i = requestSet->IndexOfFirstElementGt(aRequest);
+  if (i == 0 || aRequest != requestSet->ElementAt(i-1)) {
     requestSet->InsertElementAt(i, aRequest);
   }
 }
