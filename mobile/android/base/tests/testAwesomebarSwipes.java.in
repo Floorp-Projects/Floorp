@@ -56,16 +56,4 @@ public class testAwesomebarSwipes extends BaseTest {
 
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
     }
-
-    private ListView getAllPagesList(String url) {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        mSolo.waitForText(url);
-
-        ArrayList<ListView> views = mSolo.getCurrentListViews();
-        for (ListView view : views) {
-            if (view.getTag() == "allPages")
-                return view;
-        }
-        return null;
-    }
 }
