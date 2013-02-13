@@ -43,7 +43,7 @@
 #include "nsURLHelper.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/RTCIceServerBinding.h"
+#include "mozilla/dom/RTCConfigurationBinding.h"
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "jsapi.h"
@@ -347,43 +347,30 @@ Warn(JSContext* aCx, const nsCString& aMsg) {
  *                   { url:"turn:user@turn.example.org", credential:"mypass"} ] }
  *
  * This function converts an already-validated jsval that looks like the above
- * into an RTCConfiguration object.
+ * into an IceConfiguration object.
  */
 nsresult
 PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
-                                            RTCConfiguration *aDst,
+                                            IceConfiguration *aDst,
                                             JSContext* aCx)
 {
 #ifdef MOZILLA_INTERNAL_API
   if (!aSrc.isObject()) {
     return NS_ERROR_FAILURE;
   }
-  JSObject& config = aSrc.toObject();
-  JSAutoCompartment ac(aCx, &config);
-  JS::Value jsServers;
-  if (!(JS_GetProperty(aCx, &config, "iceServers", &jsServers) && jsServers.isObject())) {
+  JSAutoCompartment ac(aCx, &aSrc.toObject());
+  RTCConfiguration config;
+  if (!(config.Init(aCx, nullptr, aSrc) && config.mIceServers.WasPassed())) {
     return NS_ERROR_FAILURE;
   }
-  JSObject& servers = jsServers.toObject();
-  uint32_t len;
-  if (!(IsArrayLike(aCx, &servers) && JS_GetArrayLength(aCx, &servers, &len))) {
-    return NS_ERROR_FAILURE;
-  }
-  for (uint32_t i = 0; i < len; i++) {
-    nsresult rv;
-    // XXXbz once this moves to WebIDL, remove the RTCIceServer hack
-    // in DummyBinding.webidl.
-    RTCIceServer server;
-    {
-      JS::Value v;
-      if (!(JS_GetElement(aCx, &servers, i, &v) && server.Init(aCx, nullptr, v))) {
-        return NS_ERROR_FAILURE;
-      }
-    }
+  for (uint32_t i = 0; i < config.mIceServers.Value().Length(); i++) {
+    // XXXbz once this moves to WebIDL, remove RTCConfiguration in DummyBinding.webidl.
+    RTCIceServer& server = config.mIceServers.Value()[i];
     if (!server.mUrl.WasPassed()) {
       return NS_ERROR_FAILURE;
     }
     nsRefPtr<nsIURI> url;
+    nsresult rv;
     rv = NS_NewURI(getter_AddRefs(url), server.mUrl.Value());
     NS_ENSURE_SUCCESS(rv, rv);
     bool isStun = false, isStuns = false, isTurn = false, isTurns = false;
@@ -450,7 +437,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 nsresult
 PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                nsIDOMWindow* aWindow,
-                               const RTCConfiguration* aConfiguration,
+                               const IceConfiguration* aConfiguration,
                                const JS::Value* aRTCConfiguration,
                                nsIThread* aThread,
                                JSContext* aCx)
@@ -500,7 +487,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
   // Initialize the media object.
   if (aRTCConfiguration) {
-    RTCConfiguration ic;
+    IceConfiguration ic;
     res = ConvertRTCConfiguration(*aRTCConfiguration, &ic, aCx);
     NS_ENSURE_SUCCESS(res, res);
     res = mMedia->Init(ic.getServers());
