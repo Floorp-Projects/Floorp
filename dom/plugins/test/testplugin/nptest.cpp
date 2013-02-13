@@ -583,34 +583,6 @@ drawAsyncBitmapColor(InstanceData* instanceData)
   instanceData->backBuffer = oldFront;
 }
 
-static bool bug813906(NPP npp, const char* const function, const char* const url, const char* const frame)
-{
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-
-  NPObject *windowObj = nullptr;
-  NPError err = NPN_GetValue(npp, NPNVWindowNPObject, &windowObj);
-  if (err != NPERR_NO_ERROR) {
-    return false;
-  }
-
-  NPVariant result;
-  bool res = NPN_Invoke(npp, windowObj, NPN_GetStringIdentifier(function), nullptr, 0, &result);
-  NPN_ReleaseObject(windowObj);
-  if (!res) {
-    return false;
-  }
-
-  NPN_ReleaseVariantValue(&result);
-
-  err = NPN_GetURL(npp, url, frame);
-  if (err != NPERR_NO_ERROR) {
-    err = NPN_GetURL(npp, "about:blank", frame);
-    return false;
-  }
-
-  return true;
-}
-
 //
 // function signatures
 //
@@ -822,7 +794,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->frontBuffer = NULL;
   instanceData->backBuffer = NULL;
   instanceData->mouseUpEventCount = 0;
-  instanceData->bugMode = -1;
   instance->pdata = instanceData;
 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
@@ -953,9 +924,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (!strcmp(argn[i], "closestream")) {
       instanceData->closeStream = true;
     }
-    if (strcmp(argn[i], "bugmode") == 0) {
-      instanceData->bugMode = atoi(argv[i]);
-    }
   }
 
   if (!browserSupportsWindowless || !pluginSupportsWindowlessMode()) {
@@ -1046,10 +1014,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (err != NPERR_NO_ERROR) {
       instanceData->err << "NPN_GetURLNotify returned " << err;
     }
-  }
-
-  if ((instanceData->bugMode == 813906) && instanceData->frame.length()) {
-    bug813906(instance, "f", "browser.xul", instanceData->frame.c_str());
   }
 
   return NPERR_NO_ERROR;
