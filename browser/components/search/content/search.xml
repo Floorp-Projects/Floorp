@@ -455,6 +455,7 @@
         <body><![CDATA[
           // null parameter below specifies HTML response for search
           var submission = this.currentEngine.getSubmission(aData);
+          BrowserSearch.recordSearchInHealthReport(this.currentEngine.name, "searchbar");
           openUILinkIn(submission.uri.spec, aWhere, null, submission.postData);
         ]]></body>
       </method>
