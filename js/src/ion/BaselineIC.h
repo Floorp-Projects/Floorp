@@ -359,7 +359,9 @@ class ICEntry
                                 \
     _(IteratorNew_Fallback)     \
     _(IteratorMore_Fallback)    \
+    _(IteratorMore_Native)      \
     _(IteratorNext_Fallback)    \
+    _(IteratorNext_Native)      \
     _(IteratorClose_Fallback)   \
                                 \
     _(InstanceOf_Fallback)      \
@@ -3301,6 +3303,35 @@ class ICIteratorMore_Fallback : public ICFallbackStub
     };
 };
 
+// IC for testing if there are more values in a native iterator.
+class ICIteratorMore_Native : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICIteratorMore_Native(IonCode *stubCode)
+      : ICStub(ICStub::IteratorMore_Native, stubCode)
+    { }
+
+  public:
+    static inline ICIteratorMore_Native *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICIteratorMore_Native>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::IteratorMore_Native)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICIteratorMore_Native::New(space, getStubCode());
+        }
+    };
+};
+
 // IC for getting the next value in an iterator.
 class ICIteratorNext_Fallback : public ICFallbackStub
 {
@@ -3326,6 +3357,35 @@ class ICIteratorNext_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICIteratorNext_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// IC for getting the next value in a native iterator.
+class ICIteratorNext_Native : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICIteratorNext_Native(IonCode *stubCode)
+      : ICStub(ICStub::IteratorNext_Native, stubCode)
+    { }
+
+  public:
+    static inline ICIteratorNext_Native *New(ICStubSpace *space, IonCode *code) {
+        return space->allocate<ICIteratorNext_Native>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::IteratorNext_Native)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICIteratorNext_Native::New(space, getStubCode());
         }
     };
 };
