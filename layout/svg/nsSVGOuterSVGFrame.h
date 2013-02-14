@@ -57,9 +57,9 @@ public:
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus aStatus);
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,

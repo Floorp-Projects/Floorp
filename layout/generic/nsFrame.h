@@ -507,10 +507,10 @@ public:
    * @param aBackground *aBackground is set to the bottom-most
    * nsDisplayBackground item, if any are created, otherwise null.
    */
-  nsresult DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
-                                          const nsDisplayListSet& aLists,
-                                          bool aForceBackground,
-                                          nsDisplayBackgroundImage** aBackground);
+  void DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
+                                      const nsDisplayListSet& aLists,
+                                      bool aForceBackground,
+                                      nsDisplayBackgroundImage** aBackground);
   /**
    * Adds display items for standard CSS borders, background and outline for
    * for this frame, as necessary. Checks IsVisibleForPainting and won't
@@ -520,20 +520,20 @@ public:
    * for frames that might receive a propagated background via
    * nsCSSRendering::FindBackground
    */
-  nsresult DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
-                                          const nsDisplayListSet& aLists,
-                                          bool aForceBackground = false);
+  void DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
+                                      const nsDisplayListSet& aLists,
+                                      bool aForceBackground = false);
   /**
    * Add a display item for the CSS outline. Does not check visibility.
    */
-  nsresult DisplayOutlineUnconditional(nsDisplayListBuilder*   aBuilder,
-                                       const nsDisplayListSet& aLists);
+  void DisplayOutlineUnconditional(nsDisplayListBuilder*   aBuilder,
+                                   const nsDisplayListSet& aLists);
   /**
    * Add a display item for the CSS outline, after calling
    * IsVisibleForPainting to confirm we are visible.
    */
-  nsresult DisplayOutline(nsDisplayListBuilder*   aBuilder,
-                          const nsDisplayListSet& aLists);
+  void DisplayOutline(nsDisplayListBuilder*   aBuilder,
+                      const nsDisplayListSet& aLists);
 
   /**
    * Adjust the given parent frame to the right style context parent frame for
@@ -558,7 +558,7 @@ protected:
    * @param aContentType an nsISelectionDisplay DISPLAY_ constant identifying
    * which kind of content this is for
    */
-  nsresult DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
+  void DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
       nsDisplayList* aList, uint16_t aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
 
   int16_t DisplaySelection(nsPresContext* aPresContext, bool isOkToTurnOn = false);

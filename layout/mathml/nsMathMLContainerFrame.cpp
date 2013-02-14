@@ -621,7 +621,7 @@ nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIFrame*       aPa
  */
 
 
-NS_IMETHODIMP
+void
 nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
@@ -629,11 +629,11 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // report an error if something wrong was found in this frame
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
     if (!IsVisibleForPainting(aBuilder))
-      return NS_OK;
+      return;
 
     aLists.Content()->AppendNewToTop(
       new (aBuilder) nsDisplayMathMLError(aBuilder, this));
-    return NS_OK;
+    return;
   }
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
@@ -650,7 +650,6 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // in the Init() of your sub-class
   DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
 #endif
-  return NS_OK;
 }
 
 // Note that this method re-builds the automatic data in the children -- not
