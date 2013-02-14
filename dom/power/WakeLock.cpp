@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "WakeLock.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
 #include "nsDOMClassInfoID.h"
@@ -13,9 +15,10 @@
 #include "nsIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
 #include "PowerManager.h"
-#include "WakeLock.h"
 
 DOMCI_DATA(MozWakeLock, mozilla::dom::power::WakeLock)
+
+using namespace mozilla::hal;
 
 namespace mozilla {
 namespace dom {
@@ -25,6 +28,8 @@ NS_INTERFACE_MAP_BEGIN(WakeLock)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozWakeLock)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozWakeLock)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozWakeLock)
 NS_INTERFACE_MAP_END
 
@@ -34,6 +39,7 @@ NS_IMPL_RELEASE(WakeLock)
 WakeLock::WakeLock()
   : mLocked(false)
   , mHidden(true)
+  , mContentParentID(CONTENT_PROCESS_ID_UNKNOWN)
 {
 }
 
@@ -46,6 +52,13 @@ WakeLock::~WakeLock()
 nsresult
 WakeLock::Init(const nsAString &aTopic, nsIDOMWindow *aWindow)
 {
+  // Don't Init() a WakeLock twice.
+  MOZ_ASSERT(mTopic.IsEmpty());
+
+  if (aTopic.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   mTopic.Assign(aTopic);
 
   mWindow = do_GetWeakReference(aWindow);
@@ -67,15 +80,73 @@ WakeLock::Init(const nsAString &aTopic, nsIDOMWindow *aWindow)
   return NS_OK;
 }
 
+nsresult
+WakeLock::Init(const nsAString& aTopic, ContentParent* aContentParent)
+{
+  // Don't Init() a WakeLock twice.
+  MOZ_ASSERT(mTopic.IsEmpty());
+  MOZ_ASSERT(aContentParent);
+
+  if (aTopic.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mTopic.Assign(aTopic);
+  mContentParentID = aContentParent->ChildID();
+  mHidden = false;
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, "ipc:content-shutdown", /* ownsWeak */ true);
+  }
+
+  DoLock();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WakeLock::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* data)
+{
+  // If this wake lock was acquired on behalf of another process, unlock it
+  // when that process dies.
+  //
+  // Note that we do /not/ call DoUnlock() here!  The wake lock back-end is
+  // already listening for ipc:content-shutdown messages and will clear out its
+  // tally for the process when it dies.  All we need to do here is ensure that
+  // unlock() becomes a nop.
+
+  MOZ_ASSERT(!strcmp(aTopic, "ipc:content-shutdown"));
+
+  nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
+  if (!props) {
+    NS_WARNING("ipc:content-shutdown message without property bag as subject");
+    return NS_OK;
+  }
+
+  uint64_t childID = 0;
+  nsresult rv = props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"),
+                                           &childID);
+  if (NS_SUCCEEDED(rv)) {
+    if (childID == mContentParentID) {
+      mLocked = false;
+    }
+  } else {
+    NS_WARNING("ipc:content-shutdown message without childID property");
+  }
+  return NS_OK;
+}
+
 void
 WakeLock::DoLock()
 {
   if (!mLocked) {
     // Change the flag immediately to prevent recursive reentering
     mLocked = true;
+
     hal::ModifyWakeLock(mTopic,
                         hal::WAKE_LOCK_ADD_ONE,
-                        mHidden ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_NO_CHANGE);
+                        mHidden ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_NO_CHANGE,
+                        mContentParentID);
   }
 }
 
@@ -85,9 +156,11 @@ WakeLock::DoUnlock()
   if (mLocked) {
     // Change the flag immediately to prevent recursive reentering
     mLocked = false;
+
     hal::ModifyWakeLock(mTopic,
                         hal::WAKE_LOCK_REMOVE_ONE,
-                        mHidden ? hal::WAKE_LOCK_REMOVE_ONE : hal::WAKE_LOCK_NO_CHANGE);
+                        mHidden ? hal::WAKE_LOCK_REMOVE_ONE : hal::WAKE_LOCK_NO_CHANGE,
+                        mContentParentID);
   }
 }
 
@@ -181,7 +254,8 @@ WakeLock::HandleEvent(nsIDOMEvent *aEvent)
     if (mLocked && oldHidden != mHidden) {
       hal::ModifyWakeLock(mTopic,
                           hal::WAKE_LOCK_NO_CHANGE,
-                          mHidden ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_REMOVE_ONE);
+                          mHidden ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_REMOVE_ONE,
+                          mContentParentID);
     }
 
     return NS_OK;

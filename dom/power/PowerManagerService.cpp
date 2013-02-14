@@ -199,6 +199,16 @@ PowerManagerService::NewWakeLock(const nsAString &aTopic,
   return NS_OK;
 }
 
+already_AddRefed<nsIDOMMozWakeLock>
+PowerManagerService::NewWakeLockOnBehalfOfProcess(const nsAString& aTopic,
+                                                  ContentParent* aContentParent)
+{
+  nsRefPtr<WakeLock> wakelock = new WakeLock();
+  nsresult rv = wakelock->Init(aTopic, aContentParent);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return wakelock.forget();
+}
+
 } // power
 } // dom
 } // mozilla
