@@ -256,6 +256,76 @@ public:
   // nsIDOMHTMLSelectElement
   NS_DECL_NSIDOMHTMLSELECTELEMENT
 
+  // WebIdl HTMLSelectElement
+  bool Autofocus() const
+  {
+    return GetBoolAttr(nsGkAtoms::autofocus);
+  }
+  void SetAutofocus(bool aVal, mozilla::ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::autofocus, aVal, aRv);
+  }
+  bool Disabled() const
+  {
+    return GetBoolAttr(nsGkAtoms::disabled);
+  }
+  void SetDisabled(bool aVal, mozilla::ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::disabled, aVal, aRv);
+  }
+  nsHTMLFormElement* GetForm() const
+  {
+    return nsGenericHTMLFormElement::GetForm();
+  }
+  bool Multiple() const
+  {
+    return GetBoolAttr(nsGkAtoms::multiple);
+  }
+  void SetMultiple(bool aVal, mozilla::ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::multiple, aVal, aRv);
+  }
+  void GetName(nsString& aName, mozilla::ErrorResult& aRv) const
+  {
+    GetHTMLAttr(nsGkAtoms::name, aName);
+  }
+  void SetName(const nsAString& aName, mozilla::ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aName, aRv);
+  }
+  bool Required() const
+  {
+    return GetBoolAttr(nsGkAtoms::required);
+  }
+  void SetRequired(bool aVal, mozilla::ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::required, aVal, aRv);
+  }
+  nsHTMLOptionCollection* Options() const
+  {
+    return mOptions;
+  }
+  void Remove(int32_t aIdx, mozilla::ErrorResult& aRv)
+  {
+    aRv = Remove(aIdx);
+  }
+  int32_t SelectedIndex() const
+  {
+    return mSelectedIndex;
+  }
+  void SetSelectedIndex(int32_t aIdx, mozilla::ErrorResult& aRv)
+  {
+    aRv = SetSelectedIndexInternal(aIdx, true);
+  }
+  mozilla::dom::Element* IndexedGetter(uint32_t aIdx, bool& aFound) const
+  {
+    return mOptions->IndexedGetter(aIdx, aFound);
+  }
+  uint32_t Length() const
+  {
+    return mOptions->Length();
+  }
+
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
