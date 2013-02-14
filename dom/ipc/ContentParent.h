@@ -15,7 +15,6 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/HalTypes.h"
 
 #include "nsFrameMessageManager.h"
 #include "nsIObserver.h"
@@ -30,6 +29,9 @@
 #include "PermissionMessageUtils.h"
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
+
+#define CONTENT_PARENT_NO_CHILD_ID 0
+#define CONTENT_PARENT_UNKNOWN_CHILD_ID -1
 
 class mozIApplication;
 class nsConsoleService;
