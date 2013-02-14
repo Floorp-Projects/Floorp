@@ -52,13 +52,6 @@ LIBS +=	$(NSPR_LIBS)
 
 NSDISTMODE = copy
 
-ifdef _MSC_VER
-ifeq ($(OS_TEST),x86_64)
-# set stack to 2MB on x64 build.  See bug 582910
-WIN32_EXE_LDFLAGS += -STACK:2097152
-endif
-endif
-
 ifeq ($(OS_TEST),ia64)
 LIBS += $(JEMALLOC_LIBS)
 endif

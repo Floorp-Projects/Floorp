@@ -124,7 +124,7 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fails-if(Android) == aja-linear
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,16477) fails-if(Android) == aja-linear-6a.html aja-linear-6-ref.html # bug 526708
 fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
 skip-if(B2G) == height-dependence-1.html height-dependence-1-ref.html
-skip-if(B2G) == height-dependence-2.html height-dependence-2-ref.html
+skip-if(B2G) fuzzy-if(cocoaWidget,1,40000) == height-dependence-2.html height-dependence-2-ref.html
 skip-if(B2G) == height-dependence-3.html height-dependence-3-ref.html
 
 fails-if(d2d) == linear-onestopposition-1.html linear-onestopposition-1-ref.html # bug 638664

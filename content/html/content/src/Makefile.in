@@ -142,12 +142,13 @@ CPPSRCS		= \
 ifdef MOZ_MEDIA
 EXPORTS_mozilla/dom += \
 		HTMLSourceElement.h \
+		MediaError.h \
 		$(NULL)
 
 CPPSRCS		+= \
 		nsHTMLAudioElement.cpp \
 		nsHTMLMediaElement.cpp \
-		nsMediaError.cpp \
+		MediaError.cpp \
 		nsMediaFragmentURIParser.cpp \
 		HTMLSourceElement.cpp \
 		nsTimeRanges.cpp \
