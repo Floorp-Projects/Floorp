@@ -580,6 +580,11 @@ pref("dom.ipc.processPrelaunch.enabled", true);
 pref("dom.ipc.processPrelaunch.delayMs", 5000);
 #endif
 
+// When a process receives a system message, we hold a CPU wake lock on its
+// behalf for this many seconds, or until it handles the system message,
+// whichever comes first.
+pref("dom.ipc.systemMessageCPULockTimeoutSec", 30);
+
 // Ignore the "dialog=1" feature in window.open.
 pref("dom.disable_window_open_dialog_feature", true);
 
