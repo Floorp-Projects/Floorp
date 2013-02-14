@@ -11,7 +11,8 @@
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
 @media not all and (-moz-windows-classic) {
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container,
+  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
     margin-top: 1px;
   }
 
@@ -123,10 +124,6 @@
 
   #appcontent {
     -moz-appearance: -moz-win-exclude-glass;
-  }
-
-  #main-window[chromemargin^="0,"][sizemode=normal] #navigator-toolbox {
-    margin-top: -7px;
   }
 
   /* Artificially draw window borders that are covered by lwtheme, see bug 591930. */
@@ -269,7 +266,7 @@
     background-color: -moz-dialog;
   }
 
-  #navigator-toolbox[tabsontop=false] > #toolbar-menubar > #menubar-items > #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
+  #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
     background-color: rgba(255,255,255,.5);
     border-radius: 4px;
   }
@@ -331,10 +328,6 @@
   }
 
   /* Glass Fog */
-  #main-window[tabsintitlebar] #appmenu-button-container,
-  #main-window[tabsintitlebar] #titlebar-buttonbox {
-    z-index: 1; /* These elements need to appear above the glass fog */
-  }
 
   #TabsToolbar:not(:-moz-lwtheme) {
     background-image: none;
