@@ -5031,6 +5031,10 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
             return OptionFailure("ion-limit-script-size", str);
     }
 
+    int32_t useCount = op->getIntOption("ion-uses-before-compile");
+    if (useCount >= 0)
+        ion::js_IonOptions.usesBeforeCompile = useCount;
+
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
             ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_LSRA;
@@ -5271,6 +5275,9 @@ main(int argc, char **argv, char **envp)
                                "On-Stack Replacement (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-limit-script-size", "on/off",
                                "Don't compile very large scripts (default: on, off to disable)")
+        || !op.addIntOption('\0', "ion-uses-before-compile", "COUNT",
+                            "Wait for COUNT calls or iterations before compiling "
+                            "(default: 10240)", -1)
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
                                "  lsra: Linear Scan register allocation (default)\n"
