@@ -127,22 +127,32 @@ IsBackgroundPriority(ProcessPriority aPriority)
 }
 
 /**
- * This class listens to window creation and visibilitychange events and
- * informs the hal back-end when this process transitions between having no
- * visible top-level windows, and when it has at least one visible top-level
- * window.
+ * This class listens to various Gecko events and asks the hal back-end to
+ * change this process's priority when it transitions between various states of
+ * "importance".
  *
+ * The process's priority determines its CPU priority and also how likely it is
+ * to be killed when the system is running out of memory.
  *
- * An important heuristic here is that we don't mark a process as background
- * until it's had no visible top-level windows for some amount of time.
+ * The most basic dichotomy in the ProcessPriorityManager is between
+ * "foreground" processes, which usually have at least one active docshell, and
+ * "background" processes.
  *
- * We do this because the notion of visibility is tied to inner windows
- * (actually, to documents).  When we navigate a page with outer window W, we
- * first destroy W's inner window and document, then insert a new inner window
- * and document into W.  If not for our grace period, this transition could
- * cause us to inform hal that this process quickly transitioned from
- * foreground to background to foreground again.
+ * An important heuristic here is that we don't always mark a process as having
+ * "background" priority until it's met the requisite criteria for some amount
+ * of time.
  *
+ * We do this because otherwise there are cases where we'd thrash a process
+ * between foreground and background priorities; for example, Gaia sometimes
+ * releases and re-acquires CPU wake locks in quick succession.
+ *
+ * On the other hand, when the embedder of an <iframe mozbrowser> calls
+ * setVisible(false) on an iframe, we immediately send the relevant process to
+ * the background, if it has no other foreground docshells.  This is necessary
+ * to ensure that when we load an app, the embedder first has a chance to send
+ * the previous app into the background.  This ensures that there's only one
+ * foreground app at a time, thus ensuring that we kill the right process if we
+ * come under memory pressure.
  */
 class ProcessPriorityManager MOZ_FINAL
   : public nsIObserver
@@ -249,10 +259,16 @@ ProcessPriorityManager::Init()
 
   // We can't do this in the constructor because we need to hold a strong ref
   // to |this| before calling these methods.
+  //
+  // Notice that we track /window/ creation and destruction even though our
+  // notion of "is-foreground" is tied to /docshell/ activity.  We do this
+  // because docshells don't fire an event when their visibility changes, but
+  // windows do.
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   os->AddObserver(this, "content-document-global-created", /* ownsWeak = */ false);
   os->AddObserver(this, "inner-window-destroyed", /* ownsWeak = */ false);
   os->AddObserver(this, "audio-channel-agent-changed", /* ownsWeak = */ false);
+  os->AddObserver(this, "process-priority:reset-now", /* ownsWeak = */ false);
 }
 
 NS_IMETHODIMP
@@ -266,6 +282,9 @@ ProcessPriorityManager::Observe(
   } else if (!strcmp(aTopic, "inner-window-destroyed") ||
              !strcmp(aTopic, "audio-channel-agent-changed")) {
     ResetPriority();
+  } else if (!strcmp(aTopic, "process-priority:reset-now")) {
+    LOG("Got process-priority:reset-now notification.");
+    ResetPriorityNow();
   } else {
     MOZ_ASSERT(false);
   }
@@ -347,40 +366,43 @@ ProcessPriorityManager::ResetPriorityNow()
 bool
 ProcessPriorityManager::ComputeIsInForeground()
 {
-  // We could try to be clever and count the number of visible windows, instead
-  // of iterating over mWindows every time one window's visibility state changes.
-  // But experience suggests that iterating over the windows is prone to fewer
-  // errors (and one mistake doesn't mess you up for the entire session).
-  // Moreover, mWindows should be a very short list, since it contains only
-  // top-level content windows.
+  // We could try to be clever and keep a running count of the number of active
+  // docshells, instead of iterating over mWindows every time one window's
+  // visibility state changes.  But experience suggests that iterating over the
+  // windows is prone to fewer errors (and one mistake doesn't mess you up for
+  // the entire session).  Moreover, mWindows should be a very short list,
+  // since it contains only top-level content windows.
 
   bool allHidden = true;
   for (uint32_t i = 0; i < mWindows.Length(); i++) {
-    nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindows[i]);
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindows[i]);
     if (!window) {
       mWindows.RemoveElementAt(i);
       i--;
       continue;
     }
 
-    nsCOMPtr<nsIDOMDocument> doc;
-    window->GetDocument(getter_AddRefs(doc));
-    if (!doc) {
+    nsCOMPtr<nsIDocShell> docshell = do_GetInterface(window);
+    if (!docshell) {
       continue;
     }
 
-    bool hidden = false;
-    doc->GetHidden(&hidden);
+    bool isActive = false;
+    docshell->GetIsActive(&isActive);
+
 #ifdef DEBUG
-    nsAutoString spec;
-    doc->GetDocumentURI(spec);
-    LOG("Document at %s has visibility %d.", NS_ConvertUTF16toUTF8(spec).get(), !hidden);
+    nsAutoCString spec;
+    nsCOMPtr<nsIURI> uri = window->GetDocumentURI();
+    if (uri) {
+      uri->GetSpec(spec);
+    }
+    LOG("Docshell at %s has visibility %d.", spec.get(), isActive);
 #endif
 
-    allHidden = allHidden && hidden;
+    allHidden = allHidden && !isActive;
 
     // We could break out early from this loop if
-    //   !hidden && mProcessPriority == BACKGROUND,
+    //   isActive && mProcessPriority == BACKGROUND,
     // but then we might not clean up all the weak refs.
   }
 
@@ -467,7 +489,8 @@ ProcessPriorityManager::TemporarilySetIsForeground()
   SetIsForeground();
 
   // Each call to TemporarilySetIsForeground guarantees us temporaryPriorityMS
-  // in the foreground.  So cancel our timer if it's running (which is due to a
+  // in the foreground (unless we receive a process-priority:reset-now
+  // notification).  So cancel our timer if it's running (which is due to a
   // previous call to either TemporarilySetIsForeground() or ResetPriority()).
   if (mResetPriorityTimer) {
     mResetPriorityTimer->Cancel();
