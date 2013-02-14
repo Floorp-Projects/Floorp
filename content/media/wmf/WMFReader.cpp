@@ -340,7 +340,7 @@ WMFReader::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
   return S_OK;
 }
 
-void
+HRESULT
 WMFReader::ConfigureVideoDecoder()
 {
   NS_ASSERTION(mSourceReader, "Must have a SourceReader before configuring decoders!");
@@ -348,7 +348,8 @@ WMFReader::ConfigureVideoDecoder()
   // Determine if we have video.
   if (!mSourceReader ||
       !SourceReaderHasStream(mSourceReader, MF_SOURCE_READER_FIRST_VIDEO_STREAM)) {
-    return;
+    // No stream, no error.
+    return S_OK;
   }
 
   static const GUID MP4VideoTypes[] = {
@@ -361,7 +362,7 @@ WMFReader::ConfigureVideoDecoder()
                                            NS_ARRAY_LENGTH(MP4VideoTypes));
   if (FAILED(hr)) {
     LOG("Failed to configured video output for MFVideoFormat_YV12");
-    return;
+    return hr;
   }
 
   RefPtr<IMFMediaType> mediaType;
@@ -369,49 +370,52 @@ WMFReader::ConfigureVideoDecoder()
                                           byRef(mediaType));
   if (FAILED(hr)) {
     NS_WARNING("Failed to get configured video media type");
-    return;
+    return hr;
   }
 
   if (FAILED(ConfigureVideoFrameGeometry(mediaType))) {
     NS_WARNING("Failed configured video frame dimensions");
-    return;
+    return hr;
   }
 
   LOG("Successfully configured video stream");
 
   mHasVideo = mInfo.mHasVideo = true;
+
+  return S_OK;
 }
 
-void
+HRESULT
 WMFReader::ConfigureAudioDecoder()
 {
   NS_ASSERTION(mSourceReader, "Must have a SourceReader before configuring decoders!");
 
   if (!mSourceReader ||
       !SourceReaderHasStream(mSourceReader, MF_SOURCE_READER_FIRST_AUDIO_STREAM)) {
-    // No audio stream.
-    return;
+    // No stream, no error.
+    return S_OK;
   }
 
   static const GUID MP4AudioTypes[] = {
     MFAudioFormat_AAC,
     MFAudioFormat_MP3
   };
-  if (FAILED(ConfigureSourceReaderStream(mSourceReader,
-                                         MF_SOURCE_READER_FIRST_AUDIO_STREAM,
-                                         MFAudioFormat_Float,
-                                         MP4AudioTypes,
-                                         NS_ARRAY_LENGTH(MP4AudioTypes)))) {
+  HRESULT hr = ConfigureSourceReaderStream(mSourceReader,
+                                           MF_SOURCE_READER_FIRST_AUDIO_STREAM,
+                                           MFAudioFormat_Float,
+                                           MP4AudioTypes,
+                                           NS_ARRAY_LENGTH(MP4AudioTypes));
+  if (FAILED(hr)) {
     NS_WARNING("Failed to configure WMF Audio decoder for PCM output");
-    return;
+    return hr;
   }
 
   RefPtr<IMFMediaType> mediaType;
-  HRESULT hr = mSourceReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM,
-                                                  byRef(mediaType));
+  hr = mSourceReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM,
+                                          byRef(mediaType));
   if (FAILED(hr)) {
     NS_WARNING("Failed to get configured audio media type");
-    return;
+    return hr;
   }
 
   mAudioRate = MFGetAttributeUINT32(mediaType, MF_MT_AUDIO_SAMPLES_PER_SECOND, 0);
@@ -424,6 +428,8 @@ WMFReader::ConfigureAudioDecoder()
 
   LOG("Successfully configured audio stream. rate=%u channels=%u bitsPerSample=%u",
       mAudioRate, mAudioChannels, mAudioBytesPerSample);
+
+  return S_OK;
 }
 
 nsresult
@@ -438,8 +444,11 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
   hr = wmf::MFCreateSourceReaderFromByteStream(mByteStream, NULL, byRef(mSourceReader));
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  ConfigureVideoDecoder();
-  ConfigureAudioDecoder();
+  hr = ConfigureVideoDecoder();
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  hr = ConfigureAudioDecoder();
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   // Abort if both video and audio failed to initialize.
   NS_ENSURE_TRUE(mInfo.mHasAudio || mInfo.mHasVideo, NS_ERROR_FAILURE);
