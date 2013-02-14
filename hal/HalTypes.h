@@ -81,7 +81,6 @@ enum ProcessPriority {
   // "foreground" for the purposes of priority testing, for example
   // CurrentProcessIsForeground().
   PROCESS_PRIORITY_FOREGROUND,
-  PROCESS_PRIORITY_FOREGROUND_HIGH,
   PROCESS_PRIORITY_MASTER,
   NUM_PROCESS_PRIORITY
 };
