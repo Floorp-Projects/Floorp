@@ -32,6 +32,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
@@ -682,9 +683,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   // but if we get a null pointer, that's perfectly legal for parent
   // and parentContentViewer
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-  if (docShell) {
-    docShell->GetSameTypeParent(getter_AddRefs(parentAsItem));
+  if (docShellAsItem) {
+    docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
   }
 
   nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
@@ -747,7 +751,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     parserCharsetSource = charsetSource;
     parserCharset = charset;
   } else {
-    NS_ASSERTION(docShell, "Unexpected null value");
+    NS_ASSERTION(docShell && docShellAsItem, "Unexpected null value");
 
     charsetSource = kCharsetUninitialized;
     wyciwygChannel = do_QueryInterface(aChannel);

@@ -43,6 +43,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsINameSpaceManager.h"
 #include "nsError.h"
 #include "nsScriptLoader.h"

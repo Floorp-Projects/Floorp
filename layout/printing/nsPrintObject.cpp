@@ -57,14 +57,16 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
     mDocShell = aDocShell;
   } else {
     mTreeOwner = do_GetInterface(aDocShell);
+    nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(aDocShell);
     int32_t itemType = 0;
-    aDocShell->GetItemType(&itemType);
+    item->GetItemType(&itemType);
     // Create a container docshell for printing.
     mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_OUT_OF_MEMORY);
     mDidCreateDocShell = true;
-    mDocShell->SetItemType(itemType);
-    mDocShell->SetTreeOwner(mTreeOwner);
+    nsCOMPtr<nsIDocShellTreeItem> newItem = do_QueryInterface(mDocShell);
+    newItem->SetItemType(itemType);
+    newItem->SetTreeOwner(mTreeOwner);
   }
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 

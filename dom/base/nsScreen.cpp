@@ -24,12 +24,13 @@ namespace {
 bool
 IsChromeType(nsIDocShell *aDocShell)
 {
-  if (!aDocShell) {
+  nsCOMPtr<nsIDocShellTreeItem> ds = do_QueryInterface(aDocShell);
+  if (!ds) {
     return false;
   }
 
   int32_t itemType;
-  aDocShell->GetItemType(&itemType);
+  ds->GetItemType(&itemType);
   return itemType == nsIDocShellTreeItem::typeChrome;
 }
 
