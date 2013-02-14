@@ -4424,9 +4424,9 @@ nsSVGTextFrame2::DoGlyphPositioning()
   // Get the x, y, dx, dy, rotate values for the subtree.
   nsTArray<gfxPoint> deltas;
   if (!ResolvePositions(deltas)) {
-    // We shouldn't reach here because DetermineCharPositions should have been
-    // empty if we fail to resolve any positions.
-    NS_NOTREACHED("unexpected result from ResolvePositions");
+    // If ResolvePositions returned false, it means that there were some
+    // characters in the DOM but none of them are displayed.  Clear out
+    // mPositions so that we don't attempt to do any painting later.
     mPositions.Clear();
     return;
   }
