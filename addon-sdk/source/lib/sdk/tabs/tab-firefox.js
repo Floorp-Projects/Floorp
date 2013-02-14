@@ -57,7 +57,11 @@ const TabTrait = Trait.compose(EventEmitter, {
   },
   destroy: function destroy() {
     this._removeAllListeners();
-    this._browser.removeEventListener(EVENTS.ready.dom, this._onReady, true);
+    if (this._tab) {
+      this._browser.removeEventListener(EVENTS.ready.dom, this._onReady, true);
+      this._tab = null;
+      TABS.splice(TABS.indexOf(this), 1);
+    }
   },
 
   /**
@@ -98,35 +102,35 @@ const TabTrait = Trait.compose(EventEmitter, {
   /**
    * Unique id for the tab, actually maps to tab.linkedPanel but with some munging.
    */
-  get id() getTabId(this._tab),
+  get id() this._tab ? getTabId(this._tab) : undefined,
 
   /**
    * The title of the page currently loaded in the tab.
    * Changing this property changes an actual title.
    * @type {String}
    */
-  get title() getTabTitle(this._tab),
-  set title(title) setTabTitle(this._tab, title),
+  get title() this._tab ? getTabTitle(this._tab) : undefined,
+  set title(title) this._tab && setTabTitle(this._tab, title),
 
   /**
    * Returns the MIME type that the document loaded in the tab is being
    * rendered as.
    * @type {String}
    */
-  get contentType() getTabContentType(this._tab),
+  get contentType() this._tab ? getTabContentType(this._tab) : undefined,
 
   /**
    * Location of the page currently loaded in this tab.
    * Changing this property will loads page under under the specified location.
    * @type {String}
    */
-  get url() getTabURL(this._tab),
-  set url(url) setTabURL(this._tab, url),
+  get url() this._tab ? getTabURL(this._tab) : undefined,
+  set url(url) this._tab && setTabURL(this._tab, url),
   /**
    * URI of the favicon for the page currently loaded in this tab.
    * @type {String}
    */
-  get favicon() getFaviconURIForLocation(this.url),
+  get favicon() this._tab ? getFaviconURIForLocation(this.url) : undefined,
   /**
    * The CSS style for the tab
    */
@@ -137,23 +141,30 @@ const TabTrait = Trait.compose(EventEmitter, {
    * @type {Number}
    */
   get index()
-    this._window.gBrowser.getBrowserIndexForDocument(this._contentDocument),
-  set index(value) this._window.gBrowser.moveTabTo(this._tab, value),
+    this._tab ?
+    this._window.gBrowser.getBrowserIndexForDocument(this._contentDocument) :
+    undefined,
+  set index(value)
+    this._tab && this._window.gBrowser.moveTabTo(this._tab, value),
   /**
    * Thumbnail data URI of the page currently loaded in this tab.
    * @type {String}
    */
   getThumbnail: function getThumbnail()
-    getThumbnailURIForWindow(this._contentWindow),
+    this._tab ? getThumbnailURIForWindow(this._contentWindow) : undefined,
   /**
    * Whether or not tab is pinned (Is an app-tab).
    * @type {Boolean}
    */
-  get isPinned() this._tab.pinned,
+  get isPinned() this._tab ? this._tab.pinned : undefined,
   pin: function pin() {
+    if (!this._tab)
+      return;
     this._window.gBrowser.pinTab(this._tab);
   },
   unpin: function unpin() {
+    if (!this._tab)
+      return;
     this._window.gBrowser.unpinTab(this._tab);
   },
 
@@ -162,6 +173,8 @@ const TabTrait = Trait.compose(EventEmitter, {
    * @type {Worker}
    */
   attach: function attach(options) {
+    if (!this._tab)
+      return;
     // BUG 792946 https://bugzilla.mozilla.org/show_bug.cgi?id=792946
     // TODO: fix this circular dependency
     let { Worker } = require('./worker');
@@ -175,12 +188,16 @@ const TabTrait = Trait.compose(EventEmitter, {
    * we would like to return instance before firing a 'TabActivated' event.
    */
   activate: defer(function activate() {
+    if (!this._tab)
+      return;
     activateTab(this._tab);
   }),
   /**
    * Close the tab
    */
   close: function close(callback) {
+    if (!this._tab)
+      return;
     if (callback)
       this.once(EVENTS.close.name, callback);
     this._window.gBrowser.removeTab(this._tab);
@@ -189,6 +206,8 @@ const TabTrait = Trait.compose(EventEmitter, {
    * Reload the tab
    */
   reload: function reload() {
+    if (!this._tab)
+      return;
     this._window.gBrowser.reloadTab(this._tab);
   }
 });
