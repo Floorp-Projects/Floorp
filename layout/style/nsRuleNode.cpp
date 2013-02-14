@@ -322,27 +322,35 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       aPresContext->SetUsesRootEMUnits(true);
       nscoord rootFontSize;
 
+      // NOTE: Be very careful with |styleFont|, since we haven't set
+      // aCanStoreInRuleTree to false yet, so we don't want to introduce
+      // any dependencies on aStyleContext's data here.
+      const nsStyleFont *styleFont =
+        aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
+
       if (aUseProvidedRootEmSize) {
         // We should use the provided aFontSize as the reference length to
         // scale. This only happens when we are calculating font-size or
         // an equivalent (scriptminsize or CalcLengthWithInitialFont) on
         // the root element, in which case aFontSize is already the
         // value we want.
+        if (aFontSize == -1) {
+          // XXX Should this be styleFont->mSize instead to avoid taking
+          // minfontsize prefs into account?
+          aFontSize = styleFont->mFont.size;
+        }
         rootFontSize = aFontSize;
       } else if (aStyleContext && !aStyleContext->GetParent()) {
         // This is the root element (XXX we don't really know this, but
         // nsRuleNode::SetFont makes the same assumption!), so we should
         // use GetStyleFont on this context to get the root element's
         // font size.
-        const nsStyleFont *styleFont =
-          aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
         rootFontSize = styleFont->mFont.size;
       } else {
         // This is not the root element or we are calculating something other
         // than font size, so rem is relative to the root element's font size.
         nsRefPtr<nsStyleContext> rootStyle;
-        const nsStyleFont *rootStyleFont =
-          aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
+        const nsStyleFont *rootStyleFont = styleFont;
         Element* docElement = aPresContext->Document()->GetRootElement();
 
         if (docElement) {

@@ -23,6 +23,7 @@ Login Manager test: username/password prompts
 var pwmgr, ioService
 var tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4, proxyLogin;
 var mozproxy, proxiedHost = "http://mochi.test:8888";
+var proxyChannel;
 var testNum = 1;
 
 function initLogins(pi) {
@@ -121,6 +122,14 @@ ok(true, "whee, done!");
   SimpleTest.finish();
 }
 
+function proxyChannelListener() { }
+proxyChannelListener.prototype = {
+    onStartRequest: function(request, context) {
+	doTests();
+    },
+    onStopRequest: function(request, context, status) { }
+};
+
 var resolveCallback = {
 QueryInterface : function (iid) {
 const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
@@ -132,7 +141,17 @@ const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
     onProxyAvailable : function (req, uri, pi, status) {
         initLogins(pi);
-	doTests();
+
+	// I'm cheating a bit here... We should probably do some magic foo to get
+	// something implementing nsIProxiedProtocolHandler and then call
+	// NewProxiedChannel(), so we have something that's definately a proxied
+	// channel. But Mochitests use a proxy for a number of hosts, so just
+	// requesting a normal channel will give us a channel that's proxied.
+	// The proxyChannel needs to move to at least on-modify-request to
+	// have valid ProxyInfo, but we use OnStartRequest during startup()
+	// for simplicity.
+	proxyChannel = ioService.newChannel(proxiedHost, null, null);
+	proxyChannel.asyncOpen(new proxyChannelListener(), null);
     }
 };
 
@@ -919,13 +938,6 @@ is(pword.value, "fill2pass", "Checking returned password");
 
 var channel1 = ioService.newChannel("http://example.com", null, null);
 var channel2 = ioService.newChannel("http://example2.com", null, null);
-
-// I'm cheating a bit here... We should probably do some magic foo to get
-// something implementing nsIProxiedProtocolHandler and then call
-// NewProxiedChannel(), so we have something that's definately a proxied
-// channel. But Mochitests use a proxy for a number of hosts, so just
-// requesting a normal channel will give us a channel that's proxied.
-var proxyChannel = ioService.newChannel(proxiedHost, null, null);
 
 var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 

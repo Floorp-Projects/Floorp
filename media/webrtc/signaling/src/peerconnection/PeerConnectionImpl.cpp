@@ -248,6 +248,7 @@ PeerConnectionImpl::PeerConnectionImpl()
 
 PeerConnectionImpl::~PeerConnectionImpl()
 {
+  // This aborts if not on main thread (in Debug builds)
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   if (PeerConnectionCtx::isActive()) {
     PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
@@ -452,6 +453,8 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                nsIThread* aThread,
                                JSContext* aCx)
 {
+  nsresult res;
+
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
@@ -461,7 +464,11 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
   mPCObserver = do_GetWeakReference(aObserver);
 
-  nsresult res;
+  // Find the STS thread
+
+  mSTSThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
+  MOZ_ASSERT(mSTSThread);
+
 #ifdef MOZILLA_INTERNAL_API
   // This code interferes with the C++ unit test startup code.
   nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &res);
@@ -549,10 +556,6 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
   mFingerprint = "sha-1 " + mIdentity->FormatFingerprint(fingerprint,
                                                          fingerprint_length);
-
-  // Find the STS thread
-  mSTSThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
-
   if (NS_FAILED(res)) {
     CSFLogErrorS(logTag, __FUNCTION__ << ": do_GetService failed: " <<
         static_cast<uint32_t>(res));

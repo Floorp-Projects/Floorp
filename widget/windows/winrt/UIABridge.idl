@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#define DO_NO_IMPORTS 1
+
+import "oaidl.idl";
+import "oleacc.idl";
+import "Inspectable.idl";
+
+  [uuid(343159D8-B1E9-4464-82FC-B12C7A473CF1)]
+  interface IUIABridge : IInspectable {
+#if defined(x86_64)
+    HRESULT Init([in] IInspectable* view, [in] IInspectable* window, [in] __int64 inner);
+#else
+    HRESULT Init([in] IInspectable* view, [in] IInspectable* window, [in] __int32 inner);
+#endif
+    HRESULT Disconnect();
+  };
+
+  [uuid(2153B284-F946-4209-908D-AB8AA1FED09C)]
+  interface IUIAElement : IInspectable {
+#if defined(x86_64)
+    HRESULT SetFocusInternal([in] __int64 accessible);
+#else
+    HRESULT SetFocusInternal([in] __int32 accessible);
+#endif
+    HRESULT CheckFocus([in] int X, [in] int y);
+    HRESULT ClearFocus();
+    HRESULT HasFocus([out, retval] VARIANT_BOOL * hasFocus);
+  };

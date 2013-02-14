@@ -392,6 +392,8 @@ class JSScript : public js::gc::Cell
   public:
     uint32_t        length;     /* length of code vector */
 
+    uint32_t        dataSize;   /* size of the used part of the data array */
+
     uint32_t        lineno;     /* base line number of script */
 
     uint32_t        mainOffset; /* offset of main entry point from code, after
@@ -402,7 +404,6 @@ class JSScript : public js::gc::Cell
     uint32_t        sourceStart;
     uint32_t        sourceEnd;
 
-
   private:
     uint32_t        useCount;   /* Number of times the script has been called
                                  * or has had backedges taken. Reset if the
@@ -411,6 +412,7 @@ class JSScript : public js::gc::Cell
     uint32_t        maxLoopCount; /* Maximum loop count that has been encountered. */
     uint32_t        loopCount;    /* Number of times a LOOPHEAD has been encountered.
                                      after a LOOPENTRY. Modified only by interpreter. */
+    uint32_t        PADDING32;
 
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for
@@ -423,7 +425,7 @@ class JSScript : public js::gc::Cell
     // 16-bit fields.
 
   private:
-    uint16_t        PADDING;
+    uint16_t        PADDING16;
 
     uint16_t        version;    /* JS version under which script was compiled */
 
@@ -520,14 +522,13 @@ class JSScript : public js::gc::Cell
                                     const JS::CompileOptions &options, unsigned staticLevel,
                                     js::ScriptSource *ss, uint32_t sourceStart, uint32_t sourceEnd);
 
-    // Three ways ways to initialize a JSScript.  Callers of partiallyInit()
+    // Three ways ways to initialize a JSScript. Callers of partiallyInit()
     // and fullyInitTrivial() are responsible for notifying the debugger after
     // successfully creating any kind (function or other) of new JSScript.
     // However, callers of fullyInitFromEmitter() do not need to do this.
     static bool partiallyInit(JSContext *cx, JS::Handle<JSScript*> script,
-                              uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
-                              uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
-                              uint32_t nTypeSets);
+                              uint32_t nobjects, uint32_t nregexps,
+                              uint32_t ntrynotes, uint32_t nconsts, uint32_t nTypeSets);
     static bool fullyInitTrivial(JSContext *cx, JS::Handle<JSScript*> script);  // inits a JSOP_STOP-only script
     static bool fullyInitFromEmitter(JSContext *cx, JS::Handle<JSScript*> script,
                                      js::frontend::BytecodeEmitter *bce);
@@ -1077,7 +1078,7 @@ struct ScriptSource
             destroy();
     }
     bool setSourceCopy(JSContext *cx,
-                       StableCharPtr src,
+                       const jschar *src,
                        uint32_t length,
                        bool argumentsNotIncluded,
                        SourceCompressionToken *tok);
@@ -1258,6 +1259,65 @@ SweepScriptFilenames(JSRuntime *rt);
 
 extern void
 FreeScriptFilenames(JSRuntime *rt);
+
+struct SharedScriptData
+{
+    bool marked;
+    uint32_t length;
+    jsbytecode data[1];
+
+    static SharedScriptData *new_(JSContext *cx, uint32_t codeLength,
+                                             uint32_t srcnotesLength, uint32_t natoms);
+
+    HeapPtrAtom *atoms(uint32_t codeLength, uint32_t srcnotesLength) {
+        uint32_t length = codeLength + srcnotesLength;
+        return reinterpret_cast<HeapPtrAtom *>(data + length + sizeof(JSAtom *) -
+                                               length % sizeof(JSAtom *));
+    }
+
+    static SharedScriptData *fromBytecode(const jsbytecode *bytecode) {
+        return (SharedScriptData *)(bytecode - offsetof(SharedScriptData, data));
+    }
+};
+
+/*
+ * Takes ownership of its *ssd parameter and either adds it into the runtime's
+ * ScriptBytecodeTable or frees it if a matching entry already exists.
+ *
+ * Sets the |code| and |atoms| fields on the given JSScript.
+ */
+extern bool
+SaveSharedScriptData(JSContext *cx, Handle<JSScript *> script, SharedScriptData *ssd);
+
+struct ScriptBytecodeHasher
+{
+    struct Lookup
+    {
+        jsbytecode          *code;
+        uint32_t            length;
+
+        Lookup(SharedScriptData *ssd) : code(ssd->data), length(ssd->length) {}
+    };
+    static HashNumber hash(const Lookup &l) { return mozilla::HashBytes(l.code, l.length); }
+    static bool match(SharedScriptData *entry, const Lookup &lookup) {
+        if (entry->length != lookup.length)
+            return false;
+        return PodEqual<jsbytecode>(entry->data, lookup.code, lookup.length);
+    }
+};
+
+typedef HashSet<SharedScriptData*,
+                ScriptBytecodeHasher,
+                SystemAllocPolicy> ScriptDataTable;
+
+inline void
+MarkScriptBytecode(JSRuntime *rt, const jsbytecode *bytecode);
+
+extern void
+SweepScriptData(JSRuntime *rt);
+
+extern void
+FreeScriptData(JSRuntime *rt);
 
 struct ScriptAndCounts
 {

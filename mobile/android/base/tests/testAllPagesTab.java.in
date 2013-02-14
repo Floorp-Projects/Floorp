@@ -57,8 +57,7 @@ public class testAllPagesTab extends BaseTest {
     }
 
     private void testList(String url) {
-        final ListView list = getAllPagesList(url);
-        mSolo.waitForText(bookmarks[0]);
+        final ListView list = getAllPagesList(bookmarks[0]);
 
         // some basic checks for the tab strip
         TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
@@ -114,8 +113,7 @@ public class testAllPagesTab extends BaseTest {
     }
 
     private void testContextMenu(String url) {
-        ListView list = getAllPagesList(url);
-        mSolo.waitForText(bookmarks[0]);
+        ListView list = getAllPagesList(bookmarks[0]);
 
         View child = list.getChildAt(0);
         mSolo.clickLongOnView(child);
@@ -131,35 +129,13 @@ public class testAllPagesTab extends BaseTest {
     }
 
     private void testClick(String url) {
-        ListView list = getAllPagesList(url);
-        mSolo.waitForText(bookmarks[0]);
+        ListView list = getAllPagesList(bookmarks[0]);
 
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         View child = list.getChildAt(0);
         mSolo.clickOnView(child);
         contentEventExpecter.blockForEvent();
         verifyUrl(url);
-    }
-
-    private ListView getAllPagesList(String url) {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        mSolo.waitForText(bookmarks[0]);
-
-        final ArrayList<ListView> views = mSolo.getCurrentListViews();
-
-        listview = null;
-        boolean success = waitForTest(new BooleanTest() {
-            public boolean test() {
-               for (ListView view : views) {
-                   if (view.getTag().equals("allPages")) {
-                       listview = view;
-                       return true;
-                   }
-               }
-               return false;
-            }
-        }, MAX_WAIT_MS);
-        return listview;
     }
 
     public void tearDown() throws Exception {

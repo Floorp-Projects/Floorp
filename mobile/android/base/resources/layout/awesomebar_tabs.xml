@@ -13,7 +13,7 @@
           android:orientation="vertical"
           android:layout_width="fill_parent"
           android:layout_height="fill_parent"
-          android:background="@drawable/awesomebar_tabs_bg">
+          android:background="@drawable/address_bar_bg">
 
         <LinearLayout android:id="@+id/tab_widget_container"
                       android:layout_width="fill_parent"

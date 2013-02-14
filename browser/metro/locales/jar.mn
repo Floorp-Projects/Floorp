@@ -1,0 +1,40 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#
+# Metro jar resources
+#
+
+@AB_CD@.jar:
+% locale browser @AB_CD@ %locale/browser/
+  locale/browser/aboutCertError.dtd       (%chrome/aboutCertError.dtd)
+  locale/browser/browser.dtd              (%chrome/browser.dtd)
+  locale/browser/browser.properties       (%chrome/browser.properties)
+  locale/browser/config.dtd               (%chrome/config.dtd)
+  locale/browser/preferences.dtd          (%chrome/preferences.dtd)
+  locale/browser/checkbox.dtd             (%chrome/checkbox.dtd)
+  locale/browser/notification.dtd         (%chrome/notification.dtd)
+  locale/browser/sync.dtd                 (%chrome/sync.dtd)
+  locale/browser/sync.properties          (%chrome/sync.properties)
+  locale/browser/prompt.dtd               (%chrome/prompt.dtd)
+  locale/browser/phishing.dtd             (%chrome/phishing.dtd)
+
+@AB_CD@.jar:
+% locale browser @AB_CD@ %locale/browser/
+  locale/browser/bookmarks.json           (bookmarks.json)
+  locale/browser/passwordmgr.properties   (%overrides/passwordmgr.properties)
+% override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/passwordmgr.properties
+
+#
+# Browser jar resources
+#
+
+@AB_CD@.jar:
+relativesrcdir browser/locales:
+  locale/browser/region.properties        (%chrome/browser-region/region.properties)
+  locale/browser/netError.dtd             (%chrome/overrides/netError.dtd)
+% override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
+  locale/browser/appstrings.properties    (%chrome/overrides/appstrings.properties)
+% override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties

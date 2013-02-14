@@ -5,15 +5,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(9D98A42F-ABAA-48a0-BB53-CE09A29E6876)]
+[scriptable, uuid(398fb953-335d-42f1-9e91-e238b56bf4ad)]
 
 interface nsIMetroUIUtils : nsISupports {
-  /**
-   * Loads the specified panel in the browser.
-   * @ param aPanelId The identifier of the pane to load
-  */
-  void showPanel(in AString aPanelId);
-
   /**
    * Obtains the current page URI
   */
@@ -33,5 +27,10 @@ interface nsIMetroUIUtils : nsISupports {
    * Determines the text that should be shared
   */
   attribute AString shareText;
+
+  /**
+   * Determines the HTML that should be shared
+  */
+  attribute AString shareHTML;
 };
 

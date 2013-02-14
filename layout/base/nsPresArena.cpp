@@ -405,15 +405,7 @@ struct nsPresArena::State {
   size_t SizeOfIncludingThisFromMalloc(nsMallocSizeOfFun aMallocSizeOf) const
   {
     size_t n = aMallocSizeOf(this);
-
-    // The first PLArena is within the PLArenaPool, i.e. within |this|, so we
-    // don't measure it.  Subsequent PLArenas are by themselves and must be
-    // measured.
-    const PLArena *arena = mPool.first.next;
-    while (arena) {
-      n += aMallocSizeOf(arena);
-      arena = arena->next;
-    }
+    n += PL_SizeOfArenaPoolExcludingPool(&mPool, aMallocSizeOf);
     n += mFreeLists.SizeOfExcludingThis(SizeOfFreeListEntryExcludingThis,
                                         aMallocSizeOf);
     return n;

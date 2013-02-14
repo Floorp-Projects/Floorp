@@ -365,7 +365,7 @@ class TestSymbolOrder(unittest.TestCase):
         subprocess.Popen = SubprocessPopen(self)
         config.LD_PRINT_ICF_SECTIONS = '-Wl,--print-icf-sections'
         args = ExpandArgsMore(['foo', '-bar', 'bar.o', 'foo.o'])
-        self.assertEqual(args._getFoldedSections(), {'.text.hello': '.text.hi', '.text.hi': ['.text.hello']})
+        self.assertEqual(args._getFoldedSections(), {'.text.hello': ['.text.hi'], '.text.hi': ['.text.hello']})
         subprocess.Popen = subprocess_popen
 
     def test_getOrderedSectionsWithICF(self):
@@ -378,7 +378,7 @@ class TestSymbolOrder(unittest.TestCase):
         config.LIB_SUFFIX = '.a'
         config.LD_PRINT_ICF_SECTIONS = '-Wl,--print-icf-sections'
         args = ExpandArgsMore(['foo', '-bar', 'bar.o', 'foo.o'])
-        self.assertEqual(args._getOrderedSections(['hello', '_Z6barbazv']), ['.text.hi', '.text.hello', '.text.hot._Z6barbazv'])
+        self.assertEqual(args._getOrderedSections(['hello', '_Z6barbazv']), ['.text.hello', '.text.hi', '.text.hot._Z6barbazv'])
         self.assertEqual(args._getOrderedSections(['_ZThn4_6foobarv', 'hi', '_Z6barbazv']), ['.text._Z6foobarv', '.text._ZThn4_6foobarv', '.text.hi', '.text.hello', '.text.hot._Z6barbazv'])
         subprocess.Popen = subprocess_popen
 

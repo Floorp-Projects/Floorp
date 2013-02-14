@@ -2130,6 +2130,10 @@ html|*#gcli-output-frame {
   background-color: transparent;
 }
 
+.gcli-panel {
+  padding: 0;
+}
+
 #gcli-output,
 #gcli-tooltip {
   border-width: 0;

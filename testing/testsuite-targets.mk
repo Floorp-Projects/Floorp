@@ -6,8 +6,8 @@
 # Shortcut for mochitest* and xpcshell-tests targets,
 # replaces 'EXTRA_TEST_ARGS=--test-path=...'.
 ifdef TEST_PATH
-TEST_PATH_ARG := --test-path=$(TEST_PATH)
-PEPTEST_PATH_ARG := --test-path=$(TEST_PATH)
+TEST_PATH_ARG := --test-path="$(TEST_PATH)"
+PEPTEST_PATH_ARG := --test-path="$(TEST_PATH)"
 else
 TEST_PATH_ARG :=
 PEPTEST_PATH_ARG := --test-path=_tests/peptest/tests/firefox/firefox_all.ini
@@ -174,17 +174,17 @@ endif
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   --extra-profile-file=$(DIST)/plugins \
-  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
+  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) "$(1)" | tee ./$@.log
 
 REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
   --dm_trans=$(DM_TRANS) --ignore-window-size \
   --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
+  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) "$(1)" | tee ./$@.log
 
 RUN_REFTEST_B2G = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftestb2g.py \
   --remote-webserver=10.0.2.2 --b2gpath=${B2G_PATH} --adbpath=${ADB_PATH} \
   --xre-path=${MOZ_HOST_BIN} $(SYMBOLS_PATH) --ignore-window-size \
-  $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
+  $(EXTRA_TEST_ARGS) "$(1)" | tee ./$@.log
 
 ifeq ($(OS_ARCH),WINNT) #{
 # GPU-rendered shadow layers are unsupported here
@@ -364,6 +364,13 @@ cppunittests-remote:
 
 jetpack-tests:
 	$(PYTHON) $(topsrcdir)/addon-sdk/source/bin/cfx -b $(browser_path) --parseable testpkgs
+
+# -- -register
+# -- --trace-malloc malloc.log --shutdown-leaks=sdleak.log
+leaktest:
+	$(PYTHON) _leaktest/leaktest.py $(LEAKTEST_ARGS)
+
+
 
 # Package up the tests and test harnesses
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk

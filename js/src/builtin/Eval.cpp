@@ -25,10 +25,10 @@ static void
 AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 {
 #ifdef DEBUG
-    for (JSObject *o = &scopeobj; o; o = o->enclosingScope()) {
-        if (JSObjectOp op = o->getClass()->ext.innerObject) {
-            Rooted<JSObject*> obj(cx, o);
-            JS_ASSERT(op(cx, obj) == o);
+    RootedObject obj(cx);
+    for (obj = &scopeobj; obj; obj = obj->enclosingScope()) {
+        if (JSObjectOp op = obj->getClass()->ext.innerObject) {
+            JS_ASSERT(op(cx, obj) == obj);
         }
     }
 #endif
@@ -276,7 +276,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
         UnrootedScript compiled = frontend::CompileScript(cx, scopeobj, caller, options,
-                                                          chars, length, stableStr, staticLevel);
+                                                          chars.get(), length, stableStr, staticLevel);
         if (!compiled)
             return false;
 

@@ -22,23 +22,18 @@ function test()
   if (pm.eventsMeasured == 0) {
     todo(false, "stub, skipping test");
   } else {
-    is(pm.eventsMeasured, PerfMeasurement.ALL, "all events measurable");
-
     pm.start();
     for (let i = 0; i < 10000; i++) ;
       pm.stop();
 
-    isnot(pm.cpu_cycles, -1, "cpu_cycles");
-    isnot(pm.instructions, -1, "instructions");
-    isnot(pm.cache_references, -1, "cache_references");
-    isnot(pm.cache_misses, -1, "cache_misses");
-    isnot(pm.branch_instructions, -1, "branch_instructions");
-    isnot(pm.branch_misses, -1, "branch_misses");
-    isnot(pm.bus_cycles, -1, "bus_cycles");
-    isnot(pm.page_faults, -1, "page_faults");
-    isnot(pm.major_page_faults, -1, "major_page_faults");
-    isnot(pm.context_switches, -1, "context_switches");
-    isnot(pm.cpu_migrations, -1, "cpu_migrations");
+    events = ["cpu_cycles", "instructions", "cache_references", "cache_misses",
+              "branch_instructions", "branch_misses", "bus_cycles", "page_faults",
+              "major_page_faults", "context_switches", "cpu_migrations"];
+
+    for (var i = 0; i < events.length; i++) {
+        var e = events[i];
+        ((pm.eventsMeasured & PerfMeasurement[e.toUpperCase()]) ? isnot : todo_is)(pm[e], -1, e);
+    }
   }
   SimpleTest.finish();
 }

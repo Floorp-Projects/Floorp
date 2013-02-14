@@ -197,6 +197,7 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
         break;
 #endif /* USE_TURN */
       case SERVER_REFLEXIVE:
+        nr_stun_client_ctx_destroy(&cand->u.srvrflx.stun);
         break;
       default:
         break;

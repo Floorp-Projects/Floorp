@@ -7,7 +7,7 @@ body {
   font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
   font-size: 14px;
   color: #222;
-  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+  background-color: #ced7de;
   padding: 10px;
 }
 

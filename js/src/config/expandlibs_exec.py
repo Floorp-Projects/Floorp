@@ -129,7 +129,7 @@ class ExpandArgsMore(ExpandArgs):
         for l in stderr.split('\n'):
             quoted = l.split("'")
             if len(quoted) > 5 and quoted[1] != quoted[5]:
-                result[quoted[1]] = quoted[5]
+                result[quoted[1]] = [quoted[5]]
                 if quoted[5] in result:
                     result[quoted[5]].append(quoted[1])
                 else:

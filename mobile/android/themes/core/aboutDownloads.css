@@ -8,7 +8,7 @@
 html {
   font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
   font-size: 18px;
-  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+  background-color: #ced7de;
   -moz-text-size-adjust: none;
 }
 
@@ -46,7 +46,7 @@ ul {
 
 li {
   color: black;
-  background-image: url("chrome://browser/skin/images/row-bg-normal.png");
+  background-color: #e6e9eb;
   border-bottom: 2px solid;
   -moz-border-bottom-colors: #ffffff #bac2ac;
   position: relative;
@@ -65,7 +65,7 @@ li {
 }
 
 div.details {
-  background-image: url("chrome://browser/skin/images/row-bg-light.png");
+  background-color: #eef2f5;
 }
 
 #private-downloads-list div.details {

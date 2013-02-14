@@ -89,6 +89,73 @@ let gTests = [
     executeSoon(runNextTest);
   }
 },
+{
+  desc: "Check that performing a search fires a search event.",
+  setup: function () { },
+  run: function () {
+    let doc = gBrowser.contentDocument;
+
+    doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
+      is(e.detail, doc.documentElement.getAttribute("searchEngineName"), "Detail is search engine name");
+
+      gBrowser.stop();
+      executeSoon(runNextTest);
+    }, true, true);
+
+    doc.getElementById("searchText").value = "it works";
+    doc.getElementById("searchSubmit").click();
+  },
+},
+{
+  desc: "Check that performing a search records to Firefox Health Report.",
+  setup: function () { },
+  run: function () {
+    if (!("@mozilla.org/datareporting/service;1" in Components.classes)) {
+      runNextTest();
+      return;
+    }
+
+
+    let doc = gBrowser.contentDocument;
+
+    // We rely on the listener in browser.js being installed and fired before
+    // this one. If this ever changes, we should add an executeSoon() or similar.
+    doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
+      executeSoon(gBrowser.stop.bind(gBrowser));
+      let reporter = Components.classes["@mozilla.org/datareporting/service;1"]
+                                       .getService()
+                                       .wrappedJSObject
+                                       .healthReporter;
+      ok(reporter, "Health Reporter instance available.");
+
+      reporter.onInit().then(function onInit() {
+        let provider = reporter.getProvider("org.mozilla.searches");
+        ok(provider, "Searches provider is available.");
+
+        let engineName = doc.documentElement.getAttribute("searchEngineName").toLowerCase();
+
+        let m = provider.getMeasurement("counts", 1);
+        m.getValues().then(function onValues(data) {
+          let now = new Date();
+          ok(data.days.hasDay(now), "Have data for today.");
+
+          let day = data.days.getDay(now);
+          let field = engineName + ".abouthome";
+          ok(day.has(field), "Have data for about home on this engine.");
+
+          // Note the search from the previous test.
+          is(day.get(field), 2, "Have searches recorded.");
+
+          executeSoon(runNextTest);
+        });
+
+      });
+    }, true, true);
+
+    doc.getElementById("searchText").value = "a search";
+    doc.getElementById("searchSubmit").click();
+  },
+},
 ];
 
 function test()

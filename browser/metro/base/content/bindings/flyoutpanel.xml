@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="flyoutpanelBinding" extends="xul:box">
+    <resources>
+      <stylesheet src="chrome://browser/skin/flyoutpanel.css"/>
+    </resources>
+
+    <content>
+      <xul:vbox class="flyoutpanel-wrapper">
+        <xul:hbox class="flyoutpanel-header" align="top">
+          <xul:toolbarbutton class="flyout-close-button"
+                             command="cmd_flyout_back"
+                             xbl:inherits="command"/>
+          <xul:label class="flyout-header-label" xbl:inherits="value=headertext"/>
+        </xul:hbox>
+        <xul:scrollbox class="flyoutpanel-contents" flex="1" orient="vertical">
+          <children/>
+        </xul:scrollbox>
+      </xul:vbox>
+    </content>
+
+    <implementation implements="nsIDOMEventListener">
+      <constructor>
+        <![CDATA[
+          window.addEventListener('MozContextUIShow', this);
+          window.addEventListener('MozContextUIDismiss', this);
+          window.addEventListener('MozAppbarDismiss', this);
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          window.removeEventListener('MozContextUIShow', this);
+          window.removeEventListener('MozContextUIDismiss', this);
+          window.removeEventListener('MozAppbarDismiss', this);
+        ]]>
+      </destructor>
+
+      <property name="isVisible" readonly="true">
+        <getter>
+          <![CDATA[
+            return this.hasAttribute("visible");
+          ]]>
+        </getter>
+      </property>
+      
+      <method name="hide">
+        <body>
+          <![CDATA[
+            this.removeAttribute("visible");
+            DialogUI.popPopup(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="show">
+        <body>
+          <![CDATA[
+            this.setAttribute("visible", "true");
+            DialogUI.pushPopup(this, this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            switch (aEvent.type) {
+              case 'MozContextUIShow':
+              case 'MozAppbarDismiss':
+              case 'MozContextUIDismiss':
+                this.hide();
+                break;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <field name="anonScrollBox" readonly="true"><![CDATA[
+        // Expose the anyonymous scrollbox so ScrollUtils.getScrollboxFromElement can find it.
+        document.getAnonymousElementByAttribute(this, "class", "flyoutpanel-contents");
+      ]]></field>
+    </implementation>
+
+    <handlers>
+      <!-- Work around for bug 835175 -->
+      <handler event="click">false;</handler>
+    </handlers>
+  </binding>
+</bindings>

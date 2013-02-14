@@ -22,7 +22,7 @@ interface nsISearchSubmission : nsISupports
   readonly attribute nsIURI uri;
 };
 
-[scriptable, uuid(803e510b-4b27-4ba2-a16d-bb5fa953c166)]
+[scriptable, uuid(6839f025-2e25-408e-892e-c2c2fa5650c5)]
 interface nsISearchEngine : nsISupports
 {
   /**
@@ -37,12 +37,18 @@ interface nsISearchEngine : nsISupports
    *         The MIME type that we'd like to receive in response
    *         to this submission.  If null, will default to "text/html".
    *
+   * @param purpose [optional]
+   *        A string meant to indicate the context of the search request. This
+   *        allows the search service to provide a different nsISearchSubmission
+   *        depending on e.g. where the search is triggered in the UI.
+   *
    * @returns A nsISearchSubmission object that contains information about what
    *          to send to the search engine.  If no submission can be
    *          obtained for the given responseType, returns null.
    */
   nsISearchSubmission getSubmission(in AString data,
-                                    [optional] in AString responseType);
+                                    [optional] in AString responseType,
+                                    [optional] in AString purpose);
 
   /**
    * Adds a parameter to the search engine's submission data. This should only

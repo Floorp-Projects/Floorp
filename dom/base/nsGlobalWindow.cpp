@@ -528,7 +528,7 @@ nsPIDOMWindow::~nsPIDOMWindow() {}
 class nsOuterWindowProxy : public js::Wrapper
 {
 public:
-  nsOuterWindowProxy() : js::Wrapper(0) { setSafeToUnwrap(false); }
+  nsOuterWindowProxy() : js::Wrapper(0) { }
 
   virtual bool isOuterWindow() {
     return true;
@@ -9305,6 +9305,12 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
     nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(changingStorage);
     nsPIDOMStorage::nsDOMStorageType storageType = pistorage->StorageType();
+
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(GetDocShell());
+    bool isPrivate = loadContext && loadContext->UsePrivateBrowsing();
+    if (pistorage->IsPrivate() != isPrivate) {
+      return NS_OK;
+    }
 
     bool fireMozStorageChanged = false;
     principal = GetPrincipal();

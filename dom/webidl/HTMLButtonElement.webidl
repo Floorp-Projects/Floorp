@@ -12,16 +12,27 @@
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-button-element
 interface HTMLButtonElement : HTMLElement {
+  [SetterThrows, Pure]
            attribute boolean autofocus;
+  [SetterThrows, Pure]
            attribute boolean disabled;
+  [Pure]
   readonly attribute HTMLFormElement? form;
+  [SetterThrows, Pure]
            attribute DOMString formAction;
+  [SetterThrows, Pure]
            attribute DOMString formEnctype;
+  [SetterThrows, Pure]
            attribute DOMString formMethod;
+  [SetterThrows, Pure]
            attribute boolean formNoValidate;
+  [SetterThrows, Pure]
            attribute DOMString formTarget;
+  [SetterThrows, Pure]
            attribute DOMString name;
+  [SetterThrows, Pure]
            attribute DOMString type;
+  [SetterThrows, Pure]
            attribute DOMString value;
 // Not yet implemented:
 //           attribute HTMLMenuElement? menu;
