@@ -310,7 +310,7 @@ this.DataReportingPolicy = function (prefs, healthReportPrefs, listener) {
   // Record when we last requested for submitted data to be sent. This is
   // to avoid having multiple outstanding requests.
   this._inProgressSubmissionRequest = null;
-}
+};
 
 DataReportingPolicy.prototype = Object.freeze({
   /**

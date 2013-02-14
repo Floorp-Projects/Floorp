@@ -13,8 +13,9 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 Cu.import("resource://gre/modules/Metrics.jsm");
-Cu.import("resource://services-common/bagheeraclient.js");
 Cu.import("resource://services-common/async.js");
+
+Cu.import("resource://services-common/bagheeraclient.js");
 #endif
 
 Cu.import("resource://services-common/log4moz.js");
@@ -44,59 +45,11 @@ const TELEMETRY_UPLOAD = "HEALTHREPORT_UPLOAD_MS";
 const TELEMETRY_SHUTDOWN_DELAY = "HEALTHREPORT_SHUTDOWN_DELAY_MS";
 
 /**
- * Coordinates collection and submission of health report metrics.
- *
- * This is the main type for Firefox Health Report. It glues all the
- * lower-level components (such as collection and submission) together.
- *
- * An instance of this type is created as an XPCOM service. See
- * DataReportingService.js and
- * DataReporting.manifest/HealthReportComponents.manifest.
- *
- * It is theoretically possible to have multiple instances of this running
- * in the application. For example, this type may one day handle submission
- * of telemetry data as well. However, there is some moderate coupling between
- * this type and *the* Firefox Health Report (e.g. the policy). This could
- * be abstracted if needed.
- *
- * IMPLEMENTATION NOTES
- * ====================
- *
- * Initialization and shutdown are somewhat complicated and worth explaining
- * in extra detail.
- *
- * The complexity is driven by the requirements of SQLite connection management.
- * Once you have a SQLite connection, it isn't enough to just let the
- * application shut down. If there is an open connection or if there are
- * outstanding SQL statements come XPCOM shutdown time, Storage will assert.
- * On debug builds you will crash. On release builds you will get a shutdown
- * hang. This must be avoided!
- *
- * During initialization, the second we create a SQLite connection (via
- * Metrics.Storage) we register observers for application shutdown. The
- * "quit-application" notification initiates our shutdown procedure. The
- * subsequent "profile-do-change" notification ensures it has completed.
- *
- * The handler for "profile-do-change" may result in event loop spinning. This
- * is because of race conditions between our shutdown code and application
- * shutdown.
- *
- * All of our shutdown routines are async. There is the potential that these
- * async functions will not complete before XPCOM shutdown. If they don't
- * finish in time, we could get assertions in Storage. Our solution is to
- * initiate storage early in the shutdown cycle ("quit-application").
- * Hopefully all the async operations have completed by the time we reach
- * "profile-do-change." If so, great. If not, we spin the event loop until
- * they have completed, avoiding potential race conditions.
- *
- * @param branch
- *        (string) The preferences branch to use for state storage. The value
- *        must end with a period (.).
- *
- * @param policy
- *        (HealthReportPolicy) Policy driving execution of HealthReporter.
+ * This is the abstract base class of `HealthReporter`. It exists so that
+ * we can sanely divide work on platforms where control of Firefox Health
+ * Report is outside of Gecko (e.g., Android).
  */
-function HealthReporter(branch, policy, sessionRecorder) {
+function AbstractHealthReporter(branch, policy, sessionRecorder) {
   if (!branch.endsWith(".")) {
     throw new Error("Branch must end with a period (.): " + branch);
   }
@@ -110,14 +63,6 @@ function HealthReporter(branch, policy, sessionRecorder) {
 
   this._branch = branch;
   this._prefs = new Preferences(branch);
-
-  if (!this.serverURI) {
-    throw new Error("No server URI defined. Did you forget to define the pref?");
-  }
-
-  if (!this.serverNamespace) {
-    throw new Error("No server namespace defined. Did you forget a pref?");
-  }
 
   this._policy = policy;
   this.sessionRecorder = sessionRecorder;
@@ -140,15 +85,15 @@ function HealthReporter(branch, policy, sessionRecorder) {
   this._constantOnlyProvidersRegistered = false;
   this._lastDailyDate = null;
 
+  // Yes, this will probably run concurrently with remaining constructor work.
   TelemetryStopwatch.start(TELEMETRY_INIT, this);
 
   this._ensureDirectoryExists(this._stateDir)
       .then(this._onStateDirCreated.bind(this),
             this._onInitError.bind(this));
-
 }
 
-HealthReporter.prototype = Object.freeze({
+AbstractHealthReporter.prototype = Object.freeze({
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   /**
@@ -158,98 +103,6 @@ HealthReporter.prototype = Object.freeze({
    */
   get initialized() {
     return this._initialized;
-  },
-
-  /**
-   * When we last successfully submitted data to the server.
-   *
-   * This is sent as part of the upload. This is redundant with similar data
-   * in the policy because we like the modules to be loosely coupled and the
-   * similar data in the policy is only used for forensic purposes.
-   */
-  get lastPingDate() {
-    return CommonUtils.getDatePref(this._prefs, "lastPingTime", 0, this._log,
-                                   OLDEST_ALLOWED_YEAR);
-  },
-
-  set lastPingDate(value) {
-    CommonUtils.setDatePref(this._prefs, "lastPingTime", value,
-                            OLDEST_ALLOWED_YEAR);
-  },
-
-  /**
-   * The base URI of the document server to which to submit data.
-   *
-   * This is typically a Bagheera server instance. It is the URI up to but not
-   * including the version prefix. e.g. https://data.metrics.mozilla.com/
-   */
-  get serverURI() {
-    return this._prefs.get("documentServerURI", null);
-  },
-
-  set serverURI(value) {
-    if (!value) {
-      throw new Error("serverURI must have a value.");
-    }
-
-    if (typeof(value) != "string") {
-      throw new Error("serverURI must be a string: " + value);
-    }
-
-    this._prefs.set("documentServerURI", value);
-  },
-
-  /**
-   * The namespace on the document server to which we will be submitting data.
-   */
-  get serverNamespace() {
-    return this._prefs.get("documentServerNamespace", "metrics");
-  },
-
-  set serverNamespace(value) {
-    if (!value) {
-      throw new Error("serverNamespace must have a value.");
-    }
-
-    if (typeof(value) != "string") {
-      throw new Error("serverNamespace must be a string: " + value);
-    }
-
-    this._prefs.set("documentServerNamespace", value);
-  },
-
-  /**
-   * The document ID for data to be submitted to the server.
-   *
-   * This should be a UUID.
-   *
-   * We generate a new UUID when we upload data to the server. When we get a
-   * successful response for that upload, we record that UUID in this value.
-   * On the subsequent upload, this ID will be deleted from the server.
-   */
-  get lastSubmitID() {
-    return this._prefs.get("lastSubmitID", null) || null;
-  },
-
-  set lastSubmitID(value) {
-    this._prefs.set("lastSubmitID", value || "");
-  },
-
-  /**
-   * Whether this instance will upload data to a server.
-   */
-  get willUploadData() {
-    return this._policy.dataSubmissionPolicyAccepted &&
-           this._policy.healthReportUploadEnabled;
-  },
-
-  /**
-   * Whether remote data is currently stored.
-   *
-   * @return bool
-   */
-  haveRemoteData: function () {
-    return !!this.lastSubmitID;
   },
 
   //----------------------------------------------------
@@ -763,42 +616,6 @@ HealthReporter.prototype = Object.freeze({
     }.bind(this));
   },
 
-  /**
-   * Called to initiate a data upload.
-   *
-   * The passed argument is a `DataSubmissionRequest` from policy.jsm.
-   */
-  requestDataUpload: function (request) {
-    return Task.spawn(function doUpload() {
-      yield this.ensureConstantOnlyProvidersRegistered();
-      try {
-        yield this.collectMeasurements();
-        try {
-          yield this._uploadData(request);
-        } catch (ex) {
-          this._onSubmitDataRequestFailure(ex);
-        }
-      } finally {
-        yield this.ensureConstantOnlyProvidersUnregistered();
-      }
-    }.bind(this));
-  },
-
-  /**
-   * Request that server data be deleted.
-   *
-   * If deletion is scheduled to occur immediately, a promise will be returned
-   * that will be fulfilled when the deletion attempt finishes. Otherwise,
-   * callers should poll haveRemoteData() to determine when remote data is
-   * deleted.
-   */
-  requestDeleteRemoteData: function (reason) {
-    if (!this.lastSubmitID) {
-      return;
-    }
-
-    return this._policy.deleteRemoteData(reason);
-  },
 
   /**
    * Obtain the JSON payload for currently-collected data.
@@ -849,8 +666,9 @@ HealthReporter.prototype = Object.freeze({
     // FUTURE ask Privacy if we can put exception stacks in here.
     let errors = [];
 
+    // Guard here in case we don't track this (e.g., on Android).
     let lastPingDate = this.lastPingDate;
-    if (lastPingDate.getTime() > 0) {
+    if (lastPingDate && lastPingDate.getTime() > 0) {
       o.lastPingDate = this._formatDate(lastPingDate);
     }
 
@@ -933,6 +751,293 @@ HealthReporter.prototype = Object.freeze({
     this._storage.compact();
 
     throw new Task.Result(asObject ? o : JSON.stringify(o));
+  },
+
+  get _stateDir() {
+    let profD = OS.Constants.Path.profileDir;
+
+    // Work around bug 810543 until OS.File is more resilient.
+    if (!profD || !profD.length) {
+      throw new Error("Could not obtain profile directory. OS.File not " +
+                      "initialized properly?");
+    }
+
+    return OS.Path.join(profD, "healthreport");
+  },
+
+  _ensureDirectoryExists: function (path) {
+    let deferred = Promise.defer();
+
+    OS.File.makeDir(path).then(
+      function onResult() {
+        deferred.resolve(true);
+      },
+      function onError(error) {
+        if (error.becauseExists) {
+          deferred.resolve(true);
+          return;
+        }
+
+        deferred.reject(error);
+      }
+    );
+
+    return deferred.promise;
+  },
+
+  get _lastPayloadPath() {
+    return OS.Path.join(this._stateDir, "lastpayload.json");
+  },
+
+  _saveLastPayload: function (payload) {
+    let path = this._lastPayloadPath;
+    let pathTmp = path + ".tmp";
+
+    let encoder = new TextEncoder();
+    let buffer = encoder.encode(payload);
+
+    return OS.File.writeAtomic(path, buffer, {tmpPath: pathTmp});
+  },
+
+  /**
+   * Obtain the last uploaded payload.
+   *
+   * The promise is resolved to a JSON-decoded object on success. The promise
+   * is rejected if the last uploaded payload could not be found or there was
+   * an error reading or parsing it.
+   *
+   * This reads the last payload from disk. If you are looking for a
+   * current snapshot of the data, see `getJSONPayload` and
+   * `collectAndObtainJSONPayload`.
+   *
+   * @return Promise<object>
+   */
+  getLastPayload: function () {
+    let path = this._lastPayloadPath;
+
+    return OS.File.read(path).then(
+      function onData(buffer) {
+        let decoder = new TextDecoder();
+        let json = JSON.parse(decoder.decode(buffer));
+
+        return Promise.resolve(json);
+      },
+      function onError(error) {
+        return Promise.reject(error);
+      }
+    );
+  },
+
+  _now: function _now() {
+    return new Date();
+  },
+});
+
+/**
+ * HealthReporter and its abstract superclass coordinate collection and
+ * submission of health report metrics.
+ *
+ * This is the main type for Firefox Health Report on desktop. It glues all the
+ * lower-level components (such as collection and submission) together.
+ *
+ * An instance of this type is created as an XPCOM service. See
+ * DataReportingService.js and
+ * DataReporting.manifest/HealthReportComponents.manifest.
+ *
+ * It is theoretically possible to have multiple instances of this running
+ * in the application. For example, this type may one day handle submission
+ * of telemetry data as well. However, there is some moderate coupling between
+ * this type and *the* Firefox Health Report (e.g., the policy). This could
+ * be abstracted if needed.
+ *
+ * Note that `AbstractHealthReporter` exists to allow for Firefox Health Report
+ * to be more easily implemented on platforms where a separate controlling
+ * layer is responsible for payload upload and deletion.
+ *
+ * IMPLEMENTATION NOTES
+ * ====================
+ *
+ * These notes apply to the combination of `HealthReporter` and
+ * `AbstractHealthReporter`.
+ *
+ * Initialization and shutdown are somewhat complicated and worth explaining
+ * in extra detail.
+ *
+ * The complexity is driven by the requirements of SQLite connection management.
+ * Once you have a SQLite connection, it isn't enough to just let the
+ * application shut down. If there is an open connection or if there are
+ * outstanding SQL statements come XPCOM shutdown time, Storage will assert.
+ * On debug builds you will crash. On release builds you will get a shutdown
+ * hang. This must be avoided!
+ *
+ * During initialization, the second we create a SQLite connection (via
+ * Metrics.Storage) we register observers for application shutdown. The
+ * "quit-application" notification initiates our shutdown procedure. The
+ * subsequent "profile-do-change" notification ensures it has completed.
+ *
+ * The handler for "profile-do-change" may result in event loop spinning. This
+ * is because of race conditions between our shutdown code and application
+ * shutdown.
+ *
+ * All of our shutdown routines are async. There is the potential that these
+ * async functions will not complete before XPCOM shutdown. If they don't
+ * finish in time, we could get assertions in Storage. Our solution is to
+ * initiate storage early in the shutdown cycle ("quit-application").
+ * Hopefully all the async operations have completed by the time we reach
+ * "profile-do-change." If so, great. If not, we spin the event loop until
+ * they have completed, avoiding potential race conditions.
+ *
+ * @param branch
+ *        (string) The preferences branch to use for state storage. The value
+ *        must end with a period (.).
+ *
+ * @param policy
+ *        (HealthReportPolicy) Policy driving execution of HealthReporter.
+ */
+function HealthReporter(branch, policy, sessionRecorder) {
+  AbstractHealthReporter.call(this, branch, policy, sessionRecorder);
+
+  if (!this.serverURI) {
+    throw new Error("No server URI defined. Did you forget to define the pref?");
+  }
+
+  if (!this.serverNamespace) {
+    throw new Error("No server namespace defined. Did you forget a pref?");
+  }
+}
+
+HealthReporter.prototype = Object.freeze({
+  __proto__: AbstractHealthReporter.prototype,
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  /**
+   * When we last successfully submitted data to the server.
+   *
+   * This is sent as part of the upload. This is redundant with similar data
+   * in the policy because we like the modules to be loosely coupled and the
+   * similar data in the policy is only used for forensic purposes.
+   */
+  get lastPingDate() {
+    return CommonUtils.getDatePref(this._prefs, "lastPingTime", 0, this._log,
+                                   OLDEST_ALLOWED_YEAR);
+  },
+
+  set lastPingDate(value) {
+    CommonUtils.setDatePref(this._prefs, "lastPingTime", value,
+                            OLDEST_ALLOWED_YEAR);
+  },
+
+  /**
+   * The base URI of the document server to which to submit data.
+   *
+   * This is typically a Bagheera server instance. It is the URI up to but not
+   * including the version prefix. e.g. https://data.metrics.mozilla.com/
+   */
+  get serverURI() {
+    return this._prefs.get("documentServerURI", null);
+  },
+
+  set serverURI(value) {
+    if (!value) {
+      throw new Error("serverURI must have a value.");
+    }
+
+    if (typeof(value) != "string") {
+      throw new Error("serverURI must be a string: " + value);
+    }
+
+    this._prefs.set("documentServerURI", value);
+  },
+
+  /**
+   * The namespace on the document server to which we will be submitting data.
+   */
+  get serverNamespace() {
+    return this._prefs.get("documentServerNamespace", "metrics");
+  },
+
+  set serverNamespace(value) {
+    if (!value) {
+      throw new Error("serverNamespace must have a value.");
+    }
+
+    if (typeof(value) != "string") {
+      throw new Error("serverNamespace must be a string: " + value);
+    }
+
+    this._prefs.set("documentServerNamespace", value);
+  },
+
+  /**
+   * The document ID for data to be submitted to the server.
+   *
+   * This should be a UUID.
+   *
+   * We generate a new UUID when we upload data to the server. When we get a
+   * successful response for that upload, we record that UUID in this value.
+   * On the subsequent upload, this ID will be deleted from the server.
+   */
+  get lastSubmitID() {
+    return this._prefs.get("lastSubmitID", null) || null;
+  },
+
+  set lastSubmitID(value) {
+    this._prefs.set("lastSubmitID", value || "");
+  },
+
+  /**
+   * Whether this instance will upload data to a server.
+   */
+  get willUploadData() {
+    return this._policy.dataSubmissionPolicyAccepted &&
+           this._policy.healthReportUploadEnabled;
+  },
+
+  /**
+   * Whether remote data is currently stored.
+   *
+   * @return bool
+   */
+  haveRemoteData: function () {
+    return !!this.lastSubmitID;
+  },
+
+  /**
+   * Called to initiate a data upload.
+   *
+   * The passed argument is a `DataSubmissionRequest` from policy.jsm.
+   */
+  requestDataUpload: function (request) {
+    return Task.spawn(function doUpload() {
+      yield this.ensureConstantOnlyProvidersRegistered();
+      try {
+        yield this.collectMeasurements();
+        try {
+          yield this._uploadData(request);
+        } catch (ex) {
+          this._onSubmitDataRequestFailure(ex);
+        }
+      } finally {
+        yield this.ensureConstantOnlyProvidersUnregistered();
+      }
+    }.bind(this));
+  },
+
+  /**
+   * Request that server data be deleted.
+   *
+   * If deletion is scheduled to occur immediately, a promise will be returned
+   * that will be fulfilled when the deletion attempt finishes. Otherwise,
+   * callers should poll haveRemoteData() to determine when remote data is
+   * deleted.
+   */
+  requestDeleteRemoteData: function (reason) {
+    if (!this.lastSubmitID) {
+      return;
+    }
+
+    return this._policy.deleteRemoteData(reason);
   },
 
   _onBagheeraResult: function (request, isDelete, result) {
@@ -1031,87 +1136,6 @@ HealthReporter.prototype = Object.freeze({
     return client.deleteDocument(this.serverNamespace, this.lastSubmitID)
                  .then(this._onBagheeraResult.bind(this, request, true),
                        this._onSubmitDataRequestFailure.bind(this));
-
   },
-
-  get _stateDir() {
-    let profD = OS.Constants.Path.profileDir;
-
-    // Work around bug 810543 until OS.File is more resilient.
-    if (!profD || !profD.length) {
-      throw new Error("Could not obtain profile directory. OS.File not " +
-                      "initialized properly?");
-    }
-
-    return OS.Path.join(profD, "healthreport");
-  },
-
-  _ensureDirectoryExists: function (path) {
-    let deferred = Promise.defer();
-
-    OS.File.makeDir(path).then(
-      function onResult() {
-        deferred.resolve(true);
-      },
-      function onError(error) {
-        if (error.becauseExists) {
-          deferred.resolve(true);
-          return;
-        }
-
-        deferred.reject(error);
-      }
-    );
-
-    return deferred.promise;
-  },
-
-  get _lastPayloadPath() {
-    return OS.Path.join(this._stateDir, "lastpayload.json");
-  },
-
-  _saveLastPayload: function (payload) {
-    let path = this._lastPayloadPath;
-    let pathTmp = path + ".tmp";
-
-    let encoder = new TextEncoder();
-    let buffer = encoder.encode(payload);
-
-    return OS.File.writeAtomic(path, buffer, {tmpPath: pathTmp});
-  },
-
-  /**
-   * Obtain the last uploaded payload.
-   *
-   * The promise is resolved to a JSON-decoded object on success. The promise
-   * is rejected if the last uploaded payload could not be found or there was
-   * an error reading or parsing it.
-   *
-   * This reads the last payload from disk. If you are looking for a
-   * current snapshot of the data, see `getJSONPayload` and
-   * `collectAndObtainJSONPayload`.
-   *
-   * @return Promise<object>
-   */
-  getLastPayload: function () {
-    let path = this._lastPayloadPath;
-
-    return OS.File.read(path).then(
-      function onData(buffer) {
-        let decoder = new TextDecoder();
-        let json = JSON.parse(decoder.decode(buffer));
-
-        return Promise.resolve(json);
-      },
-      function onError(error) {
-        return Promise.reject(error);
-      }
-    );
-  },
-
-  _now: function _now() {
-    return new Date();
-  },
-
 });
 
