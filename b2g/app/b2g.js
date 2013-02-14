@@ -546,7 +546,7 @@ pref("ui.showHideScrollbars", 1);
 // background.
 pref("dom.ipc.processPriorityManager.enabled", true);
 pref("dom.ipc.processPriorityManager.backgroundGracePeriodMS", 1000);
-pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
+pref("dom.ipc.processPriorityManager.temporaryPriorityMS", 5000);
 
 // Kernel parameters for how processes are killed on low-memory.
 pref("gonk.systemMemoryPressureRecoveryPollMS", 5000);
