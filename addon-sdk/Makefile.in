@@ -11,13 +11,9 @@ include $(topsrcdir)/config/config.mk
 
 TEST_DIRS += test
 
-COMMONJS_FILES = \
-  source/lib/toolkit \
-  source/lib/sdk \
-  $(NULL)
-
-COMMONJS_DEST = $(FINAL_TARGET)/modules/commonjs
-INSTALL_TARGETS += COMMONJS
+libs::
+	$(PYTHON) $(srcdir)/copy_source.py $(topsrcdir) $(srcdir)/source/lib $(FINAL_TARGET)/modules/commonjs >copy_source.mk
+	$(MAKE) -f copy_source.mk libs
 
 include $(topsrcdir)/config/rules.mk
 
