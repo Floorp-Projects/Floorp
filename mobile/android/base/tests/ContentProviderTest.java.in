@@ -70,6 +70,11 @@ abstract class ContentProviderTest extends BaseTest {
         }
 
         @Override
+        public String getPackageName() {
+            return getInstrumentation().getContext().getPackageName();
+        }
+
+        @Override
         public String getPackageResourcePath() {
             return getInstrumentation().getContext().getPackageResourcePath();
         }
