@@ -514,6 +514,8 @@ public:
   virtual TableAccessible* AsTable() { return nullptr; }
 
   virtual TableCellAccessible* AsTableCell() { return nullptr; }
+  const TableCellAccessible* AsTableCell() const
+    { return const_cast<Accessible*>(this)->AsTableCell(); }
 
   bool IsTableRow() const { return HasGenericType(eTableRow); }
 

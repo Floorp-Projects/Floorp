@@ -589,6 +589,13 @@ endif
 endif
 endif
 
+ifdef _MSC_VER
+ifeq ($(CPU_ARCH),x86_64)
+# set stack to 2MB on x64 build.  See bug 582910
+WIN32_EXE_LDFLAGS	+= -STACK:2097152
+endif
+endif
+
 # If we're building a component on MSVC, we don't want to generate an
 # import lib, because that import lib will collide with the name of a
 # static version of the same library.

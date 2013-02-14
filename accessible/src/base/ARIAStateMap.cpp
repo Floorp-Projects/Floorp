@@ -272,6 +272,16 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
       return true;
     }
 
+    case eARIAReadonlyOrEditableIfDefined:
+    {
+      static const TokenTypeData data(
+        nsGkAtoms::aria_readonly, eBoolType,
+        0, states::READONLY, states::EDITABLE);
+
+      MapTokenType(aElement, aState, data);
+      return true;
+    }
+
     case eARIARequired:
     {
       static const TokenTypeData data(
