@@ -3099,7 +3099,6 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
     uint32_t callerUses = script()->getUseCount();
 
     uint32_t totalSize = 0;
-    uint32_t checkUses = js_IonOptions.usesBeforeInlining;
     uint32_t maxInlineDepth = js_IonOptions.maxInlineDepth;
     bool allFunctionsAreSmall = true;
     RootedFunction target(cx);
@@ -3126,15 +3125,13 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
             return false;
         }
     }
-    if (allFunctionsAreSmall) {
-        checkUses = js_IonOptions.smallFunctionUsesBeforeInlining;
+    if (allFunctionsAreSmall)
         maxInlineDepth = js_IonOptions.smallFunctionMaxInlineDepth;
-    }
 
     if (inliningDepth >= maxInlineDepth)
         return false;
 
-    if (script()->getUseCount() < checkUses) {
+    if (script()->getUseCount() < js_IonOptions.usesBeforeInlining()) {
         IonSpew(IonSpew_Inlining, "Not inlining, caller is not hot");
         return false;
     }
@@ -4789,7 +4786,7 @@ IonBuilder::insertRecompileCheck()
         return;
 
     // Don't recompile if we are already inlining.
-    if (script()->getUseCount() >= js_IonOptions.usesBeforeInlining)
+    if (script()->getUseCount() >= js_IonOptions.usesBeforeInlining())
         return;
 
     // Don't recompile if the oracle cannot provide inlining information

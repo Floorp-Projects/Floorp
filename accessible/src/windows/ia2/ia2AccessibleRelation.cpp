@@ -163,7 +163,11 @@ ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown **aTarget)
   if (aTargetIndex < 0 || (uint32_t)aTargetIndex >= mTargets.Length() || !aTarget)
     return E_INVALIDARG;
 
-  mTargets[aTargetIndex]->QueryNativeInterface(IID_IUnknown, (void**) aTarget);
+  AccessibleWrap* target =
+    static_cast<AccessibleWrap*>(mTargets[aTargetIndex].get());
+  *aTarget = static_cast<IAccessible*>(target);
+  (*aTarget)->AddRef();
+
   return S_OK;
 
   A11Y_TRYBLOCK_END

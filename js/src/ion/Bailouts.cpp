@@ -494,7 +494,7 @@ ion::RecompileForInlining()
         return BAILOUT_RETURN_FATAL_ERROR;
 
     // Invalidation should not reset the use count.
-    JS_ASSERT(script->getUseCount() >= js_IonOptions.usesBeforeInlining);
+    JS_ASSERT(script->getUseCount() >= js_IonOptions.usesBeforeInlining());
 
     return true;
 }
