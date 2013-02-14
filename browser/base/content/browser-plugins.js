@@ -304,10 +304,19 @@ var gPluginHandler = {
     let browser = gBrowser.getBrowserForDocument(objLoadingContent.ownerDocument.defaultView.top.document);
     let pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
 
+    let isFallbackTypeValid =
+      objLoadingContent.pluginFallbackType >= Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY &&
+      objLoadingContent.pluginFallbackType <= Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE;
+
+    if (objLoadingContent.pluginFallbackType == Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW) {
+      // checking if play preview is subject to CTP rules
+      let playPreviewInfo = pluginHost.getPlayPreviewInfo(objLoadingContent.actualType);
+      isFallbackTypeValid = !playPreviewInfo.ignoreCTP;
+    }
+
     return !objLoadingContent.activated &&
            pluginPermission != Ci.nsIPermissionManager.DENY_ACTION &&
-           objLoadingContent.pluginFallbackType >= Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY &&
-           objLoadingContent.pluginFallbackType <= Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE;
+           isFallbackTypeValid;
   },
 
   activatePlugins: function PH_activatePlugins(aContentWindow) {
@@ -472,6 +481,21 @@ var gPluginHandler = {
 
   _handlePlayPreviewEvent: function PH_handlePlayPreviewEvent(aPlugin) {
     let doc = aPlugin.ownerDocument;
+    let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
+    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    let pluginInfo = this._getPluginInfo(aPlugin);
+    let playPreviewInfo = pluginHost.getPlayPreviewInfo(pluginInfo.mimetype);
+
+    if (!playPreviewInfo.ignoreCTP) {
+      // if click-to-play rules used, play plugin at once if plugins were
+      // activated for this window
+      if (browser._clickToPlayAllPluginsActivated ||
+          browser._clickToPlayPluginsActivated.get(pluginInfo.pluginName)) {
+        objLoadingContent.playPlugin();
+        return;
+      }
+    }
+
     let previewContent = doc.getAnonymousElementByAttribute(aPlugin, "class", "previewPluginContent");
     let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
     if (!iframe) {
@@ -483,9 +507,7 @@ var gPluginHandler = {
       // Force a style flush, so that we ensure our binding is attached.
       aPlugin.clientTop;
     }
-    let pluginInfo = this._getPluginInfo(aPlugin);
-    let playPreviewUri = "data:application/x-moz-playpreview;," + pluginInfo.mimetype;
-    iframe.src = playPreviewUri;
+    iframe.src = playPreviewInfo.redirectURL;
 
     // MozPlayPlugin event can be dispatched from the extension chrome
     // code to replace the preview content with the native plugin
@@ -503,6 +525,10 @@ var gPluginHandler = {
       if (iframe)
         previewContent.removeChild(iframe);
     }, true);
+
+    if (!playPreviewInfo.ignoreCTP) {
+      gPluginHandler._showClickToPlayNotification(browser);
+    }
   },
 
   reshowClickToPlayNotification: function PH_reshowClickToPlayNotification() {

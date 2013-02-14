@@ -1758,26 +1758,20 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     }
   }
 
-  // Items resolved as Image/Document will not be checked for previews, as well
-  // as invalid plugins (they will not have the mContentType set).
-  if ((mType == eType_Null || mType == eType_Plugin) && ShouldPreview()) {
-    // If plugin preview exists, we shall use it
-    LOG(("OBJLC [%p]: Using plugin preview", this));
-    mType = eType_Null;
-    fallbackType = eFallbackPlayPreview;
-  }
-
   // If we're a plugin but shouldn't start yet, load fallback with
-  // reason click-to-play instead
+  // reason click-to-play instead. Items resolved as Image/Document
+  // will not be checked for previews, as well as invalid plugins
+  // (they will not have the mContentType set).
   FallbackType clickToPlayReason;
-  if (mType == eType_Plugin && !ShouldPlay(clickToPlayReason)) {
+  if ((mType == eType_Null || mType == eType_Plugin) &&
+      !ShouldPlay(clickToPlayReason)) {
     LOG(("OBJLC [%p]: Marking plugin as click-to-play", this));
     mType = eType_Null;
     fallbackType = clickToPlayReason;
   }
 
   if (!mActivated && mType == eType_Plugin) {
-    // Object passed ShouldPlay and !ShouldPreview, so it should be considered
+    // Object passed ShouldPlay, so it should be considered
     // activated until it changes content type
     LOG(("OBJLC [%p]: Object implicitly activated", this));
     mActivated = true;
@@ -2650,18 +2644,6 @@ nsObjectLoadingContent::CancelPlayPreview()
 }
 
 bool
-nsObjectLoadingContent::ShouldPreview()
-{
-  if (mPlayPreviewCanceled || mActivated)
-    return false;
-
-  nsRefPtr<nsPluginHost> pluginHost =
-    already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
-
-  return pluginHost->IsPluginPlayPreviewForType(mContentType.get());
-}
-
-bool
 nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
 {
   // mActivated is true if we've been activated via PlayPlugin() (e.g. user has
@@ -2670,6 +2652,25 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
 
   nsRefPtr<nsPluginHost> pluginHost =
     already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+
+  nsCOMPtr<nsIPluginPlayPreviewInfo> playPreviewInfo;
+  bool isPlayPreviewSpecified = NS_SUCCEEDED(pluginHost->GetPlayPreviewInfo(
+    mContentType, getter_AddRefs(playPreviewInfo)));
+  bool ignoreCTP = false;
+  if (isPlayPreviewSpecified) {
+    playPreviewInfo->GetIgnoreCTP(&ignoreCTP);
+  }
+  if (isPlayPreviewSpecified && !mPlayPreviewCanceled && !mActivated &&
+      ignoreCTP) {
+    // play preview in ignoreCTP mode is shown even if the native plugin
+    // is not present/installed
+    aReason = eFallbackPlayPreview;
+    return false;
+  }
+  // at this point if it's not a plugin, we let it play/fallback
+  if (mType != eType_Plugin) {
+    return true;
+  }
 
   bool isCTP;
   nsresult rv = pluginHost->IsPluginClickToPlayForType(mContentType, &isCTP);
@@ -2733,6 +2734,12 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
                                                         &permission);
     NS_ENSURE_SUCCESS(rv, false);
     allowPerm = permission == nsIPermissionManager::ALLOW_ACTION;
+  }
+
+  if (aReason == eFallbackClickToPlay && isPlayPreviewSpecified &&
+      !mPlayPreviewCanceled && !ignoreCTP) {
+    // play preview in click-to-play mode is shown instead of standard CTP UI
+    aReason = eFallbackPlayPreview;
   }
 
   return allowPerm;
