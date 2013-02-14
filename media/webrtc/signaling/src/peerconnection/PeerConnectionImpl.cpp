@@ -774,8 +774,8 @@ PeerConnectionImpl::NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aCh
  * Constraints look like this:
  *
  * {
- *    "mandatory": {"foo":"hello", "bar": false, "baz": 10},
- *    "optional": [{"hello":"foo"}, {"baz": false}]
+ *   mandatory: {"OfferToReceiveAudio": true, "OfferToReceiveVideo": true },
+ *   optional: [{"VoiceActivityDetection": true}, {"FooBar": 10}]
  * }
  *
  * Optional constraints are ordered, and hence in an array. This function
@@ -797,7 +797,7 @@ PeerConnectionImpl::ConvertConstraints(
       return NS_ERROR_FAILURE;
     }
 
-    JSObject* opts = JSVAL_TO_OBJECT(mandatory);
+    JSObject* opts = &mandatory.toObject();
     JS::AutoIdArray mandatoryOpts(aCx, JS_Enumerate(aCx, opts));
 
     // Iterate over each property.
@@ -806,7 +806,7 @@ PeerConnectionImpl::ConvertConstraints(
       if (!JS_GetPropertyById(aCx, opts, mandatoryOpts[i], &option) ||
           !JS_IdToValue(aCx, mandatoryOpts[i], &optionName) ||
           // We only support boolean constraints for now.
-          !JSVAL_IS_BOOLEAN(option)) {
+          !option.isBoolean()) {
         return NS_ERROR_FAILURE;
       }
       JSString* optionNameString = JS_ValueToString(aCx, optionName);
@@ -827,23 +827,39 @@ PeerConnectionImpl::ConvertConstraints(
       return NS_ERROR_FAILURE;
     }
 
-    JSObject* opts = JSVAL_TO_OBJECT(optional);
+    JSObject* array = &optional.toObject();
     uint32_t length;
-    if (!JS_IsArrayObject(aCx, opts) ||
-        !JS_GetArrayLength(aCx, opts, &length)) {
+    if (!JS_GetArrayLength(aCx, array, &length)) {
       return NS_ERROR_FAILURE;
     }
     for (uint32_t i = 0; i < length; i++) {
-      JS::Value val;
-      if (!JS_GetElement(aCx, opts, i, &val) ||
-          !val.isObject()) {
+      JS::Value element;
+      if (!JS_GetElement(aCx, array, i, &element) ||
+          !element.isObject()) {
         return NS_ERROR_FAILURE;
       }
-      // Extract name & value and store.
-      // FIXME: MediaConstraints does not support optional constraints?
+      JSObject* opts = &element.toObject();
+      JS::AutoIdArray optionalOpts(aCx, JS_Enumerate(aCx, opts));
+      // Expect one property per entry.
+      if (optionalOpts.length() != 1) {
+        return NS_ERROR_FAILURE;
+      }
+      JS::Value option, optionName;
+      if (!JS_GetPropertyById(aCx, opts, optionalOpts[0], &option) ||
+          !JS_IdToValue(aCx, optionalOpts[0], &optionName)) {
+        return NS_ERROR_FAILURE;
+      }
+      // Ignore constraints other than boolean, as that's all we support.
+      if (option.isBoolean()) {
+        JSString* optionNameString = JS_ValueToString(aCx, optionName);
+        if (!optionNameString) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        NS_ConvertUTF16toUTF8 stringVal(JS_GetStringCharsZ(aCx, optionNameString));
+        aObj->setBooleanConstraint(stringVal.get(), JSVAL_TO_BOOLEAN(option), false);
+      }
     }
   }
-
   return NS_OK;
 }
 
