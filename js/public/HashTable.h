@@ -852,9 +852,10 @@ class HashTable : private AllocPolicy
     mutable mozilla::DebugOnly<bool> entered;
     mozilla::DebugOnly<uint64_t>     mutationCount;
 
-    // The default initial capacity is 16, but you can ask for as small as 4.
-    static const unsigned sMinSizeLog2  = 2;
-    static const unsigned sMinSize      = 1 << sMinSizeLog2;
+    // The default initial capacity is 32 (enough to hold 16 elements), but it
+    // can be as low as 4.
+    static const unsigned sMinCapacityLog2 = 2;
+    static const unsigned sMinCapacity  = 1 << sMinCapacityLog2;
     static const unsigned sMaxInit      = JS_BIT(23);
     static const unsigned sMaxCapacity  = JS_BIT(24);
     static const unsigned sHashBits     = tl::BitSize<HashNumber>::result;
@@ -925,11 +926,11 @@ class HashTable : private AllocPolicy
         }
         uint32_t capacity = (length * sInvMaxAlpha) >> 7;
 
-        if (capacity < sMinSize)
-            capacity = sMinSize;
+        if (capacity < sMinCapacity)
+            capacity = sMinCapacity;
 
         // FIXME: use JS_CEILING_LOG2 when PGO stops crashing (bug 543034).
-        uint32_t roundUp = sMinSize, roundUpLog2 = sMinSizeLog2;
+        uint32_t roundUp = sMinCapacity, roundUpLog2 = sMinCapacityLog2;
         while (roundUp < capacity) {
             roundUp <<= 1;
             ++roundUpLog2;
@@ -993,7 +994,7 @@ class HashTable : private AllocPolicy
     // Would the table be underloaded if it had the given capacity and entryCount?
     static bool wouldBeUnderloaded(uint32_t capacity, uint32_t entryCount)
     {
-        return capacity > sMinSize && entryCount <= ((sMinAlphaFrac * capacity) >> 8);
+        return capacity > sMinCapacity && entryCount <= ((sMinAlphaFrac * capacity) >> 8);
     }
 
     bool underloaded()
