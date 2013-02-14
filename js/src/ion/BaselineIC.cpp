@@ -2519,7 +2519,10 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "SetElem(%s)", js_CodeName[JSOp(*pc)]);
 
-    JS_ASSERT(op == JSOP_SETELEM || op == JSOP_ENUMELEM || op == JSOP_INITELEM);
+    JS_ASSERT(op == JSOP_SETELEM ||
+              op == JSOP_ENUMELEM ||
+              op == JSOP_INITELEM ||
+              op == JSOP_INITELEM_ARRAY);
 
     RootedObject obj(cx, ToObject(cx, objv));
     if (!obj)
@@ -2539,6 +2542,10 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
         RootedValue nindex(cx, index);
         if (!InitElemOperation(cx, obj, &nindex, rhs))
             return false;
+    } else if (op == JSOP_INITELEM_ARRAY) {
+        JS_ASSERT(index.toInt32() == GET_UINT24(pc));
+        if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs))
+            return false;
     } else {
         if (!SetObjectElement(cx, obj, index, rhs, script->strict))
             return false;
@@ -2551,7 +2558,10 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
     }
 
     // Try to generate new stubs.
-    if (obj->isNative() && index.isInt32() && index.toInt32() >= 0) {
+    if (obj->isNative() &&
+        index.isInt32() && index.toInt32() >= 0 &&
+        !rhs.isMagic(JS_ELEMENTS_HOLE))
+    {
         bool addingCase;
         RootedObject lastProto(cx);
 
