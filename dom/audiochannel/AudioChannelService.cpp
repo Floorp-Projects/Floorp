@@ -25,7 +25,6 @@
 #endif
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::hal;
 
 StaticRefPtr<AudioChannelService> gAudioChannelService;
 
@@ -94,7 +93,7 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                                           true /* mElementHidden */,
                                                           true /* mMuted */);
   mAgents.Put(aAgent, data);
-  RegisterType(aType, CONTENT_PROCESS_ID_MAIN);
+  RegisterType(aType, CONTENT_PARENT_NO_CHILD_ID);
 }
 
 void
@@ -118,7 +117,7 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
   mAgents.RemoveAndForget(aAgent, data);
 
   if (data) {
-    UnregisterType(data->mType, data->mElementHidden, CONTENT_PROCESS_ID_MAIN);
+    UnregisterType(data->mType, data->mElementHidden, CONTENT_PARENT_NO_CHILD_ID);
   }
 }
 
@@ -152,7 +151,7 @@ AudioChannelService::GetMuted(AudioChannelAgent* aAgent, bool aElementHidden)
   // Update visibility.
   data->mElementHidden = aElementHidden;
 
-  bool muted = GetMutedInternal(data->mType, CONTENT_PROCESS_ID_MAIN,
+  bool muted = GetMutedInternal(data->mType, CONTENT_PARENT_NO_CHILD_ID,
                                 aElementHidden, oldElementHidden);
   data->mMuted = muted;
 
