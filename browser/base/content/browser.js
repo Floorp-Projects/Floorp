@@ -994,6 +994,9 @@ let gGestureSupport = {
     let contentElement = content.document.body.firstElementChild;
     if (!contentElement)
       return;
+    // If we're currently snapping, cancel that snap
+    if (contentElement.classList.contains("completeRotation"))
+      this._clearCompleteRotation();
 
     this.rotation = Math.round(this.rotation + aEvent.delta);
     contentElement.style.transform = "rotate(" + this.rotation + "deg)";
@@ -1036,8 +1039,11 @@ let gGestureSupport = {
              this.rotation < transitionRotation)
       transitionRotation -= 90;
 
-    contentElement.classList.add("completeRotation");
-    contentElement.addEventListener("transitionend", this._clearCompleteRotation);
+    // Only add the completeRotation class if it is is necessary
+    if (transitionRotation != this.rotation) {
+      contentElement.classList.add("completeRotation");
+      contentElement.addEventListener("transitionend", this._clearCompleteRotation);
+    }
 
     contentElement.style.transform = "rotate(" + transitionRotation + "deg)";
     this.rotation = transitionRotation;
@@ -1094,8 +1100,14 @@ let gGestureSupport = {
    * Removes the transition rule by removing the completeRotation class
    */
   _clearCompleteRotation: function() {
-    this.classList.remove("completeRotation");
-    this.removeEventListener("transitionend", this._clearCompleteRotation);
+    let contentElement = content.document &&
+                         content.document instanceof ImageDocument &&
+                         content.document.body &&
+                         content.document.body.firstElementChild;
+    if (!contentElement)
+      return;
+    contentElement.classList.remove("completeRotation");
+    contentElement.removeEventListener("transitionend", this._clearCompleteRotation);
   },
 };
 
