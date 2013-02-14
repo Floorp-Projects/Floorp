@@ -186,6 +186,7 @@ _BROWSER_FILES = \
                  browser_plugins_added_dynamically.js \
                  browser_CTPScriptPlugin.js \
                  browser_pluginplaypreview.js \
+                 browser_pluginplaypreview2.js \
                  browser_private_browsing_window.js \
                  browser_relatedTabs.js \
                  browser_sanitize-passwordDisabledHosts.js \

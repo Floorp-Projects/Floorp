@@ -45,6 +45,7 @@ EXPORTS = \
   nsPluginDirServiceProvider.h \
   nsPluginHost.h \
   nsPluginInstanceOwner.h \
+  nsPluginPlayPreviewInfo.h \
   $(NULL)
 
 EXPORTS_mozilla = \
@@ -62,6 +63,7 @@ CPPSRCS		= \
 		nsPluginTags.cpp \
 		PluginPRLibrary.cpp \
 		nsPluginInstanceOwner.cpp \
+		nsPluginPlayPreviewInfo.cpp \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
