@@ -84,9 +84,13 @@ public:
     static ContentParent* GetNewOrUsed(bool aForBrowserElement = false);
 
     /**
-     * Get or create a content process for the given TabContext.
+     * Get or create a content process for the given TabContext.  aFrameElement
+     * should be the frame/iframe element with which this process will
+     * associated.
      */
-    static TabParent* CreateBrowserOrApp(const TabContext& aContext);
+    static TabParent*
+    CreateBrowserOrApp(const TabContext& aContext,
+                       nsIDOMElement* aFrameElement);
 
     static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -162,7 +166,10 @@ private:
     // if it's dead), this returns false.
     static already_AddRefed<ContentParent>
     MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
-                                    ChildPrivileges aPrivs);
+                                    ChildPrivileges aPrivs,
+                                    hal::ProcessPriority aInitialPriority);
+
+    static hal::ProcessPriority GetInitialProcessPriority(nsIDOMElement* aFrameElement);
 
     static void FirstIdle();
 
@@ -172,16 +179,28 @@ private:
     using PContentParent::SendPTestShellConstructor;
 
     ContentParent(const nsAString& aAppManifestURL, bool aIsForBrowser,
-                  base::ChildPrivileges aOSPrivileges = base::PRIVILEGES_DEFAULT);
+                  ChildPrivileges aOSPrivileges = base::PRIVILEGES_DEFAULT,
+                  hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
     virtual ~ContentParent();
 
     void Init();
+
+    // Set the child process's priority.  Once the child starts up, it will
+    // manage its own priority via the ProcessPriorityManager.
+    void SetProcessInitialPriority(hal::ProcessPriority aInitialPriority);
+
+    // If the frame element indicates that the child process is "critical" and
+    // has a pending system message, this function acquires the CPU wake lock on
+    // behalf of the child.  We'll release the lock when the system message is
+    // handled or after a timeout, whichever comes first.
+    void MaybeTakeCPUWakeLock(nsIDOMElement* aFrameElement);
 
     // Transform a pre-allocated app process into a "real" app
     // process, for the specified manifest URL.  If this returns false, the
     // child process has died.
     bool TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
-                                      ChildPrivileges aPrivs);
+                                      ChildPrivileges aPrivs,
+                                      hal::ProcessPriority aInitialPriority);
 
     /**
      * Mark this ContentParent as dead for the purposes of Get*().
@@ -346,6 +365,8 @@ private:
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName);
 
     virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus);
+
+    virtual bool RecvSystemMessageHandled() MOZ_OVERRIDE;
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
