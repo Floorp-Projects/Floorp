@@ -141,7 +141,6 @@ SnapshotReader::readFrameHeader()
     } u;
     for (size_t i = 0; i < sizeof(RawScript); i++)
         u.bytes[i] = reader_.readByte();
-    script_ = u.script;
 #endif
 
     pcOffset_ = reader_.readUnsigned();
