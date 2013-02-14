@@ -58,7 +58,7 @@ random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 
 # More complex <img> tests
 == img-blobURI-1.html lime100x100-ref.html
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == img-blobURI-2.html lime100x100-ref.html
+== img-blobURI-2.html lime100x100-ref.html
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
 == img-dyn-1.html img-dyn-1-ref.html
 == img-foreignObject-1.html lime100x100-ref.html
@@ -134,8 +134,8 @@ skip-if(B2G) == svg-image-script-1.svg lime100x100.svg # bug 773482
 HTTP == svg-image-datauri-1.html       lime100x100.svg
 == svg-image-external-1.html           blue100x100.svg
 HTTP == svg-image-external-1.html      blue100x100.svg
-random skip-if(B2G) == svg-stylesheet-datauri-1.html       lime100x100.svg
-random skip-if(B2G) HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
+== svg-stylesheet-datauri-1.html       lime100x100.svg
+HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
 == svg-stylesheet-external-1.html      blue100x100.svg
 HTTP == svg-stylesheet-external-1.html blue100x100.svg
 
