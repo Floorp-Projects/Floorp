@@ -1324,9 +1324,7 @@ nsComboboxDisplayFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsDisplayListSet& aLists)
 {
   nsDisplayListCollection set;
-  nsresult rv = nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
-  if (NS_FAILED(rv))
-    return rv;
+  nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
 
   // remove background items if parent frame is themed
   if (mComboBox->IsThemed()) {
@@ -1550,13 +1548,11 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsForEventDelivery()) {
     // Don't allow children to receive events.
     // REVIEW: following old GetFrameForPoint
-    nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    DisplayBorderBackgroundOutline(aBuilder, aLists);
   } else {
     // REVIEW: Our in-flow child frames are inline-level so they will paint in our
     // content list, so we don't need to mess with layers.
-    nsresult rv = nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   }
 
   // draw a focus indicator only when focus rings should be drawn
@@ -1569,14 +1565,14 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if ((!IsThemed(disp) ||
            !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
           mDisplayFrame && IsVisibleForPainting(aBuilder)) {
-        nsresult rv = aLists.Content()->AppendNewToTop(
-            new (aBuilder) nsDisplayComboboxFocus(aBuilder, this));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.Content()->AppendNewToTop(
+          new (aBuilder) nsDisplayComboboxFocus(aBuilder, this));
       }
     }
   }
 
-  return DisplaySelectionOverlay(aBuilder, aLists.Content());
+  DisplaySelectionOverlay(aBuilder, aLists.Content());
+  return NS_OK;
 }
 
 void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
