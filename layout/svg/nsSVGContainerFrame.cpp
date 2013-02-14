@@ -93,14 +93,14 @@ nsSVGDisplayContainerFrame::Init(nsIContent* aContent,
   return rv;
 }
 
-NS_IMETHODIMP
+void
 nsSVGDisplayContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                              const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
 {
   if (mContent->IsSVG() &&
       !static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
-    return NS_OK;
+    return;
   }
   return BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
 }

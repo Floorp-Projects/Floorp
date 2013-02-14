@@ -72,9 +72,9 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame
@@ -199,7 +199,7 @@ nsRootBoxFrame::Reflow(nsPresContext*           aPresContext,
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-nsresult
+void
 nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists)
@@ -210,7 +210,6 @@ nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplayBorderBackgroundOutline(aBuilder, aLists, true);
 
   BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
