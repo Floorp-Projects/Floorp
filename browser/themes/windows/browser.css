@@ -37,6 +37,21 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
+#main-window[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"][inactive="true"]:not([customizing="true"]) {
+  visibility: hidden;
+}
+
+#main-window[sizemode="normal"] #toolbar-menubar,
+/* We want a 4px gap between the TabsToolbar and the toolbar-menubar when the
+   toolbar-menu is displayed in either restored or maximized mode. */
+#main-window:not([sizemode="fullscreen"]) #toolbar-menubar:-moz-any(:not([autohide="true"]), :not([inactive="true"])) {
+  margin-bottom: 4px;
+}
+
+#toolbar-menubar:not([autohide="true"]) {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+}
+
 #navigator-toolbox {
   -moz-appearance: none;
   background-color: transparent;
@@ -64,12 +79,16 @@
 %ifdef WINDOWS_AERO
 @media not all and (-moz-windows-compositor) {
 %endif
-  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme) {
+  #toolbar-menubar {
+    background-color: transparent !important;
+  }
+
+  #main-window[tabsintitlebar][sizemode="maximized"] #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme) {
     background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px),
                 linear-gradient(rgba(50%,50%,50%,0), ActiveCaption 85%);
     color: CaptionText;
   }
-  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+  #main-window[tabsintitlebar][sizemode="maximized"] #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
     background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px),
                 linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
     color: InactiveCaptionText;
@@ -106,6 +125,16 @@
 
 /* ::::: app menu button ::::: */
 
+/* The app menu button must appear on top of the navigator-toolbox in order
+ * for click and hover mouse events to work properly for the button in the
+ * restored window state. Otherwise, elements in the navigator-toolbox, like the
+ * menubar can swallow these events. It will also place the button above the
+ * fog on themes with Aero Glass.
+ */
+#main-window[tabsintitlebar] #appmenu-button-container {
+  z-index: 1;
+}
+
 #appmenu-button {
   -moz-appearance: none;
   background-clip: padding-box;
@@ -128,6 +157,10 @@
 
 %ifndef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
+  #main-window[tabsintitlebar][sizemode="normal"] #toolbar-menubar {
+    margin-top: 4px;
+  }
+
   #main-window[sizemode="normal"] #appmenu-button {
     margin-bottom: 5px;
   }
@@ -541,13 +574,21 @@
 }
 
 @media (-moz-windows-classic) {
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
+  #main-window[tabsintitlebar][sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container,
+  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
     margin-top: 4px;
   }
 }
 
+/* The button box must appear on top of the navigator-toolbox in order for
+ * click and hover mouse events to work properly for the button in the restored
+ * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
+ * can swallow those events. It will also place the buttons above the fog on
+ * themes with Aero Glass.
+ */
 #titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box;
+  z-index: 1;
 }
 
 #main-window[sizemode="maximized"] #titlebar-buttonbox {
@@ -1881,6 +1922,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: linear-gradient(to top, @toolbarShadowColor@ 1px, rgba(0,0,0,.05) 1px, transparent 50%);
 }
 
+#main-window[tabsintitlebar] #TabsToolbar {
+  background-color: transparent;
+}
+
 %ifndef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
   #main-window[sizemode=normal] #TabsToolbar {
@@ -1895,6 +1940,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 %ifndef WINDOWS_AERO
 /* Use lighter colors of buttons and text in the titlebar on luna-blue */
 @media (-moz-windows-theme: luna-blue) {
+  #main-window[tabsintitlebar] #main-menubar > menu {
+    color: white;
+  }
+
   #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-up,
   #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-down {
     list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
