@@ -104,21 +104,18 @@ html|applet:not([height]), html|applet[height=""] {
   display: block;
 }
 
+.submitStatus[status] {
+  display: -moz-box;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  height: 160px;
+}
+
 .submitStatus[status="noReport"]   .msgNoCrashReport,
 .submitStatus[status="please"]     .msgPleaseSubmit,
 .submitStatus[status="noSubmit"]   .msgNotSubmitted,
 .submitStatus[status="submitting"] .msgSubmitting,
 .submitStatus[status="success"]    .msgSubmitted,
-.submitStatus[status="failed"]     .msgSubmitFailed,
-.submitStatus[status]:not([status="please"]) .msgReload {
+.submitStatus[status="failed"]     .msgSubmitFailed {
   display: block;
-}
-.submitStatus[status="please"] .msgReload {
-  /* Take up space when invisible, so stuff doesn't shift upon reveal. */
-  display: block;
-  visibility: hidden;
-}
-
-.helpIcon {
-  cursor: pointer;
 }
