@@ -133,23 +133,24 @@ public:
   NS_DISPLAY_DECL_NAME("ListFocus", TYPE_LIST_FOCUS)
 };
 
-NS_IMETHODIMP
+void
 nsSelectsAreaFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
-  if (!aBuilder->IsForEventDelivery())
-    return BuildDisplayListInternal(aBuilder, aDirtyRect, aLists);
+  if (!aBuilder->IsForEventDelivery()) {
+    BuildDisplayListInternal(aBuilder, aDirtyRect, aLists);
+    return;
+  }
     
   nsDisplayListCollection set;
-  nsresult rv = BuildDisplayListInternal(aBuilder, aDirtyRect, set);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BuildDisplayListInternal(aBuilder, aDirtyRect, set);
   
   nsOptionEventGrabberWrapper wrapper;
-  return wrapper.WrapLists(aBuilder, this, set, aLists);
+  wrapper.WrapLists(aBuilder, this, set, aLists);
 }
 
-nsresult
+void
 nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
                                              const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
@@ -164,8 +165,6 @@ nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
       nsDisplayListFocus(aBuilder, this));
   }
-  
-  return NS_OK;
 }
 
 NS_IMETHODIMP 

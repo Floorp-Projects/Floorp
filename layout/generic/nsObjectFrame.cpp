@@ -1208,14 +1208,14 @@ nsObjectFrame::IsTransparentMode() const
 #endif
 }
 
-NS_IMETHODIMP
+void
 nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
   // XXX why are we painting collapsed object frames?
   if (!IsVisibleOrCollapsedForPainting(aBuilder))
-    return NS_OK;
+    return;
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
@@ -1223,14 +1223,14 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // If we are painting in Print Preview do nothing....
   if (type == nsPresContext::eContext_PrintPreview)
-    return NS_OK;
+    return;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsObjectFrame");
 
 #ifndef XP_MACOSX
   if (mWidget && aBuilder->IsInTransform()) {
     // Windowed plugins should not be rendered inside a transform.
-    return NS_OK;
+    return;
   }
 #endif
 
@@ -1289,8 +1289,6 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
-
-  return NS_OK;
 }
 
 #ifdef XP_OS2

@@ -2773,27 +2773,26 @@ PaintTreeBody(nsIFrame* aFrame, nsRenderingContext* aCtx,
 }
 
 // Painting routines
-NS_IMETHODIMP
+void
 nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
   // REVIEW: why did we paint if we were collapsed? that makes no sense!
   if (!IsVisibleForPainting(aBuilder))
-    return NS_OK; // We're invisible.  Don't paint.
+    return; // We're invisible.  Don't paint.
 
   // Handles painting our background, border, and outline.
-  nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 
   // Bail out now if there's no view or we can't run script because the
   // document is a zombie
   if (!mView || !GetContent()->GetCurrentDoc()->GetScriptGlobalObject())
-    return NS_OK;
+    return;
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(aBuilder, this, ::PaintTreeBody, "XULTreeBody",
-                       nsDisplayItem::TYPE_XUL_TREE_BODY));
+  aLists.Content()->AppendNewToTop(new (aBuilder)
+    nsDisplayGeneric(aBuilder, this, ::PaintTreeBody, "XULTreeBody",
+                     nsDisplayItem::TYPE_XUL_TREE_BODY));
 }
 
 void

@@ -505,7 +505,7 @@ static gfx3DMatrix ComputePageTransform(nsIFrame* aFrame, float aAppUnitsPerPixe
 }
 
 //------------------------------------------------------------------------------
-NS_IMETHODIMP
+void
 nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists)
@@ -576,7 +576,6 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   set.MoveTo(aLists);
-  return NS_OK;
 }
 
 //------------------------------------------------------------------------------

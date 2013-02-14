@@ -803,7 +803,7 @@ ComputePageSequenceTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
   return gfx3DMatrix::ScalingMatrix(scale, scale, 1);
 }
 
-NS_IMETHODIMP
+void
 nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
@@ -822,7 +822,6 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsDisplayTransform(aBuilder, this, &content, ::ComputePageSequenceTransform));
 
   aLists.Content()->AppendToTop(&content);
-  return NS_OK;
 }
 
 nsIAtom*

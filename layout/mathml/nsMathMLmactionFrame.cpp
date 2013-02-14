@@ -271,7 +271,7 @@ nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 //  Only paint the selected child...
-NS_IMETHODIMP
+void
 nsMathMLmactionFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
@@ -281,7 +281,7 @@ nsMathMLmactionFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // so ask nsMathMLContainerFrame to do the work for us.
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
     nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-    return NS_OK;
+    return;
   }
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
@@ -298,7 +298,6 @@ nsMathMLmactionFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // visual debug
   DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
 #endif
-  return NS_OK;
 }
 
 // Only reflow the selected child ...
