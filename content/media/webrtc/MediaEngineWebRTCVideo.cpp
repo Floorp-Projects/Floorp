@@ -6,6 +6,7 @@
 #include "Layers.h"
 #include "ImageTypes.h"
 #include "ImageContainer.h"
+#include "mtransport/runnable_utils.h"
 
 namespace mozilla {
 
@@ -227,7 +228,26 @@ MediaEngineWebRTCVideoSource::Deallocate()
       return NS_ERROR_FAILURE;
     }
 
+#ifdef XP_MACOSX
+    // Bug 829907 - on mac, in shutdown, the mainthread stops processing
+    // 'native' events, and the QTKit code uses events to the main native CFRunLoop
+    // in order to provide thread safety.  In order to avoid this locking us up,
+    // release the ViE capture device synchronously on MainThread (so the native
+    // event isn't needed).
+    // XXX Note if MainThread Dispatch()es NS_DISPATCH_SYNC to us we can deadlock.
+    // XXX It might be nice to only do this if we're in shutdown...  Hard to be
+    // sure when that is though.
+    // Thread safety: a) we call this synchronously, and don't use ViECapture from
+    // another thread anywhere else, b) ViEInputManager::DestroyCaptureDevice() grabs
+    // an exclusive object lock and deletes it in a critical section, so all in all
+    // this should be safe threadwise.
+    NS_DispatchToMainThread(WrapRunnable(mViECapture,
+                                         &webrtc::ViECapture::ReleaseCaptureDevice,
+                                         mCaptureIndex),
+                            NS_DISPATCH_SYNC);
+#else
     mViECapture->ReleaseCaptureDevice(mCaptureIndex);
+#endif
     mState = kReleased;
     LOG(("Video device %d deallocated", mCaptureIndex));
   } else {
