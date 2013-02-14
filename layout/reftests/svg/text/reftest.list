@@ -99,6 +99,7 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == display-none-1.svg simple.svg
 == display-none-2.svg simple.svg
 == display-none-3.svg simple.svg
+== display-none-4.svg simple.svg
 
 == simple-multiline.svg simple-multiline-ref.svg
 == simple-multiline-number.svg simple-multiline-number-ref.svg
