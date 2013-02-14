@@ -134,6 +134,7 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == pseudo-first-line.svg pseudo-first-line-ref.svg
 == pseudo-first-line-2.svg pseudo-first-line-2-ref.svg
 == pseudo-first-letter.svg pseudo-first-letter-ref.svg
+== pseudo-first-letter-2.svg pseudo-first-letter-2-ref.svg
 == ignore-before-after.svg ignore-prop-ref.svg
 
 # invalid child nodes

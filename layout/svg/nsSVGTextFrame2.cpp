@@ -273,11 +273,7 @@ IsNonEmptyTextFrame(nsIFrame* aFrame)
     return false;
   }
 
-  nsIContent* content = textFrame->GetContent();
-  NS_ASSERTION(content && content->IsNodeOfType(nsINode::eTEXT),
-               "unexpected content type for nsTextFrame");
-
-  return static_cast<nsTextNode*>(content)->TextLength() != 0;
+  return textFrame->GetContentLength() != 0;
 }
 
 /**
@@ -1440,6 +1436,9 @@ TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame)
  *   * what nsInlineFrame corresponding to a <textPath> element it is a
  *     descendant of
  *   * what computed dominant-baseline value applies to it
+ *
+ * Note that any text frames that are empty -- whose ContentLength() is 0 --
+ * will be skipped over.
  */
 class TextFrameIterator
 {
