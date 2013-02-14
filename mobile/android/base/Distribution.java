@@ -28,9 +28,9 @@ import java.util.zip.ZipFile;
 public final class Distribution {
     private static final String LOGTAG = "GeckoDistribution";
 
-    public static final int STATE_UNKNOWN = 0;
-    public static final int STATE_NONE = 1;
-    public static final int STATE_SET = 2;
+    private static final int STATE_UNKNOWN = 0;
+    private static final int STATE_NONE = 1;
+    private static final int STATE_SET = 2;
 
     /**
      * Initializes distribution if it hasn't already been initalized.
