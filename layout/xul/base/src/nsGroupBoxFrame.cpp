@@ -111,16 +111,14 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   // Paint our background and border
   if (IsVisibleForPainting(aBuilder)) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULGroupBackground(aBuilder, this));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayXULGroupBackground(aBuilder, this));
     
-    rv = DisplayOutline(aBuilder, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    DisplayOutline(aBuilder, aLists);
   }
 
-  return BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
-  // REVIEW: Debug borders now painted by nsFrame::BuildDisplayListForChild
+  BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  return NS_OK;
 }
 
 void

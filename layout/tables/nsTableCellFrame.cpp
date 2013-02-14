@@ -447,9 +447,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       const nsStyleBorder* borderStyle = GetStyleBorder();
       bool hasBoxShadow = !!borderStyle->mBoxShadow;
       if (hasBoxShadow) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(
-            new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, this));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(
+          new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, this));
       }
     
       // display background if we need to.
@@ -461,39 +460,34 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
         nsDisplayTableItem* item =
           new (aBuilder) nsDisplayTableCellBackground(aBuilder, this);
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(item);
         item->UpdateForFrameBackground(this);
       }
     
       // display inset box-shadows if we need to.
       if (hasBoxShadow) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(
-            new (aBuilder) nsDisplayBoxShadowInner(aBuilder, this));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(
+          new (aBuilder) nsDisplayBoxShadowInner(aBuilder, this));
       }
     
       // display borders if we need to
       if (!tableFrame->IsBorderCollapse() && borderStyle->HasBorder() &&
           emptyCellStyle == NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-            nsDisplayBorder(aBuilder, this));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+          nsDisplayBorder(aBuilder, this));
       }
     
       // and display the selection border if we need to
       if (IsSelected()) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-            nsDisplayGeneric(aBuilder, this, ::PaintTableCellSelection,
-                             "TableCellSelection",
-                             nsDisplayItem::TYPE_TABLE_CELL_SELECTION));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+          nsDisplayGeneric(aBuilder, this, ::PaintTableCellSelection,
+                           "TableCellSelection",
+                           nsDisplayItem::TYPE_TABLE_CELL_SELECTION));
       }
     }
     
     // the 'empty-cells' property has no effect on 'outline'
-    nsresult rv = DisplayOutline(aBuilder, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    DisplayOutline(aBuilder, aLists);
   }
 
   // Push a null 'current table item' so that descendant tables can't
@@ -509,7 +503,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // because that/ would put the child's background in the Content() list
   // which isn't right (e.g., would end up on top of our child floats for
   // event handling).
-  return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  return NS_OK;
 }
 
 int

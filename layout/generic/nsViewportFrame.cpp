@@ -70,7 +70,8 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // make the kid's BorderBackground our own. This ensures that the canvas
   // frame's background becomes our own background and therefore appears
   // below negative z-index elements.
-  return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
