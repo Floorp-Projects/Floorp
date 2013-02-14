@@ -6,6 +6,7 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
@@ -49,7 +50,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private static final int FRAME_RATE_METER_HEIGHT = 32;
 
     private final LayerView mView;
-    private final SingleTileLayer mBackgroundLayer;
     private final NinePatchTileLayer mShadowLayer;
     private TextLayer mFrameRateLayer;
     private final ScrollbarLayer mHorizScrollLayer;
@@ -60,6 +60,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private RenderContext mLastPageContext;
     private int mMaxTextureSize;
     private int mBackgroundColor;
+    private int mOverscrollColor;
 
     private CopyOnWriteArrayList<Layer> mExtraLayers = new CopyOnWriteArrayList<Layer>();
 
@@ -128,9 +129,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
     public LayerRenderer(LayerView view) {
         mView = view;
-
-        CairoImage backgroundImage = new BufferedCairoImage(view.getBackgroundPattern());
-        mBackgroundLayer = new SingleTileLayer(true, backgroundImage);
+        mOverscrollColor = view.getContext().getResources().getColor(R.color.background_normal);
 
         CairoImage shadowImage = new BufferedCairoImage(view.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
@@ -176,7 +175,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         DirectBufferAllocator.free(mCoordByteBuffer);
         mCoordByteBuffer = null;
         mCoordBuffer = null;
-        mBackgroundLayer.destroy();
         mShadowLayer.destroy();
         mHorizScrollLayer.destroy();
         mVertScrollLayer.destroy();
@@ -470,7 +468,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
             /* Update layers. */
             if (rootLayer != null) mUpdated &= rootLayer.update(mPageContext);  // called on compositor thread
-            mUpdated &= mBackgroundLayer.update(mScreenContext);    // called on compositor thread
             mUpdated &= mShadowLayer.update(mPageContext);  // called on compositor thread
             if (mFrameRateLayer != null) mUpdated &= mFrameRateLayer.update(mScreenContext); // called on compositor thread
             mUpdated &= mVertScrollLayer.update(mPageContext);  // called on compositor thread
@@ -519,28 +516,33 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             return mask;
         }
 
+        private void clear(int color) {
+            GLES20.glClearColor(((color >> 16) & 0xFF) / 255.0f,
+                                ((color >> 8) & 0xFF) / 255.0f,
+                                (color & 0xFF) / 255.0f,
+                                0.0f);
+            // The bits set here need to match up with those used
+            // in gfx/layers/opengl/LayerManagerOGL.cpp.
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT |
+                           GLES20.GL_DEPTH_BUFFER_BIT);
+        }
+
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawBackground() {
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
-            /* Update background color. */
+            // Draw the overscroll background area as a solid color
+            clear(mOverscrollColor);
+
+            // Update background color.
             mBackgroundColor = mView.getBackgroundColor();
 
-            /* Clear to the page background colour. The bits set here need to
-             * match up with those used in gfx/layers/opengl/LayerManagerOGL.cpp.
-             */
-            GLES20.glClearColor(((mBackgroundColor>>16)&0xFF) / 255.0f,
-                                ((mBackgroundColor>>8)&0xFF) / 255.0f,
-                                (mBackgroundColor&0xFF) / 255.0f,
-                                0.0f);
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT |
-                           GLES20.GL_DEPTH_BUFFER_BIT);
+            // Clear the page area to the page background colour.
+            setScissorRect();
+            clear(mBackgroundColor);
+            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
-            /* Draw the background. */
-            mBackgroundLayer.setMask(mPageRect);
-            mBackgroundLayer.draw(mScreenContext);
-
-            /* Draw the drop shadow, if we need to. */
+            // Draw the drop shadow, if we need to.
             if (!new RectF(mAbsolutePageRect).contains(mFrameMetrics.getViewport()))
                 mShadowLayer.draw(mPageContext);
         }
