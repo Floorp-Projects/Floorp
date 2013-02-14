@@ -101,9 +101,7 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
-  nsresult rv = nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect,
-                                                     aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   
   // Get current checked state through content model.
   if ((!IsChecked() && !IsIndeterminate()) || !IsVisibleForPainting(aBuilder))
@@ -112,12 +110,13 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (IsThemed())
     return NS_OK; // No need to paint the checkmark. The theme will do it.
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
+  aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayGeneric(aBuilder, this,
                      IsIndeterminate()
                      ? PaintIndeterminateMark : PaintCheckMark,
                      "CheckedCheckbox",
                      nsDisplayItem::TYPE_CHECKED_CHECKBOX));
+  return NS_OK;
 }
 
 //------------------------------------------------------------

@@ -1087,8 +1087,7 @@ NS_IMETHODIMP
 nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists) {
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
       nsDisplayGeneric(aBuilder, this, ::PaintColumnRule, "ColumnRule",
@@ -1096,9 +1095,7 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   
   // Our children won't have backgrounds so it doesn't matter where we put them.
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    nsresult rv = BuildDisplayListForChild(aBuilder, e.get(),
-                                           aDirtyRect, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, e.get(), aDirtyRect, aLists);
   }
   return NS_OK;
 }

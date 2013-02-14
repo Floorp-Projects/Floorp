@@ -1378,8 +1378,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // to put the background in ... it goes in aLists.BorderBackground() and
   // then if we have a block parent, it will put our background in the right
   // place.
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
   // REVIEW: Checking mRect.IsEmpty() makes no sense to me, so I removed it.
   // It can't have been protecting us against bad situations with zero-size
   // images since adding a border would make the rect non-empty.
@@ -1417,14 +1416,12 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!imageOK || !haveSize) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
-      rv = replacedContent.AppendNewToTop(new (aBuilder)
-          nsDisplayAltFeedback(aBuilder, this));
-      NS_ENSURE_SUCCESS(rv, rv);
+      replacedContent.AppendNewToTop(new (aBuilder)
+        nsDisplayAltFeedback(aBuilder, this));
     }
     else {
-      rv = replacedContent.AppendNewToTop(new (aBuilder)
-          nsDisplayImage(aBuilder, this, imgCon));
-      NS_ENSURE_SUCCESS(rv, rv);
+      replacedContent.AppendNewToTop(new (aBuilder)
+        nsDisplayImage(aBuilder, this, imgCon));
 
       // If we were previously displaying an icon, we're not anymore
       if (mDisplayingIcon) {
@@ -1435,19 +1432,17 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         
 #ifdef DEBUG
       if (GetShowFrameBorders() && GetImageMap()) {
-        rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
-            nsDisplayGeneric(aBuilder, this, PaintDebugImageMap, "DebugImageMap",
-                             nsDisplayItem::TYPE_DEBUG_IMAGE_MAP));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.Outlines()->AppendNewToTop(new (aBuilder)
+          nsDisplayGeneric(aBuilder, this, PaintDebugImageMap, "DebugImageMap",
+                           nsDisplayItem::TYPE_DEBUG_IMAGE_MAP));
       }
 #endif
     }
   }
 
   if (ShouldDisplaySelection()) {
-    rv = DisplaySelectionOverlay(aBuilder, &replacedContent,
-                                 nsISelectionDisplay::DISPLAY_IMAGES);
-    NS_ENSURE_SUCCESS(rv, rv);
+    DisplaySelectionOverlay(aBuilder, &replacedContent,
+                            nsISelectionDisplay::DISPLAY_IMAGES);
   }
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
