@@ -267,8 +267,8 @@ ContentParent::MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
         return nullptr;
     }
 
-    if (!process->SetPriorityAndCheckIsAlive(aInitialPriority) ||
-        !process->TransformPreallocatedIntoApp(aAppManifestURL, aPrivs)) {
+    if (!process->TransformPreallocatedIntoApp(aAppManifestURL, aPrivs,
+                                               aInitialPriority)) {
         // Kill the process just in case it's not actually dead; we don't want
         // to "leak" this process!
         process->KillHard();
@@ -492,19 +492,10 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         return nullptr;
     }
 
-    ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
-
     nsRefPtr<ContentParent> p = gAppContentParents->Get(manifestURL);
-    if (p) {
-        // Check that the process is still alive and set its priority.
-        // Hopefully the process won't die after this point, if this call
-        // succeeds.
-        if (!p->SetPriorityAndCheckIsAlive(initialPriority)) {
-            p = nullptr;
-        }
-    }
-
     if (!p) {
+        ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
+
         ChildPrivileges privs = PrivilegesForApp(ownApp);
         p = MaybeTakePreallocatedAppProcess(manifestURL, privs,
                                             initialPriority);
@@ -517,27 +508,14 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         gAppContentParents->Put(manifestURL, p);
     }
 
+    p->MaybeTakeCPUWakeLock(aFrameElement);
+
     nsRefPtr<TabParent> tp = new TabParent(aContext);
     tp->SetOwnerElement(aFrameElement);
     PBrowserParent* browser = p->SendPBrowserConstructor(
         tp.forget().get(), // DeallocPBrowserParent() releases this ref.
         aContext.AsIPCTabContext(),
         /* chromeFlags */ 0);
-
-    // Send the frame element's mozapptype down to the child process.  This ends
-    // up in TabChild::GetAppType().  We have to do this /before/ we acquire the
-    // CPU wake lock for this process, because if the child sees that it has a
-    // CPU wake lock but its TabChild doesn't have the right mozapptype, it
-    // might downgrade its process priority.
-    nsCOMPtr<Element> frameElement = do_QueryInterface(aFrameElement);
-    if (frameElement) {
-      nsAutoString appType;
-      frameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapptype, appType);
-      browser->SendSetAppType(appType);
-    }
-
-    p->MaybeTakeCPUWakeLock(aFrameElement);
-
     return static_cast<TabParent*>(browser);
 }
 
@@ -695,14 +673,14 @@ NS_IMPL_ISUPPORTS1(SystemMessageHandledListener,
 } // anonymous namespace
 
 void
-ContentParent::SetProcessPriority(ProcessPriority aPriority)
+ContentParent::SetProcessInitialPriority(ProcessPriority aInitialPriority)
 {
     if (!Preferences::GetBool("dom.ipc.processPriorityManager.enabled")) {
         return;
     }
 
-    hal::SetProcessPriority(base::GetProcId(mSubprocess->GetChildProcessHandle()),
-                            aPriority);
+    SetProcessPriority(base::GetProcId(mSubprocess->GetChildProcessHandle()),
+                       aInitialPriority);
 }
 
 void
@@ -730,16 +708,25 @@ ContentParent::MaybeTakeCPUWakeLock(nsIDOMElement* aFrameElement)
 }
 
 bool
-ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
+ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
+                                            ChildPrivileges aPrivs,
+                                            ProcessPriority aInitialPriority)
 {
-    SetProcessPriority(aPriority);
+    MOZ_ASSERT(mAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL);
+    // Clients should think of mAppManifestURL as const ... we're
+    // bending the rules here just for the preallocation hack.
+    const_cast<nsString&>(mAppManifestURL) = aAppManifestURL;
 
-    // Now that we've set this process's priority, check whether the process is
-    // still alive.  Hopefully we've set the priority to FOREGROUND*, so the
-    // process won't unexpectedly crash after this point!
+    SetProcessInitialPriority(aInitialPriority);
+
+    // Now that we've increased the process's priority from BACKGROUND (where
+    // the preallocated app sits) to something higher, check whether the process
+    // is still alive.  Hopefully the process won't unexpectedly crash after
+    // this point!
     //
     // It's not legal to call DidProcessCrash on Windows if the process has not
-    // terminated yet, so we have to skip this check here.
+    // terminated yet, so we have to skip this check there.
+
 #ifndef XP_WIN
     bool exited = false;
     base::DidProcessCrash(&exited, mSubprocess->GetChildProcessHandle());
@@ -747,18 +734,6 @@ ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
         return false;
     }
 #endif
-
-    return true;
-}
-
-bool
-ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
-                                            ChildPrivileges aPrivs)
-{
-    MOZ_ASSERT(mAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL);
-    // Clients should think of mAppManifestURL as const ... we're
-    // bending the rules here just for the preallocation hack.
-    const_cast<nsString&>(mAppManifestURL) = aAppManifestURL;
 
     return SendSetProcessPrivileges(aPrivs);
 }
@@ -1096,7 +1071,7 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
     // Set the subprocess's priority.  We do this first because we're likely
     // /lowering/ its CPU and memory priority, which it has inherited from this
     // process.
-    SetProcessPriority(aInitialPriority);
+    SetProcessInitialPriority(aInitialPriority);
 
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
 
