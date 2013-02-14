@@ -254,7 +254,7 @@ Object.freeze(DataSubmissionRequest.prototype);
  *        (Preferences) Handle on preferences branch on which state will be
  *        queried and stored.
  * @param healthReportPrefs
- *        (Preferences) Handle on preferences branch hold Health Report state.
+ *        (Preferences) Handle on preferences branch holding Health Report state.
  * @param listener
  *        (object) Object with callbacks that will be invoked at certain key
  *        events.
@@ -278,6 +278,24 @@ this.DataReportingPolicy = function (prefs, healthReportPrefs, listener) {
   if (!this.firstRunDate.getTime()) {
     this.firstRunDate = this.now();
   }
+
+  // Install an observer so that we can act on changes from external
+  // code (such as Android UI).
+  // Use a function because this is the only place where the Preferences
+  // abstraction is way less usable than nsIPrefBranch.
+  //
+  // Hang on to the observer here so that tests can reach it.
+  this.uploadEnabledObserver = function onUploadEnabledChanged() {
+    if (this.pendingDeleteRemoteData || this.healthReportUploadEnabled) {
+      // Nothing to do: either we're already deleting because the caller
+      // came through the front door (rHRUE), or they set the flag to true.
+      return;
+    }
+    this._log.info("uploadEnabled pref changed. Scheduling deletion.");
+    this.deleteRemoteData();
+  }.bind(this);
+
+  healthReportPrefs.observe("uploadEnabled", this.uploadEnabledObserver);
 
   // Ensure we are scheduled to submit.
   if (!this.nextDataSubmissionDate.getTime()) {
@@ -668,7 +686,7 @@ DataReportingPolicy.prototype = Object.freeze({
   /**
    * Record the user's intent for whether FHR should upload data.
    *
-   * This is the preferred way for the application to record a user's
+   * This is the preferred way for XUL applications to record a user's
    * preference on whether Firefox Health Report should upload data to
    * a server.
    *
@@ -689,13 +707,13 @@ DataReportingPolicy.prototype = Object.freeze({
    *        purposes only.
    */
   recordHealthReportUploadEnabled: function (flag, reason="no-reason") {
-    this.healthReportUploadEnabled = flag;
-
-    if (flag) {
-      return null;
+    let result = null;
+    if (!flag) {
+      result = this.deleteRemoteData(reason);
     }
 
-    return this.deleteRemoteData(reason);
+    this.healthReportUploadEnabled = flag;
+    return result;
   },
 
   /**

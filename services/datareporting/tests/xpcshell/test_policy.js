@@ -298,6 +298,9 @@ add_test(function test_upload_kill_switch() {
   policy.recordUserAcceptance();
   defineNow(policy, policy.nextDataSubmissionDate);
 
+  // So that we don't trigger deletions, which cause uploads to be delayed.
+  hrPrefs.ignore("uploadEnabled", policy.uploadEnabledObserver);
+
   policy.healthReportUploadEnabled = false;
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 0);
@@ -760,3 +763,26 @@ add_test(function test_record_health_report_upload_enabled() {
   run_next_test();
 });
 
+add_test(function test_pref_change_initiates_deletion() {
+  let [policy, policyPrefs, hrPrefs, listener] = getPolicy("record_health_report_upload_enabled");
+
+  // Preconditions.
+  do_check_false(policy.pendingDeleteRemoteData);
+  do_check_true(policy.healthReportUploadEnabled);
+  do_check_eq(listener.requestRemoteDeleteCount, 0);
+
+  // User intent to disable should indirectly result in a pending
+  // delete request, because the policy is watching for the pref
+  // to change.
+  Object.defineProperty(policy, "deleteRemoteData", {
+    value: function deleteRemoteDataProxy() {
+      do_check_false(policy.healthReportUploadEnabled);
+      do_check_false(policy.pendingDeleteRemoteData);     // Just called.
+
+      run_next_test();
+    },
+  });
+
+  hrPrefs.set("uploadEnabled", false);
+});
+ 
