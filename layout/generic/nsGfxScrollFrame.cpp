@@ -2400,7 +2400,7 @@ GetScrollPortSizeExcludingHeadersAndFooters(nsIFrame* aViewportFrame,
 
   list.Sort(TopComparator());
   nscoord headerBottom = 0;
-  for (int32_t i = 0; i < list.Length(); ++i) {
+  for (uint32_t i = 0; i < list.Length(); ++i) {
     if (list[i].top <= headerBottom) {
       headerBottom = std::max(headerBottom, list[i].bottom);
     }
@@ -2408,7 +2408,7 @@ GetScrollPortSizeExcludingHeadersAndFooters(nsIFrame* aViewportFrame,
 
   list.Sort(ReverseBottomComparator());
   nscoord footerTop = aScrollPort.height;
-  for (int32_t i = 0; i < list.Length(); ++i) {
+  for (uint32_t i = 0; i < list.Length(); ++i) {
     if (list[i].bottom >= footerTop) {
       footerTop = std::min(footerTop, list[i].top);
     }
