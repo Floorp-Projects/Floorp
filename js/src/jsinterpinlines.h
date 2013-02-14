@@ -892,20 +892,28 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
 }
 
 static JS_ALWAYS_INLINE bool
-SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value, bool strict)
+SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value,
+                          bool strict, RawScript maybeScript = NULL, jsbytecode *pc = NULL)
 {
+    RootedScript script(cx, maybeScript);
     types::TypeScript::MonitorAssign(cx, obj, id);
 
     if (obj->isArray() && JSID_IS_INT(id)) {
         uint32_t length = obj->getDenseInitializedLength();
         int32_t i = JSID_TO_INT(id);
-        if ((uint32_t)i >= length && !cx->fp()->beginsIonActivation()) {
-            JSScript *script = NULL;
-            jsbytecode *pc;
-            types::TypeScript::GetPcScript(cx, &script, &pc);
+        if ((uint32_t)i >= length) {
+            // In an Ion activation, GetPcScript won't work.  For non-baseline activations,
+            // that's ok, because optimized ion doesn't generate analysis info.  However,
+            // baseline must generate this information, so it passes the script and pc in
+            // as arguments.
+            if (script || !cx->fp()->beginsIonActivation()) {
+                JS_ASSERT(!!script == !!pc);
+                if (!script)
+                    types::TypeScript::GetPcScript(cx, script.address(), &pc);
 
-            if (script->hasAnalysis())
-                script->analysis()->getCode(pc).arrayWriteHole = true;
+                if (script->hasAnalysis())
+                    script->analysis()->getCode(pc).arrayWriteHole = true;
+            }
         }
     }
 
