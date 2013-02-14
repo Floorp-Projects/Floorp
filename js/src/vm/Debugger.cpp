@@ -4119,7 +4119,8 @@ DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
     Rooted<Env*> env(cx);
     {
         AutoCompartment ac(cx, obj);
-        env = GetDebugScopeForFunction(cx, obj->toFunction());
+        RootedFunction fun(cx, obj->toFunction());
+        env = GetDebugScopeForFunction(cx, fun);
         if (!env)
             return false;
     }
