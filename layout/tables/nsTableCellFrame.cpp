@@ -419,7 +419,7 @@ PaintTableCellSelection(nsIFrame* aFrame, nsRenderingContext* aCtx,
   static_cast<nsTableCellFrame*>(aFrame)->DecorateForSelection(*aCtx, aPt);
 }
 
-NS_IMETHODIMP
+void
 nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists)
@@ -504,7 +504,6 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // which isn't right (e.g., would end up on top of our child floats for
   // event handling).
   BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
-  return NS_OK;
 }
 
 int
