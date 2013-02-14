@@ -345,10 +345,6 @@ public class LayerView extends FrameLayout {
         return BitmapFactory.decodeResource(getContext().getResources(), resId, options);
     }
 
-    Bitmap getBackgroundPattern() {
-        return getDrawable(R.drawable.abouthome_bg);
-    }
-
     Bitmap getShadowPattern() {
         return getDrawable(R.drawable.shadow);
     }
