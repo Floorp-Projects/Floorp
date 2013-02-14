@@ -688,13 +688,13 @@ nsSVGOuterSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
 //----------------------------------------------------------------------
 // painting
 
-void
+NS_IMETHODIMP
 nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
   if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
-    return;
+    return NS_OK;
   }
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
@@ -721,6 +721,8 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   childItems.AppendNewToTop(item);
 
   WrapReplacedContentForBorderRadius(aBuilder, &childItems, aLists);
+
+  return NS_OK;
 }
 
 nsSplittableType

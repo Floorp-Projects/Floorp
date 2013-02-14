@@ -172,29 +172,34 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
   }
 }
 
-void
+NS_IMETHODIMP
 nsMathMLmfencedFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
   /////////////
   // display the content
-  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsresult rv = nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   ////////////
   // display fences and separators
   uint32_t count = 0;
   if (mOpenChar) {
-    mOpenChar->Display(aBuilder, this, aLists, count++);
+    rv = mOpenChar->Display(aBuilder, this, aLists, count++);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   
   if (mCloseChar) {
-    mCloseChar->Display(aBuilder, this, aLists, count++);
+    rv = mCloseChar->Display(aBuilder, this, aLists, count++);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   
   for (int32_t i = 0; i < mSeparatorsCount; i++) {
-    mSeparatorsChar[i].Display(aBuilder, this, aLists, count++);
+    rv = mSeparatorsChar[i].Display(aBuilder, this, aLists, count++);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

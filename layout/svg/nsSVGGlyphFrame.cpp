@@ -352,16 +352,17 @@ nsSVGGlyphFrame::GetType() const
   return nsGkAtoms::svgGlyphFrame;
 }
 
-void
+NS_IMETHODIMP
 nsSVGGlyphFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
   if (GetStyleFont()->mFont.size <= 0) {
-    return;
+    return NS_OK;
   }
   aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplaySVGGlyphs(aBuilder, this));
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

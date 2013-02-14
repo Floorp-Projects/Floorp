@@ -1157,18 +1157,18 @@ public:
    * @param aDirtyRect content outside this rectangle can be ignored; the
    * rectangle is in frame coordinates
    */
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) {}
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) { return NS_OK; }
   /**
    * Displays the caret onto the given display list builder. The caret is
    * painted on top of the rest of the display list items.
    *
    * @param aDirtyRect is the dirty rectangle that we're repainting.
    */
-  void DisplayCaret(nsDisplayListBuilder* aBuilder,
-                    const nsRect&         aDirtyRect,
-                    nsDisplayList*        aList);
+  nsresult DisplayCaret(nsDisplayListBuilder*       aBuilder,
+                        const nsRect&               aDirtyRect,
+                        nsDisplayList*              aList);
 
   /**
    * Get the preferred caret color at the offset.
@@ -1204,9 +1204,9 @@ public:
    * @param aDirtyRect content outside this rectangle can be ignored; the
    * rectangle is in frame coordinates
    */
-  void BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
-                                          const nsRect&         aDirtyRect,
-                                          nsDisplayList*        aList);
+  nsresult BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
+                                              const nsRect&         aDirtyRect,
+                                              nsDisplayList*        aList);
 
   /**
    * Clips the display items of aFromSet, putting the results in aToSet.
@@ -1241,11 +1241,11 @@ public:
    * @param aFlags combination of DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT,
    *    DISPLAY_CHILD_FORCE_STACKING_CONTEXT and DISPLAY_CHILD_INLINE
    */
-  void BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
-                                nsIFrame*               aChild,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists,
-                                uint32_t                aFlags = 0);
+  nsresult BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
+                                    nsIFrame*               aChild,
+                                    const nsRect&           aDirtyRect,
+                                    const nsDisplayListSet& aLists,
+                                    uint32_t                aFlags = 0);
 
   /**
    * A helper for replaced elements that want to clip their content to a

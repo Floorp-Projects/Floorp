@@ -163,16 +163,17 @@ nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   return foundTransform;
 }
 
-void
+NS_IMETHODIMP
 nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
   if (!static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
-    return;
+    return NS_OK;
   }
   aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplaySVGPathGeometry(aBuilder, this));
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

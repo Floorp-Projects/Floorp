@@ -59,7 +59,7 @@ PaintCheckedRadioButton(nsIFrame* aFrame,
   aCtx->FillEllipse(rect);
 }
 
-void
+NS_IMETHODIMP
 nsGfxRadioControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
@@ -67,18 +67,19 @@ nsGfxRadioControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 
   if (!IsVisibleForPainting(aBuilder))
-    return;
+    return NS_OK;
   
   if (IsThemed())
-    return; // The theme will paint the check, if any.
+    return NS_OK; // The theme will paint the check, if any.
 
   bool checked = true;
   GetCurrentCheckState(&checked); // Get check state from the content model
   if (!checked)
-    return;
+    return NS_OK;
     
   aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayGeneric(aBuilder, this, PaintCheckedRadioButton,
                      "CheckedRadioButton",
                      nsDisplayItem::TYPE_CHECKED_RADIOBUTTON));
+  return NS_OK;
 }

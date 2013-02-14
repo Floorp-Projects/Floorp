@@ -375,20 +375,19 @@ nsMenuFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
-  if (!aBuilder->IsForEventDelivery()) {
-    nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
-    return;
-  }
+  if (!aBuilder->IsForEventDelivery())
+    return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
     
   nsDisplayListCollection set;
-  nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, set);
+  nsresult rv = nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  WrapListsInRedirector(aBuilder, set, aLists);
+  return WrapListsInRedirector(aBuilder, set, aLists);
 }
 
 NS_IMETHODIMP

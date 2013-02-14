@@ -282,7 +282,7 @@ public:
   NS_DISPLAY_DECL_NAME("CanvasFocus", TYPE_CANVAS_FOCUS)
 };
 
-void
+NS_IMETHODIMP
 nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
@@ -312,11 +312,11 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (isThemed) {
       aLists.BorderBackground()->AppendNewToTop(
         new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, 0, isThemed, nullptr));
-      return;
+      return NS_OK;
     }
 
     if (!bg) {
-      return;
+      return NS_OK;
     }
 
     // Create separate items for each background layer.
@@ -356,13 +356,14 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #endif
 
   if (!mDoPaintFocus)
-    return;
+    return NS_OK;
   // Only paint the focus if we're visible
   if (!GetStyleVisibility()->IsVisible())
-    return;
+    return NS_OK;
   
   aLists.Outlines()->AppendNewToTop(new (aBuilder)
     nsDisplayCanvasFocus(aBuilder, this));
+  return NS_OK;
 }
 
 void

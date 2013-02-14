@@ -180,94 +180,112 @@ nsMathMLmencloseFrame::TransmitAutomaticData()
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
                                         const nsDisplayListSet& aLists)
 {
   /////////////
   // paint the menclosed content
-  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsresult rv = nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect,
+                                                         aLists);
+
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags))
-    return;
+    return rv;
 
   nsRect mencloseRect = nsIFrame::GetRect();
   mencloseRect.x = mencloseRect.y = 0;
 
   if (IsToDraw(NOTATION_RADICAL)) {
-    mMathMLChar[mRadicalCharIndex].Display(aBuilder, this, aLists, 0);
+    rv = mMathMLChar[mRadicalCharIndex].Display(aBuilder, this, aLists, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsRect rect;
     mMathMLChar[mRadicalCharIndex].GetRect(rect);
     rect.MoveBy(NS_MATHML_IS_RTL(mPresentationData.flags) ?
                 -mContentWidth : rect.width, 0);
     rect.SizeTo(mContentWidth, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists);
+    rv = DisplayBar(aBuilder, this, rect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_LONGDIV)) {
-    mMathMLChar[mLongDivCharIndex].Display(aBuilder, this, aLists, 1);
+    rv = mMathMLChar[mLongDivCharIndex].Display(aBuilder, this, aLists, 1);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsRect rect;
     mMathMLChar[mLongDivCharIndex].GetRect(rect);
     rect.SizeTo(rect.width + mContentWidth, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists);
+    rv = DisplayBar(aBuilder, this, rect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_TOP)) {
     nsRect rect(0, 0, mencloseRect.width, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists);
+    rv = DisplayBar(aBuilder, this, rect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_BOTTOM)) {
     nsRect rect(0, mencloseRect.height - mRuleThickness,
                 mencloseRect.width, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists);
+    rv = DisplayBar(aBuilder, this, rect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_LEFT)) {
     nsRect rect(0, 0, mRuleThickness, mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists);
+    rv = DisplayBar(aBuilder, this, rect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_RIGHT)) {
     nsRect rect(mencloseRect.width - mRuleThickness, 0,
                 mRuleThickness, mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists);
+    rv = DisplayBar(aBuilder, this, rect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_ROUNDEDBOX)) {
-    DisplayNotation(aBuilder, this, mencloseRect, aLists,
-                    mRuleThickness, NOTATION_ROUNDEDBOX);
+    rv = DisplayNotation(aBuilder, this, mencloseRect, aLists,
+                         mRuleThickness, NOTATION_ROUNDEDBOX);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_CIRCLE)) {
-    DisplayNotation(aBuilder, this, mencloseRect, aLists,
-                    mRuleThickness, NOTATION_CIRCLE);
+    rv = DisplayNotation(aBuilder, this, mencloseRect, aLists,
+                         mRuleThickness, NOTATION_CIRCLE);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_UPDIAGONALSTRIKE)) {
-    DisplayNotation(aBuilder, this, mencloseRect, aLists,
-                    mRuleThickness, NOTATION_UPDIAGONALSTRIKE);
+    rv = DisplayNotation(aBuilder, this, mencloseRect, aLists,
+                         mRuleThickness, NOTATION_UPDIAGONALSTRIKE);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_DOWNDIAGONALSTRIKE)) {
-    DisplayNotation(aBuilder, this, mencloseRect, aLists,
-                    mRuleThickness, NOTATION_DOWNDIAGONALSTRIKE);
+    rv = DisplayNotation(aBuilder, this, mencloseRect, aLists,
+                         mRuleThickness, NOTATION_DOWNDIAGONALSTRIKE);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_HORIZONTALSTRIKE)) {
     nsRect rect(0, mencloseRect.height / 2 - mRuleThickness / 2,
                 mencloseRect.width, mRuleThickness);
-    DisplayBar(aBuilder, this, rect, aLists);
+    rv = DisplayBar(aBuilder, this, rect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (IsToDraw(NOTATION_VERTICALSTRIKE)) {
     nsRect rect(mencloseRect.width / 2 - mRuleThickness / 2, 0,
                 mRuleThickness, mencloseRect.height);
-    DisplayBar(aBuilder, this, rect, aLists);
+    rv = DisplayBar(aBuilder, this, rect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+  return rv;
 }
 
 /* virtual */ nsresult
@@ -753,7 +771,7 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
   gfxCtx->SetLineWidth(currentLineWidth);
 }
 
-void
+nsresult
 nsMathMLmencloseFrame::DisplayNotation(nsDisplayListBuilder* aBuilder,
                                        nsIFrame* aFrame, const nsRect& aRect,
                                        const nsDisplayListSet& aLists,
@@ -762,8 +780,8 @@ nsMathMLmencloseFrame::DisplayNotation(nsDisplayListBuilder* aBuilder,
 {
   if (!aFrame->GetStyleVisibility()->IsVisible() || aRect.IsEmpty() ||
       aThickness <= 0)
-    return;
+    return NS_OK;
 
-  aLists.Content()->AppendNewToTop(new (aBuilder)
-    nsDisplayNotation(aBuilder, aFrame, aRect, aThickness, aType));
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayNotation(aBuilder, aFrame, aRect, aThickness, aType));
 }

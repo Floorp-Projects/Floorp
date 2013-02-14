@@ -328,7 +328,7 @@ nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 /////////////////////////////////////////////////////////////////////////////
 // Painting/Events
 
-void
+NS_IMETHODIMP
 nsContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists)
@@ -336,9 +336,10 @@ nsContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
+  return NS_OK;
 }
 
-void
+nsresult
 nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
                                                       const nsRect&           aDirtyRect,
                                                       const nsDisplayListSet& aLists,
@@ -352,6 +353,7 @@ nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aB
     BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, aFlags);
     kid = kid->GetNextSibling();
   }
+  return NS_OK;
 }
 
 /* virtual */ void

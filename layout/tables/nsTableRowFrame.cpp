@@ -555,7 +555,7 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
   painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
 
-void
+NS_IMETHODIMP
 nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -575,6 +575,7 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
   nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
+  return NS_OK;
 }
 
 int

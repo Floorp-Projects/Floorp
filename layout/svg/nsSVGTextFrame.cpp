@@ -76,13 +76,13 @@ nsSVGTextFrame::GetType() const
   return nsGkAtoms::svgTextFrame;
 }
 
-void
+NS_IMETHODIMP
 nsSVGTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists)
 {
   UpdateGlyphPositioning(true);
-  nsSVGTextFrameBase::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  return nsSVGTextFrameBase::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
 //----------------------------------------------------------------------

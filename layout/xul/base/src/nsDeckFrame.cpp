@@ -144,19 +144,21 @@ nsDeckFrame::GetSelectedBox()
   return (mIndex >= 0) ? mFrames.FrameAt(mIndex) : nullptr; 
 }
 
-void
+NS_IMETHODIMP
 nsDeckFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists)
 {
   // if a tab is hidden all its children are too.
   if (!GetStyleVisibility()->mVisible)
-    return;
+    return NS_OK;
     
-  nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  // REVIEW: The old code skipped painting of background/borders/outline for this
+  // frame and painting of debug boxes ... I've put it back.
+  return nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
-void
+NS_IMETHODIMP
 nsDeckFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
@@ -164,12 +166,13 @@ nsDeckFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   // only paint the selected box
   nsIFrame* box = GetSelectedBox();
   if (!box)
-    return;
+    return NS_OK;
 
   // Putting the child in the background list. This is a little weird but
   // it matches what we were doing before.
   nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
   BuildDisplayListForChild(aBuilder, box, aDirtyRect, set);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
