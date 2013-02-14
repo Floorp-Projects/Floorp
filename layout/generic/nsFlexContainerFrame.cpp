@@ -1037,7 +1037,7 @@ GetDisplayFlagsForFlexItem(nsIFrame* aFrame)
   return 0;
 }
 
-void
+NS_IMETHODIMP
 nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
@@ -1054,6 +1054,8 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     BuildDisplayListForChild(aBuilder, e.get(), aDirtyRect, childLists,
                              GetDisplayFlagsForFlexItem(e.get()));
   }
+
+  return NS_OK;
 }
 
 #ifdef DEBUG

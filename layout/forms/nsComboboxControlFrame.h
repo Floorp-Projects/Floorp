@@ -81,9 +81,9 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   void PaintFocus(nsRenderingContext& aRenderingContext, nsPoint aPt);
 

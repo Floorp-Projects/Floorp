@@ -156,7 +156,7 @@ nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsHTMLScrollFrame::DestroyFrom(aDestructRoot);
 }
 
-void
+NS_IMETHODIMP
 nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
@@ -167,7 +167,7 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // XXX why do we need this here? we should never reach this. Maybe
   // because these can have widgets? Hmm
   if (aBuilder->IsBackgroundOnly())
-    return;
+    return NS_OK;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame");
 
@@ -183,7 +183,12 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         mLastDropdownBackstopColor));
   }
 
-  nsHTMLScrollFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  // REVIEW: The selection visibility code that used to be here is what
+  // we already do by default.
+  // REVIEW: There was code here to paint the theme background. But as far
+  // as I can tell, we'd just paint the theme background twice because
+  // it was redundant with nsCSSRendering::PaintBackground
+  return nsHTMLScrollFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
 /**

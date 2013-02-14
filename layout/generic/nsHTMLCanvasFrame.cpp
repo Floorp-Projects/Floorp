@@ -278,13 +278,13 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
-void
+NS_IMETHODIMP
 nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                     const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
-    return;
+    return NS_OK;
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
@@ -297,6 +297,8 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                           nsISelectionDisplay::DISPLAY_IMAGES);
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+
+  return NS_OK;
 }
 
 nsIAtom*

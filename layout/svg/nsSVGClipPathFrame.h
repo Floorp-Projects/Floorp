@@ -31,9 +31,11 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame methods:
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) {
+    return NS_OK;
+  }
 
   // nsSVGClipPathFrame methods:
   nsresult ClipPaint(nsRenderingContext* aContext,
