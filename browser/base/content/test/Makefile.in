@@ -302,6 +302,8 @@ _BROWSER_FILES = \
                  browser_pageInfo_plugins.js \
                  browser_pageInfo.js \
                  feed_tab.html \
+                 browser_pluginCrashCommentAndURL.js \
+                 pluginCrashCommentAndURL.html \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

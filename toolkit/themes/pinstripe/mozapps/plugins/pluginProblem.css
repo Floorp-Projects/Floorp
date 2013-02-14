@@ -100,17 +100,53 @@ html|a {
   min-height: 19px; /* height of biggest line (with throbber) */
 }
 
-.msgBottomLinks {
-  padding-left: 2px;
-  padding-right: 2px;
+.submitComment {
+  width: 340px;
+  height: 70px;
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  resize: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.submitURLOptInBox {
+  text-align: start;
+}
+
+.submitURLOptIn {
+  margin-left: -1px;
+}
+
+.mainBox[chromedir="rtl"] .submitURLOptIn {
+  margin-left: 0;
+  margin-right: -1px;
+}
+
+.submitButtonBox {
+  margin-top: 7px;
+}
+
+.submitButton {
+  float: right;
+}
+
+.mainBox[chromedir="rtl"] .submitButton {
+  float: left;
 }
 
 .helpIcon {
-  float: left;
   display: inline-block;
   min-width: 16px;
   min-height: 16px;
   background: url(chrome://mozapps/skin/plugins/pluginHelp-16.png) no-repeat;
+  cursor: pointer;
+  float: left;
+}
+
+.mainBox[chromedir="rtl"] .helpIcon {
+  float: right;
 }
 
 .closeIcon {
