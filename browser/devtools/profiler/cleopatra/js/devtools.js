@@ -197,7 +197,7 @@ function enterFinishedProfileUI() {
 
   var currentBreadcrumb = gSampleFilters;
   gBreadcrumbTrail.add({
-    title: "Complete Profile",
+    title: gStrings["Complete Profile"],
     enterCallback: function () {
       gSampleFilters = [];
       filtersChanged();
