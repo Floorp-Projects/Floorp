@@ -109,6 +109,28 @@ function step3(assert, done) {
     });
 }
 
+exports["test behavior on close"] = function(assert, done) {
+
+  tabs.open({
+    url: "about:mozilla",
+    onReady: function(tab) {
+      assert.equal(tab.url, "about:mozilla", "Tab has the expected url");
+      assert.equal(tab.index, 1, "Tab has the expected index");
+      tab.close(function () {
+        assert.equal(tab.url, undefined,
+                     "After being closed, tab attributes are undefined (url)");
+        assert.equal(tab.index, undefined,
+                     "After being closed, tab attributes are undefined (index)");
+        // Ensure that we can call destroy multiple times without throwing
+        tab.destroy();
+        tab.destroy();
+
+        done();
+      });
+    }
+  });
+};
+
 if (require("sdk/system/xul-app").is("Fennec")) {
   module.exports = {
     "test Unsupported Test": function UnsupportedTest (assert) {
