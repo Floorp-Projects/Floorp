@@ -46,13 +46,12 @@ nsFirstLetterFrame::GetType() const
   return nsGkAtoms::letterFrame;
 }
 
-NS_IMETHODIMP
+void
 nsFirstLetterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
   BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

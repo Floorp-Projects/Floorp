@@ -80,7 +80,7 @@ nsMathMLmoFrame::UseMathMLChar()
     NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags);
 }
 
-NS_IMETHODIMP
+void
 nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -110,7 +110,6 @@ nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
 #endif
   }
-  return NS_OK;
 }
 
 // get the text that we enclose and setup our nsMathMLChar

@@ -19,9 +19,9 @@ public:
 
   // overridden so that children of listitems don't handle mouse events,
   // unless allowevents="true" is specified on the listitem
-  NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
-                                         const nsRect&           aDirtyRect,
-                                         const nsDisplayListSet& aLists);
+  virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
+                                           const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual nsSize GetPrefSize(nsBoxLayoutState& aState) MOZ_OVERRIDE;
 
