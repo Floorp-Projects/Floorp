@@ -467,12 +467,12 @@ void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
   aCtx->FillRect(mRect + ToReferenceFrame());
 }
 
-nsresult
+void
 nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder,
                           nsIFrame* aFrame, const nsRect& aRect,
                           const nsDisplayListSet& aLists) {
   if (!aFrame->GetStyleVisibility()->IsVisible() || aRect.IsEmpty())
-    return NS_OK;
+    return;
 
   aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayMathMLBar(aBuilder, aFrame, aRect));

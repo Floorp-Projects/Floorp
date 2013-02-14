@@ -55,9 +55,9 @@ public:
 
   // nsIFrame
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
 #ifdef DEBUG

@@ -1086,12 +1086,12 @@ public:
   enum {
     FORCE_DRAW = 0x01
   };
-  virtual nsresult AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
-                                                nsDisplayList& aList,
-                                                nsIFrame* aFrame,
-                                                const nsRect& aBounds,
-                                                nscolor aBackstopColor = NS_RGBA(0,0,0,0),
-                                                uint32_t aFlags = 0) = 0;
+  virtual void AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
+                                            nsDisplayList& aList,
+                                            nsIFrame* aFrame,
+                                            const nsRect& aBounds,
+                                            nscolor aBackstopColor = NS_RGBA(0,0,0,0),
+                                            uint32_t aFlags = 0) = 0;
 
 
   /**
@@ -1099,10 +1099,10 @@ public:
    * bounds aBounds representing the dark grey background behind the page of a
    * print preview presentation.
    */
-  virtual nsresult AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
-                                                 nsDisplayList& aList,
-                                                 nsIFrame* aFrame,
-                                                 const nsRect& aBounds) = 0;
+  virtual void AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
+                                             nsDisplayList& aList,
+                                             nsIFrame* aFrame,
+                                             const nsRect& aBounds) = 0;
 
   /**
    * Computes the backstop color for the view: transparent if in a transparent

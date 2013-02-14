@@ -60,9 +60,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
                                
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   void PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect, uint32_t aBGFlags);
@@ -177,7 +177,7 @@ nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                           mVisibleRect, aBuilder->GetBackgroundPaintFlags());
 }
 
-NS_IMETHODIMP
+void
 nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists) {
@@ -223,7 +223,6 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // BorderBackground() list, which isn't really correct, but it's OK because
   // mContentFrame is anonymous and can't have its own border and background.
   contentDisplayItems.MoveTo(aLists);
-  return NS_OK;
 }
 
 void

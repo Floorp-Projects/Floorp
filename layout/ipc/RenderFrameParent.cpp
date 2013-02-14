@@ -935,7 +935,7 @@ RenderFrameParent::GetRootLayer() const
   return shadowLayers ? shadowLayers->GetRoot() : nullptr;
 }
 
-NS_IMETHODIMP
+void
 RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                     nsSubDocumentFrame* aFrame,
                                     const nsRect& aDirtyRect,
@@ -962,7 +962,6 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplayClip(aBuilder, aFrame, &shadowTree,
                                  bounds));
-  return NS_OK;
 }
 
 void

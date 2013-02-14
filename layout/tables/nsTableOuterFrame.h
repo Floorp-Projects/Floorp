@@ -94,13 +94,13 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  nsresult BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
-                                         const nsRect&           aDirtyRect,
-                                         const nsDisplayListSet& aLists);
+  void BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists);
 
   virtual nscoord GetBaseline() const MOZ_OVERRIDE;
 
