@@ -16,9 +16,12 @@
 #include "nsIFile.h"
 #include "nsIProperties.h"
 #include "nsIWindowMediator.h"
+#include "nsIWinTaskbar.h"
 #include "nsServiceManagerUtils.h"
 
 #include "WidgetUtils.h"
+
+#define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
 using base::ProcessHandle;
 
@@ -65,7 +68,7 @@ private:
 namespace mozilla {
 namespace plugins {
 
-const DWORD PluginHangUIParent::kTimeout = 5000U;
+const DWORD PluginHangUIParent::kTimeout = 30000U;
 
 PluginHangUIParent::PluginHangUIParent(PluginModuleParent* aModule,
                                        const int32_t aHangUITimeoutPref)
@@ -190,6 +193,23 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   procHandleStr.AppendPrintf("%p", procHandle.Get());
   commandLine.AppendLooseValue(procHandleStr.get());
 
+  // On Win7+, pass the application user model to the child, so it can
+  // register with it. This insures windows created by the Hang UI
+  // properly group with the parent app on the Win7 taskbar.
+  nsCOMPtr<nsIWinTaskbar> taskbarInfo = do_GetService(NS_TASKBAR_CONTRACTID);
+  if (taskbarInfo) {
+    bool isSupported = false;
+    taskbarInfo->GetAvailable(&isSupported);
+    nsAutoString appId;
+    if (isSupported && NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
+      commandLine.AppendLooseValue(appId.get());
+    } else {
+      commandLine.AppendLooseValue(L"-");
+    }
+  } else {
+    commandLine.AppendLooseValue(L"-");
+  }
+
   std::wstring ipcCookie;
   rv = mMiniShm.GetCookie(ipcCookie);
   if (NS_FAILED(rv)) {
@@ -197,7 +217,6 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   }
   commandLine.AppendLooseValue(ipcCookie);
 
-  mShowEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
   ScopedHandle showEvent(::CreateEvent(NULL, FALSE, FALSE, NULL));
   if (!showEvent.IsValid()) {
     return false;
@@ -225,7 +244,14 @@ PluginHangUIParent::Init(const nsString& aPluginName)
                                   this,
                                   INFINITE,
                                   WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
-    ::WaitForSingleObject(mShowEvent, kTimeout);
+    ::WaitForSingleObject(mShowEvent, ::IsDebuggerPresent() ? INFINITE
+                                                            : kTimeout);
+    // Setting this to true even if we time out on mShowEvent. This timeout 
+    // typically occurs when the machine is thrashing so badly that 
+    // plugin-hang-ui.exe is taking a while to start. If we didn't set 
+    // this to true, Firefox would keep spawning additional plugin-hang-ui 
+    // processes, which is not what we want.
+    mIsShowing = true;
   }
   mShowEvent = NULL;
   return !(!isProcessCreated);
@@ -356,8 +382,7 @@ PluginHangUIParent::OnMiniShmConnect(MiniShmBase* aMiniShmObj)
     return;
   }
   cmd->mCode = PluginHangUICommand::HANGUI_CMD_SHOW;
-  mIsShowing = NS_SUCCEEDED(aMiniShmObj->Send());
-  if (mIsShowing) {
+  if (NS_SUCCEEDED(aMiniShmObj->Send())) {
     mShowTicks = GetTickCount();
   }
   ::SetEvent(mShowEvent);
