@@ -15,10 +15,6 @@
 #include "gfxContext.h"
 #include "GLContextProvider.h"
 #include "gfxPlatform.h"
-#include "SharedSurfaceGL.h"
-#include "SharedSurfaceEGL.h"
-#include "SurfaceStream.h"
-#include "gfxColor.h"
 
 #ifdef XP_MACOSX
 #include "mozilla/gfx/MacIOSurface.h"
@@ -40,7 +36,6 @@
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
-using namespace mozilla::gfx;
 
 static void
 MakeTextureIfNeeded(GLContext* gl, GLuint& aTexture)
@@ -107,7 +102,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
   if (aData.mGLContext != nullptr &&
       aData.mSurface != nullptr)
   {
-    NS_WARNING("CanvasLayerOGL can't have both surface and WebGLContext");
+    NS_WARNING("CanvasLayerOGL can't have both surface and GLContext");
     return;
   }
 
@@ -136,30 +131,20 @@ CanvasLayerOGL::Initialize(const Data& aData)
             } else {
                 mLayerProgram = gl::RGBXLayerProgramType;
             }
-            MakeTextureIfNeeded(gl(), mUploadTexture);
+            MakeTextureIfNeeded(gl(), mTexture);
         }
     }
 #endif
   } else if (aData.mGLContext) {
-    mGLContext = aData.mGLContext;
-    NS_ASSERTION(mGLContext->IsOffscreen(), "Canvas GLContext must be offscreen.");
-    mIsGLAlphaPremult = aData.mIsGLAlphaPremult;
-    mNeedsYFlip = true;
-
-    // [OGL Layers, MTC] WebGL layer init.
-
-    GLScreenBuffer* screen = mGLContext->Screen();
-    SurfaceStreamType streamType =
-        SurfaceStream::ChooseGLStreamType(SurfaceStream::MainThread,
-                                          screen->PreserveBuffer());
-    SurfaceFactory_GL* factory = nullptr;
-    if (!mForceReadback) {
-      factory = new SurfaceFactory_GLTexture(mGLContext, gl(), screen->Caps());
+    if (!aData.mGLContext->IsOffscreen()) {
+      NS_WARNING("CanvasLayerOGL with a non-offscreen GL context given");
+      return;
     }
 
-    if (factory) {
-      screen->Morph(factory, streamType);
-    }
+    mCanvasGLContext = aData.mGLContext;
+    mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
+
+    mNeedsYFlip = mCanvasGLContext->GetOffscreenTexture() != 0;
   } else {
     NS_WARNING("CanvasLayerOGL::Initialize called without surface or GL context!");
     return;
@@ -173,7 +158,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
   gl()->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &texSize);
   if (mBounds.width > (2 + texSize) || mBounds.height > (2 + texSize)) {
     mDelayedUpdates = true;
-    MakeTextureIfNeeded(gl(), mUploadTexture);
+    MakeTextureIfNeeded(gl(), mTexture);
     // This should only ever occur with 2d canvas, WebGL can't already have a texture
     // of this size can it?
     NS_ABORT_IF_FALSE(mCanvasSurface || mDrawTarget, 
@@ -202,73 +187,72 @@ CanvasLayerOGL::UpdateSurface()
   }
 #endif
 
-  gfxASurface* updatedSurface = nullptr;
-  gfxImageSurface* temporarySurface = nullptr;
-  bool nothingToShow = false;
-  if (mGLContext) {
-    SharedSurface* surf = mGLContext->RequestFrame();
-    if (surf) {
-      mLayerProgram = surf->HasAlpha() ? RGBALayerProgramType
-                                       : RGBXLayerProgramType;
-      switch (surf->Type()) {
-        case SharedSurfaceType::Basic: {
-          SharedSurface_Basic* readbackSurf = SharedSurface_Basic::Cast(surf);
-          updatedSurface = readbackSurf->GetData();
-          break;
-        }
-        case SharedSurfaceType::GLTextureShare: {
-          SharedSurface_GLTexture* textureSurf = SharedSurface_GLTexture::Cast(surf);
-          mTexture = textureSurf->Texture();
-          break;
-        }
-        default:
-          MOZ_NOT_REACHED("Unacceptable SharedSurface type.");
-          return;
-      }
-    } else {
-      nothingToShow = true;
+  if (mCanvasGLContext) {
+    mCanvasGLContext->MakeCurrent();
+  }
+
+  if (mCanvasGLContext &&
+      !mForceReadback &&
+      mCanvasGLContext->GetContextType() == gl()->GetContextType())
+  {
+    DiscardTempSurface();
+
+    // Can texture share, just make sure it's resolved first
+    mCanvasGLContext->GuaranteeResolve();
+
+    if (gl()->BindOffscreenNeedsTexture(mCanvasGLContext) &&
+        mTexture == 0)
+    {
+      mOGLManager->MakeCurrent();
+      MakeTextureIfNeeded(gl(), mTexture);
     }
-  } else if (mCanvasSurface) {
+    return;
+  }
+
 #ifdef XP_MACOSX
-    if (mDrawTarget && mDrawTarget->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT_ACCELERATED)) {
-      if (!mTexture) {
-        mTexture = MakeIOSurfaceTexture((CGContextRef)mDrawTarget->GetNativeSurface(
-                                        gfx::NATIVE_SURFACE_CGCONTEXT_ACCELERATED),
-                                        gl());
-        mTextureTarget = LOCAL_GL_TEXTURE_RECTANGLE_ARB;
-        mLayerProgram = gl::RGBARectLayerProgramType;
-      }
-      mDrawTarget->Flush();
-      return;
+  if (mDrawTarget && mDrawTarget->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT_ACCELERATED)) {
+    if (!mTexture) {
+      mTexture = MakeIOSurfaceTexture((CGContextRef)mDrawTarget->GetNativeSurface(
+                                      gfx::NATIVE_SURFACE_CGCONTEXT_ACCELERATED),
+                                      gl());
+      mTextureTarget = LOCAL_GL_TEXTURE_RECTANGLE_ARB;
+      mLayerProgram = gl::RGBARectLayerProgramType;
     }
+    mDrawTarget->Flush();
+    return;
+  }
 #endif
-    updatedSurface = mCanvasSurface;
+
+  nsRefPtr<gfxASurface> updatedAreaSurface;
+  if (mCanvasGLContext) {
+    gfxIntSize size(mBounds.width, mBounds.height);
+    nsRefPtr<gfxImageSurface> updatedAreaImageSurface =
+        GetTempSurface(size, gfxASurface::ImageFormatARGB32);
+
+    updatedAreaImageSurface->Flush();
+    mCanvasGLContext->ReadScreenIntoImageSurface(updatedAreaImageSurface);
+    updatedAreaImageSurface->MarkDirty();
+
+    updatedAreaSurface = updatedAreaImageSurface;
+  } else if (mCanvasSurface) {
+    updatedAreaSurface = mCanvasSurface;
   } else {
     MOZ_NOT_REACHED("Unhandled canvas layer type.");
     return;
   }
 
-  if (updatedSurface) {
-    mOGLManager->MakeCurrent();
-    mLayerProgram = gl()->UploadSurfaceToTexture(updatedSurface,
-                                                 mBounds,
-                                                 mUploadTexture,
-                                                 true,//false,
-                                                 nsIntPoint(0, 0));
-    mTexture = mUploadTexture;
-
-    if (temporarySurface)
-      delete temporarySurface;
-  }
-
-  MOZ_ASSERT(mTexture || nothingToShow);
+  mOGLManager->MakeCurrent();
+  mLayerProgram = gl()->UploadSurfaceToTexture(updatedAreaSurface,
+                                               mBounds,
+                                               mTexture,
+                                               false,
+                                               nsIntPoint(0, 0));
 }
 
 void
 CanvasLayerOGL::RenderLayer(int aPreviousDestination,
                             const nsIntPoint& aOffset)
 {
-  FirePreTransactionCallback();
   UpdateSurface();
   if (mOGLManager->CompositingDisabled()) {
     return;
@@ -289,8 +273,18 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
   ShaderProgramOGL *program = nullptr;
 
+  bool useGLContext = mCanvasGLContext &&
+                      !mForceReadback &&
+                      mCanvasGLContext->GetContextType() == gl()->GetContextType();
+
   nsIntRect drawRect = mBounds;
-  if (mDelayedUpdates) {
+
+  if (useGLContext) {
+    gl()->BindTex2DOffscreen(mCanvasGLContext);
+    program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
+                                                true,
+                                                GetMaskLayer() ? Mask2d : MaskNone);
+  } else if (mDelayedUpdates) {
     NS_ABORT_IF_FALSE(mCanvasSurface || mDrawTarget, "WebGL canvases should always be using full texture upload");
     
     drawRect.IntersectRect(drawRect, GetEffectiveVisibleRegion().GetBounds());
@@ -298,10 +292,9 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     mLayerProgram =
       gl()->UploadSurfaceToTexture(mCanvasSurface,
                                    nsIntRect(0, 0, drawRect.width, drawRect.height),
-                                   mUploadTexture,
+                                   mTexture,
                                    true,
                                    drawRect.TopLeft());
-    mTexture = mUploadTexture;
   }
 
   if (!program) {
@@ -339,15 +332,18 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     sDefGLXLib.ReleaseTexImage(mPixmap);
   }
 #endif
+
+  if (useGLContext) {
+    gl()->UnbindTex2DOffscreen(mCanvasGLContext);
+  }
 }
 
 void
 CanvasLayerOGL::CleanupResources()
 {
-  if (mUploadTexture) {
+  if (mTexture) {
     gl()->MakeCurrent();
-    gl()->fDeleteTextures(1, &mUploadTexture);
-    mUploadTexture = 0;
+    gl()->fDeleteTextures(1, &mTexture);
   }
 }
 
@@ -357,20 +353,11 @@ IsValidSharedTexDescriptor(const SurfaceDescriptor& aDescriptor)
   return aDescriptor.type() == SurfaceDescriptor::TSharedTextureDescriptor;
 }
 
-static bool
-IsValidSurfaceStreamDescriptor(const SurfaceDescriptor& aDescriptor)
-{
-  return aDescriptor.type() == SurfaceDescriptor::TSurfaceStreamDescriptor;
-}
-
 ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
   : ShadowCanvasLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mNeedsYFlip(false)
-  , mUploadTexture(0)
-  , mCurTexture(0)
-  , mGrallocImage(EGL_NO_IMAGE)
-  , mShaderType(RGBXLayerProgramType)
+  , mTexture(0)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
@@ -407,17 +394,13 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
     return;
   }
 
-  const SurfaceDescriptor& frontDesc = aNewFront.get_SurfaceDescriptor();
-  nsRefPtr<TextureImage> texImage =
+  if (nsRefPtr<TextureImage> texImage =
       ShadowLayerManager::OpenDescriptorForDirectTexturing(
-          gl(), frontDesc, LOCAL_GL_CLAMP_TO_EDGE);
+        gl(), aNewFront.get_SurfaceDescriptor(), LOCAL_GL_CLAMP_TO_EDGE)) {
 
-
-  if (texImage) {
     if (mTexImage &&
         (mTexImage->GetSize() != texImage->GetSize() ||
-         mTexImage->GetContentType() != texImage->GetContentType()))
-    {
+         mTexImage->GetContentType() != texImage->GetContentType())) {
       mTexImage = nullptr;
       DestroyFrontBuffer();
     }
@@ -428,7 +411,7 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
     mFrontBufferDescriptor = aNewFront;
     mNeedsYFlip = needYFlip;
   } else if (IsValidSharedTexDescriptor(aNewFront)) {
-    MakeTextureIfNeeded(gl(), mUploadTexture);
+    MakeTextureIfNeeded(gl(), mTexture);
     if (!IsValidSharedTexDescriptor(mFrontBufferDescriptor)) {
       mFrontBufferDescriptor = SharedTextureDescriptor(GLContext::SameProcess,
                                                        0,
@@ -438,25 +421,14 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
     *aNewBack = mFrontBufferDescriptor;
     mFrontBufferDescriptor = aNewFront;
     mNeedsYFlip = needYFlip;
-  } else if (IsValidSurfaceStreamDescriptor(frontDesc)) {
-    // Check our previous desc.
-    if (!IsValidSurfaceStreamDescriptor(mFrontBufferDescriptor)) {
-      SurfaceStreamHandle handle = (SurfaceStreamHandle)nullptr;
-      mFrontBufferDescriptor = SurfaceStreamDescriptor(handle, false);
-    }
-    *aNewBack = mFrontBufferDescriptor;
-    mFrontBufferDescriptor = aNewFront;
-    mNeedsYFlip = needYFlip;
   } else {
     AutoOpenSurface autoSurf(OPEN_READ_ONLY, aNewFront);
-    gfxIntSize autoSurfSize = autoSurf.Size();
-    if (!mTexImage ||
-        mTexImage->GetSize() != autoSurfSize ||
-        mTexImage->GetContentType() != autoSurf.ContentType())
-    {
+    gfxIntSize sz = autoSurf.Size();
+    if (!mTexImage || mTexImage->GetSize() != sz ||
+        mTexImage->GetContentType() != autoSurf.ContentType()) {
       Init(aNewFront, needYFlip);
     }
-    nsIntRegion updateRegion(nsIntRect(0, 0, autoSurfSize.width, autoSurfSize.height));
+    nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
     mTexImage->DirectUpdate(autoSurf.Get(), updateRegion);
     *aNewBack = aNewFront;
   }
@@ -466,25 +438,13 @@ void
 ShadowCanvasLayerOGL::DestroyFrontBuffer()
 {
   mTexImage = nullptr;
-
-  if (mUploadTexture) {
+  if (mTexture) {
     gl()->MakeCurrent();
-    gl()->fDeleteTextures(1, &mUploadTexture);
+    gl()->fDeleteTextures(1, &mTexture);
   }
-
-  MOZ_ASSERT(!IsValidSharedTexDescriptor(mFrontBufferDescriptor));
-
-  gl()->EmptyTexGarbageBin();
-
-  if (mGrallocImage) {
-    GLLibraryEGL* egl = (GLLibraryEGL*)gl()->GetLibraryEGL();
-    MOZ_ASSERT(egl);
-    egl->fDestroyImage(egl->Display(), mGrallocImage);
-    mGrallocImage = 0;
-  }
-
-  if (IsValidSurfaceStreamDescriptor(mFrontBufferDescriptor)) {
-    // Nothing needed.
+  if (IsValidSharedTexDescriptor(mFrontBufferDescriptor)) {
+    SharedTextureDescriptor texDescriptor = mFrontBufferDescriptor.get_SharedTextureDescriptor();
+    gl()->ReleaseSharedHandle(texDescriptor.shareType(), texDescriptor.handle());
     mFrontBufferDescriptor = SurfaceDescriptor();
   } else if (IsSurfaceDescriptorValid(mFrontBufferDescriptor)) {
     mAllocator->DestroySharedSurface(&mFrontBufferDescriptor);
@@ -526,10 +486,7 @@ void
 ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                   const nsIntPoint& aOffset)
 {
-  if (!mTexImage &&
-      !IsValidSharedTexDescriptor(mFrontBufferDescriptor) &&
-      !IsValidSurfaceStreamDescriptor(mFrontBufferDescriptor))
-  {
+  if (!mTexImage && !IsValidSharedTexDescriptor(mFrontBufferDescriptor)) {
     return;
   }
 
@@ -537,8 +494,6 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     return;
   }
   mOGLManager->MakeCurrent();
-  gl()->EmptyTexGarbageBin();
-  //ScopedBindTexture autoTex(gl());
 
   gfx3DMatrix effectiveTransform = GetEffectiveTransform();
   gfxPattern::GraphicsFilter filter = mFilter;
@@ -552,82 +507,16 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     filter = gfxPattern::FILTER_NEAREST;
   }
 #endif
-  SurfaceStream* surfStream = nullptr;
-  SharedSurface* sharedSurf = nullptr;
-  if (IsValidSurfaceStreamDescriptor(mFrontBufferDescriptor)) {
-    const SurfaceStreamDescriptor& streamDesc =
-        mFrontBufferDescriptor.get_SurfaceStreamDescriptor();
 
-    surfStream = SurfaceStream::FromHandle(streamDesc.handle());
-    MOZ_ASSERT(surfStream);
-
-    sharedSurf = surfStream->SwapConsumer();
-    if (!sharedSurf) {
-      // We don't have a valid surf to show yet.
-      return;
-    }
-
-    gfxImageSurface* toUpload = nullptr;
-    switch (sharedSurf->Type()) {
-      case SharedSurfaceType::GLTextureShare: {
-        mCurTexture = SharedSurface_GLTexture::Cast(sharedSurf)->Texture();
-        MOZ_ASSERT(mCurTexture);
-        mShaderType = sharedSurf->HasAlpha() ? RGBALayerProgramType
-                                             : RGBXLayerProgramType;
-        break;
-      }
-      case SharedSurfaceType::EGLImageShare: {
-        SharedSurface_EGLImage* eglImageSurf =
-            SharedSurface_EGLImage::Cast(sharedSurf);
-
-        mCurTexture = eglImageSurf->AcquireConsumerTexture(gl());
-        if (!mCurTexture) {
-          toUpload = eglImageSurf->GetPixels();
-          MOZ_ASSERT(toUpload);
-        } else {
-          mShaderType = sharedSurf->HasAlpha() ? RGBALayerProgramType
-                                               : RGBXLayerProgramType;
-        }
-        break;
-      }
-      case SharedSurfaceType::Basic: {
-        toUpload = SharedSurface_Basic::Cast(sharedSurf)->GetData();
-        MOZ_ASSERT(toUpload);
-        break;
-      }
-      default:
-        MOZ_NOT_REACHED("Invalid SharedSurface type.");
-        return;
-    }
-
-    if (toUpload) {
-      // mBounds seems to end up as (0,0,0,0) a lot, so don't use it?
-      nsIntSize size(toUpload->GetSize());
-      nsIntRect rect(nsIntPoint(0,0), size);
-      nsIntRegion bounds(rect);
-      mShaderType = gl()->UploadSurfaceToTexture(toUpload,
-                                                 bounds,
-                                                 mUploadTexture,
-                                                 true);
-      mCurTexture = mUploadTexture;
-    }
-
-    MOZ_ASSERT(mCurTexture);
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mCurTexture);
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D,
-                         LOCAL_GL_TEXTURE_WRAP_S,
-                         LOCAL_GL_CLAMP_TO_EDGE);
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D,
-                         LOCAL_GL_TEXTURE_WRAP_T,
-                         LOCAL_GL_CLAMP_TO_EDGE);
-  } else if (mTexImage) {
-    mShaderType = mTexImage->GetShaderProgramType();
+  ShaderProgramOGL *program;
+  if (IsValidSharedTexDescriptor(mFrontBufferDescriptor)) {
+    program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
+                                                true,
+                                                GetMaskLayer() ? Mask2d : MaskNone);
   } else {
-    MOZ_NOT_REACHED("What can we do?");
-    return;
+    program = mOGLManager->GetProgram(mTexImage->GetShaderProgramType(),
+                                      GetMaskLayer());
   }
-
-  ShaderProgramOGL* program = mOGLManager->GetProgram(mShaderType, GetMaskLayer());
 
   program->Activate();
   program->SetLayerTransform(effectiveTransform);
@@ -636,14 +525,19 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   program->SetTextureUnit(0);
   program->LoadMask(GetMaskLayer());
 
-  if (surfStream) {
-    MOZ_ASSERT(sharedSurf);
-
+  if (IsValidSharedTexDescriptor(mFrontBufferDescriptor)) {
+    // Shared texture handle rendering path, single texture rendering
+    SharedTextureDescriptor texDescriptor = mFrontBufferDescriptor.get_SharedTextureDescriptor();
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+    if (!gl()->AttachSharedHandle(texDescriptor.shareType(), texDescriptor.handle())) {
+      NS_ERROR("Failed to attach shared texture handle");
+      return;
+    }
     gl()->ApplyFilterToBoundTexture(filter);
-    program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), sharedSurf->Size()));
-
+    program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), texDescriptor.size()));
     mOGLManager->BindAndDrawQuad(program, mNeedsYFlip);
-
+    gl()->DetachSharedHandle(texDescriptor.shareType(), texDescriptor.handle());
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
   } else {
     // Tiled texture image rendering path
