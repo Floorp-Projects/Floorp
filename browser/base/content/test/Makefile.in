@@ -222,6 +222,7 @@ _BROWSER_FILES = \
                  browser_urlbarRevert.js \
                  browser_urlbarStop.js \
                  browser_urlbarTrimURLs.js \
+                 browser_urlbar_search_healthreport.js \
                  browser_urlHighlight.js \
                  browser_visibleFindSelection.js \
                  browser_visibleTabs.js \
