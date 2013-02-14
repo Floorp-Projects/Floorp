@@ -1049,24 +1049,28 @@ EnsureKernelLowMemKillerParamsSet()
 
   const char* priorityClasses[] = {
     "master",
+    "foregroundHigh",
     "foreground",
     "backgroundPerceivable",
     "backgroundHomescreen",
     "background"
   };
   for (size_t i = 0; i < NS_ARRAY_LENGTH(priorityClasses); i++) {
+    // The system doesn't function correctly if we're missing these prefs, so
+    // crash loudly.
+
     int32_t oomScoreAdj;
     if (!NS_SUCCEEDED(Preferences::GetInt(nsPrintfCString(
           "hal.processPriorityManager.gonk.%sOomScoreAdjust",
           priorityClasses[i]).get(), &oomScoreAdj))) {
-      continue;
+      MOZ_CRASH();
     }
 
     int32_t killUnderMB;
     if (!NS_SUCCEEDED(Preferences::GetInt(nsPrintfCString(
           "hal.processPriorityManager.gonk.%sKillUnderMB",
           priorityClasses[i]).get(), &killUnderMB))) {
-      continue;
+      MOZ_CRASH();
     }
 
     // adj is in oom_adj units.
@@ -1123,6 +1127,9 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
     break;
   case PROCESS_PRIORITY_FOREGROUND:
     priorityStr = "foreground";
+    break;
+  case PROCESS_PRIORITY_FOREGROUND_HIGH:
+    priorityStr = "foregroundHigh";
     break;
   case PROCESS_PRIORITY_MASTER:
     priorityStr = "master";
