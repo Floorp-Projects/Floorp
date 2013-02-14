@@ -5,6 +5,10 @@
 
 #include "CEHHelper.h"
 
+#ifdef SHOW_CONSOLE
+#include <io.h> // _open_osfhandle
+#endif
+
 HANDLE sCon;
 LPCWSTR metroDX10Available = L"MetroD3DAvailable";
 

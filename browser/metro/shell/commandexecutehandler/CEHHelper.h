@@ -21,7 +21,7 @@ extern LPCWSTR metroDX10Available;
 void Log(const wchar_t *fmt, ...);
 
 #if defined(SHOW_CONSOLE)
-static void SetupConsole();
+void SetupConsole();
 #endif
 
 bool IsDX10Available();
