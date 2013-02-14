@@ -251,24 +251,7 @@ SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
 {
   if (mListener) {
     mListener->OnStopRequest(aRequest, ctxt, status);
-    // A few levels up the stack, imgRequest::OnStopRequest is about to tell
-    // all of its observers that we know our size and are ready to paint.  That
-    // might not be true at this point, though -- so here, we synchronously
-    // finish parsing & layout in our helper-document to make sure we can hold
-    // up to this promise.
-    nsCOMPtr<nsIParser> parser = do_QueryInterface(mListener);
-    while (!parser->IsComplete()) {
-      parser->CancelParsingEvents();
-      parser->ContinueInterruptedParsing();
-    }
-    // XXX flushing is wasteful if embedding frame hasn't had initial reflow
-    FlushLayout();
     mListener = nullptr;
-
-    // In a normal document, this would be called by nsDocShell - but we don't
-    // have a nsDocShell. So we do it ourselves. (If we don't, painting will
-    // stay suppressed for a little while longer, for no good reason).
-    mViewer->LoadComplete(NS_OK);
   }
 
   return NS_OK;
@@ -416,6 +399,15 @@ SVGDocumentWrapper::FlushLayout()
   if (presShell) {
     presShell->FlushPendingNotifications(Flush_Layout);
   }
+}
+
+nsIDocument*
+SVGDocumentWrapper::GetDocument()
+{
+  if (!mViewer)
+    return nullptr;
+
+  return mViewer->GetDocument(); // May be nullptr.
 }
 
 SVGSVGElement*

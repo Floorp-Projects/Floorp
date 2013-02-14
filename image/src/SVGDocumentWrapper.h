@@ -68,6 +68,11 @@ public:
   bool      GetWidthOrHeight(Dimension aDimension, int32_t& aResult);
 
   /**
+   * Returns the wrapped document, or nullptr on failure. (No AddRef.)
+   */
+  nsIDocument* GetDocument();
+
+  /**
    * Returns the root <svg> element for the wrapped document, or nullptr on
    * failure.
    */
@@ -90,15 +95,6 @@ public:
    */
   inline nsresult  GetPresShell(nsIPresShell** aPresShell)
     { return mViewer->GetPresShell(aPresShell); }
-
-  /**
-   * Returns a bool indicating whether the wrapped document has been parsed
-   * successfully.
-   *
-   * @return true if the document has been parsed successfully,
-   *         false otherwise (e.g. if there's a syntax error in the SVG).
-   */
-  inline bool      ParsedSuccessfully()  { return !!GetRootSVGElem(); }
 
   /**
    * Modifier to update the viewport dimensions of the wrapped document. This
@@ -140,6 +136,11 @@ public:
   void StopAnimation();
   void ResetAnimation();
 
+  /**
+   * Force a layout flush of the underlying SVG document.
+   */
+  void FlushLayout();
+
 private:
   nsresult SetupViewer(nsIRequest *aRequest,
                        nsIContentViewer** aViewer,
@@ -147,8 +148,6 @@ private:
   void     DestroyViewer();
   void     RegisterForXPCOMShutdown();
   void     UnregisterForXPCOMShutdown();
-
-  void     FlushLayout();
 
   nsCOMPtr<nsIContentViewer>  mViewer;
   nsCOMPtr<nsILoadGroup>      mLoadGroup;
