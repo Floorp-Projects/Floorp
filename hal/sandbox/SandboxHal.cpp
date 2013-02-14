@@ -735,9 +735,6 @@ public:
   virtual bool
   RecvGetWakeLockInfo(const nsString &aTopic, WakeLockInformation *aWakeLockInfo) MOZ_OVERRIDE
   {
-    if (!AssertAppProcessPermission(this, "power")) {
-      return false;
-    }
     hal::GetWakeLockInfo(aTopic, aWakeLockInfo);
     return true;
   }
