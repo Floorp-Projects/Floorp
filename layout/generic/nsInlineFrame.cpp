@@ -179,16 +179,17 @@ nsInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
-  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  nsresult rv = BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // The sole purpose of this is to trigger display of the selection
   // window for Named Anchors, which don't have any children and
   // normally don't have any size, but in Editor we use CSS to display
   // an image to represent this "hidden" element.
   if (!mFrames.FirstChild()) {
-    DisplaySelectionOverlay(aBuilder, aLists.Content());
+    rv = DisplaySelectionOverlay(aBuilder, aLists.Content());
   }
-  return NS_OK;
+  return rv;
 }
 
 //////////////////////////////////////////////////////////////////////
