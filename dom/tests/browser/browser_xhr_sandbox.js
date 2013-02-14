@@ -39,7 +39,7 @@ function test() {
     let sandbox = new Cu.Sandbox(workerWindow);
     // inject some functions from the window into the sandbox.
     // postMessage so the async code in the sandbox can report a result.
-    sandbox.importFunction(workerWindow.postMessage, "postMessage");
+    sandbox.importFunction(workerWindow.postMessage.bind(workerWindow), "postMessage");
     sandbox.importFunction(workerWindow.XMLHttpRequest, "XMLHttpRequest");
     Cu.evalInSandbox(sandboxCode, sandbox, "1.8");
   }, true);
