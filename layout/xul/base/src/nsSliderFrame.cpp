@@ -298,11 +298,13 @@ nsSliderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsForEventDelivery() && isDraggingThumb()) {
     // This is EVIL, we shouldn't be messing with event delivery just to get
     // thumb mouse drag events to arrive at the slider!
-    return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayEventReceiver(aBuilder, this));
+    aLists.Outlines()->AppendNewToTop(new (aBuilder)
+      nsDisplayEventReceiver(aBuilder, this));
+    return NS_OK;
   }
   
-  return nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

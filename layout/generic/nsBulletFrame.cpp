@@ -254,8 +254,9 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsBulletFrame");
   
-  return aLists.Content()->AppendNewToTop(
-      new (aBuilder) nsDisplayBullet(aBuilder, this));
+  aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplayBullet(aBuilder, this));
+  return NS_OK;
 }
 
 void

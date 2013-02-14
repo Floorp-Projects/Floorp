@@ -474,6 +474,6 @@ nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder,
   if (!aFrame->GetStyleVisibility()->IsVisible() || aRect.IsEmpty())
     return NS_OK;
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayMathMLBar(aBuilder, aFrame, aRect));
+  aLists.Content()->AppendNewToTop(new (aBuilder)
+    nsDisplayMathMLBar(aBuilder, aFrame, aRect));
 }

@@ -360,8 +360,9 @@ nsSVGGlyphFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (GetStyleFont()->mFont.size <= 0) {
     return NS_OK;
   }
-  return aLists.Content()->AppendNewToTop(
-           new (aBuilder) nsDisplaySVGGlyphs(aBuilder, this));
+  aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplaySVGGlyphs(aBuilder, this));
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
