@@ -959,9 +959,10 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsPoint offset = aBuilder->ToReferenceFrame(aFrame);
   nsRect bounds = aFrame->EnsureInnerView()->GetBounds() + offset;
 
-  return aLists.Content()->AppendNewToTop(
+  aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplayClip(aBuilder, aFrame, &shadowTree,
                                  bounds));
+  return NS_OK;
 }
 
 void

@@ -171,8 +171,9 @@ nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
     return NS_OK;
   }
-  return aLists.Content()->AppendNewToTop(
-           new (aBuilder) nsDisplaySVGPathGeometry(aBuilder, this));
+  aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplaySVGPathGeometry(aBuilder, this));
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
