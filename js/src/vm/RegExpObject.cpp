@@ -637,7 +637,7 @@ RegExpCompartment::~RegExpCompartment()
 bool
 RegExpCompartment::init(JSContext *cx)
 {
-    if (!map_.init() || !inUse_.init()) {
+    if (!map_.init(0) || !inUse_.init(0)) {
         if (cx)
             js_ReportOutOfMemory(cx);
         return false;
