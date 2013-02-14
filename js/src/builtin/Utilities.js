@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*jshint bitwise: true, camelcase: false, curly: false, eqeqeq: true, forin: true,
-         immed: true, indent: 4, latedef: false, newcap: false, noarg: true,
-         noempty: true, nonew: true, plusplus: false, quotmark: false, regexp: true,
-         undef: true, unused: false, strict: false, trailing: true,
+/*jshint bitwise: true, camelcase: false, curly: false, eqeqeq: true,
+         es5: true, forin: true, immed: true, indent: 4, latedef: false,
+         newcap: false, noarg: true, noempty: true, nonew: true,
+         plusplus: false, quotmark: false, regexp: true, undef: true,
+         unused: false, strict: false, trailing: true,
 */
 
 /*global ToObject: false, ToInteger: false, IsCallable: false, ThrowError: false,
@@ -104,6 +105,20 @@ function ToNumber(v) {
 function ToString(v) {
     assert(arguments.length > 0, "__toString");
     return Std_String(v);
+}
+
+
+/********** Various utility functions **********/
+
+
+/** Returns true iff Type(v) is Object; see ES5 8.6. */
+function IsObject(v) {
+    // Watch out for |typeof null === "object"| as the most obvious pitfall.
+    // But also be careful of SpiderMonkey's objects that emulate undefined
+    // (i.e. |document.all|), which have bogus |typeof| behavior.  Detect
+    // these objects using strict equality, which said bogosity doesn't affect.
+    return (typeof v === "object" && v !== null) ||
+           (typeof v === "undefined" && v !== undefined);
 }
 
 

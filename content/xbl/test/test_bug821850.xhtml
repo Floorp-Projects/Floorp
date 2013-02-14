@@ -129,37 +129,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     proto.someExpando = 201;
     is(bound.someExpando, 201, "Can stick non-XBL properties on the proto");
 
-    function checkTamperProof(obj, propName, desc) {
+    // Previously, this code checked that content couldn't tamper with its XBL
+    // prototype. But we decided to allow this to reduce regression risk, so for
+    // now just check that this works.
+    function checkMayTamper(obj, propName, desc) {
       var accessor = !('value' in Object.getOwnPropertyDescriptor(obj, propName));
       if (!accessor)
-        checkRejected(function() { obj[propName] = function() {} }, desc + ": assign");
-      checkRejected(function() { Object.defineProperty(obj, propName, {value: 3}) }, desc + ": define with value");
-      checkRejected(function() { Object.defineProperty(obj, propName, {writable: true}) }, desc + ": make writable");
-      checkRejected(function() { Object.defineProperty(obj, propName, {configurable: true}) }, desc + ": make configurable");
-      checkRejected(function() { Object.defineProperty(obj, propName, {get: function() {}}) }, desc + ": define with getter");
-      checkRejected(function() { Object.defineProperty(obj, propName, {set: function() {}}) }, desc + ": define with setter");
+        checkAllowed(function() { obj[propName] = function() {} }, desc + ": assign");
+      checkAllowed(function() { Object.defineProperty(obj, propName, {configurable: true, value: 3}) }, desc + ": define with value");
+      checkAllowed(function() { Object.defineProperty(obj, propName, {configurable: true, writable: true}) }, desc + ": make writable");
+      checkAllowed(function() { Object.defineProperty(obj, propName, {configurable: true}) }, desc + ": make configurable");
+      checkAllowed(function() { Object.defineProperty(obj, propName, {configurable: true, get: function() {}}) }, desc + ": define with getter");
+      checkAllowed(function() { Object.defineProperty(obj, propName, {configurable: true, set: function() {}}) }, desc + ": define with setter");
 
       // Windows are implemented as proxies, and Proxy::delete_ doesn't currently
       // pass strict around. Work around it in the window.binding case by just
       // checking if delete returns false.
       // manually.
-      if (/testBinding/.exec(propName))
-        is(delete obj[propName], false, "deleting prototype from window fails");
-      else
-        checkRejected(function() { delete obj[propName]; }, desc + ": delete");
+      checkAllowed(function() { delete obj[propName]; }, desc + ": delete");
 
       if (!accessor)
-        checkRejected(function() { obj[propName] = function() {} }, desc + ": assign (again)");
+        checkAllowed(function() { obj[propName] = function() {} }, desc + ": assign (again)");
     }
 
-    // Make sure we can't modify XBL props on the prototype object, since Xrays
-    // use it to perform lookups.
-    checkTamperProof(proto, 'method', "XBL Proto Method");
-    checkTamperProof(proto, 'prop', "XBL Proto Prop");
-    checkTamperProof(proto, 'primitiveField', "XBL Field Accessor");
+    // Make sure content can do whatever it wants with the prototype.
+    checkMayTamper(proto, 'method', "XBL Proto Method");
+    checkMayTamper(proto, 'prop', "XBL Proto Prop");
+    checkMayTamper(proto, 'primitiveField', "XBL Field Accessor");
 
-    // Make sure that callers can't tamper with the prototype's definition on
-    // the window.
+    // As above, check that content can do what it wants with the prototype's
+    // property on the global.
     var protoName, count = 0;
     for (var k of Object.getOwnPropertyNames(window)) {
       if (!/testBinding/.exec(k))
@@ -168,10 +167,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
       protoName = k;
     }
     is(count, 1, "Should be exactly one prototype object");
-    checkTamperProof(window, protoName, "XBL prototype prop on window");
+    checkMayTamper(window, protoName, "XBL prototype prop on window");
 
     // Tamper with the derived object. This doesn't affect the XBL scope thanks
     // to Xrays.
+    bound.method = function() { return "heh"; };
     Object.defineProperty(bound, 'method', {value: function() { return "hah" }});
     Object.defineProperty(bound, 'prop', {value: "redefined"});
     bound.primitiveField = 321;
@@ -185,9 +185,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     catch (e) { ok(!!/denied|insecure/.exec(e), "Should have thrown security exception: " + e); }
   }
 
-  function checkRejected(fn, desc) {
-    try { fn(); ok(false, desc + ": Should have thrown"); }
-    catch (e) { ok(!!/configurable|read-only/.exec(e), desc + ": Threw correctly: " + e); }
+  function checkAllowed(fn, desc) {
+    try { fn(); ok(true, desc + ": Didn't throw"); }
+    catch (e) { ok(false, desc + ": Threw: " + e); }
   }
 
   function setup() {

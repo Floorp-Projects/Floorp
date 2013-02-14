@@ -199,8 +199,11 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
         mergedFeatures.Enumerate(AddFeature, &f);
     }
 
+    size_t numChars = gr_count_unicode_characters(gr_utf16,
+                                                  aText, aText + aLength,
+                                                  nullptr);
     gr_segment *seg = gr_make_seg(mGrFont, mGrFace, 0, grFeatures,
-                                  gr_utf16, aText, aLength,
+                                  gr_utf16, aText, numChars,
                                   aShapedText->IsRightToLeft());
 
     gr_featureval_destroy(grFeatures);
@@ -221,9 +224,9 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
                             // for short (typical) runs up to this length
 
 struct Cluster {
-    uint32_t baseChar;
+    uint32_t baseChar; // in UTF16 code units, not Unicode character indices
     uint32_t baseGlyph;
-    uint32_t nChars;
+    uint32_t nChars; // UTF16 code units
     uint32_t nGlyphs;
     Cluster() : baseChar(0), baseGlyph(0), nChars(0), nGlyphs(0) { }
 };
@@ -263,8 +266,10 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
          slot != nullptr;
          slot = gr_slot_next_in_segment(slot), gIndex++)
     {
-        uint32_t before = gr_slot_before(slot);
-        uint32_t after = gr_slot_after(slot);
+        uint32_t before =
+            gr_cinfo_base(gr_seg_cinfo(aSegment, gr_slot_before(slot)));
+        uint32_t after =
+            gr_cinfo_base(gr_seg_cinfo(aSegment, gr_slot_after(slot)));
         gids[gIndex] = gr_slot_gid(slot);
         xLocs[gIndex] = gr_slot_origin_X(slot);
         yLocs[gIndex] = gr_slot_origin_Y(slot);
@@ -330,9 +335,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
 
         // Check for default-ignorable char that didn't get filtered, combined,
         // etc by the shaping process, and skip it.
-        uint32_t offs = gr_cinfo_base(gr_seg_cinfo(aSegment, c.baseChar));
-        NS_ASSERTION(offs >= c.baseChar && offs < aLength,
-                     "unexpected offset");
+        uint32_t offs = c.baseChar;
+        NS_ASSERTION(offs < aLength, "unexpected offset");
         if (c.nGlyphs == 1 && c.nChars == 1 &&
             aShapedText->FilterIfIgnorable(aOffset + offs, aText[offs])) {
             continue;
@@ -375,10 +379,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
         }
 
         for (uint32_t j = c.baseChar + 1; j < c.baseChar + c.nChars; ++j) {
-            offs = gr_cinfo_base(gr_seg_cinfo(aSegment, j));
-            NS_ASSERTION(offs >= j && offs < aLength,
-                         "unexpected offset");
-            gfxShapedText::CompressedGlyph &g = charGlyphs[offs];
+            NS_ASSERTION(j < aLength, "unexpected offset");
+            gfxShapedText::CompressedGlyph &g = charGlyphs[j];
             NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
             g.SetComplex(g.IsClusterStart(), false, 0);
         }

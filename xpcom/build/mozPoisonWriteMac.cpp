@@ -247,8 +247,6 @@ void PoisonWrite() {
     if (!PoisonWriteEnabled())
         return;
 
-    PoisonWriteBase();
-
     for (int i = 0; i < NumFunctions; ++i) {
         FuncData *d = Functions[i];
         if (!d->Function)

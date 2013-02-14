@@ -488,11 +488,13 @@ js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsign
 }
 
 bool
-js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Value &thisv,
+js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, const Value &thisv,
                   ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
+    RootedObject scopeChain(cx, &scopeChainArg);
+
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain.isScope());
+    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain->isScope());
 
     if (script->isEmpty()) {
         if (result)
@@ -2443,7 +2445,7 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
     if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
         goto error;
 
-    Value v;
+    RootedValue &v = rootValue0;
     if (!ComputeImplicitThis(cx, scope, &v))
         goto error;
     PUSH_COPY(v);

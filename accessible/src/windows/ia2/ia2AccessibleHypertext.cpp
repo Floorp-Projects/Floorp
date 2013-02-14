@@ -45,17 +45,12 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
     return CO_E_OBJNOTCONNECTED;
 
   Accessible* hyperLink = hyperText->GetLinkAt(aLinkIndex);
-  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryObject(hyperLink));
-  if (!winAccessNode)
+  if (!hyperText)
     return E_FAIL;
 
-  void *instancePtr = NULL;
-  nsresult rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleHyperlink,
-                                                     &instancePtr);
-  if (NS_FAILED(rv))
-    return E_FAIL;
-
-  *aHyperlink = static_cast<IAccessibleHyperlink*>(instancePtr);
+  *aHyperlink =
+    static_cast<IAccessibleHyperlink*>(static_cast<AccessibleWrap*>(hyperLink));
+  (*aHyperlink)->AddRef();
   return S_OK;
 
   A11Y_TRYBLOCK_END

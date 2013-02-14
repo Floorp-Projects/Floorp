@@ -333,7 +333,7 @@ body {
   margin: 0;
   padding: 0;
   list-style: none;
-  background-repeat: repeat;
+  background-color: #ced7de;
 }
 
 .toolbar-hidden {
@@ -584,21 +584,11 @@ body {
   .button {
     height: 48px;
   }
-
-  .toolbar {
-    background-size: 48px;
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-mdpi.png');
-  }
 }
 
 @media screen and (orientation: landscape) {
   .button {
     height: 40px;
-  }
-
-  .toolbar {
-    background-size: 40px;
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-mdpi.png');
   }
 }
 
@@ -608,48 +598,7 @@ body {
     height: 56px;
   }
 
-  .toolbar {
-    background-size: 56px;
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-mdpi.png');
-  }
-
   .toolbar > * {
     width: 56px;
-  }
-}
-
-@media screen and (orientation: portrait) and (min-resolution: 200dpi) {
-  .toolbar {
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-hdpi.png');
-  }
-}
-
-@media screen and (orientation: landscape) and (min-resolution: 200dpi) {
-  .toolbar {
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-hdpi.png');
-  }
-}
-
-@media screen and (orientation: portrait) and (min-resolution: 300dpi) {
-  .toolbar {
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-xhdpi.png');
-  }
-}
-
-@media screen and (orientation: landscape) and (min-resolution: 300dpi) {
-  .toolbar {
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-xhdpi.png');
-  }
-}
-
-@media screen and (min-width: 960px) and (min-resolution: 200dpi) {
-  .toolbar {
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-hdpi.png');
-  }
-}
-
-@media screen and (min-width: 960px) and (min-resolution: 300dpi) {
-  .toolbar {
-    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-xhdpi.png');
   }
 }

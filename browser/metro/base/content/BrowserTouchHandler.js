@@ -20,6 +20,8 @@ const BrowserTouchHandler = {
 
   // Content forwarding the contextmenu command
   onContentContextMenu: function onContentContextMenu(aMessage) {
+    // Note, target here is the target of the message manager message,
+    // usually the browser.
     let contextInfo = { name: aMessage.name,
                         json: aMessage.json,
                         target: aMessage.target };

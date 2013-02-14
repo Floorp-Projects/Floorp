@@ -766,8 +766,10 @@ inline js::types::TypeObject *
 JSObject::getType(JSContext *cx)
 {
     JS_ASSERT(cx->compartment == compartment());
-    if (hasLazyType())
-        return makeLazyType(cx);
+    if (hasLazyType()) {
+        js::RootedObject self(cx, this);
+        return makeLazyType(cx, self);
+    }
     return type_;
 }
 

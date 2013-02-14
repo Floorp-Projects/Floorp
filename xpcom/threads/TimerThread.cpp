@@ -417,31 +417,16 @@ int32_t TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
     return -1;
 
   TimeStamp now = TimeStamp::Now();
-  uint32_t count = mTimers.Length();
-  uint32_t i = 0;
-  for (; i < count; i++) {
-    nsTimerImpl *timer = mTimers[i];
 
-    // Don't break till we have skipped any overdue timers.
+  TimerAdditionComparator c(now, mTimeoutAdjustment, aTimer);
+  nsTimerImpl** insertSlot = mTimers.InsertElementSorted(aTimer, c);
 
-    // XXXbz why?  Given our definition of overdue in terms of
-    // mTimeoutAdjustment, aTimer might be overdue already!  Why not
-    // just fire timers in order?
-
-    // XXX does this hold for TYPE_REPEATING_PRECISE?  /be
-
-    if (now < timer->mTimeout + mTimeoutAdjustment &&
-        aTimer->mTimeout < timer->mTimeout) {
-      break;
-    }
-  }
-
-  if (!mTimers.InsertElementAt(i, aTimer))
+  if (!insertSlot)
     return -1;
 
   aTimer->mArmed = true;
   NS_ADDREF(aTimer);
-  return i;
+  return insertSlot - mTimers.Elements();
 }
 
 bool TimerThread::RemoveTimerInternal(nsTimerImpl *aTimer)

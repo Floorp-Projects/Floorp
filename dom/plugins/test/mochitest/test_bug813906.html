@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test for Bug 813906</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <base href="chrome://browser/content/">
+</head>
+<body>
+
+<script type="application/javascript">
+function f() {
+  document.getElementsByTagName("base")[0].href = "http://www.safe.com/";
+}
+</script>
+
+<svg>
+  <symbol id="a">
+    <foreignObject>
+      <object bugmode="813906" frame="frame1"></object>
+    </foreignObject>
+  </symbol>
+  <use />
+</svg>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var frameLoadCount = 0;
+function frameLoaded() {
+  frameLoadCount++;
+  if (frameLoadCount == 1) {
+    document.getElementsByTagName("object")[0].type = "application/x-test";
+    document.getElementsByTagName("use")[0].setAttributeNS("http://www.w3.org/1999/xlink", "href", location.href + "#a");
+  } else if (frameLoadCount == 2) {
+    isnot(SpecialPowers.wrap(window.frame1).location.href.indexOf('chrome://'),
+          0, 'plugin shouldnt be able to cause navigation to chrome URLs');
+    SimpleTest.finish();
+  }
+}
+</script>
+
+<iframe name="frame1" onload="frameLoaded()"></iframe>
+</body>
+</html>

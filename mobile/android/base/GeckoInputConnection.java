@@ -32,6 +32,7 @@ import android.view.inputmethod.InputMethodManager;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.concurrent.SynchronousQueue;
 
 class GeckoInputConnection
     extends BaseInputConnection
@@ -43,6 +44,130 @@ class GeckoInputConnection
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
 
     private static Handler sBackgroundHandler;
+
+    private class ThreadUtils {
+        private Editable mUiEditable;
+        private Object mUiEditableReturn;
+        private Exception mUiEditableException;
+        private final SynchronousQueue<Runnable> mIcRunnableSync;
+        private final Runnable mIcSignalRunnable;
+
+        public ThreadUtils() {
+            mIcRunnableSync = new SynchronousQueue<Runnable>();
+            mIcSignalRunnable = new Runnable() {
+                @Override public void run() {
+                }
+            };
+        }
+
+        private void runOnIcThread(Handler icHandler, final Runnable runnable) {
+            if (DEBUG) {
+                GeckoApp.assertOnUiThread();
+            }
+            Runnable runner = new Runnable() {
+                @Override public void run() {
+                    try {
+                        Runnable queuedRunnable = mIcRunnableSync.take();
+                        if (DEBUG && queuedRunnable != runnable) {
+                            throw new IllegalThreadStateException("sync error");
+                        }
+                        queuedRunnable.run();
+                    } catch (InterruptedException e) {
+                    }
+                }
+            };
+            try {
+                // if we are not inside waitForUiThread(), runner will call the runnable
+                icHandler.post(runner);
+                // runnable will be called by either runner from above or waitForUiThread()
+                mIcRunnableSync.put(runnable);
+            } catch (InterruptedException e) {
+            } finally {
+                // if waitForUiThread() already called runnable, runner should not call it again
+                icHandler.removeCallbacks(runner);
+            }
+        }
+
+        public void endWaitForUiThread() {
+            if (DEBUG) {
+                GeckoApp.assertOnUiThread();
+            }
+            try {
+                mIcRunnableSync.put(mIcSignalRunnable);
+            } catch (InterruptedException e) {
+            }
+        }
+
+        public void waitForUiThread(Handler icHandler) {
+            if (DEBUG) {
+                GeckoApp.assertOnThread(icHandler.getLooper().getThread());
+            }
+            try {
+                Runnable runnable = null;
+                do {
+                    runnable = mIcRunnableSync.take();
+                    runnable.run();
+                } while (runnable != mIcSignalRunnable);
+            } catch (InterruptedException e) {
+            }
+        }
+
+        public Editable getEditableForUiThread(final Handler uiHandler,
+                                               final Handler icHandler) {
+            if (DEBUG) {
+                GeckoApp.assertOnThread(uiHandler.getLooper().getThread());
+            }
+            if (icHandler.getLooper() == uiHandler.getLooper()) {
+                // IC thread is UI thread; safe to use Editable directly
+                return getEditable();
+            }
+            // IC thread is not UI thread; we need to return a proxy Editable in order
+            // to safely use the Editable from the UI thread
+            if (mUiEditable != null) {
+                return mUiEditable;
+            }
+            final InvocationHandler invokeEditable = new InvocationHandler() {
+                @Override public Object invoke(final Object proxy,
+                                               final Method method,
+                                               final Object[] args) throws Throwable {
+                    if (DEBUG) {
+                        GeckoApp.assertOnThread(uiHandler.getLooper().getThread());
+                    }
+                    synchronized (icHandler) {
+                        // Now we are on UI thread
+                        mUiEditableReturn = null;
+                        mUiEditableException = null;
+                        // Post a Runnable that calls the real Editable and saves any
+                        // result/exception. Then wait on the Runnable to finish
+                        runOnIcThread(icHandler, new Runnable() {
+                            @Override public void run() {
+                                synchronized (icHandler) {
+                                    try {
+                                        mUiEditableReturn = method.invoke(
+                                            mEditableClient.getEditable(), args);
+                                    } catch (Exception e) {
+                                        mUiEditableException = e;
+                                    }
+                                    icHandler.notify();
+                                }
+                            }
+                        });
+                        // let InterruptedException propagate
+                        icHandler.wait();
+                        if (mUiEditableException != null) {
+                            throw mUiEditableException;
+                        }
+                        return mUiEditableReturn;
+                    }
+                }
+            };
+            mUiEditable = (Editable) Proxy.newProxyInstance(Editable.class.getClassLoader(),
+                new Class<?>[] { Editable.class }, invokeEditable);
+            return mUiEditable;
+        }
+    }
+
+    private final ThreadUtils mThreadUtils = new ThreadUtils();
 
     // Managed only by notifyIMEEnabled; see comments in notifyIMEEnabled
     private int mIMEState;
@@ -333,7 +458,7 @@ class GeckoInputConnection
                 Looper.loop();
                 sBackgroundHandler = null;
             }
-        });
+        }, LOGTAG);
         backgroundThread.setDaemon(true);
         backgroundThread.start();
         while (sBackgroundHandler == null) {
@@ -497,20 +622,12 @@ class GeckoInputConnection
             // We are on separate IC thread but the event is queued on the main thread;
             // wait on IC thread until the main thread processes our posted Runnable. At
             // that point the key event has already been processed.
-            synchronized (icHandler) {
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        synchronized (icHandler) {
-                            icHandler.notify();
-                        }
-                    }
-                });
-                try {
-                    icHandler.wait();
-                } catch (InterruptedException e) {
+            mainHandler.post(new Runnable() {
+                @Override public void run() {
+                    mThreadUtils.endWaitForUiThread();
                 }
-            }
+            });
+            mThreadUtils.waitForUiThread(icHandler);
         }
         return false; // seems to always return false
     }
@@ -546,14 +663,23 @@ class GeckoInputConnection
         View view = getView();
         KeyListener keyListener = TextKeyListener.getInstance();
 
-        // KeyListener returns true if it handled the event for us.
+        // KeyListener returns true if it handled the event for us. KeyListener is only
+        // safe to use on the UI thread; therefore we need to pass a proxy Editable to it
         if (mIMEState == IME_STATE_DISABLED ||
-                mIMEState == IME_STATE_PLUGIN ||
-                keyCode == KeyEvent.KEYCODE_ENTER ||
-                keyCode == KeyEvent.KEYCODE_DEL ||
-                keyCode == KeyEvent.KEYCODE_TAB ||
-                (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
-                !keyListener.onKeyDown(view, getEditable(), keyCode, event)) {
+            mIMEState == IME_STATE_PLUGIN ||
+            keyCode == KeyEvent.KEYCODE_ENTER ||
+            keyCode == KeyEvent.KEYCODE_DEL ||
+            keyCode == KeyEvent.KEYCODE_TAB ||
+            (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
+            view == null) {
+            mEditableClient.sendEvent(GeckoEvent.createKeyEvent(event));
+            return true;
+        }
+
+        Handler uiHandler = view.getRootView().getHandler();
+        Handler icHandler = mEditableClient.getInputConnectionHandler();
+        Editable uiEditable = mThreadUtils.getEditableForUiThread(uiHandler, icHandler);
+        if (!keyListener.onKeyDown(view, uiEditable, keyCode, event)) {
             mEditableClient.sendEvent(GeckoEvent.createKeyEvent(event));
         }
         return true;
@@ -579,15 +705,24 @@ class GeckoInputConnection
         View view = getView();
         KeyListener keyListener = TextKeyListener.getInstance();
 
+        // KeyListener returns true if it handled the event for us. KeyListener is only
+        // safe to use on the UI thread; therefore we need to pass a proxy Editable to it
         if (mIMEState == IME_STATE_DISABLED ||
             mIMEState == IME_STATE_PLUGIN ||
             keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_DEL ||
             (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
-            !keyListener.onKeyUp(view, getEditable(), keyCode, event)) {
+            view == null) {
             mEditableClient.sendEvent(GeckoEvent.createKeyEvent(event));
+            return true;
         }
 
+        Handler uiHandler = view.getRootView().getHandler();
+        Handler icHandler = mEditableClient.getInputConnectionHandler();
+        Editable uiEditable = mThreadUtils.getEditableForUiThread(uiHandler, icHandler);
+        if (!keyListener.onKeyUp(view, uiEditable, keyCode, event)) {
+            mEditableClient.sendEvent(GeckoEvent.createKeyEvent(event));
+        }
         return true;
     }
 

@@ -442,7 +442,7 @@ RasterImage::~RasterImage()
   }
 }
 
-void
+/* static */ void
 RasterImage::Initialize()
 {
   InitPrefCaches();
@@ -2615,7 +2615,7 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
 // 
 // aIntent specifies the intent of the shutdown. If aIntent is
 // eShutdownIntent_Done, an error is flagged if we didn't get what we should
-// have out of the decode. If aIntent is eShutdownIntent_Interrupted, we don't
+// have out of the decode. If aIntent is eShutdownIntent_NotNeeded, we don't
 // check this. If aIntent is eShutdownIntent_Error, we shut down in error mode.
 nsresult
 RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
@@ -2796,7 +2796,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mDecoder &&
       (mDecoder->IsSizeDecode() || mDecoder->GetDecodeFlags() != mFrameDecodeFlags))
   {
-    rv = ShutdownDecoder(eShutdownIntent_Interrupted);
+    rv = ShutdownDecoder(eShutdownIntent_NotNeeded);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
@@ -2855,7 +2855,7 @@ RasterImage::SyncDecode()
   if (mDecoder &&
       (mDecoder->IsSizeDecode() || mDecoder->GetDecodeFlags() != mFrameDecodeFlags))
   {
-    rv = ShutdownDecoder(eShutdownIntent_Interrupted);
+    rv = ShutdownDecoder(eShutdownIntent_NotNeeded);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
@@ -3162,7 +3162,7 @@ RasterImage::UnlockImage()
     PR_LOG(GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
            ("RasterImage[0x%p] canceling decode because image "
             "is now unlocked.", this));
-    ShutdownDecoder(eShutdownIntent_Interrupted);
+    ShutdownDecoder(eShutdownIntent_NotNeeded);
     ForceDiscard();
     return NS_OK;
   }

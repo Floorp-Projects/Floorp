@@ -188,6 +188,7 @@ nsFaviconService::Notify(nsITimer* timer)
 NS_IMETHODIMP
 nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aFaviconURI);
 
@@ -343,6 +344,19 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
                                            uint32_t aFaviconLoadType,
                                            nsIFaviconDataCallback* aCallback)
 {
+  PLACES_WARN_DEPRECATED();
+  return SetAndFetchFaviconForPage(aPageURI, aFaviconURI,
+                                   aForceReload, aFaviconLoadType,
+                                   aCallback);
+}
+
+NS_IMETHODIMP
+nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
+                                            nsIURI* aFaviconURI,
+                                            bool aForceReload,
+                                            uint32_t aFaviconLoadType,
+                                            nsIFaviconDataCallback* aCallback)
+{
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aFaviconURI);
 
@@ -370,18 +384,6 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
 
   // DB will be updated and observers notified when data has finished loading.
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
-                                            nsIURI* aFaviconURI,
-                                            bool aForceReload,
-                                            uint32_t aFaviconLoadType,
-                                            nsIFaviconDataCallback* aCallback)
-{
-  return SetAndLoadFaviconForPage(aPageURI, aFaviconURI,
-                                  aForceReload, aFaviconLoadType,
-                                  aCallback);
 }
 
 NS_IMETHODIMP
@@ -462,6 +464,7 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const uint8_t* aData,
                                  uint32_t aDataLen, const nsACString& aMimeType,
                                  PRTime aExpiration)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ENSURE_ARG(aFaviconURI);
 
   if (mFaviconsExpirationRunning)
@@ -637,6 +640,7 @@ nsFaviconService::SetFaviconDataFromDataURL(nsIURI* aFaviconURI,
                                             const nsAString& aDataURL,
                                             PRTime aExpiration)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ENSURE_ARG(aFaviconURI);
   if (mFaviconsExpirationRunning)
     return NS_OK;
@@ -697,6 +701,7 @@ NS_IMETHODIMP
 nsFaviconService::GetFaviconData(nsIURI* aFaviconURI, nsACString& aMimeType,
                                  uint32_t* aDataLen, uint8_t** aData)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ENSURE_ARG(aFaviconURI);
   NS_ENSURE_ARG_POINTER(aDataLen);
   NS_ENSURE_ARG_POINTER(aData);
@@ -777,6 +782,7 @@ NS_IMETHODIMP
 nsFaviconService::GetFaviconDataAsDataURL(nsIURI* aFaviconURI,
                                           nsAString& aDataURL)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ENSURE_ARG(aFaviconURI);
 
   uint8_t* data;
@@ -811,6 +817,7 @@ nsFaviconService::GetFaviconDataAsDataURL(nsIURI* aFaviconURI,
 NS_IMETHODIMP
 nsFaviconService::GetFaviconForPage(nsIURI* aPageURI, nsIURI** _retval)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG_POINTER(_retval);
 
@@ -866,6 +873,7 @@ nsFaviconService::GetFaviconDataForPage(nsIURI* aPageURI,
 NS_IMETHODIMP
 nsFaviconService::GetFaviconImageForPage(nsIURI* aPageURI, nsIURI** _retval)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG_POINTER(_retval);
 

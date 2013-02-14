@@ -358,17 +358,10 @@
       </box>
 
       <hbox id="pageactions-container" hidden="true">
-        <pageaction id="pageaction-findinpage" title="&pageactions.findInPage;"
-          onclick="FindHelperUI.show();"/>
-        <pageaction id="pageaction-share" title="&pageactions.share.page;"
-          onclick="SharingUI.show(getBrowser().currentURI.spec, getBrowser().contentTitle);"/>
-        <pageaction id="pageaction-pinsite" title="&pageactions.pin.site;"
-          onclick="PageActions.pinSite();"/>
         <pageaction id="pageaction-password" title="&pageactions.password.forget;"
           onclick="PageActions.forgetPassword(event);"/>
         <pageaction id="pageaction-reset" title="&pageactions.reset;"
           onclick="PageActions.clearPagePermissions(event);"/>
-        <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
         <pageaction id="pageaction-charset" title="&pageactions.charEncoding;" onclick="CharsetMenu.show();"/>
       </hbox>
     </arrowbox>
@@ -587,14 +580,14 @@
           <richlistitem id="context-viewinnewtab" type="image" onclick="ContextCommands.openInNewTab();">
             <label value="&contextViewInNewTab.label;"/>
           </richlistitem>
-          <richlistitem id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage();">
+          <richlistitem id="context-copy-image" type="image-loaded" onclick="ContextCommands.copyImage();">
+            <label value="&contextCopyImage.label;"/>
+          </richlistitem>
+          <richlistitem id="context-save-image" type="image-loaded" onclick="ContextCommands.saveImage();">
             <label value="&contextSaveImage.label;"/>
           </richlistitem>
-          <richlistitem id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImageTo();">
+          <richlistitem id="context-save-image-to" type="image-loaded" onclick="ContextCommands.saveImageTo();">
             <label value="&contextSaveImageTo.label;"/>
-          </richlistitem>
-          <richlistitem id="context-copy-image-location" type="image" onclick="ContextCommands.copyImageLocation();">
-            <label value="&contextCopyImageLocation.label;"/>
           </richlistitem>
 
           <!-- Link related -->
@@ -627,7 +620,7 @@
           <richlistitem id="context-save-video" type="video" onclick="ContextCommands.saveVideo();">
             <label value="&contextSaveVideo.label;"/>
           </richlistitem>
-          <richlistitem id="context-save-video" type="video" onclick="ContextCommands.saveVideoTo();">
+          <richlistitem id="context-save-video-to" type="video" onclick="ContextCommands.saveVideoTo();">
             <label value="&contextSaveVideoTo.label;"/>
           </richlistitem>
 

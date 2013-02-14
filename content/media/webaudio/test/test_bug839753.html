@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtest for bug 839753</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+AudioContext().destination.expando = null;
+ok(true, "The test should not trigger wrapper cache assertions");
+SpecialPowers.clearUserPref("media.webaudio.enabled");
+
+</script>
+</pre>
+</body>
+</html>

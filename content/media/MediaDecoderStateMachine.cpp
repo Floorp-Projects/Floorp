@@ -993,11 +993,11 @@ void MediaDecoderStateMachine::AudioLoop()
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mAudioCompleted = false;
     audioStartTime = mAudioStartTime;
+    NS_ASSERTION(audioStartTime != -1, "Should have audio start time by now");
     channels = mInfo.mAudioChannels;
     rate = mInfo.mAudioRate;
-    audioChannelType = mDecoder->GetAudioChannelType();
-    NS_ASSERTION(audioStartTime != -1, "Should have audio start time by now");
 
+    audioChannelType = mDecoder->GetAudioChannelType();
     volume = mVolume;
     preservesPitch = mPreservesPitch;
     playbackRate = mPlaybackRate;
@@ -1009,6 +1009,7 @@ void MediaDecoderStateMachine::AudioLoop()
     // initializing.
     nsAutoPtr<AudioStream> audioStream(AudioStream::AllocateStream());
     audioStream->Init(channels, rate, audioChannelType);
+    audioStream->SetVolume(volume);
     audioStream->SetPreservesPitch(preservesPitch);
     if (playbackRate != 1.0) {
       NS_ASSERTION(playbackRate != 0,
@@ -2304,11 +2305,8 @@ int64_t MediaDecoderStateMachine::GetVideoStreamPosition()
 
   int64_t pos = DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration;
   pos -= mBasePosition;
-  if (pos >= 0) {
-    int64_t final = mBasePosition + pos * mPlaybackRate + mStartTime;
-    return final;
-  }
-  return mPlayDuration + mStartTime;
+  NS_ASSERTION(pos >= 0, "Video stream position should be positive.");
+  return mBasePosition + pos * mPlaybackRate + mStartTime;
 }
 
 int64_t MediaDecoderStateMachine::GetClock() {
@@ -2767,12 +2765,14 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
   // Get position of the last time we changed the rate.
   if (!HasAudio()) {
     // mBasePosition is a position in the video stream, not an absolute time.
-    mBasePosition = GetVideoStreamPosition();
-    if (IsPlaying()) {
-      mPlayDuration = mBasePosition - mStartTime;
-      mResetPlayStartTime = true;
-      mPlayStartTime = TimeStamp::Now();
+    if (mState == DECODER_STATE_SEEKING) {
+      mBasePosition = mSeekTime;
+    } else {
+      mBasePosition = GetVideoStreamPosition();
     }
+    mPlayDuration = mBasePosition - mStartTime;
+    mResetPlayStartTime = true;
+    mPlayStartTime = TimeStamp::Now();
   }
 
   mPlaybackRate = aPlaybackRate;

@@ -1675,8 +1675,8 @@ class ContextStack
                          InitialFrameFlags initial, InvokeFrameGuard *ifg);
 
     /* Called by Execute for execution of eval or global code. */
-    bool pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thisv,
-                          JSObject &scopeChain, ExecuteType type,
+    bool pushExecuteFrame(JSContext *cx, HandleScript script, const Value &thisv,
+                          HandleObject scopeChain, ExecuteType type,
                           AbstractFramePtr evalInFrame, ExecuteFrameGuard *efg);
 
     /* Allocate actual argument space for the bailed frame */
