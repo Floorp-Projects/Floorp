@@ -1285,6 +1285,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
                        int32_t aTransitionType, bool aIsRedirect,
                        int64_t aSessionID, int64_t* aVisitID)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(aVisitID);
@@ -3247,6 +3248,7 @@ NS_IMETHODIMP
 nsNavHistory::AddURI(nsIURI *aURI, bool aRedirect,
                      bool aToplevel, nsIURI *aReferrer)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
@@ -3404,6 +3406,7 @@ nsNavHistory::AddVisitChain(nsIURI* aURI,
 NS_IMETHODIMP
 nsNavHistory::IsVisited(nsIURI *aURI, bool *_retval)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -3437,6 +3440,7 @@ NS_IMETHODIMP
 nsNavHistory::SetPageTitle(nsIURI* aURI,
                            const nsAString& aTitle)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 

@@ -5,27 +5,27 @@ import com.jayway.android.robotium.solo.Solo;
 import @ANDROID_PACKAGE_NAME@.*;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
 import android.app.Instrumentation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.ContentUris;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase2;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.widget.ListView;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import android.view.View;
-import android.os.Build;
-import android.util.DisplayMetrics;
-import android.widget.ListView;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *  A convenient base class suitable for most Robocop tests.
@@ -49,8 +49,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected String mRawBaseUrl;
     private String mLogFile;
     protected String mProfile;
-    private static ListView bookmarkList;
-    private static ListView historyList;
 
     protected void blockForGeckoReady() {
         try {
@@ -396,46 +394,56 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
     }
 
-    public ListView getBookmarksList() {
+    /**
+     * Click on the awesome bar, and return the ListView for the 
+     * All Pages ("Top Sites") tab.
+     */
+    protected ListView getAllPagesList(String waitText) {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.waitForText(waitText);
+
+        ArrayList<ListView> views = mSolo.getCurrentListViews();
+        for (ListView view : views) {
+            if (view.getTag() == "allPages") {
+                return view;
+            }
+        }
+        return null;
+    }
+
+    /** 
+     * Click on the awesome bar, click on the Bookmarks tab, and return
+     * the ListView for the Bookmarks tab.
+     */
+    protected ListView getBookmarksList() {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("Bookmarks");
 
-        final ArrayList<ListView> views = mSolo.getCurrentListViews();
-
-        bookmarkList = null;
-        boolean success = waitForTest(new BooleanTest() {
-            public boolean test() {
-               for (ListView view : views) {
-                   if (view.getTag().equals("bookmarks")) {
-                       bookmarkList = view;
-                       return true;
-                   }
-               }
-               return false;
+        ArrayList<ListView> views = mSolo.getCurrentListViews();
+        for (ListView view : views) {
+            if (view.getTag().equals("bookmarks")) {
+                return view;
             }
-        }, MAX_WAIT_MS);
-        return bookmarkList;
+        }
+        return null;
     }
 
-    public ListView getHistoryList() {
+    /**
+     * Click on the awesome bar, click on the History tab, and return
+     * the ListView for the History tab.
+     */
+    protected ListView getHistoryList() {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("History");
-
-        historyList = null;
         mSolo.waitForText("Today|Yesterday");
-        boolean success = waitForTest(new BooleanTest() {
-            public boolean test() {
-                final ArrayList<ListView> views = mSolo.getCurrentListViews();
-                for (ListView view : views) {
-                    if (view.getTag().equals("history")) {
-                        historyList = view;
-                        return true;
-                    }
-                }
-                return false;
+
+        ArrayList<ListView> views = mSolo.getCurrentListViews();
+        for (ListView view : views) {
+            if (view.getTag().equals("history")) {
+                return view;
             }
-        }, MAX_WAIT_MS);
-        return historyList;
+        }
+        return null;
     }
 
     public long addOrUpdateBookmark(String title, String url, boolean bookmarklet) {

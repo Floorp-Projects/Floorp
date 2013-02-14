@@ -14,10 +14,13 @@ function test() {
     iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
   };
   let oldwidth = window.outerWidth; // we futz with this, so we restore it
+  let postSubTest = function(cb) {
+    let chats = document.getElementById("pinnedchats");
+    ok(chats.children.length == 0, "no chatty children left behind");
+    cb();
+  };
   runSocialTestWithProvider(manifest, function (finishcb) {
-    runSocialTests(tests, undefined, undefined, function () {
-      let chats = document.getElementById("pinnedchats");
-      ok(chats.children.length == 0, "no chatty children left behind");
+    runSocialTests(tests, undefined, postSubTest, function() {
       window.resizeTo(oldwidth, window.outerHeight);
       finishcb();
     });
@@ -144,23 +147,32 @@ var tests = {
     // open enough chats to overflow the window, then check
     // if the menupopup is visible
     let port = Social.provider.getWorkerPort();
+    let chats = document.getElementById("pinnedchats");
     ok(port, "provider has a port");
+    ok(chats.menupopup.parentNode.collapsed, "popup nub collapsed at start");
     port.postMessage({topic: "test-init"});
-    let width = document.documentElement.boxObject.width;
-    let numToOpen = (width / 200) + 1;
+    // we should *never* find a test box that needs more than this to cause
+    // an overflow!
+    let maxToOpen = 20;
+    let numOpened = 0;
+    let maybeOpenAnother = function() {
+      if (numOpened++ >= maxToOpen) {
+        ok(false, "We didn't find a collapsed chat after " + maxToOpen + "chats!");
+        closeAllChats();
+        next();
+      }
+      port.postMessage({topic: "test-chatbox-open", data: { id: numOpened }});
+    }
     port.onmessage = function (e) {
       let topic = e.data.topic;
       switch (topic) {
         case "got-chatbox-message":
-          numToOpen--;
-          if (numToOpen >= 0) {
-            // we're waiting for all to open
-            ok(true, "got a chat window opened");
+          if (!chats.menupopup.parentNode.collapsed) {
+            maybeOpenAnother();
             break;
           }
+          ok(true, "popup nub became visible");
           // close our chats now
-          let chats = document.getElementById("pinnedchats");
-          ok(!chats.menupopup.parentNode.collapsed, "menu selection is visible");
           while (chats.selectedChat) {
             chats.selectedChat.close();
           }
@@ -170,10 +182,7 @@ var tests = {
           break;
       }
     }
-    let num = numToOpen;
-    while (num-- > 0) {
-      port.postMessage({topic: "test-chatbox-open", data: { id: num }});
-    }
+    maybeOpenAnother();
   },
   testWorkerChatWindow: function(next) {
     const chatUrl = "https://example.com/browser/browser/base/content/test/social/social_chat.html";
@@ -277,6 +286,42 @@ var tests = {
 
   testRemoveAllMinimized: function(next) {
     this.testRemoveAll(next, "minimized");
+  },
+
+  // Check what happens when you close the only visible chat.
+  testCloseOnlyVisible: function(next) {
+    let chatbar = window.SocialChatBar.chatbar;
+    let chatWidth = undefined;
+    let num = 0;
+    is(chatbar.childNodes.length, 0, "chatbar starting empty");
+    is(chatbar.menupopup.childNodes.length, 0, "popup starting empty");
+
+    makeChat("normal", "first chat", function() {
+      // got the first one.
+      checkPopup();
+      ok(chatbar.menupopup.parentNode.collapsed, "menu selection isn't visible");
+      // we kinda cheat here and get the width of the first chat, assuming
+      // that all future chats will have the same width when open.
+      chatWidth = chatbar.calcTotalWidthOf(chatbar.selectedChat);
+      let desired = chatWidth * 1.5;
+      resizeWindowToChatAreaWidth(desired, function(sizedOk) {
+        ok(sizedOk, "can't do any tests without this width");
+        checkPopup();
+        makeChat("normal", "second chat", function() {
+          is(chatbar.childNodes.length, 2, "now have 2 chats");
+          let first = chatbar.childNodes[0];
+          let second = chatbar.childNodes[1];
+          is(chatbar.selectedChat, first, "first chat is selected");
+          ok(second.collapsed, "second chat is currently collapsed");
+          // closing the first chat will leave enough room for the second
+          // chat to appear, and thus become selected.
+          chatbar.selectedChat.close();
+          is(chatbar.selectedChat, second, "second chat is selected");
+          closeAllChats();
+          next();
+        });
+      });
+    });
   },
 
   // resize and collapse testing.

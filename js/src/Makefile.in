@@ -233,6 +233,7 @@ EXPORTS_js = \
 		LegacyIntTypes.h \
 		MemoryMetrics.h \
 		PropertyKey.h \
+		RequiredDefines.h \
 		TemplateLib.h \
 		Utility.h \
 		Value.h \
@@ -841,8 +842,69 @@ js-config: js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config
 SCRIPTS = js-config
 SDK_BINARY = js-config
 
+######################################################
+# BEGIN SpiderMonkey header installation
+#
+# Mozilla/Gecko/Firefox mostly doesn't concern itself with defining a sensible
+# install target, because it's shipping primarily packaged builds.  And even if
+# it did, those builds wouldn't really have reason to include header files.  So
+# we have to install public headers ourselves, rather than using something from
+# config/rules.mk or similar.
+#
+# The overall directory structure of the installed headers looks like so:
+#
+#   $(includedir)/
+#      $(MODULE)/
+#        jsapi.h, jspubtd.h, etc. (all of INSTALLED_HEADERS)
+#        js/
+#          js/public/* headers (all are public)
+#        ds/
+#          js/src/ds/* public headers
+#        gc/
+#          js/src/gc/* public headers
+#        mozilla/
+#          mfbt headers
+#
+# Currently $(MODULE) is just js, but we'll soon be changing it to include the
+# SpiderMonkey version, so that headers for multiple SpiderMonkey installs can
+# exist on a system at once.  (This permits embedders depending on system
+# SpiderMonkey to independently update their embeddings to newer SpiderMonkey
+# releases at different paces.)
+#
+# It is expected that embedders will then add -I$(includedir)/$(MODULE) to
+# their compiler invocations, which will then expose all of jsapi.h and friends
+# as they've always been exported.  (This will happen naturally for anyone using
+# pkgconfig systems to determine compiler/linker flags and the like.)  Headers
+# in subdirectories will show up as "mozilla/Assertions.h" and so on.  Also,
+# this system keeps #include "js/CharacterEncoding.h" in internal headers
+# working -- not that this is required, but it does simplify things.  (At some
+# point we may want to convert SpiderMonkey, and maybe Gecko, to this system, in
+# the interest of being a more conventional embedder, but it's probably a ways
+# off.)
+#
+# Eventually we'll probably trim this structure down to having the mfbt headers
+# in mozilla/, and every SpiderMonkey-specific header in js/*.  In the meantime
+# this is the structure implemented below.
+#
+
 install:: $(INSTALLED_HEADERS)
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)
+
+install:: $(EXPORTS_ds)
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/ds
+
+install:: $(EXPORTS_gc)
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/gc
+
+install:: $(EXPORTS_js)
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/js
+
+install:: $(EXPORTS_mozilla)
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/mozilla
+
+#
+# END SpiderMonkey header installation
+#############################################
 
 install:: $(SCRIPTS)
 	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)
@@ -917,6 +979,7 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Utilities.js \
   $(srcdir)/builtin/Array.js \
   $(srcdir)/builtin/Intl.js \
+  $(srcdir)/builtin/IntlData.js \
   $(NULL)
 
 selfhosted_out_h_deps := \

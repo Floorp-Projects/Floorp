@@ -73,40 +73,84 @@ template void MacroAssembler::guardTypeSet(const ValueOperand &value, const type
 void
 MacroAssembler::PushRegsInMask(RegisterSet set)
 {
-    size_t diff = set.gprs().size() * STACK_SLOT_SIZE +
-                  set.fpus().size() * sizeof(double);
+    int32_t diffF = set.fpus().size() * sizeof(double);
+    int32_t diffG = set.gprs().size() * STACK_SLOT_SIZE;
 
-    reserveStack(diff);
-
-    for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
-        diff -= STACK_SLOT_SIZE;
-        storePtr(*iter, Address(StackPointer, diff));
+    reserveStack(diffG);
+#ifdef JS_CPU_ARM
+    if (set.gprs().size() > 1) {
+        startDataTransferM(IsStore, StackPointer, IA, NoWriteBack);
+        for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+            diffG -= STACK_SLOT_SIZE;
+            transferReg(*iter);
+        }
+        finishDataTransfer();
+    } else
+#endif
+    {
+        for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+            diffG -= STACK_SLOT_SIZE;
+            storePtr(*iter, Address(StackPointer, diffG));
+        }
     }
+    JS_ASSERT(diffG == 0);
+
+    reserveStack(diffF);
+#ifdef JS_CPU_ARM
+    diffF -= transferMultipleByRuns(set.fpus(), IsStore, StackPointer, IA);
+#else
     for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
-        diff -= sizeof(double);
-        storeDouble(*iter, Address(StackPointer, diff));
+        diffF -= sizeof(double);
+        storeDouble(*iter, Address(StackPointer, diffF));
     }
+#endif
+    JS_ASSERT(diffF == 0);
 }
 
 void
 MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
 {
-    size_t diff = set.gprs().size() * STACK_SLOT_SIZE +
-                  set.fpus().size() * sizeof(double);
-    size_t reserved = diff;
+    int32_t diffG = set.gprs().size() * STACK_SLOT_SIZE;
+    int32_t diffF = set.fpus().size() * sizeof(double);
+    const int32_t reservedG = diffG;
+    const int32_t reservedF = diffF;
 
-    for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
-        diff -= STACK_SLOT_SIZE;
-        if (!ignore.has(*iter))
-            loadPtr(Address(StackPointer, diff), *iter);
+#ifdef JS_CPU_ARM
+    // ARM can load multiple registers at once, but only if we want back all
+    // the registers we previously saved to the stack.
+    if (ignore.empty(true)) {
+        diffF -= transferMultipleByRuns(set.fpus(), IsLoad, StackPointer, IA);
+    } else
+#endif
+    {
+        for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
+            diffF -= sizeof(double);
+            if (!ignore.has(*iter))
+                loadDouble(Address(StackPointer, diffF), *iter);
+        }
     }
-    for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
-        diff -= sizeof(double);
-        if (!ignore.has(*iter))
-            loadDouble(Address(StackPointer, diff), *iter);
-    }
+    freeStack(reservedF);
+    JS_ASSERT(diffF == 0);
 
-    freeStack(reserved);
+#ifdef JS_CPU_ARM
+    if (set.gprs().size() > 1 && ignore.empty(false)) {
+        startDataTransferM(IsLoad, StackPointer, IA, NoWriteBack);
+        for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+            diffG -= STACK_SLOT_SIZE;
+            transferReg(*iter);
+        }
+        finishDataTransfer();
+    } else
+#endif
+    {
+        for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+            diffG -= STACK_SLOT_SIZE;
+            if (!ignore.has(*iter))
+                loadPtr(Address(StackPointer, diffG), *iter);
+        }
+    }
+    freeStack(reservedG);
+    JS_ASSERT(diffG == 0);
 }
 
 template<typename T>

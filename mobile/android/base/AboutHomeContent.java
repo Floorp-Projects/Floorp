@@ -761,7 +761,7 @@ public class AboutHomeContent extends ScrollView
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundResource(R.drawable.abouthome_bg_repeat);
+        setBackgroundColor(getContext().getResources().getColor(R.color.background_normal));
 
         if (mAddons != null) {
             mAddons.resetTheme();

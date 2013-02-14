@@ -15,6 +15,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_405664.js \
   browser_addEngine.js \
   browser_contextmenu.js \
+  browser_healthreport.js \
   browser_private_search_perwindowpb.js \
   testEngine.xml \
   testEngine_mozsearch.xml \

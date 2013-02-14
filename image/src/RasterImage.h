@@ -321,7 +321,7 @@ public:
   // Decoder shutdown
   enum eShutdownIntent {
     eShutdownIntent_Done        = 0,
-    eShutdownIntent_Interrupted = 1,
+    eShutdownIntent_NotNeeded   = 1,
     eShutdownIntent_Error       = 2,
     eShutdownIntent_AllCount    = 3
   };

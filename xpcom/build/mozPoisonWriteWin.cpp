@@ -48,8 +48,6 @@ void PoisonWrite() {
   if (!PoisonWriteEnabled())
     return;
 
-  PoisonWriteBase();
-
   sNtDllInterceptor.Init("ntdll.dll");
   sNtDllInterceptor.AddHook("NtFlushBuffersFile", reinterpret_cast<intptr_t>(patched_FlushBuffersFile), reinterpret_cast<void**>(&gOriginalFlushBuffersFile));
 }

@@ -83,7 +83,7 @@
 <!ENTITY contextCopyLink.label        "Copy Link">
 <!ENTITY contextCopyEmail.label       "Copy Email Address">
 <!ENTITY contextCopyPhone.label       "Copy Phone Number">
-<!ENTITY contextCopyImageLocation.label "Copy Image Location">
+<!ENTITY contextCopyImage.label       "Copy Image">
 <!ENTITY contextShareLink.label       "Share Link">
 <!ENTITY contextShareImage.label      "Share Image">
 <!ENTITY contextBookmarkLink.label    "Bookmark Link">
@@ -97,11 +97,6 @@
 <!ENTITY contextRemoveBookmark.label  "Remove">
 <!ENTITY contextShortcutBookmark.label "Add to Home Screen">
 
-<!ENTITY pageactions.pin.site        "Pin Site">
-<!ENTITY pageactions.share.page      "Share Page">
 <!ENTITY pageactions.password.forget "Forget Password">
-<!ENTITY pageactions.quit            "Quit">
 <!ENTITY pageactions.reset           "Clear Site Preferences">
-<!ENTITY pageactions.findInPage      "Find In Page">
-<!ENTITY pageactions.search.addNew   "Add Search Engine">
 <!ENTITY pageactions.charEncoding    "Character Encoding">

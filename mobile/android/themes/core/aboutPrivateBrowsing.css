@@ -20,12 +20,12 @@ div.contentSection {
 
 body.private {
   color: #9ba3ab;
-  background-image: url("chrome://browser/skin/images/privatebrowsing-bg-textured.png");
+  background-color: #292c29;
 }
 
 body.normal {
   color: #222;
-  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+  background-color: #ced7de;
 }
 
 h1 {

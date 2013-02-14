@@ -72,7 +72,6 @@
 #include "nsIEditActionListener.h"      // for nsIEditActionListener
 #include "nsIEditorObserver.h"          // for nsIEditorObserver
 #include "nsIEditorSpellCheck.h"        // for nsIEditorSpellCheck
-#include "nsIEnumerator.h"              // for nsIEnumerator, etc
 #include "nsIFrame.h"                   // for nsIFrame
 #include "nsIInlineSpellChecker.h"      // for nsIInlineSpellChecker, etc
 #include "nsIMEStateManager.h"          // for nsIMEStateManager
@@ -3892,21 +3891,13 @@ nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
   *outStartNode = nullptr;
   *outStartOffset = 0;
 
-  nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
-  nsCOMPtr<nsIEnumerator> enumerator;
-  nsresult result = selPrivate->GetEnumerator(getter_AddRefs(enumerator));
-  NS_ENSURE_SUCCESS(result, result);
-  NS_ENSURE_TRUE(enumerator, NS_ERROR_FAILURE);
+  Selection* selection = static_cast<Selection*>(aSelection);
+  NS_ENSURE_TRUE(selection->GetRangeCount(), NS_ERROR_FAILURE);
 
-  enumerator->First(); 
-  nsCOMPtr<nsISupports> currentItem;
-  result = enumerator->CurrentItem(getter_AddRefs(currentItem));
-  NS_ENSURE_SUCCESS(result, result);
-
-  nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+  nsRange* range = selection->GetRangeAt(0);
   NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
-  result = range->GetStartContainer(outStartNode);
+  nsresult result = range->GetStartContainer(outStartNode);
   NS_ENSURE_SUCCESS(result, result);
 
   result = range->GetStartOffset(outStartOffset);
@@ -3928,18 +3919,11 @@ nsEditor::GetEndNodeAndOffset(nsISelection *aSelection,
 
   *outEndNode = nullptr;
     
-  nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
-  nsCOMPtr<nsIEnumerator> enumerator;
-  nsresult result = selPrivate->GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(result) || !enumerator)
-    return NS_ERROR_FAILURE;
-    
-  enumerator->First(); 
-  nsCOMPtr<nsISupports> currentItem;
-  if (NS_FAILED(enumerator->CurrentItem(getter_AddRefs(currentItem))))
-    return NS_ERROR_FAILURE;
+  Selection* selection = static_cast<Selection*>(aSelection);
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(selection->GetRangeCount(), NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+  nsRange* range = selection->GetRangeAt(0);
   NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
     
   if (NS_FAILED(range->GetEndContainer(outEndNode)))

@@ -69,7 +69,6 @@ using parallel::SpewCompile;
 class ParallelArrayVisitor : public MInstructionVisitor
 {
     JSContext *cx_;
-    ParallelCompileContext &compileContext_;
     MIRGraph &graph_;
     bool unsafe_;
     MDefinition *parSlice_;
@@ -97,10 +96,9 @@ class ParallelArrayVisitor : public MInstructionVisitor
   public:
     AutoObjectVector callTargets;
 
-    ParallelArrayVisitor(JSContext *cx, ParallelCompileContext &compileContext,
+    ParallelArrayVisitor(JSContext *cx,
                          MIRGraph &graph)
       : cx_(cx),
-        compileContext_(compileContext),
         graph_(graph),
         unsafe_(false),
         parSlice_(NULL),
@@ -331,7 +329,7 @@ ParallelCompileContext::analyzeAndGrowWorklist(MIRGenerator *mir, MIRGraph &grap
     // We don't need a worklist, though, because the graph is sorted
     // in RPO.  Therefore, we just use the marked flags to tell us
     // when we visited some predecessor of the current block.
-    ParallelArrayVisitor visitor(cx_, *this, graph);
+    ParallelArrayVisitor visitor(cx_, graph);
     graph.entryBlock()->mark();  // Note: in par. exec., we never enter from OSR.
     uint32_t marked = 0;
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
