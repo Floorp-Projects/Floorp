@@ -1459,7 +1459,7 @@ nsTextControlFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+void
 nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
@@ -1489,8 +1489,6 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
     kid = kid->GetNextSibling();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

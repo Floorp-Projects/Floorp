@@ -287,7 +287,7 @@ nsTableOuterFrame::RemoveFrame(ChildListID     aListID,
   return NS_OK;
 }
 
-NS_METHOD 
+void
 nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                     const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists)
@@ -299,7 +299,7 @@ nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // the special display list set and then sort it.
   if (mCaptionFrames.IsEmpty()) {
     BuildDisplayListForInnerTable(aBuilder, aDirtyRect, aLists);
-    return NS_OK;
+    return;
   }
 
   nsDisplayListCollection set;
@@ -313,10 +313,9 @@ nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // may be somewhere inside the table
   set.SortAllByContentOrder(aBuilder, GetContent());
   set.MoveTo(aLists);
-  return NS_OK;
 }
 
-nsresult
+void
 nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
                                                  const nsRect&           aDirtyRect,
                                                  const nsDisplayListSet& aLists)
@@ -329,7 +328,6 @@ nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilde
     BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
     kid = kid->GetNextSibling();
   }
-  return NS_OK;
 }
 
 nsIFrame*

@@ -1990,7 +1990,7 @@ protected:
   nsIFrame* mScrolledFrame;
 };
 
-nsresult
+void
 nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
                                         const nsDisplayListSet& aLists)
@@ -2017,7 +2017,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // can just pass aLists directly.
     mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame,
                                      aDirtyRect, aLists);
-    return NS_OK;
+    return;
   }
 
   // We put scrollbars in their own layers when this is the root scroll
@@ -2126,8 +2126,6 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Now display overlay scrollbars and the resizer, if we have one.
   AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,
                       true);
-
-  return NS_OK;
 }
 
 static void HandleScrollPref(nsIScrollable *aScrollable, int32_t aOrientation,

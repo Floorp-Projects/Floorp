@@ -360,7 +360,7 @@ nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsSplitterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -373,10 +373,8 @@ nsSplitterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // XXX It's probably better not to check visibility here, right?
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
       nsDisplayEventReceiver(aBuilder, this));
-    return NS_OK;
+    return;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
