@@ -8,7 +8,6 @@
 #define mozilla_Hal_h
 
 #include "mozilla/hal_sandbox/PHal.h"
-#include "mozilla/HalTypes.h"
 #include "base/basictypes.h"
 #include "mozilla/Types.h"
 #include "nsTArray.h"
@@ -360,7 +359,7 @@ void UnregisterWakeLockObserver(WakeLockObserver* aObserver);
 void ModifyWakeLock(const nsAString &aTopic,
                     hal::WakeLockControl aLockAdjust,
                     hal::WakeLockControl aHiddenAdjust,
-                    uint64_t aProcessID = hal::CONTENT_PROCESS_ID_UNKNOWN);
+                    uint64_t aProcessID = CONTENT_PROCESS_ID_UNKNOWN);
 
 /**
  * Query the wake lock numbers of aTopic.
