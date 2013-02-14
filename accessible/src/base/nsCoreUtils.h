@@ -17,7 +17,7 @@
 
 class nsRange;
 class nsIFrame;
-class nsIDocShell;
+class nsIDocShellTreeItem;
 class nsITreeColumn;
 class nsITreeBoxObject;
 class nsIWidget;
@@ -176,9 +176,10 @@ public:
   static nsIntPoint GetScreenCoordsForWindow(nsINode *aNode);
 
   /**
-   * Return document shell for the given DOM node.
+   * Return document shell tree item for the given DOM node.
    */
-  static already_AddRefed<nsIDocShell> GetDocShellFor(nsINode *aNode);
+  static already_AddRefed<nsIDocShellTreeItem>
+    GetDocShellTreeItemFor(nsINode *aNode);
 
   /**
    * Return true if the given document is root document.

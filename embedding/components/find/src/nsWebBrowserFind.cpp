@@ -18,6 +18,7 @@
 #include "nsIURI.h"
 #include "nsIDocShell.h"
 #include "nsIEnumerator.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
