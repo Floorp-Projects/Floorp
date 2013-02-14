@@ -267,6 +267,14 @@ class SectionFinder(object):
                 syms.append((tmp[-1], tmp[0]))
         return syms
 
+def print_command(out, args):
+    print >>out, "Executing: " + " ".join(args)
+    for tmp in [f for f in args.tmp if os.path.isfile(f)]:
+        print >>out, tmp + ":"
+        with open(tmp) as file:
+            print >>out, "".join(["    " + l for l in file.readlines()])
+    out.flush()
+
 def main():
     parser = OptionParser()
     parser.add_option("--depend", dest="depend", metavar="FILE",
@@ -302,15 +310,15 @@ def main():
             args.makelist()
 
         if options.verbose:
-            print >>sys.stderr, "Executing: " + " ".join(args)
-            for tmp in [f for f in args.tmp if os.path.isfile(f)]:
-                print >>sys.stderr, tmp + ":"
-                with open(tmp) as file:
-                    print >>sys.stderr, "".join(["    " + l for l in file.readlines()])
-            sys.stderr.flush()
-        ret = subprocess.call(args)
-        if ret:
-            exit(ret)
+            print_command(sys.stderr, args)
+        proc = subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        (stdout, stderr) = proc.communicate()
+        if proc.returncode and not options.verbose:
+            print_command(sys.stderr, args)
+        sys.stderr.write(stdout)
+        sys.stderr.flush()
+        if proc.returncode:
+            exit(proc.returncode)
     if not options.depend:
         return
     ensureParentDir(options.depend)

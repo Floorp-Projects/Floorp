@@ -19,6 +19,7 @@
 #include "nsTArray.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/DashboardTypes.h"
+#include "mozilla/TimeStamp.h"
 
 class nsHostResolver;
 class nsHostRecord;
@@ -77,7 +78,7 @@ public:
                                 (though never for more than 60 seconds), but a use
                                 of that negative entry forces an asynchronous refresh. */
 
-    uint32_t     expiration; /* measured in minutes since epoch */
+    mozilla::TimeStamp expiration;
 
     bool HasResult() const { return addr_info || addr || negative; }
 
@@ -259,7 +260,7 @@ private:
     };
 
     uint32_t      mMaxCacheEntries;
-    uint32_t      mMaxCacheLifetime;
+    mozilla::TimeDuration mMaxCacheLifetime;
     uint32_t      mGracePeriod;
     Mutex         mLock;
     CondVar       mIdleThreadCV;

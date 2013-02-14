@@ -3366,6 +3366,9 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
             return;
         }
 
+        if (obj->isIndexed())
+            objType->setFlags(cx, OBJECT_FLAG_SPARSE_INDEXES);
+
         jsid *ids = cx->pod_calloc<jsid>(obj->slotSpan());
         if (!ids) {
             cx->compartment->types.setPendingNukeTypes(cx);
