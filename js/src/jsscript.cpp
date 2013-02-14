@@ -420,7 +420,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     JSContext *cx = xdr->cx();
     RootedScript script(cx);
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
-    jssrcnote *notes = NULL;
 
     /* XDR arguments and vars. */
     uint16_t nargs = 0, nvars = 0;
@@ -454,7 +453,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         nslots = (uint32_t)((script->staticLevel << 16) | script->nslots);
         natoms = script->natoms;
 
-        notes = script->notes();
         nsrcnotes = script->numNotes();
 
         if (script->hasConsts())
