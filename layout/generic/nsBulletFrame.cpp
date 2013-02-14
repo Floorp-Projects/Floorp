@@ -244,19 +244,18 @@ void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
     PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect);
 }
 
-NS_IMETHODIMP
+void
 nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
-    return NS_OK;
+    return;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsBulletFrame");
   
   aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplayBullet(aBuilder, this));
-  return NS_OK;
 }
 
 void

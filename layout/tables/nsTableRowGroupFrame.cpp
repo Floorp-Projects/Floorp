@@ -156,7 +156,7 @@ nsDisplayTableRowGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 // Handle the child-traversal part of DisplayGenericTablePart
-static nsresult
+static void
 DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
             const nsRect& aDirtyRect, const nsDisplayListSet& aLists)
 {
@@ -181,7 +181,7 @@ DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
       f->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
       kid = kid->GetNextSibling();
     }
-    return NS_OK;
+    return;
   }
   
   // No cursor. Traverse children the hard way and build a cursor while we're at it
@@ -193,7 +193,7 @@ DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
     if (cursor) {
       if (!cursor->AppendFrame(kid)) {
         f->ClearRowCursor();
-        return NS_ERROR_OUT_OF_MEMORY;
+        return;
       }
     }
   
@@ -202,11 +202,9 @@ DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
   if (cursor) {
     cursor->FinishBuildingCursor();
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
@@ -224,7 +222,6 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }  
   nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect,
                                         aLists, item, DisplayRows);
-  return NS_OK;
 }
 
 int
