@@ -111,7 +111,7 @@ function registerPlayPreview(mimeType, targetUrl) {
   };
 
   var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-  ph.registerPlayPreviewMimeType(mimeType);
+  ph.registerPlayPreviewMimeType(mimeType, true); // ignoring CTP rules
 
   var factory = new StreamConverterFactory();
   factory.register(OverlayStreamConverter);
