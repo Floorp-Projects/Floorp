@@ -9,6 +9,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
@@ -99,7 +100,7 @@ public class BrowserToolbarBackground extends GeckoLinearLayout
             return;
 
         StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(new int[] { R.attr.state_private }, mActivity.getResources().getDrawable(R.drawable.address_bar_bg_private));
+        stateList.addState(new int[] { R.attr.state_private }, new ColorDrawable(mActivity.getResources().getColor(R.color.background_private)));
         stateList.addState(new int[] {}, drawable);
 
         int[] padding =  new int[] { getPaddingLeft(),

@@ -318,6 +318,11 @@ class TypedRegisterSet
     bool has(T reg) const {
         return !!(bits_ & (1 << reg.code()));
     }
+    bool hasNextRegister(T reg) const {
+        if (reg.code() == sizeof(bits_)*8)
+            return false;
+        return !!(bits_ & (1 << (reg.code()+1)));
+    }
     void addUnchecked(T reg) {
         bits_ |= (1 << reg.code());
     }
@@ -344,9 +349,20 @@ class TypedRegisterSet
         JS_FLOOR_LOG2(ireg, bits_);
         return T::FromCode(ireg);
     }
+    T getFirst() const {
+        JS_ASSERT(!empty());
+        int ireg = js_bitscan_ctz32(bits_);
+        return T::FromCode(ireg);
+    }
     T takeAny() {
         JS_ASSERT(!empty());
         T reg = getAny();
+        take(reg);
+        return reg;
+    }
+    T takeFirst() {
+        JS_ASSERT(!empty());
+        T reg = getFirst();
         take(reg);
         return reg;
     }
@@ -533,6 +549,7 @@ class RegisterSet {
     }
 };
 
+// iterates backwards, that is, rn to r0
 template <typename T>
 class TypedRegisterIterator
 {
@@ -552,13 +569,48 @@ class TypedRegisterIterator
         regset_.takeAny();
         return old;
     }
+    TypedRegisterIterator<T>& operator ++() {
+        regset_.takeAny();
+        return *this;
+    }
     T operator *() const {
         return regset_.getAny();
     }
 };
 
+// iterates forwards, that is r0 to rn
+template <typename T>
+class TypedRegisterForwardIterator
+{
+    TypedRegisterSet<T> regset_;
+
+  public:
+    TypedRegisterForwardIterator(TypedRegisterSet<T> regset) : regset_(regset)
+    { }
+    TypedRegisterForwardIterator(const TypedRegisterForwardIterator &other) : regset_(other.regset_)
+    { }
+
+    bool more() const {
+        return !regset_.empty();
+    }
+    TypedRegisterForwardIterator<T> operator ++(int) {
+        TypedRegisterIterator<T> old(*this);
+        regset_.takeFirst();
+        return old;
+    }
+    TypedRegisterForwardIterator<T>& operator ++() {
+        regset_.takeFirst();
+        return *this;
+    }
+    T operator *() const {
+        return regset_.getFirst();
+    }
+};
+
 typedef TypedRegisterIterator<Register> GeneralRegisterIterator;
 typedef TypedRegisterIterator<FloatRegister> FloatRegisterIterator;
+typedef TypedRegisterForwardIterator<Register> GeneralRegisterForwardIterator;
+typedef TypedRegisterForwardIterator<FloatRegister> FloatRegisterForwardIterator;
 
 class AnyRegisterIterator
 {

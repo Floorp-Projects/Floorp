@@ -97,6 +97,42 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
        curr = curr->GetNext())
     curr->InstallMember(cx, targetClassObject);
 
+  // If we're using a separate XBL scope, make a safe copy of the target class
+  // object in the XBL scope that we can use for Xray lookups. We don't need
+  // the field accessors, so do this before installing them.
+  JSObject* globalObject = JS_GetGlobalForObject(cx, targetClassObject);
+  JSObject* scopeObject = xpc::GetXBLScope(cx, globalObject);
+  if (scopeObject != globalObject) {
+    JSAutoCompartment ac2(cx, scopeObject);
+
+    // Create the object. This is just a property holder, so it doesn't need
+    // any special JSClass.
+    JSObject *shadowProto = JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
+                                                       scopeObject);
+    NS_ENSURE_TRUE(shadowProto, NS_ERROR_OUT_OF_MEMORY);
+
+    // Define it as a property on the scopeObject, using the same name used on
+    // the content side.
+    bool ok = JS_DefineProperty(cx, scopeObject,
+                                js::GetObjectClass(targetClassObject)->name,
+                                JS::ObjectValue(*shadowProto), JS_PropertyStub,
+                                JS_StrictPropertyStub,
+                                JSPROP_PERMANENT | JSPROP_READONLY);
+    NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
+
+    // Copy all the properties from the content-visible prototype to the shadow
+    // object. This rewraps them appropriately, which should result in vanilla
+    // functions, since the properties on the content prototype were cross-
+    // compartment wrappers.
+    ok = JS_CopyPropertiesFrom(cx, shadowProto, targetClassObject);
+    NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
+
+    // Content shouldn't have any way to touch this object, but freeze it just
+    // to be safe.
+    ok = JS_FreezeObject(cx, shadowProto);
+    NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
+  }
+
   // Install all of our field accessors.
   for (nsXBLProtoImplField* curr = mFields;
        curr;

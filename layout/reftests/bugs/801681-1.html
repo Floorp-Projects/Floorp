@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <!--
+    please do NOT add a newline at the end of this file. The buggy behaviour
+    that it exhibits depends on the ">" of "</script>" being the last character
+    in the file.
+      -->
+  <meta charset="hz-gb-2312">
+  <style type="text/css">
+   p#p { color: red; }
+  </style>
+  <title>Bug 801681</title>
+ </head>
+ <body>
+  <p id="p">~ This line should be green</p>
+  <script>document.getElementById("p").style.color="green";</script>

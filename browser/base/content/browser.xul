@@ -265,7 +265,6 @@
            class="social-panel"
            type="arrow"
            hidden="true"
-           consumeoutsideclicks="false"
            noautofocus="true"/>
     <panel id="social-flyout-panel"
            class="social-panel"

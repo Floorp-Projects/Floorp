@@ -881,69 +881,49 @@ public:
     return elem;
   }
 
-  // This method searches for the least index of the greatest
-  // element less than or equal to |item|.  If |item| is inserted at
-  // this index, the array will remain sorted.  True is returned iff
-  // this index is also equal to |item|.  In this case, the returned
-  // index may point to the start of multiple copies of |item|.
+  // This method searches for the smallest index of an element that is strictly
+  // greater than |item|.  If |item| is inserted at this index, the array will
+  // remain sorted and |item| would come after all elements that are equal to
+  // it.  If |item| is greater than or equal to all elements in the array, the
+  // array length is returned.
+  //
+  // Note that consumers who want to know whether there are existing items equal
+  // to |item| in the array can just check that the return value here is > 0 and
+  // indexing into the previous slot gives something equal to |item|.
+  //
+  //
   // @param item   The item to search for.
   // @param comp   The Comparator used.
-  // @outparam idx The index of greatest element <= to |item|
-  // @return       True iff |item == array[*idx]|.
+  // @return        The index of greatest element <= to |item|
   // @precondition The array is sorted
   template<class Item, class Comparator>
-  bool
-  GreatestIndexLtEq(const Item& item,
-                    const Comparator& comp,
-                    index_type* idx) const {
-    // Nb: we could replace all the uses of "BinaryIndexOf" with this
-    // function, but BinaryIndexOf will be oh-so-slightly faster so
-    // it's not strictly desired to do.
-
-    // invariant: low <= [idx] < high
+  index_type
+  IndexOfFirstElementGt(const Item& item,
+                        const Comparator& comp) const {
+    // invariant: low <= [idx] <= high
     index_type low = 0, high = Length();
     while (high > low) {
       index_type mid = (high + low) >> 1;
-      if (comp.Equals(ElementAt(mid), item)) {
-        // we might have the array [..., 2, 4, 4, 4, 4, 4, 5, ...]
-        // and be searching for "4". it's arbitrary where mid ends
-        // up here, so we back it up to the first instance to maintain
-        // the "least index ..." we promised above.
-        do {
-          --mid;
-        } while (NoIndex != mid && comp.Equals(ElementAt(mid), item));
-        *idx = ++mid;
-        return true;
-      }
-      if (comp.LessThan(ElementAt(mid), item))
-        // invariant: low <= idx < high
+      // Comparators are not required to provide a LessThan(Item&, elem_type),
+      // so we can't do comp.LessThan(item, ElementAt(mid)).
+      if (comp.LessThan(ElementAt(mid), item) ||
+          comp.Equals(ElementAt(mid), item)) {
+        // item >= ElementAt(mid), so our desired index is at least mid+1.
         low = mid + 1;
-      else
-        // invariant: low <= idx < high
+      } else {
+        // item < ElementAt(mid).  Our desired index is therefore at most mid.
         high = mid;
+      }
     }
-    // low <= idx < high, so insert at high ("shifting" high up by
-    // 1) to maintain invariant.
-    // (or insert at low, since low==high; just a matter of taste here.)
-    *idx = high;
-    return false;
+    MOZ_ASSERT(high == low);
+    return low;
   }
 
-  // A variation on the GreatestIndexLtEq method defined above.
-  template<class Item, class Comparator>
-  bool
-  GreatestIndexLtEq(const Item& item,
-                    index_type& idx,
-                    const Comparator& comp) const {
-    return GreatestIndexLtEq(item, comp, &idx);
-  }
-
-  // A variation on the GreatestIndexLtEq method defined above.
+  // A variation on the IndexOfFirstElementGt method defined above.
   template<class Item>
-  bool
-  GreatestIndexLtEq(const Item& item,
-                    index_type& idx) const {
-    return GreatestIndexLtEq(item, nsDefaultComparator<elem_type, Item>(), &idx);
+  index_type
+  IndexOfFirstElementGt(const Item& item) const {
+    return IndexOfFirstElementGt(item, nsDefaultComparator<elem_type, Item>());
   }
 
   // Inserts |item| at such an index to guarantee that if the array
@@ -951,8 +931,7 @@ public:
   // insertion.
   template<class Item, class Comparator>
   elem_type *InsertElementSorted(const Item& item, const Comparator& comp) {
-    index_type index;
-    GreatestIndexLtEq(item, comp, &index);
+    index_type index = IndexOfFirstElementGt(item, comp);
     return InsertElementAt(index, item);
   }
 
@@ -1071,19 +1050,20 @@ public:
     return RemoveElement(item, nsDefaultComparator<elem_type, Item>());
   }
 
-  // This helper function combines GreatestIndexLtEq with
-  // RemoveElementAt to "search and destroy" the first element that
+  // This helper function combines IndexOfFirstElementGt with
+  // RemoveElementAt to "search and destroy" the last element that
   // is equal to the given element.
   // @param item  The item to search for.
   // @param comp  The Comparator used to determine element equality.
   // @return true if the element was found
   template<class Item, class Comparator>
   bool RemoveElementSorted(const Item& item, const Comparator& comp) {
-    index_type index;
-    bool found = GreatestIndexLtEq(item, comp, &index);
-    if (found)
-      RemoveElementAt(index);
-    return found;
+    index_type index = IndexOfFirstElementGt(item, comp);
+    if (index > 0 && comp.Equals(ElementAt(index - 1), item)) {
+      RemoveElementAt(index - 1);
+      return true;
+    }
+    return false;
   }
 
   // A variation on the RemoveElementSorted method defined above.

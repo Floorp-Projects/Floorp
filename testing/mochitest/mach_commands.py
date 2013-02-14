@@ -12,8 +12,6 @@ from mozbuild.base import (
     MozbuildObject,
 )
 
-from moztesting.util import parse_test_path
-
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -93,10 +91,9 @@ class MochitestRunner(MozbuildObject):
             raise Exception('None or unrecognized mochitest suite type.')
 
         if test_file:
-            path = parse_test_path(test_file, self.topsrcdir)['normalized']
-            if not os.path.exists(path):
-                raise Exception('No manifest file was found at %s.' % path)
-            env = {'TEST_PATH': path}
+            if not os.path.exists(test_file):
+                raise Exception('No manifest file was found at %s.' % test_file)
+            env = {'TEST_PATH': test_file}
         else:
             env = {}
 

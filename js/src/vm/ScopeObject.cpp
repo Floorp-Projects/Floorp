@@ -1895,9 +1895,15 @@ DebugScopes::onCompartmentLeaveDebugMode(JSCompartment *c)
 {
     DebugScopes *scopes = c->debugScopes;
     if (scopes) {
-        scopes->proxiedScopes.clear();
-        scopes->missingScopes.clear();
-        scopes->liveScopes.clear();
+        if (c->rt->isHeapBusy()) {
+            scopes->proxiedScopes.clearWithoutCallingDestructors();
+            scopes->missingScopes.clearWithoutCallingDestructors();
+            scopes->liveScopes.clearWithoutCallingDestructors();
+        } else {
+            scopes->proxiedScopes.clear();
+            scopes->missingScopes.clear();
+            scopes->liveScopes.clear();
+        }
     }
 }
 
@@ -2118,7 +2124,7 @@ GetDebugScope(JSContext *cx, const ScopeIter &si)
 }
 
 JSObject *
-js::GetDebugScopeForFunction(JSContext *cx, JSFunction *fun)
+js::GetDebugScopeForFunction(JSContext *cx, HandleFunction fun)
 {
     assertSameCompartment(cx, fun);
     JS_ASSERT(cx->compartment->debugMode());

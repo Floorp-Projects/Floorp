@@ -26,9 +26,51 @@
      // Import components after having initialized |exports.OS|, to ensure
      // that everybody uses the same definition of |OS|.
      if (typeof Components != "undefined") {
-       Components.utils.import("resource://gre/modules/ctypes.jsm");
+       const Cu = Components.utils;
+       Cu.import("resource://gre/modules/ctypes.jsm");
        Components.classes["@mozilla.org/net/osfileconstantsservice;1"].
          getService(Components.interfaces.nsIOSFileConstantsService).init();
+
+       if (typeof exports.OS.Shared.DEBUG !== "undefined") {
+         return; // Avoid reading and attaching an observer more than once.
+       }
+
+       Cu.import("resource://gre/modules/Services.jsm");
+
+       const PREF_OSFILE_LOG = "toolkit.osfile.log";
+
+       /**
+        * Safely read a PREF_OSFILE_LOG preference.
+        * Returns a value read or, in case of an error, oldPref or false.
+        *
+        * @param bool oldPref
+        *        An optional value that the DEBUG flag was set to previously.
+        */
+       let readDebugPref = function readDebugPref(oldPref) {
+         let pref;
+         try {
+           pref = Services.prefs.getBoolPref(PREF_OSFILE_LOG);
+         } catch (x) {
+           // In case of an error when reading a pref keep it as is.
+           pref = oldPref;
+         }
+         // If neither pref nor oldPref were set, default it to false.
+         return pref || false;
+       };
+
+       /**
+        * A variable controlling if osfile logs should be printed.
+        */
+       exports.OS.Shared.DEBUG = readDebugPref(exports.OS.Shared.DEBUG);
+
+       /**
+        * Listen to PREF_OSFILE_LOG changes and update the shared DEBUG flag
+        * appropriately.
+        */
+       Services.prefs.addObserver(PREF_OSFILE_LOG,
+         function prefObserver(aSubject, aTopic, aData) {
+           exports.OS.Shared.DEBUG = readDebugPref(exports.OS.Shared.DEBUG);
+         }, false);
      }
 
      // Define a lazy getter for a property
@@ -47,10 +89,6 @@
      };
      exports.OS.Shared.defineLazyGetter = defineLazyGetter;
 
-     /**
-      * A variable controlling whether we should printout logs.
-      */
-     exports.OS.Shared.DEBUG = false;
      let LOG;
      if (typeof console != "undefined" && console.log) {
        LOG = console.log.bind(console, "OS");

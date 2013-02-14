@@ -877,9 +877,6 @@ MarionetteDriverActor.prototype = {
     marionette.command_id = this.command_id;
 
     function chromeAsyncReturnFunc(value, status) {
-      logger.info("chromeAsyncReturn");
-      logger.info("that.command_id=" + that.command_id);
-      logger.info("marionette.command_id=" + marionette.command_id);
       if (that._emu_cbs && Object.keys(that._emu_cbs).length) {
         value = "Emulator callback still pending when finish() called";
         status = 500;
@@ -1905,7 +1902,6 @@ MarionetteDriverActor.prototype = {
       return;
     }
     try {
-      logger.info("calling callback");
       cb(message.result);
     }
     catch(e) {

@@ -1383,6 +1383,37 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32
     ma_vstr(src, Operand(ScratchRegister, 0), cc);
 }
 
+
+int32_t
+MacroAssemblerARM::transferMultipleByRuns(FloatRegisterSet set, LoadStore ls,
+                                          Register rm, DTMMode mode)
+{
+    int32_t delta;
+    if (mode == IA) {
+        delta = sizeof(double);
+    } else if (mode == DB) {
+        delta = -sizeof(double);
+    } else {
+        JS_NOT_REACHED("Invalid data transfer addressing mode");
+    }
+
+    int32_t offset = 0;
+    FloatRegisterForwardIterator iter(set);
+    while (iter.more()) {
+        startFloatTransferM(ls, rm, mode, WriteBack);
+        int32_t reg = (*iter).code_;
+        do {
+            offset += delta;
+            transferFloatReg(*iter);
+        } while ((++iter).more() && (*iter).code_ == ++reg);
+        finishFloatTransfer();
+    }
+
+    JS_ASSERT(offset == set.size() * sizeof(double) * (mode == DB ? -1 : 1));
+    ma_sub(Imm32(offset), rm);
+    return offset;
+}
+
 bool
 MacroAssemblerARMCompat::buildFakeExitFrame(const Register &scratch, uint32_t *offset)
 {
@@ -2490,41 +2521,51 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, Operand dst) {
 }
 
 void
-MacroAssemblerARMCompat::storeValue(ValueOperand val, Register base, Register index, int32_t shift)
+MacroAssemblerARMCompat::storeValue(ValueOperand val, const BaseIndex &dest)
 {
-    if (isValueDTRDCandidate(val)) {
+    if (isValueDTRDCandidate(val) && (abs(dest.offset) <= 255)) {
         Register tmpIdx;
-        if (shift == 0) {
-            tmpIdx = index;
-        } else if (shift < 0) {
-            ma_asr(Imm32(-shift), index, ScratchRegister);
-            tmpIdx = ScratchRegister;
+        if (dest.offset == 0) {
+            if (dest.scale == TimesOne) {
+                tmpIdx = dest.index;
+            } else {
+                ma_lsl(Imm32(dest.scale), dest.index, ScratchRegister);
+                tmpIdx = ScratchRegister;
+            }
+            ma_strd(val.payloadReg(), val.typeReg(), EDtrAddr(dest.base, EDtrOffReg(tmpIdx)));
         } else {
-            ma_lsl(Imm32(shift), index, ScratchRegister);
-            tmpIdx = ScratchRegister;
+            ma_alu(dest.base, lsl(dest.index, dest.scale), ScratchRegister, op_add);
+            ma_strd(val.payloadReg(), val.typeReg(),
+                    EDtrAddr(ScratchRegister, EDtrOffImm(dest.offset)));
         }
-        ma_strd(val.payloadReg(), val.typeReg(), EDtrAddr(base, EDtrOffReg(tmpIdx)));
     } else {
-        // The ideal case is the base is dead so the sequence:
-        // str val.payloadReg(), [base, index LSL shift]!
-        // str val.typeReg(), [base, #4]
-        // only clobbers dead registers
-        // Sadly, this information is not available, so the scratch register is necessary.
-        ma_alu(base, lsl(index, shift), ScratchRegister, op_add);
-
-        // This case is handled by a simpler function.
-        storeValue(val, Address(ScratchRegister, 0));
+        ma_alu(dest.base, lsl(dest.index, dest.scale), ScratchRegister, op_add);
+        storeValue(val, Address(ScratchRegister, dest.offset));
     }
 }
 
 void
-MacroAssemblerARMCompat::loadValue(Register base, Register index, ValueOperand val, Imm32 off)
+MacroAssemblerARMCompat::loadValue(const BaseIndex &addr, ValueOperand val)
 {
-
-    ma_alu(base, lsl(index, TimesEight), ScratchRegister, op_add);
-
-    // This case is handled by a simpler function.
-    loadValue(Address(ScratchRegister, off.value), val);
+    if (isValueDTRDCandidate(val) && (abs(addr.offset) <= 255)) {
+        Register tmpIdx;
+        if (addr.offset == 0) {
+            if (addr.scale == TimesOne) {
+                tmpIdx = addr.index;
+            } else {
+                ma_lsl(Imm32(addr.scale), addr.index, ScratchRegister);
+                tmpIdx = ScratchRegister;
+            }
+            ma_ldrd(EDtrAddr(addr.base, EDtrOffReg(tmpIdx)), val.payloadReg(), val.typeReg());
+        } else {
+            ma_alu(addr.base, lsl(addr.index, addr.scale), ScratchRegister, op_add);
+            ma_ldrd(EDtrAddr(ScratchRegister, EDtrOffImm(addr.offset)),
+                    val.payloadReg(), val.typeReg());
+        }
+    } else {
+        ma_alu(addr.base, lsl(addr.index, addr.scale), ScratchRegister, op_add);
+        loadValue(Address(ScratchRegister, addr.offset), val);
+    }
 }
 
 void

@@ -330,6 +330,14 @@ class MacroAssemblerARM : public Assembler
     void ma_callIonHalfPush(const Register reg);
 
     void ma_call(void *dest);
+
+    // Float registers can only be loaded/stored in continuous runs
+    // when using vstm/vldm.
+    // This function breaks set into continuous runs and loads/stores
+    // them at [rm]. rm will be modified, but returned to its initial value.
+    // Returns the offset from [dm] for the logical next load/store.
+    int32_t transferMultipleByRuns(FloatRegisterSet set, LoadStore ls,
+                                   Register rm, DTMMode mode);
 };
 
 class MacroAssemblerARMCompat : public MacroAssemblerARM
@@ -782,7 +790,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void moveValue(const Value &val, const ValueOperand &dest);
 
     void storeValue(ValueOperand val, Operand dst);
-    void storeValue(ValueOperand val, Register base, Register index, int32_t shift = defaultShift);
+    void storeValue(ValueOperand val, const BaseIndex &dest);
+    void storeValue(JSValueType type, Register reg, BaseIndex dest) {
+        // Harder cases not handled yet.
+        JS_ASSERT(dest.offset == 0);
+        ma_alu(dest.base, lsl(dest.index, dest.scale), ScratchRegister, op_add);
+        storeValue(type, reg, Address(ScratchRegister, 0));
+    }
     void storeValue(ValueOperand val, const Address &dest) {
         storeValue(val, Operand(dest));
     }
@@ -790,17 +804,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(ImmTag(JSVAL_TYPE_TO_TAG(type)), secondScratchReg_);
         ma_str(secondScratchReg_, Address(dest.base, dest.offset + 4));
         ma_str(reg, dest);
-    }
-    void storeValue(JSValueType type, Register reg, BaseIndex dest) {
-        // Harder cases not handled yet.
-        JS_ASSERT(dest.offset == 0);
-        ma_alu(dest.base, lsl(dest.index, dest.scale), ScratchRegister, op_add);
-        storeValue(type, reg, Address(ScratchRegister, 0));
-    }
-    void storeValue(ValueOperand val, const BaseIndex &dest) {
-        // Harder cases not handled yet.
-        JS_ASSERT(dest.offset == 0);
-        storeValue(val, dest.base, dest.index);
     }
     void storeValue(const Value &val, Address dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
@@ -823,10 +826,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadValue(Operand dest, ValueOperand val) {
         loadValue(dest.toAddress(), val);
     }
-    void loadValue(Register base, Register index, ValueOperand val, Imm32 of);
-    void loadValue(const BaseIndex &addr, ValueOperand val) {
-        loadValue(addr.base, addr.index, val, Imm32(addr.offset));
-    }
+    void loadValue(const BaseIndex &addr, ValueOperand val);
     void tagValue(JSValueType type, Register payload, ValueOperand dest);
 
     void pushValue(ValueOperand val);

@@ -273,11 +273,7 @@ IsNonEmptyTextFrame(nsIFrame* aFrame)
     return false;
   }
 
-  nsIContent* content = textFrame->GetContent();
-  NS_ASSERTION(content && content->IsNodeOfType(nsINode::eTEXT),
-               "unexpected content type for nsTextFrame");
-
-  return static_cast<nsTextNode*>(content)->TextLength() != 0;
+  return textFrame->GetContentLength() != 0;
 }
 
 /**
@@ -345,6 +341,13 @@ GetBaselinePosition(nsTextFrame* aFrame,
     case NS_STYLE_DOMINANT_BASELINE_HANGING:
     case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
       return 0;
+    case NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT:
+    case NS_STYLE_DOMINANT_BASELINE_NO_CHANGE:
+    case NS_STYLE_DOMINANT_BASELINE_RESET_SIZE:
+      // These three should not simply map to 'baseline', but we don't
+      // support the complex baseline model that SVG 1.1 has and which
+      // css3-linebox now defines.
+      // (fall through)
     case NS_STYLE_DOMINANT_BASELINE_AUTO:
     case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
       return aFrame->GetBaseline();
@@ -360,6 +363,7 @@ GetBaselinePosition(nsTextFrame* aFrame,
       return metrics.mAscent + metrics.mDescent;
     case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
     case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
+    case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
       return (metrics.mAscent + metrics.mDescent) / 2.0;
   }
 
@@ -1432,6 +1436,9 @@ TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame)
  *   * what nsInlineFrame corresponding to a <textPath> element it is a
  *     descendant of
  *   * what computed dominant-baseline value applies to it
+ *
+ * Note that any text frames that are empty -- whose ContentLength() is 0 --
+ * will be skipped over.
  */
 class TextFrameIterator
 {
@@ -4416,9 +4423,9 @@ nsSVGTextFrame2::DoGlyphPositioning()
   // Get the x, y, dx, dy, rotate values for the subtree.
   nsTArray<gfxPoint> deltas;
   if (!ResolvePositions(deltas)) {
-    // We shouldn't reach here because DetermineCharPositions should have been
-    // empty if we fail to resolve any positions.
-    NS_NOTREACHED("unexpected result from ResolvePositions");
+    // If ResolvePositions returned false, it means that there were some
+    // characters in the DOM but none of them are displayed.  Clear out
+    // mPositions so that we don't attempt to do any painting later.
     mPositions.Clear();
     return;
   }

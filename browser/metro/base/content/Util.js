@@ -281,63 +281,26 @@ let Util = {
    * Local system utilities
    */
 
-  createShortcut: function Util_createShortcut(aTitle, aURL, aIconURL, aType) {
-    // The background images are 72px, but Android will resize as needed.
-    // Bigger is better than too small.
-    const kIconSize = 72;
-    const kOverlaySize = 32;
-    const kOffset = 20;
-
-    // We have to fallback to something
-    aTitle = aTitle || aURL;
-
-    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    canvas.setAttribute("style", "display: none");
-
-    function _createShortcut() {
-      let icon = canvas.toDataURL("image/png", "");
-      canvas = null;
-      try {
-        let shell = Cc["@mozilla.org/browser/shell-service;1"].createInstance(Ci.nsIShellService);
-        shell.createShortcut(aTitle, aURL, icon, aType);
-      } catch(e) {
-        Cu.reportError(e);
-      }
+  copyImageToClipboard: function Util_copyImageToClipboard(aImageLoadingContent) {
+    let image = aImageLoadingContent.QueryInterface(Ci.nsIImageLoadingContent);
+    if (!image) {
+      Util.dumpLn("copyImageToClipboard error: image is not an nsIImageLoadingContent");
+      return;
     }
-
-    // Load the main background image first
-    let image = new Image();
-    image.onload = function() {
-      canvas.width = canvas.height = kIconSize;
-      let ctx = canvas.getContext("2d");
-      ctx.drawImage(image, 0, 0, kIconSize, kIconSize);
-
-      // If we have a favicon, lets draw it next
-      if (aIconURL) {
-        let favicon = new Image();
-        favicon.onload = function() {
-          // Center the favicon and overlay it on the background
-          ctx.drawImage(favicon, kOffset, kOffset, kOverlaySize, kOverlaySize);
-          _createShortcut();
-        }
-
-        favicon.onerror = function() {
-          Cu.reportError("CreateShortcut: favicon image load error");
-        }
-
-        favicon.src = aIconURL;
-      } else {
-        _createShortcut();
-      }
+    try {
+      let xferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+      xferable.init(null);
+      let imgRequest = aImageLoadingContent.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+      let mimeType = imgRequest.mimeType;
+      let imgContainer = imgRequest.image;
+      let imgPtr = Cc["@mozilla.org/supports-interface-pointer;1"].createInstance(Ci.nsISupportsInterfacePointer);
+      imgPtr.data = imgContainer;
+      xferable.setTransferData(mimeType, imgPtr, null);
+      let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+      clip.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
+    } catch (e) {
+      Util.dumpLn(e.message);
     }
-
-    image.onerror = function() {
-      Cu.reportError("CreateShortcut: background image load error");
-    }
-
-    // Pick the right background
-    image.src = aIconURL ? "chrome://browser/skin/images/homescreen-blank-hdpi.png"
-                         : "chrome://browser/skin/images/homescreen-default-hdpi.png";
   },
 };
 

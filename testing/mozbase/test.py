@@ -60,7 +60,8 @@ def main(args=sys.argv[1:]):
     # run the tests
     suite = unittest.TestSuite(unittestlist)
     runner = unittest.TextTestRunner(verbosity=2) # default=1 does not show success of unittests
-    results = TestResultCollection.from_unittest_results(runner.run(suite))
+    unittest_results = runner.run(suite)
+    results = TestResultCollection.from_unittest_results(None, unittest_results)
 
     # exit according to results
     sys.exit(1 if results.num_failures else 0)

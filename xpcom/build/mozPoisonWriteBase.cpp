@@ -41,7 +41,7 @@ std::vector<int>& getDebugFDs() {
   return *DebugFDs;
 }
 
-void PoisonWriteBase()
+void InitWritePoisoning()
 {
   nsCOMPtr<nsIFile> mozFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));

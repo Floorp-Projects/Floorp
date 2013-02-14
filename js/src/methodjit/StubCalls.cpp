@@ -201,7 +201,7 @@ stubs::ImplicitThis(VMFrame &f, PropertyName *name_)
     if (!LookupNameWithGlobalDefault(f.cx, name, scopeObj, &obj))
         THROW();
 
-    if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))
+    if (!ComputeImplicitThis(f.cx, obj, MutableHandleValue::fromMarkedLocation(&f.regs.sp[0])))
         THROW();
 }
 
@@ -1000,12 +1000,13 @@ stubs::InitElem(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::RegExp(VMFrame &f, JSObject *regex)
+stubs::RegExp(VMFrame &f, JSObject *regexArg)
 {
     /*
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc.
      */
+    RootedObject regex(f.cx, regexArg);
     RootedObject proto(f.cx, f.fp()->global().getOrCreateRegExpPrototype(f.cx));
     if (!proto)
         THROW();
