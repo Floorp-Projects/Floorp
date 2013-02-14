@@ -710,7 +710,7 @@ pref("dom.min_background_timeout_value", 1000);
 pref("dom.experimental_bindings", true);
 
 // Run content XBL in a separate scope.
-pref("dom.xbl_scopes", false);
+pref("dom.xbl_scopes", true);
 
 // Don't use new input types
 pref("dom.experimental_forms", false);
