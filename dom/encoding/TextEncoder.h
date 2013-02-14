@@ -12,11 +12,11 @@ namespace mozilla {
 namespace dom {
 
 class TextEncoder MOZ_FINAL
-  : public nsISupports, public nsWrapperCache, public TextEncoderBase
+  : public nsWrapperCache, public TextEncoderBase
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextEncoder)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TextEncoder)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(TextEncoder)
 
   // The WebIDL constructor.
   static already_AddRefed<TextEncoder>
