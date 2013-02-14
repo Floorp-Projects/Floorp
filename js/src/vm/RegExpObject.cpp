@@ -711,7 +711,10 @@ RegExpCompartment::get(JSContext *cx, HandleAtom atom, JSString *opt, RegExpGuar
 size_t
 RegExpCompartment::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
-    return map_.sizeOfExcludingThis(mallocSizeOf);
+    size_t n = 0;
+    n += map_.sizeOfExcludingThis(mallocSizeOf);
+    n += inUse_.sizeOfExcludingThis(mallocSizeOf);
+    return n;
 }
 
 /* Functions */
