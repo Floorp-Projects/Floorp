@@ -298,12 +298,11 @@ function resetValues() {
  * Returns a content sandbox that can be used by the execute_foo functions.
  */
 function createExecuteContentSandbox(aWindow, timeout) {
-  let sandbox = new Cu.Sandbox(aWindow);
+  let sandbox = new Cu.Sandbox(aWindow, {sandboxPrototype: aWindow});
   sandbox.global = sandbox;
   sandbox.window = aWindow;
   sandbox.document = sandbox.window.document;
   sandbox.navigator = sandbox.window.navigator;
-  sandbox.__proto__ = sandbox.window;
   sandbox.testUtils = utils;
 
   let marionette = new Marionette(this, aWindow, "content",
