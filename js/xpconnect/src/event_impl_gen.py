@@ -5,34 +5,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys, os, xpidl
-
-# --makedepend-output support.
-make_dependencies = []
-make_targets = []
+import sys, os, xpidl, makeutils
 
 def strip_end(text, suffix):
     if not text.endswith(suffix):
         return text
     return text[:-len(suffix)]
-
-# Copied from dombindingsgen.py
-def makeQuote(filename):
-    return filename.replace(' ', '\\ ')  # enjoy!
-
-def writeMakeDependOutput(filename):
-    print "Creating makedepend file", filename
-    f = open(filename, 'w')
-    try:
-        if len(make_targets) > 0:
-            f.write("%s:" % makeQuote(make_targets[0]))
-            for filename in make_dependencies:
-                f.write(' \\\n\t\t%s' % makeQuote(filename))
-            f.write('\n\n')
-            for filename in make_targets[1:]:
-                f.write('%s: %s\n' % (makeQuote(filename), makeQuote(make_targets[0])))
-    finally:
-        f.close()
 
 def findIDL(includePath, interfaceFileName):
     for d in includePath:
@@ -47,8 +25,8 @@ def findIDL(includePath, interfaceFileName):
 
 def loadIDL(parser, includePath, filename):
     idlFile = findIDL(includePath, filename)
-    if not idlFile in make_dependencies:
-        make_dependencies.append(idlFile)
+    if not idlFile in makeutils.dependencies:
+        makeutils.dependencies.append(idlFile)
     idl = p.parse(open(idlFile).read(), idlFile)
     idl.resolve(includePath, p)
     return idl
@@ -56,8 +34,8 @@ def loadIDL(parser, includePath, filename):
 def loadEventIDL(parser, includePath, eventname):
     eventidl = ("nsIDOM%s.idl" % eventname)
     idlFile = findIDL(includePath, eventidl)
-    if not idlFile in make_dependencies:
-        make_dependencies.append(idlFile)
+    if not idlFile in makeutils.dependencies:
+        makeutils.dependencies.append(idlFile)
     idl = p.parse(open(idlFile).read(), idlFile)
     idl.resolve(includePath, p)
     return idl
@@ -365,12 +343,12 @@ if __name__ == '__main__':
     conf = readConfigFile(filename)
 
     if options.stub_output is not None:
-        make_targets.append(options.stub_output)
+        makeutils.targets.append(options.stub_output)
         outfd = open(options.stub_output, 'w')
         print_cpp_file(outfd, conf)
         outfd.close()
         if options.makedepend_output is not None:
-            writeMakeDependOutput(options.makedepend_output)
+            makeutils.writeMakeDependOutput(options.makedepend_output)
     if options.header_output is not None:
         outfd = open(options.header_output, 'w')
         print_header_file(outfd, conf)
