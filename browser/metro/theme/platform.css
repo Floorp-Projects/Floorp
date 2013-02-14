@@ -1,0 +1,522 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Global Skin ------------------------------------------------------------- */
+
+@import url(chrome://global/skin/);
+
+%filter substitution
+%include defines.inc
+
+/* Typography & General Styling -------------------------------------------- */
+
+:root {
+  font-family: "Segoe UI", sans-serif !important;
+  font-size: @font_normal@;
+}
+
+button,
+textbox,
+menulist {
+  -moz-appearance: none;
+  min-width: @field_sizing@; /* button size */
+  min-height: @field_sizing@; /* button size */
+  margin: @metro_spacing_small@;
+  padding: @metro_spacing_xsmall@ @metro_spacing_small@;
+
+  font-size: @metro_font_normal@;
+  font-weight: normal !important;
+
+  color: @field_foreground_color@;
+  background: @field_background_color@;
+  border: @metro_border_thick@ solid @field_foreground_color@ !important;
+  border-radius: 0;
+}
+
+button[disabled="true"],
+textbox[disabled="true"],
+menulist[disabled="true"] {
+  border-color: @field_disabled_foreground_color@ !important;
+  color: @field_disabled_foreground_color@;
+}
+
+button:not([disabled]):hover:active,
+button:not([disabled])[checked="true"],
+menulist:not([disabled]):hover:active {
+  color: @field_background_color@;
+  background: @field_foreground_color@;
+}
+
+/* Textbox ----------------------------------------------------------------- */
+
+textbox[isempty="true"] {
+  color: @field_mid_foreground_color@;
+}
+
+.link {
+  color: blue;
+  text-decoration: underline;
+}
+
+spinbuttons {
+  border: none;
+}
+
+.spinbuttons-box {
+  border: none;
+  -moz-box-orient: horizontal;
+  -moz-box-direction: reverse;
+}
+
+.spinbuttons-down,
+.spinbuttons-up {
+  border: none !important;
+}
+
+.spinbuttons-down {
+  list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
+}
+
+.spinbuttons-up {
+  list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
+}
+
+/* Menu List --------------------------------------------------------------- */
+
+menulist {
+  -moz-user-focus: ignore;
+  padding: @metro_spacing_xsmall@ 0;
+  -moz-padding-start: @metro_spacing_small@;
+  border-color: @field_disabled_foreground_color@ !important;
+}
+
+/* Popup Menus ------------------------------------------------------------- */
+
+.menu-container {
+  position: absolute;
+  opacity: 0;
+  transition: opacity ease-out 0.2s;
+}
+
+.menu-container[showingfrom="below"] {
+  transform: translateY(@metro_spacing_normal@);
+}
+
+.menu-container[showingfrom="above"] {
+  transform: translateY(-@metro_spacing_normal@);
+}
+
+.menu-container[showing="true"] {
+  opacity: 1;
+  transform: none;
+  transition: all ease-out 0.2s;
+}
+
+.menu-popup > richlistbox {
+  padding: 3px 0;
+  border: #000 solid @metro_border_thick@;
+  -moz-appearance: none;
+  display: -moz-box;
+}
+
+.menu-popup > richlistbox > scrollbox {
+  width: 100%;
+}
+
+.menu-popup richlistitem {
+  width: 100%;
+  min-height: @touch_button_small@;
+  min-width: @touch_action_minwidth@; /* keep the button from being too narrow */
+  border: 0 none;
+  -moz-box-align: center;
+}
+
+.menu-popup richlistitem:not([disabled]):hover {
+  background-color: #dedad0;
+  color: black;
+}
+
+.menu-popup richlistitem:not([disabled]):active {
+  background-color: @selected_color@ !important;
+  color: black;
+}
+
+.menu-popup > richlistbox[left-hand] > richlistitem {
+  padding-left: 50px;
+}
+
+.menu-popup > richlistbox[right-hand] > richlistitem {
+  padding-right: 50px;
+}
+
+/* Toolbar Button --------------------------------------------------------- */
+
+toolbarbutton {
+  min-width: @metro_spacing_large@; /* primary button size */
+  min-height: @metro_spacing_large@; /* primary button size */
+  -moz-appearance: none;
+  margin: 0;
+  padding: @metro_spacing_xsmall@;
+}
+
+toolbarbutton:not(.show-text) .toolbarbutton-text {
+  display: none;
+}
+
+.toolbarbutton-icon[label]:not([label=""]),
+.toolbarbutton-icon[type="menu"] {
+  -moz-margin-end: @metro_spacing_xsmall@;
+}
+
+toolbarbutton:not(.show-text) .toolbarbutton-icon,
+toolbarbutton:not([image]) .toolbarbutton-icon,
+toolbarbutton[image=''] .toolbarbutton-icon {
+  -moz-margin-end: 0;
+}
+
+toolbarbutton:hover,
+toolbarbutton:hover:active,
+toolbarbutton[open="true"] {
+  border-color: transparent;
+}
+
+/* Toggleswitch ------------------------------------------------------------ */
+
+checkbox.toggleswitch {
+  margin: @metro_spacing_small@;
+  min-height: @metro_spacing_normal@;
+}
+
+checkbox.toggleswitch hbox {
+  -moz-box-align: center;
+}
+
+checkbox.toggleswitch:not([checked]) .onlabel,
+checkbox.toggleswitch[checked] .offlabel {
+  display: none;
+}
+
+checkbox.toggleswitch radiogroup {
+  border: @metro_border_thick@ solid @field_disabled_foreground_color@;
+  -moz-box-orient: horizontal;
+}
+
+checkbox.toggleswitch radio {
+  -moz-appearance: none;
+  margin: 0;
+  border: 0 none;
+  border-radius: 0;
+  background: 0 none;
+  padding: 0;
+  min-height: @metro_spacing_normal@;
+  height: @metro_spacing_normal@;
+}
+
+checkbox.toggleswitch[checked] radio.checkbox-radio-on,
+checkbox.toggleswitch:not([checked]) radio.checkbox-radio-off {
+  width: @metro_spacing_normal@;
+  min-width: @metro_spacing_normal@;
+  background: #000;
+  margin: -@metro_border_thick@;
+}
+
+checkbox.toggleswitch[checked] radio.checkbox-radio-off,
+checkbox.toggleswitch:not([checked]) radio.checkbox-radio-on {
+  width: @metro_spacing_xxxnormal@;
+  min-width: @metro_spacing_xxxnormal@;
+  margin: @metro_border_thin@;
+}
+
+checkbox.toggleswitch:not([checked]) radio.checkbox-radio-on {
+  background: @field_disabled_foreground_color@;
+}
+
+checkbox.toggleswitch[checked] radio.checkbox-radio-off {
+  background: @selected_color@;
+}
+
+checkbox.toggleswitch[checked] radio:last-child {
+  -moz-margin-start: 0;
+}
+
+checkbox.toggleswitch[checked] radio:first-child {
+  -moz-margin-end: 0;
+}
+
+/* Color Picker ------------------------------------------------------------ */
+
+colorpicker > panel {
+  background-color: #767973;
+}
+
+colorpicker > vbox {
+  background-color: #767973;
+}
+
+/* Rich List Box ---------------------------------------------------------- */
+
+richlistbox {
+  -moz-user-focus: ignore;
+  margin: 0;
+}
+
+richlistitem {
+  -moz-user-focus: ignore;
+  min-height: @metro_spacing_normal@; /* row size */
+  padding: @metro_spacing_small@;
+}
+
+richlistitem label.normal,
+richlistitem description.normal,
+richlistitem label.normal-black,
+richlistitem description.normal-black,
+richlistitem label.normal-bold,
+richlistitem description.normal-bold{
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+richlistitem label.normal,
+richlistitem description.normal {
+  color: gray;
+}
+
+richlistitem label.normal-bold,
+richlistitem description.normal-bold {
+  font-weight: bold;
+}
+
+richlistitem[selected="true"] {
+  color: black;
+  background-color: white;
+}
+
+richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) {
+  background-color: #8db8d8;
+}
+
+richlistitem.section-header,
+richlistitem[selected="true"].section-header {
+  font-weight: bold;
+  color: #000;
+  background-color: lightgray;
+}
+
+richlistitem[selected="true"] .hide-on-select,
+richlistitem .show-on-select {
+  visibility: collapse;
+}
+
+richlistitem[selected="true"] .show-on-select,
+richlistitem .hide-on-select {
+  visibility: visible;
+}
+
+richlistitem[typeName="message"] {
+  border-bottom: 0;
+}
+
+/* Rich Grid ---------------------------------------------------------------- */
+
+richgrid {
+  display: -moz-box;
+  -moz-box-sizing: border-box;
+}
+
+richgrid .meta-grid {
+  display: block;
+}
+
+richgriditem {
+  padding: @metro_spacing_small@;
+}
+
+richgriditem .richgrid-item-content {
+  border: @metro_border_thin@ solid @tile_border_color@;
+  box-shadow: 0 0 @metro_spacing_snormal@ rgba(0, 0, 0, 0.1);
+  -moz-box-sizing: border-box;
+  padding: 10px 8px 6px 8px;
+}
+
+richgriditem:not([customColorPresent]) .richgrid-item-content {
+  background: #fff;
+}
+
+richgriditem[selected="true"] .richgrid-item-content {
+  border: @metro_border_xthick@ solid @selected_color@;
+  padding: @metro_spacing_xxsmall@;
+}
+
+richgriditem .richgrid-icon-container {
+  padding-bottom: 2px;
+}
+
+richgriditem .richgrid-icon-box {
+  padding: 4px;
+  background: #fff;
+  opacity: 1.0;
+}
+
+richgriditem[customColorPresent="true"] description {
+  color: #f1f1f1;
+}
+
+richgriditem[customColorPresent="true"] .richgrid-icon-box {
+  opacity: 0.8;
+  background-color: #fff;
+}
+
+richgriditem description {
+  width: @tile_width@;
+  font-size: @metro_font_normal@;
+  margin-left: 0px !important;
+  padding-left: 0px !important;
+}
+
+richgriditem image {
+  width: 24px;
+  height: 24px;
+  list-style-image: url("chrome://browser/skin/images/identity-icons-generic.png");
+}
+
+/* Dialogs ----------------------------------------------------------------- */
+
+.modal-block,
+.perm-modal-block {
+  background-color: rgba(0,0,0,.6);
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  -moz-box-orient: horizontal;
+}
+
+.dialog-dark,
+.panel-arrowcontent {
+  background: url("chrome://browser/skin/images/popup-bg-hdpi.png") left bottom repeat-x;
+  background-color: white;
+  border-radius: @border_radius_normal@;
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@,
+              black 0 -@border_radius_tiny@ @border_radius_tiny@;
+  padding: @padding_normal@ 0; /* core spacing on top/bottom */
+}
+
+dialog {
+  -moz-box-orient: horizontal;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+dialog > .prompt-inner {
+  width: 600px;
+}
+
+.prompt-header > .prompt-message {
+  white-space: pre-wrap;
+}
+
+.prompt-header > .button-checkbox {
+  margin-left: @margin_large@;
+}
+
+.prompt-title {
+  padding-top: @metro_spacing_normal@;
+  text-align: start;
+  font-size: @metro_font_large@;
+}
+
+/* Authentication dialogs do not have a title */
+.prompt-title:empty {
+  display: none;
+}
+
+.prompt-message {
+  text-align: start;
+  font-size: @metro_font_normal@;
+}
+
+.prompt-buttons {
+  -moz-box-pack: end;
+  text-align: end;
+  padding: @metro_spacing_normal@ 0;
+}
+
+.prompt-edit {
+  margin: @margin_xnormal@;
+  font-size: @font_normal@;
+  text-align: start;
+}
+
+/* Arrowbox ---------------------------------------------------------------- */
+
+arrowbox {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+}
+
+.arrowbox-dark .panel-arrowcontent {
+  color: white;
+  background: @panel_dark_color@;
+}
+
+.arrowbox-dark .panel-arrowcontent {
+  border: @border_width_large@ solid white;
+  border-radius: @border_radius_normal@;
+  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
+}
+
+.panel-arrow[side="top"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
+  margin-bottom: -@margin_normal@;
+}
+
+.panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
+  margin-top: -@margin_normal@;
+}
+
+.panel-arrow[side="left"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
+  margin-right: -@margin_normal@;
+  transform: scaleX(-1);
+}
+
+.panel-arrow[side="right"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
+  margin-left: -@margin_normal@;
+}
+
+/*.meta -------------------------------------------------------------------- */
+
+.meta {
+  background-color: @panel_light_color@;
+  background-image: radial-gradient(circle farthest-corner at left bottom,
+                                    rgba(255, 127, 0, 0.2) 0%,
+                                    rgba(255, 212, 0, 0) 30%),
+                    radial-gradient(circle farthest-corner at 40% 100%,
+                                    rgba(0, 120, 255, 0.15) 0%,
+                                    rgba(0, 186, 255, 0) 20%),
+                    radial-gradient(circle farthest-corner at 60% 100%,
+                                    rgba(0, 120, 255, 0.125) 0%,
+                                    rgba(0, 186, 255, 0) 20%),
+                    radial-gradient(circle farthest-corner at right bottom,
+                                    rgba(185, 17, 255, 0.1) 0%,
+                                    rgba(255, 84, 253, 0) 30%),
+                    url("chrome://browser/skin/images/firefox-watermark.png"),
+                    @panel_light_background@;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-position: center center;
+  padding: @metro_spacing_normal@ @metro_spacing_xxnormal@;
+  overflow: auto;
+  max-width: 100%;
+  width: 100%;
+}
+
+.meta-section {
+  margin: 0 @metro_spacing_large@;
+}
+
+.meta-section-title {
+  font-size: @metro_font_large@;
+  font-weight: 100;
+}

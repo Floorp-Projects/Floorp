@@ -60,6 +60,14 @@ using namespace JS;
 # define JS_THREADSAFE_ASSERT(expr) ((void) 0)
 #endif
 
+#if defined(DEBUG)
+# define JS_DIAGNOSTICS_ASSERT(expr) MOZ_ASSERT(expr)
+#elif defined(JS_CRASH_DIAGNOSTICS)
+# define JS_DIAGNOSTICS_ASSERT(expr) do { if (!(expr)) MOZ_CRASH(); } while(0)
+#else
+# define JS_DIAGNOSTICS_ASSERT(expr) ((void) 0)
+#endif
+
 #define JS_STATIC_ASSERT(cond)           MOZ_STATIC_ASSERT(cond, "JS_STATIC_ASSERT")
 #define JS_STATIC_ASSERT_IF(cond, expr)  MOZ_STATIC_ASSERT_IF(cond, expr, "JS_STATIC_ASSERT_IF")
 

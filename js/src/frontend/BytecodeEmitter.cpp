@@ -1473,12 +1473,8 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answer)
 {
-    bool ok;
-    ParseNode *pn2;
-
-    ok = true;
     if (!pn || *answer)
-        return ok;
+        return true;
 
     switch (pn->getArity()) {
       case PN_FUNC:
@@ -1489,8 +1485,8 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
          * (the object and binding can be detected and hijacked or captured).
          * This is a bug fix to ES3; it is fixed in ES3.1 drafts.
          */
-        *answer = false;
-        break;
+        MOZ_ASSERT(*answer == false);
+        return true;
 
       case PN_LIST:
         if (pn->isOp(JSOP_NOP) || pn->isOp(JSOP_OR) || pn->isOp(JSOP_AND) ||
@@ -1499,35 +1495,39 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
              * Non-operators along with ||, &&, ===, and !== never invoke
              * toString or valueOf.
              */
-            for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
+            bool ok = true;
+            for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
                 ok &= CheckSideEffects(cx, bce, pn2, answer);
-        } else if (pn->isKind(PNK_GENEXP)) {
-            /* Generator-expressions are harmless if the result is ignored. */
-            *answer = false;
-        } else {
-            /*
-             * All invocation operations (construct: PNK_NEW, call: PNK_CALL)
-             * are presumed to be useful, because they may have side effects
-             * even if their main effect (their return value) is discarded.
-             *
-             * PNK_ELEM binary trees of 3+ nodes are flattened into lists to
-             * avoid too much recursion. All such lists must be presumed to be
-             * useful because each index operation could invoke a getter.
-             *
-             * Likewise, array and object initialisers may call prototype
-             * setters (the __defineSetter__ built-in, and writable __proto__
-             * on Array.prototype create this hazard). Initialiser list nodes
-             * have JSOP_NEWINIT in their pn_op.
-             */
-            *answer = true;
+            return ok;
         }
-        break;
+
+        if (pn->isKind(PNK_GENEXP)) {
+            /* Generator-expressions are harmless if the result is ignored. */
+            MOZ_ASSERT(*answer == false);
+            return true;
+        }
+
+        /*
+         * All invocation operations (construct: PNK_NEW, call: PNK_CALL)
+         * are presumed to be useful, because they may have side effects
+         * even if their main effect (their return value) is discarded.
+         *
+         * PNK_ELEM binary trees of 3+ nodes are flattened into lists to
+         * avoid too much recursion. All such lists must be presumed to be
+         * useful because each index operation could invoke a getter.
+         *
+         * Likewise, array and object initialisers may call prototype
+         * setters (the __defineSetter__ built-in, and writable __proto__
+         * on Array.prototype create this hazard). Initialiser list nodes
+         * have JSOP_NEWINIT in their pn_op.
+         */
+        *answer = true;
+        return true;
 
       case PN_TERNARY:
-        ok = CheckSideEffects(cx, bce, pn->pn_kid1, answer) &&
-             CheckSideEffects(cx, bce, pn->pn_kid2, answer) &&
-             CheckSideEffects(cx, bce, pn->pn_kid3, answer);
-        break;
+        return CheckSideEffects(cx, bce, pn->pn_kid1, answer) &&
+               CheckSideEffects(cx, bce, pn->pn_kid2, answer) &&
+               CheckSideEffects(cx, bce, pn->pn_kid3, answer);
 
       case PN_BINARY:
         if (pn->isAssignment()) {
@@ -1540,7 +1540,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
              * The only exception is assignment of a useless value to a const
              * declared in the function currently being compiled.
              */
-            pn2 = pn->pn_left;
+            ParseNode *pn2 = pn->pn_left;
             if (!pn2->isKind(PNK_NAME)) {
                 *answer = true;
             } else {
@@ -1551,36 +1551,38 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
                 if (!*answer && (!pn->isOp(JSOP_NOP) || !pn2->isConst()))
                     *answer = true;
             }
-        } else {
-            if (pn->isOp(JSOP_OR) || pn->isOp(JSOP_AND) || pn->isOp(JSOP_STRICTEQ) ||
-                pn->isOp(JSOP_STRICTNE)) {
-                /*
-                 * ||, &&, ===, and !== do not convert their operands via
-                 * toString or valueOf method calls.
-                 */
-                ok = CheckSideEffects(cx, bce, pn->pn_left, answer) &&
-                     CheckSideEffects(cx, bce, pn->pn_right, answer);
-            } else {
-                /*
-                 * We can't easily prove that neither operand ever denotes an
-                 * object with a toString or valueOf method.
-                 */
-                *answer = true;
-            }
+            return true;
         }
-        break;
+
+        if (pn->isOp(JSOP_OR) || pn->isOp(JSOP_AND) || pn->isOp(JSOP_STRICTEQ) ||
+            pn->isOp(JSOP_STRICTNE)) {
+            /*
+             * ||, &&, ===, and !== do not convert their operands via
+             * toString or valueOf method calls.
+             */
+            return CheckSideEffects(cx, bce, pn->pn_left, answer) &&
+                   CheckSideEffects(cx, bce, pn->pn_right, answer);
+        }
+
+        /*
+         * We can't easily prove that neither operand ever denotes an
+         * object with a toString or valueOf method.
+         */
+        *answer = true;
+        return true;
 
       case PN_UNARY:
         switch (pn->getKind()) {
           case PNK_DELETE:
-            pn2 = pn->pn_kid;
+          {
+            ParseNode *pn2 = pn->pn_kid;
             switch (pn2->getKind()) {
               case PNK_NAME:
                 if (!BindNameToSlot(cx, bce, pn2))
                     return false;
                 if (pn2->isConst()) {
-                    *answer = false;
-                    break;
+                    MOZ_ASSERT(*answer == false);
+                    return true;
                 }
                 /* FALL THROUGH */
               case PNK_DOT:
@@ -1588,12 +1590,13 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
               case PNK_ELEM:
                 /* All these delete addressing modes have effects too. */
                 *answer = true;
-                break;
+                return true;
               default:
-                ok = CheckSideEffects(cx, bce, pn2, answer);
-                break;
+                return CheckSideEffects(cx, bce, pn2, answer);
             }
-            break;
+            MOZ_NOT_REACHED("We have a returning default case");
+            return false;
+          }
 
           case PNK_TYPEOF:
           case PNK_VOID:
@@ -1601,8 +1604,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
           case PNK_BITNOT:
             if (pn->isOp(JSOP_NOT)) {
                 /* ! does not convert its operand via toString or valueOf. */
-                ok = CheckSideEffects(cx, bce, pn->pn_kid, answer);
-                break;
+                return CheckSideEffects(cx, bce, pn->pn_kid, answer);
             }
             /* FALL THROUGH */
 
@@ -1614,9 +1616,10 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
              * toString or valueOf method.
              */
             *answer = true;
-            break;
+            return true;
         }
-        break;
+        MOZ_NOT_REACHED("We have a returning default case");
+        return false;
 
       case PN_NAME:
         /*
@@ -1640,15 +1643,14 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
             /* Dotted property references in general can call getters. */
             *answer = true;
         }
-        ok = CheckSideEffects(cx, bce, pn->maybeExpr(), answer);
-        break;
+        return CheckSideEffects(cx, bce, pn->maybeExpr(), answer);
 
       case PN_NULLARY:
         if (pn->isKind(PNK_DEBUGGER))
             *answer = true;
-        break;
+        return true;
     }
-    return ok;
+    return true;
 }
 
 bool

@@ -114,7 +114,8 @@ protected:
   static nsresult AppendProfilePath(nsIFile* aFile,
                                     const nsACString* aProfileName,
                                     const nsACString* aAppName,
-                                    const nsACString* aVendorName);
+                                    const nsACString* aVendorName,
+                                    PRBool aLocal);
 
   static nsresult AppendSysUserExtensionPath(nsIFile* aFile);
 

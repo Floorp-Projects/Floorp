@@ -397,6 +397,10 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                                         LayerManager::DrawThebesLayerCallback aCallback,
                                         void* aCallbackData)
 {
+  // NB: this just throws away the entire valid region if there are
+  // too many rects.
+  mValidRegion.SimplifyInward(8);
+
   Base::PaintBuffer(aContext,
                     aRegionToDraw, aExtendedRegionToDraw, aRegionToInvalidate,
                     aDidSelfCopy,

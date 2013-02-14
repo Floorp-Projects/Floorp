@@ -30,7 +30,7 @@ skip-if(B2G) fails-if(Android) != textarea-ltr.html textarea-rtl.html
 skip-if(B2G) fails-if(Android) != textarea-ltr-scrollbar.html textarea-rtl-scrollbar.html
 skip-if(B2G) fails-if(Android) != textarea-in-ltr-doc-scrollbar.html textarea-in-rtl-doc-scrollbar.html
 skip-if(B2G) fails-if(Android) != textarea-ltr.html textarea-no-resize.html
-skip-if(B2G) fails-if(Android) != textarea-rtl.html textarea-no-resize.html
+skip-if(B2G) fails-if(Android) random-if(gtk2Widget) != textarea-rtl.html textarea-no-resize.html # bug 834724
 == textarea-rtl.html textarea-rtl-dynamic-attr.html
 == textarea-rtl.html textarea-rtl-dynamic-style.html
 == textarea-rtl.html textarea-in-dynamic-rtl-doc.html

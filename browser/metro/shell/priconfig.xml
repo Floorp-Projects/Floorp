@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<resources>
+	<index root="\" startIndexAt="layout.resfiles">
+		<default>
+			<qualifier name="Language" value="en-US"/>
+      <!--
+			<qualifier name="Contrast" value="standard"/>
+			<qualifier name="Scale" value="100"/>
+			<qualifier name="HomeRegion" value="001"/>
+			<qualifier name="TargetSize" value="256"/>
+			<qualifier name="LayoutDirection" value="LTR"/>
+			<qualifier name="Configuration" value=""/>
+			<qualifier name="AlternateForm" value=""/>
+      -->
+		</default>
+    <indexer-config type="RESFILES" qualifierDelimiter="." />
+    <!--
+		<indexer-config type="folder" foldernameAsQualifier="true" filenameAsQualifier="true" qualifierDelimiter="."/>
+
+		<indexer-config type="PRI"/>
+    -->
+	</index>
+
+  <index root="\" startIndexAt="resources.resfiles">
+    <default>
+      <qualifier name="language" value="en-US" />
+    </default>
+    <indexer-config type="RESW" convertDotsToSlashes="true" />
+    <indexer-config type="RESJSON" />
+    <indexer-config type="RESFILES" qualifierDelimiter="." />
+  </index>
+  <index root="\" startIndexAt="pri.resfiles">
+    <default>
+      <qualifier name="language" value="en-US" />
+    </default>
+    <indexer-config type="PRI" />
+    <indexer-config type="RESFILES" qualifierDelimiter="." />
+  </index>
+  
+	<!--<index startIndexAt="Start Index Here" root="Root Here">-->
+	<!--        <indexer-config type="resfiles" qualifierDelimiter="."/>-->
+	<!--        <indexer-config type="priinfo" emitStrings="true" emitPaths="true"/>-->
+	<!--</index>-->
+</resources>

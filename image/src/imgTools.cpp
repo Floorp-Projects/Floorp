@@ -21,6 +21,7 @@
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
 #include "ImageFactory.h"
+#include "Image.h"
 #include "ScriptedNotificationObserver.h"
 #include "imgIScriptedNotificationObserver.h"
 

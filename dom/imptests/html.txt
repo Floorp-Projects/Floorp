@@ -1,3 +1,6 @@
-https://dvcs.w3.org/hg/html|html
-tests/submission/Mozilla
-tests/submission/Opera/microdata
+git+ssh://git@github.com:w3c/html-testsuite.git|html
+html/webappapis/scripting/events
+html/browsers/browsing-the-web/read-media
+html/semantics/scripting-1/the-script-element
+html/webappapis/scripting/processing-model-2
+old-tests/submission/Opera/microdata

@@ -94,31 +94,12 @@ SpdySession3::ShutdownEnumerator(nsAHttpTransaction *key,
  
   // On a clean server hangup the server sets the GoAwayID to be the ID of
   // the last transaction it processed. If the ID of stream in the
-  // local stream is greater than that it can safely be restarted because the
-  // server guarantees it was not partially processed. Streams that have not
-  // registered an ID haven't actually been sent yet so they can always be
-  // restarted.
-  if (self->mCleanShutdown &&
-      (stream->StreamID() > self->mGoAwayID || !stream->HasRegisteredID()))
+  // local session is greater than that it can safely be restarted because the
+  // server guarantees it was not partially processed.
+  if (self->mCleanShutdown && (stream->StreamID() > self->mGoAwayID))
     self->CloseStream(stream, NS_ERROR_NET_RESET); // can be restarted
   else
     self->CloseStream(stream, NS_ERROR_ABORT);
-
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-SpdySession3::GoAwayEnumerator(nsAHttpTransaction *key,
-                               nsAutoPtr<SpdyStream3> &stream,
-                               void *closure)
-{
-  SpdySession3 *self = static_cast<SpdySession3 *>(closure);
-
-  // these streams were not processed by the server and can be restarted.
-  // Do that after the enumerator completes to avoid the risk of
-  // a restart event re-entrantly modifying this hash.
-  if (stream->StreamID() > self->mGoAwayID || !stream->HasRegisteredID())
-    self->mGoAwayStreamsToRestart.Push(stream);
 
   return PL_DHASH_NEXT;
 }
@@ -321,6 +302,7 @@ SpdySession3::AddStream(nsAHttpTransaction *aHttpTransaction,
                                       &mUpstreamZlib,
                                       aPriority);
 
+  
   LOG3(("SpdySession3::AddStream session=%p stream=%p NextID=0x%X (tentative)",
         this, stream, mNextStreamID));
 
@@ -676,7 +658,7 @@ SpdySession3::GenerateSettings()
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
   LOG3(("SpdySession3::GenerateSettings %p\n", this));
 
-  static const uint32_t maxDataLen = 4 + 2 * 8; // sized for 2 settings
+  static const uint32_t maxDataLen = 4 + 3 * 8; // sized for 3 settings
   EnsureBuffer(mOutputQueueBuffer, mOutputQueueUsed + 8 + maxDataLen,
                mOutputQueueUsed, mOutputQueueSize);
   char *packet = mOutputQueueBuffer.get() + mOutputQueueUsed;
@@ -691,6 +673,13 @@ SpdySession3::GenerateSettings()
   // entries need to be listed in order by ID
   // 1st entry is bytes 12 to 19
   // 2nd entry is bytes 20 to 27
+  // 3rd entry is bytes 28 to 35
+
+  // announcing that we accept 0 incoming streams is done to
+  // disable server push until that is implemented.
+  packet[15 + 8 * numberOfEntries] = SETTINGS_TYPE_MAX_CONCURRENT;
+  // The value portion of the setting pair is already initialized to 0
+  numberOfEntries++;
 
   nsRefPtr<nsHttpConnectionInfo> ci;
   uint32_t cwnd = 0;
@@ -1266,39 +1255,10 @@ SpdySession3::HandleGoAway(SpdySession3 *self)
   self->mGoAwayID =
     PR_ntohl(reinterpret_cast<uint32_t *>(self->mInputFrameBuffer.get())[2]);
   self->mCleanShutdown = true;
-
-  // Find streams greater than the last-good ID and mark them for deletion 
-  // in the mGoAwayStreamsToRestart queue with the GoAwayEnumerator. They can
-  // be restarted.
-  self->mStreamTransactionHash.Enumerate(GoAwayEnumerator, self);
-
-  // Process the streams marked for deletion and restart.
-  uint32_t size = self->mGoAwayStreamsToRestart.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
-    SpdyStream3 *stream =
-      static_cast<SpdyStream3 *>(self->mGoAwayStreamsToRestart.PopFront());
-
-    self->CloseStream(stream, NS_ERROR_NET_RESET);
-    if (stream->HasRegisteredID())
-      self->mStreamIDHash.Remove(stream->StreamID());
-    self->mStreamTransactionHash.Remove(stream->Transaction());
-  }
-
-  // Queued streams can also be deleted from this session and restarted
-  // in another one. (they were never sent on the network so they implicitly
-  // are not covered by the last-good id.
-  size = self->mQueuedStreams.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
-    SpdyStream3 *stream =
-      static_cast<SpdyStream3 *>(self->mQueuedStreams.PopFront());
-    self->CloseStream(stream, NS_ERROR_NET_RESET);
-    self->mStreamTransactionHash.Remove(stream->Transaction());
-  }
-
-  LOG3(("SpdySession3::HandleGoAway %p GOAWAY Last-Good-ID 0x%X status 0x%X "
-        "live streams=%d\n", self, self->mGoAwayID, 
-        PR_ntohl(reinterpret_cast<uint32_t *>(self->mInputFrameBuffer.get())[3]),
-        self->mStreamTransactionHash.Count()));
+  
+  LOG3(("SpdySession3::HandleGoAway %p GOAWAY Last-Good-ID 0x%X status 0x%X\n",
+        self, self->mGoAwayID, 
+        PR_ntohl(reinterpret_cast<uint32_t *>(self->mInputFrameBuffer.get())[3])));
 
   self->ResumeRecv();
   self->ResetDownstreamState();

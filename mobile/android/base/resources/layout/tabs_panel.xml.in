@@ -14,7 +14,7 @@
         <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
-              android:background="@drawable/tabs_tray_dark_bg_repeat">
+              android:background="@color/background_tabs_dark">
 
             <include layout="@layout/tabs_panel_header"/>
 

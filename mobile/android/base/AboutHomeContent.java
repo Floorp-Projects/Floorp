@@ -761,7 +761,7 @@ public class AboutHomeContent extends ScrollView
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundResource(R.drawable.abouthome_bg_repeat);
+        setBackgroundColor(getContext().getResources().getColor(R.color.background_normal));
 
         if (mAddons != null) {
             mAddons.resetTheme();
@@ -790,13 +790,8 @@ public class AboutHomeContent extends ScrollView
         }
 
         public int getColumnWidth(int width) {
-            int s = -1;
-            if (android.os.Build.VERSION.SDK_INT >= 16)
-                s= super.getColumnWidth();
-            else
-                s = (width - getPaddingLeft() - getPaddingRight()) / mNumberOfCols;
-
-            return s;
+            // super.getColumnWidth() doesn't always return the correct value.
+            return (width - getPaddingLeft() - getPaddingRight()) / mNumberOfCols;
         }
 
         @Override

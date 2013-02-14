@@ -763,13 +763,16 @@ if [ "$ENABLE_TESTS" ]; then
     dom/imptests/editing/selecttest/Makefile
     dom/imptests/failures/editing/conformancetest/Makefile
     dom/imptests/failures/editing/selecttest/Makefile
-    dom/imptests/failures/html/tests/submission/Opera/microdata/Makefile
+    dom/imptests/failures/html/old-tests/submission/Opera/microdata/Makefile
     dom/imptests/failures/webapps/DOMCore/tests/approved/Makefile
     dom/imptests/failures/webapps/DOMCore/tests/submissions/Opera/Makefile
     dom/imptests/failures/webapps/WebStorage/tests/submissions/Infraware/Makefile
     dom/imptests/failures/webapps/WebStorage/tests/submissions/Ms2ger/Makefile
-    dom/imptests/html/tests/submission/Mozilla/Makefile
-    dom/imptests/html/tests/submission/Opera/microdata/Makefile
+    dom/imptests/html/html/semantics/scripting-1/the-script-element/Makefile
+    dom/imptests/html/html/webappapis/scripting/events/Makefile
+    dom/imptests/html/html/webappapis/scripting/processing-model-2/Makefile
+    dom/imptests/html/html/browsers/browsing-the-web/read-media/Makefile
+    dom/imptests/html/old-tests/submission/Opera/microdata/Makefile
     dom/imptests/webapps/DOMCore/tests/approved/Makefile
     dom/imptests/webapps/DOMCore/tests/submissions/Opera/Makefile
     dom/imptests/webapps/WebStorage/tests/submissions/Infraware/Makefile

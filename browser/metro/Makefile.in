@@ -1,0 +1,51 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+
+DIRS = \
+	base \
+	components \
+	modules \
+	theme \
+	profile \
+	locales \
+	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+DIRS += shell
+endif
+
+TEST_DIRS += base/tests
+
+include $(topsrcdir)/config/rules.mk
+
+#########################################
+# application.ini
+
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL
+endif
+
+GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)
+GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
+
+# 'application.ini' breaks firefox build config. So we use something different.
+metroapp.ini: metroapp.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
+	$(RM) "metroapp.ini"
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+
+libs:: metroapp.ini
+	$(INSTALL) metroapp.ini $(FINAL_TARGET)
+
+#########################################
+
+GARBAGE += metroapp.ini

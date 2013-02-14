@@ -171,6 +171,9 @@ class HashMap
     // using the finish() method.
     void clear()                                      { impl.clear(); }
 
+    // Remove all entries without triggering destructors. This method is unsafe.
+    void clearWithoutCallingDestructors()             { impl.clearWithoutCallingDestructors(); }
+
     // Remove all the entries and release all internal buffers. The map must
     // be initialized again before any use.
     void finish()                                     { impl.finish(); }
@@ -620,6 +623,7 @@ class HashTableEntry
     bool isFree() const    { return keyHash == sFreeKey; }
     void clearLive()       { JS_ASSERT(isLive()); keyHash = sFreeKey; mem.addr()->~T(); }
     void clear()           { if (isLive()) mem.addr()->~T(); keyHash = sFreeKey; }
+    void clearNoDtor()     { keyHash = sFreeKey; }
     bool isRemoved() const { return keyHash == sRemovedKey; }
     void removeLive()      { JS_ASSERT(isLive()); keyHash = sRemovedKey; mem.addr()->~T(); }
     bool isLive() const    { return isLiveHash(keyHash); }
@@ -1256,6 +1260,20 @@ class HashTable : private AllocPolicy
             uint32_t tableCapacity = capacity();
             for (Entry *e = table, *end = table + tableCapacity; e < end; ++e)
                 e->clear();
+        }
+        removedCount = 0;
+        entryCount = 0;
+        mutationCount++;
+    }
+
+    void clearWithoutCallingDestructors()
+    {
+        if (mozilla::IsPod<Entry>::value) {
+            memset(table, 0, sizeof(*table) * capacity());
+        } else {
+            uint32_t tableCapacity = capacity();
+            for (Entry *e = table, *end = table + tableCapacity; e < end; ++e)
+                e->clearNoDtor();
         }
         removedCount = 0;
         entryCount = 0;

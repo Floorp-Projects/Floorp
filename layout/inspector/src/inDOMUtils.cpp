@@ -27,7 +27,13 @@
 #include "nsRange.h"
 #include "mozilla/dom/Element.h"
 #include "nsCSSStyleSheet.h"
+#include "nsRuleWalker.h"
+#include "nsRuleProcessorData.h"
+#include "nsCSSRuleProcessor.h"
 
+using namespace mozilla;
+using namespace mozilla::css;
+using namespace mozilla::dom;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -188,19 +194,136 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   return NS_OK;
 }
 
+static already_AddRefed<StyleRule>
+GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
+{
+  nsCOMPtr<nsICSSStyleRuleDOMWrapper> rule = do_QueryInterface(aRule);
+  if (!rule) {
+    rv.Throw(NS_ERROR_INVALID_POINTER);
+    return nullptr;
+  }
+
+  nsRefPtr<StyleRule> cssrule;
+  rv = rule->GetCSSStyleRule(getter_AddRefs(cssrule));
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  if (!cssrule) {
+    rv.Throw(NS_ERROR_FAILURE);
+  }
+  return cssrule.forget();
+}
+
 NS_IMETHODIMP
 inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, uint32_t *_retval)
 {
-  *_retval = 0;
+  ErrorResult rv;
+  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
 
-  NS_ENSURE_ARG_POINTER(aRule);
+  *_retval = rule->GetLineNumber();
+  return NS_OK;
+}
 
-  nsCOMPtr<nsICSSStyleRuleDOMWrapper> rule = do_QueryInterface(aRule);
-  nsRefPtr<mozilla::css::StyleRule> cssrule;
-  nsresult rv = rule->GetCSSStyleRule(getter_AddRefs(cssrule));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cssrule != nullptr, NS_ERROR_FAILURE);
-  *_retval = cssrule->GetLineNumber();
+NS_IMETHODIMP
+inDOMUtils::GetSelectorCount(nsIDOMCSSStyleRule* aRule, uint32_t *aCount)
+{
+  ErrorResult rv;
+  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
+
+  uint32_t count = 0;
+  for (nsCSSSelectorList* sel = rule->Selector(); sel; sel = sel->mNext) {
+    ++count;
+  }
+  *aCount = count;
+  return NS_OK;
+}
+
+static nsCSSSelectorList*
+GetSelectorAtIndex(nsIDOMCSSStyleRule* aRule, uint32_t aIndex, ErrorResult& rv)
+{
+  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  for (nsCSSSelectorList* sel = rule->Selector(); sel;
+       sel = sel->mNext, --aIndex) {
+    if (aIndex == 0) {
+      return sel;
+    }
+  }
+
+  // Ran out of selectors
+  rv.Throw(NS_ERROR_INVALID_ARG);
+  return nullptr;
+}
+
+NS_IMETHODIMP
+inDOMUtils::GetSelectorText(nsIDOMCSSStyleRule* aRule,
+                            uint32_t aSelectorIndex,
+                            nsAString& aText)
+{
+  ErrorResult rv;
+  nsCSSSelectorList* sel = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
+
+  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  MOZ_ASSERT(!rv.Failed(), "How could we get a selector but not a rule?");
+
+  sel->mSelectors->ToString(aText, rule->GetStyleSheet(), false);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::GetSpecificity(nsIDOMCSSStyleRule* aRule,
+                            uint32_t aSelectorIndex,
+                            uint64_t* aSpecificity)
+{
+  ErrorResult rv;
+  nsCSSSelectorList* sel = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
+
+  *aSpecificity = sel->mWeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
+                                   nsIDOMCSSStyleRule* aRule,
+                                   uint32_t aSelectorIndex,
+                                   bool* aMatches)
+{
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
+
+  ErrorResult rv;
+  nsCSSSelectorList* tail = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
+
+  // We want just the one list item, not the whole list tail
+  nsAutoPtr<nsCSSSelectorList> sel(tail->Clone(false));
+
+  element->OwnerDoc()->FlushPendingLinkUpdates();
+  // XXXbz what exactly should we do with visited state here?
+  TreeMatchContext matchingContext(false,
+                                   nsRuleWalker::eRelevantLinkUnvisited,
+                                   element->OwnerDoc(),
+                                   TreeMatchContext::eNeverMatchVisited);
+  *aMatches = nsCSSRuleProcessor::SelectorListMatches(element, matchingContext,
+                                                      sel);
   return NS_OK;
 }
 

@@ -22,6 +22,7 @@ this.EXPORTED_SYMBOLS = [
   "CrashDirectoryService",
   "CrashesProvider",
   "PlacesProvider",
+  "SearchesProvider",
   "SessionsProvider",
   "SysInfoProvider",
 ];
@@ -951,6 +952,97 @@ PlacesProvider.prototype = Object.freeze({
     });
 
     return deferred.promise;
+  },
+});
+
+
+/**
+ * Records search counts per day per engine and where search initiated.
+ */
+function SearchCountMeasurement() {
+  Metrics.Measurement.call(this);
+}
+
+SearchCountMeasurement.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "counts",
+  version: 1,
+
+  // If an engine is removed from this list, it may not be reported any more.
+  // Verify side-effects are sane before removing an entry.
+  PARTNER_ENGINES: [
+    "amazon.com",
+    "bing",
+    "google",
+    "yahoo",
+  ],
+
+  SOURCES: [
+    "abouthome",
+    "contextmenu",
+    "searchbar",
+    "urlbar",
+  ],
+
+  configureStorage: function () {
+    // We only record searches for search engines that have partner
+    // agreements with Mozilla.
+    let engines = this.PARTNER_ENGINES.concat("other");
+
+    let promise;
+
+    // While this creates a large number of fields, storage is sparse and there
+    // will be no overhead for fields that aren't used in a given day.
+    for (let engine of engines) {
+      for (let source of this.SOURCES) {
+        promise = this.registerStorageField(engine + "." + source,
+                                            this.storage.FIELD_DAILY_COUNTER);
+      }
+    }
+
+    return promise;
+  },
+});
+
+this.SearchesProvider = function () {
+  Metrics.Provider.call(this);
+};
+
+this.SearchesProvider.prototype = Object.freeze({
+  __proto__: Metrics.Provider.prototype,
+
+  name: "org.mozilla.searches",
+  measurementTypes: [SearchCountMeasurement],
+
+  /**
+   * Record that a search occurred.
+   *
+   * @param engine
+   *        (string) The search engine used. If the search engine is unknown,
+   *        the search will be attributed to "other".
+   * @param source
+   *        (string) Where the search was initiated from. Must be one of the
+   *        SearchCountMeasurement.SOURCES values.
+   *
+   * @return Promise<>
+   *         The promise is resolved when the storage operation completes.
+   */
+  recordSearch: function (engine, source) {
+    let m = this.getMeasurement("counts", 1);
+
+    if (m.SOURCES.indexOf(source) == -1) {
+      throw new Error("Unknown source for search: " + source);
+    }
+
+    let normalizedEngine = engine.toLowerCase();
+    if (m.PARTNER_ENGINES.indexOf(normalizedEngine) == -1) {
+      normalizedEngine = "other";
+    }
+
+    return this.enqueueStorageOperation(function recordSearch() {
+      return m.incrementDailyCounter(normalizedEngine + "." + source);
+    });
   },
 });
 

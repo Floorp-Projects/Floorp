@@ -16,21 +16,20 @@ import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 
 /**
- * A special drawable used with lightweight themes. This draws a texture,
- * a color (usually with an alpha value) and a bitmap (with a linear gradient
- * to specify the alpha) in order. The bitmap is drawn either over a texture 
- * or over a color and rarely over both.
+ * A special drawable used with lightweight themes. This draws a color 
+ * (with an optional color-filter) and a bitmap (with a linear gradient 
+ * to specify the alpha) in order.
  */
 public class LightweightThemeDrawable extends Drawable {
     private Paint mPaint;
     private Paint mColorPaint;
-    private Paint mTexturePaint;
 
     private Bitmap mBitmap;
     private Resources mResources;
@@ -55,11 +54,7 @@ public class LightweightThemeDrawable extends Drawable {
 
     @Override
     public void draw(Canvas canvas) {
-	// Draw the texture, if available.
-        if (mTexturePaint != null)
-            canvas.drawPaint(mTexturePaint);
-
-        // Draw the color, if available.
+        // Draw the colors, if available.
         if (mColorPaint != null)
             canvas.drawPaint(mColorPaint);
 
@@ -85,39 +80,6 @@ public class LightweightThemeDrawable extends Drawable {
     }		
 
     /**
-     * Creates a shader based on a texture. The texture could be a resource in 
-     * drawable-nodpi/ folder. In which case, the tile modes are set to repeat.
-     * The texture could be a BitmapDrawable which could specify the tile mode 
-     * in each direction. In that case, the intrinsic tile mode values are used.
-     *
-     * @param textureId The resource if of the texture.
-     */
-    public void setTexture(int textureId) {
-        Shader.TileMode modeX = Shader.TileMode.REPEAT;
-        Shader.TileMode modeY = Shader.TileMode.REPEAT;
-
-        // The texture to be repeated.
-        Bitmap texture = BitmapFactory.decodeResource(mResources, textureId);
-
-        if (texture == null) {
-            // Texture may be used inside a BitmapDrawable.
-            Drawable drawable = mResources.getDrawable(textureId);
-            if (drawable != null && drawable instanceof BitmapDrawable) {
-                BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-                texture = bitmapDrawable.getBitmap();
-                modeX = bitmapDrawable.getTileModeX();
-                modeY = bitmapDrawable.getTileModeY();
-            }
-        }
-
-        // Set the shader for the texture paint.
-        if (texture != null) {
-            mTexturePaint = new Paint(mPaint);
-            mTexturePaint.setShader(new BitmapShader(texture, modeX, modeY));
-        }
-    }
-
-    /**
      * Creates a paint that paint a particular color.
      *
      * @param color The color to be painted.
@@ -125,6 +87,18 @@ public class LightweightThemeDrawable extends Drawable {
     public void setColor(int color) {
         mColorPaint = new Paint(mPaint);
         mColorPaint.setColor(color);
+    }
+
+    /**
+     * Creates a paint that paint a particular color, and a filter for the color.
+     *
+     * @param color The color to be painted.
+     * @param filter The filter color to be applied using SRC_OVER mode.
+     */
+    public void setColorWithFilter(int color, int filter) {
+        mColorPaint = new Paint(mPaint);
+        mColorPaint.setColor(color);
+        mColorPaint.setColorFilter(new PorterDuffColorFilter(filter, PorterDuff.Mode.SRC_OVER));
     }
 
     /**

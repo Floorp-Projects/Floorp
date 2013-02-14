@@ -131,6 +131,7 @@ let test = maketest("Main", function main(test) {
     yield test_path();
     yield test_open();
     yield test_stat();
+    yield test_debug();
     yield test_info_features_detect();
     yield test_read_write();
     yield test_read_write_all();
@@ -627,5 +628,29 @@ let test_exists = maketest("exists", function exists(test) {
     test.ok(fileExists, "file exists");
     fileExists = yield OS.File.exists(EXISTING_FILE + ".tmp");
     test.ok(!fileExists, "file does not exists");
+  });
+});
+
+/**
+ * Test changes to OS.Shared.DEBUG flag.
+ */
+let test_debug = maketest("debug", function debug(test) {
+  return Task.spawn(function() {
+    function testSetDebugPref (pref) {
+      try {
+        Services.prefs.setBoolPref("toolkit.osfile.log", pref);
+      } catch (x) {
+        test.fail("Setting OS.Shared.DEBUG to " + pref +
+          " should not cause error.");
+      } finally {
+        test.is(OS.Shared.DEBUG, pref, "OS.Shared.DEBUG is set correctly.");
+      }
+    }
+    testSetDebugPref(true);
+    let workerDEBUG = yield OS.File.GET_DEBUG();
+    test.is(workerDEBUG, true, "Worker's DEBUG is set.");
+    testSetDebugPref(false);
+    workerDEBUG = yield OS.File.GET_DEBUG();
+    test.is(workerDEBUG, false, "Worker's DEBUG is unset.");
   });
 });

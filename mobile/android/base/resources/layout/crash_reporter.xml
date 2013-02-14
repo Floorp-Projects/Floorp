@@ -14,31 +14,27 @@
         <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:padding="10dip"
-                  android:textAppearance="?android:attr/textAppearanceMediumInverse"
-                  android:textColor="?android:attr/textColorPrimaryInverse"
+                  android:textAppearance="?android:attr/textAppearanceMedium"
                   android:textStyle="bold"
                   android:text="@string/crash_message"/>
         
         <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:padding="10dip"
-                  android:textAppearance="?android:attr/textAppearanceMediumInverse"
-                  android:textColor="?android:attr/textColorPrimaryInverse"
+                  android:textAppearance="?android:attr/textAppearanceMedium"
                   android:text="@string/crash_help_message"/>
         
         <CheckBox android:id="@+id/send_report"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:checked="true"
-                  android:textAppearance="?android:attr/textAppearanceMediumInverse"
-                  android:textColor="?android:attr/textColorPrimaryInverse"
+                  android:textAppearance="?android:attr/textAppearanceMedium"
                   android:text="@string/crash_send_report_message"/>
         
         <CheckBox android:id="@+id/include_url"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textAppearance="?android:attr/textAppearanceMediumInverse"
-                  android:textColor="?android:attr/textColorPrimaryInverse"
+                  android:textAppearance="?android:attr/textAppearanceMedium"
                   android:text="@string/crash_include_url"/>
         
         <LinearLayout android:layout_width="fill_parent"

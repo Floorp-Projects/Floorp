@@ -5,7 +5,7 @@
 html {
   font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
   font-size: 18px;
-  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+  background-color: #ced7de;
   -moz-text-size-adjust: none;
 }
 
@@ -36,7 +36,7 @@ body {
 
 .addon-item {
   color: black;
-  background-image: url("chrome://browser/skin/images/row-bg-normal.png");
+  background-color: #e6e9eb;
   border-bottom: 2px solid;
   -moz-border-bottom-colors: #ffffff #bac2ac;
   position: relative;
@@ -47,7 +47,7 @@ body {
 }
 
 .inner {
-  background-image: url("chrome://browser/skin/images/row-bg-light.png");
+  background-color: #eef2f5;
   min-height: 70px;
   padding: 8px;
 
@@ -95,7 +95,7 @@ body {
 }
 
 .status {
-  background-image: url("chrome://browser/skin/images/row-bg-light.png");
+  background-color: #eef2f5;
   border-top: 2px solid;
   -moz-border-top-colors: #bac2ac #ffffff;
   font-weight: bold;

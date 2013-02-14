@@ -174,8 +174,6 @@ pref("content.sink.perf_parse_time", 50000000);
 
 // Maximum scripts runtime before showing an alert
 pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
-// Bug 817230 - disable the dialog until we implement its checkbox properly
-pref("dom.max_script_run_time", 0);
 
 // plugins
 pref("plugin.disable", true);

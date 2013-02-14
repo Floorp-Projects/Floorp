@@ -25,7 +25,7 @@
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">36dp</dimen>
-    <dimen name="browser_toolbar_lock_width">21.33dp</dimen>
+    <dimen name="browser_toolbar_lock_width">20dp</dimen>
     <dimen name="browser_toolbar_favicon_size">29.33dip</dimen>
     <dimen name="doorhanger_arrow_width">44dp</dimen>
     <dimen name="flow_layout_spacing">6dp</dimen>
@@ -35,7 +35,7 @@
     <dimen name="menu_popup_arrow_width">40dip</dimen>
     <dimen name="menu_popup_offset">8dp</dimen>
     <dimen name="menu_popup_width">256dp</dimen>
-    <dimen name="nav_button_border_width">1dp</dimen>
+    <dimen name="nav_button_border_width">0.75dp</dimen>
     <dimen name="prompt_service_group_padding_size">32dp</dimen>
     <dimen name="prompt_service_icon_size">72dp</dimen>
     <dimen name="prompt_service_icon_text_padding">10dp</dimen>
