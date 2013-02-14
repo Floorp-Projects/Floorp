@@ -101,7 +101,8 @@ nsProgressFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  return BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsProgressFrame::Reflow(nsPresContext*           aPresContext,
