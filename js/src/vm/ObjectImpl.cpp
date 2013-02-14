@@ -169,7 +169,7 @@ ObjectElements::ConvertElementsToDoubles(JSContext *cx, uintptr_t elementsPtr)
     JS_ASSERT(elementsHeapPtr != emptyObjectElements);
 
     ObjectElements *header = ObjectElements::fromElements(elementsHeapPtr);
-    JS_ASSERT(!header->convertDoubleElements);
+    JS_ASSERT(!header->shouldConvertDoubleElements());
 
     Value *vp = (Value *) elementsPtr;
     for (size_t i = 0; i < header->initializedLength; i++) {
@@ -177,7 +177,7 @@ ObjectElements::ConvertElementsToDoubles(JSContext *cx, uintptr_t elementsPtr)
             vp[i].setDouble(vp[i].toInt32());
     }
 
-    header->convertDoubleElements = 1;
+    header->setShouldConvertDoubleElements();
     return true;
 }
 
