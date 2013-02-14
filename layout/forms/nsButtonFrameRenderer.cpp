@@ -181,17 +181,16 @@ nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
                                      nsDisplayList* aForeground)
 {
   if (mFrame->GetStyleBorder()->mBoxShadow) {
-    nsresult rv = aBackground->AppendNewToTop(new (aBuilder)
-        nsDisplayButtonBoxShadowOuter(aBuilder, this));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aBackground->AppendNewToTop(new (aBuilder)
+      nsDisplayButtonBoxShadowOuter(aBuilder, this));
   }
 
-  nsresult rv = aBackground->AppendNewToTop(new (aBuilder)
-      nsDisplayButtonBorderBackground(aBuilder, this));
-  NS_ENSURE_SUCCESS(rv, rv);
+  aBackground->AppendNewToTop(new (aBuilder)
+    nsDisplayButtonBorderBackground(aBuilder, this));
 
-  return aForeground->AppendNewToTop(new (aBuilder)
-      nsDisplayButtonForeground(aBuilder, this));
+  aForeground->AppendNewToTop(new (aBuilder)
+    nsDisplayButtonForeground(aBuilder, this));
+  return NS_OK;
 }
 
 void
