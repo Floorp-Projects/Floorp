@@ -130,12 +130,18 @@ FrameWorker.prototype = {
                      'setInterval', 'setTimeout', 'XMLHttpRequest',
                      'MozBlobBuilder', 'FileReader', 'Blob',
                      'location'];
+    // Bug 798660 - XHR and WebSocket have issues in a sandbox and need
+    // to be unwrapped to work
+    let needsWaive = ['XMLHttpRequest', 'WebSocket'];
+    // Methods need to be bound with the proper |this|.
+    let needsBind = ['atob', 'btoa', 'dump', 'setInterval', 'clearInterval',
+                     'setTimeout', 'clearTimeout'];
     workerAPI.forEach(function(fn) {
       try {
-        // Bug 798660 - XHR and WebSocket have issues in a sandbox and need
-        // to be unwrapped to work
-        if (fn == "XMLHttpRequest" || fn == "WebSocket")
+        if (needsWaive.indexOf(fn) != -1)
           sandbox[fn] = XPCNativeWrapper.unwrap(workerWindow)[fn];
+        else if (needsBind.indexOf(fn) != -1)
+          sandbox[fn] = workerWindow[fn].bind(workerWindow);
         else
           sandbox[fn] = workerWindow[fn];
       }
