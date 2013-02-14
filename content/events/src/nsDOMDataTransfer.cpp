@@ -25,6 +25,7 @@
 #include "nsCRT.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIWebNavigation.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIScriptContext.h"
 
 using namespace mozilla;

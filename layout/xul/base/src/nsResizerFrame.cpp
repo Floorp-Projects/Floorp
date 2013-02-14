@@ -17,6 +17,7 @@
 #include "nsPresContext.h"
 #include "nsFrameManager.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsPIDOMWindow.h"
@@ -363,10 +364,11 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
     // get the document and the window - should this be cached?
     nsPIDOMWindow *domWindow = aPresShell->GetDocument()->GetWindow();
     if (domWindow) {
-      nsCOMPtr<nsIDocShell> docShell = domWindow->GetDocShell();
-      if (docShell) {
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+        do_QueryInterface(domWindow->GetDocShell());
+      if (docShellAsItem) {
         nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-        docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+        docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
         if (treeOwner) {
           CallQueryInterface(treeOwner, aWindow);
         }

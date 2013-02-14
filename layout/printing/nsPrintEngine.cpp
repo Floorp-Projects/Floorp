@@ -101,6 +101,8 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIBaseWindow.h"
@@ -527,8 +529,9 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
     mPrt->mPrintObject->mFrameType = mPrt->mIsParentAFrameSet ? eFrameSet : eDoc;
 
     // Build the "tree" of PrintObjects
-    BuildDocTree(mPrt->mPrintObject->mDocShell, &mPrt->mPrintDocList,
-                 mPrt->mPrintObject);
+    nsCOMPtr<nsIDocShellTreeNode> parentAsNode =
+      do_QueryInterface(mPrt->mPrintObject->mDocShell);
+    BuildDocTree(parentAsNode, &mPrt->mPrintDocList, mPrt->mPrintObject);
   }
 
   if (!aIsPrintPreview) {
@@ -1034,10 +1037,11 @@ nsPrintEngine::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify)
       nsPIDOMWindow *domWin = mDocument->GetWindow(); 
       if (!domWin) return;
 
-      nsCOMPtr<nsIDocShell> docShell = domWin->GetDocShell();
-      if (!docShell) return;
+      nsCOMPtr<nsIDocShellTreeItem> docShellItem =
+        do_QueryInterface(domWin->GetDocShell());
+      if (!docShellItem) return;
       nsCOMPtr<nsIDocShellTreeOwner> owner;
-      docShell->GetTreeOwner(getter_AddRefs(owner));
+      docShellItem->GetTreeOwner(getter_AddRefs(owner));
       nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(owner);
       if (!browserChrome) return;
       bool isModal = true;
@@ -1107,7 +1111,8 @@ bool
 nsPrintEngine::IsParentAFrameSet(nsIDocShell * aParent)
 {
   // See if the incoming doc is the root document
-  if (!aParent) return false;
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(aParent));
+  if (!parentAsItem) return false;
 
   // When it is the top level document we need to check
   // to see if it contains a frameset. If it does, then
@@ -3120,23 +3125,25 @@ nsPrintEngine::IsWindowsInOurSubTree(nsPIDOMWindow * window)
 
   // now check to make sure it is in "our" tree of docshells
   if (window) {
-    nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+      do_QueryInterface(window->GetDocShell());
 
-    if (docShell) {
+    if (docShellAsItem) {
       // get this DocViewer docshell
       nsCOMPtr<nsIDocShell> thisDVDocShell(do_QueryReferent(mContainer));
       while (!found) {
-        if (docShell) {
-          if (docShell == thisDVDocShell) {
+        nsCOMPtr<nsIDocShell> parentDocshell(do_QueryInterface(docShellAsItem));
+        if (parentDocshell) {
+          if (parentDocshell == thisDVDocShell) {
             found = true;
             break;
           }
         } else {
           break; // at top of tree
         }
-        nsCOMPtr<nsIDocShellTreeItem> docShellItemParent;
-        docShell->GetSameTypeParent(getter_AddRefs(docShellItemParent));
-        docShell = do_QueryInterface(docShellItemParent);
+        nsCOMPtr<nsIDocShellTreeItem> docShellParent;
+        docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
+        docShellAsItem = docShellParent;
       } // while
     }
   } // scriptobj

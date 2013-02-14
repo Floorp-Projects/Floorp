@@ -14,6 +14,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCDATASection.h"

@@ -6,6 +6,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"

@@ -43,6 +43,8 @@
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIXPConnect.h"
 #include "nsDisplayList.h"
 

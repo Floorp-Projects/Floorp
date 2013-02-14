@@ -18,6 +18,7 @@
 #include "nsIMutableArray.h"
 #include "nsICommandManager.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMCharacterData.h"
@@ -184,13 +185,14 @@ DocAccessible::Name(nsString& aName)
 role
 DocAccessible::NativeRole()
 {
-  nsCOMPtr<nsIDocShell> docShell = nsCoreUtils::GetDocShellFor(mDocumentNode);
-  if (docShell) {
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    nsCoreUtils::GetDocShellTreeItemFor(mDocumentNode);
+  if (docShellTreeItem) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    docShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
     int32_t itemType;
-    docShell->GetItemType(&itemType);
-    if (sameTypeRoot == docShell) {
+    docShellTreeItem->GetItemType(&itemType);
+    if (sameTypeRoot == docShellTreeItem) {
       // Root of content or chrome tree
       if (itemType == nsIDocShellTreeItem::typeChrome)
         return roles::CHROME_WINDOW;

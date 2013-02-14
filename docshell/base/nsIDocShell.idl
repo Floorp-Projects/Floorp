@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDocShellTreeItem.idl"
+#include "nsISupports.idl"
 #include "nsIAtom.idl"
 
 %{ C++
@@ -40,7 +40,7 @@ interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
 [scriptable, builtinclass, uuid(5ea80008-a166-4692-8a7e-39690dd192c6)]
-interface nsIDocShell : nsIDocShellTreeItem
+interface nsIDocShell : nsISupports
 {
   /**
    * Loads a given URI.  This will give priority to loading the requested URI
