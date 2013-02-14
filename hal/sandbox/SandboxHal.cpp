@@ -281,7 +281,7 @@ ModifyWakeLock(const nsAString &aTopic,
                WakeLockControl aHiddenAdjust,
                uint64_t aProcessID)
 {
-  MOZ_ASSERT(aProcessID != ContentChild::kUnknownID);
+  MOZ_ASSERT(aProcessID != CONTENT_PROCESS_ID_UNKNOWN);
   Hal()->SendModifyWakeLock(nsString(aTopic), aLockAdjust, aHiddenAdjust, aProcessID);
 }
 
@@ -713,7 +713,7 @@ public:
                      const WakeLockControl& aHiddenAdjust,
                      const uint64_t& aProcessID) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(aProcessID != ContentChild::kUnknownID);
+    MOZ_ASSERT(aProcessID != CONTENT_PROCESS_ID_UNKNOWN);
 
     // We allow arbitrary content to use wake locks.
     hal::ModifyWakeLock(aTopic, aLockAdjust, aHiddenAdjust, aProcessID);
