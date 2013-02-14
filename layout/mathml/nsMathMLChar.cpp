@@ -1759,7 +1759,6 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
                       uint32_t                aIndex,
                       const nsRect*           aSelectedRect)
 {
-  nsresult rv = NS_OK;
   nsStyleContext* parentContext = mStyleContext->GetParent();
   nsStyleContext* styleContext = mStyleContext;
 
@@ -1777,34 +1776,32 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   // purposes. Normally, users will set the background on the container frame.
   // paint the selection background -- beware MathML frames overlap a lot
   if (aSelectedRect && !aSelectedRect->IsEmpty()) {
-    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayMathMLSelectionRect(aBuilder, aForFrame, *aSelectedRect));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayMathMLSelectionRect(aBuilder, aForFrame, *aSelectedRect));
   }
   else if (mRect.width && mRect.height) {
     const nsStyleBackground* backg = styleContext->GetStyleBackground();
     if (styleContext != parentContext &&
         NS_GET_A(backg->mBackgroundColor) > 0) {
-      rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayMathMLCharBackground(aBuilder, aForFrame, mRect,
-                                        styleContext));
-      NS_ENSURE_SUCCESS(rv, rv);
+      aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayMathMLCharBackground(aBuilder, aForFrame, mRect,
+                                      styleContext));
     }
     //else
     //  our container frame will take care of painting its background
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
-    rv = aLists.BorderBackground()->AppendToTop(new (aBuilder)
-        nsDisplayMathMLCharDebug(aBuilder, aForFrame, mRect));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.BorderBackground()->AppendToTop(new (aBuilder)
+      nsDisplayMathMLCharDebug(aBuilder, aForFrame, mRect));
 #endif
   }
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
-                                      aIndex,
-                                      aSelectedRect &&
-                                      !aSelectedRect->IsEmpty()));
+  aLists.Content()->AppendNewToTop(new (aBuilder)
+    nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
+                                  aIndex,
+                                  aSelectedRect &&
+                                  !aSelectedRect->IsEmpty()));
+  return NS_OK;
 }
 
 void
