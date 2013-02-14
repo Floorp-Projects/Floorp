@@ -1250,25 +1250,19 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
 bool
 BaselineCompiler::emit_JSOP_INITELEM_ARRAY()
 {
-    // Ensure array is on the stack.
-    frame.syncStack(1);
+    // Keep the object and rhs on the stack.
+    frame.syncStack(0);
 
-    StackValue *array = frame.peek(-2);
-    StackValue *element = frame.peek(-1);
+    // Load object in R0, index in R1.
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
+    masm.moveValue(Int32Value(GET_UINT24(pc)), R1);
 
-    uint32_t index = GET_UINT24(pc);
+    // Call IC.
+    ICSetElem_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
 
-    // Load obj->elements.
-    Register scratch = R2.scratchReg();
-    masm.extractObject(frame.addressOfStackValue(array), scratch);
-    masm.loadPtr(Address(scratch, JSObject::offsetOfElements()), scratch);
-
-    // Update initialized length.
-    masm.store32(Imm32(index + 1), Address(scratch, ObjectElements::offsetOfInitializedLength()));
-
-    // Perform the store.
-    storeValue(element, Address(scratch, index * sizeof(Value)), R0);
-
+    // Pop the rhs, so that the object is on the top of the stack.
     frame.pop();
     return true;
 }
