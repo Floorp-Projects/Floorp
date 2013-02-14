@@ -1023,6 +1023,7 @@ fsmdef_init_dcb (fsmdef_dcb_t *dcb, callid_t call_id,
 
     dcb->remote_sdp_present = FALSE;
     dcb->remote_sdp_in_ack = FALSE;
+    dcb->local_sdp_complete = FALSE;
 
     dcb->sdp = NULL;
     dcb->src_sdp_version = 0;
@@ -2865,6 +2866,8 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     char                *ice_pwd = NULL;
     short               vcm_res;
     session_data_t      *sess_data_p = NULL;
+    char                *local_sdp = NULL;
+    uint32_t            local_sdp_len = 0;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
@@ -2878,6 +2881,29 @@ fsmdef_ev_createoffer (sm_event_t *event) {
       FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
       return SM_RC_CLEANUP;
     }
+
+    /* For now, if the local SDP has been set, we don't allow it to be set
+       again. This will change when we allow renegotiation of ongoing
+       sessions. See bug 840728. */
+    if (dcb->local_sdp_complete) {
+        FSM_DEBUG_SM(DEB_F_PREFIX"local SDP already created: returning "
+        "prevously created SDP.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+
+        local_sdp = sipsdp_write_to_buf(dcb->sdp->src_sdp, &local_sdp_len);
+        if (!local_sdp) {
+            ui_create_offer(evCreateOfferError, line, call_id,
+                dcb->caller_id.call_instance_id, strlib_empty());
+            FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
+            return (fsmdef_release(fcb, cause, FALSE));
+        }
+
+        ui_create_offer(evCreateOffer, line, call_id,
+            dcb->caller_id.call_instance_id,
+            strlib_malloc(local_sdp,-1));
+        free(local_sdp);
+        return (SM_RC_END);
+    }
+
     dcb->inbound = FALSE;
 
     if (msg->data.session.constraints) {
@@ -2935,6 +2961,8 @@ fsmdef_ev_createoffer (sm_event_t *event) {
         return (fsmdef_release(fcb, cause, FALSE));
     }
 
+    dcb->local_sdp_complete = TRUE;
+
     /* Pass offer SDP back to UI */
     ui_create_offer(evCreateOffer, line, call_id,
         dcb->caller_id.call_instance_id,
@@ -2974,6 +3002,8 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     boolean             has_audio;
     boolean             has_video;
     boolean             has_data;
+    char                *local_sdp = NULL;
+    uint32_t            local_sdp_len = 0;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
@@ -2986,6 +3016,29 @@ fsmdef_ev_createanswer (sm_event_t *event) {
         FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
         return SM_RC_CLEANUP;
     }
+
+    /* For now, if the local SDP has been set, we don't allow it to be set
+       again. This will change when we allow renegotiation of ongoing
+       sessions. See bug 840728. */
+    if (dcb->local_sdp_complete) {
+        FSM_DEBUG_SM(DEB_F_PREFIX"local SDP already created: returning "
+        "prevously created SDP.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+
+        local_sdp = sipsdp_write_to_buf(dcb->sdp->src_sdp, &local_sdp_len);
+        if (!local_sdp) {
+            ui_create_answer(evCreateAnswerError, line, call_id,
+                dcb->caller_id.call_instance_id, strlib_empty());
+            FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
+            return (fsmdef_release(fcb, cause, FALSE));
+        }
+
+        ui_create_answer(evCreateAnswer, line, call_id,
+            dcb->caller_id.call_instance_id,
+            strlib_malloc(local_sdp,-1));
+        free(local_sdp);
+        return (SM_RC_END);
+    }
+
     dcb->inbound = TRUE;
 
     if (msg->data.session.constraints) {
@@ -3069,6 +3122,8 @@ fsmdef_ev_createanswer (sm_event_t *event) {
         return (fsmdef_release(fcb, cause, FALSE));
     }
 
+    dcb->local_sdp_complete = TRUE;
+
     /* Pass SDP back to UI */
     ui_create_answer(evCreateAnswer, line, call_id,
         dcb->caller_id.call_instance_id,
@@ -3096,7 +3151,7 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
     callid_t            call_id = msg->call_id;
     line_t              line = msg->line;
     cc_causes_t         lsm_rc;
-    char                *local_sdp = 0;
+    char                *local_sdp = NULL;
     uint32_t            local_sdp_len = 0;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
