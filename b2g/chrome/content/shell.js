@@ -526,7 +526,8 @@ var shell = {
       url: msg.uri,
       manifestURL: msg.manifest,
       isActivity: (msg.type == 'activity'),
-      target: msg.target
+      target: msg.target,
+      expectingSystemMessage: true
     });
   },
 
