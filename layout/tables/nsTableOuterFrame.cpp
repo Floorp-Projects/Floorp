@@ -297,17 +297,17 @@ nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // If there's no caption, take a short cut to avoid having to create
   // the special display list set and then sort it.
-  if (mCaptionFrames.IsEmpty())
-    return BuildDisplayListForInnerTable(aBuilder, aDirtyRect, aLists);
-    
+  if (mCaptionFrames.IsEmpty()) {
+    BuildDisplayListForInnerTable(aBuilder, aDirtyRect, aLists);
+    return NS_OK;
+  }
+
   nsDisplayListCollection set;
-  nsresult rv = BuildDisplayListForInnerTable(aBuilder, aDirtyRect, set);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BuildDisplayListForInnerTable(aBuilder, aDirtyRect, set);
   
   nsDisplayListSet captionSet(set, set.BlockBorderBackgrounds());
-  rv = BuildDisplayListForChild(aBuilder, mCaptionFrames.FirstChild(),
-                                aDirtyRect, captionSet);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BuildDisplayListForChild(aBuilder, mCaptionFrames.FirstChild(),
+                           aDirtyRect, captionSet);
   
   // Now we have to sort everything by content order, since the caption
   // may be somewhere inside the table
@@ -326,8 +326,7 @@ nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilde
   nsIFrame* kid = mFrames.FirstChild();
   // The children should be in content order
   while (kid) {
-    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
     kid = kid->GetNextSibling();
   }
   return NS_OK;

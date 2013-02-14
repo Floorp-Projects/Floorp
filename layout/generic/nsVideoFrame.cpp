@@ -375,15 +375,13 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsVideoFrame");
 
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   nsDisplayList replacedContent;
 
   if (HasVideoElement() && !ShouldDisplayPoster()) {
-    rv = replacedContent.AppendNewToTop(
+    replacedContent.AppendNewToTop(
       new (aBuilder) nsDisplayVideo(aBuilder, this));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Add child frames to display list. We expect up to two children, an image
@@ -392,15 +390,13 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
        child;
        child = child->GetNextSibling()) {
     if (child->GetType() == nsGkAtoms::imageFrame && ShouldDisplayPoster()) {
-      rv = child->BuildDisplayListForStackingContext(aBuilder,
-                                                     aDirtyRect - child->GetOffsetTo(this),
-                                                     &replacedContent);
-      NS_ENSURE_SUCCESS(rv,rv);
+      child->BuildDisplayListForStackingContext(aBuilder,
+                                                aDirtyRect - child->GetOffsetTo(this),
+                                                &replacedContent);
     } else if (child->GetType() == nsGkAtoms::boxFrame) {
-      rv = child->BuildDisplayListForStackingContext(aBuilder,
-                                                     aDirtyRect - child->GetOffsetTo(this),
-                                                     &replacedContent);
-      NS_ENSURE_SUCCESS(rv,rv);
+      child->BuildDisplayListForStackingContext(aBuilder,
+                                                aDirtyRect - child->GetOffsetTo(this),
+                                                &replacedContent);
     }
   }
 

@@ -307,7 +307,8 @@ public:
     if (aFrame != frame) {
       return NS_OK;
     }
-    return frame->DisplayCaret(this, aDirtyRect, aList);
+    frame->DisplayCaret(this, aDirtyRect, aList);
+    return NS_OK;
   }
   /**
    * Get the frame that the caret is supposed to draw in.

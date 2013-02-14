@@ -1311,27 +1311,22 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayListCollection tempLists;
   const nsDisplayListSet& destination = forceLayer ? tempLists : aLists;
 
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, destination);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, destination);
 
 #ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
-    rv = destination.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aBuilder, this, PaintXULDebugBackground,
-                         "XULDebugBackground"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = destination.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULDebug(aBuilder, this));
-    NS_ENSURE_SUCCESS(rv, rv);
+    destination.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayGeneric(aBuilder, this, PaintXULDebugBackground,
+                       "XULDebugBackground"));
+    destination.Outlines()->AppendNewToTop(new (aBuilder)
+      nsDisplayXULDebug(aBuilder, this));
   }
 #endif
 
-  rv = BuildDisplayListForChildren(aBuilder, aDirtyRect, destination);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BuildDisplayListForChildren(aBuilder, aDirtyRect, destination);
 
   // see if we have to draw a selection frame around this container
-  rv = DisplaySelectionOverlay(aBuilder, destination.Content());
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplaySelectionOverlay(aBuilder, destination.Content());
 
   if (forceLayer) {
     // This is a bit of a hack. Collect up all descendant display items
@@ -1346,9 +1341,8 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     masterList.AppendToTop(tempLists.PositionedDescendants());
     masterList.AppendToTop(tempLists.Outlines());
     // Wrap the list to make it its own layer
-    rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayOwnLayer(aBuilder, this, &masterList));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayOwnLayer(aBuilder, this, &masterList));
   }
   return NS_OK;
 }
@@ -1364,8 +1358,7 @@ nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
   // The children should be in the right order
   while (kid) {
-    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
     kid = kid->GetNextSibling();
   }
   return NS_OK;
