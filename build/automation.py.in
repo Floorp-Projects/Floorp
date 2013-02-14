@@ -533,10 +533,6 @@ user_pref("network.activity.blipIntervalMilliseconds", 250);
 // Don't allow the Data Reporting service to prompt for policy acceptance.
 user_pref("datareporting.policy.dataSubmissionPolicyBypassAcceptance", true);
 
-// Point Firefox Health Report at a local server. We don't care if it actually
-// works. It just can't hit the default production endpoint.
-user_pref("datareporting.healthreport.documentServerURI", "http://%(server)/healthreport/");
-
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
@@ -1295,4 +1291,3 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   def elf_arm(self, filename):
     data = open(filename, 'rb').read(20)
     return data[:4] == "\x7fELF" and ord(data[18]) == 40 # EM_ARM
-
