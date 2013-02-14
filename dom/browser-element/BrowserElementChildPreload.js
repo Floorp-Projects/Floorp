@@ -641,8 +641,18 @@ BrowserElementChild.prototype = {
 
   _recvSetVisible: function(data) {
     debug("Received setVisible message: (" + data.json.visible + ")");
+    if (this._forcedVisible == data.json.visible) {
+      return;
+    }
+
     this._forcedVisible = data.json.visible;
     this._updateDocShellVisibility();
+
+    // Fire a notification to the ProcessPriorityManager to reset this
+    // process's priority now (as opposed to after a brief delay).
+    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    os.notifyObservers(/* subject */ null, 'process-priority:reset-now',
+                       /* data */ null);
   },
 
   _recvVisible: function(data) {
