@@ -365,6 +365,13 @@ cppunittests-remote:
 jetpack-tests:
 	$(PYTHON) $(topsrcdir)/addon-sdk/source/bin/cfx -b $(browser_path) --parseable testpkgs
 
+# -- -register
+# -- --trace-malloc malloc.log --shutdown-leaks=sdleak.log
+leaktest:
+	$(PYTHON) _leaktest/leaktest.py $(LEAKTEST_ARGS)
+
+
+
 # Package up the tests and test harnesses
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
