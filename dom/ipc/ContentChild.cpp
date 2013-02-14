@@ -230,39 +230,6 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
     return NS_OK;
 }
 
-class SystemMessageHandledObserver MOZ_FINAL : public nsIObserver
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    void Init();
-};
-
-void SystemMessageHandledObserver::Init()
-{
-    nsCOMPtr<nsIObserverService> os =
-        mozilla::services::GetObserverService();
-
-    if (os) {
-        os->AddObserver(this, "SystemMessageManager:HandleMessageDone",
-                        /* ownsWeak */ false);
-    }
-}
-
-NS_IMETHODIMP
-SystemMessageHandledObserver::Observe(nsISupports* aSubject,
-                                      const char* aTopic,
-                                      const PRUnichar* aData)
-{
-    if (ContentChild::GetSingleton()) {
-        ContentChild::GetSingleton()->SendSystemMessageHandled();
-    }
-    return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS1(SystemMessageHandledObserver, nsIObserver)
-
 ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
@@ -380,11 +347,6 @@ ContentChild::InitXPCOM()
 
     DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
     NS_ASSERTION(observer, "FileUpdateDispatcher is null");
-
-    // This object is held alive by the observer service.
-    nsRefPtr<SystemMessageHandledObserver> sysMsgObserver =
-        new SystemMessageHandledObserver();
-    sysMsgObserver->Init();
 }
 
 PMemoryReportRequestChild*
@@ -573,12 +535,11 @@ ContentChild::AllocPBrowser(const IPCTabContext& aContext,
         sFirstIdleTask = NewRunnableFunction(FirstIdle);
         MessageLoop::current()->PostIdleTask(FROM_HERE, sFirstIdleTask);
 
-        // We are either a brand-new process loading its first PBrowser, or we
-        // are the preallocated process transforming into a particular
-        // app/browser.  Either way, our parent has already set our process
-        // priority, and we want to leave it there for a few seconds while we
-        // start up.
-        TemporarilyLockProcessPriority();
+        // If we are the preallocated process transforming into an app process,
+        // we'll have background priority at this point.  Give ourselves a
+        // priority boost for a few seconds, so we don't get killed while we're
+        // loading our first TabChild.
+        TemporarilySetProcessPriorityToForeground();
     }
 
     // We'll happily accept any kind of IPCTabContext here; we don't need to
