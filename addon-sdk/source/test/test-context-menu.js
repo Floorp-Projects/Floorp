@@ -3,8 +3,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 'use strict';
 
-let {Cc,Ci} = require("chrome");
+let { Cc, Ci } = require("chrome");
+
 const { Loader } = require('sdk/test/loader');
 const timer = require("sdk/timers");
 
@@ -480,6 +482,52 @@ exports.testURLContextRemove = function (test) {
   });
 };
 
+// Loading a new page in the same tab should correctly start a new worker for
+// any content scripts
+exports.testPageReload = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = loader.cm.Item({
+    label: "Item",
+    contentScript: "var doc = document; self.on('context', function(node) doc.body.getAttribute('showItem') == 'true');"
+  });
+
+  test.withTestDoc(function (window, doc) {
+    // Set a flag on the document that the item uses
+    doc.body.setAttribute("showItem", "true");
+
+    test.showMenu(null, function (popup) {
+      // With the attribute true the item should be visible in the menu
+      test.checkMenu([item], [], []);
+      test.hideMenu(function() {
+        let browser = this.tabBrowser.getBrowserForTab(this.tab)
+        test.delayedEventListener(browser, "load", function() {
+          test.delayedEventListener(browser, "load", function() {
+            window = browser.contentWindow;
+            doc = window.document;
+
+            // Set a flag on the document that the item uses
+            doc.body.setAttribute("showItem", "false");
+
+            test.showMenu(null, function (popup) {
+              // In the new document with the attribute false the item should be
+              // hidden, but if the contentScript hasn't been reloaded it will
+              // still see the old value
+              test.checkMenu([item], [item], []);
+
+              test.done();
+            });
+          }, true);
+          browser.loadURI(TEST_DOC_URL, null, null);
+        }, true);
+        // Required to make sure we load a new page in history rather than
+        // just reloading the current page which would unload it
+        browser.loadURI("about:blank", null, null);
+      });
+    });
+  });
+};
 
 // Closing a page after it's been used with a worker should cause the worker
 // to be destroyed
@@ -555,6 +603,143 @@ exports.testContentContextNoMatch = function (test) {
 };
 
 
+// Content contexts that return undefined should cause their items to be absent
+// from the menu.
+exports.testContentContextUndefined = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "item",
+    contentScript: 'self.on("context", function () {});'
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item], [item], []);
+    test.done();
+  });
+};
+
+
+// Content contexts that return an empty string should cause their items to be
+// absent from the menu and shouldn't wipe the label
+exports.testContentContextEmptyString = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "item",
+    contentScript: 'self.on("context", function () "");'
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item], [item], []);
+    test.assertEqual(item.label, "item", "Label should still be correct");
+    test.done();
+  });
+};
+
+
+// If any content contexts returns true then their items should be present in
+// the menu.
+exports.testMultipleContentContextMatch1 = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "item",
+    contentScript: 'self.on("context", function () true); ' +
+                   'self.on("context", function () false);',
+    onMessage: function() {
+      test.fail("Should not have called the second context listener");
+    }
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item], [], []);
+    test.done();
+  });
+};
+
+
+// If any content contexts returns true then their items should be present in
+// the menu.
+exports.testMultipleContentContextMatch2 = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "item",
+    contentScript: 'self.on("context", function () false); ' +
+                   'self.on("context", function () true);'
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item], [], []);
+    test.done();
+  });
+};
+
+
+// If any content contexts returns a string then their items should be present
+// in the menu.
+exports.testMultipleContentContextString1 = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "item",
+    contentScript: 'self.on("context", function () "new label"); ' +
+                   'self.on("context", function () false);'
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item], [], []);
+    test.assertEqual(item.label, "new label", "Label should have changed");
+    test.done();
+  });
+};
+
+
+// If any content contexts returns a string then their items should be present
+// in the menu.
+exports.testMultipleContentContextString2 = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "item",
+    contentScript: 'self.on("context", function () false); ' +
+                   'self.on("context", function () "new label");'
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item], [], []);
+    test.assertEqual(item.label, "new label", "Label should have changed");
+    test.done();
+  });
+};
+
+
+// If many content contexts returns a string then the first should take effect
+exports.testMultipleContentContextString3 = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "item",
+    contentScript: 'self.on("context", function () "new label 1"); ' +
+                   'self.on("context", function () "new label 2");'
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item], [], []);
+    test.assertEqual(item.label, "new label 1", "Label should have changed");
+    test.done();
+  });
+};
+
+
 // Content contexts that return true should cause their items to be present
 // in the menu when context clicking an active element.
 exports.testContentContextMatchActiveElement = function (test) {
@@ -619,6 +804,44 @@ exports.testContentContextNoMatchActiveElement = function (test) {
       label: "item 4",
       context: [loader.cm.PageContext()],
       contentScript: 'self.on("context", function () false);'
+    })
+  ];
+
+  test.withTestDoc(function (window, doc) {
+    test.showMenu(doc.getElementById("image"), function (popup) {
+      test.checkMenu(items, items, []);
+      test.done();
+    });
+  });
+};
+
+
+// Content contexts that return undefined should cause their items to be absent
+// from the menu when context clicking an active element.
+exports.testContentContextNoMatchActiveElement = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let items = [
+    new loader.cm.Item({
+      label: "item 1",
+      contentScript: 'self.on("context", function () {});'
+    }),
+    new loader.cm.Item({
+      label: "item 2",
+      context: undefined,
+      contentScript: 'self.on("context", function () {});'
+    }),
+    // These items will always be hidden by the declarative usage of PageContext
+    new loader.cm.Item({
+      label: "item 3",
+      context: loader.cm.PageContext(),
+      contentScript: 'self.on("context", function () {});'
+    }),
+    new loader.cm.Item({
+      label: "item 4",
+      context: [loader.cm.PageContext()],
+      contentScript: 'self.on("context", function () {});'
     })
   ];
 
@@ -799,7 +1022,7 @@ exports.testUnload = function (test) {
 
 
 // Using multiple module instances to add items without causing overflow should
-// work OK.  Assumes OVERFLOW_THRESH_DEFAULT <= 2.
+// work OK.  Assumes OVERFLOW_THRESH_DEFAULT >= 2.
 exports.testMultipleModulesAdd = function (test) {
   test = new TestHelper(test);
   let loader0 = test.newLoader();
@@ -1164,12 +1387,406 @@ exports.testMultipleModulesOrderOverflow = function (test) {
 
         // Same again
         test.checkMenu([item0, item2, item1, item3], [], []);
-        prefs.set(OVERFLOW_THRESH_PREF, OVERFLOW_THRESH_DEFAULT);
         test.done();
       });
     });
   });
 };
+
+
+// Checks that if a module's items are all hidden then the overflow menu doesn't
+// get hidden
+exports.testMultipleModulesOverflowHidden = function (test) {
+  test = new TestHelper(test);
+  let loader0 = test.newLoader();
+  let loader1 = test.newLoader();
+
+  let prefs = loader0.loader.require("preferences-service");
+  prefs.set(OVERFLOW_THRESH_PREF, 0);
+
+  // Use each module to add an item, then unload each module in turn.
+  let item0 = new loader0.cm.Item({ label: "item 0" });
+  let item1 = new loader1.cm.Item({
+    label: "item 1",
+    context: loader1.cm.SelectorContext("a")
+  });
+
+  test.showMenu(null, function (popup) {
+    // One should be hidden
+    test.checkMenu([item0, item1], [item1], []);
+    test.done();
+  });
+};
+
+
+// Checks that if a module's items are all hidden then the overflow menu doesn't
+// get hidden (reverse order to above)
+exports.testMultipleModulesOverflowHidden2 = function (test) {
+  test = new TestHelper(test);
+  let loader0 = test.newLoader();
+  let loader1 = test.newLoader();
+
+  let prefs = loader0.loader.require("preferences-service");
+  prefs.set(OVERFLOW_THRESH_PREF, 0);
+
+  // Use each module to add an item, then unload each module in turn.
+  let item0 = new loader0.cm.Item({
+    label: "item 0",
+    context: loader0.cm.SelectorContext("a")
+  });
+  let item1 = new loader1.cm.Item({ label: "item 1" });
+
+  test.showMenu(null, function (popup) {
+    // One should be hidden
+    test.checkMenu([item0, item1], [item0], []);
+    test.done();
+  });
+};
+
+
+// Checks that we don't overflow if there are more items than the overflow
+// threshold but not all of them are visible
+exports.testOverflowIgnoresHidden = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let prefs = loader.loader.require("preferences-service");
+  prefs.set(OVERFLOW_THRESH_PREF, 2);
+
+  let allItems = [
+    new loader.cm.Item({
+      label: "item 0"
+    }),
+    new loader.cm.Item({
+      label: "item 1"
+    }),
+    new loader.cm.Item({
+      label: "item 2",
+      context: loader.cm.SelectorContext("a")
+    })
+  ];
+
+  test.showMenu(null, function (popup) {
+    // One should be hidden
+    test.checkMenu(allItems, [allItems[2]], []);
+    test.done();
+  });
+};
+
+
+// Checks that we don't overflow if there are more items than the overflow
+// threshold but not all of them are visible
+exports.testOverflowIgnoresHiddenMultipleModules1 = function (test) {
+  test = new TestHelper(test);
+  let loader0 = test.newLoader();
+  let loader1 = test.newLoader();
+
+  let prefs = loader0.loader.require("preferences-service");
+  prefs.set(OVERFLOW_THRESH_PREF, 2);
+
+  let allItems = [
+    new loader0.cm.Item({
+      label: "item 0"
+    }),
+    new loader0.cm.Item({
+      label: "item 1"
+    }),
+    new loader1.cm.Item({
+      label: "item 2",
+      context: loader1.cm.SelectorContext("a")
+    }),
+    new loader1.cm.Item({
+      label: "item 3",
+      context: loader1.cm.SelectorContext("a")
+    })
+  ];
+
+  test.showMenu(null, function (popup) {
+    // One should be hidden
+    test.checkMenu(allItems, [allItems[2], allItems[3]], []);
+    test.done();
+  });
+};
+
+
+// Checks that we don't overflow if there are more items than the overflow
+// threshold but not all of them are visible
+exports.testOverflowIgnoresHiddenMultipleModules2 = function (test) {
+  test = new TestHelper(test);
+  let loader0 = test.newLoader();
+  let loader1 = test.newLoader();
+
+  let prefs = loader0.loader.require("preferences-service");
+  prefs.set(OVERFLOW_THRESH_PREF, 2);
+
+  let allItems = [
+    new loader0.cm.Item({
+      label: "item 0"
+    }),
+    new loader0.cm.Item({
+      label: "item 1",
+      context: loader0.cm.SelectorContext("a")
+    }),
+    new loader1.cm.Item({
+      label: "item 2"
+    }),
+    new loader1.cm.Item({
+      label: "item 3",
+      context: loader1.cm.SelectorContext("a")
+    })
+  ];
+
+  test.showMenu(null, function (popup) {
+    // One should be hidden
+    test.checkMenu(allItems, [allItems[1], allItems[3]], []);
+    test.done();
+  });
+};
+
+
+// Checks that we don't overflow if there are more items than the overflow
+// threshold but not all of them are visible
+exports.testOverflowIgnoresHiddenMultipleModules3 = function (test) {
+  test = new TestHelper(test);
+  let loader0 = test.newLoader();
+  let loader1 = test.newLoader();
+
+  let prefs = loader0.loader.require("preferences-service");
+  prefs.set(OVERFLOW_THRESH_PREF, 2);
+
+  let allItems = [
+    new loader0.cm.Item({
+      label: "item 0",
+      context: loader0.cm.SelectorContext("a")
+    }),
+    new loader0.cm.Item({
+      label: "item 1",
+      context: loader0.cm.SelectorContext("a")
+    }),
+    new loader1.cm.Item({
+      label: "item 2"
+    }),
+    new loader1.cm.Item({
+      label: "item 3"
+    })
+  ];
+
+  test.showMenu(null, function (popup) {
+    // One should be hidden
+    test.checkMenu(allItems, [allItems[0], allItems[1]], []);
+    test.done();
+  });
+};
+
+
+// Tests that we transition between overflowing to non-overflowing to no items
+// and back again
+exports.testOverflowTransition = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let prefs = loader.loader.require("preferences-service");
+  prefs.set(OVERFLOW_THRESH_PREF, 2);
+
+  let pItems = [
+    new loader.cm.Item({
+      label: "item 0",
+      context: loader.cm.SelectorContext("p")
+    }),
+    new loader.cm.Item({
+      label: "item 1",
+      context: loader.cm.SelectorContext("p")
+    })
+  ];
+
+  let aItems = [
+    new loader.cm.Item({
+      label: "item 2",
+      context: loader.cm.SelectorContext("a")
+    }),
+    new loader.cm.Item({
+      label: "item 3",
+      context: loader.cm.SelectorContext("a")
+    })
+  ];
+
+  let allItems = pItems.concat(aItems);
+
+  test.withTestDoc(function (window, doc) {
+    test.showMenu(doc.getElementById("link"), function (popup) {
+      // The menu should contain all items and will overflow
+      test.checkMenu(allItems, [], []);
+      popup.hidePopup();
+
+      test.showMenu(doc.getElementById("text"), function (popup) {
+        // Only contains hald the items and will not overflow
+        test.checkMenu(allItems, aItems, []);
+        popup.hidePopup();
+
+        test.showMenu(null, function (popup) {
+          // None of the items will be visible
+          test.checkMenu(allItems, allItems, []);
+          popup.hidePopup();
+
+          test.showMenu(doc.getElementById("text"), function (popup) {
+            // Only contains hald the items and will not overflow
+            test.checkMenu(allItems, aItems, []);
+            popup.hidePopup();
+
+            test.showMenu(doc.getElementById("link"), function (popup) {
+              // The menu should contain all items and will overflow
+              test.checkMenu(allItems, [], []);
+              popup.hidePopup();
+
+              test.showMenu(null, function (popup) {
+                // None of the items will be visible
+                test.checkMenu(allItems, allItems, []);
+                popup.hidePopup();
+
+                test.showMenu(doc.getElementById("link"), function (popup) {
+                  // The menu should contain all items and will overflow
+                  test.checkMenu(allItems, [], []);
+                  test.done();
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+};
+
+
+// An item's command listener should work.
+exports.testItemCommand = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "item",
+    data: "item data",
+    contentScript: 'self.on("click", function (node, data) {' +
+                   '  self.postMessage({' +
+                   '    tagName: node.tagName,' +
+                   '    data: data' +
+                   '  });' +
+                   '});',
+    onMessage: function (data) {
+      test.assertEqual(this, item, "`this` inside onMessage should be item");
+      test.assertEqual(data.tagName, "HTML", "node should be an HTML element");
+      test.assertEqual(data.data, item.data, "data should be item data");
+      test.done();
+    }
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item], [], []);
+    let elt = test.getItemElt(popup, item);
+
+    // create a command event
+    let evt = elt.ownerDocument.createEvent('Event');
+    evt.initEvent('command', true, true);
+    elt.dispatchEvent(evt);
+  });
+};
+
+
+// A menu's click listener should work and receive bubbling 'command' events from
+// sub-items appropriately.  This also tests menus and ensures that when a CSS
+// selector context matches the clicked node's ancestor, the matching ancestor
+// is passed to listeners as the clicked node.
+exports.testMenuCommand = function (test) {
+  // Create a top-level menu, submenu, and item, like this:
+  // topMenu -> submenu -> item
+  // Click the item and make sure the click bubbles.
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({
+    label: "submenu item",
+    data: "submenu item data",
+    context: loader.cm.SelectorContext("a"),
+  });
+
+  let submenu = new loader.cm.Menu({
+    label: "submenu",
+    context: loader.cm.SelectorContext("a"),
+    items: [item]
+  });
+
+  let topMenu = new loader.cm.Menu({
+    label: "top menu",
+    contentScript: 'self.on("click", function (node, data) {' +
+                   '  let Ci = Components["interfaces"];' +
+                   '  self.postMessage({' +
+                   '    tagName: node.tagName,' +
+                   '    data: data' +
+                   '  });' +
+                   '});',
+    onMessage: function (data) {
+      test.assertEqual(this, topMenu, "`this` inside top menu should be menu");
+      test.assertEqual(data.tagName, "A", "Clicked node should be anchor");
+      test.assertEqual(data.data, item.data,
+                       "Clicked item data should be correct");
+      test.done();
+    },
+    items: [submenu],
+    context: loader.cm.SelectorContext("a")
+  });
+
+  test.withTestDoc(function (window, doc) {
+    test.showMenu(doc.getElementById("span-link"), function (popup) {
+      test.checkMenu([topMenu], [], []);
+      let topMenuElt = test.getItemElt(popup, topMenu);
+      let topMenuPopup = topMenuElt.firstChild;
+      let submenuElt = test.getItemElt(topMenuPopup, submenu);
+      let submenuPopup = submenuElt.firstChild;
+      let itemElt = test.getItemElt(submenuPopup, item);
+
+      // create a command event
+      let evt = itemElt.ownerDocument.createEvent('Event');
+      evt.initEvent('command', true, true);
+      itemElt.dispatchEvent(evt);
+    });
+  });
+};
+
+
+// Click listeners should work when multiple modules are loaded.
+exports.testItemCommandMultipleModules = function (test) {
+  test = new TestHelper(test);
+  let loader0 = test.newLoader();
+  let loader1 = test.newLoader();
+
+  let item0 = loader0.cm.Item({
+    label: "loader 0 item",
+    contentScript: 'self.on("click", self.postMessage);',
+    onMessage: function () {
+      test.fail("loader 0 item should not emit click event");
+    }
+  });
+  let item1 = loader1.cm.Item({
+    label: "loader 1 item",
+    contentScript: 'self.on("click", self.postMessage);',
+    onMessage: function () {
+      test.pass("loader 1 item clicked as expected");
+      test.done();
+    }
+  });
+
+  test.showMenu(null, function (popup) {
+    test.checkMenu([item0, item1], [], []);
+    let item1Elt = test.getItemElt(popup, item1);
+
+    // create a command event
+    let evt = item1Elt.ownerDocument.createEvent('Event');
+    evt.initEvent('command', true, true);
+    item1Elt.dispatchEvent(evt);
+  });
+};
+
+
 
 
 // An item's click listener should work.
@@ -1526,6 +2143,7 @@ exports.testDrawImageOnClickNode = function (test) {
   });
 };
 
+
 // Setting an item's label before the menu is ever shown should correctly change
 // its label.
 exports.testSetLabelBeforeShow = function (test) {
@@ -1589,7 +2207,6 @@ exports.testSetLabelBeforeShowOverflow = function (test) {
 
   test.showMenu(null, function (popup) {
     test.checkMenu(items, [], []);
-    prefs.set(OVERFLOW_THRESH_PREF, OVERFLOW_THRESH_DEFAULT);
     test.done();
   });
 };
@@ -1617,7 +2234,6 @@ exports.testSetLabelAfterShowOverflow = function (test) {
     test.assertEqual(items[0].label, "z");
     test.showMenu(null, function (popup) {
       test.checkMenu(items, [], []);
-      prefs.set(OVERFLOW_THRESH_PREF, OVERFLOW_THRESH_DEFAULT);
       test.done();
     });
   });
@@ -2090,6 +2706,8 @@ exports.testSubItemDefaultVisible = function (test) {
   });
 };
 
+// Tests that the click event on sub menuitem
+// tiggers the click event for the sub menuitem and the parent menu
 exports.testSubItemClick = function (test) {
   test = new TestHelper(test);
   let loader = test.newLoader();
@@ -2141,6 +2759,68 @@ exports.testSubItemClick = function (test) {
       let topMenuPopup = topMenuElt.firstChild;
       let itemElt = test.getItemElt(topMenuPopup, items[0].items[0]);
       itemElt.click();
+    });
+  });
+};
+
+// Tests that the command event on sub menuitem
+// tiggers the click event for the sub menuitem and the parent menu
+exports.testSubItemCommand = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+
+  let state = 0;
+
+  let items = [
+    loader.cm.Menu({
+      label: "menu 1",
+      items: [
+        loader.cm.Item({
+          label: "subitem 1",
+          data: "foobar",
+          contentScript: 'self.on("click", function (node, data) {' +
+                         '  self.postMessage({' +
+                         '    tagName: node.tagName,' +
+                         '    data: data' +
+                         '  });' +
+                         '});',
+          onMessage: function(msg) {
+            test.assertEqual(msg.tagName, "HTML", "should have seen the right node");
+            test.assertEqual(msg.data, "foobar", "should have seen the right data");
+            test.assertEqual(state, 0, "should have seen the event at the right time");
+            state++;
+          }
+        })
+      ],
+      contentScript: 'self.on("click", function (node, data) {' +
+                     '  self.postMessage({' +
+                     '    tagName: node.tagName,' +
+                     '    data: data' +
+                     '  });' +
+                     '});',
+      onMessage: function(msg) {
+        test.assertEqual(msg.tagName, "HTML", "should have seen the right node");
+        test.assertEqual(msg.data, "foobar", "should have seen the right data");
+        test.assertEqual(state, 1, "should have seen the event at the right time");
+        state++
+
+        test.done();
+      }
+    })
+  ];
+
+  test.withTestDoc(function (window, doc) {
+    test.showMenu(null, function (popup) {
+      test.checkMenu(items, [], []);
+
+      let topMenuElt = test.getItemElt(popup, items[0]);
+      let topMenuPopup = topMenuElt.firstChild;
+      let itemElt = test.getItemElt(topMenuPopup, items[0].items[0]);
+
+      // create a command event
+      let evt = itemElt.ownerDocument.createEvent('Event');
+      evt.initEvent('command', true, true);
+      itemElt.dispatchEvent(evt);
     });
   });
 };
@@ -2249,6 +2929,8 @@ function TestHelper(test) {
   this.browserWindow = Cc["@mozilla.org/appshell/window-mediator;1"].
                        getService(Ci.nsIWindowMediator).
                        getMostRecentWindow("navigator:browser");
+  this.overflowThreshValue = require("sdk/preferences/service").
+                             get(OVERFLOW_THRESH_PREF, OVERFLOW_THRESH_DEFAULT);
 }
 
 TestHelper.prototype = {
@@ -2351,6 +3033,9 @@ TestHelper.prototype = {
     let mainNodes = this.browserWindow.document.querySelectorAll("#contentAreaContextMenu > ." + ITEM_CLASS);
     let overflowNodes = this.browserWindow.document.querySelectorAll("." + OVERFLOW_POPUP_CLASS + " > ." + ITEM_CLASS);
 
+    this.test.assert(mainNodes.length == 0 || overflowNodes.length == 0,
+                     "Should only see nodes at the top level or in overflow");
+
     let overflow = this.overflowSubmenu;
     if (this.shouldOverflow(total)) {
       this.test.assert(overflow && !overflow.hidden,
@@ -2361,12 +3046,15 @@ TestHelper.prototype = {
     else {
       this.test.assert(!overflow || overflow.hidden,
                        "overflow menu should not be present");
-      this.test.assertEqual(overflowNodes.length, 0,
-                            "should be no items in the overflow context menu");
+      // When visible nodes == 0 they could be in overflow or top level
+      if (total > 0) {
+        this.test.assertEqual(overflowNodes.length, 0,
+                              "should be no items in the overflow context menu");
+      }
     }
 
-    let nodes = this.shouldOverflow(total) ? overflowNodes : mainNodes;
-
+    // Iterate over wherever the nodes have ended up
+    let nodes = mainNodes.length ? mainNodes : overflowNodes;
     this.checkNodes(nodes, presentItems, absentItems, removedItems)
     let pos = 0;
   },
@@ -2381,6 +3069,11 @@ TestHelper.prototype = {
       // Removed items shouldn't be in the list
       if (removedItems.indexOf(item) >= 0)
         continue;
+
+      if (nodes.length <= pos) {
+        this.test.assert(false, "Not enough nodes");
+        return;
+      }
 
       let hidden = absentItems.indexOf(item) >= 0;
 
@@ -2432,12 +3125,16 @@ TestHelper.prototype = {
 
   // Call to finish the test.
   done: function () {
+    const self = this;
     function commonDone() {
       this.closeTab();
 
       while (this.loaders.length) {
         this.loaders[0].unload();
       }
+
+      require("sdk/preferences/service").set(OVERFLOW_THRESH_PREF, self.overflowThreshValue);
+
       this.test.done();
     }
 

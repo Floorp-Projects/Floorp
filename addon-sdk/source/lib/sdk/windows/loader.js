@@ -86,6 +86,9 @@ const WindowLoader = Trait.compose({
           this._onLoad(window)
         }
       }
+      else {
+        this.__window = null;
+      }
     }
   },
   __window: null,
