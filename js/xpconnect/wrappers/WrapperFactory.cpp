@@ -285,7 +285,8 @@ DEBUG_CheckUnwrapSafety(JSObject *obj, js::Wrapper *handler,
         MOZ_ASSERT(!handler->isSafeToUnwrap());
     } else if (AccessCheck::needsSystemOnlyWrapper(obj)) {
         // SOWs are opaque to everyone but Chrome and XBL scopes.
-        MOZ_ASSERT(handler->isSafeToUnwrap() == nsContentUtils::CanAccessNativeAnon());
+        // FIXME: Re-enable in bug 834732.
+        // MOZ_ASSERT(handler->isSafeToUnwrap() == nsContentUtils::CanAccessNativeAnon());
     } else {
         // Otherwise, it should depend on whether the target subsumes the origin.
         MOZ_ASSERT(handler->isSafeToUnwrap() == AccessCheck::subsumes(target, origin));
