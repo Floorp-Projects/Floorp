@@ -1617,7 +1617,10 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   if (isThemed) {
     nsDisplayBackgroundImage* bgItem =
       new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, 0, isThemed, nullptr);
-    aList->AppendNewToTop(bgItem);
+    nsresult rv = aList->AppendNewToTop(bgItem);
+    if (rv != NS_OK) {
+      return rv;
+    }
     if (aBackground) {
       *aBackground = bgItem;
     }
@@ -1637,7 +1640,10 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     }
     nsDisplayBackgroundImage* bgItem =
       new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, isThemed, bg);
-    aList->AppendNewToTop(bgItem);
+    nsresult rv = aList->AppendNewToTop(bgItem);
+    if (rv != NS_OK) {
+      return rv;
+    }
     if (!backgroundSet) {
       *aBackground = bgItem;
       backgroundSet = true;

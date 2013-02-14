@@ -1995,7 +1995,8 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
                                         const nsDisplayListSet& aLists)
 {
-  mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
+  nsresult rv = mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aBuilder->IsPaintingToWindow()) {
     mScrollPosAtLastPaint = GetScrollPosition();
@@ -2015,9 +2016,8 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
     // The scrolled frame shouldn't have its own background/border, so we
     // can just pass aLists directly.
-    mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame,
-                                     aDirtyRect, aLists);
-    return NS_OK;
+    return mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame,
+                                            aDirtyRect, aLists);
   }
 
   // We put scrollbars in their own layers when this is the root scroll
@@ -2062,7 +2062,8 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   nsDisplayListCollection set;
-  mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+  rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Since making new layers is expensive, only use nsDisplayScrollLayer
   // if the area is scrollable and we're the content process.
@@ -2100,8 +2101,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // to end up on our BorderBackground list.
   // If we are the viewport scrollframe, then clip all our descendants (to ensure
   // that fixed-pos elements get clipped by us).
-  mOuter->OverflowClip(aBuilder, set, aLists, clip, radii,
-                       true, mIsRoot);
+  rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, radii,
+                            true, mIsRoot);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (ShouldBuildLayer()) {
     // ScrollLayerWrapper must always be created because it initializes the

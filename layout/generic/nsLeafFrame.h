@@ -27,8 +27,7 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists) {
     DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame");
-    DisplayBorderBackgroundOutline(aBuilder, aLists);
-    return NS_OK;
+    return DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
   /**
