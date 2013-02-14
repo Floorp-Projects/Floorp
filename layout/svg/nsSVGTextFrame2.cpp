@@ -345,6 +345,13 @@ GetBaselinePosition(nsTextFrame* aFrame,
     case NS_STYLE_DOMINANT_BASELINE_HANGING:
     case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
       return 0;
+    case NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT:
+    case NS_STYLE_DOMINANT_BASELINE_NO_CHANGE:
+    case NS_STYLE_DOMINANT_BASELINE_RESET_SIZE:
+      // These three should not simply map to 'baseline', but we don't
+      // support the complex baseline model that SVG 1.1 has and which
+      // css3-linebox now defines.
+      // (fall through)
     case NS_STYLE_DOMINANT_BASELINE_AUTO:
     case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
       return aFrame->GetBaseline();
@@ -360,6 +367,7 @@ GetBaselinePosition(nsTextFrame* aFrame,
       return metrics.mAscent + metrics.mDescent;
     case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
     case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
+    case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
       return (metrics.mAscent + metrics.mDescent) / 2.0;
   }
 
