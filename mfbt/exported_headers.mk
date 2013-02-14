@@ -9,7 +9,6 @@
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla += \
-  ASan.h \
   Assertions.h \
   Attributes.h \
   BloomFilter.h \
@@ -25,6 +24,7 @@ EXPORTS_mozilla += \
   Likely.h \
   LinkedList.h \
   MathAlgorithms.h \
+  MemoryChecking.h \
   MSStdInt.h \
   NullPtr.h \
   Range.h \
