@@ -564,7 +564,22 @@ ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
                            PROCESS_PRIORITY_FOREGROUND);
     }
 
-    // If this fails, the child process died.
+    // Now that we've increased the process's priority from BACKGROUND (where
+    // the preallocated app sits) to something higher, check whether the process
+    // is still alive.  Hopefully the process won't unexpectedly crash after
+    // this point!
+    //
+    // It's not legal to call DidProcessCrash on Windows if the process has not
+    // terminated yet, so we have to skip this check there.
+
+#ifndef XP_WIN
+    bool exited = false;
+    base::DidProcessCrash(&exited, mSubprocess->GetChildProcessHandle());
+    if (exited) {
+        return false;
+    }
+#endif
+
     return SendSetProcessPrivileges(aPrivs);
 }
 
