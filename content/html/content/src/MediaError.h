@@ -3,14 +3,21 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_dom_MediaError_h
+#define mozilla_dom_MediaError_h
+
 #include "nsIDOMMediaError.h"
 #include "nsISupports.h"
 #include "mozilla/Attributes.h"
 
-class nsMediaError MOZ_FINAL : public nsIDOMMediaError
+namespace mozilla {
+namespace dom {
+
+class MediaError MOZ_FINAL : public nsIDOMMediaError
 {
 public:
-  nsMediaError(uint16_t aCode);
+  MediaError(uint16_t aCode);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -22,3 +29,8 @@ private:
   // Error code
   uint16_t mCode;
 };
+
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_MediaError_h
