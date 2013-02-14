@@ -15,15 +15,19 @@ var gInstanceUID;
  *    - stop, when user wants to stop profiling.
  *    - disabled, when the profiler was disabled
  *    - enabled, when the profiler was enabled
+ *    - displaysource, when user wants to display source
+ * @param object data (optional)
+ *    Additional data to send to the parent page.
  */
-function notifyParent(status) {
+function notifyParent(status, data={}) {
   if (!gInstanceUID) {
     gInstanceUID = window.location.search.substr(1);
   }
 
   window.parent.postMessage({
     uid: gInstanceUID,
-    status: status
+    status: status,
+    data: data
   }, "*");
 }
 
