@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIDOMEventListener.h"
+#include "nsIObserver.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
 
@@ -16,21 +17,35 @@ class nsIDOMWindow;
 
 namespace mozilla {
 namespace dom {
+
+class ContentParent;
+
 namespace power {
 
 class WakeLock
   : public nsIDOMMozWakeLock
   , public nsIDOMEventListener
+  , public nsIObserver
+  , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZWAKELOCK
   NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSIOBSERVER
 
   WakeLock();
   virtual ~WakeLock();
 
-  nsresult Init(const nsAString &aTopic, nsIDOMWindow *aWindow);
+  // Initialize this wake lock on behalf of the given window.  Null windows are
+  // allowed; a lock without an associated window is always considered
+  // invisible.
+  nsresult Init(const nsAString &aTopic, nsIDOMWindow* aWindow);
+
+  // Initialize this wake lock on behalf of the given process.  If the process
+  // dies, the lock is released.  A wake lock initialized via this method is
+  // always considered visible.
+  nsresult Init(const nsAString &aTopic, ContentParent* aContentParent);
 
 private:
   void     DoUnlock();
@@ -40,6 +55,11 @@ private:
 
   bool      mLocked;
   bool      mHidden;
+
+  // The ID of the ContentParent on behalf of whom we acquired this lock, or
+  // CONTENT_PROCESS_UNKNOWN_ID if this lock was acquired on behalf of the
+  // current process.
+  uint64_t  mContentParentID;
   nsString  mTopic;
 
   // window that this was created for.  Weak reference.
