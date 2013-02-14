@@ -1094,6 +1094,7 @@ class ObjectImpl : public gc::Cell
     }
 
     JSObject * asObjectPtr() { return reinterpret_cast<JSObject *>(this); }
+    const JSObject * asObjectPtr() const { return reinterpret_cast<const JSObject *>(this); }
 
     friend inline Value ObjectValue(ObjectImpl &obj);
 

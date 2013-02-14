@@ -529,7 +529,7 @@ public:
     return true;
   }
 
-  virtual bool finalizeInBackground(JS::HandleValue priv) {
+  virtual bool finalizeInBackground(JS::Value priv) {
     return false;
   }
 
