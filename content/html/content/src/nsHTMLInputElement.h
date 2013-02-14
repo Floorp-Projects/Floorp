@@ -663,7 +663,8 @@ protected:
    * Returns the input's "minimum" (as defined by the HTML5 spec) as a double.
    * Note this takes account of any default minimum that the type may have.
    * Returns NaN if the min attribute isn't a valid floating point number and
-   * the input's type does not have a default minimum.
+   * the input's type does not have a default minimum. Otherwise, guaranteed
+   * to return a finite value.
    *
    * NOTE: Only call this if you know DoesMinMaxApply() returns true.
    */
@@ -673,7 +674,8 @@ protected:
    * Returns the input's "maximum" (as defined by the HTML5 spec) as a double.
    * Note this takes account of any default maximum that the type may have.
    * Returns NaN if the max attribute isn't a valid floating point number and
-   * the input's type does not have a default maximum.
+   * the input's type does not have a default maximum. Otherwise, guaranteed
+   * to return a finite value.
    *
    * NOTE:Only call this if you know DoesMinMaxApply() returns true.
    */
