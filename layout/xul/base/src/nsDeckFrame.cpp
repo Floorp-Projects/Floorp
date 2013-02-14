@@ -171,8 +171,7 @@ nsDeckFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   // Putting the child in the background list. This is a little weird but
   // it matches what we were doing before.
   nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
-  BuildDisplayListForChild(aBuilder, box, aDirtyRect, set);
-  return NS_OK;
+  return BuildDisplayListForChild(aBuilder, box, aDirtyRect, set);
 }
 
 NS_IMETHODIMP

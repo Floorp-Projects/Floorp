@@ -154,14 +154,15 @@ nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
                                              const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
 {
-  nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsresult rv = nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsListControlFrame* listFrame = GetEnclosingListFrame(this);
   if (listFrame && listFrame->IsFocused()) {
     // we can't just associate the display item with the list frame,
     // because then the list's scrollframe won't clip it (the scrollframe
     // only clips contained descendants).
-    aLists.Outlines()->AppendNewToTop(new (aBuilder)
+    return aLists.Outlines()->AppendNewToTop(new (aBuilder)
       nsDisplayListFocus(aBuilder, this));
   }
   

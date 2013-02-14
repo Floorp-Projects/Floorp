@@ -287,6 +287,8 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
+  nsresult rv;
+
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aDirtyRect, aLists);
   }
@@ -310,9 +312,8 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         new (aBuilder) nsDisplayCanvasBackgroundColor(aBuilder, this));
   
     if (isThemed) {
-      aLists.BorderBackground()->AppendNewToTop(
+      return aLists.BorderBackground()->AppendNewToTop(
         new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, 0, isThemed, nullptr));
-      return NS_OK;
     }
 
     if (!bg) {
@@ -324,16 +325,18 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (bg->mLayers[i].mImage.IsEmpty()) {
         continue;
       }
-      aLists.BorderBackground()->AppendNewToTop(
-        new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i,
-                                                      isThemed, bg));
+      rv = aLists.BorderBackground()->AppendNewToTop(
+          new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i,
+                                                        isThemed, bg));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
   nsIFrame* kid;
   for (kid = GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
     // Put our child into its own pseudo-stack.
-    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
 #ifdef DEBUG_CANVAS_FOCUS
@@ -361,9 +364,8 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
   
-  aLists.Outlines()->AppendNewToTop(new (aBuilder)
-    nsDisplayCanvasFocus(aBuilder, this));
-  return NS_OK;
+  return aLists.Outlines()->AppendNewToTop(new (aBuilder)
+      nsDisplayCanvasFocus(aBuilder, this));
 }
 
 void

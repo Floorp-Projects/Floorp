@@ -808,18 +808,21 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
-  DisplayBorderBackgroundOutline(aBuilder, aLists);
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsDisplayList content;
   nsIFrame* child = GetFirstPrincipalChild();
   while (child) {
-    child->BuildDisplayListForStackingContext(aBuilder,
+    rv = child->BuildDisplayListForStackingContext(aBuilder,
         child->GetVisualOverflowRectRelativeToSelf(), &content);
+    NS_ENSURE_SUCCESS(rv, rv);
     child = child->GetNextSibling();
   }
 
-  content.AppendNewToTop(new (aBuilder)
+  rv = content.AppendNewToTop(new (aBuilder)
       nsDisplayTransform(aBuilder, this, &content, ::ComputePageSequenceTransform));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aLists.Content()->AppendToTop(&content);
   return NS_OK;

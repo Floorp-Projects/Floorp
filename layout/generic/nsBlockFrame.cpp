@@ -6250,6 +6250,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsLineBox* cursor = aBuilder->ShouldDescendIntoFrame(this) ?
     nullptr : GetFirstLineContaining(aDirtyRect.y);
   line_iterator line_end = end_lines();
+  nsresult rv = NS_OK;
   
   if (cursor) {
     for (line_iterator line = mLines.begin(cursor);
@@ -6262,8 +6263,10 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         if (lineArea.y >= aDirtyRect.YMost()) {
           break;
         }
-        DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
-                    linesDisplayListCollection, this, textOverflow);
+        rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
+                         linesDisplayListCollection, this, textOverflow);
+        if (NS_FAILED(rv))
+          break;
       }
     }
   } else {
@@ -6275,8 +6278,10 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
          line != line_end;
          ++line) {
       nsRect lineArea = line->GetVisualOverflowArea();
-      DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
-                  linesDisplayListCollection, this, textOverflow);
+      rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
+                       linesDisplayListCollection, this, textOverflow);
+      if (NS_FAILED(rv))
+        break;
       if (!lineArea.IsEmpty()) {
         if (lineArea.y < lastY
             || lineArea.YMost() < lastYMost) {
@@ -6288,7 +6293,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       lineCount++;
     }
 
-    if (nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
+    if (NS_SUCCEEDED(rv) && nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
       SetupLineCursor();
     }
   }
@@ -6302,10 +6307,10 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
   linesDisplayListCollection.MoveTo(aLists);
 
-  if (HasOutsideBullet()) {
+  if (NS_SUCCEEDED(rv) && HasOutsideBullet()) {
     // Display outside bullets manually
     nsIFrame* bullet = GetOutsideBullet();
-    BuildDisplayListForChild(aBuilder, bullet, aDirtyRect, aLists);
+    rv = BuildDisplayListForChild(aBuilder, bullet, aDirtyRect, aLists);
   }
 
 #ifdef DEBUG
@@ -6329,7 +6334,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 #endif
 
-  return NS_OK;
+  return rv;
 }
 
 #ifdef ACCESSIBILITY

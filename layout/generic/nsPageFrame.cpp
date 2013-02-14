@@ -467,7 +467,10 @@ BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
   // have already been marked as NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO.
   // Note that we should still do a prune step since we don't want to
   // rely on dirty-rect checking for correctness.
-  aExtraPage->BuildDisplayListForStackingContext(aBuilder, nsRect(), &list);
+  nsresult rv =
+    aExtraPage->BuildDisplayListForStackingContext(aBuilder, nsRect(), &list);
+  if (NS_FAILED(rv))
+    return rv;
   PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, aY, &list);
   aList->AppendToTop(&list);
   return NS_OK;
@@ -511,15 +514,18 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsDisplayListSet& aLists)
 {
   nsDisplayListCollection set;
+  nsresult rv;
 
   if (PresContext()->IsScreen()) {
-    DisplayBorderBackgroundOutline(aBuilder, aLists);
+    rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsDisplayList content;
   nsIFrame *child = mFrames.FirstChild();
-  child->BuildDisplayListForStackingContext(aBuilder,
+  rv = child->BuildDisplayListForStackingContext(aBuilder,
       child->GetVisualOverflowRectRelativeToSelf(), &content);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // We may need to paint out-of-flow frames whose placeholders are
   // on other pages. Add those pages to our display list. Note that
@@ -531,7 +537,9 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsIFrame* page = child;
   nscoord y = child->GetSize().height;
   while ((page = GetNextPage(page)) != nullptr) {
-    BuildDisplayListForExtraPage(aBuilder, this, page, y, &content);
+    rv = BuildDisplayListForExtraPage(aBuilder, this, page, y, &content);
+    if (NS_FAILED(rv))
+      break;
     y += page->GetSize().height;
   }
   
@@ -540,8 +548,8 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // can monkey with the contents if necessary.
   nsRect backgroundRect =
     nsRect(aBuilder->ToReferenceFrame(child), child->GetSize());
-  PresContext()->GetPresShell()->AddCanvasBackgroundColorItem(
-    *aBuilder, content, child, backgroundRect, NS_RGBA(0,0,0,0));
+  rv = PresContext()->GetPresShell()->AddCanvasBackgroundColorItem(
+         *aBuilder, content, child, backgroundRect, NS_RGBA(0,0,0,0));
 
   float scale = PresContext()->GetPageScale();
   nsRect clipRect(nsPoint(0, 0), child->GetSize());
@@ -563,16 +571,20 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                  "Should be clipping to region inside the page content bounds");
   }
   clipRect += aBuilder->ToReferenceFrame(child);
-  content.AppendNewToTop(new (aBuilder) nsDisplayClip(aBuilder, child, &content, clipRect));
-  content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, child, &content, ::ComputePageTransform));
+  rv = content.AppendNewToTop(new (aBuilder) nsDisplayClip(aBuilder, child, &content, clipRect));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, child, &content, ::ComputePageTransform));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   set.Content()->AppendToTop(&content);
 
   if (PresContext()->IsRootPaginatedDocument()) {
-    set.Content()->AppendNewToTop(new (aBuilder)
+    rv = set.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aBuilder, this, ::PaintHeaderFooter,
                          "HeaderFooter",
                          nsDisplayItem::TYPE_HEADER_FOOTER));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   set.MoveTo(aLists);
