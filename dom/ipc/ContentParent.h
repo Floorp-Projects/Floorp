@@ -187,7 +187,7 @@ private:
 
     // Set the child process's priority.  Once the child starts up, it will
     // manage its own priority via the ProcessPriorityManager.
-    void SetProcessPriority(hal::ProcessPriority aInitialPriority);
+    void SetProcessInitialPriority(hal::ProcessPriority aInitialPriority);
 
     // If the frame element indicates that the child process is "critical" and
     // has a pending system message, this function acquires the CPU wake lock on
@@ -195,17 +195,12 @@ private:
     // handled or after a timeout, whichever comes first.
     void MaybeTakeCPUWakeLock(nsIDOMElement* aFrameElement);
 
-    // Set the child process's priority and then check whether the child is
-    // still alive.  Returns true if the process is still alive, and false
-    // otherwise.  If you pass a FOREGROUND* priority here, it's (hopefully)
-    // unlikely that the process will be killed after this point.
-    bool SetPriorityAndCheckIsAlive(hal::ProcessPriority aPriority);
-
     // Transform a pre-allocated app process into a "real" app
     // process, for the specified manifest URL.  If this returns false, the
     // child process has died.
     bool TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
-                                      ChildPrivileges aPrivs);
+                                      ChildPrivileges aPrivs,
+                                      hal::ProcessPriority aInitialPriority);
 
     /**
      * Mark this ContentParent as dead for the purposes of Get*().
