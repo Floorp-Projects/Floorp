@@ -533,7 +533,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     if (frameElement) {
       nsAutoString appType;
       frameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapptype, appType);
-      unused << browser->SendSetAppType(appType);
+      browser->SendSetAppType(appType);
     }
 
     p->MaybeTakeCPUWakeLock(aFrameElement);
