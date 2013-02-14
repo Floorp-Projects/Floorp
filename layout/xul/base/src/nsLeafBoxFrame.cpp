@@ -106,7 +106,7 @@ void nsLeafBoxFrame::UpdateMouseThrough()
   }
 }
 
-NS_IMETHODIMP
+void
 nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists)
@@ -119,11 +119,10 @@ nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (!aBuilder->IsForEventDelivery() || !IsVisibleForPainting(aBuilder))
-    return NS_OK;
+    return;
 
   aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayEventReceiver(aBuilder, this));
-  return NS_OK;
 }
 
 /* virtual */ nscoord

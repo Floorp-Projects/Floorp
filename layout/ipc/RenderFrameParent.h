@@ -76,10 +76,10 @@ public:
                                    const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                              nsSubDocumentFrame* aFrame,
-                              const nsRect& aDirtyRect,
-                              const nsDisplayListSet& aLists);
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        nsSubDocumentFrame* aFrame,
+                        const nsRect& aDirtyRect,
+                        const nsDisplayListSet& aLists);
 
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame,
