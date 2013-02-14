@@ -47,8 +47,8 @@ public:
 
 private:
 
-  void ConfigureAudioDecoder();
-  void ConfigureVideoDecoder();
+  HRESULT ConfigureAudioDecoder();
+  HRESULT ConfigureVideoDecoder();
   HRESULT ConfigureVideoFrameGeometry(IMFMediaType* aMediaType);
 
   RefPtr<IMFSourceReader> mSourceReader;
