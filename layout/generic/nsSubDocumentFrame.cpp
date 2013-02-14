@@ -294,36 +294,35 @@ nsSubDocumentFrame::PassPointerEventsToChildren()
   return false;
 }
 
-void
+NS_IMETHODIMP
 nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
-    return;
+    return NS_OK;
 
   // If mozpasspointerevents is set, then we should allow subdocument content
   // to handle events even if we're pointer-events:none.
   if (aBuilder->IsForEventDelivery() && !PassPointerEventsToChildren())
-    return;
+    return NS_OK;
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (!mInnerView)
-    return;
+    return NS_OK;
 
   nsFrameLoader* frameLoader = FrameLoader();
   if (frameLoader) {
     RenderFrameParent* rfp = frameLoader->GetCurrentRemoteFrame();
     if (rfp) {
-      rfp->BuildDisplayList(aBuilder, this, aDirtyRect, aLists);
-      return;
+      return rfp->BuildDisplayList(aBuilder, this, aDirtyRect, aLists);
     }
   }
 
   nsView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView)
-    return;
+    return NS_OK;
 
   nsCOMPtr<nsIPresShell> presShell = nullptr;
 
@@ -354,14 +353,14 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!presShell) {
       // If we don't have a frame we use this roundabout way to get the pres shell.
       if (!mFrameLoader)
-        return;
+        return NS_OK;
       nsCOMPtr<nsIDocShell> docShell;
       mFrameLoader->GetDocShell(getter_AddRefs(docShell));
       if (!docShell)
-        return;
+        return NS_OK;
       presShell = docShell->GetPresShell();
       if (!presShell)
-        return;
+        return NS_OK;
     }
   }
 
@@ -473,6 +472,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // delete childItems in case of OOM
   childItems.DeleteAll();
+
+  return NS_OK;
 }
 
 nscoord

@@ -353,18 +353,19 @@ nsDisplayXULTextBox::GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
       ToReferenceFrame();
 }
 
-void
+NS_IMETHODIMP
 nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists)
 {
     if (!IsVisibleForPainting(aBuilder))
-        return;
+      return NS_OK;
 
     nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
     
     aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULTextBox(aBuilder, this));
+      nsDisplayXULTextBox(aBuilder, this));
+    return NS_OK;
 }
 
 void

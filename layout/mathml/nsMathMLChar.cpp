@@ -1752,7 +1752,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
 #endif
 
 
-void
+nsresult
 nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
                       nsIFrame*               aForFrame,
                       const nsDisplayListSet& aLists,
@@ -1769,7 +1769,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   }
 
   if (!styleContext->GetStyleVisibility()->IsVisible())
-    return;
+    return NS_OK;
 
   // if the leaf style context that we use for stretchy chars has a background
   // color we use it -- this feature is mostly used for testing and debugging
@@ -1801,6 +1801,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
                                   aIndex,
                                   aSelectedRect &&
                                   !aSelectedRect->IsEmpty()));
+  return NS_OK;
 }
 
 void

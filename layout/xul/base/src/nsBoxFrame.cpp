@@ -1288,7 +1288,7 @@ PaintXULDebugBackground(nsIFrame* aFrame, nsRenderingContext* aCtx,
 }
 #endif
 
-void
+nsresult
 nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                              const nsRect&           aDirtyRect,
                              const nsDisplayListSet& aLists)
@@ -1344,9 +1344,10 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     aLists.Content()->AppendNewToTop(new (aBuilder)
       nsDisplayOwnLayer(aBuilder, this, &masterList));
   }
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
                                         const nsDisplayListSet& aLists)
@@ -1360,6 +1361,7 @@ nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
     kid = kid->GetNextSibling();
   }
+  return NS_OK;
 }
 
 // REVIEW: PaintChildren did a few things none of which are a big deal
@@ -2050,13 +2052,13 @@ private:
   nsIFrame* mTargetFrame;
 };
 
-void
+nsresult
 nsBoxFrame::WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
                                   const nsDisplayListSet& aIn,
                                   const nsDisplayListSet& aOut)
 {
   nsXULEventRedirectorWrapper wrapper(this);
-  wrapper.WrapLists(aBuilder, this, aIn, aOut);
+  return wrapper.WrapLists(aBuilder, this, aIn, aOut);
 }
 
 bool

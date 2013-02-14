@@ -131,22 +131,25 @@ nsMathMLmfracFrame::CalcLineThickness(nsPresContext*  aPresContext,
   return lineThickness;
 }
 
-void
+NS_IMETHODIMP
 nsMathMLmfracFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
   /////////////
   // paint the numerator and denominator
-  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsresult rv = nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   /////////////
   // paint the fraction line
   if (mIsBevelled) {
-    DisplaySlash(aBuilder, this, mLineRect, mLineThickness, aLists);
+    rv = DisplaySlash(aBuilder, this, mLineRect, mLineThickness, aLists);
   } else {
-    DisplayBar(aBuilder, this, mLineRect, aLists);
+    rv = DisplayBar(aBuilder, this, mLineRect, aLists);
   }
+
+  return rv;
 }
 
 /* virtual */ nsresult
@@ -585,15 +588,15 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
   gfxCtx->Fill();
 }
 
-void
+nsresult
 nsMathMLmfracFrame::DisplaySlash(nsDisplayListBuilder* aBuilder,
                                  nsIFrame* aFrame, const nsRect& aRect,
                                  nscoord aThickness,
                                  const nsDisplayListSet& aLists) {
   if (!aFrame->GetStyleVisibility()->IsVisible() || aRect.IsEmpty())
-    return;
+    return NS_OK;
 
-  aLists.Content()->AppendNewToTop(new (aBuilder)
-    nsDisplayMathMLSlash(aBuilder, aFrame, aRect, aThickness,
-                         NS_MATHML_IS_RTL(mPresentationData.flags)));
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayMathMLSlash(aBuilder, aFrame, aRect, aThickness,
+                           NS_MATHML_IS_RTL(mPresentationData.flags)));
 }

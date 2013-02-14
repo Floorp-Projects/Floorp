@@ -25,9 +25,11 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
+                              const nsDisplayListSet& aLists) {
+    return NS_OK;
+  }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const
   {
