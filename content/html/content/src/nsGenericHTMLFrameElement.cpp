@@ -321,19 +321,6 @@ nsGenericHTMLFrameElement::GetReallyIsApp(bool *aOut)
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetIsExpectingSystemMessage(bool *aOut)
-{
-  *aOut = false;
-
-  if (!nsIMozBrowserFrame::GetReallyIsApp()) {
-    return NS_OK;
-  }
-
-  *aOut = HasAttr(kNameSpaceID_None, nsGkAtoms::expectingSystemMessage);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
 {
