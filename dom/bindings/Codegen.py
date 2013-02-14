@@ -6437,7 +6437,7 @@ class CGDOMJSProxyHandler_obj_toString(ClassMethod):
 
 class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JS::HandleValue', 'priv')]
+        args = [Argument('JS::Value', 'priv')]
         ClassMethod.__init__(self, "finalizeInBackground", "bool", args)
         self.descriptor = descriptor
     def getBody(self):
