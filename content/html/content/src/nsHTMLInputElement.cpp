@@ -1086,7 +1086,7 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
       {
         nsresult ec;
         aResultValue = PromiseFlatString(aValue).ToDouble(&ec);
-        if (NS_FAILED(ec)) {
+        if (NS_FAILED(ec) || !MOZ_DOUBLE_IS_FINITE(aResultValue)) {
           return false;
         }
 
@@ -3074,8 +3074,8 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
     case NS_FORM_INPUT_NUMBER:
       {
         nsresult ec;
-        PromiseFlatString(aValue).ToDouble(&ec);
-        if (NS_FAILED(ec)) {
+        double val = PromiseFlatString(aValue).ToDouble(&ec);
+        if (NS_FAILED(ec) || !MOZ_DOUBLE_IS_FINITE(val)) {
           aValue.Truncate();
         }
       }
@@ -4518,7 +4518,7 @@ nsHTMLInputElement::GetStep() const
 
   nsresult ec;
   double step = stepStr.ToDouble(&ec);
-  if (NS_FAILED(ec) || step <= 0) {
+  if (NS_FAILED(ec) || !MOZ_DOUBLE_IS_FINITE(step) || step <= 0) {
     step = GetDefaultStep();
   }
 
