@@ -12,6 +12,12 @@ namespace mozilla {
 namespace hal {
 
 /**
+ * XXX
+ */
+const uint64_t CONTENT_PROCESS_ID_UNKNOWN = uint64_t(-1);
+const uint64_t CONTENT_PROCESS_ID_MAIN = 0;
+
+/**
  * These are defined by libhardware, specifically, hardware/libhardware/include/hardware/lights.h
  * in the gonk subsystem.
  * If these change and are exposed to JS, make sure nsIHal.idl is updated as well.
