@@ -3,29 +3,36 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsMediaError.h"
+
+#include "mozilla/dom/MediaError.h"
 #include "nsDOMClassInfoID.h"
 
-NS_IMPL_ADDREF(nsMediaError)
-NS_IMPL_RELEASE(nsMediaError)
+DOMCI_DATA(MediaError, mozilla::dom::MediaError)
 
-DOMCI_DATA(MediaError, nsMediaError)
+namespace mozilla {
+namespace dom {
 
-NS_INTERFACE_MAP_BEGIN(nsMediaError)
+NS_IMPL_ADDREF(MediaError)
+NS_IMPL_RELEASE(MediaError)
+
+NS_INTERFACE_MAP_BEGIN(MediaError)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaError)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MediaError)
 NS_INTERFACE_MAP_END
 
-nsMediaError::nsMediaError(uint16_t aCode) :
-  mCode(aCode)
+MediaError::MediaError(uint16_t aCode)
+: mCode(aCode)
 {
 }
 
-NS_IMETHODIMP nsMediaError::GetCode(uint16_t* aCode)
+NS_IMETHODIMP MediaError::GetCode(uint16_t* aCode)
 {
   if (aCode)
     *aCode = mCode;
 
   return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla

@@ -38,7 +38,7 @@
 #include "nsITimer.h"
 
 #include "nsEventDispatcher.h"
-#include "nsMediaError.h"
+#include "MediaError.h"
 #include "MediaDecoder.h"
 #include "nsICategoryManager.h"
 #include "MediaResource.h"
@@ -660,7 +660,7 @@ void nsHTMLMediaElement::NoSupportedMediaSourceError()
 {
   NS_ASSERTION(mDelayingLoadEvent, "Load event not delayed during source selection?");
 
-  mError = new nsMediaError(nsIDOMMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
+  mError = new MediaError(nsIDOMMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   // This clears mDelayingLoadEvent, so AddRemoveSelfReference will be called
@@ -2740,7 +2740,7 @@ void nsHTMLMediaElement::Error(uint16_t aErrorCode)
                aErrorCode == nsIDOMMediaError::MEDIA_ERR_NETWORK ||
                aErrorCode == nsIDOMMediaError::MEDIA_ERR_ABORTED,
                "Only use nsIDOMMediaError codes!");
-  mError = new nsMediaError(aErrorCode);
+  mError = new MediaError(aErrorCode);
   mBegun = false;
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
