@@ -30,6 +30,8 @@ interface nsIFaviconService : nsISupports
    * @param aFaviconURI
    *        URI of the favicon to associate with the page.
    * @throws NS_ERROR_NOT_AVAILABLE if aPageURI doesn't exist in the database.
+   *
+   * @deprecated Use mozIAsyncFavicons::setAndFetchFaviconForPage
    */
   void setFaviconUrlForPage(in nsIURI aPageURI,
                             in nsIURI aFaviconURI);
@@ -75,8 +77,7 @@ interface nsIFaviconService : nsISupports
    *        Once we're done setting and/or loading the favicon, we invoke this
    *        callback.
    *
-   * @deprecated Use the identical function
-   *             mozIAsyncFavicons::setAndFetchFaviconForPage.
+   * @deprecated Use mozIAsyncFavicons::setAndFetchFaviconForPage
    */
   [deprecated]
   void setAndLoadFaviconForPage(in nsIURI aPageURI,
@@ -177,6 +178,8 @@ interface nsIFaviconService : nsISupports
    *        Output parameter where the MIME type will be placed.
    * @throws NS_ERROR_NOT_AVAILABLE
    *         Thrown when we have never heard of this favicon URI.
+   *
+   * @deprecated Use mozIAsyncFavicons::getFaviconDataForPage
    */
   void getFaviconData(in nsIURI aFaviconURI,
                       out AUTF8String aMimeType,
@@ -194,6 +197,8 @@ interface nsIFaviconService : nsISupports
    *         null if we have this URL but have no data associated with it.
    * @throws NS_ERROR_NOT_AVAILABLE
    *         Thrown when we have never heard of this favicon URL.
+   *
+   * @deprecated Use mozIAsyncFavicons::getFaviconDataForPage
    */
   AString getFaviconDataAsDataURL(in nsIURI aFaviconURI);
 
@@ -207,6 +212,8 @@ interface nsIFaviconService : nsISupports
    *         that we know what the favicon should be.
    * @throws NS_ERROR_NOT_AVAILABLE
    *         When the page is not found or it has no favicon.
+   *
+   * @deprecated Use mozIAsyncFavicons::getFaviconURLForPage
    */
   nsIURI getFaviconForPage(in nsIURI aPageURI);
 
@@ -227,6 +234,8 @@ interface nsIFaviconService : nsISupports
    *         this service.  For pages where we don't have a favicon, this will
    *         be a chrome URI of the default icon. For chrome URIs, the
    *         output will be the same as the input.
+   *
+   * @deprecated Use mozIAsyncFavicons::getFaviconURLForPage and getFaviconLinkForIcon
    */
   nsIURI getFaviconImageForPage(in nsIURI aPageURI);
 
