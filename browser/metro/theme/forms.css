@@ -1,0 +1,256 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%include defines.inc
+
+/* Content Navigator popup ------------------------------------------------- */
+#content-navigator {
+  display: none;
+  pointer-events: none;
+  padding: 0;
+  background-color: @appbar_color@;
+}
+
+#content-navigator[type="find"],
+#content-navigator[type="form"]:not([disabled="true"]) {
+  display: -moz-box;
+}
+
+#content-navigator > .previous-button,
+#content-navigator > .next-button,
+#content-navigator > .close-button {
+  min-width: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_small@ !important; /* button size */
+  border: none !important;
+  background-image: none !important;
+  background-color: inherit !important;
+  pointer-events: auto;
+  -moz-user-focus: ignore !important;
+  margin: 0 @margin_normal@ !important;
+
+}
+
+#content-navigator > .close-button {
+  -moz-margin-start: 0;
+  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
+  -moz-image-region: rect(0px, 480px, 40px, 440px);
+}
+
+#content-navigator > .close-button:hover {
+  -moz-image-region: rect(40px, 480px, 80px, 440px);
+}
+
+#content-navigator > .close-button:active {
+  -moz-image-region: rect(80px, 480px, 120px, 440px);
+}
+
+#content-navigator > .previous-button {
+  -moz-margin-end: 0;
+  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
+  -moz-image-region: rect(0px, 400px, 40px, 360px);
+}
+
+#content-navigator > .previous-button:hover {
+  -moz-image-region: rect(40px, 400px, 80px, 360px);
+}
+
+#content-navigator > .previous-button:active{
+  -moz-image-region: rect(80px, 400px, 120px, 360px);
+}
+
+#content-navigator:-moz-locale-dir(ltr) > .previous-button {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#content-navigator:-moz-locale-dir(rtl) > .previous-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+#content-navigator > .next-button {
+  -moz-margin-start: 0;
+  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
+  -moz-image-region: rect(0px, 440px, 40px, 400px);
+}
+
+#content-navigator > .next-button:hover {
+  -moz-image-region: rect(40px, 440px, 80px, 400px);
+}
+
+#content-navigator > .next-button:active {
+  -moz-image-region: rect(80px, 440px, 120px, 400px);
+}
+
+#content-navigator:-moz-locale-dir(ltr) > .next-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+#content-navigator:-moz-locale-dir(rtl) > .next-button {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Find Helper ------------------------------------------------------------- */
+#content-navigator[type="find"] > .previous-button {
+  /* previous button overlap the textbox */
+  -moz-margin-start: -@margin_normal@;
+}
+
+#content-navigator:not([type="find"]) > #find-helper-textbox {
+  display: none;
+}
+
+#find-helper-textbox {
+  pointer-events: auto;
+  margin: @margin_normal@;
+  -moz-margin-end: 0;
+  padding: @padding_xnormal@;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border: none !important;
+  width: 20em;
+}
+
+.textbox-search-icon {
+  list-style-image: url("chrome://browser/skin/images/search-glass-30.png");
+  -moz-image-region: auto;
+}
+
+/* Override the default box ordering and make the find textbox appear to the
+   right of the icon */
+#find-helper-textbox input {
+  -moz-box-ordinal-group: 2
+}
+
+#find-helper-textbox deck {
+  margin-right: @margin_normal@;
+}
+
+#find-helper-textbox[status="1"] { /* Ci.nsITypeAheadFind.FIND_NOTFOUND */
+  background: rgb(255,200,200);
+}
+
+#find-helper-textbox:hover:active {
+  background: #8db8d8;
+}
+
+/* Form Helper Autofill ---------------------------------------------------- */
+#form-helper-suggestions-container .panel-arrowcontent {
+  border-radius: @border_radius_normal@;
+  padding: 0; /* half core spacing & none (autorepeat arrows compensate) */
+  background-color: white;
+}
+
+#form-helper-suggestions {
+  background-color: white;
+  margin: 0;
+  color: black;
+  max-width: 0;
+}
+
+#form-helper-suggestions > .autorepeatbutton-down,
+#form-helper-suggestions > .autorepeatbutton-up {
+  border: none;
+}
+
+#form-helper-suggestions > .autorepeatbutton-down {
+  list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
+}
+
+#form-helper-suggestions > .autorepeatbutton-down:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/images/arrowleft-16.png");
+}
+
+#form-helper-suggestions > .autorepeatbutton-up {
+  list-style-image: url("chrome://browser/skin/images/arrowleft-16.png");
+}
+
+#form-helper-suggestions > .autorepeatbutton-up:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
+}
+
+/* force the autorepeat buttons to create a 'padding' when collapsed */
+#form-helper-suggestions > autorepeatbutton[collapsed="true"],
+#form-helper-suggestions > autorepeatbutton[disabled="true"] {
+  visibility: hidden;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label {
+  padding: @padding_xxnormal@ @padding_normal@; /* 12px helps get row size for the labels */
+  margin: 0;
+  border-color: transparent rgb(215,215,215) transparent rgb(255,255,255);
+  border-style: solid;
+  border-width: @border_width_tiny@;
+  background-color: white;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label:first-child {
+  -moz-padding-start: initial; /* the arrowscrollbox creates enough left padding */
+  -moz-border-start: none;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label:last-child {
+  -moz-border-end: none;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label:hover {
+  background-color: #dedad0;
+}
+
+#form-helper-suggestions .form-helper-suggestions-label:hover:active {
+  background-color: @selected_color@ !important;
+}
+
+/* Select popup ------------------------------------------------------------- */
+
+#select-container {
+  padding: 0;
+  position: absolute;
+  background-color: transparent;
+}
+
+#select-commands {
+  -moz-appearance: none;
+  background-color: white;
+  border: #000 solid @metro_border_thick@;
+  display: -moz-box;
+  -moz-user-focus: ignore;
+  -moz-box-align: stretch;
+  width: 100%;
+}
+
+/* listcell element doesn't have flex="1" so we need to force it */
+#select-commands .option-command > listcell {
+  -moz-box-flex: 1 !important;
+}
+
+.option-command {
+  min-height: @touch_button_small@;
+  min-width: @touch_action_minwidth@; /* keep the button from being too narrow */
+  border: 0 none;
+}
+
+.option-command.selected {
+  background-color: @selected_color@ !important;
+  color: black;
+}
+
+.option-command.optgroup {
+  font-weight: bold;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.option-command:not([disabled]):hover {
+  background-color: #dedad0;
+  color: black;
+}
+
+.option-command:not([disabled]):active {
+  background-color: @selected_color@ !important;
+  color: black;
+}

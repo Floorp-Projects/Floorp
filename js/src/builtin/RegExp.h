@@ -36,7 +36,7 @@ ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
  */
 bool
 ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
-                    Handle<JSStableString*> input, StableCharPtr chars, size_t length,
+                    Handle<JSLinearString*> input, const jschar *chars, size_t length,
                     size_t *lastIndex, bool test, MutableHandleValue rval);
 
 /* Translation from MatchPairs to a JS array in regexp_exec()'s output format. */
@@ -45,7 +45,7 @@ CreateRegExpMatchResult(JSContext *cx, HandleString string, MatchPairs &matches,
                         MutableHandleValue rval);
 
 bool
-CreateRegExpMatchResult(JSContext *cx, HandleString input_, StableCharPtr chars, size_t length,
+CreateRegExpMatchResult(JSContext *cx, HandleString input, const jschar *chars, size_t length,
                         MatchPairs &matches, MutableHandleValue rval);
 
 extern JSBool

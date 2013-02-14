@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346485
 <head>
   <title>Test for Bug 346485</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../reflect.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
     frameLoaded = function() {
@@ -32,20 +33,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346485
 
 function checkNameAttribute(element)
 {
-  function nameAttributeEquals(element, expectedValue)
-  {
-    is(element.name, expectedValue, "Output name IDL attribute is not correct");
-    is(element.getAttribute('name'), expectedValue,
-      "Output name content attribute is not correct");
-  }
-
-  nameAttributeEquals(element, "output-name");
-
-  element.name = "new-name";
-  nameAttributeEquals(element, "new-name");
-
-  element.setAttribute('name', 'new-name-2');
-  nameAttributeEquals(element, "new-name-2");
+  is(element.name, "output-name", "Output name IDL attribute is not correct");
+  is(element.getAttribute('name'), "output-name",
+    "Output name content attribute is not correct");
 }
 
 function checkValueAndDefaultValueIDLAttribute(element)
@@ -153,6 +143,11 @@ function checkFormSubmission()
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
+  reflectString({
+    element: document.createElement("output"),
+    attribute: "name",
+  });
+
   var o = document.getElementsByTagName('output');
   is(o.length, 1, "There should be one output element");
 

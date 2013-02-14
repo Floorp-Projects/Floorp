@@ -89,20 +89,9 @@ function clearHistory(aUseRange) {
 
 function createThumbnail() {
   addTab(URL, function () {
-    whenFileExists(function () {
+    whenFileExists(URL, function () {
       gBrowser.removeTab(gBrowser.selectedTab);
       next();
     });
   });
-}
-
-function whenFileExists(aCallback) {
-  let callback;
-  if (thumbnailExists(URL)) {
-    callback = aCallback;
-  } else {
-    callback = function () whenFileExists(aCallback);
-  }
-
-  executeSoon(callback);
 }

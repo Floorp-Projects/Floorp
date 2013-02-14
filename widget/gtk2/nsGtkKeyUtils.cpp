@@ -165,6 +165,14 @@ static const KeyPair kKeyPairs[] = {
     // x86 keyboards, located between right 'Windows' key and right Ctrl key
     { NS_VK_CONTEXT_MENU, GDK_Menu },
     { NS_VK_SLEEP,      GDK_Sleep },
+
+    { NS_VK_ATTN,       GDK_3270_Attn },
+    { NS_VK_CRSEL,      GDK_3270_CursorSelect },
+    { NS_VK_EXSEL,      GDK_3270_ExSelect },
+    { NS_VK_EREOF,      GDK_3270_EraseEOF },
+    { NS_VK_PLAY,       GDK_3270_Play },
+    //{ NS_VK_ZOOM,       GDK_XXX },
+    { NS_VK_PA1,        GDK_3270_PA1 },
 };
 
 // map Sun Keyboard special keysyms on to NS_VK keys

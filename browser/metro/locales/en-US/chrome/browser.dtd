@@ -1,0 +1,102 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY urlbar.emptytext      "Enter Search or Address">
+<!ENTITY urlbar.accesskey      "d">
+
+<!ENTITY back.label            "Back">
+<!ENTITY forward.label         "Forward">
+<!ENTITY reload.label          "Reload">
+<!ENTITY stop.label            "Stop">
+<!ENTITY go.label              "Go">
+<!ENTITY star.label            "Star">
+
+<!ENTITY toggleTabsOnly.label  "Always show tabs">
+<!ENTITY showTabs.label        "Show Tabs">
+<!ENTITY newtab.label          "New Tab">
+<!ENTITY closetab.label        "Close Tab">
+<!ENTITY undoclosetab.label    "Undo Close Tab">
+
+<!ENTITY cut.label             "Cut">
+<!ENTITY copy.label            "Copy">
+<!ENTITY copyAll.label         "Copy All">
+<!ENTITY copylink.label        "Copy Link Location">
+<!ENTITY paste.label           "Paste">
+<!ENTITY pasteAndGo.label      "Paste &amp; Go">
+<!ENTITY delete.label          "Delete">
+<!ENTITY selectAll.label       "Select All">
+
+<!ENTITY appbarFindInPage.label    "Find in Page">
+<!ENTITY appbarViewOnDesktop.label "View on Desktop">
+
+<!ENTITY startTopSitesHeader.label        "Top Sites">
+<!ENTITY startBookmarksHeader.label       "Bookmarks">
+<!ENTITY startHistoryHeader.label         "Recent History">
+<!ENTITY startRemoteTabsHeader.label      "Tabs from Other Devices">
+
+<!ENTITY autocompleteResultsHeader.label  "Your Results">
+<!ENTITY autocompleteSearchesHeader.label "Internet Searches"> 
+
+<!ENTITY selectHelper.done         "Done">
+
+<!ENTITY downloadsHeader.label     "Downloads">
+<!ENTITY downloadShowPage.label    "Go to Page">
+<!ENTITY downloadShow2.label       "Find">
+<!ENTITY downloadOpen2.label       "Open">
+<!ENTITY downloadCancel.label      "Cancel">
+<!ENTITY downloadPause.label       "Pause">
+<!ENTITY downloadResume.label      "Resume">
+<!ENTITY downloadRetry.label       "Retry">
+<!ENTITY downloadRemove.label      "Remove">
+<!ENTITY downloadDelete.label      "Delete">
+<!ENTITY downloadFailed.label      "Failed">
+
+<!ENTITY bookmarksHeader.label     "Bookmarks">
+<!ENTITY allBookmarks.label        "See all bookmarks">
+
+<!ENTITY identity.unverifiedsite2 "This website does not supply identity information.">
+<!ENTITY identity.connectedTo2 "Connected to">
+<!-- Localization note (identity.runBy2)
+ The layout of the identity dialog prevents combining this into a single string with
+ substitution variables.  If it is difficult to translate the sense of the string
+ with that structure, consider a translation which ignores the preceding domain and
+ just addresses the organization to follow, e.g. "This site is run by " -->
+<!ENTITY identity.runBy2 "run by">
+
+<!ENTITY consoleHeader.label       "Error Console">
+<!ENTITY consoleAll.label          "All">
+<!ENTITY consoleErrors.label       "Errors">
+<!ENTITY consoleWarnings.label     "Warnings">
+<!ENTITY consoleMessages.label     "Messages">
+<!ENTITY consoleCodeEval.label     "Code:">
+<!ENTITY consoleClear.label        "Clear">
+<!ENTITY consoleEvaluate.label     "…">
+<!ENTITY consoleErrFile.label      "Source File:">
+<!ENTITY consoleErrLine.label      "Line:">
+<!ENTITY consoleErrColumn.label    "Column:">
+
+<!ENTITY contextOpenInNewTab.label    "Open Link in New Tab">
+<!ENTITY contextViewInNewTab.label    "View in New Tab">
+<!ENTITY contextSaveImage.label       "Save Image">
+<!ENTITY contextSaveImageTo.label     "Save Image To">
+<!ENTITY contextCopyLink.label        "Copy Link">
+<!ENTITY contextCopyEmail.label       "Copy Email Address">
+<!ENTITY contextCopyPhone.label       "Copy Phone Number">
+<!ENTITY contextCopyImage.label       "Copy Image">
+<!ENTITY contextShareLink.label       "Share Link">
+<!ENTITY contextShareImage.label      "Share Image">
+<!ENTITY contextBookmarkLink.label    "Bookmark Link">
+<!ENTITY contextSaveVideo.label       "Save Video">
+<!ENTITY contextSaveVideoTo.label       "Save Video To">
+<!ENTITY contextShareVideo.label      "Share Video">
+<!ENTITY contextPlayMedia.label       "Play">
+<!ENTITY contextPauseMedia.label      "Pause">
+<!ENTITY contextVideoTab.label        "Open In New Tab">
+<!ENTITY contextEditBookmark.label    "Edit">
+<!ENTITY contextRemoveBookmark.label  "Remove">
+<!ENTITY contextShortcutBookmark.label "Add to Home Screen">
+
+<!ENTITY pageactions.password.forget "Forget Password">
+<!ENTITY pageactions.reset           "Clear Site Preferences">
+<!ENTITY pageactions.charEncoding    "Character Encoding">

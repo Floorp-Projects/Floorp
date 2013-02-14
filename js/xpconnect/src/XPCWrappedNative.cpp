@@ -1582,6 +1582,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                     wrapper->UpdateScriptableInfo(newProto->GetScriptableInfo());
                 }
 
+                // Crash if the wrapper is already in the new scope.
                 if (newMap->Find(wrapper->GetIdentityObject()))
                     MOZ_CRASH();
 

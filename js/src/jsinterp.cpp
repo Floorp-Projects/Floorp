@@ -267,7 +267,7 @@ bool
 js::RunScript(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(fp == cx->fp());
-    JSScript *script = fp->script();
+    RootedScript script(cx, fp->script());
 
     JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
     JS_ASSERT_IF(fp->isEvalFrame(), script->isActiveEval);
@@ -448,7 +448,7 @@ js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
 
     JSObject &callee = args.callee();
     if (callee.isFunction()) {
-        JSFunction *fun = callee.toFunction();
+        RootedFunction fun(cx, callee.toFunction());
 
         if (fun->isNativeConstructor()) {
             Probes::calloutBegin(cx, fun);
@@ -506,11 +506,13 @@ js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsign
 }
 
 bool
-js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Value &thisv,
+js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, const Value &thisv,
                   ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
+    RootedObject scopeChain(cx, &scopeChainArg);
+
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain.isScope());
+    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain->isScope());
 
     if (script->isEmpty()) {
         if (result)
@@ -2474,7 +2476,7 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
     if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
         goto error;
 
-    Value v;
+    RootedValue &v = rootValue0;
     if (!ComputeImplicitThis(cx, scope, &v))
         goto error;
     PUSH_COPY(v);
@@ -3701,5 +3703,5 @@ js::ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyNa
     if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &obj))
         return false;
 
-    return ComputeImplicitThis(cx, obj, res.address());
+    return ComputeImplicitThis(cx, obj, res);
 }

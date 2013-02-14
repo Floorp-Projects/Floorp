@@ -1,0 +1,102 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+chrome.jar:
+% content browser %content/
+
+  content/aboutCertError.xhtml                 (content/pages/aboutCertError.xhtml)
+  content/aboutRights.xhtml                    (content/pages/aboutRights.xhtml)
+  content/aboutCrash.xhtml                     (content/pages/aboutCrash.xhtml)
+  content/blockedSite.xhtml                    (content/pages/blockedSite.xhtml)
+  content/fullscreen-video.xhtml               (content/pages/fullscreen-video.xhtml)
+  content/netError.xhtml                       (content/pages/netError.xhtml)
+
+  content/bindings/bindings.xml                (content/bindings/bindings.xml)
+  content/bindings/tabs.xml                    (content/bindings/tabs.xml)
+  content/bindings/toggleswitch.xml            (content/bindings/toggleswitch.xml)
+  content/bindings/browser.xml                 (content/bindings/browser.xml)
+  content/bindings/browser.js                  (content/bindings/browser.js)
+  content/bindings/downloads.xml               (content/bindings/downloads.xml)
+  content/bindings/console.xml                 (content/bindings/console.xml)
+  content/bindings/dialog.xml                  (content/bindings/dialog.xml)
+  content/bindings/pageaction.xml              (content/bindings/pageaction.xml)
+  content/bindings/arrowbox.xml                (content/bindings/arrowbox.xml)
+  content/bindings/grid.xml                    (content/bindings/grid.xml)
+  content/bindings/autocomplete.xml            (content/bindings/autocomplete.xml)
+  content/bindings/appbar.xml                  (content/bindings/appbar.xml)
+  content/bindings/flyoutpanel.xml             (content/bindings/flyoutpanel.xml)
+  content/bindings/selectionoverlay.xml        (content/bindings/selectionoverlay.xml)
+
+  content/prompt/CaptureDialog.xul             (content/prompt/CaptureDialog.xul)
+  content/prompt/alert.xul                     (content/prompt/alert.xul)
+  content/prompt/confirm.xul                   (content/prompt/confirm.xul)
+  content/prompt/prompt.xul                    (content/prompt/prompt.xul)
+  content/prompt/promptPassword.xul            (content/prompt/promptPassword.xul)
+  content/prompt/select.xul                    (content/prompt/select.xul)
+  content/prompt/prompt.js                     (content/prompt/prompt.js)
+  content/prompt/masterPassword.xul            (content/prompt/masterPassword.xul)
+  content/prompt/removeMasterPassword.xul      (content/prompt/removeMasterPassword.xul)
+
+  content/helperui/AlertsHelper.js             (content/helperui/AlertsHelper.js)
+  content/helperui/CaptureDialog.js            (content/helperui/CaptureDialog.js)
+  content/helperui/CapturePickerUI.js          (content/helperui/CapturePickerUI.js)
+  content/helperui/CharsetMenu.js              (content/helperui/CharsetMenu.js)
+  content/helperui/IdentityUI.js               (content/helperui/IdentityUI.js)
+  content/helperui/IndexedDB.js                (content/helperui/IndexedDB.js)
+  content/helperui/MasterPasswordUI.js         (content/helperui/MasterPasswordUI.js)
+  content/helperui/MenuUI.js                   (content/helperui/MenuUI.js)
+  content/helperui/OfflineApps.js              (content/helperui/OfflineApps.js)
+  content/helperui/SelectHelperUI.js           (content/helperui/SelectHelperUI.js)
+  content/helperui/SelectionHelperUI.js        (content/helperui/SelectionHelperUI.js)
+  content/helperui/FormHelperUI.js             (content/helperui/FormHelperUI.js)
+  content/helperui/FindHelperUI.js             (content/helperui/FindHelperUI.js)
+
+  content/contenthandlers/ContextMenuHandler.js (content/contenthandlers/ContextMenuHandler.js)
+  content/contenthandlers/PluginCTPHandler.js  (content/contenthandlers/PluginCTPHandler.js)
+  content/contenthandlers/SelectionHandler.js  (content/contenthandlers/SelectionHandler.js)
+  content/contenthandlers/FormHelper.js        (content/contenthandlers/FormHelper.js)
+  content/contenthandlers/FindHandler.js       (content/contenthandlers/FindHandler.js)
+  content/contenthandlers/ViewportHandler.js   (content/contenthandlers/ViewportHandler.js)
+  content/contenthandlers/ConsoleAPIObserver.js (content/contenthandlers/ConsoleAPIObserver.js)
+  content/contenthandlers/Content.js           (content/contenthandlers/Content.js)
+
+  content/BrowserTouchHandler.js               (content/BrowserTouchHandler.js)
+* content/WebProgress.js                       (content/WebProgress.js)
+  content/config.xul                           (content/config.xul)
+  content/config.js                            (content/config.js)
+* content/browser.xul                          (content/browser.xul)
+  content/browser.js                           (content/browser.js)
+* content/browser-ui.js                        (content/browser-ui.js)
+* content/browser-scripts.js                   (content/browser-scripts.js)
+  content/ContextCommands.js                   (content/ContextCommands.js)
+  content/PageActions.js                       (content/PageActions.js)
+  content/commandUtil.js                       (content/commandUtil.js)
+  content/appbar.js                            (content/appbar.js)
+  content/shell.xul                            (content/jsshell/shell.xul)
+  content/shell.html                           (content/jsshell/shell.html)
+  content/browser.css                          (content/browser.css)
+  content/cursor.css                           (content/cursor.css)
+% content branding %content/branding/
+  content/sanitize.js                          (content/sanitize.js)
+  content/input.js                             (content/input.js)
+  content/Util.js                              (content/Util.js)
+  content/bookmarks.js                         (content/bookmarks.js)
+  content/preferences.js                       (content/preferences.js)
+  content/exceptions.js                        (content/exceptions.js)
+  content/downloads.js                         (content/downloads.js)
+  content/history.js                           (content/history.js)
+  content/TopSites.js                          (content/TopSites.js)
+  content/console.js                           (content/console.js)
+  content/AnimatedZoom.js                      (content/AnimatedZoom.js)
+  content/LoginManagerChild.js                 (content/LoginManagerChild.js)
+  content/video.js                             (content/video.js)
+#ifdef MOZ_SERVICES_SYNC
+  content/sync.js                              (content/sync.js)
+  content/RemoteTabs.js                        (content/RemoteTabs.js)
+#endif
+
+% override chrome://global/content/config.xul chrome://browser/content/config.xul
+% override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml

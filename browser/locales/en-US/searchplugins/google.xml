@@ -2,16 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-#define GOOGLE_PARAMS <Param name="q" value="{searchTerms}"/><Param name="ie" value="utf-8"/><Param name="oe" value="utf-8"/><Param name="aq" value="t"/><Param name="rls" value="{moz:distributionID}:{moz:locale}:{moz:official}"/>
-#if MOZ_UPDATE_CHANNEL == beta
-#define GOOGLE_CLIENT_PARAM <MozParam name="client" condition="defaultEngine" trueValue="firefox-beta" falseValue="firefox"/>
-#elif MOZ_UPDATE_CHANNEL == aurora
-#define GOOGLE_CLIENT_PARAM <MozParam name="client" condition="defaultEngine" trueValue="firefox-aurora" falseValue="firefox"/>
-#elif MOZ_UPDATE_CHANNEL == nightly
-#define GOOGLE_CLIENT_PARAM <MozParam name="client" condition="defaultEngine" trueValue="firefox-nightly" falseValue="firefox"/>
-#else
-#define GOOGLE_CLIENT_PARAM <MozParam name="client" condition="defaultEngine" trueValue="firefox-a" falseValue="firefox"/>
-#endif
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
 <ShortName>Google</ShortName>
 <Description>Google Search</Description>
@@ -19,20 +9,24 @@
 <Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABUUlEQVR42pWTzUsCYRCH9y9zu3SooCCkjhIRRLeIykXokiWCJ7PvDpZRlz6si1lIQZ3SQxQdOhREpgSm0JeQvfu0+i6I7LKLh4F5h5nnnRl+o6jTdHn8omAYbVqhXqvYFXcEBKFDwcoZZB8B4LkEB9cwGGmFKHb01A1EU9JXzfdvDYZi1lwLwBcVAIwsNWPesIwls7gDtB2Z7N9ujVe+IX2LO2AgItB1OL9vJqsmILDrOoK02IkBAdYy4FsQJC5h+VQCHQDWTqYSgo8fuHuRxS4Ae3stQ7UGE5ttAHqCUgfxC7m4ryrowOyeO6CxqHwZxtYFqtYc5+kNan/gDTsAeueEIRj7n/rmRQMwueUAGF0VAAT3rQBTC0Y3DoDOGbm00icML4oWHYSTgo0MFqjlmPpDgqMcFCuQf4erBzjOwXjcriu9qHg0uutO2+es6fl67T9ptebvFRjBVgAAAABJRU5ErkJggg==</Image>
 <Url type="application/x-suggestions+json" method="GET" template="https://www.google.com/complete/search?client=firefox&amp;q={searchTerms}"/>
 <Url type="text/html" method="GET" template="https://www.google.com/search">
-#expand   __GOOGLE_PARAMS__
-#expand   __GOOGLE_CLIENT_PARAM__
-</Url>
-<!-- Keyword search URL is the same as the default, but with an additional parameter -->
-<Url type="application/x-moz-keywordsearch" method="GET" template="https://www.google.com/search">
-#expand   __GOOGLE_PARAMS__
-#expand   __GOOGLE_CLIENT_PARAM__
-  <Param name="channel" value="fflb"/>
-</Url>
-<!-- Context/Right-click search URL is the same as the default, but with an additional parameter -->
-<Url type="application/x-moz-contextsearch" method="GET" template="https://www.google.com/search">
-#expand   __GOOGLE_PARAMS__
-#expand   __GOOGLE_CLIENT_PARAM__
-  <Param name="channel" value="rcs"/>
+  <Param name="q" value="{searchTerms}"/>
+  <Param name="ie" value="utf-8"/>
+  <Param name="oe" value="utf-8"/>
+  <Param name="aq" value="t"/>
+  <Param name="rls" value="{moz:distributionID}:{moz:locale}:{moz:official}"/>
+#if MOZ_UPDATE_CHANNEL == beta
+  <MozParam name="client" condition="defaultEngine" trueValue="firefox-beta" falseValue="firefox"/>
+#elif MOZ_UPDATE_CHANNEL == aurora
+  <MozParam name="client" condition="defaultEngine" trueValue="firefox-aurora" falseValue="firefox"/>
+#elif MOZ_UPDATE_CHANNEL == nightly
+  <MozParam name="client" condition="defaultEngine" trueValue="firefox-nightly" falseValue="firefox"/>
+#else
+  <MozParam name="client" condition="defaultEngine" trueValue="firefox-a" falseValue="firefox"/>
+#endif
+  <MozParam name="channel" condition="purpose" purpose="contextmenu" value="rcs"/>
+  <MozParam name="channel" condition="purpose" purpose="keyword" value="fflb"/>
+  <MozParam name="channel" condition="purpose" purpose="homepage" value="np"/>
+  <MozParam name="source" condition="purpose" purpose="homepage" value="hp"/>
 </Url>
 <SearchForm>https://www.google.com/</SearchForm>
 </SearchPlugin>

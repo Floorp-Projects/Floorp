@@ -24,6 +24,10 @@ DIRS = \
   app \
   $(NULL)
 
+ifdef MOZ_METRO
+DIRS += metro
+endif
+
 ifdef MAKENSISU
 DIRS += installer/windows
 endif

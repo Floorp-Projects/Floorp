@@ -509,6 +509,17 @@ HealthReporter.prototype = Object.freeze({
   //--------------------
 
   /**
+   * Obtain a provider from its name.
+   *
+   * This will only return providers that are currently initialized. If
+   * a provider is lazy initialized (like constant-only providers) this
+   * will likely not return anything.
+   */
+  getProvider: function (name) {
+    return this._collector.getProvider(name);
+  },
+
+  /**
    * Register a `Metrics.Provider` with this instance.
    *
    * This needs to be called or no data will be collected. See also

@@ -379,6 +379,21 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
   // be registered.
   nsPresContext* presContext = aFrame->PresContext();
 
+  if (mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
+    nsIDocument* doc = GetOurCurrentDoc();
+    if (doc) {
+      mCurrentRequestFlags |= REQUEST_IS_TRACKED;
+      doc->AddImage(mCurrentRequest);
+    }
+  }
+  if (mPendingRequest && !(mPendingRequestFlags & REQUEST_IS_TRACKED)) {
+    nsIDocument* doc = GetOurCurrentDoc();
+    if (doc) {
+      mPendingRequestFlags |= REQUEST_IS_TRACKED;
+      doc->AddImage(mPendingRequest);
+    }
+  }
+
   if (mCurrentRequest) {
     nsLayoutUtils::RegisterImageRequestIfAnimated(presContext, mCurrentRequest,
                                                   &mCurrentRequestRegistered);
@@ -406,6 +421,21 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
     nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(),
                                           mPendingRequest,
                                           &mPendingRequestRegistered);
+  }
+
+  if (mCurrentRequest && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
+    nsIDocument* doc = GetOurCurrentDoc();
+    if (doc) {
+      mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
+      doc->RemoveImage(mCurrentRequest);
+    }
+  }
+  if (mPendingRequest && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
+    nsIDocument* doc = GetOurCurrentDoc();
+    if (doc) {
+      mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
+      doc->RemoveImage(mPendingRequest);
+    }
   }
 }
 
@@ -498,6 +528,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     TrackImage(req);
     ResetAnimationIfNeeded();
   } else {
+    MOZ_ASSERT(!req, "Shouldn't have non-null request here");
     // If we don't have a current URI, we might as well store this URI so people
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
@@ -735,6 +766,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
       }
     }
   } else {
+    MOZ_ASSERT(!req, "Shouldn't have non-null request here");
     // If we don't have a current URI, we might as well store this URI so people
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
@@ -847,10 +879,12 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgRequestProxy* aRequest,
   // Clone the request we were given.
   nsRefPtr<imgRequestProxy>& req = PrepareNextRequest();
   nsresult rv = aRequest->Clone(this, getter_AddRefs(req));
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
-  else
+  } else {
+    MOZ_ASSERT(!req, "Shouldn't have non-null request here");
     return rv;
+  }
 
   return NS_OK;
 }
@@ -1149,10 +1183,16 @@ nsImageLoadingContent::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsCxPusher pusher;
   pusher.PushNull();
 
-  if (mCurrentRequestFlags & REQUEST_SHOULD_BE_TRACKED)
-    aDocument->AddImage(mCurrentRequest);
-  if (mPendingRequestFlags & REQUEST_SHOULD_BE_TRACKED)
-    aDocument->AddImage(mPendingRequest);
+  if (GetOurPrimaryFrame()) {
+    if (mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
+      mCurrentRequestFlags |= REQUEST_IS_TRACKED;
+      aDocument->AddImage(mCurrentRequest);
+    }
+    if (mPendingRequest && !(mPendingRequestFlags & REQUEST_IS_TRACKED)) {
+      mPendingRequestFlags |= REQUEST_IS_TRACKED;
+      aDocument->AddImage(mPendingRequest);
+    }
+  }
 
   if (mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD)
     aDocument->BlockOnload();
@@ -1171,10 +1211,14 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
   nsCxPusher pusher;
   pusher.PushNull();
 
-  if (mCurrentRequestFlags & REQUEST_SHOULD_BE_TRACKED)
+  if (mCurrentRequest && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
+    mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
     doc->RemoveImage(mCurrentRequest);
-  if (mPendingRequestFlags & REQUEST_SHOULD_BE_TRACKED)
+  }
+  if (mPendingRequest && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
+    mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
     doc->RemoveImage(mPendingRequest);
+  }
 
   if (mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD)
     doc->UnblockOnload(false);
@@ -1188,15 +1232,18 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage)
 
   MOZ_ASSERT(aImage == mCurrentRequest || aImage == mPendingRequest,
              "Why haven't we heard of this request?");
-  if (aImage == mCurrentRequest) {
-    mCurrentRequestFlags |= REQUEST_SHOULD_BE_TRACKED;
-  } else {
-    mPendingRequestFlags |= REQUEST_SHOULD_BE_TRACKED;
-  }
 
   nsIDocument* doc = GetOurCurrentDoc();
-  if (doc)
-    return doc->AddImage(aImage);
+  if (doc && GetOurPrimaryFrame()) {
+    if (aImage == mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
+      mCurrentRequestFlags |= REQUEST_IS_TRACKED;
+      doc->AddImage(mCurrentRequest);
+    }
+    if (aImage == mPendingRequest && !(mPendingRequestFlags & REQUEST_IS_TRACKED)) {
+      mPendingRequestFlags |= REQUEST_IS_TRACKED;
+      doc->AddImage(mPendingRequest);
+    }
+  }
   return NS_OK;
 }
 
@@ -1208,18 +1255,21 @@ nsImageLoadingContent::UntrackImage(imgIRequest* aImage)
 
   MOZ_ASSERT(aImage == mCurrentRequest || aImage == mPendingRequest,
              "Why haven't we heard of this request?");
-  if (aImage == mCurrentRequest) {
-    mCurrentRequestFlags &= ~REQUEST_SHOULD_BE_TRACKED;
-  } else {
-    mPendingRequestFlags &= ~REQUEST_SHOULD_BE_TRACKED;
-  }
 
   // If GetOurDocument() returns null here, we've outlived our document.
   // That's fine, because the document empties out the tracker and unlocks
   // all locked images on destruction.
   nsIDocument* doc = GetOurCurrentDoc();
-  if (doc)
-    return doc->RemoveImage(aImage, nsIDocument::REQUEST_DISCARD);
+  if (doc) {
+    if (aImage == mCurrentRequest && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
+      mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
+      doc->RemoveImage(mCurrentRequest, nsIDocument::REQUEST_DISCARD);
+    }
+    if (aImage == mPendingRequest && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
+      mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
+      doc->RemoveImage(mPendingRequest, nsIDocument::REQUEST_DISCARD);
+    }
+  }
   return NS_OK;
 }
 

@@ -18,7 +18,10 @@ function cleanUp() {
     Services.obs.removeObserver(gActiveObservers[topic], topic);
   for (var eventName in gActiveListeners)
     PopupNotifications.panel.removeEventListener(eventName, gActiveListeners[eventName], false);
+  PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
 }
+
+const PREF_SECURITY_DELAY_INITIAL = Services.prefs.getIntPref("security.notification_enable_delay");
 
 var gActiveListeners = {};
 var gActiveObservers = {};
@@ -675,6 +678,52 @@ var tests = [
         this.notificationOld.remove();
       }
     ]
+  },
+  { // Test #23 - test security delay - too early
+    run: function () {
+      // Set the security delay to 100s
+      PopupNotifications.buttonDelay = 100000;
+
+      this.notifyObj = new basicNotification();
+      showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+      triggerMainCommand(popup);
+
+      // Wait to see if the main command worked
+      executeSoon(function delayedDismissal() {
+        dismissNotification(popup);
+      });
+
+    },
+    onHidden: function (popup) {
+      ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked because it was too soon");
+      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
+    },
+  },
+  { // Test #24  - test security delay - after delay
+    run: function () {
+      // Set the security delay to 10ms
+      PopupNotifications.buttonDelay = 10;
+
+      this.notifyObj = new basicNotification();
+      showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+
+      // Wait until after the delay to trigger the main action
+      setTimeout(function delayedDismissal() {
+        triggerMainCommand(popup);
+      }, 500);
+
+    },
+    onHidden: function (popup) {
+      ok(this.notifyObj.mainActionClicked, "mainAction was clicked after the delay");
+      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback was not triggered");
+      PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
+    },
   }
 ];
 

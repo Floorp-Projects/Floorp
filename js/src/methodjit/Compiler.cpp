@@ -2816,6 +2816,10 @@ mjit::Compiler::generateMethod()
             frame.push(NullValue());
           END_CASE(JSOP_NULL)
 
+          BEGIN_CASE(JSOP_CALLEE)
+            frame.pushCallee();
+          END_CASE(JSOP_CALLEE)
+
           BEGIN_CASE(JSOP_THIS)
             jsop_this();
           END_CASE(JSOP_THIS)

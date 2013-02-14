@@ -34,7 +34,8 @@ class PluginModuleParent;
 class PluginHangUIParent : public MiniShmObserver
 {
 public:
-  PluginHangUIParent(PluginModuleParent* aModule);
+  PluginHangUIParent(PluginModuleParent* aModule,
+                     const int32_t aHangUITimeoutPref);
   virtual ~PluginHangUIParent();
 
   /**
@@ -129,6 +130,7 @@ private:
 
 private:
   PluginModuleParent* mModule;
+  const uint32_t mTimeoutPrefMs;
   MessageLoop* mMainThreadMessageLoop;
   volatile bool mIsShowing;
   unsigned int mLastUserResponse;

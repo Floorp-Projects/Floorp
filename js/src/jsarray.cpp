@@ -1258,6 +1258,238 @@ SortComparatorFunction::operator()(const Value &a, const Value &b, bool *lessOrE
     return true;
 }
 
+struct NumericElement
+{
+    double dv;
+    size_t elementIndex;
+};
+
+bool
+ComparatorNumericLeftMinusRight(const NumericElement &a, const NumericElement &b,
+                                bool *lessOrEqualp)
+{
+    *lessOrEqualp = (a.dv <= b.dv);
+    return true;
+}
+
+bool
+ComparatorNumericRightMinusLeft(const NumericElement &a, const NumericElement &b,
+                                bool *lessOrEqualp)
+{
+    *lessOrEqualp = (b.dv <= a.dv);
+    return true;
+}
+
+typedef bool (*ComparatorNumeric)(const NumericElement &a, const NumericElement &b,
+                                  bool *lessOrEqualp);
+
+ComparatorNumeric SortComparatorNumerics[] = {
+    NULL,
+    ComparatorNumericLeftMinusRight,
+    ComparatorNumericRightMinusLeft
+};
+
+bool
+ComparatorInt32LeftMinusRight(const Value &a, const Value &b, bool *lessOrEqualp)
+{
+    *lessOrEqualp = (a.toInt32() <= b.toInt32());
+    return true;
+}
+
+bool
+ComparatorInt32RightMinusLeft(const Value &a, const Value &b, bool *lessOrEqualp)
+{
+    *lessOrEqualp = (b.toInt32() <= a.toInt32());
+    return true;
+}
+
+typedef bool (*ComparatorInt32)(const Value &a, const Value &b, bool *lessOrEqualp);
+
+ComparatorInt32 SortComparatorInt32s[] = {
+    NULL,
+    ComparatorInt32LeftMinusRight,
+    ComparatorInt32RightMinusLeft
+};
+
+enum ComparatorMatchResult {
+    Match_None = 0,
+    Match_LeftMinusRight,
+    Match_RightMinusLeft
+};
+
+/*
+ * Specialize behavior for comparator functions with particular common bytecode
+ * patterns: namely, |return x - y| and |return y - x|.
+ */
+ComparatorMatchResult
+MatchNumericComparator(const Value &v)
+{
+    AutoAssertNoGC nogc;
+
+    if (!v.isObject())
+        return Match_None;
+
+    JSObject &obj = v.toObject();
+    if (!obj.isFunction())
+        return Match_None;
+
+    JSFunction *fun = obj.toFunction();
+    if (!fun->hasScript())
+        return Match_None;
+
+    UnrootedScript script = fun->nonLazyScript();
+    jsbytecode *pc = script->code;
+
+    uint16_t arg0, arg1;
+    if (JSOp(*pc) != JSOP_GETARG)
+        return Match_None;
+    arg0 = GET_ARGNO(pc);
+    pc += JSOP_GETARG_LENGTH;
+
+    if (JSOp(*pc) != JSOP_GETARG)
+        return Match_None;
+    arg1 = GET_ARGNO(pc);
+    pc += JSOP_GETARG_LENGTH;
+
+    if (JSOp(*pc) != JSOP_SUB)
+        return Match_None;
+    pc += JSOP_SUB_LENGTH;
+
+    if (JSOp(*pc) != JSOP_RETURN)
+        return Match_None;
+
+    if (arg0 == 0 && arg1 == 1)
+        return Match_LeftMinusRight;
+
+    if (arg0 == 1 && arg1 == 0)
+        return Match_RightMinusLeft;
+
+    return Match_None;
+}
+
+template<typename K, typename C>
+inline bool
+MergeSortByKey(K keys, size_t len, K scratch, C comparator, AutoValueVector *vec)
+{
+    MOZ_ASSERT(vec->length() >= len);
+
+    /* Sort keys. */
+    if (!MergeSort(keys, len, scratch, comparator))
+        return false;
+
+    /*
+     * Reorder vec by keys in-place, going element by element.  When an out-of-
+     * place element is encountered, move that element to its proper position,
+     * displacing whatever element was at *that* point to its proper position,
+     * and so on until an element must be moved to the current position.
+     *
+     * At each outer iteration all elements up to |i| are sorted.  If
+     * necessary each inner iteration moves some number of unsorted elements
+     * (including |i|) directly to sorted position.  Thus on completion |*vec|
+     * is sorted, and out-of-position elements have moved once.  Complexity is
+     * Θ(len) + O(len) == O(2*len), with each element visited at most twice.
+     */
+    for (size_t i = 0; i < len; i++) {
+        size_t j = keys[i].elementIndex;
+        if (i == j)
+            continue; // fixed point
+
+        MOZ_ASSERT(j > i, "Everything less than |i| should be in the right place!");
+        Value tv = (*vec)[j];
+        do {
+            size_t k = keys[j].elementIndex;
+            keys[j].elementIndex = j;
+            (*vec)[j] = (*vec)[k];
+            j = k;
+        } while (j != i);
+
+        // We could assert the loop invariant that |i == keys[i].elementIndex|
+        // here if we synced |keys[i].elementIndex|.  But doing so would render
+        // the assertion vacuous, so don't bother, even in debug builds.
+        (*vec)[i] = tv;
+    }
+
+    return true;
+}
+
+/*
+ * Sort Values as strings.
+ *
+ * To minimize #conversions, SortLexicographically() first converts all Values
+ * to strings at once, then sorts the elements by these cached strings.
+ */
+bool
+SortLexicographically(JSContext *cx, AutoValueVector *vec, size_t len)
+{
+    JS_ASSERT(vec->length() >= len);
+
+    StringBuffer sb(cx);
+    Vector<StringifiedElement, 0, TempAllocPolicy> strElements(cx);
+
+    /* MergeSort uses the upper half as scratch space. */
+    if (!strElements.reserve(2 * len))
+        return false;
+
+    /* Convert Values to strings. */
+    size_t cursor = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
+
+        if (!ValueToStringBuffer(cx, (*vec)[i], sb))
+            return false;
+
+        StringifiedElement el = { cursor, sb.length(), i };
+        strElements.infallibleAppend(el);
+        cursor = sb.length();
+    }
+
+    /* Resize strElements so we can perform MergeSort. */
+    JS_ALWAYS_TRUE(strElements.resize(2 * len));
+
+    /* Sort Values in vec alphabetically. */
+    return MergeSortByKey(strElements.begin(), len, strElements.begin() + len,
+                          SortComparatorStringifiedElements(cx, sb), vec);
+}
+
+/*
+ * Sort Values as numbers.
+ *
+ * To minimize #conversions, SortNumerically first converts all Values to
+ * numerics at once, then sorts the elements by these cached numerics.
+ */
+bool
+SortNumerically(JSContext *cx, AutoValueVector *vec, size_t len, ComparatorMatchResult comp)
+{
+    JS_ASSERT(vec->length() >= len);
+
+    Vector<NumericElement, 0, TempAllocPolicy> numElements(cx);
+
+    /* MergeSort uses the upper half as scratch space. */
+    if (!numElements.reserve(2 * len))
+        return false;
+
+    /* Convert Values to numerics. */
+    for (size_t i = 0; i < len; i++) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
+
+        double dv;
+        if (!ToNumber(cx, (*vec)[i], &dv))
+            return false;
+
+        NumericElement el = { dv, i };
+        numElements.infallibleAppend(el);
+    }
+
+    /* Resize strElements so we can perform MergeSort. */
+    JS_ALWAYS_TRUE(numElements.resize(2 * len));
+
+    /* Sort Values in vec numerically. */
+    return MergeSortByKey(numElements.begin(), len, numElements.begin() + len,
+                          SortComparatorNumerics[comp], vec);
+}
+
 } /* namespace anonymous */
 
 JSBool
@@ -1285,7 +1517,8 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
     uint32_t len;
     if (!GetLengthProperty(cx, obj, &len))
         return false;
-    if (len == 0) {
+    if (len < 2) {
+        /* [] and [a] remain unchanged when sorted. */
         args.rval().setObject(*obj);
         return true;
     }
@@ -1355,74 +1588,52 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
             return true; /* The array has only holes and undefs. */
         }
 
-        JS_ALWAYS_TRUE(vec.resize(n * 2));
-
         /* Here len == n + undefs + number_of_holes. */
-        Value *result = vec.begin();
         if (fval.isNull()) {
             /*
              * Sort using the default comparator converting all elements to
              * strings.
              */
             if (allStrings) {
+                JS_ALWAYS_TRUE(vec.resize(n * 2));
                 if (!MergeSort(vec.begin(), n, vec.begin() + n, SortComparatorStrings(cx)))
                     return false;
             } else if (allInts) {
+                JS_ALWAYS_TRUE(vec.resize(n * 2));
                 if (!MergeSort(vec.begin(), n, vec.begin() + n,
                                SortComparatorLexicographicInt32(cx))) {
                     return false;
                 }
             } else {
-                /*
-                 * Convert all elements to a jschar array in StringBuffer.
-                 * Store the index and length of each stringified element with
-                 * the corresponding index of the element in the array. Sort
-                 * the stringified elements and with this result order the
-                 * original array.
-                 */
-                StringBuffer sb(cx);
-                Vector<StringifiedElement, 0, TempAllocPolicy> strElements(cx);
-                if (!strElements.reserve(2 * n))
+                if (!SortLexicographically(cx, &vec, n))
                     return false;
-
-                size_t cursor = 0;
-                for (size_t i = 0; i < n; i++) {
-                    if (!JS_CHECK_OPERATION_LIMIT(cx))
-                        return false;
-
-                    if (!ValueToStringBuffer(cx, vec[i], sb))
-                        return false;
-
-                    StringifiedElement el = { cursor, sb.length(), i };
-                    strElements.infallibleAppend(el);
-                    cursor = sb.length();
-                }
-
-                /* Resize strElements so we can perform the sorting */
-                JS_ALWAYS_TRUE(strElements.resize(2 * n));
-
-                if (!MergeSort(strElements.begin(), n, strElements.begin() + n,
-                               SortComparatorStringifiedElements(cx, sb))) {
-                    return false;
-                }
-
-                /* Order vec[n:2n-1] using strElements.index */
-                for (size_t i = 0; i < n; i ++)
-                    vec[n + i] = vec[strElements[i].elementIndex];
-
-                result = vec.begin() + n;
             }
         } else {
-            /* array.sort() cannot currently be used from parallel code */
-            JS_ASSERT(!InParallelSection());
-            FastInvokeGuard fig(cx, fval);
-            if (!MergeSort(vec.begin(), n, vec.begin() + n,
-                           SortComparatorFunction(cx, fval, fig))) {
-                return false;
+            ComparatorMatchResult comp = MatchNumericComparator(fval);
+
+            if (comp != Match_None) {
+                if (allInts) {
+                    JS_ALWAYS_TRUE(vec.resize(n * 2));
+                    if (!MergeSort(vec.begin(), n, vec.begin() + n, SortComparatorInt32s[comp]))
+                        return false;
+                } else {
+                    if (!SortNumerically(cx, &vec, n, comp))
+                        return false;
+                }
+            } else {
+                FastInvokeGuard fig(cx, fval);
+                MOZ_ASSERT(!InParallelSection(),
+                           "Array.sort() can't currently be used from parallel code");
+                JS_ALWAYS_TRUE(vec.resize(n * 2));
+                if (!MergeSort(vec.begin(), n, vec.begin() + n,
+                               SortComparatorFunction(cx, fval, fig)))
+                {
+                    return false;
+                }
             }
         }
 
-        if (!InitArrayElements(cx, obj, 0, uint32_t(n), result, DontUpdateTypes))
+        if (!InitArrayElements(cx, obj, 0, uint32_t(n), vec.begin(), DontUpdateTypes))
             return false;
     }
 
@@ -2052,7 +2263,7 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
         HandleValue v = HandleValue::fromMarkedLocation(&p[i]);
         if (v.isObject()) {
             RootedObject obj(cx, &v.toObject());
-            if (ObjectClassIs(*obj, ESClass_Array, cx)) {
+            if (ObjectClassIs(obj, ESClass_Array, cx)) {
                 uint32_t alength;
                 if (!GetLengthProperty(cx, obj, &alength))
                     return false;

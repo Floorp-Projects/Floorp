@@ -2162,9 +2162,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 @media (min-resolution: 2dppx) {
-  .tab-throbber,
   .tab-icon-image {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
+    image-rendering: -moz-crisp-edges;
   }
 
   .tab-throbber {
@@ -2173,10 +2173,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
   .tab-throbber[progress] {
     list-style-image: url("chrome://browser/skin/tabbrowser/loading@2x.png");
-  }
-
-  .tab-icon-image {
-    image-rendering: -moz-crisp-edges;
   }
 }
 

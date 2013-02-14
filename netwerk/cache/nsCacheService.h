@@ -196,6 +196,10 @@ public:
     // Starts smart cache size computation if disk device is available
     static nsresult  SetDiskSmartSize();
 
+    static void      MoveOrRemoveDiskCache(nsIFile *aOldCacheDir,
+                                           nsIFile *aNewCacheDir,
+                                           const char *aCacheSubdir);
+
     nsresult         Init();
     void             Shutdown();
 

@@ -580,6 +580,11 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
         HangMonitor::NotifyActivity();
 
+        // Write poisoning needs to find the profile directory, so it has to
+        // be initialized before mozilla::services::Shutdown or (because of
+        // xpcshell tests replacing the service) modules being unloaded.
+        InitWritePoisoning();
+
         // We save the "xpcom-shutdown-loaders" observers to notify after
         // the observerservice is gone.
         if (observerService) {

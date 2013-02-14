@@ -8,10 +8,6 @@
 
 @ALLDEFINES@
 
-/* The c99 defining the limit macros (UINT32_MAX for example), says:
- * C++ implementations should define these macros only when __STDC_LIMIT_MACROS
- * is defined before <stdint.h> is included. */
-#define __STDC_LIMIT_MACROS
+#include "js/RequiredDefines.h"
 
 #endif /* _JS_CONFDEFS_H_ */
-

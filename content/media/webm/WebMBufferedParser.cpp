@@ -141,8 +141,8 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         // duplicate WebMTimeDataOffset entries.
         {
           ReentrantMonitorAutoEnter mon(aReentrantMonitor);
-          uint32_t idx;
-          if (!aMapping.GreatestIndexLtEq(mBlockOffset, idx)) {
+          uint32_t idx = aMapping.IndexOfFirstElementGt(mBlockOffset);
+          if (idx == 0 || !(aMapping[idx-1] == mBlockOffset)) {
             WebMTimeDataOffset entry(mBlockOffset, mClusterTimecode + mBlockTimecode);
             aMapping.InsertElementAt(idx, entry);
           }
@@ -184,17 +184,14 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   // Find the first WebMTimeDataOffset at or after aStartOffset.
-  uint32_t start;
-  mTimeMapping.GreatestIndexLtEq(aStartOffset, start);
+  uint32_t start = mTimeMapping.IndexOfFirstElementGt(aStartOffset-1);
   if (start == mTimeMapping.Length()) {
     return false;
   }
 
   // Find the first WebMTimeDataOffset at or before aEndOffset.
-  uint32_t end;
-  if (!mTimeMapping.GreatestIndexLtEq(aEndOffset, end) && end > 0) {
-    // No exact match, so adjust end to be the first entry before
-    // aEndOffset.
+  uint32_t end = mTimeMapping.IndexOfFirstElementGt(aEndOffset-1);
+  if (end > 0) {
     end -= 1;
   }
 
@@ -227,8 +224,8 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t 
 void WebMBufferedState::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  uint32_t idx;
-  if (!mRangeParsers.GreatestIndexLtEq(aOffset, idx)) {
+  uint32_t idx = mRangeParsers.IndexOfFirstElementGt(aOffset - 1);
+  if (idx == 0 || !(mRangeParsers[idx-1] == aOffset)) {
     // If the incoming data overlaps an already parsed range, adjust the
     // buffer so that we only reparse the new data.  It's also possible to
     // have an overlap where the end of the incoming data is within an
