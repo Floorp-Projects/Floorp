@@ -83,36 +83,15 @@ GetPPMLog()
 #define LOG(fmt, ...)
 #endif
 
-/**
- * Get the appropriate backround priority for this process.
- */
-ProcessPriority
-GetBackgroundPriority()
+uint64_t
+GetContentChildID()
 {
-  AudioChannelService* service = AudioChannelService::GetAudioChannelService();
-  if (service->ContentOrNormalChannelIsActive()) {
-    return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
-  }
-
-  bool isHomescreen = false;
-
   ContentChild* contentChild = ContentChild::GetSingleton();
-  if (contentChild) {
-    const InfallibleTArray<PBrowserChild*>& browsers =
-      contentChild->ManagedPBrowserChild();
-    for (uint32_t i = 0; i < browsers.Length(); i++) {
-      nsAutoString appType;
-      static_cast<TabChild*>(browsers[i])->GetAppType(appType);
-      if (appType.EqualsLiteral("homescreen")) {
-        isHomescreen = true;
-        break;
-      }
-    }
+  if (!contentChild) {
+    return 0;
   }
 
-  return isHomescreen ?
-         PROCESS_PRIORITY_BACKGROUND_HOMESCREEN :
-         PROCESS_PRIORITY_BACKGROUND;
+  return contentChild->GetID();
 }
 
 /**
@@ -158,6 +137,7 @@ class ProcessPriorityManager MOZ_FINAL
   : public nsIObserver
   , public nsIDOMEventListener
   , public nsITimerCallback
+  , public WakeLockObserver
 {
 public:
   ProcessPriorityManager();
@@ -167,20 +147,21 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMEVENTLISTENER
+  void Notify(const WakeLockInformation& aWakeLockInfo);
 
   ProcessPriority GetPriority() const { return mProcessPriority; }
 
   /**
-   * If this process is not already in the foreground, move it into the
-   * foreground and set a timer to call ResetPriorityNow() in a few seconds.
+   * This function doesn't do exactly what you might think; see the comment on
+   * ProcessPriorityManager.h::TemporarilyLockProcessPriority().
    */
-  void TemporarilySetIsForeground();
+  void TemporarilyLockProcessPriority();
 
   /**
    * Recompute this process's priority and apply it, potentially after a brief
    * delay.
    *
-   * If the new priority is FOREGROUND, it takes effect immediately.
+   * If the new priority is FOREGROUND*, it takes effect immediately.
    *
    * If the new priority is a BACKGROUND* priority and this process's priority
    * is currently a BACKGROUND* priority, the new priority takes effect
@@ -201,12 +182,29 @@ private:
   void OnContentDocumentGlobalCreated(nsISupports* aOuterWindow);
 
   /**
+   * Is this process a "critical" process that's holding the "CPU" or
+   * "high-priority" wake lock?
+   */
+  bool IsCriticalProcessWithWakeLock();
+
+  /**
+   * If this process were in the foreground, what priority would it have?
+   */
+  ProcessPriority GetForegroundPriority();
+
+  /**
+   * If this process were in the foreground, what priority would it have?
+   */
+  ProcessPriority GetBackgroundPriority();
+
+  /**
    * Compute whether this process is in the foreground and return the result.
    */
   bool ComputeIsInForeground();
 
   /**
-   * Set this process's priority to FOREGROUND immediately.
+   * Set this process's priority to the appropriate FOREGROUND* priority
+   * immediately.
    */
   void SetIsForeground();
 
@@ -224,6 +222,12 @@ private:
   void
   ScheduleResetPriority(const char* aTimeoutPref);
 
+  // Tracks whether this process holds the "cpu" lock.
+  bool mHoldsCPUWakeLock;
+
+  // Tracks whether this process holds the "high-priority" lock.
+  bool mHoldsHighPriorityWakeLock;
+
   // mProcessPriority tracks the priority we've given this process in hal.
   ProcessPriority mProcessPriority;
 
@@ -236,20 +240,20 @@ private:
   nsWeakPtr mMemoryMinimizerRunnable;
 };
 
-NS_IMPL_ISUPPORTS3(ProcessPriorityManager, nsIObserver,
-                   nsIDOMEventListener, nsITimerCallback)
+NS_IMPL_ISUPPORTS2(ProcessPriorityManager, nsIObserver, nsIDOMEventListener)
 
 ProcessPriorityManager::ProcessPriorityManager()
-  : mProcessPriority(ProcessPriority(-1))
+  : mHoldsCPUWakeLock(false)
+  , mHoldsHighPriorityWakeLock(false)
+  , mProcessPriority(ProcessPriority(-1))
 {
-  // When our parent process forked us, it set our priority either to
-  // FOREGROUND (if our parent launched this process to meet an immediate need)
-  // or one of the BACKGROUND priorities (if our parent launched this process
-  // to meet a future need).
+  // When our parent process forked us, it may have set our process's priority
+  // to one of a few of the process priorities, depending on exactly why this
+  // process was created.
   //
-  // We don't know which situation we're in, so we set mProcessPriority to -1
-  // so that the next time ResetPriorityNow is run, we'll definitely call into
-  // hal and set our priority.
+  // We don't know which priority we were given, so we set mProcessPriority to
+  // -1 so that the next time ResetPriorityNow is run, we'll definitely call
+  // into hal and set our priority.
 }
 
 void
@@ -269,6 +273,20 @@ ProcessPriorityManager::Init()
   os->AddObserver(this, "inner-window-destroyed", /* ownsWeak = */ false);
   os->AddObserver(this, "audio-channel-agent-changed", /* ownsWeak = */ false);
   os->AddObserver(this, "process-priority:reset-now", /* ownsWeak = */ false);
+
+  RegisterWakeLockObserver(this);
+
+  // This process may already hold the CPU lock; for example, our parent may
+  // have acquired it on our behalf.
+  WakeLockInformation info1, info2;
+  GetWakeLockInfo(NS_LITERAL_STRING("cpu"), &info1);
+  mHoldsCPUWakeLock = info1.lockingProcesses().Contains(GetContentChildID());
+
+  GetWakeLockInfo(NS_LITERAL_STRING("high-priority"), &info2);
+  mHoldsHighPriorityWakeLock = info2.lockingProcesses().Contains(GetContentChildID());
+
+  LOG("Done starting up.  mHoldsCPUWakeLock=%d, mHoldsHighPriorityWakeLock=%d",
+      mHoldsCPUWakeLock, mHoldsHighPriorityWakeLock);
 }
 
 NS_IMETHODIMP
@@ -289,6 +307,30 @@ ProcessPriorityManager::Observe(
     MOZ_ASSERT(false);
   }
   return NS_OK;
+}
+
+void
+ProcessPriorityManager::Notify(const WakeLockInformation& aInfo)
+{
+  bool* dest = nullptr;
+  if (aInfo.topic() == NS_LITERAL_STRING("cpu")) {
+    dest = &mHoldsCPUWakeLock;
+  } else if (aInfo.topic() == NS_LITERAL_STRING("high-priority")) {
+    dest = &mHoldsHighPriorityWakeLock;
+  }
+
+  if (dest) {
+    bool thisProcessLocks =
+      aInfo.lockingProcesses().Contains(GetContentChildID());
+
+    if (thisProcessLocks != *dest) {
+      *dest = thisProcessLocks;
+      LOG("Got wake lock changed event. "
+          "Now mHoldsCPUWakeLock=%d, mHoldsHighPriorityWakeLock=%d",
+          mHoldsCPUWakeLock, mHoldsHighPriorityWakeLock);
+      ResetPriority();
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -336,8 +378,74 @@ ProcessPriorityManager::OnContentDocumentGlobalCreated(
                                  /* wantsUntrusted = */ false);
 
   mWindows.AppendElement(weakWin);
+
   ResetPriority();
 }
+
+bool
+ProcessPriorityManager::IsCriticalProcessWithWakeLock()
+{
+  if (!(mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock)) {
+    return false;
+  }
+
+  ContentChild* contentChild = ContentChild::GetSingleton();
+  if (!contentChild) {
+    return false;
+  }
+
+  const InfallibleTArray<PBrowserChild*>& browsers =
+    contentChild->ManagedPBrowserChild();
+  for (uint32_t i = 0; i < browsers.Length(); i++) {
+    nsAutoString appType;
+    static_cast<TabChild*>(browsers[i])->GetAppType(appType);
+    if (appType.EqualsLiteral("critical")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+ProcessPriority
+ProcessPriorityManager::GetForegroundPriority()
+{
+  return IsCriticalProcessWithWakeLock() ? PROCESS_PRIORITY_FOREGROUND_HIGH :
+                                           PROCESS_PRIORITY_FOREGROUND;
+}
+
+/**
+ * Get the appropriate backround priority for this process.
+ */
+ProcessPriority
+ProcessPriorityManager::GetBackgroundPriority()
+{
+  AudioChannelService* service = AudioChannelService::GetAudioChannelService();
+  if (service->ContentOrNormalChannelIsActive()) {
+    return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
+  }
+
+  bool isHomescreen = false;
+
+  ContentChild* contentChild = ContentChild::GetSingleton();
+  if (contentChild) {
+    const InfallibleTArray<PBrowserChild*>& browsers =
+      contentChild->ManagedPBrowserChild();
+    for (uint32_t i = 0; i < browsers.Length(); i++) {
+      nsAutoString appType;
+      static_cast<TabChild*>(browsers[i])->GetAppType(appType);
+      if (appType.EqualsLiteral("homescreen")) {
+        isHomescreen = true;
+        break;
+      }
+    }
+  }
+
+  return isHomescreen ?
+         PROCESS_PRIORITY_BACKGROUND_HOMESCREEN :
+         PROCESS_PRIORITY_BACKGROUND;
+}
+
 
 void
 ProcessPriorityManager::ResetPriority()
@@ -366,6 +474,12 @@ ProcessPriorityManager::ResetPriorityNow()
 bool
 ProcessPriorityManager::ComputeIsInForeground()
 {
+  // Critical processes holding the CPU/high-priority wake lock are always
+  // considered to be in the foreground.
+  if (IsCriticalProcessWithWakeLock()) {
+    return true;
+  }
+
   // We could try to be clever and keep a running count of the number of active
   // docshells, instead of iterating over mWindows every time one window's
   // visibility state changes.  But experience suggests that iterating over the
@@ -390,6 +504,7 @@ ProcessPriorityManager::ComputeIsInForeground()
     bool isActive = false;
     docshell->GetIsActive(&isActive);
 
+
 #ifdef DEBUG
     nsAutoCString spec;
     nsCOMPtr<nsIURI> uri = window->GetDocumentURI();
@@ -412,7 +527,8 @@ ProcessPriorityManager::ComputeIsInForeground()
 void
 ProcessPriorityManager::SetIsForeground()
 {
-  if (mProcessPriority == PROCESS_PRIORITY_FOREGROUND) {
+  ProcessPriority foregroundPriority = GetForegroundPriority();
+  if (foregroundPriority == mProcessPriority) {
     return;
   }
 
@@ -423,7 +539,7 @@ ProcessPriorityManager::SetIsForeground()
     runnable->Cancel();
   }
 
-  mProcessPriority = PROCESS_PRIORITY_FOREGROUND;
+  mProcessPriority = foregroundPriority;
   LOG("Setting priority to %s.", ProcessPriorityToString(mProcessPriority));
   hal::SetProcessPriority(getpid(), PROCESS_PRIORITY_FOREGROUND);
 }
@@ -462,7 +578,7 @@ void
 ProcessPriorityManager::ScheduleResetPriority(const char* aTimeoutPref)
 {
   if (mResetPriorityTimer) {
-    // The timer is already running.
+    LOG("ScheduleResetPriority bailing; the timer is already running.");
     return;
   }
 
@@ -483,20 +599,20 @@ ProcessPriorityManager::Notify(nsITimer* aTimer)
 }
 
 void
-ProcessPriorityManager::TemporarilySetIsForeground()
+ProcessPriorityManager::TemporarilyLockProcessPriority()
 {
-  LOG("TemporarilySetIsForeground");
-  SetIsForeground();
+  LOG("TemporarilyLockProcessPriority");
 
-  // Each call to TemporarilySetIsForeground guarantees us temporaryPriorityMS
-  // in the foreground (unless we receive a process-priority:reset-now
-  // notification).  So cancel our timer if it's running (which is due to a
-  // previous call to either TemporarilySetIsForeground() or ResetPriority()).
+  // Each call to TemporarilyLockProcessPriority gives us an additional
+  // temporaryPriorityMS at our current priority (unless we receive a
+  // process-priority:reset-now notification).  So cancel our timer if it's
+  // running (which is due to a previous call to either
+  // TemporarilyLockProcessPriority() or ResetPriority()).
   if (mResetPriorityTimer) {
     mResetPriorityTimer->Cancel();
     mResetPriorityTimer = nullptr;
   }
-  ScheduleResetPriority("temporaryPriorityMS");
+  ScheduleResetPriority("temporaryPriorityLockMS");
 }
 
 } // anonymous namespace
@@ -544,12 +660,12 @@ CurrentProcessIsForeground()
 }
 
 void
-TemporarilySetProcessPriorityToForeground()
+TemporarilyLockProcessPriority()
 {
   if (sManager) {
-    sManager->TemporarilySetIsForeground();
+    sManager->TemporarilyLockProcessPriority();
   } else {
-    LOG("TemporarilySetProcessPriorityToForeground called before "
+    LOG("TemporarilyLockProcessPriority called before "
         "InitProcessPriorityManager.  Bailing.");
   }
 }
