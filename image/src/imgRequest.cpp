@@ -628,7 +628,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   // trigger a failure, since the image might be waiting for more non-optional
   // data and this is the point where we break the news that it's not coming.
   if (mImage) {
-    nsresult rv = mImage->OnImageDataComplete(aRequest, ctxt, status);
+    nsresult rv = mImage->OnImageDataComplete(aRequest, ctxt, status, lastPart);
 
     // If we got an error in the OnImageDataComplete() call, we don't want to
     // proceed as if nothing bad happened. However, we also want to give
@@ -636,10 +636,13 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     // more meaningful.
     if (NS_FAILED(rv) && NS_SUCCEEDED(status))
       status = rv;
+  } else {
+    // We have to fire imgStatusTracker::OnStopRequest ourselves because there's
+    // no image capable of doing so.
+    imgStatusTracker& statusTracker = GetStatusTracker();
+    statusTracker.RecordCancel();  // No image indicates an error!
+    statusTracker.OnStopRequest(lastPart, status);
   }
-
-  imgStatusTracker& statusTracker = GetStatusTracker();
-  statusTracker.RecordStopRequest(lastPart, status);
 
   // If the request went through, update the cache entry size. Otherwise,
   // cancel the request, which removes us from the cache.
@@ -652,8 +655,6 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     // stops animations, removes from cache
     this->Cancel(status);
   }
-
-  GetStatusTracker().OnStopRequest(lastPart, status);
 
   mTimedChannel = nullptr;
   return NS_OK;

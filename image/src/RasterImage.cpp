@@ -1813,7 +1813,7 @@ get_header_str (char *buf, char *data, size_t data_len)
 }
 
 nsresult
-RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult)
+RasterImage::DoImageDataComplete()
 {
   if (mError)
     return NS_ERROR_FAILURE;
@@ -1872,6 +1872,19 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult)
     CONTAINER_ENSURE_SUCCESS(rv);
   }
   return NS_OK;
+}
+
+nsresult
+RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus, bool aLastPart)
+{
+  nsresult finalStatus = DoImageDataComplete();
+
+  // Give precedence to Necko failure codes.
+  if (NS_FAILED(aStatus))
+    finalStatus = aStatus;
+
+  GetStatusTracker().OnStopRequest(aLastPart, finalStatus);
+  return finalStatus;
 }
 
 nsresult
