@@ -137,6 +137,7 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 
 # invalid child nodes
 == ignore-invalid-child.svg ignore-invalid-child-ref.svg
+== ignore-invalid-child-2.svg ignore-invalid-child-2-ref.svg
 
 # text inside a link
 == link-surrounding.svg simple.svg
