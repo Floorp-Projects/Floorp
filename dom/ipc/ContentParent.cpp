@@ -28,6 +28,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
+#include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/StorageParent.h"
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
@@ -61,9 +62,11 @@
 #include "nsIClipboard.h"
 #include "nsIDOMApplicationRegistry.h"
 #include "nsIDOMGeoGeolocation.h"
+#include "nsIDOMWakeLock.h"
 #include "nsIDOMWindow.h"
 #include "nsIFilePicker.h"
 #include "nsIMemoryReporter.h"
+#include "nsIMozBrowserFrame.h"
 #include "nsIMutable.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
@@ -118,8 +121,9 @@ using base::ChildPrivileges;
 using base::KillProcess;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
-using namespace mozilla::dom::sms;
 using namespace mozilla::dom::indexedDB;
+using namespace mozilla::dom::power;
+using namespace mozilla::dom::sms;
 using namespace mozilla::hal;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
@@ -225,7 +229,8 @@ ContentParent::PreallocateAppProcess()
                           /*isBrowserElement=*/false,
                           // Final privileges are set when we
                           // transform into our app.
-                          base::PRIVILEGES_INHERIT);
+                          base::PRIVILEGES_INHERIT,
+                          PROCESS_PRIORITY_BACKGROUND);
     sPreallocatedAppProcess->Init();
 }
 
@@ -252,7 +257,8 @@ ContentParent::ScheduleDelayedPreallocateAppProcess()
 
 /*static*/ already_AddRefed<ContentParent>
 ContentParent::MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
-                                               ChildPrivileges aPrivs)
+                                               ChildPrivileges aPrivs,
+                                               ProcessPriority aInitialPriority)
 {
     nsRefPtr<ContentParent> process = sPreallocatedAppProcess.get();
     sPreallocatedAppProcess = nullptr;
@@ -261,10 +267,8 @@ ContentParent::MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
         return nullptr;
     }
 
-    if (!process->TransformPreallocatedIntoApp(aAppManifestURL, aPrivs)) {
-        NS_WARNING("Can't TransformPrealocatedIntoApp.  Maybe "
-                   "the preallocated process died?");
-
+    if (!process->TransformPreallocatedIntoApp(aAppManifestURL, aPrivs,
+                                               aInitialPriority)) {
         // Kill the process just in case it's not actually dead; we don't want
         // to "leak" this process!
         process->KillHard();
@@ -382,7 +386,9 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
 
     nsRefPtr<ContentParent> p =
         new ContentParent(/* appManifestURL = */ EmptyString(),
-                          aForBrowserElement);
+                          aForBrowserElement,
+                          base::PRIVILEGES_DEFAULT,
+                          PROCESS_PRIORITY_FOREGROUND);
     p->Init();
     gNonAppContentParents->AppendElement(p);
     return p;
@@ -419,8 +425,37 @@ PrivilegesForApp(mozIApplication* aApp)
     return base::PRIVILEGES_DEFAULT;
 }
 
+/*static*/ ProcessPriority
+ContentParent::GetInitialProcessPriority(nsIDOMElement* aFrameElement)
+{
+    // Frames with mozapptype == critical which are expecting a system message
+    // get FOREGROUND_HIGH priority.  All other frames get FOREGROUND priority.
+
+    if (!aFrameElement) {
+        return PROCESS_PRIORITY_FOREGROUND;
+    }
+
+    nsAutoString appType;
+    nsCOMPtr<Element> frameElement = do_QueryInterface(aFrameElement);
+    frameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapptype, appType);
+    if (appType != NS_LITERAL_STRING("critical")) {
+        return PROCESS_PRIORITY_FOREGROUND;
+    }
+
+    nsCOMPtr<nsIMozBrowserFrame> browserFrame =
+        do_QueryInterface(aFrameElement);
+    if (!browserFrame) {
+        return PROCESS_PRIORITY_FOREGROUND;
+    }
+
+    return browserFrame->GetIsExpectingSystemMessage() ?
+               PROCESS_PRIORITY_FOREGROUND_HIGH :
+               PROCESS_PRIORITY_FOREGROUND;
+}
+
 /*static*/ TabParent*
-ContentParent::CreateBrowserOrApp(const TabContext& aContext)
+ContentParent::CreateBrowserOrApp(const TabContext& aContext,
+                                  nsIDOMElement* aFrameElement)
 {
     if (!sCanLaunchSubprocesses) {
         return nullptr;
@@ -429,6 +464,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext)
     if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
         if (ContentParent* cp = GetNewOrUsed(aContext.IsBrowserElement())) {
             nsRefPtr<TabParent> tp(new TabParent(aContext));
+            tp->SetOwnerElement(aFrameElement);
             PBrowserParent* browser = cp->SendPBrowserConstructor(
                 tp.forget().get(), // DeallocPBrowserParent() releases this ref.
                 aContext.AsIPCTabContext(),
@@ -458,18 +494,24 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext)
 
     nsRefPtr<ContentParent> p = gAppContentParents->Get(manifestURL);
     if (!p) {
+        ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
+
         ChildPrivileges privs = PrivilegesForApp(ownApp);
-        p = MaybeTakePreallocatedAppProcess(manifestURL, privs);
+        p = MaybeTakePreallocatedAppProcess(manifestURL, privs,
+                                            initialPriority);
         if (!p) {
             NS_WARNING("Unable to use pre-allocated app process");
             p = new ContentParent(manifestURL, /* isBrowserElement = */ false,
-                                  privs);
+                                  privs, initialPriority);
             p->Init();
         }
         gAppContentParents->Put(manifestURL, p);
     }
 
+    p->MaybeTakeCPUWakeLock(aFrameElement);
+
     nsRefPtr<TabParent> tp = new TabParent(aContext);
+    tp->SetOwnerElement(aFrameElement);
     PBrowserParent* browser = p->SendPBrowserConstructor(
         tp.forget().get(), // DeallocPBrowserParent() releases this ref.
         aContext.AsIPCTabContext(),
@@ -546,23 +588,136 @@ ContentParent::Init()
     NS_ASSERTION(observer, "FileUpdateDispatcher is null");
 }
 
+namespace {
+
+class SystemMessageHandledListener MOZ_FINAL
+    : public nsITimerCallback
+    , public LinkedListElement<SystemMessageHandledListener>
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    SystemMessageHandledListener() {}
+
+    static void OnSystemMessageHandled()
+    {
+        if (!sListeners) {
+            return;
+        }
+
+        SystemMessageHandledListener* listener = sListeners->popFirst();
+        if (!listener) {
+            return;
+        }
+
+        // Careful: ShutDown() may delete |this|.
+        listener->ShutDown();
+    }
+
+    void Init(nsIDOMMozWakeLock* aWakeLock)
+    {
+        MOZ_ASSERT(!mWakeLock);
+        MOZ_ASSERT(!mTimer);
+
+        // mTimer keeps a strong reference to |this|.  When this object's
+        // destructor runs, it will remove itself from the LinkedList.
+
+        if (!sListeners) {
+            sListeners = new LinkedList<SystemMessageHandledListener>();
+            ClearOnShutdown(&sListeners);
+        }
+        sListeners->insertBack(this);
+
+        mWakeLock = aWakeLock;
+
+        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+        uint32_t timeoutSec =
+            Preferences::GetInt("dom.ipc.systemMessageCPULockTimeoutSec", 30);
+        mTimer->InitWithCallback(this, timeoutSec * 1000,
+                                 nsITimer::TYPE_ONE_SHOT);
+    }
+
+    NS_IMETHOD Notify(nsITimer* aTimer)
+    {
+        // Careful: ShutDown() may delete |this|.
+        ShutDown();
+        return NS_OK;
+    }
+
+private:
+    static StaticAutoPtr<LinkedList<SystemMessageHandledListener> > sListeners;
+
+    void ShutDown()
+    {
+        nsRefPtr<SystemMessageHandledListener> kungFuDeathGrip = this;
+
+        mWakeLock->Unlock();
+
+        if (mTimer) {
+            mTimer->Cancel();
+            mTimer = nullptr;
+        }
+    }
+
+    nsCOMPtr<nsIDOMMozWakeLock> mWakeLock;
+    nsCOMPtr<nsITimer> mTimer;
+};
+
+StaticAutoPtr<LinkedList<SystemMessageHandledListener> >
+    SystemMessageHandledListener::sListeners;
+
+NS_IMPL_ISUPPORTS1(SystemMessageHandledListener,
+                   nsITimerCallback)
+
+} // anonymous namespace
+
+void
+ContentParent::SetProcessInitialPriority(ProcessPriority aInitialPriority)
+{
+    if (!Preferences::GetBool("dom.ipc.processPriorityManager.enabled")) {
+        return;
+    }
+
+    SetProcessPriority(base::GetProcId(mSubprocess->GetChildProcessHandle()),
+                       aInitialPriority);
+}
+
+void
+ContentParent::MaybeTakeCPUWakeLock(nsIDOMElement* aFrameElement)
+{
+    // Take the CPU wake lock on behalf of this processs if it's expecting a
+    // system message.  We'll release the CPU lock once the message is
+    // delivered, or after some period of time, which ever comes first.
+
+    nsCOMPtr<nsIMozBrowserFrame> browserFrame =
+        do_QueryInterface(aFrameElement);
+    if (!browserFrame ||
+        !browserFrame->GetIsExpectingSystemMessage()) {
+        return;
+    }
+
+    nsRefPtr<PowerManagerService> pms = PowerManagerService::GetInstance();
+    nsCOMPtr<nsIDOMMozWakeLock> lock =
+        pms->NewWakeLockOnBehalfOfProcess(NS_LITERAL_STRING("cpu"), this);
+
+    // This object's Init() function keeps it alive.
+    nsRefPtr<SystemMessageHandledListener> listener =
+        new SystemMessageHandledListener();
+    listener->Init(lock);
+}
+
 bool
 ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL,
-                                            ChildPrivileges aPrivs)
+                                            ChildPrivileges aPrivs,
+                                            ProcessPriority aInitialPriority)
 {
     MOZ_ASSERT(mAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL);
     // Clients should think of mAppManifestURL as const ... we're
     // bending the rules here just for the preallocation hack.
     const_cast<nsString&>(mAppManifestURL) = aAppManifestURL;
 
-    // Boost this process's priority.  The subprocess will call
-    // TemporarilySetProcessPriorityToForeground() from within
-    // ContentChild::AllocPBrowser, but this happens earlier, thus reducing the
-    // window in which the child might be killed due to low memory.
-    if (Preferences::GetBool("dom.ipc.processPriorityManager.enabled")) {
-        SetProcessPriority(base::GetProcId(mSubprocess->GetChildProcessHandle()),
-                           PROCESS_PRIORITY_FOREGROUND);
-    }
+    SetProcessInitialPriority(aInitialPriority);
 
     // Now that we've increased the process's priority from BACKGROUND (where
     // the preallocated app sits) to something higher, check whether the process
@@ -887,7 +1042,8 @@ ContentParent::GetTestShellSingleton()
 
 ContentParent::ContentParent(const nsAString& aAppManifestURL,
                              bool aIsForBrowser,
-                             ChildPrivileges aOSPrivileges)
+                             ChildPrivileges aOSPrivileges,
+                             ProcessPriority aInitialPriority /* = PROCESS_PRIORITY_FOREGROUND */)
     : mSubprocess(nullptr)
     , mOSPrivileges(aOSPrivileges)
     , mChildID(CONTENT_PROCESS_ID_UNKNOWN)
@@ -912,20 +1068,10 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
 
     mSubprocess->LaunchAndWaitForProcessHandle();
 
-    // Set the subprocess's priority (bg if we're a preallocated process, fg
-    // otherwise).  We do this first because we're likely /lowering/ its CPU and
-    // memory priority, which it has inherited from this process.
-    if (Preferences::GetBool("dom.ipc.processPriorityManager.enabled")) {
-        ProcessPriority priority;
-        if (aAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL) {
-            priority = PROCESS_PRIORITY_BACKGROUND;
-        } else {
-            priority = PROCESS_PRIORITY_FOREGROUND;
-        }
-
-        SetProcessPriority(base::GetProcId(mSubprocess->GetChildProcessHandle()),
-                           priority);
-    }
+    // Set the subprocess's priority.  We do this first because we're likely
+    // /lowering/ its CPU and memory priority, which it has inherited from this
+    // process.
+    SetProcessInitialPriority(aInitialPriority);
 
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
 
@@ -2309,6 +2455,13 @@ bool
 ContentParent::CheckAppHasPermission(const nsAString& aPermission)
 {
   return AssertAppHasPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
+}
+
+bool
+ContentParent::RecvSystemMessageHandled()
+{
+    SystemMessageHandledListener::OnSystemMessageHandled();
+    return true;
 }
 
 } // namespace dom
