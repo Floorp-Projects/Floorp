@@ -99,7 +99,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::hal;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::layers;
@@ -2061,9 +2060,11 @@ nsFrameLoader::TryRemoteBrowser()
     context.SetTabContextForBrowserFrame(containingApp, scrollingBehavior);
   }
 
-  nsCOMPtr<nsIDOMElement> ownerElement = do_QueryInterface(mOwnerContent);
-  mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement);
+  mRemoteBrowser = ContentParent::CreateBrowserOrApp(context);
   if (mRemoteBrowser) {
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
+    mRemoteBrowser->SetOwnerElement(element);
+
     // If we're an app, send the frame element's mozapptype down to the child
     // process.  This ends up in TabChild::GetAppType().
     if (ownApp) {
