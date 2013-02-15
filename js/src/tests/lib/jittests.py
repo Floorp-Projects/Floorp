@@ -21,6 +21,11 @@ except ImportError:
 
 from progressbar import ProgressBar, NullProgressBar
 
+TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
+JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
+TEST_DIR = os.path.join(JS_DIR, 'jit-test', 'tests')
+LIB_DIR = os.path.join(JS_DIR, 'jit-test', 'lib') + os.path.sep
+
 # Backported from Python 3.1 posixpath.py
 def _relpath(path, start=None):
     """Return a relative version of a path"""
@@ -139,26 +144,23 @@ class Test:
 
         return test
 
-    def command(self, js, lib_dir, shell_args):
-        libdir_var = lib_dir
-        if not libdir_var.endswith('/'):
-            libdir_var += '/'
+    def command(self, js, shell_args):
         scriptdir_var = os.path.dirname(self.path);
         if not scriptdir_var.endswith('/'):
             scriptdir_var += '/'
         expr = ("const platform=%r; const libdir=%r; const scriptdir=%r"
-                % (sys.platform, libdir_var, scriptdir_var))
+                % (sys.platform, LIB_DIR, scriptdir_var))
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
         cmd = [js] + list(set(self.jitflags)) + shell_args + ['-e', expr]
-        cmd += ['-f', os.path.join(lib_dir, 'prolog.js'), '-f', self.path]
+        cmd += ['-f', os.path.join(LIB_DIR, 'prolog.js'), '-f', self.path]
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
         return cmd
 
-def find_tests(dir, substring = None):
+def find_tests(substring=None):
     ans = []
-    for dirpath, dirnames, filenames in os.walk(dir):
+    for dirpath, dirnames, filenames in os.walk(TEST_DIR):
         dirnames.sort()
         filenames.sort()
         if dirpath == '.':
@@ -169,7 +171,7 @@ def find_tests(dir, substring = None):
             if filename in ('shell.js', 'browser.js', 'jsref.js'):
                 continue
             test = os.path.join(dirpath, filename)
-            if substring is None or substring in os.path.relpath(test, dir):
+            if substring is None or substring in os.path.relpath(test, TEST_DIR):
                 ans.append(test)
     return ans
 
@@ -258,8 +260,8 @@ def run_cmd_avoid_stdio(cmdline, env, timeout):
     _, __, code = run_timeout_cmd(cmdline, { 'env': env }, timeout)
     return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
-def run_test(test, lib_dir, shell_args, options):
-    cmd = test.command(options.js_shell, lib_dir, shell_args)
+def run_test(test, shell_args, options):
+    cmd = test.command(options.js_shell, shell_args)
     if options.show_cmd:
         print(subprocess.list2cmdline(cmd))
 
@@ -313,14 +315,14 @@ def print_tinderbox(label, test, message=None):
         result += ": " + message
     print(result)
 
-def wrap_parallel_run_test(test, lib_dir, shell_args, resultQueue, options):
+def wrap_parallel_run_test(test, shell_args, resultQueue, options):
     # Ignore SIGINT in the child
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    result = run_test(test, lib_dir, shell_args, options) + (test,)
+    result = run_test(test, shell_args, options) + (test,)
     resultQueue.put(result)
     return result
 
-def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
+def run_tests_parallel(tests, shell_args, options):
     # This queue will contain the results of the various tests run.
     # We could make this queue a global variable instead of using
     # a manager to share, but this will not work on Windows.
@@ -338,7 +340,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
     result_process_return_queue = queue_manager.Queue()
     result_process = Process(target=process_test_results_parallel,
                              args=(async_test_result_queue, result_process_return_queue,
-                                   notify_queue, len(tests), options, lib_dir, shell_args))
+                                   notify_queue, len(tests), options, shell_args))
     result_process.start()
 
     # Ensure that a SIGTERM is handled the same way as SIGINT
@@ -368,7 +370,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
         while notify_queue.get():
             if (testcnt < len(tests)):
                 # Start one new worker
-                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], lib_dir, shell_args, async_test_result_queue, options))
+                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], shell_args, async_test_result_queue, options))
                 worker_processes.append(worker_process)
                 worker_process.start()
                 testcnt += 1
@@ -417,12 +419,12 @@ def get_parallel_results(async_test_result_queue, notify_queue):
 
         yield async_test_result
 
-def process_test_results_parallel(async_test_result_queue, return_queue, notify_queue, num_tests, options, lib_dir, shell_args):
+def process_test_results_parallel(async_test_result_queue, return_queue, notify_queue, num_tests, options, shell_args):
     gen = get_parallel_results(async_test_result_queue, notify_queue)
-    ok = process_test_results(gen, num_tests, options, lib_dir, shell_args)
+    ok = process_test_results(gen, num_tests, options, shell_args)
     return_queue.put(ok)
 
-def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
+def print_test_summary(failures, complete, doing, options, shell_args):
     if failures:
         if options.write_failures:
             try:
@@ -431,7 +433,7 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
                 written = set()
                 for test, fout, ferr, fcode, _ in failures:
                     if test.path not in written:
-                        out.write(os.path.relpath(test.path, test_dir) + '\n')
+                        out.write(os.path.relpath(test.path, TEST_DIR) + '\n')
                         if options.write_failure_output:
                             out.write(fout)
                             out.write(ferr)
@@ -446,7 +448,7 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
 
         def show_test(test):
             if options.show_failed:
-                print('    ' + subprocess.list2cmdline(test.command(options.js_shell, lib_dir, shell_args)))
+                print('    ' + subprocess.list2cmdline(test.command(options.js_shell, shell_args)))
             else:
                 print('    ' + ' '.join(test.jitflags + [test.path]))
 
@@ -465,7 +467,7 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)' % doing))
         return True
 
-def process_test_results(results, num_tests, options, lib_dir, shell_args):
+def process_test_results(results, num_tests, options, shell_args):
     pb = NullProgressBar()
     if not options.hide_progress and not options.show_cmd and ProgressBar.conservative_isatty():
         fmt = [
@@ -514,17 +516,17 @@ def process_test_results(results, num_tests, options, lib_dir, shell_args):
         print_tinderbox("TEST-UNEXPECTED-FAIL", None, "Test execution interrupted by user");
 
     pb.finish(True)
-    return print_test_summary(failures, complete, doing, options, lib_dir, shell_args)
+    return print_test_summary(failures, complete, doing, options, shell_args)
 
 
-def get_serial_results(tests, lib_dir, shell_args, options):
+def get_serial_results(tests, shell_args, options):
     for test in tests:
-        result = run_test(test, lib_dir, shell_args, options)
+        result = run_test(test, shell_args, options)
         yield result + (test,)
 
-def run_tests(tests, test_dir, lib_dir, shell_args, options):
-    gen = get_serial_results(tests, lib_dir, shell_args, options)
-    ok = process_test_results(gen, len(tests), options, lib_dir, shell_args)
+def run_tests(tests, shell_args, options):
+    gen = get_serial_results(tests, shell_args, options)
+    ok = process_test_results(gen, len(tests), options, shell_args)
     return ok
 
 def parse_jitflags(options):
