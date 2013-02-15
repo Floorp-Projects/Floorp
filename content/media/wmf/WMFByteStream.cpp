@@ -192,9 +192,9 @@ NS_IMPL_THREADSAFE_RELEASE(WMFByteStream)
 
 
 // Stores data regarding an async read opreation.
-class AsyncReadRequest MOZ_FINAL : public IUnknown {
+class ReadRequest MOZ_FINAL : public IUnknown {
 public:
-  AsyncReadRequest(int64_t aOffset, BYTE* aBuffer, ULONG aLength)
+  ReadRequest(int64_t aOffset, BYTE* aBuffer, ULONG aLength)
     : mOffset(aOffset),
       mBuffer(aBuffer),
       mBufferLength(aLength),
@@ -216,14 +216,14 @@ public:
   NS_DECL_OWNINGTHREAD
 };
 
-NS_IMPL_THREADSAFE_ADDREF(AsyncReadRequest)
-NS_IMPL_THREADSAFE_RELEASE(AsyncReadRequest)
+NS_IMPL_THREADSAFE_ADDREF(ReadRequest)
+NS_IMPL_THREADSAFE_RELEASE(ReadRequest)
 
 // IUnknown Methods
 STDMETHODIMP
-AsyncReadRequest::QueryInterface(REFIID aIId, void **aInterface)
+ReadRequest::QueryInterface(REFIID aIId, void **aInterface)
 {
-  LOG("AsyncReadRequest::QueryInterface %s", GetGUIDName(aIId).get());
+  LOG("ReadRequest::QueryInterface %s", GetGUIDName(aIId).get());
 
   if (aIId == IID_IUnknown) {
     return DoGetInterface(static_cast<IUnknown*>(this), aInterface);
@@ -237,7 +237,7 @@ class ProcessReadRequestEvent MOZ_FINAL : public nsRunnable {
 public:
   ProcessReadRequestEvent(WMFByteStream* aStream,
                           IMFAsyncResult* aResult,
-                          AsyncReadRequest* aRequestState)
+                          ReadRequest* aRequestState)
     : mStream(aStream),
       mResult(aResult),
       mRequestState(aRequestState) {}
@@ -249,7 +249,7 @@ public:
 private:
   RefPtr<WMFByteStream> mStream;
   RefPtr<IMFAsyncResult> mResult;
-  RefPtr<AsyncReadRequest> mRequestState;
+  RefPtr<ReadRequest> mRequestState;
 };
 
 // IMFByteStream Methods
@@ -271,7 +271,7 @@ WMFByteStream::BeginRead(BYTE *aBuffer,
   }
 
   // Create an object to store our state.
-  RefPtr<AsyncReadRequest> requestState = new AsyncReadRequest(mOffset, aBuffer, aLength);
+  RefPtr<ReadRequest> requestState = new ReadRequest(mOffset, aBuffer, aLength);
 
   // Create an IMFAsyncResult, this is passed back to the caller as a token to
   // retrieve the number of bytes read.
@@ -298,7 +298,7 @@ WMFByteStream::BeginRead(BYTE *aBuffer,
 }
 
 nsresult
-WMFByteStream::Read(AsyncReadRequest* aRequestState)
+WMFByteStream::Read(ReadRequest* aRequestState)
 {
   ReentrantMonitorAutoEnter mon(mResourceMonitor);
 
@@ -334,7 +334,7 @@ WMFByteStream::Read(AsyncReadRequest* aRequestState)
 // Note: This is called on one of the thread pool's threads.
 void
 WMFByteStream::ProcessReadRequest(IMFAsyncResult* aResult,
-                                  AsyncReadRequest* aRequestState)
+                                  ReadRequest* aRequestState)
 {
   if (mResource->GetLength() > -1 &&
       aRequestState->mOffset > mResource->GetLength()) {
@@ -390,8 +390,8 @@ WMFByteStream::EndRead(IMFAsyncResult* aResult, ULONG *aBytesRead)
   if (FAILED(hr) || !unknown) {
     return E_INVALIDARG;
   }
-  AsyncReadRequest* requestState =
-    static_cast<AsyncReadRequest*>(unknown.get());
+  ReadRequest* requestState =
+    static_cast<ReadRequest*>(unknown.get());
 
   // Report result.
   *aBytesRead = requestState->mBytesRead;
@@ -477,10 +477,21 @@ WMFByteStream::IsEndOfStream(BOOL *aEndOfStream)
 }
 
 STDMETHODIMP
-WMFByteStream::Read(BYTE*, ULONG, ULONG*)
+WMFByteStream::Read(BYTE* aBuffer, ULONG aBufferLength, ULONG* aOutBytesRead)
 {
-  LOG("WMFByteStream::Read()");
-  return E_NOTIMPL;
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  ReadRequest request(mOffset, aBuffer, aBufferLength);
+  if (NS_FAILED(Read(&request))) {
+    LOG("WMFByteStream::Read() offset=%lld failed!", mOffset);
+    return E_FAIL;
+  }
+  if (aOutBytesRead) {
+    *aOutBytesRead = request.mBytesRead;
+  }
+  LOG("WMFByteStream::Read() offset=%lld length=%u bytesRead=%u",
+      mOffset, aBufferLength, request.mBytesRead);
+  mOffset += request.mBytesRead;
+  return S_OK;
 }
 
 STDMETHODIMP
