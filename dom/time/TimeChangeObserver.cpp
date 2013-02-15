@@ -39,14 +39,17 @@ nsSystemTimeChangeObserver::FireMozTimeChangeEvent()
   ListenerArray::ForwardIterator iter(mWindowListeners);
   while (iter.HasMore()) {
     nsWeakPtr weakWindow = iter.GetNext();
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(weakWindow);
+    nsCOMPtr<nsPIDOMWindow> innerWindow = do_QueryReferent(weakWindow);
+    nsCOMPtr<nsPIDOMWindow> outerWindow;
     nsCOMPtr<nsIDocument> document;
-    if (!window || !(document = window->GetDoc())) {
+    if (!innerWindow ||
+        !(document = innerWindow->GetExtantDoc()) ||
+        !(outerWindow = innerWindow->GetOuterWindow())) {
       mWindowListeners.RemoveElement(weakWindow);
       continue;
     }
 
-    nsContentUtils::DispatchTrustedEvent(document, window,
+    nsContentUtils::DispatchTrustedEvent(document, outerWindow,
       NS_LITERAL_STRING("moztimechange"), /* bubbles = */ true,
       /* canceable = */ false);
   }
@@ -75,16 +78,23 @@ nsSystemTimeChangeObserver::Notify(
 }
 
 nsresult
-nsSystemTimeChangeObserver::AddWindowListener(nsIDOMWindow* aWindow)
+nsSystemTimeChangeObserver::AddWindowListener(nsPIDOMWindow* aWindow)
 {
   return GetInstance()->AddWindowListenerImpl(aWindow);
 }
 
 nsresult
-nsSystemTimeChangeObserver::AddWindowListenerImpl(nsIDOMWindow* aWindow)
+nsSystemTimeChangeObserver::AddWindowListenerImpl(nsPIDOMWindow* aWindow)
 {
   if (!aWindow) {
     return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  if (aWindow->IsOuterWindow()) {
+    aWindow = aWindow->GetCurrentInnerWindow();
+    if (!aWindow) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   nsWeakPtr windowWeakRef = do_GetWeakReference(aWindow);
@@ -105,7 +115,7 @@ nsSystemTimeChangeObserver::AddWindowListenerImpl(nsIDOMWindow* aWindow)
 }
 
 nsresult
-nsSystemTimeChangeObserver::RemoveWindowListener(nsIDOMWindow* aWindow)
+nsSystemTimeChangeObserver::RemoveWindowListener(nsPIDOMWindow* aWindow)
 {
   if (!sObserver) {
     return NS_OK;
@@ -115,8 +125,19 @@ nsSystemTimeChangeObserver::RemoveWindowListener(nsIDOMWindow* aWindow)
 }
 
 nsresult
-nsSystemTimeChangeObserver::RemoveWindowListenerImpl(nsIDOMWindow* aWindow)
+nsSystemTimeChangeObserver::RemoveWindowListenerImpl(nsPIDOMWindow* aWindow)
 {
+  if (!aWindow) {
+    return NS_OK;
+  }
+
+  if (aWindow->IsOuterWindow()) {
+    aWindow = aWindow->GetCurrentInnerWindow();
+    if (!aWindow) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   mWindowListeners.RemoveElement(NS_GetWeakReference(aWindow));
 
   if (mWindowListeners.IsEmpty()) {
