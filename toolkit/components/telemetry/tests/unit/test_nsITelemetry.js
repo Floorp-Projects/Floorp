@@ -322,6 +322,21 @@ function test_privateMode() {
   do_check_neq(uneval(orig), uneval(h.snapshot()));
 }
 
+// Check that histograms that aren't flagged as needing extended stats
+// don't record extended stats.
+function test_extended_stats() {
+  var h = Telemetry.getHistogramById("GRADIENT_DURATION");
+  var s = h.snapshot();
+  do_check_eq(s.sum, 0);
+  do_check_eq(s.log_sum, 0);
+  do_check_eq(s.log_sum_squares, 0);
+  h.add(1);
+  s = h.snapshot();
+  do_check_eq(s.sum, 1);
+  do_check_eq(s.log_sum, 0);
+  do_check_eq(s.log_sum_squares, 0);
+}
+
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   // strip {}
@@ -351,4 +366,5 @@ function run_test()
   test_getSlowSQL();
   test_privateMode();
   test_addons();
+  test_extended_stats();
 }
