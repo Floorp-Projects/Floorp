@@ -31,7 +31,7 @@ function run_test()
 {
   do_print("Preparing test");
   removeMetadata();
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
+  updateAppInfo();
   do_load_manifest("data/chrome.manifest");
 
   let httpServer = new HttpServer();
