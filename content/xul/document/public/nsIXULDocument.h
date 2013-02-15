@@ -12,13 +12,11 @@
 
 class nsIXULTemplateBuilder;
 class nsIContent;
-class nsIScriptGlobalObjectOwner;
 
 
-// 3e872e97-b678-418e-a7e3-41b8305d4e75
+// 81ba4be5-6cc5-478a-9b08-b3e7ed524455
 #define NS_IXULDOCUMENT_IID \
-{ 0x3e872e97, 0xb678, 0x418e, \
-  { 0xa7, 0xe3, 0x41, 0xb8, 0x30, 0x5d, 0x4e, 0x75 } }
+  {0x81ba4be5, 0x6cc5, 0x478a, {0x9b, 0x08, 0xb3, 0xe7, 0xed, 0x52, 0x44, 0x55}}
 
 
 /*
@@ -37,11 +35,6 @@ public:
    * nsIContent pointers.
    */
   virtual void GetElementsForID(const nsAString& aID, nsCOMArray<nsIContent>& aElements) = 0;
-
-  /**
-   * Get the nsIScriptGlobalObjectOwner for this document.
-   */
-  NS_IMETHOD GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner) = 0;
 
   /**
    * Notify the XUL document that a subtree has been added

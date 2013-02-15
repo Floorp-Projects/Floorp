@@ -1211,13 +1211,6 @@ XULDocument::ResolveForwardReferences()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-XULDocument::GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner)
-{
-    NS_IF_ADDREF(*aGlobalOwner = mMasterPrototype);
-    return NS_OK;
-}
-
 //----------------------------------------------------------------------
 //
 // nsIDOMDocument interface
