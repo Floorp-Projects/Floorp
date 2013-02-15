@@ -26,6 +26,7 @@ EXPORTS_mozilla/ipc = \
   BrowserProcessSubThread.h \
   CrossProcessMutex.h \
   FileDescriptor.h \
+  FileDescriptorUtils.h \
   GeckoChildProcessHost.h \
   InputStreamUtils.h \
   IOThreadChild.h \
@@ -71,6 +72,7 @@ CPPSRCS += \
   AsyncChannel.cpp \
   BrowserProcessSubThread.cpp \
   FileDescriptor.cpp \
+  FileDescriptorUtils.cpp \
   GeckoChildProcessHost.cpp \
   InputStreamUtils.cpp \
   MessagePump.cpp \
