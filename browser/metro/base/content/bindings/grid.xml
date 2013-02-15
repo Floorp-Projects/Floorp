@@ -188,6 +188,18 @@
         </body>
       </method>
 
+      <method name="clearAll">
+        <body>
+          <![CDATA[
+            while (this.firstChild) {
+              this.removeChild(this.firstChild);
+            }
+            this._grid.style.width = "0px";
+            this._contextActions = null;
+          ]]>
+        </body>
+      </method>
+
       <method name="insertItemAt">
         <parameter name="anIndex"/>
         <parameter name="aLabel"/>
