@@ -83,10 +83,8 @@ struct CrossCompartmentKey
       : kind(kind), debugger(dbg), wrapped(wrapped) {}
 };
 
-struct WrapperHasher
+struct WrapperHasher : public DefaultHasher<CrossCompartmentKey>
 {
-    typedef CrossCompartmentKey Lookup;
-
     static HashNumber hash(const CrossCompartmentKey &key) {
         JS_ASSERT(!IsPoisonedPtr(key.wrapped));
         return uint32_t(uintptr_t(key.wrapped)) | uint32_t(key.kind);
