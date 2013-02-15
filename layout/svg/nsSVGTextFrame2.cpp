@@ -2444,6 +2444,9 @@ CharIterator::MatchesFilter() const
          IsClusterAndLigatureGroupStart();
 }
 
+// -----------------------------------------------------------------------------
+// nsCharClipDisplayItem
+
 /**
  * An nsCharClipDisplayItem that obtains its left and right clip edges from a
  * TextRenderedRun object.
@@ -2458,6 +2461,9 @@ public:
 
   NS_DISPLAY_DECL_NAME("SVGText", TYPE_TEXT)
 };
+
+// -----------------------------------------------------------------------------
+// SVGTextDrawPathCallbacks
 
 /**
  * Text frame draw callback class that paints the text and text decoration parts
@@ -2730,6 +2736,21 @@ SVGTextDrawPathCallbacks::FillAndStroke()
   }
 }
 
+// -----------------------------------------------------------------------------
+// GlyphMetricsUpdater
+
+NS_IMETHODIMP
+GlyphMetricsUpdater::Run()
+{
+  if (mFrame) {
+    mFrame->mPositioningDirty = true;
+    nsSVGUtils::InvalidateBounds(mFrame, false);
+    nsSVGUtils::ScheduleReflowSVG(mFrame);
+    mFrame->mGlyphMetricsUpdater = nullptr;
+  }
+  return NS_OK;
+}
+
 }
 
 // ============================================================================
@@ -2827,6 +2848,15 @@ nsSVGTextFrame2::Init(nsIContent* aContent,
 
   mMutationObserver.StartObserving(this);
   return rv;
+}
+
+void
+nsSVGTextFrame2::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  if (mGlyphMetricsUpdater) {
+    mGlyphMetricsUpdater->Revoke();
+  }
+  nsSVGTextFrame2Base::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP
@@ -4548,9 +4578,23 @@ nsSVGTextFrame2::ShouldRenderAsPath(nsRenderingContext* aContext,
 void
 nsSVGTextFrame2::NotifyGlyphMetricsChange()
 {
-  mPositioningDirty = true;
-  nsSVGUtils::InvalidateBounds(this, false);
-  nsSVGUtils::ScheduleReflowSVG(this);
+  // We need to perform the operations in GlyphMetricsUpdater in a
+  // script runner since we can get called just after a DOM mutation,
+  // before frames have been reconstructed, and UpdateGlyphPositioning
+  // will be called with out-of-date frames.  This occurs when the
+  // <text> element is being filtered, as the InvalidateBounds()
+  // call needs to call in to GetBBoxContribution() to determine the
+  // filtered region, and that needs to iterate over the text frames.
+  // We would flush frame construction, but that needs to be done
+  // inside a script runner.
+  //
+  // Much of the time, this will perform the GlyphMetricsUpdater
+  // operations immediately.
+  if (mGlyphMetricsUpdater) {
+    return;
+  }
+  mGlyphMetricsUpdater = new GlyphMetricsUpdater(this);
+  nsContentUtils::AddScriptRunner(mGlyphMetricsUpdater.get());
 }
 
 void
