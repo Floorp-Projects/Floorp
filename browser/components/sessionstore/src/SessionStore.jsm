@@ -3631,6 +3631,15 @@ let SessionStoreInternal = {
         }
       }
     }
+
+    // Don't save invalid states.
+    // Looks we currently have private windows, only.
+    if (oState.windows.length == 0) {
+      TelemetryStopwatch.cancel("FX_SESSION_RESTORE_COLLECT_DATA_MS");
+      TelemetryStopwatch.cancel("FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS");
+      return;
+    }
+
     for (let i = oState._closedWindows.length - 1; i >= 0; i--) {
       if (oState._closedWindows[i].isPrivate) {
         oState._closedWindows.splice(i, 1);
