@@ -184,7 +184,7 @@ public:
 
       case REMOTESTREAMADD:
         {
-          nsDOMMediaStream* stream = nullptr;
+          DOMMediaStream* stream = nullptr;
 
           if (!mRemoteStream) {
             CSFLogErrorS(logTag, __FUNCTION__ << " GetRemoteStream returned NULL");
@@ -284,7 +284,7 @@ PeerConnectionImpl::MakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aRetval)
 {
   MOZ_ASSERT(aRetval);
 
-  nsRefPtr<nsDOMMediaStream> stream = nsDOMMediaStream::CreateSourceStream(aHint);
+  nsRefPtr<DOMMediaStream> stream = DOMMediaStream::CreateSourceStream(aHint);
   NS_ADDREF(*aRetval = stream);
 
   CSFLogDebugS(logTag, "Created media stream " << static_cast<void*>(stream)
@@ -311,7 +311,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
     return res;
   }
 
-  nsDOMMediaStream* comstream = static_cast<nsDOMMediaStream*>(stream);
+  DOMMediaStream* comstream = static_cast<DOMMediaStream*>(stream);
   static_cast<mozilla::SourceMediaStream*>(comstream->GetStream())->SetPullEnabled(true);
 
   nsRefPtr<RemoteSourceStreamInfo> remote;
@@ -601,11 +601,11 @@ PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aR
   }
 
   if (!mute) {
-    if (aHint & nsDOMMediaStream::HINT_CONTENTS_AUDIO) {
-      new Fake_AudioGenerator(static_cast<nsDOMMediaStream*>(*aRetval));
+    if (aHint & DOMMediaStream::HINT_CONTENTS_AUDIO) {
+      new Fake_AudioGenerator(static_cast<DOMMediaStream*>(*aRetval));
     } else {
 #ifdef MOZILLA_INTERNAL_API
-    new Fake_VideoGenerator(static_cast<nsDOMMediaStream*>(*aRetval));
+    new Fake_VideoGenerator(static_cast<DOMMediaStream*>(*aRetval));
 #endif
     }
   }
@@ -961,15 +961,15 @@ PeerConnectionImpl::AddStream(nsIDOMMediaStream* aMediaStream) {
   if (NS_FAILED(res))
     return res;
 
-  nsDOMMediaStream* stream = static_cast<nsDOMMediaStream*>(aMediaStream);
+  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
   uint32_t hints = stream->GetHintContents();
 
   // TODO(ekr@rtfm.com): these integers should be the track IDs
-  if (hints & nsDOMMediaStream::HINT_CONTENTS_AUDIO) {
+  if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
     mCall->addStream(stream_id, 0, AUDIO);
   }
 
-  if (hints & nsDOMMediaStream::HINT_CONTENTS_VIDEO) {
+  if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
     mCall->addStream(stream_id, 1, VIDEO);
   }
 
@@ -986,14 +986,14 @@ PeerConnectionImpl::RemoveStream(nsIDOMMediaStream* aMediaStream) {
   if (NS_FAILED(res))
     return res;
 
-  nsDOMMediaStream* stream = static_cast<nsDOMMediaStream*>(aMediaStream);
+  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
   uint32_t hints = stream->GetHintContents();
 
-  if (hints & nsDOMMediaStream::HINT_CONTENTS_AUDIO) {
+  if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
     mCall->removeStream(stream_id, 0, AUDIO);
   }
 
-  if (hints & nsDOMMediaStream::HINT_CONTENTS_VIDEO) {
+  if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
     mCall->removeStream(stream_id, 1, VIDEO);
   }
 

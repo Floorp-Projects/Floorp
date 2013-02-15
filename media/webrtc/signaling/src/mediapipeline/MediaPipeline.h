@@ -12,7 +12,7 @@
 #ifdef USE_FAKE_MEDIA_STREAMS
 #include "FakeMediaStreams.h"
 #else
-#include "nsDOMMediaStream.h"
+#include "DOMMediaStream.h"
 #endif
 #include "MediaConduitInterface.h"
 #include "AudioSegment.h"

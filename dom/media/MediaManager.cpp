@@ -257,7 +257,7 @@ MediaDevice::GetSource()
  * A subclass that we only use to stash internal pointers to MediaStreamGraph objects
  * that need to be cleaned up.
  */
-class nsDOMUserMediaStream : public nsDOMLocalMediaStream
+class nsDOMUserMediaStream : public DOMLocalMediaStream
 {
 public:
   static already_AddRefed<nsDOMUserMediaStream>
@@ -342,8 +342,8 @@ public:
     }
 
     // Create a media stream.
-    uint32_t hints = (mAudioSource ? nsDOMMediaStream::HINT_CONTENTS_AUDIO : 0);
-    hints |= (mVideoSource ? nsDOMMediaStream::HINT_CONTENTS_VIDEO : 0);
+    uint32_t hints = (mAudioSource ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0);
+    hints |= (mVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
     nsRefPtr<nsDOMUserMediaStream> trackunion =
       nsDOMUserMediaStream::CreateTrackUnionStream(hints);
