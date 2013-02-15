@@ -2611,7 +2611,7 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
         if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs))
             return false;
     } else {
-        if (!SetObjectElement(cx, obj, index, rhs, script->strict))
+        if (!SetObjectElement(cx, obj, index, rhs, script->strict, script, pc))
             return false;
     }
 
