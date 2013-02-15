@@ -178,7 +178,8 @@ DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
     while (kid) {
       if (kid->GetRect().y - overflowAbove >= aDirtyRect.YMost())
         break;
-      f->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+      nsresult rv = f->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+      NS_ENSURE_SUCCESS(rv, rv);
       kid = kid->GetNextSibling();
     }
     return NS_OK;
@@ -188,7 +189,11 @@ DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
   nsTableRowGroupFrame::FrameCursorData* cursor = f->SetupRowCursor();
   kid = f->GetFirstPrincipalChild();
   while (kid) {
-    f->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    nsresult rv = f->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    if (NS_FAILED(rv)) {
+      f->ClearRowCursor();
+      return rv;
+    }
     
     if (cursor) {
       if (!cursor->AppendFrame(kid)) {
@@ -219,12 +224,12 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // visible or not. Visibility decisions are delegated to the
       // table background painter.
       item = new (aBuilder) nsDisplayTableRowGroupBackground(aBuilder, this);
-      aLists.BorderBackground()->AppendNewToTop(item);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }  
-  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect,
-                                        aLists, item, DisplayRows);
-  return NS_OK;
+  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect,
+                                               aLists, item, DisplayRows);
 }
 
 int

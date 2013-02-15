@@ -307,7 +307,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsForEventDelivery() && !PassPointerEventsToChildren())
     return NS_OK;
 
-  DisplayBorderBackgroundOutline(aBuilder, aLists);
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mInnerView)
     return NS_OK;
@@ -392,8 +393,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     mInnerView->GetBounds() + aBuilder->ToReferenceFrame(this);
 
   if (subdocRootFrame) {
-    subdocRootFrame->
-      BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
+    rv = subdocRootFrame->
+           BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
   }
 
   if (!aBuilder->IsForEventDelivery()) {
@@ -412,17 +413,17 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // background behind the page, not the canvas color. The canvas color gets
     // painted on the page itself.
     if (nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
-      presShell->AddPrintPreviewBackgroundItem(
-        *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
-        bounds);
+      rv = presShell->AddPrintPreviewBackgroundItem(
+             *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
+             bounds);
     } else {
       // Add the canvas background color to the bottom of the list. This
       // happens after we've built the list so that AddCanvasBackgroundColorItem
       // can monkey with the contents if necessary.
       uint32_t flags = nsIPresShell::FORCE_DRAW;
-      presShell->AddCanvasBackgroundColorItem(
-        *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
-        bounds, NS_RGBA(0,0,0,0), flags);
+      rv = presShell->AddCanvasBackgroundColorItem(
+             *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
+             bounds, NS_RGBA(0,0,0,0), flags);
     }
   }
 
@@ -473,7 +474,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // delete childItems in case of OOM
   childItems.DeleteAll();
 
-  return NS_OK;
+  return rv;
 }
 
 nscoord

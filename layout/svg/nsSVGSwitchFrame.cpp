@@ -99,7 +99,7 @@ nsSVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   nsIFrame* kid = GetActiveChildFrame();
   if (kid) {
-    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
   }
   return NS_OK;
 }
