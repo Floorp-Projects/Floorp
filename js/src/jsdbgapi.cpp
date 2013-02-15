@@ -512,17 +512,15 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
     if (fun->isNative())
         return NULL;
-    UnrootedScript script;
     if (fun->isInterpretedLazy()) {
         RootedFunction rootedFun(cx, fun);
         AutoCompartment funCompartment(cx, rootedFun);
-        script = rootedFun->getOrCreateScript(cx);
+        UnrootedScript script = rootedFun->getOrCreateScript(cx);
         if (!script)
             MOZ_CRASH();
-    } else {
-        script = fun->nonLazyScript();
+        return script;
     }
-    return script;
+    return fun->nonLazyScript();
 }
 
 JS_PUBLIC_API(JSNative)
@@ -1364,7 +1362,7 @@ JSAbstractFramePtr::script()
 }
 
 bool
-JSAbstractFramePtr::getThisValue(JSContext *cx, jsval *thisv)
+JSAbstractFramePtr::getThisValue(JSContext *cx, MutableHandleValue thisv)
 {
     AbstractFramePtr frame = Valueify(*this);
 
@@ -1373,7 +1371,7 @@ JSAbstractFramePtr::getThisValue(JSContext *cx, jsval *thisv)
     if (!ComputeThis(cx, frame))
         return false;
 
-    *thisv = frame.thisValue();
+    thisv.set(frame.thisValue());
     return true;
 }
 
@@ -1388,7 +1386,7 @@ bool
 JSAbstractFramePtr::evaluateInStackFrame(JSContext *cx,
                                          const char *bytes, unsigned length,
                                          const char *filename, unsigned lineno,
-                                         jsval *rval)
+                                         MutableHandleValue rval)
 {
     if (!CheckDebugMode(cx))
         return false;
@@ -1409,7 +1407,7 @@ bool
 JSAbstractFramePtr::evaluateUCInStackFrame(JSContext *cx,
                                            const jschar *chars, unsigned length,
                                            const char *filename, unsigned lineno,
-                                           jsval *rval)
+                                           MutableHandleValue rval)
 {
     if (!CheckDebugMode(cx))
         return false;

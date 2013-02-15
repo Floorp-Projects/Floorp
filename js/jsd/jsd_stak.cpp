@@ -94,7 +94,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
         JSAbstractFramePtr frame = iter.abstractFramePtr();
         JSScript* script = frame.script();
         uintptr_t  pc = (uintptr_t)iter.pc();
-        jsval dummyThis;
+        js::RootedValue dummyThis(cx);
 
         /*
          * don't construct a JSDStackFrame for dummy frames (those without a
@@ -311,7 +311,7 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
     {
         JSBool ok;
-        jsval thisval;
+        js::RootedValue thisval(jsdthreadstate->context);
         JS_BeginRequest(jsdthreadstate->context);
         ok = jsdframe->frame.getThisValue(jsdthreadstate->context, &thisval);
         JS_EndRequest(jsdthreadstate->context);
@@ -392,7 +392,7 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  JSDStackFrameInfo* jsdframe,
                                  const jschar *bytes, unsigned length,
                                  const char *filename, unsigned lineno,
-                                 JSBool eatExceptions, jsval *rval)
+                                 JSBool eatExceptions, JS::MutableHandleValue rval)
 {
     JSBool retval;
     JSBool valid;
@@ -430,7 +430,7 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDStackFrameInfo* jsdframe,
                                const char *bytes, unsigned length,
                                const char *filename, unsigned lineno,
-                               JSBool eatExceptions, jsval *rval)
+                               JSBool eatExceptions, JS::MutableHandleValue rval)
 {
     JSBool retval;
     JSBool valid;

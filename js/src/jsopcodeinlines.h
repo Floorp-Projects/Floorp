@@ -31,8 +31,8 @@ GetNameFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op)
 
 class BytecodeRange {
   public:
-    BytecodeRange(JSScript *script)
-      : script(script), pc(script->code), end(pc + script->length) {}
+    BytecodeRange(JSContext *cx, JSScript *script)
+      : script(cx, script), pc(script->code), end(pc + script->length) {}
     bool empty() const { return pc == end; }
     jsbytecode *frontPC() const { return pc; }
     JSOp frontOpcode() const { return JSOp(*pc); }
@@ -40,7 +40,7 @@ class BytecodeRange {
     void popFront() { pc += GetBytecodeLength(pc); }
 
   private:
-    JSScript *script;
+    RootedScript script;
     jsbytecode *pc, *end;
 };
 

@@ -264,9 +264,6 @@
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLAudioElement.h"
-#if defined (MOZ_MEDIA)
-#include "nsIDOMMediaStream.h"
-#endif
 #include "nsIDOMProgressEvent.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
@@ -444,6 +441,7 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "DOMCameraCapabilities.h"
 #include "DOMError.h"
 #include "DOMRequest.h"
+#include "DOMCursor.h"
 #include "nsIOpenWindowEventDetail.h"
 #include "nsIAsyncScrollEventDetail.h"
 #include "nsIDOMGlobalObjectConstructor.h"
@@ -1093,7 +1091,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLength, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedNumber, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedString, nsDOMGenericSH,
@@ -1107,7 +1105,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGStringList, nsSVGStringListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)    
+                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGZoomEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1202,10 +1200,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(GeoGeolocation, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  
+
   NS_DEFINE_CLASSINFO_DATA(GeoPosition, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS) 
-  
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(GeoPositionCoords, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1261,13 +1259,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TimeRanges, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MediaStream, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(LocalMediaStream, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
-  // DOM Traversal NodeIterator class  
+  // DOM Traversal NodeIterator class
   NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1395,6 +1389,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(DOMRequest, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(DOMCursor, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(OpenWindowEventDetail, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(AsyncScrollEventDetail, nsDOMGenericSH,
@@ -1707,7 +1705,7 @@ WrapNativeParent(JSContext *cx, JSObject *scope, nsISupports *native,
   NS_PRECONDITION(nativeWrapperCache &&
                   cache == nativeWrapperCache, "What happened here?");
 #endif
-  
+
   JSObject* obj = nativeWrapperCache->GetWrapper();
   if (obj) {
 #ifdef DEBUG
@@ -1986,7 +1984,7 @@ nsDOMClassInfo::RegisterExternalClasses()
 
 #define DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(_class, _interface, _disable)   \
   _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), true, _disable)
-  
+
 #define DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(_class, _interface)               \
   _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), false, false)
 
@@ -2298,7 +2296,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(UIEvent, nsIDOMUIEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
-  
+
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(KeyboardEvent, nsIDOMKeyEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMKeyEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
@@ -3169,7 +3167,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(ClientRect, nsIDOMClientRect)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientRect)
    DOM_CLASSINFO_MAP_END
- 
+
   DOM_CLASSINFO_MAP_BEGIN(ClientRectList, nsIDOMClientRectList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientRectList)
   DOM_CLASSINFO_MAP_END
@@ -3324,14 +3322,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(TimeRanges, nsIDOMTimeRanges)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTimeRanges)
-  DOM_CLASSINFO_MAP_END  
-
-  DOM_CLASSINFO_MAP_BEGIN(MediaStream, nsIDOMMediaStream)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMediaStream)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(LocalMediaStream, nsIDOMLocalMediaStream)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocalMediaStream)
   DOM_CLASSINFO_MAP_END
 #endif
 
@@ -3367,7 +3357,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(PaintRequest, nsIDOMPaintRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPaintRequest)
    DOM_CLASSINFO_MAP_END
- 
+
   DOM_CLASSINFO_MAP_BEGIN(PaintRequestList, nsIDOMPaintRequestList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPaintRequestList)
   DOM_CLASSINFO_MAP_END
@@ -3485,7 +3475,7 @@ nsDOMClassInfo::Init()
                                         !nsDOMTouchEvent::PrefEnabled())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchList)
   DOM_CLASSINFO_MAP_END
-  
+
   DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchEvent, nsIDOMTouchEvent,
                                         !nsDOMTouchEvent::PrefEnabled())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchEvent)
@@ -3556,7 +3546,7 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_B2G_BT
   DOM_CLASSINFO_MAP_BEGIN(BluetoothManager, nsIDOMBluetoothManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothManager)
-  DOM_CLASSINFO_MAP_END  
+  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(BluetoothAdapter, nsIDOMBluetoothAdapter)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothAdapter)
@@ -3584,6 +3574,12 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DOMRequest, nsIDOMDOMRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DOMCursor, nsIDOMDOMCursor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMCursor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
@@ -4904,7 +4900,7 @@ struct IDBConstant
   const char* interface;
   const char* name;
   const char* value;
-  
+
   static const char* IDBCursor;
   static const char* IDBRequest;
   static const char* IDBTransaction;
@@ -6067,7 +6063,7 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 
   nsDependentJSString depStr;
   NS_ENSURE_TRUE(depStr.init(cx, val), NS_ERROR_UNEXPECTED);
-  
+
   return location->SetHref(depStr);
 }
 
@@ -6727,7 +6723,7 @@ GetterShim(JSContext *cx, JSHandleObject obj, JSHandleId /* unused */, JSMutable
     return JS_FALSE;
   }
 
-  return JS_TRUE;  
+  return JS_TRUE;
 }
 
 NS_IMETHODIMP
@@ -6735,7 +6731,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
                     JSObject **parentObj)
 {
   nsINode *node = static_cast<nsINode*>(nativeObj);
-  
+
 #ifdef DEBUG
   {
     nsCOMPtr<nsINode> node_qi(do_QueryInterface(nativeObj));
@@ -6781,7 +6777,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     NS_ASSERTION(node->IsNodeOfType(nsINode::eCONTENT) ||
                  node->IsNodeOfType(nsINode::eATTRIBUTE),
                  "Unexpected node type");
-                 
+
     // For attributes and non-XUL content, use the document as scope parent.
     native_parent = doc;
 
@@ -7148,7 +7144,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsRefPtr<nsXBLBinding> binding;
   xblService->LoadBindings(element, uri, principal, getter_AddRefs(binding), &dummy);
-  
+
   if (binding) {
     if (nsContentUtils::IsSafeToRunScript()) {
       binding->ExecuteAttachedHandler();
@@ -7183,7 +7179,7 @@ nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // Bail early; this isn't something we're interested in
     return NS_OK;
   }
-  
+
   bool is_number = false;
   int32_t n = GetArrayIndexFromId(cx, id, &is_number);
 
@@ -8833,7 +8829,7 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
   return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
                                  _retval);
 }
- 
+
 // Plugin helper
 
 nsISupports*
@@ -9461,7 +9457,7 @@ nsSVGStringListSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
 #ifdef DEBUG
   {
     nsCOMPtr<nsIDOMSVGStringList> list_qi = do_QueryInterface(aNative);
-    
+
     // If this assertion fires the QI implementation for the object in
     // question doesn't use the nsIDOMDOMSVGStringList pointer as the
     // nsISupports pointer. That must be fixed, or we'll crash...

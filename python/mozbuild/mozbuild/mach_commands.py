@@ -141,8 +141,17 @@ class Build(MachCommandBase):
 
     @Command('clobber', help='Clobber the tree (delete the object directory).')
     def clobber(self):
-        self.remove_objdir()
-        return 0
+        try:
+            self.remove_objdir()
+            return 0
+        except WindowsError as e:
+            if e.winerror in (5, 32):
+                self.log(logging.ERROR, 'file_access_error', {'error': e},
+                    "Could not clobber because a file was in use. If the "
+                    "application is running, try closing it. {error}")
+                return 1
+            else:
+                raise
 
 
 @CommandProvider

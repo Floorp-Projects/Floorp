@@ -37,27 +37,36 @@
                 <html:div class="msg msgClickToPlay">&clickToActivatePlugin;</html:div>
                 <html:div class="msg msgDisabled">&disabledPlugin;</html:div>
                 <html:div class="msg msgBlocked">&blockedPlugin.label;</html:div>
-                <html:div class="msg msgCrashed"><!-- set at runtime --></html:div>
+                <html:div class="msg msgCrashed">
+                    <html:div class="msgCrashedText"><!-- set at runtime --></html:div>
+                    <!-- link href set at runtime -->
+                    <html:div class="msgReload">&reloadPlugin.pre;<html:a class="reloadLink" href="">&reloadPlugin.middle;</html:a>&reloadPlugin.post;</html:div>
+                </html:div>
 
                 <html:div class="installStatus">
                     <html:div class="msg msgInstallPlugin"><html:a class="installPluginLink" href="">&installPlugin;</html:a></html:div>
                 </html:div>
                 <html:div class="msg msgManagePlugins"><html:a class="managePluginsLink" href="">&managePlugins;</html:a></html:div>
                 <html:div class="submitStatus">
-                    <!-- links set at runtime -->
-                    <html:div class="msg msgPleaseSubmit"><html:a class="pleaseSubmitLink" href="">&report.please;</html:a></html:div>
+                    <html:div class="msg msgPleaseSubmit">
+                        <html:textarea class="submitComment"
+                                       placeholder="&report.comment;"/>
+                        <html:div class="submitURLOptInBox">
+                            <html:label><html:input class="submitURLOptIn" type="checkbox"/> &report.pageURL;</html:label>
+                        </html:div>
+                        <html:div class="submitButtonBox">
+                            <html:span class="helpIcon" role="link"/>
+                            <html:input class="submitButton" type="button"
+                                        value="&report.please;"/>
+                        </html:div>
+                    </html:div>
                     <html:div class="msg msgSubmitting">&report.submitting;<html:span class="throbber"> </html:span></html:div>
                     <html:div class="msg msgSubmitted">&report.submitted;</html:div>
                     <html:div class="msg msgNotSubmitted">&report.disabled;</html:div>
                     <html:div class="msg msgSubmitFailed">&report.failed;</html:div>
                     <html:div class="msg msgNoCrashReport">&report.unavailable;</html:div>
-                    <!-- link href set at runtime -->
-                    <html:div class="msg msgReload">&reloadPlugin.pre;<html:a class="reloadLink" href="">&reloadPlugin.middle;</html:a>&reloadPlugin.post;</html:div>
                 </html:div>
                 <xul:spacer flex="1"/>
-                <html:div class="msg msgBottomLinks">
-                    <html:span class="helpIcon" role="link"/>
-                </html:div>
             </xul:vbox>
         </xul:vbox>
         <html:div class="previewPluginContent"><!-- iframe and its src will be set at runtime --></html:div>

@@ -308,19 +308,19 @@ class JS_PUBLIC_API(JSAbstractFramePtr)
     JSFunction *maybeFun();
     JSScript *script();
 
-    bool getThisValue(JSContext *cx, jsval *thisv);
+    bool getThisValue(JSContext *cx, JS::MutableHandleValue thisv);
 
     bool isDebuggerFrame();
 
     bool evaluateInStackFrame(JSContext *cx,
                               const char *bytes, unsigned length,
                               const char *filename, unsigned lineno,
-                              jsval *rval);
+                              JS::MutableHandleValue rval);
 
     bool evaluateUCInStackFrame(JSContext *cx,
                                 const jschar *chars, unsigned length,
                                 const char *filename, unsigned lineno,
-                                jsval *rval);
+                                JS::MutableHandleValue rval);
 };
 
 class JS_PUBLIC_API(JSNullFramePtr) : public JSAbstractFramePtr

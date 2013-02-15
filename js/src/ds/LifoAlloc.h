@@ -8,15 +8,11 @@
 #ifndef LifoAlloc_h__
 #define LifoAlloc_h__
 
-#include "mozilla/ASan.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/TypeTraits.h"
-
-#if defined(MOZ_VALGRIND)
-#include "valgrind/memcheck.h"
-#endif
 
 /*
  * This data structure supports stacky LIFO allocation (mark/release and
@@ -72,7 +68,7 @@ class BumpChunk
     void setBump(void *ptr) {
         JS_ASSERT(bumpBase() <= ptr);
         JS_ASSERT(ptr <= limit);
-#if defined(DEBUG) || defined(MOZ_ASAN) || defined(MOZ_VALGRIND)
+#if defined(DEBUG) || defined(MOZ_HAVE_MEM_CHECKS)
         char* prevBump = bump;
 #endif
         bump = static_cast<char *>(ptr);
@@ -85,16 +81,11 @@ class BumpChunk
 #endif
 
         /* Poison/Unpoison memory that we just free'd/allocated */
-#if defined(MOZ_ASAN)
+#if defined(MOZ_HAVE_MEM_CHECKS)
         if (prevBump > bump)
-            ASAN_POISON_MEMORY_REGION(bump, prevBump - bump);
+            MOZ_MAKE_MEM_NOACCESS(bump, prevBump - bump);
         else if (bump > prevBump)
-            ASAN_UNPOISON_MEMORY_REGION(prevBump, bump - prevBump);
-#elif defined(MOZ_VALGRIND)
-        if (prevBump > bump)
-            VALGRIND_MAKE_MEM_NOACCESS(bump, prevBump - bump);
-        else if (bump > prevBump)
-            VALGRIND_MAKE_MEM_UNDEFINED(prevBump, bump - prevBump);
+            MOZ_MAKE_MEM_UNDEFINED(prevBump, bump - prevBump);
 #endif
     }
 

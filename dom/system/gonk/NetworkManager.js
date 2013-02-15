@@ -39,9 +39,6 @@ const DEFAULT_WIFI_INTERFACE_NAME = "wlan0";
 const TETHERING_TYPE_WIFI = "WiFi";
 const TETHERING_TYPE_USB  = "USB";
 
-const USB_FUNCTION_RNDIS = "rndis,adb";
-const USB_FUNCTION_ADB   = "adb";
-
 // 1xx - Requested action is proceeding
 const NETD_COMMAND_PROCEEDING   = 100;
 // 2xx - Requested action has been successfully completed
@@ -580,7 +577,7 @@ NetworkManager.prototype = {
 
     if (!enable) {
       this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
-      this.setUSBFunction(false, USB_FUNCTION_ADB, this.setUSBFunctionResult);
+      this.enableUsbRndis(false, this.enableUsbRndisResult);
       return;
     }
 
@@ -601,7 +598,7 @@ NetworkManager.prototype = {
       this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = mobile.name;
     }
     this.tetheringSettings[SETTINGS_USB_ENABLED] = true;
-    this.setUSBFunction(true, USB_FUNCTION_RNDIS, this.setUSBFunctionResult);
+    this.enableUsbRndis(true, this.enableUsbRndisResult);
   },
 
   getWifiTetheringParameters: function getWifiTetheringParameters(enable, tetheringinterface) {
@@ -781,7 +778,7 @@ NetworkManager.prototype = {
         resultReason: "Invalid parameters"
       };
       this.usbTetheringResultReport(params);
-      this.setUSBFunction(false, USB_FUNCTION_ADB, null);
+      this.enableUsbRndis(false, null);
       return;
     }
 
@@ -791,7 +788,7 @@ NetworkManager.prototype = {
     this.controlMessage(params, this.usbTetheringResultReport);
   },
 
-  setUSBFunctionResult: function setUSBFunctionResult(data) {
+  enableUsbRndisResult: function enableUsbRndisResult(data) {
     let result = data.result;
     let enable = data.enable;
     if (result) {
@@ -807,12 +804,11 @@ NetworkManager.prototype = {
     }
   },
   // Switch usb function by modifying property of persist.sys.usb.config.
-  setUSBFunction: function setUSBFunction(enable, usbfunc, callback) {
-    debug("Set usb function to " + usbfunc);
+  enableUsbRndis: function enableUsbRndis(enable, callback) {
+    debug("enableUsbRndis: " + enable);
 
     let params = {
-      cmd: "setUSBFunction",
-      usbfunc: usbfunc,
+      cmd: "enableUsbRndis",
       enable: enable
     };
     // Ask net work to report the result when this value is set to true.

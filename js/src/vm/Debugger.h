@@ -699,7 +699,7 @@ Debugger::onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 extern JSBool
 EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
               StableCharPtr chars, unsigned length, const char *filename, unsigned lineno,
-              Value *rval);
+              MutableHandleValue rval);
 
 }
 

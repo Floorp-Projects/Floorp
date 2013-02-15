@@ -485,6 +485,9 @@ parent:
 
     async RecordingDeviceEvents(nsString recordingStatus);
 
+    // Notify the parent that the child has finished handling a system message.
+    async SystemMessageHandled();
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData);
 };

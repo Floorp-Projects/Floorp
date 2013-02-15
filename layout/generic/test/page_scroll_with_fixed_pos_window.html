@@ -4,11 +4,14 @@
   <title>Scrolling by pages with fixed-pos headers and footers</title>
   <style>
   .fp { position:fixed; left:0; width:100%; }
+  .fp2 { position:fixed; left:0; width:100%; }
   </style>
 </head>
 <body onscroll="didScroll()" onload="test()">
 <div class="fp" id="top" style="top:0; height:10px; background:yellow;"></div>
+<div class="fp2" id="top2" style="top:10px; height:11px; background:blue;"></div>
 <div class="fp" style="top:50%; height:7px; background:cyan;"></div>
+<div class="fp2" id="bottom2" style="bottom:9px; height:12px; background:red;"></div>
 <div class="fp" id="bottom" style="bottom:0; height:13px; background:yellow;"></div>
 <p id="target">Something to click on to get focus
 <div style="height:3000px;"></div>
@@ -18,11 +21,17 @@ var SimpleTest = window.opener.SimpleTest;
 var SpecialPowers = window.opener.SpecialPowers;
 var is = window.opener.is;
 
-function showFixedPosElements(show) {
-  var elements = document.getElementsByClassName("fp");
+function showElements(show, classname) {
+  var elements = document.getElementsByClassName(classname);
   for (var i = 0; i < elements.length; ++i) {
     elements[i].style.display = show ? '' : 'none';
   }
+}
+function showFixedPosElements(show) {
+  showElements(show, "fp");
+}
+function showFixedPosElements2(show) {
+  showElements(show, "fp2");
 }
 
 var nextCont;
@@ -45,6 +54,7 @@ function test() {
   SpecialPowers.setBoolPref(smoothScrollPref, false);
 
   showFixedPosElements(false);
+  showFixedPosElements2(false);
   scrollDownOnePageWithContinuation(function() {
     var fullPageScrollDown = document.documentElement.scrollTop;
 
@@ -64,12 +74,19 @@ function test() {
         scrollDownOnePageWithContinuation(function() {
           is(document.documentElement.scrollTop, fullPageScrollDown - 13,
              "Ignore elements that don't span the entire viewport side");
-        
-          // Scroll back up so test results are visible
-          document.documentElement.scrollTop = 0;
-          SpecialPowers.clearUserPref(smoothScrollPref);
-          SimpleTest.finish();
-          window.close();
+          document.getElementById("top").style.width = "100%";
+
+          showFixedPosElements2(true);
+          scrollDownOnePageWithContinuation(function() {
+            is(document.documentElement.scrollTop, fullPageScrollDown - (10 + 11 + 9 + 12),
+               "Combine multiple overlapping elements");
+
+            // Scroll back up so test results are visible
+            document.documentElement.scrollTop = 0;
+            SpecialPowers.clearUserPref(smoothScrollPref);
+            SimpleTest.finish();
+            window.close();
+          });
         });
       });
     });

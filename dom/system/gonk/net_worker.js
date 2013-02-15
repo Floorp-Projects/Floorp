@@ -17,10 +17,13 @@
 
 const DEBUG = false;
 
-const USB_FUNCTION_PATH  = "sys.usb.config";
-const USB_FUNCTION_STATE = "sys.usb.state";
-const USB_FUNCTION_RNDIS = "rndis,adb";
-const USB_FUNCTION_ADB   = "adb";
+const PERSIST_SYS_USB_CONFIG_PROPERTY = "persist.sys.usb.config";
+const SYS_USB_CONFIG_PROPERTY         = "sys.usb.config";
+const SYS_USB_STATE_PROPERTY          = "sys.usb.state";
+
+const USB_FUNCTION_RNDIS  = "rndis";
+const USB_FUNCTION_ADB    = "adb";
+
 // Retry 20 times (2 seconds) for usb state transition.
 const USB_FUNCTION_RETRY_TIMES = 20;
 // Check "sys.usb.state" every 100ms.
@@ -93,7 +96,7 @@ function usbTetheringFail(params) {
   chain(params, gUSBFailChain, null);
 
   // Disable usb rndis function.
-  setUSBFunction({usbfunc: USB_FUNCTION_ADB, report: false});
+  enableUsbRndis({enable: false, report: false});
 }
 
 function usbTetheringSuccess(params) {
@@ -398,20 +401,58 @@ function setAccessPoint(params, callback) {
 /**
  * Modify usb function's property to turn on USB RNDIS function
  */
-function setUSBFunction(params) {
+function enableUsbRndis(params) {
   let report = params.report;
   let retry = 0;
-  let i = 0;
 
-  libcutils.property_set(USB_FUNCTION_PATH, params.usbfunc);
-  // Trigger the timer to check usb state and report the result to NetworkManager.
-  if (report) {
-    setTimeout(checkUSBFunction, USB_FUNCTION_RETRY_INTERVAL, params);
+  // For some reason, rndis doesn't play well with diag,modem,nmea.
+  // So when turning rndis on, we set sys.usb.config to either "rndis"
+  // or "rndis,adb". When turning rndis off, we go back to
+  // persist.sys.usb.config.
+  //
+  // On the otoro/unagi, persist.sys.usb.config should be one of:
+  //
+  //    diag,modem,nmea,mass_storage
+  //    diag,modem,nmea,mass_storage,adb
+  //
+  // When rndis is enabled, sys.usb.config should be one of:
+  //
+  //    rdnis
+  //    rndis,adb
+  //
+  // and when rndis is disabled, it should revert to persist.sys.usb.config
+
+  let currentConfig = libcutils.property_get(SYS_USB_CONFIG_PROPERTY);
+  let configFuncs = currentConfig.split(",");
+  let persistConfig = libcutils.property_get(PERSIST_SYS_USB_CONFIG_PROPERTY);
+  let persistFuncs = persistConfig.split(",");
+
+  if (params.enable) {
+    configFuncs = [USB_FUNCTION_RNDIS];
+    if (persistFuncs.indexOf(USB_FUNCTION_ADB) >= 0) {
+      configFuncs.push(USB_FUNCTION_ADB);
+    }
+  } else {
+    // We're turning rndis off, revert back to the persist setting.
+    // adb will already be correct there, so we don't need to do any
+    // further adjustments.
+    configFuncs = persistFuncs;
+  }
+  let newConfig = configFuncs.join(",");
+  if (newConfig != currentConfig) {
+    libcutils.property_set(SYS_USB_CONFIG_PROPERTY, newConfig);
   }
 
-  function checkUSBFunction(params) {
-    let result = libcutils.property_get(USB_FUNCTION_STATE);
-    if (result == params.usbfunc) {
+  // Trigger the timer to check usb state and report the result to NetworkManager.
+  if (report) {
+    setTimeout(checkUsbRndisState, USB_FUNCTION_RETRY_INTERVAL, params);
+  }
+
+  function checkUsbRndisState(params) {
+    let currentState = libcutils.property_get(SYS_USB_STATE_PROPERTY);
+    let stateFuncs = currentState.split(",");
+    let rndisPresent = (stateFuncs.indexOf(USB_FUNCTION_RNDIS) >= 0);
+    if (params.enable == rndisPresent) {
       params.result = true;
       postMessage(params);
       retry = 0;
@@ -419,7 +460,7 @@ function setUSBFunction(params) {
     }
     if (retry < USB_FUNCTION_RETRY_TIMES) {
       retry++;
-      setTimeout(checkUSBFunction, USB_FUNCTION_RETRY_INTERVAL, params);
+      setTimeout(checkUsbRndisState, USB_FUNCTION_RETRY_INTERVAL, params);
       return;
     }
     params.result = false;

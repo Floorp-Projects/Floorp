@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript">
+      function crash() {
+        var plugin = document.getElementById("plugin");
+        var argStr = decodeURIComponent(window.location.search.substr(1));
+        if (argStr) {
+          var args = JSON.parse(argStr);
+          for (var key in args)
+            plugin.setAttribute(key, args[key]);
+        }
+        try {
+          plugin.crash();
+        }
+        catch (err) {}
+      }
+    </script>
+  </head>
+  <body onload="crash();">
+    <embed id="plugin" type="application/x-test"
+           width="400" height="400"
+           drawmode="solid" color="FF00FFFF">
+    </embed>
+  </body>
+</html>

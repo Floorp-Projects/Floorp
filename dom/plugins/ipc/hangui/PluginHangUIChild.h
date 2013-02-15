@@ -99,6 +99,8 @@ private:
   static const DWORD kProcessTimeout;
   static const DWORD kShmTimeout;
 
+  typedef HRESULT (WINAPI *SETAPPUSERMODELID)(PCWSTR);
+
   DISALLOW_COPY_AND_ASSIGN(PluginHangUIChild);
 };
 
