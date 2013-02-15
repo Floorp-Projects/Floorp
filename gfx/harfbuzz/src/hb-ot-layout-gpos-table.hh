@@ -336,8 +336,10 @@ struct Anchor
 
 struct AnchorMatrix
 {
-  inline const Anchor& get_anchor (unsigned int row, unsigned int col, unsigned int cols) const {
+  inline const Anchor& get_anchor (unsigned int row, unsigned int col, unsigned int cols, bool *found) const {
+    *found = false;
     if (unlikely (row >= rows || col >= cols)) return Null(Anchor);
+    *found = !matrix[row * cols + col].is_null ();
     return this+matrix[row * cols + col];
   }
 
@@ -392,7 +394,11 @@ struct MarkArray : ArrayOf<MarkRecord>	/* Array of MarkRecords--in Coverage orde
     unsigned int mark_class = record.klass;
 
     const Anchor& mark_anchor = this + record.markAnchor;
-    const Anchor& glyph_anchor = anchors.get_anchor (glyph_index, mark_class, class_count);
+    bool found;
+    const Anchor& glyph_anchor = anchors.get_anchor (glyph_index, mark_class, class_count, &found);
+    /* If this subtable doesn't have an anchor for this base and this class,
+     * return false such that the subsequent subtables have a chance at it. */
+    if (unlikely (!found)) return TRACE_RETURN (false);
 
     hb_position_t mark_x, mark_y, base_x, base_y;
 
@@ -652,7 +658,7 @@ struct PairPosFormat1
   inline bool apply (hb_apply_context_t *c) const
   {
     TRACE_APPLY (this);
-    hb_apply_context_t::mark_skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, 1);
+    hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, 1);
     if (skippy_iter.has_no_chance ()) return TRACE_RETURN (false);
 
     unsigned int index = (this+coverage).get_coverage  (c->buffer->cur().codepoint);
@@ -724,7 +730,7 @@ struct PairPosFormat2
   inline bool apply (hb_apply_context_t *c) const
   {
     TRACE_APPLY (this);
-    hb_apply_context_t::mark_skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, 1);
+    hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, 1);
     if (skippy_iter.has_no_chance ()) return TRACE_RETURN (false);
 
     unsigned int index = (this+coverage).get_coverage  (c->buffer->cur().codepoint);
@@ -874,7 +880,7 @@ struct CursivePosFormat1
     /* We don't handle mark glyphs here. */
     if (c->property & HB_OT_LAYOUT_GLYPH_PROPS_MARK) return TRACE_RETURN (false);
 
-    hb_apply_context_t::mark_skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, 1);
+    hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, 1);
     if (skippy_iter.has_no_chance ()) return TRACE_RETURN (false);
 
     const EntryExitRecord &this_record = entryExitRecord[(this+coverage).get_coverage  (c->buffer->cur().codepoint)];
@@ -1023,7 +1029,7 @@ struct MarkBasePosFormat1
 
     /* now we search backwards for a non-mark glyph */
     unsigned int property;
-    hb_apply_context_t::mark_skipping_backward_iterator_t skippy_iter (c, c->buffer->idx, 1);
+    hb_apply_context_t::skipping_backward_iterator_t skippy_iter (c, c->buffer->idx, 1);
     do {
       if (!skippy_iter.prev (&property, LookupFlag::IgnoreMarks)) return TRACE_RETURN (false);
       /* We only want to attach to the first of a MultipleSubst sequence.  Reject others. */
@@ -1127,7 +1133,7 @@ struct MarkLigPosFormat1
 
     /* now we search backwards for a non-mark glyph */
     unsigned int property;
-    hb_apply_context_t::mark_skipping_backward_iterator_t skippy_iter (c, c->buffer->idx, 1);
+    hb_apply_context_t::skipping_backward_iterator_t skippy_iter (c, c->buffer->idx, 1);
     if (!skippy_iter.prev (&property, LookupFlag::IgnoreMarks)) return TRACE_RETURN (false);
 
     /* The following assertion is too strong, so we've disabled it. */
@@ -1243,8 +1249,8 @@ struct MarkMarkPosFormat1
 
     /* now we search backwards for a suitable mark glyph until a non-mark glyph */
     unsigned int property;
-    hb_apply_context_t::mark_skipping_backward_iterator_t skippy_iter (c, c->buffer->idx, 1);
-    if (!skippy_iter.prev (&property)) return TRACE_RETURN (false);
+    hb_apply_context_t::skipping_backward_iterator_t skippy_iter (c, c->buffer->idx, 1);
+    if (!skippy_iter.prev (&property, c->lookup_props & ~LookupFlag::IgnoreFlags)) return TRACE_RETURN (false);
 
     if (!(property & HB_OT_LAYOUT_GLYPH_PROPS_MARK)) return TRACE_RETURN (false);
 
@@ -1522,7 +1528,7 @@ struct GPOS : GSUBGPOS
   { return CastR<PosLookup> (GSUBGPOS::get_lookup (i)); }
 
   static inline void position_start (hb_font_t *font, hb_buffer_t *buffer);
-  static inline void position_finish (hb_font_t *font, hb_buffer_t *buffer, hb_bool_t zero_width_attahced_marks);
+  static inline void position_finish (hb_font_t *font, hb_buffer_t *buffer);
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE (this);
@@ -1555,17 +1561,13 @@ fix_cursive_minor_offset (hb_glyph_position_t *pos, unsigned int i, hb_direction
 }
 
 static void
-fix_mark_attachment (hb_glyph_position_t *pos, unsigned int i, hb_direction_t direction, hb_bool_t zero_width_attached_marks)
+fix_mark_attachment (hb_glyph_position_t *pos, unsigned int i, hb_direction_t direction)
 {
   if (likely (!(pos[i].attach_lookback())))
     return;
 
   unsigned int j = i - pos[i].attach_lookback();
 
-  if (zero_width_attached_marks) {
-    pos[i].x_advance = 0;
-    pos[i].y_advance = 0;
-  }
   pos[i].x_offset += pos[j].x_offset;
   pos[i].y_offset += pos[j].y_offset;
 
@@ -1592,7 +1594,7 @@ GPOS::position_start (hb_font_t *font HB_UNUSED, hb_buffer_t *buffer)
 }
 
 void
-GPOS::position_finish (hb_font_t *font HB_UNUSED, hb_buffer_t *buffer, hb_bool_t zero_width_attached_marks)
+GPOS::position_finish (hb_font_t *font HB_UNUSED, hb_buffer_t *buffer)
 {
   unsigned int len;
   hb_glyph_position_t *pos = hb_buffer_get_glyph_positions (buffer, &len);
@@ -1604,7 +1606,7 @@ GPOS::position_finish (hb_font_t *font HB_UNUSED, hb_buffer_t *buffer, hb_bool_t
 
   /* Handle attachments */
   for (unsigned int i = 0; i < len; i++)
-    fix_mark_attachment (pos, i, direction, zero_width_attached_marks);
+    fix_mark_attachment (pos, i, direction);
 
   HB_BUFFER_DEALLOCATE_VAR (buffer, syllable);
   HB_BUFFER_DEALLOCATE_VAR (buffer, lig_props);

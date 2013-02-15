@@ -403,7 +403,7 @@ hb_ft_font_create (FT_Face           ft_face,
 
 static FT_Library ft_library;
 
-static
+static inline
 void free_ft_library (void)
 {
   FT_Done_FreeType (ft_library);

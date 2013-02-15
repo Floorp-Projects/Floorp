@@ -354,6 +354,6 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_arabic =
   NULL, /* decompose */
   NULL, /* compose */
   setup_masks_arabic,
-  true, /* zero_width_attached_marks */
+  HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_UNICODE,
   true, /* fallback_position */
 };

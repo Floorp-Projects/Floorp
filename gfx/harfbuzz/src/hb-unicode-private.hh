@@ -107,6 +107,9 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
   unsigned int
   modified_combining_class (hb_codepoint_t unicode)
   {
+    /* XXX This hack belongs to the Myanmar shaper. */
+    if (unicode == 0x1037) unicode = 0x103A;
+
     return _hb_modified_combining_class[combining_class (unicode)];
   }
 

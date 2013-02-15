@@ -854,4 +854,33 @@ hb_codepoint_parse (const char *s, unsigned int len, int base, hb_codepoint_t *o
 }
 
 
+/* Global runtime options. */
+
+struct hb_options_t
+{
+  int initialized : 1;
+  int uniscribe_bug_compatible : 1;
+};
+
+union hb_options_union_t {
+  int i;
+  hb_options_t opts;
+};
+ASSERT_STATIC (sizeof (int) == sizeof (hb_options_union_t));
+
+HB_INTERNAL void
+_hb_options_init (void);
+
+extern HB_INTERNAL hb_options_union_t _hb_options;
+
+static inline hb_options_t
+hb_options (void)
+{
+  if (unlikely (!_hb_options.i))
+    _hb_options_init ();
+
+  return _hb_options.opts;
+}
+
+
 #endif /* HB_PRIVATE_HH */

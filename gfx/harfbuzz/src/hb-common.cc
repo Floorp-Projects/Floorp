@@ -36,6 +36,24 @@
 #include <locale.h>
 
 
+/* hb_options_t */
+
+hb_options_union_t _hb_options;
+
+void
+_hb_options_init (void)
+{
+  hb_options_union_t u;
+  u.i = 0;
+  u.opts.initialized = 1;
+
+  char *c = getenv ("HB_OPTIONS");
+  u.opts.uniscribe_bug_compatible = c && strstr (c, "uniscribe-bug-compatible");
+
+  /* This is idempotent and threadsafe. */
+  _hb_options = u;
+}
+
 
 /* hb_tag_t */
 
@@ -177,7 +195,7 @@ struct hb_language_item_t {
 
 static hb_language_item_t *langs;
 
-static
+static inline
 void free_langs (void)
 {
   while (langs) {
@@ -414,5 +432,3 @@ hb_version_check (unsigned int major,
 {
   return HB_VERSION_CHECK (major, minor, micro);
 }
-
-
