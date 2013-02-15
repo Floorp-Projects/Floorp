@@ -126,7 +126,7 @@ namespace ion {
 // stub it was entered from.  Thus, entering a type IC is a matter of a |jump|, not
 // a |call|.  This allows us to safely call a VM Monitor function from within the monitor IC's
 // fallback chain, since the return address (needed for stack inspection) is preserved.
-// 
+//
 //
 // TypeUpdate ICs
 // --------------
@@ -3382,13 +3382,20 @@ class ICCall_Native : public ICMonitoredStub
     class Compiler : public ICCallStubCompiler {
       protected:
         ICStub *firstMonitorStub_;
+        bool isConstructing_;
         RootedFunction callee_;
         bool generateStubCode(MacroAssembler &masm);
 
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isConstructing_) << 16);
+        }
+
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee)
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee,
+                 bool isConstructing)
           : ICCallStubCompiler(cx, ICStub::Call_Native),
             firstMonitorStub_(firstMonitorStub),
+            isConstructing_(isConstructing),
             callee_(cx, callee)
         { }
 
