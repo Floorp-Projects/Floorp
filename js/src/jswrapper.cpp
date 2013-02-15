@@ -377,7 +377,7 @@ ErrorCopier::~ErrorCopier()
 {
     JSContext *cx = ac.ref().context();
     if (ac.ref().origin() != cx->compartment && cx->isExceptionPending()) {
-        Value exc = cx->getPendingException();
+        RootedValue exc(cx, cx->getPendingException());
         if (exc.isObject() && exc.toObject().isError() && exc.toObject().getPrivate()) {
             cx->clearPendingException();
             ac.destroy();
