@@ -159,6 +159,17 @@ WMFByteStream::Init()
   // we're alive.
   mThreadPool = sThreadPool;
 
+  NS_ConvertUTF8toUTF16 contentTypeUTF16(mResource->GetContentType());
+  if (!contentTypeUTF16.IsEmpty()) {
+    HRESULT hr = wmf::MFCreateAttributes(byRef(mAttributes), 1);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+    hr = mAttributes->SetString(MF_BYTESTREAM_CONTENT_TYPE,
+                                contentTypeUTF16.get());
+    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+    LOG("WMFByteStream has Content-Type=%s", mResource->GetContentType());
+  }
   return NS_OK;
 }
 
@@ -181,6 +192,9 @@ WMFByteStream::QueryInterface(REFIID aIId, void **aInterface)
   }
   if (aIId == IID_IUnknown) {
     return DoGetInterface(static_cast<IMFByteStream*>(this), aInterface);
+  }
+  if (aIId == IID_IMFAttributes) {
+    return DoGetInterface(static_cast<IMFAttributes*>(this), aInterface);
   }
 
   *aInterface = NULL;
@@ -552,6 +566,219 @@ WMFByteStream::Write(const BYTE *, ULONG, ULONG *)
 {
   LOG("WMFByteStream::Write()");
   return E_NOTIMPL;
+}
+
+// IMFAttributes methods
+STDMETHODIMP
+WMFByteStream::GetItem(REFGUID guidKey, PROPVARIANT* pValue)
+{
+    MOZ_ASSERT(mAttributes);
+    return mAttributes->GetItem(guidKey, pValue);
+}
+
+STDMETHODIMP
+WMFByteStream::GetItemType(REFGUID guidKey, MF_ATTRIBUTE_TYPE* pType)
+{
+    assert(mAttributes);
+    return mAttributes->GetItemType(guidKey, pType);
+}
+
+STDMETHODIMP
+WMFByteStream::CompareItem(REFGUID guidKey, REFPROPVARIANT Value, BOOL* pbResult)
+{
+    assert(mAttributes);
+    return mAttributes->CompareItem(guidKey, Value, pbResult);
+}
+
+STDMETHODIMP
+WMFByteStream::Compare(IMFAttributes* pTheirs,
+                       MF_ATTRIBUTES_MATCH_TYPE MatchType,
+                       BOOL* pbResult)
+{
+    assert(mAttributes);
+    return mAttributes->Compare(pTheirs, MatchType, pbResult);
+}
+
+STDMETHODIMP
+WMFByteStream::GetUINT32(REFGUID guidKey, UINT32* punValue)
+{
+    assert(mAttributes);
+    return mAttributes->GetUINT32(guidKey, punValue);
+}
+
+STDMETHODIMP
+WMFByteStream::GetUINT64(REFGUID guidKey, UINT64* punValue)
+{
+    assert(mAttributes);
+    return mAttributes->GetUINT64(guidKey, punValue);
+}
+
+STDMETHODIMP
+WMFByteStream::GetDouble(REFGUID guidKey, double* pfValue)
+{
+    assert(mAttributes);
+    return mAttributes->GetDouble(guidKey, pfValue);
+}
+
+STDMETHODIMP
+WMFByteStream::GetGUID(REFGUID guidKey, GUID* pguidValue)
+{
+    assert(mAttributes);
+    return mAttributes->GetGUID(guidKey, pguidValue);
+}
+
+STDMETHODIMP
+WMFByteStream::GetStringLength(REFGUID guidKey, UINT32* pcchLength)
+{
+    assert(mAttributes);
+    return mAttributes->GetStringLength(guidKey, pcchLength);
+}
+
+STDMETHODIMP
+WMFByteStream::GetString(REFGUID guidKey, LPWSTR pwszValue, UINT32 cchBufSize, UINT32* pcchLength)
+{
+    assert(mAttributes);
+    return mAttributes->GetString(guidKey, pwszValue, cchBufSize, pcchLength);
+}
+
+STDMETHODIMP
+WMFByteStream::GetAllocatedString(REFGUID guidKey, LPWSTR* ppwszValue, UINT32* pcchLength)
+{
+    assert(mAttributes);
+    return mAttributes->GetAllocatedString(guidKey, ppwszValue, pcchLength);
+}
+
+STDMETHODIMP
+WMFByteStream::GetBlobSize(REFGUID guidKey, UINT32* pcbBlobSize)
+{
+    assert(mAttributes);
+    return mAttributes->GetBlobSize(guidKey, pcbBlobSize);
+}
+
+STDMETHODIMP
+WMFByteStream::GetBlob(REFGUID guidKey, UINT8* pBuf, UINT32 cbBufSize, UINT32* pcbBlobSize)
+{
+    assert(mAttributes);
+    return mAttributes->GetBlob(guidKey, pBuf, cbBufSize, pcbBlobSize);
+}
+
+STDMETHODIMP
+WMFByteStream::GetAllocatedBlob(REFGUID guidKey, UINT8** ppBuf, UINT32* pcbSize)
+{
+    assert(mAttributes);
+    return mAttributes->GetAllocatedBlob(guidKey, ppBuf, pcbSize);
+}
+
+STDMETHODIMP
+WMFByteStream::GetUnknown(REFGUID guidKey, REFIID riid, LPVOID* ppv)
+{
+    assert(mAttributes);
+    return mAttributes->GetUnknown(guidKey, riid, ppv);
+}
+
+STDMETHODIMP
+WMFByteStream::SetItem(REFGUID guidKey, REFPROPVARIANT Value)
+{
+    assert(mAttributes);
+    return mAttributes->SetItem(guidKey, Value);
+}
+
+STDMETHODIMP
+WMFByteStream::DeleteItem(REFGUID guidKey)
+{
+    assert(mAttributes);
+    return mAttributes->DeleteItem(guidKey);
+}
+
+STDMETHODIMP
+WMFByteStream::DeleteAllItems()
+{
+    assert(mAttributes);
+    return mAttributes->DeleteAllItems();
+}
+
+STDMETHODIMP
+WMFByteStream::SetUINT32(REFGUID guidKey, UINT32 unValue)
+{
+    assert(mAttributes);
+    return mAttributes->SetUINT32(guidKey, unValue);
+}
+
+STDMETHODIMP
+WMFByteStream::SetUINT64(REFGUID guidKey,UINT64 unValue)
+{
+    assert(mAttributes);
+    return mAttributes->SetUINT64(guidKey, unValue);
+}
+
+STDMETHODIMP
+WMFByteStream::SetDouble(REFGUID guidKey, double fValue)
+{
+    assert(mAttributes);
+    return mAttributes->SetDouble(guidKey, fValue);
+}
+
+STDMETHODIMP
+WMFByteStream::SetGUID(REFGUID guidKey, REFGUID guidValue)
+{
+    assert(mAttributes);
+    return mAttributes->SetGUID(guidKey, guidValue);
+}
+
+STDMETHODIMP
+WMFByteStream::SetString(REFGUID guidKey, LPCWSTR wszValue)
+{
+    assert(mAttributes);
+    return mAttributes->SetString(guidKey, wszValue);
+}
+
+STDMETHODIMP
+WMFByteStream::SetBlob(REFGUID guidKey, const UINT8* pBuf, UINT32 cbBufSize)
+{
+    assert(mAttributes);
+    return mAttributes->SetBlob(guidKey, pBuf, cbBufSize);
+}
+
+STDMETHODIMP
+WMFByteStream::SetUnknown(REFGUID guidKey, IUnknown* pUnknown)
+{
+    assert(mAttributes);
+    return mAttributes->SetUnknown(guidKey, pUnknown);
+}
+
+STDMETHODIMP
+WMFByteStream::LockStore()
+{
+    assert(mAttributes);
+    return mAttributes->LockStore();
+}
+
+STDMETHODIMP
+WMFByteStream::UnlockStore()
+{
+    assert(mAttributes);
+    return mAttributes->UnlockStore();
+}
+
+STDMETHODIMP
+WMFByteStream::GetCount(UINT32* pcItems)
+{
+    assert(mAttributes);
+    return mAttributes->GetCount(pcItems);
+}
+
+STDMETHODIMP
+WMFByteStream::GetItemByIndex(UINT32 unIndex, GUID* pguidKey, PROPVARIANT* pValue)
+{
+    assert(mAttributes);
+    return mAttributes->GetItemByIndex(unIndex, pguidKey, pValue);
+}
+
+STDMETHODIMP
+WMFByteStream::CopyAllItems(IMFAttributes* pDest)
+{
+    assert(mAttributes);
+    return mAttributes->CopyAllItems(pDest);
 }
 
 } // namespace mozilla
