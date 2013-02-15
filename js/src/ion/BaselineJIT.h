@@ -42,11 +42,12 @@ struct ICStubSpace
     JS_DECLARE_NEW_METHODS(allocate, alloc, inline)
 
     inline void adoptFrom(ICStubSpace *other) {
-        allocator_.transferFrom(&(other->allocator_));
+        allocator_.steal(&(other->allocator_));
     }
 
-    static ICStubSpace *FallbackStubSpaceFor(JSScript *script);
-    static ICStubSpace *StubSpaceFor(JSScript *script);
+    void free() {
+        allocator_.freeAll();
+    }
 };
 
 // Stores the native code offset for a bytecode pc.
@@ -146,6 +147,8 @@ struct BaselineScript
                                size_t pcMappingEntries);
     static void Trace(JSTracer *trc, BaselineScript *script);
     static void Destroy(FreeOp *fop, BaselineScript *script);
+
+    void purgeOptimizedStubs();
 
     static inline size_t offsetOfMethod() {
         return offsetof(BaselineScript, method_);
