@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+
+<filter id="f"/>
+
+<g filter="url(#f)">
+  <text>AB</text>
+</g>
+
+<script>
+
+function forceFrameConstruction()
+{
+  document.documentElement.getBoundingClientRect();
+}
+
+function boom()
+{
+  document.getElementsByTagName("text")[0].firstChild.splitText(1);
+  forceFrameConstruction();
+  document.normalize();
+  forceFrameConstruction();
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+
+</svg>
