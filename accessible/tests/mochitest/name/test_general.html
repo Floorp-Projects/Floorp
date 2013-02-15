@@ -171,6 +171,7 @@
       testName("ctrlvalue_scrollbar:input", "foo 5 baz");
       testName("ctrlvalue_slider:input", "foo 5 baz");
       testName("ctrlvalue_spinbutton:input", "foo 5 baz");
+      testName("ctrlvalue_combobox:input", "foo 5 baz");
 
 
       /////////////////////////////////////////////////////////////////////////
@@ -269,6 +270,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=823927"
      title="Text is jammed with control's text in name computation">
     Bug 823927
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=835666"
+     title="ARIA combobox selected value is not a part of name computation">
+    Bug 835666
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -502,6 +508,20 @@
                value="5" min="1" max="10"
                aria-valuenow="5" aria-valuemin="1"
                aria-valuemax="10">
+    baz
+  </label>
+
+  <input type="checkbox" id="ctrlvalue_combobox:input">
+  <label for="ctrlvalue_combobox:input">
+    foo
+    <div role="combobox">
+      <div role="textbox"></div>
+      <ul role="listbox" style="list-style-type: none;">
+        <li role="option">1</li>
+        <li role="option" aria-selected="true">5</li>
+        <li role="option">3</li>
+      </ul>
+    </div>
     baz
   </label>
 
