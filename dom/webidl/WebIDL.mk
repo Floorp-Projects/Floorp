@@ -78,6 +78,7 @@ webidl_files = \
   HTMLHtmlElement.webidl \
   HTMLImageElement.webidl \
   HTMLLabelElement.webidl \
+  HTMLLegendElement.webidl \
   HTMLLIElement.webidl \
   HTMLLinkElement.webidl \
   HTMLMapElement.webidl \

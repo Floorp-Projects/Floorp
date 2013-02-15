@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLLegendElement.h"
+#include "mozilla/dom/HTMLLegendElementBinding.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsFocusManager.h"
 #include "nsIFrame.h"
@@ -168,6 +169,22 @@ HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
   // just use the same behaviour as the focus method
   ErrorResult rv;
   Focus(rv);
+}
+
+already_AddRefed<nsHTMLFormElement>
+HTMLLegendElement::GetForm()
+{
+  Element* form = GetFormElement();
+  MOZ_ASSERT_IF(form, form->IsHTML(nsGkAtoms::form));
+  nsRefPtr<nsHTMLFormElement> ret = static_cast<nsHTMLFormElement*>(form);
+  return ret.forget();
+}
+
+JSObject*
+HTMLLegendElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  return HTMLLegendElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
