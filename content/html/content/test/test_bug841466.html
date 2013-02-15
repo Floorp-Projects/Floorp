@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=841466
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 841466</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script>
+  /** Test for Bug 841466 **/
+var els = ['button', 'fieldset', 'input', 'keygen', 'label', 'object', 'output', 'select', 'textarea'];
+var code = "try { is(foo, 'bar', 'expected value bar from expando on element ' + localName); } catch (e) { ok(false, String(e)); }";
+els.forEach(function(el) {
+  var f = document.createElement("form");
+  f.foo = "bar";
+  f.innerHTML = '<' + el + ' onclick="' + code + '">';
+  var e = f.firstChild
+  if (el === "keygen") {
+    todo_is(e.localName, "keygen", "Bug 101019");
+    return;
+  }
+  e.dispatchEvent(new Event("click"));
+})
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=841466">Mozilla Bug 841466</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
