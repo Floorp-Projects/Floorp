@@ -1071,7 +1071,7 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
                              ProcessPriority aInitialPriority /* = PROCESS_PRIORITY_FOREGROUND */)
     : mSubprocess(nullptr)
     , mOSPrivileges(aOSPrivileges)
-    , mChildID(CONTENT_PROCESS_ID_UNKNOWN)
+    , mChildID(gContentChildID++)
     , mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
@@ -1583,7 +1583,7 @@ bool
 ContentParent::RecvGetProcessAttributes(uint64_t* aId,
                                         bool* aIsForApp, bool* aIsForBrowser)
 {
-    *aId = mChildID = gContentChildID++;
+    *aId = mChildID;
     *aIsForApp = IsForApp();
     *aIsForBrowser = mIsForBrowser;
 
