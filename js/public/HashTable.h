@@ -60,7 +60,7 @@ class HashMap
     {
         typedef Key KeyType;
         static const Key &getKey(TableEntry &e) { return e.key; }
-        static void setKey(TableEntry &e, Key &k) { const_cast<Key &>(e.key) = k; }
+        static void setKey(TableEntry &e, Key &k) { HashPolicy::rekey(const_cast<Key &>(e.key), k); }
     };
 
     typedef detail::HashTable<TableEntry, MapHashPolicy, AllocPolicy> Impl;
@@ -295,7 +295,7 @@ class HashSet
     {
         typedef T KeyType;
         static const KeyType &getKey(const T &t) { return t; }
-        static void setKey(T &t, KeyType &k) { t = k; }
+        static void setKey(T &t, KeyType &k) { HashPolicy::rekey(t, k); }
     };
 
     typedef detail::HashTable<const T, SetOps, AllocPolicy> Impl;
@@ -517,6 +517,9 @@ struct PointerHasher
         JS_ASSERT(!JS::IsPoisonedPtr(l));
         return k == l;
     }
+    static void rekey(Key &k, const Key& newKey) {
+        k = newKey;
+    }
 };
 
 // Default hash policy: just use the 'lookup' value. This of course only
@@ -534,6 +537,9 @@ struct DefaultHasher
     static bool match(const Key &k, const Lookup &l) {
         // Use builtin or overloaded operator==.
         return k == l;
+    }
+    static void rekey(Key &k, const Key& newKey) {
+        k = newKey;
     }
 };
 

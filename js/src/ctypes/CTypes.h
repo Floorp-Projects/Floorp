@@ -217,7 +217,7 @@ struct FieldInfo
 };
 
 // Hash policy for FieldInfos.
-struct FieldHashPolicy
+struct FieldHashPolicy : DefaultHasher<JSFlatString*>
 {
   typedef JSFlatString* Key;
   typedef Key Lookup;
