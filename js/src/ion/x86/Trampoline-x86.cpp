@@ -27,7 +27,7 @@ enum EnterJitEbpArgumentOffset {
     ARG_ARGV            = 4 * sizeof(void *),
     ARG_STACKFRAME      = 5 * sizeof(void *),
     ARG_CALLEETOKEN     = 6 * sizeof(void *),
-    ARG_EVAL_SCOPECHAIN = 7 * sizeof(void *),
+    ARG_SCOPECHAIN      = 7 * sizeof(void *),
     ARG_RESULT          = 8 * sizeof(void *)
 };
 
@@ -125,7 +125,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.push(esi);
 
     if (type == EnterJitBaseline)
-        masm.movl(Operand(ebp, ARG_EVAL_SCOPECHAIN), R1.scratchReg());
+        masm.movl(Operand(ebp, ARG_SCOPECHAIN), R1.scratchReg());
 
     /***************************************************************
         Call passed-in code, get return value and fill in the

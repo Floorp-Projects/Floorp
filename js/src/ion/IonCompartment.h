@@ -25,7 +25,7 @@ enum EnterJitType {
 };
 
 typedef void (*EnterIonCode)(void *code, int argc, Value *argv, StackFrame *fp,
-                             CalleeToken calleeToken, JSObject *evalScopeChain, Value *vp);
+                             CalleeToken calleeToken, JSObject *scopeChain, Value *vp);
 
 class IonActivation;
 class IonBuilder;
