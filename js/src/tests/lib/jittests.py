@@ -20,6 +20,7 @@ except ImportError:
     HAVE_MULTIPROCESSING = False
 
 from progressbar import ProgressBar, NullProgressBar
+from results import TestOutput
 
 TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
@@ -282,8 +283,8 @@ def run_test(test, shell_args, options):
         sys.stdout.write('Exit code: %s\n' % code)
     if test.valgrind:
         sys.stdout.write(err)
-    return (check_output(out, err, code, test),
-            out, err, code, timed_out)
+
+    return TestOutput(test, cmd, out, err, code, None, timed_out)
 
 def check_output(out, err, rc, test):
     if test.expect_error:
@@ -318,7 +319,7 @@ def print_tinderbox(label, test, message=None):
 def wrap_parallel_run_test(test, shell_args, resultQueue, options):
     # Ignore SIGINT in the child
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    result = run_test(test, shell_args, options) + (test,)
+    result = run_test(test, shell_args, options)
     resultQueue.put(result)
     return result
 
@@ -431,14 +432,14 @@ def print_test_summary(failures, complete, doing, options, shell_args):
                 out = open(options.write_failures, 'w')
                 # Don't write duplicate entries when we are doing multiple failures per job.
                 written = set()
-                for test, fout, ferr, fcode, _ in failures:
-                    if test.path not in written:
-                        out.write(os.path.relpath(test.path, TEST_DIR) + '\n')
+                for res in failures:
+                    if res.test.path not in written:
+                        out.write(os.path.relpath(res.test.path, TEST_DIR) + '\n')
                         if options.write_failure_output:
-                            out.write(fout)
-                            out.write(ferr)
-                            out.write('Exit code: ' + str(fcode) + "\n")
-                        written.add(test.path)
+                            out.write(res.out)
+                            out.write(res.err)
+                            out.write('Exit code: ' + str(res.rc) + "\n")
+                        written.add(res.test.path)
                 out.close()
             except IOError:
                 sys.stderr.write("Exception thrown trying to write failure file '%s'\n"%
@@ -453,14 +454,14 @@ def print_test_summary(failures, complete, doing, options, shell_args):
                 print('    ' + ' '.join(test.jitflags + [test.path]))
 
         print('FAILURES:')
-        for test, _, __, ___, timed_out in failures:
-            if not timed_out:
-                show_test(test)
+        for res in failures:
+            if not res.timed_out:
+                show_test(res.test)
 
         print('TIMEOUTS:')
-        for test, _, __, ___, timed_out in failures:
-            if timed_out:
-                show_test(test)
+        for res in failures:
+            if res.timed_out:
+                show_test(res.test)
 
         return False
     else:
@@ -483,18 +484,19 @@ def process_test_results(results, num_tests, options, shell_args):
     complete = False
     doing = 'before starting'
     try:
-        for i, (ok, out, err, code, timed_out, test) in enumerate(results):
-            doing = 'after %s'%test.path
+        for i, res in enumerate(results):
 
+            ok = check_output(res.out, res.err, res.rc, res.test)
+            doing = 'after %s' % res.test.path
             if not ok:
-                failures.append([ test, out, err, code, timed_out ])
-                pb.message("FAIL - %s" % test.path)
-            if timed_out:
+                failures.append(res)
+                pb.message("FAIL - %s" % res.test.path)
+            if res.timed_out:
                 timeouts += 1
 
             if options.tinderbox:
                 if ok:
-                    print_tinderbox("TEST-PASS", test);
+                    print_tinderbox("TEST-PASS", res.test);
                 else:
                     lines = [ _ for _ in out.split('\n') + err.split('\n')
                               if _ != '' ]
@@ -502,7 +504,7 @@ def process_test_results(results, num_tests, options, shell_args):
                         msg = lines[-1]
                     else:
                         msg = ''
-                    print_tinderbox("TEST-UNEXPECTED-FAIL", test, msg);
+                    print_tinderbox("TEST-UNEXPECTED-FAIL", res.test, msg);
 
             n = i + 1
             pb.update(n, {
@@ -521,8 +523,7 @@ def process_test_results(results, num_tests, options, shell_args):
 
 def get_serial_results(tests, shell_args, options):
     for test in tests:
-        result = run_test(test, shell_args, options)
-        yield result + (test,)
+        yield run_test(test, shell_args, options)
 
 def run_tests(tests, shell_args, options):
     gen = get_serial_results(tests, shell_args, options)
