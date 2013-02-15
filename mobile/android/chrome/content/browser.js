@@ -6167,6 +6167,19 @@ var PluginHelper = {
     NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id, options);
   },
 
+  delayAndShowDoorHanger: function(aTab) {
+    // To avoid showing the doorhanger if there are also visible plugin
+    // overlays on the page, delay showing the doorhanger to check if
+    // visible plugins get added in the near future.
+    if (!aTab.pluginDoorhangerTimeout) {
+      aTab.pluginDoorhangerTimeout = setTimeout(function() {
+        if (this.shouldShowPluginDoorhanger) {
+          PluginHelper.showDoorHanger(this);
+        }
+      }.bind(aTab), 500);
+    }
+  },
+
   playAllPlugins: function(aContentWindow) {
     let cwu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIDOMWindowUtils);
@@ -6180,8 +6193,7 @@ var PluginHelper = {
 
   playPlugin: function(plugin) {
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (!objLoadingContent.activated &&
-        objLoadingContent.pluginFallbackType !== Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW)
+    if (!objLoadingContent.activated)
       objLoadingContent.playPlugin();
   },
 
@@ -6279,17 +6291,7 @@ var PluginHelper = {
         // If the plugin is hidden, or if the overlay is too small, show a 
         // doorhanger notification
         if (PluginHelper.isTooSmall(plugin, overlay)) {
-          // To avoid showing the doorhanger if there are also visible plugin
-          // overlays on the page, delay showing the doorhanger to check if
-          // visible plugins get added in the near future.
-          if (!aTab.pluginDoorhangerTimeout) {
-            aTab.pluginDoorhangerTimeout = setTimeout(function() {
-              if (this.shouldShowPluginDoorhanger) {
-                PluginHelper.showDoorHanger(this);
-              }
-            }.bind(aTab), 500);
-          }
-
+          PluginHelper.delayAndShowDoorHanger(aTab);
         } else {
           // There's a large enough visible overlay that we don't need to show
           // the doorhanger.
@@ -6313,6 +6315,24 @@ var PluginHelper = {
 
       case "PluginPlayPreview": {
         let previewContent = doc.getAnonymousElementByAttribute(plugin, "class", "previewPluginContent");
+        let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+        let mimeType = PluginHelper.getPluginMimeType(plugin);
+        let playPreviewInfo = pluginHost.getPlayPreviewInfo(mimeType);
+
+        if (!playPreviewInfo.ignoreCTP) {
+          // Check if plugins have already been activated for this page, or if
+          // the user has set a permission to always play plugins on the site
+          if (aTab.clickToPlayPluginsActivated ||
+              Services.perms.testPermission(aTab.browser.currentURI, "plugins") ==
+              Services.perms.ALLOW_ACTION) {
+            PluginHelper.playPlugin(plugin);
+            return;
+          }
+
+          // Always show door hanger for play preview plugins
+          PluginHelper.delayAndShowDoorHanger(aTab);
+        }
+
         let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
         if (!iframe) {
           // lazy initialization of the iframe
@@ -6320,9 +6340,7 @@ var PluginHelper = {
           iframe.className = "previewPluginContentFrame";
           previewContent.appendChild(iframe);
         }
-        let mimeType = PluginHelper.getPluginMimeType(plugin);
-        let playPreviewUri = "data:application/x-moz-playpreview;," + mimeType;
-        iframe.src = playPreviewUri;
+        iframe.src = playPreviewInfo.redirectURL;
 
         // MozPlayPlugin event can be dispatched from the extension chrome
         // code to replace the preview content with the native plugin

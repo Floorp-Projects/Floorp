@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>nsIDOMWindowUtils::getScrollbarWidth test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+
+<body id="body">
+  <script type="application/javascript;version=1.8">
+    function doTests() {
+      let iframe = document.getElementById("iframe");
+      let cwindow = iframe.contentWindow;
+      let utils = SpecialPowers.getDOMWindowUtils(cwindow);
+      let doc = cwindow.document;
+
+      function haveNonFloatingScrollbars() {
+        return doc.getElementById("float").offsetWidth > 200;
+      }
+
+      is(utils.getScrollbarWidth(true), 0,
+         "getScrollbarWidth returns zero without a scrollbar");
+
+      // Some platforms (esp. mobile) may have floating scrollbars that don't
+      // affect layout. Thus getScrollbarWidth() would always return 0.
+      if (haveNonFloatingScrollbars()) {
+        let body = doc.querySelector("body");
+        body.style.overflowY = "scroll";
+
+        is(utils.getScrollbarWidth(false), 0,
+           "getScrollbarWidth returns zero with a vertical scrollbar w/o flushing");
+
+        ok(utils.getScrollbarWidth(true) > 0,
+           "getScrollbarWidth returns non-zero with a vertical scrollbar with flushing");
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+  </script>
+
+  <iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/general/file_domWindowUtils_scrollbarWidth.html"
+          id="iframe" onload="doTests();">
+  </iframe>
+
+</body>
+</html>

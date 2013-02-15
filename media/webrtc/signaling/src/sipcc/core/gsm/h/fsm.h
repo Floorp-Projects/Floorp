@@ -293,6 +293,7 @@ typedef struct {
      */
     boolean        remote_sdp_present;
     boolean        remote_sdp_in_ack;
+    boolean        local_sdp_complete;
     uint16_t       src_sdp_version;
     cc_sdp_t       *sdp;
 

@@ -1440,6 +1440,37 @@ nsDOMWindowUtils::GetScrollXY(bool aFlushLayout, int32_t* aScrollX, int32_t* aSc
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetScrollbarWidth(bool aFlushLayout, int32_t* aResult)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  *aResult = 0;
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  NS_ENSURE_STATE(doc);
+
+  if (aFlushLayout) {
+    doc->FlushPendingNotifications(Flush_Layout);
+  }
+
+  nsIPresShell* presShell = doc->GetShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
+
+  nsIScrollableFrame* scrollFrame = presShell->GetRootScrollFrameAsScrollable();
+  NS_ENSURE_TRUE(scrollFrame, NS_OK);
+
+  nsMargin sizes = scrollFrame->GetActualScrollbarSizes();
+  *aResult = nsPresContext::AppUnitsToIntCSSPixels(sizes.LeftRight());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
 {
   if (!nsContentUtils::IsCallerChrome()) {

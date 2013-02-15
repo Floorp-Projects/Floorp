@@ -176,8 +176,7 @@ hb_ot_layout_position_lookup (hb_font_t    *font,
 /* Should be called after all the position_lookup's are done */
 HB_INTERNAL void
 hb_ot_layout_position_finish (hb_font_t    *font,
-			      hb_buffer_t  *buffer,
-			      hb_bool_t     zero_width_attached_marks);
+			      hb_buffer_t  *buffer);
 
 
 

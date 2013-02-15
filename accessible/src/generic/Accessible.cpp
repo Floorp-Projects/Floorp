@@ -22,6 +22,8 @@
 #include "RootAccessible.h"
 #include "States.h"
 #include "StyleInfo.h"
+#include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "TreeWalker.h"
 
 #include "nsContentUtils.h"
@@ -1597,6 +1599,22 @@ Accessible::ApplyARIAState(uint64_t* aState) const
   if (aria::MapToState(mRoleMapEntry->attributeMap1, element, aState) &&
       aria::MapToState(mRoleMapEntry->attributeMap2, element, aState))
     aria::MapToState(mRoleMapEntry->attributeMap3, element, aState);
+
+  // ARIA gridcell inherits editable/readonly states from the grid until it's
+  // overridden.
+  if (mRoleMapEntry->Is(nsGkAtoms::gridcell) &&
+      !(*aState & (states::READONLY | states::EDITABLE))) {
+    const TableCellAccessible* cell = AsTableCell();
+    if (cell) {
+      TableAccessible* table = cell->Table();
+      if (table) {
+        Accessible* grid = table->AsAccessible();
+        uint64_t gridState = 0;
+        grid->ApplyARIAState(&gridState);
+        *aState |= (gridState & (states::READONLY | states::EDITABLE));
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -1652,7 +1670,7 @@ Accessible::Value(nsString& aValue)
     }
 
     if (option)
-      nsTextEquivUtils::GetNameFromSubtree(option, aValue);
+      nsTextEquivUtils::GetTextEquivFromSubtree(option, aValue);
   }
 }
 

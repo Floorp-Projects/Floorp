@@ -167,6 +167,8 @@ private:
   nsresult SendSetPropertyMessage(const nsString& aPath, const char* aInterface,
                                   const BluetoothNamedValue& aValue,
                                   BluetoothReplyRunnable* aRunnable);
+
+  void DisconnectAllAcls(const nsAString& aAdapterPath);
 };
 
 END_BLUETOOTH_NAMESPACE

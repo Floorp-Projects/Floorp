@@ -41,7 +41,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIJSContextStack.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsIFragmentContentSink.h"
@@ -160,7 +159,6 @@
 #include "nsICharsetDetectionObserver.h"
 #include "nsIPlatformCharset.h"
 #include "nsIEditor.h"
-#include "nsIEditorDocShell.h"
 #include "mozilla/Attributes.h"
 #include "nsIParserService.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -6123,15 +6121,15 @@ nsContentUtils::CheckCCWrapperTraversal(void* aScriptObjectHolder,
   DebugWrapperTraversalCallback callback(wrapper);
 
   aTracer->Traverse(aScriptObjectHolder, callback);
-  NS_ASSERTION(callback.mFound,
-               "Cycle collection participant didn't traverse to preserved "
-               "wrapper! This will probably crash.");
+  MOZ_ASSERT(callback.mFound,
+             "Cycle collection participant didn't traverse to preserved "
+             "wrapper! This will probably crash.");
 
   callback.mFound = false;
   aTracer->Trace(aScriptObjectHolder, DebugWrapperTraceCallback, &callback);
-  NS_ASSERTION(callback.mFound,
-               "Cycle collection participant didn't trace preserved wrapper! "
-               "This will probably crash.");
+  MOZ_ASSERT(callback.mFound,
+             "Cycle collection participant didn't trace preserved wrapper! "
+             "This will probably crash.");
 }
 #endif
 
@@ -6802,14 +6800,14 @@ nsIEditor*
 nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
 {
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
   bool isEditable;
-  if (!editorDocShell ||
-      NS_FAILED(editorDocShell->GetEditable(&isEditable)) || !isEditable)
+  if (!docShell ||
+      NS_FAILED(docShell->GetEditable(&isEditable)) || !isEditable)
     return nullptr;
 
   nsCOMPtr<nsIEditor> editor;
-  editorDocShell->GetEditor(getter_AddRefs(editor));
+  docShell->GetEditor(getter_AddRefs(editor));
   return editor;
 }
 

@@ -112,10 +112,11 @@ function onPluginCrashed(aEvent) {
   ok(true, "Plugin crashed notification received");
   is(aEvent.type, "PluginCrashed", "event is correct type");
 
-  let pleaseLink = document.getAnonymousElementByAttribute(
-                            aEvent.target, "class", "pleaseSubmitLink");
+  let submitButton = document.getAnonymousElementByAttribute(aEvent.target,
+                                                             "class",
+                                                             "submitButton");
   // try to submit this report
-  sendMouseEvent({type:'click'}, pleaseLink, window);
+  sendMouseEvent({type:'click'}, submitButton, window);
 }
 
 function runTests() {

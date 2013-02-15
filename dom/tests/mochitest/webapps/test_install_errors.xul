@@ -52,7 +52,6 @@ function noArgs(next) {
 function parseError(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/json_syntax_error.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "MANIFEST_PARSE_ERROR", "manifest with syntax error");
     next();
@@ -62,7 +61,6 @@ function parseError(next) {
 function invalidManifest(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/missing_required_field.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
     next();
@@ -91,7 +89,6 @@ function permissionDenied(next) {
 function invalidContent(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/bad_content_type.webapp";
 
-  confirmNextInstall();
   var request = navigator.mozApps.install(url, null);
 
   request.onerror = function onInstallError() {
@@ -110,7 +107,6 @@ function invalidContent(next) {
 function invalidLaunchPath(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_launch_path.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Invalid Manifest");
     next();
@@ -120,7 +116,6 @@ function invalidLaunchPath(next) {
 function invalidLaunchPath2(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_launch_path2.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Invalid Manifest");
     next();
@@ -130,7 +125,6 @@ function invalidLaunchPath2(next) {
 function invalidEntryPoint(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_entry_point.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
     next();
@@ -140,7 +134,6 @@ function invalidEntryPoint(next) {
 function invalidLocaleEntryPoint(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_locale_entry_point.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
     next();
@@ -150,7 +143,6 @@ function invalidLocaleEntryPoint(next) {
 function invalidActivityHref(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_activity_href.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Manifest has non-relative URI for activity href");
     next();
@@ -160,7 +152,6 @@ function invalidActivityHref(next) {
 function invalidActivityHref2(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_activity_href2.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Manifest has data: URI for activity href");
     next();
@@ -170,7 +161,6 @@ function invalidActivityHref2(next) {
 function invalidMessage(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_message.webapp";
 
-  confirmNextInstall();
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Manifest has absolute message href");
     next();
@@ -207,7 +197,6 @@ function fileURL(next) {
 function originNotAllowed(next) {
   var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/installs_allowed_from_example.com.webapp";
 
-  confirmNextInstall();
   var request = navigator.mozApps.install(url, null);
 
   request.onerror = function onInstallError() {

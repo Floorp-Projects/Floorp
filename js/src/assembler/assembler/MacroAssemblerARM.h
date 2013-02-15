@@ -510,7 +510,7 @@ public:
 
     void store8(RegisterID src, ImplicitAddress address)
     {
-        m_assembler.dataTransferN(false, false, 16,  src, address.base, address.offset);
+        m_assembler.dataTransferN(false, false, 8,  src, address.base, address.offset);
     }
 
     void store8(RegisterID src, BaseIndex address)
@@ -1157,25 +1157,26 @@ public:
 
     void loadFloat(ImplicitAddress address, FPRegisterID dest)
     {
-        // as long as this is a sane mapping, (*2) should just work
-        dest = (FPRegisterID) (dest * 2);
         ASSERT((address.offset & 0x3) == 0);
-        m_assembler.floatTransfer(true, dest, address.base, address.offset);
-        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, (FPRegisterID)(dest*2), dest);
+        // as long as this is a sane mapping, (*2) should just work
+        m_assembler.floatTransfer(true, floatShadow(dest), address.base, address.offset);
+        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, floatShadow(dest), dest);
     }
     void loadFloat(BaseIndex address, FPRegisterID dest)
     {
-        m_assembler.baseIndexFloatTransfer(true, false, (FPRegisterID)(dest*2),
+        FPRegisterID dest_s = floatShadow(dest);
+        m_assembler.baseIndexFloatTransfer(true, false, dest_s,
                                            address.base, address.index,
                                            address.scale, address.offset);
-        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, (FPRegisterID)(dest*2), dest);
+        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, dest_s, dest);
     }
 
     DataLabelPtr loadFloat(const void* address, FPRegisterID dest)
     {
+        FPRegisterID dest_s = floatShadow(dest);
         DataLabelPtr label = moveWithPatch(ImmPtr(address), ARMRegisters::S0);
-        m_assembler.fmem_imm_off(true, false, true, (FPRegisterID)(dest*2), ARMRegisters::S0, 0);
-        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, (FPRegisterID)(dest*2), dest);
+        m_assembler.fmem_imm_off(true, false, true, dest_s, ARMRegisters::S0, 0);
+        m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, dest_s, dest);
         return label;
     }
  
@@ -1208,14 +1209,16 @@ public:
         m_assembler.vmov64(true, true, lo, hi, fpReg);
     }
 
+    // the StoreFloat functions take an FPRegisterID that is really of the corresponding Double register.
+    // but the double has already been converted into a float
     void storeFloat(FPRegisterID src, ImplicitAddress address)
     {
-        m_assembler.floatTransfer(false, src, address.base, address.offset);
+        m_assembler.floatTransfer(false, floatShadow(src), address.base, address.offset);
     }
 
     void storeFloat(FPRegisterID src, BaseIndex address)
     {
-        m_assembler.baseIndexFloatTransfer(false, false, src,
+        m_assembler.baseIndexFloatTransfer(false, false, floatShadow(src),
                                            address.base, address.index,
                                            address.scale, address.offset);
     }
@@ -1329,7 +1332,7 @@ public:
 
     void convertDoubleToFloat(FPRegisterID src, FPRegisterID dest)
     {
-        m_assembler.vcvt(m_assembler.FloatReg64, m_assembler.FloatReg32, src, dest);
+        m_assembler.vcvt(m_assembler.FloatReg64, m_assembler.FloatReg32, src, floatShadow(dest));
     }
 
     Jump branchDouble(DoubleCondition cond, FPRegisterID left, FPRegisterID right)

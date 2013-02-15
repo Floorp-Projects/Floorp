@@ -8,7 +8,7 @@
 #include "nsITimer.h"
 
 #include "nsCOMPtr.h"
-#include "nsDOMMediaStream.h"
+#include "DOMMediaStream.h"
 #include "nsComponentManagerUtils.h"
 
 #include "VideoUtils.h"

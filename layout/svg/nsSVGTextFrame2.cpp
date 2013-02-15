@@ -273,11 +273,7 @@ IsNonEmptyTextFrame(nsIFrame* aFrame)
     return false;
   }
 
-  nsIContent* content = textFrame->GetContent();
-  NS_ASSERTION(content && content->IsNodeOfType(nsINode::eTEXT),
-               "unexpected content type for nsTextFrame");
-
-  return static_cast<nsTextNode*>(content)->TextLength() != 0;
+  return textFrame->GetContentLength() != 0;
 }
 
 /**
@@ -1440,6 +1436,9 @@ TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame)
  *   * what nsInlineFrame corresponding to a <textPath> element it is a
  *     descendant of
  *   * what computed dominant-baseline value applies to it
+ *
+ * Note that any text frames that are empty -- whose ContentLength() is 0 --
+ * will be skipped over.
  */
 class TextFrameIterator
 {
@@ -2445,6 +2444,9 @@ CharIterator::MatchesFilter() const
          IsClusterAndLigatureGroupStart();
 }
 
+// -----------------------------------------------------------------------------
+// nsCharClipDisplayItem
+
 /**
  * An nsCharClipDisplayItem that obtains its left and right clip edges from a
  * TextRenderedRun object.
@@ -2459,6 +2461,9 @@ public:
 
   NS_DISPLAY_DECL_NAME("SVGText", TYPE_TEXT)
 };
+
+// -----------------------------------------------------------------------------
+// SVGTextDrawPathCallbacks
 
 /**
  * Text frame draw callback class that paints the text and text decoration parts
@@ -2731,6 +2736,21 @@ SVGTextDrawPathCallbacks::FillAndStroke()
   }
 }
 
+// -----------------------------------------------------------------------------
+// GlyphMetricsUpdater
+
+NS_IMETHODIMP
+GlyphMetricsUpdater::Run()
+{
+  if (mFrame) {
+    mFrame->mPositioningDirty = true;
+    nsSVGUtils::InvalidateBounds(mFrame, false);
+    nsSVGUtils::ScheduleReflowSVG(mFrame);
+    mFrame->mGlyphMetricsUpdater = nullptr;
+  }
+  return NS_OK;
+}
+
 }
 
 // ============================================================================
@@ -2828,6 +2848,15 @@ nsSVGTextFrame2::Init(nsIContent* aContent,
 
   mMutationObserver.StartObserving(this);
   return rv;
+}
+
+void
+nsSVGTextFrame2::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  if (mGlyphMetricsUpdater) {
+    mGlyphMetricsUpdater->Revoke();
+  }
+  nsSVGTextFrame2Base::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP
@@ -4424,9 +4453,9 @@ nsSVGTextFrame2::DoGlyphPositioning()
   // Get the x, y, dx, dy, rotate values for the subtree.
   nsTArray<gfxPoint> deltas;
   if (!ResolvePositions(deltas)) {
-    // We shouldn't reach here because DetermineCharPositions should have been
-    // empty if we fail to resolve any positions.
-    NS_NOTREACHED("unexpected result from ResolvePositions");
+    // If ResolvePositions returned false, it means that there were some
+    // characters in the DOM but none of them are displayed.  Clear out
+    // mPositions so that we don't attempt to do any painting later.
     mPositions.Clear();
     return;
   }
@@ -4549,9 +4578,23 @@ nsSVGTextFrame2::ShouldRenderAsPath(nsRenderingContext* aContext,
 void
 nsSVGTextFrame2::NotifyGlyphMetricsChange()
 {
-  mPositioningDirty = true;
-  nsSVGUtils::InvalidateBounds(this, false);
-  nsSVGUtils::ScheduleReflowSVG(this);
+  // We need to perform the operations in GlyphMetricsUpdater in a
+  // script runner since we can get called just after a DOM mutation,
+  // before frames have been reconstructed, and UpdateGlyphPositioning
+  // will be called with out-of-date frames.  This occurs when the
+  // <text> element is being filtered, as the InvalidateBounds()
+  // call needs to call in to GetBBoxContribution() to determine the
+  // filtered region, and that needs to iterate over the text frames.
+  // We would flush frame construction, but that needs to be done
+  // inside a script runner.
+  //
+  // Much of the time, this will perform the GlyphMetricsUpdater
+  // operations immediately.
+  if (mGlyphMetricsUpdater) {
+    return;
+  }
+  mGlyphMetricsUpdater = new GlyphMetricsUpdater(this);
+  nsContentUtils::AddScriptRunner(mGlyphMetricsUpdater.get());
 }
 
 void

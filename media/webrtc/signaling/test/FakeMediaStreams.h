@@ -23,6 +23,8 @@
 #include "nsISupportsImpl.h"
 #include "nsIDOMMediaStream.h"
 
+class nsIDOMWindow;
+
 namespace mozilla {
    class MediaStreamGraph;
    class MediaSegment;
@@ -174,26 +176,25 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
 };
 
 
-class Fake_nsDOMMediaStream : public nsIDOMMediaStream
+class Fake_DOMMediaStream : public nsIDOMMediaStream
 {
 public:
-  Fake_nsDOMMediaStream() : mMediaStream(new Fake_MediaStream()) {}
-  Fake_nsDOMMediaStream(Fake_MediaStream *stream) :
+  Fake_DOMMediaStream() : mMediaStream(new Fake_MediaStream()) {}
+  Fake_DOMMediaStream(Fake_MediaStream *stream) :
       mMediaStream(stream) {}
 
-  virtual ~Fake_nsDOMMediaStream() {
+  virtual ~Fake_DOMMediaStream() {
     // Note: memory leak
     mMediaStream->Stop();
   }
 
-
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMEDIASTREAM
 
-  static already_AddRefed<Fake_nsDOMMediaStream> CreateSourceStream(uint32_t aHintContents) {
+  static already_AddRefed<Fake_DOMMediaStream>
+  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents) {
     Fake_SourceMediaStream *source = new Fake_SourceMediaStream();
 
-    Fake_nsDOMMediaStream *ds = new Fake_nsDOMMediaStream(source);
+    Fake_DOMMediaStream *ds = new Fake_DOMMediaStream(source);
     ds->SetHintContents(aHintContents);
     ds->AddRef();
 
@@ -266,12 +267,11 @@ class Fake_VideoStreamSource : public Fake_MediaStreamBase {
 };
 
 
-typedef Fake_nsDOMMediaStream nsDOMMediaStream;
-
 namespace mozilla {
 typedef Fake_MediaStream MediaStream;
 typedef Fake_SourceMediaStream SourceMediaStream;
 typedef Fake_MediaStreamListener MediaStreamListener;
+typedef Fake_DOMMediaStream DOMMediaStream;
 }
 
 #endif

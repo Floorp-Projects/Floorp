@@ -11,7 +11,6 @@
 #include "RootAccessible.h"
 
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIDOMWindow.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -82,14 +81,13 @@ nsAccessNode::Shutdown()
 RootAccessible*
 nsAccessNode::RootAccessible() const
 {
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsCoreUtils::GetDocShellTreeItemFor(GetNode());
-  NS_ASSERTION(docShellTreeItem, "No docshell tree item for mContent");
-  if (!docShellTreeItem) {
+  nsCOMPtr<nsIDocShell> docShell = nsCoreUtils::GetDocShellFor(GetNode());
+  NS_ASSERTION(docShell, "No docshell for mContent");
+  if (!docShell) {
     return nullptr;
   }
   nsCOMPtr<nsIDocShellTreeItem> root;
-  docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
+  docShell->GetRootTreeItem(getter_AddRefs(root));
   NS_ASSERTION(root, "No root content tree item");
   if (!root) {
     return nullptr;

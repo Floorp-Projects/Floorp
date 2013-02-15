@@ -8,6 +8,11 @@ var gPluginHandler = {
   PLUGIN_SCRIPTED_STATE_FIRED: 1,
   PLUGIN_SCRIPTED_STATE_DONE: 2,
 
+  getPluginUI: function (plugin, className) {
+    return plugin.ownerDocument.
+           getAnonymousElementByAttribute(plugin, "class", className);
+  },
+
 #ifdef MOZ_CRASHREPORTER
   get CrashSubmit() {
     delete this.CrashSubmit;
@@ -304,10 +309,19 @@ var gPluginHandler = {
     let browser = gBrowser.getBrowserForDocument(objLoadingContent.ownerDocument.defaultView.top.document);
     let pluginPermission = Services.perms.testPermission(browser.currentURI, permissionString);
 
+    let isFallbackTypeValid =
+      objLoadingContent.pluginFallbackType >= Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY &&
+      objLoadingContent.pluginFallbackType <= Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE;
+
+    if (objLoadingContent.pluginFallbackType == Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW) {
+      // checking if play preview is subject to CTP rules
+      let playPreviewInfo = pluginHost.getPlayPreviewInfo(objLoadingContent.actualType);
+      isFallbackTypeValid = !playPreviewInfo.ignoreCTP;
+    }
+
     return !objLoadingContent.activated &&
            pluginPermission != Ci.nsIPermissionManager.DENY_ACTION &&
-           objLoadingContent.pluginFallbackType >= Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY &&
-           objLoadingContent.pluginFallbackType <= Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE;
+           isFallbackTypeValid;
   },
 
   activatePlugins: function PH_activatePlugins(aContentWindow) {
@@ -400,11 +414,16 @@ var gPluginHandler = {
   },
 
 #ifdef MOZ_CRASHREPORTER
-  // Callback for user clicking "submit a report" link
-  submitReport : function(pluginDumpID, browserDumpID) {
-    // The crash reporter wants a DOM element it can append an IFRAME to,
-    // which it uses to submit a form. Let's just give it gBrowser.
-    this.CrashSubmit.submit(pluginDumpID);
+  submitReport: function submitReport(pluginDumpID, browserDumpID, plugin) {
+    let keyVals = {};
+    if (plugin) {
+      let userComment = this.getPluginUI(plugin, "submitComment").value.trim();
+      if (userComment)
+        keyVals.PluginUserComment = userComment;
+      if (this.getPluginUI(plugin, "submitURLOptIn").checked)
+        keyVals.PluginContentURL = plugin.ownerDocument.URL;
+    }
+    this.CrashSubmit.submit(pluginDumpID, { extraExtraKeyVals: keyVals });
     if (browserDumpID)
       this.CrashSubmit.submit(browserDumpID);
   },
@@ -472,6 +491,21 @@ var gPluginHandler = {
 
   _handlePlayPreviewEvent: function PH_handlePlayPreviewEvent(aPlugin) {
     let doc = aPlugin.ownerDocument;
+    let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
+    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    let pluginInfo = this._getPluginInfo(aPlugin);
+    let playPreviewInfo = pluginHost.getPlayPreviewInfo(pluginInfo.mimetype);
+
+    if (!playPreviewInfo.ignoreCTP) {
+      // if click-to-play rules used, play plugin at once if plugins were
+      // activated for this window
+      if (browser._clickToPlayAllPluginsActivated ||
+          browser._clickToPlayPluginsActivated.get(pluginInfo.pluginName)) {
+        objLoadingContent.playPlugin();
+        return;
+      }
+    }
+
     let previewContent = doc.getAnonymousElementByAttribute(aPlugin, "class", "previewPluginContent");
     let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
     if (!iframe) {
@@ -483,9 +517,7 @@ var gPluginHandler = {
       // Force a style flush, so that we ensure our binding is attached.
       aPlugin.clientTop;
     }
-    let pluginInfo = this._getPluginInfo(aPlugin);
-    let playPreviewUri = "data:application/x-moz-playpreview;," + pluginInfo.mimetype;
-    iframe.src = playPreviewUri;
+    iframe.src = playPreviewInfo.redirectURL;
 
     // MozPlayPlugin event can be dispatched from the extension chrome
     // code to replace the preview content with the native plugin
@@ -503,6 +535,10 @@ var gPluginHandler = {
       if (iframe)
         previewContent.removeChild(iframe);
     }, true);
+
+    if (!playPreviewInfo.ignoreCTP) {
+      gPluginHandler._showClickToPlayNotification(browser);
+    }
   },
 
   reshowClickToPlayNotification: function PH_reshowClickToPlayNotification() {
@@ -911,11 +947,16 @@ var gPluginHandler = {
     }
     else { // doPrompt
       status = "please";
-      // XXX can we make the link target actually be blank?
-      let pleaseLink = doc.getAnonymousElementByAttribute(
-                            plugin, "class", "pleaseSubmitLink");
-      this.addLinkClickCallback(pleaseLink, "submitReport",
-                                pluginDumpID, browserDumpID);
+      this.getPluginUI(plugin, "submitButton").addEventListener("click",
+        function (event) {
+          if (event.button != 0 || !event.isTrusted)
+            return;
+          this.submitReport(pluginDumpID, browserDumpID, plugin);
+          pref.setBoolPref("", optInCB.checked);
+        }.bind(this));
+      let optInCB = this.getPluginUI(plugin, "submitURLOptIn");
+      let pref = Services.prefs.getBranch("dom.ipc.plugins.reportCrashURL");
+      optInCB.checked = pref.getBoolPref("");
     }
 
     // If we don't have a minidumpID, we can't (or didn't) submit anything.
@@ -926,8 +967,6 @@ var gPluginHandler = {
 
     statusDiv.setAttribute("status", status);
 
-    let bottomLinks = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgBottomLinks");
-    bottomLinks.style.display = "block";
     let helpIcon = doc.getAnonymousElementByAttribute(plugin, "class", "helpIcon");
     this.addLinkClickCallback(helpIcon, "openHelpPage");
 
@@ -964,7 +1003,7 @@ var gPluginHandler = {
     }
 #endif
 
-    let crashText = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgCrashed");
+    let crashText = doc.getAnonymousElementByAttribute(plugin, "class", "msgCrashedText");
     crashText.textContent = messageString;
 
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
@@ -974,21 +1013,32 @@ var gPluginHandler = {
 
     let notificationBox = gBrowser.getNotificationBox(browser);
 
+    let isShowing = true;
+
     // Is the <object>'s size too small to hold what we want to show?
     if (this.isTooSmall(plugin, overlay)) {
-        // Hide the overlay's contents. Use visibility style, so that it
-        // doesn't collapse down to 0x0.
+      // First try hiding the crash report submission UI.
+      statusDiv.removeAttribute("status");
+
+      if (this.isTooSmall(plugin, overlay)) {
+        // Hide the overlay's contents. Use visibility style, so that it doesn't
+        // collapse down to 0x0.
         overlay.style.visibility = "hidden";
-        // If another plugin on the page was large enough to show our UI, we
-        // don't want to show a notification bar.
-        if (!doc.mozNoPluginCrashedNotification)
-          showNotificationBar(pluginDumpID, browserDumpID);
+        isShowing = false;
+      }
+    }
+
+    if (isShowing) {
+      // If a previous plugin on the page was too small and resulted in adding a
+      // notification bar, then remove it because this plugin instance it big
+      // enough to serve as in-content notification.
+      hideNotificationBar();
+      doc.mozNoPluginCrashedNotification = true;
     } else {
-        // If a previous plugin on the page was too small and resulted in
-        // adding a notification bar, then remove it because this plugin
-        // instance it big enough to serve as in-content notification.
-        hideNotificationBar();
-        doc.mozNoPluginCrashedNotification = true;
+      // If another plugin on the page was large enough to show our UI, we don't
+      // want to show a notification bar.
+      if (!doc.mozNoPluginCrashedNotification)
+        showNotificationBar(pluginDumpID, browserDumpID);
     }
 
     function hideNotificationBar() {
