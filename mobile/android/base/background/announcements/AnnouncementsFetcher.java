@@ -55,12 +55,57 @@ public class AnnouncementsFetcher {
     return GlobalConstants.ANDROID_CPU_ARCH;
   }
 
-  protected static int getIdleDays(final long lastLaunch) {
-    if (lastLaunch == 0) {
+  /**
+   * Return the number of days that we've been idle, assuming that we have a
+   * sane last launch time and the current time is within range. If no sane idle
+   * time can be returned, we return -1.
+   *
+   * @param lastLaunch
+   *          Time at which the browser was last launched, in milliseconds since epoch.
+   * @param now
+   *          Milliseconds since epoch for which idle time should be calculated.
+   * @return number of idle days, or -1 if out of range.
+   */
+  protected static int getIdleDays(final long lastLaunch, final long now) {
+    if (lastLaunch <= 0) {
       return -1;
     }
-    final long idleMillis = System.currentTimeMillis() - lastLaunch;
-    return (int) (idleMillis / MILLISECONDS_PER_DAY);
+
+    if (now < GlobalConstants.BUILD_TIMESTAMP) {
+      Logger.warn(LOG_TAG, "Current time " + now + " earlier than build date. Not calculating idle.");
+      return -1;
+    }
+
+    if (now < lastLaunch) {
+      Logger.warn(LOG_TAG, "Current time " + now + " earlier than last launch! Not calculating idle.");
+      return -1;
+    }
+
+    final long idleMillis = now - lastLaunch;
+    final int idleDays = (int) (idleMillis / MILLISECONDS_PER_DAY);
+
+    if (idleDays > AnnouncementsConstants.MAX_SANE_IDLE_DAYS) {
+      Logger.warn(LOG_TAG, "Idle from " + lastLaunch + " until " + now +
+                           ", which is insane. Not calculating idle.");
+      return -1;
+    }
+
+    return idleDays;
+  }
+
+  /**
+   * Return the number of days that we've been idle, assuming that we have a
+   * sane last launch time and the current time is within range. If no sane idle
+   * time can be returned, we return -1.
+   * The current time will be calculated from {@link System#currentTimeMillis()}.
+   *
+   * @param lastLaunch
+   *          Unix timestamp at which the browser was last launched.
+   * @return number of idle days, or -1 if out of range.
+   */
+  protected static int getIdleDays(final long lastLaunch) {
+    final long now = System.currentTimeMillis();
+    return getIdleDays(lastLaunch, now);
   }
 
   public static void fetchAnnouncements(URI uri, AnnouncementsFetchDelegate delegate) {

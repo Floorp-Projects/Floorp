@@ -505,7 +505,7 @@ SpecialPowersAPI.prototype = {
     if (aExpectingProcessCrash) {
       var message = {
         op: "delete-crash-dump-files",
-        filenames: this._encounteredCrashDumpFiles 
+        filenames: this._encounteredCrashDumpFiles
       };
       if (!this._sendSyncMessage("SPProcessCrashService", message)[0]) {
         success = false;
@@ -596,7 +596,7 @@ SpecialPowersAPI.prototype = {
           if (aPref.length == 3) {
             prefType = "COMPLEX";
           } else if (aPref.length == 2) {
-            if (typeof(prefValue) == "boolean") 
+            if (typeof(prefValue) == "boolean")
               prefType = "BOOL";
             else if (typeof(prefValue) == "number")
               prefType = "INT";
@@ -657,7 +657,7 @@ SpecialPowersAPI.prototype = {
         }
         content.window.setTimeout(delayAgain, 0);
       }
-      let cb = callback ? delayedCallback : null; 
+      let cb = callback ? delayedCallback : null;
       /* Each pop will have a valid block of preferences */
       this._pendingPrefs.push([this._prefEnvUndoStack.pop(), cb]);
       this._applyPrefs();
@@ -674,7 +674,7 @@ SpecialPowersAPI.prototype = {
   },
 
   /*
-    Iterate through one atomic set of pref actions and perform sets/clears as appropriate. 
+    Iterate through one atomic set of pref actions and perform sets/clears as appropriate.
     All actions performed must modify the relevant pref.
   */
   _applyPrefs: function() {
@@ -731,12 +731,12 @@ SpecialPowersAPI.prototype = {
                    .getService(Ci.nsIObserverService);
     obsvc.removeObserver(obs, notification);
   },
-   
+
   can_QI: function(obj) {
     return obj.QueryInterface !== undefined;
   },
   do_QueryInterface: function(obj, iface) {
-    return obj.QueryInterface(Ci[iface]); 
+    return obj.QueryInterface(Ci[iface]);
   },
 
   call_Instanceof: function (obj1, obj2) {
@@ -1036,7 +1036,7 @@ SpecialPowersAPI.prototype = {
     var serv = Cc["@mozilla.org/dom/dom-request-service;1"].
       getService(Ci.nsIDOMRequestService);
     var res = { __exposedProps__: {} };
-    var props = ["createRequest", "fireError", "fireSuccess"];
+    var props = ["createRequest", "createCursor", "fireError", "fireSuccess", "fireDone"];
     for (i in props) {
       let prop = props[i];
       res[prop] = function() { return serv[prop].apply(serv, arguments) };
@@ -1125,8 +1125,8 @@ SpecialPowersAPI.prototype = {
   focus: function(window) {
     window.focus();
   },
-  
-  getClipboardData: function(flavor) {  
+
+  getClipboardData: function(flavor) {
     if (this._cb == null)
       this._cb = Components.classes["@mozilla.org/widget/clipboard;1"].
                             getService(Components.interfaces.nsIClipboard);
@@ -1144,7 +1144,7 @@ SpecialPowersAPI.prototype = {
     data = data.value || null;
     if (data == null)
       return "";
-      
+
     return data.QueryInterface(Components.interfaces.nsISupportsString).data;
   },
 
@@ -1162,12 +1162,12 @@ SpecialPowersAPI.prototype = {
     return this._cb.supportsSelectionClipboard();
   },
 
-  swapFactoryRegistration: function(cid, contractID, newFactory, oldFactory) {  
+  swapFactoryRegistration: function(cid, contractID, newFactory, oldFactory) {
     var componentRegistrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
     var unregisterFactory = newFactory;
     var registerFactory = oldFactory;
-    
+
     if (cid == null) {
       if (contractID != null) {
         cid = componentRegistrar.contractIDToCID(contractID);
@@ -1190,12 +1190,12 @@ SpecialPowersAPI.prototype = {
                                        registerFactory);
     return {'cid':cid, 'originalFactory':oldFactory};
   },
-  
+
   _getElement: function(aWindow, id) {
     return ((typeof(id) == "string") ?
-        aWindow.document.getElementById(id) : id); 
+        aWindow.document.getElementById(id) : id);
   },
-  
+
   dispatchEvent: function(aWindow, target, event) {
     var el = this._getElement(aWindow, target);
     return el.dispatchEvent(event);
@@ -1215,7 +1215,7 @@ SpecialPowersAPI.prototype = {
                                   .frameLoader
                                   .messageManager);
   },
-  
+
   setFullscreenAllowed: function(document) {
     var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
     pm.addFromPrincipal(document.nodePrincipal, "fullscreen", Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -1223,7 +1223,7 @@ SpecialPowersAPI.prototype = {
                    .getService(Ci.nsIObserverService);
     obsvc.notifyObservers(document, "fullscreen-approved", null);
   },
-  
+
   removeFullscreenAllowed: function(document) {
     var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
     pm.removeFromPrincipal(document.nodePrincipal, "fullscreen");
@@ -1244,7 +1244,7 @@ SpecialPowersAPI.prototype = {
       // It's a thing representing an app.
       let appsSvc = Cc["@mozilla.org/AppsService;1"]
                       .getService(Ci.nsIAppsService)
-      let app = appsSvc.getAppByManifestURL(arg.manifestURL); 
+      let app = appsSvc.getAppByManifestURL(arg.manifestURL);
 
       if (!app) {
         throw "No app for this manifest!";

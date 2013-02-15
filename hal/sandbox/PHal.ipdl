@@ -66,6 +66,7 @@ struct SwitchEvent {
 struct WakeLockInformation {
   uint32_t numLocks;
   uint32_t numHidden;
+  uint64_t[] lockingProcesses;
   nsString topic;
 };
 

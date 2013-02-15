@@ -5,11 +5,11 @@
 
 <Gecko.TabRow xmlns:android="http://schemas.android.com/apk/res/android"
               android:focusable="true"
+              android:nextFocusRight="@+id/close"
               android:id="@+id/info"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
               android:paddingLeft="12dip"
-              android:paddingRight="12dip"
               android:paddingTop="6dip"
               android:paddingBottom="6dip"
               android:background="@drawable/tab_row">
@@ -40,5 +40,14 @@
               android:singleLine="false"
               android:maxLines="4"
               android:duplicateParentState="true"/>
+
+    <ImageButton android:id="@+id/close"
+                 android:nextFocusLeft="@+id/info"
+                 android:layout_width="34dip"
+                 android:layout_height="fill_parent"
+                 android:background="@drawable/action_bar_button"
+                 android:scaleType="center"
+                 android:contentDescription="@string/close_tab"
+                 android:src="@drawable/tab_close"/>
 
 </Gecko.TabRow>

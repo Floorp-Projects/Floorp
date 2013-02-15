@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
@@ -14,7 +13,7 @@ const { ns } = require("./core/namespace");
 const { validateOptions, getTypeOf } = require("./deprecated/api-utils");
 const { URL } = require("./url");
 const { WindowTracker, browserWindowIterator } = require("./deprecated/window-utils");
-const { isBrowser } = require("./window/utils");
+const { isBrowser, getInnerId } = require("./window/utils");
 const { Ci } = require("chrome");
 const { MatchPattern } = require("./page-mod/match-pattern");
 const { Worker } = require("./content/worker");
@@ -325,11 +324,11 @@ function hasMatchingContext(contexts, popupNode) {
 }
 
 // Gets the matched context from any worker for this item. If there is no worker
-// or no matched context then returns null.
+// or no matched context then returns false.
 function getCurrentWorkerContext(item, popupNode) {
   let worker = getItemWorkerForWindow(item, popupNode.ownerDocument.defaultView);
-  if (!worker)
-    return null;
+  if (!worker || !worker.anyContextListeners())
+    return true;
   return worker.getMatchedContext(popupNode);
 }
 
@@ -346,18 +345,10 @@ function isItemVisible(item, popupNode, defaultVisibility) {
     return false;
 
   let context = getCurrentWorkerContext(item, popupNode);
-  if (typeof(context) === "string")
+  if (typeof(context) === "string" && context != "")
     item.label = context;
 
-  return context !== false;
-}
-
-// Destroys any item's content scripts workers associated with the given window
-function destroyItemWorkerForWindow(item, window) {
-  let worker = internal(item).workerMap.get(window);
-  if (worker)
-    worker.destroy();
-  internal(item).workerMap.delete(window);
+  return !!context;
 }
 
 // Gets the item's content script worker for a window, creating one if necessary
@@ -367,7 +358,8 @@ function getItemWorkerForWindow(item, window) {
   if (!item.contentScript && !item.contentScriptFile)
     return null;
 
-  let worker = internal(item).workerMap.get(window);
+  let id = getInnerId(window);
+  let worker = internal(item).workerMap.get(id);
 
   if (worker)
     return worker;
@@ -380,11 +372,11 @@ function getItemWorkerForWindow(item, window) {
       emit(item, "message", msg);
     },
     onDetach: function() {
-      destroyItemWorkerForWindow(item, window);
+      internal(item).workerMap.delete(id);
     }
   });
 
-  internal(item).workerMap.set(window, worker);
+  internal(item).workerMap.set(id, worker);
 
   return worker;
 }
@@ -463,8 +455,8 @@ let LabelledItem = Class({
   },
 
   destroy: function destroy() {
-    for (let [window] of internal(this).workerMap)
-      destroyItemWorkerForWindow(this, window);
+    for (let [,worker] of internal(this).workerMap)
+      worker.destroy();
 
     BaseItem.prototype.destroy.call(this);
   },
@@ -645,6 +637,12 @@ when(function() {
 // App specific UI code lives here, it should handle populating the context
 // menu and passing clicks etc. through to the items.
 
+function countVisibleItems(nodes) {
+  return Array.reduce(nodes, function(sum, node) {
+    return node.hidden ? sum : sum + 1;
+  }, 0);
+}
+
 let MenuWrapper = Class({
   initialize: function initialize(winWrapper, items, contextMenu) {
     this.winWrapper = winWrapper;
@@ -654,11 +652,17 @@ let MenuWrapper = Class({
     this.populated = false;
     this.menuMap = new Map();
 
-    this.contextMenu.addEventListener("popupshowing", this, false);
+    // updateItemVisibilities will run first, updateOverflowState will run after
+    // all other instances of this module have run updateItemVisibilities
+    this._updateItemVisibilities = this.updateItemVisibilities.bind(this);
+    this.contextMenu.addEventListener("popupshowing", this._updateItemVisibilities, true);
+    this._updateOverflowState = this.updateOverflowState.bind(this);
+    this.contextMenu.addEventListener("popupshowing", this._updateOverflowState, false);
   },
 
   destroy: function destroy() {
-    this.contextMenu.removeEventListener("popupshowing", this, false);
+    this.contextMenu.removeEventListener("popupshowing", this._updateOverflowState, false);
+    this.contextMenu.removeEventListener("popupshowing", this._updateItemVisibilities, true);
 
     if (!this.populated)
       return;
@@ -693,7 +697,7 @@ let MenuWrapper = Class({
   },
 
   get overflowItems() {
-    return this.contextMenu.querySelectorAll("." + OVERFLOW_ITEM_CLASS + " > ." + ITEM_CLASS);
+    return this.contextMenu.querySelectorAll("." + OVERFLOW_ITEM_CLASS);
   },
 
   getXULNodeForItem: function getXULNodeForItem(item) {
@@ -741,31 +745,11 @@ let MenuWrapper = Class({
 
     let menu = item.parentMenu;
     if (menu === this.items) {
+      // Insert into the overflow popup if it exists, otherwise the normal
+      // context menu
       menupopup = this.overflowPopup;
-
-      // If there isn't already an overflow menu then check if we need to
-      // create one, otherwise use the main context menu
-      if (!menupopup) {
+      if (!menupopup)
         menupopup = this.contextMenu;
-        let toplevel = this.topLevelItems;
-
-        if (toplevel.length >= MenuManager.overflowThreshold) {
-          // Create the overflow menu and move everything there
-          let overflowMenu = this.window.document.createElement("menu");
-          overflowMenu.setAttribute("class", OVERFLOW_MENU_CLASS);
-          overflowMenu.setAttribute("label", OVERFLOW_MENU_LABEL);
-          this.contextMenu.insertBefore(overflowMenu, this.separator.nextSibling);
-
-          menupopup = this.window.document.createElement("menupopup");
-          menupopup.setAttribute("class", OVERFLOW_POPUP_CLASS);
-          overflowMenu.appendChild(menupopup);
-
-          for (let xulNode of toplevel) {
-            menupopup.appendChild(xulNode);
-            this.updateXULClass(xulNode);
-          }
-        }
-      }
     }
     else {
       let xulNode = this.getXULNodeForItem(menu);
@@ -839,7 +823,7 @@ let MenuWrapper = Class({
         xulNode.setAttribute("value", item.data);
 
       let self = this;
-      xulNode.addEventListener("click", function(event) {
+      xulNode.addEventListener("command", function(event) {
         // Only care about clicks directly on this item
         if (event.target !== xulNode)
           return;
@@ -932,30 +916,18 @@ let MenuWrapper = Class({
       }
     }
     else if (parent == this.overflowPopup) {
+      // If there are no more items then remove the overflow menu and separator
       if (parent.childNodes.length == 0) {
-        // It's possible that this add-on had all the items in the overflow
-        // menu and they're now all gone, so remove the separator and overflow
-        // menu directly
-
         let separator = this.separator;
         separator.parentNode.removeChild(separator);
-        this.contextMenu.removeChild(parent.parentNode);
-      }
-      else if (parent.childNodes.length <= MenuManager.overflowThreshold) {
-        // Otherwise if the overflow menu is empty enough move everything in
-        // the overflow menu back to top level and remove the overflow menu
-
-        while (parent.firstChild) {
-          let node = parent.firstChild;
-          this.contextMenu.insertBefore(node, parent.parentNode);
-          this.updateXULClass(node);
-        }
         this.contextMenu.removeChild(parent.parentNode);
       }
     }
   },
 
-  handleEvent: function handleEvent(event) {
+  // Recurses through all the items owned by this module and sets their hidden
+  // state
+  updateItemVisibilities: function updateItemVisibilities(event) {
     try {
       if (event.type != "popupshowing")
         return;
@@ -970,28 +942,77 @@ let MenuWrapper = Class({
         this.populate(this.items);
       }
 
-      let separator = this.separator;
-      let popup = this.overflowMenu;
-  
       let popupNode = event.target.triggerNode;
-      if (this.setVisibility(this.items, popupNode, PageContext().isCurrent(popupNode))) {
-        // Some of this instance's items are visible so make sure the separator
-        // and if necessary the overflow popup are visible
-        separator.hidden = false;
-        if (popup)
-          popup.hidden = false;
+      this.setVisibility(this.items, popupNode, PageContext().isCurrent(popupNode));
+    }
+    catch (e) {
+      console.exception(e);
+    }
+  },
+
+  // Counts the number of visible items across all modules and makes sure they
+  // are in the right place between the top level context menu and the overflow
+  // menu
+  updateOverflowState: function updateOverflowState(event) {
+    try {
+      if (event.type != "popupshowing")
+        return;
+      if (event.target != this.contextMenu)
+        return;
+
+      // The main items will be in either the top level context menu or the
+      // overflow menu at this point. Count the visible ones and if they are in
+      // the wrong place move them
+      let toplevel = this.topLevelItems;
+      let overflow = this.overflowItems;
+      let visibleCount = countVisibleItems(toplevel) +
+                         countVisibleItems(overflow);
+
+      if (visibleCount == 0) {
+        let separator = this.separator;
+        if (separator)
+          separator.hidden = true;
+        let overflowMenu = this.overflowMenu;
+        if (overflowMenu)
+          overflowMenu.hidden = true;
+      }
+      else if (visibleCount > MenuManager.overflowThreshold) {
+        this.separator.hidden = false;
+        let overflowPopup = this.overflowPopup;
+        if (overflowPopup)
+          overflowPopup.parentNode.hidden = false;
+
+        if (toplevel.length > 0) {
+          // The overflow menu shouldn't exist here but let's play it safe
+          if (!overflowPopup) {
+            let overflowMenu = this.window.document.createElement("menu");
+            overflowMenu.setAttribute("class", OVERFLOW_MENU_CLASS);
+            overflowMenu.setAttribute("label", OVERFLOW_MENU_LABEL);
+            this.contextMenu.insertBefore(overflowMenu, this.separator.nextSibling);
+
+            overflowPopup = this.window.document.createElement("menupopup");
+            overflowPopup.setAttribute("class", OVERFLOW_POPUP_CLASS);
+            overflowMenu.appendChild(overflowPopup);
+          }
+
+          for (let xulNode of toplevel) {
+            overflowPopup.appendChild(xulNode);
+            this.updateXULClass(xulNode);
+          }
+        }
       }
       else {
-        // We need to test whether any other instance has visible items.
-        // Get all the highest level items and see if any are visible.
-        let anyVisible = (Array.some(this.topLevelItems, function(item) !item.hidden)) ||
-                         (Array.some(this.overflowItems, function(item) !item.hidden));
-  
-        // If any were visible make sure the separator and if necessary the
-        // overflow popup are visible, otherwise hide them
-        separator.hidden = !anyVisible;
-        if (popup)
-          popup.hidden = !anyVisible;
+        this.separator.hidden = false;
+
+        if (overflow.length > 0) {
+          // Move all the overflow nodes out of the overflow menu and position
+          // them immediately before it
+          for (let xulNode of overflow) {
+            this.contextMenu.insertBefore(xulNode, xulNode.parentNode.parentNode);
+            this.updateXULClass(xulNode);
+          }
+          this.contextMenu.removeChild(this.overflowMenu);
+        }
       }
     }
     catch (e) {

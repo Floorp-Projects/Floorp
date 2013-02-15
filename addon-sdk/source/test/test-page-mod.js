@@ -1029,3 +1029,4 @@ if (require("sdk/system/xul-app").is("Fennec")) {
     }
   }
 }
+
