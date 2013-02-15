@@ -102,7 +102,6 @@ CPPSRCS		= \
 		nsHTMLInputElement.cpp \
 		HTMLLIElement.cpp \
 		HTMLLabelElement.cpp \
-		nsHTMLLegendElement.cpp \
 		HTMLLegendElement.cpp \
 		HTMLLinkElement.cpp \
 		HTMLMapElement.cpp \
