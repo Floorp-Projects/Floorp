@@ -1670,7 +1670,7 @@ Accessible::Value(nsString& aValue)
     }
 
     if (option)
-      nsTextEquivUtils::GetNameFromSubtree(option, aValue);
+      nsTextEquivUtils::GetTextEquivFromSubtree(option, aValue);
   }
 }
 

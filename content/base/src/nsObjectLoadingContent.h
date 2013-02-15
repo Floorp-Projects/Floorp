@@ -302,11 +302,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     bool ShouldPlay(FallbackType &aReason);
 
     /**
-     * If the object should display preview content for the current mContentType
-     */
-    bool ShouldPreview();
-
-    /**
      * Helper to check if our current URI passes policy
      *
      * @param aContentPolicy [out] The result of the content policy decision

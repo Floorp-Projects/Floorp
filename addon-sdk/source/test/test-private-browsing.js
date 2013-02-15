@@ -28,3 +28,4 @@ exports.testIsActiveDefault = function(test) {
   test.assertEqual(pb.isActive, false,
                    'pb.isActive returns false when private browsing isn\'t supported');
 };
+

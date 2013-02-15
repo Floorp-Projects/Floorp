@@ -368,6 +368,9 @@ CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHan
 bool
 SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
                  JSBool strict);
+bool
+SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
+                 JSBool strict, HandleScript script, jsbytecode *pc);
 
 bool
 AddValues(JSContext *cx, HandleScript script, jsbytecode *pc,

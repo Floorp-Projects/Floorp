@@ -53,7 +53,6 @@
 #include "nsVideoFrame.h"
 #include "BasicLayers.h"
 #include <limits>
-#include "nsIDocShellTreeItem.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
@@ -62,7 +61,6 @@
 #include "nsURIHashKey.h"
 #include "nsJSUtils.h"
 #include "MediaStreamGraph.h"
-#include "nsDOMMediaStream.h"
 #include "nsIScriptError.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "MediaMetadataManager.h"
@@ -498,7 +496,7 @@ nsHTMLMediaElement::SetMozSrcObject(JSContext* aCtx, const jsval & aParams)
     stream = do_QueryInterface(nsContentUtils::XPConnect()->
         GetNativeOfWrapper(aCtx, JSVAL_TO_OBJECT(aParams)));
     if (stream) {
-      mSrcAttrStream = static_cast<nsDOMMediaStream*>(stream.get());
+      mSrcAttrStream = static_cast<DOMMediaStream*>(stream.get());
       Load();
       return NS_OK;
     }
@@ -1113,7 +1111,7 @@ nsresult nsHTMLMediaElement::LoadResource()
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
       return rv;
     }
-    SetupSrcMediaStreamPlayback(static_cast<nsDOMMediaStream*>(stream.get()));
+    SetupSrcMediaStreamPlayback(static_cast<DOMMediaStream*>(stream.get()));
     return NS_OK;
   }
 
@@ -1601,11 +1599,16 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
   return NS_OK;
 }
 
-already_AddRefed<nsDOMMediaStream>
+already_AddRefed<DOMMediaStream>
 nsHTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
 {
+  nsIDOMWindow* window = OwnerDoc()->GetInnerWindow();
+  if (!window) {
+    return nullptr;
+  }
+
   OutputMediaStream* out = mOutputStreams.AppendElement();
-  out->mStream = nsDOMMediaStream::CreateTrackUnionStream();
+  out->mStream = DOMMediaStream::CreateTrackUnionStream(window);
   nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
   out->mStream->CombineWithPrincipal(principal);
   out->mFinishWhenEnded = aFinishWhenEnded;
@@ -1620,19 +1623,25 @@ nsHTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
     mDecoder->AddOutputStream(
         out->mStream->GetStream()->AsProcessedStream(), aFinishWhenEnded);
   }
-  nsRefPtr<nsDOMMediaStream> result = out->mStream;
+  nsRefPtr<DOMMediaStream> result = out->mStream;
   return result.forget();
 }
 
 NS_IMETHODIMP nsHTMLMediaElement::MozCaptureStream(nsIDOMMediaStream** aStream)
 {
   *aStream = CaptureStreamInternal(false).get();
+  if (!*aStream) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLMediaElement::MozCaptureStreamUntilEnded(nsIDOMMediaStream** aStream)
 {
   *aStream = CaptureStreamInternal(true).get();
+  if (!*aStream) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
@@ -2516,7 +2525,7 @@ private:
   bool mDidHaveCurrentData;
 };
 
-void nsHTMLMediaElement::SetupSrcMediaStreamPlayback(nsDOMMediaStream* aStream)
+void nsHTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
 {
   NS_ASSERTION(!mSrcStream && !mSrcStreamListener, "Should have been ended already");
 

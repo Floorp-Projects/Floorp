@@ -3582,6 +3582,18 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 }
 
 bool
+js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
+                     JSBool strict, HandleScript script, jsbytecode *pc)
+{
+    JS_ASSERT(pc);
+    RootedId id(cx);
+    RootedValue indexval(cx, index);
+    if (!FetchElementId(cx, obj, indexval, &id, &indexval))
+        return false;
+    return SetObjectElementOperation(cx, obj, id, value, strict, script, pc);
+}
+
+bool
 js::AddValues(JSContext *cx, HandleScript script, jsbytecode *pc,
               MutableHandleValue lhs, MutableHandleValue rhs,
               Value *res)

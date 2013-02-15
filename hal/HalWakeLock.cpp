@@ -7,6 +7,7 @@
 #include "mozilla/HalWakeLock.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/ContentParent.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
@@ -44,6 +45,7 @@ struct LockCount {
   {}
   uint32_t numLocks;
   uint32_t numHidden;
+  nsTArray<uint64_t> processes;
 };
 typedef nsDataHashtable<nsUint64HashKey, LockCount> ProcessLockTable;
 typedef nsClassHashtable<nsStringHashKey, ProcessLockTable> LockTable;
@@ -61,6 +63,11 @@ CountWakeLocks(const uint64_t& aKey, LockCount aCount, void* aUserArg)
   LockCount* totalCount = static_cast<LockCount*>(aUserArg);
   totalCount->numLocks += aCount.numLocks;
   totalCount->numHidden += aCount.numHidden;
+
+  // This is linear in the number of processes, but that should be small.
+  if (!totalCount->processes.Contains(aKey)) {
+    totalCount->processes.AppendElement(aKey);
+  }
 
   return PL_DHASH_NEXT;
 }
@@ -173,12 +180,13 @@ DisableWakeLockNotifications()
 }
 
 void
-ModifyWakeLockInternal(const nsAString& aTopic,
-                       hal::WakeLockControl aLockAdjust,
-                       hal::WakeLockControl aHiddenAdjust,
-                       uint64_t aProcessID)
+ModifyWakeLock(const nsAString& aTopic,
+               hal::WakeLockControl aLockAdjust,
+               hal::WakeLockControl aHiddenAdjust,
+               uint64_t aProcessID)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aProcessID != CONTENT_PROCESS_ID_UNKNOWN);
 
   if (sIsShuttingDown) {
     return;
@@ -227,9 +235,7 @@ ModifyWakeLockInternal(const nsAString& aTopic,
 
   if (sActiveListeners && oldState != newState) {
     WakeLockInformation info;
-    info.numLocks() = totalCount.numLocks;
-    info.numHidden() = totalCount.numHidden;
-    info.topic() = aTopic;
+    GetWakeLockInfo(aTopic, &info);
     NotifyWakeLockChange(info);
   }
 }
@@ -256,6 +262,7 @@ GetWakeLockInfo(const nsAString& aTopic, WakeLockInformation* aWakeLockInfo)
   table->EnumerateRead(CountWakeLocks, &totalCount);
   aWakeLockInfo->numLocks() = totalCount.numLocks;
   aWakeLockInfo->numHidden() = totalCount.numHidden;
+  aWakeLockInfo->lockingProcesses() = totalCount.processes;
   aWakeLockInfo->topic() = aTopic;
 }
 

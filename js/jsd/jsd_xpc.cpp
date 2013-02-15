@@ -2025,10 +2025,10 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
     const jschar *char_bytes = reinterpret_cast<const jschar *>(h.get());
 
     JSExceptionState *estate = 0;
-    jsval jv;
 
     JSContext *cx = JSD_GetJSContext (mCx, mThreadState);
 
+    js::RootedValue jv(cx);
     JSAutoRequest ar(cx);
 
     estate = JS_SaveExceptionState (cx);
@@ -2050,7 +2050,7 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
                                               line, &jv);
     if (!*_rval) {
         if (JS_IsExceptionPending(cx))
-            JS_GetPendingException (cx, &jv);
+            JS_GetPendingException (cx, jv.address());
         else
             jv = JSVAL_NULL;
     }

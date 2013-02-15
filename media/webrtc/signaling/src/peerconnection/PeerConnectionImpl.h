@@ -144,7 +144,8 @@ public:
     RTCConfiguration *aDst, JSContext* aCx);
   static nsresult ConvertConstraints(
     const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx);
-  static nsresult MakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aStream);
+  static nsresult MakeMediaStream(nsIDOMWindow* aWindow,
+                                  uint32_t aHint, nsIDOMMediaStream** aStream);
 
   Role GetRole() const {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();

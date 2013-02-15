@@ -109,13 +109,12 @@ abstract public class BrowserApp extends GeckoApp
                     final TabsPanel.Panel panel = tab.isPrivate()
                                                 ? TabsPanel.Panel.PRIVATE_TABS
                                                 : TabsPanel.Panel.NORMAL_TABS;
-                    if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel) {
-                        mMainHandler.post(new Runnable() {
-                            public void run() {
+                    mMainHandler.post(new Runnable() {
+                        public void run() {
+                            if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel)
                                 showTabs(panel);
-                            }
-                        });
-                    }
+                        }
+                    });
                 }
                 break;
             case LOAD_ERROR:

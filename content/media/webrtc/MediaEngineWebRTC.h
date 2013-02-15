@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMFile.h"
 #include "nsThreadUtils.h"
-#include "nsDOMMediaStream.h"
+#include "DOMMediaStream.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 

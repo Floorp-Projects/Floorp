@@ -31,6 +31,16 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
   [infallible] readonly attribute boolean reallyIsApp;
 
   /**
+   * This corresponds to the expecting-system-message attribute, which tells us
+   * whether we should expect that this frame will receive a system message once
+   * it starts up.
+   *
+   * It's the embedder's job to set this attribute on a frame.  Its presence
+   * might cause us to increase the priority of the frame's process.
+   */
+  [infallible] readonly attribute boolean isExpectingSystemMessage;
+
+  /**
    * Gets this frame's app manifest URL, if the frame really is an app frame.
    * Otherwise, returns the empty string.
    *

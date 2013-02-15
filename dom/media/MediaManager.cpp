@@ -257,14 +257,14 @@ MediaDevice::GetSource()
  * A subclass that we only use to stash internal pointers to MediaStreamGraph objects
  * that need to be cleaned up.
  */
-class nsDOMUserMediaStream : public nsDOMLocalMediaStream
+class nsDOMUserMediaStream : public DOMLocalMediaStream
 {
 public:
   static already_AddRefed<nsDOMUserMediaStream>
-  CreateTrackUnionStream(uint32_t aHintContents)
+  CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents)
   {
     nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream();
-    stream->InitTrackUnionStream(aHintContents);
+    stream->InitTrackUnionStream(aWindow, aHintContents);
     return stream.forget();
   }
 
@@ -280,12 +280,11 @@ public:
     }
   }
 
-  NS_IMETHODIMP Stop()
+  virtual void Stop()
   {
     if (mSourceStream) {
       mSourceStream->EndAllTrackAndFinish();
     }
-    return NS_OK;
   }
 
   // The actual MediaStream is a TrackUnionStream. But these resources need to be
@@ -332,21 +331,23 @@ public:
   Run()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+      (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
 
     // We're on main-thread, and the windowlist can only
     // be invalidated from the main-thread (see OnNavigation)
     StreamListeners* listeners = mManager->GetWindowListeners(mWindowID);
-    if (!listeners) {
+    if (!listeners || !window || !window->GetExtantDoc()) {
       // This window is no longer live.  mListener has already been removed
       return NS_OK;
     }
 
     // Create a media stream.
-    uint32_t hints = (mAudioSource ? nsDOMMediaStream::HINT_CONTENTS_AUDIO : 0);
-    hints |= (mVideoSource ? nsDOMMediaStream::HINT_CONTENTS_VIDEO : 0);
+    uint32_t hints = (mAudioSource ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0);
+    hints |= (mVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
     nsRefPtr<nsDOMUserMediaStream> trackunion =
-      nsDOMUserMediaStream::CreateTrackUnionStream(hints);
+      nsDOMUserMediaStream::CreateTrackUnionStream(window, hints);
     if (!trackunion) {
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
       LOG(("Returning error for getUserMedia() - no stream"));
@@ -364,11 +365,7 @@ public:
     trackunion->mSourceStream = stream;
     trackunion->mPort = port.forget();
 
-    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
-      (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
-    if (window && window->GetExtantDoc()) {
-      trackunion->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
-    }
+    trackunion->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
 
     // The listener was added at the begining in an inactive state.
     // Activate our listener. We'll call Start() on the source when get a callback

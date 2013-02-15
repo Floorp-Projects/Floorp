@@ -146,7 +146,7 @@ public:
 
 #ifdef SHOW_CONSOLE
     Log(L"SetSelection param count: %d", count);
-    for (int idx = 0; idx < count; idx++) {
+    for (DWORD idx = 0; idx < count; idx++) {
       IShellItem* item = NULL;
       if (SUCCEEDED(aArray->GetItemAt(idx, &item))) {
         LPWSTR str = NULL;

@@ -140,8 +140,11 @@ protected:
   DOMCameraPreview* mDOMPreview;
 };
 
-DOMCameraPreview::DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWidth, uint32_t aHeight, uint64_t aWindowId, uint32_t aFrameRate)
-  : nsDOMMediaStream()
+DOMCameraPreview::DOMCameraPreview(nsGlobalWindow* aWindow,
+                                   ICameraControl* aCameraControl,
+                                   uint32_t aWidth, uint32_t aHeight,
+                                   uint32_t aFrameRate)
+  : DOMMediaStream()
   , mState(STOPPED)
   , mWidth(aWidth)
   , mHeight(aHeight)
@@ -154,6 +157,7 @@ DOMCameraPreview::DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWid
   mImageContainer = LayerManager::CreateImageContainer();
   MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
   mStream = gm->CreateSourceStream(this);
+  mWindow = aWindow;
   mInput = GetStream()->AsSourceStream();
 
   mListener = new DOMCameraPreviewListener(this);
@@ -162,10 +166,8 @@ DOMCameraPreview::DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWid
   mInput->AddTrack(TRACK_VIDEO, mFramesPerSecond, 0, new VideoSegment());
   mInput->AdvanceKnownTracksTime(MEDIA_TIME_MAX);
 
-  nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
-     (nsGlobalWindow::GetInnerWindowWithId(aWindowId));
-  if (window && window->GetExtantDoc()) {
-    this->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
+  if (aWindow->GetExtantDoc()) {
+    CombineWithPrincipal(aWindow->GetExtantDoc()->NodePrincipal());
   }
 }
 

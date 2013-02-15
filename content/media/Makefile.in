@@ -26,6 +26,7 @@ EXPORTS = \
   AudioSegment.h \
   BufferMediaResource.h \
   DecoderTraits.h \
+  DOMMediaStream.h \
   FileBlockCache.h \
   MediaDecoderOwner.h \
   MediaResource.h \
@@ -35,7 +36,6 @@ EXPORTS = \
   MediaDecoder.h \
   MediaDecoderStateMachine.h \
   MediaDecoderReader.h \
-  nsDOMMediaStream.h \
   MediaCache.h \
   SharedBuffer.h \
   StreamBuffer.h \
@@ -53,6 +53,7 @@ CPPSRCS = \
   AudioNodeStream.cpp \
   AudioSegment.cpp \
   DecoderTraits.cpp \
+  DOMMediaStream.cpp \
   FileBlockCache.cpp \
   MediaResource.cpp \
   MediaStreamGraph.cpp \
@@ -60,7 +61,6 @@ CPPSRCS = \
   MediaDecoder.cpp \
   MediaDecoderStateMachine.cpp \
   MediaDecoderReader.cpp \
-  nsDOMMediaStream.cpp \
   MediaCache.cpp \
   StreamBuffer.cpp \
   VideoFrameContainer.cpp \
