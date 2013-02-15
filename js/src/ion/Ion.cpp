@@ -1814,7 +1814,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         AutoFlushInhibitor afi(cx->compartment->ionCompartment());
         // Single transition point from Interpreter to Ion.
-        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, /* evalScopeChain = */ NULL,
+        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, /* scopeChain = */ NULL,
               result.address());
     }
 
@@ -1949,7 +1949,7 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args)
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
     args.setActive();
     enter(jitcode, args.length() + 1, args.array() - 1, fp, calleeToken,
-          /* evalScopeChain = */ NULL, result.address());
+          /* scopeChain = */ NULL, result.address());
     args.setInactive();
 
     if (clearCallingIntoIon)

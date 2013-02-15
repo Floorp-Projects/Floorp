@@ -333,11 +333,11 @@ BaselineCompiler::initScopeChain()
             if (!callVM(HeavyweightFunPrologueInfo))
                 return false;
         }
-    } else if (script->isForEval()) {
-        // The scope chain is in R1.
+    } else {
+        // For global and eval scripts, the scope chain is in R1.
         masm.storePtr(R1.scratchReg(), frame.addressOfScopeChain());
 
-        if (script->strict) {
+        if (script->isForEval() && script->strict) {
             // Strict eval needs its own call object.
             prepareVMCall();
 
@@ -347,9 +347,6 @@ BaselineCompiler::initScopeChain()
             if (!callVM(StrictEvalPrologueInfo))
                 return false;
         }
-    } else {
-        // For global scripts, the scope chain is the global object.
-        masm.storePtr(ImmGCPtr(&script->global()), frame.addressOfScopeChain());
     }
 
     return true;

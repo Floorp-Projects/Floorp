@@ -22,7 +22,7 @@ using namespace js::ion;
 
 /* This method generates a trampoline on x64 for a c++ function with
  * the following signature:
- *   JSBool blah(void *code, int argc, Value *argv, JSObject *evalScopeChain,
+ *   JSBool blah(void *code, int argc, Value *argv, JSObject *scopeChain,
  *               Value *vp)
  *   ...using standard x64 fastcall calling convention
  */
@@ -38,11 +38,11 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 
 #if defined(_WIN64)
     const Operand token  = Operand(rbp, 16 + ShadowStackSpace);
-    const Operand evalScopeChain = Operand(rbp, 24 + ShadowStackSpace);
+    const Operand scopeChain = Operand(rbp, 24 + ShadowStackSpace);
     const Operand result = Operand(rbp, 32 + ShadowStackSpace);
 #else
     const Register token = IntArgReg4;
-    const Register evalScopeChain = IntArgReg5;
+    const Register scopeChain = IntArgReg5;
     const Operand result = Operand(rbp, 16 + ShadowStackSpace);
 #endif
 
@@ -139,7 +139,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 
     if (type == EnterJitBaseline) {
         JS_ASSERT(R1.scratchReg() != reg_code);
-        masm.movq(evalScopeChain, R1.scratchReg());
+        masm.movq(scopeChain, R1.scratchReg());
     }
 
     // Call function.
