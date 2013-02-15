@@ -1,114 +1,92 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=827843
--->
 <head>
-  <meta charset="utf-8">
-  <title>Bug 827843: Ensure that localDescription and remoteDescription are null after close</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827843">Make sure functions act correctly after close()</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-  <audio id="audioPCLocal" controls></audio>
-  <audio id="audioPCRemote" controls></audio>
-  <audio id="audioLocal" controls></audio>
-</div>
 <pre id="test">
 <script type="application/javascript">
   if (navigator.platform.startsWith("Win")) {
     SimpleTest.expectAssertions(0, 200);
   }
-  
-  var audioLocal;
-  var audioPCLocal;
-  var audioPCRemote;
 
-  var pcLocal;
-  var pcRemote;
+  createHTML({
+    bug: "827843",
+    title: "Ensure that localDescription and remoteDescription are null after close"
+  });
 
-  var test_data = {
-    pcLocal: [],
-    pcRemote: []
-  };
+  var steps = [
+    [
+      "CHECK_FOR_SANE_SDP",
+      function (test) {
+        // TODO: We might want to move those checks into the default chain
+        ok(test.pcLocal.localDescription,
+           "test.pcLocal.localDescription is not null");
+        is(test.pcLocal.localDescription.type, "offer",
+           "test.pcLocal.localDescription type is offer");
+        ok(test.pcLocal.localDescription.sdp.length > 10,
+           "test.pcLocal.localDescription body length is plausible");
 
-  runTest(function () {
-    audioLocal = document.getElementById("audioLocal");
-    audioPCLocal = document.getElementById("audioPCLocal");
-    audioPCRemote = document.getElementById("audioPCRemote");
+        ok(test.pcLocal.remoteDescription,
+           "test.pcLocal.remoteDescription is not null");
+        is(test.pcLocal.remoteDescription.type, "answer",
+            "test.pcLocal.remoteDescription type is answer");
+        ok(test.pcLocal.remoteDescription.sdp.length > 10,
+           "test.pcLocal.remoteDescription body length is plausible");
 
-    pcLocal = new mozRTCPeerConnection();
-    pcRemote = new mozRTCPeerConnection();
+        ok(test.pcRemote.localDescription,
+           "test.pcRemote.localDescription is not null");
+        is(test.pcRemote.localDescription.type, "answer",
+           "test.pcRemote.localDescription type is answer");
+        ok(test.pcRemote.localDescription.sdp.length > 10,
+           "test.pcRemote.localDescription body length is plausible");
 
-    pcLocal.onaddstream = function (aObj) {
-      test_data.pcLocal.push(aObj.stream);
+        ok(test.pcRemote.remoteDescription,
+           "test.pcRemote.remoteDescription is not null");
+        is(test.pcRemote.remoteDescription.type, "offer",
+           "test.pcRemote.remoteDescription type is offer");
+        ok(test.pcRemote.remoteDescription.sdp.length > 10,
+           "test.pcRemote.remoteDescription body length is plausible");
 
-      audioPCRemote.mozSrcObject = aObj.stream;
-      audioPCRemote.play();
-    };
+        test.next();
+      }
+    ], [
+      "CHECK_SDP_ON_CLOSED_PC",
+      function (test) {
+        var description;
+        var exception = null;
 
-    pcRemote.onaddstream = function (aObj) {
-      test_data.pcRemote.push(aObj.stream);
+        test.pcLocal.close();
 
-      audioPCLocal.mozSrcObject = aObj.stream;
-      audioPCLocal.play();
-    };
+        try { description = test.pcLocal.localDescription; } catch (e) { exception = e; }
+        ok(exception, "Attempt to access localDescription of pcLocal after close throws exception");
+        exception = null;
 
-    navigator.mozGetUserMedia({audio: true, fake: true}, function onSuccess(aLocalInputStream) {
-      pcLocal.addStream(aLocalInputStream);
+        try { description = test.pcLocal.remoteDescription; } catch (e) { exception = e; }
+        ok(exception, "Attempt to access remoteDescription of pcLocal after close throws exception");
+        exception = null;
 
-      navigator.mozGetUserMedia({audio: true, fake: true}, function onSuccess(aRemoteInputStream) {
-        pcRemote.addStream(aRemoteInputStream);
+        test.pcRemote.close();
 
-        audioLocal.mozSrcObject = aLocalInputStream;
-        audioLocal.play();
+        try  { description = test.pcRemote.localDescription; } catch (e) { exception = e; }
+        ok(exception, "Attempt to access localDescription of pcRemote after close throws exception");
+        exception = null;
 
-        PeerConnection.handShake(pcLocal, pcRemote, function () {
+        try  { description = test.pcRemote.remoteDescription; } catch (e) { exception = e; }
+        ok(exception, "Attempt to access remoteDescription of pcRemote after close throws exception");
 
-          /* Check that the SDP is sane to start with */
-          ok(pcLocal.localDescription, "pcLocal.localDescription is not null");
-          is(pcLocal.localDescription.type, "offer", "pcLocal.localDescription type is offer");
-          ok(pcLocal.localDescription.sdp.length > 10, "pcLocal.localDescription body length is plausible");
+        test.next();
+      }
+    ]
+  ];
 
-          ok(pcLocal.remoteDescription, "pcLocal.remoteDescription is not null");
-          is(pcLocal.remoteDescription.type, "answer", "pcLocal.remoteDescription type is answer");
-          ok(pcLocal.remoteDescription.sdp.length > 10, "pcLocal.remoteDescription body length is plausible");
-
-          ok(pcRemote.localDescription, "pcRemote.localDescription is not null");
-          is(pcRemote.localDescription.type, "answer", "pcRemote.localDescription type is answer");
-          ok(pcRemote.localDescription.sdp.length > 10, "pcRemote.localDescription body length is plausible");
-
-          ok(pcRemote.remoteDescription, "pcRemote.remoteDescription is not null");
-          is(pcRemote.remoteDescription.type, "offer", "pcRemote.remoteDescription type is offer");
-          ok(pcRemote.remoteDescription.sdp.length > 10, "pcRemote.remoteDescription body length is plausible");
-
-          pcLocal.close();
-          var exception = null;
-          try  { description = pcLocal.localDescription; } catch (e) { exception = e; }
-          ok(exception, "attempt to access pcLocal.localDescription after close throws exception");
-          exception = null;
-          try  { description = pcLocal.remoteDescription; } catch (e) { exception = e; }
-          ok(exception, "attempt to access pcLocal.remoteDescription after close throws exception");
-
-          pcRemote.close();
-          exception = null;
-          try  { description = pcRemote.localDescription; } catch (e) { exception = e; }
-          ok(exception, "attempt to access pcRemote.localDescription after close throws exception");
-          exception = null;
-          try  { description = pcRemote.remoteDescription; } catch (e) { exception = e; }
-          ok(exception, "attempt to access pcRemote.remoteDescription after close throws exception");
-
-          SimpleTest.finish();
-        });
-      }, unexpectedCallbackAndFinish);
-    }, unexpectedCallbackAndFinish);
-  }, true);
-
+  var test = new PeerConnectionTest({ desktopSupportedOnly: true });
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.append(steps);
+  test.run();
 </script>
 </pre>
 </body>
