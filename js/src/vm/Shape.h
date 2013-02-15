@@ -972,6 +972,7 @@ struct InitialShapeEntry
 
     static inline HashNumber hash(const Lookup &lookup);
     static inline bool match(const InitialShapeEntry &key, const Lookup &lookup);
+    static void rekey(InitialShapeEntry &k, const InitialShapeEntry& newKey) { k = newKey; }
 };
 
 typedef HashSet<InitialShapeEntry, InitialShapeEntry, SystemAllocPolicy> InitialShapeSet;

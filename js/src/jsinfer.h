@@ -1106,7 +1106,7 @@ struct TypeObject : gc::Cell
  * Entries for the per-compartment set of type objects which are the default
  * 'new' or the lazy types of some prototype.
  */
-struct TypeObjectEntry
+struct TypeObjectEntry : DefaultHasher<ReadBarriered<TypeObject> >
 {
     struct Lookup {
         Class *clasp;
