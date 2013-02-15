@@ -2,44 +2,38 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsHTMLLegendElement.h"
+
+#include "mozilla/dom/HTMLLegendElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsIForm.h"
-#include "nsIFormControl.h"
-#include "nsIDocument.h"
-#include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
 #include "nsIFrame.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
+DOMCI_NODE_DATA(HTMLLegendElement, mozilla::dom::HTMLLegendElement)
 
 
-nsHTMLLegendElement::nsHTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+namespace mozilla {
+namespace dom {
+
+
+HTMLLegendElement::HTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
-nsHTMLLegendElement::~nsHTMLLegendElement()
+HTMLLegendElement::~HTMLLegendElement()
 {
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLLegendElement, Element)
-NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLLegendElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLLegendElement, Element)
 
 
-DOMCI_NODE_DATA(HTMLLegendElement, nsHTMLLegendElement)
-
-// QueryInterface implementation for nsHTMLLegendElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLLegendElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLegendElement, nsIDOMHTMLLegendElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLLegendElement,
+// QueryInterface implementation for HTMLLegendElement
+NS_INTERFACE_TABLE_HEAD(HTMLLegendElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLLegendElement, nsIDOMHTMLLegendElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLLegendElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLegendElement)
 
@@ -47,11 +41,11 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLegendElement)
 // nsIDOMHTMLLegendElement
 
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLLegendElement)
+NS_IMPL_ELEMENT_CLONE(HTMLLegendElement)
 
 
 NS_IMETHODIMP
-nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
+HTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   Element* form = GetFormElement();
 
@@ -59,7 +53,7 @@ nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLLegendElement, Align, align)
+NS_IMPL_STRING_ATTR(HTMLLegendElement, Align, align)
 
 // this contains center, because IE4 does
 static const nsAttrValue::EnumTable kAlignTable[] = {
@@ -72,7 +66,7 @@ static const nsAttrValue::EnumTable kAlignTable[] = {
 };
 
 nsIContent*
-nsHTMLLegendElement::GetFieldSet()
+HTMLLegendElement::GetFieldSet()
 {
   nsIContent* parent = GetParent();
 
@@ -84,10 +78,10 @@ nsHTMLLegendElement::GetFieldSet()
 }
 
 bool
-nsHTMLLegendElement::ParseAttribute(int32_t aNamespaceID,
-                                    nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsAttrValue& aResult)
+HTMLLegendElement::ParseAttribute(int32_t aNamespaceID,
+                                  nsIAtom* aAttribute,
+                                  const nsAString& aValue,
+                                  nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
     return aResult.ParseEnumValue(aValue, kAlignTable, false);
@@ -98,8 +92,8 @@ nsHTMLLegendElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 nsChangeHint
-nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                            int32_t aModType) const
+HTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                          int32_t aModType) const
 {
   nsChangeHint retval =
       nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
@@ -110,24 +104,24 @@ nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 nsresult
-nsHTMLLegendElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             nsIAtom* aPrefix, const nsAString& aValue,
-                             bool aNotify)
+HTMLLegendElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           bool aNotify)
 {
   return nsGenericHTMLElement::SetAttr(aNameSpaceID, aAttribute,
                                        aPrefix, aValue, aNotify);
 }
 nsresult
-nsHTMLLegendElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                               bool aNotify)
+HTMLLegendElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+                             bool aNotify)
 {
   return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
 nsresult
-nsHTMLLegendElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+HTMLLegendElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              bool aCompileEventHandlers)
 {
   return nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                           aBindingParent,
@@ -135,13 +129,13 @@ nsHTMLLegendElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLLegendElement::UnbindFromTree(bool aDeep, bool aNullParent)
+HTMLLegendElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 void
-nsHTMLLegendElement::Focus(ErrorResult& aError)
+HTMLLegendElement::Focus(ErrorResult& aError)
 {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
@@ -168,11 +162,13 @@ nsHTMLLegendElement::Focus(ErrorResult& aError)
 }
 
 void
-nsHTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
-                                      bool aIsTrustedEvent)
+HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
+                                    bool aIsTrustedEvent)
 {
   // just use the same behaviour as the focus method
-  mozilla::ErrorResult rv;
+  ErrorResult rv;
   Focus(rv);
 }
 
+} // namespace dom
+} // namespace mozilla
