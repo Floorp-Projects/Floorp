@@ -29,7 +29,6 @@ nsSystemTimeChangeObserver* nsSystemTimeChangeObserver::GetInstance()
 
 nsSystemTimeChangeObserver::~nsSystemTimeChangeObserver()
 {
-  mWindowListeners.Clear();
   UnregisterSystemClockChangeObserver(this);
   UnregisterSystemTimezoneChangeObserver(this);
 }
@@ -37,23 +36,14 @@ nsSystemTimeChangeObserver::~nsSystemTimeChangeObserver()
 void
 nsSystemTimeChangeObserver::FireMozTimeChangeEvent()
 {
-  //Copy mWindowListeners and iterate over windowListeners instead because
-  //mWindowListeners may be modified while we loop.
-  nsTArray<nsWeakPtr> windowListeners;
-  for (uint32_t i = 0; i < mWindowListeners.Length(); i++) {
-    windowListeners.AppendElement(mWindowListeners.SafeElementAt(i));
-  }
-
-  for (int32_t i = windowListeners.Length() - 1; i >= 0; i--) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(windowListeners[i]);
-    if (!window) {
-      mWindowListeners.RemoveElement(windowListeners[i]);
-      return;
-    }
-
-    nsCOMPtr<nsIDocument> document = window->GetDoc();
-    if (!document) {
-      return;
+  ListenerArray::ForwardIterator iter(mWindowListeners);
+  while (iter.HasMore()) {
+    nsWeakPtr weakWindow = iter.GetNext();
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(weakWindow);
+    nsCOMPtr<nsIDocument> document;
+    if (!window || !(document = window->GetDoc())) {
+      mWindowListeners.RemoveElement(weakWindow);
+      continue;
     }
 
     nsContentUtils::DispatchTrustedEvent(document, window,
@@ -97,15 +87,15 @@ nsSystemTimeChangeObserver::AddWindowListenerImpl(nsIDOMWindow* aWindow)
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsCOMPtr<nsIWeakReference> windowWeakRef = do_GetWeakReference(aWindow);
+  nsWeakPtr windowWeakRef = do_GetWeakReference(aWindow);
   NS_ASSERTION(windowWeakRef, "nsIDOMWindow implementations shuld support weak ref");
 
   if (mWindowListeners.IndexOf(windowWeakRef) !=
-      nsTArray<nsIDOMWindow*>::NoIndex) {
+      ListenerArray::array_type::NoIndex) {
     return NS_OK;
   }
 
-  if (mWindowListeners.Length() == 0) {
+  if (mWindowListeners.IsEmpty()) {
     RegisterSystemClockChangeObserver(sObserver);
     RegisterSystemTimezoneChangeObserver(sObserver);
   }
@@ -129,7 +119,7 @@ nsSystemTimeChangeObserver::RemoveWindowListenerImpl(nsIDOMWindow* aWindow)
 {
   mWindowListeners.RemoveElement(NS_GetWeakReference(aWindow));
 
-  if (mWindowListeners.Length() == 0) {
+  if (mWindowListeners.IsEmpty()) {
     UnregisterSystemClockChangeObserver(sObserver);
     UnregisterSystemTimezoneChangeObserver(sObserver);
   }
