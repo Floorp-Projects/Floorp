@@ -7,9 +7,10 @@
 #define NSDOMMEDIASTREAM_H_
 
 #include "nsIDOMMediaStream.h"
-#include "MediaStreamGraph.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPrincipal.h"
+#include "nsWrapperCache.h"
+#include "nsIDOMWindow.h"
 
 class nsXPCClassInfo;
 
@@ -19,28 +20,42 @@ class nsXPCClassInfo;
 #ifdef GetCurrentTime
 #undef GetCurrentTime
 #endif
+// X11 has a #define for CurrentTime. Unbelievable :-(.
+#ifdef CurrentTime
+#undef CurrentTime
+#endif
+
+namespace mozilla {
+
+class MediaStream;
 
 /**
  * DOM wrapper for MediaStreams.
  */
-class nsDOMMediaStream : public nsIDOMMediaStream
+class DOMMediaStream : public nsIDOMMediaStream,
+                       public nsWrapperCache
 {
-  friend class nsDOMLocalMediaStream;
+  friend class DOMLocalMediaStream;
 
 public:
-  typedef mozilla::MediaStream MediaStream;
-  typedef mozilla::MediaStreamGraph MediaStreamGraph;
+  DOMMediaStream() : mStream(nullptr), mHintContents(0)
+  {
+    SetIsDOMBinding();
+  }
+  virtual ~DOMMediaStream();
 
-  nsDOMMediaStream() : mStream(nullptr), mHintContents(0) {}
-  virtual ~nsDOMMediaStream();
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMMediaStream)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMMediaStream)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  NS_DECL_NSIDOMMEDIASTREAM
+  nsIDOMWindow* GetParentObject() const
+  {
+    return mWindow;
+  }
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
 
+  double CurrentTime();
   MediaStream* GetStream() { return mStream; }
-  bool IsFinished() { return !mStream || mStream->IsFinished(); }
+  bool IsFinished();
   /**
    * Returns a principal indicating who may access this stream. The stream contents
    * can only be accessed by principals subsuming this principal.
@@ -58,7 +73,8 @@ public:
   /**
    * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
    */
-  static already_AddRefed<nsDOMMediaStream> CreateSourceStream(uint32_t aHintContents);
+  static already_AddRefed<DOMMediaStream>
+  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
 
   // Hints to tell the SDP generator about whether this
   // MediaStream probably has audio and/or video
@@ -72,21 +88,15 @@ public:
   /**
    * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
    */
-  static already_AddRefed<nsDOMMediaStream> CreateTrackUnionStream(uint32_t aHintContents = 0);
+  static already_AddRefed<DOMMediaStream>
+  CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents = 0);
 
 protected:
-  void InitSourceStream(uint32_t aHintContents)
-  {
-    SetHintContents(aHintContents);
-    MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-    mStream = gm->CreateSourceStream(this);
-  }
-  void InitTrackUnionStream(uint32_t aHintContents)
-  {
-    SetHintContents(aHintContents);
-    MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-    mStream = gm->CreateTrackUnionStream(this);
-  }
+  void InitSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
+  void InitTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
+
+  // We need this to track our parent object.
+  nsCOMPtr<nsIDOMWindow> mWindow;
 
   // MediaStream is owned by the graph, but we tell it when to die, and it won't
   // die until we let it.
@@ -100,28 +110,33 @@ protected:
   uint32_t mHintContents;
 };
 
-class nsDOMLocalMediaStream : public nsDOMMediaStream,
-                              public nsIDOMLocalMediaStream
+class DOMLocalMediaStream : public DOMMediaStream,
+                            public nsIDOMLocalMediaStream
 {
 public:
-  nsDOMLocalMediaStream() {}
-  virtual ~nsDOMLocalMediaStream();
+  DOMLocalMediaStream() {}
+  virtual ~DOMLocalMediaStream();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMLocalMediaStream, nsDOMMediaStream)
-  NS_DECL_NSIDOMLOCALMEDIASTREAM
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMLocalMediaStream, DOMMediaStream)
 
-  NS_FORWARD_NSIDOMMEDIASTREAM(nsDOMMediaStream::)
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+
+  virtual void Stop();
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
    */
-  static already_AddRefed<nsDOMLocalMediaStream> CreateSourceStream(uint32_t aHintContents);
+  static already_AddRefed<DOMLocalMediaStream>
+  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
-  static already_AddRefed<nsDOMLocalMediaStream> CreateTrackUnionStream(uint32_t aHintContents = 0);
+  static already_AddRefed<DOMLocalMediaStream>
+  CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents = 0);
 };
+
+}
 
 #endif /* NSDOMMEDIASTREAM_H_ */

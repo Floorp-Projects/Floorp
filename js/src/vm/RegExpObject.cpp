@@ -637,7 +637,7 @@ RegExpCompartment::~RegExpCompartment()
 bool
 RegExpCompartment::init(JSContext *cx)
 {
-    if (!map_.init() || !inUse_.init()) {
+    if (!map_.init(0) || !inUse_.init(0)) {
         if (cx)
             js_ReportOutOfMemory(cx);
         return false;
@@ -711,7 +711,10 @@ RegExpCompartment::get(JSContext *cx, HandleAtom atom, JSString *opt, RegExpGuar
 size_t
 RegExpCompartment::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
-    return map_.sizeOfExcludingThis(mallocSizeOf);
+    size_t n = 0;
+    n += map_.sizeOfExcludingThis(mallocSizeOf);
+    n += inUse_.sizeOfExcludingThis(mallocSizeOf);
+    return n;
 }
 
 /* Functions */

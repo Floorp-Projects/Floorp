@@ -35,11 +35,6 @@ class SnapshotReader
     uint32_t slotsRead_;          // Number of slots that have been read.
     bool resumeAfter_;
 
-#ifdef DEBUG
-    // In debug mode we include the JSScript in order to make a few assertions.
-    JSScript *script_;
-#endif
-
 #ifdef TRACK_SNAPSHOTS
   private:
     uint32_t pcOpcode_;

@@ -13,10 +13,11 @@ import socket
 import sys
 import time
 import platform
+import moznetwork
 import xml.dom.minidom as dom
 
 from manifestparser import TestManifest
-from mozhttpd import iface, MozHttpd
+from mozhttpd import MozHttpd
 
 from marionette import Marionette
 from marionette_test import MarionetteJSTestCase, MarionetteTestCase
@@ -250,7 +251,7 @@ class MarionetteTestRunner(object):
         self.perfrequest = None
 
     def start_httpd(self):
-        host = iface.get_lan_ip()
+        host = moznetwork.get_ip()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind(("",0))
         port = s.getsockname()[1]

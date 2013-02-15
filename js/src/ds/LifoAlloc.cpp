@@ -37,11 +37,7 @@ BumpChunk::delete_(BumpChunk *chunk)
     // Part of the chunk may have been marked as poisoned/noaccess.  Undo that
     // before writing the 0xcd bytes.
     size_t size = sizeof(*chunk) + chunk->bumpSpaceSize;
-#if defined(MOZ_ASAN)
-    ASAN_UNPOISON_MEMORY_REGION(chunk, size);
-#elif defined(MOZ_VALGRIND)
-    VALGRIND_MAKE_MEM_UNDEFINED(chunk, size);
-#endif
+    MOZ_MAKE_MEM_UNDEFINED(chunk, size);
     memset(chunk, 0xcd, size);
 #endif
     js_free(chunk);

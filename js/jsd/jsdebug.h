@@ -990,7 +990,7 @@ JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  JSDStackFrameInfo* jsdframe,
                                  const jschar *bytes, unsigned length,
                                  const char *filename, unsigned lineno,
-                                 jsval *rval);
+                                 JS::MutableHandleValue rval);
 
 /*
 * Same as above, but does not eat exceptions.
@@ -1001,7 +1001,7 @@ JSD_AttemptUCScriptInStackFrame(JSDContext* jsdc,
                                 JSDStackFrameInfo* jsdframe,
                                 const jschar *bytes, unsigned length,
                                 const char *filename, unsigned lineno,
-                                jsval *rval);
+                                JS::MutableHandleValue rval);
 
 /* single byte character version of JSD_EvaluateUCScriptInStackFrame */
 extern JSD_PUBLIC_API(JSBool)
@@ -1009,7 +1009,7 @@ JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe,
                                const char *bytes, unsigned length,
-                               const char *filename, unsigned lineno, jsval *rval);
+                               const char *filename, unsigned lineno, JS::MutableHandleValue rval);
 
 /*
 * Same as above, but does not eat exceptions.
@@ -1019,7 +1019,7 @@ JSD_AttemptScriptInStackFrame(JSDContext* jsdc,
                               JSDThreadState* jsdthreadstate,
                               JSDStackFrameInfo* jsdframe,
                               const char *bytes, unsigned length,
-                              const char *filename, unsigned lineno, jsval *rval);
+                              const char *filename, unsigned lineno, JS::MutableHandleValue rval);
 
 /*
 * Convert the given jsval to a string

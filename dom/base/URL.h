@@ -9,9 +9,11 @@
 #include "mozilla/dom/URLBinding.h"
 
 class nsIDOMBlob;
-class nsIDOMMediaStream;
 
 namespace mozilla {
+
+class DOMMediaStream;
+
 namespace dom {
 
 class URL MOZ_FINAL
@@ -23,7 +25,7 @@ public:
                               nsString& aResult,
                               ErrorResult& aError);
   static void CreateObjectURL(const GlobalObject& aGlobal,
-                              nsIDOMMediaStream* aStream,
+                              DOMMediaStream& aStream,
                               const mozilla::dom::objectURLOptions& aOptions,
                               nsString& aResult,
                               mozilla::ErrorResult& aError);

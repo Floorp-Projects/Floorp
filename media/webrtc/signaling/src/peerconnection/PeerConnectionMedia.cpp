@@ -145,15 +145,15 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
     return NS_ERROR_FAILURE;
   }
 
-  nsDOMMediaStream* stream = static_cast<nsDOMMediaStream*>(aMediaStream);
+  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
 
   CSFLogDebugS(logTag, __FUNCTION__ << ": MediaStream: " << static_cast<void*>(aMediaStream));
 
   // Adding tracks here based on nsDOMMediaStream expectation settings
   uint32_t hints = stream->GetHintContents();
 
-  if (!(hints & (nsDOMMediaStream::HINT_CONTENTS_AUDIO |
-        nsDOMMediaStream::HINT_CONTENTS_VIDEO))) {
+  if (!(hints & (DOMMediaStream::HINT_CONTENTS_AUDIO |
+        DOMMediaStream::HINT_CONTENTS_VIDEO))) {
     CSFLogDebug(logTag, "Empty Stream !!");
     return NS_OK;
   }
@@ -178,11 +178,11 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
     new LocalSourceStreamInfo(stream);
   *stream_id = mLocalSourceStreams.Length();
 
-  if (hints & nsDOMMediaStream::HINT_CONTENTS_AUDIO) {
+  if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
     localSourceStream->ExpectAudio(TRACK_AUDIO);
   }
 
-  if (hints & nsDOMMediaStream::HINT_CONTENTS_VIDEO) {
+  if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
     localSourceStream->ExpectVideo(TRACK_VIDEO);
   }
 
@@ -197,7 +197,7 @@ PeerConnectionMedia::RemoveStream(nsIDOMMediaStream* aMediaStream, uint32_t *str
 {
   MOZ_ASSERT(aMediaStream);
 
-  nsDOMMediaStream* stream = static_cast<nsDOMMediaStream*>(aMediaStream);
+  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
 
   CSFLogDebugS(logTag, __FUNCTION__ << ": MediaStream: " << static_cast<void*>(aMediaStream));
 

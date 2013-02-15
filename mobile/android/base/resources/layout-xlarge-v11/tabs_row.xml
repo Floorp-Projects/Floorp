@@ -5,6 +5,7 @@
 
 <Gecko.TabRow xmlns:android="http://schemas.android.com/apk/res/android"
               android:focusable="true"
+              android:nextFocusRight="@+id/close"
               android:id="@+id/info"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
@@ -24,17 +25,35 @@
                              android:layout_height="@dimen/tab_thumbnail_height"
                              android:src="@drawable/tab_thumbnail_default"/>
 
-        <TextView android:id="@+id/title"
-                  android:layout_width="@dimen/tab_thumbnail_width"
-                  android:layout_height="wrap_content"
-                  android:layout_alignParentBottom="true"
-                  android:padding="4dip"
-                  style="@style/TabRowTextAppearance"
-                  android:background="#B3FFFFFF"
-                  android:textSize="12sp"
-                  android:textColor="#FF222222"
-                  android:singleLine="true"
-                  android:duplicateParentState="true"/>
+
+        <LinearLayout android:layout_width="@dimen/tab_thumbnail_width"
+                      android:layout_height="wrap_content"
+                      android:orientation="horizontal"
+                      android:background="#B3FFFFFF"
+                      android:layout_alignParentBottom="true"
+                      android:duplicateParentState="true">
+
+            <TextView android:id="@+id/title"
+                      android:layout_width="0dip"
+                      android:layout_height="wrap_content"
+                      android:layout_weight="1.0"
+                      android:padding="4dip"
+                      style="@style/TabRowTextAppearance"
+                      android:textSize="12sp"
+                      android:textColor="#FF222222"
+                      android:singleLine="true"
+                      android:duplicateParentState="true"/>
+
+            <ImageButton android:id="@+id/close"
+                         android:nextFocusLeft="@+id/info"
+                         android:layout_width="32dip"
+                         android:layout_height="fill_parent"
+                         android:background="@drawable/action_bar_button"
+                         android:scaleType="center"
+                         android:contentDescription="@string/close_tab"
+                         android:src="@drawable/tab_close"/>
+
+        </LinearLayout>
 
     </RelativeLayout>
 

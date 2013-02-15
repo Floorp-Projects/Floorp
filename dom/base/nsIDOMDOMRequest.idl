@@ -8,6 +8,8 @@
 
 interface nsIDOMDOMError;
 interface nsIDOMWindow;
+interface nsIDOMDOMCursor;
+interface nsICursorContinueCallback;
 
 [scriptable, builtinclass, uuid(d88998b7-ee30-4ae5-bbed-58f5711929de)]
 interface nsIDOMDOMRequest : nsIDOMEventTarget
@@ -21,13 +23,21 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
   [implicit_jscontext] attribute jsval onerror;
 };
 
-[scriptable, builtinclass, uuid(10996de9-e6f6-4058-97bd-45f1fe065eb5)]
+[scriptable, builtinclass, uuid(060df968-fd71-47ca-91a8-6b64dadceb2c)]
 interface nsIDOMRequestService : nsISupports
 {
   nsIDOMDOMRequest createRequest(in nsIDOMWindow window);
+  /*
+   * @param aCallback
+   *        Called when `continue()' is called in the cursor, should be used to
+   *        notify the data provider that content wants the next result.
+   */
+  nsIDOMDOMCursor createCursor(in nsIDOMWindow window,
+                               in nsICursorContinueCallback aCallback);
 
   void fireSuccess(in nsIDOMDOMRequest request, in jsval result);
   void fireError(in nsIDOMDOMRequest request, in DOMString error);
   void fireSuccessAsync(in nsIDOMDOMRequest request, in jsval result);
   void fireErrorAsync(in nsIDOMDOMRequest request, in DOMString error);
+  void fireDone(in nsIDOMDOMCursor cursor);
 };

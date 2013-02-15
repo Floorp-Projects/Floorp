@@ -50,7 +50,7 @@ MediaStreamList::WrapObject(JSContext* cx, ErrorResult& error)
 }
 
 template<class T>
-static nsIDOMMediaStream*
+static DOMMediaStream*
 GetStreamFromInfo(T* info, bool& found)
 {
   if (!info) {
@@ -62,7 +62,7 @@ GetStreamFromInfo(T* info, bool& found)
   return info->GetMediaStream();
 }
 
-nsIDOMMediaStream*
+DOMMediaStream*
 MediaStreamList::IndexedGetter(uint32_t index, bool& found)
 {
   if (mType == Local) {
