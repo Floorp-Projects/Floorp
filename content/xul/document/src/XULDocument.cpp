@@ -3531,7 +3531,8 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                             EmptyString(), this, stringStr);
         if (NS_SUCCEEDED(rv)) {
             rv = scriptProto->Compile(stringStr.get(), stringStr.Length(),
-                                      uri, 1, this, mCurrentPrototype);
+                                      uri, 1, this,
+                                      mCurrentPrototype->GetScriptGlobalObject());
         }
 
         aStatus = rv;

@@ -48,7 +48,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIServiceManager.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsIStyleSheet.h"
@@ -2544,7 +2543,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                               nsIURI* aURI,
                               uint32_t aLineNo,
                               nsIDocument* aDocument,
-                              nsIScriptGlobalObjectOwner* aGlobalOwner)
+                              nsIScriptGlobalObject* aGlobal)
 {
     // We'll compile the script using the prototype document's special
     // script object as the parent. This ensures that we won't end up
@@ -2556,21 +2555,16 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     // our script object would reference the first document, and the
     // first document would indirectly reference the prototype document
     // because it keeps the prototype cache alive. Circularity!
-    nsresult rv;
+    NS_ASSERTION(aGlobal, "prototype doc has no script global");
+    if (!aGlobal) {
+        return NS_ERROR_UNEXPECTED;
+    }
 
     // Use the prototype document's special context
-    nsIScriptContext *context;
-
-    {
-        nsIScriptGlobalObject* global = aGlobalOwner->GetScriptGlobalObject();
-        NS_ASSERTION(global != nullptr, "prototype doc has no script global");
-        if (! global)
-            return NS_ERROR_UNEXPECTED;
-
-        context = global->GetScriptContext();
-        NS_ASSERTION(context != nullptr, "no context for script global");
-        if (! context)
-            return NS_ERROR_UNEXPECTED;
+    nsIScriptContext *context = aGlobal->GetScriptContext();
+    NS_ASSERTION(context, "no context for script global");
+    if (! context) {
+      return NS_ERROR_UNEXPECTED;
     }
 
     nsAutoCString urlspec;
@@ -2585,20 +2579,16 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     // source from the files on demand.
     bool saveSource = !mOutOfLine;
 
-    rv = context->CompileScript(aText,
-                                aTextLength,
-                                // Use the enclosing document's principal
-                                // XXX is this right? or should we use the
-                                // protodoc's?
-                                // If we start using the protodoc's, make sure
-                                // the DowngradePrincipalIfNeeded stuff in
-                                // XULDocument::OnStreamComplete still works!
-                                aDocument->NodePrincipal(),
-                                urlspec.get(),
-                                aLineNo,
-                                mLangVersion,
-                                &newScriptObject,
-                                saveSource);
+    nsresult rv = context->CompileScript(aText, aTextLength,
+                                         // Use the enclosing document's principal
+                                         // XXX is this right? or should we use the
+                                         // protodoc's?
+                                         // If we start using the protodoc's, make sure
+                                         // the DowngradePrincipalIfNeeded stuff in
+                                         // XULDocument::OnStreamComplete still works!
+                                         aDocument->NodePrincipal(),
+                                         urlspec.get(), aLineNo, mLangVersion,
+                                         &newScriptObject, saveSource);
     if (NS_FAILED(rv))
         return rv;
 
