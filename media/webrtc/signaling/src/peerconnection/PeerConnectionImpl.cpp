@@ -280,11 +280,13 @@ PeerConnectionImpl::~PeerConnectionImpl()
 
 // One level of indirection so we can use WrapRunnable in CreateMediaStream.
 nsresult
-PeerConnectionImpl::MakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aRetval)
+PeerConnectionImpl::MakeMediaStream(nsIDOMWindow* aWindow,
+                                    uint32_t aHint, nsIDOMMediaStream** aRetval)
 {
   MOZ_ASSERT(aRetval);
 
-  nsRefPtr<DOMMediaStream> stream = DOMMediaStream::CreateSourceStream(aHint);
+  nsRefPtr<DOMMediaStream> stream =
+    DOMMediaStream::CreateSourceStream(aWindow, aHint);
   NS_ADDREF(*aRetval = stream);
 
   CSFLogDebugS(logTag, "Created media stream " << static_cast<void*>(stream)
@@ -306,7 +308,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
   // needs to actually propagate a hint for local streams.
   // TODO(ekr@rtfm.com): Clean up when we have explicit track lists.
   // See bug 834835.
-  nsresult res = MakeMediaStream(0, &stream);
+  nsresult res = MakeMediaStream(mWindow, 0, &stream);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -589,10 +591,10 @@ PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aR
 
   nsresult res;
   if (!mThread || NS_IsMainThread()) {
-    res = MakeMediaStream(aHint, aRetval);
+    res = MakeMediaStream(mWindow, aHint, aRetval);
   } else {
     mThread->Dispatch(WrapRunnableNMRet(
-        &PeerConnectionImpl::MakeMediaStream, aHint, aRetval, &res
+        &PeerConnectionImpl::MakeMediaStream, mWindow, aHint, aRetval, &res
     ), NS_DISPATCH_SYNC);
   }
 

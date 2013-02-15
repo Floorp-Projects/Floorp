@@ -7,6 +7,7 @@
 #include "CameraRecorderProfiles.h"
 #include "CameraControlImpl.h"
 #include "CameraCommon.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -420,8 +421,11 @@ GetPreviewStreamResult::Run()
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsICameraPreviewStreamCallback> onSuccess = mOnSuccessCb.get();
-  if (onSuccess && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
-    nsCOMPtr<nsIDOMMediaStream> stream = new DOMCameraPreview(mCameraControl, mWidth, mHeight, mWindowId, mFramesPerSecond);
+  nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
+  if (onSuccess && nsDOMCameraManager::IsWindowStillActive(mWindowId) && window) {
+    nsCOMPtr<nsIDOMMediaStream> stream =
+      new DOMCameraPreview(window, mCameraControl, mWidth, mHeight,
+	                         mFramesPerSecond);
     onSuccess->HandleEvent(stream);
   }
   return NS_OK;

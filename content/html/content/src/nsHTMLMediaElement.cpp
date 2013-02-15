@@ -1603,8 +1603,13 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
 already_AddRefed<DOMMediaStream>
 nsHTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
 {
+  nsIDOMWindow* window = OwnerDoc()->GetInnerWindow();
+  if (!window) {
+    return nullptr;
+  }
+
   OutputMediaStream* out = mOutputStreams.AppendElement();
-  out->mStream = DOMMediaStream::CreateTrackUnionStream();
+  out->mStream = DOMMediaStream::CreateTrackUnionStream(window);
   nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
   out->mStream->CombineWithPrincipal(principal);
   out->mFinishWhenEnded = aFinishWhenEnded;
@@ -1626,12 +1631,18 @@ nsHTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
 NS_IMETHODIMP nsHTMLMediaElement::MozCaptureStream(nsIDOMMediaStream** aStream)
 {
   *aStream = CaptureStreamInternal(false).get();
+  if (!*aStream) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLMediaElement::MozCaptureStreamUntilEnded(nsIDOMMediaStream** aStream)
 {
   *aStream = CaptureStreamInternal(true).get();
+  if (!*aStream) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
