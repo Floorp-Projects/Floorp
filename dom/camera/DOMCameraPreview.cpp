@@ -141,7 +141,7 @@ protected:
 };
 
 DOMCameraPreview::DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWidth, uint32_t aHeight, uint64_t aWindowId, uint32_t aFrameRate)
-  : nsDOMMediaStream()
+  : DOMMediaStream()
   , mState(STOPPED)
   , mWidth(aWidth)
   , mHeight(aHeight)

@@ -1956,7 +1956,7 @@ MediaStreamGraph::GetInstance()
 }
 
 SourceMediaStream*
-MediaStreamGraph::CreateSourceStream(nsDOMMediaStream* aWrapper)
+MediaStreamGraph::CreateSourceStream(DOMMediaStream* aWrapper)
 {
   SourceMediaStream* stream = new SourceMediaStream(aWrapper);
   NS_ADDREF(stream);
@@ -1967,7 +1967,7 @@ MediaStreamGraph::CreateSourceStream(nsDOMMediaStream* aWrapper)
 }
 
 ProcessedMediaStream*
-MediaStreamGraph::CreateTrackUnionStream(nsDOMMediaStream* aWrapper)
+MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
 {
   TrackUnionStream* stream = new TrackUnionStream(aWrapper);
   NS_ADDREF(stream);

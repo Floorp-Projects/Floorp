@@ -121,20 +121,20 @@ class TestAgent {
   TransportLayerDtls *audio_dtls_;
   mozilla::AudioCodecConfig audio_config_;
   mozilla::RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
-  nsRefPtr<nsDOMMediaStream> audio_;
+  nsRefPtr<DOMMediaStream> audio_;
   mozilla::RefPtr<mozilla::MediaPipeline> audio_pipeline_;
   mozilla::RefPtr<TransportFlow> video_flow_;
   TransportLayerPrsock *video_prsock_;
   mozilla::VideoCodecConfig video_config_;
   mozilla::RefPtr<mozilla::MediaSessionConduit> video_conduit_;
-  nsRefPtr<nsDOMMediaStream> video_;
+  nsRefPtr<DOMMediaStream> video_;
   mozilla::RefPtr<mozilla::MediaPipeline> video_pipeline_;
 };
 
 class TestAgentSend : public TestAgent {
  public:
   TestAgentSend() {
-    audio_ = new Fake_nsDOMMediaStream(new Fake_AudioStreamSource());
+    audio_ = new Fake_DOMMediaStream(new Fake_AudioStreamSource());
 
     mozilla::MediaConduitErrorCode err =
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get())->
@@ -151,7 +151,7 @@ class TestAgentSend : public TestAgent {
 
     audio_pipeline_->Init();
 
-//    video_ = new Fake_nsDOMMediaStream(new Fake_VideoStreamSource());
+//    video_ = new Fake_DOMMediaStream(new Fake_VideoStreamSource());
 //    video_pipeline_ = new mozilla::MediaPipelineTransmit(video_, video_conduit_, &video_flow_, &video_flow_);
   }
 
@@ -169,7 +169,7 @@ class TestAgentReceive : public TestAgent {
     audio->AddTrack(0, 100, 0, segment);
     audio->AdvanceKnownTracksTime(mozilla::STREAM_TIME_MAX);
 
-    audio_ = new Fake_nsDOMMediaStream(audio);
+    audio_ = new Fake_DOMMediaStream(audio);
 
     std::vector<mozilla::AudioCodecConfig *> codecs;
     codecs.push_back(&audio_config_);

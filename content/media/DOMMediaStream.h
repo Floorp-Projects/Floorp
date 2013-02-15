@@ -20,21 +20,20 @@ class nsXPCClassInfo;
 #undef GetCurrentTime
 #endif
 
+namespace mozilla {
+
 /**
  * DOM wrapper for MediaStreams.
  */
-class nsDOMMediaStream : public nsIDOMMediaStream
+class DOMMediaStream : public nsIDOMMediaStream
 {
-  friend class nsDOMLocalMediaStream;
+  friend class DOMLocalMediaStream;
 
 public:
-  typedef mozilla::MediaStream MediaStream;
-  typedef mozilla::MediaStreamGraph MediaStreamGraph;
+  DOMMediaStream() : mStream(nullptr), mHintContents(0) {}
+  virtual ~DOMMediaStream();
 
-  nsDOMMediaStream() : mStream(nullptr), mHintContents(0) {}
-  virtual ~nsDOMMediaStream();
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMMediaStream)
+  NS_DECL_CYCLE_COLLECTION_CLASS(DOMMediaStream)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_NSIDOMMEDIASTREAM
@@ -58,7 +57,7 @@ public:
   /**
    * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
    */
-  static already_AddRefed<nsDOMMediaStream> CreateSourceStream(uint32_t aHintContents);
+  static already_AddRefed<DOMMediaStream> CreateSourceStream(uint32_t aHintContents);
 
   // Hints to tell the SDP generator about whether this
   // MediaStream probably has audio and/or video
@@ -72,7 +71,7 @@ public:
   /**
    * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
    */
-  static already_AddRefed<nsDOMMediaStream> CreateTrackUnionStream(uint32_t aHintContents = 0);
+  static already_AddRefed<DOMMediaStream> CreateTrackUnionStream(uint32_t aHintContents = 0);
 
 protected:
   void InitSourceStream(uint32_t aHintContents)
@@ -100,28 +99,30 @@ protected:
   uint32_t mHintContents;
 };
 
-class nsDOMLocalMediaStream : public nsDOMMediaStream,
-                              public nsIDOMLocalMediaStream
+class DOMLocalMediaStream : public DOMMediaStream,
+                            public nsIDOMLocalMediaStream
 {
 public:
-  nsDOMLocalMediaStream() {}
-  virtual ~nsDOMLocalMediaStream();
+  DOMLocalMediaStream() {}
+  virtual ~DOMLocalMediaStream();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMLocalMediaStream, nsDOMMediaStream)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMLocalMediaStream, DOMMediaStream)
   NS_DECL_NSIDOMLOCALMEDIASTREAM
 
-  NS_FORWARD_NSIDOMMEDIASTREAM(nsDOMMediaStream::)
+  NS_FORWARD_NSIDOMMEDIASTREAM(DOMMediaStream::)
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
    */
-  static already_AddRefed<nsDOMLocalMediaStream> CreateSourceStream(uint32_t aHintContents);
+  static already_AddRefed<DOMLocalMediaStream> CreateSourceStream(uint32_t aHintContents);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
-  static already_AddRefed<nsDOMLocalMediaStream> CreateTrackUnionStream(uint32_t aHintContents = 0);
+  static already_AddRefed<DOMLocalMediaStream> CreateTrackUnionStream(uint32_t aHintContents = 0);
 };
+
+}
 
 #endif /* NSDOMMEDIASTREAM_H_ */
