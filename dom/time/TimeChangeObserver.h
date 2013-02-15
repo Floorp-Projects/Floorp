@@ -31,11 +31,11 @@ public:
   void Notify(
     const mozilla::hal::SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo);
 
-  static nsresult AddWindowListener(nsIDOMWindow* aWindow);
-  static nsresult RemoveWindowListener(nsIDOMWindow* aWindow);
+  static nsresult AddWindowListener(nsPIDOMWindow* aWindow);
+  static nsresult RemoveWindowListener(nsPIDOMWindow* aWindow);
 private:
-  nsresult AddWindowListenerImpl(nsIDOMWindow* aWindow);
-  nsresult RemoveWindowListenerImpl(nsIDOMWindow* aWindow);
+  nsresult AddWindowListenerImpl(nsPIDOMWindow* aWindow);
+  nsresult RemoveWindowListenerImpl(nsPIDOMWindow* aWindow);
   nsSystemTimeChangeObserver() { };
   ListenerArray mWindowListeners;
   void FireMozTimeChangeEvent();
