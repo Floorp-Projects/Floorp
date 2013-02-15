@@ -6,46 +6,29 @@
 #include "DOMMediaStream.h"
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/MediaStreamBinding.h"
+#include "mozilla/dom/LocalMediaStreamBinding.h"
+#include "MediaStreamGraph.h"
 
 using namespace mozilla;
 
-DOMCI_DATA(MediaStream, DOMMediaStream)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMMediaStream)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaStream)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MediaStream)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMMediaStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMMediaStream)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMMediaStream)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMMediaStream)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-// LocalMediaStream currently is the same C++ class as MediaStream;
-// they may eventually split
-DOMCI_DATA(LocalMediaStream, DOMLocalMediaStream)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(DOMMediaStream, mWindow)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMLocalMediaStream)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLocalMediaStream)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMMediaStream, DOMMediaStream)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLocalMediaStream)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(LocalMediaStream)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMLocalMediaStream)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMLocalMediaStream)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMLocalMediaStream)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMLocalMediaStream)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
+NS_IMPL_ADDREF_INHERITED(DOMLocalMediaStream, DOMMediaStream)
+NS_IMPL_RELEASE_INHERITED(DOMLocalMediaStream, DOMMediaStream)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_0(DOMLocalMediaStream, DOMMediaStream)
 
 DOMMediaStream::~DOMMediaStream()
 {
@@ -54,11 +37,62 @@ DOMMediaStream::~DOMMediaStream()
   }
 }
 
-NS_IMETHODIMP
-DOMMediaStream::GetCurrentTime(double *aCurrentTime)
+JSObject*
+DOMMediaStream::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
 {
-  *aCurrentTime = mStream ? MediaTimeToSeconds(mStream->GetCurrentTime()) : 0.0;
-  return NS_OK;
+  return dom::MediaStreamBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+double
+DOMMediaStream::CurrentTime()
+{
+  return mStream ? MediaTimeToSeconds(mStream->GetCurrentTime()) : 0.0;
+}
+
+bool
+DOMMediaStream::IsFinished()
+{
+  return !mStream || mStream->IsFinished();
+}
+
+void
+DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents)
+{
+  mWindow = aWindow;
+  SetHintContents(aHintContents);
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  mStream = gm->CreateSourceStream(this);
+}
+
+void
+DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents)
+{
+  mWindow = aWindow;
+  SetHintContents(aHintContents);
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  mStream = gm->CreateTrackUnionStream(this);
+}
+
+already_AddRefed<DOMMediaStream>
+DOMMediaStream::CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents)
+{
+  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
+  stream->InitSourceStream(aWindow, aHintContents);
+  return stream.forget();
+}
+
+already_AddRefed<DOMMediaStream>
+DOMMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents)
+{
+  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
+  stream->InitTrackUnionStream(aWindow, aHintContents);
+  return stream.forget();
+}
+
+bool
+DOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
+{
+  return nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
 }
 
 DOMLocalMediaStream::~DOMLocalMediaStream()
@@ -69,49 +103,32 @@ DOMLocalMediaStream::~DOMLocalMediaStream()
   }
 }
 
-NS_IMETHODIMP
+JSObject*
+DOMLocalMediaStream::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return dom::LocalMediaStreamBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+}
+
+void
 DOMLocalMediaStream::Stop()
 {
   if (mStream && mStream->AsSourceStream()) {
     mStream->AsSourceStream()->EndAllTrackAndFinish();
   }
-  return NS_OK;
 }
 
-already_AddRefed<DOMMediaStream>
-DOMMediaStream::CreateSourceStream(uint32_t aHintContents)
+already_AddRefed<DOMLocalMediaStream>
+DOMLocalMediaStream::CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents)
 {
-  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
-  stream->InitSourceStream(aHintContents);
+  nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
+  stream->InitSourceStream(aWindow, aHintContents);
   return stream.forget();
 }
 
 already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateSourceStream(uint32_t aHintContents)
+DOMLocalMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents)
 {
   nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
-  stream->InitSourceStream(aHintContents);
+  stream->InitTrackUnionStream(aWindow, aHintContents);
   return stream.forget();
-}
-
-already_AddRefed<DOMMediaStream>
-DOMMediaStream::CreateTrackUnionStream(uint32_t aHintContents)
-{
-  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
-  stream->InitTrackUnionStream(aHintContents);
-  return stream.forget();
-}
-
-already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateTrackUnionStream(uint32_t aHintContents)
-{
-  nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
-  stream->InitTrackUnionStream(aHintContents);
-  return stream.forget();
-}
-
-bool
-DOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
-{
-  return nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
 }

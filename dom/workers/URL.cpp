@@ -220,6 +220,15 @@ URL::CreateObjectURL(const WorkerGlobalObject& aGlobal, JSObject* aBlob,
 
 // static
 void
+URL::CreateObjectURL(const WorkerGlobalObject& aGlobal, JSObject& aBlob,
+                     const mozilla::dom::objectURLOptionsWorkers& aOptions,
+                     nsString& aResult, mozilla::ErrorResult& aRv)
+{
+  return CreateObjectURL(aGlobal, &aBlob, aOptions, aResult, aRv);
+}
+
+// static
+void
 URL::RevokeObjectURL(const WorkerGlobalObject& aGlobal, const nsAString& aUrl)
 {
   JSContext* cx = aGlobal.GetContext();

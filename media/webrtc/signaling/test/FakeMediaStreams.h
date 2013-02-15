@@ -23,6 +23,8 @@
 #include "nsISupportsImpl.h"
 #include "nsIDOMMediaStream.h"
 
+class nsIDOMWindow;
+
 namespace mozilla {
    class MediaStreamGraph;
    class MediaSegment;
@@ -186,11 +188,10 @@ public:
     mMediaStream->Stop();
   }
 
-
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMEDIASTREAM
 
-  static already_AddRefed<Fake_DOMMediaStream> CreateSourceStream(uint32_t aHintContents) {
+  static already_AddRefed<Fake_DOMMediaStream>
+  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents) {
     Fake_SourceMediaStream *source = new Fake_SourceMediaStream();
 
     Fake_DOMMediaStream *ds = new Fake_DOMMediaStream(source);

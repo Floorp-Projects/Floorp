@@ -107,7 +107,9 @@ webidl_files = \
   HTMLUListElement.webidl \
   ImageData.webidl \
   LinkStyle.webidl \
+  LocalMediaStream.webidl \
   Location.webidl \
+  MediaStream.webidl \
   MutationObserver.webidl \
   Node.webidl \
   NodeFilter.webidl \
