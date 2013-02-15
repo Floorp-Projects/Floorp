@@ -45,6 +45,22 @@ def _relpath(path, start=None):
 os.path.relpath = _relpath
 
 class Test:
+
+    VALGRIND_CMD = []
+    paths = (d for d in os.environ['PATH'].split(os.pathsep))
+    valgrinds = (os.path.join(d, 'valgrind') for d in paths)
+    if any(os.path.exists(p) for p in valgrinds):
+        VALGRIND_CMD = [
+            'valgrind', '-q', '--smc-check=all-non-file',
+            '--error-exitcode=1', '--gen-suppressions=all',
+            '--show-possibly-lost=no', '--leak-check=full',
+        ]
+        if os.uname()[0] == 'Darwin':
+            VALGRIND_CMD.append('--dsymutil=yes')
+
+    del paths
+    del valgrinds
+
     def __init__(self, path):
         self.path = path       # path to test file
 
@@ -134,8 +150,11 @@ class Test:
                 % (sys.platform, libdir_var, scriptdir_var))
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
-        return ([js] + list(set(self.jitflags)) + shell_args +
-                ['-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'), '-f', self.path])
+        cmd = [js] + list(set(self.jitflags)) + shell_args + ['-e', expr]
+        cmd += ['-f', os.path.join(lib_dir, 'prolog.js'), '-f', self.path]
+        if self.valgrind:
+            cmd = self.VALGRIND_CMD + cmd
+        return cmd
 
 def find_tests(dir, substring = None):
     ans = []
@@ -241,20 +260,6 @@ def run_cmd_avoid_stdio(cmdline, env, timeout):
 
 def run_test(test, lib_dir, shell_args, options):
     cmd = test.command(options.js_shell, lib_dir, shell_args)
-    if (test.valgrind and
-        any([os.path.exists(os.path.join(d, 'valgrind'))
-             for d in os.environ['PATH'].split(os.pathsep)])):
-        valgrind_prefix = [ 'valgrind',
-                            '-q',
-                            '--smc-check=all-non-file',
-                            '--error-exitcode=1',
-                            '--gen-suppressions=all',
-                            '--show-possibly-lost=no',
-                            '--leak-check=full']
-        if os.uname()[0] == 'Darwin':
-            valgrind_prefix += ['--dsymutil=yes']
-        cmd = valgrind_prefix + cmd
-
     if options.show_cmd:
         print(subprocess.list2cmdline(cmd))
 
