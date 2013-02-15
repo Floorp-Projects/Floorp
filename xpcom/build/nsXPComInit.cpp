@@ -626,7 +626,10 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_IF_RELEASE(nsDirectoryService::gService);
 
     SAMPLE_MARKER("Shutdown xpcom");
-    mozilla::PoisonWrite();
+    // If we are doing any shutdown checks, poison writes.
+    if (gShutdownChecks != SCM_NOTHING) {
+        mozilla::PoisonWrite();
+    }
 
     nsCycleCollector_shutdown();
 
