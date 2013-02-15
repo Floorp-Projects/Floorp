@@ -113,7 +113,7 @@ protected:
 
   nsresult SizeItemInCrossAxis(nsPresContext* aPresContext,
                                const FlexboxAxisTracker& aAxisTracker,
-                               const nsHTMLReflowState& aChildReflowState,
+                               nsHTMLReflowState& aChildReflowState,
                                FlexItem& aItem);
 
   void PositionItemInCrossAxis(
