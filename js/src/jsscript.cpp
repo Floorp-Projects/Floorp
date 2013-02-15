@@ -1750,7 +1750,8 @@ AllocScriptData(JSContext *cx, size_t size)
     if (!data)
         return NULL;
 
-    JS_ASSERT(size_t(data) % sizeof(Value) == 0);
+    // All script data is optional, so size might be 0. In that case, we don't care about alignment.
+    JS_ASSERT(size == 0 || size_t(data) % sizeof(Value) == 0);
     return data;
 }
 
