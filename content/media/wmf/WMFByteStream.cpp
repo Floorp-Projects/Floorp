@@ -10,6 +10,7 @@
 #include <ole2.h>
 
 #include "WMFByteStream.h"
+#include "WMFSourceReaderCallback.h"
 #include "WMFUtils.h"
 #include "MediaResource.h"
 #include "nsISeekableStream.h"
@@ -26,16 +27,6 @@ PRLogModuleInfo* gWMFByteStreamLog = nullptr;
 #else
 #define LOG(...)
 #endif
-
-HRESULT
-DoGetInterface(IUnknown* aUnknown, void** aInterface)
-{
-  if (!aInterface)
-    return E_POINTER;
-  *aInterface = aUnknown;
-  aUnknown->AddRef();
-  return S_OK;
-}
 
 // Thread pool listener which ensures that MSCOM is initialized and
 // deinitialized on the thread pool thread. We can call back into WMF
@@ -103,8 +94,10 @@ public:
   nsRefPtr<MediaResource> mResource;
 };
 
-WMFByteStream::WMFByteStream(MediaResource* aResource)
-  : mResourceMonitor("WMFByteStream.MediaResource"),
+WMFByteStream::WMFByteStream(MediaResource* aResource,
+                             WMFSourceReaderCallback* aSourceReaderCallback)
+  : mSourceReaderCallback(aSourceReaderCallback),
+    mResourceMonitor("WMFByteStream.MediaResource"),
     mResource(aResource),
     mReentrantMonitor("WMFByteStream.Data"),
     mOffset(0),
@@ -112,6 +105,7 @@ WMFByteStream::WMFByteStream(MediaResource* aResource)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
   NS_ASSERTION(mResource, "Must have a valid media resource");
+  NS_ASSERTION(mSourceReaderCallback, "Must have a source reader callback.");
 
 #ifdef PR_LOGGING
   if (!gWMFByteStreamLog) {
@@ -176,8 +170,11 @@ WMFByteStream::Init()
 nsresult
 WMFByteStream::Shutdown()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  mIsShutdown = true;
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    mIsShutdown = true;
+  }
+  mSourceReaderCallback->Cancel();
   return NS_OK;
 }
 

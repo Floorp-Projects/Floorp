@@ -8,6 +8,7 @@
 #include "WMFDecoder.h"
 #include "WMFUtils.h"
 #include "WMFByteStream.h"
+#include "WMFSourceReaderCallback.h"
 
 #ifndef MOZ_SAMPLE_TYPE_FLOAT32
 #error We expect 32bit float audio samples on desktop for the Windows Media Foundation media backend.
@@ -87,9 +88,10 @@ WMFReader::Init(MediaDecoderReader* aCloneDonor)
     return NS_ERROR_FAILURE;
   }
 
-  // Must be created on main thread.
-  mByteStream = new WMFByteStream(mDecoder->GetResource());
+  mSourceReaderCallback = new WMFSourceReaderCallback();
 
+  // Must be created on main thread.
+  mByteStream = new WMFByteStream(mDecoder->GetResource(), mSourceReaderCallback);
   return mByteStream->Init();
 }
 
@@ -441,7 +443,14 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
   LOG("WMFReader::ReadMetadata()");
   HRESULT hr;
 
-  hr = wmf::MFCreateSourceReaderFromByteStream(mByteStream, NULL, byRef(mSourceReader));
+  RefPtr<IMFAttributes> attr;
+  hr = wmf::MFCreateAttributes(byRef(attr), 1);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  hr = attr->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, mSourceReaderCallback);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  hr = wmf::MFCreateSourceReaderFromByteStream(mByteStream, attr, byRef(mSourceReader));
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   hr = ConfigureVideoDecoder();
@@ -483,27 +492,39 @@ WMFReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  DWORD flags;
-  LONGLONG timestampHns;
   HRESULT hr;
-
-  RefPtr<IMFSample> sample;
   hr = mSourceReader->ReadSample(MF_SOURCE_READER_FIRST_AUDIO_STREAM,
                                  0, // control flags
-                                 nullptr, // read stream index
-                                 &flags,
-                                 &timestampHns,
-                                 byRef(sample));
+                                 0, // read stream index
+                                 nullptr,
+                                 nullptr,
+                                 nullptr);
 
+  if (FAILED(hr)) {
+    LOG("WMFReader::DecodeAudioData() ReadSample failed with hr=0x%x", hr);
+    // End the stream.
+    mAudioQueue.Finish();
+    return false;
+  }
+
+  DWORD flags = 0;
+  LONGLONG timestampHns = 0;
+  RefPtr<IMFSample> sample;
+  hr = mSourceReaderCallback->Wait(&flags, &timestampHns, byRef(sample));
   if (FAILED(hr) ||
       (flags & MF_SOURCE_READERF_ERROR) ||
       (flags & MF_SOURCE_READERF_ENDOFSTREAM) ||
       (flags & MF_SOURCE_READERF_CURRENTMEDIATYPECHANGED)) {
     LOG("WMFReader::DecodeAudioData() ReadSample failed with hr=0x%x flags=0x%x",
         hr, flags);
-    // End of stream.
+    // End the stream.
     mAudioQueue.Finish();
     return false;
+  }
+
+  if (!sample) {
+    // Not enough data? Try again...
+    return true;
   }
 
   RefPtr<IMFMediaBuffer> buffer;
@@ -551,17 +572,26 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
   uint32_t parsed = 0, decoded = 0;
   AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
-  DWORD flags;
-  LONGLONG timestampHns;
   HRESULT hr;
 
-  RefPtr<IMFSample> sample;
   hr = mSourceReader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
                                  0, // control flags
-                                 nullptr, // read stream index
-                                 &flags,
-                                 &timestampHns,
-                                 byRef(sample));
+                                 0, // read stream index
+                                 nullptr,
+                                 nullptr,
+                                 nullptr);
+  if (FAILED(hr)) {
+    LOG("WMFReader::DecodeVideoData() ReadSample failed with hr=0x%x", hr);
+    // End the stream.
+    mVideoQueue.Finish();
+    return false;
+  }
+
+  DWORD flags = 0;
+  LONGLONG timestampHns = 0;
+  RefPtr<IMFSample> sample;
+  hr = mSourceReaderCallback->Wait(&flags, &timestampHns, byRef(sample));
+
   if (flags & MF_SOURCE_READERF_ERROR) {
     NS_WARNING("WMFReader: Catastrophic failure reading video sample");
     // Future ReadSample() calls will fail, so give up and report end of stream.
@@ -577,7 +607,7 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
   if (!sample) {
     if ((flags & MF_SOURCE_READERF_ENDOFSTREAM)) {
       LOG("WMFReader; Null sample after video decode, at end of stream");
-      // End of stream.
+      // End the stream.
       mVideoQueue.Finish();
       return false;
     }

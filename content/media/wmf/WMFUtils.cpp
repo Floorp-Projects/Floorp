@@ -199,6 +199,16 @@ SourceReaderHasStream(IMFSourceReader* aReader, const DWORD aIndex)
   return FAILED(hr) ? false : true;
 }
 
+HRESULT
+DoGetInterface(IUnknown* aUnknown, void** aInterface)
+{
+  if (!aInterface)
+    return E_POINTER;
+  *aInterface = aUnknown;
+  aUnknown->AddRef();
+  return S_OK;
+}
+
 namespace wmf {
 
 // Some SDK versions don't define the AAC decoder CLSID.
