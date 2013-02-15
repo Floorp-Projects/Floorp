@@ -13,6 +13,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
+#include "mozilla/RefPtr.h"
 
 class nsIThreadPool;
 
@@ -33,6 +34,7 @@ class ReadRequest;
 //       For details see the test code at:
 //       https://github.com/cpearce/IMFByteStreamBehaviour/
 class WMFByteStream MOZ_FINAL : public IMFByteStream
+                              , public IMFAttributes
 {
 public:
   WMFByteStream(MediaResource* aResource);
@@ -70,6 +72,38 @@ public:
   STDMETHODIMP SetCurrentPosition(QWORD aPosition);
   STDMETHODIMP SetLength(QWORD);
   STDMETHODIMP Write(const BYTE *, ULONG, ULONG *);
+
+  // IMFAttributes methods
+  STDMETHODIMP GetItem(REFGUID guidKey, PROPVARIANT* pValue);
+  STDMETHODIMP GetItemType(REFGUID guidKey, MF_ATTRIBUTE_TYPE* pType);
+  STDMETHODIMP CompareItem(REFGUID guidKey, REFPROPVARIANT Value, BOOL* pbResult);
+  STDMETHODIMP Compare(IMFAttributes* pTheirs, MF_ATTRIBUTES_MATCH_TYPE MatchType, BOOL* pbResult);
+  STDMETHODIMP GetUINT32(REFGUID guidKey, UINT32* punValue);
+  STDMETHODIMP GetUINT64(REFGUID guidKey, UINT64* punValue);
+  STDMETHODIMP GetDouble(REFGUID guidKey, double* pfValue);
+  STDMETHODIMP GetGUID(REFGUID guidKey, GUID* pguidValue);
+  STDMETHODIMP GetStringLength(REFGUID guidKey, UINT32* pcchLength);
+  STDMETHODIMP GetString(REFGUID guidKey, LPWSTR pwszValue, UINT32 cchBufSize, UINT32* pcchLength);
+  STDMETHODIMP GetAllocatedString(REFGUID guidKey, LPWSTR* ppwszValue, UINT32* pcchLength);
+  STDMETHODIMP GetBlobSize(REFGUID guidKey, UINT32* pcbBlobSize);
+  STDMETHODIMP GetBlob(REFGUID guidKey, UINT8* pBuf, UINT32 cbBufSize, UINT32* pcbBlobSize);
+  STDMETHODIMP GetAllocatedBlob(REFGUID guidKey, UINT8** ppBuf, UINT32* pcbSize);
+  STDMETHODIMP GetUnknown(REFGUID guidKey, REFIID riid, LPVOID* ppv);
+  STDMETHODIMP SetItem(REFGUID guidKey, REFPROPVARIANT Value);
+  STDMETHODIMP DeleteItem(REFGUID guidKey);
+  STDMETHODIMP DeleteAllItems();
+  STDMETHODIMP SetUINT32(REFGUID guidKey, UINT32 unValue);
+  STDMETHODIMP SetUINT64(REFGUID guidKey,UINT64 unValue);
+  STDMETHODIMP SetDouble(REFGUID guidKey, double fValue);
+  STDMETHODIMP SetGUID(REFGUID guidKey, REFGUID guidValue);
+  STDMETHODIMP SetString(REFGUID guidKey, LPCWSTR wszValue);
+  STDMETHODIMP SetBlob(REFGUID guidKey, const UINT8* pBuf, UINT32 cbBufSize);
+  STDMETHODIMP SetUnknown(REFGUID guidKey, IUnknown* pUnknown);
+  STDMETHODIMP LockStore();
+  STDMETHODIMP UnlockStore();
+  STDMETHODIMP GetCount(UINT32* pcItems);
+  STDMETHODIMP GetItemByIndex(UINT32 unIndex, GUID* pguidKey, PROPVARIANT* pValue);
+  STDMETHODIMP CopyAllItems(IMFAttributes* pDest);
 
   // We perform an async read operation in this callback implementation.
   // Processes an async read request, storing the result in aResult, and
@@ -110,6 +144,10 @@ private:
   // would leave the resource's offset at a value unexpected by the caller,
   // since the read hadn't yet completed.
   int64_t mOffset;
+
+  // We implement IMFAttributes by forwarding all calls to an instance of the
+  // standard IMFAttributes class, which we store a reference to here.
+  RefPtr<IMFAttributes> mAttributes;
 
   // True if the resource has been shutdown, either because the WMFReader is
   // shutting down, or because the underlying MediaResource has closed.
