@@ -9,7 +9,7 @@
 #include "MediaStreamGraph.h"
 #include "StreamBuffer.h"
 #include "ICameraControl.h"
-#include "nsDOMMediaStream.h"
+#include "DOMMediaStream.h"
 #include "CameraCommon.h"
 
 namespace mozilla {
@@ -20,7 +20,7 @@ typedef void (*FrameBuilder)(mozilla::layers::Image* aImage, void* aBuffer, uint
  * DOMCameraPreview is only exposed to the DOM as an nsDOMMediaStream,
  * which is a cycle-collection participant already.
  */
-class DOMCameraPreview : public nsDOMMediaStream
+class DOMCameraPreview : public DOMMediaStream
 {
 protected:
   enum { TRACK_VIDEO = 1 };
@@ -32,7 +32,7 @@ public:
 
   NS_IMETHODIMP
   GetCurrentTime(double* aCurrentTime) {
-    return nsDOMMediaStream::GetCurrentTime(aCurrentTime);
+    return DOMMediaStream::GetCurrentTime(aCurrentTime);
   }
 
   void Start();   // called by the MediaStreamListener to start preview

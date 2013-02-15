@@ -3,51 +3,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMMediaStream.h"
+#include "DOMMediaStream.h"
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;
 
-DOMCI_DATA(MediaStream, nsDOMMediaStream)
+DOMCI_DATA(MediaStream, DOMMediaStream)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMMediaStream)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMMediaStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaStream)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MediaStream)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMMediaStream)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMMediaStream)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMMediaStream)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMMediaStream)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMMediaStream)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMMediaStream)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMMediaStream)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMMediaStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // LocalMediaStream currently is the same C++ class as MediaStream;
 // they may eventually split
-DOMCI_DATA(LocalMediaStream, nsDOMLocalMediaStream)
+DOMCI_DATA(LocalMediaStream, DOMLocalMediaStream)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMLocalMediaStream)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMLocalMediaStream)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLocalMediaStream)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMMediaStream, nsDOMMediaStream)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMMediaStream, DOMMediaStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLocalMediaStream)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(LocalMediaStream)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMLocalMediaStream)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMLocalMediaStream)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMLocalMediaStream)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMLocalMediaStream)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMLocalMediaStream)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMLocalMediaStream)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMLocalMediaStream)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMLocalMediaStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
-nsDOMMediaStream::~nsDOMMediaStream()
+DOMMediaStream::~DOMMediaStream()
 {
   if (mStream) {
     mStream->Destroy();
@@ -55,13 +55,13 @@ nsDOMMediaStream::~nsDOMMediaStream()
 }
 
 NS_IMETHODIMP
-nsDOMMediaStream::GetCurrentTime(double *aCurrentTime)
+DOMMediaStream::GetCurrentTime(double *aCurrentTime)
 {
   *aCurrentTime = mStream ? MediaTimeToSeconds(mStream->GetCurrentTime()) : 0.0;
   return NS_OK;
 }
 
-nsDOMLocalMediaStream::~nsDOMLocalMediaStream()
+DOMLocalMediaStream::~DOMLocalMediaStream()
 {
   if (mStream) {
     // Make sure Listeners of this stream know it's going away
@@ -70,7 +70,7 @@ nsDOMLocalMediaStream::~nsDOMLocalMediaStream()
 }
 
 NS_IMETHODIMP
-nsDOMLocalMediaStream::Stop()
+DOMLocalMediaStream::Stop()
 {
   if (mStream && mStream->AsSourceStream()) {
     mStream->AsSourceStream()->EndAllTrackAndFinish();
@@ -78,40 +78,40 @@ nsDOMLocalMediaStream::Stop()
   return NS_OK;
 }
 
-already_AddRefed<nsDOMMediaStream>
-nsDOMMediaStream::CreateSourceStream(uint32_t aHintContents)
+already_AddRefed<DOMMediaStream>
+DOMMediaStream::CreateSourceStream(uint32_t aHintContents)
 {
-  nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
+  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
   stream->InitSourceStream(aHintContents);
   return stream.forget();
 }
 
-already_AddRefed<nsDOMLocalMediaStream>
-nsDOMLocalMediaStream::CreateSourceStream(uint32_t aHintContents)
+already_AddRefed<DOMLocalMediaStream>
+DOMLocalMediaStream::CreateSourceStream(uint32_t aHintContents)
 {
-  nsRefPtr<nsDOMLocalMediaStream> stream = new nsDOMLocalMediaStream();
+  nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
   stream->InitSourceStream(aHintContents);
   return stream.forget();
 }
 
-already_AddRefed<nsDOMMediaStream>
-nsDOMMediaStream::CreateTrackUnionStream(uint32_t aHintContents)
+already_AddRefed<DOMMediaStream>
+DOMMediaStream::CreateTrackUnionStream(uint32_t aHintContents)
 {
-  nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
+  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
   stream->InitTrackUnionStream(aHintContents);
   return stream.forget();
 }
 
-already_AddRefed<nsDOMLocalMediaStream>
-nsDOMLocalMediaStream::CreateTrackUnionStream(uint32_t aHintContents)
+already_AddRefed<DOMLocalMediaStream>
+DOMLocalMediaStream::CreateTrackUnionStream(uint32_t aHintContents)
 {
-  nsRefPtr<nsDOMLocalMediaStream> stream = new nsDOMLocalMediaStream();
+  nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
   stream->InitTrackUnionStream(aHintContents);
   return stream.forget();
 }
 
 bool
-nsDOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
+DOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
 {
   return nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
 }

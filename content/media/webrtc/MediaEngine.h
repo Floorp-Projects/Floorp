@@ -6,7 +6,7 @@
 #define MEDIAENGINE_H_
 
 #include "nsIDOMFile.h"
-#include "nsDOMMediaStream.h"
+#include "DOMMediaStream.h"
 #include "MediaStreamGraph.h"
 
 namespace mozilla {
