@@ -1630,7 +1630,7 @@ this.DOMApplicationRegistry = {
 
     // Disallow reinstalls from the same origin for now.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=821288
-    if (this._appId(app.origin) !== null) {
+    if (this._appId(app.origin) !== null && this._isLaunchable(app.origin)) {
       sendError("REINSTALL_FORBIDDEN");
       return;
     }
