@@ -16,7 +16,7 @@ DIRS += \
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
-		head.js \
+		head_plain.js \
 		test_feed_discovery.html \
 		feed_discovery.html \
 		test_bug395533.html \
