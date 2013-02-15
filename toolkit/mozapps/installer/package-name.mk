@@ -138,13 +138,18 @@ else
 BUILDID = $(shell $(PYTHON) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/platform.ini Build BuildID)
 endif
 
+ifndef INCLUDED_RCS_MK
+  USE_RCS_MK := 1
+  include $(topsrcdir)/config/makefiles/makeutils.mk
+endif
+
 MOZ_SOURCE_STAMP = $(firstword $(shell hg -R $(MOZILLA_DIR) parent --template="{node|short}\n" 2>/dev/null))
 
-# strip a trailing slash from the repo URL because it's not always present,
-# and we want to construct a working URL in the sourcestamp file.
-# make+shell+sed = awful
-_dollar=$$
-MOZ_SOURCE_REPO = $(shell cd $(MOZILLA_DIR) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
+###########################################################################
+# bug: 746277 - preserve existing functionality.
+# MOZILLA_DIR="": cd $(SPACE); hg # succeeds if ~/.hg exists
+###########################################################################
+MOZ_SOURCE_REPO = $(call getSourceRepo,$(MOZILLA_DIR)$(NULL) $(NULL))
 
 MOZ_SOURCESTAMP_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_SOURCESTAMP_FILE_BASENAME).txt
 
