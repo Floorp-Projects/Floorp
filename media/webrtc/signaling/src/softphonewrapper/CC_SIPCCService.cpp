@@ -70,13 +70,13 @@ extern "C"
  */
 void configCtlFetchReq(int device_handle)
 {
-    CSFLogDebugS(logTag, "In configCtlFetchReq");
+    CSFLogDebug(logTag, "In configCtlFetchReq");
 
     CSF::CC_SIPCCService * pPhone = CSF::CC_SIPCCService::_self;
 
     if (pPhone == NULL)
     {
-        CSFLogErrorS( logTag, "CC_SIPCCService::_self is NULL.");
+        CSFLogError( logTag, "CC_SIPCCService::_self is NULL.");
     }
     else
     {
@@ -103,7 +103,7 @@ void configCtlFetchReq(int device_handle)
  */
 void configFetchReq(int device_handle)
 {
-    CSFLogDebugS( logTag, "In configFetchReq");
+    CSFLogDebug( logTag, "In configFetchReq");
 
     configCtlFetchReq(device_handle);
 }
@@ -122,7 +122,7 @@ void configFetchReq(int device_handle)
  */
 void configParserError(void)
 {
-    CSFLogErrorS( logTag, "In configParserError");
+    CSFLogError( logTag, "In configParserError");
 }
 
 /**
@@ -161,18 +161,18 @@ void configApplyConfigNotify(cc_string_t config_version,
 		cc_string_t log_server,
 		cc_boolean ppid)
 {
-    CSFLogDebugS( logTag, "In configApplyConfigNotify");
+    CSFLogDebug( logTag, "In configApplyConfigNotify");
 }
 
 char * platGetIPAddr ()
 {
-    CSFLogDebugS( logTag, "In platGetIPAddr()");
+    CSFLogDebug( logTag, "In platGetIPAddr()");
 
     CSF::CC_SIPCCService * pPhone = CSF::CC_SIPCCService::_self;
 
     if (pPhone == NULL)
     {
-        CSFLogErrorS( logTag, "In platGetIPAddr(). CC_SIPCCService::_self is NULL.");
+        CSFLogError( logTag, "In platGetIPAddr(). CC_SIPCCService::_self is NULL.");
         return (char *) "";
     }
 
@@ -279,25 +279,25 @@ static int _maxBitValueMaskedLoggingEntries = csf_countof(_maskedLoggingEntriesA
 
 extern "C" void CCAPI_DeviceListener_onDeviceEvent(ccapi_device_event_e type, cc_device_handle_t hDevice, cc_deviceinfo_ref_t dev_info)
 {
-    //CSFLogDebugS( logTag, "In CCAPI_DeviceListener_onDeviceEvent");
+    //CSFLogDebug( logTag, "In CCAPI_DeviceListener_onDeviceEvent");
     CSF::CC_SIPCCService::onDeviceEvent(type, hDevice, dev_info);
 }
 
 extern "C" void CCAPI_DeviceListener_onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_ref_t dev_info, cc_featureinfo_ref_t feature_info)
 {
-    //CSFLogDebugS( logTag, "In CCAPI_DeviceListener_onFeatureEvent");
+    //CSFLogDebug( logTag, "In CCAPI_DeviceListener_onFeatureEvent");
     CSF::CC_SIPCCService::onFeatureEvent(type, dev_info, feature_info);
 }
 
 extern "C" void CCAPI_LineListener_onLineEvent(ccapi_line_event_e type, cc_lineid_t line, cc_lineinfo_ref_t info)
 {
-    //CSFLogDebugS( logTag, "In CCAPI_LineListener_onLineEvent");
+    //CSFLogDebug( logTag, "In CCAPI_LineListener_onLineEvent");
     CSF::CC_SIPCCService::onLineEvent(type, line, info);
 }
 
 extern "C" void CCAPI_CallListener_onCallEvent(ccapi_call_event_e type, cc_call_handle_t handle, cc_callinfo_ref_t info)
 {
-    //CSFLogDebugS( logTag, "In CCAPI_CallListener_onCallEvent");
+    //CSFLogDebug( logTag, "In CCAPI_CallListener_onCallEvent");
 	CSF::CC_SIPCCService::onCallEvent(type, handle, info);
 }
 
@@ -339,7 +339,7 @@ bool CC_SIPCCService::init(const std::string& user, const std::string& password,
 
     if (!(bCreated = (CCAPI_Service_create() == CC_SUCCESS)))
     {
-        CSFLogErrorS( logTag, "Call to CCAPI_Service_create() failed.");
+        CSFLogError( logTag, "Call to CCAPI_Service_create() failed.");
         return false;
     }
     return true;
@@ -353,7 +353,7 @@ void CC_SIPCCService::destroy()
     {
         if (CCAPI_Service_destroy() == CC_FAILURE)
         {
-            CSFLogErrorS( logTag, "Call to CCAPI_Service_destroy() failed.");
+            CSFLogError( logTag, "Call to CCAPI_Service_destroy() failed.");
         }
 
         bCreated = false;
@@ -435,18 +435,18 @@ bool CC_SIPCCService::startService()
     bUseConfig = false;
     if (!(bStarted = (CCAPI_Service_start() == CC_SUCCESS)))
     {
-        CSFLogErrorS( logTag, "Call to CCAPI_Service_start() failed.");
+        CSFLogError( logTag, "Call to CCAPI_Service_start() failed.");
         return false;
     }
 
     CC_DevicePtr devicePtr = CC_SIPCCDevice::createDevice ();
     if (devicePtr == NULL)
     {
-    	CSFLogWarnS( logTag, "stopping because createDevice failed");
+    	CSFLogWarn( logTag, "stopping because createDevice failed");
     	stop();
         return false;
     }
-    CSFLogDebugS( logTag, "About to imposeLoggingMask");
+    CSFLogDebug( logTag, "About to imposeLoggingMask");
     applyLoggingMask(loggingMask);
 
     return true;
@@ -462,7 +462,7 @@ void CC_SIPCCService::stop()
 
         if (CCAPI_Service_stop() == CC_FAILURE)
         {
-            CSFLogErrorS( logTag, "Call to CCAPI_Service_stop() failed.");
+            CSFLogError( logTag, "Call to CCAPI_Service_stop() failed.");
         }
 
         bStarted = false;
@@ -599,7 +599,7 @@ void CC_SIPCCService::onDeviceEvent(ccapi_device_event_e type, cc_device_handle_
 {
     if (_self == NULL)
     {
-        CSFLogErrorS( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of device event.");
+        CSFLogError( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of device event.");
         return;
     }
 
@@ -629,7 +629,7 @@ void CC_SIPCCService::onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_re
 
     if (_self == NULL)
      {
-         CSFLogErrorS( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of device event.");
+         CSFLogError( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of device event.");
          return;
      }
 
@@ -659,7 +659,7 @@ void CC_SIPCCService::onLineEvent(ccapi_line_event_e eventType, cc_lineid_t line
 {
     if (_self == NULL)
     {
-        CSFLogErrorS( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of line event.");
+        CSFLogError( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of line event.");
         return;
     }
 
@@ -688,7 +688,7 @@ void CC_SIPCCService::onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t
 {
     if (_self == NULL)
     {
-        CSFLogErrorS( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of call event.");
+        CSFLogError( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of call event.");
         return;
     }
 
@@ -721,7 +721,7 @@ void CC_SIPCCService::addCCObserver ( CC_Observer * observer )
 	mozilla::MutexAutoLock lock(m_lock);
     if (observer == NULL)
     {
-        CSFLogErrorS( logTag, "NULL value for \"observer\" passed to addCCObserver().");
+        CSFLogError( logTag, "NULL value for \"observer\" passed to addCCObserver().");
         return;
     }
 
@@ -859,7 +859,7 @@ void CC_SIPCCService::dtmfBurst(int digit, int direction, int duration)
 				}
 				else
 				{
-					CSFLogWarnS( logTag, "dtmfBurst:sendDtmf returned fail");
+					CSFLogWarn( logTag, "dtmfBurst:sendDtmf returned fail");
 				}
 			}
 	    }
@@ -928,7 +928,7 @@ void CC_SIPCCService::onVideoModeChanged( bool enable )
 void CC_SIPCCService::onKeyFrameRequested( int stream )
 // This is called when the Video Provider indicates that it needs to send a request for new key frame to the sender
 {
-    CSFLogDebugS(logTag, "onKeyFrameRequested for stream ");
+    CSFLogDebug(logTag, "onKeyFrameRequested for stream ");
 	// We haven't a clue what stream to use.  Search for a call which has an audio stream.
 	vector<CC_SIPCCCallPtr> calls;
 	{
@@ -973,13 +973,13 @@ void CC_SIPCCService::onKeyFrameRequested( int stream )
 						"\n"
 						"</media_control>\n"))
 				{
-					CSFLogWarnS(logTag, "sendinfo returned true");
+					CSFLogWarn(logTag, "sendinfo returned true");
 					bSent = true;
 					break;
 				}
 				else
 				{
-					CSFLogWarnS(logTag, "sendinfo returned false");
+					CSFLogWarn(logTag, "sendinfo returned false");
 				}
 			}
 	    }

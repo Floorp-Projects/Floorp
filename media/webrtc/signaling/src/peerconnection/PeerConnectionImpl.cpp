@@ -187,13 +187,13 @@ public:
           DOMMediaStream* stream = nullptr;
 
           if (!mRemoteStream) {
-            CSFLogErrorS(logTag, __FUNCTION__ << " GetRemoteStream returned NULL");
+            CSFLogError(logTag, "%s: GetRemoteStream returned NULL", __FUNCTION__);
           } else {
             stream = mRemoteStream->GetMediaStream();
           }
 
           if (!stream) {
-            CSFLogErrorS(logTag, __FUNCTION__ << " GetMediaStream returned NULL");
+            CSFLogError(logTag, "%s: GetMediaStream returned NULL", __FUNCTION__);
           } else {
             // We provide a type field because it is in the IDL
             // and we want code that looks at it not to crash.
@@ -253,7 +253,7 @@ PeerConnectionImpl::~PeerConnectionImpl()
   if (PeerConnectionCtx::isActive()) {
     PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
   } else {
-    CSFLogErrorS(logTag, "PeerConnectionCtx is already gone. Ignoring...");
+    CSFLogError(logTag, "PeerConnectionCtx is already gone. Ignoring...");
   }
 
   CloseInt(false);
@@ -490,7 +490,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
   mCall = pcctx->createCall();
   if(!mCall.get()) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Couldn't Create Call Object");
+    CSFLogError(logTag, "%s: Couldn't Create Call Object", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
 
@@ -508,7 +508,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
     res = mMedia->Init(aConfiguration->getServers());
   }
   if (NS_FAILED(res)) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Couldn't initialize media object");
+    CSFLogError(logTag, "%s: Couldn't initialize media object", __FUNCTION__);
     return res;
   }
 
@@ -537,7 +537,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mIdentity = DtlsIdentity::Generate();
 
   if (!mIdentity) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Generate returned NULL");
+    CSFLogError(logTag, "%s: Generate returned NULL", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
 
@@ -566,7 +566,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
 #ifndef MOZILLA_INTERNAL_API
   // Busy-wait until we are ready, for C++ unit tests. Remove when tests are fixed.
-  CSFLogDebugS(logTag, __FUNCTION__ << ": Sleeping until kStarted");
+  CSFLogDebug(logTag, "%s: Sleeping until kStarted", __FUNCTION__);
   while(PeerConnectionCtx::GetInstance()->sipcc_state() != kStarted) {
     PR_Sleep(100);
   }
@@ -682,7 +682,7 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
   );
   NS_ENSURE_TRUE(dataChannel,NS_ERROR_FAILURE);
 
-  CSFLogDebugS(logTag, __FUNCTION__ << ": making DOMDataChannel");
+  CSFLogDebug(logTag, "%s: making DOMDataChannel", __FUNCTION__);
 
   // TODO -- need something like "mCall->addStream(stream_id, 0, DATA);" so
   // the SDP can be generated correctly
@@ -698,7 +698,7 @@ PeerConnectionImpl::NotifyConnection()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
@@ -717,7 +717,7 @@ PeerConnectionImpl::NotifyClosedConnection()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
@@ -1112,7 +1112,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 NS_IMETHODIMP
 PeerConnectionImpl::Close(bool aIsSynchronous)
 {
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   return CloseInt(aIsSynchronous);
@@ -1206,7 +1206,7 @@ PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
       break;
 
     case CONNECTED:
-      CSFLogDebugS(logTag, "Setting PeerConnnection state to kActive");
+      CSFLogDebug(logTag, "Setting PeerConnnection state to kActive");
       ChangeReadyState(kActive);
       break;
     default:
@@ -1289,7 +1289,7 @@ PeerConnectionImpl::IceGatheringCompleted_m()
 {
   PC_AUTO_ENTER_API_CALL(false);
 
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
 
   mIceState = kIceWaiting;
 
@@ -1325,7 +1325,7 @@ PeerConnectionImpl::IceCompleted_m()
 {
   PC_AUTO_ENTER_API_CALL(false);
 
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
 
   mIceState = kIceConnected;
 
