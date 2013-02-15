@@ -217,9 +217,11 @@ BaseProxyHandler::set(JSContext *cx, JSObject *proxy_, JSObject *receiver_, jsid
 }
 
 bool
-BaseProxyHandler::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+BaseProxyHandler::keys(JSContext *cx, JSObject *proxyArg, AutoIdVector &props)
 {
     JS_ASSERT(props.length() == 0);
+
+    RootedObject proxy(cx, proxyArg);
 
     if (!getOwnPropertyNames(cx, proxy, props))
         return false;
@@ -427,9 +429,9 @@ DirectProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy,
 bool
 DirectProxyHandler::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    Value v;
+    RootedValue v(cx);
     RootedObject target(cx, GetProxyTargetObject(proxy));
-    if (!JS_DeletePropertyById2(cx, target, id, &v))
+    if (!JS_DeletePropertyById2(cx, target, id, v.address()))
         return false;
     JSBool b;
     if (!JS_ValueToBoolean(cx, v, &b))
@@ -755,7 +757,7 @@ ScriptedIndirectProxyHandler::~ScriptedIndirectProxyHandler()
 }
 
 static bool
-ReturnedValueMustNotBePrimitive(JSContext *cx, JSObject *proxy, JSAtom *atom, const Value &v)
+ReturnedValueMustNotBePrimitive(JSContext *cx, HandleObject proxy, JSAtom *atom, const Value &v)
 {
     if (v.isPrimitive()) {
         JSAutoByteString bytes;
@@ -3094,7 +3096,10 @@ js::RenewProxyObject(JSContext *cx, JSObject *obj,
     JS_ASSERT(obj->getParent() == cx->global());
     JS_ASSERT(obj->getClass() == &ObjectProxyClass);
     JS_ASSERT(obj->getTaggedProto().isLazy());
+#ifdef DEBUG
+    AutoSuppressGC suppressGC(cx);
     JS_ASSERT(!handler->isOuterWindow());
+#endif
 
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
     obj->setCrossCompartmentSlot(JSSLOT_PROXY_PRIVATE, priv);
