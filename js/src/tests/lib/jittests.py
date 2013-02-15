@@ -276,14 +276,6 @@ def run_test(test, shell_args, options):
         env['TZ'] = 'PST8PDT'
 
     out, err, code, timed_out = run(cmd, env, options.timeout)
-
-    if options.show_output:
-        sys.stdout.write(out)
-        sys.stdout.write(err)
-        sys.stdout.write('Exit code: %s\n' % code)
-    if test.valgrind:
-        sys.stdout.write(err)
-
     return TestOutput(test, cmd, out, err, code, None, timed_out)
 
 def check_output(out, err, rc, test):
@@ -485,6 +477,13 @@ def process_test_results(results, num_tests, options):
     doing = 'before starting'
     try:
         for i, res in enumerate(results):
+
+            if options.show_output:
+                sys.stdout.write(res.out)
+                sys.stdout.write(res.err)
+                sys.stdout.write('Exit code: %s\n' % res.rc)
+            if res.test.valgrind:
+                sys.stdout.write(res.err)
 
             ok = check_output(res.out, res.err, res.rc, res.test)
             doing = 'after %s' % res.test.path
