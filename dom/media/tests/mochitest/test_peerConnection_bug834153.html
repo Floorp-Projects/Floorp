@@ -1,57 +1,47 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=834153
--->
 <head>
-  <meta charset="utf-8">
-    <title>Bug 834153: Queue CreateAnswer in PeerConnection.js</title>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-    <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
-    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-    <script type="application/javascript" src="head.js"></script>
-  </meta>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=834153">Queue CreateAnswer in PeerConnection.js</a>
-<p id="display"></p>
 <pre id="test">
-<script class="testbody" type="application/javascript">
+<script type="application/javascript">
 if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 369);
 }
 
-function croak(msg) {
-  ok(0,msg);
-  SimpleTest.finish();
-}
+  createHTML({
+    bug: "834153",
+    title: "Queue CreateAnswer in PeerConnection.js"
+  });
 
-runTest(function () {
-  var pc1;
+  function croak(msg) {
+    ok(0, msg);
+    SimpleTest.finish();
+  }
 
-  pc1 = new mozRTCPeerConnection();
-  ok(pc1, "pc1 is non-null");
+  runTest(function () {
+    var pc1 = new mozRTCPeerConnection();
 
-  pc1.createOffer(
-    function(d) {
-      pc2 = new mozRTCPeerConnection();
-      ok(pc2, "pc2 is non-null");
+    pc1.createOffer(function (d) {
+      var pc2 = new mozRTCPeerConnection();
 
       // The whole point of this test is not to wait for the
       // setRemoteDescription call to succesfully complete, so we
       // don't do anything in its callbacks.
-      pc2.setRemoteDescription(d,function(x){},function(x){});
-      pc2.createAnswer(
-        function (d) {
-          is(d.type,"answer","CreateAnswer created an answer");
-          SimpleTest.finish();
-        },
-        function(err){croak("createAnswer failed: " + err);}
-      );
-    },
-    function(err){croak("createOffer failed: " + err);}
-  );
-}, true);
+      pc2.setRemoteDescription(d, function (x) {}, function (x) {});
+      pc2.createAnswer(function (d) {
+        is(d.type,"answer","CreateAnswer created an answer");
+        SimpleTest.finish();
+      }, function (err) {
+        croak("createAnswer failed: " + err);
+      });
+    }, function (err) {
+        croak("createOffer failed: " + err);
+    });
+  }, true);
 </script>
 </pre>
 </body>
