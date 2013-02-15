@@ -380,5 +380,13 @@ HRESULT MFCreateSourceReaderFromURL(LPCWSTR aURL,
   return (MFCreateSourceReaderFromURLPtr)(aURL, aAttributes, aSourceReader);
 }
 
+HRESULT
+MFCreateAttributes(IMFAttributes **ppMFAttributes, UINT32 cInitialSize)
+{
+  DECL_FUNCTION_PTR(MFCreateAttributes, IMFAttributes**, UINT32);
+  ENSURE_FUNCTION_PTR(MFCreateAttributes, mfplat.dll)
+  return (MFCreateAttributesPtr)(ppMFAttributes, cInitialSize);
+}
+
 } // end namespace wmf
 } // end namespace mozilla
