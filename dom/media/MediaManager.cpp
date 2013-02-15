@@ -1125,6 +1125,31 @@ MediaManager::RemoveFromWindowList(uint64_t aWindowID,
   if (listeners->Length() == 0) {
     RemoveWindowID(aWindowID);
     // listeners has been deleted here
+
+    // get outer windowID
+    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+      (nsGlobalWindow::GetInnerWindowWithId(aWindowID));
+    if (window) {
+      nsPIDOMWindow *outer = window->GetOuterWindow();
+      if (outer) {
+        uint64_t outerID = outer->WindowID();
+
+        // Notify the UI that this window no longer has gUM active
+        char windowBuffer[32];
+        PR_snprintf(windowBuffer, sizeof(windowBuffer), "%llu", outerID);
+        nsAutoString data;
+        data.Append(NS_ConvertUTF8toUTF16(windowBuffer));
+
+        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+        obs->NotifyObservers(nullptr, "recording-window-ended", data.get());
+        LOG(("Sent recording-window-ended for window %llu (outer %llu)",
+             aWindowID, outerID));
+      } else {
+        LOG(("No outer window for inner %llu", aWindowID));
+      }
+    } else {
+      LOG(("No inner window for %llu", aWindowID));
+    }
   }
 }
 
