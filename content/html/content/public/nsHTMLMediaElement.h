@@ -258,11 +258,6 @@ public:
   static mozilla::CanPlayStatus GetCanPlay(const nsAString& aType);
 
   /**
-   * Get the mime type for this element.
-   */
-  void GetMimeType(nsCString& aMimeType);
-
-  /**
    * Called when a child source element is added to this media element. This
    * may queue a task to run the select resource algorithm if appropriate.
    */
@@ -898,13 +893,6 @@ protected:
 
   // True if the media's channel's download has been suspended.
   bool mDownloadSuspendedByCache;
-
-  // The Content-Type for this media. When we are sniffing for the Content-Type,
-  // and we are recreating a channel after the initial load, we need that
-  // information to give it as a hint to the channel for it to bypass the
-  // sniffing phase, that would fail because sniffing only works when applied to
-  // the first bytes of the stream.
-  nsCString mMimeType;
 
   // Audio Channel Type.
   mozilla::dom::AudioChannelType mAudioChannelType;
