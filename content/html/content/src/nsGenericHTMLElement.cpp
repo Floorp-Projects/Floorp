@@ -2198,6 +2198,14 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
                                    nsGenericHTMLElement,
                                    nsIFormControl)
 
+nsINode*
+nsGenericHTMLFormElement::GetParentObject() const
+{
+  // We use the parent chain to implement the scope for event handlers.
+  return mForm ? static_cast<nsINode*>(mForm)
+               : static_cast<nsINode*>(OwnerDoc());
+}
+
 bool
 nsGenericHTMLFormElement::IsNodeOfType(uint32_t aFlags) const
 {
