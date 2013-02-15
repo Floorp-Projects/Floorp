@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsIContentViewerFile.idl',
     'nsIDocCharset.idl',
     'nsIDocShell.idl',
-    'nsIDocShellHistory.idl',
     'nsIDocShellLoadInfo.idl',
     'nsIDocShellTreeItem.idl',
     'nsIDocShellTreeNode.idl',

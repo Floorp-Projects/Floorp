@@ -25,7 +25,6 @@
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserStream.h"
 #include "nsIPresShell.h"
-#include "nsIDocShellHistory.h"
 #include "nsIURIContentListener.h"
 #include "nsGUIEvent.h"
 #include "nsISHistoryListener.h"
@@ -317,10 +316,8 @@ NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(bool aEnable)
     nsresult rv;
     
     NS_ENSURE_STATE(mDocShell);
-    nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(mDocShell, &rv));
-    if (NS_FAILED(rv)) return rv;
     
-    return dsHistory->SetUseGlobalHistory(aEnable);
+    return mDocShell->SetUseGlobalHistory(aEnable);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow)
