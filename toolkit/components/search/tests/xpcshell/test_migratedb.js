@@ -13,7 +13,7 @@ function run_test()
 {
   removeMetadata();
 
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
+  updateAppInfo();
 
   let search_sqlite = do_get_file("data/search.sqlite");
   search_sqlite.copyTo(gProfD, "search.sqlite");
