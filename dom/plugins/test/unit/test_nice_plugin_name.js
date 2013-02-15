@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 let gAppInfo = null;
 
@@ -60,37 +59,10 @@ function createAppInfo(id, name, version, platformVersion) {
 let gDirSvc = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties);
 
-function get_test_plugin_no_symlink() {
-  let pluginEnum = gDirSvc.get("APluginsDL", Ci.nsISimpleEnumerator);
-  while (pluginEnum.hasMoreElements()) {
-    let dir = pluginEnum.getNext().QueryInterface(Ci.nsILocalFile);
-    let plugin = dir.clone();
-    plugin.append(get_platform_specific_plugin_name());
-    if (plugin.exists()) {
-      return plugin;
-    }
-  }
-  return null;
-}
-
 let gPluginHost = null;
 let gIsWindows = null;
 let gIsOSX = null;
 let gIsLinux = null;
-
-function get_platform_specific_plugin_name() {
-  if (gIsWindows) return "nptest.dll";
-  else if (gIsOSX) return "Test.plugin";
-  else if (gIsLinux) return "libnptest.so";
-  else return null;
-}
-
-function get_platform_specific_plugin_suffix() {
-  if (gIsWindows) return ".dll";
-  else if (gIsOSX) return ".plugin";
-  else if (gIsLinux) return ".so";
-  else return null;
-}
 
 function test_expected_permission_string(aPermString) {
   gPluginHost.reloadPlugins(false);
@@ -101,9 +73,6 @@ function test_expected_permission_string(aPermString) {
 }
 
 function run_test() {
-  gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-  gIsOSX = ("nsILocalFileMac" in Ci);
-  gIsLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
   do_check_true(gIsWindows || gIsOSX || gIsLinux);
   do_check_true(!(gIsWindows && gIsOSX) && !(gIsWindows && gIsLinux) &&
                 !(gIsOSX && gIsLinux));
@@ -113,7 +82,7 @@ function run_test() {
 
   let expectedDefaultPermissionString = null;
   if (gIsWindows) expectedDefaultPermissionString = "plugin:nptest";
-  if (gIsOSX) expectedDefaultPermissionString = "plugin:Test";
+  if (gIsOSX) expectedDefaultPermissionString = "plugin:test";
   if (gIsLinux) expectedDefaultPermissionString = "plugin:libnptest";
   test_expected_permission_string(expectedDefaultPermissionString);
 
@@ -135,13 +104,16 @@ function run_test() {
   pluginCopy.moveTo(null, "npqtplugin7" + suffix);
   test_expected_permission_string("plugin:npqtplugin");
 
-  pluginCopy.moveTo(null, "npfoo3d" + suffix);
+  pluginCopy.moveTo(null, "npFoo3d" + suffix);
   test_expected_permission_string("plugin:npfoo3d");
 
   pluginCopy.moveTo(null, "NPSWF32_11_5_502_146" + suffix);
-  test_expected_permission_string("plugin:NPSWF");
+  test_expected_permission_string("plugin:npswf");
 
   pluginCopy.remove(true);
   pluginFile.moveTo(pluginDir, null);
   test_expected_permission_string(expectedDefaultPermissionString);
+
+  // Clean up
+  Services.prefs.clearUserPref("plugin.importedState");
 }

@@ -3,17 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
-// v0.9+ registry field meanings are different on Mac OS X
-const CWD = do_get_cwd();
-function checkOS(os) {
-  const nsILocalFile_ = "nsILocalFile" + os;
-  return nsILocalFile_ in Components.interfaces &&
-         CWD instanceof Components.interfaces[nsILocalFile_];
-}
-const isMac = checkOS("Mac");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // Plugin registry uses different field delimeters on different platforms
 var DELIM = ":";
@@ -64,7 +54,7 @@ function run_test() {
   // write plugin registry data
   let registry = "";
 
-  if (isMac) {
+  if (gIsOSX) {
     registry += file.leafName + DELIM + "$\n";
     registry += file.path + DELIM + "$\n";
   } else {
@@ -94,4 +84,7 @@ function run_test() {
   // The plugin registry should have been rejected.
   // If not, the test plugin version would be 0.0.0.0
   do_check_eq(plugin.version, "1.0.0.0");
+
+  // Clean up
+  Services.prefs.clearUserPref("plugin.importedState");
 }
