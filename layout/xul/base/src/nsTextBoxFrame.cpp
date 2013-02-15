@@ -361,11 +361,11 @@ nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!IsVisibleForPainting(aBuilder))
       return NS_OK;
 
-    nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+    nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
     
-    aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayXULTextBox(aBuilder, this));
-    return NS_OK;
+    return aLists.Content()->AppendNewToTop(new (aBuilder)
+        nsDisplayXULTextBox(aBuilder, this));
 }
 
 void

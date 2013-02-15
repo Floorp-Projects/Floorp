@@ -51,8 +51,7 @@ nsFirstLetterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
-  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
-  return NS_OK;
+  return BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

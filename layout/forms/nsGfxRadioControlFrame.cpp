@@ -64,8 +64,10 @@ nsGfxRadioControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
-  nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-
+  nsresult rv = nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect,
+                                                     aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
   
@@ -77,9 +79,8 @@ nsGfxRadioControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!checked)
     return NS_OK;
     
-  aLists.Content()->AppendNewToTop(new (aBuilder)
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayGeneric(aBuilder, this, PaintCheckedRadioButton,
                      "CheckedRadioButton",
                      nsDisplayItem::TYPE_CHECKED_RADIOBUTTON));
-  return NS_OK;
 }

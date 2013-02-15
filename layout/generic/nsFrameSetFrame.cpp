@@ -763,13 +763,14 @@ nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                       const nsRect&           aDirtyRect,
                                       const nsDisplayListSet& aLists)
 {
-  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  nsresult rv = BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mDragger && aBuilder->IsForEventDelivery()) {
-    aLists.Content()->AppendNewToTop(
-      new (aBuilder) nsDisplayEventReceiver(aBuilder, this));
+    rv = aLists.Content()->AppendNewToTop(
+        new (aBuilder) nsDisplayEventReceiver(aBuilder, this));
   }
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -1545,9 +1546,8 @@ nsHTMLFramesetBorderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
-  aLists.Content()->AppendNewToTop(
-    new (aBuilder) nsDisplayFramesetBorder(aBuilder, this));
-  return NS_OK;
+  return aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayFramesetBorder(aBuilder, this));
 }
 
 void nsHTMLFramesetBorderFrame::PaintBorder(nsRenderingContext& aRenderingContext,
@@ -1755,7 +1755,6 @@ nsHTMLFramesetBlankFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists)
 {
-  aLists.Content()->AppendNewToTop(
-    new (aBuilder) nsDisplayFramesetBlank(aBuilder, this));
-  return NS_OK;
+  return aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayFramesetBlank(aBuilder, this));
 }

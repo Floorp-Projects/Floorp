@@ -286,15 +286,18 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  DisplayBorderBackgroundOutline(aBuilder, aLists);
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsDisplayList replacedContent;
 
-  replacedContent.AppendNewToTop(
-    new (aBuilder) nsDisplayCanvas(aBuilder, this));
+  rv = replacedContent.AppendNewToTop(
+      new (aBuilder) nsDisplayCanvas(aBuilder, this));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  DisplaySelectionOverlay(aBuilder, &replacedContent,
-                          nsISelectionDisplay::DISPLAY_IMAGES);
+  rv = DisplaySelectionOverlay(aBuilder, &replacedContent,
+                               nsISelectionDisplay::DISPLAY_IMAGES);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
 

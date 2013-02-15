@@ -1217,7 +1217,8 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleOrCollapsedForPainting(aBuilder))
     return NS_OK;
 
-  DisplayBorderBackgroundOutline(aBuilder, aLists);
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsPresContext::nsPresContextType type = PresContext()->Type();
 
@@ -1251,9 +1252,9 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // determine if we are printing
   if (type == nsPresContext::eContext_Print) {
-    replacedContent.AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
-                       nsDisplayItem::TYPE_PRINT_PLUGIN));
+    rv = replacedContent.AppendNewToTop(new (aBuilder)
+        nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
+                         nsDisplayItem::TYPE_PRINT_PLUGIN));
   } else {
     LayerState state = GetLayerState(aBuilder, nullptr);
     if (state == LAYER_INACTIVE &&
@@ -1265,8 +1266,9 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (aBuilder->IsPaintingToWindow() &&
         state == LAYER_ACTIVE &&
         IsTransparentMode()) {
-      replacedContent.AppendNewToTop(new (aBuilder)
-        nsDisplayPluginReadback(aBuilder, this));
+      rv = replacedContent.AppendNewToTop(new (aBuilder)
+          nsDisplayPluginReadback(aBuilder, this));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 #endif
 
@@ -1278,15 +1280,17 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       mInstanceOwner->GetVideos(videos);
 
       for (uint32_t i = 0; i < videos.Length(); i++) {
-        replacedContent.AppendNewToTop(new (aBuilder)
+        rv = replacedContent.AppendNewToTop(new (aBuilder)
           nsDisplayPluginVideo(aBuilder, this, videos[i]));
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     }
 #endif
 
-    replacedContent.AppendNewToTop(new (aBuilder)
-      nsDisplayPlugin(aBuilder, this));
+    rv = replacedContent.AppendNewToTop(new (aBuilder)
+        nsDisplayPlugin(aBuilder, this));
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
 

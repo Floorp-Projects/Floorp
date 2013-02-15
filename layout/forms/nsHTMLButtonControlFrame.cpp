@@ -117,14 +117,17 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   nsDisplayList onTop;
   if (IsVisibleForPainting(aBuilder)) {
-    mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
+    nsresult rv = mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   
   nsDisplayListCollection set;
   // Do not allow the child subtree to receive events.
   if (!aBuilder->IsForEventDelivery()) {
-    BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
-                             DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+    nsresult rv =
+      BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
+                               DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+    NS_ENSURE_SUCCESS(rv, rv);
     // That should put the display items in set.Content()
   }
   
@@ -140,16 +143,17 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nscoord radii[8];
     GetPaddingBoxBorderRadii(radii);
 
-    OverflowClip(aBuilder, set, aLists, rect, radii);
+    nsresult rv = OverflowClip(aBuilder, set, aLists, rect, radii);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     set.MoveTo(aLists);
   }
   
-  DisplayOutline(aBuilder, aLists);
+  nsresult rv = DisplayOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // to draw border when selected in editor
-  DisplaySelectionOverlay(aBuilder, aLists.Content());
-  return NS_OK;
+  return DisplaySelectionOverlay(aBuilder, aLists.Content());
 }
 
 nscoord
