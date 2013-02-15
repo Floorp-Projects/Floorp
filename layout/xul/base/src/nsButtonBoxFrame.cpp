@@ -32,15 +32,15 @@ NS_NewButtonBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsButtonBoxFrame)
 
-void
+NS_IMETHODIMP
 nsButtonBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                               const nsRect&           aDirtyRect,
                                               const nsDisplayListSet& aLists)
 {
   // override, since we don't want children to get events
   if (aBuilder->IsForEventDelivery())
-    return;
-  nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+    return NS_OK;
+  return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

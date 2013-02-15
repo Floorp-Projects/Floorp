@@ -290,7 +290,7 @@ nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
   return rv;
 }
 
-void
+NS_IMETHODIMP
 nsSliderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
@@ -300,13 +300,14 @@ nsSliderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // thumb mouse drag events to arrive at the slider!
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
       nsDisplayEventReceiver(aBuilder, this));
-    return;
+    return NS_OK;
   }
   
   nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists)
@@ -324,10 +325,10 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     GetClientRect(crect);
 
     if (crect.width < thumbRect.width || crect.height < thumbRect.height)
-      return;
+      return NS_OK;
   }
   
-  nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

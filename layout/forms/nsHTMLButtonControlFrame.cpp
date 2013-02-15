@@ -110,7 +110,7 @@ nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 
-void
+NS_IMETHODIMP
 nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists)
@@ -149,6 +149,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // to draw border when selected in editor
   DisplaySelectionOverlay(aBuilder, aLists.Content());
+  return NS_OK;
 }
 
 nscoord

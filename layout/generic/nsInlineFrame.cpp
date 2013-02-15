@@ -174,7 +174,7 @@ nsInlineFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
   return false;
 }
 
-void
+NS_IMETHODIMP
 nsInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
@@ -188,6 +188,7 @@ nsInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!mFrames.FirstChild()) {
     DisplaySelectionOverlay(aBuilder, aLists.Content());
   }
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////

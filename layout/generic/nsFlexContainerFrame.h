@@ -35,9 +35,9 @@ class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
 
 public:
   // nsIFrame overrides
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

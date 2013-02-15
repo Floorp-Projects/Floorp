@@ -354,9 +354,9 @@ public:
    * probably be avoided and eventually removed. It's currently here
    * to emulate what nsContainerFrame::Paint did.
    */
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   // Destructor function for the proptable-stored framelists
   static void DestroyFrameList(void* aPropertyValue)
@@ -391,21 +391,22 @@ protected:
    * so its background and all other display items (except for positioned
    * display items) go into the Content() list.
    */
-  void BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
-                                           const nsRect&           aDirtyRect,
-                                           const nsDisplayListSet& aLists,
-                                           uint32_t                aFlags = 0);
+  nsresult BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
+                                               const nsRect&           aDirtyRect,
+                                               const nsDisplayListSet& aLists,
+                                               uint32_t                aFlags = 0);
 
   /**
    * A version of BuildDisplayList that use DISPLAY_CHILD_INLINE.
    * Intended as a convenience for derived classes.
    */
-  void BuildDisplayListForInline(nsDisplayListBuilder*   aBuilder,
-                                 const nsRect&           aDirtyRect,
-                                 const nsDisplayListSet& aLists) {
+  nsresult BuildDisplayListForInline(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists) {
     DisplayBorderBackgroundOutline(aBuilder, aLists);
     BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
                                         DISPLAY_CHILD_INLINE);
+    return NS_OK;
   }
 
 

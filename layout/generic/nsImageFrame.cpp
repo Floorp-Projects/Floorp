@@ -1366,13 +1366,13 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
   }
 }
 
-void
+NS_IMETHODIMP
 nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
-    return;
+    return NS_OK;
 
   // REVIEW: We don't need any special logic here for deciding which layer
   // to put the background in ... it goes in aLists.BorderBackground() and
@@ -1446,6 +1446,8 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+
+  return NS_OK;
 }
 
 bool
