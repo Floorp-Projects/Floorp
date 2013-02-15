@@ -432,6 +432,9 @@ class ICStub
     Trait trait_ : 3;
     Kind kind_ : 13;
 
+    // A 16-bit field usable by subtypes of ICStub for subtype-specific small-info
+    uint16_t extra_;
+
     // The raw jitcode to call for this stub.
     uint8_t *stubCode_;
 
@@ -442,6 +445,7 @@ class ICStub
     inline ICStub(Kind kind, IonCode *stubCode)
       : trait_(Regular),
         kind_(kind),
+        extra_(0),
         stubCode_(stubCode->raw()),
         next_(NULL)
     {
@@ -451,6 +455,7 @@ class ICStub
     inline ICStub(Kind kind, Trait trait, IonCode *stubCode)
       : trait_(trait),
         kind_(kind),
+        extra_(0),
         stubCode_(stubCode->raw()),
         next_(NULL)
     {
@@ -571,6 +576,10 @@ class ICStub
 
     static inline size_t offsetOfStubCode() {
         return offsetof(ICStub, stubCode_);
+    }
+
+    static inline size_t offsetOfExtra() {
+        return offsetof(ICStub, extra_);
     }
 
     static bool CanMakeCalls(ICStub::Kind kind) {
