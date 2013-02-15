@@ -3897,9 +3897,11 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
     if (constructing)
         return true;
 
-    if (fun->isNative()) {
-        IonSpew(IonSpew_BaselineIC, "  Generating Call_Native stub (fun=%p)", fun.get());
-        ICCall_Native::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(), fun);
+    if (fun->isNative() && (!constructing || (constructing && fun->isNativeConstructor()))) {
+        IonSpew(IonSpew_BaselineIC, "  Generating Call_Native stub (fun=%p, cons=%s)", fun.get(),
+                constructing ? "yes" : "no");
+        ICCall_Native::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+                                         fun, constructing);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -4274,6 +4276,12 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
     // right-to-left so duplicate them on the stack in reverse order.
     // |this| and callee are pushed last.
     pushCallArguments(masm, regs, argcReg);
+
+    if (isConstructing_) {
+        // Stack looks like: [ ..., Arg0Val, ThisVal, CalleeVal ]
+        // Replace ThisVal with MagicValue(JS_IS_CONSTRUCTING)
+        masm.storeValue(MagicValue(JS_IS_CONSTRUCTING), Address(BaselineStackReg, sizeof(Value)));
+    }
 
     masm.checkStackAlignment();
 
