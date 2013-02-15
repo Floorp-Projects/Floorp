@@ -462,6 +462,11 @@ class ICStub
         JS_ASSERT(stubCode != NULL);
     }
 
+    inline Trait trait() const {
+        // Workaround for MSVC reading trait_ as signed value.
+        return (Trait)(trait_ & 0x7);
+    }
+
   public:
 
     inline Kind kind() const {
@@ -469,19 +474,19 @@ class ICStub
     }
 
     inline bool isFallback() const {
-        return trait_ == Fallback || trait_ == MonitoredFallback;
+        return trait() == Fallback || trait() == MonitoredFallback;
     }
 
     inline bool isMonitored() const {
-        return trait_ == Monitored;
+        return trait() == Monitored;
     }
 
     inline bool isUpdated() const {
-        return trait_ == Updated;
+        return trait() == Updated;
     }
 
     inline bool isMonitoredFallback() const {
-        return trait_ == MonitoredFallback;
+        return trait() == MonitoredFallback;
     }
 
     inline const ICFallbackStub *toFallbackStub() const {
