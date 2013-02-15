@@ -19,13 +19,13 @@ class nsIThreadPool;
 namespace mozilla {
 
 class MediaResource;
-class AsyncReadRequest;
+class ReadRequest;
 
 // Wraps a MediaResource around an IMFByteStream interface, so that it can
 // be used by the IMFSourceReader. Each WMFByteStream creates a WMF Work Queue
 // on which blocking I/O is performed. The SourceReader requests reads
-// asynchronously using {Begin,End}Read(). The synchronous I/O methods aren't
-// used by the SourceReader, so they're not implemented on this class.
+// asynchronously using {Begin,End}Read(), and more rarely synchronously
+// using Read().
 //
 // Note: This implementation attempts to be bug-compatible with Windows Media
 //       Foundation's implementation of IMFByteStream. The behaviour of WMF's
@@ -75,12 +75,12 @@ public:
   // Processes an async read request, storing the result in aResult, and
   // notifying the caller when the read operation is complete.
   void ProcessReadRequest(IMFAsyncResult* aResult,
-                          AsyncReadRequest* aRequestState);
+                          ReadRequest* aRequestState);
 private:
 
-  // Locks the MediaResource and performs the read. This is a helper
-  // for ProcessReadRequest().
-  nsresult Read(AsyncReadRequest* aRequestState);
+  // Locks the MediaResource and performs the read. The other read methods
+  // call this function.
+  nsresult Read(ReadRequest* aRequestState);
 
   // Returns true if the current position of the stream is at end of stream.
   bool IsEOS();
