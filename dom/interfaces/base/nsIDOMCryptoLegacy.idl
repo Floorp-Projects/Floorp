@@ -7,7 +7,7 @@
 
 interface nsIDOMCRMFObject;
 
-[scriptable, uuid(b50312fa-06ec-460c-b5e9-5dbb009eb457)]
+[scriptable, uuid(e1df1d4d-41ef-4225-934a-107c5d612686)]
 interface nsIDOMCrypto : nsISupports
 {
   readonly attribute DOMString        version;
@@ -23,4 +23,6 @@ interface nsIDOMCrypto : nsISupports
                                      in DOMString caOption /* ... */);
   void                      logout();
   void                      disableRightClick();
+
+  [implicit_jscontext] jsval getRandomValues(in jsval aData);
 };

@@ -99,6 +99,7 @@ EXPORTS += \
   CryptoTask.h \
   nsNSSShutDown.h \
   ScopedNSSTypes.h \
+  nsRandomGenerator.h \
   $(NULL)
 
 EXPORTS_NAMESPACES = mozilla
