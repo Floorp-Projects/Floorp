@@ -42,7 +42,6 @@ XPIDLSRCS = \
   nsIContentViewerEdit.idl \
   nsIContentViewerFile.idl \
   nsIURIFixup.idl \
-  nsIEditorDocShell.idl \
   nsIWebPageDescriptor.idl \
   nsIDownloadHistory.idl \
   nsILoadContext.idl \

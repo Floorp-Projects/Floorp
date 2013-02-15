@@ -235,13 +235,11 @@ nsHtml5TreeOpExecutor::SetDocumentCharsetAndSource(nsACString& aCharset, int32_t
       // in this block of code, if we get an error result, we return
       // it but if we get a null pointer, that's perfectly legal for
       // parent and parentContentViewer
-      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-        do_QueryInterface(mDocShell);
-      if (!docShellAsItem) {
+      if (!mDocShell) {
     	  return;
       }
       nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-      docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
+      mDocShell->GetSameTypeParent(getter_AddRefs(parentAsItem));
       nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
       if (parent) {
         nsCOMPtr<nsIContentViewer> parentContentViewer;
@@ -880,9 +878,8 @@ nsHtml5TreeOpExecutor::MaybeComplainAboutCharset(const char* aMsgId,
   // the embedded different-origin pages anyway and can't fix problems even
   // if alerted about them.
   if (!strcmp(aMsgId, "EncNoDeclaration") && mDocShell) {
-    nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
     nsCOMPtr<nsIDocShellTreeItem> parent;
-    treeItem->GetSameTypeParent(getter_AddRefs(parent));
+    mDocShell->GetSameTypeParent(getter_AddRefs(parent));
     if (parent) {
       return;
     }

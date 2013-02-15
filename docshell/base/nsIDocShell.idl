@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#include "nsIDocShellTreeItem.idl"
 #include "nsIAtom.idl"
 
 %{ C++
@@ -26,6 +26,7 @@ interface nsIContentViewer;
 interface nsIURIContentListener;
 interface nsIDOMEventTarget;
 interface nsIDocShellLoadInfo;
+interface nsIEditor;
 interface nsIWebNavigation;
 interface nsISimpleEnumerator;
 interface nsIInputStream;
@@ -39,8 +40,8 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(5ea80008-a166-4692-8a7e-39690dd192c6)]
-interface nsIDocShell : nsISupports
+[scriptable, builtinclass, uuid(e8f6f3e5-8cee-4be3-8d56-5ed617305bf8)]
+interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
    * Loads a given URI.  This will give priority to loading the requested URI
@@ -789,4 +790,17 @@ interface nsIDocShell : nsISupports
    * must disable the menu when this property is false.
    */
   [infallible] readonly attribute boolean mayEnableCharacterEncodingMenu;
+
+           attribute  nsIEditor editor;
+  readonly attribute  boolean   editable;             /* this docShell is editable */
+  readonly attribute  boolean   hasEditingSession;    /* this docShell has an editing session */
+    
+  /**
+   * Make this docShell editable, setting a flag that causes
+   * an editor to get created, either immediately, or after
+   * a url has been loaded.
+   *      @param  inWaitForUriLoad    true to wait for a URI before
+   *                                  creating the editor.
+   */     
+  void makeEditable(in boolean inWaitForUriLoad);
 };

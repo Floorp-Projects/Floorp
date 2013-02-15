@@ -1009,7 +1009,7 @@ function runComplexContenteditableTests()
   var editor =
     window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIWebNavigation).
-      QueryInterface(Components.interfaces.nsIEditorDocShell).editor;
+      QueryInterface(Components.interfaces.nsIDocShell).editor;
   var flags = editor.flags;
   editor.flags = flags | kReadonly;
   is(gFM.focusedElement, container,
@@ -1041,7 +1041,7 @@ function runComplexContenteditableTests()
   editor =
     window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIWebNavigation).
-      QueryInterface(Components.interfaces.nsIEditorDocShell).editor;
+      QueryInterface(Components.interfaces.nsIDocShell).editor;
   flags = editor.flags;
   editor.flags = flags | kReadonly;
   is(gFM.focusedElement, button,
@@ -1083,7 +1083,7 @@ function runComplexContenteditableTests()
     editor =
       window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
         getInterface(Components.interfaces.nsIWebNavigation).
-        QueryInterface(Components.interfaces.nsIEditorDocShell).editor;
+        QueryInterface(Components.interfaces.nsIDocShell).editor;
     flags = editor.flags;
     editor.flags = flags | kReadonly;
     is(gFM.focusedElement, aEditor,
@@ -1151,7 +1151,7 @@ function runComplexContenteditableTests()
     editor =
       window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
         getInterface(Components.interfaces.nsIWebNavigation).
-        QueryInterface(Components.interfaces.nsIEditorDocShell).editor;
+        QueryInterface(Components.interfaces.nsIDocShell).editor;
     flags = editor.flags;
     editor.flags = flags | kReadonly;
     is(gFM.focusedElement, aFocusNode,
@@ -1219,7 +1219,7 @@ function runEditorFlagChangeTests()
   var editor =
     window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIWebNavigation).
-      QueryInterface(Components.interfaces.nsIEditorDocShell).editor;
+      QueryInterface(Components.interfaces.nsIDocShell).editor;
   var editorIMESupport =
     editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
   var flags = editor.flags;

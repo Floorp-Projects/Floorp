@@ -405,7 +405,7 @@ NS_IMETHODIMP nsWebBrowser::GetName(PRUnichar** aName)
    NS_ENSURE_ARG_POINTER(aName);
 
    if(mDocShell)  
-      mDocShellAsItem->GetName(aName);
+      mDocShell->GetName(aName);
    else
       *aName = ToNewUnicode(mInitInfo->name);
 
@@ -416,10 +416,7 @@ NS_IMETHODIMP nsWebBrowser::SetName(const PRUnichar* aName)
 {
    if(mDocShell)
       {
-      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-      NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-      return docShellAsItem->SetName(aName);
+      return mDocShell->SetName(aName);
       }
    else
       mInitInfo->name = aName;
@@ -433,9 +430,7 @@ NS_IMETHODIMP nsWebBrowser::NameEquals(const PRUnichar *aName, bool *_retval)
     NS_ENSURE_ARG_POINTER(_retval);
     if(mDocShell)
     {
-        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-        NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-        return docShellAsItem->NameEquals(aName, _retval);
+        return mDocShell->NameEquals(aName, _retval);
     }
     else
         *_retval = mInitInfo->name.Equals(aName);
@@ -455,10 +450,10 @@ NS_IMETHODIMP nsWebBrowser::SetItemType(int32_t aItemType)
 {
     NS_ENSURE_TRUE((aItemType == typeContentWrapper || aItemType == typeChromeWrapper), NS_ERROR_FAILURE);
     mContentType = aItemType;
-    if (mDocShellAsItem)
-        mDocShellAsItem->SetItemType(mContentType == typeChromeWrapper
-                                         ? static_cast<int32_t>(typeChrome)
-                                         : static_cast<int32_t>(typeContent));
+    if (mDocShell)
+        mDocShell->SetItemType(mContentType == typeChromeWrapper
+                                   ? static_cast<int32_t>(typeChrome)
+                                   : static_cast<int32_t>(typeContent));
     return NS_OK;
 }
 
@@ -515,7 +510,7 @@ NS_IMETHODIMP nsWebBrowser::FindItemWithName(const PRUnichar *aName,
    NS_ENSURE_STATE(mDocShell);
    NS_ASSERTION(mDocShellTreeOwner, "This should always be set when in this situation");
 
-   return mDocShellAsItem->FindItemWithName(aName, 
+   return mDocShell->FindItemWithName(aName, 
       static_cast<nsIDocShellTreeOwner*>(mDocShellTreeOwner),
       aOriginalRequestor, _retval);
 }
@@ -1176,16 +1171,16 @@ NS_IMETHODIMP nsWebBrowser::Create()
       docShellParentWidget, mInitInfo->x, mInitInfo->y, mInitInfo->cx,
       mInitInfo->cy), NS_ERROR_FAILURE);
 
-   mDocShellAsItem->SetName(mInitInfo->name.get());
+   mDocShell->SetName(mInitInfo->name.get());
    if (mContentType == typeChromeWrapper)
    {
-       mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);
+       mDocShell->SetItemType(nsIDocShellTreeItem::typeChrome);
    }
    else
    {
-       mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
+       mDocShell->SetItemType(nsIDocShellTreeItem::typeContent);
    }
-   mDocShellAsItem->SetTreeOwner(mDocShellTreeOwner);
+   mDocShell->SetTreeOwner(mDocShellTreeOwner);
    
    // If the webbrowser is a content docshell item then we won't hear any
    // events from subframes. To solve that we install our own chrome event handler
@@ -1598,18 +1593,16 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
  
          nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(aDocShell));
          nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aDocShell));
-         nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aDocShell));
          nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
          nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
          nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
          nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell));
-         NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll && progress,
+         NS_ENSURE_TRUE(req && baseWin && nav && scrollable && textScroll && progress,
              NS_ERROR_FAILURE);
  
          mDocShell = aDocShell;
          mDocShellAsReq = req;
          mDocShellAsWin = baseWin;
-         mDocShellAsItem = item;
          mDocShellAsNav = nav;
          mDocShellAsScrollable = scrollable;
          mDocShellAsTextScroll = textScroll;
@@ -1635,7 +1628,6 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
          mDocShell = nullptr;
          mDocShellAsReq = nullptr;
          mDocShellAsWin = nullptr;
-         mDocShellAsItem = nullptr;
          mDocShellAsNav = nullptr;
          mDocShellAsScrollable = nullptr;
          mDocShellAsTextScroll = nullptr;

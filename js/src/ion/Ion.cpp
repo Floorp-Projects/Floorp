@@ -1201,13 +1201,19 @@ OffThreadCompilationAvailable(JSContext *cx)
 {
     // Even if off thread compilation is enabled, compilation must still occur
     // on the main thread in some cases. Do not compile off thread during an
-    // incremental GC, as this may trip incremental read barriers. Also skip
-    // off thread compilation if script execution is being profiled, as
+    // incremental GC, as this may trip incremental read barriers.
+    //
+    // Skip off thread compilation if PC count profiling is enabled, as
     // CodeGenerator::maybeCreateScriptCounts will not attach script profiles
     // when running off thread.
+    //
+    // Also skip off thread compilation if the SPS profiler is enabled, as it
+    // stores strings in the spsProfiler data structure, which is not protected
+    // by a lock.
     return OffThreadCompilationEnabled(cx)
         && cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL
-        && !cx->runtime->profilingScripts;
+        && !cx->runtime->profilingScripts
+        && !cx->runtime->spsProfiler.enabled();
 }
 
 AbortReason
