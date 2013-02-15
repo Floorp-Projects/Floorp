@@ -58,7 +58,8 @@ fails == flexbox-basic-img-vert-2.xhtml flexbox-basic-img-vert-2-ref.xhtml # bug
 == flexbox-basic-video-vert-1.xhtml     flexbox-basic-video-vert-1-ref.xhtml
 fails == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml # bug 794660
 
-# Tests for dynamic modifications of content inside a flex container
+# Tests for dynamic modifications of content inside/around a flex container
+== flexbox-dyn-changeFrameWidth-1.xhtml flexbox-dyn-changeFrameWidth-1-ref.xhtml
 == flexbox-dyn-changePadding-1a.xhtml flexbox-dyn-changePadding-1-ref.xhtml
 == flexbox-dyn-changePadding-1b.xhtml flexbox-dyn-changePadding-1-ref.xhtml
 
