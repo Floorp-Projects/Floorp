@@ -6,6 +6,7 @@
 
 const Cu = Components.utils;
 
+Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource:///modules/devtools/ProfilerController.jsm");
 Cu.import("resource:///modules/devtools/ProfilerHelpers.jsm");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
@@ -14,10 +15,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["ProfilerPanel"];
 
-XPCOMUtils.defineLazyGetter(this, "DebuggerServer", function () {
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-  return DebuggerServer;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
+  "resource://gre/modules/devtools/dbg-server.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
 /**
  * An instance of a profile UI. Profile UI consists of
@@ -105,6 +107,9 @@ function ProfileUI(uid, panel) {
         break;
       case "enabled":
         this.emit("enabled");
+        break;
+      case "displaysource":
+        this.panel.displaySource(event.data.data);
     }
   }.bind(this));
 }
@@ -219,6 +224,7 @@ ProfilerPanel.prototype = {
   _uid:        null,
   _activeUid:  null,
   _runningUid: null,
+  _browserWin: null,
 
   get activeProfile() {
     return this.profiles.get(this._activeUid);
@@ -226,6 +232,21 @@ ProfilerPanel.prototype = {
 
   set activeProfile(profile) {
     this._activeUid = profile.uid;
+  },
+
+  get browserWindow() {
+    if (this._browserWin) {
+      return this._browserWin;
+    }
+
+    let win = this.window.top;
+    let type = win.document.documentElement.getAttribute("windowtype");
+
+    if (type !== "navigator:browser") {
+      win = Services.wm.getMostRecentWindow("navigator:browser");
+    }
+
+    return this._browserWin = win;
   },
 
   /**
@@ -414,6 +435,48 @@ ProfilerPanel.prototype = {
       }
       uid -= 1;
     }
+  },
+
+  /**
+   * Open file specified in data in either a debugger or view-source.
+   *
+   * @param object data
+   *   An object describing the file. It must have three properties:
+   *    - uri
+   *    - line
+   *    - isChrome (chrome files are opened via view-source)
+   */
+  displaySource: function PP_displaySource(data, onOpen=function() {}) {
+    let win = this.window;
+    let panelWin, timeout;
+
+    function onSourceShown(event) {
+      if (event.detail.url !== data.uri) {
+        return;
+      }
+
+      panelWin.removeEventListener("Debugger:SourceShown", onSourceShown, false);
+      panelWin.editor.setCaretPosition(data.line - 1);
+      onOpen();
+    }
+
+    if (data.isChrome) {
+      return void this.browserWindow.gViewSourceUtils.
+        viewSource(data.uri, null, this.document, data.line);
+    }
+
+    gDevTools.showToolbox(this.target, "jsdebugger").then(function (toolbox) {
+      let dbg = toolbox.getCurrentPanel();
+      panelWin = dbg.panelWin;
+
+      let view = dbg.panelWin.DebuggerView;
+      if (view.Source && view.Sources.selectedValue === data.uri) {
+        return void view.editor.setCaretPosition(data.line - 1);
+      }
+
+      panelWin.addEventListener("Debugger:SourceShown", onSourceShown, false);
+      panelWin.DebuggerView.Sources.preferredSource = data.uri;
+    }.bind(this));
   },
 
   /**
