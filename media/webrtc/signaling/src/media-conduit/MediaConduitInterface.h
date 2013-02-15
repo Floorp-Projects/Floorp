@@ -5,9 +5,6 @@
 #ifndef MEDIA_CONDUIT_ABSTRACTION_
 #define MEDIA_CONDUIT_ABSTRACTION_
 
-#include "nspr.h"
-#include "prerror.h"
-
 #include "nsISupportsImpl.h"
 #include "nsXPCOM.h"
 #include "mozilla/RefPtr.h"
