@@ -165,7 +165,7 @@ namespace {
   //
   // This union is used when setting up the lParam for keyboard events.
   union LParamForKeyEvents {
-    LPARAM lParam;
+    uintptr_t lParam;
     struct {
       // bits 0-15    Repeat count, always 1 for WM_KEYUP
       uint16_t repeatCount;
@@ -197,7 +197,7 @@ namespace {
   // in response to keyboard events.
   void
   InitPluginKeyEventLParamFromKeyStatus(
-                      uint32_t& aLParam,
+                      uintptr_t& aLParam,
                       UI::Core::CorePhysicalKeyStatus const& aKeyStatus) {
     LParamForKeyEvents lParam;
 
@@ -228,7 +228,7 @@ namespace {
   //
   // This union is used when setting up the lParam for mouse events.
   union LParamForMouseEvents {
-    LPARAM lParam;
+    uintptr_t lParam;
     // lParam is the position at which the event occurred.
     struct lParamDeconstruction {
       // The low-order word is the x-coordinate
@@ -241,8 +241,8 @@ namespace {
   // that we create in response to mouse events.
   void
   InitPluginMouseEventParams(nsInputEvent const& aEvent,
-                             uint32_t& aWParam,
-                             uint32_t& aLParam) {
+                             uintptr_t& aWParam,
+                             uintptr_t& aLParam) {
     // wParam is a mask indicating whether certain virtual keys are down.
     aWParam = 0;
     if (IS_VK_DOWN(VK_LBUTTON)) {
@@ -453,7 +453,7 @@ MetroInput::OnPointerWheelChanged(UI::Core::ICoreWindow* aSender,
   pluginEvent.event = horzEvent ? WM_MOUSEHWHEEL : WM_MOUSEWHEEL;
 
   union {
-    uint32_t wParam;
+    uintptr_t wParam;
     uint16_t parts[2];
   } wParam;
 
