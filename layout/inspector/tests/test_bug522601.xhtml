@@ -30,22 +30,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=522601
 SimpleTest.waitForExplicitFinish();
 
 function testFunc(walker, func, expectedNode, str) {
-  var oldCurrent = walker.currentNode;
-  var newNode = walker[func]();
+  var oldCurrent = SpecialPowers.unwrap(walker.currentNode);
+  var newNode = SpecialPowers.unwrap(walker[func]());
   is(newNode, expectedNode, "Unexpected node after " + str);
-  is(walker.currentNode, newNode ? newNode : oldCurrent,
+  is(SpecialPowers.unwrap(walker.currentNode), newNode ? newNode : oldCurrent,
      "Unexpected current node after " + str);
 }
 
 addLoadEvent(function() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var walkerNonAnon =
-    Components.classes["@mozilla.org/inspector/deep-tree-walker;1"]
-              .createInstance(Components.interfaces.inIDeepTreeWalker);
+    SpecialPowers.Cc["@mozilla.org/inspector/deep-tree-walker;1"]
+              .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
   walkerNonAnon.init($("display"), NodeFilter.SHOW_ALL);
   walkerNonAnon.showAnonymousContent = false;
 
-  is(walkerNonAnon.currentNode, $("display"), "Unexpected non-anon root");
+  is(SpecialPowers.unwrap(walkerNonAnon.currentNode), $("display"), "Unexpected non-anon root");
   testFunc(walkerNonAnon, "nextNode", $("s").previousSibling,
            "step to some text");
   testFunc(walkerNonAnon, "nextNode", $("s"), "step to span");
@@ -87,7 +86,7 @@ addLoadEvent(function() {
 
   // Move the walker over to the end
   while (walkerNonAnon.nextNode()) { /* do nothing */ }
-  is(walkerNonAnon.currentNode, $("i2").firstChild, "unexpected last node");
+  is(SpecialPowers.unwrap(walkerNonAnon.currentNode), $("i2").firstChild, "unexpected last node");
   testFunc(walkerNonAnon, "previousNode", $("i2"), "step back to second italic");
   testFunc(walkerNonAnon, "previousNode", $("i1").nextSibling,
            "step back to more bold text");
@@ -110,12 +109,12 @@ addLoadEvent(function() {
   var anonDiv = document.getAnonymousNodes($("display"))[0];
 
   var walkerAnon =
-    Components.classes["@mozilla.org/inspector/deep-tree-walker;1"]
-              .createInstance(Components.interfaces.inIDeepTreeWalker);
+    SpecialPowers.Cc["@mozilla.org/inspector/deep-tree-walker;1"]
+              .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
   walkerAnon.showAnonymousContent = true;
   walkerAnon.init($("display"), NodeFilter.SHOW_ALL);
 
-  is(walkerAnon.currentNode, $("display"), "Unexpected anon root");
+  is(SpecialPowers.unwrap(walkerAnon.currentNode), $("display"), "Unexpected anon root");
   testFunc(walkerAnon, "nextNode", anonDiv,
            "step to anonymous div");
   testFunc(walkerAnon, "nextNode", $("s").previousSibling,

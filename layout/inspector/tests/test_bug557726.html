@@ -40,21 +40,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557726
 <script type="application/javascript">
 
 /** Test for Bug 557726 **/
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 function getSelectors (rules) {
   var styleElement = document.getElementById("pseudo-style");
   var selectors = [];
   for (var i = 0; i < rules.Count(); i++) {
-    var rule = rules.GetElementAt(i).QueryInterface(Components.interfaces.nsIDOMCSSStyleRule);
-    if (rule.parentStyleSheet.ownerNode == styleElement) // no user agent rules
+    var rule = rules.GetElementAt(i).QueryInterface(SpecialPowers.Ci.nsIDOMCSSStyleRule);
+    if (SpecialPowers.unwrap(rule.parentStyleSheet.ownerNode) == styleElement) // no user agent rules
       selectors.push(rule.selectorText);
   }
   return selectors;
 }
 
-var domUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-               .getService(Components.interfaces.inIDOMUtils);
+var domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+               .getService(SpecialPowers.Ci.inIDOMUtils);
 
 var div = document.getElementById("div1");
 

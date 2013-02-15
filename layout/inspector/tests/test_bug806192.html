@@ -12,8 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806192
 <pre id="test">
 <script type="application/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-const utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+const utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
 .getService(Components.interfaces.inIDOMUtils);
 
 try {
