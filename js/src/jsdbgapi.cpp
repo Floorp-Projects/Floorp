@@ -512,17 +512,15 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
     if (fun->isNative())
         return NULL;
-    UnrootedScript script;
     if (fun->isInterpretedLazy()) {
         RootedFunction rootedFun(cx, fun);
         AutoCompartment funCompartment(cx, rootedFun);
-        script = rootedFun->getOrCreateScript(cx);
+        UnrootedScript script = rootedFun->getOrCreateScript(cx);
         if (!script)
             MOZ_CRASH();
-    } else {
-        script = fun->nonLazyScript();
+        return script;
     }
-    return script;
+    return fun->nonLazyScript();
 }
 
 JS_PUBLIC_API(JSNative)
