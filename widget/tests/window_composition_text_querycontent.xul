@@ -87,7 +87,7 @@ const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
 const nsIEditorIMESupport = Components.interfaces.nsIEditorIMESupport;
 const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-const nsIEditorDocShell = Components.interfaces.nsIEditorDocShell;
+const nsIDocShell = Components.interfaces.nsIDocShell;
 
 function hitEventLoop(aFunc, aTimes)
 {
@@ -109,7 +109,7 @@ function getHTMLEditorIMESupport(aWindow)
 {
   return aWindow.QueryInterface(nsIInterfaceRequestor).
                  getInterface(nsIWebNavigation).
-                 QueryInterface(nsIEditorDocShell).
+                 QueryInterface(nsIDocShell).
                  editor;
 }
 

@@ -24,11 +24,7 @@
 #endif
 
 #include "mozilla/StandardInteger.h"
-#include "mozilla/ASan.h"
-
-#if defined(MOZ_VALGRIND)
-#include "valgrind/memcheck.h"
-#endif
+#include "mozilla/MemoryChecking.h"
 
 // Even on 32-bit systems, we allocate objects from the frame arena
 // that require 8-byte alignment.  The cast to uintptr_t is needed
@@ -290,18 +286,14 @@ struct nsPresArena::State {
     PR_CallOnce(&ARENA_POISON_guard, ARENA_POISON_init);
   }
 
-#if defined(MOZ_ASAN) || defined(MOZ_VALGRIND)
+#if defined(MOZ_HAVE_MEM_CHECKS)
   static PLDHashOperator UnpoisonFreeList(FreeList* aEntry, void*)
   {
     nsTArray<void*>::index_type len;
     while ((len = aEntry->mEntries.Length())) {
       void* result = aEntry->mEntries.ElementAt(len - 1);
       aEntry->mEntries.RemoveElementAt(len - 1);
-#if defined(MOZ_ASAN)
-      ASAN_UNPOISON_MEMORY_REGION(result, aEntry->mEntrySize);
-#elif defined(MOZ_VALGRIND)
-      VALGRIND_MAKE_MEM_UNDEFINED(result, aEntry->mEntrySize);
-#endif
+      MOZ_MAKE_MEM_UNDEFINED(result, aEntry->mEntrySize);
     }
     return PL_DHASH_NEXT;
   }
@@ -309,7 +301,7 @@ struct nsPresArena::State {
 
   ~State()
   {
-#if defined(MOZ_ASAN) || defined(MOZ_VALGRIND)
+#if defined(MOZ_HAVE_MEM_CHECKS)
     mFreeLists.EnumerateEntries(UnpoisonFreeList, nullptr);
 #endif
     PL_FinishArenaPool(&mPool);
@@ -340,11 +332,7 @@ struct nsPresArena::State {
       // LIFO behavior for best cache utilization
       result = list->mEntries.ElementAt(len - 1);
       list->mEntries.RemoveElementAt(len - 1);
-#if defined(MOZ_ASAN)
-      ASAN_UNPOISON_MEMORY_REGION(result, list->mEntrySize);
-#elif defined(MOZ_VALGRIND)
-      VALGRIND_MAKE_MEM_UNDEFINED(result, list->mEntrySize);
-#elif defined(DEBUG)
+#if defined(DEBUG)
       {
         char* p = reinterpret_cast<char*>(result);
         char* limit = p + list->mEntrySize;
@@ -362,6 +350,7 @@ struct nsPresArena::State {
         }
       }
 #endif
+      MOZ_MAKE_MEM_UNDEFINED(result, list->mEntrySize);
       return result;
     }
 
@@ -387,11 +376,7 @@ struct nsPresArena::State {
       *reinterpret_cast<uintptr_t*>(p) = ARENA_POISON;
     }
 
-#if defined(MOZ_ASAN)
-    ASAN_POISON_MEMORY_REGION(aPtr, list->mEntrySize);
-#elif defined(MOZ_VALGRIND)
-    VALGRIND_MAKE_MEM_NOACCESS(aPtr, list->mEntrySize);
-#endif
+    MOZ_MAKE_MEM_NOACCESS(aPtr, list->mEntrySize);
     list->mEntries.AppendElement(aPtr);
   }
 

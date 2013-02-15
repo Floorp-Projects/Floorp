@@ -186,6 +186,7 @@ _BROWSER_FILES = \
                  browser_plugins_added_dynamically.js \
                  browser_CTPScriptPlugin.js \
                  browser_pluginplaypreview.js \
+                 browser_pluginplaypreview2.js \
                  browser_private_browsing_window.js \
                  browser_relatedTabs.js \
                  browser_sanitize-passwordDisabledHosts.js \
@@ -222,6 +223,7 @@ _BROWSER_FILES = \
                  browser_urlbarRevert.js \
                  browser_urlbarStop.js \
                  browser_urlbarTrimURLs.js \
+                 browser_urlbar_search_healthreport.js \
                  browser_urlHighlight.js \
                  browser_visibleFindSelection.js \
                  browser_visibleTabs.js \
@@ -301,6 +303,8 @@ _BROWSER_FILES = \
                  browser_pageInfo_plugins.js \
                  browser_pageInfo.js \
                  feed_tab.html \
+                 browser_pluginCrashCommentAndURL.js \
+                 pluginCrashCommentAndURL.html \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

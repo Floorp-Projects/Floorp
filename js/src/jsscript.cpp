@@ -1321,11 +1321,13 @@ ScriptSource::destroy()
 size_t
 ScriptSource::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
-    JS_ASSERT(ready());
-
     // |data| is a union, but both members are pointers to allocated memory,
     // |emptySource|, or NULL, so just using |data.compressed| will work.
-    return mallocSizeOf(this) + ((data.compressed != emptySource) ? mallocSizeOf(data.compressed) : 0);
+    size_t n = mallocSizeOf(this);
+    n += (ready() && data.compressed != emptySource)
+       ? mallocSizeOf(data.compressed)
+       : 0;
+    return n;
 }
 
 template<XDRMode mode>

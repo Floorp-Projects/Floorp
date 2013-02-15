@@ -75,8 +75,7 @@ for h in headers:
 		print " * %s" % (l.strip())
 print " */"
 print
-print "#ifndef HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH"
-print "#define HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH"
+print '#include "hb-ot-shape-complex-indic-private.hh"'
 print
 
 # Shorten values
@@ -182,8 +181,8 @@ print
 occupancy = used * 100. / total
 print "}; /* Table occupancy: %d%% */" % occupancy
 print
-print "static INDIC_TABLE_ELEMENT_TYPE"
-print "get_indic_categories (hb_codepoint_t u)"
+print "INDIC_TABLE_ELEMENT_TYPE"
+print "hb_indic_get_categories (hb_codepoint_t u)"
 print "{"
 for (start,end) in zip (starts, ends):
 	offset = "indic_offset_0x%04x" % start
@@ -201,8 +200,6 @@ for i in range (2):
 	for v in vv:
 		print "#undef %s_%s" % \
 			(what_short[i], short[i][v])
-print
-print "#endif /* HB_OT_SHAPE_COMPLEX_INDIC_TABLE_HH */"
 print
 print "/* == End of generated table == */"
 

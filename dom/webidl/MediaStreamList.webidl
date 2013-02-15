@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface MediaStream;
-
 [NoInterfaceObject]
 interface MediaStreamList {
   getter MediaStream? (unsigned long index);

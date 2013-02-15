@@ -1361,7 +1361,7 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
                                     const nsACString* aProfileName,
                                     const nsACString* aAppName,
                                     const nsACString* aVendorName,
-                                    PRBool aLocal)
+                                    bool aLocal)
 {
   NS_ASSERTION(aFile, "Null pointer!");
   

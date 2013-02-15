@@ -31,13 +31,6 @@ public:
     GetComputedStyleDeclaration(nsIContent* aContent);
 
   /**
-   * Convert nsIArray array of accessible objects to an array of IUnknown*
-   * objects used in IA2 methods.
-   */
-  static HRESULT ConvertToIA2Array(nsIArray *aCollection,
-                                   IUnknown ***aAccessibles, long *aCount);
-
-  /**
    * Start window emulation if presence of specific AT is detected.
    */
   static bool MaybeStartWindowEmulation();

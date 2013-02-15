@@ -6,6 +6,37 @@
 ; to launch the Win8 metro browser or desktop browser.
 !define DELEGATE_EXECUTE_HANDLER_ID {5100FEC1-212B-4BF5-9BF8-3E650FD794A3}
 
+; Does metro registration for the command execute handler
+Function RegisterCEH
+!ifdef MOZ_METRO
+  ${If} ${AtLeastWin8}
+    ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID}
+    ${AddMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
+                                    "$INSTDIR\CommandExecuteHandler.exe" \
+                                    $AppUserModelID \
+                                    "FirefoxURL" \
+                                    "FirefoxHTML"
+  ${EndIf}
+!endif
+FunctionEnd
+
+; If MOZ_METRO is defined and we're at least win8, then we should re-create
+; the start menu shortcut so that the Metro browser is accessible.
+; This is also for zip builds who won't have a start menu shortcut yet.
+Function CreateStartMenuTile
+!ifdef MOZ_METRO
+    Delete "$SMPROGRAMS\${BrandFullName}.lnk"
+    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                             "$INSTDIR"
+      ${If} "$AppUserModelID" != ""
+        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID" "true"
+      ${EndIf}
+    ${EndIf}
+!endif
+FunctionEnd
+
 !macro PostUpdate
   ${CreateShortcutsLog}
 
@@ -22,6 +53,10 @@
 
   ; Win7 taskbar and start menu link maintenance
   Call FixShortcutAppModelIDs
+
+  ; Win8 specific registration
+  Call RegisterCEH
+  Call CreateStartMenuTile
 
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
@@ -342,16 +377,7 @@
 
   ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,1" "${AppRegName} URL" \
                                  "true"
-!ifdef MOZ_METRO
-  ${If} ${AtLeastWin8}
-    ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID}
-    ${AddMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
-                                    "$INSTDIR\CommandExecuteHandler.exe" \
-                                    $AppUserModelID \
-                                    "FirefoxURL" \
-                                    "FirefoxHTML"
-  ${EndIf}
-!endif
+  Call RegisterCEH
 
   ; An empty string is used for the 4th & 5th params because the following
   ; protocol handlers already have a display name and the additional keys
@@ -1149,20 +1175,7 @@ Function SetAsDefaultAppUserHKCU
     ${SetStartMenuInternet} "HKCU"
     ${FixShellIconHandler} "HKCU"
     ${FixClassKeys} ; Does not use SHCTX
-; If MOZ_METRO is defined and we're at least win8, then we should re-create
-; the start menu shortcut so that the Metro browser is accessible.
-; This is also for zip builds who won't have a start menu shortcut yet.
-!ifdef MOZ_METRO
-    Delete "$SMPROGRAMS\${BrandFullName}.lnk"
-    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
-                                             "$INSTDIR"
-      ${If} "$AppUserModelID" != ""
-        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID" "true"
-      ${EndIf}
-    ${EndIf}
-!endif
+    Call CreateStartMenuTile
   ${EndIf}
 
   ${SetHandlers}

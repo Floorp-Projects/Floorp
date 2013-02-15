@@ -19,7 +19,7 @@
 #ifdef USE_FAKE_MEDIA_STREAMS
 #include "FakeMediaStreams.h"
 #else
-#include "nsDOMMediaStream.h"
+#include "DOMMediaStream.h"
 #include "MediaSegment.h"
 #endif
 
@@ -47,7 +47,9 @@ class PeerConnectionImpl;
 /* Temporary for providing audio data */
 class Fake_AudioGenerator {
  public:
-Fake_AudioGenerator(nsDOMMediaStream* aStream) : mStream(aStream), mCount(0) {
+  typedef mozilla::DOMMediaStream DOMMediaStream;
+
+Fake_AudioGenerator(DOMMediaStream* aStream) : mStream(aStream), mCount(0) {
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
     MOZ_ASSERT(mTimer);
 
@@ -78,7 +80,7 @@ Fake_AudioGenerator(nsDOMMediaStream* aStream) : mStream(aStream), mCount(0) {
 
  private:
   nsCOMPtr<nsITimer> mTimer;
-  nsRefPtr<nsDOMMediaStream> mStream;
+  nsRefPtr<DOMMediaStream> mStream;
   int mCount;
 };
 
@@ -86,7 +88,9 @@ Fake_AudioGenerator(nsDOMMediaStream* aStream) : mStream(aStream), mCount(0) {
 #ifdef MOZILLA_INTERNAL_API
 class Fake_VideoGenerator {
  public:
-  Fake_VideoGenerator(nsDOMMediaStream* aStream) {
+  typedef mozilla::DOMMediaStream DOMMediaStream;
+
+  Fake_VideoGenerator(DOMMediaStream* aStream) {
     mStream = aStream;
     mCount = 0;
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -151,14 +155,16 @@ class Fake_VideoGenerator {
 
  private:
   nsCOMPtr<nsITimer> mTimer;
-  nsRefPtr<nsDOMMediaStream> mStream;
+  nsRefPtr<DOMMediaStream> mStream;
   int mCount;
 };
 #endif
 
 class LocalSourceStreamInfo {
 public:
-  LocalSourceStreamInfo(nsDOMMediaStream* aMediaStream)
+  typedef mozilla::DOMMediaStream DOMMediaStream;
+
+  LocalSourceStreamInfo(DOMMediaStream* aMediaStream)
     : mMediaStream(aMediaStream) {
       MOZ_ASSERT(aMediaStream);
     }
@@ -166,7 +172,7 @@ public:
     mMediaStream = NULL;
   }
 
-  nsDOMMediaStream* GetMediaStream() {
+  DOMMediaStream* GetMediaStream() {
     return mMediaStream;
   }
   void StorePipeline(int aTrack, mozilla::RefPtr<mozilla::MediaPipeline> aPipeline);
@@ -189,20 +195,22 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LocalSourceStreamInfo)
 private:
   std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> > mPipelines;
-  nsRefPtr<nsDOMMediaStream> mMediaStream;
+  nsRefPtr<DOMMediaStream> mMediaStream;
   nsTArray<mozilla::TrackID> mAudioTracks;
   nsTArray<mozilla::TrackID> mVideoTracks;
 };
 
 class RemoteSourceStreamInfo {
  public:
-  RemoteSourceStreamInfo(nsDOMMediaStream* aMediaStream) :
-    mMediaStream(already_AddRefed<nsDOMMediaStream>(aMediaStream)),
+  typedef mozilla::DOMMediaStream DOMMediaStream;
+
+  RemoteSourceStreamInfo(DOMMediaStream* aMediaStream) :
+    mMediaStream(already_AddRefed<DOMMediaStream>(aMediaStream)),
     mPipelines() {
       MOZ_ASSERT(aMediaStream);
     }
 
-  nsDOMMediaStream* GetMediaStream() {
+  DOMMediaStream* GetMediaStream() {
     return mMediaStream;
   }
   void StorePipeline(int aTrack, bool aIsVideo,
@@ -221,7 +229,7 @@ class RemoteSourceStreamInfo {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteSourceStreamInfo)
  private:
-  nsRefPtr<nsDOMMediaStream> mMediaStream;
+  nsRefPtr<DOMMediaStream> mMediaStream;
   std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> > mPipelines;
   std::map<int, bool> mTypes;
 };

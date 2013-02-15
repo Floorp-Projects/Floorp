@@ -41,7 +41,7 @@ interface nsIDOMClientRect;
 interface nsIURI;
 interface nsIDOMEventTarget;
 
-[scriptable, uuid(020deb5a-cba6-41dd-8551-72a880d01970)]
+[scriptable, uuid(16b3bdcc-75d4-11e2-8a20-aaff78957a39)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -646,6 +646,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see nsIDOMWindow::scrollX/Y
    */
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
+
+  /**
+   * Returns the scrollbar width of the window's scroll frame.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   */
+  long getScrollbarWidth(in boolean aFlushLayout);
 
   /**
    * Returns the bounds of the window's currently loaded document. This will

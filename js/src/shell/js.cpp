@@ -1507,10 +1507,11 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
 }
 
 static JSTrapStatus
-TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rval,
+TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rvalArg,
             jsval closure)
 {
     JSString *str = JSVAL_TO_STRING(closure);
+    RootedValue rval(cx, *rvalArg);
 
     ScriptFrameIter iter(cx);
     JS_ASSERT(!iter.done());
@@ -1527,11 +1528,13 @@ TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rval,
     if (!frame.evaluateUCInStackFrame(cx, chars, length,
                                       script->filename,
                                       script->lineno,
-                                      rval))
+                                      &rval))
     {
+        *rvalArg = rval;
         return JSTRAP_ERROR;
     }
-    if (!JSVAL_IS_VOID(*rval))
+    *rvalArg = rval;
+    if (!rval.isUndefined())
         return JSTRAP_RETURN;
     return JSTRAP_CONTINUE;
 }
@@ -1870,9 +1873,9 @@ DisassembleScript(JSContext *cx, HandleScript script, JSFunction *fun, bool line
             RawObject obj = objects->vector[i];
             if (obj->isFunction()) {
                 Sprint(sp, "\n");
-                RootedFunction fun(cx, obj->toFunction());
+                RootedFunction f(cx, obj->toFunction());
                 RootedScript script(cx);
-                JSFunction::maybeGetOrCreateScript(cx, fun, &script);
+                JSFunction::maybeGetOrCreateScript(cx, f, &script);
                 if (!DisassembleScript(cx, script, fun, lines, recursive, sp))
                     return false;
             }
@@ -2599,7 +2602,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
                                              fpscript->filename,
                                              JS_PCToLineNumber(cx, fpscript,
                                                                fi.pc()),
-                                             vp);
+                                             MutableHandleValue::fromMarkedLocation(vp));
 
     if (saved)
         JS_RestoreFrameChain(cx);
@@ -5041,6 +5044,10 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
             return OptionFailure("ion-limit-script-size", str);
     }
 
+    int32_t useCount = op->getIntOption("ion-uses-before-compile");
+    if (useCount >= 0)
+        ion::js_IonOptions.usesBeforeCompile = useCount;
+
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
             ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_LSRA;
@@ -5096,8 +5103,8 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
             filePaths.popFront();
         } else {
             const char *code = codeChunks.front();
-            jsval rval;
-            if (!JS_EvaluateScript(cx, obj, code, strlen(code), "-e", 1, &rval))
+            RootedValue rval(cx);
+            if (!JS_EvaluateScript(cx, obj, code, strlen(code), "-e", 1, rval.address()))
                 return gExitCode ? gExitCode : EXITCODE_RUNTIME_ERROR;
             codeChunks.popFront();
         }
@@ -5281,6 +5288,9 @@ main(int argc, char **argv, char **envp)
                                "On-Stack Replacement (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-limit-script-size", "on/off",
                                "Don't compile very large scripts (default: on, off to disable)")
+        || !op.addIntOption('\0', "ion-uses-before-compile", "COUNT",
+                            "Wait for COUNT calls or iterations before compiling "
+                            "(default: 10240)", -1)
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
                                "  lsra: Linear Scan register allocation (default)\n"

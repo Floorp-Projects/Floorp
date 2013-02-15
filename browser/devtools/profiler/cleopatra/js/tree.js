@@ -466,7 +466,8 @@ TreeView.prototype = {
       '<span class="resourceIcon" data-resource="' + node.library + '"></span> ' +
       '<span class="functionName">' + nodeName + '</span>' +
       '<span class="libraryName">' + libName + '</span>' +
-      '<input type="button" value="Focus Callstack" title="Focus Callstack" class="focusCallstackButton" tabindex="-1">';
+      (nodeName === '(total)' ? '' :
+        '<input type="button" value="Focus Callstack" title="Focus Callstack" class="focusCallstackButton" tabindex="-1">');
   },
   _resolveChildren: function TreeView__resolveChildren(div, childrenCollapsedValue) {
     while (div.pendingExpand != null && div.pendingExpand.length > 0) {

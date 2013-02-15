@@ -30,6 +30,19 @@ template <class T,
 class Vector;
 
 /*
+ * Check that the given capacity wastes the minimal amount of space if
+ * allocated on the heap.  This means that cap*sizeof(T) is as close to a
+ * power-of-two as possible.  growStorageBy() is responsible for ensuring
+ * this.
+ */
+template <typename T>
+static bool CapacityHasExcessSpace(size_t cap)
+{
+    size_t size = cap * sizeof(T);
+    return RoundUpPow2(size) - size >= sizeof(T);
+}
+
+/*
  * This template class provides a default implementation for vector operations
  * when the element type is not known to be a POD, as judged by IsPod.
  */
@@ -79,14 +92,15 @@ struct VectorImpl
     }
 
     /*
-     * Grows the given buffer to have capacity newcap, preserving the objects
+     * Grows the given buffer to have capacity newCap, preserving the objects
      * constructed in the range [begin, end) and updating v. Assumes that (1)
-     * newcap has not overflowed, and (2) multiplying newcap by sizeof(T) will
+     * newCap has not overflowed, and (2) multiplying newCap by sizeof(T) will
      * not overflow.
      */
-    static inline bool growTo(Vector<T,N,AP> &v, size_t newcap) {
+    static inline bool growTo(Vector<T,N,AP> &v, size_t newCap) {
         JS_ASSERT(!v.usingInlineStorage());
-        T *newbuf = reinterpret_cast<T *>(v.malloc_(newcap * sizeof(T)));
+        JS_ASSERT(!CapacityHasExcessSpace<T>(newCap));
+        T *newbuf = reinterpret_cast<T *>(v.malloc_(newCap * sizeof(T)));
         if (!newbuf)
             return false;
         for (T *dst = newbuf, *src = v.beginNoCheck(); src != v.endNoCheck(); ++dst, ++src)
@@ -95,7 +109,7 @@ struct VectorImpl
         v.free_(v.mBegin);
         v.mBegin = newbuf;
         /* v.mLength is unchanged. */
-        v.mCapacity = newcap;
+        v.mCapacity = newCap;
         return true;
     }
 };
@@ -146,16 +160,17 @@ struct VectorImpl<T, N, AP, true>
             *p = t;
     }
 
-    static inline bool growTo(Vector<T,N,AP> &v, size_t newcap) {
+    static inline bool growTo(Vector<T,N,AP> &v, size_t newCap) {
         JS_ASSERT(!v.usingInlineStorage());
-        size_t bytes = sizeof(T) * newcap;
-        size_t oldBytes = sizeof(T) * v.mCapacity;
-        T *newbuf = reinterpret_cast<T *>(v.realloc_(v.mBegin, oldBytes, bytes));
+        JS_ASSERT(!CapacityHasExcessSpace<T>(newCap));
+        size_t oldSize = sizeof(T) * v.mCapacity;
+        size_t newSize = sizeof(T) * newCap;
+        T *newbuf = reinterpret_cast<T *>(v.realloc_(v.mBegin, oldSize, newSize));
         if (!newbuf)
             return false;
         v.mBegin = newbuf;
         /* v.mLength is unchanged. */
-        v.mCapacity = newcap;
+        v.mCapacity = newCap;
         return true;
     }
 };
@@ -189,10 +204,8 @@ class Vector : private AllocPolicy
     typedef VectorImpl<T, N, AllocPolicy, sElemIsPod> Impl;
     friend struct VectorImpl<T, N, AllocPolicy, sElemIsPod>;
 
-    bool calculateNewCapacity(size_t curLength, size_t lengthInc, size_t &newCap);
-    bool growStorageBy(size_t lengthInc);
-    bool growHeapStorageBy(size_t lengthInc);
-    bool convertToHeapStorage(size_t lengthInc);
+    bool growStorageBy(size_t incr);
+    bool convertToHeapStorage(size_t newCap);
 
     template <bool InitNewElems> inline bool growByImpl(size_t inc);
 
@@ -571,75 +584,18 @@ Vector<T,N,AP>::~Vector()
 }
 
 /*
- * Calculate a new capacity that is at least lengthInc greater than
- * curLength and check for overflow.
- */
-template <class T, size_t N, class AP>
-STATIC_POSTCONDITION(!return || newCap >= curLength + lengthInc)
-#ifdef DEBUG
-/* gcc (ARM, x86) compiler bug workaround - See bug 694694 */
-JS_NEVER_INLINE bool
-#else
-inline bool
-#endif
-Vector<T,N,AP>::calculateNewCapacity(size_t curLength, size_t lengthInc,
-                                     size_t &newCap)
-{
-    size_t newMinCap = curLength + lengthInc;
-
-    /*
-     * Check for overflow in the above addition, below CEILING_LOG2, and later
-     * multiplication by sizeof(T).
-     */
-    if (newMinCap < curLength ||
-        newMinCap & tl::MulOverflowMask<2 * sizeof(T)>::result) {
-        this->reportAllocOverflow();
-        return false;
-    }
-
-    /* Round up to next power of 2. */
-    newCap = RoundUpPow2(newMinCap);
-
-    /*
-     * Do not allow a buffer large enough that the expression ((char *)end() -
-     * (char *)begin()) overflows ptrdiff_t. See Bug 510319.
-     */
-    if (newCap & tl::UnsafeRangeSizeMask<T>::result) {
-        this->reportAllocOverflow();
-        return false;
-    }
-    return true;
-}
-
-/*
- * This function will grow the current heap capacity to have capacity
- * (mLength + lengthInc) and fail on OOM or integer overflow.
- */
-template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
-Vector<T,N,AP>::growHeapStorageBy(size_t lengthInc)
-{
-    JS_ASSERT(!usingInlineStorage());
-    size_t newCap;
-    return calculateNewCapacity(mLength, lengthInc, newCap) &&
-           Impl::growTo(*this, newCap);
-}
-
-/*
- * This function will create a new heap buffer with capacity (mLength +
- * lengthInc()), move all elements in the inline buffer to this new buffer,
- * and fail on OOM or integer overflow.
+ * This function will create a new heap buffer with capacity newCap,
+ * move all elements in the inline buffer to this new buffer,
+ * and fail on OOM.
  */
 template <class T, size_t N, class AP>
 inline bool
-Vector<T,N,AP>::convertToHeapStorage(size_t lengthInc)
+Vector<T,N,AP>::convertToHeapStorage(size_t newCap)
 {
     JS_ASSERT(usingInlineStorage());
-    size_t newCap;
-    if (!calculateNewCapacity(mLength, lengthInc, newCap))
-        return false;
 
     /* Allocate buffer. */
+    JS_ASSERT(!CapacityHasExcessSpace<T>(newCap));
     T *newBuf = reinterpret_cast<T *>(this->malloc_(newCap * sizeof(T)));
     if (!newBuf)
         return false;
@@ -660,9 +616,78 @@ JS_NEVER_INLINE bool
 Vector<T,N,AP>::growStorageBy(size_t incr)
 {
     JS_ASSERT(mLength + incr > mCapacity);
-    return usingInlineStorage()
-         ? convertToHeapStorage(incr)
-         : growHeapStorageBy(incr);
+    JS_ASSERT_IF(!usingInlineStorage(), !CapacityHasExcessSpace<T>(mCapacity));
+
+    /*
+     * When choosing a new capacity, its size should is as close to 2^N bytes
+     * as possible.  2^N-sized requests are best because they are unlikely to
+     * be rounded up by the allocator.  Asking for a 2^N number of elements
+     * isn't as good, because if sizeof(T) is not a power-of-two that would
+     * result in a non-2^N request size.
+     */
+
+    size_t newCap;
+
+    if (incr == 1) {
+        if (usingInlineStorage()) {
+            /* This case occurs in ~70--80% of the calls to this function. */
+            size_t newSize = tl::RoundUpPow2<(sInlineCapacity + 1) * sizeof(T)>::result;
+            newCap = newSize / sizeof(T);
+            goto convert;
+        }
+
+        if (mLength == 0) {
+            /* This case occurs in ~0--10% of the calls to this function. */
+            newCap = 1;
+            goto grow;
+        }
+
+        /* This case occurs in ~15--20% of the calls to this function. */
+
+        /*
+         * Will mLength*4*sizeof(T) overflow?  This condition limits a Vector
+         * to 1GB of memory on a 32-bit system, which is a reasonable limit.
+         * It also ensures that the ((char *)end() - (char *)begin()) does not
+         * overflow ptrdiff_t (see Bug 510319).
+         */
+        if (mLength & tl::MulOverflowMask<4 * sizeof(T)>::result) {
+            this->reportAllocOverflow();
+            return false;
+        }
+
+        /*
+         * If we reach here, the existing capacity will have a size that is
+         * already as close to 2^N as sizeof(T) will allow.  Just double the
+         * capacity, and then there might be space for one more element.
+         */
+        newCap = mLength * 2;
+        if (CapacityHasExcessSpace<T>(newCap))
+            newCap += 1;
+
+    } else {
+        /* This case occurs in ~2% of the calls to this function. */
+        size_t newMinCap = mLength + incr;
+
+        /* Did mLength+incr overflow?  Will newCap*sizeof(T) overflow? */
+        if (newMinCap < mLength ||
+            newMinCap & tl::MulOverflowMask<2 * sizeof(T)>::result)
+        {
+            this->reportAllocOverflow();
+            return false;
+        }
+
+        size_t newMinSize = newMinCap * sizeof(T);
+        size_t newSize = RoundUpPow2(newMinSize);
+        newCap = newSize / sizeof(T);
+    }
+
+    if (usingInlineStorage()) {
+      convert:
+        return convertToHeapStorage(newCap);
+    }
+
+  grow:
+    return Impl::growTo(*this, newCap);
 }
 
 template <class T, size_t N, class AP>

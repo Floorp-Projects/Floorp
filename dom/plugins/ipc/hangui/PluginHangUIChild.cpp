@@ -18,7 +18,7 @@ namespace mozilla {
 namespace plugins {
 
 PluginHangUIChild* PluginHangUIChild::sSelf = nullptr;
-const int PluginHangUIChild::kExpectedMinimumArgc = 9;
+const int PluginHangUIChild::kExpectedMinimumArgc = 10;
 const DWORD PluginHangUIChild::kProcessTimeout = 1200000U;
 const DWORD PluginHangUIChild::kShmTimeout = 5000U;
 
@@ -67,6 +67,18 @@ PluginHangUIChild::Init(int aArgc, wchar_t* aArgv[])
   issProc >> mParentProcess;
   if (!issProc) {
     return false;
+  }
+  // Only set the App User Model ID if it's present in the args
+  if (wcscmp(aArgv[++i], L"-")) {
+    HMODULE shell32 = LoadLibrary(L"shell32.dll");
+    if (shell32) {
+      SETAPPUSERMODELID fSetAppUserModelID = (SETAPPUSERMODELID)
+        GetProcAddress(shell32, "SetCurrentProcessExplicitAppUserModelID");
+      if (fSetAppUserModelID) {
+        fSetAppUserModelID(aArgv[i]);
+      }
+      FreeLibrary(shell32);
+    }
   }
 
   nsresult rv = mMiniShm.Init(this,
@@ -119,10 +131,6 @@ PluginHangUIChild::HangUIDlgProc(HWND aDlgHandle, UINT aMsgCode, WPARAM aWParam,
   mDlgHandle = aDlgHandle;
   switch (aMsgCode) {
     case WM_INITDIALOG: {
-      // Disentangle our input queue from the hung Firefox process
-      AttachThreadInput(GetCurrentThreadId(),
-                        GetWindowThreadProcessId(mParentWindow, nullptr),
-                        FALSE);
       // Register a wait on the Firefox process so that we will be informed
       // if it dies while the dialog is showing
       RegisterWaitForSingleObject(&mRegWaitProcess,
@@ -141,11 +149,13 @@ PluginHangUIChild::HangUIDlgProc(HWND aDlgHandle, UINT aMsgCode, WPARAM aWParam,
       if (icon) {
         SendDlgItemMessage(aDlgHandle, IDC_DLGICON, STM_SETICON, (WPARAM)icon, 0);
       }
+      EnableWindow(mParentWindow, FALSE);
       return TRUE;
     }
     case WM_CLOSE: {
       mResponseBits |= HANGUI_USER_RESPONSE_CANCEL;
       EndDialog(aDlgHandle, 0);
+      SetWindowLongPtr(aDlgHandle, DWLP_MSGRESULT, 0);
       return TRUE;
     }
     case WM_COMMAND: {
@@ -154,6 +164,7 @@ PluginHangUIChild::HangUIDlgProc(HWND aDlgHandle, UINT aMsgCode, WPARAM aWParam,
           if (HIWORD(aWParam) == BN_CLICKED) {
             mResponseBits |= HANGUI_USER_RESPONSE_CONTINUE;
             EndDialog(aDlgHandle, 1);
+            SetWindowLongPtr(aDlgHandle, DWLP_MSGRESULT, 0);
             return TRUE;
           }
           break;
@@ -161,6 +172,7 @@ PluginHangUIChild::HangUIDlgProc(HWND aDlgHandle, UINT aMsgCode, WPARAM aWParam,
           if (HIWORD(aWParam) == BN_CLICKED) {
             mResponseBits |= HANGUI_USER_RESPONSE_STOP;
             EndDialog(aDlgHandle, 1);
+            SetWindowLongPtr(aDlgHandle, DWLP_MSGRESULT, 0);
             return TRUE;
           }
           break;
@@ -173,16 +185,23 @@ PluginHangUIChild::HangUIDlgProc(HWND aDlgHandle, UINT aMsgCode, WPARAM aWParam,
               mResponseBits &=
                 ~static_cast<DWORD>(HANGUI_USER_RESPONSE_DONT_SHOW_AGAIN);
             }
+            SetWindowLongPtr(aDlgHandle, DWLP_MSGRESULT, 0);
             return TRUE;
           }
+          break;
         default:
           break;
       }
-      return FALSE;
+      break;
+    }
+    case WM_DESTROY: {
+      EnableWindow(mParentWindow, TRUE);
+      break;
     }
     default:
-      return FALSE;
+      break;
   }
+  return FALSE;
 }
 
 // static
@@ -207,7 +226,7 @@ PluginHangUIChild::Show()
 {
   INT_PTR dlgResult = DialogBox(GetModuleHandle(NULL),
                                 MAKEINTRESOURCE(IDD_HANGUIDLG),
-                                mParentWindow,
+                                NULL,
                                 &SHangUIDlgProc);
   mDlgHandle = NULL;
   assert(dlgResult != -1);
