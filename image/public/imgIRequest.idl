@@ -19,7 +19,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(3ea9fc87-2e97-45bf-b373-d1dd253a0b5e)]
+[scriptable, builtinclass, uuid(9c709b50-bd1a-476d-b313-d64db874f80a)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -55,6 +55,9 @@ interface imgIRequest : nsIRequest
    *
    * STATUS_ERROR: An error occurred loading the image.
    *
+   * STATUS_DECODE_STARTED: The decoding process has begun, but not yet
+   * finished.
+   *
    * STATUS_FRAME_COMPLETE: The first frame has been
    * completely decoded.
    *
@@ -66,8 +69,9 @@ interface imgIRequest : nsIRequest
   const long STATUS_LOAD_PARTIAL     = 0x2;
   const long STATUS_LOAD_COMPLETE    = 0x4;
   const long STATUS_ERROR            = 0x8;
-  const long STATUS_FRAME_COMPLETE   = 0x10;
-  const long STATUS_DECODE_COMPLETE  = 0x20;
+  const long STATUS_DECODE_STARTED   = 0x10;
+  const long STATUS_FRAME_COMPLETE   = 0x20;
+  const long STATUS_DECODE_COMPLETE  = 0x40;
   //@}
 
   /**
