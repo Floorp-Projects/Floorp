@@ -207,10 +207,10 @@ nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // root boxes don't need a debug border/outline or a selection overlay...
   // They *may* have a background propagated to them, so force creation
   // of a background display list element.
-  DisplayBorderBackgroundOutline(aBuilder, aLists, true);
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists, true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
-  return NS_OK;
+  return BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

@@ -1045,14 +1045,16 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   MOZ_ASSERT(nsLayoutUtils::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
              "Frame list should've been sorted in reflow");
 
-  DisplayBorderBackgroundOutline(aBuilder, aLists);
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Our children are all block-level, so their borders/backgrounds all go on
   // the BlockBorderBackgrounds list.
   nsDisplayListSet childLists(aLists, aLists.BlockBorderBackgrounds());
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    BuildDisplayListForChild(aBuilder, e.get(), aDirtyRect, childLists,
-                             GetDisplayFlagsForFlexItem(e.get()));
+    rv = BuildDisplayListForChild(aBuilder, e.get(), aDirtyRect, childLists,
+                                  GetDisplayFlagsForFlexItem(e.get()));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;

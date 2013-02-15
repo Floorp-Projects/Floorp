@@ -291,7 +291,8 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
@@ -305,8 +306,9 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 
   nsDisplayList list;
-  list.AppendNewToTop(
-    new (aBuilder) nsDisplayXULImage(aBuilder, this));
+  rv = list.AppendNewToTop(
+      new (aBuilder) nsDisplayXULImage(aBuilder, this));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   CreateOwnLayerIfNeeded(aBuilder, &list);
 

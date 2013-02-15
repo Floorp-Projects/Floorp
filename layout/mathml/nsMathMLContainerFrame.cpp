@@ -631,15 +631,16 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!IsVisibleForPainting(aBuilder))
       return NS_OK;
 
-    aLists.Content()->AppendNewToTop(
-      new (aBuilder) nsDisplayMathMLError(aBuilder, this));
-    return NS_OK;
+    return aLists.Content()->AppendNewToTop(
+        new (aBuilder) nsDisplayMathMLError(aBuilder, this));
   }
 
-  DisplayBorderBackgroundOutline(aBuilder, aLists);
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
-                                      DISPLAY_CHILD_INLINE);
+  rv = BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
+                                           DISPLAY_CHILD_INLINE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
   // for visual debug
@@ -648,9 +649,9 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // your mBoundingMetrics and mReference point, and set
   // mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS
   // in the Init() of your sub-class
-  DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
+  rv = DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
 #endif
-  return NS_OK;
+  return rv;
 }
 
 // Note that this method re-builds the automatic data in the children -- not

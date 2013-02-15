@@ -403,10 +403,12 @@ protected:
   nsresult BuildDisplayListForInline(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists) {
-    DisplayBorderBackgroundOutline(aBuilder, aLists);
-    BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
-                                        DISPLAY_CHILD_INLINE);
-    return NS_OK;
+    nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
+                                             DISPLAY_CHILD_INLINE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return rv;
   }
 
 
