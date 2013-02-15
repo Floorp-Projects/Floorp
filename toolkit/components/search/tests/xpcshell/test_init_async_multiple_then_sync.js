@@ -16,7 +16,7 @@
 function run_test() {
   do_print("Setting up test");
   do_test_pending();
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
+  updateAppInfo();
 
   do_print("Test starting");
 
