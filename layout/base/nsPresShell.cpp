@@ -4868,13 +4868,13 @@ PresShell::RenderSelection(nsISelection* aSelection,
                              aScreenRect);
 }
 
-void
+nsresult
 PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                          nsDisplayList&        aList,
                                          nsIFrame*             aFrame,
                                          const nsRect&         aBounds)
 {
-  aList.AppendNewToBottom(new (&aBuilder)
+  return aList.AppendNewToBottom(new (&aBuilder)
     nsDisplaySolidColor(&aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115)));
 }
 
@@ -4896,16 +4896,15 @@ AddCanvasBackgroundColor(const nsDisplayList& aList, nsIFrame* aCanvasFrame,
   return false;
 }
 
-void
-PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
-                                        nsDisplayList&        aList,
-                                        nsIFrame*             aFrame,
-                                        const nsRect&         aBounds,
-                                        nscolor               aBackstopColor,
-                                        uint32_t              aFlags)
+nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
+                                                 nsDisplayList&        aList,
+                                                 nsIFrame*             aFrame,
+                                                 const nsRect&         aBounds,
+                                                 nscolor               aBackstopColor,
+                                                 uint32_t              aFlags)
 {
   if (aBounds.IsEmpty()) {
-    return;
+    return NS_OK;
   }
   // We don't want to add an item for the canvas background color if the frame
   // (sub)tree we are painting doesn't include any canvas frames. There isn't
@@ -4915,12 +4914,12 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
   // the (sub)tree).
   if (!(aFlags & nsIPresShell::FORCE_DRAW) &&
       !nsCSSRendering::IsCanvasFrame(aFrame)) {
-    return;
+    return NS_OK;
   }
 
   nscolor bgcolor = NS_ComposeColors(aBackstopColor, mCanvasBackgroundColor);
   if (NS_GET_A(bgcolor) == 0)
-    return;
+    return NS_OK;
 
   // To make layers work better, we want to avoid having a big non-scrolled 
   // color background behind a scrolled transparent background. Instead,
@@ -4933,13 +4932,13 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting(&aBuilder)) {
         if (AddCanvasBackgroundColor(aList, canvasFrame, bgcolor))
-          return;
+          return NS_OK;
       }
     }
   }
 
-  aList.AppendNewToBottom(
-    new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
+  return aList.AppendNewToBottom(
+      new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
 }
 
 static bool IsTransparentContainerElement(nsPresContext* aPresContext)

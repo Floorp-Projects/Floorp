@@ -2859,6 +2859,7 @@ nsSVGTextFrame2::DestroyFrom(nsIFrame* aDestructRoot)
   nsSVGTextFrame2Base::DestroyFrom(aDestructRoot);
 }
 
+NS_IMETHODIMP
 nsSVGTextFrame2::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -2867,10 +2868,10 @@ nsSVGTextFrame2::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // We can sometimes be asked to paint before reflow happens and we
     // have updated mPositions, etc.  In this case, we just avoid
     // painting.
-    return;
+    return NS_OK;
   }
-  aLists.Content()->AppendNewToTop(
-    new (aBuilder) nsDisplaySVGText(aBuilder, this));
+  return aLists.Content()->AppendNewToTop(
+           new (aBuilder) nsDisplaySVGText(aBuilder, this));
 }
 
 NS_IMETHODIMP

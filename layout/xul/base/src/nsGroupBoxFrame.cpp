@@ -20,9 +20,9 @@ public:
 
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
@@ -104,7 +104,7 @@ nsDisplayXULGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
     PaintBorderBackground(*aCtx, ToReferenceFrame(), mVisibleRect);
 }
 
-void
+NS_IMETHODIMP
 nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -118,6 +118,7 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  return NS_OK;
 }
 
 void

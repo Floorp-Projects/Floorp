@@ -67,9 +67,9 @@ public:
   virtual nsMargin GetUsedBorder() const;
   virtual nsMargin GetUsedPadding() const;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   nsTableCellFrame* GetFirstCell() ;
 

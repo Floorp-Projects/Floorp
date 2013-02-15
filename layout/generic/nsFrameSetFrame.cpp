@@ -103,9 +103,9 @@ public:
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -150,9 +150,9 @@ public:
                   uint32_t aFlags = 0) const MOZ_OVERRIDE;
 #endif
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -758,7 +758,7 @@ nsHTMLFramesetFrame::GetCursor(const nsPoint&    aPoint,
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                       const nsRect&           aDirtyRect,
                                       const nsDisplayListSet& aLists)
@@ -769,6 +769,7 @@ nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     aLists.Content()->AppendNewToTop(
       new (aBuilder) nsDisplayEventReceiver(aBuilder, this));
   }
+  return NS_OK;
 }
 
 void
@@ -1539,13 +1540,14 @@ void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
     PaintBorder(*aCtx, ToReferenceFrame());
 }
 
-void
+NS_IMETHODIMP
 nsHTMLFramesetBorderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
   aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplayFramesetBorder(aBuilder, this));
+  return NS_OK;
 }
 
 void nsHTMLFramesetBorderFrame::PaintBorder(nsRenderingContext& aRenderingContext,
@@ -1748,11 +1750,12 @@ nsHTMLFramesetBlankFrame::List(FILE*    out,
 }
 #endif
 
-void
+NS_IMETHODIMP
 nsHTMLFramesetBlankFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists)
 {
   aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplayFramesetBlank(aBuilder, this));
+  return NS_OK;
 }

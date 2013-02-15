@@ -4623,22 +4623,22 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   f->PaintText(aCtx, ToReferenceFrame(), extraVisible, *this);
 }
 
-void
+NS_IMETHODIMP
 nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
-    return;
+    return NS_OK;
   
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame");
 
   if ((0 != (mState & TEXT_BLINK_ON)) && nsBlinkTimer::GetBlinkIsOff() &&
       PresContext()->IsDynamic() && !aBuilder->IsForEventDelivery())
-    return;
+    return NS_OK;
     
-  aLists.Content()->AppendNewToTop(
-    new (aBuilder) nsDisplayText(aBuilder, this));
+  return aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayText(aBuilder, this));
 }
 
 static nsIFrame*

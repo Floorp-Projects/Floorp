@@ -86,9 +86,11 @@ public:
             aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
   }
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE {
+    return NS_OK;
+  }
 
   virtual bool UpdateOverflow() MOZ_OVERRIDE;
 };
@@ -129,9 +131,9 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform = nullptr,
                                 gfxMatrix *aFromParentTransform = nullptr) const MOZ_OVERRIDE;

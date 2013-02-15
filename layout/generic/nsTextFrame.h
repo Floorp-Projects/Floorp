@@ -51,9 +51,9 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,

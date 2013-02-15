@@ -6144,7 +6144,7 @@ static void DebugOutputDrawLine(int32_t aDepth, nsLineBox* aLine, bool aDrawn) {
 }
 #endif
 
-static void
+static nsresult
 DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
             const nsRect& aDirtyRect, nsBlockFrame::line_iterator& aLine,
             int32_t aDepth, int32_t& aDrawnLines, const nsDisplayListSet& aLists,
@@ -6170,7 +6170,7 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   bool lineMayHaveTextOverflow = aTextOverflow && lineInline;
   if (!intersect && !aBuilder->ShouldDescendIntoFrame(aFrame) &&
       !lineMayHaveTextOverflow)
-    return;
+    return NS_OK;
 
   // Block-level child backgrounds go on the blockBorderBackgrounds list ...
   // Inline-level child backgrounds go on the regular child content list.
@@ -6182,17 +6182,20 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   nsIFrame* kid = aLine->mFirstChild;
   int32_t n = aLine->GetChildCount();
   while (--n >= 0) {
-    aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect,
-                                     childLists, flags);
+    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect,
+                                                   childLists, flags);
+    NS_ENSURE_SUCCESS(rv, rv);
     kid = kid->GetNextSibling();
   }
   
   if (lineMayHaveTextOverflow) {
     aTextOverflow->ProcessLine(aLists, aLine.get());
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
@@ -6325,6 +6328,8 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     printf("%s\n", buf);
   }
 #endif
+
+  return NS_OK;
 }
 
 #ifdef ACCESSIBILITY

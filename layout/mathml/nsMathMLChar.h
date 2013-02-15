@@ -76,11 +76,12 @@ public:
     mStyleContext->Release();
   }
 
-  void Display(nsDisplayListBuilder*   aBuilder,
-               nsIFrame*               aForFrame,
-               const nsDisplayListSet& aLists,
-               uint32_t                aIndex,
-               const nsRect*           aSelectedRect = nullptr);
+  nsresult
+  Display(nsDisplayListBuilder*   aBuilder,
+          nsIFrame*               aForFrame,
+          const nsDisplayListSet& aLists,
+          uint32_t                aIndex,
+          const nsRect*           aSelectedRect = nullptr);
           
   void PaintForeground(nsPresContext* aPresContext,
                        nsRenderingContext& aRenderingContext,
