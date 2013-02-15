@@ -76,6 +76,7 @@ public class TabsTray extends ListView
             public void onMovedToScrapHeap(View view) {
                 TabRow row = (TabRow) view.getTag();
                 row.thumbnail.setImageDrawable(null);
+                row.close.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -115,12 +116,14 @@ public class TabsTray extends ListView
         int id;
         TextView title;
         ImageView thumbnail;
+        ImageButton close;
         LinearLayout info;
 
         public TabRow(View view) {
             info = (LinearLayout) view;
             title = (TextView) view.findViewById(R.id.title);
             thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
+            close = (ImageButton) view.findViewById(R.id.close);
         }
     }
 
@@ -242,6 +245,7 @@ public class TabsTray extends ListView
                 row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
 
             row.title.setText(tab.getDisplayTitle());
+            row.close.setTag(row);
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -250,6 +254,7 @@ public class TabsTray extends ListView
             if (convertView == null) {
                 convertView = mInflater.inflate(R.layout.tabs_row, null);
                 row = new TabRow(convertView);
+                row.close.setOnClickListener(mOnCloseClickListener);
                 convertView.setTag(row);
             } else {
                 row = (TabRow) convertView.getTag();
@@ -322,6 +327,15 @@ public class TabsTray extends ListView
         PropertyAnimator animator = new PropertyAnimator(ANIMATION_DURATION);
         animator.attach(view, Property.ALPHA, 1);
         animator.attach(view, Property.TRANSLATION_X, 0);
+
+        animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            public void onPropertyAnimationStart() { }
+            public void onPropertyAnimationEnd() {
+                TabRow tab = (TabRow) view.getTag();
+                tab.close.setVisibility(View.VISIBLE);
+            }
+        });
+
         animator.start();
     }
 
@@ -482,6 +496,9 @@ public class TabsTray extends ListView
 
                         mSwiping = true;
                         TabsTray.this.requestDisallowInterceptTouchEvent(true);
+
+                        TabRow tab = (TabRow) mSwipeView.getTag();
+                        tab.close.setVisibility(View.INVISIBLE);
 
                         // Stops listview from highlighting the touched item
                         // in the list when swiping.

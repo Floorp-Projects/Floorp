@@ -1154,17 +1154,6 @@ nsPluginHost::IsPluginClickToPlayForType(const nsACString &aMimeType, bool *aRes
   return NS_OK;
 }
 
-bool
-nsPluginHost::IsPluginPlayPreviewForType(const char* aMimeType)
-{
-  for (uint32_t i = 0; i < mPlayPreviewMimeTypes.Length(); i++) {
-    nsCString mt = mPlayPreviewMimeTypes[i];
-    if (PL_strcasecmp(mt.get(), aMimeType) == 0)
-      return true;
-  }
-  return false;
-}
-
 nsresult
 nsPluginHost::GetBlocklistStateForType(const char *aMimeType, uint32_t *aState)
 {
@@ -1648,9 +1637,21 @@ nsPluginHost::EnumerateSiteData(const nsACString& domain,
 }
 
 NS_IMETHODIMP
-nsPluginHost::RegisterPlayPreviewMimeType(const nsACString& mimeType)
+nsPluginHost::RegisterPlayPreviewMimeType(const nsACString& mimeType,
+                                          bool ignoreCTP,
+                                          const nsACString& redirectURL)
 {
-  mPlayPreviewMimeTypes.AppendElement(mimeType);
+  nsAutoCString mt(mimeType);
+  nsAutoCString url(redirectURL);
+  if (url.Length() == 0) {
+    // using default play preview iframe URL, if redirectURL is not specified
+    url.Assign("data:application/x-moz-playpreview;,");
+    url.Append(mimeType);
+  }
+
+  nsRefPtr<nsPluginPlayPreviewInfo> playPreview =
+    new nsPluginPlayPreviewInfo(mt.get(), ignoreCTP, url.get());
+  mPlayPreviewMimeTypes.AppendElement(playPreview);
   return NS_OK;
 }
 
@@ -1658,14 +1659,31 @@ NS_IMETHODIMP
 nsPluginHost::UnregisterPlayPreviewMimeType(const nsACString& mimeType)
 {
   nsAutoCString mimeTypeToRemove(mimeType);
-  for (uint32_t i = mPlayPreviewMimeTypes.Length(); i > 0;) {
-    nsCString mt = mPlayPreviewMimeTypes[--i];
-    if (PL_strcasecmp(mt.get(), mimeTypeToRemove.get()) == 0) {
-      mPlayPreviewMimeTypes.RemoveElementAt(i);
+  for (uint32_t i = mPlayPreviewMimeTypes.Length(); i > 0; i--) {
+    nsRefPtr<nsPluginPlayPreviewInfo> pp = mPlayPreviewMimeTypes[i - 1];
+    if (PL_strcasecmp(pp.get()->mMimeType.get(), mimeTypeToRemove.get()) == 0) {
+      mPlayPreviewMimeTypes.RemoveElementAt(i - 1);
       break;
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginHost::GetPlayPreviewInfo(const nsACString& mimeType,
+                                 nsIPluginPlayPreviewInfo** aResult)
+{
+  nsAutoCString mimeTypeToFind(mimeType);
+  for (uint32_t i = 0; i < mPlayPreviewMimeTypes.Length(); i++) {
+    nsRefPtr<nsPluginPlayPreviewInfo> pp = mPlayPreviewMimeTypes[i];
+    if (PL_strcasecmp(pp.get()->mMimeType.get(), mimeTypeToFind.get()) == 0) {
+      *aResult = new nsPluginPlayPreviewInfo(pp.get());
+      NS_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
+  *aResult = nullptr;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP

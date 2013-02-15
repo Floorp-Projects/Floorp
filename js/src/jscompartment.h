@@ -328,7 +328,8 @@ struct JSCompartment : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS
     int64_t                      lastCodeRelease;
 
     /* Pools for analysis and type information in this compartment. */
-    static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 32 * 1024;
+    static const size_t ANALYSIS_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 32 * 1024;
+    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 8 * 1024;
     js::LifoAlloc                analysisLifoAlloc;
     js::LifoAlloc                typeLifoAlloc;
 

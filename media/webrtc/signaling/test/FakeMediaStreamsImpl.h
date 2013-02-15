@@ -13,17 +13,7 @@
 static const int AUDIO_BUFFER_SIZE = 1600;
 static const int NUM_CHANNELS      = 2;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(Fake_nsDOMMediaStream, nsIDOMMediaStream)
-
-// DOM Media stream
-NS_IMETHODIMP
-Fake_nsDOMMediaStream::GetCurrentTime(double *aCurrentTime)
-{
-  PR_ASSERT(PR_FALSE);
-
-  *aCurrentTime = 0;
-  return NS_OK;
-}
+NS_IMPL_THREADSAFE_ISUPPORTS1(Fake_DOMMediaStream, nsIDOMMediaStream)
 
 // Fake_SourceMediaStream
 nsresult Fake_SourceMediaStream::Start() {

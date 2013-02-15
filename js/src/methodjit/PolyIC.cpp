@@ -124,7 +124,7 @@ class PICStubCompiler : public BaseCompiler
 
 static bool
 GeneratePrototypeGuards(JSContext *cx, Vector<JSC::MacroAssembler::Jump,8> &mismatches, Assembler &masm,
-                        JSObject *obj, JSObject *holder,
+                        JSObject *obj, HandleObject holder,
                         JSC::MacroAssembler::RegisterID objReg,
                         JSC::MacroAssembler::RegisterID scratchReg)
 {
@@ -142,7 +142,7 @@ GeneratePrototypeGuards(JSContext *cx, Vector<JSC::MacroAssembler::Jump,8> &mism
             return false;
     }
 
-    JSObject *pobj = obj->getTaggedProto().toObjectOrNull();
+    RootedObject pobj(cx, obj->getTaggedProto().toObjectOrNull());
     while (pobj != holder) {
         if (pobj->hasUncacheableProto()) {
             Jump j;
@@ -253,7 +253,7 @@ class SetPropCompiler : public PICStubCompiler
             repatcher.relink(label.jumpAtOffset(secondGuardOffset), cs);
     }
 
-    LookupStatus generateStub(UnrootedShape initialShape, UnrootedShape shape, bool adding)
+    LookupStatus generateStub(HandleShape initialShape, HandleShape shape, bool adding)
     {
         if (hadGC())
             return Lookup_Uncacheable;
@@ -309,7 +309,8 @@ class SetPropCompiler : public PICStubCompiler
             JS_ASSERT(shape->hasSlot());
             pic.shapeRegHasBaseShape = false;
 
-            if (!GeneratePrototypeGuards(cx, otherGuards, masm, obj, NULL,
+            RootedObject holder(cx, NULL);
+            if (!GeneratePrototypeGuards(cx, otherGuards, masm, obj, holder,
                                          pic.objReg, pic.shapeReg)) {
                 return error();
             }
@@ -594,7 +595,8 @@ class SetPropCompiler : public PICStubCompiler
             return patchInline(shape);
         }
 
-        return generateStub(obj->lastProperty(), shape, false);
+        RootedShape initialShape(cx, obj->lastProperty());
+        return generateStub(initialShape, shape, false);
     }
 };
 
@@ -1252,7 +1254,7 @@ class GetPropCompiler : public PICStubCompiler
         linkerEpilogue(linker, start, shapeMismatches);
     }
 
-    LookupStatus generateStub(JSObject *holder, HandleShape shape)
+    LookupStatus generateStub(HandleObject holder, HandleShape shape)
     {
         AssertCanGC();
         Vector<Jump, 8> shapeMismatches(cx);
@@ -2370,7 +2372,7 @@ GetElementIC::attachGetProp(VMFrame &f, HandleObject obj, HandleValue v, HandleP
 
     // Guard on the prototype, if applicable.
     MaybeJump protoGuard;
-    JSObject *holder = getprop.holder;
+    RootedObject holder(cx, getprop.holder);
     RegisterID holderReg = objReg;
     if (obj != holder) {
         if (!GeneratePrototypeGuards(cx, otherGuards, masm, obj, holder, objReg, typeReg))

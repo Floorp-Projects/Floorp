@@ -277,7 +277,7 @@ RemoveObserversExceptBluetoothManager
    void* arg)
 {
   if (!key.EqualsLiteral("/")) {
-    static_cast<BluetoothService*>(arg)->RemoveObserverFromTable(key);
+    return PL_DHASH_REMOVE;
   }
 
   return PL_DHASH_NEXT;
@@ -485,7 +485,7 @@ BluetoothService::SetEnabled(bool aEnabled)
      * for more details.
      */
     mBluetoothSignalObserverTable.Enumerate(
-      RemoveObserversExceptBluetoothManager, this);
+      RemoveObserversExceptBluetoothManager, nullptr);
   }
 
   /**

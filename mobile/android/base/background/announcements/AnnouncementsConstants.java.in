@@ -13,6 +13,8 @@ public class AnnouncementsConstants {
   // Not `final` so we have the option to turn this on at runtime with a magic addon.
   public static boolean DISABLED = false;
 
+  public static final long MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
   public static final String GLOBAL_LOG_TAG = "GeckoAnnounce";
   public static final String ACTION_ANNOUNCEMENTS_PREF = "@ANDROID_PACKAGE_NAME@.ANNOUNCEMENTS_PREF";
 
@@ -34,6 +36,14 @@ public class AnnouncementsConstants {
   public static long DEFAULT_ANNOUNCE_FETCH_INTERVAL_MSEC = AlarmManager.INTERVAL_HALF_DAY;
   public static long DEFAULT_BACKOFF_MSEC = 2 * 24 * 60 * 60 * 1000;   // Two days. Used if no Retry-After header.
   public static long MINIMUM_FETCH_INTERVAL_MSEC = 60 * 60 * 1000;     // 1 hour.
+
+  // Stop reporting idle counts once they hit one year.
+  public static long MAX_SANE_IDLE_DAYS = 365;
+
+  // Don't track last launch if the timestamp is ridiculously out of range:
+  // four years after build.
+  public static long LATEST_ACCEPTED_LAUNCH_TIMESTAMP = GlobalConstants.BUILD_TIMESTAMP +
+                                                        4 * 365 * MILLISECONDS_PER_DAY;
 
   public static String ANNOUNCE_USER_AGENT = "Firefox Announcements " + GlobalConstants.MOZ_APP_VERSION;
   public static String ANNOUNCE_CHANNEL = GlobalConstants.MOZ_UPDATE_CHANNEL.replace("default", GlobalConstants.MOZ_OFFICIAL_BRANDING ? "release" : "dev");

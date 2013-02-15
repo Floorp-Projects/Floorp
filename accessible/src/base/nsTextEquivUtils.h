@@ -54,6 +54,14 @@ public:
                                      nsAString& aName);
 
   /**
+   * Calculates text equivalent from the subtree. Similar to GetNameFromSubtree.
+   * The difference it returns not empty result for things like HTML p, i.e.
+   * if the role has eNameFromSubtreeIfReq rule.
+   */
+  static void GetTextEquivFromSubtree(Accessible* aAccessible,
+                                      nsString& aTextEquiv);
+
+  /**
    * Calculates text equivalent for the given accessible from its IDRefs
    * attribute (like aria-labelledby or aria-describedby).
    *

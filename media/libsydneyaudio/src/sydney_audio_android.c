@@ -75,8 +75,6 @@ struct sa_stream {
   unsigned int channels;
   unsigned int isPaused;
 
-  int64_t lastStartTime;
-  int64_t timePlaying;
   int64_t amountWritten;
   unsigned int bufferSize;
 
@@ -155,8 +153,6 @@ sa_stream_create_pcm(
   s->channels    = channels;
   s->isPaused    = 0;
 
-  s->lastStartTime = 0;
-  s->timePlaying = 0;
   s->amountWritten = 0;
 
   s->bufferSize = 0;
@@ -332,20 +328,13 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
       break;
     }
 
-    /* AudioTrack::write is blocking when the AudioTrack is playing.  When
-       it's not playing, it's a non-blocking call that will return a short
-       write when the buffer is full.  Use a short write to indicate a good
-       time to start the AudioTrack playing. */
-    if (r != towrite) {
-      ALOG("%p - Buffer full, starting playback", s);
-      sa_stream_resume(s);
-    }
 
     p += r;
     wrote += r;
-  } while (wrote < nbytes);
+    s->amountWritten += r;
 
-  s->amountWritten += nbytes;
+    sa_stream_resume(s);
+  } while (wrote < nbytes);
 
   (*jenv)->PopLocalFrame(jenv, NULL);
 
@@ -366,17 +355,23 @@ sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
     return SA_ERROR_NO_INIT;
   }
 
-  /* No android API for this, so estimate based on how much we have played and
-   * how much we have written. */
-  *size = s->bufferSize - ((s->timePlaying * s->channels * s->rate * sizeof(int16_t) /
-                            MILLISECONDS_PER_SECOND) - s->amountWritten);
+
+  /* No way to query the available buffer space directly, so calculate it from
+     the amount we've written and the current playback position. */
+  JNIEnv *jenv = GetJNIForThread();
+  int32_t framePosition = (*jenv)->CallIntMethod(jenv, s->output_unit, at.getpos);
+
+  int64_t bytePos = framePosition * s->channels * sizeof(int16_t);
+
+  *size = s->bufferSize - (s->amountWritten - bytePos);
 
   /* Available buffer space can't exceed bufferSize. */
   if (*size > s->bufferSize) {
     *size = s->bufferSize;
   }
 
-  ALOG("%p - Write Size tp=%lld aw=%lld sz=%zu", s, s->timePlaying, s->amountWritten, *size);
+  ALOG("%p - Write Size aw=%lld bufsz=%u pos=%lld sz=%zu",
+       s, s->amountWritten, s->bufferSize, bytePos, *size);
   return SA_SUCCESS;
 }
 
@@ -410,14 +405,7 @@ sa_stream_pause(sa_stream_t *s) {
   s->isPaused = 1;
 
   /* Update stats */
-  if (s->lastStartTime != 0) {
-    /* if lastStartTime is not zero, so playback has started */
-    struct timespec current_time;
-    clock_gettime(CLOCK_REALTIME, &current_time);
-    int64_t ticker = current_time.tv_sec * 1000 + current_time.tv_nsec / 1000000;
-    s->timePlaying += ticker - s->lastStartTime;
-  }
-  ALOG("%p - Pause total time playing: %lld total written: %lld", s,  s->timePlaying, s->amountWritten);
+  ALOG("%p - pause", s);
 
   (*jenv)->CallVoidMethod(jenv, s->output_unit, at.pause);
   return SA_SUCCESS;
@@ -435,12 +423,6 @@ sa_stream_resume(sa_stream_t *s) {
 
   JNIEnv *jenv = GetJNIForThread();
   s->isPaused = 0;
-
-  /* Update stats */
-  struct timespec current_time;
-  clock_gettime(CLOCK_REALTIME, &current_time);
-  int64_t ticker = current_time.tv_sec * 1000 + current_time.tv_nsec / 1000000;
-  s->lastStartTime = ticker;
 
   (*jenv)->CallVoidMethod(jenv, s->output_unit, at.play);
   return SA_SUCCESS;

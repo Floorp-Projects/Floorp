@@ -546,17 +546,19 @@ pref("ui.showHideScrollbars", 1);
 // background.
 pref("dom.ipc.processPriorityManager.enabled", true);
 pref("dom.ipc.processPriorityManager.backgroundGracePeriodMS", 1000);
-pref("dom.ipc.processPriorityManager.temporaryPriorityMS", 5000);
+pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
 
 // Kernel parameters for how processes are killed on low-memory.
 pref("gonk.systemMemoryPressureRecoveryPollMS", 5000);
 pref("hal.processPriorityManager.gonk.masterOomScoreAdjust", 0);
 pref("hal.processPriorityManager.gonk.masterKillUnderMB", 1);
-pref("hal.processPriorityManager.gonk.foregroundOomScoreAdjust", 67);
+pref("hal.processPriorityManager.gonk.foregroundHighOomScoreAdjust", 67);
+pref("hal.processPriorityManager.gonk.foregroundHighKillUnderMB", 3);
+pref("hal.processPriorityManager.gonk.foregroundOomScoreAdjust", 134);
 pref("hal.processPriorityManager.gonk.foregroundKillUnderMB", 4);
-pref("hal.processPriorityManager.gonk.backgroundPerceivableOomScoreAdjust", 134);
+pref("hal.processPriorityManager.gonk.backgroundPerceivableOomScoreAdjust", 200);
 pref("hal.processPriorityManager.gonk.backgroundPerceivableKillUnderMB", 5);
-pref("hal.processPriorityManager.gonk.backgroundHomescreenOomScoreAdjust", 200);
+pref("hal.processPriorityManager.gonk.backgroundHomescreenOomScoreAdjust", 267);
 pref("hal.processPriorityManager.gonk.backgroundHomescreenKillUnderMB", 5);
 pref("hal.processPriorityManager.gonk.backgroundOomScoreAdjust", 400);
 pref("hal.processPriorityManager.gonk.backgroundKillUnderMB", 8);
@@ -564,6 +566,7 @@ pref("hal.processPriorityManager.gonk.notifyLowMemUnderMB", 10);
 
 // Niceness values (i.e., CPU priorities) for B2G processes.
 pref("hal.processPriorityManager.gonk.masterNice", 0);
+pref("hal.processPriorityManager.gonk.foregroundHighNice", 0);
 pref("hal.processPriorityManager.gonk.foregroundNice", 1);
 pref("hal.processPriorityManager.gonk.backgroundPerceivableNice", 10);
 pref("hal.processPriorityManager.gonk.backgroundHomescreenNice", 20);
@@ -576,6 +579,11 @@ pref("dom.ipc.processPrelaunch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
 pref("dom.ipc.processPrelaunch.delayMs", 5000);
 #endif
+
+// When a process receives a system message, we hold a CPU wake lock on its
+// behalf for this many seconds, or until it handles the system message,
+// whichever comes first.
+pref("dom.ipc.systemMessageCPULockTimeoutSec", 30);
 
 // Ignore the "dialog=1" feature in window.open.
 pref("dom.disable_window_open_dialog_feature", true);
