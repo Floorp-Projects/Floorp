@@ -1321,6 +1321,13 @@ var NativeWindow = {
     });
   },
 
+  unloadDex: function(zipFile) {
+    sendMessageToJava({
+      type: "Dex:Unload",
+      zipfile: zipFile
+    });
+  },
+
   toast: {
     show: function(aMessage, aDuration) {
       sendMessageToJava({
