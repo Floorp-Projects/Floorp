@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 // MozKeyboard
 // -----------------------------------------------------------------------
 
-function MozKeyboard() { } 
+function MozKeyboard() { }
 
 MozKeyboard.prototype = {
   classID: Components.ID("{397a7fdf-2254-47be-b74e-76625a1a66d5}"),
@@ -36,6 +36,15 @@ MozKeyboard.prototype = {
   }),
 
   init: function mozKeyboardInit(win) {
+    let principal = win.document.nodePrincipal;
+    let perm = Services.perms
+               .testExactPermissionFromPrincipal(principal, "keyboard");
+    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
+      dump("No permission to use the keyboard API for " +
+           principal.origin + "\n");
+      return null;
+    }
+
     Services.obs.addObserver(this, "inner-window-destroyed", false);
     cpmm.addMessageListener('Keyboard:FocusChange', this);
 
