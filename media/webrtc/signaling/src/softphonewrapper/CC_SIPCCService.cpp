@@ -6,6 +6,8 @@
 #include <windows.h> //plat_api.h seems to need some of the types defined in Windows.h (e.g. boolean)
 #endif
 
+#include "CSFLogStream.h"
+
 #include "CC_CallTypes.h"
 #include "CC_SIPCCService.h"
 #include "NullDeleter.h"
@@ -32,7 +34,6 @@ extern "C" {
 
 #include "csf_common.h"
 
-#include "CSFLogStream.h"
 static const char* logTag = "CC_SIPCCService";
 
 using namespace std;

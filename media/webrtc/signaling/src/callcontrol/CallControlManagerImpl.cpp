@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <string>
 
+#include "CSFLogStream.h"
+
 #include "CC_SIPCCDevice.h"
 #include "CC_SIPCCDeviceInfo.h"
 #include "CC_SIPCCFeatureInfo.h"
@@ -12,7 +14,6 @@
 #include "CC_SIPCCLineInfo.h"
 #include "CC_SIPCCCallInfo.h"
 #include "CallControlManagerImpl.h"
-#include "CSFLogStream.h"
 #include "csf_common.h"
 
 extern "C"
