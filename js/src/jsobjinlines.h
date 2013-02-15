@@ -241,11 +241,6 @@ JSObject::finalize(js::FreeOp *fop)
     }
 #endif
 
-    /*
-     * Finalize obj first, in case it needs map and slots. Objects with
-     * finalize hooks are not finalized in the background, as the class is
-     * stored in the object's shape, which may have already been destroyed.
-     */
     js::Class *clasp = getClass();
     if (clasp->finalize)
         clasp->finalize(fop, this);
@@ -943,6 +938,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap
     JS_ASSERT(!!dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == !!slots);
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
     JS_ASSERT(cx->compartment == type->compartment());
+    JS_ASSERT_IF(type->clasp->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
 
     JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind, heap);
     if (!obj)
@@ -1563,7 +1559,8 @@ CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
      * IsBackgroundFinalized is called to prevent recursively incrementing
      * the finalize kind; kind may already be a background finalize kind.
      */
-    return (!gc::IsBackgroundFinalized(kind) && !clasp->finalize);
+    return (!gc::IsBackgroundFinalized(kind) &&
+            (!clasp->finalize || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE)));
 }
 
 /*
