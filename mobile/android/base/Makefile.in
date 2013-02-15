@@ -103,6 +103,7 @@ FENNEC_JAVA_FILES = \
   GeckoViewsFactory.java \
   HeightChangeAnimation.java \
   InputMethods.java \
+  JavaAddonManager.java \
   LightweightTheme.java \
   LightweightThemeDrawable.java \
   LinkPreference.java \
