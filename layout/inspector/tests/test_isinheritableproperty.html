@@ -13,9 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=699592
 <script type="application/javascript">
 
 function do_test() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-    .getService(Components.interfaces.inIDOMUtils);
+  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+    .getService(SpecialPowers.Ci.inIDOMUtils);
 
   is(utils.isInheritedProperty("font-size"), true, "font-size is inherited.");
 

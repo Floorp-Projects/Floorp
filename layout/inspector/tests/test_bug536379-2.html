@@ -18,10 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=536379
 
 /** Test for Bug 536379 **/
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-const CI = Components.interfaces;
-const CC = Components.classes;
+const CI = SpecialPowers.Ci;
+const CC = SpecialPowers.Cc;
 
 var domUtils =
   CC["@mozilla.org/inspector/dom-utils;1"].getService(CI.inIDOMUtils);

@@ -21,9 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462787
 
 function do_test() {
   const INVALID_POINTER = 0x80004003;
-  
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+
+  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
                              .getService(Components.interfaces.inIDOMUtils);
   try {
     utils.getCSSStyleRules(null); 
