@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   do_get_profile_startup();
@@ -17,4 +16,7 @@ function run_test() {
 
   var plugin = get_test_plugintag();
   do_check_false(plugin == null);
+
+  // Clean up
+  Services.prefs.clearUserPref("plugin.importedState");
 }
