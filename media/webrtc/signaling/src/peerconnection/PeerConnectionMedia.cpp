@@ -76,7 +76,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   // Looks like a bug in the NrIceCtx API.
   mIceCtx = NrIceCtx::Create("PC:" + mParent->GetHandle(), true);
   if(!mIceCtx) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Failed to create Ice Context");
+    CSFLogError(logTag, "%s: Failed to create Ice Context", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
   nsresult rv = mIceCtx->SetStunServers(stun_servers);
@@ -96,21 +96,21 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   RefPtr<NrIceMediaStream> dcStream = mIceCtx->CreateStream("stream3", 2);
 
   if (!audioStream) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": audio stream is NULL");
+    CSFLogError(logTag, "%s: audio stream is NULL", __FUNCTION__);
     return NS_ERROR_FAILURE;
   } else {
     mIceStreams.push_back(audioStream);
   }
 
   if (!videoStream) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": video stream is NULL");
+    CSFLogError(logTag, "%s: video stream is NULL", __FUNCTION__);
     return NS_ERROR_FAILURE;
   } else {
     mIceStreams.push_back(videoStream);
   }
 
   if (!dcStream) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": datachannel stream is NULL");
+    CSFLogError(logTag, "%s: datachannel stream is NULL", __FUNCTION__);
     return NS_ERROR_FAILURE;
   } else {
     mIceStreams.push_back(dcStream);
@@ -217,16 +217,16 @@ PeerConnectionMedia::RemoveStream(nsIDOMMediaStream* aMediaStream, uint32_t *str
 void
 PeerConnectionMedia::SelfDestruct()
 {
-   CSFLogDebugS(logTag, __FUNCTION__ << " Disconnecting media streams from PC");
+   CSFLogDebug(logTag, "%s: Disconnecting media streams from PC", __FUNCTION__);
 
    DisconnectMediaStreams();
 
-   CSFLogDebugS(logTag, __FUNCTION__ << " Disconnecting transport");
+   CSFLogDebug(logTag, "%s: Disconnecting transport", __FUNCTION__);
    // Shutdown the transport.
    RUN_ON_THREAD(mParent->GetSTSThread(), WrapRunnable(
        this, &PeerConnectionMedia::ShutdownMediaTransport), NS_DISPATCH_SYNC);
 
-  CSFLogDebugS(logTag, __FUNCTION__ << " Media shut down");
+  CSFLogDebug(logTag, "%s: Media shut down", __FUNCTION__);
 
   // This should destroy the object.
   this->Release();
@@ -321,7 +321,7 @@ LocalSourceStreamInfo::StorePipeline(int aTrack,
 {
   MOZ_ASSERT(mPipelines.find(aTrack) == mPipelines.end());
   if (mPipelines.find(aTrack) != mPipelines.end()) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Storing duplicate track");
+    CSFLogError(logTag, "%s: Storing duplicate track", __FUNCTION__);
     return;
   }
   //TODO: Revisit once we start supporting multiple streams or multiple tracks
