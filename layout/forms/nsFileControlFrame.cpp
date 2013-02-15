@@ -577,7 +577,7 @@ nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
@@ -613,6 +613,7 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   DisplaySelectionOverlay(aBuilder, aLists.Content());
+  return NS_OK;
 }
 
 #ifdef ACCESSIBILITY

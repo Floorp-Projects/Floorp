@@ -286,7 +286,7 @@ nsImageBoxFrame::UpdateLoadFlags()
   }
 }
 
-void
+NS_IMETHODIMP
 nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -297,11 +297,12 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // Do not render when given a zero area. This avoids some useless
     // scaling work while we wait for our image dimensions to arrive
     // asynchronously.
-    return;
+    return NS_OK;
   }
 
   if (!IsVisibleForPainting(aBuilder))
-    return;
+    return NS_OK;
+
 
   nsDisplayList list;
   list.AppendNewToTop(
@@ -310,6 +311,7 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   CreateOwnLayerIfNeeded(aBuilder, &list);
 
   aLists.Content()->AppendToTop(&list);
+  return NS_OK;
 }
 
 void

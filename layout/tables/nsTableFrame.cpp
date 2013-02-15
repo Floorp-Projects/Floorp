@@ -1103,7 +1103,7 @@ static bool CompareByTablePartRank(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   return GetTablePartRank(aItem1) <= GetTablePartRank(aItem2);
 }
 
-/* static */ void
+/* static */ nsresult
 nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
                                const nsRect& aDirtyRect, const nsDisplayListSet& aLists)
 {
@@ -1120,9 +1120,10 @@ nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
     aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
     kid = kid->GetNextSibling();
   }
+  return NS_OK;
 }
 
-/* static */ void
+/* static */ nsresult
 nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
                                       nsFrame* aFrame,
                                       const nsRect& aDirtyRect,
@@ -1183,6 +1184,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
   }
 
   aFrame->DisplayOutline(aBuilder, aLists);
+  return NS_OK;
 }
 
 #ifdef DEBUG
@@ -1221,7 +1223,7 @@ AnyTablePartHasBorderOrBackground(nsIFrame* aStart, nsIFrame* aEnd)
 
 // table paint code is concerned primarily with borders and bg color
 // SEC: TODO: adjust the rect for captions
-void
+NS_IMETHODIMP
 nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
@@ -1254,6 +1256,8 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
   DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
+
+  return NS_OK;
 }
 
 nsMargin

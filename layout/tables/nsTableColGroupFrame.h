@@ -48,9 +48,9 @@ public:
   /**
    * ColGroups never paint anything, nor receive events.
    */
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) { return NS_OK; }
 
   /** A colgroup can be caused by three things:
     * 1)	An element with table-column-group display

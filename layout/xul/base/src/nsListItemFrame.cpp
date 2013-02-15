@@ -36,7 +36,7 @@ nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState)
   return size;
 }
 
-void
+NS_IMETHODIMP
 nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                              const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
@@ -44,10 +44,10 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsForEventDelivery()) {
     if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowevents,
                                nsGkAtoms::_true, eCaseMatters))
-      return;
+      return NS_OK;
   }
   
-  nsGridRowLeafFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  return nsGridRowLeafFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

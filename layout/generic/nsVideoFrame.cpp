@@ -365,13 +365,13 @@ public:
   }
 };
 
-void
+NS_IMETHODIMP
 nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
-    return;
+    return NS_OK;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsVideoFrame");
 
@@ -401,6 +401,8 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+
+  return NS_OK;
 }
 
 nsIAtom*

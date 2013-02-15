@@ -39,7 +39,7 @@ nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
   UpdateMouseThrough();
 }
 
-void
+NS_IMETHODIMP
 nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                              const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
@@ -48,9 +48,9 @@ nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsForEventDelivery()) {
     if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowevents,
                                nsGkAtoms::_true, eCaseMatters))
-      return;
+      return NS_OK;
   }
-  nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

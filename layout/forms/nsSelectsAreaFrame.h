@@ -15,13 +15,13 @@ public:
 
   friend nsIFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, uint32_t aFlags);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  void BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists);
+  nsresult BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
+                                    const nsRect&           aDirtyRect,
+                                    const nsDisplayListSet& aLists);
 
   NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,

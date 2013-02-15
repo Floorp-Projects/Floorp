@@ -28,9 +28,9 @@ public:
                   nsIFrame*   aParent,
                   nsIFrame*   aPrevInFlow);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
