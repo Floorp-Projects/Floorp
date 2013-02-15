@@ -123,6 +123,20 @@ class Test:
 
         return test
 
+    def command(self, js, lib_dir, shell_args):
+        libdir_var = lib_dir
+        if not libdir_var.endswith('/'):
+            libdir_var += '/'
+        scriptdir_var = os.path.dirname(self.path);
+        if not scriptdir_var.endswith('/'):
+            scriptdir_var += '/'
+        expr = ("const platform=%r; const libdir=%r; const scriptdir=%r"
+                % (sys.platform, libdir_var, scriptdir_var))
+        # We may have specified '-a' or '-d' twice: once via --jitflags, once
+        # via the "|jit-test|" line.  Remove dups because they are toggles.
+        return ([js] + list(set(self.jitflags)) + shell_args +
+                ['-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'), '-f', self.path])
+
 def find_tests(dir, substring = None):
     ans = []
     for dirpath, dirnames, filenames in os.walk(dir):
@@ -139,20 +153,6 @@ def find_tests(dir, substring = None):
             if substring is None or substring in os.path.relpath(test, dir):
                 ans.append(test)
     return ans
-
-def get_test_cmd(js, path, jitflags, lib_dir, shell_args):
-    libdir_var = lib_dir
-    if not libdir_var.endswith('/'):
-        libdir_var += '/'
-    scriptdir_var = os.path.dirname(path);
-    if not scriptdir_var.endswith('/'):
-        scriptdir_var += '/'
-    expr = ("const platform=%r; const libdir=%r; const scriptdir=%r"
-            % (sys.platform, libdir_var, scriptdir_var))
-    # We may have specified '-a' or '-d' twice: once via --jitflags, once
-    # via the "|jit-test|" line.  Remove dups because they are toggles.
-    return ([js] + list(set(jitflags)) + shell_args +
-            [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'), '-f', path ])
 
 def tmppath(token):
     fd, path = tempfile.mkstemp(prefix=token)
@@ -240,8 +240,7 @@ def run_cmd_avoid_stdio(cmdline, env, timeout):
     return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
 def run_test(test, lib_dir, shell_args, options):
-    cmd = get_test_cmd(options.js_shell, test.path, test.jitflags, lib_dir, shell_args)
-
+    cmd = test.command(options.js_shell, lib_dir, shell_args)
     if (test.valgrind and
         any([os.path.exists(os.path.join(d, 'valgrind'))
              for d in os.environ['PATH'].split(os.pathsep)])):
@@ -442,7 +441,7 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
 
         def show_test(test):
             if options.show_failed:
-                print('    ' + subprocess.list2cmdline(get_test_cmd(options.js_shell, test.path, test.jitflags, lib_dir, shell_args)))
+                print('    ' + subprocess.list2cmdline(test.command(options.js_shell, lib_dir, shell_args)))
             else:
                 print('    ' + ' '.join(test.jitflags + [test.path]))
 
