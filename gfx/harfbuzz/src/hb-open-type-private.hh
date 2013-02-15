@@ -616,10 +616,20 @@ struct Index : USHORT {
 DEFINE_NULL_DATA (Index, "\xff\xff");
 
 /* Offset to a table, same as uint16 (length = 16 bits), Null offset = 0x0000 */
-typedef USHORT Offset;
+struct Offset : USHORT
+{
+  inline bool is_null (void) const { return 0 == *this; }
+  public:
+  DEFINE_SIZE_STATIC (2);
+};
 
 /* LongOffset to a table, same as uint32 (length = 32 bits), Null offset = 0x00000000 */
-typedef ULONG LongOffset;
+struct LongOffset : ULONG
+{
+  inline bool is_null (void) const { return 0 == *this; }
+  public:
+  DEFINE_SIZE_STATIC (4);
+};
 
 
 /* CheckSum */
