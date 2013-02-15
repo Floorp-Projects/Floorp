@@ -38,6 +38,7 @@
       var mimeType = tagTestPlugin.getMimeTypes()[0];
       ok(mimeType, "should have a MIME type for Test Plug-in");
       ok(navigator.mimeTypes[mimeType.type], "navigator.mimeTypes should have an entry for '" + mimeType.type + "'");
+      ok(!tagTestPlugin.disabled, "test plugin should not be disabled");
 
       nextTest = testPart2;
       tagTestPlugin.disabled = true;
