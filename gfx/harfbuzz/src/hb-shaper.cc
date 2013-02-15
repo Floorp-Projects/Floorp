@@ -40,7 +40,7 @@ static const hb_shaper_pair_t all_shapers[] = {
 
 static const hb_shaper_pair_t *static_shapers;
 
-static
+static inline
 void free_static_shapers (void)
 {
   if (unlikely (static_shapers != all_shapers))

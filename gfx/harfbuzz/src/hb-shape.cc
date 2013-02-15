@@ -202,7 +202,7 @@ hb_feature_to_string (hb_feature_t *feature,
 
 static const char **static_shaper_list;
 
-static
+static inline
 void free_static_shaper_list (void)
 {
   free (static_shaper_list);
