@@ -145,7 +145,7 @@ class Test:
 
         return test
 
-    def command(self, js, shell_args):
+    def command(self, prefix):
         scriptdir_var = os.path.dirname(self.path);
         if not scriptdir_var.endswith('/'):
             scriptdir_var += '/'
@@ -153,8 +153,7 @@ class Test:
                 % (sys.platform, LIB_DIR, scriptdir_var))
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
-        cmd = [js] + list(set(self.jitflags)) + shell_args + ['-e', expr]
-        cmd += ['-f', os.path.join(LIB_DIR, 'prolog.js'), '-f', self.path]
+        cmd = prefix + list(set(self.jitflags)) + ['-e', expr, '-f', self.path]
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
         return cmd
@@ -261,8 +260,8 @@ def run_cmd_avoid_stdio(cmdline, env, timeout):
     _, __, code = run_timeout_cmd(cmdline, { 'env': env }, timeout)
     return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
-def run_test(test, shell_args, options):
-    cmd = test.command(options.js_shell, shell_args)
+def run_test(test, prefix, options):
+    cmd = test.command(prefix)
     if options.show_cmd:
         print(subprocess.list2cmdline(cmd))
 
@@ -308,14 +307,14 @@ def print_tinderbox(label, test, message=None):
         result += ": " + message
     print(result)
 
-def wrap_parallel_run_test(test, shell_args, resultQueue, options):
+def wrap_parallel_run_test(test, prefix, resultQueue, options):
     # Ignore SIGINT in the child
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    result = run_test(test, shell_args, options)
+    result = run_test(test, prefix, options)
     resultQueue.put(result)
     return result
 
-def run_tests_parallel(tests, shell_args, options):
+def run_tests_parallel(tests, prefix, options):
     # This queue will contain the results of the various tests run.
     # We could make this queue a global variable instead of using
     # a manager to share, but this will not work on Windows.
@@ -363,7 +362,7 @@ def run_tests_parallel(tests, shell_args, options):
         while notify_queue.get():
             if (testcnt < len(tests)):
                 # Start one new worker
-                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], shell_args, async_test_result_queue, options))
+                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], prefix, async_test_result_queue, options))
                 worker_processes.append(worker_process)
                 worker_process.start()
                 testcnt += 1
@@ -519,13 +518,12 @@ def process_test_results(results, num_tests, options):
     pb.finish(True)
     return print_test_summary(failures, complete, doing, options)
 
-
-def get_serial_results(tests, shell_args, options):
+def get_serial_results(tests, prefix, options):
     for test in tests:
-        yield run_test(test, shell_args, options)
+        yield run_test(test, prefix, options)
 
-def run_tests(tests, shell_args, options):
-    gen = get_serial_results(tests, shell_args, options)
+def run_tests(tests, prefix, options):
+    gen = get_serial_results(tests, prefix, options)
     ok = process_test_results(gen, len(tests), options)
     return ok
 

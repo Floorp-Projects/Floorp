@@ -79,7 +79,7 @@ def main(argv):
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
     # We need to make sure we are using backslashes on Windows.
-    options.js_shell, test_args = os.path.abspath(args[0]), args[1:]
+    test_args = args[:1]
 
     if jittests.stdio_might_be_broken():
         # Prefer erring on the side of caution and not using stdio if
@@ -174,8 +174,8 @@ def main(argv):
                 new_test.jitflags.extend(jitflags)
                 job_list.append(new_test)
 
-    shell_args = shlex.split(options.shell_args)
-
+    prefix = [os.path.abspath(args[0])] + shlex.split(options.shell_args)
+    prefix += ['-f', os.path.join(jittests.LIB_DIR, 'prolog.js')]
     if options.debug:
         if len(job_list) > 1:
             print 'Multiple tests match command line arguments, debugger can only run one'
@@ -184,21 +184,21 @@ def main(argv):
             sys.exit(1)
 
         tc = job_list[0]
-        cmd = [ 'gdb', '--args' ] + tc.command(options.js_shell, shell_args)
+        cmd = ['gdb', '--args'] + tc.command(prefix)
         subprocess.call(cmd)
         sys.exit()
 
     try:
         ok = None
         if options.max_jobs > 1 and jittests.HAVE_MULTIPROCESSING:
-            ok = jittests.run_tests_parallel(job_list, shell_args, options)
+            ok = jittests.run_tests_parallel(job_list, prefix, options)
         else:
-            ok = jittests.run_tests(job_list, shell_args, options)
+            ok = jittests.run_tests(job_list, prefix, options)
         if not ok:
             sys.exit(2)
     except OSError:
-        if not os.path.exists(options.js_shell):
-            print >> sys.stderr, "JS shell argument: file does not exist: '%s'" % options.js_shell
+        if not os.path.exists(prefix[0]):
+            print >> sys.stderr, "JS shell argument: file does not exist: '%s'" % prefix[0]
             sys.exit(1)
         else:
             raise
