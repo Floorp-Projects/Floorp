@@ -189,7 +189,7 @@ def main(argv):
             sys.exit(1)
 
         tc = job_list[0]
-        cmd = [ 'gdb', '--args' ] + jittests.get_test_cmd(options.js_shell, tc.path, tc.jitflags, lib_dir, shell_args)
+        cmd = [ 'gdb', '--args' ] + tc.command(options.js_shell, lib_dir, shell_args)
         subprocess.call(cmd)
         sys.exit()
 
