@@ -1118,11 +1118,11 @@ bool
 ContextStack::pushBailoutArgs(JSContext *cx, const ion::IonBailoutIterator &it, InvokeArgsGuard *iag)
 {
     unsigned argc = it.numActualArgs();
-    ion::SnapshotIterator s(it);
 
     if (!pushInvokeArgs(cx, argc, iag, DONT_REPORT_ERROR))
         return false;
 
+    ion::SnapshotIterator s(it);
     JSFunction *fun = it.callee();
     iag->setCallee(ObjectValue(*fun));
 

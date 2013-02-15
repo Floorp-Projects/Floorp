@@ -247,8 +247,6 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     }
 #endif
 
-    SnapshotIterator iter(it);
-
     // Set a flag to avoid bailing out on every iteration or function call. Ion can
     // compile and run the script again after an invalidation.
     it.ionScript()->setBailoutExpected();
@@ -295,6 +293,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 
     if (it.isConstructing())
         fp->setConstructing();
+
+    SnapshotIterator iter(it);
 
     while (true) {
         IonSpew(IonSpew_Bailouts, " restoring frame");
