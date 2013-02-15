@@ -38,6 +38,10 @@ function TopSitesView(aGrid, maxSites) {
 
   // handle selectionchange DOM events from the grid/tile group
   this._set.addEventListener("context-action", this, false);
+
+  let history = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+  history.addObserver(this, false);
 }
 
 TopSitesView.prototype = {
@@ -153,6 +157,42 @@ TopSitesView.prototype = {
 
   destruct: function destruct() {
     // remove the observers here
+  },
+
+  // nsINavHistoryObserver
+
+  onBeginUpdateBatch: function() {
+  },
+
+  onEndUpdateBatch: function() {
+  },
+
+  onVisit: function(aURI, aVisitID, aTime, aSessionID,
+                    aReferringID, aTransitionType) {
+  },
+
+  onTitleChanged: function(aURI, aPageTitle) {
+  },
+
+  onDeleteURI: function(aURI) {
+  },
+
+  onClearHistory: function() {
+    this._set.clearAll();
+  },
+
+  onPageChanged: function(aURI, aWhat, aValue) {
+  },
+
+  onPageExpired: function(aURI, aVisitTime, aWholeEntry) {
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsINavHistoryObserver) ||
+        iid.equals(Components.interfaces.nsISupports)) {
+      return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 
 };
