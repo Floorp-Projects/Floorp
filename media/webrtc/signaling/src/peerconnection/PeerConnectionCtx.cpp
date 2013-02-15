@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "CSFLog.h"
 
 #include "CallControlManager.h"
 #include "CC_Device.h"
@@ -11,7 +12,6 @@
 #include "CC_SIPCCCallInfo.h"
 #include "ccapi_device_info.h"
 #include "CC_SIPCCDeviceInfo.h"
-#include "CSFLog.h"
 #include "vcm.h"
 #include "VcmSIPCCBinding.h"
 #include "PeerConnectionImpl.h"
