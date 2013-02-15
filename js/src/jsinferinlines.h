@@ -603,6 +603,24 @@ TrackPropertyTypes(JSContext *cx, UnrootedObject obj, RawId id)
     return true;
 }
 
+inline void
+EnsureTrackPropertyTypes(JSContext *cx, UnrootedObject obj, RawId id)
+{
+    JS_ASSERT(!obj->hasLazyType());
+
+    if (!cx->typeInferenceEnabled() || obj->type()->unknownProperties())
+        return;
+
+    id = IdToTypeId(id);
+
+    if (obj->hasSingletonType()) {
+        AutoEnterAnalysis enter(cx);
+        obj->type()->getProperty(cx, id, true);
+    }
+
+    JS_ASSERT(TrackPropertyTypes(cx, obj, id));
+}
+
 /* Add a possible type for a property of obj. */
 inline void
 AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, Type type)

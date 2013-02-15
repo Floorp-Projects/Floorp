@@ -999,6 +999,7 @@ DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue objval, Han
       case ICStub::SetElem_Dense:
       case ICStub::SetElem_DenseAdd: {
         JS_ASSERT(obj->isNative());
+        types::EnsureTrackPropertyTypes(cx, obj, JSID_VOID);
         types::AddTypePropertyId(cx, obj, JSID_VOID, value);
         break;
       }
@@ -1006,6 +1007,7 @@ DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue objval, Han
         JS_ASSERT(obj->isNative());
         jsbytecode *pc = stub->getChainFallback()->icEntry()->pc(script);
         RootedPropertyName name(cx, script->getName(pc));
+        types::EnsureTrackPropertyTypes(cx, obj, NameToId(name));
         types::AddTypePropertyId(cx, obj, NameToId(name), value);
         break;
       }
@@ -3698,7 +3700,6 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stu
     uint32_t offset = isFixedSlot
                       ? JSObject::getFixedSlotOffset(shape->slot())
                       : obj->dynamicSlotIndex(shape->slot()) * sizeof(Value);
-
 
     IonSpew(IonSpew_BaselineIC, "  Generating SetProp(NativeObject.PROP) stub");
     RootedTypeObject type(cx, obj->getType(cx));
