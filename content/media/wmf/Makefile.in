@@ -25,6 +25,7 @@ CPPSRCS		= \
 		WMFDecoder.cpp \
 		WMFReader.cpp \
 		WMFUtils.cpp \
+		WMFSourceReaderCallback.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

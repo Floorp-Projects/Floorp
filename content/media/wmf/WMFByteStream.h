@@ -21,6 +21,7 @@ namespace mozilla {
 
 class MediaResource;
 class ReadRequest;
+class WMFSourceReaderCallback;
 
 // Wraps a MediaResource around an IMFByteStream interface, so that it can
 // be used by the IMFSourceReader. Each WMFByteStream creates a WMF Work Queue
@@ -37,7 +38,7 @@ class WMFByteStream MOZ_FINAL : public IMFByteStream
                               , public IMFAttributes
 {
 public:
-  WMFByteStream(MediaResource* aResource);
+  WMFByteStream(MediaResource* aResource, WMFSourceReaderCallback* aCallback);
   ~WMFByteStream();
 
   nsresult Init();
@@ -122,6 +123,12 @@ private:
   // Reference to the thread pool in which we perform the reads asynchronously.
   // Note this is pool is shared amongst all active WMFByteStreams.
   nsCOMPtr<nsIThreadPool> mThreadPool;
+
+  // Reference to the source reader's callback. We use this reference to
+  // notify threads waiting on a ReadSample() callback to stop waiting
+  // if the stream is closed, which happens when the media element is
+  // shutdown.
+  RefPtr<WMFSourceReaderCallback> mSourceReaderCallback;
 
   // Monitor that ensures that multiple concurrent async reads are processed
   // in serial on a resource. This prevents concurrent async reads and seeks
