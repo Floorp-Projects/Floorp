@@ -5,7 +5,8 @@
 
 #include "nsISupports.idl"
  
-[scriptable, uuid(eadb45d6-aec2-4b70-95f4-ffdf1f86738f)]
+[scriptable, uuid(a0a3bc68-eab3-4e66-b5cb-b1d86765119c)]
 interface nsIDOMCrypto : nsISupports
 {
+  [implicit_jscontext] jsval getRandomValues(in jsval aData);
 };

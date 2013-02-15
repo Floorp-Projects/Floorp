@@ -3,7 +3,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "Crypto.h"
 #include "nsIDOMClassInfo.h"
+#include "DOMError.h"
 #include "nsString.h"
+#include "nsIRandomGenerator.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
+
+using namespace js::ArrayBufferView;
 
 namespace mozilla {
 namespace dom {
@@ -25,6 +31,72 @@ Crypto::Crypto()
 Crypto::~Crypto()
 {
   MOZ_COUNT_DTOR(Crypto);
+}
+
+NS_IMETHODIMP
+Crypto::GetRandomValues(const jsval& aData, JSContext *cx, jsval* _retval)
+{
+  // Make sure this is a JavaScript object
+  if (!aData.isObject()) {
+    return NS_ERROR_DOM_NOT_OBJECT_ERR;
+  }
+
+  JSObject* view = &aData.toObject();
+
+  // Make sure this object is an ArrayBufferView
+  if (!JS_IsTypedArrayObject(view)) {
+    return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+  }
+
+  // Throw if the wrong type of ArrayBufferView is passed in
+  // (Part of the Web Crypto API spec)
+  switch (JS_GetArrayBufferViewType(view)) {
+    case TYPE_INT8:
+    case TYPE_UINT8:
+    case TYPE_UINT8_CLAMPED:
+    case TYPE_INT16:
+    case TYPE_UINT16:
+    case TYPE_INT32:
+    case TYPE_UINT32:
+      break;
+    default:
+      return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+  }
+
+  uint32_t dataLen = JS_GetTypedArrayByteLength(view);
+
+  if (dataLen == 0) {
+    NS_WARNING("ArrayBufferView length is 0, cannot continue");
+    return NS_OK;
+  } else if (dataLen > 65536) {
+    return NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
+  }
+
+  nsCOMPtr<nsIRandomGenerator> randomGenerator;
+  nsresult rv;
+  randomGenerator =
+    do_GetService("@mozilla.org/security/random-generator;1", &rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("unable to continue without random number generator");
+    return rv;
+  }
+
+  void *dataptr = JS_GetArrayBufferViewData(view);
+  NS_ENSURE_TRUE(dataptr, NS_ERROR_FAILURE);
+
+  unsigned char* data =
+    static_cast<unsigned char*>(dataptr);
+
+  uint8_t *buf;
+  rv = randomGenerator->GenerateRandomBytes(dataLen, &buf);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  memcpy(data, buf, dataLen);
+  NS_Free(buf);
+
+  *_retval = OBJECT_TO_JSVAL(view);
+
+  return NS_OK;
 }
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY

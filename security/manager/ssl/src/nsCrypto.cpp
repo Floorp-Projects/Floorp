@@ -2856,6 +2856,12 @@ nsCrypto::DisableRightClick()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsCrypto::GetRandomValues(const jsval& aData, JSContext *cx, jsval* _retval)
+{
+  return mozilla::dom::Crypto::GetRandomValues(aData, cx, _retval);
+}
+
 nsCRMFObject::nsCRMFObject()
 {
 }
