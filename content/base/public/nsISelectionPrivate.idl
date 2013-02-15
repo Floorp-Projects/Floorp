@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 #include "nsISelectionListener.idl"
-#include "nsIEnumerator.idl"
 #include "nsISelection.idl"
 
 interface nsRange;
@@ -31,7 +30,7 @@ struct ScrollAxis;
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, builtinclass, uuid(2e44b10f-7d6d-4bf4-92e2-f9551d22f422)]
+[scriptable, builtinclass, uuid(a6d2cedd-afbc-4d25-bffb-e725b9881e30)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -49,7 +48,6 @@ interface nsISelectionPrivate : nsISelection
     */
     void  endBatchChanges();
 		
-    nsIEnumerator  getEnumerator();
     DOMString  toStringWithFormat(in string formatType, in unsigned long flags, in int32_t wrapColumn);
     void  addSelectionListener(in nsISelectionListener newListener);
     void  removeSelectionListener(in nsISelectionListener listenerToRemove);
