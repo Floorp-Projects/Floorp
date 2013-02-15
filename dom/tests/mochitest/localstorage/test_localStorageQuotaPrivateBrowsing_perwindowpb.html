@@ -45,7 +45,7 @@ function startTest() {
     }, false);
     slave = aWindow.content.frames[0];
 
-    doNextTest(aWindow);
+    SimpleTest.waitForFocus(function() doNextTest(aWindow), aWindow);
   });
 }
 
