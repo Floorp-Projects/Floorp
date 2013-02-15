@@ -383,6 +383,20 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
                     return NS_ERROR_NOT_AVAILABLE;
                 }
 
+                // This notification is meant for Firefox Health Report so it
+                // can increment counts from the search engine. The assumption
+                // here is that this keyword/submission will eventually result
+                // in a search. Since we only generate a URI here, there is the
+                // possibility we'll increment the counter without actually
+                // incurring a search. A robust solution would involve currying
+                // the search engine's name through various function calls.
+                nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+                if (obsSvc) {
+                  nsAutoString name;
+                  defaultEngine->GetName(name);
+                  obsSvc->NotifyObservers(nullptr, "keyword-search", name.get());
+                }
+
                 return submission->GetUri(aURI);
             }
         }

@@ -42,7 +42,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIWidget.h"
 #include "gfxMatrix.h"
 #include "gfxPoint3D.h"
@@ -4462,9 +4461,8 @@ nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
       }
     }
 
-    nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(docShell);
     nsCOMPtr<nsIDocShellTreeItem> parentItem;
-    curItem->GetParent(getter_AddRefs(parentItem));
+    docShell->GetParent(getter_AddRefs(parentItem));
     docShell = do_QueryInterface(parentItem);
   }
 

@@ -37,7 +37,6 @@
 #include "nsCSSStyleSheet.h"
 #include "nsIDOMStyleSheet.h"
 
-#include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMRange.h"
@@ -2388,7 +2387,7 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
   nsresult res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+  Selection* sel = static_cast<Selection*>(selection.get());
 
   bool bNodeFound = false;
   bool isCollapsed = selection->Collapsed();
@@ -2453,7 +2452,7 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
       int32_t anchorOffset = -1;
       if (anchorNode)
         selection->GetAnchorOffset(&anchorOffset);
-    
+
       nsCOMPtr<nsIDOMNode> focusNode;
       res = selection->GetFocusNode(getter_AddRefs(focusNode));
       NS_ENSURE_SUCCESS(res, res);
@@ -2464,19 +2463,6 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
       // Link node must be the same for both ends of selection
       if (NS_SUCCEEDED(res) && anchorNode)
       {
-  #ifdef DEBUG_cmanske
-        {
-        nsAutoString name;
-        anchorNode->GetNodeName(name);
-        printf("GetSelectedElement: Anchor node of selection: ");
-        wprintf(name.get());
-        printf(" Offset: %d\n", anchorOffset);
-        focusNode->GetNodeName(name);
-        printf("Focus node of selection: ");
-        wprintf(name.get());
-        printf(" Offset: %d\n", focusOffset);
-        }
-  #endif
         nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
         res = GetElementOrParentByTagName(NS_LITERAL_STRING("href"), anchorNode, getter_AddRefs(parentLinkOfAnchor));
         // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
@@ -2493,7 +2479,7 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
             if (NS_SUCCEEDED(res) && parentLinkOfFocus == parentLinkOfAnchor)
               bNodeFound = true;
           }
-      
+
           // We found a link node parent
           if (bNodeFound) {
             // GetElementOrParentByTagName addref'd this, so we don't need to do it here
@@ -2518,77 +2504,63 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
 
     if (!isCollapsed)   // Don't bother to examine selection if it is collapsed
     {
-      nsCOMPtr<nsIEnumerator> enumerator;
-      res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
-      if (NS_SUCCEEDED(res))
-      {
-        if(!enumerator)
-          return NS_ERROR_NULL_POINTER;
+      nsRefPtr<nsRange> currange = sel->GetRangeAt(0);
+      if (currange) {
+        nsCOMPtr<nsIContentIterator> iter =
+          do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
+        NS_ENSURE_SUCCESS(res, res);
 
-        enumerator->First(); 
-        nsCOMPtr<nsISupports> currentItem;
-        res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-        if ((NS_SUCCEEDED(res)) && currentItem)
+        iter->Init(currange);
+        // loop through the content iterator for each content node
+        while (!iter->IsDone())
         {
-          nsCOMPtr<nsIDOMRange> currange( do_QueryInterface(currentItem) );
-          nsCOMPtr<nsIContentIterator> iter =
-            do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
-          NS_ENSURE_SUCCESS(res, res);
-
-          iter->Init(currange);
-          // loop through the content iterator for each content node
-          while (!iter->IsDone())
+          // Query interface to cast nsIContent to nsIDOMNode
+          //  then get tagType to compare to  aTagName
+          // Clone node of each desired type and append it to the aDomFrag
+          selectedElement = do_QueryInterface(iter->GetCurrentNode());
+          if (selectedElement)
           {
-            // Query interface to cast nsIContent to nsIDOMNode
-            //  then get tagType to compare to  aTagName
-            // Clone node of each desired type and append it to the aDomFrag
-            selectedElement = do_QueryInterface(iter->GetCurrentNode());
-            if (selectedElement)
+            // If we already found a node, then we have another element,
+            //  thus there's not just one element selected
+            if (bNodeFound)
             {
-              // If we already found a node, then we have another element,
-              //  thus there's not just one element selected
-              if (bNodeFound)
-              {
-                bNodeFound = false;
-                break;
-              }
-
-              selectedElement->GetNodeName(domTagName);
-              ToLowerCase(domTagName);
-
-              if (anyTag)
-              {
-                // Get name of first selected element
-                selectedElement->GetTagName(TagName);
-                ToLowerCase(TagName);
-                anyTag = false;
-              }
-
-              // The "A" tag is a pain,
-              //  used for both link(href is set) and "Named Anchor"
-              nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
-              if ( (isLinkTag && nsHTMLEditUtils::IsLink(selectedNode)) ||
-                   (isNamedAnchorTag && nsHTMLEditUtils::IsNamedAnchor(selectedNode)) )
-              {
-                bNodeFound = true;
-              } else if (TagName == domTagName) { // All other tag names are handled here
-                bNodeFound = true;
-              }
-              if (!bNodeFound)
-              {
-                // Check if node we have is really part of the selection???
-                break;
-              }
+              bNodeFound = false;
+              break;
             }
-            iter->Next();
+
+            selectedElement->GetNodeName(domTagName);
+            ToLowerCase(domTagName);
+
+            if (anyTag)
+            {
+              // Get name of first selected element
+              selectedElement->GetTagName(TagName);
+              ToLowerCase(TagName);
+              anyTag = false;
+            }
+
+            // The "A" tag is a pain,
+            //  used for both link(href is set) and "Named Anchor"
+            nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
+            if ( (isLinkTag && nsHTMLEditUtils::IsLink(selectedNode)) ||
+                (isNamedAnchorTag && nsHTMLEditUtils::IsNamedAnchor(selectedNode)) )
+            {
+              bNodeFound = true;
+            } else if (TagName == domTagName) { // All other tag names are handled here
+              bNodeFound = true;
+            }
+            if (!bNodeFound)
+            {
+              // Check if node we have is really part of the selection???
+              break;
+            }
           }
-        } else {
-          // Should never get here?
-          isCollapsed = true;
-          printf("isCollapsed was FALSE, but no elements found in selection\n");
+          iter->Next();
         }
       } else {
-        printf("Could not create enumerator for GetSelectionProperties\n");
+        // Should never get here?
+        isCollapsed = true;
+        NS_WARNING("isCollapsed was FALSE, but no elements found in selection\n");
       }
     }
   }
@@ -4678,23 +4650,13 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled)
   {
-    // get selection range enumerator
-    nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(getter_AddRefs(enumerator));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(enumerator, NS_ERROR_FAILURE);
-
     // loop thru the ranges in the selection
-    enumerator->First(); 
-    nsCOMPtr<nsISupports> currentItem;
     nsAutoString bgcolor; bgcolor.AssignLiteral("bgcolor");
-    nsCOMPtr<nsIDOMNode> cachedBlockParent = nullptr;
-    while (static_cast<nsresult>(NS_ENUMERATOR_FALSE) == enumerator->IsDone()) {
-      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-      NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_TRUE(currentItem, NS_ERROR_FAILURE);
-      
-      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+    uint32_t rangeCount = selection->GetRangeCount();
+    for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
+      nsCOMPtr<nsIDOMNode> cachedBlockParent = nullptr;
+      nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
+      NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
       
       // check for easy case: both range endpoints in same text node
       nsCOMPtr<nsIDOMNode> startNode, endNode;
@@ -4854,7 +4816,6 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
           }
         }
       }
-      enumerator->Next();
     }
   }
   if (!cancel)

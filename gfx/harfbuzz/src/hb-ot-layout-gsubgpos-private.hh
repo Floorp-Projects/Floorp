@@ -62,7 +62,7 @@ struct hb_closure_context_t
   template <typename T>
   inline return_t process (const T &obj) { obj.closure (this); return HB_VOID; }
   static return_t default_return_value (void) { return HB_VOID; }
-  bool stop_sublookup_iteration (const return_t r HB_UNUSED) const { return false; }
+  bool stop_sublookup_iteration (return_t r HB_UNUSED) const { return false; }
   return_t recurse (unsigned int lookup_index)
   {
     if (unlikely (nesting_level_left == 0 || !recurse_func))
@@ -111,7 +111,7 @@ struct hb_would_apply_context_t
   template <typename T>
   inline return_t process (const T &obj) { return obj.would_apply (this); }
   static return_t default_return_value (void) { return false; }
-  bool stop_sublookup_iteration (const return_t r) const { return r; }
+  bool stop_sublookup_iteration (return_t r) const { return r; }
 
   hb_face_t *face;
   const hb_codepoint_t *glyphs;
@@ -150,7 +150,7 @@ struct hb_collect_glyphs_context_t
   template <typename T>
   inline return_t process (const T &obj) { obj.collect_glyphs (this); return HB_VOID; }
   static return_t default_return_value (void) { return HB_VOID; }
-  bool stop_sublookup_iteration (const return_t r HB_UNUSED) const { return false; }
+  bool stop_sublookup_iteration (return_t r HB_UNUSED) const { return false; }
   return_t recurse (unsigned int lookup_index)
   {
     if (unlikely (nesting_level_left == 0 || !recurse_func))
@@ -243,7 +243,7 @@ struct hb_apply_context_t
   template <typename T>
   inline return_t process (const T &obj) { return obj.apply (this); }
   static return_t default_return_value (void) { return false; }
-  bool stop_sublookup_iteration (const return_t r) const { return r; }
+  bool stop_sublookup_iteration (return_t r) const { return r; }
   return_t recurse (unsigned int lookup_index)
   {
     if (unlikely (nesting_level_left == 0 || !recurse_func))
@@ -286,12 +286,12 @@ struct hb_apply_context_t
   void set_lookup_props (unsigned int lookup_props_) { lookup_props = lookup_props_; }
   void set_lookup (const Lookup &l) { lookup_props = l.get_props (); }
 
-  struct mark_skipping_forward_iterator_t
+  struct skipping_forward_iterator_t
   {
-    inline mark_skipping_forward_iterator_t (hb_apply_context_t *c_,
-					     unsigned int start_index_,
-					     unsigned int num_items_,
-					     bool context_match = false)
+    inline skipping_forward_iterator_t (hb_apply_context_t *c_,
+					unsigned int start_index_,
+					unsigned int num_items_,
+					bool context_match = false)
     {
       c = c_;
       idx = start_index_;
@@ -317,7 +317,7 @@ struct hb_apply_context_t
 	if (has_no_chance ())
 	  return false;
 	idx++;
-      } while (c->should_skip_mark (&c->buffer->info[idx], lookup_props, property_out));
+      } while (c->should_skip (&c->buffer->info[idx], lookup_props, property_out));
       num_items--;
       return (c->buffer->info[idx].mask & mask) && (!syllable || syllable == c->buffer->info[idx].syllable ());
     }
@@ -335,13 +335,13 @@ struct hb_apply_context_t
     unsigned int end;
   };
 
-  struct mark_skipping_backward_iterator_t
+  struct skipping_backward_iterator_t
   {
-    inline mark_skipping_backward_iterator_t (hb_apply_context_t *c_,
-					      unsigned int start_index_,
-					      unsigned int num_items_,
-					      hb_mask_t mask_ = 0,
-					      bool match_syllable_ = true)
+    inline skipping_backward_iterator_t (hb_apply_context_t *c_,
+					 unsigned int start_index_,
+					 unsigned int num_items_,
+					 hb_mask_t mask_ = 0,
+					 bool match_syllable_ = true)
     {
       c = c_;
       idx = start_index_;
@@ -366,7 +366,7 @@ struct hb_apply_context_t
 	if (has_no_chance ())
 	  return false;
 	idx--;
-      } while (c->should_skip_mark (&c->buffer->out_info[idx], lookup_props, property_out));
+      } while (c->should_skip (&c->buffer->out_info[idx], lookup_props, property_out));
       num_items--;
       return (c->buffer->out_info[idx].mask & mask) && (!syllable || syllable == c->buffer->out_info[idx].syllable ());
     }
@@ -435,9 +435,9 @@ struct hb_apply_context_t
   }
 
   inline bool
-  should_skip_mark (hb_glyph_info_t *info,
-		   unsigned int  lookup_props,
-		   unsigned int *property_out) const
+  should_skip (hb_glyph_info_t *info,
+	       unsigned int  lookup_props,
+	       unsigned int *property_out) const
   {
     unsigned int property;
 
@@ -445,18 +445,13 @@ struct hb_apply_context_t
     if (property_out)
       *property_out = property;
 
-    /* If it's a mark, skip it if we don't accept it. */
-    if (unlikely (property & HB_OT_LAYOUT_GLYPH_PROPS_MARK))
-      return !match_properties (info->codepoint, property, lookup_props);
-
-    /* If not a mark, don't skip. */
-    return false;
+    return !match_properties (info->codepoint, property, lookup_props);
   }
 
 
-  inline bool should_mark_skip_current_glyph (void) const
+  inline bool should_skip_current_glyph (void) const
   {
-    return should_skip_mark (&buffer->cur(), lookup_props, NULL);
+    return should_skip (&buffer->cur(), lookup_props, NULL);
   }
 
   inline void set_class (hb_codepoint_t glyph_index, unsigned int class_guess) const
@@ -602,7 +597,7 @@ static inline bool match_input (hb_apply_context_t *c,
 {
   TRACE_APPLY (NULL);
 
-  hb_apply_context_t::mark_skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, count - 1);
+  hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, count - 1);
   if (skippy_iter.has_no_chance ()) return TRACE_RETURN (false);
 
   /*
@@ -720,7 +715,7 @@ static inline void ligate_input (hb_apply_context_t *c,
 
   for (unsigned int i = 1; i < count; i++)
   {
-    while (c->should_mark_skip_current_glyph ())
+    while (c->should_skip_current_glyph ())
     {
       if (!is_mark_ligature) {
 	unsigned int new_lig_comp = components_so_far - last_num_components +
@@ -759,7 +754,7 @@ static inline bool match_backtrack (hb_apply_context_t *c,
 {
   TRACE_APPLY (NULL);
 
-  hb_apply_context_t::mark_skipping_backward_iterator_t skippy_iter (c, c->buffer->backtrack_len (), count, true);
+  hb_apply_context_t::skipping_backward_iterator_t skippy_iter (c, c->buffer->backtrack_len (), count, true);
   if (skippy_iter.has_no_chance ())
     return TRACE_RETURN (false);
 
@@ -784,7 +779,7 @@ static inline bool match_lookahead (hb_apply_context_t *c,
 {
   TRACE_APPLY (NULL);
 
-  hb_apply_context_t::mark_skipping_forward_iterator_t skippy_iter (c, c->buffer->idx + offset - 1, count, true);
+  hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx + offset - 1, count, true);
   if (skippy_iter.has_no_chance ())
     return TRACE_RETURN (false);
 
@@ -849,7 +844,7 @@ static inline bool apply_lookup (hb_apply_context_t *c,
   {
     if (unlikely (c->buffer->idx == end))
       return TRACE_RETURN (true);
-    while (c->should_mark_skip_current_glyph ())
+    while (c->should_skip_current_glyph ())
     {
       /* No lookup applied for this index */
       c->buffer->next_glyph ();

@@ -351,6 +351,9 @@ class MediaManager MOZ_FINAL : public nsIMediaManagerService,
 public:
   static already_AddRefed<MediaManager> GetInstance();
 
+  // NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
+  // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
+  // from MediaManager thread.
   static MediaManager* Get() {
     if (!sSingleton) {
       sSingleton = new MediaManager();

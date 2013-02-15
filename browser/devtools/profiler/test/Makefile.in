@@ -10,12 +10,21 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOCHITEST_BROWSER_FILES = \
+MOCHITEST_BROWSER_TESTS = \
 		browser_profiler_run.js \
 		browser_profiler_controller.js \
 		browser_profiler_profiles.js \
 		browser_profiler_remote.js \
 		browser_profiler_bug_830664_multiple_profiles.js \
+		browser_profiler_bug_834878_source_buttons.js \
 		head.js \
+		$(NULL)
+
+MOCHITEST_BROWSER_PAGES = \
+		mock_profiler_bug_834878_page.html \
+		mock_profiler_bug_834878_script.js \
+		$(NULL)
+
+MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
 
 include $(topsrcdir)/config/rules.mk

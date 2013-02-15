@@ -1317,6 +1317,8 @@ interface nsINavHistoryService : nsISupports
    * @return The ID of the created visit. This will be 0 if the URI cannot
    *         be added to history (canAddURI = false) or the visit is session
    *         persistent (TRANSITION_EMBED).
+   *
+   * @deprecated Use mozIAsyncHistory::updatePlaces
    */
   long long addVisit(in nsIURI aURI, in PRTime aTime,
                      in nsIURI aReferringURI, in long aTransitionType,

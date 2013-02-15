@@ -8,6 +8,7 @@
 #define mozilla_Hal_h
 
 #include "mozilla/hal_sandbox/PHal.h"
+#include "mozilla/HalTypes.h"
 #include "base/basictypes.h"
 #include "mozilla/Types.h"
 #include "nsTArray.h"
@@ -15,6 +16,7 @@
 #include "mozilla/dom/battery/Types.h"
 #include "mozilla/dom/network/Types.h"
 #include "mozilla/dom/power/Types.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/dom/ScreenOrientation.h"
 
@@ -340,26 +342,25 @@ void RegisterWakeLockObserver(WakeLockObserver* aObserver);
 void UnregisterWakeLockObserver(WakeLockObserver* aObserver);
 
 /**
- * Adjust the wake lock counts.
+ * Adjust a wake lock's counts on behalf of a given process.
+ *
+ * In most cases, you shouldn't need to pass the aProcessID argument; the
+ * default of CONTENT_PROCESS_ID_UNKNOWN is probably what you want.
+ *
  * @param aTopic        lock topic
  * @param aLockAdjust   to increase or decrease active locks
  * @param aHiddenAdjust to increase or decrease hidden locks
+ * @param aProcessID    indicates which process we're modifying the wake lock
+ *                      on behalf of.  It is interpreted as
+ *
+ *                      CONTENT_PROCESS_ID_UNKNOWN: The current process
+ *                      CONTENT_PROCESS_ID_MAIN: The root process
+ *                      X: The process with ContentChild::GetID() == X
  */
 void ModifyWakeLock(const nsAString &aTopic,
                     hal::WakeLockControl aLockAdjust,
-                    hal::WakeLockControl aHiddenAdjust);
-
-/**
- * Adjust the wake lock counts. Do not call this function directly.
- * @param aTopic        lock topic
- * @param aLockAdjust   to increase or decrease active locks
- * @param aHiddenAdjust to increase or decrease hidden locks
- * @param aProcessID    unique id per-ContentChild or 0 for chrome
- */
-void ModifyWakeLockInternal(const nsAString &aTopic,
-                            hal::WakeLockControl aLockAdjust,
-                            hal::WakeLockControl aHiddenAdjust,
-                            uint64_t aProcessID);
+                    hal::WakeLockControl aHiddenAdjust,
+                    uint64_t aProcessID = hal::CONTENT_PROCESS_ID_UNKNOWN);
 
 /**
  * Query the wake lock numbers of aTopic.

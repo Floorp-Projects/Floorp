@@ -7,8 +7,6 @@
 #include "nsLayoutDebuggingTools.h"
 
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeNode.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
 #include "nsIContentViewer.h"
 
@@ -342,8 +340,7 @@ NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpWebShells()
 {
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
-    nsCOMPtr<nsIDocShellTreeItem> shellAsItem(do_QueryInterface(mDocShell));
-    DumpAWebShell(shellAsItem, stdout, 0);
+    DumpAWebShell(mDocShell, stdout, 0);
     return NS_OK;
 }
 
@@ -366,11 +363,10 @@ DumpContentRecur(nsIDocShell* aDocShell, FILE* out)
         }
         // dump the frames of the sub documents
         int32_t i, n;
-        nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
-        docShellAsNode->GetChildCount(&n);
+        aDocShell->GetChildCount(&n);
         for (i = 0; i < n; ++i) {
             nsCOMPtr<nsIDocShellTreeItem> child;
-            docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+            aDocShell->GetChildAt(i, getter_AddRefs(child));
             nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
             if (child) {
                 DumpContentRecur(childAsShell, out);
@@ -406,11 +402,10 @@ DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
 
     // dump the frames of the sub documents
     int32_t i, n;
-    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
-    docShellAsNode->GetChildCount(&n);
+    aDocShell->GetChildCount(&n);
     for (i = 0; i < n; ++i) {
         nsCOMPtr<nsIDocShellTreeItem> child;
-        docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+        aDocShell->GetChildAt(i, getter_AddRefs(child));
         nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
         if (childAsShell) {
             DumpFramesRecur(childAsShell, out);
@@ -446,11 +441,10 @@ DumpViewsRecur(nsIDocShell* aDocShell, FILE* out)
 
     // dump the views of the sub documents
     int32_t i, n;
-    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
-    docShellAsNode->GetChildCount(&n);
+    aDocShell->GetChildCount(&n);
     for (i = 0; i < n; i++) {
         nsCOMPtr<nsIDocShellTreeItem> child;
-        docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+        aDocShell->GetChildAt(i, getter_AddRefs(child));
         nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
         if (childAsShell) {
             DumpViewsRecur(childAsShell, out);

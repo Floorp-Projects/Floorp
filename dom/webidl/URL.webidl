@@ -11,8 +11,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface MediaStream;
- 
 interface URL {
   [Throws]
   static DOMString? createObjectURL(Blob blob, optional objectURLOptions options);

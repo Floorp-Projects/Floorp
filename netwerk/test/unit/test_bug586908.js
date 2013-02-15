@@ -27,6 +27,7 @@ var systemSettings = {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
   
+  mainThreadOnly: true,
   PACURI: "http://localhost:4444/redirect",
   getProxyForURI: function(aURI) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;

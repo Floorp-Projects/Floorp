@@ -7,9 +7,16 @@
 #define mozilla_hal_Types_h
 
 #include "IPCMessageUtils.h"
+#include "Observer.h"
 
 namespace mozilla {
 namespace hal {
+
+/**
+ * XXX
+ */
+const uint64_t CONTENT_PROCESS_ID_UNKNOWN = uint64_t(-1);
+const uint64_t CONTENT_PROCESS_ID_MAIN = 0;
 
 /**
  * These are defined by libhardware, specifically, hardware/libhardware/include/hardware/lights.h
@@ -75,6 +82,7 @@ enum ProcessPriority {
   // "foreground" for the purposes of priority testing, for example
   // CurrentProcessIsForeground().
   PROCESS_PRIORITY_FOREGROUND,
+  PROCESS_PRIORITY_FOREGROUND_HIGH,
   PROCESS_PRIORITY_MASTER,
   NUM_PROCESS_PRIORITY
 };

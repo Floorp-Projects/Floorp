@@ -99,6 +99,7 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == display-none-1.svg simple.svg
 == display-none-2.svg simple.svg
 == display-none-3.svg simple.svg
+== display-none-4.svg simple.svg
 
 == simple-multiline.svg simple-multiline-ref.svg
 == simple-multiline-number.svg simple-multiline-number-ref.svg
@@ -133,10 +134,12 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == pseudo-first-line.svg pseudo-first-line-ref.svg
 == pseudo-first-line-2.svg pseudo-first-line-2-ref.svg
 == pseudo-first-letter.svg pseudo-first-letter-ref.svg
+== pseudo-first-letter-2.svg pseudo-first-letter-2-ref.svg
 == ignore-before-after.svg ignore-prop-ref.svg
 
 # invalid child nodes
 == ignore-invalid-child.svg ignore-invalid-child-ref.svg
+== ignore-invalid-child-2.svg ignore-invalid-child-2-ref.svg
 
 # text inside a link
 == link-surrounding.svg simple.svg

@@ -409,7 +409,7 @@ function onConfigUnload()
 function FilterPrefs()
 {
   if (document.getElementById("configDeck").getAttribute("selectedIndex") != 1) {
-    return false;
+    return;
   }
 
   var substring = document.getElementById("textbox").value;

@@ -9,7 +9,6 @@
 #include "nsINode.h"
 #include "nsCOMPtr.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsISecurityEventSink.h"
 #include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"
@@ -61,12 +60,11 @@ public:
     // set the approriate flag to true if we are about to load Mixed Active
     // Content.
     nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(mContext);
-    nsCOMPtr<nsIDocShellTreeItem> currentDocShellTreeItem(do_QueryInterface(docShell));
-    if (!currentDocShellTreeItem) {
+    if (!docShell) {
         return NS_OK;
     }
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    currentDocShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    docShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
     NS_ASSERTION(sameTypeRoot, "No document shell root tree item from document shell tree item!");
 
     // now get the document from sameTypeRoot
@@ -368,10 +366,8 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   }
 
   // Get the root document from the docshell
-  nsCOMPtr<nsIDocShellTreeItem> currentDocShellTreeItem(do_QueryInterface(docShell));
-  NS_ASSERTION(currentDocShellTreeItem, "No DocShellTreeItem from docshell");  
   nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-  currentDocShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+  docShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
   NS_ASSERTION(sameTypeRoot, "No document shell root tree item from document shell tree item!");
   nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(sameTypeRoot);
   NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
