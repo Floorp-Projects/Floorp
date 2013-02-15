@@ -10,7 +10,9 @@ function HistoryView(aSet) {
   this._set = aSet;
   this._set.controller = this;
 
-  //add observers here
+  let history = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+  history.addObserver(this, false);
 }
 
 HistoryView.prototype = {
@@ -49,6 +51,42 @@ HistoryView.prototype = {
 
   destruct: function destruct() {
   },
+
+  // nsINavHistoryObserver
+
+  onBeginUpdateBatch: function() {
+  },
+
+  onEndUpdateBatch: function() {
+  },
+
+  onVisit: function(aURI, aVisitID, aTime, aSessionID,
+                    aReferringID, aTransitionType) {
+  },
+
+  onTitleChanged: function(aURI, aPageTitle) {
+  },
+
+  onDeleteURI: function(aURI) {
+  },
+
+  onClearHistory: function() {
+    this._set.clearAll();
+  },
+
+  onPageChanged: function(aURI, aWhat, aValue) {
+  },
+
+  onPageExpired: function(aURI, aVisitTime, aWholeEntry) {
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsINavHistoryObserver) ||
+        iid.equals(Components.interfaces.nsISupports)) {
+      return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
 };
 
 let HistoryStartView = {
