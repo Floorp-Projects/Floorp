@@ -104,7 +104,7 @@ private:
     // property set, that would be bad, since then our GetVisualOverflowRect()
     // call would give us the post-effects, and post-transform, overflow rect.
     //
-    NS_ASSERTION(aFrame->GetParent()->GetStyleContext()->GetPseudo() ==
+    NS_ASSERTION(aFrame->GetParent()->StyleContext()->GetPseudo() ==
                    nsCSSAnonBoxes::mozAnonymousBlock,
                  "How did we getting here, then?");
     NS_ASSERTION(!aFrame->Properties().Get(

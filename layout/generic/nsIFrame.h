@@ -566,7 +566,7 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
   nsPresContext* PresContext() const {
-    return GetStyleContext()->GetRuleNode()->GetPresContext();
+    return StyleContext()->GetRuleNode()->GetPresContext();
   }
 
   /**
@@ -743,7 +743,7 @@ public:
    * Get the style context associated with this frame.
    *
    */
-  nsStyleContext* GetStyleContext() const { return mStyleContext; }
+  nsStyleContext* StyleContext() const { return mStyleContext; }
   void SetStyleContext(nsStyleContext* aContext)
   { 
     if (aContext != mStyleContext) {

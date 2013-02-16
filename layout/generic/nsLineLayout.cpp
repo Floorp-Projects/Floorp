@@ -1467,7 +1467,7 @@ nsLineLayout::VerticalAlignLine()
   // offset in a frame property on any child frames that are vertically-aligned
   // somewhere other than the baseline. This property is then used by
   // nsTextFrame::GetTextDecorations when the same conditions are met.
-  if (rootPFD.mFrame->GetStyleContext()->HasTextDecorationLines()) {
+  if (rootPFD.mFrame->StyleContext()->HasTextDecorationLines()) {
     for (const PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
       const nsIFrame *const f = pfd->mFrame;
       if (f->VerticalAlignEnum() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
@@ -1702,7 +1702,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     float inflation =
       nsLayoutUtils::FontSizeInflationInner(spanFrame, mInflationMinFontSize);
     nscoord logicalHeight = nsHTMLReflowState::
-      CalcLineHeight(spanFrame->GetStyleContext(),
+      CalcLineHeight(spanFrame->StyleContext(),
                      mBlockReflowState->ComputedHeight(),
                      inflation);
     nscoord contentHeight = spanFramePFD->mBounds.height -
@@ -1947,7 +1947,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         float inflation =
           nsLayoutUtils::FontSizeInflationInner(frame, mInflationMinFontSize);
         pctBasis = nsHTMLReflowState::CalcLineHeight(
-          frame->GetStyleContext(), mBlockReflowState->ComputedHeight(),
+          frame->StyleContext(), mBlockReflowState->ComputedHeight(),
           inflation);
       }
       nscoord offset =
@@ -2674,7 +2674,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
         // (2) When there are text decorations, since we can't recompute the
         //     overflow area until Reflow and VerticalAlignLine have finished
         if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW) ||
-            frame->GetStyleContext()->HasTextDecorationLines()) {
+            frame->StyleContext()->HasTextDecorationLines()) {
           nsTextFrame* f = static_cast<nsTextFrame*>(frame);
           r = f->RecomputeOverflow(*mBlockReflowState);
         }

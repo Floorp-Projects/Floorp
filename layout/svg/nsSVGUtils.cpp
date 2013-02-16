@@ -1556,7 +1556,7 @@ nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext,
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  SetupFallbackOrPaintColor(aContext, aFrame->GetStyleContext(),
+  SetupFallbackOrPaintColor(aContext, aFrame->StyleContext(),
                             &nsStyleSVG::mFill, opacity);
 
   return true;
@@ -1587,7 +1587,7 @@ nsSVGUtils::SetupCairoStrokePaint(nsIFrame *aFrame, gfxContext* aContext,
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  SetupFallbackOrPaintColor(aContext, aFrame->GetStyleContext(),
+  SetupFallbackOrPaintColor(aContext, aFrame->StyleContext(),
                             &nsStyleSVG::mStroke, opacity);
 
   return true;

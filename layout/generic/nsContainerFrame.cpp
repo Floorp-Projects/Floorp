@@ -779,7 +779,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
                                           nsView*         aView,
                                           uint32_t         aFlags)
 {
-  NS_ASSERTION(!aStyleContext || aFrame->GetStyleContext() == aStyleContext,
+  NS_ASSERTION(!aStyleContext || aFrame->StyleContext() == aStyleContext,
                "Wrong style context for frame?");
 
   if (!aView) {
@@ -789,7 +789,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
   nsViewManager* vm = aView->GetViewManager();
 
   if (nullptr == aStyleContext) {
-    aStyleContext = aFrame->GetStyleContext();
+    aStyleContext = aFrame->StyleContext();
   }
 
   // Make sure visibility is correct. This only affects nsSubdocumentFrame.

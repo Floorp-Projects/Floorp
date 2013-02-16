@@ -1742,7 +1742,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
   // for visual debug
   int skipSides = 0;
   nsPresContext* presContext = mFrame->PresContext();
-  nsStyleContext* styleContext = mFrame->GetStyleContext();
+  nsStyleContext* styleContext = mFrame->StyleContext();
   nsRect rect = mRect + ToReferenceFrame();
   nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
                               mVisibleRect, rect, styleContext, skipSides);

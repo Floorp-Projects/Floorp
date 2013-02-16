@@ -2028,7 +2028,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       // shrink-wrap.
       if (isBlock &&
           ((aFrameType == nsGkAtoms::legendFrame &&
-            frame->GetStyleContext()->GetPseudo() != nsCSSAnonBoxes::scrolledContent) ||
+            frame->StyleContext()->GetPseudo() != nsCSSAnonBoxes::scrolledContent) ||
            (aFrameType == nsGkAtoms::scrollFrame &&
             frame->GetContentInsertionFrame()->GetType() == nsGkAtoms::legendFrame))) {
         computeSizeFlags |= nsIFrame::eShrinkWrap;
@@ -2399,7 +2399,7 @@ nsHTMLReflowState::CalcLineHeight() const
     nsLayoutUtils::IsNonWrapperBlock(frame) ? mComputedHeight :
     (mCBReflowState ? mCBReflowState->mComputedHeight : NS_AUTOHEIGHT);
 
-  return CalcLineHeight(frame->GetStyleContext(), blockHeight,
+  return CalcLineHeight(frame->StyleContext(), blockHeight,
                         nsLayoutUtils::FontSizeInflationFor(frame));
 }
 
