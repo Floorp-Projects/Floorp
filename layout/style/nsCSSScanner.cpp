@@ -121,11 +121,6 @@ HexDigitValue(int32_t ch)
   }
 }
 
-nsCSSToken::nsCSSToken()
-{
-  mType = eCSSToken_Symbol;
-}
-
 void
 nsCSSToken::AppendToString(nsString& aBuffer) const
 {
@@ -140,7 +135,7 @@ nsCSSToken::AppendToString(nsString& aBuffer) const
       break;
 
     case eCSSToken_ID:
-    case eCSSToken_Ref:
+    case eCSSToken_Hash:
       aBuffer.Append('#');
       nsStyleUtil::AppendEscapedCSSIdent(mIdent, aBuffer);
       break;
@@ -200,7 +195,7 @@ nsCSSToken::AppendToString(nsString& aBuffer) const
       aBuffer.Append(mSymbol);
       break;
 
-    case eCSSToken_WhiteSpace:
+    case eCSSToken_Whitespace:
       aBuffer.Append(' ');
       break;
 
@@ -232,7 +227,7 @@ nsCSSToken::AppendToString(nsString& aBuffer) const
 }
 
 nsCSSScanner::nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber)
-  : mReadPointer(aBuffer.BeginReading())
+  : mBuffer(aBuffer.BeginReading())
   , mOffset(0)
   , mCount(aBuffer.Length())
   , mPushback(mLocalPushback)
@@ -259,6 +254,43 @@ nsCSSScanner::~nsCSSScanner()
   }
 }
 
+void
+nsCSSScanner::StartRecording()
+{
+  NS_ASSERTION(!mRecording, "already started recording");
+  mRecording = true;
+  mRecordStartOffset = mOffset - mPushbackCount;
+}
+
+void
+nsCSSScanner::StopRecording()
+{
+  NS_ASSERTION(mRecording, "haven't started recording");
+  mRecording = false;
+}
+
+void
+nsCSSScanner::StopRecording(nsString& aBuffer)
+{
+  NS_ASSERTION(mRecording, "haven't started recording");
+  mRecording = false;
+  aBuffer.Append(mBuffer + mRecordStartOffset,
+                 mOffset - mPushbackCount - mRecordStartOffset);
+}
+
+nsDependentSubstring
+nsCSSScanner::GetCurrentLine() const
+{
+  uint32_t end = mTokenOffset;
+  while (end < mCount &&
+         mBuffer[end] != '\n' && mBuffer[end] != '\r' &&
+         mBuffer[end] != '\f') {
+    end++;
+  }
+  return nsDependentSubstring(mBuffer + mTokenLineOffset,
+                              mBuffer + end);
+}
+
 // Returns -1 on error or eof
 int32_t
 nsCSSScanner::Read()
@@ -270,11 +302,11 @@ nsCSSScanner::Read()
     if (mOffset == mCount) {
       return -1;
     }
-    rv = int32_t(mReadPointer[mOffset++]);
+    rv = int32_t(mBuffer[mOffset++]);
     // There are four types of newlines in CSS: "\r", "\n", "\r\n", and "\f".
     // To simplify dealing with newlines, they are all normalized to "\n" here
     if (rv == '\r') {
-      if (mOffset < mCount && mReadPointer[mOffset] == '\n') {
+      if (mOffset < mCount && mBuffer[mOffset] == '\n') {
         mOffset++;
       }
       rv = '\n';
@@ -323,43 +355,6 @@ nsCSSScanner::Pushback(PRUnichar aChar)
   mPushback[mPushbackCount++] = aChar;
 }
 
-void
-nsCSSScanner::StartRecording()
-{
-  NS_ASSERTION(!mRecording, "already started recording");
-  mRecording = true;
-  mRecordStartOffset = mOffset - mPushbackCount;
-}
-
-void
-nsCSSScanner::StopRecording()
-{
-  NS_ASSERTION(mRecording, "haven't started recording");
-  mRecording = false;
-}
-
-void
-nsCSSScanner::StopRecording(nsString& aBuffer)
-{
-  NS_ASSERTION(mRecording, "haven't started recording");
-  mRecording = false;
-  aBuffer.Append(mReadPointer + mRecordStartOffset,
-                 mOffset - mPushbackCount - mRecordStartOffset);
-}
-
-nsDependentSubstring
-nsCSSScanner::GetCurrentLine() const
-{
-  uint32_t end = mTokenOffset;
-  while (end < mCount &&
-         mReadPointer[end] != '\n' && mReadPointer[end] != '\r' &&
-         mReadPointer[end] != '\f') {
-    end++;
-  }
-  return nsDependentSubstring(mReadPointer + mTokenLineOffset,
-                              mReadPointer + end);
-}
-
 bool
 nsCSSScanner::LookAhead(PRUnichar aChar)
 {
@@ -389,7 +384,7 @@ nsCSSScanner::LookAheadOrEOF(PRUnichar aChar)
 }
 
 void
-nsCSSScanner::EatWhiteSpace()
+nsCSSScanner::SkipWhitespace()
 {
   for (;;) {
     int32_t ch = Read();
@@ -403,233 +398,28 @@ nsCSSScanner::EatWhiteSpace()
   }
 }
 
-bool
-nsCSSScanner::Next(nsCSSToken& aToken)
+void
+nsCSSScanner::SkipComment()
 {
-  for (;;) { // Infinite loop so we can restart after comments.
-    mTokenOffset = mOffset;
-    mTokenLineOffset = mLineOffset;
-    mTokenLineNumber = mLineNumber;
-
-    int32_t ch = Read();
-    if (ch < 0) {
-      return false;
-    }
-
-    // UNICODE-RANGE
-    if ((ch == 'u' || ch == 'U') && Peek() == '+')
-      return ParseURange(ch, aToken);
-
-    // IDENT
-    if (StartsIdent(ch, Peek()))
-      return ParseIdent(ch, aToken);
-
-    // AT_KEYWORD
-    if (ch == '@') {
-      return ParseAtKeyword(aToken);
-    }
-
-    // NUMBER or DIM
-    if ((ch == '.') || (ch == '+') || (ch == '-')) {
-      int32_t nextChar = Peek();
-      if (IsDigit(nextChar)) {
-        return ParseNumber(ch, aToken);
-      }
-      else if (('.' == nextChar) && ('.' != ch)) {
-        nextChar = Read();
-        int32_t followingChar = Peek();
-        Pushback(nextChar);
-        if (IsDigit(followingChar))
-          return ParseNumber(ch, aToken);
-      }
-    }
-    if (IsDigit(ch)) {
-      return ParseNumber(ch, aToken);
-    }
-
-    // ID
-    if (ch == '#') {
-      return ParseRef(ch, aToken);
-    }
-
-    // STRING
-    if ((ch == '"') || (ch == '\'')) {
-      return ParseString(ch, aToken);
-    }
-
-    // WS
-    if (IsWhitespace(ch)) {
-      aToken.mType = eCSSToken_WhiteSpace;
-      aToken.mIdent.Assign(PRUnichar(ch));
-      EatWhiteSpace();
-      return true;
-    }
-    if (ch == '/' && !IsSVGMode()) {
-      int32_t nextChar = Peek();
-      if (nextChar == '*') {
-        Read();
-        // FIXME: Editor wants comments to be preserved (bug 60290).
-        if (!SkipCComment()) {
-          return false;
-        }
-        continue; // start again at the beginning
-      }
-    }
-    if (ch == '<') {  // consume HTML comment tags
-      if (LookAhead('!')) {
-        if (LookAhead('-')) {
-          if (LookAhead('-')) {
-            aToken.mType = eCSSToken_HTMLComment;
-            aToken.mIdent.AssignLiteral("<!--");
-            return true;
-          }
-          Pushback('-');
-        }
-        Pushback('!');
-      }
-    }
-    if (ch == '-') {  // check for HTML comment end
-      if (LookAhead('-')) {
-        if (LookAhead('>')) {
-          aToken.mType = eCSSToken_HTMLComment;
-          aToken.mIdent.AssignLiteral("-->");
-          return true;
-        }
-        Pushback('-');
-      }
-    }
-
-    // INCLUDES ("~=") and DASHMATCH ("|=")
-    if (( ch == '|' ) || ( ch == '~' ) || ( ch == '^' ) ||
-        ( ch == '$' ) || ( ch == '*' )) {
-      int32_t nextChar = Read();
-      if ( nextChar == '=' ) {
-        if (ch == '~') {
-          aToken.mType = eCSSToken_Includes;
-        }
-        else if (ch == '|') {
-          aToken.mType = eCSSToken_Dashmatch;
-        }
-        else if (ch == '^') {
-          aToken.mType = eCSSToken_Beginsmatch;
-        }
-        else if (ch == '$') {
-          aToken.mType = eCSSToken_Endsmatch;
-        }
-        else if (ch == '*') {
-          aToken.mType = eCSSToken_Containsmatch;
-        }
-        return true;
-      } else if (nextChar >= 0) {
-        Pushback(nextChar);
-      }
-    }
-    aToken.mType = eCSSToken_Symbol;
-    aToken.mSymbol = ch;
-    return true;
-  }
-}
-
-bool
-nsCSSScanner::NextURL(nsCSSToken& aToken)
-{
-  EatWhiteSpace();
-
-  int32_t ch = Read();
-  if (ch < 0) {
-    return false;
-  }
-
-  // STRING
-  if ((ch == '"') || (ch == '\'')) {
-#ifdef DEBUG
-    bool ok =
-#endif
-      ParseString(ch, aToken);
-    NS_ABORT_IF_FALSE(ok, "ParseString should never fail, "
-                          "since there's always something read");
-
-    NS_ABORT_IF_FALSE(aToken.mType == eCSSToken_String ||
-                      aToken.mType == eCSSToken_Bad_String,
-                      "unexpected token type");
-    if (MOZ_LIKELY(aToken.mType == eCSSToken_String)) {
-      EatWhiteSpace();
-      if (LookAheadOrEOF(')')) {
-        aToken.mType = eCSSToken_URL;
-      } else {
-        aToken.mType = eCSSToken_Bad_URL;
-      }
-    } else {
-      aToken.mType = eCSSToken_Bad_URL;
-    }
-    return true;
-  }
-
-  // Process a url lexical token. A CSS1 url token can contain
-  // characters beyond identifier characters (e.g. '/', ':', etc.)
-  // Because of this the normal rules for tokenizing the input don't
-  // apply very well. To simplify the parser and relax some of the
-  // requirements on the scanner we parse url's here. If we find a
-  // malformed URL then we emit a token of type "Bad_URL" so that
-  // the CSS1 parser can ignore the invalid input.  The parser must
-  // treat a Bad_URL token like a Function token, and process
-  // tokens until a matching parenthesis.
-
-  aToken.mType = eCSSToken_Bad_URL;
-  aToken.mSymbol = PRUnichar(0);
-  nsString& ident = aToken.mIdent;
-  ident.SetLength(0);
-
-  // start of a non-quoted url (which may be empty)
-  bool ok = true;
   for (;;) {
-    if (IsURLChar(ch)) {
-      // A regular url character.
-      ident.Append(PRUnichar(ch));
-    } else if (ch == ')') {
-      // All done
-      break;
-    } else if (IsWhitespace(ch)) {
-      // Whitespace is allowed at the end of the URL
-      EatWhiteSpace();
-      // Consume the close paren if we have it; if not we're an invalid URL.
-      ok = LookAheadOrEOF(')');
-      break;
-    } else if (ch == '\\') {
-      if (!ParseAndAppendEscape(ident, false)) {
-        ok = false;
-        Pushback(ch);
-        break;
+    int32_t ch = Read();
+    if (ch < 0) break;
+    if (ch == '*') {
+      if (LookAhead('/')) {
+        return;
       }
-    } else {
-      // This is an invalid URL spec
-      ok = false;
-      Pushback(ch); // push it back so the parser can match tokens and
-                    // then closing parenthesis
-      break;
-    }
-
-    ch = Read();
-    if (ch < 0) {
-      break;
     }
   }
 
-  // If the result of the above scanning is ok then change the token
-  // type to a useful one.
-  if (ok) {
-    aToken.mType = eCSSToken_URL;
-  }
-  return true;
+  mReporter->ReportUnexpectedEOF("PECommentEOF");
 }
-
 
 /**
  * Returns whether an escape was succesfully parsed; if it was not,
  * the backslash needs to be its own symbol token.
  */
 bool
-nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, bool aInString)
+nsCSSScanner::GatherEscape(nsString& aOutput, bool aInString)
 {
   int32_t ch = Read();
   if (ch < 0) {
@@ -717,7 +507,7 @@ bool
 nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
 {
   if (aChar == '\\') {
-    if (!ParseAndAppendEscape(aIdent, false)) {
+    if (!GatherEscape(aIdent, false)) {
       return false;
     }
   } else {
@@ -730,12 +520,12 @@ nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
       // See how much we can consume and append in one go
       uint32_t n = mOffset;
       // Count number of Ident characters that can be processed
-      while (n < mCount && IsIdent(mReadPointer[n])) {
+      while (n < mCount && IsIdent(mBuffer[n])) {
         ++n;
       }
       // Add to the token what we have so far
       if (n > mOffset) {
-        aIdent.Append(&mReadPointer[mOffset], n - mOffset);
+        aIdent.Append(&mBuffer[mOffset], n - mOffset);
         mOffset = n;
       }
     }
@@ -743,7 +533,7 @@ nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
     aChar = Read();
     if (aChar < 0) break;
     if (aChar == '\\') {
-      if (!ParseAndAppendEscape(aIdent, false)) {
+      if (!GatherEscape(aIdent, false)) {
         Pushback(aChar);
         break;
       }
@@ -759,35 +549,7 @@ nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
 }
 
 bool
-nsCSSScanner::ParseRef(int32_t aChar, nsCSSToken& aToken)
-{
-  // Fall back for when we don't have name characters following:
-  aToken.mType = eCSSToken_Symbol;
-  aToken.mSymbol = aChar;
-
-  int32_t ch = Read();
-  if (ch < 0) {
-    return true;
-  }
-  if (IsIdent(ch) || ch == '\\') {
-    // First char after the '#' is a valid ident char (or an escape),
-    // so it makes sense to keep going
-    nsCSSTokenType type =
-      StartsIdent(ch, Peek()) ? eCSSToken_ID : eCSSToken_Ref;
-    aToken.mIdent.SetLength(0);
-    if (GatherIdent(ch, aToken.mIdent)) {
-      aToken.mType = type;
-      return true;
-    }
-  }
-
-  // No ident chars after the '#'.  Just unread |ch| and get out of here.
-  Pushback(ch);
-  return true;
-}
-
-bool
-nsCSSScanner::ParseIdent(int32_t aChar, nsCSSToken& aToken)
+nsCSSScanner::ScanIdent(int32_t aChar, nsCSSToken& aToken)
 {
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
@@ -814,7 +576,7 @@ nsCSSScanner::ParseIdent(int32_t aChar, nsCSSToken& aToken)
 }
 
 bool
-nsCSSScanner::ParseAtKeyword(nsCSSToken& aToken)
+nsCSSScanner::ScanAtKeyword(nsCSSToken& aToken)
 {
   int32_t ch = Read();
   if (StartsIdent(ch, Peek())) {
@@ -833,7 +595,35 @@ nsCSSScanner::ParseAtKeyword(nsCSSToken& aToken)
 }
 
 bool
-nsCSSScanner::ParseNumber(int32_t c, nsCSSToken& aToken)
+nsCSSScanner::ScanHash(int32_t aChar, nsCSSToken& aToken)
+{
+  // Fall back for when we don't have name characters following:
+  aToken.mType = eCSSToken_Symbol;
+  aToken.mSymbol = aChar;
+
+  int32_t ch = Read();
+  if (ch < 0) {
+    return true;
+  }
+  if (IsIdent(ch) || ch == '\\') {
+    // First char after the '#' is a valid ident char (or an escape),
+    // so it makes sense to keep going
+    nsCSSTokenType type =
+      StartsIdent(ch, Peek()) ? eCSSToken_ID : eCSSToken_Hash;
+    aToken.mIdent.SetLength(0);
+    if (GatherIdent(ch, aToken.mIdent)) {
+      aToken.mType = type;
+      return true;
+    }
+  }
+
+  // No ident chars after the '#'.  Just unread |ch| and get out of here.
+  Pushback(ch);
+  return true;
+}
+
+bool
+nsCSSScanner::ScanNumber(int32_t c, nsCSSToken& aToken)
 {
   NS_PRECONDITION(c == '.' || c == '+' || c == '-' || IsDigit(c),
                   "Why did we get called?");
@@ -867,7 +657,7 @@ nsCSSScanner::ParseNumber(int32_t c, nsCSSToken& aToken)
   bool gotDot = (c == '.');
 
   if (!gotDot) {
-    // Parse the integer part of the mantisssa
+    // Scan the integer part of the mantisssa
     NS_ASSERTION(IsDigit(c), "Why did we get called?");
     do {
       intPart = 10*intPart + DecimalDigitValue(c);
@@ -879,7 +669,7 @@ nsCSSScanner::ParseNumber(int32_t c, nsCSSToken& aToken)
   }
 
   if (gotDot) {
-    // Parse the fractional part of the mantissa.
+    // Scan the fractional part of the mantissa.
     c = Read();
     NS_ASSERTION(IsDigit(c), "How did we get here?");
     // Power of ten by which we need to divide our next digit
@@ -967,24 +757,7 @@ nsCSSScanner::ParseNumber(int32_t c, nsCSSToken& aToken)
 }
 
 bool
-nsCSSScanner::SkipCComment()
-{
-  for (;;) {
-    int32_t ch = Read();
-    if (ch < 0) break;
-    if (ch == '*') {
-      if (LookAhead('/')) {
-        return true;
-      }
-    }
-  }
-
-  mReporter->ReportUnexpectedEOF("PECommentEOF");
-  return false;
-}
-
-bool
-nsCSSScanner::ParseString(int32_t aStop, nsCSSToken& aToken)
+nsCSSScanner::ScanString(int32_t aStop, nsCSSToken& aToken)
 {
   aToken.mIdent.SetLength(0);
   aToken.mType = eCSSToken_String;
@@ -996,7 +769,7 @@ nsCSSScanner::ParseString(int32_t aStop, nsCSSToken& aToken)
       uint32_t n = mOffset;
       // Count number of characters that can be processed
       for (;n < mCount; ++n) {
-        PRUnichar nextChar = mReadPointer[n];
+        PRUnichar nextChar = mBuffer[n];
         if ((nextChar == aStop) || (nextChar == '\\') ||
             (nextChar == '\n') || (nextChar == '\r') || (nextChar == '\f')) {
           break;
@@ -1004,7 +777,7 @@ nsCSSScanner::ParseString(int32_t aStop, nsCSSToken& aToken)
       }
       // Add to the token what we have so far
       if (n > mOffset) {
-        aToken.mIdent.Append(&mReadPointer[mOffset], n - mOffset);
+        aToken.mIdent.Append(&mBuffer[mOffset], n - mOffset);
         mOffset = n;
       }
     }
@@ -1018,10 +791,10 @@ nsCSSScanner::ParseString(int32_t aStop, nsCSSToken& aToken)
       break;
     }
     if (ch == '\\') {
-      if (!ParseAndAppendEscape(aToken.mIdent, true)) {
+      if (!GatherEscape(aToken.mIdent, true)) {
         aToken.mType = eCSSToken_Bad_String;
         Pushback(ch);
-        // For strings, the only case where ParseAndAppendEscape will
+        // For strings, the only case where GatherEscape will
         // return false is when there's a backslash to start an escape
         // immediately followed by end-of-stream.  In that case, the
         // correct tokenization is badstring *followed* by a DELIM for
@@ -1052,7 +825,7 @@ nsCSSScanner::ParseString(int32_t aStop, nsCSSToken& aToken)
 // are also decoded into mInteger and mInteger2, and mIntegerValid is set.
 
 bool
-nsCSSScanner::ParseURange(int32_t aChar, nsCSSToken& aResult)
+nsCSSScanner::ScanURange(int32_t aChar, nsCSSToken& aResult)
 {
   int32_t intro2 = Read();
   int32_t ch = Peek();
@@ -1069,7 +842,7 @@ nsCSSScanner::ParseURange(int32_t aChar, nsCSSToken& aResult)
   if (!IsHexDigit(ch) && ch != '?') {
     Pushback(intro2);
     Pushback(aChar);
-    return ParseIdent(aChar, aResult);
+    return ScanIdent(aChar, aResult);
   }
 
   aResult.mIdent.Truncate();
@@ -1128,4 +901,224 @@ nsCSSScanner::ParseURange(int32_t aChar, nsCSSToken& aResult)
   aResult.mIntegerValid = valid;
   aResult.mType = eCSSToken_URange;
   return true;
+}
+
+bool
+nsCSSScanner::NextURL(nsCSSToken& aToken)
+{
+  SkipWhitespace();
+
+  int32_t ch = Read();
+  if (ch < 0) {
+    return false;
+  }
+
+  // STRING
+  if ((ch == '"') || (ch == '\'')) {
+#ifdef DEBUG
+    bool ok =
+#endif
+      ScanString(ch, aToken);
+    NS_ABORT_IF_FALSE(ok, "ScanString should never fail, "
+                          "since there's always something read");
+
+    NS_ABORT_IF_FALSE(aToken.mType == eCSSToken_String ||
+                      aToken.mType == eCSSToken_Bad_String,
+                      "unexpected token type");
+    if (MOZ_LIKELY(aToken.mType == eCSSToken_String)) {
+      SkipWhitespace();
+      if (LookAheadOrEOF(')')) {
+        aToken.mType = eCSSToken_URL;
+      } else {
+        aToken.mType = eCSSToken_Bad_URL;
+      }
+    } else {
+      aToken.mType = eCSSToken_Bad_URL;
+    }
+    return true;
+  }
+
+  // Process a url lexical token. A CSS1 url token can contain
+  // characters beyond identifier characters (e.g. '/', ':', etc.)
+  // Because of this the normal rules for tokenizing the input don't
+  // apply very well. To simplify the parser and relax some of the
+  // requirements on the scanner we parse url's here. If we find a
+  // malformed URL then we emit a token of type "Bad_URL" so that
+  // the CSS1 parser can ignore the invalid input.  The parser must
+  // treat a Bad_URL token like a Function token, and process
+  // tokens until a matching parenthesis.
+
+  aToken.mType = eCSSToken_Bad_URL;
+  aToken.mSymbol = PRUnichar(0);
+  nsString& ident = aToken.mIdent;
+  ident.SetLength(0);
+
+  // start of a non-quoted url (which may be empty)
+  bool ok = true;
+  for (;;) {
+    if (IsURLChar(ch)) {
+      // A regular url character.
+      ident.Append(PRUnichar(ch));
+    } else if (ch == ')') {
+      // All done
+      break;
+    } else if (IsWhitespace(ch)) {
+      // Whitespace is allowed at the end of the URL
+      SkipWhitespace();
+      // Consume the close paren if we have it; if not we're an invalid URL.
+      ok = LookAheadOrEOF(')');
+      break;
+    } else if (ch == '\\') {
+      if (!GatherEscape(ident, false)) {
+        ok = false;
+        Pushback(ch);
+        break;
+      }
+    } else {
+      // This is an invalid URL spec
+      ok = false;
+      Pushback(ch); // push it back so the parser can match tokens and
+                    // then closing parenthesis
+      break;
+    }
+
+    ch = Read();
+    if (ch < 0) {
+      break;
+    }
+  }
+
+  // If the result of the above scanning is ok then change the token
+  // type to a useful one.
+  if (ok) {
+    aToken.mType = eCSSToken_URL;
+  }
+  return true;
+}
+
+bool
+nsCSSScanner::Next(nsCSSToken& aToken, bool aSkipWS)
+{
+  for (;;) { // Infinite loop so we can restart after comments.
+    mTokenOffset = mOffset;
+    mTokenLineOffset = mLineOffset;
+    mTokenLineNumber = mLineNumber;
+
+    int32_t ch = Read();
+    if (ch < 0) {
+      return false;
+    }
+
+    // UNICODE-RANGE
+    if ((ch == 'u' || ch == 'U') && Peek() == '+')
+      return ScanURange(ch, aToken);
+
+    // IDENT
+    if (StartsIdent(ch, Peek()))
+      return ScanIdent(ch, aToken);
+
+    // AT_KEYWORD
+    if (ch == '@') {
+      return ScanAtKeyword(aToken);
+    }
+
+    // NUMBER or DIM
+    if ((ch == '.') || (ch == '+') || (ch == '-')) {
+      int32_t nextChar = Peek();
+      if (IsDigit(nextChar)) {
+        return ScanNumber(ch, aToken);
+      }
+      else if (('.' == nextChar) && ('.' != ch)) {
+        nextChar = Read();
+        int32_t followingChar = Peek();
+        Pushback(nextChar);
+        if (IsDigit(followingChar))
+          return ScanNumber(ch, aToken);
+      }
+    }
+    if (IsDigit(ch)) {
+      return ScanNumber(ch, aToken);
+    }
+
+    // ID
+    if (ch == '#') {
+      return ScanHash(ch, aToken);
+    }
+
+    // STRING
+    if ((ch == '"') || (ch == '\'')) {
+      return ScanString(ch, aToken);
+    }
+
+    // WS
+    if (IsWhitespace(ch)) {
+      SkipWhitespace();
+      if (!aSkipWS) {
+        aToken.mType = eCSSToken_Whitespace;
+        return true;
+      }
+      continue; // start again at the beginning
+    }
+    if (ch == '/' && !IsSVGMode()) {
+      int32_t nextChar = Peek();
+      if (nextChar == '*') {
+        Read();
+        // FIXME: Editor wants comments to be preserved (bug 60290).
+        SkipComment();
+        continue; // start again at the beginning
+      }
+    }
+    if (ch == '<') {  // consume HTML comment tags
+      if (LookAhead('!')) {
+        if (LookAhead('-')) {
+          if (LookAhead('-')) {
+            aToken.mType = eCSSToken_HTMLComment;
+            aToken.mIdent.AssignLiteral("<!--");
+            return true;
+          }
+          Pushback('-');
+        }
+        Pushback('!');
+      }
+    }
+    if (ch == '-') {  // check for HTML comment end
+      if (LookAhead('-')) {
+        if (LookAhead('>')) {
+          aToken.mType = eCSSToken_HTMLComment;
+          aToken.mIdent.AssignLiteral("-->");
+          return true;
+        }
+        Pushback('-');
+      }
+    }
+
+    // INCLUDES ("~=") and DASHMATCH ("|=")
+    if (( ch == '|' ) || ( ch == '~' ) || ( ch == '^' ) ||
+        ( ch == '$' ) || ( ch == '*' )) {
+      int32_t nextChar = Read();
+      if ( nextChar == '=' ) {
+        if (ch == '~') {
+          aToken.mType = eCSSToken_Includes;
+        }
+        else if (ch == '|') {
+          aToken.mType = eCSSToken_Dashmatch;
+        }
+        else if (ch == '^') {
+          aToken.mType = eCSSToken_Beginsmatch;
+        }
+        else if (ch == '$') {
+          aToken.mType = eCSSToken_Endsmatch;
+        }
+        else if (ch == '*') {
+          aToken.mType = eCSSToken_Containsmatch;
+        }
+        return true;
+      } else if (nextChar >= 0) {
+        Pushback(nextChar);
+      }
+    }
+    aToken.mType = eCSSToken_Symbol;
+    aToken.mSymbol = ch;
+    return true;
+  }
 }
