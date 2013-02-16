@@ -778,12 +778,12 @@ public:
   /**
    * Get the style data associated with this frame.  This returns a
    * const style struct pointer that should never be modified.  See
-   * |nsIStyleContext::GetStyleData| for more information.
+   * |nsStyleContext::StyleData| for more information.
    *
    * The use of the typesafe functions below is preferred to direct use
    * of this function.
    */
-  virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const = 0;
+  virtual const void* StyleDataExternal(nsStyleStructID aSID) const = 0;
 
   /**
    * Define typesafe getter functions for each style struct by
@@ -803,7 +803,7 @@ public:
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
     const nsStyle##name_ * Style##name_ () const {                            \
       return static_cast<const nsStyle##name_*>(                              \
-                            GetStyleDataExternal(eStyleStruct_##name_));      \
+                            StyleDataExternal(eStyleStruct_##name_));         \
     }
 #endif
   #include "nsStyleStructList.h"

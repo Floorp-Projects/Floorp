@@ -213,7 +213,7 @@ const void* nsStyleContext::GetCachedStyleData(nsStyleStructID aSID)
   return cachedData;
 }
 
-const void* nsStyleContext::GetStyleData(nsStyleStructID aSID)
+const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 {
   const void* cachedData = GetCachedStyleData(aSID);
   if (cachedData)
@@ -232,7 +232,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   // function really shouldn't be called for style contexts that could
   // have kids depending on the data.  ClearStyleData would be OK, but
   // this test for no mChild or mEmptyChild doesn't catch that case.)
-  const void *current = GetStyleData(aSID);
+  const void *current = StyleData(aSID);
   if (!mChild && !mEmptyChild &&
       !(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
       GetCachedStyleData(aSID))
