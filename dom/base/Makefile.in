@@ -79,6 +79,7 @@ EXPORTS = \
   nsContentPermissionHelper.h \
   nsStructuredCloneContainer.h \
   nsWindowMemoryReporter.h \
+  Crypto.h \
   $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
@@ -117,6 +118,7 @@ CPPSRCS =			\
 	nsDOMNavigationTiming.cpp \
 	nsPerformance.cpp	\
 	nsWindowMemoryReporter.cpp \
+	Crypto.cpp \
 	DOMError.cpp \
 	DOMRequest.cpp \
 	DOMCursor.cpp \
