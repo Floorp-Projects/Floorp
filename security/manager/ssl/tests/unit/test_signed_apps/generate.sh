@@ -39,7 +39,7 @@ sign_app_with_new_cert()
   db=$tmpdir/$label
   mkdir -p $db
   certutil -d $db -N -f $passwordfile
-  make_cert="certutil -d $db -f $passwordfile -S -v 3 -g 2048 -Z SHA256 \
+  make_cert="certutil -d $db -f $passwordfile -S -v 480 -g 2048 -Z SHA256 \
                       -z $noisefile -y 3 -2 --extKeyUsage critical,codeSigning"
   $make_cert -n ca1        -m 1 -s "$ca_subj" \
              --keyUsage critical,certSigning      -t ",,CTu" -x < $ca_responses
@@ -75,5 +75,3 @@ replace_zip $srcdir/unsigned.zip $srcdir/simple
 sign_app_with_new_cert trusted   $srcdir/unsigned.zip $srcdir/valid.zip
 sign_app_with_new_cert untrusted $srcdir/unsigned.zip $srcdir/unknown_issuer.zip
 certutil -d $tmpdir/trusted -f $passwordfile -L -n ca1 -r -o $srcdir/trusted_ca1.der
-
-rm -Rf $tmpdir
