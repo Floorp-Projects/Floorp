@@ -198,7 +198,7 @@ protected:
     nsIFrame* frame = GetPrimaryFrame();
     if (!frame) return false;
 
-    nsStyleContext* style = frame->GetStyleContext();
+    nsStyleContext* style = frame->StyleContext();
     return style->GetStyleSVG()->mColorInterpolationFilters ==
              NS_STYLE_COLOR_INTERPOLATION_SRGB;
   }

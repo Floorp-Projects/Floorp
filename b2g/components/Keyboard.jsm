@@ -49,6 +49,30 @@ let Keyboard = {
   },
 
   receiveMessage: function keyboardReceiveMessage(msg) {
+    // If we get a 'Keyboard:XXX' message, check that the sender has the
+    // keyboard permission.
+    if (msg.name != 'Forms:Input') {
+      let mm;
+      try {
+        mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
+                       .frameLoader.messageManager;
+      } catch(e) {
+        mm = msg.target;
+      }
+
+      // That should never happen.
+      if (!mm) {
+        dump("!! No message manager found for " + msg.name);
+        return;
+      }
+
+      if (!mm.assertPermission("keyboard")) {
+        dump("Keyboard message " + msg.name +
+        " from a content process with no 'keyboard' privileges.");
+        return;
+      }
+    }
+
     switch (msg.name) {
       case 'Forms:Input':
         this.handleFormsInput(msg);

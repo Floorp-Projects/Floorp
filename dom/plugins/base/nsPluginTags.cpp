@@ -19,6 +19,7 @@
 #include "nsNPAPIPlugin.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Preferences.h"
+#include <cctype>
 
 using namespace mozilla;
 using mozilla::TimeStamp;
@@ -52,7 +53,8 @@ mFileName(aPluginTag->mFileName),
 mFullPath(aPluginTag->mFullPath),
 mVersion(aPluginTag->mVersion),
 mLastModifiedTime(0),
-mFlags(NS_PLUGIN_FLAG_ENABLED)
+mFlags(NS_PLUGIN_FLAG_ENABLED),
+mNiceFileName()
 {
 }
 
@@ -67,7 +69,8 @@ mFileName(aPluginInfo->fFileName),
 mFullPath(aPluginInfo->fFullPath),
 mVersion(aPluginInfo->fVersion),
 mLastModifiedTime(0),
-mFlags(NS_PLUGIN_FLAG_ENABLED)
+mFlags(NS_PLUGIN_FLAG_ENABLED),
+mNiceFileName()
 {
   InitMime(aPluginInfo->fMimeTypeArray,
            aPluginInfo->fMimeDescriptionArray,
@@ -97,7 +100,8 @@ mFileName(aFileName),
 mFullPath(aFullPath),
 mVersion(aVersion),
 mLastModifiedTime(aLastModifiedTime),
-mFlags(0) // Caller will read in our flags from cache
+mFlags(0), // Caller will read in our flags from cache
+mNiceFileName()
 {
   InitMime(aMimeTypes, aMimeDescriptions, aExtensions, static_cast<uint32_t>(aVariants));
   if (!aArgsAreUTF8)
@@ -432,4 +436,29 @@ void nsPluginTag::TryUnloadPlugin(bool inShutdown)
     mPlugin->Shutdown();
     mPlugin = nullptr;
   }
+}
+
+nsCString nsPluginTag::GetNiceFileName() {
+  if (!mNiceFileName.IsEmpty()) {
+    return mNiceFileName;
+  }
+
+  mNiceFileName.Assign(mFileName);
+  int32_t niceNameLength = mFileName.RFind(".");
+  NS_ASSERTION(niceNameLength != kNotFound, "mFileName doesn't have a '.'?");
+  while (niceNameLength > 0) {
+    char chr = mFileName[niceNameLength - 1];
+    if (!std::isalpha(chr))
+      niceNameLength--;
+    else
+      break;
+  }
+
+  // If it turns out that niceNameLength <= 0, we'll fall back and use the
+  // entire mFileName (which we've already taken care of, a few lines back)
+  if (niceNameLength > 0) {
+    mNiceFileName.Truncate(niceNameLength);
+  }
+
+  return mNiceFileName;
 }

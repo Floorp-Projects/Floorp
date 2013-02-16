@@ -60,7 +60,7 @@ ContentPermissionPrompt.prototype = {
     if (request.window) {
       let requestingWindow = request.window.top;
       let chromeWin = this.getChromeWindow(requestingWindow).wrappedJSObject;
-      let windowID = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+      let windowID = request.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
       let browser = chromeWin.Browser.getBrowserForWindowId(windowID);
       return chromeWin.getNotificationBox(browser);
     }

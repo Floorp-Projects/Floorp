@@ -271,7 +271,7 @@ nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 //  Only paint the selected child...
-NS_IMETHODIMP
+void
 nsMathMLmactionFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
@@ -280,26 +280,24 @@ nsMathMLmactionFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // We can't call nsDisplayMathMLError from here,
   // so ask nsMathMLContainerFrame to do the work for us.
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    return nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+    nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+    return;
   }
 
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     // Put the child's background directly onto the content list
     nsDisplayListSet set(aLists, aLists.Content());
     // The children should be in content order
-    rv = BuildDisplayListForChild(aBuilder, childFrame, aDirtyRect, set);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, childFrame, aDirtyRect, set);
   }
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
   // visual debug
-  rv = DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
+  DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
 #endif
-  return rv;
 }
 
 // Only reflow the selected child ...

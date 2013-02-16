@@ -352,16 +352,16 @@ nsSVGGlyphFrame::GetType() const
   return nsGkAtoms::svgGlyphFrame;
 }
 
-NS_IMETHODIMP
+void
 nsSVGGlyphFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
   if (GetStyleFont()->mFont.size <= 0) {
-    return NS_OK;
+    return;
   }
-  return aLists.Content()->AppendNewToTop(
-           new (aBuilder) nsDisplaySVGGlyphs(aBuilder, this));
+  aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplaySVGGlyphs(aBuilder, this));
 }
 
 //----------------------------------------------------------------------
@@ -1042,7 +1042,7 @@ nsSVGGlyphFrame::SetupInheritablePaint(gfxContext *aContext,
     aTargetPaint.SetObjectPaint(aOuterObjectPaint, (style->*aFillOrStroke).mType);
   } else {
     nscolor color = nsSVGUtils::GetFallbackOrPaintColor(aContext,
-                                                        GetStyleContext(),
+                                                        StyleContext(),
                                                         aFillOrStroke);
     aTargetPaint.SetColor(color);
 
@@ -1836,7 +1836,7 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     bool printerFont = (presContext->Type() == nsPresContext::eContext_PrintPreview ||
                           presContext->Type() == nsPresContext::eContext_Print);
     gfxFontStyle fontStyle(font.style, font.weight, font.stretch, textRunSize,
-                           mStyleContext->GetStyleFont()->mLanguage,
+                           GetStyleFont()->mLanguage,
                            font.sizeAdjust, font.systemFont,
                            printerFont,
                            font.languageOverride);
@@ -1848,7 +1848,7 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
 
     uint32_t flags = gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX |
       GetTextRunFlags(text.Length()) |
-      nsLayoutUtils::GetTextRunFlagsForStyle(GetStyleContext(), GetStyleFont(), 0);
+      nsLayoutUtils::GetTextRunFlagsForStyle(StyleContext(), GetStyleFont(), 0);
 
     // XXX We should use a better surface here! But then we'd have to
     // change things so we can ensure we always have the "right" sort of

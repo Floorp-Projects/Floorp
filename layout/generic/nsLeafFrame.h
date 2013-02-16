@@ -23,11 +23,11 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame replacements
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) {
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {
     DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame");
-    return DisplayBorderBackgroundOutline(aBuilder, aLists);
+    DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
   /**

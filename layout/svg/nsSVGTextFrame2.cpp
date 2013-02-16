@@ -2859,7 +2859,7 @@ nsSVGTextFrame2::DestroyFrom(nsIFrame* aDestructRoot)
   nsSVGTextFrame2Base::DestroyFrom(aDestructRoot);
 }
 
-NS_IMETHODIMP
+void
 nsSVGTextFrame2::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -2868,10 +2868,10 @@ nsSVGTextFrame2::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // We can sometimes be asked to paint before reflow happens and we
     // have updated mPositions, etc.  In this case, we just avoid
     // painting.
-    return NS_OK;
+    return;
   }
-  return aLists.Content()->AppendNewToTop(
-           new (aBuilder) nsDisplaySVGText(aBuilder, this));
+  aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplaySVGText(aBuilder, this));
 }
 
 NS_IMETHODIMP
@@ -2956,8 +2956,10 @@ nsSVGTextFrame2::MutationObserver::AttributeChanged(
                aAttribute == nsGkAtoms::href) {
       // Blow away our reference, if any
       nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
-      childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
-      mFrame->NotifyGlyphMetricsChange();
+      if (childElementFrame) {
+        childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
+        mFrame->NotifyGlyphMetricsChange();
+      }
     }
   } else {
     if (aNameSpaceID == kNameSpaceID_None &&
@@ -5069,7 +5071,7 @@ nsSVGTextFrame2::SetupInheritablePaint(gfxContext* aContext,
     aTargetPaint.SetObjectPaint(aOuterObjectPaint, (style->*aFillOrStroke).mType);
   } else {
     nscolor color = nsSVGUtils::GetFallbackOrPaintColor(aContext,
-                                                        aFrame->GetStyleContext(),
+                                                        aFrame->StyleContext(),
                                                         aFillOrStroke);
     aTargetPaint.SetColor(color);
 

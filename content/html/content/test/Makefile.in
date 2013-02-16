@@ -279,6 +279,7 @@ MOCHITEST_FILES = \
 		test_bug803677.html \
 		test_bug827126.html \
 		test_bug827426.html \
+		test_bug841466.html \
 		test_iframe_sandbox_inheritance.html \
 		file_iframe_sandbox_a_if1.html \
 		file_iframe_sandbox_a_if2.html \

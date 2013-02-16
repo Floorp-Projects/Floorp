@@ -1288,7 +1288,7 @@ PaintXULDebugBackground(nsIFrame* aFrame, nsRenderingContext* aCtx,
 }
 #endif
 
-nsresult
+void
 nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                              const nsRect&           aDirtyRect,
                              const nsDisplayListSet& aLists)
@@ -1301,7 +1301,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Check for frames that are marked as a part of the region used
   // in calculating glass margins on Windows.
   if (GetContent()->IsXUL()) {
-      const nsStyleDisplay* styles = mStyleContext->GetStyleDisplay();
+      const nsStyleDisplay* styles = GetStyleDisplay();
       if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
         nsRect rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
         aBuilder->AddExcludedGlassRegion(rect);
@@ -1311,27 +1311,22 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayListCollection tempLists;
   const nsDisplayListSet& destination = forceLayer ? tempLists : aLists;
 
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, destination);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, destination);
 
 #ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
-    rv = destination.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aBuilder, this, PaintXULDebugBackground,
-                         "XULDebugBackground"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = destination.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULDebug(aBuilder, this));
-    NS_ENSURE_SUCCESS(rv, rv);
+    destination.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayGeneric(aBuilder, this, PaintXULDebugBackground,
+                       "XULDebugBackground"));
+    destination.Outlines()->AppendNewToTop(new (aBuilder)
+      nsDisplayXULDebug(aBuilder, this));
   }
 #endif
 
-  rv = BuildDisplayListForChildren(aBuilder, aDirtyRect, destination);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BuildDisplayListForChildren(aBuilder, aDirtyRect, destination);
 
   // see if we have to draw a selection frame around this container
-  rv = DisplaySelectionOverlay(aBuilder, destination.Content());
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplaySelectionOverlay(aBuilder, destination.Content());
 
   if (forceLayer) {
     // This is a bit of a hack. Collect up all descendant display items
@@ -1346,14 +1341,12 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     masterList.AppendToTop(tempLists.PositionedDescendants());
     masterList.AppendToTop(tempLists.Outlines());
     // Wrap the list to make it its own layer
-    rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayOwnLayer(aBuilder, this, &masterList));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayOwnLayer(aBuilder, this, &masterList));
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
                                         const nsDisplayListSet& aLists)
@@ -1364,11 +1357,9 @@ nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
   // The children should be in the right order
   while (kid) {
-    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
     kid = kid->GetNextSibling();
   }
-  return NS_OK;
 }
 
 // REVIEW: PaintChildren did a few things none of which are a big deal
@@ -2059,13 +2050,13 @@ private:
   nsIFrame* mTargetFrame;
 };
 
-nsresult
+void
 nsBoxFrame::WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
                                   const nsDisplayListSet& aIn,
                                   const nsDisplayListSet& aOut)
 {
   nsXULEventRedirectorWrapper wrapper(this);
-  return wrapper.WrapLists(aBuilder, this, aIn, aOut);
+  wrapper.WrapLists(aBuilder, this, aIn, aOut);
 }
 
 bool

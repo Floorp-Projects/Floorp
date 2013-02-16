@@ -11,7 +11,7 @@ interface nsIB2GCameraContent : nsISupports
   DOMString getCameraURI([optional] in jsval options);
 };
 
-[scriptable, uuid(53990d7a-ab2a-11e1-8543-7767e4cbcbff)]
+[scriptable, uuid(94233b76-3987-4fc0-8924-7596846f9bd3)]
 interface nsIB2GKeyboard : nsISupports
 {
   void sendKey(in long keyCode, in long charCode);

@@ -398,7 +398,7 @@ CloneProperties(JSContext *cx, HandleObject obj, HandleObject clone, CloneMemory
         id = ids[i];
         if (!GetUnclonedValue(cx, obj, id, &val) ||
             !CloneValue(cx, &val, clonedObjects) ||
-            !JSObject::setGeneric(cx, clone, clone, id, &val, false))
+            !JS_DefinePropertyById(cx, clone, id, val.get(), NULL, NULL, 0))
         {
             return false;
         }

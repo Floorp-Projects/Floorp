@@ -293,7 +293,7 @@ TableBackgroundPainter::PaintTableFrame(nsTableFrame*         aTableFrame,
     nsCSSRendering::PaintBackgroundWithSC(mPresContext, mRenderingContext,
                                           tableData.mFrame, mDirtyRect,
                                           tableData.mRect + mRenderPt,
-                                          tableData.mFrame->GetStyleContext(),
+                                          tableData.mFrame->StyleContext(),
                                           *tableData.mBorder,
                                           mBGPaintFlags);
   }
@@ -602,7 +602,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
     nsCSSRendering::PaintBackgroundWithSC(mPresContext, mRenderingContext,
                                           mCols[colIndex].mColGroup->mFrame, mDirtyRect,
                                           mCols[colIndex].mColGroup->mRect + mRenderPt,
-                                          mCols[colIndex].mColGroup->mFrame->GetStyleContext(),
+                                          mCols[colIndex].mColGroup->mFrame->StyleContext(),
                                           *mCols[colIndex].mColGroup->mBorder,
                                           mBGPaintFlags, &mCellRect);
   }
@@ -612,7 +612,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
     nsCSSRendering::PaintBackgroundWithSC(mPresContext, mRenderingContext,
                                           mCols[colIndex].mCol.mFrame, mDirtyRect,
                                           mCols[colIndex].mCol.mRect + mRenderPt,
-                                          mCols[colIndex].mCol.mFrame->GetStyleContext(),
+                                          mCols[colIndex].mCol.mFrame->StyleContext(),
                                           *mCols[colIndex].mCol.mBorder,
                                           mBGPaintFlags, &mCellRect);
   }
@@ -622,7 +622,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
     nsCSSRendering::PaintBackgroundWithSC(mPresContext, mRenderingContext,
                                           mRowGroup.mFrame, mDirtyRect,
                                           mRowGroup.mRect + mRenderPt,
-                                          mRowGroup.mFrame->GetStyleContext(),
+                                          mRowGroup.mFrame->StyleContext(),
                                           *mRowGroup.mBorder,
                                           mBGPaintFlags, &mCellRect);
   }
@@ -632,7 +632,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
     nsCSSRendering::PaintBackgroundWithSC(mPresContext, mRenderingContext,
                                           mRow.mFrame, mDirtyRect,
                                           mRow.mRect + mRenderPt,
-                                          mRow.mFrame->GetStyleContext(),
+                                          mRow.mFrame->StyleContext(),
                                           *mRow.mBorder,
                                           mBGPaintFlags, &mCellRect);
   }
