@@ -9,6 +9,7 @@
 #define jsion_range_analysis_h__
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "wtf/Platform.h"
 #include "MIR.h"
@@ -199,14 +200,6 @@ class Range : public TempObject {
 
     static Range *Truncate(int64_t l, int64_t h);
 
-    static int64_t abs64(int64_t x) {
-#ifdef WTF_OS_WINDOWS
-        return _abs64(x);
-#else
-        return llabs(x);
-#endif
-    }
-
     void print(Sprinter &sp) const;
     bool update(const Range *other);
     bool update(const Range &other) {
@@ -351,7 +344,8 @@ class Range : public TempObject {
             return;
         }
 
-        uint32_t max = Max(abs64((int64_t) lower()), abs64((int64_t) upper()));
+        uint32_t max = Max(mozilla::Abs<int64_t>(lower()),
+                           mozilla::Abs<int64_t>(upper()));
         JS_ASSERT_IF(lower() == JSVAL_INT_MIN, max == (uint32_t) JSVAL_INT_MIN);
         JS_ASSERT(max <= (uint32_t) JSVAL_INT_MIN);
         // The number of bits needed to encode |max| is the power of 2 plus one.

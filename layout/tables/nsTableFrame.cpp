@@ -3,6 +3,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/Likely.h"
+#include "mozilla/MathAlgorithms.h"
+
 #include "nsCOMPtr.h"
 #include "nsTableFrame.h"
 #include "nsRenderingContext.h"
@@ -38,9 +42,6 @@
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSProps.h"
-#include "mozilla/Likely.h"
-#include <cstdlib> // for std::abs(int/long)
-#include <cmath> // for std::abs(float/double)
 #include <algorithm>
 
 using namespace mozilla;
@@ -6246,7 +6247,7 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
   if (!haveIntersect)
     return false;
   mDamageArea = nsIntRect(startColIndex, startRowIndex,
-                          1 + std::abs(int32_t(endColIndex - startColIndex)),
+                          1 + Abs<int32_t>(endColIndex - startColIndex),
                           1 + endRowIndex - startRowIndex);
 
   Reset();
