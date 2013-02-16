@@ -2956,8 +2956,10 @@ nsSVGTextFrame2::MutationObserver::AttributeChanged(
                aAttribute == nsGkAtoms::href) {
       // Blow away our reference, if any
       nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
-      childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
-      mFrame->NotifyGlyphMetricsChange();
+      if (childElementFrame) {
+        childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
+        mFrame->NotifyGlyphMetricsChange();
+      }
     }
   } else {
     if (aNameSpaceID == kNameSpaceID_None &&
