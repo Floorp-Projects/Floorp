@@ -113,8 +113,7 @@ nsSVGSwitchFrame::PaintSVG(nsRenderingContext* aContext,
                "If display lists are enabled, only painting of non-display "
                "SVG should take this code path");
 
-  const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
-  if (display->mOpacity == 0.0)
+  if (GetStyleDisplay()->mOpacity == 0.0)
     return NS_OK;
 
   nsIFrame *kid = GetActiveChildFrame();
