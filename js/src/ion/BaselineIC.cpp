@@ -1646,16 +1646,6 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
         return true;
     }
 
-    if (arg.isNull() || arg.isUndefined()) {
-        ICToBool_NullUndefined::Compiler compiler(cx);
-        ICStub *nilStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!nilStub)
-            return false;
-
-        stub->addNewStub(nilStub);
-        return true;
-    }
-
     return true;
 }
 
@@ -1721,27 +1711,6 @@ ICToBool_String::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.moveValue(BooleanValue(true), R0);
     EmitReturnFromIC(masm);
-
-    masm.bind(&ifFalse);
-    masm.moveValue(BooleanValue(false), R0);
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-//
-// ToBool_NullUndefined
-//
-
-bool
-ICToBool_NullUndefined::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    Label failure, ifFalse;
-    masm.branchTestNull(Assembler::Equal, R0, &ifFalse);
-    masm.branchTestUndefined(Assembler::NotEqual, R0, &failure);
 
     masm.bind(&ifFalse);
     masm.moveValue(BooleanValue(false), R0);
