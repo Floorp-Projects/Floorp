@@ -326,7 +326,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       // aCanStoreInRuleTree to false yet, so we don't want to introduce
       // any dependencies on aStyleContext's data here.
       const nsStyleFont *styleFont =
-        aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
+        aStyleFont ? aStyleFont : aStyleContext->StyleFont();
 
       if (aUseProvidedRootEmSize) {
         // We should use the provided aFontSize as the reference length to
@@ -343,7 +343,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       } else if (aStyleContext && !aStyleContext->GetParent()) {
         // This is the root element (XXX we don't really know this, but
         // nsRuleNode::SetFont makes the same assumption!), so we should
-        // use GetStyleFont on this context to get the root element's
+        // use StyleFont on this context to get the root element's
         // font size.
         rootFontSize = styleFont->mFont.size;
       } else {
@@ -357,7 +357,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
           rootStyle = aPresContext->StyleSet()->ResolveStyleFor(docElement,
                                                                 nullptr);
           if (rootStyle) {
-            rootStyleFont = rootStyle->GetStyleFont();
+            rootStyleFont = rootStyle->StyleFont();
           }
         }
 
@@ -375,7 +375,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   // thus can't be stored in the rule tree:
   aCanStoreInRuleTree = false;
   const nsStyleFont *styleFont =
-    aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
+    aStyleFont ? aStyleFont : aStyleContext->StyleFont();
   if (aFontSize == -1) {
     // XXX Should this be styleFont->mSize instead to avoid taking minfontsize
     // prefs into account?
@@ -843,7 +843,7 @@ static bool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
           // because they could be used on a node with a different color
           aCanStoreInRuleTree = false;
           if (aContext) {
-            aResult = aContext->GetStyleColor()->mColor;
+            aResult = aContext->StyleColor()->mColor;
             result = true;
           }
           break;
@@ -2296,7 +2296,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     // the style context, since data cached in the rule tree could be
     // used with a style context with a different value.
     aCanStoreInRuleTree = false;
-    uint8_t dir = aContext->GetStyleVisibility()->mDirection;
+    uint8_t dir = aContext->StyleVisibility()->mDirection;
 
     if (dir == NS_STYLE_DIRECTION_LTR) {
       if (LTRlogical)
@@ -2336,13 +2336,13 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   bool canStoreInRuleTree = aCanStoreInRuleTree;                              \
                                                                               \
   /* If |canStoreInRuleTree| might be true by the time we're done, we */      \
-  /* can't call parentContext->GetStyle##type_() since it could recur into */ \
+  /* can't call parentContext->Style##type_() since it could recur into */    \
   /* setting the same struct on the same rule node, causing a leak. */        \
   if (aRuleDetail != eRuleFullReset &&                                        \
       (!aStartStruct || (aRuleDetail != eRulePartialReset &&                  \
                          aRuleDetail != eRuleNone))) {                        \
     if (parentContext) {                                                      \
-      parentdata_ = parentContext->GetStyle##type_();                         \
+      parentdata_ = parentContext->Style##type_();                            \
     } else {                                                                  \
       maybeFakeParentData.construct ctorargs_;                                \
       parentdata_ = maybeFakeParentData.addr();                               \
@@ -2402,7 +2402,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     data_ = new (mPresContext) nsStyle##type_ ctorargs_;                      \
                                                                               \
   /* If |canStoreInRuleTree| might be true by the time we're done, we */      \
-  /* can't call parentContext->GetStyle##type_() since it could recur into */ \
+  /* can't call parentContext->Style##type_() since it could recur into */    \
   /* setting the same struct on the same rule node, causing a leak. */        \
   mozilla::Maybe<nsStyle##type_> maybeFakeParentData;                         \
   const nsStyle##type_* parentdata_ = data_;                                  \
@@ -2410,7 +2410,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
       aRuleDetail != eRulePartialReset &&                                     \
       aRuleDetail != eRuleNone) {                                             \
     if (parentContext) {                                                      \
-      parentdata_ = parentContext->GetStyle##type_();                         \
+      parentdata_ = parentContext->Style##type_();                            \
     } else {                                                                  \
       maybeFakeParentData.construct ctorargs_;                                \
       parentdata_ = maybeFakeParentData.addr();                               \
@@ -3390,7 +3390,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   contextPath.AppendElement(aContext);
   nsStyleContext* higherContext = aContext->GetParent();
   while (higherContext) {
-    if (higherContext->GetStyleFont()->mGenericID == aGenericFontID) {
+    if (higherContext->StyleFont()->mGenericID == aGenericFontID) {
       // done walking up the higher contexts
       break;
     }
@@ -3407,7 +3407,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     aPresContext->GetDefaultFont(aGenericFontID, aFont->mLanguage);
   nsStyleFont parentFont(*defaultFont, aPresContext);
   if (higherContext) {
-    const nsStyleFont* tmpFont = higherContext->GetStyleFont();
+    const nsStyleFont* tmpFont = higherContext->StyleFont();
     parentFont = *tmpFont;
   }
   *aFont = parentFont;
@@ -3699,7 +3699,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     canStoreInRuleTree = false;
     // Use |mFont.size| to pick up minimum font size.
     text->mLineHeight.SetCoordValue(
-        NSToCoordRound(float(aContext->GetStyleFont()->mFont.size) *
+        NSToCoordRound(float(aContext->StyleFont()->mFont.size) *
                        lineHeightValue->GetPercentValue()));
   }
   else if (eCSSUnit_Initial == lineHeightValue->GetUnit() ||
@@ -3716,7 +3716,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                                          text->mLineHeight.GetCoordValue());
 
       canStoreInRuleTree = false;
-      const nsStyleFont *font = aContext->GetStyleFont();
+      const nsStyleFont *font = aContext->StyleFont();
       nscoord minimumFontSize = mPresContext->MinFontSize(font->mLanguage);
 
       if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
@@ -3876,7 +3876,7 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
       bool isForeground;
       parentText->GetDecorationColor(decorationColor, isForeground);
       if (isForeground) {
-        text->SetDecorationColor(parentContext->GetStyleColor()->mColor);
+        text->SetDecorationColor(parentContext->StyleColor()->mColor);
       } else {
         text->SetDecorationColor(decorationColor);
       }
@@ -5085,7 +5085,7 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
                           visibility, parentVisibility)
 
   // IMPORTANT: No properties in this struct have lengths in them.  We
-  // depend on this since CalcLengthWith can call GetStyleVisibility()
+  // depend on this since CalcLengthWith can call StyleVisibility()
   // to get the language for resolving fonts!
 
   // direction: enum, inherit, initial
@@ -6063,7 +6063,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
             // used.  We can ensure that the data for the parent are fully
             // computed (unlike for the element where this will be used, for
             // which the color could be specified on a more specific rule).
-            border->SetBorderColor(side, parentContext->GetStyleColor()->mColor);
+            border->SetBorderColor(side, parentContext->StyleColor()->mColor);
           } else
             border->SetBorderColor(side, borderColor);
         } else {
@@ -6304,7 +6304,7 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
         // used.  We can ensure that the data for the parent are fully
         // computed (unlike for the element where this will be used, for
         // which the color could be specified on a more specific rule).
-        outline->SetOutlineColor(parentContext->GetStyleColor()->mColor);
+        outline->SetOutlineColor(parentContext->StyleColor()->mColor);
       }
     } else {
       outline->SetOutlineInitialColor();
@@ -6547,7 +6547,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
           // Normal case -- we have a grandparent.
           // Its "align-items" value is what we should end up inheriting.
           const nsStylePosition* grandparentPos =
-            grandparentContext->GetStylePosition();
+            grandparentContext->StylePosition();
           inheritedAlignSelf = grandparentPos->mAlignItems;
         }
       }
@@ -7144,7 +7144,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
     column->mColumnRuleColorIsForeground = false;
     if (parent->mColumnRuleColorIsForeground) {
       if (parentContext) {
-        column->mColumnRuleColor = parentContext->GetStyleColor()->mColor;
+        column->mColumnRuleColor = parentContext->StyleColor()->mColor;
       } else {
         nsStyleColor defaultColumnRuleColor(mPresContext);
         column->mColumnRuleColor = defaultColumnRuleColor.mColor;

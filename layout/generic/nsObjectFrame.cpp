@@ -816,7 +816,7 @@ bool
 nsObjectFrame::IsHidden(bool aCheckVisibilityStyle) const
 {
   if (aCheckVisibilityStyle) {
-    if (!GetStyleVisibility()->IsVisibleOrCollapsed())
+    if (!StyleVisibility()->IsVisibleOrCollapsed())
       return true;    
   }
 

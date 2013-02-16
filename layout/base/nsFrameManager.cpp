@@ -1064,7 +1064,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
 
 #ifdef ACCESSIBILITY
     bool wasFrameVisible = nsIPresShell::IsAccessibilityActive() ?
-      oldContext->GetStyleVisibility()->IsVisible() : false;
+      oldContext->StyleVisibility()->IsVisible() : false;
 #endif
 
     nsIAtom* const pseudoTag = oldContext->GetPseudo();
@@ -1410,7 +1410,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                            undisplayed->mContent->AsElement());
         }
         if (undisplayedContext) {
-          const nsStyleDisplay* display = undisplayedContext->GetStyleDisplay();
+          const nsStyleDisplay* display = undisplayedContext->StyleDisplay();
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
             NS_ASSERTION(undisplayed->mContent,
                          "Must have undisplayed content");
@@ -1501,7 +1501,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           !aFrame->GetPrevContinuation() &&
           !nsLayoutUtils::FrameIsNonFirstInIBSplit(aFrame)) {
         if (aDesiredA11yNotifications == eSendAllNotifications) {
-          bool isFrameVisible = newContext->GetStyleVisibility()->IsVisible();
+          bool isFrameVisible = newContext->StyleVisibility()->IsVisible();
           if (isFrameVisible != wasFrameVisible) {
             if (isFrameVisible) {
               // Notify a11y the element (perhaps with its children) was shown.
@@ -1520,7 +1520,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
             }
           }
         } else if (aDesiredA11yNotifications == eNotifyIfShown &&
-                   newContext->GetStyleVisibility()->IsVisible()) {
+                   newContext->StyleVisibility()->IsVisible()) {
           // Notify a11y that element stayed visible while its parent was
           // hidden.
           aVisibleKidsOfHiddenElement.AppendElement(aFrame->GetContent());

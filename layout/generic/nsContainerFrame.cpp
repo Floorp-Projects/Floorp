@@ -704,7 +704,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(aFrame, rootFrame);
   nsIWidget* viewWidget = aView->GetWidget();
   viewWidget->SetTransparencyMode(mode);
-  windowWidget->SetWindowShadowStyle(rootFrame->GetStyleUIReset()->mWindowShadow);
+  windowWidget->SetWindowShadowStyle(rootFrame->StyleUIReset()->mWindowShadow);
 
   if (!aRC)
     return;
@@ -794,7 +794,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
       !aFrame->SupportsVisibilityHidden()) {
     // See if the view should be hidden or visible
     vm->SetViewVisibility(aView,
-        aStyleContext->GetStyleVisibility()->IsVisible()
+        aStyleContext->StyleVisibility()->IsVisible()
             ? nsViewVisibility_kShow : nsViewVisibility_kHide);
   }
 
@@ -809,7 +809,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
     autoZIndex = true;
   } else {
     // Make sure z-index is correct
-    const nsStylePosition* position = aStyleContext->GetStylePosition();
+    const nsStylePosition* position = aStyleContext->StylePosition();
 
     if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
       zIndex = position->mZIndex.GetIntValue();
@@ -841,7 +841,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
                   aType == nsLayoutUtils::PREF_WIDTH, "bad type");
 
   mozilla::css::Side startSide, endSide;
-  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR) {
+  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR) {
     startSide = NS_SIDE_LEFT;
     endSide = NS_SIDE_RIGHT;
   } else {
@@ -849,9 +849,9 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
     endSide = NS_SIDE_LEFT;
   }
 
-  const nsStylePadding *stylePadding = GetStylePadding();
-  const nsStyleBorder *styleBorder = GetStyleBorder();
-  const nsStyleMargin *styleMargin = GetStyleMargin();
+  const nsStylePadding *stylePadding = StylePadding();
+  const nsStyleBorder *styleBorder = StyleBorder();
+  const nsStyleMargin *styleMargin = StyleMargin();
 
   // This goes at the beginning no matter how things are broken and how
   // messy the bidi situations are, since per CSS2.1 section 8.6
@@ -923,7 +923,7 @@ nsContainerFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   // replaced elements always shrink-wrap
   if (aShrinkWrap || IsFrameOfType(eReplaced)) {
     // don't bother setting it if the result won't be used
-    if (GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
+    if (StylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
       result.width = ShrinkWidthToFit(aRenderingContext, availBased);
     }
   } else {

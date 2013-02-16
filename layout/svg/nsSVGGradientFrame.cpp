@@ -123,8 +123,8 @@ nsSVGGradientFrame::GetStopInformation(int32_t aIndex,
       *aOffset = 1.0f;
   }
 
-  *aStopColor   = stopFrame->GetStyleSVGReset()->mStopColor;
-  *aStopOpacity = stopFrame->GetStyleSVGReset()->mStopOpacity;
+  *aStopColor   = stopFrame->StyleSVGReset()->mStopColor;
+  *aStopOpacity = stopFrame->StyleSVGReset()->mStopOpacity;
 }
 
 uint16_t

@@ -117,7 +117,7 @@ protected:
           }
           return false;
         }
-        bool isVisible = frame->GetStyleVisibility()->IsVisible();
+        bool isVisible = frame->StyleVisibility()->IsVisible();
         if (!isVisible && aNode->IsNodeOfType(nsINode::eTEXT))
           return false;
       }

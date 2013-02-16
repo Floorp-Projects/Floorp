@@ -205,7 +205,7 @@ nsSVGDisplayContainerFrame::PaintSVG(nsRenderingContext* aContext,
                "If display lists are enabled, only painting of non-display "
                "SVG should take this code path");
 
-  const nsStyleDisplay *display = GetStyleDisplay();
+  const nsStyleDisplay *display = StyleDisplay();
   if (display->mOpacity == 0.0)
     return NS_OK;
 

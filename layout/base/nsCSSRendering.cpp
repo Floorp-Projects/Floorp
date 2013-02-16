@@ -97,7 +97,7 @@ struct InlineBackgroundData
       // Scan continuations on the same line as aFrame and accumulate the widths
       // of frames that are to the left (if this is an LTR block) or right
       // (if it's RTL) of the current one.
-      bool isRtlBlock = (mBlockFrame->GetStyleVisibility()->mDirection ==
+      bool isRtlBlock = (mBlockFrame->StyleVisibility()->mDirection ==
                            NS_STYLE_DIRECTION_RTL);
       nscoord curOffset = aFrame->GetOffsetTo(mBlockFrame).x;
 
@@ -586,7 +586,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
 {
   SAMPLE_LABEL("nsCSSRendering", "PaintBorder");
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
-  const nsStyleBorder *styleBorder = aStyleContext->GetStyleBorder();
+  const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
   // Don't check RelevantLinkVisited here, since we want to take the
   // same amount of time whether or not it's true.
   if (!styleIfVisited) {
@@ -636,7 +636,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the border.  DO not get the data from aForFrame, since the passed in style context
   // may be different!  Always use |aStyleContext|!
-  const nsStyleDisplay* displayData = aStyleContext->GetStyleDisplay();
+  const nsStyleDisplay* displayData = aStyleContext->StyleDisplay();
   if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame, displayData->mAppearance))
@@ -650,7 +650,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   }
 
   // Get our style context's color struct.
-  const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
+  const nsStyleColor* ourColor = aStyleContext->StyleColor();
 
   // in NavQuirks mode we want to use the parent's context as a starting point
   // for determining the background color
@@ -668,7 +668,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   }
 
   nsSize frameSize = aForFrame->GetSize();
-  if (&aStyleBorder == aForFrame->GetStyleBorder() &&
+  if (&aStyleBorder == aForFrame->StyleBorder() &&
       frameSize == aBorderArea.Size()) {
     aForFrame->GetBorderRadii(twipsRadii);
   } else {
@@ -779,7 +779,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   nscoord             twipsRadii[8];
 
   // Get our style context's color struct.
-  const nsStyleOutline* ourOutline = aStyleContext->GetStyleOutline();
+  const nsStyleOutline* ourOutline = aStyleContext->StyleOutline();
 
   nscoord width;
   ourOutline->GetOutlineWidth(width);
@@ -1010,7 +1010,7 @@ nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
   while (frame) {
     // No need to call GetVisitedDependentColor because it always uses
     // this alpha component anyway.
-    if (NS_GET_A(frame->GetStyleBackground()->mBackgroundColor) > 0)
+    if (NS_GET_A(frame->StyleBackground()->mBackgroundColor) > 0)
       break;
 
     if (frame->IsThemed())
@@ -1042,7 +1042,7 @@ nsCSSRendering::IsCanvasFrame(nsIFrame* aFrame)
 nsIFrame*
 nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame)
 {
-  const nsStyleBackground* result = aForFrame->GetStyleBackground();
+  const nsStyleBackground* result = aForFrame->StyleBackground();
 
   // Check if we need to do propagation from BODY rather than HTML.
   if (!result->IsTransparent()) {
@@ -1150,7 +1150,7 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
   if (!aRootElementFrame)
     return true;
 
-  const nsStyleBackground* htmlBG = aRootElementFrame->GetStyleBackground();
+  const nsStyleBackground* htmlBG = aRootElementFrame->StyleBackground();
   return !htmlBG->IsTransparent();
 }
 
@@ -1192,7 +1192,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
 {
-  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
+  const nsStyleBorder* styleBorder = aForFrame->StyleBorder();
   nsCSSShadowArray* shadows = styleBorder->mBoxShadow;
   if (!shadows)
     return;
@@ -1203,7 +1203,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
   gfxCornerSizes borderRadii;
 
   // Get any border radius, since box-shadow must also have rounded corners if the frame does
-  const nsStyleDisplay* styleDisplay = aForFrame->GetStyleDisplay();
+  const nsStyleDisplay* styleDisplay = aForFrame->StyleDisplay();
   nsITheme::Transparency transparency;
   if (aForFrame->IsThemed(styleDisplay, &transparency)) {
     // We don't respect border-radius for native-themed widgets
@@ -1299,7 +1299,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     if (shadowItem->mHasColor)
       shadowColor = shadowItem->mColor;
     else
-      shadowColor = aForFrame->GetStyleColor()->mColor;
+      shadowColor = aForFrame->StyleColor()->mColor;
 
     renderContext->Save();
     renderContext->SetColor(gfxRGBA(shadowColor));
@@ -1371,7 +1371,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
 {
-  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
+  const nsStyleBorder* styleBorder = aForFrame->StyleBorder();
   nsCSSShadowArray* shadows = styleBorder->mBoxShadow;
   if (!shadows)
     return;
@@ -1493,7 +1493,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     if (shadowItem->mHasColor)
       shadowColor = shadowItem->mColor;
     else
-      shadowColor = aForFrame->GetStyleColor()->mColor;
+      shadowColor = aForFrame->StyleColor()->mColor;
 
     renderContext->Save();
     renderContext->SetColor(gfxRGBA(shadowColor));
@@ -1554,7 +1554,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
     // a root, otherwise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    if (!aForFrame->GetStyleDisplay()->mAppearance) {
+    if (!aForFrame->StyleDisplay()->mAppearance) {
       return;
     }
 
@@ -1568,7 +1568,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, sc,
-                        *aForFrame->GetStyleBorder(), aFlags,
+                        *aForFrame->StyleBorder(), aFlags,
                         aBGClipRect, aLayer);
 }
 
@@ -1591,7 +1591,7 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
     // a root, other wise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    if (!aForFrame->GetStyleDisplay()->mAppearance) {
+    if (!aForFrame->StyleDisplay()->mAppearance) {
       return;
     }
 
@@ -1605,7 +1605,7 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
 
   PaintBackgroundColorWithSC(aPresContext, aRenderingContext, aForFrame,
                              aDirtyRect, aBorderArea, sc,
-                             *aForFrame->GetStyleBorder(), aFlags);
+                             *aForFrame->StyleBorder(), aFlags);
 }
 
 static bool
@@ -1841,7 +1841,7 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
     aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
 
-  const nsStyleBackground *bg = aStyleContext->GetStyleBackground();
+  const nsStyleBackground *bg = aStyleContext->StyleBackground();
   nscolor bgColor;
   if (aDrawBackgroundColor) {
     bgColor =
@@ -2477,7 +2477,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the background and bail out.
   // XXXzw this ignores aBGClipRect.
-  const nsStyleDisplay* displayData = aForFrame->GetStyleDisplay();
+  const nsStyleDisplay* displayData = aForFrame->StyleDisplay();
   if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
@@ -2515,7 +2515,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
   // If we're drawing a specific layer, we don't want to draw the
   // background color.
-  const nsStyleBackground *bg = aBackgroundSC->GetStyleBackground();
+  const nsStyleBackground *bg = aBackgroundSC->StyleBackground();
   if (drawBackgroundColor && aLayer >= 0) {
     drawBackgroundColor = false;
   }
@@ -2536,7 +2536,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   {
     nscoord radii[8];
     nsSize frameSize = aForFrame->GetSize();
-    if (&aBorder == aForFrame->GetStyleBorder() &&
+    if (&aBorder == aForFrame->StyleBorder() &&
         frameSize == aBorderArea.Size()) {
       haveRoundedCorners = aForFrame->GetBorderRadii(radii);
     } else {
@@ -2695,7 +2695,7 @@ nsCSSRendering::PaintBackgroundColorWithSC(nsPresContext* aPresContext,
 
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the background and bail out.
-  const nsStyleDisplay* displayData = aForFrame->GetStyleDisplay();
+  const nsStyleDisplay* displayData = aForFrame->StyleDisplay();
   if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
@@ -2730,7 +2730,7 @@ nsCSSRendering::PaintBackgroundColorWithSC(nsPresContext* aPresContext,
   {
     nscoord radii[8];
     nsSize frameSize = aForFrame->GetSize();
-    if (&aBorder == aForFrame->GetStyleBorder() &&
+    if (&aBorder == aForFrame->StyleBorder() &&
         frameSize == aBorderArea.Size()) {
       haveRoundedCorners = aForFrame->GetBorderRadii(radii);
     } else {
@@ -2750,7 +2750,7 @@ nsCSSRendering::PaintBackgroundColorWithSC(nsPresContext* aPresContext,
   // radii as the border code will.
   // The background-color is drawn based on the bottom
   // background-clip.
-  const nsStyleBackground *bg = aBackgroundSC->GetStyleBackground();
+  const nsStyleBackground *bg = aBackgroundSC->StyleBackground();
   uint8_t currentBackgroundClip = bg->BottomLayer().mClip;
   bool isSolidBorder =
     (aFlags & PAINTBG_WILL_PAINT_BORDER) && IsOpaqueBorder(aBorder);
@@ -3784,7 +3784,7 @@ nsCSSRendering::ExpandPaintingRectForDecorationLine(nsIFrame* aFrame,
     if (block) {
       break;
     }
-    relativeX += f->GetRelativeOffset(f->GetStyleDisplay()).x;
+    relativeX += f->GetRelativeOffset(f->StyleDisplay()).x;
   }
 
   NS_ENSURE_TRUE(block, aClippedRect);

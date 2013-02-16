@@ -366,8 +366,8 @@ protected:
    */
   bool IsDirectionRTL() const {
     return mAnchorContent && mAnchorContent->GetPrimaryFrame()
-      ? mAnchorContent->GetPrimaryFrame()->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL
-      : GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+      ? mAnchorContent->GetPrimaryFrame()->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL
+      : StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   }
 
   // Create a popup view for this frame. The view is added a child of the root

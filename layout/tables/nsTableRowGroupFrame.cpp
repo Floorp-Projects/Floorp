@@ -42,7 +42,7 @@ nsTableRowGroupFrame::GetRowCount()
 {
 #ifdef DEBUG
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    NS_ASSERTION(e.get()->GetStyleDisplay()->mDisplay ==
+    NS_ASSERTION(e.get()->StyleDisplay()->mDisplay ==
                    NS_STYLE_DISPLAY_TABLE_ROW,
                  "Unexpected display");
     NS_ASSERTION(e.get()->GetType() == nsGkAtoms::tableRowFrame,
@@ -75,7 +75,7 @@ void  nsTableRowGroupFrame::AdjustRowIndices(int32_t aRowIndex,
 {
   nsIFrame* rowFrame = GetFirstPrincipalChild();
   for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
-    if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
+    if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->StyleDisplay()->mDisplay) {
       int32_t index = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
       if (index >= aRowIndex)
         ((nsTableRowFrame *)rowFrame)->SetRowIndex(index+anAdjustment);
@@ -381,7 +381,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
           // Inform the row of its new height.
           rowFrame->DidResize();
           // the overflow area may have changed inflate the overflow area
-          const nsStylePosition *stylePos = GetStylePosition();
+          const nsStylePosition *stylePos = StylePosition();
           nsStyleUnit unit = stylePos->mHeight.GetUnit();
           if (aReflowState.tableFrame->IsAutoHeight() &&
               unit != eStyleUnit_Coord) {
@@ -781,7 +781,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
                                                   nscoord aWidth)
 {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  const nsStyleVisibility* groupVis = GetStyleVisibility();
+  const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
     tableFrame->SetNeedToCollapse(true);
@@ -1273,7 +1273,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   nsRowGroupReflowState state(aReflowState, tableFrame);
-  const nsStyleVisibility* groupVis = GetStyleVisibility();
+  const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
     tableFrame->SetNeedToCollapse(true);
@@ -1363,7 +1363,7 @@ nsTableRowGroupFrame::AppendFrames(ChildListID     aListID,
     NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");
     if (rowFrame) {
       NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
-                     e.get()->GetStyleDisplay()->mDisplay,
+                     e.get()->StyleDisplay()->mDisplay,
                    "wrong display type on rowframe");      
       rows.AppendElement(rowFrame);
     }
@@ -1406,7 +1406,7 @@ nsTableRowGroupFrame::InsertFrames(ChildListID     aListID,
     NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");
     if (rowFrame) {
       NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
-                     e.get()->GetStyleDisplay()->mDisplay,
+                     e.get()->StyleDisplay()->mDisplay,
                    "wrong display type on rowframe");      
       rows.AppendElement(rowFrame);
       if (!gotFirstRow) {
@@ -1536,7 +1536,7 @@ nsTableRowGroupFrame::HasInternalBreakBefore() const
  nsIFrame* firstChild = mFrames.FirstChild(); 
   if (!firstChild)
     return false;
-  return firstChild->GetStyleDisplay()->mBreakBefore;
+  return firstChild->StyleDisplay()->mBreakBefore;
 }
 
 /** find page break after the last row **/
@@ -1546,7 +1546,7 @@ nsTableRowGroupFrame::HasInternalBreakAfter() const
   nsIFrame* lastChild = mFrames.LastChild(); 
   if (!lastChild)
     return false;
-  return lastChild->GetStyleDisplay()->mBreakAfter;
+  return lastChild->StyleDisplay()->mBreakAfter;
 }
 /* ----- global methods ----- */
 
@@ -1617,7 +1617,7 @@ nsTableRowGroupFrame::GetDirection()
 {
   nsTableFrame* table = nsTableFrame::GetTableFrame(this);
   return (NS_STYLE_DIRECTION_RTL ==
-          table->GetStyleVisibility()->mDirection);
+          table->StyleVisibility()->mDirection);
 }
   
 NS_IMETHODIMP
@@ -1720,7 +1720,7 @@ nsTableRowGroupFrame::FindFrameAt(int32_t    aLineNumber,
    }
    NS_ASSERTION(frame, "cellmap is lying");
    bool isRTL = (NS_STYLE_DIRECTION_RTL ==
-                   table->GetStyleVisibility()->mDirection);
+                   table->StyleVisibility()->mDirection);
    
    nsIFrame* closestFromLeft = nullptr;
    nsIFrame* closestFromRight = nullptr;

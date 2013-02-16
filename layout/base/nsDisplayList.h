@@ -2297,7 +2297,7 @@ public:
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(FILE *aOutput) {
-    fprintf(aOutput, "(opacity %f)", mFrame->GetStyleDisplay()->mOpacity);
+    fprintf(aOutput, "(opacity %f)", mFrame->StyleDisplay()->mOpacity);
   }
 #endif
 

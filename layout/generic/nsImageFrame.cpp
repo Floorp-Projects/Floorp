@@ -468,7 +468,7 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
 {
   nsEventStates state = aElement->State();
   if (IMAGE_OK(state,
-               HaveFixedSize(aStyleContext->GetStylePosition()))) {
+               HaveFixedSize(aStyleContext->StylePosition()))) {
     // Image is fine; do the image frame thing
     return true;
   }
@@ -486,7 +486,7 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
   //  - otherwise, skip the icon
   bool useSizedBox;
   
-  if (aStyleContext->GetStyleUIReset()->mForceBrokenImageIcon) {
+  if (aStyleContext->StyleUIReset()->mForceBrokenImageIcon) {
     useSizedBox = true;
   }
   else if (gIconLoad && gIconLoad->mPrefForceInlineAltText) {
@@ -512,7 +512,7 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
       }
       else {
         // check whether we have fixed size
-        useSizedBox = HaveFixedSize(aStyleContext->GetStylePosition());
+        useSizedBox = HaveFixedSize(aStyleContext->StylePosition());
       }
     }
   }
@@ -690,7 +690,7 @@ nsresult
 nsImageFrame::FrameChanged(imgIRequest *aRequest,
                            imgIContainer *aContainer)
 {
-  if (!GetStyleVisibility()->IsVisible()) {
+  if (!StyleVisibility()->IsVisible()) {
     return NS_OK;
   }
 
@@ -995,7 +995,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
                              const nsRect&        aRect)
 {
   // Set font and color
-  aRenderingContext.SetColor(GetStyleColor()->mColor);
+  aRenderingContext.SetColor(StyleColor()->mColor);
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(this));
@@ -1030,7 +1030,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
     nsresult rv = NS_ERROR_FAILURE;
 
     if (aPresContext->BidiEnabled()) {
-      const nsStyleVisibility* vis = GetStyleVisibility();
+      const nsStyleVisibility* vis = StyleVisibility();
       if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
         rv = nsBidiPresUtils::RenderText(str, maxFit, NSBIDI_RTL,
                                          aPresContext, aRenderingContext,
@@ -1143,7 +1143,7 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
 
   // Check if we should display image placeholders
   if (gIconLoad->mPrefShowPlaceholders) {
-    const nsStyleVisibility* vis = GetStyleVisibility();
+    const nsStyleVisibility* vis = StyleVisibility();
     nscoord size = nsPresContext::CSSPixelsToAppUnits(ICON_SIZE);
 
     bool iconUsed = false;
@@ -1699,7 +1699,7 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
         PresContext()->PresShell()->StyleSet()->
           ResolveStyleFor(area->AsElement(), StyleContext());
       if (areaStyle) {
-        FillCursorInformationFromStyle(areaStyle->GetStyleUserInterface(),
+        FillCursorInformationFromStyle(areaStyle->StyleUserInterface(),
                                        aCursor);
         if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
           aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
@@ -2024,7 +2024,7 @@ IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
     // Assume direct parent is a table cell frame.
     nsFrame *grandAncestor = static_cast<nsFrame*>(ancestor->GetParent());
     return grandAncestor &&
-      grandAncestor->GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto;
+      grandAncestor->StylePosition()->mWidth.GetUnit() == eStyleUnit_Auto;
   }
   return false;
 }
@@ -2038,7 +2038,7 @@ nsImageFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
   
   bool canBreak =
     !CanContinueTextRun() &&
-    GetParent()->GetStyleText()->WhiteSpaceCanWrap() &&
+    GetParent()->StyleText()->WhiteSpaceCanWrap() &&
     !IsInAutoWidthTableCellForQuirk(this);
 
   if (canBreak)

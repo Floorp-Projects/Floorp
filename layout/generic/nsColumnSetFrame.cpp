@@ -197,8 +197,8 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
   if (!nextSibling)
     return;  // 1 column only - this means no gap to draw on
 
-  bool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
-  const nsStyleColumn* colStyle = GetStyleColumn();
+  bool isRTL = StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  const nsStyleColumn* colStyle = StyleColumn();
 
   uint8_t ruleStyle;
   // Per spec, inset => ridge and outset => groove
@@ -296,7 +296,7 @@ GetColumnGap(nsColumnSetFrame*    aFrame,
              const nsStyleColumn* aColStyle)
 {
   if (eStyleUnit_Normal == aColStyle->mColumnGap.GetUnit())
-    return aFrame->GetStyleFont()->mFont.size;
+    return aFrame->StyleFont()->mFont.size;
   if (eStyleUnit_Coord == aColStyle->mColumnGap.GetUnit()) {
     nscoord colGap = aColStyle->mColumnGap.GetCoordValue();
     NS_ASSERTION(colGap >= 0, "negative column gap");
@@ -310,7 +310,7 @@ GetColumnGap(nsColumnSetFrame*    aFrame,
 nsColumnSetFrame::ReflowConfig
 nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
 {
-  const nsStyleColumn* colStyle = GetStyleColumn();
+  const nsStyleColumn* colStyle = StyleColumn();
   nscoord availContentWidth = GetAvailableContentWidth(aReflowState);
   if (aReflowState.ComputedWidth() != NS_INTRINSICSIZE) {
     availContentWidth = aReflowState.ComputedWidth();
@@ -440,7 +440,7 @@ nsColumnSetFrame::GetMinWidth(nsRenderingContext *aRenderingContext) {
   if (mFrames.FirstChild()) {
     width = mFrames.FirstChild()->GetMinWidth(aRenderingContext);
   }
-  const nsStyleColumn* colStyle = GetStyleColumn();
+  const nsStyleColumn* colStyle = StyleColumn();
   nscoord colWidth;
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
     colWidth = colStyle->mColumnWidth.GetCoordValue();
@@ -472,7 +472,7 @@ nsColumnSetFrame::GetPrefWidth(nsRenderingContext *aRenderingContext) {
   // XXX what about forced column breaks here?
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
-  const nsStyleColumn* colStyle = GetStyleColumn();
+  const nsStyleColumn* colStyle = StyleColumn();
   nscoord colGap = GetColumnGap(this, colStyle);
 
   nscoord colWidth;
@@ -508,7 +508,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 {
   aColData.Reset();
   bool allFit = true;
-  bool RTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  bool RTL = StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   bool shrinkingHeightOnly = !NS_SUBTREE_DIRTY(this) &&
     mLastBalanceHeight > aConfig.mColMaxHeight;
   

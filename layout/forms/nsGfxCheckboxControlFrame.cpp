@@ -45,7 +45,7 @@ PaintCheckMark(nsIFrame* aFrame,
                                       checkPolygonY[polyIndex] * paintScale);
   }
 
-  aCtx->SetColor(aFrame->GetStyleColor()->mColor);
+  aCtx->SetColor(aFrame->StyleColor()->mColor);
   aCtx->FillPolygon(paintPolygon, checkNumPoints);
 }
 
@@ -61,7 +61,7 @@ PaintIndeterminateMark(nsIFrame* aFrame,
   rect.y += (rect.height - rect.height/4) / 2;
   rect.height /= 4;
 
-  aCtx->SetColor(aFrame->GetStyleColor()->mColor);
+  aCtx->SetColor(aFrame->StyleColor()->mColor);
   aCtx->FillRect(rect);
 }
 

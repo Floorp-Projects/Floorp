@@ -149,7 +149,7 @@ TableBackgroundPainter::TableBackgroundData::SetData()
   NS_PRECONDITION(mFrame, "null frame");
   if (mFrame->IsVisibleForPainting()) {
     mVisible = true;
-    mBorder = mFrame->GetStyleBorder();
+    mBorder = mFrame->StyleBorder();
   }
 }
 
@@ -169,7 +169,7 @@ TableBackgroundPainter::TableBackgroundData::ShouldSetBCBorder()
     return false;
   }
 
-  const nsStyleBackground *bg = mFrame->GetStyleBackground();
+  const nsStyleBackground *bg = mFrame->StyleBackground();
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     if (!bg->mLayers[i].mImage.IsEmpty())
       return true;
@@ -584,7 +584,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
   NS_PRECONDITION(aCell, "null frame");
 
   const nsStyleTableBorder* cellTableStyle;
-  cellTableStyle = aCell->GetStyleTableBorder();
+  cellTableStyle = aCell->StyleTableBorder();
   if (!(NS_STYLE_TABLE_EMPTY_CELLS_SHOW == cellTableStyle->mEmptyCells ||
         NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND == cellTableStyle->mEmptyCells)
       && aCell->GetContentEmpty() && !mIsBorderCollapse) {

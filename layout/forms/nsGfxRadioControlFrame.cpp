@@ -55,7 +55,7 @@ PaintCheckedRadioButton(nsIFrame* aFrame,
   rect.Deflate(nsPresContext::CSSPixelsToAppUnits(2),
                nsPresContext::CSSPixelsToAppUnits(2));
 
-  aCtx->SetColor(aFrame->GetStyleColor()->mColor);
+  aCtx->SetColor(aFrame->StyleColor()->mColor);
   aCtx->FillEllipse(rect);
 }
 

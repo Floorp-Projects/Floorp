@@ -124,7 +124,7 @@ void
 nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect) {
   int skipSides = 0;
-  const nsStyleBorder* borderStyleData = GetStyleBorder();
+  const nsStyleBorder* borderStyleData = StyleBorder();
   const nsMargin& border = borderStyleData->GetComputedBorder();
   nscoord yoff = 0;
   nsPresContext* presContext = PresContext();
@@ -136,7 +136,7 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     // if the border is smaller than the legend. Move the border down
     // to be centered on the legend. 
     nsMargin groupMargin;
-    groupBox->GetStyleMargin()->GetMargin(groupMargin);
+    groupBox->StyleMargin()->GetMargin(groupMargin);
     groupRect.Inflate(groupMargin);
  
     if (border.top < groupRect.height)

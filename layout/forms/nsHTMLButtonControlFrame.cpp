@@ -133,8 +133,8 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // clips to our padding box for <input>s but not <button>s, unless
   // they have non-visible overflow..
-  if (IsInput() || GetStyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
-    nsMargin border = GetStyleBorder()->GetComputedBorder();
+  if (IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
+    nsMargin border = StyleBorder()->GetComputedBorder();
     nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
     rect.Deflate(border);
     nscoord radii[8];

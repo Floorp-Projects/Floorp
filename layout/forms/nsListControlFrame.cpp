@@ -930,7 +930,7 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
 
   // do we have style that affects how we are selected?
   // do we have user-input style?
-  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
+  const nsStyleUserInterface* uiStyle = StyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
@@ -1620,7 +1620,7 @@ nsListControlFrame::AboutToDropDown()
   mLastDropdownBackstopColor = NS_RGBA(0,0,0,0);
   while (NS_GET_A(mLastDropdownBackstopColor) < 255 && context) {
     mLastDropdownBackstopColor =
-      NS_ComposeColors(context->GetStyleBackground()->mBackgroundColor,
+      NS_ComposeColors(context->StyleBackground()->mBackgroundColor,
                        mLastDropdownBackstopColor);
     context = context->GetParent();
   }
@@ -1805,7 +1805,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  const nsStyleVisibility* vis = GetStyleVisibility();
+  const nsStyleVisibility* vis = StyleVisibility();
       
   if (!vis->IsVisible()) {
     return NS_OK;

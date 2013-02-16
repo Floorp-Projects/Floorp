@@ -36,10 +36,10 @@ static inline bool IS_TABLE_CELL(nsIAtom* frameType) {
 }
 
 static inline bool FrameHasBorderOrBackground(nsIFrame* f) {
-  return (f->GetStyleVisibility()->IsVisible() &&
-          (!f->GetStyleBackground()->IsTransparent() ||
-           f->GetStyleDisplay()->mAppearance ||
-           f->GetStyleBorder()->HasBorder()));
+  return (f->StyleVisibility()->IsVisible() &&
+          (!f->StyleBackground()->IsTransparent() ||
+           f->StyleDisplay()->mAppearance ||
+           f->StyleBorder()->HasBorder()));
 }
 
 class nsDisplayTableItem : public nsDisplayItem

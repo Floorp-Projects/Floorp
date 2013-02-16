@@ -365,7 +365,7 @@ nsRangeFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                               nsSize aMargin, nsSize aBorder,
                               nsSize aPadding, bool aShrinkWrap)
 {
-  nscoord oneEm = NSToCoordRound(GetStyleFont()->mFont.size *
+  nscoord oneEm = NSToCoordRound(StyleFont()->mFont.size *
                                  nsLayoutUtils::FontSizeInflationFor(this)); // 1em
 
   // frameSizeOverride values just gets us to fall back to being horizontal
@@ -416,7 +416,7 @@ nsRangeFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
     return 0;
   }
 
-  nscoord prefWidth = NSToCoordRound(GetStyleFont()->mFont.size *
+  nscoord prefWidth = NSToCoordRound(StyleFont()->mFont.size *
                                      nsLayoutUtils::FontSizeInflationFor(this)); // 1em
 
   if (isHorizontal) {

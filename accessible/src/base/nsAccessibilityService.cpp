@@ -743,7 +743,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
   // Check frame and its visibility. Note, hidden frame allows visible
   // elements in subtree.
-  if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
+  if (!frame || !frame->StyleVisibility()->IsVisible()) {
     if (aIsSubtreeHidden && !frame)
       *aIsSubtreeHidden = true;
 

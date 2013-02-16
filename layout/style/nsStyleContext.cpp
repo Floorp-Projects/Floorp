@@ -301,7 +301,7 @@ nsStyleContext::ApplyStyleFixups()
     mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
   } else {
     // We might have defined a decoration.
-    const nsStyleTextReset* text = GetStyleTextReset();
+    const nsStyleTextReset* text = StyleTextReset();
     uint8_t decorationLine = text->mTextDecorationLine;
     if (decorationLine != NS_STYLE_TEXT_DECORATION_LINE_NONE &&
         decorationLine != NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL) {
@@ -314,12 +314,12 @@ nsStyleContext::ApplyStyleFixups()
   }
 
   // Correct tables.
-  const nsStyleDisplay* disp = GetStyleDisplay();
+  const nsStyleDisplay* disp = StyleDisplay();
   if (disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
     // -moz-center and -moz-right are used for HTML's alignment
     // This is covering the <div align="right"><table>...</table></div> case.
     // In this case, we don't want to inherit the text alignment into the table.
-    const nsStyleText* text = GetStyleText();
+    const nsStyleText* text = StyleText();
     
     if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
         text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
@@ -363,7 +363,7 @@ nsStyleContext::ApplyStyleFixups()
   // ...which converts inline-level elements to their block-level equivalents.
 #ifdef MOZ_FLEXBOX
   if (mParent) {
-    const nsStyleDisplay* parentDisp = mParent->GetStyleDisplay();
+    const nsStyleDisplay* parentDisp = mParent->StyleDisplay();
     if ((parentDisp->mDisplay == NS_STYLE_DISPLAY_FLEX ||
          parentDisp->mDisplay == NS_STYLE_DISPLAY_INLINE_FLEX) &&
         GetPseudo() != nsCSSAnonBoxes::mozNonElement) {
@@ -403,7 +403,7 @@ nsStyleContext::ApplyStyleFixups()
 #endif // MOZ_FLEXBOX
 
   // Computer User Interface style, to trigger loads of cursors
-  GetStyleUserInterface();
+  StyleUserInterface();
 }
 
 nsChangeHint
@@ -446,7 +446,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
   PR_BEGIN_MACRO                                                              \
     const nsStyle##struct_* this##struct_ = PeekStyle##struct_();             \
     if (this##struct_) {                                                      \
-      const nsStyle##struct_* other##struct_ = aOther->GetStyle##struct_();   \
+      const nsStyle##struct_* other##struct_ = aOther->Style##struct_();      \
       nsChangeHint maxDifference = nsStyle##struct_::MaxDifference();         \
       if ((compare ||                                                         \
            (maxDifference & aParentHintsNotHandledForDescendants)) &&         \
@@ -524,24 +524,24 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
     // due to change being true already or due to the old style context
     // not having a style-if-visited), but not the other way around.
     if (PeekStyleColor()) {
-      if (thisVis->GetStyleColor()->mColor !=
-          otherVis->GetStyleColor()->mColor) {
+      if (thisVis->StyleColor()->mColor !=
+          otherVis->StyleColor()->mColor) {
         change = true;
       }
     }
 
     // NB: Calling Peek on |this|, not |thisVis| (see above).
     if (!change && PeekStyleBackground()) {
-      if (thisVis->GetStyleBackground()->mBackgroundColor !=
-          otherVis->GetStyleBackground()->mBackgroundColor) {
+      if (thisVis->StyleBackground()->mBackgroundColor !=
+          otherVis->StyleBackground()->mBackgroundColor) {
         change = true;
       }
     }
 
     // NB: Calling Peek on |this|, not |thisVis| (see above).
     if (!change && PeekStyleBorder()) {
-      const nsStyleBorder *thisVisBorder = thisVis->GetStyleBorder();
-      const nsStyleBorder *otherVisBorder = otherVis->GetStyleBorder();
+      const nsStyleBorder *thisVisBorder = thisVis->StyleBorder();
+      const nsStyleBorder *otherVisBorder = otherVis->StyleBorder();
       NS_FOR_CSS_SIDES(side) {
         bool thisFG, otherFG;
         nscolor thisColor, otherColor;
@@ -556,8 +556,8 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
 
     // NB: Calling Peek on |this|, not |thisVis| (see above).
     if (!change && PeekStyleOutline()) {
-      const nsStyleOutline *thisVisOutline = thisVis->GetStyleOutline();
-      const nsStyleOutline *otherVisOutline = otherVis->GetStyleOutline();
+      const nsStyleOutline *thisVisOutline = thisVis->StyleOutline();
+      const nsStyleOutline *otherVisOutline = otherVis->StyleOutline();
       bool haveColor;
       nscolor thisColor, otherColor;
       if (thisVisOutline->GetOutlineInitialColor() != 
@@ -571,8 +571,8 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
 
     // NB: Calling Peek on |this|, not |thisVis| (see above).
     if (!change && PeekStyleColumn()) {
-      const nsStyleColumn *thisVisColumn = thisVis->GetStyleColumn();
-      const nsStyleColumn *otherVisColumn = otherVis->GetStyleColumn();
+      const nsStyleColumn *thisVisColumn = thisVis->StyleColumn();
+      const nsStyleColumn *otherVisColumn = otherVis->StyleColumn();
       if (thisVisColumn->mColumnRuleColor != otherVisColumn->mColumnRuleColor ||
           thisVisColumn->mColumnRuleColorIsForeground !=
             otherVisColumn->mColumnRuleColorIsForeground) {
@@ -582,8 +582,8 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
 
     // NB: Calling Peek on |this|, not |thisVis| (see above).
     if (!change && PeekStyleTextReset()) {
-      const nsStyleTextReset *thisVisTextReset = thisVis->GetStyleTextReset();
-      const nsStyleTextReset *otherVisTextReset = otherVis->GetStyleTextReset();
+      const nsStyleTextReset *thisVisTextReset = thisVis->StyleTextReset();
+      const nsStyleTextReset *otherVisTextReset = otherVis->StyleTextReset();
       nscolor thisVisDecColor, otherVisDecColor;
       bool thisVisDecColorIsFG, otherVisDecColorIsFG;
       thisVisTextReset->GetDecorationColor(thisVisDecColor,
@@ -598,8 +598,8 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
 
     // NB: Calling Peek on |this|, not |thisVis| (see above).
     if (!change && PeekStyleSVG()) {
-      const nsStyleSVG *thisVisSVG = thisVis->GetStyleSVG();
-      const nsStyleSVG *otherVisSVG = otherVis->GetStyleSVG();
+      const nsStyleSVG *thisVisSVG = thisVis->StyleSVG();
+      const nsStyleSVG *otherVisSVG = otherVis->StyleSVG();
       if (thisVisSVG->mFill != otherVisSVG->mFill ||
           thisVisSVG->mStroke != otherVisSVG->mStroke) {
         change = true;

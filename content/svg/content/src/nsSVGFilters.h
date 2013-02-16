@@ -199,7 +199,7 @@ protected:
     if (!frame) return false;
 
     nsStyleContext* style = frame->StyleContext();
-    return style->GetStyleSVG()->mColorInterpolationFilters ==
+    return style->StyleSVG()->mColorInterpolationFilters ==
              NS_STYLE_COLOR_INTERPOLATION_SRGB;
   }
 

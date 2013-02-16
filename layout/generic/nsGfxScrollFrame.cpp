@@ -2156,7 +2156,7 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
   }
 
   if (!mIsRoot) {
-    const nsStyleDisplay* disp = mOuter->GetStyleDisplay();
+    const nsStyleDisplay* disp = mOuter->StyleDisplay();
     return ScrollbarStyles(disp->mOverflowX, disp->mOverflowY);
   }
 
@@ -2603,7 +2603,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
   }
 
   // Check if the frame is resizable.
-  int8_t resizeStyle = mOuter->GetStyleDisplay()->mResize;
+  int8_t resizeStyle = mOuter->StyleDisplay()->mResize;
   bool isResizable = resizeStyle != NS_STYLE_RESIZE_NONE;
 
   nsIScrollableFrame *scrollable = do_QueryFrame(mOuter);
@@ -3105,7 +3105,7 @@ nsGfxScrollFrameInner::IsLTR() const
     }
   }
 
-  return frame->GetStyleVisibility()->mDirection != NS_STYLE_DIRECTION_RTL;
+  return frame->StyleVisibility()->mDirection != NS_STYLE_DIRECTION_RTL;
 }
 
 bool

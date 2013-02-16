@@ -225,7 +225,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
     // using percentage padding anyway.
     nsMargin childPadding;
     nsIFrame* firstChild = GetFirstPrincipalChild();
-    if (firstChild && firstChild->GetStylePadding()->GetPadding(childPadding)) {
+    if (firstChild && firstChild->StylePadding()->GetPadding(childPadding)) {
       aIntrinsicSize.width += childPadding.LeftRight();
     } else {
       NS_ERROR("Percentage padding on value div?");
@@ -234,7 +234,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
 
   // Increment width with cols * letter-spacing.
   {
-    const nsStyleCoord& lsCoord = GetStyleText()->mLetterSpacing;
+    const nsStyleCoord& lsCoord = StyleText()->mLetterSpacing;
     if (eStyleUnit_Coord == lsCoord.GetUnit()) {
       nscoord letterSpacing = lsCoord.GetCoordValue();
       if (letterSpacing != 0) {
@@ -489,7 +489,7 @@ nsTextControlFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   }
 #ifdef DEBUG
   // Note: Ancestor ComputeAutoSize only computes a width if we're auto-width
-  else if (GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
+  else if (StylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
     nsSize ancestorAutoSize =
       nsContainerFrame::ComputeAutoSize(aRenderingContext,
                                         aCBSize, aAvailableWidth,

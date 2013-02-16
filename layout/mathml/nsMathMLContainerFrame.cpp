@@ -1205,7 +1205,7 @@ public:
     InitMetricsForChild();
 
     // add inter frame spacing
-    const nsStyleFont* font = mParentFrame->GetStyleFont();
+    const nsStyleFont* font = mParentFrame->StyleFont();
     nscoord space =
       GetInterFrameSpacing(font->mScriptLevel,
                            prevFrameType, mChildFrameType,
@@ -1375,7 +1375,7 @@ GetInterFrameSpacingFor(int32_t         aScriptLevel,
     if (aChildFrame == childFrame) {
       // get thinspace
       nsStyleContext* parentContext = aParentFrame->StyleContext();
-      nscoord thinSpace = GetThinSpace(parentContext->GetStyleFont());
+      nscoord thinSpace = GetThinSpace(parentContext->StyleFont());
       // we are done
       return space * thinSpace;
     }
@@ -1397,7 +1397,7 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
   nsIAtom *parentTag = parentContent->Tag();
   if (parentContent->GetNameSpaceID() == kNameSpaceID_MathML && 
       (parentTag == nsGkAtoms::math || parentTag == nsGkAtoms::mtd_)) {
-    gap = GetInterFrameSpacingFor(GetStyleFont()->mScriptLevel, mParent, this);
+    gap = GetInterFrameSpacingFor(StyleFont()->mScriptLevel, mParent, this);
     // add our own italic correction
     nscoord leftCorrection = 0, italicCorrection = 0;
     GetItalicCorrection(mBoundingMetrics, leftCorrection, italicCorrection);

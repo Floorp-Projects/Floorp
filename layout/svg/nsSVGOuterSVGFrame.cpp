@@ -627,7 +627,7 @@ nsDisplayOuterSVG::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
 static inline bool
 DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame)
 {
-  const nsStylePosition *pos = aEmbeddingFrame->GetStylePosition();
+  const nsStylePosition *pos = aEmbeddingFrame->StylePosition();
   const nsStyleCoord &width = pos->mWidth;
   const nsStyleCoord &height = pos->mHeight;
 

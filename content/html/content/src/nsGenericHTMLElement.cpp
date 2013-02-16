@@ -470,8 +470,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect)
 
   // Subtract the parent border unless it uses border-box sizing.
   if (parent &&
-      parent->GetStylePosition()->mBoxSizing != NS_STYLE_BOX_SIZING_BORDER) {
-    const nsStyleBorder* border = parent->GetStyleBorder();
+      parent->StylePosition()->mBoxSizing != NS_STYLE_BOX_SIZING_BORDER) {
+    const nsStyleBorder* border = parent->StyleBorder();
     origin.x -= border->GetComputedBorderWidth(NS_SIDE_LEFT);
     origin.y -= border->GetComputedBorderWidth(NS_SIDE_TOP);
   }
@@ -2699,7 +2699,7 @@ nsGenericHTMLFormElement::IsElementDisabledForEvents(uint32_t aMessage,
 {
   bool disabled = IsDisabled();
   if (!disabled && aFrame) {
-    const nsStyleUserInterface* uiStyle = aFrame->GetStyleUserInterface();
+    const nsStyleUserInterface* uiStyle = aFrame->StyleUserInterface();
     disabled = uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
       uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED;
 

@@ -674,7 +674,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   // on the side that has more room.
   bool b = dropdownSize.height <= below || below >= above;
   nsPoint dropdownPosition(0, b ? GetRect().height : -dropdownSize.height);
-  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     // Align the right edge of the drop-down with the right edge of the control.
     dropdownPosition.x = GetRect().width - dropdownSize.width;
   }
@@ -843,7 +843,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   // Get the width of the vertical scrollbar.  That will be the width of the
   // dropdown button.
   nscoord buttonWidth;
-  const nsStyleDisplay *disp = GetStyleDisplay();
+  const nsStyleDisplay *disp = StyleDisplay();
   if (IsThemed(disp) && !aPresContext->GetTheme()->ThemeNeedsComboboxDropmarker()) {
     buttonWidth = 0;
   }
@@ -894,7 +894,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif
 
-  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     // Make sure the right edge of the button frame stays where it is now
     buttonRect.x -= buttonWidth - buttonRect.width;
   }
@@ -1144,7 +1144,7 @@ nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
 
   // If we have style that affects how we are selected, feed event down to
   // nsFrame::HandleEvent so that selection takes place when appropriate.
-  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
+  const nsStyleUserInterface* uiStyle = StyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsBlockFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
@@ -1559,7 +1559,7 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsPIDOMWindow* window = doc->GetWindow();
     if (window && window->ShouldShowFocusRing()) {
       nsPresContext *presContext = PresContext();
-      const nsStyleDisplay *disp = GetStyleDisplay();
+      const nsStyleDisplay *disp = StyleDisplay();
       if ((!IsThemed(disp) ||
            !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
           mDisplayFrame && IsVisibleForPainting(aBuilder)) {
@@ -1592,7 +1592,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
   // draw focus
 
   aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-  aRenderingContext.SetColor(GetStyleColor()->mColor);
+  aRenderingContext.SetColor(StyleColor()->mColor);
 
   //aRenderingContext.DrawRect(clipRect);
 
