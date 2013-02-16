@@ -26,74 +26,141 @@ static const uint8_t IS_URL_CHAR   = 0x08;
 static const uint8_t IS_HSPACE     = 0x10;
 static const uint8_t IS_VSPACE     = 0x20;
 static const uint8_t IS_SPACE      = IS_HSPACE|IS_VSPACE;
+static const uint8_t IS_STRING     = 0x40;
 
 #define H    IS_HSPACE
 #define V    IS_VSPACE
 #define I    IS_IDCHAR
-#define U                                      IS_URL_CHAR
-#define S              IS_IDSTART
-#define UI   IS_IDCHAR                        |IS_URL_CHAR
-#define USI  IS_IDCHAR|IS_IDSTART             |IS_URL_CHAR
-#define UXI  IS_IDCHAR           |IS_HEX_DIGIT|IS_URL_CHAR
-#define UXSI IS_IDCHAR|IS_IDSTART|IS_HEX_DIGIT|IS_URL_CHAR
+#define J    IS_IDSTART
+#define U    IS_URL_CHAR
+#define S    IS_STRING
+#define X    IS_HEX_DIGIT
+
+#define SH    S|H
+#define SU    S|U
+#define SUI   S|U|I
+#define SUIJ  S|U|I|J
+#define SUIX  S|U|I|X
+#define SUIJX S|U|I|J|X
 
 static const uint8_t gLexTable[] = {
-//                                     TAB LF      FF  CR
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  H,  V,  0,  V,  V,  0,  0,
-//
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-// SPC !   "   #   $   %   &   '   (   )   *   +   ,   -   .   /
-   H,  U,  0,  U,  U,  U,  U,  0,  0,  0,  U,  U,  U,  UI, U,  U,
-// 0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ?
-   UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,U,  U,  U,  U,  U,  U,
-// @   A   B   C    D    E    F    G   H   I   J   K   L   M   N   O
-   U,UXSI,UXSI,UXSI,UXSI,UXSI,UXSI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
-// P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,U,  S,  U,  U,  USI,
-// `   a   b   c    d    e    f    g   h   i   j   k   l   m   n   o
-   U,UXSI,UXSI,UXSI,UXSI,UXSI,UXSI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
-// p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~
-   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,U,  U,  U,  U,  0
+// 00    01    02    03    04    05    06    07
+    0,    S,    S,    S,    S,    S,    S,    S,
+// 08   TAB    LF    0B    FF    CR    0E    0F
+    S,   SH,    V,    S,    V,    V,    S,    S,
+// 10    11    12    13    14    15    16    17
+    S,    S,    S,    S,    S,    S,    S,    S,
+// 18    19    1A    1B    1C    1D    1E    1F
+    S,    S,    S,    S,    S,    S,    S,    S,
+//SPC     !     "     #     $     %     &     '
+   SH,   SU,    0,   SU,   SU,   SU,   SU,    0,
+//  (     )     *     +     ,     -     .     /
+    S,    S,   SU,   SU,   SU,  SUI,   SU,   SU,
+//  0     1     2     3     4     5     6     7
+ SUIX, SUIX, SUIX, SUIX, SUIX, SUIX, SUIX, SUIX,
+//  8     9     :     ;     <     =     >     ?
+ SUIX, SUIX,   SU,   SU,   SU,   SU,   SU,   SU,
+//  @     A     B     C     D     E     F     G
+   SU,SUIJX,SUIJX,SUIJX,SUIJX,SUIJX,SUIJX, SUIJ,
+//  H     I     J     K     L     M     N     O
+ SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ,
+//  P     Q     R     S     T     U     V     W
+ SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ,
+//  X     Y     Z     [     \     ]     ^     _
+ SUIJ, SUIJ, SUIJ,   SU,    J,   SU,   SU, SUIJ,
+//  `     a     b     c     d     e     f     g
+   SU,SUIJX,SUIJX,SUIJX,SUIJX,SUIJX,SUIJX, SUIJ,
+//  h     i     j     k     l     m     n     o
+ SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ,
+//  p     q     r     s     t     u     v     w
+ SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ, SUIJ,
+//  x     y     z     {     |     }     ~    7F
+ SUIJ, SUIJ, SUIJ,   SU,   SU,   SU,   SU,    S,
 };
 
 MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(gLexTable) == 128,
                   "gLexTable expected to cover all 128 ASCII characters");
 
-#undef H
-#undef V
-#undef S
 #undef I
+#undef J
 #undef U
-#undef UI
-#undef USI
-#undef UXI
-#undef UXSI
+#undef S
+#undef X
+#undef SH
+#undef SU
+#undef SUI
+#undef SUIJ
+#undef SUIX
+#undef SUIJX
 
+/**
+ * True if 'ch' is in character class 'cls', which should be one of
+ * the constants above or some combination of them.  All characters
+ * above U+007F are considered to be in 'cls'.  EOF is never in 'cls'.
+ */
 static inline bool
-IsHorzSpace(int32_t ch) {
-  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_HSPACE) != 0;
+IsOpenCharClass(int32_t ch, uint8_t cls) {
+  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & cls) != 0);
 }
 
+/**
+ * True if 'ch' is in character class 'cls', which should be one of
+ * the constants above or some combination of them.  No characters
+ * above U+007F are considered to be in 'cls'. EOF is never in 'cls'.
+ */
 static inline bool
-IsVertSpace(int32_t ch) {
-  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_VSPACE) != 0;
+IsClosedCharClass(int32_t ch, uint8_t cls) {
+  return uint32_t(ch) < 128 && (gLexTable[ch] & cls) != 0;
 }
 
+/**
+ * True if 'ch' is CSS whitespace, i.e. any of the ASCII characters
+ * TAB, LF, FF, CR, or SPC.
+ */
 static inline bool
 IsWhitespace(int32_t ch) {
-  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_SPACE) != 0;
+  return IsClosedCharClass(ch, IS_SPACE);
 }
 
+/**
+ * True if 'ch' is horizontal whitespace, i.e. TAB or SPC.
+ */
+static inline bool
+IsHorzSpace(int32_t ch) {
+  return IsClosedCharClass(ch, IS_HSPACE);
+}
+
+/**
+ * True if 'ch' is vertical whitespace, i.e. LF, FF, or CR.  Vertical
+ * whitespace requires special handling when consumed, see AdvanceLine.
+ */
+static inline bool
+IsVertSpace(int32_t ch) {
+  return IsClosedCharClass(ch, IS_VSPACE);
+}
+
+/**
+ * True if 'ch' is a character that can appear in the middle of an
+ * identifier.
+ */
 static inline bool
 IsIdentChar(int32_t ch) {
-  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_IDCHAR) != 0);
+  return IsOpenCharClass(ch, IS_IDCHAR);
 }
 
+/**
+ * True if 'ch' is a character that by itself begins an identifier.
+ * (This is a subset of IsIdentChar.)
+ */
 static inline bool
 IsIdentStart(int32_t ch) {
-  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_IDSTART) != 0);
+  return IsOpenCharClass(ch, IS_IDSTART);
 }
 
+/**
+ * True if the two-character sequence aFirstChar+aSecondChar begins an
+ * identifier.
+ */
 static inline bool
 StartsIdent(int32_t aFirstChar, int32_t aSecondChar)
 {
@@ -101,27 +168,34 @@ StartsIdent(int32_t aFirstChar, int32_t aSecondChar)
     (aFirstChar == '-' && IsIdentStart(aSecondChar));
 }
 
-static inline bool
-IsURLChar(int32_t ch) {
-  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_URL_CHAR) != 0);
-}
-
+/**
+ * True if 'ch' is a decimal digit.
+ */
 static inline bool
 IsDigit(int32_t ch) {
   return (ch >= '0') && (ch <= '9');
 }
 
+/**
+ * True if 'ch' is a hexadecimal digit.
+ */
 static inline bool
 IsHexDigit(int32_t ch) {
-  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
+  return IsClosedCharClass(ch, IS_HEX_DIGIT);
 }
 
+/**
+ * Assuming that 'ch' is a decimal digit, return its numeric value.
+ */
 static inline uint32_t
 DecimalDigitValue(int32_t ch)
 {
   return ch - '0';
 }
 
+/**
+ * Assuming that 'ch' is a hexadecimal digit, return its numeric value.
+ */
 static inline uint32_t
 HexDigitValue(int32_t ch)
 {
@@ -135,6 +209,11 @@ HexDigitValue(int32_t ch)
   }
 }
 
+/**
+ * If 'ch' can be the first character of a two-character match operator
+ * token, return the token type code for that token, otherwise return
+ * eCSSToken_Symbol to indicate that it can't.
+ */
 static inline nsCSSTokenType
 MatchOperatorType(int32_t ch)
 {
@@ -522,53 +601,55 @@ nsCSSScanner::GatherEscape(nsString& aOutput, bool aInString)
 }
 
 /**
- * Consume a sequence of identifier characters and escape sequences
- * starting with the current read position, and append all of them to
- * |aIdent|.  Returns true if it consumed any characters, false if it
- * did not (this can only happen when there was an invalid escape
- * sequence right at the current read position).
+ * Consume a run of "text" beginning with the current read position,
+ * consisting of characters in the class |aClass| (which must be a
+ * suitable argument to IsOpenCharClass) plus escape sequences.
+ * Append the text to |aText|, after decoding escape sequences.
+ *
+ * Returns true if at least one character was appended to |aText|,
+ * false otherwise.
  */
 bool
-nsCSSScanner::GatherIdent(nsString& aIdent)
+nsCSSScanner::GatherText(uint8_t aClass, nsString& aText)
 {
-  int32_t ch = Peek();
-  MOZ_ASSERT(IsIdentChar(ch) || ch == '\\',
-             "should not have been called");
-#ifdef DEBUG
-  uint32_t n = aIdent.Length();
-#endif
+  // This is all of the character classes currently used with
+  // GatherText.  If you have a need to use this function with a
+  // different class, go ahead and add it.
+  MOZ_ASSERT(aClass == IS_STRING ||
+             aClass == IS_IDCHAR ||
+             aClass == IS_URL_CHAR,
+             "possibly-inappropriate character class");
 
-  if (ch == '\\') {
-    if (!GatherEscape(aIdent, false)) {
-      return false;
-    }
-  }
+  uint32_t start = mOffset;
+  bool inString = aClass == IS_STRING;
+
   for (;;) {
     // Consume runs of unescaped characters in one go.
     uint32_t n = mOffset;
-    while (n < mCount && IsIdentChar(mBuffer[n])) {
+    while (n < mCount && IsOpenCharClass(mBuffer[n], aClass)) {
       n++;
     }
-    // Add to the token what we have so far.
     if (n > mOffset) {
-      aIdent.Append(&mBuffer[mOffset], n - mOffset);
+      aText.Append(&mBuffer[mOffset], n - mOffset);
       mOffset = n;
     }
+    if (n == mCount) {
+      break;
+    }
 
-    ch = Peek();
-    if (ch == '\\') {
-      if (!GatherEscape(aIdent, false)) {
-        break;
-      }
-    } else {
-      MOZ_ASSERT(!IsIdentChar(ch), "should not have exited the inner loop");
+    int32_t ch = Peek();
+    MOZ_ASSERT(!IsOpenCharClass(ch, aClass),
+               "should not have exited the inner loop");
+
+    if (ch != '\\') {
+      break;
+    }
+    if (!GatherEscape(aText, inString)) {
       break;
     }
   }
 
-  // If we get here, we should have added some characters to aIdent.
-  MOZ_ASSERT(aIdent.Length() > n);
-  return true;
+  return mOffset > start;
 }
 
 /**
@@ -580,7 +661,7 @@ nsCSSScanner::GatherIdent(nsString& aIdent)
 bool
 nsCSSScanner::ScanIdent(nsCSSToken& aToken)
 {
-  if (MOZ_UNLIKELY(!GatherIdent(aToken.mIdent))) {
+  if (MOZ_UNLIKELY(!GatherText(IS_IDCHAR, aToken.mIdent))) {
     aToken.mSymbol = Peek();
     Advance();
     return true;
@@ -614,7 +695,7 @@ nsCSSScanner::ScanAtKeyword(nsCSSToken& aToken)
 
   int32_t ch = Peek();
   if (StartsIdent(ch, Peek(1))) {
-     if (GatherIdent(aToken.mIdent)) {
+    if (GatherText(IS_IDCHAR, aToken.mIdent)) {
        aToken.mType = eCSSToken_AtKeyword;
      }
   }
@@ -640,7 +721,7 @@ nsCSSScanner::ScanHash(nsCSSToken& aToken)
     nsCSSTokenType type =
       StartsIdent(ch, Peek(1)) ? eCSSToken_ID : eCSSToken_Hash;
     aToken.mIdent.SetLength(0);
-    if (GatherIdent(aToken.mIdent)) {
+    if (GatherText(IS_IDCHAR, aToken.mIdent)) {
       aToken.mType = type;
     }
   }
@@ -779,7 +860,7 @@ nsCSSScanner::ScanNumber(nsCSSToken& aToken)
   // Check for Dimension and Percentage tokens.
   if (c >= 0) {
     if (StartsIdent(c, Peek(1))) {
-      if (GatherIdent(ident)) {
+      if (GatherText(IS_IDCHAR, ident)) {
         type = eCSSToken_Dimension;
       }
     } else if (c == '%') {
@@ -809,42 +890,26 @@ nsCSSScanner::ScanString(nsCSSToken& aToken)
   Advance();
 
   for (;;) {
-    // Consume runs of unescaped characters in one go.
-    uint32_t n = mOffset;
-    int32_t ch = -1;
-    while (n < mCount) {
-      ch = mBuffer[n];
-      if (ch == aStop || ch == '\\' || IsVertSpace(ch)) {
-        break;
-      }
-      n++;
-    }
-    if (n > mOffset) {
-      aToken.mIdent.Append(&mBuffer[mOffset], n - mOffset);
-      mOffset = n;
-    }
-    if (n == mCount) {
+    GatherText(IS_STRING, aToken.mIdent);
+
+    int32_t ch = Peek();
+    if (ch == -1) {
       break; // EOF ends a string token with no error.
     }
     if (ch == aStop) {
       Advance();
       break;
     }
-    if (IsVertSpace(ch)) {
-      aToken.mType = eCSSToken_Bad_String;
-      mReporter->ReportUnexpected("SEUnterminatedString", aToken);
-      break;
+    // Both " and ' are excluded from IS_STRING.
+    if (ch == '"' || ch == '\'') {
+      aToken.mIdent.Append(ch);
+      Advance();
+      continue;
     }
-    MOZ_ASSERT(ch == '\\', "should not have exited the inner loop");
-    if (!GatherEscape(aToken.mIdent, true)) {
-      // For strings, the only case where GatherEscape will return
-      // false is when there's a backslash to start an escape
-      // immediately followed by end-of-stream.  In that case, the
-      // backslash is not included in the Bad_String token.
-      aToken.mType = eCSSToken_Bad_String;
-      mReporter->ReportUnexpected("SEUnterminatedString", aToken);
-      break;
-    }
+
+    aToken.mType = eCSSToken_Bad_String;
+    mReporter->ReportUnexpected("SEUnterminatedString", aToken);
+    break;
   }
   return true;
 }
@@ -964,34 +1029,8 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     MOZ_ASSERT(aToken.mType == eCSSToken_String, "unexpected token type");
 
   } else {
-    // Otherwise, this is the start of a non-quoted url (which may be empty)
-    aToken.mSymbol = PRUnichar(0);
-    for (;;) {
-      // Consume runs of unescaped characters in one go.
-      uint32_t n = mOffset;
-      while (n < mCount) {
-        ch = mBuffer[n];
-        if (!IsURLChar(ch)) {
-          break;
-        }
-        n++;
-      }
-      if (n > mOffset) {
-        aToken.mIdent.Append(&mBuffer[mOffset], n - mOffset);
-        mOffset = n;
-      }
-      if (n == mCount) {
-        break; // EOF ends URL literal with no error.
-      }
-      if (ch != '\\') {
-        break;
-      }
-      if (!GatherEscape(aToken.mIdent, false)) {
-        break; // Bad escape sequence terminates URL.  The backslash
-               // remains unconsumed, so the logic below will produce a
-               // Bad_URL token.
-      }
-    }
+    // Otherwise, this is the start of a non-quoted url (which may be empty).
+    GatherText(IS_URL_CHAR, aToken.mIdent);
   }
 
   // Consume trailing whitespace and then look for a close parenthesis.

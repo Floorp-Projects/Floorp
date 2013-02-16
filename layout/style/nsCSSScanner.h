@@ -194,7 +194,7 @@ protected:
   void SkipComment();
 
   bool GatherEscape(nsString& aOutput, bool aInString);
-  bool GatherIdent(nsString& aIdent);
+  bool GatherText(uint8_t aClass, nsString& aIdent);
 
   bool ScanIdent(nsCSSToken& aResult);
   bool ScanAtKeyword(nsCSSToken& aResult);
