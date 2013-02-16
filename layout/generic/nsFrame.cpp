@@ -7375,10 +7375,10 @@ nsFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
 }
 
 /* virtual */ const void*
-nsFrame::GetStyleDataExternal(nsStyleStructID aSID) const
+nsFrame::StyleDataExternal(nsStyleStructID aSID) const
 {
   NS_ASSERTION(mStyleContext, "unexpected null pointer");
-  return mStyleContext->GetStyleData(aSID);
+  return mStyleContext->StyleData(aSID);
 }
 
 /* virtual */ bool
