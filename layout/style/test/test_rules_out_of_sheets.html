@@ -102,7 +102,7 @@ try {
 } catch(ex) {}
 
 rule = make_rule_and_remove_sheet("@keyframes a { from { color: blue } }");
-rule.insertRule("from { color: fuchsia}");
+rule.appendRule("from { color: fuchsia}");
 rule.deleteRule("from");
 rule.name = "b";
 rule.cssRules[0].keyText = "50%";
