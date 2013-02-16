@@ -3427,7 +3427,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     // Note that we *do* need to do this for our own data, since what is
     // in |fontData| in ComputeFontData is only for the rules below
     // aStartStruct.
-    for (nsRuleNode* ruleNode = context->GetRuleNode(); ruleNode;
+    for (nsRuleNode* ruleNode = context->RuleNode(); ruleNode;
          ruleNode = ruleNode->GetParent()) {
       if (ruleNode->mNoneBits & fontBit)
         // no more font rules on this branch, get out
@@ -7942,7 +7942,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   bool haveExplicitUAInherit;
   do {
     haveExplicitUAInherit = false;
-    for (nsRuleNode* ruleNode = styleContext->GetRuleNode(); ruleNode;
+    for (nsRuleNode* ruleNode = styleContext->RuleNode(); ruleNode;
          ruleNode = ruleNode->GetParent()) {
       nsIStyleRule *rule = ruleNode->GetRule();
       if (rule) {
