@@ -40,6 +40,7 @@ function checkAvailability()
     ["reset", false],
     ["button", false],
     ["number", true],
+    ["range", true],
     ["date", true],
     ["time", true],
     // The next types have not been implemented but will fallback to "text"
@@ -53,7 +54,6 @@ function checkAvailability()
     ["month", true],
     ["week", true],
     ["datetime-local", true],
-    ["range", true],
   ];
 
   var element = document.createElement('input');
@@ -163,6 +163,97 @@ function checkNumberSet()
 
   var element = document.createElement('input');
   element.type = "number";
+  for (data of testData) {
+    var caught = false;
+    try {
+      element.valueAsNumber = data[0];
+      is(element.value, data[1],
+         "valueAsNumber should be able to set the value");
+    } catch (e) {
+      caught = true;
+    }
+
+    if (data[2]) {
+      ok(caught, "valueAsNumber should have thrown");
+      is(element.value, data[1], "value should not have changed");
+    } else {
+      ok(!caught, "valueAsNumber should not have thrown");
+    }
+  }
+}
+
+function checkRangeGet()
+{
+  // For type=range we should never get NaN since the user agent is required
+  // to fix up the input's value to be something sensible.
+
+  var min = -200;
+  var max = 200;
+  var defaultValue = min + (max - min)/2;
+
+  var testData =
+  [
+    ["42", 42],
+    ["-42", -42], // should work for negative values
+    ["42.1234", 42.1234],
+    ["123.12345678912345", 123.12345678912345], // double precision
+    ["1e2", 100], // e should be usable
+    ["2e1", 20],
+    ["1e-1", 0.1], // value after e can be negative
+    ["1E2", 100], // E can be used instead of e
+    ["e", defaultValue],
+    ["e2", defaultValue],
+    ["1e0.1", defaultValue],
+    ["", defaultValue],
+    ["foo", defaultValue],
+    ["42,13", defaultValue],
+  ];
+
+  var element = document.createElement('input');
+  element.type = "range";
+  element.setAttribute("min", min); // avoids out of range sanitization
+  element.setAttribute("max", max);
+  element.setAttribute("step", "any"); // avoids step mismatch sanitization
+  for (data of testData) {
+    element.value = data[0];
+
+    // Given that NaN != NaN, we have to use null when the expected value is NaN.
+    is(element.valueAsNumber, data[1], "valueAsNumber should return the " +
+       "floating point representation of the value");
+  }
+}
+
+function checkRangeSet()
+{
+  var min = -200;
+  var max = 200;
+  var defaultValue = min + (max - min)/2;
+
+  var testData =
+  [
+    [42, "42"],
+    [-42, "-42"], // should work for negative values
+    [42.1234, "42.1234"],
+    [123.123456789123, "123.123456789123"], // double precision
+    [1e2, "100"], // e should be usable
+    [2e1, "20"],
+    [1e-1, "0.1"], // value after e can be negative
+    [1E2, "100"], // E can be used instead of e
+    ["foo", defaultValue],
+    ["", defaultValue],
+    [42, "42"], // Keep this here, it is used by the next test.
+    // Setting Infinity should throw and not change the current value.
+    [Infinity, "42", true],
+    [-Infinity, "42", true],
+    // Setting NaN should change the value to the empty string.
+    [NaN, defaultValue],
+  ];
+
+  var element = document.createElement('input');
+  element.type = "range";
+  element.setAttribute("min", min); // avoids out of range sanitization
+  element.setAttribute("max", max);
+  element.setAttribute("step", "any"); // avoids step mismatch sanitization
   for (data of testData) {
     var caught = false;
     try {
@@ -401,6 +492,10 @@ checkAvailability();
 // <input type='number'> test
 checkNumberGet();
 checkNumberSet();
+
+// <input type='range'> test
+checkRangeGet();
+checkRangeSet();
 
 // <input type='date'> test
 checkDateGet();
