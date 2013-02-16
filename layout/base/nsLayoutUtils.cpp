@@ -594,7 +594,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
   // See if the frame is moved out of the flow
   else if (aChildFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     // Look at the style information to tell
-    const nsStyleDisplay* disp = aChildFrame->GetStyleDisplay();
+    const nsStyleDisplay* disp = aChildFrame->StyleDisplay();
 
     if (NS_STYLE_POSITION_ABSOLUTE == disp->mPosition) {
       id = nsIFrame::kAbsoluteList;
@@ -2091,7 +2091,7 @@ nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
     return 0;
 
   const nsStylePosition* position =
-    aFrame->GetStylePosition();
+    aFrame->StylePosition();
   if (position->mZIndex.GetUnit() == eStyleUnit_Integer)
     return position->mZIndex.GetIntValue();
 
@@ -2296,7 +2296,7 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
                                        nsIFrame* aFrame,
                                        uint32_t aFlags)
 {
-  const nsStyleText* textStyle = aFrame->GetStyleText();
+  const nsStyleText* textStyle = aFrame->StyleText();
   if (!textStyle->HasTextShadow(aFrame))
     return aTextAndDecorationsRect;
 
@@ -2336,7 +2336,7 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
   // pass the user font set object into the device context to pass along to CreateFontGroup
   gfxUserFontSet* fs = aStyleContext->PresContext()->GetUserFontSet();
 
-  nsFont font = aStyleContext->GetStyleFont()->mFont;
+  nsFont font = aStyleContext->StyleFont()->mFont;
   // We need to not run font.size through floats when it's large since
   // doing so would be lossy.  Fortunately, in such cases, aInflation is
   // guaranteed to be 1.0f.
@@ -2344,7 +2344,7 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
     font.size = NSToCoordRound(font.size * aInflation);
   }
   return aStyleContext->PresContext()->DeviceContext()->GetMetricsFor(
-                  font, aStyleContext->GetStyleFont()->mLanguage,
+                  font, aStyleContext->StyleFont()->mLanguage,
                   fs, *aFontMetrics);
 }
 
@@ -2534,7 +2534,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
     return false;
   }
 
-  const nsStylePosition *pos = f->GetStylePosition();
+  const nsStylePosition *pos = f->StylePosition();
   nscoord h;
   if (!GetAbsoluteCoord(pos->mHeight, h) &&
       !GetPercentHeight(pos->mHeight, f, h)) {
@@ -2672,7 +2672,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   nsIFrame::IntrinsicWidthOffsetData offsets =
     aFrame->IntrinsicWidthOffsets(aRenderingContext);
 
-  const nsStylePosition *stylePos = aFrame->GetStylePosition();
+  const nsStylePosition *stylePos = aFrame->StylePosition();
   uint8_t boxSizing = stylePos->mBoxSizing;
   const nsStyleCoord &styleWidth = stylePos->mWidth;
   const nsStyleCoord &styleMinWidth = stylePos->mMinWidth;
@@ -2759,13 +2759,13 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
         nscoord heightTakenByBoxSizing = 0;
         switch (boxSizing) {
         case NS_STYLE_BOX_SIZING_BORDER: {
-          const nsStyleBorder* styleBorder = aFrame->GetStyleBorder();
+          const nsStyleBorder* styleBorder = aFrame->StyleBorder();
           heightTakenByBoxSizing +=
             styleBorder->GetComputedBorder().TopBottom();
           // fall through
         }
         case NS_STYLE_BOX_SIZING_PADDING: {
-          const nsStylePadding* stylePadding = aFrame->GetStylePadding();
+          const nsStylePadding* stylePadding = aFrame->StylePadding();
           nscoord pad;
           if (GetAbsoluteCoord(stylePadding->mPadding.GetTop(), pad) ||
               GetPercentHeight(stylePadding->mPadding.GetTop(), aFrame, pad)) {
@@ -2900,7 +2900,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   if (result < min)
     result = min;
 
-  const nsStyleDisplay *disp = aFrame->GetStyleDisplay();
+  const nsStyleDisplay *disp = aFrame->StyleDisplay();
   if (aFrame->IsThemed(disp)) {
     nsIntSize size(0, 0);
     bool canOverride = true;
@@ -3044,7 +3044,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                    nsSize aIntrinsicRatio, nsSize aCBSize,
                    nsSize aMargin, nsSize aBorder, nsSize aPadding)
 {
-  const nsStylePosition* stylePos = aFrame->GetStylePosition();
+  const nsStylePosition* stylePos = aFrame->StylePosition();
 
   // If we're a flex item, we'll compute our size a bit differently.
   const nsStyleCoord* widthStyleCoord = &(stylePos->mWidth);
@@ -3060,7 +3060,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
     // "flex-basis:auto", in which case they use their main-size property after
     // all.
     uint32_t flexDirection =
-      aFrame->GetParent()->GetStylePosition()->mFlexDirection;
+      aFrame->GetParent()->StylePosition()->mFlexDirection;
     isHorizontalFlexItem =
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
@@ -3463,7 +3463,7 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
     if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
-      aDirection = aFrame->GetStyleVisibility()->mDirection;
+      aDirection = aFrame->StyleVisibility()->mDirection;
     }
     nsBidiDirection direction =
       (NS_STYLE_DIRECTION_RTL == aDirection) ?
@@ -3489,7 +3489,7 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 #ifdef IBMBIDI
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+    const nsStyleVisibility* vis = aFrame->StyleVisibility();
     nsBidiDirection direction =
       (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
       NSBIDI_RTL : NSBIDI_LTR;
@@ -3510,7 +3510,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
                                TextShadowCallback aCallback,
                                void* aCallbackData)
 {
-  const nsStyleText* textStyle = aFrame->GetStyleText();
+  const nsStyleText* textStyle = aFrame->StyleText();
   if (!textStyle->HasTextShadow(aFrame))
     return;
 
@@ -3773,7 +3773,7 @@ nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
     nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;
 
-  switch (frame->GetStyleSVG()->mImageRendering) {
+  switch (frame->StyleSVG()->mImageRendering) {
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED:
     return gfxPattern::FILTER_FAST;
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY:
@@ -4296,16 +4296,16 @@ nsLayoutUtils::HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
 /* static */ nsTransparencyMode
 nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
                                     nsIFrame* aCSSRootFrame) {
-  if (aCSSRootFrame->GetStyleDisplay()->mOpacity < 1.0f)
+  if (aCSSRootFrame->StyleDisplay()->mOpacity < 1.0f)
     return eTransparencyTransparent;
 
-  if (HasNonZeroCorner(aCSSRootFrame->GetStyleBorder()->mBorderRadius))
+  if (HasNonZeroCorner(aCSSRootFrame->StyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
-  if (aCSSRootFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
+  if (aCSSRootFrame->StyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;
 
-  if (aCSSRootFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS)
+  if (aCSSRootFrame->StyleDisplay()->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS)
     return eTransparencyBorderlessGlass;
 
   nsITheme::Transparency transparency;
@@ -4327,7 +4327,7 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
                                       aBackgroundFrame, &bgSC)) {
     return eTransparencyTransparent;
   }
-  const nsStyleBackground* bg = bgSC->GetStyleBackground();
+  const nsStyleBackground* bg = bgSC->StyleBackground();
   if (NS_GET_A(bg->mBackgroundColor) < 255 ||
       // bottom layer's clip is used for the color
       bg->BottomLayer().mClip != NS_STYLE_BG_CLIP_BORDER)
@@ -4387,7 +4387,7 @@ nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
   if (aLetterSpacing != 0) {
     result |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
   }
-  switch (aStyleContext->GetStyleSVG()->mTextRendering) {
+  switch (aStyleContext->StyleSVG()->mTextRendering) {
   case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
     result |= gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
     break;
@@ -4463,7 +4463,7 @@ nsLayoutUtils::IsReallyFixedPos(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame->GetParent(),
                   "IsReallyFixedPos called on frame not in tree");
-  NS_PRECONDITION(aFrame->GetStyleDisplay()->mPosition ==
+  NS_PRECONDITION(aFrame->StyleDisplay()->mPosition ==
                     NS_STYLE_POSITION_FIXED,
                   "IsReallyFixedPos called on non-'position:fixed' frame");
 
@@ -5178,7 +5178,7 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
   // Note that line heights should be inflated by the same ratio as the
   // font size of the same text; thus we operate only on the font size
   // even when we're scaling a line height.
-  nscoord styleFontSize = aFrame->GetStyleFont()->mFont.size;
+  nscoord styleFontSize = aFrame->StyleFont()->mFont.size;
   if (styleFontSize <= 0) {
     // Never scale zero font size.
     return 1.0;
@@ -5205,8 +5205,8 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
         // ignore width on radios and checkboxes since we enlarge them and
         // they have width/height in ua.css
         fType != nsGkAtoms::formControlFrame) {
-      nsStyleCoord stylePosWidth = f->GetStylePosition()->mWidth;
-      nsStyleCoord stylePosHeight = f->GetStylePosition()->mHeight;
+      nsStyleCoord stylePosWidth = f->StylePosition()->mWidth;
+      nsStyleCoord stylePosHeight = f->StylePosition()->mHeight;
       if (stylePosWidth.GetUnit() != eStyleUnit_Auto ||
           stylePosHeight.GetUnit() != eStyleUnit_Auto) {
 
@@ -5267,7 +5267,7 @@ ShouldInflateFontsForContainer(const nsIFrame *aFrame)
   // indicates whether the frame is inside something with a constrained
   // height (propagating down the tree), but the propagation stops when
   // we hit overflow-y: scroll or auto.
-  const nsStyleText* styleText = aFrame->GetStyleText();
+  const nsStyleText* styleText = aFrame->StyleText();
 
   return styleText->mTextSizeAdjust != NS_STYLE_TEXT_SIZE_ADJUST_NONE &&
          !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT) &&
@@ -5400,7 +5400,7 @@ nsLayoutUtils::FontSizeInflationEnabled(nsPresContext *aPresContext)
 nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame, 
                                         const nsSize& aFrameSize)
 {
-  nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
+  nsCSSShadowArray* boxShadows = aFrame->StyleBorder()->mBoxShadow;
   if (!boxShadows) {
     return nsRect();
   }

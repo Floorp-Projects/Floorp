@@ -67,7 +67,7 @@ nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
 
   gfxContextAutoSaveRestore autoSR;
 
-  if (GetStyleDisplay()->IsScrollableOverflow()) {
+  if (StyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
     static_cast<SVGSVGElement*>(mContent)->
       GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
@@ -223,7 +223,7 @@ nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
                "If display lists are enabled, only hit-testing of non-display "
                "SVG should take this code path");
 
-  if (GetStyleDisplay()->IsScrollableOverflow()) {
+  if (StyleDisplay()->IsScrollableOverflow()) {
     nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
 

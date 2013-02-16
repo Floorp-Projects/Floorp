@@ -150,7 +150,7 @@ nsDeckFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsDisplayListSet& aLists)
 {
   // if a tab is hidden all its children are too.
-  if (!GetStyleVisibility()->mVisible)
+  if (!StyleVisibility()->mVisible)
     return;
     
   nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);

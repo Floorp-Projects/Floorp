@@ -161,7 +161,7 @@ nsStyleVisibility::GetEffectivePointerEvents(nsIFrame* aFrame) const
     // frame.
     nsIFrame* f = aFrame->GetContent()->GetPrimaryFrame();
     if (f) {
-      return f->GetStyleVisibility()->mPointerEvents;
+      return f->StyleVisibility()->mPointerEvents;
     }
   }
   return mPointerEvents;

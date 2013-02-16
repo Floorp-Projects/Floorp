@@ -292,7 +292,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   // Force a background to be shown. We may have a background propagated to us,
-  // in which case GetStyleBackground wouldn't have the right background
+  // in which case StyleBackground wouldn't have the right background
   // and the code in nsFrame::DisplayBorderBackgroundOutline might not give us
   // a background.
   // We don't have any border or outline, and our background draws over
@@ -304,7 +304,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     bool isThemed = IsThemed();
     if (!isThemed &&
         nsCSSRendering::FindBackground(PresContext(), this, &bgSC)) {
-      bg = bgSC->GetStyleBackground();
+      bg = bgSC->StyleBackground();
     }
     aLists.BorderBackground()->AppendNewToTop(
         new (aBuilder) nsDisplayCanvasBackgroundColor(aBuilder, this));
@@ -358,7 +358,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!mDoPaintFocus)
     return;
   // Only paint the focus if we're visible
-  if (!GetStyleVisibility()->IsVisible())
+  if (!StyleVisibility()->IsVisible())
     return;
   
   aLists.Outlines()->AppendNewToTop(new (aBuilder)
@@ -381,7 +381,7 @@ nsCanvasFrame::PaintFocus(nsRenderingContext& aRenderingContext, nsPoint aPt)
  // XXX use the root frame foreground color, but should we find BODY frame
  // for HTML documents?
   nsIFrame* root = mFrames.FirstChild();
-  const nsStyleColor* color = root ? root->GetStyleColor() : GetStyleColor();
+  const nsStyleColor* color = root ? root->StyleColor() : StyleColor();
   if (!color) {
     NS_ERROR("current color cannot be found");
     return;
@@ -478,7 +478,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     nsPoint kidPt(kidReflowState.mComputedMargin.left,
                   kidReflowState.mComputedMargin.top);
     // Apply CSS relative positioning
-    const nsStyleDisplay* styleDisp = kidFrame->GetStyleDisplay();
+    const nsStyleDisplay* styleDisp = kidFrame->StyleDisplay();
     if (NS_STYLE_POSITION_RELATIVE == styleDisp->mPosition) {
       kidPt += nsPoint(kidReflowState.mComputedOffsets.left,
                        kidReflowState.mComputedOffsets.top);

@@ -131,7 +131,7 @@ static GtkTextDirection GetTextDirection(nsIFrame* aFrame)
   if (!aFrame)
     return GTK_TEXT_DIR_NONE;
 
-  switch (aFrame->GetStyleVisibility()->mDirection) {
+  switch (aFrame->StyleVisibility()->mDirection) {
     case NS_STYLE_DIRECTION_RTL:
       return GTK_TEXT_DIR_RTL;
     case NS_STYLE_DIRECTION_LTR:
@@ -534,7 +534,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
       nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
 
       aGtkWidgetType = IsIndeterminateProgress(stateFrame, eventStates)
-                         ? (stateFrame->GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL)
+                         ? (stateFrame->StyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL)
                            ? MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE
                            : MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE
                          : MOZ_GTK_PROGRESS_CHUNK;

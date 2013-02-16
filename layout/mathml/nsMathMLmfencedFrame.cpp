@@ -209,7 +209,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
 
   int32_t i;
-  const nsStyleFont* font = GetStyleFont();
+  const nsStyleFont* font = StyleFont();
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   aReflowState.rendContext->SetFont(fm);
@@ -575,7 +575,7 @@ nsMathMLmfencedFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext)
   nscoord width = 0;
 
   nsPresContext* presContext = PresContext();
-  const nsStyleFont* font = GetStyleFont();
+  const nsStyleFont* font = StyleFont();
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   nscoord em;

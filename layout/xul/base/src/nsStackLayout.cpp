@@ -65,7 +65,7 @@ nsStackLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   nsIFrame* child = aBox->GetChildBox();
   while (child) {
-    if (child->GetStyleXUL()->mStretchStack) {
+    if (child->StyleXUL()->mStretchStack) {
       nsSize pref = child->GetPrefSize(aState);
 
       AddMargin(child, pref);
@@ -91,7 +91,7 @@ nsStackLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   nsIFrame* child = aBox->GetChildBox();
   while (child) {
-    if (child->GetStyleXUL()->mStretchStack) {
+    if (child->StyleXUL()->mStretchStack) {
       nsSize min = child->GetMinSize(aState);
 
       AddMargin(child, min);
@@ -117,7 +117,7 @@ nsStackLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   nsIFrame* child = aBox->GetChildBox();
   while (child) {
-    if (child->GetStyleXUL()->mStretchStack) {
+    if (child->StyleXUL()->mStretchStack) {
       nsSize min = child->GetMinSize(aState);
       nsSize max = child->GetMaxSize(aState);
 
@@ -176,7 +176,7 @@ nsStackLayout::GetOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsMargin& a
   uint8_t offsetSpecified = 0;
   nsIContent* content = aChild->GetContent();
   if (content) {
-    bool ltr = aChild->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
+    bool ltr = aChild->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
     nsAutoString value;
     nsresult error;
 
@@ -343,7 +343,7 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
           childRect = child->GetRect();
           childRect.Inflate(margin);
 
-          if (child->GetStyleXUL()->mStretchStack) {
+          if (child->StyleXUL()->mStretchStack) {
             // Did the child push back on us and get bigger?
             if (offset.LeftRight() + childRect.width > clientRect.width) {
               clientRect.width = childRect.width + offset.LeftRight();

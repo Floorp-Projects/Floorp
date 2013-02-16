@@ -312,7 +312,7 @@ nsBlockFrame::GetLineIterator()
   if (!it)
     return nullptr;
 
-  const nsStyleVisibility* visibility = GetStyleVisibility();
+  const nsStyleVisibility* visibility = StyleVisibility();
   nsresult rv = it->Init(mLines, visibility->mDirection == NS_STYLE_DIRECTION_RTL);
   if (NS_FAILED(rv)) {
     delete it;
@@ -739,7 +739,7 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
           // Only add text-indent if it has no percentages; using a
           // percentage basis of 0 unconditionally would give strange
           // behavior for calc(10%-3px).
-          const nsStyleCoord &indent = GetStyleText()->mTextIndent;
+          const nsStyleCoord &indent = StyleText()->mTextIndent;
           if (indent.ConvertsToLength())
             data.currentLine += nsRuleNode::ComputeCoordPercentCalc(indent, 0);
         }
@@ -819,7 +819,7 @@ nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
           // Only add text-indent if it has no percentages; using a
           // percentage basis of 0 unconditionally would give strange
           // behavior for calc(10%-3px).
-          const nsStyleCoord &indent = GetStyleText()->mTextIndent;
+          const nsStyleCoord &indent = StyleText()->mTextIndent;
           if (indent.ConvertsToLength())
             data.currentLine += nsRuleNode::ComputeCoordPercentCalc(indent, 0);
         }
@@ -1595,12 +1595,12 @@ IsAlignedLeft(uint8_t aAlignment,
 nsresult
 nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 {
-  const nsStyleText* styleText = GetStyleText();
-  const nsStyleTextReset* styleTextReset = GetStyleTextReset();
+  const nsStyleText* styleText = StyleText();
+  const nsStyleTextReset* styleTextReset = StyleTextReset();
   // See if we can try and avoid marking all the lines as dirty
   bool tryAndSkipLines =
     // The block must be LTR (bug 806284)
-    GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR &&
+    StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR &&
     // The text must be left-aligned.
     IsAlignedLeft(styleText->mTextAlign, 
                   aState.mReflowState.mStyleVisibility->mDirection,
@@ -1608,7 +1608,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
                   this) &&
     // The left content-edge must be a constant distance from the left
     // border-edge.
-    !GetStylePadding()->mPadding.GetLeft().HasPercent();
+    !StylePadding()->mPadding.GetLeft().HasPercent();
 
 #ifdef DEBUG
   if (gDisableResizeOpt) {
@@ -2716,7 +2716,7 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
     }
   }
   else if (nsGkAtoms::value == aAttribute) {
-    const nsStyleDisplay* styleDisplay = GetStyleDisplay();
+    const nsStyleDisplay* styleDisplay = StyleDisplay();
     if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
       // Search for the closest ancestor that's a block frame. We
       // make the assumption that all related list items share a
@@ -2767,14 +2767,14 @@ nsBlockFrame::IsSelfEmpty()
   if (GetStateBits() & NS_BLOCK_MARGIN_ROOT)
     return false;
 
-  const nsStylePosition* position = GetStylePosition();
+  const nsStylePosition* position = StylePosition();
 
   if (IsNonAutoNonZeroHeight(position->mMinHeight) ||
       IsNonAutoNonZeroHeight(position->mHeight))
     return false;
 
-  const nsStyleBorder* border = GetStyleBorder();
-  const nsStylePadding* padding = GetStylePadding();
+  const nsStyleBorder* border = StyleBorder();
+  const nsStylePadding* padding = StylePadding();
   if (border->GetComputedBorderWidth(NS_SIDE_TOP) != 0 ||
       border->GetComputedBorderWidth(NS_SIDE_BOTTOM) != 0 ||
       !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetTop()) ||
@@ -2883,7 +2883,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   }
 
   // Prepare the block reflow engine
-  const nsStyleDisplay* display = frame->GetStyleDisplay();
+  const nsStyleDisplay* display = frame->StyleDisplay();
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState);
 
   uint8_t breakType = display->mBreakType;
@@ -3499,12 +3499,12 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // frame, because the block frame could be split by hard line breaks into
   // multiple paragraphs with different base direction
   uint8_t direction;
-  if (GetStyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+  if (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
     FramePropertyTable *propTable = aState.mPresContext->PropertyTable();
     direction =  NS_PTR_TO_INT32(propTable->Get(aLine->mFirstChild,
                                                 BaseLevelProperty())) & 1;
   } else {
-    direction = GetStyleVisibility()->mDirection;
+    direction = StyleVisibility()->mDirection;
   }
 
   aLineLayout.BeginLineReflow(x, aState.mY,
@@ -3930,10 +3930,10 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
   // The containing block is now overflow-incomplete.
   NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
 
-  if (aFloat->GetStyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
+  if (aFloat->StyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
     aState.mFloatManager->SetSplitLeftFloatAcrossBreak();
   } else {
-    NS_ABORT_IF_FALSE(aFloat->GetStyleDisplay()->mFloats ==
+    NS_ABORT_IF_FALSE(aFloat->StyleDisplay()->mFloats ==
                         NS_STYLE_FLOAT_RIGHT, "unexpected float side");
     aState.mFloatManager->SetSplitRightFloatAcrossBreak();
   }
@@ -4164,7 +4164,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // Only block frames horizontally align their children because
   // inline frames "shrink-wrap" around their children (therefore
   // there is no extra horizontal space).
-  const nsStyleText* styleText = GetStyleText();
+  const nsStyleText* styleText = StyleText();
 
   /**
    * text-align-last defaults to the same value as text-align when
@@ -4188,7 +4188,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // XXXldb Why don't we do this earlier?
   if (aState.mPresContext->BidiEnabled()) {
     if (!aState.mPresContext->IsVisualMode() ||
-        GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+        StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
       nsBidiPresUtils::ReorderFrames(aLine->mFirstChild, aLine->GetChildCount());
     } // not visual mode
   } // bidi enabled
@@ -4842,7 +4842,7 @@ ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame)
     return true;
   if (type == nsGkAtoms::textFrame)
     return aLastFrame->HasTerminalNewline() &&
-           aLastFrame->GetStyleText()->NewlineIsSignificant();
+           aLastFrame->StyleText()->NewlineIsSignificant();
   return false;
 }
 
@@ -5749,7 +5749,7 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
   // Compute the available width. By default, assume the width of the
   // containing block.
   nscoord availWidth;
-  const nsStyleDisplay* floatDisplay = aFloatFrame->GetStyleDisplay();
+  const nsStyleDisplay* floatDisplay = aFloatFrame->StyleDisplay();
 
   if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
       eCompatibility_NavQuirks != aState.mPresContext->CompatibilityMode() ) {
@@ -6547,10 +6547,10 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
       possibleListItem = parent;
     }
     if (NS_STYLE_DISPLAY_LIST_ITEM ==
-          possibleListItem->GetStyleDisplay()->mDisplay &&
+          possibleListItem->StyleDisplay()->mDisplay &&
         !GetPrevInFlow()) {
       // Resolve style for the bullet frame
-      const nsStyleList* styleList = GetStyleList();
+      const nsStyleList* styleList = StyleList();
       nsCSSPseudoElements::Type pseudoType;
       switch (styleList->mListStyleType) {
         case NS_STYLE_LIST_STYLE_DISC:
@@ -6601,10 +6601,10 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
 bool
 nsBlockFrame::BulletIsEmpty() const
 {
-  NS_ASSERTION(mContent->GetPrimaryFrame()->GetStyleDisplay()->mDisplay ==
+  NS_ASSERTION(mContent->GetPrimaryFrame()->StyleDisplay()->mDisplay ==
                  NS_STYLE_DISPLAY_LIST_ITEM && HasOutsideBullet(),
                "should only care when we have an outside bullet");
-  const nsStyleList* list = GetStyleList();
+  const nsStyleList* list = StyleList();
   return list->mListStyleType == NS_STYLE_LIST_STYLE_NONE &&
          !list->GetListStyleImage();
 }
@@ -6614,7 +6614,7 @@ nsBlockFrame::GetBulletText(nsAString& aText) const
 {
   aText.Truncate();
 
-  const nsStyleList* myList = GetStyleList();
+  const nsStyleList* myList = StyleList();
   if (myList->GetListStyleImage() ||
       myList->mListStyleType == NS_STYLE_LIST_STYLE_DISC) {
     aText.Assign(kDiscCharacter);
@@ -6746,7 +6746,7 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
 
   // if the frame is a placeholder, then get the out of flow frame
   nsIFrame* kid = nsPlaceholderFrame::GetRealFrameFor(aKid);
-  const nsStyleDisplay* display = kid->GetStyleDisplay();
+  const nsStyleDisplay* display = kid->StyleDisplay();
 
   // drill down through any wrappers to the real frame
   kid = kid->GetContentInsertionFrame();

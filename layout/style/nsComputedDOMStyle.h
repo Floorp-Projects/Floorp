@@ -95,8 +95,8 @@ private:
   }
 
 #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                  \
-  const nsStyle##name_ * GetStyle##name_() {                            \
-    return mStyleContextHolder->GetStyle##name_();                      \
+  const nsStyle##name_ * Style##name_() {                               \
+    return mStyleContextHolder->Style##name_();                         \
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT

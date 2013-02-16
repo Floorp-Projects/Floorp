@@ -87,7 +87,7 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder, const
   }
 
   // Swap left and right for RTL trees in order to find the correct splitter
-  if (mFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (mFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     bool tmp = left;
     left = right;
     right = tmp;

@@ -760,7 +760,7 @@ nsMathMLmencloseFrame::DisplayNotation(nsDisplayListBuilder* aBuilder,
                                        nscoord aThickness,
                                        nsMencloseNotation aType)
 {
-  if (!aFrame->GetStyleVisibility()->IsVisible() || aRect.IsEmpty() ||
+  if (!aFrame->StyleVisibility()->IsVisible() || aRect.IsEmpty() ||
       aThickness <= 0)
     return;
 

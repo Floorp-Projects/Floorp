@@ -325,7 +325,7 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   // Now that we've checked for the attribute it's time to check CSS.  For 
   // horizontal boxes we're checking PACK.  For vertical boxes we are checking
   // ALIGN.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   if (IsHorizontal()) {
     switch (boxInfo->mBoxPack) {
       case NS_STYLE_BOX_PACK_START:
@@ -400,7 +400,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   // Now that we've checked for the attribute it's time to check CSS.  For 
   // horizontal boxes we're checking ALIGN.  For vertical boxes we are checking
   // PACK.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   if (IsHorizontal()) {
     switch (boxInfo->mBoxAlign) {
       case NS_STYLE_BOX_ALIGN_START:
@@ -446,7 +446,7 @@ nsBoxFrame::GetInitialOrientation(bool& aIsHorizontal)
     return;
 
   // Check the style system first.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   if (boxInfo->mBoxOrient == NS_STYLE_BOX_ORIENT_HORIZONTAL)
     aIsHorizontal = true;
   else 
@@ -472,13 +472,13 @@ nsBoxFrame::GetInitialDirection(bool& aIsNormal)
   if (IsHorizontal()) {
     // For horizontal boxes only, we initialize our value based off the CSS 'direction' property.
     // This means that BiDI users will end up with horizontally inverted chrome.
-    aIsNormal = (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR); // If text runs RTL then so do we.
+    aIsNormal = (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR); // If text runs RTL then so do we.
   }
   else
     aIsNormal = true; // Assume a normal direction in the vertical case.
 
   // Now check the style system to see if we should invert aIsNormal.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   if (boxInfo->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE)
     aIsNormal = !aIsNormal; // Invert our direction.
   
@@ -536,7 +536,7 @@ nsBoxFrame::GetInitialAutoStretch(bool& aStretch)
   }
 
   // Check the CSS box-align property.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   aStretch = (boxInfo->mBoxAlign == NS_STYLE_BOX_ALIGN_STRETCH);
 
   return true;
@@ -1224,7 +1224,7 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
     // kPopupList and RelayoutChildAtOrdinal() only handles
     // principal children.
     if (parent && !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-        GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_POPUP) {
+        StyleDisplay()->mDisplay != NS_STYLE_DISPLAY_POPUP) {
       parent->RelayoutChildAtOrdinal(state, this);
       // XXXldb Should this instead be a tree change on the child or parent?
       PresContext()->PresShell()->
@@ -1301,7 +1301,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Check for frames that are marked as a part of the region used
   // in calculating glass margins on Windows.
   if (GetContent()->IsXUL()) {
-      const nsStyleDisplay* styles = GetStyleDisplay();
+      const nsStyleDisplay* styles = StyleDisplay();
       if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
         nsRect rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
         aBuilder->AddExcludedGlassRegion(rect);

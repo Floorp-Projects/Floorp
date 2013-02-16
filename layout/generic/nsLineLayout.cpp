@@ -86,7 +86,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   MOZ_COUNT_CTOR(nsLineLayout);
 
   // Stash away some style data that we need
-  mStyleText = aOuterReflowState->frame->GetStyleText();
+  mStyleText = aOuterReflowState->frame->StyleText();
   mLineNumber = 0;
   mTotalPlacedFrames = 0;
   mTopEdge = 0;
@@ -413,7 +413,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
     psd->mBaseline = aBaseline;
 
     psd->mNoWrap =
-      !aSpanReflowState->frame->GetStyleText()->WhiteSpaceCanWrap();
+      !aSpanReflowState->frame->StyleText()->WhiteSpaceCanWrap();
     psd->mDirection = aSpanReflowState->mStyleVisibility->mDirection;
     psd->mChangedFrameDirection = false;
 
@@ -650,19 +650,19 @@ IsPercentageAware(const nsIFrame* aFrame)
   // things unnecessarily complicated, since they'll probably be set
   // quite rarely.
 
-  const nsStyleMargin* margin = aFrame->GetStyleMargin();
+  const nsStyleMargin* margin = aFrame->StyleMargin();
   if (HasPercentageUnitSide(margin->mMargin)) {
     return true;
   }
 
-  const nsStylePadding* padding = aFrame->GetStylePadding();
+  const nsStylePadding* padding = aFrame->StylePadding();
   if (HasPercentageUnitSide(padding->mPadding)) {
     return true;
   }
 
   // Note that borders can't be aware of percentages
 
-  const nsStylePosition* pos = aFrame->GetStylePosition();
+  const nsStylePosition* pos = aFrame->StylePosition();
 
   if ((pos->WidthDependsOnContainer() &&
        pos->mWidth.GetUnit() != eStyleUnit_Auto) ||
@@ -676,7 +676,7 @@ IsPercentageAware(const nsIFrame* aFrame)
   if (eStyleUnit_Auto == pos->mWidth.GetUnit()) {
     // We need to check for frames that shrink-wrap when they're auto
     // width.
-    const nsStyleDisplay* disp = aFrame->GetStyleDisplay();
+    const nsStyleDisplay* disp = aFrame->StyleDisplay();
     if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK ||
         disp->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE ||
         fType == nsGkAtoms::HTMLButtonControlFrame ||
@@ -1313,7 +1313,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   else
     pfd->mAscent = aMetrics.ascent;
 
-  bool ltr = (NS_STYLE_DIRECTION_LTR == pfd->mFrame->GetStyleVisibility()->mDirection);
+  bool ltr = (NS_STYLE_DIRECTION_LTR == pfd->mFrame->StyleVisibility()->mDirection);
   // Advance to next X coordinate
   psd->mX = pfd->mBounds.XMost() + (ltr ? pfd->mMargin.right : pfd->mMargin.left);
 
@@ -1712,7 +1712,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // the frame height if the user has left line-height == normal 
     if (spanFramePFD->GetFlag(PFD_ISLETTERFRAME) &&
         !spanFrame->GetPrevInFlow() &&
-        spanFrame->GetStyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal) {
+        spanFrame->StyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal) {
       logicalHeight = spanFramePFD->mBounds.height;
     }
 
@@ -1789,7 +1789,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
     // Get vertical-align property
     const nsStyleCoord& verticalAlign =
-      frame->GetStyleTextReset()->mVerticalAlign;
+      frame->StyleTextReset()->mVerticalAlign;
     uint8_t verticalAlignEnum = frame->VerticalAlignEnum();
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  [frame]");
@@ -1984,7 +1984,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       bool canUpdate = !pfd->GetFlag(PFD_ISTEXTFRAME);
       if (!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
         canUpdate =
-          frame->GetStyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal;
+          frame->StyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal;
       }
       if (canUpdate) {
 #endif

@@ -262,7 +262,7 @@ nsFontInflationData::FindEdgeInflatableFrameIn(nsIFrame* aFrame,
         if (content && kid == content->GetPrimaryFrame()) {
           uint32_t len = nsTextFrameUtils::
             ComputeApproximateLengthWithWhitespaceCompression(
-              content, kid->GetStyleText());
+              content, kid->StyleText());
           if (len != 0) {
             return kid;
           }
@@ -306,7 +306,7 @@ DoCharCountOfLargestOption(nsIFrame *aContainer)
         if (optionChild->GetType() == nsGkAtoms::textFrame) {
           optionResult += nsTextFrameUtils::
             ComputeApproximateLengthWithWhitespaceCompression(
-              optionChild->GetContent(), optionChild->GetStyleText());
+              optionChild->GetContent(), optionChild->StyleText());
         }
       }
     }
@@ -348,9 +348,9 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
         if (content && kid == content->GetPrimaryFrame()) {
           uint32_t len = nsTextFrameUtils::
             ComputeApproximateLengthWithWhitespaceCompression(
-              content, kid->GetStyleText());
+              content, kid->StyleText());
           if (len != 0) {
-            nscoord fontSize = kid->GetStyleFont()->mFont.size;
+            nscoord fontSize = kid->StyleFont()->mFont.size;
             if (fontSize > 0) {
               mTextAmount += fontSize * len;
             }
@@ -359,20 +359,20 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
       } else if (fType == nsGkAtoms::textInputFrame) {
         // We don't want changes to the amount of text in a text input
         // to change what we count towards inflation.
-        nscoord fontSize = kid->GetStyleFont()->mFont.size;
+        nscoord fontSize = kid->StyleFont()->mFont.size;
         int32_t charCount = static_cast<nsTextControlFrame*>(kid)->GetCols();
         mTextAmount += charCount * fontSize;
       } else if (fType == nsGkAtoms::comboboxControlFrame) {
         // See textInputFrame above (with s/amount of text/selected option/).
         // Don't just recurse down to the list control inside, since we
         // need to exclude the display frame.
-        nscoord fontSize = kid->GetStyleFont()->mFont.size;
+        nscoord fontSize = kid->StyleFont()->mFont.size;
         int32_t charCount = CharCountOfLargestOption(
           static_cast<nsComboboxControlFrame*>(kid)->GetDropDown());
         mTextAmount += charCount * fontSize;
       } else if (fType == nsGkAtoms::listControlFrame) {
         // See textInputFrame above (with s/amount of text/selected option/).
-        nscoord fontSize = kid->GetStyleFont()->mFont.size;
+        nscoord fontSize = kid->StyleFont()->mFont.size;
         int32_t charCount = CharCountOfLargestOption(kid);
         mTextAmount += charCount * fontSize;
       } else {

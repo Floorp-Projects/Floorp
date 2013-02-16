@@ -66,7 +66,7 @@ FixedTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
             continue;
         }
         const nsStyleCoord *styleWidth =
-            &colFrame->GetStylePosition()->mWidth;
+            &colFrame->StylePosition()->mWidth;
         if (styleWidth->ConvertsToLength()) {
             result += nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                         colFrame, 0, 0, 0, *styleWidth);
@@ -85,7 +85,7 @@ FixedTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
             nsTableCellFrame *cellFrame =
                 cellMap->GetCellInfoAt(0, col, &originates, &colSpan);
             if (cellFrame) {
-                styleWidth = &cellFrame->GetStylePosition()->mWidth;
+                styleWidth = &cellFrame->StylePosition()->mWidth;
                 if (styleWidth->ConvertsToLength() ||
                     (styleWidth->GetUnit() == eStyleUnit_Enumerated &&
                      (styleWidth->GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
@@ -207,7 +207,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         oldColWidths.AppendElement(colFrame->GetFinalWidth());
         colFrame->ResetPrefPercent();
         const nsStyleCoord *styleWidth =
-            &colFrame->GetStylePosition()->mWidth;
+            &colFrame->StylePosition()->mWidth;
         nscoord colWidth;
         if (styleWidth->ConvertsToLength()) {
             colWidth = nsLayoutUtils::ComputeWidthValue(
@@ -232,7 +232,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             nsTableCellFrame *cellFrame =
                 cellMap->GetCellInfoAt(0, col, &originates, &colSpan);
             if (cellFrame) {
-                styleWidth = &cellFrame->GetStylePosition()->mWidth;
+                styleWidth = &cellFrame->StylePosition()->mWidth;
                 if (styleWidth->ConvertsToLength() ||
                     (styleWidth->GetUnit() == eStyleUnit_Enumerated &&
                      (styleWidth->GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||

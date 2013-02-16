@@ -35,7 +35,7 @@ nsSVGGeometryFrame::Init(nsIContent* aContent,
 uint16_t
 nsSVGGeometryFrame::GetClipRule()
 {
-  return GetStyleSVG()->mClipRule;
+  return StyleSVG()->mClipRule;
 }
 
 uint16_t
