@@ -2133,6 +2133,9 @@ public:
    *
    * The algorithm is defined in
    * http://www.w3.org/TR/CSS2/visudet.html#containing-block-details.
+   *
+   * NOTE: This is guaranteed to return a non-null pointer when invoked on any
+   * frame other than the root frame.
    */
   nsIFrame* GetContainingBlock() const;
 
