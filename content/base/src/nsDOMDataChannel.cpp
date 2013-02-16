@@ -22,6 +22,7 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #include "nsIDOMFile.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIDOMDataChannel.h"
+#include "nsIDOMRTCPeerConnection.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMEventTargetHelper.h"
@@ -109,6 +110,11 @@ private:
 };
 
 DOMCI_DATA(DataChannel, nsDOMDataChannel)
+// A bit of a hack for RTCPeerConnection, since it doesn't have a .cpp file of
+// its own.  Note that it's not castable to anything in particular other than
+// nsIDOMRTCPeerConnection, so we can just use nsIDOMRTCPeerConnection as the
+// "class".
+DOMCI_DATA(RTCPeerConnection, nsIDOMRTCPeerConnection)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMDataChannel,
                                                   nsDOMEventTargetHelper)
