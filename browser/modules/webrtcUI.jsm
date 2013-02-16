@@ -22,11 +22,13 @@ this.webrtcUI = {
   init: function () {
     Services.obs.addObserver(handleRequest, "getUserMedia:request", false);
     Services.obs.addObserver(updateGlobalIndicator, "recording-device-events", false);
+    Services.obs.addObserver(removeBrowserSpecificIndicator, "recording-window-ended", false);
   },
 
   uninit: function () {
     Services.obs.removeObserver(handleRequest, "getUserMedia:request");
     Services.obs.removeObserver(updateGlobalIndicator, "recording-device-events");
+    Services.obs.removeObserver(removeBrowserSpecificIndicator, "recording-window-ended");
   },
 
   showGlobalIndicator: false,
@@ -54,18 +56,21 @@ this.webrtcUI = {
   }
 }
 
-function handleRequest(aSubject, aTopic, aData) {
-  let {windowID: windowID, callID: callID} = JSON.parse(aData);
-
+function getBrowserForWindowId(aWindowID) {
   let someWindow = Services.wm.getMostRecentWindow(null);
   let contentWindow = someWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindowUtils)
-                                .getOuterWindowWithId(windowID);
-  let browser = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIWebNavigation)
-                             .QueryInterface(Ci.nsIDocShell)
-                             .chromeEventHandler;
+                                .getOuterWindowWithId(aWindowID);
+  return contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShell)
+                      .chromeEventHandler;
+}
 
+function handleRequest(aSubject, aTopic, aData) {
+  let {windowID: windowID, callID: callID} = JSON.parse(aData);
+
+  let browser = getBrowserForWindowId(windowID);
   let params = aSubject.QueryInterface(Ci.nsIMediaStreamOptions);
 
   browser.ownerDocument.defaultView.navigator.mozGetUserMediaDevices(
@@ -73,6 +78,12 @@ function handleRequest(aSubject, aTopic, aData) {
       prompt(browser, callID, params.audio, params.video, devices);
     },
     function (error) {
+      // bug 827146 -- In the future, the UI should catch NO_DEVICES_FOUND
+      // and allow the user to plug in a device, instead of immediately failing.
+      let msg = Cc["@mozilla.org/supports-string;1"].
+                createInstance(Ci.nsISupportsString);
+      msg.data = error;
+      Services.obs.notifyObservers(msg, "getUserMedia:response:deny", callID);
       Cu.reportError(error);
     }
   );
@@ -204,4 +215,14 @@ function updateGlobalIndicator() {
   let e = Services.wm.getEnumerator("navigator:browser");
   while (e.hasMoreElements())
     e.getNext().WebrtcIndicator.updateButton();
+}
+
+function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
+  let browser = getBrowserForWindowId(aData);
+  let PopupNotifications = browser.ownerDocument.defaultView.PopupNotifications;
+  let notification = PopupNotifications &&
+                     PopupNotifications.getNotification("webRTC-sharingDevices",
+                                                        browser);
+  if (notification)
+    PopupNotifications.remove(notification);
 }

@@ -6,5 +6,5 @@
 
 interface CSSValueList : CSSValue {
          readonly attribute unsigned long    length;
-  getter CSSValue           item(unsigned long index);
+  getter CSSValue?          item(unsigned long index);
 };

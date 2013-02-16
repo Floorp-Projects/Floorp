@@ -11,6 +11,7 @@
 #include "mozilla/HalTypes.h"
 #include "nsPIDOMWindow.h"
 #include "nsWeakPtr.h"
+#include "nsTObserverArray.h"
 
 typedef mozilla::Observer<int64_t> SystemClockChangeObserver;
 typedef mozilla::Observer<mozilla::hal::SystemTimezoneChangeInformation> SystemTimezoneChangeObserver;
@@ -18,6 +19,7 @@ typedef mozilla::Observer<mozilla::hal::SystemTimezoneChangeInformation> SystemT
 class nsSystemTimeChangeObserver : public SystemClockChangeObserver,
                                    public SystemTimezoneChangeObserver
 {
+  typedef nsTObserverArray<nsWeakPtr> ListenerArray;
 public:
   static nsSystemTimeChangeObserver* GetInstance();
   virtual ~nsSystemTimeChangeObserver();
@@ -29,13 +31,13 @@ public:
   void Notify(
     const mozilla::hal::SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo);
 
-  static nsresult AddWindowListener(nsIDOMWindow* aWindow);
-  static nsresult RemoveWindowListener(nsIDOMWindow* aWindow);
+  static nsresult AddWindowListener(nsPIDOMWindow* aWindow);
+  static nsresult RemoveWindowListener(nsPIDOMWindow* aWindow);
 private:
-  nsresult AddWindowListenerImpl(nsIDOMWindow* aWindow);
-  nsresult RemoveWindowListenerImpl(nsIDOMWindow* aWindow);
+  nsresult AddWindowListenerImpl(nsPIDOMWindow* aWindow);
+  nsresult RemoveWindowListenerImpl(nsPIDOMWindow* aWindow);
   nsSystemTimeChangeObserver() { };
-  nsTArray<nsWeakPtr> mWindowListeners;
+  ListenerArray mWindowListeners;
   void FireMozTimeChangeEvent();
 };
 

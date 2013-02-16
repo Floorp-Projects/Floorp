@@ -61,7 +61,7 @@ public:
   ErrorCallbackRunnable(
     already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
-    const nsString& aErrorMsg, uint64_t aWindowID)
+    const nsAString& aErrorMsg, uint64_t aWindowID)
     : mSuccess(aSuccess)
     , mError(aError)
     , mErrorMsg(aErrorMsg)
@@ -553,7 +553,7 @@ public:
   }
 
   nsresult
-  Denied()
+  Denied(const nsAString& aErrorMsg)
   {
       // We add a disabled listener to the StreamListeners array until accepted
       // If this was the only active MediaStream, remove the window from the list.
@@ -561,7 +561,7 @@ public:
       // This is safe since we're on main-thread, and the window can only
       // be invalidated from the main-thread (see OnNavigation)
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
-      error->OnError(NS_LITERAL_STRING("PERMISSION_DENIED"));
+      error->OnError(aErrorMsg);
 
       // Should happen *after* error runs for consistency, but may not matter
       nsRefPtr<MediaManager> manager(MediaManager::GetInstance());
@@ -570,7 +570,7 @@ public:
       // This will re-check the window being alive on main-thread
       // Note: we must remove the listener on MainThread as well
       NS_DispatchToMainThread(new ErrorCallbackRunnable(
-        mSuccess, mError, NS_LITERAL_STRING("PERMISSION_DENIED"), mWindowID
+        mSuccess, mError, aErrorMsg, mWindowID
       ));
 
       // MUST happen after ErrorCallbackRunnable Run()s, as it checks the active window list
@@ -1125,6 +1125,31 @@ MediaManager::RemoveFromWindowList(uint64_t aWindowID,
   if (listeners->Length() == 0) {
     RemoveWindowID(aWindowID);
     // listeners has been deleted here
+
+    // get outer windowID
+    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+      (nsGlobalWindow::GetInnerWindowWithId(aWindowID));
+    if (window) {
+      nsPIDOMWindow *outer = window->GetOuterWindow();
+      if (outer) {
+        uint64_t outerID = outer->WindowID();
+
+        // Notify the UI that this window no longer has gUM active
+        char windowBuffer[32];
+        PR_snprintf(windowBuffer, sizeof(windowBuffer), "%llu", outerID);
+        nsAutoString data;
+        data.Append(NS_ConvertUTF8toUTF16(windowBuffer));
+
+        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+        obs->NotifyObservers(nullptr, "recording-window-ended", data.get());
+        LOG(("Sent recording-window-ended for window %llu (outer %llu)",
+             aWindowID, outerID));
+      } else {
+        LOG(("No outer window for inner %llu", aWindowID));
+      }
+    } else {
+      LOG(("No inner window for %llu", aWindowID));
+    }
   }
 }
 
@@ -1172,7 +1197,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       array->Count(&len);
       MOZ_ASSERT(len);
       if (!len) {
-        gUMRunnable->Denied(); // neither audio nor video were selected
+        gUMRunnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED")); // neither audio nor video were selected
         return NS_OK;
       }
       for (uint32_t i = 0; i < len; i++) {
@@ -1200,6 +1225,16 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (!strcmp(aTopic, "getUserMedia:response:deny")) {
+    nsString errorMessage(NS_LITERAL_STRING("PERMISSION_DENIED"));
+
+    if (aSubject) {
+      nsCOMPtr<nsISupportsString> msg(do_QueryInterface(aSubject));
+      MOZ_ASSERT(msg);
+      msg->GetData(errorMessage);
+      if (errorMessage.IsEmpty())
+        errorMessage.Assign(NS_LITERAL_STRING("UNKNOWN_ERROR"));
+    }
+
     nsString key(aData);
     nsRefPtr<nsRunnable> runnable;
     if (!mActiveCallbacks.Get(key, getter_AddRefs(runnable))) {
@@ -1209,7 +1244,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 
     GetUserMediaRunnable* gUMRunnable =
       static_cast<GetUserMediaRunnable*>(runnable.get());
-    gUMRunnable->Denied();
+    gUMRunnable->Denied(errorMessage);
     return NS_OK;
   }
 

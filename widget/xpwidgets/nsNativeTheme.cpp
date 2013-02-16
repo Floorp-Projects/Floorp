@@ -39,7 +39,7 @@ nsNativeTheme::GetPresShell(nsIFrame* aFrame)
 
   // this is a workaround for the egcs 1.1.2 not inliningg
   // aFrame->GetPresContext(), which causes an undefined symbol
-  nsPresContext *context = aFrame->GetStyleContext()->GetRuleNode()->GetPresContext();
+  nsPresContext *context = aFrame->StyleContext()->GetRuleNode()->GetPresContext();
   return context ? context->GetPresShell() : nullptr;
 }
 

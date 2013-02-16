@@ -312,7 +312,7 @@ def lookup_for_objfile(objfile):
 class Pointer(object):
     def __new__(cls, value, cache):
         # Don't try to provide pretty-printers for NULL pointers.
-        if value.type.code == gdb.TYPE_CODE_PTR and value == 0:
+        if value.type.strip_typedefs().code == gdb.TYPE_CODE_PTR and value == 0:
             return None
         return super(Pointer, cls).__new__(cls)
 
@@ -323,10 +323,13 @@ class Pointer(object):
     def to_string(self):
         # See comment above.
         assert not hasattr(self, 'display_hint') or self.display_hint() != 'string'
-        if self.value.type.code == gdb.TYPE_CODE_PTR:
+        concrete_type = self.value.type.strip_typedefs()
+        if concrete_type.code == gdb.TYPE_CODE_PTR:
             address = self.value.cast(self.cache.void_ptr_t)
-        elif self.value.type.code == gdb.TYPE_CODE_REF:
+        elif concrete_type.code == gdb.TYPE_CODE_REF:
             address = '@' + str(self.value.address.cast(self.cache.void_ptr_t))
+        else:
+            assert not "mozilla.prettyprinters.Pointer applied to bad value type"
         try:
             summary = self.summary()
         except gdb.MemoryError as r:

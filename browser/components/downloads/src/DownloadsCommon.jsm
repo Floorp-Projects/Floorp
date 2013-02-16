@@ -59,6 +59,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsLogger",
+                                  "resource:///modules/DownloadsLogger.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -90,6 +92,22 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
 
 const kPartialDownloadSuffix = ".part";
 
+const kPrefDebug = "browser.download.debug";
+
+let DebugPrefObserver = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+  observe: function PDO_observe(aSubject, aTopic, aData) {
+    this.debugEnabled = Services.prefs.getBoolPref(kPrefDebug);
+  }
+}
+
+XPCOMUtils.defineLazyGetter(DebugPrefObserver, "debugEnabled", function () {
+  Services.prefs.addObserver(kPrefDebug, DebugPrefObserver, true);
+  return Services.prefs.getBoolPref(kPrefDebug);
+});
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsCommon
 
@@ -98,6 +116,27 @@ const kPartialDownloadSuffix = ".part";
  * and provides shared methods for all the instances of the user interface.
  */
 this.DownloadsCommon = {
+  log: function DC_log(...aMessageArgs) {
+    delete this.log;
+    this.log = function DC_log(...aMessageArgs) {
+      if (!DebugPrefObserver.debugEnabled) {
+        return;
+      }
+      DownloadsLogger.log.apply(DownloadsLogger, aMessageArgs);
+    }
+    this.log.apply(this, aMessageArgs);
+  },
+
+  error: function DC_error(...aMessageArgs) {
+    delete this.error;
+    this.error = function DC_error(...aMessageArgs) {
+      if (!DebugPrefObserver.debugEnabled) {
+        return;
+      }
+      DownloadsLogger.reportError.apply(DownloadsLogger, aMessageArgs);
+    }
+    this.error.apply(this, aMessageArgs);
+  },
   /**
    * Returns an object whose keys are the string names from the downloads string
    * bundle, and whose values are either the translated strings or functions
@@ -687,7 +726,8 @@ DownloadsDataCtor.prototype = {
         return existingItem;
       }
     }
-
+    DownloadsCommon.log("Creating a new DownloadsDataItem with downloadGuid =",
+                        downloadGuid);
     let dataItem = new DownloadsDataItem(aSource);
     this.dataItems[downloadGuid] = dataItem;
 
@@ -759,6 +799,7 @@ DownloadsDataCtor.prototype = {
 
     if (aActiveOnly) {
       if (this._loadState == this.kLoadNone) {
+        DownloadsCommon.log("Loading only active downloads from the persistence database");
         // Indicate to the views that a batch loading operation is in progress.
         this._views.forEach(
           function (view) view.onDataLoadStarting()
@@ -777,6 +818,7 @@ DownloadsDataCtor.prototype = {
         this._views.forEach(
           function (view) view.onDataLoadCompleted()
         );
+        DownloadsCommon.log("Active downloads done loading.");
       }
     } else {
       if (this._loadState != this.kLoadAll) {
@@ -784,6 +826,7 @@ DownloadsDataCtor.prototype = {
         // columns are read in the _initFromDataRow method of DownloadsDataItem.
         // Order by descending download identifier so that the most recent
         // downloads are notified first to the listening views.
+        DownloadsCommon.log("Loading all downloads from the persistence database.");
         let dbConnection = Services.downloads.DBConnection;
         let statement = dbConnection.createAsyncStatement(
           "SELECT guid, target, name, source, referrer, state, "
@@ -834,12 +877,14 @@ DownloadsDataCtor.prototype = {
 
   handleError: function DD_handleError(aError)
   {
-    Cu.reportError("Database statement execution error (" + aError.result +
-                   "): " + aError.message);
+    DownloadsCommon.error("Database statement execution error (",
+                          aError.result, "): ", aError.message);
   },
 
   handleCompletion: function DD_handleCompletion(aReason)
   {
+    DownloadsCommon.log("Loading all downloads from database completed with reason:",
+                        aReason);
     this._pendingStatement = null;
 
     // To ensure that we don't inadvertently delete more downloads from the
@@ -868,13 +913,16 @@ DownloadsDataCtor.prototype = {
       case "download-manager-remove-download-guid":
         // If a single download was removed, remove the corresponding data item.
         if (aSubject) {
-          this._removeDataItem(aSubject.QueryInterface(Ci.nsISupportsCString)
-                                       .data);
+            let downloadGuid = aSubject.data.QueryInterface(Ci.nsISupportsCString);
+            DownloadsCommon.log("A single download with id",
+                                downloadGuid, "was removed.");
+          this._removeDataItem(downloadGuid);
           break;
         }
 
         // Multiple downloads have been removed.  Iterate over known downloads
         // and remove those that don't exist anymore.
+        DownloadsCommon.log("Multiple downloads were removed.");
         for each (let dataItem in this.dataItems) {
           if (dataItem) {
             // Bug 449811 - We have to bind to the dataItem because Javascript
@@ -883,6 +931,8 @@ DownloadsDataCtor.prototype = {
             Services.downloads.getDownloadByGUID(dataItemBinding.downloadGuid,
                                                  function(aStatus, aResult) {
               if (aStatus == Components.results.NS_ERROR_NOT_AVAILABLE) {
+                DownloadsCommon.log("Removing download with id",
+                                    dataItemBinding.downloadGuid);
                 this._removeDataItem(dataItemBinding.downloadGuid);
               }
             }.bind(this));
@@ -916,6 +966,7 @@ DownloadsDataCtor.prototype = {
 
     let wasInProgress = dataItem.inProgress;
 
+    DownloadsCommon.log("A download changed its state to:", aDownload.state);
     dataItem.state = aDownload.state;
     dataItem.referrer = aDownload.referrer && aDownload.referrer.spec;
     dataItem.resumable = aDownload.resumable;
@@ -1034,7 +1085,9 @@ DownloadsDataCtor.prototype = {
    */
   _notifyDownloadEvent: function DD_notifyDownloadEvent(aType)
   {
+    DownloadsCommon.log("Attempting to notify that a new download has started or finished.");
     if (DownloadsCommon.useToolkitUI) {
+      DownloadsCommon.log("Cancelling notification - we're using the toolkit downloads manager.");
       return;
     }
 
@@ -1048,6 +1101,7 @@ DownloadsDataCtor.prototype = {
       // For new downloads after the first one, don't show the panel
       // automatically, but provide a visible notification in the topmost
       // browser window, if the status indicator is already visible.
+      DownloadsCommon.log("Showing new download notification.");
       browserWin.DownloadsIndicatorView.showEventNotification(aType);
       return;
     }

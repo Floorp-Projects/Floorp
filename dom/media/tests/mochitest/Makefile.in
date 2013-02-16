@@ -29,6 +29,7 @@ MOCHITEST_FILES = \
   test_peerConnection_basicAudioVideo.html \
   test_peerConnection_basicAudioVideoCombined.html \
   test_peerConnection_basicVideo.html \
+  test_peerConnection_bug822674.html \
   test_peerConnection_bug827843.html \
   test_peerConnection_bug825703.html \
   test_peerConnection_bug834153.html \

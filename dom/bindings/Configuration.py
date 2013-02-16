@@ -207,7 +207,6 @@ class Descriptor(DescriptorProvider):
                 nativeTypeDefault = "mozilla::dom::" + ifaceName
 
         self.nativeType = desc.get('nativeType', nativeTypeDefault)
-        self.hasInstanceInterface = desc.get('hasInstanceInterface', None)
 
         # Do something sane for JSObject
         if self.nativeType == "JSObject":
@@ -228,16 +227,6 @@ class Descriptor(DescriptorProvider):
         self.headerFile = desc.get('headerFile', headerDefault)
 
         self.skipGen = desc.get('skipGen', False)
-
-        if (self.interface.isCallback() or self.interface.isExternal() or
-            self.skipGen):
-            if 'castable' in desc:
-                raise TypeError("%s is external or callback or skipGen but has "
-                                "a castable setting" %
-                                self.interface.identifier.name)
-            self.castable = False
-        else:
-            self.castable = desc.get('castable', True)
 
         self.notflattened = desc.get('notflattened', False)
         self.register = desc.get('register', True)
@@ -440,7 +429,7 @@ class Descriptor(DescriptorProvider):
 
     def needsConstructHookHolder(self):
         assert self.interface.hasInterfaceObject()
-        return not self.hasInstanceInterface and not self.interface.isCallback()
+        return False
 
 # Some utility methods
 def getTypesFromDescriptor(descriptor):

@@ -42,9 +42,6 @@ import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import dalvik.system.DexClassLoader;
-
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.EnumSet;
@@ -237,10 +234,10 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Feedback:LastUrl");
         registerEventListener("Feedback:OpenPlayStore");
         registerEventListener("Feedback:MaybeLater");
-        registerEventListener("Dex:Load");
         registerEventListener("Telemetry:Gather");
 
         Distribution.init(this);
+        JavaAddonManager.getInstance().init(getApplicationContext());
     }
 
     @Override
@@ -256,7 +253,6 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Feedback:LastUrl");
         unregisterEventListener("Feedback:OpenPlayStore");
         unregisterEventListener("Feedback:MaybeLater");
-        unregisterEventListener("Dex:Load");
         unregisterEventListener("Telemetry:Gather");
     }
 
@@ -491,18 +487,6 @@ abstract public class BrowserApp extends GeckoApp
                 Telemetry.HistogramAdd("PLACES_BOOKMARKS_COUNT", BrowserDB.getCount(getContentResolver(), "bookmarks"));
                 Telemetry.HistogramAdd("FENNEC_FAVICONS_COUNT", BrowserDB.getCount(getContentResolver(), "favicons"));
                 Telemetry.HistogramAdd("FENNEC_THUMBNAILS_COUNT", BrowserDB.getCount(getContentResolver(), "thumbnails"));
-            } else if (event.equals("Dex:Load")) {
-                String zipFile = message.getString("zipfile");
-                String implClass = message.getString("impl");
-                Log.d(LOGTAG, "Attempting to load classes.dex file from " + zipFile + " and instantiate " + implClass);
-                try {
-                    File tmpDir = getDir("dex", 0);
-                    DexClassLoader loader = new DexClassLoader(zipFile, tmpDir.getAbsolutePath(), null, ClassLoader.getSystemClassLoader());
-                    Class<?> c = loader.loadClass(implClass);
-                    c.newInstance();
-                } catch (Exception e) {
-                    Log.e(LOGTAG, "Unable to initialize addon", e);
-                }
             } else {
                 super.handleMessage(event, message);
             }

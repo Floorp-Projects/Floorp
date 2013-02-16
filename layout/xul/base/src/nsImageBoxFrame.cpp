@@ -286,34 +286,30 @@ nsImageBoxFrame::UpdateLoadFlags()
   }
 }
 
-NS_IMETHODIMP
+void
 nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
     // scaling work while we wait for our image dimensions to arrive
     // asynchronously.
-    return NS_OK;
+    return;
   }
 
   if (!IsVisibleForPainting(aBuilder))
-    return NS_OK;
-
+    return;
 
   nsDisplayList list;
-  rv = list.AppendNewToTop(
-      new (aBuilder) nsDisplayXULImage(aBuilder, this));
-  NS_ENSURE_SUCCESS(rv, rv);
+  list.AppendNewToTop(
+    new (aBuilder) nsDisplayXULImage(aBuilder, this));
 
   CreateOwnLayerIfNeeded(aBuilder, &list);
 
   aLists.Content()->AppendToTop(&list);
-  return NS_OK;
 }
 
 void

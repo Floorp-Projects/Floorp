@@ -354,14 +354,11 @@
       <method name="filterElement">
         <parameter name="aRow" />
         <body><![CDATA[
-          let anyMatch = (aRow.hasAttribute("msg") &&
-                          this.stringMatchesFilters(aRow.getAttribute("msg"), this.mFilter)) ||
-                         (aRow.hasAttribute("code") &&
-                          this.stringMatchesFilters(aRow.getAttribute("code"), this.mFilter)) ||
-                         (aRow.mSourceName &&
-                          this.stringMatchesFilters(aRow.mSourceName, this.mFilter)) ||
-                         (aRow.mSourceLine &&
-                          this.stringMatchesFilters(aRow.mSourceLine, this.mFilter));
+          let anyMatch = ["msg", "line", "code"].some(function (key) {
+            return (aRow.hasAttribute(key) &&
+                    this.stringMatchesFilters(aRow.getAttribute(key), this.mFilter));
+          }, this) || (aRow.mSourceName &&
+                       this.stringMatchesFilters(aRow.mSourceName, this.mFilter));
 
           if (anyMatch) {
             aRow.classList.remove("filtered-by-string")
@@ -510,13 +507,13 @@
                                         [this.mSourceName]) + "\n";
             if (this.hasAttribute("col")) {
               msg += strBundle.getFormattedString("errLineCol",
-                         [this.mSourceLine, this.getAttribute("col")]);
+                         [this.getAttribute("line"), this.getAttribute("col")]);
             } else
-              msg += strBundle.getFormattedString("errLine", [this.mSourceLine]);
+              msg += strBundle.getFormattedString("errLine", [this.getAttribute("line")]);
           }
 
           if (this.hasAttribute("code"))
-            msg += "\n" + strBundle.getString("errCode") + "\n" + this.getAttribute("code");
+            msg += "\n" + strBundle.getString("errCode") + "\n" + this.mSourceLine;
 
           return msg;
         ]]></body>

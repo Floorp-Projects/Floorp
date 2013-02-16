@@ -39,6 +39,7 @@ browser.jar:
         skin/classic/browser/menu-back.png
         skin/classic/browser/menu-forward.png
         skin/classic/browser/mixed-content-blocked-16.png
+        skin/classic/browser/mixed-content-blocked-64.png
         skin/classic/browser/monitor.png
         skin/classic/browser/monitor_16-10.png
         skin/classic/browser/pageInfo.css
