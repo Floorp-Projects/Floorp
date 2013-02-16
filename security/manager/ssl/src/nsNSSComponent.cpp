@@ -478,52 +478,47 @@ nsNSSComponent::DispatchEvent(const nsAString &eventType,
 
 nsresult
 nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
-                      const nsAString &eventType, const nsAString &tokenName)
+                                      const nsAString &eventType,
+                                      const nsAString &tokenName)
 {
-  // first walk the children and dispatch their events 
-  {
-    nsresult rv;
-    nsCOMPtr<nsIDOMWindowCollection> frames;
-    rv = domWin->GetFrames(getter_AddRefs(frames));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+  if (!domWin) {
+    return NS_OK;
+  }
 
-    uint32_t length;
-    frames->GetLength(&length);
-    uint32_t i;
-    for (i = 0; i < length; i++) {
-      nsCOMPtr<nsIDOMWindow> childWin;
-      frames->Item(i, getter_AddRefs(childWin));
-      DispatchEventToWindow(childWin, eventType, tokenName);
-    }
+  // first walk the children and dispatch their events 
+  nsresult rv;
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  rv = domWin->GetFrames(getter_AddRefs(frames));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint32_t length;
+  frames->GetLength(&length);
+  uint32_t i;
+  for (i = 0; i < length; i++) {
+    nsCOMPtr<nsIDOMWindow> childWin;
+    frames->Item(i, getter_AddRefs(childWin));
+    DispatchEventToWindow(childWin, eventType, tokenName);
   }
 
   // check if we've enabled smart card events on this window
   // NOTE: it's not an error to say that we aren't going to dispatch
   // the event.
-  {
-    nsCOMPtr<nsIWindowCrypto> domWindow = do_QueryInterface(domWin);
-    if (!domWindow) {
-      return NS_OK; // nope, it's not an internal window
-    }
+  nsCOMPtr<nsIDOMCrypto> crypto;
+  domWin->GetCrypto(getter_AddRefs(crypto));
+  if (!crypto) {
+    return NS_OK; // nope, it doesn't have a crypto property
+  }
 
-    nsCOMPtr<nsIDOMCrypto> crypto;
-    domWindow->GetCrypto(getter_AddRefs(crypto));
-    if (!crypto) {
-      return NS_OK; // nope, it doesn't have a crypto property
-    }
-
-    bool boolrv;
-    crypto->GetEnableSmartCardEvents(&boolrv);
-    if (!boolrv) {
-      return NS_OK; // nope, it's not enabled.
-    }
+  bool boolrv;
+  crypto->GetEnableSmartCardEvents(&boolrv);
+  if (!boolrv) {
+    return NS_OK; // nope, it's not enabled.
   }
 
   // dispatch the event ...
 
-  nsresult rv;
   // find the document
   nsCOMPtr<nsIDOMDocument> doc;
   rv = domWin->GetDocument(getter_AddRefs(doc));
@@ -545,9 +540,7 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
     return rv;
   }
 
-  bool boolrv;
-  rv = target->DispatchEvent(smartCardEvent, &boolrv);
-  return rv;
+  return target->DispatchEvent(smartCardEvent, &boolrv);
 }
 #endif // MOZ_DISABLE_CRYPTOLEGACY
 
