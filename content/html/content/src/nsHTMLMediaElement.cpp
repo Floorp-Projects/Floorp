@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHTMLMediaElement.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Util.h"
 
 #include "base/basictypes.h"
@@ -72,8 +73,6 @@
 
 #include "ImageContainer.h"
 #include "nsIPowerManagerService.h"
-#include <cstdlib> // for std::abs(int/long)
-#include <cmath> // for std::abs(float/double)
 #include <algorithm>
 
 #ifdef MOZ_OGG
@@ -3520,10 +3519,10 @@ static double ClampPlaybackRate(double aPlaybackRate)
   if (aPlaybackRate == 0.0) {
     return aPlaybackRate;
   }
-  if (std::abs(aPlaybackRate) < MIN_PLAYBACKRATE) {
+  if (Abs(aPlaybackRate) < MIN_PLAYBACKRATE) {
     return aPlaybackRate < 0 ? -MIN_PLAYBACKRATE : MIN_PLAYBACKRATE;
   }
-  if (std::abs(aPlaybackRate) > MAX_PLAYBACKRATE) {
+  if (Abs(aPlaybackRate) > MAX_PLAYBACKRATE) {
     return aPlaybackRate < 0 ? -MAX_PLAYBACKRATE : MAX_PLAYBACKRATE;
   }
   return aPlaybackRate;

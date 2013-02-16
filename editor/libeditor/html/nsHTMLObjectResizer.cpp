@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
@@ -42,8 +43,6 @@
 #include "nsStringFwd.h"
 #include "nsSubstringTuple.h"
 #include "nscore.h"
-#include <cstdlib> // for std::abs(int/long)
-#include <cmath> // for std::abs(float/double)
 #include <algorithm>
 
 class nsISelection;
@@ -876,8 +875,8 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     int32_t yThreshold =
       LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 1);
 
-    if (std::abs(clientX - mOriginalX ) * 2 >= xThreshold ||
-        std::abs(clientY - mOriginalY ) * 2 >= yThreshold) {
+    if (Abs(clientX - mOriginalX) * 2 >= xThreshold ||
+        Abs(clientY - mOriginalY) * 2 >= yThreshold) {
       mGrabberClicked = false;
       StartMoving(nullptr);
     }

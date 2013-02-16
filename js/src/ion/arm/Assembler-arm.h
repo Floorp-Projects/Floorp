@@ -8,13 +8,15 @@
 #ifndef jsion_cpu_arm_assembler_h__
 #define jsion_cpu_arm_assembler_h__
 
+#include "mozilla/MathAlgorithms.h"
+#include "mozilla/Util.h"
+
 #include "ion/shared/Assembler-shared.h"
 #include "assembler/assembler/AssemblerBufferWithConstantPool.h"
 #include "ion/CompactBuffer.h"
 #include "ion/IonCode.h"
 #include "ion/arm/Architecture-arm.h"
 #include "ion/shared/IonAssemblerBufferWithConstantPools.h"
-#include "mozilla/Util.h"
 
 namespace js {
 namespace ion {
@@ -703,7 +705,7 @@ class DtrOffImm : public DtrOff
 {
   public:
     DtrOffImm(int32_t imm)
-      : DtrOff(datastore::Imm12Data(abs(imm)), imm >= 0 ? IsUp : IsDown)
+      : DtrOff(datastore::Imm12Data(mozilla::Abs(imm)), imm >= 0 ? IsUp : IsDown)
     {
         JS_ASSERT((imm < 4096) && (imm > -4096));
     }
@@ -788,7 +790,7 @@ class EDtrOffImm : public EDtrOff
 {
   public:
     EDtrOffImm(int32_t imm)
-      : EDtrOff(datastore::Imm8Data(abs(imm)), (imm >= 0) ? IsUp : IsDown)
+      : EDtrOff(datastore::Imm8Data(mozilla::Abs(imm)), (imm >= 0) ? IsUp : IsDown)
     { }
 };
 
@@ -836,7 +838,7 @@ class VFPOffImm : public VFPOff
 {
   public:
     VFPOffImm(int32_t imm)
-      : VFPOff(datastore::Imm8VFPOffData(abs(imm) >> 2), imm < 0 ? IsDown : IsUp)
+      : VFPOff(datastore::Imm8VFPOffData(mozilla::Abs(imm) >> 2), imm < 0 ? IsDown : IsUp)
     { }
 };
 class VFPAddr

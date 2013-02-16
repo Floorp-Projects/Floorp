@@ -3,12 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/PLayersChild.h"
+#include "mozilla/MathAlgorithms.h"
 #include "BasicTiledThebesLayer.h"
 #include "gfxImageSurface.h"
 #include "sampler.h"
 #include "gfxPlatform.h"
-#include <cstdlib> // for std::abs(int/long)
-#include <cmath> // for std::abs(float/double)
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"
@@ -377,7 +376,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     if (!aRegionToPaint.IsEmpty()) {
       break;
     }
-    if (std::abs(scrollDiffY) >= std::abs(scrollDiffX)) {
+    if (Abs(scrollDiffY) >= Abs(scrollDiffX)) {
       tileBounds.x += incX;
     } else {
       tileBounds.y += incY;
