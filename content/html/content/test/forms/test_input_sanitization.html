@@ -18,7 +18,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549475
 </div>
 <script type="application/javascript">
 
-/** Test for Bug 549475 **/
+/**
+ * This files tests the 'value sanitization algorithm' for the various input
+ * types. Note that an input's value is affected by more than just its type's
+ * value sanitization algorithm; e.g. some type=range has actions that the user
+ * agent must perform to change the element's value to avoid underflow/overflow
+ * and step mismatch (when possible). We specifically avoid triggering these
+ * other actions here so that this test only tests the value sanitization
+ * algorithm for the various input types.
+ *
+ * XXXjwatt splitting out testing of the value sanitization algorithm and 
+ * "other things" that affect .value makes it harder to know what we're testing
+ * and what we've missed, because what's included in the value sanitization
+ * algorithm and what's not is different from input type to input type. It
+ * seems to me it would be better to have a test (maybe one per type) focused
+ * on testing .value for permutations of all other inputs that can affect it.
+ * The value sanitization algorithm is just an internal spec concept after all.
+ */
 
 // We are excluding "file" because it's too different from the other types.
 // And it has no sanitizing algorithm.
@@ -26,12 +42,12 @@ var inputTypes =
 [
   "text", "password", "search", "tel", "hidden", "checkbox", "radio",
   "submit", "image", "reset", "button", "email", "url", "number", "date",
-  "time",
+  "time", "range"
 ];
 
 var todoTypes =
 [
-  "range", "color",
+  "color",
   "month", "week", "datetime", "datetime-local",
 ];
 
@@ -55,6 +71,20 @@ function sanitizeValue(aType, aValue)
       return aValue.replace(/[\n\r]/g, "").replace(/^[\u0020\u0009\t\u000a\u000c\u000d]+|[\u0020\u0009\t\u000a\u000c\u000d]+$/g, "");
     case "number":
       return isNaN(Number(aValue)) ? "" : aValue;
+    case "range":
+      var defaultMinimum = 0;
+      var defaultMaximum = 100;
+      var value = Number(aValue);
+      if (isNaN(value)) {
+        return ((defaultMaximum - defaultMinimum)/2).toString(); // "50"
+      }
+      if (value < defaultMinimum) {
+        return defaultMinimum.toString();
+      }
+      if (value > defaultMaximum) {
+        return defaultMaximum.toString();
+      }
+      return aValue;
     case "date":
       // http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#valid-date-string
       function getNumbersOfDaysInMonth(aMonth, aYear) {
@@ -121,10 +151,6 @@ function sanitizeValue(aType, aValue)
       // TODO: write the sanitize algorithm.
       ok(false);
       return "";
-    case "range":
-      ok(false);
-      // TODO: write the sanitize algorithm.
-      return "";
     case "color":
       ok(false);
       // TODO: write the sanitize algorithm.
@@ -151,7 +177,7 @@ function checkSanitizing(element)
     "\u000d foo \u000d",
     "\u0020 foo \u0020",
     " \u0009 foo \u0009 ",
-    // For number:
+    // For number and range:
     "42",
     "13.37",
     "1.234567898765432",
