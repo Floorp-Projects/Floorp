@@ -1004,17 +1004,16 @@ static bool
 TextContainsLineBreakerWhiteSpace(const void* aText, uint32_t aLength,
                                   bool aIsDoubleByte)
 {
-  uint32_t i;
   if (aIsDoubleByte) {
     const PRUnichar* chars = static_cast<const PRUnichar*>(aText);
-    for (i = 0; i < aLength; ++i) {
+    for (uint32_t i = 0; i < aLength; ++i) {
       if (IsLineBreakingWhiteSpace(chars[i]))
         return true;
     }
     return false;
   } else {
     const uint8_t* chars = static_cast<const uint8_t*>(aText);
-    for (i = 0; i < aLength; ++i) {
+    for (uint32_t i = 0; i < aLength; ++i) {
       if (IsLineBreakingWhiteSpace(chars[i]))
         return true;
     }
@@ -1274,8 +1273,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
       bool(seenTextRunBoundaryOnLaterLine), false, false };
     nsIFrame* child = line->mFirstChild;
     bool foundBoundary = false;
-    int32_t i;
-    for (i = line->GetChildCount() - 1; i >= 0; --i) {
+    for (int32_t i = line->GetChildCount() - 1; i >= 0; --i) {
       BuildTextRunsScanner::FindBoundaryResult result =
           scanner.FindBoundaries(child, &state);
       if (result == BuildTextRunsScanner::FB_FOUND_VALID_TEXTRUN_BOUNDARY) {
@@ -1318,8 +1316,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     scanner.SetAtStartOfLine();
     scanner.SetCommonAncestorWithLastFrame(nullptr);
     nsIFrame* child = line->mFirstChild;
-    int32_t i;
-    for (i = line->GetChildCount() - 1; i >= 0; --i) {
+    for (int32_t i = line->GetChildCount() - 1; i >= 0; --i) {
       scanner.ScanFrame(child);
       child = child->GetNextSibling();
     }
@@ -1370,8 +1367,7 @@ bool BuildTextRunsScanner::IsTextRunValidForMappedFlows(gfxTextRun* aTextRun)
   TextRunUserData* userData = static_cast<TextRunUserData*>(aTextRun->GetUserData());
   if (userData->mMappedFlowCount != mMappedFlows.Length())
     return false;
-  uint32_t i;
-  for (i = 0; i < mMappedFlows.Length(); ++i) {
+  for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
     if (userData->mMappedFlows[i].mStartFrame != mMappedFlows[i].mStartFrame ||
         int32_t(userData->mMappedFlows[i].mContentLength) !=
             mMappedFlows[i].GetContentEnd() - mMappedFlows[i].mStartFrame->GetContentOffset())
@@ -1440,8 +1436,7 @@ void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
     aTrailingTextRun->SetFlagBits(nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK);
   }
 
-  uint32_t i;
-  for (i = 0; i < mBreakSinks.Length(); ++i) {
+  for (uint32_t i = 0; i < mBreakSinks.Length(); ++i) {
     if (!mBreakSinks[i]->mExistingTextRun || mBreakSinks[i]->mChangedBreaks) {
       // TODO cause frames associated with the textrun to be reflowed, if they
       // aren't being reflowed already!
@@ -1450,7 +1445,7 @@ void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
   }
   mBreakSinks.Clear();
 
-  for (i = 0; i < mTextRunsToDelete.Length(); ++i) {
+  for (uint32_t i = 0; i < mTextRunsToDelete.Length(); ++i) {
     gfxTextRun* deleteTextRun = mTextRunsToDelete[i];
     gTextRuns->RemoveFromCache(deleteTextRun);
     delete deleteTextRun;
@@ -1841,11 +1836,10 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       break;
   }
 
-  uint32_t i;
   const nsStyleText* textStyle = nullptr;
   const nsStyleFont* fontStyle = nullptr;
   nsStyleContext* lastStyleContext = nullptr;
-  for (i = 0; i < mMappedFlows.Length(); ++i) {
+  for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
     nsTextFrame* f = mappedFlow->mStartFrame;
 
@@ -1988,7 +1982,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
                "Didn't find all the frames to break-before...");
   gfxSkipCharsIterator iter(skipChars);
   nsAutoTArray<uint32_t,50> textBreakPointsAfterTransform;
-  for (i = 0; i < textBreakPoints.Length(); ++i) {
+  for (uint32_t i = 0; i < textBreakPoints.Length(); ++i) {
     nsTextFrameUtils::AppendLineBreakOffset(&textBreakPointsAfterTransform, 
             iter.ConvertOriginalToSkipped(textBreakPoints[i]));
   }
@@ -2009,7 +2003,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   nsTArray<nsStyleContext*> styles;
   if (transformingFactory) {
     iter.SetOriginalOffset(0);
-    for (i = 0; i < mMappedFlows.Length(); ++i) {
+    for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
       MappedFlow* mappedFlow = &mMappedFlows[i];
       nsTextFrame* f;
       for (f = mappedFlow->mStartFrame; f != mappedFlow->mEndFrame;
@@ -2146,9 +2140,8 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
   uint32_t nextBreakIndex = 0;
   nsTextFrame* nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
 
-  uint32_t i;
   const nsStyleText* textStyle = nullptr;
-  for (i = 0; i < mMappedFlows.Length(); ++i) {
+  for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
     nsTextFrame* f = mappedFlow->mStartFrame;
 
@@ -2262,8 +2255,7 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
   // whitespace...
   gfxSkipCharsIterator iter(aTextRun->GetSkipChars());
 
-  uint32_t i;
-  for (i = 0; i < mMappedFlows.Length(); ++i) {
+  for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
     uint32_t offset = iter.GetSkippedOffset();
     gfxSkipCharsIterator iterNext = iter;
@@ -2370,8 +2362,7 @@ FindFlowForContent(TextRunUserData* aUserData, nsIContent* aContent)
 void
 BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun, float aInflation)
 {
-  uint32_t i;
-  for (i = 0; i < mMappedFlows.Length(); ++i) {
+  for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
     nsTextFrame* startFrame = mappedFlow->mStartFrame;
     nsTextFrame* endFrame = mappedFlow->mEndFrame;
@@ -2434,8 +2425,8 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun, float aInflation)
 #ifdef DEBUG
         if (firstFrame && !firstFrame->GetTextRun(mWhichTextRun)) {
           // oldTextRun was destroyed - assert that we don't reference it.
-          for (uint32_t i = 0; i < mBreakSinks.Length(); ++i) {
-            NS_ASSERTION(oldTextRun != mBreakSinks[i]->mTextRun,
+          for (uint32_t j = 0; j < mBreakSinks.Length(); ++j) {
+            NS_ASSERTION(oldTextRun != mBreakSinks[j]->mTextRun,
                          "destroyed text run is still in use");
           }
         }
@@ -2839,8 +2830,7 @@ PropertyProvider::ComputeJustifiableCharacters(int32_t aOffset, int32_t aLength)
   uint32_t justifiableChars = 0;
   bool isCJK = IsChineseOrJapanese(mFrame);
   while (run.NextRun()) {
-    int32_t i;
-    for (i = 0; i < run.GetRunLength(); ++i) {
+    for (int32_t i = 0; i < run.GetRunLength(); ++i) {
       justifiableChars +=
         IsJustifiableCharacter(mFrag, run.GetOriginalOffset() + i, isCJK);
     }
@@ -2923,9 +2913,8 @@ PropertyProvider::GetSpacingInternal(uint32_t aStart, uint32_t aLength,
       run(start, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aLength);
     while (run.NextRun()) {
       uint32_t runOffsetInSubstring = run.GetSkippedOffset() - aStart;
-      int32_t i;
       gfxSkipCharsIterator iter = run.GetPos();
-      for (i = 0; i < run.GetRunLength(); ++i) {
+      for (int32_t i = 0; i < run.GetRunLength(); ++i) {
         if (CanAddSpacingAfter(mTextRun, run.GetSkippedOffset() + i)) {
           // End of a cluster, not in a ligature: put letter-spacing after it
           aSpacing[runOffsetInSubstring + i].mAfter += mLetterSpacing;
@@ -2968,10 +2957,9 @@ PropertyProvider::GetSpacingInternal(uint32_t aStart, uint32_t aLength,
     nsSkipCharsRunIterator
       run(start, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aLength);
     while (run.NextRun()) {
-      int32_t i;
       gfxSkipCharsIterator iter = run.GetPos();
       int32_t runOriginalOffset = run.GetOriginalOffset();
-      for (i = 0; i < run.GetRunLength(); ++i) {
+      for (int32_t i = 0; i < run.GetRunLength(); ++i) {
         int32_t iterOriginalOffset = runOriginalOffset + i;
         if (IsJustifiableCharacter(mFrag, iterOriginalOffset, isCJK)) {
           iter.SetOriginalOffset(iterOriginalOffset);
@@ -3398,8 +3386,8 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
   printf("%s\n", buf);
 #endif
 
-  uint32_t i, n = mFrames.Length();
-  for (i = 0; i < n; i++) {
+  uint32_t n = mFrames.Length();
+  for (uint32_t i = 0; i < n; i++) {
     FrameData& frameData = mFrames.ElementAt(i);
 
     // Determine damaged area and tell view manager to redraw it
@@ -5697,13 +5685,13 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
     DestroySelectionDetails(details);
     return false;
   }
-  int32_t i;
   // Iterate through just the selection types that paint decorations and
   // paint decorations for any that actually occur in this frame. Paint
   // higher-numbered selection types below lower-numered ones on the
   // general principal that lower-numbered selections are higher priority.
   allTypes &= SelectionTypesWithDecorations;
-  for (i = nsISelectionController::NUM_SELECTIONTYPES - 1; i >= 1; --i) {
+  for (int32_t i = nsISelectionController::NUM_SELECTIONTYPES - 1;
+       i >= 1; --i) {
     SelectionType type = 1 << (i - 1);
     if (allTypes & type) {
       // There is some selection of this type. Try to paint its decorations
@@ -6215,8 +6203,7 @@ CountCharsFit(gfxTextRun* aTextRun, uint32_t aStart, uint32_t aLength,
 {
   uint32_t last = 0;
   gfxFloat width = 0;
-  uint32_t i;
-  for (i = 1; i <= aLength; ++i) {
+  for (uint32_t i = 1; i <= aLength; ++i) {
     if (i == aLength || aTextRun->IsClusterStart(aStart + i)) {
       gfxFloat nextWidth = width +
           aTextRun->GetAdvanceWidth(aStart + last, i - last, aProvider);
@@ -6791,8 +6778,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
     aContext.Insert(str, 0);
   }
   nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
-  int32_t i;
-  for (i = 0; i <= textLen; ++i) {
+  for (int32_t i = 0; i <= textLen; ++i) {
     int32_t indexInText = i + textStart;
     mWordBreaks[i] |=
       wordBreaker->BreakInBetween(aContext.get(), indexInText,
@@ -8262,8 +8248,8 @@ nsTextFrame::TrimTrailingWhiteSpace(nsRenderingContext* aRC)
     gfxSkipCharsIterator justificationStart(start), justificationEnd(trimmedEndIter);
     provider.FindJustificationRange(&justificationStart, &justificationEnd);
 
-    int32_t i;
-    for (i = justificationEnd.GetOriginalOffset(); i < trimmed.GetEnd(); ++i) {
+    for (int32_t i = justificationEnd.GetOriginalOffset();
+         i < trimmed.GetEnd(); ++i) {
       if (IsJustifiableCharacter(frag, i, isCJK)) {
         result.mLastCharIsJustifiable = true;
       }
