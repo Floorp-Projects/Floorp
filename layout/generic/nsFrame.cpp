@@ -1072,7 +1072,7 @@ nsIFrame::HasPerspective() const
 bool
 nsIFrame::ChildrenHavePerspective() const
 {
-  const nsStyleDisplay *disp = StyleContext()->GetStyleDisplay();
+  const nsStyleDisplay *disp = GetStyleDisplay();
   if (disp &&
       disp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
       disp->mChildPerspective.GetCoordValue() > 0.0) {
@@ -6079,7 +6079,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 
   // If this is a preformatted text frame, see if it ends with a newline
   if (aFrame->HasTerminalNewline() &&
-      aFrame->StyleContext()->GetStyleText()->NewlineIsSignificant()) {
+      aFrame->GetStyleText()->NewlineIsSignificant()) {
     int32_t startOffset, endOffset;
     aFrame->GetOffsets(startOffset, endOffset);
     result.mContent = aFrame->GetContent();
@@ -7521,8 +7521,7 @@ nsIFrame::VerticalAlignEnum() const
     return ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline);
   }
 
-  const nsStyleCoord& verticalAlign =
-    StyleContext()->GetStyleTextReset()->mVerticalAlign;
+  const nsStyleCoord& verticalAlign = GetStyleTextReset()->mVerticalAlign;
   if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     return verticalAlign.GetIntValue();
   }
