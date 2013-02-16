@@ -2,6 +2,7 @@
 
 import gdb
 import mozilla.prettyprinters
+import mozilla.Root
 
 from mozilla.prettyprinters import pretty_printer
 
@@ -52,3 +53,15 @@ class jsid(object):
         else:
             body = "<unrecognized>"
         return '$jsid(%s)' % (body,)
+
+# Hard-code the referent type pretty-printer for jsid roots and handles.
+# See the comment for mozilla.Root.Common.__init__.
+@pretty_printer('js::Rooted<long>')
+def RootedJSID(value, cache):
+    return mozilla.Root.Rooted(value, cache, jsid)
+@pretty_printer('JS::Handle<long>')
+def HandleJSID(value, cache):
+    return mozilla.Root.Handle(value, cache, jsid)
+@pretty_printer('JS::MutableHandle<long>')
+def MutableHandleJSID(value, cache):
+    return mozilla.Root.MutableHandle(value, cache, jsid)
