@@ -104,7 +104,7 @@ nsTableCaptionFrame::GetParentStyleContextFrame() const
     nsIFrame* innerFrame = outerFrame->GetFirstPrincipalChild();
     if (innerFrame) {
       return nsFrame::CorrectStyleParentFrame(innerFrame,
-                                              GetStyleContext()->GetPseudo());
+                                              StyleContext()->GetPseudo());
     }
   }
 

@@ -403,7 +403,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 
     nsIFrame* f = this;
     do {  // find decoration colors
-      nsStyleContext* context = f->GetStyleContext();
+      nsStyleContext* context = f->StyleContext();
       if (!context->HasTextDecorationLines()) {
         break;
       }

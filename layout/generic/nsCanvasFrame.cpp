@@ -385,7 +385,7 @@ nsCanvasFrame::PaintFocus(nsRenderingContext& aRenderingContext, nsPoint aPt)
  // for HTML documents?
   nsIFrame* root = mFrames.FirstChild();
   const nsStyleColor* color =
-    root ? root->GetStyleContext()->GetStyleColor() :
+    root ? root->StyleContext()->GetStyleColor() :
            mStyleContext->GetStyleColor();
   if (!color) {
     NS_ERROR("current color cannot be found");

@@ -164,7 +164,7 @@ nsTableColGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
      
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     int32_t colCount = GetColCount();
     if (!colCount)
       return; // this is a degenerated colgroup 
@@ -301,9 +301,9 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
       while (col && col->GetColType() == eColAnonymousCol) {
 #ifdef DEBUG
         nsIFrame* providerFrame = colFrame->GetParentStyleContextFrame();
-        if (colFrame->GetStyleContext()->GetParent() ==
-            providerFrame->GetStyleContext()) {
-          NS_ASSERTION(col->GetStyleContext() == colFrame->GetStyleContext() &&
+        if (colFrame->StyleContext()->GetParent() ==
+            providerFrame->StyleContext()) {
+          NS_ASSERTION(col->StyleContext() == colFrame->StyleContext() &&
                        col->GetContent() == colFrame->GetContent(),
                        "How did that happen??");
         }

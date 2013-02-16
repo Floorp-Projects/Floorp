@@ -5069,7 +5069,7 @@ nsSVGTextFrame2::SetupInheritablePaint(gfxContext* aContext,
     aTargetPaint.SetObjectPaint(aOuterObjectPaint, (style->*aFillOrStroke).mType);
   } else {
     nscolor color = nsSVGUtils::GetFallbackOrPaintColor(aContext,
-                                                        aFrame->GetStyleContext(),
+                                                        aFrame->StyleContext(),
                                                         aFillOrStroke);
     aTargetPaint.SetColor(color);
 
