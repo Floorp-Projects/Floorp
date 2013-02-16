@@ -89,7 +89,7 @@ public:
     return mRefCnt;
   }
 
-  nsPresContext* PresContext() const { return mRuleNode->GetPresContext(); }
+  nsPresContext* PresContext() const { return mRuleNode->PresContext(); }
 
   nsStyleContext* GetParent() const { return mParent; }
 

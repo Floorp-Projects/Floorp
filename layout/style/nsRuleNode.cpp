@@ -1308,12 +1308,16 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
     mNoneBits(0),
     mRefCnt(0)
 {
+  MOZ_ASSERT(aContext);
   NS_ABORT_IF_FALSE(IsRoot() == !aRule,
                     "non-root rule nodes must have a rule");
 
   mChildren.asVoid = nullptr;
   MOZ_COUNT_CTOR(nsRuleNode);
-  NS_IF_ADDREF(mRule);
+
+  if (mRule) {
+    mRule->AddRef();
+  }
 
   NS_ASSERTION(IsRoot() || GetLevel() == aLevel, "not enough bits");
   NS_ASSERTION(IsRoot() || IsImportantRule() == aIsImportant, "yikes");
@@ -1338,7 +1342,9 @@ nsRuleNode::~nsRuleNode()
   MOZ_COUNT_DTOR(nsRuleNode);
   if (mStyleData.mResetData || mStyleData.mInheritedData)
     mStyleData.Destroy(mDependentBits, mPresContext);
-  NS_IF_RELEASE(mRule);
+  if (mRule) {
+    mRule->Release();
+  }
 }
 
 nsRuleNode*
