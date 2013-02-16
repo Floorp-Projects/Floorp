@@ -2065,7 +2065,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
       // Set the inherit bits on our context.  These bits tell the style context that
       // it never has to go back to the rule tree for data.  Instead the style context tree
       // should be walked to find the data.
-      const void* parentStruct = parentContext->GetStyleData(aSID);
+      const void* parentStruct = parentContext->StyleData(aSID);
       aContext->AddStyleBit(bit); // makes const_cast OK.
       aContext->SetStyle(aSID, const_cast<void*>(parentStruct));
       return parentStruct;

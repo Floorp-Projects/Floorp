@@ -742,8 +742,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
   //
-  // Direction Style from this->GetStyleData()
-  // now in (visibility->mDirection)
+  // Direction Style from visibility->mDirection
   // ------------------
   // NS_STYLE_DIRECTION_LTR : LTR or Default
   // NS_STYLE_DIRECTION_RTL

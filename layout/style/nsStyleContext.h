@@ -230,7 +230,7 @@ public:
    * function, both because they're easier to read and because they're
    * faster.
    */
-  const void* NS_FASTCALL GetStyleData(nsStyleStructID aSID);
+  const void* NS_FASTCALL StyleData(nsStyleStructID aSID);
 
   /**
    * Define typesafe getter functions for each style struct by

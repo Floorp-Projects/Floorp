@@ -2323,7 +2323,7 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
 
     // Force walk of rule tree
     nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
-    tmpStyleContext->GetStyleData(sid);
+    tmpStyleContext->StyleData(sid);
 
     // If the rule node will have cached style data if the value is not
     // context-sensitive. So if there's nothing cached, it's not context
@@ -2603,7 +2603,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                     aProperty < eCSSProperty_COUNT_no_shorthands,
                     "bad property");
   const void* styleStruct =
-    aStyleContext->GetStyleData(nsCSSProps::kSIDTable[aProperty]);
+    aStyleContext->StyleData(nsCSSProps::kSIDTable[aProperty]);
   ptrdiff_t ssOffset = nsCSSProps::kStyleStructOffsetTable[aProperty];
   nsStyleAnimType animType = nsCSSProps::kAnimTypeTable[aProperty];
   NS_ABORT_IF_FALSE(0 <= ssOffset || animType == eStyleAnimType_Custom,
