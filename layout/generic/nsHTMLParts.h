@@ -189,6 +189,8 @@ nsIFrame*
 NS_NewProgressFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
+NS_NewRangeFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // Table frame factories
 nsIFrame*
