@@ -78,6 +78,12 @@ function handleRequest(aSubject, aTopic, aData) {
       prompt(browser, callID, params.audio, params.video, devices);
     },
     function (error) {
+      // bug 827146 -- In the future, the UI should catch NO_DEVICES_FOUND
+      // and allow the user to plug in a device, instead of immediately failing.
+      let msg = Cc["@mozilla.org/supports-string;1"].
+                createInstance(Ci.nsISupportsString);
+      msg.data = error;
+      Services.obs.notifyObservers(msg, "getUserMedia:response:deny", callID);
       Cu.reportError(error);
     }
   );
