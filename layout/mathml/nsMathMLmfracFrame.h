@@ -67,9 +67,9 @@ public:
         bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   NS_IMETHOD
   TransmitAutomaticData() MOZ_OVERRIDE;
@@ -102,10 +102,10 @@ protected:
                          bool                 aWidthOnly);
 
   // Display a slash
-  nsresult DisplaySlash(nsDisplayListBuilder* aBuilder,
-                        nsIFrame* aFrame, const nsRect& aRect,
-                        nscoord aThickness,
-                        const nsDisplayListSet& aLists);
+  void DisplaySlash(nsDisplayListBuilder* aBuilder,
+                    nsIFrame* aFrame, const nsRect& aRect,
+                    nscoord aThickness,
+                    const nsDisplayListSet& aLists);
 
   nsRect        mLineRect;
   nsMathMLChar* mSlashChar;

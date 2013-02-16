@@ -43,7 +43,7 @@ nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext):
 // the case for stacking context but non-positioned, non-floating frames).
 // This could easily be changed back by hacking nsBoxFrame::BuildDisplayListInternal
 // a bit more.
-NS_IMETHODIMP
+void
 nsStackFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                           const nsRect&           aDirtyRect,
                                           const nsDisplayListSet& aLists)
@@ -56,11 +56,8 @@ nsStackFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     // Force each child into its own true stacking context.
-    nsresult rv =
-      BuildDisplayListForChild(aBuilder, kid, aDirtyRect, kidLists,
-                               DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, kidLists,
+                             DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
     kid = kid->GetNextSibling();
   }
-  return NS_OK;
 }

@@ -6144,7 +6144,7 @@ static void DebugOutputDrawLine(int32_t aDepth, nsLineBox* aLine, bool aDrawn) {
 }
 #endif
 
-static nsresult
+static void
 DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
             const nsRect& aDirtyRect, nsBlockFrame::line_iterator& aLine,
             int32_t aDepth, int32_t& aDrawnLines, const nsDisplayListSet& aLists,
@@ -6170,7 +6170,7 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   bool lineMayHaveTextOverflow = aTextOverflow && lineInline;
   if (!intersect && !aBuilder->ShouldDescendIntoFrame(aFrame) &&
       !lineMayHaveTextOverflow)
-    return NS_OK;
+    return;
 
   // Block-level child backgrounds go on the blockBorderBackgrounds list ...
   // Inline-level child backgrounds go on the regular child content list.
@@ -6182,20 +6182,17 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   nsIFrame* kid = aLine->mFirstChild;
   int32_t n = aLine->GetChildCount();
   while (--n >= 0) {
-    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect,
-                                                   childLists, flags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect,
+                                     childLists, flags);
     kid = kid->GetNextSibling();
   }
   
   if (lineMayHaveTextOverflow) {
     aTextOverflow->ProcessLine(aLists, aLine.get());
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
@@ -6250,7 +6247,6 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsLineBox* cursor = aBuilder->ShouldDescendIntoFrame(this) ?
     nullptr : GetFirstLineContaining(aDirtyRect.y);
   line_iterator line_end = end_lines();
-  nsresult rv = NS_OK;
   
   if (cursor) {
     for (line_iterator line = mLines.begin(cursor);
@@ -6263,10 +6259,8 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         if (lineArea.y >= aDirtyRect.YMost()) {
           break;
         }
-        rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
-                         linesDisplayListCollection, this, textOverflow);
-        if (NS_FAILED(rv))
-          break;
+        DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
+                    linesDisplayListCollection, this, textOverflow);
       }
     }
   } else {
@@ -6278,10 +6272,8 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
          line != line_end;
          ++line) {
       nsRect lineArea = line->GetVisualOverflowArea();
-      rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
-                       linesDisplayListCollection, this, textOverflow);
-      if (NS_FAILED(rv))
-        break;
+      DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
+                  linesDisplayListCollection, this, textOverflow);
       if (!lineArea.IsEmpty()) {
         if (lineArea.y < lastY
             || lineArea.YMost() < lastYMost) {
@@ -6293,7 +6285,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       lineCount++;
     }
 
-    if (NS_SUCCEEDED(rv) && nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
+    if (nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
       SetupLineCursor();
     }
   }
@@ -6307,10 +6299,10 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
   linesDisplayListCollection.MoveTo(aLists);
 
-  if (NS_SUCCEEDED(rv) && HasOutsideBullet()) {
+  if (HasOutsideBullet()) {
     // Display outside bullets manually
     nsIFrame* bullet = GetOutsideBullet();
-    rv = BuildDisplayListForChild(aBuilder, bullet, aDirtyRect, aLists);
+    BuildDisplayListForChild(aBuilder, bullet, aDirtyRect, aLists);
   }
 
 #ifdef DEBUG
@@ -6333,8 +6325,6 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     printf("%s\n", buf);
   }
 #endif
-
-  return rv;
 }
 
 #ifdef ACCESSIBILITY
