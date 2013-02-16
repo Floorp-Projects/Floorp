@@ -11,6 +11,7 @@
 
 #include "mozilla/Constants.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include <stdlib.h>
 #include "jstypes.h"
@@ -29,6 +30,8 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+
+using mozilla::Abs;
 
 #ifndef M_E
 #define M_E             2.7182818284590452354
@@ -102,7 +105,7 @@ js_math_abs(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    z = fabs(x);
+    z = Abs(x);
     vp->setNumber(z);
     return JS_TRUE;
 }

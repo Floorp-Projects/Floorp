@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MathAlgorithms.h"
+
 #include <math.h>
 #include <stdio.h>
 
@@ -19,6 +21,8 @@
 
 using namespace js;
 using namespace js::ion;
+
+using mozilla::Abs;
 
 // This algorithm is based on the paper "Eliminating Range Checks Using
 // Static Single Assignment Form" by Gough and Klaren.
@@ -668,8 +672,7 @@ MAbs::computeRange()
     Range other(getOperand(0));
 
     Range *range = new Range(0,
-                             Max(Range::abs64((int64_t) other.lower()),
-                                 Range::abs64((int64_t) other.upper())),
+                             Max(Abs<int64_t>(other.lower()), Abs<int64_t>(other.upper())),
                              other.isDecimal(),
                              other.exponent());
     setRange(range);
@@ -716,8 +719,8 @@ MMod::computeRange()
         return;
     Range lhs(getOperand(0));
     Range rhs(getOperand(1));
-    int64_t a = Range::abs64((int64_t) rhs.lower());
-    int64_t b = Range::abs64((int64_t) rhs.upper());
+    int64_t a = Abs<int64_t>(rhs.lower());
+    int64_t b = Abs<int64_t>(rhs.upper());
     if (a == 0 && b == 0)
         return;
     int64_t bound = Max(1-a, b-1);
