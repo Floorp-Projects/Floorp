@@ -102,9 +102,9 @@ public:
   // Find, if it already exists *and is easily findable* (i.e., near the
   // start of the child list), a style context whose:
   //  * GetPseudo() matches aPseudoTag
-  //  * GetRuleNode() matches aRules
+  //  * RuleNode() matches aRules
   //  * !GetStyleIfVisited() == !aRulesIfVisited, and, if they're
-  //    non-null, GetStyleIfVisited()->GetRuleNode() == aRulesIfVisited
+  //    non-null, GetStyleIfVisited()->RuleNode() == aRulesIfVisited
   //  * RelevantLinkVisited() == aRelevantLinkVisited
   already_AddRefed<nsStyleContext>
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules,
@@ -205,7 +205,7 @@ public:
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
-  nsRuleNode* GetRuleNode() { return mRuleNode; }
+  nsRuleNode* RuleNode() { return mRuleNode; }
   void AddStyleBit(const uint32_t& aBit) { mBits |= aBit; }
 
   /*

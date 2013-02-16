@@ -50,6 +50,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   MOZ_STATIC_ASSERT((UINT32_MAX >> NS_STYLE_CONTEXT_TYPE_SHIFT) >=
                     nsCSSPseudoElements::ePseudo_MAX,
                     "pseudo element bits no longer fit in a uint32_t");
+  MOZ_ASSERT(aRuleNode);
 
   mNextSibling = this;
   mPrevSibling = this;
@@ -57,7 +58,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
     mParent->AddRef();
     mParent->AddChild(this);
 #ifdef DEBUG
-    nsRuleNode *r1 = mParent->GetRuleNode(), *r2 = aRuleNode;
+    nsRuleNode *r1 = mParent->RuleNode(), *r2 = aRuleNode;
     while (r1->GetParent())
       r1 = r1->GetParent();
     while (r2->GetParent())

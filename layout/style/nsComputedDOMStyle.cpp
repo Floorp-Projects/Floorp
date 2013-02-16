@@ -356,7 +356,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
   if (aStyleType == eDefaultOnly) {
     // We really only want the user and UA rules.  Filter out the other ones.
     nsTArray< nsCOMPtr<nsIStyleRule> > rules;
-    for (nsRuleNode* ruleNode = sc->GetRuleNode();
+    for (nsRuleNode* ruleNode = sc->RuleNode();
          !ruleNode->IsRoot();
          ruleNode = ruleNode->GetParent()) {
       if (ruleNode->GetLevel() == nsStyleSet::eAgentSheet ||

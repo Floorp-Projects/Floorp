@@ -430,7 +430,7 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
   nsRefPtr<nsStyleContext> sContext =
     nsComputedDOMStyle::GetStyleContextForElement(aContent->AsElement(), aPseudo, presShell);
   if (sContext) {
-    *aRuleNode = sContext->GetRuleNode();
+    *aRuleNode = sContext->RuleNode();
     sContext.forget(aStyleContext);
   }
   return NS_OK;
