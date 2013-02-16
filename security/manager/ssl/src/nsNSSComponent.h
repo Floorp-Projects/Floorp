@@ -16,13 +16,15 @@
 #include "nsIEntropyCollector.h"
 #include "nsString.h"
 #include "nsIStringBundle.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIPrefBranch.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsIScriptSecurityManager.h"
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+#include "nsIDOMEventTarget.h"
 #include "nsSmartCardMonitor.h"
+#endif
 #include "nsINSSErrorsService.h"
 #include "nsITimer.h"
 #include "nsNetUtil.h"
@@ -146,6 +148,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   
   NS_IMETHOD LogoutAuthenticatedPK11() = 0;
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_IMETHOD LaunchSmartCardThread(SECMODModule *module) = 0;
 
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule *module) = 0;
@@ -153,6 +156,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD PostEvent(const nsAString &eventType, const nsAString &token) = 0;
 
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token) = 0;
+#endif
   
   NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
 
@@ -253,10 +257,15 @@ public:
   NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString);
   NS_IMETHOD RememberCert(CERTCertificate *cert);
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_IMETHOD LaunchSmartCardThread(SECMODModule *module);
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule *module);
   NS_IMETHOD PostEvent(const nsAString &eventType, const nsAString &token);
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token);
+  void LaunchSmartCardThreads();
+  void ShutdownSmartCardThreads();
+  nsresult DispatchEventToWindow(nsIDOMWindow *domWin, const nsAString &eventType, const nsAString &token);
+#endif
   NS_IMETHOD EnsureIdentityInfoLoaded();
   NS_IMETHOD IsNSSInitialized(bool *initialized);
 
@@ -275,8 +284,6 @@ private:
   
   void InstallLoadableRoots();
   void UnloadLoadableRoots();
-  void LaunchSmartCardThreads();
-  void ShutdownSmartCardThreads();
   void CleanupIdentityInfo();
   void setValidationOptions(nsIPrefBranch * pref);
   nsresult InitializePIPNSSBundle();
@@ -287,7 +294,6 @@ private:
   nsresult DownloadCrlSilently();
   nsresult PostCRLImportEvent(const nsCSubstring &urlString, nsIStreamListener *psmDownloader);
   nsresult getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key);
-  nsresult DispatchEventToWindow(nsIDOMWindow *domWin, const nsAString &eventType, const nsAString &token);
 
   // Methods that we use to handle the profile change notifications (and to
   // synthesize a full profile change when we're just doing a profile startup):
@@ -315,7 +321,9 @@ private:
   bool mUpdateTimerInitialized;
   static int mInstanceCount;
   nsNSSShutDownList *mShutdownObjectList;
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   SmartCardThreadList *mThreadList;
+#endif
   bool mIsNetworkDown;
 
   void deleteBackgroundThreads();
