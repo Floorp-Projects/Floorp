@@ -82,7 +82,7 @@ nsStyleContext::~nsStyleContext()
 {
   NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
 
-  nsPresContext *presContext = mRuleNode->GetPresContext();
+  nsPresContext *presContext = mRuleNode->PresContext();
 
   mRuleNode->Release();
 
@@ -281,7 +281,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
   void** dataSlot;
   if (nsCachedStyleData::IsReset(aSID)) {
     if (!mCachedResetData) {
-      mCachedResetData = new (mRuleNode->GetPresContext()) nsResetStyleData;
+      mCachedResetData = new (mRuleNode->PresContext()) nsResetStyleData;
     }
     dataSlot = &mCachedResetData->mStyleStructs[aSID];
   } else {
@@ -702,7 +702,7 @@ void
 nsStyleContext::Destroy()
 {
   // Get the pres context from our rule node.
-  nsRefPtr<nsPresContext> presContext = mRuleNode->GetPresContext();
+  nsRefPtr<nsPresContext> presContext = mRuleNode->PresContext();
 
   // Call our destructor.
   this->~nsStyleContext();
@@ -719,7 +719,7 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsRuleNode* aRuleNode)
 {
   nsStyleContext* context =
-    new (aRuleNode->GetPresContext())
+    new (aRuleNode->PresContext())
       nsStyleContext(aParentContext, aPseudoTag, aPseudoType, aRuleNode);
   context->AddRef();
   return context;
