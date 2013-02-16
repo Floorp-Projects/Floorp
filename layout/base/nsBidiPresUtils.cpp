@@ -992,7 +992,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
       if (nsGkAtoms::textFrame == frameType) {
         if (content != aBpd->mPrevContent) {
           aBpd->mPrevContent = content;
-          if (!frame->StyleContext()->GetStyleText()->NewlineIsSignificant()) {
+          if (!frame->GetStyleText()->NewlineIsSignificant()) {
             content->AppendTextTo(aBpd->mBuffer);
           } else {
             /*
