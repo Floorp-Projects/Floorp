@@ -221,7 +221,7 @@ nsTableCellFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     int32_t colIndex, rowIndex;
     GetColIndex(colIndex);
     GetRowIndex(rowIndex);
@@ -687,7 +687,7 @@ int32_t nsTableCellFrame::GetRowSpan()
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   // Don't look at the content's rowspan if we're a pseudo cell
-  if (hc && !GetStyleContext()->GetPseudo()) {
+  if (hc && !StyleContext()->GetPseudo()) {
     const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::rowspan);
     // Note that we don't need to check the tag name, because only table cells
     // and table headers parse the "rowspan" attribute into an integer.
@@ -704,7 +704,7 @@ int32_t nsTableCellFrame::GetColSpan()
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   // Don't look at the content's colspan if we're a pseudo cell
-  if (hc && !GetStyleContext()->GetPseudo()) {
+  if (hc && !StyleContext()->GetPseudo()) {
     const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::colspan);
     // Note that we don't need to check the tag name, because only table cells
     // and table headers parse the "colspan" attribute into an integer.
@@ -1167,7 +1167,7 @@ nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
   // of frame cannot be used for the root element
   nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext, this,
                                         aDirtyRect, rect,
-                                        GetStyleContext(), myBorder,
+                                        StyleContext(), myBorder,
                                         aFlags, nullptr);
 
 #ifdef DEBUG

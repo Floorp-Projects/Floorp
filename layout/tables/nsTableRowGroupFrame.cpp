@@ -1348,7 +1348,7 @@ nsTableRowGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
      
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     nsIntRect damageArea(0, GetStartRowIndex(), tableFrame->GetColCount(),
                          GetRowCount());
     tableFrame->AddBCDamageArea(damageArea);

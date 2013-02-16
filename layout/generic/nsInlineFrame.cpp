@@ -223,7 +223,7 @@ nsRect
 nsInlineFrame::ComputeTightBounds(gfxContext* aContext) const
 {
   // be conservative
-  if (GetStyleContext()->HasTextDecorationLines()) {
+  if (StyleContext()->HasTextDecorationLines()) {
     return GetVisualOverflowRect();
   }
   return ComputeSimpleTightBounds(aContext);
@@ -1055,7 +1055,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     if (mStyleContext == first->mStyleContext) {
       // Fixup our style context and our children. First get the
       // proper parent context.
-      nsStyleContext* parentContext = first->GetParent()->GetStyleContext();
+      nsStyleContext* parentContext = first->GetParent()->StyleContext();
       if (parentContext) {
         // Create a new style context that is a child of the parent
         // style context thus removing the :first-line style. This way

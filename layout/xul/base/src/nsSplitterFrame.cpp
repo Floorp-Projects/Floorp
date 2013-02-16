@@ -286,7 +286,7 @@ nsSplitterFrame::Init(nsIContent*      aContent,
                                            nsGkAtoms::orient)) {
         aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                           NS_LITERAL_STRING("vertical"), false);
-        nsStyleContext* parentStyleContext = GetStyleContext()->GetParent();
+        nsStyleContext* parentStyleContext = StyleContext()->GetParent();
         nsRefPtr<nsStyleContext> newContext = PresContext()->StyleSet()->
           ResolveStyleFor(aContent->AsElement(), parentStyleContext);
         SetStyleContextWithoutNotification(newContext);

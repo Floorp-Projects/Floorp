@@ -246,7 +246,7 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
 
     nsRect lineRect(linePt, ruleSize);
     nsCSSRendering::PaintBorderWithStyleBorder(presContext, *aCtx, this,
-        aDirtyRect, lineRect, border, GetStyleContext(),
+        aDirtyRect, lineRect, border, StyleContext(),
         // Remember, we only have the "left" "border". Skip everything else
         (1 << NS_SIDE_TOP | 1 << NS_SIDE_RIGHT | 1 << NS_SIDE_BOTTOM));
 

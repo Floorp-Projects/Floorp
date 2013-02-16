@@ -326,7 +326,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   // The continuation will have gotten the first letter style from it's
   // prev continuation, so we need to repair the style context so it
   // doesn't have the first letter styling.
-  nsStyleContext* parentSC = this->GetStyleContext()->GetParent();
+  nsStyleContext* parentSC = this->StyleContext()->GetParent();
   if (parentSC) {
     nsRefPtr<nsStyleContext> newSC;
     newSC = presShell->StyleSet()->ResolveStyleForNonElement(parentSC);
