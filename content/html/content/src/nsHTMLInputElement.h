@@ -663,8 +663,7 @@ protected:
    * Returns the input's "minimum" (as defined by the HTML5 spec) as a double.
    * Note this takes account of any default minimum that the type may have.
    * Returns NaN if the min attribute isn't a valid floating point number and
-   * the input's type does not have a default minimum. Otherwise, guaranteed
-   * to return a finite value.
+   * the input's type does not have a default minimum.
    *
    * NOTE: Only call this if you know DoesMinMaxApply() returns true.
    */
@@ -674,8 +673,7 @@ protected:
    * Returns the input's "maximum" (as defined by the HTML5 spec) as a double.
    * Note this takes account of any default maximum that the type may have.
    * Returns NaN if the max attribute isn't a valid floating point number and
-   * the input's type does not have a default maximum. Otherwise, guaranteed
-   * to return a finite value.
+   * the input's type does not have a default maximum.
    *
    * NOTE:Only call this if you know DoesMinMaxApply() returns true.
    */
@@ -774,7 +772,7 @@ protected:
 
   // Step scale factor values, for input types that have one.
   static const double kStepScaleFactorDate;
-  static const double kStepScaleFactorNumber;
+  static const double kStepScaleFactorNumberRange;
   static const double kStepScaleFactorTime;
 
   // Default step base value when a type do not have specific one.
