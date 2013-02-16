@@ -171,7 +171,9 @@ class nsCSSScanner {
   // IDENT token, but the :nth() selector syntax wants to interpret
   // them the same as "2n -1" and "n -1" respectively.  Please do not
   // add new uses to the parser.
-  void Pushback(PRUnichar aChar);
+  //
+  // Note: this function may not be used to back up over a line boundary.
+  void Backup(uint32_t n);
 
   // Starts recording the input stream from the current position.
   void StartRecording();
@@ -184,8 +186,12 @@ class nsCSSScanner {
   void StopRecording(nsString& aBuffer);
 
 protected:
+  int32_t Peek(uint32_t n = 0);
+  void Advance(uint32_t n = 1);
+  void AdvanceLine();
+
   int32_t Read();
-  int32_t Peek();
+  void Pushback(PRUnichar aChar);
   bool LookAhead(PRUnichar aChar);
   bool LookAheadOrEOF(PRUnichar aChar); // expect either aChar or EOF
 
@@ -205,11 +211,6 @@ protected:
   const PRUnichar *mBuffer;
   uint32_t mOffset;
   uint32_t mCount;
-
-  PRUnichar* mPushback;
-  int32_t mPushbackCount;
-  int32_t mPushbackSize;
-  PRUnichar mLocalPushback[4];
 
   uint32_t mLineNumber;
   uint32_t mLineOffset;
