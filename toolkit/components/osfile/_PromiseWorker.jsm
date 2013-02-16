@@ -39,7 +39,7 @@ Queue.prototype = {
  *
  * @param {string} url The url containing the source code for this worker,
  * as in constructor ChromeWorker.
- * @param {Function=} log Optionally, a logging function.
+ * @param {Function} log A logging function.
  *
  * @constructor
  */
@@ -47,8 +47,8 @@ function PromiseWorker(url, log) {
   if (typeof url != "string") {
     throw new TypeError("Expecting a string");
   }
-  if (log != null && typeof log != "function") {
-    throw new TypeError("Expecting either null or a function");
+  if (typeof log !== "function") {
+    throw new TypeError("log is expected to be a function");
   }
   this._log = log;
   this._url = url;
@@ -98,9 +98,7 @@ PromiseWorker.prototype = {
      * @param {Error} error Some JS error.
      */
     worker.onerror = function onerror(error) {
-      if (self._log) {
-        self._log("Received uncaught error from worker", JSON.stringify(error.message), error.message);
-      }
+      self._log("Received uncaught error from worker", error.message);
       error.preventDefault();
       let {deferred} = self._queue.pop();
       deferred.reject(error);
@@ -120,9 +118,7 @@ PromiseWorker.prototype = {
      * @param {*} msg The message received from the worker.
      */
     worker.onmessage = function onmessage(msg) {
-      if (self._log) {
-        self._log("Received message from worker", JSON.stringify(msg.data));
-      }
+      self._log("Received message from worker", msg.data);
       let handler = self._queue.pop();
       let deferred = handler.deferred;
       let data = msg.data;
@@ -158,14 +154,10 @@ PromiseWorker.prototype = {
     let deferred = Promise.defer();
     let id = ++this._id;
     let message = {fun: fun, args: array, id: id};
-    if (this._log) {
-      this._log("Posting message", JSON.stringify(message));
-    }
+    this._log("Posting message", message);
     this._queue.push({deferred:deferred, closure: closure, id: id});
     this._worker.postMessage(message);
-    if (this._log) {
-      this._log("Message posted");
-    }
+    this._log("Message posted");
     return deferred.promise;
   }
 };

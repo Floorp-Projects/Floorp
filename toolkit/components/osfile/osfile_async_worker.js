@@ -16,8 +16,6 @@ if (this.Components) {
      importScripts("resource://gre/modules/osfile.jsm");
 
      let LOG = exports.OS.Shared.LOG.bind(exports.OS.Shared.LOG, "Agent");
-     // A simple flag used to control debugging messages.
-     let DEBUG = exports.OS.Shared.DEBUG;
 
      /**
       * Communications with the controller.
@@ -30,35 +28,25 @@ if (this.Components) {
       */
      self.onmessage = function onmessage(msg) {
        let data = msg.data;
-       if (DEBUG) {
-         LOG("Received message", JSON.stringify(data));
-       }
+       LOG("Received message", data);
        let id = data.id;
        let result;
        let exn;
        try {
          let method = data.fun;
-         if (DEBUG) {
-           LOG("Calling method", method);
-         }
+         LOG("Calling method", method);
          result = Agent[method].apply(Agent, data.args);
-         if (DEBUG) {
-           LOG("Method", method, "succeeded");
-         }
+         LOG("Method", method, "succeeded");
        } catch (ex) {
          exn = ex;
-         if (DEBUG) {
-           LOG("Error while calling agent method", exn, exn.stack);
-         }
+         LOG("Error while calling agent method", exn, exn.stack);
        }
        // Now, post a reply, possibly as an uncaught error.
        // We post this message from outside the |try ... catch| block
        // to avoid capturing errors that take place during |postMessage| and
        // built-in serialization.
        if (!exn) {
-         if (DEBUG) {
-           LOG("Sending positive reply", JSON.stringify(result), "id is", id);
-         }
+         LOG("Sending positive reply", result, "id is", id);
          if (result instanceof Transfer) {
            // Take advantage of zero-copy transfers
            self.postMessage({ok: result.data, id: id}, result.transfers);
@@ -67,22 +55,16 @@ if (this.Components) {
          }
        } else if (exn == StopIteration) {
          // StopIteration cannot be serialized automatically
-         if (DEBUG) {
-           LOG("Sending back StopIteration");
-         }
+         LOG("Sending back StopIteration");
          self.postMessage({StopIteration: true, id: id});
        } else if (exn instanceof exports.OS.File.Error) {
-         if (DEBUG) {
-           LOG("Sending back OS.File error", exn, "id is", id);
-         }
+         LOG("Sending back OS.File error", exn, "id is", id);
          // Instances of OS.File.Error know how to serialize themselves
          // (deserialization ensures that we end up with OS-specific
          // instances of |OS.File.Error|)
          self.postMessage({fail: exports.OS.File.Error.toMsg(exn), id:id});
        } else {
-         if (DEBUG) {
-           LOG("Sending back regular error", exn, exn.stack, "id is", id);
-         }
+         LOG("Sending back regular error", exn, exn.stack, "id is", id);
          // Other exceptions do not, and should be propagated through DOM's
          // built-in mechanism for uncaught errors, although this mechanism
          // may lose interesting information.
@@ -202,14 +184,14 @@ if (this.Components) {
       * back the results.
       */
      let Agent = {
-       // Update DEBUG flag message from controller.
+       // Update worker's OS.Shared.DEBUG flag message from controller.
        SET_DEBUG: function SET_DEBUG (aDEBUG) {
-         DEBUG = aDEBUG;
+         exports.OS.Shared.DEBUG = aDEBUG;
        },
-       // Return current DEBUG value to controller.
+       // Return worker's current OS.Shared.DEBUG value to controller.
        // Note: This is used for testing purposes.
        GET_DEBUG: function GET_DEBUG () {
-         return DEBUG;
+         return exports.OS.Shared.DEBUG;
        },
        // Functions of OS.File
        stat: function stat(path) {
