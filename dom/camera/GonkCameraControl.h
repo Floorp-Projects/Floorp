@@ -40,6 +40,7 @@ class nsGonkCameraControl : public CameraControlImpl
 {
 public:
   nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId);
+  void DispatchInit(nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId);
   nsresult Init();
 
   const char* GetParameter(const char* aKey);
