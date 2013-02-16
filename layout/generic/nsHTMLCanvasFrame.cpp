@@ -278,30 +278,25 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
-NS_IMETHODIMP
+void
 nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                     const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists)
 {
   if (!IsVisibleForPainting(aBuilder))
-    return NS_OK;
+    return;
 
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   nsDisplayList replacedContent;
 
-  rv = replacedContent.AppendNewToTop(
-      new (aBuilder) nsDisplayCanvas(aBuilder, this));
-  NS_ENSURE_SUCCESS(rv, rv);
+  replacedContent.AppendNewToTop(
+    new (aBuilder) nsDisplayCanvas(aBuilder, this));
 
-  rv = DisplaySelectionOverlay(aBuilder, &replacedContent,
-                               nsISelectionDisplay::DISPLAY_IMAGES);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplaySelectionOverlay(aBuilder, &replacedContent,
+                          nsISelectionDisplay::DISPLAY_IMAGES);
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
-
-  return NS_OK;
 }
 
 nsIAtom*
