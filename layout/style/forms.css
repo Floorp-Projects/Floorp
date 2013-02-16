@@ -368,6 +368,11 @@ select:disabled:disabled /* Need the pseudo-class twice to have the specificity
   cursor: inherit;
 }
 
+input:disabled > .anonymous-div,
+textarea:disabled > .anonymous-div {
+  cursor: default;
+}
+
 option:disabled,
 optgroup:disabled {
   background-color: transparent;
@@ -664,7 +669,7 @@ progress {
 }
 
 ::-moz-progress-bar {
-  /* Block styles that would change the type of frame we construct. */
+  /* Prevent styling that would change the type of frame we construct. */
   display: inline-block ! important;
   float: none ! important;
   position: static ! important;
@@ -710,6 +715,57 @@ meter {
 :-moz-meter-sub-sub-optimum::-moz-meter-bar {
   /* red. */
   background: -moz-linear-gradient(top, #f77, #f77, #fcc 20%, #d44 45%, #d44 55%);
+}
+
+input[type="range"] {
+  -moz-appearance: none;
+  display: inline-block !important;
+  cursor: default;
+  width: 12em;
+  height: 1.3em;
+  background: none;
+  border: none;
+  margin: 0 0.7em;
+}
+
+/**
+ * Layout handles positioning of this pseudo-element specially (so that content
+ * authors can concentrate on styling the thumb without worrying about the
+ * logic to position it). Specifically the 'margin', 'top' and 'left'
+ * properties are ignored.
+ *
+ * If content authors want to have a vertical range, they will also need to
+ * set the width/height of this pseudo-element.
+ */
+::-moz-range-track {
+  /* Prevent styling that would change the type of frame we construct. */
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  border: none;
+  border-top: solid 0.1em lightgrey;
+  border-bottom: solid 0.1em lightgrey;
+  background-color: grey;
+  width: 100%;
+  height: 0.2em;
+}
+
+/**
+ * Layout handles positioning of this pseudo-element specially (so that content
+ * authors can concentrate on styling the thumb without worrying about the
+ * logic to position it). Specifically the 'margin', 'top' and 'left'
+ * properties are ignored.
+ */
+::-moz-range-thumb {
+  /* Prevent styling that would change the type of frame we construct. */
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  width: 1em;
+  height: 1em;
+  border: 0.1em solid grey;
+  border-radius: 0.5em;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><linearGradient id='g' x2='0' y2='100%'><stop stop-color='%23ddd'/><stop offset='100%' stop-color='white'/></linearGradient><rect fill='url(%23g)' width='100%' height='100%'/></svg>");
 }
 
 %ifdef XP_OS2
