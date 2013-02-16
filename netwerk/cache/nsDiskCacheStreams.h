@@ -18,24 +18,18 @@
 #include "pratom.h"
 
 class nsDiskCacheInputStream;
-class nsDiskCacheOutputStream;
 class nsDiskCacheDevice;
 
-class nsDiskCacheStreamIO : public nsISupports {
+class nsDiskCacheStreamIO : public nsIOutputStream {
 public:
              nsDiskCacheStreamIO(nsDiskCacheBinding *   binding);
     virtual ~nsDiskCacheStreamIO();
     
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIOUTPUTSTREAM
 
     nsresult    GetInputStream(uint32_t offset, nsIInputStream ** inputStream);
     nsresult    GetOutputStream(uint32_t offset, nsIOutputStream ** outputStream);
-
-    nsresult    CloseOutputStream(nsDiskCacheOutputStream * outputStream);
-
-    nsresult    Write( const char * buffer,
-                       uint32_t     count,
-                       uint32_t *   bytesWritten);
 
     nsresult    ClearBinding();
     
@@ -53,25 +47,23 @@ public:
     nsDiskCacheStreamIO() { NS_NOTREACHED("oops"); }
 
 private:
-
-    void        Close();
     nsresult    OpenCacheFile(int flags, PRFileDesc ** fd);
     nsresult    ReadCacheBlocks(uint32_t bufferSize);
     nsresult    FlushBufferToFile();
     void        UpdateFileSize();
     void        DeleteBuffer();
-    nsresult    Flush();
+    nsresult    CloseOutputStream();
     nsresult    SeekAndTruncate(uint32_t offset);
 
     nsDiskCacheBinding *        mBinding;       // not an owning reference
     nsDiskCacheDevice *         mDevice;
-    nsDiskCacheOutputStream *   mOutStream;     // not an owning reference
     int32_t                     mInStreamCount;
     PRFileDesc *                mFD;
 
     uint32_t                    mStreamEnd;     // current size of data
     uint32_t                    mBufSize;       // current end of buffer
     char *                      mBuffer;
+    bool                        mOutputStreamIsOpen;
 };
 
 #endif // _nsDiskCacheStreams_h_
