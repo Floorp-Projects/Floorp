@@ -39,10 +39,11 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
         is_delegate = bool(flags & self.otc.flag_DELEGATE)
         name = None
         if class_name == 'Function':
-            if self.value.type.code == gdb.TYPE_CODE_PTR:
-                function = self.value.cast(self.otc.func_ptr_type)
-            elif self.value.type.code == gdb.TYPE_CODE_REF:
-                function = self.value.address.cast(self.otc.func_ptr_type)
+            function = self.value
+            concrete_type = function.type.strip_typedefs()
+            if concrete_type.code == gdb.TYPE_CODE_REF:
+                function = function.address
+            function = function.cast(self.otc.func_ptr_type)
             atom = deref(function['atom_'])
             name = str(atom) if atom else '<unnamed>'
         return '[object %s%s]%s' % (class_name,
