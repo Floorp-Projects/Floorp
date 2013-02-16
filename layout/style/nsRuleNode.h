@@ -260,14 +260,14 @@ public:
   };
 
 private:
-  nsPresContext* mPresContext; // Our pres context.
+  nsPresContext* const mPresContext; // Our pres context.
 
-  nsRuleNode* mParent; // A pointer to the parent node in the tree.
-                       // This enables us to walk backwards from the
-                       // most specific rule matched to the least
-                       // specific rule (which is the optimal order to
-                       // use for lookups of style properties.
-  nsIStyleRule* mRule; // [STRONG] A pointer to our specific rule.
+  nsRuleNode* const mParent; // A pointer to the parent node in the tree.
+                             // This enables us to walk backwards from the
+                             // most specific rule matched to the least
+                             // specific rule (which is the optimal order to
+                             // use for lookups of style properties.
+  nsIStyleRule* const mRule; // [STRONG] A pointer to our specific rule.
 
   nsRuleNode* mNextSibling; // This value should be used only by the
                             // parent, since the parent may store
@@ -666,10 +666,10 @@ public:
     return (mDependentBits & NS_RULE_NODE_USED_DIRECTLY) != 0;
   }
 
-  // NOTE:  Does not |AddRef|.
+  // NOTE:  Does not |AddRef|.  Null only for the root.
   nsIStyleRule* GetRule() const { return mRule; }
-  // NOTE: Does not |AddRef|.
-  nsPresContext* GetPresContext() const { return mPresContext; }
+  // NOTE: Does not |AddRef|.  Never null.
+  nsPresContext* PresContext() const { return mPresContext; }
 
   const void* GetStyleData(nsStyleStructID aSID,
                            nsStyleContext* aContext,
