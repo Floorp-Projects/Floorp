@@ -401,7 +401,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 }
                 break;
             case RESTORED:
-                updateTabCount(Tabs.getInstance().getDisplayCount());
+                updateTabCount(Tabs.getInstance().getCount());
                 break;
             case SELECTED:
                 mAnimateSiteSecurity = false;
@@ -415,7 +415,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 break;
             case CLOSED:
             case ADDED:
-                updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
+                updateTabCountAndAnimate(Tabs.getInstance().getCount());
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     updateBackButton(tab.canDoBack());
                     updateForwardButton(tab.canDoForward());
@@ -1156,7 +1156,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             setSecurityMode(tab.getSecurityMode());
             setReaderMode(tab.getReaderEnabled());
             setShadowVisibility(true);
-            updateTabCount(Tabs.getInstance().getDisplayCount());
+            updateTabCount(Tabs.getInstance().getCount());
             updateBackButton(tab.canDoBack());
             updateForwardButton(tab.canDoForward());
 
