@@ -1459,7 +1459,7 @@ nsTextControlFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+void
 nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
@@ -1475,8 +1475,7 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element!");
 
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   nsIFrame* kid = mFrames.FirstChild();
   nsDisplayListSet set(aLists, aLists.Content());
@@ -1486,13 +1485,10 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // placeholder has to be visible.
     if (kid->GetContent() != txtCtrl->GetPlaceholderNode() ||
         txtCtrl->GetPlaceholderVisibility()) {
-      nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
+      BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, 0);
     }
     kid = kid->GetNextSibling();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

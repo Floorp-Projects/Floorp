@@ -19,33 +19,26 @@
 #include "nsIStreamListener.h"
 #include "nsIStringBundle.h"
 #include "nsIDirectoryService.h"
+#include "nsIDOMNode.h"
 #include "nsCURILoader.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
+#include "nsSmartCardMonitor.h"
 #include "prlog.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
-#include "nsThreadUtils.h"
-
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-#include "nsIDOMNode.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMSmartCardEvent.h"
-#include "nsSmartCardMonitor.h"
-#include "nsIDOMCryptoLegacy.h"
-#include "nsIPrincipal.h"
-#else
 #include "nsIDOMCrypto.h"
-#endif
-
+#include "nsThreadUtils.h"
 #include "nsCRT.h"
 #include "nsCRLInfo.h"
 #include "nsCertOverrideService.h"
@@ -65,6 +58,7 @@
 #include "nsICRLManager.h"
 #include "nsNSSShutDown.h"
 #include "GeneratedEvents.h"
+#include "nsIDOMSmartCardEvent.h"
 #include "nsIKeyModule.h"
 #include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
@@ -211,7 +205,6 @@ private:
   nsCOMPtr<nsIStreamListener> mListener;
 };
 
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
 //This class is used to run the callback code
 //passed to the event handlers for smart card notification
 class nsTokenEventRunnable : public nsIRunnable {
@@ -246,7 +239,6 @@ nsTokenEventRunnable::Run()
 
   return nssComponent->DispatchEvent(mType, mTokenName);
 }
-#endif // MOZ_DISABLE_CRYPTOLEGACY
 
 bool nsPSMInitPanic::isPanic = false;
 
@@ -334,9 +326,7 @@ nsNSSComponent::nsNSSComponent()
   :mutex("nsNSSComponent.mutex"),
    mNSSInitialized(false),
    mCrlTimerLock("nsNSSComponent.mCrlTimerLock"),
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
    mThreadList(nullptr),
-#endif
    mCertVerificationThread(nullptr)
 {
 #ifdef PR_LOGGING
@@ -425,7 +415,6 @@ nsNSSComponent::~nsNSSComponent()
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor finished\n"));
 }
 
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
 NS_IMETHODIMP
 nsNSSComponent::PostEvent(const nsAString &eventType, 
                                                   const nsAString &tokenName)
@@ -478,47 +467,52 @@ nsNSSComponent::DispatchEvent(const nsAString &eventType,
 
 nsresult
 nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
-                                      const nsAString &eventType,
-                                      const nsAString &tokenName)
+                      const nsAString &eventType, const nsAString &tokenName)
 {
-  if (!domWin) {
-    return NS_OK;
-  }
-
   // first walk the children and dispatch their events 
-  nsresult rv;
-  nsCOMPtr<nsIDOMWindowCollection> frames;
-  rv = domWin->GetFrames(getter_AddRefs(frames));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  {
+    nsresult rv;
+    nsCOMPtr<nsIDOMWindowCollection> frames;
+    rv = domWin->GetFrames(getter_AddRefs(frames));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
-  uint32_t length;
-  frames->GetLength(&length);
-  uint32_t i;
-  for (i = 0; i < length; i++) {
-    nsCOMPtr<nsIDOMWindow> childWin;
-    frames->Item(i, getter_AddRefs(childWin));
-    DispatchEventToWindow(childWin, eventType, tokenName);
+    uint32_t length;
+    frames->GetLength(&length);
+    uint32_t i;
+    for (i = 0; i < length; i++) {
+      nsCOMPtr<nsIDOMWindow> childWin;
+      frames->Item(i, getter_AddRefs(childWin));
+      DispatchEventToWindow(childWin, eventType, tokenName);
+    }
   }
 
   // check if we've enabled smart card events on this window
   // NOTE: it's not an error to say that we aren't going to dispatch
   // the event.
-  nsCOMPtr<nsIDOMCrypto> crypto;
-  domWin->GetCrypto(getter_AddRefs(crypto));
-  if (!crypto) {
-    return NS_OK; // nope, it doesn't have a crypto property
-  }
+  {
+    nsCOMPtr<nsIWindowCrypto> domWindow = do_QueryInterface(domWin);
+    if (!domWindow) {
+      return NS_OK; // nope, it's not an internal window
+    }
 
-  bool boolrv;
-  crypto->GetEnableSmartCardEvents(&boolrv);
-  if (!boolrv) {
-    return NS_OK; // nope, it's not enabled.
+    nsCOMPtr<nsIDOMCrypto> crypto;
+    domWindow->GetCrypto(getter_AddRefs(crypto));
+    if (!crypto) {
+      return NS_OK; // nope, it doesn't have a crypto property
+    }
+
+    bool boolrv;
+    crypto->GetEnableSmartCardEvents(&boolrv);
+    if (!boolrv) {
+      return NS_OK; // nope, it's not enabled.
+    }
   }
 
   // dispatch the event ...
 
+  nsresult rv;
   // find the document
   nsCOMPtr<nsIDOMDocument> doc;
   rv = domWin->GetDocument(getter_AddRefs(doc));
@@ -540,9 +534,11 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
     return rv;
   }
 
-  return target->DispatchEvent(smartCardEvent, &boolrv);
+  bool boolrv;
+  rv = target->DispatchEvent(smartCardEvent, &boolrv);
+  return rv;
 }
-#endif // MOZ_DISABLE_CRYPTOLEGACY
+
 
 NS_IMETHODIMP
 nsNSSComponent::PIPBundleFormatStringFromName(const char *name,
@@ -624,7 +620,6 @@ nsNSSComponent::GetNSSBundleString(const char *name,
   return rv;
 }
 
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
 void
 nsNSSComponent::LaunchSmartCardThreads()
 {
@@ -680,7 +675,6 @@ nsNSSComponent::ShutdownSmartCardThreads()
   delete mThreadList;
   mThreadList = nullptr;
 }
-#endif // MOZ_DISABLE_CRYPTOLEGACY
 
 static char *
 nss_addEscape(const char *string, char quote)
@@ -1806,9 +1800,7 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
       InstallLoadableRoots();
 
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
       LaunchSmartCardThreads();
-#endif
 
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
     }
@@ -1856,9 +1848,7 @@ nsNSSComponent::ShutdownNSS()
       mPrefBranch->RemoveObserver("security.", this);
     }
 
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
     ShutdownSmartCardThreads();
-#endif
     SSL_ClearSessionCache();
     UnloadLoadableRoots();
     CleanupIdentityInfo();

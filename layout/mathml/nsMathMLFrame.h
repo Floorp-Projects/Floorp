@@ -363,9 +363,9 @@ protected:
    * Display a solid rectangle in the frame's text color. Used for drawing
    * fraction separators and root/sqrt overbars.
    */
-  nsresult DisplayBar(nsDisplayListBuilder* aBuilder,
-                      nsIFrame* aFrame, const nsRect& aRect,
-                      const nsDisplayListSet& aLists);
+  void DisplayBar(nsDisplayListBuilder* aBuilder,
+                  nsIFrame* aFrame, const nsRect& aRect,
+                  const nsDisplayListSet& aLists);
 
   // information about the presentation policy of the frame
   nsPresentationData mPresentationData;
