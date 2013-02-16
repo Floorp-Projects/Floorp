@@ -18,17 +18,38 @@ class Common(object):
     # the template member holds the referent directly.
     handle = False
 
-    def __init__(self, value, cache):
+    # Initialize a pretty-printer for |value|, using |cache|.
+    #
+    # If given, |content_printer| is a pretty-printer constructor to use for
+    # this handle/root/etc.'s referent. Usually, we can just omit this argument
+    # and let GDB choose a pretty-printer for the referent given its type, but
+    # when the referent is a typedef of an integral type (say, |jsid| in a
+    # non-|DEBUG| build), the GNU toolchain (at least) loses the typedef name,
+    # and all we know about the referent is its fundamental integer type ---
+    # |js::Rooted<jsid>|, for example, appears in GDB as |js::Rooted<long>| ---
+    # and we are left with no way to choose a meaningful pretty-printer based on
+    # the type of the referent alone. However, because we know that the only
+    # integer type for which |js::Rooted| is likely to be instantiated is
+    # |jsid|, we *can* register a pretty-printer constructor for the full
+    # instantiation |js::Rooted<long>|. That constructor creates a |js::Rooted|
+    # pretty-printer, and explicitly specifies the constructor for the referent,
+    # using this initializer's |content_printer| argument.
+    def __init__(self, value, cache, content_printer=None):
         self.value = value
+        self.cache = cache
+        self.content_printer = content_printer
     def to_string(self):
         ptr = self.value[self.member]
         if self.handle:
             ptr = ptr.dereference()
-        # As of 2012-11, GDB suppresses printing pointers in replacement values;
-        # see http://sourceware.org/ml/gdb/2012-11/msg00055.html That means that
-        # simply returning the 'ptr' member won't work. Instead, just invoke
-        # GDB's formatter ourselves.
-        return str(ptr)
+        if self.content_printer:
+            return self.content_printer(ptr, self.cache).to_string()
+        else:
+            # As of 2012-11, GDB suppresses printing pointers in replacement
+            # values; see http://sourceware.org/ml/gdb/2012-11/msg00055.html
+            # That means that simply returning the 'ptr' member won't work.
+            # Instead, just invoke GDB's formatter ourselves.
+            return str(ptr)
 
 @template_pretty_printer("js::Rooted")
 class Rooted(Common):
