@@ -153,7 +153,7 @@ function startTest() {
   
   is($_(11, "uname").value, "", "type=datetime-local should not be considered a username");
   
-  is($_(12, "uname").value, "", "type=range should not be considered a username");
+  is($_(12, "uname").value, "50", "type=range should not be considered a username");
   
   is($_(13, "uname").value, "", "type=color should not be considered a username");
 
