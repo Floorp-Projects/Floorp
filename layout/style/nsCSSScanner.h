@@ -190,23 +190,18 @@ protected:
   void Advance(uint32_t n = 1);
   void AdvanceLine();
 
-  int32_t Read();
-  void Pushback(PRUnichar aChar);
-  bool LookAhead(PRUnichar aChar);
-  bool LookAheadOrEOF(PRUnichar aChar); // expect either aChar or EOF
-
   void SkipWhitespace();
   void SkipComment();
 
   bool GatherEscape(nsString& aOutput, bool aInString);
-  bool GatherIdent(int32_t aChar, nsString& aIdent);
+  bool GatherIdent(nsString& aIdent);
 
-  bool ScanIdent(int32_t aChar, nsCSSToken& aResult);
+  bool ScanIdent(nsCSSToken& aResult);
   bool ScanAtKeyword(nsCSSToken& aResult);
-  bool ScanHash(int32_t aChar, nsCSSToken& aResult);
-  bool ScanNumber(int32_t aChar, nsCSSToken& aResult);
-  bool ScanString(int32_t aChar, nsCSSToken& aResult);
-  bool ScanURange(int32_t aChar, nsCSSToken& aResult);
+  bool ScanHash(nsCSSToken& aResult);
+  bool ScanNumber(nsCSSToken& aResult);
+  bool ScanString(nsCSSToken& aResult);
+  bool ScanURange(nsCSSToken& aResult);
 
   const PRUnichar *mBuffer;
   uint32_t mOffset;
