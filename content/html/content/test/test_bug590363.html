@@ -37,11 +37,12 @@ var testData = [
   [ "number",   true ],
   [ "date",     true ],
   [ "time",     true ],
+  [ "range",    true ],
   // 'file' is treated separatly.
 ];
 
 var todoTypes = [
-  "datetime", "month", "week", "datetime-local", "range", "color"
+  "datetime", "month", "week", "datetime-local", "color"
 ];
 
 var nonTrivialSanitizing = [ 'number', 'date', 'time' ];
@@ -53,8 +54,17 @@ for (var i=0; i<length; ++i) {
     e.type = testData[i][0];
 
     var expectedValue;
-    if (nonTrivialSanitizing.indexOf(testData[i][0]) != -1 &&
-        nonTrivialSanitizing.indexOf(testData[j][0]) != -1) {
+
+    // range will sanitize its value to 50 (the default) if it isn't a valid
+    // number. We need to handle that specially.
+    if (testData[j][0] == 'range' || testData[i][0] == 'range') {
+      if (testData[j][0] == 'date' || testData[j][0] == 'time') {
+        expectedValue = '';
+      } else {
+        expectedValue = '50';
+      }
+    } else if (nonTrivialSanitizing.indexOf(testData[i][0]) != -1 &&
+               nonTrivialSanitizing.indexOf(testData[j][0]) != -1) {
       expectedValue = '';
     } else if (testData[i][0] == 'number' || testData[j][0] == 'number') {
       expectedValue = '42';
@@ -82,7 +92,10 @@ for (var data of testData) {
   e.type = 'file';
   e.type = data[0];
 
-  if (data[1]) {
+  if (data[0] == 'range') {
+    is(e.value, '50', ".value should still return the same value after " +
+       "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
+  } else if (data[1]) {
     is(e.value, '', ".value should have been reset to the empty string after " +
        "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
   } else {

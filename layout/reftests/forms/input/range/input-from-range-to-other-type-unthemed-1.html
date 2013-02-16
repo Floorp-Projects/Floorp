@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when switching to another type, the input element should look
+             like that type (not like an input range element) -->
+  <script type="text/javascript">
+    function setToCheckbox()
+    {
+      document.getElementById('i').type='checkbox';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setToCheckbox(); disableReftestWait();">
+    <input type='range' id='i' style="-moz-appearance:none;">
+  </body>
+</html>

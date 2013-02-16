@@ -104,6 +104,11 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- form with input type='range' -->
+  <form id="form16" onsubmit="return false;">
+    <input  type="range" name="field13" max="64">
+    <button type="submit">Submit</button>
+  </form>
 
 </div>
 
@@ -149,10 +154,11 @@ fh.addEntry("field9", "value");
 fh.addEntry("field10", "42");
 fh.addEntry("field11", "2010-10-10");
 fh.addEntry("field12", "21:21");
+fh.addEntry("field13", "32"); // not used, since type=range doesn't have a drop down menu
 fh.addEntry("searchbar-history", "blacklist test");
 
 // All these non-implemeted types might need autocomplete tests in the future.
-var todoTypes = [ "datetime", "month", "week", "datetime-local", "range", "color" ];
+var todoTypes = [ "datetime", "month", "week", "datetime-local", "color" ];
 var todoInput = document.createElement("input");
 for (var type of todoTypes) {
   todoInput.type = type;
@@ -765,6 +771,17 @@ function runTest(testNum) {
         doKey("down");
         doKey("return");
         checkForm("21:21");
+
+        input = $_(16, "field13");
+        restoreForm();
+        doKey("down");
+        break;
+
+      case 407:
+        checkMenuEntries([]); // type=range does not have a drop down menu
+        doKey("down");
+        doKey("return");
+        checkForm("32"); // default (midway between minimum (0) and maximum (64))
 
         // Go to test 500.
         fh.addEntry("field1", "value1");

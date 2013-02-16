@@ -101,7 +101,48 @@
          dump(text + "\n");
        };
      }
-     exports.OS.Shared.LOG = LOG;
+
+     /**
+      * Apply JSON.stringify to an argument of type object.
+      * Return itself otherwise.
+      *
+      * @param arg An argument to be stringified if possible.
+      */
+     let stringifyArg = function stringifyArg(arg) {
+       if (typeof arg === "string") {
+         return arg;
+       }
+       if (arg && typeof arg === "object") {
+         return JSON.stringify(arg);
+       }
+       return arg;
+     };
+
+     /**
+      * A Shared LOG utility function that only logs when DEBUG is set.
+      *
+      * @params {string|object}
+      *         An arbitrary number of arguments to be logged.
+      */
+     exports.OS.Shared.LOG = function (...args) {
+       // If DEBUG is falsy, do nothing.
+       if (!exports.OS.Shared.DEBUG) {
+         return;
+       }
+
+       let logFunc = LOG;
+
+       if (exports.OS.Shared.TEST && Services) {
+         // If TEST is true and the file is loaded in the main thread,
+         // use Services.console for logging and listening to.
+         logFunc = function logFunc(...args) {
+           let message = ["TEST", "OS"].concat(args).join(" ");
+           Services.console.logStringMessage(message + "\n");
+         };
+       }
+
+       logFunc.apply(null, [stringifyArg(arg) for (arg of args)]);
+     };
 
      /**
       * An OS error.
@@ -383,10 +424,8 @@
      };
 
      function projector(type, signed) {
-       if (exports.OS.Shared.DEBUG) {
-         LOG("Determining best projection for", type,
-             "(size: ", type.size, ")", signed?"signed":"unsigned");
-       }
+       exports.OS.Shared.LOG("Determining best projection for", type,
+         "(size: ", type.size, ")", signed?"signed":"unsigned");
        if (type instanceof Type) {
          type = type.implementation;
        }
@@ -402,22 +441,16 @@
            || type == ctypes.ssize_t
            || type == ctypes.intptr_t
            || type == ctypes.uintptr_t
-           || type == ctypes.off_t){
-          if (signed) {
-	    if (exports.OS.Shared.DEBUG) {
-             LOG("Projected as a large signed integer");
-	    }
-            return projectLargeInt;
-          } else {
-	    if (exports.OS.Shared.DEBUG) {
-             LOG("Projected as a large unsigned integer");
-	    }
-            return projectLargeUInt;
-          }
+           || type == ctypes.off_t) {
+         if (signed) {
+           exports.OS.Shared.LOG("Projected as a large signed integer");
+           return projectLargeInt;
+         } else {
+           exports.OS.Shared.LOG("Projected as a large unsigned integer");
+           return projectLargeUInt;
+         }
        }
-       if (exports.OS.Shared.DEBUG) {
-         LOG("Projected as a regular number");
-       }
+       exports.OS.Shared.LOG("Projected as a regular number");
        return projectValue;
      };
      exports.OS.Shared.projectValue = projectValue;
@@ -820,9 +853,7 @@
         // thread
      let declareFFI = function declareFFI(lib, symbol, abi,
                                           returnType /*, argTypes ...*/) {
-       if (exports.OS.Shared.DEBUG) {
-         LOG("Attempting to declare FFI ", symbol);
-       }
+       exports.OS.Shared.LOG("Attempting to declare FFI ", symbol);
        // We guard agressively, to avoid any late surprise
        if (typeof symbol != "string") {
          throw new TypeError("declareFFI expects as first argument a string");
@@ -860,16 +891,12 @@
          if (exports.OS.Shared.DEBUG) {
            result.fun = fun; // Also return the raw FFI function.
          }
-	 if (exports.OS.Shared.DEBUG) {
-          LOG("Function", symbol, "declared");
-	 }
+         exports.OS.Shared.LOG("Function", symbol, "declared");
          return result;
        } catch (x) {
          // Note: Not being able to declare a function is normal.
          // Some functions are OS (or OS version)-specific.
-	 if (exports.OS.Shared.DEBUG) {
-          LOG("Could not declare function " + symbol, x);
-	 }
+         exports.OS.Shared.LOG("Could not declare function ", symbol, x);
          return null;
        }
      };

@@ -34,7 +34,7 @@ var data = [
   { type: 'time', apply: true },
   { type: 'datetime-local', apply: true, todo: true },
   { type: 'number', apply: true },
-  { type: 'range', apply: true, todo: true },
+  { type: 'range', apply: true },
   { type: 'color', apply: false, todo: true },
   { type: 'checkbox', apply: false },
   { type: 'radio', apply: false },
@@ -48,6 +48,19 @@ var data = [
 var input = document.createElement("input");
 document.getElementById('content').appendChild(input);
 
+/**
+ * @aValidity - boolean indicating whether the element is expected to be valid
+ *   (aElement.validity.valid is true) or not. The value passed is ignored and
+ *   overridden with true if aApply is false.
+ * @aApply - boolean indicating whether the min/max attributes apply to this
+ *   element type.
+ * @aRangeApply - A boolean that's set to true if the current input type is a
+ *   "[candidate] for constraint validation" and it "[has] range limitations"
+ *   per http://www.whatwg.org/specs/web-apps/current-work/multipage/selectors.html#selector-in-range
+ *   (in other words, one of the pseudo classes :in-range and :out-of-range
+ *   should apply (which, depends on aValidity)).
+ *   Else (neither :in-range or :out-of-range should match) set to false.
+ */
 function checkValidity(aElement, aValidity, aApply, aRangeApply)
 {
   aValidity = aApply ? aValidity : true;
@@ -86,7 +99,15 @@ for (var test of data) {
     continue;
   }
 
-  checkValidity(input, true, apply, false);
+  // The element should be valid. Range should not apply when @min and @max are
+  // undefined, except if the input type is 'range' (since that type has a
+  // default minimum and maximum).
+  if (input.type == 'range') {
+    checkValidity(input, true, apply, true);
+  } else {
+    checkValidity(input, true, apply, false);
+  }
+  checkValidity(input, true, apply, test.type == 'range');
 
   switch (input.type) {
     case 'hidden':
@@ -111,6 +132,14 @@ for (var test of data) {
       break;
     case 'time':
       input.max = '02:20';
+      break;
+    case 'range':
+      // range is special, since setting max to -1 will make it invalid since
+      // it's default would then be 0, meaning it suffers from overflow.
+      input.max = '-1';
+      checkValidity(input, false, apply, apply);
+      // Now make it something that won't cause an error below:
+      input.max = '10';
       break;
     default:
       ok(false, 'please, add a case for this new type (' + input.type + ')');
@@ -234,6 +263,46 @@ for (var test of data) {
            "Please select a value that is lower than 4.33333333333333.",
            "validation message");
       }
+
+      break;
+    case 'range':
+      input.max = '2';
+      input.value = '1';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '3';
+      checkValidity(input, true, apply, apply);
+
+      is(input.value, input.max, "the value should have been set to max");
+
+      input.max = '5';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '42';
+      checkValidity(input, true, apply, apply);
+
+      is(input.value, input.max, "the value should have been set to max");
+
+      input.max = '';
+      checkValidity(input, true, apply, apply);
+
+      input.max = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      // Check that we correctly convert input.max to a double in validationMessage.
+      input.step = 'any';
+      input.min = 5;
+      input.max = 0.66666666666666666666666666666666666
+      input.value = 1;
+      is(input.validationMessage,
+         "Please select a value that is lower than 0.666666666666667.",
+         "validation message")
 
       break;
     case 'time':
