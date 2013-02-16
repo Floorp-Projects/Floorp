@@ -265,7 +265,7 @@ nsTransitionManager::UpdateThrottledStyle(dom::Element* aElement,
   }
 
   nsStyleContext* oldStyle = primaryFrame->StyleContext();
-  nsRuleNode* ruleNode = oldStyle->GetRuleNode();
+  nsRuleNode* ruleNode = oldStyle->RuleNode();
   nsTArray<nsStyleSet::RuleAndLevel> rules;
   do {
     if (ruleNode->IsRoot()) {

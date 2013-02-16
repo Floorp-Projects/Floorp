@@ -2329,7 +2329,7 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
     // context-sensitive. So if there's nothing cached, it's not context
     // sensitive.
     *aIsContextSensitive =
-      !tmpStyleContext->GetRuleNode()->NodeHasCachedData(sid);
+      !tmpStyleContext->RuleNode()->NodeHasCachedData(sid);
   }
 
   // If we're not concerned whether the property is context sensitive then just
