@@ -717,6 +717,37 @@ meter {
   background: -moz-linear-gradient(top, #f77, #f77, #fcc 20%, #d44 45%, #d44 55%);
 }
 
+input[type="range"] {
+  cursor: move;
+  -moz-appearance: scale-horizontal;
+  display: inline-block;
+
+  /* Default style in case of there is -moz-appearance: none; */
+  border: 2px solid;
+  /* #e6e6e6 is a light gray. */
+  -moz-border-top-colors: ThreeDShadow #e6e6e6;
+  -moz-border-right-colors: ThreeDHighlight #e6e6e6;
+  -moz-border-bottom-colors: ThreeDHighlight #e6e6e6;
+  -moz-border-left-colors: ThreeDShadow #e6e6e6;
+  background-color: #e6e6e6;
+}
+
+::-moz-range-thumb {
+  /* Block styles that would change the type of frame we construct. */
+  display: inline-block ! important;
+  float: none ! important;
+  position: static ! important;
+  overflow: visible ! important;
+  -moz-box-sizing: border-box ! important;
+
+  -moz-appearance: scale-thumb-horizontal;
+  height: 100%;
+  width: 100%;
+
+  /* Default style in case of there is -moz-appearance: none; */
+  background-color: #0064b4; /* blue */
+}
+
 %ifdef XP_OS2
 input {
   font: medium serif; font-family: inherit
