@@ -18,27 +18,30 @@
 using mozilla::ArrayLength;
 
 static const uint8_t IS_HEX_DIGIT  = 0x01;
-static const uint8_t START_IDENT   = 0x02;
-static const uint8_t IS_IDENT      = 0x04;
-static const uint8_t IS_WHITESPACE = 0x08;
-static const uint8_t IS_URL_CHAR   = 0x10;
+static const uint8_t IS_IDSTART    = 0x02;
+static const uint8_t IS_IDCHAR     = 0x04;
+static const uint8_t IS_URL_CHAR   = 0x08;
+static const uint8_t IS_HSPACE     = 0x10;
+static const uint8_t IS_VSPACE     = 0x20;
+static const uint8_t IS_SPACE      = IS_HSPACE|IS_VSPACE;
 
-#define W    IS_WHITESPACE
-#define I    IS_IDENT
+#define H    IS_HSPACE
+#define V    IS_VSPACE
+#define I    IS_IDCHAR
 #define U                                      IS_URL_CHAR
-#define S             START_IDENT
-#define UI   IS_IDENT                         |IS_URL_CHAR
-#define USI  IS_IDENT|START_IDENT             |IS_URL_CHAR
-#define UXI  IS_IDENT            |IS_HEX_DIGIT|IS_URL_CHAR
-#define UXSI IS_IDENT|START_IDENT|IS_HEX_DIGIT|IS_URL_CHAR
+#define S              IS_IDSTART
+#define UI   IS_IDCHAR                        |IS_URL_CHAR
+#define USI  IS_IDCHAR|IS_IDSTART             |IS_URL_CHAR
+#define UXI  IS_IDCHAR           |IS_HEX_DIGIT|IS_URL_CHAR
+#define UXSI IS_IDCHAR|IS_IDSTART|IS_HEX_DIGIT|IS_URL_CHAR
 
 static const uint8_t gLexTable[] = {
 //                                     TAB LF      FF  CR
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  W,  W,  0,  W,  W,  0,  0,
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  H,  V,  0,  V,  V,  0,  0,
 //
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 // SPC !   "   #   $   %   &   '   (   )   *   +   ,   -   .   /
-   W,  U,  0,  U,  U,  U,  U,  0,  0,  0,  U,  U,  U,  UI, U,  U,
+   H,  U,  0,  U,  U,  U,  U,  0,  0,  0,  U,  U,  U,  UI, U,  U,
 // 0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ?
    UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,U,  U,  U,  U,  U,  U,
 // @   A   B   C    D    E    F    G   H   I   J   K   L   M   N   O
@@ -51,10 +54,11 @@ static const uint8_t gLexTable[] = {
    USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,U,  U,  U,  U,  0
 };
 
-MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(gLexTable) == 128,
+MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(gLexTable) == 128,
                   "gLexTable expected to cover all 128 ASCII characters");
 
-#undef W
+#undef H
+#undef V
 #undef S
 #undef I
 #undef U
@@ -64,10 +68,28 @@ MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(gLexTable) == 128,
 #undef UXSI
 
 static inline bool
-IsIdentStart(int32_t aChar)
-{
-  return aChar >= 0 &&
-    (aChar >= 128 || (gLexTable[aChar] & START_IDENT) != 0);
+IsHorzSpace(int32_t ch) {
+  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_HSPACE) != 0;
+}
+
+static inline bool
+IsVertSpace(int32_t ch) {
+  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_VSPACE) != 0;
+}
+
+static inline bool
+IsWhitespace(int32_t ch) {
+  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_SPACE) != 0;
+}
+
+static inline bool
+IsIdentChar(int32_t ch) {
+  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_IDCHAR) != 0);
+}
+
+static inline bool
+IsIdentStart(int32_t ch) {
+  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_IDSTART) != 0);
 }
 
 static inline bool
@@ -78,8 +100,8 @@ StartsIdent(int32_t aFirstChar, int32_t aSecondChar)
 }
 
 static inline bool
-IsWhitespace(int32_t ch) {
-  return uint32_t(ch) < 128 && (gLexTable[ch] & IS_WHITESPACE) != 0;
+IsURLChar(int32_t ch) {
+  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_URL_CHAR) != 0);
 }
 
 static inline bool
@@ -90,16 +112,6 @@ IsDigit(int32_t ch) {
 static inline bool
 IsHexDigit(int32_t ch) {
   return uint32_t(ch) < 128 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
-}
-
-static inline bool
-IsIdent(int32_t ch) {
-  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_IDENT) != 0);
-}
-
-static inline bool
-IsURLChar(int32_t ch) {
-  return ch >= 0 && (ch >= 128 || (gLexTable[ch] & IS_URL_CHAR) != 0);
 }
 
 static inline uint32_t
@@ -230,9 +242,6 @@ nsCSSScanner::nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber)
   : mBuffer(aBuffer.BeginReading())
   , mOffset(0)
   , mCount(aBuffer.Length())
-  , mPushback(mLocalPushback)
-  , mPushbackCount(0)
-  , mPushbackSize(ArrayLength(mLocalPushback))
   , mLineNumber(aLineNumber)
   , mLineOffset(0)
   , mTokenLineNumber(aLineNumber)
@@ -249,137 +258,200 @@ nsCSSScanner::nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber)
 nsCSSScanner::~nsCSSScanner()
 {
   MOZ_COUNT_DTOR(nsCSSScanner);
-  if (mLocalPushback != mPushback) {
-    delete [] mPushback;
-  }
 }
 
 void
 nsCSSScanner::StartRecording()
 {
-  NS_ASSERTION(!mRecording, "already started recording");
+  MOZ_ASSERT(!mRecording, "already started recording");
   mRecording = true;
-  mRecordStartOffset = mOffset - mPushbackCount;
+  mRecordStartOffset = mOffset;
 }
 
 void
 nsCSSScanner::StopRecording()
 {
-  NS_ASSERTION(mRecording, "haven't started recording");
+  MOZ_ASSERT(mRecording, "haven't started recording");
   mRecording = false;
 }
 
 void
 nsCSSScanner::StopRecording(nsString& aBuffer)
 {
-  NS_ASSERTION(mRecording, "haven't started recording");
+  MOZ_ASSERT(mRecording, "haven't started recording");
   mRecording = false;
   aBuffer.Append(mBuffer + mRecordStartOffset,
-                 mOffset - mPushbackCount - mRecordStartOffset);
+                 mOffset - mRecordStartOffset);
 }
 
 nsDependentSubstring
 nsCSSScanner::GetCurrentLine() const
 {
   uint32_t end = mTokenOffset;
-  while (end < mCount &&
-         mBuffer[end] != '\n' && mBuffer[end] != '\r' &&
-         mBuffer[end] != '\f') {
+  while (end < mCount && !IsVertSpace(mBuffer[end])) {
     end++;
   }
   return nsDependentSubstring(mBuffer + mTokenLineOffset,
                               mBuffer + end);
 }
 
+/**
+ * Return the raw UTF-16 code unit at position |mOffset + n| within
+ * the read buffer.  If that is beyond the end of the buffer, returns
+ * -1 to indicate end of input.
+ */
+inline int32_t
+nsCSSScanner::Peek(uint32_t n)
+{
+  if (mOffset + n >= mCount) {
+    return -1;
+  }
+  return mBuffer[mOffset + n];
+}
+
+/**
+ * Advance |mOffset| over |n| code units.  Advance(0) is a no-op.
+ * If |n| is greater than the distance to end of input, will silently
+ * stop at the end.  May not be used to advance over a line boundary;
+ * AdvanceLine() must be used instead.
+ */
+inline void
+nsCSSScanner::Advance(uint32_t n)
+{
+#ifdef DEBUG
+  while (mOffset < mCount && n > 0) {
+    MOZ_ASSERT(!IsVertSpace(mBuffer[mOffset]),
+               "may not Advance() over a line boundary");
+    mOffset++;
+    n--;
+  }
+#else
+  if (mOffset + n >= mCount || mOffset + n < mOffset)
+    mOffset = mCount;
+  else
+    mOffset += n;
+#endif
+}
+
+/**
+ * Advance |mOffset| over a line boundary.
+ */
+void
+nsCSSScanner::AdvanceLine()
+{
+  MOZ_ASSERT(IsVertSpace(mBuffer[mOffset]),
+             "may not AdvanceLine() over a horizontal character");
+  // Advance over \r\n as a unit.
+  if (mBuffer[mOffset]   == '\r' && mOffset + 1 < mCount &&
+      mBuffer[mOffset+1] == '\n')
+    mOffset += 2;
+  else
+    mOffset += 1;
+  // 0 is a magical line number meaning that we don't know (i.e., script)
+  if (mLineNumber != 0)
+    mLineNumber++;
+  mLineOffset = mOffset;
+}
+
+/**
+ * Back up |mOffset| over |n| code units.  Backup(0) is a no-op.
+ * If |n| is greater than the distance to beginning of input, will
+ * silently stop at the beginning.  May not be used to back up over a
+ * line boundary.
+ */
+void
+nsCSSScanner::Backup(uint32_t n)
+{
+#if 1
+  // Right now, code below does occasionally need to back up over a
+  // line boundary.  This will cease to be required later in this
+  // patch series.  Note that we do not attempt to correct mLineOffset.
+  while (mOffset > 0 && n > 0) {
+    if (IsVertSpace(mBuffer[mOffset-1])) {
+      if (mBuffer[mOffset-1] == '\n' && mOffset > 1 &&
+          mBuffer[mOffset-2] == '\r') {
+        mOffset -= 2;
+      } else {
+        mOffset -= 1;
+      }
+      n--;
+      mLineNumber--;
+    } else {
+      mOffset--;
+      n--;
+    }
+  }
+#else
+#ifdef DEBUG
+  while (mOffset > 0 && n > 0) {
+    MOZ_ASSERT(!IsVertSpace(mBuffer[mOffset-1]),
+               "may not Backup() over a line boundary");
+    mOffset--;
+    n--;
+  }
+#else
+  if (mOffset < n)
+    mOffset = 0;
+  else
+    mOffset -= n;
+#endif
+#endif
+}
+
 // Returns -1 on error or eof
 int32_t
 nsCSSScanner::Read()
 {
-  int32_t rv;
-  if (0 < mPushbackCount) {
-    rv = int32_t(mPushback[--mPushbackCount]);
-  } else {
-    if (mOffset == mCount) {
-      return -1;
-    }
-    rv = int32_t(mBuffer[mOffset++]);
-    // There are four types of newlines in CSS: "\r", "\n", "\r\n", and "\f".
-    // To simplify dealing with newlines, they are all normalized to "\n" here
-    if (rv == '\r') {
-      if (mOffset < mCount && mBuffer[mOffset] == '\n') {
-        mOffset++;
-      }
-      rv = '\n';
-    } else if (rv == '\f') {
-      rv = '\n';
-    }
-    if (rv == '\n') {
-      // 0 is a magical line number meaning that we don't know (i.e., script)
-      if (mLineNumber != 0)
-        ++mLineNumber;
-      mLineOffset = mOffset;
-    }
+  int32_t rv = Peek();
+
+  // There are four types of newlines in CSS: "\r", "\n", "\r\n", and "\f".
+  // To simplify dealing with newlines, they are all normalized to "\n" here.
+  if (IsVertSpace(rv)) {
+    AdvanceLine();
+    rv = '\n';
+  } else if (rv >= 0) {
+    Advance();
   }
   return rv;
-}
-
-int32_t
-nsCSSScanner::Peek()
-{
-  if (0 == mPushbackCount) {
-    int32_t ch = Read();
-    if (ch < 0) {
-      return -1;
-    }
-    mPushback[0] = PRUnichar(ch);
-    mPushbackCount++;
-  }
-  return int32_t(mPushback[mPushbackCount - 1]);
 }
 
 void
 nsCSSScanner::Pushback(PRUnichar aChar)
 {
-  if (mPushbackCount == mPushbackSize) { // grow buffer
-    PRUnichar*  newPushback = new PRUnichar[mPushbackSize + 4];
-    if (nullptr == newPushback) {
-      return;
-    }
-    mPushbackSize += 4;
-    memcpy(newPushback, mPushback, sizeof(PRUnichar) * mPushbackCount);
-    if (mPushback != mLocalPushback) {
-      delete [] mPushback;
-    }
-    mPushback = newPushback;
-  }
-  mPushback[mPushbackCount++] = aChar;
+  MOZ_ASSERT(mOffset > 0 && aChar == mBuffer[mOffset-1],
+             "may only push back exactly what was read");
+  Backup(1);
 }
 
 bool
 nsCSSScanner::LookAhead(PRUnichar aChar)
 {
-  int32_t ch = Read();
-  if (ch < 0) {
-    return false;
-  }
-  if (ch == aChar) {
+  if (Peek() == aChar) {
+    if (IsVertSpace(aChar)) {
+      AdvanceLine();
+    } else {
+      Advance();
+    }
     return true;
   }
-  Pushback(ch);
   return false;
 }
 
 bool
 nsCSSScanner::LookAheadOrEOF(PRUnichar aChar)
 {
-  int32_t ch = Read();
-  if (ch < 0) {
+  int32_t ch = Peek();
+  if (ch == -1) {
     return true;
   }
   if (ch == aChar) {
+    if (IsVertSpace(aChar)) {
+      AdvanceLine();
+    } else {
+      Advance();
+    }
     return true;
   }
-  Pushback(ch);
   return false;
 }
 
@@ -387,13 +459,14 @@ void
 nsCSSScanner::SkipWhitespace()
 {
   for (;;) {
-    int32_t ch = Read();
-    if (ch < 0) {
+    int32_t ch = Peek();
+    if (!IsWhitespace(ch)) { // EOF counts as non-whitespace
       break;
     }
-    if ((ch != ' ') && (ch != '\n') && (ch != '\t')) {
-      Pushback(ch);
-      break;
+    if (IsVertSpace(ch)) {
+      AdvanceLine();
+    } else {
+      Advance();
     }
   }
 }
@@ -402,16 +475,21 @@ void
 nsCSSScanner::SkipComment()
 {
   for (;;) {
-    int32_t ch = Read();
-    if (ch < 0) break;
-    if (ch == '*') {
-      if (LookAhead('/')) {
-        return;
-      }
+    int32_t ch = Peek();
+    if (ch < 0) {
+      mReporter->ReportUnexpectedEOF("PECommentEOF");
+      return;
+    }
+    if (ch == '*' && Peek(1) == '/') {
+      Advance(2);
+      return;
+    }
+    if (IsVertSpace(ch)) {
+      AdvanceLine();
+    } else {
+      Advance();
     }
   }
-
-  mReporter->ReportUnexpectedEOF("PECommentEOF");
 }
 
 /**
@@ -515,12 +593,11 @@ nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
     aIdent.Append(aChar);
   }
   for (;;) {
-    // If nothing in pushback, first try to get as much as possible in one go
-    if (!mPushbackCount && mOffset < mCount) {
+    if (mOffset < mCount) {
       // See how much we can consume and append in one go
       uint32_t n = mOffset;
       // Count number of Ident characters that can be processed
-      while (n < mCount && IsIdent(mBuffer[n])) {
+      while (n < mCount && IsIdentChar(mBuffer[n])) {
         ++n;
       }
       // Add to the token what we have so far
@@ -537,7 +614,7 @@ nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
         Pushback(aChar);
         break;
       }
-    } else if (IsIdent(aChar)) {
+    } else if (IsIdentChar(aChar)) {
       aIdent.Append(PRUnichar(aChar));
     } else {
       Pushback(aChar);
@@ -605,7 +682,7 @@ nsCSSScanner::ScanHash(int32_t aChar, nsCSSToken& aToken)
   if (ch < 0) {
     return true;
   }
-  if (IsIdent(ch) || ch == '\\') {
+  if (IsIdentChar(ch) || ch == '\\') {
     // First char after the '#' is a valid ident char (or an escape),
     // so it makes sense to keep going
     nsCSSTokenType type =
@@ -763,8 +840,7 @@ nsCSSScanner::ScanString(int32_t aStop, nsCSSToken& aToken)
   aToken.mType = eCSSToken_String;
   aToken.mSymbol = PRUnichar(aStop); // remember how it's quoted
   for (;;) {
-    // If nothing in pushback, first try to get as much as possible in one go
-    if (!mPushbackCount && mOffset < mCount) {
+    if (mOffset < mCount) {
       // See how much we can consume and append in one go
       uint32_t n = mOffset;
       // Count number of characters that can be processed
