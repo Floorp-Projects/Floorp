@@ -71,7 +71,7 @@ nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   // wrapping inside of us should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
 
-  uint8_t captionSide = GetStyleTableBorder()->mCaptionSide;
+  uint8_t captionSide = StyleTableBorder()->mCaptionSide;
   if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
       captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
     result.width = GetMinWidth(aRenderingContext);
@@ -566,7 +566,7 @@ uint8_t
 nsTableOuterFrame::GetCaptionSide()
 {
   if (mCaptionFrames.NotEmpty()) {
-    return mCaptionFrames.FirstChild()->GetStyleTableBorder()->mCaptionSide;
+    return mCaptionFrames.FirstChild()->StyleTableBorder()->mCaptionSide;
   }
   else {
     return NO_SIDE; // no caption
@@ -577,7 +577,7 @@ uint8_t
 nsTableOuterFrame::GetCaptionVerticalAlign()
 {
   const nsStyleCoord& va =
-    mCaptionFrames.FirstChild()->GetStyleTextReset()->mVerticalAlign;
+    mCaptionFrames.FirstChild()->StyleTextReset()->mVerticalAlign;
   return (va.GetUnit() == eStyleUnit_Enumerated)
            ? va.GetIntValue()
            : NS_STYLE_VERTICAL_ALIGN_TOP;

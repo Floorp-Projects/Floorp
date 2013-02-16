@@ -142,9 +142,9 @@ IsTable(uint8_t aDisplay)
 }
 
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected) \
-  NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == _frame->GetStyleDisplay()->mDisplay, "internal error");
+  NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == _frame->StyleDisplay()->mDisplay, "internal error");
 #define DEBUG_VERIFY_THAT_FRAME_IS_TABLE(_frame) \
-  NS_ASSERTION(IsTable(_frame->GetStyleDisplay()->mDisplay), "internal error");
+  NS_ASSERTION(IsTable(_frame->StyleDisplay()->mDisplay), "internal error");
 #else
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
 #define DEBUG_VERIFY_THAT_FRAME_IS_TABLE(_frame)

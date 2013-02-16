@@ -105,7 +105,7 @@ nsTreeColumn::GetRect(nsTreeBodyFrame* aBodyFrame, nscoord aY, nscoord aHeight, 
     return NS_ERROR_FAILURE;
   }
 
-  bool isRTL = aBodyFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  bool isRTL = aBodyFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   *aResult = frame->GetRect();
   aResult->y = aY;
   aResult->height = aHeight;
@@ -274,10 +274,10 @@ nsTreeColumn::Invalidate()
   // Cache our index.
   nsTreeUtils::GetColumnIndex(mContent, &mIndex);
 
-  const nsStyleVisibility* vis = frame->GetStyleVisibility();
+  const nsStyleVisibility* vis = frame->StyleVisibility();
 
   // Cache our text alignment policy.
-  const nsStyleText* textStyle = frame->GetStyleText();
+  const nsStyleText* textStyle = frame->StyleText();
 
   mTextAlignment = textStyle->mTextAlign;
   // DEFAULT or END alignment sometimes means RIGHT

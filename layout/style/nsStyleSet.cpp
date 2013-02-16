@@ -834,7 +834,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
     nsIDocument* doc = aElementForAnimation->GetCurrentDoc();
     if (doc && doc->GetBodyElement() == aElementForAnimation) {
       // Update the prescontext's body color
-      PresContext()->SetBodyTextColor(result->GetStyleColor()->mColor);
+      PresContext()->SetBodyTextColor(result->StyleColor()->mColor);
     }
   }
 
@@ -1399,8 +1399,8 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   if (result &&
       (pseudoTag == nsCSSPseudoElements::before ||
        pseudoTag == nsCSSPseudoElements::after)) {
-    const nsStyleDisplay *display = result->GetStyleDisplay();
-    const nsStyleContent *content = result->GetStyleContent();
+    const nsStyleDisplay *display = result->StyleDisplay();
+    const nsStyleContent *content = result->StyleContent();
     // XXXldb What is contentCount for |content: ""|?
     if (display->mDisplay == NS_STYLE_DISPLAY_NONE ||
         content->ContentCount() == 0) {

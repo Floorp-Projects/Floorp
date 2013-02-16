@@ -193,7 +193,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     if (aFloatAvailableSpace.mHasFloats) {
       // Use the float-edge property to determine how the child block
       // will interact with the float.
-      const nsStyleBorder* borderStyle = aFrame->GetStyleBorder();
+      const nsStyleBorder* borderStyle = aFrame->StyleBorder();
       switch (borderStyle->mFloatEdge) {
         default:
         case NS_STYLE_FLOAT_EDGE_CONTENT:  // content and only content does runaround of floats
@@ -589,7 +589,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   const nscoord saveY = mY;
 
   // Grab the float's display information
-  const nsStyleDisplay* floatDisplay = aFloat->GetStyleDisplay();
+  const nsStyleDisplay* floatDisplay = aFloat->StyleDisplay();
 
   // The float's old region, so we can propagate damage.
   nsRect oldRegion = nsFloatManager::GetRegionFor(aFloat);
@@ -789,7 +789,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // top when floatY > 0.
   if (mContentArea.height != NS_UNCONSTRAINEDSIZE &&
       !mustPlaceFloat && (!mReflowState.mFlags.mIsTopOfPage || floatY > 0) &&
-      NS_STYLE_PAGE_BREAK_AVOID == aFloat->GetStyleDisplay()->mBreakInside &&
+      NS_STYLE_PAGE_BREAK_AVOID == aFloat->StyleDisplay()->mBreakInside &&
       (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus) ||
        aFloat->GetSize().height + floatMargin.TopBottom() >
          mContentArea.YMost() - floatY) &&
@@ -881,10 +881,10 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
   //    must have their tops below the top of this float)
   //  * don't waste much time trying to reflow this float again until
   //    after the break
-  if (aFloat->GetStyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
+  if (aFloat->StyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
     mFloatManager->SetPushedLeftFloatPastBreak();
   } else {
-    NS_ABORT_IF_FALSE(aFloat->GetStyleDisplay()->mFloats ==
+    NS_ABORT_IF_FALSE(aFloat->StyleDisplay()->mFloats ==
                         NS_STYLE_FLOAT_RIGHT,
                       "unexpected float value");
     mFloatManager->SetPushedRightFloatPastBreak();

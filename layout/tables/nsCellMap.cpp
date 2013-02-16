@@ -239,7 +239,7 @@ nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
   if (aRowGroup->IsRepeatable()) {
     nsTableFrame* fifTable = static_cast<nsTableFrame*>(mTableFrame.GetFirstInFlow());
 
-    const nsStyleDisplay* display = aRowGroup->GetStyleDisplay();
+    const nsStyleDisplay* display = aRowGroup->StyleDisplay();
     nsTableRowGroupFrame* rgOrig =
       (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ?
       fifTable->GetTHead() : fifTable->GetTFoot();
@@ -2537,7 +2537,7 @@ void nsCellMap::Dump(bool aIsBorderCollapse) const
 {
   printf("\n  ***** START GROUP CELL MAP DUMP ***** %p\n", (void*)this);
   nsTableRowGroupFrame* rg = GetRowGroup();
-  const nsStyleDisplay* display = rg->GetStyleDisplay();
+  const nsStyleDisplay* display = rg->StyleDisplay();
   switch (display->mDisplay) {
   case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
     printf("  thead ");

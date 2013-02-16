@@ -106,7 +106,7 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
   mPageData = new nsSharedPageData();
   mPageData->mHeadFootFont =
     new nsFont(*PresContext()->GetDefaultFont(kGenericFont_serif,
-                                              aContext->GetStyleFont()->mLanguage));
+                                              aContext->StyleFont()->mLanguage));
   mPageData->mHeadFootFont->size = nsPresContext::CSSPointsToAppUnits(10);
 
   nsresult rv;

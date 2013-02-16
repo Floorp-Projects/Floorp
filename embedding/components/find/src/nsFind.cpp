@@ -761,7 +761,7 @@ bool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
     return false;
   }
 
-  return frame->GetStyleVisibility()->IsVisible();
+  return frame->StyleVisibility()->IsVisible();
 }
 
 bool nsFind::SkipNode(nsIContent* aContent)

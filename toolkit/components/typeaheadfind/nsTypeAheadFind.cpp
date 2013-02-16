@@ -1098,7 +1098,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   if (!frame)    
     return false;  // No frame! Not visible then.
 
-  if (!frame->GetStyleVisibility()->IsVisible())
+  if (!frame->StyleVisibility()->IsVisible())
     return false;
 
   // Detect if we are _inside_ a text control, or something else with its own

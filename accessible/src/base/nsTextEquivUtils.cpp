@@ -101,7 +101,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(Accessible* aInitiatorAcc,
   // through the DOM subtree otherwise go down through accessible subtree and
   // calculate the flat string.
   nsIFrame *frame = aContent->GetPrimaryFrame();
-  bool isVisible = frame && frame->GetStyleVisibility()->IsVisible();
+  bool isVisible = frame && frame->StyleVisibility()->IsVisible();
 
   nsresult rv = NS_ERROR_FAILURE;
   bool goThroughDOMSubtree = true;
@@ -136,7 +136,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
         // If this text is inside a block level frame (as opposed to span
         // level), we need to add spaces around that block's text, so we don't
         // get words jammed together in final name.
-        const nsStyleDisplay* display = frame->GetStyleDisplay();
+        const nsStyleDisplay* display = frame->StyleDisplay();
         if (display->IsBlockOutsideStyle() ||
             display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
           isHTMLBlock = true;

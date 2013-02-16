@@ -122,7 +122,7 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
 
   gfxContext *gfx = aContext->ThebesContext();
 
-  if (GetStyleDisplay()->IsScrollableOverflow()) {
+  if (StyleDisplay()->IsScrollableOverflow()) {
     gfx->Save();
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, viewBox.x, viewBox.y,
@@ -141,7 +141,7 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
     }
   }
 
-  if (GetStyleDisplay()->IsScrollableOverflow())
+  if (StyleDisplay()->IsScrollableOverflow())
     gfx->Restore();
 
   return NS_OK;

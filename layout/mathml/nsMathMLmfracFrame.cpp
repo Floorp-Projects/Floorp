@@ -590,7 +590,7 @@ nsMathMLmfracFrame::DisplaySlash(nsDisplayListBuilder* aBuilder,
                                  nsIFrame* aFrame, const nsRect& aRect,
                                  nscoord aThickness,
                                  const nsDisplayListSet& aLists) {
-  if (!aFrame->GetStyleVisibility()->IsVisible() || aRect.IsEmpty())
+  if (!aFrame->StyleVisibility()->IsVisible() || aRect.IsEmpty())
     return;
 
   aLists.Content()->AppendNewToTop(new (aBuilder)

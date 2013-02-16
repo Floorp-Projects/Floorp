@@ -236,12 +236,12 @@ public:
    * Define typesafe getter functions for each style struct by
    * preprocessing the list of style structs.  These functions are the
    * preferred way to get style data.  The macro creates functions like:
-   *   const nsStyleBorder* GetStyleBorder();
-   *   const nsStyleColor* GetStyleColor();
+   *   const nsStyleBorder* StyleBorder();
+   *   const nsStyleColor* StyleColor();
    */
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)  \
-    const nsStyle##name_ * GetStyle##name_() {            \
-      return DoGetStyle##name_(true);                  \
+    const nsStyle##name_ * Style##name_() {               \
+      return DoGetStyle##name_(true);                     \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
@@ -255,7 +255,7 @@ public:
    */
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)  \
     const nsStyle##name_ * PeekStyle##name_() {           \
-      return DoGetStyle##name_(false);                 \
+      return DoGetStyle##name_(false);                    \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
@@ -330,7 +330,7 @@ public:
    */
   void StartBackgroundImageLoads() {
     // Just get our background struct; that should do the trick
-    GetStyleBackground();
+    StyleBackground();
   }
 
 #ifdef DEBUG

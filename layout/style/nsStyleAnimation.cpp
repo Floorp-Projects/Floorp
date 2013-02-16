@@ -2484,7 +2484,7 @@ ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
     GetBorderColor(aSide, color, foreground);
   if (foreground) {
     // FIXME: should add test for this
-    color = aStyleContext->GetStyleColor()->mColor;
+    color = aStyleContext->StyleColor()->mColor;
   }
   aComputedValue.SetColorValue(color);
 }
@@ -2655,7 +2655,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             static_cast<const nsStyleOutline*>(styleStruct);
           nscolor color;
           if (!styleOutline->GetOutlineColor(color))
-            color = aStyleContext->GetStyleColor()->mColor;
+            color = aStyleContext->StyleColor()->mColor;
           aComputedValue.SetColorValue(color);
           break;
         }
@@ -2665,7 +2665,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             static_cast<const nsStyleColumn*>(styleStruct);
           nscolor color;
           if (styleColumn->mColumnRuleColorIsForeground) {
-            color = aStyleContext->GetStyleColor()->mColor;
+            color = aStyleContext->StyleColor()->mColor;
           } else {
             color = styleColumn->mColumnRuleColor;
           }
@@ -2702,7 +2702,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           bool isForeground;
           styleTextReset->GetDecorationColor(color, isForeground);
           if (isForeground) {
-            color = aStyleContext->GetStyleColor()->mColor;
+            color = aStyleContext->StyleColor()->mColor;
           }
           aComputedValue.SetColorValue(color);
           break;

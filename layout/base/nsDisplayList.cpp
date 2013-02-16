@@ -389,7 +389,7 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
     nscoord perspective = 0.0;
     nsStyleContext* parentStyleContext = frame->StyleContext()->GetParent();
     if (parentStyleContext) {
-      const nsStyleDisplay* disp = parentStyleContext->GetStyleDisplay();
+      const nsStyleDisplay* disp = parentStyleContext->StyleDisplay();
       if (disp && disp->mChildPerspective.GetUnit() == eStyleUnit_Coord) {
         perspective = disp->mChildPerspective.GetCoordValue();
       }
@@ -916,7 +916,7 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     // children, which might be a large area their contents don't really cover).
     nsIFrame* f = aItem->GetUnderlyingFrame();
     if (f && f->PresContext()->IsChrome() && !aItem->GetChildren() &&
-        f->GetStyleDisplay()->mOpacity != 0.0) {
+        f->StyleDisplay()->mOpacity != 0.0) {
       opaque = aItem->GetBounds(aBuilder, &snap);
     }
   }
@@ -1331,7 +1331,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
         nsIFrame *f = outFrames.ElementAt(j);
         // Handle the XUL 'mousethrough' feature and 'pointer-events'.
         if (!GetMouseThrough(f) &&
-            f->GetStyleVisibility()->GetEffectivePointerEvents(f) != NS_STYLE_POINTER_EVENTS_NONE) {
+            f->StyleVisibility()->GetEffectivePointerEvents(f) != NS_STYLE_POINTER_EVENTS_NONE) {
           writeFrames->AppendElement(f);
         }
       }
@@ -1520,7 +1520,7 @@ RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
   }
 
   nsRect borderBox(aFrame->GetOffsetTo(displayRoot), aFrame->GetSize());
-  aBuilder->RegisterThemeGeometry(aFrame->GetStyleDisplay()->mAppearance,
+  aBuilder->RegisterThemeGeometry(aFrame->StyleDisplay()->mAppearance,
       borderBox.ToNearestPixels(aFrame->PresContext()->AppUnitsPerDevPixel()));
 }
 
@@ -1538,7 +1538,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
   if (mIsThemed) {
-    const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+    const nsStyleDisplay* disp = mFrame->StyleDisplay();
     mFrame->IsThemed(disp, &mThemeTransparency);
     // Perform necessary RegisterThemeGeometry
     if (disp->mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
@@ -1575,7 +1575,7 @@ void
 nsDisplayBackgroundImage::WriteDebugInfo(FILE *aOutput)
 {
   if (mIsThemed) {
-    fprintf(aOutput, "(themed, appearance:%d) ", mFrame->GetStyleDisplay()->mAppearance);
+    fprintf(aOutput, "(themed, appearance:%d) ", mFrame->StyleDisplay()->mAppearance);
   }
 
 }
@@ -1593,7 +1593,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   bool isThemed = aFrame->IsThemed();
   if (!isThemed &&
       nsCSSRendering::FindBackground(presContext, aFrame, &bgSC)) {
-    bg = bgSC->GetStyleBackground();
+    bg = bgSC->StyleBackground();
   }
 
   bool drawBackgroundColor = false;
@@ -2022,7 +2022,7 @@ bool
 nsDisplayBackgroundImage::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) {
   // theme background overrides any other background
   if (mIsThemed) {
-    const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+    const nsStyleDisplay* disp = mFrame->StyleDisplay();
     if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
         disp->mAppearance == NS_THEME_WIN_GLASS) {
       *aColor = NS_RGBA(0,0,0,0);
@@ -2176,7 +2176,7 @@ nsDisplayBackgroundImage::GetBoundsInternal() {
     nsRect r(nsPoint(0,0), mFrame->GetSize());
     presContext->GetTheme()->
         GetWidgetOverflow(presContext->DeviceContext(), mFrame,
-                          mFrame->GetStyleDisplay()->mAppearance, &r);
+                          mFrame->StyleDisplay()->mAppearance, &r);
 #ifdef XP_MACOSX
     // Bug 748219
     r.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
@@ -2251,7 +2251,7 @@ nsDisplayBackgroundColor::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aCo
   if (!mBackgroundStyle)
     return true;
 
-  return (!nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
+  return (!nsLayoutUtils::HasNonZeroCorner(mFrame->StyleBorder()->mBorderRadius) &&
           mBackgroundStyle->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER);
 }
 
@@ -2295,7 +2295,7 @@ nsDisplayOutline::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     return false;
   }
 
-  const nsStyleOutline* outline = mFrame->GetStyleOutline();
+  const nsStyleOutline* outline = mFrame->StyleOutline();
   nsRect borderBox(ToReferenceFrame(), mFrame->GetSize());
   if (borderBox.Contains(aVisibleRegion->GetBounds()) &&
       !nsLayoutUtils::HasNonZeroCorner(outline->mOutlineRadius)) {
@@ -2344,7 +2344,7 @@ nsDisplayBorder::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     ToReferenceFrame();
   const nsStyleBorder *styleBorder;
   if (paddingRect.Contains(aVisibleRegion->GetBounds()) &&
-      !(styleBorder = mFrame->GetStyleBorder())->IsBorderImageLoaded() &&
+      !(styleBorder = mFrame->StyleBorder())->IsBorderImageLoaded() &&
       !nsLayoutUtils::HasNonZeroCorner(styleBorder->mBorderRadius)) {
     // the visible region is entirely inside the content rect, and no part
     // of the border is rendered inside the content rect, so we are not
@@ -2395,7 +2395,7 @@ nsRect
 nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
   nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
-  borderBounds.Inflate(mFrame->GetStyleBorder()->GetImageOutset());
+  borderBounds.Inflate(mFrame->StyleBorder()->GetImageOutset());
   *aSnap = true;
   return borderBounds;
 }
@@ -2798,7 +2798,7 @@ already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerParameters& aContainerParameters) {
-  if (mFrame->GetStyleDisplay()->mOpacity == 0 && mFrame->GetContent() &&
+  if (mFrame->StyleDisplay()->mOpacity == 0 && mFrame->GetContent() &&
       !nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(), eCSSProperty_opacity)) {
     return nullptr;
   }
@@ -2808,7 +2808,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (!container)
     return nullptr;
 
-  container->SetOpacity(mFrame->GetStyleDisplay()->mOpacity);
+  container->SetOpacity(mFrame->StyleDisplay()->mOpacity);
   AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                      this, eCSSProperty_opacity);
   return container.forget();
@@ -2962,7 +2962,7 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   gfxPoint anchor(anchorRect.x, anchorRect.y);
 
-  const nsStylePosition* position = mFixedPosFrame->GetStylePosition();
+  const nsStylePosition* position = mFixedPosFrame->StylePosition();
   if (position->mOffset.GetRightUnit() != eStyleUnit_Auto)
     anchor.x = anchorRect.XMost();
   if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto)
@@ -3587,7 +3587,7 @@ nsDisplayTransform::GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
    * percentage, it's relative to the size of the frame.  Otherwise, if it's
    * a distance, it's already computed for us!
    */
-  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
+  const nsStyleDisplay* display = aFrame->StyleDisplay();
   nsRect boundingRect = (aBoundsOverride ? *aBoundsOverride :
                          nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
 
@@ -3659,7 +3659,7 @@ nsDisplayTransform::GetDeltaToMozPerspectiveOrigin(const nsIFrame* aFrame,
   if (!parent) {
     return gfxPoint3D();
   }
-  const nsStyleDisplay* display = parent->GetStyleDisplay();
+  const nsStyleDisplay* display = parent->StyleDisplay();
   nsRect boundingRect = nsDisplayTransform::GetFrameBoundsForTransform(parent);
 
   /* Allows us to access named variables by index. */
@@ -3704,7 +3704,7 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsI
                                                                        float aAppUnitsPerPixel,
                                                                        const nsRect* aBoundsOverride)
   : mFrame(aFrame)
-  , mTransformList(aFrame->GetStyleDisplay()->mSpecifiedTransform)
+  , mTransformList(aFrame->StyleDisplay()->mSpecifiedTransform)
   , mToMozOrigin(GetDeltaToMozTransformOrigin(aFrame, aAppUnitsPerPixel, aBoundsOverride))
   , mToPerspectiveOrigin(GetDeltaToMozPerspectiveOrigin(aFrame, aAppUnitsPerPixel))
   , mChildPerspective(0)
@@ -3712,7 +3712,7 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsI
   const nsStyleDisplay* parentDisp = nullptr;
   nsStyleContext* parentStyleContext = aFrame->StyleContext()->GetParent();
   if (parentStyleContext) {
-    parentDisp = parentStyleContext->GetStyleDisplay();
+    parentDisp = parentStyleContext->StyleDisplay();
   }
   if (parentDisp && parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord) {
     mChildPerspective = parentDisp->mChildPerspective.GetCoordValue();
@@ -3919,7 +3919,7 @@ static bool IsFrameVisible(nsIFrame* aFrame, const gfx3DMatrix& aMatrix)
   if (aMatrix.IsSingular()) {
     return false;
   }
-  if (aFrame->GetStyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
+  if (aFrame->StyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
       aMatrix.IsBackfaceVisible()) {
     return false;
   }
@@ -4408,7 +4408,7 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  float opacity = mFrame->GetStyleDisplay()->mOpacity;
+  float opacity = mFrame->StyleDisplay()->mOpacity;
   if (opacity == 0.0f)
     return nullptr;
 
@@ -4478,9 +4478,9 @@ nsDisplaySVGEffects::PrintEffects(FILE* aOutput)
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   bool first = true;
   fprintf(aOutput, " effects=(");
-  if (mFrame->GetStyleDisplay()->mOpacity != 1.0f) {
+  if (mFrame->StyleDisplay()->mOpacity != 1.0f) {
     first = false;
-    fprintf(aOutput, "opacity(%f)", mFrame->GetStyleDisplay()->mOpacity);
+    fprintf(aOutput, "opacity(%f)", mFrame->StyleDisplay()->mOpacity);
   }
   if (clipPathFrame) {
     if (!first) {

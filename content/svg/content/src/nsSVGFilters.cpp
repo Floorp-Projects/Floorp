@@ -2763,8 +2763,8 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance,
   if (!frame) return NS_ERROR_FAILURE;
   nsStyleContext* style = frame->StyleContext();
 
-  nscolor floodColor = style->GetStyleSVGReset()->mFloodColor;
-  float floodOpacity = style->GetStyleSVGReset()->mFloodOpacity;
+  nscolor floodColor = style->StyleSVGReset()->mFloodColor;
+  float floodOpacity = style->StyleSVGReset()->mFloodOpacity;
 
   gfxContext ctx(aTarget->mImage);
   ctx.SetColor(gfxRGBA(NS_GET_R(floodColor) / 255.0,
@@ -4994,7 +4994,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   if (!frame) return NS_ERROR_FAILURE;
   nsStyleContext* style = frame->StyleContext();
 
-  nscolor lightColor = style->GetStyleSVGReset()->mLightingColor;
+  nscolor lightColor = style->StyleSVGReset()->mLightingColor;
 
   // find specified light  
   for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();

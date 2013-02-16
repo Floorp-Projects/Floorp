@@ -137,7 +137,7 @@ nsFormControlFrame::HandleEvent(nsPresContext* aPresContext,
                                           nsEventStatus* aEventStatus)
 {
   // Check for user-input:none style
-  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
+  const nsStyleUserInterface* uiStyle = StyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
       uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);

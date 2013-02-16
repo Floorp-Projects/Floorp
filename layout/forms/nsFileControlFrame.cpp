@@ -583,7 +583,7 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsDisplayListSet& aLists)
 {
   // box-shadow
-  if (GetStyleBorder()->mBoxShadow) {
+  if (StyleBorder()->mBoxShadow) {
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
       nsDisplayBoxShadowOuter(aBuilder, this));
   }

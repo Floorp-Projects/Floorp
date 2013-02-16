@@ -260,7 +260,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
 
   gfx->Save();
 
-  if (GetStyleDisplay()->IsScrollableOverflow()) {
+  if (StyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
     static_cast<nsSVGElement*>(mContent)->
       GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);

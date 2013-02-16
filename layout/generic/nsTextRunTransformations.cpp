@@ -581,7 +581,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       if (!inner->IsClusterStart(i)) {
         chCase = runCase;
       } else {
-        if (styleContext->GetStyleFont()->mFont.variant == NS_STYLE_FONT_VARIANT_SMALL_CAPS) {
+        if (styleContext->StyleFont()->mFont.variant == NS_STYLE_FONT_VARIANT_SMALL_CAPS) {
           uint32_t ch = str[i];
           if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 && NS_IS_LOW_SURROGATE(str[i + 1])) {
             ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
@@ -589,7 +589,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
           uint32_t ch2 = ToUpperCase(ch);
           if (ch != ch2 || mozilla::unicode::SpecialUpper(ch)) {
             chCase = kLowercase;
-          } else if (styleContext->GetStyleFont()->mLanguage == nsGkAtoms::el) {
+          } else if (styleContext->StyleFont()->mLanguage == nsGkAtoms::el) {
             // In Greek, check for characters that will be modified by the
             // GreekUpperCase mapping - this catches accented capitals where
             // the accent is to be removed (bug 307039). These are handled by
@@ -703,7 +703,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     nsStyleContext* styleContext = styles[i];
 
     uint8_t style = mAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE
-      : styleContext->GetStyleText()->mTextTransform;
+      : styleContext->StyleText()->mTextTransform;
     int extraChars = 0;
     const mozilla::unicode::MultiCharMapping *mcm;
 
@@ -711,8 +711,8 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
     }
 
-    if (lang != styleContext->GetStyleFont()->mLanguage) {
-      lang = styleContext->GetStyleFont()->mLanguage;
+    if (lang != styleContext->StyleFont()->mLanguage) {
+      lang = styleContext->StyleFont()->mLanguage;
       if (lang == nsGkAtoms::tr || lang == nsGkAtoms::az ||
           lang == nsGkAtoms::ba || lang == nsGkAtoms::crh ||
           lang == nsGkAtoms::tt) {
