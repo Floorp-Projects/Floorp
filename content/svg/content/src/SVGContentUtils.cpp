@@ -72,7 +72,7 @@ float
 SVGContentUtils::GetFontSize(nsIFrame *aFrame)
 {
   NS_ABORT_IF_FALSE(aFrame, "NULL frame in GetFontSize");
-  return GetFontSize(aFrame->GetStyleContext());
+  return GetFontSize(aFrame->StyleContext());
 }
 
 float
@@ -110,7 +110,7 @@ float
 SVGContentUtils::GetFontXHeight(nsIFrame *aFrame)
 {
   NS_ABORT_IF_FALSE(aFrame, "NULL frame in GetFontXHeight");
-  return GetFontXHeight(aFrame->GetStyleContext());
+  return GetFontXHeight(aFrame->StyleContext());
 }
 
 float

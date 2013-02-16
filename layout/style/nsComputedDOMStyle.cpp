@@ -322,7 +322,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
     nsIFrame* frame = aElement->GetPrimaryFrame();
     if (frame) {
       nsStyleContext* result =
-        nsLayoutUtils::GetStyleFrame(frame)->GetStyleContext();
+        nsLayoutUtils::GetStyleFrame(frame)->StyleContext();
       // Don't use the style context if it was influenced by
       // pseudo-elements, since then it's not the primary style
       // for this element.
@@ -512,7 +512,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
                      "the inner table");
       }
 
-      mStyleContextHolder = mInnerFrame->GetStyleContext();
+      mStyleContextHolder = mInnerFrame->StyleContext();
       NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
     }
   }

@@ -459,6 +459,7 @@ MAKEFILES_xulapp="
   toolkit/components/apppicker/Makefile
   toolkit/components/Makefile
   toolkit/components/build/Makefile
+  toolkit/components/captivedetect/Makefile
   toolkit/components/commandlines/Makefile
   toolkit/components/console/Makefile
   toolkit/components/contentprefs/Makefile
@@ -925,6 +926,7 @@ if [ "$ENABLE_TESTS" ]; then
     testing/xpcshell/example/Makefile
     toolkit/components/aboutmemory/tests/Makefile
     toolkit/components/alerts/test/Makefile
+    toolkit/components/captivedetect/test/Makefile
     toolkit/components/commandlines/test/Makefile
     toolkit/components/contentprefs/tests/Makefile
     toolkit/components/downloads/test/Makefile

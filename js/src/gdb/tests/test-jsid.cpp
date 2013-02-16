@@ -17,3 +17,20 @@ FRAGMENT(jsid, simple) {
   (void) void_id;
   (void) object_id;
 }
+
+void
+jsid_handles(JS::Handle<jsid> jsid_handle,
+             JS::MutableHandle<jsid> mutable_jsid_handle)
+{
+  // Prevent the linker from unifying this function with others that are
+  // equivalent in machine code but not type.
+  fprintf(stderr, "Called " __FILE__ ":jsid_handles\n");
+  breakpoint();
+}
+
+FRAGMENT(jsid, handles) {
+  js::Rooted<JSString *> string(cx, JS_NewStringCopyZ(cx, "shovel"));
+  js::Rooted<JSString *> interned(cx, JS_InternJSString(cx, string));
+  js::Rooted<jsid> string_id(cx, INTERNED_STRING_TO_JSID(cx, interned));
+  jsid_handles(string_id, &string_id);
+}

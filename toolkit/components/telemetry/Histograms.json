@@ -20,6 +20,7 @@
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "time spent updating accessibility (ms)"
   },
   "CYCLE_COLLECTOR": {
@@ -167,6 +168,7 @@
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time taken to submit telemetry info (ms)"
   },
   "TELEMETRY_SUCCESS": {
@@ -178,6 +180,7 @@
     "low": "32 * 1024",
     "high": "16 * 1024 * 1024",
     "n_buckets": 200,
+    "extended_statistics_ok": true,
     "description": "Resident memory size (KB)"
   },
   "MEMORY_VSIZE": {
@@ -185,18 +188,21 @@
     "low": "32 * 1024",
     "high": "16 * 1024 * 1024",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "Virtual memory size (KB)"
   },
   "MEMORY_JS_COMPARTMENTS_SYSTEM": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Total JavaScript compartments used for add-ons and internals."
   },
   "MEMORY_JS_COMPARTMENTS_USER": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Total JavaScript compartments used for web pages"
   },
   "MEMORY_JS_GC_HEAP": {
@@ -204,6 +210,7 @@
     "low": 1024,
     "high": "16 * 1024 * 1024",
     "n_buckets": 200,
+    "extended_statistics_ok": true,
     "description": "Memory used by the garbage-collected JavaScript heap (KB)"
   },
   "MEMORY_STORAGE_SQLITE": {
@@ -211,6 +218,7 @@
     "low": 1024,
     "high": "512 * 1024",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Memory used by SQLite (KB)"
   },
   "MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED": {
@@ -218,6 +226,7 @@
     "low": 1024,
     "high": "1024 * 1024",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Memory used for uncompressed, in-use content images (KB)"
   },
   "MEMORY_HEAP_ALLOCATED": {
@@ -225,6 +234,7 @@
     "low": 1024,
     "high": "16 * 1024 * 1024",
     "n_buckets": 200,
+    "extended_statistics_ok": true,
     "description": "Heap memory allocated (KB)"
   },
   "MEMORY_HEAP_COMMITTED_UNUSED": {
@@ -232,6 +242,7 @@
     "low": 1024,
     "high": "512 * 1024",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Committed, unused heap memory (KB)"
   },
   "MEMORY_HEAP_COMMITTED_UNUSED_RATIO": {
@@ -245,18 +256,21 @@
     "low": 1024,
     "high": "16 * 1024 * 1024",
     "n_buckets": 200,
+    "extended_statistics_ok": true,
     "description": "Explicit memory allocations (KB)"
   },
   "GHOST_WINDOWS": {
     "kind": "exponential",
     "high": "128",
     "n_buckets": 32,
+    "extended_statistics_ok": true,
     "description": "Number of ghost windows"
   },
   "MEMORY_FREE_PURGED_PAGES_MS": {
     "kind": "exponential",
     "high": "1024",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time(ms) to purge MADV_FREE'd heap pages.",
     "cpp_guard": "XP_MACOSX"
   },
@@ -264,6 +278,7 @@
     "kind": "exponential",
     "high": "1024",
     "n_buckets": 21,
+    "extended_statistics_ok": true,
     "description": "Number of low-virtual-memory events fired since last ping",
     "cpp_guard": "XP_WIN"
   },
@@ -271,6 +286,7 @@
     "kind": "exponential",
     "high": "1024",
     "n_buckets": 21,
+    "extended_statistics_ok": true,
     "description": "Number of low-physical-memory events fired since last ping",
     "cpp_guard": "XP_WIN"
   },
@@ -278,6 +294,7 @@
     "kind": "exponential",
     "high": "1024",
     "n_buckets": 21,
+    "extended_statistics_ok": true,
     "description": "Number of low-commit-space events fired since last ping",
     "cpp_guard": "XP_WIN"
   },
@@ -292,6 +309,7 @@
     "kind": "exponential",
     "high": "50 * 1024",
     "n_buckets": 12,
+    "extended_statistics_ok": true,
     "description": "ProcessIoCounters.ReadTransferCount before glue startup (KB)",
     "cpp_guard": "XP_WIN"
   },
@@ -306,6 +324,7 @@
     "kind": "exponential",
     "high": "50 * 1024",
     "n_buckets": 12,
+    "extended_statistics_ok": true,
     "description": "ProcessIoCounters.ReadTransferCount after glue startup (KB)",
     "cpp_guard": "XP_WIN"
   },
@@ -320,6 +339,7 @@
     "kind": "exponential",
     "high": "500",
     "n_buckets": 12,
+    "extended_statistics_ok": true,
     "description": "Hard faults count after glue startup",
     "cpp_guard": "XP_UNIX"
   },
@@ -328,6 +348,7 @@
     "low": 8,
     "high": "64 * 1024",
     "n_buckets": 13,
+    "extended_statistics_ok": true,
     "description": "Hard page faults (since last telemetry ping)",
     "cpp_guard": "XP_UNIX"
   },
@@ -335,18 +356,21 @@
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time(ms) spent on reading other family names from all fonts"
   },
   "FONTLIST_INITFACENAMELISTS": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time(ms) spent on reading family names from all fonts"
   },
   "DWRITEFONT_INITFONTLIST_TOTAL": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxDWriteFontList::InitFontList Total (ms)",
     "cpp_guard": "XP_WIN"
   },
@@ -354,6 +378,7 @@
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxDWriteFontList::InitFontList init (ms)",
     "cpp_guard": "XP_WIN"
   },
@@ -361,6 +386,7 @@
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxDWriteFontList::InitFontList GdiInterop object (ms)",
     "cpp_guard": "XP_WIN"
   },
@@ -368,6 +394,7 @@
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxDWriteFontList::DelayedInitFontList Total (ms)",
     "cpp_guard": "XP_WIN"
   },
@@ -375,6 +402,7 @@
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxDWriteFontList::DelayedInitFontList Font Family Count",
     "cpp_guard": "XP_WIN"
   },
@@ -387,6 +415,7 @@
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxDWriteFontList::DelayedInitFontList GetSystemFontCollection (ms)",
     "cpp_guard": "XP_WIN"
   },
@@ -394,6 +423,7 @@
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxDWriteFontList::DelayedInitFontList iterate over families (ms)",
     "cpp_guard": "XP_WIN"
   },
@@ -401,6 +431,7 @@
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxGDIFontList::InitFontList Total (ms)",
     "cpp_guard": "XP_WIN"
   },
@@ -408,6 +439,7 @@
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "gfxMacPlatformFontList::InitFontList Total (ms)",
     "cpp_guard": "XP_MACOSX"
   },
@@ -415,12 +447,14 @@
     "kind": "exponential",
     "high": "100000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "System font fallback (us)"
   },
   "SYSTEM_FONT_FALLBACK_FIRST": {
     "kind": "exponential",
     "high": "40000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "System font fallback, first call (ms)"
   },
   "SYSTEM_FONT_FALLBACK_SCRIPT": {
@@ -444,6 +478,7 @@
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Startup cache age (hours)"
   },
   "STARTUP_CACHE_INVALID": {
@@ -547,24 +582,28 @@
     "low": 100,
     "high": "30000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "HTTP: Total page load time (ms)"
   },
   "HTTP_SUBITEM_OPEN_LATENCY_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Page start -> subitem open() (ms)"
   },
   "HTTP_SUBITEM_FIRST_BYTE_LATENCY_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Page start -> first byte received for subitem reply (ms)"
   },
   "HTTP_REQUEST_PER_PAGE": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP: Requests per page (count)"
   },
   "HTTP_REQUEST_PER_PAGE_FROM_CACHE": {
@@ -576,156 +615,182 @@
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP: requests per connection"
   },
   "HTTP_KBREAD_PER_CONN": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP: KB read per connection"
   },
   "HTTP_PAGE_DNS_ISSUE_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: open() -> DNS request issued (ms)"
   },
   "HTTP_PAGE_DNS_LOOKUP_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: DNS lookup time (ms)"
   },
   "HTTP_PAGE_TCP_CONNECTION": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: TCP connection setup (ms)"
   },
   "HTTP_PAGE_OPEN_TO_FIRST_SENT": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: Open -> first byte of request sent (ms)"
   },
   "HTTP_PAGE_FIRST_SENT_TO_LAST_RECEIVED": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: First byte of request sent -> last byte of response received (ms)"
   },
   "HTTP_PAGE_OPEN_TO_FIRST_RECEIVED": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: Open -> first byte of reply received (ms)"
   },
   "HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: Open -> cache read start (ms)"
   },
   "HTTP_PAGE_CACHE_READ_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: Cache read time (ms)"
   },
   "HTTP_PAGE_REVALIDATION": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: Positive cache validation time (ms)"
   },
   "HTTP_PAGE_COMPLETE_LOAD": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: Overall load time - all (ms)"
   },
   "HTTP_PAGE_COMPLETE_LOAD_CACHED": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: Overall load time - cache hits (ms)"
   },
   "HTTP_PAGE_COMPLETE_LOAD_NET": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP page: Overall load time - network (ms)"
   },
   "HTTP_SUB_DNS_ISSUE_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: open() -> DNS request issued (ms)"
   },
   "HTTP_SUB_DNS_LOOKUP_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: DNS lookup time (ms)"
   },
   "HTTP_SUB_TCP_CONNECTION": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: TCP connection setup (ms)"
   },
   "HTTP_SUB_OPEN_TO_FIRST_SENT": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Open -> first byte of request sent (ms)"
   },
   "HTTP_SUB_FIRST_SENT_TO_LAST_RECEIVED": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: First byte of request sent -> last byte of response received (ms)"
   },
   "HTTP_SUB_OPEN_TO_FIRST_RECEIVED": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Open -> first byte of reply received (ms)"
   },
   "HTTP_SUB_OPEN_TO_FIRST_FROM_CACHE": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Open -> cache read start (ms)"
   },
   "HTTP_SUB_CACHE_READ_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Cache read time (ms)"
   },
   "HTTP_SUB_REVALIDATION": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Positive cache validation time (ms)"
   },
   "HTTP_SUB_COMPLETE_LOAD": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Overall load time - all (ms)"
   },
   "HTTP_SUB_COMPLETE_LOAD_CACHED": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Overall load time - cache hits (ms)"
   },
   "HTTP_SUB_COMPLETE_LOAD_NET": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "HTTP subitem: Overall load time - network (ms)"
   },
   "HTTP_PROXY_TYPE": {
@@ -742,6 +807,7 @@
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 200,
+    "extended_statistics_ok": true,
     "description": "ms of SSL wait time including TCP and proxy tunneling"
   },
   "SSL_NPN_TYPE": {
@@ -758,18 +824,21 @@
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 200,
+    "extended_statistics_ok": true,
     "description": "ms elapsed time of OCSP etc.. that was canceled"
   },
   "CERT_VALIDATION_HTTP_REQUEST_SUCCEEDED_TIME": {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 200,
+    "extended_statistics_ok": true,
     "description": "ms elapsed time of OCSP etc.. that succeeded"
   },
   "CERT_VALIDATION_HTTP_REQUEST_FAILED_TIME": {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 200,
+    "extended_statistics_ok": true,
     "description": "ms elapsed time of OCSP etc.. that failed"
   },
   "SSL_KEY_EXCHANGE_ALGORITHM": {
@@ -791,24 +860,28 @@
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "SPDY: Streams concurrent active per connection"
   },
   "SPDY_REQUEST_PER_CONN": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "SPDY: Streams created per connection"
   },
   "SPDY_SERVER_INITIATED_STREAMS": {
     "kind": "exponential",
     "high": "100000",
     "n_buckets": 250,
+    "extended_statistics_ok": true,
     "description": "SPDY: Streams recevied per connection"
   },
   "SPDY_CHUNK_RECVD": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "SPDY: Recvd Chunk Size (rounded to KB)"
   },
   "SPDY_SYN_SIZE": {
@@ -816,6 +889,7 @@
     "low": 20,
     "high": "20000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "SPDY: SYN Frame Header Size"
   },
   "SPDY_SYN_RATIO": {
@@ -829,6 +903,7 @@
     "low": 16,
     "high": "20000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "SPDY: SYN Reply Header Size"
   },
   "SPDY_SYN_REPLY_RATIO": {
@@ -849,48 +924,56 @@
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "SPDY: KB read per connection"
   },
   "SPDY_SETTINGS_UL_BW": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "SPDY: Settings Upload Bandwidth"
   },
   "SPDY_SETTINGS_DL_BW": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "SPDY: Settings Download Bandwidth"
   },
   "SPDY_SETTINGS_RTT": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "SPDY: Settings RTT"
   },
   "SPDY_SETTINGS_MAX_STREAMS": {
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "SPDY: Settings Max Streams parameter"
   },
   "SPDY_SETTINGS_CWND": {
     "kind": "exponential",
     "high": "500",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "SPDY: Settings CWND (packets)"
   },
   "SPDY_SETTINGS_RETRANS": {
     "kind": "exponential",
     "high": "100",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "SPDY: Retransmission Rate"
   },
   "SPDY_SETTINGS_IW": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "SPDY: Settings IW (rounded to KB)"
   },
   "DISK_CACHE_CORRUPT_DETAILS": {
@@ -938,48 +1021,56 @@
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time to search cache (ms)"
   },
   "CACHE_MEMORY_SEARCH_2": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time to search memory cache (ms)"
   },
   "CACHE_DISK_SEARCH_2": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time to search disk cache (ms)"
   },
   "CACHE_OFFLINE_SEARCH_2": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time to search offline cache (ms)"
   },
   "TRANSACTION_WAIT_TIME_HTTP": {
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "Time from submission to dispatch of HTTP transaction (ms)"
   },
   "TRANSACTION_WAIT_TIME_HTTP_PIPELINES": {
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "Time from submission to dispatch of HTTP with pipelines transaction (ms)"
   },
   "TRANSACTION_WAIT_TIME_SPDY": {
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "Time from submission to dispatch of SPDY transaction (ms)"
   },
   "HTTP_DISK_CACHE_OVERHEAD": {
     "kind": "exponential",
     "high": "32000000",
     "n_buckets": 100,
+    "extended_statistics_ok": true,
     "description": "HTTP Disk cache memory overhead (bytes)"
   },
   "CACHE_LM_INCONSISTENT": {
@@ -1431,36 +1522,42 @@
     "kind": "exponential",
     "high": "1440",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "DNS Cache Entry Age at Removal Time (minutes)"
   },
   "DNS_LOOKUP_TIME": {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time for a successful DNS OS resolution (msec)"
   },
   "DNS_RENEWAL_TIME": {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time for a renewed DNS OS resolution (msec)"
   },
   "DNS_FAILED_LOOKUP_TIME": {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
   "FIND_PLUGINS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent scanning filesystem for plugins (ms)"
   },
   "CHECK_JAVA_ENABLED": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent checking if Java is enabled (ms)"
   },
   "PLUGIN_HANG_UI_USER_RESPONSE": {
@@ -1488,174 +1585,203 @@
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Time spent shutting down plugins (ms)"
   },
   "MOZ_SQLITE_OPEN_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite open() (ms)"
   },
   "MOZ_SQLITE_OPEN_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite open() (ms)"
   },
   "MOZ_SQLITE_TRUNCATE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite truncate() (ms)"
   },
   "MOZ_SQLITE_TRUNCATE_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite truncate() (ms)"
   },
   "MOZ_SQLITE_OTHER_READ_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
   "MOZ_SQLITE_OTHER_READ_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
   "MOZ_SQLITE_PLACES_READ_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
   "MOZ_SQLITE_PLACES_READ_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
   "MOZ_SQLITE_COOKIES_READ_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
   "MOZ_SQLITE_COOKIES_READ_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
   "MOZ_SQLITE_WEBAPPS_READ_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
   "MOZ_SQLITE_WEBAPPS_READ_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
   "MOZ_SQLITE_OTHER_WRITE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite write() (ms)"
   },
   "MOZ_SQLITE_OTHER_WRITE_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite write() (ms)"
   },
   "MOZ_SQLITE_PLACES_WRITE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite write() (ms)"
   },
   "MOZ_SQLITE_PLACES_WRITE_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite write() (ms)"
   },
   "MOZ_SQLITE_COOKIES_WRITE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite write() (ms)"
   },
   "MOZ_SQLITE_COOKIES_WRITE_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite write() (ms)"
   },
   "MOZ_SQLITE_WEBAPPS_WRITE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite write() (ms)"
   },
   "MOZ_SQLITE_WEBAPPS_WRITE_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite write() (ms)"
   },
   "MOZ_SQLITE_OTHER_SYNC_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite fsync() (ms)"
   },
   "MOZ_SQLITE_OTHER_SYNC_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite fsync() (ms)"
   },
   "MOZ_SQLITE_PLACES_SYNC_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite fsync() (ms)"
   },
   "MOZ_SQLITE_PLACES_SYNC_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite fsync() (ms)"
   },
   "MOZ_SQLITE_COOKIES_SYNC_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite fsync() (ms)"
   },
   "MOZ_SQLITE_COOKIES_SYNC_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite fsync() (ms)"
   },
   "MOZ_SQLITE_WEBAPPS_SYNC_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite fsync() (ms)"
   },
   "MOZ_SQLITE_WEBAPPS_SYNC_MAIN_THREAD_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent on SQLite fsync() (ms)"
   },
   "MOZ_SQLITE_OTHER_READ_B": {
@@ -1710,6 +1836,7 @@
     "kind": "exponential",
     "high": "32768",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "mozStorage async requests completion (ms)"
   },
   "MOZ_STORAGE_ASYNC_REQUESTS_SUCCESS": {
@@ -1725,60 +1852,70 @@
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent opening disk cache (ms)"
   },
   "NETWORK_DISK_CACHE_TRASHRENAME": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent renaming bad Cache to Cache.Trash (ms)"
   },
   "NETWORK_DISK_CACHE_DELETEDIR": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent deleting disk cache (ms)"
   },
   "NETWORK_DISK_CACHE_DELETEDIR_SHUTDOWN": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent during showdown stopping thread deleting old disk cache (ms)"
   },
   "NETWORK_DISK_CACHE_SHUTDOWN": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Total Time spent (ms) during disk cache showdown"
   },
   "NETWORK_DISK_CACHE_SHUTDOWN_CLEAR_PRIVATE": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent (ms) during showdown deleting disk cache for 'clear private data' option"
   },
   "NETWORK_DISK_CACHE_REVALIDATION": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Total Time spent (ms) during disk cache revalidation"
   },
   "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent in nsDiskCacheOutputStream::Close() on non-main thread (ms)"
   },
   "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent in nsDiskCacheOutputStream::Close() on the main thread (ms)"
   },
   "IDLE_NOTIFY_BACK_MS": {
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent checking for and notifying listeners that the user is back (ms)"
   },
   "IDLE_NOTIFY_BACK_LISTENERS": {
@@ -1791,6 +1928,7 @@
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent checking for and notifying listeners that the user is idle (ms)"
   },
   "IDLE_NOTIFY_IDLE_LISTENERS": {
@@ -1803,12 +1941,14 @@
     "kind": "exponential",
     "high": "500",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent per dbservice lookup (ms)"
   },
   "URLCLASSIFIER_CL_CHECK_TIME": {
     "kind": "exponential",
     "high": "500",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent per classifier lookup (ms)"
   },
   "URLCLASSIFIER_CL_UPDATE_TIME": {
@@ -1816,24 +1956,28 @@
     "low": 20,
     "high": "15000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Time spent per classifier update (ms)"
   },
   "URLCLASSIFIER_PS_FILELOAD_TIME": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent loading PrefixSet from file (ms)"
   },
   "URLCLASSIFIER_PS_FALLOCATE_TIME": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time spent fallocating PrefixSet (ms)"
   },
   "URLCLASSIFIER_PS_CONSTRUCT_TIME": {
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Time spent constructing PrefixSet from DB (ms)"
   },
   "URLCLASSIFIER_LC_PREFIXES": {
@@ -1846,6 +1990,7 @@
     "kind": "exponential",
     "high": "200",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Size of the completion cache in entries"
   },
   "URLCLASSIFIER_PS_FAILURE": {
@@ -1857,6 +2002,7 @@
     "low": 1000,
     "high": "150000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "PLACES: Number of unique pages"
   },
   "PLACES_BOOKMARKS_COUNT": {
@@ -1864,24 +2010,28 @@
     "low": 100,
     "high": "8000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "PLACES: Number of bookmarks"
   },
   "PLACES_TAGS_COUNT": {
     "kind": "exponential",
     "high": "200",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Number of tags"
   },
   "PLACES_FOLDERS_COUNT": {
     "kind": "exponential",
     "high": "200",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Number of folders"
   },
   "PLACES_KEYWORDS_COUNT": {
     "kind": "exponential",
     "high": "200",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Number of keywords"
   },
   "FENNEC_FAVICONS_COUNT": {
@@ -1889,6 +2039,7 @@
     "high": "2000",
     "n_buckets": 10,
     "cpp_guard": "ANDROID",
+    "extended_statistics_ok": true,
     "description": "FENNEC: (Places) Number of favicons stored"
   },
   "FENNEC_THUMBNAILS_COUNT": {
@@ -1896,6 +2047,7 @@
     "high": "2000",
     "n_buckets": 10,
     "cpp_guard": "ANDROID",
+    "extended_statistics_ok": true,
     "description": "FENNEC: (Places) Number of thumbnails stored"
   },
   "PLACES_SORTED_BOOKMARKS_PERC": {
@@ -1915,12 +2067,14 @@
     "low": 5,
     "high": "200",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Database filesize (MB)"
   },
   "PLACES_DATABASE_JOURNALSIZE_MB": {
     "kind": "exponential",
     "high": "50",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Database journal size (MB)"
   },
   "PLACES_DATABASE_PAGESIZE_B": {
@@ -1928,6 +2082,7 @@
     "low": 1024,
     "high": "32768",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Database page size (bytes)"
   },
   "PLACES_DATABASE_SIZE_PER_PAGE_B": {
@@ -1935,6 +2090,7 @@
     "low": 500,
     "high": "10240",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "PLACES: Average size of a place in the database (bytes)"
   },
   "PLACES_EXPIRATION_STEPS_TO_CLEAN2": {
@@ -1947,6 +2103,7 @@
     "low": 50,
     "high": "500",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Time for first autocomplete result if > 50ms (ms)"
   },
   "PLACES_AUTOCOMPLETE_URLINLINE_DOMAIN_QUERY_TIME_MS": {
@@ -1954,6 +2111,7 @@
     "low": 50,
     "high": 2000,
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Duration of the domain query for the url inline autocompletion (ms)"
   },
   "PLACES_IDLE_FRECENCY_DECAY_TIME_MS": {
@@ -1961,6 +2119,7 @@
     "low": 50,
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Time to decay all frecencies values on idle (ms)"
   },
   "PLACES_IDLE_MAINTENANCE_TIME_MS": {
@@ -1968,6 +2127,7 @@
     "low": 1000,
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Time to execute maintenance tasks on idle (ms)"
   },
   "PLACES_ANNOS_BOOKMARKS_COUNT": {
@@ -1975,6 +2135,7 @@
     "low": 50,
     "high": "5000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Number of bookmarks annotations"
   },
   "PLACES_ANNOS_BOOKMARKS_SIZE_KB": {
@@ -1982,6 +2143,7 @@
     "low": 10,
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Size of bookmarks annotations (KB)"
   },
   "PLACES_ANNOS_PAGES_COUNT": {
@@ -1989,6 +2151,7 @@
     "low": 50,
     "high": "5000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Number of pages annotations"
   },
   "PLACES_ANNOS_PAGES_SIZE_KB": {
@@ -1996,12 +2159,14 @@
     "low": 10,
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Size of pages annotations (KB)"
   },
   "PLACES_FRECENCY_CALC_TIME_MS": {
     "kind": "exponential",
     "high": "100",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "PLACES: Time to calculate frecency of a page (ms)"
   },
   "UPDATER_STATUS_CODES": {
@@ -2052,6 +2217,7 @@
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 30,
+    "extended_statistics_ok": true,
     "description": "Conversations: time between the moment we click and the second gloda query returns (ms)"
   },
   "THUNDERBIRD_INDEXING_RATE_MSG_PER_S": {
@@ -2137,12 +2303,14 @@
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Firefox: Time taken by the identity popup to open in milliseconds"
   },
   "FX_APP_MENU_OPEN_MS": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Firefox: Time taken by the app-menu opening in milliseconds"
   },
   "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
@@ -2150,30 +2318,35 @@
     "low": 50,
     "high": "5000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Firefox: Time to initialize the bookmarks toolbar view (ms)"
   },
   "FX_NEW_WINDOW_MS": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Firefox: Time taken to open a new browser window (ms)"
   },
   "FX_PAGE_LOAD_MS": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Firefox: Time taken to load a page (ms)"
   },
   "FX_THUMBNAILS_CAPTURE_TIME_MS": {
     "kind": "exponential",
     "high": "500",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "THUMBNAILS: Time (ms) it takes to capture a thumbnail"
   },
   "FX_THUMBNAILS_STORE_TIME_MS": {
     "kind": "exponential",
     "high": "500",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "THUMBNAILS: Time (ms) it takes to store a thumbnail in the cache"
   },
   "FX_THUMBNAILS_HIT_OR_MISS": {
@@ -2185,48 +2358,56 @@
     "low": 50,
     "high": "60000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Widget: Time it takes for the message before a UI message (ms)"
   },
   "FX_SESSION_RESTORE_COLLECT_DATA_MS": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Session restore: Time to collect all window and tab data (ms)"
   },
   "FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Session restore: Duration of the longest uninterruptible operation while collecting all window and tab data (ms)"
   },
   "FX_SESSION_RESTORE_SERIALIZE_DATA_MS": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Session restore: Time to JSON serialize session data (ms)"
   },
   "FX_SESSION_RESTORE_SERIALIZE_DATA_LONGEST_OP_MS": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Session restore: Duration of the longest uninterruptible operation while serializing session data (ms)"
   },
   "FX_SESSION_RESTORE_READ_FILE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Session restore: Time to read the session data from the file on disk (ms)"
   },
   "FX_SESSION_RESTORE_SYNC_READ_FILE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Session restore: Time to read the session data from the file on disk, using the synchronous fallback (ms)"
   },
   "FX_SESSION_RESTORE_WRITE_FILE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Session restore: Time to write the session data to the file on disk (ms)"
   },
   "FX_SESSION_RESTORE_CORRUPT_FILE": {
@@ -2279,12 +2460,14 @@
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "DOM: Timer handlers called per native timer expiration"
   },
   "DOM_TIMERS_RECENTLY_SET": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "DOM: setTimeout/setInterval calls recently (last 30s or more)"
   },
   "DOM_RANGE_DETACHED": {
@@ -2295,48 +2478,56 @@
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time to return a list of all keys in domain's LocalStorage (ms)"
   },
   "LOCALDOMSTORAGE_GETVALUE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time to return a value for a key in LocalStorage (ms)"
   },
   "LOCALDOMSTORAGE_SETVALUE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time to set a single key's value in LocalStorage (ms)"
   },
   "LOCALDOMSTORAGE_REMOVEKEY_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time to remove a single key from LocalStorage (ms)"
   },
   "LOCALDOMSTORAGE_REMOVEALL_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time to clear LocalStorage for all domains (ms)"
   },
   "LOCALDOMSTORAGE_FETCH_DOMAIN_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time to fetch LocalStorage data for a domain (ms)"
   },
   "LOCALDOMSTORAGE_FETCH_QUOTA_USE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time to fetch quota use stats for a TLD (ms)"
   },
   "LOCALDOMSTORAGE_TIMER_FLUSH_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time to flush dirty entries from the cache (ms)"
   },
   "LOCALDOMSTORAGE_KEY_SIZE_BYTES": {
@@ -2344,6 +2535,7 @@
     "low": 1024,
     "high": "32768",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "DOM storage: size of keys stored in localStorage"
   },
   "LOCALDOMSTORAGE_VALUE_SIZE_BYTES": {
@@ -2351,6 +2543,7 @@
     "low": 1024,
     "high": "32768",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "DOM storage: size of values stored in localStorage"
   },
   "SESSIONDOMSTORAGE_KEY_SIZE_BYTES": {
@@ -2358,6 +2551,7 @@
     "low": 1024,
     "high": "32768",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "DOM storage: size of keys stored in sessionStorage"
   },
   "SESSIONDOMSTORAGE_VALUE_SIZE_BYTES": {
@@ -2365,30 +2559,35 @@
     "low": 1024,
     "high": "32768",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "DOM storage: size of values stored in sessionStorage"
   },
   "RANGE_CHECKSUM_ERRORS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Number of histograms with range checksum errors"
   },
   "BUCKET_ORDER_ERRORS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Number of histograms with bucket order errors"
   },
   "TOTAL_COUNT_HIGH_ERRORS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Number of histograms with total count high errors"
   },
   "TOTAL_COUNT_LOW_ERRORS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Number of histograms with total count low errors"
   },
   "TELEMETRY_TEST_FLAG": {
@@ -2417,30 +2616,35 @@
     "kind": "exponential",
     "high": "100",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Number of sites blocked from the new tab page."
   },
   "PANORAMA_INITIALIZATION_TIME_MS": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Time it takes to initialize Panorama (ms)"
   },
   "PANORAMA_GROUPS_COUNT": {
     "kind": "exponential",
     "high": "25",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Number of groups in Panorama"
   },
   "PANORAMA_STACKED_GROUPS_COUNT": {
     "kind": "exponential",
     "high": "25",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Number of stacked groups in Panorama"
   },
   "PANORAMA_MEDIAN_TABS_IN_GROUPS_COUNT": {
     "kind": "exponential",
     "high": "100",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Median of tabs in groups in Panorama"
   },
   "BROWSERPROVIDER_XUL_IMPORT_TIME": {
@@ -2448,6 +2652,7 @@
     "low": 20,
     "high": "600000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Time for the initial conversion of a XUL places database (ms)",
     "cpp_guard": "ANDROID"
   },
@@ -2455,6 +2660,7 @@
     "kind": "exponential",
     "high": "50000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Number of bookmarks in the original XUL places database",
     "cpp_guard": "ANDROID"
   },
@@ -2462,6 +2668,7 @@
     "kind": "exponential",
     "high": "1000000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Number of history entries in the original XUL places database",
     "cpp_guard": "ANDROID"
   },
@@ -2520,6 +2727,7 @@
     "low": 10,
     "high": 604800,
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "How long (in seconds) a tab was inactive before it was expired",
     "cpp_guard": "ANDROID"
   },
@@ -2528,6 +2736,7 @@
     "low": 10,
     "high": 604800,
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "How long (in seconds) a tab was inactive when it was OOM-zombified",
     "cpp_guard": "ANDROID"
   },
@@ -2545,12 +2754,14 @@
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Time (ms) it takes to initialize the search service"
   },
   "SEARCH_SERVICE_BUILD_CACHE_MS": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Time (ms) it takes to build the cache of the search service"
   },
   "SOCIAL_ENABLED_ON_SESSION": {
@@ -2590,54 +2801,63 @@
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Time (ms) it takes to figure out extension last modified time"
   },
   "TELEMETRY_MEMORY_REPORTER_MS": {
     "kind": "exponential",
     "high": "5000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time (ms) it takes to run memory reporters when sending a telemetry ping"
   },
   "SSL_SUCCESFUL_CERT_VALIDATION_TIME_LIBPKIX" : {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time spent on a successful cert verification in libpix mode (ms)"
   },
   "SSL_SUCCESFUL_CERT_VALIDATION_TIME_CLASSIC" : {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time spent on a successful cert  verification in classic mode (ms)"
   },
   "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX" : {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time spent on an initially failed cert verification in libpix mode (ms)"
   },
   "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_CLASSIC" : {
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
+    "extended_statistics_ok": true,
     "description": "Time spent on an initially failed cert  verification in classic mode (ms)"
   },
   "HEALTHREPORT_INIT_MS": {
     "kind": "exponential",
     "high": "20000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Time (ms) spent to initialize Firefox Health Report service."
   },
   "HEALTHREPORT_SHUTDOWN_DELAY_MS": {
     "kind": "exponential",
     "high": "20000",
     "n_buckets": 15,
+    "extended_statistics_ok": true,
     "description": "Time (ms) that Firefox Health Report delays application shutdown by."
   },
   "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Time (ms) it takes to obtain and format a Health Report JSON payload."
   },
   "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES": {
@@ -2650,12 +2870,14 @@
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 20,
+    "extended_statistics_ok": true,
     "description": "Time (ms) it takes to upload the Health Report payload."
   },
   "HEALTHREPORT_SAVE_LAST_PAYLOAD_MS": {
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 10,
+    "extended_statistics_ok": true,
     "description": "Time (ms) it takes to persist the last submitted Health Report payload to disk."
   },
   "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {

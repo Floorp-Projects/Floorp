@@ -136,7 +136,7 @@ nsTableFrame::GetParentStyleContextFrame() const
   // must return whatever our parent would normally have returned.
 
   NS_PRECONDITION(mParent, "table constructed without outer table");
-  if (!mContent->GetParent() && !GetStyleContext()->GetPseudo()) {
+  if (!mContent->GetParent() && !StyleContext()->GetPseudo()) {
     // We're the root.  We have no style context parent.
     return nullptr;
   }
@@ -664,7 +664,7 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     // all anonymous cols that we create here use a pseudo style context of the
     // col group
     iContent = aColGroupFrame->GetContent();
-    parentStyleContext = aColGroupFrame->GetStyleContext();
+    parentStyleContext = aColGroupFrame->StyleContext();
     styleContext = shell->StyleSet()->
       ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableCol, parentStyleContext);
     // ASSERTION to check for bug 54454 sneaking back in...
@@ -1103,7 +1103,7 @@ static bool CompareByTablePartRank(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   return GetTablePartRank(aItem1) <= GetTablePartRank(aItem2);
 }
 
-/* static */ nsresult
+/* static */ void
 nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
                                const nsRect& aDirtyRect, const nsDisplayListSet& aLists)
 {
@@ -1117,14 +1117,12 @@ nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
   // lets us get cell borders into the nsTableFrame's BorderBackground list.
   nsIFrame* kid = aFrame->GetFirstPrincipalChild();
   while (kid) {
-    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
     kid = kid->GetNextSibling();
   }
-  return NS_OK;
 }
 
-/* static */ nsresult
+/* static */ void
 nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
                                       nsFrame* aFrame,
                                       const nsRect& aDirtyRect,
@@ -1155,30 +1153,26 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     // Paint the outset box-shadows for the table frames
     bool hasBoxShadow = aFrame->GetStyleBorder()->mBoxShadow != nullptr;
     if (hasBoxShadow) {
-      nsresult rv = lists->BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, aFrame));
-      NS_ENSURE_SUCCESS(rv, rv);
+      lists->BorderBackground()->AppendNewToTop(
+        new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, aFrame));
     }
 
     // Create dedicated background display items per-frame when we're
     // handling events.
     // XXX how to handle collapsed borders?
     if (aBuilder->IsForEventDelivery()) {
-      nsresult rv = nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, aFrame,
-                                                                    lists->BorderBackground());
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, aFrame,
+                                                           lists->BorderBackground());
     }
 
     // Paint the inset box-shadows for the table frames
     if (hasBoxShadow) {
-      nsresult rv = lists->BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayBoxShadowInner(aBuilder, aFrame));
-      NS_ENSURE_SUCCESS(rv, rv);
+      lists->BorderBackground()->AppendNewToTop(
+        new (aBuilder) nsDisplayBoxShadowInner(aBuilder, aFrame));
     }
   }
 
-  nsresult rv = aTraversal(aBuilder, aFrame, aDirtyRect, *lists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aTraversal(aBuilder, aFrame, aDirtyRect, *lists);
 
   if (sortEventBackgrounds) {
     // Ensure that the table frame event background goes before the
@@ -1188,7 +1182,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     separatedCollection.MoveTo(aLists);
   }
 
-  return aFrame->DisplayOutline(aBuilder, aLists);
+  aFrame->DisplayOutline(aBuilder, aLists);
 }
 
 #ifdef DEBUG
@@ -1227,7 +1221,7 @@ AnyTablePartHasBorderOrBackground(nsIFrame* aStart, nsIFrame* aEnd)
 
 // table paint code is concerned primarily with borders and bg color
 // SEC: TODO: adjust the rect for captions
-NS_IMETHODIMP
+void
 nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
@@ -1243,8 +1237,7 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // opacity and visibility optimizations
       if (deflate == nsMargin(0, 0, 0, 0)) {
         nsDisplayBackgroundImage* bg;
-        nsresult rv = DisplayBackgroundUnconditional(aBuilder, aLists, false, &bg);
-        NS_ENSURE_SUCCESS(rv, rv);
+        DisplayBackgroundUnconditional(aBuilder, aLists, false, &bg);
       }
     }
     
@@ -1257,11 +1250,10 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         AnyTablePartHasBorderOrBackground(this, GetNextSibling()) ||
         AnyTablePartHasBorderOrBackground(mColGroups.FirstChild(), nullptr)) {
       item = new (aBuilder) nsDisplayTableBorderBackground(aBuilder, this);
-      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
-      NS_ENSURE_SUCCESS(rv, rv);
+      aLists.BorderBackground()->AppendNewToTop(item);
     }
   }
-  return DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
+  DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
 }
 
 nsMargin
@@ -2022,7 +2014,7 @@ nsTableFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     return;
 
   if (IsBorderCollapse() &&
-      BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+      BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     SetFullBCDamageArea();
   }
 
@@ -4433,7 +4425,7 @@ GetColorAndStyle(const nsIFrame*  aFrame,
       (NS_STYLE_BORDER_STYLE_HIDDEN == aStyle)) {
     return;
   }
-  aColor = aFrame->GetStyleContext()->GetVisitedDependentColor(
+  aColor = aFrame->StyleContext()->GetVisitedDependentColor(
              nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[aSide]);
 }
 

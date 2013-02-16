@@ -1296,25 +1296,27 @@ Blob<Parent>::RecvPBlobStreamConstructor(StreamType* aActor)
   nsresult rv = mBlob->GetInternalStream(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsCOMPtr<nsIIPCSerializableInputStream> serializableStream;
-
   nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(mBlob);
+
+  nsCOMPtr<IPrivateRemoteInputStream> remoteStream;
   if (remoteBlob) {
-    // Sanity check that the remote blob returned a remote stream.
-    nsCOMPtr<IPrivateRemoteInputStream> remoteStream =
-      do_QueryInterface(stream);
-    if (!remoteStream) {
-      MOZ_ASSERT(false, "Remote blob didn't return a remote stream!");
-      return false;
-    }
+    remoteStream = do_QueryInterface(stream);
   }
 
-  // If the underlying blob is not a remote blob or it is a remote blob
-  // representing this actor then we can use the internal stream that it
-  // provides. Otherwise we need to be on a background thread before we can
-  // get to the real stream.
+  // There are three cases in which we can use the stream obtained from the blob
+  // directly as our serialized stream:
+  //
+  //   1. The blob is not a remote blob.
+  //   2. The blob is a remote blob that represents this actor.
+  //   3. The blob is a remote blob representing a different actor but we
+  //      already have a non-remote, i.e. serialized, serialized stream.
+  //
+  // In all other cases we need to be on a background thread before we can get
+  // to the real stream.
+  nsCOMPtr<nsIIPCSerializableInputStream> serializableStream;
   if (!remoteBlob ||
-      static_cast<ProtocolType*>(remoteBlob->GetPBlob()) == this) {
+      static_cast<ProtocolType*>(remoteBlob->GetPBlob()) == this ||
+      !remoteStream) {
     serializableStream = do_QueryInterface(stream);
     if (!serializableStream) {
       MOZ_ASSERT(false, "Must be serializable!");

@@ -306,6 +306,9 @@ pref("browser.urlbar.trimURLs", true);
 
 pref("browser.altClickSave", false);
 
+// Enable logging downloads operations to the Error Console.
+pref("browser.download.debug", false);
+
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 
 // picking a filename without that info in hand so that the user sees some

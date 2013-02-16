@@ -328,18 +328,17 @@ nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 /////////////////////////////////////////////////////////////////////////////
 // Painting/Events
 
-NS_IMETHODIMP
+void
 nsContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists)
 {
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  return BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
+  BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
 }
 
-nsresult
+void
 nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
                                                       const nsRect&           aDirtyRect,
                                                       const nsDisplayListSet& aLists,
@@ -350,11 +349,9 @@ nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aB
   nsDisplayListSet set(aLists, aLists.Content());
   // The children should be in content order
   while (kid) {
-    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, aFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, aFlags);
     kid = kid->GetNextSibling();
   }
-  return NS_OK;
 }
 
 /* virtual */ void
@@ -779,7 +776,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
                                           nsView*         aView,
                                           uint32_t         aFlags)
 {
-  NS_ASSERTION(!aStyleContext || aFrame->GetStyleContext() == aStyleContext,
+  NS_ASSERTION(!aStyleContext || aFrame->StyleContext() == aStyleContext,
                "Wrong style context for frame?");
 
   if (!aView) {
@@ -789,7 +786,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
   nsViewManager* vm = aView->GetViewManager();
 
   if (nullptr == aStyleContext) {
-    aStyleContext = aFrame->GetStyleContext();
+    aStyleContext = aFrame->StyleContext();
   }
 
   // Make sure visibility is correct. This only affects nsSubdocumentFrame.

@@ -163,7 +163,7 @@ nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
      
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     nsIntRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
     tableFrame->AddBCDamageArea(damageArea);
   }
@@ -555,7 +555,7 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
   painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
 
-NS_IMETHODIMP
+void
 nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -571,11 +571,10 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // need the background to be larger than the row frame in some
       // cases.
       item = new (aBuilder) nsDisplayTableRowBackground(aBuilder, this);
-      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
-      NS_ENSURE_SUCCESS(rv, rv);
+      aLists.BorderBackground()->AppendNewToTop(item);
     }
   }
-  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
+  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
 }
 
 int

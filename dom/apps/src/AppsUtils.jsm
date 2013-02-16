@@ -177,8 +177,8 @@ this.AppsUtils = {
   },
 
   /**
-   * from https://developer.mozilla.org/en/OpenWebApps/The_Manifest
-   * only the name property is mandatory
+   * From https://developer.mozilla.org/en/OpenWebApps/The_Manifest
+   * Only the name property is mandatory.
    */
   checkManifest: function(aManifest, app) {
     if (aManifest.name == undefined)
@@ -232,6 +232,14 @@ this.AppsUtils = {
             return false;
           }
         }
+      }
+    }
+
+    // The 'size' field must be a positive integer.
+    if (aManifest.size) {
+      aManifest.size = parseInt(aManifest.size);
+      if (Number.isNaN(aManifest.size) || aManifest.size < 0) {
+        return false;
       }
     }
 
