@@ -14,6 +14,8 @@ assert_eq(str(stars), "'*' <repeats 100 times>")
 doubleStars = gdb.parse_and_eval('doubleStars')
 assert_eq(str(doubleStars), "'*' <repeats 200 times>")
 
+assert_pretty('xRaw', '"x"')
+
 # JSAtom *
 
 run_fragment('JSString.atom')

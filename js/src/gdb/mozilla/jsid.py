@@ -23,14 +23,15 @@ class jsid(object):
     def __init__(self, value, cache):
         self.value = value
         self.cache = cache
+        self.concrete_type = self.value.type.strip_typedefs()
 
     # SpiderMonkey has two alternative definitions of jsid: a typedef for
     # ptrdiff_t, and a struct with == and != operators defined on it.
     # Extract the bits from either one.
     def as_bits(self):
-        if self.value.type.code == gdb.TYPE_CODE_STRUCT:
+        if self.concrete_type.code == gdb.TYPE_CODE_STRUCT:
             return self.value['asBits']
-        elif self.value.type.code == gdb.TYPE_CODE_INT:
+        elif self.concrete_type.code == gdb.TYPE_CODE_INT:
             return self.value
         else:
             raise RuntimeError, ("definition of SpiderMonkey 'jsid' type"
