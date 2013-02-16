@@ -88,14 +88,6 @@ NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
   return computedStyle.forget();
 }
 
-static nsIFrame*
-GetContainingBlockFor(nsIFrame* aFrame) {
-  if (!aFrame) {
-    return nullptr;
-  }
-  return aFrame->GetContainingBlock();
-}
-
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
                                        const nsAString& aPseudoElt,
                                        nsIPresShell* aPresShell,
@@ -3536,60 +3528,56 @@ nsComputedDOMStyle::GetOffsetWidthFor(mozilla::css::Side aSide)
 CSSValue*
 nsComputedDOMStyle::GetAbsoluteOffset(mozilla::css::Side aSide)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  MOZ_ASSERT(mOuterFrame, "need a frame, so we can call GetContainingBlock()");
 
-  nsIFrame* container = GetContainingBlockFor(mOuterFrame);
-  if (container) {
-    nsMargin margin = mOuterFrame->GetUsedMargin();
-    nsMargin border = container->GetUsedBorder();
-    nsMargin scrollbarSizes(0, 0, 0, 0);
-    nsRect rect = mOuterFrame->GetRect();
-    nsRect containerRect = container->GetRect();
+  nsIFrame* container = mOuterFrame->GetContainingBlock();
+  nsMargin margin = mOuterFrame->GetUsedMargin();
+  nsMargin border = container->GetUsedBorder();
+  nsMargin scrollbarSizes(0, 0, 0, 0);
+  nsRect rect = mOuterFrame->GetRect();
+  nsRect containerRect = container->GetRect();
 
-    if (container->GetType() == nsGkAtoms::viewportFrame) {
-      // For absolutely positioned frames scrollbars are taken into
-      // account by virtue of getting a containing block that does
-      // _not_ include the scrollbars.  For fixed positioned frames,
-      // the containing block is the viewport, which _does_ include
-      // scrollbars.  We have to do some extra work.
-      // the first child in the default frame list is what we want
-      nsIFrame* scrollingChild = container->GetFirstPrincipalChild();
-      nsIScrollableFrame *scrollFrame = do_QueryFrame(scrollingChild);
-      if (scrollFrame) {
-        scrollbarSizes = scrollFrame->GetActualScrollbarSizes();
-      }
+  if (container->GetType() == nsGkAtoms::viewportFrame) {
+    // For absolutely positioned frames scrollbars are taken into
+    // account by virtue of getting a containing block that does
+    // _not_ include the scrollbars.  For fixed positioned frames,
+    // the containing block is the viewport, which _does_ include
+    // scrollbars.  We have to do some extra work.
+    // the first child in the default frame list is what we want
+    nsIFrame* scrollingChild = container->GetFirstPrincipalChild();
+    nsIScrollableFrame *scrollFrame = do_QueryFrame(scrollingChild);
+    if (scrollFrame) {
+      scrollbarSizes = scrollFrame->GetActualScrollbarSizes();
     }
-
-    nscoord offset = 0;
-    switch (aSide) {
-      case NS_SIDE_TOP:
-        offset = rect.y - margin.top - border.top - scrollbarSizes.top;
-
-        break;
-      case NS_SIDE_RIGHT:
-        offset = containerRect.width - rect.width -
-          rect.x - margin.right - border.right - scrollbarSizes.right;
-
-        break;
-      case NS_SIDE_BOTTOM:
-        offset = containerRect.height - rect.height -
-          rect.y - margin.bottom - border.bottom - scrollbarSizes.bottom;
-
-        break;
-      case NS_SIDE_LEFT:
-        offset = rect.x - margin.left - border.left - scrollbarSizes.left;
-
-        break;
-      default:
-        NS_ERROR("Invalid side");
-        break;
-    }
-    val->SetAppUnits(offset);
-  } else {
-    // XXX no frame.  This property makes no sense
-    val->SetAppUnits(0);
   }
 
+  nscoord offset = 0;
+  switch (aSide) {
+    case NS_SIDE_TOP:
+      offset = rect.y - margin.top - border.top - scrollbarSizes.top;
+
+      break;
+    case NS_SIDE_RIGHT:
+      offset = containerRect.width - rect.width -
+        rect.x - margin.right - border.right - scrollbarSizes.right;
+
+      break;
+    case NS_SIDE_BOTTOM:
+      offset = containerRect.height - rect.height -
+        rect.y - margin.bottom - border.bottom - scrollbarSizes.bottom;
+
+      break;
+    case NS_SIDE_LEFT:
+      offset = rect.x - margin.left - border.left - scrollbarSizes.left;
+
+      break;
+    default:
+      NS_ERROR("Invalid side");
+      break;
+  }
+
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  val->SetAppUnits(offset);
   return val;
 }
 
@@ -3905,13 +3893,9 @@ nsComputedDOMStyle::GetCBContentWidth(nscoord& aWidth)
     return false;
   }
 
-  nsIFrame* container = GetContainingBlockFor(mOuterFrame);
-  if (!container) {
-    return false;
-  }
-
   AssertFlushedPendingReflows();
 
+  nsIFrame* container = mOuterFrame->GetContainingBlock();
   aWidth = container->GetContentRect().width;
   return true;
 }
@@ -3923,13 +3907,9 @@ nsComputedDOMStyle::GetCBContentHeight(nscoord& aHeight)
     return false;
   }
 
-  nsIFrame* container = GetContainingBlockFor(mOuterFrame);
-  if (!container) {
-    return false;
-  }
-
   AssertFlushedPendingReflows();
 
+  nsIFrame* container = mOuterFrame->GetContainingBlock();
   aHeight = container->GetContentRect().height;
   return true;
 }
