@@ -1489,69 +1489,6 @@ nsHTMLInputElement::SetValueAsNumber(double aValueAsNumber)
 }
 
 double
-nsHTMLInputElement::GetPositionAsPercent()
-{
-  // Should only be used for <input type='range'> for the moment.
-  MOZ_ASSERT(mType == NS_FORM_INPUT_RANGE);
-
-  double minimum = GetMinimum();
-  if (MOZ_DOUBLE_IS_NaN(minimum)) {
-    return MOZ_DOUBLE_NaN();
-  }
-
-  double maximum = GetMaximum();
-  if (MOZ_DOUBLE_IS_NaN(maximum)) {
-    return MOZ_DOUBLE_NaN();
-  }
-
-  double value = GetValueAsDouble();
-  if (MOZ_DOUBLE_IS_NaN(value)) {
-    return MOZ_DOUBLE_NaN();
-  }
-
-  return (value - minimum) / (maximum - minimum);
-}
-
-void
-nsHTMLInputElement::SetPositionAsPercent(double position)
-{
-  // TODO: datalist support
-
-  double minimum = GetMinimum();
-  if (MOZ_DOUBLE_IS_NaN(minimum)) {
-    return;
-  }
-
-  double maximum = GetMaximum();
-  if (MOZ_DOUBLE_IS_NaN(maximum)) {
-    return;
-  }
-
-  double currentValue = GetValueAsDouble();
-  if (MOZ_DOUBLE_IS_NaN(currentValue)) {
-    return;
-  }
-
-  double val = (maximum - minimum)*position + minimum;
-  if (DoesStepApply()) {
-    double increment = GetStep();
-    val = minimum + NSToIntRound(val / float(increment)) * increment;
-  }
-
-  // get the new position and make sure it is in bounds
-  if (val < minimum || maximum < minimum)
-    val = minimum;
-  else if (val > maximum)
-    val = maximum;
-
-  if (val == currentValue)
-    return;
-
-  SetValue(val);
-  FireChangeEventIfNeeded();
-}
-
-double
 nsHTMLInputElement::GetMinimum() const
 {
   MOZ_ASSERT(DoesValueAsNumberApply(),

@@ -9,56 +9,38 @@
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsRepeatService.h"
 #include "nsCOMPtr.h"
-#include "nsDOMTouchEvent.h"
-#include "nsIDOMEventListener.h"
 
 class nsBaseContentList;
-class nsRangeFrame;
-
-class nsRangeMediator : public nsIDOMEventListener
-{
-public:
-
-  NS_DECL_ISUPPORTS
-
-  nsRangeFrame* mRange;
-
-  nsRangeMediator(nsRangeFrame* aRange) {  mRange = aRange; }
-  virtual ~nsRangeMediator() {}
-
-  virtual void SetRange(nsRangeFrame* aRange) { mRange = aRange; }
-};
 
 class nsRangeFrame : public nsContainerFrame,
                      public nsIAnonymousContentCreator
 {
+  friend nsIFrame*
+  NS_NewRangeFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  nsRangeFrame(nsStyleContext* aContext);
+  virtual ~nsRangeFrame();
+
 public:
   NS_DECL_QUERYFRAME_TARGET(nsRangeFrame)
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame overrides
-  NS_IMETHODIMP SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList) MOZ_OVERRIDE;
-
-  nsRangeFrame(nsStyleContext* aContext);
-  virtual ~nsRangeFrame();
-
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                        const nsRect&           aDirtyRect,
+                        const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  NS_IMETHOD Reflow(nsPresContext*           aCX,
+  NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
     return MakeFrameName(NS_LITERAL_STRING("Range"), aResult);
   }
 #endif
@@ -72,25 +54,35 @@ public:
 
   NS_IMETHOD AttributeChanged(int32_t  aNameSpaceID,
                               nsIAtom* aAttribute,
-                              int32_t  aModType);
+                              int32_t  aModType) MOZ_OVERRIDE;
 
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
                                  nsSize aPadding, bool aShrinkWrap) MOZ_OVERRIDE;
 
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
-  double GetMin() const;
-  double GetMax() const;
-  double GetValue() const;
+  /**
+   * Returns true if the slider's thumb moves horizontally, or else false if it
+   * moves vertically.
+   *
+   * aOverrideFrameSize If specified, this will be used instead of the size of
+   *   the frame's rect (i.e. the frame's border-box size) if the frame's
+   *   rect would have otherwise been examined. This should only be specified
+   *   during reflow when the frame's [new] border-box size has not yet been
+   *   stored in its mRect.
+   */
+  bool IsHorizontal(const nsSize *aFrameSizeOverride = nullptr) const;
 
   /**
    * Returns whether the frame and its child should use the native style.
@@ -98,32 +90,31 @@ public:
   bool ShouldUseNativeStyle() const;
 
 private:
-  bool IsHorizontal(nscoord width, nscoord height);
-  void SetCurrentThumbPosition(double position);
-  void AddListener();
-  void RemoveListener();
 
-  nscoord mChange;
+  // Helper function which reflows the anonymous div frames.
+  nsresult ReflowAnonymousContent(nsPresContext*           aPresContext,
+                                  nsHTMLReflowMetrics&     aDesiredSize,
+                                  const nsHTMLReflowState& aReflowState);
 
-protected:
-  // Helper function which reflow the anonymous div frame.
-  void ReflowBarFrame(nsPresContext*           aPresContext,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus);
+  /**
+   * Returns the input element's value as a fraction of the difference between
+   * the input's minimum and its maximum (i.e. returns 0.0 when the value is
+   * the same as the minimum, and returns 1.0 when the value is the same as the
+   * maximum).
+   */
+  double GetValueAsFractionOfRange();
+
+  /**
+   * The div used to show the track.
+   * @see nsRangeFrame::CreateAnonymousContent
+   */
+  nsCOMPtr<nsIContent> mTrackDiv;
 
   /**
    * The div used to show the thumb.
    * @see nsRangeFrame::CreateAnonymousContent
    */
   nsCOMPtr<nsIContent> mThumbDiv;
-
-  /**
-   * The div used to show the active progress.
-   * @see nsRangeFrame::CreateAnonymousContent
-   */
-  nsCOMPtr<nsIContent> mProgressDiv;
-
 };
 
 #endif
-
