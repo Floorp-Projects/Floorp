@@ -741,7 +741,6 @@ public:
 
   /**
    * Get the style context associated with this frame.
-   *
    */
   nsStyleContext* StyleContext() const { return mStyleContext; }
   void SetStyleContext(nsStyleContext* aContext)

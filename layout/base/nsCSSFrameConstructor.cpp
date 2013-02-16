@@ -10850,9 +10850,6 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   // all of the content that was previously part of the letter frame
   // (and probably continued elsewhere).
   nsStyleContext* parentSC = parentFrame->StyleContext();
-  if (!parentSC) {
-    return NS_OK;
-  }
   nsIContent* textContent = textFrame->GetContent();
   if (!textContent) {
     return NS_OK;
