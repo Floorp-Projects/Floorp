@@ -82,10 +82,6 @@ public:
   // aOverflowAreas, if non-null, is unioned with (in the local
   // coordinate space) the overflow areas of the absolutely positioned
   // children.
-  // @param aForceReflow if this is false, reflow for some absolutely
-  //        positioned frames may be skipped based on whether they use
-  //        placeholders for positioning and on whether the containing block
-  //        width or height changed.
   nsresult Reflow(nsContainerFrame*        aDelegatingFrame,
                   nsPresContext*           aPresContext,
                   const nsHTMLReflowState& aReflowState,
