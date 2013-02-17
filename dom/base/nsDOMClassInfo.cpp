@@ -286,8 +286,12 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
-#include "nsIDOMCrypto.h"
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMCRMFObject.h"
+#include "nsIDOMCryptoLegacy.h"
+#else
+#include "nsIDOMCrypto.h"
+#endif
 #include "nsIControllers.h"
 #include "nsISelection.h"
 #include "nsIBoxObject.h"
@@ -477,7 +481,7 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static const char kDOMStringBundleURL[] =
   "chrome://global/locale/dom/dom.properties";
 
-#ifdef MOZ_DISABLE_DOMCRYPTO
+#ifdef MOZ_DISABLE_CRYPTOLEGACY
   static const bool domCryptoEnabled = false;
 #else
   static const bool domCryptoEnabled = true;
@@ -556,8 +560,11 @@ static const char kDOMStringBundleURL[] =
 const uint32_t kDOMClassInfo_##_dom_class##_interfaces =                      \
   0;
 
-DOMCI_DATA_NO_CLASS(Crypto)
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 DOMCI_DATA_NO_CLASS(CRMFObject)
+#endif
+DOMCI_DATA_NO_CLASS(Crypto)
+
 DOMCI_DATA_NO_CLASS(ContentFrameMessageManager)
 DOMCI_DATA_NO_CLASS(ChromeMessageBroadcaster)
 DOMCI_DATA_NO_CLASS(ChromeMessageSender)
@@ -956,9 +963,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #endif
 
   // Crypto classes
-  NS_DEFINE_CLASSINFO_DATA(Crypto, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_DEFINE_CLASSINFO_DATA(CRMFObject, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#endif
+  NS_DEFINE_CLASSINFO_DATA(Crypto, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // DOM Traversal classes
@@ -2764,12 +2773,14 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 #endif
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+   DOM_CLASSINFO_MAP_BEGIN(CRMFObject, nsIDOMCRMFObject)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCRMFObject)
+   DOM_CLASSINFO_MAP_END
+#endif
+
   DOM_CLASSINFO_MAP_BEGIN(Crypto, nsIDOMCrypto)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCrypto)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CRMFObject, nsIDOMCRMFObject)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCRMFObject)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLStylesheetProcessingInstruction, nsIDOMProcessingInstruction)

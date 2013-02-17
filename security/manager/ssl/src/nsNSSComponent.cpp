@@ -19,26 +19,33 @@
 #include "nsIStreamListener.h"
 #include "nsIStringBundle.h"
 #include "nsIDirectoryService.h"
-#include "nsIDOMNode.h"
 #include "nsCURILoader.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
-#include "nsSmartCardMonitor.h"
 #include "prlog.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
+#include "nsThreadUtils.h"
+
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+#include "nsIDOMNode.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMSmartCardEvent.h"
+#include "nsSmartCardMonitor.h"
+#include "nsIDOMCryptoLegacy.h"
+#include "nsIPrincipal.h"
+#else
 #include "nsIDOMCrypto.h"
-#include "nsThreadUtils.h"
+#endif
+
 #include "nsCRT.h"
 #include "nsCRLInfo.h"
 #include "nsCertOverrideService.h"
@@ -58,7 +65,6 @@
 #include "nsICRLManager.h"
 #include "nsNSSShutDown.h"
 #include "GeneratedEvents.h"
-#include "nsIDOMSmartCardEvent.h"
 #include "nsIKeyModule.h"
 #include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
@@ -205,6 +211,7 @@ private:
   nsCOMPtr<nsIStreamListener> mListener;
 };
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 //This class is used to run the callback code
 //passed to the event handlers for smart card notification
 class nsTokenEventRunnable : public nsIRunnable {
@@ -239,6 +246,7 @@ nsTokenEventRunnable::Run()
 
   return nssComponent->DispatchEvent(mType, mTokenName);
 }
+#endif // MOZ_DISABLE_CRYPTOLEGACY
 
 bool nsPSMInitPanic::isPanic = false;
 
@@ -326,7 +334,9 @@ nsNSSComponent::nsNSSComponent()
   :mutex("nsNSSComponent.mutex"),
    mNSSInitialized(false),
    mCrlTimerLock("nsNSSComponent.mCrlTimerLock"),
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
    mThreadList(nullptr),
+#endif
    mCertVerificationThread(nullptr)
 {
 #ifdef PR_LOGGING
@@ -415,6 +425,7 @@ nsNSSComponent::~nsNSSComponent()
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor finished\n"));
 }
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 NS_IMETHODIMP
 nsNSSComponent::PostEvent(const nsAString &eventType, 
                                                   const nsAString &tokenName)
@@ -538,7 +549,7 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
   rv = target->DispatchEvent(smartCardEvent, &boolrv);
   return rv;
 }
-
+#endif // MOZ_DISABLE_CRYPTOLEGACY
 
 NS_IMETHODIMP
 nsNSSComponent::PIPBundleFormatStringFromName(const char *name,
@@ -620,6 +631,7 @@ nsNSSComponent::GetNSSBundleString(const char *name,
   return rv;
 }
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 void
 nsNSSComponent::LaunchSmartCardThreads()
 {
@@ -675,6 +687,7 @@ nsNSSComponent::ShutdownSmartCardThreads()
   delete mThreadList;
   mThreadList = nullptr;
 }
+#endif // MOZ_DISABLE_CRYPTOLEGACY
 
 static char *
 nss_addEscape(const char *string, char quote)
@@ -1800,7 +1813,9 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
       InstallLoadableRoots();
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
       LaunchSmartCardThreads();
+#endif
 
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
     }
@@ -1848,7 +1863,9 @@ nsNSSComponent::ShutdownNSS()
       mPrefBranch->RemoveObserver("security.", this);
     }
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
     ShutdownSmartCardThreads();
+#endif
     SSL_ClearSessionCache();
     UnloadLoadableRoots();
     CleanupIdentityInfo();

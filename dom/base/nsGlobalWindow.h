@@ -41,9 +41,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMDocument.h"
-#ifndef MOZ_DISABLE_DOMCRYPTO
-#include "nsIDOMCrypto.h"
-#endif
 #include "nsIPrincipal.h"
 #include "nsIXPCScriptable.h"
 #include "nsPoint.h"
@@ -96,6 +93,7 @@
 class nsIDOMBarProp;
 class nsIDocument;
 class nsPresContext;
+class nsIDOMCrypto;
 class nsIDOMEvent;
 class nsIScrollableFrame;
 class nsIControllers;
@@ -114,10 +112,6 @@ class nsDOMEventTargetHelper;
 class nsDOMOfflineResourceList;
 class nsDOMWindowUtils;
 class nsIIdleService;
-
-#ifdef MOZ_DISABLE_DOMCRYPTO
-class nsIDOMCrypto;
-#endif
 
 class nsWindowSizes;
 
@@ -1080,9 +1074,8 @@ protected:
   nsString                      mDefaultStatus;
   // index 0->language_id 1, so index MAX-1 == language_id MAX
   nsGlobalWindowObserver*       mObserver;
-#ifndef MOZ_DISABLE_DOMCRYPTO
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
-#endif
+
   nsCOMPtr<nsIDOMStorage>      mLocalStorage;
   nsCOMPtr<nsIDOMStorage>      mSessionStorage;
 
