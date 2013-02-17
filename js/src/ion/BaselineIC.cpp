@@ -517,8 +517,6 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
         *jitcodePtr = ion->method()->raw() + ion->osrEntryOffset();
     }
 
-    script->resetUseCount();
-
     return true;
 }
 
@@ -643,13 +641,8 @@ DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
         script->resetUseCount();
         return true;
     }
-    if (script->isIonCompilingOffThread()) {
-        // TODO: ASSERT that end-of-off-thread-compilation checker stub doesn't exist.
-        // TODO: Clear all optimized stubs.
-        // TODO: Add end-of-off-thread-compilation checker stub.
-        script->resetUseCount();
-        return true;
-    }
+
+    JS_ASSERT(!script->isIonCompilingOffThread());
 
     // If Ion script exists, but PC is not at a loop entry, then Ion will be entered for
     // this script at an appropriate LOOPENTRY or the next time this function is called.
