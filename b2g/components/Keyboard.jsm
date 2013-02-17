@@ -46,6 +46,16 @@ let Keyboard = {
     let frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
     let mm = frameLoader.messageManager;
     mm.addMessageListener('Forms:Input', this);
+
+    // When not running apps OOP, we need to load forms.js here since this
+    // won't happen from dom/ipc/preload.js
+    try {
+       if (Services.prefs.getBoolPref("dom.ipc.tabs.disabled") === true) {
+         mm.loadFrameScript(kFormsFrameScript, true);
+       }
+     } catch (e) {
+       dump('Error loading ' + kFormsFrameScript + ' as frame script: ' + e + '\n');
+     }
   },
 
   receiveMessage: function keyboardReceiveMessage(msg) {
