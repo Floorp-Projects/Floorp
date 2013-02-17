@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html class="reftest-wait">
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=802982
 -->
@@ -8,15 +8,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802982
   <title>Excessive getUserMedia calls</title>
   <script type="application/javascript">
 
+  function finish() {
+    document.documentElement.removeAttribute("class");
+  }
+
   function boom()
   {
     for (var j = 0; j < 100; ++j) {
       navigator.mozGetUserMedia({}, {}, {});
     }
+    finish(); // we're not waiting for success/error callbacks here
   }
 
   </script>
 </head>
 
-<body onload="boom();"></body>
+<body onload="setTimeout(boom, 100)">
 </html>
