@@ -22,7 +22,7 @@ const Cc = Components.classes;
 const Cr = Components.results;
 const Ci = Components.interfaces;
 
-Cu.import("resource:///modules/PageThumbs.jsm");
+Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",

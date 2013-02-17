@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "gPrefBranch", function() {
 });
 
 XPCOMUtils.defineLazyModuleGetter(this, "gPageThumbnails",
-  "resource:///modules/PageThumbs.jsm", "PageThumbs");
+  "resource://gre/modules/PageThumbs.jsm", "PageThumbs");
 
 var gWindow = window.parent;
 var gBrowser = gWindow.gBrowser;
