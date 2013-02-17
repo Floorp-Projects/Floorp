@@ -10,7 +10,7 @@ const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
 let tmp = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("resource:///modules/PageThumbs.jsm", tmp);
+  .loadSubScript("resource://gre/modules/PageThumbs.jsm", tmp);
 let {PageThumbsStorageMigrator} = tmp;
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",

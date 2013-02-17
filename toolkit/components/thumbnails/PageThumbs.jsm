@@ -205,10 +205,28 @@ this.PageThumbs = {
     });
   },
 
+  /**
+   * Register an expiration filter.
+   *
+   * When thumbnails are going to expire, each registered filter is asked for a
+   * list of thumbnails to keep.
+   *
+   * The filter (if it is a callable) or its filterForThumbnailExpiration method
+   * (if the filter is an object) is called with a single argument.  The
+   * argument is a callback function.  The filter must call the callback
+   * function and pass it an array of zero or more URLs.  (It may do so
+   * asynchronously.)  Thumbnails for those URLs will be except from expiration.
+   *
+   * @param aFilter callable, or object with filterForThumbnailExpiration method
+   */
   addExpirationFilter: function PageThumbs_addExpirationFilter(aFilter) {
     PageThumbsExpiration.addFilter(aFilter);
   },
 
+  /**
+   * Unregister an expiration filter.
+   * @param aFilter A filter that was previously passed to addExpirationFilter.
+   */
   removeExpirationFilter: function PageThumbs_removeExpirationFilter(aFilter) {
     PageThumbsExpiration.removeFilter(aFilter);
   },
@@ -475,7 +493,7 @@ let PageThumbsWorker = {
    */
   get _worker() {
     delete this._worker;
-    this._worker = new ChromeWorker("resource:///modules/PageThumbsWorker.js");
+    this._worker = new ChromeWorker("resource://gre/modules/PageThumbsWorker.js");
     this._worker.addEventListener("message", this);
     return this._worker;
   },

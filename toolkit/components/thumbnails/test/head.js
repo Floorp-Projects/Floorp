@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let tmp = {};
-Cu.import("resource:///modules/PageThumbs.jsm", tmp);
+Cu.import("resource://gre/modules/PageThumbs.jsm", tmp);
 let PageThumbs = tmp.PageThumbs;
 let PageThumbsStorage = tmp.PageThumbsStorage;
 

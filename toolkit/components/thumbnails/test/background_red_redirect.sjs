@@ -6,5 +6,5 @@ function handleRequest(aRequest, aResponse) {
  aResponse.setStatusLine(aRequest.httpVersion, 301, "Moved Permanently");
 
  // Set redirect URI.
- aResponse.setHeader("Location", "http://mochi.test:8888/browser/browser/components/thumbnails/test/background_red.html");
+ aResponse.setHeader("Location", "http://mochi.test:8888/browser/toolkit/components/thumbnails/test/background_red.html");
 }

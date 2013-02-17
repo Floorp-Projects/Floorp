@@ -482,6 +482,7 @@ MAKEFILES_xulapp="
   toolkit/components/startup/public/Makefile
   toolkit/components/statusfilter/Makefile
   toolkit/components/telemetry/Makefile
+  toolkit/components/thumbnails/Makefile
   toolkit/components/typeaheadfind/Makefile
   toolkit/components/urlformatter/Makefile
   toolkit/components/viewconfig/Makefile
@@ -556,6 +557,7 @@ MAKEFILES_profiler="
 MAKEFILES_snappy="
   other-licenses/snappy/Makefile
 "
+
 
 add_makefiles "
   $MAKEFILES_dom
@@ -944,6 +946,7 @@ if [ "$ENABLE_TESTS" ]; then
     toolkit/components/social/test/Makefile
     toolkit/components/social/test/browser/Makefile
     toolkit/components/telemetry/tests/Makefile
+    toolkit/components/thumbnails/test/Makefile
     toolkit/components/urlformatter/tests/Makefile
     toolkit/components/viewsource/test/Makefile
     toolkit/components/viewsource/test/browser/Makefile

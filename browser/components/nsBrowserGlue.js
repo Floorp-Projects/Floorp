@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "webappsUI",
                                   "resource:///modules/webappsUI.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
-                                  "resource:///modules/PageThumbs.jsm");
+                                  "resource://gre/modules/PageThumbs.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
                                   "resource:///modules/NewTabUtils.jsm");

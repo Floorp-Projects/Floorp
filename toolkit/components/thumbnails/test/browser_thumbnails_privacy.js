@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const PREF_DISK_CACHE_SSL = "browser.cache.disk_cache_ssl";
-const URL = "://example.com/browser/browser/components/thumbnails/" +
+const URL = "://example.com/browser/toolkit/components/thumbnails/" +
             "test/privacy_cache_control.sjs";
 
 function runTests() {
