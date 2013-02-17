@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGFILTERELEMENT_H__
-#define __NS_SVGFILTERELEMENT_H__
+#ifndef mozilla_dom_SVGFilterElement_h
+#define mozilla_dom_SVGFilterElement_h
 
 #include "nsIDOMSVGFilterElement.h"
 #include "nsIDOMSVGUnitTypes.h"
@@ -15,20 +15,29 @@
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
 
-typedef nsSVGElement nsSVGFilterElementBase;
+typedef nsSVGElement SVGFilterElementBase;
 
-class nsSVGFilterElement : public nsSVGFilterElementBase,
-                           public nsIDOMSVGFilterElement,
-                           public nsIDOMSVGURIReference,
-                           public nsIDOMSVGUnitTypes
+class nsSVGFilterFrame;
+class nsAutoFilterInstance;
+
+nsresult NS_NewSVGFilterElement(nsIContent **aResult,
+                                already_AddRefed<nsINodeInfo> aNodeInfo);
+
+namespace mozilla {
+namespace dom {
+
+class SVGFilterElement : public SVGFilterElementBase,
+                         public nsIDOMSVGFilterElement,
+                         public nsIDOMSVGURIReference,
+                         public nsIDOMSVGUnitTypes
 {
-  friend class nsSVGFilterFrame;
-  friend class nsAutoFilterInstance;
+  friend class ::nsSVGFilterFrame;
+  friend class ::nsAutoFilterInstance;
 
 protected:
-  friend nsresult NS_NewSVGFilterElement(nsIContent **aResult,
-                                         already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGFilterElement(nsIContent **aResult,
+                                            already_AddRefed<nsINodeInfo> aNodeInfo));
+  SVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -40,7 +49,7 @@ public:
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFilterElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFilterElementBase::)
 
   // nsIContent
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -79,4 +88,7 @@ protected:
   static StringInfo sStringInfo[1];
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_SVGFilterElement_h

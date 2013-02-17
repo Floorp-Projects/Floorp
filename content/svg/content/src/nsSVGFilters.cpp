@@ -31,7 +31,7 @@
 #include "imgIContainer.h"
 #include "nsNetUtil.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsSVGFilterElement.h"
+#include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGString.h"
 #include "nsSVGEffects.h"
 #include "gfxUtils.h"
@@ -5756,7 +5756,7 @@ nsSVGFEImageElement::Invalidate()
 {
   nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
   if (filter) {
-    static_cast<nsSVGFilterElement*>(GetParent())->Invalidate();
+    static_cast<SVGFilterElement*>(GetParent())->Invalidate();
   }
 }
 
