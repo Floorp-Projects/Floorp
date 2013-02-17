@@ -149,8 +149,10 @@ DOMCI_CLASS(TreeContentView)
 #endif
 
 // Crypto classes
-DOMCI_CLASS(Crypto)
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 DOMCI_CLASS(CRMFObject)
+#endif
+DOMCI_CLASS(Crypto)
 
 // DOM Traversal classes
 DOMCI_CLASS(TreeWalker)

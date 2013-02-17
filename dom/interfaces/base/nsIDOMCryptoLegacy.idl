@@ -1,0 +1,26 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface nsIDOMCRMFObject;
+
+[scriptable, uuid(b50312fa-06ec-460c-b5e9-5dbb009eb457)]
+interface nsIDOMCrypto : nsISupports
+{
+  readonly attribute DOMString        version;
+  attribute boolean         enableSmartCardEvents;
+
+  nsIDOMCRMFObject          generateCRMFRequest(/* ... */);
+  DOMString                 importUserCertificates(in DOMString nickname,
+                                                   in DOMString cmmfResponse,
+                                                   in boolean doForcedBackup);
+  DOMString                 popChallengeResponse(in DOMString challenge);
+  DOMString                 random(in long numBytes);
+  DOMString                 signText(in DOMString stringToSign,
+                                     in DOMString caOption /* ... */);
+  void                      logout();
+  void                      disableRightClick();
+};

@@ -186,7 +186,9 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsNSSCertCache)
 #ifdef MOZ_XUL
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertTree)
 #endif
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCrypto)
+#endif
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsPkcs11)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSSecureMessage)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSDecoder)
@@ -225,7 +227,9 @@ NS_DEFINE_NAMED_CID(NS_FORMPROCESSOR_CID);
 NS_DEFINE_NAMED_CID(NS_CERTTREE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_PKCS11_CID);
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 NS_DEFINE_NAMED_CID(NS_CRYPTO_CID);
+#endif
 NS_DEFINE_NAMED_CID(NS_CMSSECUREMESSAGE_CID);
 NS_DEFINE_NAMED_CID(NS_CMSDECODER_CID);
 NS_DEFINE_NAMED_CID(NS_CMSENCODER_CID);
@@ -262,7 +266,9 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_CERTTREE_CID, false, nullptr, nsCertTreeConstructor },
 #endif
   { &kNS_PKCS11_CID, false, nullptr, nsPkcs11Constructor },
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   { &kNS_CRYPTO_CID, false, nullptr, nsCryptoConstructor },
+#endif
   { &kNS_CMSSECUREMESSAGE_CID, false, nullptr, nsCMSSecureMessageConstructor },
   { &kNS_CMSDECODER_CID, false, nullptr, nsCMSDecoderConstructor },
   { &kNS_CMSENCODER_CID, false, nullptr, nsCMSEncoderConstructor },
@@ -302,7 +308,9 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_CERTTREE_CONTRACTID, &kNS_CERTTREE_CID },
 #endif
   { NS_PKCS11_CONTRACTID, &kNS_PKCS11_CID },
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   { NS_CRYPTO_CONTRACTID, &kNS_CRYPTO_CID },
+#endif
   { NS_CMSSECUREMESSAGE_CONTRACTID, &kNS_CMSSECUREMESSAGE_CID },
   { NS_CMSDECODER_CONTRACTID, &kNS_CMSDECODER_CID },
   { NS_CMSENCODER_CONTRACTID, &kNS_CMSENCODER_CID },
