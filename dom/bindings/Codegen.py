@@ -6813,13 +6813,20 @@ class CGDictionary(CGThing):
         return name + "_id"
 
     @staticmethod
+    def getDictionaryDependenciesFromType(type):
+        if type.isDictionary():
+            return set([type.unroll().inner])
+        if type.isSequence() or type.isArray():
+            return CGDictionary.getDictionaryDependenciesFromType(type.unroll())
+        return set()
+
+    @staticmethod
     def getDictionaryDependencies(dictionary):
         deps = set();
         if dictionary.parent:
             deps.add(dictionary.parent)
         for member in dictionary.members:
-            if member.type.isDictionary():
-                deps.add(member.type.unroll().inner)
+            deps |= CGDictionary.getDictionaryDependenciesFromType(member.type)
         return deps
 
 
