@@ -7,7 +7,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-Cu.import("resource:///modules/NewTabUtils.jsm");
+Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource://gre/modules/Services.jsm");
 
