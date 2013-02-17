@@ -1660,7 +1660,9 @@ nsPresContext::UIResolutionChangedInternal()
   mPendingUIResolutionChanged = false;
 
   mDeviceContext->CheckDPIChange();
-  AppUnitsPerDevPixelChanged();
+  if (mCurAppUnitsPerDevPixel != AppUnitsPerDevPixel()) {
+    AppUnitsPerDevPixelChanged();
+  }
 
   mDocument->EnumerateSubDocuments(UIResolutionChangedSubdocumentCallback,
                                    nullptr);
