@@ -481,12 +481,6 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static const char kDOMStringBundleURL[] =
   "chrome://global/locale/dom/dom.properties";
 
-#ifdef MOZ_DISABLE_CRYPTOLEGACY
-  static const bool domCryptoEnabled = false;
-#else
-  static const bool domCryptoEnabled = true;
-#endif
-
 // NOTE: DEFAULT_SCRIPTABLE_FLAGS and DOM_DEFAULT_SCRIPTABLE_FLAGS
 //       are defined in nsIDOMClassInfo.h.
 
@@ -2067,8 +2061,7 @@ nsDOMClassInfo::RegisterExternalClasses()
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMWindowPerformance,                 \
                                       nsGlobalWindow::HasPerformanceSupport()) \
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
-                                      nsDOMTouchEvent::PrefEnabled())          \
-  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIWindowCrypto, domCryptoEnabled)
+                                      nsDOMTouchEvent::PrefEnabled())
 #else // !MOZ_B2G
 #define DOM_CLASSINFO_WINDOW_MAP_ENTRIES(_support_indexed_db)                  \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)                                        \
@@ -2080,8 +2073,7 @@ nsDOMClassInfo::RegisterExternalClasses()
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMWindowPerformance,                 \
                                       nsGlobalWindow::HasPerformanceSupport()) \
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
-                                      nsDOMTouchEvent::PrefEnabled())          \
-  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIWindowCrypto, domCryptoEnabled)
+                                      nsDOMTouchEvent::PrefEnabled())
 #endif // MOZ_B2G
 
 nsresult
