@@ -12,10 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=649740
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=649740">Mozilla Bug 649740</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-
-</div>
+<p id="display1"></p>
+<p id="display2"></p>
 <pre id="test">
 <script type="application/javascript">
 
@@ -43,6 +41,41 @@ function runTest() {
   is(condition(sheet.cssRules[2].cssText), "((color: green))");
   is(condition(sheet.cssRules[3].cssText), "(color: green) and (color: blue)");
   is(condition(sheet.cssRules[4].cssText), "( Font:  20px serif ! Important)");
+
+  var cs1 = getComputedStyle(document.getElementById("display1"), "");
+  var cs2 = getComputedStyle(document.getElementById("display2"), "");
+  function check_balanced_condition(condition, expected_match) {
+    style.textContent = "#display1, #display2 { text-decoration: overline }\n" +
+                        "@supports " + condition + "{\n" +
+                        "  #display1 { text-decoration: line-through }\n" +
+                        "}\n" +
+                        "#display2 { text-decoration: underline }\n";
+    is(cs1.textDecoration,
+       expected_match ? "line-through" : "overline",
+       "@supports condition \"" + condition + "\" should " +
+       (expected_match ? "" : "NOT ") + "match");
+    is(cs2.textDecoration, "underline",
+       "@supports condition \"" + condition + "\" should be balanced");
+  }
+
+  check_balanced_condition("not (color: green)", false);
+  check_balanced_condition("not (colour: green)", true);
+  check_balanced_condition("not(color: green)", false);
+  check_balanced_condition("not(colour: green)", false);
+  check_balanced_condition("not/* */(color: green)", false);
+  check_balanced_condition("not/* */(colour: green)", false);
+  check_balanced_condition("not /* */ (color: green)", false);
+  check_balanced_condition("not /* */ (colour: green)", true);
+  check_balanced_condition("(color: green) and (color: blue)", true);
+  check_balanced_condition("(color: green) /* */ /* */ and /* */ /* */ (color: blue)", true);
+  check_balanced_condition("(color: green) and(color: blue)", false);
+  check_balanced_condition("(color: green) and/* */(color: blue)", false);
+  check_balanced_condition("(color: green)and (color: blue)", false);
+  check_balanced_condition("(color: green) or (color: blue)", true);
+  check_balanced_condition("(color: green) /* */ /* */ or /* */ /* */ (color: blue)", true);
+  check_balanced_condition("(color: green) or(color: blue)", false);
+  check_balanced_condition("(color: green) or/* */(color: blue)", false);
+  check_balanced_condition("(color: green)or (color: blue)", false);
 
   SimpleTest.finish();
 }
