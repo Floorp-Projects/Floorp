@@ -12,7 +12,7 @@
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsISVGChildFrame.h"
 #include "nsRenderingContext.h"
-#include "nsSVGFilterElement.h"
+#include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
