@@ -10,8 +10,9 @@ function start() {
                  sdbMid: "helloworld", // Mis-spelt attribute for bug 833948 compatibility.
                  sdpMLineIndex: 1
                 });
-  remotePC.addIceCandidate(cand);
-  remotePC.addIceCandidate(cand, function(sdp){}, finish);
+  try {remotePC.addIceCandidate(cand);} catch(e) {} // bug 842075 - remove try when fixed
+  try {remotePC.addIceCandidate(cand, function(sdp){}, finish);} catch(e) {} // bug 842075 - remove try when fixed
+  finish();
 }
 
 function finish(arg) {
@@ -19,6 +20,6 @@ function finish(arg) {
 }
     </script>
   </head>
-  <body onload="start()">
+  <body onload="setTimeout(start, 100)">
   </body>
 </html>
