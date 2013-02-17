@@ -5,14 +5,11 @@
     function setToRange()
     {
       document.getElementById('i').type='range';
-    }
-    function disableReftestWait()
-    {
       document.documentElement.className = '';
     }
+    document.addEventListener("MozReftestInvalidate", setToRange);
   </script>
-
-  <body onload="setToRange(); disableReftestWait();">
+  <body>
     <input type='checkbox' id='i' style="-moz-appearance:none;">
   </body>
 </html>

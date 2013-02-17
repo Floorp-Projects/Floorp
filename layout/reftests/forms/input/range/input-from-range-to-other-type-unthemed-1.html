@@ -6,14 +6,11 @@
     function setToCheckbox()
     {
       document.getElementById('i').type='checkbox';
-    }
-    function disableReftestWait()
-    {
       document.documentElement.className = '';
     }
+    document.addEventListener("MozReftestInvalidate", setToCheckbox);
   </script>
-
-  <body onload="setToCheckbox(); disableReftestWait();">
+  <body>
     <input type='range' id='i' style="-moz-appearance:none;">
   </body>
 </html>
