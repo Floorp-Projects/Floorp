@@ -269,6 +269,9 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
 
     if (isHorizontal) {
       thumbX = NSToCoordRound(rangeFrameContentBoxWidth * valueAsFraction);
+      if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+        thumbX = rangeFrameContentBoxWidth - thumbX;
+      }
       thumbY = rangeFrameContentBoxHeight / 2;
     } else {
       thumbX = rangeFrameContentBoxWidth / 2;
