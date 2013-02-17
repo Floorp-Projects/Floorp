@@ -348,7 +348,7 @@
 @BINPATH@/browser/components/DownloadsStartup.js
 @BINPATH@/browser/components/DownloadsUI.js
 @BINPATH@/browser/components/BrowserPlaces.manifest
-@BINPATH@/browser/components/BrowserPageThumbs.manifest
+@BINPATH@/components/BrowserPageThumbs.manifest
 @BINPATH@/browser/components/nsPrivateBrowsingServiceObsolete.manifest
 @BINPATH@/browser/components/nsPrivateBrowsingServiceObsolete.js
 @BINPATH@/components/SiteSpecificUserAgent.js
@@ -413,7 +413,7 @@
 @BINPATH@/browser/components/PlacesProtocolHandler.js
 @BINPATH@/components/PlacesCategoriesStarter.js
 @BINPATH@/components/ColorAnalyzer.js
-@BINPATH@/browser/components/PageThumbsProtocol.js
+@BINPATH@/components/PageThumbsProtocol.js
 @BINPATH@/components/nsDefaultCLH.manifest
 @BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.manifest

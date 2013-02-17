@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 let tmp = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("resource:///modules/PageThumbs.jsm", tmp);
+  .loadSubScript("resource://gre/modules/PageThumbs.jsm", tmp);
 
 const {EXPIRATION_MIN_CHUNK_SIZE, PageThumbsExpiration} = tmp;
 
