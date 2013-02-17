@@ -29,6 +29,7 @@ default-preferences pref(svg.text.css-frames.enabled,true)
 == simple-fill-color.svg simple-fill-color-ref.html
 HTTP(../..) == simple-fill-gradient.svg simple-fill-gradient-ref.svg
 == simple-fill-none.svg simple.svg
+== simple-pointer-events.svg simple.svg
 
 == simple-multiple-dx.svg simple-multiple-dx-ref.html
 == simple-multiple-dx-2.svg simple-multiple-dx.svg
