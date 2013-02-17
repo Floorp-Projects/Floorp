@@ -253,6 +253,7 @@ IsTextContentElement(nsIContent* aContent)
 
   if (aContent->Tag() == nsGkAtoms::a ||
       aContent->Tag() == nsGkAtoms::tspan ||
+      aContent->Tag() == nsGkAtoms::tref ||
       aContent->Tag() == nsGkAtoms::altGlyph) {
     return true;
   }
