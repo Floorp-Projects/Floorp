@@ -404,16 +404,21 @@ BaselineCompiler::emitUseCountIncrement()
     masm.add32(Imm32(1), countReg);
     masm.store32(countReg, useCountAddr);
 
-    Label lowCount;
-    masm.branch32(Assembler::LessThan, countReg, Imm32(js_IonOptions.usesBeforeCompile),
-                  &lowCount);
+    Label skipCall;
+
+    uint32_t minUses = UsesBeforeIonRecompile(script, pc);
+    masm.branch32(Assembler::LessThan, countReg, Imm32(minUses), &skipCall);
+
+    masm.branchPtr(Assembler::Equal,
+                   Address(scriptReg, offsetof(JSScript, ion)),
+                   ImmWord(ION_COMPILING_SCRIPT), &skipCall);
 
     // Call IC.
     ICUseCount_Fallback::Compiler stubCompiler(cx);
     if (!emitNonOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
-    masm.bind(&lowCount);
+    masm.bind(&skipCall);
 
     return true;
 }
