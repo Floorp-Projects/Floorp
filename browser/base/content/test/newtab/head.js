@@ -6,7 +6,7 @@ const PREF_NEWTAB_ENABLED = "browser.newtabpage.enabled";
 Services.prefs.setBoolPref(PREF_NEWTAB_ENABLED, true);
 
 let tmp = {};
-Cu.import("resource:///modules/NewTabUtils.jsm", tmp);
+Cu.import("resource://gre/modules/NewTabUtils.jsm", tmp);
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://browser/content/sanitize.js", tmp);

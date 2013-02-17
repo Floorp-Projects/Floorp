@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
                                   "resource://gre/modules/PageThumbs.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
-                                  "resource:///modules/NewTabUtils.jsm");
+                                  "resource://gre/modules/NewTabUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserNewTabPreloader",
                                   "resource:///modules/BrowserNewTabPreloader.jsm");
