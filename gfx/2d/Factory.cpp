@@ -66,7 +66,7 @@ enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 // cpuid.h is available on gcc 4.3 and higher on i386 and x86_64
 #include <cpuid.h>
 
-static bool
+static inline bool
 HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 {
   unsigned int regs[4];
@@ -128,7 +128,7 @@ __cpuid(int CPUInfo[4], int InfoType)
 #endif
 
 #ifdef HAVE_CPU_DETECTION
-static bool
+static inline bool
 HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 {
   // Check that the level in question is supported.
