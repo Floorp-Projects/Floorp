@@ -1,5 +1,5 @@
 ﻿﻿<!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=822197
 -->
@@ -9,15 +9,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822197
   <script type="application/javascript">
     var pcArray = [];
 
+    function finish() {
+      document.documentElement.removeAttribute("class");
+    }
+
     function start() {
       for(var i = 0; i < 70; i++) {
         var pc = new mozRTCPeerConnection();
         pc.createOffer(function() {}, function() {});
         pcArray.push(pc);
       }
+      finish();
     }
   </script>
 </head>
 
-<body onload="start();"></body>
+<body onload="setTimeout(start, 100)">
 </html>
