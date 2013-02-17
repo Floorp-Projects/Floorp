@@ -3333,7 +3333,7 @@ nsSVGTextFrame2::ReflowSVG()
     uint16_t hitTestFlags = nsSVGUtils::GetGeometryHitTestFlags(run.mFrame);
 
     if ((hitTestFlags & SVG_HIT_TEST_FILL) ||
-        run.mFrame->StyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
+        run.mFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
       runFlags |= TextRenderedRun::eIncludeFill;
     }
     if ((hitTestFlags & SVG_HIT_TEST_STROKE) ||
