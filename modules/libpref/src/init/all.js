@@ -182,6 +182,8 @@ pref("media.gstreamer.enabled", true);
 pref("media.navigator.enabled", true);
 pref("media.peerconnection.enabled", false);
 pref("media.navigator.permission.disabled", false);
+pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:23.21.150.121\"}]");
+pref("media.peerconnection.use_document_iceservers", true);
 // These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
 // kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each 
 // setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.
