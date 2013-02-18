@@ -24,7 +24,7 @@
 #include "nsCheapSets.h"
 #include "nsError.h"
 #include "HTMLOptGroupElement.h"
-#include "nsHTMLOptionElement.h"
+#include "mozilla/dom/HTMLOptionElement.h"
 #include "nsHTMLFormElement.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -47,8 +47,8 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
-                               bool *triedToWrap);
+  virtual JSObject* WrapObject(JSContext* cx, JSObject* scope,
+                               bool* triedToWrap);
 
   // nsIDOMHTMLOptionsCollection interface
   NS_DECL_NSIDOMHTMLOPTIONSCOLLECTION
@@ -68,7 +68,7 @@ public:
    * @param aOption the option to insert
    * @param aIndex the index to insert at
    */
-  void InsertOptionAt(nsHTMLOptionElement* aOption, uint32_t aIndex)
+  void InsertOptionAt(mozilla::dom::HTMLOptionElement* aOption, uint32_t aIndex)
   {
     mElements.InsertElementAt(aIndex, aOption);
   }
@@ -87,7 +87,7 @@ public:
    * @param aIndex the index
    * @param aReturn the option returned [OUT]
    */
-  nsHTMLOptionElement *ItemAsOption(uint32_t aIndex)
+  mozilla::dom::HTMLOptionElement* ItemAsOption(uint32_t aIndex)
   {
     return mElements.SafeElementAt(aIndex, nullptr);
   }
@@ -103,7 +103,7 @@ public:
   /**
    * Append an option to end of array
    */
-  void AppendOption(nsHTMLOptionElement* aOption)
+  void AppendOption(mozilla::dom::HTMLOptionElement* aOption)
   {
     mElements.AppendElement(aOption);
   }
@@ -136,7 +136,7 @@ public:
   void Remove(int32_t aIndex, mozilla::ErrorResult& aError);
   int32_t GetSelectedIndex(mozilla::ErrorResult& aError);
   void SetSelectedIndex(int32_t aSelectedIndex, mozilla::ErrorResult& aError);
-  void IndexedSetter(uint32_t aIndex, nsIDOMHTMLOptionElement *aOption,
+  void IndexedSetter(uint32_t aIndex, nsIDOMHTMLOptionElement* aOption,
                      mozilla::ErrorResult& aError)
   {
     aError = SetOption(aIndex, aOption);
@@ -146,7 +146,7 @@ public:
 private:
   /** The list of options (holds strong references).  This is infallible, so
    * various members such as InsertOptionAt are also infallible. */
-  nsTArray<nsRefPtr<nsHTMLOptionElement> > mElements;
+  nsTArray<nsRefPtr<mozilla::dom::HTMLOptionElement> > mElements;
   /** The select element that contains this array */
   nsHTMLSelectElement* mSelect;
 };
@@ -330,7 +330,7 @@ public:
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* aTabIndex);
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify);
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
@@ -381,7 +381,7 @@ public:
    * @return whether the option is disabled
    */
   NS_IMETHOD IsOptionDisabled(int32_t aIndex,
-                              bool *aIsDisabled);
+                              bool* aIsDisabled);
 
   /**
    * Sets multiple options (or just sets startIndex if select is single)
@@ -450,17 +450,17 @@ public:
                                               int32_t aModType) const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLSelectElement,
                                            nsGenericHTMLFormElement)
 
-  nsHTMLOptionCollection *GetOptions()
+  nsHTMLOptionCollection* GetOptions()
   {
     return mOptions;
   }
 
-  static nsHTMLSelectElement *FromSupports(nsISupports *aSupports)
+  static nsHTMLSelectElement* FromSupports(nsISupports* aSupports)
   {
     return static_cast<nsHTMLSelectElement*>(static_cast<nsINode*>(aSupports));
   }
@@ -522,7 +522,7 @@ protected:
    * @param aIndex the index that was selected or deselected
    * @param aSelected whether the index was selected or deselected
    * @param aChangeOptionState if false, don't do anything to the
-   *                           nsHTMLOptionElement at aIndex.  If true, change
+   *                           HTMLOptionElement at aIndex.  If true, change
    *                           its selected state to aSelected.
    * @param aNotify whether to notify the style system and such
    */
@@ -627,7 +627,7 @@ protected:
    * Get the frame as an nsISelectControlFrame (MAY RETURN NULL)
    * @return the select frame, or null
    */
-  nsISelectControlFrame *GetSelectFrame();
+  nsISelectControlFrame* GetSelectFrame();
 
   /**
    * Is this a combobox?
