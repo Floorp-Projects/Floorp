@@ -218,7 +218,6 @@ DOMCI_CLASS(SVGFESpecularLightingElement)
 DOMCI_CLASS(SVGFESpotLightElement)
 DOMCI_CLASS(SVGFETileElement)
 DOMCI_CLASS(SVGFETurbulenceElement)
-DOMCI_CLASS(SVGImageElement)
 DOMCI_CLASS(SVGMarkerElement)
 DOMCI_CLASS(SVGUnknownElement)
 

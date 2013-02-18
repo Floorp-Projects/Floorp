@@ -16,8 +16,6 @@
 #include "mozilla/dom/SVGImageElementBinding.h"
 #include "nsContentUtils.h"
 
-DOMCI_NODE_DATA(SVGImageElement, mozilla::dom::SVGImageElement)
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Image)
 
 namespace mozilla {
@@ -45,17 +43,11 @@ nsSVGElement::StringInfo SVGImageElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGImageElement,SVGImageElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGImageElement,SVGImageElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGImageElement)
-  NS_NODE_INTERFACE_TABLE8(SVGImageElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGImageElement,
-                           nsIDOMSVGURIReference, imgINotificationObserver,
-                           nsIImageLoadingContent, imgIOnloadBlocker)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGImageElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGImageElementBase)
+NS_IMPL_ISUPPORTS_INHERITED7(SVGImageElement, SVGImageElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement,
+                             nsIDOMSVGURIReference, imgINotificationObserver,
+                             nsIImageLoadingContent, imgIOnloadBlocker)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -81,26 +73,11 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGImageElement)
 
 
 //----------------------------------------------------------------------
-// nsIDOMSVGImageElement methods:
-
-/* readonly attribute nsIDOMSVGAnimatedLength x; */
-NS_IMETHODIMP SVGImageElement::GetX(nsIDOMSVGAnimatedLength * *aX)
-{
-  *aX = X().get();
-  return NS_OK;
-}
 
 already_AddRefed<SVGAnimatedLength>
 SVGImageElement::X()
 {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength y; */
-NS_IMETHODIMP SVGImageElement::GetY(nsIDOMSVGAnimatedLength * *aY)
-{
-  *aY = Y().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -109,39 +86,16 @@ SVGImageElement::Y()
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength width; */
-NS_IMETHODIMP SVGImageElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
-{
-  *aWidth = Width().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGImageElement::Width()
 {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength height; */
-NS_IMETHODIMP SVGImageElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
-{
-  *aHeight = Height().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 SVGImageElement::Height()
 {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute SVGPreserveAspectRatio preserveAspectRatio; */
-NS_IMETHODIMP
-SVGImageElement::GetPreserveAspectRatio(nsISupports
-                                        **aPreserveAspectRatio)
-{
-  *aPreserveAspectRatio = PreserveAspectRatio().get();
-  return NS_OK;
 }
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
