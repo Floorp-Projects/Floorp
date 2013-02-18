@@ -393,6 +393,13 @@ pref("browser.link.open_newwindow.override.external", -1);
 // 2: don't divert window.open with features
 pref("browser.link.open_newwindow.restriction", 2);
 
+// Disable opening a new window via window.open if browser is in fullscreen mode
+#ifdef XP_MACOSX
+pref("browser.link.open_newwindow.disabled_in_fullscreen", true);
+#else
+pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
+#endif
+
 // Tabbed browser
 pref("browser.tabs.autoHide", false);
 pref("browser.tabs.closeWindowWithLastTab", true);

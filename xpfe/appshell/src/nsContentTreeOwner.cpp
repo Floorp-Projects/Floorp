@@ -865,11 +865,25 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
     return *aWindowIsNew ? NS_OK : NS_ERROR_ABORT;
   }
 
+  // the parent window is fullscreen mode or not.
+  bool isFullScreen = false;
+  if (aParent) {
+    aParent->GetFullScreen(&isFullScreen);
+  }
+
   // Where should we open this?
   int32_t containerPref;
   if (NS_FAILED(Preferences::GetInt("browser.link.open_newwindow",
                                     &containerPref))) {
     return NS_OK;
+  }
+
+  bool isDisabledOpenNewWindow =
+    isFullScreen &&
+    Preferences::GetBool("browser.link.open_newwindow.disabled_in_fullscreen");
+
+  if (isDisabledOpenNewWindow && (containerPref == nsIBrowserDOMWindow::OPEN_NEWWINDOW)) {
+    containerPref = nsIBrowserDOMWindow::OPEN_NEWTAB;
   }
 
   if (containerPref != nsIBrowserDOMWindow::OPEN_NEWTAB &&
@@ -889,6 +903,12 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
       Preferences::GetInt("browser.link.open_newwindow.restriction", 2);
     if (restrictionPref < 0 || restrictionPref > 2) {
       restrictionPref = 2; // Sane default behavior
+    }
+
+    if (isDisabledOpenNewWindow) {
+      // In browser fullscreen, the window should be opened
+      // in the current window with no features (see bug 803675)
+      restrictionPref = 0;
     }
 
     if (restrictionPref == 1) {
