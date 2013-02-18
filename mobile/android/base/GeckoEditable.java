@@ -384,6 +384,9 @@ final class GeckoEditable
         int rangeStart = composingStart;
         TextPaint tp = new TextPaint();
         TextPaint emptyTp = new TextPaint();
+        // set initial foreground color to 0, because we check for tp.getColor() == 0
+        // below to decide whether to pass a foreground color to Gecko
+        emptyTp.setColor(0);
         do {
             int rangeType, rangeStyles = 0, rangeLineStyle = GeckoEvent.IME_RANGE_LINE_NONE;
             boolean rangeBoldLine = false;
