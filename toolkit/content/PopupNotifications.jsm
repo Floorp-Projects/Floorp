@@ -277,11 +277,16 @@ PopupNotifications.prototype = {
   },
 
   /**
-   * Called by the consumer to indicate that the current browser's location has
-   * changed, so that we can update the active notifications accordingly.
+   * Called by the consumer to indicate that a browser's location has changed,
+   * so that we can update the active notifications accordingly.
    */
-  locationChange: function PopupNotifications_locationChange() {
-    this._currentNotifications = this._currentNotifications.filter(function(notification) {
+  locationChange: function PopupNotifications_locationChange(aBrowser) {
+    if (!aBrowser)
+      throw "PopupNotifications_locationChange: invalid browser";
+
+    let notifications = this._getNotificationsForBrowser(aBrowser);
+
+    notifications = notifications.filter(function (notification) {
       // The persistWhileVisible option allows an open notification to persist
       // across location changes
       if (notification.options.persistWhileVisible &&
@@ -310,7 +315,10 @@ PopupNotifications.prototype = {
       return false;
     }, this);
 
-    this._update();
+    this._setNotificationsForBrowser(aBrowser, notifications);
+
+    if (aBrowser == this.tabbrowser.selectedBrowser)
+      this._update();
   },
 
   /**
@@ -356,13 +364,10 @@ PopupNotifications.prototype = {
   _currentAnchorElement: null,
 
   /**
-   * Gets and sets notifications for the currently selected browser.
+   * Gets notifications for the currently selected browser.
    */
   get _currentNotifications() {
     return this._getNotificationsForBrowser(this.tabbrowser.selectedBrowser);
-  },
-  set _currentNotifications(a) {
-    return this._setNotificationsForBrowser(this.tabbrowser.selectedBrowser, a);
   },
 
   _remove: function PopupNotifications_removeHelper(notification) {
