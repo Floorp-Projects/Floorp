@@ -913,7 +913,7 @@ DownloadsDataCtor.prototype = {
       case "download-manager-remove-download-guid":
         // If a single download was removed, remove the corresponding data item.
         if (aSubject) {
-            let downloadGuid = aSubject.data.QueryInterface(Ci.nsISupportsCString);
+            let downloadGuid = aSubject.QueryInterface(Ci.nsISupportsCString).data;
             DownloadsCommon.log("A single download with id",
                                 downloadGuid, "was removed.");
           this._removeDataItem(downloadGuid);
