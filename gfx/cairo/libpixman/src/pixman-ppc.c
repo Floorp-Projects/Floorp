@@ -37,10 +37,10 @@
 static pixman_bool_t
 pixman_have_vmx (void)
 {
+    int error, have_vmx;
     size_t length = sizeof(have_vmx);
-    int error, have_mmx;
 
-    sysctlbyname ("hw.optional.altivec", &have_vmx, &length, NULL, 0);
+    error = sysctlbyname ("hw.optional.altivec", &have_vmx, &length, NULL, 0);
 
     if (error)
 	return FALSE;
@@ -56,9 +56,9 @@ pixman_have_vmx (void)
 static pixman_bool_t
 pixman_have_vmx (void)
 {
+    int error, have_vmx;
     int mib[2] = { CTL_MACHDEP, CPU_ALTIVEC };
     size_t length = sizeof(have_vmx);
-    int error, have_vmx;
 
     error = sysctl (mib, 2, &have_vmx, &length, NULL, 0);
 

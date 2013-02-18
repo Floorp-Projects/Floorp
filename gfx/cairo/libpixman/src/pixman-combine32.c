@@ -196,14 +196,58 @@ combine_over_u (pixman_implementation_t *imp,
 {
     int i;
 
-    for (i = 0; i < width; ++i)
+    if (!mask)
     {
-	uint32_t s = combine_mask (src, mask, i);
-	uint32_t d = *(dest + i);
-	uint32_t ia = ALPHA_8 (~s);
-
-	UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
-	*(dest + i) = d;
+	for (i = 0; i < width; ++i)
+	{
+	    uint32_t s = *(src + i);
+	    uint32_t a = ALPHA_8 (s);
+	    if (a == 0xFF)
+	    {
+		*(dest + i) = s;
+	    }
+	    else if (s)
+	    {
+		uint32_t d = *(dest + i);
+		uint32_t ia = a ^ 0xFF;
+		UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
+		*(dest + i) = d;
+	    }
+	}
+    }
+    else
+    {
+	for (i = 0; i < width; ++i)
+	{
+	    uint32_t m = ALPHA_8 (*(mask + i));
+	    if (m == 0xFF)
+	    {
+		uint32_t s = *(src + i);
+		uint32_t a = ALPHA_8 (s);
+		if (a == 0xFF)
+		{
+		    *(dest + i) = s;
+		}
+		else if (s)
+		{
+		    uint32_t d = *(dest + i);
+		    uint32_t ia = a ^ 0xFF;
+		    UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
+		    *(dest + i) = d;
+		}
+	    }
+	    else if (m)
+	    {
+		uint32_t s = *(src + i);
+		if (s)
+		{
+		    uint32_t d = *(dest + i);
+		    UN8x4_MUL_UN8 (s, m);
+		    UN8x4_MUL_UN8_ADD_UN8x4 (d, ALPHA_8 (~s), s);
+		    *(dest + i) = d;
+		}
+	    }
+	}
     }
 }
 

@@ -202,7 +202,7 @@ PIXREGION_SZOF (size_t n)
     return size + sizeof(region_data_type_t);
 }
 
-static void *
+static region_data_type_t *
 alloc_data (size_t n)
 {
     size_t sz = PIXREGION_SZOF (n);

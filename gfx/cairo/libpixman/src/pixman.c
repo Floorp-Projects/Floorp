@@ -455,6 +455,14 @@ analyze_extent (pixman_image_t       *image,
 	    height = params[1];
 	    break;
 
+	case PIXMAN_FILTER_SEPARABLE_CONVOLUTION:
+	    params = image->common.filter_params;
+	    x_off = - pixman_fixed_e - ((params[0] - pixman_fixed_1) >> 1);
+	    y_off = - pixman_fixed_e - ((params[1] - pixman_fixed_1) >> 1);
+	    width = params[0];
+	    height = params[1];
+	    break;
+	    
 	case PIXMAN_FILTER_GOOD:
 	case PIXMAN_FILTER_BEST:
 	case PIXMAN_FILTER_BILINEAR:
@@ -573,11 +581,13 @@ pixman_image_composite32 (pixman_op_t      op,
                           int32_t          height)
 {
     pixman_format_code_t src_format, mask_format, dest_format;
-    uint32_t src_flags, mask_flags, dest_flags;
     pixman_region32_t region;
     pixman_box32_t extents;
     pixman_implementation_t *imp;
     pixman_composite_func_t func;
+    pixman_composite_info_t info;
+    const pixman_box32_t *pbox;
+    int n;
 
     _pixman_image_validate (src);
     if (mask)
@@ -585,27 +595,27 @@ pixman_image_composite32 (pixman_op_t      op,
     _pixman_image_validate (dest);
 
     src_format = src->common.extended_format_code;
-    src_flags = src->common.flags;
+    info.src_flags = src->common.flags;
 
-    if (mask)
+    if (mask && !(mask->common.flags & FAST_PATH_IS_OPAQUE))
     {
 	mask_format = mask->common.extended_format_code;
-	mask_flags = mask->common.flags;
+	info.mask_flags = mask->common.flags;
     }
     else
     {
 	mask_format = PIXMAN_null;
-	mask_flags = FAST_PATH_IS_OPAQUE;
+	info.mask_flags = FAST_PATH_IS_OPAQUE;
     }
 
     dest_format = dest->common.extended_format_code;
-    dest_flags = dest->common.flags;
+    info.dest_flags = dest->common.flags;
 
     /* Check for pixbufs */
     if ((mask_format == PIXMAN_a8r8g8b8 || mask_format == PIXMAN_a8b8g8r8) &&
 	(src->type == BITS && src->bits.bits == mask->bits.bits)	   &&
 	(src->common.repeat == mask->common.repeat)			   &&
-	(src_flags & mask_flags & FAST_PATH_ID_TRANSFORM)		   &&
+	(info.src_flags & info.mask_flags & FAST_PATH_ID_TRANSFORM)	   &&
 	(src_x == mask_x && src_y == mask_y))
     {
 	if (src_format == PIXMAN_x8b8g8r8)
@@ -630,7 +640,7 @@ pixman_image_composite32 (pixman_op_t      op,
     extents.x2 -= dest_x - src_x;
     extents.y2 -= dest_y - src_y;
 
-    if (!analyze_extent (src, &extents, &src_flags))
+    if (!analyze_extent (src, &extents, &info.src_flags))
 	goto out;
 
     extents.x1 -= src_x - mask_x;
@@ -638,7 +648,7 @@ pixman_image_composite32 (pixman_op_t      op,
     extents.x2 -= src_x - mask_x;
     extents.y2 -= src_y - mask_y;
 
-    if (!analyze_extent (mask, &extents, &mask_flags))
+    if (!analyze_extent (mask, &extents, &info.mask_flags))
 	goto out;
 
     /* If the clip is within the source samples, and the samples are
@@ -651,16 +661,16 @@ pixman_image_composite32 (pixman_op_t      op,
 			 FAST_PATH_BILINEAR_FILTER |			\
 			 FAST_PATH_SAMPLES_COVER_CLIP_BILINEAR)
 
-    if ((src_flags & NEAREST_OPAQUE) == NEAREST_OPAQUE ||
-	(src_flags & BILINEAR_OPAQUE) == BILINEAR_OPAQUE)
+    if ((info.src_flags & NEAREST_OPAQUE) == NEAREST_OPAQUE ||
+	(info.src_flags & BILINEAR_OPAQUE) == BILINEAR_OPAQUE)
     {
-	src_flags |= FAST_PATH_IS_OPAQUE;
+	info.src_flags |= FAST_PATH_IS_OPAQUE;
     }
 
-    if ((mask_flags & NEAREST_OPAQUE) == NEAREST_OPAQUE ||
-	(mask_flags & BILINEAR_OPAQUE) == BILINEAR_OPAQUE)
+    if ((info.mask_flags & NEAREST_OPAQUE) == NEAREST_OPAQUE ||
+	(info.mask_flags & BILINEAR_OPAQUE) == BILINEAR_OPAQUE)
     {
-	mask_flags |= FAST_PATH_IS_OPAQUE;
+	info.mask_flags |= FAST_PATH_IS_OPAQUE;
     }
 
     /*
@@ -668,42 +678,35 @@ pixman_image_composite32 (pixman_op_t      op,
      * if the src or dest are opaque. The output operator should be
      * mathematically equivalent to the source.
      */
-    op = optimize_operator (op, src_flags, mask_flags, dest_flags);
+    info.op = optimize_operator (op, info.src_flags, info.mask_flags, info.dest_flags);
 
-    if (_pixman_implementation_lookup_composite (
-	    get_implementation (), op,
-	    src_format, src_flags, mask_format, mask_flags, dest_format, dest_flags,
-	    &imp, &func))
+    _pixman_implementation_lookup_composite (
+	get_implementation (), info.op,
+	src_format, info.src_flags,
+	mask_format, info.mask_flags,
+	dest_format, info.dest_flags,
+	&imp, &func);
+
+    info.src_image = src;
+    info.mask_image = mask;
+    info.dest_image = dest;
+
+    pbox = pixman_region32_rectangles (&region, &n);
+
+    while (n--)
     {
-	pixman_composite_info_t info;
-	const pixman_box32_t *pbox;
-	int n;
+	info.src_x = pbox->x1 + src_x - dest_x;
+	info.src_y = pbox->y1 + src_y - dest_y;
+	info.mask_x = pbox->x1 + mask_x - dest_x;
+	info.mask_y = pbox->y1 + mask_y - dest_y;
+	info.dest_x = pbox->x1;
+	info.dest_y = pbox->y1;
+	info.width = pbox->x2 - pbox->x1;
+	info.height = pbox->y2 - pbox->y1;
 
-	info.op = op;
-	info.src_image = src;
-	info.mask_image = mask;
-	info.dest_image = dest;
-	info.src_flags = src_flags;
-	info.mask_flags = mask_flags;
-	info.dest_flags = dest_flags;
+	func (imp, &info);
 
-	pbox = pixman_region32_rectangles (&region, &n);
-
-	while (n--)
-	{
-	    info.src_x = pbox->x1 + src_x - dest_x;
-	    info.src_y = pbox->y1 + src_y - dest_y;
-	    info.mask_x = pbox->x1 + mask_x - dest_x;
-	    info.mask_y = pbox->y1 + mask_y - dest_y;
-	    info.dest_x = pbox->x1;
-	    info.dest_y = pbox->y1;
-	    info.width = pbox->x2 - pbox->x1;
-	    info.height = pbox->y2 - pbox->y1;
-
-	    func (imp, &info);
-
-	    pbox++;
-	}
+	pbox++;
     }
 
 out:
@@ -758,10 +761,10 @@ pixman_fill (uint32_t *bits,
              int       y,
              int       width,
              int       height,
-             uint32_t xor)
+             uint32_t  filler)
 {
     return _pixman_implementation_fill (
-	get_implementation(), bits, stride, bpp, x, y, width, height, xor);
+	get_implementation(), bits, stride, bpp, x, y, width, height, filler);
 }
 
 static uint32_t
@@ -820,7 +823,7 @@ color_to_pixel (const pixman_color_t *color,
 	c = c >> 24;
     else if (format == PIXMAN_r5g6b5 ||
              format == PIXMAN_b5g6r5)
-	c = CONVERT_8888_TO_0565 (c);
+	c = convert_8888_to_0565 (c);
 
 #if 0
     printf ("color: %x %x %x %x\n", color->alpha, color->red, color->green, color->blue);

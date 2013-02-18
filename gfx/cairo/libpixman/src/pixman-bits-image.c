@@ -413,10 +413,108 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 	}
     }
 
-    satot >>= 16;
-    srtot >>= 16;
-    sgtot >>= 16;
-    sbtot >>= 16;
+    satot = (satot + 0x8000) >> 16;
+    srtot = (srtot + 0x8000) >> 16;
+    sgtot = (sgtot + 0x8000) >> 16;
+    sbtot = (sbtot + 0x8000) >> 16;
+
+    satot = CLIP (satot, 0, 0xff);
+    srtot = CLIP (srtot, 0, 0xff);
+    sgtot = CLIP (sgtot, 0, 0xff);
+    sbtot = CLIP (sbtot, 0, 0xff);
+
+    return ((satot << 24) | (srtot << 16) | (sgtot <<  8) | (sbtot));
+}
+
+static uint32_t
+bits_image_fetch_pixel_separable_convolution (bits_image_t *image,
+                                              pixman_fixed_t x,
+                                              pixman_fixed_t y,
+                                              get_pixel_t    get_pixel)
+{
+    pixman_fixed_t *params = image->common.filter_params;
+    pixman_repeat_t repeat_mode = image->common.repeat;
+    int width = image->width;
+    int height = image->height;
+    int cwidth = pixman_fixed_to_int (params[0]);
+    int cheight = pixman_fixed_to_int (params[1]);
+    int x_phase_bits = pixman_fixed_to_int (params[2]);
+    int y_phase_bits = pixman_fixed_to_int (params[3]);
+    int x_phase_shift = 16 - x_phase_bits;
+    int y_phase_shift = 16 - y_phase_bits;
+    int x_off = ((cwidth << 16) - pixman_fixed_1) >> 1;
+    int y_off = ((cheight << 16) - pixman_fixed_1) >> 1;
+    pixman_fixed_t *y_params;
+    int srtot, sgtot, sbtot, satot;
+    int32_t x1, x2, y1, y2;
+    int32_t px, py;
+    int i, j;
+
+    /* Round x and y to the middle of the closest phase before continuing. This
+     * ensures that the convolution matrix is aligned right, since it was
+     * positioned relative to a particular phase (and not relative to whatever
+     * exact fraction we happen to get here).
+     */
+    x = ((x >> x_phase_shift) << x_phase_shift) + ((1 << x_phase_shift) >> 1);
+    y = ((y >> y_phase_shift) << y_phase_shift) + ((1 << y_phase_shift) >> 1);
+
+    px = (x & 0xffff) >> x_phase_shift;
+    py = (y & 0xffff) >> y_phase_shift;
+
+    y_params = params + 4 + (1 << x_phase_bits) * cwidth + py * cheight;
+
+    x1 = pixman_fixed_to_int (x - pixman_fixed_e - x_off);
+    y1 = pixman_fixed_to_int (y - pixman_fixed_e - y_off);
+    x2 = x1 + cwidth;
+    y2 = y1 + cheight;
+
+    srtot = sgtot = sbtot = satot = 0;
+
+    for (i = y1; i < y2; ++i)
+    {
+        pixman_fixed_48_16_t fy = *y_params++;
+        pixman_fixed_t *x_params = params + 4 + px * cwidth;
+
+        if (fy)
+        {
+            for (j = x1; j < x2; ++j)
+            {
+                pixman_fixed_t fx = *x_params++;
+		int rx = j;
+		int ry = i;
+
+                if (fx)
+                {
+                    pixman_fixed_t f;
+                    uint32_t pixel;
+
+                    if (repeat_mode != PIXMAN_REPEAT_NONE)
+                    {
+                        repeat (repeat_mode, &rx, width);
+                        repeat (repeat_mode, &ry, height);
+
+                        pixel = get_pixel (image, rx, ry, FALSE);
+                    }
+                    else
+                    {
+                        pixel = get_pixel (image, rx, ry, TRUE);
+		    }
+
+                    f = (fy * fx + 0x8000) >> 16;
+
+                    srtot += (int)RED_8 (pixel) * f;
+                    sgtot += (int)GREEN_8 (pixel) * f;
+                    sbtot += (int)BLUE_8 (pixel) * f;
+                    satot += (int)ALPHA_8 (pixel) * f;
+                }
+            }
+	}
+    }
+
+    satot = (satot + 0x8000) >> 16;
+    srtot = (srtot + 0x8000) >> 16;
+    sgtot = (sgtot + 0x8000) >> 16;
+    sbtot = (sbtot + 0x8000) >> 16;
 
     satot = CLIP (satot, 0, 0xff);
     srtot = CLIP (srtot, 0, 0xff);
@@ -448,6 +546,10 @@ bits_image_fetch_pixel_filtered (bits_image_t *image,
     case PIXMAN_FILTER_CONVOLUTION:
 	return bits_image_fetch_pixel_convolution (image, x, y, get_pixel);
 	break;
+
+    case PIXMAN_FILTER_SEPARABLE_CONVOLUTION:
+        return bits_image_fetch_pixel_separable_convolution (image, x, y, get_pixel);
+        break;
 
     default:
         break;
@@ -618,9 +720,153 @@ bits_image_fetch_general (pixman_iter_t  *iter,
     return buffer;
 }
 
-static const uint8_t zero[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
 typedef uint32_t (* convert_pixel_t) (const uint8_t *row, int x);
+
+static force_inline void
+bits_image_fetch_separable_convolution_affine (pixman_image_t * image,
+					       int              offset,
+					       int              line,
+					       int              width,
+					       uint32_t *       buffer,
+					       const uint32_t * mask,
+
+					       convert_pixel_t	convert_pixel,
+					       pixman_format_code_t	format,
+					       pixman_repeat_t	repeat_mode)
+{
+    bits_image_t *bits = &image->bits;
+    pixman_fixed_t *params = image->common.filter_params;
+    int cwidth = pixman_fixed_to_int (params[0]);
+    int cheight = pixman_fixed_to_int (params[1]);
+    int x_off = ((cwidth << 16) - pixman_fixed_1) >> 1;
+    int y_off = ((cheight << 16) - pixman_fixed_1) >> 1;
+    int x_phase_bits = pixman_fixed_to_int (params[2]);
+    int y_phase_bits = pixman_fixed_to_int (params[3]);
+    int x_phase_shift = 16 - x_phase_bits;
+    int y_phase_shift = 16 - y_phase_bits;
+    pixman_fixed_t vx, vy;
+    pixman_fixed_t ux, uy;
+    pixman_vector_t v;
+    int k;
+
+    /* reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed (offset) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (line) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+
+    if (!pixman_transform_point_3d (image->common.transform, &v))
+	return;
+
+    ux = image->common.transform->matrix[0][0];
+    uy = image->common.transform->matrix[1][0];
+
+    vx = v.vector[0];
+    vy = v.vector[1];
+
+    for (k = 0; k < width; ++k)
+    {
+	pixman_fixed_t *y_params;
+	int satot, srtot, sgtot, sbtot;
+	pixman_fixed_t x, y;
+	int32_t x1, x2, y1, y2;
+	int32_t px, py;
+	int i, j;
+
+	if (mask && !mask[k])
+	    goto next;
+
+	/* Round x and y to the middle of the closest phase before continuing. This
+	 * ensures that the convolution matrix is aligned right, since it was
+	 * positioned relative to a particular phase (and not relative to whatever
+	 * exact fraction we happen to get here).
+	 */
+	x = ((vx >> x_phase_shift) << x_phase_shift) + ((1 << x_phase_shift) >> 1);
+	y = ((vy >> y_phase_shift) << y_phase_shift) + ((1 << y_phase_shift) >> 1);
+
+	px = (x & 0xffff) >> x_phase_shift;
+	py = (y & 0xffff) >> y_phase_shift;
+
+	x1 = pixman_fixed_to_int (x - pixman_fixed_e - x_off);
+	y1 = pixman_fixed_to_int (y - pixman_fixed_e - y_off);
+	x2 = x1 + cwidth;
+	y2 = y1 + cheight;
+
+	satot = srtot = sgtot = sbtot = 0;
+
+	y_params = params + 4 + (1 << x_phase_bits) * cwidth + py * cheight;
+
+	for (i = y1; i < y2; ++i)
+	{
+	    pixman_fixed_t fy = *y_params++;
+
+	    if (fy)
+	    {
+		pixman_fixed_t *x_params = params + 4 + px * cwidth;
+
+		for (j = x1; j < x2; ++j)
+		{
+		    pixman_fixed_t fx = *x_params++;
+		    int rx = j;
+		    int ry = i;
+		    
+		    if (fx)
+		    {
+			pixman_fixed_t f;
+			uint32_t pixel, mask;
+			uint8_t *row;
+
+			mask = PIXMAN_FORMAT_A (format)? 0 : 0xff000000;
+
+			if (repeat_mode != PIXMAN_REPEAT_NONE)
+			{
+			    repeat (repeat_mode, &rx, bits->width);
+			    repeat (repeat_mode, &ry, bits->height);
+
+			    row = (uint8_t *)bits->bits + bits->rowstride * 4 * ry;
+			    pixel = convert_pixel (row, rx) | mask;
+			}
+			else
+			{
+			    if (rx < 0 || ry < 0 || rx >= bits->width || ry >= bits->height)
+			    {
+				pixel = 0;
+			    }
+			    else
+			    {
+				row = (uint8_t *)bits->bits + bits->rowstride * 4 * ry;
+				pixel = convert_pixel (row, rx) | mask;
+			    }
+			}
+
+			f = ((pixman_fixed_32_32_t)fx * fy + 0x8000) >> 16;
+			srtot += (int)RED_8 (pixel) * f;
+			sgtot += (int)GREEN_8 (pixel) * f;
+			sbtot += (int)BLUE_8 (pixel) * f;
+			satot += (int)ALPHA_8 (pixel) * f;
+		    }
+		}
+	    }
+	}
+
+	satot = (satot + 0x8000) >> 16;
+	srtot = (srtot + 0x8000) >> 16;
+	sgtot = (sgtot + 0x8000) >> 16;
+	sbtot = (sbtot + 0x8000) >> 16;
+
+	satot = CLIP (satot, 0, 0xff);
+	srtot = CLIP (srtot, 0, 0xff);
+	sgtot = CLIP (sgtot, 0, 0xff);
+	sbtot = CLIP (sbtot, 0, 0xff);
+
+	buffer[k] = (satot << 24) | (srtot << 16) | (sgtot << 8) | (sbtot << 0);
+
+    next:
+	vx += ux;
+	vy += uy;
+    }
+}
+
+static const uint8_t zero[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 static force_inline void
 bits_image_fetch_bilinear_affine (pixman_image_t * image,
@@ -868,8 +1114,25 @@ convert_a8 (const uint8_t *row, int x)
 static force_inline uint32_t
 convert_r5g6b5 (const uint8_t *row, int x)
 {
-    return CONVERT_0565_TO_0888 (*((uint16_t *)row + x));
+    return convert_0565_to_0888 (*((uint16_t *)row + x));
 }
+
+#define MAKE_SEPARABLE_CONVOLUTION_FETCHER(name, format, repeat_mode)  \
+    static uint32_t *							\
+    bits_image_fetch_separable_convolution_affine_ ## name (pixman_iter_t   *iter, \
+							    const uint32_t * mask) \
+    {									\
+	bits_image_fetch_separable_convolution_affine (                 \
+	    iter->image,                                                \
+	    iter->x, iter->y++,                                         \
+	    iter->width,                                                \
+	    iter->buffer, mask,                                         \
+	    convert_ ## format,                                         \
+	    PIXMAN_ ## format,                                          \
+	    repeat_mode);                                               \
+									\
+	return iter->buffer;                                            \
+    }
 
 #define MAKE_BILINEAR_FETCHER(name, format, repeat_mode)		\
     static uint32_t *							\
@@ -903,7 +1166,8 @@ convert_r5g6b5 (const uint8_t *row, int x)
 
 #define MAKE_FETCHERS(name, format, repeat_mode)			\
     MAKE_NEAREST_FETCHER (name, format, repeat_mode)			\
-    MAKE_BILINEAR_FETCHER (name, format, repeat_mode)
+    MAKE_BILINEAR_FETCHER (name, format, repeat_mode)			\
+    MAKE_SEPARABLE_CONVOLUTION_FETCHER (name, format, repeat_mode)
 
 MAKE_FETCHERS (pad_a8r8g8b8,     a8r8g8b8, PIXMAN_REPEAT_PAD)
 MAKE_FETCHERS (none_a8r8g8b8,    a8r8g8b8, PIXMAN_REPEAT_NONE)
@@ -1153,6 +1417,20 @@ static const fetcher_info_t fetcher_info[] =
      FAST_PATH_AFFINE_TRANSFORM		|				\
      FAST_PATH_NEAREST_FILTER)
 
+#define GENERAL_SEPARABLE_CONVOLUTION_FLAGS				\
+    (FAST_PATH_NO_ALPHA_MAP            |				\
+     FAST_PATH_NO_ACCESSORS            |				\
+     FAST_PATH_HAS_TRANSFORM           |				\
+     FAST_PATH_AFFINE_TRANSFORM        |				\
+     FAST_PATH_SEPARABLE_CONVOLUTION_FILTER)
+    
+#define SEPARABLE_CONVOLUTION_AFFINE_FAST_PATH(name, format, repeat)   \
+    { PIXMAN_ ## format,                                               \
+      GENERAL_SEPARABLE_CONVOLUTION_FLAGS | FAST_PATH_ ## repeat ## _REPEAT, \
+      bits_image_fetch_separable_convolution_affine_ ## name,          \
+      _pixman_image_get_scanline_generic_float			       \
+    },
+
 #define BILINEAR_AFFINE_FAST_PATH(name, format, repeat)			\
     { PIXMAN_ ## format,						\
       GENERAL_BILINEAR_FLAGS | FAST_PATH_ ## repeat ## _REPEAT,		\
@@ -1168,6 +1446,7 @@ static const fetcher_info_t fetcher_info[] =
     },
 
 #define AFFINE_FAST_PATHS(name, format, repeat)				\
+    SEPARABLE_CONVOLUTION_AFFINE_FAST_PATH(name, format, repeat)	\
     BILINEAR_AFFINE_FAST_PATH(name, format, repeat)			\
     NEAREST_AFFINE_FAST_PATH(name, format, repeat)
     
