@@ -11,12 +11,6 @@ public class PrivateTab extends Tab {
     }
 
     @Override
-    protected void addHistory(final String uri) {}
-
-    @Override
-    protected void updateHistory(final String uri, final String title) {}
-
-    @Override
     protected void saveThumbnailToDB() {}
 
     @Override
