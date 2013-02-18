@@ -140,7 +140,7 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
     if (aType == AUDIO_CHANNEL_CONTENT &&
         mActiveContentChildIDs.Contains(aChildID) &&
         (!mActiveContentChildIDsFrozen &&
-          mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].IndexOf(aChildID) == -1)) {
+          !mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].Contains(aChildID))) {
       mActiveContentChildIDs.RemoveElement(aChildID);
     }
     SendAudioChannelChangedNotification();
@@ -303,8 +303,8 @@ AudioChannelService::SendAudioChannelChangedNotification()
     // And need to check whether there is any content channels under playing
     // now.
     else if (!mActiveContentChildIDs.IsEmpty() &&
-             mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN].IndexOf(
-             mActiveContentChildIDs[0]) != -1) {
+             mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN].Contains(
+             mActiveContentChildIDs[0])) {
       higher = AUDIO_CHANNEL_CONTENT;
     }
   }
