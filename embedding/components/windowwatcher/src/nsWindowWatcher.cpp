@@ -1587,6 +1587,17 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
   bool disableDialogFeature = false;
   nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
   branch->GetBoolPref("dom.disable_window_open_dialog_feature", &disableDialogFeature);
+
+  bool isFullScreen = false;
+  if (aParent) {
+    aParent->GetFullScreen(&isFullScreen);
+  }
+  if (isFullScreen && !isCallerChrome) {
+    // If the parent window is in fullscreen & the caller context is content,
+    // dialog feature is disabled. (see bug 803675)
+    disableDialogFeature = true;
+  }
+
   if (!disableDialogFeature) {
     chromeFlags |= WinHasOption(aFeatures, "dialog", 0, nullptr) ?
       nsIWebBrowserChrome::CHROME_OPENAS_DIALOG : 0;
