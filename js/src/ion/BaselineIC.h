@@ -307,6 +307,7 @@ class ICEntry
     _(BinaryArith_Int32)        \
     _(BinaryArith_Double)       \
     _(BinaryArith_StringConcat) \
+    _(BinaryArith_StringObjectConcat) \
                                 \
     _(UnaryArith_Fallback)      \
     _(UnaryArith_Int32)         \
@@ -1975,6 +1976,47 @@ class ICBinaryArith_StringConcat : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICBinaryArith_StringConcat::New(space, getStubCode());
+        }
+    };
+};
+
+class ICBinaryArith_StringObjectConcat : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICBinaryArith_StringObjectConcat(IonCode *stubCode, bool lhsIsString)
+      : ICStub(BinaryArith_StringObjectConcat, stubCode)
+    {
+        extra_ = lhsIsString;
+    }
+
+  public:
+    static inline ICBinaryArith_StringObjectConcat *New(ICStubSpace *space, IonCode *code,
+                                                        bool lhsIsString) {
+        return space->allocate<ICBinaryArith_StringObjectConcat>(code, lhsIsString);
+    }
+
+    bool lhsIsString() const {
+        return extra_;
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool lhsIsString_;
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(lhsIsString_) << 16);
+        }
+
+      public:
+        Compiler(JSContext *cx, bool lhsIsString)
+          : ICStubCompiler(cx, ICStub::BinaryArith_StringObjectConcat),
+            lhsIsString_(lhsIsString)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBinaryArith_StringObjectConcat::New(space, getStubCode(), lhsIsString_);
         }
     };
 };
