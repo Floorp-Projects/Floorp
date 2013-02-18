@@ -1442,8 +1442,8 @@ nsWindowWatcher::URIfromURL(const char *aURL,
 
 #define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag)               \
     prefBranch->GetBoolPref(feature, &forceEnable);               \
-    if (forceEnable && !(aDialog && isChrome) &&                  \
-        !(isChrome && aHasChromeParent) && !aChromeURL) {         \
+    if (forceEnable && !(aDialog && isCallerChrome) &&            \
+        !(isCallerChrome && aHasChromeParent) && !aChromeURL) {   \
       chromeFlags |= flag;                                        \
     } else {                                                      \
       chromeFlags |= WinHasOption(aFeatures, feature,             \
@@ -1494,25 +1494,17 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
 
   /* Next, allow explicitly named options to override the initial settings */
 
-  nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-
-  bool isChrome = false;
-  nsresult rv;
-  if (securityManager) {
-    rv = securityManager->SubjectPrincipalIsSystem(&isChrome);
-    if (NS_FAILED(rv)) {
-      isChrome = false;
-    }
-  }
+  bool isCallerChrome = nsContentUtils::IsCallerChrome();
 
   // Determine whether the window is a private browsing window
-  if (isChrome) {
+  if (isCallerChrome) {
     chromeFlags |= WinHasOption(aFeatures, "private", 0, &presenceFlag) ?
       nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW : 0;
     chromeFlags |= WinHasOption(aFeatures, "non-private", 0, &presenceFlag) ?
       nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW : 0;
   }
+
+  nsresult rv;
 
   nsCOMPtr<nsIPrefBranch> prefBranch;
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
@@ -1614,7 +1606,7 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
    */
 
   // Check security state for use in determing window dimensions
-  if (!nsContentUtils::IsCallerChrome() || (isChrome && !aHasChromeParent)) {
+  if (!isCallerChrome || !aHasChromeParent) {
     // If priv check fails (or if we're called from chrome, but the
     // parent is not a chrome window), set all elements to minimum
     // reqs., else leave them alone.
