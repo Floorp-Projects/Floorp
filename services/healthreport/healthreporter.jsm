@@ -88,8 +88,8 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   this._shutdownComplete = false;
   this._shutdownCompleteCallback = null;
 
-  this._constantOnlyProviders = {};
-  this._constantOnlyProvidersRegistered = false;
+  this._pullOnlyProviders = {};
+  this._pullOnlyProvidersRegistered = false;
   this._lastDailyDate = null;
 
   // Yes, this will probably run concurrently with remaining constructor work.
@@ -387,7 +387,7 @@ AbstractHealthReporter.prototype = Object.freeze({
    * Obtain a provider from its name.
    *
    * This will only return providers that are currently initialized. If
-   * a provider is lazy initialized (like constant-only providers) this
+   * a provider is lazy initialized (like pull-only providers) this
    * will likely not return anything.
    */
   getProvider: function (name) {
@@ -410,19 +410,19 @@ AbstractHealthReporter.prototype = Object.freeze({
   /**
    * Registers a provider from its constructor function.
    *
-   * If the provider is constant-only, it will be stashed away and
+   * If the provider is pull-only, it will be stashed away and
    * initialized later. Null will be returned.
    *
-   * If it is not constant-only, it will be initialized immediately and a
+   * If it is not pull-only, it will be initialized immediately and a
    * promise will be returned. The promise will be resolved when the
    * provider has finished initializing.
    */
   registerProviderFromType: function (type) {
     let proto = type.prototype;
-    if (proto.constantOnly) {
-      this._log.info("Provider is constant-only. Deferring initialization: " +
+    if (proto.pullOnly) {
+      this._log.info("Provider is pull-only. Deferring initialization: " +
                      proto.name);
-      this._constantOnlyProviders[proto.name] = type;
+      this._pullOnlyProviders[proto.name] = type;
 
       return null;
     }
@@ -506,50 +506,50 @@ AbstractHealthReporter.prototype = Object.freeze({
   },
 
   /**
-   * Ensure that constant-only providers are registered.
+   * Ensure that pull-only providers are registered.
    */
-  ensureConstantOnlyProvidersRegistered: function () {
-    if (this._constantOnlyProvidersRegistered) {
+  ensurePullOnlyProvidersRegistered: function () {
+    if (this._pullOnlyProvidersRegistered) {
       return Promise.resolve();
     }
 
     let onFinished = function () {
-      this._constantOnlyProvidersRegistered = true;
+      this._pullOnlyProvidersRegistered = true;
 
       return Promise.resolve();
     }.bind(this);
 
-    return Task.spawn(function registerConstantProviders() {
-      for each (let providerType in this._constantOnlyProviders) {
+    return Task.spawn(function registerPullProviders() {
+      for each (let providerType in this._pullOnlyProviders) {
         try {
           let provider = this.initProviderFromType(providerType);
           yield this.registerProvider(provider);
         } catch (ex) {
-          this._log.warn("Error registering constant-only provider: " +
+          this._log.warn("Error registering pull-only provider: " +
                          CommonUtils.exceptionStr(ex));
         }
       }
     }.bind(this)).then(onFinished, onFinished);
   },
 
-  ensureConstantOnlyProvidersUnregistered: function () {
-    if (!this._constantOnlyProvidersRegistered) {
+  ensurePullOnlyProvidersUnregistered: function () {
+    if (!this._pullOnlyProvidersRegistered) {
       return Promise.resolve();
     }
 
     let onFinished = function () {
-      this._constantOnlyProvidersRegistered = false;
+      this._pullOnlyProvidersRegistered = false;
 
       return Promise.resolve();
     }.bind(this);
 
-    return Task.spawn(function unregisterConstantProviders() {
+    return Task.spawn(function unregisterPullProviders() {
       for (let provider of this._collector.providers) {
-        if (!provider.constantOnly) {
+        if (!provider.pullOnly) {
           continue;
         }
 
-        this._log.info("Shutting down constant-only provider: " +
+        this._log.info("Shutting down pull-only provider: " +
                        provider.name);
 
         try {
@@ -618,7 +618,7 @@ AbstractHealthReporter.prototype = Object.freeze({
    */
   collectAndObtainJSONPayload: function (asObject=false) {
     return Task.spawn(function collectAndObtain() {
-      yield this.ensureConstantOnlyProvidersRegistered();
+      yield this.ensurePullOnlyProvidersRegistered();
 
       let payload;
       let error;
@@ -631,7 +631,7 @@ AbstractHealthReporter.prototype = Object.freeze({
         this._log.warn("Error collecting and/or retrieving JSON payload: " +
                        CommonUtils.exceptionStr(ex));
       } finally {
-        yield this.ensureConstantOnlyProvidersUnregistered();
+        yield this.ensurePullOnlyProvidersUnregistered();
 
         if (error) {
           throw error;
@@ -1044,7 +1044,7 @@ HealthReporter.prototype = Object.freeze({
    */
   requestDataUpload: function (request) {
     return Task.spawn(function doUpload() {
-      yield this.ensureConstantOnlyProvidersRegistered();
+      yield this.ensurePullOnlyProvidersRegistered();
       try {
         yield this.collectMeasurements();
         try {
@@ -1053,7 +1053,7 @@ HealthReporter.prototype = Object.freeze({
           this._onSubmitDataRequestFailure(ex);
         }
       } finally {
-        yield this.ensureConstantOnlyProvidersUnregistered();
+        yield this.ensurePullOnlyProvidersUnregistered();
       }
     }.bind(this));
   },

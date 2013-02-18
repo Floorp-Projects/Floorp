@@ -214,7 +214,7 @@ ProfileMetadataProvider.prototype = {
 
   measurementTypes: [ProfileMetadataMeasurement],
 
-  constantOnly: true,
+  pullOnly: true,
 
   getProfileCreationDays: function () {
     let accessor = new ProfileCreationTimeAccessor(null, this._log);
