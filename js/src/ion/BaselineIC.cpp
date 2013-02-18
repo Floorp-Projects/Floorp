@@ -327,6 +327,12 @@ ICMonitoredFallbackStub::initMonitoringChain(JSContext *cx, ICStubSpace *space)
 }
 
 bool
+ICMonitoredFallbackStub::addMonitorStubForValue(JSContext *cx, HandleScript script, HandleValue val)
+{
+    return fallbackMonitorStub_->addMonitorStubForValue(cx, script, val);
+}
+
+bool
 ICUpdatedStub::initUpdatingChain(JSContext *cx, ICStubSpace *space)
 {
     JS_ASSERT(firstUpdateStub_ == NULL);
@@ -769,14 +775,32 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
     }
 
     if (val.isPrimitive()) {
+        JS_ASSERT(!val.isMagic());
         JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
-        ICTypeMonitor_Type::Compiler compiler(cx, type);
+
+        // Check for existing TypeMonitor stub.
+        for (ICStub *chk = firstMonitorStub(); chk != this; chk = chk->next()) {
+            if (chk->isTypeMonitor_Primitive() && chk->toTypeMonitor_Primitive()->type() == type)
+                return true;
+        }
+
+        ICTypeMonitor_Primitive::Compiler compiler(cx, type);
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
             return false;
         addOptimizedMonitorStub(stub);
     } else if (val.toObject().hasSingletonType()) {
         RootedObject obj(cx, &val.toObject());
+
+        // Check for existing TypeMonitor stub.
+        for (ICStub *chk = firstMonitorStub(); chk != this; chk = chk->next()) {
+            if (chk->isTypeMonitor_SingleObject() &&
+                chk->toTypeMonitor_SingleObject()->object() == obj)
+            {
+                return true;
+            }
+        }
+
         ICTypeMonitor_SingleObject::Compiler compiler(cx, obj);
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
@@ -784,6 +808,16 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
         addOptimizedMonitorStub(stub);
     } else {
         RootedTypeObject type(cx, val.toObject().type());
+
+        // Check for existing TypeMonitor stub.
+        for (ICStub *chk = firstMonitorStub(); chk != this; chk = chk->next()) {
+            if (chk->isTypeMonitor_TypeObject() &&
+                chk->toTypeMonitor_TypeObject()->type() == type)
+            {
+                return true;
+            }
+        }
+
         ICTypeMonitor_TypeObject::Compiler compiler(cx, type);
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
@@ -869,7 +903,7 @@ ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICTypeMonitor_Type::Compiler::generateStubCode(MacroAssembler &masm)
+ICTypeMonitor_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
     switch (type_) {
@@ -952,13 +986,30 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleV
 
     if (val.isPrimitive()) {
         JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
-        ICTypeUpdate_Type::Compiler compiler(cx, type);
+
+        // Check for existing TypeUpdate stub.
+        for (ICStub *chk = firstUpdateStub_; chk->next() != NULL; chk = chk->next()) {
+            if (chk->isTypeUpdate_Primitive() && chk->toTypeUpdate_Primitive()->type() == type)
+                return true;
+        }
+
+        ICTypeUpdate_Primitive::Compiler compiler(cx, type);
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
             return false;
         addOptimizedUpdateStub(stub);
     } else if (val.toObject().hasSingletonType()) {
         RootedObject obj(cx, &val.toObject());
+
+        // Check for existing TypeUpdate stub.
+        for (ICStub *chk = firstUpdateStub_; chk->next() != NULL; chk = chk->next()) {
+            if (chk->isTypeUpdate_SingleObject() &&
+                chk->toTypeUpdate_SingleObject()->object() == obj)
+            {
+                return true;
+            }
+        }
+
         ICTypeUpdate_SingleObject::Compiler compiler(cx, obj);
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
@@ -966,6 +1017,16 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleV
         addOptimizedUpdateStub(stub);
     } else {
         RootedTypeObject type(cx, val.toObject().type());
+
+        // Check for existing TypeUpdate stub.
+        for (ICStub *chk = firstUpdateStub_; chk->next() != NULL; chk = chk->next()) {
+            if (chk->isTypeUpdate_TypeObject() &&
+                chk->toTypeUpdate_TypeObject()->type() == type)
+            {
+                return true;
+            }
+        }
+
         ICTypeUpdate_TypeObject::Compiler compiler(cx, type);
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
@@ -1026,7 +1087,7 @@ ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICTypeUpdate_Type::Compiler::generateStubCode(MacroAssembler &masm)
+ICTypeUpdate_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
     switch (type_) {
@@ -1884,9 +1945,6 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         if (!strcatStub)
             return false;
         stub->addNewStub(strcatStub);
-
-        // TODO: Add String type to type monitor IC chain.
-
         return true;
     }
 
@@ -2282,14 +2340,20 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
         types::TypeScript::Monitor(cx, script, pc, res);
     }
 
+    // Add a type monitor stub for the resulting value.
+    if (!stub->addMonitorStubForValue(cx, script, res))
+        return false;
+
     if (stub->numOptimizedStubs() >= ICGetElem_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
         // But for now we just bail.
         return true;
     }
 
+    // Try to attach an optimized stub.
     if (!TryAttachGetElemStub(cx, script, stub, lhs, rhs, res))
         return false;
+
     return true;
 }
 
@@ -2666,8 +2730,10 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
                         "(shape=%p, type=%p, lastProto=%p, lastProtoShape=%p)",
                         obj->lastProperty(), type.get(), lastProto.get(), lastProtoShape.get());
                 ICSetElem_DenseAdd::Compiler compiler(cx, shape, type, lastProto, lastProtoShape);
-                ICStub *denseStub = compiler.getStub(compiler.getStubSpace(script));
+                ICUpdatedStub *denseStub = compiler.getStub(compiler.getStubSpace(script));
                 if (!denseStub)
+                    return false;
+                if (!denseStub->addUpdateStubForValue(cx, script, rhs))
                     return false;
 
                 stub->addNewStub(denseStub);
@@ -2678,8 +2744,10 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
                         "  Generating SetElem_Dense stub (shape=%p, type=%p)",
                         obj->lastProperty(), type.get());
                 ICSetElem_Dense::Compiler compiler(cx, shape, type);
-                ICStub *denseStub = compiler.getStub(compiler.getStubSpace(script));
+                ICUpdatedStub *denseStub = compiler.getStub(compiler.getStubSpace(script));
                 if (!denseStub)
+                    return false;
+                if (!denseStub->addUpdateStubForValue(cx, script, rhs))
                     return false;
 
                 stub->addNewStub(denseStub);
@@ -3132,6 +3200,10 @@ DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeCha
 
     types::TypeScript::Monitor(cx, script, pc, res);
 
+    // Add a type monitor stub for the resulting value.
+    if (!stub->addMonitorStubForValue(cx, script, res))
+        return false;
+
     // Attach new stub.
     if (stub->numOptimizedStubs() >= ICGetName_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with generic stub.
@@ -3504,6 +3576,10 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
 
     types::TypeScript::Monitor(cx, script, pc, res);
 
+    // Add a type monitor stub for the resulting value.
+    if (!stub->addMonitorStubForValue(cx, script, res))
+        return false;
+
     if (stub->numOptimizedStubs() >= ICGetProp_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with generic getprop stub.
         return true;
@@ -3708,7 +3784,7 @@ ICGetPropNativeCompiler::generateStubCode(MacroAssembler &masm)
 // Attach an optimized stub for a SETPROP/SETGNAME/SETNAME op.
 static bool
 TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stub,
-                     HandleObject obj, HandleId id, bool *attached)
+                     HandleObject obj, HandleId id, HandleValue rhs, bool *attached)
 {
     JS_ASSERT(!*attached);
 
@@ -3728,8 +3804,10 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stu
     IonSpew(IonSpew_BaselineIC, "  Generating SetProp(NativeObject.PROP) stub");
     RootedTypeObject type(cx, obj->getType(cx));
     ICSetProp_Native::Compiler compiler(cx, type, obj->lastProperty(), isFixedSlot, offset);
-    ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+    ICUpdatedStub *newStub = compiler.getStub(compiler.getStubSpace(script));
     if (!newStub)
+        return false;
+    if (!newStub->addUpdateStubForValue(cx, script, rhs))
         return false;
 
     stub->addNewStub(newStub);
@@ -3783,7 +3861,7 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
     }
 
     bool attached = false;
-    if (!TryAttachSetPropStub(cx, script, stub, obj, id, &attached))
+    if (!TryAttachSetPropStub(cx, script, stub, obj, id, rhs, &attached))
         return false;
     if (attached)
         return true;
@@ -3981,6 +4059,9 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
     // Attach a new TypeMonitor stub for this value.
     ICTypeMonitor_Fallback *typeMonFbStub = stub->fallbackMonitorStub();
     if (!typeMonFbStub->addMonitorStubForValue(cx, script, res))
+        return false;
+    // Add a type monitor stub for the resulting value.
+    if (!stub->addMonitorStubForValue(cx, script, res))
         return false;
 
     return true;

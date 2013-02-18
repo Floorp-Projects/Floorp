@@ -273,22 +273,12 @@ class ICEntry
     _(UseCount_Fallback)        \
                                 \
     _(TypeMonitor_Fallback)     \
-    _(TypeMonitor_Int32)        \
-    _(TypeMonitor_Double)       \
-    _(TypeMonitor_Boolean)      \
-    _(TypeMonitor_String)       \
-    _(TypeMonitor_Null)         \
-    _(TypeMonitor_Undefined)    \
+    _(TypeMonitor_Primitive)    \
     _(TypeMonitor_SingleObject) \
     _(TypeMonitor_TypeObject)   \
                                 \
     _(TypeUpdate_Fallback)      \
-    _(TypeUpdate_Int32)         \
-    _(TypeUpdate_Double)        \
-    _(TypeUpdate_Boolean)       \
-    _(TypeUpdate_String)        \
-    _(TypeUpdate_Null)          \
-    _(TypeUpdate_Undefined)     \
+    _(TypeUpdate_Primitive)     \
     _(TypeUpdate_SingleObject)  \
     _(TypeUpdate_TypeObject)    \
                                 \
@@ -733,6 +723,7 @@ class ICMonitoredFallbackStub : public ICFallbackStub
 
   public:
     bool initMonitoringChain(JSContext *cx, ICStubSpace *space);
+    bool addMonitorStubForValue(JSContext *cx, HandleScript script, HandleValue val);
 
     inline ICTypeMonitor_Fallback *fallbackMonitorStub() const {
         return fallbackMonitorStub_;
@@ -1119,29 +1110,25 @@ class ICTypeMonitor_Fallback : public ICStub
     };
 };
 
-class ICTypeMonitor_Type : public ICStub
+class ICTypeMonitor_Primitive : public ICStub
 {
     friend class ICStubSpace;
 
-    ICTypeMonitor_Type(Kind kind, IonCode *stubCode)
-        : ICStub(kind, stubCode)
-    { }
-
-  public:
-    static inline ICTypeMonitor_Type *New(ICStubSpace *space, Kind kind, IonCode *code) {
-        return space->allocate<ICTypeMonitor_Type>(kind, code);
+    ICTypeMonitor_Primitive(IonCode *stubCode, JSValueType type)
+        : ICStub(TypeMonitor_Primitive, stubCode)
+    {
+        extra_ = static_cast<uint16_t>(type);
     }
 
-    static Kind KindFromType(JSValueType type) {
-        switch (type) {
-          case JSVAL_TYPE_INT32:     return TypeMonitor_Int32;
-          case JSVAL_TYPE_DOUBLE:    return TypeMonitor_Double;
-          case JSVAL_TYPE_BOOLEAN:   return TypeMonitor_Boolean;
-          case JSVAL_TYPE_STRING:    return TypeMonitor_String;
-          case JSVAL_TYPE_NULL:      return TypeMonitor_Null;
-          case JSVAL_TYPE_UNDEFINED: return TypeMonitor_Undefined;
-          default: JS_NOT_REACHED("Invalid type");
-        }
+  public:
+    static inline ICTypeMonitor_Primitive *New(ICStubSpace *space, IonCode *code,
+                                               JSValueType type)
+    {
+        return space->allocate<ICTypeMonitor_Primitive>(code, type);
+    }
+
+    JSValueType type() const {
+        return static_cast<JSValueType>(extra_);
     }
 
     class Compiler : public ICStubCompiler {
@@ -1149,14 +1136,18 @@ class ICTypeMonitor_Type : public ICStub
         JSValueType type_;
         bool generateStubCode(MacroAssembler &masm);
 
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16);
+        }
+
       public:
         Compiler(JSContext *cx, JSValueType type)
-          : ICStubCompiler(cx, ICTypeMonitor_Type::KindFromType(type)),
+          : ICStubCompiler(cx, TypeMonitor_Primitive),
             type_(type)
         { }
 
-        ICTypeMonitor_Type *getStub(ICStubSpace *space) {
-            return ICTypeMonitor_Type::New(space, kind, getStubCode());
+        ICTypeMonitor_Primitive *getStub(ICStubSpace *space) {
+            return ICTypeMonitor_Primitive::New(space, getStubCode(), type_);
         }
     };
 };
@@ -1283,29 +1274,25 @@ class ICTypeUpdate_Fallback : public ICStub
 };
 
 // Type update stub to handle a primitive type.
-class ICTypeUpdate_Type : public ICStub
+class ICTypeUpdate_Primitive : public ICStub
 {
     friend class ICStubSpace;
 
-    ICTypeUpdate_Type(Kind kind, IonCode *stubCode)
-        : ICStub(kind, stubCode)
-    { }
-
-  public:
-    static inline ICTypeUpdate_Type *New(ICStubSpace *space, Kind kind, IonCode *code) {
-        return space->allocate<ICTypeUpdate_Type>(kind, code);
+    ICTypeUpdate_Primitive(IonCode *stubCode, JSValueType type)
+        : ICStub(TypeUpdate_Primitive, stubCode)
+    {
+        extra_ = static_cast<uint16_t>(type);
     }
 
-    static Kind KindFromType(JSValueType type) {
-        switch (type) {
-          case JSVAL_TYPE_INT32:     return TypeUpdate_Int32;
-          case JSVAL_TYPE_DOUBLE:    return TypeUpdate_Double;
-          case JSVAL_TYPE_BOOLEAN:   return TypeUpdate_Boolean;
-          case JSVAL_TYPE_STRING:    return TypeUpdate_String;
-          case JSVAL_TYPE_NULL:      return TypeUpdate_Null;
-          case JSVAL_TYPE_UNDEFINED: return TypeUpdate_Undefined;
-          default: JS_NOT_REACHED("Invalid type");
-        }
+  public:
+    static inline ICTypeUpdate_Primitive *New(ICStubSpace *space,  IonCode *code,
+                                              JSValueType type)
+    {
+        return space->allocate<ICTypeUpdate_Primitive>(code, type);
+    }
+
+    JSValueType type() const {
+        return static_cast<JSValueType>(extra_);
     }
 
     class Compiler : public ICStubCompiler {
@@ -1313,14 +1300,18 @@ class ICTypeUpdate_Type : public ICStub
         JSValueType type_;
         bool generateStubCode(MacroAssembler &masm);
 
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16);
+        }
+
       public:
         Compiler(JSContext *cx, JSValueType type)
-          : ICStubCompiler(cx, ICTypeUpdate_Type::KindFromType(type)),
+          : ICStubCompiler(cx, TypeUpdate_Primitive),
             type_(type)
         { }
 
-        ICTypeUpdate_Type *getStub(ICStubSpace *space) {
-            return ICTypeUpdate_Type::New(space, kind, getStubCode());
+        ICTypeUpdate_Primitive *getStub(ICStubSpace *space) {
+            return ICTypeUpdate_Primitive::New(space, getStubCode(), type_);
         }
     };
 };
@@ -2438,7 +2429,7 @@ class ICSetElem_Dense : public ICUpdatedStub
             type_(type)
         {}
 
-        ICStub *getStub(ICStubSpace *space) {
+        ICUpdatedStub *getStub(ICStubSpace *space) {
             ICSetElem_Dense *stub = ICSetElem_Dense::New(space, getStubCode(), shape_, type_);
             if (!stub || !stub->initUpdatingChain(cx, space))
                 return NULL;
@@ -2522,7 +2513,7 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
             lastProtoShape_(cx, lastProtoShape)
         {}
 
-        ICStub *getStub(ICStubSpace *space) {
+        ICUpdatedStub *getStub(ICStubSpace *space) {
             ICSetElem_DenseAdd *stub = ICSetElem_DenseAdd::New(space, getStubCode(), shape_, type_,
                                                                lastProto_, lastProtoShape_);
             if (!stub || !stub->initUpdatingChain(cx, space))
@@ -3256,7 +3247,7 @@ class ICSetProp_Native : public ICUpdatedStub
             offset_(offset)
         {}
 
-        ICStub *getStub(ICStubSpace *space) {
+        ICUpdatedStub *getStub(ICStubSpace *space) {
             ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type_, shape_, offset_);
             if (!stub || !stub->initUpdatingChain(cx, space))
                 return NULL;
