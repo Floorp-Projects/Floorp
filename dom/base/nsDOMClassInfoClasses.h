@@ -222,7 +222,6 @@ DOMCI_CLASS(SVGFETurbulenceElement)
 DOMCI_CLASS(SVGImageElement)
 DOMCI_CLASS(SVGMarkerElement)
 DOMCI_CLASS(SVGMaskElement)
-DOMCI_CLASS(SVGTitleElement)
 DOMCI_CLASS(SVGUnknownElement)
 
 // other SVG classes

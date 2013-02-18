@@ -35,7 +35,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGStringList.idl \
-		nsIDOMSVGTitleElement.idl \
 		nsIDOMSVGURIReference.idl \
 		nsIDOMSVGUnitTypes.idl \
 		nsIDOMSVGZoomEvent.idl \
