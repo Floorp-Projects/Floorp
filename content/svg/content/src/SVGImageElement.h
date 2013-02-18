@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGImageElement_h
 #define mozilla_dom_SVGImageElement_h
 
-#include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"
@@ -26,7 +25,7 @@ namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio;
 
 class SVGImageElement : public SVGImageElementBase,
-                        public nsIDOMSVGImageElement,
+                        public nsIDOMSVGElement,
                         public nsIDOMSVGURIReference,
                         public nsImageLoadingContent
 {
@@ -43,7 +42,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGIMAGEELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx I wish we could use virtual inheritance
@@ -76,8 +74,6 @@ public:
   void MaybeLoadSVGImage();
 
   bool IsImageSrcSetDisabled() const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
