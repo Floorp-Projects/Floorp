@@ -35,12 +35,12 @@ class nsPtrHashKey;
 #define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_)                        \
   {                                                                            \
     type_ *cur = (ptr_)->member_;                                              \
-    (ptr_)->member_ = nullptr;                                                  \
+    (ptr_)->member_ = nullptr;                                                 \
     while (cur) {                                                              \
-      type_ *next = cur->member_;                                              \
-      cur->member_ = nullptr;                                                   \
+      type_ *dlm_next = cur->member_;                                          \
+      cur->member_ = nullptr;                                                  \
       delete cur;                                                              \
-      cur = next;                                                              \
+      cur = dlm_next;                                                          \
     }                                                                          \
   }
 
@@ -50,15 +50,15 @@ class nsPtrHashKey;
 #define NS_CSS_CLONE_LIST_MEMBER(type_, from_, member_, to_, args_)            \
   {                                                                            \
     type_ *dest = (to_);                                                       \
-    (to_)->member_ = nullptr;                                                   \
+    (to_)->member_ = nullptr;                                                  \
     for (const type_ *src = (from_)->member_; src; src = src->member_) {       \
-      type_ *clone = src->Clone args_;                                         \
-      if (!clone) {                                                            \
+      type_ *clm_clone = src->Clone args_;                                     \
+      if (!clm_clone) {                                                        \
         delete (to_);                                                          \
-        return nullptr;                                                         \
+        return nullptr;                                                        \
       }                                                                        \
-      dest->member_ = clone;                                                   \
-      dest = clone;                                                            \
+      dest->member_ = clm_clone;                                               \
+      dest = clm_clone;                                                        \
     }                                                                          \
   }
 

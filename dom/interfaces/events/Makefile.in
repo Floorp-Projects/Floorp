@@ -58,6 +58,7 @@ XPIDLSRCS =					\
 	nsIDOMCustomEvent.idl			\
 	nsIDOMCompositionEvent.idl		\
 	nsIDOMWheelEvent.idl			\
+	nsIDOMBlobEvent.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
