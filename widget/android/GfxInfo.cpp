@@ -355,7 +355,20 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
     if (aFeature == FEATURE_STAGEFRIGHT) {
       NS_LossyConvertUTF16toASCII cManufacturer(mManufacturer);
       NS_LossyConvertUTF16toASCII cModel(mModel);
-      if (CompareVersions(mOSVersion.get(), "4.0.0") < 0)
+      if (CompareVersions(mOSVersion.get(), "2.3.0") >= 0 &&
+          CompareVersions(mOSVersion.get(), "2.4.0") < 0)
+      {
+        // Gingerbread HTC devices are whitelisted.
+	// All other Gingerbread devices are blacklisted.
+	bool isWhitelisted =
+          cManufacturer.Equals("htc", nsCaseInsensitiveCStringComparator());
+
+        if (!isWhitelisted) {
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+          return NS_OK;
+        }
+      }
+      else if (CompareVersions(mOSVersion.get(), "4.0.0") < 0)
       {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
         return NS_OK;
