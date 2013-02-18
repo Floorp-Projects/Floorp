@@ -14,3 +14,6 @@ default-preferences pref(dom.experimental_forms_range,true)
 != input-range-different-fraction-of-range-unthemed-1.html input-range-different-fraction-of-range-unthemed-1-notref.html
 == input-range-same-fraction-of-range-unthemed-1.html input-range-same-fraction-of-range-unthemed-1-ref.html
 
+# 'direction' property:
+== input-range-direction-unthemed-1.html input-range-direction-unthemed-1-ref.html
+

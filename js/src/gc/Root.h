@@ -1057,16 +1057,16 @@ struct Cell;
 class CompilerRootNode
 {
   protected:
-    CompilerRootNode(js::gc::Cell *ptr) : next(NULL), ptr(ptr) {}
+    CompilerRootNode(js::gc::Cell *ptr) : next(NULL), ptr_(ptr) {}
 
   public:
-    void **address() { return (void **)&ptr; }
+    void **address() { return (void **)&ptr_; }
 
   public:
     CompilerRootNode *next;
 
   protected:
-    js::gc::Cell *ptr;
+    js::gc::Cell *ptr_;
 };
 
 }  /* namespace js */

@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGPatternElement_h
 #define mozilla_dom_SVGPatternElement_h
 
-#include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
@@ -30,8 +29,7 @@ typedef nsSVGElement SVGPatternElementBase;
 
 class SVGPatternElement MOZ_FINAL : public SVGPatternElementBase,
                                     public nsIDOMSVGElement,
-                                    public nsIDOMSVGURIReference,
-                                    public nsIDOMSVGUnitTypes
+                                    public nsIDOMSVGURIReference
 {
   friend class ::nsSVGPatternFrame;
 

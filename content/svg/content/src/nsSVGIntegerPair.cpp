@@ -173,6 +173,14 @@ nsSVGIntegerPair::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
                                        PairIndex aIndex,
                                        nsSVGElement *aSVGElement)
 {
+  *aResult = ToDOMAnimatedInteger(aIndex, aSVGElement).get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedInteger>
+nsSVGIntegerPair::ToDOMAnimatedInteger(PairIndex aIndex,
+                                       nsSVGElement* aSVGElement)
+{
   nsRefPtr<DOMAnimatedInteger> domAnimatedInteger =
     aIndex == eFirst ? sSVGFirstAnimatedIntegerTearoffTable.GetTearoff(this) :
                        sSVGSecondAnimatedIntegerTearoffTable.GetTearoff(this);
@@ -185,8 +193,7 @@ nsSVGIntegerPair::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
     }
   }
 
-  domAnimatedInteger.forget(aResult);
-  return NS_OK;
+  return domAnimatedInteger.forget();
 }
 
 nsSVGIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger()

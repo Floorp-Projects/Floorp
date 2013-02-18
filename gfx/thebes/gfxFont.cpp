@@ -168,21 +168,6 @@ nsresult gfxFontEntry::ReadCMAP()
 }
 
 nsString
-gfxFontEntry::FamilyName()
-{
-    FallibleTArray<uint8_t> nameTable;
-    nsresult rv = GetFontTable(TRUETYPE_TAG('n','a','m','e'), nameTable);
-    if (NS_SUCCEEDED(rv)) {
-        nsAutoString name;
-        rv = gfxFontUtils::GetFamilyNameFromTable(nameTable, name);
-        if (NS_SUCCEEDED(rv)) {
-            return name;
-        }
-    }
-    return Name();
-}
-
-nsString
 gfxFontEntry::RealFaceName()
 {
     FallibleTArray<uint8_t> nameTable;

@@ -155,9 +155,9 @@ IncludeBBoxScale(const nsSVGViewBox& aViewBox,
                  uint32_t aPatternContentUnits, uint32_t aPatternUnits)
 {
   return (!aViewBox.IsExplicitlySet() &&
-          aPatternContentUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) ||
+          aPatternContentUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) ||
          (aViewBox.IsExplicitlySet() &&
-          aPatternUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
+          aPatternUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
 }
 
 // Given the matrix for the pattern element's own transform, this returns a
@@ -173,7 +173,7 @@ GetPatternMatrix(uint16_t aPatternUnits,
   gfxFloat minx = bbox.X();
   gfxFloat miny = bbox.Y();
 
-  if (aPatternUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+  if (aPatternUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     minx += callerBBox.X();
     miny += callerBBox.Y();
   }
@@ -593,7 +593,7 @@ nsSVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
   tmpHeight = GetLengthValue(SVGPatternElement::ATTR_HEIGHT);
   tmpWidth = GetLengthValue(SVGPatternElement::ATTR_WIDTH);
 
-  if (aPatternUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+  if (aPatternUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     x = nsSVGUtils::ObjectSpace(aTargetBBox, tmpX);
     y = nsSVGUtils::ObjectSpace(aTargetBBox, tmpY);
     width = nsSVGUtils::ObjectSpace(aTargetBBox, tmpWidth);

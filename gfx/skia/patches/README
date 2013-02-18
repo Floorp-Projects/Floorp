@@ -8,3 +8,4 @@ See the relevant bugs in bugzilla for information on these patches:
 0005-Bug-777614-Re-apply-bug-687188-Expand-the-gradient-c.patch
 0009-Bug-777614-Re-apply-759683-Handle-compilers-that-don.patch
 0010-Bug-836892-Add-new-blending-modes-to-SkXfermode.patch
+0011-Bug-839347-no-anon-namespace-around-SkNO_RETURN_HINT.patch

@@ -43,7 +43,6 @@ CPPSRCS		= \
 		nsSVGElement.cpp \
 		nsSVGEnum.cpp \
 		nsSVGFeatures.cpp \
-		nsSVGFilterElement.cpp \
 		nsSVGFilters.cpp \
 		nsSVGInteger.cpp \
 		nsSVGIntegerPair.cpp \
@@ -81,6 +80,7 @@ CPPSRCS		= \
 		SVGDescElement.cpp \
 		SVGElementFactory.cpp \
 		SVGEllipseElement.cpp \
+		SVGFilterElement.cpp \
 		SVGForeignObjectElement.cpp \
 		SVGFragmentIdentifier.cpp \
 		SVGGElement.cpp \
@@ -166,10 +166,11 @@ EXPORTS_mozilla/dom = \
 	SVGAnimationElement.h \
 	SVGClipPathElement.h \
 	SVGCircleElement.h \
-  SVGComponentTransferFunctionElement.h \
+	SVGComponentTransferFunctionElement.h \
 	SVGDefsElement.h \
 	SVGDescElement.h \
 	SVGEllipseElement.h \
+	SVGFilterElement.h \
 	SVGForeignObjectElement.h \
 	SVGGElement.h \
 	SVGGradientElement.h \

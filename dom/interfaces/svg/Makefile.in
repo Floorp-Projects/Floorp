@@ -27,7 +27,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
 		nsIDOMSVGEvent.idl \
-		nsIDOMSVGFilterElement.idl \
 		nsIDOMSVGFilters.idl \
 		nsIDOMSVGImageElement.idl \
 		nsIDOMSVGLength.idl \

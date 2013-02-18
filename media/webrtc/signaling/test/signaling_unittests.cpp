@@ -534,7 +534,7 @@ class SignalingAgent {
     pObserver = new TestObserver(pc);
     ASSERT_TRUE(pObserver);
 
-    sipcc::RTCConfiguration cfg;
+    sipcc::IceConfiguration cfg;
     cfg.addServer("23.21.150.121", 3478);
     ASSERT_EQ(pc->Initialize(pObserver, nullptr, cfg, thread), NS_OK);
 
@@ -562,7 +562,7 @@ class SignalingAgent {
     if (!pObserver)
       return false;
 
-    sipcc::RTCConfiguration cfg;
+    sipcc::IceConfiguration cfg;
     cfg.addServer("23.21.150.121", 3478);
     if (NS_FAILED(pc->Initialize(pObserver, nullptr, cfg, thread)))
       return false;

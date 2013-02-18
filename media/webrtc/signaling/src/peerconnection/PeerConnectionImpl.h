@@ -65,7 +65,7 @@ private:
   constraints_map  mConstraints;
 };
 
-class RTCConfiguration
+class IceConfiguration
 {
 public:
   bool addServer(const std::string& addr, uint16_t port)
@@ -141,7 +141,7 @@ public:
 
   static PeerConnectionImpl* CreatePeerConnection();
   static nsresult ConvertRTCConfiguration(const JS::Value& aSrc,
-    RTCConfiguration *aDst, JSContext* aCx);
+    IceConfiguration *aDst, JSContext* aCx);
   static nsresult ConvertConstraints(
     const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx);
   static nsresult MakeMediaStream(nsIDOMWindow* aWindow,
@@ -209,10 +209,10 @@ public:
     return mWindow;
   }
 
-  // Initialize PeerConnection from an RTCConfiguration object.
+  // Initialize PeerConnection from an IceConfiguration object.
   nsresult Initialize(IPeerConnectionObserver* aObserver,
                       nsIDOMWindow* aWindow,
-                      const RTCConfiguration& aConfiguration,
+                      const IceConfiguration& aConfiguration,
                       nsIThread* aThread) {
     return Initialize(aObserver, aWindow, &aConfiguration, nullptr, aThread, nullptr);
   }
@@ -227,7 +227,7 @@ private:
   PeerConnectionImpl& operator=(PeerConnectionImpl);
   nsresult Initialize(IPeerConnectionObserver* aObserver,
                       nsIDOMWindow* aWindow,
-                      const RTCConfiguration* aConfiguration,
+                      const IceConfiguration* aConfiguration,
                       const JS::Value* aRTCConfiguration,
                       nsIThread* aThread,
                       JSContext* aCx);

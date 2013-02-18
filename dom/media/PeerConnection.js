@@ -335,9 +335,8 @@ PeerConnection.prototype = {
     function isObject(obj) {
       return obj && (typeof obj === "object");
     }
-    function isArray(obj) {
-      return isObject(obj) &&
-        (Object.prototype.toString.call(obj) === "[object Array]");
+    function isArraylike(obj) {
+      return isObject(obj) && ("length" in obj);
     }
     function nicerNewURI(uriStr, errorMsg) {
       let ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
@@ -359,10 +358,11 @@ PeerConnection.prototype = {
     if (!isObject(rtcConfig)) {
       throw new Error (errorMsg);
     }
-    if (!isArray(rtcConfig.iceServers)) {
+    if (!isArraylike(rtcConfig.iceServers)) {
       throw new Error (errorMsg + " - iceServers [] property not present");
     }
-    for (let i=0; i < rtcConfig.iceServers.length; i++) {
+    let len = rtcConfig.iceServers.length;
+    for (let i=0; i < len; i++) {
       mustValidateServer (rtcConfig.iceServers[i], errorMsg);
     }
   },
@@ -371,33 +371,74 @@ PeerConnection.prototype = {
    * Constraints look like this:
    *
    * {
-   *   mandatory: {"foo": true, "bar": 10, "baz": "boo"},
-   *   optional: [{"foo": true}, {"bar": 10}]
+   *   mandatory: {"OfferToReceiveAudio": true, "OfferToReceiveVideo": true },
+   *   optional: [{"VoiceActivityDetection": true}, {"FooBar": 10}]
    * }
    *
-   * We check for basic structure but not the validity of the constraints
-   * themselves before passing them along to C++.
+   * We check for basic structure of constraints and the validity of
+   * mandatory constraints against those we support (fail if we don't).
+   * Unknown optional constraints may be of any type.
    */
-  _validateConstraints: function(constraints) {
+  _mustValidateConstraints: function(constraints, errorMsg) {
     function isObject(obj) {
       return obj && (typeof obj === "object");
     }
-    function isArray(obj) {
-      return isObject(obj) &&
-        (Object.prototype.toString.call(obj) === "[object Array]");
+    function isArraylike(obj) {
+      return isObject(obj) && ("length" in obj);
     }
-
-    if (!isObject(constraints)) {
-      return false;
+    const SUPPORTED_CONSTRAINTS = {
+      OfferToReceiveAudio:1,
+      OfferToReceiveVideo:1,
+      MozDontOfferDataChannel:1
+    };
+    const OTHER_KNOWN_CONSTRAINTS = {
+      VoiceActivityDetection:1,
+      IceTransports:1,
+      RequestIdentity:1
+    };
+    // Parse-aid: Testing for pilot error of missing outer block avoids
+    // otherwise silent no-op since both mandatory and optional are optional
+    if (!isObject(constraints) || Array.isArray(constraints)) {
+      throw new Error(errorMsg);
     }
-    if (constraints.mandatory && !isObject(constraints.mandatory)) {
-      return false;
+    if (constraints.mandatory) {
+      // Testing for pilot error of using [] on mandatory here throws nicer msg
+      // (arrays would throw in loop below regardless but with more cryptic msg)
+      if (!isObject(constraints.mandatory) || Array.isArray(constraints.mandatory)) {
+        throw new Error(errorMsg + " - malformed mandatory constraints");
+      }
+      for (let constraint in constraints.mandatory) {
+        if (!(constraint in SUPPORTED_CONSTRAINTS) &&
+            constraints.mandatory.hasOwnProperty(constraint)) {
+          throw new Error (errorMsg + " - " +
+                           ((constraint in OTHER_KNOWN_CONSTRAINTS)?
+                            "unsupported" : "unknown") +
+                           " mandatory constraint: " + constraint);
+        }
+      }
     }
-    if (constraints.optional && !isArray(constraints.optional)) {
-      return false;
+    if (constraints.optional) {
+      if (!isArraylike(constraints.optional)) {
+        throw new Error(errorMsg + " - malformed optional constraint array");
+      }
+      let len = constraints.optional.length;
+      for (let i = 0; i < len; i += 1) {
+        if (!isObject(constraints.optional[i])) {
+          throw new Error(errorMsg + " - malformed optional constraint: " +
+                          constraints.optional[i]);
+        }
+        let constraints_per_entry = 0;
+        for (let constraint in constraints.optional[i]) {
+          if (constraints.optional[i].hasOwnProperty(constraint)) {
+            if (constraints_per_entry) {
+              throw new Error (errorMsg +
+                               " - optional constraint must be single key/value pair");
+            }
+            constraints_per_entry += 1;
+          }
+        }
+      }
     }
-
-    return true;
   },
 
   // Ideally, this should be of the form _checkState(state),
@@ -415,10 +456,7 @@ PeerConnection.prototype = {
       constraints = {};
     }
 
-    if (!this._validateConstraints(constraints)) {
-      throw new Error("createOffer passed invalid constraints");
-    }
-
+    this._mustValidateConstraints(constraints, "createOffer passed invalid constraints");
     this._onCreateOfferSuccess = onSuccess;
     this._onCreateOfferFailure = onError;
 
@@ -467,9 +505,7 @@ PeerConnection.prototype = {
       constraints = {};
     }
 
-    if (!this._validateConstraints(constraints)) {
-      throw new Error("createAnswer passed invalid constraints");
-    }
+    this._mustValidateConstraints(constraints, "createAnswer passed invalid constraints");
 
     if (!provisional) {
       provisional = false;

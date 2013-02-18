@@ -38,11 +38,11 @@ nsSVGElement::EnumInfo SVGMaskElement::sEnumInfo[2] =
 {
   { &nsGkAtoms::maskUnits,
     sSVGUnitTypesMap,
-    nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
+    SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
   },
   { &nsGkAtoms::maskContentUnits,
     sSVGUnitTypesMap,
-    nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE
+    SVG_UNIT_TYPE_USERSPACEONUSE
   }
 };
 
@@ -53,9 +53,9 @@ NS_IMPL_ADDREF_INHERITED(SVGMaskElement,SVGMaskElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGMaskElement,SVGMaskElementBase)
 
 NS_INTERFACE_TABLE_HEAD(SVGMaskElement)
-  NS_NODE_INTERFACE_TABLE5(SVGMaskElement, nsIDOMNode, nsIDOMElement,
+  NS_NODE_INTERFACE_TABLE4(SVGMaskElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement,
-                           nsIDOMSVGMaskElement, nsIDOMSVGUnitTypes)
+                           nsIDOMSVGMaskElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGMaskElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGMaskElementBase)
 

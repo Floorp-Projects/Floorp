@@ -266,7 +266,7 @@ template <>
 struct ParamTraitsFixed<int16_t> {
   typedef int16_t param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteInt(p);
+    m->WriteInt16(p);
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
     return m->ReadInt16(iter, r);
@@ -280,7 +280,7 @@ template <>
 struct ParamTraitsFixed<uint16_t> {
   typedef uint16_t param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteInt(p);
+    m->WriteUInt16(p);
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
     return m->ReadUInt16(iter, r);

@@ -79,6 +79,7 @@ public:
     void AddFontEntry(gfxFontEntry *aFontEntry) {
         nsRefPtr<gfxFontEntry> fe = aFontEntry;
         mAvailableFonts.AppendElement(fe);
+        aFontEntry->mFamilyName = Name();
         ResetCharacterMap();
     }
 
@@ -90,6 +91,7 @@ public:
             if (fe == aOldFontEntry) {
                 // note that this may delete aOldFontEntry, if there's no
                 // other reference to it except from its family
+                aNewFontEntry->mFamilyName = Name();
                 mAvailableFonts[i] = aNewFontEntry;
                 break;
             }
@@ -303,6 +305,7 @@ public:
                 return mozilla::HashGeneric(principalHash,
                                             nsURIHashKey::HashKey(aKey->mURI),
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
+                                            mozilla::HashString(aKey->mFontEntry->mFamilyName),
                                             ((uint32_t)aKey->mFontEntry->mItalic |
                                              (aKey->mFontEntry->mWeight << 1) |
                                              (aKey->mFontEntry->mStretch << 10) ) ^

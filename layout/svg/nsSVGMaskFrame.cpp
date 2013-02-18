@@ -46,7 +46,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
   uint16_t units =
     mask->mEnumAttributes[SVGMaskElement::MASKUNITS].GetAnimValue();
   gfxRect bbox;
-  if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+  if (units == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     bbox = nsSVGUtils::GetBBox(aParent);
   }
 

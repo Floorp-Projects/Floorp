@@ -49,7 +49,6 @@
 #include "SVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
 #include "DOMSVGTests.h"
-#include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGRect.h"
 #include "nsIFrame.h"
 #include "prdtoa.h"
@@ -72,8 +71,8 @@ PR_STATIC_ASSERT(sizeof(void*) == sizeof(nullptr));
 
 
 nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
-  {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE},
-  {&nsGkAtoms::objectBoundingBox, nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
+  {&nsGkAtoms::userSpaceOnUse, SVG_UNIT_TYPE_USERSPACEONUSE},
+  {&nsGkAtoms::objectBoundingBox, SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
   {nullptr, 0}
 };
 
