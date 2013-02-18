@@ -331,8 +331,16 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   }
 
   memset(&wfx, 0, sizeof(wfx));
-  wfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-  wfx.Format.cbSize = sizeof(wfx) - sizeof(wfx.Format);
+  if (stream_params.channels > 2) {
+    wfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+    wfx.Format.cbSize = sizeof(wfx) - sizeof(wfx.Format);
+  } else {
+    wfx.Format.wFormatTag = WAVE_FORMAT_PCM;
+    if (stream_params.format == CUBEB_SAMPLE_FLOAT32LE) {
+      wfx.Format.wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+    }
+    wfx.Format.cbSize = 0;
+  }
   wfx.Format.nChannels = stream_params.channels;
   wfx.Format.nSamplesPerSec = stream_params.rate;
 

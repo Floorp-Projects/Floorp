@@ -378,15 +378,15 @@ class Vector : private AllocPolicy
 
     class Range {
         friend class Vector;
-        T *cur, *end;
-        Range(T *cur, T *end) : cur(cur), end(end) {}
+        T *cur_, *end_;
+        Range(T *cur, T *end) : cur_(cur), end_(end) {}
       public:
         Range() {}
-        bool empty() const { return cur == end; }
-        size_t remain() const { return end - cur; }
-        T &front() const { return *cur; }
-        void popFront() { JS_ASSERT(!empty()); ++cur; }
-        T popCopyFront() { JS_ASSERT(!empty()); return *cur++; }
+        bool empty() const { return cur_ == end_; }
+        size_t remain() const { return end_ - cur_; }
+        T &front() const { return *cur_; }
+        void popFront() { JS_ASSERT(!empty()); ++cur_; }
+        T popCopyFront() { JS_ASSERT(!empty()); return *cur_++; }
     };
 
     Range all() {
@@ -447,11 +447,11 @@ class Vector : private AllocPolicy
     void infallibleAppendN(const T &t, size_t n) {
         internalAppendN(t, n);
     }
-    template <class U> void infallibleAppend(const U *begin, const U *end) {
-        internalAppend(begin, mozilla::PointerRangeSize(begin, end));
+    template <class U> void infallibleAppend(const U *aBegin, const U *aEnd) {
+        internalAppend(aBegin, mozilla::PointerRangeSize(aBegin, aEnd));
     }
-    template <class U> void infallibleAppend(const U *begin, size_t length) {
-        internalAppend(begin, length);
+    template <class U> void infallibleAppend(const U *aBegin, size_t aLength) {
+        internalAppend(aBegin, aLength);
     }
     template <class U, size_t O, class BP> void infallibleAppend(const Vector<U,O,BP> &other) {
         internalAppend(other);
@@ -916,12 +916,12 @@ Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 template <class T, size_t N, class AP>
 template <class U>
 JS_ALWAYS_INLINE void
-Vector<T,N,AP>::internalAppend(const U *insBegin, size_t length)
+Vector<T,N,AP>::internalAppend(const U *insBegin, size_t insLength)
 {
-    JS_ASSERT(mLength + length <= mReserved);
+    JS_ASSERT(mLength + insLength <= mReserved);
     JS_ASSERT(mReserved <= mCapacity);
-    Impl::copyConstruct(endNoCheck(), insBegin, insBegin + length);
-    mLength += length;
+    Impl::copyConstruct(endNoCheck(), insBegin, insBegin + insLength);
+    mLength += insLength;
 }
 
 template <class T, size_t N, class AP>
@@ -943,9 +943,9 @@ Vector<T,N,AP>::internalAppend(const Vector<U,O,BP> &other)
 template <class T, size_t N, class AP>
 template <class U>
 JS_ALWAYS_INLINE bool
-Vector<T,N,AP>::append(const U *insBegin, size_t length)
+Vector<T,N,AP>::append(const U *insBegin, size_t insLength)
 {
-    return this->append(insBegin, insBegin + length);
+    return this->append(insBegin, insBegin + insLength);
 }
 
 template <class T, size_t N, class AP>
@@ -994,7 +994,7 @@ Vector<T,N,AP>::extractRawBuffer()
 
 template <class T, size_t N, class AP>
 inline void
-Vector<T,N,AP>::replaceRawBuffer(T *p, size_t length)
+Vector<T,N,AP>::replaceRawBuffer(T *p, size_t aLength)
 {
     REENTRANCY_GUARD_ET_AL;
 
@@ -1004,25 +1004,25 @@ Vector<T,N,AP>::replaceRawBuffer(T *p, size_t length)
         this->free_(beginNoCheck());
 
     /* Take in the new buffer. */
-    if (length <= sInlineCapacity) {
+    if (aLength <= sInlineCapacity) {
         /*
          * We convert to inline storage if possible, even though p might
          * otherwise be acceptable.  Maybe this behaviour should be
          * specifiable with an argument to this function.
          */
         mBegin = (T *)storage.addr();
-        mLength = length;
+        mLength = aLength;
         mCapacity = sInlineCapacity;
-        Impl::moveConstruct(mBegin, p, p + length);
-        Impl::destroy(p, p + length);
+        Impl::moveConstruct(mBegin, p, p + aLength);
+        Impl::destroy(p, p + aLength);
         this->free_(p);
     } else {
         mBegin = p;
-        mLength = length;
-        mCapacity = length;
+        mLength = aLength;
+        mCapacity = aLength;
     }
 #ifdef DEBUG
-    mReserved = length;
+    mReserved = aLength;
 #endif
 }
 

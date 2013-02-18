@@ -655,10 +655,10 @@ class ProfileEntry
     void *stackAddress() volatile { return sp; }
     const char *label() volatile { return string; }
 
-    void setLine(uint32_t line) volatile { JS_ASSERT(!js()); idx = line; }
-    void setLabel(const char *string) volatile { this->string = string; }
-    void setStackAddress(void *sp) volatile { this->sp = sp; }
-    void setScript(JSScript *script) volatile { script_ = script; }
+    void setLine(uint32_t aLine) volatile { JS_ASSERT(!js()); idx = aLine; }
+    void setLabel(const char *aString) volatile { string = aString; }
+    void setStackAddress(void *aSp) volatile { sp = aSp; }
+    void setScript(JSScript *aScript) volatile { script_ = aScript; }
 
     /* we can't know the layout of JSScript, so look in vm/SPSProfiler.cpp */
     JS_FRIEND_API(jsbytecode *) pc() volatile;

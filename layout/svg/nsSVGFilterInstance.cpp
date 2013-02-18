@@ -9,10 +9,9 @@
 // Keep others in (case-insensitive) order:
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
-#include "nsIDOMSVGUnitTypes.h"
 #include "nsISVGChildFrame.h"
 #include "nsRenderingContext.h"
-#include "nsSVGFilterElement.h"
+#include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
@@ -25,7 +24,7 @@ nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType, float aValue) const
            nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
 
   float value;
-  if (mPrimitiveUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+  if (mPrimitiveUnits == mozilla::dom::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     value = nsSVGUtils::ObjectSpace(mTargetBBox, &val);
   } else {
     value = nsSVGUtils::UserSpace(mTargetFrame, &val);

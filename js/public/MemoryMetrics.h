@@ -317,7 +317,7 @@ struct RuntimeStats
       , totals()
       , compartmentStatsVector()
       , currCompartmentStats(NULL)
-      , mallocSizeOf(mallocSizeOf)
+      , mallocSizeOf_(mallocSizeOf)
     {}
 
     RuntimeSizes runtime;
@@ -357,7 +357,7 @@ struct RuntimeStats
     js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> compartmentStatsVector;
     CompartmentStats *currCompartmentStats;
 
-    JSMallocSizeOfFun mallocSizeOf;
+    JSMallocSizeOfFun mallocSizeOf_;
 
     virtual void initExtraCompartmentStats(JSCompartment *c, CompartmentStats *cstats) = 0;
 };
@@ -374,10 +374,10 @@ public:
     // A callback that gets a JSObject's nsISupports pointer, if it has one.
     // Note: this function does *not* addref |iface|.
     typedef JSBool(*GetISupportsFun)(JSObject *obj, nsISupports **iface);
-    GetISupportsFun getISupports;
+    GetISupportsFun getISupports_;
 
     ObjectPrivateVisitor(GetISupportsFun getISupports)
-      : getISupports(getISupports)
+      : getISupports_(getISupports)
     {}
 };
 

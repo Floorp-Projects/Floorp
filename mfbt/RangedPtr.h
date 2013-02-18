@@ -54,12 +54,12 @@ class RangedPtr
       MOZ_ASSERT(ptr <= rangeEnd);
     }
 
-    /* Creates a new pointer for |ptr|, restricted to this pointer's range. */
-    RangedPtr<T> create(T *ptr) const {
+    /* Creates a new pointer for |p|, restricted to this pointer's range. */
+    RangedPtr<T> create(T *p) const {
 #ifdef DEBUG
-      return RangedPtr<T>(ptr, rangeStart, rangeEnd);
+      return RangedPtr<T>(p, rangeStart, rangeEnd);
 #else
-      return RangedPtr<T>(ptr, NULL, size_t(0));
+      return RangedPtr<T>(p, NULL, size_t(0));
 #endif
     }
 

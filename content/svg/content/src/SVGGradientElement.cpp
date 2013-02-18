@@ -36,7 +36,7 @@ nsSVGElement::EnumInfo SVGGradientElement::sEnumInfo[2] =
 {
   { &nsGkAtoms::gradientUnits,
     sSVGUnitTypesMap,
-    nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
+    SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
   },
   { &nsGkAtoms::spreadMethod,
     sSpreadMethodMap,
@@ -57,7 +57,6 @@ NS_IMPL_RELEASE_INHERITED(SVGGradientElement, SVGGradientElementBase)
 
 NS_INTERFACE_MAP_BEGIN(SVGGradientElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGURIReference)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGUnitTypes)
 NS_INTERFACE_MAP_END_INHERITING(SVGGradientElementBase)
 
 //----------------------------------------------------------------------

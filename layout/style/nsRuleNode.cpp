@@ -3941,10 +3941,10 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
   } else if (eCSSUnit_Pair == textOverflowValue->GetUnit()) {
     // Two values were specified.
     text->mTextOverflow.mLogicalDirections = false;
-    const nsCSSValuePair& textOverflowValue =
-      aRuleData->ValueForTextOverflow()->GetPairValue();
+    const nsCSSValuePair& textOverflowValuePair =
+      textOverflowValue->GetPairValue();
 
-    const nsCSSValue *textOverflowLeftValue = &textOverflowValue.mXValue;
+    const nsCSSValue *textOverflowLeftValue = &textOverflowValuePair.mXValue;
     if (eCSSUnit_Enumerated == textOverflowLeftValue->GetUnit()) {
       SetDiscrete(*textOverflowLeftValue, text->mTextOverflow.mLeft.mType,
                   canStoreInRuleTree,
@@ -3956,7 +3956,7 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
       text->mTextOverflow.mLeft.mType = NS_STYLE_TEXT_OVERFLOW_STRING;
     }
 
-    const nsCSSValue *textOverflowRightValue = &textOverflowValue.mYValue;
+    const nsCSSValue *textOverflowRightValue = &textOverflowValuePair.mYValue;
     if (eCSSUnit_Enumerated == textOverflowRightValue->GetUnit()) {
       SetDiscrete(*textOverflowRightValue, text->mTextOverflow.mRight.mType,
                   canStoreInRuleTree,

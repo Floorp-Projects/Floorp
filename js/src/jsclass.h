@@ -40,7 +40,7 @@ SPECIALID_TO_JSID(const SpecialId &sid);
  */
 class SpecialId
 {
-    uintptr_t bits;
+    uintptr_t bits_;
 
     /* Needs access to raw bits. */
     friend JS_ALWAYS_INLINE jsid SPECIALID_TO_JSID(const SpecialId &sid);
@@ -50,27 +50,27 @@ class SpecialId
     static const uintptr_t TYPE_OBJECT = JSID_TYPE_OBJECT;
     static const uintptr_t TYPE_MASK = JSID_TYPE_MASK;
 
-    SpecialId(uintptr_t bits) : bits(bits) { }
+    SpecialId(uintptr_t bits) : bits_(bits) { }
 
   public:
-    SpecialId() : bits(TYPE_VOID) { }
+    SpecialId() : bits_(TYPE_VOID) { }
 
     /* Object-valued */
 
     SpecialId(JSObject &obj)
-      : bits(uintptr_t(&obj) | TYPE_OBJECT)
+      : bits_(uintptr_t(&obj) | TYPE_OBJECT)
     {
         JS_ASSERT(&obj != NULL);
         JS_ASSERT((uintptr_t(&obj) & TYPE_MASK) == 0);
     }
 
     bool isObject() const {
-        return (bits & TYPE_MASK) == TYPE_OBJECT && bits != TYPE_OBJECT;
+        return (bits_ & TYPE_MASK) == TYPE_OBJECT && bits_ != TYPE_OBJECT;
     }
 
     JSObject *toObject() const {
         JS_ASSERT(isObject());
-        return reinterpret_cast<JSObject *>(bits & ~TYPE_MASK);
+        return reinterpret_cast<JSObject *>(bits_ & ~TYPE_MASK);
     }
 
     /* Empty */
@@ -82,7 +82,7 @@ class SpecialId
     }
 
     bool isEmpty() const {
-        return bits == TYPE_OBJECT;
+        return bits_ == TYPE_OBJECT;
     }
 
     /* Void */
@@ -94,7 +94,7 @@ class SpecialId
     }
 
     bool isVoid() const {
-        return bits == TYPE_VOID;
+        return bits_ == TYPE_VOID;
     }
 };
 
@@ -102,7 +102,7 @@ static JS_ALWAYS_INLINE jsid
 SPECIALID_TO_JSID(const SpecialId &sid)
 {
     jsid id;
-    JSID_BITS(id) = sid.bits;
+    JSID_BITS(id) = sid.bits_;
     JS_ASSERT_IF(sid.isObject(), JSID_IS_OBJECT(id) && JSID_TO_OBJECT(id) == sid.toObject());
     JS_ASSERT_IF(sid.isVoid(), JSID_IS_VOID(id));
     JS_ASSERT_IF(sid.isEmpty(), JSID_IS_EMPTY(id));
