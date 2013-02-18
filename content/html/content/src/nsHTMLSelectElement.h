@@ -735,7 +735,7 @@ nsHTMLOptionCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
 {
   nsGenericHTMLElement& element =
     aElement.IsHTMLOptionElement() ?
-    static_cast<nsGenericHTMLElement&>(*aElement.GetAsHTMLOptionElement()) :
+    static_cast<nsGenericHTMLElement&>(aElement.GetAsHTMLOptionElement()) :
     static_cast<nsGenericHTMLElement&>(aElement.GetAsHTMLOptGroupElement());
 
   if (aBefore.IsNull()) {
