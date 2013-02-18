@@ -1,0 +1,31 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+interface nsIDOMBlob;
+/**
+ * The nsIDOMBlobEvent interface is used for server-sent events
+ *
+ * For more information on this interface, please see
+ * https://dvcs.w3.org/hg/dap/raw-file/tip/media-stream-capture/RecordingProposal.html
+ */
+[scriptable, builtinclass, uuid(84293ee0-68f5-11e2-9906-cf63ba8c6e43)]
+interface nsIDOMBlobEvent : nsIDOMEvent
+{
+  /**
+   * Custom blob data associated with this event.
+   */
+  readonly attribute nsIDOMBlob data;
+  
+  [noscript]
+  void initBlobEvent(in DOMString aType,
+                     in boolean aCanBubble,
+                     in boolean aCancelable,
+                     in nsIDOMBlob aData);
+};
+
+dictionary BlobEventInit : EventInit {
+  nsIDOMBlob data;
+};
