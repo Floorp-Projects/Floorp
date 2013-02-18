@@ -173,6 +173,8 @@ _BROWSER_FILES = \
                  browser_disablechrome.js \
                  browser_discovery.js \
                  browser_duplicateIDs.js \
+                 browser_fullscreen-window-open.js \
+                 file_fullscreen-window-open.html \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
                  browser_hide_removing.js \
