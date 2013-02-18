@@ -38,11 +38,18 @@ const DAYS_IN_PAYLOAD = 180;
 const DEFAULT_DATABASE_NAME = "healthreport.sqlite";
 
 const TELEMETRY_INIT = "HEALTHREPORT_INIT_MS";
+const TELEMETRY_INIT_FIRSTRUN = "HEALTHREPORT_INIT_FIRSTRUN_MS";
+const TELEMETRY_DB_OPEN = "HEALTHREPORT_DB_OPEN_MS";
+const TELEMETRY_DB_OPEN_FIRSTRUN = "HEALTHREPORT_DB_OPEN_FIRSTRUN_MS";
 const TELEMETRY_GENERATE_PAYLOAD = "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS";
+const TELEMETRY_JSON_PAYLOAD_SERIALIZE = "HEALTHREPORT_JSON_PAYLOAD_SERIALIZE_MS";
 const TELEMETRY_PAYLOAD_SIZE = "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES";
 const TELEMETRY_SAVE_LAST_PAYLOAD = "HEALTHREPORT_SAVE_LAST_PAYLOAD_MS";
 const TELEMETRY_UPLOAD = "HEALTHREPORT_UPLOAD_MS";
 const TELEMETRY_SHUTDOWN_DELAY = "HEALTHREPORT_SHUTDOWN_DELAY_MS";
+const TELEMETRY_COLLECT_CONSTANT = "HEALTHREPORT_COLLECT_CONSTANT_DATA_MS";
+const TELEMETRY_COLLECT_DAILY = "HEALTHREPORT_COLLECT_DAILY_MS";
+const TELEMETRY_SHUTDOWN = "HEALTHREPORT_SHUTDOWN_MS";
 
 /**
  * This is the abstract base class of `HealthReporter`. It exists so that
@@ -86,7 +93,11 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   this._lastDailyDate = null;
 
   // Yes, this will probably run concurrently with remaining constructor work.
-  TelemetryStopwatch.start(TELEMETRY_INIT, this);
+  let hasFirstRun = this._prefs.get("service.firstRun", false);
+  this._initHistogram = hasFirstRun ? TELEMETRY_INIT : TELEMETRY_INIT_FIRSTRUN;
+  this._dbOpenHistogram = hasFirstRun ? TELEMETRY_DB_OPEN : TELEMETRY_DB_OPEN_FIRSTRUN;
+
+  TelemetryStopwatch.start(this._initHistogram, this);
 
   this._ensureDirectoryExists(this._stateDir)
       .then(this._onStateDirCreated.bind(this),
@@ -112,7 +123,11 @@ AbstractHealthReporter.prototype = Object.freeze({
   //----------------------------------------------------
 
   _onInitError: function (error) {
-    TelemetryStopwatch.cancel(TELEMETRY_INIT, this);
+    TelemetryStopwatch.cancel(this._initHistogram, this);
+    TelemetryStopwatch.cancel(this._dbOpenHistogram, this);
+    delete this._initHistogram;
+    delete this._dbOpenHistogram;
+
     this._log.error("Error during initialization: " +
                     CommonUtils.exceptionStr(error));
     this._initializeHadError = true;
@@ -130,12 +145,15 @@ AbstractHealthReporter.prototype = Object.freeze({
     Services.obs.addObserver(this, "profile-before-change", false);
 
     this._storageInProgress = true;
+    TelemetryStopwatch.start(this._dbOpenHistogram, this);
     Metrics.Storage(this._dbName).then(this._onStorageCreated.bind(this),
                                        this._onInitError.bind(this));
   },
 
   // Called when storage has been opened.
   _onStorageCreated: function (storage) {
+    TelemetryStopwatch.finish(this._dbOpenHistogram, this);
+    delete this._dbOpenHistogram;
     this._log.info("Storage initialized.");
     this._storage = storage;
     this._storageInProgress = false;
@@ -168,7 +186,8 @@ AbstractHealthReporter.prototype = Object.freeze({
   },
 
   _onCollectorInitialized: function () {
-    TelemetryStopwatch.finish(TELEMETRY_INIT, this);
+    TelemetryStopwatch.finish(this._initHistogram, this);
+    delete this._initHistogram;
     this._log.debug("Collector initialized.");
     this._collectorInProgress = false;
 
@@ -234,6 +253,8 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     // Everything from here must only be performed once or else race conditions
     // could occur.
+
+    TelemetryStopwatch.start(TELEMETRY_SHUTDOWN, this);
     this._shutdownInitiated = true;
 
     // We may not have registered the observer yet. If not, this will
@@ -297,6 +318,7 @@ AbstractHealthReporter.prototype = Object.freeze({
   _onShutdownComplete: function () {
     this._log.warn("Shutdown complete.");
     this._shutdownComplete = true;
+    TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN, this);
 
     if (this._shutdownCompleteCallback) {
       this._shutdownCompleteCallback();
@@ -548,8 +570,11 @@ AbstractHealthReporter.prototype = Object.freeze({
   collectMeasurements: function () {
     return Task.spawn(function doCollection() {
       try {
+        TelemetryStopwatch.start(TELEMETRY_COLLECT_CONSTANT, this);
         yield this._collector.collectConstantData();
+        TelemetryStopwatch.finish(TELEMETRY_COLLECT_CONSTANT, this);
       } catch (ex) {
+        TelemetryStopwatch.cancel(TELEMETRY_COLLECT_CONSTANT, this);
         this._log.warn("Error collecting constant data: " +
                        CommonUtils.exceptionStr(ex));
       }
@@ -564,9 +589,12 @@ AbstractHealthReporter.prototype = Object.freeze({
           Date.now() - this._lastDailyDate > MILLISECONDS_PER_DAY) {
 
         try {
+          TelemetryStopwatch.start(TELEMETRY_COLLECT_DAILY, this);
           this._lastDailyDate = new Date();
           yield this._collector.collectDailyData();
+          TelemetryStopwatch.finish(TELEMETRY_COLLECT_DAILY, this);
         } catch (ex) {
+          TelemetryStopwatch.cancel(TELEMETRY_COLLECT_DAILY, this);
           this._log.warn("Error collecting daily data from providers: " +
                          CommonUtils.exceptionStr(ex));
         }
@@ -750,7 +778,13 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     this._storage.compact();
 
-    throw new Task.Result(asObject ? o : JSON.stringify(o));
+    if (!asObject) {
+      TelemetryStopwatch.start(TELEMETRY_JSON_PAYLOAD_SERIALIZE, this);
+      o = JSON.stringify(o);
+      TelemetryStopwatch.finish(TELEMETRY_JSON_PAYLOAD_SERIALIZE, this);
+    }
+
+    throw new Task.Result(o);
   },
 
   get _stateDir() {

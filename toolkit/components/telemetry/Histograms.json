@@ -2839,6 +2839,24 @@
     "extended_statistics_ok": true,
     "description": "Time spent on an initially failed cert  verification in classic mode (ms)"
   },
+  "HEALTHREPORT_DB_OPEN_FIRSTRUN_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) spent to open Firefox Health Report's database the first time, including schema setup."
+  },
+  "HEALTHREPORT_DB_OPEN_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) spent to open Firefox Health Report's database."
+  },
+  "HEALTHREPORT_INIT_FIRSTRUN_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) spent to initialize Firefox Health Report the first time, including provider and collector initialization."
+  },
   "HEALTHREPORT_INIT_MS": {
     "kind": "exponential",
     "high": "20000",
@@ -2860,6 +2878,12 @@
     "extended_statistics_ok": true,
     "description": "Time (ms) it takes to obtain and format a Health Report JSON payload."
   },
+  "HEALTHREPORT_JSON_PAYLOAD_SERIALIZE_MS": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 10,
+    "description": "Time (ms) it takes to JSON.stringify() the FHR JSON payload."
+  },
   "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES": {
     "kind": "linear",
     "high": "2000000",
@@ -2879,6 +2903,24 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time (ms) it takes to persist the last submitted Health Report payload to disk."
+  },
+  "HEALTHREPORT_COLLECT_CONSTANT_DATA_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) it takes FHR to collect constant data."
+  },
+  "HEALTHREPORT_COLLECT_DAILY_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) it takes FHR to collect daily data."
+  },
+  "HEALTHREPORT_SHUTDOWN_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) it takes FHR to shut down."
   },
   "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {
     "kind": "linear",
