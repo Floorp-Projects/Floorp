@@ -12,7 +12,6 @@ import org.mozilla.gecko.util.StringUtils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -69,7 +68,6 @@ public class AwesomeBar extends GeckoActivity {
     private AwesomeBarTabs mAwesomeTabs;
     private CustomEditText mText;
     private ImageButton mGoButton;
-    private ContentResolver mResolver;
     private ContextMenuSubject mContextMenuSubject;
     private boolean mIsUsingSwype;
     private boolean mDelayRestartInput;
@@ -80,9 +78,7 @@ public class AwesomeBar extends GeckoActivity {
 
         Log.d(LOGTAG, "creating awesomebar");
 
-        mResolver = Tabs.getInstance().getContentResolver();
         LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
-
         setContentView(R.layout.awesomebar);
 
         mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
@@ -384,10 +380,10 @@ public class AwesomeBar extends GeckoActivity {
         String keywordSearch = null;
 
         if (index == -1) {
-            keywordUrl = BrowserDB.getUrlForKeyword(mResolver, url);
+            keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url);
             keywordSearch = "";
         } else {
-            keywordUrl = BrowserDB.getUrlForKeyword(mResolver, url.substring(0, index));
+            keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url.substring(0, index));
             keywordSearch = url.substring(index + 1);
         }
 
@@ -575,7 +571,7 @@ public class AwesomeBar extends GeckoActivity {
                             @Override
                             public Void doInBackground(Void... params) {
                                 String newUrl = locationText.getText().toString().trim();
-                                BrowserDB.updateBookmark(mResolver, id, newUrl, nameText.getText().toString(),
+                                BrowserDB.updateBookmark(getContentResolver(), id, newUrl, nameText.getText().toString(),
                                                          keywordText.getText().toString());
                                 return null;
                             }
@@ -627,7 +623,7 @@ public class AwesomeBar extends GeckoActivity {
 
                     @Override
                     public Void doInBackground(Void... params) {
-                        BrowserDB.removeBookmark(mResolver, id);
+                        BrowserDB.removeBookmark(getContentResolver(), id);
                         return null;
                     }
 
@@ -650,7 +646,7 @@ public class AwesomeBar extends GeckoActivity {
                 (new GeckoAsyncTask<Void, Void, Void>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
                     @Override
                     public Void doInBackground(Void... params) {
-                        BrowserDB.removeHistoryEntry(mResolver, id);
+                        BrowserDB.removeHistoryEntry(getContentResolver(), id);
                         return null;
                     }
 
