@@ -39,13 +39,13 @@ struct THEBES_API gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfx
 
         gfxFloat theta = acos(dot);
         gfxFloat rsintheta = 1/sqrt(1 - dot*dot);
-        gfxFloat w = sin(aCoeff*theta)*rsintheta;
+        gfxFloat rightWeight = sin(aCoeff*theta)*rsintheta;
 
         gfxQuaternion left = *this;
         gfxQuaternion right = aOther;
 
-        left *= cos(aCoeff*theta) - dot*w;
-        right *= w;
+        left *= cos(aCoeff*theta) - dot*rightWeight;
+        right *= rightWeight;
 
         return left + right;
     }
