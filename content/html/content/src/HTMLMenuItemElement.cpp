@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLMenuItemElement.h"
+#include "mozilla/dom/HTMLMenuItemElementBinding.h"
 #include "nsEventDispatcher.h"
 #include "nsAttrValueInlines.h"
 
@@ -161,6 +162,7 @@ HTMLMenuItemElement::HTMLMenuItemElement(
     mCheckedDirty(false),
     mChecked(false)
 {
+  SetIsDOMBinding();
   mParserCreating = aFromParser;
 }
 
@@ -487,6 +489,13 @@ HTMLMenuItemElement::InitChecked()
     ClearCheckedVisitor visitor(this);
     WalkRadioGroup(&visitor);
   }
+}
+
+JSObject*
+HTMLMenuItemElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                              bool* aTriedToWrap)
+{
+  return HTMLMenuItemElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom

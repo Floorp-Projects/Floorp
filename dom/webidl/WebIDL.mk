@@ -82,6 +82,7 @@ webidl_files = \
   HTMLLIElement.webidl \
   HTMLLinkElement.webidl \
   HTMLMapElement.webidl \
+  HTMLMenuItemElement.webidl \
   HTMLMetaElement.webidl \
   HTMLMeterElement.webidl \
   HTMLModElement.webidl \
