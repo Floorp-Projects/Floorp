@@ -1,9 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/*
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
@@ -15,12 +14,12 @@ const FILE_UPDATE_STATUS  = "update.status";
 const KEY_UPDROOT         = "UpdRootD";
 
 /**
-#  Gets the specified directory at the specified hierarchy under the update root
-#  directory without creating it if it doesn't exist.
-#  @param   pathArray
-#           An array of path components to locate beneath the directory
-#           specified by |key|
-#  @return  nsIFile object for the location specified.
+ * Gets the specified directory at the specified hierarchy under the update root
+ * directory without creating it if it doesn't exist.
+ * @param   pathArray
+ *          An array of path components to locate beneath the directory
+ *          specified by |key|
+ * @return  nsIFile object for the location specified.
  */
 function getUpdateDirNoCreate(pathArray) {
   return FileUtils.getDir(KEY_UPDROOT, pathArray, false);

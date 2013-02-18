@@ -63,10 +63,10 @@ EXTRA_JS_MODULES = \
   PopupNotifications.jsm \
   PropertyListUtils.jsm \
   Task.jsm \
+  PrivateBrowsingUtils.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
-  PrivateBrowsingUtils.jsm \
   Services.jsm \
   WindowDraggingUtils.jsm \
   Troubleshoot.jsm \
