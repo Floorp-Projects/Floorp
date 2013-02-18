@@ -38,7 +38,7 @@ ToPropertyKeySlow(JSContext *cx, HandleValue v, PropertyKey *key);
 class PropertyKey
 {
     Value v;
-    friend bool detail::ToPropertyKeySlow(JSContext *cx, HandleValue v, PropertyKey *key);
+    friend JS_PUBLIC_API(bool) detail::ToPropertyKeySlow(JSContext *cx, HandleValue v, PropertyKey *key);
 
   public:
     explicit PropertyKey(uint32_t index) : v(PrivateUint32Value(index)) {}
