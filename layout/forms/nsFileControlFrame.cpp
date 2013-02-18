@@ -327,22 +327,6 @@ nsFileControlFrame::SetFormProperty(nsIAtom* aName,
   return NS_OK;
 }
 
-nsresult
-nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
-{
-  aValue.Truncate();  // initialize out param
-
-  if (nsGkAtoms::value == aName) {
-    nsHTMLInputElement* inputElement =
-      nsHTMLInputElement::FromContent(mContent);
-
-    if (inputElement) {
-      inputElement->GetDisplayFileName(aValue);
-    }
-  }
-  return NS_OK;
-}
-
 void
 nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
