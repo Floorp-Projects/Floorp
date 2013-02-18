@@ -68,10 +68,8 @@
  */
 #if !defined(SkNO_RETURN_HINT)
     #if SK_HAS_COMPILER_FEATURE(attribute_analyzer_noreturn)
-        namespace {
-            inline void SkNO_RETURN_HINT() __attribute__((analyzer_noreturn));
-            inline void SkNO_RETURN_HINT() {}
-        }
+        inline void SkNO_RETURN_HINT() __attribute__((analyzer_noreturn));
+        inline void SkNO_RETURN_HINT() {}
     #else
         #define SkNO_RETURN_HINT() do {} while (false)
     #endif
