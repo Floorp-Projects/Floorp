@@ -181,8 +181,8 @@ set_sea_properties (hb_glyph_info_t &info)
 
 static void
 setup_masks_sea (const hb_ot_shape_plan_t *plan HB_UNUSED,
-		   hb_buffer_t              *buffer,
-		   hb_font_t                *font HB_UNUSED)
+		 hb_buffer_t              *buffer,
+		 hb_font_t                *font HB_UNUSED)
 {
   HB_BUFFER_ALLOCATE_VAR (buffer, sea_category);
   HB_BUFFER_ALLOCATE_VAR (buffer, sea_position);
@@ -238,8 +238,9 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
       info[i].sea_position() = POS_PRE_C;
       continue;
     }
-    if (info[i].sea_position() < POS_BASE_C) /* Left matra */
+    if (info[i].sea_category() == OT_VPre) /* Left matra */
     {
+      info[i].sea_position() = POS_PRE_M;
       continue;
     }
 
@@ -263,9 +264,9 @@ initial_reordering_broken_cluster (const hb_ot_shape_plan_t *plan,
 
 static void
 initial_reordering_non_sea_cluster (const hb_ot_shape_plan_t *plan HB_UNUSED,
-					hb_face_t *face HB_UNUSED,
-					hb_buffer_t *buffer HB_UNUSED,
-					unsigned int start HB_UNUSED, unsigned int end HB_UNUSED)
+				    hb_face_t *face HB_UNUSED,
+				    hb_buffer_t *buffer HB_UNUSED,
+				    unsigned int start HB_UNUSED, unsigned int end HB_UNUSED)
 {
   /* Nothing to do right now.  If we ever switch to using the output
    * buffer in the reordering process, we'd need to next_glyph() here. */
