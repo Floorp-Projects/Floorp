@@ -135,14 +135,6 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
   // In order to avoid race conditions, it's safer to notify any existing
   // agent any time a new one is registered.
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    // We only remove ChildID when it is in the foreground.
-    // If in the background, we kept ChildID for allowing it to play next song.
-    if (aType == AUDIO_CHANNEL_CONTENT &&
-        mActiveContentChildIDs.Contains(aChildID) &&
-        (!mActiveContentChildIDsFrozen &&
-          !mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].Contains(aChildID))) {
-      mActiveContentChildIDs.RemoveElement(aChildID);
-    }
     SendAudioChannelChangedNotification();
     Notify();
   }
@@ -299,12 +291,8 @@ AudioChannelService::SendAudioChannelChangedNotification()
       higher = AUDIO_CHANNEL_NOTIFICATION;
     }
 
-    // There is only one Child can play content channel in the background.
-    // And need to check whether there is any content channels under playing
-    // now.
-    else if (!mActiveContentChildIDs.IsEmpty() &&
-             mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN].Contains(
-             mActiveContentChildIDs[0])) {
+    // Content channels play in background if just one is active.
+    else if (!mActiveContentChildIDs.IsEmpty()) {
       higher = AUDIO_CHANNEL_CONTENT;
     }
   }
