@@ -257,7 +257,7 @@ public:
     return !((uintptr_t)stackAddress() & 0x1);
   }
 
-  void setStackAddressCopy(void *sp, bool copy) volatile {
+  void setStackAddressCopy(void *sparg, bool copy) volatile {
     // Tagged pointer. Less significant bit used to track if mLabel needs a
     // copy. Note that we don't need the last bit of the stack address for
     // proper ordering. This is optimized for encoding within the JS engine's
@@ -265,10 +265,10 @@ public:
     // Last bit 1 = Don't copy, Last bit 0 = Copy.
     if (copy) {
       setStackAddress(reinterpret_cast<void*>(
-                        reinterpret_cast<uintptr_t>(sp) & ~0x1));
+                        reinterpret_cast<uintptr_t>(sparg) & ~0x1));
     } else {
       setStackAddress(reinterpret_cast<void*>(
-                        reinterpret_cast<uintptr_t>(sp) | 0x1));
+                        reinterpret_cast<uintptr_t>(sparg) | 0x1));
     }
   }
 };
