@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLOptionElement.h"
+#include "mozilla/dom/HTMLOptionElementBinding.h"
 #include "nsHTMLSelectElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -66,6 +67,8 @@ HTMLOptionElement::HTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mIsSelected(false),
     mIsInSetDefaultSelected(false)
 {
+  SetIsDOMBinding();
+
   // We start off enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
@@ -98,15 +101,15 @@ NS_IMETHODIMP
 HTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
-  *aForm = nullptr;
-
-  nsHTMLSelectElement* selectControl = GetSelect();
-
-  if (selectControl) {
-    selectControl->GetForm(aForm);
-  }
-
+  *aForm = GetForm();
   return NS_OK;
+}
+
+nsHTMLFormElement*
+HTMLOptionElement::GetForm()
+{
+  nsHTMLSelectElement* selectControl = GetSelect();
+  return selectControl ? selectControl->GetForm() : nullptr;
 }
 
 void
@@ -456,6 +459,12 @@ HTMLOptionElement::CopyInnerTo(Element* aDest)
     static_cast<HTMLOptionElement*>(aDest)->SetSelected(Selected());
   }
   return NS_OK;
+}
+
+JSObject*
+HTMLOptionElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return HTMLOptionElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom

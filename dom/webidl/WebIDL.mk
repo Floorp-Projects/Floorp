@@ -90,6 +90,7 @@ webidl_files = \
   HTMLModElement.webidl \
   HTMLOListElement.webidl \
   HTMLOptGroupElement.webidl \
+  HTMLOptionElement.webidl \
   HTMLOptionsCollection.webidl \
   HTMLOutputElement.webidl \
   HTMLParagraphElement.webidl \
