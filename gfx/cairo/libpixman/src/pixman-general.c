@@ -42,9 +42,7 @@ general_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 {
     pixman_image_t *image = iter->image;
 
-    if (image->type == SOLID)
-	_pixman_solid_fill_iter_init (image, iter);
-    else if (image->type == LINEAR)
+    if (image->type == LINEAR)
 	_pixman_linear_gradient_iter_init (image, iter);
     else if (image->type == RADIAL)
 	_pixman_radial_gradient_iter_init (image, iter);
@@ -52,7 +50,9 @@ general_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 	_pixman_conical_gradient_iter_init (image, iter);
     else if (image->type == BITS)
 	_pixman_bits_image_src_iter_init (image, iter);
-    else
+    else if (image->type == SOLID)
+        _pixman_log_error (FUNC, "Solid image not handled by noop");
+    else         
 	_pixman_log_error (FUNC, "Pixman bug: unknown image type\n");
 
     return TRUE;
@@ -202,9 +202,6 @@ general_composite_rect  (pixman_implementation_t *imp,
 
     compose = _pixman_implementation_lookup_combiner (
 	imp->toplevel, op, component_alpha, narrow, !!rgb16);
-
-    if (!compose)
-	return;
 
     for (i = 0; i < height; ++i)
     {

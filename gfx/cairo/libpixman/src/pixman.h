@@ -228,6 +228,9 @@ pixman_bool_t pixman_transform_is_inverse       (const struct pixman_transform *
 /*
  * Floating point matrices
  */
+typedef struct pixman_f_transform pixman_f_transform_t;
+typedef struct pixman_f_vector pixman_f_vector_t;
+
 struct pixman_f_vector
 {
     double  v[3];
@@ -291,7 +294,28 @@ typedef enum
     PIXMAN_FILTER_BEST,
     PIXMAN_FILTER_NEAREST,
     PIXMAN_FILTER_BILINEAR,
-    PIXMAN_FILTER_CONVOLUTION
+    PIXMAN_FILTER_CONVOLUTION,
+
+    /* The SEPARABLE_CONVOLUTION filter takes the following parameters:
+     *
+     *         width:           integer given as 16.16 fixpoint number
+     *         height:          integer given as 16.16 fixpoint number
+     *         x_phase_bits:	integer given as 16.16 fixpoint
+     *         y_phase_bits:	integer given as 16.16 fixpoint
+     *         xtables:         (1 << x_phase_bits) tables of size width
+     *         ytables:         (1 << y_phase_bits) tables of size height
+     *
+     * When sampling at (x, y), the location is first rounded to one of
+     * n_x_phases * n_y_phases subpixel positions. These subpixel positions
+     * determine an xtable and a ytable to use.
+     *
+     * Conceptually a width x height matrix is then formed in which each entry
+     * is the product of the corresponding entries in the x and y tables.
+     * This matrix is then aligned with the image pixels such that its center
+     * is as close as possible to the subpixel location chosen earlier. Then
+     * the image is convolved with the matrix and the resulting pixel returned.
+     */
+    PIXMAN_FILTER_SEPARABLE_CONVOLUTION
 } pixman_filter_t;
 
 typedef enum
@@ -809,6 +833,33 @@ int             pixman_image_get_height              (pixman_image_t            
 int		pixman_image_get_stride              (pixman_image_t               *image); /* in bytes */
 int		pixman_image_get_depth               (pixman_image_t		   *image);
 pixman_format_code_t pixman_image_get_format	     (pixman_image_t		   *image);
+
+typedef enum
+{
+    PIXMAN_KERNEL_IMPULSE,
+    PIXMAN_KERNEL_BOX,
+    PIXMAN_KERNEL_LINEAR,
+    PIXMAN_KERNEL_CUBIC,
+    PIXMAN_KERNEL_GAUSSIAN,
+    PIXMAN_KERNEL_LANCZOS2,
+    PIXMAN_KERNEL_LANCZOS3,
+    PIXMAN_KERNEL_LANCZOS3_STRETCHED       /* Jim Blinn's 'nice' filter */
+} pixman_kernel_t;
+
+/* Create the parameter list for a SEPARABLE_CONVOLUTION filter
+ * with the given kernels and scale parameters.
+ */
+pixman_fixed_t *
+pixman_filter_create_separable_convolution (int             *n_values,
+					    pixman_fixed_t   scale_x,
+					    pixman_fixed_t   scale_y,
+					    pixman_kernel_t  reconstruct_x,
+					    pixman_kernel_t  reconstruct_y,
+					    pixman_kernel_t  sample_x,
+					    pixman_kernel_t  sample_y,
+					    int              subsample_bits_x,
+					    int              subsample_bits_y);
+
 pixman_bool_t	pixman_image_fill_rectangles	     (pixman_op_t		    op,
 						      pixman_image_t		   *image,
 						      const pixman_color_t	   *color,

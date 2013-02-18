@@ -224,13 +224,6 @@ linear_get_scanline_narrow (pixman_iter_t  *iter,
     return iter->buffer;
 }
 
-static uint16_t convert_8888_to_0565(uint32_t color)
-{
-    return CONVERT_8888_TO_0565(color);
-}
-
-
-
 static uint32_t *
 linear_get_scanline_16 (pixman_iter_t  *iter,
 			const uint32_t *mask)

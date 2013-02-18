@@ -20,6 +20,47 @@
 #define BLUE_8(x) ((x) & MASK)
 
 /*
+ * ARMv6 has UQADD8 instruction, which implements unsigned saturated
+ * addition for 8-bit values packed in 32-bit registers. It is very useful
+ * for UN8x4_ADD_UN8x4, UN8_rb_ADD_UN8_rb and ADD_UN8 macros (which would
+ * otherwise need a lot of arithmetic operations to simulate this operation).
+ * Since most of the major ARM linux distros are built for ARMv7, we are
+ * much less dependent on runtime CPU detection and can get practical
+ * benefits from conditional compilation here for a lot of users.
+ */
+
+#if defined(USE_GCC_INLINE_ASM) && defined(__arm__) && \
+    !defined(__aarch64__) && (!defined(__thumb__) || defined(__thumb2__))
+#if defined(__ARM_ARCH_6__)   || defined(__ARM_ARCH_6J__)  || \
+    defined(__ARM_ARCH_6K__)  || defined(__ARM_ARCH_6Z__)  || \
+    defined(__ARM_ARCH_6ZK__) || defined(__ARM_ARCH_6T2__) || \
+    defined(__ARM_ARCH_6M__)  || defined(__ARM_ARCH_7__)   || \
+    defined(__ARM_ARCH_7A__)  || defined(__ARM_ARCH_7R__)  || \
+    defined(__ARM_ARCH_7M__)  || defined(__ARM_ARCH_7EM__)
+
+static force_inline uint32_t
+un8x4_add_un8x4 (uint32_t x, uint32_t y)
+{
+    uint32_t t;
+    asm ("uqadd8 %0, %1, %2" : "=r" (t) : "%r" (x), "r" (y));
+    return t;
+}
+
+#define UN8x4_ADD_UN8x4(x, y) \
+    ((x) = un8x4_add_un8x4 ((x), (y)))
+
+#define UN8_rb_ADD_UN8_rb(x, y, t) \
+    ((t) = un8x4_add_un8x4 ((x), (y)), (x) = (t))
+
+#define ADD_UN8(x, y, t) \
+    ((t) = (x), un8x4_add_un8x4 ((t), (y)))
+
+#endif
+#endif
+
+/*****************************************************************************/
+
+/*
  * Helper macros.
  */
 
@@ -29,9 +70,11 @@
 #define DIV_UN8(a, b)							\
     (((uint16_t) (a) * MASK + ((b) / 2)) / (b))
 
+#ifndef ADD_UN8
 #define ADD_UN8(x, y, t)				     \
     ((t) = (x) + (y),					     \
      (uint32_t) (uint8_t) ((t) | (0 - ((t) >> G_SHIFT))))
+#endif
 
 #define DIV_ONE_UN8(x)							\
     (((x) + ONE_HALF + (((x) + ONE_HALF) >> G_SHIFT)) >> G_SHIFT)
@@ -56,6 +99,7 @@
 /*
  * x_rb = min (x_rb + y_rb, 255)
  */
+#ifndef UN8_rb_ADD_UN8_rb
 #define UN8_rb_ADD_UN8_rb(x, y, t)					\
     do									\
     {									\
@@ -63,6 +107,7 @@
 	t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);		\
 	x = (t & RB_MASK);						\
     } while (0)
+#endif
 
 /*
  * x_rb = (x_rb * a_rb) / 255
@@ -208,6 +253,7 @@
 /*
   x_c = min(x_c + y_c, 255)
 */
+#ifndef UN8x4_ADD_UN8x4
 #define UN8x4_ADD_UN8x4(x, y)						\
     do									\
     {									\
@@ -223,3 +269,4 @@
 									\
 	x = r1__ | (r2__ << G_SHIFT);					\
     } while (0)
+#endif

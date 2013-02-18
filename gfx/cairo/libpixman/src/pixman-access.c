@@ -1345,8 +1345,10 @@ static const format_info_t accessors[] =
 
 /* sRGB formats */
   { PIXMAN_a8r8g8b8_sRGB,
+    NULL,
     fetch_scanline_a8r8g8b8_32_sRGB, fetch_scanline_a8r8g8b8_sRGB_float,
     fetch_pixel_a8r8g8b8_32_sRGB, fetch_pixel_a8r8g8b8_sRGB_float,
+    NULL,
     store_scanline_a8r8g8b8_32_sRGB, store_scanline_a8r8g8b8_sRGB_float,
   },
 
