@@ -392,7 +392,6 @@ protected:
         mWeight = aProxyEntry.mWeight;
         mStretch = aProxyEntry.mStretch;
         mIsUserFont = true;
-        mFamilyName = aProxyEntry.mFamilyName;
     }
 
     // Helper function to change a pattern so that it matches the CSS style
