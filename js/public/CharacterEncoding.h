@@ -28,9 +28,9 @@ class Latin1Chars : public mozilla::Range<unsigned char>
 
   public:
     Latin1Chars() : Base() {}
-    Latin1Chars(char *bytes, size_t length) : Base(reinterpret_cast<unsigned char *>(bytes), length) {}
-    Latin1Chars(const char *bytes, size_t length)
-      : Base(reinterpret_cast<unsigned char *>(const_cast<char *>(bytes)), length)
+    Latin1Chars(char *aBytes, size_t aLength) : Base(reinterpret_cast<unsigned char *>(aBytes), aLength) {}
+    Latin1Chars(const char *aBytes, size_t aLength)
+      : Base(reinterpret_cast<unsigned char *>(const_cast<char *>(aBytes)), aLength)
     {}
 };
 
@@ -44,16 +44,16 @@ class Latin1CharsZ : public mozilla::RangedPtr<unsigned char>
   public:
     Latin1CharsZ() : Base(NULL, 0) {}
 
-    Latin1CharsZ(char *bytes, size_t length)
-      : Base(reinterpret_cast<unsigned char *>(bytes), length)
+    Latin1CharsZ(char *aBytes, size_t aLength)
+      : Base(reinterpret_cast<unsigned char *>(aBytes), aLength)
     {
-        JS_ASSERT(bytes[length] == '\0');
+        JS_ASSERT(aBytes[aLength] == '\0');
     }
 
-    Latin1CharsZ(unsigned char *bytes, size_t length)
-      : Base(bytes, length)
+    Latin1CharsZ(unsigned char *aBytes, size_t aLength)
+      : Base(aBytes, aLength)
     {
-        JS_ASSERT(bytes[length] == '\0');
+        JS_ASSERT(aBytes[aLength] == '\0');
     }
 
     char *c_str() { return reinterpret_cast<char *>(get()); }
@@ -69,10 +69,10 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
   public:
     UTF8CharsZ() : Base(NULL, 0) {}
 
-    UTF8CharsZ(char *bytes, size_t length)
-      : Base(reinterpret_cast<unsigned char *>(bytes), length)
+    UTF8CharsZ(char *aBytes, size_t aLength)
+      : Base(reinterpret_cast<unsigned char *>(aBytes), aLength)
     {
-        JS_ASSERT(bytes[length] == '\0');
+        JS_ASSERT(aBytes[aLength] == '\0');
     }
 };
 
@@ -90,8 +90,8 @@ class TwoByteChars : public mozilla::Range<jschar>
 
   public:
     TwoByteChars() : Base() {}
-    TwoByteChars(jschar *chars, size_t length) : Base(chars, length) {}
-    TwoByteChars(const jschar *chars, size_t length) : Base(const_cast<jschar *>(chars), length) {}
+    TwoByteChars(jschar *aChars, size_t aLength) : Base(aChars, aLength) {}
+    TwoByteChars(const jschar *aChars, size_t aLength) : Base(const_cast<jschar *>(aChars), aLength) {}
 };
 
 /*
@@ -105,8 +105,8 @@ class StableTwoByteChars : public mozilla::Range<jschar>
 
   public:
     StableTwoByteChars() : Base() {}
-    StableTwoByteChars(jschar *chars, size_t length) : Base(chars, length) {}
-    StableTwoByteChars(const jschar *chars, size_t length) : Base(const_cast<jschar *>(chars), length) {}
+    StableTwoByteChars(jschar *aChars, size_t aLength) : Base(aChars, aLength) {}
+    StableTwoByteChars(const jschar *aChars, size_t aLength) : Base(const_cast<jschar *>(aChars), aLength) {}
 };
 
 /*
