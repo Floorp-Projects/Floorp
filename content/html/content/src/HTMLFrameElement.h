@@ -49,6 +49,66 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL API
+  // The XPCOM GetFrameBorder is OK for us
+  void SetFrameBorder(const nsAString& aFrameBorder, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::frameborder, aFrameBorder, aError);
+  }
+
+  // The XPCOM GetLongDesc is OK for us
+  void SetLongDesc(const nsAString& aLongDesc, ErrorResult& aError)
+  {
+    SetAttrHelper(nsGkAtoms::longdesc, aLongDesc);
+  }
+
+  // The XPCOM GetMarginHeight is OK for us
+  void SetMarginHeight(const nsAString& aMarginHeight, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::marginheight, aMarginHeight, aError);
+  }
+
+  // The XPCOM GetMarginWidth is OK for us
+  void SetMarginWidth(const nsAString& aMarginWidth, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::marginwidth, aMarginWidth, aError);
+  }
+
+  // The XPCOM GetName is OK for us
+  void SetName(const nsAString& aName, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aName, aError);
+  }
+
+  bool NoResize() const
+  {
+   return GetBoolAttr(nsGkAtoms::noresize);
+  }
+  void SetNoResize(bool& aNoResize, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::noresize, aNoResize, aError);
+  }
+
+  // The XPCOM GetScrolling is OK for us
+  void SetScrolling(const nsAString& aScrolling, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::scrolling, aScrolling, aError);
+  }
+
+  // The XPCOM GetSrc is OK for us
+  void SetSrc(const nsAString& aSrc, ErrorResult& aError)
+  {
+    SetAttrHelper(nsGkAtoms::src, aSrc);
+  }
+
+  already_AddRefed<nsIDocument> GetContentDocument(ErrorResult& aRv);
+
+  already_AddRefed<nsIDOMWindow> GetContentWindow(ErrorResult& aRv);
+
+protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
+                             bool* aTriedToWrap) MOZ_OVERRIDE;
 };
 
 } // namespace dom

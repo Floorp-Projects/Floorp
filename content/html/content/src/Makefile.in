@@ -39,6 +39,7 @@ EXPORTS_mozilla/dom = \
 		HTMLDivElement.h \
 		HTMLFieldSetElement.h \
 		HTMLFontElement.h \
+		HTMLFrameElement.h \
 		HTMLFrameSetElement.h \
 		HTMLHeadingElement.h \
 		HTMLHRElement.h \
