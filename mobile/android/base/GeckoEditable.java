@@ -23,6 +23,7 @@ import android.text.TextUtils;
 import android.text.style.CharacterStyle;
 import android.util.Log;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -191,6 +192,8 @@ final class GeckoEditable
         void offer(Action action) {
             if (DEBUG) {
                 assertOnIcThread();
+                Log.d(LOGTAG, "offer: Action(" +
+                              getConstantName(Action.class, "TYPE_", action.mType) + ")");
             }
             /* Events don't need update because they generate text/selection
                notifications which will do the updating for us */
@@ -261,8 +264,14 @@ final class GeckoEditable
                 assertOnIcThread();
             }
             if (mFocused && !mActions.isEmpty()) {
+                if (DEBUG) {
+                    Log.d(LOGTAG, "syncWithGecko blocking on thread " +
+                                  Thread.currentThread().getName());
+                }
                 mActionsActive.acquireUninterruptibly();
                 mActionsActive.release();
+            } else if (DEBUG && !mFocused) {
+                Log.d(LOGTAG, "skipped syncWithGecko (no focus)");
             }
         }
 
@@ -445,7 +454,8 @@ final class GeckoEditable
             rangeStart = rangeEnd;
 
             if (DEBUG) {
-                Log.d(LOGTAG, " added " + rangeType + " : " + rangeStyles +
+                Log.d(LOGTAG, " added " + rangeType +
+                              " : " + Integer.toHexString(rangeStyles) +
                               " : " + Integer.toHexString(rangeForeColor) +
                               " : " + Integer.toHexString(rangeBackColor));
             }
@@ -459,6 +469,9 @@ final class GeckoEditable
 
     @Override
     public void sendEvent(final GeckoEvent event) {
+        if (DEBUG) {
+            Log.d(LOGTAG, "sendEvent(" + event + ")");
+        }
         if (!onIcThread()) {
             // Events may get dispatched to the main thread;
             // reroute to our IC thread instead
@@ -585,6 +598,10 @@ final class GeckoEditable
         }
         final Action action = mActionQueue.peek();
 
+        if (DEBUG) {
+            Log.d(LOGTAG, "reply: Action(" +
+                          getConstantName(Action.class, "TYPE_", action.mType) + ")");
+        }
         switch (action.mType) {
         case Action.TYPE_SET_SELECTION:
             final int len = mText.length();
@@ -629,6 +646,12 @@ final class GeckoEditable
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             GeckoApp.assertOnGeckoThread();
+            // NOTIFY_IME_REPLY_EVENT is logged separately, inside geckoActionReply()
+            if (type != NOTIFY_IME_REPLY_EVENT) {
+                Log.d(LOGTAG, "notifyIME(" +
+                              getConstantName(GeckoEditableListener.class, "NOTIFY_IME_", type) +
+                              ", " + state + ")");
+            }
         }
         if (type == NOTIFY_IME_REPLY_EVENT) {
             try {
@@ -636,6 +659,8 @@ final class GeckoEditable
                     // When mFocused is false, the reply is for a stale action,
                     // and we should not do anything
                     geckoActionReply();
+                } else if (DEBUG) {
+                    Log.d(LOGTAG, "discarding stale reply");
                 }
             } finally {
                 // Ensure action is always removed from queue
@@ -669,6 +694,11 @@ final class GeckoEditable
                           final String modeHint, final String actionHint) {
         // Because we want to be able to bind GeckoEditable to the newest LayerView instance,
         // this can be called from the Java IC thread in addition to the Gecko thread.
+        if (DEBUG) {
+            Log.d(LOGTAG, "notifyIMEEnabled(" +
+                          getConstantName(GeckoEditableListener.class, "IME_STATE_", state) +
+                          ", \"" + typeHint + "\", \"" + modeHint + "\", \"" + actionHint + "\")");
+        }
         geckoPostToIc(new Runnable() {
             public void run() {
                 // Make sure there are no other things going on
@@ -691,6 +721,7 @@ final class GeckoEditable
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             GeckoApp.assertOnGeckoThread();
+            Log.d(LOGTAG, "onSelectionChange(" + start + ", " + end + ")");
         }
         if (start < 0 || start > mText.length() || end < 0 || end > mText.length()) {
             throw new IllegalArgumentException("invalid selection notification range");
@@ -739,6 +770,8 @@ final class GeckoEditable
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             GeckoApp.assertOnGeckoThread();
+            Log.d(LOGTAG, "onTextChange(\"" + text + "\", " + start + ", " +
+                          unboundedOldEnd + ", " + unboundedNewEnd + ")");
         }
         if (start < 0 || start > unboundedOldEnd) {
             throw new IllegalArgumentException("invalid text notification range");
@@ -812,7 +845,20 @@ final class GeckoEditable
 
     // InvocationHandler interface
 
-    private static StringBuilder debugAppend(StringBuilder sb, Object obj) {
+    static String getConstantName(Class<?> cls, String prefix, Object value) {
+        for (Field fld : cls.getDeclaredFields()) {
+            try {
+                if (fld.getName().startsWith(prefix) &&
+                    fld.get(null).equals(value)) {
+                    return fld.getName();
+                }
+            } catch (IllegalAccessException e) {
+            }
+        }
+        return String.valueOf(value);
+    }
+
+    static StringBuilder debugAppend(StringBuilder sb, Object obj) {
         if (obj == null) {
             sb.append("null");
         } else if (obj instanceof GeckoEditable) {
