@@ -4341,18 +4341,6 @@ var XULBrowserWindow = {
         SocialShareButton.updateShareState();
       }
 
-      // Filter out anchor navigation, history.push/pop/replaceState and
-      // tab switches.
-      if (aRequest) {
-        // Only need to call locationChange if the PopupNotifications object
-        // for this window has already been initialized (i.e. its getter no
-        // longer exists)
-        // XXX bug 839445: We never tell PopupNotifications about location
-        // changes in background tabs.
-        if (!__lookupGetter__("PopupNotifications"))
-          PopupNotifications.locationChange();
-      }
-
       // Show or hide browser chrome based on the whitelist
       if (this.hideChromeForLocation(location)) {
         document.documentElement.setAttribute("disablechrome", "true");
@@ -4776,6 +4764,12 @@ var TabsProgressListener = {
         aBrowser._clickToPlayPluginsActivated = new Map();
         aBrowser._clickToPlayAllPluginsActivated = false;
         aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
+
+        // Only need to call locationChange if the PopupNotifications object
+        // for this window has already been initialized (i.e. its getter no
+        // longer exists)
+        if (!Object.getOwnPropertyDescriptor(window, "PopupNotifications").get)
+          PopupNotifications.locationChange(aBrowser);
       }
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }

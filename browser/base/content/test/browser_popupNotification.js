@@ -27,15 +27,15 @@ var gActiveListeners = {};
 var gActiveObservers = {};
 var gShownState = {};
 
+function goNext() {
+  if (++gTestIndex == tests.length)
+    executeSoon(finish);
+  else
+    executeSoon(runNextTest);
+}
+
 function runNextTest() {
   let nextTest = tests[gTestIndex];
-
-  function goNext() {
-    if (++gTestIndex == tests.length)
-      executeSoon(finish);
-    else
-      executeSoon(runNextTest);
-  }
 
   function addObserver(topic) {
     function observer() {
@@ -54,7 +54,7 @@ function runNextTest() {
     addObserver("backgroundShow");
   } else if (nextTest.updateNotShowing) {
     addObserver("updateNotShowing");
-  } else {
+  } else if (nextTest.onShown) {
     doOnPopupEvent("popupshowing", function () {
       info("[Test #" + gTestIndex + "] popup showing");
     });
@@ -724,6 +724,34 @@ var tests = [
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback was not triggered");
       PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
     },
+  },
+  { // Test #25 - location change in background tab removes notification
+    run: function () {
+      this.oldSelectedTab = gBrowser.selectedTab;
+      this.newTab = gBrowser.addTab("about:blank");
+      gBrowser.selectedTab = this.newTab;
+
+      loadURI("http://example.com/", function() {
+        gBrowser.selectedTab = this.oldSelectedTab;
+        let browser = gBrowser.getBrowserForTab(this.newTab);
+
+        this.notifyObj = new basicNotification();
+        this.notifyObj.browser = browser;
+        this.notifyObj.options.eventCallback = function (eventName) {
+          if (eventName == "removed") {
+            ok(true, "Notification removed in background tab after reloading");
+            executeSoon(function () {
+              gBrowser.removeTab(this.newTab);
+              goNext();
+            }.bind(this));
+          }
+        }.bind(this);
+        this.notification = showNotification(this.notifyObj);
+        executeSoon(function () {
+          browser.reload();
+        });
+      }.bind(this));
+    }
   }
 ];
 
