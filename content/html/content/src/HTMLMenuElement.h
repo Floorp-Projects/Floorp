@@ -54,6 +54,40 @@ public:
 
   uint8_t GetType() const { return mType; }
 
+  // WebIDL
+
+  // The XPCOM GetType is OK for us
+  void SetType(const nsAString& aType, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aType, aError);
+  }
+
+  // The XPCOM GetLabel is OK for us
+  void SetLabel(const nsAString& aLabel, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::label, aLabel, aError);
+  }
+
+  bool Compact() const
+  {
+    return GetBoolAttr(nsGkAtoms::compact);
+  }
+  void SetCompact(bool aCompact, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::compact, aCompact, aError);
+  }
+
+  // The XPCOM SendShowEvent is OK for us
+
+  already_AddRefed<nsIMenuBuilder> CreateBuilder();
+
+  // The XPCOM Build is OK for us
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
+
+
 protected:
   static bool CanLoadIcon(nsIContent* aContent, const nsAString& aIcon);
 

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLMenuElement.h"
+#include "mozilla/dom/HTMLMenuElementBinding.h"
 #include "nsXULContextMenuBuilder.h"
 #include "nsEventDispatcher.h"
 #include "HTMLMenuItemElement.h"
@@ -44,6 +45,7 @@ enum SeparatorType
 HTMLMenuElement::HTMLMenuElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mType(MENU_TYPE_LIST)
 {
+  SetIsDOMBinding();
 }
 
 HTMLMenuElement::~HTMLMenuElement()
@@ -113,6 +115,16 @@ HTMLMenuElement::CreateBuilder(nsIMenuBuilder** _retval)
   return NS_OK;
 }
 
+already_AddRefed<nsIMenuBuilder>
+HTMLMenuElement::CreateBuilder()
+{
+  if (mType != MENU_TYPE_CONTEXT) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIMenuBuilder> ret = new nsXULContextMenuBuilder();
+  return ret.forget();
+}
 
 NS_IMETHODIMP
 HTMLMenuElement::Build(nsIMenuBuilder* aBuilder)
@@ -253,6 +265,13 @@ HTMLMenuElement::AddSeparator(nsIMenuBuilder* aBuilder, int8_t& aSeparator)
  
   aBuilder->AddSeparator();
   aSeparator = ST_TRUE;
+}
+
+JSObject*
+HTMLMenuElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                          bool* aTriedToWrap)
+{
+  return HTMLMenuElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
