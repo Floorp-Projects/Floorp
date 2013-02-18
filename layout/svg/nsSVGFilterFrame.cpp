@@ -165,10 +165,10 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   NS_ABORT_IF_FALSE(sizeof(filter->mLengthAttributes) == sizeof(XYWH),
                     "XYWH size incorrect");
   memcpy(XYWH, filter->mLengthAttributes, sizeof(filter->mLengthAttributes));
-  XYWH[0] = *aFilterFrame->GetLengthValue(SVGFilterElement::X);
-  XYWH[1] = *aFilterFrame->GetLengthValue(SVGFilterElement::Y);
-  XYWH[2] = *aFilterFrame->GetLengthValue(SVGFilterElement::WIDTH);
-  XYWH[3] = *aFilterFrame->GetLengthValue(SVGFilterElement::HEIGHT);
+  XYWH[0] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_X);
+  XYWH[1] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_Y);
+  XYWH[2] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_WIDTH);
+  XYWH[3] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_HEIGHT);
   // The filter region in user space, in user units:
   gfxRect filterRegion = nsSVGUtils::GetRelativeRect(filterUnits,
     XYWH, bbox, aTarget);

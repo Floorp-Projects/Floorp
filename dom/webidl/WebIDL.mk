@@ -149,6 +149,7 @@ webidl_files = \
   SVGDescElement.webidl \
   SVGElement.webidl \
   SVGEllipseElement.webidl \
+  SVGFilterElement.webidl \
   SVGFEFuncAElement.webidl \
   SVGFEFuncBElement.webidl \
   SVGFEFuncGElement.webidl \
