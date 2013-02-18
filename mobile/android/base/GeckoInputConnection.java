@@ -63,6 +63,8 @@ class GeckoInputConnection
         private void runOnIcThread(Handler icHandler, final Runnable runnable) {
             if (DEBUG) {
                 GeckoApp.assertOnUiThread();
+                Log.d(LOGTAG, "runOnIcThread() on thread " +
+                              icHandler.getLooper().getThread().getName());
             }
             Runnable runner = new Runnable() {
                 @Override public void run() {
@@ -91,6 +93,7 @@ class GeckoInputConnection
         public void endWaitForUiThread() {
             if (DEBUG) {
                 GeckoApp.assertOnUiThread();
+                Log.d(LOGTAG, "endWaitForUiThread()");
             }
             try {
                 mIcRunnableSync.put(mIcSignalRunnable);
@@ -101,6 +104,8 @@ class GeckoInputConnection
         public void waitForUiThread(Handler icHandler) {
             if (DEBUG) {
                 GeckoApp.assertOnThread(icHandler.getLooper().getThread());
+                Log.d(LOGTAG, "waitForUiThread() blocking on thread " +
+                              icHandler.getLooper().getThread().getName());
             }
             try {
                 Runnable runnable = null;
@@ -132,6 +137,7 @@ class GeckoInputConnection
                                                final Object[] args) throws Throwable {
                     if (DEBUG) {
                         GeckoApp.assertOnThread(uiHandler.getLooper().getThread());
+                        Log.d(LOGTAG, "UiEditable." + method.getName() + "() blocking");
                     }
                     synchronized (icHandler) {
                         // Now we are on UI thread
@@ -147,6 +153,10 @@ class GeckoInputConnection
                                             mEditableClient.getEditable(), args);
                                     } catch (Exception e) {
                                         mUiEditableException = e;
+                                    }
+                                    if (DEBUG) {
+                                        Log.d(LOGTAG, "UiEditable." + method.getName() +
+                                                      "() returning");
                                     }
                                     icHandler.notify();
                                 }
@@ -580,6 +590,12 @@ class GeckoInputConnection
                                    | EditorInfo.IME_FLAG_NO_FULLSCREEN;
         }
 
+        if (DEBUG) {
+            Log.d(LOGTAG, "mapped IME states to: inputType = " +
+                          Integer.toHexString(outAttrs.inputType) + ", imeOptions = " +
+                          Integer.toHexString(outAttrs.imeOptions));
+        }
+
         String prevInputMethod = mCurrentInputMethod;
         mCurrentInputMethod = InputMethods.getCurrentInputMethod(app);
         if (DEBUG) {
@@ -838,10 +854,12 @@ final class DebugGeckoInputConnection
         implements InvocationHandler {
 
     private InputConnection mProxy;
+    private StringBuilder mCallLevel;
 
     private DebugGeckoInputConnection(View targetView,
                                       GeckoEditableClient editable) {
         super(targetView, editable);
+        mCallLevel = new StringBuilder();
     }
 
     public static GeckoEditableListener create(View targetView,
@@ -857,47 +875,43 @@ final class DebugGeckoInputConnection
         return (GeckoEditableListener)dgic.mProxy;
     }
 
-    private static StringBuilder debugAppend(StringBuilder sb, Object obj) {
-        if (obj == null) {
-            sb.append("null");
-        } else if (obj instanceof GeckoEditable) {
-            sb.append("GeckoEditable");
-        } else if (Proxy.isProxyClass(obj.getClass())) {
-            debugAppend(sb, Proxy.getInvocationHandler(obj));
-        } else if (obj instanceof CharSequence) {
-            sb.append("\"").append(obj.toString().replace('\n', '\u21b2')).append("\"");
-        } else if (obj.getClass().isArray()) {
-            sb.append(obj.getClass().getComponentType().getSimpleName()).append("[")
-              .append(java.lang.reflect.Array.getLength(obj)).append("]");
-        } else {
-            sb.append(obj.toString());
-        }
-        return sb;
-    }
-
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
 
-        Object ret = method.invoke(this, args);
-        if (ret == this) {
-            ret = mProxy;
-        }
-
-        StringBuilder log = new StringBuilder(method.getName());
-        log.append("(");
+        StringBuilder log = new StringBuilder(mCallLevel);
+        log.append("> ").append(method.getName()).append("(");
         for (Object arg : args) {
-            debugAppend(log, arg).append(", ");
+            // translate argument values to constant names
+            if ("notifyIME".equals(method.getName()) && arg == args[0]) {
+                log.append(GeckoEditable.getConstantName(
+                    GeckoEditableListener.class, "NOTIFY_IME_", arg));
+            } else if ("notifyIMEEnabled".equals(method.getName()) && arg == args[0]) {
+                log.append(GeckoEditable.getConstantName(
+                    GeckoEditableListener.class, "IME_STATE_", arg));
+            } else {
+                GeckoEditable.debugAppend(log, arg);
+            }
+            log.append(", ");
         }
         if (args.length > 0) {
             log.setLength(log.length() - 2);
         }
-        if (method.getReturnType().equals(Void.TYPE)) {
-            log.append(")");
-        } else {
-            debugAppend(log.append(") = "), ret);
-        }
+        log.append(")");
         Log.d(LOGTAG, log.toString());
 
+        mCallLevel.append(' ');
+        Object ret = method.invoke(this, args);
+        if (ret == this) {
+            ret = mProxy;
+        }
+        mCallLevel.setLength(Math.max(0, mCallLevel.length() - 1));
+
+        log.setLength(mCallLevel.length());
+        log.append("< ").append(method.getName());
+        if (!method.getReturnType().equals(Void.TYPE)) {
+            GeckoEditable.debugAppend(log.append(": "), ret);
+        }
+        Log.d(LOGTAG, log.toString());
         return ret;
     }
 }
