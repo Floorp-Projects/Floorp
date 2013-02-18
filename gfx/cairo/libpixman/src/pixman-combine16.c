@@ -25,16 +25,6 @@ combine_mask (const uint32_t src, const uint32_t mask)
     return s;
 }
 
-static inline uint32_t convert_0565_to_8888(uint16_t color)
-{
-    return CONVERT_0565_TO_8888(color);
-}
-
-static inline uint16_t convert_8888_to_0565(uint32_t color)
-{
-    return CONVERT_8888_TO_0565(color);
-}
-
 static void
 combine_src_u (pixman_implementation_t *imp,
                pixman_op_t              op,

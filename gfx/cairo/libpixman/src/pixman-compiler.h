@@ -56,6 +56,10 @@
 # define INT64_MAX              (9223372036854775807)
 #endif
 
+#ifndef SIZE_MAX
+# define SIZE_MAX               ((size_t)-1)
+#endif
+
 
 #ifndef M_PI
 # define M_PI			3.14159265358979323846

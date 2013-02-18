@@ -85,6 +85,42 @@ mips_composite_##name (pixman_implementation_t *imp,             \
     }                                                            \
 }
 
+/****************************************************************/
+
+#define PIXMAN_MIPS_BIND_FAST_PATH_N_DST(flags, name,            \
+                                         dst_type, dst_cnt)      \
+void                                                             \
+pixman_composite_##name##_asm_mips (dst_type *dst,               \
+                                    uint32_t  src,               \
+                                    int32_t   w);                \
+                                                                 \
+static void                                                      \
+mips_composite_##name (pixman_implementation_t *imp,             \
+                       pixman_composite_info_t *info)            \
+{                                                                \
+    PIXMAN_COMPOSITE_ARGS (info);                                \
+    dst_type  *dst_line, *dst;                                   \
+    int32_t    dst_stride;                                       \
+    uint32_t   src;                                              \
+                                                                 \
+    src = _pixman_image_get_solid (                              \
+    imp, src_image, dest_image->bits.format);                    \
+                                                                 \
+    if ((flags & SKIP_ZERO_SRC) && src == 0)                     \
+        return;                                                  \
+                                                                 \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type, \
+                           dst_stride, dst_line, dst_cnt);       \
+                                                                 \
+    while (height--)                                             \
+    {                                                            \
+        dst = dst_line;                                          \
+        dst_line += dst_stride;                                  \
+                                                                 \
+        pixman_composite_##name##_asm_mips (dst, src, width);    \
+    }                                                            \
+}
+
 /*******************************************************************/
 
 #define PIXMAN_MIPS_BIND_FAST_PATH_N_MASK_DST(flags, name,          \
@@ -209,6 +245,52 @@ mips_composite_##name (pixman_implementation_t *imp,                     \
         pixman_composite_##name##_asm_mips (dst, src, mask, width);      \
     }                                                                    \
 }
+
+/*****************************************************************************/
+
+#define PIXMAN_MIPS_BIND_SCALED_NEAREST_SRC_A8_DST(flags, name, op,           \
+                                                  src_type, dst_type)         \
+void                                                                          \
+pixman_scaled_nearest_scanline_##name##_##op##_asm_mips (                     \
+                                                   dst_type *       dst,      \
+                                                   const src_type * src,      \
+                                                   const uint8_t *  mask,     \
+                                                   int32_t          w,        \
+                                                   pixman_fixed_t   vx,       \
+                                                   pixman_fixed_t   unit_x);  \
+                                                                              \
+static force_inline void                                                      \
+scaled_nearest_scanline_mips_##name##_##op (const uint8_t *  mask,            \
+                                            dst_type *       pd,              \
+                                            const src_type * ps,              \
+                                            int32_t          w,               \
+                                            pixman_fixed_t   vx,              \
+                                            pixman_fixed_t   unit_x,          \
+                                            pixman_fixed_t   max_vx,          \
+                                            pixman_bool_t    zero_src)        \
+{                                                                             \
+    if ((flags & SKIP_ZERO_SRC) && zero_src)                                  \
+        return;                                                               \
+    pixman_scaled_nearest_scanline_##name##_##op##_asm_mips (pd, ps,          \
+                                                             mask, w,         \
+                                                             vx, unit_x);     \
+}                                                                             \
+                                                                              \
+FAST_NEAREST_MAINLOOP_COMMON (mips_##name##_cover_##op,                       \
+                              scaled_nearest_scanline_mips_##name##_##op,     \
+                              src_type, uint8_t, dst_type, COVER, TRUE, FALSE)\
+FAST_NEAREST_MAINLOOP_COMMON (mips_##name##_none_##op,                        \
+                              scaled_nearest_scanline_mips_##name##_##op,     \
+                              src_type, uint8_t, dst_type, NONE, TRUE, FALSE) \
+FAST_NEAREST_MAINLOOP_COMMON (mips_##name##_pad_##op,                         \
+                              scaled_nearest_scanline_mips_##name##_##op,     \
+                              src_type, uint8_t, dst_type, PAD, TRUE, FALSE)
+
+/* Provide entries for the fast path table */
+#define PIXMAN_MIPS_SIMPLE_NEAREST_A8_MASK_FAST_PATH(op,s,d,func)             \
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH_COVER (op,s,d,func),                     \
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH_NONE (op,s,d,func),                      \
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH_PAD (op,s,d,func)
 
 /****************************************************************************/
 

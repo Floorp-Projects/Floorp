@@ -35,7 +35,7 @@
 static force_inline uint32_t
 fetch_24 (uint8_t *a)
 {
-    if (((unsigned long)a) & 1)
+    if (((uintptr_t)a) & 1)
     {
 #ifdef WORDS_BIGENDIAN
 	return (*a << 16) | (*(uint16_t *)(a + 1));
@@ -57,7 +57,7 @@ static force_inline void
 store_24 (uint8_t *a,
           uint32_t v)
 {
-    if (((unsigned long)a) & 1)
+    if (((uintptr_t)a) & 1)
     {
 #ifdef WORDS_BIGENDIAN
 	*a = (uint8_t) (v >> 16);
@@ -507,15 +507,15 @@ fast_composite_over_n_8_0565 (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = over (src, CONVERT_0565_TO_0888 (d));
+		    d = over (src, convert_0565_to_0888 (d));
 		}
-		*dst = CONVERT_8888_TO_0565 (d);
+		*dst = convert_8888_to_0565 (d);
 	    }
 	    else if (m)
 	    {
 		d = *dst;
-		d = over (in (src, m), CONVERT_0565_TO_0888 (d));
-		*dst = CONVERT_8888_TO_0565 (d);
+		d = over (in (src, m), convert_0565_to_0888 (d));
+		*dst = convert_8888_to_0565 (d);
 	    }
 	    dst++;
 	}
@@ -541,7 +541,7 @@ fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
     if (src == 0)
 	return;
 
-    src16 = CONVERT_8888_TO_0565 (src);
+    src16 = convert_8888_to_0565 (src);
 
     PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint32_t, mask_stride, mask_line, 1);
@@ -566,14 +566,14 @@ fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = over (src, CONVERT_0565_TO_0888 (d));
-		    *dst = CONVERT_8888_TO_0565 (d);
+		    d = over (src, convert_0565_to_0888 (d));
+		    *dst = convert_8888_to_0565 (d);
 		}
 	    }
 	    else if (ma)
 	    {
 		d = *dst;
-		d = CONVERT_0565_TO_0888 (d);
+		d = convert_0565_to_0888 (d);
 
 		s = src;
 
@@ -582,7 +582,7 @@ fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 		ma = ~ma;
 		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, s);
 
-		*dst = CONVERT_8888_TO_0565 (d);
+		*dst = convert_8888_to_0565 (d);
 	    }
 	    dst++;
 	}
@@ -729,40 +729,10 @@ fast_composite_over_8888_0565 (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = over (s, CONVERT_0565_TO_0888 (d));
+		    d = over (s, convert_0565_to_0888 (d));
 		}
-		*dst = CONVERT_8888_TO_0565 (d);
+		*dst = convert_8888_to_0565 (d);
 	    }
-	    dst++;
-	}
-    }
-}
-
-static void
-fast_composite_src_x888_0565 (pixman_implementation_t *imp,
-                              pixman_composite_info_t *info)
-{
-    PIXMAN_COMPOSITE_ARGS (info);
-    uint16_t    *dst_line, *dst;
-    uint32_t    *src_line, *src, s;
-    int dst_stride, src_stride;
-    int32_t w;
-
-    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
-    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
-
-    while (height--)
-    {
-	dst = dst_line;
-	dst_line += dst_stride;
-	src = src_line;
-	src_line += src_stride;
-	w = width;
-
-	while (w--)
-	{
-	    s = *src++;
-	    *dst = CONVERT_8888_TO_0565 (s);
 	    dst++;
 	}
     }
@@ -838,13 +808,13 @@ fast_composite_add_0565_0565 (pixman_implementation_t *imp,
 	    if (s)
 	    {
 		d = *dst;
-		s = CONVERT_0565_TO_8888 (s);
+		s = convert_0565_to_8888 (s);
 		if (d)
 		{
-		    d = CONVERT_0565_TO_8888 (d);
+		    d = convert_0565_to_8888 (d);
 		    UN8x4_ADD_UN8x4 (s, d);
 		}
-		*dst = CONVERT_8888_TO_0565 (s);
+		*dst = convert_8888_to_0565 (s);
 	    }
 	    dst++;
 	}
@@ -1094,7 +1064,7 @@ fast_composite_over_n_1_0565 (pixman_implementation_t *imp,
 
     if (srca == 0xff)
     {
-	src565 = CONVERT_8888_TO_0565 (src);
+	src565 = convert_8888_to_0565 (src);
 	while (height--)
 	{
 	    dst = dst_line;
@@ -1142,8 +1112,8 @@ fast_composite_over_n_1_0565 (pixman_implementation_t *imp,
 		}
 		if (bitcache & bitmask)
 		{
-		    d = over (src, CONVERT_0565_TO_0888 (*dst));
-		    *dst = CONVERT_8888_TO_0565 (d);
+		    d = over (src, convert_0565_to_0888 (*dst));
+		    *dst = convert_8888_to_0565 (d);
 		}
 		bitmask = UPDATE_BITMASK (bitmask);
 		dst++;
@@ -1176,7 +1146,7 @@ fast_composite_solid_fill (pixman_implementation_t *imp,
     else if (dest_image->bits.format == PIXMAN_r5g6b5 ||
              dest_image->bits.format == PIXMAN_b5g6r5)
     {
-	src = CONVERT_8888_TO_0565 (src);
+	src = convert_8888_to_0565 (src);
     }
 
     pixman_fill (dest_image->bits.bits, dest_image->bits.rowstride,
@@ -1260,8 +1230,8 @@ scaled_bilinear_scanline_8888_565_OVER (uint16_t *       dst,
 				      pixman_fixed_to_bilinear_weight(vx),
 				      wb);
 	vx += unit_x;
-	result = over (src, CONVERT_0565_TO_0888 (d));
-	*dst++ = CONVERT_8888_TO_0565(result);
+	result = over (src, convert_0565_to_0888 (d));
+	*dst++ = convert_8888_to_0565 (result);
     }
 }
 
@@ -1319,14 +1289,14 @@ scaled_bilinear_scanline_565_565_SRC (uint16_t *       dst,
 	uint16_t bl = src_bottom [pixman_fixed_to_int (vx)];
 	uint16_t br = src_bottom [pixman_fixed_to_int (vx) + 1];
 	uint32_t d;
-	d = bilinear_interpolation(CONVERT_0565_TO_8888(tl),
-				   CONVERT_0565_TO_8888(tr),
-				   CONVERT_0565_TO_8888(bl),
-				   CONVERT_0565_TO_8888(br),
-				   pixman_fixed_to_bilinear_weight(vx),
+	d = bilinear_interpolation(convert_0565_to_8888 (tl),
+				   convert_0565_to_8888 (tr),
+				   convert_0565_to_8888 (bl),
+				   convert_0565_to_8888 (br),
+				   pixman_fixed_to_bilinear_weight (vx),
 				   wb);
 	vx += unit_x;
-	*dst++ = CONVERT_8888_TO_0565(d);
+	*dst++ = convert_8888_to_0565 (d);
     }
 }
 
@@ -1465,6 +1435,18 @@ fast_composite_tiled_repeat (pixman_implementation_t *imp,
     pixman_composite_func_t func;
     pixman_format_code_t mask_format;
     uint32_t src_flags, mask_flags;
+    int32_t sx, sy;
+    int32_t width_remain;
+    int32_t num_pixels;
+    int32_t src_width;
+    int32_t i, j;
+    pixman_image_t extended_src_image;
+    uint32_t extended_src[REPEAT_MIN_WIDTH * 2];
+    pixman_bool_t need_src_extension;
+    uint32_t *src_line;
+    int32_t src_stride;
+    int32_t src_bpp;
+    pixman_composite_info_t info2 = *info;
 
     src_flags = (info->src_flags & ~FAST_PATH_NORMAL_REPEAT) |
 		    FAST_PATH_SAMPLES_COVER_CLIP_NEAREST;
@@ -1480,149 +1462,131 @@ fast_composite_tiled_repeat (pixman_implementation_t *imp,
 	mask_flags = FAST_PATH_IS_OPAQUE;
     }
 
-    if (_pixman_implementation_lookup_composite (
-	    imp->toplevel, info->op,
-	    src_image->common.extended_format_code, src_flags,
-	    mask_format, mask_flags,
-	    dest_image->common.extended_format_code, info->dest_flags,
-	    &imp, &func))
+    _pixman_implementation_lookup_composite (
+	imp->toplevel, info->op,
+	src_image->common.extended_format_code, src_flags,
+	mask_format, mask_flags,
+	dest_image->common.extended_format_code, info->dest_flags,
+	&imp, &func);
+
+    src_bpp = PIXMAN_FORMAT_BPP (src_image->bits.format);
+
+    if (src_image->bits.width < REPEAT_MIN_WIDTH		&&
+	(src_bpp == 32 || src_bpp == 16 || src_bpp == 8)	&&
+	!src_image->bits.indexed)
     {
-	int32_t sx, sy;
-	int32_t width_remain;
-	int32_t num_pixels;
-	int32_t src_width;
-	int32_t i, j;
-	pixman_image_t extended_src_image;
-	uint32_t extended_src[REPEAT_MIN_WIDTH * 2];
-	pixman_bool_t need_src_extension;
-	uint32_t *src_line;
-	int32_t src_stride;
-	int32_t src_bpp;
-	pixman_composite_info_t info2 = *info;
-
-	src_bpp = PIXMAN_FORMAT_BPP (src_image->bits.format);
-
-	if (src_image->bits.width < REPEAT_MIN_WIDTH		&&
-	    (src_bpp == 32 || src_bpp == 16 || src_bpp == 8)	&&
-	    !src_image->bits.indexed)
-	{
-	    sx = src_x;
-	    sx = MOD (sx, src_image->bits.width);
-	    sx += width;
-	    src_width = 0;
-
-	    while (src_width < REPEAT_MIN_WIDTH && src_width <= sx)
-		src_width += src_image->bits.width;
-
-	    src_stride = (src_width * (src_bpp >> 3) + 3) / (int) sizeof (uint32_t);
-
-	    /* Initialize/validate stack-allocated temporary image */
-	    _pixman_bits_image_init (&extended_src_image, src_image->bits.format,
-				     src_width, 1, &extended_src[0], src_stride,
-				     FALSE);
-	    _pixman_image_validate (&extended_src_image);
-
-	    info2.src_image = &extended_src_image;
-	    need_src_extension = TRUE;
-	}
-	else
-	{
-	    src_width = src_image->bits.width;
-	    need_src_extension = FALSE;
-	}
-
 	sx = src_x;
-	sy = src_y;
+	sx = MOD (sx, src_image->bits.width);
+	sx += width;
+	src_width = 0;
 
-	while (--height >= 0)
-	{
-	    sx = MOD (sx, src_width);
-	    sy = MOD (sy, src_image->bits.height);
+	while (src_width < REPEAT_MIN_WIDTH && src_width <= sx)
+	    src_width += src_image->bits.width;
 
-	    if (need_src_extension)
-	    {
-		if (src_bpp == 32)
-		{
-		    PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint32_t, src_stride, src_line, 1);
+	src_stride = (src_width * (src_bpp >> 3) + 3) / (int) sizeof (uint32_t);
 
-		    for (i = 0; i < src_width; )
-		    {
-			for (j = 0; j < src_image->bits.width; j++, i++)
-			    extended_src[i] = src_line[j];
-		    }
-		}
-		else if (src_bpp == 16)
-		{
-		    uint16_t *src_line_16;
+	/* Initialize/validate stack-allocated temporary image */
+	_pixman_bits_image_init (&extended_src_image, src_image->bits.format,
+				 src_width, 1, &extended_src[0], src_stride,
+				 FALSE);
+	_pixman_image_validate (&extended_src_image);
 
-		    PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint16_t, src_stride,
-					   src_line_16, 1);
-		    src_line = (uint32_t*)src_line_16;
-
-		    for (i = 0; i < src_width; )
-		    {
-			for (j = 0; j < src_image->bits.width; j++, i++)
-			    ((uint16_t*)extended_src)[i] = ((uint16_t*)src_line)[j];
-		    }
-		}
-		else if (src_bpp == 8)
-		{
-		    uint8_t *src_line_8;
-
-		    PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint8_t, src_stride,
-					   src_line_8, 1);
-		    src_line = (uint32_t*)src_line_8;
-
-		    for (i = 0; i < src_width; )
-		    {
-			for (j = 0; j < src_image->bits.width; j++, i++)
-			    ((uint8_t*)extended_src)[i] = ((uint8_t*)src_line)[j];
-		    }
-		}
-
-		info2.src_y = 0;
-	    }
-	    else
-	    {
-		info2.src_y = sy;
-	    }
-
-	    width_remain = width;
-
-	    while (width_remain > 0)
-	    {
-		num_pixels = src_width - sx;
-
-		if (num_pixels > width_remain)
-		    num_pixels = width_remain;
-
-		info2.src_x = sx;
-		info2.width = num_pixels;
-		info2.height = 1;
-
-		func (imp, &info2);
-
-		width_remain -= num_pixels;
-		info2.mask_x += num_pixels;
-		info2.dest_x += num_pixels;
-		sx = 0;
-	    }
-
-	    sx = src_x;
-	    sy++;
-	    info2.mask_x = info->mask_x;
-	    info2.mask_y++;
-	    info2.dest_x = info->dest_x;
-	    info2.dest_y++;
-	}
-
-	if (need_src_extension)
-	    _pixman_image_fini (&extended_src_image);
+	info2.src_image = &extended_src_image;
+	need_src_extension = TRUE;
     }
     else
     {
-	_pixman_log_error (FUNC, "Didn't find a suitable function ");
+	src_width = src_image->bits.width;
+	need_src_extension = FALSE;
     }
+
+    sx = src_x;
+    sy = src_y;
+
+    while (--height >= 0)
+    {
+	sx = MOD (sx, src_width);
+	sy = MOD (sy, src_image->bits.height);
+
+	if (need_src_extension)
+	{
+	    if (src_bpp == 32)
+	    {
+		PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint32_t, src_stride, src_line, 1);
+
+		for (i = 0; i < src_width; )
+		{
+		    for (j = 0; j < src_image->bits.width; j++, i++)
+			extended_src[i] = src_line[j];
+		}
+	    }
+	    else if (src_bpp == 16)
+	    {
+		uint16_t *src_line_16;
+
+		PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint16_t, src_stride,
+				       src_line_16, 1);
+		src_line = (uint32_t*)src_line_16;
+
+		for (i = 0; i < src_width; )
+		{
+		    for (j = 0; j < src_image->bits.width; j++, i++)
+			((uint16_t*)extended_src)[i] = ((uint16_t*)src_line)[j];
+		}
+	    }
+	    else if (src_bpp == 8)
+	    {
+		uint8_t *src_line_8;
+
+		PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint8_t, src_stride,
+				       src_line_8, 1);
+		src_line = (uint32_t*)src_line_8;
+
+		for (i = 0; i < src_width; )
+		{
+		    for (j = 0; j < src_image->bits.width; j++, i++)
+			((uint8_t*)extended_src)[i] = ((uint8_t*)src_line)[j];
+		}
+	    }
+
+	    info2.src_y = 0;
+	}
+	else
+	{
+	    info2.src_y = sy;
+	}
+
+	width_remain = width;
+
+	while (width_remain > 0)
+	{
+	    num_pixels = src_width - sx;
+
+	    if (num_pixels > width_remain)
+		num_pixels = width_remain;
+
+	    info2.src_x = sx;
+	    info2.width = num_pixels;
+	    info2.height = 1;
+
+	    func (imp, &info2);
+
+	    width_remain -= num_pixels;
+	    info2.mask_x += num_pixels;
+	    info2.dest_x += num_pixels;
+	    sx = 0;
+	}
+
+	sx = src_x;
+	sy++;
+	info2.mask_x = info->mask_x;
+	info2.mask_y++;
+	info2.dest_x = info->dest_x;
+	info2.dest_y++;
+    }
+
+    if (need_src_extension)
+	_pixman_image_fini (&extended_src_image);
 }
 
 /* Use more unrolling for src_0565_0565 because it is typically CPU bound */
@@ -2135,10 +2099,6 @@ static const pixman_fast_path_t c_fast_paths[] =
     PIXMAN_STD_FAST_PATH (SRC, x1r5g5b5, null, x1r5g5b5, fast_composite_src_memcpy),
     PIXMAN_STD_FAST_PATH (SRC, a1r5g5b5, null, x1r5g5b5, fast_composite_src_memcpy),
     PIXMAN_STD_FAST_PATH (SRC, a8, null, a8, fast_composite_src_memcpy),
-    PIXMAN_STD_FAST_PATH (SRC, a8r8g8b8, null, r5g6b5, fast_composite_src_x888_0565),
-    PIXMAN_STD_FAST_PATH (SRC, x8r8g8b8, null, r5g6b5, fast_composite_src_x888_0565),
-    PIXMAN_STD_FAST_PATH (SRC, a8b8g8r8, null, b5g6r5, fast_composite_src_x888_0565),
-    PIXMAN_STD_FAST_PATH (SRC, x8b8g8r8, null, b5g6r5, fast_composite_src_x888_0565),
     PIXMAN_STD_FAST_PATH (IN, a8, null, a8, fast_composite_in_8_8),
     PIXMAN_STD_FAST_PATH (IN, solid, a8, a8, fast_composite_in_n_8_8),
 
@@ -2293,12 +2253,12 @@ pixman_fill1 (uint32_t *bits,
               int       y,
               int       width,
               int       height,
-              uint32_t  xor)
+              uint32_t  filler)
 {
     uint32_t *dst = bits + y * stride + (x >> 5);
     int offs = x & 31;
 
-    if (xor & 1)
+    if (filler & 1)
     {
 	while (height--)
 	{
@@ -2323,11 +2283,11 @@ pixman_fill8 (uint32_t *bits,
               int       y,
               int       width,
               int       height,
-              uint32_t xor)
+              uint32_t  filler)
 {
     int byte_stride = stride * (int) sizeof (uint32_t);
     uint8_t *dst = (uint8_t *) bits;
-    uint8_t v = xor & 0xff;
+    uint8_t v = filler & 0xff;
     int i;
 
     dst = dst + y * byte_stride + x;
@@ -2348,12 +2308,12 @@ pixman_fill16 (uint32_t *bits,
                int       y,
                int       width,
                int       height,
-               uint32_t xor)
+               uint32_t  filler)
 {
     int short_stride =
 	(stride * (int)sizeof (uint32_t)) / (int)sizeof (uint16_t);
     uint16_t *dst = (uint16_t *)bits;
-    uint16_t v = xor & 0xffff;
+    uint16_t v = filler & 0xffff;
     int i;
 
     dst = dst + y * short_stride + x;
@@ -2374,7 +2334,7 @@ pixman_fill32 (uint32_t *bits,
                int       y,
                int       width,
                int       height,
-               uint32_t  xor)
+               uint32_t  filler)
 {
     int i;
 
@@ -2383,7 +2343,7 @@ pixman_fill32 (uint32_t *bits,
     while (height--)
     {
 	for (i = 0; i < width; ++i)
-	    bits[i] = xor;
+	    bits[i] = filler;
 
 	bits += stride;
     }
@@ -2398,24 +2358,24 @@ fast_path_fill (pixman_implementation_t *imp,
                 int                      y,
                 int                      width,
                 int                      height,
-                uint32_t		 xor)
+                uint32_t		 filler)
 {
     switch (bpp)
     {
     case 1:
-	pixman_fill1 (bits, stride, x, y, width, height, xor);
+	pixman_fill1 (bits, stride, x, y, width, height, filler);
 	break;
 
     case 8:
-	pixman_fill8 (bits, stride, x, y, width, height, xor);
+	pixman_fill8 (bits, stride, x, y, width, height, filler);
 	break;
 
     case 16:
-	pixman_fill16 (bits, stride, x, y, width, height, xor);
+	pixman_fill16 (bits, stride, x, y, width, height, filler);
 	break;
 
     case 32:
-	pixman_fill32 (bits, stride, x, y, width, height, xor);
+	pixman_fill32 (bits, stride, x, y, width, height, filler);
 	break;
 
     default:
@@ -2425,12 +2385,206 @@ fast_path_fill (pixman_implementation_t *imp,
     return TRUE;
 }
 
+/*****************************************************************************/
+
+static uint32_t *
+fast_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    int32_t w = iter->width;
+    uint32_t *dst = iter->buffer;
+    const uint16_t *src = (const uint16_t *)iter->bits;
+
+    iter->bits += iter->stride;
+
+    /* Align the source buffer at 4 bytes boundary */
+    if (w > 0 && ((uintptr_t)src & 3))
+    {
+	*dst++ = convert_0565_to_8888 (*src++);
+	w--;
+    }
+    /* Process two pixels per iteration */
+    while ((w -= 2) >= 0)
+    {
+	uint32_t sr, sb, sg, t0, t1;
+	uint32_t s = *(const uint32_t *)src;
+	src += 2;
+	sr = (s >> 8) & 0x00F800F8;
+	sb = (s << 3) & 0x00F800F8;
+	sg = (s >> 3) & 0x00FC00FC;
+	sr |= sr >> 5;
+	sb |= sb >> 5;
+	sg |= sg >> 6;
+	t0 = ((sr << 16) & 0x00FF0000) | ((sg << 8) & 0x0000FF00) |
+	     (sb & 0xFF) | 0xFF000000;
+	t1 = (sr & 0x00FF0000) | ((sg >> 8) & 0x0000FF00) |
+	     (sb >> 16) | 0xFF000000;
+#ifdef WORDS_BIGENDIAN
+	*dst++ = t1;
+	*dst++ = t0;
+#else
+	*dst++ = t0;
+	*dst++ = t1;
+#endif
+    }
+    if (w & 1)
+    {
+	*dst = convert_0565_to_8888 (*src);
+    }
+
+    return iter->buffer;
+}
+
+static uint32_t *
+fast_dest_fetch_noop (pixman_iter_t *iter, const uint32_t *mask)
+{
+    iter->bits += iter->stride;
+    return iter->buffer;
+}
+
+/* Helper function for a workaround, which tries to ensure that 0x1F001F
+ * constant is always allocated in a register on RISC architectures.
+ */
+static force_inline uint32_t
+convert_8888_to_0565_workaround (uint32_t s, uint32_t x1F001F)
+{
+    uint32_t a, b;
+    a = (s >> 3) & x1F001F;
+    b = s & 0xFC00;
+    a |= a >> 5;
+    a |= b >> 5;
+    return a;
+}
+
+static void
+fast_write_back_r5g6b5 (pixman_iter_t *iter)
+{
+    int32_t w = iter->width;
+    uint16_t *dst = (uint16_t *)(iter->bits - iter->stride);
+    const uint32_t *src = iter->buffer;
+    /* Workaround to ensure that x1F001F variable is allocated in a register */
+    static volatile uint32_t volatile_x1F001F = 0x1F001F;
+    uint32_t x1F001F = volatile_x1F001F;
+
+    while ((w -= 4) >= 0)
+    {
+	uint32_t s1 = *src++;
+	uint32_t s2 = *src++;
+	uint32_t s3 = *src++;
+	uint32_t s4 = *src++;
+	*dst++ = convert_8888_to_0565_workaround (s1, x1F001F);
+	*dst++ = convert_8888_to_0565_workaround (s2, x1F001F);
+	*dst++ = convert_8888_to_0565_workaround (s3, x1F001F);
+	*dst++ = convert_8888_to_0565_workaround (s4, x1F001F);
+    }
+    if (w & 2)
+    {
+	*dst++ = convert_8888_to_0565_workaround (*src++, x1F001F);
+	*dst++ = convert_8888_to_0565_workaround (*src++, x1F001F);
+    }
+    if (w & 1)
+    {
+	*dst = convert_8888_to_0565_workaround (*src, x1F001F);
+    }
+}
+
+typedef struct
+{
+    pixman_format_code_t	format;
+    pixman_iter_get_scanline_t	get_scanline;
+    pixman_iter_write_back_t	write_back;
+} fetcher_info_t;
+
+static const fetcher_info_t fetchers[] =
+{
+    { PIXMAN_r5g6b5, fast_fetch_r5g6b5, fast_write_back_r5g6b5 },
+    { PIXMAN_null }
+};
+
+static pixman_bool_t
+fast_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+{
+    pixman_image_t *image = iter->image;
+
+#define FLAGS								\
+    (FAST_PATH_STANDARD_FLAGS | FAST_PATH_ID_TRANSFORM |		\
+     FAST_PATH_BITS_IMAGE | FAST_PATH_SAMPLES_COVER_CLIP_NEAREST)
+
+    if (iter->iter_flags & ITER_16)
+	    return FALSE;
+
+    if ((iter->iter_flags & ITER_NARROW)			&&
+	(iter->image_flags & FLAGS) == FLAGS)
+    {
+	const fetcher_info_t *f;
+
+	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
+	{
+	    if (image->common.extended_format_code == f->format)
+	    {
+		uint8_t *b = (uint8_t *)image->bits.bits;
+		int s = image->bits.rowstride * 4;
+
+		iter->bits = b + s * iter->y + iter->x * PIXMAN_FORMAT_BPP (f->format) / 8;
+		iter->stride = s;
+
+		iter->get_scanline = f->get_scanline;
+		return TRUE;
+	    }
+	}
+    }
+
+    return FALSE;
+}
+
+static pixman_bool_t
+fast_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+{
+    pixman_image_t *image = iter->image;
+
+    if (iter->iter_flags & ITER_16)
+	    return FALSE;
+
+    if ((iter->iter_flags & ITER_NARROW)		&&
+	(iter->image_flags & FAST_PATH_STD_DEST_FLAGS) == FAST_PATH_STD_DEST_FLAGS)
+    {
+	const fetcher_info_t *f;
+
+	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
+	{
+	    if (image->common.extended_format_code == f->format)
+	    {
+		uint8_t *b = (uint8_t *)image->bits.bits;
+		int s = image->bits.rowstride * 4;
+
+		iter->bits = b + s * iter->y + iter->x * PIXMAN_FORMAT_BPP (f->format) / 8;
+		iter->stride = s;
+
+		if ((iter->iter_flags & (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA)) ==
+		    (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA))
+		{
+		    iter->get_scanline = fast_dest_fetch_noop;
+		}
+		else
+		{
+		    iter->get_scanline = f->get_scanline;
+		}
+		iter->write_back = f->write_back;
+		return TRUE;
+	    }
+	}
+    }
+    return FALSE;
+}
+
+
 pixman_implementation_t *
 _pixman_implementation_create_fast_path (pixman_implementation_t *fallback)
 {
     pixman_implementation_t *imp = _pixman_implementation_create (fallback, c_fast_paths);
 
     imp->fill = fast_path_fill;
+    imp->src_iter_init = fast_src_iter_init;
+    imp->dest_iter_init = fast_dest_iter_init;
 
     return imp;
 }

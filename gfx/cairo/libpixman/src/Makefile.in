@@ -93,6 +93,7 @@ CSRCS	= \
 	pixman-edge.c \
 	pixman-edge-accessors.c \
 	pixman-fast-path.c \
+	pixman-filter.c \
 	pixman-general.c \
 	pixman-gradient-walker.c \
 	pixman-glyph.c \
@@ -129,7 +130,7 @@ endif
 
 ifdef USE_ARM_SIMD_GCC
 CSRCS += pixman-arm-simd.c
-SSRCS += pixman-arm-simd-asm.S
+SSRCS += pixman-arm-simd-asm.S pixman-arm-simd-asm-scaled.S
 DEFINES += -DUSE_ARM_SIMD
 endif
 
