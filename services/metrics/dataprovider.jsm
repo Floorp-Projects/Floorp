@@ -392,18 +392,20 @@ this.Provider = function () {
 
 Provider.prototype = Object.freeze({
   /**
-   * Whether the provider provides only constant data.
+   * Whether the provider only pulls data from other sources.
    *
-   * If this is true, the provider likely isn't instantiated until
-   * `collectConstantData` is called and the provider may be torn down after
-   * this function has finished.
+   * If this is true, the provider pulls data from other sources. By contrast,
+   * "push-based" providers subscribe to foreign sources and record/react to
+   * external events as they happen.
    *
-   * This is an optimization so provider instances aren't dead weight while the
-   * application is running.
+   * Pull-only providers likely aren't instantiated until a data collection
+   * is performed. Thus, implementations cannot rely on a provider instance
+   * always being alive. This is an optimization so provider instances aren't
+   * dead weight while the application is running.
    *
-   * This must be set on the prototype for the optimization to be realized.
+   * This must be set on the prototype to have an effect.
    */
-  constantOnly: false,
+  pullOnly: false,
 
   /**
    * Obtain a `Measurement` from its name and version.
