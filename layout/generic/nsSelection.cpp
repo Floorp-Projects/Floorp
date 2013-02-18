@@ -2930,9 +2930,9 @@ nsFrameSelection::DeleteFromDocument()
     return NS_OK;
   }
 
-  uint32_t rangeCount = mDomSelections[index]->GetRangeCount();
-  for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
-    nsRefPtr<nsRange> range = mDomSelections[index]->GetRangeAt(rangeIdx);
+  nsRefPtr<mozilla::Selection> selection = mDomSelections[index];
+  for (uint32_t rangeIdx = 0; rangeIdx < selection->GetRangeCount(); ++rangeIdx) {
+    nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
     res = range->DeleteContents();
     if (NS_FAILED(res))
       return res;
