@@ -94,7 +94,7 @@ CPPSRCS		= \
 		HTMLFieldSetElement.cpp \
 		HTMLFontElement.cpp \
 		nsHTMLFormElement.cpp \
-		nsHTMLFrameElement.cpp \
+		HTMLFrameElement.cpp \
 		HTMLFrameSetElement.cpp \
 		HTMLHRElement.cpp \
 		HTMLHeadingElement.cpp \
