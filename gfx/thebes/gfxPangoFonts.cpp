@@ -329,6 +329,12 @@ public:
         // mPatterns is an nsAutoTArray with 1 space always available, so the
         // AppendElement always succeeds.
         mPatterns[0] = aFontPattern;
+
+        FcChar8 *name;
+        if (FcPatternGetString(aFontPattern,
+                               FC_FAMILY, 0, &name) == FcResultMatch) {
+            mFamilyName = NS_ConvertUTF8toUTF16((const char*)name);
+        }
     }
 
     ~gfxSystemFcFontEntry()
@@ -386,6 +392,7 @@ protected:
         mWeight = aProxyEntry.mWeight;
         mStretch = aProxyEntry.mStretch;
         mIsUserFont = true;
+        mFamilyName = aProxyEntry.mFamilyName;
     }
 
     // Helper function to change a pattern so that it matches the CSS style
