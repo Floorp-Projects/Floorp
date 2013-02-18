@@ -153,8 +153,14 @@ ProfileCreationTimeAccessor.prototype = {
           }
         }
       }
+
+      function onStatFailure(e) {
+        // Never mind.
+        self._log.debug("Stat failure: " + CommonUtils.exceptionStr(e));
+      }
+
       return OS.File.stat(entry.path)
-                    .then(onStatSuccess);
+                    .then(onStatSuccess, onStatFailure);
     }
 
     let promise = iterator.forEach(onEntry);
