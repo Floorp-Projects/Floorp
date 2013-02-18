@@ -41,18 +41,21 @@ simple_events = [
 #endif
     'MozSmsEvent',
     'DeviceStorageChangeEvent',
-    'PopupBlockedEvent'
+    'PopupBlockedEvent',
+    'BlobEvent'
   ]
 
 """ include file names """
 special_includes = [
     'DictionaryHelpers.h',
     'nsContentUtils.h',
-    'nsIDOMApplicationRegistry.h'
+    'nsIDOMApplicationRegistry.h',
+    'nsIDOMFile.h'
   ]
 
 """ name of the type to not include using #include "typename.h" """
 exclude_automatic_type_include = [
     'nsISupports',
-    'mozIDOMApplication'
+    'mozIDOMApplication',
+    'nsIDOMBlob'
   ]
