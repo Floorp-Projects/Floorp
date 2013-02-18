@@ -9,7 +9,7 @@
 #include "nsXULContextMenuBuilder.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
-#include "nsHTMLMenuItemElement.h"
+#include "HTMLMenuItemElement.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
 
@@ -210,8 +210,7 @@ nsHTMLMenuElement::TraverseContent(nsIContent* aContent,
     nsIAtom* tag = child->Tag();
 
     if (tag == nsGkAtoms::menuitem) {
-      nsHTMLMenuItemElement* menuitem =
-        nsHTMLMenuItemElement::FromContent(child);
+      HTMLMenuItemElement* menuitem = HTMLMenuItemElement::FromContent(child);
 
       if (menuitem->IsHidden()) {
         continue;
