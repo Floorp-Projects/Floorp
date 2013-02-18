@@ -738,6 +738,18 @@ let SessionStoreInternal = {
       let followUp = this._statesToRestore[aWindow.__SS_restoreID].windows.length == 1;
       this.restoreWindow(aWindow, this._statesToRestore[aWindow.__SS_restoreID], true, followUp);
     }
+    // The user opened another, non-private window after starting up with
+    // a single private one. Let's restore the session we actually wanted to
+    // restore at startup.
+    else if (this._deferredInitialState && !isPrivateWindow &&
+             aWindow.toolbar.visible) {
+
+      this._deferredInitialState._firstTabs = true;
+      this._restoreCount = this._deferredInitialState.windows ?
+        this._deferredInitialState.windows.length : 0;
+      this.restoreWindow(aWindow, this._deferredInitialState, true);
+      this._deferredInitialState = null;
+    }
     else if (this._restoreLastWindow && aWindow.toolbar.visible &&
              this._closedWindows.length && !isPrivateWindow) {
 
