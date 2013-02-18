@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHTMLOptionElement_h__
-#define nsHTMLOptionElement_h__
+#ifndef mozilla_dom_HTMLOptionElement_h__
+#define mozilla_dom_HTMLOptionElement_h__
 
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLOptionElement.h"
@@ -13,15 +13,18 @@
 
 class nsHTMLSelectElement;
 
-class nsHTMLOptionElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLOptionElement,
-                            public nsIJSNativeInitializer
+namespace mozilla {
+namespace dom {
+
+class HTMLOptionElement : public nsGenericHTMLElement,
+                          public nsIDOMHTMLOptionElement,
+                          public nsIJSNativeInitializer
 {
 public:
-  nsHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLOptionElement();
+  HTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLOptionElement();
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLOptionElement, option)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLOptionElement, option)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -92,4 +95,7 @@ protected:
   bool mIsInSetDefaultSelected;
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_HTMLOptionElement_h__

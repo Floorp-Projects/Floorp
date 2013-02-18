@@ -54,6 +54,7 @@ EXPORTS_mozilla/dom = \
 		HTMLMetaElement.h \
 		HTMLMeterElement.h \
 		HTMLModElement.h \
+		HTMLOptionElement.h \
 		HTMLOptGroupElement.h \
 		HTMLOutputElement.h \
 		HTMLParagraphElement.h \
@@ -115,7 +116,7 @@ CPPSRCS		= \
 		HTMLModElement.cpp \
 		HTMLObjectElement.cpp \
 		nsHTMLSharedObjectElement.cpp \
-		nsHTMLOptionElement.cpp \
+		HTMLOptionElement.cpp \
 		HTMLOptGroupElement.cpp \
 		HTMLOutputElement.cpp \
 		HTMLParagraphElement.cpp \

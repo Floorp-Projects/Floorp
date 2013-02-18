@@ -16,12 +16,13 @@
 #include "States.h"
 
 #include "nsCOMPtr.h"
-#include "nsHTMLOptionElement.h"
+#include "mozilla/dom/HTMLOptionElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIFrame.h"
 #include "nsIListControlFrame.h"
 
 using namespace mozilla::a11y;
+using namespace mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLSelectListAccessible
@@ -218,7 +219,7 @@ HTMLSelectOptionAccessible::NativeState()
     return state;
 
   // Are we selected?
-  nsHTMLOptionElement* option = nsHTMLOptionElement::FromContent(mContent);
+  HTMLOptionElement* option = HTMLOptionElement::FromContent(mContent);
   bool selected = option && option->Selected();
   if (selected)
     state |= states::SELECTED;
@@ -265,7 +266,7 @@ HTMLSelectOptionAccessible::NativeInteractiveState() const
 int32_t
 HTMLSelectOptionAccessible::GetLevelInternal()
 {
-  nsIContent *parentContent = mContent->GetParent();
+  nsIContent* parentContent = mContent->GetParent();
 
   int32_t level =
     parentContent->NodeInfo()->Equals(nsGkAtoms::optgroup) ? 2 : 1;
@@ -322,7 +323,7 @@ HTMLSelectOptionAccessible::SetSelected(bool aSelect)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsHTMLOptionElement* option = nsHTMLOptionElement::FromContent(mContent);
+  HTMLOptionElement* option = HTMLOptionElement::FromContent(mContent);
   return option ? option->SetSelected(aSelect) : NS_ERROR_FAILURE;
 }
 
@@ -425,11 +426,11 @@ HTMLComboboxAccessible::CacheChildren()
   if (!frame)
     return;
 
-  nsIComboboxControlFrame *comboFrame = do_QueryFrame(frame);
+  nsIComboboxControlFrame* comboFrame = do_QueryFrame(frame);
   if (!comboFrame)
     return;
 
-  nsIFrame *listFrame = comboFrame->GetDropDown();
+  nsIFrame* listFrame = comboFrame->GetDropDown();
   if (!listFrame)
     return;
 
@@ -534,11 +535,11 @@ HTMLComboboxAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
   if (aIndex != HTMLComboboxAccessible::eAction_Click) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsIFrame *frame = GetFrame();
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     return NS_ERROR_FAILURE;
   }
-  nsIComboboxControlFrame *comboFrame = do_QueryFrame(frame);
+  nsIComboboxControlFrame* comboFrame = do_QueryFrame(frame);
   if (!comboFrame) {
     return NS_ERROR_FAILURE;
   }
