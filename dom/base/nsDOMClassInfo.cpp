@@ -309,7 +309,6 @@
 #include "nsIDOMMozBrowserFrame.h"
 
 #include "nsIDOMGetSVGDocument.h"
-#include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsIDOMSVGAnimatedLength.h"
@@ -1019,8 +1018,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOCUMENT_SCRIPTABLE_FLAGS)
 
   // SVG element classes
-  NS_DEFINE_CLASSINFO_DATA(SVGAElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TimeEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEBlendElement, nsElementSH,
@@ -2856,13 +2853,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   // SVG element classes
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGAElement, nsIDOMSVGAElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
-    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(TimeEvent, nsIDOMTimeEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTimeEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
