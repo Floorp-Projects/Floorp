@@ -17,7 +17,6 @@ XPIDL_MODULE	= dom_svg
 
 XPIDLSRCS	= \
 		nsIDOMGetSVGDocument.idl \
-		nsIDOMSVGAElement.idl \
 		nsIDOMSVGAnimatedEnum.idl \
 		nsIDOMSVGAnimatedInteger.idl \
 		nsIDOMSVGAnimatedLength.idl \
