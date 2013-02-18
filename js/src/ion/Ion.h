@@ -89,7 +89,7 @@ struct IonOptions
     // How many invocations or loop iterations are needed before functions
     // are compiled.
     //
-    // Default: 10,240
+    // Default: 1,000
     uint32_t usesBeforeCompile;
 
     // How many invocations or loop iterations are needed before functions
@@ -190,7 +190,7 @@ struct IonOptions
         rangeAnalysis(true),
         uce(true),
         parallelCompilation(false),
-        usesBeforeCompile(10240),
+        usesBeforeCompile(1000),
         usesBeforeCompileNoJaeger(40),
         usesBeforeInliningFactor(.125),
         maxStackArgs(4096),
