@@ -30,7 +30,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGImageElement.idl \
 		nsIDOMSVGLength.idl \
 		nsIDOMSVGMarkerElement.idl \
-		nsIDOMSVGMaskElement.idl \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGStringList.idl \
