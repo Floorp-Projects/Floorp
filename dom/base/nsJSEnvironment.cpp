@@ -3240,7 +3240,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
     sHasRunGC = true;
     nsJSContext::MaybePokeCC();
 
-    if (aDesc.isCompartment) {
+    if (aDesc.isCompartment_) {
       ++sCompartmentGCCount;
       if (!sFullGCTimer && !sShuttingDown) {
         CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);

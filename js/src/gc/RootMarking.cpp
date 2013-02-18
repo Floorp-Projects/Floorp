@@ -372,14 +372,14 @@ ConservativeGCData::recordStackTop()
 void
 AutoIdArray::trace(JSTracer *trc)
 {
-    JS_ASSERT(tag == IDARRAY);
+    JS_ASSERT(tag_ == IDARRAY);
     gc::MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
 inline void
 AutoGCRooter::trace(JSTracer *trc)
 {
-    switch (tag) {
+    switch (tag_) {
       case JSVAL:
         MarkValueRoot(trc, &static_cast<AutoValueRooter *>(this)->val, "JS::AutoValueRooter.val");
         return;
@@ -426,9 +426,9 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case OBJECT:
-        if (static_cast<AutoObjectRooter *>(this)->obj)
-            MarkObjectRoot(trc, &static_cast<AutoObjectRooter *>(this)->obj,
-                           "JS::AutoObjectRooter.obj");
+        if (static_cast<AutoObjectRooter *>(this)->obj_)
+            MarkObjectRoot(trc, &static_cast<AutoObjectRooter *>(this)->obj_,
+                           "JS::AutoObjectRooter.obj_");
         return;
 
       case ID:
@@ -442,9 +442,9 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case STRING:
-        if (static_cast<AutoStringRooter *>(this)->str)
-            MarkStringRoot(trc, &static_cast<AutoStringRooter *>(this)->str,
-                           "JS::AutoStringRooter.str");
+        if (static_cast<AutoStringRooter *>(this)->str_)
+            MarkStringRoot(trc, &static_cast<AutoStringRooter *>(this)->str_,
+                           "JS::AutoStringRooter.str_");
         return;
 
       case IDVECTOR: {
@@ -623,8 +623,8 @@ AutoGCRooter::trace(JSTracer *trc)
       }
     }
 
-    JS_ASSERT(tag >= 0);
-    MarkValueRootRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array,
+    JS_ASSERT(tag_ >= 0);
+    MarkValueRootRange(trc, tag_, static_cast<AutoArrayRooter *>(this)->array,
                        "JS::AutoArrayRooter.array");
 }
 
@@ -639,7 +639,7 @@ AutoGCRooter::traceAll(JSTracer *trc)
 AutoGCRooter::traceAllWrappers(JSTracer *trc)
 {
     for (js::AutoGCRooter *gcr = trc->runtime->autoGCRooters; gcr; gcr = gcr->down) {
-        if (gcr->tag == WRAPVECTOR || gcr->tag == WRAPPER)
+        if (gcr->tag_ == WRAPVECTOR || gcr->tag_ == WRAPPER)
             gcr->trace(trc);
     }
 }
