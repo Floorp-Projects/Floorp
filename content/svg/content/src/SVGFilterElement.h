@@ -6,8 +6,6 @@
 #ifndef mozilla_dom_SVGFilterElement_h
 #define mozilla_dom_SVGFilterElement_h
 
-#include "nsIDOMSVGFilterElement.h"
-#include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsSVGEnum.h"
 #include "nsSVGElement.h"
@@ -25,11 +23,11 @@ nsresult NS_NewSVGFilterElement(nsIContent **aResult,
 
 namespace mozilla {
 namespace dom {
+class SVGAnimatedLength;
 
 class SVGFilterElement : public SVGFilterElementBase,
-                         public nsIDOMSVGFilterElement,
-                         public nsIDOMSVGURIReference,
-                         public nsIDOMSVGUnitTypes
+                         public nsIDOMSVGElement,
+                         public nsIDOMSVGURIReference
 {
   friend class ::nsSVGFilterFrame;
   friend class ::nsAutoFilterInstance;
@@ -38,12 +36,12 @@ protected:
   friend nsresult (::NS_NewSVGFilterElement(nsIContent **aResult,
                                             already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
 public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFILTERELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx I wish we could use virtual inheritance
@@ -58,12 +56,23 @@ public:
   // Invalidate users of this filter
   void Invalidate();
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;
+
+  // WebIDL
+  already_AddRefed<SVGAnimatedLength> X();
+  already_AddRefed<SVGAnimatedLength> Y();
+  already_AddRefed<SVGAnimatedLength> Width();
+  already_AddRefed<SVGAnimatedLength> Height();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> FilterUnits();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> PrimitiveUnits();
+  already_AddRefed<nsIDOMSVGAnimatedInteger> FilterResX();
+  already_AddRefed<nsIDOMSVGAnimatedInteger> FilterResY();
+  void SetFilterRes(uint32_t filterResX, uint32_t filterResY);
+  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
@@ -71,7 +80,7 @@ protected:
   virtual EnumAttributesInfo GetEnumInfo();
   virtual StringAttributesInfo GetStringInfo();
 
-  enum { X, Y, WIDTH, HEIGHT };
+  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 

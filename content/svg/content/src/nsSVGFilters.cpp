@@ -15,7 +15,6 @@
 #include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
 #include "nsSVGFilterInstance.h"
-#include "nsIDOMSVGFilterElement.h"
 #include "nsSVGEnum.h"
 #include "SVGNumberList.h"
 #include "SVGAnimatedNumberList.h"
@@ -5754,8 +5753,7 @@ nsSVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRec
 void
 nsSVGFEImageElement::Invalidate()
 {
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  if (filter) {
+  if (GetParent()->IsSVG(nsGkAtoms::filter)) {
     static_cast<SVGFilterElement*>(GetParent())->Invalidate();
   }
 }
