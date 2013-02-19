@@ -976,13 +976,16 @@ ICTypeMonitor_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleValue val)
+ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleObject obj,
+                                     RawId id, HandleValue val)
 {
     if (numOptimizedStubs_ >= MAX_OPTIMIZED_STUBS) {
         // TODO: if the TypeSet becomes unknown or has the AnyObject type,
         // replace stubs with a single stub to handle these.
         return true;
     }
+
+    types::EnsureTrackPropertyTypes(cx, obj, id);
 
     if (val.isPrimitive()) {
         JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
@@ -1048,21 +1051,21 @@ DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue objval, Han
 
     RootedScript script(cx, GetTopIonJSScript(cx));
     RootedObject obj(cx, &objval.toObject());
+    RootedId id(cx);
 
     switch(stub->kind()) {
       case ICStub::SetElem_Dense:
       case ICStub::SetElem_DenseAdd: {
         JS_ASSERT(obj->isNative());
-        types::EnsureTrackPropertyTypes(cx, obj, JSID_VOID);
-        types::AddTypePropertyId(cx, obj, JSID_VOID, value);
+        id = JSID_VOID;
+        types::AddTypePropertyId(cx, obj, id, value);
         break;
       }
       case ICStub::SetProp_Native: {
         JS_ASSERT(obj->isNative());
         jsbytecode *pc = stub->getChainFallback()->icEntry()->pc(script);
-        RootedPropertyName name(cx, script->getName(pc));
-        types::EnsureTrackPropertyTypes(cx, obj, NameToId(name));
-        types::AddTypePropertyId(cx, obj, NameToId(name), value);
+        id = NameToId(script->getName(pc));
+        types::AddTypePropertyId(cx, obj, id, value);
         break;
       }
       default:
@@ -1070,7 +1073,7 @@ DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue objval, Han
         return false;
     }
 
-    return stub->addUpdateStubForValue(cx, script, value);
+    return stub->addUpdateStubForValue(cx, script, obj, id, value);
 }
 
 typedef bool (*DoTypeUpdateFallbackFn)(JSContext *, ICUpdatedStub *, HandleValue, HandleValue);
@@ -2087,7 +2090,7 @@ ConvertObjectToStringForConcat(JSContext *cx, HandleValue obj)
     JS_ASSERT(obj.isObject());
     RootedValue rootedObj(cx, obj);
     if (!ToPrimitive(cx, &rootedObj))
-        return false;
+        return NULL;
     return ToString<CanGC>(cx, rootedObj);
 }
 
@@ -2829,7 +2832,7 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
                 ICUpdatedStub *denseStub = compiler.getStub(compiler.getStubSpace(script));
                 if (!denseStub)
                     return false;
-                if (!denseStub->addUpdateStubForValue(cx, script, rhs))
+                if (!denseStub->addUpdateStubForValue(cx, script, obj, JSID_VOID, rhs))
                     return false;
 
                 stub->addNewStub(denseStub);
@@ -2843,7 +2846,7 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
                 ICUpdatedStub *denseStub = compiler.getStub(compiler.getStubSpace(script));
                 if (!denseStub)
                     return false;
-                if (!denseStub->addUpdateStubForValue(cx, script, rhs))
+                if (!denseStub->addUpdateStubForValue(cx, script, obj, JSID_VOID, rhs))
                     return false;
 
                 stub->addNewStub(denseStub);
@@ -3903,7 +3906,7 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stu
     ICUpdatedStub *newStub = compiler.getStub(compiler.getStubSpace(script));
     if (!newStub)
         return false;
-    if (!newStub->addUpdateStubForValue(cx, script, rhs))
+    if (!newStub->addUpdateStubForValue(cx, script, obj, id, rhs))
         return false;
 
     stub->addNewStub(newStub);
