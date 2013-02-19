@@ -162,13 +162,12 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
   // allow one of each.
   // TODO(ekr@rtfm.com): remove this when multiple of each stream
   // is allowed
-  PR_Lock(mLocalSourceStreamsLock);
+  mozilla::MutexAutoLock lock(mLocalSourceStreamsLock);
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
     nsRefPtr<LocalSourceStreamInfo> localSourceStream = mLocalSourceStreams[u];
 
     if (localSourceStream->GetMediaStream()->GetHintContents() & hints) {
       CSFLogError(logTag, "Only one stream of any given type allowed");
-      PR_Unlock(mLocalSourceStreamsLock);
       return NS_ERROR_FAILURE;
     }
   }
@@ -188,7 +187,6 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
 
   mLocalSourceStreams.AppendElement(localSourceStream);
 
-  PR_Unlock(mLocalSourceStreamsLock);
   return NS_OK;
 }
 
@@ -201,17 +199,15 @@ PeerConnectionMedia::RemoveStream(nsIDOMMediaStream* aMediaStream, uint32_t *str
 
   CSFLogDebugS(logTag, __FUNCTION__ << ": MediaStream: " << static_cast<void*>(aMediaStream));
 
-  PR_Lock(mLocalSourceStreamsLock);
+  mozilla::MutexAutoLock lock(mLocalSourceStreamsLock);
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
     nsRefPtr<LocalSourceStreamInfo> localSourceStream = mLocalSourceStreams[u];
     if (localSourceStream->GetMediaStream() == stream) {
       *stream_id = u;
-      PR_Unlock(mLocalSourceStreamsLock);
       return NS_OK;
     }
   }
 
-  PR_Unlock(mLocalSourceStreamsLock);
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
