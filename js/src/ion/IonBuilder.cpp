@@ -5523,7 +5523,7 @@ IonBuilder::jsop_getelem_dense()
 MInstruction *
 IonBuilder::getTypedArrayLength(MDefinition *obj)
 {
-    if (obj->isConstant()) {
+    if (obj->isConstant() && obj->toConstant()->value().isObject()) {
         JSObject *array = &obj->toConstant()->value().toObject();
         int32_t length = (int32_t) TypedArray::length(array);
         obj->setFoldedUnchecked();
@@ -5535,7 +5535,7 @@ IonBuilder::getTypedArrayLength(MDefinition *obj)
 MInstruction *
 IonBuilder::getTypedArrayElements(MDefinition *obj)
 {
-    if (obj->isConstant()) {
+    if (obj->isConstant() && obj->toConstant()->value().isObject()) {
         JSObject *array = &obj->toConstant()->value().toObject();
         void *data = TypedArray::viewData(array);
         obj->setFoldedUnchecked();
