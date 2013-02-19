@@ -8,7 +8,7 @@ const { Cc, Ci } = require("chrome");
 const { Loader } = require('sdk/test/loader');
 const url = require("sdk/url");
 const timer = require("sdk/timers");
-const self = require("self");
+const self = require("sdk/self");
 const windowUtils = require("sdk/deprecated/window-utils");
 
 exports.testConstructor = function(test) {
@@ -1029,7 +1029,7 @@ exports.testSVGWidget = function(test) {
   // use of capital SVG here is intended, that was failing..
   let SVG_URL = self.data.url("mofo_logo.SVG");
 
-  let widget = require("widget").Widget({
+  let widget = require("sdk/widget").Widget({
     id: "mozilla-svg-logo",
     label: "moz foundation logo",
     contentURL: SVG_URL,
