@@ -3194,10 +3194,45 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
         return false;
     }
 
+    JSOp op = JSOp(*pc);
     for (size_t i = 0; i < targets.length(); i++) {
-        if (!canInlineTarget(targets[i]->toFunction())) {
+        JSFunction *target = targets[i]->toFunction();
+
+        if (!canInlineTarget(target)) {
             IonSpew(IonSpew_Inlining, "Decided not to inline");
             return false;
+        }
+
+        // For fun.apply we need to make sure the types of the argument is a subset
+        // of the types used in the callee. Because adding a typeset in the callee,
+        // doesn't update the types in the "apply" function, resulting in missed types.
+        if (op == JSOP_FUNAPPLY) {
+            types::TypeSet *calleeType, *callerType;
+            size_t nargs = Min<size_t>(target->nargs, inlinedArguments_.length());
+            for (size_t i = 0; i < nargs; i++) {
+                calleeType = types::TypeScript::ArgTypes(targetScript, i);
+                // The arguments to this function aren't always available in this script.
+                // We need to get them from the caller at the position where
+                // the function gets called.
+                callerType = oracle->getCallArg(callerBuilder_->script_.get(),
+                                                inlinedArguments_.length(),
+                                                i+1, callerBuilder_->pc);
+
+                if (!callerType->isSubset(calleeType)) {
+                    IonSpew(IonSpew_Inlining, "Funapply inlining failed due to wrong types");
+                    return false;
+                }
+            }
+            // Arguments that weren't provided will be Undefined
+            for (size_t i = nargs; i < target->nargs; i++) {
+                calleeType = types::TypeScript::ArgTypes(targetScript, i);
+                if (calleeType->unknown() ||
+                    !calleeType->hasType(types::Type::UndefinedType()))
+                {
+                    IonSpew(IonSpew_Inlining, "Funapply inlining failed due to wrong types");
+                    return false;
+                }
+            }
         }
     }
 
