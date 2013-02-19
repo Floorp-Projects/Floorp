@@ -670,10 +670,16 @@ class Argument():
     """
     A class for outputting the type and name of an argument
     """
-    def __init__(self, argType, name):
+    def __init__(self, argType, name, default=None):
         self.argType = argType
         self.name = name
-    def __str__(self):
+        self.default = default
+    def declare(self):
+        string = self.argType + ' ' + self.name
+        if self.default is not None:
+            string += " = " + self.default
+        return string
+    def define(self):
         return self.argType + ' ' + self.name
 
 class CGAbstractMethod(CGThing):
@@ -712,8 +718,8 @@ class CGAbstractMethod(CGThing):
         self.alwaysInline = alwaysInline
         self.static = static
         self.templateArgs = templateArgs
-    def _argstring(self):
-        return ', '.join([str(a) for a in self.args])
+    def _argstring(self, declare):
+        return ', '.join([a.declare() if declare else a.define() for a in self.args])
     def _template(self):
         if self.templateArgs is None:
             return ''
@@ -731,15 +737,15 @@ class CGAbstractMethod(CGThing):
         return ' '.join(decorators) + maybeNewline
     def declare(self):
         if self.inline:
-            return self._define()
-        return "%s%s%s(%s);\n" % (self._template(), self._decorators(), self.name, self._argstring())
-    def _define(self):
-        return self.definition_prologue() + "\n" + self.definition_body() + self.definition_epilogue()
+            return self._define(True)
+        return "%s%s%s(%s);\n" % (self._template(), self._decorators(), self.name, self._argstring(True))
+    def _define(self, fromDeclare=False):
+        return self.definition_prologue(fromDeclare) + "\n" + self.definition_body() + self.definition_epilogue()
     def define(self):
         return "" if self.inline else self._define()
-    def definition_prologue(self):
+    def definition_prologue(self, fromDeclare):
         return "%s%s%s(%s)\n{" % (self._template(), self._decorators(),
-                                  self.name, self._argstring())
+                                  self.name, self._argstring(fromDeclare))
     def definition_epilogue(self):
         return "\n}\n"
     def definition_body(self):
@@ -5187,7 +5193,7 @@ class ClassMethod(ClassItem):
     def declare(self, cgClass):
         templateClause = 'template <%s>\n' % ', '.join(self.templateArgs) \
                          if self.bodyInHeader and self.templateArgs else ''
-        args = ', '.join([str(a) for a in self.args])
+        args = ', '.join([a.declare() for a in self.args])
         if self.bodyInHeader:
             body = CGIndenter(CGGeneric(self.getBody())).define()
             body = '\n{\n' + body + '\n}'
@@ -5223,7 +5229,7 @@ class ClassMethod(ClassItem):
         else:
             templateClause = ''
 
-        args = ', '.join([str(a) for a in self.args])
+        args = ', '.join([a.define() for a in self.args])
 
         body = CGIndenter(CGGeneric(self.getBody())).define()
 
@@ -5301,7 +5307,7 @@ class ClassConstructor(ClassItem):
         return self.body
 
     def declare(self, cgClass):
-        args = ', '.join([str(a) for a in self.args])
+        args = ', '.join([a.declare() for a in self.args])
         if self.bodyInHeader:
             body = '  ' + self.getBody();
             body = stripTrailingWhitespace(body.replace('\n', '\n  '))
@@ -5495,7 +5501,7 @@ class CGClass(CGThing):
     def declare(self):
         result = ''
         if self.templateArgs:
-            templateArgs = [str(a) for a in self.templateArgs]
+            templateArgs = [a.declare() for a in self.templateArgs]
             templateArgs = templateArgs[len(self.templateSpecialization):]
             result = result + self.indent + 'template <%s>\n' \
                      % ','.join([str(a) for a in templateArgs])
@@ -7703,11 +7709,16 @@ class CGCallback(CGClass):
         argnames = [arg.name for arg in args]
         argnamesWithThis = ["s.GetContext()", "thisObjJS"] + argnames
         argnamesWithoutThis = ["s.GetContext()", "nullptr"] + argnames
+        # Now that we've recorded the argnames for our call to our private
+        # method, insert our optional argument for deciding whether the
+        # CallSetup should re-throw exceptions on aRv.
+        args.append(Argument("ExceptionHandling", "aExceptionHandling",
+                             "eReportExceptions"))
         # And now insert our template argument.
         argsWithoutThis = list(args)
         args.insert(0, Argument("const T&",  "thisObj"))
 
-        setupCall = ("CallSetup s(mCallback, aRv, eReportExceptions);\n"
+        setupCall = ("CallSetup s(mCallback, aRv, aExceptionHandling);\n"
                      "if (!s.GetContext()) {\n"
                      "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
                      "  return${errorReturn};\n"
@@ -7959,7 +7970,10 @@ class CallbackMember(CGNativeMember):
     def getArgs(self, returnType, argList):
         args = CGNativeMember.getArgs(self, returnType, argList)
         if not self.needThisHandling:
-            return args
+            # Since we don't need this handling, we're the actual method that
+            # will be called, so we need an aRethrowExceptions argument.
+            return args + [Argument("ExceptionHandling", "aExceptionHandling",
+                                    "eReportExceptions")]
         # We want to allow the caller to pass in a "this" object, as
         # well as a JSContext.
         return [Argument("JSContext*", "cx"),
@@ -7970,7 +7984,7 @@ class CallbackMember(CGNativeMember):
             # It's been done for us already
             return ""
         return string.Template(
-            "CallSetup s(mCallback, aRv, eReportExceptions);\n"
+            "CallSetup s(mCallback, aRv, aExceptionHandling);\n"
             "JSContext* cx = s.GetContext();\n"
             "if (!cx) {\n"
             "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
