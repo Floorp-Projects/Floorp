@@ -285,20 +285,6 @@ partial interface Document {
   // nsIDOMDocumentTouch
   // XXXbz I can't find the sane spec for this stuff, so just cribbing
   // from our xpidl for now.
-  // XXXbz commented out for now because quickstubs can't do pref-ability
-  /*
-  [SetterThrows, Func="nsGenericHTMLElement::TouchEventsEnabled"]
-  attribute EventHandler ontouchstart;
-  [SetterThrows, Func="nsGenericHTMLElement::TouchEventsEnabled"]
-  attribute EventHandler ontouchend;
-  [SetterThrows, Func="nsGenericHTMLElement::TouchEventsEnabled"]
-  attribute EventHandler ontouchmove;
-  [SetterThrows, Func="nsGenericHTMLElement::TouchEventsEnabled"]
-  attribute EventHandler ontouchenter;
-  [SetterThrows, Func="nsGenericHTMLElement::TouchEventsEnabled"]
-  attribute EventHandler ontouchleave;
-  [SetterThrows, Func="nsGenericHTMLElement::TouchEventsEnabled"]
-  attribute EventHandler ontouchcancel;
   [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   Touch createTouch(optional Window? view = null,
                     // Nasty hack, because we can't do EventTarget arguments yet
@@ -330,9 +316,9 @@ partial interface Document {
   TouchList createTouchList();
   [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList(sequence<Touch> touches);
-  */
 };
 
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
 Document implements NodeEventHandlers;
+Document implements TouchEventHandlers;
