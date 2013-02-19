@@ -71,7 +71,7 @@ const BackgroundFileSaverStreamListener = Components.Constructor(
  */
 function Download()
 {
-  this._deferDone = Promise.defer();
+  this._deferStopped = Promise.defer();
 }
 
 Download.prototype = {
@@ -93,10 +93,15 @@ Download.prototype = {
   /**
    * Becomes true when the download has been completed successfully, failed, or
    * has been canceled.  This property can become true, then it can be reset to
-   * false when a failed or canceled download is resumed.  This property remains
-   * false while the download is paused.
+   * false when a failed or canceled download is restarted.
    */
-  done: false,
+  stopped: false,
+
+  /**
+   * Indicates that the download has been canceled.  This property can become
+   * true, then it can be reset to false when a canceled download is restarted.
+   */
+  canceled: false,
 
   /**
    * When the download fails, this is set to a DownloadError instance indicating
@@ -141,7 +146,7 @@ Download.prototype = {
   currentBytes: 0,
 
   /**
-   * This can be set to a function that is called when other properties change.
+   * This can be set to a function that is called after other properties change.
    */
   onchange: null,
 
@@ -162,7 +167,7 @@ Download.prototype = {
    * This deferred object is resolved when this download finishes successfully,
    * and rejected if this download fails.
    */
-  _deferDone: null,
+  _deferStopped: null,
 
   /**
    * Starts the download.
@@ -173,31 +178,36 @@ Download.prototype = {
    */
   start: function D_start()
   {
-    this._deferDone.resolve(Task.spawn(function task_D_start() {
+    this._deferStopped.resolve(Task.spawn(function task_D_start() {
       try {
         yield this.saver.execute();
         this.progress = 100;
       } catch (ex) {
+        if (this.canceled) {
+          throw new DownloadError(Cr.NS_ERROR_FAILURE, "Download canceled.");
+        }
         this.error = ex;
         throw ex;
       } finally {
-        this.done = true;
+        this.stopped = true;
         this._notifyChange();
       }
     }.bind(this)));
 
-    return this.whenDone();
+    return this._deferStopped.promise;
   },
 
   /**
-   * Waits for the download to finish.
-   *
-   * @return {Promise}
-   * @resolves When the download has finished successfully.
-   * @rejects JavaScript exception if the download failed.
+   * Cancels the download.
    */
-  whenDone: function D_whenDone() {
-    return this._deferDone.promise;
+  cancel: function D_cancel()
+  {
+    if (this.stopped || this.canceled) {
+      return;
+    }
+
+    this.canceled = true;
+    this.saver.cancel();
   },
 
   /**
@@ -334,7 +344,15 @@ DownloadSaver.prototype = {
   execute: function DS_execute()
   {
     throw new Error("Not implemented.");
-  }
+  },
+
+  /**
+   * Cancels the download.
+   */
+  cancel: function DS_cancel()
+  {
+    throw new Error("Not implemented.");
+  },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +365,11 @@ function DownloadCopySaver() { }
 
 DownloadCopySaver.prototype = {
   __proto__: DownloadSaver.prototype,
+
+  /**
+   * BackgroundFileSaver object currently handling the download.
+   */
+  _backgroundFileSaver: null,
 
   /**
    * Implements "DownloadSaver.execute".
@@ -424,6 +447,9 @@ DownloadCopySaver.prototype = {
                                               aOffset, aCount);
         },
       }, null);
+
+      // If the operation succeeded, store the object to allow cancellation.
+      this._backgroundFileSaver = backgroundFileSaver;
     } catch (ex) {
       // In case an error occurs while setting up the chain of objects for the
       // download, ensure that we release the resources of the background saver.
@@ -431,5 +457,16 @@ DownloadCopySaver.prototype = {
       backgroundFileSaver.finish(Cr.NS_ERROR_FAILURE);
     }
     return deferred.promise;
+  },
+
+  /**
+   * Implements "DownloadSaver.cancel".
+   */
+  cancel: function DCS_cancel()
+  {
+    if (this._backgroundFileSaver) {
+      this._backgroundFileSaver.finish(Cr.NS_ERROR_FAILURE);
+      this._backgroundFileSaver = null;
+    }
   },
 };
