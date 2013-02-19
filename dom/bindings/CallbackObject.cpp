@@ -33,8 +33,12 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCallback)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-CallbackObject::CallSetup::CallSetup(JSObject* const aCallback)
+CallbackObject::CallSetup::CallSetup(JSObject* const aCallback,
+                                     ErrorResult& aRv,
+                                     ExceptionHandling aExceptionHandling)
   : mCx(nullptr)
+  , mErrorResult(aRv)
+  , mExceptionHandling(aExceptionHandling)
 {
   xpc_UnmarkGrayObject(aCallback);
 
@@ -123,14 +127,40 @@ CallbackObject::CallSetup::CallSetup(JSObject* const aCallback)
 
   // And now we're ready to go.
   mCx = cx;
+
+  // Make sure the JS engine doesn't report exceptions we want to re-throw
+  if (mExceptionHandling == eRethrowExceptions) {
+    mSavedJSContextOptions = JS_GetOptions(cx);
+    JS_SetOptions(cx, mSavedJSContextOptions | JSOPTION_DONT_REPORT_UNCAUGHT);
+  }
 }
 
 CallbackObject::CallSetup::~CallSetup()
 {
   // First things first: if we have a JSContext, report any pending
-  // errors on it.
+  // errors on it, unless we were told to re-throw them.
   if (mCx) {
-    nsJSUtils::ReportPendingException(mCx);
+    bool dealtWithPendingException = false;
+    if (mExceptionHandling == eRethrowExceptions) {
+      // Restore the old context options
+      JS_SetOptions(mCx, mSavedJSContextOptions);
+      mErrorResult.MightThrowJSException();
+      if (JS_IsExceptionPending(mCx)) {
+        JS::Value exn;
+        if (JS_GetPendingException(mCx, &exn)) {
+          mErrorResult.ThrowJSException(mCx, exn);
+          JS_ClearPendingException(mCx);
+          dealtWithPendingException = true;
+        }
+      }
+    }
+
+    if (!dealtWithPendingException) {
+      // Either we're supposed to report our exceptions, or we're supposed to
+      // re-throw them but we failed to JS_GetPendingException.  Either way,
+      // just report the pending exception, if any.
+      nsJSUtils::ReportPendingException(mCx);
+    }
   }
 
   // If we have an mCtx, we need to call ScriptEvaluated() on it.  But we have
