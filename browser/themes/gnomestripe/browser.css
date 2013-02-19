@@ -9,7 +9,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-%include ../browserShared.inc
+%include ../shared/browser.inc
 %filter substitution
 %define toolbarHighlight rgba(255,255,255,.3)
 %define selectedTabHighlight rgba(255,255,255,.8) 1px, rgba(255,255,255,.5) 3px
