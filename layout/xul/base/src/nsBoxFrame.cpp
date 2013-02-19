@@ -325,7 +325,7 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   // Now that we've checked for the attribute it's time to check CSS.  For 
   // horizontal boxes we're checking PACK.  For vertical boxes we are checking
   // ALIGN.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   if (IsHorizontal()) {
     switch (boxInfo->mBoxPack) {
       case NS_STYLE_BOX_PACK_START:
@@ -400,7 +400,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   // Now that we've checked for the attribute it's time to check CSS.  For 
   // horizontal boxes we're checking ALIGN.  For vertical boxes we are checking
   // PACK.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   if (IsHorizontal()) {
     switch (boxInfo->mBoxAlign) {
       case NS_STYLE_BOX_ALIGN_START:
@@ -446,7 +446,7 @@ nsBoxFrame::GetInitialOrientation(bool& aIsHorizontal)
     return;
 
   // Check the style system first.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   if (boxInfo->mBoxOrient == NS_STYLE_BOX_ORIENT_HORIZONTAL)
     aIsHorizontal = true;
   else 
@@ -472,13 +472,13 @@ nsBoxFrame::GetInitialDirection(bool& aIsNormal)
   if (IsHorizontal()) {
     // For horizontal boxes only, we initialize our value based off the CSS 'direction' property.
     // This means that BiDI users will end up with horizontally inverted chrome.
-    aIsNormal = (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR); // If text runs RTL then so do we.
+    aIsNormal = (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR); // If text runs RTL then so do we.
   }
   else
     aIsNormal = true; // Assume a normal direction in the vertical case.
 
   // Now check the style system to see if we should invert aIsNormal.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   if (boxInfo->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE)
     aIsNormal = !aIsNormal; // Invert our direction.
   
@@ -536,7 +536,7 @@ nsBoxFrame::GetInitialAutoStretch(bool& aStretch)
   }
 
   // Check the CSS box-align property.
-  const nsStyleXUL* boxInfo = GetStyleXUL();
+  const nsStyleXUL* boxInfo = StyleXUL();
   aStretch = (boxInfo->mBoxAlign == NS_STYLE_BOX_ALIGN_STRETCH);
 
   return true;
@@ -1224,7 +1224,7 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
     // kPopupList and RelayoutChildAtOrdinal() only handles
     // principal children.
     if (parent && !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-        GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_POPUP) {
+        StyleDisplay()->mDisplay != NS_STYLE_DISPLAY_POPUP) {
       parent->RelayoutChildAtOrdinal(state, this);
       // XXXldb Should this instead be a tree change on the child or parent?
       PresContext()->PresShell()->
@@ -1288,7 +1288,7 @@ PaintXULDebugBackground(nsIFrame* aFrame, nsRenderingContext* aCtx,
 }
 #endif
 
-nsresult
+void
 nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                              const nsRect&           aDirtyRect,
                              const nsDisplayListSet& aLists)
@@ -1301,7 +1301,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Check for frames that are marked as a part of the region used
   // in calculating glass margins on Windows.
   if (GetContent()->IsXUL()) {
-      const nsStyleDisplay* styles = mStyleContext->GetStyleDisplay();
+      const nsStyleDisplay* styles = StyleDisplay();
       if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
         nsRect rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
         aBuilder->AddExcludedGlassRegion(rect);
@@ -1311,27 +1311,22 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayListCollection tempLists;
   const nsDisplayListSet& destination = forceLayer ? tempLists : aLists;
 
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, destination);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, destination);
 
 #ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
-    rv = destination.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aBuilder, this, PaintXULDebugBackground,
-                         "XULDebugBackground"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = destination.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULDebug(aBuilder, this));
-    NS_ENSURE_SUCCESS(rv, rv);
+    destination.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayGeneric(aBuilder, this, PaintXULDebugBackground,
+                       "XULDebugBackground"));
+    destination.Outlines()->AppendNewToTop(new (aBuilder)
+      nsDisplayXULDebug(aBuilder, this));
   }
 #endif
 
-  rv = BuildDisplayListForChildren(aBuilder, aDirtyRect, destination);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BuildDisplayListForChildren(aBuilder, aDirtyRect, destination);
 
   // see if we have to draw a selection frame around this container
-  rv = DisplaySelectionOverlay(aBuilder, destination.Content());
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplaySelectionOverlay(aBuilder, destination.Content());
 
   if (forceLayer) {
     // This is a bit of a hack. Collect up all descendant display items
@@ -1346,14 +1341,12 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     masterList.AppendToTop(tempLists.PositionedDescendants());
     masterList.AppendToTop(tempLists.Outlines());
     // Wrap the list to make it its own layer
-    rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayOwnLayer(aBuilder, this, &masterList));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayOwnLayer(aBuilder, this, &masterList));
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
                                         const nsDisplayListSet& aLists)
@@ -1364,11 +1357,9 @@ nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
   // The children should be in the right order
   while (kid) {
-    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
     kid = kid->GetNextSibling();
   }
-  return NS_OK;
 }
 
 // REVIEW: PaintChildren did a few things none of which are a big deal
@@ -2059,13 +2050,13 @@ private:
   nsIFrame* mTargetFrame;
 };
 
-nsresult
+void
 nsBoxFrame::WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
                                   const nsDisplayListSet& aIn,
                                   const nsDisplayListSet& aOut)
 {
   nsXULEventRedirectorWrapper wrapper(this);
-  return wrapper.WrapLists(aBuilder, this, aIn, aOut);
+  wrapper.WrapLists(aBuilder, this, aIn, aOut);
 }
 
 bool

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title id="hello">hello</title>
+  <text x="100" y="100"> <tref xlink:href="#hello"/></text>
+</svg>

@@ -89,7 +89,7 @@ public:
     return mRefCnt;
   }
 
-  nsPresContext* PresContext() const { return mRuleNode->GetPresContext(); }
+  nsPresContext* PresContext() const { return mRuleNode->PresContext(); }
 
   nsStyleContext* GetParent() const { return mParent; }
 
@@ -102,9 +102,9 @@ public:
   // Find, if it already exists *and is easily findable* (i.e., near the
   // start of the child list), a style context whose:
   //  * GetPseudo() matches aPseudoTag
-  //  * GetRuleNode() matches aRules
+  //  * RuleNode() matches aRules
   //  * !GetStyleIfVisited() == !aRulesIfVisited, and, if they're
-  //    non-null, GetStyleIfVisited()->GetRuleNode() == aRulesIfVisited
+  //    non-null, GetStyleIfVisited()->RuleNode() == aRulesIfVisited
   //  * RelevantLinkVisited() == aRelevantLinkVisited
   already_AddRefed<nsStyleContext>
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules,
@@ -205,7 +205,7 @@ public:
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
-  nsRuleNode* GetRuleNode() { return mRuleNode; }
+  nsRuleNode* RuleNode() { return mRuleNode; }
   void AddStyleBit(const uint32_t& aBit) { mBits |= aBit; }
 
   /*
@@ -230,18 +230,18 @@ public:
    * function, both because they're easier to read and because they're
    * faster.
    */
-  const void* NS_FASTCALL GetStyleData(nsStyleStructID aSID);
+  const void* NS_FASTCALL StyleData(nsStyleStructID aSID);
 
   /**
    * Define typesafe getter functions for each style struct by
    * preprocessing the list of style structs.  These functions are the
    * preferred way to get style data.  The macro creates functions like:
-   *   const nsStyleBorder* GetStyleBorder();
-   *   const nsStyleColor* GetStyleColor();
+   *   const nsStyleBorder* StyleBorder();
+   *   const nsStyleColor* StyleColor();
    */
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)  \
-    const nsStyle##name_ * GetStyle##name_() {            \
-      return DoGetStyle##name_(true);                  \
+    const nsStyle##name_ * Style##name_() {               \
+      return DoGetStyle##name_(true);                     \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
@@ -255,7 +255,7 @@ public:
    */
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)  \
     const nsStyle##name_ * PeekStyle##name_() {           \
-      return DoGetStyle##name_(false);                 \
+      return DoGetStyle##name_(false);                    \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
@@ -330,7 +330,7 @@ public:
    */
   void StartBackgroundImageLoads() {
     // Just get our background struct; that should do the trick
-    GetStyleBackground();
+    StyleBackground();
   }
 
 #ifdef DEBUG

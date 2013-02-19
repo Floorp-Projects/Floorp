@@ -38,11 +38,18 @@ const DAYS_IN_PAYLOAD = 180;
 const DEFAULT_DATABASE_NAME = "healthreport.sqlite";
 
 const TELEMETRY_INIT = "HEALTHREPORT_INIT_MS";
+const TELEMETRY_INIT_FIRSTRUN = "HEALTHREPORT_INIT_FIRSTRUN_MS";
+const TELEMETRY_DB_OPEN = "HEALTHREPORT_DB_OPEN_MS";
+const TELEMETRY_DB_OPEN_FIRSTRUN = "HEALTHREPORT_DB_OPEN_FIRSTRUN_MS";
 const TELEMETRY_GENERATE_PAYLOAD = "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS";
+const TELEMETRY_JSON_PAYLOAD_SERIALIZE = "HEALTHREPORT_JSON_PAYLOAD_SERIALIZE_MS";
 const TELEMETRY_PAYLOAD_SIZE = "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES";
 const TELEMETRY_SAVE_LAST_PAYLOAD = "HEALTHREPORT_SAVE_LAST_PAYLOAD_MS";
 const TELEMETRY_UPLOAD = "HEALTHREPORT_UPLOAD_MS";
 const TELEMETRY_SHUTDOWN_DELAY = "HEALTHREPORT_SHUTDOWN_DELAY_MS";
+const TELEMETRY_COLLECT_CONSTANT = "HEALTHREPORT_COLLECT_CONSTANT_DATA_MS";
+const TELEMETRY_COLLECT_DAILY = "HEALTHREPORT_COLLECT_DAILY_MS";
+const TELEMETRY_SHUTDOWN = "HEALTHREPORT_SHUTDOWN_MS";
 
 /**
  * This is the abstract base class of `HealthReporter`. It exists so that
@@ -81,12 +88,16 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   this._shutdownComplete = false;
   this._shutdownCompleteCallback = null;
 
-  this._constantOnlyProviders = {};
-  this._constantOnlyProvidersRegistered = false;
+  this._pullOnlyProviders = {};
+  this._pullOnlyProvidersRegistered = false;
   this._lastDailyDate = null;
 
   // Yes, this will probably run concurrently with remaining constructor work.
-  TelemetryStopwatch.start(TELEMETRY_INIT, this);
+  let hasFirstRun = this._prefs.get("service.firstRun", false);
+  this._initHistogram = hasFirstRun ? TELEMETRY_INIT : TELEMETRY_INIT_FIRSTRUN;
+  this._dbOpenHistogram = hasFirstRun ? TELEMETRY_DB_OPEN : TELEMETRY_DB_OPEN_FIRSTRUN;
+
+  TelemetryStopwatch.start(this._initHistogram, this);
 
   this._ensureDirectoryExists(this._stateDir)
       .then(this._onStateDirCreated.bind(this),
@@ -112,7 +123,11 @@ AbstractHealthReporter.prototype = Object.freeze({
   //----------------------------------------------------
 
   _onInitError: function (error) {
-    TelemetryStopwatch.cancel(TELEMETRY_INIT, this);
+    TelemetryStopwatch.cancel(this._initHistogram, this);
+    TelemetryStopwatch.cancel(this._dbOpenHistogram, this);
+    delete this._initHistogram;
+    delete this._dbOpenHistogram;
+
     this._log.error("Error during initialization: " +
                     CommonUtils.exceptionStr(error));
     this._initializeHadError = true;
@@ -130,12 +145,15 @@ AbstractHealthReporter.prototype = Object.freeze({
     Services.obs.addObserver(this, "profile-before-change", false);
 
     this._storageInProgress = true;
+    TelemetryStopwatch.start(this._dbOpenHistogram, this);
     Metrics.Storage(this._dbName).then(this._onStorageCreated.bind(this),
                                        this._onInitError.bind(this));
   },
 
   // Called when storage has been opened.
   _onStorageCreated: function (storage) {
+    TelemetryStopwatch.finish(this._dbOpenHistogram, this);
+    delete this._dbOpenHistogram;
     this._log.info("Storage initialized.");
     this._storage = storage;
     this._storageInProgress = false;
@@ -168,7 +186,8 @@ AbstractHealthReporter.prototype = Object.freeze({
   },
 
   _onCollectorInitialized: function () {
-    TelemetryStopwatch.finish(TELEMETRY_INIT, this);
+    TelemetryStopwatch.finish(this._initHistogram, this);
+    delete this._initHistogram;
     this._log.debug("Collector initialized.");
     this._collectorInProgress = false;
 
@@ -234,6 +253,8 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     // Everything from here must only be performed once or else race conditions
     // could occur.
+
+    TelemetryStopwatch.start(TELEMETRY_SHUTDOWN, this);
     this._shutdownInitiated = true;
 
     // We may not have registered the observer yet. If not, this will
@@ -297,6 +318,7 @@ AbstractHealthReporter.prototype = Object.freeze({
   _onShutdownComplete: function () {
     this._log.warn("Shutdown complete.");
     this._shutdownComplete = true;
+    TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN, this);
 
     if (this._shutdownCompleteCallback) {
       this._shutdownCompleteCallback();
@@ -365,7 +387,7 @@ AbstractHealthReporter.prototype = Object.freeze({
    * Obtain a provider from its name.
    *
    * This will only return providers that are currently initialized. If
-   * a provider is lazy initialized (like constant-only providers) this
+   * a provider is lazy initialized (like pull-only providers) this
    * will likely not return anything.
    */
   getProvider: function (name) {
@@ -388,19 +410,19 @@ AbstractHealthReporter.prototype = Object.freeze({
   /**
    * Registers a provider from its constructor function.
    *
-   * If the provider is constant-only, it will be stashed away and
+   * If the provider is pull-only, it will be stashed away and
    * initialized later. Null will be returned.
    *
-   * If it is not constant-only, it will be initialized immediately and a
+   * If it is not pull-only, it will be initialized immediately and a
    * promise will be returned. The promise will be resolved when the
    * provider has finished initializing.
    */
   registerProviderFromType: function (type) {
     let proto = type.prototype;
-    if (proto.constantOnly) {
-      this._log.info("Provider is constant-only. Deferring initialization: " +
+    if (proto.pullOnly) {
+      this._log.info("Provider is pull-only. Deferring initialization: " +
                      proto.name);
-      this._constantOnlyProviders[proto.name] = type;
+      this._pullOnlyProviders[proto.name] = type;
 
       return null;
     }
@@ -484,50 +506,50 @@ AbstractHealthReporter.prototype = Object.freeze({
   },
 
   /**
-   * Ensure that constant-only providers are registered.
+   * Ensure that pull-only providers are registered.
    */
-  ensureConstantOnlyProvidersRegistered: function () {
-    if (this._constantOnlyProvidersRegistered) {
+  ensurePullOnlyProvidersRegistered: function () {
+    if (this._pullOnlyProvidersRegistered) {
       return Promise.resolve();
     }
 
     let onFinished = function () {
-      this._constantOnlyProvidersRegistered = true;
+      this._pullOnlyProvidersRegistered = true;
 
       return Promise.resolve();
     }.bind(this);
 
-    return Task.spawn(function registerConstantProviders() {
-      for each (let providerType in this._constantOnlyProviders) {
+    return Task.spawn(function registerPullProviders() {
+      for each (let providerType in this._pullOnlyProviders) {
         try {
           let provider = this.initProviderFromType(providerType);
           yield this.registerProvider(provider);
         } catch (ex) {
-          this._log.warn("Error registering constant-only provider: " +
+          this._log.warn("Error registering pull-only provider: " +
                          CommonUtils.exceptionStr(ex));
         }
       }
     }.bind(this)).then(onFinished, onFinished);
   },
 
-  ensureConstantOnlyProvidersUnregistered: function () {
-    if (!this._constantOnlyProvidersRegistered) {
+  ensurePullOnlyProvidersUnregistered: function () {
+    if (!this._pullOnlyProvidersRegistered) {
       return Promise.resolve();
     }
 
     let onFinished = function () {
-      this._constantOnlyProvidersRegistered = false;
+      this._pullOnlyProvidersRegistered = false;
 
       return Promise.resolve();
     }.bind(this);
 
-    return Task.spawn(function unregisterConstantProviders() {
+    return Task.spawn(function unregisterPullProviders() {
       for (let provider of this._collector.providers) {
-        if (!provider.constantOnly) {
+        if (!provider.pullOnly) {
           continue;
         }
 
-        this._log.info("Shutting down constant-only provider: " +
+        this._log.info("Shutting down pull-only provider: " +
                        provider.name);
 
         try {
@@ -548,8 +570,11 @@ AbstractHealthReporter.prototype = Object.freeze({
   collectMeasurements: function () {
     return Task.spawn(function doCollection() {
       try {
+        TelemetryStopwatch.start(TELEMETRY_COLLECT_CONSTANT, this);
         yield this._collector.collectConstantData();
+        TelemetryStopwatch.finish(TELEMETRY_COLLECT_CONSTANT, this);
       } catch (ex) {
+        TelemetryStopwatch.cancel(TELEMETRY_COLLECT_CONSTANT, this);
         this._log.warn("Error collecting constant data: " +
                        CommonUtils.exceptionStr(ex));
       }
@@ -564,9 +589,12 @@ AbstractHealthReporter.prototype = Object.freeze({
           Date.now() - this._lastDailyDate > MILLISECONDS_PER_DAY) {
 
         try {
+          TelemetryStopwatch.start(TELEMETRY_COLLECT_DAILY, this);
           this._lastDailyDate = new Date();
           yield this._collector.collectDailyData();
+          TelemetryStopwatch.finish(TELEMETRY_COLLECT_DAILY, this);
         } catch (ex) {
+          TelemetryStopwatch.cancel(TELEMETRY_COLLECT_DAILY, this);
           this._log.warn("Error collecting daily data from providers: " +
                          CommonUtils.exceptionStr(ex));
         }
@@ -590,7 +618,7 @@ AbstractHealthReporter.prototype = Object.freeze({
    */
   collectAndObtainJSONPayload: function (asObject=false) {
     return Task.spawn(function collectAndObtain() {
-      yield this.ensureConstantOnlyProvidersRegistered();
+      yield this.ensurePullOnlyProvidersRegistered();
 
       let payload;
       let error;
@@ -603,7 +631,7 @@ AbstractHealthReporter.prototype = Object.freeze({
         this._log.warn("Error collecting and/or retrieving JSON payload: " +
                        CommonUtils.exceptionStr(ex));
       } finally {
-        yield this.ensureConstantOnlyProvidersUnregistered();
+        yield this.ensurePullOnlyProvidersUnregistered();
 
         if (error) {
           throw error;
@@ -750,7 +778,13 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     this._storage.compact();
 
-    throw new Task.Result(asObject ? o : JSON.stringify(o));
+    if (!asObject) {
+      TelemetryStopwatch.start(TELEMETRY_JSON_PAYLOAD_SERIALIZE, this);
+      o = JSON.stringify(o);
+      TelemetryStopwatch.finish(TELEMETRY_JSON_PAYLOAD_SERIALIZE, this);
+    }
+
+    throw new Task.Result(o);
   },
 
   get _stateDir() {
@@ -1010,7 +1044,7 @@ HealthReporter.prototype = Object.freeze({
    */
   requestDataUpload: function (request) {
     return Task.spawn(function doUpload() {
-      yield this.ensureConstantOnlyProvidersRegistered();
+      yield this.ensurePullOnlyProvidersRegistered();
       try {
         yield this.collectMeasurements();
         try {
@@ -1019,7 +1053,7 @@ HealthReporter.prototype = Object.freeze({
           this._onSubmitDataRequestFailure(ex);
         }
       } finally {
-        yield this.ensureConstantOnlyProvidersUnregistered();
+        yield this.ensurePullOnlyProvidersUnregistered();
       }
     }.bind(this));
   },

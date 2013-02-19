@@ -87,7 +87,7 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder, const
   }
 
   // Swap left and right for RTL trees in order to find the correct splitter
-  if (mFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (mFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     bool tmp = left;
     left = right;
     right = tmp;
@@ -109,23 +109,23 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder, const
 
 }
 
-nsresult
+void
 nsTreeColFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
-  if (!aBuilder->IsForEventDelivery())
-    return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  if (!aBuilder->IsForEventDelivery()) {
+    nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+    return;
+  }
   
   nsDisplayListCollection set;
-  nsresult rv = nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, set);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, set);
   
-  rv = WrapListsInRedirector(aBuilder, set, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  WrapListsInRedirector(aBuilder, set, aLists);
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayXULTreeColSplitterTarget(aBuilder, this));
+  aLists.Content()->AppendNewToTop(new (aBuilder)
+    nsDisplayXULTreeColSplitterTarget(aBuilder, this));
 }
 
 NS_IMETHODIMP

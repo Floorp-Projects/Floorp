@@ -1603,7 +1603,7 @@ nsTextEditorState::InitializeRootNode()
     // crash when the number of lines exceeds the height of the textarea and
     // setting -moz-hidden-unscrollable overflow (NS_STYLE_OVERFLOW_CLIP)
     // doesn't paint the caret for some reason.
-    const nsStyleDisplay* disp = mBoundFrame->GetStyleDisplay();
+    const nsStyleDisplay* disp = mBoundFrame->StyleDisplay();
     if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
         disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
       classValue.AppendLiteral(" inherit-overflow");

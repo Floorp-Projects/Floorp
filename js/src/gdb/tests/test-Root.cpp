@@ -10,6 +10,9 @@ FRAGMENT(Root, null) {
 
 void callee(JS::Handle<JSObject *> obj, JS::MutableHandle<JSObject *> mutableObj)
 {
+  // Prevent the linker from unifying this function with others that are
+  // equivalent in machine code but not type.
+  fprintf(stderr, "Called " __FILE__ ":callee\n");
   breakpoint();
 }
 

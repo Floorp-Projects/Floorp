@@ -81,7 +81,7 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
              nsIFrame *aFrame, bool aIsCell)
 {
     nscoord minCoord, prefCoord;
-    const nsStylePosition *stylePos = aFrame->GetStylePosition();
+    const nsStylePosition *stylePos = aFrame->StylePosition();
     bool isQuirks = aFrame->PresContext()->CompatibilityMode() ==
                     eCompatibility_NavQuirks;
     nscoord boxSizingToBorderEdge = 0;

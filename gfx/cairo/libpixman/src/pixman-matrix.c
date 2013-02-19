@@ -34,6 +34,338 @@
 
 #define F(x)    pixman_int_to_fixed (x)
 
+static force_inline int
+count_leading_zeros (uint32_t x)
+{
+#ifdef __GNUC__
+    return __builtin_clz (x);
+#else
+    int n = 0;
+    while (x)
+    {
+        n++;
+        x >>= 1;
+    }
+    return 32 - n;
+#endif
+}
+
+/*
+ * Large signed/unsigned integer division with rounding for the platforms with
+ * only 64-bit integer data type supported (no 128-bit data type).
+ *
+ * Arguments:
+ *     hi, lo - high and low 64-bit parts of the dividend
+ *     div    - 48-bit divisor
+ *
+ * Returns: lowest 64 bits of the result as a return value and highest 64
+ *          bits of the result to "result_hi" pointer
+ */
+
+/* grade-school unsigned division (128-bit by 48-bit) with rounding to nearest */
+static force_inline uint64_t
+rounded_udiv_128_by_48 (uint64_t  hi,
+                        uint64_t  lo,
+                        uint64_t  div,
+                        uint64_t *result_hi)
+{
+    uint64_t tmp, remainder, result_lo;
+    assert(div < ((uint64_t)1 << 48));
+
+    remainder = hi % div;
+    *result_hi = hi / div;
+
+    tmp = (remainder << 16) + (lo >> 48);
+    result_lo = tmp / div;
+    remainder = tmp % div;
+
+    tmp = (remainder << 16) + ((lo >> 32) & 0xFFFF);
+    result_lo = (result_lo << 16) + (tmp / div);
+    remainder = tmp % div;
+
+    tmp = (remainder << 16) + ((lo >> 16) & 0xFFFF);
+    result_lo = (result_lo << 16) + (tmp / div);
+    remainder = tmp % div;
+
+    tmp = (remainder << 16) + (lo & 0xFFFF);
+    result_lo = (result_lo << 16) + (tmp / div);
+    remainder = tmp % div;
+
+    /* round to nearest */
+    if (remainder * 2 >= div && ++result_lo == 0)
+        *result_hi += 1;
+
+    return result_lo;
+}
+
+/* signed division (128-bit by 49-bit) with rounding to nearest */
+static inline int64_t
+rounded_sdiv_128_by_49 (int64_t   hi,
+                        uint64_t  lo,
+                        int64_t   div,
+                        int64_t  *signed_result_hi)
+{
+    uint64_t result_lo, result_hi;
+    int sign = 0;
+    if (div < 0)
+    {
+        div = -div;
+        sign ^= 1;
+    }
+    if (hi < 0)
+    {
+        if (lo != 0)
+            hi++;
+        hi = -hi;
+        lo = -lo;
+        sign ^= 1;
+    }
+    result_lo = rounded_udiv_128_by_48 (hi, lo, div, &result_hi);
+    if (sign)
+    {
+        if (result_lo != 0)
+            result_hi++;
+        result_hi = -result_hi;
+        result_lo = -result_lo;
+    }
+    if (signed_result_hi)
+    {
+        *signed_result_hi = result_hi;
+    }
+    return result_lo;
+}
+
+/*
+ * Multiply 64.16 fixed point value by (2^scalebits) and convert
+ * to 128-bit integer.
+ */
+static force_inline void
+fixed_64_16_to_int128 (int64_t  hi,
+                       int64_t  lo,
+                       int64_t *rhi,
+                       int64_t *rlo,
+                       int      scalebits)
+{
+    /* separate integer and fractional parts */
+    hi += lo >> 16;
+    lo &= 0xFFFF;
+
+    if (scalebits <= 0)
+    {
+        *rlo = hi >> (-scalebits);
+        *rhi = *rlo >> 63;
+    }
+    else
+    {
+        *rhi = hi >> (64 - scalebits);
+        *rlo = (uint64_t)hi << scalebits;
+        if (scalebits < 16)
+            *rlo += lo >> (16 - scalebits);
+        else
+            *rlo += lo << (scalebits - 16);
+    }
+}
+
+/*
+ * Convert 112.16 fixed point value to 48.16 with clamping for the out
+ * of range values.
+ */
+static force_inline pixman_fixed_48_16_t
+fixed_112_16_to_fixed_48_16 (int64_t hi, int64_t lo, pixman_bool_t *clampflag)
+{
+    if ((lo >> 63) != hi)
+    {
+        *clampflag = TRUE;
+        return hi >= 0 ? INT64_MAX : INT64_MIN;
+    }
+    else
+    {
+        return lo;
+    }
+}
+
+/*
+ * Transform a point with 31.16 fixed point coordinates from the destination
+ * space to a point with 48.16 fixed point coordinates in the source space.
+ * No overflows are possible for affine transformations and the results are
+ * accurate including the least significant bit. Projective transformations
+ * may overflow, in this case the results are just clamped to return maximum
+ * or minimum 48.16 values (so that the caller can at least handle the NONE
+ * and PAD repeats correctly) and the return value is FALSE to indicate that
+ * such clamping has happened.
+ */
+PIXMAN_EXPORT pixman_bool_t
+pixman_transform_point_31_16 (const pixman_transform_t    *t,
+                              const pixman_vector_48_16_t *v,
+                              pixman_vector_48_16_t       *result)
+{
+    pixman_bool_t clampflag = FALSE;
+    int i;
+    int64_t tmp[3][2], divint;
+    uint16_t divfrac;
+
+    /* input vector values must have no more than 31 bits (including sign)
+     * in the integer part */
+    assert (v->v[0] <   ((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[0] >= -((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[1] <   ((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[1] >= -((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[2] <   ((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[2] >= -((pixman_fixed_48_16_t)1 << (30 + 16)));
+
+    for (i = 0; i < 3; i++)
+    {
+        tmp[i][0] = (int64_t)t->matrix[i][0] * (v->v[0] >> 16);
+        tmp[i][1] = (int64_t)t->matrix[i][0] * (v->v[0] & 0xFFFF);
+        tmp[i][0] += (int64_t)t->matrix[i][1] * (v->v[1] >> 16);
+        tmp[i][1] += (int64_t)t->matrix[i][1] * (v->v[1] & 0xFFFF);
+        tmp[i][0] += (int64_t)t->matrix[i][2] * (v->v[2] >> 16);
+        tmp[i][1] += (int64_t)t->matrix[i][2] * (v->v[2] & 0xFFFF);
+    }
+
+    /*
+     * separate 64-bit integer and 16-bit fractional parts for the divisor,
+     * which is also scaled by 65536 after fixed point multiplication.
+     */
+    divint  = tmp[2][0] + (tmp[2][1] >> 16);
+    divfrac = tmp[2][1] & 0xFFFF;
+
+    if (divint == pixman_fixed_1 && divfrac == 0)
+    {
+        /*
+         * this is a simple affine transformation
+         */
+        result->v[0] = tmp[0][0] + ((tmp[0][1] + 0x8000) >> 16);
+        result->v[1] = tmp[1][0] + ((tmp[1][1] + 0x8000) >> 16);
+        result->v[2] = pixman_fixed_1;
+    }
+    else if (divint == 0 && divfrac == 0)
+    {
+        /*
+         * handle zero divisor (if the values are non-zero, set the
+         * results to maximum positive or minimum negative)
+         */
+        clampflag = TRUE;
+
+        result->v[0] = tmp[0][0] + ((tmp[0][1] + 0x8000) >> 16);
+        result->v[1] = tmp[1][0] + ((tmp[1][1] + 0x8000) >> 16);
+
+        if (result->v[0] > 0)
+            result->v[0] = INT64_MAX;
+        else if (result->v[0] < 0)
+            result->v[0] = INT64_MIN;
+
+        if (result->v[1] > 0)
+            result->v[1] = INT64_MAX;
+        else if (result->v[1] < 0)
+            result->v[1] = INT64_MIN;
+    }
+    else
+    {
+        /*
+         * projective transformation, analyze the top 32 bits of the divisor
+         */
+        int32_t hi32divbits = divint >> 32;
+        if (hi32divbits < 0)
+            hi32divbits = ~hi32divbits;
+
+        if (hi32divbits == 0)
+        {
+            /* the divisor is small, we can actually keep all the bits */
+            int64_t hi, rhi, lo, rlo;
+            int64_t div = (divint << 16) + divfrac;
+
+            fixed_64_16_to_int128 (tmp[0][0], tmp[0][1], &hi, &lo, 32);
+            rlo = rounded_sdiv_128_by_49 (hi, lo, div, &rhi);
+            result->v[0] = fixed_112_16_to_fixed_48_16 (rhi, rlo, &clampflag);
+
+            fixed_64_16_to_int128 (tmp[1][0], tmp[1][1], &hi, &lo, 32);
+            rlo = rounded_sdiv_128_by_49 (hi, lo, div, &rhi);
+            result->v[1] = fixed_112_16_to_fixed_48_16 (rhi, rlo, &clampflag);
+        }
+        else
+        {
+            /* the divisor needs to be reduced to 48 bits */
+            int64_t hi, rhi, lo, rlo, div;
+            int shift = 32 - count_leading_zeros (hi32divbits);
+            fixed_64_16_to_int128 (divint, divfrac, &hi, &div, 16 - shift);
+
+            fixed_64_16_to_int128 (tmp[0][0], tmp[0][1], &hi, &lo, 32 - shift);
+            rlo = rounded_sdiv_128_by_49 (hi, lo, div, &rhi);
+            result->v[0] = fixed_112_16_to_fixed_48_16 (rhi, rlo, &clampflag);
+
+            fixed_64_16_to_int128 (tmp[1][0], tmp[1][1], &hi, &lo, 32 - shift);
+            rlo = rounded_sdiv_128_by_49 (hi, lo, div, &rhi);
+            result->v[1] = fixed_112_16_to_fixed_48_16 (rhi, rlo, &clampflag);
+        }
+    }
+    result->v[2] = pixman_fixed_1;
+    return !clampflag;
+}
+
+PIXMAN_EXPORT void
+pixman_transform_point_31_16_affine (const pixman_transform_t    *t,
+                                     const pixman_vector_48_16_t *v,
+                                     pixman_vector_48_16_t       *result)
+{
+    int64_t hi0, lo0, hi1, lo1;
+
+    /* input vector values must have no more than 31 bits (including sign)
+     * in the integer part */
+    assert (v->v[0] <   ((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[0] >= -((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[1] <   ((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[1] >= -((pixman_fixed_48_16_t)1 << (30 + 16)));
+
+    hi0  = (int64_t)t->matrix[0][0] * (v->v[0] >> 16);
+    lo0  = (int64_t)t->matrix[0][0] * (v->v[0] & 0xFFFF);
+    hi0 += (int64_t)t->matrix[0][1] * (v->v[1] >> 16);
+    lo0 += (int64_t)t->matrix[0][1] * (v->v[1] & 0xFFFF);
+    hi0 += (int64_t)t->matrix[0][2];
+
+    hi1  = (int64_t)t->matrix[1][0] * (v->v[0] >> 16);
+    lo1  = (int64_t)t->matrix[1][0] * (v->v[0] & 0xFFFF);
+    hi1 += (int64_t)t->matrix[1][1] * (v->v[1] >> 16);
+    lo1 += (int64_t)t->matrix[1][1] * (v->v[1] & 0xFFFF);
+    hi1 += (int64_t)t->matrix[1][2];
+
+    result->v[0] = hi0 + ((lo0 + 0x8000) >> 16);
+    result->v[1] = hi1 + ((lo1 + 0x8000) >> 16);
+    result->v[2] = pixman_fixed_1;
+}
+
+PIXMAN_EXPORT void
+pixman_transform_point_31_16_3d (const pixman_transform_t    *t,
+                                 const pixman_vector_48_16_t *v,
+                                 pixman_vector_48_16_t       *result)
+{
+    int i;
+    int64_t tmp[3][2];
+
+    /* input vector values must have no more than 31 bits (including sign)
+     * in the integer part */
+    assert (v->v[0] <   ((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[0] >= -((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[1] <   ((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[1] >= -((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[2] <   ((pixman_fixed_48_16_t)1 << (30 + 16)));
+    assert (v->v[2] >= -((pixman_fixed_48_16_t)1 << (30 + 16)));
+
+    for (i = 0; i < 3; i++)
+    {
+        tmp[i][0] = (int64_t)t->matrix[i][0] * (v->v[0] >> 16);
+        tmp[i][1] = (int64_t)t->matrix[i][0] * (v->v[0] & 0xFFFF);
+        tmp[i][0] += (int64_t)t->matrix[i][1] * (v->v[1] >> 16);
+        tmp[i][1] += (int64_t)t->matrix[i][1] * (v->v[1] & 0xFFFF);
+        tmp[i][0] += (int64_t)t->matrix[i][2] * (v->v[2] >> 16);
+        tmp[i][1] += (int64_t)t->matrix[i][2] * (v->v[2] & 0xFFFF);
+    }
+
+    result->v[0] = tmp[0][0] + ((tmp[0][1] + 0x8000) >> 16);
+    result->v[1] = tmp[1][0] + ((tmp[1][1] + 0x8000) >> 16);
+    result->v[2] = tmp[2][0] + ((tmp[2][1] + 0x8000) >> 16);
+}
+
 PIXMAN_EXPORT void
 pixman_transform_init_identity (struct pixman_transform *matrix)
 {
@@ -50,69 +382,41 @@ PIXMAN_EXPORT pixman_bool_t
 pixman_transform_point_3d (const struct pixman_transform *transform,
                            struct pixman_vector *         vector)
 {
-    struct pixman_vector result;
-    pixman_fixed_32_32_t partial;
-    pixman_fixed_48_16_t v;
-    int i, j;
+    pixman_vector_48_16_t tmp;
+    tmp.v[0] = vector->vector[0];
+    tmp.v[1] = vector->vector[1];
+    tmp.v[2] = vector->vector[2];
 
-    for (j = 0; j < 3; j++)
-    {
-	v = 0;
-	for (i = 0; i < 3; i++)
-	{
-	    partial = ((pixman_fixed_48_16_t) transform->matrix[j][i] *
-	               (pixman_fixed_48_16_t) vector->vector[i]);
-	    v += partial >> 16;
-	}
-	
-	if (v > pixman_max_fixed_48_16 || v < pixman_min_fixed_48_16)
-	    return FALSE;
-	
-	result.vector[j] = (pixman_fixed_t) v;
-    }
-    
-    *vector = result;
+    pixman_transform_point_31_16_3d (transform, &tmp, &tmp);
 
-    if (!result.vector[2])
-	return FALSE;
+    vector->vector[0] = tmp.v[0];
+    vector->vector[1] = tmp.v[1];
+    vector->vector[2] = tmp.v[2];
 
-    return TRUE;
+    return vector->vector[0] == tmp.v[0] &&
+           vector->vector[1] == tmp.v[1] &&
+           vector->vector[2] == tmp.v[2];
 }
 
 PIXMAN_EXPORT pixman_bool_t
 pixman_transform_point (const struct pixman_transform *transform,
                         struct pixman_vector *         vector)
 {
-    pixman_fixed_32_32_t partial;
-    pixman_fixed_34_30_t v[3];
-    pixman_fixed_48_16_t quo;
-    int i, j;
+    pixman_vector_48_16_t tmp;
+    tmp.v[0] = vector->vector[0];
+    tmp.v[1] = vector->vector[1];
+    tmp.v[2] = vector->vector[2];
 
-    for (j = 0; j < 3; j++)
-    {
-	v[j] = 0;
-	
-	for (i = 0; i < 3; i++)
-	{
-	    partial = ((pixman_fixed_32_32_t) transform->matrix[j][i] *
-	               (pixman_fixed_32_32_t) vector->vector[i]);
-	    v[j] += partial >> 2;
-	}
-    }
-    
-    if (!(v[2] >> 16))
-	return FALSE;
+    if (!pixman_transform_point_31_16 (transform, &tmp, &tmp))
+        return FALSE;
 
-    for (j = 0; j < 2; j++)
-    {
-	quo = v[j] / (v[2] >> 16);
-	if (quo > pixman_max_fixed_48_16 || quo < pixman_min_fixed_48_16)
-	    return FALSE;
-	vector->vector[j] = (pixman_fixed_t) quo;
-    }
-    
-    vector->vector[2] = pixman_fixed_1;
-    return TRUE;
+    vector->vector[0] = tmp.v[0];
+    vector->vector[1] = tmp.v[1];
+    vector->vector[2] = tmp.v[2];
+
+    return vector->vector[0] == tmp.v[0] &&
+           vector->vector[1] == tmp.v[1] &&
+           vector->vector[2] == tmp.v[2];
 }
 
 PIXMAN_EXPORT pixman_bool_t
@@ -138,7 +442,7 @@ pixman_transform_multiply (struct pixman_transform *      dst,
 		    (pixman_fixed_32_32_t) l->matrix[dy][o] *
 		    (pixman_fixed_32_32_t) r->matrix[o][dx];
 
-		v += partial >> 16;
+		v += (partial + 0x8000) >> 16;
 	    }
 
 	    if (v > pixman_max_fixed_48_16 || v < pixman_min_fixed_48_16)
@@ -336,14 +640,14 @@ PIXMAN_EXPORT pixman_bool_t
 pixman_transform_invert (struct pixman_transform *      dst,
                          const struct pixman_transform *src)
 {
-    struct pixman_f_transform m, r;
+    struct pixman_f_transform m;
 
     pixman_f_transform_from_pixman_transform (&m, src);
 
-    if (!pixman_f_transform_invert (&r, &m))
+    if (!pixman_f_transform_invert (&m, &m))
 	return FALSE;
 
-    if (!pixman_transform_from_pixman_f_transform (dst, &r))
+    if (!pixman_transform_from_pixman_f_transform (dst, &m))
 	return FALSE;
 
     return TRUE;
@@ -469,10 +773,11 @@ PIXMAN_EXPORT pixman_bool_t
 pixman_f_transform_invert (struct pixman_f_transform *      dst,
                            const struct pixman_f_transform *src)
 {
-    double det;
-    int i, j;
     static const int a[3] = { 2, 2, 1 };
     static const int b[3] = { 1, 0, 0 };
+    pixman_f_transform_t d;
+    double det;
+    int i, j;
 
     det = 0;
     for (i = 0; i < 3; i++)
@@ -507,9 +812,11 @@ pixman_f_transform_invert (struct pixman_f_transform *      dst,
 	    if (((i + j) & 1) != 0)
 		p = -p;
 	    
-	    dst->m[j][i] = det * p;
+	    d.m[j][i] = det * p;
 	}
     }
+
+    *dst = d;
 
     return TRUE;
 }

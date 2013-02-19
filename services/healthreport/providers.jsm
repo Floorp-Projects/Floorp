@@ -126,7 +126,7 @@ AppInfoProvider.prototype = Object.freeze({
 
   measurementTypes: [AppInfoMeasurement, AppVersionMeasurement],
 
-  constantOnly: true,
+  pullOnly: true,
 
   appInfoFields: {
     // From nsIXULAppInfo.
@@ -303,7 +303,7 @@ SysInfoProvider.prototype = Object.freeze({
 
   measurementTypes: [SysInfoMeasurement],
 
-  constantOnly: true,
+  pullOnly: true,
 
   sysInfoFields: {
     cpucount: "cpuCount",
@@ -486,7 +486,7 @@ SessionsProvider.prototype = Object.freeze({
 
   measurementTypes: [CurrentSessionMeasurement, PreviousSessionsMeasurement],
 
-  constantOnly: true,
+  pullOnly: true,
 
   collectConstantData: function () {
     let previous = this.getMeasurement("previous", 3);
@@ -757,7 +757,7 @@ CrashesProvider.prototype = Object.freeze({
 
   measurementTypes: [DailyCrashesMeasurement],
 
-  constantOnly: true,
+  pullOnly: true,
 
   collectConstantData: function () {
     return Task.spawn(this._populateCrashCounts.bind(this));

@@ -275,7 +275,7 @@ struct nsCSSRendering {
     // This should always give transparent, so we'll fill it in with the
     // default color if needed.  This seems to happen a bit while a page is
     // being loaded.
-    return aForFrame->GetStyleContext();
+    return aForFrame->StyleContext();
   }
 
   /**

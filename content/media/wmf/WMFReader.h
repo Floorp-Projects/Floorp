@@ -12,6 +12,7 @@
 namespace mozilla {
 
 class WMFByteStream;
+class WMFSourceReaderCallback;
 
 // Decoder backend for reading H.264/AAC in MP4/M4A and MP3 audio files,
 // using Windows Media Foundation.
@@ -47,12 +48,13 @@ public:
 
 private:
 
-  void ConfigureAudioDecoder();
-  void ConfigureVideoDecoder();
+  HRESULT ConfigureAudioDecoder();
+  HRESULT ConfigureVideoDecoder();
   HRESULT ConfigureVideoFrameGeometry(IMFMediaType* aMediaType);
 
   RefPtr<IMFSourceReader> mSourceReader;
   RefPtr<WMFByteStream> mByteStream;
+  RefPtr<WMFSourceReaderCallback> mSourceReaderCallback;
 
   // Region inside the video frame that makes up the picture. Pixels outside
   // of this region should not be rendered.

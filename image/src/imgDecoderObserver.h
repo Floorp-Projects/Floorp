@@ -32,8 +32,7 @@
  * loaded data fire before the call returns. If FLAG_SYNC_DECODE is not passed,
  * all, some, or none of the notifications may fire before the call returns.
  */
-class imgDecoderObserver : public mozilla::RefCounted<imgDecoderObserver>,
-                           public mozilla::SupportsWeakPtr<imgDecoderObserver>
+class imgDecoderObserver : public mozilla::RefCounted<imgDecoderObserver>
 {
 public:
   virtual ~imgDecoderObserver() = 0;

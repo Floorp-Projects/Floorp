@@ -253,7 +253,6 @@ IsTextContentElement(nsIContent* aContent)
 
   if (aContent->Tag() == nsGkAtoms::a ||
       aContent->Tag() == nsGkAtoms::tspan ||
-      aContent->Tag() == nsGkAtoms::tref ||
       aContent->Tag() == nsGkAtoms::altGlyph) {
     return true;
   }
@@ -1558,7 +1557,7 @@ private:
    */
   void Init()
   {
-    mBaselines.AppendElement(mRootFrame->GetStyleSVGReset()->mDominantBaseline);
+    mBaselines.AppendElement(mRootFrame->StyleSVGReset()->mDominantBaseline);
     Next();
   }
 
@@ -1704,7 +1703,7 @@ TextFrameIterator::Next()
 void
 TextFrameIterator::PushBaseline(nsIFrame* aNextFrame)
 {
-  uint8_t baseline = aNextFrame->GetStyleSVGReset()->mDominantBaseline;
+  uint8_t baseline = aNextFrame->StyleSVGReset()->mDominantBaseline;
   if (baseline != NS_STYLE_DOMINANT_BASELINE_AUTO) {
     mBaselines.AppendElement(baseline);
   } else {
@@ -1931,7 +1930,7 @@ TextRenderedRunIterator::Next()
     bool skip = !mFrameIterator.IsWithinSubtree() ||
                 Root()->mPositions[mTextElementCharIndex].mHidden;
     if (mFilter == eVisibleFrames) {
-      skip = skip || !frame->GetStyleVisibility()->IsVisible();
+      skip = skip || !frame->StyleVisibility()->IsVisible();
     }
 
     // Update our global character index to move past the characters
@@ -2309,7 +2308,7 @@ CharIterator::IsOriginalCharTrimmed() const
   return !((index >= mTrimmedOffset &&
             index < mTrimmedOffset + mTrimmedLength) ||
            (index >= mTrimmedOffset + mTrimmedLength &&
-            mFrameForTrimCheck->GetStyleText()->NewlineIsSignificant() &&
+            mFrameForTrimCheck->StyleText()->NewlineIsSignificant() &&
             mFrameForTrimCheck->GetContent()->GetText()->CharAt(index) == '\n'));
 }
 
@@ -2660,7 +2659,7 @@ SVGTextDrawPathCallbacks::SetupContext()
   // XXX This is copied from nsSVGGlyphFrame::Render, but cairo doesn't actually
   // seem to do anything with the antialias mode.  So we can perhaps remove it,
   // or make SetAntialiasMode set cairo text antialiasing too.
-  switch (mFrame->GetStyleSVG()->mTextRendering) {
+  switch (mFrame->StyleSVG()->mTextRendering) {
   case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
     gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
     break;
@@ -2675,7 +2674,7 @@ SVGTextDrawPathCallbacks::HandleTextGeometry()
 {
   if (mRenderMode != SVGAutoRenderState::NORMAL) {
     // We're in a clip path.
-    if (mFrame->GetStyleSVG()->mClipRule == NS_STYLE_FILL_RULE_EVENODD)
+    if (mFrame->StyleSVG()->mClipRule == NS_STYLE_FILL_RULE_EVENODD)
       gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
     else
       gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
@@ -2859,7 +2858,7 @@ nsSVGTextFrame2::DestroyFrom(nsIFrame* aDestructRoot)
   nsSVGTextFrame2Base::DestroyFrom(aDestructRoot);
 }
 
-NS_IMETHODIMP
+void
 nsSVGTextFrame2::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -2868,10 +2867,10 @@ nsSVGTextFrame2::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // We can sometimes be asked to paint before reflow happens and we
     // have updated mPositions, etc.  In this case, we just avoid
     // painting.
-    return NS_OK;
+    return;
   }
-  return aLists.Content()->AppendNewToTop(
-           new (aBuilder) nsDisplaySVGText(aBuilder, this));
+  aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplaySVGText(aBuilder, this));
 }
 
 NS_IMETHODIMP
@@ -2956,8 +2955,10 @@ nsSVGTextFrame2::MutationObserver::AttributeChanged(
                aAttribute == nsGkAtoms::href) {
       // Blow away our reference, if any
       nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
-      childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
-      mFrame->NotifyGlyphMetricsChange();
+      if (childElementFrame) {
+        childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
+        mFrame->NotifyGlyphMetricsChange();
+      }
     }
   } else {
     if (aNameSpaceID == kNameSpaceID_None &&
@@ -3332,7 +3333,7 @@ nsSVGTextFrame2::ReflowSVG()
     uint16_t hitTestFlags = nsSVGUtils::GetGeometryHitTestFlags(run.mFrame);
 
     if ((hitTestFlags & SVG_HIT_TEST_FILL) ||
-        run.mFrame->GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
+        run.mFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
       runFlags |= TextRenderedRun::eIncludeFill;
     }
     if ((hitTestFlags & SVG_HIT_TEST_STROKE) ||
@@ -3394,7 +3395,7 @@ TextRenderedRunFlagsForBBoxContribution(const TextRenderedRun& aRun,
   uint32_t flags = 0;
   if ((aBBoxFlags & nsSVGUtils::eBBoxIncludeFillGeometry) ||
       ((aBBoxFlags & nsSVGUtils::eBBoxIncludeFill) &&
-       aRun.mFrame->GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)) {
+       aRun.mFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None)) {
     flags |= TextRenderedRun::eIncludeFill;
   }
   if ((aBBoxFlags & nsSVGUtils::eBBoxIncludeStrokeGeometry) ||
@@ -4421,9 +4422,9 @@ nsSVGTextFrame2::DoAnchoring()
 
     if (left != std::numeric_limits<gfxFloat>::infinity()) {
       bool isRTL =
-        chunkFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+        chunkFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
       TextAnchorSide anchor =
-        ConvertLogicalTextAnchorToPhysical(chunkFrame->GetStyleSVG()->mTextAnchor,
+        ConvertLogicalTextAnchorToPhysical(chunkFrame->StyleSVG()->mTextAnchor,
                                            isRTL);
 
       ShiftAnchoredChunk(mPositions, start, end, left, right, anchor);
@@ -4552,7 +4553,7 @@ nsSVGTextFrame2::ShouldRenderAsPath(nsRenderingContext* aContext,
 
   aShouldPaintSVGGlyphs = true;
 
-  const nsStyleSVG* style = aFrame->GetStyleSVG();
+  const nsStyleSVG* style = aFrame->StyleSVG();
 
   // Fill is a non-solid paint, has a non-default fill-rule or has
   // non-1 opacity.
@@ -4687,10 +4688,10 @@ nsSVGTextFrame2::UpdateFontSizeScaleFactor(bool aForceGlobalTransform)
     if (!geometricPrecision) {
       // Unfortunately we can't treat text-rendering:geometricPrecision
       // separately for each text frame.
-      geometricPrecision = f->GetStyleSVG()->mTextRendering ==
+      geometricPrecision = f->StyleSVG()->mTextRendering ==
                              NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION;
     }
-    nscoord size = f->GetStyleFont()->mFont.size;
+    nscoord size = f->StyleFont()->mFont.size;
     if (size) {
       min = std::min(min, size);
       max = std::max(max, size);
@@ -5002,7 +5003,7 @@ nsSVGTextFrame2::SetupCairoStroke(gfxContext* aContext,
                                   gfxTextObjectPaint* aOuterObjectPaint,
                                   SVGTextObjectPaint* aThisObjectPaint)
 {
-  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  const nsStyleSVG *style = aFrame->StyleSVG();
   if (style->mStroke.mType == eStyleSVGPaintType_None) {
     aThisObjectPaint->SetStrokeOpacity(0.0f);
     return false;
@@ -5031,7 +5032,7 @@ nsSVGTextFrame2::SetupCairoFill(gfxContext* aContext,
                                 gfxTextObjectPaint* aOuterObjectPaint,
                                 SVGTextObjectPaint* aThisObjectPaint)
 {
-  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  const nsStyleSVG *style = aFrame->StyleSVG();
   if (style->mFill.mType == eStyleSVGPaintType_None) {
     aThisObjectPaint->SetFillOpacity(0.0f);
     return false;
@@ -5059,7 +5060,7 @@ nsSVGTextFrame2::SetupInheritablePaint(gfxContext* aContext,
                                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                        const FramePropertyDescriptor* aProperty)
 {
-  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  const nsStyleSVG *style = aFrame->StyleSVG();
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &(style->*aFillOrStroke), aProperty);
 
@@ -5069,7 +5070,7 @@ nsSVGTextFrame2::SetupInheritablePaint(gfxContext* aContext,
     aTargetPaint.SetObjectPaint(aOuterObjectPaint, (style->*aFillOrStroke).mType);
   } else {
     nscolor color = nsSVGUtils::GetFallbackOrPaintColor(aContext,
-                                                        aFrame->GetStyleContext(),
+                                                        aFrame->StyleContext(),
                                                         aFillOrStroke);
     aTargetPaint.SetColor(color);
 
@@ -5091,7 +5092,7 @@ nsSVGTextFrame2::SetupObjectPaint(gfxContext* aContext,
     return false;
   }
 
-  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  const nsStyleSVG *style = aFrame->StyleSVG();
   const nsStyleSVGPaint &paint = style->*aFillOrStroke;
 
   if (paint.mType != eStyleSVGPaintType_ObjectFill &&

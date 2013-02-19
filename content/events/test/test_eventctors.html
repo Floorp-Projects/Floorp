@@ -162,6 +162,47 @@ try {
 ok(ex, "Should have thrown an exception!");
 ex = false;
 
+// BlobEvent
+
+try {
+  e = new BlobEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new BlobEvent("hello");
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+var blob = Blob();
+e = new BlobEvent("hello", { bubbles: true, cancelable: true, data: blob });
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.data, blob , "Wrong event.data!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+
+e = new BlobEvent("hello", {data: blob});
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event should be cancelable1!");
+is(e.data, blob , "Wrong event.data!");
+
+e = new BlobEvent("hello", { data: null });
+is(e.data, null, "Wrong event.data!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+blob = null;
 // CloseEvent
 
 try {

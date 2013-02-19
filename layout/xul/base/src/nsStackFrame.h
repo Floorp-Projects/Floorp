@@ -32,9 +32,9 @@ public:
   }
 #endif
 
-  NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
-                                         const nsRect&           aDirtyRect,
-                                         const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
+                                           const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
 protected:
   nsStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

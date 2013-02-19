@@ -447,7 +447,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
   EffectProperties result;
-  const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
+  const nsStyleSVGReset *style = aFrame->StyleSVGReset();
   result.mFilter = static_cast<nsSVGFilterProperty*>
     (GetEffectProperty(style->mFilter, aFrame, FilterProperty(),
                        CreateFilterProperty));
@@ -525,13 +525,13 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 
   // Ensure that the filter is repainted correctly
   // We can't do that in DoUpdate as the referenced frame may not be valid
-  GetEffectProperty(aFrame->GetStyleSVGReset()->mFilter,
+  GetEffectProperty(aFrame->StyleSVGReset()->mFilter,
                     aFrame, FilterProperty(), CreateFilterProperty);
 
   if (aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
       static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
-    const nsStyleSVG *style = aFrame->GetStyleSVG();
+    const nsStyleSVG *style = aFrame->StyleSVG();
     GetEffectProperty(style->mMarkerStart, aFrame, MarkerBeginProperty(),
                       CreateMarkerProperty);
     GetEffectProperty(style->mMarkerMid, aFrame, MarkerMiddleProperty(),
@@ -546,7 +546,7 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
-  if (!aFrame->GetStyleSVGReset()->mFilter)
+  if (!aFrame->StyleSVGReset()->mFilter)
     return nullptr;
 
   return static_cast<nsSVGFilterProperty *>

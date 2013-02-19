@@ -86,7 +86,7 @@ public:
 
   // Returns the media type for the given |AdaptationSet|, audio/video.
   virtual AdaptationSetType
-          GetAdaptationSetType(uint32_t aAdaptSetIdx) const = 0;
+          GetAdaptationSetType(uint32_t const aAdaptSetIdx) const = 0;
 
   // Gets the number of media |Representation|s for the given |AdaptationSet|.
   // e.g how many bitrate encodings are there of the audio stream?

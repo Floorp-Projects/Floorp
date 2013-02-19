@@ -34,6 +34,7 @@
 #include "nsJSEnvironment.h"
 #include "nsXMLHttpRequest.h"
 #include "mozilla/Telemetry.h"
+#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 using namespace js;
@@ -4526,6 +4527,22 @@ nsXPCComponents_Utils::IsXrayWrapper(const JS::Value &obj, bool* aRetval)
     *aRetval =
         obj.isObject() && xpc::WrapperFactory::IsXrayWrapper(&obj.toObject());
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetDOMClassInfo(const nsAString& aClassName,
+                                       nsIClassInfo** aClassInfo)
+{
+#ifdef MOZ_WEBRTC
+    if (aClassName.EqualsLiteral("RTCPeerConnection")) {
+        NS_ADDREF(*aClassInfo =
+                  NS_GetDOMClassInfoInstance(eDOMClassInfo_RTCPeerConnection_id));
+        return NS_OK;
+    }
+#endif
+
+    *aClassInfo = nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 /***************************************************************************/

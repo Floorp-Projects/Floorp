@@ -17,8 +17,8 @@
   <binding id="checkbox-toggleswitch" display="xul:box" extends="chrome://global/content/bindings/checkbox.xml#checkbox-baseline">
     <content>
       <xul:hbox>
-        <xul:description anonid="onlabel" class="onlabel" value="&checkbox.yes.label;" xbl:inherits="value=onlabel"/>
-        <xul:description anonid="offlabel" class="offlabel" value="&checkbox.no.label;" xbl:inherits="value=offlabel"/>
+        <xul:description anonid="onlabel" class="onlabel" value="&checkbox.on.label;" xbl:inherits="value=onlabel"/>
+        <xul:description anonid="offlabel" class="offlabel" value="&checkbox.off.label;" xbl:inherits="value=offlabel"/>
         <xul:radiogroup anonid="group" xbl:inherits="disabled">
           <xul:radio anonid="on" class="checkbox-radio-on"/>
           <xul:radio anonid="off" class="checkbox-radio-off"/>

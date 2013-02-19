@@ -92,7 +92,7 @@ ia2AccessibleComponent::get_foreground(IA2Color* aForeground)
 
   nsIFrame* frame = acc->GetFrame();
   if (frame)
-    *aForeground = frame->GetStyleColor()->mColor;
+    *aForeground = frame->StyleColor()->mColor;
 
   return S_OK;
 
@@ -110,7 +110,7 @@ ia2AccessibleComponent::get_background(IA2Color* aBackground)
 
   nsIFrame* frame = acc->GetFrame();
   if (frame)
-    *aBackground = frame->GetStyleBackground()->mBackgroundColor;
+    *aBackground = frame->StyleBackground()->mBackgroundColor;
 
   return S_OK;
 

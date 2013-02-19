@@ -10,7 +10,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsHTMLFormElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
-#include "nsHTMLOptionElement.h"
+#include "mozilla/dom/HTMLOptionElement.h"
 #include "HTMLOptGroupElement.h"
 #include "nsHTMLVideoElement.h"
 #include "nsHTMLDocument.h"
@@ -172,7 +172,7 @@ DEFINE_UNWRAP_CAST_HTML(canvas, mozilla::dom::HTMLCanvasElement)
 DEFINE_UNWRAP_CAST_HTML(form, nsHTMLFormElement)
 DEFINE_UNWRAP_CAST_HTML(img, mozilla::dom::HTMLImageElement)
 DEFINE_UNWRAP_CAST_HTML(optgroup, mozilla::dom::HTMLOptGroupElement)
-DEFINE_UNWRAP_CAST_HTML(option, nsHTMLOptionElement)
+DEFINE_UNWRAP_CAST_HTML(option, mozilla::dom::HTMLOptionElement)
 DEFINE_UNWRAP_CAST_HTML(video, nsHTMLVideoElement)
 
 inline nsISupports*

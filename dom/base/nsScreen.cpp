@@ -90,10 +90,8 @@ nsScreen::~nsScreen()
 
 DOMCI_DATA(Screen, nsScreen)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_0(nsScreen, nsDOMEventTargetHelper)
-
 // QueryInterface implementation for nsScreen
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsScreen)
+NS_INTERFACE_MAP_BEGIN(nsScreen)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScreen)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Screen)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)

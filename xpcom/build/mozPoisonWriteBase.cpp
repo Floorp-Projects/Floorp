@@ -106,11 +106,17 @@ static void RecordStackWalker(void *aPC, void *aSP, void *aClosure)
 
 bool ValidWriteAssert(bool ok)
 {
-    // On a debug build, just crash.
-    MOZ_ASSERT(ok);
+    if (gShutdownChecks == SCM_CRASH && !ok) {
+        MOZ_CRASH();
+    }
 
-    if (ok || !sProfileDirectory || !Telemetry::CanRecord())
+    // We normally don't poison writes if gShutdownChecks is SCM_NOTHING, but
+    // write poisoning can get more users in the future (profiling for example),
+    // so make sure we behave correctly.
+    if (gShutdownChecks == SCM_NOTHING || ok || !sProfileDirectory ||
+        !Telemetry::CanRecord()) {
         return ok;
+    }
 
     // Write the stack and loaded libraries to a file. We can get here
     // concurrently from many writes, so we use multiple temporary files.

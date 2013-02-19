@@ -674,7 +674,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   // on the side that has more room.
   bool b = dropdownSize.height <= below || below >= above;
   nsPoint dropdownPosition(0, b ? GetRect().height : -dropdownSize.height);
-  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     // Align the right edge of the drop-down with the right edge of the control.
     dropdownPosition.x = GetRect().width - dropdownSize.width;
   }
@@ -843,7 +843,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   // Get the width of the vertical scrollbar.  That will be the width of the
   // dropdown button.
   nscoord buttonWidth;
-  const nsStyleDisplay *disp = GetStyleDisplay();
+  const nsStyleDisplay *disp = StyleDisplay();
   if (IsThemed(disp) && !aPresContext->GetTheme()->ThemeNeedsComboboxDropmarker()) {
     buttonWidth = 0;
   }
@@ -894,7 +894,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif
 
-  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     // Make sure the right edge of the button frame stays where it is now
     buttonRect.x -= buttonWidth - buttonRect.width;
   }
@@ -1144,7 +1144,7 @@ nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
 
   // If we have style that affects how we are selected, feed event down to
   // nsFrame::HandleEvent so that selection takes place when appropriate.
-  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
+  const nsStyleUserInterface* uiStyle = StyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsBlockFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
@@ -1279,9 +1279,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
 protected:
   nsComboboxControlFrame* mComboBox;
@@ -1318,15 +1318,13 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
   return nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 }
 
-NS_IMETHODIMP
+void
 nsComboboxDisplayFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
   nsDisplayListCollection set;
-  nsresult rv = nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
-  if (NS_FAILED(rv))
-    return rv;
+  nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
 
   // remove background items if parent frame is themed
   if (mComboBox->IsThemed()) {
@@ -1334,8 +1332,6 @@ nsComboboxDisplayFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   set.MoveTo(aLists);
-
-  return NS_OK;
 }
 
 nsIFrame*
@@ -1537,7 +1533,7 @@ void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
     ->PaintFocus(*aCtx, ToReferenceFrame());
 }
 
-NS_IMETHODIMP
+void
 nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
@@ -1550,13 +1546,11 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsForEventDelivery()) {
     // Don't allow children to receive events.
     // REVIEW: following old GetFrameForPoint
-    nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    DisplayBorderBackgroundOutline(aBuilder, aLists);
   } else {
     // REVIEW: Our in-flow child frames are inline-level so they will paint in our
     // content list, so we don't need to mess with layers.
-    nsresult rv = nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   }
 
   // draw a focus indicator only when focus rings should be drawn
@@ -1565,18 +1559,17 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsPIDOMWindow* window = doc->GetWindow();
     if (window && window->ShouldShowFocusRing()) {
       nsPresContext *presContext = PresContext();
-      const nsStyleDisplay *disp = GetStyleDisplay();
+      const nsStyleDisplay *disp = StyleDisplay();
       if ((!IsThemed(disp) ||
            !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
           mDisplayFrame && IsVisibleForPainting(aBuilder)) {
-        nsresult rv = aLists.Content()->AppendNewToTop(
-            new (aBuilder) nsDisplayComboboxFocus(aBuilder, this));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.Content()->AppendNewToTop(
+          new (aBuilder) nsDisplayComboboxFocus(aBuilder, this));
       }
     }
   }
 
-  return DisplaySelectionOverlay(aBuilder, aLists.Content());
+  DisplaySelectionOverlay(aBuilder, aLists.Content());
 }
 
 void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
@@ -1599,7 +1592,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
   // draw focus
 
   aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-  aRenderingContext.SetColor(GetStyleColor()->mColor);
+  aRenderingContext.SetColor(StyleColor()->mColor);
 
   //aRenderingContext.DrawRect(clipRect);
 

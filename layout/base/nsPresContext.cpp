@@ -1660,7 +1660,9 @@ nsPresContext::UIResolutionChangedInternal()
   mPendingUIResolutionChanged = false;
 
   mDeviceContext->CheckDPIChange();
-  AppUnitsPerDevPixelChanged();
+  if (uint32_t(mCurAppUnitsPerDevPixel) != AppUnitsPerDevPixel()) {
+    AppUnitsPerDevPixelChanged();
+  }
 
   mDocument->EnumerateSubDocuments(UIResolutionChangedSubdocumentCallback,
                                    nullptr);
@@ -1888,7 +1890,7 @@ nsPresContext::InvalidateIsChromeCacheExternal()
 nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, uint32_t ruleTypeMask) const
 {
   return
-    nsRuleNode::HasAuthorSpecifiedRules(aFrame->GetStyleContext(),
+    nsRuleNode::HasAuthorSpecifiedRules(aFrame->StyleContext(),
                                         ruleTypeMask,
                                         UseDocumentColors());
 }

@@ -123,8 +123,10 @@ select[size][multiple],
   /*background: white -moz-linear-gradient(top, rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 3px, rgba(255,255,255,0.2) 16px);*/
 }
 
-/* Selects are handled by the form helper, see bug 685197 */
-select option, select optgroup {
+/* For both mouse and touch, single-selects are handled by the SelectHelper popup.
+ * Suppress mouse events on the popup itself. See also ../base/content/cursor.css */
+select[size=1] :-moz-any(option, optgroup),
+select:not([size]):not([multiple]) :-moz-any(option, optgroup) {
   pointer-events: none;
 }
 

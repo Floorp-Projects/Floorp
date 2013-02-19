@@ -20,9 +20,9 @@ public:
 
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
@@ -104,30 +104,27 @@ nsDisplayXULGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
     PaintBorderBackground(*aCtx, ToReferenceFrame(), mVisibleRect);
 }
 
-NS_IMETHODIMP
+void
 nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
   // Paint our background and border
   if (IsVisibleForPainting(aBuilder)) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULGroupBackground(aBuilder, this));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayXULGroupBackground(aBuilder, this));
     
-    rv = DisplayOutline(aBuilder, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    DisplayOutline(aBuilder, aLists);
   }
 
-  return BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
-  // REVIEW: Debug borders now painted by nsFrame::BuildDisplayListForChild
+  BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 void
 nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect) {
   int skipSides = 0;
-  const nsStyleBorder* borderStyleData = GetStyleBorder();
+  const nsStyleBorder* borderStyleData = StyleBorder();
   const nsMargin& border = borderStyleData->GetComputedBorder();
   nscoord yoff = 0;
   nsPresContext* presContext = PresContext();
@@ -139,7 +136,7 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     // if the border is smaller than the legend. Move the border down
     // to be centered on the legend. 
     nsMargin groupMargin;
-    groupBox->GetStyleMargin()->GetMargin(groupMargin);
+    groupBox->StyleMargin()->GetMargin(groupMargin);
     groupRect.Inflate(groupMargin);
  
     if (border.top < groupRect.height)

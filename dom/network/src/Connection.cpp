@@ -26,9 +26,7 @@ namespace network {
 const char* Connection::sMeteredPrefName     = "dom.network.metered";
 const bool  Connection::sMeteredDefaultValue = false;
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_0(Connection, nsDOMEventTargetHelper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Connection)
+NS_INTERFACE_MAP_BEGIN(Connection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozConnection)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozConnection)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)

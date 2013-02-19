@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGMarkerElement_h
 
 #include "gfxMatrix.h"
-#include "nsIDOMSVGMarkerElement.h"
 #include "nsSVGAngle.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
@@ -24,12 +23,22 @@ nsresult NS_NewSVGMarkerElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
+// Marker Unit Types
+static const unsigned short SVG_MARKERUNITS_UNKNOWN         = 0;
+static const unsigned short SVG_MARKERUNITS_USERSPACEONUSE = 1;
+static const unsigned short SVG_MARKERUNITS_STROKEWIDTH    = 2;
+
+// Marker Orientation Types
+static const unsigned short SVG_MARKER_ORIENT_UNKNOWN      = 0;
+static const unsigned short SVG_MARKER_ORIENT_AUTO         = 1;
+static const unsigned short SVG_MARKER_ORIENT_ANGLE        = 2;
+
 class nsSVGOrientType
 {
 public:
   nsSVGOrientType()
-   : mAnimVal(nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE),
-     mBaseVal(nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {}
+   : mAnimVal(SVG_MARKER_ORIENT_ANGLE),
+     mBaseVal(SVG_MARKER_ORIENT_ANGLE) {}
 
   nsresult SetBaseValue(uint16_t aValue,
                         nsSVGElement *aSVGElement);
@@ -78,7 +87,7 @@ private:
 typedef nsSVGElement SVGMarkerElementBase;
 
 class SVGMarkerElement : public SVGMarkerElementBase,
-                         public nsIDOMSVGMarkerElement
+                         public nsIDOMSVGElement
 {
   friend class ::nsSVGMarkerFrame;
 
@@ -92,7 +101,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGMARKERELEMENT
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -118,8 +126,6 @@ public:
 
   nsSVGOrientType* GetOrientType() { return &mOrientType; }
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
@@ -132,7 +138,7 @@ public:
   already_AddRefed<SVGAnimatedLength> MarkerHeight();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> OrientType();
   already_AddRefed<SVGAnimatedAngle> OrientAngle();
-  // We can use the XPIDL SetOrientToAuto
+  void SetOrientToAuto();
   void SetOrientToAngle(SVGAngle& angle, ErrorResult& rv);
 
 protected:

@@ -20,7 +20,7 @@ from automationutils import getDebuggerInfo, addCommonOptions
 
 PORT = 8888
 PROFILE_DIRECTORY = os.path.abspath(os.path.join(SCRIPT_DIR, "./pgoprofile"))
-MOZ_JAR_LOG_DIR = os.path.abspath(os.getenv("JARLOG_DIR"))
+MOZ_JAR_LOG_FILE = os.path.abspath(os.getenv("JARLOG_FILE"))
 os.chdir(SCRIPT_DIR)
 
 class EasyServer(SocketServer.TCPServer):
@@ -47,7 +47,7 @@ if __name__ == '__main__':
   automation.initializeProfile(PROFILE_DIRECTORY)
   browserEnv = automation.environment()
   browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
-  browserEnv["MOZ_JAR_LOG_DIR"] = MOZ_JAR_LOG_DIR
+  browserEnv["MOZ_JAR_LOG_FILE"] = MOZ_JAR_LOG_FILE
 
   url = "http://localhost:%d/index.html" % PORT
   appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)

@@ -54,12 +54,10 @@ public:
   /**
    * Creates a new image container.
    *
-   * @param aObserver Observer to send decoder and animation notifications to.
    * @param aMimeType The mimetype of the image.
    * @param aFlags Initialization flags of the INIT_FLAG_* variety.
    */
-  virtual nsresult Init(imgDecoderObserver* aObserver,
-                        const char* aMimeType,
+  virtual nsresult Init(const char* aMimeType,
                         uint32_t aFlags) = 0;
 
   virtual imgStatusTracker& GetStatusTracker() = 0;

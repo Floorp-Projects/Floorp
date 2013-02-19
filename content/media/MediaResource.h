@@ -367,6 +367,11 @@ public:
 
   // Notify that the last data byte range was loaded.
   virtual void NotifyLastByteRange() { }
+
+  // Returns the content type of the resource. This is copied from the
+  // nsIChannel when the MediaResource is created. Safe to call from
+  // any thread.
+  virtual const nsACString& GetContentType() const = 0;
 };
 
 class BaseMediaResource : public MediaResource {
@@ -375,17 +380,27 @@ public:
   virtual void MoveLoadsToBackground();
 
 protected:
-  BaseMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  BaseMediaResource(MediaDecoder* aDecoder,
+                    nsIChannel* aChannel,
+                    nsIURI* aURI,
+                    const nsACString& aContentType) :
     mDecoder(aDecoder),
     mChannel(aChannel),
     mURI(aURI),
+    mContentType(aContentType),
     mLoadInBackground(false)
   {
     MOZ_COUNT_CTOR(BaseMediaResource);
+    NS_ASSERTION(!mContentType.IsEmpty(), "Must know content type");
   }
   virtual ~BaseMediaResource()
   {
     MOZ_COUNT_DTOR(BaseMediaResource);
+  }
+
+  virtual const nsACString& GetContentType() const MOZ_OVERRIDE
+  {
+    return mContentType;
   }
 
   // Set the request's load flags to aFlags.  If the request is part of a
@@ -406,6 +421,11 @@ protected:
   // main thread only.
   nsCOMPtr<nsIURI> mURI;
 
+  // Content-Type of the channel. This is copied from the nsIChannel when the
+  // MediaResource is created. This is constant, so accessing from any thread
+  // is safe.
+  const nsAutoCString mContentType;
+
   // True if MoveLoadsToBackground() has been called, i.e. the load event
   // has been fired, and all channel loads will be in the background.
   bool mLoadInBackground;
@@ -422,7 +442,10 @@ protected:
 class ChannelMediaResource : public BaseMediaResource
 {
 public:
-  ChannelMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
+  ChannelMediaResource(MediaDecoder* aDecoder,
+                       nsIChannel* aChannel,
+                       nsIURI* aURI,
+                       const nsACString& aContentType);
   ~ChannelMediaResource();
 
   // These are called on the main thread by MediaCache. These must

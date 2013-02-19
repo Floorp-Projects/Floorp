@@ -102,9 +102,9 @@ nsInlineFrame::IsSelfEmpty()
     return false;
   }
 #endif
-  const nsStyleMargin* margin = GetStyleMargin();
-  const nsStyleBorder* border = GetStyleBorder();
-  const nsStylePadding* padding = GetStylePadding();
+  const nsStyleMargin* margin = StyleMargin();
+  const nsStyleBorder* border = StyleBorder();
+  const nsStylePadding* padding = StylePadding();
   // XXX Top and bottom removed, since they shouldn't affect things, but this
   // doesn't really match with nsLineLayout.cpp's setting of
   // ZeroEffectiveSpanBox, anymore, so what should this really be?
@@ -119,7 +119,7 @@ nsInlineFrame::IsSelfEmpty()
   if (haveLeft || haveRight) {
     if (GetStateBits() & NS_FRAME_IS_SPECIAL) {
       bool haveStart, haveEnd;
-      if (NS_STYLE_DIRECTION_LTR == GetStyleVisibility()->mDirection) {
+      if (NS_STYLE_DIRECTION_LTR == StyleVisibility()->mDirection) {
         haveStart = haveLeft;
         haveEnd = haveRight;
       } else {
@@ -174,22 +174,20 @@ nsInlineFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
   return false;
 }
 
-NS_IMETHODIMP
+void
 nsInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
-  nsresult rv = BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
 
   // The sole purpose of this is to trigger display of the selection
   // window for Named Anchors, which don't have any children and
   // normally don't have any size, but in Editor we use CSS to display
   // an image to represent this "hidden" element.
   if (!mFrames.FirstChild()) {
-    rv = DisplaySelectionOverlay(aBuilder, aLists.Content());
+    DisplaySelectionOverlay(aBuilder, aLists.Content());
   }
-  return rv;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -223,7 +221,7 @@ nsRect
 nsInlineFrame::ComputeTightBounds(gfxContext* aContext) const
 {
   // be conservative
-  if (GetStyleContext()->HasTextDecorationLines()) {
+  if (StyleContext()->HasTextDecorationLines()) {
     return GetVisualOverflowRect();
   }
   return ComputeSimpleTightBounds(aContext);
@@ -888,7 +886,7 @@ nsInlineFrame::GetSkipSides() const
     // a split should skip the "start" side.  But figuring out which part of
     // the split we are involves getting our first continuation, which might be
     // expensive.  So don't bother if we already have the relevant bits set.
-    bool ltr = (NS_STYLE_DIRECTION_LTR == GetStyleVisibility()->mDirection);
+    bool ltr = (NS_STYLE_DIRECTION_LTR == StyleVisibility()->mDirection);
     int startBit = (1 << (ltr ? NS_SIDE_LEFT : NS_SIDE_RIGHT));
     int endBit = (1 << (ltr ? NS_SIDE_RIGHT : NS_SIDE_LEFT));
     if (((startBit | endBit) & skip) != (startBit | endBit)) {
@@ -1055,22 +1053,20 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     if (mStyleContext == first->mStyleContext) {
       // Fixup our style context and our children. First get the
       // proper parent context.
-      nsStyleContext* parentContext = first->GetParent()->GetStyleContext();
-      if (parentContext) {
-        // Create a new style context that is a child of the parent
-        // style context thus removing the :first-line style. This way
-        // we behave as if an anonymous (unstyled) span was the child
-        // of the parent frame.
-        nsRefPtr<nsStyleContext> newSC;
-        newSC = aPresContext->StyleSet()->
-          ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame, parentContext);
-        if (newSC) {
-          // Switch to the new style context.
-          SetStyleContext(newSC);
+      nsStyleContext* parentContext = first->GetParent()->StyleContext();
+      // Create a new style context that is a child of the parent
+      // style context thus removing the :first-line style. This way
+      // we behave as if an anonymous (unstyled) span was the child
+      // of the parent frame.
+      nsRefPtr<nsStyleContext> newSC;
+      newSC = aPresContext->StyleSet()->
+        ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame, parentContext);
+      if (newSC) {
+        // Switch to the new style context.
+        SetStyleContext(newSC);
 
-          // Re-resolve all children
-          ReparentChildListStyle(aPresContext, mFrames, this);
-        }
+        // Re-resolve all children
+        ReparentChildListStyle(aPresContext, mFrames, this);
       }
     }
   }

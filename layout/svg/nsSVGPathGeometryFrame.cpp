@@ -163,16 +163,16 @@ nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   return foundTransform;
 }
 
-NS_IMETHODIMP
+void
 nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
   if (!static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
-    return NS_OK;
+    return;
   }
-  return aLists.Content()->AppendNewToTop(
-           new (aBuilder) nsDisplaySVGPathGeometry(aBuilder, this));
+  aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplaySVGPathGeometry(aBuilder, this));
 }
 
 //----------------------------------------------------------------------
@@ -182,10 +182,10 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
                                  const nsIntRect *aDirtyRect)
 {
-  if (!GetStyleVisibility()->IsVisible())
+  if (!StyleVisibility()->IsVisible())
     return NS_OK;
 
-  uint32_t paintOrder = GetStyleSVG()->mPaintOrder;
+  uint32_t paintOrder = StyleSVG()->mPaintOrder;
   if (paintOrder == NS_STYLE_PAINT_ORDER_NORMAL) {
     Render(aContext, eRenderFill | eRenderStroke);
     PaintMarkers(aContext);
@@ -231,7 +231,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
     if (!hitTestFlags || ((hitTestFlags & SVG_HIT_TEST_CHECK_MRECT) &&
                           !mRect.Contains(point)))
       return nullptr;
-    fillRule = GetStyleSVG()->mFillRule;
+    fillRule = StyleSVG()->mFillRule;
   }
 
   bool isHit = false;
@@ -391,7 +391,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   // Account for fill:
   if ((aFlags & nsSVGUtils::eBBoxIncludeFillGeometry) ||
       ((aFlags & nsSVGUtils::eBBoxIncludeFill) &&
-       GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)) {
+       StyleSVG()->mFill.mType != eStyleSVGPaintType_None)) {
     bbox = pathExtents;
   }
 
@@ -493,7 +493,7 @@ nsSVGPathGeometryFrame::GetMarkerProperties(nsSVGPathGeometryFrame *aFrame)
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
   MarkerProperties result;
-  const nsStyleSVG *style = aFrame->GetStyleSVG();
+  const nsStyleSVG *style = aFrame->StyleSVG();
   result.mMarkerStart =
     nsSVGEffects::GetMarkerProperty(style->mMarkerStart, aFrame,
                                     nsSVGEffects::MarkerBeginProperty());
@@ -541,7 +541,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
 
   uint16_t renderMode = SVGAutoRenderState::GetRenderMode(aContext);
 
-  switch (GetStyleSVG()->mShapeRendering) {
+  switch (StyleSVG()->mShapeRendering) {
   case NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED:
   case NS_STYLE_SHAPE_RENDERING_CRISPEDGES:
     gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
@@ -607,7 +607,7 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
   aContext->MultiplyAndNudgeToIntegers(aTransform);
 
   // Hack to let SVGPathData::ConstructPath know if we have square caps:
-  const nsStyleSVG* style = GetStyleSVG();
+  const nsStyleSVG* style = StyleSVG();
   if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
     aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
   }

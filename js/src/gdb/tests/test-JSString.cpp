@@ -23,6 +23,9 @@ FRAGMENT(JSString, simple) {
   // This will probably be a rope.
   js::Rooted<JSString *> doubleStars(cx, JS_ConcatStrings(cx, stars, stars));
 
+  // Ensure we're not confused by typedefs for pointer types.
+  js::RawString xRaw = x;
+
   breakpoint();
 
   (void) empty;
@@ -31,14 +34,17 @@ FRAGMENT(JSString, simple) {
   (void) stars;
   (void) xz;
   (void) doubleStars;
+  (void) xRaw;
 }
 
 FRAGMENT(JSString, null) {
   js::Rooted<JSString *> null(cx, NULL);
+  js::RawString nullRaw = null;
 
   breakpoint();
 
   (void) null;
+  (void) nullRaw;
 }
 
 FRAGMENT(JSString, subclasses) {

@@ -459,6 +459,7 @@ MAKEFILES_xulapp="
   toolkit/components/apppicker/Makefile
   toolkit/components/Makefile
   toolkit/components/build/Makefile
+  toolkit/components/captivedetect/Makefile
   toolkit/components/commandlines/Makefile
   toolkit/components/console/Makefile
   toolkit/components/contentprefs/Makefile
@@ -481,6 +482,7 @@ MAKEFILES_xulapp="
   toolkit/components/startup/public/Makefile
   toolkit/components/statusfilter/Makefile
   toolkit/components/telemetry/Makefile
+  toolkit/components/thumbnails/Makefile
   toolkit/components/typeaheadfind/Makefile
   toolkit/components/urlformatter/Makefile
   toolkit/components/viewconfig/Makefile
@@ -555,6 +557,7 @@ MAKEFILES_profiler="
 MAKEFILES_snappy="
   other-licenses/snappy/Makefile
 "
+
 
 add_makefiles "
   $MAKEFILES_dom
@@ -925,6 +928,7 @@ if [ "$ENABLE_TESTS" ]; then
     testing/xpcshell/example/Makefile
     toolkit/components/aboutmemory/tests/Makefile
     toolkit/components/alerts/test/Makefile
+    toolkit/components/captivedetect/test/Makefile
     toolkit/components/commandlines/test/Makefile
     toolkit/components/contentprefs/tests/Makefile
     toolkit/components/downloads/test/Makefile
@@ -942,6 +946,7 @@ if [ "$ENABLE_TESTS" ]; then
     toolkit/components/social/test/Makefile
     toolkit/components/social/test/browser/Makefile
     toolkit/components/telemetry/tests/Makefile
+    toolkit/components/thumbnails/test/Makefile
     toolkit/components/urlformatter/tests/Makefile
     toolkit/components/viewsource/test/Makefile
     toolkit/components/viewsource/test/browser/Makefile

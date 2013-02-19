@@ -127,8 +127,7 @@ class GlobalHistory {
         if (!canAddURI(uri))
             return;
 
-        ContentResolver resolver = GeckoApp.mAppContext.getContentResolver();
-        BrowserDB.updateHistoryTitle(resolver, uri, title);
+        BrowserDB.updateHistoryTitle(GeckoApp.mAppContext.getContentResolver(), uri, title);
     }
 
     public void checkUriVisited(final String uri) {

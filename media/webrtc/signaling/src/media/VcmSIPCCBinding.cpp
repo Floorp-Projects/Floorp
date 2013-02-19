@@ -1495,7 +1495,7 @@ short vcmRxClose(cc_mcapid_t mcap_id,
     CSFLogDebug( logTag, "%s: group_id=%d call_handle=%d", fname, group_id, call_handle);
 
     if (call_handle == CC_NO_CALL_ID) {
-        CSFLogDebugS( logTag, "No CALL ID");
+        CSFLogDebug( logTag, "No CALL ID");
         /* no operation when no call ID */
         return VCM_ERROR;
     }
@@ -1617,7 +1617,7 @@ map_tone_type( vcm_tones_t tone )
     case VCM_SECUREWARNING_TONE:
         return ToneType_SECUREWARNING_TONE;
     default:
-        CSFLogDebugS( logTag, "map_tone_type(): WARNING..tone type not mapped.");
+        CSFLogDebug( logTag, "map_tone_type(): WARNING..tone type not mapped.");
         return ToneType_NO_TONE;
     }
 }
@@ -2423,7 +2423,7 @@ cc_boolean vcmCheckAttribs(cc_uint32_t media_type, void *sdp_p, int level, void 
         rcap = (struct h264_video *) cpr_malloc( sizeof(struct h264_video) );
         if ( rcap == NULL )
         {
-            CSFLogDebugS( logTag, "vcmCheckAttribs(): Malloc Failed for rcap");
+            CSFLogDebug( logTag, "vcmCheckAttribs(): Malloc Failed for rcap");
             return FALSE;
         }
         memset( rcap, 0, sizeof(struct h264_video) );

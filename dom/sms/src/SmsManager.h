@@ -21,14 +21,11 @@ class SmsManager : public nsDOMEventTargetHelper
                  , public nsIObserver
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMMOZSMSMANAGER
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SmsManager,
-                                           nsDOMEventTargetHelper)
 
   static already_AddRefed<SmsManager>
   CreateInstanceIfAllowed(nsPIDOMWindow *aWindow);

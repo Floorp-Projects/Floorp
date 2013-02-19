@@ -213,13 +213,7 @@ FileSystemDataSource::Create(nsISupports* aOuter, const nsIID& aIID, void **aRes
     return self->QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_CYCLE_COLLECTION_0(FileSystemDataSource) 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemDataSource)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemDataSource)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemDataSource)
-    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
-    NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(FileSystemDataSource, nsIRDFDataSource)
 
 NS_IMETHODIMP
 FileSystemDataSource::GetURI(char **uri)

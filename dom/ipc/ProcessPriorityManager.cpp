@@ -541,7 +541,7 @@ ProcessPriorityManager::SetIsForeground()
 
   mProcessPriority = foregroundPriority;
   LOG("Setting priority to %s.", ProcessPriorityToString(mProcessPriority));
-  hal::SetProcessPriority(getpid(), PROCESS_PRIORITY_FOREGROUND);
+  hal::SetProcessPriority(getpid(), mProcessPriority);
 }
 
 void

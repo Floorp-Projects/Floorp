@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test for window.open() when browser is in fullscreen</title>
+  </head>
+  <body>
+    <script>
+      window.addEventListener("load", function onLoad() {
+        window.removeEventListener("load", onLoad, true);
+
+        document.getElementById("test").addEventListener("click", onClick, true);
+      }, true);
+
+      function onClick(aEvent) {
+        aEvent.preventDefault();
+
+        var dataStr = aEvent.target.getAttribute("data-test-param");
+        var data = JSON.parse(dataStr);
+        window.open(data.uri, data.title, data.option);
+      }
+    </script>
+    <a id="test" href="" data-test-param="">Test</a>
+  </body>
+</html>

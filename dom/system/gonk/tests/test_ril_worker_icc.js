@@ -1144,34 +1144,27 @@ add_test(function read_network_name() {
   run_next_test();
 });
 
-add_test(function test_update_network_name() {
-  let RIL = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
-      // Do nothing
-    },
-    postMessage: function fakePostMessage(message) {
-      // Do nothing
+add_test(function test_get_network_name_from_icc() {
+  let worker = newUint8Worker();
+  let RIL = worker.RIL;
+  let ICCUtilsHelper = worker.ICCUtilsHelper;
+
+  function testGetNetworkNameFromICC(operatorData, expectedResult) {
+    let result = ICCUtilsHelper.getNetworkNameFromICC(operatorData.mcc,
+                                                      operatorData.mnc,
+                                                      operatorData.lac);
+
+    if (expectedResult == null) {
+      do_check_eq(result, expectedResult);
+    } else {
+      do_check_eq(result.fullName, expectedResult.longName);
+      do_check_eq(result.shortName, expectedResult.shortName);
     }
-  }).RIL;
-
-  function testNetworkNameIsNull(operatorMcc, operatorMnc) {
-    RIL.operator.mcc = operatorMcc;
-    RIL.operator.mnc = operatorMnc;
-    do_check_eq(RIL.updateNetworkName(), null);
-  }
-
-  function testNetworkName(operatorMcc, operatorMnc,
-                            expectedLongName, expectedShortName) {
-    RIL.operator.mcc = operatorMcc;
-    RIL.operator.mnc = operatorMnc;
-    let result = RIL.updateNetworkName();
-
-    do_check_eq(result.fullName, expectedLongName);
-    do_check_eq(result.shortName, expectedShortName);
   }
 
   // Before EF_OPL and EF_PNN have been loaded.
-  do_check_eq(RIL.updateNetworkName(), null);
+  testGetNetworkNameFromICC({mcc: 123, mnc: 456, lac: 0x1000}, null);
+  testGetNetworkNameFromICC({mcc: 321, mnc: 654, lac: 0x2000}, null);
 
   // Set HPLMN
   RIL.iccInfo.mcc = 123;
@@ -1195,11 +1188,12 @@ add_test(function test_update_network_name() {
   };
 
   // EF_OPL isn't available and current isn't in HPLMN,
-  testNetworkNameIsNull(123, 457);
+  testGetNetworkNameFromICC({mcc: 321, mnc: 654, lac: 0x1000}, null);
 
   // EF_OPL isn't available and current is in HPLMN,
   // the first record of PNN should be returned.
-  testNetworkName(123, 456, "PNN1Long", "PNN1Short");
+  testGetNetworkNameFromICC({mcc: 123, mnc: 456, lac: 0x1000},
+                            {longName: "PNN1Long", shortName: "PNN1Short"});
 
   // Set EF_OPL
   RIL.iccInfoPrivate.OPL = [
@@ -1211,27 +1205,34 @@ add_test(function test_update_network_name() {
       "pnnRecordId": 4
     },
     {
-      "mcc": 123,
-      "mnc": 457,
+      "mcc": 321,
+      "mnc": 654,
       "lacTacStart": 0,
       "lacTacEnd": 0x0010,
       "pnnRecordId": 3
     },
     {
-      "mcc": 123,
-      "mnc": 457,
-      "lacTacStart": 0,
+      "mcc": 321,
+      "mnc": 654,
+      "lacTacStart": 0x0100,
       "lacTacEnd": 0x1010,
       "pnnRecordId": 2
     }
   ];
 
   // Both EF_PNN and EF_OPL are presented, and current PLMN is HPLMN,
-  testNetworkName(123, 456, "PNN4Long", "PNN4Short");
+  testGetNetworkNameFromICC({mcc: 123, mnc: 456, lac: 0x1000},
+                            {longName: "PNN4Long", shortName: "PNN4Short"});
 
   // Current PLMN is not HPLMN, and according to LAC, we should get
   // the second PNN record.
-  testNetworkName(123, 457, "PNN2Long", "PNN2Short");
+  testGetNetworkNameFromICC({mcc: 321, mnc: 654, lac: 0x1000},
+                            {longName: "PNN2Long", shortName: "PNN2Short"});
+
+  // Current PLMN is not HPLMN, and according to LAC, we should get
+  // the thrid PNN record.
+  testGetNetworkNameFromICC({mcc: 321, mnc: 654, lac: 0x0001},
+                            {longName: "PNN3Long", shortName: "PNN3Short"});
 
   run_next_test();
 });

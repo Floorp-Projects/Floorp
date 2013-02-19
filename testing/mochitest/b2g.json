@@ -4,6 +4,9 @@
     "layout": ""
   },
 "excludetests": {
+    "dom/tests/mochitest/crypto/test_getRandomValues.html": "bug 440046, re-enable when bug 673432 lands",
+    "dom/tests/mochitest/crypto/test_no_legacy.html": "bug 440046, re-enable when bug 673432 lands",
+    "dom/tests/mochitest/crypto/test_legacy.html": "bug 440046, re-enable when bug 673432 lands",
     "dom/tests/mochitest/dom-level0/test_innerWidthHeight_script.html": "bug 807137",
     "dom/alarm/test/test_alarm_permitted_app.html":" navigator.mozAlarms should be an nsIDOMMozAlarmsManager object",
     "dom/battery/test/test_battery_basics.html":" Default chargingTime should be 0 - got Infinity, expected 0",

@@ -2012,29 +2012,26 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
 
 /* Use this method with extreme caution. It trades the guts of two objects. */
 bool
-JSObject::swap(JSContext *cx, JSObject *other_)
+JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
 {
-    RootedObject self(cx, this);
-    RootedObject other(cx, other_);
-
-    AutoMarkInDeadZone adc1(self->zone());
-    AutoMarkInDeadZone adc2(other->zone());
+    AutoMarkInDeadZone adc1(a->zone());
+    AutoMarkInDeadZone adc2(b->zone());
 
     // Ensure swap doesn't cause a finalizer to not be run.
-    JS_ASSERT(IsBackgroundFinalized(getAllocKind()) ==
-              IsBackgroundFinalized(other->getAllocKind()));
-    JS_ASSERT(compartment() == other->compartment());
+    JS_ASSERT(IsBackgroundFinalized(a->getAllocKind()) ==
+              IsBackgroundFinalized(b->getAllocKind()));
+    JS_ASSERT(a->compartment() == b->compartment());
 
-    unsigned r = NotifyGCPreSwap(this, other);
+    unsigned r = NotifyGCPreSwap(a, b);
 
     TradeGutsReserved reserved(cx);
-    if (!ReserveForTradeGuts(cx, this, other, reserved)) {
-        NotifyGCPostSwap(other, this, r);
+    if (!ReserveForTradeGuts(cx, a, b, reserved)) {
+        NotifyGCPostSwap(b, a, r);
         return false;
     }
-    TradeGuts(cx, this, other, reserved);
+    TradeGuts(cx, a, b, reserved);
 
-    NotifyGCPostSwap(this, other, r);
+    NotifyGCPostSwap(a, b, r);
     return true;
 }
 

@@ -63,8 +63,8 @@ struct BidiParagraphData {
     mParagraphDepth = 0;
 
     bool styleDirectionIsRTL =
-      (NS_STYLE_DIRECTION_RTL == aBlockFrame->GetStyleVisibility()->mDirection);
-    if (aBlockFrame->GetStyleTextReset()->mUnicodeBidi &
+      (NS_STYLE_DIRECTION_RTL == aBlockFrame->StyleVisibility()->mDirection);
+    if (aBlockFrame->StyleTextReset()->mUnicodeBidi &
         NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
       // unicode-bidi: plaintext: the Bidi algorithm will determine the
       // directionality of the paragraph according to the first strong
@@ -131,9 +131,9 @@ struct BidiParagraphData {
     mPrevFrame = aBpd->mPrevFrame;
     mParagraphDepth = aBpd->mParagraphDepth + 1;
 
-    const nsStyleTextReset* text = aBDIFrame->GetStyleTextReset();
+    const nsStyleTextReset* text = aBDIFrame->StyleTextReset();
     bool isRTL = (NS_STYLE_DIRECTION_RTL ==
-                  aBDIFrame->GetStyleVisibility()->mDirection);
+                  aBDIFrame->StyleVisibility()->mDirection);
 
     if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
       mParaLevel = NSBIDI_DEFAULT_LTR;
@@ -590,10 +590,10 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
 
   // Handle bidi-override being set on the block itself before calling
   // TraverseFrames.
-  const nsStyleTextReset* text = aBlockFrame->GetStyleTextReset();
+  const nsStyleTextReset* text = aBlockFrame->StyleTextReset();
   PRUnichar ch = 0;
   if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
-    const nsStyleVisibility* vis = aBlockFrame->GetStyleVisibility();
+    const nsStyleVisibility* vis = aBlockFrame->StyleVisibility();
     if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
       ch = kRLO;
     }
@@ -953,8 +953,8 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
 
     PRUnichar ch = 0;
     if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
-      const nsStyleVisibility* vis = frame->GetStyleVisibility();
-      const nsStyleTextReset* text = frame->GetStyleTextReset();
+      const nsStyleVisibility* vis = frame->StyleVisibility();
+      const nsStyleTextReset* text = frame->StyleTextReset();
       if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
         if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
           ch = kRLO;
@@ -992,7 +992,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
       if (nsGkAtoms::textFrame == frameType) {
         if (content != aBpd->mPrevContent) {
           aBpd->mPrevContent = content;
-          if (!frame->GetStyleContext()->GetStyleText()->NewlineIsSignificant()) {
+          if (!frame->StyleText()->NewlineIsSignificant()) {
             content->AppendTextTo(aBpd->mBuffer);
           } else {
             /*
@@ -1121,7 +1121,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
       nsIFrame* kid = frame->GetFirstPrincipalChild();
       nsIFrame* overflowKid = frame->GetFirstChild(nsIFrame::kOverflowList);
       if (kid || overflowKid) {
-        const nsStyleTextReset* text = frame->GetStyleTextReset();
+        const nsStyleTextReset* text = frame->StyleTextReset();
         if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_ISOLATE ||
             text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
           // css "unicode-bidi: isolate" and html5 bdi: 
@@ -1241,7 +1241,7 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
                                    bool&                aIsLeftMost /* out */,
                                    bool&                aIsRightMost /* out */)
 {
-  const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+  const nsStyleVisibility* vis = aFrame->StyleVisibility();
   bool isLTR = (NS_STYLE_DIRECTION_LTR == vis->mDirection);
 
   /*
@@ -1440,7 +1440,7 @@ void
 nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
                                         nsIFrame* aFirstChild)
 {
-  const nsStyleVisibility* vis = aFirstChild->GetStyleVisibility();
+  const nsStyleVisibility* vis = aFirstChild->StyleVisibility();
   bool isLTR = (NS_STYLE_DIRECTION_LTR == vis->mDirection);
   nscoord leftSpace = 0;
 

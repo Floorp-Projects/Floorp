@@ -46,6 +46,6 @@ static inline uint16_t dither_8888_to_0565(uint32_t color, pixman_bool_t toggle)
     if (toggle) {
 	return dither_32_to_16(color);
     } else {
-	return CONVERT_8888_TO_0565(color);
+	return convert_8888_to_0565(color);
     }
 }

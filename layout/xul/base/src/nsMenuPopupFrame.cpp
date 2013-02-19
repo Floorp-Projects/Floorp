@@ -316,11 +316,11 @@ nsMenuPopupFrame::CreateWidgetForView(nsView* aView)
 uint8_t
 nsMenuPopupFrame::GetShadowStyle()
 {
-  uint8_t shadow = GetStyleUIReset()->mWindowShadow;
+  uint8_t shadow = StyleUIReset()->mWindowShadow;
   if (shadow != NS_STYLE_WINDOW_SHADOW_DEFAULT)
     return shadow;
 
-  switch (GetStyleDisplay()->mAppearance) {
+  switch (StyleDisplay()->mAppearance) {
     case NS_THEME_TOOLTIP:
       return NS_STYLE_WINDOW_SHADOW_TOOLTIP;
     case NS_THEME_MENUPOPUP:
@@ -918,7 +918,7 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
   // popup, move the popup up by the height. In addition, account for the
   // margins of the popup on the edge on which it is aligned.
   nsMargin margin(0, 0, 0, 0);
-  GetStyleMargin()->GetMargin(margin);
+  StyleMargin()->GetMargin(margin);
   switch (popupAlign) {
     case POPUPALIGNMENT_TOPRIGHT:
       pnt.MoveBy(-mRect.width - margin.right, margin.top);
@@ -1143,7 +1143,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove)
   FlipStyle hFlip = FlipStyle_None, vFlip = FlipStyle_None;
 
   nsMargin margin(0, 0, 0, 0);
-  GetStyleMargin()->GetMargin(margin);
+  StyleMargin()->GetMargin(margin);
 
   // the screen rectangle of the root frame, in dev pixels.
   nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
@@ -1747,17 +1747,17 @@ nsMenuPopupFrame::AttachedDismissalListener()
   mConsumeRollupEvent = nsIPopupBoxObject::ROLLUP_DEFAULT;
 }
 
-nsresult
+void
 nsMenuPopupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists)
 {
   // don't pass events to drag popups
   if (aBuilder->IsForEventDelivery() && mIsDragPopup) {
-    return NS_OK;
+    return;
   }
 
-  return nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
 // helpers /////////////////////////////////////////////////////////////
@@ -1848,7 +1848,7 @@ nsMenuPopupFrame::MoveTo(int32_t aLeft, int32_t aTop, bool aUpdateAttrs)
   // using (-1, -1) as coordinates. Subtract off the margin as it will be
   // added to the position when SetPopupPosition is called.
   nsMargin margin(0, 0, 0, 0);
-  GetStyleMargin()->GetMargin(margin);
+  StyleMargin()->GetMargin(margin);
 
   // Workaround for bug 788189.  See also bug 708278 comment #25 and following.
   if (mAdjustOffsetForContextMenu) {

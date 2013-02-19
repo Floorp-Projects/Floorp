@@ -199,7 +199,88 @@ SourceReaderHasStream(IMFSourceReader* aReader, const DWORD aIndex)
   return FAILED(hr) ? false : true;
 }
 
+HRESULT
+DoGetInterface(IUnknown* aUnknown, void** aInterface)
+{
+  if (!aInterface)
+    return E_POINTER;
+  *aInterface = aUnknown;
+  aUnknown->AddRef();
+  return S_OK;
+}
+
 namespace wmf {
+
+// Some SDK versions don't define the AAC decoder CLSID.
+#ifndef CLSID_CMSAACDecMFT
+// {32D186A7-218F-4C75-8876-DD77273A8999}
+DEFINE_GUID(CLSID_CMSAACDecMFT, 0x32D186A7, 0x218F, 0x4C75, 0x88, 0x76, 0xDD, 0x77, 0x27, 0x3A, 0x89, 0x99);
+#endif
+
+static bool
+IsSupportedDecoder(const GUID& aDecoderGUID)
+{
+  return aDecoderGUID == CLSID_CMSH264DecoderMFT ||
+         aDecoderGUID == CLSID_CMSAACDecMFT ||
+         aDecoderGUID == CLSID_CMP3DecMediaObject;
+}
+
+static HRESULT
+DisableBlockedDecoders(IMFPluginControl* aPluginControl,
+                       const GUID& aCategory)
+{
+  HRESULT hr = S_OK;
+
+  UINT32 numMFTs = 0;
+  IMFActivate **ppActivate = NULL;
+  hr = wmf::MFTEnumEx(aCategory,
+                      MFT_ENUM_FLAG_ALL,
+                      nullptr, // Input type, nullptr -> match all.
+                      nullptr, // Output type, nullptr -> match all.
+                      &ppActivate,
+                      &numMFTs);
+
+  if (SUCCEEDED(hr) && numMFTs == 0) {
+    hr = MF_E_TOPO_CODEC_NOT_FOUND;
+  }
+
+  for (UINT32 i = 0; i < numMFTs; i++) {
+    // Note: We must release all IMFActivate objects in the list, hence
+    // we're putting individual IMFActivate objects in into a smart ptr.
+    RefPtr<IMFActivate> activate = ppActivate[i];
+    GUID guid = GUID_NULL;
+    hr = activate->GetGUID(MFT_TRANSFORM_CLSID_Attribute, &guid);
+    if (FAILED(hr)) {
+      NS_WARNING("FAILED to get IMFActivate clsid");
+      continue;
+    }
+    if (!IsSupportedDecoder(guid)) {
+      hr = aPluginControl->SetDisabled(MF_Plugin_Type_MFT, guid, TRUE);
+      NS_ASSERTION(SUCCEEDED(hr), "Failed to disable plugin!");
+    }
+  }
+  CoTaskMemFree(ppActivate);
+
+  return hr;
+}
+
+static HRESULT
+DisableBlockedDecoders()
+{
+  RefPtr<IMFPluginControl> pluginControl;
+  HRESULT hr = wmf::MFGetPluginControl(byRef(pluginControl));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = DisableBlockedDecoders(pluginControl,
+                              MFT_CATEGORY_VIDEO_DECODER);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = DisableBlockedDecoders(pluginControl,
+                              MFT_CATEGORY_AUDIO_DECODER);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  return S_OK;
+}
 
 static bool sDLLsLoaded = false;
 static bool sFailedToLoadDlls = false;
@@ -234,10 +315,19 @@ LoadDLLs()
     sDLLs[i].handle = LoadLibraryA(sDLLs[i].name);
     if (!sDLLs[i].handle) {
       sFailedToLoadDlls = true;
+      NS_WARNING("Failed to load WMF DLLs");
       UnloadDLLs();
-      wmf::MFShutdown();
       return E_FAIL;
     }
+  }
+
+  // Enumerate all the decoders on the system, and disable the ones except
+  // those which we expect to use, the MP3, AAC and H.264 decoders.
+  if (FAILED(DisableBlockedDecoders())) {
+    sFailedToLoadDlls = true;
+    NS_WARNING("Failed to disable non whitelisted WMF decoders");
+    UnloadDLLs();
+    return E_FAIL;
   }
 
   sDLLsLoaded = true;
@@ -290,10 +380,11 @@ MFShutdown()
   return (MFShutdownPtr)();
 }
 
-HRESULT MFCreateAsyncResult(IUnknown *aUnkObject,
-                            IMFAsyncCallback *aCallback,
-                            IUnknown *aUnkState,
-                            IMFAsyncResult **aOutAsyncResult)
+HRESULT
+MFCreateAsyncResult(IUnknown *aUnkObject,
+                    IMFAsyncCallback *aCallback,
+                    IUnknown *aUnkState,
+                    IMFAsyncResult **aOutAsyncResult)
 {
   DECL_FUNCTION_PTR(MFCreateAsyncResult, IUnknown*, IMFAsyncCallback*, IUnknown*, IMFAsyncResult**);
   ENSURE_FUNCTION_PTR(MFCreateAsyncResult, Mfplat.dll)
@@ -343,13 +434,14 @@ HRESULT PropVariantToInt64(REFPROPVARIANT aPropVar, LONGLONG *aOutLL)
   return (PropVariantToInt64Ptr)(aPropVar, aOutLL);
 }
 
-HRESULT MFTGetInfo(CLSID aClsidMFT,
-                   LPWSTR *aOutName,
-                   MFT_REGISTER_TYPE_INFO **aOutInputTypes,
-                   UINT32 *aOutNumInputTypes,
-                   MFT_REGISTER_TYPE_INFO **aOutOutputTypes,
-                   UINT32 *aOutNumOutputTypes,
-                   IMFAttributes **aOutAttributes)
+HRESULT
+MFTGetInfo(CLSID aClsidMFT,
+           LPWSTR *aOutName,
+           MFT_REGISTER_TYPE_INFO **aOutInputTypes,
+           UINT32 *aOutNumInputTypes,
+           MFT_REGISTER_TYPE_INFO **aOutOutputTypes,
+           UINT32 *aOutNumOutputTypes,
+           IMFAttributes **aOutAttributes)
 {
   DECL_FUNCTION_PTR(MFTGetInfo, CLSID, LPWSTR*, MFT_REGISTER_TYPE_INFO**, UINT32*, MFT_REGISTER_TYPE_INFO**, UINT32*, IMFAttributes**);
   ENSURE_FUNCTION_PTR(MFTGetInfo, Mfplat.dll)
@@ -362,22 +454,53 @@ HRESULT MFTGetInfo(CLSID aClsidMFT,
                          aOutAttributes);
 }
 
-HRESULT MFGetStrideForBitmapInfoHeader(DWORD aFormat,
-                                       DWORD aWidth,
-                                       LONG *aOutStride)
+HRESULT
+MFGetStrideForBitmapInfoHeader(DWORD aFormat,
+                               DWORD aWidth,
+                               LONG *aOutStride)
 {
   DECL_FUNCTION_PTR(MFGetStrideForBitmapInfoHeader, DWORD, DWORD, LONG*);
   ENSURE_FUNCTION_PTR(MFGetStrideForBitmapInfoHeader, Mfplat.dll)
   return (MFGetStrideForBitmapInfoHeaderPtr)(aFormat, aWidth, aOutStride);
 }
 
-HRESULT MFCreateSourceReaderFromURL(LPCWSTR aURL,
-                                    IMFAttributes *aAttributes,
-                                    IMFSourceReader **aSourceReader)
+HRESULT
+MFCreateSourceReaderFromURL(LPCWSTR aURL,
+                            IMFAttributes *aAttributes,
+                            IMFSourceReader **aSourceReader)
 {
   DECL_FUNCTION_PTR(MFCreateSourceReaderFromURL, LPCWSTR, IMFAttributes*, IMFSourceReader**);
   ENSURE_FUNCTION_PTR(MFCreateSourceReaderFromURL, Mfreadwrite.dll)
   return (MFCreateSourceReaderFromURLPtr)(aURL, aAttributes, aSourceReader);
+}
+
+HRESULT
+MFCreateAttributes(IMFAttributes **ppMFAttributes, UINT32 cInitialSize)
+{
+  DECL_FUNCTION_PTR(MFCreateAttributes, IMFAttributes**, UINT32);
+  ENSURE_FUNCTION_PTR(MFCreateAttributes, mfplat.dll)
+  return (MFCreateAttributesPtr)(ppMFAttributes, cInitialSize);
+}
+
+HRESULT
+MFGetPluginControl(IMFPluginControl **aOutPluginControl)
+{
+  DECL_FUNCTION_PTR(MFGetPluginControl, IMFPluginControl **);
+  ENSURE_FUNCTION_PTR(MFGetPluginControl, mfplat.dll)
+  return (MFGetPluginControlPtr)(aOutPluginControl);
+}
+
+HRESULT
+MFTEnumEx(GUID guidCategory,
+          UINT32 Flags,
+          const MFT_REGISTER_TYPE_INFO *pInputType,
+          const MFT_REGISTER_TYPE_INFO *pOutputType,
+          IMFActivate ***pppMFTActivate,
+          UINT32 *pcMFTActivate)
+{
+  DECL_FUNCTION_PTR(MFTEnumEx, GUID, UINT32, const MFT_REGISTER_TYPE_INFO *, const MFT_REGISTER_TYPE_INFO *, IMFActivate ***, UINT32 *);
+  ENSURE_FUNCTION_PTR(MFTEnumEx, mfplat.dll)
+  return (MFTEnumExPtr)(guidCategory, Flags, pInputType, pOutputType, pppMFTActivate, pcMFTActivate);
 }
 
 } // end namespace wmf

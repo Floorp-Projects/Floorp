@@ -35,9 +35,9 @@ class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
 
 public:
   // nsIFrame overrides
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -113,7 +113,7 @@ protected:
 
   nsresult SizeItemInCrossAxis(nsPresContext* aPresContext,
                                const FlexboxAxisTracker& aAxisTracker,
-                               const nsHTMLReflowState& aChildReflowState,
+                               nsHTMLReflowState& aChildReflowState,
                                FlexItem& aItem);
 
   void PositionItemInCrossAxis(

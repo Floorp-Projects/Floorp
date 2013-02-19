@@ -186,7 +186,7 @@ nsCounterManager::nsCounterManager()
 bool
 nsCounterManager::AddCounterResetsAndIncrements(nsIFrame *aFrame)
 {
-    const nsStyleContent *styleContent = aFrame->GetStyleContent();
+    const nsStyleContent *styleContent = aFrame->StyleContent();
     if (!styleContent->CounterIncrementCount() &&
         !styleContent->CounterResetCount())
         return false;

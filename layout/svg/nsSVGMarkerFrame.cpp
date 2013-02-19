@@ -54,8 +54,7 @@ nsSVGMarkerFrame::Init(nsIContent* aContent,
                        nsIFrame* aParent,
                        nsIFrame* aPrevInFlow)
 {
-  nsCOMPtr<nsIDOMSVGMarkerElement> marker = do_QueryInterface(aContent);
-  NS_ASSERTION(marker, "Content is not an SVG marker");
+  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::marker), "Content is not an SVG marker");
 
   return nsSVGMarkerFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
@@ -122,7 +121,7 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
 
   gfxContext *gfx = aContext->ThebesContext();
 
-  if (GetStyleDisplay()->IsScrollableOverflow()) {
+  if (StyleDisplay()->IsScrollableOverflow()) {
     gfx->Save();
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, viewBox.x, viewBox.y,
@@ -141,7 +140,7 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
     }
   }
 
-  if (GetStyleDisplay()->IsScrollableOverflow())
+  if (StyleDisplay()->IsScrollableOverflow())
     gfx->Restore();
 
   return NS_OK;

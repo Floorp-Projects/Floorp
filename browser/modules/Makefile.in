@@ -18,7 +18,6 @@ EXTRA_JS_MODULES = \
 	BrowserNewTabPreloader.jsm \
 	openLocationLastURL.jsm \
 	NetworkPrioritizer.jsm \
-	NewTabUtils.jsm \
 	offlineAppCache.jsm \
 	SignInToWebsite.jsm \
 	webappsUI.jsm \

@@ -221,7 +221,7 @@ nsTableCellFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     int32_t colIndex, rowIndex;
     GetColIndex(colIndex);
     GetRowIndex(rowIndex);
@@ -310,7 +310,7 @@ nsTableCellFrame::DecorateForSelection(nsRenderingContext& aRenderingContext,
       {
         //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
         bordercolor = EnsureDifferentColors(bordercolor,
-                                            GetStyleBackground()->mBackgroundColor);
+                                            StyleBackground()->mBackgroundColor);
         nsRenderingContext::AutoPushTranslation
             translate(&aRenderingContext, aPt);
         nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
@@ -350,7 +350,7 @@ nsTableCellFrame::PaintCellBackground(nsRenderingContext& aRenderingContext,
                                       const nsRect& aDirtyRect, nsPoint aPt,
                                       uint32_t aFlags)
 {
-  if (!GetStyleVisibility()->IsVisible())
+  if (!StyleVisibility()->IsVisible())
     return;
 
   PaintBackground(aRenderingContext, aDirtyRect, aPt, aFlags);
@@ -419,7 +419,7 @@ PaintTableCellSelection(nsIFrame* aFrame, nsRenderingContext* aCtx,
   static_cast<nsTableCellFrame*>(aFrame)->DecorateForSelection(*aCtx, aPt);
 }
 
-NS_IMETHODIMP
+void
 nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsRect&           aDirtyRect,
                                    const nsDisplayListSet& aLists)
@@ -428,10 +428,10 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (IsVisibleInSelection(aBuilder)) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     int32_t emptyCellStyle = GetContentEmpty() && !tableFrame->IsBorderCollapse() ?
-                                GetStyleTableBorder()->mEmptyCells
+                                StyleTableBorder()->mEmptyCells
                                 : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
     // take account of 'empty-cells'
-    if (GetStyleVisibility()->IsVisible() &&
+    if (StyleVisibility()->IsVisible() &&
         (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != emptyCellStyle)) {
     
     
@@ -444,56 +444,50 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       }
     
       // display outset box-shadows if we need to.
-      const nsStyleBorder* borderStyle = GetStyleBorder();
+      const nsStyleBorder* borderStyle = StyleBorder();
       bool hasBoxShadow = !!borderStyle->mBoxShadow;
       if (hasBoxShadow) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(
-            new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, this));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(
+          new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, this));
       }
     
       // display background if we need to.
       if (aBuilder->IsForEventDelivery() ||
           (((!tableFrame->IsBorderCollapse() || isRoot) &&
-          (!GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance)))) {
+          (!StyleBackground()->IsTransparent() || StyleDisplay()->mAppearance)))) {
         // The cell background was not painted by the nsTablePainter,
         // so we need to do it. We have special background processing here
         // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
         nsDisplayTableItem* item =
           new (aBuilder) nsDisplayTableCellBackground(aBuilder, this);
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(item);
         item->UpdateForFrameBackground(this);
       }
     
       // display inset box-shadows if we need to.
       if (hasBoxShadow) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(
-            new (aBuilder) nsDisplayBoxShadowInner(aBuilder, this));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(
+          new (aBuilder) nsDisplayBoxShadowInner(aBuilder, this));
       }
     
       // display borders if we need to
       if (!tableFrame->IsBorderCollapse() && borderStyle->HasBorder() &&
           emptyCellStyle == NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-            nsDisplayBorder(aBuilder, this));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+          nsDisplayBorder(aBuilder, this));
       }
     
       // and display the selection border if we need to
       if (IsSelected()) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-            nsDisplayGeneric(aBuilder, this, ::PaintTableCellSelection,
-                             "TableCellSelection",
-                             nsDisplayItem::TYPE_TABLE_CELL_SELECTION));
-        NS_ENSURE_SUCCESS(rv, rv);
+        aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+          nsDisplayGeneric(aBuilder, this, ::PaintTableCellSelection,
+                           "TableCellSelection",
+                           nsDisplayItem::TYPE_TABLE_CELL_SELECTION));
       }
     }
     
     // the 'empty-cells' property has no effect on 'outline'
-    nsresult rv = DisplayOutline(aBuilder, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    DisplayOutline(aBuilder, aLists);
   }
 
   // Push a null 'current table item' so that descendant tables can't
@@ -509,7 +503,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // because that/ would put the child's background in the Content() list
   // which isn't right (e.g., would end up on top of our child floats for
   // event handling).
-  return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
 }
 
 int
@@ -624,7 +618,7 @@ nsTableCellFrame::UpdateOverflow()
 uint8_t
 nsTableCellFrame::GetVerticalAlign() const
 {
-  const nsStyleCoord& verticalAlign = GetStyleTextReset()->mVerticalAlign;
+  const nsStyleCoord& verticalAlign = StyleTextReset()->mVerticalAlign;
   if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     uint8_t value = verticalAlign.GetIntValue();
     if (value == NS_STYLE_VERTICAL_ALIGN_TOP ||
@@ -687,7 +681,7 @@ int32_t nsTableCellFrame::GetRowSpan()
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   // Don't look at the content's rowspan if we're a pseudo cell
-  if (hc && !GetStyleContext()->GetPseudo()) {
+  if (hc && !StyleContext()->GetPseudo()) {
     const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::rowspan);
     // Note that we don't need to check the tag name, because only table cells
     // and table headers parse the "rowspan" attribute into an integer.
@@ -704,7 +698,7 @@ int32_t nsTableCellFrame::GetColSpan()
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   // Don't look at the content's colspan if we're a pseudo cell
-  if (hc && !GetStyleContext()->GetPseudo()) {
+  if (hc && !StyleContext()->GetPseudo()) {
     const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::colspan);
     // Note that we don't need to check the tag name, because only table cells
     // and table headers parse the "colspan" attribute into an integer.
@@ -1021,7 +1015,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 nsMargin*
 nsTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
 {
-  aBorder = GetStyleBorder()->GetComputedBorder();
+  aBorder = StyleBorder()->GetComputedBorder();
   return &aBorder;
 }
 
@@ -1151,11 +1145,11 @@ nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
   nsMargin borderWidth;
   GetBorderWidth(borderWidth);
 
-  nsStyleBorder myBorder(*GetStyleBorder());
+  nsStyleBorder myBorder(*StyleBorder());
   // We're making an ephemeral stack copy here, so just copy this debug-only
   // member to prevent assertions.
 #ifdef DEBUG
-  myBorder.mImageTracked = GetStyleBorder()->mImageTracked;
+  myBorder.mImageTracked = StyleBorder()->mImageTracked;
 #endif
 
   NS_FOR_CSS_SIDES(side) {
@@ -1167,7 +1161,7 @@ nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
   // of frame cannot be used for the root element
   nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext, this,
                                         aDirtyRect, rect,
-                                        GetStyleContext(), myBorder,
+                                        StyleContext(), myBorder,
                                         aFlags, nullptr);
 
 #ifdef DEBUG

@@ -13,7 +13,9 @@ namespace mozilla {
 namespace hal {
 
 /**
- * XXX
+ * These constants specify special values for content process IDs.  You can get
+ * a content process ID by calling ContentChild::GetID() or
+ * ContentParent::GetChildID().
  */
 const uint64_t CONTENT_PROCESS_ID_UNKNOWN = uint64_t(-1);
 const uint64_t CONTENT_PROCESS_ID_MAIN = 0;
