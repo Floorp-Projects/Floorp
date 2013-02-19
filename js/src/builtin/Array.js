@@ -212,6 +212,51 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
     return void 0;
 }
 
+/* ES5 15.4.4.19. */
+function ArrayMap(callbackfn/*, thisArg*/) {
+    /* Step 1. */
+    var O = ToObject(this);
+
+    /* Step 2-3. */
+    var len = TO_UINT32(O.length);
+
+    /* Step 4. */
+    if (arguments.length === 0)
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.map');
+    if (!IsCallable(callbackfn))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+
+    /* Step 5. */
+    var T = arguments.length > 1 ? arguments[1] : void 0;
+
+    /* Step 6. */
+    var A = NewDenseArray(len);
+
+    /* Step 7-8. */
+    /* Step a (implicit), and d. */
+    for (var k = 0; k < len; k++) {
+        /* Step b */
+        if (k in O) {
+            /* Step c.i-iii. */
+            var mappedValue = callFunction(callbackfn, T, O[k], k, O);
+            // UnsafeSetElement doesn't invoke setters, so we can use it here.
+            UnsafeSetElement(A, k, mappedValue);
+        }
+    }
+
+    /* Step 9. */
+    return A;
+}
+
+function ArrayStaticMap(list, callbackfn/*, thisArg*/) {
+    if (arguments.length < 2)
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.map');
+    if (!IsCallable(callbackfn))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+    var T = arguments.length > 2 ? arguments[2] : void 0;
+    return callFunction(ArrayMap, list, callbackfn, T);
+}
+
 function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
         ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
