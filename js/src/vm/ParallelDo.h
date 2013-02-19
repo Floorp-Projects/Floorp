@@ -17,6 +17,12 @@ namespace js {
 namespace parallel {
 
 ///////////////////////////////////////////////////////////////////////////
+// The main Parallel Execution function.  This is exposed as the
+// intrinsic ParallelDo().
+
+bool Do(JSContext *cx, CallArgs &args);
+
+///////////////////////////////////////////////////////////////////////////
 // Debug Spew
 
 enum ExecutionStatus {
