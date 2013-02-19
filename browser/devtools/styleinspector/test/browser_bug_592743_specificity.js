@@ -6,6 +6,8 @@
 
 let tempScope = {};
 Cu.import("resource:///modules/devtools/CssLogic.jsm", tempScope);
+const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
+                   .getService(Ci.inIDOMUtils);
 let CssLogic = tempScope.CssLogic;
 let CssSelector = tempScope.CssSelector;
 
@@ -30,8 +32,8 @@ function runTests(doc) {
     let selectorText = selectors[i];
     let selector = new CssSelector(cssRule, selectorText, i);
     let expected = getExpectedSpecificity(selectorText);
-    let specificity = selector.domUtils.getSpecificity(selector._cssRule,
-                                                       selector.selectorIndex)
+    let specificity = DOMUtils.getSpecificity(selector._cssRule,
+                                              selector.selectorIndex)
     is(specificity, expected,
       'selector "' + selectorText + '" has a specificity of ' + expected);
   }
