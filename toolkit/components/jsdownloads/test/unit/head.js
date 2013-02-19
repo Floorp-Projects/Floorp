@@ -48,6 +48,10 @@ const FAKE_BASE = "http://localhost:" + FAKE_SERVER_PORT;
 const TEST_SOURCE_URI = NetUtil.newURI(HTTP_BASE + "/source.txt");
 const TEST_FAKE_SOURCE_URI = NetUtil.newURI(FAKE_BASE + "/source.txt");
 
+const TEST_INTERRUPTIBLE_PATH = "/interruptible.txt";
+const TEST_INTERRUPTIBLE_URI = NetUtil.newURI(HTTP_BASE +
+                                              TEST_INTERRUPTIBLE_PATH);
+
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 const TEST_DATA_SHORT = "This test string is downloaded.";
 
@@ -133,6 +137,48 @@ function startFakeServer()
     onStopListening: function () { },
   });
   return serverSocket;
+}
+
+/**
+ * This function allows testing events or actions that need to happen in the
+ * middle of a download.
+ *
+ * Calling this function registers a new request handler in the internal HTTP
+ * server, accessible at the TEST_INTERRUPTIBLE_URI address.  The HTTP handler
+ * returns the TEST_DATA_SHORT text, then waits until the "resolve" method is
+ * called on the object returned by the function.  At this point, the handler
+ * sends the TEST_DATA_SHORT text again to complete the response.
+ *
+ * You can also call the "reject" method on the returned object to interrupt the
+ * response midway.  Because of how the network layer is implemented, this does
+ * not cause the socket to return an error.
+ *
+ * The handler is unregistered when the response finishes or is interrupted.
+ *
+ * @returns Deferred object used to control the response.
+ */
+function startInterruptibleResponseHandler()
+{
+  let deferResponse = Promise.defer();
+  gHttpServer.registerPathHandler(TEST_INTERRUPTIBLE_PATH,
+    function (aRequest, aResponse)
+    {
+      aResponse.processAsync();
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
+                          false);
+      aResponse.write(TEST_DATA_SHORT);
+
+      deferResponse.promise.then(function SIRH_onSuccess() {
+        aResponse.write(TEST_DATA_SHORT);
+        aResponse.finish();
+        gHttpServer.registerPathHandler(TEST_INTERRUPTIBLE_PATH, null);
+      }, function SIRH_onFailure() {
+        aResponse.abort();
+        gHttpServer.registerPathHandler(TEST_INTERRUPTIBLE_PATH, null);
+      });
+    });
+  return deferResponse;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
