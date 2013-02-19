@@ -20,6 +20,9 @@ public interface Actions {
         /** Blocks until the event has been received. Subsequent calls will return immediately. */
         public void blockForEvent();
 
+        /** Blocks until the event has been received and returns data associated with the event. */
+        public String blockForEventData();
+
         /** Polls to see if the event has been received. Once this returns true, subsequent calls will also return true. */
         public boolean eventReceived();
     }
