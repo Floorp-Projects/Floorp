@@ -10890,6 +10890,11 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   // new primary frame.
   textContent->SetPrimaryFrame(newTextFrame);
 
+  // Wallpaper bug 822910.
+  if (prevSibling && prevSibling->GetType() == nsGkAtoms::textFrame) {
+    prevSibling->AddStateBits(NS_FRAME_IS_DIRTY);
+  }
+
   // Insert text frame in its place
   nsFrameList textList(newTextFrame, newTextFrame);
   InsertFrames(parentFrame, kPrincipalList, prevSibling, textList);
@@ -10938,6 +10943,11 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       // Now that the old frames are gone, we can start pointing to our
       // new primary frame.
       textContent->SetPrimaryFrame(textFrame);
+
+      // Wallpaper bug 822910.
+      if (prevSibling && prevSibling->GetType() == nsGkAtoms::textFrame) {
+        prevSibling->AddStateBits(NS_FRAME_IS_DIRTY);
+      }
 
       // Insert text frame in its place
       nsFrameList textList(textFrame, textFrame);
