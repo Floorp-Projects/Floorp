@@ -108,6 +108,7 @@ webidl_files = \
   HTMLTableElement.webidl \
   HTMLTableRowElement.webidl \
   HTMLTableSectionElement.webidl \
+  HTMLTextAreaElement.webidl \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
   ImageData.webidl \

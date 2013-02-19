@@ -27,9 +27,7 @@ addLoadEvent(function() SimpleTest.executeSoon(runTest));
 var gMisspeltWords;
 
 function getEditor() {
-  return document.getElementById("edit")
-                 .QueryInterface(Ci.nsIDOMNSEditableElement)
-                 .editor;
+  return SpecialPowers.wrap(document.getElementById("edit")).editor;
 }
 
 function getSpellCheckSelection() {
