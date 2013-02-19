@@ -104,7 +104,8 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * Find out about the status of an ICC lock (e.g. the PIN lock).
    *
    * @param lockType
-   *        Identifies the lock type, e.g. "pin" for the PIN lock.
+   *        Identifies the lock type, e.g. "pin" for the PIN lock, "fdn" for
+   *        the FDN lock.
    *
    * @return a DOM Request.
    *         The request's result will be an object containing
@@ -151,7 +152,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *
    *     {
    *       lockType:   "pin",
-   *       result:     false,
+   *       success:    false,
    *       retryCount: 2
    *     }
    *
@@ -159,7 +160,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *
    *     {
    *       lockType:  "pin",
-   *       result:    true
+   *       success:   true
    *     }
    */
   nsIDOMDOMRequest unlockCardLock(in jsval info);
@@ -176,10 +177,16 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *
    * Examples:
    *
-   * (1) Disabling the PIN lock:
+   * (1a) Disabling the PIN lock:
    *
    *   setCardLock({lockType: "pin",
    *                pin: "...",
+   *                enabled: false});
+   *
+   * (1b) Disabling the FDN lock:
+   *
+   *   setCardLock({lockType: "fdn",
+   *                pin2: "...",
    *                enabled: false});
    *
    * (2) Changing the PIN:
@@ -198,7 +205,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *
    *     {
    *       lockType: "pin",
-   *       result: false,
+   *       success: false,
    *       retryCount: 2
    *     }
    *
@@ -206,7 +213,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *
    *     {
    *       lockType: "pin",
-   *       result: true
+   *       success: true
    *     }
    */
   nsIDOMDOMRequest setCardLock(in jsval info);
