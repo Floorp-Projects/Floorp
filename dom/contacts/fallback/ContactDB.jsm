@@ -18,8 +18,9 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 const STORE_NAME = "contacts";
+const SAVED_GETALL_STORE_NAME = "getallcache";
 
 this.ContactDB = function ContactDB(aGlobal) {
   if (DEBUG) debug("Constructor");
@@ -28,6 +29,8 @@ this.ContactDB = function ContactDB(aGlobal) {
 
 ContactDB.prototype = {
   __proto__: IndexedDBHelper.prototype,
+
+  cursorData: {},
 
   upgradeSchema: function upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
     if (DEBUG) debug("upgrade schema from: " + aOldVersion + " to " + aNewVersion + " called!");
@@ -238,6 +241,9 @@ ContactDB.prototype = {
             objectStore.deleteIndex(names[i]);
           }
         }
+      } else if (currVersion == 7) {
+        if (DEBUG) debug("Adding object store for cached searches");
+        db.createObjectStore(SAVED_GETALL_STORE_NAME);
       }
     }
   },
@@ -382,6 +388,41 @@ ContactDB.prototype = {
     record.updated = new Date();
   },
 
+  removeObjectFromCache: function CDB_removeObjectFromCache(aObjectId, aCallback) {
+    if (DEBUG) debug("removeObjectFromCache: " + aObjectId);
+    if (!aObjectId) {
+      if (DEBUG) debug("No object ID passed");
+      return;
+    }
+    this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function(txn, store) {
+      store.openCursor().onsuccess = function(e) {
+        let cursor = e.target.result;
+        if (cursor) {
+          for (let i = 0; i < cursor.value.length; ++i) {
+            if (cursor.value[i] == aObjectId) {
+              if (DEBUG) debug("id matches cache");
+              cursor.value.splice(i, 1);
+              cursor.update(cursor.value);
+              break;
+            }
+          }
+          cursor.continue();
+        } else {
+          aCallback();
+        }
+      }.bind(this);
+    }.bind(this));
+  },
+
+  // Invalidate the entire cache. It will be incrementally regenerated on demand
+  // See getCacheForQuery
+  invalidateCache: function CDB_invalidateCache() {
+    if (DEBUG) debug("invalidate cache");
+    this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function (txn, store) {
+      store.clear();
+    });
+  },
+
   saveContact: function saveContact(aContact, successCb, errorCb) {
     let contact = this.makeImport(aContact);
     this.newTxn("readwrite", STORE_NAME, function (txn, store) {
@@ -408,15 +449,20 @@ ContactDB.prototype = {
             store.put(contact);
           }
         }
+        this.invalidateCache();
       }.bind(this);
     }.bind(this), successCb, errorCb);
   },
 
   removeContact: function removeContact(aId, aSuccessCb, aErrorCb) {
-    this.newTxn("readwrite", STORE_NAME, function (txn, store) {
-      if (DEBUG) debug("Going to delete" + aId);
-      store.delete(aId);
-    }, aSuccessCb, aErrorCb);
+    if (DEBUG) debug("removeContact: " + aId);
+    this.removeObjectFromCache(aId, function() {
+      this.newTxn("readwrite", STORE_NAME, function(txn, store) {
+        store.delete(aId).onsuccess = function() {
+          aSuccessCb();
+        };
+      }, null, aErrorCb);
+    }.bind(this));
   },
 
   clear: function clear(aSuccessCb, aErrorCb) {
@@ -424,6 +470,164 @@ ContactDB.prototype = {
       if (DEBUG) debug("Going to clear all!");
       store.clear();
     }, aSuccessCb, aErrorCb);
+  },
+
+  getObjectById: function CDB_getObjectById(aStore, aObjectId, aCallback) {
+    if (DEBUG) debug("getObjectById: " + aStore + ":" + aObjectId);
+    this.newTxn("readonly", aStore, function (txn, store) {
+      let req = store.get(aObjectId);
+      req.onsuccess = function (event) {
+        aCallback(event.target.result);
+      };
+      req.onerror = function (event) {
+        aCallback(null);
+      };
+    });
+  },
+
+  getCacheForQuery: function CDB_getCacheForQuery(aQuery, aCursorId, aSuccessCb) {
+    if (DEBUG) debug("getCacheForQuery");
+    // Here we try to get the cached results for query `aQuery'. If they don't
+    // exist, it means the cache was invalidated and needs to be recreated, so
+    // we do that. Otherwise, we just return the existing cache.
+    this.getObjectById(SAVED_GETALL_STORE_NAME, aQuery, function (aCache) {
+      if (!aCache) {
+        if (DEBUG) debug("creating cache for query " + aQuery);
+        this.createCacheForQuery(aQuery, aCursorId, aSuccessCb);
+      } else {
+        if (DEBUG) debug("cache exists");
+        if (!this.cursorData[aCursorId]) {
+          this.cursorData[aCursorId] = aCache;
+        }
+        aSuccessCb(aCache);
+      }
+    }.bind(this));
+  },
+
+  setCacheForQuery: function CDB_setCacheForQuery(aQuery, aCache, aCallback) {
+    this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function (txn, store) {
+      let req = store.put(aCache, aQuery);
+      if (!aCallback) {
+        return;
+      }
+      req.onsuccess = function () {
+        aCallback(true);
+      };
+      req.onerror = function () {
+        aCallback(false);
+      };
+    });
+  },
+
+  createCacheForQuery: function CDB_createCacheForQuery(aQuery, aCursorId, aSuccessCb, aFailureCb) {
+    this.find(function (aContacts) {
+      if (aContacts) {
+        let contactsArray = [];
+        for (let i in aContacts) {
+          contactsArray.push(aContacts[i].id);
+        }
+
+        this.setCacheForQuery(aQuery, contactsArray);
+        this.cursorData[aCursorId] = contactsArray;
+        aSuccessCb(contactsArray);
+      } else {
+        aSuccessCb(null);
+      }
+    }.bind(this),
+    function (aErrorMsg) { aFailureCb(aErrorMsg); },
+    JSON.parse(aQuery));
+  },
+
+  getAll: function CDB_getAll(aSuccessCb, aFailureCb, aOptions, aCursorId) {
+    // Recreate the cache for this query if needed
+    let optionStr = JSON.stringify(aOptions);
+    this.getCacheForQuery(optionStr, aCursorId, function (aCachedResults) {
+      if (aCachedResults && aCachedResults.length > 0) {
+        if (DEBUG) debug("query returned at least one contact");
+        this.getObjectById(STORE_NAME, aCachedResults[0], function (aContact) {
+          this.cursorData[aCursorId].shift();
+          aSuccessCb(aContact);
+        }.bind(this));
+      } else { // no contacts
+        if (DEBUG) debug("query returned no contacts");
+        aSuccessCb(null);
+      }
+    }.bind(this));
+  },
+
+  getNext: function CDB_getNext(aSuccessCb, aFailureCb, aCursorId) {
+    if (DEBUG) debug("ContactDB:getNext: " + aCursorId);
+    let aCachedResults = this.cursorData[aCursorId];
+    if (DEBUG) debug("got transient cache");
+    if (aCachedResults.length > 0) {
+      this.getObjectById(STORE_NAME, aCachedResults[0], function(aContact) {
+        this.cursorData[aCursorId].shift();
+        if (aContact) {
+          aSuccessCb(aContact);
+        } else {
+          // If the contact ID in cache is invalid, it was removed recently and
+          // the cache hasn't been updated to reflect the change, so we skip it.
+          if (DEBUG) debug("invalid contact in cache: " + aCachedResults[0]);
+          return this.getNext(aSuccessCb, aFailureCb, aCursorId);
+        }
+      }.bind(this));
+    } else { // last contact
+      delete this.cursorData[aCursorId];
+      aSuccessCb(null);
+    }
+  },
+
+  releaseCursors: function CDB_releaseCursors(aCursors) {
+    for (let i of aCursors) {
+      delete this.cursorData[i];
+    }
+  },
+
+  /*
+   * Sorting the contacts by sortBy field. aSortBy can either be familyName or givenName.
+   * If 2 entries have the same sortyBy field or no sortBy field is present, we continue
+   * sorting with the other sortyBy field.
+   */
+  sortResults: function CDB_sortResults(aResults, aFindOptions) {
+    if (!aFindOptions)
+      return;
+    if (aFindOptions.sortBy != "undefined") {
+      aResults.sort(function (a, b) {
+        let x, y;
+        let result = 0;
+        let sortOrder = aFindOptions.sortOrder;
+        let sortBy = aFindOptions.sortBy == "familyName" ? [ "familyName", "givenName" ] : [ "givenName" , "familyName" ];
+        let xIndex = 0;
+        let yIndex = 0;
+
+        do {
+          while (xIndex < sortBy.length && !x) {
+            x = a.properties[sortBy[xIndex]] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
+            xIndex++;
+          }
+          if (!x) {
+            return sortOrder == 'ascending' ? 1 : -1;
+          }
+          while (yIndex < sortBy.length && !y) {
+            y = b.properties[sortBy[yIndex]] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
+            yIndex++;
+          }
+          if (!y) {
+            return sortOrder == 'ascending' ? 1 : -1;
+          }
+
+          result = x.localeCompare(y);
+          x = null;
+          y = null;
+        } while (result == 0);
+
+        return sortOrder == 'ascending' ? result : -result;
+      });
+    }
+    if (aFindOptions.filterLimit && aFindOptions.filterLimit != 0) {
+      if (DEBUG) debug("filterLimit is set: " + aFindOptions.filterLimit);
+      aResults.splice(aFindOptions.filterLimit, aResults.length);
+    }
   },
 
   /**
@@ -439,7 +643,7 @@ ContactDB.prototype = {
    *        - count
    */
   find: function find(aSuccessCb, aFailureCb, aOptions) {
-    if (DEBUG) debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp + "\n");
+    if (DEBUG) debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp);
     let self = this;
     this.newTxn("readonly", STORE_NAME, function (txn, store) {
       if (aOptions && (aOptions.filterOp == "equals" || aOptions.filterOp == "contains")) {
@@ -455,7 +659,7 @@ ContactDB.prototype = {
     let fields = options.filterBy;
     for (let key in fields) {
       if (DEBUG) debug("key: " + fields[key]);
-      if (!store.indexNames.contains(fields[key]) && !fields[key] == "id") {
+      if (!store.indexNames.contains(fields[key]) && fields[key] != "id") {
         if (DEBUG) debug("Key not valid!" + fields[key] + ", " + store.indexNames);
         txn.abort();
         return;
@@ -506,7 +710,8 @@ ContactDB.prototype = {
         txn.result = {};
 
       request.onsuccess = function (event) {
-        if (DEBUG) debug("Request successful. Record count:" + event.target.result.length);
+        if (DEBUG) debug("Request successful. Record count: " + event.target.result.length);
+        this.sortResults(event.target.result, options);
         for (let i in event.target.result)
           txn.result[event.target.result[i].id] = this.makeExport(event.target.result[i]);
       }.bind(this);
@@ -520,13 +725,15 @@ ContactDB.prototype = {
     // Sorting functions takes care of limit if set.
     let limit = options.sortBy === 'undefined' ? options.filterLimit : null;
     store.mozGetAll(null, limit).onsuccess = function (event) {
-      if (DEBUG) debug("Request successful. Record count:", event.target.result.length);
-      for (let i in event.target.result)
+      if (DEBUG) debug("Request successful. Record count:" + event.target.result.length);
+      this.sortResults(event.target.result, options);
+      for (let i in event.target.result) {
         txn.result[event.target.result[i].id] = this.makeExport(event.target.result[i]);
+      }
     }.bind(this);
   },
 
   init: function init(aGlobal) {
-      this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME], aGlobal);
+      this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME, SAVED_GETALL_STORE_NAME], aGlobal);
   }
 };

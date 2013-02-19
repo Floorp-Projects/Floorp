@@ -588,13 +588,14 @@ class BuildReader(object):
                     'TIERS defined but it should not be')
 
             for tier, values in sandbox['TIERS'].items():
-                for var in ('regular', 'static'):
-                    for d in values[var]:
-                        if d in dirs:
-                            raise SandboxValidationError(
-                                'Tier directory (%s) registered multiple '
-                                'times in %s' % (d, tier))
-                        dirs.append(d)
+                # We don't descend into static directories because static by
+                # definition is external to the build system.
+                for d in values['regular']:
+                    if d in dirs:
+                        raise SandboxValidationError(
+                            'Tier directory (%s) registered multiple '
+                            'times in %s' % (d, tier))
+                    dirs.append(d)
 
         curdir = os.path.dirname(path)
         for relpath in dirs:

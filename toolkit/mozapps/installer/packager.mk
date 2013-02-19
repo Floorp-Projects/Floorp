@@ -98,7 +98,7 @@ endif # LIBXUL_SDK
 
 _ABS_DIST = $(call core_abspath,$(DIST))
 JARLOG_DIR = $(call core_abspath,$(DEPTH)/jarlog/)
-JARLOG_FILE_AB_CD = $(JARLOG_DIR)/$(AB_CD).log
+JARLOG_DIR_AB_CD = $(JARLOG_DIR)/$(AB_CD)
 
 TAR_CREATE_FLAGS := --exclude=.mkdir.done $(TAR_CREATE_FLAGS)
 CREATE_FINAL_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \
@@ -591,7 +591,7 @@ stage-package: $(MOZ_PKG_MANIFEST)
 		$(addprefix --removals ,$(MOZ_PKG_REMOVALS)) \
 		$(if $(filter-out 0,$(MOZ_PKG_FATAL_WARNINGS)),,--ignore-errors) \
 		$(if $(MOZ_PACKAGER_MINIFY),--minify) \
-		$(if $(JARLOG_DIR),$(addprefix --jarlog ,$(wildcard $(JARLOG_FILE_AB_CD)))) \
+		$(if $(JARLOG_DIR),--jarlogs $(JARLOG_DIR_AB_CD)) \
 		$(if $(OPTIMIZEJARS),--optimizejars) \
 		$(addprefix --unify ,$(UNIFY_DIST)) \
 		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR) \

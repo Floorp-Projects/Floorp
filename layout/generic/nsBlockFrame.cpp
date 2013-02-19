@@ -4838,11 +4838,15 @@ static bool
 ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame)
 {
   nsIAtom* type = aLastFrame->GetType();
-  if (type == nsGkAtoms::brFrame)
+  if (type == nsGkAtoms::brFrame) {
     return true;
-  if (type == nsGkAtoms::textFrame)
+  }
+  // XXX the IS_DIRTY check is a wallpaper for bug 822910.
+  if (type == nsGkAtoms::textFrame &&
+      !(aLastFrame->GetStateBits() & NS_FRAME_IS_DIRTY)) {
     return aLastFrame->HasTerminalNewline() &&
-           aLastFrame->StyleText()->NewlineIsSignificant();
+      aLastFrame->StyleText()->NewlineIsSignificant();
+  }
   return false;
 }
 
