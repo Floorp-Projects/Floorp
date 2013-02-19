@@ -16,6 +16,8 @@
 
 #include <math.h>
 
+#include "mozilla/dom/TextDecoderBase.h"
+
 #include "Layers.h"
 #include "nsJSUtils.h"
 #include "nsCOMPtr.h"
@@ -3624,39 +3626,17 @@ nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
     return NS_OK;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsICharsetConverterManager> ccm =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  ErrorResult rv;
+  TextDecoderBase decoder;
+  decoder.Init(NS_ConvertUTF8toUTF16(aCharset), false, rv);
+  if (rv.Failed()) {
+    rv.ClearMessage();
+    return rv.ErrorCode();
+  }
 
-  nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm->GetUnicodeDecoder(PromiseFlatCString(aCharset).get(),
-                              getter_AddRefs(decoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsPromiseFlatCString flatInput(aInput);
-  int32_t length = flatInput.Length();
-  int32_t outLen;
-  rv = decoder->GetMaxLength(flatInput.get(), length, &outLen);
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRUnichar *ustr = (PRUnichar *)nsMemory::Alloc((outLen + 1) *
-                                                 sizeof(PRUnichar));
-  if (!ustr)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  const char* data = flatInput.get();
-  aOutput.Truncate();
-  rv = decoder->Convert(data, &length, ustr, &outLen);
-  MOZ_ASSERT(rv != NS_ERROR_ILLEGAL_INPUT);
-  ustr[outLen] = 0;
-  aOutput.Append(ustr, outLen);
-
-  nsMemory::Free(ustr);
-  return rv;
+  decoder.Decode(aInput.BeginReading(), aInput.Length(), false,
+                 aOutput, rv);
+  return rv.ErrorCode();
 }
 
 /* static */
