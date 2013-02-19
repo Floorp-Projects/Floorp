@@ -1086,7 +1086,7 @@ class PropertyDefiner:
         specs = []
         prefableSpecs = []
 
-        prefableTemplate = '  { true, &%s[%d] }'
+        prefableTemplate = '  { true, nullptr, &%s[%d] }'
         prefCacheTemplate = '&%s[%d].enabled'
         def switchToPref(props, pref):
             # Remember the info about where our pref-controlled
