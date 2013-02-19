@@ -236,7 +236,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Feedback:MaybeLater");
         registerEventListener("Telemetry:Gather");
 
-        Distribution.init(this);
+        Distribution.init(this, getPackageResourcePath());
         JavaAddonManager.getInstance().init(getApplicationContext());
     }
 

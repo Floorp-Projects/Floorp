@@ -8312,6 +8312,8 @@ var Distribution = {
         defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedString);
       } catch (e) { /* ignore bad prefs and move on */ }
     }
+
+    sendMessageToJava({ type: "Distribution:Set:OK" });
   },
 
   // aFile is an nsIFile
