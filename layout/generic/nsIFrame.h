@@ -566,7 +566,7 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
   nsPresContext* PresContext() const {
-    return GetStyleContext()->GetRuleNode()->GetPresContext();
+    return StyleContext()->RuleNode()->PresContext();
   }
 
   /**
@@ -741,9 +741,8 @@ public:
 
   /**
    * Get the style context associated with this frame.
-   *
    */
-  nsStyleContext* GetStyleContext() const { return mStyleContext; }
+  nsStyleContext* StyleContext() const { return mStyleContext; }
   void SetStyleContext(nsStyleContext* aContext)
   { 
     if (aContext != mStyleContext) {
@@ -779,32 +778,32 @@ public:
   /**
    * Get the style data associated with this frame.  This returns a
    * const style struct pointer that should never be modified.  See
-   * |nsIStyleContext::GetStyleData| for more information.
+   * |nsStyleContext::StyleData| for more information.
    *
    * The use of the typesafe functions below is preferred to direct use
    * of this function.
    */
-  virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const = 0;
+  virtual const void* StyleDataExternal(nsStyleStructID aSID) const = 0;
 
   /**
    * Define typesafe getter functions for each style struct by
    * preprocessing the list of style structs.  These functions are the
    * preferred way to get style data.  The macro creates functions like:
-   *   const nsStyleBorder* GetStyleBorder();
-   *   const nsStyleColor* GetStyleColor();
+   *   const nsStyleBorder* StyleBorder();
+   *   const nsStyleColor* StyleColor();
    */
 
 #ifdef _IMPL_NS_LAYOUT
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
-    const nsStyle##name_ * GetStyle##name_ () const {                         \
+    const nsStyle##name_ * Style##name_ () const {                            \
       NS_ASSERTION(mStyleContext, "No style context found!");                 \
-      return mStyleContext->GetStyle##name_ ();                               \
+      return mStyleContext->Style##name_ ();                                  \
     }
 #else
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
-    const nsStyle##name_ * GetStyle##name_ () const {                         \
+    const nsStyle##name_ * Style##name_ () const {                            \
       return static_cast<const nsStyle##name_*>(                              \
-                            GetStyleDataExternal(eStyleStruct_##name_));      \
+                            StyleDataExternal(eStyleStruct_##name_));         \
     }
 #endif
   #include "nsStyleStructList.h"
@@ -978,9 +977,9 @@ public:
    * its rect) and the padding edge of the frame. Like GetRect(), returns
    * the dimensions as of the most recent reflow.
    *
-   * Note that this differs from GetStyleBorder()->GetBorder() in that
+   * Note that this differs from StyleBorder()->GetBorder() in that
    * this describes region of the frame's box, and
-   * GetStyleBorder()->GetBorder() describes a border.  They differ only
+   * StyleBorder()->GetBorder() describes a border.  They differ only
    * for tables, particularly border-collapse tables.
    */
   virtual nsMargin GetUsedBorder() const;
@@ -1157,18 +1156,18 @@ public:
    * @param aDirtyRect content outside this rectangle can be ignored; the
    * rectangle is in frame coordinates
    */
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) { return NS_OK; }
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) {}
   /**
    * Displays the caret onto the given display list builder. The caret is
    * painted on top of the rest of the display list items.
    *
    * @param aDirtyRect is the dirty rectangle that we're repainting.
    */
-  nsresult DisplayCaret(nsDisplayListBuilder*       aBuilder,
-                        const nsRect&               aDirtyRect,
-                        nsDisplayList*              aList);
+  void DisplayCaret(nsDisplayListBuilder* aBuilder,
+                    const nsRect&         aDirtyRect,
+                    nsDisplayList*        aList);
 
   /**
    * Get the preferred caret color at the offset.
@@ -1179,7 +1178,7 @@ public:
 
  
   bool IsThemed(nsITheme::Transparency* aTransparencyState = nullptr) const {
-    return IsThemed(GetStyleDisplay(), aTransparencyState);
+    return IsThemed(StyleDisplay(), aTransparencyState);
   }
   bool IsThemed(const nsStyleDisplay* aDisp,
                   nsITheme::Transparency* aTransparencyState = nullptr) const {
@@ -1204,9 +1203,9 @@ public:
    * @param aDirtyRect content outside this rectangle can be ignored; the
    * rectangle is in frame coordinates
    */
-  nsresult BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
-                                              const nsRect&         aDirtyRect,
-                                              nsDisplayList*        aList);
+  void BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
+                                          const nsRect&         aDirtyRect,
+                                          nsDisplayList*        aList);
 
   /**
    * Clips the display items of aFromSet, putting the results in aToSet.
@@ -1241,11 +1240,11 @@ public:
    * @param aFlags combination of DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT,
    *    DISPLAY_CHILD_FORCE_STACKING_CONTEXT and DISPLAY_CHILD_INLINE
    */
-  nsresult BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
-                                    nsIFrame*               aChild,
-                                    const nsRect&           aDirtyRect,
-                                    const nsDisplayListSet& aLists,
-                                    uint32_t                aFlags = 0);
+  void BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
+                                nsIFrame*               aChild,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists,
+                                uint32_t                aFlags = 0);
 
   /**
    * A helper for replaced elements that want to clip their content to a
@@ -2134,6 +2133,9 @@ public:
    *
    * The algorithm is defined in
    * http://www.w3.org/TR/CSS2/visudet.html#containing-block-details.
+   *
+   * NOTE: This is guaranteed to return a non-null pointer when invoked on any
+   * frame other than the root frame.
    */
   nsIFrame* GetContainingBlock() const;
 
@@ -2574,7 +2576,7 @@ public:
    * XXX maybe check IsTransformed()?
    */
   bool IsPseudoStackingContextFromStyle() {
-    const nsStyleDisplay* disp = GetStyleDisplay();
+    const nsStyleDisplay* disp = StyleDisplay();
     return disp->mOpacity != 1.0f ||
            disp->IsPositioned(this) ||
            disp->IsFloating(this);
@@ -3266,49 +3268,49 @@ FrameLinkEnumerator(const nsFrameList& aList, nsIFrame* aPrevFrame)
 bool
 nsIFrame::IsFloating() const
 {
-  return GetStyleDisplay()->IsFloating(this);
+  return StyleDisplay()->IsFloating(this);
 }
 
 bool
 nsIFrame::IsPositioned() const
 {
-  return GetStyleDisplay()->IsPositioned(this);
+  return StyleDisplay()->IsPositioned(this);
 }
 
 bool
 nsIFrame::IsRelativelyPositioned() const
 {
-  return GetStyleDisplay()->IsRelativelyPositioned(this);
+  return StyleDisplay()->IsRelativelyPositioned(this);
 }
 
 bool
 nsIFrame::IsAbsolutelyPositioned() const
 {
-  return GetStyleDisplay()->IsAbsolutelyPositioned(this);
+  return StyleDisplay()->IsAbsolutelyPositioned(this);
 }
 
 bool
 nsIFrame::IsBlockInside() const
 {
-  return GetStyleDisplay()->IsBlockInside(this);
+  return StyleDisplay()->IsBlockInside(this);
 }
 
 bool
 nsIFrame::IsBlockOutside() const
 {
-  return GetStyleDisplay()->IsBlockOutside(this);
+  return StyleDisplay()->IsBlockOutside(this);
 }
 
 bool
 nsIFrame::IsInlineOutside() const
 {
-  return GetStyleDisplay()->IsInlineOutside(this);
+  return StyleDisplay()->IsInlineOutside(this);
 }
 
 uint8_t
 nsIFrame::GetDisplay() const
 {
-  return GetStyleDisplay()->GetDisplay(this);
+  return StyleDisplay()->GetDisplay(this);
 }
 
 #endif /* nsIFrame_h___ */

@@ -99,7 +99,7 @@
 #include "xpcpublic.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsCSSParser.h"
-#include "nsHTMLLegendElement.h"
+#include "HTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
 #include "WrapperFactory.h"
 #include "DocumentType.h"

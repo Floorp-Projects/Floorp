@@ -13,6 +13,7 @@
 %}
 
 interface xpcIJSWeakReference;
+interface nsIClassInfo;
 
 /**
 * interface of Components.interfacesByID
@@ -118,7 +119,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(0d0fd2f7-3250-4092-9340-ca9bcb7be470)]
+[scriptable, uuid(5b62c98f-5ff8-41f9-bcb8-a24d1b4255d4)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -402,7 +403,16 @@ interface nsIXPCComponents_Utils : nsISupports
     [implicit_jscontext]
     void nukeSandbox(in jsval obj);
 
+    /**
+     * Check whether the given object is an XrayWrapper.
+     */
     bool isXrayWrapper(in jsval obj);
+
+    /**
+     * Get a DOM classinfo for the given classname.  Only some class
+     * names are supported.
+     */
+    nsIClassInfo getDOMClassInfo(in AString aClassName);
 };
 
 /**

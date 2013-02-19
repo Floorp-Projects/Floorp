@@ -20,7 +20,6 @@ struct PathOp
     OP_LINETO,
     OP_BEZIERTO,
     OP_QUADRATICBEZIERTO,
-    OP_ARCTO,
     OP_CLOSE
   };
 

@@ -83,10 +83,10 @@ IsHorizontalOverflowVisible(nsIFrame* aFrame)
                   "expected a block frame");
 
   nsIFrame* f = aFrame;
-  while (f && f->GetStyleContext()->GetPseudo()) {
+  while (f && f->StyleContext()->GetPseudo()) {
     f = f->GetParent();
   }
-  return !f || f->GetStyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
+  return !f || f->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
 }
 
 static nsDisplayItem*
@@ -230,12 +230,12 @@ TextOverflow::Init(nsDisplayListBuilder*   aBuilder,
   mBlock = aBlockFrame;
   mContentArea = aBlockFrame->GetContentRectRelativeToSelf();
   mScrollableFrame = nsLayoutUtils::GetScrollableFrameFor(aBlockFrame);
-  uint8_t direction = aBlockFrame->GetStyleVisibility()->mDirection;
+  uint8_t direction = aBlockFrame->StyleVisibility()->mDirection;
   mBlockIsRTL = direction == NS_STYLE_DIRECTION_RTL;
   mAdjustForPixelSnapping = false;
 #ifdef MOZ_XUL
   if (!mScrollableFrame) {
-    nsIAtom* pseudoType = aBlockFrame->GetStyleContext()->GetPseudo();
+    nsIAtom* pseudoType = aBlockFrame->StyleContext()->GetPseudo();
     if (pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock) {
       mScrollableFrame =
         nsLayoutUtils::GetScrollableFrameFor(aBlockFrame->GetParent());
@@ -260,7 +260,7 @@ TextOverflow::Init(nsDisplayListBuilder*   aBuilder,
     nsIFrame* scrollFrame = do_QueryFrame(mScrollableFrame);
     scrollFrame->AddStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   }
-  const nsStyleTextReset* style = aBlockFrame->GetStyleTextReset();
+  const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
   mLeft.Init(style->mTextOverflow.GetLeft(direction));
   mRight.Init(style->mTextOverflow.GetRight(direction));
   // The left/right marker string is setup in ExamineLineFrames when a line
@@ -294,7 +294,7 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
     return;
   }
   const bool isAtomic = IsAtomicElement(aFrame, frameType);
-  if (aFrame->GetStyleVisibility()->IsVisible()) {
+  if (aFrame->StyleVisibility()->IsVisible()) {
     nsRect childRect = aFrame->GetScrollableOverflowRect() +
                        aFrame->GetOffsetTo(mBlock);
     bool overflowLeft = childRect.x < aContentArea.x;
@@ -651,7 +651,7 @@ TextOverflow::PruneDisplayListContents(nsDisplayList*        aList,
 TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
                                   nsIFrame*             aBlockFrame)
 {
-  const nsStyleTextReset* style = aBlockFrame->GetStyleTextReset();
+  const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
   // Nothing to do for text-overflow:clip or if 'overflow-x:visible'
   // or if we're just building items for event processing.
   if ((style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&

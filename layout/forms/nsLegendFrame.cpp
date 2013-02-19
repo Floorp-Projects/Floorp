@@ -17,7 +17,7 @@ nsIFrame*
 NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
 #ifdef DEBUG
-  const nsStyleDisplay* disp = aContext->GetStyleDisplay();
+  const nsStyleDisplay* disp = aContext->StyleDisplay();
   NS_ASSERTION(!disp->IsAbsolutelyPositionedStyle() && !disp->IsFloatingStyle(),
                "Legends should not be positioned and should not float");
 #endif
@@ -68,7 +68,7 @@ int32_t nsLegendFrame::GetAlign()
 {
   int32_t intValue = NS_STYLE_TEXT_ALIGN_LEFT;
 #ifdef IBMBIDI
-  if (mParent && NS_STYLE_DIRECTION_RTL == mParent->GetStyleVisibility()->mDirection) {
+  if (mParent && NS_STYLE_DIRECTION_RTL == mParent->StyleVisibility()->mDirection) {
     intValue = NS_STYLE_TEXT_ALIGN_RIGHT;
   }
 #endif // IBMBIDI

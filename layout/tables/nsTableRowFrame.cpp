@@ -140,7 +140,7 @@ nsTableRowFrame::Init(nsIContent*      aContent,
   // Let the base class do its initialization
   rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == GetStyleDisplay()->mDisplay,
+  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == StyleDisplay()->mDisplay,
                "wrong display on table row frame");
 
   if (aPrevInFlow) {
@@ -163,7 +163,7 @@ nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
      
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     nsIntRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
     tableFrame->AddBCDamageArea(damageArea);
   }
@@ -488,7 +488,7 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
                             ? 0 : aReflowState.ComputedHeight();
   ResetHeight(computedHeight);
 
-  const nsStylePosition* position = GetStylePosition();
+  const nsStylePosition* position = StylePosition();
   if (position->mHeight.ConvertsToLength()) {
     SetFixedHeight(nsRuleNode::ComputeCoordPercentCalc(position->mHeight, 0));
   }
@@ -555,7 +555,7 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
   painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
 
-NS_IMETHODIMP
+void
 nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
@@ -571,11 +571,10 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // need the background to be larger than the row frame in some
       // cases.
       item = new (aBuilder) nsDisplayTableRowBackground(aBuilder, this);
-      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
-      NS_ENSURE_SUCCESS(rv, rv);
+      aLists.BorderBackground()->AppendNewToTop(item);
     }
   }
-  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
+  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
 }
 
 int
@@ -601,7 +600,7 @@ nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
   nscoord specifiedHeight = 0;
   
   // Get the height specified in the style information
-  const nsStylePosition* position = aCellFrame->GetStylePosition();
+  const nsStylePosition* position = aCellFrame->StylePosition();
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   int32_t rowSpan = tableFrame->GetEffectiveRowSpan(*aCellFrame);
@@ -703,10 +702,10 @@ GetSpaceBetween(int32_t       aPrevColIndex,
       }
       else {
         nsTableColFrame* colFrame = aTableFrame.GetColFrame(colX);
-        const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
+        const nsStyleVisibility* colVis = colFrame->StyleVisibility();
         bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
         nsIFrame* cgFrame = colFrame->GetParent();
-        const nsStyleVisibility* groupVis = cgFrame->GetStyleVisibility();
+        const nsStyleVisibility* groupVis = cgFrame->StyleVisibility();
         bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                 groupVis->mVisible);
         isCollapsed = collapseCol || collapseGroup;
@@ -727,10 +726,10 @@ GetSpaceBetween(int32_t       aPrevColIndex,
       }
       else {
         nsTableColFrame* colFrame = aTableFrame.GetColFrame(colX);
-        const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
+        const nsStyleVisibility* colVis = colFrame->StyleVisibility();
         bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
         nsIFrame* cgFrame = colFrame->GetParent();
-        const nsStyleVisibility* groupVis = cgFrame->GetStyleVisibility();
+        const nsStyleVisibility* groupVis = cgFrame->StyleVisibility();
         bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                 groupVis->mVisible);
         isCollapsed = collapseCol || collapseGroup;
@@ -1015,7 +1014,7 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   nsresult rv = NS_OK;
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  const nsStyleVisibility* rowVis = GetStyleVisibility();
+  const nsStyleVisibility* rowVis = StyleVisibility();
   bool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
   if (collapseRow) {
     tableFrame->SetNeedToCollapse(true);
@@ -1107,7 +1106,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
                                         bool    aCollapseGroup,
                                         bool& aDidCollapse)
 {
-  const nsStyleVisibility* rowVis = GetStyleVisibility();
+  const nsStyleVisibility* rowVis = StyleVisibility();
   bool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
   nsTableFrame* tableFrame = static_cast<nsTableFrame*>(
     nsTableFrame::GetTableFrame(this)->GetFirstInFlow());
@@ -1194,11 +1193,11 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
              colX += colIncrement, actualColSpan--) {
 
           nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
-          const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
+          const nsStyleVisibility* colVis = colFrame->StyleVisibility();
           bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                 colVis->mVisible);
           nsIFrame* cgFrame = colFrame->GetParent();
-          const nsStyleVisibility* groupVis = cgFrame->GetStyleVisibility();
+          const nsStyleVisibility* groupVis = cgFrame->StyleVisibility();
           bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                   groupVis->mVisible);
           bool isCollapsed = collapseCol || collapseGroup;
@@ -1209,7 +1208,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
               nsTableColFrame* nextColFrame =
                 tableFrame->GetColFrame(colX + colIncrement);
               const nsStyleVisibility* nextColVis =
-              nextColFrame->GetStyleVisibility();
+              nextColFrame->StyleVisibility();
               if ( (NS_STYLE_VISIBILITY_COLLAPSE != nextColVis->mVisible) &&
                   tableFrame->ColumnHasCellSpacingBefore(colX + colIncrement)) {
                 cRect.width += cellSpacingX;
@@ -1223,7 +1222,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         int32_t actualRowSpan = tableFrame->GetEffectiveRowSpan(*cellFrame);
         nsTableRowFrame* rowFrame = GetNextRow();
         for (actualRowSpan--; actualRowSpan > 0 && rowFrame; actualRowSpan--) {
-          const nsStyleVisibility* nextRowVis = rowFrame->GetStyleVisibility();
+          const nsStyleVisibility* nextRowVis = rowFrame->StyleVisibility();
           bool collapseNextRow = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                     nextRowVis->mVisible);
           if (!collapseNextRow) {
@@ -1310,7 +1309,7 @@ nsTableRowFrame::GetNextRow() const
   while (childFrame) {
     nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
     if (rowFrame) {
-	  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == childFrame->GetStyleDisplay()->mDisplay, "wrong display type on rowframe");
+	  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == childFrame->StyleDisplay()->mDisplay, "wrong display type on rowframe");
       return rowFrame;
     }
     childFrame = childFrame->GetNextSibling();
@@ -1377,7 +1376,7 @@ void nsTableRowFrame::InitHasCellWithStyleHeight(nsTableFrame* aTableFrame)
       continue;
     }
     // Ignore row-spanning cells
-    const nsStyleCoord &cellHeight = cellFrame->GetStylePosition()->mHeight;
+    const nsStyleCoord &cellHeight = cellFrame->StylePosition()->mHeight;
     if (aTableFrame->GetEffectiveRowSpan(*cellFrame) == 1 &&
         cellHeight.GetUnit() != eStyleUnit_Auto &&
          /* calc() with percentages treated like 'auto' */

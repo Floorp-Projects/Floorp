@@ -15,7 +15,6 @@
 #include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
 #include "nsSVGFilterInstance.h"
-#include "nsIDOMSVGFilterElement.h"
 #include "nsSVGEnum.h"
 #include "SVGNumberList.h"
 #include "SVGAnimatedNumberList.h"
@@ -31,7 +30,7 @@
 #include "imgIContainer.h"
 #include "nsNetUtil.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsSVGFilterElement.h"
+#include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGString.h"
 #include "nsSVGEffects.h"
 #include "gfxUtils.h"
@@ -2761,10 +2760,10 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance,
 {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) return NS_ERROR_FAILURE;
-  nsStyleContext* style = frame->GetStyleContext();
+  nsStyleContext* style = frame->StyleContext();
 
-  nscolor floodColor = style->GetStyleSVGReset()->mFloodColor;
-  float floodOpacity = style->GetStyleSVGReset()->mFloodOpacity;
+  nscolor floodColor = style->StyleSVGReset()->mFloodColor;
+  float floodOpacity = style->StyleSVGReset()->mFloodOpacity;
 
   gfxContext ctx(aTarget->mImage);
   ctx.SetColor(gfxRGBA(NS_GET_R(floodColor) / 255.0,
@@ -4992,9 +4991,9 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
 
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) return NS_ERROR_FAILURE;
-  nsStyleContext* style = frame->GetStyleContext();
+  nsStyleContext* style = frame->StyleContext();
 
-  nscolor lightColor = style->GetStyleSVGReset()->mLightingColor;
+  nscolor lightColor = style->StyleSVGReset()->mLightingColor;
 
   // find specified light  
   for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();
@@ -5754,9 +5753,8 @@ nsSVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRec
 void
 nsSVGFEImageElement::Invalidate()
 {
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  if (filter) {
-    static_cast<nsSVGFilterElement*>(GetParent())->Invalidate();
+  if (GetParent()->IsSVG(nsGkAtoms::filter)) {
+    static_cast<SVGFilterElement*>(GetParent())->Invalidate();
   }
 }
 

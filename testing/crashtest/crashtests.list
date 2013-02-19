@@ -26,9 +26,8 @@ include ../../dom/base/crashtests/crashtests.list
 include ../../dom/bindings/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list
 
-# Bug 801682 - Because of leaks we can't enable media crashtests yet
 # Bug 811873 - mozRTCPeerConnection doesn't support remote browser yet
-# skip-if(browserIsRemote) include ../../dom/media/tests/crashtests/crashtests.list
+skip-if(Android||B2G||browserIsRemote) include ../../dom/media/tests/crashtests/crashtests.list
 
 include ../../dom/src/offline/crashtests/crashtests.list
 include ../../dom/src/jsurl/crashtests/crashtests.list

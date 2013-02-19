@@ -76,13 +76,13 @@ nsSVGTextFrame::GetType() const
   return nsGkAtoms::svgTextFrame;
 }
 
-NS_IMETHODIMP
+void
 nsSVGTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists)
 {
   UpdateGlyphPositioning(true);
-  return nsSVGTextFrameBase::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsSVGTextFrameBase::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
 //----------------------------------------------------------------------
@@ -440,7 +440,7 @@ nsSVGTextFrame::UpdateGlyphPositioning(bool aForceGlobalTransform)
      * See also XXXsmontagu comments in nsSVGGlyphFrame::EnsureTextRun
      */
 #if 0
-    if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+    if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
       if (anchor == NS_STYLE_TEXT_ANCHOR_END) {
         anchor = NS_STYLE_TEXT_ANCHOR_START;
       } else if (anchor == NS_STYLE_TEXT_ANCHOR_START) {

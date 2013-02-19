@@ -118,9 +118,8 @@ class nsIInputStream;
  * it's not allocated until the second frame is added.
  *
  * @note
- * mAnimationMode, mLoopCount and mObserver are not in the mAnim structure
- * because the first two have public setters and the observer we only get
- * in Init().
+ * mAnimationMode and mLoopCount are not in the mAnim structure because
+ * they have public setters.
  */
 
 class ScaleRequest;
@@ -157,8 +156,7 @@ public:
   virtual nsresult StopAnimation();
 
   // Methods inherited from Image
-  nsresult Init(imgDecoderObserver* aObserver,
-                const char* aMimeType,
+  nsresult Init(const char* aMimeType,
                 uint32_t aFlags);
   virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
@@ -644,8 +642,6 @@ private: // data
   //! # loops remaining before animation stops (-1 no stop)
   int32_t                    mLoopCount;
   
-  mozilla::WeakPtr<imgDecoderObserver> mObserver;
-
   // Discard members
   uint32_t                   mLockCount;
   DiscardTracker::Node       mDiscardTrackerNode;

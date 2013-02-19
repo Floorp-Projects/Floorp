@@ -244,27 +244,7 @@ public class Tab {
             return;
 
         mTitle = (title == null ? "" : title);
-
-        if (mUrl != null)
-            updateHistory(mUrl, mTitle);
-
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.TITLE);
-    }
-
-    protected void addHistory(final String uri) {
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                GlobalHistory.getInstance().add(uri);
-            }
-        });
-    }
-
-    protected void updateHistory(final String uri, final String title) {
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                GlobalHistory.getInstance().update(uri, title);
-            }
-        });
     }
 
     public void setState(int state) {

@@ -19,9 +19,14 @@ class nsIPresShell;
 class nsRenderingContext;
 class nsStyleContext;
 class nsSVGFilterPaintCallback;
-class nsSVGFilterElement;
 class nsSVGIntegerPair;
 class nsSVGLength2;
+
+namespace mozilla {
+namespace dom {
+class SVGFilterElement;
+}
+}
 
 typedef nsSVGContainerFrame nsSVGFilterFrameBase;
 
@@ -42,11 +47,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame methods:
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) {
-    return NS_OK;
-  }
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
 
   NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -131,8 +134,8 @@ private:
   {
     return GetLengthValue(aIndex, mContent);
   }
-  const nsSVGFilterElement *GetFilterContent(nsIContent *aDefault);
-  const nsSVGFilterElement *GetFilterContent()
+  const mozilla::dom::SVGFilterElement *GetFilterContent(nsIContent *aDefault);
+  const mozilla::dom::SVGFilterElement *GetFilterContent()
   {
     return GetFilterContent(mContent);
   }

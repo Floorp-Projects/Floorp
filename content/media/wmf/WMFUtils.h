@@ -11,7 +11,8 @@
 
 namespace mozilla {
 
-nsCString GetGUIDName(const GUID& guid);
+nsCString
+GetGUIDName(const GUID& guid);
 
 // Returns true if the reader has a stream with the specified index.
 // Index can be a specific index, or one of:
@@ -45,15 +46,22 @@ private:
 // Converts from microseconds to hundreds of nanoseconds.
 // We use microseconds for our timestamps, whereas WMF uses
 // hundreds of nanoseconds.
-inline int64_t UsecsToHNs(int64_t aUsecs) {
+inline int64_t
+UsecsToHNs(int64_t aUsecs) {
   return aUsecs * 10;
 }
 
 // Converts from hundreds of nanoseconds to microseconds.
 // We use microseconds for our timestamps, whereas WMF uses
 // hundreds of nanoseconds.
-inline int64_t HNsToUsecs(int64_t hNanoSecs) {
+inline int64_t
+HNsToUsecs(int64_t hNanoSecs) {
   return hNanoSecs / 10;
 }
+
+// Assigns aUnknown to *aInterface, and AddRef's it.
+// Helper for MSCOM QueryInterface implementations.
+HRESULT
+DoGetInterface(IUnknown* aUnknown, void** aInterface);
 
 } // namespace mozilla

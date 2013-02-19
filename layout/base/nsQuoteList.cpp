@@ -36,7 +36,7 @@ nsQuoteNode::Text()
   NS_ASSERTION(mType == eStyleContentType_OpenQuote ||
                mType == eStyleContentType_CloseQuote,
                "should only be called when mText should be non-null");
-  const nsStyleQuotes* styleQuotes = mPseudoFrame->GetStyleQuotes();
+  const nsStyleQuotes* styleQuotes = mPseudoFrame->StyleQuotes();
   int32_t quotesCount = styleQuotes->QuotesCount(); // 0 if 'quotes:none'
   int32_t quoteDepth = Depth();
 

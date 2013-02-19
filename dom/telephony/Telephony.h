@@ -21,8 +21,30 @@ BEGIN_TELEPHONY_NAMESPACE
 class Telephony : public nsDOMEventTargetHelper,
                   public nsIDOMTelephony
 {
+  class RILTelephonyCallback : public nsIRILTelephonyCallback
+  {
+    Telephony* mTelephony;
+
+  public:
+    NS_DECL_ISUPPORTS
+    NS_FORWARD_SAFE_NSIRILTELEPHONYCALLBACK(mTelephony)
+
+    RILTelephonyCallback(Telephony* aTelephony)
+    : mTelephony(aTelephony)
+    {
+      NS_ASSERTION(mTelephony, "Null pointer!");
+    }
+
+    void
+    Disable()
+    {
+      NS_ASSERTION(mTelephony, "Disable called more than once!");
+      mTelephony = nullptr;
+    }
+  };
+
   nsCOMPtr<nsIRILContentHelper> mRIL;
-  nsCOMPtr<nsIRILTelephonyCallback> mRILTelephonyCallback;
+  nsRefPtr<RILTelephonyCallback> mRILTelephonyCallback;
 
   TelephonyCall* mActiveCall;
   nsTArray<nsRefPtr<TelephonyCall> > mCalls;
@@ -103,21 +125,6 @@ private:
   nsresult
   DispatchCallEvent(const nsAString& aType,
                     nsIDOMTelephonyCall* aCall);
-
-  class RILTelephonyCallback : public nsIRILTelephonyCallback
-  {
-    Telephony* mTelephony;
-
-  public:
-    NS_DECL_ISUPPORTS
-    NS_FORWARD_NSIRILTELEPHONYCALLBACK(mTelephony->)
-
-    RILTelephonyCallback(Telephony* aTelephony)
-    : mTelephony(aTelephony)
-    {
-      NS_ASSERTION(mTelephony, "Null pointer!");
-    }
-  };
 };
 
 END_TELEPHONY_NAMESPACE

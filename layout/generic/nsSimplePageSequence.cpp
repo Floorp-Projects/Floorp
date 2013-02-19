@@ -106,7 +106,7 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
   mPageData = new nsSharedPageData();
   mPageData->mHeadFootFont =
     new nsFont(*PresContext()->GetDefaultFont(kGenericFont_serif,
-                                              aContext->GetStyleFont()->mLanguage));
+                                              aContext->StyleFont()->mLanguage));
   mPageData->mHeadFootFont->size = nsPresContext::CSSPointsToAppUnits(10);
 
   nsresult rv;
@@ -803,29 +803,25 @@ ComputePageSequenceTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
   return gfx3DMatrix::ScalingMatrix(scale, scale, 1);
 }
 
-NS_IMETHODIMP
+void
 nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   nsDisplayList content;
   nsIFrame* child = GetFirstPrincipalChild();
   while (child) {
-    rv = child->BuildDisplayListForStackingContext(aBuilder,
+    child->BuildDisplayListForStackingContext(aBuilder,
         child->GetVisualOverflowRectRelativeToSelf(), &content);
-    NS_ENSURE_SUCCESS(rv, rv);
     child = child->GetNextSibling();
   }
 
-  rv = content.AppendNewToTop(new (aBuilder)
+  content.AppendNewToTop(new (aBuilder)
       nsDisplayTransform(aBuilder, this, &content, ::ComputePageSequenceTransform));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   aLists.Content()->AppendToTop(&content);
-  return NS_OK;
 }
 
 nsIAtom*

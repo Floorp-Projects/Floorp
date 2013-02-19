@@ -920,13 +920,14 @@ SetFontFamily(nsStyleContext*      aStyleContext,
     font.name = family;
     nsRefPtr<nsFontMetrics> fm;
     aRenderingContext.DeviceContext()->GetMetricsFor(font,
-      aStyleContext->GetStyleFont()->mLanguage,
+      aStyleContext->StyleFont()->mLanguage,
       aStyleContext->PresContext()->GetUserFontSet(),
       *getter_AddRefs(fm));
     // Set the font if it is an unicode table
     // or if the same family name has been found
     if (aGlyphTable == &gGlyphTableList->mUnicodeTable ||
-        fm->GetThebesFontGroup()->GetFamilyNameAt(0) == family) {
+        fm->GetThebesFontGroup()->GetFontAt(0)->GetFontEntry()->
+        FamilyName() == family) {
       aFont.name = family;
       aRenderingContext.SetFont(fm);
     } else {
@@ -996,7 +997,7 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
 {
   // Use our stretchy style context now that stretching is in progress
   nsStyleContext *sc = mChar->mStyleContext;
-  nsFont font = sc->GetStyleFont()->mFont;
+  nsFont font = sc->StyleFont()->mFont;
   // Ensure mRenderingContext.SetFont will be called:
   font.name.Truncate();
 
@@ -1097,7 +1098,7 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
   // See if the parts of this table fit in the desired space //////////////////
 
   // Use our stretchy style context now that stretching is in progress
-  nsFont font = mChar->mStyleContext->GetStyleFont()->mFont;
+  nsFont font = mChar->mStyleContext->StyleFont()->mFont;
   // Ensure mRenderingContext.SetFont will be called:
   font.name.Truncate();
 
@@ -1245,7 +1246,7 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
   // Check font family if it is not a generic one
   // We test with the kNullGlyph
   nsStyleContext *sc = context->mChar->mStyleContext;
-  nsFont font = sc->GetStyleFont()->mFont;
+  nsFont font = sc->StyleFont()->mFont;
   if (!aGeneric && !SetFontFamily(sc, context->mRenderingContext,
                                   font, NULL, kNullGlyph, aFamily))
      return true; // Could not set the family
@@ -1290,7 +1291,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   // Set default font and get the default bounding metrics
   // mStyleContext is a leaf context used only when stretching happens.
   // For the base size, the default font should come from the parent context
-  nsFont font = mStyleContext->GetParent()->GetStyleFont()->mFont;
+  nsFont font = mStyleContext->GetParent()->StyleFont()->mFont;
 
   // Override with specific fonts if applicable for this character
   nsAutoString families;
@@ -1308,7 +1309,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
 
   nsRefPtr<nsFontMetrics> fm;
   aRenderingContext.DeviceContext()->GetMetricsFor(font,
-    mStyleContext->GetStyleFont()->mLanguage,
+    mStyleContext->StyleFont()->mLanguage,
     aPresContext->GetUserFontSet(), *getter_AddRefs(fm));
   aRenderingContext.SetFont(fm);
   aDesiredStretchSize =
@@ -1408,7 +1409,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   nsAutoString cssFamilies;
 
   if (!done) {
-    font = mStyleContext->GetStyleFont()->mFont;
+    font = mStyleContext->StyleFont()->mFont;
     cssFamilies = font.name;
   }
 
@@ -1651,7 +1652,7 @@ private:
 void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
                                           nsRenderingContext* aCtx)
 {
-  const nsStyleBorder* border = mStyleContext->GetStyleBorder();
+  const nsStyleBorder* border = mStyleContext->StyleBorder();
   nsRect rect(mRect + ToReferenceFrame());
   nsCSSRendering::PaintBackgroundWithSC(mFrame->PresContext(), *aCtx, mFrame,
                                         mVisibleRect, rect,
@@ -1742,7 +1743,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
   // for visual debug
   int skipSides = 0;
   nsPresContext* presContext = mFrame->PresContext();
-  nsStyleContext* styleContext = mFrame->GetStyleContext();
+  nsStyleContext* styleContext = mFrame->StyleContext();
   nsRect rect = mRect + ToReferenceFrame();
   nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
                               mVisibleRect, rect, styleContext, skipSides);
@@ -1752,14 +1753,13 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
 #endif
 
 
-nsresult
+void
 nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
                       nsIFrame*               aForFrame,
                       const nsDisplayListSet& aLists,
                       uint32_t                aIndex,
                       const nsRect*           aSelectedRect)
 {
-  nsresult rv = NS_OK;
   nsStyleContext* parentContext = mStyleContext->GetParent();
   nsStyleContext* styleContext = mStyleContext;
 
@@ -1769,42 +1769,39 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
     styleContext = parentContext;
   }
 
-  if (!styleContext->GetStyleVisibility()->IsVisible())
-    return NS_OK;
+  if (!styleContext->StyleVisibility()->IsVisible())
+    return;
 
   // if the leaf style context that we use for stretchy chars has a background
   // color we use it -- this feature is mostly used for testing and debugging
   // purposes. Normally, users will set the background on the container frame.
   // paint the selection background -- beware MathML frames overlap a lot
   if (aSelectedRect && !aSelectedRect->IsEmpty()) {
-    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayMathMLSelectionRect(aBuilder, aForFrame, *aSelectedRect));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayMathMLSelectionRect(aBuilder, aForFrame, *aSelectedRect));
   }
   else if (mRect.width && mRect.height) {
-    const nsStyleBackground* backg = styleContext->GetStyleBackground();
+    const nsStyleBackground* backg = styleContext->StyleBackground();
     if (styleContext != parentContext &&
         NS_GET_A(backg->mBackgroundColor) > 0) {
-      rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayMathMLCharBackground(aBuilder, aForFrame, mRect,
-                                        styleContext));
-      NS_ENSURE_SUCCESS(rv, rv);
+      aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayMathMLCharBackground(aBuilder, aForFrame, mRect,
+                                      styleContext));
     }
     //else
     //  our container frame will take care of painting its background
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
-    rv = aLists.BorderBackground()->AppendToTop(new (aBuilder)
-        nsDisplayMathMLCharDebug(aBuilder, aForFrame, mRect));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aLists.BorderBackground()->AppendToTop(new (aBuilder)
+      nsDisplayMathMLCharDebug(aBuilder, aForFrame, mRect));
 #endif
   }
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
-                                      aIndex,
-                                      aSelectedRect &&
-                                      !aSelectedRect->IsEmpty()));
+  aLists.Content()->AppendNewToTop(new (aBuilder)
+    nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
+                                  aIndex,
+                                  aSelectedRect &&
+                                  !aSelectedRect->IsEmpty()));
 }
 
 void
@@ -1849,13 +1846,13 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
   }
   aRenderingContext.SetColor(fgColor);
 
-  nsFont theFont(styleContext->GetStyleFont()->mFont);
+  nsFont theFont(styleContext->StyleFont()->mFont);
   if (! mFamily.IsEmpty()) {
     theFont.name = mFamily;
   }
   nsRefPtr<nsFontMetrics> fm;
   aRenderingContext.DeviceContext()->GetMetricsFor(theFont,
-    styleContext->GetStyleFont()->mLanguage,
+    styleContext->StyleFont()->mLanguage,
     aPresContext->GetUserFontSet(),
     *getter_AddRefs(fm));
   aRenderingContext.SetFont(fm);

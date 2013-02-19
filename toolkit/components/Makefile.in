@@ -42,6 +42,7 @@ PARALLEL_DIRS += \
   startup \
   statusfilter \
   telemetry \
+  thumbnails \
   typeaheadfind \
   urlformatter \
   viewconfig \
@@ -83,6 +84,10 @@ endif
 
 ifdef MOZ_URL_CLASSIFIER
 PARALLEL_DIRS += url-classifier
+endif
+
+ifdef MOZ_CAPTIVEDETECT
+PARALLEL_DIRS += captivedetect
 endif
 
 DIRS += \

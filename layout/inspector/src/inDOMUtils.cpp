@@ -71,7 +71,7 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
   // property now and make sure that this isn't preformatted text...
   nsIFrame* frame = content->GetPrimaryFrame();
   if (frame) {
-    const nsStyleText* text = frame->GetStyleText();
+    const nsStyleText* text = frame->StyleText();
     *aReturn = !text->WhiteSpaceIsSignificant();
   }
   else {
@@ -430,7 +430,7 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
   nsRefPtr<nsStyleContext> sContext =
     nsComputedDOMStyle::GetStyleContextForElement(aContent->AsElement(), aPseudo, presShell);
   if (sContext) {
-    *aRuleNode = sContext->GetRuleNode();
+    *aRuleNode = sContext->RuleNode();
     sContext.forget(aStyleContext);
   }
   return NS_OK;

@@ -437,7 +437,7 @@ let Content = {
     // target element doesn't match the current focus element, clear
     // focus. This allows users to remove focus from form elements by
     // taping on white space content.
-    if (!this.formAssistant.open(element, aEvent.clientX, aEvent.clientY)) {
+    if (!this.formAssistant.open(element, aEvent)) {
       if (gFocusManager.focusedElement &&
           gFocusManager.focusedElement != element) {
         gFocusManager.focusedElement.blur();
@@ -447,11 +447,6 @@ let Content = {
       sendAsyncMessage("FindAssist:Hide", { });
     }
 
-    // Fire mouse events on everything but selects, see bug 685197
-    if (element instanceof HTMLSelectElement) {
-      aEvent.preventDefault()
-      aEvent.stopPropagation()
-    }
     this._cancelTapHighlight();
     this.formAssistant.focusSync = false;
   },

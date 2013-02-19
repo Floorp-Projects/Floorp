@@ -491,6 +491,8 @@ pixman_composite_trapezoids (pixman_op_t		op,
 {
     int i;
 
+    return_if_fail (PIXMAN_FORMAT_TYPE (mask_format) == PIXMAN_TYPE_A);
+    
     if (n_traps <= 0)
 	return;
 
@@ -521,8 +523,9 @@ pixman_composite_trapezoids (pixman_op_t		op,
 	if (!get_trap_extents (op, dst, traps, n_traps, &box))
 	    return;
 	
-	tmp = pixman_image_create_bits (
-	    mask_format, box.x2 - box.x1, box.y2 - box.y1, NULL, -1);
+	if (!(tmp = pixman_image_create_bits (
+		  mask_format, box.x2 - box.x1, box.y2 - box.y1, NULL, -1)))
+	    return;
 	
 	for (i = 0; i < n_traps; ++i)
 	{

@@ -12,3 +12,8 @@ xul|*:-moz-system-metric(touch-enabled) {
 html|*:-moz-system-metric(touch-enabled) {
   cursor: none !important;
 }
+
+/* For touch input, *all* select boxes use the SelectHelper popup. */
+select option, select optgroup {
+  pointer-events: none;
+}

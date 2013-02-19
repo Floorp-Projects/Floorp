@@ -111,7 +111,7 @@ radial_compute_color (double                    a,
 	}
 	else
 	{
-	    if (t * dr > mindr)
+	    if (t * dr >= mindr)
 		return _pixman_gradient_walker_pixel (walker, t);
 	}
 
@@ -147,9 +147,9 @@ radial_compute_color (double                    a,
 	}
 	else
 	{
-	    if (t0 * dr > mindr)
+	    if (t0 * dr >= mindr)
 		return _pixman_gradient_walker_pixel (walker, t0);
-	    else if (t1 * dr > mindr)
+	    else if (t1 * dr >= mindr)
 		return _pixman_gradient_walker_pixel (walker, t1);
 	}
     }
@@ -400,11 +400,6 @@ radial_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 
     iter->y++;
     return iter->buffer;
-}
-
-static uint16_t convert_8888_to_0565(uint32_t color)
-{
-    return CONVERT_8888_TO_0565(color);
 }
 
 static uint32_t *

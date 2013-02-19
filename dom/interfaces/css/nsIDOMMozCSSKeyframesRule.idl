@@ -11,7 +11,7 @@ interface nsIDOMMozCSSKeyframesRule : nsIDOMCSSRule
            attribute DOMString         name;
   readonly attribute nsIDOMCSSRuleList cssRules;
 
-  void                     insertRule(in DOMString rule);
+  void                     appendRule(in DOMString rule);
   void                     deleteRule(in DOMString key);
   nsIDOMMozCSSKeyframeRule findRule(in DOMString key);
 };

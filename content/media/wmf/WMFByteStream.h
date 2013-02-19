@@ -13,19 +13,21 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
+#include "mozilla/RefPtr.h"
 
 class nsIThreadPool;
 
 namespace mozilla {
 
 class MediaResource;
-class AsyncReadRequest;
+class ReadRequest;
+class WMFSourceReaderCallback;
 
 // Wraps a MediaResource around an IMFByteStream interface, so that it can
 // be used by the IMFSourceReader. Each WMFByteStream creates a WMF Work Queue
 // on which blocking I/O is performed. The SourceReader requests reads
-// asynchronously using {Begin,End}Read(). The synchronous I/O methods aren't
-// used by the SourceReader, so they're not implemented on this class.
+// asynchronously using {Begin,End}Read(), and more rarely synchronously
+// using Read().
 //
 // Note: This implementation attempts to be bug-compatible with Windows Media
 //       Foundation's implementation of IMFByteStream. The behaviour of WMF's
@@ -33,9 +35,10 @@ class AsyncReadRequest;
 //       For details see the test code at:
 //       https://github.com/cpearce/IMFByteStreamBehaviour/
 class WMFByteStream MOZ_FINAL : public IMFByteStream
+                              , public IMFAttributes
 {
 public:
-  WMFByteStream(MediaResource* aResource);
+  WMFByteStream(MediaResource* aResource, WMFSourceReaderCallback* aCallback);
   ~WMFByteStream();
 
   nsresult Init();
@@ -71,16 +74,48 @@ public:
   STDMETHODIMP SetLength(QWORD);
   STDMETHODIMP Write(const BYTE *, ULONG, ULONG *);
 
+  // IMFAttributes methods
+  STDMETHODIMP GetItem(REFGUID guidKey, PROPVARIANT* pValue);
+  STDMETHODIMP GetItemType(REFGUID guidKey, MF_ATTRIBUTE_TYPE* pType);
+  STDMETHODIMP CompareItem(REFGUID guidKey, REFPROPVARIANT Value, BOOL* pbResult);
+  STDMETHODIMP Compare(IMFAttributes* pTheirs, MF_ATTRIBUTES_MATCH_TYPE MatchType, BOOL* pbResult);
+  STDMETHODIMP GetUINT32(REFGUID guidKey, UINT32* punValue);
+  STDMETHODIMP GetUINT64(REFGUID guidKey, UINT64* punValue);
+  STDMETHODIMP GetDouble(REFGUID guidKey, double* pfValue);
+  STDMETHODIMP GetGUID(REFGUID guidKey, GUID* pguidValue);
+  STDMETHODIMP GetStringLength(REFGUID guidKey, UINT32* pcchLength);
+  STDMETHODIMP GetString(REFGUID guidKey, LPWSTR pwszValue, UINT32 cchBufSize, UINT32* pcchLength);
+  STDMETHODIMP GetAllocatedString(REFGUID guidKey, LPWSTR* ppwszValue, UINT32* pcchLength);
+  STDMETHODIMP GetBlobSize(REFGUID guidKey, UINT32* pcbBlobSize);
+  STDMETHODIMP GetBlob(REFGUID guidKey, UINT8* pBuf, UINT32 cbBufSize, UINT32* pcbBlobSize);
+  STDMETHODIMP GetAllocatedBlob(REFGUID guidKey, UINT8** ppBuf, UINT32* pcbSize);
+  STDMETHODIMP GetUnknown(REFGUID guidKey, REFIID riid, LPVOID* ppv);
+  STDMETHODIMP SetItem(REFGUID guidKey, REFPROPVARIANT Value);
+  STDMETHODIMP DeleteItem(REFGUID guidKey);
+  STDMETHODIMP DeleteAllItems();
+  STDMETHODIMP SetUINT32(REFGUID guidKey, UINT32 unValue);
+  STDMETHODIMP SetUINT64(REFGUID guidKey,UINT64 unValue);
+  STDMETHODIMP SetDouble(REFGUID guidKey, double fValue);
+  STDMETHODIMP SetGUID(REFGUID guidKey, REFGUID guidValue);
+  STDMETHODIMP SetString(REFGUID guidKey, LPCWSTR wszValue);
+  STDMETHODIMP SetBlob(REFGUID guidKey, const UINT8* pBuf, UINT32 cbBufSize);
+  STDMETHODIMP SetUnknown(REFGUID guidKey, IUnknown* pUnknown);
+  STDMETHODIMP LockStore();
+  STDMETHODIMP UnlockStore();
+  STDMETHODIMP GetCount(UINT32* pcItems);
+  STDMETHODIMP GetItemByIndex(UINT32 unIndex, GUID* pguidKey, PROPVARIANT* pValue);
+  STDMETHODIMP CopyAllItems(IMFAttributes* pDest);
+
   // We perform an async read operation in this callback implementation.
   // Processes an async read request, storing the result in aResult, and
   // notifying the caller when the read operation is complete.
   void ProcessReadRequest(IMFAsyncResult* aResult,
-                          AsyncReadRequest* aRequestState);
+                          ReadRequest* aRequestState);
 private:
 
-  // Locks the MediaResource and performs the read. This is a helper
-  // for ProcessReadRequest().
-  nsresult Read(AsyncReadRequest* aRequestState);
+  // Locks the MediaResource and performs the read. The other read methods
+  // call this function.
+  nsresult Read(ReadRequest* aRequestState);
 
   // Returns true if the current position of the stream is at end of stream.
   bool IsEOS();
@@ -88,6 +123,12 @@ private:
   // Reference to the thread pool in which we perform the reads asynchronously.
   // Note this is pool is shared amongst all active WMFByteStreams.
   nsCOMPtr<nsIThreadPool> mThreadPool;
+
+  // Reference to the source reader's callback. We use this reference to
+  // notify threads waiting on a ReadSample() callback to stop waiting
+  // if the stream is closed, which happens when the media element is
+  // shutdown.
+  RefPtr<WMFSourceReaderCallback> mSourceReaderCallback;
 
   // Monitor that ensures that multiple concurrent async reads are processed
   // in serial on a resource. This prevents concurrent async reads and seeks
@@ -110,6 +151,10 @@ private:
   // would leave the resource's offset at a value unexpected by the caller,
   // since the read hadn't yet completed.
   int64_t mOffset;
+
+  // We implement IMFAttributes by forwarding all calls to an instance of the
+  // standard IMFAttributes class, which we store a reference to here.
+  RefPtr<IMFAttributes> mAttributes;
 
   // True if the resource has been shutdown, either because the WMFReader is
   // shutting down, or because the underlying MediaResource has closed.

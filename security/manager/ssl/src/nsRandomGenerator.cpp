@@ -4,6 +4,9 @@
 
 #include "nsRandomGenerator.h"
 #include "pk11pub.h"
+#include "secerr.h"
+#include "prerror.h"
+#include "nsNSSComponent.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsRandomGenerator
@@ -25,7 +28,12 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
   if (!buf)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  SECStatus srv = PK11_GenerateRandom(buf, aLength);
+  mozilla::ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  if (slot == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+  SECStatus srv = PK11_GenerateRandomOnSlot(slot, buf, aLength);
+
   if (SECSuccess != srv) {
     NS_Free(buf);
     return NS_ERROR_FAILURE;

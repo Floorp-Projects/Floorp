@@ -1,0 +1,31 @@
+# HG changeset patch
+# Parent 2c6da9f02606f7a02f635d99ef8cf669d3bc5c4b
+# User Daniel Holbert <dholbert@cs.stanford.edu>
+Bug 839347: Move SkNO_RETURN_HINT out of anonymous namespace so that clang won't warn about it being unused. r=mattwoodrow
+
+diff --git a/gfx/skia/include/core/SkPostConfig.h b/gfx/skia/include/core/SkPostConfig.h
+--- a/gfx/skia/include/core/SkPostConfig.h
++++ b/gfx/skia/include/core/SkPostConfig.h
+@@ -63,20 +63,18 @@
+  * The clang static analyzer likes to know that when the program is not
+  * expected to continue (crash, assertion failure, etc). It will notice that
+  * some combination of parameters lead to a function call that does not return.
+  * It can then make appropriate assumptions about the parameters in code
+  * executed only if the non-returning function was *not* called.
+  */
+ #if !defined(SkNO_RETURN_HINT)
+     #if SK_HAS_COMPILER_FEATURE(attribute_analyzer_noreturn)
+-        namespace {
+-            inline void SkNO_RETURN_HINT() __attribute__((analyzer_noreturn));
+-            inline void SkNO_RETURN_HINT() {}
+-        }
++        inline void SkNO_RETURN_HINT() __attribute__((analyzer_noreturn));
++        inline void SkNO_RETURN_HINT() {}
+     #else
+         #define SkNO_RETURN_HINT() do {} while (false)
+     #endif
+ #endif
+ 
+ #if defined(SK_ZLIB_INCLUDE) && defined(SK_SYSTEM_ZLIB)
+     #error "cannot define both SK_ZLIB_INCLUDE and SK_SYSTEM_ZLIB"
+ #elif defined(SK_ZLIB_INCLUDE) || defined(SK_SYSTEM_ZLIB)

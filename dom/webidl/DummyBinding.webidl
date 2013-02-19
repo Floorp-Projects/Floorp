@@ -10,7 +10,7 @@
 interface DummyInterface {
   readonly attribute OnErrorEventHandlerNonNull onErrorEventHandler;
   FilePropertyBag fileBag();
-  RTCIceServer rtcIceServer();
+  RTCConfiguration rtcConfiguration();
   CFStateChangeEventDict cfstateChangeEvent();
   USSDReceivedEventDict ussdReceivedEvent();
 };

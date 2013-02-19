@@ -67,7 +67,7 @@ void CC_SIPCCCall::setRemoteWindow (VideoWindowHandle window)
 
     if (!pVideo)
     {
-        CSFLogWarnS( logTag, "setRemoteWindow: no video provider found");
+        CSFLogWarn( logTag, "setRemoteWindow: no video provider found");
         return;
     }
 
@@ -93,7 +93,7 @@ int CC_SIPCCCall::setExternalRenderer(VideoFormat vFormat, ExternalRendererHandl
 
     if (!pVideo)
     {
-        CSFLogWarnS( logTag, "setExternalRenderer: no video provider found");
+        CSFLogWarn( logTag, "setExternalRenderer: no video provider found");
         return -1;
     }
 
@@ -233,7 +233,7 @@ bool CC_SIPCCCall::sendDigit (cc_digit_t digit)
 			}
 			else
 			{
-				CSFLogWarnS( logTag, "sendDigit:sendDtmf returned fail");
+				CSFLogWarn( logTag, "sendDigit:sendDtmf returned fail");
 			}
 		}
     }
@@ -356,7 +356,7 @@ bool CC_SIPCCCall::setAudioMute(bool mute)
 				}
 				else
 				{
-					CSFLogWarnS( logTag, "setAudioMute:audio mute returned fail");
+					CSFLogWarn( logTag, "setAudioMute:audio mute returned fail");
 				}
 			}
 	    }
@@ -390,7 +390,7 @@ bool CC_SIPCCCall::setVideoMute(bool mute)
 				}
 				else
 				{
-					CSFLogWarnS( logTag, "setVideoMute:video mute returned fail");
+					CSFLogWarn( logTag, "setVideoMute:video mute returned fail");
 				}
 			}
 	    }
@@ -426,7 +426,7 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
         }
         else
         {
-            CSFLogInfoS( logTag, "addStream: remoteWindow is NULL");
+            CSFLogInfo( logTag, "addStream: remoteWindow is NULL");
         }
 
 		if(pMediaData->extRenderer != NULL)
@@ -435,7 +435,7 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
 		}
 		else
 		{
-            CSFLogInfoS( logTag, "addStream: externalRenderer is NULL");
+            CSFLogInfo( logTag, "addStream: externalRenderer is NULL");
 
 		}
 

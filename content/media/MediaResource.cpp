@@ -50,8 +50,10 @@ static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
 namespace mozilla {
 
 ChannelMediaResource::ChannelMediaResource(MediaDecoder* aDecoder,
-    nsIChannel* aChannel, nsIURI* aURI)
-  : BaseMediaResource(aDecoder, aChannel, aURI),
+                                           nsIChannel* aChannel,
+                                           nsIURI* aURI,
+                                           const nsACString& aContentType)
+  : BaseMediaResource(aDecoder, aChannel, aURI, aContentType),
     mOffset(0), mSuspendCount(0),
     mReopenOnError(false), mIgnoreClose(false),
     mCacheStream(this),
@@ -704,7 +706,10 @@ MediaResource* ChannelMediaResource::CloneData(MediaDecoder* aDecoder)
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
 
-  ChannelMediaResource* resource = new ChannelMediaResource(aDecoder, nullptr, mURI);
+  ChannelMediaResource* resource = new ChannelMediaResource(aDecoder,
+                                                            nullptr,
+                                                            mURI,
+                                                            GetContentType());
   if (resource) {
     // Initially the clone is treated as suspended by the cache, because
     // we don't have a channel. If the cache needs to read data from the clone
@@ -916,11 +921,9 @@ ChannelMediaResource::RecreateChannel()
   // the channel to avoid a sniffing failure, which would be expected because we
   // are probably seeking in the middle of the bitstream, and sniffing relies
   // on the presence of a magic number at the beginning of the stream.
-  nsAutoCString contentType;
-  element->GetMimeType(contentType);
-  NS_ASSERTION(!contentType.IsEmpty(),
+  NS_ASSERTION(!GetContentType().IsEmpty(),
       "When recreating a channel, we should know the Content-Type.");
-  mChannel->SetContentType(contentType);
+  mChannel->SetContentType(GetContentType());
 
   return rv;
 }
@@ -1241,8 +1244,11 @@ ChannelMediaResource::PossiblyResume()
 class FileMediaResource : public BaseMediaResource
 {
 public:
-  FileMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
-    BaseMediaResource(aDecoder, aChannel, aURI),
+  FileMediaResource(MediaDecoder* aDecoder,
+                    nsIChannel* aChannel,
+                    nsIURI* aURI,
+                    const nsACString& aContentType) :
+    BaseMediaResource(aDecoder, aChannel, aURI, aContentType),
     mSize(-1),
     mLock("FileMediaResource.mLock"),
     mSizeInitialized(false)
@@ -1503,7 +1509,7 @@ MediaResource* FileMediaResource::CloneData(MediaDecoder* aDecoder)
   if (NS_FAILED(rv))
     return nullptr;
 
-  return new FileMediaResource(aDecoder, channel, mURI);
+  return new FileMediaResource(aDecoder, channel, mURI, GetContentType());
 }
 
 nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount)
@@ -1581,11 +1587,14 @@ MediaResource::Create(MediaDecoder* aDecoder, nsIChannel* aChannel)
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
+  nsAutoCString contentType;
+  aChannel->GetContentType(contentType);
+
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
   if (fc || IsBlobURI(uri)) {
-    return new FileMediaResource(aDecoder, aChannel, uri);
+    return new FileMediaResource(aDecoder, aChannel, uri, contentType);
   }
-  return new ChannelMediaResource(aDecoder, aChannel, uri);
+  return new ChannelMediaResource(aDecoder, aChannel, uri, contentType);
 }
 
 void BaseMediaResource::MoveLoadsToBackground() {

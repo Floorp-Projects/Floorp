@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1359495205000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1360959670000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -195,6 +195,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i284" id="playbryte@playbryte.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i59" id="ghostviewer@youtube2.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -208,7 +212,7 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i258" id="helperbar@helperbar.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                        <versionRange  minVersion="0" maxVersion="1.0" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i46" id="{841468a1-d7f4-4bd3-84e6-bb0f13a06c64}">
@@ -318,8 +322,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i56" id="flash@adobe.com">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i282" id="{33e0daa6-3af3-d8b5-6752-10e949c61516}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i216" id="fdm_ffext@freedownloadmanager.org">
@@ -434,6 +438,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i68" id="flashupdate@adobe.com">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i56" id="flash@adobe.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
@@ -594,16 +602,16 @@
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p176">
-                  <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="0" maxVersion="10.3.183.18.999" severity="0" vulnerabilitystatus="1">
+                  <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="10.3" maxVersion="10.3.183.18.999" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="19.0a1" maxVersion="*" />
+                              <versionRange  minVersion="20.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p178">
                   <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.4.402.286.999" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="19.0a1" maxVersion="*" />
+                              <versionRange  minVersion="20.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
@@ -730,6 +738,26 @@
     <gfxBlacklistEntry  blockID="g230">      <os>Darwin 10</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g232">      <os>Darwin 11</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g234">      <os>Darwin 12</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g278">      <os>WINNT 6.1</os>      <vendor>0x1002</vendor>              <devices>
+                      <device>0x9802</device>
+                      <device>0x9803</device>
+                      <device>0x9803</device>
+                      <device>0x9804</device>
+                      <device>0x9805</device>
+                      <device>0x9806</device>
+                      <device>0x9807</device>
+                  </devices>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g280">      <os>WINNT 6.1</os>      <vendor>0x1002</vendor>              <devices>
+                      <device>0x9802</device>
+                      <device>0x9803</device>
+                      <device>0x9803</device>
+                      <device>0x9804</device>
+                      <device>0x9805</device>
+                      <device>0x9806</device>
+                      <device>0x9807</device>
+                  </devices>
+            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
     </gfxItems>
 
 

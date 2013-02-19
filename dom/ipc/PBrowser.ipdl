@@ -31,6 +31,7 @@ using gfxSize;
 using mozilla::layers::LayersBackend;
 using mozilla::layers::FrameMetrics;
 using mozilla::layout::ScrollingBehavior;
+using mozilla::void_t;
 using mozilla::WindowsHandle;
 using nscolor;
 using nsCompositionEvent;
@@ -289,6 +290,8 @@ child:
     Show(nsIntSize size);
 
     LoadURL(nsCString uri);
+
+    CacheFileDescriptor(nsString path, FileDescriptor fd);
 
     UpdateDimensions(nsRect rect, nsIntSize size, ScreenOrientation orientation) compress;
 

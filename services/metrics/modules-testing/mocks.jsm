@@ -103,6 +103,6 @@ this.DummyConstantProvider = function () {
 DummyConstantProvider.prototype = {
   __proto__: DummyProvider.prototype,
 
-  constantOnly: true,
+  pullOnly: true,
 };
 

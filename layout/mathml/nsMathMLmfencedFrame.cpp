@@ -172,34 +172,29 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
   }
 }
 
-NS_IMETHODIMP
+void
 nsMathMLmfencedFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
   /////////////
   // display the content
-  nsresult rv = nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   
   ////////////
   // display fences and separators
   uint32_t count = 0;
   if (mOpenChar) {
-    rv = mOpenChar->Display(aBuilder, this, aLists, count++);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mOpenChar->Display(aBuilder, this, aLists, count++);
   }
   
   if (mCloseChar) {
-    rv = mCloseChar->Display(aBuilder, this, aLists, count++);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mCloseChar->Display(aBuilder, this, aLists, count++);
   }
   
   for (int32_t i = 0; i < mSeparatorsCount; i++) {
-    rv = mSeparatorsChar[i].Display(aBuilder, this, aLists, count++);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mSeparatorsChar[i].Display(aBuilder, this, aLists, count++);
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -214,7 +209,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
 
   int32_t i;
-  const nsStyleFont* font = GetStyleFont();
+  const nsStyleFont* font = StyleFont();
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   aReflowState.rendContext->SetFont(fm);
@@ -580,7 +575,7 @@ nsMathMLmfencedFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext)
   nscoord width = 0;
 
   nsPresContext* presContext = PresContext();
-  const nsStyleFont* font = GetStyleFont();
+  const nsStyleFont* font = StyleFont();
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   nscoord em;

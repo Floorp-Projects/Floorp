@@ -545,7 +545,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     // Likewise, when we initially construct frames, we're not in a
     // style change, but also not in an animation restyle.
 
-    const nsStyleDisplay *disp = aStyleContext->GetStyleDisplay();
+    const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
     ElementAnimations *ea =
       GetElementAnimations(aElement, aStyleContext->GetPseudoType(), false);
     if (!ea &&
@@ -732,7 +732,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
   ResolvedStyleCache resolvedStyles;
 
-  const nsStyleDisplay *disp = aStyleContext->GetStyleDisplay();
+  const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   for (uint32_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
@@ -931,7 +931,7 @@ nsAnimationManager::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
   const nsTimingFunction *tf;
   if (aFromDeclaration &&
       aFromDeclaration->HasProperty(eCSSProperty_animation_timing_function)) {
-    tf = &aFromContext->GetStyleDisplay()->mAnimations[0].GetTimingFunction();
+    tf = &aFromContext->StyleDisplay()->mAnimations[0].GetTimingFunction();
   } else {
     tf = &aAnimation.GetTimingFunction();
   }

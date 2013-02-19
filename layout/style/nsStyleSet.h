@@ -376,7 +376,7 @@ class nsStyleSet
              mozilla::dom::Element* aElementForAnimation,
              uint32_t aFlags);
 
-  nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }
+  nsPresContext* PresContext() { return mRuleTree->PresContext(); }
 
   // The sheets in each array in mSheets are stored with the most significant
   // sheet last.

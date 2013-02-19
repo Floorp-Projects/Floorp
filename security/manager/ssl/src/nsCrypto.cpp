@@ -3,8 +3,18 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsNSSComponent.h"
 #include "nsCrypto.h"
+#include "nsNSSComponent.h"
+#include "secmod.h"
+
+#include "nsReadableUtils.h"
+#include "nsCRT.h"
+#include "nsXPIDLString.h"
+#include "nsISaveAsCharset.h"
+#include "nsNativeCharsetUtils.h"
+
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+#include "nsNSSComponent.h"
 #include "nsKeygenHandler.h"
 #include "nsKeygenThread.h"
 #include "nsNSSCertificate.h"
@@ -15,7 +25,6 @@
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
 #include "nsAlgorithm.h"
-#include "nsCRT.h"
 #include "prprf.h"
 #include "nsDOMCID.h"
 #include "nsIDOMWindow.h"
@@ -34,7 +43,6 @@
 #include "nsJSPrincipals.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsXPIDLString.h"
 #include "nsIGenKeypairInfoDlg.h"
 #include "nsIDOMCryptoDialogs.h"
 #include "nsIFormSigningDialog.h"
@@ -42,7 +50,6 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include <ctype.h>
-#include "nsReadableUtils.h"
 #include "pk11func.h"
 #include "keyhi.h"
 #include "cryptohi.h"
@@ -57,21 +64,17 @@
 #include "cert.h"
 #include "certdb.h"
 #include "secmod.h"
-#include "nsISaveAsCharset.h"
-#include "nsNativeCharsetUtils.h"
 #include "ScopedNSSTypes.h"
 
 #include "ssl.h" // For SSL_ClearSessionCache
 
 #include "nsNSSCleaner.h"
 
-#include "nsNSSShutDown.h"
 #include "nsNSSCertHelper.h"
 #include <algorithm>
+#endif
 
 using namespace mozilla;
-
-NSSCleanupAutoPtrClass_WithParam(PK11Context, PK11_DestroyContext, TrueParam, true)
 
 /*
  * These are the most common error strings that are returned
@@ -97,6 +100,16 @@ NSSCleanupAutoPtrClass_WithParam(PK11Context, PK11_DestroyContext, TrueParam, tr
 #define JS_ERR_BAD_MECHANISM_FLAGS        -8
 #define JS_ERR_BAD_CIPHER_ENABLE_FLAGS    -9
 #define JS_ERR_ADD_DUPLICATE_MOD          -10
+
+namespace {
+  
+NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
+} // unnamed namespace
+
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+
+NSSCleanupAutoPtrClass_WithParam(PK11Context, PK11_DestroyContext, TrueParam, true)
 
 /*
  * This structure is used to store information for one key generation.
@@ -195,13 +208,11 @@ private:
 // QueryInterface implementation for nsCrypto
 NS_INTERFACE_MAP_BEGIN(nsCrypto)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCrypto)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Crypto)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(mozilla::dom::Crypto)
 
-NS_IMPL_ADDREF(nsCrypto)
-NS_IMPL_RELEASE(nsCrypto)
-
+NS_IMPL_ADDREF_INHERITED(nsCrypto, mozilla::dom::Crypto)
+NS_IMPL_RELEASE_INHERITED(nsCrypto, mozilla::dom::Crypto)
+ 
 // QueryInterface implementation for nsCRMFObject
 NS_INTERFACE_MAP_BEGIN(nsCRMFObject)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCRMFObject)
@@ -213,6 +224,8 @@ NS_IMPL_ADDREF(nsCRMFObject)
 NS_IMPL_RELEASE(nsCRMFObject)
 
 // QueryInterface implementation for nsPkcs11
+#endif // MOZ_DISABLE_CRYPTOLEGACY
+
 NS_INTERFACE_MAP_BEGIN(nsPkcs11)
   NS_INTERFACE_MAP_ENTRY(nsIPKCS11)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -220,6 +233,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsPkcs11)
 NS_IMPL_RELEASE(nsPkcs11)
+
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 
 // ISupports implementation for nsCryptoRunnable
 NS_IMPL_ISUPPORTS1(nsCryptoRunnable, nsIRunnable)
@@ -229,8 +244,6 @@ NS_IMPL_ISUPPORTS1(nsP12Runnable, nsIRunnable)
 
 // ISupports implementation for nsCryptoRunArgs
 NS_IMPL_ISUPPORTS0(nsCryptoRunArgs)
-
-static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 nsCrypto::nsCrypto() :
   mEnableSmartCardEvents(false)
@@ -2843,6 +2856,12 @@ nsCrypto::DisableRightClick()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsCrypto::GetRandomValues(const jsval& aData, JSContext *cx, jsval* _retval)
+{
+  return mozilla::dom::Crypto::GetRandomValues(aData, cx, _retval);
+}
+
 nsCRMFObject::nsCRMFObject()
 {
 }
@@ -2871,39 +2890,14 @@ nsCRMFObject::SetCRMFRequest(char *inRequest)
   return NS_OK;
 }
 
+#endif // MOZ_DISABLE_CRYPTOLEGACY
+
 nsPkcs11::nsPkcs11()
 {
 }
 
 nsPkcs11::~nsPkcs11()
 {
-}
-
-//Quick function to confirm with the user.
-bool
-confirm_user(const PRUnichar *message)
-{
-  int32_t buttonPressed = 1; // If the user exits by clicking the close box, assume No (button 1)
-
-  nsCOMPtr<nsIPrompt> prompter;
-  (void) nsNSSComponent::GetNewPrompter(getter_AddRefs(prompter));
-
-  if (prompter) {
-    nsPSMUITracker tracker;
-    if (!tracker.isUIForbidden()) {
-      // The actual value is irrelevant but we shouldn't be handing out
-      // malformed JSBools to XPConnect.
-      bool checkState = false;
-      prompter->ConfirmEx(0, message,
-                          (nsIPrompt::BUTTON_DELAY_ENABLE) +
-                          (nsIPrompt::BUTTON_POS_1_DEFAULT) +
-                          (nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0) +
-                          (nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_1),
-                          nullptr, nullptr, nullptr, nullptr, &checkState, &buttonPressed);
-    }
-  }
-
-  return (buttonPressed == 0);
 }
 
 //Delete a PKCS11 module from the user's profile.
@@ -2928,7 +2922,9 @@ nsPkcs11::DeleteModule(const nsAString& aModuleName)
   if (srv == SECSuccess) {
     SECMODModule *module = SECMOD_FindModule(modName.get());
     if (module) {
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
       nssComponent->ShutdownSmartCardThread(module);
+#endif
       SECMOD_DestroyModule(module);
     }
     rv = NS_OK;
@@ -2960,7 +2956,9 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
   if (srv == SECSuccess) {
     SECMODModule *module = SECMOD_FindModule(moduleName.get());
     if (module) {
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
       nssComponent->LaunchSmartCardThread(module);
+#endif
       SECMOD_DestroyModule(module);
     }
   }

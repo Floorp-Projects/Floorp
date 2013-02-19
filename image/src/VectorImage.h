@@ -37,8 +37,7 @@ public:
   virtual ~VectorImage();
 
   // Methods inherited from Image
-  nsresult Init(imgDecoderObserver* aObserver,
-                const char* aMimeType,
+  nsresult Init(const char* aMimeType,
                 uint32_t aFlags);
   virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
@@ -68,7 +67,6 @@ protected:
   virtual bool     ShouldAnimate();
 
 private:
-  WeakPtr<imgDecoderObserver>        mObserver;
   nsRefPtr<SVGDocumentWrapper>       mSVGDocumentWrapper;
   nsRefPtr<SVGRootRenderingObserver> mRenderingObserver;
 
