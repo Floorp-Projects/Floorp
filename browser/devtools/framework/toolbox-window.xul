@@ -11,6 +11,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="devtools-toolbox-window"
+        title="&window.title;"
         macanimationtype="document"
         fullscreenbutton="true"
         windowtype="devtools:toolbox"
