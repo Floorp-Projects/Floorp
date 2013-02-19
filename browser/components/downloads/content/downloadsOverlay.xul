@@ -67,7 +67,7 @@
                   label="&cmd.cancel.label;"
                   accesskey="&cmd.cancel.accesskey;"/>
         <menuitem command="cmd_delete"
-                  class="downloadRemoveFromListMenuItem"
+                  class="downloadRemoveFromHistoryMenuItem"
                   label="&cmd.removeFromHistory.label;"
                   accesskey="&cmd.removeFromHistory.accesskey;"/>
         <menuitem command="downloadsCmd_show"
