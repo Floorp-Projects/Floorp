@@ -10,13 +10,16 @@ contract @mozilla.org/contactField;1 {e2cb19c0-e4aa-11e1-9b23-0800200c9a66}
 component {ed0ab260-e4aa-11e1-9b23-0800200c9a66} ContactManager.js
 contract @mozilla.org/contactTelField;1 {ed0ab260-e4aa-11e1-9b23-0800200c9a66}
 
-component {e31daea0-0cb6-11e1-be50-0800200c9a66} ContactManager.js
-contract @mozilla.org/contactFindOptions;1 {e31daea0-0cb6-11e1-be50-0800200c9a66}
+component {cb008c06-3bf8-495c-8865-f9ca1673a1e1} ContactManager.js
+contract @mozilla.org/contactFindSortOptions;1 {cb008c06-3bf8-495c-8865-f9ca1673a1e1}
+
+component {e13ca4c5-c9cd-40bb-95e9-b636d42f5edf} ContactManager.js
+contract @mozilla.org/contactFindOptions;1 {e13ca4c5-c9cd-40bb-95e9-b636d42f5edf}
 
 component {da0f7040-388b-11e1-b86c-0800200c9a66} ContactManager.js
 contract @mozilla.org/contact;1 {da0f7040-388b-11e1-b86c-0800200c9a66}
 category JavaScript-global-constructor mozContact @mozilla.org/contact;1
 
-component {d88af7e0-a45f-11e1-b3dd-0800200c9a66} ContactManager.js
-contract @mozilla.org/contactManager;1 {d88af7e0-a45f-11e1-b3dd-0800200c9a66}
+component {1d70322b-f11b-4f19-9586-7bf291f212aa} ContactManager.js
+contract @mozilla.org/contactManager;1 {1d70322b-f11b-4f19-9586-7bf291f212aa}
 category JavaScript-navigator-property mozContacts @mozilla.org/contactManager;1

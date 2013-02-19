@@ -131,19 +131,19 @@ Unreported stack frame records
 
 Unreported: 9 blocks from 1 stack trace record in stack frame record M of N
  1,008 bytes (900 requested / 108 slop)
- 8.34% of the heap;  0.00% of unreported
+ 8.34% of the heap;  81.82% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 2 blocks from 1 stack trace record in stack frame record M of N
  112 bytes (112 requested / 0 slop)
- 0.93% of the heap;  0.00% of unreported
+ 0.93% of the heap;  9.09% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 2 blocks from 1 stack trace record in stack frame record M of N
  112 bytes (112 requested / 0 slop)
- 0.93% of the heap;  0.00% of unreported
+ 0.93% of the heap;  9.09% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
@@ -256,43 +256,43 @@ Once-reported stack frame records
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  8,192 bytes (4,097 requested / 4,095 slop)
- 67.77% of the heap;  0.00% of once-reported
+ 67.77% of the heap;  77.40% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  1,024 bytes (1,023 requested / 1 slop)
- 8.47% of the heap;  0.00% of once-reported
+ 8.47% of the heap;  9.67% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  512 bytes (512 requested / 0 slop)
- 4.24% of the heap;  0.00% of once-reported
+ 4.24% of the heap;  4.84% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 4 blocks from 3 stack trace records in stack frame record M of N
  416 bytes (416 requested / 0 slop)
- 3.44% of the heap;  0.00% of once-reported
+ 3.44% of the heap;  3.93% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 4 blocks from 3 stack trace records in stack frame record M of N
  416 bytes (416 requested / 0 slop)
- 3.44% of the heap;  0.00% of once-reported
+ 3.44% of the heap;  3.93% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  16 bytes (10 requested / 6 slop)
- 0.13% of the heap;  0.00% of once-reported
+ 0.13% of the heap;  0.15% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  8 bytes (0 requested / 8 slop)
- 0.07% of the heap;  0.00% of once-reported
+ 0.07% of the heap;  0.08% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
@@ -368,19 +368,19 @@ Unreported stack frame records
 
 Unreported: 9 blocks from 1 stack trace record in stack frame record M of N
  1,008 bytes (900 requested / 108 slop)
- 35.49% of the heap;  0.00% of unreported
+ 35.49% of the heap;  48.84% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 6 blocks from 1 stack trace record in stack frame record M of N
  528 bytes (528 requested / 0 slop)
- 18.59% of the heap;  0.00% of unreported
+ 18.59% of the heap;  25.58% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 6 blocks from 1 stack trace record in stack frame record M of N
  528 bytes (528 requested / 0 slop)
- 18.59% of the heap;  0.00% of unreported
+ 18.59% of the heap;  25.58% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
@@ -430,25 +430,25 @@ Once-reported stack frame records
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  512 bytes (512 requested / 0 slop)
- 18.03% of the heap;  0.00% of once-reported
+ 18.03% of the heap;  74.42% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  80 bytes (79 requested / 1 slop)
- 2.82% of the heap;  0.00% of once-reported
+ 2.82% of the heap;  11.63% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  80 bytes (78 requested / 2 slop)
- 2.82% of the heap;  0.00% of once-reported
+ 2.82% of the heap;  11.63% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Once-reported: 1 block from 1 stack trace record in stack frame record M of N
  16 bytes (10 requested / 6 slop)
- 0.56% of the heap;  0.00% of once-reported
+ 0.56% of the heap;  2.33% of once-reported
  PC is
    ... RunTestMode ... DMD.cpp
 
@@ -526,43 +526,43 @@ Unreported stack frame records
 
 Unreported: ~4 blocks from ~1 stack trace record in stack frame record M of N
  ~512 bytes (~512 requested / ~0 slop)
- 35.96% of the heap;  0.00% of unreported
+ 35.96% of the heap;  35.96% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 1 block from 1 stack trace record in stack frame record M of N
  256 bytes (256 requested / 0 slop)
- 17.98% of the heap;  0.00% of unreported
+ 17.98% of the heap;  17.98% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 1 block from 1 stack trace record in stack frame record M of N
  144 bytes (144 requested / 0 slop)
- 10.11% of the heap;  0.00% of unreported
+ 10.11% of the heap;  10.11% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: 1 block from 1 stack trace record in stack frame record M of N
  128 bytes (128 requested / 0 slop)
- 8.99% of the heap;  0.00% of unreported
+ 8.99% of the heap;  8.99% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: ~1 block from ~1 stack trace record in stack frame record M of N
  ~128 bytes (~128 requested / ~0 slop)
- 8.99% of the heap;  0.00% of unreported
+ 8.99% of the heap;  8.99% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: ~1 block from ~1 stack trace record in stack frame record M of N
  ~128 bytes (~128 requested / ~0 slop)
- 8.99% of the heap;  0.00% of unreported
+ 8.99% of the heap;  8.99% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 
 Unreported: ~1 block from ~1 stack trace record in stack frame record M of N
  ~128 bytes (~128 requested / ~0 slop)
- 8.99% of the heap;  0.00% of unreported
+ 8.99% of the heap;  8.99% of unreported
  PC is
    ... RunTestMode ... DMD.cpp
 

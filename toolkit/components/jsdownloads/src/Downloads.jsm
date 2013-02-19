@@ -124,4 +124,11 @@ this.Downloads = {
       return aDownload.start();
     });
   },
+
+  /**
+   * Constructor for a DownloadError object.  When you catch an exception during
+   * a download, you can use this to verify if "ex instanceof Downloads.Error",
+   * before reading the exception properties with the error details.
+   */
+  Error: DownloadError,
 };

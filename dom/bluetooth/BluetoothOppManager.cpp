@@ -179,7 +179,6 @@ public:
 };
 
 BluetoothOppManager::BluetoothOppManager() : mConnected(false)
-                                           , mConnectionId(1)
                                            , mRemoteObexVersion(0)
                                            , mRemoteConnectionFlags(0)
                                            , mRemoteMaxPacketLength(0)
@@ -920,7 +919,6 @@ BluetoothOppManager::SendConnectRequest()
   req[5] = BluetoothOppManager::MAX_PACKET_LENGTH >> 8;
   req[6] = (uint8_t)BluetoothOppManager::MAX_PACKET_LENGTH;
 
-  index += AppendHeaderConnectionId(&req[index], mConnectionId);
   SetObexPacketInfo(req, ObexRequestCode::Connect, index);
   mLastCommand = ObexRequestCode::Connect;
 
@@ -948,7 +946,6 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
   fileName[len * 2 + 1] = 0x00;
 
   int index = 3;
-  index += AppendHeaderConnectionId(&req[index], mConnectionId);
   index += AppendHeaderName(&req[index], (char*)fileName, (len + 1) * 2);
   index += AppendHeaderLength(&req[index], aFileSize);
 

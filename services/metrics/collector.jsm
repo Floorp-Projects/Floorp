@@ -113,22 +113,11 @@ Collector.prototype = Object.freeze({
     this._providerInitializing = true;
 
     this._log.info("Initializing provider with storage: " + provider.name);
-    let initPromise;
-    try {
-      initPromise = provider.init(this._storage);
-    } catch (ex) {
-      this._log.warn("Provider failed to initialize: " +
-                     CommonUtils.exceptionStr(ex));
-      this._providerInitializing = false;
-      deferred.reject(ex);
-      this._popAndInitProvider();
-      return;
-    }
 
-    initPromise.then(
-      function onSuccess(result) {
-        this._log.info("Provider finished initialization: " + provider.name);
-        this._providerInitializing = false;
+    Task.spawn(function initProvider() {
+      try {
+        let result = yield provider.init(this._storage);
+        this._log.info("Provider successfully initialized: " + provider.name);
 
         this._providers.set(provider.name, {
           provider: provider,
@@ -138,17 +127,15 @@ Collector.prototype = Object.freeze({
         this.providerErrors.set(provider.name, []);
 
         deferred.resolve(result);
-        this._popAndInitProvider();
-      }.bind(this),
-      function onError(error) {
-        this._log.warn("Provider initialization failed: " +
-                       CommonUtils.exceptionStr(error));
+      } catch (ex) {
+        this._log.warn("Provider failed to initialize: " + provider.name +
+                       ": " + CommonUtils.exceptionStr(ex));
+        deferred.reject(ex);
+      } finally {
         this._providerInitializing = false;
-        deferred.reject(error);
         this._popAndInitProvider();
-      }.bind(this)
-    );
-
+      }
+    }.bind(this));
   },
 
   /**
@@ -238,31 +225,25 @@ Collector.prototype = Object.freeze({
    * promises is rejected.
    */
   _handleCollectionPromises: function (promises) {
-    if (!promises.length) {
-      return Promise.resolve(this);
-    }
-
-    let deferred = Promise.defer();
-    let finishedCount = 0;
-
-    let onComplete = function () {
-      finishedCount++;
-      if (finishedCount >= promises.length) {
-        deferred.resolve(this);
+    return Task.spawn(function waitForPromises() {
+      for (let [name, promise] of promises) {
+        try {
+          yield promise;
+          this._log.debug("Provider collected successfully: " + name);
+        } catch (ex) {
+          this._log.warn("Provider failed to collect: " + name + ": " +
+                         CommonUtils.exceptionStr(ex));
+          try {
+            this.providerErrors.get(name).push(ex);
+          } catch (ex2) {
+            this._log.error("Error updating provider errors. This should " +
+                            "never happen: " + CommonUtils.exceptionStr(ex2));
+          }
+        }
       }
-    }.bind(this);
 
-    for (let [name, promise] of promises) {
-      let onError = function (error) {
-        this._log.warn("Collection promise was rejected: " +
-                       CommonUtils.exceptionStr(error));
-        this.providerErrors.get(name).push(error);
-        onComplete();
-      }.bind(this);
-      promise.then(onComplete, onError);
-    }
-
-    return deferred.promise;
+      throw new Task.Result(this);
+    }.bind(this));
   },
 });
 

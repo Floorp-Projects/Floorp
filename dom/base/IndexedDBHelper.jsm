@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict"
+"use strict";
 
 let DEBUG = 0;
 let debug;
@@ -49,7 +49,7 @@ IndexedDBHelper.prototype = {
     if (DEBUG) debug("Try to open database:" + self.dbName + " " + self.dbVersion);
     let req = this.dbGlobal.indexedDB.open(this.dbName, this.dbVersion);
     req.onsuccess = function (event) {
-      if (DEBUG) debug("Opened database:" + self.dbName + " " + self.dbName);
+      if (DEBUG) debug("Opened database:" + self.dbName + " " + self.dbVersion);
       self._db = event.target.result;
       self._db.onversionchange = function(event) {
         if (DEBUG) debug("WARNING: DB modified from a different window.");
@@ -60,7 +60,7 @@ IndexedDBHelper.prototype = {
     req.onupgradeneeded = function (aEvent) {
       if (DEBUG) {
         debug("Database needs upgrade:" + self.dbName + aEvent.oldVersion + aEvent.newVersion);
-        debug("Correct new database version:" + aEvent.newVersion == this.dbVersion);
+        debug("Correct new database version:" + (aEvent.newVersion == this.dbVersion));
       }
 
       let _db = aEvent.target.result;
@@ -117,7 +117,9 @@ IndexedDBHelper.prototype = {
 
       txn.oncomplete = function (event) {
         if (DEBUG) debug("Transaction complete. Returning to callback.");
-        successCb(txn.result);
+        if (successCb) {
+          successCb(txn.result);
+        }
       };
 
       txn.onabort = function (event) {
@@ -126,10 +128,13 @@ IndexedDBHelper.prototype = {
          * event.target.error may be null
          * if txn was aborted by calling txn.abort()
          */
-        if (event.target.error)
+        if (failureCb) {
+          if (event.target.error) {
             failureCb(event.target.error.name);
-        else
+          } else {
             failureCb("UnknownError");
+          }
+        }
       };
       callback(txn, store);
     }.bind(this), failureCb);

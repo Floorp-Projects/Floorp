@@ -31,14 +31,19 @@ interface nsIDOMContactTelField : nsIDOMContactField
   attribute DOMString carrier;
 };
 
-[scriptable, uuid(e31daea0-0cb6-11e1-be50-0800200c9a66)]
-interface nsIDOMContactFindOptions : nsISupports
+[scriptable, uuid(cb008c06-3bf8-495c-8865-f9ca1673a1e1)]
+interface nsIDOMContactFindSortOptions : nsISupports
+{
+  attribute DOMString sortBy;       // "givenName" or "familyName"
+  attribute DOMString sortOrder;    // e.g. "descending"
+};
+
+[scriptable, uuid(e13ca4c5-c9cd-40bb-95e9-b636d42f5edf)]
+interface nsIDOMContactFindOptions : nsIDOMContactFindSortOptions
 {
   attribute DOMString filterValue;  // e.g. "Tom"
   attribute DOMString filterOp;     // e.g. "contains"
   attribute jsval filterBy;         // DOMString[], e.g. ["givenName", "nickname"]
-  attribute DOMString sortBy;       // "givenName" or "familyName"
-  attribute DOMString sortOrder;    // e.g. "descending"
   attribute unsigned long filterLimit;
 };
 
