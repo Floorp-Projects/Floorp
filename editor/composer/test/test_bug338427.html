@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338427
 /** Test for Bug 338427 **/
 function init() {
     var textarea = document.getElementById("editor");
-    var editor = textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+    var editor = textarea.editor;
     var spellchecker = editor.getInlineSpellChecker(true);
     spellchecker.enableRealTimeSpell = true;
 
