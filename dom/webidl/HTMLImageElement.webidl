@@ -17,9 +17,7 @@ interface URI;
 interface MozChannel;
 interface nsIStreamListener;
 
-[NamedConstructor=Image(),
- NamedConstructor=Image(unsigned long width),
- NamedConstructor=Image(unsigned long width, unsigned long height)]
+[NamedConstructor=Image(optional unsigned long width, optional unsigned long height)]
 interface HTMLImageElement : HTMLElement {
            [SetterThrows]
            attribute DOMString alt;
