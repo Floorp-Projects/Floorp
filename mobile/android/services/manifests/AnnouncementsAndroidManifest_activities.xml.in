@@ -9,7 +9,7 @@
             </intent-filter>
             <intent-filter>
                 <!-- SD card remounted. -->
-                <action android:name="android.intent.action.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE" />
+                <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE" />
             </intent-filter>
             <intent-filter >
               <action android:name="@ANDROID_PACKAGE_NAME@.ANNOUNCEMENTS_PREF" />
