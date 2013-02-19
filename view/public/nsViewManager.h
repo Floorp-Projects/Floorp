@@ -314,7 +314,7 @@ public:
    */
   void UpdateWidgetGeometry();
 
-  uint32_t AppUnitsPerDevPixel() const
+  int32_t AppUnitsPerDevPixel() const
   {
     return mContext->AppUnitsPerDevPixel();
   }
