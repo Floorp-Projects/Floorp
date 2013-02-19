@@ -34,7 +34,9 @@ interface nsIFile;
  *
  * @remarks Implementations may require the consumer to always call Finish.  If
  *          the object reference is released without calling Finish, a memory
- *          leak may occur, and the target file might be kept locked.
+ *          leak may occur, and the target file might be kept locked. All
+ *          public methods of the interface may only be called from the main
+ *          thread.
  */
 [scriptable, uuid(f2fb4daf-0aba-4b30-9ec0-b7a83ce3b7ab)]
 interface nsIBackgroundFileSaver : nsISupports
@@ -48,6 +50,22 @@ interface nsIBackgroundFileSaver : nsISupports
    *          implements nsIBackgroundFileSaver.
    */
   attribute nsIBackgroundFileSaverObserver observer;
+
+  /**
+   * The SHA256 hash in raw bytes associated with the file that was downloaded.
+   *
+   * @remarks Reading this will throw NS_ERROR_NOT_AVAILABLE unless
+   *          sha256enabled is true and onSaveComplete has been called.
+   */
+  readonly attribute ACString sha256Hash;
+
+  /**
+   * Compute SHA256.
+   *
+   * @remarks This must be set on the main thread before the first call to
+   *          setTarget.
+   */
+  void enableSha256();
 
   /**
    * Sets the name of the output file to be written.  The output file may
