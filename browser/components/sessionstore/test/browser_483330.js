@@ -33,5 +33,5 @@ function test() {
     }, true);
   }, true);
 
-  browser.loadURI("data:text/html,<body style='width: 100000px; height: 100000px;'><p>top</p></body>");
+  browser.loadURI("data:text/html;charset=utf-8,<body style='width: 100000px; height: 100000px;'><p>top</p></body>");
 }
