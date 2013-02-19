@@ -570,7 +570,7 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         gc::MarkValueRoot(trc, oolgetter->thisp(), "ion-ool-getter-this");
         return;
     }
-
+ 
     if (frame.isOOLPropertyOp()) {
         IonOOLPropertyOpExitFrameLayout *oolgetter = frame.exitFrame()->oolPropertyOpExit();
         gc::MarkIonCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
