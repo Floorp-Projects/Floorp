@@ -45,6 +45,16 @@ const TEST_FILE_NAME_1 = "test-backgroundfilesaver-1.txt";
 const TEST_FILE_NAME_2 = "test-backgroundfilesaver-2.txt";
 const TEST_FILE_NAME_3 = "test-backgroundfilesaver-3.txt";
 
+// A map of test data length to the expected hash
+const EXPECTED_HASHES = {
+  // SHA-256 hash of TEST_DATA_SHORT
+  40 : "f37176b690e8744ee990a206c086cba54d1502aa2456c3b0c84ef6345d72a192",
+  // SHA-256 hash of TEST_DATA_SHORT + TEST_DATA_SHORT
+  80 : "780c0e91f50bb7ec922cc11e16859e6d5df283c0d9470f61772e3d79f41eeb58",
+  // SHA-256 hash of a bunch of dashes
+  16777216 : "03a0db69a30140f307587ee746a539247c181bafd85b85c8516a3533c7d9ea1d"
+};
+
 const gTextDecoder = new TextDecoder();
 
 // Generate a long string of data in a moderately fast way.
@@ -65,6 +75,21 @@ function getTempFile(aLeafName) {
     }
   });
   return file;
+}
+
+/**
+ * Helper function for converting a binary blob to its hex equivalent.
+ *
+ * @param str
+ *        String possibly containing non-printable chars.
+ * @return A hex-encoded string.
+ */
+function toHex(str) {
+  var hex = '';
+  for (var i = 0; i < str.length; i++) {
+    hex += ('0' + str.charCodeAt(i).toString(16)).slice(-2);
+  }
+  return hex;
 }
 
 /**
@@ -298,6 +323,7 @@ add_task(function test_combinations()
     let saver = useStreamListener
                 ? new BackgroundFileSaverStreamListener()
                 : new BackgroundFileSaverOutputStream();
+    saver.enableSha256();
     let completionPromise = promiseSaverComplete(saver, onTargetChange);
 
     // Start feeding the first chunk of data to the saver.  In case we are using
@@ -340,9 +366,10 @@ add_task(function test_combinations()
     if (!cancelAtSomePoint) {
       // In this case, the file must exist.
       do_check_true(currentFile.exists());
-      if (!cancelAtSomePoint) {
-        yield promiseVerifyContents(currentFile, testData + testData);
-      }
+      expectedContents = testData + testData;
+      yield promiseVerifyContents(currentFile, expectedContents);
+      do_check_eq(EXPECTED_HASHES[expectedContents.length],
+                  toHex(saver.sha256Hash));
       currentFile.remove(false);
 
       // If the target was really renamed, the old file should not exist.
@@ -379,6 +406,7 @@ add_task(function test_setTarget_after_close_stream()
   // where the file already exists.
   for (let i = 0; i < 2; i++) {
     let saver = new BackgroundFileSaverOutputStream();
+    saver.enableSha256();
     let completionPromise = promiseSaverComplete(saver);
   
     // Copy some data to the output stream of the file saver.  This data must
@@ -394,6 +422,8 @@ add_task(function test_setTarget_after_close_stream()
   
     // Verify results.
     yield promiseVerifyContents(destFile, TEST_DATA_SHORT);
+    do_check_eq(EXPECTED_HASHES[TEST_DATA_SHORT.length],
+                toHex(saver.sha256Hash));
   }
 
   // Clean up.
@@ -436,6 +466,29 @@ add_task(function test_finish_only()
   let completionPromise = promiseSaverComplete(saver, onTargetChange);
   saver.finish(Cr.NS_OK);
   yield completionPromise;
+});
+
+add_task(function test_invalid_hash()
+{
+  let saver = new BackgroundFileSaverStreamListener();
+  // We shouldn't be able to get the hash if hashing hasn't been enabled
+  try {
+    let hash = saver.sha256Hash;
+    throw "Shouldn't be able to get hash if hashing not enabled";
+  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+  // Enable hashing, but don't feed any data to saver
+  saver.enableSha256();
+  let destFile = getTempFile(TEST_FILE_NAME_1);
+  saver.setTarget(destFile, false);
+  // We don't wait on promiseSaverComplete, so the hash getter can run before
+  // or after onSaveComplete is called. However, the expected behavior is the
+  // same in both cases since the hash is only valid when the save completes
+  // successfully.
+  saver.finish(Cr.NS_ERROR_FAILURE);
+  try {
+    let hash = saver.sha256Hash;
+    throw "Shouldn't be able to get hash if save did not succeed";
+  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
 });
 
 add_task(function test_teardown()
