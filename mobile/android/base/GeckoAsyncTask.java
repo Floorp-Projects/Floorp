@@ -15,6 +15,7 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
     public enum Priority { NORMAL, HIGH };
 
     private final Activity mActivity;
+    private volatile boolean mCancelled = false;
     private final Handler mBackgroundThreadHandler;
     private Priority mPriority = Priority.NORMAL;
 
@@ -32,9 +33,13 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
 
         public void run() {
             final Result result = doInBackground(mParams);
+
             mActivity.runOnUiThread(new Runnable() {
                 public void run() {
-                    onPostExecute(result);
+                    if (mCancelled)
+                        onCancelled();
+                    else
+                        onPostExecute(result);
                 }
             });
         }
@@ -59,9 +64,18 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
         return this;
     }
 
-    /* Empty stub method. Implementors can optionally override this if they need it */
+    @SuppressWarnings({"UnusedParameters"})
+    public final boolean cancel(boolean mayInterruptIfRunning) {
+        mCancelled = true;
+        return mCancelled;
+    }
+
+    public final boolean isCancelled() {
+        return mCancelled;
+    }
+
     protected void onPreExecute() { }
     protected void onPostExecute(Result result) { }
-
+    protected void onCancelled() { }
     protected abstract Result doInBackground(Params... params);
 }
