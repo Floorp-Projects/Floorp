@@ -4566,8 +4566,7 @@ nsEditor::CreateTxnForDeleteSelection(EDirection aAction,
   // allocate the out-param transaction
   nsRefPtr<EditAggregateTxn> aggTxn = new EditAggregateTxn();
 
-  uint32_t rangeCount = selection->GetRangeCount();
-  for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
+  for (int32_t rangeIdx = 0; rangeIdx < selection->GetRangeCount(); ++rangeIdx) {
     nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
     NS_ENSURE_STATE(range);
 
