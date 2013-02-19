@@ -13,6 +13,7 @@
                                 android:layout_width="200dip"
                                 android:layout_height="fill_parent"
                                 android:background="@color/background_tabs_light"
+                                android:visibility="invisible"
                                 gecko:sidebar="true"/>
 
    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
