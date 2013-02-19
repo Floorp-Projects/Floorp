@@ -52,7 +52,7 @@ public final class Distribution {
                 SharedPreferences settings = context.getSharedPreferences(GeckoApp.PREFS_NAME, Activity.MODE_PRIVATE);
                 String keyName = context.getPackageName() + ".distribution_state";
                 int state = settings.getInt(keyName, STATE_UNKNOWN);
-                if (state == STATE_NONE && packagePath == null) {
+                if (state == STATE_NONE) {
                     return;
                 }
 
