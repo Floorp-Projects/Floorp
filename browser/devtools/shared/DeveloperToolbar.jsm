@@ -626,17 +626,16 @@ function DT__updateErrorsCount(aChangedTabId)
   let btn = this._errorCounterButton;
   if (errors) {
     let errorsText = toolboxStrings
-                     .GetStringFromName("toolboxToggleButton.errorsCount");
-    errorsText = PluralForm.get(errors, errorsText);
+                     .GetStringFromName("toolboxToggleButton.errors");
+    errorsText = PluralForm.get(errors, errorsText).replace("#1", errors);
 
     let warningsText = toolboxStrings
-                       .GetStringFromName("toolboxToggleButton.warningsCount");
-    warningsText = PluralForm.get(warnings, warningsText);
+                       .GetStringFromName("toolboxToggleButton.warnings");
+    warningsText = PluralForm.get(warnings, warningsText).replace("#1", warnings);
 
     let tooltiptext = toolboxStrings
-                      .formatStringFromName("toolboxToggleButton.tooltiptext",
-                                            [errors, errorsText, warnings,
-                                             warningsText], 4);
+                      .formatStringFromName("toolboxToggleButton.tooltip",
+                                            [errorsText, warningsText], 2);
 
     btn.setAttribute("error-count", errors);
     btn.setAttribute("tooltiptext", tooltiptext);
