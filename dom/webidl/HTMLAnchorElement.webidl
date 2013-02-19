@@ -36,16 +36,8 @@ interface HTMLAnchorElement : HTMLElement {
 
            [SetterThrows]
            attribute DOMString text;
-
-  // URL decomposition IDL attributes
-           attribute DOMString protocol;
-           attribute DOMString host;
-           attribute DOMString hostname;
-           attribute DOMString port;
-           attribute DOMString pathname;
-           attribute DOMString search;
-           attribute DOMString hash;
 };
+HTMLAnchorElement implements URLUtils;
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLAnchorElement {
