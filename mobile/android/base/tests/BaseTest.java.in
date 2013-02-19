@@ -546,7 +546,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     class Device {
         Build.VERSION mBuildVersion;
         public String version; // 2.x or 3.x or 4.x
-        public String type; // tablet or phone
+        public String type; // "tablet" or "phone"
         public int width;
         public int height;
 
@@ -560,12 +560,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             int mSDK = mBuildVersion.SDK_INT;
             if (mSDK < Build.VERSION_CODES.HONEYCOMB) {
                 version = "2.x";
-            }
-            else {
+            } else {
                 if (mSDK > Build.VERSION_CODES.HONEYCOMB_MR2) {
                     version = "4.x";
-                }
-                else {
+                } else {
                     version = "3.x";
                 }
             }
@@ -577,19 +575,24 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             width = dm.widthPixels;
 
             // Determine device type
-            if (width > 480 && height > 480) {
-                type = "tablet";
-            }
-            else {
-                type = "phone";
+            type = "phone";
+            try {
+                ClassLoader classLoader = getActivity().getClassLoader();
+                Class appsCls = classLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
+                Method isTabletMethod = appsCls.getMethod("isTablet", (Class[]) null);
+                boolean isTablet = (Boolean)isTabletMethod.invoke(null);
+                if (isTablet) {
+                    type = "tablet";
+                }
+            } catch (Exception e) {
+                mAsserter.dumpLog("Exception in detectDevice", e);
             }
         }
 
         public void rotate() {
             if (getActivity().getRequestedOrientation () == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
                 mSolo.setActivityOrientation(Solo.PORTRAIT);
-            }
-            else {
+            } else {
                 mSolo.setActivityOrientation(Solo.LANDSCAPE);
             }
         }
@@ -605,47 +608,42 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
 
         public void back() {
-            if (devType == "tablet"){
+            if (devType.equals("tablet")) {
                 Element backBtn = mDriver.findElement(getActivity(), "back");
                 backBtn.click();
-            }
-            else {
+            } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.BACK);
             }
         }
 
         public void forward() {
-            if (devType == "tablet"){
+            if (devType.equals("tablet")) {
                 Element fwdBtn = mDriver.findElement(getActivity(), "forward");
                 fwdBtn.click();
-            }
-            else {
+            } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.MENU);
                 mSolo.waitForText("^New Tab$");
-                if (osVersion != "2.x") {
+                if (!osVersion.equals("2.x")) {
                     Element fwdBtn = mDriver.findElement(getActivity(), "forward");
                     fwdBtn.click();
-                }
-                else {
+                } else {
                     mSolo.clickOnText("^Forward$");
                 }
             }
         }
 
         public void reload() {
-            if (devType == "tablet"){
+            if (devType.equals("tablet")) {
                 Element reloadBtn = mDriver.findElement(getActivity(), "reload");
                 reloadBtn.click();
-            }
-            else {
+            } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.MENU);
                 mSolo.waitForText("^New Tab$");
-                if (osVersion != "2.x") {
+                if (!osVersion.equals("2.x")) {
                     Element reloadBtn = mDriver.findElement(getActivity(), "reload");
                     reloadBtn.click();
-                }
-                else {
-                    mSolo.clickOnText("^Forward$");
+                } else {
+                    mSolo.clickOnText("^Reload$");
                 }
             }
         }
