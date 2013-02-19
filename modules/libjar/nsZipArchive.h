@@ -217,8 +217,9 @@ private:
   // file handle
   nsRefPtr<nsZipHandle> mFd;
 
-  // file URI, for logging
-  nsCString mURI;
+  // logging handle
+  mozilla::AutoFDClose mLog;
+
 
 private:
   //--- private methods ---
