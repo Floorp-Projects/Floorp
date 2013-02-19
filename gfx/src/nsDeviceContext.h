@@ -58,7 +58,7 @@ public:
      * is usually a factor of AppUnitsPerCSSPixel(), although that is
      * not guaranteed.
      */
-    uint32_t AppUnitsPerDevPixel() const { return mAppUnitsPerDevPixel; }
+    int32_t AppUnitsPerDevPixel() const { return mAppUnitsPerDevPixel; }
 
     /**
      * Convert device pixels which is used for gfx/thebes to nearest
@@ -243,7 +243,7 @@ protected:
     nscoord  mWidth;
     nscoord  mHeight;
     uint32_t mDepth;
-    uint32_t  mAppUnitsPerDevPixel;
+    int32_t  mAppUnitsPerDevPixel;
     int32_t  mAppUnitsPerDevNotScaledPixel;
     int32_t  mAppUnitsPerPhysicalInch;
     float    mPixelScale;

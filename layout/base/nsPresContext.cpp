@@ -1660,7 +1660,7 @@ nsPresContext::UIResolutionChangedInternal()
   mPendingUIResolutionChanged = false;
 
   mDeviceContext->CheckDPIChange();
-  if (uint32_t(mCurAppUnitsPerDevPixel) != AppUnitsPerDevPixel()) {
+  if (mCurAppUnitsPerDevPixel != AppUnitsPerDevPixel()) {
     AppUnitsPerDevPixelChanged();
   }
 
