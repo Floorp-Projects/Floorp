@@ -2580,6 +2580,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   border-top: 1px solid hsla(211,68%,6%,.65) !important;
 }
 
+%include ../shared/devtools/responsivedesign.inc.css
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
 
@@ -2587,52 +2588,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   border-color: hsl(210,24%,10%);
   box-shadow: inset 0 1px 0 hsla(211,68%,6%,.05),
               0 0 0 1px hsla(210,40%,83%,.1);
-}
-
-/* Responsive Mode */
-
-.browserContainer[responsivemode] {
-  background: #222 url("chrome://browser/skin/devtools/responsive-background.png");
-  padding: 0 20px 20px 20px;
-}
-
-.browserStack[responsivemode] {
-  box-shadow: 0 0 7px black;
-}
-
-.devtools-responsiveui-toolbar {
-  background: transparent;
-  margin: 10px 0;
-  padding: 0;
-  box-shadow: none;
-  border-bottom-width: 0;
-}
-
-.devtools-responsiveui-toolbar > menulist,
-.devtools-responsiveui-toolbar > toolbarbutton {
-  min-width: 22px;
-  border-radius: 0;
-}
-
-.devtools-responsiveui-toolbar:-moz-locale-dir(ltr) > *:first-child,
-.devtools-responsiveui-toolbar:-moz-locale-dir(rtl) > *:last-child {
-  margin-left: 0;
-}
-
-.devtools-responsiveui-resizebar {
-  width: 7px;
-  height: 24px;
-  cursor: ew-resize;
-  transform: translate(12px, -12px);
-  background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer.png");
-}
-
-.devtools-responsiveui-resizehandle {
-  width: 16px;
-  height: 16px;
-  cursor: se-resize;
-  transform: translate(12px, 12px);
-  background-image: url("chrome://browser/skin/devtools/responsive-se-resizer.png");
 }
 
 /* Web Console */

@@ -2004,6 +2004,7 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   border-top: 1px solid hsla(210, 8%, 5%, .65);
 }
 
+%include ../shared/devtools/responsivedesign.inc.css
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
 
@@ -2024,51 +2025,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 
 .gclitoolbar-prompt {
   background-color: hsl(210,11%,16%);
-}
-
-/* Responsive Mode */
-
-.browserContainer[responsivemode] {
-  background: #222 url("chrome://browser/skin/devtools/responsive-background.png");
-  padding: 0 20px 20px 20px;
-}
-
-.browserStack[responsivemode] {
-  box-shadow: 0 0 7px black;
-}
-
-.devtools-responsiveui-toolbar {
-  background: transparent;
-  margin: 10px 0;
-  padding: 0;
-  box-shadow: none;
-}
-
-.devtools-responsiveui-toolbar > menulist,
-.devtools-responsiveui-toolbar > toolbarbutton {
-  min-width: 22px;
-  border-radius: 0;
-}
-
-.devtools-responsiveui-toolbar:-moz-locale-dir(ltr) > *:first-child,
-.devtools-responsiveui-toolbar:-moz-locale-dir(rtl) > *:last-child {
-  margin-left: 0;
-}
-
-.devtools-responsiveui-resizebar {
-  width: 7px;
-  height: 24px;
-  cursor: ew-resize;
-  transform: translate(12px, -12px);
-  background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer.png");
-}
-
-.devtools-responsiveui-resizehandle {
-  width: 16px;
-  height: 16px;
-  cursor: se-resize;
-  transform: translate(12px, 12px);
-  background-image: url("chrome://browser/skin/devtools/responsive-se-resizer.png");
 }
 
 /* Web Console */
