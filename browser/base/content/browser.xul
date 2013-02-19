@@ -184,7 +184,7 @@
            align="start"
            role="alert">
       <hbox flex="1">
-        <image src="chrome://browser/content/social-icon.png" class="popup-notification-icon"/>
+        <image id="social-activation-icon" class="popup-notification-icon"/>
         <vbox flex="1">
           <description id="social-activation-message" class="popup-notification-description"/>
           <spacer flex="1"/>

@@ -243,6 +243,15 @@ let SocialUI = {
                                                         [provider.name, brandShortName]);
       description.value = message;
 
+      let icon = document.getElementById("social-activation-icon");
+      if (provider.icon64URL || provider.icon32URL) {
+        icon.setAttribute('src', provider.icon64URL || provider.icon32URL);
+        icon.hidden = false;
+      } else {
+        icon.removeAttribute('src');
+        icon.hidden = true;
+      }
+
       let notificationPanel = SocialUI.notificationPanel;
       // Set the origin being activated and the previously active one, to allow undo
       notificationPanel.setAttribute("origin", provider.origin);
