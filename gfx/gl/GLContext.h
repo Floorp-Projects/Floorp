@@ -242,8 +242,6 @@ public:
 
     virtual bool SetupLookupFunction() = 0;
 
-    virtual void WindowDestroyed() {}
-
     virtual void ReleaseSurface() {}
 
     void *GetUserData(void *aKey) {
