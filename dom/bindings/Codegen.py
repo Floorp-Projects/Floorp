@@ -516,6 +516,19 @@ class CGHeaders(CGWrapper):
         callForEachType(descriptors + callbackDescriptors, dictionaries,
                         callbacks, addHeadersForType)
 
+        # Now for non-callback descriptors make sure we include any
+        # headers needed by Func declarations.
+        for desc in descriptors:
+            if desc.interface.isExternal():
+                continue
+            for m in desc.interface.members:
+                func = PropertyDefiner.getStringAttr(m, "Func")
+                # Include the right class header, which we can only do
+                # if this is a class member function.
+                if func is not None and "::" in func:
+                    # Strip out the function name and convert "::" to "/"
+                    bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
+
         declareIncludes = set(declareIncludes)
         for d in dictionaries:
             if d.parent:
