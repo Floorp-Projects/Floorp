@@ -1,0 +1,137 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+.chat-status-icon {
+  max-height: 16px;
+  max-width: 16px;
+  padding: 0;
+}
+
+.chat-toolbarbutton {
+  -moz-appearance: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: none;
+}
+
+.chat-toolbarbutton > .toolbarbutton-text {
+  display: none;
+}
+
+.chat-close-button {
+  list-style-image: url('chrome://browser/skin/social/chat-close.png');
+  -moz-image-region: rect(0, 14px, 14px, 0);
+}
+
+.chat-close-button:hover:active {
+  -moz-image-region: rect(14px, 14px, 28px, 0);
+}
+
+.chat-close-button:hover {
+  -moz-image-region: rect(28px, 14px, 42px, 0);
+}
+
+.chat-title {
+  font-weight: bold;
+  color: black;
+  text-shadow: none;
+  cursor: inherit;
+}
+
+.chat-titlebar {
+  height: 20px;
+  min-height: 20px;
+  width: 100%;
+  margin: 0;
+  padding: 2px;
+  -moz-padding-start: 6px;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.chat-titlebar[minimized="true"] {
+  border-bottom: none;
+}
+
+.chat-titlebar[activity] {
+  background-image: radial-gradient(ellipse closest-side at center, rgb(255,255,255), rgba(255,255,255,0));
+  background-repeat: no-repeat;
+  background-size: 100% 20px;
+  background-position: 0 -10px;
+}
+
+.chat-frame {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.chatbar-button {
+  /* XXX get a real image for this */
+  list-style-image: url("chrome://browser/skin/social/social.png");
+  border: none;
+  margin: 0;
+  padding: 2px;
+  height: 21px;
+  width: 21px;
+  border-top: 1px solid #ccc;
+  -moz-border-end: 1px solid #ccc;
+}
+
+.chatbar-button > menupopup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
+  width: auto;
+  height: auto;
+  max-height: 16px;
+  max-width: 16px;
+}
+
+.chatbar-button > .toolbarbutton-icon {
+  opacity: .6;
+}
+
+.chatbar-button:hover > .toolbarbutton-icon,
+.chatbar-button[open="true"] > .toolbarbutton-icon {
+  opacity: 1;
+}
+
+.chatbar-button[open="true"] {
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
+}
+
+.chatbar-button > .toolbarbutton-text,
+.chatbar-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+.chatbar-button > menupopup > menuitem[activity] {
+  font-weight: bold;
+}
+
+.chatbar-innerbox {
+  background: transparent;
+  margin: -285px 0 0;
+  overflow: hidden;
+}
+
+chatbar {
+  -moz-margin-end: 20px;
+}
+
+chatbox {
+  height: 285px;
+  width: 260px;
+  -moz-margin-start: 4px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-bottom: none;
+}
+
+chatbox[minimized="true"] {
+  width: 160px;
+  height: 20px;
+}
