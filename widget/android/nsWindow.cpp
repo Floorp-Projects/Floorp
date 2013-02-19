@@ -110,11 +110,7 @@ static bool gMenuConsumed;
 // one.
 static nsTArray<nsWindow*> gTopLevelWindows;
 
-static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
-static bool sValidSurface;
-static bool sSurfaceExists = false;
-static void *sNativeWindow = nullptr;
 
 // Multitouch swipe thresholds in inches
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
@@ -724,30 +720,6 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
     {
         printf_stderr(" -- creating basic, not accelerated\n");
         mLayerManager = CreateBasicLayerManager();
-        return mLayerManager;
-    }
-
-    if (!mLayerManager) {
-        if (!sGLContext) {
-            // the window we give doesn't matter here
-            sGLContext = mozilla::gl::GLContextProvider::CreateForWindow(this);
-        }
-
-        if (sGLContext) {
-                nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
-                        new mozilla::layers::LayerManagerOGL(this);
-
-                if (layerManager && layerManager->Initialize(sGLContext))
-                        mLayerManager = layerManager;
-                sValidSurface = true;
-        }
-
-        if (!sGLContext || !mLayerManager) {
-                sGLContext = nullptr;
-                sFailedToCreateGLContext = true;
-
-                mLayerManager = CreateBasicLayerManager();
-        }
     }
 
     return mLayerManager;
@@ -900,37 +872,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 NS_WARNING("Sending unexpected IME event to top window");
                 win->OnIMEEvent(ae);
             }
-            break;
-
-        case AndroidGeckoEvent::SURFACE_CREATED:
-            sSurfaceExists = true;
-
-            if (AndroidBridge::Bridge()->HasNativeWindowAccess()) {
-                AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
-                JNIEnv *env = AndroidBridge::GetJNIEnv();
-                if (env) {
-                    AutoLocalJNIFrame jniFrame(env);
-                    jobject surface = sview.GetSurface(&jniFrame);
-                    if (surface) {
-                        sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(env, surface);
-                        if (sNativeWindow) {
-                            AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, 0, 0, AndroidBridge::WINDOW_FORMAT_RGB_565);
-                        }
-                    }
-                }
-            }
-            break;
-
-        case AndroidGeckoEvent::SURFACE_DESTROYED:
-            if (sGLContext && sValidSurface) {
-                sGLContext->ReleaseSurface();
-            }
-            if (sNativeWindow) {
-                AndroidBridge::Bridge()->ReleaseNativeWindow(sNativeWindow);
-                sNativeWindow = nullptr;
-            }
-            sSurfaceExists = false;
-            sValidSurface = false;
             break;
 
         case AndroidGeckoEvent::COMPOSITOR_PAUSE:
