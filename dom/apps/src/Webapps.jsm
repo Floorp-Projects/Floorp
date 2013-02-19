@@ -2252,6 +2252,8 @@ this.DOMApplicationRegistry = {
                 if (Components.isSuccessCode(aRv)) {
                   isSigned = true;
                   zipReader = aZipReader;
+                } else if (aRv == Cr.NS_ERROR_FILE_CORRUPTED) {
+                  throw "APP_PACKAGE_CORRUPTED";
                 } else if (aRv != Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED) {
                   throw "INVALID_SIGNATURE";
                 } else {
@@ -2288,7 +2290,7 @@ this.DOMApplicationRegistry = {
                   throw "INVALID_SIGNATURE";
                 } else if (isSigned && !isSignedAppOrigin) {
                   // Other origins are *prohibited* from installing signed apps.
-                  // One reason is that our app revociation mechanism requires
+                  // One reason is that our app revocation mechanism requires
                   // strong cooperation from the host of the mini-manifest, which
                   // we assume to be under the control of the install origin,
                   // even if it has a different origin.
@@ -2359,8 +2361,13 @@ this.DOMApplicationRegistry = {
                 }
               } catch (e) {
                 // Something bad happened when reading the package.
-                // unrecoverable error, don't bug the user
-                app.downloadAvailable = false;
+                // Unrecoverable error, don't bug the user.
+                // Apps with installState 'pending' does not produce any
+                // notification, so we are safe with its current
+                // downladAvailable state.
+                if (app.installState === "installed") {
+                  app.downloadAvailable = false;
+                }
                 if (typeof e == 'object') {
                   Cu.reportError("Error while reading package:" + e);
                   cleanup("INVALID_PACKAGE");
