@@ -135,10 +135,26 @@ Measurement.prototype = Object.freeze({
     return this._serializers[format];
   },
 
+  /**
+   * Whether this measurement contains the named field.
+   *
+   * @param name
+   *        (string) Name of field.
+   *
+   * @return bool
+   */
   hasField: function (name) {
     return this._fieldsByName.has(name);
   },
 
+  /**
+   * The unique identifier for a named field.
+   *
+   * This will throw if the field is not known.
+   *
+   * @param name
+   *        (string) Name of field.
+   */
   fieldID: function (name) {
     let entry = this._fieldsByName.get(name);
 
@@ -192,40 +208,122 @@ Measurement.prototype = Object.freeze({
     return deferred.promise;
   },
 
+  //---------------------------------------------------------------------------
+  // Data Recording Functions
+  //
+  // Functions in this section are used to record new values against this
+  // measurement instance.
+  //
+  // Generally speaking, these functions will throw if the specified field does
+  // not exist or if the storage function requested is not appropriate for the
+  // type of that field. These functions will also return a promise that will
+  // be resolved when the underlying storage operation has completed.
+  //---------------------------------------------------------------------------
+
+  /**
+   * Increment a daily counter field in this measurement by 1.
+   *
+   * By default, the counter for the current day will be incremented.
+   *
+   * If the field is not known or is not a daily counter, this will throw.
+   *
+   *
+   *
+   * @param field
+   *        (string) The name of the field whose value to increment.
+   * @param date
+   *        (Date) Day on which to increment the counter.
+   * @return Promise<>
+   */
   incrementDailyCounter: function (field, date=new Date()) {
     return this.storage.incrementDailyCounterFromFieldID(this.fieldID(field),
                                                          date);
   },
 
+  /**
+   * Record a new numeric value for a daily discrete numeric field.
+   *
+   * @param field
+   *        (string) The name of the field to append a value to.
+   * @param value
+   *        (Number) Number to append.
+   * @param date
+   *        (Date) Day on which to append the value.
+   *
+   * @return Promise<>
+   */
   addDailyDiscreteNumeric: function (field, value, date=new Date()) {
     return this.storage.addDailyDiscreteNumericFromFieldID(
                           this.fieldID(field), value, date);
   },
 
+  /**
+   * Record a new text value for a daily discrete text field.
+   *
+   * This is like `addDailyDiscreteNumeric` but for daily discrete text fields.
+   */
   addDailyDiscreteText: function (field, value, date=new Date()) {
     return this.storage.addDailyDiscreteTextFromFieldID(
                           this.fieldID(field), value, date);
   },
 
+  /**
+   * Record the last seen value for a last numeric field.
+   *
+   * @param field
+   *        (string) The name of the field to set the value of.
+   * @param value
+   *        (Number) The value to set.
+   * @param date
+   *        (Date) When this value was recorded.
+   *
+   * @return Promise<>
+   */
   setLastNumeric: function (field, value, date=new Date()) {
     return this.storage.setLastNumericFromFieldID(this.fieldID(field), value,
                                                   date);
   },
 
+  /**
+   * Record the last seen value for a last text field.
+   *
+   * This is like `setLastNumeric` except for last text fields.
+   */
   setLastText: function (field, value, date=new Date()) {
     return this.storage.setLastTextFromFieldID(this.fieldID(field), value,
                                                date);
   },
 
+  /**
+   * Record the most recent value for a daily last numeric field.
+   *
+   * @param field
+   *        (string) The name of a daily last numeric field.
+   * @param value
+   *        (Number) The value to set.
+   * @param date
+   *        (Date) Day on which to record the last value.
+   *
+   * @return Promise<>
+   */
   setDailyLastNumeric: function (field, value, date=new Date()) {
     return this.storage.setDailyLastNumericFromFieldID(this.fieldID(field),
                                                        value, date);
   },
 
+  /**
+   * Record the most recent value for a daily last text field.
+   *
+   * This is like `setDailyLastNumeric` except for a daily last text field.
+   */
   setDailyLastText: function (field, value, date=new Date()) {
     return this.storage.setDailyLastTextFromFieldID(this.fieldID(field),
                                                     value, date);
   },
+
+  //---------------------------------------------------------------------------
+  // End of data recording APIs.
+  //---------------------------------------------------------------------------
 
   /**
    * Obtain all values stored for this measurement.
@@ -564,6 +662,11 @@ Provider.prototype = Object.freeze({
     return this.storage.enqueueOperation(func);
   },
 
+  /**
+   * Obtain persisted provider state.
+   *
+   * State is backend by storage.
+   */
   getState: function (key) {
     let name = this.name;
     let storage = this.storage;
