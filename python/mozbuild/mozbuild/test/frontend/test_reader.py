@@ -70,7 +70,7 @@ class TestBuildReader(unittest.TestCase):
         reader = self.reader('traversal-tier-simple')
 
         sandboxes = list(reader.read_topsrcdir())
-        self.assertEqual(len(sandboxes), 6)
+        self.assertEqual(len(sandboxes), 4)
 
     def test_tier_subdir(self):
         # add_tier_dir() should fail when not in the top directory.

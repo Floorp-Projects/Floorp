@@ -211,6 +211,7 @@ PeerConnectionMedia::RemoveStream(nsIDOMMediaStream* aMediaStream, uint32_t *str
     }
   }
 
+  PR_Unlock(mLocalSourceStreamsLock);
   return NS_ERROR_ILLEGAL_VALUE;
 }
 

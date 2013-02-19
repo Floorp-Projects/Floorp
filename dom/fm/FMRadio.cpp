@@ -121,10 +121,6 @@ NS_IMETHODIMP FMRadio::Enable(nsIFMRadioSettings *settings)
   bool canPlay;
   mAudioChannelAgent->SetVisibilityState(!mHidden);
   mAudioChannelAgent->StartPlaying(&canPlay);
-  // We enable the hardware, but mute the audio stream, in order to
-  // simplify state handling.  This is simpler but worse for battery
-  // life; followup is bug 820282.
-  CanPlayChanged(canPlay);
 
   settings->GetUpperLimit(&upperLimit);
   settings->GetLowerLimit(&lowerLimit);
@@ -141,6 +137,12 @@ NS_IMETHODIMP FMRadio::Enable(nsIFMRadioSettings *settings)
   NS_ENSURE_TRUE(audioManager, NS_OK);
 
   audioManager->SetFmRadioAudioEnabled(true);
+  // We enable the hardware, but mute the audio stream, in order to
+  // simplify state handling.  This is simpler but worse for battery
+  // life; followup is bug 820282.
+  // Note: To adjust FM volume is only available after setting up
+  // routing patch.
+  CanPlayChanged(canPlay);
 
   return NS_OK;
 }

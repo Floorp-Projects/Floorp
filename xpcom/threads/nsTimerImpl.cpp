@@ -61,7 +61,7 @@ namespace {
 // to avoid the default allocator lock contention when firing timer events.
 // It is a thread-safe wrapper around nsFixedSizeAllocator.  The thread-safety
 // is required because nsTimerEvent objects are allocated on the timer thread,
-// and freed on the main thread.  Since this is a TimerEventAllocator specific
+// and freed on another thread.  Since this is a TimerEventAllocator specific
 // lock, the lock contention issue is only limited to the allocation and
 // deallocation of nsTimerEvent objects.
 class TimerEventAllocator : public nsFixedSizeAllocator {
