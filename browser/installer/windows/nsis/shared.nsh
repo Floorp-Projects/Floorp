@@ -20,12 +20,11 @@ Function RegisterCEH
 !endif
 FunctionEnd
 
-; If MOZ_METRO is defined and we're at least win8, then we should re-create
-; the start menu shortcut so that the Metro browser is accessible.
-; This is also for zip builds who won't have a start menu shortcut yet.
-Function CreateStartMenuTile
+; If we're in Win8 make sure we have a start menu shortcut and that it has
+; the correct AppuserModelID so that the Metro browser has a Metro tile.
+Function RegisterStartMenuTile
 !ifdef MOZ_METRO
-    Delete "$SMPROGRAMS\${BrandFullName}.lnk"
+  ${If} ${AtLeastWin8}
     CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
     ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
       ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
@@ -34,10 +33,28 @@ Function CreateStartMenuTile
         ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID" "true"
       ${EndIf}
     ${EndIf}
+  ${EndIf}
 !endif
 FunctionEnd
 
 !macro PostUpdate
+  ; Determine if we're the protected UserChoice default or not. If so fix the
+  ; start menu tile.  In case there are 2 Firefox installations, we only do
+  ; this if the application being updated is the default.
+  ReadRegStr $0 HKCU "Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice" "ProgId"
+  ${If} $0 == "FirefoxURL"
+    ReadRegStr $0 HKCU "Software\Classes\FirefoxURL\shell\open\command" ""
+    ${GetPathFromString} "$0" $0
+    ${GetParent} "$0" $0
+    ${If} ${FileExists} "$0"
+      ${GetLongPath} "$0" $0
+    ${EndIf}
+    ${If} "$0" == "$INSTDIR"
+      ; Win8 specific registration
+      Call RegisterStartMenuTile
+    ${EndIf}
+  ${EndIf}
+
   ${CreateShortcutsLog}
 
   ; Remove registry entries for non-existent apps and for apps that point to our
@@ -53,10 +70,6 @@ FunctionEnd
 
   ; Win7 taskbar and start menu link maintenance
   Call FixShortcutAppModelIDs
-
-  ; Win8 specific registration
-  Call RegisterCEH
-  Call CreateStartMenuTile
 
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
@@ -176,6 +189,20 @@ FunctionEnd
   ${EndIf}
 !endif
 
+; Register the DEH
+!ifdef MOZ_METRO
+  ${If} ${AtLeastWin8}
+    ; If RegisterCEH is called too close to changing the shortcut AppUserModelID
+    ; and if the tile image is not already in cache.  Then Windows won't refresh
+    ; the tile image on the start screen.  So wait before calling RegisterCEH.
+    ; We only need to do this when the DEH doesn't already exist.
+    ReadRegStr $0 HKCU "Software\Classes\FirefoxURL\shell\open\command" "DelegateExecute"
+    ${If} $0 != ${DELEGATE_EXECUTE_HANDLER_ID}
+      Sleep 3000
+    ${EndIf}
+    Call RegisterCEH
+  ${EndIf}
+!endif
 !macroend
 !define PostUpdate "!insertmacro PostUpdate"
 
@@ -1175,7 +1202,7 @@ Function SetAsDefaultAppUserHKCU
     ${SetStartMenuInternet} "HKCU"
     ${FixShellIconHandler} "HKCU"
     ${FixClassKeys} ; Does not use SHCTX
-    Call CreateStartMenuTile
+    Call RegisterStartMenuTile
   ${EndIf}
 
   ${SetHandlers}
