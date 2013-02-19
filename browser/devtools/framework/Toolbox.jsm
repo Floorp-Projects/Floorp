@@ -19,11 +19,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "CommandUtils",
 
 XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function() {
   let bundle = Services.strings.createBundle("chrome://browser/locale/devtools/toolbox.properties");
-  let l10n = function(name) {
+  let l10n = function(aName, ...aArgs) {
     try {
-      return bundle.GetStringFromName(name);
+      if (aArgs.length == 0) {
+        return bundle.GetStringFromName(aName);
+      } else {
+        return bundle.formatStringFromName(aName, aArgs, aArgs.length);
+      }
     } catch (ex) {
-      Services.console.logStringMessage("Error reading '" + name + "'");
+      Services.console.logStringMessage("Error reading '" + aName + "'");
     }
   };
   return l10n;
@@ -139,6 +143,11 @@ this.Toolbox = function Toolbox(target, selectedTool, hostType) {
   this._host = this._createHost(hostType);
 
   EventEmitter.decorate(this);
+
+  this._refreshHostTitle = this._refreshHostTitle.bind(this);
+  this._target.on("navigate", this._refreshHostTitle);
+  this.on("host-changed", this._refreshHostTitle);
+  this.on("select", this._refreshHostTitle);
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
@@ -509,6 +518,24 @@ Toolbox.prototype = {
   },
 
   /**
+   * Refresh the host's title.
+   */
+  _refreshHostTitle: function TBOX_refreshHostTitle() {
+    let toolName;
+    let toolId = this.currentToolId;
+    if (toolId) {
+      let toolDef = gDevTools.getToolDefinitionMap().get(toolId);
+      toolName = toolDef.label;
+    } else {
+      // no tool is selected
+      toolName = toolboxStrings("toolbox.defaultTitle");
+    }
+    let title = toolboxStrings("toolbox.titleTemplate",
+                               toolName, this.target.url);
+    this._host.setTitle(title);
+  },
+
+  /**
    * Create a host object based on the given host type.
    *
    * Warning: some hosts require that the toolbox target provides a reference to
@@ -648,6 +675,10 @@ Toolbox.prototype = {
     if (this._destroyer) {
       return this._destroyer;
     }
+
+    this._target.off("navigate", this._refreshHostTitle);
+    this.off("select", this._refreshHostTitle);
+    this.off("host-changed", this._refreshHostTitle);
 
     let outstanding = [];
 
