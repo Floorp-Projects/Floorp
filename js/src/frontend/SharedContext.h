@@ -179,12 +179,9 @@ class GlobalSharedContext : public SharedContext
 
 class ModuleBox : public ObjectBox, public SharedContext {
 public:
-    size_t      bufStart;
-    size_t      bufEnd;
-    Bindings    bindings;
+    Bindings bindings;
 
-    ModuleBox(JSContext *cx, ParseContext *pc, Module *module,
-              ObjectBox *traceListHead);
+    ModuleBox(JSContext *cx, ObjectBox *traceListHead, Module *module, ParseContext *pc);
     ObjectBox *toObjectBox() { return this; }
     Module *module() const { return &object->asModule(); }
 };

@@ -291,7 +291,7 @@ struct Parser : private AutoGCRooter
      * cx->tempLifoAlloc.
      */
     ObjectBox *newObjectBox(JSObject *obj);
-
+    ModuleBox *newModuleBox(Module *module, ParseContext *pc);
     FunctionBox *newFunctionBox(JSFunction *fun, ParseContext *pc, bool strict);
 
     /*
