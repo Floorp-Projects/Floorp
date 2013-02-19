@@ -15,8 +15,7 @@ function runTests() {
   textElt.focus();
   textElt.value = text;
   textElt.select();
-  textElt.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
-      .editor.copy();
+  SpecialPowers.wrap(textElt).editor.copy();
 
   is(plugin.getClipboardText(), text);
 

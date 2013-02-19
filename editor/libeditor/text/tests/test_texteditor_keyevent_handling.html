@@ -427,7 +427,7 @@ function runTests()
   textarea.removeAttribute("readonly");
   const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
   const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
-  var editor = textarea.QueryInterface(nsIDOMNSEditableElement).editor;
+  var editor = SpecialPowers.wrap(textarea).editor;
   var flags = editor.flags;
   editor.flags = flags & ~(nsIPlaintextEditor.eEditorWidgetMask |
                            nsIPlaintextEditor.eEditorAllowInteraction);
