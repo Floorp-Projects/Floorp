@@ -34,7 +34,6 @@ class TransportLayerLoopback : public TransportLayer {
   TransportLayerLoopback() :
       peer_(nullptr),
       timer_(nullptr),
-      target_(nullptr),
       packets_(),
       packets_lock_(nullptr),
       deliverer_(nullptr) {}
@@ -130,7 +129,6 @@ class TransportLayerLoopback : public TransportLayer {
 
   TransportLayerLoopback* peer_;
   nsCOMPtr<nsITimer> timer_;
-  nsCOMPtr<nsIEventTarget> target_;
   std::queue<QueuedPacket *> packets_;
   PRLock *packets_lock_;
   nsRefPtr<Deliverer> deliverer_;
