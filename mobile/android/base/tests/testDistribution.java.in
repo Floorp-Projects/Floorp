@@ -103,18 +103,27 @@ public class testDistribution extends ContentProviderTest {
         return outFile.getPath();
     }
 
+    // Clears the distribution pref to return distribution state to STATE_UNKNOWN
+    private void clearDistributionPref() {
+        SharedPreferences settings = mActivity.getSharedPreferences("GeckoApp", Activity.MODE_PRIVATE);
+        String keyName = mActivity.getPackageName() + ".distribution_state";
+        settings.edit().remove(keyName).commit();
+    }
+
     public void setUp() throws Exception {
         // TODO: Set up the content provider after setting the distribution.
         super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
 
         mActivity = getActivity();
 
+        // Clear the distribution pref in case Distribution.init has already run
+        clearDistributionPref();
+
         // Call Distribution.init with the mock package.
         ClassLoader classLoader = mActivity.getClassLoader();
         Class distributionClass = classLoader.loadClass("org.mozilla.gecko.Distribution");
         Class contextClass = classLoader.loadClass("android.content.Context");
-        Class stringClass = classLoader.loadClass("java.lang.String");
-        Method init = distributionClass.getMethod("init", contextClass, stringClass);
+        Method init = distributionClass.getMethod("init", contextClass, String.class);
 
         Actions.EventExpecter eventExpecter = mActions.expectGeckoEvent("Distribution:Set:OK");
         init.invoke(null, mActivity, getMockPackagePath());
@@ -136,10 +145,7 @@ public class testDistribution extends ContentProviderTest {
         }
         mAsserter.ok(distDir.delete(), "clean up distribution directory", "deleted distribution directory");
 
-        // Reset distribution preference
-        SharedPreferences settings = mActivity.getSharedPreferences("GeckoApp", Activity.MODE_PRIVATE);
-        String keyName = mActivity.getPackageName() + ".distribution_state";
-        settings.edit().remove(keyName).commit();
+        clearDistributionPref();
 
         super.tearDown();
     }
