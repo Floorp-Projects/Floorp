@@ -1921,10 +1921,12 @@ TextRenderedRunIterator::Next()
                                    mFrameIterator.DominantBaseline());
 
     // Trim the offset/length to remove any leading/trailing white space.
+    uint32_t untrimmedOffset = offset;
     uint32_t untrimmedLength = length;
     nsTextFrame::TrimmedOffsets trimmedOffsets =
       frame->GetTrimmedOffsets(frame->GetContent()->GetText(), true);
     TrimOffsets(offset, length, trimmedOffsets);
+    charIndex += offset - untrimmedOffset;
 
     // Determine if we should skip this rendered run.
     bool skip = !mFrameIterator.IsWithinSubtree() ||
@@ -1993,10 +1995,11 @@ public:
     // Iterate over all original characters from the DOM that are within valid
     // text content elements.
     eOriginal,
-    // Iterate only over characters that are not skipped per the
-    // gfxSkipCharsIterator used for the text runs.
-    eNonSkipped,
-    // terate only over characters that are the first of clusters or ligature
+    // Iterate only over characters that are addressable by the positioning
+    // attributes x="", y="", etc.  This includes all characters after
+    // collapsing white space as required by the value of 'white-space'.
+    eAddressable,
+    // Iterate only over characters that are the first of clusters or ligature
     // groups.
     eClusterAndLigatureGroupStart,
     // Iterate only over characters that are part of a cluster or ligature
@@ -2010,8 +2013,12 @@ public:
    * @param aSVGTextFrame The nsSVGTextFrame2 whose characters to iterate
    *   through.
    * @param aFilter Indicates which characters to iterate over.
+   * @param aSubtree A content subtree to track whether the current character
+   *   is within.
    */
-  CharIterator(nsSVGTextFrame2* aSVGTextFrame, CharacterFilter aFilter);
+  CharIterator(nsSVGTextFrame2* aSVGTextFrame,
+               CharacterFilter aFilter,
+               nsIContent* aSubtree = nullptr);
 
   /**
    * Returns whether the iterator is finished.
@@ -2022,10 +2029,22 @@ public:
   }
 
   /**
-   * Advances to the next character.  Returns true if there was a character to
-   * advance to, and false otherwise.
+   * Advances to the next matching character.  Returns true if there was a
+   * character to advance to, and false otherwise.
    */
   bool Next();
+
+  /**
+   * Advances ahead aCount matching characters.  Returns true if there were
+   * enough characters to advance past, and false otherwise.
+   */
+  bool Next(uint32_t aCount);
+
+  /**
+   * Advances ahead up to aCount matching characters, stopping early if we move
+   * past the subtree (if one was specified in the constructor).
+   */
+  void NextWithinSubtree(uint32_t aCount);
 
   /**
    * Advances to the character with the specified index.  The index is in the
@@ -2046,11 +2065,34 @@ public:
   bool AdvancePastCurrentTextPathFrame();
 
   /**
+   * Advances to the first matching character of the subtree.  Returns true
+   * if we successfully advance to the subtree, or if we are already within
+   * the subtree.  Returns false if we are past the subtree.
+   */
+  bool AdvanceToSubtree();
+
+  /**
    * Returns the nsTextFrame for the current character.
    */
   nsTextFrame* TextFrame() const
   {
     return mFrameIterator.Current();
+  }
+
+  /**
+   * Returns whether the iterator is within the subtree.
+   */
+  bool IsWithinSubtree() const
+  {
+    return mFrameIterator.IsWithinSubtree();
+  }
+
+  /**
+   * Returns whether the iterator is past the subtree.
+   */
+  bool IsAfterSubtree() const
+  {
+    return mFrameIterator.IsAfterSubtree();
   }
 
   /**
@@ -2209,9 +2251,10 @@ private:
 };
 
 CharIterator::CharIterator(nsSVGTextFrame2* aSVGTextFrame,
-                           CharIterator::CharacterFilter aFilter)
+                           CharIterator::CharacterFilter aFilter,
+                           nsIContent* aSubtree)
   : mFilter(aFilter),
-    mFrameIterator(aSVGTextFrame),
+    mFrameIterator(aSVGTextFrame, aSubtree),
     mFrameForTrimCheck(nullptr),
     mTrimmedOffset(0),
     mTrimmedLength(0),
@@ -2237,6 +2280,29 @@ CharIterator::Next()
     }
   }
   return false;
+}
+
+bool
+CharIterator::Next(uint32_t aCount)
+{
+  while (aCount) {
+    if (!Next()) {
+      return false;
+    }
+    aCount--;
+  }
+  return true;
+}
+
+void
+CharIterator::NextWithinSubtree(uint32_t aCount)
+{
+  while (IsWithinSubtree() && aCount) {
+    if (!Next()) {
+      break;
+    }
+    aCount--;
+  }
 }
 
 bool
@@ -2275,6 +2341,20 @@ CharIterator::AdvancePastCurrentTextPathFrame()
       return false;
     }
   } while (TextPathFrame() == currentTextPathFrame);
+  return true;
+}
+
+bool
+CharIterator::AdvanceToSubtree()
+{
+  while (!IsWithinSubtree()) {
+    if (IsAfterSubtree()) {
+      return false;
+    }
+    if (!AdvancePastCurrentFrame()) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -2435,8 +2515,8 @@ CharIterator::MatchesFilter() const
     return false;
   }
 
-  if (mFilter == eNonSkipped) {
-    return true;
+  if (mFilter == eAddressable) {
+    return !IsOriginalCharUnaddressable();
   }
 
   return (mFilter == eClusterAndLigatureGroupStart) ==
@@ -3490,28 +3570,23 @@ GetTextContentLength(nsIContent* aContent)
   return length;
 }
 
-/**
- * Returns the number of DOM characters beneath a node but which occur
- * before a second node.
- *
- * @param aContent The node under which to look for nsTextNodes.
- * @param aBefore The node before which, in document order, the candidate
- *   nsTextNodes are to be found.
- */
-static uint32_t
-GetTextContentLengthBefore(nsIContent* aContent, nsIContent* aBefore)
+int32_t
+nsSVGTextFrame2::ConvertTextElementCharIndexToAddressableIndex(
+                                                           int32_t aIndex,
+                                                           nsIContent* aContent)
 {
-  NS_ASSERTION(aContent, "expected non-null aContent");
-  NS_ASSERTION(aBefore, "expected non-null aBefore");
-
-  uint32_t length = 0;
-  TextNodeIterator it(aContent, aBefore);
-  for (nsTextNode* text = it.Current();
-       text && !it.IsWithinSubtree() && !it.IsAfterSubtree();
-       text = it.Next()) {
-    length += text->TextLength();
+  CharIterator it(this, CharIterator::eAddressable, aContent);
+  if (!it.AdvanceToSubtree()) {
+    return -1;
   }
-  return length;
+  uint32_t result = 0;
+  while (!it.AtEnd() &&
+         it.IsWithinSubtree() &&
+         it.TextElementCharIndex() < static_cast<uint32_t>(aIndex)) {
+    result++;
+    it.Next();
+  }
+  return result;
 }
 
 /**
@@ -3521,7 +3596,15 @@ GetTextContentLengthBefore(nsIContent* aContent, nsIContent* aBefore)
 uint32_t
 nsSVGTextFrame2::GetNumberOfChars(nsIContent* aContent)
 {
-  return GetTextContentLength(aContent);
+  uint32_t n = 0;
+  CharIterator it(this, CharIterator::eAddressable, aContent);
+  if (it.AdvanceToSubtree()) {
+    while (!it.AtEnd() && it.IsWithinSubtree()) {
+      n++;
+      it.Next();
+    }
+  }
+  return n;
 }
 
 /**
@@ -3567,12 +3650,22 @@ nsSVGTextFrame2::GetSubStringLength(nsIContent* aContent,
     return 0.0f;
   }
 
-  // Convert charnum to be an offset into the whole <text> element, not just
-  // into aContent which might be a child <tspan>, etc.
-  charnum += GetTextContentLengthBefore(mContent, aContent);
+  // Convert charnum/nchars from addressable characters relative to
+  // aContent to global character indices.
+  CharIterator chit(this, CharIterator::eAddressable, aContent);
+  if (!chit.AdvanceToSubtree() ||
+      !chit.Next(charnum) ||
+      chit.IsAfterSubtree()) {
+    return 0.0f;
+  }
+  charnum = chit.TextElementCharIndex();
+  chit.NextWithinSubtree(nchars);
+  nchars = chit.TextElementCharIndex() - charnum;
 
+  // Find each rendered run that intersects with the range defined
+  // by charnum/nchars.
   nscoord textLength = 0;
-  TextRenderedRunIterator it(this);
+  TextRenderedRunIterator it(this, TextRenderedRunIterator::eAllFrames);
   TextRenderedRun run = it.Current();
   while (run.mFrame) {
     // If this rendered run is past the substring we are interested in, we
@@ -3588,8 +3681,8 @@ nsSVGTextFrame2::GetSubStringLength(nsIContent* aContent,
     IntersectInterval(offset, length, charnum, nchars);
 
     if (length != 0) {
-      // Convert offset into an index into the run.
-      offset -= run.mTextElementCharIndex;
+      // Convert offset into an index into the frame.
+      offset += run.mTextFrameContentOffset - run.mTextElementCharIndex;
 
       gfxSkipCharsIterator it =
         run.mFrame->EnsureTextRun(nsTextFrame::eInflated);
@@ -3637,7 +3730,7 @@ nsSVGTextFrame2::GetCharNumAtPosition(nsIContent* aContent,
     // Hit test this rendered run.  Later runs will override earlier ones.
     int32_t index = run.GetCharNumAtPosition(context, p);
     if (index != -1) {
-      result = index + run.mTextElementCharIndex;
+      result = index + run.mTextElementCharIndex - run.mTextFrameContentOffset;
     }
   }
 
@@ -3645,8 +3738,7 @@ nsSVGTextFrame2::GetCharNumAtPosition(nsIContent* aContent,
     return result;
   }
 
-  // Transform the result index into an index relative to aContent.
-  return result - GetTextContentLengthBefore(mContent, aContent);
+  return ConvertTextElementCharIndexToAddressableIndex(result, aContent);
 }
 
 /**
@@ -3660,16 +3752,10 @@ nsSVGTextFrame2::GetStartPositionOfChar(nsIContent* aContent,
 {
   UpdateGlyphPositioning(false);
 
-  uint32_t textBefore = GetTextContentLengthBefore(mContent, aContent);
-  uint32_t textWithin = GetTextContentLength(aContent);
-
-  if (aCharNum >= textWithin) {
+  CharIterator it(this, CharIterator::eAddressable, aContent);
+  if (!it.AdvanceToSubtree() ||
+      !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  CharIterator it(this, CharIterator::eNonSkipped);
-  if (!it.AdvanceToCharacter(aCharNum + textBefore)) {
-    return NS_ERROR_FAILURE;
   }
 
   // We need to return the start position of the whole glyph.
@@ -3690,16 +3776,10 @@ nsSVGTextFrame2::GetEndPositionOfChar(nsIContent* aContent,
 {
   UpdateGlyphPositioning(false);
 
-  uint32_t textBefore = GetTextContentLengthBefore(mContent, aContent);
-  uint32_t textWithin = GetTextContentLength(aContent);
-
-  if (aCharNum >= textWithin) {
+  CharIterator it(this, CharIterator::eAddressable, aContent);
+  if (!it.AdvanceToSubtree() ||
+      !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  CharIterator it(this, CharIterator::eNonSkipped);
-  if (!it.AdvanceToCharacter(aCharNum + textBefore)) {
-    return NS_ERROR_FAILURE;
   }
 
   // We need to return the end position of the whole glyph.
@@ -3733,16 +3813,10 @@ nsSVGTextFrame2::GetExtentOfChar(nsIContent* aContent,
 {
   UpdateGlyphPositioning(false);
 
-  uint32_t textBefore = GetTextContentLengthBefore(mContent, aContent);
-  uint32_t textWithin = GetTextContentLength(aContent);
-
-  if (aCharNum >= textWithin) {
+  CharIterator it(this, CharIterator::eAddressable, aContent);
+  if (!it.AdvanceToSubtree() ||
+      !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  CharIterator it(this, CharIterator::eNonSkipped);
-  if (!it.AdvanceToCharacter(aCharNum + textBefore)) {
-    return NS_ERROR_FAILURE;
   }
 
   nsPresContext* presContext = PresContext();
@@ -3790,13 +3864,13 @@ nsSVGTextFrame2::GetRotationOfChar(nsIContent* aContent,
 {
   UpdateGlyphPositioning(false);
 
-  uint32_t textBefore = GetTextContentLengthBefore(mContent, aContent);
-  uint32_t textWithin = GetTextContentLength(aContent);
-  if (aCharNum >= textWithin) {
+  CharIterator it(this, CharIterator::eAddressable, aContent);
+  if (!it.AdvanceToSubtree() ||
+      !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  *aResult = mPositions[aCharNum + textBefore].mAngle * 180.0 / M_PI;
+  *aResult = mPositions[it.TextElementCharIndex()].mAngle * 180.0 / M_PI;
   return NS_OK;
 }
 

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=655877
+-->
+<head>
+  <meta charset=UTF-8>
+  <title>Test for Bug 655877</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=655877">Mozilla Bug 655877</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <svg width="400" height="200">
+    <text x="100" y="100" style="font: 16px sans-serif">
+      abc אבג 123 דהו defg
+    </text>
+  </svg>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function close(x, y, message) {
+  ok(Math.abs(x - y) < 1e-4, message);
+}
+
+function runTest() {
+  SpecialPowers.pushPrefEnv({'set': [['svg.text.css-frames.enabled', true]]}, function() {
+    document.getElementById("content").style.display = "block";
+
+    var text = document.querySelector("text");
+
+    // there are only 20 addressable characters
+    is(text.getNumberOfChars(), 20, "getNumberOfChars");
+
+    var sum, total = text.getComputedTextLength();
+
+    close(text.getSubStringLength(0, 20), total, "getSubStringLength all");
+
+    // add the advance of each glyph
+    sum = 0;
+    for (var i = 0; i < 20; i++) {
+      sum += text.getSubStringLength(i, 1);
+    }
+    close(total, sum, "sum getSubStringLength 1");
+
+    // split the text up into three chunks and add them together
+    close(total, text.getSubStringLength(0, 6) +
+                 text.getSubStringLength(6, 8) +
+                 text.getSubStringLength(14, 6), "sum getSubStringLength 2");
+
+    SimpleTest.finish();
+  });
+}
+
+window.addEventListener("load", runTest, false);
+</script>
+</pre>
+</body>
+</html>
