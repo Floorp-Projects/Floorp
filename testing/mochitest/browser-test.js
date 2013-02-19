@@ -1,5 +1,5 @@
 // Test timeout (seconds)
-const TIMEOUT_SECONDS = 30;
+var gTimeoutSeconds = 30;
 var gConfig;
 
 if (Cc === undefined) {
@@ -28,6 +28,9 @@ function testOnLoad() {
       return;
 
     prefs.setBoolPref("testing.browserTestHarness.running", true);
+
+    if (prefs.prefHasUserValue("testing.browserTestHarness.timeout"))
+      gTimeoutSeconds = prefs.getIntPref("testing.browserTestHarness.timeout");
 
     var sstring = Cc["@mozilla.org/supports-string;1"].
                   createInstance(Ci.nsISupportsString);
@@ -407,14 +410,14 @@ Tester.prototype = {
             "Longer timeout required, waiting longer...  Remaining timeouts: " +
             self.currentTest.scope.__timeoutFactor);
           self.currentTest.scope.__waitTimer =
-            setTimeout(arguments.callee, TIMEOUT_SECONDS * 1000);
+            setTimeout(arguments.callee, gTimeoutSeconds * 1000);
           return;
         }
         self.currentTest.addResult(new testResult(false, "Test timed out", "", false));
         self.currentTest.timedOut = true;
         self.currentTest.scope.__waitTimer = null;
         self.nextTest();
-      }, TIMEOUT_SECONDS * 1000);
+      }, gTimeoutSeconds * 1000);
     }
   },
 
