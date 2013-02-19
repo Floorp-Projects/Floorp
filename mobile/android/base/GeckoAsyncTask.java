@@ -41,11 +41,17 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
     }
 
     public final void execute(final Params... params) {
-        BackgroundTaskRunnable runnable = new BackgroundTaskRunnable(params);
-        if (mPriority == Priority.HIGH)
-            mBackgroundThreadHandler.postAtFrontOfQueue(runnable);
-        else
-            mBackgroundThreadHandler.post(runnable);
+        mActivity.runOnUiThread(new Runnable() {
+            public void run() {
+                onPreExecute();
+
+                BackgroundTaskRunnable runnable = new BackgroundTaskRunnable(params);
+                if (mPriority == Priority.HIGH)
+                    mBackgroundThreadHandler.postAtFrontOfQueue(runnable);
+                else
+                    mBackgroundThreadHandler.post(runnable);
+            }
+        });
     }
 
     public final GeckoAsyncTask<Params, Progress, Result> setPriority(Priority priority) {
@@ -54,6 +60,7 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
     }
 
     /* Empty stub method. Implementors can optionally override this if they need it */
+    protected void onPreExecute() { }
     protected void onPostExecute(Result result) { }
 
     protected abstract Result doInBackground(Params... params);
