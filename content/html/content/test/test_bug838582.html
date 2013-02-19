@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=838582
+-->
+<head>
+  <title>Test for Bug 838582</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=838582">Mozilla Bug 838582</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<textarea id="t">abc</textarea>
+<script type="application/javascript">
+
+/** Test for Bug 838582 **/
+
+var textarea = document.getElementById("t");
+
+is(t.textLength, 3, "Correct textLength for defaultValue");
+t.value = "abcdef";
+is(t.textLength, 6, "Correct textLength for value");
+ok(!("controllers" in t), "Don't have web-visible controllers property");
+ok("controllers" in SpecialPowers.wrap(t), "Have chrome-visible controllers property");
+
+</script>
+</pre>
+</body>
+</html>

@@ -56,7 +56,7 @@ function testCopyPaste () {
   var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
                             .getService(Components.interfaces.nsIClipboard);
 
-  var textarea = document.getElementById('input');
+  var textarea = SpecialPowers.wrap(document.getElementById('input'));
 
   function copySelectionToClipboard() {
     documentViewer.copySelection();
@@ -111,8 +111,7 @@ function testCopyPaste () {
   function testPasteText(expected) {
     textarea.value="";
     textarea.focus();
-    textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
-            .editor.paste(1);
+    textarea.editor.paste(1);
     is(textarea.value, expected, "value of the textarea after the paste");
   }
   function testSelectionToString(expected) {
