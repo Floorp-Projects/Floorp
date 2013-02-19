@@ -9,10 +9,11 @@
     factory.call(this, require, exports, module);
   } else if (~String(this).indexOf('BackstagePass')) { // JSM
     this[factory.name] = {};
+    var Cu = this.Components["utils"];
+    this.console = Cu.import("resource://gre/modules/devtools/Console.jsm", {})
+                  .console;
     factory(function require(uri) {
-      var imports = {};
-      this['Components'].utils.import(uri, imports);
-      return imports;
+      return Cu.import(uri, {});
     }, this[factory.name], { uri: __URI__, id: id });
     this.EXPORTED_SYMBOLS = [factory.name];
   } else {  // Browser or alike
@@ -53,7 +54,12 @@ function attempt(f) {
   **/
   return function effort(options) {
     try { return f(options) }
-    catch(error) { return rejection(error) }
+    catch(error) {
+      if (exports._reportErrors && typeof(console) == 'object') {
+        console.error(error)
+      }
+      return rejection(error)
+    }
   }
 }
 

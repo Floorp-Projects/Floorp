@@ -27,12 +27,21 @@ but will have no effect when called.
 
 <api name="isActive">
 @property {boolean}
-  This read-only boolean is true if global private browsing mode is turned on.
+  This read-only boolean is `true` if global private browsing mode is turned on.
 
   <div class="warning">
   This property is deprecated. It will continue to work until version 1.13 of the SDK.
-  From version 1.13 onwards it will always return false.
+  From version 1.13 onwards it will always return `false`.
   </div>
+</api>
+
+<api name="isPrivate">
+@function
+  Returns `true` if the argument is a private window or tab.
+@param [thing] {any}
+  The thing to check if it is private, only handles windows and tabs at the moment.
+  Everything else returns `false` automatically.
+  In global private browsing mode, this method returns the same value as `isActive`.
 </api>
 
 <api name="activate">

@@ -1360,7 +1360,7 @@ exports.testMultipleModulesOrderOverflow = function (test) {
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
-  let prefs = loader0.loader.require("preferences-service");
+  let prefs = loader0.loader.require("sdk/preferences/service");
   prefs.set(OVERFLOW_THRESH_PREF, 0);
 
   // Use each module to add an item, then unload each module in turn.
@@ -1401,7 +1401,7 @@ exports.testMultipleModulesOverflowHidden = function (test) {
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
-  let prefs = loader0.loader.require("preferences-service");
+  let prefs = loader0.loader.require("sdk/preferences/service");
   prefs.set(OVERFLOW_THRESH_PREF, 0);
 
   // Use each module to add an item, then unload each module in turn.
@@ -1426,7 +1426,7 @@ exports.testMultipleModulesOverflowHidden2 = function (test) {
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
-  let prefs = loader0.loader.require("preferences-service");
+  let prefs = loader0.loader.require("sdk/preferences/service");
   prefs.set(OVERFLOW_THRESH_PREF, 0);
 
   // Use each module to add an item, then unload each module in turn.
@@ -1450,7 +1450,7 @@ exports.testOverflowIgnoresHidden = function (test) {
   test = new TestHelper(test);
   let loader = test.newLoader();
 
-  let prefs = loader.loader.require("preferences-service");
+  let prefs = loader.loader.require("sdk/preferences/service");
   prefs.set(OVERFLOW_THRESH_PREF, 2);
 
   let allItems = [
@@ -1481,7 +1481,7 @@ exports.testOverflowIgnoresHiddenMultipleModules1 = function (test) {
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
-  let prefs = loader0.loader.require("preferences-service");
+  let prefs = loader0.loader.require("sdk/preferences/service");
   prefs.set(OVERFLOW_THRESH_PREF, 2);
 
   let allItems = [
@@ -1516,7 +1516,7 @@ exports.testOverflowIgnoresHiddenMultipleModules2 = function (test) {
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
-  let prefs = loader0.loader.require("preferences-service");
+  let prefs = loader0.loader.require("sdk/preferences/service");
   prefs.set(OVERFLOW_THRESH_PREF, 2);
 
   let allItems = [
@@ -1551,7 +1551,7 @@ exports.testOverflowIgnoresHiddenMultipleModules3 = function (test) {
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
-  let prefs = loader0.loader.require("preferences-service");
+  let prefs = loader0.loader.require("sdk/preferences/service");
   prefs.set(OVERFLOW_THRESH_PREF, 2);
 
   let allItems = [
@@ -1585,7 +1585,7 @@ exports.testOverflowTransition = function (test) {
   test = new TestHelper(test);
   let loader = test.newLoader();
 
-  let prefs = loader.loader.require("preferences-service");
+  let prefs = loader.loader.require("sdk/preferences/service");
   prefs.set(OVERFLOW_THRESH_PREF, 2);
 
   let pItems = [
@@ -1718,7 +1718,6 @@ exports.testMenuCommand = function (test) {
   let topMenu = new loader.cm.Menu({
     label: "top menu",
     contentScript: 'self.on("click", function (node, data) {' +
-                   '  let Ci = Components["interfaces"];' +
                    '  self.postMessage({' +
                    '    tagName: node.tagName,' +
                    '    data: data' +
@@ -1798,7 +1797,6 @@ exports.testItemClick = function (test) {
     label: "item",
     data: "item data",
     contentScript: 'self.on("click", function (node, data) {' +
-                   '  let Ci = Components["interfaces"];' +
                    '  self.postMessage({' +
                    '    tagName: node.tagName,' +
                    '    data: data' +
@@ -1846,7 +1844,6 @@ exports.testMenuClick = function (test) {
   let topMenu = new loader.cm.Menu({
     label: "top menu",
     contentScript: 'self.on("click", function (node, data) {' +
-                   '  let Ci = Components["interfaces"];' +
                    '  self.postMessage({' +
                    '    tagName: node.tagName,' +
                    '    data: data' +

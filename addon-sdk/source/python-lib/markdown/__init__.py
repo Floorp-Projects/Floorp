@@ -182,7 +182,7 @@ class Markdown:
     def __init__(self,
                  extensions=[],
                  extension_configs={},
-                 safe_mode = False, 
+                 safe_mode = False,
                  output_format=DEFAULT_OUTPUT_FORMAT):
         """
         Creates a new Markdown instance.
@@ -200,12 +200,12 @@ class Markdown:
             * "xhtml": Outputs latest supported version of XHTML (currently XHTML 1.1).
             * "html4": Outputs HTML 4
             * "html": Outputs latest supported version of HTML (currently HTML 4).
-            Note that it is suggested that the more specific formats ("xhtml1" 
+            Note that it is suggested that the more specific formats ("xhtml1"
             and "html4") be used as "xhtml" or "html" may change in the future
-            if it makes sense at that time. 
+            if it makes sense at that time.
 
         """
-        
+
         self.safeMode = safe_mode
         self.registeredExtensions = []
         self.docType = ""
@@ -300,9 +300,9 @@ class Markdown:
 
         # Map format keys to serializers
         self.output_formats = {
-            'html'  : html4.to_html_string, 
+            'html'  : html4.to_html_string,
             'html4' : html4.to_html_string,
-            'xhtml' : etree.tostring, 
+            'xhtml' : etree.tostring,
             'xhtml1': etree.tostring,
         }
 
@@ -332,7 +332,7 @@ class Markdown:
             except AttributeError:
                 message(ERROR, "Incorrect type! Extension '%s' is "
                                "neither a string or an Extension." %(repr(ext)))
-            
+
 
     def registerExtension(self, extension):
         """ This gets called by the extension """
@@ -574,15 +574,15 @@ def markdown(text,
         * "xhtml": Outputs latest supported version of XHTML (currently XHTML 1.1).
         * "html4": Outputs HTML 4
         * "html": Outputs latest supported version of HTML (currently HTML 4).
-        Note that it is suggested that the more specific formats ("xhtml1" 
+        Note that it is suggested that the more specific formats ("xhtml1"
         and "html4") be used as "xhtml" or "html" may change in the future
-        if it makes sense at that time. 
+        if it makes sense at that time.
 
     Returns: An HTML document as a string.
 
     """
     md = Markdown(extensions=load_extensions(extensions),
-                  safe_mode=safe_mode, 
+                  safe_mode=safe_mode,
                   output_format=output_format)
     return md.convert(text)
 
@@ -594,7 +594,7 @@ def markdownFromFile(input = None,
                      safe_mode = False,
                      output_format = DEFAULT_OUTPUT_FORMAT):
     """Read markdown code from a file and write it to a file or a stream."""
-    md = Markdown(extensions=load_extensions(extensions), 
+    md = Markdown(extensions=load_extensions(extensions),
                   safe_mode=safe_mode,
                   output_format=output_format)
     md.convertFile(input, output, encoding)
