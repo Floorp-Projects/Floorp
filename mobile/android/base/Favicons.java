@@ -6,20 +6,21 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.util.GeckoBackgroundThread;
+import org.mozilla.gecko.util.GeckoAsyncTask;
 import org.mozilla.gecko.util.GeckoJarReader;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.http.AndroidHttpClient;
-import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 
@@ -111,7 +112,7 @@ public class Favicons {
             return -1;
         }
 
-        LoadFaviconTask task = new LoadFaviconTask(pageUrl, faviconUrl, persist, listener);
+        LoadFaviconTask task = new LoadFaviconTask(GeckoApp.mAppContext, GeckoAppShell.getHandler(), pageUrl, faviconUrl, persist, listener);
 
         long taskId = task.getId();
         mLoadTasks.put(taskId, task);
@@ -198,15 +199,18 @@ public class Favicons {
         }
     }
 
-    private class LoadFaviconTask extends AsyncTask<Void, Void, Bitmap> {
+    private class LoadFaviconTask extends GeckoAsyncTask<Void, Void, Bitmap> {
         private long mId;
         private String mPageUrl;
         private String mFaviconUrl;
         private OnFaviconLoadedListener mListener;
         private boolean mPersist;
 
-        public LoadFaviconTask(String pageUrl, String faviconUrl, boolean persist,
-                OnFaviconLoadedListener listener) {
+        public LoadFaviconTask(Activity activity, Handler backgroundThreadHandler,
+                               String pageUrl, String faviconUrl, boolean persist,
+                               OnFaviconLoadedListener listener) {
+            super(activity, backgroundThreadHandler);
+
             synchronized(this) {
                 mId = ++mNextFaviconLoadId;
             }
@@ -229,15 +233,8 @@ public class Favicons {
                 return;
             }
 
-            // Even though this code is in a background thread, all DB writes
-            // should happen in GeckoBackgroundThread or we could get locked
-            // databases.
-            GeckoBackgroundThread.post(new Runnable() {
-                public void run() {
-                    ContentResolver resolver = mContext.getContentResolver();
-                    BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon, mFaviconUrl);
-                }
-            });
+            ContentResolver resolver = mContext.getContentResolver();
+            BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon, mFaviconUrl);
         }
 
         // Runs in background thread
