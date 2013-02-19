@@ -15,13 +15,14 @@ const { getWindowLoadingContext, windows } = require('../window/utils');
 const { WindowTracker } = require("../deprecated/window-utils");
 const events = require('../system/events');
 const { deprecateFunction } = require('../util/deprecate');
+const { isOneOf, is, satisfiesVersion, version } = require('../system/xul-app');
 
 let deferredEmit = defer(emit);
 let pbService;
 let PrivateBrowsingUtils;
 
 // Private browsing is only supported in Fx
-if (require("../system/xul-app").is("Firefox")) {
+if (isOneOf(['Firefox', 'Fennec'])) {
   // get the nsIPrivateBrowsingService if it exists
   try {
     pbService = Cc["@mozilla.org/privatebrowsing;1"].
@@ -41,20 +42,36 @@ if (require("../system/xul-app").is("Firefox")) {
 }
 
 function isWindowPrivate(win) {
+  if (!PrivateBrowsingUtils || !win)
+    return false;
+
   // if the pbService is undefined, the PrivateBrowsingUtils.jsm is available,
   // and the app is Firefox, then assume per-window private browsing is
   // enabled.
-  return win instanceof Ci.nsIDOMWindow &&
-         isWindowPBSupported &&
-         PrivateBrowsingUtils.isWindowPrivate(win);
+  if (win instanceof Ci.nsIDOMWindow) {
+    return PrivateBrowsingUtils.isWindowPrivate(win);
+  }
+
+  // Sometimes the input is not a nsIDOMWindow.. but it is still a winodw.
+  try {
+    return !!win.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing;
+  }
+  catch (e) {}
+
+  return false;
 }
 exports.isWindowPrivate = isWindowPrivate;
 
 // checks that global private browsing is implemented
-let isGlobalPBSupported = exports.isGlobalPBSupported =  !!pbService;
+let isGlobalPBSupported = exports.isGlobalPBSupported = !!pbService && is('Firefox');
 
 // checks that per-window private browsing is implemented
-let isWindowPBSupported = exports.isWindowPBSupported = !isGlobalPBSupported && !!PrivateBrowsingUtils;
+let isWindowPBSupported = exports.isWindowPBSupported =
+                          !pbService && !!PrivateBrowsingUtils && is('Firefox');
+
+// checks that per-tab private browsing is implemented
+let isTabPBSupported = exports.isTabPBSupported =
+                       !pbService && !!PrivateBrowsingUtils && is('Fennec') && satisfiesVersion(version, '>=20.0*');
 
 function onChange() {
   // Emit event with in next turn of event loop.

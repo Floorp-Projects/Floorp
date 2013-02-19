@@ -7,11 +7,15 @@ let { Cc,Ci } = require('chrome');
 const unload = require("sdk/system/unload");
 const { Loader } = require('sdk/test/loader');
 const { windows: windowsIterator } = require("sdk/window/utils");
-const windows = require("windows").browserWindows;
+const windows = require("sdk/windows").browserWindows;
 
 let { loader } = LoaderWithHookedConsole();
 const pb = loader.require('sdk/private-browsing');
 const pbUtils = loader.require('sdk/private-browsing/utils');
+const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
+
+require('sdk/tabs/utils');
+require('sdk/windows');
 
 function LoaderWithHookedConsole() {
   let errors = [];
@@ -40,6 +44,8 @@ function deactivate(callback) {
 }
 exports.deactivate = deactivate;
 
+exports.loader = loader;
 exports.pb = pb;
 exports.pbUtils = pbUtils;
+exports.getOwnerWindow = getOwnerWindow;
 exports.LoaderWithHookedConsole = LoaderWithHookedConsole;
