@@ -1353,6 +1353,22 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Now save the temp leaf name, minus the ".part" bit, so we can use it later.
+  // This is a bit broken in the case when createUnique actually had to append
+  // some numbers, because then we now have a filename like foo.bar-1.part and
+  // we'll end up with foo.bar-1.bar as our final filename if we end up using
+  // this.  But the other options are all bad too....  Ideally we'd have a way
+  // to tell createUnique to put its unique marker before the extension that
+  // comes before ".part" or something.
+  rv = mTempFile->GetLeafName(mTempLeafName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ENSURE_TRUE(StringEndsWith(mTempLeafName, NS_LITERAL_STRING(".part")),
+                 NS_ERROR_UNEXPECTED);
+
+  // Strip off the ".part" from mTempLeafName
+  mTempLeafName.Truncate(mTempLeafName.Length() - ArrayLength(".part") + 1);
+
   MOZ_ASSERT(!mSaver, "Output file initialization called more than once!");
   mSaver = do_CreateInstance(NS_BACKGROUNDFILESAVERSTREAMLISTENER_CONTRACTID,
                              &rv);
@@ -2065,10 +2081,8 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, bool 
   nsCOMPtr<nsIFile> fileToUse = do_QueryInterface(aNewFileLocation);
   if (!fileToUse)
   {
-    nsAutoString leafName;
-    mTempFile->GetLeafName(leafName);
     if (mSuggestedFileName.IsEmpty())
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName, mTempFileExtension);
+      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mTempLeafName, mTempFileExtension);
     else
     {
       nsAutoString fileExt;
@@ -2244,7 +2258,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   if (mSuggestedFileName.IsEmpty())
   {
     // Keep using the leafname of the temp file, since we're just starting a helper
-    mTempFile->GetLeafName(mSuggestedFileName);
+    mSuggestedFileName = mTempLeafName;
   }
 
 #ifdef XP_WIN

@@ -72,9 +72,9 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame
@@ -199,7 +199,7 @@ nsRootBoxFrame::Reflow(nsPresContext*           aPresContext,
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-nsresult
+void
 nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists)
@@ -207,10 +207,9 @@ nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // root boxes don't need a debug border/outline or a selection overlay...
   // They *may* have a background propagated to them, so force creation
   // of a background display list element.
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists, true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayBorderBackgroundOutline(aBuilder, aLists, true);
 
-  return BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

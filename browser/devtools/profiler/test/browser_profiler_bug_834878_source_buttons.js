@@ -18,9 +18,18 @@ function test() {
         let view = dbg.panelWin.DebuggerView;
 
         is(view.Sources.selectedValue, data.uri, "URI is different");
-        is(view.editor.getCaretPosition().line, data.line - 1, "Line is different");
+        is(view.editor.getCaretPosition().line, data.line - 1,
+          "Line is different");
 
-        tearDown(tab);
+        // Test the case where script is already loaded.
+        view.editor.setCaretPosition(1);
+        gDevTools.showToolbox(target, "jsprofiler").then(function () {
+          panel.displaySource(data, function onOpenAgain() {
+            is(view.editor.getCaretPosition().line, data.line - 1,
+              "Line is different");
+            tearDown(tab);
+          });
+        });
       });
     });
 

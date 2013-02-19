@@ -285,6 +285,9 @@
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/browser/components/sessionstore.xpt
 @BINPATH@/components/services-crypto-component.xpt
+#ifdef MOZ_CAPTIVEDETECT
+@BINPATH@/components/captivedetect.xpt
+#endif
 @BINPATH@/browser/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
@@ -345,7 +348,7 @@
 @BINPATH@/browser/components/DownloadsStartup.js
 @BINPATH@/browser/components/DownloadsUI.js
 @BINPATH@/browser/components/BrowserPlaces.manifest
-@BINPATH@/browser/components/BrowserPageThumbs.manifest
+@BINPATH@/components/BrowserPageThumbs.manifest
 @BINPATH@/browser/components/nsPrivateBrowsingServiceObsolete.manifest
 @BINPATH@/browser/components/nsPrivateBrowsingServiceObsolete.js
 @BINPATH@/components/SiteSpecificUserAgent.js
@@ -410,7 +413,7 @@
 @BINPATH@/browser/components/PlacesProtocolHandler.js
 @BINPATH@/components/PlacesCategoriesStarter.js
 @BINPATH@/components/ColorAnalyzer.js
-@BINPATH@/browser/components/PageThumbsProtocol.js
+@BINPATH@/components/PageThumbsProtocol.js
 @BINPATH@/components/nsDefaultCLH.manifest
 @BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.manifest
@@ -482,6 +485,10 @@
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
 @BINPATH@/components/Weave.js
+#endif
+#ifdef MOZ_CAPTIVEDETECT
+@BINPATH@/components/CaptivePortalDetectComponents.manifest
+@BINPATH@/components/captivedetect.js
 #endif
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/cryptoComponents.manifest

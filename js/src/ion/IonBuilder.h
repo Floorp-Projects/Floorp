@@ -73,7 +73,8 @@ class IonBuilder : public MIRGenerator
             TABLE_SWITCH,       // switch() { x }
             COND_SWITCH_CASE,   // switch() { case X: ... }
             COND_SWITCH_BODY,   // switch() { case ...: X }
-            AND_OR              // && x, || x
+            AND_OR,             // && x, || x
+            LABEL               // label: x
         };
 
         State state;            // Current state of this control structure.
@@ -140,6 +141,9 @@ class IonBuilder : public MIRGenerator
                 jsbytecode *exitpc;
                 DeferredEdge *breaks;
             } condswitch;
+            struct {
+                DeferredEdge *breaks;
+            } label;
         };
 
         inline bool isLoop() const {
@@ -162,6 +166,7 @@ class IonBuilder : public MIRGenerator
         static CFGState AndOr(jsbytecode *join, MBasicBlock *joinStart);
         static CFGState TableSwitch(jsbytecode *exitpc, MTableSwitch *ins);
         static CFGState CondSwitch(jsbytecode *exitpc, jsbytecode *defaultTarget);
+        static CFGState Label(jsbytecode *exitpc);
     };
 
     static int CmpSuccessors(const void *a, const void *b);
@@ -214,6 +219,7 @@ class IonBuilder : public MIRGenerator
     ControlStatus processSwitchBreak(JSOp op, jssrcnote *sn);
     ControlStatus processSwitchEnd(DeferredEdge *breaks, jsbytecode *exitpc);
     ControlStatus processAndOrEnd(CFGState &state);
+    ControlStatus processLabelEnd(CFGState &state);
     ControlStatus processReturn(JSOp op);
     ControlStatus processThrow();
     ControlStatus processContinue(JSOp op, jssrcnote *sn);
@@ -329,6 +335,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_funapplyarguments(uint32_t argc);
     bool jsop_call(uint32_t argc, bool constructing);
     bool jsop_ifeq(JSOp op);
+    bool jsop_label();
     bool jsop_condswitch();
     bool jsop_andor(JSOp op);
     bool jsop_dup2();
@@ -509,6 +516,7 @@ class IonBuilder : public MIRGenerator
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
     Vector<ControlFlowInfo, 4, IonAllocPolicy> loops_;
     Vector<ControlFlowInfo, 0, IonAllocPolicy> switches_;
+    Vector<ControlFlowInfo, 2, IonAllocPolicy> labels_;
     Vector<MInstruction *, 2, IonAllocPolicy> iterators_;
     TypeOracle *oracle;
 

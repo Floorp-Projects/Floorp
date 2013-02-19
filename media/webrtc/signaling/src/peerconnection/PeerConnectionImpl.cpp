@@ -43,7 +43,7 @@
 #include "nsURLHelper.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/RTCIceServerBinding.h"
+#include "mozilla/dom/RTCConfigurationBinding.h"
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "jsapi.h"
@@ -187,13 +187,13 @@ public:
           DOMMediaStream* stream = nullptr;
 
           if (!mRemoteStream) {
-            CSFLogErrorS(logTag, __FUNCTION__ << " GetRemoteStream returned NULL");
+            CSFLogError(logTag, "%s: GetRemoteStream returned NULL", __FUNCTION__);
           } else {
             stream = mRemoteStream->GetMediaStream();
           }
 
           if (!stream) {
-            CSFLogErrorS(logTag, __FUNCTION__ << " GetMediaStream returned NULL");
+            CSFLogError(logTag, "%s: GetMediaStream returned NULL", __FUNCTION__);
           } else {
             // We provide a type field because it is in the IDL
             // and we want code that looks at it not to crash.
@@ -253,7 +253,7 @@ PeerConnectionImpl::~PeerConnectionImpl()
   if (PeerConnectionCtx::isActive()) {
     PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
   } else {
-    CSFLogErrorS(logTag, "PeerConnectionCtx is already gone. Ignoring...");
+    CSFLogError(logTag, "PeerConnectionCtx is already gone. Ignoring...");
   }
 
   CloseInt(false);
@@ -347,43 +347,30 @@ Warn(JSContext* aCx, const nsCString& aMsg) {
  *                   { url:"turn:user@turn.example.org", credential:"mypass"} ] }
  *
  * This function converts an already-validated jsval that looks like the above
- * into an RTCConfiguration object.
+ * into an IceConfiguration object.
  */
 nsresult
 PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
-                                            RTCConfiguration *aDst,
+                                            IceConfiguration *aDst,
                                             JSContext* aCx)
 {
 #ifdef MOZILLA_INTERNAL_API
   if (!aSrc.isObject()) {
     return NS_ERROR_FAILURE;
   }
-  JSObject& config = aSrc.toObject();
-  JSAutoCompartment ac(aCx, &config);
-  JS::Value jsServers;
-  if (!(JS_GetProperty(aCx, &config, "iceServers", &jsServers) && jsServers.isObject())) {
+  JSAutoCompartment ac(aCx, &aSrc.toObject());
+  RTCConfiguration config;
+  if (!(config.Init(aCx, nullptr, aSrc) && config.mIceServers.WasPassed())) {
     return NS_ERROR_FAILURE;
   }
-  JSObject& servers = jsServers.toObject();
-  uint32_t len;
-  if (!(IsArrayLike(aCx, &servers) && JS_GetArrayLength(aCx, &servers, &len))) {
-    return NS_ERROR_FAILURE;
-  }
-  for (uint32_t i = 0; i < len; i++) {
-    nsresult rv;
-    // XXXbz once this moves to WebIDL, remove the RTCIceServer hack
-    // in DummyBinding.webidl.
-    RTCIceServer server;
-    {
-      JS::Value v;
-      if (!(JS_GetElement(aCx, &servers, i, &v) && server.Init(aCx, nullptr, v))) {
-        return NS_ERROR_FAILURE;
-      }
-    }
+  for (uint32_t i = 0; i < config.mIceServers.Value().Length(); i++) {
+    // XXXbz once this moves to WebIDL, remove RTCConfiguration in DummyBinding.webidl.
+    RTCIceServer& server = config.mIceServers.Value()[i];
     if (!server.mUrl.WasPassed()) {
       return NS_ERROR_FAILURE;
     }
     nsRefPtr<nsIURI> url;
+    nsresult rv;
     rv = NS_NewURI(getter_AddRefs(url), server.mUrl.Value());
     NS_ENSURE_SUCCESS(rv, rv);
     bool isStun = false, isStuns = false, isTurn = false, isTurns = false;
@@ -450,7 +437,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 nsresult
 PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                nsIDOMWindow* aWindow,
-                               const RTCConfiguration* aConfiguration,
+                               const IceConfiguration* aConfiguration,
                                const JS::Value* aRTCConfiguration,
                                nsIThread* aThread,
                                JSContext* aCx)
@@ -490,7 +477,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
   mCall = pcctx->createCall();
   if(!mCall.get()) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Couldn't Create Call Object");
+    CSFLogError(logTag, "%s: Couldn't Create Call Object", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
 
@@ -500,7 +487,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
   // Initialize the media object.
   if (aRTCConfiguration) {
-    RTCConfiguration ic;
+    IceConfiguration ic;
     res = ConvertRTCConfiguration(*aRTCConfiguration, &ic, aCx);
     NS_ENSURE_SUCCESS(res, res);
     res = mMedia->Init(ic.getServers());
@@ -508,7 +495,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
     res = mMedia->Init(aConfiguration->getServers());
   }
   if (NS_FAILED(res)) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Couldn't initialize media object");
+    CSFLogError(logTag, "%s: Couldn't initialize media object", __FUNCTION__);
     return res;
   }
 
@@ -537,7 +524,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mIdentity = DtlsIdentity::Generate();
 
   if (!mIdentity) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Generate returned NULL");
+    CSFLogError(logTag, "%s: Generate returned NULL", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
 
@@ -566,7 +553,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
 #ifndef MOZILLA_INTERNAL_API
   // Busy-wait until we are ready, for C++ unit tests. Remove when tests are fixed.
-  CSFLogDebugS(logTag, __FUNCTION__ << ": Sleeping until kStarted");
+  CSFLogDebug(logTag, "%s: Sleeping until kStarted", __FUNCTION__);
   while(PeerConnectionCtx::GetInstance()->sipcc_state() != kStarted) {
     PR_Sleep(100);
   }
@@ -682,7 +669,7 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
   );
   NS_ENSURE_TRUE(dataChannel,NS_ERROR_FAILURE);
 
-  CSFLogDebugS(logTag, __FUNCTION__ << ": making DOMDataChannel");
+  CSFLogDebug(logTag, "%s: making DOMDataChannel", __FUNCTION__);
 
   // TODO -- need something like "mCall->addStream(stream_id, 0, DATA);" so
   // the SDP can be generated correctly
@@ -698,7 +685,7 @@ PeerConnectionImpl::NotifyConnection()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
@@ -717,7 +704,7 @@ PeerConnectionImpl::NotifyClosedConnection()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
@@ -774,8 +761,8 @@ PeerConnectionImpl::NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aCh
  * Constraints look like this:
  *
  * {
- *    "mandatory": {"foo":"hello", "bar": false, "baz": 10},
- *    "optional": [{"hello":"foo"}, {"baz": false}]
+ *   mandatory: {"OfferToReceiveAudio": true, "OfferToReceiveVideo": true },
+ *   optional: [{"VoiceActivityDetection": true}, {"FooBar": 10}]
  * }
  *
  * Optional constraints are ordered, and hence in an array. This function
@@ -797,7 +784,7 @@ PeerConnectionImpl::ConvertConstraints(
       return NS_ERROR_FAILURE;
     }
 
-    JSObject* opts = JSVAL_TO_OBJECT(mandatory);
+    JSObject* opts = &mandatory.toObject();
     JS::AutoIdArray mandatoryOpts(aCx, JS_Enumerate(aCx, opts));
 
     // Iterate over each property.
@@ -806,7 +793,7 @@ PeerConnectionImpl::ConvertConstraints(
       if (!JS_GetPropertyById(aCx, opts, mandatoryOpts[i], &option) ||
           !JS_IdToValue(aCx, mandatoryOpts[i], &optionName) ||
           // We only support boolean constraints for now.
-          !JSVAL_IS_BOOLEAN(option)) {
+          !option.isBoolean()) {
         return NS_ERROR_FAILURE;
       }
       JSString* optionNameString = JS_ValueToString(aCx, optionName);
@@ -827,23 +814,39 @@ PeerConnectionImpl::ConvertConstraints(
       return NS_ERROR_FAILURE;
     }
 
-    JSObject* opts = JSVAL_TO_OBJECT(optional);
+    JSObject* array = &optional.toObject();
     uint32_t length;
-    if (!JS_IsArrayObject(aCx, opts) ||
-        !JS_GetArrayLength(aCx, opts, &length)) {
+    if (!JS_GetArrayLength(aCx, array, &length)) {
       return NS_ERROR_FAILURE;
     }
     for (uint32_t i = 0; i < length; i++) {
-      JS::Value val;
-      if (!JS_GetElement(aCx, opts, i, &val) ||
-          !val.isObject()) {
+      JS::Value element;
+      if (!JS_GetElement(aCx, array, i, &element) ||
+          !element.isObject()) {
         return NS_ERROR_FAILURE;
       }
-      // Extract name & value and store.
-      // FIXME: MediaConstraints does not support optional constraints?
+      JSObject* opts = &element.toObject();
+      JS::AutoIdArray optionalOpts(aCx, JS_Enumerate(aCx, opts));
+      // Expect one property per entry.
+      if (optionalOpts.length() != 1) {
+        return NS_ERROR_FAILURE;
+      }
+      JS::Value option, optionName;
+      if (!JS_GetPropertyById(aCx, opts, optionalOpts[0], &option) ||
+          !JS_IdToValue(aCx, optionalOpts[0], &optionName)) {
+        return NS_ERROR_FAILURE;
+      }
+      // Ignore constraints other than boolean, as that's all we support.
+      if (option.isBoolean()) {
+        JSString* optionNameString = JS_ValueToString(aCx, optionName);
+        if (!optionNameString) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        NS_ConvertUTF16toUTF8 stringVal(JS_GetStringCharsZ(aCx, optionNameString));
+        aObj->setBooleanConstraint(stringVal.get(), JSVAL_TO_BOOLEAN(option), false);
+      }
     }
   }
-
   return NS_OK;
 }
 
@@ -1112,7 +1115,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 NS_IMETHODIMP
 PeerConnectionImpl::Close(bool aIsSynchronous)
 {
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   return CloseInt(aIsSynchronous);
@@ -1206,7 +1209,7 @@ PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
       break;
 
     case CONNECTED:
-      CSFLogDebugS(logTag, "Setting PeerConnnection state to kActive");
+      CSFLogDebug(logTag, "Setting PeerConnnection state to kActive");
       ChangeReadyState(kActive);
       break;
     default:
@@ -1289,7 +1292,7 @@ PeerConnectionImpl::IceGatheringCompleted_m()
 {
   PC_AUTO_ENTER_API_CALL(false);
 
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
 
   mIceState = kIceWaiting;
 
@@ -1325,7 +1328,7 @@ PeerConnectionImpl::IceCompleted_m()
 {
   PC_AUTO_ENTER_API_CALL(false);
 
-  CSFLogDebugS(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, __FUNCTION__);
 
   mIceState = kIceConnected;
 

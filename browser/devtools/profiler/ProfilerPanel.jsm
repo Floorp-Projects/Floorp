@@ -470,8 +470,10 @@ ProfilerPanel.prototype = {
       panelWin = dbg.panelWin;
 
       let view = dbg.panelWin.DebuggerView;
-      if (view.Source && view.Sources.selectedValue === data.uri) {
-        return void view.editor.setCaretPosition(data.line - 1);
+      if (view.Sources.selectedValue === data.uri) {
+        view.editor.setCaretPosition(data.line - 1);
+        onOpen();
+        return;
       }
 
       panelWin.addEventListener("Debugger:SourceShown", onSourceShown, false);

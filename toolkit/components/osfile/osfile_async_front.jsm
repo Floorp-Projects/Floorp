@@ -89,8 +89,7 @@ const noOptions = {};
 
 
 let worker = new PromiseWorker(
-  "resource://gre/modules/osfile/osfile_async_worker.js",
-  DEBUG?LOG:null);
+  "resource://gre/modules/osfile/osfile_async_worker.js", LOG);
 let Scheduler = {
   post: function post(...args) {
     let promise = worker.post.apply(worker, args);

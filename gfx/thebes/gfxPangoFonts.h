@@ -33,8 +33,6 @@ public:
 
     virtual gfxFont *GetFontAt(int32_t i);
 
-    virtual nsString GetFamilyNameAt(int32_t i);
-
     virtual void UpdateFontList();
 
     virtual already_AddRefed<gfxFont>

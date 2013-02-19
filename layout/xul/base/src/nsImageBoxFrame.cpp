@@ -246,11 +246,11 @@ nsImageBoxFrame::UpdateImage()
   } else {
     // Only get the list-style-image if we aren't being drawn
     // by a native theme.
-    uint8_t appearance = GetStyleDisplay()->mAppearance;
+    uint8_t appearance = StyleDisplay()->mAppearance;
     if (!(appearance && nsBox::gTheme &&
           nsBox::gTheme->ThemeSupportsWidget(nullptr, this, appearance))) {
       // get the list-style-image
-      imgRequestProxy *styleRequest = GetStyleList()->GetListStyleImage();
+      imgRequestProxy *styleRequest = StyleList()->GetListStyleImage();
       if (styleRequest) {
         styleRequest->Clone(mListener, getter_AddRefs(mImageRequest));
       }
@@ -286,34 +286,30 @@ nsImageBoxFrame::UpdateLoadFlags()
   }
 }
 
-NS_IMETHODIMP
+void
 nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
     // scaling work while we wait for our image dimensions to arrive
     // asynchronously.
-    return NS_OK;
+    return;
   }
 
   if (!IsVisibleForPainting(aBuilder))
-    return NS_OK;
-
+    return;
 
   nsDisplayList list;
-  rv = list.AppendNewToTop(
-      new (aBuilder) nsDisplayXULImage(aBuilder, this));
-  NS_ENSURE_SUCCESS(rv, rv);
+  list.AppendNewToTop(
+    new (aBuilder) nsDisplayXULImage(aBuilder, this));
 
   CreateOwnLayerIfNeeded(aBuilder, &list);
 
   aLists.Content()->AppendToTop(&list);
-  return NS_OK;
 }
 
 void
@@ -425,14 +421,14 @@ nsImageBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   nsLeafBoxFrame::DidSetStyleContext(aOldStyleContext);
 
   // Fetch our subrect.
-  const nsStyleList* myList = GetStyleList();
+  const nsStyleList* myList = StyleList();
   mSubRect = myList->mImageRegion; // before |mSuppressStyleCheck| test!
 
   if (mUseSrcAttr || mSuppressStyleCheck)
     return; // No more work required, since the image isn't specified by style.
 
   // If we're using a native theme implementation, we shouldn't draw anything.
-  const nsStyleDisplay* disp = GetStyleDisplay();
+  const nsStyleDisplay* disp = StyleDisplay();
   if (disp->mAppearance && nsBox::gTheme &&
       nsBox::gTheme->ThemeSupportsWidget(nullptr, this, disp->mAppearance))
     return;

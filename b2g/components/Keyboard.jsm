@@ -46,9 +46,43 @@ let Keyboard = {
     let frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
     let mm = frameLoader.messageManager;
     mm.addMessageListener('Forms:Input', this);
+
+    // When not running apps OOP, we need to load forms.js here since this
+    // won't happen from dom/ipc/preload.js
+    try {
+       if (Services.prefs.getBoolPref("dom.ipc.tabs.disabled") === true) {
+         mm.loadFrameScript(kFormsFrameScript, true);
+       }
+     } catch (e) {
+       dump('Error loading ' + kFormsFrameScript + ' as frame script: ' + e + '\n');
+     }
   },
 
   receiveMessage: function keyboardReceiveMessage(msg) {
+    // If we get a 'Keyboard:XXX' message, check that the sender has the
+    // keyboard permission.
+    if (msg.name != 'Forms:Input') {
+      let mm;
+      try {
+        mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
+                       .frameLoader.messageManager;
+      } catch(e) {
+        mm = msg.target;
+      }
+
+      // That should never happen.
+      if (!mm) {
+        dump("!! No message manager found for " + msg.name);
+        return;
+      }
+
+      if (!mm.assertPermission("keyboard")) {
+        dump("Keyboard message " + msg.name +
+        " from a content process with no 'keyboard' privileges.");
+        return;
+      }
+    }
+
     switch (msg.name) {
       case 'Forms:Input':
         this.handleFormsInput(msg);

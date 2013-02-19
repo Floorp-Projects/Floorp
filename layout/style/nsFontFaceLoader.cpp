@@ -731,8 +731,8 @@ nsUserFontSet::LogMessage(gfxMixedFontFamily *aFamily,
     weightKeyword = weightKeywordBuf;
   }
 
-  nsPrintfCString
-    msg("downloadable font: %s "
+  nsPrintfCString message
+       ("downloadable font: %s "
         "(font-family: \"%s\" style:%s weight:%s stretch:%s src index:%d)",
         aMessage,
         familyName.get(),
@@ -743,27 +743,27 @@ nsUserFontSet::LogMessage(gfxMixedFontFamily *aFamily,
         aProxy->mSrcIndex);
 
   if (NS_FAILED(aStatus)) {
-    msg.Append(": ");
+    message.Append(": ");
     switch (aStatus) {
     case NS_ERROR_DOM_BAD_URI:
-      msg.Append("bad URI or cross-site access not allowed");
+      message.Append("bad URI or cross-site access not allowed");
       break;
     case NS_ERROR_CONTENT_BLOCKED:
-      msg.Append("content blocked");
+      message.Append("content blocked");
       break;
     default:
-      msg.Append("status=");
-      msg.AppendInt(static_cast<uint32_t>(aStatus));
+      message.Append("status=");
+      message.AppendInt(static_cast<uint32_t>(aStatus));
       break;
     }
   }
-  msg.Append("\nsource: ");
-  msg.Append(fontURI);
+  message.Append("\nsource: ");
+  message.Append(fontURI);
 
 #ifdef PR_LOGGING
   if (PR_LOG_TEST(GetUserFontsLog(), PR_LOG_DEBUG)) {
     PR_LOG(GetUserFontsLog(), PR_LOG_DEBUG,
-           ("userfonts (%p) %s", this, msg.get()));
+           ("userfonts (%p) %s", this, message.get()));
   }
 #endif
 
@@ -787,7 +787,7 @@ nsUserFontSet::LogMessage(gfxMixedFontFamily *aFamily,
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t innerWindowID = GetPresContext()->Document()->InnerWindowID();
-  rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(msg),
+  rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(message),
                                      href,         // file
                                      text,         // src line
                                      0, 0,         // line & column number

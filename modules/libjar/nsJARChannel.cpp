@@ -18,7 +18,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsIFileURL.h"
-#include "nsXULAppAPI.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
@@ -349,9 +348,9 @@ nsJARChannel::LookupFile()
     }
     // if we're in child process and have special "remoteopenfile:://" scheme,
     // create special nsIFile that gets file handle from parent when opened.
-    if (!mJarFile && XRE_GetProcessType() != GeckoProcessType_Default) {
+    if (!mJarFile && !gJarHandler->IsMainProcess()) {
         nsAutoCString scheme;
-        nsresult rv = mJarBaseURI->GetScheme(scheme);
+        rv = mJarBaseURI->GetScheme(scheme);
         if (NS_SUCCEEDED(rv) && scheme.EqualsLiteral("remoteopenfile")) {
             nsRefPtr<RemoteOpenFileChild> remoteFile = new RemoteOpenFileChild();
             rv = remoteFile->Init(mJarBaseURI);
@@ -369,13 +368,20 @@ nsJARChannel::LookupFile()
                 }
             }
 
+            mOpeningRemote = true;
+
+            if (gJarHandler->RemoteOpenFileInProgress(remoteFile, this)) {
+                // JarHandler will trigger OnRemoteFileOpen() after the first
+                // request for this file completes and we'll get a JAR cache
+                // hit.
+                return NS_OK;
+            }
+
             // Open file on parent: OnRemoteFileOpenComplete called when done
             nsCOMPtr<nsITabChild> tabChild;
             NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, tabChild);
             rv = remoteFile->AsyncRemoteFileOpen(PR_RDONLY, this, tabChild.get());
             NS_ENSURE_SUCCESS(rv, rv);
-
-            mOpeningRemote = true;
         }
     }
     // try to handle a nested jar
@@ -395,6 +401,38 @@ nsJARChannel::LookupFile()
     }
 
     return rv;
+}
+
+nsresult
+nsJARChannel::OpenLocalFile()
+{
+    MOZ_ASSERT(mIsPending);
+
+    // Local files are always considered safe.
+    mIsUnsafe = false;
+
+    nsRefPtr<nsJARInputThunk> input;
+    nsresult rv = CreateJarInput(gJarHandler->JarCache(),
+                                 getter_AddRefs(input));
+    if (NS_SUCCEEDED(rv)) {
+        // Create input stream pump and call AsyncRead as a block.
+        rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input);
+        if (NS_SUCCEEDED(rv))
+            rv = mPump->AsyncRead(this, nullptr);
+    }
+
+    return rv;
+}
+
+void
+nsJARChannel::NotifyError(nsresult aError)
+{
+    MOZ_ASSERT(NS_FAILED(aError));
+
+    mStatus = aError;
+
+    OnStartRequest(nullptr, nullptr);
+    OnStopRequest(nullptr, nullptr, aError);
 }
 
 //-----------------------------------------------------------------------------
@@ -749,17 +787,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
     } else if (mOpeningRemote) {
         // nothing to do: already asked parent to open file.
     } else {
-        // local files are always considered safe
-        mIsUnsafe = false;
-
-        nsRefPtr<nsJARInputThunk> input;
-        rv = CreateJarInput(gJarHandler->JarCache(), getter_AddRefs(input));
-        if (NS_SUCCEEDED(rv)) {
-            // create input stream pump and call AsyncRead as a block
-            rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input);
-            if (NS_SUCCEEDED(rv))
-                rv = mPump->AsyncRead(this, nullptr);
-        }
+        rv = OpenLocalFile();
     }
 
     if (NS_FAILED(rv)) {
@@ -902,9 +930,7 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
     }
 
     if (NS_FAILED(status)) {
-        mStatus = status;
-        OnStartRequest(nullptr, nullptr);
-        OnStopRequest(nullptr, nullptr, status);
+        NotifyError(status);
     }
 
     return NS_OK;
@@ -918,29 +944,18 @@ nsJARChannel::OnRemoteFileOpenComplete(nsresult aOpenStatus)
 {
     nsresult rv = aOpenStatus;
 
-    if (NS_SUCCEEDED(rv)) {
-        // files on parent are always considered safe
-        mIsUnsafe = false;
-
-        nsRefPtr<nsJARInputThunk> input;
-        rv = CreateJarInput(gJarHandler->JarCache(), getter_AddRefs(input));
-        if (NS_SUCCEEDED(rv)) {
-            // create input stream pump and call AsyncRead as a block
-            rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input);
-            if (NS_SUCCEEDED(rv))
-                rv = mPump->AsyncRead(this, nullptr);
-        }
+    // NS_ERROR_ALREADY_OPENED here means we'll hit JAR cache in
+    // OpenLocalFile().
+    if (NS_SUCCEEDED(rv) || rv == NS_ERROR_ALREADY_OPENED) {
+        rv = OpenLocalFile();
     }
 
     if (NS_FAILED(rv)) {
-        mStatus = rv;
-        OnStartRequest(nullptr, nullptr);
-        OnStopRequest(nullptr, nullptr, mStatus);
+        NotifyError(rv);
     }
 
     return NS_OK;
 }
-
 
 //-----------------------------------------------------------------------------
 // nsIStreamListener

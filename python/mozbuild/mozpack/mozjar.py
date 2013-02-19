@@ -11,6 +11,8 @@ from zipfile import (
     ZIP_DEFLATED,
 )
 from collections import OrderedDict
+from urlparse import urlparse, ParseResult
+import mozpack.path
 
 JAR_STORED = ZIP_STORED
 JAR_DEFLATED = ZIP_DEFLATED
@@ -278,6 +280,12 @@ class JarFileReader(object):
         data.
         '''
         return self.read().splitlines(True)
+
+    def __iter__(self):
+        '''
+        Iterator, to support the "for line in fileobj" constructs.
+        '''
+        return iter(self.readlines())
 
     def seek(self, pos, whence=os.SEEK_SET):
         '''
@@ -732,3 +740,60 @@ class Deflater(object):
         if self.compressed:
             return self._deflated.getvalue()
         return self._data.getvalue()
+
+
+class JarLog(dict):
+    '''
+    Helper to read the file Gecko generates when setting MOZ_JAR_LOG_FILE.
+    The jar log is then available as a dict with the jar path as key (see
+    canonicalize for more details on the key value), and the corresponding
+    access log as a list value. Only the first access to a given member of
+    a jar is stored.
+    '''
+    def __init__(self, file=None, fileobj=None):
+        if not fileobj:
+            fileobj = open(file, 'r')
+        urlmap = {}
+        for line in fileobj:
+            url, path = line.strip().split(None, 1)
+            if not url or not path:
+                continue
+            if url not in urlmap:
+                urlmap[url] = JarLog.canonicalize(url)
+            jar = urlmap[url]
+            entry = self.setdefault(jar, [])
+            if path not in entry:
+                entry.append(path)
+
+    @staticmethod
+    def canonicalize(url):
+        '''
+        The jar path is stored in a MOZ_JAR_LOG_FILE log as a url. This method
+        returns a unique value corresponding to such urls.
+        - file:///{path} becomes {path}
+        - jar:file:///{path}!/{subpath} becomes ({path}, {subpath})
+        - jar:jar:file:///{path}!/{subpath}!/{subpath2} becomes
+           ({path}, {subpath}, {subpath2})
+        '''
+        if not isinstance(url, ParseResult):
+            # Assume that if it doesn't start with jar: or file:, it's a path.
+            if not url.startswith(('jar:', 'file:')):
+                url = 'file:///' + os.path.abspath(url)
+            url = urlparse(url)
+        assert url.scheme
+        assert url.scheme in ('jar', 'file')
+        if url.scheme == 'jar':
+            path = JarLog.canonicalize(url.path)
+            if isinstance(path, tuple):
+                return path[:-1] + tuple(path[-1].split('!/', 1))
+            return tuple(path.split('!/', 1))
+        if url.scheme == 'file':
+            assert os.path.isabs(url.path)
+            path = url.path
+            # On Windows, url.path will be /drive:/path ; on Unix systems,
+            # /path. As we want drive:/path instead of /drive:/path on Windows,
+            # remove the leading /.
+            if os.path.isabs(path[1:]):
+                path = path[1:]
+            path = os.path.realpath(path)
+            return mozpack.path.normsep(os.path.normcase(path))

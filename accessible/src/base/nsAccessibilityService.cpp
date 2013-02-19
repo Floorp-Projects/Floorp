@@ -743,7 +743,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
   // Check frame and its visibility. Note, hidden frame allows visible
   // elements in subtree.
-  if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
+  if (!frame || !frame->StyleVisibility()->IsVisible()) {
     if (aIsSubtreeHidden && !frame)
       *aIsSubtreeHidden = true;
 
@@ -1422,8 +1422,10 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLTableAccessibleWrap(aContent, document);
       break;
     case eHTMLTableCellType:
-      // Accessible HTML table cell must be a child of accessible HTML table row.
-      if (aContext->IsHTMLTableRow())
+      // Accessible HTML table cell should be a child of accessible HTML table
+      // or its row (CSS HTML tables are polite to the used markup at
+      // certain degree).
+      if (aContext->IsHTMLTableRow() || aContext->IsHTMLTable())
         newAcc = new HTMLTableCellAccessibleWrap(aContent, document);
       break;
 

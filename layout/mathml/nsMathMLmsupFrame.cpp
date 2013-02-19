@@ -164,7 +164,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   nscoord supScriptShift;
   nsPresentationData presentationData;
   aFrame->GetPresentationData (presentationData);
-  if ( aFrame->GetStyleFont()->mScriptLevel == 0 && 
+  if ( aFrame->StyleFont()->mScriptLevel == 0 && 
        NS_MATHML_IS_DISPLAYSTYLE(presentationData.flags) &&
       !NS_MATHML_IS_COMPRESSED(presentationData.flags)) {
     // Style D in TeXbook

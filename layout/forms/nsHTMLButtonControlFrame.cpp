@@ -110,24 +110,21 @@ nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP
+void
 nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists)
 {
   nsDisplayList onTop;
   if (IsVisibleForPainting(aBuilder)) {
-    nsresult rv = mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
   }
   
   nsDisplayListCollection set;
   // Do not allow the child subtree to receive events.
   if (!aBuilder->IsForEventDelivery()) {
-    nsresult rv =
-      BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
-                               DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
-    NS_ENSURE_SUCCESS(rv, rv);
+    BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
+                             DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
     // That should put the display items in set.Content()
   }
   
@@ -136,24 +133,22 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // clips to our padding box for <input>s but not <button>s, unless
   // they have non-visible overflow..
-  if (IsInput() || GetStyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
-    nsMargin border = GetStyleBorder()->GetComputedBorder();
+  if (IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
+    nsMargin border = StyleBorder()->GetComputedBorder();
     nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
     rect.Deflate(border);
     nscoord radii[8];
     GetPaddingBoxBorderRadii(radii);
 
-    nsresult rv = OverflowClip(aBuilder, set, aLists, rect, radii);
-    NS_ENSURE_SUCCESS(rv, rv);
+    OverflowClip(aBuilder, set, aLists, rect, radii);
   } else {
     set.MoveTo(aLists);
   }
   
-  nsresult rv = DisplayOutline(aBuilder, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisplayOutline(aBuilder, aLists);
 
   // to draw border when selected in editor
-  return DisplaySelectionOverlay(aBuilder, aLists.Content());
+  DisplaySelectionOverlay(aBuilder, aLists.Content());
 }
 
 nscoord

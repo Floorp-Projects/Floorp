@@ -324,7 +324,7 @@ nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
                     ToReferenceFrame();
   nsLayoutUtils::PaintTextShadow(mFrame, aCtx,
                                  drawRect, mVisibleRect,
-                                 mFrame->GetStyleColor()->mColor,
+                                 mFrame->StyleColor()->mColor,
                                  PaintTextShadowCallback,
                                  (void*)this);
 
@@ -353,18 +353,17 @@ nsDisplayXULTextBox::GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
       ToReferenceFrame();
 }
 
-NS_IMETHODIMP
+void
 nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists)
 {
     if (!IsVisibleForPainting(aBuilder))
-      return NS_OK;
+        return;
 
-    nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
     
-    return aLists.Content()->AppendNewToTop(new (aBuilder)
+    aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayXULTextBox(aBuilder, this));
 }
 
@@ -403,11 +402,11 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 
     nsIFrame* f = this;
     do {  // find decoration colors
-      nsStyleContext* context = f->GetStyleContext();
+      nsStyleContext* context = f->StyleContext();
       if (!context->HasTextDecorationLines()) {
         break;
       }
-      const nsStyleTextReset* styleText = context->GetStyleTextReset();
+      const nsStyleTextReset* styleText = context->StyleTextReset();
       
       if (decorMask & styleText->mTextDecorationLine) {  // a decoration defined here
         nscolor color;
@@ -498,14 +497,14 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 
     CalculateUnderline(*refContext);
 
-    aRenderingContext.SetColor(aOverrideColor ? *aOverrideColor : GetStyleColor()->mColor);
+    aRenderingContext.SetColor(aOverrideColor ? *aOverrideColor : StyleColor()->mColor);
 
 #ifdef IBMBIDI
     nsresult rv = NS_ERROR_FAILURE;
 
     if (mState & NS_FRAME_IS_BIDI) {
       presContext->SetBidiEnabled();
-      const nsStyleVisibility* vis = GetStyleVisibility();
+      const nsStyleVisibility* vis = StyleVisibility();
       nsBidiDirection direction = (NS_STYLE_DIRECTION_RTL == vis->mDirection) ? NSBIDI_RTL : NSBIDI_LTR;
       if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
           // We let the RenderText function calculate the mnemonic's
@@ -892,7 +891,7 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 
     CalcDrawRect(*aBoxLayoutState.GetRenderingContext());
 
-    const nsStyleText* textStyle = GetStyleText();
+    const nsStyleText* textStyle = StyleText();
     
     nsRect scrollBounds(nsPoint(0, 0), GetSize());
     nsRect textRect = mTextDrawRect;
@@ -929,7 +928,7 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 nsRect
 nsTextBoxFrame::GetComponentAlphaBounds()
 {
-  if (GetStyleText()->mTextShadow) {
+  if (StyleText()->mTextShadow) {
     return GetVisualOverflowRectRelativeToSelf();
   }
   return mTextDrawRect;
@@ -1002,8 +1001,8 @@ nsTextBoxFrame::CalcDrawRect(nsRenderingContext &aRenderingContext)
     textRect.width = titleWidth;
 
     // Align our text within the overall rect by checking our text-align property.
-    const nsStyleVisibility* vis = GetStyleVisibility();
-    const nsStyleText* textStyle = GetStyleText();
+    const nsStyleVisibility* vis = StyleVisibility();
+    const nsStyleText* textStyle = StyleText();
 
     if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_CENTER)
       textRect.x += (outerWidth - textRect.width)/2;

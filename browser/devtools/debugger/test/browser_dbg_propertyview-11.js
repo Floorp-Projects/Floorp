@@ -187,7 +187,7 @@ function testFrameParameters()
              .getAttribute("value"), "formMethod",
             "Should have the right property name for 'formMethod' in buttonProtoNode.");
           is(buttonProtoNode.get("formMethod").target.querySelector(".value")
-             .getAttribute("value"), '"get"',
+             .getAttribute("value"), '""',
             "'formMethod' in buttonProtoNode should have the right value.");
 
           is(documentProtoNode.get("baseURI").target.querySelector(".name")
@@ -243,7 +243,7 @@ function testFrameParameters()
                .getAttribute("value"), "formMethod",
               "Should have the right property name for 'formMethod' in buttonAsProtoProtoProtoNode.");
             is(buttonAsProtoProtoProtoNode.get("formMethod").target.querySelector(".value")
-               .getAttribute("value"), '"get"',
+               .getAttribute("value"), '""',
               "'formMethod' in buttonAsProtoProtoProtoNode should have the right value.");
 
             resumeAndFinish();

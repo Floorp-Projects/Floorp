@@ -47,6 +47,8 @@ parent:
   PWebSocket(PBrowser browser, SerializedLoadContext loadContext);
   PTCPSocket(nsString host, uint16_t port, bool useSSL, nsString binaryType,
              nullable PBrowser browser);
+
+  // Request that the parent open a file.
   PRemoteOpenFile(URIParams fileuri, nullable PBrowser browser);
 
   HTMLDNSPrefetch(nsString hostname, uint16_t flags);

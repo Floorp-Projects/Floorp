@@ -86,24 +86,21 @@ nsMathMLmrootFrame::TransmitAutomaticData()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsMathMLmrootFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
   /////////////
   // paint the content we are square-rooting
-  nsresult rv = nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   
   /////////////
   // paint the sqrt symbol
   if (!NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    rv = mSqrChar.Display(aBuilder, this, aLists, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mSqrChar.Display(aBuilder, this, aLists, 0);
 
-    rv = DisplayBar(aBuilder, this, mBarRect, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    DisplayBar(aBuilder, this, mBarRect, aLists);
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
@@ -111,11 +108,9 @@ nsMathMLmrootFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     mSqrChar.GetRect(rect);
     nsBoundingMetrics bm;
     mSqrChar.GetBoundingMetrics(bm);
-    rv = DisplayBoundingMetrics(aBuilder, this, rect.TopLeft(), bm, aLists);
+    DisplayBoundingMetrics(aBuilder, this, rect.TopLeft(), bm, aLists);
 #endif
   }
-
-  return rv;
 }
 
 static void

@@ -239,6 +239,8 @@ protected:
   nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIURI> mSourceUrl;
   nsString mTempFileExtension;
+  nsString mTempLeafName;
+
   /**
    * The MIME Info for this load. Will never be null.
    */

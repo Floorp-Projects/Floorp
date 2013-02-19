@@ -294,7 +294,9 @@
             if (aValue >= 10) {
               aValue /= 100.0;
             } else {
-              this.mScaleCombobox.selectedIndex = this.mScaleCombobox.getAttribute('lastValidInx');
+              if (this.mScaleCombobox.hasAttribute('lastValidInx')) {
+                this.mScaleCombobox.selectedIndex = this.mScaleCombobox.getAttribute('lastValidInx');
+              }
               return;
             }
           }

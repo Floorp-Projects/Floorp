@@ -13,12 +13,14 @@
 #include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGElement.h"
-#include "nsSVGFilterElement.h"
+#include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsContentUtils.h"
+
+using namespace mozilla::dom;
 
 nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -138,12 +140,12 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
                                            const nsRect *aPreFilterVisualOverflowRectOverride,
                                            const gfxRect *aOverrideBBox)
 {
-  const nsSVGFilterElement *filter = aFilterFrame->GetFilterContent();
+  const SVGFilterElement *filter = aFilterFrame->GetFilterContent();
 
   uint16_t filterUnits =
-    aFilterFrame->GetEnumValue(nsSVGFilterElement::FILTERUNITS);
+    aFilterFrame->GetEnumValue(SVGFilterElement::FILTERUNITS);
   uint16_t primitiveUnits =
-    aFilterFrame->GetEnumValue(nsSVGFilterElement::PRIMITIVEUNITS);
+    aFilterFrame->GetEnumValue(SVGFilterElement::PRIMITIVEUNITS);
 
   gfxRect bbox = aOverrideBBox ? *aOverrideBBox : nsSVGUtils::GetBBox(aTarget);
 
@@ -163,10 +165,10 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   NS_ABORT_IF_FALSE(sizeof(filter->mLengthAttributes) == sizeof(XYWH),
                     "XYWH size incorrect");
   memcpy(XYWH, filter->mLengthAttributes, sizeof(filter->mLengthAttributes));
-  XYWH[0] = *aFilterFrame->GetLengthValue(nsSVGFilterElement::X);
-  XYWH[1] = *aFilterFrame->GetLengthValue(nsSVGFilterElement::Y);
-  XYWH[2] = *aFilterFrame->GetLengthValue(nsSVGFilterElement::WIDTH);
-  XYWH[3] = *aFilterFrame->GetLengthValue(nsSVGFilterElement::HEIGHT);
+  XYWH[0] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_X);
+  XYWH[1] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_Y);
+  XYWH[2] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_WIDTH);
+  XYWH[3] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_HEIGHT);
   // The filter region in user space, in user units:
   gfxRect filterRegion = nsSVGUtils::GetRelativeRect(filterUnits,
     XYWH, bbox, aTarget);
@@ -185,7 +187,7 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
 
   gfxIntSize filterRes;
   const nsSVGIntegerPair* filterResAttrs =
-    aFilterFrame->GetIntegerPairValue(nsSVGFilterElement::FILTERRES);
+    aFilterFrame->GetIntegerPairValue(SVGFilterElement::FILTERRES);
   if (filterResAttrs->IsExplicitlySet()) {
     int32_t filterResX = filterResAttrs->GetAnimValue(nsSVGIntegerPair::eFirst);
     int32_t filterResY = filterResAttrs->GetAnimValue(nsSVGIntegerPair::eSecond);
@@ -281,7 +283,7 @@ uint16_t
 nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
 {
   nsSVGEnum& thisEnum =
-    static_cast<nsSVGFilterElement *>(mContent)->mEnumAttributes[aIndex];
+    static_cast<SVGFilterElement *>(mContent)->mEnumAttributes[aIndex];
 
   if (thisEnum.IsExplicitlySet())
     return thisEnum.GetAnimValue();
@@ -290,7 +292,7 @@ nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
 
   nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
   return next ? next->GetEnumValue(aIndex, aDefault) :
-    static_cast<nsSVGFilterElement *>(aDefault)->
+    static_cast<SVGFilterElement *>(aDefault)->
       mEnumAttributes[aIndex].GetAnimValue();
 }
 
@@ -298,7 +300,7 @@ const nsSVGIntegerPair *
 nsSVGFilterFrame::GetIntegerPairValue(uint32_t aIndex, nsIContent *aDefault)
 {
   const nsSVGIntegerPair *thisIntegerPair =
-    &static_cast<nsSVGFilterElement *>(mContent)->mIntegerPairAttributes[aIndex];
+    &static_cast<SVGFilterElement *>(mContent)->mIntegerPairAttributes[aIndex];
 
   if (thisIntegerPair->IsExplicitlySet())
     return thisIntegerPair;
@@ -307,14 +309,14 @@ nsSVGFilterFrame::GetIntegerPairValue(uint32_t aIndex, nsIContent *aDefault)
 
   nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
   return next ? next->GetIntegerPairValue(aIndex, aDefault) :
-    &static_cast<nsSVGFilterElement *>(aDefault)->mIntegerPairAttributes[aIndex];
+    &static_cast<SVGFilterElement *>(aDefault)->mIntegerPairAttributes[aIndex];
 }
 
 const nsSVGLength2 *
 nsSVGFilterFrame::GetLengthValue(uint32_t aIndex, nsIContent *aDefault)
 {
   const nsSVGLength2 *thisLength =
-    &static_cast<nsSVGFilterElement *>(mContent)->mLengthAttributes[aIndex];
+    &static_cast<SVGFilterElement *>(mContent)->mLengthAttributes[aIndex];
 
   if (thisLength->IsExplicitlySet())
     return thisLength;
@@ -323,10 +325,10 @@ nsSVGFilterFrame::GetLengthValue(uint32_t aIndex, nsIContent *aDefault)
 
   nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
   return next ? next->GetLengthValue(aIndex, aDefault) :
-    &static_cast<nsSVGFilterElement *>(aDefault)->mLengthAttributes[aIndex];
+    &static_cast<SVGFilterElement *>(aDefault)->mLengthAttributes[aIndex];
 }
 
-const nsSVGFilterElement *
+const SVGFilterElement *
 nsSVGFilterFrame::GetFilterContent(nsIContent *aDefault)
 {
   for (nsIContent* child = mContent->GetFirstChild();
@@ -335,7 +337,7 @@ nsSVGFilterFrame::GetFilterContent(nsIContent *aDefault)
     nsRefPtr<nsSVGFE> primitive;
     CallQueryInterface(child, (nsSVGFE**)getter_AddRefs(primitive));
     if (primitive) {
-      return static_cast<nsSVGFilterElement *>(mContent);
+      return static_cast<SVGFilterElement *>(mContent);
     }
   }
 
@@ -343,7 +345,7 @@ nsSVGFilterFrame::GetFilterContent(nsIContent *aDefault)
 
   nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
   return next ? next->GetFilterContent(aDefault) :
-    static_cast<nsSVGFilterElement *>(aDefault);
+    static_cast<SVGFilterElement *>(aDefault);
 }
 
 nsSVGFilterFrame *
@@ -357,9 +359,9 @@ nsSVGFilterFrame::GetReferencedFilter()
 
   if (!property) {
     // Fetch our Filter element's xlink:href attribute
-    nsSVGFilterElement *filter = static_cast<nsSVGFilterElement *>(mContent);
+    SVGFilterElement *filter = static_cast<SVGFilterElement *>(mContent);
     nsAutoString href;
-    filter->mStringAttributes[nsSVGFilterElement::HREF].GetAnimValue(href, filter);
+    filter->mStringAttributes[SVGFilterElement::HREF].GetAnimValue(href, filter);
     if (href.IsEmpty()) {
       mNoHRefURI = true;
       return nullptr; // no URL

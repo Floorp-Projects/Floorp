@@ -18,10 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=536379
 
 /** Test for Bug 536379 **/
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-const CI = Components.interfaces;
-const CC = Components.classes;
+const CI = SpecialPowers.Ci;
+const CC = SpecialPowers.Cc;
 
 var domUtils =
   CC["@mozilla.org/inspector/dom-utils;1"].getService(CI.inIDOMUtils);
@@ -33,10 +31,10 @@ ok(true, "should not crash");
 
 var links = document.getElementsByTagName("link");
 is(links.length, 3, "links.length");
-is(firstPRule.parentStyleSheet, links[1].sheet, "sheet match for first P rule");
+is(SpecialPowers.unwrap(firstPRule.parentStyleSheet), links[1].sheet, "sheet match for first P rule");
 var secondPRule =
   rules.GetElementAt(rules.Count() - 1).QueryInterface(CI.nsIDOMCSSStyleRule);
-is(secondPRule.parentStyleSheet, links[2].sheet, "sheet match for second P rule");
+is(SpecialPowers.unwrap(secondPRule.parentStyleSheet), links[2].sheet, "sheet match for second P rule");
 is(links[1].href, links[2].href, "links should have same href");
 isnot(links[1].sheet, links[2].sheet, "links should have different sheets");
 isnot(firstPRule, secondPRule, "rules should be different");

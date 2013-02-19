@@ -153,13 +153,13 @@ public:
 
   // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
   // can override it
-  NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
-                                         const nsRect&           aDirtyRect,
-                                         const nsDisplayListSet& aLists);
+  virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
+                                           const nsDisplayListSet& aLists);
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
   
 #ifdef DEBUG_LAYOUT
     virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIFrame* aChild, bool aDebug);
@@ -174,9 +174,9 @@ public:
    * Supports 'allowevents' attribute on descendant elements to allow those
    * elements and their descendants to receive events.
    */
-  nsresult WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
-                                 const nsDisplayListSet& aIn,
-                                 const nsDisplayListSet& aOut);
+  void WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
+                             const nsDisplayListSet& aIn,
+                             const nsDisplayListSet& aOut);
 
   /**
    * This defaults to true, but some box frames (nsListBoxBodyFrame for

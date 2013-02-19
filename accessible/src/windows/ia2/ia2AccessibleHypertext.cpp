@@ -45,7 +45,7 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
     return CO_E_OBJNOTCONNECTED;
 
   Accessible* hyperLink = hyperText->GetLinkAt(aLinkIndex);
-  if (!hyperText)
+  if (!hyperLink)
     return E_FAIL;
 
   *aHyperlink =

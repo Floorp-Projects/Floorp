@@ -191,8 +191,7 @@ VectorImage::~VectorImage()
 // Methods inherited from Image.h
 
 nsresult
-VectorImage::Init(imgDecoderObserver* aObserver,
-                  const char* aMimeType,
+VectorImage::Init(const char* aMimeType,
                   uint32_t aFlags)
 {
   // We don't support re-initialization
@@ -202,14 +201,9 @@ VectorImage::Init(imgDecoderObserver* aObserver,
   NS_ABORT_IF_FALSE(!mIsFullyLoaded && !mHaveAnimations &&
                     !mHaveRestrictedRegion && !mError,
                     "Flags unexpectedly set before initialization");
-
-  if (aObserver) {
-    mObserver = aObserver->asWeakPtr();
-  }
   NS_ABORT_IF_FALSE(!strcmp(aMimeType, IMAGE_SVG_XML), "Unexpected mimetype");
 
   mIsInitialized = true;
-
   return NS_OK;
 }
 
@@ -714,9 +708,9 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
   mRenderingObserver = new SVGRootRenderingObserver(mSVGDocumentWrapper, this);
 
   // Tell *our* observers that we're done loading
-  RefPtr<imgDecoderObserver> observer(mObserver);
-  if (observer) {
+  if (mStatusTracker) {
     // NOTE: This signals that width/height are available.
+    imgDecoderObserver* observer = mStatusTracker->GetDecoderObserver();
     observer->OnStartContainer();
 
     observer->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
@@ -753,8 +747,8 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
 void
 VectorImage::InvalidateObserver()
 {
-  RefPtr<imgDecoderObserver> observer(mObserver);
-  if (observer) {
+  if (mStatusTracker) {
+    imgDecoderObserver* observer = mStatusTracker->GetDecoderObserver();
     observer->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
     observer->OnStopFrame();
   }

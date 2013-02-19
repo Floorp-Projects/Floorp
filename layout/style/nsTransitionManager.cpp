@@ -216,13 +216,13 @@ static void ReparentBeforeAndAfter(dom::Element* aElement,
 {
   if (nsIFrame* before = nsLayoutUtils::GetBeforeFrame(aPrimaryFrame)) {
     nsRefPtr<nsStyleContext> beforeStyle =
-      aStyleSet->ReparentStyleContext(before->GetStyleContext(),
+      aStyleSet->ReparentStyleContext(before->StyleContext(),
                                      aNewStyle, aElement);
     before->SetStyleContextWithoutNotification(beforeStyle);
   }
   if (nsIFrame* after = nsLayoutUtils::GetBeforeFrame(aPrimaryFrame)) {
     nsRefPtr<nsStyleContext> afterStyle =
-      aStyleSet->ReparentStyleContext(after->GetStyleContext(),
+      aStyleSet->ReparentStyleContext(after->StyleContext(),
                                      aNewStyle, aElement);
     after->SetStyleContextWithoutNotification(afterStyle);
   }
@@ -264,8 +264,8 @@ nsTransitionManager::UpdateThrottledStyle(dom::Element* aElement,
     return nullptr;
   }
 
-  nsStyleContext* oldStyle = primaryFrame->GetStyleContext();
-  nsRuleNode* ruleNode = oldStyle->GetRuleNode();
+  nsStyleContext* oldStyle = primaryFrame->StyleContext();
+  nsRuleNode* ruleNode = oldStyle->RuleNode();
   nsTArray<nsStyleSet::RuleAndLevel> rules;
   do {
     if (ruleNode->IsRoot()) {
@@ -355,7 +355,7 @@ nsTransitionManager::UpdateThrottledStylesForSubtree(nsIContent* aContent,
       return;
     }
 
-    newStyle = styleSet->ReparentStyleContext(primaryFrame->GetStyleContext(),
+    newStyle = styleSet->ReparentStyleContext(primaryFrame->StyleContext(),
                                               aParentStyle, element);
     primaryFrame->SetStyleContextWithoutNotification(newStyle);
     ReparentBeforeAndAfter(element, primaryFrame, newStyle, styleSet);
@@ -425,7 +425,7 @@ nsTransitionManager::UpdateAllThrottledStyles()
     if (element &&
         (primaryFrame = element->GetPrimaryFrame())) {
       UpdateThrottledStylesForSubtree(element,
-        primaryFrame->GetStyleContext()->GetParent(), changeList);
+        primaryFrame->StyleContext()->GetParent(), changeList);
     }
   }
 
@@ -457,7 +457,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
   // Return sooner (before the startedAny check below) for the most
   // common case: no transitions specified or running.
-  const nsStyleDisplay *disp = aNewStyleContext->GetStyleDisplay();
+  const nsStyleDisplay *disp = aNewStyleContext->StyleDisplay();
   nsCSSPseudoElements::Type pseudoType = aNewStyleContext->GetPseudoType();
   if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
     if (pseudoType != nsCSSPseudoElements::ePseudo_before &&

@@ -72,7 +72,7 @@ float
 SVGContentUtils::GetFontSize(nsIFrame *aFrame)
 {
   NS_ABORT_IF_FALSE(aFrame, "NULL frame in GetFontSize");
-  return GetFontSize(aFrame->GetStyleContext());
+  return GetFontSize(aFrame->StyleContext());
 }
 
 float
@@ -83,7 +83,7 @@ SVGContentUtils::GetFontSize(nsStyleContext *aStyleContext)
   nsPresContext *presContext = aStyleContext->PresContext();
   NS_ABORT_IF_FALSE(presContext, "NULL pres context in GetFontSize");
 
-  nscoord fontSize = aStyleContext->GetStyleFont()->mSize;
+  nscoord fontSize = aStyleContext->StyleFont()->mSize;
   return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) / 
          presContext->TextZoom();
 }
@@ -110,7 +110,7 @@ float
 SVGContentUtils::GetFontXHeight(nsIFrame *aFrame)
 {
   NS_ABORT_IF_FALSE(aFrame, "NULL frame in GetFontXHeight");
-  return GetFontXHeight(aFrame->GetStyleContext());
+  return GetFontXHeight(aFrame->StyleContext());
 }
 
 float

@@ -286,7 +286,7 @@ nsSplitterFrame::Init(nsIContent*      aContent,
                                            nsGkAtoms::orient)) {
         aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                           NS_LITERAL_STRING("vertical"), false);
-        nsStyleContext* parentStyleContext = GetStyleContext()->GetParent();
+        nsStyleContext* parentStyleContext = StyleContext()->GetParent();
         nsRefPtr<nsStyleContext> newContext = PresContext()->StyleSet()->
           ResolveStyleFor(aContent->AsElement(), parentStyleContext);
         SetStyleContextWithoutNotification(newContext);
@@ -360,23 +360,21 @@ nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsSplitterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsresult rv = nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   
   // if the mouse is captured always return us as the frame.
   if (mInner->mDragging)
   {
     // XXX It's probably better not to check visibility here, right?
-    return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayEventReceiver(aBuilder, this));
+    aLists.Outlines()->AppendNewToTop(new (aBuilder)
+      nsDisplayEventReceiver(aBuilder, this));
+    return;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -486,7 +484,7 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
     bool supportsBefore = SupportsCollapseDirection(Before);
     bool supportsAfter = SupportsCollapseDirection(After);
 
-    const bool isRTL = mOuter->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+    const bool isRTL = mOuter->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
     bool pastEnd = oldPos > 0 && oldPos > pos;
     bool pastBegin = oldPos < 0 && oldPos < pos;
     if (isRTL) {

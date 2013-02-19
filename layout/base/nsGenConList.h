@@ -63,15 +63,15 @@ struct nsGenConNode : public PRCList {
 protected:
   void CheckFrameAssertions() {
     NS_ASSERTION(mContentIndex <
-                   int32_t(mPseudoFrame->GetStyleContent()->ContentCount()),
+                   int32_t(mPseudoFrame->StyleContent()->ContentCount()),
                  "index out of range");
       // We allow negative values of mContentIndex for 'counter-reset' and
       // 'counter-increment'.
 
     NS_ASSERTION(mContentIndex < 0 ||
-                 mPseudoFrame->GetStyleContext()->GetPseudo() ==
+                 mPseudoFrame->StyleContext()->GetPseudo() ==
                    nsCSSPseudoElements::before ||
-                 mPseudoFrame->GetStyleContext()->GetPseudo() ==
+                 mPseudoFrame->StyleContext()->GetPseudo() ==
                    nsCSSPseudoElements::after,
                  "not :before/:after generated content and not counter change");
     NS_ASSERTION(mContentIndex < 0 ||

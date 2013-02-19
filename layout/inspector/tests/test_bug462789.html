@@ -23,9 +23,8 @@ function do_test() {
   const ERROR_FAILURE = 0x80004005;
   const DOCUMENT_NODE_TYPE = 9;
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(Components.interfaces.inIDOMUtils);
+  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+                             .getService(SpecialPowers.Ci.inIDOMUtils);
 
   var iframe = document.getElementById("bug462789_iframe");
   var docElement = iframe.contentDocument.documentElement;
@@ -63,7 +62,7 @@ function do_test() {
 
   try {
     var res = utils.getBindingURLs(docElement);
-    is(res instanceof Components.interfaces["nsIArray"], true, "getBindingURLs result type");
+    is(SpecialPowers.unwrap(res) instanceof SpecialPowers.Ci["nsIArray"], true, "getBindingURLs result type");
     is(res.length, 0, "getBindingURLs array length");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }

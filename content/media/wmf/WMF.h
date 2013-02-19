@@ -28,7 +28,7 @@ which makes Windows Media Foundation unavailable.
 #include <mferror.h>
 #include <propvarutil.h>
 #include <wmcodecdsp.h>
-
+#include <initguid.h>
 
 namespace mozilla {
 namespace wmf {
@@ -83,6 +83,17 @@ HRESULT MFGetStrideForBitmapInfoHeader(DWORD aFormat,
 HRESULT MFCreateSourceReaderFromURL(LPCWSTR aURL,
                                     IMFAttributes *aAttributes,
                                     IMFSourceReader **aSourceReader);
+
+HRESULT MFCreateAttributes(IMFAttributes **ppMFAttributes, UINT32 cInitialSize);
+
+HRESULT MFGetPluginControl(IMFPluginControl **aOutPluginControl);
+
+HRESULT MFTEnumEx(GUID guidCategory,
+                  UINT32 Flags,
+                  const MFT_REGISTER_TYPE_INFO *pInputType,
+                  const MFT_REGISTER_TYPE_INFO *pOutputType,
+                  IMFActivate ***pppMFTActivate,
+                  UINT32 *pcMFTActivate);
 
 } // end namespace wmf
 } // end namespace mozilla

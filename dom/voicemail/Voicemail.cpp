@@ -20,9 +20,7 @@ DOMCI_DATA(MozVoicemail, mozilla::dom::Voicemail)
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_0(Voicemail, nsDOMEventTargetHelper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Voicemail)
+NS_INTERFACE_MAP_BEGIN(Voicemail)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozVoicemail)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozVoicemail)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)

@@ -32,7 +32,6 @@ XPIDLSRCS =					\
 	nsIDOMClientInformation.idl		\
 	nsIDOMConstructor.idl			\
 	nsIDOMCRMFObject.idl			\
-	nsIDOMCrypto.idl			\
 	nsIDOMHistory.idl			\
 	nsIDOMLocation.idl			\
 	nsIDOMMediaQueryList.idl		\
@@ -58,10 +57,20 @@ XPIDLSRCS =					\
 	nsIIdleObserver.idl			\
 	$(NULL)
 
+ifdef MOZ_DISABLE_CRYPTOLEGACY
+XPIDLSRCS += \
+	nsIDOMCrypto.idl			\
+	$(NULL)
+else
+XPIDLSRCS += \
+	nsIDOMCryptoLegacy.idl			\
+	$(NULL)
+endif
+
 ifdef MOZ_B2G
 XPIDLSRCS += \
-  nsIDOMWindowB2G.idl \
-  $(NULL)
+	nsIDOMWindowB2G.idl \
+	$(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk

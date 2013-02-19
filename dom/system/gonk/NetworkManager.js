@@ -846,7 +846,7 @@ let CaptivePortalDetectionHelper = (function() {
   let _ongoingInterface = null;
   let _available = ("nsICaptivePortalDetector" in Ci);
   let getService = function () {
-    return Cc['@mozilla.org/services/captive-detector;1'].getService(Ci.nsICaptivePortalDetector);
+    return Cc['@mozilla.org/toolkit/captive-detector;1'].getService(Ci.nsICaptivePortalDetector);
   };
 
   let _performDetection = function (interfaceName, callback) {

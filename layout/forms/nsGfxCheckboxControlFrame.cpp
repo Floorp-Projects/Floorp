@@ -45,7 +45,7 @@ PaintCheckMark(nsIFrame* aFrame,
                                       checkPolygonY[polyIndex] * paintScale);
   }
 
-  aCtx->SetColor(aFrame->GetStyleColor()->mColor);
+  aCtx->SetColor(aFrame->StyleColor()->mColor);
   aCtx->FillPolygon(paintPolygon, checkNumPoints);
 }
 
@@ -61,7 +61,7 @@ PaintIndeterminateMark(nsIFrame* aFrame,
   rect.y += (rect.height - rect.height/4) / 2;
   rect.height /= 4;
 
-  aCtx->SetColor(aFrame->GetStyleColor()->mColor);
+  aCtx->SetColor(aFrame->StyleColor()->mColor);
   aCtx->FillRect(rect);
 }
 
@@ -96,23 +96,21 @@ nsGfxCheckboxControlFrame::AccessibleType()
 #endif
 
 //------------------------------------------------------------
-NS_IMETHODIMP
+void
 nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
-  nsresult rv = nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect,
-                                                     aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
   
   // Get current checked state through content model.
   if ((!IsChecked() && !IsIndeterminate()) || !IsVisibleForPainting(aBuilder))
-    return NS_OK;   // we're not checked or not visible, nothing to paint.
+    return;   // we're not checked or not visible, nothing to paint.
     
   if (IsThemed())
-    return NS_OK; // No need to paint the checkmark. The theme will do it.
+    return; // No need to paint the checkmark. The theme will do it.
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
+  aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayGeneric(aBuilder, this,
                      IsIndeterminate()
                      ? PaintIndeterminateMark : PaintCheckMark,

@@ -23,7 +23,6 @@ class nsIFrame;
 class nsIStyleRule;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
-class nsHTMLMenuElement;
 class nsIDOMCSSStyleDeclaration;
 class nsIURI;
 class nsIFormControlFrame;
@@ -41,6 +40,7 @@ class nsDOMSettableTokenList;
 namespace mozilla {
 namespace dom{
 class HTMLPropertiesCollection;
+class HTMLMenuElement;
 }
 }
 
@@ -220,7 +220,7 @@ public:
     }
     return false;
   }
-  nsHTMLMenuElement* GetContextMenu() const;
+  mozilla::dom::HTMLMenuElement* GetContextMenu() const;
   bool Spellcheck();
   void SetSpellcheck(bool aSpellcheck, mozilla::ErrorResult& aError)
   {
@@ -1058,6 +1058,8 @@ public:
   virtual ~nsGenericHTMLFormElement();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  nsINode* GetParentObject() const;
 
   virtual bool IsNodeOfType(uint32_t aFlags) const;
   virtual void SaveSubtreeState();

@@ -46,7 +46,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
   uint16_t units =
     mask->mEnumAttributes[SVGMaskElement::MASKUNITS].GetAnimValue();
   gfxRect bbox;
-  if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+  if (units == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     bbox = nsSVGUtils::GetBBox(aParent);
   }
 
@@ -116,12 +116,12 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
 
   nsIntRect rect(0, 0, surfaceSize.width, surfaceSize.height);
   nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, rect);
-  if (GetStyleSVG()->mColorInterpolation ==
+  if (StyleSVG()->mColorInterpolation ==
       NS_STYLE_COLOR_INTERPOLATION_LINEARRGB) {
     nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, rect);
   }
 
-  if (GetStyleSVGReset()->mMaskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
+  if (StyleSVGReset()->mMaskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
     for (int32_t y = 0; y < surfaceSize.height; y++) {
       for (int32_t x = 0; x < surfaceSize.width; x++) {
         uint8_t *pixel = data + stride * y + 4 * x;

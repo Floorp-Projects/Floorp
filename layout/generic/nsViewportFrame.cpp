@@ -57,7 +57,7 @@ ViewportFrame::SetInitialChildList(ChildListID     aListID,
   return nsContainerFrame::SetInitialChildList(aListID, aChildList);
 }
 
-NS_IMETHODIMP
+void
 ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
@@ -65,12 +65,12 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   SAMPLE_LABEL("ViewportFrame", "BuildDisplayList");
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid)
-    return NS_OK;
+    return;
 
   // make the kid's BorderBackground our own. This ensures that the canvas
   // frame's background becomes our own background and therefore appears
   // below negative z-index elements.
-  return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

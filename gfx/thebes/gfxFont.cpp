@@ -168,21 +168,6 @@ nsresult gfxFontEntry::ReadCMAP()
 }
 
 nsString
-gfxFontEntry::FamilyName()
-{
-    FallibleTArray<uint8_t> nameTable;
-    nsresult rv = GetFontTable(TRUETYPE_TAG('n','a','m','e'), nameTable);
-    if (NS_SUCCEEDED(rv)) {
-        nsAutoString name;
-        rv = gfxFontUtils::GetFamilyNameFromTable(nameTable, name);
-        if (NS_SUCCEEDED(rv)) {
-            return name;
-        }
-    }
-    return Name();
-}
-
-nsString
 gfxFontEntry::RealFaceName()
 {
     FallibleTArray<uint8_t> nameTable;
@@ -2045,7 +2030,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
           mat = ToMatrix(*reinterpret_cast<gfxMatrix*>(&matrix));
 
           mat._11 = mat._22 = 1.0;
-          mat._21 /= mAdjustedSize;
+          float adjustedSize = mAdjustedSize > 0 ? mAdjustedSize : GetStyle()->size;
+          mat._21 /= adjustedSize;
 
           dt->SetTransform(mat * oldMat);
 

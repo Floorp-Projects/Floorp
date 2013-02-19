@@ -1857,7 +1857,7 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, bool aSetPixelScale)
   // Check to see if the subdocument's element has been hidden by the parent document
   if (aPO->mParent && aPO->mParent->mPresShell) {
     nsIFrame* frame = aPO->mContent ? aPO->mContent->GetPrimaryFrame() : nullptr;
-    if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
+    if (!frame || !frame->StyleVisibility()->IsVisible()) {
       SetPrintPO(aPO, false);
       aPO->mInvisible = true;
       return NS_OK;

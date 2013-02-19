@@ -22,11 +22,13 @@ class BufferMediaResource : public MediaResource
 public:
   BufferMediaResource(const uint8_t* aBuffer,
                       uint32_t aLength,
-                      nsIPrincipal* aPrincipal) :
+                      nsIPrincipal* aPrincipal,
+                      const nsACString& aContentType) :
     mBuffer(aBuffer),
     mLength(aLength),
     mOffset(0),
-    mPrincipal(aPrincipal)
+    mPrincipal(aPrincipal),
+    mContentType(aContentType)
   {
     MOZ_COUNT_CTOR(BufferMediaResource);
   }
@@ -134,11 +136,17 @@ public:
 
   bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
 
+  virtual const nsACString& GetContentType() const MOZ_OVERRIDE
+  {
+    return mContentType;
+  }
+
 private:
   const uint8_t * mBuffer;
   uint32_t mLength;
   uint32_t mOffset;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  const nsAutoCString mContentType;
 };
 
 }

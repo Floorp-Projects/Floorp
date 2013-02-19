@@ -537,7 +537,6 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
                         if (NS_SUCCEEDED(rv) &&
                             (fe = LoadFont(aFamily, aProxyEntry,
                                            buffer, bufferLength))) {
-                            UserFontCache::CacheFont(fe);
                             return STATUS_LOADED;
                         } else {
                             LogMessage(aFamily, aProxyEntry,
@@ -672,8 +671,8 @@ gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,
                  uint32_t(mGeneration)));
         }
 #endif
-        UserFontCache::CacheFont(fe);
         ReplaceFontEntry(aFamily, aProxy, fe);
+        UserFontCache::CacheFont(fe);
     } else {
 #ifdef PR_LOGGING
         if (LOG_ENABLED()) {
@@ -764,7 +763,8 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
         mFontEntry->mWeight           != fe->mWeight          ||
         mFontEntry->mStretch          != fe->mStretch         ||
         mFontEntry->mFeatureSettings  != fe->mFeatureSettings ||
-        mFontEntry->mLanguageOverride != fe->mLanguageOverride) {
+        mFontEntry->mLanguageOverride != fe->mLanguageOverride ||
+        mFontEntry->mFamilyName       != fe->mFamilyName) {
         return false;
     }
 
@@ -774,6 +774,8 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 void
 gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
 {
+    NS_ASSERTION(aFontEntry->mFamilyName.Length() != 0,
+                 "caching a font associated with no family yet");
     if (!sUserFonts) {
         sUserFonts = new nsTHashtable<Entry>;
         sUserFonts->Init();

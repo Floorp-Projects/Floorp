@@ -15,9 +15,7 @@ extern "C"
 
 #include "CSFLogStream.h"
 
-#ifdef DEBUG
 static const char* logTag = "CC_SIPCCCallInfo";
-#endif
 
 using namespace std;
 using namespace CSF;
@@ -368,7 +366,7 @@ bool CC_SIPCCCallInfo::getIsConference()
 
 set<cc_int32_t> CC_SIPCCCallInfo::getStreamStatistics()
 {
-    CSFLogErrorS(logTag, "CCAPI_CallInfo_getCapabilitySet() NOT IMPLEMENTED IN PSIPCC.");
+    CSFLogError(logTag, "CCAPI_CallInfo_getCapabilitySet() NOT IMPLEMENTED IN PSIPCC.");
     set<cc_int32_t> stats;
     return stats;
 }

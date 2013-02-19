@@ -119,14 +119,14 @@ bounce.deleteRule("75%  ,85%");
 is(bounce.cssRules.length, 3, "deleteRule should match keys in order, parsed");
 bounce.deleteRule("0%");
 is(bounce.cssRules.length, 2, "deleteRule should match keys in order, parsed");
-bounce.insertRule("from { color: blue }");
-is(bounce.cssRules.length, 3, "insertRule should append");
-is(bounce.cssRules[2].keyText, "0%", "insertRule should append");
-bounce.insertRule("from { color: blue }");
-is(bounce.cssRules.length, 4, "insertRule should append");
-is(bounce.cssRules[3].keyText, "0%", "insertRule should append");
-bounce.insertRule("from { color: blue } to { color: green }");
-is(bounce.cssRules.length, 4, "insertRule should ignore garbage at end");
+bounce.appendRule("from { color: blue }");
+is(bounce.cssRules.length, 3, "appendRule should append");
+is(bounce.cssRules[2].keyText, "0%", "appendRule should append");
+bounce.appendRule("from { color: blue }");
+is(bounce.cssRules.length, 4, "appendRule should append");
+is(bounce.cssRules[3].keyText, "0%", "appendRule should append");
+bounce.appendRule("from { color: blue } to { color: green }");
+is(bounce.cssRules.length, 4, "appendRule should ignore garbage at end");
 
 </script>
 </pre>

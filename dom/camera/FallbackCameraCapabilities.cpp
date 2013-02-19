@@ -11,16 +11,14 @@ using namespace mozilla;
 
 DOMCI_DATA(CameraCapabilities, nsICameraCapabilities)
 
-NS_IMPL_CYCLE_COLLECTION_0(DOMCameraCapabilities)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMCameraCapabilities)
+NS_INTERFACE_MAP_BEGIN(DOMCameraCapabilities)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsICameraCapabilities)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CameraCapabilities)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMCameraCapabilities)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMCameraCapabilities)
+NS_IMPL_ADDREF(DOMCameraCapabilities)
+NS_IMPL_RELEASE(DOMCameraCapabilities)
 
 /* [implicit_jscontext] readonly attribute jsval previewSizes; */
 NS_IMETHODIMP

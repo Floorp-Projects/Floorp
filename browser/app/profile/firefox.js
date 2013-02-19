@@ -306,6 +306,9 @@ pref("browser.urlbar.trimURLs", true);
 
 pref("browser.altClickSave", false);
 
+// Enable logging downloads operations to the Error Console.
+pref("browser.download.debug", false);
+
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 
 // picking a filename without that info in hand so that the user sees some
@@ -389,6 +392,13 @@ pref("browser.link.open_newwindow.override.external", -1);
 // 1: don't divert window.open at all
 // 2: don't divert window.open with features
 pref("browser.link.open_newwindow.restriction", 2);
+
+// Disable opening a new window via window.open if browser is in fullscreen mode
+#ifdef XP_MACOSX
+pref("browser.link.open_newwindow.disabled_in_fullscreen", true);
+#else
+pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
+#endif
 
 // Tabbed browser
 pref("browser.tabs.autoHide", false);

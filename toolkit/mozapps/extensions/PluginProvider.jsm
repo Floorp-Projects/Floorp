@@ -14,6 +14,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME       = "type.%ID%.name";
+const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 
 for (let name of ["LOG", "WARN", "ERROR"]) {
   this.__defineGetter__(name, function() {
@@ -52,6 +53,7 @@ var PluginProvider = {
   plugins: null,
 
   startup: function PL_startup() {
+    Services.obs.addObserver(this, LIST_UPDATED_TOPIC, false);
     Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, false);
   },
 
@@ -62,24 +64,43 @@ var PluginProvider = {
   shutdown: function PL_shutdown() {
     this.plugins = null;
     Services.obs.removeObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
+    Services.obs.removeObserver(this, LIST_UPDATED_TOPIC);
   },
 
   observe: function(aSubject, aTopic, aData) {
-    this.getAddonByID(aData, function(plugin) {
-      if (!plugin)
-        return;
+    switch (aTopic) {
+    case AddonManager.OPTIONS_NOTIFICATION_DISPLAYED:
+      this.getAddonByID(aData, function PL_displayPluginInfo(plugin) {
+        if (!plugin)
+          return;
 
-      let libLabel = aSubject.getElementById("pluginLibraries");
-      libLabel.textContent = plugin.pluginLibraries.join(", ");
+        let libLabel = aSubject.getElementById("pluginLibraries");
+        libLabel.textContent = plugin.pluginLibraries.join(", ");
 
-      let typeLabel = aSubject.getElementById("pluginMimeTypes"), types = [];
-      for (let type of plugin.pluginMimeTypes) {
-        let extras = [type.description.trim(), type.suffixes].
-                     filter(function(x) x).join(": ");
-        types.push(type.type + (extras ? " (" + extras + ")" : ""));
-      }
-      typeLabel.textContent = types.join(",\n");
-    });
+        let typeLabel = aSubject.getElementById("pluginMimeTypes"), types = [];
+        for (let type of plugin.pluginMimeTypes) {
+          let extras = [type.description.trim(), type.suffixes].
+                       filter(function(x) x).join(": ");
+          types.push(type.type + (extras ? " (" + extras + ")" : ""));
+        }
+        typeLabel.textContent = types.join(",\n");
+      });
+      break;
+    case LIST_UPDATED_TOPIC:
+      if (this.plugins)
+        this.updatePluginList();
+      break;
+    }
+  },
+
+  /**
+   * Creates a PluginWrapper for a plugin object.
+   */
+  buildWrapper: function PL_buildWrapper(aPlugin) {
+    return new PluginWrapper(aPlugin.id,
+                             aPlugin.name,
+                             aPlugin.description,
+                             aPlugin.tags);
   },
 
   /**
@@ -94,16 +115,10 @@ var PluginProvider = {
     if (!this.plugins)
       this.buildPluginList();
 
-    if (aId in this.plugins) {
-      let name = this.plugins[aId].name;
-      let description = this.plugins[aId].description;
-      let tags = this.plugins[aId].tags;
-
-      aCallback(new PluginWrapper(aId, name, description, tags));
-    }
-    else {
+    if (aId in this.plugins)
+      aCallback(this.buildWrapper(this.plugins[aId]));
+    else
       aCallback(null);
-    }
   },
 
   /**
@@ -158,32 +173,105 @@ var PluginProvider = {
     aCallback([]);
   },
 
-  buildPluginList: function PL_buildPluginList() {
+  /**
+   * Builds a list of the current plugins reported by the plugin host
+   *
+   * @return a dictionary of plugins indexed by our generated ID
+   */
+  getPluginList: function PL_getPluginList() {
     let tags = Cc["@mozilla.org/plugin/host;1"].
                getService(Ci.nsIPluginHost).
                getPluginTags({});
 
-    this.plugins = {};
-    let plugins = {};
+    let list = {};
+    let seenPlugins = {};
     for (let tag of tags) {
-      if (!(tag.name in plugins))
-        plugins[tag.name] = {};
-      if (!(tag.description in plugins[tag.name])) {
+      if (!(tag.name in seenPlugins))
+        seenPlugins[tag.name] = {};
+      if (!(tag.description in seenPlugins[tag.name])) {
         let plugin = {
+          id: getIDHashForString(tag.name + tag.description),
           name: tag.name,
           description: tag.description,
           tags: [tag]
         };
 
-        let id = getIDHashForString(tag.name + tag.description);
-
-        plugins[tag.name][tag.description] = plugin;
-        this.plugins[id] = plugin;
+        seenPlugins[tag.name][tag.description] = plugin;
+        list[plugin.id] = plugin;
       }
       else {
-        plugins[tag.name][tag.description].tags.push(tag);
+        seenPlugins[tag.name][tag.description].tags.push(tag);
       }
     }
+
+    return list;
+  },
+
+  /**
+   * Builds the list of known plugins from the plugin host
+   */
+  buildPluginList: function PL_buildPluginList() {
+    this.plugins = this.getPluginList();
+  },
+
+  /**
+   * Updates the plugins from the plugin host by comparing the current plugins
+   * to the last known list sending out any necessary API notifications for
+   * changes.
+   */
+  updatePluginList: function PL_updatePluginList() {
+    let newList = this.getPluginList();
+
+    let lostPlugins = [this.buildWrapper(this.plugins[id])
+                       for each (id in Object.keys(this.plugins)) if (!(id in newList))];
+    let newPlugins = [this.buildWrapper(newList[id])
+                      for each (id in Object.keys(newList)) if (!(id in this.plugins))];
+    let matchedIDs = [id for each (id in Object.keys(newList)) if (id in this.plugins)];
+
+    // The plugin host generates new tags for every plugin after a scan and
+    // if the plugin's filename has changed then the disabled state won't have
+    // been carried across, send out notifications for anything that has
+    // changed (see bug 830267).
+    let changedWrappers = [];
+    for (let id of matchedIDs) {
+      let oldWrapper = this.buildWrapper(this.plugins[id]);
+      let newWrapper = this.buildWrapper(newList[id]);
+
+      if (newWrapper.isActive != oldWrapper.isActive) {
+        AddonManagerPrivate.callAddonListeners(newWrapper.isActive ?
+                                               "onEnabling" : "onDisabling",
+                                               newWrapper, false);
+        changedWrappers.push(newWrapper);
+      }
+    }
+
+    // Notify about new installs
+    for (let plugin of newPlugins) {
+      AddonManagerPrivate.callInstallListeners("onExternalInstall", null,
+                                               plugin, null, false);
+      AddonManagerPrivate.callAddonListeners("onInstalling", plugin, false);
+    }
+
+    // Notify for any plugins that have vanished.
+    for (let plugin of lostPlugins)
+      AddonManagerPrivate.callAddonListeners("onUninstalling", plugin, false);
+
+    this.plugins = newList;
+
+    // Signal that new installs are complete
+    for (let plugin of newPlugins)
+      AddonManagerPrivate.callAddonListeners("onInstalled", plugin);
+
+    // Signal that enables/disables are complete
+    for (let wrapper of changedWrappers) {
+      AddonManagerPrivate.callAddonListeners(wrapper.isActive ?
+                                             "onEnabled" : "onDisabled",
+                                             wrapper);
+    }
+
+    // Signal that uninstalls are complete
+    for (let plugin of lostPlugins)
+      AddonManagerPrivate.callAddonListeners("onUninstalled", plugin);
   }
 };
 

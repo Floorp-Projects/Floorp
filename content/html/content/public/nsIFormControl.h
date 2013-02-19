@@ -63,6 +63,7 @@ enum InputElementTypes {
   NS_FORM_INPUT_TEXT,
   NS_FORM_INPUT_TIME,
   NS_FORM_INPUT_URL,
+  NS_FORM_INPUT_RANGE,
   eInputElementTypesMax
 };
 
