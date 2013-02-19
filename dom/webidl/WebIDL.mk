@@ -215,6 +215,7 @@ webidl_files = \
   ValidityState.webidl \
   WebSocket.webidl \
   UndoManager.webidl \
+  URLUtils.webidl \
   USSDReceivedEvent.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
