@@ -37,7 +37,6 @@
 #include "nsDOMScriptObjectHolder.h"
 #include "nsIFrameLoader.h"
 #include "jspubtd.h"
-#include "nsGenericHTMLElement.h"
 #include "nsFrameLoader.h"
 
 class nsIDocument;
@@ -586,10 +585,7 @@ public:
         }
         return nsStyledElement::GetParentObject();
     }
-    static bool PrefEnabled()
-    {
-        return nsGenericHTMLElement::PrefEnabled();
-    }
+
 protected:
 
     // This can be removed if EnsureContentsGenerated dies.
