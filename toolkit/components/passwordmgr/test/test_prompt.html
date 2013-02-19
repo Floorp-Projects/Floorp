@@ -18,6 +18,7 @@ Login Manager test: username/password prompts
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
 
 /** Test for Login Manager: username / password prompts. **/
 var pwmgr, ioService
@@ -94,83 +95,83 @@ function initLogins(pi) {
 
 function finishTest() {
   try {
-  ok(true, "finishTest removing testing logins...");
-  dumpLogins(pwmgr);
-ok(true, "removing login 1...");
-  pwmgr.removeLogin(login1);
-ok(true, "removing login 2A...");
-  pwmgr.removeLogin(login2A);
-ok(true, "removing login 2B...");
-  pwmgr.removeLogin(login2B);
-ok(true, "removing login 2C...");
-  pwmgr.removeLogin(login2C);
-ok(true, "removing login 2D...");
-  pwmgr.removeLogin(login2D);
-ok(true, "removing login 2E...");
-  pwmgr.removeLogin(login2E);
-ok(true, "removing login 3A...");
-  pwmgr.removeLogin(login3A);
-ok(true, "removing login 3B...");
-  pwmgr.removeLogin(login3B);
-ok(true, "removing login 4...");
-  pwmgr.removeLogin(login4);
-ok(true, "removing proxyLogin...");
-  pwmgr.removeLogin(proxyLogin);
-  } catch (e) { ok(false, "finishTest FAILED: " + e); }
-ok(true, "whee, done!");
+    ok(true, "finishTest removing testing logins...");
+    dumpLogins(pwmgr);
+    ok(true, "removing login 1...");
+      pwmgr.removeLogin(login1);
+    ok(true, "removing login 2A...");
+      pwmgr.removeLogin(login2A);
+    ok(true, "removing login 2B...");
+      pwmgr.removeLogin(login2B);
+    ok(true, "removing login 2C...");
+      pwmgr.removeLogin(login2C);
+    ok(true, "removing login 2D...");
+      pwmgr.removeLogin(login2D);
+    ok(true, "removing login 2E...");
+      pwmgr.removeLogin(login2E);
+    ok(true, "removing login 3A...");
+      pwmgr.removeLogin(login3A);
+    ok(true, "removing login 3B...");
+      pwmgr.removeLogin(login3B);
+    ok(true, "removing login 4...");
+      pwmgr.removeLogin(login4);
+    ok(true, "removing proxyLogin...");
+      pwmgr.removeLogin(proxyLogin);
+  } catch (e) {
+    ok(false, "finishTest FAILED: " + e);
+  }
+  ok(true, "whee, done!");
 
   SimpleTest.finish();
 }
 
 function proxyChannelListener() { }
 proxyChannelListener.prototype = {
-    onStartRequest: function(request, context) {
-	doTests();
-    },
-    onStopRequest: function(request, context, status) { }
+  onStartRequest: function(request, context) {
+    doTests();
+  },
+  onStopRequest: function(request, context, status) { }
 };
 
 var resolveCallback = {
-QueryInterface : function (iid) {
-const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
+  QueryInterface : function (iid) {
+    const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
     if (!interfaces.some( function(v) { return iid.equals(v) } ))
-	throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
-},
+  },
 
-    onProxyAvailable : function (req, uri, pi, status) {
-        initLogins(pi);
+  onProxyAvailable : function (req, uri, pi, status) {
+    initLogins(pi);
 
-	// I'm cheating a bit here... We should probably do some magic foo to get
-	// something implementing nsIProxiedProtocolHandler and then call
-	// NewProxiedChannel(), so we have something that's definately a proxied
-	// channel. But Mochitests use a proxy for a number of hosts, so just
-	// requesting a normal channel will give us a channel that's proxied.
-	// The proxyChannel needs to move to at least on-modify-request to
-	// have valid ProxyInfo, but we use OnStartRequest during startup()
-	// for simplicity.
-	proxyChannel = ioService.newChannel(proxiedHost, null, null);
-	proxyChannel.asyncOpen(new proxyChannelListener(), null);
-    }
+    // I'm cheating a bit here... We should probably do some magic foo to get
+    // something implementing nsIProxiedProtocolHandler and then call
+    // NewProxiedChannel(), so we have something that's definately a proxied
+    // channel. But Mochitests use a proxy for a number of hosts, so just
+    // requesting a normal channel will give us a channel that's proxied.
+    // The proxyChannel needs to move to at least on-modify-request to
+    // have valid ProxyInfo, but we use OnStartRequest during startup()
+    // for simplicity.
+    proxyChannel = ioService.newChannel(proxiedHost, null, null);
+    proxyChannel.asyncOpen(new proxyChannelListener(), null);
+  }
 };
 
 function startup() {
-            //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-    var ios = SpecialPowers.wrap(Components)
-	.classes["@mozilla.org/network/io-service;1"]
-	.getService(Components.interfaces.nsIIOService);
+  //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
+  var ios = SpecialPowers.wrap(Components).
+    classes["@mozilla.org/network/io-service;1"].
+    getService(Components.interfaces.nsIIOService);
 
-    var pps = SpecialPowers.wrap(Components)
-	.classes["@mozilla.org/network/protocol-proxy-service;1"]
-	.getService();
+  var pps = SpecialPowers.wrap(Components).
+    classes["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
-    var uri = ios.newURI("http://example.com", null, null);
-    pps.asyncResolve(uri, 0, resolveCallback);
+  var uri = ios.newURI("http://example.com", null, null);
+  pps.asyncResolve(uri, 0, resolveCallback);
 }
 
-function addNotificationCallback(cb)
-{
+function addNotificationCallback(cb) {
   storageObserver.notificationCallbacks.push(cb);
 }
 
@@ -194,44 +195,46 @@ var storageObserver = {
     try {
       switch (data) {
         case "addLogin":
-            ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
-            ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
-            dumpLogin("added: ", subject);
-            break;
+          ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
+          ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
+          dumpLogin("added: ", subject);
+          break;
         case "modifyLogin":
-            var arr = wrapped.QueryInterface(Ci.nsIArray);
-            ok(arr, "subject QI");
-            is(arr.length, 2, "should be 2 items");
-            var oldLogin = arr.queryElementAt(0, Ci.nsILoginInfo);
-            var newLogin = arr.queryElementAt(1, Ci.nsILoginInfo);
-            dumpLogin("oldLogin: ", oldLogin);
-            dumpLogin("newLogin: ", newLogin);
-            break;
+          var arr = wrapped.QueryInterface(Ci.nsIArray);
+          ok(arr, "subject QI");
+          is(arr.length, 2, "should be 2 items");
+          var oldLogin = arr.queryElementAt(0, Ci.nsILoginInfo);
+          var newLogin = arr.queryElementAt(1, Ci.nsILoginInfo);
+          dumpLogin("oldLogin: ", oldLogin);
+          dumpLogin("newLogin: ", newLogin);
+          break;
         case "removeLogin":
-            ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
-            ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
-            dumpLogin("removed: ", subject);
-            break;
+          ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
+          ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
+          dumpLogin("removed: ", subject);
+          break;
         case "removeAllLogins":
-            is(subject, null, "no subject");
-            break;
+          is(subject, null, "no subject");
+          break;
         case "hostSavingEnabled":
         case "hostSavingDisabled":
-            ok(subject instanceof Ci.nsISupportsString, "subject QI");
-            ok(true, "state is: " + subject.data);
-            break;
+          ok(subject instanceof Ci.nsISupportsString, "subject QI");
+          ok(true, "state is: " + subject.data);
+          break;
         default:
-            do_throw("Unhandled notification: " + data + " / " + topic);
+          do_throw("Unhandled notification: " + data + " / " + topic);
       }
 
       if (this.notificationCallbacks.length)
         this.notificationCallbacks.splice(0, 1)[0]();
-    } catch (e) { ok(false, "OBSERVER FAILED: " + e); }
+    } catch (e) {
+      ok(false, "OBSERVER FAILED: " + e);
+    }
   }
 };
 
-var observerService = Cc["@mozilla.org/observer-service;1"]
-                      .getService(Ci.nsIObserverService);
+var observerService = Cc["@mozilla.org/observer-service;1"].
+                      getService(Ci.nsIObserverService);
 observerService.addObserver(storageObserver, "passwordmgr-storage-changed", false);
 
 /*
@@ -246,7 +249,7 @@ function handleDialog(doc, testNum) {
   ok(true, "."); // make it easier to see next line in logs.
   ok(true, "handleDialog running for test " + testNum);
   ok(true, "Time is " + (new Date()).toUTCString());
-dumpNotifications();
+  dumpNotifications();
 
   var clickOK = true;
   var body = doc.getElementById("info.body");
@@ -258,206 +261,172 @@ dumpNotifications();
 
   switch(testNum) {
     case 1:
-        is(username, "abc", "Checking provided username");
-        userfield.setAttribute("value", "xyz");
-        // Temporarily commented out because of Bug #718543
-        // is(doc.activeElement, userfield.inputField, "focus correct for test" + testNum);
-        // doc.commandDispatcher.rewindFocus();
-        // is(doc.activeElement, body, "description focusable");
-        break;
-
+      is(username, "abc", "Checking provided username");
+      userfield.setAttribute("value", "xyz");
+      // Temporarily commented out because of Bug #718543
+      // is(doc.activeElement, userfield.inputField, "focus correct for test" + testNum);
+      // doc.commandDispatcher.rewindFocus();
+      // is(doc.activeElement, body, "description focusable");
+      break;
     case 2:
-        clickOK = false;
-        break;
-
+      clickOK = false;
+      break;
     case 10:
-        is(password, "inputpw", "Checking provided password");
-        passfield.setAttribute("value", "secret");
-        // Temporarily commented out because of Bug #718543
-        // is(doc.activeElement, passfield.inputField, "focus correct for test" + testNum);
-        break;
-
+      is(password, "inputpw", "Checking provided password");
+      passfield.setAttribute("value", "secret");
+      // Temporarily commented out because of Bug #718543
+      // is(doc.activeElement, passfield.inputField, "focus correct for test" + testNum);
+      break;
     case 11:
-        is(password, "inputpw", "Checking provided password");
-        clickOK = false;
-        break;
-
+      is(password, "inputpw", "Checking provided password");
+      clickOK = false;
+      break;
     case 12:
-        is(password, "", "Checking provided password");
-        passfield.setAttribute("value", "secret");
-        break;
-
+      is(password, "", "Checking provided password");
+      passfield.setAttribute("value", "secret");
+      break;
     case 14:
-        is(password, "", "Checking provided password");
-        passfield.setAttribute("value", "secret");
-        break;
-
+      is(password, "", "Checking provided password");
+      passfield.setAttribute("value", "secret");
+      break;
     case 30:
     case 31:
-        is(password, "", "Checking provided password");
-        passfield.setAttribute("value", "fill2pass");
-        break;
-
+      is(password, "", "Checking provided password");
+      passfield.setAttribute("value", "fill2pass");
+      break;
     case 100:
-        is(username, "inuser", "Checking provided username");
-        is(password, "inpass", "Checking provided password");
-        userfield.setAttribute("value", "outuser");
-        passfield.setAttribute("value", "outpass");
-        break;
-
+      is(username, "inuser", "Checking provided username");
+      is(password, "inpass", "Checking provided password");
+      userfield.setAttribute("value", "outuser");
+      passfield.setAttribute("value", "outpass");
+      break;
     case 101:
-        clickOK = false;
-        break;
-
+      clickOK = false;
+      break;
     case 102:
-        is(username, "", "Checking provided username");
-        is(password, "examplepass", "Checking provided password");
-        break;
-
+      is(username, "", "Checking provided username");
+      is(password, "examplepass", "Checking provided password");
+      break;
     case 103:
-        ok(username == "user1name" || username == "user2name", "Checking filled username");
-        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-        break;
-
+      ok(username == "user1name" || username == "user2name", "Checking filled username");
+      ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+      break;
     case 104:
-        is(username, "user1name", "Checking filled username");
-        is(password, "user1pass", "Checking filled password");
-        break;
-
+      is(username, "user1name", "Checking filled username");
+      is(password, "user1pass", "Checking filled password");
+      break;
     case 105:
-        is(username, "user2name", "Checking filled username");
-        is(password, "user2pass", "Checking filled password");
-        break;
-
+      is(username, "user2name", "Checking filled username");
+      is(password, "user2pass", "Checking filled password");
+      break;
     case 106:
-        is(username, "user2name", "Checking filled username");
-        is(password, "user2pass", "Checking filled password");
-        passfield.setAttribute("value", "NEWuser2pass");
-        break;
-
+      is(username, "user2name", "Checking filled username");
+      is(password, "user2pass", "Checking filled password");
+      passfield.setAttribute("value", "NEWuser2pass");
+      break;
     case 107:
-        is(username, "user2name", "Checking filled username");
-        is(password, "NEWuser2pass", "Checking filled password");
-        passfield.setAttribute("value", "user2pass");
-        break;
-
+      is(username, "user2name", "Checking filled username");
+      is(password, "NEWuser2pass", "Checking filled password");
+      passfield.setAttribute("value", "user2pass");
+      break;
     case 120:
     case 121:
-        is(username, "", "Checking filled username");
-        is(password, "", "Checking filled password");
-        userfield.setAttribute("value", "fill2user");
-        passfield.setAttribute("value", "fill2pass");
-        break;
-
+      is(username, "", "Checking filled username");
+      is(password, "", "Checking filled password");
+      userfield.setAttribute("value", "fill2user");
+      passfield.setAttribute("value", "fill2pass");
+      break;
     case 500:
-        is(username, "inuser", "Checking unfilled username");
-        is(password, "inpass", "Checking unfilled password");
-        userfield.setAttribute("value", "outuser");
-        passfield.setAttribute("value", "outpass");
-        break;
-
+      is(username, "inuser", "Checking unfilled username");
+      is(password, "inpass", "Checking unfilled password");
+      userfield.setAttribute("value", "outuser");
+      passfield.setAttribute("value", "outpass");
+      break;
     case 501:
-        clickOK = false;
-        break;
-
+      clickOK = false;
+      break;
     case 502:
-        is(username, "", "Checking filled username");
-        is(password, "examplepass", "Checking filled password");
-        break;
-
+      is(username, "", "Checking filled username");
+      is(password, "examplepass", "Checking filled password");
+      break;
     case 503:
-        // either of the two logins might have been filled in
-        ok(username == "user1name" || username == "user2name", "Checking filled username");
-        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-        break;
-
+      // either of the two logins might have been filled in
+      ok(username == "user1name" || username == "user2name", "Checking filled username");
+      ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+      break;
     case 504:
-        // either of the two logins might have been filled in
-        ok(username == "user1name" || username == "user2name", "Checking filled username");
-        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-        // enter one of the known logins, test 504+505 exercise the two possible states.
-        userfield.setAttribute("value", "user1name");
-        passfield.setAttribute("value", "user1pass");
-        break;
-
+      // either of the two logins might have been filled in
+      ok(username == "user1name" || username == "user2name", "Checking filled username");
+      ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+      // enter one of the known logins, test 504+505 exercise the two possible states.
+      userfield.setAttribute("value", "user1name");
+      passfield.setAttribute("value", "user1pass");
+      break;
     case 505:
-        // either of the two logins might have been filled in
-        ok(username == "user1name" || username == "user2name", "Checking filled username");
-        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-        // enter one of the known logins, test 504+505 exercise the two possible states.
-        userfield.setAttribute("value", "user2name");
-        passfield.setAttribute("value", "user2pass");
-        break;
-
+      // either of the two logins might have been filled in
+      ok(username == "user1name" || username == "user2name", "Checking filled username");
+      ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+      // enter one of the known logins, test 504+505 exercise the two possible states.
+      userfield.setAttribute("value", "user2name");
+      passfield.setAttribute("value", "user2pass");
+      break;
     case 506:
-        // either of the two logins might have been filled in
-        ok(username == "user1name" || username == "user2name", "Checking filled username");
-        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-        // force to user2, and change the password
-        userfield.setAttribute("value", "user2name");
-        passfield.setAttribute("value", "NEWuser2pass");
-        break;
-
+      // either of the two logins might have been filled in
+      ok(username == "user1name" || username == "user2name", "Checking filled username");
+      ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+      // force to user2, and change the password
+      userfield.setAttribute("value", "user2name");
+      passfield.setAttribute("value", "NEWuser2pass");
+      break;
     case 507:
-        // either of the two logins might have been filled in
-        ok(username == "user1name" || username == "user2name", "Checking filled username");
-        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-        // force to user2, and change the password back
-        userfield.setAttribute("value", "user2name");
-        passfield.setAttribute("value", "user2pass");
-        break;
-
+      // either of the two logins might have been filled in
+      ok(username == "user1name" || username == "user2name", "Checking filled username");
+      ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+      // force to user2, and change the password back
+      userfield.setAttribute("value", "user2name");
+      passfield.setAttribute("value", "user2pass");
+      break;
     case 508:
-        is(username, "proxuser", "Checking filled username");
-        is(password, "proxpass", "Checking filled password");
-        break;
-
+      is(username, "proxuser", "Checking filled username");
+      is(password, "proxpass", "Checking filled password");
+      break;
     // No case 509, it's unprompted.
-
     case 510:
-        is(username, "proxuser", "Checking filled username");
-        is(password, "proxpass", "Checking filled password");
-        break;
-
+      is(username, "proxuser", "Checking filled username");
+      is(password, "proxpass", "Checking filled password");
+      break;
     case 511:
-        is(username, "proxuser", "Checking filled username");
-        is(password, "proxpass", "Checking filled password");
-        break;
-
+      is(username, "proxuser", "Checking filled username");
+      is(password, "proxpass", "Checking filled password");
+      break;
     case 1000:
-        is(username, "mochiuser1", "Checking filled username");
-        is(password, "mochipass1", "Checking filled password");
-        break;
-
+      is(username, "mochiuser1", "Checking filled username");
+      is(password, "mochipass1", "Checking filled password");
+      break;
     case 1001:
-        is(username, "mochiuser2", "Checking filled username");
-        is(password, "mochipass2", "Checking filled password");
-        break;
-
+      is(username, "mochiuser2", "Checking filled username");
+      is(password, "mochipass2", "Checking filled password");
+      break;
     // (1002 doesn't trigger a dialog)
-
     case 1003:
-        is(username, "mochiuser1", "Checking filled username");
-        is(password, "mochipass1", "Checking filled password");
-        passfield.setAttribute("value", "mochipass1-new");
-        break;
-
+      is(username, "mochiuser1", "Checking filled username");
+      is(password, "mochipass1", "Checking filled password");
+      passfield.setAttribute("value", "mochipass1-new");
+      break;
     case 1004:
-        is(username, "mochiuser3", "Checking filled username");
-        is(password, "mochipass3-old", "Checking filled password");
-        passfield.setAttribute("value", "mochipass3-new");
-        break;
-
+      is(username, "mochiuser3", "Checking filled username");
+      is(password, "mochipass3-old", "Checking filled password");
+      passfield.setAttribute("value", "mochipass3-new");
+      break;
     case 1005:
-        is(username, "", "Checking filled username");
-        is(password, "", "Checking filled password");
-        userfield.setAttribute("value", "mochiuser3");
-        passfield.setAttribute("value", "mochipass3-old");
-        break;
-
+      is(username, "", "Checking filled username");
+      is(password, "", "Checking filled password");
+      userfield.setAttribute("value", "mochiuser3");
+      passfield.setAttribute("value", "mochipass3-old");
+      break;
     default:
-        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
-        break;
+      ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+      break;
   }
 
   if (clickOK)
@@ -469,7 +438,6 @@ dumpNotifications();
   didDialog = true;
 }
 
-
 /*
  * handleLoad
  *
@@ -479,7 +447,7 @@ function handleLoad() {
   ok(true, "."); // make it easier to see next line in logs.
   ok(true, "handleLoad running for test " + testNum);
   ok(true, "Time is " + (new Date()).toUTCString());
-dumpNotifications();
+  dumpNotifications();
 
   if (testNum != 1002)
     ok(didDialog, "handleDialog was invoked");
@@ -491,133 +459,126 @@ dumpNotifications();
 
   switch(testNum) {
     case 1000:
-        testNum++;
-        is(authok, "PASS", "Checking for successful authentication");
-        is(username, "mochiuser1", "Checking for echoed username");
-        is(password, "mochipass1", "Checking for echoed password");
-        startCallbackTimer();
-        // We've already authenticated to this host:port. For this next
-        // request, the existing auth should be sent, we'll get a 401 reply,
-        // and we should prompt for new auth.
-        iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
-        break;
-
+      testNum++;
+      is(authok, "PASS", "Checking for successful authentication");
+      is(username, "mochiuser1", "Checking for echoed username");
+      is(password, "mochipass1", "Checking for echoed password");
+      startCallbackTimer();
+      // We've already authenticated to this host:port. For this next
+      // request, the existing auth should be sent, we'll get a 401 reply,
+      // and we should prompt for new auth.
+      iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
+      break;
     case 1001:
-        testNum++;
-        is(authok, "PASS", "Checking for successful authentication");
-        is(username, "mochiuser2", "Checking for echoed username");
-        is(password, "mochipass2", "Checking for echoed password");
-        // Now make a load that requests the realm from test 1000. It was
-        // already provided there, so auth will *not* be prompted for -- the
-        // networking layer already knows it!
-        iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-        break;
-
-
+      testNum++;
+      is(authok, "PASS", "Checking for successful authentication");
+      is(username, "mochiuser2", "Checking for echoed username");
+      is(password, "mochipass2", "Checking for echoed password");
+      // Now make a load that requests the realm from test 1000. It was
+      // already provided there, so auth will *not* be prompted for -- the
+      // networking layer already knows it!
+      iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+      break;
     case 1002:
-        testNum++;
-        is(authok, "PASS", "Checking for successful authentication");
-        is(username, "mochiuser1", "Checking for echoed username");
-        is(password, "mochipass1", "Checking for echoed password");
+      testNum++;
+      is(authok, "PASS", "Checking for successful authentication");
+      is(username, "mochiuser1", "Checking for echoed username");
+      is(password, "mochipass1", "Checking for echoed password");
 
-        // Same realm we've already authenticated to, but with a different
-        // expected password (to trigger an auth prompt, and change-password
-        // popup notification).
-        startCallbackTimer();
-        iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
-        break;
-
+      // Same realm we've already authenticated to, but with a different
+      // expected password (to trigger an auth prompt, and change-password
+      // popup notification).
+      startCallbackTimer();
+      iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
+      break;
     case 1003:
-        testNum++;
-        is(authok, "PASS", "Checking for successful authentication");
-        is(username, "mochiuser1", "Checking for echoed username");
-        is(password, "mochipass1-new", "Checking for echoed password");
+      testNum++;
+      is(authok, "PASS", "Checking for successful authentication");
+      is(username, "mochiuser1", "Checking for echoed username");
+      is(password, "mochipass1-new", "Checking for echoed password");
 
-        // Housekeeping: change it back
-        function resetIt() {
-          tmpLogin.init("http://mochi.test:8888", null, "mochitest",
-                        "mochiuser1", "mochipass1-new", "", "");
-          pwmgr.modifyLogin(tmpLogin, login3A);
-        }
-        addNotificationCallback(resetIt);
+      // Housekeeping: change it back
+      function resetIt() {
+        tmpLogin.init("http://mochi.test:8888", null, "mochitest",
+                      "mochiuser1", "mochipass1-new", "", "");
+        pwmgr.modifyLogin(tmpLogin, login3A);
+      }
+      addNotificationCallback(resetIt);
 
-        // Check for the popup notification, and change the password.
-        popup = getPopup(popupNotifications, "password-change");
-        ok(popup, "got popup notification");
-        clickPopupButton(popup, kChangeButton);
-        popup.remove();
+      // Check for the popup notification, and change the password.
+      popupNotifications = getPopupNotifications(window.top);
+      popup = getPopup(popupNotifications, "password-change");
+      ok(popup, "got popup notification");
+      clickPopupButton(popup, kChangeButton);
+      popup.remove();
 
-        // Same as last test, but for a realm we haven't already authenticated
-        // to (but have an existing saved login for, so that we'll trigger
-        // a change-password popup notification.
-        startCallbackTimer();
-        iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
-        break;
-
+      // Same as last test, but for a realm we haven't already authenticated
+      // to (but have an existing saved login for, so that we'll trigger
+      // a change-password popup notification.
+      startCallbackTimer();
+      iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
+      break;
     case 1004:
-        testNum++;
-        is(authok, "PASS", "Checking for successful authentication");
-        is(username, "mochiuser3", "Checking for echoed username");
-        is(password, "mochipass3-new", "Checking for echoed password");
+      testNum++;
+      is(authok, "PASS", "Checking for successful authentication");
+      is(username, "mochiuser3", "Checking for echoed username");
+      is(password, "mochipass3-new", "Checking for echoed password");
 
-        // Housekeeping: change it back to the original login4. Actually,
-        // just delete it and we'll re-add it as the next test.
-        function clearIt() {
-          ok(true, "1004's clearIt() called.");
-         try {
-          tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
-                        "mochiuser3", "mochipass3-new", "", "");
-          pwmgr.removeLogin(tmpLogin);
+      // Housekeeping: change it back to the original login4. Actually,
+      // just delete it and we'll re-add it as the next test.
+      function clearIt() {
+        ok(true, "1004's clearIt() called.");
+       try {
+        tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                      "mochiuser3", "mochipass3-new", "", "");
+        pwmgr.removeLogin(tmpLogin);
 
-          // Trigger a new prompt, so we can test adding a new login.
-          startCallbackTimer();
-          iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
-         } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
-        }
-        addNotificationCallback(clearIt);
+        // Trigger a new prompt, so we can test adding a new login.
+        startCallbackTimer();
+        iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+       } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
+      }
+      addNotificationCallback(clearIt);
 
-        // Check for the popup notification, and change the password.
-        popup = getPopup(popupNotifications, "password-change");
-        ok(popup, "got popup notification");
-        clickPopupButton(popup, kChangeButton);
-        popup.remove();
+      // Check for the popup notification, and change the password.
+      popup = getPopup(popupNotifications, "password-change");
+      ok(popup, "got popup notification");
+      clickPopupButton(popup, kChangeButton);
+      popup.remove();
 
-        // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
-        var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                      getService(Ci.nsIHttpAuthManager);
-        authMgr.clearAll();
-        ok(true, "authMgr cleared cached auth");
-        break;
-
+      // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
+      var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                    getService(Ci.nsIHttpAuthManager);
+      authMgr.clearAll();
+      ok(true, "authMgr cleared cached auth");
+      break;
     case 1005:
-        testNum++;
-        is(authok, "PASS", "Checking for successful authentication");
-        is(username, "mochiuser3", "Checking for echoed username");
-        is(password, "mochipass3-old", "Checking for echoed password");
+      testNum++;
+      is(authok, "PASS", "Checking for successful authentication");
+      is(username, "mochiuser3", "Checking for echoed username");
+      is(password, "mochipass3-old", "Checking for echoed password");
 
-        function finishIt() {
-          finishTest();
-        }
-        addNotificationCallback(finishIt);
+      function finishIt() {
+        finishTest();
+      }
+      addNotificationCallback(finishIt);
 
-        // Check for the popup notification, and change the password.
-        popup = getPopup(popupNotifications, "password-save");
-        ok(popup, "got popup notification");
-        clickPopupButton(popup, kRememberButton);
-        popup.remove();
-        break;
-
+      // Check for the popup notification, and change the password.
+      popup = getPopup(popupNotifications, "password-save");
+      ok(popup, "got popup notification");
+      clickPopupButton(popup, kRememberButton);
+      popup.remove();
+      break;
     default:
-        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
-        break;
+      ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+      break;
   }
-
 }
 
 startup();
 
 function doTests() {
-var authinfo = {
+  var authinfo = {
     username : "",
     password : "",
     domain   : "",
@@ -625,9 +586,9 @@ var authinfo = {
     flags : Ci.nsIAuthInformation.AUTH_HOST,
     authenticationScheme : "basic",
     realm : ""
-};
+  };
 
-var proxyAuthinfo = {
+  var proxyAuthinfo = {
     username : "",
     password : "",
     domain   : "",
@@ -635,522 +596,512 @@ var proxyAuthinfo = {
     flags : Ci.nsIAuthInformation.AUTH_PROXY,
     authenticationScheme : "basic",
     realm : ""
-};
-
-var prefs = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefBranch);
-
-const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
-ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
-
-const Ci_promptFac = Ci.nsIPromptFactory;
-ok(Ci_promptFac != null, "Access Ci.nsIPromptFactory");
-
-const promptFac = Cc_promptFac.getService(Ci_promptFac);
-ok(promptFac != null, "promptFac getService()");
-
-var prompter1 = promptFac.getPrompt(window, Ci.nsIAuthPrompt);
-var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
-
-function dialogTitle() { return "nsILoginManagerPrompter test #" + testNum; }
-var dialogText  = "This dialog should be modified and dismissed by the test.";
-var uname  = { value : null };
-var pword  = { value : null };
-var result = { value : null };
-var isOk;
-
-// popupNotifications (not *popup*) is a constant, per-tab container. So, we
-// only need to fetch it once.
-var popupNotifications = getPopupNotifications(window.top);
-ok(popupNotifications, "Got popupNotifications");
-
-// ===== test 1 ===== 
-testNum = 1;
-startCallbackTimer();
-isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
-                        Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(result.value, "xyz", "Checking prompt() returned value");
-
-
-// ===== test 2 =====
-testNum++;
-startCallbackTimer();
-isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
-                        Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
-ok(didDialog, "handleDialog was invoked");
-ok(!isOk, "Checking dialog return value (cancel)");
-
-
-// ===== test 10 =====
-// Default password provided, existing logins are ignored.
-testNum = 10;
-pword.value = "inputpw";
-startCallbackTimer();
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(pword.value, "secret", "Checking returned password");
-
-// ===== test 11 =====
-// Default password provided, existing logins are ignored.
-testNum++;
-pword.value = "inputpw";
-startCallbackTimer();
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(!isOk, "Checking dialog return value (cancel)");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 12 =====
-// No default password provided, realm does not match existing login.
-testNum++;
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://nonexample.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(pword.value, "secret", "Checking returned password");
-
-// ===== test 13 =====
-// No default password provided, matching login is returned w/o prompting.
-testNum++;
-pword.value = null;
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-is(pword.value, "examplepass", "Checking returned password");
-
-// ===== test 14 =====
-// No default password provided, none of the logins from this host are
-// password-only so the user is prompted.
-testNum++;
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(pword.value, "secret", "Checking returned password");
-
-// ===== test 15 =====
-// No default password provided, matching login is returned w/o prompting.
-testNum++;
-pword.value = null;
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user1name@example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-is(pword.value, "user1pass", "Checking returned password");
-
-// ===== test 16 =====
-// No default password provided, matching login is returned w/o prompting.
-testNum++;
-pword.value = null;
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user2name@example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-is(pword.value, "user2pass", "Checking returned password");
-
-// ===== test 17 =====
-// No default password provided, matching login is returned w/o prompting.
-testNum++;
-pword.value = null;
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user3%2Ename%40host@example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-is(pword.value, "user3pass", "Checking returned password");
-
-// ===== test 18 =====
-// No default password provided, matching login is returned w/o prompting.
-testNum++;
-pword.value = null;
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://100@beef@example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-is(pword.value, "user3pass", "Checking returned password");
-
-// ===== test 19 =====
-// No default password provided, matching login is returned w/o prompting.
-testNum++;
-pword.value = null;
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://100%25beef@example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-is(pword.value, "user3pass", "Checking returned password");
-
-
-// XXX test saving a password with  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY
-
-
-// ===== test 30 =====
-// We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
-testNum = 30;
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(pword.value, "fill2pass", "Checking returned password");
-
-// ===== test 31 =====
-// We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
-testNum++;
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(pword.value, "fill2pass", "Checking returned password");
-
-
-// ===== test 100 =====
-testNum = 100;
-uname.value = "inuser";
-pword.value = "inpass";
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://nonexample.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(uname.value, "outuser", "Checking returned username");
-is(pword.value, "outpass", "Checking returned password");
-
-// ===== test 101 =====
-testNum++;
-uname.value = "inuser";
-pword.value = "inpass";
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://nonexample.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
-ok(!isOk, "Checking dialog return value (cancel)");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 102 =====
-// test filling in existing password-only login
-testNum++;
-uname.value = null;
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(uname.value, "", "Checking returned username");
-is(pword.value, "examplepass", "Checking returned password");
-
-// ===== test 103 =====
-// test filling in existing login (undetermined from multiple selection)
-testNum++;
-uname.value = null;
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-ok(uname.value == "user1name" || uname.value == "user2name", "Checking returned username");
-ok(pword.value == "user1pass" || uname.value == "user2pass", "Checking returned password");
-
-// ===== test 104 =====
-// test filling in existing login (user1 from multiple selection)
-testNum++;
-uname.value = "user1name";
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(uname.value, "user1name", "Checking returned username");
-is(pword.value, "user1pass", "Checking returned password");
-
-// ===== test 105 =====
-// test filling in existing login (user2 from multiple selection)
-testNum++;
-uname.value = "user2name";
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(uname.value, "user2name", "Checking returned username");
-is(pword.value, "user2pass", "Checking returned password");
-
-// ===== test 106 =====
-// test changing password
-testNum++;
-uname.value = "user2name";
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(uname.value, "user2name", "Checking returned username");
-is(pword.value, "NEWuser2pass", "Checking returned password");
-
-// ===== test 107 =====
-// test changing password (back to original value)
-testNum++;
-uname.value = "user2name";
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(uname.value, "user2name", "Checking returned username");
-is(pword.value, "user2pass", "Checking returned password");
-
-// ===== test 120 =====
-// We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
-testNum = 120;
-uname.value = null;
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(uname.value, "fill2user", "Checking returned username");
-is(pword.value, "fill2pass", "Checking returned password");
-
-// ===== test 121 =====
-// We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
-testNum++;
-uname.value = null;
-pword.value = null;
-startCallbackTimer();
-isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
-                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(uname.value, "fill2user", "Checking returned username");
-is(pword.value, "fill2pass", "Checking returned password");
-
-
-var channel1 = ioService.newChannel("http://example.com", null, null);
-var channel2 = ioService.newChannel("http://example2.com", null, null);
-
-var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
-
-
-// ===== test 500 =====
-testNum = 500;
-authinfo.username = "inuser";
-authinfo.password = "inpass";
-authinfo.realm    = "some realm";
-
-startCallbackTimer();
-isOk = prompter2.promptAuth(channel1, level, authinfo);
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(authinfo.username, "outuser", "Checking returned username");
-is(authinfo.password, "outpass", "Checking returned password");
-
-// ===== test 501 =====
-testNum++;
-startCallbackTimer();
-isOk = prompter2.promptAuth(channel1, level, authinfo);
-
-ok(!isOk, "Checking dialog return value (cancel)");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 502 =====
-// test filling in password-only login
-testNum++;
-authinfo.username = "";
-authinfo.password = "";
-authinfo.realm    = "http://example.com";
-
-startCallbackTimer();
-isOk = prompter2.promptAuth(channel1, level, authinfo);
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(authinfo.username, "", "Checking returned username");
-is(authinfo.password, "examplepass", "Checking returned password");
-
-// ===== test 503 =====
-// test filling in existing login (undetermined from multiple selection)
-testNum++;
-authinfo.username = "";
-authinfo.password = "";
-authinfo.realm    = "http://example2.com";
-
-startCallbackTimer();
-isOk = prompter2.promptAuth(channel2, level, authinfo);
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-ok(authinfo.username == "user1name" || authinfo.username == "user2name", "Checking returned username");
-ok(authinfo.password == "user1pass" || authinfo.password == "user2pass", "Checking returned password");
-
-// ===== test 504 =====
-// test filling in existing login (undetermined --> user1)
-testNum++;
-authinfo.username = "";
-authinfo.password = "";
-authinfo.realm    = "http://example2.com";
-
-startCallbackTimer();
-isOk = prompter2.promptAuth(channel2, level, authinfo);
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(authinfo.username, "user1name", "Checking returned username");
-is(authinfo.password, "user1pass", "Checking returned password");
-
-// ===== test 505 =====
-// test filling in existing login (undetermined --> user2)
-testNum++;
-authinfo.username = "";
-authinfo.password = "";
-authinfo.realm    = "http://example2.com";
-
-dumpNotifications();
-startCallbackTimer();
-isOk = prompter2.promptAuth(channel2, level, authinfo);
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(authinfo.username, "user2name", "Checking returned username");
-is(authinfo.password, "user2pass", "Checking returned password");
-
-// ===== test 506 =====
-// test changing a password (undetermined --> user2 w/ newpass)
-testNum++;
-authinfo.username = "";
-authinfo.password = "";
-authinfo.realm    = "http://example2.com";
-
-dumpNotifications();
-startCallbackTimer();
-isOk = prompter2.promptAuth(channel2, level, authinfo);
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(authinfo.username, "user2name", "Checking returned username");
-is(authinfo.password, "NEWuser2pass", "Checking returned password");
-
-// ===== test 507 =====
-// test changing a password (undetermined --> user2 w/ origpass)
-testNum++;
-authinfo.username = "";
-authinfo.password = "";
-authinfo.realm    = "http://example2.com";
-
-dumpNotifications();
-startCallbackTimer();
-isOk = prompter2.promptAuth(channel2, level, authinfo);
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-is(authinfo.username, "user2name", "Checking returned username");
-is(authinfo.password, "user2pass", "Checking returned password");
-
-// ===== test 508 =====
-// test proxy login (default = no autologin), make sure it prompts.
-testNum++;
-proxyAuthinfo.username = "";
-proxyAuthinfo.password = "";
-proxyAuthinfo.realm    = "Proxy Realm";
-proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
-
-dumpNotifications();
-var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-startCallbackTimer();
-isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-var time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-isnot(time1, time2, "Checking that timeLastUsed was updated");
-is(proxyAuthinfo.username, "proxuser", "Checking returned username");
-is(proxyAuthinfo.password, "proxpass", "Checking returned password");
-
-// ===== test 509 =====
-// test proxy login (with autologin)
-testNum++;
-
-// Enable the autologin pref.
-prefs.setBoolPref("signon.autologin.proxy", true);
-
-proxyAuthinfo.username = "";
-proxyAuthinfo.password = "";
-proxyAuthinfo.realm    = "Proxy Realm";
-proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
-
-time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-
-ok(isOk, "Checking dialog return value (accept)");
-isnot(time1, time2, "Checking that timeLastUsed was updated");
-is(proxyAuthinfo.username, "proxuser", "Checking returned username");
-is(proxyAuthinfo.password, "proxpass", "Checking returned password");
-
-// ===== test 510 =====
-// test proxy login (with autologin), ensure it prompts after a failed auth.
-testNum++;
-
-proxyAuthinfo.username = "";
-proxyAuthinfo.password = "";
-proxyAuthinfo.realm    = "Proxy Realm";
-proxyAuthinfo.flags    = (Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED);
-
-time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-startCallbackTimer();
-isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-
-ok(isOk, "Checking dialog return value (accept)");
-ok(didDialog, "handleDialog was invoked");
-isnot(time1, time2, "Checking that timeLastUsed was updated");
-is(proxyAuthinfo.username, "proxuser", "Checking returned username");
-is(proxyAuthinfo.password, "proxpass", "Checking returned password");
-
-// ===== test 511 =====
-// test proxy login (with autologin), ensure it prompts in Private Browsing mode.
-testNum++;
-
-proxyAuthinfo.username = "";
-proxyAuthinfo.password = "";
-proxyAuthinfo.realm    = "Proxy Realm";
-proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
-
-
-prefs.clearUserPref("signon.autologin.proxy");
-
-// XXX check for and kill popup notification??
-// XXX check for checkbox / checkstate on old prompts?
-// XXX check NTLM domain stuff
-
-
-var iframe = document.getElementById("iframe");
-iframe.onload = handleLoad;
-
-// clear plain HTTP auth sessions before the test, to allow
-// running them more than once.
-var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-              getService(Ci.nsIHttpAuthManager);
-authMgr.clearAll();
-
-// ===== test 1000 =====
-testNum = 1000;
-startCallbackTimer();
-iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-
-// ...remaining tests are driven by handleLoad()...
-SimpleTest.waitForExplicitFinish();
+  };
+
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+
+  const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
+  ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
+
+  const Ci_promptFac = Ci.nsIPromptFactory;
+  ok(Ci_promptFac != null, "Access Ci.nsIPromptFactory");
+
+  const promptFac = Cc_promptFac.getService(Ci_promptFac);
+  ok(promptFac != null, "promptFac getService()");
+
+  var prompter1 = promptFac.getPrompt(window, Ci.nsIAuthPrompt);
+  var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
+
+  function dialogTitle() { return "nsILoginManagerPrompter test #" + testNum; }
+  var dialogText  = "This dialog should be modified and dismissed by the test.";
+  var uname  = { value : null };
+  var pword  = { value : null };
+  var result = { value : null };
+  var isOk;
+
+  // popupNotifications (not *popup*) is a constant, per-tab container. So, we
+  // only need to fetch it once.
+  var popupNotifications = getPopupNotifications(window.top);
+  ok(popupNotifications, "Got popupNotifications");
+
+  // ===== test 1 =====
+  testNum = 1;
+  startCallbackTimer();
+  isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
+                          Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(result.value, "xyz", "Checking prompt() returned value");
+
+  // ===== test 2 =====
+  testNum++;
+  startCallbackTimer();
+  isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
+                          Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
+  ok(didDialog, "handleDialog was invoked");
+  ok(!isOk, "Checking dialog return value (cancel)");
+
+  // ===== test 10 =====
+  // Default password provided, existing logins are ignored.
+  testNum = 10;
+  pword.value = "inputpw";
+  startCallbackTimer();
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(pword.value, "secret", "Checking returned password");
+
+  // ===== test 11 =====
+  // Default password provided, existing logins are ignored.
+  testNum++;
+  pword.value = "inputpw";
+  startCallbackTimer();
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(!isOk, "Checking dialog return value (cancel)");
+  ok(didDialog, "handleDialog was invoked");
+
+  // ===== test 12 =====
+  // No default password provided, realm does not match existing login.
+  testNum++;
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://nonexample.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(pword.value, "secret", "Checking returned password");
+
+  // ===== test 13 =====
+  // No default password provided, matching login is returned w/o prompting.
+  testNum++;
+  pword.value = null;
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  is(pword.value, "examplepass", "Checking returned password");
+
+  // ===== test 14 =====
+  // No default password provided, none of the logins from this host are
+  // password-only so the user is prompted.
+  testNum++;
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(pword.value, "secret", "Checking returned password");
+
+  // ===== test 15 =====
+  // No default password provided, matching login is returned w/o prompting.
+  testNum++;
+  pword.value = null;
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user1name@example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  is(pword.value, "user1pass", "Checking returned password");
+
+  // ===== test 16 =====
+  // No default password provided, matching login is returned w/o prompting.
+  testNum++;
+  pword.value = null;
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user2name@example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  is(pword.value, "user2pass", "Checking returned password");
+
+  // ===== test 17 =====
+  // No default password provided, matching login is returned w/o prompting.
+  testNum++;
+  pword.value = null;
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user3%2Ename%40host@example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  is(pword.value, "user3pass", "Checking returned password");
+
+  // ===== test 18 =====
+  // No default password provided, matching login is returned w/o prompting.
+  testNum++;
+  pword.value = null;
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://100@beef@example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  is(pword.value, "user3pass", "Checking returned password");
+
+  // ===== test 19 =====
+  // No default password provided, matching login is returned w/o prompting.
+  testNum++;
+  pword.value = null;
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://100%25beef@example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  is(pword.value, "user3pass", "Checking returned password");
+
+  // XXX test saving a password with  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY
+
+  // ===== test 30 =====
+  // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
+  testNum = 30;
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(pword.value, "fill2pass", "Checking returned password");
+
+  // ===== test 31 =====
+  // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
+  testNum++;
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(pword.value, "fill2pass", "Checking returned password");
+
+  // ===== test 100 =====
+  testNum = 100;
+  uname.value = "inuser";
+  pword.value = "inpass";
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://nonexample.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(uname.value, "outuser", "Checking returned username");
+  is(pword.value, "outpass", "Checking returned password");
+
+  // ===== test 101 =====
+  testNum++;
+  uname.value = "inuser";
+  pword.value = "inpass";
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://nonexample.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+  ok(!isOk, "Checking dialog return value (cancel)");
+  ok(didDialog, "handleDialog was invoked");
+
+  // ===== test 102 =====
+  // test filling in existing password-only login
+  testNum++;
+  uname.value = null;
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(uname.value, "", "Checking returned username");
+  is(pword.value, "examplepass", "Checking returned password");
+
+  // ===== test 103 =====
+  // test filling in existing login (undetermined from multiple selection)
+  testNum++;
+  uname.value = null;
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  ok(uname.value == "user1name" || uname.value == "user2name", "Checking returned username");
+  ok(pword.value == "user1pass" || uname.value == "user2pass", "Checking returned password");
+
+  // ===== test 104 =====
+  // test filling in existing login (user1 from multiple selection)
+  testNum++;
+  uname.value = "user1name";
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(uname.value, "user1name", "Checking returned username");
+  is(pword.value, "user1pass", "Checking returned password");
+
+  // ===== test 105 =====
+  // test filling in existing login (user2 from multiple selection)
+  testNum++;
+  uname.value = "user2name";
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(uname.value, "user2name", "Checking returned username");
+  is(pword.value, "user2pass", "Checking returned password");
+
+  // ===== test 106 =====
+  // test changing password
+  testNum++;
+  uname.value = "user2name";
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(uname.value, "user2name", "Checking returned username");
+  is(pword.value, "NEWuser2pass", "Checking returned password");
+
+  // ===== test 107 =====
+  // test changing password (back to original value)
+  testNum++;
+  uname.value = "user2name";
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(uname.value, "user2name", "Checking returned username");
+  is(pword.value, "user2pass", "Checking returned password");
+
+  // ===== test 120 =====
+  // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
+  testNum = 120;
+  uname.value = null;
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(uname.value, "fill2user", "Checking returned username");
+  is(pword.value, "fill2pass", "Checking returned password");
+
+  // ===== test 121 =====
+  // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
+  testNum++;
+  uname.value = null;
+  pword.value = null;
+  startCallbackTimer();
+  isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
+                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(uname.value, "fill2user", "Checking returned username");
+  is(pword.value, "fill2pass", "Checking returned password");
+
+  var channel1 = ioService.newChannel("http://example.com", null, null);
+  var channel2 = ioService.newChannel("http://example2.com", null, null);
+
+  var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
+
+  // ===== test 500 =====
+  testNum = 500;
+  authinfo.username = "inuser";
+  authinfo.password = "inpass";
+  authinfo.realm    = "some realm";
+
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(channel1, level, authinfo);
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(authinfo.username, "outuser", "Checking returned username");
+  is(authinfo.password, "outpass", "Checking returned password");
+
+  // ===== test 501 =====
+  testNum++;
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(channel1, level, authinfo);
+
+  ok(!isOk, "Checking dialog return value (cancel)");
+  ok(didDialog, "handleDialog was invoked");
+
+  // ===== test 502 =====
+  // test filling in password-only login
+  testNum++;
+  authinfo.username = "";
+  authinfo.password = "";
+  authinfo.realm    = "http://example.com";
+
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(channel1, level, authinfo);
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(authinfo.username, "", "Checking returned username");
+  is(authinfo.password, "examplepass", "Checking returned password");
+
+  // ===== test 503 =====
+  // test filling in existing login (undetermined from multiple selection)
+  testNum++;
+  authinfo.username = "";
+  authinfo.password = "";
+  authinfo.realm    = "http://example2.com";
+
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  ok(authinfo.username == "user1name" || authinfo.username == "user2name", "Checking returned username");
+  ok(authinfo.password == "user1pass" || authinfo.password == "user2pass", "Checking returned password");
+
+  // ===== test 504 =====
+  // test filling in existing login (undetermined --> user1)
+  testNum++;
+  authinfo.username = "";
+  authinfo.password = "";
+  authinfo.realm    = "http://example2.com";
+
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(authinfo.username, "user1name", "Checking returned username");
+  is(authinfo.password, "user1pass", "Checking returned password");
+
+  // ===== test 505 =====
+  // test filling in existing login (undetermined --> user2)
+  testNum++;
+  authinfo.username = "";
+  authinfo.password = "";
+  authinfo.realm    = "http://example2.com";
+
+  dumpNotifications();
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(authinfo.username, "user2name", "Checking returned username");
+  is(authinfo.password, "user2pass", "Checking returned password");
+
+  // ===== test 506 =====
+  // test changing a password (undetermined --> user2 w/ newpass)
+  testNum++;
+  authinfo.username = "";
+  authinfo.password = "";
+  authinfo.realm    = "http://example2.com";
+
+  dumpNotifications();
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(authinfo.username, "user2name", "Checking returned username");
+  is(authinfo.password, "NEWuser2pass", "Checking returned password");
+
+  // ===== test 507 =====
+  // test changing a password (undetermined --> user2 w/ origpass)
+  testNum++;
+  authinfo.username = "";
+  authinfo.password = "";
+  authinfo.realm    = "http://example2.com";
+
+  dumpNotifications();
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(authinfo.username, "user2name", "Checking returned username");
+  is(authinfo.password, "user2pass", "Checking returned password");
+
+  // ===== test 508 =====
+  // test proxy login (default = no autologin), make sure it prompts.
+  testNum++;
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm    = "Proxy Realm";
+  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+  dumpNotifications();
+  var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  var time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+
+  // ===== test 509 =====
+  // test proxy login (with autologin)
+  testNum++;
+
+  // Enable the autologin pref.
+  prefs.setBoolPref("signon.autologin.proxy", true);
+
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm    = "Proxy Realm";
+  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+  ok(isOk, "Checking dialog return value (accept)");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+
+  // ===== test 510 =====
+  // test proxy login (with autologin), ensure it prompts after a failed auth.
+  testNum++;
+
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm    = "Proxy Realm";
+  proxyAuthinfo.flags    = (Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED);
+
+  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+
+  // ===== test 511 =====
+  // test proxy login (with autologin), ensure it prompts in Private Browsing mode.
+  testNum++;
+
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm    = "Proxy Realm";
+  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+  prefs.clearUserPref("signon.autologin.proxy");
+
+  // XXX check for and kill popup notification??
+  // XXX check for checkbox / checkstate on old prompts?
+  // XXX check NTLM domain stuff
+
+  var iframe = document.getElementById("iframe");
+  iframe.onload = handleLoad;
+
+  // clear plain HTTP auth sessions before the test, to allow
+  // running them more than once.
+  var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                getService(Ci.nsIHttpAuthManager);
+  authMgr.clearAll();
+
+  // ===== test 1000 =====
+  testNum = 1000;
+  startCallbackTimer();
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+
+  // ...remaining tests are driven by handleLoad()...
 }
 </script>
 </pre>
