@@ -230,8 +230,8 @@ def main():
                         help='Transform errors into warnings.')
     parser.add_argument('--minify', action='store_true', default=False,
                         help='Make some files more compact while packaging')
-    parser.add_argument('--jarlogs', default='', help='Base directory where ' +
-                        'to find jar content access logs')
+    parser.add_argument('--jarlog', default='', help='File containing jar ' +
+                        'access logs')
     parser.add_argument('--optimizejars', action='store_true', default=False,
                         help='Enable jar optimizations')
     parser.add_argument('--unify', default='',
@@ -331,13 +331,15 @@ def main():
                                                     libname)))
 
     # Setup preloading
-    if args.jarlogs:
-        jarlogs = FileFinder(args.jarlogs)
-        for p, log in jarlogs:
-            if p.endswith('.log'):
-                p = p[:-4]
-            if copier.contains(p) and isinstance(copier[p], Jarrer):
-                copier[p].preload([l.strip() for l in log.open().readlines()])
+    if args.jarlog and os.path.exists(args.jarlog):
+        from mozpack.mozjar import JarLog
+        log = JarLog(args.jarlog)
+        for p, f in copier:
+            if not isinstance(f, Jarrer):
+                continue
+            key = JarLog.canonicalize(os.path.join(args.destination, p))
+            if key in log:
+                f.preload(log[key])
 
     # Fill startup cache
     if isinstance(formatter, OmniJarFormatter) and launcher.can_launch():
