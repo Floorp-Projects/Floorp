@@ -124,13 +124,10 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11Context,
                                           mozilla::psm::PK11_DestroyContext_true)
 
 /** A more convenient way of dealing with digests calculated into
- *  stack-allocated buffers. NSS must be initialized on the main thread before
- *  use, and the caller must ensure NSS isn't shut down, typically by
- *  subclassing nsNSSShutDownObject, while Digest is in use.
+ *  stack-allocated buffers.
  *
  * Typical usage, for digesting a buffer in memory:
  *
- *   nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &rv);
  *   Digest digest;
  *   nsresult rv = digest.DigestBuf(SEC_OID_SHA256, mybuffer, myBufferLen);
  *   NS_ENSURE_SUCCESS(rv, rv);
@@ -147,7 +144,7 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11Context,
  *      rv = MapSECStatus(PK11_DigestOp(digestContext, ...));
  *      NS_ENSURE_SUCCESS(rv, rv);
  *   }
- *   rv = digest.End(SEC_OID_SHA1, digestContext);
+ *   rv = digestContext.End(SEC_OID_SHA1, digestContext);
  *   NS_ENSURE_SUCCESS(rv, rv)
  */
 class Digest

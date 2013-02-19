@@ -14,12 +14,10 @@
 
 #include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
-#include "nsNSSShutDown.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIBackgroundFileSaver.h"
 #include "nsIStreamListener.h"
 #include "nsStreamUtils.h"
-#include "ScopedNSSTypes.h"
 
 class nsIAsyncInputStream;
 class nsIThread;
@@ -27,13 +25,10 @@ class nsIThread;
 namespace mozilla {
 namespace net {
 
-class DigestOutputStream;
-
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaver
 
-class BackgroundFileSaver : public nsIBackgroundFileSaver,
-                            public nsNSSShutDownObject
+class BackgroundFileSaver : public nsIBackgroundFileSaver
 {
 public:
   NS_DECL_NSIBACKGROUNDFILESAVER
@@ -48,18 +43,8 @@ public:
    */
   nsresult Init();
 
-  /**
-   * Used by nsNSSShutDownList to manage nsNSSShutDownObjects.
-   */
-  void virtualDestroyNSSReference();
-
 protected:
   virtual ~BackgroundFileSaver();
-
-  /**
-   * Helper function for managing NSS objects (mDigestContext).
-   */
-  void destructorSafeDestroyNSSReference();
 
   /**
    * Thread that constructed this object.
@@ -73,8 +58,7 @@ protected:
 
   /**
    * Stream that receives data from derived classes.  The received data will be
-   * available to the worker thread through mPipeInputStream. This is an
-   * instance of nsPipeOutputStream, not BackgroundFileSaverOutputStream.
+   * available to the worker thread through mPipeInputStream.
    */
   nsCOMPtr<nsIAsyncOutputStream> mPipeOutputStream;
 
@@ -158,18 +142,6 @@ private:
    */
   nsCOMPtr<nsISupports> mAsyncCopyContext;
 
-  /**
-   * The SHA 256 hash in raw bytes of the downloaded file. This is written
-   * by the worker thread but can be read on the main thread.
-   */
-  nsAutoCString mSha256;
-
-  /**
-   * Whether or not to compute the hash. Must be set on the main thread before
-   * setTarget is called.
-   */
-  bool mSha256Enabled;
-
   //////////////////////////////////////////////////////////////////////////////
   //// State handled exclusively by the worker thread
 
@@ -183,12 +155,6 @@ private:
    * rather than deleted, if the operation fails or is canceled.
    */
   bool mActualTargetKeepPartial;
-
-  /**
-   * Used to calculate the file hash. This keeps state across file renames and
-   * is lazily initialized in ProcessStateChange.
-   */
-  ScopedPK11Context mDigestContext;
 
   //////////////////////////////////////////////////////////////////////////////
   //// Private methods
@@ -271,8 +237,7 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-//// BackgroundFileSaverStreamListener. This class is instantiated by
-// nsExternalHelperAppService, DownloadCore.jsm, and possibly others.
+//// BackgroundFileSaverStreamListener
 
 class BackgroundFileSaverStreamListener : public BackgroundFileSaver
                                         , public nsIStreamListener
@@ -323,31 +288,6 @@ private:
   nsresult NotifySuspendOrResume();
 };
 
-// A wrapper around nsIOutputStream, so that we can compute hashes on the
-// stream without copying and without polluting pristine NSS code with XPCOM
-// interfaces.
-class DigestOutputStream : public nsNSSShutDownObject,
-                           public nsIOutputStream
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOUTPUTSTREAM
-  // Constructor. Neither parameter may be null. The caller owns both.
-  DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);
-  ~DigestOutputStream();
-
-  // We don't own any NSS objects here, so no need to clean up
-  void virtualDestroyNSSReference() { }
-
-private:
-  // Calls to write are passed to this stream.
-  nsCOMPtr<nsIOutputStream> mOutputStream;
-  // Digest context used to compute the hash, owned by the caller.
-  PK11Context* mDigestContext;
-
-  // Don't accidentally copy construct.
-  DigestOutputStream(const DigestOutputStream& d);
-};
 } // namespace net
 } // namespace mozilla
 
