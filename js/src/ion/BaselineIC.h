@@ -755,7 +755,8 @@ class ICUpdatedStub : public ICStub
   public:
     bool initUpdatingChain(JSContext *cx, ICStubSpace *space);
 
-    bool addUpdateStubForValue(JSContext *cx, HandleScript script, HandleValue val);
+    bool addUpdateStubForValue(JSContext *cx, HandleScript script, HandleObject obj, RawId id,
+                               HandleValue val);
 
     void addOptimizedUpdateStub(ICStub *stub) {
         if (firstUpdateStub_->isTypeUpdate_Fallback()) {
