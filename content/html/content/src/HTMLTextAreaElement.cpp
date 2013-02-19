@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/HTMLTextAreaElementBinding.h"
 #include "mozilla/Util.h"
 
 #include "nsIControllers.h"
@@ -18,7 +19,6 @@
 #include "nsFormSubmission.h"
 #include "nsIDOMEventTarget.h"
 #include "nsAttrValueInlines.h"
-#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
@@ -73,6 +73,8 @@ HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo
   AddStatesSilently(NS_EVENT_STATE_ENABLED |
                     NS_EVENT_STATE_OPTIONAL |
                     NS_EVENT_STATE_VALID);
+
+  SetIsDOMBinding();
 }
 
 
@@ -236,7 +238,7 @@ HTMLTextAreaElement::GetValueInternal(nsAString& aValue, bool aIgnoreWrap) const
 NS_IMETHODIMP_(nsIEditor*)
 HTMLTextAreaElement::GetTextEditor()
 {
-  return mState.GetEditor();
+  return GetEditor();
 }
 
 NS_IMETHODIMP_(nsISelectionController*)
@@ -371,11 +373,21 @@ HTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue)
 NS_IMETHODIMP
 HTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
+  ErrorResult error;
+  SetDefaultValue(aDefaultValue, error);
+  return error.ErrorCode();
+}
+
+void
+HTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aError)
+{
   nsresult rv = nsContentUtils::SetNodeTextContent(this, aDefaultValue, true);
   if (NS_SUCCEEDED(rv) && !mValueChanged) {
     Reset();
   }
-  return rv;
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
 }
 
 bool
@@ -563,45 +575,65 @@ HTMLTextAreaElement::IsDoneAddingChildren()
 
 // Controllers Methods
 
+nsIControllers*
+HTMLTextAreaElement::GetControllers(ErrorResult& aError)
+{
+  if (!mControllers)
+  {
+    nsresult rv;
+    mControllers = do_CreateInstance(kXULControllersCID, &rv);
+    if (NS_FAILED(rv)) {
+      aError.Throw(rv);
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
+    if (NS_FAILED(rv)) {
+      aError.Throw(rv);
+      return nullptr;
+    }
+
+    mControllers->AppendController(controller);
+
+    controller = do_CreateInstance("@mozilla.org/editor/editingcontroller;1", &rv);
+    if (NS_FAILED(rv)) {
+      aError.Throw(rv);
+      return nullptr;
+    }
+
+    mControllers->AppendController(controller);
+  }
+
+  return mControllers;
+}
+
 NS_IMETHODIMP
 HTMLTextAreaElement::GetControllers(nsIControllers** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  if (!mControllers)
-  {
-    nsresult rv;
-    mControllers = do_CreateInstance(kXULControllersCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
-    if (NS_FAILED(rv))
-      return rv;
-
-    mControllers->AppendController(controller);
-
-    controller = do_CreateInstance("@mozilla.org/editor/editingcontroller;1", &rv);
-    if (NS_FAILED(rv))
-      return rv;
-
-    mControllers->AppendController(controller);
-  }
-
-  *aResult = mControllers;
+  ErrorResult error;
+  *aResult = GetControllers(error);
   NS_IF_ADDREF(*aResult);
 
-  return NS_OK;
+  return error.ErrorCode();
+}
+
+uint32_t
+HTMLTextAreaElement::GetTextLength()
+{
+  nsAutoString val;
+  GetValue(val);
+  return val.Length();
 }
 
 NS_IMETHODIMP
 HTMLTextAreaElement::GetTextLength(int32_t *aTextLength)
 {
   NS_ENSURE_ARG_POINTER(aTextLength);
-  nsAutoString val;
-  nsresult rv = GetValue(val);
-  *aTextLength = val.Length();
+  *aTextLength = GetTextLength();
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -609,35 +641,62 @@ HTMLTextAreaElement::GetSelectionStart(int32_t *aSelectionStart)
 {
   NS_ENSURE_ARG_POINTER(aSelectionStart);
 
-  int32_t selEnd;
-  nsresult rv = GetSelectionRange(aSelectionStart, &selEnd);
+  ErrorResult error;
+  *aSelectionStart = GetSelectionStart(error);
+  return error.ErrorCode();
+}
+
+uint32_t
+HTMLTextAreaElement::GetSelectionStart(ErrorResult& aError)
+{
+  int32_t selStart, selEnd;
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
 
   if (NS_FAILED(rv) && mState.IsSelectionCached()) {
-    *aSelectionStart = mState.GetSelectionProperties().mStart;
-    return NS_OK;
+    return mState.GetSelectionProperties().mStart;
   }
-  return rv;
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
+  return selStart;
 }
 
 NS_IMETHODIMP
 HTMLTextAreaElement::SetSelectionStart(int32_t aSelectionStart)
 {
+  ErrorResult error;
+  SetSelectionStart(aSelectionStart, error);
+  return error.ErrorCode();
+}
+
+void
+HTMLTextAreaElement::SetSelectionStart(uint32_t aSelectionStart, ErrorResult& aError)
+{
   if (mState.IsSelectionCached()) {
     mState.GetSelectionProperties().mStart = aSelectionStart;
-    return NS_OK;
+    return;
   }
 
   nsAutoString direction;
   nsresult rv = GetSelectionDirection(direction);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
   int32_t start, end;
   rv = GetSelectionRange(&start, &end);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
   start = aSelectionStart;
   if (end < start) {
     end = start;
   }
-  return SetSelectionRange(start, end, direction);
+  rv = SetSelectionRange(start, end, direction);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
 }
 
 NS_IMETHODIMP
@@ -645,35 +704,62 @@ HTMLTextAreaElement::GetSelectionEnd(int32_t *aSelectionEnd)
 {
   NS_ENSURE_ARG_POINTER(aSelectionEnd);
 
-  int32_t selStart;
-  nsresult rv = GetSelectionRange(&selStart, aSelectionEnd);
+  ErrorResult error;
+  *aSelectionEnd = GetSelectionEnd(error);
+  return error.ErrorCode();
+}
+
+uint32_t
+HTMLTextAreaElement::GetSelectionEnd(ErrorResult& aError)
+{
+  int32_t selStart, selEnd;
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
 
   if (NS_FAILED(rv) && mState.IsSelectionCached()) {
-    *aSelectionEnd = mState.GetSelectionProperties().mEnd;
-    return NS_OK;
+    return mState.GetSelectionProperties().mEnd;
   }
-  return rv;
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
+  return selEnd;
 }
 
 NS_IMETHODIMP
 HTMLTextAreaElement::SetSelectionEnd(int32_t aSelectionEnd)
 {
+  ErrorResult error;
+  SetSelectionEnd(aSelectionEnd, error);
+  return error.ErrorCode();
+}
+
+void
+HTMLTextAreaElement::SetSelectionEnd(uint32_t aSelectionEnd, ErrorResult& aError)
+{
   if (mState.IsSelectionCached()) {
     mState.GetSelectionProperties().mEnd = aSelectionEnd;
-    return NS_OK;
+    return;
   }
 
   nsAutoString direction;
   nsresult rv = GetSelectionDirection(direction);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
   int32_t start, end;
   rv = GetSelectionRange(&start, &end);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
   end = aSelectionEnd;
   if (start > end) {
     start = end;
   }
-  return SetSelectionRange(start, end, direction);
+  rv = SetSelectionRange(start, end, direction);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
 }
 
 nsresult
@@ -709,6 +795,14 @@ DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirecti
 nsresult
 HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection)
 {
+  ErrorResult error;
+  GetSelectionDirection(aDirection, error);
+  return error.ErrorCode();
+}
+
+void
+HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aError)
+{
   nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
 
@@ -726,15 +820,23 @@ HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection)
   if (NS_FAILED(rv)) {
     if (mState.IsSelectionCached()) {
       DirectionToName(mState.GetSelectionProperties().mDirection, aDirection);
-      return NS_OK;
+      return;
     }
+    aError.Throw(rv);
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection) {
+HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection)
+{
+  ErrorResult error;
+  SetSelectionDirection(aDirection, error);
+  return error.ErrorCode();
+}
+
+void
+HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult& aError)
+{
   if (mState.IsSelectionCached()) {
     nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eNone;
     if (aDirection.EqualsLiteral("forward")) {
@@ -743,7 +845,7 @@ HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection) {
       dir = nsITextControlFrame::eBackward;
     }
     mState.GetSelectionProperties().mDirection = dir;
-    return NS_OK;
+    return;
   }
 
   int32_t start, end;
@@ -751,15 +853,29 @@ HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection) {
   if (NS_SUCCEEDED(rv)) {
     rv = SetSelectionRange(start, end, aDirection);
   }
-
-  return rv;
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
 }
 
 NS_IMETHODIMP
 HTMLTextAreaElement::SetSelectionRange(int32_t aSelectionStart,
                                        int32_t aSelectionEnd,
                                        const nsAString& aDirection)
-{ 
+{
+  ErrorResult error;
+  Optional<nsAString> dir;
+  dir = &aDirection;
+  SetSelectionRange(aSelectionStart, aSelectionEnd, dir, error);
+  return error.ErrorCode();
+}
+
+void
+HTMLTextAreaElement::SetSelectionRange(uint32_t aSelectionStart,
+                                       uint32_t aSelectionEnd,
+                                       const Optional<nsAString>& aDirection,
+                                       ErrorResult& aError)
+{
   nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
 
@@ -770,7 +886,7 @@ HTMLTextAreaElement::SetSelectionRange(int32_t aSelectionStart,
       // Note that we don't currently support directionless selections, so
       // "none" is treated like "forward".
       nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
-      if (aDirection.EqualsLiteral("backward")) {
+      if (aDirection.WasPassed() && aDirection.Value().EqualsLiteral("backward")) {
         dir = nsITextControlFrame::eBackward;
       }
 
@@ -781,8 +897,10 @@ HTMLTextAreaElement::SetSelectionRange(int32_t aSelectionStart,
     }
   }
 
-  return rv;
-} 
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+  }
+}
 
 nsresult
 HTMLTextAreaElement::Reset()
@@ -1308,6 +1426,13 @@ HTMLTextAreaElement::FieldSetDisabledChanged(bool aNotify)
   UpdateBarredFromConstraintValidation();
 
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aNotify);
+}
+
+JSObject*
+HTMLTextAreaElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                              bool* aTriedToWrap)
+{
+  return HTMLTextAreaElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 } // namespace dom
