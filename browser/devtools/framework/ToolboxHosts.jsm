@@ -86,13 +86,6 @@ BottomHost.prototype = {
   },
 
   /**
-   * Set the toolbox title.
-   */
-  setTitle: function BH_setTitle(title) {
-    // Nothing to do for this host type.
-  },
-
-  /**
    * Destroy the bottom dock.
    */
   destroy: function BH_destroy() {
@@ -163,13 +156,6 @@ SidebarHost.prototype = {
    */
   raise: function SH_raise() {
     focusTab(this.hostTab);
-  },
-
-  /**
-   * Set the toolbox title.
-   */
-  setTitle: function SH_setTitle(title) {
-    // Nothing to do for this host type.
   },
 
   /**
@@ -247,13 +233,6 @@ WindowHost.prototype = {
    */
   raise: function RH_raise() {
     this._window.focus();
-  },
-
-  /**
-   * Set the toolbox title.
-   */
-  setTitle: function WH_setTitle(title) {
-    this._window.document.title = title;
   },
 
   /**
