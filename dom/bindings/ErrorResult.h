@@ -51,6 +51,7 @@ public:
 
   void ThrowTypeError(const dom::ErrNum errorNumber, ...);
   void ReportTypeError(JSContext* cx);
+  void ClearMessage();
   bool IsTypeError() const { return ErrorCode() == NS_ERROR_TYPE_ERR; }
 
   // In the future, we can add overloads of Throw that take more

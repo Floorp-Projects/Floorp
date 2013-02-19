@@ -95,8 +95,16 @@ ErrorResult::ReportTypeError(JSContext* aCx)
                               static_cast<const unsigned>(message->mErrorNumber),
                               argCount > 0 ? args : nullptr);
 
-  delete message;
-  mMessage = nullptr;
+  ClearMessage();
+}
+
+void
+ErrorResult::ClearMessage()
+{
+  if (IsTypeError()) {
+    delete mMessage;
+    mMessage = nullptr;
+  }
 }
 
 namespace dom {
