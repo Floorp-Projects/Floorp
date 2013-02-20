@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <limits.h>
+
 #include "vm/Debugger.h"
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -2992,7 +2994,7 @@ class FlowGraphSummary {
     class Entry {
       public:
         static Entry createWithNoEdges() {
-            return Entry(-1, 0);
+            return Entry(SIZE_MAX, 0);
         }
 
         static Entry createWithSingleEdge(size_t lineno, size_t column) {
@@ -3000,29 +3002,29 @@ class FlowGraphSummary {
         }
 
         static Entry createWithMultipleEdgesFromSingleLine(size_t lineno) {
-            return Entry(lineno, -1);
+            return Entry(lineno, SIZE_MAX);
         }
 
         static Entry createWithMultipleEdgesFromMultipleLines() {
-            return Entry(-1, -1);
+            return Entry(SIZE_MAX, SIZE_MAX);
         }
 
         Entry() {}
 
         bool hasNoEdges() const {
-            return lineno_ == -1 && column_ != -1;
+            return lineno_ == SIZE_MAX && column_ != SIZE_MAX;
         }
 
         bool hasSingleEdge() const {
-            return lineno_ != -1 && column_ != -1;
+            return lineno_ != SIZE_MAX && column_ != SIZE_MAX;
         }
 
         bool hasMultipleEdgesFromSingleLine() const {
-            return lineno_ != -1 && column_ == -1;
+            return lineno_ != SIZE_MAX && column_ == SIZE_MAX;
         }
 
         bool hasMultipleEdgesFromMultipleLines() const {
-            return lineno_ == -1 && column_ == -1;
+            return lineno_ == SIZE_MAX && column_ == SIZE_MAX;
         }
 
         bool operator==(const Entry &other) const {
