@@ -6,7 +6,6 @@
 
 #include "vcm.h"
 #include "CSFLog.h"
-#include "CSFLogStream.h"
 #include "ccapi_call_info.h"
 #include "CC_SIPCCCallInfo.h"
 #include "ccapi_device_info.h"
@@ -212,7 +211,7 @@ public:
         break;
 
       default:
-        CSFLogDebugS(logTag, ": **** UNHANDLED CALL STATE : " << mStateStr);
+        CSFLogDebug(logTag, ": **** UNHANDLED CALL STATE : %s", mStateStr.c_str());
         break;
     }
 
@@ -289,8 +288,7 @@ PeerConnectionImpl::MakeMediaStream(nsIDOMWindow* aWindow,
     DOMMediaStream::CreateSourceStream(aWindow, aHint);
   NS_ADDREF(*aRetval = stream);
 
-  CSFLogDebugS(logTag, "Created media stream " << static_cast<void*>(stream)
-    << " inner: " << static_cast<void*>(stream->GetStream()));
+  CSFLogDebug(logTag, "Created media stream %p, inner: %p", stream.get(), stream->GetStream());
 
   return NS_OK;
 }
@@ -326,7 +324,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
 #ifdef MOZILLA_INTERNAL_API
 static void
 Warn(JSContext* aCx, const nsCString& aMsg) {
-  CSFLogErrorS(logTag, "Warning: " << aMsg.get());
+  CSFLogError(logTag, "Warning: %s", aMsg.get());
   nsIScriptContext* sc = GetScriptContextFromJSContext(aCx);
   if (sc) {
     nsCOMPtr<nsIDocument> doc;
@@ -538,16 +536,16 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                       &fingerprint_length);
 
   if (NS_FAILED(res)) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": ComputeFingerprint failed: " <<
-        static_cast<uint32_t>(res));
+    CSFLogError(logTag, "%s: ComputeFingerprint failed: %u",
+      __FUNCTION__, static_cast<uint32_t>(res));
     return res;
   }
 
   mFingerprint = "sha-1 " + mIdentity->FormatFingerprint(fingerprint,
                                                          fingerprint_length);
   if (NS_FAILED(res)) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": do_GetService failed: " <<
-        static_cast<uint32_t>(res));
+    CSFLogError(logTag, "%s: do_GetService failed: %u",
+      __FUNCTION__, static_cast<uint32_t>(res));
     return res;
   }
 
@@ -628,7 +626,7 @@ PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
   // XXX Fix! Get the correct flow for DataChannel. Also error handling.
   for (int i = 2; i >= 0; i--) {
     nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(i,false).get();
-    CSFLogDebugS(logTag, "Transportflow[" << i << "] = " << flow.get());
+    CSFLogDebug(logTag, "Transportflow[%d] = %p", i, flow.get());
     if (flow) {
       if (!mDataConnection->ConnectDTLS(flow, aLocalport, aRemoteport)) {
         return NS_ERROR_FAILURE;
@@ -736,7 +734,7 @@ PeerConnectionImpl::NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aCh
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aChannel.get());
 
-  CSFLogDebugS(logTag, __FUNCTION__ << ": channel: " << static_cast<void*>(aChannel.get()));
+  CSFLogDebug(logTag, "%s: channel: %p", __FUNCTION__, aChannel.get());
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<nsIDOMDataChannel> domchannel;
@@ -1014,7 +1012,7 @@ PeerConnectionImpl::SetRemoteFingerprint(const char* hash, const char* fingerpri
 
   if (fingerprint != NULL && (strcmp(hash, "sha-1") == 0)) {
     mRemoteFingerprint = std::string(fingerprint);
-    CSFLogDebugS(logTag, "Setting remote fingerprint to " << mRemoteFingerprint);
+    CSFLogDebug(logTag, "Setting remote fingerprint to %s", mRemoteFingerprint.c_str());
     return NS_OK;
   } else {
     CSFLogError(logTag, "%s: Invalid Remote Finger Print", __FUNCTION__);
@@ -1174,8 +1172,7 @@ void
 PeerConnectionImpl::virtualDestroyNSSReference()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  CSFLogDebugS(logTag, __FUNCTION__ << ": "
-               << "NSS shutting down; freeing our DtlsIdentity.");
+  CSFLogDebug(logTag, "%s: NSS shutting down; freeing our DtlsIdentity.", __FUNCTION__);
   mIdentity = nullptr;
 }
 #endif
@@ -1192,8 +1189,8 @@ PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
   std::string statestr = aInfo->callStateToString(event);
 
   if (CCAPI_CALL_EV_CREATED != aCallEvent && CCAPI_CALL_EV_STATE != aCallEvent) {
-    CSFLogDebugS(logTag, ": **** CALL HANDLE IS: " << mHandle <<
-      ": **** CALL STATE IS: " << statestr);
+    CSFLogDebug(logTag, "%s: **** CALL HANDLE IS: %s, **** CALL STATE IS: %s",
+      __FUNCTION__, mHandle.c_str(), statestr.c_str());
     return;
   }
 
@@ -1353,7 +1350,7 @@ PeerConnectionImpl::IceStreamReady(NrIceMediaStream *aStream)
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aStream);
 
-  CSFLogDebugS(logTag, __FUNCTION__ << ": "  << aStream->name().c_str());
+  CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
 }
 
 

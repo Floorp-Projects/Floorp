@@ -4,7 +4,6 @@
 #include <string>
 
 #include "CSFLog.h"
-#include "CSFLogStream.h"
 
 #include "nspr.h"
 #include "cc_constants.h"
@@ -65,7 +64,7 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
 {
   PeerConnectionImpl *pc = new PeerConnectionImpl();
 
-  CSFLogDebugS(logTag, "Created PeerConnection: " << static_cast<void*>(pc));
+  CSFLogDebug(logTag, "Created PeerConnection: %p", pc);
 
   return pc;
 }
@@ -130,8 +129,8 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   );
 
   if (NS_FAILED(res)) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": StartGathering failed: " <<
-        static_cast<uint32_t>(res));
+    CSFLogError(logTag, "%s: StartGathering failed: %u",
+      __FUNCTION__, static_cast<uint32_t>(res));
     return res;
   }
 
@@ -148,7 +147,8 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
 
   DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
 
-  CSFLogDebugS(logTag, __FUNCTION__ << ": MediaStream: " << static_cast<void*>(aMediaStream));
+  CSFLogDebug(logTag, "%s: MediaStream: %p",
+    __FUNCTION__, aMediaStream);
 
   // Adding tracks here based on nsDOMMediaStream expectation settings
   uint32_t hints = stream->GetHintContents();
@@ -198,7 +198,8 @@ PeerConnectionMedia::RemoveStream(nsIDOMMediaStream* aMediaStream, uint32_t *str
 
   DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
 
-  CSFLogDebugS(logTag, __FUNCTION__ << ": MediaStream: " << static_cast<void*>(aMediaStream));
+  CSFLogDebug(logTag, "%s: MediaStream: %p",
+    __FUNCTION__, aMediaStream);
 
   mozilla::MutexAutoLock lock(mLocalSourceStreamsLock);
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
@@ -309,7 +310,7 @@ PeerConnectionMedia::IceStreamReady(NrIceMediaStream *aStream)
 {
   MOZ_ASSERT(aStream);
 
-  CSFLogDebugS(logTag, __FUNCTION__ << ": "  << aStream->name().c_str());
+  CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
 }
 
 
@@ -334,7 +335,7 @@ RemoteSourceStreamInfo::StorePipeline(int aTrack,
 {
   MOZ_ASSERT(mPipelines.find(aTrack) == mPipelines.end());
   if (mPipelines.find(aTrack) != mPipelines.end()) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": Request to store duplicate track " << aTrack);
+    CSFLogError(logTag, "%s: Request to store duplicate track %d", __FUNCTION__, aTrack);
     return;
   }
   CSFLogDebug(logTag, "%s track %d %s = %p", __FUNCTION__, aTrack, aIsVideo ? "video" : "audio",
