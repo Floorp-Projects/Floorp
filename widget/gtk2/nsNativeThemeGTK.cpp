@@ -1052,9 +1052,9 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
       moz_gtk_get_scrollbar_metrics(&metrics);
 
       if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL)
-        aResult->width = metrics.slider_width + 2 * metrics.trough_border;
+        aResult->width = metrics.slider_width;
       else
-        aResult->height = metrics.slider_width + 2 * metrics.trough_border;
+        aResult->height = metrics.slider_width;
 
       *aIsOverridable = false;
     }
