@@ -64,7 +64,7 @@ const PropertyInfo gShorthandProperties[] = {
 #undef CSS_PROP_DOMPROP_PREFIXED
 
 #define CSS_PROP_ALIAS(name_, id_, method_, pref_) \
-    { #name_, #method_, #pref_ },
+    { #name_, #method_, pref_ },
 
 #include "nsCSSPropAliasList.h"
 
@@ -192,13 +192,8 @@ print_array(const char *aName,
                 // lowercase the first letter
                 printf("\"%c%s\"", p->domName[0] + 32, p->domName + 1);
         }
-        if (p->pref && p->pref[0]) {
-            printf(", pref: ");
-            if (p->pref[0] == '\"') {
-                printf("%s", p->pref);
-            } else {
-                printf("\"%s\"", p->pref);
-            }
+        if (p->pref[0]) {
+            printf(", pref: \"%s\"", p->pref);
         }
         printf(" }");
     }
