@@ -25,9 +25,7 @@ TimerThread::TimerThread() :
   mMonitor("TimerThread.mMonitor"),
   mShutdown(false),
   mWaiting(false),
-  mSleeping(false),
-  mDelayLineCounter(0),
-  mMinTimerPeriod(0)
+  mSleeping(false)
 {
 }
 
@@ -161,60 +159,6 @@ nsresult TimerThread::Shutdown()
   return NS_OK;
 }
 
-// Keep track of how early (positive slack) or late (negative slack) timers
-// are running, and use the filtered slack number to adaptively estimate how
-// early timers should fire to be "on time".
-void TimerThread::UpdateFilter(uint32_t aDelay, TimeStamp aTimeout,
-                               TimeStamp aNow)
-{
-  TimeDuration slack = aTimeout - aNow;
-  double smoothSlack = 0;
-  uint32_t i, filterLength;
-  static TimeDuration kFilterFeedbackMaxTicks =
-    TimeDuration::FromMilliseconds(FILTER_FEEDBACK_MAX);
-  static TimeDuration kFilterFeedbackMinTicks =
-    TimeDuration::FromMilliseconds(-FILTER_FEEDBACK_MAX);
-
-  if (slack > kFilterFeedbackMaxTicks)
-    slack = kFilterFeedbackMaxTicks;
-  else if (slack < kFilterFeedbackMinTicks)
-    slack = kFilterFeedbackMinTicks;
-
-  mDelayLine[mDelayLineCounter & DELAY_LINE_LENGTH_MASK] =
-    slack.ToMilliseconds();
-  if (++mDelayLineCounter < DELAY_LINE_LENGTH) {
-    // Startup mode: accumulate a full delay line before filtering.
-    PR_ASSERT(mTimeoutAdjustment.ToSeconds() == 0);
-    filterLength = 0;
-  } else {
-    // Past startup: compute number of filter taps based on mMinTimerPeriod.
-    if (mMinTimerPeriod == 0) {
-      mMinTimerPeriod = (aDelay != 0) ? aDelay : 1;
-    } else if (aDelay != 0 && aDelay < mMinTimerPeriod) {
-      mMinTimerPeriod = aDelay;
-    }
-
-    filterLength = (uint32_t) (FILTER_DURATION / mMinTimerPeriod);
-    if (filterLength > DELAY_LINE_LENGTH)
-      filterLength = DELAY_LINE_LENGTH;
-    else if (filterLength < 4)
-      filterLength = 4;
-
-    for (i = 1; i <= filterLength; i++)
-      smoothSlack += mDelayLine[(mDelayLineCounter-i) & DELAY_LINE_LENGTH_MASK];
-    smoothSlack /= filterLength;
-
-    // XXXbe do we need amplification?  hacking a fudge factor, need testing...
-    mTimeoutAdjustment = TimeDuration::FromMilliseconds(smoothSlack * 1.5);
-  }
-
-#ifdef DEBUG_TIMERS
-  PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
-         ("UpdateFilter: smoothSlack = %g, filterLength = %u\n",
-          smoothSlack, filterLength));
-#endif
-}
-
 /* void Run(); */
 NS_IMETHODIMP TimerThread::Run()
 {
@@ -259,7 +203,7 @@ NS_IMETHODIMP TimerThread::Run()
       if (!mTimers.IsEmpty()) {
         timer = mTimers[0];
 
-        if (now >= timer->mTimeout + mTimeoutAdjustment) {
+        if (now >= timer->mTimeout) {
     next:
           // NB: AddRef before the Release under RemoveTimerInternal to avoid
           // mRefCnt passing through zero, in case all other refs than the one
@@ -317,7 +261,7 @@ NS_IMETHODIMP TimerThread::Run()
       if (!mTimers.IsEmpty()) {
         timer = mTimers[0];
 
-        TimeStamp timeout = timer->mTimeout + mTimeoutAdjustment;
+        TimeStamp timeout = timer->mTimeout;
 
         // Don't wait at all (even for PR_INTERVAL_NO_WAIT) if the next timer
         // is due now or overdue.
@@ -329,7 +273,7 @@ NS_IMETHODIMP TimerThread::Run()
         double microseconds = (timeout - now).ToMilliseconds()*1000;
         if (microseconds < halfMicrosecondsIntervalResolution)
           goto next; // round down; execute event now
-        waitFor = PR_MicrosecondsToInterval(microseconds);
+        waitFor = PR_MicrosecondsToInterval(static_cast<PRUint32>(microseconds)); // Floor is accurate enough.
         if (waitFor == 0)
           waitFor = 1; // round up, wait the minimum time we can wait
       }
@@ -418,7 +362,7 @@ int32_t TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
 
   TimeStamp now = TimeStamp::Now();
 
-  TimerAdditionComparator c(now, mTimeoutAdjustment, aTimer);
+  TimerAdditionComparator c(now, aTimer);
   nsTimerImpl** insertSlot = mTimers.InsertElementSorted(aTimer, c);
 
   if (!insertSlot)
@@ -461,9 +405,6 @@ void TimerThread::DoAfterSleep()
     timer->SetDelay(delay);
   }
 
-  // nuke the stored adjustments, so they get recalibrated
-  mTimeoutAdjustment = TimeDuration(0);
-  mDelayLineCounter = 0;
   mSleeping = false;
 }
 

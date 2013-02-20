@@ -52,7 +52,7 @@ public:
   static NS_HIDDEN_(void) Shutdown();
 
   friend class TimerThread;
-  friend class TimerAdditionComparator;
+  friend struct TimerAdditionComparator;
 
   void Fire();
   nsresult PostTimerEvent();

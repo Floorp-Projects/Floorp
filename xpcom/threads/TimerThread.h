@@ -41,12 +41,6 @@ public:
   nsresult TimerDelayChanged(nsTimerImpl *aTimer);
   nsresult RemoveTimer(nsTimerImpl *aTimer);
 
-#define FILTER_DURATION         1e3     /* one second */
-#define FILTER_FEEDBACK_MAX     100     /* 1/10th of a second */
-
-  void UpdateFilter(uint32_t aDelay, TimeStamp aTimeout,
-                    TimeStamp aNow);
-
   void DoBeforeSleep();
   void DoAfterSleep();
 
@@ -76,23 +70,12 @@ private:
   bool mSleeping;
   
   nsTArray<nsTimerImpl*> mTimers;
-
-#define DELAY_LINE_LENGTH_LOG2  5
-#define DELAY_LINE_LENGTH_MASK  ((1u << DELAY_LINE_LENGTH_LOG2) - 1)
-#define DELAY_LINE_LENGTH       (1u << DELAY_LINE_LENGTH_LOG2)
-
-  int32_t  mDelayLine[DELAY_LINE_LENGTH]; // milliseconds
-  uint32_t mDelayLineCounter;
-  uint32_t mMinTimerPeriod;     // milliseconds
-  TimeDuration mTimeoutAdjustment;
 };
 
 struct TimerAdditionComparator {
   TimerAdditionComparator(const mozilla::TimeStamp &aNow,
-                          const mozilla::TimeDuration &aTimeoutAdjustment,
                           nsTimerImpl *aTimerToInsert) :
-    now(aNow),
-    timeoutAdjustment(aTimeoutAdjustment)
+    now(aNow)
 #ifdef DEBUG
     , timerToInsert(aTimerToInsert)
 #endif
@@ -102,11 +85,7 @@ struct TimerAdditionComparator {
     NS_ABORT_IF_FALSE(newTimer == timerToInsert, "Unexpected timer ordering");
 
     // Skip any overdue timers.
-
-    // XXXbz why?  Given our definition of overdue in terms of
-    // mTimeoutAdjustment, aTimer might be overdue already!  Why not
-    // just fire timers in order?
-    return now >= fromArray->mTimeout + timeoutAdjustment ||
+    return fromArray->mTimeout <= now ||
            fromArray->mTimeout <= newTimer->mTimeout;
   }
 
@@ -116,7 +95,6 @@ struct TimerAdditionComparator {
 
 private:
   const mozilla::TimeStamp &now;
-  const mozilla::TimeDuration &timeoutAdjustment;
 #ifdef DEBUG
   const nsTimerImpl * const timerToInsert;
 #endif

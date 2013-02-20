@@ -10094,11 +10094,11 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   TimeStamp deadline;
 
   if (aTimeout && aTimeout->mWhen > now) {
-    // The OS timer fired early (yikes!), and possibly out of order
-    // too. Set |deadline| to be the time when the OS timer *should*
-    // have fired so that any timers that *should* have fired before
-    // aTimeout *will* be fired now. This happens most of the time on
-    // Win2k.
+    // The OS timer fired early (which can happen due to the timers
+    // having lower precision than TimeStamp does).  Set |deadline| to
+    // be the time when the OS timer *should* have fired so that any
+    // timers that *should* have fired before aTimeout *will* be fired
+    // now.
 
     deadline = aTimeout->mWhen;
   } else {
