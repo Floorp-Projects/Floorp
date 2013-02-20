@@ -125,8 +125,6 @@ CssLogic.prototype = {
   _matchedRules: null,
   _matchedSelectors: null,
 
-  domUtils: Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils),
-
   /**
    * Reset various properties
    */
@@ -470,8 +468,9 @@ CssLogic.prototype = {
 
       rule.selectors.forEach(function (aSelector) {
         if (aSelector._matchId !== this._matchId &&
-            (aSelector.elementStyle ||
-             this._selectorMatchesElement(aSelector))) {
+           (aSelector.elementStyle ||
+            this.selectorMatchesElement(rule._domRule, aSelector.selectorIndex))) {
+
           aSelector._matchId = this._matchId;
           this._matchedSelectors.push([ aSelector, status ]);
           if (aCallback) {
@@ -489,15 +488,19 @@ CssLogic.prototype = {
    * parents.
    *
    * @private
-   * @param {string} aSelector the selector string you want to check.
-   * @return {boolean} true if the given selector matches the highlighted
-   * element or any of its parents, otherwise false is returned.
+   * @param {DOMRule} domRule
+   *        The DOM Rule containing the selector.
+   * @param {Number} idx
+   *        The index of the selector within the DOMRule.
+   * @return {boolean}
+   *         true if the given selector matches the highlighted element or any
+   *         of its parents, otherwise false is returned.
    */
-  _selectorMatchesElement: function CL__selectorMatchesElement(aSelector)
+  selectorMatchesElement: function CL_selectorMatchesElement2(domRule, idx)
   {
     let element = this.viewedElement;
     do {
-      if (element.mozMatchesSelector(aSelector)) {
+      if (domUtils.selectorMatchesElement(element, domRule, idx)) {
         return true;
       }
     } while ((element = element.parentNode) &&
@@ -531,7 +534,7 @@ CssLogic.prototype = {
         if (rule.getPropertyValue(aProperty) &&
             (status == CssLogic.STATUS.MATCHED ||
              (status == CssLogic.STATUS.PARENT_MATCH &&
-              this.domUtils.isInheritedProperty(aProperty)))) {
+              domUtils.isInheritedProperty(aProperty)))) {
           result[aProperty] = true;
           return false;
         }
@@ -569,7 +572,7 @@ CssLogic.prototype = {
                    CssLogic.STATUS.MATCHED : CssLogic.STATUS.PARENT_MATCH;
 
       try {
-        domRules = this.domUtils.getCSSStyleRules(element);
+        domRules = domUtils.getCSSStyleRules(element);
       } catch (ex) {
         Services.console.
           logStringMessage("CL__buildMatchedRules error: " + ex);
@@ -690,65 +693,22 @@ CssLogic.getShortNamePath = function CssLogic_getShortNamePath(aElement)
 };
 
 /**
- * Get a string list of selectors for a given CSSStyleRule.selectorText
+ * Get a string list of selectors for a given DOMRule.
  *
- * @param {string} aSelectorText The CSSStyleRule.selectorText to parse.
- * @return {array} An array of string selectors.
+ * @param {DOMRule} aDOMRule
+ *        The DOMRule to parse.
+ * @return {Array}
+ *         An array of string selectors.
  */
-CssLogic.getSelectors = function CssLogic_getSelectors(aSelectorText)
+CssLogic.getSelectors = function CssLogic_getSelectors(aDOMRule)
 {
   let selectors = [];
 
-  let selector = aSelectorText.trim();
-  if (!selector) {
-    return selectors;
+  let len = domUtils.getSelectorCount(aDOMRule);
+  for (let i = 0; i < len; i++) {
+    let text = domUtils.getSelectorText(aDOMRule, i);
+    selectors.push(text);
   }
-
-  let nesting = 0;
-  let currentSelector = [];
-
-  // Parse a selector group into selectors. Normally we could just .split(',')
-  // however Gecko allows -moz-any(a, b, c) as a selector so we ignore commas
-  // inside brackets.
-  for (let i = 0, selLen = selector.length; i < selLen; i++) {
-    let c = selector.charAt(i);
-    switch (c) {
-      case ",":
-        if (nesting == 0 && currentSelector.length > 0) {
-          let selectorStr = currentSelector.join("").trim();
-          if (selectorStr) {
-            selectors.push(selectorStr);
-          }
-          currentSelector = [];
-        } else {
-          currentSelector.push(c);
-        }
-        break;
-
-      case "(":
-        nesting++;
-        currentSelector.push(c);
-        break;
-
-      case ")":
-        nesting--;
-        currentSelector.push(c);
-        break;
-
-      default:
-        currentSelector.push(c);
-        break;
-    }
-  }
-
-  // Add the last selector.
-  if (nesting == 0 && currentSelector.length > 0) {
-    let selectorStr = currentSelector.join("").trim();
-    if (selectorStr) {
-      selectors.push(selectorStr);
-    }
-  }
-
   return selectors;
 }
 
@@ -1171,7 +1131,7 @@ function CssRule(aCssSheet, aDomRule, aElement)
   if (this._cssSheet) {
     // parse _domRule.selectorText on call to this.selectors
     this._selectors = null;
-    this.line = this._cssSheet._cssLogic.domUtils.getRuleLine(this._domRule);
+    this.line = domUtils.getRuleLine(this._domRule);
     this.source = this._cssSheet.shortSource + ":" + this.line;
     if (this.mediaText) {
       this.source += " @media " + this.mediaText;
@@ -1179,7 +1139,7 @@ function CssRule(aCssSheet, aDomRule, aElement)
     this.href = this._cssSheet.href;
     this.contentRule = this._cssSheet.contentSheet;
   } else if (aElement) {
-    this._selectors = [ new CssSelector(this, "@element.style") ];
+    this._selectors = [ new CssSelector(this, "@element.style", 0) ];
     this.line = -1;
     this.source = CssLogic.l10n("rule.sourceElement");
     this.href = "#";
@@ -1263,8 +1223,12 @@ CssRule.prototype = {
       return this._selectors;
     }
 
-    let selectors = CssLogic.getSelectors(this._domRule.selectorText);
-    this._selectors = [new CssSelector(this, text) for (text of selectors)];
+    let selectors = CssLogic.getSelectors(this._domRule);
+
+    for (let i = 0, len = selectors.length; i < len; i++) {
+      this._selectors.push(new CssSelector(this, selectors[i], i));
+    }
+
     return this._selectors;
   },
 
@@ -1281,13 +1245,15 @@ CssRule.prototype = {
  * @constructor
  * @param {CssRule} aCssRule the CssRule instance from where the selector comes.
  * @param {string} aSelector The selector that we wish to investigate.
+ * @param {Number} aIndex The index of the selector within it's rule.
  */
-this.CssSelector = function CssSelector(aCssRule, aSelector)
+this.CssSelector = function CssSelector(aCssRule, aSelector, aIndex)
 {
   this._cssRule = aCssRule;
   this.text = aSelector;
   this.elementStyle = this.text == "@element.style";
   this._specificity = null;
+  this.selectorIndex = aIndex;
 }
 
 CssSelector.prototype = {
@@ -1402,8 +1368,7 @@ CssSelector.prototype = {
    * @see http://www.w3.org/TR/css3-selectors/#specificity
    * @see http://www.w3.org/TR/CSS2/selector.html
    *
-   * @return {object} an object holding specificity information for the current
-   * selector.
+   * @return {Number} The selector's specificity.
    */
   get specificity()
   {
@@ -1411,59 +1376,8 @@ CssSelector.prototype = {
       return this._specificity;
     }
 
-    let specificity = {
-      ids: 0,
-      classes: 0,
-      tags: 0
-    };
-
-    let text = this.text;
-
-    if (!this.elementStyle) {
-      // Remove universal selectors as they are not relevant as far as specificity
-      // is concerned.
-      text = text.replace(RX_UNIVERSAL_SELECTOR, "");
-
-      // not() is ignored but any selectors contained by it are counted. Let's
-      // remove the not() and keep the contents.
-      text = text.replace(RX_NOT, " $1");
-
-      // Simplify remaining psuedo classes & elements.
-      text = text.replace(RX_PSEUDO_CLASS_OR_ELT, " $1)");
-
-      // Replace connectors with spaces
-      text = text.replace(RX_CONNECTORS, " ");
-
-      text.split(/\s/).forEach(function(aSimple) {
-        // Count IDs.
-        aSimple = aSimple.replace(RX_ID, function() {
-          specificity.ids++;
-          return "";
-        });
-
-        // Count class names and attribute matchers.
-        aSimple = aSimple.replace(RX_CLASS_OR_ATTRIBUTE, function() {
-          specificity.classes++;
-          return "";
-        });
-
-        aSimple = aSimple.replace(RX_PSEUDO, function(aDummy, aPseudoName) {
-          if (this.pseudoElements.has(aPseudoName)) {
-            // Pseudo elements count as tags.
-            specificity.tags++;
-          } else {
-            // Pseudo classes count as classes.
-            specificity.classes++;
-          }
-          return "";
-        }.bind(this));
-
-        if (aSimple) {
-          specificity.tags++;
-        }
-      }, this);
-    }
-    this._specificity = specificity;
+    this._specificity = domUtils.getSpecificity(this._cssRule._domRule,
+                                                this.selectorIndex);
 
     return this._specificity;
   },
@@ -1610,7 +1524,7 @@ CssPropertyInfo.prototype = {
     if (value &&
         (aStatus == CssLogic.STATUS.MATCHED ||
          (aStatus == CssLogic.STATUS.PARENT_MATCH &&
-          this._cssLogic.domUtils.isInheritedProperty(this.property)))) {
+          domUtils.isInheritedProperty(this.property)))) {
       let selectorInfo = new CssSelectorInfo(aSelector, this.property, value,
           aStatus);
       this._matchedSelectors.push(selectorInfo);
@@ -1677,25 +1591,6 @@ function CssSelectorInfo(aSelector, aProperty, aValue, aStatus)
 
   let priority = this.selector._cssRule.getPropertyPriority(this.property);
   this.important = (priority === "important");
-
-  /* Score prefix:
-  0 UA normal property
-  1 UA important property
-  2 normal property
-  3 inline (element.style)
-  4 important
-  5 inline important
-  */
-  let scorePrefix = this.contentRule ? 2 : 0;
-  if (this.elementStyle) {
-    scorePrefix++;
-  }
-  if (this.important) {
-    scorePrefix += this.contentRule ? 2 : 1;
-  }
-
-  this.specificityScore = "" + scorePrefix + this.specificity.ids +
-      this.specificity.classes + this.specificity.tags;
 }
 
 CssSelectorInfo.prototype = {
@@ -1824,14 +1719,8 @@ CssSelectorInfo.prototype = {
     if (this.important && !aThat.important) return -1;
     if (aThat.important && !this.important) return 1;
 
-    if (this.specificity.ids > aThat.specificity.ids) return -1;
-    if (aThat.specificity.ids > this.specificity.ids) return 1;
-
-    if (this.specificity.classes > aThat.specificity.classes) return -1;
-    if (aThat.specificity.classes > this.specificity.classes) return 1;
-
-    if (this.specificity.tags > aThat.specificity.tags) return -1;
-    if (aThat.specificity.tags > this.specificity.tags) return 1;
+    if (this.specificity > aThat.specificity) return -1;
+    if (aThat.specificity > this.specificity) return 1;
 
     if (this.sheetIndex > aThat.sheetIndex) return -1;
     if (aThat.sheetIndex > this.sheetIndex) return 1;
@@ -1847,3 +1736,7 @@ CssSelectorInfo.prototype = {
     return this.selector + " -> " + this.value;
   },
 };
+
+XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let tabState = {
-  entries: [{url: "data:text/html,<input%20id='foo'>", formdata: { id: { "foo": "bar" } } }]
+  entries: [{url: "data:text/html;charset=utf-8,<input%20id='foo'>", formdata: { id: { "foo": "bar" } } }]
 };
 
 function test() {
