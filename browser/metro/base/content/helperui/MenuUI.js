@@ -179,12 +179,6 @@ var ContextMenuUI = {
     }
 
     this._menuPopup.show(this._popupState);
-
-    let event = document.createEvent("Events");
-    event.initEvent("CancelTouchSequence", true, false);
-    if (this._popupState.target) {
-      this._popupState.target.dispatchEvent(event);
-    }
     return true;
   },
 
@@ -342,6 +336,10 @@ MenuPopup.prototype = {
     this._panel.addEventListener("transitionend", function () {
       self._panel.removeEventListener("transitionend", arguments.callee);
       self._panel.removeAttribute("showingfrom");
+
+      let event = document.createEvent("Events");
+      event.initEvent("popupshown", true, false);
+      document.dispatchEvent(event);
     });
 
     let popupFrom = (aPositionOptions.forcePosition && !aPositionOptions.bottomAligned) ? "above" : "below";
@@ -365,6 +363,9 @@ MenuPopup.prototype = {
       self._panel.removeEventListener("transitionend", arguments.callee);
       self._panel.hidden = true;
       self._popupState = null;
+      let event = document.createEvent("Events");
+      event.initEvent("popuphidden", true, false);
+      document.dispatchEvent(event);
     });
 
     this._panel.removeAttribute("showing");

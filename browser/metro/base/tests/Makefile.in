@@ -11,7 +11,7 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_BROWSER_FILES = \
+BROWSER_TESTS = \
   head.js \
   browser_test.js \
   browser_canonizeURL.js \
@@ -23,7 +23,16 @@ _BROWSER_FILES = \
   browser_plugin_input.html \
   browser_plugin_input_mouse.js \
   browser_plugin_input_keyboard.js \
+  browser_context_menu_tests.js \
+  browser_context_menu_tests_01.html \
   $(NULL)
 
-libs:: $(_BROWSER_FILES)
+BROWSER_TEST_RESOURCES = \
+  res\image01.png \
+  $(NULL)
+
+libs:: $(BROWSER_TESTS)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/
+
+libs:: $(BROWSER_TEST_RESOURCES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/res
