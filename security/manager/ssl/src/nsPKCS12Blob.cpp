@@ -51,7 +51,6 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 // constructor
 nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
                              mTmpFile(nullptr),
-                             mTmpFilePath(nullptr),
                              mDigest(nullptr),
                              mDigestIterator(nullptr),
                              mTokenSet(false)
@@ -830,4 +829,3 @@ nsPKCS12Blob::handleError(int myerr)
   if (NS_SUCCEEDED(rv))
     (void) nssComponent->ShowAlertFromStringBundle(msgID);
 }
-
