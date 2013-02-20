@@ -16,7 +16,7 @@ interface nsIAppShell;
 struct JSContext;
 %}
 
-[scriptable, uuid(5c19ab54-67bf-46d0-ac5b-21abd9050c3b)]
+[scriptable, uuid(1ae1e51a-cd69-4c18-805e-ad09b39b1f4c)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -117,6 +117,12 @@ interface nsIAppShellService : nsISupports
    * @param aWindow you see the pattern
    */
   void unregisterTopLevelWindow(in nsIXULWindow aWindow);
+
+  /**
+   * Whether the hidden non-private window has been lazily created.
+   */
+  [noscript]
+  readonly attribute boolean hasHiddenWindow;
 
   /**
    * Whether the hidden private window has been lazily created.

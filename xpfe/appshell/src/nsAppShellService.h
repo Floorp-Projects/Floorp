@@ -33,6 +33,7 @@ protected:
   ~nsAppShellService();
 
   nsresult CreateHiddenWindowHelper(bool aIsPrivate);
+  void EnsureHiddenWindow();
   void EnsurePrivateHiddenWindow();
 
   nsresult JustCreateTopWindow(nsIXULWindow *aParent,

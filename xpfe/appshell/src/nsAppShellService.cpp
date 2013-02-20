@@ -87,6 +87,12 @@ nsAppShellService::CreateHiddenWindow()
 }
 
 void
+nsAppShellService::EnsureHiddenWindow()
+{
+  CreateHiddenWindow();
+}
+
+void
 nsAppShellService::EnsurePrivateHiddenWindow()
 {
   if (!mHiddenPrivateWindow) {
@@ -437,6 +443,8 @@ nsAppShellService::GetHiddenWindow(nsIXULWindow **aWindow)
 {
   NS_ENSURE_ARG_POINTER(aWindow);
 
+  EnsureHiddenWindow();
+
   *aWindow = mHiddenWindow;
   NS_IF_ADDREF(*aWindow);
   return *aWindow ? NS_OK : NS_ERROR_FAILURE;
@@ -445,6 +453,8 @@ nsAppShellService::GetHiddenWindow(nsIXULWindow **aWindow)
 NS_IMETHODIMP
 nsAppShellService::GetHiddenDOMWindow(nsIDOMWindow **aWindow)
 {
+  EnsureHiddenWindow();
+
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell;
   NS_ENSURE_TRUE(mHiddenWindow, NS_ERROR_FAILURE);
@@ -470,6 +480,15 @@ nsAppShellService::GetHiddenPrivateWindow(nsIXULWindow **aWindow)
   *aWindow = mHiddenPrivateWindow;
   NS_IF_ADDREF(*aWindow);
   return *aWindow ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsAppShellService::GetHasHiddenWindow(bool* aHasHiddenWindow)
+{
+  NS_ENSURE_ARG_POINTER(aHasHiddenWindow);
+
+  *aHasHiddenWindow = !!mHiddenWindow;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
