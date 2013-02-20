@@ -748,7 +748,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
 
         uint32_t index;
         if (IsDefinitelyIndex(rref, &index)) {
-            if (analyze && !objArg->isNative()) {
+            if (analyze && !objArg->isNative() && !objArg->isTypedArray()) {
                 JSScript *script = NULL;
                 jsbytecode *pc = NULL;
                 types::TypeScript::GetPcScript(cx, &script, &pc);
@@ -775,7 +775,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
             if (script->hasAnalysis()) {
                 script->analysis()->getCode(pc).getStringElement = true;
 
-                if (!objArg->isArray() && !objArg->isNative())
+                if (!objArg->isArray() && !objArg->isNative() && !objArg->isTypedArray())
                     script->analysis()->getCode(pc).nonNativeGetElement = true;
             }
         }
