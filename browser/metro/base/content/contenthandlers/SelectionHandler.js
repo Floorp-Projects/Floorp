@@ -55,6 +55,7 @@ var SelectionHandler = {
 
   init: function init() {
     addMessageListener("Browser:SelectionStart", this);
+    addMessageListener("Browser:SelectionAttach", this);
     addMessageListener("Browser:SelectionEnd", this);
     addMessageListener("Browser:SelectionMoveStart", this);
     addMessageListener("Browser:SelectionMove", this);
@@ -68,6 +69,7 @@ var SelectionHandler = {
 
   shutdown: function shutdown() {
     removeMessageListener("Browser:SelectionStart", this);
+    removeMessageListener("Browser:SelectionAttach", this);
     removeMessageListener("Browser:SelectionEnd", this);
     removeMessageListener("Browser:SelectionMoveStart", this);
     removeMessageListener("Browser:SelectionMove", this);
@@ -107,6 +109,17 @@ var SelectionHandler = {
     if (!this._domWinUtils.selectAtPoint(aX, aY, Ci.nsIDOMWindowUtils
                                                    .SELECT_WORDNOSPACE)) {
       this._onFail("failed to set selection at point");
+      return;
+    }
+
+    // Update the position of our selection monocles
+    this._updateSelectionUI(true, true);
+  },
+
+  _onSelectionAttach: function _onSelectionAttach(aX, aY) {
+    // Init content window information
+    if (!this._initTargetInfo(aX, aY)) {
+      this._onFail("failed to get frame offset");
       return;
     }
 
@@ -893,6 +906,10 @@ var SelectionHandler = {
       case "Browser:SelectionStart":
         this._onSelectionStart(json.xPos, json.yPos);
         break;
+
+      case "Browser:SelectionAttach":
+        this._onSelectionAttach(json.xPos, json.yPos);
+      break;
 
       case "Browser:SelectionClose":
         this._onSelectionClose();

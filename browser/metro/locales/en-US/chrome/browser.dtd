@@ -7,25 +7,11 @@
 
 <!ENTITY back.label            "Back">
 <!ENTITY forward.label         "Forward">
-<!ENTITY reload.label          "Reload">
-<!ENTITY stop.label            "Stop">
-<!ENTITY go.label              "Go">
-<!ENTITY star.label            "Star">
-
 <!ENTITY toggleTabsOnly.label  "Always show tabs">
 <!ENTITY showTabs.label        "Show Tabs">
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
 <!ENTITY undoclosetab.label    "Undo Close Tab">
-
-<!ENTITY cut.label             "Cut">
-<!ENTITY copy.label            "Copy">
-<!ENTITY copyAll.label         "Copy All">
-<!ENTITY copylink.label        "Copy Link Location">
-<!ENTITY paste.label           "Paste">
-<!ENTITY pasteAndGo.label      "Paste &amp; Go">
-<!ENTITY delete.label          "Delete">
-<!ENTITY selectAll.label       "Select All">
 
 <!ENTITY appbarFindInPage.label    "Find in Page">
 <!ENTITY appbarViewOnDesktop.label "View on Desktop">
@@ -37,8 +23,6 @@
 
 <!ENTITY autocompleteResultsHeader.label  "Your Results">
 <!ENTITY autocompleteSearchesHeader.label "Internet Searches"> 
-
-<!ENTITY selectHelper.done         "Done">
 
 <!ENTITY downloadsHeader.label     "Downloads">
 <!ENTITY downloadShowPage.label    "Go to Page">
@@ -76,32 +60,31 @@
 <!ENTITY consoleErrLine.label      "Line:">
 <!ENTITY consoleErrColumn.label    "Column:">
 
-<!ENTITY contextOpenInNewTab.label    "Open Link in New Tab">
-<!ENTITY contextViewInNewTab.label    "View in New Tab">
-<!ENTITY contextCopyLink.label        "Copy Link">
-<!ENTITY contextCopyEmail.label       "Copy Email Address">
-<!ENTITY contextCopyPhone.label       "Copy Phone Number">
-<!ENTITY contextCopyImage.label       "Copy Image">
-<!ENTITY contextShareLink.label       "Share Link">
-<!ENTITY contextShareImage.label      "Share Image">
-<!ENTITY contextBookmarkLink.label    "Bookmark Link">
-<!ENTITY contextSaveVideo.label       "Save Video">
-<!ENTITY contextSaveVideoTo.label       "Save Video To">
-<!ENTITY contextShareVideo.label      "Share Video">
-<!ENTITY contextPlayMedia.label       "Play">
-<!ENTITY contextPauseMedia.label      "Pause">
-<!ENTITY contextVideoTab.label        "Open In New Tab">
-<!ENTITY contextEditBookmark.label    "Edit">
-<!ENTITY contextRemoveBookmark.label  "Remove">
-<!ENTITY contextShortcutBookmark.label "Add to Home Screen">
+<!--  TEXT CONTEXT MENU -->
+<!ENTITY contextTextCopy.label             "Copy">
+<!ENTITY contextTextPaste.label            "Paste">
+<!-- unique item that is only added to the url bar context menu -->
+<!ENTITY contextTextPasteAndGo.label       "Paste &amp; go">
+<!ENTITY contextTextSelect.label           "Select">
+<!ENTITY contextTextSelectAll.label        "Select all">
 
-<!-- * image context menu * -->
+<!-- LINK CONTEXT MENU -->
+<!ENTITY contextOpenLinkTab.label          "Open link in new tab">
+<!ENTITY contextCopyLinkHref.label         "Copy link">
+<!ENTITY contextBookmarkLinkHref.label     "Bookmark link">
+
+<!-- IMAGE CONTEXT MENU -->
 <!-- l10n: contextSaveImageLib saves an image to the users "pictures library"
      (Explorer -> left hand side navigation ppane -> Libraries -> Pictures) -->
-<!ENTITY contextSaveImageLib.label        "Save to pictures library">
-<!ENTITY contextCopyImage.label           "Copy image">
-<!ENTITY contextCopyImageLocation.label   "Copy image location">
-<!ENTITY contextOpenImageTab.label        "Open image in new tab">
+<!ENTITY contextSaveImageLib.label         "Save to picture library">
+<!ENTITY contextCopyImage.label            "Copy image">
+<!ENTITY contextCopyImageLocation.label    "Copy image location">
+<!ENTITY contextOpenImageTab.label         "Open image in new tab">
+
+<!-- VIDEO CONTEXT MENU -->
+<!ENTITY contextSaveVideoLib.label         "Save to video library">
+<!ENTITY contextCopyVideoLocation.label    "Copy video location">
+<!ENTITY contextOpenVideoTab.label         "Open video in new tab">
 
 <!ENTITY pageactions.password.forget "Forget Password">
 <!ENTITY pageactions.reset           "Clear Site Preferences">
