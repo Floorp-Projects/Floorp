@@ -78,8 +78,6 @@
 
 <!ENTITY contextOpenInNewTab.label    "Open Link in New Tab">
 <!ENTITY contextViewInNewTab.label    "View in New Tab">
-<!ENTITY contextSaveImage.label       "Save Image">
-<!ENTITY contextSaveImageTo.label     "Save Image To">
 <!ENTITY contextCopyLink.label        "Copy Link">
 <!ENTITY contextCopyEmail.label       "Copy Email Address">
 <!ENTITY contextCopyPhone.label       "Copy Phone Number">
@@ -96,6 +94,14 @@
 <!ENTITY contextEditBookmark.label    "Edit">
 <!ENTITY contextRemoveBookmark.label  "Remove">
 <!ENTITY contextShortcutBookmark.label "Add to Home Screen">
+
+<!-- * image context menu * -->
+<!-- l10n: contextSaveImageLib saves an image to the users "pictures library"
+     (Explorer -> left hand side navigation ppane -> Libraries -> Pictures) -->
+<!ENTITY contextSaveImageLib.label        "Save to pictures library">
+<!ENTITY contextCopyImage.label           "Copy image">
+<!ENTITY contextCopyImageLocation.label   "Copy image location">
+<!ENTITY contextOpenImageTab.label        "Open image in new tab">
 
 <!ENTITY pageactions.password.forget "Forget Password">
 <!ENTITY pageactions.reset           "Clear Site Preferences">
