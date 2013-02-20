@@ -565,11 +565,6 @@ xt_client_create ( XtClient* xtclient ,
 void
 xt_client_unrealize ( XtClient* xtclient )
 {
-  /* Explicitly destroy the child_widget window because this is actually a
-     child of the socket window.  It is not a child of top_widget's window
-     when that is destroyed. */
-  XtUnrealizeWidget(xtclient->child_widget);
-
 #if XlibSpecificationRelease >= 6
   XtUnregisterDrawable(xtclient->xtdisplay,
                        xtclient->top_widget->core.window);
