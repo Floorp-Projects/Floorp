@@ -1546,6 +1546,9 @@ GetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     Label failures;
     MacroAssembler masm;
 
+    Register scratchReg = output().scratchReg().gpr();
+    JS_ASSERT(scratchReg != InvalidReg);
+
     // Guard object's shape.
     RootedObject globalObj(cx, &script->global());
     RootedShape shape(cx, obj->lastProperty());
@@ -1562,8 +1565,6 @@ GetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     masm.loadPtr(Address(object(), JSObject::offsetOfElements()), object());
 
     // Unbox the index.
-    ValueOperand out = output().valueReg();
-    Register scratchReg = out.scratchReg();
     masm.unboxInt32(val, scratchReg);
 
     Label hole;
@@ -1572,11 +1573,9 @@ GetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     Address initLength(object(), ObjectElements::offsetOfInitializedLength());
     masm.branch32(Assembler::BelowOrEqual, initLength, scratchReg, &hole);
 
-    // Load the value.
-    masm.loadValue(BaseIndex(object(), scratchReg, TimesEight), out);
-
-    // Hole check.
-    masm.branchTestMagic(Assembler::Equal, out, &hole);
+    // Check for holes & load the value.
+    masm.loadElementTypedOrValue(BaseIndex(object(), scratchReg, TimesEight),
+                                 output(), true, &hole);
 
     masm.pop(object());
     RepatchLabel rejoin_;
@@ -1609,14 +1608,8 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
     // The array type is the object within the table of typed array classes.
     int arrayType = obj->getClass() - &TypedArray::classes[0];
 
-    Register tmpReg;
-    if (output().hasValue()) {
-        tmpReg = output().valueReg().scratchReg();
-    } else {
-        JS_ASSERT(output().type() == MIRType_Int32);
-        tmpReg = output().typedReg().gpr();
-    }
-    JS_ASSERT(object() != tmpReg);
+    Register tmpReg = output().scratchReg().gpr();
+    JS_ASSERT(tmpReg != InvalidReg);
 
     // Check that the typed array is of the same type as the current object
     // because load size differ in function of the typed array data width.

@@ -4645,6 +4645,18 @@ CodeGenerator::visitGetElementCacheV(LGetElementCacheV *ins)
     return addCache(ins, allocateCache(cache));
 }
 
+bool
+CodeGenerator::visitGetElementCacheT(LGetElementCacheT *ins)
+{
+    Register obj = ToRegister(ins->object());
+    ConstantOrRegister index = TypedOrValueRegister(ToValue(ins, LGetElementCacheT::Index));
+    TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
+
+    GetElementIC cache(obj, index, output, ins->mir()->monitoredResult());
+
+    return addCache(ins, allocateCache(cache));
+}
+
 typedef bool (*GetElementICFn)(JSContext *, size_t, HandleObject, HandleValue, MutableHandleValue);
 const VMFunction GetElementIC::UpdateInfo =
     FunctionInfo<GetElementICFn>(GetElementIC::update);
