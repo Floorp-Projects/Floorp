@@ -2996,7 +2996,7 @@ MaybeEmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, Par
     ParseNode *lhs = pn->pn_left;
     ParseNode *rhs = pn->pn_right;
     if (lhs->isKind(PNK_ARRAY) && rhs->isKind(PNK_ARRAY) &&
-        !(rhs->pn_xflags & PNX_HOLEY) &&
+        !(rhs->pn_xflags & PNX_SPECIALARRAYINIT) &&
         lhs->pn_count <= rhs->pn_count)
     {
         if (groupOption == GroupIsDecl && !EmitDestructuringDecls(cx, bce, prologOp, lhs))
@@ -3028,8 +3028,8 @@ MaybeEmitLetGroupDecl(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp *
     ParseNode *lhs = pn->pn_left;
     ParseNode *rhs = pn->pn_right;
     if (lhs->isKind(PNK_ARRAY) && rhs->isKind(PNK_ARRAY) &&
-        !(rhs->pn_xflags & PNX_HOLEY) &&
-        !(lhs->pn_xflags & PNX_HOLEY) &&
+        !(rhs->pn_xflags & PNX_SPECIALARRAYINIT) &&
+        !(lhs->pn_xflags & PNX_SPECIALARRAYINIT) &&
         lhs->pn_count == rhs->pn_count)
     {
         for (ParseNode *l = lhs->pn_head; l; l = l->pn_next) {
