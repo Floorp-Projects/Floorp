@@ -39,10 +39,10 @@ function testFrameParameters()
     gDebugger.removeEventListener("Debugger:FetchedVariables", test, false);
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let anonymousScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[1],
-          globalScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[2],
-          anonymousNodes = anonymousScope.querySelector(".details").childNodes,
-          globalNodes = globalScope.querySelector(".details").childNodes,
+      let anonymousScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[1],
+          globalScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[2],
+          anonymousNodes = anonymousScope.querySelector(".variables-view-element-details").childNodes,
+          globalNodes = globalScope.querySelector(".variables-view-element-details").childNodes,
           gVars = gDebugger.DebuggerView.Variables;
 
 

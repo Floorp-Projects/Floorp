@@ -81,8 +81,8 @@ function addWatchExpressions(callback)
 
 function testEdit(string, expected, callback)
 {
-  let localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[1],
-      localNodes = localScope.querySelector(".details").childNodes,
+  let localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[1],
+      localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
       myVar = gVars.getItemForNode(localNodes[11]);
 
   waitForProperties(function() {
@@ -108,7 +108,7 @@ function testEdit(string, expected, callback)
       "The right property setter wasn't found.");
 
     EventUtils.sendMouseEvent({ type: "mousedown" },
-      prop._target.querySelector(".dbg-variable-edit"),
+      prop._target.querySelector(".variables-view-edit"),
       gDebugger);
 
     waitForElement(".element-value-input", true, function() {

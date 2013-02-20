@@ -12,7 +12,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_aaa_run_first_leaktest.js \
+	browser_dbg_clean-exit.js \
 	browser_dbg_createChrome.js \
+	$(browser_dbg_createRemote.js disabled for intermittent failures, bug 753225) \
 	$(browser_dbg_debugger-tab-switch.js disabled until issues 106, 40 are fixed) \
 	$(browser_dbg_debugger-tab-switch-window.js disabled until issues 106, 40 are fixed) \
 	browser_dbg_debuggerstatement.js \
@@ -20,7 +22,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_tabactor-01.js \
 	browser_dbg_tabactor-02.js \
 	browser_dbg_globalactor-01.js \
-	testactors.js \
 	browser_dbg_nav-01.js \
 	browser_dbg_propertyview-01.js \
 	browser_dbg_propertyview-02.js \
@@ -60,7 +61,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_location-changes.js \
 	browser_dbg_location-changes-new.js \
 	browser_dbg_location-changes-blank.js \
-	browser_dbg_script-switching.js \
+	browser_dbg_scripts-switching.js \
 	browser_dbg_scripts-sorting.js \
 	browser_dbg_scripts-searching-01.js \
 	browser_dbg_scripts-searching-02.js \
@@ -75,8 +76,8 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_pause-resume.js \
 	browser_dbg_pause-warning.js \
 	browser_dbg_update-editor-mode.js \
-	$(filter temporarily-disabled-due-to-oranges--bug-726609, browser_dbg_select-line.js) \
-	browser_dbg_clean-exit.js \
+	browser_dbg_select-line.js \
+	browser_dbg_breakpoint-new-script.js \
 	browser_dbg_bug723069_editor-breakpoints.js \
 	browser_dbg_bug723071_editor-breakpoints-pane.js \
 	browser_dbg_bug740825_conditional-breakpoints-01.js \
@@ -84,21 +85,20 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_bug727429_watch-expressions-01.js \
 	browser_dbg_bug727429_watch-expressions-02.js \
 	browser_dbg_bug731394_editor-contextmenu.js \
+	browser_dbg_bug737803_editor_actual_location.js \
 	browser_dbg_bug786070_hide_nonenums.js \
 	browser_dbg_displayName.js \
-	browser_dbg_iframes.js \
 	browser_dbg_pause-exceptions.js \
 	browser_dbg_multiple-windows.js \
+	browser_dbg_iframes.js \
 	browser_dbg_bfcache.js \
-	browser_dbg_breakpoint-new-script.js \
-	browser_dbg_bug737803_editor_actual_location.js \
 	browser_dbg_progress-listener-bug.js \
 	browser_dbg_chrome-debugging.js \
-	$(filter disabled-for-intermittent-failures--bug-753225, browser_dbg_createRemote.js) \
 	head.js \
 	$(NULL)
 
 MOCHITEST_BROWSER_PAGES = \
+	testactors.js \
 	browser_dbg_tab1.html \
 	browser_dbg_tab2.html \
 	browser_dbg_debuggerstatement.html \

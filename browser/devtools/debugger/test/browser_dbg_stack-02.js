@@ -39,33 +39,34 @@ function testEvalCall() {
       is(frames.querySelector("#stackframe-0 .dbg-stackframe-title").getAttribute("value"),
         "(eval)", "Frame name should be (eval)");
 
-      ok(frames.querySelector("#stackframe-0").classList.contains("selected"),
+      ok(frames.querySelector("#stackframe-0").parentNode.hasAttribute("checked"),
         "First frame should be selected by default.");
 
-      ok(!frames.querySelector("#stackframe-1").classList.contains("selected"),
+      ok(!frames.querySelector("#stackframe-1").parentNode.hasAttribute("checked"),
         "Second frame should not be selected.");
 
 
-      EventUtils.sendMouseEvent({ type: "click" },
+      EventUtils.sendMouseEvent({ type: "mousedown" },
         frames.querySelector("#stackframe-1"),
         gDebugger);
 
-      ok(!frames.querySelector("#stackframe-0").classList.contains("selected"),
+      ok(!frames.querySelector("#stackframe-0").parentNode.hasAttribute("checked"),
          "First frame should not be selected after click.");
 
-      ok(frames.querySelector("#stackframe-1").classList.contains("selected"),
+      ok(frames.querySelector("#stackframe-1").parentNode.hasAttribute("checked"),
          "Second frame should be selected after click.");
 
 
-      EventUtils.sendMouseEvent({ type: "click" },
+      EventUtils.sendMouseEvent({ type: "mousedown" },
         frames.querySelector("#stackframe-0 .dbg-stackframe-title"),
         gDebugger);
 
-      ok(frames.querySelector("#stackframe-0").classList.contains("selected"),
+      ok(frames.querySelector("#stackframe-0").parentNode.hasAttribute("checked"),
          "First frame should be selected after click inside the first frame.");
 
-      ok(!frames.querySelector("#stackframe-1").classList.contains("selected"),
+      ok(!frames.querySelector("#stackframe-1").parentNode.hasAttribute("checked"),
          "Second frame should not be selected after click inside the first frame.");
+
 
       gDebugger.DebuggerController.activeThread.resume(function() {
         closeDebuggerAndFinish();

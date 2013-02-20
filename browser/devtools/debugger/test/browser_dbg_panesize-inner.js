@@ -16,44 +16,44 @@ function test() {
       let dbg = toolbox.getCurrentPanel();
       ok(dbg, "We should have a debugger panel.");
 
-      let preferredSfw = Services.prefs.getIntPref("devtools.debugger.ui.stackframes-width");
-      let preferredBpw = Services.prefs.getIntPref("devtools.debugger.ui.variables-width");
+      let preferredSw = Services.prefs.getIntPref("devtools.debugger.ui.panes-sources-width");
+      let preferredIw = Services.prefs.getIntPref("devtools.debugger.ui.panes-instruments-width");
       let someWidth1, someWidth2;
 
       do {
         someWidth1 = parseInt(Math.random() * 200) + 100;
         someWidth2 = parseInt(Math.random() * 200) + 100;
-      } while (someWidth1 == preferredSfw ||
-               someWidth2 == preferredBpw)
+      } while (someWidth1 == preferredSw ||
+               someWidth2 == preferredIw)
 
       let someWidth1 = parseInt(Math.random() * 200) + 100;
       let someWidth2 = parseInt(Math.random() * 200) + 100;
 
-      info("Preferred stackframes width: " + preferredSfw);
-      info("Preferred variables width: " + preferredBpw);
-      info("Generated stackframes width: " + someWidth1);
-      info("Generated variables width: " + someWidth2);
+      info("Preferred sources width: " + preferredSw);
+      info("Preferred instruments width: " + preferredIw);
+      info("Generated sources width: " + someWidth1);
+      info("Generated instruments width: " + someWidth2);
 
       let content = dbg.panelWin;
-      let stackframes;
-      let variables;
+      let sources;
+      let instruments;
 
       wait_for_connect_and_resume(function() {
-        ok(content.Prefs.stackframesWidth,
-          "The debugger preferences should have a saved stackframesWidth value.");
-        ok(content.Prefs.variablesWidth,
-          "The debugger preferences should have a saved variablesWidth value.");
+        ok(content.Prefs.sourcesWidth,
+          "The debugger preferences should have a saved sourcesWidth value.");
+        ok(content.Prefs.instrumentsWidth,
+          "The debugger preferences should have a saved instrumentsWidth value.");
 
-        stackframes = content.document.getElementById("stackframes+breakpoints");
-        variables = content.document.getElementById("variables+expressions");
+        sources = content.document.getElementById("sources-pane");
+        instruments = content.document.getElementById("instruments-pane");
 
-        is(content.Prefs.stackframesWidth, stackframes.getAttribute("width"),
-          "The stackframes pane width should be the same as the preferred value.");
-        is(content.Prefs.variablesWidth, variables.getAttribute("width"),
-          "The variables pane width should be the same as the preferred value.");
+        is(content.Prefs.sourcesWidth, sources.getAttribute("width"),
+          "The sources pane width should be the same as the preferred value.");
+        is(content.Prefs.instrumentsWidth, instruments.getAttribute("width"),
+          "The instruments pane width should be the same as the preferred value.");
 
-        stackframes.setAttribute("width", someWidth1);
-        variables.setAttribute("width", someWidth2);
+        sources.setAttribute("width", someWidth1);
+        instruments.setAttribute("width", someWidth2);
 
         removeTab(tab1);
       }, tab1);
@@ -61,15 +61,17 @@ function test() {
       window.addEventListener("Debugger:Shutdown", function dbgShutdown() {
         window.removeEventListener("Debugger:Shutdown", dbgShutdown, true);
 
-        is(content.Prefs.stackframesWidth, stackframes.getAttribute("width"),
-          "The stackframes pane width should have been saved by now.");
-        is(content.Prefs.variablesWidth, variables.getAttribute("width"),
-          "The variables pane width should have been saved by now.");
+        is(content.Prefs.sourcesWidth, sources.getAttribute("width"),
+          "The sources pane width should have been saved by now.");
+        is(content.Prefs.instrumentsWidth, instruments.getAttribute("width"),
+          "The instruments pane width should have been saved by now.");
+
+        // Cleanup after ourselves!
+        Services.prefs.setIntPref("devtools.debugger.ui.panes-sources-width", preferredSw);
+        Services.prefs.setIntPref("devtools.debugger.ui.panes-instruments-width", preferredIw);
 
         finish();
-
       }, true);
     });
-
   });
 }

@@ -12,15 +12,11 @@ let gPane = null;
 let gTab = null;
 let gDebuggee = null;
 let gDebugger = null;
-let gScripts = null;
+let gSources = null;
 let gEditor = null;
 let gBreakpoints = null;
 
 function test() {
-  let tempScope = {};
-  Cu.import("resource:///modules/source-editor.jsm", tempScope);
-  let SourceEditor = tempScope.SourceEditor;
-
   let scriptShown = false;
   let framesAdded = false;
   let testStarted = false;
@@ -59,7 +55,7 @@ function test() {
   }
 
   function performTest() {
-    gScripts = gDebugger.DebuggerView.Sources;
+    gSources = gDebugger.DebuggerView.Sources;
     gEditor = gDebugger.editor;
     gBreakpoints = gPane.getAllBreakpoints();
     is(Object.keys(gBreakpoints), 0, "There are no breakpoints");
@@ -67,7 +63,7 @@ function test() {
     gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE,
       onEditorBreakpointAdd);
 
-    let location = { url: gScripts.selectedValue, line: 4 };
+    let location = { url: gSources.selectedValue, line: 4 };
     executeSoon(function () {
       gPane.addBreakpoint(location, onBreakpointAdd);
     });
@@ -77,7 +73,7 @@ function test() {
   let onBpEditorAdd = false;
 
   function onBreakpointAdd(aBpClient) {
-    is(aBpClient.location.url, gScripts.selectedValue, "URL is the same");
+    is(aBpClient.location.url, gSources.selectedValue, "URL is the same");
     is(aBpClient.location.line, 6, "Line number is new");
     is(aBpClient.requestedLocation.line, 4, "Requested location is correct");
 
@@ -92,11 +88,11 @@ function test() {
     is(gEditor.getBreakpoints().length, 1,
       "There is only one breakpoint in the editor");
 
-    ok(!gPane.getBreakpoint(gScripts.selectedValue, 4),
+    ok(!gPane.getBreakpoint(gSources.selectedValue, 4),
       "There are no breakpoints on an invalid line");
 
-    let br = gPane.getBreakpoint(gScripts.selectedValue, 6);
-    is(br.location.url, gScripts.selectedValue, "URL is correct");
+    let br = gPane.getBreakpoint(gSources.selectedValue, 6);
+    is(br.location.url, gSources.selectedValue, "URL is correct");
     is(br.location.line, 6, "Line number is correct");
 
     onBpEditorAdd = true;
@@ -118,7 +114,7 @@ function test() {
     gTab = null;
     gDebuggee = null;
     gDebugger = null;
-    gScripts = null;
+    gSources = null;
     gEditor = null;
     gBreakpoints = null;
   });

@@ -1,0 +1,43 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* BreacrumbsWidget */
+
+.breadcrumbs-widget-item {
+  direction: ltr;
+}
+
+/* SideMenuWidget */
+
+.side-menu-widget-container {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.side-menu-widget-group[name=""] > .side-menu-widget-group-title {
+  display: none;
+}
+
+/* VariablesView */
+
+.variables-view-container {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.variables-view-element-details:not([open]) {
+  display: none;
+}
+
+.variables-view-scope,
+.variable-or-property {
+  -moz-user-focus: normal;
+}
+
+.variables-view-scope[non-header] > .title,
+.variable-or-property[non-header] > .title,
+.variable-or-property[non-match] > .title {
+  display: none;
+}
