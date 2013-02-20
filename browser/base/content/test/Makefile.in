@@ -161,6 +161,7 @@ _BROWSER_FILES = \
                  browser_bug783614.js \
                  browser_bug797677.js \
                  browser_bug816527.js \
+                 browser_bug822367.js \
                  browser_bug832435.js \
                  browser_canonizeURL.js \
                  browser_customize.js \
@@ -237,6 +238,15 @@ _BROWSER_FILES = \
                  disablechrome.html \
                  discovery.html \
                  domplate_test.js \
+                 file_bug822367_1.html \
+                 file_bug822367_1.js \
+                 file_bug822367_2.html \
+                 file_bug822367_3.html \
+                 file_bug822367_4.html \
+                 file_bug822367_4.js \
+                 file_bug822367_4B.html \
+                 file_bug822367_5.html \
+                 file_bug822367_6.html \
                  moz.png \
                  video.ogg \
                  test_bug435035.html \
