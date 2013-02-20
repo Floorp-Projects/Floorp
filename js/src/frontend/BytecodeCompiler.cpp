@@ -280,7 +280,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     fun->setArgCount(formals.length());
 
     /* FIXME: make Function format the source for a function definition. */
-    ParseNode *fn = FunctionNode::create(PNK_FUNCTION, &parser);
+    ParseNode *fn = CodeNode::create(PNK_FUNCTION, &parser);
     if (!fn)
         return false;
 
