@@ -3161,18 +3161,20 @@ class LGetElementCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 
     }
 };
 
-class LGetElementCacheT : public LInstructionHelper<1, 1 + BOX_PIECES, 0>
+class LGetElementCacheT : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(GetElementCacheT)
 
-    static const size_t Index = 1;
-
-    LGetElementCacheT(const LAllocation &object) {
+    LGetElementCacheT(const LAllocation &object, const LAllocation &index) {
         setOperand(0, object);
+        setOperand(1, index);
     }
     const LAllocation *object() {
         return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
     }
     const LDefinition *output() {
         return getDef(0);

@@ -369,13 +369,15 @@ TypeInferenceOracle::elementReadIsPacked(UnrootedScript script, jsbytecode *pc)
 }
 
 void
-TypeInferenceOracle::elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult)
+TypeInferenceOracle::elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult, bool *intIndex)
 {
     MIRType obj = getMIRType(script->analysis()->poppedTypes(pc, 1));
     MIRType id = getMIRType(script->analysis()->poppedTypes(pc, 0));
 
     *cacheable = (obj == MIRType_Object &&
                   (id == MIRType_Value || id == MIRType_Int32 || id == MIRType_String));
+
+    *intIndex = id == MIRType_Int32;
 
     // Turn off cacheing if the element is int32 and we've seen non-native objects as the target
     // of this getelem.

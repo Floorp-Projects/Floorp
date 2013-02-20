@@ -4649,7 +4649,7 @@ bool
 CodeGenerator::visitGetElementCacheT(LGetElementCacheT *ins)
 {
     Register obj = ToRegister(ins->object());
-    ConstantOrRegister index = TypedOrValueRegister(ToValue(ins, LGetElementCacheT::Index));
+    ConstantOrRegister index = TypedOrValueRegister(MIRType_Int32, ToAnyRegister(ins->index()));
     TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
 
     GetElementIC cache(obj, index, output, ins->mir()->monitoredResult());
