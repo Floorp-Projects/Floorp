@@ -2797,39 +2797,71 @@ JSScript::setNeedsArgsObj(bool needsArgsObj)
     needsArgsObj_ = needsArgsObj;
 }
 
-/* static */ bool
-JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
+void
+js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
+                            HandleScript script, JSObject *argsobj)
 {
-    AssertCanGC();
-    JS_ASSERT(script->analyzedArgsUsage());
-    JS_ASSERT(script->argumentsHasVarBinding());
-    JS_ASSERT(!script->isGenerator);
-
     /*
-     * It is possible that the apply speculation has already failed, everything
-     * has been fixed up, but there was an outstanding magic value on the
-     * stack that has just now flowed into an apply. In this case, there is
-     * nothing to do; GuardFunApplySpeculation will patch in the real argsobj.
+     * Replace any optimized arguments in the frame with an explicit arguments
+     * object. Note that 'arguments' may have already been overwritten.
      */
-    if (script->needsArgsObj())
-        return true;
-
-    script->needsArgsObj_ = true;
 
     InternalBindingsHandle bindings(script, &script->bindings);
     const unsigned var = Bindings::argumentsVarIndex(cx, bindings);
 
+    if (script->varIsAliased(var)) {
+        /*
+         * Scan the script to find the slot in the call object that 'arguments'
+         * is assigned to.
+         */
+        jsbytecode *pc = script->code;
+        while (*pc != JSOP_ARGUMENTS)
+            pc += GetBytecodeLength(pc);
+        pc += JSOP_ARGUMENTS_LENGTH;
+        JS_ASSERT(*pc == JSOP_SETALIASEDVAR);
+
+        if (frame.callObj().asScope().aliasedVar(pc).isMagic(JS_OPTIMIZED_ARGUMENTS))
+            frame.callObj().asScope().setAliasedVar(pc, ObjectValue(*argsobj));
+    } else {
+        if (frame.unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
+            frame.unaliasedLocal(var) = ObjectValue(*argsobj);
+    }
+}
+
+/* static */ bool
+JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
+{
+    AssertCanGC();
+    JS_ASSERT(script->function());
+    JS_ASSERT(script->analyzedArgsUsage());
+    JS_ASSERT(script->argumentsHasVarBinding());
+
     /*
-     * By design, the apply-arguments optimization is only made when there
-     * are no outstanding cases of MagicValue(JS_OPTIMIZED_ARGUMENTS) other
-     * than this particular invocation of 'f.apply(x, arguments)'. Thus, there
-     * are no outstanding values of MagicValue(JS_OPTIMIZED_ARGUMENTS) on the
-     * stack. However, there are three things that need fixup:
+     * It is possible that the arguments optimization has already failed,
+     * everything has been fixed up, but there was an outstanding magic value
+     * on the stack that has just now flowed into an apply. In this case, there
+     * is nothing to do; GuardFunApplySpeculation will patch in the real
+     * argsobj.
+     */
+    if (script->needsArgsObj())
+        return true;
+
+    JS_ASSERT(!script->isGenerator);
+
+    script->needsArgsObj_ = true;
+
+    /*
+     * By design, the arguments optimization is only made when there are no
+     * outstanding cases of MagicValue(JS_OPTIMIZED_ARGUMENTS) at any points
+     * where the optimization could fail, other than an active invocation of
+     * 'f.apply(x, arguments)'. Thus, there are no outstanding values of
+     * MagicValue(JS_OPTIMIZED_ARGUMENTS) on the stack. However, there are
+     * three things that need fixup:
      *  - there may be any number of activations of this script that don't have
      *    an argsObj that now need one.
      *  - jit code compiled (and possible active on the stack) with the static
      *    assumption of !script->needsArgsObj();
-     *  - type inference data for the script assuming script->needsArgsObj; and
+     *  - type inference data for the script assuming script->needsArgsObj
      */
     for (AllFramesIter i(cx->runtime); !i.done(); ++i) {
         /*
@@ -2856,9 +2888,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
                 return false;
             }
 
-            /* Note: 'arguments' may have already been overwritten. */
-            if (frame.unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
-                frame.unaliasedLocal(var) = ObjectValue(*argsobj);
+            SetFrameArgumentsObject(cx, frame, script, argsobj);
         }
     }
 
