@@ -100,9 +100,10 @@ class TypeOracle
     virtual bool elementReadIsPacked(UnrootedScript script, jsbytecode *pc) {
         return false;
     }
-    virtual void elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult) {
+    virtual void elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult, bool *intIndex) {
         *cacheable = false;
         *monitorResult = true;
+        *intIndex = false;
     }
     virtual bool setElementHasWrittenHoles(UnrootedScript script, jsbytecode *pc) {
         return true;
@@ -256,7 +257,7 @@ class TypeInferenceOracle : public TypeOracle
     bool elementReadShouldAlwaysLoadDoubles(UnrootedScript script, jsbytecode *pc);
     bool elementReadHasExtraIndexedProperty(UnrootedScript, jsbytecode *pc);
     bool elementReadIsPacked(UnrootedScript script, jsbytecode *pc);
-    void elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult);
+    void elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult, bool *intIndex);
     bool elementWriteIsDenseNative(HandleScript script, jsbytecode *pc);
     bool elementAccessIsDenseNative(types::StackTypeSet *obj, types::StackTypeSet *id);
     bool elementWriteIsTypedArray(RawScript script, jsbytecode *pc, int *arrayType);

@@ -2069,18 +2069,18 @@ bool
 LIRGenerator::visitGetElementCache(MGetElementCache *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);
-    JS_ASSERT(ins->index()->type() == MIRType_Value);
 
     if (ins->type() == MIRType_Value) {
+        JS_ASSERT(ins->index()->type() == MIRType_Value);
         LGetElementCacheV *lir = new LGetElementCacheV(useRegister(ins->object()));
         if (!useBox(lir, LGetElementCacheV::Index, ins->index()))
             return false;
         return defineBox(lir, ins) && assignSafepoint(lir, ins);
     }
 
-    LGetElementCacheT *lir = new LGetElementCacheT(useRegister(ins->object()));
-    if (!useBox(lir, LGetElementCacheT::Index, ins->index()))
-        return false;
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+    LGetElementCacheT *lir = new LGetElementCacheT(useRegister(ins->object()),
+                                                   useRegister(ins->index()));
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
