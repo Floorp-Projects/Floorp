@@ -37,17 +37,15 @@ class PatchInfo:
         
     def append_add_instruction(self, filename):
         """ Appends an add instruction for this patch.   
-            if the filename starts with extensions/ adds an add-if instruction
-            to test the existence of the subdirectory.  This was ported from
-            mozilla/tools/update-packaging/common.sh/make_add_instruction
+            if the filename starts with distribution/extensions/ adds an add-if
+            instruction to test the existence of the subdirectory.  This was
+            ported from mozilla/tools/update-packaging/common.sh's
+            make_add_instruction.
         """
-        if filename.startswith("extensions/"):
+        m = re.match("((?:|.*/)distribution/extensions)/", filename):
+        if m:
             # Directory immediately following extensions is used for the test
-            testdir = "extensions/"+filename.split("/")[1]
-            self.manifestv1.append('add-if "'+testdir+'" "'+filename+'"')
-            self.manifestv2.append('add-if "'+testdir+'" "'+filename+'"')
-        elif filename.startswith("Contents/MacOS/extensions/"):
-            testdir = "Contents/MacOS/extensions/"+filename.split("/")[3]
+            testdir = m.group(1)
             self.manifestv1.append('add-if "'+testdir+'" "'+filename+'"')
             self.manifestv2.append('add-if "'+testdir+'" "'+filename+'"')
         else:
@@ -60,24 +58,16 @@ class PatchInfo:
             filename = file to patch
             patchname = patchfile to apply to file
             
-            if the filename starts with extensions/ adds a patch-if instruction
-            to test the existence of the subdirectory.  
-            if the filename starts with searchplugins/ add a add-if instruction for the filename
+            if the filename starts with distribution/extensions/ adds a
+            patch-if instruction to test the existence of the subdirectory.  
             This was ported from
-            mozilla/tools/update-packaging/common.sh/make_patch_instruction
+            mozilla/tools/update-packaging/common.sh's make_patch_instruction.
         """
-        if filename.startswith("extensions/"):
-            testdir = "extensions/"+filename.split("/")[1]
+        m = re.match("((?:|.*/)distribution/extensions)/", filename):
+        if m:
+            testdir = m.group(1)
             self.manifestv1.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
             self.manifestv2.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
-        elif filename.startswith("Contents/MacOS/extensions/"):
-            testdir = "Contents/MacOS/extensions/"+filename.split("/")[3]
-            self.manifestv1.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
-            self.manifestv2.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
-        elif (filename.startswith("searchplugins/") or
-             filename.startswith("Contents/MacOS/searchplugins/")):
-            self.manifestv1.append('patch-if "'+filename+'" "'+patchname+'" "'+filename+'"')
-            self.manifestv2.append('patch-if "'+filename+'" "'+patchname+'" "'+filename+'"')
         else:
             self.manifestv1.append('patch "'+patchname+'" "'+filename+'"')
             self.manifestv2.append('patch "'+patchname+'" "'+filename+'"')
