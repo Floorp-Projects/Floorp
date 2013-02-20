@@ -194,6 +194,9 @@ class MacroAssemblerX86Shared : public Assembler
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest) {
         cvtsi2sd(Operand(src), dest);
     }
+    void convertInt32ToDouble(const Address &src, FloatRegister dest) {
+        cvtsi2sd(Operand(src), dest);
+    }
     Condition testDoubleTruthy(bool truthy, const FloatRegister &reg) {
         xorpd(ScratchFloatReg, ScratchFloatReg);
         ucomisd(ScratchFloatReg, reg);

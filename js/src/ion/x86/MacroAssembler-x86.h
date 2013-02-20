@@ -307,6 +307,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         JS_ASSERT(cond == Equal || cond == NotEqual);
         return testInt32(cond, Operand(address));
     }
+    Condition testDouble(Condition cond, const Operand &operand) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        Condition actual = (cond == Equal) ? Below : AboveOrEqual;
+        cmpl(ToType(operand), ImmTag(JSVAL_TAG_CLEAR));
+        return actual;
+    }
+    Condition testDouble(Condition cond, const Address &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        return testDouble(cond, Operand(address));
+    }
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         return testUndefined(cond, value.typeReg());
     }
@@ -588,6 +598,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void unboxInt32(const Address &src, const Register &dest) {
         movl(payloadOf(src), dest);
+    }
+    void unboxDouble(const Address &src, const FloatRegister &dest) {
+        movsd(Operand(src), dest);
     }
     void unboxBoolean(const ValueOperand &src, const Register &dest) {
         movl(src.payloadReg(), dest);
