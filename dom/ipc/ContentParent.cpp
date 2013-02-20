@@ -2369,7 +2369,9 @@ ContentParent::RecvSetGeolocationHigherAccuracy(const bool& aEnable)
 {
     nsRefPtr<nsGeolocationService> geoSvc =
         nsGeolocationService::GetGeolocationService();
-    geoSvc->SetHigherAccuracy(aEnable);
+    if (geoSvc) {
+        geoSvc->SetHigherAccuracy(aEnable);
+    }
     return true;
 }
 
