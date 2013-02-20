@@ -3652,6 +3652,9 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint)) {
     mPrintEngine->SetDisallowSelectionPrint(true);
   }
+  if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::moznomarginboxes)) {
+    mPrintEngine->SetNoMarginBoxes(true);
+  }
   rv = mPrintEngine->Print(aPrintSettings, aWebProgressListener);
   if (NS_FAILED(rv)) {
     OnDonePrinting();
