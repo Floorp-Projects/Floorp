@@ -168,6 +168,11 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &setElemStub->lastProtoShape(), "baseline-setelem-denseadd-lastprotoshape");
         break;
       }
+      case ICStub::SetElem_TypedArray: {
+        ICSetElem_TypedArray *setElemStub = toSetElem_TypedArray();
+        MarkShape(trc, &setElemStub->shape(), "baseline-setelem-typedarray-shape");
+        break;
+      }
       case ICStub::TypeMonitor_SingleObject: {
         ICTypeMonitor_SingleObject *monitorStub = toTypeMonitor_SingleObject();
         MarkObject(trc, &monitorStub->object(), "baseline-monitor-singleobject");
@@ -2781,6 +2786,18 @@ DenseSetElemStubExists(JSContext *cx, ICStub::Kind kind, ICSetElem_Fallback *stu
 }
 
 static bool
+TypedArraySetElemStubExists(ICSetElem_Fallback *stub, HandleObject obj)
+{
+    for (ICStub *cur = stub->icEntry()->firstStub(); cur != stub; cur = cur->next()) {
+        if (!cur->isSetElem_TypedArray())
+            continue;
+        if (obj->lastProperty() == cur->toSetElem_TypedArray()->shape())
+            return true;
+    }
+    return false;
+}
+
+static bool
 CanOptimizeDenseSetElem(JSContext *cx, HandleObject obj, uint32_t index,
                         HandleShape oldShape, uint32_t oldCapacity, uint32_t oldInitLength,
                         bool *isAddingCaseOut, MutableHandleObject lastProtoOut)
@@ -2904,6 +2921,8 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
         index.isInt32() && index.toInt32() >= 0 &&
         !rhs.isMagic(JS_ELEMENTS_HOLE))
     {
+        JS_ASSERT(!obj->isTypedArray());
+
         bool addingCase;
         RootedObject lastProto(cx);
 
@@ -2943,6 +2962,23 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
                 stub->addNewStub(denseStub);
             }
         }
+
+        return true;
+    }
+
+    if (obj->isTypedArray() &&
+        index.isInt32() && rhs.isNumber() &&
+        !TypedArraySetElemStubExists(stub, obj))
+    {
+        IonSpew(IonSpew_BaselineIC, "  Generating SetElem_TypedArray stub (shape=%p, type=%u)",
+                obj->lastProperty(), TypedArray::type(obj));
+        ICSetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
+        ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!typedArrayStub)
+            return false;
+
+        stub->addNewStub(typedArrayStub);
+        return true;
     }
 
     return true;
@@ -3177,6 +3213,100 @@ ICSetElem_DenseAdd::Compiler::generateStubCode(MacroAssembler &masm)
     // Failure case - fail but first unstow R0 and R1
     masm.bind(&failureUnstow);
     EmitUnstowICValues(masm, 2);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// SetElem_TypedArray
+//
+
+bool
+ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratchReg = regs.takeAny();
+
+    // Unbox R0 and shape guard.
+    Register obj = masm.extractObject(R0, ExtractTemp0);
+    masm.loadPtr(Address(BaselineStubReg, ICSetElem_TypedArray::offsetOfShape()), scratchReg);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
+
+    // Unbox key.
+    Register key = masm.extractInt32(R1, ExtractTemp1);
+
+    // Bounds check.
+    masm.unboxInt32(Address(obj, TypedArray::lengthOffset()), scratchReg);
+    masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
+
+    // Load the elements vector.
+    masm.loadPtr(Address(obj, TypedArray::dataOffset()), scratchReg);
+
+    BaseIndex dest(scratchReg, key, ScaleFromElemWidth(TypedArray::slotWidth(type_)));
+    Address value(BaselineStackReg, ICStackValueOffset);
+
+    // We need a second scratch register. It's okay to clobber the type tag of
+    // R0 or R1, as long as it's restored before jumping to the next stub.
+    regs = availableGeneralRegs(0);
+    regs.takeUnchecked(obj);
+    regs.takeUnchecked(key);
+    regs.take(scratchReg);
+    Register secondScratch = regs.takeAny();
+
+    if (type_ == TypedArray::TYPE_FLOAT32 || type_ == TypedArray::TYPE_FLOAT64) {
+        masm.ensureDouble(value, FloatReg0, &failure);
+        masm.storeToTypedFloatArray(type_, FloatReg0, dest);
+        EmitReturnFromIC(masm);
+    } else if (type_ == TypedArray::TYPE_UINT8_CLAMPED) {
+        Label notInt32;
+        masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
+        masm.unboxInt32(value, secondScratch);
+        masm.clampIntToUint8(secondScratch, secondScratch);
+
+        Label clamped;
+        masm.bind(&clamped);
+        masm.storeToTypedIntArray(type_, secondScratch, dest);
+        EmitReturnFromIC(masm);
+
+        // If the value is a double, clamp to uint8 and jump back.
+        // Else, jump to failure.
+        masm.bind(&notInt32);
+        masm.branchTestDouble(Assembler::NotEqual, value, &failure);
+        masm.unboxDouble(value, FloatReg0);
+        masm.clampDoubleToUint8(FloatReg0, secondScratch);
+        masm.jump(&clamped);
+    } else {
+        Label notInt32;
+        masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
+        masm.unboxInt32(value, secondScratch);
+
+        Label isInt32;
+        masm.bind(&isInt32);
+        masm.storeToTypedIntArray(type_, secondScratch, dest);
+        EmitReturnFromIC(masm);
+
+        // If the value is a double, truncate and jump back.
+        // Else, jump to failure.
+        Label failureRestoreRegs;
+        masm.bind(&notInt32);
+        masm.branchTestDouble(Assembler::NotEqual, value, &failure);
+        masm.unboxDouble(value, FloatReg0);
+        masm.branchTruncateDouble(FloatReg0, secondScratch, &failureRestoreRegs);
+        masm.jump(&isInt32);
+
+        // Writing to secondScratch may have clobbered R0 or R1, restore them
+        // first.
+        masm.bind(&failureRestoreRegs);
+        masm.tagValue(JSVAL_TYPE_OBJECT, obj, R0);
+        masm.tagValue(JSVAL_TYPE_INT32, key, R1);
+    }
 
     // Failure case - jump to next stub
     masm.bind(&failure);

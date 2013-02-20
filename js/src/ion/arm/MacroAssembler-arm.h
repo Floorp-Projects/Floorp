@@ -46,6 +46,7 @@ class MacroAssemblerARM : public Assembler
     }
 
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
+    void convertInt32ToDouble(const Address &src, FloatRegister dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
@@ -589,6 +590,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testMagic(Condition cond, const Address &address);
     Condition testMagic(Condition cond, const BaseIndex &address);
     Condition testInt32(Condition cond, const Address &address);
+    Condition testDouble(Condition cond, const Address &address);
 
     template <typename T>
     void branchTestGCThing(Condition cond, const T &t, Label *label) {
@@ -611,6 +613,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxBoolean(const ValueOperand &operand, const Register &dest);
     void unboxBoolean(const Address &src, const Register &dest);
     void unboxDouble(const ValueOperand &operand, const FloatRegister &dest);
+    void unboxDouble(const Address &src, const FloatRegister &dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);
     void unboxPrivate(const ValueOperand &src, Register dest);
 

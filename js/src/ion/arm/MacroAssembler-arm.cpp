@@ -38,6 +38,13 @@ MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister
 }
 
 void
+MacroAssemblerARM::convertInt32ToDouble(const Address &src, FloatRegister dest)
+{
+    ma_ldr(Operand(src), ScratchRegister);
+    convertInt32ToDouble(ScratchRegister, dest);
+}
+
+void
 MacroAssemblerARM::convertUInt32ToDouble(const Register &src, const FloatRegister &dest_)
 {
     // direct conversions aren't possible.
@@ -2306,6 +2313,14 @@ MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Address &add
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testDouble(Assembler::Condition cond, const Address &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    return testDouble(cond, ScratchRegister);
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testDouble(Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
@@ -2386,6 +2401,12 @@ MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatReg
     JS_ASSERT(dest != ScratchFloatReg);
     as_vxfer(operand.payloadReg(), operand.typeReg(),
              VFPRegister(dest), CoreToFloat);
+}
+
+void
+MacroAssemblerARMCompat::unboxDouble(const Address &src, const FloatRegister &dest)
+{
+    ma_vldr(Operand(src), dest);
 }
 
 void
