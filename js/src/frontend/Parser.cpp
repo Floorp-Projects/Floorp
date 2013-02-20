@@ -5737,7 +5737,7 @@ Parser::primaryExpr(TokenKind tt)
                     /* So CURRENT_TOKEN gets TOK_COMMA and not TOK_LB. */
                     tokenStream.matchToken(TOK_COMMA);
                     pn2 = NullaryNode::create(PNK_COMMA, this);
-                    pn->pn_xflags |= PNX_HOLEY | PNX_NONCONST;
+                    pn->pn_xflags |= PNX_SPECIALARRAYINIT | PNX_NONCONST;
                 } else {
                     ParseNode *spreadNode = NULL;
                     if (tt == TOK_TRIPLEDOT) {
@@ -5754,6 +5754,7 @@ Parser::primaryExpr(TokenKind tt)
                         if (!pn2->isConstant() || spreadNode)
                             pn->pn_xflags |= PNX_NONCONST;
                         if (spreadNode) {
+                            pn->pn_xflags |= PNX_SPECIALARRAYINIT;
                             spreadNode->pn_kid = pn2;
                             pn2 = spreadNode;
                         }
