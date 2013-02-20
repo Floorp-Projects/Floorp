@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CSFLogStream.h"
+#include "CSFLog.h"
 
 #include "CC_Common.h"
 
@@ -32,7 +32,7 @@ CC_SIPCCCall::CC_SIPCCCall (cc_call_handle_t aCallHandle) :
             pMediaData(new CC_SIPCCCallMediaData(NULL,false,false,-1)),
             m_lock("CC_SIPCCCall")
 {
-    CSFLogInfoS( logTag, "Creating  CC_SIPCCCall " << callHandle );
+    CSFLogInfo( logTag, "Creating  CC_SIPCCCall %u", callHandle );
 
     AudioControl * audioControl = VcmSIPCCBinding::getAudioControl();
 
@@ -83,7 +83,7 @@ void CC_SIPCCCall::setRemoteWindow (VideoWindowHandle window)
             return;
         }
     }
-    CSFLogInfoS( logTag, "setRemoteWindow:no video stream found in call " << callHandle );
+    CSFLogInfo( logTag, "setRemoteWindow:no video stream found in call %u", callHandle );
 }
 
 int CC_SIPCCCall::setExternalRenderer(VideoFormat vFormat, ExternalRendererHandle renderer)
@@ -107,7 +107,7 @@ int CC_SIPCCCall::setExternalRenderer(VideoFormat vFormat, ExternalRendererHandl
             return pVideo->setExternalRenderer(streamId,  pMediaData->videoFormat, pMediaData->extRenderer);
         }
     }
-    CSFLogInfoS( logTag, "setExternalRenderer:no video stream found in call " << callHandle );
+    CSFLogInfo( logTag, "setExternalRenderer:no video stream found in call %u", callHandle );
 	return -1;
 }
 
@@ -408,7 +408,8 @@ bool CC_SIPCCCall::setVideoMute(bool mute)
 void CC_SIPCCCall::addStream(int streamId, bool isVideo)
 {
 
-	CSFLogInfoS( logTag, "addStream: " << streamId << "video=" << isVideo << "callhandle=" << callHandle);
+	CSFLogInfo( logTag, "addStream: %d video=%s callhandle=%u",
+        streamId, isVideo ? "TRUE" : "FALSE", callHandle);
 	{
 		mozilla::MutexAutoLock lock(m_lock);
 		pMediaData->streamMap[streamId].isVideo = isVideo;
@@ -451,10 +452,10 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
         }
 		if (!pVideo->mute(streamId,  pMediaData->videoMuteState))
 		{
-			CSFLogErrorS( logTag, "setting video mute state failed for new stream: " << streamId);
+			CSFLogError( logTag, "setting video mute state failed for new stream: %d", streamId);
 		} else
 		{
-			CSFLogErrorS( logTag, "setting video mute state SUCCEEDED for new stream: " << streamId);
+			CSFLogError( logTag, "setting video mute state SUCCEEDED for new stream: %d", streamId);
 
 		}
 #endif
@@ -464,11 +465,11 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
 		AudioTermination * pAudio = VcmSIPCCBinding::getAudioTermination();
 		if (!pAudio->mute(streamId,  pMediaData->audioMuteState))
 		{
-			CSFLogErrorS( logTag, "setting audio mute state failed for new stream: " << streamId);
+			CSFLogError( logTag, "setting audio mute state failed for new stream: %d", streamId);
 		}
         if (!pAudio->setVolume(streamId,  pMediaData->volume))
         {
-			CSFLogErrorS( logTag, "setting volume state failed for new stream: " << streamId);
+			CSFLogError( logTag, "setting volume state failed for new stream: %d", streamId);
         }
 	}
 }
@@ -479,7 +480,7 @@ void CC_SIPCCCall::removeStream(int streamId)
 
 	if ( pMediaData->streamMap.erase(streamId) != 1)
 	{
-		CSFLogErrorS( logTag, "removeStream stream that was never in the streamMap: " << streamId);
+		CSFLogError( logTag, "removeStream stream that was never in the streamMap: %d", streamId);
 	}
 }
 
@@ -507,7 +508,8 @@ bool CC_SIPCCCall::setVolume(int volume)
 			    }
 			    else
 			    {
-				    CSFLogWarnS( logTag, "setVolume:set volume on stream " << streamId << " returned fail");
+				    CSFLogWarn( logTag, "setVolume:set volume on stream %d returned fail",
+                        streamId);
                 }
             }
 	    }
