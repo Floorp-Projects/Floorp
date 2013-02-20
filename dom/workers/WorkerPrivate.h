@@ -349,7 +349,7 @@ public:
   ForgetMainThreadObjects(nsTArray<nsCOMPtr<nsISupports> >& aDoomed);
 
   bool
-  PostMessage(JSContext* aCx, jsval aMessage, jsval aTransferable);
+  PostMessage(JSContext* aCx, JS::Value aMessage, JS::Value aTransferable);
 
   uint64_t
   GetInnerWindowId();
