@@ -33,6 +33,9 @@
 
 for (var idx in gLonghandProperties) {
   var prop = gLonghandProperties[idx];
+  if (prop.pref && !SpecialPowers.getBoolPref(prop.pref)) {
+    continue;
+  }
   var present = prop.name in gCSSProperties;
   ok(present,
      "'" + prop.name + "' listed in gCSSProperties");
@@ -45,6 +48,9 @@ for (var idx in gLonghandProperties) {
 }
 for (var idx in gShorthandProperties) {
   var prop = gShorthandProperties[idx];
+  if (prop.pref && !SpecialPowers.getBoolPref(prop.pref)) {
+    continue;
+  }
   var present = prop.name in gCSSProperties;
   ok(present,
      "'" + prop.name + "' listed in gCSSProperties");
@@ -58,6 +64,9 @@ for (var idx in gShorthandProperties) {
 }
 for (var idx in gShorthandPropertiesLikeLonghand) {
   var prop = gShorthandPropertiesLikeLonghand[idx];
+  if (prop.pref && !SpecialPowers.getBoolPref(prop.pref)) {
+    continue;
+  }
   var present = prop.name in gCSSProperties;
   ok(present,
      "'" + prop.name + "' listed in gCSSProperties");
@@ -75,6 +84,9 @@ for (var idx in gShorthandPropertiesLikeLonghand) {
  */
 for (var prop in gCSSProperties) {
   var info = gCSSProperties[prop];
+  if (info.pref && !SpecialPowers.getBoolPref(info.pref)) {
+    continue;
+  }
   if (info.type == CSS_TYPE_LONGHAND) {
     ok(!("subproperties" in info),
        "longhand property '" + prop + "' must not have subproperty list");
