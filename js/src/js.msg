@@ -388,3 +388,6 @@ MSG_DEF(JSMSG_INVALID_CURRENCY_CODE,  334, 1, JSEXN_RANGEERR, "invalid currency 
 MSG_DEF(JSMSG_UNDEFINED_CURRENCY,     335, 0, JSEXN_TYPEERR, "undefined currency in NumberFormat() with currency style")
 MSG_DEF(JSMSG_INVALID_TIME_ZONE,      336, 1, JSEXN_RANGEERR, "invalid time zone in DateTimeFormat(): {0}")
 MSG_DEF(JSMSG_DATE_NOT_FINITE,        337, 0, JSEXN_RANGEERR, "date value is not finite in DateTimeFormat.format()")
+MSG_DEF(JSMSG_MODULE_STATEMENT,       338, 0, JSEXN_SYNTAXERR, "module declarations may only appear at the top level of a program or module body")
+MSG_DEF(JSMSG_CURLY_BEFORE_MODULE,    339, 0, JSEXN_SYNTAXERR, "missing { before module body")
+MSG_DEF(JSMSG_CURLY_AFTER_MODULE,     340, 0, JSEXN_SYNTAXERR, "missing } after module body")
