@@ -118,7 +118,7 @@ static bool
 PushNodeChildren(ParseNode *pn, NodeStack *stack)
 {
     switch (pn->getArity()) {
-      case PN_FUNC:
+      case PN_CODE:
         /*
          * Function nodes are linked into the function box tree, and may appear
          * on method lists. Both of those lists are singly-linked, so trying to
@@ -385,13 +385,18 @@ CloneParseTree(ParseNode *opn, Parser *parser)
     switch (pn->getArity()) {
 #define NULLCHECK(e)    JS_BEGIN_MACRO if (!(e)) return NULL; JS_END_MACRO
 
-      case PN_FUNC:
-        NULLCHECK(pn->pn_funbox =
-                  parser->newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));
-        NULLCHECK(pn->pn_body = CloneParseTree(opn->pn_body, parser));
-        pn->pn_cookie = opn->pn_cookie;
-        pn->pn_dflags = opn->pn_dflags;
-        pn->pn_blockid = opn->pn_blockid;
+      case PN_CODE:
+        if (pn->getKind() == PNK_MODULE) {
+            JS_NOT_REACHED("module nodes cannot be cloned");
+            return NULL;
+        } else {
+            NULLCHECK(pn->pn_funbox =
+                      parser->newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));
+            NULLCHECK(pn->pn_body = CloneParseTree(opn->pn_body, parser));
+            pn->pn_cookie = opn->pn_cookie;
+            pn->pn_dflags = opn->pn_dflags;
+            pn->pn_blockid = opn->pn_blockid;
+        }
         break;
 
       case PN_LIST:
@@ -589,8 +594,8 @@ ParseNode::dump(int indent)
       case PN_TERNARY:
         ((TernaryNode *) this)->dump(indent);
         break;
-      case PN_FUNC:
-        ((FunctionNode *) this)->dump(indent);
+      case PN_CODE:
+        ((CodeNode *) this)->dump(indent);
         break;
       case PN_LIST:
         ((ListNode *) this)->dump(indent);
@@ -671,7 +676,7 @@ TernaryNode::dump(int indent)
 }
 
 void
-FunctionNode::dump(int indent)
+CodeNode::dump(int indent)
 {
     const char *name = parseNodeNames[getKind()];
     fprintf(stderr, "(%s ", name);

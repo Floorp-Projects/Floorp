@@ -273,7 +273,7 @@ class NameResolver
         if (cur == NULL)
             return;
 
-        if (cur->isKind(PNK_FUNCTION) && cur->isArity(PN_FUNC)) {
+        if (cur->isKind(PNK_FUNCTION) && cur->isArity(PN_CODE)) {
             RootedAtom prefix2(cx, resolveFun(cur, prefix));
             /*
              * If a function looks like (function(){})() where the parent node
@@ -314,7 +314,7 @@ class NameResolver
             resolve(cur->pn_kid2, prefix);
             resolve(cur->pn_kid3, prefix);
             break;
-          case PN_FUNC:
+          case PN_CODE:
             JS_ASSERT(cur->isKind(PNK_FUNCTION));
             resolve(cur->pn_body, prefix);
             break;

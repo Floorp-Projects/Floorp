@@ -1477,7 +1477,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
         return true;
 
     switch (pn->getArity()) {
-      case PN_FUNC:
+      case PN_CODE:
         /*
          * A named function, contrary to ES3, is no longer useful, because we
          * bind its name lexically (using JSOP_CALLEE) instead of creating an
