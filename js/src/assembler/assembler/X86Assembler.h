@@ -1277,7 +1277,8 @@ public:
 
     void testq_i32r(int imm, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        spew("testq      $0x%x, %s",
+             imm, nameIReg(dst));
         m_formatter.oneByteOp64(OP_GROUP3_EvIz, GROUP3_OP_TEST, dst);
         m_formatter.immediate32(imm);
     }
