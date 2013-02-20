@@ -294,7 +294,7 @@ protected:
   enum CacheFailedBehavior { EXECUTE_IF_CANT_CACHE, DONT_EXECUTE };
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
                                     CacheFailedBehavior aBehavior = DONT_EXECUTE);
-  bool InitTabChildGlobalInternal(nsISupports* aScope);
+  bool InitTabChildGlobalInternal(nsISupports* aScope, const nsACString& aID);
   static void Traverse(nsFrameScriptExecutor *tmp,
                        nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsFrameScriptExecutor* aTmp);
