@@ -35,6 +35,7 @@ OS_LIBS = \
 	shlwapi.lib \
 	propsys.lib \
 	advapi32.lib \
+	wininet.lib \
 	$(NULL)
 
 DEFINES += -DUNICODE -D_UNICODE -DNS_NO_XPCOM
