@@ -1597,6 +1597,80 @@ GetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
 }
 
 bool
+GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *obj,
+                                      const Value &idval)
+{
+    JS_ASSERT(obj->isTypedArray());
+    JS_ASSERT(idval.isInt32());
+
+    Label failures;
+    MacroAssembler masm;
+
+    // The array type is the object within the table of typed array classes.
+    int arrayType = obj->getClass() - &TypedArray::classes[0];
+
+    Register tmpReg;
+    if (output().hasValue()) {
+        tmpReg = output().valueReg().scratchReg();
+    } else {
+        JS_ASSERT(output().type() == MIRType_Int32);
+        tmpReg = output().typedReg().gpr();
+    }
+    JS_ASSERT(object() != tmpReg);
+
+    // Check that the typed array is of the same type as the current object
+    // because load size differ in function of the typed array data width.
+    masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, obj->getClass(), &failures);
+
+    // Ensure the index is an int32 value.
+    ValueOperand val = index().reg().valueReg();
+    masm.branchTestInt32(Assembler::NotEqual, val, &failures);
+
+    // Unbox the index.
+    Register indexReg = tmpReg;
+    masm.unboxInt32(val, indexReg);
+
+    // Guard on the initialized length.
+    Address length(object(), TypedArray::lengthOffset());
+    masm.branch32(Assembler::BelowOrEqual, length, indexReg, &failures);
+
+    // Save the object register on the stack in case of failure.
+    Label popAndFail;
+    Register elementReg = object();
+    masm.push(object());
+
+    // Load elements vector.
+    masm.loadPtr(Address(object(), TypedArray::dataOffset()), elementReg);
+
+    // Load the value. We use an invalid register because the destination
+    // register is necessary a non double register.
+    int width = TypedArray::slotWidth(arrayType);
+    BaseIndex source(elementReg, indexReg, ScaleFromElemWidth(width));
+    if (output().hasValue())
+        masm.loadFromTypedArray(arrayType, source, output().valueReg(), true,
+                                elementReg, &popAndFail);
+    else
+        masm.loadFromTypedArray(arrayType, source, output().typedReg(),
+                                elementReg, &popAndFail);
+
+    masm.pop(object());
+    RepatchLabel rejoin_;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
+    masm.bind(&rejoin_);
+
+    // Restore the object before continuing to the next stub.
+    masm.bind(&popAndFail);
+    masm.pop(object());
+    masm.bind(&failures);
+
+    RepatchLabel exit_;
+    CodeOffsetJump exitOffset = masm.jumpWithPatch(&exit_);
+    masm.bind(&exit_);
+
+    return linkAndAttachStub(cx, masm, ion, "typed array", rejoinOffset, &exitOffset);
+}
+
+bool
 GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                      HandleValue idval, MutableHandleValue res)
 {
@@ -1634,6 +1708,10 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
             }
         } else if (!cache.hasDenseStub() && obj->isNative() && idval.isInt32()) {
             if (!cache.attachDenseElement(cx, ion, obj, idval))
+                return false;
+            attachedStub = true;
+        } else if (obj->isTypedArray() && idval.isInt32()) {
+            if (!cache.attachTypedArrayElement(cx, ion, obj, idval))
                 return false;
             attachedStub = true;
         }
