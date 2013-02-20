@@ -24,6 +24,7 @@ function test() {
 function testCleanExit() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
+
       is(gDebugger.DebuggerController.activeThread.paused, true,
         "Should be paused after the debugger statement.");
 

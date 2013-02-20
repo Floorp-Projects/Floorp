@@ -223,8 +223,8 @@ function addWatchExpressions(callback)
 
 function testEdit(what, string, callback, expected)
 {
-  let localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[1],
-      localNodes = localScope.querySelector(".details").childNodes,
+  let localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[1],
+      localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
       myVar = gVars.getItemForNode(localNodes[11]);
 
   waitForProperties(function() {

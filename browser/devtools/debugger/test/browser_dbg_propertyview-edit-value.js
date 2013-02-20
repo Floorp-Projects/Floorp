@@ -15,7 +15,7 @@ var gTab = null;
 var gDebuggee = null;
 var gDebugger = null;
 
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 function test() {
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
@@ -38,8 +38,8 @@ function testFrameEval() {
       is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
 
-      var localScope = gDebugger.DebuggerView.Variables._list.querySelector(".scope"),
-          localNodes = localScope.querySelector(".details").childNodes,
+      var localScope = gDebugger.DebuggerView.Variables._list.querySelector(".variables-view-scope"),
+          localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
           varA = localNodes[7];
 
       is(varA.querySelector(".name").getAttribute("value"), "a",
@@ -88,8 +88,8 @@ function testModification(aVar, aCallback, aNewValue, aNewResult) {
       gDebugger.removeEventListener("Debugger:FetchedVariables", test, false);
       // Get the variable reference anew, since the old ones were discarded when
       // we resumed.
-      var localScope = gDebugger.DebuggerView.Variables._list.querySelector(".scope"),
-          localNodes = localScope.querySelector(".details").childNodes,
+      var localScope = gDebugger.DebuggerView.Variables._list.querySelector(".variables-view-scope"),
+          localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
           varA = localNodes[7];
 
       is(varA.querySelector(".value").getAttribute("value"), aNewResult,
