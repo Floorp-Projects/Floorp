@@ -17,9 +17,7 @@ const { Cc, Ci, Cr } = require('chrome'),
       windowUtils = require('../deprecated/window-utils'),
       { WindowTrackerTrait } = windowUtils,
       { ns } = require('../core/namespace'),
-      { observer: windowObserver } = require('./observer'),
-      { getOwnerWindow } = require('../private-browsing/window/utils'),
-      viewNS = require('sdk/core/namespace').ns();
+      { observer: windowObserver } = require('./observer');
 
 /**
  * Window trait composes safe wrappers for browser window that are E10S
@@ -71,10 +69,6 @@ const BrowserWindowTrait = Trait.compose(
       this._private = !!options.private;
 
       this._load();
-
-      viewNS(this._public).window = this._window;
-      getOwnerWindow.implement(this._public, getChromeWindow);
-
       return this;
     },
     destroy: function () this._onUnload(),
@@ -244,9 +238,5 @@ const browserWindows = Trait.resolve({ toString: null }).compose(
     }
   }).resolve({ toString: null })
 )();
-
-function getChromeWindow(window) {
-  return viewNS(window).window;
-}
 
 exports.browserWindows = browserWindows;

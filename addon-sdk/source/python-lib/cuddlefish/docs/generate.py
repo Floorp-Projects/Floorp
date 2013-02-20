@@ -196,3 +196,4 @@ def replace_file(env_root, dest_path, file_contents, must_rewrite_links):
     if must_rewrite_links and dest_path.endswith(".html"):
         file_contents = rewrite_links(env_root, get_sdk_docs_path(env_root), file_contents, dest_path)
     open(dest_path, "w").write(file_contents)
+
