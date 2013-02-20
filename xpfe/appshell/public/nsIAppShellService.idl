@@ -16,7 +16,7 @@ interface nsIAppShell;
 struct JSContext;
 %}
 
-[scriptable, uuid(1a15727f-ab2e-46cd-ac7f-39f12f30eef5)]
+[scriptable, uuid(5c19ab54-67bf-46d0-ac5b-21abd9050c3b)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -83,6 +83,17 @@ interface nsIAppShellService : nsISupports
   readonly attribute nsIDOMWindow hiddenPrivateDOMWindow;
 
   /**
+   * Return the (singleton) application hidden window as an nsIDOMWindow,
+   * and, the corresponding JavaScript context pointer.  This is useful
+   * if you'd like to subsequently call OpenDialog on the hidden window.
+   * @aHiddenDOMWindow the hidden window QI'd to type nsIDOMWindow
+   * @aJSContext       the corresponding JavaScript context
+   */
+  [noscript]
+  void getHiddenWindowAndJSContext(out nsIDOMWindow aHiddenDOMWindow,
+                                   out JSContext aJSContext);
+
+  /**
    * Return true if the application hidden window was provided by the
    * application. If it wasn't, the default hidden window was used. This will
    * usually be false on all non-mac platforms.
@@ -106,12 +117,6 @@ interface nsIAppShellService : nsISupports
    * @param aWindow you see the pattern
    */
   void unregisterTopLevelWindow(in nsIXULWindow aWindow);
-
-  /**
-   * Whether the hidden non-private window has been lazily created.
-   */
-  [noscript]
-  readonly attribute boolean hasHiddenWindow;
 
   /**
    * Whether the hidden private window has been lazily created.
