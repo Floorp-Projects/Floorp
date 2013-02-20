@@ -1511,11 +1511,13 @@ NPP_GetValue(NPP instance, NPPVariable variable, void* value)
   }
   if (variable == NPPVpluginNeedsXEmbed) {
     // Only relevant for X plugins
-    *(NPBool*)value = instanceData->hasWidget;
+    // use 4-byte writes like some plugins may do
+    *(uint32_t*)value = instanceData->hasWidget;
     return NPERR_NO_ERROR;
   }
   if (variable == NPPVpluginWantsAllNetworkStreams) {
-    *(NPBool*)value = instanceData->wantsAllStreams;
+    // use 4-byte writes like some plugins may do
+    *(uint32_t*)value = instanceData->wantsAllStreams;
     return NPERR_NO_ERROR;
   }
 
