@@ -143,15 +143,6 @@ nsInProcessTabChildGlobal::Init()
                                               nullptr,
                                               mCx,
                                               mozilla::dom::ipc::MM_CHILD);
-
-  // Set the location information for the new global, so that tools like
-  // about:memory may use that information.
-  JSObject *global;
-  nsIURI* docURI = mOwner->OwnerDoc()->GetDocumentURI();
-  if (mGlobal && NS_SUCCEEDED(mGlobal->GetJSObject(&global)) && docURI) {
-    xpc::SetLocationForGlobal(global, docURI);
-  }
-
   return NS_OK;
 }
 
@@ -307,10 +298,18 @@ nsInProcessTabChildGlobal::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 nsresult
 nsInProcessTabChildGlobal::InitTabChildGlobal()
 {
-
+  nsAutoCString id;
+  id.AssignLiteral("inProcessTabChildGlobal");
+  nsIURI* uri = mOwner->OwnerDoc()->GetDocumentURI();
+  if (uri) {
+    nsAutoCString u;
+    uri->GetSpec(u);
+    id.AppendLiteral("?ownedBy=");
+    id.Append(u);
+  }
   nsISupports* scopeSupports =
     NS_ISUPPORTS_CAST(nsIDOMEventTarget*, this);
-  NS_ENSURE_STATE(InitTabChildGlobalInternal(scopeSupports));
+  NS_ENSURE_STATE(InitTabChildGlobalInternal(scopeSupports, id));
   return NS_OK;
 }
 
