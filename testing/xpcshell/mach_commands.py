@@ -175,4 +175,3 @@ class MachCommands(MachCommandBase):
         except InvalidTestPathError as e:
             print(e.message)
             return 1
-
