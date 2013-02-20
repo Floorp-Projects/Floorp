@@ -470,43 +470,6 @@ nsXMLHttpRequest::Init(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-/**
- * This Initialize method is called from XPConnect via nsIJSNativeInitializer.
- */
-NS_IMETHODIMP
-nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
-                             uint32_t argc, jsval *argv)
-{
-  nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aOwner);
-  if (!owner) {
-    NS_WARNING("Unexpected nsIJSNativeInitializer owner");
-    return NS_OK;
-  }
-
-  // This XHR object is bound to a |window|,
-  // so re-set principal and script context.
-  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal = do_QueryInterface(aOwner);
-  NS_ENSURE_STATE(scriptPrincipal);
-
-  Construct(scriptPrincipal->GetPrincipal(), owner);
-  if (argc) {
-    nsresult rv = InitParameters(cx, argv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsXMLHttpRequest::InitParameters(JSContext* aCx, const jsval* aParams)
-{
-  mozilla::idl::XMLHttpRequestParameters params;
-  nsresult rv = params.Init(aCx, aParams);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  InitParameters(params.mozAnon, params.mozSystem);
-  return NS_OK;
-}
-
 void
 nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
 {
@@ -638,7 +601,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsISizeOfEventTarget)
 NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
