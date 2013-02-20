@@ -226,9 +226,6 @@ var SelectionHelperUI = {
    * the section.
    */
   openEditSession: function openEditSession(aMessage) {
-    if (!this.canHandle(aMessage))
-      return;
-
      /*
      * aMessage - from _onContentContextMenu in ContextMenuHandler
      *  name: aMessage.name,
@@ -266,21 +263,41 @@ var SelectionHelperUI = {
   },
 
   /*
+   * attachEditSession
+   * 
+   * Attaches to existing selection and begins editing.
+   */
+  attachEditSession: function attachEditSession(aMessage) {
+    this._popupState = aMessage.json;
+    this._popupState._target = aMessage.target;
+
+    this._init();
+
+    Util.dumpLn("enableSelection target:", this._popupState._target);
+
+    // Set the track bounds for each marker NIY
+    this.startMark.setTrackBounds(this._popupState.xPos, this._popupState.yPos);
+    this.endMark.setTrackBounds(this._popupState.xPos, this._popupState.yPos);
+
+    // Send this over to SelectionHandler in content, they'll message us
+    // back with information on the current selection.
+    this._popupState._target.messageManager.sendAsyncMessage(
+      "Browser:SelectionAttach",
+      { xPos: this._popupState.xPos,
+        yPos: this._popupState.yPos });
+
+    this._setupDebugOptions();
+  },
+
+  /*
    * canHandle
    *
    * Determines if we can handle a ContextMenuHandler message.
    */
   canHandle: function canHandle(aMessage) {
-    // Reject empty text inputs, nothing to do here
-    if (aMessage.json.types.indexOf("input-empty") != -1) {
-      return false;
-    }
-    // Input with text or general text in a page
-    if (aMessage.json.types.indexOf("content-text") == -1 &&
-        aMessage.json.types.indexOf("input-text") == -1) {
-      return false;
-    }
-    return true;
+    if (aMessage.json.types.indexOf("content-text") != -1)
+      return true;
+    return false;
   },
 
   /*
