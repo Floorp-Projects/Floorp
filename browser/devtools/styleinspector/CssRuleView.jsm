@@ -108,8 +108,6 @@ ElementStyle.prototype = {
   // to figure out how shorthand properties will be parsed.
   dummyElement: null,
 
-  domUtils: Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils),
-
   /**
    * Called by the Rule object when it has been changed through the
    * setProperty* methods.
@@ -158,7 +156,7 @@ ElementStyle.prototype = {
     });
 
     // Get the styles that apply to the element.
-    var domRules = this.domUtils.getCSSStyleRules(aElement);
+    var domRules = domUtils.getCSSStyleRules(aElement);
 
     // getCSStyleRules returns ordered from least-specific to
     // most-specific.
@@ -413,7 +411,7 @@ Rule.prototype = {
       // No stylesheet, no ruleLine
       return null;
     }
-    return this.elementStyle.domUtils.getRuleLine(this.domRule);
+    return domUtils.getRuleLine(this.domRule);
   },
 
   /**
@@ -576,8 +574,7 @@ Rule.prototype = {
         continue;
 
       let name = matches[1];
-      if (this.inherited &&
-          !this.elementStyle.domUtils.isInheritedProperty(name)) {
+      if (this.inherited && !domUtils.isInheritedProperty(name)) {
         continue;
       }
       let value = store.userProperties.getProperty(this.style, name, matches[2]);
@@ -1448,7 +1445,7 @@ RuleEditor.prototype = {
     // actually match.  For custom selector text (such as for the 'element'
     // style, just show the text directly.
     if (this.rule.domRule && this.rule.domRule.selectorText) {
-      let selectors = CssLogic.getSelectors(this.rule.selectorText);
+      let selectors = CssLogic.getSelectors(this.rule.domRule);
       let element = this.rule.inherited || this.ruleView._viewedElement;
       for (let i = 0; i < selectors.length; i++) {
         let selector = selectors[i];
@@ -1458,8 +1455,12 @@ RuleEditor.prototype = {
             textContent: ", "
           });
         }
-        let cls = element.mozMatchesSelector(selector) ? "ruleview-selector-matched" :
-                                                         "ruleview-selector-unmatched";
+        let cls;
+        if (domUtils.selectorMatchesElement(element, this.rule.domRule, i)) {
+          cls = "ruleview-selector-matched";
+        } else {
+          cls = "ruleview-selector-unmatched";
+        }
         createChild(this.selectorText, "span", {
           class: cls,
           textContent: selector
@@ -2846,4 +2847,8 @@ XPCOMUtils.defineLazyGetter(this, "_strings", function() {
 
 XPCOMUtils.defineLazyGetter(this, "osString", function() {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+});
+
+XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
