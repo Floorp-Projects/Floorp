@@ -22,7 +22,7 @@ pref("metro.debug.selection.dumpRanges", false);
 pref("metro.debug.selection.dumpEvents", false);
 
 // Form helper options: 0 = disabled, 1 = enabled, 2 = dynamic depending on screen size
-pref("formhelper.mode", 1);
+pref("formhelper.mode", 0);
 // Auto zoom to form elements when they take focus 
 pref("formhelper.autozoom", true);
 // Auto zoom to the caret
