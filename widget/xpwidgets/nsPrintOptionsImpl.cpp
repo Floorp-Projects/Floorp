@@ -509,6 +509,9 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
 {
   NS_ENSURE_ARG_POINTER(aPS);
 
+  bool persistMarginBoxSettings;
+  aPS->GetPersistMarginBoxSettings(&persistMarginBoxSettings);
+
   nsIntMargin margin;
   if (aFlags & nsIPrintSettings::kInitSaveMargins) {
     if (NS_SUCCEEDED(aPS->GetMarginInTwips(margin))) {
@@ -613,51 +616,53 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
         }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
-    if (NS_SUCCEEDED(aPS->GetHeaderStrLeft(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintHeaderStrLeft, uStr);
-      Preferences::SetString(GetPrefName(kPrintHeaderStrLeft, aPrinterName),
-                             uStr);
+  if (persistMarginBoxSettings) {
+    if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
+      if (NS_SUCCEEDED(aPS->GetHeaderStrLeft(&uStr))) {
+        DUMP_STR(kWriteStr, kPrintHeaderStrLeft, uStr);
+        Preferences::SetString(GetPrefName(kPrintHeaderStrLeft, aPrinterName),
+                               uStr);
+      }
     }
-  }
 
-  if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
-    if (NS_SUCCEEDED(aPS->GetHeaderStrCenter(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintHeaderStrCenter, uStr);
-      Preferences::SetString(GetPrefName(kPrintHeaderStrCenter, aPrinterName),
-                             uStr);
+    if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
+      if (NS_SUCCEEDED(aPS->GetHeaderStrCenter(&uStr))) {
+        DUMP_STR(kWriteStr, kPrintHeaderStrCenter, uStr);
+        Preferences::SetString(GetPrefName(kPrintHeaderStrCenter, aPrinterName),
+                               uStr);
+      }
     }
-  }
 
-  if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
-    if (NS_SUCCEEDED(aPS->GetHeaderStrRight(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintHeaderStrRight, uStr);
-      Preferences::SetString(GetPrefName(kPrintHeaderStrRight, aPrinterName),
-                             uStr);
+    if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
+      if (NS_SUCCEEDED(aPS->GetHeaderStrRight(&uStr))) {
+        DUMP_STR(kWriteStr, kPrintHeaderStrRight, uStr);
+        Preferences::SetString(GetPrefName(kPrintHeaderStrRight, aPrinterName),
+                               uStr);
+      }
     }
-  }
 
-  if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
-    if (NS_SUCCEEDED(aPS->GetFooterStrLeft(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintFooterStrLeft, uStr);
-      Preferences::SetString(GetPrefName(kPrintFooterStrLeft, aPrinterName),
-                             uStr);
+    if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
+      if (NS_SUCCEEDED(aPS->GetFooterStrLeft(&uStr))) {
+        DUMP_STR(kWriteStr, kPrintFooterStrLeft, uStr);
+        Preferences::SetString(GetPrefName(kPrintFooterStrLeft, aPrinterName),
+                               uStr);
+      }
     }
-  }
 
-  if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
-    if (NS_SUCCEEDED(aPS->GetFooterStrCenter(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintFooterStrCenter, uStr);
-      Preferences::SetString(GetPrefName(kPrintFooterStrCenter, aPrinterName),
-                             uStr);
+    if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
+      if (NS_SUCCEEDED(aPS->GetFooterStrCenter(&uStr))) {
+        DUMP_STR(kWriteStr, kPrintFooterStrCenter, uStr);
+        Preferences::SetString(GetPrefName(kPrintFooterStrCenter, aPrinterName),
+                               uStr);
+      }
     }
-  }
 
-  if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
-    if (NS_SUCCEEDED(aPS->GetFooterStrRight(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintFooterStrRight, uStr);
-      Preferences::SetString(GetPrefName(kPrintFooterStrRight, aPrinterName),
-                             uStr);
+    if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
+      if (NS_SUCCEEDED(aPS->GetFooterStrRight(&uStr))) {
+        DUMP_STR(kWriteStr, kPrintFooterStrRight, uStr);
+        Preferences::SetString(GetPrefName(kPrintFooterStrRight, aPrinterName),
+                               uStr);
+      }
     }
   }
 
