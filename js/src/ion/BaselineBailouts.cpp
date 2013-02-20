@@ -614,21 +614,21 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     // If this was the last inline frame, then unpacking is almost done.
     if (!iter.moreFrames()) {
 
-        // If the bailout was a resumeAfter, and the opcode is
-        // monitored, then the bailed out state should be in a position to enter
+        // If the bailout was a resumeAfter, and the opcode is monitored,
+        // then the bailed out state should be in a position to enter
         // into the ICTypeMonitor chain for the op.
-        bool enterMonitorChain = resumeAfter ? !!(js_CodeSpec[op].format & JOF_TYPESET) : false;
-        uint32_t numCallArgs = isCall ? GET_ARGC(pc) : 0;
-
-        // NEWARRAY and NEWOBJECT are JOF_TYPESET ops, but don't have an IC
-        // monitor chain, since the TypeObject is statically known.
-        if (op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT) {
-#ifdef DEBUG
+        bool enterMonitorChain = false;
+        if (resumeAfter && (js_CodeSpec[op].format & JOF_TYPESET)) {
+            // Not every monitored op has a monitored fallback stub, e.g.
+            // JSOP_GETINTRINSIC will always return the same value so does
+            // not need a monitor chain.
             ICEntry &icEntry = baselineScript->icEntryFromPCOffset(pcOff);
-            JS_ASSERT(!icEntry.firstStub()->getChainFallback()->isMonitoredFallback());
-#endif
-            enterMonitorChain = false;
+            ICFallbackStub *fallbackStub = icEntry.firstStub()->getChainFallback();
+            if (fallbackStub->isMonitoredFallback())
+                enterMonitorChain = true;
         }
+
+        uint32_t numCallArgs = isCall ? GET_ARGC(pc) : 0;
 
         if (resumeAfter && !enterMonitorChain)
             pc = GetNextPc(pc);
