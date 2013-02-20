@@ -9,8 +9,8 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const BaseAssert = require("sdk/test/assert").Assert;
-const { isFunction, isObject } = require("sdk/lang/type");
+const BaseAssert = require("./test/assert").Assert;
+const { isFunction, isObject } = require("./lang/type");
 
 function extend(target) {
   let descriptor = {}

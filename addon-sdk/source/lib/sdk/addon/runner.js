@@ -86,7 +86,8 @@ function startup(reason, options) {
     then(function onLocalizationReady(data) {
       // Exports data to a pseudo module so that api-utils/l10n/core
       // can get access to it
-      definePseudo(options.loader, '@l10n/data', data ? data : null);
+      if (data)
+        definePseudo(options.loader, '@l10n/data', data);
       run(options);
     });
 }
