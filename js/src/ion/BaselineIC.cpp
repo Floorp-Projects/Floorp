@@ -2883,8 +2883,8 @@ CanOptimizeDenseSetElem(JSContext *cx, HandleObject obj, uint32_t index,
 }
 
 static bool
-DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, HandleValue objv,
-                  HandleValue index)
+DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, Value *stack, HandleValue objv,
+                  HandleValue index, HandleValue rhs)
 {
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
@@ -2922,6 +2922,10 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
         if (!SetObjectElement(cx, obj, index, rhs, script->strict, script, pc))
             return false;
     }
+
+    // Overwrite the object on the stack (pushed for the decompiler) with the rhs.
+    JS_ASSERT(stack[2] == objv);
+    stack[2] = rhs;
 
     if (stub->numOptimizedStubs() >= ICSetElem_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
@@ -2997,9 +3001,10 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, HandleValue rhs, Hand
     return true;
 }
 
-typedef bool (*DoSetElemFallbackFn)(JSContext *, ICSetElem_Fallback *, HandleValue, HandleValue,
-                                    HandleValue);
-static const VMFunction DoSetElemFallbackInfo = FunctionInfo<DoSetElemFallbackFn>(DoSetElemFallback);
+typedef bool (*DoSetElemFallbackFn)(JSContext *, ICSetElem_Fallback *, Value *, HandleValue,
+                                    HandleValue, HandleValue);
+static const VMFunction DoSetElemFallbackInfo =
+    FunctionInfo<DoSetElemFallbackFn>(DoSetElemFallback, PopValues(2));
 
 bool
 ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -3008,14 +3013,28 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     EmitRestoreTailCallReg(masm);
 
-    // Push key and object.
+    // State: R0: object, R1: index, stack: rhs.
+    // For the decompiler, the stack has to be: object, index, rhs,
+    // so we push the index, then overwrite the rhs Value with R0
+    // and push the rhs value.
     masm.pushValue(R1);
-    masm.pushValue(R0);
+    masm.loadValue(Address(BaselineStackReg, sizeof(Value)), R1);
+    masm.storeValue(R0, Address(BaselineStackReg, sizeof(Value)));
+    masm.pushValue(R1);
 
-    // Push RHS. On x86 and ARM two push instructions are emitted so use a
+    // Push arguments.
+    masm.pushValue(R1); // RHS
+
+    // Push index. On x86 and ARM two push instructions are emitted so use a
     // separate register to store the old stack pointer.
-    masm.mov(BaselineStackReg, R0.scratchReg());
-    masm.pushValue(Address(R0.scratchReg(), 2 * sizeof(Value)));
+    masm.mov(BaselineStackReg, R1.scratchReg());
+    masm.pushValue(Address(R1.scratchReg(), 2 * sizeof(Value)));
+    masm.pushValue(R0); // Object.
+
+    // Push pointer to stack values, so that the stub can overwrite the object
+    // (pushed for the decompiler) with the rhs.
+    masm.computeEffectiveAddress(Address(BaselineStackReg, 3 * sizeof(Value)), R0.scratchReg());
+    masm.push(R0.scratchReg());
 
     masm.push(BaselineStubReg);
 
