@@ -1,0 +1,131 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/* Highlighter */
+
+.highlighter-outline {
+  box-shadow: 0 0 0 1px black;
+  outline: 1px dashed white;
+  outline-offset: -1px;
+}
+
+.highlighter-outline[locked]  {
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+  outline-color: rgba(255,255,255,0.7);
+}
+
+/* Highlighter - Node Infobar */
+
+.highlighter-nodeinfobar {
+  color: hsl(200, 100%, 65%);
+  border: 1px solid hsla(210, 19%, 63%, .5);
+  border-radius: 3px;
+  background: linear-gradient(hsl(209, 18%, 30%), hsl(210, 24%, 16%)) no-repeat padding-box;
+}
+
+/* Highlighter - Node Infobar - text */
+
+.highlighter-nodeinfobar-text {
+  /* 100% - size of the buttons and margins */
+  max-width: calc(100% - 2 * (26px + 6px));
+  padding-bottom: 1px;
+}
+
+html|*.highlighter-nodeinfobar-tagname {
+  color: white;
+}
+
+html|*.highlighter-nodeinfobar-id {
+  color: hsl(90, 79%, 52%);
+}
+
+html|*.highlighter-nodeinfobar-pseudo-classes {
+  color: hsl(20, 100%, 70%);
+}
+
+/* Highlighter - Node Infobar - buttons */
+
+.highlighter-nodeinfobar-button {
+  -moz-appearance: none;
+  border: 0 solid hsla(210,8%,5%,.45);
+  padding: 0;
+  width: 26px;
+  min-height: 26px;
+%ifndef XP_LINUX
+  background-color: transparent;
+%endif
+}
+
+.highlighter-nodeinfobar-inspectbutton {
+  -moz-border-end-width: 1px;
+  box-shadow: 1px 0 0 hsla(210,16%,76%,.15), -1px 0 0 hsla(210,16%,76%,.15) inset;
+  -moz-margin-end: 6px;
+  list-style-image: url("chrome://browser/skin/devtools/inspect-button.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.highlighter-nodeinfobar-inspectbutton:-moz-locale-dir(rtl) {
+  box-shadow: -1px 0 0 hsla(210,16%,76%,.15), 1px 0 0 hsla(210,16%,76%,.15) inset;
+}
+
+.highlighter-nodeinfobar-inspectbutton:active:hover,
+.highlighter-nodeinfobar-container:not([locked]) >  .highlighter-nodeinfobar >  .highlighter-nodeinfobar-inspectbutton {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+.highlighter-nodeinfobar-menu {
+  -moz-border-start-width: 1px;
+  box-shadow: -1px 0 0 hsla(210,16%,76%,.15), 1px 0 0 hsla(210,16%,76%,.15) inset;
+  -moz-margin-start: 6px;
+}
+
+.highlighter-nodeinfobar-menu:-moz-locale-dir(rtl) {
+  box-shadow: 1px 0 0 hsla(210,16%,76%,.15), -1px 0 0 hsla(210,16%,76%,.15) inset;
+}
+
+.highlighter-nodeinfobar-menu > .toolbarbutton-menu-dropmarker {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  -moz-box-align: center;
+  -moz-margin-start: -1px;
+}
+
+/* Highlighter - Node Infobar - box & arrow */
+
+.highlighter-nodeinfobar-arrow {
+  width: 14px;
+  height: 14px;
+  -moz-margin-start: calc(50% - 7px);
+  transform: rotate(-45deg);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  background-repeat: no-repeat;
+}
+
+.highlighter-nodeinfobar-arrow-top {
+  margin-bottom: -8px;
+  margin-top: 8px;
+  border-right-color: hsla(210, 19%, 63%, .5);
+  border-top-color: hsla(210, 19%, 63%, .5);
+  background-image: linear-gradient(to top right, transparent 50%, hsl(209, 18%, 30%) 50%);
+}
+
+.highlighter-nodeinfobar-arrow-bottom {
+  margin-top: -8px;
+  margin-bottom: 8px;
+  border-left-color: hsla(210, 19%, 63%, .5);
+  border-bottom-color: hsla(210, 19%, 63%, .5);
+  background-image: linear-gradient(to bottom left, transparent 50%, hsl(210, 24%, 16%) 50%);
+}
+
+.highlighter-nodeinfobar-container[position="top"] > .highlighter-nodeinfobar,
+.highlighter-nodeinfobar-container[position="overlap"] > .highlighter-nodeinfobar {
+  box-shadow: 0 1px 0 hsla(0, 0%, 100%, .1) inset;
+}
+
+.highlighter-nodeinfobar-container[hide-arrow] > .highlighter-nodeinfobar {
+  margin: 7px 0;
+}
