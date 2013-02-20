@@ -172,7 +172,7 @@ struct BaselineScript
     static void Trace(JSTracer *trc, BaselineScript *script);
     static void Destroy(FreeOp *fop, BaselineScript *script);
 
-    void purgeOptimizedStubs();
+    void purgeOptimizedStubs(Zone *zone);
 
     static inline size_t offsetOfMethod() {
         return offsetof(BaselineScript, method_);

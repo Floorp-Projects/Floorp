@@ -247,7 +247,7 @@ ICStub::trace(JSTracer *trc)
 }
 
 void
-ICFallbackStub::unlinkStub(ICStub *prev, ICStub *stub)
+ICFallbackStub::unlinkStub(Zone *zone, ICStub *prev, ICStub *stub)
 {
     JS_ASSERT(stub->next());
 
@@ -272,6 +272,12 @@ ICFallbackStub::unlinkStub(ICStub *prev, ICStub *stub)
     JS_ASSERT(numOptimizedStubs_ > 0);
     numOptimizedStubs_--;
 
+    if (zone->needsBarrier()) {
+        // We are removing edges from ICStub to gcthings. Perform one final trace
+        // of the stub for incremental GC, as it must know about those edges.
+        stub->trace(zone->barrierTracer());
+    }
+
 #ifdef DEBUG
     // Poison stub code to ensure we don't call this stub again.
     stub->stubCode_ = (uint8_t *)0xbad;
@@ -279,13 +285,13 @@ ICFallbackStub::unlinkStub(ICStub *prev, ICStub *stub)
 }
 
 void
-ICFallbackStub::unlinkStubsWithKind(ICStub::Kind kind)
+ICFallbackStub::unlinkStubsWithKind(JSContext *cx, ICStub::Kind kind)
 {
     ICStub *stub = icEntry_->firstStub();
     ICStub *last = NULL;
     do {
         if (stub->kind() == kind) {
-            unlinkStub(last, stub);
+            unlinkStub(cx->zone(), last, stub);
             stub = stub->next();
             continue;
         }
@@ -296,8 +302,15 @@ ICFallbackStub::unlinkStubsWithKind(ICStub::Kind kind)
 }
 
 void
-ICTypeMonitor_Fallback::resetMonitorStubChain()
+ICTypeMonitor_Fallback::resetMonitorStubChain(Zone *zone)
 {
+    if (zone->needsBarrier()) {
+        // We are removing edges from monitored stubs to gcthings (IonCode).
+        // Perform one final trace of all monitor stubs for incremental GC,
+        // as it must know about those edges.
+        this->trace(zone->barrierTracer());
+    }
+
     firstMonitorStub_ = this;
     numOptimizedMonitorStubs_ = 0;
 
@@ -1375,7 +1388,7 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
         IonSpew(IonSpew_BaselineIC, "  Generating %s(Number, Number) stub", js_CodeName[op]);
 
         // Unlink int32 stubs, it's faster to always use the double stub.
-        stub->unlinkStubsWithKind(ICStub::Compare_Int32);
+        stub->unlinkStubsWithKind(cx, ICStub::Compare_Int32);
 
         ICCompare_Double::Compiler compiler(cx, op);
         ICStub *doubleStub = compiler.getStub(compiler.getStubSpace(script));
@@ -1999,7 +2012,7 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
           case JSOP_DIV:
           case JSOP_MOD: {
             // Unlink int32 stubs, it's faster to always use the double stub.
-            stub->unlinkStubsWithKind(ICStub::BinaryArith_Int32);
+            stub->unlinkStubsWithKind(cx, ICStub::BinaryArith_Int32);
             IonSpew(IonSpew_BaselineIC, "  Generating %s(Double, Double) stub", js_CodeName[op]);
 
             ICBinaryArith_Double::Compiler compiler(cx, op);
@@ -2275,7 +2288,7 @@ DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val
     if (val.isNumber() && res.isNumber() && op == JSOP_NEG) {
         IonSpew(IonSpew_BaselineIC, "  Generating %s(Number => Number) stub", js_CodeName[op]);
         // Unlink int32 stubs, the double stub handles both cases and TI specializes for both.
-        stub->unlinkStubsWithKind(ICStub::UnaryArith_Int32);
+        stub->unlinkStubsWithKind(cx, ICStub::UnaryArith_Int32);
 
         ICUnaryArith_Double::Compiler compiler(cx, op);
         ICStub *doubleStub = compiler.getStub(compiler.getStubSpace(script));
