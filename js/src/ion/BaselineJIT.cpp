@@ -19,8 +19,8 @@
 using namespace js;
 using namespace js::ion;
 
-/* static */ PCMappingEntry::SlotLocation
-PCMappingEntry::ToSlotLocation(const StackValue *stackVal)
+/* static */ PCMappingSlotInfo::SlotLocation
+PCMappingSlotInfo::ToSlotLocation(const StackValue *stackVal)
 {
     if (stackVal->kind() == StackValue::Register) {
         if (stackVal->reg() == R0)
@@ -260,19 +260,22 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
 static const unsigned DataAlignment = sizeof(uintptr_t);
 
 BaselineScript *
-BaselineScript::New(JSContext *cx, uint32_t prologueOffset, size_t icEntries, size_t pcMappingEntries)
+BaselineScript::New(JSContext *cx, uint32_t prologueOffset, size_t icEntries,
+                    size_t pcMappingIndexEntries, size_t pcMappingSize)
 {
     size_t paddedBaselineScriptSize = AlignBytes(sizeof(BaselineScript), DataAlignment);
 
     size_t icEntriesSize = icEntries * sizeof(ICEntry);
-    size_t pcMappingEntriesSize = pcMappingEntries * sizeof(PCMappingEntry);
+    size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
 
     size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
-    size_t paddedPCMappingEntriesSize = AlignBytes(pcMappingEntriesSize, DataAlignment);
+    size_t paddedPCMappingIndexEntriesSize = AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
+    size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
 
     size_t allocBytes = paddedBaselineScriptSize +
         paddedICEntriesSize +
-        paddedPCMappingEntriesSize;
+        paddedPCMappingIndexEntriesSize +
+        paddedPCMappingSize;
 
     uint8_t *buffer = (uint8_t *)cx->malloc_(allocBytes);
     if (!buffer)
@@ -287,9 +290,13 @@ BaselineScript::New(JSContext *cx, uint32_t prologueOffset, size_t icEntries, si
     script->icEntries_ = icEntries;
     offsetCursor += paddedICEntriesSize;
 
+    script->pcMappingIndexOffset_ = offsetCursor;
+    script->pcMappingIndexEntries_ = pcMappingIndexEntries;
+    offsetCursor += paddedPCMappingIndexEntriesSize;
+
     script->pcMappingOffset_ = offsetCursor;
-    script->pcMappingEntries_ = pcMappingEntries;
-    offsetCursor += paddedPCMappingEntriesSize;
+    script->pcMappingSize_ = pcMappingSize;
+    offsetCursor += paddedPCMappingSize;
 
     return script;
 }
@@ -326,6 +333,26 @@ BaselineScript::icEntry(size_t index)
 {
     JS_ASSERT(index < numICEntries());
     return icEntryList()[index];
+}
+
+PCMappingIndexEntry &
+BaselineScript::pcMappingIndexEntry(size_t index)
+{
+    JS_ASSERT(index < numPCMappingIndexEntries());
+    return pcMappingIndexEntryList()[index];
+}
+
+CompactBufferReader
+BaselineScript::pcMappingReader(size_t indexEntry)
+{
+    PCMappingIndexEntry &entry = pcMappingIndexEntry(indexEntry);
+
+    uint8_t *dataStart = pcMappingData() + entry.bufferOffset;
+    uint8_t *dataEnd = (indexEntry == numPCMappingIndexEntries() - 1)
+        ? pcMappingData() + pcMappingSize_
+        : pcMappingData() + pcMappingIndexEntry(indexEntry + 1).bufferOffset;
+
+    return CompactBufferReader(dataStart, dataEnd);
 }
 
 ICEntry &
@@ -412,53 +439,71 @@ BaselineScript::adoptFallbackStubs(ICStubSpace *stubSpace)
     fallbackStubSpace_.adoptFrom(stubSpace);
 }
 
-PCMappingEntry &
-BaselineScript::pcMappingEntry(size_t index)
+void
+BaselineScript::copyPCMappingEntries(const CompactBufferWriter &entries)
 {
-    JS_ASSERT(index < numPCMappingEntries());
-    return pcMappingEntryList()[index];
+    JS_ASSERT(entries.length() > 0);
+    JS_ASSERT(entries.length() == pcMappingSize_);
+
+    memcpy(pcMappingData(), entries.buffer(), entries.length());
 }
 
 void
-BaselineScript::copyPCMappingEntries(const PCMappingEntry *entries, MacroAssembler &masm)
+BaselineScript::copyPCMappingIndexEntries(const PCMappingIndexEntry *entries)
 {
-    for (uint32_t i = 0; i < numPCMappingEntries(); i++) {
-        PCMappingEntry &ent = pcMappingEntry(i);
-        ent = entries[i];
-        ent.fixupNativeOffset(masm);
-    }
+    for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++)
+        pcMappingIndexEntry(i) = entries[i];
 }
 
 uint8_t *
-BaselineScript::nativeCodeForPC(HandleScript script, jsbytecode *pc)
+BaselineScript::nativeCodeForPC(JSScript *script, jsbytecode *pc, PCMappingSlotInfo *slotInfo)
 {
     JS_ASSERT(script->baseline == this);
+    JS_ASSERT(pc >= script->code);
+    JS_ASSERT(pc < script->code + script->length);
 
     uint32_t pcOffset = pc - script->code;
-    for (size_t i = 0; i < numPCMappingEntries(); i++) {
-        PCMappingEntry &entry = pcMappingEntry(i);
-        if (entry.pcOffset == pcOffset)
-            return method_->raw() + entry.nativeOffset;
+
+    // Look for the first PCMappingIndexEntry with pc > the pc we are
+    // interested in.
+    uint32_t i = 1;
+    for (; i < numPCMappingIndexEntries(); i++) {
+        if (pcMappingIndexEntry(i).pcOffset > pcOffset)
+            break;
+    }
+
+    // The previous entry contains the current pc.
+    JS_ASSERT(i > 0);
+    i--;
+
+    PCMappingIndexEntry &entry = pcMappingIndexEntry(i);
+    JS_ASSERT(pcOffset >= entry.pcOffset);
+
+    CompactBufferReader reader(pcMappingReader(i));
+    jsbytecode *curPC = script->code + entry.pcOffset;
+    uint32_t nativeOffset = entry.nativeOffset;
+
+    JS_ASSERT(curPC >= script->code);
+    JS_ASSERT(curPC <= pc);
+
+    while (true) {
+        // If the high bit is set, the native offset relative to the
+        // previous pc != 0 and comes next.
+        uint8_t b = reader.readByte();
+        if (b & 0x80)
+            nativeOffset += reader.readUnsigned();
+
+        if (curPC == pc) {
+            if (slotInfo)
+                *slotInfo = PCMappingSlotInfo(b & ~0x80);
+            return method_->raw() + nativeOffset;
+        }
+
+        curPC += GetBytecodeLength(curPC);
     }
 
     JS_NOT_REACHED("Invalid pc");
     return NULL;
-}
-
-uint8_t
-BaselineScript::slotInfoForPC(HandleScript script, jsbytecode *pc)
-{
-    JS_ASSERT(script->baseline == this);
-
-    uint32_t pcOffset = pc - script->code;
-    for (size_t i = 0; i < numPCMappingEntries(); i++) {
-        PCMappingEntry &entry = pcMappingEntry(i);
-        if (entry.pcOffset == pcOffset)
-            return entry.slotInfo;
-    }
-
-    JS_NOT_REACHED("Invalid pc");
-    return 0xff;
 }
 
 void
@@ -467,27 +512,38 @@ BaselineScript::toggleDebugTraps(UnrootedScript script, jsbytecode *pc)
     JS_ASSERT(script->baseline == this);
 
     SrcNoteLineScanner scanner(script->notes(), script->lineno);
-    uint32_t pcOffset = pc ? pc - script->code : 0;
 
     IonContext ictx(NULL, script->compartment(), NULL);
     AutoFlushCache afc("DebugTraps");
 
-    for (size_t i = 0; i < numPCMappingEntries(); i++) {
-        PCMappingEntry &entry = pcMappingEntry(i);
+    for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
+        PCMappingIndexEntry &entry = pcMappingIndexEntry(i);
 
-        // If we have a pc, only toggle traps at that pc.
-        if (pc && pcOffset != entry.pcOffset)
-            continue;
+        CompactBufferReader reader(pcMappingReader(i));
+        jsbytecode *curPC = script->code + entry.pcOffset;
+        uint32_t nativeOffset = entry.nativeOffset;
 
-        scanner.advanceTo(entry.pcOffset);
+        JS_ASSERT(curPC >= script->code);
+        JS_ASSERT(curPC < script->code + script->length);
 
-        jsbytecode *trapPc = script->code + entry.pcOffset;
-        bool enabled = (script->stepModeEnabled() && scanner.isLineHeader()) ||
-            script->hasBreakpointsAt(trapPc);
+        while (reader.more()) {
+            uint8_t b = reader.readByte();
+            if (b & 0x80)
+                nativeOffset += reader.readUnsigned();
 
-        // Patch the trap.
-        CodeLocationLabel label(method(), entry.nativeOffset);
-        Assembler::ToggleCall(label, enabled);
+            scanner.advanceTo(curPC - script->code);
+
+            if (!pc || pc == curPC) {
+                bool enabled = (script->stepModeEnabled() && scanner.isLineHeader()) ||
+                    script->hasBreakpointsAt(curPC);
+
+                // Patch the trap.
+                CodeLocationLabel label(method(), nativeOffset);
+                Assembler::ToggleCall(label, enabled);
+            }
+
+            curPC += GetBytecodeLength(curPC);
+        }
     }
 }
 

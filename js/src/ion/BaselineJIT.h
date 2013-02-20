@@ -50,52 +50,73 @@ struct ICStubSpace
     }
 };
 
-// Stores the native code offset for a bytecode pc.
-struct PCMappingEntry
+class PCMappingSlotInfo
 {
+    uint8_t slotInfo_;
+
+  public:
+    // SlotInfo encoding:
+    //  Bits 0 & 1: number of slots at top of stack which are unsynced.
+    //  Bits 2 & 3: SlotLocation of top slot value (only relevant if numUnsynced > 0).
+    //  Bits 3 & 4: SlotLocation of next slot value (only relevant if numUnsynced > 1).
     enum SlotLocation { SlotInR0 = 0, SlotInR1 = 1, SlotIgnore = 3 };
+
+    PCMappingSlotInfo()
+      : slotInfo_(0)
+    { }
+
+    explicit PCMappingSlotInfo(uint8_t slotInfo)
+      : slotInfo_(slotInfo)
+    { }
 
     static inline bool ValidSlotLocation(SlotLocation loc) {
         return (loc == SlotInR0) || (loc == SlotInR1) || (loc == SlotIgnore);
     }
 
-    uint32_t pcOffset;
-    uint32_t nativeOffset;
-    // SlotInfo encoding:
-    //  Bits 0 & 1: number of slots at top of stack which are unsynced.
-    //  Bits 2 & 3: SlotLocation of top slot value (only relevant if numUnsynced > 0).
-    //  Bits 3 & 4: SlotLocation of next slot value (only relevant if numUnsynced > 1).
-    uint8_t slotInfo;
-
-    void fixupNativeOffset(MacroAssembler &masm) {
-        CodeOffsetLabel offset(nativeOffset);
-        offset.fixup(&masm);
-        JS_ASSERT(offset.offset() <= UINT32_MAX);
-        nativeOffset = (uint32_t) offset.offset();
-    }
-
     static SlotLocation ToSlotLocation(const StackValue *stackVal);
-    inline static uint8_t MakeSlotInfo() { return static_cast<uint8_t>(0); }
-    inline static uint8_t MakeSlotInfo(SlotLocation topSlotLoc) {
+
+    inline static PCMappingSlotInfo MakeSlotInfo() { return PCMappingSlotInfo(0); }
+
+    inline static PCMappingSlotInfo MakeSlotInfo(SlotLocation topSlotLoc) {
         JS_ASSERT(ValidSlotLocation(topSlotLoc));
-        return static_cast<uint8_t>(1) | (static_cast<uint8_t>(topSlotLoc)) << 2;
+        return PCMappingSlotInfo(1 | (topSlotLoc << 2));
     }
-    inline static uint8_t MakeSlotInfo(SlotLocation topSlotLoc, SlotLocation nextSlotLoc) {
+
+    inline static PCMappingSlotInfo MakeSlotInfo(SlotLocation topSlotLoc, SlotLocation nextSlotLoc) {
         JS_ASSERT(ValidSlotLocation(topSlotLoc));
         JS_ASSERT(ValidSlotLocation(nextSlotLoc));
-        return static_cast<uint8_t>(2) | (static_cast<uint8_t>(topSlotLoc) << 2)
-                                       | (static_cast<uint8_t>(nextSlotLoc) << 4);
+        return PCMappingSlotInfo(2 | (topSlotLoc << 2) | (nextSlotLoc) << 4);
     }
 
-    inline static unsigned SlotInfoNumUnsynced(uint8_t slotInfo) {
-        return static_cast<unsigned>(slotInfo & 0x3);
+    inline unsigned numUnsynced() const {
+        return slotInfo_ & 0x3;
     }
-    inline static SlotLocation SlotInfoTopSlotLocation(uint8_t slotInfo) {
-        return static_cast<SlotLocation>((slotInfo >> 2) & 0x3);
+    inline SlotLocation topSlotLocation() const {
+        return static_cast<SlotLocation>((slotInfo_ >> 2) & 0x3);
     }
-    inline static SlotLocation SlotInfoNextSlotLocation(uint8_t slotInfo) {
-        return static_cast<SlotLocation>((slotInfo >> 4) & 0x3);
+    inline SlotLocation nextSlotLocation() const {
+        return static_cast<SlotLocation>((slotInfo_ >> 4) & 0x3);
     }
+    inline uint8_t toByte() const {
+        return slotInfo_;
+    }
+};
+
+// A CompactBuffer is used to store native code offsets (relative to the
+// previous pc) and PCMappingSlotInfo bytes. To allow binary search into this
+// table, we maintain a second table of "index" entries. Every X ops, the
+// compiler will add an index entry, so that from the index entry to the
+// actual native code offset, we have to iterate at most X times.
+struct PCMappingIndexEntry
+{
+    // jsbytecode offset.
+    uint32_t pcOffset;
+
+    // Native code offset.
+    uint32_t nativeOffset;
+
+    // Offset in the CompactBuffer where data for pcOffset starts.
+    uint32_t bufferOffset;
 };
 
 struct BaselineScript
@@ -136,15 +157,18 @@ struct BaselineScript
     uint32_t icEntriesOffset_;
     uint32_t icEntries_;
 
+    uint32_t pcMappingIndexOffset_;
+    uint32_t pcMappingIndexEntries_;
+
     uint32_t pcMappingOffset_;
-    uint32_t pcMappingEntries_;
+    uint32_t pcMappingSize_;
 
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
     BaselineScript(uint32_t prologueOffset);
 
     static BaselineScript *New(JSContext *cx, uint32_t prologueOffset, size_t icEntries,
-                               size_t pcMappingEntries);
+                               size_t pcMappingIndexEntries, size_t pcMappingSize);
     static void Trace(JSTracer *trc, BaselineScript *script);
     static void Destroy(FreeOp *fop, BaselineScript *script);
 
@@ -178,10 +202,12 @@ struct BaselineScript
     ICEntry *icEntryList() {
         return (ICEntry *)(reinterpret_cast<uint8_t *>(this) + icEntriesOffset_);
     }
-    PCMappingEntry *pcMappingEntryList() {
-        return (PCMappingEntry *)(reinterpret_cast<uint8_t *>(this) + pcMappingOffset_);
+    PCMappingIndexEntry *pcMappingIndexEntryList() {
+        return (PCMappingIndexEntry *)(reinterpret_cast<uint8_t *>(this) + pcMappingIndexOffset_);
     }
-
+    uint8_t *pcMappingData() {
+        return reinterpret_cast<uint8_t *>(this) + pcMappingOffset_;
+    }
     ICStubSpace *fallbackStubSpace() {
         return &fallbackStubSpace_;
     }
@@ -215,14 +241,17 @@ struct BaselineScript
     void copyICEntries(HandleScript script, const ICEntry *entries, MacroAssembler &masm);
     void adoptFallbackStubs(ICStubSpace *stubSpace);
 
-    size_t numPCMappingEntries() const {
-        return pcMappingEntries_;
+    PCMappingIndexEntry &pcMappingIndexEntry(size_t index);
+    CompactBufferReader pcMappingReader(size_t indexEntry);
+
+    size_t numPCMappingIndexEntries() const {
+        return pcMappingIndexEntries_;
     }
 
-    PCMappingEntry &pcMappingEntry(size_t index);
-    void copyPCMappingEntries(const PCMappingEntry *entries, MacroAssembler &masm);
-    uint8_t *nativeCodeForPC(HandleScript script, jsbytecode *pc);
-    uint8_t slotInfoForPC(HandleScript script, jsbytecode *pc);
+    void copyPCMappingIndexEntries(const PCMappingIndexEntry *entries);
+
+    void copyPCMappingEntries(const CompactBufferWriter &entries);
+    uint8_t *nativeCodeForPC(JSScript *script, jsbytecode *pc, PCMappingSlotInfo *slotInfo = NULL);
 
     // Toggle debug traps (used for breakpoints and step mode) in the script.
     // If |pc| is NULL, toggle traps for all ops in the script. Else, only

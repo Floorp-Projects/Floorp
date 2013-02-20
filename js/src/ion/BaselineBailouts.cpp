@@ -241,19 +241,19 @@ struct BaselineStackBuilder
         return result;
     }
 
-    void popValueInto(PCMappingEntry::SlotLocation loc) {
-        JS_ASSERT(PCMappingEntry::ValidSlotLocation(loc));
+    void popValueInto(PCMappingSlotInfo::SlotLocation loc) {
+        JS_ASSERT(PCMappingSlotInfo::ValidSlotLocation(loc));
         switch(loc) {
-          case PCMappingEntry::SlotInR0:
+          case PCMappingSlotInfo::SlotInR0:
             header_->setR0 = 1;
             header_->valueR0 = popValue();
             break;
-          case PCMappingEntry::SlotInR1:
+          case PCMappingSlotInfo::SlotInR1:
             header_->setR1 = 1;
             header_->valueR1 = popValue();
             break;
           default:
-            JS_ASSERT(loc == PCMappingEntry::SlotIgnore);
+            JS_ASSERT(loc == PCMappingSlotInfo::SlotIgnore);
             popValue();
             break;
         }
@@ -645,7 +645,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
 
             // To enter a monitoring chain, we load the top stack value into R0
             IonSpew(IonSpew_BaselineBailouts, "      Popping top stack value into R0.");
-            builder.popValueInto(PCMappingEntry::SlotInR0);
+            builder.popValueInto(PCMappingSlotInfo::SlotInR0);
 
             // Need to adjust the frameSize for the frame to match the values popped
             // into registers.
@@ -680,18 +680,19 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
         } else {
             // If needed, initialize BaselineBailoutInfo's valueR0 and/or valueR1 with the
             // top stack values.
-            uint8_t slotInfo = baselineScript->slotInfoForPC(script, pc);
-            unsigned numUnsynced = PCMappingEntry::SlotInfoNumUnsynced(slotInfo);
+            PCMappingSlotInfo slotInfo;
+            uint8_t *nativeCodeForPC = baselineScript->nativeCodeForPC(script, pc, &slotInfo);
+            unsigned numUnsynced = slotInfo.numUnsynced();
             JS_ASSERT(numUnsynced <= 2);
-            PCMappingEntry::SlotLocation loc1, loc2;
+            PCMappingSlotInfo::SlotLocation loc1, loc2;
             if (numUnsynced > 0) {
-                loc1 = PCMappingEntry::SlotInfoTopSlotLocation(slotInfo);
+                loc1 = slotInfo.topSlotLocation();
                 IonSpew(IonSpew_BaselineBailouts, "      Popping top stack value into %d.",
                             (int) loc1);
                 builder.popValueInto(loc1);
             }
             if (numUnsynced > 1) {
-                loc2 = PCMappingEntry::SlotInfoNextSlotLocation(slotInfo);
+                loc2 = slotInfo.nextSlotLocation();
                 IonSpew(IonSpew_BaselineBailouts, "      Popping next stack value into %d.",
                             (int) loc2);
                 JS_ASSERT(loc1 != loc2);
@@ -713,7 +714,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
                 opReturnAddr = baselineScript->prologueEntryAddr();
                 IonSpew(IonSpew_BaselineBailouts, "      Resuming into prologue.");
             } else {
-                opReturnAddr = baselineScript->nativeCodeForPC(script, pc);
+                opReturnAddr = nativeCodeForPC;
             }
             builder.setResumeAddr(opReturnAddr);
             IonSpew(IonSpew_BaselineBailouts, "      Set resumeAddr=%p", opReturnAddr);

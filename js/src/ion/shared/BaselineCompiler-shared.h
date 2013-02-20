@@ -32,6 +32,25 @@ class BaselineCompilerShared
     ICStubSpace stubSpace_;
     js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries_;
 
+    // Stores the native code offset for a bytecode pc.
+    struct PCMappingEntry
+    {
+        uint32_t pcOffset;
+        uint32_t nativeOffset;
+        PCMappingSlotInfo slotInfo;
+
+        // If set, insert a PCMappingIndexEntry before encoding the
+        // current entry.
+        bool addIndexEntry;
+
+        void fixupNativeOffset(MacroAssembler &masm) {
+            CodeOffsetLabel offset(nativeOffset);
+            offset.fixup(&masm);
+            JS_ASSERT(offset.offset() <= UINT32_MAX);
+            nativeOffset = (uint32_t) offset.offset();
+        }
+    };
+
     js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;
 
     // Labels for the 'movWithPatch' for loading IC entry pointers in
@@ -77,21 +96,21 @@ class BaselineCompilerShared
         return script->function();
     }
 
-    uint8_t getStackTopSlotInfo() {
+    PCMappingSlotInfo getStackTopSlotInfo() {
         JS_ASSERT(frame.numUnsyncedSlots() <= 2);
         switch (frame.numUnsyncedSlots()) {
           case 0:
-            return PCMappingEntry::MakeSlotInfo();
+            return PCMappingSlotInfo::MakeSlotInfo();
           case 1:
-            return PCMappingEntry::MakeSlotInfo(PCMappingEntry::ToSlotLocation(frame.peek(-1)));
+            return PCMappingSlotInfo::MakeSlotInfo(PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)));
           case 2:
           default:
-            return PCMappingEntry::MakeSlotInfo(PCMappingEntry::ToSlotLocation(frame.peek(-1)),
-                                                PCMappingEntry::ToSlotLocation(frame.peek(-2)));
+            return PCMappingSlotInfo::MakeSlotInfo(PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)),
+                                                   PCMappingSlotInfo::ToSlotLocation(frame.peek(-2)));
         }
     }
 
-    bool addPCMappingEntry(uint32_t nativeOffset, uint8_t slotInfo) {
+    bool addPCMappingEntry(uint32_t nativeOffset, PCMappingSlotInfo slotInfo, bool addIndexEntry) {
 
         // Don't add multiple entries for a single pc.
         size_t nentries = pcMappingEntries_.length();
@@ -104,19 +123,20 @@ class BaselineCompilerShared
         entry.pcOffset = pc - script->code;
         entry.nativeOffset = nativeOffset;
         entry.slotInfo = slotInfo;
+        entry.addIndexEntry = addIndexEntry;
 
         IonSpew(IonSpew_BaselineScripts, "PCMapping (%s:%u): %u => %u (%u:%u:%u)!",
                         script->filename, script->lineno,
                         entry.pcOffset, entry.nativeOffset,
-                        (entry.slotInfo & 0x3),
-                        ((entry.slotInfo >> 2) & 0x3),
-                        ((entry.slotInfo >> 4) & 0x3));
+                        (entry.slotInfo.toByte() & 0x3),
+                        ((entry.slotInfo.toByte() >> 2) & 0x3),
+                        ((entry.slotInfo.toByte() >> 4) & 0x3));
 
         return pcMappingEntries_.append(entry);
     }
 
-    bool addPCMappingEntry() {
-        return addPCMappingEntry(masm.currentOffset(), getStackTopSlotInfo());
+    bool addPCMappingEntry(bool addIndexEntry) {
+        return addPCMappingEntry(masm.currentOffset(), getStackTopSlotInfo(), addIndexEntry);
     }
 
     template <typename T>
