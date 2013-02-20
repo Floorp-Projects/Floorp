@@ -652,7 +652,9 @@ struct ParseNode {
                                            2. code evaluating destructuring
                                               arguments occurs before function
                                               body */
-#define PNX_HOLEY      0x200            /* array initialiser has holes */
+#define PNX_SPECIALARRAYINIT 0x200      /* one or more of
+                                           1. array initialiser has holes
+                                           2. array initializer has spread node */
 #define PNX_NONCONST   0x400            /* initialiser has non-constants */
 
     unsigned frameLevel() const {
