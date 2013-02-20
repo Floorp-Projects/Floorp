@@ -679,8 +679,8 @@ class ICFallbackStub : public ICStub
         return false;
     }
 
-    void unlinkStub(ICStub *prev, ICStub *stub);
-    void unlinkStubsWithKind(ICStub::Kind kind);
+    void unlinkStub(Zone *zone, ICStub *prev, ICStub *stub);
+    void unlinkStubsWithKind(JSContext *cx, ICStub::Kind kind);
 };
 
 // Monitored stubs are IC stubs that feed a single resulting value out to a
@@ -1084,7 +1084,7 @@ class ICTypeMonitor_Fallback : public ICStub
     // add it to this chain.
     bool addMonitorStubForValue(JSContext *cx, HandleScript script, HandleValue val);
 
-    void resetMonitorStubChain();
+    void resetMonitorStubChain(Zone *zone);
 
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
