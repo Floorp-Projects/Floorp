@@ -412,7 +412,7 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
                 inWith = true;
             scope = scope->enclosingScope();
         }
-    } else {
+    } else if (outerpc->sc->isFunctionBox()) {
         // This is like the above case, but for more deeply nested functions.
         // For example:
         //
@@ -1843,6 +1843,41 @@ Parser::functionArgsAndBody(ParseNode *pn, HandleFunction fun, HandlePropertyNam
         return false;
 
     return true;
+}
+
+ParseNode *
+Parser::moduleDecl()
+{
+    JS_ASSERT(tokenStream.currentToken().name() == context->runtime->atomState.module);
+    if (!((pc->sc->isGlobalSharedContext() || pc->sc->isModuleBox()) && pc->atBodyLevel()))
+    {
+        reportError(NULL, JSMSG_MODULE_STATEMENT);
+        return NULL;
+    }
+
+    ParseNode *pn = CodeNode::create(PNK_MODULE, this);
+    if (!pn)
+        return NULL;
+    JS_ALWAYS_TRUE(tokenStream.matchToken(TOK_STRING));
+    RootedAtom atom(context, tokenStream.currentToken().atom());
+    Module *module = js_NewModule(context, atom);
+    if (!module)
+        return NULL;
+    ModuleBox *modulebox = newModuleBox(module, pc);
+    if (!modulebox)
+        return NULL;
+    pn->pn_modulebox = modulebox;
+
+    ParseContext modulepc(this, modulebox, pc->staticLevel + 1, pc->blockidGen);
+    if (!modulepc.init())
+        return NULL;
+    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_MODULE);
+    pn->pn_body = statements();
+    if (!pn->pn_body)
+        return NULL;
+    MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_MODULE);
+
+    return pn;
 }
 
 ParseNode *
@@ -4046,6 +4081,13 @@ Parser::statement()
 
       case TOK_ERROR:
         return NULL;
+
+      case TOK_NAME:
+        if (tokenStream.currentToken().name() == context->names().module &&
+            tokenStream.peekTokenSameLine(TSF_OPERAND) == TOK_STRING)
+        {
+            return moduleDecl();
+        }
 
       default:
         return expressionStatement();
