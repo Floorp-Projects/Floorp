@@ -221,11 +221,11 @@ let SessionFileInternal = {
     return TaskUtils.spawn(function task() {
       try {
         yield OS.File.copy(self.path, self.backupPath);
+      } catch (ex if self._isNoSuchFile(ex)) {
+        // Ignore exceptions about non-existent files.
       } catch (ex) {
-        if (!self._isNoSuchFile(ex)) {
-          Cu.reportError("Could not backup session state file: " + ex);
-          throw ex;
-        }
+        Cu.reportError("Could not backup session state file: " + ex);
+        throw ex;
       }
     });
   },
@@ -235,12 +235,17 @@ let SessionFileInternal = {
     return TaskUtils.spawn(function task() {
       try {
         yield OS.File.remove(self.path);
+      } catch (ex if self._isNoSuchFile(ex)) {
+        // Ignore exceptions about non-existent files.
       } catch (ex) {
         Cu.reportError("Could not remove session state file: " + ex);
         throw ex;
       }
+
       try {
         yield OS.File.remove(self.backupPath);
+      } catch (ex if self._isNoSuchFile(ex)) {
+        // Ignore exceptions about non-existent files.
       } catch (ex) {
         Cu.reportError("Could not remove session state backup file: " + ex);
         throw ex;

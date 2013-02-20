@@ -140,11 +140,13 @@ Highlighter.prototype = {
       if (id != "inspector") {
         this.chromeWin.clearTimeout(this.pageEventsMuter);
         this.detachMouseListeners();
+        this.disabled = true;
         this.hide();
       } else {
         if (!this.locked) {
           this.attachMouseListeners();
         }
+        this.disabled = false;
         this.show();
       }
     }.bind(this);
@@ -206,6 +208,9 @@ Highlighter.prototype = {
                           this.selection.isElementNode();
 
     if (canHighlightNode) {
+      if (this.selection.reason != "navigateaway") {
+        this.disabled = false;
+      }
       this.show();
       this.updateInfobar();
       this.invalidateSize();
@@ -214,6 +219,7 @@ Highlighter.prototype = {
         LayoutHelpers.scrollIntoViewIfNeeded(this.selection.node);
       }
     } else {
+      this.disabled = true;
       this.hide();
     }
   },
@@ -246,7 +252,7 @@ Highlighter.prototype = {
    * Show the highlighter if it has been hidden.
    */
   show: function() {
-    if (!this.hidden) return;
+    if (!this.hidden || this.disabled) return;
     this.showOutline();
     this.showInfobar();
     this.computeZoomFactor();

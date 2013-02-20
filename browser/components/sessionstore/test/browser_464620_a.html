@@ -15,7 +15,7 @@
       return;
     firstPass = frames[1].location.href == "about:blank";
     if (firstPass) {
-      frames[0].location = 'data:text/html,<body onload="if (parent.firstPass) parent.step();"><input id="x" oninput="parent.xss()">XXX</body>';
+      frames[0].location = 'data:text/html;charset=utf-8,<body onload="if (parent.firstPass) parent.step();"><input id="x" oninput="parent.xss()">XXX</body>';
     }
     frames[1].location = targetUrl;
   }

@@ -1,7 +1,7 @@
 function test() {
   waitForExplicitFinish();
 
-  var tab1 = gBrowser.addTab("data:text/plain,foo");
+  var tab1 = gBrowser.addTab("data:text/plain;charset=utf-8,foo");
   gBrowser.pinTab(tab1);
 
   tab1.linkedBrowser.addEventListener("load", function () {
