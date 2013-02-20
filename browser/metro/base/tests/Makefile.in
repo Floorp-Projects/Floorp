@@ -25,6 +25,7 @@ BROWSER_TESTS = \
   browser_plugin_input_keyboard.js \
   browser_context_menu_tests.js \
   browser_context_menu_tests_01.html \
+  browser_context_menu_tests_02.html \
   $(NULL)
 
 BROWSER_TEST_RESOURCES = \
