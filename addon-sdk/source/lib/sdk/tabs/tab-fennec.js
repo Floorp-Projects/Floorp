@@ -7,10 +7,9 @@ const { Cc, Ci } = require('chrome');
 const { Class } = require('../core/heritage');
 const { tabNS } = require('./namespace');
 const { EventTarget } = require('../event/target');
-const { activateTab, getTabTitle, setTabTitle, closeTab, getTabURL, getContentWindowForTab,
+const { activateTab, getTabTitle, setTabTitle, closeTab, getTabURL,
         setTabURL, getOwnerWindow, getTabContentType, getTabId } = require('./utils');
 const { emit } = require('../event/core');
-const { getOwnerWindow: getPBOwnerWindow } = require('../private-browsing/window/utils');
 const { when: unload } = require('../system/unload');
 
 const { EVENTS } = require('./events');
@@ -144,7 +143,3 @@ const Tab = Class({
   }
 });
 exports.Tab = Tab;
-
-getPBOwnerWindow.define(Tab, function(tab) {
-  return getContentWindowForTab(tabNS(tab).tab);
-});

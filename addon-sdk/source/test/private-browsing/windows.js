@@ -4,11 +4,9 @@
 'use strict';
 
 const { pb, pbUtils } = require('./helper');
-const { openDialog } = require('sdk/window/utils');
-const { isPrivate } = require('sdk/private-browsing');
-const { browserWindows: windows } = require('sdk/windows');
+const { openDialog } = require('window/utils');
 
-exports.testPerWindowPrivateBrowsingGetter = function(assert, done) {
+exports["test Per Window Private Browsing getter"] = function(assert, done) {
   let win = openDialog({
     private: true
   });
@@ -25,30 +23,8 @@ exports.testPerWindowPrivateBrowsingGetter = function(assert, done) {
       assert.equal(pb.isActive, false, 'PB mode is not active');
       done();
     }, false);
-
     win.close();
   }, false);
-}
-
-exports.testIsPrivateOnWindowOn = function(assert, done) {
-  windows.open({
-    private: true,
-    onOpen: function(window) {
-      assert.equal(isPrivate(window), true, 'isPrivate for a window is true when it should be');
-      assert.equal(isPrivate(window.tabs[0]), true, 'isPrivate for a tab is false when it should be');
-      window.close(done);
-    }
-  });
-}
-
-exports.testIsPrivateOnWindowOff = function(assert, done) {
-  windows.open({
-    onOpen: function(window) {
-      assert.equal(isPrivate(window), false, 'isPrivate for a window is false when it should be');
-      assert.equal(isPrivate(window.tabs[0]), false, 'isPrivate for a tab is false when it should be');
-      window.close(done);
-    }
-  })
 }
 
 require("test").run(exports);
