@@ -54,7 +54,16 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   let actorPool = new ActorPool(this.conn);
 
 #ifndef MOZ_WIDGET_GONK
-  let actor = this._tabActors.get(this.browser);
+  // Get the chrome debugger actor.
+  let actor = this._chromeDebugger;
+  if (!actor) {
+    actor = new ChromeDebuggerActor(this);
+    actor.parentID = this.actorID;
+    this._chromeDebugger = actor;
+    actorPool.addActor(actor);
+  }
+
+  actor = this._tabActors.get(this.browser);
   if (!actor) {
     actor = new DeviceTabActor(this.conn, this.browser);
     // this.actorID is set by ActorPool when an actor is put into one.
@@ -78,7 +87,8 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
     'from': 'root',
     'selected': 0,
 #ifndef MOZ_WIDGET_GONK
-    'tabs': [actor.grip()]
+    'tabs': [actor.grip()],
+    "chromeDebugger": this._chromeDebugger.actorID
 #else
     'tabs': []
 #endif
