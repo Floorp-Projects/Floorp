@@ -507,6 +507,44 @@ add_test(function test_send_stk_terminal_profile() {
 });
 
 /**
+ * Verify RIL.iccGetCardLock("fdn")
+ */
+add_test(function test_icc_get_card_lock_fdn() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+  let buf = worker.Buf;
+
+  buf.sendParcel = function () {
+    // Request Type.
+    do_check_eq(this.readUint32(), REQUEST_QUERY_FACILITY_LOCK)
+
+    // Token : we don't care.
+    this.readUint32();
+
+    // String Array Length.
+    do_check_eq(this.readUint32(), 4);
+
+    // Facility.
+    do_check_eq(this.readString(), ICC_CB_FACILITY_FDN);
+
+    // Password.
+    do_check_eq(this.readString(), "");
+
+    // Service class.
+    do_check_eq(this.readString(), (ICC_SERVICE_CLASS_VOICE |
+                                    ICC_SERVICE_CLASS_DATA  |
+                                    ICC_SERVICE_CLASS_FAX).toString());
+
+    // AID. Ignore because it's from modem.
+    this.readUint32();
+
+    run_next_test();
+  };
+
+  ril.iccGetCardLock({lockType: "fdn"});
+});
+
+/**
  * Verify ComprehensionTlvHelper.writeLocationInfoTlv
  */
 add_test(function test_write_location_info_tlv() {
