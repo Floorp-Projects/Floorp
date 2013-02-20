@@ -615,14 +615,11 @@ ion::ThunkToInterpreter(Value *vp)
                     resumeMode = JSINTERP_RETHROW;
                     break;
                 }
-                InternalBindingsHandle bindings(script, &script->bindings);
-                const unsigned var = Bindings::argumentsVarIndex(cx, bindings);
                 // The arguments is a local binding and needsArgsObj does not
                 // check if it is clobbered. Ensure that the local binding
                 // restored during bailout before storing the arguments object
                 // to the slot.
-                if (fp->unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
-                    fp->unaliasedLocal(var) = ObjectValue(*argsobj);
+                SetFrameArgumentsObject(cx, fp, script, argsobj);
             }
             ++iter;
         } while (fp != br->entryfp());

@@ -194,13 +194,40 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, AbstractFramePtr
     if (!SetSourceMap(cx, tokenStream, ss, script))
         return UnrootedScript(NULL);
 
-    // It's an error to use |arguments| in a function that has a rest parameter.
-    if (callerFrame && callerFrame.isFunctionFrame() && callerFrame.fun()->hasRest()) {
+    if (callerFrame && callerFrame.isFunctionFrame()) {
         HandlePropertyName arguments = cx->names().arguments;
         for (AtomDefnRange r = pc.lexdeps->all(); !r.empty(); r.popFront()) {
             if (r.front().key() == arguments) {
-                parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
-                return UnrootedScript(NULL);
+                if (callerFrame.fun()->hasRest()) {
+                    // It's an error to use |arguments| in a function that has
+                    // a rest parameter.
+                    parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
+                    return UnrootedScript(NULL);
+                }
+                // Force construction of arguments objects for functions that
+                // use 'arguments' within an eval.
+                RootedScript script(cx, callerFrame.fun()->nonLazyScript());
+                if (script->argumentsHasVarBinding()) {
+                    if (!JSScript::argumentsOptimizationFailed(cx, script))
+                        return UnrootedScript(NULL);
+                }
+            }
+        }
+
+        // If the eval'ed script contains any debugger statement, force construction
+        // of arguments objects for the caller script and any other scripts it is
+        // transitively nested inside.
+        if (pc.sc->hasDebuggerStatement()) {
+            RootedObject scope(cx, callerFrame.scopeChain());
+            while (scope->isScope() || scope->isDebugScope()) {
+                if (scope->isCall() && !scope->asCall().isForEval()) {
+                    RootedScript script(cx, scope->asCall().callee().nonLazyScript());
+                    if (script->argumentsHasVarBinding()) {
+                        if (!JSScript::argumentsOptimizationFailed(cx, script))
+                            return UnrootedScript(NULL);
+                    }
+                }
+                scope = scope->enclosingScope();
             }
         }
     }
