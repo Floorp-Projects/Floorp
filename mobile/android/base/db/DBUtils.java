@@ -11,6 +11,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.IOException;
+
 public class DBUtils {
     private static final String LOGTAG = "GeckoDBUtils";
 
@@ -64,19 +66,20 @@ public class DBUtils {
     }
 
     public static void ensureDatabaseIsNotLocked(SQLiteOpenHelper dbHelper, String databasePath) {
-        try {
-            dbHelper.getWritableDatabase();
-        } catch (Exception e) {
-            Log.d(LOGTAG, "Database is locked, trying to kill any zombie processes: " + databasePath);
-
-            GeckoAppShell.killAnyZombies();
-
-            // This call should not throw if the forced unlocking
-            // actually fixed the situation.
-            dbHelper.getWritableDatabase();
-
-            // TODO: maybe check if the database is still locked and let the
-            // user know that the device needs rebooting?
+        for (int retries = 0; retries < 5; retries++) {
+            try {
+                // Try a simple test and exit the loop
+                dbHelper.getWritableDatabase();
+                return;
+            } catch (Exception e) {
+                // Things could get very bad if we don't find a way to unlock the DB
+                Log.d(LOGTAG, "Database is locked, trying to kill any zombie processes: " + databasePath);
+                GeckoAppShell.killAnyZombies();
+                try {
+                    Thread.sleep(retries * 100);
+                } catch (InterruptedException ie) { }
+            }
         }
+        Log.d(LOGTAG, "Failed to unlock database");
     }
 }
