@@ -163,11 +163,11 @@ cubeb_get_backend_id(cubeb * ctx)
 void
 cubeb_destroy(cubeb * ctx)
 {
-  dlclose(ctx->lib);
   if (ctx->outmixObj)
     (*ctx->outmixObj)->Destroy(ctx->outmixObj);
   if (ctx->engObj)
     (*ctx->engObj)->Destroy(ctx->engObj);
+  dlclose(ctx->lib);
   free(ctx);
 }
 
