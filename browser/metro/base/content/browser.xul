@@ -577,17 +577,17 @@
           </richlistitem>
 
           <!-- Image related -->
-          <richlistitem id="context-viewinnewtab" type="image" onclick="ContextCommands.openInNewTab();">
-            <label value="&contextViewInNewTab.label;"/>
+          <richlistitem id="context-save-image-lib" type="image" onclick="ContextCommands.saveImageToLib();">
+            <label value="&contextSaveImageLib.label;"/>
           </richlistitem>
-          <richlistitem id="context-copy-image" type="image-loaded" onclick="ContextCommands.copyImage();">
+          <richlistitem id="context-copy-image" type="image" onclick="ContextCommands.copyImage();">
             <label value="&contextCopyImage.label;"/>
           </richlistitem>
-          <richlistitem id="context-save-image" type="image-loaded" onclick="ContextCommands.saveImage();">
-            <label value="&contextSaveImage.label;"/>
+          <richlistitem id="context-copy-image-loc" type="image" onclick="ContextCommands.copyImageLink();">
+            <label value="&contextCopyImageLocation.label;"/>
           </richlistitem>
-          <richlistitem id="context-save-image-to" type="image-loaded" onclick="ContextCommands.saveImageTo();">
-            <label value="&contextSaveImageTo.label;"/>
+          <richlistitem id="context-open-image-tab" type="image" onclick="ContextCommands.openImageInNewTab();">
+            <label value="&contextOpenImageTab.label;"/>
           </richlistitem>
 
           <!-- Link related -->

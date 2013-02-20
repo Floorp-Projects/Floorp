@@ -77,8 +77,7 @@ var ContextCommands = {
   },
 
   openInNewTab: function cc_openInNewTab() {
-    Browser.addTab(ContextMenuUI.popupState.linkURL, false, Browser.selectedTab);
-    ContextUI.peekTabs();
+    BrowserUI.newTab(ContextMenuUI.popupState.linkURL, Browser.selectedTab);
   },
 
   saveToWinLibrary: function cc_saveToWinLibrary(aType) {
@@ -116,6 +115,8 @@ var ContextCommands = {
     });
   },
 
+  // Video specific
+
   saveVideo: function cc_saveVideo() {
     this.saveToWinLibrary("Vids");
   },
@@ -124,12 +125,24 @@ var ContextCommands = {
     this.saveFileAs(ContextMenuUI.popupState);
   },
 
-  saveImage: function cc_saveImage() {
+  // Image specific
+
+  saveImageToLib: function cc_saveImageToLib() {
     this.saveToWinLibrary("Pict");
   },
 
-  saveImageTo: function cc_saveImageTo() {
-    this.saveFileAs(ContextMenuUI.popupState);
+  copyImage: function cc_copyImage() {
+    // copy to clibboard
+    this.sendCommand("copy-image-contents");
+  },
+
+  copyImageLink: function cc_copyImage() {
+    this.clipboard.copyString(ContextMenuUI.popupState.mediaURL,
+                              this.docRef);
+  },
+
+  openImageInNewTab: function cc_openImageInNewTab() {
+    BrowserUI.newTab(ContextMenuUI.popupState.mediaURL, Browser.selectedTab);
   },
 
   copyLink: function cc_copyLink() {
@@ -145,10 +158,6 @@ var ContextCommands = {
   copyPhone: function cc_copyPhone() {
     this.clipboard.copyString(ContextMenuUI.popupState.linkURL.substr(ContextMenuUI.popupState.linkURL.indexOf(':')+1),
                               this.docRef);
-  },
-
-  copyImage: function cc_copyImage() {
-    this.sendCommand("copy-image-contents");
   },
 
   bookmarkLink: function cc_bookmarkLink() {
