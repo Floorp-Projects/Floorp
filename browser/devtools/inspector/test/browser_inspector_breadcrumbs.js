@@ -78,12 +78,12 @@ function test()
     for (let i = 2; i < container.childNodes.length; i++) {
       let expectedId = "#" + buttonsLabelIds[i - 2];
       let button = container.childNodes[i];
-      let labelId = button.querySelector(".inspector-breadcrumbs-id");
+      let labelId = button.querySelector(".breadcrumbs-widget-item-id");
       is(labelId.textContent, expectedId, "Node " + cursor + ": button " + i + " matches");
     }
 
     let checkedButton = container.querySelector("button[checked]");
-    let labelId = checkedButton.querySelector(".inspector-breadcrumbs-id");
+    let labelId = checkedButton.querySelector(".breadcrumbs-widget-item-id");
     let id = inspector.selection.node.id;
     is(labelId.textContent, "#" + id, "Node " + cursor + ": selection matches");
   }

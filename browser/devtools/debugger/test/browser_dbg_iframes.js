@@ -7,6 +7,7 @@
 
 var gPane = null;
 var gTab = null;
+var gDebugger = null;
 
 const TEST_URL = EXAMPLE_URL + "browser_dbg_iframes.html";
 
@@ -14,7 +15,7 @@ function test() {
   debug_tab_pane(TEST_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gPane = aPane;
-    let gDebugger = gPane.panelWin;
+    gDebugger = gPane.panelWin;
 
     is(gDebugger.DebuggerController.activeThread.paused, false,
       "Should be running after debug_tab_pane.");
@@ -62,4 +63,5 @@ registerCleanupFunction(function() {
   removeTab(gTab);
   gPane = null;
   gTab = null;
+  gDebugger = null;
 });

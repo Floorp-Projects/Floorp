@@ -21,7 +21,7 @@ function test()
     gDebugger = gPane.panelWin;
     gVariablesView = gDebugger.DebuggerView.Variables;
 
-    gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });
+    gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
     testVariablesView();
   });
 }

@@ -98,10 +98,10 @@ function testSimpleCall() {
         "The localScope doesn't contain all the created variable elements.");
 
 
-      is(localVar5.target.querySelector(".details").childNodes.length, 6,
+      is(localVar5.target.querySelector(".variables-view-element-details").childNodes.length, 6,
         "The localVar5 doesn't contain all the created properties.");
 
-      is(localVar5.get("someProp5").target.querySelector(".details").childNodes.length, 6,
+      is(localVar5.get("someProp5").target.querySelector(".variables-view-element-details").childNodes.length, 6,
         "The localVar5.someProp5 doesn't contain all the created properties.");
 
 

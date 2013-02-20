@@ -11,10 +11,9 @@ let gPane = null;
 let gTab = null;
 let gDebuggee = null;
 let gDebugger = null;
-let gScripts = null;
 let gEditor = null;
+let gSources = null;
 let gBreakpoints = null;
-let gBreakpointsPane = null;
 
 requestLongerTimeout(2);
 
@@ -30,10 +29,8 @@ function test()
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.panelWin;
-    gBreakpoints = gDebugger.DebuggerController.Breakpoints;
-    gBreakpointsPane = gDebugger.DebuggerView.Breakpoints;
 
-    gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });
+    gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
     resumed = true;
 
     gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
@@ -65,24 +62,24 @@ function test()
 
   function performTest()
   {
-    gScripts = gDebugger.DebuggerView.Sources;
+    gEditor = gDebugger.editor;
+    gSources = gDebugger.DebuggerView.Sources;
+    gBreakpoints = gPane.getAllBreakpoints();
 
     is(gDebugger.DebuggerController.activeThread.state, "paused",
       "Should only be getting stack frames while paused.");
 
-    is(gScripts._container.itemCount, 1, "Found the expected number of scripts.");
-
-    gEditor = gDebugger.editor;
+    is(gSources.itemCount, 1,
+      "Found the expected number of scripts.");
 
     isnot(gEditor.getText().indexOf("ermahgerd"), -1,
-          "The correct script was loaded initially.");
-    is(gScripts.selectedValue, gScripts.values[0],
-          "The correct script is selected");
+      "The correct script was loaded initially.");
 
-    gBreakpoints = gPane.getAllBreakpoints();
+    is(gSources.selectedValue, gSources.values[0],
+      "The correct script is selected");
+
     is(Object.keys(gBreakpoints).length, 13, "thirteen breakpoints");
     ok(!gPane.getBreakpoint("foo", 3), "getBreakpoint('foo', 3) returns falsey");
-
     is(gEditor.getBreakpoints().length, 13, "thirteen breakpoints in the editor");
 
     executeSoon(test1);
@@ -90,47 +87,47 @@ function test()
 
   function test1(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 14, test2);
+    resumeAndTestBreakpoint(gSources.selectedValue, 14, test2);
   }
 
   function test2(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 15, test3);
+    resumeAndTestBreakpoint(gSources.selectedValue, 15, test3);
   }
 
   function test3(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 16, test4);
+    resumeAndTestBreakpoint(gSources.selectedValue, 16, test4);
   }
 
   function test4(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 17, test5);
+    resumeAndTestBreakpoint(gSources.selectedValue, 17, test5);
   }
 
   function test5(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 18, test6);
+    resumeAndTestBreakpoint(gSources.selectedValue, 18, test6);
   }
 
   function test6(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 19, test7);
+    resumeAndTestBreakpoint(gSources.selectedValue, 19, test7);
   }
 
   function test7(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 21, test8);
+    resumeAndTestBreakpoint(gSources.selectedValue, 21, test8);
   }
 
   function test8(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 22, test9);
+    resumeAndTestBreakpoint(gSources.selectedValue, 22, test9);
   }
 
   function test9(callback)
   {
-    resumeAndTestBreakpoint(gScripts.selectedValue, 23, test10);
+    resumeAndTestBreakpoint(gSources.selectedValue, 23, test10);
   }
 
   function test10(callback)
@@ -138,14 +135,18 @@ function test()
     gDebugger.addEventListener("Debugger:AfterFramesCleared", function listener() {
       gDebugger.removeEventListener("Debugger:AfterFramesCleared", listener, true);
 
-      is(gBreakpointsPane.selectedItem, null,
-        "There should be no selected breakpoint in the breakpoints pane.")
-      is(gBreakpointsPane._popupShown, false,
+      isnot(gSources.selectedItem, null,
+        "There should be a selected script in the scripts pane.")
+      is(gSources.selectedBreakpoint, null,
+        "There should be no selected breakpoint in the scripts pane.")
+      is(gSources.selectedClient, null,
+        "There should be no selected client in the scripts pane.");
+      is(gSources._conditionalPopupVisible, false,
         "The breakpoint conditional expression popup should not be shown.");
 
-      is(gDebugger.DebuggerView.StackFrames.visibleItems.length, 0,
+      is(gDebugger.DebuggerView.StackFrames._container._list.querySelectorAll(".dbg-stackframe").length, 0,
         "There should be no visible stackframes.");
-      is(gDebugger.DebuggerView.Breakpoints.visibleItems.length, 13,
+      is(gDebugger.DebuggerView.Sources._container._list.querySelectorAll(".dbg-breakpoint").length, 13,
         "There should be thirteen visible breakpoints.");
 
       testReload();
@@ -158,7 +159,7 @@ function test()
   {
     resume(line, function() {
       waitForCaretPos(line - 1, function() {
-        testBreakpoint(gBreakpointsPane.selectedItem, gBreakpointsPane.selectedClient, url, line, true);
+        testBreakpoint(gSources.selectedBreakpoint, gSources.selectedClient, url, line, true);
         callback();
       });
     });
@@ -166,15 +167,15 @@ function test()
 
   function testBreakpoint(aBreakpointItem, aBreakpointClient, url, line, editor)
   {
-    is(aBreakpointItem.attachment.sourceLocation, gScripts.selectedValue,
+    is(aBreakpointItem.attachment.sourceLocation, gSources.selectedValue,
       "The breakpoint on line " + line + " wasn't added on the correct source.");
     is(aBreakpointItem.attachment.lineNumber, line,
       "The breakpoint on line " + line + " wasn't found.");
-    is(aBreakpointItem.attachment.enabled, true,
+    is(!!aBreakpointItem.attachment.disabled, false,
       "The breakpoint on line " + line + " should be enabled.");
-    is(aBreakpointItem.attachment.isConditional, true,
-      "The breakpoint on line " + line + " should be conditional.");
-    is(gBreakpointsPane._popupShown, false,
+    is(!!aBreakpointItem.attachment.openPopupFlag, false,
+      "The breakpoint on line " + line + " should not open a popup.");
+    is(gSources._conditionalPopupVisible, false,
       "The breakpoint conditional expression popup should not be shown.");
 
     is(aBreakpointClient.location.url, url,
@@ -253,13 +254,14 @@ function test()
 
   function testReload()
   {
+    info("Testing reload...");
+
     function _get(url, line) {
       return [
-        gDebugger.DebuggerView.Breakpoints.getBreakpoint(url, line),
+        gDebugger.DebuggerView.Sources.getBreakpoint(url, line),
         gDebugger.DebuggerController.Breakpoints.getBreakpoint(url, line),
         url,
         line,
-        false
       ];
     }
 
@@ -267,20 +269,24 @@ function test()
       gDebugger.removeEventListener("Debugger:SourceShown", _onSourceShown);
 
       waitForBreakpoints(13, function() {
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 14));
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 15));
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 16));
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 17));
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 18));
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 19));
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 21));
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 22));
-        testBreakpoint.apply(this, _get(gScripts.selectedValue, 23));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 14));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 15));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 16));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 17));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 18));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 19));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 21));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 22));
+        testBreakpoint.apply(this, _get(gSources.selectedValue, 23));
 
-        is(gBreakpointsPane.selectedItem, null,
-          "There should be no selected item in the breakpoints pane.");
-        is(gBreakpointsPane.selectedClient, null,
-          "There should be no selected client in the breakpoints pane.");
+      isnot(gSources.selectedItem, null,
+        "There should be a selected script in the scripts pane.")
+      is(gSources.selectedBreakpoint, null,
+        "There should be no selected breakpoint in the scripts pane.")
+      is(gSources.selectedClient, null,
+        "There should be no selected client in the scripts pane.");
+      is(gSources._conditionalPopupVisible, false,
+        "The breakpoint conditional expression popup should not be shown.");
 
         closeDebuggerAndFinish();
       });
@@ -292,9 +298,9 @@ function test()
 
   function finalCheck() {
     isnot(gEditor.getText().indexOf("ermahgerd"), -1,
-          "The correct script is still loaded.");
-    is(gScripts.selectedValue, gScripts.values[0],
-          "The correct script is still selected");
+      "The correct script is still loaded.");
+    is(gSources.selectedValue, gSources.values[0],
+      "The correct script is still selected");
   }
 
   function resume(expected, callback) {
@@ -324,8 +330,8 @@ function test()
         window.clearInterval(intervalID);
         return closeDebuggerAndFinish();
       }
-      if ((gBreakpointsPane.selectedClient !== expected) &&
-          (gBreakpointsPane.selectedClient || bogusClient).location.line !== expected) {
+      if ((gSources.selectedClient !== expected) &&
+          (gSources.selectedClient || bogusClient).location.line !== expected) {
         return;
       }
       // We arrived at the expected line, it's safe to callback.
@@ -345,7 +351,7 @@ function test()
         window.clearInterval(intervalID);
         return closeDebuggerAndFinish();
       }
-      if (gBreakpointsPane.visibleItems.length != total) {
+      if (gSources._container._list.querySelectorAll(".dbg-breakpoint").length != total) {
         return;
       }
       // We got all the breakpoints, it's safe to callback.
@@ -380,9 +386,8 @@ function test()
     gTab = null;
     gDebuggee = null;
     gDebugger = null;
-    gScripts = null;
     gEditor = null;
+    gSources = null;
     gBreakpoints = null;
-    gBreakpointsPane = null;
   });
 }

@@ -57,7 +57,7 @@ function testSimpleCall() {
       is(testVar.target.querySelector(".name").getAttribute("value"), "something",
         "Any new variable should have the designated title.");
 
-      is(testVar.target.querySelector(".details").childNodes.length, 0,
+      is(testVar.target.querySelector(".variables-view-element-details").childNodes.length, 0,
         "Any new variable should have a details container with no child nodes.");
 
 
