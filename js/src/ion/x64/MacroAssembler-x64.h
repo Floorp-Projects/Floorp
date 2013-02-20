@@ -540,13 +540,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void splitTag(const ValueOperand &operand, const Register &dest) {
         splitTag(operand.valueReg(), dest);
     }
-    void splitTag(const Address &operand, const Register &dest) {
-        movq(Operand(operand), dest);
+    void splitTag(const Operand &operand, const Register &dest) {
+        movq(operand, dest);
         shrq(Imm32(JSVAL_TAG_SHIFT), dest);
     }
+    void splitTag(const Address &operand, const Register &dest) {
+        splitTag(Operand(operand), dest);
+    }
     void splitTag(const BaseIndex &operand, const Register &dest) {
-        movq(Operand(operand), dest);
-        shrq(Imm32(JSVAL_TAG_SHIFT), dest);
+        splitTag(Operand(operand), dest);
     }
 
     // Extracts the tag of a value and places it in ScratchReg.
@@ -608,6 +610,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void branchTestInt32(Condition cond, const Address &address, Label *label) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         branchTestInt32(cond, Operand(address), label);
+    }
+    void branchTestDouble(Condition cond, const Operand &operand, Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        splitTag(operand, ScratchReg);
+        branchTestDouble(cond, ScratchReg, label);
+    }
+    void branchTestDouble(Condition cond, const Address &address, Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        branchTestDouble(cond, Operand(address), label);
     }
     void branchTestBoolean(Condition cond, const Operand &operand, Label *label) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
@@ -707,6 +718,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void unboxInt32(const Address &src, const Register &dest) {
         unboxInt32(Operand(src), dest);
+    }
+    void unboxDouble(const Address &src, const FloatRegister &dest) {
+        movsd(Operand(src), dest);
     }
 
     void unboxArgObjMagic(const ValueOperand &src, const Register &dest) {
