@@ -1455,15 +1455,8 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
       v = NS_ConvertUTF8toUTF16(str);
     }
 
-    BluetoothSignal signal(signalName, signalPath, v);
-
-    // Fire a Device properties fetcher at the main thread
-    nsRefPtr<DevicePropertiesSignalHandler> b =
-      new DevicePropertiesSignalHandler(signal);
-    if (NS_FAILED(NS_DispatchToMainThread(b))) {
-      NS_WARNING("Failed to dispatch to main thread!");
-    }
-    // Since we're handling this in other threads, just fall out here
+    // Bug 842471. No need to get device properties here and forward to
+    // BluetoothAdapter, and this event is going to be removed from idl.
     return DBUS_HANDLER_RESULT_HANDLED;
   } else if (dbus_message_is_signal(aMsg, DBUS_ADAPTER_IFACE, "DeviceRemoved")) {
     const char* str;
