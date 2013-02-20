@@ -156,6 +156,8 @@ function checkPayloadInfo(payload, reason) {
   do_check_eq(payload.info.reason, reason);
   do_check_true("appUpdateChannel" in payload.info);
   do_check_true("locale" in payload.info);
+  do_check_true("revision" in payload.info);
+  do_check_true(payload.info.revision.startsWith("http"));
 
   try {
     // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
