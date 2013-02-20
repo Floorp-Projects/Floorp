@@ -254,6 +254,11 @@ public:
   static nsresult UnregisterCallback(PrefChangedFunc aCallback,
                                      const char* aPref,
                                      void* aClosure = nullptr);
+  // Like RegisterCallback, but also calls the callback immediately for
+  // initialization.
+  static nsresult RegisterCallbackAndCall(PrefChangedFunc aCallback,
+                                          const char* aPref,
+                                          void* aClosure = nullptr);
 
   /**
    * Adds the aVariable to cache table.  aVariable must be a pointer for a
