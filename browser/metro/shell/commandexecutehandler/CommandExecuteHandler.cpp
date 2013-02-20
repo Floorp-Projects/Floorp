@@ -545,7 +545,9 @@ void CExecuteCommandVerb::LaunchDesktopBrowser()
   CStringW params;
   if (!IsTargetBrowser()) {
     params += "-url ";
+    params += "\"";
     params += mTarget;
+    params += "\"";
   }
 
   Log(L"Desktop Launch: verb:%s exe:%s params:%s", mVerb, browserPath, params); 
