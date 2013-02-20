@@ -80,6 +80,7 @@ class VirtualenvManager(object):
         for submanifest in submanifests:
             submanifest = os.path.join(self.topsrcdir, submanifest)
             submanager = VirtualenvManager(self.topsrcdir,
+                                           self.topobjdir,
                                            self.virtualenv_root,
                                            self.log_handle,
                                            submanifest)
