@@ -359,12 +359,16 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
   if (appShell) {
     nsCOMPtr<nsIXULWindow> hw;
-    appShell->GetHiddenWindow(getter_AddRefs(hw));
-    if (hw) {
-      nsCOMPtr<nsIDocShell> shell;
-      hw->GetDocShell(getter_AddRefs(shell));
-      nsCOMPtr<nsIDocShellTreeNode> shellTreeNode = do_QueryInterface(shell);
-      MarkDocShell(shellTreeNode, cleanupJS, prepareForCC);
+    bool hasHiddenWindow = false;
+    appShell->GetHasHiddenWindow(&hasHiddenWindow);
+    if (hasHiddenWindow) {
+      appShell->GetHiddenWindow(getter_AddRefs(hw));
+      if (hw) {
+        nsCOMPtr<nsIDocShell> shell;
+        hw->GetDocShell(getter_AddRefs(shell));
+        nsCOMPtr<nsIDocShellTreeNode> shellTreeNode = do_QueryInterface(shell);
+        MarkDocShell(shellTreeNode, cleanupJS, prepareForCC);
+      }
     }
     bool hasHiddenPrivateWindow = false;
     appShell->GetHasHiddenPrivateWindow(&hasHiddenPrivateWindow);
