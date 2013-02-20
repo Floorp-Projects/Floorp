@@ -1283,7 +1283,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, HandlePropertyName funName,
              * when leaving the inner function.
              *
              * The dn == outer_dn case arises with generator expressions
-             * (see CompExprTransplanter::transplant, the PN_FUNC/PN_NAME
+             * (see CompExprTransplanter::transplant, the PN_CODE/PN_NAME
              * case), and nowhere else, currently.
              */
             if (dn != outer_dn) {
@@ -1559,7 +1559,7 @@ Parser::functionDef(HandlePropertyName funName, const TokenStream::Position &sta
     JS_ASSERT_IF(kind == Statement, funName);
 
     /* Make a TOK_FUNCTION node. */
-    ParseNode *pn = FunctionNode::create(PNK_FUNCTION, this);
+    ParseNode *pn = CodeNode::create(PNK_FUNCTION, this);
     if (!pn)
         return NULL;
     pn->pn_body = NULL;
@@ -1610,7 +1610,7 @@ Parser::functionDef(HandlePropertyName funName, const TokenStream::Position &sta
             if (Definition *fn = pc->lexdeps.lookupDefn(funName)) {
                 JS_ASSERT(fn->isDefn());
                 fn->setKind(PNK_FUNCTION);
-                fn->setArity(PN_FUNC);
+                fn->setArity(PN_CODE);
                 fn->pn_pos.begin = pn->pn_pos.begin;
                 fn->pn_pos.end = pn->pn_pos.end;
 
@@ -4852,7 +4852,7 @@ BumpStaticLevel(ParseNode *pn, ParseContext *pc)
 static bool
 AdjustBlockId(ParseNode *pn, unsigned adjust, ParseContext *pc)
 {
-    JS_ASSERT(pn->isArity(PN_LIST) || pn->isArity(PN_FUNC) || pn->isArity(PN_NAME));
+    JS_ASSERT(pn->isArity(PN_LIST) || pn->isArity(PN_CODE) || pn->isArity(PN_NAME));
     if (JS_BIT(20) - pn->pn_blockid <= adjust + 1) {
         JS_ReportErrorNumber(pc->sc->context, js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "program");
         return false;
@@ -4906,7 +4906,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
             return false;
         break;
 
-      case PN_FUNC:
+      case PN_CODE:
       case PN_NAME:
         if (!transplant(pn->maybeExpr()))
             return false;
@@ -5289,7 +5289,7 @@ Parser::generatorExpr(ParseNode *kid)
     pn->pn_hidden = true;
 
     /* Make a new node for the desugared generator function. */
-    ParseNode *genfn = FunctionNode::create(PNK_FUNCTION, this);
+    ParseNode *genfn = CodeNode::create(PNK_FUNCTION, this);
     if (!genfn)
         return NULL;
     genfn->setOp(JSOP_LAMBDA);
