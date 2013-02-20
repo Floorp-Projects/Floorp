@@ -885,8 +885,23 @@ Parser::functionBody(FunctionBodyType type)
         FunctionBox *funbox = pc->sc->asFunctionBox();
         funbox->setArgumentsHasLocalBinding();
 
-        /* Dynamic scope access destroys all hope of optimization. */
-        if (pc->sc->bindingsAccessedDynamically())
+        /*
+         * If a script has both explicit mentions of 'arguments' and dynamic
+         * name lookups which could access the arguments, an arguments object
+         * must be created eagerly. The SSA analysis used for lazy arguments
+         * cannot cope with dynamic name accesses, so any 'arguments' accessed
+         * via a NAME opcode must force construction of the arguments object.
+         */
+        if (pc->sc->bindingsAccessedDynamically() && maybeArgDef)
+            funbox->setDefinitelyNeedsArgsObj();
+
+        /*
+         * If a script contains the debugger statement either directly or
+         * within an inner function, the arguments object must be created
+         * eagerly. The debugger can walk the scope chain and observe any
+         * values along it.
+         */
+        if (pc->sc->hasDebuggerStatement())
             funbox->setDefinitelyNeedsArgsObj();
 
         /*
@@ -907,6 +922,9 @@ Parser::functionBody(FunctionBodyType type)
                     }
                 }
             }
+            /* Watch for mutation of arguments through e.g. eval(). */
+            if (pc->sc->bindingsAccessedDynamically())
+                funbox->setDefinitelyNeedsArgsObj();
           exitLoop: ;
         }
     }
@@ -1769,6 +1787,8 @@ Parser::functionArgsAndBody(ParseNode *pn, HandleFunction fun, HandlePropertyNam
      */
     if (funbox->bindingsAccessedDynamically())
         outerpc->sc->setBindingsAccessedDynamically();
+    if (funbox->hasDebuggerStatement())
+        outerpc->sc->setHasDebuggerStatement();
 
 #if JS_HAS_DESTRUCTURING
     /*
@@ -1811,7 +1831,8 @@ Parser::functionArgsAndBody(ParseNode *pn, HandleFunction fun, HandlePropertyNam
      */
     if (funbox->bindingsAccessedDynamically())
         outerpc->sc->setBindingsAccessedDynamically();
-
+    if (funbox->hasDebuggerStatement())
+        outerpc->sc->setHasDebuggerStatement();
 
     pn->pn_funbox = funbox;
     pn->pn_body->append(body);
@@ -4020,6 +4041,7 @@ Parser::statement()
         if (!pn)
             return NULL;
         pc->sc->setBindingsAccessedDynamically();
+        pc->sc->setHasDebuggerStatement();
         break;
 
       case TOK_ERROR:
