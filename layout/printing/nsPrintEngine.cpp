@@ -235,7 +235,8 @@ nsPrintEngine::nsPrintEngine() :
   mLoadCounter(0),
   mDidLoadDataForPrinting(false),
   mIsDestroying(false),
-  mDisallowSelectionPrint(false)
+  mDisallowSelectionPrint(false),
+  mNoMarginBoxes(false)
 {
 }
 
@@ -473,6 +474,21 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
 
   mPrt->mPrintSettings->SetIsCancelled(false);
   mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
+
+  // In the case the margin boxes are not printed store the print settings for
+  // the footer/header to be used as default print setting for follow up prints.
+  mPrt->mPrintSettings->SetPersistMarginBoxSettings(!mNoMarginBoxes);
+
+  if (mNoMarginBoxes) {
+    // Set the footer/header to blank.
+    const PRUnichar* emptyString = EmptyString().get();
+    mPrt->mPrintSettings->SetHeaderStrLeft(emptyString);
+    mPrt->mPrintSettings->SetHeaderStrCenter(emptyString);
+    mPrt->mPrintSettings->SetHeaderStrRight(emptyString);
+    mPrt->mPrintSettings->SetFooterStrLeft(emptyString);
+    mPrt->mPrintSettings->SetFooterStrCenter(emptyString);
+    mPrt->mPrintSettings->SetFooterStrRight(emptyString);
+  }
 
   if (aIsPrintPreview) {
     SetIsCreatingPrintPreview(true);
