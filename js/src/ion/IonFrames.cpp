@@ -331,22 +331,22 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
     JS_ASSERT(frame.isBaselineJS());
     AssertCanGC();
 
-    JS_ASSERT(cx->isExceptionPending());
-
     RootedScript script(cx);
     jsbytecode *pc;
     frame.baselineScriptAndPc(script.address(), &pc);
 
-    if (cx->compartment->debugMode()) {
+    if (cx->isExceptionPending() && cx->compartment->debugMode()) {
         BaselineFrame *baselineFrame = frame.baselineFrame();
         JSTrapStatus status = DebugExceptionUnwind(cx, baselineFrame, pc);
         switch (status) {
           case JSTRAP_ERROR:
-            // Uncatchable exception, return.
-            return;
+            // Uncatchable exception.
+            JS_ASSERT(!cx->isExceptionPending());
+            break;
 
           case JSTRAP_CONTINUE:
           case JSTRAP_THROW:
+            JS_ASSERT(cx->isExceptionPending());
             break;
 
           case JSTRAP_RETURN:
@@ -358,16 +358,14 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
                 return;
             }
 
-            // Uncatchable exception, return.
+            // Uncatchable exception.
             JS_ASSERT(!cx->isExceptionPending());
-            return;
+            break;
 
           default:
             JS_NOT_REACHED("Invalid trap status");
         }
     }
-
-    JS_ASSERT(cx->isExceptionPending());
 
     if (!script->hasTrynotes())
         return;
@@ -383,7 +381,8 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
             continue;
 
         // Unwind scope chain (pop block objects).
-        UnwindScope(cx, frame.baselineFrame(), tn->stackDepth);
+        if (cx->isExceptionPending())
+            UnwindScope(cx, frame.baselineFrame(), tn->stackDepth);
 
         // Compute base pointer and stack pointer.
         rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
@@ -391,18 +390,23 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
             (script->nfixed + tn->stackDepth) * sizeof(Value);
 
         switch (tn->kind) {
-          case JSTRY_CATCH: {
-            // Resume at the start of the catch block.
-            rfe->kind = ResumeFromException::RESUME_CATCH;
-            jsbytecode *catchPC = script->main() + tn->start + tn->length;
-            rfe->target = script->baseline->nativeCodeForPC(script, catchPC);
-            return;
-          }
+          case JSTRY_CATCH:
+            if (cx->isExceptionPending()) {
+                // Resume at the start of the catch block.
+                rfe->kind = ResumeFromException::RESUME_CATCH;
+                jsbytecode *catchPC = script->main() + tn->start + tn->length;
+                rfe->target = script->baseline->nativeCodeForPC(script, catchPC);
+                return;
+            }
+            break;
 
           case JSTRY_ITER: {
             Value iterValue(* (Value *) rfe->stackPointer);
             RootedObject iterObject(cx, &iterValue.toObject());
-            UnwindIteratorForException(cx, iterObject);
+            if (cx->isExceptionPending())
+                UnwindIteratorForException(cx, iterObject);
+            else
+                UnwindIteratorForUncatchableException(cx, iterObject);
             break;
           }
 
@@ -459,11 +463,9 @@ ion::HandleException(ResumeFromException *rfe)
                 ionScript->decref(cx->runtime->defaultFreeOp());
 
         } else if (iter.isBaselineJS()) {
-            if (cx->isExceptionPending()) {
-                HandleException(cx, iter, rfe);
-                if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
-                    return;
-            }
+            HandleException(cx, iter, rfe);
+            if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
+                return;
 
             if (cx->compartment->debugMode()) {
                 // If DebugEpilogue returns |true|, we have to perform a forced
