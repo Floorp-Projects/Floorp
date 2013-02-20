@@ -229,6 +229,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGetPropertyCacheV(LGetPropertyCacheV *ins);
     bool visitGetPropertyCacheT(LGetPropertyCacheT *ins);
     bool visitGetElementCacheV(LGetElementCacheV *ins);
+    bool visitGetElementCacheT(LGetElementCacheT *ins);
     bool visitBindNameCache(LBindNameCache *ins);
     bool visitCallSetProperty(LInstruction *ins);
     bool visitSetPropertyCacheV(LSetPropertyCacheV *ins);

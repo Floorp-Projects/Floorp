@@ -3161,6 +3161,27 @@ class LGetElementCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 
     }
 };
 
+class LGetElementCacheT : public LInstructionHelper<1, 1 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(GetElementCacheT)
+
+    static const size_t Index = 1;
+
+    LGetElementCacheT(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    const MGetElementCache *mir() const {
+        return mir_->toGetElementCache();
+    }
+};
+
 class LBindNameCache : public LInstructionHelper<1, 1, 0>
 {
   public:
