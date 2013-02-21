@@ -627,7 +627,7 @@ class StackFrame
     inline bool forEachCanonicalActualArg(Op op, unsigned start = 0, unsigned count = unsigned(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
 
-
+    void cleanupTornValues();
 
     /*
      * Arguments object
