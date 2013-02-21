@@ -264,32 +264,32 @@ enum SrcNoteType {
                                    do-while loop */
     SRC_FOR_IN      = 6,        /* JSOP_GOTO to for-in loop condition from
                                    before loop */
-    SRC_CONTINUE    = 7,        /* JSOP_GOTO is a continue, not a break */
-    SRC_CONT2LABEL  = 8,        /* JSOP_GOTO for 'continue label' with atomid */
-    SRC_BREAK       = 9,        /* JSOP_GOTO is a break */
-    SRC_BREAK2LABEL = 10,       /* JSOP_GOTO for 'break label' with atomid */
-    SRC_SWITCHBREAK = 11,       /* JSOP_GOTO is a break in a switch */
+    SRC_CONTINUE    = 7,        /* JSOP_GOTO is a continue */
+    SRC_BREAK       = 8,        /* JSOP_GOTO is a break */
+    SRC_BREAK2LABEL = 9,        /* JSOP_GOTO for 'break label' */
+    SRC_SWITCHBREAK = 10,       /* JSOP_GOTO is a break in a switch */
 
-    SRC_SWITCH      = 12,       /* JSOP_*SWITCH with offset to end of switch,
+    SRC_SWITCH      = 11,       /* JSOP_*SWITCH with offset to end of switch,
                                    2nd off to first JSOP_CASE if condswitch */
 
-    SRC_PCDELTA     = 13,       /* distance forward from comma-operator to
+    SRC_PCDELTA     = 12,       /* distance forward from comma-operator to
                                    next POP, or from CONDSWITCH to first CASE
                                    opcode, etc. -- always a forward delta */
 
-    SRC_ASSIGNOP    = 14,       /* += or another assign-op follows */
+    SRC_ASSIGNOP    = 13,       /* += or another assign-op follows */
 
-    SRC_HIDDEN      = 15,       /* opcode shouldn't be decompiled */
+    SRC_HIDDEN      = 14,       /* opcode shouldn't be decompiled */
 
-    SRC_CATCH       = 16,       /* catch block has guard */
+    SRC_CATCH       = 15,       /* catch block has guard */
 
     /* All notes below here are "gettable".  See SN_IS_GETTABLE below. */
     SRC_LAST_GETTABLE = SRC_CATCH,
 
-    SRC_COLSPAN     = 17,       /* number of columns this opcode spans */
-    SRC_NEWLINE     = 18,       /* bytecode follows a source newline */
-    SRC_SETLINE     = 19,       /* a file-absolute source line number note */
+    SRC_COLSPAN     = 16,       /* number of columns this opcode spans */
+    SRC_NEWLINE     = 17,       /* bytecode follows a source newline */
+    SRC_SETLINE     = 18,       /* a file-absolute source line number note */
 
+    SRC_UNUSED19    = 19,
     SRC_UNUSED20    = 20,
     SRC_UNUSED21    = 21,
     SRC_UNUSED22    = 22,

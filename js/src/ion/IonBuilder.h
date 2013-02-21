@@ -216,13 +216,13 @@ class IonBuilder : public MIRGenerator
     ControlStatus processNextTableSwitchCase(CFGState &state);
     ControlStatus processCondSwitchCase(CFGState &state);
     ControlStatus processCondSwitchBody(CFGState &state);
-    ControlStatus processSwitchBreak(JSOp op, jssrcnote *sn);
+    ControlStatus processSwitchBreak(JSOp op);
     ControlStatus processSwitchEnd(DeferredEdge *breaks, jsbytecode *exitpc);
     ControlStatus processAndOrEnd(CFGState &state);
     ControlStatus processLabelEnd(CFGState &state);
     ControlStatus processReturn(JSOp op);
     ControlStatus processThrow();
-    ControlStatus processContinue(JSOp op, jssrcnote *sn);
+    ControlStatus processContinue(JSOp op);
     ControlStatus processBreak(JSOp op, jssrcnote *sn);
     ControlStatus maybeLoop(JSOp op, jssrcnote *sn);
     bool pushLoop(CFGState::State state, jsbytecode *stopAt, MBasicBlock *entry,
@@ -259,7 +259,7 @@ class IonBuilder : public MIRGenerator
     void assertValidLoopHeadOp(jsbytecode *pc);
 
     ControlStatus forLoop(JSOp op, jssrcnote *sn);
-    ControlStatus whileOrForInLoop(JSOp op, jssrcnote *sn);
+    ControlStatus whileOrForInLoop(jssrcnote *sn);
     ControlStatus doWhileLoop(JSOp op, jssrcnote *sn);
     ControlStatus tableSwitch(JSOp op, jssrcnote *sn);
     ControlStatus condSwitch(JSOp op, jssrcnote *sn);
