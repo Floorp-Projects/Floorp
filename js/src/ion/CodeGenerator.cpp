@@ -20,6 +20,7 @@
 #include "jsinterpinlines.h"
 #include "ParallelFunctions.h"
 #include "ExecutionModeInlines.h"
+#include "builtin/Eval.h"
 #include "vm/ForkJoin.h"
 
 #include "vm/StringObject-inl.h"
@@ -1666,6 +1667,25 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     emitPopArguments(apply, copyreg);
 
     return true;
+}
+
+typedef bool (*DirectEvalFn)(JSContext *, HandleObject, HandleScript, HandleValue, HandleString,
+                             MutableHandleValue);
+static const VMFunction DirectEvalInfo =
+    FunctionInfo<DirectEvalFn>(DirectEvalFromIon);
+
+bool
+CodeGenerator::visitCallDirectEval(LCallDirectEval *lir)
+{
+    Register scopeChain = ToRegister(lir->getScopeChain());
+    Register string = ToRegister(lir->getString());
+
+    pushArg(string);
+    pushArg(ToValue(lir, LCallDirectEval::ThisValueInput));
+    pushArg(ImmGCPtr(gen->info().script()));
+    pushArg(scopeChain);
+
+    return callVM(DirectEvalInfo, lir);
 }
 
 // Registers safe for use before generatePrologue().

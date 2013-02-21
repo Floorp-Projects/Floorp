@@ -221,6 +221,7 @@
     "layout/forms/test/test_bug446663.html" : "bug446663_a cut - got 123, expected",
     "layout/forms/test/test_bug477700.html" : "Typing should work - got , expected Test",
     "layout/forms/test/test_bug534785.html" : "timed out",
+    "layout/forms/test/test_bug549170.html": "Bug 843374",
     "layout/forms/test/test_bug563642.html" : "timed out",
     "layout/forms/test/test_bug572649.html" : "timed out",
     "layout/forms/test/test_bug644542.html" : "timed out",

@@ -5,7 +5,7 @@
 "use strict";
 
 const { readURI, readURISync } = require("sdk/net/url");
-const { data } = require("self");
+const { data } = require("sdk/self");
 
 const utf8text = "Hello, ゼロ!";
 const latin1text = "Hello, ã‚¼ãƒ­!";

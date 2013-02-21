@@ -72,6 +72,10 @@ class JavaAddonManager implements GeckoEventListener {
     }
 
     void init(Context applicationContext) {
+        if (mApplicationContext != null) {
+            // we've already done this registration. don't do it again
+            return;
+        }
         mApplicationContext = applicationContext;
         mDispatcher.registerEventListener("Dex:Load", this);
         mDispatcher.registerEventListener("Dex:Unload", this);

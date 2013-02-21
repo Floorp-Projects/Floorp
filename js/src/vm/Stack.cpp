@@ -240,6 +240,24 @@ StackFrame::copyRawFrameSlots(AutoValueVector *vec)
     return true;
 }
 
+static void
+CleanupTornValue(StackFrame *fp, Value *vp)
+{
+    if (vp->isObject() && !vp->toGCThing())
+        vp->setObject(fp->global());
+    if (vp->isString() && !vp->toGCThing())
+        vp->setString(fp->compartment()->rt->emptyString);
+}
+
+void
+StackFrame::cleanupTornValues()
+{
+    for (size_t i = 0; i < numFormalArgs(); i++)
+        CleanupTornValue(this, &formals()[i]);
+    for (size_t i = 0; i < script()->nfixed; i++)
+        CleanupTornValue(this, &slots()[i]);
+}
+
 static inline void
 AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *scope)
 {
@@ -348,8 +366,6 @@ StackFrame::epilogue(JSContext *cx)
         } else if (isDirectEvalFrame()) {
             if (isDebuggerFrame())
                 JS_ASSERT(!scopeChain()->isScope());
-            else
-                JS_ASSERT(scopeChain() == prev()->scopeChain());
         } else {
             /*
              * Debugger.Object.prototype.evalInGlobal creates indirect eval
@@ -1518,7 +1534,8 @@ StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
 StackIter::StackIter(const StackIter &other)
   : data_(other.data_)
 #ifdef JS_ION
-    , ionInlineFrames_(other.data_.seg_->cx(), &other.ionInlineFrames_)
+    , ionInlineFrames_(other.data_.seg_->cx(),
+                       data_.ionFrames_.isScripted() ? &other.ionInlineFrames_ : NULL)
 #endif
 {
 }
@@ -2164,4 +2181,20 @@ AllFramesIter::abstractFramePtr() const
     }
     JS_NOT_REACHED("Unexpected state");
     return NullFramePtr();
+}
+
+JSObject *
+AbstractFramePtr::evalPrevScopeChain(JSRuntime *rt) const
+{
+    /* Find the stack segment containing this frame. */
+    AllFramesIter alliter(rt);
+    while (alliter.isIon() || alliter.abstractFramePtr() != *this)
+        ++alliter;
+
+    /* Eval frames are not compiled by Ion, though their caller might be. */
+    StackIter iter(rt, *alliter.seg());
+    while (!iter.isScript() || iter.isIon() || iter.abstractFramePtr() != *this)
+        ++iter;
+    ++iter;
+    return iter.scopeChain();
 }

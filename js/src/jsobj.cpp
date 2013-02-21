@@ -1444,7 +1444,7 @@ CreateThisForFunctionWithType(JSContext *cx, HandleTypeObject type, JSObject *pa
          * object before it is read from.
          */
         gc::AllocKind kind = type->newScript->allocKind;
-        RootedObject res(cx, NewObjectWithType(cx, type, parent, kind));
+        RootedObject res(cx, NewObjectWithType(cx, type, parent, kind, newKind));
         if (res) {
             RootedShape shape(cx, type->newScript->shape);
             JS_ALWAYS_TRUE(JSObject::setLastProperty(cx, res, shape));
