@@ -11,6 +11,7 @@ const { getWindowTitle } = require('./utils');
 const unload = require('../system/unload');
 const { getMode } = require('../private-browsing/utils');
 const { EventTarget } = require('../event/target');
+const { getOwnerWindow: getPBOwnerWindow } = require('../private-browsing/window/utils');
 
 const ERR_FENNEC_MSG = 'This method is not yet supported by Fennec, consider using require("tabs") instead';
 
@@ -39,3 +40,7 @@ const BrowserWindow = Class({
   get isPrivateBrowsing() getMode(windowNS(this).window),
 });
 exports.BrowserWindow = BrowserWindow;
+
+getPBOwnerWindow.define(BrowserWindow, function(window) {
+  return windowNS(window).window;
+});

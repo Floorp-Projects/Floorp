@@ -21,7 +21,7 @@ function isChromeVisible(window) {
 
 exports['test that add-on page has no chrome'] = function(assert, done) {
   let loader = Loader(module);
-  loader.require('addon-kit/addon-page');
+  loader.require('sdk/addon-page');
 
   let window = windows.activeBrowserWindow;
   let tab = openTab(window, uri);
@@ -44,7 +44,7 @@ exports['test that add-on page has no chrome'] = function(assert, done) {
 
 exports['test that add-on page with hash has no chrome'] = function(assert, done) {
   let loader = Loader(module);
-  loader.require('addon-kit/addon-page');
+  loader.require('sdk/addon-page');
 
   let window = windows.activeBrowserWindow;
   let tab = openTab(window, uri + "#foo");
@@ -67,7 +67,7 @@ exports['test that add-on page with hash has no chrome'] = function(assert, done
 
 exports['test that add-on page with querystring has no chrome'] = function(assert, done) {
   let loader = Loader(module);
-  loader.require('addon-kit/addon-page');
+  loader.require('sdk/addon-page');
 
   let window = windows.activeBrowserWindow;
   let tab = openTab(window, uri + '?foo=bar');
@@ -90,7 +90,7 @@ exports['test that add-on page with querystring has no chrome'] = function(asser
 
 exports['test that add-on page with hash and querystring has no chrome'] = function(assert, done) {
   let loader = Loader(module);
-  loader.require('addon-kit/addon-page');
+  loader.require('sdk/addon-page');
 
   let window = windows.activeBrowserWindow;
   let tab = openTab(window, uri + '#foo?foo=bar');
@@ -113,7 +113,7 @@ exports['test that add-on page with hash and querystring has no chrome'] = funct
 
 exports['test that malformed uri is not an addon-page'] = function(assert, done) {
   let loader = Loader(module);
-  loader.require('addon-kit/addon-page');
+  loader.require('sdk/addon-page');
 
   let window = windows.activeBrowserWindow;
   let tab = openTab(window, uri + 'anguage');
@@ -146,4 +146,4 @@ exports['test that add-on pages are closed on unload'] = function(assert, done) 
   });
 };
 
-require('sdk/test').run(exports);
+require('test').run(exports);

@@ -199,7 +199,7 @@ exports.testPrefUnloadWildcardListener = function(test) {
   test.waitUntilDone();
   let testpref = "test-wildcard-unload-listener";
   let loader = Loader(module);
-  let sp = loader.require("simple-prefs");
+  let sp = loader.require("sdk/simple-prefs");
   let counter = 0;
 
   let listener = function() {
@@ -210,7 +210,7 @@ exports.testPrefUnloadWildcardListener = function(test) {
     // this may not execute after unload, but definitely shouldn't fire listener
     sp.prefs[testpref] = false;
     // this should execute, but also definitely shouldn't fire listener
-    require("simple-prefs").prefs[testpref] = false;
+    require("sdk/simple-prefs").prefs[testpref] = false;
 
     test.done();
   };
