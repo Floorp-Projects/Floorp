@@ -105,7 +105,7 @@ exports.runTestsFromModule = function runTestsFromModule(module) {
 
   runTests(function findAndRunTests(loader, nextIteration) {
     // Consider that all these tests are CommonJS ones
-    loader.require('../test').run(exports);
+    loader.require('../../test').run(exports);
 
     // Reproduce what is done in unit-test-finder.findTests()
     let tests = [];

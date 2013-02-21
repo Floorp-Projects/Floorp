@@ -20,7 +20,7 @@ const { Ci, Cc } = require("chrome"),
     { when: unload } = require("./system/unload"),
     { getTabs, getTabContentWindow, getTabForContentWindow,
       getAllTabContentWindows } = require('./tabs/utils'),
-    { getInnerId, getMostRecentBrowserWindow,
+    { getMostRecentBrowserWindow,
       windows, getFocusedWindow, getFocusedElement } = require("./window/utils"),
     events = require("./system/events");
 
@@ -321,17 +321,6 @@ function addSelectionListener(window) {
   window.addEventListener("select", selectionListener.onSelect, true);
 
   selections(window).selection = selection;
-
-  let innerId = getInnerId(window);
-
-  events.on("inner-window-destroyed", function destroyed (event) {
-    let destroyedId = event.subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-
-    if (destroyedId === innerId) {
-      removeSelectionListener(window);
-      events.off("inner-window-destroyed", destroyed);
-    }
-  });
 };
 
 /**
@@ -382,7 +371,7 @@ getAllTabContentWindows().forEach(addSelectionListener);
 //
 // See bug 665386 for further details.
 
-events.on("document-shown", function (event) {
+function onShown(event) {
   let window = event.subject.defaultView;
 
   // We are not interested in documents without valid defaultView.
@@ -408,17 +397,21 @@ events.on("document-shown", function (event) {
     if (currentSelection instanceof Ci.nsISelectionPrivate &&
       currentSelection !== selection) {
 
+      window.addEventListener("select", selectionListener.onSelect, true);
       currentSelection.addSelectionListener(selectionListener);
       selections(window).selection = currentSelection;
     }
   }
-});
+}
+
+events.on("document-shown", onShown, true);
 
 // Removes Selection listeners when the add-on is unloaded
 unload(function(){
   getAllTabContentWindows().forEach(removeSelectionListener);
 
   events.off("document-element-inserted", onContent);
+  events.off("document-shown", onShown);
 
   off(exports);
 });

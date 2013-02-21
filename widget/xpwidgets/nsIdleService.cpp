@@ -383,7 +383,7 @@ nsIdleService::GetInstance()
 }
 
 nsIdleService::nsIdleService() : mCurrentlySetToTimeoutAt(TimeStamp()),
-                                 mAnyObserverIdle(false),
+                                 mIdleObserverCount(0),
                                  mDeltaToNextIdleSwitchInS(UINT32_MAX),
                                  mLastUserInteraction(TimeStamp::Now())
 {
@@ -476,14 +476,18 @@ nsIdleService::RemoveIdleObserver(nsIObserver* aObserver, uint32_t aTimeInS)
   // existing timer run to completion (there might be a new registration in a
   // little while.
   IdleListenerComparator c;
-  if (mArrayListeners.RemoveElement(listener, c)) {
+  nsTArray<IdleListener>::index_type listenerIndex = mArrayListeners.IndexOf(listener, 0, c);
+  if (listenerIndex != mArrayListeners.NoIndex) {
+    if (mArrayListeners.ElementAt(listenerIndex).isIdle)
+      mIdleObserverCount--;
+    mArrayListeners.RemoveElementAt(listenerIndex);
     PR_LOG(sLog, PR_LOG_DEBUG,
-           ("idleService: Remove idle observer %x (%d seconds)",
-            aObserver, aTimeInS));
+           ("idleService: Remove observer %x (%d seconds), %d remain idle",
+            aObserver, aTimeInS, mIdleObserverCount));
 #ifdef MOZ_WIDGET_ANDROID
     __android_log_print(ANDROID_LOG_INFO, "IdleService",
-                        "Remove idle observer %x (%d seconds)",
-                        aObserver, aTimeInS);
+                        "Remove observer %x (%d seconds), %d remain idle",
+                        aObserver, aTimeInS, mIdleObserverCount);
 #endif
     return NS_OK;
   }
@@ -512,7 +516,7 @@ nsIdleService::ResetIdleTimeOut(uint32_t idleDeltaInMS)
                          TimeDuration::FromMilliseconds(idleDeltaInMS);
 
   // If no one is idle, then we are done, any existing timers can keep running.
-  if (!mAnyObserverIdle) {
+  if (mIdleObserverCount == 0) {
     PR_LOG(sLog, PR_LOG_DEBUG,
            ("idleService: Reset idle timeout: no idle observers"));
     return NS_OK;
@@ -539,7 +543,7 @@ nsIdleService::ResetIdleTimeOut(uint32_t idleDeltaInMS)
   }
 
   // When we are done, then we wont have anyone idle.
-  mAnyObserverIdle = false;
+  mIdleObserverCount = 0;
 
   // Restart the idle timer, and do so before anyone can delay us.
   ReconfigureTimer();
@@ -717,7 +721,7 @@ nsIdleService::IdleTimerCallback(void)
         // This listener is now idle.
         curListener.isIdle = true;
         // Remember we have someone idle.
-        mAnyObserverIdle = true;
+        mIdleObserverCount++;
       } else {
         // Listeners that are not timed out yet are candidates for timing out.
         mDeltaToNextIdleSwitchInS = std::min(mDeltaToNextIdleSwitchInS,
@@ -822,7 +826,7 @@ void
 nsIdleService::ReconfigureTimer(void)
 {
   // Check if either someone is idle, or someone will become idle.
-  if (!mAnyObserverIdle && UINT32_MAX == mDeltaToNextIdleSwitchInS) {
+  if ((mIdleObserverCount == 0) && UINT32_MAX == mDeltaToNextIdleSwitchInS) {
     // If not, just let any existing timers run to completion
     // And bail out.
     PR_LOG(sLog, PR_LOG_DEBUG,
@@ -853,7 +857,7 @@ nsIdleService::ReconfigureTimer(void)
                       nextTimeoutDuration.ToMilliseconds());
 #endif
   // Check if we should correct the timeout time because we should poll before.
-  if (mAnyObserverIdle && UsePollMode()) {
+  if ((mIdleObserverCount > 0) && UsePollMode()) {
     TimeStamp pollTimeout =
         curTime + TimeDuration::FromMilliseconds(MIN_IDLE_POLL_INTERVAL_MSEC);
 

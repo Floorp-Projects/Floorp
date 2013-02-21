@@ -27,7 +27,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteTestRoot = self.device.getTestRoot("xpcshell")
         # remoteBinDir contains xpcshell and its wrapper script, both of which must
         # be executable. Since +x permissions cannot usually be set on /mnt/sdcard,
-        # and the test root may be on /mnt/sdcard, remoteBinDir is set to be on 
+        # and the test root may be on /mnt/sdcard, remoteBinDir is set to be on
         # /data/local, always.
         self.remoteBinDir = "/data/local/xpcb"
         # Terse directory names are used here ("c" for the components directory)
@@ -45,20 +45,20 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.testingModulesDir = options.testingModulesDir
 
         if self.options.objdir:
-          self.xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
+            self.xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
         elif os.path.isdir(os.path.join(here, 'tests')):
-          self.xpcDir = os.path.join(here, 'tests')
+            self.xpcDir = os.path.join(here, 'tests')
         else:
-          print >> sys.stderr, "Couldn't find local xpcshell test directory"
-          sys.exit(1)
+            print >> sys.stderr, "Couldn't find local xpcshell test directory"
+            sys.exit(1)
 
         if options.setup:
-          self.setupUtilities()
-          self.setupModules()
-          self.setupTestDir()
+            self.setupUtilities()
+            self.setupModules()
+            self.setupTestDir()
         if options.localAPK:
-          self.remoteAPK = self.remoteJoin(self.remoteBinDir, os.path.basename(options.localAPK))
-          self.setAppRoot()
+            self.remoteAPK = self.remoteJoin(self.remoteBinDir, os.path.basename(options.localAPK))
+            self.setAppRoot()
 
     def setAppRoot(self):
         # Determine the application root directory associated with the package
@@ -66,13 +66,13 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.appRoot = None
         packageName = None
         if self.options.localAPK:
-          try:
-            packageName = subprocess.check_output(["unzip", "-p", self.options.localAPK, "package-name.txt"])
-            if packageName:
-              self.appRoot = self.device.getAppRoot(packageName.strip())
-          except Exception as detail:
-            print "unable to determine app root: " + detail
-            pass
+            try:
+                packageName = subprocess.check_output(["unzip", "-p", self.options.localAPK, "package-name.txt"])
+                if packageName:
+                    self.appRoot = self.device.getAppRoot(packageName.strip())
+            except Exception as detail:
+                print "unable to determine app root: " + detail
+                pass
         return None
 
     def remoteJoin(self, path1, path2):
@@ -82,25 +82,25 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
     def remoteForLocal(self, local):
         for mapping in self.pathMapping:
-          if (os.path.abspath(mapping.local) == os.path.abspath(local)):
-            return mapping.remote
+            if (os.path.abspath(mapping.local) == os.path.abspath(local)):
+                return mapping.remote
         return local
 
     def setupUtilities(self):
         if (not self.device.dirExists(self.remoteBinDir)):
-          # device.mkDir may fail here where shellCheckOutput may succeed -- see bug 817235
-          self.device.shellCheckOutput(["mkdir", self.remoteBinDir]);
+            # device.mkDir may fail here where shellCheckOutput may succeed -- see bug 817235
+            self.device.shellCheckOutput(["mkdir", self.remoteBinDir]);
 
         remotePrefDir = self.remoteJoin(self.remoteBinDir, "defaults/pref")
         if (self.device.dirExists(self.remoteTmpDir)):
-          self.device.removeDir(self.remoteTmpDir)
+            self.device.removeDir(self.remoteTmpDir)
         self.device.mkDir(self.remoteTmpDir)
         if (not self.device.dirExists(remotePrefDir)):
-          self.device.mkDirs(self.remoteJoin(remotePrefDir, "extra"))
+            self.device.mkDirs(self.remoteJoin(remotePrefDir, "extra"))
         if (not self.device.dirExists(self.remoteScriptsDir)):
-          self.device.mkDir(self.remoteScriptsDir)
+            self.device.mkDir(self.remoteScriptsDir)
         if (not self.device.dirExists(self.remoteComponentsDir)):
-          self.device.mkDir(self.remoteComponentsDir)
+            self.device.mkDir(self.remoteComponentsDir)
 
         local = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'head.js')
         remoteFile = self.remoteJoin(self.remoteScriptsDir, "head.js")
@@ -123,28 +123,28 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.pushFile(local, remoteFile)
 
         if self.options.localAPK:
-          remoteFile = self.remoteJoin(self.remoteBinDir, os.path.basename(self.options.localAPK))
-          self.device.pushFile(self.options.localAPK, remoteFile)
+            remoteFile = self.remoteJoin(self.remoteBinDir, os.path.basename(self.options.localAPK))
+            self.device.pushFile(self.options.localAPK, remoteFile)
 
         self.pushLibs()
 
     def pushLibs(self):
         for file in os.listdir(self.localLib):
-          if (file.endswith(".so")):
-            print >> sys.stderr, "Pushing %s.." % file
-            if 'libxul' in file:
-              print >> sys.stderr, "This is a big file, it could take a while."
-            remoteFile = self.remoteJoin(self.remoteBinDir, file)
-            self.device.pushFile(os.path.join(self.localLib, file), remoteFile)
+            if (file.endswith(".so")):
+                print >> sys.stderr, "Pushing %s.." % file
+                if 'libxul' in file:
+                    print >> sys.stderr, "This is a big file, it could take a while."
+                remoteFile = self.remoteJoin(self.remoteBinDir, file)
+                self.device.pushFile(os.path.join(self.localLib, file), remoteFile)
 
         # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
         localArmLib = os.path.join(self.localLib, "lib")
         if os.path.exists(localArmLib):
-          for root, dirs, files in os.walk(localArmLib):
-            for file in files:
-              if (file.endswith(".so")):
-                remoteFile = self.remoteJoin(self.remoteBinDir, file)
-                self.device.pushFile(os.path.join(root, file), remoteFile)
+            for root, dirs, files in os.walk(localArmLib):
+                for file in files:
+                    if (file.endswith(".so")):
+                        remoteFile = self.remoteJoin(self.remoteBinDir, file)
+                        self.device.pushFile(os.path.join(root, file), remoteFile)
 
     def setupModules(self):
         if self.testingModulesDir:
@@ -158,11 +158,11 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         xpcshell.XPCShellTests.buildTestList(self)
         uniqueTestPaths = set([])
         for test in self.alltests:
-          uniqueTestPaths.add(test['here'])
+            uniqueTestPaths.add(test['here'])
         for testdir in uniqueTestPaths:
-          abbrevTestDir = os.path.relpath(testdir, self.xpcDir)
-          remoteScriptDir = self.remoteJoin(self.remoteScriptsDir, abbrevTestDir)
-          self.pathMapping.append(PathMapping(testdir, remoteScriptDir))
+            abbrevTestDir = os.path.relpath(testdir, self.xpcDir)
+            remoteScriptDir = self.remoteJoin(self.remoteScriptsDir, abbrevTestDir)
+            self.pathMapping.append(PathMapping(testdir, remoteScriptDir))
 
     def buildXpcsCmd(self, testdir):
         # change base class' paths to remote paths and use base class to build command
@@ -176,15 +176,15 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         # remove "-g <dir> -a <dir>" and add "--greomni <apk>"
         del(self.xpcsCmd[1:5])
         if self.options.localAPK:
-          self.xpcsCmd.insert(3, '--greomni')
-          self.xpcsCmd.insert(4, self.remoteAPK)
+            self.xpcsCmd.insert(3, '--greomni')
+            self.xpcsCmd.insert(4, self.remoteAPK)
 
         if self.remoteDebugger:
-          # for example, "/data/local/gdbserver" "localhost:12345"
-          self.xpcsCmd = [
-            self.remoteDebugger,
-            self.remoteDebuggerArgs,
-            self.xpcsCmd]
+            # for example, "/data/local/gdbserver" "localhost:12345"
+            self.xpcsCmd = [
+              self.remoteDebugger,
+              self.remoteDebuggerArgs,
+              self.xpcsCmd]
 
     def getHeadAndTailFiles(self, test):
         """Override parent method to find files on remote device."""
@@ -209,9 +209,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
     def buildCmdTestFile(self, name):
         remoteDir = self.remoteForLocal(os.path.dirname(name))
         if remoteDir == self.remoteHere:
-          remoteName = os.path.basename(name)
+            remoteName = os.path.basename(name)
         else:
-          remoteName = self.remoteJoin(remoteDir, os.path.basename(name))
+            remoteName = self.remoteJoin(remoteDir, os.path.basename(name))
         return ['-e', 'const _TEST_FILE = ["%s"];' %
                  replaceBackSlashes(remoteName)]
 
@@ -219,7 +219,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.removeDir(self.profileDir)
         self.device.mkDir(self.profileDir)
         if self.interactive or self.singleFile:
-          self.log.info("TEST-INFO | profile dir is %s" % self.profileDir)
+            self.log.info("TEST-INFO | profile dir is %s" % self.profileDir)
         return self.profileDir
 
     def logCommand(self, name, completeCmd, testdir):
@@ -262,12 +262,12 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.setLD_LIBRARY_PATH(self.env)
         self.env["MOZ_LINKER_CACHE"]=self.remoteBinDir
         if self.options.localAPK and self.appRoot:
-          self.env["GRE_HOME"]=self.appRoot
+            self.env["GRE_HOME"]=self.appRoot
         self.env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
         self.env["TMPDIR"]=self.remoteTmpDir
         self.env["HOME"]=self.profileDir
         if self.options.setup:
-          self.pushWrapper()
+            self.pushWrapper()
 
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
         cmd.insert(1, self.remoteHere)
@@ -292,7 +292,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
     def poll(self, proc):
         if self.device.processExist("xpcshell") is None:
-          return self.getReturnCode(proc)
+            return self.getReturnCode(proc)
         # Process is still running
         return None
 
@@ -301,9 +301,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
     def getReturnCode(self, proc):
         if self.shellReturnCode is not None:
-          return self.shellReturnCode
+            return self.shellReturnCode
         else:
-          return -1
+            return -1
 
     def removeDir(self, dirname):
         self.device.removeDir(dirname)
@@ -318,10 +318,10 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             f.write(stdout)
 
             for leakLog in leakLogs:
-              if os.path.exists(leakLog):
-                leaks = open(leakLog, "r")
-                f.write(leaks.read())
-                leaks.close()
+                if os.path.exists(leakLog):
+                    leaks = open(leakLog, "r")
+                    f.write(leaks.read())
+                    leaks.close()
         finally:
             if f <> None:
                 f.close()
@@ -422,50 +422,49 @@ def main():
     parser = RemoteXPCShellOptions()
     options, args = parser.parse_args()
     if not options.localAPK:
-      for file in os.listdir(os.path.join(options.objdir, "dist")):
-        if (file.endswith(".apk") and file.startswith("fennec")):
-          options.localAPK = os.path.join(options.objdir, "dist")
-          options.localAPK = os.path.join(options.localAPK, file)
-          print >>sys.stderr, "using APK: " + options.localAPK
-          break
-      else:
-        print >>sys.stderr, "Error: please specify an APK"
-        sys.exit(1)
+        for file in os.listdir(os.path.join(options.objdir, "dist")):
+            if (file.endswith(".apk") and file.startswith("fennec")):
+                options.localAPK = os.path.join(options.objdir, "dist")
+                options.localAPK = os.path.join(options.localAPK, file)
+                print >>sys.stderr, "using APK: " + options.localAPK
+                break
+        else:
+            print >>sys.stderr, "Error: please specify an APK"
+            sys.exit(1)
 
     options = parser.verifyRemoteOptions(options)
 
     if len(args) < 1 and options.manifest is None:
-      print >>sys.stderr, """Usage: %s <test dirs>
-           or: %s --manifest=test.manifest """ % (sys.argv[0], sys.argv[0])
-      sys.exit(1)
-
-    if (options.dm_trans == "adb"):
-      if (options.deviceIP):
-        dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort, packageName=None, deviceRoot=options.remoteTestRoot)
-      else:
-        dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remoteTestRoot)
-    else:
-      dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
-      if (options.deviceIP == None):
-        print "Error: you must provide a device IP to connect to via the --device option"
+        print >>sys.stderr, """Usage: %s <test dirs>
+             or: %s --manifest=test.manifest """ % (sys.argv[0], sys.argv[0])
         sys.exit(1)
 
+    if (options.dm_trans == "adb"):
+        if (options.deviceIP):
+            dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort, packageName=None, deviceRoot=options.remoteTestRoot)
+        else:
+            dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remoteTestRoot)
+    else:
+        dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+        if (options.deviceIP == None):
+            print "Error: you must provide a device IP to connect to via the --device option"
+            sys.exit(1)
+
     if options.interactive and not options.testPath:
-      print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
-      sys.exit(1)
+        print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
+        sys.exit(1)
 
     if not options.objdir:
-      print >>sys.stderr, "Error: You must specify an objdir"
-      sys.exit(1)
+        print >>sys.stderr, "Error: You must specify an objdir"
+        sys.exit(1)
 
     xpcsh = XPCShellRemote(dm, options, args)
 
     if not xpcsh.runTests(xpcshell='xpcshell',
                           testdirs=args[0:],
                           **options.__dict__):
-      sys.exit(1)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
-  main()
-
+    main()
