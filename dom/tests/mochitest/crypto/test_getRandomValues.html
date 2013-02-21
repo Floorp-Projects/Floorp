@@ -140,15 +140,23 @@ function onWindowLoad()
   }
 
   // Test a one-length buffer view
-  try {
-    var a = new Int8Array(1);
-    var b = window.crypto.getRandomValues(a);
-    ok(a[0] !== 0, "The array buffer has one random value");
-    ok(a === b, "ArrayBuffer result is argument buffer");
+  var randomVal = 0;
+  // The probability of getRandomValues generating a zero value is 1/256 so we
+  // run this in a loop until it returns a non-zero value to guard against
+  // false failures
+  do {
+    try {
+      var a = new Uint8Array(1);
+      var b = window.crypto.getRandomValues(a);
+      randomVal = a[0];
+      ok(a === b, "ArrayBuffer result is argument buffer");
+    }
+    catch (ex) {
+      ok(false, "A one-length array buffer view should not fail");
+    }
   }
-  catch (ex) {
-    ok(false, "A one-length array buffer view should not fail");
-  }
+  while (randomVal == 0);
+  ok(randomVal !== 0, "The array buffer eventually had one random value");
 
   // Test a 16 byte length buffer
   var testConfig = { len: 16, type: "Int8", pass: true };
