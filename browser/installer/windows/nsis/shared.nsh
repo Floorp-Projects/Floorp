@@ -50,8 +50,19 @@ FunctionEnd
       ${GetLongPath} "$0" $0
     ${EndIf}
     ${If} "$0" == "$INSTDIR"
-      ; Win8 specific registration
-      Call RegisterStartMenuTile
+
+      ; PostUpdate is called from both session 0 and from the user session
+      ; for service updates, make sure that we only register with the user session
+      ; Otherwise ApplicationID::Set can fail intermittently with a file in use error.
+      System::Call "kernel32::GetCurrentProcessId() i.r0"
+      System::Call "kernel32::ProcessIdToSessionId(i $0, *i ${NSIS_MAX_STRLEN} r9)"
+      
+      ${If} $9 != 0 ; We're not running in session 0
+        ; Win8 specific registration
+        Call RegisterStartMenuTile
+      ${EndIf}
+
+
     ${EndIf}
   ${EndIf}
 
@@ -192,6 +203,7 @@ FunctionEnd
 ; Register the DEH
 !ifdef MOZ_METRO
   ${If} ${AtLeastWin8}
+  ${AndIf} $9 != 0 ; We're not running in session 0
     ; If RegisterCEH is called too close to changing the shortcut AppUserModelID
     ; and if the tile image is not already in cache.  Then Windows won't refresh
     ; the tile image on the start screen.  So wait before calling RegisterCEH.
