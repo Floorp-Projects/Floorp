@@ -504,6 +504,32 @@ MGoto::New(MBasicBlock *target)
     return new MGoto(target);
 }
 
+void
+MUnbox::printOpcode(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " ");
+    getOperand(0)->printName(fp);
+    fprintf(fp, " ");
+
+    switch (type()) {
+      case MIRType_Int32: fprintf(fp, "to Int32"); break;
+      case MIRType_Double: fprintf(fp, "to Double"); break;
+      case MIRType_Boolean: fprintf(fp, "to Boolean"); break;
+      case MIRType_String: fprintf(fp, "to String"); break;
+      case MIRType_Object: fprintf(fp, "to Object"); break;
+      default: break;
+    }
+
+    switch (mode()) {
+      case Fallible: fprintf(fp, " (fallible)"); break;
+      case Infallible: fprintf(fp, " (infallible)"); break;
+      case TypeBarrier: fprintf(fp, " (typebarrier)"); break;
+      case TypeGuard: fprintf(fp, " (typeguard)"); break;
+      default: break;
+    }
+}
+
 MPhi *
 MPhi::New(uint32_t slot)
 {
