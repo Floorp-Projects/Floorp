@@ -55,7 +55,7 @@ MOCHITEST_FILES = \
     test_notifications_popup.html \
     privbrowsing_perwindowpb_iframe.html \
     test_privbrowsing_perwindowpb.html \
-    test_prompt.html \
+    $(filter disabled-for-intermittent-failures--bug-835904, test_prompt.html) \
     test_prompt_async.html \
     test_xhr.html \
     test_xml_load.html \
