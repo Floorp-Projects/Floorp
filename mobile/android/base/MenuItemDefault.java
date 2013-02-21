@@ -62,6 +62,11 @@ public class MenuItemDefault extends TextView
     }
 
     @Override
+    public View getView() {
+        return this;
+    }
+
+    @Override
     public void setIcon(Drawable icon) {
         mIcon = icon;
 
