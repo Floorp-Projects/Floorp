@@ -750,11 +750,6 @@ JSObject::setSingletonType(JSContext *cx, js::HandleObject obj)
     if (!cx->typeInferenceEnabled())
         return true;
 
-    mozilla::DebugOnly<JSFunction *> fun = obj->type()->newScript ? obj->type()->newScript->fun : NULL;
-    JS_ASSERT(!obj->hasLazyType());
-    JS_ASSERT_IF(obj->getTaggedProto().isObject() && !obj->type()->newScript,
-                 obj->type() == obj->getTaggedProto().toObject()->getNewType(cx, obj->getClass(), fun));
-
     js::types::TypeObject *type = cx->compartment->getLazyType(cx, obj->getClass(), obj->getTaggedProto());
     if (!type)
         return false;
