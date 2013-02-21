@@ -18,15 +18,27 @@ namespace mozilla {
 namespace layers {
 
 
-ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop)
-: mMessageLoop(aLoop)
+ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop, Transport* aTransport)
+  : mMessageLoop(aLoop)
+  , mTransport(aTransport)
 {
   ImageContainerParent::CreateSharedImageMap();
 }
 
 ImageBridgeParent::~ImageBridgeParent()
 {
-  ImageContainerParent::DestroySharedImageMap();
+  if (mTransport) {
+    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                     new DeleteTask<Transport>(mTransport));
+  }
+}
+
+void
+ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  MessageLoop::current()->PostTask(
+    FROM_HERE,
+    NewRunnableMethod(this, &ImageBridgeParent::DeferredDestroy));
 }
 
 static void
@@ -47,11 +59,12 @@ ImageBridgeParent::Create(Transport* aTransport, ProcessId aOtherProcess)
   }
 
   MessageLoop* loop = CompositorParent::CompositorLoop();
-  ImageBridgeParent* bridge = new ImageBridgeParent(loop);
+  nsRefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport);
+  bridge->mSelfRef = bridge;
   loop->PostTask(FROM_HERE,
                  NewRunnableFunction(ConnectImageBridgeInParentProcess,
-                                     bridge, aTransport, processHandle));
-  return bridge;
+                                     bridge.get(), aTransport, processHandle));
+  return bridge.get();
 }
 
 bool ImageBridgeParent::RecvStop()
@@ -116,6 +129,12 @@ MessageLoop * ImageBridgeParent::GetMessageLoop() {
   return mMessageLoop;
 }
 
+void
+ImageBridgeParent::DeferredDestroy()
+{
+  mSelfRef = nullptr;
+  // |this| was just destroyed, hands off
+}
 
 } // layers
 } // mozilla

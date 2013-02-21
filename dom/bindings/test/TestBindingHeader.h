@@ -16,6 +16,8 @@
 #include "../TestCodeGenBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 
+extern bool TestFuncControlledMember(JSContext*, JSObject*);
+
 namespace mozilla {
 namespace dom {
 
@@ -469,6 +471,27 @@ public:
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,
                             const Sequence<OwningNonNull<TestInterface> >&);
+
+  // Conditionally exposed methods/attributes
+  bool Prefable1();
+  bool Prefable2();
+  bool Prefable3();
+  bool Prefable4();
+  bool Prefable5();
+  bool Prefable6();
+  bool Prefable7();
+  bool Prefable8();
+  bool Prefable9();
+  void Prefable10();
+  void Prefable11();
+  bool Prefable12();
+  void Prefable13();
+  bool Prefable14();
+  bool Prefable15();
+  bool Prefable16();
+  void Prefable17();
+  void Prefable18();
+  void Prefable19();
 
   // Miscellania
   int32_t AttrWithLenientThis();

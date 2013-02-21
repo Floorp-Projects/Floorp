@@ -68,6 +68,9 @@ def Load(build_files, format, default_variables={},
   # avoiding collisions with user and automatic variables.
   default_variables['GENERATOR'] = format
 
+  # Provide a PYTHON value to run sub-commands with the same python
+  default_variables['PYTHON'] = sys.executable
+
   # Format can be a custom python file, or by default the name of a module
   # within gyp.generator.
   if format.endswith('.py'):

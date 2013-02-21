@@ -15,12 +15,12 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessibleRelation.h"
 #include "nsWinUtils.h"
+#include "ServiceProvider.h"
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
 #include "sdnAccessible.h"
 #include "States.h"
-#include "uiaRawElmProvider.h"
 
 #ifdef A11Y_LOG
 #include "Logging.h"
@@ -90,7 +90,7 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 
     *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
   } else if (IID_IServiceProvider == iid)
-    *ppv = static_cast<IServiceProvider*>(this);
+    *ppv = new ServiceProvider(this);
   else if (IID_IAccessible2 == iid && !Compatibility::IsIA2Off())
     *ppv = static_cast<IAccessible2*>(this);
   else if (IID_ISimpleDOMNode == iid) {
@@ -125,32 +125,6 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   return S_OK;
 
   A11Y_TRYBLOCK_END
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// IServiceProvider
-
-STDMETHODIMP
-AccessibleWrap::QueryService(REFGUID aGuidService, REFIID aIID,
-                             void** aInstancePtr)
-{
-  if (!aInstancePtr)
-    return E_INVALIDARG;
-
-  *aInstancePtr = NULL;
-
-  // UIA IAccessibleEx
-  if (aGuidService == IID_IAccessibleEx &&
-      Preferences::GetBool("accessibility.uia.enable")) {
-    uiaRawElmProvider* accEx = new uiaRawElmProvider(this);
-    HRESULT hr = accEx->QueryInterface(aIID, aInstancePtr);
-    if (FAILED(hr))
-      delete accEx;
-
-    return hr;
-  }
-
-  return nsAccessNodeWrap::QueryService(aGuidService, aIID, aInstancePtr);
 }
 
 //-----------------------------------------------------

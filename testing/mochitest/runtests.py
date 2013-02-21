@@ -584,6 +584,8 @@ class Mochitest(object):
 
   def buildProfile(self, options):
     """ create the profile and add optional chrome bits and files if requested """
+    if options.browserChrome and options.timeout:
+      options.extraPrefs.append("testing.browserTestHarness.timeout=%d" % options.timeout)
     self.automation.initializeProfile(options.profilePath,
                                       options.extraPrefs,
                                       useServerLocations=True)

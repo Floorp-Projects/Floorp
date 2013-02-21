@@ -514,6 +514,7 @@ this.ICC_STATUS_ERROR_WRONG_PARAMETERS = 0x6a;
 // ICC call barring facility.
 // TS 27.007, clause 7.4, +CLCK
 this.ICC_CB_FACILITY_SIM = "SC";
+this.ICC_CB_FACILITY_FDN = "FD";
 
 // ICC service class
 // TS 27.007, clause 7.4, +CLCK

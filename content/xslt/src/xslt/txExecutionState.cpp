@@ -208,8 +208,8 @@ txExecutionState::getVariable(int32_t aNamespace, nsIAtom* aLName,
         return NS_ERROR_FAILURE;
     }
     
-    NS_ASSERTION(var->mExpr && !var->mFirstInstruction ||
-                 !var->mExpr && var->mFirstInstruction,
+    NS_ASSERTION((var->mExpr && !var->mFirstInstruction) ||
+                 (!var->mExpr && var->mFirstInstruction),
                  "global variable should have either instruction or expression");
 
     // Is this a stylesheet parameter that has a value?

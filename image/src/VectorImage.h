@@ -23,6 +23,8 @@ namespace image {
 
 class SVGDocumentWrapper;
 class SVGRootRenderingObserver;
+class SVGLoadEventListener;
+class SVGParseCompleteListener;
 
 class VectorImage : public ImageResource,
                     public nsIStreamListener
@@ -53,11 +55,19 @@ public:
                                         uint32_t aCount) MOZ_OVERRIDE;
   virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
                                        nsISupports* aContext,
-                                       nsresult status) MOZ_OVERRIDE;
+                                       nsresult aResult,
+                                       bool aLastPart) MOZ_OVERRIDE;
   virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
-  // Callback for SVGRootRenderingObserver
+  // Callback for SVGRootRenderingObserver.
   void InvalidateObserver();
+
+  // Callback for SVGParseCompleteListener.
+  void OnSVGDocumentParsed();
+
+  // Callbacks for SVGLoadEventListener.
+  void OnSVGDocumentLoaded();
+  void OnSVGDocumentError();
 
 protected:
   VectorImage(imgStatusTracker* aStatusTracker = nullptr, nsIURI* aURI = nullptr);
@@ -67,8 +77,29 @@ protected:
   virtual bool     ShouldAnimate();
 
 private:
+  void CancelAllListeners();
+
+  // A private structure used for storing the arguments to
+  // imgStatusTracker::OnStopRequest until we're ready to call it.
+  struct StopRequest
+  {
+    StopRequest(bool aLastPart = true, nsresult aStatus = NS_OK)
+      : lastPart(aLastPart)
+      , status(aStatus)
+    { }
+
+    bool lastPart;
+    nsresult status;
+  };
+
   nsRefPtr<SVGDocumentWrapper>       mSVGDocumentWrapper;
   nsRefPtr<SVGRootRenderingObserver> mRenderingObserver;
+  nsRefPtr<SVGLoadEventListener>     mLoadEventListener;
+  nsRefPtr<SVGParseCompleteListener> mParseCompleteListener;
+
+  // If we need to fire OnStopRequest, this stores the parameters we got when
+  // OnImageDataComplete was called.
+  Maybe<StopRequest> mStopRequest;       
 
   nsIntRect      mRestrictedRegion;       // If we were created by
                                           // ExtractFrame, this is the region
@@ -76,7 +107,7 @@ private:
                                           // Otherwise, this is ignored.
 
   bool           mIsInitialized:1;        // Have we been initalized?
-  bool           mIsFullyLoaded:1;        // Has OnStopRequest been called?
+  bool           mIsFullyLoaded:1;        // Has the SVG document finished loading?
   bool           mIsDrawing:1;            // Are we currently drawing?
   bool           mHaveAnimations:1;       // Is our SVG content SMIL-animated?
                                           // (Only set after mIsFullyLoaded.)

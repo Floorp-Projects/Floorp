@@ -175,6 +175,8 @@ var ContextMenuHandler = {
           linkUrl = state.linkURL;
           state.linkTitle = popupNode.textContent || popupNode.title;
           state.linkProtocol = this._getProtocol(this._getURI(state.linkURL));
+          // mark as text so we can pickup on selection below
+          isText = true;
           break;
         } else if (this._isTextInput(elem)) {
           let selectionStart = elem.selectionStart;
@@ -188,14 +190,11 @@ var ContextMenuHandler = {
             if (selectionStart != selectionEnd) {
               state.types.push("copy");
               state.string = elem.value.slice(selectionStart, selectionEnd);
-            } else if (elem.value) {
-              state.types.push("copy-all");
+            }
+            if (elem.value && (selectionStart > 0 || selectionEnd < elem.textLength)) {
+              state.types.push("selectable");
               state.string = elem.value;
             }
-          }
-
-          if (selectionStart > 0 || selectionEnd < elem.textLength) {
-            state.types.push("select-all");
           }
 
           if (!elem.textLength) {
@@ -227,6 +226,7 @@ var ContextMenuHandler = {
       elem = elem.parentNode;
     }
 
+    // Over arching text tests
     if (isText) {
       // If this is text and has a selection, we want to bring
       // up the copy option on the context menu.
@@ -334,36 +334,3 @@ var ContextMenuHandler = {
 };
 
 ContextMenuHandler.init();
-
-ContextMenuHandler.registerType("mailto", function(aState, aElement) {
-  return aState.linkProtocol == "mailto";
-});
-
-ContextMenuHandler.registerType("callto", function(aState, aElement) {
-  let protocol = aState.linkProtocol;
-  return protocol == "tel" || protocol == "callto" || protocol == "sip" || protocol == "voipto";
-});
-
-ContextMenuHandler.registerType("link-openable", function(aState, aElement) {
-  return Util.isOpenableScheme(aState.linkProtocol);
-});
-
-["image", "video"].forEach(function(aType) {
-  ContextMenuHandler.registerType(aType+"-shareable", function(aState, aElement) {
-    if (aState.types.indexOf(aType) == -1)
-      return false;
-
-    let protocol = ContextMenuHandler._getProtocol(ContextMenuHandler._getURI(aState.mediaURL));
-    return Util.isShareableScheme(protocol);
-  });
-});
-
-ContextMenuHandler.registerType("image-loaded", function(aState, aElement) {
-  if (aState.types.indexOf("image") != -1) {
-    let request = aElement.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-    if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
-      return true;
-  }
-  return false;
-});
-

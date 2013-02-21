@@ -119,3 +119,5 @@ DOM4_MSG_DEF(ReadOnlyError, "A mutation operation was attempted in a READ_ONLY l
 
 DOM4_MSG_DEF(InvalidStateError, "A mutation operation was attempted on a file storage that did not allow mutations.", NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR)
 DOM4_MSG_DEF(AbortError, "A request was aborted, for example through a call to LockedFile.abort.", NS_ERROR_DOM_FILEHANDLE_ABORT_ERR)
+
+DOM_MSG_DEF(NS_ERROR_DOM_JS_EXCEPTION, "A callback threw an exception")

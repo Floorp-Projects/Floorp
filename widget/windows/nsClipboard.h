@@ -30,6 +30,7 @@ public:
   // nsIClipboard
   NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
                                     int32_t aWhichClipboard, bool *_retval); 
+  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard);
 
   // Internal Native Routines
   static nsresult CreateNativeDataObject(nsITransferable * aTransferable, 

@@ -111,6 +111,7 @@ public class AboutHomeContent extends ScrollView
     private static Rect sIconBounds;
     private static TextAppearanceSpan sSubTitleSpan;
     private static Drawable sPinDrawable = null;
+    private int mThumbnailBackground;
 
     public interface UriLoadCallback {
         public void callback(String uriSpec);
@@ -136,6 +137,7 @@ public class AboutHomeContent extends ScrollView
         int iconSize = mContext.getResources().getDimensionPixelSize(R.dimen.abouthome_addon_icon_size);
         sIconBounds = new Rect(0, 0, iconSize, iconSize); 
         sSubTitleSpan = new TextAppearanceSpan(mContext, R.style.AboutHome_TextAppearance_SubTitle);
+        mThumbnailBackground = mContext.getResources().getColor(R.color.abouthome_thumbnail_bg);
 
         inflate();
 
@@ -350,10 +352,12 @@ public class AboutHomeContent extends ScrollView
 
         if (thumbnail == null) {
             thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
+            thumbnailView.setBackgroundColor(mThumbnailBackground);
             thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         } else {
             try {
                 thumbnailView.setImageBitmap(thumbnail);
+                thumbnailView.setBackgroundColor(0x0);
                 thumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             } catch (OutOfMemoryError oom) {
                 Log.e(LOGTAG, "Unable to load thumbnail bitmap", oom);
@@ -977,6 +981,7 @@ public class AboutHomeContent extends ScrollView
         holder.setTitle("");
         holder.setUrl("");
         holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
+        holder.thumbnailView.setBackgroundColor(mThumbnailBackground);
         holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         holder.setPinned(false);
     }

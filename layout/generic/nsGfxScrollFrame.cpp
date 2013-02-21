@@ -2333,7 +2333,7 @@ nsGfxScrollFrameInner::GetLineScrollAmount() const
     Preferences::AddIntVarCache(&sMinLineScrollAmountInPixels,
                                 "mousewheel.min_line_scroll_amount", 1);
   }
-  uint32_t appUnitsPerDevPixel = mOuter->PresContext()->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = mOuter->PresContext()->AppUnitsPerDevPixel();
   nscoord minScrollAmountInAppUnits =
     std::max(1, sMinLineScrollAmountInPixels) * appUnitsPerDevPixel;
   nscoord horizontalAmount = fm ? fm->AveCharWidth() : 0;
@@ -3566,16 +3566,16 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
       // if a resizer is present, get its size. Assume a default size of 15 pixels.
       nsSize resizerSize;
       nscoord defaultSize = nsPresContext::CSSPixelsToAppUnits(15);
-      resizerSize.width =
-        mVScrollbarBox ? mVScrollbarBox->GetMinSize(aState).width : defaultSize;
+      resizerSize.width = mVScrollbarBox ?
+        mVScrollbarBox->GetPrefSize(aState).width : defaultSize;
       if (resizerSize.width > r.width) {
         r.width = resizerSize.width;
         if (aContentArea.x == mScrollPort.x && !scrollbarOnLeft)
           r.x = aContentArea.XMost() - r.width;
       }
 
-      resizerSize.height =
-        mHScrollbarBox ? mHScrollbarBox->GetMinSize(aState).height : defaultSize;
+      resizerSize.height = mHScrollbarBox ?
+        mHScrollbarBox->GetPrefSize(aState).height : defaultSize;
       if (resizerSize.height > r.height) {
         r.height = resizerSize.height;
         if (aContentArea.y == mScrollPort.y)

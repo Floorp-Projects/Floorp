@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CC_Common.h"
-
 #include "CSFLogStream.h"
+
+#include "CC_Common.h"
 
 #include "CSFMediaProvider.h"
 #include "CSFAudioTermination.h"

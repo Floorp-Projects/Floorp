@@ -50,11 +50,12 @@ Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", t
 // The implementation of communications
 Components.utils.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
 
+Components.utils.import("resource://gre/modules/Services.jsm", this);
+
 // If profileDir is not available, osfile.jsm has been imported before the
 // profile is setup. In this case, we need to observe "profile-do-change"
 // and set OS.Constants.Path.profileDir as soon as it becomes available.
 if (!("profileDir" in OS.Constants.Path) || !("localProfileDir" in OS.Constants.Path)) {
-  Components.utils.import("resource://gre/modules/Services.jsm", this);
   let observer = function observer() {
     Services.obs.removeObserver(observer, "profile-do-change");
 
@@ -124,6 +125,37 @@ Object.defineProperty(OS.Shared, "DEBUG", {
         DEBUG = newVal;
     }
 });
+
+/**
+ * An observer function to be used to monitor web-workers-shutdown events.
+ */
+let webWorkersShutdownObserver = function webWorkersShutdownObserver() {
+  // Send a "System_shutdown" message to the worker.
+  Scheduler.post("System_shutdown").then(function onSuccess(opened) {
+    let msg = "";
+    if (opened.openedFiles.length > 0) {
+      msg += "The following files are still opened:\n" +
+        opened.openedFiles.join("\n");
+    }
+    if (opened.openedDirectoryIterators.length > 0) {
+      msg += "The following directory iterators are still opened:\n" +
+        opened.openedDirectoryIterators.join("\n");
+    }
+    // Only log if file descriptors leaks detected.
+    if (msg) {
+      LOG("WARNING: File descriptors leaks detected.\n" + msg);
+    }
+  });
+};
+
+// Attaching an observer listening to the "web-workers-shutdown".
+Services.obs.addObserver(webWorkersShutdownObserver, "web-workers-shutdown",
+  false);
+// Attaching the same observer listening to the
+// "test.osfile.web-workers-shutdown".
+// Note: This is used for testing purposes.
+Services.obs.addObserver(webWorkersShutdownObserver,
+  "test.osfile.web-workers-shutdown", false);
 
 /**
  * Representation of a file, with asynchronous methods.

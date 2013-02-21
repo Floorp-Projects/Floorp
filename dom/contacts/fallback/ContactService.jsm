@@ -210,8 +210,10 @@ this.DOMContactManager = {
         break;
       case "child-process-shutdown":
         if (DEBUG) debug("Unregister");
-        this._db.releaseCursors(this._liveCursors[mm]);
-        delete this._liveCursors[mm];
+        if (this._liveCursors[mm]) {
+          this._db.releaseCursors(this._liveCursors[mm]);
+          delete this._liveCursors[mm];
+        }
         let index = this._children.indexOf(mm);
         if (index != -1) {
           if (DEBUG) debug("Unregister index: " + index);

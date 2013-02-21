@@ -1636,8 +1636,6 @@ public class BrowserProvider extends ContentProvider {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
                     oldVersion + " to " + newVersion);
 
-            db.beginTransaction();
-
             // We have to do incremental upgrades until we reach the current
             // database schema version.
             for (int v = oldVersion + 1; v <= newVersion; v++) {
@@ -1705,9 +1703,6 @@ public class BrowserProvider extends ContentProvider {
                                 && !mContext.deleteDatabase(Obsolete.FAVICON_DB)) {
                 throw new SQLException("Could not delete " + Obsolete.FAVICON_DB);
             }
-
-            db.setTransactionSuccessful();
-            db.endTransaction();
         }
 
         @Override

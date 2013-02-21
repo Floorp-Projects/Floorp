@@ -2300,7 +2300,7 @@ struct NS_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcesso
 
     uint32_t numRuns;
     const gfxTextRun::GlyphRun *runs = mTextRun->GetGlyphRuns(&numRuns);
-    const uint32_t appUnitsPerDevUnit = mAppUnitsPerDevPixel;
+    const int32_t appUnitsPerDevUnit = mAppUnitsPerDevPixel;
     const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
     Point baselineOrigin =
       Point(point.x * devUnitsPerAppUnit, point.y * devUnitsPerAppUnit);
@@ -2424,7 +2424,7 @@ struct NS_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcesso
   gfxFontGroup* mFontgrp;
 
   // dev pixel conversion factor
-  uint32_t mAppUnitsPerDevPixel;
+  int32_t mAppUnitsPerDevPixel;
 
   // operation (fill or stroke)
   CanvasRenderingContext2D::TextDrawOperation mOp;

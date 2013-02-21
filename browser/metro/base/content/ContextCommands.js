@@ -23,12 +23,16 @@ var ContextCommands = {
    * Context menu handlers
    */
 
+  // Text specific
+
   copy: function cc_copy() {
     let target = ContextMenuUI.popupState.target;
     if (target.localName == "browser") {
+      // content
       if (ContextMenuUI.popupState.string != "undefined") {
         this.clipboard.copyString(ContextMenuUI.popupState.string,
                                   this.docRef);
+        this.showToast(Strings.browser.GetStringFromName("selectionHelper.textCopied"));
       } else {
         let x = ContextMenuUI.popupState.x;
         let y = ContextMenuUI.popupState.y;
@@ -36,7 +40,9 @@ var ContextCommands = {
         target.messageManager.sendAsyncMessage("Browser:ContextCommand", json);
       }
     } else {
+      // chrome
       target.editor.copy();
+      this.showToast(Strings.browser.GetStringFromName("selectionHelper.textCopied"));
     }
 
     if (target)
@@ -46,11 +52,13 @@ var ContextCommands = {
   paste: function cc_paste() {
     let target = ContextMenuUI.popupState.target;
     if (target.localName == "browser") {
+      // content
       let x = ContextMenuUI.popupState.x;
       let y = ContextMenuUI.popupState.y;
       let json = {x: x, y: y, command: "paste" };
       target.messageManager.sendAsyncMessage("Browser:ContextCommand", json);
     } else {
+      // chrome
       target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
       target.focus();
     }
@@ -63,23 +71,156 @@ var ContextCommands = {
     BrowserUI.goToURI();
   },
 
+  select: function cc_select() {
+    let contextInfo = { name: "",
+                        json: ContextMenuUI.popupState,
+                        target: ContextMenuUI.popupState.target };
+    SelectionHelperUI.openEditSession(contextInfo);
+  },
+
   selectAll: function cc_selectAll() {
     let target = ContextMenuUI.popupState.target;
     if (target.localName == "browser") {
+      // content
       let x = ContextMenuUI.popupState.x;
       let y = ContextMenuUI.popupState.y;
       let json = {x: x, y: y, command: "select-all" };
       target.messageManager.sendAsyncMessage("Browser:ContextCommand", json);
+      let contextInfo = { name: "",
+                          json: ContextMenuUI.popupState,
+                          target: ContextMenuUI.popupState.target };
+      SelectionHelperUI.attachEditSession(contextInfo);
     } else {
+      // chrome
       target.editor.selectAll();
       target.focus();
     }
   },
 
-  openInNewTab: function cc_openInNewTab() {
-    Browser.addTab(ContextMenuUI.popupState.linkURL, false, Browser.selectedTab);
-    ContextUI.peekTabs();
+  // called on display of the search text menu item
+  searchTextSetup: function cc_searchTextSetup(aRichListItem, aSearchString) {
+    let defaultURI;
+    let defaultName;
+    try {
+      let defaultPB = Services.prefs.getDefaultBranch(null);
+      const nsIPLS = Ci.nsIPrefLocalizedString;
+      defaultName = defaultPB.getComplexValue("browser.search.defaultenginename", nsIPLS).data;
+      let defaultEngine = Services.search.getEngineByName(defaultName);
+      defaultURI = defaultEngine.getSubmission(aSearchString).uri.spec;
+    } catch (ex) {
+      Cu.reportError(ex);
+      return false;
+    }
+    // label child node
+    let label = Services.strings
+                        .createBundle("chrome://browser/locale/browser.properties")
+                        .formatStringFromName("browser.search.contextTextSearchLabel",
+                                              [defaultName], 1);
+    aRichListItem.childNodes[0].setAttribute("value", label);
+    aRichListItem.setAttribute("searchString", defaultURI);
+    return true;
   },
+
+  searchText: function cc_searchText(aRichListItem) {
+    let defaultURI = aRichListItem.getAttribute("searchString");
+    aRichListItem.childNodes[0].setAttribute("value", "");
+    aRichListItem.setAttribute("searchString", "");
+    BrowserUI.newTab(defaultURI, Browser.selectedTab);
+  },
+
+  // Link specific
+
+  openLinkInNewTab: function cc_openLinkInNewTab() {
+    BrowserUI.newTab(ContextMenuUI.popupState.linkURL, Browser.selectedTab);
+  },
+
+  copyLink: function cc_copyLink() {
+    this.clipboard.copyString(ContextMenuUI.popupState.linkURL,
+                              this.docRef);
+    this.showToast(Strings.browser.GetStringFromName("selectionHelper.linkCopied"));
+  },
+
+  bookmarkLink: function cc_bookmarkLink() {
+    let state = ContextMenuUI.popupState;
+    let uri = Util.makeURI(state.linkURL);
+    let title = state.linkTitle || state.linkURL;
+
+    try {
+      Bookmarks.addForURI(uri, title);
+    } catch (e) {
+      return;
+    }
+
+    this.showToast(Strings.browser.GetStringFromName("alertLinkBookmarked"));
+  },
+
+  // Image specific
+
+  saveImageToLib: function cc_saveImageToLib() {
+    this.saveToWinLibrary("Pict");
+  },
+
+  copyImage: function cc_copyImage() {
+    // copy to clibboard
+    this.sendCommand("copy-image-contents");
+  },
+
+  copyImageSrc: function cc_copyImageSrc() {
+    this.clipboard.copyString(ContextMenuUI.popupState.mediaURL,
+                              this.docRef);
+    this.showToast(Strings.browser.GetStringFromName("selectionHelper.linkCopied"));
+  },
+
+  openImageInNewTab: function cc_openImageInNewTab() {
+    BrowserUI.newTab(ContextMenuUI.popupState.mediaURL, Browser.selectedTab);
+  },
+
+  // Video specific
+
+  saveVideoToLib: function cc_saveVideoToLib() {
+    this.saveToWinLibrary("Vids");
+  },
+
+  copyVideoSrc: function cc_copyVideoSrc() {
+    this.clipboard.copyString(ContextMenuUI.popupState.mediaURL,
+                              this.docRef);
+    this.showToast(Strings.browser.GetStringFromName("selectionHelper.linkCopied"));
+  },
+
+  openVideoInNewTab: function cc_openVideoInNewTab() {
+    BrowserUI.newTab(ContextMenuUI.popupState.mediaURL, Browser.selectedTab);
+  },
+
+  openVideoInFullscreen: function cc_openVideoInFullscreen() {
+    // XXX currently isn't working.
+    this.sendCommand('videotab');
+  },
+
+  // Bookmarks
+
+  editBookmark: function cc_editBookmark() {
+    let target = ContextMenuUI.popupState.target;
+    target.startEditing();
+  },
+
+  removeBookmark: function cc_removeBookmark() {
+    let target = ContextMenuUI.popupState.target;
+    target.remove();
+  },
+
+  // App bar
+
+  findInPage: function cc_findInPage() {
+    FindHelperUI.show();
+  },
+
+  viewOnDesktop: function cc_viewOnDesktop() {
+    Appbar.onViewOnDesktop();
+  },
+
+  /*
+   * Utilities
+   */
 
   saveToWinLibrary: function cc_saveToWinLibrary(aType) {
     let popupState = ContextMenuUI.popupState;
@@ -116,55 +257,9 @@ var ContextCommands = {
     });
   },
 
-  saveVideo: function cc_saveVideo() {
-    this.saveToWinLibrary("Vids");
-  },
-
-  saveVideoTo: function cc_saveVideoTo() {
-    this.saveFileAs(ContextMenuUI.popupState);
-  },
-
-  saveImage: function cc_saveImage() {
-    this.saveToWinLibrary("Pict");
-  },
-
-  saveImageTo: function cc_saveImageTo() {
-    this.saveFileAs(ContextMenuUI.popupState);
-  },
-
-  copyLink: function cc_copyLink() {
-    this.clipboard.copyString(ContextMenuUI.popupState.linkURL,
-                              this.docRef);
-  },
-
-  copyEmail: function cc_copyEmail() {
-    this.clipboard.copyString(ContextMenuUI.popupState.linkURL.substr(ContextMenuUI.popupState.linkURL.indexOf(':')+1),
-                              this.docRef);
-  },
-
-  copyPhone: function cc_copyPhone() {
-    this.clipboard.copyString(ContextMenuUI.popupState.linkURL.substr(ContextMenuUI.popupState.linkURL.indexOf(':')+1),
-                              this.docRef);
-  },
-
-  copyImage: function cc_copyImage() {
-    this.sendCommand("copy-image-contents");
-  },
-
-  bookmarkLink: function cc_bookmarkLink() {
-    let state = ContextMenuUI.popupState;
-    let uri = Util.makeURI(state.linkURL);
-    let title = state.linkTitle || state.linkURL;
-
-    try {
-      Bookmarks.addForURI(uri, title);
-    } catch (e) {
-      return;
-    }
-
-    let message = Strings.browser.GetStringFromName("alertLinkBookmarked");
+  showToast: function showToast(aString) {
     let toaster = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
-    toaster.showAlertNotification(null, message, "", false, "", null);
+    toaster.showAlertNotification(null, aString, "", false, "", null);
   },
 
   sendCommand: function cc_playVideo(aCommand) {
@@ -172,28 +267,6 @@ var ContextCommands = {
     let browser = ContextMenuUI.popupState.target;
     browser.messageManager.sendAsyncMessage("Browser:ContextCommand", { command: aCommand });
   },
-
-  editBookmark: function cc_editBookmark() {
-    let target = ContextMenuUI.popupState.target;
-    target.startEditing();
-  },
-
-  removeBookmark: function cc_removeBookmark() {
-    let target = ContextMenuUI.popupState.target;
-    target.remove();
-  },
-
-  findInPage: function cc_findInPage() {
-    FindHelperUI.show();
-  },
-
-  viewOnDesktop: function cc_viewOnDesktop() {
-    Appbar.onViewOnDesktop();
-  },
-
-  /*
-   * Utilities
-   */
 
   /*
    * isAccessibleDirectory

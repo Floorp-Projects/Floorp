@@ -12,7 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import android.widget.TextView;
 import android.app.Activity;
+import android.util.DisplayMetrics;
 
+/**
+ * This test covers the opening and content of the Share Link pop-up list
+ * The test opens the Share menu from the app menu, the URL bar, a link context menu and the Awesomescreen tabs
+ */
 public class testShareLink extends BaseTest {
     ListView list;
     String url;
@@ -23,18 +28,81 @@ public class testShareLink extends BaseTest {
     }
 
     public void testShareLink() {
-        url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        url = getAbsoluteUrl("/robocop/robocop_big_link.html");
         ArrayList<String> shareOptions;
-
         blockForGeckoReady();
 
         loadUrl(url);
+        mSolo.waitForText("Big Link"); // Waiting for page title to ensure the page is loaded
         selectMenuItem("Share");
         mSolo.waitForText("Share Via");
 
-        // Get list of current avaliable share activities
+        // Get list of current avaliable share activities and verify them
         shareOptions = getShareOptions();
-        verifyOptions(shareOptions);
+        ArrayList<String> displayedOptions = getSharePopupOption();
+        for (String option:shareOptions) {
+             // Verify if the option is present in the list of displayed share options
+             mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option found", option);
+        }
+
+        // Test share from the awesomebar context menu
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Close the share menu
+        mSolo.clickLongOnText("Big Link");
+        verifySharePopup(shareOptions,"Awesomebar");
+
+        // Test link Context Menu
+        DisplayMetrics dm = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        // The link has a 60px height, so let's try to hit the middle
+        float top = mDriver.getGeckoTop() + 30 * dm.density;
+        float left = mDriver.getGeckoLeft() + mDriver.getGeckoWidth() / 2;
+        mSolo.clickLongOnScreen(left, top);
+        verifySharePopup(shareOptions,"Link");
+
+        // Test share popup in Top Sites
+        ListView tslist = getAllPagesList(url);
+
+        // Make sure the keyboard is closed since a back here would just close the Awesomebar
+        mSolo.clickOnText("Bookmarks");
+        mSolo.clickOnText("Sites");
+        mSolo.waitForText("Big Link");
+
+        View allpages = tslist.getChildAt(1);
+        if (allpages != null) {
+            mSolo.clickLongOnView(allpages);
+            verifySharePopup(shareOptions,"Top Sites");
+        } else {
+            // The view should not be null but sometimes getChildAt fails
+            // TODO: Investigate why this fails
+            mAsserter.todo_isnot(allpages, null, "View should not be null but sometimes it is");
+        }
+
+        // Test the share popup in the Bookmarks tab
+        ListView blist = getBookmarksList();
+        mSolo.clickOnText("Bookmarks");
+        View bookmark = blist.getChildAt(1); // Getting child at 1 because 0 might be the Desktop folder
+        mSolo.clickLongOnView(bookmark);
+        verifySharePopup(shareOptions,"bookmarks");
+
+        // Test the share popup in the History tab
+        ListView hlist = getHistoryList();
+        mSolo.clickOnText("History");
+        View history = hlist.getChildAt(1); // Getting child at 1 because 0 might be the "Today" label
+        mSolo.clickLongOnView(history);
+        verifySharePopup(shareOptions,"history");
+    }
+
+    public void verifySharePopup(ArrayList<String> shareOptions, String openedFrom) {
+        mSolo.waitForText("Share");
+        mSolo.clickOnText("Share");
+        mSolo.waitForText("Share Via");
+        ArrayList<String> displayedOptions = getSharePopupOption();
+        for (String option:shareOptions) {
+             // Verify if the option is present in the list of displayed share options
+             mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option for " + openedFrom + (openedFrom.equals("Awesomebar") ? "" : " item") + " found", option);
+        }
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
     }
 
     // Create a SEND intent and get the possible activities offered
@@ -53,46 +121,33 @@ public class testShareLink extends BaseTest {
         return shareOptions;
     }
 
-    public void verifyOptions(ArrayList<String> shareOptions) {
-        Device device = new Device();
-        if (device.version.equals("2.x")) {
-            ArrayList<String> displayedOptions = new ArrayList();
-            ListView shareMenu = getDisplayedShareList();
+    public ArrayList<String> getSharePopupOption() {
+        ArrayList<String> displayedOptions = new ArrayList();
+        ListView shareMenu = getDisplayedShareList();
 
-            /* Will have to go in the ListView, get each child, for the child separate the icon and the label
-               and from the label get the label text in a String Array */
-            for (int i = 0; i < shareMenu.getAdapter().getCount();i++) {
-                 View shareItem = shareMenu.getAdapter().getView(i, null, null);
-                 ViewGroup shareItemEntry = (ViewGroup)shareItem;
-                 for (int j = 0; j < shareItemEntry.getChildCount(); j++) {
-                      View shareItemLabel = shareItemEntry.getChildAt(j);
-                      if (shareItemLabel instanceof android.widget.LinearLayout) {
-                          // The Item label is a LinearLayout of LinearLayouts
-                          ViewGroup itemLabel = (ViewGroup)shareItemLabel;
-                          for (int k = 0; k < itemLabel.getChildCount(); k++) {
-                               View shareItemName = itemLabel.getChildAt(k);
-                               if (shareItemName instanceof android.widget.TextView) {
-                                   /* The displayedOptions list array will also contain other elements that make up the
-                                      share item label but we will check the option to be present here so there is no need
-                                      at the moment to try and clean this array up further */
-                                   displayedOptions.add(((android.widget.TextView)shareItemName).getText().toString());
-                               }
-                          }
+        /* Will have to go in the ListView, get each child, for the child separate the icon and the label
+           and from the label get the label text in a String Array */
+        for (int i = 0; i < shareMenu.getAdapter().getCount();i++) {
+             View shareItem = shareMenu.getAdapter().getView(i, null, null);
+             ViewGroup shareItemEntry = (ViewGroup)shareItem;
+             for (int j = 0; j < shareItemEntry.getChildCount(); j++) {
+                  View shareItemLabel = shareItemEntry.getChildAt(j);
+                  if (shareItemLabel instanceof android.widget.LinearLayout) {
+                      // The Item label is a LinearLayout of LinearLayouts
+                      ViewGroup itemLabel = (ViewGroup)shareItemLabel;
+                      for (int k = 0; k < itemLabel.getChildCount(); k++) {
+                           View shareItemName = itemLabel.getChildAt(k);
+                           if (shareItemName instanceof android.widget.TextView) {
+                               /* The displayedOptions list array will also contain other elements that make up the
+                                  share item label but we will check the option to be present here so there is no need
+                                  at the moment to try and clean this array up further */
+                               displayedOptions.add(((android.widget.TextView)shareItemName).getText().toString());
+                           }
                       }
                   }
-            }
-
-            for (String option:shareOptions) {
-                 // Verify if the option is present in the list of displayed share options
-                 mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option found", option);
-            }
+             }
         }
-        else {
-            // For Honeycomb and newer the share options list is displayed as a menu not as a list pop-up
-            for (String option:shareOptions) {
-                mAsserter.ok(mSolo.searchText(option), "Found the option in the share menu", option);
-            }
-        }
+        return displayedOptions;
     }
 
     private boolean optionDisplayed(String shareOption, ArrayList<String> displayedOptions) {

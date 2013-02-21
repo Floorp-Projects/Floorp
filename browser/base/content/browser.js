@@ -4374,7 +4374,7 @@ var XULBrowserWindow = {
         if (e.target.readyState != "interactive" && e.target.readyState != "complete")
           return;
 
-        e.target.removeEventListener("readystate", onContentRSChange);
+        e.target.removeEventListener("readystatechange", onContentRSChange);
         disableFindCommands(shouldDisableFind(e.target));
       }
 
@@ -4763,7 +4763,7 @@ var TabsProgressListener = {
     if (aBrowser.contentWindow == aWebProgress.DOMWindow) {
       // Filter out any onLocationChanges triggered by anchor navigation
       // or history.push/pop/replaceState.
-      if (aRequest) {
+      if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
         // Initialize the click-to-play state.
         aBrowser._clickToPlayPluginsActivated = new Map();
         aBrowser._clickToPlayAllPluginsActivated = false;
