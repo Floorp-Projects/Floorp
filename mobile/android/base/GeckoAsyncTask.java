@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.util;
 
-import android.app.Activity;
 import android.os.Handler;
 
 // AsyncTask runs onPostExecute on the thread it is constructed on
@@ -14,13 +13,13 @@ import android.os.Handler;
 public abstract class GeckoAsyncTask<Params, Progress, Result> {
     public enum Priority { NORMAL, HIGH };
 
-    private final Activity mActivity;
     private volatile boolean mCancelled = false;
     private final Handler mBackgroundThreadHandler;
+    private final Handler mUiHandler;
     private Priority mPriority = Priority.NORMAL;
 
-    public GeckoAsyncTask(Activity activity, Handler backgroundThreadHandler) {
-        mActivity = activity;
+    public GeckoAsyncTask(Handler uiHandler, Handler backgroundThreadHandler) {
+        mUiHandler = uiHandler;
         mBackgroundThreadHandler = backgroundThreadHandler;
     }
 
@@ -34,7 +33,7 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
         public void run() {
             final Result result = doInBackground(mParams);
 
-            mActivity.runOnUiThread(new Runnable() {
+            mUiHandler.post(new Runnable() {
                 public void run() {
                     if (mCancelled)
                         onCancelled();
@@ -46,7 +45,7 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
     }
 
     public final void execute(final Params... params) {
-        mActivity.runOnUiThread(new Runnable() {
+        mUiHandler.post(new Runnable() {
             public void run() {
                 onPreExecute();
 
