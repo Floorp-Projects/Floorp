@@ -6989,7 +6989,7 @@ mjit::Compiler::jsop_newinit()
         templateObject = NewDenseUnallocatedArray(cx, count);
         types::StackTypeSet::DoubleConversion conversion =
             script->analysis()->pushedTypes(PC, 0)->convertDoubleElements(cx);
-        if (conversion == types::StackTypeSet::AlwaysConvertToDoubles)
+        if (templateObject && conversion == types::StackTypeSet::AlwaysConvertToDoubles)
             templateObject->setShouldConvertDoubleElements();
     } else {
         templateObject = CopyInitializerObject(cx, baseobj);
