@@ -5,7 +5,7 @@
 
 const PREF_DISPLAY = "security.mixed_content.block_display_content";
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
-const gHttpTestRoot = "https://example.com/tests/content/base/test/";
+const gHttpTestRoot = "https://example.com/browser/browser/base/content/test/";
 var origBlockDisplay;
 var origBlockActive;
 var gTestBrowser = null;

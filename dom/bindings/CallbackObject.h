@@ -81,6 +81,11 @@ public:
     return mCallback;
   }
 
+  enum ExceptionHandling {
+    eReportExceptions,
+    eRethrowExceptions
+  };
+
 protected:
   explicit CallbackObject(CallbackObject* aCallbackFunction)
     : mCallback(aCallbackFunction->mCallback)
@@ -112,7 +117,8 @@ protected:
      * non-null.
      */
   public:
-    CallSetup(JSObject* const aCallable);
+    CallSetup(JSObject* const aCallable, ErrorResult& aRv,
+              ExceptionHandling aExceptionHandling);
     ~CallSetup();
 
     JSContext* GetContext() const
@@ -149,6 +155,12 @@ protected:
     // JSContext.  Though in practice we'll often manually order those two
     // things.
     Maybe<JSAutoCompartment> mAc;
+
+    // An ErrorResult to possibly re-throw exceptions on and whether
+    // we should re-throw them.
+    ErrorResult& mErrorResult;
+    const ExceptionHandling mExceptionHandling;
+    uint32_t mSavedJSContextOptions;
   };
 };
 

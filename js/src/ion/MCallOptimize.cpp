@@ -880,15 +880,15 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
      */
 
     for (uint32_t base = 0; base < argc; base += 3) {
-        uint32_t arri = base + 1;
-        uint32_t idxi = base + 2;
+        uint32_t arri = base + 0;
+        uint32_t idxi = base + 1;
 
         types::StackTypeSet *obj = getInlineArgTypeSet(callInfo, arri);
         types::StackTypeSet *id = getInlineArgTypeSet(callInfo, idxi);
 
         int arrayType;
-        if (!oracle->elementAccessIsDenseNative(obj, id) &&
-            !oracle->elementAccessIsTypedArray(obj, id, &arrayType))
+        if (!oracle->elementWriteIsDenseNative(obj, id) &&
+            !oracle->elementWriteIsTypedArray(obj, id, &arrayType))
         {
             return InliningStatus_NotInlined;
         }
@@ -903,20 +903,20 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
     current->push(udef);
 
     for (uint32_t base = 0; base < argc; base += 3) {
-        uint32_t arri = base + 1;
-        uint32_t idxi = base + 2;
+        uint32_t arri = base + 0;
+        uint32_t idxi = base + 1;
 
         types::StackTypeSet *obj = getInlineArgTypeSet(callInfo, arri);
         types::StackTypeSet *id = getInlineArgTypeSet(callInfo, idxi);
 
-        if (oracle->elementAccessIsDenseNative(obj, id)) {
+        if (oracle->elementWriteIsDenseNative(obj, id)) {
             if (!inlineUnsafeSetDenseArrayElement(callInfo, base))
                 return InliningStatus_Error;
             continue;
         }
 
         int arrayType;
-        if (oracle->elementAccessIsTypedArray(obj, id, &arrayType)) {
+        if (oracle->elementWriteIsTypedArray(obj, id, &arrayType)) {
             if (!inlineUnsafeSetTypedArrayElement(callInfo, base, arrayType))
                 return InliningStatus_Error;
             continue;
@@ -938,9 +938,9 @@ IonBuilder::inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base)
     // Furthermore, note that inference should be propagating
     // the type of the value to the JSID_VOID property of the array.
 
-    uint32_t arri = base + 1;
-    uint32_t idxi = base + 2;
-    uint32_t elemi = base + 3;
+    uint32_t arri = base + 0;
+    uint32_t idxi = base + 1;
+    uint32_t elemi = base + 2;
 
     MElements *elements = MElements::New(callInfo.getArg(arri));
     current->add(elements);
@@ -1073,8 +1073,10 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
         return InliningStatus_Error;
     templateObject->setType(typeObject);
 
+    callInfo.unwrapArgs();
+
     MParNewDenseArray *newObject = new MParNewDenseArray(graph().parSlice(),
-                                                         callInfo.getArg(1),
+                                                         callInfo.getArg(0),
                                                          templateObject);
     current->add(newObject);
     current->push(newObject);

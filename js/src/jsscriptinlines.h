@@ -91,6 +91,10 @@ MarkScriptBytecode(JSRuntime *rt, const jsbytecode *bytecode)
         SharedScriptData::fromBytecode(bytecode)->marked = true;
 }
 
+void
+SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
+                        HandleScript script, JSObject *argsobj);
+
 } // namespace js
 
 inline void

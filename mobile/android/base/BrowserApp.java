@@ -236,7 +236,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Feedback:MaybeLater");
         registerEventListener("Telemetry:Gather");
 
-        Distribution.init(this);
+        Distribution.init(this, getPackageResourcePath());
         JavaAddonManager.getInstance().init(getApplicationContext());
     }
 
@@ -392,7 +392,6 @@ abstract public class BrowserApp extends GeckoApp
                     iconRes = message.getString("icon");
                 } catch (Exception ex) { }
                 info.icon = iconRes;
-                info.checkable = false;
                 try {
                     info.checkable = message.getBoolean("checkable");
                 } catch (Exception ex) { }
@@ -612,6 +611,7 @@ abstract public class BrowserApp extends GeckoApp
 
             mGeckoLayout.requestLayout();
         } else {
+            mTabsPanel.setVisibility(View.INVISIBLE);
             mBrowserToolbar.updateTabs(false);
             mBrowserToolbar.finishTabsAnimation();
             mTabsPanel.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
@@ -837,7 +837,11 @@ abstract public class BrowserApp extends GeckoApp
                         }
                     }
                 });
+            } else {
+                item.setIcon(R.drawable.ic_menu_addons_filler);
             }
+        } else {
+            item.setIcon(R.drawable.ic_menu_addons_filler);
         }
 
         item.setCheckable(info.checkable);

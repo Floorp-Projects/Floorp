@@ -95,6 +95,123 @@ protected:
   VectorImage* mVectorImage;   // Raw pointer because it owns me.
 };
 
+class SVGParseCompleteListener MOZ_FINAL : public nsStubDocumentObserver {
+public:
+  NS_DECL_ISUPPORTS
+
+  SVGParseCompleteListener(nsIDocument* aDocument,
+                           VectorImage* aImage)
+    : mDocument(aDocument)
+    , mImage(aImage)
+  {
+    NS_ABORT_IF_FALSE(mDocument, "Need an SVG document");
+    NS_ABORT_IF_FALSE(mImage, "Need an image");
+
+    mDocument->AddObserver(this);
+  }
+
+  ~SVGParseCompleteListener()
+  { 
+    if (mDocument) {
+      // The document must have been destroyed before we got our event.
+      // Otherwise this can't happen, since documents hold strong references to
+      // their observers.
+      Cancel();
+    }
+  }
+
+  void EndLoad(nsIDocument* aDocument) MOZ_OVERRIDE
+  {
+    NS_ABORT_IF_FALSE(aDocument == mDocument, "Got EndLoad for wrong document?");
+
+    // OnSVGDocumentParsed will release our owner's reference to us, so ensure
+    // we stick around long enough to complete our work.
+    nsRefPtr<SVGParseCompleteListener> kungFuDeathGroup(this);
+
+    mImage->OnSVGDocumentParsed();
+  }
+
+  void Cancel()
+  {
+    NS_ABORT_IF_FALSE(mDocument, "Duplicate call to Cancel");
+    mDocument->RemoveObserver(this);
+    mDocument = nullptr;
+  }
+
+private:
+  nsCOMPtr<nsIDocument> mDocument;
+  VectorImage* mImage; // Raw pointer to owner.
+};
+
+NS_IMPL_ISUPPORTS1(SVGParseCompleteListener, nsIDocumentObserver)
+
+class SVGLoadEventListener MOZ_FINAL : public nsIDOMEventListener {
+public:
+  NS_DECL_ISUPPORTS
+
+  SVGLoadEventListener(nsIDocument* aDocument,
+                       VectorImage* aImage)
+    : mDocument(aDocument)
+    , mImage(aImage)
+  {
+    NS_ABORT_IF_FALSE(mDocument, "Need an SVG document");
+    NS_ABORT_IF_FALSE(mImage, "Need an image");
+
+    mDocument->AddEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"), this, true, false);
+    mDocument->AddEventListener(NS_LITERAL_STRING("SVGAbort"), this, true, false);
+    mDocument->AddEventListener(NS_LITERAL_STRING("SVGError"), this, true, false);
+  }
+
+  ~SVGLoadEventListener()
+  {
+    if (mDocument) {
+      // The document must have been destroyed before we got our event.
+      // Otherwise this can't happen, since documents hold strong references to
+      // their observers.
+      Cancel();
+    }
+  }
+
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
+  {
+    NS_ABORT_IF_FALSE(mDocument, "Need an SVG document. Received multiple events?");
+
+    // OnSVGDocumentLoaded/OnSVGDocumentError will release our owner's reference
+    // to us, so ensure we stick around long enough to complete our work.
+    nsRefPtr<SVGLoadEventListener> kungFuDeathGroup(this);
+
+    nsAutoString eventType;
+    aEvent->GetType(eventType);
+    NS_ABORT_IF_FALSE(eventType.EqualsLiteral("MozSVGAsImageDocumentLoad")  ||
+                      eventType.EqualsLiteral("SVGAbort")                   ||
+                      eventType.EqualsLiteral("SVGError"),
+                      "Received unexpected event");
+
+    if (eventType.EqualsLiteral("MozSVGAsImageDocumentLoad")) {
+      mImage->OnSVGDocumentLoaded();
+    } else {
+      mImage->OnSVGDocumentError();
+    }
+
+    return NS_OK;
+  }
+
+  void Cancel()
+  {
+    NS_ABORT_IF_FALSE(mDocument, "Duplicate call to Cancel");
+    mDocument->RemoveEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"), this, true);
+    mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGAbort"), this, true);
+    mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGError"), this, true);
+    mDocument = nullptr;
+  }
+
+private:
+  nsCOMPtr<nsIDocument> mDocument;
+  VectorImage* mImage; // Raw pointer to owner.
+};
+
+NS_IMPL_ISUPPORTS1(SVGLoadEventListener, nsIDOMEventListener)
+
 // Helper-class: SVGDrawingCallback
 class SVGDrawingCallback : public gfxDrawingCallback {
 public:
@@ -244,9 +361,32 @@ VectorImage::OutOfProcessSizeOfDecoded() const
 nsresult
 VectorImage::OnImageDataComplete(nsIRequest* aRequest,
                                  nsISupports* aContext,
-                                 nsresult aStatus)
+                                 nsresult aStatus,
+                                 bool aLastPart)
 {
-  return OnStopRequest(aRequest, aContext, aStatus);
+  NS_ABORT_IF_FALSE(mStopRequest.empty(), "Duplicate call to OnImageDataComplete?");
+
+  // Call our internal OnStopRequest method, which only talks to our embedded
+  // SVG document. This won't have any effect on our imgStatusTracker.
+  nsresult finalStatus = OnStopRequest(aRequest, aContext, aStatus);
+
+  // Give precedence to Necko failure codes.
+  if (NS_FAILED(aStatus))
+    finalStatus = aStatus;
+
+  // If there's an error already, we need to fire OnStopRequest on our
+  // imgStatusTracker immediately. We might not get another chance.
+  if (mError || NS_FAILED(finalStatus)) {
+    GetStatusTracker().OnStopRequest(aLastPart, finalStatus);
+    return finalStatus;
+  }
+
+  // Otherwise, we record the parameters we'll use to call OnStopRequest, and
+  // return. We'll actually call it in OnSVGDocumentLoaded or
+  // OnSVGDocumentError.
+  mStopRequest.construct(aLastPart, finalStatus);
+
+  return finalStatus;
 }
 
 nsresult
@@ -342,6 +482,38 @@ VectorImage::GetHeight(int32_t* aHeight)
     return NS_ERROR_FAILURE;
   }
 
+  return NS_OK;
+}
+
+//******************************************************************************
+/* [noscript] readonly attribute nsSize intrinsicSize; */
+NS_IMETHODIMP
+VectorImage::GetIntrinsicSize(nsSize* aSize)
+{
+  nsIFrame* rootFrame = GetRootLayoutFrame();
+  if (!rootFrame)
+    return NS_ERROR_FAILURE;
+
+  *aSize = nsSize(-1, -1);
+  nsIFrame::IntrinsicSize rfSize = rootFrame->GetIntrinsicSize();
+  if (rfSize.width.GetUnit() == eStyleUnit_Coord)
+    aSize->width = rfSize.width.GetCoordValue();
+  if (rfSize.height.GetUnit() == eStyleUnit_Coord)
+    aSize->height = rfSize.height.GetCoordValue();
+
+  return NS_OK;
+}
+
+//******************************************************************************
+/* [noscript] readonly attribute nsSize intrinsicRatio; */
+NS_IMETHODIMP
+VectorImage::GetIntrinsicRatio(nsSize* aRatio)
+{
+  nsIFrame* rootFrame = GetRootLayoutFrame();
+  if (!rootFrame)
+    return NS_ERROR_FAILURE;
+
+  *aRatio = rootFrame->GetIntrinsicRatio();
   return NS_OK;
 }
 
@@ -673,9 +845,27 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
   if (NS_FAILED(rv)) {
     mSVGDocumentWrapper = nullptr;
     mError = true;
+    return rv;
   }
 
-  return rv;
+  // Sending StartDecode will block page load until the document's ready.  (We
+  // unblock it by sending StopDecode in OnSVGDocumentLoaded or
+  // OnSVGDocumentError.)
+  if (mStatusTracker) {
+    mStatusTracker->GetDecoderObserver()->OnStartDecode();
+  }
+
+  // Create a listener to wait until the SVG document is fully loaded, which
+  // will signal that this image is ready to render. Certain error conditions
+  // will prevent us from ever getting this notification, so we also create a
+  // listener that waits for parsing to complete and cancels the
+  // SVGLoadEventListener if needed. The listeners are automatically attached
+  // to the document by their constructors.
+  nsIDocument* document = mSVGDocumentWrapper->GetDocument();
+  mLoadEventListener = new SVGLoadEventListener(document, this);
+  mParseCompleteListener = new SVGParseCompleteListener(document, this);
+
+  return NS_OK;
 }
 
 //******************************************************************************
@@ -688,38 +878,101 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
   if (mError)
     return NS_ERROR_FAILURE;
 
-  NS_ABORT_IF_FALSE(!mIsFullyLoaded && !mHaveAnimations,
-                    "these flags shouldn't get set until OnStopRequest. "
-                    "Duplicate calls to OnStopRequest?");
+  return mSVGDocumentWrapper->OnStopRequest(aRequest, aCtxt, aStatus);
+}
 
-  nsresult rv = mSVGDocumentWrapper->OnStopRequest(aRequest, aCtxt, aStatus);
-  if (!mSVGDocumentWrapper->ParsedSuccessfully()) {
-    // XXXdholbert Need to do something more here -- right now, this just
-    // makes us draw the "object" icon, rather than the (jagged) "broken image"
-    // icon.  See bug 594505.
-    mError = true;
-    return rv;
+void
+VectorImage::OnSVGDocumentParsed()
+{
+  NS_ABORT_IF_FALSE(mParseCompleteListener, "Should have the parse complete listener");
+  NS_ABORT_IF_FALSE(mLoadEventListener, "Should have the load event listener");
+
+  if (!mSVGDocumentWrapper->GetRootSVGElem()) {
+    // This is an invalid SVG document. It may have failed to parse, or it may
+    // be missing the <svg> root element, or the <svg> root element may not
+    // declare the correct namespace. In any of these cases, we'll never be
+    // notified that the SVG finished loading, so we need to treat this as an error.
+    OnSVGDocumentError();
   }
+}
+
+void
+VectorImage::CancelAllListeners()
+{
+  NS_ABORT_IF_FALSE(mParseCompleteListener, "Should have the parse complete listener");
+  NS_ABORT_IF_FALSE(mLoadEventListener, "Should have the load event listener");
+
+  if (mParseCompleteListener) {
+    mParseCompleteListener->Cancel();
+    mParseCompleteListener = nullptr;
+  }
+  if (mLoadEventListener) {
+    mLoadEventListener->Cancel();
+    mLoadEventListener = nullptr;
+  }
+}
+
+void
+VectorImage::OnSVGDocumentLoaded()
+{
+  NS_ABORT_IF_FALSE(mSVGDocumentWrapper->GetRootSVGElem(), "Should have parsed successfully");
+  NS_ABORT_IF_FALSE(!mIsFullyLoaded && !mHaveAnimations,
+                    "These flags shouldn't get set until OnSVGDocumentLoaded. "
+                    "Duplicate calls to OnSVGDocumentLoaded?");
+
+  CancelAllListeners();
+
+  // XXX Flushing is wasteful if embedding frame hasn't had initial reflow.
+  mSVGDocumentWrapper->FlushLayout();
 
   mIsFullyLoaded = true;
   mHaveAnimations = mSVGDocumentWrapper->IsAnimated();
 
-  // Start listening to our image for rendering updates
+  // Start listening to our image for rendering updates.
   mRenderingObserver = new SVGRootRenderingObserver(mSVGDocumentWrapper, this);
 
-  // Tell *our* observers that we're done loading
+  // Tell *our* observers that we're done loading.
   if (mStatusTracker) {
-    // NOTE: This signals that width/height are available.
     imgDecoderObserver* observer = mStatusTracker->GetDecoderObserver();
-    observer->OnStartContainer();
 
+    observer->OnStartContainer(); // Signal that width/height are available.
     observer->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
     observer->OnStopFrame();
-    observer->OnStopDecode(NS_OK);
-  }
-  EvaluateAnimation();
 
-  return rv;
+    if (!mStopRequest.empty()) {
+      GetStatusTracker().OnStopRequest(mStopRequest.ref().lastPart,
+                                       mStopRequest.ref().status);
+      mStopRequest.destroy();
+    }
+
+    observer->OnStopDecode(NS_OK); // Unblock page load.
+  }
+
+  EvaluateAnimation();
+}
+
+void
+VectorImage::OnSVGDocumentError()
+{
+  CancelAllListeners();
+
+  // XXXdholbert Need to do something more for the parsing failed case -- right
+  // now, this just makes us draw the "object" icon, rather than the (jagged)
+  // "broken image" icon.  See bug 594505.
+  mError = true;
+
+  if (mStatusTracker) {
+    if (!mStopRequest.empty()) {
+      nsresult status = NS_FAILED(mStopRequest.ref().status)
+                      ? mStopRequest.ref().status
+                      : NS_ERROR_FAILURE;
+      GetStatusTracker().OnStopRequest(mStopRequest.ref().lastPart, status);
+      mStopRequest.destroy();
+    }
+
+    // Unblock page load.
+    mStatusTracker->GetDecoderObserver()->OnStopDecode(NS_ERROR_FAILURE);
+  }
 }
 
 //------------------------------------------------------------------------------

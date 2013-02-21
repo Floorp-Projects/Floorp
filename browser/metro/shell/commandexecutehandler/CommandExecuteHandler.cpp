@@ -20,6 +20,7 @@
 #include <strsafe.h>
 #include <io.h>
 #include <shellapi.h>
+#include <wininet.h>
 
 #ifdef SHOW_CONSOLE
 #define DEBUG_DELAY_SHUTDOWN 1
@@ -438,6 +439,46 @@ bool CExecuteCommandVerb::IsTargetBrowser()
   return false;
 }
 
+namespace {
+  const FORMATETC kPlainTextFormat =
+    {CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+  const FORMATETC kPlainTextWFormat =
+    {CF_UNICODETEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+}
+
+bool HasPlainText(IDataObject* aDataObj) {
+  return SUCCEEDED(aDataObj->QueryGetData((FORMATETC*)&kPlainTextWFormat)) ||
+      SUCCEEDED(aDataObj->QueryGetData((FORMATETC*)&kPlainTextFormat));
+}
+
+bool GetPlainText(IDataObject* aDataObj, CStringW& cstrText)
+{
+  if (!HasPlainText(aDataObj))
+    return false;
+
+  STGMEDIUM store;
+
+  // unicode text
+  if (SUCCEEDED(aDataObj->GetData((FORMATETC*)&kPlainTextWFormat, &store))) {
+    // makes a copy
+    cstrText = static_cast<LPCWSTR>(GlobalLock(store.hGlobal));
+    GlobalUnlock(store.hGlobal);
+    ReleaseStgMedium(&store);
+    return true;
+  }
+
+  // ascii text
+  if (SUCCEEDED(aDataObj->GetData((FORMATETC*)&kPlainTextFormat, &store))) {
+    // makes a copy
+    cstrText = static_cast<char*>(GlobalLock(store.hGlobal));
+    GlobalUnlock(store.hGlobal);
+    ReleaseStgMedium(&store);
+    return true;
+  }
+
+  return false;
+}
+
 /*
  * Updates the current target based on the contents of
  * a shell item.
@@ -447,15 +488,42 @@ bool CExecuteCommandVerb::SetTargetPath(IShellItem* aItem)
   if (!aItem)
     return false;
 
+  CString cstrText;
+  CComPtr<IDataObject> object;
+  // Check the underlying data object first to insure we get
+  // absolute uri. See chromium bug 157184.
+  if (SUCCEEDED(aItem->BindToHandler(NULL, BHID_DataObject,
+                                     IID_IDataObject,
+                                     reinterpret_cast<void**>(&object))) &&
+      GetPlainText(object, cstrText)) {
+    wchar_t scheme[16];
+    URL_COMPONENTS components = {0};
+    components.lpszScheme = scheme;
+    components.dwSchemeLength = sizeof(scheme)/sizeof(scheme[0]);
+    components.dwStructSize = sizeof(components);
+    // note, more advanced use may have issues with paths with spaces.
+    if (!InternetCrackUrlW(cstrText, 0, 0, &components)) {
+      Log(L"Failed to identify object text '%s'", cstrText);
+      return false;
+    }
+
+    mTargetIsFileSystemLink = (components.nScheme == INTERNET_SCHEME_FILE);
+    mTarget = cstrText;
+    return true;
+  }
+
+  Log(L"No data object or data object has no text.");
+
+  // Use the shell item display name
   LPWSTR str = NULL;
   mTargetIsFileSystemLink = true;
   if (FAILED(aItem->GetDisplayName(SIGDN_FILESYSPATH, &str))) {
+    mTargetIsFileSystemLink = false;
     if (FAILED(aItem->GetDisplayName(SIGDN_URL, &str))) {
+      Log(L"Failed to get parameter string.");
       return false;
     }
-    mTargetIsFileSystemLink = false;
   }
-
   mTarget = str;
   CoTaskMemFree(str);
   return true;
@@ -477,7 +545,9 @@ void CExecuteCommandVerb::LaunchDesktopBrowser()
   CStringW params;
   if (!IsTargetBrowser()) {
     params += "-url ";
+    params += "\"";
     params += mTarget;
+    params += "\"";
   }
 
   Log(L"Desktop Launch: verb:%s exe:%s params:%s", mVerb, browserPath, params); 

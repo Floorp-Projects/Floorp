@@ -64,6 +64,10 @@ NS_IMPL_RELEASE(nsHistory)
 NS_IMETHODIMP
 nsHistory::GetLength(int32_t* aLength)
 {
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
+    return NS_ERROR_DOM_SECURITY_ERR;
+
   nsCOMPtr<nsISHistory>   sHistory;
 
   // Get session History from docshell
@@ -171,6 +175,10 @@ nsHistory::GetNext(nsAString& aNext)
 NS_IMETHODIMP
 nsHistory::Back()
 {
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
+    return NS_ERROR_DOM_SECURITY_ERR;
+
   nsCOMPtr<nsISHistory>  sHistory;
 
   GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(sHistory));
@@ -187,6 +195,10 @@ nsHistory::Back()
 NS_IMETHODIMP
 nsHistory::Forward()
 {
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
+    return NS_ERROR_DOM_SECURITY_ERR;
+
   nsCOMPtr<nsISHistory>  sHistory;
 
   GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(sHistory));
@@ -203,6 +215,10 @@ nsHistory::Forward()
 NS_IMETHODIMP
 nsHistory::Go(int32_t aDelta)
 {
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
+    return NS_ERROR_DOM_SECURITY_ERR;
+
   if (aDelta == 0) {
     nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(GetDocShell()));
 

@@ -114,6 +114,13 @@ if (this.Components) {
          let id = this._idgen++;
          this._map.set(id, {resource:resource, info:info});
          return id;
+       },
+       /**
+        * Return a list of all open resources i.e. the ones still present in
+        * ResourceTracker's _map.
+        */
+       listOpenedResources: function listOpenedResources() {
+         return [resource.info.path for ([id, resource] of this._map)];
        }
      };
 
@@ -193,6 +200,16 @@ if (this.Components) {
        GET_DEBUG: function GET_DEBUG () {
          return exports.OS.Shared.DEBUG;
        },
+       // Report file descriptors leaks.
+       System_shutdown: function System_shutdown () {
+         // Return information about both opened files and opened
+         // directory iterators.
+         return {
+           openedFiles: OpenedFiles.listOpenedResources(),
+           openedDirectoryIterators:
+             OpenedDirectoryIterators.listOpenedResources()
+         };
+       },
        // Functions of OS.File
        stat: function stat(path) {
          return exports.OS.File.Info.toMsg(
@@ -222,8 +239,13 @@ if (this.Components) {
          return File.remove(Type.path.fromMsg(path));
        },
        open: function open(path, mode, options) {
-         let file = File.open(Type.path.fromMsg(path), mode, options);
-         return OpenedFiles.add(file);
+         let filePath = Type.path.fromMsg(path);
+         let file = File.open(filePath, mode, options);
+         return OpenedFiles.add(file, {
+           // Adding path information to keep track of opened files
+           // to report leaks when debugging.
+           path: filePath
+         });
        },
        read: function read(path, bytes) {
          let data = File.read(Type.path.fromMsg(path), bytes);
@@ -242,8 +264,13 @@ if (this.Components) {
                                 );
        },
        new_DirectoryIterator: function new_DirectoryIterator(path, options) {
-         let iterator = new File.DirectoryIterator(Type.path.fromMsg(path), options);
-         return OpenedDirectoryIterators.add(iterator);
+         let directoryPath = Type.path.fromMsg(path);
+         let iterator = new File.DirectoryIterator(directoryPath, options);
+         return OpenedDirectoryIterators.add(iterator, {
+           // Adding path information to keep track of opened directory
+           // iterators to report leaks when debugging.
+           path: directoryPath
+         });
        },
        // Methods of OS.File
        File_prototype_close: function close(fd) {

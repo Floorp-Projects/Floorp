@@ -13,9 +13,9 @@ function test() {
   let doneURL = "done";
 
   let mainURL = testURL;
-  let frame1URL = "data:text/html,<input%20id='original'>";
+  let frame1URL = "data:text/html;charset=utf-8,<input%20id='original'>";
   let frame2URL = rootDir + "browser_463205_helper.html";
-  let frame3URL = "data:text/html,mark2";
+  let frame3URL = "data:text/html;charset=utf-8,mark2";
 
   let frameCount = 0;
 
@@ -68,7 +68,7 @@ function test() {
     frame1URL = "http://mochi.test:8888/browser/" +
       "browser/components/sessionstore/test/browser_463205_helper.html";
     frame2URL = rootDir + "browser_463205_helper.html";
-    frame3URL = "data:text/html,mark2";
+    frame3URL = "data:text/html;charset=utf-8,mark2";
 
     frameCount = 0;
 

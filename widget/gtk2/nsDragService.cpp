@@ -1168,16 +1168,12 @@ nsDragService::GetSourceList(void)
 
         // the application/x-moz-internal-item-list format, which preserves
         // all information for drags within the same mozilla instance.
-        GdkAtom listAtom = gdk_atom_intern(gMimeListType, FALSE);
         GtkTargetEntry *listTarget =
             (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
         listTarget->target = g_strdup(gMimeListType);
         listTarget->flags = 0;
-        /* Bug 331198 */
-        listTarget->info = NS_PTR_TO_UINT32(listAtom);
         PR_LOG(sDragLm, PR_LOG_DEBUG,
-               ("automatically adding target %s with id %ld\n",
-               listTarget->target, listAtom));
+               ("automatically adding target %s\n", listTarget->target));
         targetArray.AppendElement(listTarget);
 
         // check what flavours are supported so we can decide what other
@@ -1208,16 +1204,13 @@ nsDragService::GetSourceList(void)
                         // If so, advertise
                         // text/uri-list.
                         if (strcmp(flavorStr, kURLMime) == 0) {
-                            listAtom = gdk_atom_intern(gTextUriListType, FALSE);
                             listTarget =
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             listTarget->target = g_strdup(gTextUriListType);
                             listTarget->flags = 0;
-                            /* Bug 331198 */
-                            listTarget->info = NS_PTR_TO_UINT32(listAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
-                                   ("automatically adding target %s with \
-                                   id %ld\n", listTarget->target, listAtom));
+                                   ("automatically adding target %s\n",
+                                    listTarget->target));
                             targetArray.AppendElement(listTarget);
                         }
                     }
@@ -1245,67 +1238,47 @@ nsDragService::GetSourceList(void)
                     if (currentFlavor) {
                         nsXPIDLCString flavorStr;
                         currentFlavor->ToString(getter_Copies(flavorStr));
-                        // get the atom
-                        GdkAtom atom = gdk_atom_intern(flavorStr, FALSE);
                         GtkTargetEntry *target =
                           (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                         target->target = g_strdup(flavorStr);
                         target->flags = 0;
-                        /* Bug 331198 */
-                        target->info = NS_PTR_TO_UINT32(atom);
                         PR_LOG(sDragLm, PR_LOG_DEBUG,
-                               ("adding target %s with id %ld\n",
-                               target->target, atom));
+                               ("adding target %s\n", target->target));
                         targetArray.AppendElement(target);
                         // Check to see if this is text/unicode.
                         // If it is, add text/plain
                         // since we automatically support text/plain
                         // if we support text/unicode.
                         if (strcmp(flavorStr, kUnicodeMime) == 0) {
-                            // get the atom for the unicode string
-                            GdkAtom plainUTF8Atom =
-                              gdk_atom_intern(gTextPlainUTF8Type, FALSE);
                             GtkTargetEntry *plainUTF8Target =
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             plainUTF8Target->target = g_strdup(gTextPlainUTF8Type);
                             plainUTF8Target->flags = 0;
-                            /* Bug 331198 */
-                            plainUTF8Target->info = NS_PTR_TO_UINT32(plainUTF8Atom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
-                                   ("automatically adding target %s with \
-                                   id %ld\n", plainUTF8Target->target, plainUTF8Atom));
+                                   ("automatically adding target %s\n",
+                                    plainUTF8Target->target));
                             targetArray.AppendElement(plainUTF8Target);
 
-                            // get the atom for the ASCII string
-                            GdkAtom plainAtom =
-                              gdk_atom_intern(kTextMime, FALSE);
                             GtkTargetEntry *plainTarget =
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             plainTarget->target = g_strdup(kTextMime);
                             plainTarget->flags = 0;
-                            /* Bug 331198 */
-                            plainTarget->info = NS_PTR_TO_UINT32(plainAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
-                                   ("automatically adding target %s with \
-                                   id %ld\n", plainTarget->target, plainAtom));
+                                   ("automatically adding target %s\n",
+                                    plainTarget->target));
                             targetArray.AppendElement(plainTarget);
                         }
                         // Check to see if this is the x-moz-url type.
                         // If it is, add _NETSCAPE_URL
                         // this is a type used by everybody.
                         if (strcmp(flavorStr, kURLMime) == 0) {
-                            // get the atom name for it
-                            GdkAtom urlAtom =
-                             gdk_atom_intern(gMozUrlType, FALSE);
                             GtkTargetEntry *urlTarget =
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             urlTarget->target = g_strdup(gMozUrlType);
                             urlTarget->flags = 0;
-                            /* Bug 331198 */
-                            urlTarget->info = NS_PTR_TO_UINT32(urlAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
-                                   ("automatically adding target %s with \
-                                   id %ld\n", urlTarget->target, urlAtom));
+                                   ("automatically adding target %s\n",
+                                    urlTarget->target));
                             targetArray.AppendElement(urlTarget);
                         }
                     }
@@ -1326,7 +1299,7 @@ nsDragService::GetSourceList(void)
             // this is a string reference but it will be freed later.
             targets[targetIndex].target = disEntry->target;
             targets[targetIndex].flags = disEntry->flags;
-            targets[targetIndex].info = disEntry->info;
+            targets[targetIndex].info = 0;
         }
         targetList = gtk_target_list_new(targets, targetCount);
         // clean up the target list
@@ -1477,14 +1450,13 @@ void
 nsDragService::SourceDataGet(GtkWidget        *aWidget,
                              GdkDragContext   *aContext,
                              GtkSelectionData *aSelectionData,
-                             guint             aInfo,
                              guint32           aTime)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::SourceDataGet"));
-    GdkAtom atom = (GdkAtom)aInfo;
+    GdkAtom target = gtk_selection_data_get_target(aSelectionData);
     nsXPIDLCString mimeFlavor;
     gchar *typeName = 0;
-    typeName = gdk_atom_name(atom);
+    typeName = gdk_atom_name(target);
     if (!typeName) {
         PR_LOG(sDragLm, PR_LOG_DEBUG, ("failed to get atom name.\n"));
         return;
@@ -1567,8 +1539,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
             }
             if (tmpData) {
                 // this copies the data
-                gtk_selection_data_set(aSelectionData,
-                                       gtk_selection_data_get_target(aSelectionData),
+                gtk_selection_data_set(aSelectionData, target,
                                        8,
                                        (guchar *)tmpData, tmpDataLen);
                 // this wasn't allocated with glib
@@ -1580,8 +1551,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
                 gchar *uriList;
                 gint length;
                 CreateUriList(mSourceDataItems, &uriList, &length);
-                gtk_selection_data_set(aSelectionData,
-                                       gtk_selection_data_get_target(aSelectionData),
+                gtk_selection_data_set(aSelectionData, target,
                                        8, (guchar *)uriList, length);
                 g_free(uriList);
                 return;
@@ -1660,7 +1630,7 @@ invisibleSourceDragDataGet(GtkWidget        *aWidget,
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("invisibleSourceDragDataGet"));
     nsDragService *dragService = (nsDragService *)aData;
     dragService->SourceDataGet(aWidget, aContext,
-                               aSelectionData, aInfo, aTime);
+                               aSelectionData, aTime);
 }
 
 static gboolean

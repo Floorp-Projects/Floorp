@@ -14,7 +14,7 @@ def parse_cmdline(args):
     contents = {}
     for arg in args:
         key, s, value = arg.partition("=")
-        if value == '':
+        if s == '':
             print "ERROR: Malformed command line key value pairing (%s)" % arg
             exit(1)
         contents[key.lower()] = value

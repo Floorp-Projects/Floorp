@@ -501,7 +501,7 @@
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_DOM
   /* XXX If you add a new DOM error code, also add an error string to
-   * dom/src/base/domerr.msg */
+   * dom/base/domerr.msg */
 
   /* Standard DOM error codes: http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html */
   ERROR(NS_ERROR_DOM_INDEX_SIZE_ERR,               FAILURE(1)),
@@ -548,6 +548,7 @@
   ERROR(NS_ERROR_DOM_BAD_URI,                      FAILURE(1012)),
   ERROR(NS_ERROR_DOM_RETVAL_UNDEFINED,             FAILURE(1013)),
   ERROR(NS_ERROR_DOM_QUOTA_REACHED,                FAILURE(1014)),
+  ERROR(NS_ERROR_DOM_JS_EXCEPTION,                 FAILURE(1015)),
 #undef MODULE
 
 

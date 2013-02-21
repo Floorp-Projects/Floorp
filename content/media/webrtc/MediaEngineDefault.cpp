@@ -12,6 +12,9 @@
 #include "ImageTypes.h"
 #include "prmem.h"
 
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #include "nsISupportsUtils.h"
@@ -27,17 +30,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineDefaultVideoSource, nsITimerCallback)
  * Default video source.
  */
 
-// Cannot be initialized in the class definition
-const MediaEngineVideoOptions MediaEngineDefaultVideoSource::mOpts = {
-  DEFAULT_WIDTH,
-  DEFAULT_HEIGHT,
-  DEFAULT_FPS,
-  kVideoCodecI420
-};
-
-MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
+MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource(int32_t aWidth,
+                                                             int32_t aHeight,
+                                                             int32_t aFPS)
   : mTimer(nullptr)
 {
+  mOpts.mWidth = aWidth;
+  mOpts.mHeight = aHeight;
+  mOpts.mMaxFPS = aFPS;
   mState = kReleased;
 }
 
@@ -143,14 +143,15 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   // Allocate a single blank Image
   mCb = 16;
   mCr = 16;
-  AllocateSolidColorFrame(data, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0x80, mCb, mCr);
+  AllocateSolidColorFrame(data, mOpts.mWidth, mOpts.mHeight, 0x80, mCb, mCr);
   // SetData copies data, so we can free the frame
   mImage->SetData(data);
   ReleaseFrame(data);
 
   // AddTrack takes ownership of segment
   VideoSegment *segment = new VideoSegment();
-  segment->AppendFrame(image.forget(), USECS_PER_S / DEFAULT_FPS, gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+  segment->AppendFrame(image.forget(), USECS_PER_S / mOpts.mMaxFPS,
+                       gfxIntSize(mOpts.mWidth, mOpts.mHeight));
   mSource->AddTrack(aID, VIDEO_RATE, 0, segment);
 
   // We aren't going to add any more tracks
@@ -160,7 +161,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mTrackID = aID;
 
   // Start timer for subsequent frames
-  mTimer->InitWithCallback(this, 1000 / DEFAULT_FPS, nsITimer::TYPE_REPEATING_SLACK);
+  mTimer->InitWithCallback(this, 1000 / mOpts.mMaxFPS, nsITimer::TYPE_REPEATING_SLACK);
   mState = kStarted;
 
   return NS_OK;
@@ -242,14 +243,15 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
   nsRefPtr<layers::PlanarYCbCrImage> ycbcr_image =
       static_cast<layers::PlanarYCbCrImage*>(image.get());
   layers::PlanarYCbCrImage::Data data;
-  AllocateSolidColorFrame(data, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0x80, mCb, mCr);
+  AllocateSolidColorFrame(data, mOpts.mWidth, mOpts.mHeight, 0x80, mCb, mCr);
   ycbcr_image->SetData(data);
   // SetData copies data, so we can free the frame
   ReleaseFrame(data);
 
   // AddTrack takes ownership of segment
   VideoSegment segment;
-  segment.AppendFrame(ycbcr_image.forget(), USECS_PER_S / DEFAULT_FPS, gfxIntSize(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+  segment.AppendFrame(ycbcr_image.forget(), USECS_PER_S / mOpts.mMaxFPS,
+                      gfxIntSize(mOpts.mWidth, mOpts.mHeight));
   mSource->AppendToTrack(mTrackID, &segment);
 
   return NS_OK;
@@ -344,7 +346,8 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   mTrackID = aID;
 
   // 1 Audio frame per Video frame
-  mTimer->InitWithCallback(this, 1000 / MediaEngineDefaultVideoSource::DEFAULT_FPS, nsITimer::TYPE_REPEATING_SLACK);
+  mTimer->InitWithCallback(this, 1000 / MediaEngineDefaultVideoSource::DEFAULT_VIDEO_FPS,
+                           nsITimer::TYPE_REPEATING_SLACK);
   mState = kStarted;
 
   return NS_OK;
@@ -393,18 +396,39 @@ MediaEngineDefault::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSour
   int32_t found = false;
   int32_t len = mVSources.Length();
 
+  int32_t width  = MediaEngineDefaultVideoSource::DEFAULT_VIDEO_WIDTH;
+  int32_t height = MediaEngineDefaultVideoSource::DEFAULT_VIDEO_HEIGHT;
+  int32_t fps    = MediaEngineDefaultVideoSource::DEFAULT_VIDEO_FPS;
+
+  // FIX - these should be passed in originating in prefs and/or getUserMedia constraints
+  // Bug 778801
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+    if (branch) {
+      // these very rarely change
+      branch->GetIntPref("media.navigator.video.default_width", &width);
+      branch->GetIntPref("media.navigator.video.default_height", &height);
+      branch->GetIntPref("media.navigator.video.default_fps", &fps);
+    }
+  }
+
   for (int32_t i = 0; i < len; i++) {
     nsRefPtr<MediaEngineVideoSource> source = mVSources.ElementAt(i);
     aVSources->AppendElement(source);
-    if (source->IsAvailable()) {
+    const MediaEngineVideoOptions *opts = source->GetOptions();
+    if (source->IsAvailable() &&
+        opts->mWidth == width && opts->mHeight == height && opts->mMaxFPS == fps) {
       found = true;
     }
   }
 
-  // All streams are currently busy, just make a new one.
+  // All streams are currently busy (or wrong resolution), just make a new one.
   if (!found) {
     nsRefPtr<MediaEngineVideoSource> newSource =
-      new MediaEngineDefaultVideoSource();
+      new MediaEngineDefaultVideoSource(width, height, fps);
     mVSources.AppendElement(newSource);
     aVSources->AppendElement(newSource);
   }

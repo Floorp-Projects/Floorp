@@ -238,11 +238,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
  public:
   PeerConnectionMedia(PeerConnectionImpl *parent)
       : mParent(parent),
-      mLocalSourceStreamsLock(PR_NewLock()),
+      mLocalSourceStreamsLock("PeerConnectionMedia.mLocalSourceStreamsLock"),
       mIceCtx(NULL) {}
 
   ~PeerConnectionMedia() {
-    PR_DestroyLock(mLocalSourceStreamsLock);
   }
 
   nsresult Init(const std::vector<mozilla::NrIceStunServer>& stun_servers);
@@ -345,11 +344,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   PeerConnectionImpl *mParent;
 
   // A list of streams returned from GetUserMedia
-  PRLock *mLocalSourceStreamsLock;
+  mozilla::Mutex mLocalSourceStreamsLock;
   nsTArray<nsRefPtr<LocalSourceStreamInfo> > mLocalSourceStreams;
 
   // A list of streams provided by the other side
-  PRLock *mRemoteSourceStreamsLock;
   nsTArray<nsRefPtr<RemoteSourceStreamInfo> > mRemoteSourceStreams;
 
   // ICE objects

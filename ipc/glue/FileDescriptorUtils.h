@@ -6,6 +6,7 @@
 #ifndef mozilla_ipc_FileDescriptorUtils_h
 #define mozilla_ipc_FileDescriptorUtils_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "nsIRunnable.h"
 
@@ -15,7 +16,7 @@ namespace ipc {
 // When Dispatch() is called (from main thread) this class arranges to close the
 // provided FileDescriptor on one of the socket transport service threads (to
 // avoid main thread I/O).
-class CloseFileRunnable : public nsIRunnable
+class CloseFileRunnable MOZ_FINAL : public nsIRunnable
 {
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
 

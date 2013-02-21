@@ -19,6 +19,53 @@ const kDefaultWait = 10000;
 const kDefaultInterval = 50;
 
 /*=============================================================================
+  Metro ui helpers
+=============================================================================*/
+
+function checkContextUIMenuItemCount(aCount)
+{
+  let visibleCount = 0;
+  for (let idx = 0; idx < ContextMenuUI._commands.childNodes.length; idx++) {
+    if (!ContextMenuUI._commands.childNodes[idx].hidden)
+      visibleCount++;
+  }
+  is(visibleCount, aCount, "command list count");
+}
+
+function checkContextUIMenuItemVisibility(aVisibleList)
+{
+  let errors = 0;
+  for (let idx = 0; idx < ContextMenuUI._commands.childNodes.length; idx++) {
+    let item = ContextMenuUI._commands.childNodes[idx];
+    if (aVisibleList.indexOf(item.id) != -1 && item.hidden) {
+      // item should be visible
+      errors++;
+      info("should be visible:" + item.id);
+    } else if (aVisibleList.indexOf(item.id) == -1 && !item.hidden) {
+      // item should be hidden
+      errors++;
+      info("should be hidden:" + item.id);
+    }
+  }
+  is(errors, 0, "context menu item list visibility");
+}
+
+/*=============================================================================
+  Asynchronous Metro ui helpers
+=============================================================================*/
+
+function hideContextUI()
+{
+  purgeEventQueue();
+  if (ContextUI.isVisible) {
+    info("is visible, waiting...");
+    let promise = waitForEvent(Elements.tray, "transitionend");
+    ContextUI.dismiss();
+    return promise;
+  }
+}
+
+/*=============================================================================
   Asynchronous test helpers
 =============================================================================*/
 /**
@@ -66,6 +113,7 @@ function addTab(aUrl) {
  * @returns a Promise that resolves to the received event, or to an Error
  */
 function waitForEvent(aSubject, aEventName, aTimeoutMs) {
+  info("waitForEvent: on " + aSubject + " event: " + aEventName);
   let eventDeferred = Promise.defer();
   let timeoutMs = aTimeoutMs || kDefaultWait;
   let timerID = setTimeout(function wfe_canceller() {
@@ -162,6 +210,78 @@ function waitForCondition(aCondition, aTimeoutMs, aIntervalMs) {
   return deferred.promise;
 }
 
+/*
+ * Waits for an image in a page to load. Wrapper around waitForCondition.
+ *
+ * @param aWindow the tab or window that contains the image.
+ * @param aImageId the id of the image in the page.
+ * @returns a Promise that resolves to true, or to an Error
+ */
+function waitForImageLoad(aWindow, aImageId) {
+  let elem = aWindow.document.getElementById(aImageId);
+  return waitForCondition(function () {
+    let request = elem.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+    if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+      return true;
+    return false;
+  }, 5000, 100);
+}
+
+/**
+ * Waits a specified number of miliseconds for an observer event.
+ *
+ * @param aObsEvent the observer event to wait for
+ * @param aTimeoutMs the number of miliseconds to wait before giving up
+ * @returns a Promise that resolves to true, or to an Error
+ */
+function waitForObserver(aObsEvent, aTimeoutMs) {
+  try {
+  
+  let deferred = Promise.defer();
+  let timeoutMs = aTimeoutMs || kDefaultWait;
+  let timerID = 0;
+
+  var observeWatcher = {
+    onEvent: function () {
+      clearTimeout(timerID);
+      Services.obs.removeObserver(this, aObsEvent);
+      deferred.resolve();
+    },
+
+    onError: function () {
+      clearTimeout(timerID);
+      Services.obs.removeObserver(this, aObsEvent);
+      deferred.reject(new Error(aObsEvent + " event timeout"));
+    },
+
+    observe: function (aSubject, aTopic, aData) {
+      if (aTopic == aObsEvent) {
+        this.onEvent();
+      }
+    },
+
+    QueryInterface: function (aIID) {
+      if (!aIID.equals(Ci.nsIObserver) &&
+          !aIID.equals(Ci.nsISupportsWeakReference) &&
+          !aIID.equals(Ci.nsISupports)) {
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      }
+      return this;
+    },
+  }
+
+  timerID = setTimeout(function wfo_canceller() {
+    observeWatcher.onError();
+  }, timeoutMs);
+
+  Services.obs.addObserver(observeWatcher, aObsEvent, true);
+  return deferred.promise;
+  
+  } catch (ex) {
+    info(ex.message);
+  }
+}
+
 /*=============================================================================
   Native input synthesis helpers
 =============================================================================*/
@@ -244,6 +364,41 @@ function synthesizeNativeMouseMUp(aElement, aOffsetX, aOffsetY) {
                         aOffsetX,
                         aOffsetY,
                         0x0040);  // MOUSEEVENTF_MIDDLEUP
+}
+
+/*
+ * sendContextMenuClick - simulates a press-hold touch input event.
+ */
+function sendContextMenuClick(aWindow, aX, aY) {
+  let utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+  utils.sendMouseEventToWindow("contextmenu", aX, aY, 2, 1, 0, true,
+                                1, Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH);
+}
+
+function sendContextMenuClickToElement(aWindow, aElement, aX, aY) {
+  let utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  let rect = aElement.getBoundingClientRect();
+  utils.sendMouseEventToWindow("contextmenu", rect.left + aX, rect.top + aY, 2, 1, 0, true,
+                                1, Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH);
+}
+
+/*=============================================================================
+  System utilities
+=============================================================================*/
+
+/*
+ * purgeEventQueue - purges the event queue on the calling thread.
+ * Pumps latent in-process message manager events awaiting delivery.
+ */
+function purgeEventQueue() {
+  let thread = Services.tm.currentThread;
+  while (thread.hasPendingEvents()) {
+    if (!thread.processNextEvent(true))
+      break;
+  }
 }
 
 /*=============================================================================

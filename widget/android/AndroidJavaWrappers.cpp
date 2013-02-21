@@ -109,16 +109,6 @@ jfieldID AndroidProgressiveUpdateData::jHeightField = 0;
 jfieldID AndroidProgressiveUpdateData::jScaleField = 0;
 jfieldID AndroidProgressiveUpdateData::jShouldAbortField = 0;
 
-jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
-jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jDraw2DBitmapMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jDraw2DBufferMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBitmapMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jGetSurfaceMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
-
 static jclass GetClassGlobalRef(JNIEnv* env, const char* className)
 {
     jobject classLocalRef = env->FindClass(className);
@@ -200,7 +190,6 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidLayerRendererFrame::InitLayerRendererFrameClass(jEnv);
     AndroidViewTransform::InitViewTransformClass(jEnv);
     AndroidProgressiveUpdateData::InitProgressiveUpdateDataClass(jEnv);
-    AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
 }
 
 void
@@ -247,25 +236,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
     jScreenOrientationField = getField("mScreenOrientation", "S");
     jByteBufferField = getField("mBuffer", "Ljava/nio/ByteBuffer;");
-}
-
-void
-AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
-{
-#ifndef MOZ_ANDROID_OMTC
-    initInit();
-
-    jGeckoSurfaceViewClass = getClassGlobalRef("org/mozilla/gecko/GeckoSurfaceView");
-
-    jBeginDrawingMethod = getMethod("beginDrawing", "()I");
-    jGetSoftwareDrawBitmapMethod = getMethod("getSoftwareDrawBitmap", "()Landroid/graphics/Bitmap;");
-    jGetSoftwareDrawBufferMethod = getMethod("getSoftwareDrawBuffer", "()Ljava/nio/ByteBuffer;");
-    jEndDrawingMethod = getMethod("endDrawing", "()V");
-    jDraw2DBitmapMethod = getMethod("draw2D", "(Landroid/graphics/Bitmap;II)V");
-    jDraw2DBufferMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
-    jGetSurfaceMethod = getMethod("getSurface", "()Landroid/view/Surface;");
-    jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
-#endif
 }
 
 void
@@ -349,7 +319,6 @@ AndroidRectF::InitRectFClass(JNIEnv *jEnv)
 void
 AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 {
-#ifdef MOZ_ANDROID_OMTC
     initInit();
 
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
@@ -371,14 +340,11 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jDisplayportResolution = GetFieldID(jEnv, jDisplayportClass, "resolution", "F");
     jProgressiveUpdateCallbackMethod = getMethod("progressiveUpdateCallback",
                                                  "(ZFFFFFZ)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
-
-#endif
 }
 
 void
 AndroidLayerRendererFrame::InitLayerRendererFrameClass(JNIEnv *jEnv)
 {
-#ifdef MOZ_ANDROID_OMTC
     initInit();
 
     jLayerRendererFrameClass = getClassGlobalRef("org/mozilla/gecko/gfx/LayerRenderer$Frame");
@@ -387,13 +353,11 @@ AndroidLayerRendererFrame::InitLayerRendererFrameClass(JNIEnv *jEnv)
     jDrawBackgroundMethod = getMethod("drawBackground", "()V");
     jDrawForegroundMethod = getMethod("drawForeground", "()V");
     jEndDrawingMethod = getMethod("endDrawing", "()V");
-#endif
 }
 
 void
 AndroidViewTransform::InitViewTransformClass(JNIEnv *jEnv)
 {
-#ifdef MOZ_ANDROID_OMTC
     initInit();
 
     jViewTransformClass = getClassGlobalRef("org/mozilla/gecko/gfx/ViewTransform");
@@ -401,13 +365,11 @@ AndroidViewTransform::InitViewTransformClass(JNIEnv *jEnv)
     jXField = getField("x", "F");
     jYField = getField("y", "F");
     jScaleField = getField("scale", "F");
-#endif
 }
 
 void
 AndroidProgressiveUpdateData::InitProgressiveUpdateDataClass(JNIEnv *jEnv)
 {
-#ifdef MOZ_ANDROID_OMTC
     initInit();
 
     jProgressiveUpdateDataClass = getClassGlobalRef("org/mozilla/gecko/gfx/ProgressiveUpdateData");
@@ -418,7 +380,6 @@ AndroidProgressiveUpdateData::InitProgressiveUpdateDataClass(JNIEnv *jEnv)
     jHeightField = getField("height", "F");
     jScaleField = getField("scale", "F");
     jShouldAbortField = getField("abort", "Z");
-#endif
 }
 
 #undef initInit
@@ -750,65 +711,6 @@ AndroidProgressiveUpdateData::Init(jobject jobj)
 }
 
 void
-AndroidGeckoSurfaceView::Init(jobject jobj)
-{
-    NS_ASSERTION(wrapped_obj == nullptr, "Init called on non-null wrapped_obj!");
-
-    wrapped_obj = jobj;
-}
-
-int
-AndroidGeckoSurfaceView::BeginDrawing()
-{
-    NS_ASSERTION(!isNull(), "BeginDrawing called on null surfaceview!");
-
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return 0;
-
-    AutoLocalJNIFrame jniFrame(env, 0);
-
-    int ret = env->CallIntMethod(wrapped_obj, jBeginDrawingMethod);
-    if (jniFrame.CheckForException())
-        return 0;
-
-    return ret;
-}
-
-void
-AndroidGeckoSurfaceView::EndDrawing()
-{
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env, 0);
-    env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
-}
-
-void
-AndroidGeckoSurfaceView::Draw2D(jobject bitmap, int width, int height)
-{
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env, 0);
-    env->CallVoidMethod(wrapped_obj, jDraw2DBitmapMethod, bitmap, width, height);
-}
-
-void
-AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
-{
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env, 0);
-    env->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
-}
-
-void
 AndroidGeckoLayerClient::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
 {
     NS_ASSERTION(!isNull(), "SetFirstPaintViewport called on null layer client!");
@@ -975,58 +877,6 @@ AndroidGeckoLayerClient::GetDisplayPort(AutoLocalJNIFrame *jniFrame, bool aPageS
     if (jniFrame->CheckForException()) return;
     createDisplayPort(jniFrame, jobj, displayPort);
     (*displayPort)->AddRef();
-}
-
-jobject
-AndroidGeckoSurfaceView::GetSoftwareDrawBitmap(AutoLocalJNIFrame *jniFrame)
-{
-    if (!jniFrame || !jniFrame->GetEnv())
-        return nullptr;
-
-    jobject ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBitmapMethod);
-    if (jniFrame->CheckForException())
-        return nullptr;
-
-    return ret;
-}
-
-jobject
-AndroidGeckoSurfaceView::GetSoftwareDrawBuffer(AutoLocalJNIFrame *jniFrame)
-{
-    if (!jniFrame || !jniFrame->GetEnv())
-        return nullptr;
-
-    jobject ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBufferMethod);
-    if (jniFrame->CheckForException())
-        return nullptr;
-
-    return ret;
-}
-
-jobject
-AndroidGeckoSurfaceView::GetSurface(AutoLocalJNIFrame *jniFrame)
-{
-    if (!jniFrame || !jniFrame->GetEnv())
-        return nullptr;
-
-    jobject ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetSurfaceMethod);
-    if (jniFrame->CheckForException())
-        return nullptr;
-
-    return ret;
-}
-
-jobject
-AndroidGeckoSurfaceView::GetSurfaceHolder(AutoLocalJNIFrame *jniFrame)
-{
-    if (!jniFrame || !jniFrame->GetEnv())
-        return nullptr;
-
-    jobject ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
-    if (jniFrame->CheckForException())
-        return nullptr;
-
-    return ret;
 }
 
 bool

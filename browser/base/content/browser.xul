@@ -184,7 +184,7 @@
            align="start"
            role="alert">
       <hbox flex="1">
-        <image src="chrome://browser/content/social-icon.png" class="popup-notification-icon"/>
+        <image id="social-activation-icon" class="popup-notification-icon"/>
         <vbox flex="1">
           <description id="social-activation-message" class="popup-notification-description"/>
           <spacer flex="1"/>
@@ -956,7 +956,7 @@
 
     <toolbarpalette id="BrowserToolbarPalette">
 
-# Update primaryToolbarButtons in browser/themes/browserShared.inc when adding
+# Update primaryToolbarButtons in browser/themes/shared/browser.inc when adding
 # or removing default items with the toolbarbutton-1 class.
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"

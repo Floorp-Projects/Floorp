@@ -101,7 +101,7 @@ protected:
   int16_t       mOutputFormat;
   bool          mIsInitedFromPrinter;
   bool          mIsInitedFromPrefs;
-
+  bool          mPersistMarginBoxSettings;
 };
 
 #endif /* nsPrintSettings_h__ */

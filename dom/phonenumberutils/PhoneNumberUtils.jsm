@@ -83,5 +83,11 @@ this.PhoneNumberUtils = {
     let countryName = MCC_ISO3166_TABLE[aMCC];
     if (DEBUG) debug("found country name: " + countryName);
     return PhoneNumber.Parse(aNumber, countryName);
+  },
+
+  isViablePhoneNumber: function IsViablePhoneNumber(aNumber) {
+    let viable = PhoneNumber.IsViable(aNumber);
+    if (DEBUG) debug("IsViable(" + aNumber + "): " + viable);
+    return viable;
   }
 };

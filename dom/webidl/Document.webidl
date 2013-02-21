@@ -285,21 +285,7 @@ partial interface Document {
   // nsIDOMDocumentTouch
   // XXXbz I can't find the sane spec for this stuff, so just cribbing
   // from our xpidl for now.
-  // XXXbz commented out for now because quickstubs can't do pref-ability
-  /*
-  [SetterThrows, Pref="dom.w3c_touch_events.expose"]
-  attribute EventHandler ontouchstart;
-  [SetterThrows, Pref="dom.w3c_touch_events.expose"]
-  attribute EventHandler ontouchend;
-  [SetterThrows, Pref="dom.w3c_touch_events.expose"]
-  attribute EventHandler ontouchmove;
-  [SetterThrows, Pref="dom.w3c_touch_events.expose"]
-  attribute EventHandler ontouchenter;
-  [SetterThrows, Pref="dom.w3c_touch_events.expose"]
-  attribute EventHandler ontouchleave;
-  [SetterThrows, Pref="dom.w3c_touch_events.expose"]
-  attribute EventHandler ontouchcancel;
-  [Creator, Pref="dom.w3c_touch_events.expose"]
+  [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   Touch createTouch(optional Window? view = null,
                     // Nasty hack, because we can't do EventTarget arguments yet
                     // (they would need to be non-castable, but trying to do
@@ -321,18 +307,18 @@ partial interface Document {
   // distinguishing arguments yet.  Once this hack is removed. we can also
   // remove the corresponding overload on nsIDocument, since Touch... and
   // sequence<Touch> look the same in the C++.
-  [Creator, Pref="dom.w3c_touch_events.expose"]
+  [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList(Touch touch, Touch... touches);
   // XXXbz and another hack for the fact that we can't usefully have optional
   // distinguishing arguments but need a working zero-arg form of
   // createTouchList().
-  [Creator, Pref="dom.w3c_touch_events.expose"]
+  [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList();
-  [Creator, Pref="dom.w3c_touch_events.expose"]
+  [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList(sequence<Touch> touches);
-  */
 };
 
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
 Document implements NodeEventHandlers;
+Document implements TouchEventHandlers;
