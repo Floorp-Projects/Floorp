@@ -7,7 +7,7 @@
 <!-- contributed by Atul Varma [atul@mozilla.com]  -->
 <!-- edited by Noelle Murata [fiveinchpixie@gmail.com]  -->
 
-The `preferences-service` module provides access to the
+The `preferences/service` module provides access to the
 application-wide preferences service singleton.
 
 

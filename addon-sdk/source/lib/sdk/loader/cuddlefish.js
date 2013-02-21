@@ -88,8 +88,8 @@ function CuddlefishLoader(options) {
     // cache to avoid subsequent loads via `require`.
     modules: override({
       'toolkit/loader': loaderModule,
-      'addon-sdk/sdk/loader/cuddlefish': exports,
-      'addon-sdk/sdk/system/xul-app': xulappModule
+      'sdk/loader/cuddlefish': exports,
+      'sdk/system/xul-app': xulappModule
     }, options.modules),
     resolve: function resolve(id, requirer) {
       let entry = requirer && requirer in manifest && manifest[requirer];
@@ -103,15 +103,14 @@ function CuddlefishLoader(options) {
         // If requirer entry is in manifest and it's requirement is not, than
         // it has no authority to load since linker was not able to find it.
         if (!requirement)
-          throw Error('Module: ' + requirer.id + ' located at ' + requirer.uri
-                      + ' has no authority to load: ' + id, requirer.uri);
+          throw Error('Module: ' + requirer + ' has no authority to load: '
+                      + id, requirer);
 
         uri = requirement;
-      }
-      // If requirer is off manifest than it's a system module and we allow it
-      // to go off manifest.
-      else {
-        uri = id;
+      } else {
+        // If requirer is off manifest than it's a system module and we allow it
+        // to go off manifest by resolving a relative path.
+        uri = loaderModule.resolve(id, requirer);
       }
       return uri;
     },
