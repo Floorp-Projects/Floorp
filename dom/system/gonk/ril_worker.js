@@ -10933,20 +10933,17 @@ let ICCUtilsHelper = {
     let pbr = {};
     for (let i = 0; i < pbrTlvs.length; i++) {
       let pbrTlv = pbrTlvs[i];
+      let anrIndex = 0;
       for (let j = 0; j < pbrTlv.value.length; j++) {
         let tlv = pbrTlv.value[j];
         let tagName = USIM_TAG_NAME[tlv.tag];
 
-        // ANR could have multiple files.
+        // ANR could have multiple files. We save it as anr0, anr1,...etc.
         if (tlv.tag == ICC_USIM_EFANR_TAG) {
-          if (!pbr.anr) {
-            pbr.anr = [];
-          }
-          pbr.anr.push(tlv);
-        } else {
-          pbr[tagName] = tlv;
+          tagName += anrIndex;
+          anrIndex++;
         }
-
+        pbr[tagName] = tlv;
         pbr[tagName].fileType = pbrTlv.tag;
         pbr[tagName].fileId = (tlv.value[0] << 8) | tlv.value[1];
 
