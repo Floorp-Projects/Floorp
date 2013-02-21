@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
                                    "nsIClipboardHelper");
 
-const ORION_SCRIPT = "chrome://browser/content/orion.js";
+const ORION_SCRIPT = "chrome://browser/content/devtools/orion.js";
 const ORION_IFRAME = "data:text/html;charset=utf8,<!DOCTYPE html>" +
   "<html style='height:100%' dir='ltr'>" +
   "<head><link rel='stylesheet'" +

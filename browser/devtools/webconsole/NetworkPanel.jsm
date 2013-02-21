@@ -62,7 +62,7 @@ function NetworkPanel(aParent, aHttpActivity, aWebConsoleFrame)
 
   // Create the iframe that displays the NetworkPanel XHTML.
   this.iframe = createAndAppendElement(this.panel, "iframe", {
-    src: "chrome://browser/content/NetworkPanel.xhtml",
+    src: "chrome://browser/content/devtools/NetworkPanel.xhtml",
     type: "content",
     flex: "1"
   });
