@@ -1697,6 +1697,8 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     int numActualArgs = 0;
     RootedValue thisv(cx);
 
+    fp->cleanupTornValues();
+
     void *calleeToken;
     if (fp->isFunctionFrame()) {
         // CountArgSlot include |this| and the |scopeChain|.
