@@ -17,7 +17,7 @@ import android.view.View;
 public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     private static final String LOGTAG = "GeckoMenuItem";
 
-    public static interface Layout<T extends View> {
+    public static interface Layout {
         public void setIcon(Drawable icon);
         public void setIcon(int iconRes);
         public void setTitle(CharSequence title);
