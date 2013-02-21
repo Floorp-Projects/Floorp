@@ -267,11 +267,7 @@ enum SrcNoteType {
     SRC_WHILE       = 4,        /* JSOP_GOTO to for or while loop condition
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
-    SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
-                                   JSOP_ENDINIT needs extra comma at end of
-                                   array literal: [1,2,,];
-                                   JSOP_DUP continuing destructuring pattern;
-                                   JSOP_POP at end of for-in */
+    SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break */
     SRC_PCDELTA     = 7,        /* distance forward from comma-operator to
                                    next POP, or from CONDSWITCH to first CASE
                                    opcode, etc. -- always a forward delta */
