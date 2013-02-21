@@ -2823,12 +2823,7 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
 
     index = 0;
     for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-        /*
-         * Duplicate the value being destructured to use as a reference base.
-         * If dup is not the first one, annotate it for the decompiler.
-         */
-        if (pn2 != pn->pn_head && NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
-            return false;
+        /* Duplicate the value being destructured to use as a reference base. */
         if (Emit1(cx, bce, JSOP_DUP) < 0)
             return false;
 
@@ -4028,9 +4023,6 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     uint32_t alreadyPushed = unsigned(bce->stackDepth - letHeadDepth);
     uint32_t blockObjCount = blockObj->slotCount();
     for (uint32_t i = alreadyPushed; i < blockObjCount; ++i) {
-        /* Tell the decompiler not to print the decl in the let head. */
-        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
-            return false;
         if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
             return false;
     }
@@ -4262,12 +4254,8 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (Emit1(cx, bce, JSOP_ENDITER) < 0)
         return false;
 
-    if (letDecl) {
-        /* Tell the decompiler to pop but not to print. */
-        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
-            return false;
+    if (letDecl)
         EMIT_UINT16_IMM_OP(JSOP_POPN, blockObjCount);
-    }
 
     return true;
 }
@@ -4513,8 +4501,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT(bi.frameIndex() < JS_BIT(20));
 #endif
         pn->pn_index = index;
-        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
-            return false;
         if (!EmitIndexOp(cx, JSOP_LAMBDA, index, bce))
             return false;
         JS_ASSERT(pn->getOp() == JSOP_GETLOCAL || pn->getOp() == JSOP_GETARG);
@@ -5470,15 +5456,7 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
     JS_ASSERT(atomIndex == pn->pn_count);
     if (nspread) {
-        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
-            return false;
         if (Emit1(cx, bce, JSOP_POP) < 0)
-            return false;
-    }
-
-    if (pn->pn_xflags & PNX_ENDCOMMA) {
-        /* Emit a source note so we know to decompile an extra comma. */
-        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
             return false;
     }
 
