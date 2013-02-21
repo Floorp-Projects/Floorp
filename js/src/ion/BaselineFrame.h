@@ -342,6 +342,11 @@ class BaselineFrame
         return false;
     }
 
+    IonJSFrameLayout *framePrefix() const {
+        uint8_t *fp = (uint8_t *)this + Size() + FramePointerOffset;
+        return (IonJSFrameLayout *)fp;
+    }
+
     // Methods below are used by the compiler.
     static size_t offsetOfCalleeToken() {
         return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfCalleeToken();
