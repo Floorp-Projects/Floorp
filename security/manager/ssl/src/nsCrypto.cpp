@@ -929,7 +929,7 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
     jsString = JS_ValueToString(cx,argv[1]);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[1] = STRING_TO_JSVAL(jsString);
-    params.encode(cx, jsString);
+    params.encodeLatin1(cx, jsString);
     NS_ENSURE_TRUE(!!params, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -941,7 +941,7 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
   jsString = JS_ValueToString(cx, argv[2]);
   NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
   argv[2] = STRING_TO_JSVAL(jsString);
-  keyGenAlg.encode(cx, jsString);
+  keyGenAlg.encodeLatin1(cx, jsString);
   NS_ENSURE_TRUE(!!keyGenAlg, NS_ERROR_OUT_OF_MEMORY);
   keyGenType->keyGenType = cryptojs_interpret_key_gen_type(keyGenAlg.ptr());
   if (keyGenType->keyGenType == invalidKeyGen) {
@@ -1886,7 +1886,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
     jsString = JS_ValueToString(cx, argv[1]);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[1] = STRING_TO_JSVAL(jsString);
-    regToken.encode(cx, jsString);
+    regToken.encodeLatin1(cx, jsString);
     NS_ENSURE_TRUE(!!regToken, NS_ERROR_OUT_OF_MEMORY);
   }
   JSAutoByteString authenticator;
@@ -1894,7 +1894,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
     jsString      = JS_ValueToString(cx, argv[2]);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[2] = STRING_TO_JSVAL(jsString);
-    authenticator.encode(cx, jsString);
+    authenticator.encodeLatin1(cx, jsString);
     NS_ENSURE_TRUE(!!authenticator, NS_ERROR_OUT_OF_MEMORY);
   }
   JSAutoByteString eaCert;
@@ -1902,7 +1902,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
     jsString     = JS_ValueToString(cx, argv[3]);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[3] = STRING_TO_JSVAL(jsString);
-    eaCert.encode(cx, jsString);
+    eaCert.encodeLatin1(cx, jsString);
     NS_ENSURE_TRUE(!!eaCert, NS_ERROR_OUT_OF_MEMORY);
   }
   if (JSVAL_IS_NULL(argv[4])) {
@@ -2553,7 +2553,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
       JSString *caName = JS_ValueToString(cx, argv[i]);
       NS_ENSURE_TRUE(caName, NS_ERROR_OUT_OF_MEMORY);
       argv[i] = STRING_TO_JSVAL(caName);
-      caNameBytes[i - 2].encode(cx, caName);
+      caNameBytes[i - 2].encodeLatin1(cx, caName);
       NS_ENSURE_TRUE(!!caNameBytes[i - 2], NS_ERROR_OUT_OF_MEMORY);
     }
 
