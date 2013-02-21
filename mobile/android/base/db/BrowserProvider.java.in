@@ -1563,10 +1563,11 @@ public class BrowserProvider extends ContentProvider {
                         null, null, null, null);
 
                 while (c.moveToNext()) {
-                    String faviconUrl = c.getString(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL));
                     long faviconId = -1;
-
-                    if (faviconUrl != null) {
+                    int faviconUrlIndex = c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL);
+                    String faviconUrl = null;
+                    if (!c.isNull(faviconUrlIndex)) {
+                        faviconUrl = c.getString(faviconUrlIndex);
                         Cursor c2 = null;
                         try {
                             c2 = db.query(TABLE_FAVICONS,
