@@ -252,6 +252,7 @@ FENNEC_PP_XML_FILES = \
   res/drawable/address_bar_bg.xml \
   res/drawable/address_bar_nav_button.xml \
   res/drawable/address_bar_url.xml \
+  res/drawable/menu_item_state.xml \
   res/drawable/menu_level.xml \
   res/layout/abouthome_content.xml \
   res/layout/awesomebar_search.xml \
@@ -979,7 +980,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_on.xml            \
   mobile/android/base/resources/drawable/ic_menu_quit.xml                       \
   mobile/android/base/resources/drawable/menu_button.xml                        \
-  mobile/android/base/resources/drawable/menu_item_checkmark.xml                \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/remote_tabs_child_divider.xml          \
   mobile/android/base/resources/drawable/site_security_level.xml                \
