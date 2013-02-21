@@ -767,13 +767,14 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
 
   if (!result) {
     result = NS_NewStyleContext(aParentContext, aPseudoTag, aPseudoType,
-                                aRuleNode);
+                                aRuleNode, aFlags & eSkipFlexItemStyleFixup);
     if (!result)
       return nullptr;
     if (aVisitedRuleNode) {
       nsRefPtr<nsStyleContext> resultIfVisited =
         NS_NewStyleContext(parentIfVisited, aPseudoTag, aPseudoType,
-                           aVisitedRuleNode);
+                           aVisitedRuleNode,
+                           aFlags & eSkipFlexItemStyleFixup);
       if (!resultIfVisited) {
         return nullptr;
       }
