@@ -10,7 +10,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsPrintfCString.h"
 #include "prenv.h"
-#include "GLContext.h"
 
 namespace mozilla {
 namespace gl {
@@ -257,30 +256,6 @@ GLLibraryEGL::EnsureInitialized()
         }
     }
 
-    if (IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base)) {
-        GLLibraryLoader::SymLoadStruct imageSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCreateImage,  { "eglCreateImageKHR",  nullptr } },
-            { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", nullptr } },
-            { nullptr, { nullptr } }
-        };
-
-        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
-                                                    &imageSymbols[0],
-                                                    lookupFunction);
-        if (!success) {
-            NS_ERROR("EGL supports KHR_image(_base) without exposing its functions!");
-
-            MarkExtensionUnsupported(KHR_image);
-            MarkExtensionUnsupported(KHR_image_base);
-            MarkExtensionUnsupported(KHR_image_pixmap);
-
-            mSymbols.fCreateImage = nullptr;
-            mSymbols.fDestroyImage = nullptr;
-        }
-    } else {
-        MarkExtensionUnsupported(KHR_image_pixmap);
-    }
-
     mInitialized = true;
     reporter.SetSuccessful();
     return true;
@@ -312,6 +287,37 @@ GLLibraryEGL::InitExtensions()
 #ifdef DEBUG
     firstRun = false;
 #endif
+}
+
+void
+GLLibraryEGL::LoadConfigSensitiveSymbols()
+{
+    GLLibraryLoader::PlatformLookupFunction lookupFunction =
+            (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+
+    if (IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base)) {
+        GLLibraryLoader::SymLoadStruct imageSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCreateImage,  { "eglCreateImageKHR",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", nullptr } },
+            { nullptr, { nullptr } }
+        };
+
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &imageSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports KHR_image(_base) without exposing its functions!");
+
+            MarkExtensionUnsupported(KHR_image);
+            MarkExtensionUnsupported(KHR_image_base);
+            MarkExtensionUnsupported(KHR_image_pixmap);
+
+            mSymbols.fCreateImage = nullptr;
+            mSymbols.fDestroyImage = nullptr;
+        }
+    } else {
+        MarkExtensionUnsupported(KHR_image_pixmap);
+    }
 }
 
 void
