@@ -1748,6 +1748,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           case SRC_SWITCHBREAK:
           case SRC_ASSIGNOP:
           case SRC_HIDDEN:
+          case SRC_CATCH:
           case SRC_XDELTA:
             break;
 
@@ -1807,16 +1808,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
                                     &switchTableStart, &switchTableEnd);
             break;
           }
-
-          case SRC_CATCH:
-            delta = (unsigned) js_GetSrcNoteOffset(sn, 0);
-            if (delta) {
-                if (script->main()[offset] == JSOP_LEAVEBLOCK)
-                    Sprint(sp, " stack depth %u", delta);
-                else
-                    Sprint(sp, " guard delta %u", delta);
-            }
-            break;
 
           default:
             JS_ASSERT(0);
