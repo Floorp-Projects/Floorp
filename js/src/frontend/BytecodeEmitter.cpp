@@ -643,21 +643,15 @@ static const jsatomid INVALID_ATOMID = -1;
 
 static ptrdiff_t
 EmitGoto(JSContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt, ptrdiff_t *lastp,
-         jsatomid labelIndex = INVALID_ATOMID, SrcNoteType noteType = SRC_NULL)
+         SrcNoteType noteType = SRC_NULL)
 {
-    int index;
-
     if (!EmitNonLocalJumpFixup(cx, bce, toStmt))
         return -1;
 
-    if (labelIndex != INVALID_ATOMID)
-        index = NewSrcNote2(cx, bce, noteType, ptrdiff_t(labelIndex));
-    else if (noteType != SRC_NULL)
-        index = NewSrcNote(cx, bce, noteType);
-    else
-        index = 0;
-    if (index < 0)
-        return -1;
+    if (noteType != SRC_NULL) {
+        if (NewSrcNote(cx, bce, noteType) < 0)
+            return -1;
+    }
 
     return EmitBackPatchOp(cx, bce, lastp);
 }
@@ -4163,7 +4157,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
             return false;
     }
 
-    /* Annotate so the decompiler can find the loop-closing jump. */
+    /* Annotate so IonMonkey can find the loop-closing jump. */
     int noteIndex = NewSrcNote(cx, bce, SRC_FOR_IN);
     if (noteIndex < 0)
         return false;
@@ -4196,7 +4190,6 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (!EmitAssignment(cx, bce, forHead->pn_kid2, JSOP_NOP, NULL))
         return false;
 
-    ptrdiff_t tmp2 = bce->offset();
     if (Emit1(cx, bce, JSOP_POP) < 0)
         return false;
 
@@ -4225,11 +4218,8 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (beq < 0)
         return false;
 
-    /* Set the first srcnote offset so we can find the start of the loop body. */
-    if (!SetSrcNoteOffset(cx, bce, (unsigned)noteIndex, 0, tmp2 - jmp))
-        return false;
-    /* Set the second srcnote offset so we can find the closing jump. */
-    if (!SetSrcNoteOffset(cx, bce, (unsigned)noteIndex, 1, beq - jmp))
+    /* Set the srcnote offset so we can find the closing jump. */
+    if (!SetSrcNoteOffset(cx, bce, (unsigned)noteIndex, 0, beq - jmp))
         return false;
 
     /* Fixup breaks and continues before JSOP_ITER (and JSOP_LEAVEFORINLET). */
@@ -4619,34 +4609,24 @@ EmitBreak(JSContext *cx, BytecodeEmitter *bce, PropertyName *label)
 {
     StmtInfoBCE *stmt = bce->topStmt;
     SrcNoteType noteType;
-    jsatomid labelIndex;
     if (label) {
-        if (!bce->makeAtomIndex(label, &labelIndex))
-            return false;
-
         while (stmt->type != STMT_LABEL || stmt->label != label)
             stmt = stmt->down;
         noteType = SRC_BREAK2LABEL;
     } else {
-        labelIndex = INVALID_ATOMID;
         while (!stmt->isLoop() && stmt->type != STMT_SWITCH)
             stmt = stmt->down;
         noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
     }
 
-    return EmitGoto(cx, bce, stmt, &stmt->breaks, labelIndex, noteType) >= 0;
+    return EmitGoto(cx, bce, stmt, &stmt->breaks, noteType) >= 0;
 }
 
 static bool
 EmitContinue(JSContext *cx, BytecodeEmitter *bce, PropertyName *label)
 {
     StmtInfoBCE *stmt = bce->topStmt;
-    SrcNoteType noteType;
-    jsatomid labelIndex;
     if (label) {
-        if (!bce->makeAtomIndex(label, &labelIndex))
-            return false;
-
         /* Find the loop statement enclosed by the matching label. */
         StmtInfoBCE *loop = NULL;
         while (stmt->type != STMT_LABEL || stmt->label != label) {
@@ -4655,15 +4635,12 @@ EmitContinue(JSContext *cx, BytecodeEmitter *bce, PropertyName *label)
             stmt = stmt->down;
         }
         stmt = loop;
-        noteType = SRC_CONT2LABEL;
     } else {
-        labelIndex = INVALID_ATOMID;
         while (!stmt->isLoop())
             stmt = stmt->down;
-        noteType = SRC_CONTINUE;
     }
 
-    return EmitGoto(cx, bce, stmt, &stmt->continues, labelIndex, noteType) >= 0;
+    return EmitGoto(cx, bce, stmt, &stmt->continues, SRC_CONTINUE) >= 0;
 }
 
 static bool
@@ -5557,7 +5534,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // main pass later the emitter will add JSOP_NOP with source notes
             // for the function to preserve the original functions position
             // when decompiling.
-             
+            //
             // Currently this is used only for functions, as compile-as-we go
             // mode for scripts does not allow separate emitter passes.
             for (ParseNode *pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
@@ -6382,28 +6359,27 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
 /*  4 */ {"for",            3},
 
 /*  5 */ {"while",          1},
-
-/*  6 */ {"for-in",         2},
+/*  6 */ {"for-in",         1},
 /*  7 */ {"continue",       0},
-/*  8 */ {"cont2label",     1},
-/*  9 */ {"break",          0},
-/* 10 */ {"break2label",    1},
-/* 11 */ {"switchbreak",    2},
+/*  8 */ {"break",          0},
+/*  9 */ {"break2label",    0},
+/* 10 */ {"switchbreak",    0},
 
-/* 12 */ {"switch",         2},
+/* 11 */ {"switch",         2},
 
-/* 13 */ {"pcdelta",        1},
+/* 12 */ {"pcdelta",        1},
 
-/* 14 */ {"assignop",       0},
+/* 13 */ {"assignop",       0},
 
-/* 15 */ {"hidden",         0},
+/* 14 */ {"hidden",         0},
 
-/* 16 */ {"catch",          1},
+/* 15 */ {"catch",          1},
 
-/* 17 */ {"colspan",        1},
-/* 18 */ {"newline",        0},
-/* 19 */ {"setline",        1},
+/* 16 */ {"colspan",        1},
+/* 17 */ {"newline",        0},
+/* 18 */ {"setline",        1},
 
+/* 19 */ {"unused19",       0},
 /* 20 */ {"unused20",       0},
 /* 21 */ {"unused21",       0},
 /* 22 */ {"unused22",       0},
