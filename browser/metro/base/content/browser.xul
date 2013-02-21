@@ -57,21 +57,21 @@
 
   <commandset id="mainCommandSet">
     <!-- basic navigation -->
-    <command id="cmd_back" label="&back.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_forward" label="&forward.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);" observes="bcast_urlbarState"/>
+    <command id="cmd_back" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_forward" disabled="true" oncommand="CommandUpdater.doCommand(this.id);" observes="bcast_urlbarState"/>
     <command id="cmd_handleBackspace" oncommand="BrowserUI.handleBackspace();" />
     <command id="cmd_handleShiftBackspace" oncommand="BrowserUI.handleShiftBackspace();" />
-    <command id="cmd_reload" label="&reload.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_reload" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_forceReload" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_stop" label="&stop.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_go" label="&go.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_stop" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_go" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_openLocation" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_home" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- tabs -->
-    <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_undoCloseTab" label="&undoclosetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_newTab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_closeTab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_undoCloseTab" oncommand="CommandUpdater.doCommand(this.id);"/>
 #ifdef MOZ_SERVICES_SYNC
     <command id="cmd_remoteTabs" oncommand="CommandUpdater.doCommand(this.id);"/>
 #endif
@@ -101,12 +101,12 @@
     <command id="cmd_scrollPageDown" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- editing -->
-    <command id="cmd_cut" label="&cut.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_copy" label="&copy.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_copylink" label="&copylink.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_paste" label="&paste.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_delete" label="&delete.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_selectAll" label="&selectAll.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_cut" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_copy" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_copylink" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_paste" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_delete" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_selectAll" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- forms navigation -->
     <command id="cmd_formPrevious" oncommand="FormHelperUI.goToPrevious();"/>
@@ -195,10 +195,10 @@
                forwarddisabled="true"
                title="Back/Forward">
               <toolbarbutton id="back-button" class="toolbarbutton"
-                             label="Back"
+                             label="&back.label;"
                              command="cmd_back"/>
               <toolbarbutton id="forward-button" class="toolbarbutton"
-                             label="Forward"
+                             label="&forward.label;"
                              command="cmd_forward"/>
               <dummyobservertarget hidden="true"
                                    onbroadcast="if (this.getAttribute('disabled') == 'true')
@@ -245,7 +245,7 @@
           </toolbar>
 
           <box id="toolbar-transition" observes="bcast_windowState" >
-            <toolbarbutton id="tool-new-tab" command="cmd_newTab"/>
+            <toolbarbutton id="tool-new-tab" command="cmd_newTab" label="&newtab.label;"/>
           </box>
         </hbox>
 
@@ -559,78 +559,83 @@
     <box id="context-container" class="menu-container" hidden="true">
       <vbox id="context-popup" class="menu-popup">
         <richlistbox id="context-commands" bindingType="contextmenu" flex="1">
+          <!-- priority="low" items are hidden by default when a context is being displayed
+               for two or more media types. (e.g. a linked image) -->
+          <!-- Note the order of richlistitem here is important as it is reflected in the
+               menu itself. -->
+          <!-- ux spec: https://bug782810.bugzilla.mozilla.org/attachment.cgi?id=714804 -->
+
           <!-- Text related -->
-          <richlistitem id="context-copy" type="copy" onclick="ContextCommands.copy();">
-            <label value="&copy.label;"/>
+          <!-- for text inputs, this will copy selected text, or if no text is selected, copy all -->
+          <richlistitem id="context-copy" type="copy,selectable" onclick="ContextCommands.copy();">
+            <label value="&contextTextCopy.label;"/>
           </richlistitem>
-          <richlistitem id="context-copy-all" type="copy-all" onclick="ContextCommands.copy();">
-            <label value="&copyAll.label;"/>
-          </richlistitem>
+          <!-- only displayed if there is text on the clipboard -->
           <richlistitem id="context-paste" type="paste" onclick="ContextCommands.paste();">
-            <label value="&paste.label;"/>
+            <label value="&contextTextPaste.label;"/>
           </richlistitem>
+          <!-- Search Bing for "..." -->
+          <richlistitem id="context-search" type="copy,selected-text" onclick="ContextCommands.searchText(this);">
+            <label id="context-search-label" value=""/>
+          </richlistitem>
+          <!-- only display if there is text on the clipboard and the target is the urlbar -->
           <richlistitem id="context-paste-n-go" type="paste-url" onclick="ContextCommands.pasteAndGo();">
-            <label value="&pasteAndGo.label;"/>
+            <label value="&contextTextPasteAndGo.label;"/>
           </richlistitem>
-          <richlistitem id="context-select-all" type="select-all" onclick="ContextCommands.selectAll();">
-            <label value="&selectAll.label;"/>
+          <!-- only displayed in inputs with text that do not have selection -->
+          <richlistitem id="context-select" type="selectable" onclick="ContextCommands.select();">
+            <label value="&contextTextSelect.label;"/>
+          </richlistitem>
+          <!-- only displayed in inputs with text that do not have selection -->
+          <richlistitem id="context-select-all" type="selectable" onclick="ContextCommands.selectAll();">
+            <label value="&contextTextSelectAll.label;"/>
           </richlistitem>
 
           <!-- Image related -->
-          <richlistitem id="context-viewinnewtab" type="image" onclick="ContextCommands.openInNewTab();">
-            <label value="&contextViewInNewTab.label;"/>
+          <!-- save image to user pictures library -->
+          <richlistitem id="context-save-image-lib" type="image" onclick="ContextCommands.saveImageToLib();">
+            <label value="&contextSaveImageLib.label;"/>
           </richlistitem>
-          <richlistitem id="context-copy-image" type="image-loaded" onclick="ContextCommands.copyImage();">
+          <!-- copy image data to clipboard -->
+          <richlistitem id="context-copy-image" type="image" onclick="ContextCommands.copyImage();">
             <label value="&contextCopyImage.label;"/>
           </richlistitem>
-          <richlistitem id="context-save-image" type="image-loaded" onclick="ContextCommands.saveImage();">
-            <label value="&contextSaveImage.label;"/>
+          <!-- copy the uri of the image src -->
+          <richlistitem id="context-copy-image-loc" type="image" onclick="ContextCommands.copyImageSrc();">
+            <label value="&contextCopyImageLocation.label;"/>
           </richlistitem>
-          <richlistitem id="context-save-image-to" type="image-loaded" onclick="ContextCommands.saveImageTo();">
-            <label value="&contextSaveImageTo.label;"/>
-          </richlistitem>
-
-          <!-- Link related -->
-          <richlistitem id="context-openinnewtab" type="link-openable" onclick="ContextCommands.openInNewTab();">
-            <label value="&contextOpenInNewTab.label;"/>
-          </richlistitem>
-          <richlistitem id="context-bookmark-link" type="link" onclick="ContextCommands.bookmarkLink();">
-            <label value="&contextBookmarkLink.label;"/>
-          </richlistitem>
-          <richlistitem id="context-copy-link" type="link" onclick="ContextCommands.copyLink();">
-            <label value="&contextCopyLink.label;"/>
-          </richlistitem>
-          <richlistitem id="context-copy-email" type="mailto" onclick="ContextCommands.copyEmail();">
-            <label value="&contextCopyEmail.label;"/>
-          </richlistitem>
-          <richlistitem id="context-copy-phone" type="callto" onclick="ContextCommands.copyPhone();">
-            <label value="&contextCopyPhone.label;"/>
+          <!-- open the uri of the image src in a new tab -->
+          <richlistitem id="context-open-image-tab" type="image" priority="low" onclick="ContextCommands.openImageInNewTab();">
+            <label value="&contextOpenImageTab.label;"/>
           </richlistitem>
 
           <!-- Video related -->
-          <richlistitem id="context-play-media" type="media-paused" onclick="ContextCommands.sendCommand('play');">
-            <label value="&contextPlayMedia.label;"/>
+          <!-- save video to user videos library -->
+          <richlistitem id="context-save-video-lib" type="video" onclick="ContextCommands.saveVideoToLib();">
+            <label value="&contextSaveVideoLib.label;"/>
           </richlistitem>
-          <richlistitem id="context-pause-video" type="media-playing" onclick="ContextCommands.sendCommand('pause');">
-            <label value="&contextPauseMedia.label;"/>
+          <!-- copy the uri of the video src -->
+          <richlistitem id="context-copy-video-loc" type="video" onclick="ContextCommands.copyVideoSrc();">
+            <label value="&contextCopyVideoLocation.label;"/>
           </richlistitem>
-          <richlistitem id="context-videotab" type="video" onclick="ContextCommands.sendCommand('videotab');">
-            <label value="&contextVideoTab.label;"/>
-          </richlistitem>
-          <richlistitem id="context-save-video" type="video" onclick="ContextCommands.saveVideo();">
-            <label value="&contextSaveVideo.label;"/>
-          </richlistitem>
-          <richlistitem id="context-save-video-to" type="video" onclick="ContextCommands.saveVideoTo();">
-            <label value="&contextSaveVideoTo.label;"/>
+          <!-- open the uri of the video src in a new tab -->
+          <richlistitem id="context-open-video-tab" type="video" priority="low" onclick="ContextCommands.openVideoInNewTab();">
+            <label value="&contextOpenVideoTab.label;"/>
           </richlistitem>
 
-          <!-- Misc. related -->
-          <richlistitem id="context-editbookmark" type="edit-bookmark" onclick="ContextCommands.editBookmark();">
-            <label value="&contextEditBookmark.label;"/>
+          <!-- Link related -->
+          <!-- all of these apply to underlying link href values -->
+          <richlistitem id="context-open-in-new-tab" type="link" onclick="ContextCommands.openLinkInNewTab();">
+            <label value="&contextOpenLinkTab.label;"/>
           </richlistitem>
-          <richlistitem id="context-removebookmark" type="edit-bookmark" onclick="ContextCommands.removeBookmark();">
-            <label value="&contextRemoveBookmark.label;"/>
+          <richlistitem id="context-copy-link" type="link" onclick="ContextCommands.copyLink();">
+            <label value="&contextCopyLinkHref.label;"/>
           </richlistitem>
+          <richlistitem id="context-bookmark-link" type="link" priority="low" onclick="ContextCommands.bookmarkLink();">
+            <label value="&contextBookmarkLinkHref.label;"/>
+          </richlistitem>
+
+          <!-- App bar: 'more' button context menu -->
           <richlistitem id="context-findinpage" type="find-in-page" onclick="ContextCommands.findInPage();">
           <label value="&appbarFindInPage.label;"/>
           </richlistitem>

@@ -412,7 +412,7 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
                 inWith = true;
             scope = scope->enclosingScope();
         }
-    } else {
+    } else if (outerpc->sc->isFunctionBox()) {
         // This is like the above case, but for more deeply nested functions.
         // For example:
         //
@@ -885,8 +885,23 @@ Parser::functionBody(FunctionBodyType type)
         FunctionBox *funbox = pc->sc->asFunctionBox();
         funbox->setArgumentsHasLocalBinding();
 
-        /* Dynamic scope access destroys all hope of optimization. */
-        if (pc->sc->bindingsAccessedDynamically())
+        /*
+         * If a script has both explicit mentions of 'arguments' and dynamic
+         * name lookups which could access the arguments, an arguments object
+         * must be created eagerly. The SSA analysis used for lazy arguments
+         * cannot cope with dynamic name accesses, so any 'arguments' accessed
+         * via a NAME opcode must force construction of the arguments object.
+         */
+        if (pc->sc->bindingsAccessedDynamically() && maybeArgDef)
+            funbox->setDefinitelyNeedsArgsObj();
+
+        /*
+         * If a script contains the debugger statement either directly or
+         * within an inner function, the arguments object must be created
+         * eagerly. The debugger can walk the scope chain and observe any
+         * values along it.
+         */
+        if (pc->sc->hasDebuggerStatement())
             funbox->setDefinitelyNeedsArgsObj();
 
         /*
@@ -907,6 +922,9 @@ Parser::functionBody(FunctionBodyType type)
                     }
                 }
             }
+            /* Watch for mutation of arguments through e.g. eval(). */
+            if (pc->sc->bindingsAccessedDynamically())
+                funbox->setDefinitelyNeedsArgsObj();
           exitLoop: ;
         }
     }
@@ -1265,7 +1283,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, HandlePropertyName funName,
              * when leaving the inner function.
              *
              * The dn == outer_dn case arises with generator expressions
-             * (see CompExprTransplanter::transplant, the PN_FUNC/PN_NAME
+             * (see CompExprTransplanter::transplant, the PN_CODE/PN_NAME
              * case), and nowhere else, currently.
              */
             if (dn != outer_dn) {
@@ -1541,7 +1559,7 @@ Parser::functionDef(HandlePropertyName funName, const TokenStream::Position &sta
     JS_ASSERT_IF(kind == Statement, funName);
 
     /* Make a TOK_FUNCTION node. */
-    ParseNode *pn = FunctionNode::create(PNK_FUNCTION, this);
+    ParseNode *pn = CodeNode::create(PNK_FUNCTION, this);
     if (!pn)
         return NULL;
     pn->pn_body = NULL;
@@ -1592,7 +1610,7 @@ Parser::functionDef(HandlePropertyName funName, const TokenStream::Position &sta
             if (Definition *fn = pc->lexdeps.lookupDefn(funName)) {
                 JS_ASSERT(fn->isDefn());
                 fn->setKind(PNK_FUNCTION);
-                fn->setArity(PN_FUNC);
+                fn->setArity(PN_CODE);
                 fn->pn_pos.begin = pn->pn_pos.begin;
                 fn->pn_pos.end = pn->pn_pos.end;
 
@@ -1769,6 +1787,8 @@ Parser::functionArgsAndBody(ParseNode *pn, HandleFunction fun, HandlePropertyNam
      */
     if (funbox->bindingsAccessedDynamically())
         outerpc->sc->setBindingsAccessedDynamically();
+    if (funbox->hasDebuggerStatement())
+        outerpc->sc->setHasDebuggerStatement();
 
 #if JS_HAS_DESTRUCTURING
     /*
@@ -1811,7 +1831,8 @@ Parser::functionArgsAndBody(ParseNode *pn, HandleFunction fun, HandlePropertyNam
      */
     if (funbox->bindingsAccessedDynamically())
         outerpc->sc->setBindingsAccessedDynamically();
-
+    if (funbox->hasDebuggerStatement())
+        outerpc->sc->setHasDebuggerStatement();
 
     pn->pn_funbox = funbox;
     pn->pn_body->append(body);
@@ -1822,6 +1843,41 @@ Parser::functionArgsAndBody(ParseNode *pn, HandleFunction fun, HandlePropertyNam
         return false;
 
     return true;
+}
+
+ParseNode *
+Parser::moduleDecl()
+{
+    JS_ASSERT(tokenStream.currentToken().name() == context->runtime->atomState.module);
+    if (!((pc->sc->isGlobalSharedContext() || pc->sc->isModuleBox()) && pc->atBodyLevel()))
+    {
+        reportError(NULL, JSMSG_MODULE_STATEMENT);
+        return NULL;
+    }
+
+    ParseNode *pn = CodeNode::create(PNK_MODULE, this);
+    if (!pn)
+        return NULL;
+    JS_ALWAYS_TRUE(tokenStream.matchToken(TOK_STRING));
+    RootedAtom atom(context, tokenStream.currentToken().atom());
+    Module *module = js_NewModule(context, atom);
+    if (!module)
+        return NULL;
+    ModuleBox *modulebox = newModuleBox(module, pc);
+    if (!modulebox)
+        return NULL;
+    pn->pn_modulebox = modulebox;
+
+    ParseContext modulepc(this, modulebox, pc->staticLevel + 1, pc->blockidGen);
+    if (!modulepc.init())
+        return NULL;
+    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_MODULE);
+    pn->pn_body = statements();
+    if (!pn->pn_body)
+        return NULL;
+    MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_MODULE);
+
+    return pn;
 }
 
 ParseNode *
@@ -4020,10 +4076,18 @@ Parser::statement()
         if (!pn)
             return NULL;
         pc->sc->setBindingsAccessedDynamically();
+        pc->sc->setHasDebuggerStatement();
         break;
 
       case TOK_ERROR:
         return NULL;
+
+      case TOK_NAME:
+        if (tokenStream.currentToken().name() == context->names().module &&
+            tokenStream.peekTokenSameLine(TSF_OPERAND) == TOK_STRING)
+        {
+            return moduleDecl();
+        }
 
       default:
         return expressionStatement();
@@ -4830,7 +4894,7 @@ BumpStaticLevel(ParseNode *pn, ParseContext *pc)
 static bool
 AdjustBlockId(ParseNode *pn, unsigned adjust, ParseContext *pc)
 {
-    JS_ASSERT(pn->isArity(PN_LIST) || pn->isArity(PN_FUNC) || pn->isArity(PN_NAME));
+    JS_ASSERT(pn->isArity(PN_LIST) || pn->isArity(PN_CODE) || pn->isArity(PN_NAME));
     if (JS_BIT(20) - pn->pn_blockid <= adjust + 1) {
         JS_ReportErrorNumber(pc->sc->context, js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "program");
         return false;
@@ -4884,7 +4948,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
             return false;
         break;
 
-      case PN_FUNC:
+      case PN_CODE:
       case PN_NAME:
         if (!transplant(pn->maybeExpr()))
             return false;
@@ -5267,7 +5331,7 @@ Parser::generatorExpr(ParseNode *kid)
     pn->pn_hidden = true;
 
     /* Make a new node for the desugared generator function. */
-    ParseNode *genfn = FunctionNode::create(PNK_FUNCTION, this);
+    ParseNode *genfn = CodeNode::create(PNK_FUNCTION, this);
     if (!genfn)
         return NULL;
     genfn->setOp(JSOP_LAMBDA);
@@ -5673,7 +5737,7 @@ Parser::primaryExpr(TokenKind tt)
                     /* So CURRENT_TOKEN gets TOK_COMMA and not TOK_LB. */
                     tokenStream.matchToken(TOK_COMMA);
                     pn2 = NullaryNode::create(PNK_COMMA, this);
-                    pn->pn_xflags |= PNX_HOLEY | PNX_NONCONST;
+                    pn->pn_xflags |= PNX_SPECIALARRAYINIT | PNX_NONCONST;
                 } else {
                     ParseNode *spreadNode = NULL;
                     if (tt == TOK_TRIPLEDOT) {
@@ -5690,6 +5754,7 @@ Parser::primaryExpr(TokenKind tt)
                         if (!pn2->isConstant() || spreadNode)
                             pn->pn_xflags |= PNX_NONCONST;
                         if (spreadNode) {
+                            pn->pn_xflags |= PNX_SPECIALARRAYINIT;
                             spreadNode->pn_kid = pn2;
                             pn2 = spreadNode;
                         }

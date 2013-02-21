@@ -4128,18 +4128,11 @@ nsLayoutUtils::ComputeSizeForDrawing(imgIContainer *aImage,
 {
   aGotWidth  = NS_SUCCEEDED(aImage->GetWidth(&aImageSize.width));
   aGotHeight = NS_SUCCEEDED(aImage->GetHeight(&aImageSize.height));
+  bool gotRatio = NS_SUCCEEDED(aImage->GetIntrinsicRatio(&aIntrinsicRatio));
 
-  if (aGotWidth && aGotHeight) {
-    aIntrinsicRatio = nsSize(aImageSize.width, aImageSize.height);
-    return;
-  }
-
-  // If we failed to get width or height, we either have a vector image and
-  // should return its intrinsic ratio, or we hit an error (say, because the
-  // image failed to load or couldn't be decoded) and should return zero size.
-  if (nsIFrame* rootFrame = aImage->GetRootLayoutFrame()) {
-    aIntrinsicRatio = rootFrame->GetIntrinsicRatio();
-  } else {
+  if (!(aGotWidth && aGotHeight) && !gotRatio) {
+    // We hit an error (say, because the image failed to load or couldn't be
+    // decoded) and should return zero size.
     aGotWidth = aGotHeight = true;
     aImageSize = nsIntSize(0, 0);
     aIntrinsicRatio = nsSize(0, 0);

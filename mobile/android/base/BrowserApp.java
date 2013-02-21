@@ -392,7 +392,6 @@ abstract public class BrowserApp extends GeckoApp
                     iconRes = message.getString("icon");
                 } catch (Exception ex) { }
                 info.icon = iconRes;
-                info.checkable = false;
                 try {
                     info.checkable = message.getBoolean("checkable");
                 } catch (Exception ex) { }
@@ -838,7 +837,11 @@ abstract public class BrowserApp extends GeckoApp
                         }
                     }
                 });
+            } else {
+                item.setIcon(R.drawable.ic_menu_addons_filler);
             }
+        } else {
+            item.setIcon(R.drawable.ic_menu_addons_filler);
         }
 
         item.setCheckable(info.checkable);

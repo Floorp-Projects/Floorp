@@ -83,7 +83,6 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 
 #define HTTP_PREF_PREFIX        "network.http."
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
-#define NETWORK_ENABLEIDN       "network.enableIDN"
 #define BROWSER_PREF_PREFIX     "browser.cache."
 #define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
 #define DONOTTRACK_HEADER_VALUE   "privacy.donottrackheader.value"
@@ -249,7 +248,6 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(HTTP_PREF_PREFIX, this, true);
         prefBranch->AddObserver(UA_PREF_PREFIX, this, true);
         prefBranch->AddObserver(INTL_ACCEPT_LANGUAGES, this, true);
-        prefBranch->AddObserver(NETWORK_ENABLEIDN, this, true);
         prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, true);
         prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, true);
         prefBranch->AddObserver(DONOTTRACK_HEADER_VALUE, this, true);
@@ -1197,24 +1195,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             if (uval)
                 SetAcceptLanguages(NS_ConvertUTF16toUTF8(uval).get());
         }
-    }
-
-    //
-    // IDN options
-    //
-
-    if (PREF_CHANGED(NETWORK_ENABLEIDN)) {
-        bool enableIDN = false;
-        prefs->GetBoolPref(NETWORK_ENABLEIDN, &enableIDN);
-        // No locking is required here since this method runs in the main
-        // UI thread, and so do all the methods in nsHttpChannel.cpp
-        // (mIDNConverter is used by nsHttpChannel)
-        if (enableIDN && !mIDNConverter) {
-            mIDNConverter = do_GetService(NS_IDNSERVICE_CONTRACTID);
-            NS_ASSERTION(mIDNConverter, "idnSDK not installed");
-        }
-        else if (!enableIDN && mIDNConverter)
-            mIDNConverter = nullptr;
     }
 
     //

@@ -55,10 +55,16 @@ class AnyContextFlags
     //
     bool            bindingsAccessedDynamically:1;
 
+    // Whether this script, or any of its inner scripts contains a debugger
+    // statement which could potentially read or write anywhere along the
+    // scope chain.
+    bool            hasDebuggerStatement:1;
+
   public:
     AnyContextFlags()
      :  hasExplicitUseStrict(false),
-        bindingsAccessedDynamically(false)
+        bindingsAccessedDynamically(false),
+        hasDebuggerStatement(false)
     { }
 };
 
@@ -156,9 +162,11 @@ class SharedContext
 
     bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
     bool bindingsAccessedDynamically() const { return anyCxFlags.bindingsAccessedDynamically; }
+    bool hasDebuggerStatement()        const { return anyCxFlags.hasDebuggerStatement; }
 
     void setExplicitUseStrict()           { anyCxFlags.hasExplicitUseStrict        = true; }
     void setBindingsAccessedDynamically() { anyCxFlags.bindingsAccessedDynamically = true; }
+    void setHasDebuggerStatement()        { anyCxFlags.hasDebuggerStatement        = true; }
 
     // JSOPTION_STRICT warnings or strict mode errors.
     inline bool needStrictChecks();

@@ -187,6 +187,12 @@ class TypedOrValueRegister
     ValueOperand valueReg() {
         return dataValue();
     }
+
+    AnyRegister scratchReg() {
+        if (hasValue())
+            return AnyRegister(valueReg().scratchReg());
+        return typedReg();
+    }
 };
 
 // A constant value, or registers to hold a typed/untyped value.
