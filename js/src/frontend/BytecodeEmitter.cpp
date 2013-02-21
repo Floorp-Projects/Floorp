@@ -3906,18 +3906,12 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         /*
          * We came here from the goto further below that detects else-if
          * chains, so we must mutate stmtInfo back into a STMT_IF record.
-         * Also (see below for why) we need a note offset for SRC_IF_ELSE
-         * to help the decompiler.  Actually, we need two offsets, one for
-         * decompiling any else clause and the second for decompiling an
-         * else-if chain without bracing, overindenting, or incorrectly
-         * scoping let declarations.
+         * Also we need a note offset for SRC_IF_ELSE to help IonMonkey.
          */
         JS_ASSERT(stmtInfo.type == STMT_ELSE);
         stmtInfo.type = STMT_IF;
         stmtInfo.update = top;
         if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq))
-            return false;
-        if (!SetSrcNoteOffset(cx, bce, noteIndex, 1, top - beq))
             return false;
     }
 
@@ -3959,7 +3953,7 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         /*
          * Annotate SRC_IF_ELSE with the offset from branch to jump, for
-         * the decompiler's benefit.  We can't just "back up" from the pc
+         * IonMonkey's benefit.  We can't just "back up" from the pc
          * of the else clause, because we don't know whether an extended
          * jump was required to leap from the end of the then clause over
          * the else clause.
@@ -6382,7 +6376,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
 /*  0 */ {"null",           0},
 
 /*  1 */ {"if",             0},
-/*  2 */ {"if-else",        2},
+/*  2 */ {"if-else",        1},
 /*  3 */ {"cond",           1},
 
 /*  4 */ {"for",            3},

@@ -263,7 +263,7 @@ enum SrcNoteType {
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
     SRC_FOR_IN      = 6,        /* JSOP_GOTO to for-in loop condition from
-                                   before loop (same arity as SRC_IF_ELSE) */
+                                   before loop */
     SRC_CONTINUE    = 7,        /* JSOP_GOTO is a continue, not a break */
     SRC_CONT2LABEL  = 8,        /* JSOP_GOTO for 'continue label' with atomid */
     SRC_BREAK       = 9,        /* JSOP_GOTO is a break */
