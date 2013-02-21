@@ -1773,9 +1773,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
 
           case SRC_IF_ELSE:
-            Sprint(sp, " else %u elseif %u",
-                   unsigned(js_GetSrcNoteOffset(sn, 0)),
-                   unsigned(js_GetSrcNoteOffset(sn, 1)));
+            Sprint(sp, " else %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
 
           case SRC_FOR_IN:
