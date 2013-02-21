@@ -328,10 +328,13 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
 }
 
 static void
-HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromException *rfe)
+HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromException *rfe,
+                bool *calledDebugEpilogue)
 {
     JS_ASSERT(frame.isBaselineJS());
     AssertCanGC();
+
+    JS_ASSERT(!*calledDebugEpilogue);
 
     RootedScript script(cx);
     jsbytecode *pc;
@@ -360,9 +363,9 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
                 return;
             }
 
-            // Uncatchable exception.
-            JS_ASSERT(!cx->isExceptionPending());
-            break;
+            // DebugEpilogue threw an exception. Propagate to the caller frame.
+            *calledDebugEpilogue = true;
+            return;
 
           default:
             JS_NOT_REACHED("Invalid trap status");
@@ -465,11 +468,14 @@ ion::HandleException(ResumeFromException *rfe)
                 ionScript->decref(cx->runtime->defaultFreeOp());
 
         } else if (iter.isBaselineJS()) {
-            HandleException(cx, iter, rfe);
+            // It's invalid to call DebugEpilogue twice for the same frame.
+            bool calledDebugEpilogue = false;
+
+            HandleException(cx, iter, rfe, &calledDebugEpilogue);
             if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
                 return;
 
-            if (cx->compartment->debugMode()) {
+            if (cx->compartment->debugMode() && !calledDebugEpilogue) {
                 // If DebugEpilogue returns |true|, we have to perform a forced
                 // return, e.g. return frame->returnValue() to the caller.
                 BaselineFrame *frame = iter.baselineFrame();
