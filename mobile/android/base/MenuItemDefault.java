@@ -18,14 +18,16 @@ import android.widget.TextView;
 
 public class MenuItemDefault extends LinearLayout
                              implements GeckoMenuItem.Layout {
-    private static final String LOGTAG = "GeckoMenuItemDefault";
     private static Rect sIconBounds;
+    private static Drawable sChecked;
+    private static Drawable sUnChecked;
+    private static Drawable sMore;
 
     private TextView mTitle;
-    private CheckBox mCheck;
-    private ImageView mMore;
 
     private Drawable mIcon;
+    private Drawable mState;
+
     private boolean mCheckable;
     private boolean mChecked;
     private boolean mHasSubMenu;
@@ -39,8 +41,6 @@ public class MenuItemDefault extends LinearLayout
 
         inflate(context, R.layout.menu_item, this);
         mTitle = (TextView) findViewById(R.id.title);
-        mCheck = (CheckBox) findViewById(R.id.check);
-        mMore = (ImageView) findViewById(R.id.more);
 
         mCheckable = false;
         mChecked = false;
@@ -49,6 +49,18 @@ public class MenuItemDefault extends LinearLayout
         if (sIconBounds == null) {
             int iconSize = res.getDimensionPixelSize(R.dimen.menu_item_icon);
             sIconBounds = new Rect(0, 0, iconSize, iconSize);
+
+            int stateIconSize = res.getDimensionPixelSize(R.dimen.menu_item_state_icon);
+            Rect stateIconBounds = new Rect(0, 0, stateIconSize, stateIconSize);
+
+            sChecked = res.getDrawable(R.drawable.menu_item_check);
+            sChecked.setBounds(stateIconBounds);
+
+            sUnChecked = res.getDrawable(R.drawable.menu_item_uncheck);
+            sUnChecked.setBounds(stateIconBounds);
+
+            sMore = res.getDrawable(R.drawable.menu_item_more);
+            sMore.setBounds(stateIconBounds);
         }
     }
 
@@ -64,7 +76,7 @@ public class MenuItemDefault extends LinearLayout
         if (mIcon != null)
             mIcon.setBounds(sIconBounds);
 
-        mTitle.setCompoundDrawables(mIcon, null, null, null);
+        mTitle.setCompoundDrawables(mIcon, null, mState, null);
     }
 
     @Override
@@ -90,26 +102,39 @@ public class MenuItemDefault extends LinearLayout
         if (mIcon != null)
             mIcon.setAlpha(enabled ? 255 : 99);
 
-        mCheck.setEnabled(enabled);
-        mMore.setColorFilter(enabled ? 0 : 0xFF999999);
+        if (mState != null)
+            mState.setAlpha(enabled ? 255 : 99);
     }
 
     @Override
     public void setCheckable(boolean checkable) {
         mCheckable = checkable;
-        mCheck.setVisibility(mCheckable && !mHasSubMenu ? VISIBLE : GONE);
+        refreshState();
+    }
+
+    private void refreshState() {
+        if (mHasSubMenu)
+            mState = sMore;
+        else if (mCheckable && mChecked)
+            mState = sChecked;
+        else if (mCheckable && !mChecked)
+            mState = sUnChecked;
+        else
+            mState = null;
+
+        mTitle.setCompoundDrawables(mIcon, null, mState, null);
     }
 
     @Override
     public void setChecked(boolean checked) {
         mChecked = checked;
-        mCheck.setChecked(mChecked);
+        refreshState();
     }
 
     @Override
     public void setSubMenuIndicator(boolean hasSubMenu) {
         mHasSubMenu = hasSubMenu;
-        mMore.setVisibility(mHasSubMenu ? VISIBLE : GONE);
-        mCheck.setVisibility(mCheckable && !mHasSubMenu ? VISIBLE : GONE);
+        mState = sMore;
+        refreshState();
     }
 }
