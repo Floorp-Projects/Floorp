@@ -1607,7 +1607,7 @@ ParallelArrayObject::dimensionsGetter(JSContext *cx, CallArgs args)
 {
     RootedObject dimArray(cx, as(&args.thisv().toObject())->dimensionArray());
     RootedObject copy(cx, NewDenseCopiedArray(cx, dimArray->getDenseInitializedLength(),
-                                              dimArray->getDenseElements()));
+                                              dimArray, 0));
     if (!copy)
         return false;
     // Reuse the existing dimension array's type.
