@@ -6379,31 +6379,43 @@ CGConstList::finish(ConstArray *array)
  * JSOP_{NOP,POP}_LENGTH), which is used only by SRC_FOR.
  */
 JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
-    {"null",            0},
-    {"if",              0},
-    {"if-else",         2},
-    {"for",             3},
-    {"while",           1},
-    {"continue",        0},
-    {"decl",            1},
-    {"pcdelta",         1},
-    {"assignop",        0},
-    {"cond",            1},
-    {"brace",           1},
-    {"hidden",          0},
-    {"pcbase",          1},
-    {"label",           1},
-    {"labelbrace",      1},
-    {"endbrace",        0},
-    {"break2label",     1},
-    {"cont2label",      1},
-    {"switch",          2},
-    {"funcdef",         1},
-    {"catch",           1},
-    {"colspan",         1},
-    {"newline",         0},
-    {"setline",         1},
-    {"xdelta",          0},
+/*  0 */ {"null",           0},
+
+/*  1 */ {"if",             0},
+/*  2 */ {"if-else",        2},
+/*  3 */ {"cond",           1},
+
+/*  4 */ {"for",            3},
+
+/*  5 */ {"while",          1},
+
+/*  6 */ {"for-in",         2},
+/*  7 */ {"continue",       0},
+/*  8 */ {"cont2label",     1},
+/*  9 */ {"break",          0},
+/* 10 */ {"break2label",    1},
+/* 11 */ {"switchbreak",    2},
+
+/* 12 */ {"switch",         2},
+
+/* 13 */ {"pcdelta",        1},
+
+/* 14 */ {"assignop",       0},
+
+/* 15 */ {"hidden",         0},
+
+/* 16 */ {"catch",          1},
+
+/* 17 */ {"colspan",        1},
+/* 18 */ {"newline",        0},
+/* 19 */ {"setline",        1},
+
+/* 20 */ {"unused20",       0},
+/* 21 */ {"unused21",       0},
+/* 22 */ {"unused22",       0},
+/* 23 */ {"unused23",       0},
+
+/* 24 */ {"xdelta",         0},
 };
 
 JS_FRIEND_API(unsigned)
