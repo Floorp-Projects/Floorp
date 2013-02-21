@@ -1197,7 +1197,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *paren
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
-    gc::InitialHeap heap = InitialHeapForNewKind(newKind);
+    gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
     JSObject *obj = JSObject::create(cx, kind, heap, shape, type, slots);
     if (!obj) {
         js_free(slots);
@@ -1242,7 +1242,7 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp,
         (!parent || parent == proto.toObject()->getParent()) && !proto.toObject()->isGlobal())
     {
         if (cache.lookupProto(clasp, proto.toObject(), allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry, InitialHeapForNewKind(newKind));
+            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
             if (obj)
                 return obj;
         }
@@ -1298,7 +1298,7 @@ js::NewObjectWithClassProtoCommon(JSContext *cx, js::Class *clasp, JSObject *pro
     NewObjectCache::EntryIndex entry = -1;
     if (parentArg->isGlobal() && protoKey != JSProto_Null && newKind != SingletonObject) {
         if (cache.lookupGlobal(clasp, &parentArg->asGlobal(), allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry, InitialHeapForNewKind(newKind));
+            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
             if (obj)
                 return obj;
         }
@@ -1340,7 +1340,7 @@ js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc
     NewObjectCache::EntryIndex entry = -1;
     if (parent == type->proto->getParent() && newKind != SingletonObject) {
         if (cache.lookupType(&ObjectClass, type, allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry, InitialHeapForNewKind(newKind));
+            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &ObjectClass));
             if (obj)
                 return obj;
         }
