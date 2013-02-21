@@ -115,6 +115,7 @@ public:
   void SetUpIO()
   {
     MOZ_ASSERT(!mIOLoop);
+    MOZ_ASSERT(mFd >= 0);
     mIOLoop = MessageLoopForIO::current();
     mIOLoop->WatchFileDescriptor(mFd,
                                  true,
@@ -749,6 +750,7 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
   // within mCurrentRilRawData, and request another write when the
   // system won't block.
   //
+  MOZ_ASSERT(aFd >= 0);
   while (true) {
     UnixSocketRawData* data;
     if (mOutgoingQ.IsEmpty()) {
