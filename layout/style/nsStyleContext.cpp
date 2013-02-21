@@ -34,7 +34,8 @@ using namespace mozilla;
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
                                nsCSSPseudoElements::Type aPseudoType,
-                               nsRuleNode* aRuleNode)
+                               nsRuleNode* aRuleNode,
+                               bool aSkipFlexItemStyleFixup)
   : mParent(aParent),
     mChild(nullptr),
     mEmptyChild(nullptr),
@@ -70,7 +71,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   mRuleNode->AddRef();
   mRuleNode->SetUsedDirectly(); // before ApplyStyleFixups()!
 
-  ApplyStyleFixups();
+  ApplyStyleFixups(aSkipFlexItemStyleFixup);
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
   NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
@@ -293,7 +294,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 }
 
 void
-nsStyleContext::ApplyStyleFixups()
+nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
 {
   // See if we have any text decorations.
   // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
@@ -362,7 +363,7 @@ nsStyleContext::ApplyStyleFixups()
   //   # by applying the table in CSS 2.1 Chapter 9.7.
   // ...which converts inline-level elements to their block-level equivalents.
 #ifdef MOZ_FLEXBOX
-  if (mParent) {
+  if (!aSkipFlexItemStyleFixup && mParent) {
     const nsStyleDisplay* parentDisp = mParent->StyleDisplay();
     if ((parentDisp->mDisplay == NS_STYLE_DISPLAY_FLEX ||
          parentDisp->mDisplay == NS_STYLE_DISPLAY_INLINE_FLEX) &&
@@ -716,11 +717,13 @@ already_AddRefed<nsStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsCSSPseudoElements::Type aPseudoType,
-                   nsRuleNode* aRuleNode)
+                   nsRuleNode* aRuleNode,
+                   bool aSkipFlexItemStyleFixup)
 {
   nsStyleContext* context =
     new (aRuleNode->PresContext())
-      nsStyleContext(aParentContext, aPseudoTag, aPseudoType, aRuleNode);
+    nsStyleContext(aParentContext, aPseudoTag, aPseudoType, aRuleNode,
+                   aSkipFlexItemStyleFixup);
   context->AddRef();
   return context;
 }

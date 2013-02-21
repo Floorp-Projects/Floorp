@@ -908,19 +908,19 @@
     'android_app_version_name%': 'Developer Build',
     'android_app_version_code%': 0,
 
-    'sas_dll_exists': '<!(python <(DEPTH)/build/dir_exists.py <(sas_dll_path))',
-    'wix_exists': '<!(python <(DEPTH)/build/dir_exists.py <(wix_path))',
+    'sas_dll_exists': '<!(<(PYTHON) <(DEPTH)/build/dir_exists.py <(sas_dll_path))',
+    'wix_exists': '<!(<(PYTHON) <(DEPTH)/build/dir_exists.py <(wix_path))',
 
     'windows_sdk_default_path': '<(DEPTH)/third_party/platformsdk_win8/files',
     'directx_sdk_default_path': '<(DEPTH)/third_party/directxsdk/files',
 
     'conditions': [
-      ['OS=="win" and "<!(python <(DEPTH)/build/dir_exists.py <(windows_sdk_default_path))"=="True"', {
+      ['OS=="win" and "<!(<(PYTHON) <(DEPTH)/build/dir_exists.py <(windows_sdk_default_path))"=="True"', {
         'windows_sdk_path%': '<(windows_sdk_default_path)',
       }, {
         'windows_sdk_path%': 'C:/Program Files (x86)/Windows Kits/8.0',
       }],
-      ['OS=="win" and "<!(python <(DEPTH)/build/dir_exists.py <(directx_sdk_default_path))"=="True"', {
+      ['OS=="win" and "<!(<(PYTHON) <(DEPTH)/build/dir_exists.py <(directx_sdk_default_path))"=="True"', {
         'directx_sdk_path%': '<(directx_sdk_default_path)',
       }, {
         'directx_sdk_path%': '$(DXSDK_DIR)',
@@ -932,7 +932,7 @@
       # means, a warning will be printed at compile time.
       ['use_official_google_api_keys==2', {
         'use_official_google_api_keys%':
-            '<!(python <(DEPTH)/google_apis/build/check_internal.py <(DEPTH)/google_apis/internal/google_chrome_api_keys.h)',
+            '<!(<(PYTHON) <(DEPTH)/google_apis/build/check_internal.py <(DEPTH)/google_apis/internal/google_chrome_api_keys.h)',
       }],
       ['os_posix==1 and OS!="mac" and OS!="ios"', {
         # Figure out the python architecture to decide if we build pyauto.
@@ -944,7 +944,7 @@
           # disabled for Mozilla since it doesn't use this, and 'msys' messes $(CXX) up
           ['build_with_mozilla==0 and clang==0 and asan==0 and tsan==0', {
             # This will set gcc_version to XY if you are running gcc X.Y.*.
-            'gcc_version%': '<!(python <(DEPTH)/build/compiler_version.py)',
+            'gcc_version%': '<!(<(PYTHON) <(DEPTH)/build/compiler_version.py)',
           }, {
             'gcc_version%': 0,
           }],
@@ -969,7 +969,7 @@
         # The Mac SDK is set for iOS builds and passed through to Mac
         # sub-builds. This allows the Mac sub-build SDK in an iOS build to be
         # overridden from the command line the same way it is for a Mac build.
-        'mac_sdk%': '<!(python <(DEPTH)/build/mac/find_sdk.py 10.6)',
+        'mac_sdk%': '<!(<(PYTHON) <(DEPTH)/build/mac/find_sdk.py 10.6)',
 
         # iOS SDK and deployment target support.  The iOS 5.0 SDK is actually
         # what is required, but the value is left blank so when it is set in
@@ -1155,7 +1155,7 @@
           }],
 
           ['branding=="Chrome" and buildtype=="Official"', {
-            'mac_sdk%': '<!(python <(DEPTH)/build/mac/find_sdk.py --verify <(mac_sdk_min) --sdk_path=<(mac_sdk_path))',
+            'mac_sdk%': '<!(<(PYTHON) <(DEPTH)/build/mac/find_sdk.py --verify <(mac_sdk_min) --sdk_path=<(mac_sdk_path))',
             # Enable uploading crash dumps.
             'mac_breakpad_uploads%': 1,
             # Enable dumping symbols at build time for use by Mac Breakpad.
@@ -1163,7 +1163,7 @@
             # Enable Keystone auto-update support.
             'mac_keystone%': 1,
           }, { # else: branding!="Chrome" or buildtype!="Official"
-            'mac_sdk%': '<!(python <(DEPTH)/build/mac/find_sdk.py <(mac_sdk_min))',
+            'mac_sdk%': '<!(<(PYTHON) <(DEPTH)/build/mac/find_sdk.py <(mac_sdk_min))',
             'mac_breakpad_uploads%': 0,
             'mac_breakpad%': 0,
             'mac_keystone%': 0,

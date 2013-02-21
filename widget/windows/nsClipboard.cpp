@@ -924,6 +924,15 @@ nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, int32_t a
 
 }
 
+NS_IMETHODIMP
+nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
+{
+  if (::OpenClipboard(nullptr)) { 
+    ::EmptyClipboard();
+    ::CloseClipboard();
+  }
+  return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
+}
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,

@@ -209,6 +209,10 @@ public:
     mDisallowSelectionPrint = aDisallowSelectionPrint;
   }
 
+  void SetNoMarginBoxes(bool aNoMarginBoxes) {
+    mNoMarginBoxes = aNoMarginBoxes;
+  }
+
 protected:
 
   nsresult CommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
@@ -287,6 +291,7 @@ protected:
   bool mDidLoadDataForPrinting;
   bool mIsDestroying;
   bool mDisallowSelectionPrint;
+  bool mNoMarginBoxes;
 
   nsresult AfterNetworkPrint(bool aHandleError);
 

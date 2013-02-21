@@ -22,6 +22,15 @@
 
 Components.utils.import("resource://gre/modules/PhoneNumber.jsm");
 
+function IsViable(dial, expected) {
+  var result = PhoneNumber.IsViable(dial);
+  if (result != expected) {
+    ok(false, dial + " is " + (result ? "" : "not ") + "viable, expects otherwise.");
+  } else {
+    ok(true, dial + " is " + (result ? "" : "not ") + "viable as expected.");
+  }
+}
+
 function CantParse(dial, currentRegion) {
   var result = PhoneNumber.Parse(dial, currentRegion);
   if (result) {
@@ -72,6 +81,37 @@ function Format(dial, currentRegion, nationalNumber, region, nationalFormat, int
     return result;
   }
 }
+
+// Test whether could a string be a phone number.
+IsViable(null, false);
+IsViable("", false);
+IsViable("1", false);
+IsViable("12", true); // MIN_LENGTH_PHONE_NUMBER
+IsViable("123", true); // MIN_LENGTH_PHONE_NUMBER
+IsViable("1a2", false);
+IsViable("12a", false);
+IsViable("1234", true); // MIN_LENGTH_PHONE_NUMBER
+IsViable("123a", true);
+IsViable("+", false);
+IsViable("+1", false);
+IsViable("+12", false);
+IsViable("+123", true);
+IsViable("()123", true);
+IsViable("(1)23", true);
+IsViable("(12)3", true);
+IsViable("(123)", true);
+IsViable("(123)4", true);
+IsViable("(123)4", true);
+IsViable("123;ext=", false);
+IsViable("123;ext=1", true);
+IsViable("123;ext=1234567", true);
+IsViable("123;ext=12345678", false);
+IsViable("123 ext:1", true);
+IsViable("123 ext:1#", true);
+IsViable("123-1#", true);
+IsViable("123 1#", true);
+IsViable("123 12345#", true);
+IsViable("123 +123456#", false);
 
 // Test parsing national numbers.
 Parse("033316005", "NZ");

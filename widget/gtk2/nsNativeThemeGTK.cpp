@@ -612,6 +612,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
   return true;
 }
 
+#if defined(MOZ_WIDGET_GTK2)
 class ThemeRenderer : public gfxGdkNativeRenderer {
 public:
   ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
@@ -654,6 +655,7 @@ ThemeRenderer::DrawWithGDK(GdkDrawable * drawable, gint offsetX,
 
   return NS_OK;
 }
+#endif
 
 bool
 nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
@@ -782,23 +784,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
 
   // gdk rectangles are wrt the drawing rect.
 
-  // The gdk_clip is just advisory here, meaning "you don't
-  // need to draw outside this rect if you don't feel like it!"
-  GdkRectangle gdk_clip = {0, 0, drawingRect.width, drawingRect.height};
-
   GdkRectangle gdk_rect = {-drawingRect.x, -drawingRect.y,
                            widgetRect.width, widgetRect.height};
-
-  ThemeRenderer renderer(state, gtkWidgetType, flags, direction,
-                         gdk_rect, gdk_clip);
-
-  // Some themes (e.g. Clearlooks) just don't clip properly to any
-  // clip rect we provide, so we cannot advertise support for clipping within
-  // the widget bounds.
-  uint32_t rendererFlags = 0;
-  if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque) {
-    rendererFlags |= gfxGdkNativeRenderer::DRAW_IS_OPAQUE;
-  }
 
   // translate everything so (0,0) is the top left of the drawingRect
   gfxContextAutoSaveRestore autoSR(ctx);
@@ -817,11 +804,31 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
     gdk_error_trap_push ();
   }
 
+#if defined(MOZ_WIDGET_GTK2)
+  // The gdk_clip is just advisory here, meaning "you don't
+  // need to draw outside this rect if you don't feel like it!"
+  GdkRectangle gdk_clip = {0, 0, drawingRect.width, drawingRect.height};
+
+  ThemeRenderer renderer(state, gtkWidgetType, flags, direction,
+                         gdk_rect, gdk_clip);
+
+  // Some themes (e.g. Clearlooks) just don't clip properly to any
+  // clip rect we provide, so we cannot advertise support for clipping within
+  // the widget bounds.
+  uint32_t rendererFlags = 0;
+  if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque) {
+    rendererFlags |= gfxGdkNativeRenderer::DRAW_IS_OPAQUE;
+  }
+
   // GtkStyles (used by the widget drawing backend) are created for a
   // particular colormap/visual.
   GdkColormap* colormap = moz_gtk_widget_get_colormap();
 
   renderer.Draw(ctx, drawingRect.Size(), rendererFlags, colormap);
+#else 
+  moz_gtk_widget_paint(gtkWidgetType, ctx->GetCairo(), &gdk_rect, 
+                       &state, flags, direction);
+#endif
 
   if (!safeState) {
     gdk_flush();

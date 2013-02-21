@@ -1010,11 +1010,11 @@ let RIL = {
     Buf.sendParcel();
   },
 
-   /**
+  /**
    * Helper function for changing ICC locks.
    */
   iccSetCardLock: function iccSetCardLock(options) {
-    if (options.newPin !== undefined) {
+    if (options.newPin !== undefined) { // Change PIN lock.
       switch (options.lockType) {
         case "pin":
           this.changeICCPIN(options);
@@ -1027,14 +1027,27 @@ let RIL = {
           options.success = false;
           this.sendDOMMessage(options);
       }
-    } else { // Enable/Disable pin lock.
-      if (options.lockType != "pin") {
-        options.errorMsg = "Unsupported Card Lock.";
-        options.success = false;
-        this.sendDOMMessage(options);
-        return;
+    } else { // Enable/Disable lock.
+      switch (options.lockType) {
+        case "pin":
+          options.facility = ICC_CB_FACILITY_SIM;
+          options.password = options.pin;
+          break;
+        case "fdn":
+          options.facility = ICC_CB_FACILITY_FDN;
+          options.password = options.pin2;
+          break;
+        default:
+          options.errorMsg = "Unsupported Card Lock.";
+          options.success = false;
+          this.sendDOMMessage(options);
+          return;
       }
-      this.setICCPinLock(options);
+      options.enabled = options.enabled;
+      options.serviceClass = ICC_SERVICE_CLASS_VOICE |
+                             ICC_SERVICE_CLASS_DATA  |
+                             ICC_SERVICE_CLASS_FAX;
+      this.setICCFacilityLock(options);
     }
   },
 
@@ -1127,23 +1140,18 @@ let RIL = {
   iccGetCardLock: function iccGetCardLock(options) {
     switch (options.lockType) {
       case "pin":
-        this.getICCPinLock(options);
+        options.facility = ICC_CB_FACILITY_SIM;
+        break;
+      case "fdn":
+        options.facility = ICC_CB_FACILITY_FDN;
         break;
       default:
         options.errorMsg = "Unsupported Card Lock.";
         options.success = false;
         this.sendDOMMessage(options);
+        return;
     }
-  },
 
-  /**
-   * Get ICC Pin lock. A wrapper call to queryICCFacilityLock.
-   *
-   * @param requestId
-   *        Request Id from RadioInterfaceLayer.
-   */
-  getICCPinLock: function getICCPinLock(options) {
-    options.facility = ICC_CB_FACILITY_SIM;
     options.password = ""; // For query no need to provide pin.
     options.serviceClass = ICC_SERVICE_CLASS_VOICE |
                            ICC_SERVICE_CLASS_DATA  |
@@ -1173,26 +1181,6 @@ let RIL = {
       Buf.writeString(options.aid || this.aid);
     }
     Buf.sendParcel();
-  },
-
-  /**
-   * Set ICC Pin lock. A wrapper call to setICCFacilityLock.
-   *
-   * @param enabled
-   *        true to enable, false to disable.
-   * @param pin
-   *        Pin code.
-   * @param requestId
-   *        Request Id from RadioInterfaceLayer.
-   */
-  setICCPinLock: function setICCPinLock(options) {
-    options.facility = ICC_CB_FACILITY_SIM;
-    options.enabled = options.enabled;
-    options.password = options.pin;
-    options.serviceClass = ICC_SERVICE_CLASS_VOICE |
-                           ICC_SERVICE_CLASS_DATA  |
-                           ICC_SERVICE_CLASS_FAX;
-    this.setICCFacilityLock(options);
   },
 
   /**
@@ -7424,6 +7412,11 @@ let StkCommandParamsFactory = {
       textMsg.responseNeeded = true;
     }
 
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
+    if (ctlv) {
+      textMsg.duration = ctlv.value;
+    }
+
     // High priority.
     if (cmdDetails.commandQualifier & 0x01) {
       textMsg.isHighPriority = true;
@@ -7587,6 +7580,12 @@ let StkCommandParamsFactory = {
       throw new Error("Stk Set Up Call: Required value missing : Adress");
     }
     call.address = ctlv.value.number;
+
+    // see 3GPP TS 31.111 section 6.4.13
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
+    if (ctlv) {
+      call.duration = ctlv.value;
+    }
 
     return call;
   },

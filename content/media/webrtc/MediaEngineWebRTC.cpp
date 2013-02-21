@@ -10,6 +10,9 @@
 #error "This file must be #included before any IPDL-generated files or other files that #include prlog.h"
 #endif
 
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+
 #include "CSFLog.h"
 #include "prenv.h"
 
@@ -39,6 +42,36 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
   webrtc::ViECapture* ptrViECapture;
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
+
+  int32_t width  = MediaEngineWebRTCVideoSource::DEFAULT_VIDEO_WIDTH;
+  int32_t height = MediaEngineWebRTCVideoSource::DEFAULT_VIDEO_HEIGHT;
+  int32_t fps    = MediaEngineWebRTCVideoSource::DEFAULT_VIDEO_FPS;
+  int32_t minfps = MediaEngineWebRTCVideoSource::DEFAULT_VIDEO_MIN_FPS;
+
+  // FIX - these should be passed in originating in prefs and/or getUserMedia constraints
+  // Bug 778801
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+    if (branch) {
+      branch->GetIntPref("media.navigator.video.default_width", &width);
+      branch->GetIntPref("media.navigator.video.default_height", &height);
+      branch->GetIntPref("media.navigator.video.default_fps", &fps);
+      branch->GetIntPref("media.navigator.video.default_min_fps", &minfps);
+    }
+  }
+  LOG(("%s: %dx%d @%dfps (min %d)", __FUNCTION__, width, height, fps, minfps));
+
+  bool changed = false;
+  if (width != mWidth || height != mHeight || fps != mFPS || minfps != mMinFPS) {
+    changed = true;
+  }
+  mWidth = width;
+  mHeight = height;
+  mFPS = fps;
+  mMinFPS = minfps;
 
   if (!mVideoEngine) {
     if (!(mVideoEngine = webrtc::VideoEngine::Create())) {
@@ -134,11 +167,12 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
 
     nsRefPtr<MediaEngineWebRTCVideoSource> vSource;
     NS_ConvertUTF8toUTF16 uuid(uniqueId);
-    if (mVideoSources.Get(uuid, getter_AddRefs(vSource))) {
+    if (!changed && mVideoSources.Get(uuid, getter_AddRefs(vSource))) {
       // We've already seen this device, just append.
       aVSources->AppendElement(vSource.get());
     } else {
-      vSource = new MediaEngineWebRTCVideoSource(mVideoEngine, i);
+      vSource = new MediaEngineWebRTCVideoSource(mVideoEngine, i,
+                                                 width, height, fps, minfps);
       mVideoSources.Put(uuid, vSource); // Hashtable takes ownership.
       aVSources->AppendElement(vSource);
     }

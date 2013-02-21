@@ -151,6 +151,26 @@ function testSetupCall(cmd) {
   runNextTest();
 }
 
+function testDisplayTextVariableTimeOut(cmd) {
+  log("STK CMD " + JSON.stringify(cmd));
+  is(cmd.typeOfCommand, icc.STK_CMD_DISPLAY_TEXT);
+  is(cmd.commandNumber, 0x01);
+  is(cmd.options.duration.timeUnit, icc.STK_TIME_UNIT_SECOND);
+  is(cmd.options.duration.timeInterval, 0x0A);
+
+  runNextTest();
+}
+
+function testSetUpCallVariableTimeOut(cmd) {
+  log("STK CMD " + JSON.stringify(cmd));
+  is(cmd.typeOfCommand, icc.STK_CMD_SET_UP_CALL);
+  is(cmd.commandNumber, 0x01);
+  is(cmd.options.duration.timeUnit, icc.STK_TIME_UNIT_SECOND);
+  is(cmd.options.duration.timeInterval, 0x0A);
+
+  runNextTest();
+}
+
 let tests = [
   {command: "d0288103012180820281020d1d00d3309bfc06c95c301aa8e80259c3ec34b9ac07c9602f58ed159bb940",
    func: testDisplayTextGsm7BitEncoding},
@@ -180,6 +200,10 @@ let tests = [
    func: testSetupCall},
   {command: "D0198103012200820281828D0A04456E74657220222B228402010A",
    func: testGetInKeyVariableTimeout},
+  {command: "d0198103012180820281028D0A043130205365636F6E648402010A",
+   func: testDisplayTextVariableTimeOut},
+  {command: "d02281030110008202818385084E6F7420627573798609911032042143651C2C8402010A",
+   func: testSetUpCallVariableTimeOut},
 ];
 
 let pendingEmulatorCmdCount = 0;
