@@ -1795,6 +1795,7 @@ class MUnbox : public MUnaryInstruction
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    void printOpcode(FILE *fp);
 };
 
 class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
