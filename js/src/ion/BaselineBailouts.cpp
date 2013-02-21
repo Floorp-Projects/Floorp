@@ -520,7 +520,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
             // Get scope chain from function or script if not already set. If
             // pcOffset == 0, we may have to push a new call object, so we leave
             // scopeChain NULL and enter baseline code before the prologue.
-            if (iter.pcOffset() != 0) {
+            if (iter.pcOffset() != 0 || iter.resumeAfter()) {
                 if (fun)
                     scopeChain = fun->environment();
                 else
