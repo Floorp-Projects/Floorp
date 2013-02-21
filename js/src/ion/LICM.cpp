@@ -41,11 +41,15 @@ LICM::analyze()
         Loop::LoopReturn lr = loop.init();
         if (lr == Loop::LoopReturn_Error)
             return false;
-        if (lr == Loop::LoopReturn_Skip)
+        if (lr == Loop::LoopReturn_Skip) {
+            graph.unmarkBlocks();
             continue;
+        }
 
         if (!loop.optimize())
             return false;
+
+        graph.unmarkBlocks();
     }
 
     return true;
@@ -73,7 +77,6 @@ Loop::init()
     if (lr == LoopReturn_Error)
         return LoopReturn_Error;
 
-    graph.unmarkBlocks();
     return lr;
 }
 
@@ -194,7 +197,7 @@ Loop::hoistInstructions(InstructionQueue &toHoist)
 bool
 Loop::isInLoop(MDefinition *ins)
 {
-    return ins->block()->id() >= header_->id();
+    return ins->block()->isMarked();
 }
 
 bool
