@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>dir="auto" and inputs</title>
+  </head>
+  <body>
+    <p>The next three lines should be left-to-right:</p>
+    <div dir="ltr"><input value="abcdefghi"> is left-to-right.</div>
+    <div dir="ltr"><input value="ابتثجحخدذ"> is right-to-left.</div>
+    <div dir="ltr"><input value="!()*;<=>?"> is neutral.</div>
+    <p dir="rtl">The next three lines should be right-to-left:</p>
+    <div dir="rtl"><input value="abcdefghi"> שמאל-ימין.</div>
+    <div dir="rtl"><input value="ابتثجحخدذ"> ימין-שמאל.</div>
+    <div dir="rtl"><input value="!()*;<=>?"> נייטראלי.</div>
+  </body>
+</html>

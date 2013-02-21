@@ -238,7 +238,8 @@ DoesNotParticipateInAutoDirection(const Element* aElement)
   return (!aElement->IsHTML() ||
           nodeInfo->Equals(nsGkAtoms::script) ||
           nodeInfo->Equals(nsGkAtoms::style) ||
-          nodeInfo->Equals(nsGkAtoms::textarea));
+          nodeInfo->Equals(nsGkAtoms::textarea) ||
+          aElement->IsInAnonymousSubtree());
 }
 
 static inline bool
