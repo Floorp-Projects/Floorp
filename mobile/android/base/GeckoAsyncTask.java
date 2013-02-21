@@ -11,12 +11,9 @@ import android.os.Handler;
 // We construct these off of the main thread, and we want that to run
 // on the main UI thread, so this is a convenience class to do that
 public abstract class GeckoAsyncTask<Params, Progress, Result> {
-    public enum Priority { NORMAL, HIGH };
-
     private volatile boolean mCancelled = false;
     private final Handler mBackgroundThreadHandler;
     private final Handler mUiHandler;
-    private Priority mPriority = Priority.NORMAL;
 
     public GeckoAsyncTask(Handler uiHandler, Handler backgroundThreadHandler) {
         mUiHandler = uiHandler;
@@ -48,19 +45,9 @@ public abstract class GeckoAsyncTask<Params, Progress, Result> {
         mUiHandler.post(new Runnable() {
             public void run() {
                 onPreExecute();
-
-                BackgroundTaskRunnable runnable = new BackgroundTaskRunnable(params);
-                if (mPriority == Priority.HIGH)
-                    mBackgroundThreadHandler.postAtFrontOfQueue(runnable);
-                else
-                    mBackgroundThreadHandler.post(runnable);
+                mBackgroundThreadHandler.post(new BackgroundTaskRunnable(params));
             }
         });
-    }
-
-    public final GeckoAsyncTask<Params, Progress, Result> setPriority(Priority priority) {
-        mPriority = priority;
-        return this;
     }
 
     @SuppressWarnings({"UnusedParameters"})
