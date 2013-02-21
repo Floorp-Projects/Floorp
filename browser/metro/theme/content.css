@@ -125,7 +125,7 @@ select[size][multiple],
 
 /* For both mouse and touch, single-selects are handled by the SelectHelper popup.
  * Suppress mouse events on the popup itself. See also ../base/content/cursor.css */
-select[size=1] :-moz-any(option, optgroup),
+select[size="1"] :-moz-any(option, optgroup),
 select:not([size]):not([multiple]) :-moz-any(option, optgroup) {
   pointer-events: none;
 }
