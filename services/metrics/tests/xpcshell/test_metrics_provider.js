@@ -54,7 +54,7 @@ add_task(function test_init() {
   let m = provider.getMeasurement("DummyMeasurement", 1);
   do_check_true(m instanceof Metrics.Measurement);
   do_check_eq(m.id, 1);
-  do_check_eq(m._fieldsByName.size, 7);
+  do_check_eq(Object.keys(m._fields).length, 7);
   do_check_true(m.hasField("daily-counter"));
   do_check_false(m.hasField("does-not-exist"));
 
