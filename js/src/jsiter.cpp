@@ -385,12 +385,14 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
         if (!type)
             return NULL;
 
-        RootedShape shape(cx, EmptyShape::getInitialShape(cx, &PropertyIteratorObject::class_,
-                                                          NULL, NULL, ITERATOR_FINALIZE_KIND));
+        Class *clasp = &PropertyIteratorObject::class_;
+        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, NULL, NULL,
+                                                          ITERATOR_FINALIZE_KIND));
         if (!shape)
             return NULL;
 
-        RawObject obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND, gc::DefaultHeap, shape, type, NULL);
+        RawObject obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND,
+                                         GetInitialHeap(GenericObject, clasp), shape, type, NULL);
         if (!obj)
             return NULL;
 

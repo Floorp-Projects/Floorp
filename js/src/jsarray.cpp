@@ -2666,7 +2666,7 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg, NewObjectKind newKi
     if (newKind != SingletonObject &&
         cache.lookupGlobal(&ArrayClass, cx->global(), allocKind, &entry))
     {
-        RootedObject obj(cx, cache.newObjectFromHit(cx, entry, InitialHeapForNewKind(newKind)));
+        RootedObject obj(cx, cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &ArrayClass)));
         if (obj) {
             /* Fixup the elements pointer and length, which may be incorrect. */
             obj->setFixedElements();

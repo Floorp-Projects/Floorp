@@ -1199,9 +1199,11 @@ enum NewObjectKind {
 };
 
 inline gc::InitialHeap
-InitialHeapForNewKind(NewObjectKind newKind)
+GetInitialHeap(NewObjectKind newKind, const Class *clasp)
 {
-    return newKind == GenericObject ? gc::DefaultHeap : gc::TenuredHeap;
+    if (clasp->finalize || newKind != GenericObject)
+        return gc::TenuredHeap;
+    return gc::DefaultHeap;
 }
 
 // Specialized call for constructing |this| with a known function callee,
