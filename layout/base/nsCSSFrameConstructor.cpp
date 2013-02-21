@@ -5108,9 +5108,21 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
                                       nsFrameItems&            aFrameItems)
 
 {
-  NS_PRECONDITION(nullptr != aParentFrame, "no parent frame");
+  NS_PRECONDITION(aParentFrame, "no parent frame");
+  // NOTE: If we start using this code for non-anonymous content, we'll need
+  // to evaluate whether the AutoFlexItemStyleFixupSkipper (instantiated below)
+  // is appropriate for that content.
+  NS_PRECONDITION(aContent->IsRootOfNativeAnonymousSubtree(),
+                  "ConstructFrame should only be used for anonymous content");
+
   FrameConstructionItemList items;
-  AddFrameConstructionItems(aState, aContent, true, aParentFrame, items);
+  {
+    // Skip flex item style-fixup during our AddFrameConstructionItems() call:
+    TreeMatchContext::AutoFlexItemStyleFixupSkipper
+      flexItemStyleFixupSkipper(aState.mTreeMatchContext);
+
+    AddFrameConstructionItems(aState, aContent, true, aParentFrame, items);
+  }
   items.SetTriedConstructingFrames();
 
   for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {

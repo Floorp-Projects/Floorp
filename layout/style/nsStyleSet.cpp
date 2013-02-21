@@ -1175,6 +1175,9 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
                             HasState(NS_EVENT_STATE_VISITED)) {
     flags |= eIsVisitedLink;
   }
+  if (aTreeMatchContext.mSkippingFlexItemStyleFixup) {
+    flags |= eSkipFlexItemStyleFixup;
+  }
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
                     nullptr, nsCSSPseudoElements::ePseudo_NotPseudoElement,
