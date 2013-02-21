@@ -4890,14 +4890,22 @@ nsSVGFELightingElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChan
 
 static int32_t
 Convolve3x3(const uint8_t *index, int32_t stride,
-            const int8_t kernel[3][3])
+            const int8_t kernel[3][3]
+#ifdef DEBUG
+            , const uint8_t *minData, const uint8_t *maxData
+#endif // DEBUG
+)
 {
   int32_t sum = 0;
   for (int32_t y = 0; y < 3; y++) {
     for (int32_t x = 0; x < 3; x++) {
       int8_t k = kernel[y][x];
-      if (k)
-        sum += k * index[4 * (x - 1) + stride * (y - 1)];
+      if (k) {
+        const uint8_t *valPtr = index + (4 * (x - 1) + stride * (y - 1));
+        NS_ASSERTION(valPtr >= minData, "out of bounds read (before buffer)");
+        NS_ASSERTION(valPtr < maxData,  "out of bounds read (after buffer)");
+        sum += k * (*valPtr);
+      }
     }
   }
   return sum;
@@ -4966,10 +4974,30 @@ GenerateNormal(float *N, const uint8_t *data, int32_t stride,
 
   const uint8_t *index = data + y * stride + 4 * x + GFX_ARGB32_OFFSET_A;
 
+#ifdef DEBUG
+  // For sanity-checking, to be sure we're not reading outside source buffer:
+  const uint8_t* minData = data;
+  const uint8_t* maxData = minData + (surfaceHeight * surfaceWidth * stride);
+
+  // We'll sanity-check each value we read inside of Convolve3x3, but we
+  // might as well ensure we're passing it a valid pointer to start with, too:
+  NS_ASSERTION(index >= minData, "index points before buffer start");
+  NS_ASSERTION(index < maxData, "index points after buffer end");
+#endif // DEBUG
+
   N[0] = -surfaceScale * FACTORx[yflag][xflag] *
-    Convolve3x3(index, stride, Kx[yflag][xflag]);
+    Convolve3x3(index, stride, Kx[yflag][xflag]
+#ifdef DEBUG
+                , minData, maxData
+#endif // DEBUG
+                );
+
   N[1] = -surfaceScale * FACTORy[yflag][xflag] *
-    Convolve3x3(index, stride, Ky[yflag][xflag]);
+    Convolve3x3(index, stride, Ky[yflag][xflag]
+#ifdef DEBUG
+                , minData, maxData
+#endif // DEBUG
+                );
   N[2] = 255;
   NORMALIZE(N);
 }

@@ -152,6 +152,12 @@ XPCOMUtils.defineLazyGetter(this, "WAP", function () {
   return WAP;
 });
 
+XPCOMUtils.defineLazyGetter(this, "PhoneNumberUtils", function () {
+  let ns = {};
+  Cu.import("resource://gre/modules/PhoneNumberUtils.jsm", ns);
+  return ns.PhoneNumberUtils;
+});
+
 function convertRILCallState(state) {
   switch (state) {
     case RIL.CALL_STATE_ACTIVE:
@@ -1984,6 +1990,14 @@ RadioInterfaceLayer.prototype = {
 
   dial: function dial(number) {
     debug("Dialing " + number);
+    if (!PhoneNumberUtils.isViablePhoneNumber(number)) {
+      this.handleCallError({
+        callIndex: -1,
+        error: RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER]
+      });
+      debug("Number '" + number + "' doesn't seem to be a viable number. Drop.");
+      return;
+    }
     this.worker.postMessage({rilMessageType: "dial",
                              number: number,
                              isDialEmergency: false});

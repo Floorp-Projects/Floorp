@@ -613,14 +613,18 @@ public:
         return NS_ERROR_FAILURE;
       }
 
+      /**
+       * We're allowing multiple tabs to access the same camera for parity
+       * with Chrome.  See bug 811757 for some of the issues surrounding
+       * this decision.  To disallow, we'd filter by IsAvailable() as we used
+       * to.
+       */
       // Pick the first available device.
       for (uint32_t i = 0; i < count; i++) {
         nsRefPtr<MediaEngineVideoSource> vSource = videoSources[i];
-        if (vSource->IsAvailable()) {
-          found = true;
-          mVideoDevice = new MediaDevice(videoSources[i]);
-          break;
-        }
+        found = true;
+        mVideoDevice = new MediaDevice(videoSources[i]);
+        break;
       }
 
       if (!found) {
@@ -647,11 +651,9 @@ public:
 
       for (uint32_t i = 0; i < count; i++) {
         nsRefPtr<MediaEngineAudioSource> aSource = audioSources[i];
-        if (aSource->IsAvailable()) {
-          found = true;
-          mAudioDevice = new MediaDevice(audioSources[i]);
-          break;
-        }
+        found = true;
+        mAudioDevice = new MediaDevice(audioSources[i]);
+        break;
       }
 
       if (!found) {
