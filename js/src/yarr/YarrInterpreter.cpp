@@ -746,7 +746,7 @@ public:
                     ASSERT((&term - term.atom.parenthesesWidth)->inputPosition == term.inputPosition);
 #endif
                     unsigned subpatternId = term.atom.subpatternId;
-                    output[subpatternId << 1] = input.getPos() + (&term - term.atom.parenthesesWidth)->inputPosition;
+                    output[subpatternId << 1] = input.getPos() + term.inputPosition;
                 }
                 context->term -= term.atom.parenthesesWidth;
                 return true;
