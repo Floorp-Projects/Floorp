@@ -511,6 +511,7 @@ RES_ANIM = \
   $(NULL)
 
 RES_DRAWABLE_MDPI = \
+  res/drawable-mdpi/blank.png \
   res/drawable-mdpi/favicon.png \
   res/drawable-mdpi/folder.png \
   res/drawable-mdpi/abouthome_icon.png \
@@ -622,6 +623,7 @@ RES_DRAWABLE_LDPI = \
   $(NULL)
 
 RES_DRAWABLE_HDPI = \
+  res/drawable-hdpi/blank.png \
   res/drawable-hdpi/favicon.png \
   res/drawable-hdpi/folder.png \
   res/drawable-hdpi/home_bg.png \
@@ -712,6 +714,7 @@ RES_DRAWABLE_HDPI = \
   $(NULL)
 
 RES_DRAWABLE_XHDPI = \
+  res/drawable-xhdpi/blank.png \
   res/drawable-xhdpi/favicon.png \
   res/drawable-xhdpi/folder.png \
   res/drawable-xhdpi/abouthome_icon.png \
