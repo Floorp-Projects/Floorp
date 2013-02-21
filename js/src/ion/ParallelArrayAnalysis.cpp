@@ -141,6 +141,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(PassArg)
     CUSTOM_OP(Call)
     UNSAFE_OP(ApplyArgs)
+    UNSAFE_OP(CallDirectEval)
     SAFE_OP(BitNot)
     UNSAFE_OP(TypeOf)
     SAFE_OP(ToId)

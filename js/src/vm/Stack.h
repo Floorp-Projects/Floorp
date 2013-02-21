@@ -307,7 +307,8 @@ class AbstractFramePtr
 
     inline bool prevUpToDate() const;
     inline void setPrevUpToDate() const;
-    inline AbstractFramePtr evalPrev() const;
+
+    JSObject *evalPrevScopeChain(JSRuntime *rt) const;
 
     inline void *maybeHookData() const;
     inline void setHookData(void *data) const;
