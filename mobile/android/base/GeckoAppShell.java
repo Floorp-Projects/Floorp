@@ -73,6 +73,7 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -87,8 +88,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.concurrent.SynchronousQueue;
 import java.net.ProxySelector;
 import java.net.Proxy;
@@ -124,7 +127,6 @@ public class GeckoAppShell
 
     static private final boolean LOGGING = false;
 
-    static File sHomeDir = null;
     static private int sDensityDpi = 0;
 
     private static final EventDispatcher sEventDispatcher = new EventDispatcher();
@@ -1558,15 +1560,24 @@ public class GeckoAppShell
             } catch (InterruptedException ie) {}
         }
     }
-
-    public static String getAppNameByPID(Context context, int pid) {
-        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningAppProcessInfo processInfo : manager.getRunningAppProcesses()) {
-            if (processInfo.pid == pid) {
-                return processInfo.processName;
+    public static String getAppNameByPID(int pid) {
+        BufferedReader cmdlineReader = null;
+        String path = "/proc/" + pid + "/cmdline";
+        try {
+            File cmdlineFile = new File(path);
+            if (!cmdlineFile.exists())
+                return "";
+            cmdlineReader = new BufferedReader(new FileReader(cmdlineFile));
+            return cmdlineReader.readLine().trim();
+        } catch (Exception ex) {
+            return "";
+        } finally {
+            if (null != cmdlineReader) {
+                try {
+                    cmdlineReader.close();
+                } catch (Exception e) {}
             }
         }
-        return "";
     }
 
     public static void listOfOpenFiles() {
@@ -1574,6 +1585,9 @@ public class GeckoAppShell
         int nameColumn = -1;
 
         try {
+            String filter = GeckoProfile.get(GeckoApp.mAppContext).getDir().toString();
+            Log.i(LOGTAG, "[OPENFILE] Filter: " + filter);
+
             // run lsof and parse its output
             java.lang.Process lsof = Runtime.getRuntime().exec("lsof");
             BufferedReader in = new BufferedReader(new InputStreamReader(lsof.getInputStream()), 2048);
@@ -1591,14 +1605,21 @@ public class GeckoAppShell
             }
 
             // alright, the rest are open file entries.
+            Map<Integer, String> pidNameMap = new TreeMap<Integer, String>();
             String output = null;
             while ((output = in.readLine()) != null) {
                 String[] split = output.split("\\s+");
                 if (split.length <= pidColumn || split.length <= nameColumn)
                     continue;
-                String name = getAppNameByPID(GeckoApp.mAppContext, Integer.parseInt(split[pidColumn]));
-                if (!TextUtils.isEmpty(name) && name.startsWith("org.mozilla"))
-                    Log.i(LOGTAG, "[OPENFILE] " + name + "(" + split[pidColumn] + ") : " + split[nameColumn]);
+                Integer pid = new Integer(split[pidColumn]);
+                String name = pidNameMap.get(pid);
+                if (name == null) {
+                    name = getAppNameByPID(pid.intValue());
+                    pidNameMap.put(pid, name);
+                }
+                String file = split[nameColumn];
+                if (!TextUtils.isEmpty(name) && !TextUtils.isEmpty(file) && file.startsWith(filter))
+                    Log.i(LOGTAG, "[OPENFILE] " + name + "(" + split[pidColumn] + ") : " + file);
             }
             in.close();
         } catch (Exception e) { }
