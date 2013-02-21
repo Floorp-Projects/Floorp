@@ -88,7 +88,7 @@ let debuggerDefinition = {
   ordinal: 1,
   killswitch: "devtools.debugger.enabled",
   icon: "chrome://browser/skin/devtools/tool-debugger.png",
-  url: "chrome://browser/content/debugger.xul",
+  url: "chrome://browser/content/devtools/debugger.xul",
   label: l10n("ToolboxDebugger.label", debuggerStrings),
   tooltip: l10n("ToolboxDebugger.tooltip", debuggerStrings),
 
@@ -131,7 +131,7 @@ let styleEditorDefinition = {
   modifiers: "shift",
   label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
   icon: "chrome://browser/skin/devtools/tool-styleeditor.png",
-  url: "chrome://browser/content/styleeditor.xul",
+  url: "chrome://browser/content/devtools/styleeditor.xul",
   tooltip: l10n("ToolboxStyleEditor.tooltip", styleEditorStrings),
 
   isTargetSupported: function(target) {
