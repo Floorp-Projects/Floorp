@@ -46,12 +46,6 @@
 #include "frontend/SharedContext-inl.h"
 #include "vm/Shape-inl.h"
 
-/* Allocation chunk counts, must be powers of two in general. */
-#define BYTECODE_CHUNK_LENGTH  1024    /* initial bytecode chunk length */
-
-/* Macros to compute byte sizes from typed element counts. */
-#define BYTECODE_SIZE(n)        ((n) * sizeof(jsbytecode))
-
 using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
@@ -130,43 +124,17 @@ BytecodeEmitter::init()
 
 BytecodeEmitter::~BytecodeEmitter()
 {
-    js_free(prolog.base);
-    js_free(main.base);
 }
 
 static ptrdiff_t
 EmitCheck(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t delta)
 {
-    jsbytecode *base = bce->base();
-    jsbytecode *newbase;
-    jsbytecode *next = bce->next();
-    jsbytecode *limit = bce->limit();
-    ptrdiff_t offset = next - base;
-    size_t minlength = offset + delta;
+    ptrdiff_t offset = bce->code().length();
 
-    if (next + delta > limit) {
-        size_t newlength;
-        if (!base) {
-            JS_ASSERT(!next && !limit);
-            newlength = BYTECODE_CHUNK_LENGTH;
-            if (newlength < minlength)     /* make it bigger if necessary */
-                newlength = RoundUpPow2(minlength);
-            newbase = (jsbytecode *) cx->malloc_(BYTECODE_SIZE(newlength));
-        } else {
-            JS_ASSERT(base <= next && next <= limit);
-            newlength = (limit - base) * 2;
-            if (newlength < minlength)     /* make it bigger if necessary */
-                newlength = RoundUpPow2(minlength);
-            newbase = (jsbytecode *) cx->realloc_(base, BYTECODE_SIZE(newlength));
-        }
-        if (!newbase) {
-            js_ReportOutOfMemory(cx);
-            return -1;
-        }
-        JS_ASSERT(newlength >= size_t(offset + delta));
-        bce->current->base = newbase;
-        bce->current->limit = newbase + newlength;
-        bce->current->next = newbase + offset;
+    jsbytecode dummy = 0;
+    if (!bce->code().appendN(dummy, delta)) {
+        js_ReportOutOfMemory(cx);
+        return -1;
     }
     return offset;
 }
@@ -185,7 +153,6 @@ UpdateDepth(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
     jsbytecode *pc = bce->code(target);
     JSOp op = (JSOp) *pc;
     const JSCodeSpec *cs = &js_CodeSpec[op];
-
 
     if (cs->format & JOF_TMPSLOT_MASK) {
         /*
@@ -235,11 +202,12 @@ ptrdiff_t
 frontend::Emit1(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 {
     ptrdiff_t offset = EmitCheck(cx, bce, 1);
+    if (offset < 0)
+        return -1;
 
-    if (offset >= 0) {
-        *bce->current->next++ = (jsbytecode)op;
-        UpdateDepth(cx, bce, offset);
-    }
+    jsbytecode *code = bce->code(offset);
+    code[0] = jsbytecode(op);
+    UpdateDepth(cx, bce, offset);
     return offset;
 }
 
@@ -247,14 +215,13 @@ ptrdiff_t
 frontend::Emit2(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1)
 {
     ptrdiff_t offset = EmitCheck(cx, bce, 2);
+    if (offset < 0)
+        return -1;
 
-    if (offset >= 0) {
-        jsbytecode *next = bce->next();
-        next[0] = (jsbytecode)op;
-        next[1] = op1;
-        bce->current->next = next + 2;
-        UpdateDepth(cx, bce, offset);
-    }
+    jsbytecode *code = bce->code(offset);
+    code[0] = jsbytecode(op);
+    code[1] = op1;
+    UpdateDepth(cx, bce, offset);
     return offset;
 }
 
@@ -267,15 +234,14 @@ frontend::Emit3(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1,
     JS_ASSERT(!IsLocalOp(op));
 
     ptrdiff_t offset = EmitCheck(cx, bce, 3);
+    if (offset < 0)
+        return -1;
 
-    if (offset >= 0) {
-        jsbytecode *next = bce->next();
-        next[0] = (jsbytecode)op;
-        next[1] = op1;
-        next[2] = op2;
-        bce->current->next = next + 3;
-        UpdateDepth(cx, bce, offset);
-    }
+    jsbytecode *code = bce->code(offset);
+    code[0] = jsbytecode(op);
+    code[1] = op1;
+    code[2] = op2;
+    UpdateDepth(cx, bce, offset);
     return offset;
 }
 
@@ -284,20 +250,20 @@ frontend::EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra)
 {
     ptrdiff_t length = 1 + (ptrdiff_t)extra;
     ptrdiff_t offset = EmitCheck(cx, bce, length);
+    if (offset < 0)
+        return -1;
 
-    if (offset >= 0) {
-        jsbytecode *next = bce->next();
-        *next = (jsbytecode)op;
-        memset(next + 1, 0, BYTECODE_SIZE(extra));
-        bce->current->next = next + length;
+    jsbytecode *code = bce->code(offset);
+    code[0] = jsbytecode(op);
+    /* The remaining |extra| bytes are set by the caller */
 
-        /*
-         * Don't UpdateDepth if op's use-count comes from the immediate
-         * operand yet to be stored in the extra bytes after op.
-         */
-        if (js_CodeSpec[op].nuses >= 0)
-            UpdateDepth(cx, bce, offset);
-    }
+    /*
+     * Don't UpdateDepth if op's use-count comes from the immediate
+     * operand yet to be stored in the extra bytes after op.
+     */
+    if (js_CodeSpec[op].nuses >= 0)
+        UpdateDepth(cx, bce, offset);
+
     return offset;
 }
 
@@ -305,14 +271,13 @@ static ptrdiff_t
 EmitJump(JSContext *cx, BytecodeEmitter *bce, JSOp op, ptrdiff_t off)
 {
     ptrdiff_t offset = EmitCheck(cx, bce, 5);
+    if (offset < 0)
+        return -1;
 
-    if (offset >= 0) {
-        jsbytecode *next = bce->next();
-        next[0] = (jsbytecode)op;
-        SET_JUMP_OFFSET(next, off);
-        bce->current->next = next + 5;
-        UpdateDepth(cx, bce, offset);
-    }
+    jsbytecode *code = bce->code(offset);
+    code[0] = jsbytecode(op);
+    SET_JUMP_OFFSET(code, off);
+    UpdateDepth(cx, bce, offset);
     return offset;
 }
 
@@ -710,7 +675,7 @@ PopStatementBCE(JSContext *cx, BytecodeEmitter *bce)
 {
     StmtInfoBCE *stmt = bce->topStmt;
     if (!stmt->isTrying() &&
-        (!BackPatch(cx, bce, stmt->breaks, bce->next(), JSOP_GOTO) ||
+        (!BackPatch(cx, bce, stmt->breaks, bce->code().end(), JSOP_GOTO) ||
          !BackPatch(cx, bce, stmt->continues, bce->code(stmt->update), JSOP_GOTO)))
     {
         return false;
@@ -728,10 +693,9 @@ EmitIndex32(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
     if (offset < 0)
         return false;
 
-    jsbytecode *next = bce->next();
-    next[0] = jsbytecode(op);
-    SET_UINT32_INDEX(next, index);
-    bce->current->next = next + len;
+    jsbytecode *code = bce->code(offset);
+    code[0] = jsbytecode(op);
+    SET_UINT32_INDEX(code, index);
     UpdateDepth(cx, bce, offset);
     CheckTypeSet(cx, bce, op);
     return true;
@@ -746,10 +710,9 @@ EmitIndexOp(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
     if (offset < 0)
         return false;
 
-    jsbytecode *next = bce->next();
-    next[0] = jsbytecode(op);
-    SET_UINT32_INDEX(next, index);
-    bce->current->next = next + len;
+    jsbytecode *code = bce->code(offset);
+    code[0] = jsbytecode(op);
+    SET_UINT32_INDEX(code, index);
     UpdateDepth(cx, bce, offset);
     CheckTypeSet(cx, bce, op);
     return true;
@@ -795,10 +758,9 @@ EmitAtomIncDec(JSContext *cx, JSAtom *atom, JSOp op, BytecodeEmitter *bce)
     if (offset < 0)
         return false;
 
-    jsbytecode *next = bce->next();
-    next[0] = jsbytecode(op);
-    SET_UINT32_INDEX(next, index);
-    bce->current->next = next + len;
+    jsbytecode *code = bce->code(offset);
+    code[0] = jsbytecode(op);
+    SET_UINT32_INDEX(code, index);
     UpdateDepth(cx, bce, offset);
     CheckTypeSet(cx, bce, op);
     return true;
@@ -2502,7 +2464,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
 
     FunctionBox *funbox = bce->sc->asFunctionBox();
     if (funbox->argumentsHasLocalBinding()) {
-        JS_ASSERT(bce->next() == bce->base());  /* See JSScript::argumentsBytecode. */
+        JS_ASSERT(bce->offset() == 0);  /* See JSScript::argumentsBytecode. */
         bce->switchToProlog();
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
             return false;
@@ -3418,13 +3380,12 @@ EmitNewInit(JSContext *cx, BytecodeEmitter *bce, JSProtoKey key, ParseNode *pn)
     if (offset < 0)
         return false;
 
-    jsbytecode *next = bce->next();
-    next[0] = JSOP_NEWINIT;
-    next[1] = jsbytecode(key);
-    next[2] = 0;
-    next[3] = 0;
-    next[4] = 0;
-    bce->current->next = next + len;
+    jsbytecode *code = bce->code(offset);
+    code[0] = JSOP_NEWINIT;
+    code[1] = jsbytecode(key);
+    code[2] = 0;
+    code[3] = 0;
+    code[4] = 0;
     UpdateDepth(cx, bce, offset);
     CheckTypeSet(cx, bce, JSOP_NEWINIT);
     return true;
@@ -3804,7 +3765,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * Fix up the gosubs that might have been emitted before non-local
          * jumps to the finally code.
          */
-        if (!BackPatch(cx, bce, stmtInfo.gosubs(), bce->next(), JSOP_GOSUB))
+        if (!BackPatch(cx, bce, stmtInfo.gosubs(), bce->code().end(), JSOP_GOSUB))
             return false;
 
         finallyStart = bce->offset();
@@ -3829,7 +3790,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     /* Fix up the end-of-try/catch jumps to come here. */
-    if (!BackPatch(cx, bce, catchJump, bce->next(), JSOP_GOTO))
+    if (!BackPatch(cx, bce, catchJump, bce->code().end(), JSOP_GOTO))
         return false;
 
     /*
@@ -4649,7 +4610,7 @@ EmitReturn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!EmitNonLocalJumpFixup(cx, bce, NULL))
         return false;
     if (top + JSOP_RETURN_LENGTH != bce->offset()) {
-        bce->base()[top] = JSOP_SETRVAL;
+        bce->code()[top] = JSOP_SETRVAL;
         if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
             return false;
     }
@@ -5227,7 +5188,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * ignore setters and to avoid dup'ing and popping the object as each
      * property is added, as JSOP_SETELEM/JSOP_SETPROP would do.
      */
-    ptrdiff_t offset = bce->next() - bce->base();
+    ptrdiff_t offset = bce->offset();
     if (!EmitNewInit(cx, bce, JSProto_Object, pn))
         return false;
 

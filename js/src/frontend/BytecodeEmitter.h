@@ -61,6 +61,7 @@ struct StmtInfoBCE;
 
 // Use zero inline elements because these go on the stack and affect how many
 // nested functions are possible.
+typedef Vector<jsbytecode, 0> BytecodeVector;
 typedef Vector<jssrcnote, 0> SrcNotesVector;
 
 struct BytecodeEmitter
@@ -74,9 +75,7 @@ struct BytecodeEmitter
     Rooted<JSScript*> script;       /* the JSScript we're ultimately producing */
 
     struct EmitSection {
-        jsbytecode  *base;          /* base of JS bytecode vector */
-        jsbytecode  *limit;         /* one byte beyond end of bytecode */
-        jsbytecode  *next;          /* pointer to next free bytecode */
+        BytecodeVector code;        /* bytecode */
         SrcNotesVector notes;       /* source notes, see below */
         ptrdiff_t   lastNoteOffset; /* code offset for last source note */
         unsigned    currentLine;    /* line number for tree-based srcnote gen */
@@ -84,9 +83,11 @@ struct BytecodeEmitter
                                        last SRC_COLSPAN-annotated opcode */
 
         EmitSection(JSContext *cx, unsigned lineno)
-          : base(NULL), limit(NULL), next(NULL), notes(cx), lastNoteOffset(0),
-            currentLine(lineno), lastColumn(0)
+          : code(cx), notes(cx), lastNoteOffset(0), currentLine(lineno), lastColumn(0)
         {
+            // Start them off moderately large, to avoid repeated resizings
+            // early on.
+            code.reserve(1024);
             notes.reserve(1024);
         }
     };
@@ -136,17 +137,17 @@ struct BytecodeEmitter
                                            don't ever get emitted. See the comment for
                                            the field |selfHostingMode| in Parser.h for details. */
 
+    /*
+     * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
+     * space above their tempMark points. This means that you cannot alloc from
+     * tempLifoAlloc and save the pointer beyond the next BytecodeEmitter
+     * destruction.
+     */
     BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, SharedContext *sc,
                     HandleScript script, HandleScript evalCaller, bool hasGlobalScope,
                     unsigned lineno, bool selfHostingMode = false);
     bool init();
 
-    /*
-     * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
-     * space above their tempMark points. This means that you cannot alloc from
-     * tempLifoAlloc and save the pointer beyond the next BytecodeEmitter
-     * destructor call.
-     */
     ~BytecodeEmitter();
 
     bool isAliasedName(ParseNode *pn);
@@ -176,13 +177,10 @@ struct BytecodeEmitter
 
     TokenStream *tokenStream() { return &parser->tokenStream; }
 
-    jsbytecode *base() const { return current->base; }
-    jsbytecode *limit() const { return current->limit; }
-    jsbytecode *next() const { return current->next; }
-    jsbytecode *code(ptrdiff_t offset) const { return base() + offset; }
-    ptrdiff_t offset() const { return next() - base(); }
-    jsbytecode *prologBase() const { return prolog.base; }
-    ptrdiff_t prologOffset() const { return prolog.next - prolog.base; }
+    BytecodeVector &code() const { return current->code; }
+    jsbytecode *code(ptrdiff_t offset) const { return current->code.begin() + offset; }
+    ptrdiff_t offset() const { return current->code.end() - current->code.begin(); }
+    ptrdiff_t prologOffset() const { return prolog.code.end() - prolog.code.begin(); }
     void switchToMain() { current = &main; }
     void switchToProlog() { current = &prolog; }
 
