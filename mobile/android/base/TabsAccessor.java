@@ -15,6 +15,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Handler;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -62,18 +63,18 @@ public final class TabsAccessor {
 
     // This method returns all tabs from all remote clients, 
     // ordered by most recent client first, most recent tab first 
-    public static void getTabs(final Context context, final OnQueryTabsCompleteListener listener) {
-        getTabs(context, 0, listener);
+    public static void getTabs(final Context context, final OnQueryTabsCompleteListener listener, Handler uiHandler) {
+        getTabs(context, 0, listener, uiHandler);
     }
 
     // This method returns limited number of tabs from all remote clients, 
     // ordered by most recent client first, most recent tab first 
-    public static void getTabs(final Context context, final int limit, final OnQueryTabsCompleteListener listener) {
+    public static void getTabs(final Context context, final int limit, final OnQueryTabsCompleteListener listener, Handler uiHandler) {
         // If there is no listener, no point in doing work.
         if (listener == null)
             return;
 
-        (new GeckoAsyncTask<Void, Void, List<RemoteTab>>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+        (new GeckoAsyncTask<Void, Void, List<RemoteTab>>(uiHandler, GeckoAppShell.getHandler()) {
             @Override
             protected List<RemoteTab> doInBackground(Void... unused) {
                 Uri uri = BrowserContract.Tabs.CONTENT_URI;
