@@ -524,6 +524,11 @@ public:
   virtual bool isOuterWindow() {
     return true;
   }
+
+  virtual bool finalizeInBackground(JS::HandleValue priv) {
+    return false;
+  }
+
   virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
   virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
 

@@ -240,7 +240,6 @@ JSObject::finalize(js::FreeOp *fop)
         fop->runtime()->assertValidThread();
     }
 #endif
-
     js::Class *clasp = getClass();
     if (clasp->finalize)
         clasp->finalize(fop, this);
