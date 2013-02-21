@@ -312,7 +312,8 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
         }
         ptr++;
       }
-      newArgc--;
+      if (ptr == newArgv[newArgc-1])
+        newArgc--;
       int result = XRE_main(newArgc, newArgv, appData, mainFlags);
       XRE_FreeAppData(appData);
       return result;
