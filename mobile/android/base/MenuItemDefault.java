@@ -13,40 +13,27 @@ import android.view.View;
 import android.widget.AbsListView;
 import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class MenuItemDefault extends LinearLayout
+public class MenuItemDefault extends TextView
                              implements GeckoMenuItem.Layout {
     private static Rect sIconBounds;
     private static Drawable sChecked;
     private static Drawable sUnChecked;
     private static Drawable sMore;
 
-    private TextView mTitle;
-
     private Drawable mIcon;
     private Drawable mState;
 
-    private boolean mCheckable;
-    private boolean mChecked;
-    private boolean mHasSubMenu;
+    private boolean mCheckable = false;
+    private boolean mChecked = false;
+    private boolean mHasSubMenu = false;
 
     public MenuItemDefault(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        Resources res = context.getResources();
-        setLayoutParams(new AbsListView.LayoutParams((int) (res.getDimension(R.dimen.menu_item_row_width)),
-                                                     (int) (res.getDimension(R.dimen.menu_item_row_height))));
-
-        inflate(context, R.layout.menu_item, this);
-        mTitle = (TextView) findViewById(R.id.title);
-
-        mCheckable = false;
-        mChecked = false;
-        mHasSubMenu = false;
-
         if (sIconBounds == null) {
+            Resources res = context.getResources();
             int iconSize = res.getDimensionPixelSize(R.dimen.menu_item_icon);
             sIconBounds = new Rect(0, 0, iconSize, iconSize);
 
@@ -65,18 +52,13 @@ public class MenuItemDefault extends LinearLayout
     }
 
     @Override
-    public View getLayout() {
-        return this;
-    }
-
-    @Override
     public void setIcon(Drawable icon) {
         mIcon = icon;
 
         if (mIcon != null)
             mIcon.setBounds(sIconBounds);
 
-        mTitle.setCompoundDrawables(mIcon, null, mState, null);
+        setCompoundDrawables(mIcon, null, mState, null);
     }
 
     @Override
@@ -91,13 +73,12 @@ public class MenuItemDefault extends LinearLayout
 
     @Override
     public void setTitle(CharSequence title) {
-        mTitle.setText(title);
+        setText(title);
     }
 
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
-        mTitle.setEnabled(enabled);
 
         if (mIcon != null)
             mIcon.setAlpha(enabled ? 255 : 99);
@@ -122,7 +103,7 @@ public class MenuItemDefault extends LinearLayout
         else
             mState = null;
 
-        mTitle.setCompoundDrawables(mIcon, null, mState, null);
+        setCompoundDrawables(mIcon, null, mState, null);
     }
 
     @Override

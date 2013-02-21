@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
-
-     <TextView android:id="@+id/title"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:layout_weight="1.0"
-               android:layout_marginLeft="10dp"
-               android:layout_marginRight="10dp"
-               android:textSize="16sp"
-               android:textColor="@color/menu_item_title"
-               android:singleLine="true"
-               android:ellipsize="middle"
-               android:layout_gravity="center_vertical"
-               android:drawablePadding="6dp"/>
-
-</merge>
+<Gecko.MenuItemDefault xmlns:android="http://schemas.android.com/apk/res/android"
+                       android:layout_width="@dimen/menu_item_row_width"
+                       android:layout_height="@dimen/menu_item_row_height"
+                       android:minHeight="@dimen/menu_item_row_height"
+                       android:paddingLeft="10dp"
+                       android:paddingRight="10dp"
+                       android:textSize="16sp"
+                       android:textColor="@color/menu_item_title"
+                       android:singleLine="true"
+                       android:ellipsize="middle"
+                       android:gravity="center_vertical"
+                       android:drawablePadding="6dp"/>
