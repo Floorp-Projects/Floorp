@@ -3264,7 +3264,10 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
     }
 
     NewObjectKind newKind = clasp == &OuterWindowProxyClass ? SingletonObject : GenericObject;
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, newKind));
+    gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
+    if (handler->finalizeInBackground(priv))
+        allocKind = GetBackgroundAllocKind(allocKind);
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
     if (!obj)
         return NULL;
     obj->initSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));

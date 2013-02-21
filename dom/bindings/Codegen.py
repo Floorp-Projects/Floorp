@@ -6377,6 +6377,14 @@ class CGDOMJSProxyHandler_obj_toString(ClassMethod):
     def getBody(self):
         return "return mozilla::dom::DOMProxyHandler::obj_toString(cx, \"%s\");" % self.descriptor.name
 
+class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JS::HandleValue', 'priv')]
+        ClassMethod.__init__(self, "finalizeInBackground", "bool", args)
+        self.descriptor = descriptor
+    def getBody(self):
+        return ("return false;")
+
 class CGDOMJSProxyHandler_finalize(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSFreeOp*', 'fop'), Argument('JSObject*', 'proxy')]
@@ -6464,6 +6472,7 @@ class CGDOMJSProxyHandler(CGClass):
                         CGDOMJSProxyHandler_hasOwn(descriptor),
                         CGDOMJSProxyHandler_get(descriptor),
                         CGDOMJSProxyHandler_obj_toString(descriptor),
+                        CGDOMJSProxyHandler_finalizeInBackground(descriptor),
                         CGDOMJSProxyHandler_finalize(descriptor),
                         CGDOMJSProxyHandler_getElementIfPresent(descriptor),
                         CGDOMJSProxyHandler_getInstance(),

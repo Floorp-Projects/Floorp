@@ -206,6 +206,18 @@ CrossCompartmentWrapper::~CrossCompartmentWrapper()
 {
 }
 
+bool CrossCompartmentWrapper::finalizeInBackground(HandleValue priv)
+{
+    if (!priv.isObject())
+        return true;
+
+    /*
+     * Make the 'background-finalized-ness' of the wrapper the same as the
+     * wrapped object, to allow transplanting between them.
+     */
+    return IsBackgroundFinalized(priv.toObject().getAllocKind());
+}
+
 #define PIERCE(cx, wrapper, pre, op, post)                      \
     JS_BEGIN_MACRO                                              \
         bool ok;                                                \
