@@ -1161,7 +1161,7 @@ abstract public class BrowserApp extends GeckoApp
         if (!Intent.ACTION_MAIN.equals(intent.getAction()) || !mInitialized)
             return;
 
-        (new GeckoAsyncTask<Void, Void, Boolean>(mAppContext, GeckoAppShell.getHandler()) {
+        (new GeckoAsyncTask<Void, Void, Boolean>(mMainHandler, GeckoAppShell.getHandler()) {
             @Override
             public synchronized Boolean doInBackground(Void... params) {
                 // Check to see how many times the app has been launched.
@@ -1198,7 +1198,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void getLastUrl() {
-        (new GeckoAsyncTask<Void, Void, String>(mAppContext, GeckoAppShell.getHandler()) {
+        (new GeckoAsyncTask<Void, Void, String>(mMainHandler, GeckoAppShell.getHandler()) {
             @Override
             public synchronized String doInBackground(Void... params) {
                 // Get the most recent URL stored in browser history.
