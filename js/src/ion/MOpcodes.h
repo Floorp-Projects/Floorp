@@ -37,6 +37,7 @@ namespace ion {
     _(PassArg)                                                              \
     _(Call)                                                                 \
     _(ApplyArgs)                                                            \
+    _(CallDirectEval)                                                       \
     _(BitNot)                                                               \
     _(TypeOf)                                                               \
     _(ToId)                                                                 \

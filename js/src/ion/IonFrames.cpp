@@ -917,7 +917,7 @@ InlineFrameIterator::resetOn(const IonFrameIterator *iter)
 }
 
 InlineFrameIterator::InlineFrameIterator(JSContext *cx, const InlineFrameIterator *iter)
-  : frame_(iter->frame_),
+  : frame_(iter ? iter->frame_ : NULL),
     framesRead_(0),
     callee_(cx),
     script_(cx)
