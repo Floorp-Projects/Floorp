@@ -27,7 +27,7 @@ MOZGLUE_PP_JAVA_FILES := \
 UTIL_JAVA_FILES := \
   ActivityResultHandler.java \
   ActivityResultHandlerMap.java \
-  GeckoAsyncTask.java \
+  UiAsyncTask.java \
   GeckoBackgroundThread.java \
   GeckoEventListener.java \
   GeckoEventResponder.java \
