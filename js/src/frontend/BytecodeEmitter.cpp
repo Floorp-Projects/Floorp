@@ -370,7 +370,7 @@ ReportStatementTooLarge(JSContext *cx, StmtInfoBCE *topStmt)
  * so that we can walk back up the chain fixing up the op and jump offset.
  */
 static ptrdiff_t
-EmitBackPatchOp(JSContext *cx, BytecodeEmitter *bce, JSOp op, ptrdiff_t *lastp)
+EmitBackPatchOp(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t *lastp)
 {
     ptrdiff_t offset, delta;
 
@@ -378,7 +378,7 @@ EmitBackPatchOp(JSContext *cx, BytecodeEmitter *bce, JSOp op, ptrdiff_t *lastp)
     delta = offset - *lastp;
     *lastp = offset;
     JS_ASSERT(delta > 0);
-    return EmitJump(cx, bce, op, delta);
+    return EmitJump(cx, bce, JSOP_BACKPATCH, delta);
 }
 
 /* Updates line number notes, not column notes. */
@@ -571,7 +571,7 @@ EmitNonLocalJumpFixup(JSContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt)
             FLUSH_POPS();
             if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
                 return false;
-            if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &stmt->gosubs()) < 0)
+            if (EmitBackPatchOp(cx, bce, &stmt->gosubs()) < 0)
                 return false;
             break;
 
@@ -659,7 +659,7 @@ EmitGoto(JSContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt, ptrdiff_t *la
     if (index < 0)
         return -1;
 
-    return EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, lastp);
+    return EmitBackPatchOp(cx, bce, lastp);
 }
 
 static bool
@@ -3696,14 +3696,14 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (pn->pn_kid3) {
         if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
             return false;
-        if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &stmtInfo.gosubs()) < 0)
+        if (EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()) < 0)
             return false;
     }
 
     /* Emit (hidden) jump over catch and/or finally. */
     if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
         return false;
-    if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &catchJump) < 0)
+    if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
         return false;
 
     ptrdiff_t tryEnd = bce->offset();
@@ -3791,7 +3791,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             /* gosub <finally>, if required */
             if (pn->pn_kid3) {
-                if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &stmtInfo.gosubs()) < 0)
+                if (EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()) < 0)
                     return false;
                 JS_ASSERT(bce->stackDepth == depth);
             }
@@ -3802,7 +3802,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              */
             if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
                 return false;
-            if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &catchJump) < 0)
+            if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
                 return false;
 
             /*
