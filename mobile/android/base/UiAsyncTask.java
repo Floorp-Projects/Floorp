@@ -10,12 +10,12 @@ import android.os.Handler;
 // AsyncTask runs onPostExecute on the thread it is constructed on
 // We construct these off of the main thread, and we want that to run
 // on the main UI thread, so this is a convenience class to do that
-public abstract class GeckoAsyncTask<Params, Progress, Result> {
+public abstract class UiAsyncTask<Params, Progress, Result> {
     private volatile boolean mCancelled = false;
     private final Handler mBackgroundThreadHandler;
     private final Handler mUiHandler;
 
-    public GeckoAsyncTask(Handler uiHandler, Handler backgroundThreadHandler) {
+    public UiAsyncTask(Handler uiHandler, Handler backgroundThreadHandler) {
         mUiHandler = uiHandler;
         mBackgroundThreadHandler = backgroundThreadHandler;
     }

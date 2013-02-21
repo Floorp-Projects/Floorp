@@ -7,7 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.util.GeckoAsyncTask;
+import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.app.Activity;
@@ -566,7 +566,7 @@ public class AwesomeBar extends GeckoActivity {
 
                 editPrompt.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        (new GeckoAsyncTask<Void, Void, Void>(mAwesomeTabs.getHandler(), GeckoAppShell.getHandler()) {
+                        (new UiAsyncTask<Void, Void, Void>(mAwesomeTabs.getHandler(), GeckoAppShell.getHandler()) {
                             @Override
                             public Void doInBackground(Void... params) {
                                 String newUrl = locationText.getText().toString().trim();
@@ -612,7 +612,7 @@ public class AwesomeBar extends GeckoActivity {
                 break;
             }
             case R.id.remove_bookmark: {
-                (new GeckoAsyncTask<Void, Void, Void>(mAwesomeTabs.getHandler(), GeckoAppShell.getHandler()) {
+                (new UiAsyncTask<Void, Void, Void>(mAwesomeTabs.getHandler(), GeckoAppShell.getHandler()) {
                     private boolean mInReadingList;
 
                     @Override
@@ -642,7 +642,7 @@ public class AwesomeBar extends GeckoActivity {
                 break;
             }
             case R.id.remove_history: {
-                (new GeckoAsyncTask<Void, Void, Void>(mAwesomeTabs.getHandler(), GeckoAppShell.getHandler()) {
+                (new UiAsyncTask<Void, Void, Void>(mAwesomeTabs.getHandler(), GeckoAppShell.getHandler()) {
                     @Override
                     public Void doInBackground(Void... params) {
                         BrowserDB.removeHistoryEntry(getContentResolver(), id);
