@@ -52,7 +52,7 @@ static char *RCSSTRING __UNUSED__="$Id: transport_addr.c,v 1.2 2008/04/28 17:59:
 #include "nr_api.h"
 #include "transport_addr.h"
 
-static int fmt_addr_string(nr_transport_addr *addr)
+int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr)
   {
     int _status;
     /* Max length for normalized IPv6 address string represntation is 39 */
@@ -109,7 +109,7 @@ int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int saddr_len, int pro
     else
       ABORT(R_BAD_ARGS);
 
-    if(r=fmt_addr_string(addr))
+    if(r=nr_transport_addr_fmt_addr_string(addr))
       ABORT(r);
 
     _status=0;
@@ -144,7 +144,7 @@ int nr_ip4_port_to_transport_addr(UINT4 ip4, UINT2 port, int protocol, nr_transp
     addr->addr=(struct sockaddr *)&addr->u.addr4;
     addr->addr_len=sizeof(struct sockaddr_in);
 
-    if(r=fmt_addr_string(addr))
+    if(r=nr_transport_addr_fmt_addr_string(addr))
       ABORT(r);
 
     _status=0;
@@ -205,6 +205,26 @@ int nr_transport_addr_get_port(nr_transport_addr *addr, int *port)
         break;
       case NR_IPV6:
         *port=ntohs(addr->u.addr6.sin6_port);
+        break;
+      default:
+        ABORT(R_INTERNAL);
+    }
+
+    _status=0;
+  abort:
+    return(_status);
+  }
+
+int nr_transport_addr_set_port(nr_transport_addr *addr, int port)
+  {
+    int _status;
+
+    switch(addr->ip_version){
+      case NR_IPV4:
+        addr->u.addr4.sin_port=htons(port);
+        break;
+      case NR_IPV6:
+        addr->u.addr6.sin6_port=htons(port);
         break;
       default:
         ABORT(R_INTERNAL);
