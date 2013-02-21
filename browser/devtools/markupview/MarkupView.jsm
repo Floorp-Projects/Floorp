@@ -1083,7 +1083,7 @@ ElementEditor.prototype = {
 
   _createAttribute: function EE_createAttribute(aAttr, aBefore)
   {
-    if (aAttr.name in this.attrs) {
+    if (this.attrs.indexOf(aAttr.name) !== -1) {
       var attr = this.attrs[aAttr.name];
       var name = attr.querySelector(".attrname");
       var val = attr.querySelector(".attrvalue");
