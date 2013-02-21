@@ -1744,6 +1744,8 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           case SRC_IF:
           case SRC_CONTINUE:
           case SRC_BREAK:
+          case SRC_BREAK2LABEL:
+          case SRC_SWITCHBREAK:
           case SRC_ASSIGNOP:
           case SRC_HIDDEN:
           case SRC_XDELTA:
@@ -1777,9 +1779,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
 
           case SRC_FOR_IN:
-            Sprint(sp, " loopstart %u closingjump %u",
-                   unsigned(js_GetSrcNoteOffset(sn, 0)),
-                   unsigned(js_GetSrcNoteOffset(sn, 1)));
+            Sprint(sp, " closingjump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
 
           case SRC_COND:
@@ -1788,21 +1788,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             Sprint(sp, " offset %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
 
-          case SRC_BREAK2LABEL:
-          case SRC_CONT2LABEL: {
-            uint32_t index = js_GetSrcNoteOffset(sn, 0);
-            JSAtom *atom = script->getAtom(index);
-            Sprint(sp, " atom %u (", index);
-            size_t len = PutEscapedString(NULL, 0, atom, '\0');
-            if (char *buf = sp->reserve(len)) {
-                PutEscapedString(buf, len + 1, atom, 0);
-                buf[len] = 0;
-            }
-            Sprint(sp, ")");
-            break;
-          }
-
-          case SRC_SWITCHBREAK:
           case SRC_SWITCH: {
             JSOp op = JSOp(script->code[offset]);
             if (op == JSOP_GOTO)
