@@ -9,7 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const DBG_XUL = "chrome://browser/content/debugger.xul";
+const DBG_XUL = "chrome://browser/content/devtools/debugger.xul";
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const CHROME_DEBUGGER_PROFILE_NAME = "_chrome-debugger-profile";
 const TAB_SWITCH_NOTIFICATION = "debugger-tab-switch";
