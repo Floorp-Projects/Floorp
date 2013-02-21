@@ -554,7 +554,7 @@ StackTypeSet *
 TypeInferenceOracle::getCallTarget(UnrootedScript caller, uint32_t argc, jsbytecode *pc)
 {
     JS_ASSERT(caller == this->script());
-    JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE && JSOp(*pc) != JSOP_EVAL);
+    JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE);
 
     ScriptAnalysis *analysis = script()->analysis();
     return analysis->poppedTypes(pc, argc + 1);
