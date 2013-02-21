@@ -686,11 +686,13 @@ BaselineCompiler::emitToBoolean()
 bool
 BaselineCompiler::emitTest(bool branchIfTrue)
 {
+    bool knownBoolean = frame.peek(-1)->isKnownBoolean();
+
     // Keep top stack value in R0.
     frame.popRegsAndSync(1);
 
-    if (!emitToBoolean())
-        return false;
+    if (!knownBoolean && !emitToBoolean())
+            return false;
 
     // IC will leave a JSBool value (guaranteed) in R0, just need to branch on it.
     masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
@@ -712,11 +714,13 @@ BaselineCompiler::emit_JSOP_IFNE()
 bool
 BaselineCompiler::emitAndOr(bool branchIfTrue)
 {
+    bool knownBoolean = frame.peek(-1)->isKnownBoolean();
+
     // AND and OR leave the original value on the stack.
     frame.syncStack(0);
 
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
-    if (!emitToBoolean())
+    if (!knownBoolean && !emitToBoolean())
         return false;
 
     masm.branchTestBooleanTruthy(branchIfTrue, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
@@ -738,15 +742,17 @@ BaselineCompiler::emit_JSOP_OR()
 bool
 BaselineCompiler::emit_JSOP_NOT()
 {
+    bool knownBoolean = frame.peek(-1)->isKnownBoolean();
+
     // Keep top stack value in R0.
     frame.popRegsAndSync(1);
 
-    if (!emitToBoolean())
+    if (!knownBoolean && !emitToBoolean())
         return false;
 
     masm.notBoolean(R0);
 
-    frame.push(R0);
+    frame.push(R0, JSVAL_TYPE_BOOLEAN);
     return true;
 }
 
@@ -1160,7 +1166,7 @@ BaselineCompiler::emitCompare()
         return false;
 
     // Mark R0 as pushed stack value.
-    frame.push(R0);
+    frame.push(R0, JSVAL_TYPE_BOOLEAN);
     return true;
 }
 
