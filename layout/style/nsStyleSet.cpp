@@ -1320,7 +1320,10 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
 
   // For pseudos, |data.IsLink()| being true means that
   // our parent node is a link.
-  uint32_t flags = eNoFlags;
+  // Also: Flex containers shouldn't have pseudo-elements, so given that we're
+  // looking up pseudo-element style, make sure we're not treating our node as
+  // a flex item.
+  uint32_t flags = eSkipFlexItemStyleFixup;
   if (aType == nsCSSPseudoElements::ePseudo_before ||
       aType == nsCSSPseudoElements::ePseudo_after) {
     flags |= eDoAnimation;
@@ -1383,7 +1386,10 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
 
   // For pseudos, |data.IsLink()| being true means that
   // our parent node is a link.
-  uint32_t flags = eNoFlags;
+  // Also: Flex containers shouldn't have pseudo-elements, so given that we're
+  // looking up pseudo-element style, make sure we're not treating our node as
+  // a flex item.
+  uint32_t flags = eSkipFlexItemStyleFixup;
   if (aType == nsCSSPseudoElements::ePseudo_before ||
       aType == nsCSSPseudoElements::ePseudo_after) {
     flags |= eDoAnimation;
