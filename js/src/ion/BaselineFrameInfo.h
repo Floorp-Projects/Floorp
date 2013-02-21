@@ -80,6 +80,8 @@ class StackValue
         } arg;
     } data;
 
+    JSValueType knownType_;
+
   public:
     StackValue() {
         reset();
@@ -88,9 +90,24 @@ class StackValue
     Kind kind() const {
         return kind_;
     }
+    bool hasKnownType() const {
+        return knownType_ != JSVAL_TYPE_UNKNOWN;
+    }
+    bool hasKnownType(JSValueType type) const {
+        JS_ASSERT(type != JSVAL_TYPE_UNKNOWN);
+        return knownType_ == type;
+    }
+    bool isKnownBoolean() const {
+        return hasKnownType(JSVAL_TYPE_BOOLEAN);
+    }
+    JSValueType knownType() const {
+        JS_ASSERT(hasKnownType());
+        return knownType_;
+    }
     void reset() {
 #ifdef DEBUG
         kind_ = Uninitialized;
+        knownType_ = JSVAL_TYPE_UNKNOWN;
 #endif
     }
     Value constant() const {
@@ -113,24 +130,30 @@ class StackValue
     void setConstant(const Value &v) {
         kind_ = Constant;
         data.constant.v = v;
+        knownType_ = v.isDouble() ? JSVAL_TYPE_DOUBLE : v.extractNonDoubleType();
     }
-    void setRegister(const ValueOperand &val) {
+    void setRegister(const ValueOperand &val, JSValueType knownType = JSVAL_TYPE_UNKNOWN) {
         kind_ = Register;
         *data.reg.reg.addr() = val;
+        knownType_ = knownType;
     }
     void setLocalSlot(uint32_t slot) {
         kind_ = LocalSlot;
         data.local.slot = slot;
+        knownType_ = JSVAL_TYPE_UNKNOWN;
     }
     void setArgSlot(uint32_t slot) {
         kind_ = ArgSlot;
         data.arg.slot = slot;
+        knownType_ = JSVAL_TYPE_UNKNOWN;
     }
     void setThis() {
         kind_ = ThisSlot;
+        knownType_ = JSVAL_TYPE_UNKNOWN;
     }
     void setStack() {
         kind_ = Stack;
+        knownType_ = JSVAL_TYPE_UNKNOWN;
     }
 };
 
@@ -214,9 +237,9 @@ class FrameInfo
         StackValue *sv = rawPush();
         sv->setConstant(val);
     }
-    inline void push(const ValueOperand &val) {
+    inline void push(const ValueOperand &val, JSValueType knownType=JSVAL_TYPE_UNKNOWN) {
         StackValue *sv = rawPush();
-        sv->setRegister(val);
+        sv->setRegister(val, knownType);
     }
     inline void pushLocal(uint32_t local) {
         StackValue *sv = rawPush();
