@@ -82,9 +82,7 @@ static nsRefPtr<GLContext> sPluginContext = nullptr;
 static bool EnsureGLContext()
 {
   if (!sPluginContext) {
-    gfxIntSize dummySize(16, 16);
-    GLContext::SurfaceCaps dummyCaps;
-    sPluginContext = GLContextProvider::CreateOffscreen(dummySize, dummyCaps);
+    sPluginContext = GLContextProvider::CreateOffscreen(gfxIntSize(16, 16));
   }
 
   return sPluginContext != nullptr;
