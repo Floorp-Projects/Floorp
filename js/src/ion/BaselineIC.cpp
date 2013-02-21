@@ -3591,7 +3591,7 @@ ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler &masm)
     Register walker = regs.takeAny();
     Register scratch = regs.takeAny();
 
-    for (int index = 0; index < NumHops + 1; index++) {
+    for (size_t index = 0; index < NumHops + 1; index++) {
         Register scope = index ? walker : obj;
 
         // Shape guard.
@@ -4824,7 +4824,7 @@ ICTableSwitch::Compiler::getStub(ICStubSpace *space)
 
     jsbytecode *defaultpc = pc_ + GET_JUMP_OFFSET(pc_);
 
-    for (size_t i = 0; i < length; i++) {
+    for (int32_t i = 0; i < length; i++) {
         int32_t off = GET_JUMP_OFFSET(pc);
         if (off)
             table[i] = pc_ + off;
@@ -4841,7 +4841,7 @@ ICTableSwitch::fixupJumpTable(HandleScript script, BaselineScript *baseline)
 {
     defaultTarget_ = baseline->nativeCodeForPC(script, (jsbytecode *) defaultTarget_);
 
-    for (size_t i = 0; i < length_; i++)
+    for (int32_t i = 0; i < length_; i++)
         table_[i] = baseline->nativeCodeForPC(script, (jsbytecode *) table_[i]);
 }
 
