@@ -4495,7 +4495,7 @@ class JSAutoByteString
         mBytes = bytes;
     }
 
-    char *encode(JSContext *cx, JSString *str) {
+    char *encodeLatin1(JSContext *cx, JSString *str) {
         JS_ASSERT(!mBytes);
         JS_ASSERT(cx);
         mBytes = JS_EncodeString(cx, str);

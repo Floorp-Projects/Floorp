@@ -1202,7 +1202,7 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
                 JSAutoByteString message;
                 JSString* str;
                 if (nullptr != (str = JS_ValueToString(cx, s)))
-                    message.encode(cx, str);
+                    message.encodeLatin1(cx, str);
                 return JSErrorToXPCException(ccx, message.ptr(), ifaceName,
                                              methodName, report, exceptn);
             }
