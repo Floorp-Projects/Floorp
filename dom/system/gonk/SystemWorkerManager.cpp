@@ -449,7 +449,8 @@ SystemWorkerManager::SendRilRawData(unsigned long aClientId,
                                     UnixSocketRawData* aRaw)
 {
   if ((gInstance->mRilConsumers.Length() <= aClientId) ||
-      !gInstance->mRilConsumers[aClientId]) {
+      !gInstance->mRilConsumers[aClientId] ||
+      gInstance->mRilConsumers[aClientId]->GetConnectionStatus() != SOCKET_CONNECTED) {
     // Probably shuting down.
     delete aRaw;
     return true;
