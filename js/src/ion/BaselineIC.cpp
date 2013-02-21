@@ -4316,9 +4316,6 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
         return true;
     }
 
-    if (constructing)
-        return true;
-
     if (fun->isNative() && (!constructing || (constructing && fun->isNativeConstructor()))) {
         IonSpew(IonSpew_BaselineIC, "  Generating Call_Native stub (fun=%p, cons=%s)", fun.get(),
                 constructing ? "yes" : "no");
