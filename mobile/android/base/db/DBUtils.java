@@ -81,5 +81,6 @@ public class DBUtils {
             }
         }
         Log.d(LOGTAG, "Failed to unlock database");
+        GeckoAppShell.listOfOpenFiles();
     }
 }

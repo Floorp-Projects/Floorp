@@ -1559,6 +1559,51 @@ public class GeckoAppShell
         }
     }
 
+    public static String getAppNameByPID(Context context, int pid) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningAppProcessInfo processInfo : manager.getRunningAppProcesses()) {
+            if (processInfo.pid == pid) {
+                return processInfo.processName;
+            }
+        }
+        return "";
+    }
+
+    public static void listOfOpenFiles() {
+        int pidColumn = -1;
+        int nameColumn = -1;
+
+        try {
+            // run lsof and parse its output
+            java.lang.Process lsof = Runtime.getRuntime().exec("lsof");
+            BufferedReader in = new BufferedReader(new InputStreamReader(lsof.getInputStream()), 2048);
+
+            String headerOutput = in.readLine();
+            StringTokenizer st = new StringTokenizer(headerOutput);
+            int token = 0;
+            while (st.hasMoreTokens()) {
+                String next = st.nextToken();
+                if (next.equalsIgnoreCase("PID"))
+                    pidColumn = token;
+                else if (next.equalsIgnoreCase("NAME"))
+                    nameColumn = token;
+                token++;
+            }
+
+            // alright, the rest are open file entries.
+            String output = null;
+            while ((output = in.readLine()) != null) {
+                String[] split = output.split("\\s+");
+                if (split.length <= pidColumn || split.length <= nameColumn)
+                    continue;
+                String name = getAppNameByPID(GeckoApp.mAppContext, Integer.parseInt(split[pidColumn]));
+                if (!TextUtils.isEmpty(name) && name.startsWith("org.mozilla"))
+                    Log.i(LOGTAG, "[OPENFILE] " + name + "(" + split[pidColumn] + ") : " + split[nameColumn]);
+            }
+            in.close();
+        } catch (Exception e) { }
+    }
+
     public static void scanMedia(String aFile, String aMimeType) {
         Context context = GeckoApp.mAppContext;
         GeckoMediaScannerClient.startScan(context, aFile, aMimeType);
