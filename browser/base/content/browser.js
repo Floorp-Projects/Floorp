@@ -4759,22 +4759,21 @@ var TabsProgressListener = {
 
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI,
                               aFlags) {
-    // Filter out any sub-frame loads
-    if (aBrowser.contentWindow == aWebProgress.DOMWindow) {
-      // Filter out any onLocationChanges triggered by anchor navigation
-      // or history.push/pop/replaceState.
-      if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-        // Initialize the click-to-play state.
-        aBrowser._clickToPlayPluginsActivated = new Map();
-        aBrowser._clickToPlayAllPluginsActivated = false;
-        aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
+    // Filter out sub-frame loads and location changes caused by anchor
+    // navigation or history.push/pop/replaceState.
+    if (aBrowser.contentWindow == aWebProgress.DOMWindow &&
+        !(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
+      // Initialize the click-to-play state.
+      aBrowser._clickToPlayPluginsActivated = new Map();
+      aBrowser._clickToPlayAllPluginsActivated = false;
+      aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
 
-        // Only need to call locationChange if the PopupNotifications object
-        // for this window has already been initialized (i.e. its getter no
-        // longer exists)
-        if (!Object.getOwnPropertyDescriptor(window, "PopupNotifications").get)
-          PopupNotifications.locationChange(aBrowser);
-      }
+      // Only need to call locationChange if the PopupNotifications object
+      // for this window has already been initialized (i.e. its getter no
+      // longer exists)
+      if (!Object.getOwnPropertyDescriptor(window, "PopupNotifications").get)
+        PopupNotifications.locationChange(aBrowser);
+
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }
   },
