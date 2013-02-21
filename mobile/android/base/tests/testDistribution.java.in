@@ -43,6 +43,25 @@ public class testDistribution extends ContentProviderTest {
     }
 
     public void testDistribution() {
+        mActivity = getActivity();
+
+        // Clear the distribution pref in case Distribution.init has already run
+        clearDistributionPref();
+
+        try {
+            // Call Distribution.init with the mock package.
+            ClassLoader classLoader = mActivity.getClassLoader();
+            Class distributionClass = classLoader.loadClass("org.mozilla.gecko.Distribution");
+            Class contextClass = classLoader.loadClass("android.content.Context");
+            Method init = distributionClass.getMethod("init", contextClass, String.class);
+
+            Actions.EventExpecter distributionSetExpecter = mActions.expectGeckoEvent("Distribution:Set:OK");
+            init.invoke(null, mActivity, getMockPackagePath());
+            distributionSetExpecter.blockForEvent();
+        } catch (Exception e) {
+            mAsserter.ok(false, "exception initializing distribution", e.toString());
+        }
+
         try {
             JSONArray getPrefData = new JSONArray();
             getPrefData.put("distribution.id");
@@ -113,21 +132,6 @@ public class testDistribution extends ContentProviderTest {
     public void setUp() throws Exception {
         // TODO: Set up the content provider after setting the distribution.
         super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
-
-        mActivity = getActivity();
-
-        // Clear the distribution pref in case Distribution.init has already run
-        clearDistributionPref();
-
-        // Call Distribution.init with the mock package.
-        ClassLoader classLoader = mActivity.getClassLoader();
-        Class distributionClass = classLoader.loadClass("org.mozilla.gecko.Distribution");
-        Class contextClass = classLoader.loadClass("android.content.Context");
-        Method init = distributionClass.getMethod("init", contextClass, String.class);
-
-        Actions.EventExpecter eventExpecter = mActions.expectGeckoEvent("Distribution:Set:OK");
-        init.invoke(null, mActivity, getMockPackagePath());
-        eventExpecter.blockForEvent();
     }
 
     public void tearDown() throws Exception {
