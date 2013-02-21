@@ -64,26 +64,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "m_cpp_utils.h"
 
-namespace mozilla {
-
-typedef void* NR_SOCKET;
 typedef struct nr_ice_ctx_ nr_ice_ctx;
 typedef struct nr_ice_peer_ctx_ nr_ice_peer_ctx;
 typedef struct nr_ice_media_stream_ nr_ice_media_stream;
 typedef struct nr_ice_handler_ nr_ice_handler;
 typedef struct nr_ice_handler_vtbl_ nr_ice_handler_vtbl;
 typedef struct nr_ice_cand_pair_ nr_ice_cand_pair;
+typedef struct nr_ice_stun_server_ nr_ice_stun_server;
+typedef struct nr_resolver_ nr_resolver;
+
+namespace mozilla {
+
+typedef void* NR_SOCKET;
 
 class NrIceMediaStream;
 
-
 struct NrIceStunServer {
  public:
-  NrIceStunServer(const PRNetAddr& addr) {
+  NrIceStunServer(const PRNetAddr& addr) : has_addr_(true) {
     memcpy(&addr_, &addr, sizeof(addr));
   }
 
-  // Convenience function to allow you to pass an IP addr as a string
+   // The main function to use. Will take either an address or a hostname.
   static NrIceStunServer* Create(const std::string& addr, uint16_t port) {
     ScopedDeletePtr<NrIceStunServer> server(
         new NrIceStunServer());
@@ -94,23 +96,35 @@ struct NrIceStunServer {
 
     return server.forget();
   }
-  
 
-  const PRNetAddr& addr() const { return addr_; }
+  nsresult ToNicerStruct(nr_ice_stun_server *server) const;
 
  private:
   NrIceStunServer() : addr_() {}
 
   nsresult Init(const std::string& addr, uint16_t port) {
     PRStatus status = PR_StringToNetAddr(addr.c_str(), &addr_);
-    if (status != PR_SUCCESS)
-      return NS_ERROR_INVALID_ARG;
+    if (status == PR_SUCCESS) {
+      // Parseable as an address
+      addr_.inet.port = PR_htons(port);
+      port_ = port;
+      has_addr_ = true;
+      return NS_OK;
+    }
+    else if (host_.size() < 256) {
+      // Apparently this is a hostname.
+      host_ = addr;
+      port_ = port;
+      has_addr_ = false;
+      return NS_OK;
+    }
 
-    addr_.inet.port = PR_htons(port);
-
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
+  bool has_addr_;
+  std::string host_;
+  uint16_t port_;
   PRNetAddr addr_;
 };
 
@@ -167,6 +181,10 @@ class NrIceCtx {
   // Set the STUN servers. Must be called before StartGathering
   // (if at all).
   nsresult SetStunServers(const std::vector<NrIceStunServer>& stun_servers);
+
+  // Provide the resolution provider. Must be called before
+  // StartGathering.
+  nsresult SetResolver(nr_resolver *resolver);
 
   // Start ICE gathering
   nsresult StartGathering();
