@@ -4336,13 +4336,6 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
         JS_ASSERT_IF(rt->gcMode == JSGC_MODE_GLOBAL, zone->isGCScheduled());
 #endif
 
-    /*
-     * Don't GC if we are reporting an OOM or in an interactive debugging
-     * session.
-     */
-    if (rt->mainThread.suppressGC)
-        return;
-
     AutoGCSession gcsession(rt);
 
     /*
@@ -4411,6 +4404,9 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
     JS_ASSERT(!InParallelSection());
 
     JS_AbortIfWrongThread(rt);
+
+    if (rt->mainThread.suppressGC)
+        return;
 
 #if JS_TRACE_LOGGING
     AutoTraceLog logger(TraceLogging::defaultLogger(),
