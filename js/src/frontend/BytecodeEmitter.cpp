@@ -75,7 +75,7 @@ struct frontend::StmtInfoBCE : public StmtInfoBase
     StmtInfoBCE(JSContext *cx) : StmtInfoBase(cx) {}
 
     /*
-     * To reuse space, alias the three ptrdiff_t fields for use during
+     * To reuse space, alias two of the ptrdiff_t fields for use during
      * try/catch/finally code generation and backpatching.
      *
      * Only a loop, switch, or label statement info record can have breaks and
@@ -86,11 +86,6 @@ struct frontend::StmtInfoBCE : public StmtInfoBase
     ptrdiff_t &gosubs() {
         JS_ASSERT(type == STMT_FINALLY);
         return breaks;
-    }
-
-    ptrdiff_t &catchNote() {
-        JS_ASSERT(type == STMT_TRY || type == STMT_FINALLY);
-        return update;
     }
 
     ptrdiff_t &guardJump() {
@@ -3557,7 +3552,7 @@ class EmitLevelManager
 static bool
 EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    ptrdiff_t catchStart, guardJump;
+    ptrdiff_t guardJump;
 
     /*
      * Morph STMT_BLOCK to STMT_CATCH, note the block entry code offset,
@@ -3566,7 +3561,6 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     StmtInfoBCE *stmt = bce->topStmt;
     JS_ASSERT(stmt->type == STMT_BLOCK && stmt->isBlockScope);
     stmt->type = STMT_CATCH;
-    catchStart = stmt->update;
 
     /* Go up one statement info record to the TRY or FINALLY record. */
     stmt = stmt->down;
@@ -3612,8 +3606,7 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (pn->pn_kid2) {
         if (!EmitTree(cx, bce, pn->pn_kid2))
             return false;
-        if (!SetSrcNoteOffset(cx, bce, stmt->catchNote(), 0, bce->offset() - catchStart))
-            return false;
+
         /* ifeq <next block> */
         guardJump = EmitJump(cx, bce, JSOP_IFEQ, 0);
         if (guardJump < 0)
@@ -3633,10 +3626,7 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Annotate the JSOP_LEAVEBLOCK that will be emitted as we unwind via
      * our PNK_LEXICALSCOPE parent, so the decompiler knows to pop.
      */
-    ptrdiff_t off = bce->stackDepth;
-    if (NewSrcNote2(cx, bce, SRC_CATCH, off) < 0)
-        return false;
-    return true;
+    return NewSrcNote(cx, bce, SRC_CATCH) >= 0;
 }
 
 /*
@@ -3705,7 +3695,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          *
          * [throwing]                          only if 2nd+ catch block
          * [leaveblock]                        only if 2nd+ catch block
-         * enterblock                          with SRC_CATCH
+         * enterblock
          * exception
          * [dup]                               only if catchguard
          * setlocalpop <slot>                  or destructuring code
@@ -3723,7 +3713,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * thrown from catch{} blocks.
          */
         for (ParseNode *pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-            ptrdiff_t guardJump, catchNote;
+            ptrdiff_t guardJump;
 
             JS_ASSERT(bce->stackDepth == depth);
             guardJump = stmtInfo.guardJump();
@@ -3753,18 +3743,6 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, count);
                 JS_ASSERT(bce->stackDepth == depth);
             }
-
-            /*
-             * Annotate the JSOP_ENTERBLOCK that's about to be generated
-             * by the call to EmitTree immediately below.  Save this
-             * source note's index in stmtInfo for use by the PNK_CATCH:
-             * case, where the length of the catch guard is set as the
-             * note's offset.
-             */
-            catchNote = NewSrcNote2(cx, bce, SRC_CATCH, 0);
-            if (catchNote < 0)
-                return false;
-            stmtInfo.catchNote() = catchNote;
 
             /*
              * Emit the lexical scope and catch body.  Save the catch's
@@ -6372,7 +6350,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
 
 /* 15 */ {"hidden",         0},
 
-/* 16 */ {"catch",          1},
+/* 16 */ {"catch",          0},
 
 /* 17 */ {"colspan",        1},
 /* 18 */ {"newline",        0},
