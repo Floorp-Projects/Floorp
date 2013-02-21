@@ -3496,25 +3496,25 @@ class ICCall_Scripted : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
-    HeapPtrFunction callee_;
+    HeapPtrScript calleeScript_;
 
-    ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee)
+    ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub, HandleScript calleeScript)
       : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
-        callee_(callee)
+        calleeScript_(calleeScript)
     { }
 
   public:
     static inline ICCall_Scripted *New(
-            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub, HandleFunction callee)
+            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub, HandleScript calleeScript)
     {
-        return space->allocate<ICCall_Scripted>(code, firstMonitorStub, callee);
+        return space->allocate<ICCall_Scripted>(code, firstMonitorStub, calleeScript);
     }
 
-    static size_t offsetOfCallee() {
-        return offsetof(ICCall_Scripted, callee_);
+    static size_t offsetOfCalleeScript() {
+        return offsetof(ICCall_Scripted, calleeScript_);
     }
-    HeapPtrFunction &callee() {
-        return callee_;
+    HeapPtrScript &calleeScript() {
+        return calleeScript_;
     }
 
     // Compiler for this stub kind.
@@ -3522,7 +3522,7 @@ class ICCall_Scripted : public ICMonitoredStub
       protected:
         ICStub *firstMonitorStub_;
         bool isConstructing_;
-        RootedFunction callee_;
+        RootedScript calleeScript_;
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
@@ -3530,16 +3530,16 @@ class ICCall_Scripted : public ICMonitoredStub
         }
 
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee,
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleScript calleeScript,
                  bool isConstructing)
           : ICCallStubCompiler(cx, ICStub::Call_Scripted),
             firstMonitorStub_(firstMonitorStub),
             isConstructing_(isConstructing),
-            callee_(cx, callee)
+            calleeScript_(cx, calleeScript)
         { }
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, callee_);
+            return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, calleeScript_);
         }
     };
 };
