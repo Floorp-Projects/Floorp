@@ -1740,35 +1740,56 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
         const char *name = js_SrcNoteSpec[type].name;
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", unsigned(sn - notes), lineno, offset, delta, name);
         switch (type) {
+          case SRC_NULL:
+          case SRC_IF:
+          case SRC_CONTINUE:
+          case SRC_BREAK:
+          case SRC_ASSIGNOP:
+          case SRC_HIDDEN:
+          case SRC_XDELTA:
+            break;
+
           case SRC_COLSPAN:
             colspan = js_GetSrcNoteOffset(sn, 0);
             if (colspan >= SN_COLSPAN_DOMAIN / 2)
                 colspan -= SN_COLSPAN_DOMAIN;
             Sprint(sp, "%d", colspan);
             break;
+
           case SRC_SETLINE:
             lineno = js_GetSrcNoteOffset(sn, 0);
             Sprint(sp, " lineno %u", lineno);
             break;
+
           case SRC_NEWLINE:
             ++lineno;
             break;
+
           case SRC_FOR:
             Sprint(sp, " cond %u update %u tail %u",
                    unsigned(js_GetSrcNoteOffset(sn, 0)),
                    unsigned(js_GetSrcNoteOffset(sn, 1)),
                    unsigned(js_GetSrcNoteOffset(sn, 2)));
             break;
+
           case SRC_IF_ELSE:
             Sprint(sp, " else %u elseif %u",
                    unsigned(js_GetSrcNoteOffset(sn, 0)),
                    unsigned(js_GetSrcNoteOffset(sn, 1)));
             break;
+
+          case SRC_FOR_IN:
+            Sprint(sp, " loopstart %u closingjump %u",
+                   unsigned(js_GetSrcNoteOffset(sn, 0)),
+                   unsigned(js_GetSrcNoteOffset(sn, 1)));
+            break;
+
           case SRC_COND:
           case SRC_WHILE:
           case SRC_PCDELTA:
             Sprint(sp, " offset %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
+
           case SRC_BREAK2LABEL:
           case SRC_CONT2LABEL: {
             uint32_t index = js_GetSrcNoteOffset(sn, 0);
@@ -1782,6 +1803,8 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             Sprint(sp, ")");
             break;
           }
+
+          case SRC_SWITCHBREAK:
           case SRC_SWITCH: {
             JSOp op = JSOp(script->code[offset]);
             if (op == JSOP_GOTO)
@@ -1794,6 +1817,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
                                     &switchTableStart, &switchTableEnd);
             break;
           }
+
           case SRC_CATCH:
             delta = (unsigned) js_GetSrcNoteOffset(sn, 0);
             if (delta) {
@@ -1803,7 +1827,10 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
                     Sprint(sp, " guard delta %u", delta);
             }
             break;
-          default:;
+
+          default:
+            JS_ASSERT(0);
+            break;
         }
         Sprint(sp, "\n");
     }
