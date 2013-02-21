@@ -210,7 +210,9 @@ IonFrameIterator::prevFp() const
         prevType() == IonFrame_Unwound_OptimizedJS ||
         prevType() == IonFrame_Unwound_BaselineStub)
     {
-        JS_ASSERT(type_ == IonFrame_Exit);
+        JS_ASSERT(type_ == IonFrame_Exit || type_ == IonFrame_BaselineJS);
+        JS_ASSERT(SizeOfFramePrefix(IonFrame_BaselineJS) ==
+                  SizeOfFramePrefix(IonFrame_OptimizedJS));
         currentSize = SizeOfFramePrefix(IonFrame_OptimizedJS);
     }
     currentSize += current()->prevFrameLocalSize();
@@ -500,6 +502,14 @@ ion::HandleException(ResumeFromException *rfe)
 void
 ion::EnsureExitFrame(IonCommonFrameLayout *frame)
 {
+    if (frame->prevType() == IonFrame_Unwound_OptimizedJS ||
+        frame->prevType() == IonFrame_Unwound_BaselineStub ||
+        frame->prevType() == IonFrame_Unwound_Rectifier)
+    {
+        // Already an exit frame, nothing to do.
+        return;
+    }
+
     if (frame->prevType() == IonFrame_Entry) {
         // The previous frame type is the entry frame, so there's no actual
         // need for an exit frame.

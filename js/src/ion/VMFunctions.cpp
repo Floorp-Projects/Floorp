@@ -563,6 +563,14 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
         DebugScopes::onPopCall(frame, cx);
     }
 
+    if (!ok) {
+        // Pop this frame by updating ionTop, so that the exception handling
+        // code will start at the previous frame.
+        IonJSFrameLayout *prefix = frame->framePrefix();
+        EnsureExitFrame(prefix);
+        cx->mainThread().ionTop = (uint8_t *)prefix;
+    }
+
     return ok;
 }
 
