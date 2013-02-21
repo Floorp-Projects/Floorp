@@ -589,6 +589,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
         public ListView listView;
         private int mResourceId = -1;
+        private Drawable mBlankDrawable = null;
+        private Drawable mMoreDrawable = null;
 
         PromptListAdapter(Context context, int textViewResourceId, PromptListItem[] objects) {
             super(context, textViewResourceId, objects);
@@ -606,8 +608,22 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             return VIEW_TYPE_COUNT;
         }
 
+        private Drawable getMoreDrawable(Resources res) {
+            if (mMoreDrawable == null) {
+                mMoreDrawable = res.getDrawable(android.R.drawable.ic_menu_more);
+            }
+            return mMoreDrawable;
+        }
+
+        private Drawable getBlankDrawable(Resources res) {
+            if (mBlankDrawable == null) {
+                mBlankDrawable = res.getDrawable(R.drawable.blank);
+            }
+            return mBlankDrawable;
+        }
+
         private void maybeUpdateIcon(PromptListItem item, TextView t) {
-            if (item.icon == null && !item.isParent) {
+            if (item.icon == null && !item.inGroup && !item.isParent) {
                 t.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
                 return;
             }
@@ -617,21 +633,18 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             // Set the padding between the icon and the text.
             t.setCompoundDrawablePadding(mIconTextPadding);
             if (item.icon != null) {
-                // Set padding inside the item.
-                t.setPadding(item.inGroup ? mLeftRightTextWithIconPadding + mGroupPaddingSize :
-                                            mLeftRightTextWithIconPadding,
-                             mTopBottomTextWithIconPadding,
-                             mLeftRightTextWithIconPadding,
-                             mTopBottomTextWithIconPadding);
                 // We want the icon to be of a specific size. Some do not
                 // follow this rule so we have to resize them.
                 Bitmap bitmap = ((BitmapDrawable) item.icon).getBitmap();
                 d = new BitmapDrawable(Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
+            } else if (item.inGroup) {
+                // We don't currently support "indenting" items with icons
+                d = getBlankDrawable(res);
             }
 
             Drawable moreDrawable = null;
             if (item.isParent) {
-                moreDrawable = res.getDrawable(android.R.drawable.ic_menu_more);
+                moreDrawable = getMoreDrawable(res);
             }
 
             if (d != null || moreDrawable != null) {
@@ -640,11 +653,6 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         }
 
         private void maybeUpdateCheckedState(int position, PromptListItem item, ViewHolder viewHolder) {
-            viewHolder.textView.setPadding((item.inGroup ? mGroupPaddingSize : viewHolder.paddingLeft),
-                                            viewHolder.paddingTop,
-                                            viewHolder.paddingRight,
-                                            viewHolder.paddingBottom);
-
             viewHolder.textView.setEnabled(!item.disabled && !item.isGroup);
             viewHolder.textView.setClickable(item.isGroup || item.disabled);
 
