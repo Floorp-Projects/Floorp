@@ -86,7 +86,7 @@ int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out)
         ABORT(r);
       addr_int=inet_addr(addr);
       if(addr_int==INADDR_NONE){
-        r_log(LOG_ICE,LOG_ERR,"Invalid address %s",addr);
+        r_log(LOG_ICE,LOG_ERR,"Invalid address %s;",addr);
         ABORT(R_BAD_ARGS);
       }
       if(r=NR_reg_get2_uint2(child,"port",&port)) {
@@ -95,10 +95,10 @@ int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out)
         port = 3478;
       }
       if(r=nr_ip4_port_to_transport_addr(ntohl(addr_int), port, IPPROTO_UDP,
-        &servers[i].addr))
+        &servers[i].u.addr))
         ABORT(r);
       servers[i].index=i;
-
+      servers[i].type = NR_ICE_STUN_SERVER_TYPE_ADDR;
       RFREE(addr);
       addr=0;
     }
@@ -156,6 +156,22 @@ int nr_ice_ctx_set_turn_servers(nr_ice_ctx *ctx,nr_ice_turn_server *servers,int 
     return(_status);
   }
 
+int nr_ice_ctx_set_resolver(nr_ice_ctx *ctx, nr_resolver *resolver)
+  {
+    int _status;
+
+    if (ctx->resolver) {
+      ABORT(R_ALREADY);
+    }
+
+    ctx->resolver = resolver;
+
+    _status=0;
+   abort:
+    return(_status);
+  }
+
+
 #ifdef USE_TURN
 int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out)
   {
@@ -188,7 +204,7 @@ int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out)
         port = 3478;
       }
       if(r=nr_ip4_port_to_transport_addr(ntohl(addr_int), port, IPPROTO_UDP,
-        &servers[i].turn_server.addr))
+        &servers[i].turn_server.u.addr))
         ABORT(r);
 
       if(r=NR_reg_get2_uint4(child,NR_ICE_REG_TURN_SRV_BANDWIDTH,&servers[i].bandwidth_kbps))
@@ -362,6 +378,8 @@ static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
       STAILQ_REMOVE(&ctx->ids,id1,nr_ice_stun_id_,entry);
       RFREE(id1);
     }
+
+    nr_resolver_destroy(&ctx->resolver);
 
     RFREE(ctx);
   }
