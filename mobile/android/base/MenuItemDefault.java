@@ -17,13 +17,13 @@ import android.widget.TextView;
 
 public class MenuItemDefault extends TextView
                              implements GeckoMenuItem.Layout {
-    private static Rect sIconBounds;
-    private static Drawable sChecked;
-    private static Drawable sUnChecked;
-    private static Drawable sMore;
+    private static final int[] STATE_MORE = new int[] { R.attr.state_more };
+    private static final int[] STATE_CHECKED = new int[] { android.R.attr.state_checkable, android.R.attr.state_checked };
+    private static final int[] STATE_UNCHECKED = new int[] { android.R.attr.state_checkable };
 
     private Drawable mIcon;
     private Drawable mState;
+    private static Rect sIconBounds;
 
     private boolean mCheckable = false;
     private boolean mChecked = false;
@@ -32,23 +32,33 @@ public class MenuItemDefault extends TextView
     public MenuItemDefault(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        Resources res = context.getResources();
+        int stateIconSize = res.getDimensionPixelSize(R.dimen.menu_item_state_icon);
+        Rect stateIconBounds = new Rect(0, 0, stateIconSize, stateIconSize);
+
+        mState = res.getDrawable(R.drawable.menu_item_state);
+        mState.setBounds(stateIconBounds);
+
         if (sIconBounds == null) {
-            Resources res = context.getResources();
             int iconSize = res.getDimensionPixelSize(R.dimen.menu_item_icon);
             sIconBounds = new Rect(0, 0, iconSize, iconSize);
-
-            int stateIconSize = res.getDimensionPixelSize(R.dimen.menu_item_state_icon);
-            Rect stateIconBounds = new Rect(0, 0, stateIconSize, stateIconSize);
-
-            sChecked = res.getDrawable(R.drawable.menu_item_check);
-            sChecked.setBounds(stateIconBounds);
-
-            sUnChecked = res.getDrawable(R.drawable.menu_item_uncheck);
-            sUnChecked.setBounds(stateIconBounds);
-
-            sMore = res.getDrawable(R.drawable.menu_item_more);
-            sMore.setBounds(stateIconBounds);
         }
+
+        setCompoundDrawables(mIcon, null, mState, null);
+    }
+
+    @Override
+    public int[] onCreateDrawableState(int extraSpace) {
+        final int[] drawableState = super.onCreateDrawableState(extraSpace + 2);
+
+        if (mHasSubMenu)
+            mergeDrawableStates(drawableState, STATE_MORE);
+        else if (mCheckable && mChecked)
+            mergeDrawableStates(drawableState, STATE_CHECKED);
+        else if (mCheckable && !mChecked)
+            mergeDrawableStates(drawableState, STATE_UNCHECKED);
+
+        return drawableState;
     }
 
     @Override
@@ -89,33 +99,25 @@ public class MenuItemDefault extends TextView
 
     @Override
     public void setCheckable(boolean checkable) {
-        mCheckable = checkable;
-        refreshState();
-    }
-
-    private void refreshState() {
-        if (mHasSubMenu)
-            mState = sMore;
-        else if (mCheckable && mChecked)
-            mState = sChecked;
-        else if (mCheckable && !mChecked)
-            mState = sUnChecked;
-        else
-            mState = null;
-
-        setCompoundDrawables(mIcon, null, mState, null);
+        if (mCheckable != checkable) {
+            mCheckable = checkable;
+            refreshDrawableState();
+        }
     }
 
     @Override
     public void setChecked(boolean checked) {
-        mChecked = checked;
-        refreshState();
+        if (mChecked != checked) {
+            mChecked = checked;
+            refreshDrawableState();
+        }
     }
 
     @Override
     public void setSubMenuIndicator(boolean hasSubMenu) {
-        mHasSubMenu = hasSubMenu;
-        mState = sMore;
-        refreshState();
+        if (mHasSubMenu != hasSubMenu) {
+            mHasSubMenu = hasSubMenu;
+            refreshDrawableState();
+        }
     }
 }
