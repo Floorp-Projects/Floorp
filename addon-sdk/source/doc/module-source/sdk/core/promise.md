@@ -201,11 +201,11 @@ functions to asynchronous by making it aware of promises. Module exports
 `promised` function to do exactly that:
 
     const { promised } = require('sdk/core/promise');
-    function sum(x, y) { return x + y }
-    var sumAsync = promised(sum);
+    function sum(x, y) { return x + y };
+    var asyncSum = promised(sum);
 
     var c = sum(a, b);
-    var cAsync = asyncSum(aAsync(), bAsinc());
+    var cAsync = asyncSum(aAsync(), bAsync());
 
 `promised` takes normal function and composes new promise aware version of it
 that may take both normal values and promises as arguments and returns promise

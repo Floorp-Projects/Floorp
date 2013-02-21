@@ -24,7 +24,7 @@ their code.
 
 The stability index is adopted from
 [node.js](http://nodejs.org/api/documentation.html#documentation_stability_index).
-The SDK uses only three of the six values defined by node.js:
+The SDK uses only four of the six values defined by node.js:
 
 <table>
   <tr>
@@ -33,6 +33,14 @@ The SDK uses only three of the six values defined by node.js:
 You can try it out and provide feedback, but we may change or remove
 it in future versions without having to pass through a formal
 deprecation process.</td>
+  </tr>
+  <tr>
+    <td>Unstable</td>
+    <td>The API is in the process of settling, but has not yet had sufficient
+real-world testing to be considered stable.
+Backwards-compatibility will be maintained if reasonable.
+If we do have to make backwards-incompatible changes, we will not guarantee
+to go through the formal deprecation process.</td>
   </tr>
   <tr>
     <td>Stable</td>
