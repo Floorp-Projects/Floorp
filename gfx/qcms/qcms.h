@@ -87,11 +87,17 @@ typedef struct _qcms_profile qcms_profile;
 
 /* these values match the Rendering Intent values from the ICC spec */
 typedef enum {
-	QCMS_INTENT_DEFAULT = 0,
+	QCMS_INTENT_MIN = 0,
 	QCMS_INTENT_PERCEPTUAL = 0,
 	QCMS_INTENT_RELATIVE_COLORIMETRIC = 1,
 	QCMS_INTENT_SATURATION = 2,
-	QCMS_INTENT_ABSOLUTE_COLORIMETRIC = 3
+	QCMS_INTENT_ABSOLUTE_COLORIMETRIC = 3,
+	QCMS_INTENT_MAX = 3,
+
+	/* Chris Murphy (CM consultant) suggests this as a default in the event that we
+	 * cannot reproduce relative + Black Point Compensation.  BPC brings an
+	 * unacceptable performance overhead, so we go with perceptual. */
+	QCMS_INTENT_DEFAULT = QCMS_INTENT_PERCEPTUAL,
 } qcms_intent;
 
 //XXX: I don't really like the _DATA_ prefix
