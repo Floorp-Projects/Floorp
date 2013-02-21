@@ -16,7 +16,7 @@ SurfaceStreamType
 SurfaceStream::ChooseGLStreamType(SurfaceStream::OMTC omtc,
                                   bool preserveBuffer)
 {
-    if (omtc == SurfaceStream::OMTC::OffMainThread) {
+    if (omtc == SurfaceStream::OffMainThread) {
         if (preserveBuffer)
             return SurfaceStreamType::TripleBuffer_Copy;
         else
