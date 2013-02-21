@@ -2169,7 +2169,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     jsbytecode *pc;
     StmtInfoBCE stmtInfo(cx);
 
-    /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
+    /* Try for most optimal, fall back if not dense ints. */
     switchOp = JSOP_TABLESWITCH;
     hasDefault = false;
     defaultOffset = -1;
@@ -2324,24 +2324,22 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     /*
-     * Emit a note with two offsets: first tells total switch code length,
-     * second tells offset to first JSOP_CASE if condswitch.
+     * The note has one or two offsets: first tells total switch code length;
+     * second (if condswitch) tells offset to first JSOP_CASE.
      */
-    noteIndex = NewSrcNote3(cx, bce, SRC_SWITCH, 0, 0);
-    if (noteIndex < 0)
-        return false;
-
     if (switchOp == JSOP_CONDSWITCH) {
-        /*
-         * 0 bytes of immediate for unoptimized ECMAv2 switch.
-         */
+        /* 0 bytes of immediate for unoptimized switch. */
         switchSize = 0;
+        noteIndex = NewSrcNote3(cx, bce, SRC_CONDSWITCH, 0, 0);
     } else {
         JS_ASSERT(switchOp == JSOP_TABLESWITCH);
 
         /* 3 offsets (len, low, high) before the table, 1 per entry. */
         switchSize = (size_t)(JUMP_OFFSET_LEN * (3 + tableLength));
+        noteIndex = NewSrcNote2(cx, bce, SRC_TABLESWITCH, 0);
     }
+    if (noteIndex < 0)
+        return false;
 
     /* Emit switchOp followed by switchSize bytes of jump or lookup table. */
     if (EmitN(cx, bce, switchOp, switchSize) < 0)
@@ -6365,21 +6363,21 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
 /*  9 */ {"break2label",    0},
 /* 10 */ {"switchbreak",    0},
 
-/* 11 */ {"switch",         2},
+/* 11 */ {"tableswitch",    1},
+/* 12 */ {"condswitch",     2},
 
-/* 12 */ {"pcdelta",        1},
+/* 13 */ {"pcdelta",        1},
 
-/* 13 */ {"assignop",       0},
+/* 14 */ {"assignop",       0},
 
-/* 14 */ {"hidden",         0},
+/* 15 */ {"hidden",         0},
 
-/* 15 */ {"catch",          1},
+/* 16 */ {"catch",          1},
 
-/* 16 */ {"colspan",        1},
-/* 17 */ {"newline",        0},
-/* 18 */ {"setline",        1},
+/* 17 */ {"colspan",        1},
+/* 18 */ {"newline",        0},
+/* 19 */ {"setline",        1},
 
-/* 19 */ {"unused19",       0},
 /* 20 */ {"unused20",       0},
 /* 21 */ {"unused21",       0},
 /* 22 */ {"unused22",       0},
